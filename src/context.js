@@ -13,11 +13,29 @@
       return null
     }
 
+    /**
+     * The current-session selection left the Session Controller in dsh 0.2:
+     * the list snapshot no longer carries `current`, and the main-view
+     * selection is projected by the `uiSession` service as a binding source
+     * whose `value.key` is the selected session id (`undefined` when no
+     * session is materialized). Read the new source first and fall back to
+     * the legacy `list.current` so older hosts keep working.
+     */
+    function currentSessionId(ctx, sessions) {
+      try {
+        var uiSession = ctx.get('uiSession')
+        var current = uiSession === void 0 || uiSession === null ? null : uiSession.current
+        var value = current === void 0 || current === null ? null : current.value
+        if (value !== void 0 && value !== null && typeof value.key === 'string') return value.key
+      } catch (error) { /* fall through to the legacy snapshot field */ }
+      return sessions.list.getSnapshot().current
+    }
+
     function currentSession(ctx) {
       var sessions = ctx.get('sessions')
       if (sessions === void 0 || sessions === null) return null
-      var id = sessions.list.getSnapshot().current
-      if (id === void 0) return null
+      var id = currentSessionId(ctx, sessions)
+      if (id === void 0 || id === null) return null
       var binding = sessions.binding(id)
       if (binding === void 0 || binding === null) return null
       return binding.session === void 0 ? null : binding.session
@@ -26,7 +44,11 @@
     function currentPreset(session) {
       try {
         var snapshot = session.projections.faceOf('permissions').getSnapshot()
-        return snapshot === void 0 ? null : snapshot.currentValue
+        if (snapshot === void 0 || snapshot === null) return null
+        // dsh 0.2+ projection faces hand back the bare value (e.g. the preset
+        // id string); older hosts wrapped it as `{ currentValue }`.
+        if (typeof snapshot === 'object' && 'currentValue' in snapshot) return snapshot.currentValue
+        return snapshot
       } catch (error) {
         return null
       }

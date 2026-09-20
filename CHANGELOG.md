@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Fixed
+- **修复权限切换在 dsh 0.2+ 上完全失效**：当前会话选中态已移出 Session Controller（`sessions.list` 快照不再有 `current` 字段，改由 `uiSession` 服务以主视图绑定投影），`currentSession` 恒返回 null，点击权限菜单任意选项都静默无效、按钮标签永远停留在 `Accept edits`，而原生触发器被皮肤隐藏，GUI 内没有任何可用的切换入口。改为优先从 `uiSession` 主视图绑定读取当前会话 id，旧版宿主回退到 `list.current`；同时兼容 `permissions` 投影在 0.2+ 直接返回裸值（旧版包一层 `{ currentValue }`）的差异。
+
 ### Changed
 - **深色模式输入框焦点由"加深"改为"提亮"**：近黑画布上黑边毫无辨识度，深色焦点描边与 1px 晕边从纯黑改为亮象牙（`#faf9f5`，描边 45% / 晕边 18%），输入框聚焦时明显亮起，底栏托盘与键盘 `:focus-visible` 外框同步改为亮象牙；暗色投影保留作真实阴影深度。
 - **权限弹层列表间距加宽**：Read / Edit / Auto 预设行为两行行（标签 + 说明），原先 2px 的行间距糊成整块；行间距加宽 4px 至 6px，弹层不再拥挤。
