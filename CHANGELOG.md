@@ -19,6 +19,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 ### 问题修复
 
 - 修复 **选中划过行内代码时代码段显示为一块偏浅的独立高亮**：芯片的半透明底色画在选中高亮之上，把芯片内的选中色混浅了一档；现在芯片内的选中色预先抵消这层罩色，整段选区呈现统一的选中色，聚焦与失焦、深色与浅色下一致。
+- 修复 **窗口较矮时工作台首页被用量面板撑出窗口**：面板放不下时整页向下延伸，问候语被顶出窗口上沿；现在面板在问候语与输入框之间自己滚动，底边渐隐，滚到底时渐隐消失，问候语、上下文行与输入框都留在窗口内。
 
 <h3 id="en-unreleased">New Features</h3>
 
@@ -33,6 +34,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 ### Bug Fixes
 
 - Fixed **inline code showing a separate, lighter highlight when selected**: the chip's translucent wash painted over the selection and lightened it inside the chip; the in-chip selection paint now pre-compensates for that wash, so a selection crossing inline code is one even colour, focused or blurred, dark or light.
+- Fixed **the usage panel pushing the Studio home past a short window**: when the panel did not fit, the whole page grew downward and the greeting ran off the top; the panel now scrolls between the greeting and the composer with its bottom edge fading out (the fade lifts at the end of the scroll), and the greeting, the context row and the input box stay in the window.
 
 ## [0.7.1] - 2026-09-25
 

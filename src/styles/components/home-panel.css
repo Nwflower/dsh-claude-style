@@ -57,7 +57,10 @@ body[data-dsh-claude-style] .dsh-claude-home-seat {
 
 body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [class*="_composerHero"] > :is([data-slot="conversation.input.dock"], .dsh-claude-home-seat) > * {
   order: 1;
-  flex: 0 0 auto;
+  /* A window too short for the whole panel shrinks the panel instead of the
+     page: the greeting stays on the top edge, the context row and the card on
+     the bottom, and the panel scrolls inside the room between them. */
+  flex: 0 1 auto;
   min-height: 0;
   /* The panel is the narrow dashboard card, left-aligned on the composer's own
      left edge; the free width to its right stays empty. The width is stated
@@ -150,6 +153,27 @@ body[data-dsh-claude-style] .dsh-claude-home-panel {
      the label tone over the card tone, which flips with the theme on its own. */
   background: color-mix(in srgb, var(--dsw-alias-label-primary, #141413) 4%, var(--dsw-alias-bg-layer-2, #fbfbf9));
   overflow: auto;
+  /* Claude Code fades its dashboard into the context row when the window cuts
+     it short. The mask's transparent 32px foot hangs below the box at rest, so
+     a panel that fits is untouched; while the panel scrolls, the scroll-linked
+     animation pulls the foot up over the bottom edge, and lowers it again over
+     the last 32px of travel, so the final row reads clean at the end. A panel
+     that does not overflow has an inactive scroll timeline, and the resting
+     value holds. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 32px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 32px), transparent);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% calc(100% + 32px);
+  mask-size: 100% calc(100% + 32px);
+  animation: dsh-claude-home-panel-fade linear both;
+  animation-timeline: scroll(self);
+  animation-range: calc(100% - 32px) 100%;
+}
+
+@keyframes dsh-claude-home-panel-fade {
+  from { -webkit-mask-size: 100% 100%; mask-size: 100% 100%; }
+  to { -webkit-mask-size: 100% calc(100% + 32px); mask-size: 100% calc(100% + 32px); }
 }
 
 body[data-dsh-claude-style] .dsh-claude-home-panel-head {

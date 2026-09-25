@@ -225,7 +225,10 @@ conversation, where the todo, queue and goal bars hang on it. The seat is scoped
 to a session, so the cold start screen (no session yet, the card waiting for a
 workspace) has none; there the skin mounts the same component on a
 `display: contents` element of its own (`.dsh-claude-home-seat`) and drops it
-once the host's dock arrives.
+once the host's dock arrives. A window too short for the whole panel shrinks the
+panel, never the page: the greeting keeps the top edge, the chips and the card
+keep the bottom, and the panel scrolls between them with a 32px fade over its
+bottom edge that lifts over the last 32px of travel.
 
 The cold start card waits for a workspace: the host marks it with a dashed ring
 and makes every control on it inert, so a press anywhere opens the workspace
