@@ -52,14 +52,6 @@ body[data-dsh-claude-style]:not([data-ds-dark-theme]) .dsh-claude-segment[data-a
   box-shadow: 0 1px 2px rgba(20, 20, 19, 0.08);
 }
 
-/* Rows whose preset the host's permission catalog does not carry (the Auto
-   review tier without the auto-review integration) are taken out of the
-   control entirely. */
-body[data-dsh-claude-style] .dsh-claude-segment[data-hidden],
-body[data-dsh-claude-style] .dsh-claude-perm-popover .dsh-claude-popover-item[data-hidden] {
-  display: none !important;
-}
-
 /* ---------- Claude Code layout: in-conversation permission popover ---------- */
 body[data-dsh-claude-style] .dsh-claude-perm-container {
   position: relative !important;

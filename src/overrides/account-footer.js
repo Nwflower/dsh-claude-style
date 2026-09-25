@@ -118,6 +118,11 @@
       var hostMenu = createHostAccountMenu({ close: closePopover })
       var rows = createAccountRows({
         hostMenu: hostMenu,
+        // Drawing the launcher's head is asynchronous and changes no DOM the
+        // observer can see, so the picture asks for the pass that paints it.
+        onChange: function () {
+          if (typeof ui.schedule === 'function') ui.schedule()
+        },
         openBan: function () {
           // Leave the surface up: the overlay is a full-window surface, so what
           // is behind it does not matter, and the footer is left as the user

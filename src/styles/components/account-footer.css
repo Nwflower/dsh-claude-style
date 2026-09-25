@@ -191,6 +191,35 @@ body[data-dsh-claude-style] .dsh-claude-account-photo[hidden] {
   display: none !important;
 }
 
+/* The launcher's own skin, when the instance was started with one: the head is
+   a canvas cropped out of the texture the host serves (src/overrides/account/
+   rows.js), so it is the picture, not the mark, that fills the box. The mark is
+   dropped only while that canvas is mounted — a skin whose bytes never arrived
+   leaves the attribute off and the mark in place. The pixels are a Minecraft
+   head's 8×8 face, so they are scaled without smoothing.
+   The box is square, not the circle the photo path uses: the head is drawn to
+   the box's edges (the hat layer covers it, the face is inset by 1/18), so any
+   rounding at all shaves the head's own pixels — the circle cut the four
+   corners off. The launcher's own account list shows the head square for the
+   same reason. */
+body[data-dsh-claude-style] .dsh-claude-account-avatar[data-dsh-claude-skin] {
+  position: relative !important;
+  background-image: none !important;
+  border-radius: 0 !important;
+}
+body[data-dsh-claude-style] .dsh-claude-account-avatar[data-dsh-claude-skin]::before {
+  display: none !important;
+}
+body[data-dsh-claude-style] .dsh-claude-account-skin {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: inherit !important;
+  pointer-events: none !important;
+  image-rendering: pixelated;
+}
+
 /* The drawer's rows had no hover feedback at all: the only
    `.dsh-claude-popover-item:hover` rule in the stylesheet is scoped to the model
    picker. Give the account drawer the same affordance as the rest of the skin. */

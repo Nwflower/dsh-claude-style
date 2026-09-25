@@ -51,6 +51,22 @@ const HOST = path.join(ROOT, 'lib', 'index.js')
 const MARKUP = '<img src=x onerror="window.__pwned=(window.__pwned||0)+1">'
 /** One transparent pixel: the launcher's avatar the HDSL case serves. */
 const PNG_1PX = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
+/**
+ * A 64×64 skin atlas with three landmarks, so a wrong crop cannot pass: the
+ * head's front face (8,8–16,16) is red, the hat layer (40,8–48,16) is clear
+ * except two green pixels that land at the box's opposite corners, and the
+ * rest of the atlas is grey. What the launcher serves is this sheet, not a
+ * finished avatar.
+ */
+const SKIN_FIXTURE = path.join(__dirname, 'fixtures', 'skin-64.png')
+const SKIN_FACE = [255, 0, 0, 255]
+const SKIN_HAT = [0, 255, 0, 255]
+/**
+ * The cases whose launcher serves that atlas. `hdsl-broken` deliberately does
+ * not: its contract names a picture the player has already deleted, which the
+ * picture route answers with a 404.
+ */
+const SKIN_CASES = ['hdsl']
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b)
@@ -75,9 +91,22 @@ function check(label, ok, detail) {
  *   the durable events the fake `sessionQuery` reader answers for it.
  */
 function fakeHost(mod, options = {}) {
-  const { fenced, home, live = [], events } = options
+  const { fenced, home, live = [], events, launch } = options
   const routes = {}
   const settings = { configure: () => () => {} }
+  // The harness's launch environment, as its own snapshot behaves: the canonical
+  // order is process, project-env, user-env, and a layer left out of the asked
+  // list stays unreachable.
+  const launchEnvironment = launch === undefined ? undefined : {
+    getFrom(name, sources) {
+      for (const source of ['process', 'project-env', 'user-env']) {
+        if (!sources.includes(source)) continue
+        const values = launch[source]
+        if (values !== undefined && Object.prototype.hasOwnProperty.call(values, name)) return { value: values[name], source }
+      }
+      return undefined
+    },
+  }
   // Modelled on the host's connection.requestRejection(): the Host/Origin fence
   // (loopback, no cross-site marker, Origin naming the Host), then the cookie.
   const connection = {
@@ -96,6 +125,7 @@ function fakeHost(mod, options = {}) {
       if (name === 'connection' && fenced) return connection
       if (name === 'dshHomePath' && home !== undefined) return (...segments) => path.join(home, ...segments)
       if (name === 'sessions') return { get: (id) => (live.includes(id) ? {} : undefined) }
+      if (name === 'launchEnvironment') return launchEnvironment
       if (name === 'sessionQuery' && events !== undefined) {
         return { readSession: async (id) => ({ events: events[id] ?? [] }) }
       }
@@ -113,7 +143,10 @@ function fakeHost(mod, options = {}) {
   return { routes }
 }
 
-/** One request through a registered route; resolves with `{ status, body }`. */
+/**
+ * One request through a registered route; resolves with `{ status, body }`, and
+ * with the answer's bytes as `raw` (the skin route answers with a picture).
+ */
 function request(host, route, method, body, headers) {
   const req = Readable.from(body ? [Buffer.from(body)] : [])
   Object.assign(req, { method, url: route, headers })
@@ -121,9 +154,12 @@ function request(host, route, method, body, headers) {
     const res = {
       status: 0,
       writeHead(status) { this.status = status },
-      end(chunk) { resolve({ status: this.status, body: chunk ? chunk.toString() : '' }) },
+      end(chunk) {
+        const raw = chunk === undefined ? null : (Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk)))
+        resolve({ status: this.status, body: raw === null ? '' : raw.toString(), raw })
+      },
     }
-    Promise.resolve(host.routes[route].handler(req, res)).catch((error) => resolve({ status: -1, body: String(error) }))
+    Promise.resolve(host.routes[route].handler(req, res)).catch((error) => resolve({ status: -1, body: String(error), raw: null }))
   })
 }
 
@@ -154,6 +190,67 @@ async function hostHalf() {
     }
     const r = await request(host, USER, 'GET', '', browser)
     check('browser username read answered', r.status === 200 && JSON.parse(r.body).ok === true, `HTTP ${r.status}`)
+
+    // The launcher's account contract. Its two layers are the only ones allowed
+    // to say who the player is, and the picture's absolute path stays here.
+    const HDSL = '/dsh-claude-style/hdsl'
+    const SKIN = '/dsh-claude-style/hdsl-skin.png'
+    const contract = {
+      HDSL_ACCOUNT_CONTRACT: '1',
+      HDSL_ACCOUNT_NAME: 'HDSLPlayer',
+      HDSL_ACCOUNT_VENDOR: 'deepseek',
+      HDSL_ACCOUNT_KIND: 'official',
+      HDSL_ACCOUNT_SKIN: 'local',
+      HDSL_ACCOUNT_SKIN_MODEL: 'default',
+      HDSL_ACCOUNT_SKIN_FILE: SKIN_FIXTURE,
+    }
+    const withContract = (patch) => fakeHost(mod, {
+      fenced, home: scratchHome, launch: { process: Object.assign({}, contract, patch) },
+    })
+    const who = JSON.parse((await request(withContract(), HDSL, 'GET', '', browser)).body)
+    check('the launcher contract reached the browser half',
+      who.ok === true && who.contract === true && who.name === 'HDSLPlayer' && who.vendor === 'deepseek' &&
+        who.kind === 'official' && who.hasSkinImage === true,
+      JSON.stringify(who))
+    check('the skin path never reaches the browser', JSON.stringify(who).indexOf(SKIN_FIXTURE) === -1)
+    const skin = await request(withContract(), SKIN, 'GET', '', browser)
+    check("the skin route serves the launcher's atlas",
+      skin.status === 200 && Buffer.compare(skin.raw, fs.readFileSync(SKIN_FIXTURE)) === 0, `HTTP ${skin.status}`)
+    for (const [label, headers] of [['cross-site page', crossSite], ['LAN peer', lanPeer], ['DNS-rebound page', rebound]]) {
+      const refused = await request(withContract(), SKIN, 'GET', '', headers)
+      check(`${label}: skin read refused`, refused.status === 401 || refused.status === 403, `HTTP ${refused.status}`)
+      const meta = await request(withContract(), HDSL, 'GET', '', headers)
+      check(`${label}: account read refused`, meta.status === 401 || meta.status === 403, `HTTP ${meta.status}`)
+    }
+    // An offline account still has a name and, on the launcher's own patch, a
+    // vendor of `offline`: the kind is what says it has no provider.
+    const offline = JSON.parse((await request(withContract({ HDSL_ACCOUNT_KIND: 'offline', HDSL_ACCOUNT_VENDOR: 'offline' }), HDSL, 'GET', '', browser)).body)
+    check('an offline account still names the instance and reports its kind',
+      offline.name === 'HDSLPlayer' && offline.kind === 'offline', JSON.stringify(offline))
+    // The project directory's `.env` travels with a cloned repository: it may
+    // not name the player, nor point the picture route at a file of its choosing.
+    const spoofed = fakeHost(mod, {
+      fenced,
+      home: scratchHome,
+      launch: {
+        process: { HDSL_ACCOUNT_CONTRACT: '1' },
+        'project-env': { HDSL_ACCOUNT_NAME: 'Mallory', HDSL_ACCOUNT_SKIN: 'local', HDSL_ACCOUNT_SKIN_FILE: SKIN_FIXTURE },
+      },
+    })
+    const spoofedWho = JSON.parse((await request(spoofed, HDSL, 'GET', '', browser)).body)
+    check('the project directory cannot name the player', spoofedWho.name === null, JSON.stringify(spoofedWho))
+    check('the project directory cannot supply a picture',
+      spoofedWho.hasSkinImage === false && (await request(spoofed, SKIN, 'GET', '', browser)).status === 404)
+    check('without a contract the route says so',
+      (await request(fakeHost(mod, { fenced, home: scratchHome }), HDSL, 'GET', '', browser)).body.indexOf('"contract":false') !== -1)
+    // A picture the launcher points at but can no longer read. The contract
+    // advertises that the player chose one (the declaration is what the
+    // launcher wrote); the route is the truth, and it is what the browser half
+    // falls back from (the `hdsl-broken` case).
+    const gone = withContract({ HDSL_ACCOUNT_SKIN_FILE: path.join(scratchHome, 'deleted.png') })
+    check('a picture that is gone answers 404 although the contract names one',
+      (await request(gone, SKIN, 'GET', '', browser)).status === 404 &&
+        JSON.parse((await request(gone, HDSL, 'GET', '', browser)).body).hasSkinImage === true)
 
     fs.rmSync(scratchHome, { recursive: true, force: true })
     fs.mkdirSync(path.join(scratchCwd, scratchId), { recursive: true })
@@ -413,7 +510,15 @@ const STAND_IN = `(function () {
     action.setAttribute('aria-label', MARKUP)
     action.setAttribute('data-cordis-badge', MARKUP)
   }
-  var username = CASE === 'markup' ? MARKUP : CASE === 'desktop' || CASE === 'hdsl' ? '' : 'Tester'
+  // The launcher cases leave the custom nickname empty on purpose: the name
+  // they show is the one the launcher published.
+  var LAUNCHER = {
+    hdsl: { hasSkinImage: true },
+    'hdsl-noskin': { hasSkinImage: false },
+    'hdsl-broken': { hasSkinImage: true },
+  }
+  var launcherCase = LAUNCHER[CASE] !== undefined
+  var username = CASE === 'markup' ? MARKUP : CASE === 'desktop' || launcherCase ? '' : 'Tester'
   var form = {
     getSnapshot: function () { return { status: 'ready', value: { username: username, collapseFooter: true, homeLayout: CASE === 'studio' ? 'studio' : 'classic' } } },
     subscribe: function () { return function () {} },
@@ -463,8 +568,14 @@ const STAND_IN = `(function () {
     var url = typeof input === 'string' ? input : (input && input.url) || ''
     if (url === '/dsh-claude-style/username') return Promise.resolve(jsonResponse({ ok: true, username: 'Tester' }))
     if (url === '/dsh-claude-style/hdsl') {
-      return Promise.resolve(jsonResponse(CASE === 'hdsl'
-        ? { ok: true, contract: true, name: 'HDSLPlayer', vendor: 'deepseek', kind: 'official', skin: 'local', skinModel: 'default', hasSkinImage: true }
+      // Three launcher cases: the player's own atlas, a built-in figure (no
+      // picture at all), and an atlas the player deleted before the page
+      // loaded — the two fallbacks the account row has to survive.
+      return Promise.resolve(jsonResponse(LAUNCHER[CASE] !== undefined
+        ? {
+            ok: true, contract: true, name: 'HDSLPlayer', vendor: 'deepseek', kind: 'official',
+            skin: 'local', skinModel: 'default', hasSkinImage: LAUNCHER[CASE].hasSkinImage,
+          }
         : { ok: true, contract: false }))
     }
     if (url === '/dsh-claude-style/usage' && CASE === 'studio') {
@@ -495,7 +606,10 @@ const STAND_IN = `(function () {
       } }))
     }
     if (url === '/dsh-claude-style/hdsl-skin.png') {
-      if (CASE !== 'hdsl') return Promise.resolve(new Response(null, { status: 404 }))
+      // An <img> or a canvas source loads this outside the fetch stub, so the
+      // HTTP stand-in serves the bytes; this branch only keeps a stray request
+      // from reaching the real network.
+      if (SKIN_CASES.indexOf(CASE) === -1) return Promise.resolve(new Response(null, { status: 404 }))
       return Promise.resolve(new Response(PNG_1PX, { headers: { 'content-type': 'image/png' } }))
     }
     return realFetch.apply(window, arguments)
@@ -503,7 +617,7 @@ const STAND_IN = `(function () {
   var account = {
     getProfile: CASE === 'install-fault'
       ? function () { return undefined } // host API drift: not a promise
-      : CASE === 'hdsl'
+      : launcherCase
         ? function () { return Promise.resolve({ ok: true, value: null }) } // signed out: the launcher's name wins
         : function () {
             if (CASE === 'desktop') window.__profileReads++
@@ -529,14 +643,36 @@ const STAND_IN = `(function () {
     { value: 'workspace-write', name: 'Workspace Write', description: 'workspace write' },
     { value: 'danger-full-access', name: 'Full access', description: 'full access' },
   ]
+  // What each case's catalog carries on top of the configured presets, and the
+  // preset its session runs. Every case not listed keeps the live Auto review
+  // preset, which is the shipped shape; the auto mode cases model the
+  // third-party tier being installed (alone, and together with the built-in one
+  // in the hero case, where the slot has to choose). The conversation cases
+  // drive the popover, the hero case the segment group.
+  var PERMISSION_FIXTURES = {
+    'no-auto-review': { extras: [], current: null },
+    automode: { extras: [{ value: 'auto-mode', name: 'Auto mode', description: 'classified' }], current: 'workspace-write' },
+    'automode-current': {
+      extras: [{ value: 'auto-mode', name: 'Auto mode', description: 'classified', icon: 'M9 3 5 9h2l-1 5 4-6H8l1-5Z' }],
+      current: 'auto-mode',
+    },
+    'automode-hero': {
+      extras: [{ value: 'auto-mode', name: 'Auto mode', description: 'classified' }, { value: 'auto', name: 'Auto review' }],
+      current: 'auto-mode',
+    },
+    'automode-roundtrip': {
+      extras: [{ value: 'auto-mode', name: 'Auto mode', description: 'classified' }],
+      current: 'workspace-write',
+    },
+  }
+  var permissionFixture = PERMISSION_FIXTURES[CASE]
+  var catalogExtras = permissionFixture === undefined ? [{ value: 'auto', name: 'Auto review' }] : permissionFixture.extras
   var permissionPresets = {
     catalog: function () {
       return Promise.resolve({
         ok: true,
         value: {
-          options: CASE === 'no-auto-review'
-            ? configuredPresetOptions
-            : configuredPresetOptions.concat([{ value: 'auto', name: 'Auto review' }]),
+          options: configuredPresetOptions.concat(catalogExtras),
           defaultOptions: configuredPresetOptions,
           defaultPreset: 'workspace-write',
         },
@@ -544,10 +680,27 @@ const STAND_IN = `(function () {
     },
   }
   // Host API drift at sync time: a session list that throws, which only the
-  // permission control reads on every pass.
+  // permission control reads on every pass. The auto mode cases carry a real
+  // session instead: the control reads the running preset from its projection
+  // and switches through the host permission command; the case asserts both.
+  var permissionCommands = []
   var sessions = CASE === 'sync-fault'
     ? { list: { getSnapshot: function () { throw new Error('session list unavailable') } }, binding: function () { return null } }
-    : undefined
+    : (permissionFixture !== undefined && permissionFixture.current !== null ? {
+        list: { getSnapshot: function () { return { current: 'smoke-session' } } },
+        binding: function () {
+          return {
+            session: {
+              projections: {
+                faceOf: function () {
+                  return { getSnapshot: function () { return { currentValue: permissionFixture.current } } }
+                },
+              },
+              command: function (line) { permissionCommands.push(line); return undefined },
+            },
+          }
+        },
+      } : undefined)
   // The served-namespace directory. The late-forms case starts empty and gains
   // the namespace after apply, the way a cold page sees the host's wire read
   // answer after this plugin has already installed.
@@ -589,6 +742,7 @@ const STAND_IN = `(function () {
       return function () {}
     },
   } : undefined
+  window.__permissionCommands = permissionCommands
   window.__ctx = {
     fiber: { entry: { id: 'ui-skin-claude-style' } },
     get: function (name) {
@@ -1011,6 +1165,23 @@ const PROBE = `(function () {
     r.photo = photo ? { attrs: attrs(photo), referrerPolicy: photo.referrerPolicy } : null
     r.photoSrc = photo ? photo.getAttribute('src') : null
     r.photoHidden = photo ? photo.hidden : null
+    // The launcher's own picture is a texture sheet, so the row crops the head
+    // into a canvas instead of handing the sheet to the <img>. Sampled at the
+    // fixture's landmarks: red face inside the inset, green hat at the box's
+    // corners, nothing in the margin between them.
+    r.skinFlag = r.avatarAttrs !== null && r.avatarAttrs.indexOf('data-dsh-claude-skin') !== -1
+    r.avatarRadius = avatar ? getComputedStyle(avatar).borderRadius : null
+    var skinHead = avatar ? avatar.querySelector('canvas.dsh-claude-account-skin') : null
+    r.skinCanvas = skinHead ? { width: skinHead.width, height: skinHead.height } : null
+    r.skinPixels = null
+    if (skinHead) {
+      var skinContext = skinHead.getContext('2d')
+      var pixelAt = function (x, y) {
+        var data = skinContext.getImageData(x, y, 1, 1).data
+        return [data[0], data[1], data[2], data[3]]
+      }
+      r.skinPixels = { face: pixelAt(32, 32), hatTop: pixelAt(2, 2), hatBottom: pixelAt(62, 62), margin: pixelAt(62, 30) }
+    }
     var mirrored = drawer ? drawer.querySelector('[data-action-index]') : null
     r.mirroredText = mirrored ? mirrored.querySelector('.dsh-claude-popover-item-text').textContent : null
     var badge = mirrored ? mirrored.querySelector('.dsh-claude-popover-item-badge') : null
@@ -1148,15 +1319,63 @@ const PROBE = `(function () {
     // it while installed, and hands it back when switched off.
     var hostAccess = document.querySelector('button[aria-label^="Access mode"]')
     r.hostAccessVisible = hostAccess !== null && getComputedStyle(hostAccess).display !== 'none'
-    // The Auto review rows follow the host's permission catalog: hidden while
-    // the catalog does not carry the preset, offered while it does.
+    // The permission ladder follows the host's catalog: a preset it does not
+    // serve has no row at all, and one a plugin adds (the auto mode plugin's)
+    // gets its own. Each row's shape is read so names, the active mark and the
+    // "no glyphs in this list" rule can be asserted.
     var permAutoPopoverRow = document.querySelector('.dsh-claude-perm-popover [data-preset="auto"]')
     var permAutoSegment = document.querySelector('.dsh-claude-segment[data-preset="auto"]')
     r.permAutoRowDisplay = permAutoPopoverRow !== null ? getComputedStyle(permAutoPopoverRow).display : null
     r.permAutoSegmentDisplay = permAutoSegment !== null ? getComputedStyle(permAutoSegment).display : null
     r.permRows = Array.prototype.map.call(document.querySelectorAll('.dsh-claude-perm-popover [data-preset]'), function (it) {
-      return { preset: it.getAttribute('data-preset'), display: getComputedStyle(it).display }
+      return {
+        preset: it.getAttribute('data-preset'),
+        display: getComputedStyle(it).display,
+        text: (it.textContent || '').trim(),
+        active: it.hasAttribute('data-active'),
+        glyphs: it.querySelectorAll('svg').length,
+      }
     })
+    var permLabelEl = document.querySelector('.dsh-claude-perm-label')
+    r.permLabel = permLabelEl === null ? null : permLabelEl.textContent
+    r.permSegments = Array.prototype.map.call(document.querySelectorAll('.dsh-claude-segment'), function (it) {
+      return { preset: it.getAttribute('data-preset'), text: it.textContent, active: it.hasAttribute('data-active') }
+    })
+    // The pick path, end to end: switch to the auto mode tier and read what the
+    // control sent the session (the host permission command line).
+    var autoModeRow = document.querySelector('.dsh-claude-perm-popover [data-preset="auto-mode"]')
+    if (autoModeRow !== null) {
+      autoModeRow.click()
+      await sleep(80)
+    }
+    r.permissionCommands = window.__permissionCommands.slice()
+    // A round trip through the home view: the hero layout takes the trigger and
+    // its popover out of the tree, and coming back builds a fresh, empty one
+    // that has to be filled again.
+    if (window.SMOKE_CASE === 'automode-roundtrip') {
+      var wakePass = function () {
+        var node = document.createElement('span')
+        document.body.appendChild(node)
+        document.body.removeChild(node)
+      }
+      var composerCard = document.querySelector('[data-composer-card]')
+      r.rowsBeforeHome = Array.prototype.map.call(document.querySelectorAll('.dsh-claude-perm-popover [data-preset]'), function (it) {
+        return it.getAttribute('data-preset')
+      })
+      composerCard.setAttribute('data-phase', 'hero')
+      wakePass()
+      await sleep(250)
+      r.segmentsInHome = Array.prototype.map.call(document.querySelectorAll('.dsh-claude-segment'), function (it) {
+        return it.getAttribute('data-preset')
+      })
+      r.popoversInHome = document.querySelectorAll('.dsh-claude-perm-popover').length
+      composerCard.removeAttribute('data-phase')
+      wakePass()
+      await sleep(250)
+      r.rowsAfterReturn = Array.prototype.map.call(document.querySelectorAll('.dsh-claude-perm-popover [data-preset]'), function (it) {
+        return it.getAttribute('data-preset')
+      })
+    }
     // The host's own account row, when the host has one: the skin marks it and
     // repaints it as a Claude row, so the teardown has to hand it back exactly as
     // the host rendered it (D12).
@@ -1282,7 +1501,7 @@ ${footer}
   <div class="_x_sessionRow_1" role="treeitem"><span class="_x_slot_1"><div data-slot="sidebar.session.row.leading" style="display:contents"></div></span><span class="_x_title_1">idle session</span></div>
   <div class="_x_sessionRow_1" role="treeitem"><span class="_x_slot_1"><svg data-state="ongoing" viewBox="0 0 16 16" width="10" height="10"></svg></span><span class="_x_title_1">running session</span></div>
 </div>
-<div data-composer-card>
+<div data-composer-card${name === 'automode-hero' ? ' data-phase="hero"' : ''}>
 ${heroRow}
   <div class="_x_toolbar_1"><button aria-label="Access mode: Edit">Edit</button></div>
   <div data-composer-input contenteditable="true" id="editor">/comp</div>
@@ -1372,9 +1591,13 @@ const CASES = {
     check('Enter on an open composer menu reaches the host', same(r.keys, ['host picked the menu item']), JSON.stringify(r.keys))
     check("the permission control stands in for the host's access button", r.composerRestyle && !r.hostAccessVisible,
       JSON.stringify({ restyle: r.composerRestyle, hostAccess: r.hostAccessVisible }))
-    check('the Auto review rows are offered while the catalog carries the preset',
-      r.permAutoRowDisplay !== null && r.permAutoRowDisplay !== 'none',
-      JSON.stringify({ popoverRow: r.permAutoRowDisplay, rows: r.permRows }))
+    check('the permission ladder is the catalog, in the skin order',
+      same(r.permRows.map(function (row) { return row.preset }), ['read-only', 'workspace-write', 'auto', 'danger-full-access']),
+      JSON.stringify(r.permRows))
+    check('the Auto review tier is offered while the catalog carries the preset',
+      r.permAutoRowDisplay !== null && r.permAutoRowDisplay !== 'none' &&
+        r.permRows[2].text.indexOf('Auto review') === 0,
+      JSON.stringify({ popoverRow: r.permAutoRowDisplay, row: r.permRows[2] }))
     check('the stats card keeps both sections when the host panels mount late',
       r.statsCardOpen === 1 && same(r.statsCardSections, ['会话统计', 'Token 用量']),
       JSON.stringify({ open: r.statsCardOpen, sections: r.statsCardSections }))
@@ -1386,14 +1609,104 @@ const CASES = {
       JSON.stringify({ panel: r.syntheticVisibility, row: r.syntheticRowVisibility }))
     commonChecks(r)
   },
+  // The auto mode cases: the ladder follows the host catalog, so a third-party
+  // permission tier is a first-class row.
+  automode(r) {
+    check('apply() completes', r.applyError === null, r.applyError)
+    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    check('the ladder takes the catalog, the third-party tier included',
+      same(r.permRows.map(function (row) { return row.preset }), ['read-only', 'workspace-write', 'auto-mode', 'danger-full-access']),
+      JSON.stringify(r.permRows))
+    check('a tier the catalog does not carry is absent, not hidden',
+      r.permRows.every(function (row) { return row.preset !== 'auto' }) && r.permAutoRowDisplay === null,
+      JSON.stringify(r.permRows))
+    check('the tier reads as a Claude name, not as its machine id',
+      r.permRows[2].text.indexOf('Auto mode') === 0 && r.permRows[2].text.indexOf('分类器') !== -1 &&
+        r.permRows[2].text.indexOf('auto-mode') === -1,
+      JSON.stringify(r.permRows[2].text))
+    check('the ladder stays one text list: no row draws a glyph',
+      r.permRows.every(function (row) { return row.glyphs === 0 }),
+      JSON.stringify(r.permRows.map(function (row) { return row.glyphs })))
+    check('the running preset reads as its Claude name',
+      r.permLabel === 'Accept edits', JSON.stringify(r.permLabel))
+    check('picking the tier switches through the host permission command',
+      same(r.permissionCommands, ['/permission auto-mode']), JSON.stringify(r.permissionCommands))
+    commonChecks(r)
+  },
+  'automode-current'(r) {
+    check('apply() completes', r.applyError === null, r.applyError)
+    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    check('a session running the third-party tier names it instead of its id',
+      r.permLabel === 'Auto mode', JSON.stringify(r.permLabel))
+    check('the running tier is marked in the popover',
+      r.permRows[2].active === true && r.permRows[0].active === false,
+      JSON.stringify(r.permRows.map(function (row) { return [row.preset, row.active] })))
+    check("a glyph the deployment declares is left out with the rest of them",
+      r.permRows[2].preset === 'auto-mode' && r.permRows[2].glyphs === 0,
+      JSON.stringify(r.permRows[2]))
+    commonChecks(r)
+  },
+  'automode-hero'(r) {
+    check('apply() completes', r.applyError === null, r.applyError)
+    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    check('the Auto slot binds to the tier the deployment offers',
+      same(r.permSegments.map(function (s) { return s.preset }), ['read-only', 'workspace-write', 'auto-mode', 'danger-full-access']),
+      JSON.stringify(r.permSegments))
+    check('the slot keeps its Claude label while carrying that tier',
+      r.permSegments[2].text === 'Auto' && r.permSegments[2].active === true,
+      JSON.stringify(r.permSegments[2]))
+    check('the built-in review tier stays out of the slot while the deployment has its own',
+      r.permSegments.every(function (s) { return s.preset !== 'auto' }) && r.permAutoSegmentDisplay === null,
+      JSON.stringify(r.permSegments))
+    commonChecks(r)
+  },
+  'automode-roundtrip'(r) {
+    var ladder = ['read-only', 'workspace-write', 'auto-mode', 'danger-full-access']
+    check('apply() completes', r.applyError === null, r.applyError)
+    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    check('the ladder is drawn in the conversation view', same(r.rowsBeforeHome, ladder), JSON.stringify(r.rowsBeforeHome))
+    check('the home view shows it as segments and leaves no popover behind',
+      same(r.segmentsInHome, ladder) && r.popoversInHome === 0,
+      JSON.stringify({ segments: r.segmentsInHome, popovers: r.popoversInHome }))
+    check('returning to the conversation draws the ladder again',
+      same(r.rowsAfterReturn, ladder), JSON.stringify(r.rowsAfterReturn))
+    commonChecks(r)
+  },
   hdsl(r) {
     check('apply() completes', r.applyError === null, r.applyError)
     check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
     check("the launcher's account name outranks the OS-user probe", r.accountUser === 'HDSLPlayer', JSON.stringify(r.accountUser))
-    check("the launcher's avatar is served through the plugin's own route",
-      r.photoSrc === '/dsh-claude-style/hdsl-skin.png', JSON.stringify(r.photoSrc))
-    check("the launcher's avatar loads, so the brand mark is not what shows",
-      r.photoHidden === false, JSON.stringify(r.photoHidden))
+    check("the launcher's atlas is cropped into the head the launcher itself draws",
+      r.skinCanvas !== null && r.skinCanvas.width === 64 && r.skinFlag === true,
+      JSON.stringify({ canvas: r.skinCanvas, flag: r.skinFlag }))
+    check('the head takes the box from the profile picture, uncut by a round mask',
+      r.photo === null && r.avatarRadius === '0px',
+      JSON.stringify({ photo: r.photo, radius: r.avatarRadius }))
+    check('the crop is the face, inset, with the hat layer over the whole box',
+      same(r.skinPixels && r.skinPixels.face, SKIN_FACE) &&
+        same(r.skinPixels && r.skinPixels.hatTop, SKIN_HAT) &&
+        same(r.skinPixels && r.skinPixels.hatBottom, SKIN_HAT) &&
+        same(r.skinPixels && r.skinPixels.margin, [0, 0, 0, 0]),
+      JSON.stringify(r.skinPixels))
+    commonChecks(r)
+  },
+  'hdsl-noskin'(r) {
+    check('apply() completes', r.applyError === null, r.applyError)
+    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    check('the launcher account still names the instance', r.accountUser === 'HDSLPlayer', JSON.stringify(r.accountUser))
+    check('a built-in figure with no picture leaves the circle to the mark alone',
+      r.skinCanvas === null && r.skinFlag === false && r.photo === null,
+      JSON.stringify({ canvas: r.skinCanvas, flag: r.skinFlag, photo: r.photo }))
+    commonChecks(r)
+  },
+  'hdsl-broken'(r) {
+    check('apply() completes', r.applyError === null, r.applyError)
+    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    check('a picture the launcher points at but cannot serve leaves no canvas and no marker',
+      r.skinCanvas === null && r.skinFlag === false,
+      JSON.stringify({ canvas: r.skinCanvas, flag: r.skinFlag }))
+    check('the failed picture falls back to the circle as it was',
+      r.avatarRadius === '50%', JSON.stringify(r.avatarRadius))
     commonChecks(r)
   },
   'stats-compact'(r) {
@@ -1500,12 +1813,12 @@ const CASES = {
     check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
     check("the permission control stands in for the host's access button", r.composerRestyle && !r.hostAccessVisible,
       JSON.stringify({ restyle: r.composerRestyle, hostAccess: r.hostAccessVisible }))
-    check('the Auto review row is hidden while the catalog lacks the preset',
-      r.permAutoRowDisplay === 'none',
-      JSON.stringify({ popoverRow: r.permAutoRowDisplay, rows: r.permRows }))
-    check('the other permission rows stay offered',
-      Array.isArray(r.permRows) && r.permRows.length === 4 &&
-        r.permRows.every(function (row) { return row.preset === 'auto' ? row.display === 'none' : row.display !== 'none' }),
+    check('a preset the catalog does not carry is not drawn at all',
+      r.permAutoRowDisplay === null &&
+        same(r.permRows.map(function (row) { return row.preset }), ['read-only', 'workspace-write', 'danger-full-access']),
+      JSON.stringify(r.permRows))
+    check('the rows the catalog does carry stay offered',
+      r.permRows.every(function (row) { return row.display !== 'none' }),
       JSON.stringify(r.permRows))
     commonChecks(r)
   },
@@ -1627,17 +1940,26 @@ async function browserHalf() {
     console.log('\nbrowser half — skipped: no Chrome/Edge found (set CHROME_PATH)')
     return false
   }
+  /** The case whose page is being served; the picture route answers for it. */
+  let current = null
   const server = http.createServer((req, res) => {
     const name = new URL(req.url, 'http://x').pathname.slice(1)
     if (name === 'client.js') {
       res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8' })
       res.end(fs.readFileSync(CLIENT))
     } else if (name === 'dsh-claude-style/hdsl-skin.png') {
-      // The launcher's avatar, which an <img> loads outside `fetch`, so the
-      // page-side stand-in cannot answer it. Only the HDSL case asks for it.
+      // The launcher's atlas, which the skin loads outside `fetch`, so the
+      // page-side stand-in cannot answer it. `hdsl-broken` models a file the
+      // player removed after the launcher wrote the contract.
+      if (SKIN_CASES.indexOf(current) === -1) {
+        res.writeHead(404, { 'cache-control': 'no-store' })
+        res.end()
+        return
+      }
       res.writeHead(200, { 'content-type': 'image/png' })
-      res.end(Buffer.from(PNG_1PX, 'base64'))
+      res.end(fs.readFileSync(SKIN_FIXTURE))
     } else if (Object.prototype.hasOwnProperty.call(CASES, name)) {
+      current = name
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
       res.end(page(name))
     } else {
@@ -1646,6 +1968,7 @@ async function browserHalf() {
     }
   })
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
+
   const base = `http://127.0.0.1:${server.address().port}`
   const chrome = await launchChrome(browser, { name: 'smoke', width: 1280, height: 800 })
   try {

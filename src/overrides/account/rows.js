@@ -15,8 +15,8 @@
       /**
        * The profile picture's address, or null when there is none usable. It
        * comes from the account service or from the plugin's own HDSL route, so
-       * only http(s) and that route are accepted, and it is handed to an `<img>`
-       * as a property — never written into markup.
+       * only http(s) and that route are accepted, and it is set as a property —
+       * never written into markup.
        */
       function accountPhotoUrl(raw) {
         if (raw === HDSL_SKIN_ROUTE) return raw
@@ -29,11 +29,110 @@
         }
       }
 
+      /** The head's canvas, and what a pass needs to decide whether to keep it. */
+      var headCanvas = null
+      /** A load has been started; the route is read once per page, so is a failure. */
+      var headRequested = false
+      var headFailed = false
+
+      /**
+       * Draw the head out of a launcher skin, the way the launcher's own
+       * account list draws it: the front face of the head texel block, inset by
+       * 1/18 of the box, then the hat layer over the whole box. The atlas may
+       * be stored at any integer multiple of 64 (the launcher normalizes to
+       * 64×64 and keeps an already-larger import at its size), so every texel
+       * block is measured by that multiple.
+       *
+       * @returns whether a head was drawn.
+       */
+      function drawLauncherHead(canvas, image) {
+        var box = canvas.width
+        var scale = image.naturalWidth / 64
+        var context = canvas.getContext('2d')
+        if (context === null || scale < 1 || scale !== Math.floor(scale)) return false
+        var offset = Math.round(box / 18)
+        context.clearRect(0, 0, box, box)
+        // The face is a 8×8 texel block drawn inside the inset; the pixels are
+        // already at the right size, so smoothing would only blur them.
+        context.imageSmoothingEnabled = false
+        context.drawImage(image, 8 * scale, 8 * scale, 8 * scale, 8 * scale, offset, offset, box - 2 * offset, box - 2 * offset)
+        context.drawImage(image, 40 * scale, 8 * scale, 8 * scale, 8 * scale, 0, 0, box, box)
+        return true
+      }
+
+      /**
+       * Load the launcher's atlas once. The canvas is built off-screen: the
+       * avatar element a pass hands in may be a different one by the time the
+       * picture lands, and a failure only means the mark keeps the circle.
+       */
+      function loadLauncherHead() {
+        headRequested = true
+        var image = new Image()
+        image.decoding = 'async'
+        image.addEventListener('load', function () {
+          if (image.naturalWidth !== image.naturalHeight || image.naturalWidth < 64) {
+            headFailed = true
+            wake()
+            return
+          }
+          if (headCanvas === null) {
+            headCanvas = document.createElement('canvas')
+            headCanvas.className = 'dsh-claude-account-skin'
+            headCanvas.width = 64
+            headCanvas.height = 64
+            headCanvas.setAttribute('aria-hidden', 'true')
+          }
+          if (!drawLauncherHead(headCanvas, image)) headFailed = true
+          wake()
+        })
+        image.addEventListener('error', function () {
+          headFailed = true
+          wake()
+        })
+        image.src = HDSL_SKIN_ROUTE
+      }
+
+      /** Ask for the pass that mounts the head (the picture changes no DOM). */
+      function wake() {
+        if (typeof options.onChange === 'function') options.onChange()
+      }
+
+      /** Drop the account profile's photo, if one is mounted. */
+      function clearAccountPhoto(avatarEl) {
+        var photo = avatarEl.querySelector('.dsh-claude-account-photo')
+        if (photo === null) return
+        avatarEl.removeChild(photo)
+        if (avatarEl.hasAttribute('data-dsh-claude-photo')) avatarEl.removeAttribute('data-dsh-claude-photo')
+      }
+
+      /** Take the head's canvas back out of a circle the photo path owns again. */
+      function detachLauncherHead(avatarEl) {
+        if (headCanvas !== null && headCanvas.parentElement === avatarEl) avatarEl.removeChild(headCanvas)
+        if (avatarEl.hasAttribute('data-dsh-claude-skin')) avatarEl.removeAttribute('data-dsh-claude-skin')
+      }
+
+      /**
+       * Paint the player's own head. What the launcher serves is the normalized
+       * skin atlas — a sheet of body parts, not a face — so it is cropped into
+       * a canvas and never handed to the `<img>` the photo path uses. Until the
+       * head is drawn, and when it cannot be, the mark keeps the circle.
+       */
+      function syncLauncherHead(avatarEl) {
+        if (!headRequested) loadLauncherHead()
+        if (headCanvas === null || headFailed) return
+        if (headCanvas.parentElement !== avatarEl) {
+          if (headCanvas.parentElement !== null) headCanvas.parentElement.removeChild(headCanvas)
+          avatarEl.appendChild(headCanvas)
+        }
+        if (!avatarEl.hasAttribute('data-dsh-claude-skin')) avatarEl.setAttribute('data-dsh-claude-skin', '')
+      }
+
       /**
        * Paint (or clear) the picture inside the avatar circle. The address comes
        * from the identity chain (src/context/host.js): the account's own avatar,
-       * then the HDSL launcher's, then nothing — and the brand mark the
-       * stylesheet draws shows through. It is a real `<img>` layered over that
+       * then the HDSL launcher's (drawn as a cropped head), then nothing — and
+       * the brand mark the stylesheet draws shows through. The account's avatar
+       * is a real `<img>` layered over that
        * mark rather than a CSS background: the host's own avatar `<img>` carries
        * `referrerPolicy="no-referrer"`, which is what the picture host expects,
        * and a background cannot drop the referrer. A picture that fails to load
@@ -42,10 +141,16 @@
       function syncAccountAvatar(avatarEl) {
         if (avatarEl === null) return
         var src = accountPhotoUrl(resolveAvatarUrl())
+        if (src === HDSL_SKIN_ROUTE) {
+          // The launcher's picture only ever shows as the cropped head.
+          clearAccountPhoto(avatarEl)
+          syncLauncherHead(avatarEl)
+          return
+        }
+        detachLauncherHead(avatarEl)
         var photo = avatarEl.querySelector('.dsh-claude-account-photo')
         if (src === null) {
-          if (photo !== null) avatarEl.removeChild(photo)
-          if (avatarEl.hasAttribute('data-dsh-claude-photo')) avatarEl.removeAttribute('data-dsh-claude-photo')
+          clearAccountPhoto(avatarEl)
           return
         }
         if (photo === null) {

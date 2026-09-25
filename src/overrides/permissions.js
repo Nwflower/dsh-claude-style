@@ -5,46 +5,110 @@
       var permLabel = null
       var permPopover = null
       var permHoverIntent = null
+      /** The pick path the rows call back into; the rows are rebuilt, the path is not. */
+      var permPick = null
 
       /**
-       * Whether the host's permission catalog carries the live Auto review
-       * preset (`auto`, registered by the auto-review plugin): true or false
-       * once a catalog read settled, null until then. While unknown the rows
-       * stay hidden, the way the shipped picker renders nothing before its
-       * first catalog read.
+       * The host's permission catalog: every preset this deployment offers, in
+       * the host's order, or null before the first read settles. It is the
+       * authority on what is switchable — a third-party plugin's preset rides
+       * in it — while PERMISSION_PRESETS decides how a known one reads.
        */
-      var autoPresetLive = null
+      var catalogOptions = null
       /** The first catalog failure; thrown on the next sync to retire the feature. */
       var autoPresetError = null
       var catalogFiber = null
       var catalogChangedDisposer = null
+      /** What the popover and the segment group currently render, so a change rebuilds them. */
+      var renderedRows = ''
+      var renderedRowsFor = null
+      var renderedSegments = ''
 
-      /** The Auto review rows are only offered while the host's catalog carries the preset. */
-      function rowVisible(preset) {
-        return preset !== AUTO_REVIEW_PRESET || autoPresetLive === true
-      }
-
-      /**
-       * Mirror the availability onto a row as data-hidden; the stylesheet turns
-       * that into display:none (an inline style would lose to the popover
-       * item's own `display: flex !important`).
-       */
-      function syncRowVisibility(row, preset) {
-        if (rowVisible(preset)) {
-          if (row.hasAttribute('data-hidden')) row.removeAttribute('data-hidden')
-        } else if (!row.hasAttribute('data-hidden')) {
-          row.setAttribute('data-hidden', '')
+      /** The catalog's entry for one preset, or null. */
+      function catalogOption(preset) {
+        if (catalogOptions === null) return null
+        for (var i = 0; i < catalogOptions.length; i++) {
+          var option = catalogOptions[i]
+          if (option !== null && typeof option === 'object' && option.value === preset) return option
         }
+        return null
       }
 
       /**
-       * Read the host's permission catalog and record whether it carries the
-       * live Auto review preset. The shipped picker builds its rows from the
-       * same catalog, so it is the authority on what is switchable. A rejected
-       * read retries like the account profile's reads (the client connection
-       * may still be coming up at install); once the retries are exhausted the
-       * failure is remembered and thrown on the next sync, which retires this
-       * feature and hands the shipped access button back (D12).
+       * Whether the host offers a preset. Until the first read settles the
+       * shipped built-ins stand in, which is what the control drew before the
+       * catalog existed; a preset the catalog does not carry is not drawn at
+       * all, so a deployment that configures fewer presets gets fewer rows
+       * rather than dead ones.
+       */
+      function presetOffered(preset) {
+        if (catalogOptions === null) return PERMISSION_SHIPPED_PRESETS.indexOf(preset) !== -1
+        return catalogOption(preset) !== null
+      }
+
+      /** The name a preset reads as: the skin's table first, then the host's own name. */
+      function presetLabel(preset) {
+        var known = PERMISSION_PRESETS[preset]
+        if (known !== undefined) return known.label
+        var option = catalogOption(preset)
+        if (option !== null && typeof option.name === 'string' && option.name !== '') return option.name
+        var current = PERMISSION_CURRENT_LABELS[preset]
+        return current === undefined ? preset : current
+      }
+
+      /** The one line under that name, from the same two sources. */
+      function presetDesc(preset) {
+        var known = PERMISSION_PRESETS[preset]
+        if (known !== undefined) return known.desc
+        var option = catalogOption(preset)
+        return option !== null && typeof option.description === 'string' ? option.description : ''
+      }
+
+      /** Every preset the control offers, in the order its rows list them. */
+      function offeredPresets() {
+        var i
+        if (catalogOptions === null) return PERMISSION_SHIPPED_PRESETS.slice()
+        var offered = []
+        for (i = 0; i < catalogOptions.length; i++) {
+          var option = catalogOptions[i]
+          if (option === null || typeof option !== 'object') continue
+          if (typeof option.value !== 'string' || option.value === '') continue
+          if (offered.indexOf(option.value) === -1) offered.push(option.value)
+        }
+        // The skin's order for the presets it knows; anything else the host
+        // offers follows in the host's own order.
+        var ordered = []
+        for (i = 0; i < PERMISSION_ORDER.length; i++) {
+          if (offered.indexOf(PERMISSION_ORDER[i]) !== -1) ordered.push(PERMISSION_ORDER[i])
+        }
+        for (i = 0; i < offered.length; i++) {
+          if (ordered.indexOf(offered[i]) === -1) ordered.push(offered[i])
+        }
+        return ordered
+      }
+
+      /** The segments to draw: each slot bound to the first of its presets the host offers. */
+      function resolvedSegments() {
+        var out = []
+        for (var i = 0; i < PERMISSION_SEGMENTS.length; i++) {
+          var slot = PERMISSION_SEGMENTS[i]
+          for (var j = 0; j < slot.presets.length; j++) {
+            if (!presetOffered(slot.presets[j])) continue
+            out.push({ label: slot.label, preset: slot.presets[j] })
+            break
+          }
+        }
+        return out
+      }
+
+      /**
+       * Read the host's permission catalog into `catalogOptions`. The shipped
+       * picker builds its rows from the same catalog, so it is the authority on
+       * what is switchable — including presets a third-party plugin registered.
+       * A rejected read retries like the account profile's reads (the client
+       * connection may still be coming up at install); once the retries are
+       * exhausted the failure is remembered and thrown on the next sync, which
+       * retires this feature and hands the shipped access button back (D12).
        */
       var AUTO_PRESET_RETRY_MS = [1000, 5000]
       var autoPresetRetries = 0
@@ -83,15 +147,9 @@
           }
           autoPresetRetries = 0
           autoPresetError = null
-          var live = false
-          for (var i = 0; i < result.value.options.length; i++) {
-            var option = result.value.options[i]
-            if (option !== null && typeof option === 'object' && option.value === AUTO_REVIEW_PRESET) {
-              live = true
-              break
-            }
-          }
-          autoPresetLive = live
+          // The whole option list is kept, not just whether one preset is in
+          // it: the rows and the segments are built from what the host serves.
+          catalogOptions = result.value.options.slice()
           ui.schedule()
         }, function () {
           if (read !== autoPresetRead) return
@@ -134,14 +192,19 @@
         }
       }
 
-      function buildSegments(onPick) {
+      /**
+       * Build the segment group from the resolved slots. `specs` is what
+       * resolvedSegments() returned, so a slot the host cannot serve is simply
+       * absent instead of drawn dead.
+       */
+      function buildSegments(onPick, specs) {
         var group = document.createElement('div')
         group.className = SEGMENTS_CLASS
         group.setAttribute('role', 'radiogroup')
         group.setAttribute('aria-label', 'Permission')
         group.setAttribute('data-composer-segments', '')
-        for (var i = 0; i < PERMISSION_SEGMENTS.length; i++) {
-          var spec = PERMISSION_SEGMENTS[i]
+        for (var i = 0; i < specs.length; i++) {
+          var spec = specs[i]
           var item = document.createElement('button')
           item.type = 'button'
           item.className = SEGMENT_CLASS
@@ -172,9 +235,77 @@
         permPopover.removeAttribute('data-open')
       }
 
+      /**
+       * One popover row for one preset: the name and the line under it from the
+       * skin's table (the host's own copy for a preset the table does not know),
+       * and the active check. No glyph: the tiers read as one list, and a
+       * preset's own `icon` — which the host ignores natively — is left out so
+       * the rows stay consistent with each other.
+       */
+      function buildPermRow(preset) {
+        var item = document.createElement('button')
+        item.type = 'button'
+        item.className = 'dsh-claude-popover-item'
+        item.setAttribute('role', 'menuitem')
+        item.setAttribute('data-preset', preset)
+
+        var col = document.createElement('div')
+        col.style.cssText = 'display:flex; flex-direction:column; gap:2px; flex:1; text-align:left; min-width:0;'
+
+        var itemTitle = document.createElement('span')
+        itemTitle.style.cssText = 'font-weight:500; font-size:13px; line-height:16px;'
+        itemTitle.textContent = presetLabel(preset)
+
+        var itemDesc = document.createElement('span')
+        itemDesc.style.cssText = 'font-size:11px; line-height:14px; color:var(--dsw-alias-label-tertiary);'
+        itemDesc.textContent = presetDesc(preset)
+
+        col.appendChild(itemTitle)
+        col.appendChild(itemDesc)
+        item.appendChild(col)
+
+        var check = document.createElement('span')
+        check.className = 'dsh-claude-perm-check'
+        check.style.cssText = 'font-size:12px; color:var(--dsw-alias-brand-primary, #d97757); margin-left:8px; display:none;'
+        check.textContent = '✓'
+        item.appendChild(check)
+
+        item.addEventListener('click', function (e) {
+          e.stopPropagation()
+          closePermMenu()
+          if (permPick !== null) permPick(preset)
+        })
+
+        return item
+      }
+
+      /**
+       * Rebuild the popover's rows when the set of offered presets changes.
+       * Rows come from the host's catalog, so a preset a plugin registers while
+       * the page stays open appears without a reload, and one it withdraws
+       * disappears; an unchanged set leaves the DOM alone (the pass runs on
+       * every mutation).
+       *
+       * The rendered signature is kept WITH the element it was rendered into: a
+       * new popover starts empty (the hero view takes the old one out of the
+       * tree), so a signature that merely matches the previous one must not
+       * skip filling this one.
+       */
+      function syncPermRows() {
+        if (permPopover === null) return
+        var wanted = offeredPresets()
+        var signature = wanted.join('|')
+        if (signature === renderedRows && renderedRowsFor === permPopover) return
+        renderedRows = signature
+        renderedRowsFor = permPopover
+        while (permPopover.firstChild !== null) permPopover.removeChild(permPopover.firstChild)
+        for (var i = 0; i < wanted.length; i++) permPopover.appendChild(buildPermRow(wanted[i]))
+      }
+
       registerPopover('permission', closePermMenu)
 
       function buildPermTriggerAndPopover(onPick) {
+        permPick = onPick
         var container = document.createElement('div')
         container.className = 'dsh-claude-perm-container'
 
@@ -198,46 +329,6 @@
         var popover = document.createElement('div')
         popover.className = 'dsh-claude-perm-popover'
         popover.setAttribute('role', 'menu')
-
-        for (var i = 0; i < PERMISSION_OPTIONS.length; i++) {
-          var opt = PERMISSION_OPTIONS[i]
-          var item = document.createElement('button')
-          item.type = 'button'
-          item.className = 'dsh-claude-popover-item'
-          item.setAttribute('role', 'menuitem')
-          item.setAttribute('data-preset', opt.preset)
-
-          var col = document.createElement('div')
-          col.style.cssText = 'display:flex; flex-direction:column; gap:2px; flex:1; text-align:left; min-width:0;'
-
-          var itemTitle = document.createElement('span')
-          itemTitle.style.cssText = 'font-weight:500; font-size:13px; line-height:16px;'
-          itemTitle.textContent = opt.label
-
-          var itemDesc = document.createElement('span')
-          itemDesc.style.cssText = 'font-size:11px; line-height:14px; color:var(--dsw-alias-label-tertiary);'
-          itemDesc.textContent = opt.desc
-
-          col.appendChild(itemTitle)
-          col.appendChild(itemDesc)
-          item.appendChild(col)
-
-          var check = document.createElement('span')
-          check.className = 'dsh-claude-perm-check'
-          check.style.cssText = 'font-size:12px; color:var(--dsw-alias-brand-primary, #d97757); margin-left:8px; display:none;'
-          check.textContent = '✓'
-          item.appendChild(check)
-
-          item.addEventListener('click', (function (preset) {
-            return function (e) {
-              e.stopPropagation()
-              closePermMenu()
-              onPick(preset)
-            }
-          })(opt.preset))
-
-          popover.appendChild(item)
-        }
 
         function openPerm() {
           if (permHoverIntent) permHoverIntent.cancel()
@@ -309,15 +400,13 @@
 
       function updatePermState(preset) {
         if (!permLabel || !permPopover) return
-        // A preset our option list does not carry (the host's `custom`, or a
-        // row this host's catalog does not offer) shows its machine value.
-        var matchedLabel = preset === null ? 'Accept edits' : preset
-        for (var i = 0; i < PERMISSION_OPTIONS.length; i++) {
-          if (PERMISSION_OPTIONS[i].preset === preset) {
-            matchedLabel = PERMISSION_OPTIONS[i].label
-            break
-          }
-        }
+        // The rows follow the host's catalog: one it does not serve is not
+        // drawn at all, and one it starts serving appears.
+        syncPermRows()
+        // The running preset reads as its Claude-flavored name; a value no
+        // preset carries (the host's `custom`) reads as the host's own word for
+        // it rather than as the machine value.
+        var matchedLabel = preset === null ? 'Accept edits' : presetLabel(preset)
         // Same-value guard: this runs on every pass, and an identical
         // textContent write still replaces the text node — a mutation that
         // schedules the next pass, so the page never went idle.
@@ -326,8 +415,7 @@
         var items = permPopover.querySelectorAll('[data-preset]')
         for (var j = 0; j < items.length; j++) {
           var it = items[j]
-          var rowPreset = it.getAttribute('data-preset')
-          var isCurrent = rowPreset === preset
+          var isCurrent = it.getAttribute('data-preset') === preset
           var check = it.querySelector('.dsh-claude-perm-check')
           if (check) {
             check.style.display = isCurrent ? 'inline' : 'none'
@@ -337,7 +425,6 @@
           } else {
             it.removeAttribute('data-active')
           }
-          syncRowVisibility(it, rowPreset)
         }
       }
 
@@ -437,19 +524,25 @@
           permLabel = null
           permPopover = null
 
+          // The slots follow the host's catalog: the deployment's own auto tier
+          // takes the Auto slot when it is offered, and a slot with no offered
+          // preset is not drawn. Rebuild when the binding changed; the shipped
+          // group is reused otherwise, so a pass leaves the DOM alone.
+          var segmentSpecs = resolvedSegments()
+          var segmentSignature = segmentSpecs.map(function (spec) { return spec.label + '=' + spec.preset }).join('|')
           if (existingSegments.length > 1) {
             for (var s = 1; s < existingSegments.length; s++) existingSegments[s].remove()
           }
-          if (existingSegments.length === 1 && host.contains(existingSegments[0])) {
+          if (segmentSignature === renderedSegments && existingSegments.length === 1 && host.contains(existingSegments[0])) {
             segments = existingSegments[0]
           } else {
+            renderedSegments = segmentSignature
             for (var s2 = 0; s2 < existingSegments.length; s2++) existingSegments[s2].remove()
-            segments = buildSegments(pick)
+            segments = buildSegments(pick, segmentSpecs)
             host.insertBefore(segments, host.firstChild)
           }
           for (var j = 0; j < segments.children.length; j++) {
             var item = segments.children[j]
-            syncRowVisibility(item, item.getAttribute('data-preset'))
             if (item.getAttribute('data-preset') === preset) {
               item.setAttribute('data-active', '')
               item.setAttribute('aria-checked', 'true')
