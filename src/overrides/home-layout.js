@@ -14,7 +14,10 @@
      * the hero region that accepts a new entry (the brand mark, workspace and
      * preset seats are `single` and occupied), and it is scoped to a session, so
      * on the cold start screen — no session object yet — the host does not render
-     * it at all and the studio layout simply shows the greeting and the composer.
+     * it at all. There the skin mounts the same panel itself: a React root on a
+     * `display: contents` element of its own at the end of the hero stack, which
+     * the stylesheet sorts into the dock's place. It goes away as soon as the
+     * host renders the dock.
      *
      * This fragment is the shell: the seat registration, the head (the
      * Overview/Models tabs and the All/30d/7d range pills), the tab switch and
@@ -40,6 +43,9 @@
        */
       var bookPick = Math.random()
       var slotsFiber = null
+      var ReactDOM = require('react-dom/client')
+      /** The cold start screen's panel: `{ stack, element, root }`, or null. */
+      var coldSeat = null
 
       var usage = createHomeUsage(ctx)
       var overview = createHomeOverview()
@@ -190,11 +196,44 @@
         })
       }
 
+      function unmountColdSeat() {
+        if (coldSeat === null) return
+        coldSeat.root.unmount()
+        if (coldSeat.element.parentElement !== null) coldSeat.element.parentElement.removeChild(coldSeat.element)
+        coldSeat = null
+      }
+
+      /**
+       * Mount the panel on the cold start screen, and drop it once the host's
+       * dock is there to carry it (or the page leaves the studio hero). The
+       * element is appended to the host's stack and never moves a host node;
+       * a re-render that replaces the stack leaves the old copy behind, so it
+       * is re-mounted on the new stack.
+       */
+      function syncColdSeat() {
+        var stack = document.body.hasAttribute(HOME_HERO_ATTR)
+          ? document.querySelector('[class*="_composerStack"][class*="_composerHero"]')
+          : null
+        if (stack === null || stack.querySelector(':scope > [data-slot="' + DOCK_SLOT + '"]') !== null) {
+          unmountColdSeat()
+          return
+        }
+        if (coldSeat !== null && coldSeat.stack === stack && coldSeat.element.parentElement === stack) return
+        unmountColdSeat()
+        var element = document.createElement('div')
+        element.className = 'dsh-claude-home-seat'
+        stack.appendChild(element)
+        var root = ReactDOM.createRoot(element)
+        root.render(React.createElement(HomeUsagePanel))
+        coldSeat = { stack: stack, element: element, root: root }
+      }
+
       /** Each pass reads the preference and the phase; only a change re-renders. */
       function sync() {
         var next = readPrefs().homeLayout
         if (next !== layout) {
           setLayout(next)
+          syncColdSeat()
           return
         }
         // The hero/active phase flips without any preference change (opening a
@@ -208,6 +247,7 @@
           if (hero) bookPick = Math.random()
           usage.notify()
         }
+        syncColdSeat()
         if (next === HOME_LAYOUT_STUDIO) {
           usage.load(false)
           usage.loadList()
@@ -220,6 +260,7 @@
       setLayout(readPrefs().homeLayout)
 
       return function () {
+        unmountColdSeat()
         usage.stop()
         document.body.removeAttribute(HOME_LAYOUT_ATTR)
         document.body.removeAttribute(HOME_HERO_ATTR)

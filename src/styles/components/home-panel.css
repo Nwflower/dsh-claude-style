@@ -49,7 +49,13 @@ body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [class*="_comp
   margin-bottom: 30px;
 }
 
-body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [class*="_composerHero"] > [data-slot="conversation.input.dock"] > * {
+/* The skin's own seat on the cold start screen, where the host renders no dock
+   (src/overrides/home-layout.js); like the host's anchor it generates no box. */
+body[data-dsh-claude-style] .dsh-claude-home-seat {
+  display: contents;
+}
+
+body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [class*="_composerHero"] > :is([data-slot="conversation.input.dock"], .dsh-claude-home-seat) > * {
   order: 1;
   flex: 0 0 auto;
   min-height: 0;
@@ -127,7 +133,7 @@ body[data-dsh-claude-style] .dsh-claude-home-panel {
   display: none;
 }
 
-body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [class*="_composerHero"] > [data-slot="conversation.input.dock"] > .dsh-claude-home-panel {
+body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [class*="_composerHero"] > :is([data-slot="conversation.input.dock"], .dsh-claude-home-seat) > .dsh-claude-home-panel {
   display: flex;
 }
 

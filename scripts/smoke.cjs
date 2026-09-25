@@ -846,10 +846,28 @@ const STAND_IN = `(function () {
     useRef: function (v) { return { current: v } },
   }
   window.__react = react
+  // The host's react-dom/client. Each root records the element it was created
+  // on, how many times it was asked to render and whether it was unmounted, so
+  // the probe can follow a root the skin mounts on a seat of its own.
+  window.__roots = []
+  var reactDom = {
+    createRoot: function (element) {
+      var root = {
+        element: element,
+        renders: 0,
+        unmounted: false,
+        render: function () { root.renders++ },
+        unmount: function () { root.unmounted = true },
+      }
+      window.__roots.push(root)
+      return root
+    },
+  }
   window.__ModuleLoader__ = {
     load: function (def) {
       window.__skin = def.factory(function (name) {
         if (name === 'react') return react
+        if (name === 'react-dom/client') return reactDom
         throw new Error('no module ' + name)
       })
     },
@@ -1281,6 +1299,39 @@ const PROBE = `(function () {
         r.mascot.clickSettled = mascot.getAttribute('data-pose')
         window.matchMedia = matchMedia
       }
+      // The cold start screen: no session yet, so the host renders no dock
+      // under the hero stack and no access button, and the card is the
+      // workspace picker with an empty mode strip. The page's own access button
+      // stands for a session, so it leaves the page for the length of this.
+      var access = document.querySelector('button[aria-label^="Access mode"]')
+      var accessParent = access.parentElement
+      access.remove()
+      var coldStack = document.createElement('div')
+      coldStack.className = '_x_composerStack_1 _x_composerHero_1'
+      coldStack.innerHTML = '<div data-composer-card class="_x_card_1 _x_cardWorkspaceTrigger_1">' +
+        '<div class="_x_row_1"><div class="_x_tools_1"><div class="_x_modes_1"></div></div></div></div>'
+      heroRoot.appendChild(coldStack)
+      await sleep(200)
+      var coldSeat = coldStack.querySelector(':scope > .dsh-claude-home-seat')
+      var coldRoot = window.__roots.filter(function (root) { return root.element === coldSeat })[0]
+      r.coldStart = {
+        seat: coldSeat !== null,
+        rendered: coldRoot !== undefined && coldRoot.renders > 0,
+        segments: Array.prototype.map.call(coldStack.querySelectorAll('._x_modes_1 > .dsh-claude-segments > .dsh-claude-segment'), function (item) {
+          return { label: item.textContent, disabled: item.disabled, active: item.hasAttribute('data-active') }
+        }),
+      }
+      // The session arrives: the host renders its dock, and the skin's seat
+      // gives the panel back.
+      var coldDock = document.createElement('div')
+      coldDock.setAttribute('data-slot', 'conversation.input.dock')
+      coldStack.insertBefore(coldDock, coldStack.firstChild)
+      await sleep(200)
+      r.coldStart.seatAfterDock = coldStack.querySelector('.dsh-claude-home-seat') !== null
+      r.coldStart.unmountedAfterDock = coldRoot !== undefined && coldRoot.unmounted
+      coldStack.remove()
+      accessParent.appendChild(access)
+      await sleep(200)
       r.homeHero = { onHero: document.body.hasAttribute('data-dsh-claude-home-hero') }
       // The studio rules reach the hero stack through that mark: the stack
       // takes the studio column's 720px cap.
@@ -1296,11 +1347,12 @@ const PROBE = `(function () {
       // The stylesheet alone decides where a panel may draw: under the hero
       // stack's dock it shows, and the moment the host drops the stack's hero
       // class (the first message sent) it is gone, before any pass runs.
-      function panelDisplay(stackClass) {
+      function panelDisplay(stackClass, coldStart) {
         var stack = document.createElement('div')
         stack.className = stackClass
         var dock = document.createElement('div')
-        dock.setAttribute('data-slot', 'conversation.input.dock')
+        if (coldStart) dock.className = 'dsh-claude-home-seat'
+        else dock.setAttribute('data-slot', 'conversation.input.dock')
         var panel = document.createElement('section')
         panel.className = 'dsh-claude-home-panel'
         dock.appendChild(panel)
@@ -1312,6 +1364,7 @@ const PROBE = `(function () {
       }
       r.panelDisplay = {
         hero: panelDisplay('_x_composerStack_1 _x_composerHero_1'),
+        coldStart: panelDisplay('_x_composerStack_1 _x_composerHero_1', true),
         conversation: panelDisplay('_x_composerStack_1'),
       }
     }
@@ -1791,8 +1844,17 @@ const CASES = {
       r.homeHero !== undefined && r.homeHero.onHero === true && r.homeHero.offHero === false && r.homeHero.stackMaxWidth === '720px',
       JSON.stringify(r.homeHero))
     check('the usage panel draws under the hero stack only, so sending a message never shows it full width',
-      r.panelDisplay !== undefined && r.panelDisplay.hero === 'flex' && r.panelDisplay.conversation === 'none',
+      r.panelDisplay !== undefined && r.panelDisplay.hero === 'flex' && r.panelDisplay.coldStart === 'flex' &&
+        r.panelDisplay.conversation === 'none',
       JSON.stringify(r.panelDisplay))
+    const cold = r.coldStart || {}
+    check('the cold start screen carries the usage panel on the skin\'s own seat, given back once the dock arrives',
+      cold.seat === true && cold.rendered === true && cold.seatAfterDock === false && cold.unmountedAfterDock === true,
+      JSON.stringify(cold))
+    check('the cold start screen shows the permission segments on the new-session default, disabled',
+      Array.isArray(cold.segments) && cold.segments.length === 4 &&
+        cold.segments.every((item) => item.disabled === true && item.active === (item.label === 'Edit')),
+      JSON.stringify(cold.segments))
     check('the open model list shows every row and a "Show less" row',
       rows('models-open') === 8 && said('models-open', /^Show less$/) && !said('models-open', /^Show \d+ more$/),
       JSON.stringify({ rows: rows('models-open'), texts: renders['models-open'] && renders['models-open'].texts.slice(-3) }))

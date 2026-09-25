@@ -11,6 +11,11 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **账号位置的头像改为玩家自己的皮肤**：启动器记下了玩家导入的皮肤，宿主半边把那张规范化贴图以只读路由发给浏览器，浏览器按启动器账号列表相同的裁法取头部——脸的 8×8 贴图块按盒子的 1/18 内缩，帽子层铺满整个盒子。头部按**方形**绘制，不用账号头像那条路径的圆形遮罩：它画到盒子边缘，任何圆角都会切掉它的像素。没有头像、头像文件已删、图取不到时显示 Claude 徽标。
 - **权限档位改为跟随宿主目录**：权限控件（输入框分段控件与它的弹层）不再写死四档，段位与行都按宿主的 `permissionPresets` 目录构建——目录里有的档位才画，宿主没提供的整条不出现，第三方插件注册的档位因此成为一等公民：auto mode 插件的 `auto-mode` 会以 **Auto mode** 出现在弹层里，并在分段控件里占用 **Auto** 那一格（部署同时提供宿主内置 Auto review 时，内置档退居弹层、把格子让给部署自己的自动档）。档位名与说明仍由皮肤给（皮肤不认识的档位用宿主自己的名字与说明，机器值不上屏），行保持纯文字——预设声明的 `icon` 也不画，档位列表读起来是一份清单。切换仍走宿主的 `/permission <preset>`。
 
+### 体验优化
+
+- **工作台首页在还没选工作区时也显示用量面板与权限分段**：刚打开、尚无会话的首页此前只有问候语和输入框；现在用量面板照常出现在两者之间，输入框下方显示 Read / Edit / Auto / Yolo 分段，停在新会话的默认权限上，点它和点输入框一样打开工作区选择。
+- **工作台首页「先选工作区」的虚线框只框住单行输入框**：虚线框此前连同输入框下方的工具行一起框进去，比输入框高出一截；现在虚线画在单行输入框本身，指针移上去时变色的提示不变。
+
 ### 问题修复
 
 - 修复 **选中划过行内代码时代码段显示为一块偏浅的独立高亮**：芯片的半透明底色画在选中高亮之上，把芯片内的选中色混浅了一档；现在芯片内的选中色预先抵消这层罩色，整段选区呈现统一的选中色，聚焦与失焦、深色与浅色下一致。
@@ -19,6 +24,11 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 - **The account row's mark becomes the player's own skin**: the launcher stores every imported skin as a normalized texture atlas, and the host half serves it over a read-only route. The browser crops the head the way the launcher's own account list does — the face's 8×8 texel block inset by 1/18 of the box, with the hat layer over the whole box. The head is drawn **square** rather than under the round mask the avatar-photo path uses, because it reaches the box's edges and any rounding would shave its pixels off. With no picture, a deleted file, or a picture that cannot be served, the Claude mark shows.
 - **The permission ladder now follows the host catalog**: the permission control (the composer's segmented group and its popover) no longer hardcodes four tiers. Both the segments and the rows are built from the host's `permissionPresets` catalog, so a deployment offers exactly the tiers it configures and a tier no one serves is absent rather than drawn dead. A tier a third-party plugin registers is therefore a first-class entry: the auto mode plugin's `auto-mode` appears as **Auto mode** in the popover and takes the **Auto** slot of the segmented group (when the deployment also serves the host's built-in Auto review, that one stays in the popover and the slot goes to the deployment's own tier). Names and descriptions still come from the skin — a tier it does not know reads with the host's own name and description, never with its machine id — and the rows stay text-only: a preset's declared `icon` is not drawn either, so the ladder reads as one list. Switching still goes through the host's `/permission <preset>`.
+
+### Improvements
+
+- **The Studio home shows the usage panel and the permission segments before a workspace is picked**: a fresh home with no session yet showed only the greeting and the input box; the usage panel now sits between them as usual, and the Read / Edit / Auto / Yolo segments show under the input box, resting on the preset a new session starts in — pressing them opens the workspace picker, the same as pressing the input box.
+- **The Studio home's dashed "pick a workspace" ring outlines the single-line input box alone**: the ring used to take in the toolbar row under the input box and stood a row taller than it; it is now drawn on the input box itself, and still changes colour under the pointer.
 
 ### Bug Fixes
 

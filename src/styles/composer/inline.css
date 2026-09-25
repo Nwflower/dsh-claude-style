@@ -241,6 +241,28 @@ body[data-dsh-claude-style][data-ds-dark-theme] [data-composer-card][data-compos
 body[data-dsh-claude-style][data-ds-dark-theme] [class*="composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] [data-input-scroll] {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) !important;
 }
+/* No workspace picked yet: the host marks the card as a workspace picker with a
+   dashed ring over its whole box. In the single-line form the card is the input
+   box plus the toolbar row on the canvas, so the ring moves onto the input box
+   itself — the host's dashed stroke and colours, hover included — and the
+   card's own ring is dropped. The input box stays flat, the way the host's
+   picker card drops its elevation. */
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"][class*="_cardWorkspaceTrigger"]::after,
+body[data-dsh-claude-style] [class*="composerStack"]:not([data-composer-variant="hero"]) [data-composer-card][class*="_cardWorkspaceTrigger"]::after {
+  display: none !important;
+}
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"][class*="_cardWorkspaceTrigger"] [data-input-scroll],
+body[data-dsh-claude-style] [class*="composerStack"]:not([data-composer-variant="hero"]) [data-composer-card][class*="_cardWorkspaceTrigger"] [data-input-scroll] {
+  border-style: dashed !important;
+  border-color: var(--dsw-alias-border-l4) !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  transition: border-color 100ms ease !important;
+}
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"][class*="_cardWorkspaceTrigger"]:hover [data-input-scroll],
+body[data-dsh-claude-style] [class*="composerStack"]:not([data-composer-variant="hero"]) [data-composer-card][class*="_cardWorkspaceTrigger"]:hover [data-input-scroll] {
+  border-color: var(--dsw-alias-state-business-primary) !important;
+}
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-composer-card][data-composer-variant="inline"]:focus-within [data-input-scroll],
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [class*="composerStack"]:not([data-composer-variant="hero"]) [data-composer-card]:focus-within [data-input-scroll] {
   border-color: rgba(20, 20, 19, 0.18) !important;

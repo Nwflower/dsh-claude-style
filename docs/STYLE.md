@@ -221,7 +221,18 @@ removes the contest.
 **The usage panel.** It is a `conversation.input.dock` entry (the host's list
 seat between the greeting and the card; a list seat keys its entries by `id`),
 and it renders only in the hero phase — the host mounts that same seat inside a
-conversation, where the todo, queue and goal bars hang on it.
+conversation, where the todo, queue and goal bars hang on it. The seat is scoped
+to a session, so the cold start screen (no session yet, the card waiting for a
+workspace) has none; there the skin mounts the same component on a
+`display: contents` element of its own (`.dsh-claude-home-seat`) and drops it
+once the host's dock arrives.
+
+The cold start card waits for a workspace: the host marks it with a dashed ring
+and makes every control on it inert, so a press anywhere opens the workspace
+picker. In the studio form the ring sits on the single-line input box itself
+(the host's dashed stroke and colours, flat, no drop shadow), and the permission
+segments fill the card's empty mode strip on the preset a new session starts in
+— disabled, like the rest of the card's controls.
 
 The panel is Claude Code's dashboard shape: a flat warm-gray wash (a
 `color-mix` of the label tone at 4% over the card tone, which flips with the

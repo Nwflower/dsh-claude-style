@@ -15,6 +15,15 @@
        * in it — while PERMISSION_PRESETS decides how a known one reads.
        */
       var catalogOptions = null
+      /**
+       * The preset a new session starts in (the catalog's `defaultPreset`: the
+       * configured default, or the one the host infers). The cold start screen
+       * has no session to read a preset from, so its segments show this one.
+       * null until a catalog read settled.
+       */
+      var defaultPreset = null
+      /** Whether the last pass drew the segments on the cold start screen. */
+      var coldStartShown = false
       /** The first catalog failure; thrown on the next sync to retire the feature. */
       var autoPresetError = null
       var catalogFiber = null
@@ -102,7 +111,8 @@
       }
 
       /**
-       * Read the host's permission catalog into `catalogOptions`. The shipped
+       * Read the host's permission catalog into `catalogOptions`, and which
+       * preset a new session starts in into `defaultPreset`. The shipped
        * picker builds its rows from the same catalog, so it is the authority on
        * what is switchable — including presets a third-party plugin registered.
        * A rejected read retries like the account profile's reads (the client
@@ -140,7 +150,7 @@
           if (read !== autoPresetRead) return
           if (result === null || typeof result !== 'object' || result.ok !== true ||
               result.value === null || typeof result.value !== 'object' ||
-              !Array.isArray(result.value.options)) {
+              !Array.isArray(result.value.options) || typeof result.value.defaultPreset !== 'string') {
             autoPresetError = new Error('permission: unexpected permissionPresets catalog shape')
             ui.schedule()
             return
@@ -150,6 +160,7 @@
           // The whole option list is kept, not just whether one preset is in
           // it: the rows and the segments are built from what the host serves.
           catalogOptions = result.value.options.slice()
+          defaultPreset = result.value.defaultPreset
           ui.schedule()
         }, function () {
           if (read !== autoPresetRead) return
@@ -501,16 +512,29 @@
             existingSegments[es0].remove()
           }
           segments = null
+          coldStartShown = false
           return
         }
 
+        var session = currentSession(ctx)
         var trigger = findAccessTrigger()
-        if (trigger === null) return
-        var host = trigger.parentElement
+        // The cold start screen (no session yet) renders no access button: the
+        // host leaves the card's mode strip empty and turns the whole card into
+        // the workspace pick target. The segments take that strip and show the
+        // preset the new session will start in; they are disabled there, so a
+        // press falls through to the card and opens the workspace picker like
+        // every other control on it.
+        var coldStart = trigger === null && isHero && session === null
+        var host = coldStart
+          ? document.querySelector('[data-composer-card][class*="_cardWorkspaceTrigger"] [class*="_modes"]')
+          : trigger === null ? null : trigger.parentElement
+        // The default can change in Settings without a catalog event, so each
+        // return to the cold start screen reads it again.
+        if (coldStart && !coldStartShown && catalogOptions !== null) probeAutoPreset()
+        coldStartShown = coldStart
         if (host === null) return
 
-        var session = currentSession(ctx)
-        var preset = session === null ? null : currentPreset(session)
+        var preset = coldStart ? defaultPreset : session === null ? null : currentPreset(session)
 
         if (isHero) {
           for (var i = 0; i < existingPermContainers.length; i++) {
@@ -543,6 +567,7 @@
           }
           for (var j = 0; j < segments.children.length; j++) {
             var item = segments.children[j]
+            if (item.disabled !== coldStart) item.disabled = coldStart
             if (item.getAttribute('data-preset') === preset) {
               item.setAttribute('data-active', '')
               item.setAttribute('aria-checked', 'true')
