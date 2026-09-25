@@ -73,7 +73,7 @@ async function probe(port) {
   // collapsed projects.
   const openSession = `(() => {
     const rows = Array.from(document.querySelectorAll('[class*="sessionRow"]'))
-      .filter((r) => !/^(新会话|New session)$/.test((r.textContent || '').trim()))
+      .filter((r) => !/^(新会话|New session)$/i.test((r.textContent || '').trim()))
     if (!rows.length) return false
     const t = rows[0].closest('[role="treeitem"]') || rows[0]
     t.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))
