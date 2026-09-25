@@ -121,6 +121,30 @@ body[data-dsh-claude-style][data-dsh-window-blur] ::selection {
   color: #000000 !important;
 }
 
+/* Inline-code chips: Blink paints an inline box's own background ABOVE the
+   selection highlight, so the chip's 5% wash (tokens.css
+   --dsh-claude-inline-code-bg) tints whatever the selection paints and a
+   selected chip reads as a separate, lighter block. These paints are the
+   channel-wise inverse of that overlay — dark composites 5% white over the
+   paint, light 5% black — so after the wash blends over them the result lands
+   back on the two selection colours above. The chip's 1px border is outside
+   ::selection's reach and keeps its own colour. */
+body[data-dsh-claude-style] code:not(pre code)::selection {
+  background-color: rgb(40, 94, 206) !important;
+}
+
+body[data-dsh-claude-style][data-dsh-window-blur] code:not(pre code)::selection {
+  background-color: rgb(196, 196, 195) !important;
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) code:not(pre code)::selection {
+  background-color: rgb(54, 107, 219) !important;
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme])[data-dsh-window-blur] code:not(pre code)::selection {
+  background-color: rgb(209, 209, 208) !important;
+}
+
 body[data-dsh-claude-style] :is(button, input, textarea, select, [role="button"], [role="tab"], [role="treeitem"]) {
   outline: none;
 }
