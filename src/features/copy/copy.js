@@ -96,38 +96,6 @@
         }
       }
 
-      /**
-       * Claude Code spinner verbs: picks one random verb per session turn
-       * and retains it stably for that turn's thinking duration.
-       */
-      function pickRandomSpinnerVerb() {
-        return `${SPINNER_VERBS[Math.floor(Math.random() * SPINNER_VERBS.length)]}...`
-      }
-
-      function rewriteTurnStatus() {
-        const nodes = document.querySelectorAll('[role="status"][class*="turnStatus"], [class*="turnStatus"]:not([class*="Clock"]):not([class*="_clock"])')
-        for (let i = 0; i < nodes.length; i++) {
-          const el = nodes[i]
-          const cls = el.getAttribute('class') || ''
-          if (cls.includes('Clock') || cls.includes('clock')) continue
-          let verb = el.getAttribute('data-dsh-spinner-verb')
-          if (!verb) {
-            verb = pickRandomSpinnerVerb()
-            el.setAttribute('data-dsh-spinner-verb', verb)
-          }
-          for (let j = 0; j < el.childNodes.length; j++) {
-            const child = el.childNodes[j]
-            if (child.nodeType === Node.TEXT_NODE) {
-              if (child.nodeValue !== verb) {
-                child.nodeValue = verb
-              }
-              break
-            }
-          }
-        }
-      }
-
-
       ui.copy = {
         sync() {
           rewriteHeadline()
@@ -135,7 +103,6 @@
           // Every pass, the restyle on or off: its off branch is what takes the
           // skin's placeholders away again.
           syncAttachmentPlaceholder()
-          rewriteTurnStatus()
         },
         /** A composer input/compositionend event: refresh the placeholder. The
          * scheduler owns the [data-composer-input] filter. */

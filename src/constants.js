@@ -126,55 +126,6 @@
     }
 
     /**
-     * Claude Code's 185 playful spinner verbs displayed while thinking / executing.
-     * Recreates the iconic CLI waiting experience in the DSH web interface.
-     */
-    const SPINNER_VERBS = [
-      // Cooking (22)
-      'Baking', 'Blanching', 'Brewing', 'Caramelizing', 'Cooking', 'Fermenting', 'Flambeing', 'Frosting',
-      'Garnishing', 'Infusing', 'Julienning', 'Kneading', 'Leavening', 'Marinating', 'Proofing', 'Sauteing',
-      'Seasoning', 'Simmering', 'Stewing', 'Tempering', 'Whisking', 'Zesting',
-      // Thinking (21)
-      'Cerebrating', 'Cogitating', 'Considering', 'Contemplating', 'Deciphering', 'Deliberating', 'Determining',
-      'Envisioning', 'Ideating', 'Imagining', 'Inferring', 'Mulling', 'Musing', 'Noodling', 'Perusing',
-      'Philosophising', 'Pondering', 'Pontificating', 'Puzzling', 'Ruminating', 'Thinking',
-      // Dancing / Movement (20)
-      "Beboppin'", 'Boogieing', 'Frolicking', 'Gallivanting', 'Galloping', 'Grooving', 'Jitterbugging',
-      'Meandering', 'Moonwalking', 'Moseying', 'Perambulating', 'Scampering', 'Scurrying', 'Shimmying',
-      'Skedaddling', 'Slithering', 'Sock-hopping', 'Waddling', 'Wandering', 'Zigzagging',
-      // Playful (26)
-      'Befuddling', 'Bloviating', 'Boondoggling', 'Booping', 'Canoodling', 'Combobulating', 'Dilly-dallying',
-      'Discombobulating', 'Fiddle-faddling', 'Finagling', 'Flibbertigibbeting', 'Flummoxing', 'Honking',
-      'Hullaballooing', 'Lollygagging', 'Puttering', 'Razzle-dazzling', 'Razzmatazzing', 'Recombobulating',
-      'Schlepping', 'Shenaniganing', 'Smooshing', 'Tomfoolering', 'Topsy-turvying', 'Whatchamacalliting',
-      'Wibbling',
-      // Science (12)
-      'Crystallizing', 'Evaporating', 'Ionizing', 'Nebulizing', 'Nucleating', 'Osmosing', 'Photosynthesizing',
-      'Pollinating', 'Precipitating', 'Quantumizing', 'Sublimating', 'Synthesizing',
-      // Nature (15)
-      'Billowing', 'Cascading', 'Drizzling', 'Ebbing', 'Flowing', 'Fluttering', 'Germinating', 'Gusting',
-      'Misting', 'Sprouting', 'Swirling', 'Swooping', 'Thundering', 'Undulating', 'Whirlpooling',
-      // Magic / Fantasy (12)
-      'Channeling', 'Channelling', 'Enchanting', 'Hyperspacing', 'Levitating', 'Manifesting', 'Metamorphosing',
-      'Orbiting', 'Prestidigitating', 'Transfiguring', 'Transmuting', 'Warping',
-      // Productive / Work (25)
-      'Accomplishing', 'Actioning', 'Actualizing', 'Architecting', 'Bootstrapping', 'Calculating', 'Churning',
-      'Composing', 'Computing', 'Concocting', 'Crafting', 'Creating', 'Crunching', 'Doing', 'Effecting',
-      'Elucidating', 'Forging', 'Forming', 'Generating', 'Hashing', 'Hatching', 'Orchestrating', 'Processing',
-      'Working', 'Wrangling',
-      // Creative (8)
-      'Choreographing', 'Cultivating', 'Doodling', 'Embellishing', 'Harmonizing', 'Improvising', 'Sketching',
-      'Tinkering',
-      // Animal (6)
-      'Burrowing', 'Herding', 'Nesting', 'Pouncing', 'Roosting', 'Symbioting',
-      // Claude specific (3)
-      'Clauding', 'Gitifying', 'Reticulating',
-      // Other (13)
-      'Beaming', 'Catapulting', 'Coalescing', 'Incubating', 'Mustering', 'Newspapering', 'Propagating',
-      'Spinning', 'Twisting', 'Unfurling', 'Unravelling', 'Vibing', 'Whirring'
-    ]
-
-    /**
      * Claude-flavored presentation of the permission presets, keyed by preset
      * id. The host's catalog decides WHICH presets a deployment offers — a
      * third-party plugin's ride in it, the auto mode plugin's `auto-mode` among

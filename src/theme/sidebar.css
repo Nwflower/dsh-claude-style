@@ -447,25 +447,3 @@ body[data-dsh-claude-style] svg[data-state="ongoing"] * {
     animation-play-state: running !important;
   }
 }
-
-/* Turn status: Claude thinking indicator (terracotta accent shimmer) */
-body[data-dsh-claude-style] [class*="turnStatus"]:not([class*="Clock"]):not([class*="_clock"]) {
-  background: linear-gradient(90deg, #d97757 0%, #d97757 40%, #f3b5a3 50%, #d97757 60%, #d97757 100%);
-  background-position: 100% 0;
-  background-size: 250% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-  animation: 1.8s linear infinite dsh-claude-turn-status-shimmer;
-}
-@keyframes dsh-claude-turn-status-shimmer {
-  to { background-position: 0 0; }
-}
-@media (prefers-reduced-motion: reduce) {
-  body[data-dsh-claude-style] [class*="turnStatus"]:not([class*="Clock"]):not([class*="_clock"]) {
-    background-position: 0 0;
-    background-size: 100% 100%;
-    animation: none;
-  }
-}
