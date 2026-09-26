@@ -140,6 +140,7 @@
         { name: 'themeFlip', install: installThemeFlip }, // 主题翻转瞬间抑制过渡，修掉「先色后样」
         { name: 'workspace', install() { return installWorkspaceView(ctx, ui) } }, // 侧栏工作区：进行中 / 已归档 分段 + 归档行删除
         { name: 'search', install() { return installSearch(ctx, ui) } }, // 侧栏品牌行的搜索框 + 搜索面板（会话、项目、插件、Skill、快捷键）
+        { name: 'turnStatus', install() { return installTurnStatus(ctx, ui) } }, // 进行中那一轮的状态行：移到工作过程末尾，火花 + 用时 · 输出 tokens · 当前动作
         { name: 'viewTabs', install() { return installViewTabs(ctx, ui) } }, // 对话区视图标签条：按实测把标签条放到标题那一行（放得下才放）
         { name: 'settings', handle: 'settingsNav', install() { return installSettingsSection(ctx, ui) } }
       ]

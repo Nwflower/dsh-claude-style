@@ -231,6 +231,18 @@ and shows the Enter glyph; the others hide it. The card fades in and settles
 from 6px above at 98.5% scale over 0.18s; on close card and mask fade out
 together over 0.14s before the modal unmounts.
 
+## Turn status · 进行中状态行
+
+While a turn runs, its status line sits after the turn's work (queued messages
+below it), 4px under the last row, with no rule under it: a 14px Claude spark in
+the brand clay (`--dsw-alias-brand-primary`, `#D97757`), 8px gap, then the text
+in the tertiary label at the host's secondary content size (13px, 24px line),
+one line with an ellipsis. The text is `elapsed · N tokens · action`, joined by
+` · `; the token part is left out until a finished step has reported usage. The
+spark turns a full circle every 2.4s while breathing down to 78% at the half
+turn, in every motion setting, like the sidebar's background-work ring. Once the
+turn ends the host's own control returns unchanged.
+
 ## Home layouts · 首页版面
 
 The new-conversation page has two arrangements. `homeLayout` (settings: Home

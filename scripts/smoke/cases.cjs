@@ -452,6 +452,19 @@ const CASES = {
     check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
     commonChecks(r)
   },
+  'turn-status'(r) {
+    check('apply() completes', r.applyError === null, r.applyError)
+    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    const status = r.turnStatus || {}
+    check("the running turn's process control moves below the turn's work and above the queued message",
+      status.live === true && status.trailing === true && status.belowWork === true && status.aboveQueued === true,
+      JSON.stringify(status))
+    check('the status line reads elapsed time · output tokens · what the model is doing, in place of the host label',
+      /^1m [5-9]s · 1\.2k tokens · \S/.test(status.text || '') && status.drawn === JSON.stringify(status.text) &&
+        status.label === 'none',
+      JSON.stringify(status))
+    commonChecks(r)
+  },
 }
 
 module.exports = { CASES }

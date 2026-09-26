@@ -347,7 +347,40 @@
   // session instead: the control reads the running preset from its projection
   // and switches through the host permission command; the case asserts both.
   var permissionCommands = []
-  var sessions = CASE === 'sync-fault'
+  // The turn-status case: one bound session whose chat snapshot (ui-chat's
+  // `chat` target of uiConversation) has a running turn — a settled first step
+  // that reported its usage, and a second step streaming its reasoning — and
+  // the host's chat wording for durations (English).
+  var turnStatusChat = CASE === 'turn-status' ? (function () {
+    function stepData(value) { return { get: function (kind) { return kind === 'assistant-step' ? value : undefined } } }
+    var turn = {
+      turn: 1,
+      status: 'open',
+      start: { time: Date.now() - 65000 },
+      steps: [
+        { step: 1, data: stepData({ status: 'settled', step: 1, blocks: [{ kind: 'reasoning' }, { kind: 'tool-call' }], usage: { outputTokens: 1200 } }) },
+        { step: 2, data: stepData({ status: 'running', step: 2, blocks: [{ kind: 'reasoning' }] }) },
+      ],
+    }
+    var snapshot = { timeline: { turns: new Map([[1, turn]]) }, legacy: { runningCalls: [] } }
+    return {
+      binding: function () { return { target: function () { return { getSnapshot: function () { return snapshot } } } } },
+    }
+  })() : undefined
+  var turnStatusLocale = CASE === 'turn-status' ? {
+    getSnapshot: function () { return { active: 'en' } },
+    subscribe: function () { return function () {} },
+    bind: function () {
+      var templates = { 'duration.seconds': '{seconds}s', 'duration.minutes': '{minutes}m {seconds}s', 'duration.hours': '{hours}h {minutes}m {seconds}s' }
+      return function (key, params) {
+        return (templates[key] || key).replace(/\{(\w+)\}/g, function (match, name) { return String(params[name]) })
+      }
+    },
+  } : undefined
+  var sessions = CASE === 'turn-status' ? {
+    list: { getSnapshot: function () { return { current: undefined } } },
+    binding: function (id) { return id === 'smoke-session' ? {} : undefined },
+  } : CASE === 'sync-fault'
     ? { list: { getSnapshot: function () { throw new Error('session list unavailable') } }, binding: function () { return null } }
     : (permissionFixture !== undefined && permissionFixture.current !== null ? {
         list: { getSnapshot: function () { return { current: 'smoke-session' } } },
@@ -414,6 +447,8 @@
       if (name === 'remote.permissionPresets') return permissionPresets
       if (name === 'remote') return CASE === 'desktop' ? remote : undefined
       if (name === 'sessions') return sessions
+      if (name === 'uiConversation') return turnStatusChat
+      if (name === 'locale') return turnStatusLocale
       if (name === 'slots') return slotRegistry
       return undefined
     },
