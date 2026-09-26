@@ -221,6 +221,10 @@
             cancelClosePopover()
           })
           accountPopover.addEventListener('mouseleave', () => {
+            // The hold screen takes the window, so its opening "leaves" the
+            // card without the pointer moving; that leave must not fold the
+            // drawer behind the page (openBan leaves the footer as it was).
+            if (ui.ban?.isOpen() === true) return
             scheduleClosePopover()
           })
 
@@ -262,7 +266,13 @@
         if (surface.mode() === 'host') {
           const menu = hostMenu.findMenu()
           if (menu !== null) {
-            menu.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+            // The scheduler's key handler must not read this as a user's Esc
+            // (it would close every overlay, the hold screen included): the
+            // event is this skin's own dismissal, addressed to the host's Menu
+            // alone.
+            const escape = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+            escape.__dshHostMenuEscape = true
+            menu.dispatchEvent(escape)
           }
           return
         }
@@ -310,8 +320,14 @@
        * its first placement frames, so a leave can arrive while the pointer is
        * still on the row or on the card. Only a pointer that is genuinely
        * elsewhere dismisses the menu; the next leave closes it.
+       *
+       * The hold-screen overlay covers the whole window, so opening it "leaves"
+       * the row and the card without the pointer moving: that leave stands down
+       * — the surface the reader had behind the page stays up and the footer is
+       * handed back as it was once the screen is dismissed.
        */
       function closeHostMenuForHover() {
+        if (ui.ban?.isOpen() === true) return
         const row = hostMenu.trigger()
         if (row !== null && row.matches(':hover')) return
         const menu = hostMenu.findMenu()

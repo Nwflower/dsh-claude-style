@@ -207,6 +207,27 @@
       await sleep(80)
       var focused = document.activeElement
       r.focusInInjected = !!(focused && inject2 && inject2.contains(focused) && focused.tagName === 'BUTTON')
+      // The hold screen entered from the header: the overlay takes the pointer,
+      // so the row and the card it covered report a leave without the pointer
+      // moving, and with the hover preference on those leaves must neither
+      // dismiss the host menu behind the page nor — through the footer's
+      // synthetic Escape to that menu — the page itself.
+      var banEntry = document.querySelector('.dsh-claude-account-inject [data-dsh-claude-ban-row]')
+      if (banEntry) {
+        banEntry.click()
+        await sleep(80)
+        r.banOpened = document.querySelectorAll('[data-dsh-ban]').length
+        if (hostRow) hostRow.dispatchEvent(new MouseEvent('mouseleave'))
+        var coveredMenu = document.querySelector('body > [role="menu"]')
+        if (coveredMenu) coveredMenu.dispatchEvent(new MouseEvent('mouseleave'))
+        await sleep(300)
+        r.banSurvivesLeave = document.querySelectorAll('[data-dsh-ban]').length
+        r.menuBehindBan = accountMenuOpen()
+        var banDismiss = document.querySelector('.dsh-claude-ban [data-dsh-ban-dismiss]')
+        if (banDismiss) banDismiss.click()
+        await sleep(80)
+        r.banAfterDismiss = document.querySelectorAll('[data-dsh-ban]').length
+      }
       // Closing the host's menu (its own Escape) leaves no container behind.
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
       await sleep(400)

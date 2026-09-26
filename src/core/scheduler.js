@@ -88,6 +88,13 @@
       }
 
       function onGlobalKeyDown(e) {
+        // The account footer dismisses the host's account menu with a synthetic
+        // Escape it dispatches itself (account-footer.js), addressed to the
+        // host's Menu alone. Taking it for a user's Esc here would run every
+        // feature's Esc route — and close the account-hold page the reader had
+        // just entered, because the footer's hover close fires behind that
+        // overlay the moment it covers the pointer.
+        if (e.__dshHostMenuEscape === true) return
         if (e.key === 'Escape') {
           // Every feature's own Esc route, in feature order. The account-hold
           // overlay is the one layer that does NOT close on a window blur (it is

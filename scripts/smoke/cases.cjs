@@ -427,6 +427,12 @@ const CASES = {
       JSON.stringify({ first: r.injectHealedFirst, same: r.injectHealedSame }))
     check("the host's keyboard walk reaches our injected button",
       r.focusInInjected === true, JSON.stringify(r.focusInInjected))
+    check('the hold screen opens over the menu and survives the leaves its overlay causes',
+      r.banOpened === 1 && r.banSurvivesLeave === 1,
+      JSON.stringify({ opened: r.banOpened, survived: r.banSurvivesLeave }))
+    check('the host menu stays up behind the hold screen and the screen leaves by its own control',
+      r.menuBehindBan === true && r.banAfterDismiss === 0,
+      JSON.stringify({ menu: r.menuBehindBan, dismissed: r.banAfterDismiss }))
     check('closing the host menu leaves no injected container behind',
       r.injectAfterClose === 0 && r.hostMenuAfterClose === 0,
       JSON.stringify({ containers: r.injectAfterClose, menus: r.hostMenuAfterClose }))

@@ -12,6 +12,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 ### 问题修复
 
+- 修复 **开启「自动弹出弹层」后进入封号彩蛋页会立刻退出**：桌面端从账号菜单点开彩蛋页时，全窗浮层让指针「离开」菜单，悬停收起随后代宿主菜单按下的 Escape 被插件的键盘路由当成了用户按键，约 0.1 秒就把刚打开的彩蛋页关掉。现在这次代发的 Escape 只送达宿主菜单：彩蛋页开着时悬停收起同时停摆，页面保持打开，退出后侧栏与账号菜单恢复进入前的样子。
 - 修复 **启用皮肤后带输入框的会话页上快捷键失灵**：皮肤常驻页面的模型选择器、推理强度与权限弹层卡片在关闭时仍标注 `role="menu"`，宿主据此把快捷键仲裁给一个看不见的「前景菜单」，连按 Esc 停止智能体、Ctrl+W 关闭页面与标签页菜单的 Esc 都不再生效（Web 端受影响的面更宽）。现在这一角色标注随卡片开合写入与撤销：卡片打开时才存在，快捷键的仲裁恢复如常。
 
 <h3 id="en-unreleased">Improvements</h3>
@@ -20,6 +21,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 ### Bug Fixes
 
+- **Fixed the account-hold easter egg closing itself right after it opened while "Open popovers on hover" is on**: on the desktop, opening the page from the account menu made the full-window overlay "leave" the menu, and the hover close that followed pressed Escape on the host's behalf — which the skin's keyboard routing took for the user's own key and dismissed the page about 0.1 s in. That dispatched Escape now reaches only the host's menu, the hover close stands down while the page is open, and the sidebar and its account menu come back as they were once the page is dismissed.
 - **Fixed shortcuts going dead on conversation pages with an input box while the skin is enabled**: the model picker, reasoning-effort and permission popover cards the skin keeps in the page carried their `role="menu"` mark while closed, so the host arbitrated its shortcuts to an invisible "foreground menu" — pressing Esc twice to stop the agent, Ctrl+W to close a page and the Esc of the tab menu all stopped working (the Web build loses a wider set of them). The mark now rides the card's open state: it exists only while a card is open, and shortcut arbitration goes back to normal.
 
 ## [0.8.0] - 2026-09-26
