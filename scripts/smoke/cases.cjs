@@ -40,6 +40,8 @@ function commonChecks(r) {
     r.seatRunning !== null && r.seatRunning.content === 'none' && r.seatRunning.svgs > 0,
     JSON.stringify(r.seatRunning))
   check('scheduler idle once settled (0 passes in 1 s)', r.idlePasses === 0, `${r.idlePasses} passes`)
+  check('a closed popover card claims no menu role for the host\'s keyboard arbitration',
+    r.closedMenuCards === 0, `${r.closedMenuCards} closed cards carry role=menu`)
   check('no Windows titlebar marker: the body carries no data-dsh-titlebar-tabs',
     r.titlebarTabs === false, JSON.stringify(r.titlebarTabs))
   check('teardown registered with the host', r.teardownRegistered)
@@ -355,6 +357,8 @@ const CASES = {
       r.permOpenAtDwell === 0, `${r.permOpenAtDwell} open at 50 ms`)
     check('a pointer that stays the dwell out opens the card',
       r.permOpenPastDwell === 1, `${r.permOpenPastDwell} open past the dwell`)
+    check('an open card answers the host\'s menu role',
+      r.permCardRole === 'menu', JSON.stringify(r.permCardRole))
     check('opening the account drawer folds the permission card',
       r.drawerUp === 1 && r.permFoldedByDrawer === 0,
       JSON.stringify({ drawer: r.drawerUp, permission: r.permFoldedByDrawer }))

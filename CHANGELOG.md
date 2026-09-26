@@ -10,9 +10,17 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 - **用量面板的倍数趣味行从二十九本书扩到六十五本**：书单补入《黄色壁纸》《变形记》《化身博士》《野性的呼唤》《时间机器》《绿野仙踪》《黑暗之心》《浮士德》《螺丝在拧紧》《伊索寓言》《彼得·潘》《君主论》《隐形人》《安徒生童话》《世界大战》《善恶的彼岸》《白牙》《沉思录》《格林童话》《格列佛游记》《瓦尔登湖》《鲁滨逊漂流记》《神曲》《包法利夫人》《查拉图斯特拉如是说》《奥德赛》《双城记》《远大前程》《理想国》《罪与罚》《利维坦》《安娜·卡列尼娜》《卡拉马佐夫兄弟》《堂吉诃德》《基督山伯爵》《悲惨世界》，长度都是全文以 o200k_base 分词器实测的值（英文原著或通行英译本，《浮士德》为德文原文）。书单仍从《道德经》排到《追忆似水年华》，用量越过的书更密，趣味行落到的那本书离实际用量更近。
 
+### 问题修复
+
+- 修复 **启用皮肤后带输入框的会话页上快捷键失灵**：皮肤常驻页面的模型选择器、推理强度与权限弹层卡片在关闭时仍标注 `role="menu"`，宿主据此把快捷键仲裁给一个看不见的「前景菜单」，连按 Esc 停止智能体、Ctrl+W 关闭页面与标签页菜单的 Esc 都不再生效（Web 端受影响的面更宽）。现在这一角色标注随卡片开合写入与撤销：卡片打开时才存在，快捷键的仲裁恢复如常。
+
 <h3 id="en-unreleased">Improvements</h3>
 
 - **The usage panel's yardstick line grows from twenty-nine to sixty-five books**: the list adds The Yellow Wallpaper, Metamorphosis, The Strange Case of Dr Jekyll and Mr Hyde, The Call of the Wild, The Time Machine, The Wonderful Wizard of Oz, Heart of Darkness, Faust, The Turn of the Screw, Aesop's Fables, Peter Pan, The Prince, The Invisible Man, Andersen's Fairy Tales, The War of the Worlds, Beyond Good and Evil, White Fang, Meditations, Grimms' Fairy Tales, Gulliver's Travels, Walden, Robinson Crusoe, The Divine Comedy, Madame Bovary, Thus Spoke Zarathustra, The Odyssey, A Tale of Two Cities, Great Expectations, The Republic, Crime and Punishment, Leviathan, Anna Karenina, The Brothers Karamazov, Don Quixote, The Count of Monte Cristo and Les Misérables, each sized by feeding its full text to the o200k_base tokenizer (the English original or the standard English translation; Faust in the German original). The list still runs from Tao Te Ching to In Search of Lost Time; with the books set closer together, the one the line lands on sits nearer the real usage.
+
+### Bug Fixes
+
+- **Fixed shortcuts going dead on conversation pages with an input box while the skin is enabled**: the model picker, reasoning-effort and permission popover cards the skin keeps in the page carried their `role="menu"` mark while closed, so the host arbitrated its shortcuts to an invisible "foreground menu" — pressing Esc twice to stop the agent, Ctrl+W to close a page and the Esc of the tab menu all stopped working (the Web build loses a wider set of them). The mark now rides the card's open state: it exists only while a card is open, and shortcut arbitration goes back to normal.
 
 ## [0.8.0] - 2026-09-26
 

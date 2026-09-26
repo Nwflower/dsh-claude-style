@@ -242,7 +242,7 @@
         if (permBtn === null || permPopover === null) return
         permBtn.removeAttribute('data-open')
         permBtn.setAttribute('aria-expanded', 'false')
-        permPopover.removeAttribute('data-open')
+        setMenuPopoverOpen(permPopover, false)
       }
 
       /**
@@ -332,7 +332,7 @@
         btn.appendChild(chevron)
 
         const popover = buildElement('div', 'dsh-claude-popover-card dsh-claude-perm-popover')
-        popover.setAttribute('role', 'menu')
+        setMenuPopoverOpen(popover, false)
 
         function openPerm() {
           if (permHoverIntent) permHoverIntent.cancel()
@@ -342,7 +342,7 @@
           popover.style.bottom = `${Math.max(8, window.innerHeight - rect.top + 6)}px`
           btn.setAttribute('data-open', 'true')
           btn.setAttribute('aria-expanded', 'true')
-          popover.setAttribute('data-open', 'true')
+          setMenuPopoverOpen(popover, true)
         }
 
         permHoverIntent = createHoverIntent(openPerm, closePermMenu, POPOVER_OPEN_DELAY, POPOVER_CLOSE_DELAY)

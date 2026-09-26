@@ -118,8 +118,8 @@
 
       function closeModelPopovers() {
         cancelCloseModel()
-        if (modelPop) modelPop.setAttribute('data-open', 'false')
-        if (modelSubPop) modelSubPop.setAttribute('data-open', 'false')
+        if (modelPop) setMenuPopoverOpen(modelPop, false)
+        if (modelSubPop) setMenuPopoverOpen(modelSubPop, false)
       }
 
       function openModelPopover() {
@@ -137,17 +137,17 @@
             pending.catch(() => { /* the store's error surface covers a failure */ })
           }
         }
-        if (modelSubPop) modelSubPop.setAttribute('data-open', 'false')
+        if (modelSubPop) setMenuPopoverOpen(modelSubPop, false)
         renderModelBody()
         positionModelPopovers()
-        if (modelPop) modelPop.setAttribute('data-open', 'true')
+        if (modelPop) setMenuPopoverOpen(modelPop, true)
       }
 
       function openModelSub() {
         cancelCloseModel()
         renderModelSub()
         positionModelPopovers()
-        if (modelSubPop) modelSubPop.setAttribute('data-open', 'true')
+        if (modelSubPop) setMenuPopoverOpen(modelSubPop, true)
       }
 
       function pickModel(provider, modelId) {
@@ -371,8 +371,7 @@
           if (modelPop !== null && modelPop.parentElement !== null) modelPop.parentElement.removeChild(modelPop)
           modelPop = document.createElement('div')
           modelPop.className = 'dsh-claude-popover-card dsh-claude-model-popover'
-          modelPop.setAttribute('role', 'menu')
-          modelPop.setAttribute('data-open', 'false')
+          setMenuPopoverOpen(modelPop, false)
           modelBody = document.createElement('div')
           modelBody.className = 'dsh-claude-popover-body'
           modelPop.appendChild(modelBody)
@@ -399,7 +398,7 @@
             subFoldTimer = setTimeout(() => {
               subFoldTimer = null
               if (pointerInPicker()) return
-              if (modelSubPop !== null) modelSubPop.setAttribute('data-open', 'false')
+              if (modelSubPop !== null) setMenuPopoverOpen(modelSubPop, false)
             }, MODEL_CLOSE_DELAY)
           })
           modelPop.addEventListener('mouseleave', scheduleCloseModel)
@@ -410,8 +409,7 @@
           if (modelSubPop !== null && modelSubPop.parentElement !== null) modelSubPop.parentElement.removeChild(modelSubPop)
           modelSubPop = document.createElement('div')
           modelSubPop.className = 'dsh-claude-popover-card dsh-claude-model-popover dsh-claude-model-popover-sub'
-          modelSubPop.setAttribute('role', 'menu')
-          modelSubPop.setAttribute('data-open', 'false')
+          setMenuPopoverOpen(modelSubPop, false)
           modelSubBody = document.createElement('div')
           modelSubBody.className = 'dsh-claude-popover-body'
           modelSubPop.appendChild(modelSubBody)

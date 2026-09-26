@@ -161,6 +161,29 @@
     }
 
     /**
+     * Write one menu popover card's open state, together with the role that
+     * says the same thing to the host: the host's keyboard arbitration reads
+     * every `[role="menu"]` in the document as a menu that owns the foreground
+     * (ui-primitives' modalSelector, which the shortcut dispatchers and
+     * closeTopModal query; ui-dockkit's tab menu and the fixed Esc-Esc stop
+     * read it the same way). A card this skin keeps mounted for measurement is
+     * only hidden while closed, and a hidden card answers those document
+     * queries exactly like an open one — so the role rides the open state:
+     * present while the card is up, gone the moment it folds. Only a card that
+     * IS a menu goes through here; the account drawer and the stats card keep
+     * writing `data-open` by hand.
+     */
+    function setMenuPopoverOpen(card, open) {
+      if (open) {
+        card.setAttribute('data-open', 'true')
+        card.setAttribute('role', 'menu')
+      } else {
+        card.setAttribute('data-open', 'false')
+        card.removeAttribute('role')
+      }
+    }
+
+    /**
      * Remove the skin's own nodes that no live reference holds.
      *
      * Client HMR drops the previous generation's disposals instead of running

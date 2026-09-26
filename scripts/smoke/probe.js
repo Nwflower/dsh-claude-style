@@ -26,8 +26,9 @@
   }
   window.__smoke = (async function () {
     var r = { applyError: window.__applyError, teardownRegistered: typeof window.__dispose === 'function' }
-    // The account menu is counted by content (its Sign out row), because the
-    // model picker keeps a hidden role=menu portal in the page.
+    // The account menu is counted by content (its Sign out row): a role=menu
+    // portal exists only while its menu is open — ours included — so the row
+    // the host itself renders is the stable test.
     function accountMenuOpen() {
       var menus = document.querySelectorAll('body > [role="menu"]')
       for (var mi = 0; mi < menus.length; mi++) {
@@ -67,6 +68,9 @@
       r.permOpenAtDwell = permUp()
       await sleep(200)
       r.permOpenPastDwell = permUp()
+      // An open card is the one moment it may answer the host's menu role.
+      var openPermCard = document.querySelector('.dsh-claude-perm-popover[data-open="true"]')
+      r.permCardRole = openPermCard !== null ? openPermCard.getAttribute('role') : null
       // The drawer opens over the permission card and folds it.
       drawerTrigger.dispatchEvent(new MouseEvent('mouseenter'))
       await sleep(250)
@@ -208,8 +212,8 @@
       await sleep(400)
       r.injectAfterClose = document.querySelectorAll('.dsh-claude-account-inject').length
       r.accountMenuMarkAfterClose = document.querySelectorAll('[data-dsh-claude-account-menu]').length
-      // The model picker keeps a hidden role=menu portal in the page, so the
-      // account menu is counted by content (its Sign out row), not by role.
+      // The account menu is counted by content (its Sign out row): a role=menu
+      // portal exists only while its menu is open, ours included.
       r.hostMenuAfterClose = Array.prototype.filter.call(document.querySelectorAll('body > [role="menu"]'), function (m) {
         var items = m.querySelectorAll('[role="menuitem"]')
         for (var mi = 0; mi < items.length; mi++) {
@@ -660,6 +664,11 @@
     r.banToast = toast ? toast.textContent : null
     var dismiss = document.querySelector('.dsh-claude-ban [data-dsh-ban-dismiss]')
     if (dismiss) dismiss.click()
+    // A closed popover card must not answer the host's menu role: the host's
+    // keyboard arbitration queries every [role=menu] in the document as a menu
+    // that owns the foreground, so a hidden card silently disarms the shortcuts
+    // behind it (the Esc-Esc stop, the close-page and dialog commands).
+    r.closedMenuCards = document.querySelectorAll('.dsh-claude-popover-card[role="menu"]:not([data-open="true"])').length
     var editor = document.getElementById('editor')
     editor.focus()
     editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))

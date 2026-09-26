@@ -91,7 +91,7 @@
 
       function closeEffortPopover() {
         effortHoverIntent.cancel()
-        if (effortPop !== null) effortPop.setAttribute('data-open', 'false')
+        if (effortPop !== null) setMenuPopoverOpen(effortPop, false)
       }
 
       function openEffortPopover() {
@@ -102,7 +102,7 @@
         closeOtherPopovers('effort')
         if (effortSlider !== null) effortSlider.update()
         positionEffortPopover()
-        if (effortPop !== null) effortPop.setAttribute('data-open', 'true')
+        if (effortPop !== null) setMenuPopoverOpen(effortPop, true)
       }
 
       function positionEffortPopover() {
@@ -188,8 +188,7 @@
           if (effortPop !== null && effortPop.parentElement !== null) effortPop.parentElement.removeChild(effortPop)
           effortPop = document.createElement('div')
           effortPop.className = 'dsh-claude-popover-card dsh-claude-effort-popover'
-          effortPop.setAttribute('role', 'menu')
-          effortPop.setAttribute('data-open', 'false')
+          setMenuPopoverOpen(effortPop, false)
           effortPop.addEventListener('mouseenter', cancelCloseEffort)
           effortPop.addEventListener('mouseleave', () => {
             // A hold must not be cut short by the hover-close timer: the
