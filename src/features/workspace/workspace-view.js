@@ -99,7 +99,7 @@
       function findTree(label) {
         let region = label.parentElement
         while (region !== null && region !== document.body) {
-          const tree = region.querySelector('[role="tree"], [class*="list"]')
+          const tree = region.querySelector('[role="tree"], [class*="_list"]')
           if (tree !== null && tree.querySelector(TREE_ROW_SELECTOR) !== null) return tree
           region = region.parentElement
         }

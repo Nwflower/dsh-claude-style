@@ -63,16 +63,16 @@
       }
 
       /** The input rail inside a card: the attachment shell and its scrolling inner rail. */
-      const ATTACHMENT_RAIL = '[class*="rail"]:not([class*="trailing"])'
+      const ATTACHMENT_RAIL = '[class*="_rail"]'
       /** Anything in a card that means it carries attachments. */
-      const ATTACHMENT_PRESENT = `[class*="imageItem"], [class*="thumbnail"], [class*="FileCard"], ${ATTACHMENT_RAIL} :is([class*="item"], img, [class*="card"])`
+      const ATTACHMENT_PRESENT = `[class*="imageItem"], [class*="thumbnail"], [class*="FileCard"], ${ATTACHMENT_RAIL} :is([class*="_item"], img, [class*="_card"])`
       /**
        * The attachment tiles the stylesheet reshapes into thumbnails. They are
        * found here once per pass and marked, so the rules read one attribute
        * instead of re-running this list, with its structural :has(img), on
        * every DOM change.
        */
-      const ATTACHMENT_TILES = `${ATTACHMENT_RAIL} :is([class*="imageItem"], [class*="thumbnail"], [class*="FileCard"], [class*="item"]:has(img), [class*="card"]:has(img), [class*="attachment"]:has(img))`
+      const ATTACHMENT_TILES = `${ATTACHMENT_RAIL} :is([class*="imageItem"], [class*="thumbnail"], [class*="FileCard"], [class*="_item"]:has(img), [class*="_card"]:has(img), [class*="attachment"]:has(img))`
       const ATTACHMENT_TILE_ATTR = 'data-dsh-claude-attachment'
 
       /** Mark the cards that carry attachments, and the tiles inside them. */
@@ -95,6 +95,34 @@
         for (let n = 0; n < tiles.length; n++) {
           if (!tiles[n].hasAttribute(ATTACHMENT_TILE_ATTR)) tiles[n].setAttribute(ATTACHMENT_TILE_ATTR, '')
         }
+      }
+
+      const CONTROL_ATTR = 'data-dsh-claude-control'
+
+      /**
+       * Mark each host control on the composer with what it is, so the
+       * stylesheets key on `data-dsh-claude-control` instead of the host's
+       * button text — text that changes with the shell language and with each
+       * host release. Read from the host's structure (InputBar):
+       *   commands — the tools row's `+`, the one button that opens a listbox;
+       *   stop / send — the trailing row's primary buttons, told apart by their
+       *     glyph: stop draws a rect, the submit arrow a path (queue and steer
+       *     are the same submit button under another label);
+       *   access — the button the permission slot renders (host.js).
+       */
+      function syncControls(cards) {
+        const mark = (button, role) => {
+          if (button.getAttribute(CONTROL_ATTR) !== role) button.setAttribute(CONTROL_ATTR, role)
+        }
+        for (const card of cards) {
+          const commands = card.querySelector('[class*="_tools"] button[aria-haspopup="listbox"]')
+          if (commands !== null) mark(commands, 'commands')
+          for (const button of card.querySelectorAll('[class*="_trailing"] button[class*="_primary"]')) {
+            mark(button, button.querySelector('svg rect') !== null ? 'stop' : 'send')
+          }
+        }
+        const access = findAccessTrigger()
+        if (access !== null) mark(access, 'access')
       }
 
       const DRAFT_EMPTY_ATTR = 'data-dsh-claude-draft-empty'
@@ -209,6 +237,7 @@
         }
         syncAttachments(cards)
         syncDraftState(cards)
+        syncControls(cards)
         stampContextMeter(cards[0])
         syncChatTabComposer()
       }
@@ -267,7 +296,7 @@
         heroCard = null
         if (document.body.hasAttribute(COMPOSER_ATTR)) document.body.removeAttribute(COMPOSER_ATTR)
         document.body.removeAttribute('data-dsh-claude-composer-hidden')
-        const marks = ['data-composer-variant', 'data-has-attachments', ATTACHMENT_TILE_ATTR, DRAFT_EMPTY_ATTR, 'data-dsh-claude-context-meter']
+        const marks = ['data-composer-variant', 'data-has-attachments', ATTACHMENT_TILE_ATTR, DRAFT_EMPTY_ATTR, CONTROL_ATTR, 'data-dsh-claude-context-meter']
         for (let k = 0; k < marks.length; k++) {
           const marked = document.querySelectorAll(`[${marks[k]}]`)
           for (let i = 0; i < marked.length; i++) marked[i].removeAttribute(marks[k])

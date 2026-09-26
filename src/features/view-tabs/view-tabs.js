@@ -34,7 +34,7 @@
      * @returns teardown.
      */
     function installViewTabs(ctx, ui) {
-      const HEADER = '[class*="header"]:has([class*="_tabs"])'
+      const HEADER = '[class*="_header"]:has([class*="_tabs"])'
       const STRIP = `${HEADER} [class*="_tabs"]`
       /**
        * The title's TEXT, not its row or cluster: `.titleRow` is a flex row and the
@@ -42,7 +42,7 @@
        * every window and the strip never lifted. The crumb is the content-sized
        * element that actually draws the words.
        */
-      const TITLE = '[class*="crumbCurrent"], [class*="crumb"], [class*="titleCluster"]'
+      const TITLE = '[class*="crumbCurrent"], [class*="_crumb"], [class*="titleCluster"]'
       const ACTIONS = '[class*="headerActions"], [class*="headerUtilities"]'
       /** The stylesheet's fallback: the strip's own row, 10px up from y=50. */
       const FALLBACK = -10

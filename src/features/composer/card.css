@@ -124,21 +124,21 @@ body[data-dsh-claude-style] [data-composer-card]:after {
 
 /* Commands and attach: 7px corners instead of the shipped full circle, no
    resting fill, and a warm plate on hover. */
-body[data-dsh-claude-style] :is(button[aria-label="指令"], button[aria-label="Commands"], button[aria-label="添加附件"], button[aria-label="Add attachment"], button[aria-label*="添加文件"], button[aria-label*="Add files"]) {
+body[data-dsh-claude-style] button[data-dsh-claude-control="commands"] {
   border-radius: 7px;
 }
 
 /* Send, and the stop/queue/steer labels that replace it while running: the
    shipped 34px circle becomes a 7px rounded rectangle. */
-body[data-dsh-claude-style] :is(button[aria-label="发送消息"], button[aria-label="Send message"], button[aria-label="排队发送"], button[aria-label="Queue message"], button[aria-label="插话发送"], button[aria-label="Steer message"], button[aria-label="停止生成"], button[aria-label="Stop generating"]) {
+body[data-dsh-claude-style] :is(button[data-dsh-claude-control="send"], button[data-dsh-claude-control="stop"]) {
   border-radius: 7px;
 }
 
-body[data-dsh-claude-style]:not([data-ds-dark-theme]) :is(button[aria-label="指令"], button[aria-label="Commands"], button[aria-label="添加附件"], button[aria-label="Add attachment"], button[aria-label*="添加文件"], button[aria-label*="Add files"]) {
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[data-dsh-claude-control="commands"] {
   background: transparent;
 }
 
-body[data-dsh-claude-style]:not([data-ds-dark-theme]) :is(button[aria-label="指令"], button[aria-label="Commands"], button[aria-label="添加附件"], button[aria-label="Add attachment"], button[aria-label*="添加文件"], button[aria-label*="Add files"]):hover:not(:disabled) {
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[data-dsh-claude-control="commands"]:hover:not(:disabled) {
   background: #f6f6f4;
 }
 
@@ -146,12 +146,12 @@ body[data-dsh-claude-style]:not([data-ds-dark-theme]) :is(button[aria-label="指
    same 7px corners; its chevron is dropped while the click target and the
    menu it opens stay exactly as shipped. Its shipped hover token is only a
    ~6% tint, so the hover plate matches the composer tool buttons. */
-body[data-dsh-claude-style] [data-composer-card] [class*="trigger"] {
+body[data-dsh-claude-style] [data-composer-card] [class*="_trigger"] {
   font-size: 14px;
   border-radius: 7px;
 }
 
-body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-composer-card] [class*="trigger"]:hover:not(:disabled) {
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-composer-card] [class*="_trigger"]:hover:not(:disabled) {
   background: #f6f6f4;
 }
 
@@ -216,7 +216,7 @@ body[data-dsh-claude-style] [class*="heroWorkspaceRow"] :is(button, [role="butto
 }
 
 /* Hide chevrons in the footer tray for a clean, minimal Claude Code look */
-body[data-dsh-claude-style] [class*="heroWorkspaceRow"] :is([class*="chevron"], [class*="Chevron"]) {
+body[data-dsh-claude-style] [class*="heroWorkspaceRow"] :is([class*="_chevron"], [class*="Chevron"]) {
   display: none !important;
 }
 
@@ -229,7 +229,7 @@ body[data-dsh-claude-style] [class*="heroWorkspaceRow"] :is([class*="chevron"], 
    steer labels are untouched, so a running turn keeps its control even with an
    empty draft. The empty draft is the card's data-dsh-claude-draft-empty mark
    (src/features/composer/composer.js). */
-body[data-dsh-claude-style] [data-composer-card]:not([data-has-attachments="true"])[data-dsh-claude-draft-empty] :is(button[aria-label="发送消息"], button[aria-label="Send message"]) {
+body[data-dsh-claude-style] [data-composer-card]:not([data-has-attachments="true"])[data-dsh-claude-draft-empty] button[data-dsh-claude-control="send"] {
   box-sizing: border-box;
   background: transparent;
   color: var(--dsw-alias-label-caption);

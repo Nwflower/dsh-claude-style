@@ -67,7 +67,7 @@
           const text = (input.textContent || '').replace(/[\u200B-\u200D\uFEFF]/g, '').trim()
           const isEmpty = text.length === 0
           let placeholder = card.querySelector('[data-composer-placeholder]')
-          const grow = input.closest ? input.closest('[class*="grow"]') : input.parentElement
+          const grow = input.closest ? input.closest('[class*="_grow"]') : input.parentElement
 
           if (isEmpty) {
             if (!placeholder && grow) {
@@ -105,7 +105,7 @@
       }
 
       function rewriteTurnStatus() {
-        const nodes = document.querySelectorAll('[role="status"][class*="turnStatus"], [class*="turnStatus"]:not([class*="Clock"]):not([class*="clock"])')
+        const nodes = document.querySelectorAll('[role="status"][class*="turnStatus"], [class*="turnStatus"]:not([class*="Clock"]):not([class*="_clock"])')
         for (let i = 0; i < nodes.length; i++) {
           const el = nodes[i]
           const cls = el.getAttribute('class') || ''

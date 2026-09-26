@@ -136,7 +136,7 @@ body[data-dsh-claude-style][data-dsh-titlebar-tabs] [data-dsh-view-tabs]:hover {
 /* The strip's row is gone from the flow, so the header takes the shape it has
    when it owns no tab strip: no min-height, and the bottom padding the host
    gives that shape. */
-body[data-dsh-claude-style][data-dsh-titlebar-tabs] [class*="header"]:has([class*="_tabs"]) {
+body[data-dsh-claude-style][data-dsh-titlebar-tabs] [class*="_header"]:has([class*="_tabs"]) {
   min-height: 0 !important;
   padding-bottom: 10px !important;
 }

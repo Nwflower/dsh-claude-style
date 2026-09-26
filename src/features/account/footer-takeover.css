@@ -82,16 +82,16 @@ body[data-dsh-claude-style][%%FOOTER_ATTR%%] [class*="footArea"] [data-dsh-claud
 }
 
 /* Collapsed rail mode adaptations */
-body[data-dsh-claude-style] [class*="root"][class*="collapsed"] .dsh-claude-account-btn {
+body[data-dsh-claude-style] [class*="_root"][class*="_collapsed"] .dsh-claude-account-btn {
   width: 36px !important;
   height: 36px !important;
   padding: 0 !important;
   justify-content: center !important;
 }
-body[data-dsh-claude-style] [class*="root"][class*="collapsed"] .dsh-claude-account-avatar {
+body[data-dsh-claude-style] [class*="_root"][class*="_collapsed"] .dsh-claude-account-avatar {
   margin-right: 0 !important;
 }
-body[data-dsh-claude-style] [class*="root"][class*="collapsed"] :is(.dsh-claude-account-label, .dsh-claude-account-chevron) {
+body[data-dsh-claude-style] [class*="_root"][class*="_collapsed"] :is(.dsh-claude-account-label, .dsh-claude-account-chevron) {
   display: none !important;
 }
 /* The rail's popover cannot stay an absolutely positioned child of the footer.
@@ -102,7 +102,7 @@ body[data-dsh-claude-style] [class*="root"][class*="collapsed"] :is(.dsh-claude-
    for it), and overrides.js anchors it to the trigger from there. left/right/
    bottom are reset so the base rule's own `!important` anchors cannot fight the
    resolved coordinates. */
-body[data-dsh-claude-style] [class*="root"][class*="collapsed"] .dsh-claude-account-popover {
+body[data-dsh-claude-style] [class*="_root"][class*="_collapsed"] .dsh-claude-account-popover {
   position: fixed !important;
   left: auto !important;
   right: auto !important;
@@ -115,14 +115,14 @@ body[data-dsh-claude-style] [class*="root"][class*="collapsed"] .dsh-claude-acco
 /* The host's own account menu in the rail: the card's width follows the account
    row, which is a 36px icon there, so the measured width would leave a 36px
    card. The drawer's rail width above is the floor for both. */
-body[data-dsh-claude-style] [class*="root"][class*="collapsed"] [%%ACCOUNT_MENU_ATTR%%] {
+body[data-dsh-claude-style] [class*="_root"][class*="_collapsed"] [%%ACCOUNT_MENU_ATTR%%] {
   width: 220px !important;
   max-width: min(220px, calc(100vw - 16px)) !important;
 }
 /* The rail opens the panel beside the trigger, not above it, so the hover bridge
    has to span the horizontal gap: the base rule's downward strip would sit under
    the panel and leave the pointer's 8px crossing uncovered. */
-body[data-dsh-claude-style] [class*="root"][class*="collapsed"] .dsh-claude-account-popover::after {
+body[data-dsh-claude-style] [class*="_root"][class*="_collapsed"] .dsh-claude-account-popover::after {
   top: 0 !important;
   bottom: 0 !important;
   left: auto !important;
@@ -139,19 +139,19 @@ body[data-dsh-claude-style] [class*="root"][class*="collapsed"] .dsh-claude-acco
    in the rail. Reachability is unaffected — the popover's settings item opens
    the real trigger programmatically (`realTrigger.click()`), which
    display:none does not block. */
-body[data-dsh-claude-style][%%FOOTER_ATTR%%] [class*="root"][class*="collapsed"] [class*="footArea"] [class*="settingsArea"] :is(button, [class*="triggerRow"]):not([data-dsh-claude-account-host-row]):not(:has([data-dsh-claude-account-host-row])) {
+body[data-dsh-claude-style][%%FOOTER_ATTR%%] [class*="_root"][class*="_collapsed"] [class*="footArea"] [class*="settingsArea"] :is(button, [class*="triggerRow"]):not([data-dsh-claude-account-host-row]):not(:has([data-dsh-claude-account-host-row])) {
   display: none !important;
 }
 /* The rail's host account row is a 36px square with neither label nor chevron,
    matching the self-built trigger's rail shape. */
-body[data-dsh-claude-style] [class*="root"][class*="collapsed"] [data-dsh-claude-account-host-row] {
+body[data-dsh-claude-style] [class*="_root"][class*="_collapsed"] [data-dsh-claude-account-host-row] {
   width: 36px !important;
   height: 36px !important;
   padding: 0 !important;
   justify-content: center !important;
   font-size: 0 !important;
 }
-body[data-dsh-claude-style] [class*="root"][class*="collapsed"] [data-dsh-claude-account-host-row]::after {
+body[data-dsh-claude-style] [class*="_root"][class*="_collapsed"] [data-dsh-claude-account-host-row]::after {
   display: none !important;
 }
 

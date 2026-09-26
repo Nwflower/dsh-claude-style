@@ -234,7 +234,7 @@ body[data-dsh-claude-style] button[class*="panelRow"]:hover svg {
 
 /* ---------- Claude Code layout: workspace & session sidebar ---------- */
 /* 1. Typography: Anthropic Sans and compact font sizes */
-body[data-dsh-claude-style] :is([data-pane="sidebar"], [class*="sidebarCol"], [class*="treeBody"], [role="tree"]) :is([class*="title"], [class*="projectText"], [class*="sectionLabel"], [class*="sessionRow"], [class*="projectRow"], [class*="time"]) {
+body[data-dsh-claude-style] :is([data-pane="sidebar"], [class*="sidebarCol"], [class*="treeBody"], [role="tree"]) :is([class*="title"], [class*="projectText"], [class*="sectionLabel"], [class*="sessionRow"], [class*="projectRow"], [class*="_time"]) {
   font-family: var(--dsw-font-family) !important;
 }
 body[data-dsh-claude-style] [class*="projectRow"] [class*="title"] {
@@ -252,13 +252,13 @@ body[data-dsh-claude-style] [class*="sessionRow"] [class*="title"] {
 body[data-dsh-claude-style][data-ds-dark-theme] [class*="sessionRow"] [class*="title"] {
   color: #8c8983 !important;
 }
-body[data-dsh-claude-style] [class*="sessionRow"]:is(:hover, [class*="selected"], [class*="active"], [class*="menuOpen"], [aria-selected="true"], [data-selected="true"]) [class*="title"] {
+body[data-dsh-claude-style] [class*="sessionRow"]:is(:hover, [class*="_selected"], [class*="_active"], [class*="menuOpen"], [aria-selected="true"], [data-selected="true"]) [class*="title"] {
   color: var(--dsw-alias-label-primary, #141413) !important;
 }
-body[data-dsh-claude-style][data-ds-dark-theme] [class*="sessionRow"]:is(:hover, [class*="selected"], [class*="active"], [class*="menuOpen"], [aria-selected="true"], [data-selected="true"]) [class*="title"] {
+body[data-dsh-claude-style][data-ds-dark-theme] [class*="sessionRow"]:is(:hover, [class*="_selected"], [class*="_active"], [class*="menuOpen"], [aria-selected="true"], [data-selected="true"]) [class*="title"] {
   color: #f5f4ef !important;
 }
-body[data-dsh-claude-style] [class*="sessionRow"] [class*="time"] {
+body[data-dsh-claude-style] [class*="sessionRow"] [class*="_time"] {
   font-size: 11px !important;
   line-height: 16px !important;
 }
@@ -305,7 +305,7 @@ body[data-dsh-claude-style] :is([class*="projectRow"], [class*="sessionRow"]) [c
    darkening (rule 4). This also cancels the shipped
    .projectRow:hover{background:var(--dsw-alias-interactive-bg-hover)}. */
 body[data-dsh-claude-style] [class*="sessionRow"]:hover,
-body[data-dsh-claude-style] [class*="sessionRow"][class*="selected"],
+body[data-dsh-claude-style] [class*="sessionRow"][class*="_selected"],
 body[data-dsh-claude-style] [class*="sessionRow"][class*="menuOpen"] {
   background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
 }
@@ -313,7 +313,7 @@ body[data-dsh-claude-style] [class*="sessionRow"][class*="menuOpen"] {
 body[data-dsh-claude-style] [class*="projectRow"],
 body[data-dsh-claude-style] [class*="projectRow"]:hover,
 body[data-dsh-claude-style] [class*="projectRow"][class*="menuOpen"],
-body[data-dsh-claude-style] [class*="projectRow"][class*="selected"] {
+body[data-dsh-claude-style] [class*="projectRow"][class*="_selected"] {
   background: transparent !important;
 }
 
@@ -330,7 +330,7 @@ body[data-dsh-claude-style] [class*="projectRow"] [class*="folderActive"] {
   color: inherit !important;
 }
 /* Cancel folder icon */
-body[data-dsh-claude-style] [class*="projectRow"] [class*="folder"] {
+body[data-dsh-claude-style] [class*="projectRow"] [class*="_folder"] {
   display: none !important;
 }
 /* Project row flex layout: Title on the left, dropdown arrow next to title */
@@ -349,7 +349,7 @@ body[data-dsh-claude-style] [class*="projectRow"] [class*="projectText"] {
    is widened to the whole group section: the folder row and everything listed
    under it. (Keyed on the section's own :hover rather than
    `:has(row:hover)`, which made every DOM change re-match the document.) */
-body[data-dsh-claude-style] [class*="projectRow"] [class*="chevron"] {
+body[data-dsh-claude-style] [class*="projectRow"] [class*="_chevron"] {
   order: 2 !important;
   display: none !important;
   width: 14px !important;
@@ -358,7 +358,7 @@ body[data-dsh-claude-style] [class*="projectRow"] [class*="chevron"] {
   justify-content: center !important;
   color: var(--dsw-alias-label-secondary, #787672) !important;
 }
-body[data-dsh-claude-style] [class*="groupSection"]:hover [class*="projectRow"] [class*="chevron"] {
+body[data-dsh-claude-style] [class*="groupSection"]:hover [class*="projectRow"] [class*="_chevron"] {
   display: inline-flex !important;
 }
 body[data-dsh-claude-style] [class*="projectRow"] [class*="rowActions"] {
@@ -366,10 +366,10 @@ body[data-dsh-claude-style] [class*="projectRow"] [class*="rowActions"] {
   margin-left: auto !important;
 }
 /* Cancel solid lower triangle, replace with dropdown menu arrow */
-body[data-dsh-claude-style] [class*="projectRow"] [class*="chevron"] svg {
+body[data-dsh-claude-style] [class*="projectRow"] [class*="_chevron"] svg {
   display: none !important;
 }
-body[data-dsh-claude-style] [class*="projectRow"] [class*="chevron"]::after {
+body[data-dsh-claude-style] [class*="projectRow"] [class*="_chevron"]::after {
   content: "";
   display: inline-block;
   width: 12px;
@@ -379,7 +379,7 @@ body[data-dsh-claude-style] [class*="projectRow"] [class*="chevron"]::after {
   mask: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27 fill=%27none%27 stroke=%27black%27 stroke-width=%271.5%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpath d=%27M4 6l4 4 4-4%27/%3E%3C/svg%3E") center / contain no-repeat;
   transition: transform 0.15s var(--ds-ease-in-out, ease);
 }
-body[data-dsh-claude-style] [class*="projectRow"][aria-expanded="false"] [class*="chevron"]::after {
+body[data-dsh-claude-style] [class*="projectRow"][aria-expanded="false"] [class*="_chevron"]::after {
   transform: rotate(-90deg);
 }
 /* Session status circle indicator (matching Claude style). The host's newer
@@ -388,15 +388,15 @@ body[data-dsh-claude-style] [class*="projectRow"][aria-expanded="false"] [class*
    is registered — an idle row's seat is therefore no longer :empty, so the
    circle hangs on the empty anchor as well. A seat carrying status dots or
    another plugin's content keeps its own paint and gets no circle. */
-body[data-dsh-claude-style] [class*="sessionRow"] [class*="slot"] {
+body[data-dsh-claude-style] [class*="sessionRow"] [class*="_slot"] {
   width: 14px !important;
   height: 16px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
 }
-body[data-dsh-claude-style] [class*="sessionRow"] [class*="slot"]:empty::after,
-body[data-dsh-claude-style] [class*="sessionRow"] [class*="slot"] > [data-slot]:empty::after {
+body[data-dsh-claude-style] [class*="sessionRow"] [class*="_slot"]:empty::after,
+body[data-dsh-claude-style] [class*="sessionRow"] [class*="_slot"] > [data-slot]:empty::after {
   content: "";
   display: inline-block;
   width: 5px;
@@ -449,7 +449,7 @@ body[data-dsh-claude-style] svg[data-state="ongoing"] * {
 }
 
 /* Turn status: Claude thinking indicator (terracotta accent shimmer) */
-body[data-dsh-claude-style] [class*="turnStatus"]:not([class*="Clock"]):not([class*="clock"]) {
+body[data-dsh-claude-style] [class*="turnStatus"]:not([class*="Clock"]):not([class*="_clock"]) {
   background: linear-gradient(90deg, #d97757 0%, #d97757 40%, #f3b5a3 50%, #d97757 60%, #d97757 100%);
   background-position: 100% 0;
   background-size: 250% 100%;
@@ -463,7 +463,7 @@ body[data-dsh-claude-style] [class*="turnStatus"]:not([class*="Clock"]):not([cla
   to { background-position: 0 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  body[data-dsh-claude-style] [class*="turnStatus"]:not([class*="Clock"]):not([class*="clock"]) {
+  body[data-dsh-claude-style] [class*="turnStatus"]:not([class*="Clock"]):not([class*="_clock"]) {
     background-position: 0 0;
     background-size: 100% 100%;
     animation: none;

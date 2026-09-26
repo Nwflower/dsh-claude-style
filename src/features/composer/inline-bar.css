@@ -1,7 +1,7 @@
 /* @composer-gate */
 /* Model trigger in trailing */
-body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [class*="trailing"] > :first-child,
-body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [class*="trailing"] :is([class*="trigger" i], [class*="model" i], [class*="Model"]) {
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [class*="_trailing"] > :first-child,
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [class*="_trailing"] :is([class*="trigger" i], [class*="model" i], [class*="Model"]) {
   display: inline-flex !important;
   align-items: center !important;
   font-size: 13px !important;
@@ -18,7 +18,7 @@ body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"]
 body[data-dsh-claude-style] [data-dsh-claude-model-host] {
   display: none !important;
 }
-body[data-dsh-claude-style] [class*="trailing"] .dsh-claude-model-btn {
+body[data-dsh-claude-style] [class*="_trailing"] .dsh-claude-model-btn {
   display: inline-flex !important;
   align-items: center !important;
   gap: 2px !important;
@@ -36,20 +36,20 @@ body[data-dsh-claude-style] [class*="trailing"] .dsh-claude-model-btn {
   box-sizing: border-box !important;
   min-width: 0 !important;
 }
-body[data-dsh-claude-style] [class*="trailing"] .dsh-claude-model-btn-label.dsh-claude-model-btn-loading {
+body[data-dsh-claude-style] [class*="_trailing"] .dsh-claude-model-btn-label.dsh-claude-model-btn-loading {
   color: var(--dsw-alias-label-caption, #a6a094) !important;
 }
-body[data-dsh-claude-style] [class*="trailing"] .dsh-claude-model-btn:hover {
+body[data-dsh-claude-style] [class*="_trailing"] .dsh-claude-model-btn:hover {
   background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
   color: var(--dsw-alias-label-primary) !important;
 }
 
 /* Only the whole trigger gets the hover plate; its label/effort spans stay
    transparent so no smaller inner background appears. */
-body[data-dsh-claude-style] [class*="trailing"] .dsh-claude-model-btn > * {
+body[data-dsh-claude-style] [class*="_trailing"] .dsh-claude-model-btn > * {
   background: transparent !important;
 }
-body[data-dsh-claude-style] [class*="trailing"] .dsh-claude-model-btn-label {
+body[data-dsh-claude-style] [class*="_trailing"] .dsh-claude-model-btn-label {
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
   min-width: 0 !important;
@@ -57,7 +57,7 @@ body[data-dsh-claude-style] [class*="trailing"] .dsh-claude-model-btn-label {
 }
 /* (The effort trigger's styles live in features/effort/effort-picker.css: the
    trigger is body-mounted and JS-pinned beside the model trigger — it never
-   sits under [class*="trailing"], so the rules drafted for that seat were dead
+   sits under [class*="_trailing"], so the rules drafted for that seat were dead
    and have been removed.) */
 /* The host's dock line — the stats pills and the context meter — laid over
    the toolbar row. Both stay in their native React parent (moving them out
@@ -101,7 +101,7 @@ body[data-dsh-claude-style] [class*="composerStack"]:not([data-composer-variant=
   right: 4px !important;
   align-items: center !important;
 }
-body[data-dsh-claude-style] [class*="composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] [class*="_row"] > [class*="trailing"] {
+body[data-dsh-claude-style] [class*="composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] [class*="_row"] > [class*="_trailing"] {
   margin-right: var(--dsh-claude-meter-room, 0px) !important;
 }
 body[data-dsh-claude-style] [class*="composerStack"]:not([data-composer-variant="hero"]) [data-composer-stats] {

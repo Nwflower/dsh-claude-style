@@ -18,6 +18,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - 修复 **侧栏「已归档」显示「没有已归档的会话」**：插件启动时宿主的归档数据往往还没到，列表就一直停在空白；现在列表跟随宿主的归档记录与会话列表实时更新，启动后、在别处归档或取消归档后都立刻反映。列表收录的会话与宿主自带「仅已归档」筛选一致（不含子代理会话与已不存在的会话），每行显示宿主给出的标题，不再出现成片的「未命名会话」；会话多时列表在侧栏内滚动，不再被截在窗口底部。
 - 修复 **点击已归档行没有任何反应**：现在与宿主会话树里点已归档会话一样，窗口顶部弹出宿主自己的提示「已归档对话暂时无法查看，请取消归档后查看」。
 
+- 修复 **英文界面下「排队发送」「插话发送」按钮的外观与中文界面不一致**：英文界面下，回复进行中且草稿非空时，这两个按钮此前不显示强调色，悬停时也没有底色；现在与中文界面一致。输入框里各按钮改为按它们在宿主界面中的位置识别，不再依赖按钮文字，宿主改动按钮文案或切换界面语言都不影响样式。
 <h3 id="en-unreleased">Improvements</h3>
 
 - **The Chat / Trajectory / Context highlight slides between tabs**: switching views used to fade the highlight out on the old tab and in on the new one; now one highlight slides from the old tab to the new one, resizing to the new label as it goes, while the labels' colours cross over. The slide ignores the system's reduced-motion setting, so it still plays with Windows' "Show animations in Windows" turned off.
@@ -31,6 +32,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - Fixed **clicking an archived row doing nothing**: it now raises the host's own notice at the top of the window, "Archived sessions cannot be opened. Unarchive it to view.", the same one the host's session tree shows for an archived session.
 
 ## [0.7.2] - 2026-09-25
+- Fixed **the Queue message and Steer message buttons looking different in the English UI**: in English, with a reply running and a non-empty draft, these two buttons showed no accent colour and no hover fill; they now match the Chinese UI. The composer's buttons are now recognised by where they sit in the host's markup rather than by their text, so a host wording change or a switch of the UI language leaves their styling intact.
 
 [中文](#cn-0.7.2) | [English](#en-0.7.2)
 

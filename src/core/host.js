@@ -1,13 +1,13 @@
+    /**
+     * The host's access-mode trigger: the button its permission slot renders.
+     * Every slot render site carries a `[data-slot="<key>"]` wrapper — the
+     * host renderer's anchor contract for outside styles (ui-renderer
+     * scoped-slots) — so this reads the same in every shell language. The
+     * permission control inserts its own buttons beside the host's inside
+     * that wrapper, so the skin's are skipped.
+     */
     function findAccessTrigger() {
-      const prefixes = ['访问模式', 'Access mode']
-      const buttons = document.querySelectorAll('button[aria-label]')
-      for (let i = 0; i < buttons.length; i++) {
-        const label = buttons[i].getAttribute('aria-label') || ''
-        for (let j = 0; j < prefixes.length; j++) {
-          if (label.indexOf(prefixes[j]) === 0) return buttons[i]
-        }
-      }
-      return null
+      return document.querySelector('[data-slot="conversation.input.permission"] button:not([class*="dsh-claude"])')
     }
 
     /** The sidebar footer, where the account row and the plugin footer entries live. */

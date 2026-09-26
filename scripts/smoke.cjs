@@ -1191,6 +1191,20 @@ const PROBE = `(function () {
       await sleep(150)
       var viewStrip = viewHeader.firstChild
       var viewTabs = viewStrip.children
+      // The composer's host controls are marked by what they are, read from
+      // the host's structure; the submit button turning into stop (its glyph
+      // becomes a rect) moves its mark with it.
+      var controlOf = function (id) { var el = document.getElementById(id); return el && el.getAttribute('data-dsh-claude-control') }
+      var accessButton = document.querySelector('[data-slot="conversation.input.permission"] button:not([class*="dsh-claude"])')
+      r.controls = { commands: controlOf('commands'), send: controlOf('send'), access: accessButton && accessButton.getAttribute('data-dsh-claude-control') }
+      var sendSvg = document.querySelector('#send svg')
+      var sendGlyph = sendSvg.innerHTML
+      sendSvg.innerHTML = '<rect x="3" y="3" width="10" height="10"></rect>'
+      await sleep(60)
+      r.controls.stopping = controlOf('send')
+      sendSvg.innerHTML = sendGlyph
+      await sleep(60)
+      r.controls.back = controlOf('send')
       r.viewPill = { stamped: viewStrip.hasAttribute('data-dsh-view-tabs'), first: pillState(viewStrip, viewTabs[0]) }
       viewTabs[0].setAttribute('aria-selected', 'false')
       viewTabs[0].className = '_c_tab_1'
@@ -1555,6 +1569,7 @@ const PROBE = `(function () {
       r.leftStylesheet = !!document.getElementById('dsh-claude-style-style')
       if (viewStrip) r.viewPill.left = viewStrip.hasAttribute('data-dsh-claude-pill') || viewStrip.hasAttribute('data-dsh-view-tabs') || viewStrip.style.length > 0
       r.leftDraftMarks = document.querySelectorAll('[data-dsh-claude-draft-empty]').length
+      r.leftControlMarks = document.querySelectorAll('[data-dsh-claude-control]').length
       var hostRowEnd = document.getElementById('host-account')
       r.hostRowEnd = hostRowEnd === null ? null : {
         visibility: getComputedStyle(hostRowEnd).visibility,
@@ -1637,9 +1652,14 @@ ${footer}
 </div>
 <div data-composer-card${name === 'automode-hero' ? ' data-phase="hero"' : ''}>
 ${heroRow}
-  <div class="_x_toolbar_1"><button aria-label="Access mode: Edit">Edit</button></div>
   <div data-composer-input contenteditable="true" id="editor">/comp</div>
-  <button aria-label="Send" id="send">Send</button>
+  <div class="_x_row_1">
+    <div class="_x_tools_1">
+      <button class="_x_add_1" aria-label="Add files or run commands" aria-haspopup="listbox" id="commands"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 2v12M2 8h12"/></svg></button>
+      <div class="_x_modes_1"><div data-slot="conversation.input.permission" style="display:contents"><button aria-label="Access mode, current: Edit">Edit</button></div></div>
+    </div>
+    <div class="_x_trailing_1"><button class="_x_primary_1" aria-label="Send message" id="send"><svg viewBox="0 0 16 16" width="16" height="16"><path d="M8 1v14"/></svg></button></div>
+  </div>
 </div>
 ${stats}
 ${hostControls}
@@ -1720,6 +1740,12 @@ const CASES = {
       pill.reducedMotionRules === 0, `${pill.reducedMotionRules} rules`)
     check('teardown takes the pill, its placement and the strip stamp off the view tabs', pill.left === false, JSON.stringify(pill.left))
     check('teardown takes the draft marks off the composer cards', r.leftDraftMarks === 0, `${r.leftDraftMarks} left`)
+    const controls = r.controls || {}
+    check('the composer\'s host controls are marked by structure: commands, access, send',
+      controls.commands === 'commands' && controls.access === 'access' && controls.send === 'send', JSON.stringify(controls))
+    check('the submit button\'s mark follows its glyph to stop and back',
+      controls.stopping === 'stop' && controls.back === 'send', JSON.stringify(controls))
+    check('teardown takes the control marks off the host controls', r.leftControlMarks === 0, `${r.leftControlMarks} left`)
     check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
     check('detailed stats keep the merged sentence: host icons hidden, our separator in',
       r.statsMode === 'detailed' && r.statsIcons !== null && r.statsIcons.length === 2 &&
@@ -1910,11 +1936,11 @@ const CASES = {
       drew('overview', 'dsh-claude-home-stat') && drew('overview', 'dsh-claude-home-heat'),
       JSON.stringify(renders.overview))
     const said = (tab, pattern) => renders[tab] !== undefined && renders[tab].texts.some((text) => pattern.test(text))
-    check('all time: the peak hour and the book line read the whole history (500k steps down to Moby-Dick)',
-      said('overview', /^3 AM$/) && said('overview', /^You've used ~2× more tokens than Moby-Dick\.$/),
+    check('all time: the peak hour and the book line read the whole history (500k steps down to Death\'s End)',
+      said('overview', /^3 AM$/) && said('overview', /^You've used ~1× more tokens than Death's End\.$/),
       JSON.stringify(renders.overview && renders.overview.texts))
-    check('7d: the peak hour and the book line follow the range window (250k steps down to Pride and Prejudice)',
-      said('overview-7d', /^3 PM$/) && said('overview-7d', /^You've used ~2× more tokens than Pride and Prejudice\.$/),
+    check('7d: the peak hour and the book line follow the range window (250k steps down to Dracula)',
+      said('overview-7d', /^3 PM$/) && said('overview-7d', /^You've used ~1× more tokens than Dracula\.$/),
       JSON.stringify(renders['overview-7d'] && renders['overview-7d'].texts))
     check('the usage panel renders its Models tab: stacked chart and ranked list',
       drew('models', 'dsh-claude-home-chart-seg') && drew('models', 'dsh-claude-home-model'),

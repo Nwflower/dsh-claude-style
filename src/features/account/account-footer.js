@@ -107,7 +107,7 @@
        */
       function positionAccountPopover() {
         if (!accountPopover || !accountBtn) return
-        if (accountBtn.closest('[class*="collapsed"]') === null) {
+        if (accountBtn.closest('[class*="_collapsed"]') === null) {
           accountPopover.style.removeProperty('left')
           accountPopover.style.removeProperty('top')
           return

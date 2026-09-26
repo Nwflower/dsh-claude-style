@@ -367,7 +367,7 @@ body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] [class*="itemWrap"] > [role=
 }
 /* The selected row keeps the skin's fill rather than the host's stronger
    accent: the account menu's rows are actions, not a persistent choice. */
-body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] [class*="selected"] {
+body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] [class*="_selected"] {
   background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
 }
 body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] [class*="itemLabel"] {
@@ -394,11 +394,11 @@ body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] [role="separator"] {
 
 /* The list and its pinned footer sit inside the card's 6px padding; the footer
    keeps a hairline but takes the skin's spacing. */
-body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] [class*="viewport"] {
+body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] [class*="_viewport"] {
   padding: 0 !important;
   overflow-x: hidden !important;
 }
-body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] [class*="footer"] {
+body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] [class*="_footer"] {
   margin-top: 2px !important;
   padding-top: 2px !important;
   border-top: 1px solid var(--dsw-alias-border-l1, #e8e6dc) !important;
