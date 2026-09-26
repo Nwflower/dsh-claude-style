@@ -14,7 +14,7 @@
  * screenshot with real workspace names in it.
  *
  * Usage:
- *   node scripts/shoot.cjs --token <launch-token> [--url http://127.0.0.1:4390]
+ *   node scripts/shoot.cjs --token <launch-token> [--url http://127.0.0.1:3080]
  *
  * The launch token comes from the `dsh web` banner (GUI URL `/?token=…`) or
  * the DSH_WEB_TOKEN env var. Chrome is launched headless with a throwaway
@@ -30,7 +30,7 @@ const argOf = (name) => {
   return i === -1 ? undefined : args[i + 1]
 }
 const TOKEN = argOf('token') || process.env.DSH_WEB_TOKEN
-const BASE = (argOf('url') || 'http://127.0.0.1:4390').replace(/\/+$/, '')
+const BASE = (argOf('url') || 'http://127.0.0.1:3080').replace(/\/+$/, '')
 const OUT = path.resolve(argOf('out') || path.join(__dirname, '..', 'docs'))
 const WIDTH = 1440
 const HEIGHT = 900

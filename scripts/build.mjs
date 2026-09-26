@@ -28,6 +28,7 @@
  * runtime), so each fragment must keep its 4-space base indentation and must
  * NOT use import/export.
  */
+import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 import vm from 'node:vm'
@@ -496,14 +497,29 @@ function main() {
     return text
   }
 
-  const bundle = [
+  // The build id: a hash of the bundle itself, written into it. The skin puts
+  // it on <body data-dsh-claude-style>, so a live page can be matched to the
+  // lib/client.js it runs — a hot reload swaps the bundle without reloading
+  // the page, so the page's load time says nothing about its code.
+  const BUILD_ID_SLOT = '%%BUILD_ID%%'
+  const buildDecl = [
+    '    // ============================================================================',
+    '    // 构建编号（由 scripts/build.mjs 按产物内容生成） (Build id)',
+    '    // ============================================================================',
+    `    var BUILD_ID = '${BUILD_ID_SLOT}'`,
+  ].join('\n')
+
+  const draft = [
     HEADER,
     fragment(FRAGMENTS[0]),
     cssDecl,
     combineDecl,
+    buildDecl,
     ...FRAGMENTS.slice(1).map(fragment),
     FOOTER,
   ].join('\n\n')
+  const buildId = createHash('sha256').update(draft).digest('hex').slice(0, 12)
+  const bundle = draft.replace(BUILD_ID_SLOT, buildId)
 
   // Syntax gate: the bundle must parse before it is written.
   try {
@@ -519,7 +535,7 @@ function main() {
   fs.writeFileSync(OUT, bundle)
 
   const lines = bundle.split('\n').length
-  console.log(`built lib/client.js (${lines} lines, ${bundle.length} bytes) from src/ (${STYLE_FILES.length} stylesheets + ${FRAGMENTS.length} fragments + ${Object.keys(combines).length} lockups)`)
+  console.log(`built lib/client.js (${lines} lines, ${bundle.length} bytes, build ${buildId}) from src/ (${STYLE_FILES.length} stylesheets + ${FRAGMENTS.length} fragments + ${Object.keys(combines).length} lockups)`)
 
   const copy = JSON.parse(fs.readFileSync(path.join(SRC, MODEL_COPY), 'utf8'))
   const exact = validateModelCopy(copy, combines)

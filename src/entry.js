@@ -88,7 +88,9 @@
         }
       }
 
-      body.setAttribute('data-dsh-claude-style', '')
+      // The value is the build id (scripts/build.mjs): the stylesheet keys on
+      // the attribute alone, and a live page reads which lib/client.js it runs.
+      body.setAttribute('data-dsh-claude-style', BUILD_ID)
       setHostContext(ctx)
       // Bind the official settings form before anything reads a preference:
       // the host serves namespaces through `ctx.configForms`. Bound once here,

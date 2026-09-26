@@ -17,7 +17,7 @@
  *   6. memory    — JS heap before and after opening the picker.
  *
  * Usage:
- *   node scripts/probe-timing.cjs --token <launch-token> [--url http://127.0.0.1:43120]
+ *   node scripts/probe-timing.cjs --token <launch-token> [--url http://127.0.0.1:3080]
  *
  * The launch token comes from the GUI URL (`/?token=…`) of the running DSH
  * instance; it may also be passed via the DSH_WEB_TOKEN env var.
@@ -30,7 +30,7 @@ const argOf = (name) => {
   return i === -1 ? undefined : args[i + 1]
 }
 const TOKEN = argOf('token') || process.env.DSH_WEB_TOKEN
-const BASE = (argOf('url') || 'http://127.0.0.1:43120').replace(/\/+$/, '')
+const BASE = (argOf('url') || 'http://127.0.0.1:3080').replace(/\/+$/, '')
 
 if (!TOKEN) {
   console.error('usage: node scripts/probe-timing.cjs --token <launch-token> [--url <base>]')
