@@ -97,6 +97,25 @@
         }
       }
 
+      var DRAFT_EMPTY_ATTR = 'data-dsh-claude-draft-empty'
+
+      /**
+       * Mark the cards whose draft is empty. The host's editor shows its
+       * placeholder exactly then (DraftEditor's `data-composer-placeholder`),
+       * and the send button's ghost and ready looks key on this mark — as a
+       * stylesheet test (`card:has(placeholder) button`) it made every DOM
+       * change re-match the whole document. The placeholder comes and goes as a
+       * DOM change, so the pass that follows it moves the mark in the same frame.
+       */
+      function syncDraftState(cards) {
+        for (var i = 0; i < cards.length; i++) {
+          var empty = cards[i].querySelector('[data-composer-placeholder]') !== null
+          if (empty === cards[i].hasAttribute(DRAFT_EMPTY_ATTR)) continue
+          if (empty) cards[i].setAttribute(DRAFT_EMPTY_ATTR, '')
+          else cards[i].removeAttribute(DRAFT_EMPTY_ATTR)
+        }
+      }
+
       /**
        * The composer's dock line, which the host renders right after the card
        * (a notice line, when there is one, sits before it).
@@ -189,6 +208,7 @@
           else document.body.removeAttribute(COMPOSER_ATTR)
         }
         syncAttachments(cards)
+        syncDraftState(cards)
         stampContextMeter(cards[0])
         syncChatTabComposer()
       }
@@ -247,7 +267,7 @@
         heroCard = null
         if (document.body.hasAttribute(COMPOSER_ATTR)) document.body.removeAttribute(COMPOSER_ATTR)
         document.body.removeAttribute('data-dsh-claude-composer-hidden')
-        var marks = ['data-composer-variant', 'data-has-attachments', ATTACHMENT_TILE_ATTR, 'data-dsh-claude-context-meter']
+        var marks = ['data-composer-variant', 'data-has-attachments', ATTACHMENT_TILE_ATTR, DRAFT_EMPTY_ATTR, 'data-dsh-claude-context-meter']
         for (var k = 0; k < marks.length; k++) {
           var marked = document.querySelectorAll('[' + marks[k] + ']')
           for (var i = 0; i < marked.length; i++) marked[i].removeAttribute(marks[k])

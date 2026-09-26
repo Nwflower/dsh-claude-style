@@ -1,5 +1,7 @@
     function installPermissions(ctx, ui) {
       var segments = null
+      /** The segment group's sliding highlight (src/overrides/sliding-pill.js). */
+      var segmentPill = createSlidingPill('[data-active]')
       var permContainer = null
       var permBtn = null
       var permLabel = null
@@ -512,6 +514,7 @@
             existingSegments[es0].remove()
           }
           segments = null
+          segmentPill.sync(null)
           coldStartShown = false
           return
         }
@@ -576,11 +579,13 @@
               item.setAttribute('aria-checked', 'false')
             }
           }
+          segmentPill.sync(segments)
         } else {
           for (var es = 0; es < existingSegments.length; es++) {
             existingSegments[es].remove()
           }
           segments = null
+          segmentPill.sync(null)
 
           var allExisting = document.querySelectorAll('.dsh-claude-perm-container')
           if (allExisting.length > 0) {
@@ -654,6 +659,7 @@
           window.removeEventListener('scroll', permResizeListener, true)
           permResizeListener = null
         }
+        segmentPill.release()
         removeStrayNodes(document, '.' + SEGMENTS_CLASS + '[data-composer-segments], .dsh-claude-perm-container, .dsh-claude-perm-popover', [])
         segments = null
         permPopover = null

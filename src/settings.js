@@ -13,9 +13,10 @@
      * follows the shell language like every other string the skin paints. The
      * English literals here are the fallback for a failed fetch.
      *
-     * Both segmented controls reuse the shared `.dsh-claude-segments` /
-     * `.dsh-claude-segment` classes — the same control the composer's permission
-     * picker uses — so the two read as one design instead of two lookalikes.
+     * Its segmented controls reuse the shared `.dsh-claude-segments` /
+     * `.dsh-claude-segment` classes and sliding highlight — the same control the
+     * composer's permission picker uses — so the two read as one design instead
+     * of two lookalikes.
      */
     /**
      * The quick-provider popover (src/overrides/quick-providers.js). The settings
@@ -23,6 +24,28 @@
      * popover through this handle.
      */
     var quickProviderApi = null
+
+    /**
+     * One segmented control on the page, carrying the shared sliding highlight
+     * (src/overrides/sliding-pill.js). The group is React's, so the pill is
+     * placed from a layout effect after every render — before the frame is
+     * painted — and taken off when the group unmounts.
+     */
+    function ClaudeStyleSegmentGroup(props) {
+      var group = React.useRef(null)
+      var pill = React.useRef(null)
+      React.useLayoutEffect(function () {
+        pill.current = createSlidingPill('[data-active]')
+        return function () {
+          pill.current.release()
+          pill.current = null
+        }
+      }, [])
+      React.useLayoutEffect(function () {
+        pill.current.sync(group.current)
+      })
+      return React.createElement('div', { ref: group, className: SEGMENTS_CLASS, role: 'group' }, props.children)
+    }
 
     function ClaudeStyleSettingsSection(props) {
       var state = React.useState(readPrefs())
@@ -117,7 +140,7 @@
             options[i].label,
           ))
         }
-        return React.createElement('div', { className: SEGMENTS_CLASS, role: 'group' }, buttons)
+        return React.createElement(ClaudeStyleSegmentGroup, null, buttons)
       }
 
       var toggle = function (on, onPick) {

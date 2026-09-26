@@ -68,9 +68,10 @@
 ## D9. composer 的 :has() 分支改 JS 写属性
 
 - **背景**：皮肤在流式输出期间的渲染压力主要来自两处：D6 的每帧全量 pass，以及 CSS 中约 70 处对 DOM 结构敏感的 `:has()`（绝大多数是 `[class*="composerStack"]` 上的 hero/inline 分支）——每次 DOM 变更都触发昂贵的选择器重算。
-- **决定**：把「结构感知」从 CSS 移到 JS：`composer.js` 的 pass（每轮第一个同步）为卡片与 composerStack 祖先写 `data-composer-variant="hero|inline"` 属性（hero 以宿主会话根上的 `data-phase="hero"` 为准；observer 的 attributeFilter 不含 data-*，不会反触发；写前比较旧值防抖动；同轮去重避免多卡命中同一 stack 反复写），CSS 改为读属性。附件同理：同一个 pass 找出输入栏里的附件缩略图并标上 `data-dsh-claude-attachment`，缩略图样式只读这个属性，不再在 CSS 里用 `:has(img)` 逐次判定。交互敏感的 `:has()`（`:hover`、`:focus-within`）与低频的 dialog `:has()` 保留。
-- **落地**：已执行完毕。仍未消除的结构感知 `:has()` 还有两处：placeholder 那几条（`card` 与 inline 规则上的 `:has([data-composer-placeholder])`）——`copy.js` 本就管理 placeholder，可在它的 sync 里同步写 `data-has-placeholder` 再改 CSS；以及 hero 分支上的 `*:has([data-composer-card])`。两处都属可选的后续优化。
-- **重审条件**：实测证明 :has() 不再是热点，或宿主提供 hero/inline 的稳定属性契约。
+- **决定**：把「结构感知」从 CSS 移到 JS：`composer.js` 的 pass（每轮第一个同步）为卡片与 composerStack 祖先写 `data-composer-variant="hero|inline"` 属性（hero 以宿主会话根上的 `data-phase="hero"` 为准；observer 的 attributeFilter 不含 data-*，不会反触发；写前比较旧值防抖动；同轮去重避免多卡命中同一 stack 反复写），CSS 改为读属性。附件同理：同一个 pass 找出输入栏里的附件缩略图并标上 `data-dsh-claude-attachment`，缩略图样式只读这个属性，不再在 CSS 里用 `:has(img)` 逐次判定。草稿同理：同一个 pass 在草稿为空（宿主编辑器显示 `data-composer-placeholder`）的卡片上写 `data-dsh-claude-draft-empty`，发送按钮的两种外观只读这个属性。
+- **修订（2026-09-26）**：原决定保留了「交互敏感的 `:has()`（`:hover`、`:focus-within`）」，理由是它们只在交互时才需要重算。实测推翻了这个理由：开销取决于 `:has()` 在选择器里的**位置**，与它测试的内容无关。在无界面 Chrome 里打开一个会话、每帧往页面追加一个字（等同打字机效果或流式输出），整张皮肤样式表让每帧样式重算从 1.6ms 涨到 11–18ms；逐条加回测量，凡是 `:has()` 后面还接着后代或兄弟选择器的规则（`A:has(B) C`、`body:not(:has(B)) C`），单独一条就让每帧多出 7–13ms，不论括号里测的是结构还是 `:hover` / `:focus-within`；`:has()` 位于最后一段的规则（`A:has(B)`、`A :has(B)`）每条只要 0.1–0.5ms。因此规则改为：**`:has()` 只能出现在选择器的最后一段**，其余写法改成 pass 写属性，或改成从上往下读状态的选择器（侧栏展开态从 AppFrame 往下读 `:not([data-sidebar-collapsed])`，文件夹箭头改用分组自己的 `:hover`，工作区行改用 `composerStack:focus-within` 并排除行内聚焦，对话视图标签条由 `view-tabs.js` 打 `data-dsh-view-tabs`）。`scripts/build.mjs` 的 `checkHasPlacement` 在构建时拒绝违规写法。改完后同一场景每帧样式重算为 1.9–2.7ms，每帧主线程总耗时从 14–23ms 降到 5–7ms。
+- **落地**：已执行完毕。hero 分支上的 `*:has([data-composer-card])` 位于最后一段，按上面的规则保留。
+- **重审条件**：浏览器对非末段 `:has()` 的失效处理变得廉价（同一场景下实测不再显著高于末段写法），或宿主提供 hero/inline 的稳定属性契约。
 
 ## D10. 设置传输只走官方 Config 表单
 

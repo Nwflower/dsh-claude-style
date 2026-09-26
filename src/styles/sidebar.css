@@ -76,8 +76,12 @@ body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_ANTHROPIC%%"] [class*="brand
    inside, which is how Claude marks its primary "New" row. The row treatment
    holds while the column is expanded: collapsed, the host re-seats this button
    as its own icon control (36px in the rail, 28px fixed in the Windows
-   titlebar), where a full-width row plate would span the titlebar. */
-body[data-dsh-claude-style]:not(:has([data-sidebar-collapsed])) button[class*="newSession"] {
+   titlebar), where a full-width row plate would span the titlebar. The app
+   frame carries the collapsed marker (ui-layout's AppFrame) and holds the
+   sidebar column as a direct child, so the expanded state is read going down
+   from the frame — `body:not(:has(collapsed))` made every DOM change re-match
+   the whole document. */
+body[data-dsh-claude-style] [class*="_frame"]:not([data-sidebar-collapsed]) > [class*="_sidebarCol"] button[class*="newSession"] {
   display: flex !important;
   align-items: center !important;
   justify-content: flex-start !important;
@@ -102,13 +106,13 @@ body[data-dsh-claude-style]:not(:has([data-sidebar-collapsed])) button[class*="n
   box-shadow: none !important;
   transition: background-color 0.12s ease !important;
 }
-body[data-dsh-claude-style]:not(:has([data-sidebar-collapsed])) button[class*="newSession"]:hover {
+body[data-dsh-claude-style] [class*="_frame"]:not([data-sidebar-collapsed]) > [class*="_sidebarCol"] button[class*="newSession"]:hover {
   background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
 }
-body[data-dsh-claude-style][data-ds-dark-theme]:not(:has([data-sidebar-collapsed])) button[class*="newSession"] {
+body[data-dsh-claude-style][data-ds-dark-theme] [class*="_frame"]:not([data-sidebar-collapsed]) > [class*="_sidebarCol"] button[class*="newSession"] {
   color: #f5f4ef !important;
 }
-body[data-dsh-claude-style][data-ds-dark-theme]:not(:has([data-sidebar-collapsed])) button[class*="newSession"]:hover {
+body[data-dsh-claude-style][data-ds-dark-theme] [class*="_frame"]:not([data-sidebar-collapsed]) > [class*="_sidebarCol"] button[class*="newSession"]:hover {
   background: rgba(255, 255, 255, 0.08) !important;
 }
 /* Collapsed rail and titlebar: no hover plate. The host draws one for its own
@@ -341,8 +345,10 @@ body[data-dsh-claude-style] [class*="projectRow"] [class*="projectText"] {
 }
 /* The chevron is a reveal-on-hover affordance, never a resting one. The
    shipped CSS gates it on .projectRow:hover alone, which drops it the moment
-   the pointer moves down into the folder's conversation list; :has() on the
-   group section widens the trigger to the folder row or any row inside it. */
+   the pointer moves down into the folder's conversation list, so the trigger
+   is widened to the whole group section: the folder row and everything listed
+   under it. (Keyed on the section's own :hover rather than
+   `:has(row:hover)`, which made every DOM change re-match the document.) */
 body[data-dsh-claude-style] [class*="projectRow"] [class*="chevron"] {
   order: 2 !important;
   display: none !important;
@@ -352,7 +358,7 @@ body[data-dsh-claude-style] [class*="projectRow"] [class*="chevron"] {
   justify-content: center !important;
   color: var(--dsw-alias-label-secondary, #787672) !important;
 }
-body[data-dsh-claude-style] [class*="groupSection"]:has(:is([class*="projectRow"], [class*="sessionRow"]):hover) [class*="projectRow"] [class*="chevron"] {
+body[data-dsh-claude-style] [class*="groupSection"]:hover [class*="projectRow"] [class*="chevron"] {
   display: inline-flex !important;
 }
 body[data-dsh-claude-style] [class*="projectRow"] [class*="rowActions"] {

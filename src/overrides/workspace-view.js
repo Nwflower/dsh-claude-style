@@ -52,6 +52,8 @@
       var LABEL_TEXTS = ['工作区', 'Workspace']
       var view = 'active'
       var control = null
+      /** The control's sliding highlight (src/overrides/sliding-pill.js). */
+      var segmentPill = createSlidingPill('[aria-checked="true"]')
       var listHost = null
       var markedLabel = null
       var markedTree = null
@@ -349,6 +351,7 @@
           var on = id === view
           if (item.getAttribute('aria-checked') !== (on ? 'true' : 'false')) item.setAttribute('aria-checked', on ? 'true' : 'false')
         }
+        segmentPill.sync(control)
         var tree = findTree(label)
         if (tree === null) return
         if (markedTree !== tree) {
@@ -388,6 +391,7 @@
           unwatch()
           unwatch = null
         }
+        segmentPill.release()
         if (control !== null && control.parentElement !== null) control.parentElement.removeChild(control)
         if (listHost !== null && listHost.parentElement !== null) listHost.parentElement.removeChild(listHost)
         if (markedLabel !== null) markedLabel.removeAttribute(LABEL_ATTR)

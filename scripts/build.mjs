@@ -73,6 +73,7 @@ const FRAGMENTS = [
   'context/model-copy.js',
   'context/i18n.js',
   'overrides/popover-utils.js',
+  'overrides/sliding-pill.js',
   'overrides/selection.js',
   'overrides/composer.js',
   'overrides/copy.js',
@@ -117,6 +118,7 @@ const STYLE_FILES = [
   { file: 'composer/inline.css', gate: true },
   { file: 'composer/inline-bar.css', gate: true },
   { file: 'sidebar.css' },
+  { file: 'components/sliding-pill.css' },
   { file: 'components/workspace.css' },
   { file: 'components/permissions.css' },
   { file: 'components/account-footer.css' },
@@ -244,6 +246,51 @@ function gateComposerScope(file, text) {
     throw new Error(`build: src/styles/${file} left ${missed.length} rule(s) ungated: ${missed[0].trim().slice(0, 80)}`)
   }
   return head + gated
+}
+
+/**
+ * Refuse a `:has()` that is not in its selector's last compound.
+ *
+ * `A:has(B) C` (and `body:not(:has(B)) C`) makes the browser re-match every
+ * descendant of every A on each DOM change anywhere below it: measured at
+ * 7–13ms of style recalculation per changed frame for a single such rule on a
+ * conversation page, where the whole stylesheet without them costs 1.6ms. In
+ * the last compound (`A:has(B)`, `A :has(B)`) it costs a fraction of a
+ * millisecond. What such a rule needs is a mark the skin's pass writes — the
+ * view tabs, the draft state — or a selector that reads the state going down.
+ *
+ * @param file - stylesheet name, for diagnostics.
+ * @param text - stylesheet source (LF-normalised).
+ */
+function checkHasPlacement(file, text) {
+  // Comments blanked in place, so offsets still give the right line.
+  const source = text.replace(/\/\*[\s\S]*?\*\//g, (comment) => comment.replace(/[^\n]/g, ' '))
+  let from = 0
+  for (;;) {
+    const at = source.indexOf(':has(', from)
+    if (at === -1) return
+    from = at + 5
+    // Past the :has() argument.
+    let i = at + 4
+    let depth = 0
+    for (; i < source.length; i++) {
+      if (source[i] === '(') depth++
+      else if (source[i] === ')' && --depth === 0) { i++; break }
+    }
+    // Past the rest of its compound; a `)` with nothing open closes an
+    // enclosing :not( / :is( and belongs to the same compound.
+    let nest = 0
+    for (; i < source.length; i++) {
+      const ch = source[i]
+      if (ch === '(' || ch === '[') nest++
+      else if (ch === ')' || ch === ']') { if (nest > 0) nest-- }
+      else if (nest === 0 && /[\s,{>~+]/.test(ch)) break
+    }
+    while (i < source.length && /\s/.test(source[i])) i++
+    if (source[i] === '{' || source[i] === ',') continue
+    const line = source.slice(0, at).split('\n').length
+    throw new Error(`build: src/styles/${file}:${line} has a :has() followed by a combinator; mark the element from the skin's pass instead`)
+  }
 }
 
 /**
@@ -401,6 +448,7 @@ function main() {
       const file = fileDef.file
       const gated = fileDef.gate === true
       let text = fs.readFileSync(path.join(SRC, 'styles', file), 'utf8').replace(/\r\n/g, '\n')
+      checkHasPlacement(file, text)
       if (gated) text = gateComposerScope(file, text)
       return substitute(file, text, tokens).replace(/\n+$/, '')
     })

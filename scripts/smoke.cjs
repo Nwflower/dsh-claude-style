@@ -889,6 +889,26 @@ const PROBE = `(function () {
   try { window.__skin.apply(window.__ctx) } catch (e) { window.__applyError = String((e && e.stack) || e) }
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms) }) }
   function attrs(el) { return el ? Array.prototype.map.call(el.attributes, function (a) { return a.name }) : null }
+  // A segmented control's sliding pill (src/overrides/sliding-pill.js) against
+  // the item it should sit under: its mark, its written placement, the item's
+  // own fill (which gives way to the pill) and the transitions running on it.
+  function pillState(control, item) {
+    var box = control.getBoundingClientRect()
+    var itemBox = item.getBoundingClientRect()
+    var slides = control.getAnimations({ subtree: true }).filter(function (a) {
+      return a.effect && a.effect.pseudoElement === '::before'
+    })
+    return {
+      attr: control.hasAttribute('data-dsh-claude-pill'),
+      content: getComputedStyle(control, '::before').content,
+      x: parseFloat(control.style.getPropertyValue('--dsh-claude-pill-x')),
+      w: parseFloat(control.style.getPropertyValue('--dsh-claude-pill-w')),
+      itemX: itemBox.left - box.left - control.clientLeft,
+      itemW: itemBox.width,
+      itemFill: getComputedStyle(item).backgroundColor,
+      slides: slides.map(function (a) { return a.transitionProperty }),
+    }
+  }
   window.__smoke = (async function () {
     var r = { applyError: window.__applyError, teardownRegistered: typeof window.__dispose === 'function' }
     // The account menu is counted by content (its Sign out row), because the
@@ -1171,30 +1191,24 @@ const PROBE = `(function () {
       await sleep(150)
       var viewStrip = viewHeader.firstChild
       var viewTabs = viewStrip.children
-      var pillState = function (tab) {
-        var stripBox = viewStrip.getBoundingClientRect()
-        var tabBox = tab.getBoundingClientRect()
-        var slides = viewStrip.getAnimations({ subtree: true }).filter(function (a) {
-          return a.effect && a.effect.pseudoElement === '::before'
-        })
-        return {
-          attr: viewStrip.hasAttribute('data-dsh-view-tabs-pill'),
-          content: getComputedStyle(viewStrip, '::before').content,
-          x: parseFloat(viewStrip.style.getPropertyValue('--dsh-view-tabs-pill-x')),
-          w: parseFloat(viewStrip.style.getPropertyValue('--dsh-view-tabs-pill-w')),
-          tabX: tabBox.left - stripBox.left,
-          tabW: tabBox.width,
-          tabFill: getComputedStyle(tab).backgroundColor,
-          slides: slides.map(function (a) { return a.transitionProperty }),
-        }
-      }
-      r.viewPill = { first: pillState(viewTabs[0]) }
+      r.viewPill = { stamped: viewStrip.hasAttribute('data-dsh-view-tabs'), first: pillState(viewStrip, viewTabs[0]) }
       viewTabs[0].setAttribute('aria-selected', 'false')
       viewTabs[0].className = '_c_tab_1'
       viewTabs[2].setAttribute('aria-selected', 'true')
       viewTabs[2].className = '_c_tab_1 _c_tabActive_1'
       await sleep(60)
-      r.viewPill.switched = pillState(viewTabs[2])
+      r.viewPill.switched = pillState(viewStrip, viewTabs[2])
+      // The slide plays whatever the system's motion setting: no reduced-motion
+      // block in the shipped stylesheets may reach the pill.
+      r.viewPill.reducedMotionRules = 0
+      for (var sheetIndex = 0; sheetIndex < document.styleSheets.length; sheetIndex++) {
+        var sheetRules = document.styleSheets[sheetIndex].cssRules
+        for (var ruleIndex = 0; ruleIndex < sheetRules.length; ruleIndex++) {
+          var mediaRule = sheetRules[ruleIndex]
+          if (mediaRule instanceof CSSMediaRule && /prefers-reduced-motion/.test(mediaRule.conditionText) &&
+            mediaRule.cssText.indexOf('data-dsh-claude-pill') !== -1) r.viewPill.reducedMotionRules++
+        }
+      }
     }
     if (window.SMOKE_CASE === 'default' && statsRoot) {
       // The host's panels mount on its own commit, later than the skin's old
@@ -1383,6 +1397,9 @@ const PROBE = `(function () {
           return { label: item.textContent, disabled: item.disabled, active: item.hasAttribute('data-active') }
         }),
       }
+      var coldGroup = coldStack.querySelector('._x_modes_1 > .dsh-claude-segments')
+      var coldActive = coldGroup === null ? null : coldGroup.querySelector('[data-active]')
+      r.coldStart.pill = coldActive === null ? null : pillState(coldGroup, coldActive)
       // The session arrives: the host renders its dock, and the skin's seat
       // gives the panel back.
       var coldDock = document.createElement('div')
@@ -1536,7 +1553,8 @@ const PROBE = `(function () {
       r.leftMarkers = document.querySelectorAll('[data-dsh-claude-footer-entry], [data-dsh-claude-footer-hidden], [data-dsh-claude-footer-overlay], [data-dsh-claude-model-host], [data-dsh-claude-account-host-row], [data-dsh-claude-stats-mode]').length
       r.leftAttrs = Array.prototype.filter.call(document.body.attributes, function (a) { return /^data-dsh-(claude|window)/.test(a.name) }).map(function (a) { return a.name })
       r.leftStylesheet = !!document.getElementById('dsh-claude-style-style')
-      if (viewStrip) r.viewPill.left = viewStrip.hasAttribute('data-dsh-view-tabs-pill') || viewStrip.style.length > 0
+      if (viewStrip) r.viewPill.left = viewStrip.hasAttribute('data-dsh-claude-pill') || viewStrip.hasAttribute('data-dsh-view-tabs') || viewStrip.style.length > 0
+      r.leftDraftMarks = document.querySelectorAll('[data-dsh-claude-draft-empty]').length
       var hostRowEnd = document.getElementById('host-account')
       r.hostRowEnd = hostRowEnd === null ? null : {
         visibility: getComputedStyle(hostRowEnd).visibility,
@@ -1690,14 +1708,18 @@ const CASES = {
       JSON.stringify(greeting))
     check('the classic hero page carries no crab', r.classicCrab === false, JSON.stringify(r.classicCrab))
     const pill = r.viewPill || {}
-    const under = (s) => !!s && s.attr && s.content !== 'none' && Math.abs(s.x - s.tabX) < 0.5 &&
-      Math.abs(s.w - s.tabW) < 0.5 && s.tabFill === 'rgba(0, 0, 0, 0)'
+    const under = (s) => !!s && s.attr && s.content !== 'none' && Math.abs(s.x - s.itemX) < 0.5 &&
+      Math.abs(s.w - s.itemW) < 0.5 && s.itemFill === 'rgba(0, 0, 0, 0)'
+    check('the conversation header\'s tab strip is stamped for the stylesheet', pill.stamped === true, JSON.stringify(pill.stamped))
     check('the view tabs draw their pill under the active tab without sliding in',
       under(pill.first) && pill.first.slides.length === 0, JSON.stringify(pill.first))
     check('a view switch slides the pill to the newly active tab',
       under(pill.switched) && pill.switched.slides.indexOf('transform') !== -1 && pill.switched.x > pill.first.x,
       JSON.stringify(pill.switched))
-    check('teardown takes the pill and its placement off the view tabs', pill.left === false, JSON.stringify(pill.left))
+    check('the pill slides whatever the system motion setting: no reduced-motion rule reaches it',
+      pill.reducedMotionRules === 0, `${pill.reducedMotionRules} rules`)
+    check('teardown takes the pill, its placement and the strip stamp off the view tabs', pill.left === false, JSON.stringify(pill.left))
+    check('teardown takes the draft marks off the composer cards', r.leftDraftMarks === 0, `${r.leftDraftMarks} left`)
     check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
     check('detailed stats keep the merged sentence: host icons hidden, our separator in',
       r.statsMode === 'detailed' && r.statsIcons !== null && r.statsIcons.length === 2 &&
@@ -1927,6 +1949,11 @@ const CASES = {
       Array.isArray(cold.segments) && cold.segments.length === 4 &&
         cold.segments.every((item) => item.disabled === true && item.active === (item.label === 'Edit')),
       JSON.stringify(cold.segments))
+    const coldPill = cold.pill
+    check('the permission segments draw their sliding pill under the active segment',
+      !!coldPill && coldPill.attr && coldPill.content !== 'none' && Math.abs(coldPill.x - coldPill.itemX) < 0.5 &&
+        Math.abs(coldPill.w - coldPill.itemW) < 0.5 && coldPill.itemFill === 'rgba(0, 0, 0, 0)',
+      JSON.stringify(coldPill))
     check('the open model list shows every row and a "Show less" row',
       rows('models-open') === 8 && said('models-open', /^Show less$/) && !said('models-open', /^Show \d+ more$/),
       JSON.stringify({ rows: rows('models-open'), texts: renders['models-open'] && renders['models-open'].texts.slice(-3) }))

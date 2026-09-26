@@ -99,6 +99,25 @@ body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-ws-segment[aria-chec
   color: #f5f4ef !important;
   box-shadow: none !important;
 }
+/* The control's sliding pill (components/sliding-pill.css places and moves it;
+   the control is absolutely placed, so it already anchors the pill): the raised
+   box the checked segment wore above, which the segment gives up while the pill
+   is there. */
+body[data-dsh-claude-style] .dsh-claude-ws-segments[data-dsh-claude-pill]::before {
+  top: 2px !important;
+  bottom: 2px !important;
+  border-radius: 5px !important;
+  background: var(--dsw-alias-bg-overlay, #ffffff) !important;
+  box-shadow: 0 1px 2px rgba(20, 20, 19, 0.10) !important;
+}
+body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-ws-segments[data-dsh-claude-pill]::before {
+  background: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: none !important;
+}
+body[data-dsh-claude-style] .dsh-claude-ws-segments[data-dsh-claude-pill] > .dsh-claude-ws-segment[aria-checked="true"] {
+  background: transparent !important;
+  box-shadow: none !important;
+}
 /* ---------- workspace view: the skin's own archived list ---------- */
 /* 已归档 is the skin's list (src/overrides/workspace-view.js), flat on purpose:
    the host's own filter buries archived rows inside collapsed workspace groups

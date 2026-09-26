@@ -351,6 +351,7 @@ assembly order itself is authoritative in `scripts/build.mjs`
 | `src/styles/composer/inline.css` | in-conversation single-line composer (gated by composer preference) |
 | `src/styles/composer/inline-bar.css` | the inline composer's trailing bar: model trigger and merged time/usage stats line (gated by composer preference) |
 | `src/styles/sidebar.css` | sidebar brand, new-session row, workspace tree |
+| `src/styles/components/sliding-pill.css` | the segmented controls' shared sliding highlight: its placement and motion (each control's own stylesheet gives it shape and fill) |
 | `src/styles/components/workspace.css` | the workspace section's 进行中 / 已归档 segment control and the skin's own archived list |
 | `src/styles/components/permissions.css` | permission segments and popover |
 | `src/styles/components/account-footer.css` | account row and floating popover |
@@ -372,7 +373,8 @@ assembly order itself is authoritative in `scripts/build.mjs`
 | `src/context/model-copy.js` | model copy document store |
 | `src/context/i18n.js` | localized copy lookups |
 | `src/overrides/popover-utils.js` | shared anchor positioning and hover intent |
-| `src/overrides/composer.js` | composer layout feature: each pass writes the variant, gate, attachment and context-ring attributes the composer stylesheets read |
+| `src/overrides/sliding-pill.js` | sliding highlight factory (`createSlidingPill`): measures a segmented control's active item and writes where the shared pill sits — used by the view tabs, the permission segments, 进行中 / 已归档 and the settings page |
+| `src/overrides/composer.js` | composer layout feature: each pass writes the variant, gate, attachment, empty-draft and context-ring attributes the composer stylesheets read |
 | `src/overrides/copy.js` | composer/copy rewrites installer |
 | `src/overrides/session-stats.js` | session-stats card factory (`createSessionStats`), the permissions feature's split-out half |
 | `src/overrides/permissions.js` | permission segments/popover installer (the stats card lives in `session-stats.js`) |
@@ -395,7 +397,7 @@ assembly order itself is authoritative in `scripts/build.mjs`
 | `src/overrides/ban-screen.js` | account-hold easter egg installer |
 | `src/overrides/theme-flip.js` | suppresses transitions during a theme flip, so colours and shapes land together |
 | `src/overrides/workspace-view.js` | workspace section feature: the 进行中 / 已归档 segments and the archived list (row delete goes through the plugin's own route) |
-| `src/overrides/view-tabs.js` | conversation view tabs: moves the tab bar onto the title row when it fits, and places the pill that slides to the active tab |
+| `src/overrides/view-tabs.js` | conversation view tabs: stamps the strip the stylesheet styles, moves it onto the title row when it fits, and places its sliding pill |
 | `src/overrides/home-layout.js` | home layout feature shell: writes the layout attribute, registers the usage panel into the host's dock seat, and draws the panel's head |
 | `src/overrides/home/data.js` | the usage panel's data: the roll-up route, the session list's fallback, and the figures both tabs read |
 | `src/overrides/home/overview.js` | the usage panel's Overview tab: stat cells, heat grid, yardstick line |
@@ -434,6 +436,11 @@ rule should be checked for accidental hits:
   page's "充值") is a filled or outlined control, not a text link: it states its
   own ink. The blanket anchor colour excludes that class — painting it leaves a
   filled button's label the same colour as its fill.
+- `:has()` only in a selector's last compound (`A:has(B)`, `A :has(B)`), never
+  followed by another compound (`A:has(B) C`, `body:not(:has(B)) C`): those make
+  every DOM change re-match the document, 7–13ms of style recalculation per
+  changed frame for a single rule. Stamp the element from the skin's pass or read
+  the state going down instead; the build refuses the pattern (architecture D9).
 
 `node scripts/probe.cjs --token <launch-token>` drives a headless Chrome over
 CDP and asserts the invariants (composer pinned at bottom, single-line start,

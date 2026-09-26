@@ -242,8 +242,11 @@ body[data-dsh-claude-style] [class*="header"]:has([class*="tabs"])::after {
 /* The host's tab strip (ConversationRoot's .tabs / .tab / .tabActive) gets
    the same shape as the sidebar's 进行中 / 已归档 control: a 7px pill shell with a
    raised pill for the active tab, instead of the shipped underline. Scoped to the
-   header that owns the strip, so the settings page's own tabs keep their look. */
-body[data-dsh-claude-style] [class*="header"]:has([class*="_tabs"]) [class*="_tabs"] {
+   strip src/overrides/view-tabs.js stamps data-dsh-view-tabs on — the one in the
+   conversation header — so the settings page's own tabs keep their look. The
+   stamp stands in for `header:has(tabs) tabs`, which made every DOM change
+   re-match the whole document. */
+body[data-dsh-claude-style] [data-dsh-view-tabs] {
   display: inline-flex !important;
   /* Hug the tabs. The host's strip is a full-width flex row, so without this the
      pill shell stretches across the whole header: the "groove" reads as one long
@@ -266,7 +269,7 @@ body[data-dsh-claude-style] [class*="header"]:has([class*="_tabs"]) [class*="_ta
      10px up from y=50) holds the rest of the time. */
   justify-self: center !important;
   transform: translateY(var(--dsh-view-tabs-shift, -10px)) !important;
-  /* The sliding pill below is absolutely placed against the strip. */
+  /* The sliding pill (components/sliding-pill.css) is absolutely placed against the strip. */
   position: relative !important;
   /* A view switcher, not furniture: it fades in when the pointer is in the
      conversation pane and out when it leaves, the same idiom as the sidebar's
@@ -278,13 +281,13 @@ body[data-dsh-claude-style] [class*="header"]:has([class*="_tabs"]) [class*="_ta
 /* `centerCol` is the pane holding the header AND the transcript, so hovering the
    strip itself keeps it up, while the right sidebar — which sits outside it —
    does not bring it back. */
-body[data-dsh-claude-style] [class*="centerCol"]:hover [class*="header"]:has([class*="_tabs"]) [class*="_tabs"] {
+body[data-dsh-claude-style] [class*="centerCol"]:hover [data-dsh-view-tabs] {
   opacity: 1 !important;
 }
-body[data-dsh-claude-style][data-ds-dark-theme] [class*="header"]:has([class*="_tabs"]) [class*="_tabs"] {
+body[data-dsh-claude-style][data-ds-dark-theme] [data-dsh-view-tabs] {
   background: rgba(255, 255, 255, 0.08) !important;
 }
-body[data-dsh-claude-style] [class*="header"]:has([class*="_tabs"]) [class*="_tabs"] > [class*="_tab"] {
+body[data-dsh-claude-style] [data-dsh-view-tabs] > [class*="_tab"] {
   appearance: none !important;
   border: none !important;
   background: transparent !important;
@@ -299,62 +302,44 @@ body[data-dsh-claude-style] [class*="header"]:has([class*="_tabs"]) [class*="_ta
   cursor: pointer !important;
   user-select: none !important;
   -webkit-user-select: none !important;
-  /* Above the sliding pill, which is the strip's first painted box. */
-  position: relative !important;
-  z-index: 1 !important;
   transition: color 0.2s ease !important;
 }
-body[data-dsh-claude-style] [class*="header"]:has([class*="_tabs"]) [class*="_tabs"] > [class*="_tab"]:hover {
+body[data-dsh-claude-style] [data-dsh-view-tabs] > [class*="_tab"]:hover {
   color: var(--dsw-alias-label-primary, #141413) !important;
 }
-body[data-dsh-claude-style] [class*="header"]:has([class*="_tabs"]) [class*="_tabs"] > [class*="_tab"][aria-selected="true"],
-body[data-dsh-claude-style] [class*="header"]:has([class*="_tabs"]) [class*="_tabs"] > [class*="_tab"][class*="Active"] {
+body[data-dsh-claude-style] [data-dsh-view-tabs] > [class*="_tab"][aria-selected="true"],
+body[data-dsh-claude-style] [data-dsh-view-tabs] > [class*="_tab"][class*="Active"] {
   background: var(--dsw-alias-bg-overlay, #ffffff) !important;
   color: var(--dsw-alias-label-primary, #141413) !important;
   box-shadow: 0 1px 2px rgba(20, 20, 19, 0.10) !important;
 }
-body[data-dsh-claude-style][data-ds-dark-theme] [class*="header"]:has([class*="_tabs"]) [class*="_tabs"] > [class*="_tab"][aria-selected="true"],
-body[data-dsh-claude-style][data-ds-dark-theme] [class*="header"]:has([class*="_tabs"]) [class*="_tabs"] > [class*="_tab"][class*="Active"] {
+body[data-dsh-claude-style][data-ds-dark-theme] [data-dsh-view-tabs] > [class*="_tab"][aria-selected="true"],
+body[data-dsh-claude-style][data-ds-dark-theme] [data-dsh-view-tabs] > [class*="_tab"][class*="Active"] {
   background: rgba(255, 255, 255, 0.14) !important;
   color: #f5f4ef !important;
   box-shadow: none !important;
 }
-/* The sliding pill: one raised box that travels to the active tab, instead of
-   the old pill fading out on one tab and in on the next. src/overrides/view-tabs.js
-   measures the active tab and writes its offset and width; the strip attribute
-   that brings the pill into being lands in the same frame as the first
-   placement, so the pill appears in place and only later moves slide. While it
-   is there, the active tab's own background gives way to it. */
-body[data-dsh-claude-style] [class*="header"]:has([class*="_tabs"]) [class*="_tabs"][data-dsh-view-tabs-pill]::before {
-  content: "" !important;
-  position: absolute !important;
+/* The strip's sliding pill (components/sliding-pill.css places and moves it):
+   the raised box the active tab wore above, which the tab gives up while the
+   pill is there. */
+body[data-dsh-claude-style] [data-dsh-view-tabs][data-dsh-claude-pill]::before {
   top: 2px !important;
   bottom: 2px !important;
-  left: 0 !important;
-  width: var(--dsh-view-tabs-pill-w, 0px) !important;
-  transform: translateX(var(--dsh-view-tabs-pill-x, 0px)) !important;
   border-radius: 5px !important;
   background: var(--dsw-alias-bg-overlay, #ffffff) !important;
   box-shadow: 0 1px 2px rgba(20, 20, 19, 0.10) !important;
-  pointer-events: none !important;
-  transition: transform 0.24s cubic-bezier(0.22, 0.61, 0.36, 1), width 0.24s cubic-bezier(0.22, 0.61, 0.36, 1) !important;
 }
-body[data-dsh-claude-style][data-ds-dark-theme] [class*="header"]:has([class*="_tabs"]) [class*="_tabs"][data-dsh-view-tabs-pill]::before {
+body[data-dsh-claude-style][data-ds-dark-theme] [data-dsh-view-tabs][data-dsh-claude-pill]::before {
   background: rgba(255, 255, 255, 0.14) !important;
   box-shadow: none !important;
 }
-body[data-dsh-claude-style] [class*="header"]:has([class*="_tabs"]) [class*="_tabs"][data-dsh-view-tabs-pill] > [class*="_tab"][aria-selected="true"],
-body[data-dsh-claude-style] [class*="header"]:has([class*="_tabs"]) [class*="_tabs"][data-dsh-view-tabs-pill] > [class*="_tab"][class*="Active"] {
+body[data-dsh-claude-style] [data-dsh-view-tabs][data-dsh-claude-pill] > [class*="_tab"][aria-selected="true"],
+body[data-dsh-claude-style] [data-dsh-view-tabs][data-dsh-claude-pill] > [class*="_tab"][class*="Active"] {
   background: transparent !important;
   box-shadow: none !important;
 }
-@media (prefers-reduced-motion: reduce) {
-  body[data-dsh-claude-style] [class*="header"]:has([class*="_tabs"]) [class*="_tabs"][data-dsh-view-tabs-pill]::before {
-    transition: none !important;
-  }
-}
 /* The shipped active-tab underline has no place in a pill. */
-body[data-dsh-claude-style] [class*="header"]:has([class*="_tabs"]) [class*="_tabs"] > [class*="_tab"]::after {
+body[data-dsh-claude-style] [data-dsh-view-tabs] > [class*="_tab"]::after {
   display: none !important;
 }
 
@@ -366,7 +351,7 @@ body[data-dsh-claude-style] [class*="header"]:has([class*="_tabs"]) [class*="_ta
    gives the collapsed sidebar's new-session button. The measured
    --dsh-view-tabs-shift is not written in this mode, so the base transform
    gives way. */
-body[data-dsh-claude-style][data-dsh-titlebar-tabs] [class*="header"]:has([class*="_tabs"]) [class*="_tabs"] {
+body[data-dsh-claude-style][data-dsh-titlebar-tabs] [data-dsh-view-tabs] {
   position: fixed !important;
   top: calc(var(--dsh-windows-titlebar-height, 40px) / 2) !important;
   left: 50% !important;
@@ -385,7 +370,7 @@ body[data-dsh-claude-style][data-dsh-titlebar-tabs] [class*="header"]:has([class
   opacity: 0 !important;
   transition: opacity 0.3s ease !important;
 }
-body[data-dsh-claude-style][data-dsh-titlebar-tabs] [class*="header"]:has([class*="_tabs"]) [class*="_tabs"]:hover {
+body[data-dsh-claude-style][data-dsh-titlebar-tabs] [data-dsh-view-tabs]:hover {
   opacity: 1 !important;
 }
 /* The strip's row is gone from the flow, so the header takes the shape it has

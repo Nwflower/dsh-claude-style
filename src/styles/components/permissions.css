@@ -16,6 +16,8 @@ body[data-dsh-claude-style] .dsh-claude-segments {
   border-radius: 7px;
   background: var(--dsw-specific-selector);
   display: inline-flex;
+  /* The sliding pill (components/sliding-pill.css) is absolutely placed against the group. */
+  position: relative;
 }
 
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) .dsh-claude-segments {
@@ -50,6 +52,25 @@ body[data-dsh-claude-style] .dsh-claude-segment[data-active] {
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) .dsh-claude-segment[data-active] {
   background: var(--dsw-alias-bg-overlay);
   box-shadow: 0 1px 2px rgba(20, 20, 19, 0.08);
+}
+
+/* The group's sliding pill: the box the active segment wore above, which the
+   segment gives up while the pill is there. */
+body[data-dsh-claude-style] .dsh-claude-segments[data-dsh-claude-pill]::before {
+  top: 2px;
+  bottom: 2px;
+  border-radius: 7px;
+  background: var(--dsw-alias-bg-layer-3);
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) .dsh-claude-segments[data-dsh-claude-pill]::before {
+  background: var(--dsw-alias-bg-overlay);
+  box-shadow: 0 1px 2px rgba(20, 20, 19, 0.08);
+}
+
+body[data-dsh-claude-style] .dsh-claude-segments[data-dsh-claude-pill] > .dsh-claude-segment[data-active] {
+  background: transparent;
+  box-shadow: none;
 }
 
 /* ---------- Claude Code layout: in-conversation permission popover ---------- */

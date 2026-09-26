@@ -102,11 +102,15 @@ body[data-dsh-claude-style][data-ds-dark-theme] [data-composer-card]:focus-withi
    its fade band instead (see composer/inline.css), so the base rules already
    hold the pure card fill and the real drop shadow on every variant. */
 
-body[data-dsh-claude-style]:not([data-ds-dark-theme]) [class*="composerStack"]:has([data-composer-card]:focus-within) > [class*="heroWorkspaceRow"] {
+/* The hero's workspace row sits on the card and takes its focus ring. The row
+   comes before the card in the stack, so no sibling selector reaches it from
+   the card; focus inside the stack but not inside the row itself is the card's
+   (`:has(card:focus-within)` made every DOM change re-match the document). */
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) [class*="composerStack"]:focus-within > [class*="heroWorkspaceRow"]:not(:focus-within) {
   border-color: rgba(20, 20, 19, 0.18);
 }
 
-body[data-dsh-claude-style][data-ds-dark-theme] [class*="composerStack"]:has([data-composer-card]:focus-within) > [class*="heroWorkspaceRow"] {
+body[data-dsh-claude-style][data-ds-dark-theme] [class*="composerStack"]:focus-within > [class*="heroWorkspaceRow"]:not(:focus-within) {
   border-color: rgba(250, 249, 245, 0.22);
 }
 
@@ -223,8 +227,9 @@ body[data-dsh-claude-style] [class*="heroWorkspaceRow"] :is([class*="chevron"], 
    it reads as not-ready instead of vanishing. Flat by design (no shadow), and
    border-box keeps the outer 34px so the row does not shift. The stop/queue/
    steer labels are untouched, so a running turn keeps its control even with an
-   empty draft. */
-body[data-dsh-claude-style] [data-composer-card]:not([data-has-attachments="true"]):has([data-composer-placeholder]) :is(button[aria-label="发送消息"], button[aria-label="Send message"]) {
+   empty draft. The empty draft is the card's data-dsh-claude-draft-empty mark
+   (src/overrides/composer.js). */
+body[data-dsh-claude-style] [data-composer-card]:not([data-has-attachments="true"])[data-dsh-claude-draft-empty] :is(button[aria-label="发送消息"], button[aria-label="Send message"]) {
   box-sizing: border-box;
   background: transparent;
   color: var(--dsw-alias-label-caption);

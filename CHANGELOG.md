@@ -8,7 +8,9 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 <h3 id="cn-unreleased">体验优化</h3>
 
-- **对话 / 轨迹 / 上下文切换时高亮块平滑滑动**：切换视图时，高亮块此前在原标签上淡出、在新标签上淡入；现在同一块高亮从原标签滑到新标签，宽度随标签文字一起变化，标签文字颜色同步过渡。系统要求减少动态效果时，高亮块直接跳到新标签。
+- **对话 / 轨迹 / 上下文切换时高亮块平滑滑动**：切换视图时，高亮块此前在原标签上淡出、在新标签上淡入；现在同一块高亮从原标签滑到新标签，宽度随标签文字一起变化，标签文字颜色同步过渡。滑动不受系统「减少动态效果」设置影响，Windows 关掉了「在 Windows 中显示动画」时照样滑动。
+- **权限分段、进行中 / 已归档与设置页分段控件的高亮块同样滑动**：只读 / 编辑 / 自动 / Yolo、侧栏的进行中 / 已归档，以及设置页里的各组分段控件，切换时高亮块都从原来那一段滑到新的一段，与对话视图标签同一套动画。
+- **页面持续变化时插件的每帧开销大幅下降**：流式输出、打字机效果这类每帧都改动页面内容的场景，插件样式表此前让浏览器每帧的样式重算从 1.6ms 涨到 11–18ms，每帧主线程总耗时 14–23ms，超过一帧 16.7ms 的预算而掉帧；现在同一场景下样式重算为每帧 1.9–2.7ms，总耗时 5–7ms（本机无界面 Chrome 实测）。界面外观不变。
 - **工作区选择菜单改为 Claude Code 的文件夹菜单样式**：菜单此前每行前面都有一个文件夹图标，行距与档位菜单的两行条目一样宽；现在是一张窄卡片，纯文字行排得更紧，文件夹图标与「添加工作区…」前的加号都不画，当前工作区仍以强调色勾号标出。档位菜单保持原样。
 
 ### 问题修复
@@ -18,7 +20,9 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 <h3 id="en-unreleased">Improvements</h3>
 
-- **The Chat / Trajectory / Context highlight slides between tabs**: switching views used to fade the highlight out on the old tab and in on the new one; now one highlight slides from the old tab to the new one, resizing to the new label as it goes, while the labels' colours cross over. When the system asks for reduced motion, the highlight jumps straight to the new tab.
+- **The Chat / Trajectory / Context highlight slides between tabs**: switching views used to fade the highlight out on the old tab and in on the new one; now one highlight slides from the old tab to the new one, resizing to the new label as it goes, while the labels' colours cross over. The slide ignores the system's reduced-motion setting, so it still plays with Windows' "Show animations in Windows" turned off.
+- **The permission segments, Active / Archived and the settings page's segmented controls slide their highlight too**: Read / Edit / Auto / Yolo, the sidebar's Active / Archived, and every segmented control on the settings page now slide the highlight from the old segment to the new one, with the same motion as the conversation view tabs.
+- **Much lower per-frame cost while the page keeps changing**: when content changes every frame (streaming output, a typewriter effect), the plugin's stylesheet used to raise the browser's style recalculation from 1.6ms to 11–18ms per frame, for 14–23ms of main-thread work per frame — over the 16.7ms frame budget, so frames dropped. The same scenario now costs 1.9–2.7ms of style recalculation and 5–7ms in total per frame (measured locally in headless Chrome). Nothing on screen looks different.
 - **The workspace picker takes the look of Claude Code's folder menu**: every row used to carry a folder glyph and was spaced like the preset menu's two-line entries; it is now a narrow card of plain text rows set closer together, with no folder glyph and no plus sign on "Add workspace…", and the current workspace keeps the accent check. The preset menu is unchanged.
 
 ### Bug Fixes
