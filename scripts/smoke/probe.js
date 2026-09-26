@@ -352,6 +352,28 @@
       viewTabs[2].className = '_c_tab_1 _c_tabActive_1'
       await sleep(60)
       r.viewPill.switched = pillState(viewStrip, viewTabs[2])
+      // The sidebar's brand row (ui-sidebar SidebarRoot): the search box goes in
+      // beside the wide brand, and pressing it renders the host's Modal through
+      // a root of the skin's own.
+      var sidebarSlot = document.createElement('div')
+      sidebarSlot.setAttribute('data-slot', 'sidebar')
+      sidebarSlot.innerHTML = '<div class="_n_root_1"><div class="_n_logoRow_1" data-window-drag="true">' +
+        '<button type="button" class="_n_brand_1 _n_wide_1" aria-label="New session">brand</button>' +
+        '<button type="button" class="_n_iconButton_1 _n_toggle_1" aria-label="Collapse sidebar">toggle</button></div></div>'
+      document.body.appendChild(sidebarSlot)
+      await sleep(150)
+      var logoRow = sidebarSlot.querySelector('[class*="_logoRow"]')
+      var searchTrigger = logoRow.querySelector('.dsh-claude-search-trigger')
+      var rootsBefore = window.__roots.length
+      if (searchTrigger) searchTrigger.click()
+      await sleep(60)
+      var searchRoot = window.__roots[rootsBefore]
+      r.search = {
+        placed: !!searchTrigger && searchTrigger.previousElementSibling === logoRow.firstElementChild,
+        rowMarked: logoRow.hasAttribute('data-dsh-claude-search-row'),
+        resting: searchTrigger ? getComputedStyle(searchTrigger).visibility : null,
+        modalRendered: !!searchRoot && searchRoot.renders > 0,
+      }
       // The slide plays whatever the system's motion setting: no reduced-motion
       // block in the shipped stylesheets may reach the pill.
       r.viewPill.reducedMotionRules = 0
@@ -714,6 +736,10 @@
       r.leftAttrs = Array.prototype.filter.call(document.body.attributes, function (a) { return /^data-dsh-(claude|window)/.test(a.name) }).map(function (a) { return a.name })
       r.leftStylesheet = !!document.getElementById('dsh-claude-style-style')
       if (viewStrip) r.viewPill.left = viewStrip.hasAttribute('data-dsh-claude-pill') || viewStrip.hasAttribute('data-dsh-view-tabs') || viewStrip.style.length > 0
+      if (r.search) {
+        r.search.left = document.querySelectorAll('[data-dsh-claude-search-row], .dsh-claude-search-trigger').length
+        r.search.rootUnmounted = !!searchRoot && searchRoot.unmounted
+      }
       r.leftDraftMarks = document.querySelectorAll('[data-dsh-claude-draft-empty]').length
       r.leftControlMarks = document.querySelectorAll('[data-dsh-claude-control]').length
       var hostRowEnd = document.getElementById('host-account')

@@ -20,6 +20,9 @@
      *     keeps its exact shipped dismiss routes.
      * @property {Function} [onInput] `onInput(target)`: an input or
      *     compositionend event whose target is inside the composer input.
+     * @property {Function} [onFocusIn] `onFocusIn(target)`: every focusin,
+     *     after the composer route. The search palette takes over when the
+     *     host's own sidebar search input receives focus (its Ctrl+K).
      * @property {Function} [reposition] `reposition(reason)`: `'viewport'` (a
      *     viewport scroll or resize) or `'composer'` (the composer card changed
      *     size). A popover checks whether it is open; the composer keeps the
@@ -129,13 +132,20 @@
       // cannot feed itself another pass. The hero menu has no close of its own —
       // it lives and dies with the host's hover state, and syncHeroMenu notices
       // when it is gone — so it has no hook and is simply skipped.
-      function onComposerFocusIn(e) {
+      // Every focus move is then offered to the features that take one (the
+      // search palette answers the host's own sidebar search taking focus).
+      function onGlobalFocusIn(e) {
         const target = e.target
         if (!target || typeof target.closest !== 'function') return
-        if (target.closest('[data-composer-card]') === null) return
-        for (let i = 0; i < HOOK_FEATURES.length; i++) {
-          const handle = ui[HOOK_FEATURES[i]]
-          if (handle && typeof handle.close === 'function') handle.close('composer')
+        if (target.closest('[data-composer-card]') !== null) {
+          for (let i = 0; i < HOOK_FEATURES.length; i++) {
+            const handle = ui[HOOK_FEATURES[i]]
+            if (handle && typeof handle.close === 'function') handle.close('composer')
+          }
+        }
+        for (let j = 0; j < HOOK_FEATURES.length; j++) {
+          const focused = ui[HOOK_FEATURES[j]]
+          if (focused && typeof focused.onFocusIn === 'function') focused.onFocusIn(target)
         }
       }
 
@@ -156,7 +166,7 @@
       document.addEventListener('keydown', onGlobalKeyDown, true)
       document.addEventListener('input', onComposerInput, true)
       document.addEventListener('compositionend', onComposerInput, true)
-      document.addEventListener('focusin', onComposerFocusIn, true)
+      document.addEventListener('focusin', onGlobalFocusIn, true)
 
       // Re-pin every feature that anchors to a moving target. The scheduler
       // knows only the hook: a feature with a `reposition(reason)` re-resolves
@@ -310,6 +320,6 @@
         document.removeEventListener('keydown', onGlobalKeyDown, true)
         document.removeEventListener('input', onComposerInput, true)
         document.removeEventListener('compositionend', onComposerInput, true)
-        document.removeEventListener('focusin', onComposerFocusIn, true)
+        document.removeEventListener('focusin', onGlobalFocusIn, true)
       }
     }

@@ -6,8 +6,13 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 [中文](#cn-unreleased) | [English](#en-unreleased)
 
-<h3 id="cn-unreleased">体验优化</h3>
+<h3 id="cn-unreleased">新增功能</h3>
 
+- **侧栏搜索框与搜索面板**：鼠标移到侧栏上时，左上角的品牌标志淡出、换成一个淡入的搜索按钮（右端标出宿主的搜索快捷键），点它在窗口上方打开搜索面板；宿主的搜索快捷键（桌面端 Ctrl+K，Web 端 Ctrl+Alt+K，在设置里改过的以改后的为准）也打开这个面板，侧栏「工作区」标题行原来的搜索图标不再显示。面板打开与关闭时连同背后的遮罩一起淡入淡出。面板能搜历史会话（按会话标题与所属工作区名；部署开启了会话内容索引时也搜消息内容，并在行下显示匹配的片段）、项目、插件、当前会话可用的 Skill 与快捷键，顶部的「全部 / 会话 / 项目 / 插件 / Skill / 快捷键」切换分类；搜索框为空时列出最近的五个会话和「新会话 / 插件 / 设置 / 键盘快捷键」几个操作。↑↓ 选择，Enter 打开，Tab 与 Shift+Tab 切换分类，Esc 关闭。选中会话即打开该会话；选中项目在这个工作区开一个新会话；选中插件打开它在插件页的详情；选中 Skill 把 `/名称 ` 放到当前会话输入框的开头；选中快捷键打开宿主的快捷键列表，并筛到这一条。侧栏收起成窄条时没有搜索框。
+
+### 体验优化
+
+- **桌面端侧栏的品牌行上移 10px**：桌面端的侧栏从 40px 高的标题栏下方开始，品牌标志因此比 Web 端低出一截；现在品牌行（连同其下的新会话、插件与会话列表）上移 10px，悬停时换上的搜索框仍整个露在标题栏下方，与标题栏里的收起按钮也不重叠。Web 端不变。
 - **用量面板的倍数趣味行从二十九本书扩到六十五本**：书单补入《黄色壁纸》《变形记》《化身博士》《野性的呼唤》《时间机器》《绿野仙踪》《黑暗之心》《浮士德》《螺丝在拧紧》《伊索寓言》《彼得·潘》《君主论》《隐形人》《安徒生童话》《世界大战》《善恶的彼岸》《白牙》《沉思录》《格林童话》《格列佛游记》《瓦尔登湖》《鲁滨逊漂流记》《神曲》《包法利夫人》《查拉图斯特拉如是说》《奥德赛》《双城记》《远大前程》《理想国》《罪与罚》《利维坦》《安娜·卡列尼娜》《卡拉马佐夫兄弟》《堂吉诃德》《基督山伯爵》《悲惨世界》，长度都是全文以 o200k_base 分词器实测的值（英文原著或通行英译本，《浮士德》为德文原文）。书单仍从《道德经》排到《追忆似水年华》，用量越过的书更密，趣味行落到的那本书离实际用量更近。
 
 ### 问题修复
@@ -15,8 +20,13 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - 修复 **开启「自动弹出弹层」后进入封号彩蛋页会立刻退出**：桌面端从账号菜单点开彩蛋页时，全窗浮层让指针「离开」菜单，悬停收起随后代宿主菜单按下的 Escape 被插件的键盘路由当成了用户按键，约 0.1 秒就把刚打开的彩蛋页关掉。现在这次代发的 Escape 只送达宿主菜单：彩蛋页开着时悬停收起同时停摆，页面保持打开，退出后侧栏与账号菜单恢复进入前的样子。
 - 修复 **启用皮肤后带输入框的会话页上快捷键失灵**：皮肤常驻页面的模型选择器、推理强度与权限弹层卡片在关闭时仍标注 `role="menu"`，宿主据此把快捷键仲裁给一个看不见的「前景菜单」，连按 Esc 停止智能体、Ctrl+W 关闭页面与标签页菜单的 Esc 都不再生效（Web 端受影响的面更宽）。现在这一角色标注随卡片开合写入与撤销：卡片打开时才存在，快捷键的仲裁恢复如常。
 
-<h3 id="en-unreleased">Improvements</h3>
+<h3 id="en-unreleased">New Features</h3>
 
+- **A sidebar search box and search palette**: while the pointer is over the sidebar, the brand mark at its top left fades out into a search button (the host's search shortcut shown at its right end), and pressing it opens a search palette near the top of the window; the host's search shortcut (Ctrl+K on the desktop, Ctrl+Alt+K on the web, or whatever it has been rebound to in settings) opens the same palette, and the search icon the sidebar's Workspace heading used to carry is gone. The palette fades in and out together with the mask behind it. The palette searches past sessions (by title and by workspace name; where the deployment keeps a session content index, by message content too, with the matching excerpt under the row), projects, plugins, the skills the current session offers and keyboard shortcuts, with All / Sessions / Projects / Plugins / Skills / Shortcuts across the top to narrow the list; with the box empty it lists the five most recent sessions and the New session, Plugins, Settings and Keyboard shortcuts actions. ↑↓ moves, Enter opens, Tab and Shift+Tab switch the category, Esc closes. Picking a session opens it; a project starts a new session in that workspace; a plugin opens its details on the plugins page; a skill puts `/name ` at the head of the current session's input; a shortcut opens the host's shortcut list filtered to that entry. The collapsed sidebar rail has no search box.
+
+### Improvements
+
+- **The desktop sidebar's brand row sits 10px higher**: the desktop sidebar starts below the 40px titlebar, which left the brand mark lower than on the web; the brand row (and the New session, Plugins and session list below it) now rises 10px, with the search box that takes its place on hover still wholly below the titlebar and clear of the collapse button there. The web build is unchanged.
 - **The usage panel's yardstick line grows from twenty-nine to sixty-five books**: the list adds The Yellow Wallpaper, Metamorphosis, The Strange Case of Dr Jekyll and Mr Hyde, The Call of the Wild, The Time Machine, The Wonderful Wizard of Oz, Heart of Darkness, Faust, The Turn of the Screw, Aesop's Fables, Peter Pan, The Prince, The Invisible Man, Andersen's Fairy Tales, The War of the Worlds, Beyond Good and Evil, White Fang, Meditations, Grimms' Fairy Tales, Gulliver's Travels, Walden, Robinson Crusoe, The Divine Comedy, Madame Bovary, Thus Spoke Zarathustra, The Odyssey, A Tale of Two Cities, Great Expectations, The Republic, Crime and Punishment, Leviathan, Anna Karenina, The Brothers Karamazov, Don Quixote, The Count of Monte Cristo and Les Misérables, each sized by feeding its full text to the o200k_base tokenizer (the English original or the standard English translation; Faust in the German original). The list still runs from Tao Te Ching to In Search of Lost Time; with the books set closer together, the one the line lands on sits nearer the real usage.
 
 ### Bug Fixes

@@ -200,6 +200,37 @@ properties on the card (`--dsh-claude-hero-menu-x` / `--dsh-claude-hero-menu-y`,
 written by the same pass that stamps it) which `features/hero-menu/hero-menu.css` reads
 with `!important`; that declaration outranks the host's plain inline value.
 
+## Search · 搜索
+
+**Sidebar box.** The box takes the brand's place in the logo row while the
+pointer is over the sidebar: 32px tall, 8px radius, a 1px `#E8E6DC` hairline on
+the ivory canvas fill (dark: `#2E2C29` on `#1E1E1D`), a 16px search glyph in the
+secondary label, the "Search" label in the tertiary label at 14px, and the
+host's search shortcut as 20px keycaps at the right end. It is a button like
+the New session and Plugins rows below it: the pointer cursor, and on hover the
+same plate those rows take (`--dsh-claude-hover-bg`, dark `rgba(255, 255, 255,
+0.08)`) laid over its opaque fill. Box and brand share one grid cell and
+cross-fade over 0.16s, the timing the workspace heading and its segmented
+control trade places with; the box is excluded from the window drag region. In
+the desktop titlebar mode the brand row rises 10px, since the sidebar column
+starts under the 40px titlebar — as far as it goes with the box still wholly
+below that edge, which clips the column.
+
+**Palette.** A modal card set 8vh from the top, 760px wide at most, 16px radius,
+on the same ivory fill (dark `#1E1E1D`) under the host's mask. From the top: a
+17px borderless input with a 28px close button; the category chips (32px tall,
+8px radius, 14px, tertiary at rest and primary when current) sharing one
+sliding highlight at `rgba(20, 20, 19, 0.06)`; the list, capped at
+`min(520px, 62vh)`, with 13px tertiary section captions and 40px rows (8px
+radius, 15px title, an 18px glyph in the secondary label, a 13px tertiary detail
+after the title and an optional excerpt line under it); a hairline-topped footer
+of hints with 20px keycaps. The input text, the chips' text, the captions and
+the row glyphs all start on one vertical line 24px in from the card edge. The
+highlighted row takes `rgba(20, 20, 19, 0.05)` (dark `rgba(250, 249, 245, 0.07)`)
+and shows the Enter glyph; the others hide it. The card fades in and settles
+from 6px above at 98.5% scale over 0.18s; on close card and mask fade out
+together over 0.14s before the modal unmounts.
+
 ## Home layouts · 首页版面
 
 The new-conversation page has two arrangements. `homeLayout` (settings: Home

@@ -13,7 +13,7 @@
 - 构建与源码：D1 拼接构建 · D5 模型文案是数据 · D18 源码布局与共用部件层 · D4 输入框样式门控
 - 宿主边界：D2 只做浏览器半边 · D3 宿主选择器纪律 · D19 宿主契约与构建编号 · D10 设置传输 · D11 私有路由与字符串安全
 - 运行时：D6 单一调度器 · D13 功能契约 · D12 快速失败与功能隔离 · D9 样式性能
-- 功能：D14 账号表面 · D15 HDSL 契约 · D16 弹层基准 · D17 权限档位 · D20 滑动高亮 · D21 已归档列表
+- 功能：D14 账号表面 · D15 HDSL 契约 · D16 弹层基准 · D17 权限档位 · D20 滑动高亮 · D21 已归档列表 · D22 搜索面板
 - 分发：D7 行为层与皮肤同包 · D8 多主题
 
 ---
@@ -122,7 +122,7 @@
 
 - **决定**：
   - `src/entry.js` 的 FEATURES 表（`{ name, handle?, install }`）同时决定安装顺序与刷新顺序：刷新顺序就是安装顺序中句柄带 `sync` 的那些。
-  - 调度器只认功能句柄上的可选钩子（类型定义在 scheduler.js 开头）：`sync` / `owns` + `close('outside')` / `onPointerDown` / `close('escape')` / `close('composer')` / `onInput` / `reposition('viewport' | 'composer')` / `onCopyChange` / `onKey`；没实现的钩子直接跳过，每个功能保留自己的关闭方式。
+  - 调度器只认功能句柄上的可选钩子（类型定义在 scheduler.js 开头）：`sync` / `owns` + `close('outside')` / `onPointerDown` / `close('escape')` / `close('composer')` / `onInput` / `onFocusIn` / `reposition('viewport' | 'composer')` / `onCopyChange` / `onKey`；没实现的钩子直接跳过，每个功能保留自己的关闭方式。
   - `retire` 按 name 或 handle 匹配：只匹配到 handle 时只停止 sync、不拆安装（设置页的 `settingsNav`）。
   - 功能拆出的部分写成顶层工厂 `createX(...)`：状态留在工厂自己的闭包里，访问器与回调经参数传入，不伸手进别的闭包；名字以功能开头（`createAccountProfile`）。
 - **理由**：加一个功能只需在 FEATURES 表加一行、在句柄上实现钩子；调度器不认识任何具体功能，没有要手工同步的清单。
@@ -198,3 +198,16 @@
 - **决定**：侧栏「已归档」是插件自己的平铺列表，订阅宿主 `workspaces.list`（归档集合）与 `sessions.list`（标题、时间、来源），两者都就绪后按宿主「仅已归档」的规则重算：只收已有会话摘要、非子代理、非空白占位的归档会话，按更新时间排序，内容不变时不重建。宿主自带的筛选状态存在 ui-workspace 私有的视图 store 里，不是客户端服务，只能靠点它的菜单改，因此不用。取消归档走 `workspaces.unarchiveSession`；删除走宿主半边的私有路由（D11），失败记录警告。点击已归档行显示宿主的同一条提示：用宿主的 Toast 组件与 `workspace` 文案表里的 `toast.archivedNotOpenable`（宿主的提示通道是私有的）。
 - **代价**：宿主「仅已归档」的规则变化时需要同步。
 - **重审条件**：宿主把视图筛选或提示通道开放为客户端服务时改用宿主的。
+
+## D22. 搜索面板：宿主的 Modal、宿主的数据与导航
+
+- **决定**：
+  - 侧栏搜索框插在宿主品牌行（`[data-slot="sidebar"]` 里的 `_logoRow`）的品牌旁边，只在这一行带宽版品牌时放置，侧栏收起成窄条时不放；这一行改成网格，品牌与搜索框同占第一格，两者的淡入淡出交给样式表的 `[data-slot="sidebar"]:hover`，不另外监听指针。
+  - 宿主的搜索快捷键（`session.search`）没有可替换的公开入口，它的效果是展开宿主自己的侧栏搜索并聚焦其输入框。宿主的这块搜索因此保持挂载、只从视觉与布局里拿掉；调度器的 `onFocusIn` 钩子见到焦点落进它的输入框时，搜索面板打开，并经宿主自己的清除按钮把它收回。这样快捷键改绑后也跟着走。
+  - 面板是宿主 ui-primitives 的 `Modal`（headless）：遮罩、焦点归还、Esc 与模态层都用宿主的，面板开着时宿主的快捷键把它当作前景对话框；卡片里的行由皮肤自己搭。它是模态对话框，不套 D16 的弹层外壳，但登记进弹层互斥表。宿主的 `Modal` 关闭即卸载，没有退场动画，所以关闭时面板先给遮罩层打上标记、保持挂载淡出，淡出结束后再卸载；标记在卸载之后才撤，否则卡片与遮罩会重播一帧入场动画。
+  - 数据只读宿主的客户端服务：`sessions.list` 与 `workspaces.list`（去掉已归档、子代理与空白占位）、`sessions.search`（消息内容索引；部署关闭索引时只剩标题匹配）、`remote.pluginInventory` 与 `remote.pluginManager`、当前会话的 `remote.skills`、`shortcuts.catalog`。远程命名空间在面板打开时用 `ctx.get('remote.<名字>')` 读：在根上下文里直接读 `remote` 的子属性，cordis 会以「没有 inject」拒绝。
+  - 选中后走宿主自己的导航：`uiWorkspace.openSession` / `startSession`、`pluginNavigation.openBundle`、`layout.selectPanel`，Skill 经会话输入的 `setDraft` 与 `focus`；设置页与快捷键列表经它们在插槽登记里声明的 store（`slots.entries(key)` 条目上的 `store.create()`）打开。宿主的快捷键命令没有公开的执行入口，所以快捷键行打开快捷键列表，不代为执行命令。
+  - 匹配沿用宿主侧栏搜索的子串规则，排序为标题开头、标题中的词开头、标题其他位置、第二个键（路径、包名、描述、别名）。宿主 `/` 菜单的子序列排序在标题、路径和描述上会命中大量无关结果，因此不用。
+- **理由**：面板要做的每件事宿主都已有一条路：模态层、列表数据、打开会话与页面。借用这些路，面板的行为与宿主各处一致，也不重复实现。
+- **代价**：依赖上面这些服务、store 与品牌行结构的现状，宿主改名或收回时需要跟进；smoke 只覆盖放置、打开与卸载，数据与导航在真实页面核对。
+- **重审条件**：宿主提供自己的全局搜索或命令面板时，改为打开宿主的。

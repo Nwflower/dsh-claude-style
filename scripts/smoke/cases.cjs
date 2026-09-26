@@ -79,6 +79,12 @@ const CASES = {
     check('the pill slides whatever the system motion setting: no reduced-motion rule reaches it',
       pill.reducedMotionRules === 0, `${pill.reducedMotionRules} rules`)
     check('teardown takes the pill, its placement and the strip stamp off the view tabs', pill.left === false, JSON.stringify(pill.left))
+    const search = r.search || {}
+    check('the search box goes in the brand row beside the brand, and rests hidden until the sidebar is hovered',
+      search.placed === true && search.rowMarked === true && search.resting === 'hidden', JSON.stringify(search))
+    check('pressing the search box renders the host modal through a root of the skin\'s own', search.modalRendered === true, JSON.stringify(search))
+    check('teardown takes the search box, its row mark and its root away',
+      search.left === 0 && search.rootUnmounted === true, JSON.stringify(search))
     check('teardown takes the draft marks off the composer cards', r.leftDraftMarks === 0, `${r.leftDraftMarks} left`)
     const controls = r.controls || {}
     check('the composer\'s host controls are marked by structure: commands, access, send',

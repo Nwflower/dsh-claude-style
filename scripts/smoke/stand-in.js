@@ -516,6 +516,7 @@
   var primitives = {
     Tooltip: primitive('Tooltip'),
     Toast: primitive('Toast'),
+    Modal: primitive('Modal'),
     IconUnarchiveOutlineRegular: primitive('IconUnarchiveOutlineRegular'),
     IconTrashOutlineRegular: primitive('IconTrashOutlineRegular'),
     IconWarningOutlineRegular: primitive('IconWarningOutlineRegular'),
