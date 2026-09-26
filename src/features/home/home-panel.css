@@ -1,0 +1,250 @@
+/* ---------- home layout: the studio (dashboard) form and its usage panel ---------- */
+/* The hero's own markup is the host's either way; this file only rearranges it and
+   draws the panel the dock slot carries. Both are keyed on the attributes
+   src/features/home/home-layout.js writes — the layout, and `data-dsh-claude-home-hero`
+   while the studio layout owns the new-conversation page — so the classic
+   layout is untouched.
+   The two tab bodies live in home-overview.css and home-models.css. */
+
+/* The scroll body centres the hero stack; the studio form starts at the top and
+   lets the seat take the rest of the column, so the card lands on the bottom edge. */
+body[data-dsh-claude-style][data-dsh-claude-home-hero] [class*="_scrollBody"] {
+  justify-content: flex-start;
+}
+
+body[data-dsh-claude-style][data-dsh-claude-home-hero] [class*="_composerSeat"] {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* The stack becomes the column: greeting, panel, context row, card. Its own
+   32px foot is the hero's centred-box treatment; the studio form drops the foot
+   and fills the seat, so the context row and the card rest on the bottom edge.
+   The composer keeps the 720px column, while the greeting and the dashboard
+   card read as a 480px block against its left edge. */
+body[data-dsh-claude-style][data-dsh-claude-home-hero] [class*="_composerStack"][class*="_composerHero"] {
+  /* The conversation form's own rule pins this stack to its content height; the
+     studio column has to fill the seat for the card to reach the bottom edge.
+     Naming the stack by both its classes matches that gated rule's weight, and
+     this sheet comes after it, so the studio column wins. */
+  flex: 1 1 auto !important;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 720px;
+  height: auto !important;
+  min-height: 0;
+  margin-inline: auto;
+  gap: 10px;
+  padding-bottom: 16px;
+}
+
+/* Order is written on the boxes the host's `display: contents` slot anchors
+   expose, because an anchor with `display: contents` generates no box to sort. */
+body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [class*="_composerHero"] > :has([class*="_headline"]) {
+  order: 0;
+  height: auto;
+  justify-content: flex-start;
+  /* The greeting's left edge lands on the panel's and the card's. */
+  padding: 14px var(--dsh-composer-side-clearance, 0px) 0;
+  margin-bottom: 30px;
+}
+
+/* The skin's own seat on the cold start screen, where the host renders no dock
+   (src/features/home/home-layout.js); like the host's anchor it generates no box. */
+body[data-dsh-claude-style] .dsh-claude-home-seat {
+  display: contents;
+}
+
+body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [class*="_composerHero"] > :is([data-slot="conversation.input.dock"], .dsh-claude-home-seat) > * {
+  order: 1;
+  /* A window too short for the whole panel shrinks the panel instead of the
+     page: the greeting stays on the top edge, the context row and the card on
+     the bottom, and the panel scrolls inside the room between them. */
+  flex: 0 1 auto;
+  min-height: 0;
+  /* The panel is the narrow dashboard card, left-aligned on the composer's own
+     left edge; the free width to its right stays empty. The width is stated
+     rather than left to the content, so the head's copy length cannot resize the
+     card. */
+  width: 480px;
+  max-width: calc(100% - var(--dsh-composer-side-clearance, 0px));
+  margin-right: auto;
+}
+
+body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [class*="_composerHero"] > [class*="_heroWorkspaceRow"] {
+  order: 2;
+  /* Everything below the panel drops to the bottom edge: the auto margin eats
+     the free column and carries the context row and the card down with it. */
+  margin-top: auto;
+  gap: 8px;
+}
+
+/* The context row's triggers wear Claude's chip: a hairline box on the canvas
+   rather than a bare label. The target list is the composer card's own for these
+   triggers, so the chip carries the same weight and, coming later, wins. */
+body[data-dsh-claude-style][data-dsh-claude-home-hero] [class*="_heroWorkspaceRow"] :is(button, [role="button"]) {
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--dsw-alias-label-primary, #141413) 12%, transparent);
+  border-radius: 8px;
+  background: transparent;
+}
+
+body[data-dsh-claude-style][data-dsh-claude-home-hero] [class*="_heroWorkspaceRow"] :is(button, [role="button"]):hover:not(:disabled) {
+  background: color-mix(in srgb, var(--dsw-alias-label-primary, #141413) 5%, transparent);
+}
+
+body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [class*="_composerHero"] > [data-slot="conversation.composer.bar"] > * {
+  order: 3;
+}
+
+/* Claude Code's home greeting is a 20px sans line with a small brand mark.
+   The serif display rule (theme/typography.css) reaches the headline AND the
+   titleGroup inside it — the class name contains "title" — so both elements
+   have to leave it behind, and the two extra body attributes plus the root
+   qualifier carry past the hero's own 44.2px size as well. */
+body[data-dsh-claude-style][data-dsh-claude-home-hero] [class*="_headline"],
+body[data-dsh-claude-style][data-dsh-claude-home-hero] [class*="_headline"] [class*="titleGroup"],
+body[data-dsh-claude-style][data-dsh-claude-home-hero] [class*="_headline"] [class*="titleGroup"] > span {
+  justify-content: flex-start;
+  font-family: var(--dsw-font-family);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 26px;
+  color: var(--dsw-alias-label-primary, #141413);
+}
+
+body[data-dsh-claude-style][data-dsh-claude-home-hero] [class*="_headline"] {
+  gap: 8px;
+}
+
+/* The mark shrinks with the line: Claude's home asterisk stands a hair taller
+   than the greeting's own cap height, not twice it. */
+body[data-dsh-claude-style][data-dsh-claude-home-hero] [class*="fishHitbox"]::before {
+  width: 21px;
+  height: 21px;
+}
+
+/* ---------- the panel ---------- */
+/* The panel draws only inside the studio hero stack. Sending the first message
+   takes the stack's hero class away in the host's own render, while
+   the component steps away only on the skin's next pass; keyed here, the panel
+   leaves in the same frame, instead of spending that gap at the conversation's
+   full width with its square heat cells blown up to fill the window. */
+body[data-dsh-claude-style] .dsh-claude-home-panel {
+  display: none;
+}
+
+body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [class*="_composerHero"] > :is([data-slot="conversation.input.dock"], .dsh-claude-home-seat) > .dsh-claude-home-panel {
+  display: flex;
+}
+
+body[data-dsh-claude-style] .dsh-claude-home-panel {
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+  /* The card inside the stack carries the composer's side clearance; the panel
+     takes the same inset so the two read as one column. */
+  margin: 0 var(--dsh-composer-side-clearance, 0px);
+  padding: 12px;
+  border-radius: 12px;
+  /* Claude Code's panel is a flat warm-gray wash with no outline: a whisper of
+     the label tone over the card tone, which flips with the theme on its own. */
+  background: color-mix(in srgb, var(--dsw-alias-label-primary, #141413) 4%, var(--dsw-alias-bg-layer-2, #fbfbf9));
+  overflow: auto;
+  /* Claude Code fades its dashboard into the context row when the window cuts
+     it short. The mask's transparent 32px foot hangs below the box at rest, so
+     a panel that fits is untouched; while the panel scrolls, the scroll-linked
+     animation pulls the foot up over the bottom edge, and lowers it again over
+     the last 32px of travel, so the final row reads clean at the end. A panel
+     that does not overflow has an inactive scroll timeline, and the resting
+     value holds. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 32px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 32px), transparent);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% calc(100% + 32px);
+  mask-size: 100% calc(100% + 32px);
+  animation: dsh-claude-home-panel-fade linear both;
+  animation-timeline: scroll(self);
+  animation-range: calc(100% - 32px) 100%;
+}
+
+@keyframes dsh-claude-home-panel-fade {
+  from { -webkit-mask-size: 100% 100%; mask-size: 100% 100%; }
+  to { -webkit-mask-size: 100% calc(100% + 32px); mask-size: 100% calc(100% + 32px); }
+}
+
+body[data-dsh-claude-style] .dsh-claude-home-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-home-tabs,
+body[data-dsh-claude-style] .dsh-claude-home-ranges {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-home-tab,
+body[data-dsh-claude-style] .dsh-claude-home-range {
+  appearance: none;
+  margin: 0;
+  padding: 1px 8px;
+  border: 0;
+  /* Half of the full pill the 20px control would round to, matching Claude's
+     Overview chip. */
+  border-radius: 5px;
+  background: transparent;
+  color: var(--dsw-alias-label-tertiary, #8f8a7e);
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 18px;
+  cursor: pointer;
+}
+
+body[data-dsh-claude-style] .dsh-claude-home-tab:hover:not([data-active]),
+body[data-dsh-claude-style] .dsh-claude-home-range:hover:not([data-active]) {
+  background: color-mix(in srgb, var(--dsw-alias-label-primary, #141413) 5%, transparent);
+  color: var(--dsw-alias-label-primary, #141413);
+}
+
+/* The active pill is a gray chip one step below the panel's own wash — Claude's
+   Overview reads as gray ground under black text, not a lifted white card. */
+body[data-dsh-claude-style] .dsh-claude-home-tab[data-active],
+body[data-dsh-claude-style] .dsh-claude-home-range[data-active] {
+  background: color-mix(in srgb, var(--dsw-alias-label-primary, #141413) 10%, var(--dsw-alias-bg-layer-2, #fbfbf9));
+  color: var(--dsw-alias-label-primary, #141413);
+}
+
+body[data-dsh-claude-style] .dsh-claude-home-panel-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* While the host half is still folding, every skeleton surface breathes together:
+   the tiles' stand-in figures, the heat grid, and the models tab's stand-in rows. */
+body[data-dsh-claude-style] .dsh-claude-home-panel[data-computing] .dsh-claude-home-stat[data-skeleton] .dsh-claude-home-stat-value,
+body[data-dsh-claude-style] .dsh-claude-home-panel[data-computing] .dsh-claude-home-models[data-skeleton] .dsh-claude-home-model-swatch,
+body[data-dsh-claude-style] .dsh-claude-home-heat[data-skeleton] .dsh-claude-home-heat-cell {
+  animation: dsh-claude-home-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes dsh-claude-home-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-dsh-claude-style] .dsh-claude-home-panel[data-computing] .dsh-claude-home-stat[data-skeleton] .dsh-claude-home-stat-value,
+  body[data-dsh-claude-style] .dsh-claude-home-panel[data-computing] .dsh-claude-home-models[data-skeleton] .dsh-claude-home-model-swatch,
+  body[data-dsh-claude-style] .dsh-claude-home-heat[data-skeleton] .dsh-claude-home-heat-cell {
+    animation: none;
+  }
+}

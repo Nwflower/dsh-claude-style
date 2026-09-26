@@ -53,7 +53,7 @@ OUT_DIR = os.path.join(ROOT, 'src', 'assets', 'icons', 'combine')
 # preferred over anything fetched: <brand>.svg here wins.
 COMBINE_SRC = os.path.join(ROOT, 'src', 'assets', 'icons')
 
-# Canvas colours the contrast check is run against (src/styles/tokens.css).
+# Canvas colours the contrast check is run against (src/theme/tokens.css).
 LIGHT_CANVAS = '#fcfcfb'
 DARK_CANVAS = '#141413'
 # WCAG contrast below this and the brand colour is not legible on that canvas, so

@@ -1,0 +1,240 @@
+/* ---------- Claude Code layout: composer input + buttons ---------- */
+/* @composer-gate */
+/* Everything from here down is the "Composer restyle" preference's territory:
+   the build stamps `[data-dsh-claude-composer-active]` onto every rule below
+   this marker, and the skin sets that attribute on <body> only while the page
+   on screen is a surface the preference covers. Above the marker sits the hero
+   brand mark and headline, which belong to the brand preference instead — a
+   composer scope of "conversation only" must not revert them. */
+/* The composer card is the input box: one step up in type size, pure white
+   so it separates from the canvas, and an outline 4px tighter than the
+   shipped 22px. */
+body[data-dsh-claude-style] [data-composer-card] {
+  font-size: 15px;
+  border-radius: 18px;
+  border: 1px solid var(--dsw-alias-border-l1);
+  position: relative;
+  z-index: 2;
+  gap: 8px !important;
+  padding-bottom: 2px !important;
+  min-height: 0 !important;
+  height: auto !important;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+/* Input height, by composer variant. The hero (new conversation) keeps the
+   tall 86px field it was tuned to. An active conversation instead hugs its
+   draft: the shipped 36px floor holds exactly one line, the contenteditable
+   then grows a line at a time, and .scroll caps the box at
+   --dsh-composer-text-max-height before it starts scrolling. Both hooks are
+   ancestors of the field, so :is() also keeps the tall field through the
+   settling frame, while an active composer matches neither. */
+body[data-dsh-claude-style] :is([class*="composerHero"], [data-phase="hero"]) [data-composer-input] {
+  min-height: 86px !important;
+}
+
+body[data-dsh-claude-style] [data-composer-input] {
+  min-height: 36px !important;
+  height: auto !important;
+}
+
+/* The hero's hint, for the times the skin has to supply it.
+   The host renders its own placeholder only while the draft is empty AND
+   nothing is attached (`draft === "" && attachments.length === 0`), so pasting
+   an image with no text removes it — and the skin's synthetic stand-in carries
+   none of the host's classes, so without this rule it fell back to a static
+   block in the card's own ink colour, below the field instead of on it. The
+   hero keeps the host's field metrics (the skin only raises its min-height), so
+   the stand-in takes the host's own inset — 4px down, 14px in — rather than the
+   inline variant's zero-origin line box. The host's `.grow` is already
+   `position: relative`, so the offsets resolve against the field. */
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant="hero"] [data-dsh-synthetic-placeholder] {
+  position: absolute !important;
+  top: 4px !important;
+  left: 14px !important;
+  right: 8px !important;
+  color: var(--dsw-alias-label-caption) !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+/* Tight bottom padding below the button controls row. The selector must
+   be `[class*="_row"]`: a bare `[class*="row"]` substring-matches the
+   shipped input growth wrapper `.p_FcLG_grow` ("grow" contains "row"),
+   which pins the composer field to the toolbar-row metrics. */
+body[data-dsh-claude-style] [data-composer-card] [class*="_row"] {
+  padding-bottom: 2px !important;
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-composer-card] {
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(20, 20, 19, 0.04), 0 1px 3px rgba(20, 20, 19, 0.02);
+}
+
+body[data-dsh-claude-style][data-ds-dark-theme] [data-composer-card] {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+/* Focus: the shipped field has no focus face at all — only the caret moves —
+   so this adds one, in the input box's own shadow colour rather than the
+   accent: the hairline takes the drop-shadow tint (espresso in light), a 1px
+   halo in the same tone hugs the edge, and the drop shadow deepens. Dark sits
+   on a near-black canvas, where black-on-black carries no cue at all — there
+   the focus face inverts to a BRIGHT ivory rim and halo, so the field visibly
+   lights up instead of deepening. The tray below continues the same hairline,
+   so its three edges follow whenever the card above it holds focus. */
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-composer-card]:focus-within {
+  border-color: rgba(20, 20, 19, 0.18);
+  box-shadow: 0 0 0 1px rgba(20, 20, 19, 0.065), 0 6px 18px rgba(20, 20, 19, 0.03), 0 2px 6px rgba(20, 20, 19, 0.015);
+}
+
+body[data-dsh-claude-style][data-ds-dark-theme] [data-composer-card]:focus-within {
+  border-color: rgba(250, 249, 245, 0.22);
+  box-shadow: 0 0 0 1px rgba(250, 249, 245, 0.09), 0 6px 24px rgba(0, 0, 0, 0.22), 0 2px 8px rgba(0, 0, 0, 0.11);
+}
+
+/* The hero used to need its own four rules here, because the base rules above
+   carried the background-coloured (--dsw-alias-bg-base) halo that had to be
+   stripped from the home dialog. That halo is gone: the seat paints the bar and
+   its fade band instead (see features/composer/inline.css), so the base rules already
+   hold the pure card fill and the real drop shadow on every variant. */
+
+/* The hero's workspace row sits on the card and takes its focus ring. The row
+   comes before the card in the stack, so no sibling selector reaches it from
+   the card; focus inside the stack but not inside the row itself is the card's
+   (`:has(card:focus-within)` made every DOM change re-match the document). */
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) [class*="composerStack"]:focus-within > [class*="heroWorkspaceRow"]:not(:focus-within) {
+  border-color: rgba(20, 20, 19, 0.18);
+}
+
+body[data-dsh-claude-style][data-ds-dark-theme] [class*="composerStack"]:focus-within > [class*="heroWorkspaceRow"]:not(:focus-within) {
+  border-color: rgba(250, 249, 245, 0.22);
+}
+
+/* The workspace-trigger variant paints its dashed ring through a masked svg
+   cut with rx=22; re-cut it so the ring tracks the 18px card. */
+body[data-dsh-claude-style] [data-composer-card]:after {
+  border-radius: 18px;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27%3E%3Crect width=%27100%25%27 height=%27100%25%27 fill=%27none%27 rx=%2718%27 ry=%2718%27 stroke=%27black%27 stroke-width=%272%27 stroke-dasharray=%274 4%27/%3E%3C/svg%3E");
+  mask: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27%3E%3Crect width=%27100%25%27 height=%27100%25%27 fill=%27none%27 rx=%2718%27 ry=%2718%27 stroke=%27black%27 stroke-width=%272%27 stroke-dasharray=%274 4%27/%3E%3C/svg%3E");
+}
+
+/* Commands and attach: 7px corners instead of the shipped full circle, no
+   resting fill, and a warm plate on hover. */
+body[data-dsh-claude-style] :is(button[aria-label="指令"], button[aria-label="Commands"], button[aria-label="添加附件"], button[aria-label="Add attachment"], button[aria-label*="添加文件"], button[aria-label*="Add files"]) {
+  border-radius: 7px;
+}
+
+/* Send, and the stop/queue/steer labels that replace it while running: the
+   shipped 34px circle becomes a 7px rounded rectangle. */
+body[data-dsh-claude-style] :is(button[aria-label="发送消息"], button[aria-label="Send message"], button[aria-label="排队发送"], button[aria-label="Queue message"], button[aria-label="插话发送"], button[aria-label="Steer message"], button[aria-label="停止生成"], button[aria-label="Stop generating"]) {
+  border-radius: 7px;
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) :is(button[aria-label="指令"], button[aria-label="Commands"], button[aria-label="添加附件"], button[aria-label="Add attachment"], button[aria-label*="添加文件"], button[aria-label*="Add files"]) {
+  background: transparent;
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) :is(button[aria-label="指令"], button[aria-label="Commands"], button[aria-label="添加附件"], button[aria-label="Add attachment"], button[aria-label*="添加文件"], button[aria-label*="Add files"]):hover:not(:disabled) {
+  background: #f6f6f4;
+}
+
+/* Model selector: the same type size as the permission segments and the
+   same 7px corners; its chevron is dropped while the click target and the
+   menu it opens stay exactly as shipped. Its shipped hover token is only a
+   ~6% tint, so the hover plate matches the composer tool buttons. */
+body[data-dsh-claude-style] [data-composer-card] [class*="trigger"] {
+  font-size: 14px;
+  border-radius: 7px;
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-composer-card] [class*="trigger"]:hover:not(:disabled) {
+  background: #f6f6f4;
+}
+
+body[data-dsh-claude-style] [data-composer-card] [class*="_chevron"] {
+  display: none !important;
+}
+
+/* ---------- Claude Code layout: composer footer bar ---------- */
+/* Reference layout: two-tier integrated tray. The top card is a pure white
+   rounded card with drop shadow (z-index: 2). The bottom tray is a seamless
+   equal-width tray (z-index: 1) attached directly to the bottom of the card,
+   with transparent background (inheriting the canvas tone #fcfcfb),
+   left/right/bottom border, and 18px rounded bottom corners.
+
+   The tray belongs to the CLASSIC home layout: the studio layout
+   (features/home/home-panel.css) places the workspace row as a plain context row
+   above the card and the usage panel between them, so every rule below is
+   scoped away from it. */
+body[data-dsh-claude-style]:not([data-dsh-claude-home-layout="studio"]) [class*="composerStack"][data-composer-variant="hero"] {
+  --dsh-claude-bar-h: 96px;
+}
+
+body[data-dsh-claude-style]:not([data-dsh-claude-home-layout="studio"]) [class*="composerStack"][data-composer-variant="hero"] *:has([data-composer-card]) {
+  order: 1;
+  padding-bottom: 0 !important;
+}
+
+body[data-dsh-claude-style]:not([data-dsh-claude-home-layout="studio"]) [class*="composerStack"][data-composer-variant="hero"] [data-composer-card] {
+  gap: 8px !important;
+  padding-bottom: 2px !important;
+  min-height: 0 !important;
+  height: auto !important;
+}
+
+body[data-dsh-claude-style]:not([data-dsh-claude-home-layout="studio"]) [class*="composerStack"][data-composer-variant="hero"] > [class*="heroWorkspaceRow"] {
+  order: 2;
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  height: calc(var(--dsh-claude-bar-h) + 18px);
+  width: calc(100% - var(--dsh-composer-side-clearance, 0px) - var(--dsh-composer-side-clearance, 0px));
+  max-width: var(--dsh-composer-card-max-width, 100%);
+  margin: calc(0px - var(--dsh-composer-stack-gap, 6px) - 18px) auto 0;
+  padding: 18px 16px 0 16px;
+  background: transparent;
+  border-left: 1px solid var(--dsw-alias-border-l1);
+  border-right: 1px solid var(--dsw-alias-border-l1);
+  border-bottom: 1px solid var(--dsw-alias-border-l1);
+  border-top: none;
+  border-radius: 0 0 18px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: border-color 0.12s ease;
+}
+
+/* Muted typography and 7px corners for footer controls */
+body[data-dsh-claude-style] [class*="heroWorkspaceRow"] :is(button, [role="button"]) {
+  font-size: 13px;
+  color: var(--dsw-alias-label-secondary);
+  border-radius: 7px;
+}
+
+/* Hide chevrons in the footer tray for a clean, minimal Claude Code look */
+body[data-dsh-claude-style] [class*="heroWorkspaceRow"] :is([class*="chevron"], [class*="Chevron"]) {
+  display: none !important;
+}
+
+/* ---------- Claude Code layout: composer send button ---------- */
+/* An empty composer keeps the send button in place but drops it to a ghost:
+   transparent plate, a hairline in the input box border colour, and the glyph
+   in the same colour the model control uses for its effort tier (low/high), so
+   it reads as not-ready instead of vanishing. Flat by design (no shadow), and
+   border-box keeps the outer 34px so the row does not shift. The stop/queue/
+   steer labels are untouched, so a running turn keeps its control even with an
+   empty draft. The empty draft is the card's data-dsh-claude-draft-empty mark
+   (src/features/composer/composer.js). */
+body[data-dsh-claude-style] [data-composer-card]:not([data-has-attachments="true"])[data-dsh-claude-draft-empty] :is(button[aria-label="发送消息"], button[aria-label="Send message"]) {
+  box-sizing: border-box;
+  background: transparent;
+  color: var(--dsw-alias-label-caption);
+  border: 1px solid var(--dsw-alias-border-l2);
+  box-shadow: none;
+  cursor: default;
+}
+

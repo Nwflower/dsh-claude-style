@@ -77,7 +77,7 @@ Both are solid (never translucent) and `!important`, so they override whatever
 colour the text underneath carries — links, inline code, syntax tokens. CSS
 cannot read window focus: Chromium reaches the inactive paint through its own
 internal `-internal-inactive-selection-*` properties, which a stylesheet cannot
-address. `src/overrides/selection.js` therefore mirrors `document.hasFocus()`
+address. `src/features/selection/selection.js` therefore mirrors `document.hasFocus()`
 onto `data-dsh-window-blur` and the stylesheet switches on that attribute; the
 selection itself survives the blur.
 
@@ -117,7 +117,7 @@ the account drawer, the session-stats card, and the host's own menu primitive
 under the hero row's workspace and preset pickers — is meant to start from one
 recipe. New popovers take it rather than inventing a card.
 
-Two rules hold across all of them, both owned by `overrides/popover-utils.js`. A
+Two rules hold across all of them, both owned by `shared/popover.js`. A
 pointer opens a card only after a **100 ms dwell** — long enough that crossing a
 28px trigger on the way somewhere else unfolds nothing — and the card closes
 100 ms after the pointer leaves. Two cards keep their own numbers with the reason
@@ -174,8 +174,8 @@ takes the longest stable piece of whichever family it targets — `_itemWrap_`,
 never the bare local name.
 
 The hero row's two pickers are that primitive, portaled to `<body>` with no
-marker of their own. `src/overrides/hero-menu.js` stamps the open card with
-`data-dsh-claude-hero-menu` and `components/hero-menu.css` restyles it; the
+marker of their own. `src/features/hero-menu/hero-menu.js` stamps the open card with
+`data-dsh-claude-hero-menu` and `features/hero-menu/hero-menu.css` restyles it; the
 host's other menus (sidebar row menus, the settings permission row, submenus)
 keep the host's own design on purpose. What that replaces: a 20px radius card
 with 4px padding, 40px rows at 10px radius, and 14px text.
@@ -192,19 +192,19 @@ z-index 1000 and 100000) and now follow the table above. The hero row's pickers 
 two ways that CSS cannot change: it mounts instead of toggling a `data-open`
 attribute, so it takes the same fade/scale as a one-shot `0.15s` animation; and
 the host places it *below* its trigger, which is where the composer sits — so
-`src/overrides/hero-menu.js` re-places it beside the trigger (bottom-aligned,
+`src/features/hero-menu/hero-menu.js` re-places it beside the trigger (bottom-aligned,
 growing upward into the empty hero space, flipping left when the viewport is
 tight). The host re-runs its own placement from its anchor geometry on every
 frame while the card is open, so the position is handed over in two custom
 properties on the card (`--dsh-claude-hero-menu-x` / `--dsh-claude-hero-menu-y`,
-written by the same pass that stamps it) which `components/hero-menu.css` reads
+written by the same pass that stamps it) which `features/hero-menu/hero-menu.css` reads
 with `!important`; that declaration outranks the host's plain inline value.
 
 ## Home layouts · 首页版面
 
 The new-conversation page has two arrangements. `homeLayout` (settings: Home
 layout) writes `data-dsh-claude-home-layout` onto `<body>` and
-`src/styles/components/home-panel.css` branches on it. Both are the host's own
+`src/features/home/home-panel.css` branches on it. Both are the host's own
 hero markup — the greeting, the workspace row, the dock and the composer card
 inside `…_composerStack …_composerHero` — so only the arrangement differs.
 
@@ -218,7 +218,7 @@ inside `…_composerStack …_composerHero` — so only the arrangement differs.
 
 The studio composer is stamped `data-composer-variant="inline"` (composer.js's
 pass reads the same preference), so the home card is drawn by the conversation's
-single-line stylesheet. The classic tray rules in `composer/card.css` are scoped
+single-line stylesheet. The classic tray rules in `features/composer/card.css` are scoped
 away from studio with `:not([data-dsh-claude-home-layout="studio"])`. That is
 deliberate: they set `order: 1` / `order: 2` on the same boxes, and a competing
 rule would have to be out-specified rather than merely reordered — scoping them
@@ -343,69 +343,69 @@ assembly order itself is authoritative in `scripts/build.mjs`
 | `src/assets/brand/*.svg` | brand marks, inlined as CSS `url()` data URIs at build time (the loader exposes no asset URLs) |
 | `src/assets/icons/combine/*.svg` | vendor lockups (Lobe Icons mark + wordmark composed into one SVG, MIT), inlined as JS markup tables at build time; bound to models by `model-descriptions.json` → `brands` |
 | `src/assets/icons/*.svg` | hand-provided lockup artwork (e.g. ChatGPT), which the vendoring step prefers over anything fetched; `brands.lockups` may also point a brand's two halves at different Lobe icons or crop a wordmark |
-| `src/styles/tokens.css` | design tokens (dark base + ivory light) |
-| `src/styles/typography.css` | serif display / sans UI / mono code, editorial markdown |
-| `src/styles/chrome.css` | canvas, hairlines, clay accent, chrome details |
-| `src/styles/composer/hero.css` | hero brand mark and headline |
-| `src/styles/composer/card.css` | composer input card and footer tray (gated by composer preference) |
-| `src/styles/composer/inline.css` | in-conversation single-line composer (gated by composer preference) |
-| `src/styles/composer/inline-bar.css` | the inline composer's trailing bar: model trigger and merged time/usage stats line (gated by composer preference) |
-| `src/styles/sidebar.css` | sidebar brand, new-session row, workspace tree |
-| `src/styles/components/sliding-pill.css` | the segmented controls' shared sliding highlight: its placement and motion (each control's own stylesheet gives it shape and fill) |
-| `src/styles/components/workspace.css` | the workspace section's 进行中 / 已归档 segment control and the skin's own archived list |
-| `src/styles/components/permissions.css` | permission segments and popover |
-| `src/styles/components/account-footer.css` | account row and floating popover |
-| `src/styles/components/ban-screen.css` | the account-hold easter egg (full-window overlay) |
-| `src/styles/components/model-picker.css` | model picker popovers |
-| `src/styles/components/effort-picker.css` | the reasoning-effort card, slider and its trigger |
-| `src/styles/components/popover.css` | shared popover chrome: header, body and menu rows |
-| `src/styles/components/hero-menu.css` | the host's menu primitive under the hero row's workspace/preset pickers (composer-gated) |
-| `src/styles/components/footer-takeover.css` | host footer takeover rules |
-| `src/styles/components/third-party.css` | agy-link repair rules |
-| `src/styles/components/settings.css` | settings page section |
-| `src/styles/components/home-panel.css` | the studio home layout and the usage panel's shell (keyed on the attribute `home-layout.js` writes) |
-| `src/styles/components/home-overview.css` | the usage panel's Overview tab: stat cells, heat grid, yardstick line |
-| `src/styles/components/home-models.css` | the usage panel's Models tab: the stacked chart and the ranked list |
-| `src/styles/components/mascot.css` | the pixel crab: its seat on the card's top edge and its inks |
-| `src/styles/components/theme-flip.css` | theme-flip transition suppression |
-| `src/context/host.js` | host accessors and helpers |
-| `src/context/prefs.js` | preference store |
-| `src/context/model-copy.js` | model copy document store |
-| `src/context/i18n.js` | localized copy lookups |
-| `src/overrides/popover-utils.js` | shared anchor positioning and hover intent |
-| `src/overrides/sliding-pill.js` | sliding highlight factory (`createSlidingPill`): measures a segmented control's active item and writes where the shared pill sits — used by the view tabs, the permission segments, 进行中 / 已归档 and the settings page |
-| `src/overrides/composer.js` | composer layout feature: each pass writes the variant, gate, attachment, empty-draft and context-ring attributes the composer stylesheets read |
-| `src/overrides/copy.js` | composer/copy rewrites installer |
-| `src/overrides/session-stats.js` | session-stats card factory (`createSessionStats`), the permissions feature's split-out half |
-| `src/overrides/permissions.js` | permission segments/popover installer (the stats card lives in `session-stats.js`) |
-| `src/overrides/model-brand.js` | brand lockup lookup: maps a catalog model to its vendored lockup through the `brands` bindings |
-| `src/overrides/model-copy-lookup.js` | model copy lookup: exact entry → family rule → tier rule → the catalog's own text |
-| `src/overrides/model/catalog.js` | model catalog factory (`createModelCatalog`): the per-session ModelDirectory store |
-| `src/overrides/model/rows.js` | model row factory (`createModelRows`): option cells, provider rules, level-1 sections |
-| `src/overrides/model-picker.js` | model picker installer, wiring the `model/` factories (thin orchestration) |
-| `src/overrides/effort/matrix.js` | effort matrix factory (`createEffortMatrix`): the tier data the slider snaps to |
-| `src/overrides/effort/control.js` | effort control factory (`createEffortControl`): the reasoning-effort slider and its card |
-| `src/overrides/effort-picker.js` | effort picker installer, wiring the `effort/` factories (thin orchestration) |
-| `src/overrides/hero-menu.js` | stamps the host menu card the hero row's pickers open |
-| `src/overrides/quick-providers.js` | the settings page's quick-providers multi-select popover |
-| `src/overrides/account/profile.js` | account profile factory (`createAccountProfile`): signed-in name/avatar reads and retries |
-| `src/overrides/account/host-menu.js` | host account menu factory (`createHostAccountMenu`): reads and drives the host's own menu |
-| `src/overrides/account/rows.js` | account rows factory (`createAccountRows`): the account popover's row builders |
-| `src/overrides/account/footer-mirror.js` | footer mirror factory (`createFooterMirror`): redirects other plugins' footer entries into the drawer |
-| `src/overrides/account/surface.js` | account surface factory (`createAccountSurface`): one row model, picks the mount point each pass (the host's account menu or the self-built popover) |
-| `src/overrides/account-footer.js` | account drawer installer, wiring the `account/` factories (thin orchestration) |
-| `src/overrides/ban-screen.js` | account-hold easter egg installer |
-| `src/overrides/theme-flip.js` | suppresses transitions during a theme flip, so colours and shapes land together |
-| `src/overrides/workspace-view.js` | workspace section feature: the 进行中 / 已归档 segments and the archived list (row delete goes through the plugin's own route) |
-| `src/overrides/view-tabs.js` | conversation view tabs: stamps the strip the stylesheet styles, moves it onto the title row when it fits, and places its sliding pill |
-| `src/overrides/home-layout.js` | home layout feature shell: writes the layout attribute, registers the usage panel into the host's dock seat, and draws the panel's head |
-| `src/overrides/home/data.js` | the usage panel's data: the roll-up route, the session list's fallback, and the figures both tabs read |
-| `src/overrides/home/overview.js` | the usage panel's Overview tab: stat cells, heat grid, yardstick line |
-| `src/overrides/home/models.js` | the usage panel's Models tab: the stacked chart and the ranked list |
-| `src/overrides/mascot.js` | the pixel crab on the new-conversation card: its poses as one inline SVG, and the fishing routine |
-| `src/overrides/scheduler.js` | scheduler, observers, subscriptions, teardown |
-| `src/overrides/selection.js` | mirrors the window's focus state onto the document for the two text-selection paints |
-| `src/settings.js` | settings section (brand switch) |
+| `src/theme/tokens.css` | design tokens (dark base + ivory light) |
+| `src/theme/typography.css` | serif display / sans UI / mono code, editorial markdown |
+| `src/theme/chrome.css` | canvas, hairlines, clay accent, chrome details |
+| `src/theme/hero.css` | hero brand mark and headline |
+| `src/features/composer/card.css` | composer input card and footer tray (gated by composer preference) |
+| `src/features/composer/inline.css` | in-conversation single-line composer (gated by composer preference) |
+| `src/features/composer/inline-bar.css` | the inline composer's trailing bar: model trigger and merged time/usage stats line (gated by composer preference) |
+| `src/theme/sidebar.css` | sidebar brand, new-session row, workspace tree |
+| `src/shared/sliding-pill.css` | the segmented controls' shared sliding highlight: its placement and motion (each control's own stylesheet gives it shape and fill) |
+| `src/features/workspace/workspace.css` | the workspace section's 进行中 / 已归档 segment control and the skin's own archived list |
+| `src/features/permissions/permissions.css` | permission segments and popover |
+| `src/features/account/account-footer.css` | account row and floating popover |
+| `src/features/ban-screen/ban-screen.css` | the account-hold easter egg (full-window overlay) |
+| `src/features/model/model-picker.css` | model picker popovers |
+| `src/features/effort/effort-picker.css` | the reasoning-effort card, slider and its trigger |
+| `src/shared/popover.css` | shared popover chrome: header, body and menu rows |
+| `src/features/hero-menu/hero-menu.css` | the host's menu primitive under the hero row's workspace/preset pickers (composer-gated) |
+| `src/features/account/footer-takeover.css` | host footer takeover rules |
+| `src/theme/third-party.css` | agy-link repair rules |
+| `src/features/settings/settings.css` | settings page section |
+| `src/features/home/home-panel.css` | the studio home layout and the usage panel's shell (keyed on the attribute `home-layout.js` writes) |
+| `src/features/home/home-overview.css` | the usage panel's Overview tab: stat cells, heat grid, yardstick line |
+| `src/features/home/home-models.css` | the usage panel's Models tab: the stacked chart and the ranked list |
+| `src/features/mascot/mascot.css` | the pixel crab: its seat on the card's top edge and its inks |
+| `src/features/theme-flip/theme-flip.css` | theme-flip transition suppression |
+| `src/core/host.js` | host accessors and helpers |
+| `src/core/prefs.js` | preference store |
+| `src/core/model-copy.js` | model copy document store |
+| `src/core/i18n.js` | localized copy lookups |
+| `src/shared/popover.js` | shared anchor positioning and hover intent |
+| `src/shared/sliding-pill.js` | sliding highlight factory (`createSlidingPill`): measures a segmented control's active item and writes where the shared pill sits — used by the view tabs, the permission segments, 进行中 / 已归档 and the settings page |
+| `src/features/composer/composer.js` | composer layout feature: each pass writes the variant, gate, attachment, empty-draft and context-ring attributes the composer stylesheets read |
+| `src/features/copy/copy.js` | composer/copy rewrites installer |
+| `src/features/permissions/session-stats.js` | session-stats card factory (`createSessionStats`), the permissions feature's split-out half |
+| `src/features/permissions/permissions.js` | permission segments/popover installer (the stats card lives in `session-stats.js`) |
+| `src/features/model/brand.js` | brand lockup lookup: maps a catalog model to its vendored lockup through the `brands` bindings |
+| `src/features/model/copy-lookup.js` | model copy lookup: exact entry → family rule → tier rule → the catalog's own text |
+| `src/features/model/catalog.js` | model catalog factory (`createModelCatalog`): the per-session ModelDirectory store |
+| `src/features/model/rows.js` | model row factory (`createModelRows`): option cells, provider rules, level-1 sections |
+| `src/features/model/model-picker.js` | model picker installer, wiring the `model/` factories (thin orchestration) |
+| `src/features/effort/matrix.js` | effort matrix factory (`createEffortMatrix`): the tier data the slider snaps to |
+| `src/features/effort/control.js` | effort control factory (`createEffortControl`): the reasoning-effort slider and its card |
+| `src/features/effort/effort-picker.js` | effort picker installer, wiring the `effort/` factories (thin orchestration) |
+| `src/features/hero-menu/hero-menu.js` | stamps the host menu card the hero row's pickers open |
+| `src/features/settings/quick-providers.js` | the settings page's quick-providers multi-select popover |
+| `src/features/account/profile.js` | account profile factory (`createAccountProfile`): signed-in name/avatar reads and retries |
+| `src/features/account/host-menu.js` | host account menu factory (`createHostAccountMenu`): reads and drives the host's own menu |
+| `src/features/account/rows.js` | account rows factory (`createAccountRows`): the account popover's row builders |
+| `src/features/account/footer-mirror.js` | footer mirror factory (`createFooterMirror`): redirects other plugins' footer entries into the drawer |
+| `src/features/account/surface.js` | account surface factory (`createAccountSurface`): one row model, picks the mount point each pass (the host's account menu or the self-built popover) |
+| `src/features/account/account-footer.js` | account drawer installer, wiring the `account/` factories (thin orchestration) |
+| `src/features/ban-screen/ban-screen.js` | account-hold easter egg installer |
+| `src/features/theme-flip/theme-flip.js` | suppresses transitions during a theme flip, so colours and shapes land together |
+| `src/features/workspace/workspace-view.js` | workspace section feature: the 进行中 / 已归档 segments and the archived list (row delete goes through the plugin's own route) |
+| `src/features/view-tabs/view-tabs.js` | conversation view tabs: stamps the strip the stylesheet styles, moves it onto the title row when it fits, and places its sliding pill |
+| `src/features/home/home-layout.js` | home layout feature shell: writes the layout attribute, registers the usage panel into the host's dock seat, and draws the panel's head |
+| `src/features/home/data.js` | the usage panel's data: the roll-up route, the session list's fallback, and the figures both tabs read |
+| `src/features/home/overview.js` | the usage panel's Overview tab: stat cells, heat grid, yardstick line |
+| `src/features/home/models.js` | the usage panel's Models tab: the stacked chart and the ranked list |
+| `src/features/mascot/mascot.js` | the pixel crab on the new-conversation card: its poses as one inline SVG, and the fishing routine |
+| `src/core/scheduler.js` | scheduler, observers, subscriptions, teardown |
+| `src/features/selection/selection.js` | mirrors the window's focus state onto the document for the two text-selection paints |
+| `src/features/settings/settings.js` | settings section (brand switch) |
 | `src/entry.js` | `apply()` orchestrator + exports |
 | `src/model-descriptions.json` | model copy (picker labels + per-model descriptions); validated at build time and **copied** to `lib/`, not inlined |
 

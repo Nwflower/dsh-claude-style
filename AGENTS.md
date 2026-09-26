@@ -37,7 +37,7 @@
 
 - This repository only builds a Web theme plugin; it never modifies the DSH engine, apiproxy, or the official UI packages. All effects are achieved on the browser side through CSS overrides and client-side DOM overrides.
 - Zero build toolchain, zero runtime dependencies: `scripts/build.mjs` concatenates the `src/` fragments verbatim in a fixed order into the single file `lib/client.js`. Do not introduce bundlers like esbuild/rollup, do not introduce any new dependency (the DSH module loader has no relative require and no asset URLs — this architecture must be preserved, see docs/architecture.md D1).
-- `lib/client.js`, `lib/model-descriptions.json`, and `lib/claude-mark.svg` are build artifacts; never edit them by hand — run `npm run build` after changing `src/`. `lib/index.js` is the handwritten host side and can be edited directly.
+- `lib/client.js`, `lib/model-descriptions.json`, and `lib/claude-mark.svg` are build artifacts; never edit them by hand — run `npm run build` after changing `src/`. `host/index.js` is the handwritten host side and can be edited directly.
 - The npm package does not distribute the Anthropic Sans/Serif fonts; `fonts/` is a repository-only download. Anthropic fonts are copyrighted by Anthropic and are not covered by MIT. The JetBrains Mono code font ships with the plugin package under the SIL OFL.
 - Public documentation (bilingual README, docs, CHANGELOG) never shows internal numbering.
 - Local debug scripts, screenshots, and intermediate artifacts all go into `.debug/` and are never committed.

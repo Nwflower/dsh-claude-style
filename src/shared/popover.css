@@ -1,0 +1,100 @@
+/* Popover Header. Vertical padding only: the clickable account row carries its
+   own inline padding (features/account/account-footer.css), and the divider below is a
+   full-bleed rule that must not be inset by this box. */
+body[data-dsh-claude-style] .dsh-claude-account-popover-header {
+  padding: 6px 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+body[data-dsh-claude-style] .dsh-claude-account-popover-name {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: var(--dsw-alias-label-primary, #141413) !important;
+  line-height: 18px !important;
+  font-family: var(--dsw-font-family) !important;
+}
+body[data-dsh-claude-style] .dsh-claude-account-popover-divider {
+  height: 1px !important;
+  background: var(--dsw-alias-border-l1, #e8e6dc) !important;
+  margin: 2px 0 !important;
+  flex: none !important;
+}
+
+/* Popover Body & Items */
+body[data-dsh-claude-style] .dsh-claude-account-popover-body {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  max-height: 360px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+body[data-dsh-claude-style] .dsh-claude-popover-item {
+  width: 100% !important;
+  min-height: 32px !important;
+  padding: 2px 7px !important;
+  border-radius: 6px !important;
+  border: none !important;
+  background: transparent !important;
+  color: var(--dsw-alias-label-primary, #141413) !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 8px !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  font-family: var(--dsw-font-family) !important;
+  transition: background-color 0.12s ease !important;
+  box-sizing: border-box !important;
+}
+body[data-dsh-claude-style] .dsh-claude-popover-item:hover {
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
+  color: var(--dsw-alias-label-primary, #141413) !important;
+}
+body[data-dsh-claude-style] .dsh-claude-popover-item-icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 16px !important;
+  height: 16px !important;
+  flex: none !important;
+  color: var(--dsw-alias-label-secondary, #787672) !important;
+}
+body[data-dsh-claude-style] .dsh-claude-popover-item-icon svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+body[data-dsh-claude-style] .dsh-claude-popover-item-text {
+  flex: 1 !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  text-align: left !important;
+}
+body[data-dsh-claude-style] .dsh-claude-popover-item-badge {
+  margin-left: auto !important;
+  font-size: 10px !important;
+  line-height: 14px !important;
+  padding: 0 5px !important;
+  border-radius: 8px !important;
+  background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, 0.08)) !important;
+  color: var(--dsw-alias-label-secondary, #787672) !important;
+}
+/* A provider the catalog no longer offers: its stored row stays checked but is
+   muted, so it reads as "this used to be picked" and can be unchecked away. */
+body[data-dsh-claude-style] .dsh-claude-popover-item.dsh-claude-model-stale .dsh-claude-popover-item-text,
+body[data-dsh-claude-style] .dsh-claude-popover-item.dsh-claude-model-stale .dsh-claude-popover-item-badge {
+  color: var(--dsw-alias-label-tertiary, #8f8d84) !important;
+}
+body[data-dsh-claude-style] .dsh-claude-popover-item.dsh-claude-model-stale .dsh-claude-popover-item-badge {
+  background: transparent !important;
+}
+
+/* Ensure popover items only display inside the popover */
+body[data-dsh-claude-style] [class*="footArea"] > .dsh-claude-popover-item {
+  display: none !important;
+}

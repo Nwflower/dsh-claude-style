@@ -1,0 +1,169 @@
+/* @composer-gate */
+/* ---------- Host menu primitive: the hero row's pickers ---------- */
+/* The workspace (directory) chip and the agent-preset seat open the host's
+   shared Menu primitive, which portals its card to <body>. The card carries no
+   marker of its own, so src/features/hero-menu/hero-menu.js stamps the one that belongs
+   to this row with HERO_MENU_ATTR and these rules reach it alone — the host's
+   other menus keep their own design. The metrics are the skin's popover
+   language, the same card / rows / hover plate / accent check as
+   features/model/model-picker.css and features/permissions/permissions.css. */
+
+/* Two class-name families meet here. The host's client-ui packages hash as
+   `<hash>_<local>`, so their fragments read `_itemName` / `_itemDesc`; the
+   shared menu ships inside the web shell and hashes as `_<local>_<hash>_<n>`,
+   so its fragments read `_itemWrap_` / `_itemLabel_`. Both are the longest
+   stable piece of the class — never the bare local name. */
+
+body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] {
+  min-width: 248px !important;
+  max-width: min(360px, calc(100vw - 16px)) !important;
+  max-height: min(440px, calc(100vh - 96px)) !important;
+  /* The host re-places this card from its own geometry on every frame while it
+     is open, writing plain inline `left` / `top`; an inline write from the
+     browser half would survive only until that frame. The position travels in
+     two custom properties instead — the host's style writes never touch them —
+     and these `!important` declarations outrank its inline value, so the card
+     holds the position the stamping pass gave it. */
+  left: var(--dsh-claude-hero-menu-x, 0px) !important;
+  top: var(--dsh-claude-hero-menu-y, 0px) !important;
+  padding: 6px !important;
+  gap: 6px !important;
+  border: 1px solid var(--dsw-alias-border-l1, #e8e6dc) !important;
+  border-radius: 12px !important;
+  background: var(--dsw-alias-bg-overlay, #ffffff) !important;
+  box-shadow: 0 8px 30px rgba(20, 20, 19, 0.12), 0 2px 8px rgba(20, 20, 19, 0.06) !important;
+  z-index: 99999 !important;
+  font-family: var(--dsw-font-family) !important;
+  /* The host mounts the card instead of toggling a `data-open` attribute, so
+     the skin's open transition becomes a one-shot animation with the same
+     values. Its origin is the edge nearest the trigger: the card sits beside it. */
+  transform-origin: bottom left !important;
+  animation: dsh-claude-hero-menu-in 0.15s ease !important;
+}
+@keyframes dsh-claude-hero-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+body[data-dsh-claude-style][data-ds-dark-theme] [%%HERO_MENU_ATTR%%] {
+  background: #1e1e1d !important;
+  border-color: #2e2c29 !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* One row height, one radius, one hover plate for both pickers. */
+body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [class*="_itemWrap_"] > [role="menuitem"] {
+  min-height: 32px !important;
+  padding: 2px 7px !important;
+  gap: 8px !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  line-height: 20px !important;
+  color: var(--dsw-alias-label-primary, #141413) !important;
+  transition: background-color 0.12s ease !important;
+}
+body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [class*="_itemWrap_"] > [role="menuitem"]:hover:not(:disabled) {
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
+}
+body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [class*="_itemWrap_"] > [role="menuitem"]:disabled {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+}
+body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [class*="_itemIcon_"] {
+  width: 16px !important;
+  height: 16px !important;
+  color: var(--dsw-alias-label-secondary, #787672) !important;
+}
+body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [class*="_itemIcon_"] svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [class*="_itemLabel_"] {
+  font-size: 13px !important;
+  line-height: 20px !important;
+}
+/* The current row is marked by the accent, as in the model picker. */
+body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [class*="_check_"] {
+  flex: none !important;
+  color: var(--dsw-alias-brand-primary, #d97757) !important;
+}
+
+/* The preset rows are two lines (name + description), so the height above is a
+   floor rather than a cap. */
+body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [class*="_itemName"] {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  line-height: 16px !important;
+}
+body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [class*="_itemDesc"] {
+  font-size: 11px !important;
+  line-height: 14px !important;
+  color: var(--dsw-alias-label-tertiary, #8f8d84) !important;
+}
+
+/* Heading and separator rows. */
+body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] > [class*="_viewport_"] > [role="presentation"] {
+  padding: 6px 7px 2px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  line-height: 16px !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  color: var(--dsw-alias-label-tertiary, #8f8d84) !important;
+}
+body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [role="separator"] {
+  height: 1px !important;
+  margin: 2px 4px !important;
+  background: var(--dsw-alias-border-l1, #e8e6dc) !important;
+}
+
+/* The pinned footer ("添加工作区…") keeps the host's spacing with the skin's
+   hairline. */
+body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] > [class*="_footer_"] {
+  margin-top: 4px !important;
+  padding-top: 4px !important;
+  border-top: 1px solid var(--dsw-alias-border-l1, #e8e6dc) !important;
+}
+
+/* The workspace picker is Claude Code's folder menu: a narrow card of plain
+   text rows. Every row names a folder, so the folder glyph in front of each
+   one repeats what the list already says and is dropped, the add row's `＋`
+   with it; the rows sit closer together than the preset card's two-line rows
+   need to. The current folder keeps the accent check. */
+body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%="workspace"] {
+  min-width: 180px !important;
+  max-width: min(280px, calc(100vw - 16px)) !important;
+  padding: 4px !important;
+  gap: 4px !important;
+}
+body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%="workspace"] [class*="_itemWrap_"] > [role="menuitem"] {
+  min-height: 26px !important;
+  padding: 3px 10px !important;
+}
+body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%="workspace"] [class*="_itemIcon_"] {
+  display: none !important;
+}
+body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%="workspace"] [class*="_check_"] {
+  width: 14px !important;
+  height: 14px !important;
+}
+body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%="workspace"] > [class*="_footer_"] {
+  margin-top: 0 !important;
+  padding-top: 4px !important;
+}
+
+/* The card's padding is the skin's 6px rather than the host's 4px, so a side
+   card moves with it: 6px pad + 6px gap. */
+body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [class*="_submenu_"] {
+  bottom: -6px !important;
+  left: calc(100% + 12px) !important;
+}
+body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [class*="_submenu_"]::before {
+  left: -12px !important;
+  width: 12px !important;
+}

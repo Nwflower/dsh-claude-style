@@ -1,0 +1,216 @@
+/* --- 2.1 Design Tokens (Dark Base & Light Overrides) --- */
+/* ---------- typography tokens: theme-independent ---------- */
+body[data-dsh-claude-style] {
+  --dsw-font-family: %%SANS%%;
+  --dsw-font-serif: %%SERIF%%;
+  --dsw-font-prose: %%PROSE%%;
+  --dsw-font-code: %%MONO%%;
+  /* Claude's lockup is drawn in Anthropic's serif, so its rows take the same face:
+     the wordmark and the rest of the label then read as one piece of lettering.
+     The face is already served for the UI (see theme/typography.css); the serif token
+     stays behind it so a missing font degrades to the shipped serif, not to sans. */
+  --dsw-font-brand-claude: 'Anthropic Serif Web Text', var(--dsw-font-serif);
+  /* Markdown document headings keep the host's own ladder, steepened from
+     21/19/18 toward Claude's measured ≈21/17/15; h1 and h4 keep the host's
+     values. The host reads these through a `font:` shorthand that names
+     --dsw-font-family directly, so overriding the `-font-family` sub-tokens
+     never reached the page — the shorthand itself is what has to be
+     re-declared. */
+  --dsw-font-markdown-h2: 700 calc(18px + var(--dsh-content-font-delta)) / calc(26px + var(--dsh-content-font-delta)) var(--dsw-font-prose);
+  --dsw-font-markdown-h3: 700 calc(16px + var(--dsh-content-font-delta)) / calc(24px + var(--dsh-content-font-delta)) var(--dsw-font-prose);
+}
+
+/* ---------- design tokens: warm-black (dark) palette ---------- */
+/* The dark palette is scoped to [data-ds-dark-theme] on purpose. The host
+   ships its own dark palette on body[data-ds-dark-theme] — the same (0,1,1)
+   weight as a bare body[data-dsh-claude-style] — so the two only tie, and
+   whichever stylesheet the loader appends last wins. When the host's lands
+   after this one its blue accents (--dsw-alias-state-business-primary,
+   --dsw-alias-button-info-fill, --dsw-alias-link and the brand "new color")
+   replace the warm palette. Naming the attribute keeps this block at (0,2,1)
+   and makes it order-independent. */
+body[data-dsh-claude-style][data-ds-dark-theme] {
+  --dsw-alias-bg-base: #141413;
+  --dsw-alias-bg-layer-1: #1c1b1a;
+  --dsw-alias-bg-layer-2: #242320;
+  --dsw-alias-bg-layer-3: #2e2c29;
+  --dsw-alias-bg-overlay: #242320;
+  --dsw-alias-border-l1: #242320;
+  --dsw-alias-border-l2: #2e2c29;
+  --dsw-alias-border-l3: #3a3833;
+  --dsw-alias-brand-primary: #d97757;
+  --dsw-alias-brand-text: #faf9f5;
+  /* The host takes a primary button's fill from --dsw-alias-brand-primary but
+     its hover from a monochrome step of its own scale (light #43454a, dark
+     #ebeef2). The skin's accent is clay, so a filled button states both steps
+     here and the hover stays in the fill's own family. */
+  --dsw-alias-button-primary-fill: #d97757;
+  --dsw-alias-button-primary-hover: #e08a6d;
+  --dsw-alias-button-elevated-fill: #242320;
+  --dsw-alias-button-floating-fill: #242320;
+  --dsw-alias-button-floating-hover: #2e2c29;
+  --dsw-alias-button-info-fill: #d97757;
+  --dsw-alias-button-info-hover: #e08a6d;
+  --dsw-alias-interactive-bg-active: rgba(217, 119, 87, 0.30);
+  --dsh-claude-hover-bg: rgba(255, 255, 255, 0.08);
+  --dsh-claude-inline-code-bg: rgba(255, 255, 255, 0.05);
+  /* The reasoning slider's top rung is the one place the clay accent does not
+     rule: Claude's own "Ultracode" rung is violet, and the user asked for that
+     violet rather than a clay translation of it. Values measured off Claude's
+     recorded slider (block ≈ rgb(150,127,200), name ink darker still); the
+     matrix's eight tone buckets (features/effort/effort-picker.css) are mixed from
+     these tokens, so they follow any change made here. */
+  --dsh-claude-apex: #9d8ce0;
+  --dsh-claude-apex-flash: #e6e0fb;
+  --dsh-claude-apex-ink: #b9adf0;
+  --dsh-claude-inline-code-fg: #e8a08a;
+  --dsh-claude-link: #8ab4f8;
+  --dsh-claude-link-underline: rgba(138, 180, 248, 0.6);
+  /* The host pins the code-block surface on `pre.shiki` with !important, so it
+     is only reachable through its own token; #1c1b1a is the value the skin's
+     (inert) `pre { background }` rule always meant. */
+  --dsw-alias-markdown-code-block: #1c1b1a;
+  --dsw-alias-markdown-code-block-banner: #242320;
+  --dsw-alias-interactive-bg-hover: var(--dsh-claude-hover-bg);
+  --dsw-alias-interactive-bg-hover-solid: #2e2c29;
+  --dsw-alias-label-primary: #faf9f5;
+  --dsw-alias-label-primary-bluish: #faf9f5;
+  --dsw-alias-label-secondary: #b0aea5;
+  --dsw-alias-label-tertiary: #8f8d84;
+  --dsw-alias-label-caption: #6b6a65;
+  --dsw-alias-state-business-primary: #d97757;
+  --dsw-alias-state-business-tertiary: #3a2a22;
+  --dsw-alias-link: #e08a6d;
+  --dsw-shadow-lv2: 0 4px 16px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.14);
+  --dsw-specific-input-major: #0f0e0d;
+  --dsw-specific-selector: #2e2c29;
+  --dsw-specific-sidebar-fill: #141413;
+  /* The host's "new color" brand accent (shipped under this doubled suffix)
+     resolves to a deepseek blue in both palettes; the skin has one accent. */
+  --dsw-alias-brand-primary-new-colorprimary-new-color: #d97757;
+}
+
+/* ================= light variant: ivory editorial ================= */
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) {
+  --dsw-alias-bg-base: #fcfcfb;
+  --dsw-alias-bg-layer-1: #fcfcfb;
+  --dsw-alias-bg-layer-2: #fbfbf9;
+  --dsw-alias-bg-layer-3: #f9f9f6;
+  --dsw-alias-bg-overlay: #ffffff;
+  --dsw-alias-border-l1: #e8e6dc;
+  --dsw-alias-border-l2: #dedcd2;
+  --dsw-alias-border-l3: #d0cdc1;
+  --dsw-alias-brand-primary: #d97757;
+  --dsw-alias-button-primary-fill: #d97757;
+  --dsw-alias-button-primary-hover: #c6613f;
+  --dsw-alias-button-info-fill: #d97757;
+  --dsw-alias-button-info-hover: #c6613f;
+  --dsw-alias-button-floating-fill: #ffffff;
+  --dsw-alias-button-floating-hover: #ffffff;
+  --dsw-alias-label-primary: #141413;
+  --dsw-alias-label-primary-bluish: #141413;
+  --dsw-alias-label-secondary: #6e6a60;
+  --dsw-alias-label-tertiary: #8f8a7e;
+  --dsw-alias-label-caption: #a6a094;
+  --dsw-alias-state-business-primary: #d97757;
+  --dsw-alias-state-business-tertiary: #e9dfd2;
+  --dsw-alias-link: #c6613f;
+  --dsw-specific-input-major: #ffffff;
+  --dsw-specific-menu: #ffffff;
+  --dsw-specific-selector: #fbfbf9;
+  --dsw-specific-sidebar-fill: #fbfbf9;
+  --dsh-claude-hover-bg: rgba(0, 0, 0, 0.08);
+  --dsh-claude-inline-code-bg: rgba(0, 0, 0, 0.05);
+  /* See the dark block: the top rung keeps Claude's violet, not the clay accent. */
+  --dsh-claude-apex: #8b7ad0;
+  --dsh-claude-apex-flash: #d9d2f5;
+  --dsh-claude-apex-ink: #5f51b5;
+  --dsw-alias-interactive-bg-hover: var(--dsh-claude-hover-bg);
+  --dsw-shadow-lv2: 0 4px 18px rgba(20, 20, 19, 0.10), 0 1px 3px rgba(20, 20, 19, 0.05);
+  --dsw-alias-brand-primary-new-colorprimary-new-color: #d97757;
+  /* Carried over from the dark base block so the light palette stays complete
+     now that the dark palette is dark-scoped. The two fills are palette-specific
+     instead: the host paints a solid hover chip and an elevated surface lighter
+     than the canvas here, and the light ink they carry needs a light fill. */
+  --dsw-alias-brand-text: #faf9f5;
+  --dsw-alias-button-elevated-fill: #ffffff;
+  --dsw-alias-interactive-bg-active: rgba(217, 119, 87, 0.30);
+  --dsw-alias-interactive-bg-hover-solid: #f0efe9;
+  /* User message bubbles: the host's light bubble token is deepseek-50 (blue);
+     use the skin's button-hover gray instead. */
+  --dsw-specific-bubble: var(--dsh-claude-hover-bg);
+  /* Markdown surfaces, measured off Claude: a white code block, a neutral-gray
+     inline-code chip, and blue links. The chip colour is the same gray the
+     components hover with, so the two read as one material. */
+  --dsw-alias-markdown-code-block: #ffffff;
+  --dsw-alias-markdown-code-block-banner: #ffffff;
+  --dsh-claude-inline-code-fg: #943333;
+  --dsh-claude-link: #184f95;
+  --dsh-claude-link-underline: rgba(24, 79, 149, 0.6);
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) {
+  color: #141413;
+  background-color: #fcfcfb !important;
+}
+
+html:has(body[data-dsh-claude-style]:not([data-ds-dark-theme])),
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) #root {
+  background-color: #fcfcfb !important;
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) :is([data-pane="sidebar"], [class*="sidebarCol"], .dshDesktopSidebarSurface) {
+  --dsw-specific-sidebar-fill: #fbfbf9 !important;
+  background: #fbfbf9 !important;
+  border-right: 1px solid #e8e6dc !important;
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) :is([data-pane="conversation"], [class*="centerCol"]) {
+  background: #fcfcfb !important;
+}
+
+/* The light half of the anchor ink in theme/chrome.css; both leave a host button
+   class (`_linkButton`) to the ink that class states for itself. */
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) a:not([class*="_linkButton"]) {
+  color: #c6613f;
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) a:not([class*="_linkButton"]):hover {
+  color: #a94f2f;
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[class*="_brand"],
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[class*="_primary"],
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-slot="sidebar.settings"] > :is(button, [role="button"]) {
+  background: #d97757;
+  color: #ffffff;
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[class*="_brand"]:hover,
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[class*="_primary"]:hover,
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-slot="sidebar.settings"] > :is(button, [role="button"]):hover {
+  background: #c6613f;
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) blockquote {
+  color: #6e6a60;
+  border-left-color: var(--dsw-alias-label-caption);
+  background: rgba(20, 20, 19, 0.04);
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) pre {
+  border-color: #e8e6dc;
+}
+
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) * {
+  scrollbar-color: rgba(208, 205, 193, 0.9) transparent;
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) ::-webkit-scrollbar-thumb {
+  background: rgba(208, 205, 193, 0.9);
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) ::-webkit-scrollbar-thumb:hover {
+  background: rgba(143, 138, 126, 0.8);
+}

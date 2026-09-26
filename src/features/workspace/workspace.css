@@ -1,0 +1,248 @@
+/* ---------- Workspace section: 进行中 / 已归档 segments and the archived list ---------- */
+/* The segment control and the archived list dress the markup built by
+   src/features/workspace/workspace-view.js; sidebar-adjacent, but split from theme/sidebar.css
+   when that file neared the 750-line stop line. */
+
+/* ---------- workspace section: 进行中 / 已归档 ---------- */
+/* The section label gives way to a two-state segment control (the skin's own
+   markup, built by src/features/workspace/workspace-view.js); the archived state swaps
+   the host's tree for the skin's list, and the list's rows carry a delete
+   button. The label and the control cross-fade by opacity further down. */
+body[data-dsh-claude-style] .dsh-claude-ws-segments {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+  padding: 2px !important;
+  border-radius: 7px !important;
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.06)) !important;
+  flex: none !important;
+}
+body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-ws-segments {
+  /* The skin's light plate token resolves too faintly on the warm black canvas;
+     pin the dark pair so the control matches the sidebar's own rows. */
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+/* The control is a mode switch, not furniture: while 进行中 is the state it steps
+   aside for the plain 工作区 heading and comes back as soon as the pointer is in
+   the section — the header itself or the tree below it. In 已归档 it stays put,
+   because it is the way back.
+   The two swap by opacity rather than display, so they cross-fade; the control
+   is laid over the label's own slot (absolute, same 16px) so neither the header's
+   height nor the actions' position moves while they swap. */
+body[data-dsh-claude-style] [class*="sectionHeader"] {
+  position: relative !important;
+}
+body[data-dsh-claude-style] .dsh-claude-ws-segments {
+  position: absolute !important;
+  left: 0 !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transition: opacity 0.16s ease, visibility 0.16s ease !important;
+}
+body[data-dsh-claude-style] [data-dsh-claude-ws-view="active"] .dsh-claude-ws-segments {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+body[data-dsh-claude-style] [data-dsh-claude-ws-view="active"]:hover .dsh-claude-ws-segments,
+body[data-dsh-claude-style] [class*="sectionHeader"]:hover .dsh-claude-ws-segments {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+body[data-dsh-claude-style] [class*="sectionLabel"][data-dsh-claude-ws-label] {
+  /* The heading is a label, not a target: it must not swallow clicks aimed at the
+     control laid over it, nor start a selection drag. */
+  pointer-events: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  opacity: 0 !important;
+  transition: opacity 0.16s ease !important;
+}
+body[data-dsh-claude-style] [data-dsh-claude-ws-view="active"] [class*="sectionLabel"][data-dsh-claude-ws-label] {
+  opacity: 1 !important;
+}
+body[data-dsh-claude-style] [data-dsh-claude-ws-view="active"]:hover [class*="sectionLabel"][data-dsh-claude-ws-label],
+body[data-dsh-claude-style] [class*="sectionHeader"]:hover [class*="sectionLabel"][data-dsh-claude-ws-label] {
+  opacity: 0 !important;
+}
+body[data-dsh-claude-style] .dsh-claude-ws-segment {
+  /* A click must never start a text selection in the heading behind the control. */
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  appearance: none !important;
+  border: none !important;
+  background: transparent !important;
+  color: var(--dsw-alias-label-tertiary, #8f8d84) !important;
+  font-family: var(--dsw-font-family) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 18px !important;
+  padding: 0 8px !important;
+  height: 20px !important;
+  border-radius: 5px !important;
+  cursor: pointer !important;
+  transition: background-color 0.12s ease, color 0.12s ease !important;
+}
+body[data-dsh-claude-style] .dsh-claude-ws-segment:hover {
+  color: var(--dsw-alias-label-primary, #141413) !important;
+}
+body[data-dsh-claude-style] .dsh-claude-ws-segment[aria-checked="true"] {
+  background: var(--dsw-alias-bg-overlay, #ffffff) !important;
+  color: var(--dsw-alias-label-primary, #141413) !important;
+  box-shadow: 0 1px 2px rgba(20, 20, 19, 0.10) !important;
+}
+body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-ws-segment[aria-checked="true"] {
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #f5f4ef !important;
+  box-shadow: none !important;
+}
+/* The control's sliding pill (shared/sliding-pill.css places and moves it;
+   the control is absolutely placed, so it already anchors the pill): the raised
+   box the checked segment wore above, which the segment gives up while the pill
+   is there. */
+body[data-dsh-claude-style] .dsh-claude-ws-segments[data-dsh-claude-pill]::before {
+  top: 2px !important;
+  bottom: 2px !important;
+  border-radius: 5px !important;
+  background: var(--dsw-alias-bg-overlay, #ffffff) !important;
+  box-shadow: 0 1px 2px rgba(20, 20, 19, 0.10) !important;
+}
+body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-ws-segments[data-dsh-claude-pill]::before {
+  background: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: none !important;
+}
+body[data-dsh-claude-style] .dsh-claude-ws-segments[data-dsh-claude-pill] > .dsh-claude-ws-segment[aria-checked="true"] {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+/* ---------- workspace view: the skin's own archived list ---------- */
+/* 已归档 is the skin's list (src/features/workspace/workspace-view.js), flat on purpose:
+   the host's own filter buries archived rows inside collapsed workspace groups
+   and its state is not reachable without clicking its menu. */
+body[data-dsh-claude-style] [data-dsh-claude-ws-view="archived"] [data-dsh-claude-ws-tree] {
+  display: none !important;
+}
+body[data-dsh-claude-style] [data-dsh-claude-ws-view="active"] .dsh-claude-archive-list {
+  display: none !important;
+}
+body[data-dsh-claude-style] .dsh-claude-archive-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1px !important;
+  /* It takes the tree's place in the section's column, so it takes the tree's
+     box and scrolling too: fill the height left under the header and scroll
+     inside it (the region above clips), with the tree's thin, reserved
+     scrollbar. The host's scroller reaches 4px left of the section's content
+     and 10px past its right edge to hold that gutter, then insets 4px / 5px —
+     the same box puts the rows where the tree's rows sit (measured: row x=12,
+     width 251, title x=36). */
+  margin: 0 -10px 0 -4px !important;
+  padding: 0 5px 0 4px !important;
+  min-width: 0 !important;
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin !important;
+  scrollbar-gutter: stable !important;
+}
+body[data-dsh-claude-style] .dsh-claude-archive-row {
+  /* The list scrolls at a fixed height; its rows keep theirs instead of
+     shrinking to fit. */
+  flex: none !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  height: 28px !important;
+  /* The host's own session row: 6px inside the list's 12px, so the row's box and
+     the title's x land where the tree's rows put them (measured 12 / 36). */
+  padding: 0 6px !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  color: var(--dsw-alias-label-primary, #141413) !important;
+  font-family: var(--dsw-font-family) !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  transition: background-color 0.12s ease !important;
+}
+/* The leading slot the host's rows carry (a 5px circle centred in 14px), so the
+   two lists start their titles at the same x. */
+body[data-dsh-claude-style] .dsh-claude-archive-row::before {
+  content: "" !important;
+  flex: none !important;
+  width: 5px !important;
+  height: 5px !important;
+  margin: 0 4.5px !important;
+  border-radius: 50% !important;
+  corner-shape: round !important;
+  border: 1.2px solid var(--dsw-alias-label-caption, #a6a094) !important;
+  box-sizing: border-box !important;
+}
+body[data-dsh-claude-style] .dsh-claude-archive-row:hover {
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.06)) !important;
+}
+body[data-dsh-claude-style] .dsh-claude-archive-title {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+}
+body[data-dsh-claude-style] .dsh-claude-archive-time {
+  flex: none !important;
+  color: var(--dsw-alias-label-caption, #a6a094) !important;
+  font-size: 11px !important;
+}
+/* Hover swaps the trailing time for the two row actions, the way the host's
+   own session rows swap their time cell for the action buttons — so at rest
+   the time right-aligns with the row and nothing sits reserved beside it. */
+body[data-dsh-claude-style] .dsh-claude-archive-row:hover .dsh-claude-archive-time,
+body[data-dsh-claude-style] .dsh-claude-archive-row:focus-visible .dsh-claude-archive-time {
+  display: none !important;
+}
+/* The two row actions follow the host's own session rows: display none while
+   the row is at rest — nothing sits reserved at the row's right end, and the
+   invisible buttons offered phantom click targets there — and on hover, or
+   while the row holds keyboard focus (a display:none button cannot be tabbed
+   to), they take the time's place. Each button lives in the span its React
+   root renders into. */
+body[data-dsh-claude-style] .dsh-claude-archive-action {
+  display: none !important;
+  flex: none !important;
+}
+body[data-dsh-claude-style] .dsh-claude-archive-row:hover .dsh-claude-archive-action,
+body[data-dsh-claude-style] .dsh-claude-archive-row:focus-visible .dsh-claude-archive-action {
+  display: inline-flex !important;
+}
+body[data-dsh-claude-style] .dsh-claude-archive-delete,
+body[data-dsh-claude-style] .dsh-claude-archive-restore {
+  flex: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 22px !important;
+  height: 22px !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 5px !important;
+  background: transparent !important;
+  color: var(--dsw-alias-label-caption, #a6a094) !important;
+  cursor: pointer !important;
+  transition: background-color 0.12s ease, color 0.12s ease !important;
+}
+body[data-dsh-claude-style] .dsh-claude-archive-restore:hover {
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
+  color: var(--dsw-alias-label-primary, #141413) !important;
+}
+body[data-dsh-claude-style] .dsh-claude-archive-delete:hover {
+  background: rgba(192, 57, 43, 0.12) !important;
+  color: var(--dsw-alias-state-error-primary, #c0392b) !important;
+}
+body[data-dsh-claude-style] .dsh-claude-archive-status {
+  padding: 8px !important;
+  color: var(--dsw-alias-label-caption, #a6a094) !important;
+  font-family: var(--dsw-font-family) !important;
+  font-size: 12px !important;
+}

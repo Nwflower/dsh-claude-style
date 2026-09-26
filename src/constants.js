@@ -226,7 +226,7 @@
 
     /**
      * Preferences, persisted in the profile entry's settings namespace (the
-     * exported Config in lib/index.js declares the fields; src/context/prefs.js
+     * exported Config in host/index.js declares the fields; src/core/prefs.js
      * reads and writes them). Each value is mirrored onto the document as an
      * attribute so the stylesheet decides what a preference means, and the
      * defaults here are the shipped behaviour.
@@ -244,7 +244,7 @@
     /** Present while the skin takes over the sidebar footer (settings area + account row). */
     var FOOTER_ATTR = 'data-dsh-claude-footer-takeover'
     /**
-     * The language the account-hold easter egg (src/overrides/ban-screen.js) is
+     * The language the account-hold easter egg (src/features/ban-screen/ban-screen.js) is
      * written in. It is its own preference rather than "follow the shell",
      * because the page reproduces a real Claude screen: the point is to read it
      * in the language Claude actually used, whatever the shell is set to. The
@@ -267,8 +267,8 @@
     /**
      * Stamped on the host's own account menu card while it is open (Desktop
      * 0.1.7+). That card is the host's shared Menu portal and its class names
-     * are hashed, so src/overrides/account/surface.js stamps this attribute and
-     * components/account-footer.css repaints the card, its rows and its
+     * are hashed, so src/features/account/surface.js stamps this attribute and
+     * features/account/account-footer.css repaints the card, its rows and its
      * separators with the skin's popover language.
      */
     var ACCOUNT_MENU_ATTR = 'data-dsh-claude-account-menu'
@@ -286,8 +286,8 @@
      * Stamped on the host's shared menu card while it is the hero row's picker
      * (the workspace chip or the agent-preset seat opened it). The host portals
      * that card to <body> with no marker of its own, so the stylesheet cannot
-     * tell it from the host's other menus; src/overrides/hero-menu.js stamps it
-     * and components/hero-menu.css switches on this attribute.
+     * tell it from the host's other menus; src/features/hero-menu/hero-menu.js stamps it
+     * and features/hero-menu/hero-menu.css switches on this attribute.
      */
     var HERO_MENU_ATTR = 'data-dsh-claude-hero-menu'
     /**
@@ -295,7 +295,7 @@
      *
      * The window's focus state is the only thing that separates the two text
      * selection paints (gray on black unfocused, blue on white focused), and no
-     * selector can read it — so src/overrides/selection.js mirrors it onto the
+     * selector can read it — so src/features/selection/selection.js mirrors it onto the
      * document and the stylesheet switches on this attribute.
      */
     var WINDOW_BLUR_ATTR = 'data-dsh-window-blur'
@@ -313,7 +313,7 @@
      */
     var HOME_HERO_ATTR = 'data-dsh-claude-home-hero'
     /**
-     * The host half's session-deletion route (lib/index.js, SESSION_DELETE_PATH).
+     * The host half's session-deletion route (host/index.js, SESSION_DELETE_PATH).
      * The harness gives the browser half no deletion API of its own, so the
      * archived row's delete button posts the session id here and the host half
      * removes the stored session directory. Keep the path in step with the host
@@ -321,7 +321,7 @@
      */
     var SESSION_DELETE_ROUTE = '/dsh-claude-style/session-delete'
     /**
-     * The host half's cross-session usage roll-up (lib/index.js, USAGE_PATH).
+     * The host half's cross-session usage roll-up (host/index.js, USAGE_PATH).
      * The browser half cannot read the session logs or the cost-meter ledger, so
      * the day buckets behind the home dashboard's panel arrive from here.
      */
@@ -356,12 +356,12 @@
      * The player's own avatar, forwarded by the host half; 404 falls back to the
      * mark. What the route serves is the launcher's normalized skin atlas, not a
      * finished avatar, so the account row crops the head out of it
-     * (src/overrides/account/rows.js).
+     * (src/features/account/rows.js).
      */
     var HDSL_SKIN_ROUTE = '/dsh-claude-style/hdsl-skin.png'
-    /** Longest accepted custom username; mirrored by lib/index.js. */
+    /** Longest accepted custom username; mirrored by host/index.js. */
     var USERNAME_MAX = 64
-    /** Most quick-provider ids kept, and the longest id accepted; mirrored by lib/index.js. */
+    /** Most quick-provider ids kept, and the longest id accepted; mirrored by host/index.js. */
     var QUICK_PROVIDERS_MAX = 64
     var PROVIDER_ID_MAX = 128
 

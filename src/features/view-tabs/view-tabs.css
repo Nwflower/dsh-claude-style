@@ -1,0 +1,142 @@
+/* ---------- conversation view tabs: the skin's own segment control ---------- */
+/* The host's tab strip (ConversationRoot's .tabs / .tab / .tabActive) gets
+   the same shape as the sidebar's 进行中 / 已归档 control: a 7px pill shell with a
+   raised pill for the active tab, instead of the shipped underline. Scoped to the
+   strip src/features/view-tabs/view-tabs.js stamps data-dsh-view-tabs on — the one in the
+   conversation header — so the settings page's own tabs keep their look. The
+   stamp stands in for `header:has(tabs) tabs`, which made every DOM change
+   re-match the whole document. */
+body[data-dsh-claude-style] [data-dsh-view-tabs] {
+  display: inline-flex !important;
+  /* Hug the tabs. The host's strip is a full-width flex row, so without this the
+     pill shell stretches across the whole header: the "groove" reads as one long
+     empty bar and clicks to the right of the last tab land on nothing — which is
+     what made switching feel unresponsive. */
+  width: fit-content !important;
+  max-width: 100% !important;
+  flex: none !important;
+  align-self: flex-start !important;
+  align-items: center !important;
+  gap: 2px !important;
+  padding: 2px !important;
+  border-radius: 7px !important;
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.06)) !important;
+  /* Horizontally centred in the header (the strip already spans grid-column 1/-1,
+     so justify-self alone does it). The vertical shift is MEASURED, not fixed: the
+     title's row also carries the header actions, so whether the strip can rise onto
+     it depends on the window — src/features/view-tabs/view-tabs.js writes
+     --dsh-view-tabs-shift when the room is there, and this fallback (its own row,
+     10px up from y=50) holds the rest of the time. */
+  justify-self: center !important;
+  transform: translateY(var(--dsh-view-tabs-shift, -10px)) !important;
+  /* The sliding pill (shared/sliding-pill.css) is absolutely placed against the strip. */
+  position: relative !important;
+  /* A view switcher, not furniture: it fades in when the pointer is in the
+     conversation pane and out when it leaves, the same idiom as the sidebar's
+     进行中 / 已归档 control. Opacity, not display, so the header keeps its height
+     and the actions beside it never move. */
+  opacity: 0 !important;
+  transition: opacity 0.16s ease !important;
+}
+/* `centerCol` is the pane holding the header AND the transcript, so hovering the
+   strip itself keeps it up, while the right sidebar — which sits outside it —
+   does not bring it back. */
+body[data-dsh-claude-style] [class*="centerCol"]:hover [data-dsh-view-tabs] {
+  opacity: 1 !important;
+}
+body[data-dsh-claude-style][data-ds-dark-theme] [data-dsh-view-tabs] {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+body[data-dsh-claude-style] [data-dsh-view-tabs] > [class*="_tab"] {
+  appearance: none !important;
+  border: none !important;
+  background: transparent !important;
+  color: var(--dsw-alias-label-tertiary, #8f8d84) !important;
+  font-family: var(--dsw-font-family) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 18px !important;
+  height: 22px !important;
+  padding: 0 10px !important;
+  border-radius: 5px !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  transition: color 0.2s ease !important;
+}
+body[data-dsh-claude-style] [data-dsh-view-tabs] > [class*="_tab"]:hover {
+  color: var(--dsw-alias-label-primary, #141413) !important;
+}
+body[data-dsh-claude-style] [data-dsh-view-tabs] > [class*="_tab"][aria-selected="true"],
+body[data-dsh-claude-style] [data-dsh-view-tabs] > [class*="_tab"][class*="Active"] {
+  background: var(--dsw-alias-bg-overlay, #ffffff) !important;
+  color: var(--dsw-alias-label-primary, #141413) !important;
+  box-shadow: 0 1px 2px rgba(20, 20, 19, 0.10) !important;
+}
+body[data-dsh-claude-style][data-ds-dark-theme] [data-dsh-view-tabs] > [class*="_tab"][aria-selected="true"],
+body[data-dsh-claude-style][data-ds-dark-theme] [data-dsh-view-tabs] > [class*="_tab"][class*="Active"] {
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #f5f4ef !important;
+  box-shadow: none !important;
+}
+/* The strip's sliding pill (shared/sliding-pill.css places and moves it):
+   the raised box the active tab wore above, which the tab gives up while the
+   pill is there. */
+body[data-dsh-claude-style] [data-dsh-view-tabs][data-dsh-claude-pill]::before {
+  top: 2px !important;
+  bottom: 2px !important;
+  border-radius: 5px !important;
+  background: var(--dsw-alias-bg-overlay, #ffffff) !important;
+  box-shadow: 0 1px 2px rgba(20, 20, 19, 0.10) !important;
+}
+body[data-dsh-claude-style][data-ds-dark-theme] [data-dsh-view-tabs][data-dsh-claude-pill]::before {
+  background: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: none !important;
+}
+body[data-dsh-claude-style] [data-dsh-view-tabs][data-dsh-claude-pill] > [class*="_tab"][aria-selected="true"],
+body[data-dsh-claude-style] [data-dsh-view-tabs][data-dsh-claude-pill] > [class*="_tab"][class*="Active"] {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+/* The shipped active-tab underline has no place in a pill. */
+body[data-dsh-claude-style] [data-dsh-view-tabs] > [class*="_tab"]::after {
+  display: none !important;
+}
+
+/* ---------- Windows titlebar mode: the strip moves into the titlebar ---------- */
+/* The desktop shell marks <html> with data-windows-titlebar and draws the
+   titlebar strip with the frame's ::before; src/features/view-tabs/view-tabs.js mirrors
+   the marker onto <body>. There the strip leaves its own row and sits fixed in
+   the titlebar, horizontally centred in the window — the same row the host
+   gives the collapsed sidebar's new-session button. The measured
+   --dsh-view-tabs-shift is not written in this mode, so the base transform
+   gives way. */
+body[data-dsh-claude-style][data-dsh-titlebar-tabs] [data-dsh-view-tabs] {
+  position: fixed !important;
+  top: calc(var(--dsh-windows-titlebar-height, 40px) / 2) !important;
+  left: 50% !important;
+  /* The host's own strip carries a top margin for its row; fixed placement
+     must not inherit it, or the translate would be off centre. */
+  margin: 0 !important;
+  transform: translate(-50%, -50%) !important;
+  justify-self: auto !important;
+  z-index: 30 !important;
+  /* The titlebar band is a drag region; the strip's tabs must stay clickable. */
+  -webkit-app-region: no-drag !important;
+  /* The pane-hover reveal stays the rule here, as it was inside the header. The
+     strip now sits outside the pane, so the pointer leaving the pane on its way
+     up must not blank it: its own hover keeps it up, and the longer fade covers
+     the 40px crossing between the pane and the titlebar. */
+  opacity: 0 !important;
+  transition: opacity 0.3s ease !important;
+}
+body[data-dsh-claude-style][data-dsh-titlebar-tabs] [data-dsh-view-tabs]:hover {
+  opacity: 1 !important;
+}
+/* The strip's row is gone from the flow, so the header takes the shape it has
+   when it owns no tab strip: no min-height, and the bottom padding the host
+   gives that shape. */
+body[data-dsh-claude-style][data-dsh-titlebar-tabs] [class*="header"]:has([class*="_tabs"]) {
+  min-height: 0 !important;
+  padding-bottom: 10px !important;
+}

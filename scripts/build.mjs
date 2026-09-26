@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * build.mjs — assemble `lib/client.js` from `src/` fragments + `src/styles/*.css`.
+ * build.mjs — assemble `lib/client.js` from the `src/` fragments and stylesheets.
  *
  * The shipped client bundle is a single self-contained file (the DSH module
  * loader has no relative requires and no asset URLs for plugin clients), so the
@@ -10,15 +10,15 @@
  *                                %%TOKEN%% placeholders); brand SVGs live in src/assets/
  *   src/assets/icons/combine/*.svg     vendor lockups (mark + wordmark in one),
  *                                inlined as JS markup tables
- *   src/styles/*.css             plain CSS with %%TOKEN%% placeholders
- *   src/context/*.js             host accessors, prefs, model copy, i18n
- *   src/overrides/*.js           feature installers, shared popover utils, scheduler
- *   src/overrides/session-stats.js  the permissions feature's split factory
- *   src/overrides/account/*.js   the account footer's split factories
- *   src/overrides/model/*.js     the model picker's split factories
- *   src/overrides/effort/*.js    the effort picker's split factories
- *   src/settings.js              settings section (brand)
- *   src/entry.js                 apply() + exports
+ *   src/core/                    host accessors, prefs, model copy, i18n, scheduler
+ *   src/shared/                  parts more than one feature uses (JS + CSS)
+ *   src/theme/*.css              the global look no single feature owns
+ *   src/features/<name>/         one feature: its installer, its split
+ *                                factories and its stylesheets, side by side
+ *   src/entry.js                 apply(): the FEATURES table + exports
+ *
+ * FRAGMENTS and STYLE_FILES below are the assembly order and the only list of
+ * what ships.
  *
  * `src/model-descriptions.json` is not a fragment: it is validated here and
  * copied to `lib/`, where the host half serves it to the browser half at
@@ -68,78 +68,79 @@ const ICON_FILE = 'claude-mark.svg'
 
 const FRAGMENTS = [
   'constants.js',
-  'context/host.js',
-  'context/prefs.js',
-  'context/model-copy.js',
-  'context/i18n.js',
-  'overrides/popover-utils.js',
-  'overrides/sliding-pill.js',
-  'overrides/selection.js',
-  'overrides/composer.js',
-  'overrides/copy.js',
-  'overrides/session-stats.js',
-  'overrides/permissions.js',
-  'overrides/model-brand.js',
-  'overrides/model-copy-lookup.js',
-  'overrides/model/catalog.js',
-  'overrides/model/rows.js',
-  'overrides/model-picker.js',
-  'overrides/effort/matrix.js',
-  'overrides/effort/control.js',
-  'overrides/effort-picker.js',
-  'overrides/hero-menu.js',
-  'overrides/quick-providers.js',
-  'overrides/account/profile.js',
-  'overrides/account/host-menu.js',
-  'overrides/account/rows.js',
-  'overrides/account/footer-mirror.js',
-  'overrides/account/surface.js',
-  'overrides/account-footer.js',
-  'overrides/ban-screen.js',
-  'overrides/theme-flip.js',
-  'overrides/workspace-view.js',
-  'overrides/view-tabs.js',
-  'overrides/home/data.js',
-  'overrides/home/overview.js',
-  'overrides/home/models.js',
-  'overrides/home-layout.js',
-  'overrides/mascot.js',
-  'overrides/scheduler.js',
-  'settings.js',
+  'core/host.js',
+  'core/prefs.js',
+  'core/model-copy.js',
+  'core/i18n.js',
+  'shared/popover.js',
+  'shared/sliding-pill.js',
+  'features/selection/selection.js',
+  'features/composer/composer.js',
+  'features/copy/copy.js',
+  'features/permissions/session-stats.js',
+  'features/permissions/permissions.js',
+  'features/model/brand.js',
+  'features/model/copy-lookup.js',
+  'features/model/catalog.js',
+  'features/model/rows.js',
+  'features/model/model-picker.js',
+  'features/effort/matrix.js',
+  'features/effort/control.js',
+  'features/effort/effort-picker.js',
+  'features/hero-menu/hero-menu.js',
+  'features/settings/quick-providers.js',
+  'features/account/profile.js',
+  'features/account/host-menu.js',
+  'features/account/rows.js',
+  'features/account/footer-mirror.js',
+  'features/account/surface.js',
+  'features/account/account-footer.js',
+  'features/ban-screen/ban-screen.js',
+  'features/theme-flip/theme-flip.js',
+  'features/workspace/workspace-view.js',
+  'features/view-tabs/view-tabs.js',
+  'features/home/data.js',
+  'features/home/overview.js',
+  'features/home/models.js',
+  'features/home/home-layout.js',
+  'features/mascot/mascot.js',
+  'core/scheduler.js',
+  'features/settings/settings.js',
   'entry.js',
 ]
 
 const STYLE_FILES = [
-  { file: 'tokens.css' },
-  { file: 'typography.css' },
-  { file: 'chrome.css' },
-  { file: 'composer/hero.css' },
-  { file: 'composer/card.css', gate: true },
-  { file: 'composer/inline.css', gate: true },
-  { file: 'composer/inline-bar.css', gate: true },
-  { file: 'sidebar.css' },
-  { file: 'components/sliding-pill.css' },
-  { file: 'components/workspace.css' },
-  { file: 'components/permissions.css' },
-  { file: 'components/account-footer.css' },
-  { file: 'components/ban-screen.css' },
-  { file: 'components/model-picker.css' },
-  { file: 'components/effort-picker.css' },
-  { file: 'components/popover.css' },
-  { file: 'components/hero-menu.css', gate: true },
-  { file: 'components/footer-takeover.css' },
-  { file: 'components/third-party.css' },
-  { file: 'components/settings.css' },
-  { file: 'components/home-panel.css' },
-  { file: 'components/home-overview.css' },
-  { file: 'components/home-models.css' },
-  { file: 'components/mascot.css' },
-  { file: 'components/theme-flip.css' },
+  { file: 'theme/tokens.css' },
+  { file: 'theme/typography.css' },
+  { file: 'theme/chrome.css' },
+  { file: 'features/view-tabs/view-tabs.css' },
+  { file: 'theme/hero.css' },
+  { file: 'features/composer/card.css', gate: true },
+  { file: 'features/composer/inline.css', gate: true },
+  { file: 'features/composer/inline-bar.css', gate: true },
+  { file: 'theme/sidebar.css' },
+  { file: 'shared/sliding-pill.css' },
+  { file: 'features/workspace/workspace.css' },
+  { file: 'features/permissions/permissions.css' },
+  { file: 'features/account/account-footer.css' },
+  { file: 'features/ban-screen/ban-screen.css' },
+  { file: 'features/model/model-picker.css' },
+  { file: 'features/effort/effort-picker.css' },
+  { file: 'shared/popover.css' },
+  { file: 'features/hero-menu/hero-menu.css', gate: true },
+  { file: 'features/account/footer-takeover.css' },
+  { file: 'theme/third-party.css' },
+  { file: 'features/settings/settings.css' },
+  { file: 'features/home/home-panel.css' },
+  { file: 'features/home/home-overview.css' },
+  { file: 'features/home/home-models.css' },
+  { file: 'features/mascot/mascot.css' },
+  { file: 'features/theme-flip/theme-flip.css' },
 ]
 
 const HEADER = (() => {
   const jsFragments = FRAGMENTS.map((name) => ` *   - src/${name}`).join('\n')
-  const styleSheets = STYLE_FILES.map((fileDef) => ` *   - src/styles/${fileDef.file}`).join('\n')
+  const styleSheets = STYLE_FILES.map((fileDef) => ` *   - src/${fileDef.file}`).join('\n')
   return `/**
  * Claude Style — Claude Code Desktop theme for the DeepSeek Harness web GUI.
  *
@@ -214,7 +215,7 @@ const SELECTOR_ROOT = 'body[data-dsh-claude-style]'
  */
 function gateComposerScope(file, text) {
   const markerAt = text.indexOf(COMPOSER_GATE_MARKER)
-  if (markerAt === -1) throw new Error(`build: src/styles/${file} is missing the ${COMPOSER_GATE_MARKER} marker`)
+  if (markerAt === -1) throw new Error(`build: src/${file} is missing the ${COMPOSER_GATE_MARKER} marker`)
   const gate = `[%%COMPOSER_ATTR%%]`
   const head = text.slice(0, markerAt + COMPOSER_GATE_MARKER.length)
   const body = text.slice(markerAt + COMPOSER_GATE_MARKER.length)
@@ -238,12 +239,12 @@ function gateComposerScope(file, text) {
   })
 
   const gated = out.join('\n')
-  if (stamped === 0) throw new Error(`build: src/styles/${file} has no rules below ${COMPOSER_GATE_MARKER}`)
+  if (stamped === 0) throw new Error(`build: src/${file} has no rules below ${COMPOSER_GATE_MARKER}`)
   const missed = gated
     .split('\n')
     .filter((line) => /[,{]\s*$/.test(line) && line.includes(SELECTOR_ROOT) && !line.includes(gate))
   if (missed.length > 0) {
-    throw new Error(`build: src/styles/${file} left ${missed.length} rule(s) ungated: ${missed[0].trim().slice(0, 80)}`)
+    throw new Error(`build: src/${file} left ${missed.length} rule(s) ungated: ${missed[0].trim().slice(0, 80)}`)
   }
   return head + gated
 }
@@ -289,7 +290,7 @@ function checkHasPlacement(file, text) {
     while (i < source.length && /\s/.test(source[i])) i++
     if (source[i] === '{' || source[i] === ',') continue
     const line = source.slice(0, at).split('\n').length
-    throw new Error(`build: src/styles/${file}:${line} has a :has() followed by a combinator; mark the element from the skin's pass instead`)
+    throw new Error(`build: src/${file}:${line} has a :has() followed by a combinator; mark the element from the skin's pass instead`)
   }
 }
 
@@ -352,10 +353,10 @@ function loadCombines() {
 /** Substitute %%TOKEN%% placeholders in one stylesheet; throws on leftovers. */
 function substitute(file, text, tokens) {
   const out = text.replace(/%%([A-Z_]+)%%/g, (match, name) => {
-    if (!(name in tokens)) throw new Error(`build: unknown token %%${name}%% in src/styles/${file}`)
+    if (!(name in tokens)) throw new Error(`build: unknown token %%${name}%% in src/${file}`)
     return tokens[name]
   })
-  if (out.includes('%%')) throw new Error(`build: unsubstituted token remains in src/styles/${file}`)
+  if (out.includes('%%')) throw new Error(`build: unsubstituted token remains in src/${file}`)
   return out
 }
 
@@ -447,7 +448,7 @@ function main() {
     .map((fileDef) => {
       const file = fileDef.file
       const gated = fileDef.gate === true
-      let text = fs.readFileSync(path.join(SRC, 'styles', file), 'utf8').replace(/\r\n/g, '\n')
+      let text = fs.readFileSync(path.join(SRC, file), 'utf8').replace(/\r\n/g, '\n')
       checkHasPlacement(file, text)
       if (gated) text = gateComposerScope(file, text)
       return substitute(file, text, tokens).replace(/\n+$/, '')
@@ -456,7 +457,7 @@ function main() {
 
   const cssDecl = [
     '    // ============================================================================',
-    '    // 样式表（由 src/styles/*.css 内联生成，勿手改） (CSS Stylesheet)',
+    '    // 样式表（由 src/ 下的 .css 内联生成，勿手改） (CSS Stylesheet)',
     '    // ============================================================================',
     '    var CSS = [',
     ...cssText.split('\n').map((line) => '      ' + JSON.stringify(line) + ','),

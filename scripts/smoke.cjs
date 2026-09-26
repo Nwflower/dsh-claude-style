@@ -3,7 +3,7 @@
  * smoke.cjs — zero-dependency smoke test of the BUILT plugin (`lib/`); no running
  * DSH instance is needed.
  *
- * Host half, in Node: `lib/index.js` is applied to a fake cordis context and the
+ * Host half, in Node: `host/index.js` is applied to a fake cordis context and the
  * username and session-delete routes get the request shapes that matter
  * (docs/architecture.md D11) — a cross-site page, a LAN peer and the browser's
  * own same-origin fetch, plus the deletion route's own guards (POST only, the id
@@ -47,7 +47,7 @@ const { findChrome, launchChrome, connectTab } = require('./chrome.cjs')
 
 const ROOT = path.resolve(__dirname, '..')
 const CLIENT = path.join(ROOT, 'lib', 'client.js')
-const HOST = path.join(ROOT, 'lib', 'index.js')
+const HOST = path.join(ROOT, 'host', 'index.js')
 const MARKUP = '<img src=x onerror="window.__pwned=(window.__pwned||0)+1">'
 /** One transparent pixel: the launcher's avatar the HDSL case serves. */
 const PNG_1PX = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
@@ -82,7 +82,7 @@ function check(label, ok, detail) {
 // ---------------------------------------------------------------------------
 
 /**
- * lib/index.js applied to a fake cordis context.
+ * host/index.js applied to a fake cordis context.
  *
  * @param mod - the host-half module.
  * @param options - `fenced` offers the host's own request check, `home` answers
@@ -889,7 +889,7 @@ const PROBE = `(function () {
   try { window.__skin.apply(window.__ctx) } catch (e) { window.__applyError = String((e && e.stack) || e) }
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms) }) }
   function attrs(el) { return el ? Array.prototype.map.call(el.attributes, function (a) { return a.name }) : null }
-  // A segmented control's sliding pill (src/overrides/sliding-pill.js) against
+  // A segmented control's sliding pill (src/shared/sliding-pill.js) against
   // the item it should sit under: its mark, its written placement, the item's
   // own fill (which gives way to the pill) and the transitions running on it.
   function pillState(control, item) {

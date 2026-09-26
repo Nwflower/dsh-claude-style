@@ -3,7 +3,7 @@
   "description": "Claude Code Desktop theme for DeepSeek Harness (dsh) web GUI — visual & interaction overhaul",
   "version": "0.7.2",
   "type": "module",
-  "main": "lib/index.js",
+  "main": "host/index.js",
   "icon": "lib/claude-mark.svg",
   "scripts": {
     "build": "node scripts/build.mjs",
@@ -12,7 +12,7 @@
     "prepublishOnly": "npm run build"
   },
   "exports": {
-    ".": "./lib/index.js",
+    ".": "./host/index.js",
     "./client": "./lib/client.js",
     "./package.json": "./package.json",
     "./locale/*": "./locale/*"
@@ -30,6 +30,7 @@
     }
   },
   "files": [
+    "host",
     "lib",
     "locale",
     "skin.json",

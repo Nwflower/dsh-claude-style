@@ -1,0 +1,176 @@
+/* ---------- Settings dialog: modal panel background ---------- */
+/* In light mode, the host dialog defaults to var(--dsw-alias-bg-layer-2);
+   align the dialog card with the main canvas (#fcfcfb). */
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) :is([class*="settingsArea"] [class*="_panel"], [class*="settingsArea"] [role="dialog"], [class*="_overlay"] > [class*="_panel"]) {
+  background: var(--dsw-alias-bg-base) !important;
+}
+
+/* ---------- Settings dialog: Claude Style tab icon ---------- */
+/* Replace the host's default settings gear icon on the Claude Style nav tab
+   with the monochrome Claude starburst icon (black in light mode). */
+body[data-dsh-claude-style] button[data-dsh-section="claude-style"] [class*="_navIcon"] {
+  display: none !important;
+}
+
+body[data-dsh-claude-style] button[data-dsh-section="claude-style"]::before {
+  content: "";
+  display: block;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  background-color: currentColor;
+  -webkit-mask: %%CLAUDE_MARK%% center / contain no-repeat;
+  mask: %%CLAUDE_MARK%% center / contain no-repeat;
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[data-dsh-section="claude-style"]::before {
+  background-color: #141413;
+}
+
+/* ---------- Claude Code layout: settings page ---------- */
+/* The skin's own page in the settings dialog. Its segmented controls reuse the
+   composer permission picker's classes (`.dsh-claude-segments` /
+   `.dsh-claude-segment`), so the two are literally one control rather than two
+   lookalikes; only the row shell and the switch are new here. */
+body[data-dsh-claude-style] .dsh-claude-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px;
+  max-width: 640px;
+  box-sizing: border-box;
+  font-family: var(--dsw-font-family);
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--dsw-alias-label-primary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 12px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-row-text {
+  flex: 1;
+  min-width: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-row-title {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--dsw-alias-label-primary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-row-desc {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-error {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--dsw-alias-state-error-primary, #c0392b);
+}
+
+/* The switch borrows the segment track's palette and radius so a page of rows
+   reads as one control set rather than two. */
+body[data-dsh-claude-style] .dsh-claude-settings-switch {
+  flex: none;
+  appearance: none;
+  margin: 0;
+  border: 0;
+  cursor: pointer;
+  width: 36px;
+  height: 20px;
+  padding: 2px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  background: var(--dsw-specific-selector);
+  transition: background-color .12s ease;
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) .dsh-claude-settings-switch {
+  background: #f6f6f4;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-switch[data-on] {
+  background: var(--dsw-alias-brand-primary, #d97757);
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-switch-knob {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  /* A true circle: the page inherits superellipse corners from <html>. */
+  corner-shape: round;
+  background: var(--dsw-alias-bg-overlay, #ffffff);
+  box-shadow: 0 1px 2px rgba(20, 20, 19, 0.18);
+  transition: transform .12s ease;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-switch[data-on] .dsh-claude-settings-switch-knob {
+  transform: translateX(16px);
+}
+
+/* Custom username input: same row rhythm as the switch/segments, but wide
+   enough to read a name and narrow enough not to push the description. */
+body[data-dsh-claude-style] .dsh-claude-settings-input {
+  flex: none;
+  width: 180px;
+  max-width: 45%;
+  box-sizing: border-box;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-label-primary);
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 18px;
+  outline: none;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-input:focus {
+  border-color: var(--dsw-alias-brand-primary, #d97757);
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-input::placeholder {
+  color: var(--dsw-alias-label-caption);
+}
+
+/* The quick-provider trigger belongs to the same control family as the username
+   input: one bordered plate that opens a picker. Its card is the shared popover
+   card (features/permissions/permissions.css), so only the trigger is styled here. */
+body[data-dsh-claude-style] .dsh-claude-settings-picker {
+  flex: none;
+  min-width: 140px;
+  max-width: 45%;
+  box-sizing: border-box;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-label-primary);
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 18px;
+  text-align: left;
+  cursor: pointer;
+}
+body[data-dsh-claude-style] .dsh-claude-settings-picker:hover {
+  border-color: var(--dsw-alias-border-l2);
+}
+body[data-dsh-claude-style] .dsh-claude-settings-picker[aria-expanded="true"] {
+  border-color: var(--dsw-alias-brand-primary, #d97757);
+}

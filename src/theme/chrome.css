@@ -1,0 +1,239 @@
+/* --- 2.3 Host Chrome Restyling (Sidebar, Composer, Buttons) --- */
+/* ---------- canvas + hairline structure ---------- */
+body[data-dsh-claude-style] :is([data-pane="sidebar"], [class*="sidebarCol"], .dshDesktopSidebarSurface) {
+  --dsw-specific-sidebar-fill: #141413 !important;
+  background: #141413 !important;
+  border-right: 1px solid #242320 !important;
+}
+
+body[data-dsh-claude-style] :is([data-pane="conversation"], [class*="centerCol"]) {
+  background: #141413;
+}
+
+/* ---------- clay accent: one emphasis color, disciplined ---------- */
+/* Text links take the clay ink. An anchor that carries a host button class
+   (`AccountSection`'s "充值" is `_linkButton _primary`) is a filled or outlined
+   control, not a text link: it states its own ink, and repainting it here leaves
+   the label the same clay as the fill underneath it. */
+body[data-dsh-claude-style] a:not([class*="_linkButton"]) {
+  color: #e08a6d;
+}
+
+body[data-dsh-claude-style] a:not([class*="_linkButton"]):hover {
+  color: #f0a488;
+}
+
+body[data-dsh-claude-style] button[class*="brand"] {
+  color: #d97757;
+}
+
+/* The baked-in wordmark "HARNESS" badge (a pill rect + its letter paths)
+   looks crowded next to the whale + wordmark. Hide the badge entirely so
+   the brand reads as a clean whale + wordmark on the clay pill. */
+body[data-dsh-claude-style] button[class*="brand"] rect[fill="currentColor"],
+body[data-dsh-claude-style] button[class*="brand"] path[fill*="label-primary-inverted"] {
+  display: none;
+}
+
+/* pill CTAs: send + settings sidebar actions */
+body[data-dsh-claude-style] button[class*="_brand"],
+body[data-dsh-claude-style] button[class*="_primary"],
+body[data-dsh-claude-style] [data-slot="sidebar.settings"] > :is(button, [role="button"]) {
+  border-radius: 9999px;
+  background: #d97757;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+body[data-dsh-claude-style] button[class*="_brand"]:hover,
+body[data-dsh-claude-style] button[class*="_primary"]:hover,
+body[data-dsh-claude-style] [data-slot="sidebar.settings"] > :is(button, [role="button"]):hover {
+  background: #e08a6d;
+}
+
+/* Brand logo chip: drop the loud clay pill so the mark + wordmark sit on
+   the canvas. That pill also carried a 9999px radius, and together with the
+   button overflow:hidden its arc clipped the leading edge of the mark — so
+   the radius goes as well. Adaptive logo color: espresso on light, ivory
+   on dark. */
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[class*="brand"],
+body[data-dsh-claude-style][data-ds-dark-theme] button[class*="brand"] {
+  background: transparent !important;
+  border: none;
+  border-radius: 0;
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[class*="brand"] {
+  color: #141413 !important;
+}
+
+body[data-dsh-claude-style][data-ds-dark-theme] button[class*="brand"] {
+  color: #faf9f5 !important;
+}
+
+/* badges: full pill */
+body[data-dsh-claude-style] :is([class*="badge"], [class*="Badge"], [class*="tag"], [class*="Tag"]) {
+  border-radius: 9999px;
+}
+
+/* ---------- chrome details ---------- */
+body[data-dsh-claude-style] * {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(58, 56, 51, 0.9) transparent;
+}
+
+body[data-dsh-claude-style] ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+body[data-dsh-claude-style] ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body[data-dsh-claude-style] ::-webkit-scrollbar-thumb {
+  background: rgba(58, 56, 51, 0.9);
+  border-radius: 9999px;
+}
+
+body[data-dsh-claude-style] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 106, 101, 0.9);
+}
+
+/* Text selection: two solid paints, identical on both canvases.
+   Focused is white on blue, unfocused is black on gray. It replaces the
+   translucent clay wash this skin used before, and it deliberately ignores the
+   theme: a selection is a transient user gesture, not a surface, so it does not
+   follow the ivory/warm-black palette. Every value is a solid colour and
+   !important, because it has to override the colors the host and this skin put
+   on the text underneath (markdown links, inline code, syntax tokens) — a
+   selection that kept the underlying colour would be illegible on blue.
+   The unfocused rule is declared after the focused one and shares its weight,
+   so the attribute decides; the focus state itself is mirrored onto the
+   document by src/features/selection/selection.js. */
+body[data-dsh-claude-style] ::selection {
+  background-color: #3366d0 !important;
+  color: #ffffff !important;
+}
+
+body[data-dsh-claude-style][data-dsh-window-blur] ::selection {
+  background-color: #c7c7c6 !important;
+  color: #000000 !important;
+}
+
+/* Inline-code chips: Blink paints an inline box's own background ABOVE the
+   selection highlight, so the chip's 5% wash (theme/tokens.css
+   --dsh-claude-inline-code-bg) tints whatever the selection paints and a
+   selected chip reads as a separate, lighter block. These paints are the
+   channel-wise inverse of that overlay — dark composites 5% white over the
+   paint, light 5% black — so after the wash blends over them the result lands
+   back on the two selection colours above. The chip's 1px border is outside
+   ::selection's reach and keeps its own colour. */
+body[data-dsh-claude-style] code:not(pre code)::selection {
+  background-color: rgb(40, 94, 206) !important;
+}
+
+body[data-dsh-claude-style][data-dsh-window-blur] code:not(pre code)::selection {
+  background-color: rgb(196, 196, 195) !important;
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) code:not(pre code)::selection {
+  background-color: rgb(54, 107, 219) !important;
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme])[data-dsh-window-blur] code:not(pre code)::selection {
+  background-color: rgb(209, 209, 208) !important;
+}
+
+body[data-dsh-claude-style] :is(button, input, textarea, select, [role="button"], [role="tab"], [role="treeitem"]) {
+  outline: none;
+}
+
+/* Keyboard focus ring: neutral, in the input box's own shadow colour
+   (espresso #141413 in light); dark inverts to bright ivory — a near-black
+   canvas gets a light ring, never a darker one. */
+body[data-dsh-claude-style] :is(button, input, textarea, select, [role="button"], [role="tab"], [role="treeitem"]):focus-visible {
+  outline: 2px solid rgba(20, 20, 19, 0.45);
+  outline-offset: 1px;
+}
+
+body[data-dsh-claude-style][data-ds-dark-theme] :is(button, input, textarea, select, [role="button"], [role="tab"], [role="treeitem"]):focus-visible {
+  outline-color: rgba(250, 249, 245, 0.60);
+}
+
+/* ---------- composer dock overlays ---------- */
+/* Queue (QueueDock), the todo list (TodoDock) and the goal bar (GoalBar) all
+   live inside the composer seat, which is its own stacking context
+   (position: sticky + a z-index of 7): a z-index on the overlays only orders
+   them among the seat's own children and cannot lift them over the message
+   cards, which sit outside the seat. The rule that used to force
+   position: relative + z-index: 100 on all three was a workaround from the
+   old loading path and is gone; the seat's own layer is what carries them.
+   The header actions below are a different story — see the comment. */
+
+/* The header actions are NOT inside the composer seat, so unlike the three
+   overlays above they escape every stacking context and their value is read
+   against the page: the right Sidebar's panel covers through ui-dockkit's dock
+   layer (`--dsh-dockkit-dock-layer`, 10 normal and 40 fullscreen), and a
+   header action above those paints through the fullscreen panel. 9 keeps the
+   actions over the message layer (pinned headers 7, back-to-bottom 8) while
+   staying under both panel layers. The composer overlays keep 100 because the
+   seat's own stacking context caps them. */
+body[data-dsh-claude-style] [data-slot="conversation.session.header.actions"] > * {
+  position: relative;
+  z-index: 9 !important;
+}
+
+/* The queue dock's spacing is the HOST's to own: its own rule cancels the stack
+   gap and tucks 3px under the input card, so the two read as one attached
+   surface. The skin used to override that to cancel only the gap, because the
+   card then carried a 6px background-coloured halo (`0 0 0 6px
+   var(--dsw-alias-bg-base)`) which painted over the tucked strip and read as a
+   line across the dock. The halo is gone — the seat paints the bar and its fade
+   band instead — and with it the reason to override: cancelling only the gap
+   now leaves the dock's panel short of the card, which is the gap that opened
+   between the queue row and the input box. No rule here on purpose; re-add one
+   only if the host changes its own geometry. */
+
+/* The conversation header (title + view tabs) carries the host's own
+   order-bottom: 0.5px solid var(--dsw-alias-border-l3)
+   (ConversationRoot.module.css) — the line under the tabs. The transcript's own
+   top fade below takes over that job, so the rule goes. Scoped with :has() to
+   the header that owns the tab strip, so no other header loses its edge. */
+body[data-dsh-claude-style] [class*="header"]:has([class*="tabs"]) {
+  border-bottom-color: transparent !important;
+  /* The host's own header rule sets no position (ConversationRoot.module.css),
+     so it is static: an absolutely positioned band would anchor to some far
+     ancestor instead of this header. elative gives it the containing block —
+     and is safe here, since the stickiness lives on the header's parent. */
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* The transcript's top fade. The conversation header already covers the
+   transcript (it is the opaque bar), so the band that makes messages dissolve as
+   they scroll under it hangs off the header's own bottom edge — no transcript
+   selector needed, and it follows the header wherever it moves.
+   --dsh-transcript-fade-h is the single knob, matching the composer's own
+   --dsh-composer-fade-h; the canvas token is theme-aware, so light and dark
+   share one rule. */
+body[data-dsh-claude-style] [class*="header"]:has([class*="tabs"])::after {
+  content: "" !important;
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 100% !important;
+  height: var(--dsh-transcript-fade-h, 28px) !important;
+  /* Four stops, not two: a straight 100% -> 0% ramp reads as a haze band (the eye
+     catches its midpoint). Holding near-opaque just under the header and easing
+     out low makes the dissolve read as depth. color-mix keeps it theme-aware. */
+  background: linear-gradient(
+    to bottom,
+    var(--dsw-alias-bg-base, #FCFCFB) 0%,
+    color-mix(in srgb, var(--dsw-alias-bg-base, #FCFCFB) 82%, transparent) 32%,
+    color-mix(in srgb, var(--dsw-alias-bg-base, #FCFCFB) 40%, transparent) 68%,
+    transparent 100%
+  ) !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+}

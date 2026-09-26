@@ -1,0 +1,15 @@
+/* ============================================================================
+   主题翻转：瞬时抑制过渡 (Theme Flip: Transition Suppression)
+   ============================================================================ */
+/* While a theme flip is in flight, every skin surface must swap in ONE
+   recalc: the composer card/input/rail keep 0.12s border/box-shadow
+   transitions for hover/focus, and without this flag they trail the canvas
+   repaint by a visible beat ("colours first, styles later"). The flag is
+   mounted for the flip only (~0.3s), never during ordinary interaction.
+   This rule only out-specifies the lower-specificity transition rules
+   (html[flag] body[skin][flag] * is (0,3,2)); the higher ones (input scroll
+   (0,6,1), attachment rail (0,7,1)) are covered by the forced-flush cancel
+   sweep in src/features/theme-flip/theme-flip.js. */
+html[data-dsh-theme-transitioning] body[data-dsh-claude-style][data-dsh-theme-transitioning] * {
+  transition: none !important;
+}

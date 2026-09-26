@@ -1,0 +1,158 @@
+/* --- 2.4 Custom Components (Segments & Account Popover) --- */
+/* ---------- Claude Code layout: permission segments ---------- */
+/* The shipped access control is one popup-select button; it is replaced by
+   a Read | Edit | Auto | Yolo segmented control over presets — for
+   as long as the permission control is installed to stand in for it. */
+body[data-dsh-claude-style][data-dsh-claude-composer-active][%%PERMISSIONS_ATTR%%] button[aria-label^="访问模式"],
+body[data-dsh-claude-style][data-dsh-claude-composer-active][%%PERMISSIONS_ATTR%%] button[aria-label^="Access mode"] {
+  display: none !important;
+}
+
+body[data-dsh-claude-style] .dsh-claude-segments {
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 7px;
+  background: var(--dsw-specific-selector);
+  display: inline-flex;
+  /* The sliding pill (shared/sliding-pill.css) is absolutely placed against the group. */
+  position: relative;
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) .dsh-claude-segments {
+  background: #f6f6f4;
+}
+
+body[data-dsh-claude-style] .dsh-claude-segment {
+  appearance: none;
+  margin: 0;
+  border: 0;
+  cursor: pointer;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 18px;
+  padding: 3px 12px;
+  border-radius: 7px;
+  transition: background-color .1s, color .1s;
+}
+
+body[data-dsh-claude-style] .dsh-claude-segment:hover:not([data-active]) {
+  color: var(--dsw-alias-label-primary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-segment[data-active] {
+  color: var(--dsw-alias-label-primary);
+  background: var(--dsw-alias-bg-layer-3);
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) .dsh-claude-segment[data-active] {
+  background: var(--dsw-alias-bg-overlay);
+  box-shadow: 0 1px 2px rgba(20, 20, 19, 0.08);
+}
+
+/* The group's sliding pill: the box the active segment wore above, which the
+   segment gives up while the pill is there. */
+body[data-dsh-claude-style] .dsh-claude-segments[data-dsh-claude-pill]::before {
+  top: 2px;
+  bottom: 2px;
+  border-radius: 7px;
+  background: var(--dsw-alias-bg-layer-3);
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) .dsh-claude-segments[data-dsh-claude-pill]::before {
+  background: var(--dsw-alias-bg-overlay);
+  box-shadow: 0 1px 2px rgba(20, 20, 19, 0.08);
+}
+
+body[data-dsh-claude-style] .dsh-claude-segments[data-dsh-claude-pill] > .dsh-claude-segment[data-active] {
+  background: transparent;
+  box-shadow: none;
+}
+
+/* ---------- Claude Code layout: in-conversation permission popover ---------- */
+body[data-dsh-claude-style] .dsh-claude-perm-container {
+  position: relative !important;
+  display: inline-flex !important;
+  z-index: 20 !important;
+}
+body[data-dsh-claude-style] .dsh-claude-perm-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  height: 24px !important;
+  padding: 0 6px 0 6px !important;
+  border-radius: 6px !important;
+  border: none !important;
+  background: transparent !important;
+  color: var(--dsw-alias-label-primary, #141413) !important;
+  font-family: var(--dsw-font-family) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  transition: background-color 0.12s ease !important;
+}
+body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-perm-btn {
+  color: #faf9f5 !important;
+}
+body[data-dsh-claude-style] .dsh-claude-perm-btn:hover,
+body[data-dsh-claude-style] .dsh-claude-perm-btn[data-open="true"] {
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
+}
+body[data-dsh-claude-style] .dsh-claude-perm-chevron {
+  width: 12px;
+  height: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--dsw-alias-label-secondary);
+}
+body[data-dsh-claude-style] .dsh-claude-perm-chevron::after {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E") center / contain no-repeat;
+  transition: transform 0.15s ease;
+}
+body[data-dsh-claude-style] .dsh-claude-perm-btn[data-open="true"] .dsh-claude-perm-chevron::after {
+  transform: rotate(180deg);
+}
+body[data-dsh-claude-style] .dsh-claude-perm-popover {
+  position: fixed !important;
+  min-width: 248px !important;
+  background: var(--dsw-alias-bg-overlay, #ffffff) !important;
+  border: 1px solid var(--dsw-alias-border-l1, #e8e6dc) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 30px rgba(20, 20, 19, 0.12), 0 2px 8px rgba(20, 20, 19, 0.06) !important;
+  padding: 6px !important;
+  box-sizing: border-box !important;
+  z-index: 99999 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  /* Two-line preset rows (label + description) need air between them: the
+     2px gap read as one solid block, so each row is separated by 6px. */
+  gap: 6px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(4px) scale(0.98) !important;
+  transform-origin: bottom left !important;
+  transition: opacity 0.15s ease, transform 0.15s ease !important;
+}
+body[data-dsh-claude-style] .dsh-claude-perm-popover[data-open="true"] {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: translateY(0) scale(1) !important;
+}
+body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-perm-popover {
+  background: #1e1e1d !important;
+  border-color: #2e2c29 !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
