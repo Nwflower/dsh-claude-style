@@ -29,19 +29,42 @@
     const HOME_HEAT_STEPS = 4
     /**
      * The yardstick line's books, shortest first: each title's copy key, its
-     * English fallback, and its length in tokens (its word count at the same
-     * 1.3 tokens a word The Hobbit's 123k comes from).
+     * English fallback, and its length in tokens. Lengths carry two sources:
+     * the public-domain classics were measured by feeding their full
+     * Project Gutenberg / Wikisource text to the o200k_base tokenizer, while
+     * titles still under copyright keep word-count estimates (English at the
+     * same 1.3 tokens a word The Hobbit's 123k comes from; the Three-Body
+     * volumes, To Live and Ordinary World at the 0.96 tokens a character that
+     * tokenizer measures on modern simplified-Chinese prose).
      */
     const HOME_BOOKS = [
+      { key: 'homeBookTaoTeChing', title: 'Tao Te Ching', tokens: 7607 },
+      { key: 'homeBookAlice', title: "Alice's Adventures in Wonderland", tokens: 37248 },
       { key: 'homeBookAnimalFarm', title: 'Animal Farm', tokens: 39000 },
-      { key: 'homeBookGatsby', title: 'The Great Gatsby', tokens: 61000 },
+      { key: 'homeBookChristmasCarol', title: 'A Christmas Carol', tokens: 40306 },
+      { key: 'homeBookGatsby', title: 'The Great Gatsby', tokens: 65763 },
+      { key: 'homeBookFrankenstein', title: 'Frankenstein', tokens: 97886 },
       { key: 'homeBookPhilosophersStone', title: "Harry Potter and the Philosopher's Stone", tokens: 100000 },
-      { key: 'homeBook1984', title: 'Nineteen Eighty-Four', tokens: 116000 },
+      { key: 'homeBookDorianGray', title: 'The Picture of Dorian Gray', tokens: 106339 },
+      { key: 'homeBookToLive', title: 'To Live', tokens: 115000 },
       { key: 'homeBookHobbit', title: 'The Hobbit', tokens: 123000 },
-      { key: 'homeBookPride', title: 'Pride and Prejudice', tokens: 159000 },
-      { key: 'homeBookMobyDick', title: 'Moby-Dick', tokens: 268000 },
+      { key: 'homeBook1984', title: 'Nineteen Eighty-Four', tokens: 136278 },
+      { key: 'homeBookSherlockHolmes', title: 'The Adventures of Sherlock Holmes', tokens: 138725 },
+      { key: 'homeBookHuckleberryFinn', title: 'Adventures of Huckleberry Finn', tokens: 154263 },
+      { key: 'homeBookPride', title: 'Pride and Prejudice', tokens: 171701 },
+      { key: 'homeBookThreeBody', title: 'The Three-Body Problem', tokens: 202000 },
+      { key: 'homeBookDracula', title: 'Dracula', tokens: 213648 },
+      { key: 'homeBookJaneEyre', title: 'Jane Eyre', tokens: 256179 },
+      { key: 'homeBookMobyDick', title: 'Moby-Dick', tokens: 306522 },
+      { key: 'homeBookDarkForest', title: 'The Dark Forest', tokens: 307000 },
+      { key: 'homeBookDeathsEnd', title: "Death's End", tokens: 336000 },
       { key: 'homeBookLordOfTheRings', title: 'The Lord of the Rings', tokens: 625000 },
-      { key: 'homeBookWarAndPeace', title: 'War and Peace', tokens: 763000 },
+      { key: 'homeBookThreeKingdoms', title: 'Romance of the Three Kingdoms', tokens: 638009 },
+      { key: 'homeBookWarAndPeace', title: 'War and Peace', tokens: 769001 },
+      { key: 'homeBookJourneyWest', title: 'Journey to the West', tokens: 783200 },
+      { key: 'homeBookRedChamber', title: 'Dream of the Red Chamber', tokens: 903956 },
+      { key: 'homeBookWaterMargin', title: 'Water Margin', tokens: 958242 },
+      { key: 'homeBookOrdinaryWorld', title: 'Ordinary World', tokens: 998000 },
       { key: 'homeBookHarryPotter', title: 'the whole Harry Potter series', tokens: 1409000 },
       { key: 'homeBookLostTime', title: 'In Search of Lost Time', tokens: 1647000 },
     ]
@@ -510,7 +533,7 @@
       while (bookIndex >= 0 && tokens < HOME_BOOKS[bookIndex].tokens) bookIndex -= 1
       if (bookIndex >= 0) {
         const book = HOME_BOOKS[bookIndex]
-        fun = copyLabel('homeFunBook', "You've used ~{count}× more tokens than {book}.", {
+        fun = copyLabel('homeFunBook', "You've used ~{count}× the tokens in {book}.", {
           count: formatHomeCount(Math.round(tokens / book.tokens)),
           book: copyLabel(book.key, book.title),
         })

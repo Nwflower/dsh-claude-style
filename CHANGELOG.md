@@ -12,27 +12,29 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **权限分段、进行中 / 已归档与设置页分段控件的高亮块同样滑动**：只读 / 编辑 / 自动 / Yolo、侧栏的进行中 / 已归档，以及设置页里的各组分段控件，切换时高亮块都从原来那一段滑到新的一段，与对话视图标签同一套动画。
 - **页面持续变化时插件的每帧开销大幅下降**：流式输出、打字机效果这类每帧都改动页面内容的场景，插件样式表此前让浏览器每帧的样式重算从 1.6ms 涨到 11–18ms，每帧主线程总耗时 14–23ms，超过一帧 16.7ms 的预算而掉帧；现在同一场景下样式重算为每帧 1.9–2.7ms，总耗时 5–7ms（本机无界面 Chrome 实测）。界面外观不变。
 - **工作区选择菜单改为 Claude Code 的文件夹菜单样式**：菜单此前每行前面都有一个文件夹图标，行距与档位菜单的两行条目一样宽；现在是一张窄卡片，纯文字行排得更紧，文件夹图标与「添加工作区…」前的加号都不画，当前工作区仍以强调色勾号标出。档位菜单保持原样。
+- **用量面板的倍数趣味行从十一本书扩到二十九本**：标尺书单补入《道德经》《爱丽丝漫游奇境》《圣诞颂歌》《弗兰肯斯坦》《道林·格雷的画像》《福尔摩斯冒险史》《哈克贝利·费恩历险记》《简·爱》《德古拉》，以及四大名著、《三体》三部曲、《活着》《平凡的世界》等中文书目，整份书单从《道德经》（约 7.6K tokens）排到《追忆似水年华》。书长改用真实口径：公有领域原书按全文以 o200k_base 分词器实测，仍在版权期的书目按出版字数以同一分词器实测的比例折算，几本英文经典的长度也按实测值更新。英文界面的这一行改为 “You've used ~N× the tokens in <书名>.”，此前的 “~N× more tokens than” 读起来是多出 N 倍，与实际倍数差了一倍。
 
 ### 问题修复
 
 - 修复 **侧栏「已归档」显示「没有已归档的会话」**：插件启动时宿主的归档数据往往还没到，列表就一直停在空白；现在列表跟随宿主的归档记录与会话列表实时更新，启动后、在别处归档或取消归档后都立刻反映。列表收录的会话与宿主自带「仅已归档」筛选一致（不含子代理会话与已不存在的会话），每行显示宿主给出的标题，不再出现成片的「未命名会话」；会话多时列表在侧栏内滚动，不再被截在窗口底部。
 - 修复 **点击已归档行没有任何反应**：现在与宿主会话树里点已归档会话一样，窗口顶部弹出宿主自己的提示「已归档对话暂时无法查看，请取消归档后查看」。
-
 - 修复 **英文界面下「排队发送」「插话发送」按钮的外观与中文界面不一致**：英文界面下，回复进行中且草稿非空时，这两个按钮此前不显示强调色，悬停时也没有底色；现在与中文界面一致。输入框里各按钮改为按它们在宿主界面中的位置识别，不再依赖按钮文字，宿主改动按钮文案或切换界面语言都不影响样式。
+
 <h3 id="en-unreleased">Improvements</h3>
 
 - **The Chat / Trajectory / Context highlight slides between tabs**: switching views used to fade the highlight out on the old tab and in on the new one; now one highlight slides from the old tab to the new one, resizing to the new label as it goes, while the labels' colours cross over. The slide ignores the system's reduced-motion setting, so it still plays with Windows' "Show animations in Windows" turned off.
 - **The permission segments, Active / Archived and the settings page's segmented controls slide their highlight too**: Read / Edit / Auto / Yolo, the sidebar's Active / Archived, and every segmented control on the settings page now slide the highlight from the old segment to the new one, with the same motion as the conversation view tabs.
 - **Much lower per-frame cost while the page keeps changing**: when content changes every frame (streaming output, a typewriter effect), the plugin's stylesheet used to raise the browser's style recalculation from 1.6ms to 11–18ms per frame, for 14–23ms of main-thread work per frame — over the 16.7ms frame budget, so frames dropped. The same scenario now costs 1.9–2.7ms of style recalculation and 5–7ms in total per frame (measured locally in headless Chrome). Nothing on screen looks different.
 - **The workspace picker takes the look of Claude Code's folder menu**: every row used to carry a folder glyph and was spaced like the preset menu's two-line entries; it is now a narrow card of plain text rows set closer together, with no folder glyph and no plus sign on "Add workspace…", and the current workspace keeps the accent check. The preset menu is unchanged.
+- **The usage panel's yardstick line grows from eleven to twenty-nine books**: the list adds Tao Te Ching, Alice's Adventures in Wonderland, A Christmas Carol, Frankenstein, The Picture of Dorian Gray, The Adventures of Sherlock Holmes, Adventures of Huckleberry Finn, Jane Eyre and Dracula, plus the Chinese classics — the Four Great Classical Novels, the Three-Body trilogy, To Live and Ordinary World — with the whole list spanning Tao Te Ching (~7.6K tokens) to In Search of Lost Time. Book lengths now carry a real basis: public-domain originals are measured by feeding their full text to the o200k_base tokenizer, and in-copyright titles are their published word counts at the ratio that tokenizer measures, with several English classics' lengths updated to the measured values. The English line now reads "You've used ~N× the tokens in <book>."; the former "~N× more tokens than" said N times more, one whole book off the real multiple.
 
 ### Bug Fixes
 
 - Fixed **the sidebar's Archived view reading "No archived conversations"**: the host's archive data usually arrives after the plugin starts, and the list stayed empty. The list now follows the host's archive record and session list live, so it fills in after startup and reflects archiving or unarchiving done anywhere. It holds the same conversations as the host's own "Archived only" filter (no subagent sessions, no sessions that no longer exist), each row carries the host's title instead of a run of "Untitled conversation", and a long list scrolls inside the sidebar instead of being cut off at the bottom of the window.
 - Fixed **clicking an archived row doing nothing**: it now raises the host's own notice at the top of the window, "Archived sessions cannot be opened. Unarchive it to view.", the same one the host's session tree shows for an archived session.
+- Fixed **the Queue message and Steer message buttons looking different in the English UI**: in English, with a reply running and a non-empty draft, these two buttons showed no accent colour and no hover fill; they now match the Chinese UI. The composer's buttons are now recognised by where they sit in the host's markup rather than by their text, so a host wording change or a switch of the UI language leaves their styling intact.
 
 ## [0.7.2] - 2026-09-25
-- Fixed **the Queue message and Steer message buttons looking different in the English UI**: in English, with a reply running and a non-empty draft, these two buttons showed no accent colour and no hover fill; they now match the Chinese UI. The composer's buttons are now recognised by where they sit in the host's markup rather than by their text, so a host wording change or a switch of the UI language leaves their styling intact.
 
 [中文](#cn-0.7.2) | [English](#en-0.7.2)
 

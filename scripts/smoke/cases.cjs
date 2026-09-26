@@ -275,11 +275,11 @@ const CASES = {
       drew('overview', 'dsh-claude-home-stat') && drew('overview', 'dsh-claude-home-heat'),
       JSON.stringify(renders.overview))
     const said = (tab, pattern) => renders[tab] !== undefined && renders[tab].texts.some((text) => pattern.test(text))
-    check('all time: the peak hour and the book line read the whole history (500k steps down to Moby-Dick)',
-      said('overview', /^3 AM$/) && said('overview', /^You've used ~2× more tokens than Moby-Dick\.$/),
+    check('all time: the peak hour and the book line read the whole history (500k steps down to Death\'s End)',
+      said('overview', /^3 AM$/) && said('overview', /^You've used ~1× the tokens in Death's End\.$/),
       JSON.stringify(renders.overview && renders.overview.texts))
-    check('7d: the peak hour and the book line follow the range window (250k steps down to Pride and Prejudice)',
-      said('overview-7d', /^3 PM$/) && said('overview-7d', /^You've used ~2× more tokens than Pride and Prejudice\.$/),
+    check('7d: the peak hour and the book line follow the range window (250k steps down to Dracula)',
+      said('overview-7d', /^3 PM$/) && said('overview-7d', /^You've used ~1× the tokens in Dracula\.$/),
       JSON.stringify(renders['overview-7d'] && renders['overview-7d'].texts))
     check('the usage panel renders its Models tab: stacked chart and ranked list',
       drew('models', 'dsh-claude-home-chart-seg') && drew('models', 'dsh-claude-home-model'),

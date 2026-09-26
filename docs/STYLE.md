@@ -256,8 +256,12 @@ bold figure — the figure stays barely above its own label, which is also what
 lets a long model id such as deepseek-v4.1-flash sit on one line; the favourite
 model is a name, not a figure, and keeps the regular weight. Messages are the
 settled calls. Once the picked range's total passes one
-book, the yardstick line appears under the grid: eleven books from Animal Farm
-(39k tokens) to In Search of Lost Time (1.6M), each sized at 1.3 tokens a word.
+book, the yardstick line appears under the grid: twenty-nine books from Tao Te
+Ching (7.6k tokens) to In Search of Lost Time (1.6M), the public-domain ones
+measured by feeding their full text to the o200k_base tokenizer and the rest
+estimated (1.3 tokens a word for English, 0.96 tokens a character for modern
+Chinese prose). The line states the rounded multiple as a share of the book
+("~2× the tokens in Moby-Dick"), never as an excess over it.
 The book is drawn afresh each time the page comes back to the new-conversation
 hero, and a range that has not reached it steps down to the longest book it has
 passed, so the range pills keep the same book whenever the totals allow. The heat
@@ -327,10 +331,10 @@ takes the pointer; the room the rod swings through does not.
 ## Implementation notes
 
 - Every rule is scoped under `body[data-dsh-claude-style]`.
+- Dark tokens are the base; light overrides use `:not([data-ds-dark-theme])`.
 - A surface's stylesheet sits beside its feature under `src/features/<feature>/`;
   the look no single feature owns is in `src/theme/`, and the parts several
   features share (the popover card and rows, the sliding highlight) are in
   `src/shared/`. The source layout, the host selector discipline and the checks
   the build runs are in `docs/architecture.md` (D1, D3, D9, D18, D19).
-- Dark tokens are the base; light overrides use `:not([data-ds-dark-theme])`.
 
