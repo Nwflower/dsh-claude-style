@@ -9,7 +9,8 @@
      * So the browser half stamps the open card rather than guessing in CSS.
      * While either trigger reports `aria-expanded="true"`, the one host menu
      * sitting in <body> is that card; HERO_MENU_ATTR is what
-     * components/hero-menu.css switches on.
+     * components/hero-menu.css switches on, and its value (`workspace` or
+     * `preset`) names the picker, since the two cards are drawn differently.
      *
      * The scheduler's attributeFilter does not watch `aria-expanded`, but the
      * card is inserted into <body> as it opens — a childList mutation the pass
@@ -176,6 +177,19 @@
       document.addEventListener('mouseover', onHeroPointerOver, true)
       document.addEventListener('mouseout', onHeroPointerOut, true)
 
+      /**
+       * Which picker a trigger opens, written as the stamp's value so the
+       * stylesheet can draw the two cards apart. The workspace chip is the
+       * button carrying the host's workspace label; the composer card's own
+       * workspace trigger opens that same picker; anything else in the row is
+       * the agent-preset seat.
+       */
+      function pickerKind(trigger) {
+        if (trigger.querySelector('[class*="_workspaceLabel"]') !== null) return 'workspace'
+        if (closestWithin(trigger, '[class*="cardWorkspaceTrigger"]') !== null) return 'workspace'
+        return 'preset'
+      }
+
       function clearStamp() {
         if (stamped === null) return
         stamped.removeAttribute(HERO_MENU_ATTR)
@@ -271,8 +285,9 @@
           clearStamp()
           stamped = cards[0]
           stampedTrigger = trigger
-          stamped.setAttribute(HERO_MENU_ATTR, '')
         }
+        var kind = pickerKind(trigger)
+        if (stamped.getAttribute(HERO_MENU_ATTR) !== kind) stamped.setAttribute(HERO_MENU_ATTR, kind)
         placeCard(trigger, stamped)
       }
 

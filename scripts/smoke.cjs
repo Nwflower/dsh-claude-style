@@ -469,19 +469,28 @@ const STAND_IN = `(function () {
       heroMenus[id] = null
       document.getElementById(id).setAttribute('aria-expanded', 'false')
     }
-    function bindHeroTrigger(id, label) {
+    // Each card is the host Menu's markup: a row with its glyph and label, and
+    // for the workspace picker the pinned add row in the footer. The row carries
+    // the host's own border: none (Menu.module.css .item).
+    function heroMenuRow(label) {
+      return '<div class="_x_itemWrap_1"><button type="button" role="menuitem" class="_x_item_1" style="border:none">' +
+        '<span class="_x_itemIcon_1"><svg viewBox="0 0 16 16" width="16" height="16"></svg></span>' +
+        '<span class="_x_itemLabel_1">' + label + '</span></button></div>'
+    }
+    function bindHeroTrigger(id, label, footer) {
       document.getElementById(id).addEventListener('click', function () {
         if (heroMenus[id]) { closeHeroMenu(id); return }
         var menu = document.createElement('div')
         menu.setAttribute('role', 'menu')
-        menu.innerHTML = '<div class="itemWrap"><button type="button" role="menuitem">' + label + '</button></div>'
+        menu.innerHTML = '<div class="_x_viewport_1" role="presentation">' + heroMenuRow(label) + '</div>' +
+          (footer ? '<div class="_x_footer_1" role="presentation">' + heroMenuRow(footer) + '</div>' : '')
         document.body.appendChild(menu)
         heroMenus[id] = menu
         document.getElementById(id).setAttribute('aria-expanded', 'true')
       })
     }
-    bindHeroTrigger('hero-workspace', 'Workspace A')
-    bindHeroTrigger('hero-preset', 'Standard mode')
+    bindHeroTrigger('hero-workspace', 'Workspace A', 'Add workspace…')
+    bindHeroTrigger('hero-preset', 'Standard mode', null)
     document.addEventListener('keydown', function (e) {
       if (e.key !== 'Escape') return
       closeHeroMenu('hero-workspace')
@@ -946,11 +955,26 @@ const PROBE = `(function () {
       await sleep(250)
       r.presetUp = window.__heroMenuOpen('hero-preset')
       r.permFoldedByPreset = permUp()
+      // The stamp names the picker, and only the workspace card is drawn as
+      // Claude's folder menu: the preset card keeps its row glyph.
+      function heroCardShape() {
+        var card = document.querySelector('[data-dsh-claude-hero-menu]')
+        if (card === null) return null
+        var icons = card.querySelectorAll('[class*="_itemIcon_"]')
+        var row = card.querySelector('[role="menuitem"]')
+        return {
+          kind: card.getAttribute('data-dsh-claude-hero-menu'),
+          iconsShown: Array.prototype.filter.call(icons, function (icon) { return getComputedStyle(icon).display !== 'none' }).length,
+          rowHeight: row === null ? null : Math.round(row.getBoundingClientRect().height),
+        }
+      }
+      r.presetCard = heroCardShape()
       heroTrigger.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
       await sleep(250)
       r.workspaceUpAfterCrossing = window.__heroMenuOpen('hero-workspace')
       r.presetFoldedBySibling = window.__heroMenuOpen('hero-preset')
       r.heroCardsUp = hostCards()
+      r.workspaceCard = heroCardShape()
       // Leaving the row folds the menu the hover opened, and only that one.
       heroTrigger.dispatchEvent(new MouseEvent('mouseout', { bubbles: true, relatedTarget: document.body }))
       await sleep(300)
@@ -1526,7 +1550,7 @@ function page(name) {
   // its own host menu, opened and closed by pressing its own trigger.
   var heroRow = name === 'popovers'
     ? '<div class="_x_heroWorkspaceRow_1">' +
-        '<button type="button" id="hero-workspace" aria-haspopup="menu" aria-expanded="false">workspace</button>' +
+        '<button type="button" id="hero-workspace" aria-haspopup="menu" aria-expanded="false"><span class="_x_workspaceLabel_1">workspace</span></button>' +
         '<button type="button" id="hero-preset" aria-haspopup="menu" aria-expanded="false">preset</button>' +
       '</div>'
     : ''
@@ -1906,6 +1930,13 @@ const CASES = {
     check('crossing to the row\'s other trigger folds the picker left behind',
       r.workspaceUpAfterCrossing === true && r.presetFoldedBySibling === false && r.heroCardsUp === 1,
       JSON.stringify({ workspace: r.workspaceUpAfterCrossing, preset: r.presetFoldedBySibling, cards: r.heroCardsUp }))
+    check('the preset card is stamped as the preset picker and keeps its row glyph',
+      r.presetCard !== null && r.presetCard.kind === 'preset' && r.presetCard.iconsShown === 1 && r.presetCard.rowHeight === 32,
+      JSON.stringify(r.presetCard))
+    check('the workspace card is drawn as a folder menu: plain text rows, the add row included, set closer together',
+      r.workspaceCard !== null && r.workspaceCard.kind === 'workspace' && r.workspaceCard.iconsShown === 0 &&
+        r.workspaceCard.rowHeight === 26,
+      JSON.stringify(r.workspaceCard))
     check('leaving the row leaves no hero picker up',
       r.heroMenusLeft === 0, `${r.heroMenusLeft} open`)
     check('leaving every trigger leaves no card up',
