@@ -1,33 +1,36 @@
     /**
-     * Turn status: while a turn is running, the host's turn-process control
-     * leaves the top of the turn and becomes the status line at the end of the
-     * work in progress, the way Claude Code shows it — the spark, the elapsed
-     * time, the output tokens so far, and what the model is doing now.
+     * Turn status: the host's turn-process control of a running, stopped or
+     * failed turn leaves the top of the turn and becomes the status line at
+     * the end of the turn's work, the way Claude Code shows it — the spark,
+     * the elapsed time, the output tokens, and what the model is doing now
+     * (or that the turn stopped or failed). A turn that finished normally
+     * keeps the host's control, which folds its work.
      *
-     * The host keeps the control and its data: the pass stamps the control's
-     * flow item so the stylesheet moves it with flex `order` (the chat column
-     * is a flex column), and writes the line's text into an attribute the
-     * stylesheet renders, so React never sees its own DOM rewritten. Numbers
-     * come from the host's chat snapshot (`uiConversation`, target `chat`):
-     * the turn's start time, the usage its settled steps report, the output
-     * of the step still streaming and the running tool calls. Durations use the host's
-     * own chat wording. A finished turn keeps the host's control as it is.
-     * docs/architecture.md D23.
+     * The host keeps the control and its data: the pass writes flex `order`
+     * values onto the chat column's rows (the column is a flex column), and
+     * writes the line's text into an attribute the stylesheet renders, so
+     * React never sees its own DOM rewritten. Numbers come from the host's
+     * chat snapshot (`uiConversation`, target `chat`): the turn's start and
+     * end, the usage its settled steps report, the output of the step still
+     * streaming and the running tool calls. Durations and the stopped / failed
+     * words are the host's own chat wording. docs/architecture.md D23.
      *
      * @param ctx - client context.
      * @param ui - shared handle table.
      * @returns teardown.
      */
     function installTurnStatus(ctx, ui) {
-      /** On the live control's flow item: the stylesheet orders it after the turn's work. */
-      const LIVE_ATTR = 'data-dsh-claude-turn-live'
-      /** On column rows after the live turn (queued messages): they stay below the status line. */
-      const TRAILING_ATTR = 'data-dsh-claude-turn-trailing'
-      /** On the live control itself: the status line's text. */
+      /** On the moved control: `live`, `stopped` or `failed`. */
+      const STATE_ATTR = 'data-dsh-claude-turn-state'
+      /** On the moved control: the status line's text. */
       const STATUS_ATTR = 'data-dsh-claude-turn-status'
+      /** Inline on the column's rows from the first moved control on: their flex order. */
+      const ORDER_PROP = '--dsh-claude-turn-order'
       const SEPARATOR = ' · '
-      /** Element → attribute it carries, for every mark this feature wrote. */
-      const marks = new Map()
+      /** Element → (attribute → value) this feature wrote. */
+      let attrMarks = new Map()
+      /** Row → order this feature wrote. */
+      let orderMarks = new Map()
       /**
        * Reasoning the pass has watched stream, per live turn: the step it
        * belongs to and when the pass first and last saw it as the newest
@@ -36,18 +39,30 @@
        */
       const reasoning = new Map()
 
-      function mark(next, element, attr, value) {
-        next.set(element, attr)
-        if (element.getAttribute(attr) !== value) element.setAttribute(attr, value)
-      }
-
-      /** Take every mark the last pass wrote that this pass did not write again. */
-      function settle(next) {
-        marks.forEach((attr, element) => {
-          if (next.get(element) !== attr) element.removeAttribute(attr)
+      /** Write this pass's marks and take off every mark the last pass wrote that this one did not. */
+      function settle(nextAttrs, nextOrders) {
+        attrMarks.forEach((values, element) => {
+          const kept = nextAttrs.get(element)
+          values.forEach((value, attr) => {
+            if (kept === undefined || !kept.has(attr)) element.removeAttribute(attr)
+          })
         })
-        marks.clear()
-        next.forEach((attr, element) => marks.set(element, attr))
+        nextAttrs.forEach((values, element) => {
+          values.forEach((value, attr) => {
+            if (element.getAttribute(attr) !== value) element.setAttribute(attr, value)
+          })
+        })
+        orderMarks.forEach((order, element) => {
+          if (nextOrders.has(element)) return
+          element.style.removeProperty(ORDER_PROP)
+          if (element.style.length === 0) element.removeAttribute('style')
+        })
+        nextOrders.forEach((order, element) => {
+          const value = String(order)
+          if (element.style.getPropertyValue(ORDER_PROP) !== value) element.style.setProperty(ORDER_PROP, value)
+        })
+        attrMarks = nextAttrs
+        orderMarks = nextOrders
       }
 
       function chatSnapshot(sessionId) {
@@ -57,14 +72,19 @@
         return conversation.binding(sessionId).target('chat').getSnapshot()
       }
 
-      /** The host's live clock format: minutes and seconds unpadded below the hour. */
-      function formatElapsed(ms, t) {
+      /**
+       * The host's clock formats: a running turn counts seconds unpadded, a
+       * finished one pads seconds (and minutes under an hour mark) to two digits.
+       */
+      function formatDuration(ms, t, padded) {
         const total = Math.max(0, Math.floor(ms / 1000))
         const hours = Math.floor(total / 3600)
         const minutes = Math.floor(total / 60) % 60
-        const seconds = String(total % 60)
-        if (hours > 0) return t('duration.hours', { hours, minutes: String(minutes).padStart(2, '0'), seconds })
-        return minutes > 0 ? t('duration.minutes', { minutes, seconds }) : t('duration.seconds', { seconds })
+        const seconds = total % 60
+        const pad = (value) => String(value).padStart(2, '0')
+        if (hours > 0) return t('duration.hours', { hours, minutes: pad(minutes), seconds: padded ? pad(seconds) : String(seconds) })
+        if (minutes > 0) return t('duration.minutes', { minutes, seconds: padded ? pad(seconds) : String(seconds) })
+        return t('duration.seconds', { seconds })
       }
 
       function formatTokens(count) {
@@ -82,6 +102,16 @@
           if (usage && typeof usage.outputTokens === 'number') total += usage.outputTokens
         }
         return total
+      }
+
+      /** `live`, `stopped`, `failed`, or null for a turn the host's control keeps. */
+      function turnState(turn) {
+        if (turn === undefined) return null
+        if (turn.status === 'open') return 'live'
+        const reason = turn.status === 'closed' && turn.end !== undefined ? turn.end.data.reason.kind : null
+        if (reason === 'aborted') return 'stopped'
+        if (reason === 'error') return 'failed'
+        return null
       }
 
       /**
@@ -109,7 +139,7 @@
           if (newest === null) return copyLabel('turnStatusWaiting', 'Waiting for the model…')
           if (seen.from !== null) {
             return copyLabel('turnStatusThought', 'Thought for {duration}', {
-              duration: formatElapsed(Math.max(1000, seen.until - seen.from), t),
+              duration: formatDuration(Math.max(1000, seen.until - seen.from), t, false),
             })
           }
           return newest === 'tool-call'
@@ -123,63 +153,84 @@
         return copyLabel('turnStatusWaiting', 'Waiting for the model…')
       }
 
-      function statusText(key, snapshot, turn, t) {
-        const now = Date.now()
+      /**
+       * A running turn: elapsed · tokens · action. A stopped or failed one:
+       * the host's word for it · how long it ran · tokens.
+       */
+      function statusText(key, snapshot, turn, state, t) {
         const parts = []
-        if (turn.start !== undefined) parts.push(formatElapsed(Math.max(1000, now - turn.start.time), t))
         const tokens = outputTokens(turn)
-        if (tokens > 0) parts.push(copyLabel('turnStatusTokens', '{count} tokens', { count: formatTokens(tokens) }))
-        parts.push(phaseText(key, snapshot, turn, now, t))
+        const tokenText = tokens > 0 ? copyLabel('turnStatusTokens', '{count} tokens', { count: formatTokens(tokens) }) : null
+        if (state === 'live') {
+          const now = Date.now()
+          if (turn.start !== undefined) parts.push(formatDuration(Math.max(1000, now - turn.start.time), t, false))
+          if (tokenText !== null) parts.push(tokenText)
+          parts.push(phaseText(key, snapshot, turn, now, t))
+        } else {
+          parts.push(t(state === 'stopped' ? 'message.stopped' : 'message.turnProcess.failed'))
+          if (turn.start !== undefined) parts.push(formatDuration(Math.max(1000, turn.end.time - turn.start.time), t, true))
+          if (tokenText !== null) parts.push(tokenText)
+        }
         return parts.join(SEPARATOR)
       }
 
       /**
-       * One chat column: the control of its running turn moves after the
-       * turn's last row, and the rows the host renders after the turn
-       * (queued messages) keep their place below it.
+       * One chat column. Each moved control goes after its turn's last row
+       * other than the turn's footer (`turn-tail`); every row from there on
+       * steps up an order level, so later turns, the footer and queued
+       * messages keep their places below it. Rows before the first moved
+       * control keep order 0.
        */
-      function syncColumn(column, next, live, t) {
+      function syncColumn(column, nextAttrs, nextOrders, live, t) {
         const sessionHost = column.closest('[data-conversation-session]')
         const sessionId = sessionHost === null ? '' : sessionHost.getAttribute('data-conversation-session')
         if (!sessionId) return
         const rows = column.children
-        let control = null
-        for (let i = rows.length - 1; i >= 0; i--) {
-          if (rows[i].getAttribute('data-chat-flow-kind') === 'turn-process') {
-            control = rows[i]
-            break
-          }
-        }
-        if (control === null) return
-        const button = control.querySelector('button[data-turn-process]')
-        if (button === null) return
-        const turnNumber = Number(control.getAttribute('data-chat-turn'))
-        const snapshot = chatSnapshot(sessionId)
-        const turn = snapshot === null ? undefined : snapshot.timeline.turns.get(turnNumber)
-        if (turn === undefined || turn.status !== 'open') return
-        const key = `${sessionId}:${turnNumber}`
-        live.add(key)
-        mark(next, control, LIVE_ATTR, '')
-        mark(next, button, STATUS_ATTR, statusText(key, snapshot, turn, t))
-        let turnEnd = -1
+        let snapshot
+        const after = new Map()
         for (let i = 0; i < rows.length; i++) {
-          if (rows[i].getAttribute('data-chat-turn') === String(turnNumber)) turnEnd = i
+          if (rows[i].getAttribute('data-chat-flow-kind') !== 'turn-process') continue
+          const button = rows[i].querySelector('button[data-turn-process]')
+          if (button === null) continue
+          if (snapshot === undefined) snapshot = chatSnapshot(sessionId)
+          if (snapshot === null) return
+          const turnText = rows[i].getAttribute('data-chat-turn')
+          const turn = snapshot.timeline.turns.get(Number(turnText))
+          const state = turnState(turn)
+          if (state === null) continue
+          const key = `${sessionId}:${turnText}`
+          if (state === 'live') live.add(key)
+          nextAttrs.set(button, new Map([[STATE_ATTR, state], [STATUS_ATTR, statusText(key, snapshot, turn, state, t)]]))
+          let last = -1
+          for (let j = i + 1; j < rows.length; j++) {
+            if (rows[j].getAttribute('data-chat-turn') === turnText && rows[j].getAttribute('data-chat-flow-kind') !== 'turn-tail') last = j
+          }
+          if (last !== -1) after.set(last, rows[i])
         }
-        for (let i = turnEnd + 1; i < rows.length; i++) {
-          if (rows[i] !== control) mark(next, rows[i], TRAILING_ATTR, '')
+        if (after.size === 0) return
+        const moved = new Set(after.values())
+        let level = 0
+        for (let i = 0; i < rows.length; i++) {
+          if (moved.has(rows[i])) continue
+          if (level > 0) nextOrders.set(rows[i], 2 * level)
+          const control = after.get(i)
+          if (control === undefined) continue
+          nextOrders.set(control, 2 * level + 1)
+          level++
         }
       }
 
       function sync() {
-        const next = new Map()
+        const nextAttrs = new Map()
+        const nextOrders = new Map()
         const live = new Set()
         const locale = ctx.get('locale')
         if (locale) {
           const t = locale.bind('chat')
           const columns = document.querySelectorAll('[data-chat-flow]')
-          for (let i = 0; i < columns.length; i++) syncColumn(columns[i], next, live, t)
+          for (let i = 0; i < columns.length; i++) syncColumn(columns[i], nextAttrs, nextOrders, live, t)
         }
-        settle(next)
+        settle(nextAttrs, nextOrders)
         reasoning.forEach((seen, key) => {
           if (!live.has(key)) reasoning.delete(key)
         })
@@ -188,7 +239,7 @@
       ui.turnStatus = { sync }
 
       return () => {
-        settle(new Map())
+        settle(new Map(), new Map())
         reasoning.clear()
         delete ui.turnStatus
       }

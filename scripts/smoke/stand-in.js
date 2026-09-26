@@ -348,13 +348,23 @@
   // and switches through the host permission command; the case asserts both.
   var permissionCommands = []
   // The turn-status case: one bound session whose chat snapshot (ui-chat's
-  // `chat` target of uiConversation) has a running turn — a settled first step
+  // `chat` target of uiConversation) has a failed first turn that ran 12s and
+  // reported 300 output tokens, then a running turn — a settled first step
   // that reported its usage, and a second step streaming its reasoning — and
-  // the host's chat wording for durations (English).
+  // the host's chat wording (English).
   var turnStatusChat = CASE === 'turn-status' ? (function () {
     function stepData(value) { return { get: function (kind) { return kind === 'assistant-step' ? value : undefined } } }
-    var turn = {
+    var failed = {
       turn: 1,
+      status: 'closed',
+      start: { time: 1000 },
+      end: { time: 13000, data: { reason: { kind: 'error' } } },
+      steps: [
+        { step: 1, data: stepData({ status: 'settled', step: 1, blocks: [{ kind: 'text' }], usage: { outputTokens: 300 } }) },
+      ],
+    }
+    var running = {
+      turn: 2,
       status: 'open',
       start: { time: Date.now() - 65000 },
       steps: [
@@ -362,7 +372,7 @@
         { step: 2, data: stepData({ status: 'running', step: 2, blocks: [{ kind: 'reasoning' }] }) },
       ],
     }
-    var snapshot = { timeline: { turns: new Map([[1, turn]]) }, legacy: { runningCalls: [] } }
+    var snapshot = { timeline: { turns: new Map([[1, failed], [2, running]]) }, legacy: { runningCalls: [] } }
     return {
       binding: function () { return { target: function () { return { getSnapshot: function () { return snapshot } } } } },
     }
@@ -371,7 +381,13 @@
     getSnapshot: function () { return { active: 'en' } },
     subscribe: function () { return function () {} },
     bind: function () {
-      var templates = { 'duration.seconds': '{seconds}s', 'duration.minutes': '{minutes}m {seconds}s', 'duration.hours': '{hours}h {minutes}m {seconds}s' }
+      var templates = {
+        'duration.seconds': '{seconds}s',
+        'duration.minutes': '{minutes}m {seconds}s',
+        'duration.hours': '{hours}h {minutes}m {seconds}s',
+        'message.stopped': 'Stopped',
+        'message.turnProcess.failed': 'Failed',
+      }
       return function (key, params) {
         return (templates[key] || key).replace(/\{(\w+)\}/g, function (match, name) { return String(params[name]) })
       }

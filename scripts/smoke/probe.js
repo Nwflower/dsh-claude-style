@@ -684,32 +684,44 @@
         return it.getAttribute('data-preset')
       })
     }
-    // The chat column of a running turn (ui-chat ChatView): its process control
-    // renders first, then the turn's work, then a queued message the host
-    // keeps after the turn. The status line has to show below the work and
-    // above the queued message.
+    // The chat column (ui-chat ChatView) of a failed turn followed by a running
+    // one: each turn's process control renders first, then the turn's work;
+    // the failed turn has its error and its footer, and a queued message
+    // follows the running turn. Each status line has to show below its turn's
+    // work, above what follows.
     if (window.SMOKE_CASE === 'turn-status') {
       var chatSession = document.createElement('div')
       chatSession.setAttribute('data-conversation-session', 'smoke-session')
       chatSession.innerHTML = '<div data-chat-flow="" style="display:flex;flex-direction:column">' +
-        '<div data-chat-flow-kind="user" data-chat-turn="1">question</div>' +
+        '<div data-chat-flow-kind="user" data-chat-turn="1">first question</div>' +
         '<div data-chat-flow-kind="turn-process" data-chat-turn="1"><button type="button" data-turn-process="1" disabled>' +
+        '<span class="_p_label_1">Failed</span></button></div>' +
+        '<div data-chat-flow-kind="assistant-step" data-chat-turn="1">first work</div>' +
+        '<div data-chat-flow-kind="turn-error" data-chat-turn="1">error</div>' +
+        '<div data-chat-flow-kind="turn-tail" data-chat-turn="1">footer</div>' +
+        '<div data-chat-flow-kind="user" data-chat-turn="2">second question</div>' +
+        '<div data-chat-flow-kind="turn-process" data-chat-turn="2"><button type="button" data-turn-process="2" disabled>' +
         '<span class="_p_label_1">Deep diving for 1m 5s</span></button></div>' +
-        '<div data-chat-flow-kind="assistant-step" data-chat-turn="1">work</div>' +
+        '<div data-chat-flow-kind="assistant-step" data-chat-turn="2">second work</div>' +
         '<div class="_p_pending_1">queued</div></div>'
       document.body.appendChild(chatSession)
       await sleep(150)
-      var chatRows = chatSession.querySelectorAll('[data-chat-flow] > *')
-      var statusButton = chatSession.querySelector('button[data-turn-process]')
-      var tops = Array.prototype.map.call(chatRows, function (row) { return row.getBoundingClientRect().top })
+      var chatRows = Array.prototype.slice.call(chatSession.querySelectorAll('[data-chat-flow] > *'))
+      var statusButtons = chatSession.querySelectorAll('button[data-turn-process]')
+      var seen = chatRows.slice().sort(function (a, b) { return a.getBoundingClientRect().top - b.getBoundingClientRect().top })
+      var lineOf = function (button) {
+        return {
+          state: button.getAttribute('data-dsh-claude-turn-state'),
+          text: button.getAttribute('data-dsh-claude-turn-status'),
+          drawn: getComputedStyle(button, '::after').content,
+          label: getComputedStyle(button.querySelector('span')).display,
+          turning: getComputedStyle(button, '::before').animationName,
+        }
+      }
       r.turnStatus = {
-        live: chatRows[1].hasAttribute('data-dsh-claude-turn-live'),
-        trailing: chatRows[3].hasAttribute('data-dsh-claude-turn-trailing'),
-        belowWork: tops[1] > tops[2],
-        aboveQueued: tops[1] < tops[3],
-        text: statusButton.getAttribute('data-dsh-claude-turn-status'),
-        drawn: getComputedStyle(statusButton, '::after').content,
-        label: getComputedStyle(chatRows[1].querySelector('span')).display,
+        seen: seen.map(function (row) { return row.textContent }),
+        failed: lineOf(statusButtons[0]),
+        live: lineOf(statusButtons[1]),
       }
     }
     // The host's own account row, when the host has one: the skin marks it and
@@ -760,7 +772,7 @@
       await sleep(200)
       r.passesAfterTeardown = window.__passes - before
       r.leftNodes = document.querySelectorAll('[class*="dsh-claude-"]').length
-      r.leftMarkers = document.querySelectorAll('[data-dsh-claude-footer-entry], [data-dsh-claude-footer-hidden], [data-dsh-claude-footer-overlay], [data-dsh-claude-model-host], [data-dsh-claude-account-host-row], [data-dsh-claude-stats-mode], [data-dsh-claude-turn-live], [data-dsh-claude-turn-trailing], [data-dsh-claude-turn-status]').length
+      r.leftMarkers = document.querySelectorAll('[data-dsh-claude-footer-entry], [data-dsh-claude-footer-hidden], [data-dsh-claude-footer-overlay], [data-dsh-claude-model-host], [data-dsh-claude-account-host-row], [data-dsh-claude-stats-mode], [data-dsh-claude-turn-state], [data-dsh-claude-turn-status], [style*="--dsh-claude-turn-order"]').length
       r.leftAttrs = Array.prototype.filter.call(document.body.attributes, function (a) { return /^data-dsh-(claude|window)/.test(a.name) }).map(function (a) { return a.name })
       r.leftStylesheet = !!document.getElementById('dsh-claude-style-style')
       if (viewStrip) r.viewPill.left = viewStrip.hasAttribute('data-dsh-claude-pill') || viewStrip.hasAttribute('data-dsh-view-tabs') || viewStrip.style.length > 0

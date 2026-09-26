@@ -1,20 +1,18 @@
-/* ---------- Live turn status line ---------- */
-/* src/features/turn-status/turn-status.js marks the running turn's process
-   control and the rows the host renders after that turn. The chat column is a
-   flex column, so `order` carries the control below the work in progress
-   while the queued messages stay under it; every other row keeps order 0 and
-   its document place. */
-body[data-dsh-claude-style] [data-chat-flow] > [data-dsh-claude-turn-live] {
-  order: 1;
-}
-body[data-dsh-claude-style] [data-chat-flow] > [data-dsh-claude-turn-trailing] {
-  order: 2;
+/* ---------- Turn status line ---------- */
+/* src/features/turn-status/turn-status.js writes a flex order onto the chat
+   column's rows from the first running, stopped or failed turn on: that turn's
+   process control goes after its work, and the rows after it (its footer,
+   later turns, queued messages) step up one level each time. The chat column
+   is a flex column; rows without the property keep order 0 and their
+   document place. */
+body[data-dsh-claude-style] [data-chat-flow] > [style*="--dsh-claude-turn-order"] {
+  order: var(--dsh-claude-turn-order);
 }
 
-/* The control reads as Claude Code's status line: the spark, then elapsed
-   time · output tokens · what the model is doing, written by the pass into the
-   attribute. The host's own label (and its ticking clock) stays in the DOM,
-   out of sight. */
+/* The control reads as Claude Code's status line: the spark, then the text the
+   pass writes into the attribute — elapsed · output tokens · action while the
+   turn runs, the host's stopped / failed word · duration · tokens after. The
+   host's own label (and its ticking clock) stays in the DOM, out of sight. */
 body[data-dsh-claude-style] button[data-dsh-claude-turn-status] {
   height: auto !important;
   min-height: calc(24px + var(--dsh-content-font-delta, 0px)) !important;
@@ -36,7 +34,6 @@ body[data-dsh-claude-style] button[data-dsh-claude-turn-status]::before {
   background: var(--dsw-alias-brand-primary, #d97757);
   -webkit-mask: %%CLAUDE_MARK%% center / contain no-repeat;
   mask: %%CLAUDE_MARK%% center / contain no-repeat;
-  animation: 2.4s ease-in-out infinite dsh-claude-turn-spark;
 }
 body[data-dsh-claude-style] button[data-dsh-claude-turn-status]::after {
   content: attr(data-dsh-claude-turn-status);
@@ -47,8 +44,12 @@ body[data-dsh-claude-style] button[data-dsh-claude-turn-status]::after {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* The spark turns and breathes in every motion setting, like the sidebar's
-   background-work ring: standing still, it would read as a stalled turn. */
+/* While the turn runs the spark turns and breathes, in every motion setting,
+   like the sidebar's background-work ring: standing still, it would read as a
+   stalled turn. A stopped or failed turn's spark stands still. */
+body[data-dsh-claude-style] button[data-dsh-claude-turn-state="live"]::before {
+  animation: 2.4s ease-in-out infinite dsh-claude-turn-spark;
+}
 @keyframes dsh-claude-turn-spark {
   0% { transform: rotate(0deg) scale(1); }
   50% { transform: rotate(180deg) scale(0.78); }

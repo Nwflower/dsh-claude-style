@@ -456,13 +456,20 @@ const CASES = {
     check('apply() completes', r.applyError === null, r.applyError)
     check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
     const status = r.turnStatus || {}
-    check("the running turn's process control moves below the turn's work and above the queued message",
-      status.live === true && status.trailing === true && status.belowWork === true && status.aboveQueued === true,
-      JSON.stringify(status))
-    check('the status line reads elapsed time · output tokens · what the model is doing, in place of the host label',
-      /^1m [5-9]s · 1\.2k tokens · \S/.test(status.text || '') && status.drawn === JSON.stringify(status.text) &&
-        status.label === 'none',
-      JSON.stringify(status))
+    const failed = status.failed || {}
+    const live = status.live || {}
+    check('each status line moves below its turn\'s work: the failed turn\'s above its footer, the running turn\'s above the queued message',
+      JSON.stringify(status.seen) === JSON.stringify(['first question', 'first work', 'error', 'Failed', 'footer',
+        'second question', 'second work', 'Deep diving for 1m 5s', 'queued']),
+      JSON.stringify(status.seen))
+    check('the running line reads elapsed time · output tokens · what the model is doing, with a turning spark, in place of the host label',
+      live.state === 'live' && /^1m [5-9]s · 1\.2k tokens · \S/.test(live.text || '') &&
+        live.drawn === JSON.stringify(live.text) && live.label === 'none' && live.turning === 'dsh-claude-turn-spark',
+      JSON.stringify(live))
+    check('the failed line reads the host\'s word · how long it ran · output tokens, with a still spark',
+      failed.state === 'failed' && failed.text === 'Failed · 12s · 300 tokens' &&
+        failed.drawn === JSON.stringify(failed.text) && failed.label === 'none' && failed.turning === 'none',
+      JSON.stringify(failed))
     commonChecks(r)
   },
 }
