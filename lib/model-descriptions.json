@@ -74,6 +74,126 @@
       "zh": "{count} 天",
       "en": "{count} d"
     },
+    "searchPlaceholder": {
+      "zh": "搜索",
+      "en": "Search"
+    },
+    "searchClose": {
+      "zh": "关闭",
+      "en": "Close"
+    },
+    "searchFilterHint": {
+      "zh": "切换分类",
+      "en": "Filters"
+    },
+    "searchOpenHint": {
+      "zh": "打开",
+      "en": "Open"
+    },
+    "searchFilterAll": {
+      "zh": "全部",
+      "en": "All"
+    },
+    "searchFilterSessions": {
+      "zh": "会话",
+      "en": "Sessions"
+    },
+    "searchFilterProjects": {
+      "zh": "项目",
+      "en": "Projects"
+    },
+    "searchFilterPlugins": {
+      "zh": "插件",
+      "en": "Plugins"
+    },
+    "searchFilterSkills": {
+      "zh": "Skill",
+      "en": "Skills"
+    },
+    "searchFilterShortcuts": {
+      "zh": "快捷键",
+      "en": "Shortcuts"
+    },
+    "searchRecents": {
+      "zh": "最近",
+      "en": "Recents"
+    },
+    "searchActions": {
+      "zh": "操作",
+      "en": "Actions"
+    },
+    "searchSessions": {
+      "zh": "会话",
+      "en": "Sessions"
+    },
+    "searchProjects": {
+      "zh": "项目",
+      "en": "Projects"
+    },
+    "searchPlugins": {
+      "zh": "插件",
+      "en": "Plugins"
+    },
+    "searchSkills": {
+      "zh": "Skill",
+      "en": "Skills"
+    },
+    "searchShortcuts": {
+      "zh": "快捷键",
+      "en": "Shortcuts"
+    },
+    "searchActionNewSession": {
+      "zh": "新会话",
+      "en": "New session"
+    },
+    "searchActionPlugins": {
+      "zh": "插件",
+      "en": "Plugins"
+    },
+    "searchActionSettings": {
+      "zh": "设置",
+      "en": "Settings"
+    },
+    "searchActionShortcuts": {
+      "zh": "键盘快捷键",
+      "en": "Keyboard shortcuts"
+    },
+    "searchLoading": {
+      "zh": "正在搜索…",
+      "en": "Searching…"
+    },
+    "searchEmpty": {
+      "zh": "没有匹配的结果",
+      "en": "No results"
+    },
+    "turnStatusTokens": {
+      "zh": "{count} tokens",
+      "en": "{count} tokens"
+    },
+    "turnStatusWaiting": {
+      "zh": "等待模型…",
+      "en": "Waiting for the model…"
+    },
+    "turnStatusThinking": {
+      "zh": "思考中…",
+      "en": "Thinking…"
+    },
+    "turnStatusThought": {
+      "zh": "思考了 {duration}",
+      "en": "Thought for {duration}"
+    },
+    "turnStatusWriting": {
+      "zh": "输出中…",
+      "en": "Writing…"
+    },
+    "turnStatusToolCall": {
+      "zh": "准备调用工具…",
+      "en": "Preparing a tool call…"
+    },
+    "turnStatusTools": {
+      "zh": "运行工具中…",
+      "en": "Running tools…"
+    },
     "homeTabOverview": {
       "zh": "概览",
       "en": "Overview"
@@ -225,6 +345,150 @@
     "homeBookOrdinaryWorld": {
       "zh": "《平凡的世界》",
       "en": "Ordinary World"
+    },
+    "homeBookYellowWallpaper": {
+      "zh": "《黄色壁纸》",
+      "en": "The Yellow Wallpaper"
+    },
+    "homeBookMetamorphosis": {
+      "zh": "《变形记》",
+      "en": "Metamorphosis"
+    },
+    "homeBookJekyllAndHyde": {
+      "zh": "《化身博士》",
+      "en": "The Strange Case of Dr Jekyll and Mr Hyde"
+    },
+    "homeBookCallOfTheWild": {
+      "zh": "《野性的呼唤》",
+      "en": "The Call of the Wild"
+    },
+    "homeBookTimeMachine": {
+      "zh": "《时间机器》",
+      "en": "The Time Machine"
+    },
+    "homeBookWizardOfOz": {
+      "zh": "《绿野仙踪》",
+      "en": "The Wonderful Wizard of Oz"
+    },
+    "homeBookHeartOfDarkness": {
+      "zh": "《黑暗之心》",
+      "en": "Heart of Darkness"
+    },
+    "homeBookFaust": {
+      "zh": "《浮士德》",
+      "en": "Faust"
+    },
+    "homeBookTurnOfTheScrew": {
+      "zh": "《螺丝在拧紧》",
+      "en": "The Turn of the Screw"
+    },
+    "homeBookAesopsFables": {
+      "zh": "《伊索寓言》",
+      "en": "Aesop's Fables"
+    },
+    "homeBookPeterPan": {
+      "zh": "《彼得·潘》",
+      "en": "Peter Pan"
+    },
+    "homeBookPrince": {
+      "zh": "《君主论》",
+      "en": "The Prince"
+    },
+    "homeBookInvisibleMan": {
+      "zh": "《隐形人》",
+      "en": "The Invisible Man"
+    },
+    "homeBookAndersensFairyTales": {
+      "zh": "《安徒生童话》",
+      "en": "Andersen's Fairy Tales"
+    },
+    "homeBookWarOfTheWorlds": {
+      "zh": "《世界大战》",
+      "en": "The War of the Worlds"
+    },
+    "homeBookBeyondGoodAndEvil": {
+      "zh": "《善恶的彼岸》",
+      "en": "Beyond Good and Evil"
+    },
+    "homeBookWhiteFang": {
+      "zh": "《白牙》",
+      "en": "White Fang"
+    },
+    "homeBookMeditations": {
+      "zh": "《沉思录》",
+      "en": "Meditations"
+    },
+    "homeBookGrimmsFairyTales": {
+      "zh": "《格林童话》",
+      "en": "Grimms' Fairy Tales"
+    },
+    "homeBookGulliversTravels": {
+      "zh": "《格列佛游记》",
+      "en": "Gulliver's Travels"
+    },
+    "homeBookWalden": {
+      "zh": "《瓦尔登湖》",
+      "en": "Walden"
+    },
+    "homeBookRobinsonCrusoe": {
+      "zh": "《鲁滨逊漂流记》",
+      "en": "Robinson Crusoe"
+    },
+    "homeBookDivineComedy": {
+      "zh": "《神曲》",
+      "en": "The Divine Comedy"
+    },
+    "homeBookMadameBovary": {
+      "zh": "《包法利夫人》",
+      "en": "Madame Bovary"
+    },
+    "homeBookZarathustra": {
+      "zh": "《查拉图斯特拉如是说》",
+      "en": "Thus Spoke Zarathustra"
+    },
+    "homeBookOdyssey": {
+      "zh": "《奥德赛》",
+      "en": "The Odyssey"
+    },
+    "homeBookTaleOfTwoCities": {
+      "zh": "《双城记》",
+      "en": "A Tale of Two Cities"
+    },
+    "homeBookGreatExpectations": {
+      "zh": "《远大前程》",
+      "en": "Great Expectations"
+    },
+    "homeBookRepublic": {
+      "zh": "《理想国》",
+      "en": "The Republic"
+    },
+    "homeBookCrimeAndPunishment": {
+      "zh": "《罪与罚》",
+      "en": "Crime and Punishment"
+    },
+    "homeBookLeviathan": {
+      "zh": "《利维坦》",
+      "en": "Leviathan"
+    },
+    "homeBookAnnaKarenina": {
+      "zh": "《安娜·卡列尼娜》",
+      "en": "Anna Karenina"
+    },
+    "homeBookBrothersKaramazov": {
+      "zh": "《卡拉马佐夫兄弟》",
+      "en": "The Brothers Karamazov"
+    },
+    "homeBookDonQuixote": {
+      "zh": "《堂吉诃德》",
+      "en": "Don Quixote"
+    },
+    "homeBookCountOfMonteCristo": {
+      "zh": "《基督山伯爵》",
+      "en": "The Count of Monte Cristo"
+    },
+    "homeBookLesMiserables": {
+      "zh": "《悲惨世界》",
+      "en": "Les Misérables"
     },
     "homeModelSessions": {
       "zh": "{count} 个会话",

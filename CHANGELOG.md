@@ -2,11 +2,11 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
-## [Unreleased]
+## [0.9.0] - 2026-09-26
 
-[中文](#cn-unreleased) | [English](#en-unreleased)
+[中文](#cn-0.9.0) | [English](#en-0.9.0)
 
-<h3 id="cn-unreleased">新增功能</h3>
+<h3 id="cn-0.9.0">新增功能</h3>
 
 - **侧栏搜索框与搜索面板**：鼠标移到侧栏上时，左上角的品牌标志淡出、换成一个淡入的搜索按钮（右端标出宿主的搜索快捷键），点它在窗口上方打开搜索面板；宿主的搜索快捷键（桌面端 Ctrl+K，Web 端 Ctrl+Alt+K，在设置里改过的以改后的为准）也打开这个面板，侧栏「工作区」标题行原来的搜索图标不再显示。面板打开与关闭时连同背后的遮罩一起淡入淡出。面板能搜历史会话、项目、插件、当前会话可用的 Skill 与快捷键。会话按标题、所属工作区名和对话内容搜：你和模型说过的每句话都算（工具调用的参数与子代理会话不算），句子中间的几个中文字也能搜到，不分大小写，空格多几个少几个都行；行下显示命中的那一句，命中的字加粗。插件新增只读的私有路由 `/dsh-claude-style/session-search` 供面板查询，与其他私有路由一样先过宿主的请求校验；宿主进程启动后第一次打开面板时它会把全部会话读一遍（本机 128 个会话约 16 秒，这期间面板显示「正在搜索」），之后每次查询约 0.1 秒。顶部的「全部 / 会话 / 项目 / 插件 / Skill / 快捷键」切换分类；搜索框为空时列出最近的五个会话和「新会话 / 插件 / 设置 / 键盘快捷键」几个操作。↑↓ 选择，Enter 打开，Tab 与 Shift+Tab 切换分类，Esc 关闭。选中会话即打开该会话；选中项目在这个工作区开一个新会话；选中插件打开它在插件页的详情；选中 Skill 把 `/名称 ` 放到当前会话输入框的开头；选中快捷键打开宿主的快捷键列表，并筛到这一条。侧栏收起成窄条时没有搜索框。
 - **进行中、已停止与失败的轮次改用 Claude Code 式的状态行**：原来宿主把「深度求索中，用时 N 秒」「已停止」「处理失败」排在这一轮的最前面，工作过程往下越排越长、状态却停在上方。现在这一行跟在这一轮工作的末尾（这一轮的页脚、排队中的消息仍在它下面），画成 Claude Code 的样子。进行中是一个转动的火花标记加「用时 · 输出 tokens · 当前动作」，例如「34秒 · 1.2k tokens · 思考中…」，当前动作依次有等待模型、思考中、思考了 N 秒、输出中、准备调用工具与运行工具中；停止或失败后火花静止，文字为「已停止 · 17秒 · 179 tokens」「处理失败 · 12秒 · 300 tokens」这样，历史里的这些轮次也一样。tokens 是这一轮已完成各步上报的输出用量，正在输出的那一步结束后计入。正常结束的一轮仍是宿主原来的「用时 N 秒」，在原来的位置，折叠与展开照旧。
@@ -23,7 +23,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - 修复 **开启「自动弹出弹层」后进入封号彩蛋页会立刻退出**：桌面端从账号菜单点开彩蛋页时，全窗浮层让指针「离开」菜单，悬停收起随后代宿主菜单按下的 Escape 被插件的键盘路由当成了用户按键，约 0.1 秒就把刚打开的彩蛋页关掉。现在这次代发的 Escape 只送达宿主菜单：彩蛋页开着时悬停收起同时停摆，页面保持打开，退出后侧栏与账号菜单恢复进入前的样子。
 - 修复 **启用皮肤后带输入框的会话页上快捷键失灵**：皮肤常驻页面的模型选择器、推理强度与权限弹层卡片在关闭时仍标注 `role="menu"`，宿主据此把快捷键仲裁给一个看不见的「前景菜单」，连按 Esc 停止智能体、Ctrl+W 关闭页面与标签页菜单的 Esc 都不再生效（Web 端受影响的面更宽）。现在这一角色标注随卡片开合写入与撤销：卡片打开时才存在，快捷键的仲裁恢复如常。
 
-<h3 id="en-unreleased">New Features</h3>
+<h3 id="en-0.9.0">New Features</h3>
 
 - **A sidebar search box and search palette**: while the pointer is over the sidebar, the brand mark at its top left fades out into a search button (the host's search shortcut shown at its right end), and pressing it opens a search palette near the top of the window; the host's search shortcut (Ctrl+K on the desktop, Ctrl+Alt+K on the web, or whatever it has been rebound to in settings) opens the same palette, and the search icon the sidebar's Workspace heading used to carry is gone. The palette fades in and out together with the mask behind it. The palette searches past sessions, projects, plugins, the skills the current session offers and keyboard shortcuts. Sessions match by title, by workspace name and by what was said in them: every message between you and the model counts (tool-call arguments and subagent sessions do not), a few Chinese characters from the middle of a sentence match, case does not matter and neither do extra spaces; the matching line shows under the row with the match in bold. The plugin adds a read-only private route, `/dsh-claude-style/session-search`, for these queries, behind the host's request check like its other private routes; the first time the palette opens after the host process starts, the route reads every session once (about 16 s for 128 sessions here, while the palette shows "Searching…"), and each query after that takes about 0.1 s. The palette has All / Sessions / Projects / Plugins / Skills / Shortcuts across the top to narrow the list; with the box empty it lists the five most recent sessions and the New session, Plugins, Settings and Keyboard shortcuts actions. ↑↓ moves, Enter opens, Tab and Shift+Tab switch the category, Esc closes. Picking a session opens it; a project starts a new session in that workspace; a plugin opens its details on the plugins page; a skill puts `/name ` at the head of the current session's input; a shortcut opens the host's shortcut list filtered to that entry. The collapsed sidebar rail has no search box.
 - **A Claude Code style status line for running, stopped and failed turns**: the host used to put "Deep diving for N s", "Stopped" and "Failed" at the very top of the turn, so the work grew downward while its status stayed above it. The line now follows the end of the turn's work (the turn's footer and queued messages still sit below it) and looks like Claude Code's. While the turn runs it is a turning spark, then elapsed time · output tokens · what the model is doing, for example "34s · 1.2k tokens · Thinking…", the action being one of waiting for the model, thinking, thought for N s, writing, preparing a tool call and running tools; once the turn is stopped or fails the spark stands still and the line reads like "Stopped · 17s · 179 tokens" or "Failed · 12s · 300 tokens", for such turns in the history too. The token count is the output usage the turn's finished steps report; the step still streaming joins it once it finishes. A turn that finishes normally keeps the host's own "Took N s" in its place, and folding works as before.
@@ -39,6 +39,8 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 - **Fixed the account-hold easter egg closing itself right after it opened while "Open popovers on hover" is on**: on the desktop, opening the page from the account menu made the full-window overlay "leave" the menu, and the hover close that followed pressed Escape on the host's behalf — which the skin's keyboard routing took for the user's own key and dismissed the page about 0.1 s in. That dispatched Escape now reaches only the host's menu, the hover close stands down while the page is open, and the sidebar and its account menu come back as they were once the page is dismissed.
 - **Fixed shortcuts going dead on conversation pages with an input box while the skin is enabled**: the model picker, reasoning-effort and permission popover cards the skin keeps in the page carried their `role="menu"` mark while closed, so the host arbitrated its shortcuts to an invisible "foreground menu" — pressing Esc twice to stop the agent, Ctrl+W to close a page and the Esc of the tab menu all stopped working (the Web build loses a wider set of them). The mark now rides the card's open state: it exists only while a card is open, and shortcut arbitration goes back to normal.
+
+**Full Changelog**: [v0.8.0...v0.9.0](https://github.com/Nwflower/dsh-claude-style/compare/v0.8.0...v0.9.0)
 
 ## [0.8.0] - 2026-09-26
 
