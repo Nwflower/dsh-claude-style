@@ -180,6 +180,12 @@ host's other menus (sidebar row menus, the settings permission row, submenus)
 keep the host's own design on purpose. What that replaces: a 20px radius card
 with 4px padding, 40px rows at 10px radius, and 14px text.
 
+The stamp's value names the picker (`workspace` or `preset`), because the two
+cards differ. The preset card keeps the popover table's 32px rows for its
+two-line entries. The workspace card is Claude Code's folder menu: a 180px-min
+card with 4px padding, 26px plain-text rows (no folder glyph in front of each
+folder, no `＋` on the pinned add row) and the accent check on the current one.
+
 **All five are aligned**: the account drawer and the stats card were the outliers
 (8px row radius, 2px and 4px card gap, 8px padding, 220 / 260px min-width,
 z-index 1000 and 100000) and now follow the table above. The hero row's pickers are the host's own menu primitive, which differs in

@@ -9,6 +9,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 <h3 id="cn-unreleased">体验优化</h3>
 
 - **对话 / 轨迹 / 上下文切换时高亮块平滑滑动**：切换视图时，高亮块此前在原标签上淡出、在新标签上淡入；现在同一块高亮从原标签滑到新标签，宽度随标签文字一起变化，标签文字颜色同步过渡。系统要求减少动态效果时，高亮块直接跳到新标签。
+- **工作区选择菜单改为 Claude Code 的文件夹菜单样式**：菜单此前每行前面都有一个文件夹图标，行距与档位菜单的两行条目一样宽；现在是一张窄卡片，纯文字行排得更紧，文件夹图标与「添加工作区…」前的加号都不画，当前工作区仍以强调色勾号标出。档位菜单保持原样。
 
 ### 问题修复
 
@@ -18,6 +19,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 <h3 id="en-unreleased">Improvements</h3>
 
 - **The Chat / Trajectory / Context highlight slides between tabs**: switching views used to fade the highlight out on the old tab and in on the new one; now one highlight slides from the old tab to the new one, resizing to the new label as it goes, while the labels' colours cross over. When the system asks for reduced motion, the highlight jumps straight to the new tab.
+- **The workspace picker takes the look of Claude Code's folder menu**: every row used to carry a folder glyph and was spaced like the preset menu's two-line entries; it is now a narrow card of plain text rows set closer together, with no folder glyph and no plus sign on "Add workspace…", and the current workspace keeps the accent check. The preset menu is unchanged.
 
 ### Bug Fixes
 

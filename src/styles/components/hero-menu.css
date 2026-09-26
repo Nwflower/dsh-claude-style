@@ -93,8 +93,8 @@ body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [class*="_check_"] {
   color: var(--dsw-alias-brand-primary, #d97757) !important;
 }
 
-/* The preset rows are two lines (name + description) and the workspace rows
-   one with an icon, so the height above is a floor rather than a cap. */
+/* The preset rows are two lines (name + description), so the height above is a
+   floor rather than a cap. */
 body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [class*="_itemName"] {
   font-size: 13px !important;
   font-weight: 500 !important;
@@ -128,6 +128,33 @@ body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] > [class*="_footer_"] {
   margin-top: 4px !important;
   padding-top: 4px !important;
   border-top: 1px solid var(--dsw-alias-border-l1, #e8e6dc) !important;
+}
+
+/* The workspace picker is Claude Code's folder menu: a narrow card of plain
+   text rows. Every row names a folder, so the folder glyph in front of each
+   one repeats what the list already says and is dropped, the add row's `＋`
+   with it; the rows sit closer together than the preset card's two-line rows
+   need to. The current folder keeps the accent check. */
+body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%="workspace"] {
+  min-width: 180px !important;
+  max-width: min(280px, calc(100vw - 16px)) !important;
+  padding: 4px !important;
+  gap: 4px !important;
+}
+body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%="workspace"] [class*="_itemWrap_"] > [role="menuitem"] {
+  min-height: 26px !important;
+  padding: 3px 10px !important;
+}
+body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%="workspace"] [class*="_itemIcon_"] {
+  display: none !important;
+}
+body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%="workspace"] [class*="_check_"] {
+  width: 14px !important;
+  height: 14px !important;
+}
+body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%="workspace"] > [class*="_footer_"] {
+  margin-top: 0 !important;
+  padding-top: 4px !important;
 }
 
 /* The card's padding is the skin's 6px rather than the host's 4px, so a side
