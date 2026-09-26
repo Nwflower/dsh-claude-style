@@ -58,10 +58,6 @@
       "zh": "正在加载…",
       "en": "Loading…"
     },
-    "archiveUntitled": {
-      "zh": "未命名会话",
-      "en": "Untitled conversation"
-    },
     "archiveJustNow": {
       "zh": "刚刚",
       "en": "Just now"
@@ -112,7 +108,7 @@
     },
     "homeFunBook": {
       "zh": "你的Token用量相当于{count}本{book}。",
-      "en": "You've used ~{count}× more tokens than {book}."
+      "en": "You've used ~{count}× the tokens in {book}."
     },
     "homeBookAnimalFarm": {
       "zh": "《动物农场》",
@@ -157,6 +153,78 @@
     "homeBookLostTime": {
       "zh": "《追忆似水年华》",
       "en": "In Search of Lost Time"
+    },
+    "homeBookTaoTeChing": {
+      "zh": "《道德经》",
+      "en": "Tao Te Ching"
+    },
+    "homeBookAlice": {
+      "zh": "《爱丽丝漫游奇境》",
+      "en": "Alice's Adventures in Wonderland"
+    },
+    "homeBookChristmasCarol": {
+      "zh": "《圣诞颂歌》",
+      "en": "A Christmas Carol"
+    },
+    "homeBookFrankenstein": {
+      "zh": "《弗兰肯斯坦》",
+      "en": "Frankenstein"
+    },
+    "homeBookDorianGray": {
+      "zh": "《道林·格雷的画像》",
+      "en": "The Picture of Dorian Gray"
+    },
+    "homeBookToLive": {
+      "zh": "《活着》",
+      "en": "To Live"
+    },
+    "homeBookSherlockHolmes": {
+      "zh": "《福尔摩斯冒险史》",
+      "en": "The Adventures of Sherlock Holmes"
+    },
+    "homeBookHuckleberryFinn": {
+      "zh": "《哈克贝利·费恩历险记》",
+      "en": "Adventures of Huckleberry Finn"
+    },
+    "homeBookThreeBody": {
+      "zh": "《三体》",
+      "en": "The Three-Body Problem"
+    },
+    "homeBookDracula": {
+      "zh": "《德古拉》",
+      "en": "Dracula"
+    },
+    "homeBookJaneEyre": {
+      "zh": "《简·爱》",
+      "en": "Jane Eyre"
+    },
+    "homeBookDarkForest": {
+      "zh": "《三体Ⅱ·黑暗森林》",
+      "en": "The Dark Forest"
+    },
+    "homeBookDeathsEnd": {
+      "zh": "《三体Ⅲ·死神永生》",
+      "en": "Death's End"
+    },
+    "homeBookThreeKingdoms": {
+      "zh": "《三国演义》",
+      "en": "Romance of the Three Kingdoms"
+    },
+    "homeBookJourneyWest": {
+      "zh": "《西游记》",
+      "en": "Journey to the West"
+    },
+    "homeBookRedChamber": {
+      "zh": "《红楼梦》",
+      "en": "Dream of the Red Chamber"
+    },
+    "homeBookWaterMargin": {
+      "zh": "《水浒传》",
+      "en": "Water Margin"
+    },
+    "homeBookOrdinaryWorld": {
+      "zh": "《平凡的世界》",
+      "en": "Ordinary World"
     },
     "homeModelSessions": {
       "zh": "{count} 个会话",

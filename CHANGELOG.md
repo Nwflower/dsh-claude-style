@@ -2,11 +2,11 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
-## [Unreleased]
+## [0.8.0] - 2026-09-26
 
-[中文](#cn-unreleased) | [English](#en-unreleased)
+[中文](#cn-0.8.0) | [English](#en-0.8.0)
 
-<h3 id="cn-unreleased">体验优化</h3>
+<h3 id="cn-0.8.0">体验优化</h3>
 
 - **对话 / 轨迹 / 上下文切换时高亮块平滑滑动**：切换视图时，高亮块此前在原标签上淡出、在新标签上淡入；现在同一块高亮从原标签滑到新标签，宽度随标签文字一起变化，标签文字颜色同步过渡。滑动不受系统「减少动态效果」设置影响，Windows 关掉了「在 Windows 中显示动画」时照样滑动。
 - **权限分段、进行中 / 已归档与设置页分段控件的高亮块同样滑动**：只读 / 编辑 / 自动 / Yolo、侧栏的进行中 / 已归档，以及设置页里的各组分段控件，切换时高亮块都从原来那一段滑到新的一段，与对话视图标签同一套动画。
@@ -21,7 +21,11 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - 修复 **点击已归档行没有任何反应**：现在与宿主会话树里点已归档会话一样，窗口顶部弹出宿主自己的提示「已归档对话暂时无法查看，请取消归档后查看」。
 - 修复 **英文界面下「排队发送」「插话发送」按钮的外观与中文界面不一致**：英文界面下，回复进行中且草稿非空时，这两个按钮此前不显示强调色，悬停时也没有底色；现在与中文界面一致。输入框里各按钮改为按它们在宿主界面中的位置识别，不再依赖按钮文字，宿主改动按钮文案或切换界面语言都不影响样式。
 
-<h3 id="en-unreleased">Improvements</h3>
+### 其他变更
+
+- **页面标出正在运行的构建**：`<body>` 上的 `data-dsh-claude-style` 属性现在写着已加载的包的构建编号（`npm run build` 会打印同一个编号），报告问题时即使页面经过多次热重载、从未刷新，也能说清运行的是哪一版。
+
+<h3 id="en-0.8.0">Improvements</h3>
 
 - **The Chat / Trajectory / Context highlight slides between tabs**: switching views used to fade the highlight out on the old tab and in on the new one; now one highlight slides from the old tab to the new one, resizing to the new label as it goes, while the labels' colours cross over. The slide ignores the system's reduced-motion setting, so it still plays with Windows' "Show animations in Windows" turned off.
 - **The permission segments, Active / Archived and the settings page's segmented controls slide their highlight too**: Read / Edit / Auto / Yolo, the sidebar's Active / Archived, and every segmented control on the settings page now slide the highlight from the old segment to the new one, with the same motion as the conversation view tabs.
@@ -35,6 +39,12 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - Fixed **the sidebar's Archived view reading "No archived conversations"**: the host's archive data usually arrives after the plugin starts, and the list stayed empty. The list now follows the host's archive record and session list live, so it fills in after startup and reflects archiving or unarchiving done anywhere. It holds the same conversations as the host's own "Archived only" filter (no subagent sessions, no sessions that no longer exist), each row carries the host's title instead of a run of "Untitled conversation", and a long list scrolls inside the sidebar instead of being cut off at the bottom of the window.
 - Fixed **clicking an archived row doing nothing**: it now raises the host's own notice at the top of the window, "Archived sessions cannot be opened. Unarchive it to view.", the same one the host's session tree shows for an archived session.
 - Fixed **the Queue message and Steer message buttons looking different in the English UI**: in English, with a reply running and a non-empty draft, these two buttons showed no accent colour and no hover fill; they now match the Chinese UI. The composer's buttons are now recognised by where they sit in the host's markup rather than by their text, so a host wording change or a switch of the UI language leaves their styling intact.
+
+### Chores
+
+- **The page states which build it is running**: the `data-dsh-claude-style` attribute on `<body>` now carries the build id of the loaded bundle (`npm run build` prints the same id), so a bug report can name the exact build even after hot reloads that never reloaded the page.
+
+**Full Changelog**: [v0.7.2...v0.8.0](https://github.com/Nwflower/dsh-claude-style/compare/v0.7.2...v0.8.0)
 
 ## [0.7.2] - 2026-09-25
 
