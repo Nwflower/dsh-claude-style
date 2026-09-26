@@ -10,9 +10,19 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 - **对话 / 轨迹 / 上下文切换时高亮块平滑滑动**：切换视图时，高亮块此前在原标签上淡出、在新标签上淡入；现在同一块高亮从原标签滑到新标签，宽度随标签文字一起变化，标签文字颜色同步过渡。系统要求减少动态效果时，高亮块直接跳到新标签。
 
+### 问题修复
+
+- 修复 **侧栏「已归档」显示「没有已归档的会话」**：插件启动时宿主的归档数据往往还没到，列表就一直停在空白；现在列表跟随宿主的归档记录与会话列表实时更新，启动后、在别处归档或取消归档后都立刻反映。列表收录的会话与宿主自带「仅已归档」筛选一致（不含子代理会话与已不存在的会话），每行显示宿主给出的标题，不再出现成片的「未命名会话」；会话多时列表在侧栏内滚动，不再被截在窗口底部。
+- 修复 **点击已归档行没有任何反应**：现在与宿主会话树里点已归档会话一样，窗口顶部弹出宿主自己的提示「已归档对话暂时无法查看，请取消归档后查看」。
+
 <h3 id="en-unreleased">Improvements</h3>
 
 - **The Chat / Trajectory / Context highlight slides between tabs**: switching views used to fade the highlight out on the old tab and in on the new one; now one highlight slides from the old tab to the new one, resizing to the new label as it goes, while the labels' colours cross over. When the system asks for reduced motion, the highlight jumps straight to the new tab.
+
+### Bug Fixes
+
+- Fixed **the sidebar's Archived view reading "No archived conversations"**: the host's archive data usually arrives after the plugin starts, and the list stayed empty. The list now follows the host's archive record and session list live, so it fills in after startup and reflects archiving or unarchiving done anywhere. It holds the same conversations as the host's own "Archived only" filter (no subagent sessions, no sessions that no longer exist), each row carries the host's title instead of a run of "Untitled conversation", and a long list scrolls inside the sidebar instead of being cut off at the bottom of the window.
+- Fixed **clicking an archived row doing nothing**: it now raises the host's own notice at the top of the window, "Archived sessions cannot be opened. Unarchive it to view.", the same one the host's session tree shows for an archived session.
 
 ## [0.7.2] - 2026-09-25
 

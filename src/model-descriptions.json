@@ -16,7 +16,6 @@
     "archiveRestore": { "zh": "取消归档", "en": "Unarchive conversation" },
     "archiveEmpty": { "zh": "没有已归档的会话", "en": "No archived conversations" },
     "archiveLoading": { "zh": "正在加载…", "en": "Loading…" },
-    "archiveUntitled": { "zh": "未命名会话", "en": "Untitled conversation" },
     "archiveJustNow": { "zh": "刚刚", "en": "Just now" },
     "archiveMinutes": { "zh": "{count} 分钟", "en": "{count} min" },
     "archiveHours": { "zh": "{count} 小时", "en": "{count} h" },

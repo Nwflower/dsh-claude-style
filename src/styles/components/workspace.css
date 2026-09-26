@@ -113,14 +113,26 @@ body[data-dsh-claude-style] .dsh-claude-archive-list {
   display: flex !important;
   flex-direction: column !important;
   gap: 1px !important;
-  /* No inset of its own: the region already indents its content by 12px, which is
-     where the host's tree rows start (measured: row x=12, title x=36). The 5px on
-     the right is the tree's own inset — matching it keeps the two rows the same
-     width (251px) instead of letting this one run 5px wider. */
-  padding: 0 5px 0 0 !important;
+  /* It takes the tree's place in the section's column, so it takes the tree's
+     box and scrolling too: fill the height left under the header and scroll
+     inside it (the region above clips), with the tree's thin, reserved
+     scrollbar. The host's scroller reaches 4px left of the section's content
+     and 10px past its right edge to hold that gutter, then insets 4px / 5px —
+     the same box puts the rows where the tree's rows sit (measured: row x=12,
+     width 251, title x=36). */
+  margin: 0 -10px 0 -4px !important;
+  padding: 0 5px 0 4px !important;
   min-width: 0 !important;
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin !important;
+  scrollbar-gutter: stable !important;
 }
 body[data-dsh-claude-style] .dsh-claude-archive-row {
+  /* The list scrolls at a fixed height; its rows keep theirs instead of
+     shrinking to fit. */
+  flex: none !important;
   display: flex !important;
   align-items: center !important;
   gap: 4px !important;

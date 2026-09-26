@@ -3,13 +3,14 @@
      *
      * 进行中 needs no filtering of its own: the host's tree already leaves
      * archived sessions out (measured on 0.1.7-alpha.1 — 10 rows, 6 archived, zero
-     * overlap). 已归档 is the skin's own flat list of archived conversations, built
-     * from the archive registry (ids) plus the session list (titles and times),
-     * with a delete button on every row.
+     * overlap). 已归档 is the skin's own flat list of archived conversations, a
+     * live projection of the host's two client lists — the workspace
+     * controller's archive set (ids) and the session list (titles and times) —
+     * with an unarchive and a delete button on every row.
      *
-     * The host DOES ship this filter, but its state lives in a store created per
-     * view instance (`createWorkspaceViewStore`) and is not reachable as a client
-     * service — the only way to use it is to click its options menu, which flashes
+     * The host DOES ship this filter, but its state lives in the viewing store
+     * the ui-workspace plugin creates privately (`createWorkspaceViewStore`) and
+     * is not reachable as a client service — the only way to use it is to click its options menu, which flashes
      * a popover in the user's face and still leaves the archived rows buried in
      * collapsed workspace groups. Listing them here is quieter and flat.
      *
@@ -38,6 +39,9 @@
       try { reactDom = require('react-dom/client') } catch (error) { reactDom = null }
       /** React roots holding the row actions, unmounted when the list is rebuilt. */
       var actionRoots = []
+      /** React root holding the archived-row notice, and the show count that keys it. */
+      var noticeRoot = null
+      var noticeSeq = 0
       var VIEW_ATTR = 'data-dsh-claude-ws-view'
       var LABEL_ATTR = 'data-dsh-claude-ws-label'
       var TREE_ATTR = 'data-dsh-claude-ws-tree'
@@ -51,17 +55,21 @@
       var listHost = null
       var markedLabel = null
       var markedTree = null
-      /** `null` until the registry answers; then `[{ id, title, at }]`. */
+      /** `null` until both host lists have arrived; then `[{ id, title, at }]`. */
       var items = null
-      var loading = false
+      /** Ids, titles and times of the rows on screen, joined; a list tick that changes none of them leaves the rows alone. */
+      var renderedKey
+      /** Rows deleted through the host half: the archive set keeps their ids until the host forgets them. */
+      var deletedIds = {}
       /**
-       * Whether this host archives conversations at all. Until the archive
-       * service answers, the section keeps its plain label instead of growing a
-       * control that can only ever show an empty list. `null` = not known yet.
+       * The host's workspace and session services, once both are reachable;
+       * until then the section keeps its plain label. `unwatch` drops the two
+       * list subscriptions.
        */
-      var supported = null
+      var workspaces = null
+      var sessions = null
+      var unwatch = null
       var disposed = false
-      var retryTimer = null
 
       function service(name) {
         try { return ctx.get(name) } catch (error) { return undefined }
@@ -107,108 +115,79 @@
         return copyLabel('archiveDays', '{count} d', { count: Math.floor(hours / 24) })
       }
 
-      /** Ids → `{ title, updatedAt }`, from the session list the shell already has. */
-      function titlesFor() {
-        var sessions = service('remote.session')
-        if (sessions === undefined || sessions === null || typeof sessions.list !== 'function') return Promise.resolve({})
-        return sessions.list({}).then(function (result) {
-          var map = {}
-          var rows = (result && result.ok === true && result.value && result.value.items) || []
-          for (var i = 0; i < rows.length; i++) {
-            var values = rows[i].projections && rows[i].projections.values
-            map[rows[i].sessionId] = { title: values ? values.title : null, updatedAt: rows[i].updatedAt }
-          }
-          return map
-        }).catch(function () { return {} })
-      }
-
-      function loadArchived(attempt) {
-        // Archiving is a DSH feature, not a third-party one: the official client
-        // service carries the registry-global archived set as `archivedSessionIds`.
-        // The old `remote.workspaceRegistry` route belongs to the archive-manager
-        // plugin and simply 404s without it — which used to be read as "this host
-        // cannot archive" and took the segment control away on 0.1.7-rc.1.
-        var official = service('workspaces')
-        var officialSnapshot = null
-        try {
-          officialSnapshot = official !== undefined && official !== null && official.list ? official.list.getSnapshot() : null
-        } catch (error) { officialSnapshot = null }
-        if (officialSnapshot !== null && officialSnapshot.archivedSessionIds !== undefined) {
-          supported = true
-          loading = false
-          items = officialSnapshot.archivedSessionIds.map(function (id) { return { id: id, title: null, at: null } })
-          renderList()
-          fillTitles(0)
-          return
+      /**
+       * Follow the host's two client lists: `workspaces.list` carries the
+       * registry-global archive set, `sessions.list` every session's title,
+       * time and origin. Both arrive after the skin installs — the archive set
+       * reads `[]` while the workspace list is still `pending` — so the rows are
+       * recomputed on every tick of either list, never read once.
+       * @returns whether both lists are being followed.
+       */
+      function watch() {
+        if (unwatch !== null) return true
+        var nextWorkspaces = service('workspaces')
+        var nextSessions = service('sessions')
+        if (nextWorkspaces === undefined || nextWorkspaces === null || nextWorkspaces.list === undefined) return false
+        if (nextSessions === undefined || nextSessions === null || nextSessions.list === undefined) return false
+        workspaces = nextWorkspaces
+        sessions = nextSessions
+        var stopArchive = workspaces.list.subscribe(refreshItems)
+        var stopSessions = sessions.list.subscribe(refreshItems)
+        unwatch = function () {
+          stopArchive()
+          stopSessions()
         }
-        function retry() {
-          if (disposed || attempt >= 4) {
-            // No archive service answered: this host does not have one, so the
-            // section goes back to being a plain label.
-            supported = false
-            items = []
-            loading = false
-            renderList()
-            return
-          }
-          loading = true
-          renderList()
-          retryTimer = setTimeout(function () {
-            retryTimer = null
-            loadArchived(attempt + 1)
-          }, 600)
-        }
-        var registry = service('remote.workspaceRegistry')
-        if (registry === undefined || registry === null || typeof registry.archivedSessionMetadata !== 'function') {
-          retry()
-          return
-        }
-        loading = true
-        renderList()
-        registry.archivedSessionMetadata().then(function (result) {
-          if (!result || result.ok !== true) throw new Error('archived metadata unavailable')
-          var rows = (result.value && result.value.items) || []
-          supported = true
-          items = rows.map(function (row) { return { id: row.sessionId, title: null, at: row.createdAt } })
-          items.sort(function (a, b) { return (b.at || 0) - (a.at || 0) })
-          loading = false
-          renderList()
-          return fillTitles(0)
-        }).catch(function () { retry() })
+        refreshItems()
+        return true
       }
 
       /**
-       * Titles and times ride the session list, which the shell may still be
-       * loading when the registry answers — a row falls back to its id until they
-       * land, and a couple of re-reads fill them in. Bounded, and abandoned the
-       * moment the view is left or the fragment is torn down.
+       * The archived rows, by the host's own archived-only rule (ui-workspace
+       * `sessionVisible`): an archived id whose session summary has landed,
+       * neither a subagent child nor a blank placeholder. Newest first.
        */
-      function fillTitles(attempt) {
-        return titlesFor().then(function (titles) {
-          if (items === null) return
-          var missing = false
-          for (var i = 0; i < items.length; i++) {
-            var meta = titles[items[i].id]
-            if (meta && meta.title) items[i].title = meta.title
-            if (meta && meta.updatedAt) items[i].at = meta.updatedAt
-            if (!items[i].title) missing = true
+      function refreshItems() {
+        if (disposed) return
+        var archive = workspaces.list.getSnapshot()
+        var list = sessions.list.getSnapshot()
+        if (archive.phase !== 'ready' || list.phase !== 'ready') {
+          items = null
+        } else {
+          items = []
+          for (var i = 0; i < archive.archivedSessionIds.length; i++) {
+            var id = archive.archivedSessionIds[i]
+            var summary = list.byId[id]
+            if (summary === undefined || summary.origin === 'subagent' || summary.blank || deletedIds[id] === true) continue
+            items.push({ id: id, title: summary.displayTitle, at: summary.updatedAt })
           }
-          items.sort(function (a, b) { return (b.at || 0) - (a.at || 0) })
-          renderList()
-          if (!missing || attempt >= 4 || view !== 'archived' || disposed) return
-          return new Promise(function (resolve) {
-            retryTimer = setTimeout(resolve, 500)
-          }).then(function () {
-            retryTimer = null
-            if (disposed || view !== 'archived') return
-            return fillTitles(attempt + 1)
-          })
-        })
+          items.sort(function (a, b) { return b.at - a.at })
+        }
+        var key = items === null ? null : items.map(function (item) { return item.id + '\n' + item.title + '\n' + item.at }).join('\n')
+        if (key === renderedKey) return
+        renderedKey = key
+        renderList()
       }
 
-      function openArchived(id) {
-        var sessions = service('sessions')
-        if (sessions !== undefined && sessions !== null && typeof sessions.open === 'function') sessions.open(id)
+      /**
+       * The host's notice for a clicked archived row: the same Toast, warning
+       * glyph and copy (`workspace` namespace, `toast.archivedNotOpenable`) its
+       * own tree raises. The host's notice channel is private to ui-workspace,
+       * so the skin renders the same component itself; the Toast portals to
+       * the body, and a new key restarts it the way the host re-shows it.
+       */
+      function notifyArchivedNotOpenable() {
+        if (react === null || reactDom === null || primitives === null || !primitives.Toast || !primitives.IconWarningOutlineRegular) {
+          throw new Error('dsh-claude-style: the host Toast is not reachable through the plugin loader')
+        }
+        var t = ctx.get('locale').bind('workspace')
+        if (noticeRoot === null) noticeRoot = reactDom.createRoot(document.createElement('div'))
+        noticeSeq++
+        noticeRoot.render(react.createElement(primitives.Toast, {
+          key: 'toast-' + noticeSeq,
+          text: t('toast.archivedNotOpenable'),
+          icon: react.createElement(primitives.IconWarningOutlineRegular),
+          onDone: function () { if (noticeRoot !== null) noticeRoot.render(null) },
+        }))
       }
 
       /**
@@ -231,31 +210,19 @@
           return response.ok ? response.json() : null
         }).then(function (result) {
           if (result === null || result.ok !== true) return
-          if (items !== null) items = items.filter(function (row) { return row.id !== id })
-          renderList()
+          deletedIds[id] = true
+          refreshItems()
         }).catch(function () { /* the row stays; the next read tells the truth */ })
       }
 
-      /** Put a conversation back among the live ones; it leaves this list. */
+      /**
+       * Put a conversation back among the live ones. The row leaves this list
+       * on the archive set's next tick; a refusal leaves it in place.
+       */
       function restoreArchived(id) {
-        var official = service('workspaces')
-        if (official !== undefined && official !== null && typeof official.unarchiveSession === 'function') {
-          official.unarchiveSession(id).then(function () {
-            if (items !== null) items = items.filter(function (row) { return row.id !== id })
-            renderList()
-          }).catch(function () { /* the row stays; the next read tells the truth */ })
-          return
-        }
-        var registry = service('remote.workspaceRegistry')
-        if (registry === undefined || registry === null || typeof registry.unarchiveSession !== 'function') return
-        registry.unarchiveSession(id).then(function (result) {
-          if (!result || result.ok !== true) return
-          if (items !== null) items = items.filter(function (row) { return row.id !== id })
-          renderList()
-          // The host's own tree has to be told to pick the conversation back up.
-          var sessions = service('sessions')
-          if (sessions !== undefined && sessions !== null && typeof sessions.refresh === 'function') sessions.refresh()
-        }).catch(function () { /* the row stays; the next read tells the truth */ })
+        workspaces.unarchiveSession(id).catch(function (reason) {
+          console.warn('dsh-claude-style: session unarchive rejected:', reason)
+        })
       }
 
       /**
@@ -289,7 +256,7 @@
         row.setAttribute('role', 'button')
         row.setAttribute('tabindex', '0')
         row.setAttribute('data-session-id', item.id)
-        row.appendChild(modelEl('span', 'dsh-claude-archive-title', item.title || copyLabel('archiveUntitled', 'Untitled conversation')))
+        row.appendChild(modelEl('span', 'dsh-claude-archive-title', item.title))
         row.appendChild(modelEl('span', 'dsh-claude-archive-time', relativeTime(item.at)))
         // The host's archived rows offer an unarchive action; the skin's list
         // carries the same pair, so leaving the archived view is not the only way
@@ -302,7 +269,7 @@
           event.stopPropagation()
           removeArchived(item.id)
         }))
-        row.addEventListener('click', function () { openArchived(item.id) })
+        row.addEventListener('click', notifyArchivedNotOpenable)
         return row
       }
 
@@ -315,11 +282,10 @@
         }
         actionRoots = []
         while (listHost.firstChild) listHost.removeChild(listHost.firstChild)
-        if (loading) {
+        if (items === null) {
           listHost.appendChild(modelEl('div', 'dsh-claude-archive-status', copyLabel('archiveLoading', 'Loading…')))
           return
         }
-        if (items === null) return
         if (items.length === 0) {
           listHost.appendChild(modelEl('div', 'dsh-claude-archive-status', copyLabel('archiveEmpty', 'No archived conversations')))
           return
@@ -352,7 +318,6 @@
         if (next !== 'active' && next !== 'archived') return
         if (next === view) return
         view = next
-        if (view === 'archived' && items === null && !loading) loadArchived(0)
         sync()
       }
 
@@ -360,24 +325,9 @@
         var label = findSection()
         if (label === null || label.parentElement === null) return
         var header = label.parentElement
-        // Find out whether this host archives at all, once, on the first pass —
-        // the answer decides whether the section keeps its label.
-        if (supported === null && !loading) loadArchived(0)
-        if (supported !== true) {
-          if (control !== null) {
-            if (control.parentElement !== null) control.parentElement.removeChild(control)
-            control = null
-          }
-          if (listHost !== null) {
-            if (listHost.parentElement !== null) listHost.parentElement.removeChild(listHost)
-            listHost = null
-          }
-          if (markedLabel !== null) {
-            markedLabel.removeAttribute(LABEL_ATTR)
-            markedLabel = null
-          }
-          return
-        }
+        // Until the host's workspace and session services are both reachable
+        // the section keeps its plain label.
+        if (!watch()) return
         if (markedLabel !== label) {
           if (markedLabel !== null) markedLabel.removeAttribute(LABEL_ATTR)
           markedLabel = label
@@ -430,9 +380,13 @@
           try { actionRoots[r].unmount() } catch (error) { /* already gone */ }
         }
         actionRoots = []
-        if (retryTimer !== null) {
-          clearTimeout(retryTimer)
-          retryTimer = null
+        if (noticeRoot !== null) {
+          noticeRoot.unmount()
+          noticeRoot = null
+        }
+        if (unwatch !== null) {
+          unwatch()
+          unwatch = null
         }
         if (control !== null && control.parentElement !== null) control.parentElement.removeChild(control)
         if (listHost !== null && listHost.parentElement !== null) listHost.parentElement.removeChild(listHost)
