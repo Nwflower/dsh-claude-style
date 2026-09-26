@@ -13,6 +13,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **页面持续变化时插件的每帧开销大幅下降**：流式输出、打字机效果这类每帧都改动页面内容的场景，插件样式表此前让浏览器每帧的样式重算从 1.6ms 涨到 11–18ms，每帧主线程总耗时 14–23ms，超过一帧 16.7ms 的预算而掉帧；现在同一场景下样式重算为每帧 1.9–2.7ms，总耗时 5–7ms（本机无界面 Chrome 实测）。界面外观不变。
 - **工作区选择菜单改为 Claude Code 的文件夹菜单样式**：菜单此前每行前面都有一个文件夹图标，行距与档位菜单的两行条目一样宽；现在是一张窄卡片，纯文字行排得更紧，文件夹图标与「添加工作区…」前的加号都不画，当前工作区仍以强调色勾号标出。档位菜单保持原样。
 - **用量面板的倍数趣味行从十一本书扩到二十九本**：标尺书单补入《道德经》《爱丽丝漫游奇境》《圣诞颂歌》《弗兰肯斯坦》《道林·格雷的画像》《福尔摩斯冒险史》《哈克贝利·费恩历险记》《简·爱》《德古拉》，以及四大名著、《三体》三部曲、《活着》《平凡的世界》等中文书目，整份书单从《道德经》（约 7.6K tokens）排到《追忆似水年华》。书长改用真实口径：公有领域原书按全文以 o200k_base 分词器实测，仍在版权期的书目按出版字数以同一分词器实测的比例折算，几本英文经典的长度也按实测值更新。英文界面的这一行改为 “You've used ~N× the tokens in <书名>.”，此前的 “~N× more tokens than” 读起来是多出 N 倍，与实际倍数差了一倍。
+- **账号弹层卡片改用象牙白底色**：浅色模式下，账号弹层与宿主账号菜单此前是纯白卡片，和界面其余部分的暖色调不一致；现在与主画布同为象牙白 `#FCFCFB`，靠细边框和阴影与侧栏区分。暗色模式不变。
 
 ### 问题修复
 
@@ -27,6 +28,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **Much lower per-frame cost while the page keeps changing**: when content changes every frame (streaming output, a typewriter effect), the plugin's stylesheet used to raise the browser's style recalculation from 1.6ms to 11–18ms per frame, for 14–23ms of main-thread work per frame — over the 16.7ms frame budget, so frames dropped. The same scenario now costs 1.9–2.7ms of style recalculation and 5–7ms in total per frame (measured locally in headless Chrome). Nothing on screen looks different.
 - **The workspace picker takes the look of Claude Code's folder menu**: every row used to carry a folder glyph and was spaced like the preset menu's two-line entries; it is now a narrow card of plain text rows set closer together, with no folder glyph and no plus sign on "Add workspace…", and the current workspace keeps the accent check. The preset menu is unchanged.
 - **The usage panel's yardstick line grows from eleven to twenty-nine books**: the list adds Tao Te Ching, Alice's Adventures in Wonderland, A Christmas Carol, Frankenstein, The Picture of Dorian Gray, The Adventures of Sherlock Holmes, Adventures of Huckleberry Finn, Jane Eyre and Dracula, plus the Chinese classics — the Four Great Classical Novels, the Three-Body trilogy, To Live and Ordinary World — with the whole list spanning Tao Te Ching (~7.6K tokens) to In Search of Lost Time. Book lengths now carry a real basis: public-domain originals are measured by feeding their full text to the o200k_base tokenizer, and in-copyright titles are their published word counts at the ratio that tokenizer measures, with several English classics' lengths updated to the measured values. The English line now reads "You've used ~N× the tokens in <book>."; the former "~N× more tokens than" said N times more, one whole book off the real multiple.
+- **The account popover's card takes the ivory canvas fill**: in light mode the account popover and the host's account menu were pure white cards, out of tone with the warm rest of the interface; they now share the main canvas's ivory `#FCFCFB`, set off from the sidebar by their hairline and shadow. Dark mode is unchanged.
 
 ### Bug Fixes
 
