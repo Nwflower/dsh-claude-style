@@ -256,9 +256,10 @@ bold figure — the figure stays barely above its own label, which is also what
 lets a long model id such as deepseek-v4.1-flash sit on one line; the favourite
 model is a name, not a figure, and keeps the regular weight. Messages are the
 settled calls. Once the picked range's total passes one
-book, the yardstick line appears under the grid: twenty-nine books from Tao Te
+book, the yardstick line appears under the grid: sixty-five books from Tao Te
 Ching (7.6k tokens) to In Search of Lost Time (1.6M), the public-domain ones
-measured by feeding their full text to the o200k_base tokenizer and the rest
+measured by feeding their full text to the o200k_base tokenizer (the English
+original or the standard English translation; Faust in German) and the rest
 estimated (1.3 tokens a word for English, 0.96 tokens a character for modern
 Chinese prose). The line states the rounded multiple as a share of the book
 ("~2× the tokens in Moby-Dick"), never as an excess over it.

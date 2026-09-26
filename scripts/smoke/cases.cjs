@@ -275,8 +275,8 @@ const CASES = {
       drew('overview', 'dsh-claude-home-stat') && drew('overview', 'dsh-claude-home-heat'),
       JSON.stringify(renders.overview))
     const said = (tab, pattern) => renders[tab] !== undefined && renders[tab].texts.some((text) => pattern.test(text))
-    check('all time: the peak hour and the book line read the whole history (500k steps down to Death\'s End)',
-      said('overview', /^3 AM$/) && said('overview', /^You've used ~1× the tokens in Death's End\.$/),
+    check('all time: the peak hour and the book line read the whole history (500k steps down to The Brothers Karamazov)',
+      said('overview', /^3 AM$/) && said('overview', /^You've used ~1× the tokens in The Brothers Karamazov\.$/),
       JSON.stringify(renders.overview && renders.overview.texts))
     check('7d: the peak hour and the book line follow the range window (250k steps down to Dracula)',
       said('overview-7d', /^3 PM$/) && said('overview-7d', /^You've used ~1× the tokens in Dracula\.$/),
