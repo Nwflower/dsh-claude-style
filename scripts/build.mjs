@@ -38,6 +38,8 @@ const SRC = path.join(ROOT, 'src')
 const ASSETS = path.join(SRC, 'assets')
 /** Brand marks inlined as CSS data URIs. */
 const BRAND_ASSETS = path.join(ASSETS, 'brand')
+/** The composer crab's sprite strips, inlined as CSS data URIs. */
+const MASCOT_ASSETS = path.join(ASSETS, 'mascot')
 /** Vendored vendor lockups (src/assets/icons/combine); mark + wordmark per brand id. */
 const COMBINE_ASSETS = path.join(ASSETS, 'icons', 'combine')
 const LIB = path.join(ROOT, 'lib')
@@ -329,6 +331,25 @@ function loadSvgAssets() {
 }
 
 /**
+ * The composer crab's frames: one strip of the crab in its colours and one of
+ * the fishing rod as a mask, a frame per 34×23 cells side by side, one pixel
+ * per cell (src/features/mascot). Encoded into CSS url() %%TOKEN%% values the
+ * same way as the brand marks.
+ */
+const PNG_TOKENS = {
+  MASCOT_BODY: 'crab-body.png',
+  MASCOT_ROD: 'crab-rod.png',
+}
+
+function loadPngAssets() {
+  const out = {}
+  for (const [token, file] of Object.entries(PNG_TOKENS)) {
+    out[token] = 'url("data:image/png;base64,' + fs.readFileSync(path.join(MASCOT_ASSETS, file)).toString('base64') + '")'
+  }
+  return out
+}
+
+/**
  * The vendored vendor lockups, keyed by brand id.
  *
  * One file per vendor, already composed from Lobe's mark and wordmark by
@@ -468,7 +489,7 @@ function checkListed() {
 
 function main() {
   checkListed()
-  const tokens = { ...loadTokens(), ...loadSvgAssets() }
+  const tokens = { ...loadTokens(), ...loadSvgAssets(), ...loadPngAssets() }
   const combines = loadCombines()
 
   const cssText = STYLE_FILES

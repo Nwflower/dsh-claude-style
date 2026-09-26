@@ -512,16 +512,20 @@
           react.states = null
         }
       }
-      // The crab rides the hero card. The pointer leaving it starts the
-      // routine: a quarter second in it is winking, and past the routine's
-      // three seconds it faces front again — and no frame of it wakes a pass.
+      // The crab rides the hero card, drawn from the two inlined strips. The
+      // pointer leaving it starts the routine: under half a second in it is
+      // blinking, off the resting frame, and past the routine's 3.44 seconds it
+      // rests again — and no frame of it wakes a pass.
       var mascot = document.querySelector('[data-composer-card] > .dsh-claude-mascot')
-      r.mascot = {
-        mounted: mascot !== null,
-        poses: mascot === null ? 0 : mascot.querySelectorAll('g[data-pose]').length,
-        visiblePoses: mascot === null ? 0 : mascot.querySelectorAll('g[data-pose]:not([display])').length,
-      }
+      var mascotFrame = function () { return mascot.style.getPropertyValue('--dsh-claude-mascot-frame') }
+      r.mascot = { mounted: mascot !== null }
       if (mascot !== null) {
+        var mascotBody = mascot.querySelector('.dsh-claude-mascot-body')
+        var mascotRod = mascot.querySelector('.dsh-claude-mascot-rod')
+        r.mascot.frame = mascotFrame()
+        r.mascot.body = getComputedStyle(mascotBody).backgroundImage.indexOf('data:image/png') !== -1
+        r.mascot.rod = getComputedStyle(mascotRod).maskImage.indexOf('data:image/png') !== -1
+        r.mascot.bodyShift = getComputedStyle(mascotBody).backgroundPositionX
         // A real press has to reach the crab: nothing on the page may cover it.
         mascot.scrollIntoView({ block: 'center' })
         var hitBox = mascot.querySelector('.dsh-claude-mascot-hit').getBoundingClientRect()
@@ -529,11 +533,11 @@
         r.mascot.reachable = topmost !== null && topmost.classList.contains('dsh-claude-mascot-hit')
         var passesBefore = window.__passes
         mascot.querySelector('.dsh-claude-mascot-hit').dispatchEvent(new PointerEvent('pointerleave'))
-        await sleep(250)
-        r.mascot.early = mascot.getAttribute('data-pose')
-        r.mascot.earlyVisible = mascot.querySelectorAll('g[data-pose]:not([display])').length
-        await sleep(3000)
-        r.mascot.settled = mascot.getAttribute('data-pose')
+        await sleep(450)
+        r.mascot.early = mascotFrame()
+        r.mascot.earlyShift = getComputedStyle(mascotBody).backgroundPositionX
+        await sleep(3300)
+        r.mascot.settled = mascotFrame()
         r.mascot.passesDuring = window.__passes - passesBefore
         // Under reduced motion the pointer passing by leaves it still, and a
         // click still plays it.
@@ -542,13 +546,13 @@
           return query === '(prefers-reduced-motion: reduce)' ? { matches: true } : matchMedia.call(window, query)
         }
         mascot.querySelector('.dsh-claude-mascot-hit').dispatchEvent(new PointerEvent('pointerleave'))
-        await sleep(250)
-        r.mascot.reducedLeave = mascot.getAttribute('data-pose')
+        await sleep(450)
+        r.mascot.reducedLeave = mascotFrame()
         mascot.querySelector('.dsh-claude-mascot-hit').dispatchEvent(new MouseEvent('click', { bubbles: true }))
-        await sleep(250)
-        r.mascot.clicked = mascot.getAttribute('data-pose')
-        await sleep(3000)
-        r.mascot.clickSettled = mascot.getAttribute('data-pose')
+        await sleep(450)
+        r.mascot.clicked = mascotFrame()
+        await sleep(3300)
+        r.mascot.clickSettled = mascotFrame()
         window.matchMedia = matchMedia
       }
       // The cold start screen: no session yet, so the host renders no dock

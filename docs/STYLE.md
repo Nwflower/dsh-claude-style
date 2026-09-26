@@ -361,18 +361,20 @@ placeholder, a zero day draws the grid's own base tone.
 ## The composer crab · 输入卡片上的螃蟹
 
 On the studio layout's new-conversation page, Claude Code's pixel crab stands on
-the composer card's top edge: 4px cells, a nine-cell shell with two-cell arms
-(52×32px), feet on the card's edge and the right arm 8px inside the single-line
+the composer card's top edge. Its frames are Claude Code's own animation, cut to
+34×23 cells and drawn at 2px a cell, crisp (68×46px); the resting crab is 48×32px
+with its feet on the card's edge and the right arm 8px inside the single-line
 card's right edge, so the feet stand where its 18px corner starts to round. The
-classic layout keeps its centred hero without the crab. The shell is the clay accent `#d97757` in both
-themes, the side-on back is `#b9603f`, the eyes `#141413`, and the rod takes the
-tertiary label ink. When the crab is clicked, when the pointer leaves it, and on its own every 25–45
-seconds while the page is in view, it plays Claude Code's fishing routine
-(about three seconds): a half turn and a wink, the rod raised overhead and cast
-down onto the card's edge, a hop, a spell of fishing side-on, and the rod put
-away as it turns back to face front. With reduced motion requested, only a click
-plays it: the pointer passing by and the idle timer leave it still. Only the crab
-takes the pointer; the room the rod swings through does not.
+classic layout keeps its centred hero without the crab. The shell is the clay
+accent `#d97757` in both themes, the side-on back is `#b9603f`, the eyes
+`#141413`, and the rod takes the tertiary label ink. When the crab is clicked,
+when the pointer leaves it, and on its own every 25–45 seconds while the page is
+in view, it plays Claude Code's fishing routine, 43 frames of 80ms (3.44s): a
+blink, the rod raised overhead and cast down past the card's edge, a hop into a
+side-on stance, a spell of fishing, and the rod reeled in as it turns back to
+face front. With reduced motion requested, only a click plays it: the pointer
+passing by and the idle timer leave it still. Only the crab takes the pointer;
+the room the rod swings through does not.
 
 ## Implementation notes
 

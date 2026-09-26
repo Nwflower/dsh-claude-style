@@ -5,174 +5,40 @@
      *
      * It stands still facing the reader. When it is clicked, when the pointer
      * leaves it, and now and then on its own while the hero page stays up, it
-     * plays Claude Code's fishing routine: a half turn and a wink, a rod raised
-     * overhead and cast down onto the card's edge, a spell of fishing side-on,
-     * and the rod put away as it turns back. A reader who asks the system for
-     * reduced motion gets the routine only by clicking the crab.
+     * plays Claude Code's fishing routine: a blink, a rod raised overhead and
+     * cast down past the card's edge, a hop into a side-on stance, a spell of
+     * fishing, and the rod reeled in as it turns back. A reader who asks the
+     * system for reduced motion gets the routine only by clicking the crab.
      *
-     * The crab is one inline SVG holding every pose as its own group; a frame
-     * change is a `display` flip on two groups, an attribute the scheduler's
-     * observer does not watch, so the routine never wakes a pass. The card
-     * comes from the composer's own reading (`ui.composer.heroCard`), and the
-     * crab is the skin's own node appended to it, re-appended when the host
-     * replaces the card.
+     * The frames are Claude Code's animation cut into two strips the build
+     * inlines (src/assets/mascot): the crab in its colours, and the rod as a
+     * mask the stylesheet fills with the theme's quiet ink. A frame change
+     * writes one custom property on the crab's own node — the `style`
+     * attribute, which the scheduler's observer does not watch — so the
+     * routine never wakes a pass. The card comes from the composer's own
+     * reading (`ui.composer.heroCard`), and the crab is the skin's own node
+     * appended to it, re-appended when the host replaces the card.
      *
      * @param ui - shared handle table.
      * @returns teardown.
      */
     function installMascot(ui) {
-      const SVG_NS = 'http://www.w3.org/2000/svg'
-      /** One sprite cell, in CSS pixels. */
-      const CELL = 4
+      /** How long each frame of the routine holds, as in Claude Code's animation. */
+      const FRAME_MS = 80
       /**
-       * The canvas, in cells: the crab stands in the right thirteen columns
-       * and the bottom eight rows; the room to its left and above is where the
-       * rod swings.
+       * The routine, frame by frame, as indices into the strips (the strips
+       * hold each distinct frame once). It starts and ends on the resting
+       * frame 0.
        */
-      const CANVAS_COLUMNS = 24
-      const CANVAS_ROWS = 12
-      /** Where a pose's first row and column land on the canvas. */
-      const CRAB_LEFT = 11
-      const CRAB_TOP = 4
+      const ROUTINE = [
+        0, 0, 0, 0, 1, 2, 1, 2, 2, 3, 4, 4, 5, 6, 7, 8, 9, 10, 11, 12, 10, 11, 12, 10, 11, 12,
+        10, 11, 12, 10, 11, 12, 10, 13, 14, 15, 16, 17, 17, 18, 19, 0, 0,
+      ]
       /** The quiet spell between two unprompted routines, in milliseconds. */
       const IDLE_MIN_MS = 25000
       const IDLE_SPAN_MS = 20000
 
-      /**
-       * The poses, drawn thirteen cells wide from the crab's own left edge:
-       * `#` shell, `s` the shaded back of the shell side-on, `o` an eye, `O` an
-       * eye widened mid-turn, `d` an eye shut in a wink, `l` a leg seen side-on,
-       * slanting back over its own row and the one below. A pose may start one
-       * row above the head (`above`) for an arm raised over it. `rod` is the
-       * fishing rod as canvas points, with an optional lure square.
-       */
-      const FRONT = [
-        '..#########..',
-        '..#o#####o#..',
-        '..#########..',
-        '#############',
-        '#############',
-        '..#########..',
-        '..#..#.#..#..',
-        '..#..#.#..#..',
-      ]
-      const TURN = [
-        '...########..',
-        '...#o###o####',
-        '...##########',
-        '.##########..',
-        '.##########..',
-        '...########..',
-        '...#.#..#.#..',
-        '...#.#..#.#..',
-      ]
-      const WINK = [
-        '...########..',
-        '...#o###d####',
-        '...##########',
-        '.##########..',
-        '.##########..',
-        '...########..',
-        '...#.#..#.#..',
-        '...#.#..#.#..',
-      ]
-      const CAST_UP = [
-        '.##########..',
-        '..#o#####o#..',
-        '..#########..',
-        '..###########',
-        '..###########',
-        '..#########..',
-        '..#..#.#..#..',
-        '..#..#.#..#..',
-      ]
-      const CAST_SWING = [
-        '..#########..',
-        '..#o#####o#..',
-        '..#########..',
-        '#############',
-        '..###########',
-        '..#########..',
-        '..#..#.#..#..',
-        '..#..#.#..#..',
-      ]
-      const CAST_DOWN = [
-        '..#########..',
-        '..#o#####o#..',
-        '..#########..',
-        '..###########',
-        '#############',
-        '###########..',
-        '..#..#.#..#..',
-        '..#..#.#..#..',
-      ]
-      const HOP = [
-        '..##....##...',
-        '..########s..',
-        '..#o####o#s..',
-        '..########s..',
-        '..########s..',
-        '..########s..',
-        '..########s..',
-        '..#.#..#.#...',
-        '..#.#..#.#...',
-      ]
-      const FISH_A = [
-        '...#######s..',
-        '...o##o###s..',
-        '...#######s..',
-        '.#########s..',
-        '.##.######s..',
-        '...#######s..',
-        '...l.l.l.l...',
-        '.............',
-      ]
-      const FISH_B = [
-        '...#######s..',
-        '...o##o###s..',
-        '...#######s..',
-        '...#######s..',
-        '.#########s..',
-        '.##.######s..',
-        '...l.l.l.l...',
-        '.............',
-      ]
-      const FISH_TURN = [
-        '...#######s..',
-        '...O##O###s..',
-        '...#######s..',
-        '.#########s..',
-        '.##.######s..',
-        '...#######s..',
-        '...l.l.l.l...',
-        '.............',
-      ]
-
-      /** The rod laid on the card's edge: tip up and out, handle at the crab's foot. */
-      const ROD_RESTING = { points: [[46, 47], [30, 47], [20, 37]] }
-      const POSES = {
-        front: { rows: FRONT },
-        turn: { rows: TURN },
-        wink: { rows: WINK },
-        castUp: { rows: CAST_UP, rod: { points: [[48, 17], [37, 17], [37, 2]] } },
-        castSwing: { rows: CAST_SWING, rod: { points: [[44, 30], [30, 30], [24, 22]], lure: [18, 16, 6] } },
-        castDown: { rows: CAST_DOWN, rod: ROD_RESTING },
-        hop: { rows: HOP, above: true, rod: ROD_RESTING },
-        fishTurn: { rows: FISH_TURN, rod: ROD_RESTING },
-        fishA: { rows: FISH_A, rod: ROD_RESTING },
-        fishB: { rows: FISH_B, rod: { points: [[46, 47], [30, 47], [21, 39]] } },
-        putAway: { rows: TURN, rod: { points: [[46, 30], [36, 34], [28, 36]] } },
-      }
-      /** Claude Code's routine, pose by pose, each held for its milliseconds. */
-      const ROUTINE = [
-        ['turn', 70], ['wink', 400], ['castUp', 200], ['castSwing', 70], ['castDown', 200], ['hop', 130],
-        ['fishTurn', 70], ['fishA', 280], ['fishB', 210], ['fishA', 280], ['fishB', 210], ['fishA', 280], ['fishB', 210],
-        ['fishTurn', 70], ['putAway', 70], ['turn', 270], ['front', 0],
-      ]
-
       let root = null
-      let groups = {}
-      let shown = 'front'
       let playing = false
       let stepTimer = null
       let idleTimer = null
@@ -182,111 +48,28 @@
         return window.matchMedia('(prefers-reduced-motion: reduce)').matches
       }
 
-      function rect(parent, className, x, y, width, height) {
-        const node = document.createElementNS(SVG_NS, 'rect')
-        node.setAttribute('class', className)
-        node.setAttribute('x', String(x))
-        node.setAttribute('y', String(y))
-        node.setAttribute('width', String(width))
-        node.setAttribute('height', String(height))
-        parent.appendChild(node)
-      }
-
-      /** One pose as an SVG group: shell runs merged per row, eyes and rod on top. */
-      function drawPose(name, pose) {
-        const group = document.createElementNS(SVG_NS, 'g')
-        group.setAttribute('data-pose', name)
-        if (name !== shown) group.setAttribute('display', 'none')
-        const top = CRAB_TOP - (pose.above ? 1 : 0)
-        const eyes = []
-        const legs = []
-        for (let r = 0; r < pose.rows.length; r++) {
-          const row = pose.rows[r]
-          const y = (top + r) * CELL
-          let c = 0
-          while (c < row.length) {
-            const mark = row.charAt(c)
-            if (mark === '.') { c++; continue }
-            if (mark === 'l') {
-              legs.push({ x: (CRAB_LEFT + c) * CELL, y })
-              c++
-              continue
-            }
-            const fill = mark === 's' ? 's' : '#'
-            const start = c
-            // An eye sits on shell, so the shell run carries on under it.
-            while (c < row.length && !'.l'.includes(row.charAt(c)) && (row.charAt(c) === 's') === (fill === 's')) {
-              if ('oOd'.includes(row.charAt(c))) eyes.push({ mark: row.charAt(c), x: (CRAB_LEFT + c) * CELL, y })
-              c++
-            }
-            rect(group, fill === 's' ? 'dsh-claude-mascot-shade' : 'dsh-claude-mascot-shell', (CRAB_LEFT + start) * CELL, y, (c - start) * CELL, CELL)
-          }
-        }
-        for (let l = 0; l < legs.length; l++) {
-          const leg = legs[l]
-          const slant = document.createElementNS(SVG_NS, 'polygon')
-          slant.setAttribute('class', 'dsh-claude-mascot-shell')
-          slant.setAttribute('points', [
-            [leg.x, leg.y], [leg.x + CELL, leg.y], [leg.x + CELL + CELL / 2, leg.y + 2 * CELL], [leg.x + CELL / 2, leg.y + 2 * CELL],
-          ].map(point => point.join(',')).join(' '))
-          group.appendChild(slant)
-        }
-        for (let e = 0; e < eyes.length; e++) {
-          const eye = eyes[e]
-          if (eye.mark === 'o') rect(group, 'dsh-claude-mascot-eye', eye.x, eye.y, CELL, CELL)
-          else if (eye.mark === 'O') rect(group, 'dsh-claude-mascot-eye', eye.x, eye.y - 1, CELL, CELL + 2)
-          else rect(group, 'dsh-claude-mascot-eye', eye.x - 1, eye.y + 1, CELL + 2, 2)
-        }
-        if (pose.rod) {
-          const line = document.createElementNS(SVG_NS, 'polyline')
-          line.setAttribute('class', 'dsh-claude-mascot-rod')
-          line.setAttribute('points', pose.rod.points.map(point => point.join(',')).join(' '))
-          group.appendChild(line)
-          const lure = pose.rod.lure
-          if (lure) rect(group, 'dsh-claude-mascot-lure', lure[0], lure[1], lure[2], lure[2])
-        }
-        return group
-      }
-
       function build() {
-        root = document.createElement('span')
-        root.className = 'dsh-claude-mascot'
+        root = buildElement('span', 'dsh-claude-mascot')
         root.setAttribute('aria-hidden', 'true')
-        root.setAttribute('data-pose', shown)
-        const svg = document.createElementNS(SVG_NS, 'svg')
-        svg.setAttribute('viewBox', `0 0 ${CANVAS_COLUMNS * CELL} ${CANVAS_ROWS * CELL}`)
-        svg.setAttribute('width', String(CANVAS_COLUMNS * CELL))
-        svg.setAttribute('height', String(CANVAS_ROWS * CELL))
-        for (const name in POSES) {
-          groups[name] = drawPose(name, POSES[name])
-          svg.appendChild(groups[name])
-        }
+        root.appendChild(buildElement('span', 'dsh-claude-mascot-body'))
+        root.appendChild(buildElement('span', 'dsh-claude-mascot-rod'))
         // The pointer only meets the crab itself, never the rod's empty room.
-        const hit = document.createElementNS(SVG_NS, 'rect')
-        hit.setAttribute('class', 'dsh-claude-mascot-hit')
-        hit.setAttribute('x', String(CRAB_LEFT * CELL))
-        hit.setAttribute('y', String(CRAB_TOP * CELL))
-        hit.setAttribute('width', String(13 * CELL))
-        hit.setAttribute('height', String(8 * CELL))
+        const hit = buildElement('span', 'dsh-claude-mascot-hit')
         hit.addEventListener('click', play)
         hit.addEventListener('pointerleave', play)
-        svg.appendChild(hit)
-        root.appendChild(svg)
+        root.appendChild(hit)
+        show(0)
       }
 
-      function show(name) {
-        if (name === shown) return
-        groups[shown].setAttribute('display', 'none')
-        groups[name].removeAttribute('display')
-        root.setAttribute('data-pose', name)
-        shown = name
+      function show(frame) {
+        root.style.setProperty('--dsh-claude-mascot-frame', String(frame))
       }
 
       function stopRoutine() {
         if (stepTimer !== null) clearTimeout(stepTimer)
         stepTimer = null
         playing = false
-        if (root !== null) show('front')
+        if (root !== null) show(0)
       }
 
       /**
@@ -300,15 +83,14 @@
         playing = true
         let step = 0
         function next() {
-          const entry = ROUTINE[step]
-          show(entry[0])
+          show(ROUTINE[step])
           step++
           if (step >= ROUTINE.length) {
             stepTimer = null
             playing = false
             return
           }
-          stepTimer = setTimeout(next, entry[1])
+          stepTimer = setTimeout(next, FRAME_MS)
         }
         next()
       }
@@ -344,8 +126,6 @@
         idleTimer = null
         if (root !== null && root.parentNode !== null) root.parentNode.removeChild(root)
         root = null
-        groups = {}
-        shown = 'front'
         delete ui.mascot
       }
     }

@@ -1,10 +1,11 @@
 /* ── The composer crab ──────────────────────────────────────────────────────
    Claude Code's pixel crab standing on the studio home page's card, on its top
-   edge near the right end. The canvas is wider and taller than the crab: the room
+   edge near the right end. Each frame is 34×23 cells at 2px a cell; the room
    to the crab's left and above it is where the rod swings, and only the crab
-   itself takes the pointer. The shell is the clay accent in both themes; the
-   rod takes the tertiary label ink, so it stays a quiet warm grey on either
-   canvas. */
+   itself takes the pointer. The crab strip carries the clay shell, its shaded
+   side and the eyes; the rod strip is a mask filled with the tertiary label
+   ink, so the rod stays a quiet warm grey on either canvas. The pass writes the
+   frame index as --dsh-claude-mascot-frame, and both strips slide to it. */
 
 /* Claude Code's spacing on the studio page's single-line card: the right arm
    8px inside the card's right edge, so the feet stand where the 18px corner
@@ -15,41 +16,39 @@ body[data-dsh-claude-style] .dsh-claude-mascot {
   /* Feet on the card's edge: the card draws its outline inside its own box. */
   bottom: 100%;
   z-index: 1;
-  width: 96px;
-  height: 48px;
+  width: 68px;
+  height: 46px;
   pointer-events: none;
 }
 
-body[data-dsh-claude-style] .dsh-claude-mascot svg {
-  display: block;
-  overflow: visible;
-  shape-rendering: crispEdges;
+body[data-dsh-claude-style] :is(.dsh-claude-mascot-body, .dsh-claude-mascot-rod) {
+  position: absolute;
+  inset: 0;
+  image-rendering: pixelated;
 }
 
-body[data-dsh-claude-style] .dsh-claude-mascot-shell {
-  fill: #d97757;
-}
-
-body[data-dsh-claude-style] .dsh-claude-mascot-shade {
-  fill: #b9603f;
-}
-
-body[data-dsh-claude-style] .dsh-claude-mascot-eye {
-  fill: #141413;
+body[data-dsh-claude-style] .dsh-claude-mascot-body {
+  background: %%MASCOT_BODY%% no-repeat;
+  background-size: 1360px 46px;
+  background-position: calc(var(--dsh-claude-mascot-frame, 0) * -68px) 0;
 }
 
 body[data-dsh-claude-style] .dsh-claude-mascot-rod {
-  fill: none;
-  stroke: var(--dsw-alias-label-tertiary, #8f8a7e);
-  stroke-width: 2;
-  stroke-linejoin: miter;
+  background: var(--dsw-alias-label-tertiary, #8f8a7e);
+  -webkit-mask: %%MASCOT_ROD%% no-repeat;
+  mask: %%MASCOT_ROD%% no-repeat;
+  -webkit-mask-size: 1360px 46px;
+  mask-size: 1360px 46px;
+  -webkit-mask-position: calc(var(--dsh-claude-mascot-frame, 0) * -68px) 0;
+  mask-position: calc(var(--dsh-claude-mascot-frame, 0) * -68px) 0;
 }
 
-body[data-dsh-claude-style] .dsh-claude-mascot-lure {
-  fill: var(--dsw-alias-label-tertiary, #8f8a7e);
-}
-
+/* The resting crab's shell, arms and legs: columns 10–33, rows 7–22. */
 body[data-dsh-claude-style] .dsh-claude-mascot-hit {
-  fill: none;
-  pointer-events: all;
+  position: absolute;
+  left: 20px;
+  top: 14px;
+  width: 48px;
+  height: 32px;
+  pointer-events: auto;
 }

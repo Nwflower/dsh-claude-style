@@ -298,13 +298,15 @@ const CASES = {
       rows('models') === 6 && said('models', /^Show 2 more$/),
       JSON.stringify({ rows: rows('models'), texts: renders.models && renders.models.texts.slice(-3) }))
     const mascot = r.mascot || {}
-    check('the crab stands on the hero card, facing front, one pose shown',
-      mascot.mounted === true && mascot.poses === 11 && mascot.visiblePoses === 1, JSON.stringify(mascot))
-    check('the pointer leaving the crab plays the routine and it ends facing front, without waking a pass',
-      mascot.early === 'wink' && mascot.earlyVisible === 1 && mascot.settled === 'front' && mascot.passesDuring === 0,
+    check('the crab stands on the hero card on its resting frame, drawn from the inlined crab strip and rod mask',
+      mascot.mounted === true && mascot.frame === '0' && mascot.body === true && mascot.rod === true &&
+        mascot.bodyShift === '0px', JSON.stringify(mascot))
+    check('the pointer leaving the crab plays the routine and it ends on the resting frame, without waking a pass',
+      mascot.early !== '0' && mascot.early !== '' && mascot.earlyShift === `${-68 * Number(mascot.early)}px` &&
+        mascot.settled === '0' && mascot.passesDuring === 0,
       JSON.stringify(mascot))
     check('a click reaches the crab; under reduced motion only a click plays the routine',
-      mascot.reachable === true && mascot.reducedLeave === 'front' && mascot.clicked === 'wink' && mascot.clickSettled === 'front',
+      mascot.reachable === true && mascot.reducedLeave === '0' && mascot.clicked !== '0' && mascot.clickSettled === '0',
       JSON.stringify(mascot))
     check('the crab leaves with the hero page', mascot.afterHero === false, JSON.stringify(mascot))
     check('the studio hero mark is on the document on the hero page and off it elsewhere, and the studio rules reach the stack',
