@@ -340,6 +340,13 @@ body[data-dsh-claude-style] .dsh-claude-search-item-detail {
 body[data-dsh-claude-style] .dsh-claude-search-item-snippet {
   line-height: 18px !important;
 }
+/* The query inside a message excerpt: the primary label ink at medium weight,
+   no fill, so the excerpt stays one quiet line. */
+body[data-dsh-claude-style] .dsh-claude-search-item-match {
+  background: none !important;
+  color: var(--dsw-alias-label-primary) !important;
+  font-weight: 500 !important;
+}
 body[data-dsh-claude-style] .dsh-claude-search-item-enter {
   display: inline-flex !important;
   flex: none !important;

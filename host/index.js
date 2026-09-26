@@ -33,6 +33,7 @@ import { homedir, userInfo } from 'node:os'
 import { dirname, join, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createUsage } from './usage.js'
+import { QUERY_MAX, createSessionSearch } from './search.js'
 
 export const name = 'dsh-claude-style'
 
@@ -107,6 +108,12 @@ const SESSION_DELETE_PATH = `${ROUTE_PREFIX}/session-delete`
 const USAGE_PATH = `${ROUTE_PREFIX}/usage`
 /** How long a computed roll-up is served before a background refresh is kicked. */
 const USAGE_TTL_MS = 5 * 60 * 1000
+/**
+ * Message-content search for the search palette (host/search.js). `?q=` is
+ * the query; without one the route only brings its message cache up to date,
+ * which the palette asks for as it opens so the first real query is quick.
+ */
+const SESSION_SEARCH_PATH = `${ROUTE_PREFIX}/session-search`
 /** Session ids are the harness's own shape; anything else is refused before it reaches a path. */
 const SESSION_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/
 /** Largest deletion request body read; a real one carries one id. */
@@ -547,6 +554,7 @@ export function apply(ctx) {
       const warn = (message) => ctx.logger?.warn?.(`dsh-claude-style: ${message}`)
       const usage = createUsage(ctx)
       const hdsl = createHdslAccount(ctx)
+      const sessionSearch = createSessionSearch(ctx)
 
       try {
         disposers.push(scope.webServer.register({
@@ -754,6 +762,38 @@ export function apply(ctx) {
         }))
       } catch (error) {
         warn(`usage route unavailable: ${error?.message ?? error}`)
+      }
+
+      try {
+        // The search palette's message hits. Read-only, behind the same fence
+        // as the usage route: the answer quotes the user's own conversations.
+        disposers.push(scope.webServer.register({
+          kind: 'exact',
+          path: SESSION_SEARCH_PATH,
+          handler: (req, res) => {
+            if (req.method !== 'GET') {
+              res.writeHead(405, { allow: 'GET' })
+              res.end()
+              return
+            }
+            const refused = refusalOf(ctx, req)
+            if (refused !== undefined) {
+              sendJson(res, refused, { ok: false, error: refused === 401 ? 'unauthorized' : 'forbidden' })
+              return
+            }
+            const query = (new URL(req.url ?? '/', 'http://local').searchParams.get('q') ?? '').trim().slice(0, QUERY_MAX)
+            const answer = query === ''
+              ? sessionSearch.warm().then(() => ({ sessions: [] }))
+              : sessionSearch.search(query)
+            void answer.then((value) => {
+              sendJson(res, 200, { ok: true, ...value })
+            }, (error) => {
+              sendJson(res, 500, { ok: false, error: String(error?.message ?? error) })
+            })
+          },
+        }))
+      } catch (error) {
+        warn(`session search route unavailable: ${error?.message ?? error}`)
       }
 
       return () => {

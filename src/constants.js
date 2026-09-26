@@ -278,6 +278,12 @@
      */
     const USAGE_ROUTE = '/dsh-claude-style/usage'
     /**
+     * The host half's message-content search (host/search.js, SESSION_SEARCH_PATH):
+     * `?q=` answers the sessions whose messages hold the query; without `q` it
+     * only brings its message cache up to date.
+     */
+    const SESSION_SEARCH_ROUTE = '/dsh-claude-style/session-search'
+    /**
      * Home-page layouts. `classic` is the centered hero the skin has always
      * drawn; `studio` is the dashboard form: the greeting sits at the top left,
      * the composer hugs the window's bottom edge, and the usage panel fills the

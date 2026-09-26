@@ -368,7 +368,16 @@
         line.appendChild(buildElement('span', 'dsh-claude-search-item-name', row.title))
         if (row.detail) line.appendChild(buildElement('span', 'dsh-claude-search-item-detail', row.detail))
         text.appendChild(line)
-        if (row.snippet) text.appendChild(buildElement('span', 'dsh-claude-search-item-snippet', row.snippet))
+        if (row.snippet) {
+          const snippet = buildElement('span', 'dsh-claude-search-item-snippet')
+          if (row.snippetMatch) {
+            const [start, end] = row.snippetMatch
+            snippet.append(row.snippet.slice(0, start), buildElement('mark', 'dsh-claude-search-item-match', row.snippet.slice(start, end)), row.snippet.slice(end))
+          } else {
+            snippet.textContent = row.snippet
+          }
+          text.appendChild(snippet)
+        }
         item.appendChild(text)
         if (row.keys && row.keys.length > 0) item.appendChild(keycaps(row.keys))
         const enter = buildElement('span', 'dsh-claude-search-item-enter')

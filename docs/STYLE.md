@@ -223,7 +223,8 @@ on the same ivory fill (dark `#1E1E1D`) under the host's mask. From the top: a
 sliding highlight at `rgba(20, 20, 19, 0.06)`; the list, capped at
 `min(520px, 62vh)`, with 13px tertiary section captions and 40px rows (8px
 radius, 15px title, an 18px glyph in the secondary label, a 13px tertiary detail
-after the title and an optional excerpt line under it); a hairline-topped footer
+after the title and an optional 13px tertiary excerpt line under it, the match
+inside it in the primary label at weight 500 with no fill); a hairline-topped footer
 of hints with 20px keycaps. The input text, the chips' text, the captions and
 the row glyphs all start on one vertical line 24px in from the card edge. The
 highlighted row takes `rgba(20, 20, 19, 0.05)` (dark `rgba(250, 249, 245, 0.07)`)

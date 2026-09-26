@@ -22,10 +22,12 @@ const { ROOT, HOST, SKIN_FIXTURE, same, check } = require('./shared.cjs')
  * @param options - `fenced` offers the host's own request check, `home` answers
  *   `dshHomePath` with a scratch harness home, and `live` names the sessions the
  *   fake `sessions` service reports as open, and `events` maps a session id to
- *   the durable events the fake `sessionQuery` reader answers for it.
+ *   the durable events the fake `sessionQuery` reader answers for it (each read
+ *   is pushed onto `reads`, when given); `stored` is the snapshot list the fake
+ *   `sessionPersistence` answers.
  */
 function fakeHost(mod, options = {}) {
-  const { fenced, home, live = [], events, launch } = options
+  const { fenced, home, live = [], events, launch, stored, reads } = options
   const routes = {}
   const settings = { configure: () => () => {} }
   // The harness's launch environment, as its own snapshot behaves: the canonical
@@ -58,10 +60,11 @@ function fakeHost(mod, options = {}) {
     get: (name) => {
       if (name === 'connection' && fenced) return connection
       if (name === 'dshHomePath' && home !== undefined) return (...segments) => path.join(home, ...segments)
-      if (name === 'sessions') return { get: (id) => (live.includes(id) ? {} : undefined) }
+      if (name === 'sessions') return { get: (id) => (live.includes(id) ? {} : undefined), list: () => live.map((id) => ({ id, header: { id }, seq: (events?.[id] ?? []).length })) }
       if (name === 'launchEnvironment') return launchEnvironment
+      if (name === 'sessionPersistence' && stored !== undefined) return { list: async () => stored }
       if (name === 'sessionQuery' && events !== undefined) {
-        return { readSession: async (id) => ({ events: events[id] ?? [] }) }
+        return { readSession: async (id) => { if (reads !== undefined) reads.push(id); return { events: events[id] ?? [] } } }
       }
       return undefined
     },
@@ -93,7 +96,7 @@ function request(host, route, method, body, headers) {
         resolve({ status: this.status, body: raw === null ? '' : raw.toString(), raw })
       },
     }
-    Promise.resolve(host.routes[route].handler(req, res)).catch((error) => resolve({ status: -1, body: String(error), raw: null }))
+    Promise.resolve(host.routes[route.split('?')[0]].handler(req, res)).catch((error) => resolve({ status: -1, body: String(error), raw: null }))
   })
 }
 
@@ -278,6 +281,65 @@ async function hostHalf() {
       days.every((day) => day.hours.reduce((sum, count) => sum + count, 0) === 1),
     JSON.stringify({ hours: value.hours, days: days.map((day) => [day.date, day.hours]) }))
   fs.rmSync(scratchHome, { recursive: true, force: true })
+
+  // Message-content search over the query service's raw logs: a phrase inside
+  // a Chinese sentence matches, case and runs of whitespace do not matter,
+  // tool-call arguments and subagent children stay out, and a session is read
+  // again only when its persistence revision moves.
+  console.log('\nhost half — message content search')
+  const SEARCH = '/dsh-claude-style/session-search'
+  const said = (seq, time, text) => ({ seq, time, type: 'user/message', data: { content: [{ type: 'text', text }] } })
+  const answered = (seq, time, content) => ({ seq, time, type: 'assistant/message', data: { message: { content } } })
+  const searchEvents = {
+    'session-a': [said(1, 1000, '我们能获得一个这样的搜索框吗？'), answered(2, 2000, [{ type: 'text', text: 'Yes.' }])],
+    'session-b': [said(1, 3000, 'Open the SEARCH\n   box, please'),
+      answered(2, 4000, [{ type: 'text', text: 'Done.' }, { type: 'tool-call', name: 'edit', arguments: '{"text":"搜索框"}' }])],
+    'session-child': [said(1, 5000, '搜索框')],
+  }
+  const stored = [
+    { header: { id: 'session-a' }, revision: 'a1' },
+    { header: { id: 'session-b' }, revision: 'b1' },
+    { header: { id: 'session-child', origin: 'subagent' }, revision: 'c1' },
+  ]
+  const reads = []
+  const searchHost = fakeHost(mod, { fenced: true, events: searchEvents, stored, reads })
+  const ask = async (query, headers = browser) => {
+    const answer = await request(searchHost, `${SEARCH}?q=${encodeURIComponent(query)}`, 'GET', '', headers)
+    return { status: answer.status, body: answer.status === 200 ? JSON.parse(answer.body) : null }
+  }
+  const refusedSearch = await ask('搜索框', crossSite)
+  check('cross-site page: content search refused', refusedSearch.status === 401 || refusedSearch.status === 403, `HTTP ${refusedSearch.status}`)
+  const chinese = await ask('搜索框')
+  const hit = chinese.body?.sessions?.[0] ?? {}
+  check('a phrase inside a Chinese sentence matches, and the excerpt marks it',
+    chinese.status === 200 && chinese.body.sessions.length === 1 && hit.sessionId === 'session-a' && hit.role === 'user' &&
+      hit.snippet.slice(hit.match[0], hit.match[1]) === '搜索框',
+    JSON.stringify(chinese))
+  const english = await ask('search box')
+  check('case and runs of whitespace do not matter; tool-call arguments and subagent children stay out',
+    english.status === 200 && english.body.sessions.length === 1 && english.body.sessions[0].sessionId === 'session-b' &&
+      english.body.sessions[0].snippet === 'Open the SEARCH box, please',
+    JSON.stringify(english))
+  check('each stored top-level session is read once while its revision holds',
+    same(reads.slice().sort(), ['session-a', 'session-b']), JSON.stringify(reads))
+  stored[1] = { header: { id: 'session-b' }, revision: 'b2' }
+  await ask('search box')
+  check('a moved revision reads that session again, and only it',
+    same(reads.slice().sort(), ['session-a', 'session-b', 'session-b']), JSON.stringify(reads))
+  // An open session is read again only when its log grows.
+  const liveReads = []
+  const liveEvents = { ...searchEvents, 'session-a': searchEvents['session-a'].slice() }
+  const liveSearch = fakeHost(mod, { fenced: true, events: liveEvents, stored, reads: liveReads, live: ['session-a'] })
+  const liveAsk = () => request(liveSearch, `${SEARCH}?q=${encodeURIComponent('搜索框')}`, 'GET', '', browser)
+  await liveAsk()
+  await liveAsk()
+  const liveHeld = liveReads.filter((id) => id === 'session-a').length
+  liveEvents['session-a'].push(said(3, 6000, '再看一次搜索框'))
+  const grown = JSON.parse((await liveAsk()).body)
+  check('an open session is read again only when its log grows, and its new message is found',
+    liveHeld === 1 && liveReads.filter((id) => id === 'session-a').length === 2 &&
+      grown.sessions[0]?.seq === 3 && grown.sessions[0]?.snippet === '再看一次搜索框',
+    JSON.stringify({ liveReads, grown }))
 }
 
 module.exports = { hostHalf }

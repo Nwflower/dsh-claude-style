@@ -1,15 +1,17 @@
     /**
      * What the search palette lists, read from the host's own client services
-     * and turned into rows: `{ kind, id, title, detail?, snippet?, label?,
-     * keys?, icon?, image?, run }` — `label` is the second key a query matches
-     * (a path, a package name, a description, aliases). Every row's `run` is
+     * and turned into rows: `{ kind, id, title, detail?, snippet?,
+     * snippetMatch?, label?, keys?, icon?, image?, run }` — `snippetMatch` is
+     * the `[start, end)` of the query within the excerpt, and `label` is the
+     * second key a query matches (a path, a package name, a description,
+     * aliases). Every row's `run` is
      * the host's own navigation for that thing — nothing here re-implements
      * what a host surface already does.
      *
      * - Sessions: the session list (titles, times) minus the archived set,
      *   subagent children and blank placeholders; a typed query also asks the
-     *   host's message-content index (`sessions.search`). Opening goes through
-     *   `uiWorkspace.openSession`.
+     *   host half's message-content search (host/search.js). Opening goes
+     *   through `uiWorkspace.openSession`.
      * - Projects: the workspace list; picking one starts a session in it
      *   (`uiWorkspace.startSession`), the same as the host's group ＋.
      * - Plugins: the plugin manager's bundles; picking one opens its page
@@ -112,14 +114,16 @@
         return rows
       }
 
-      function sessionRow(entry, snippet) {
+      /** A session row; `hit`, when given, is its content hit — the excerpt and the match within it. */
+      function sessionRow(entry, hit) {
         const id = entry.summary.id
         return {
           kind: 'session',
           id: `session:${id}`,
           title: entry.summary.displayTitle,
           detail: entry.workspace,
-          snippet: snippet || '',
+          snippet: hit === undefined ? '' : hit.snippet,
+          snippetMatch: hit === undefined ? null : hit.match,
           run() { service('uiWorkspace').openSession(id) },
         }
       }
@@ -130,13 +134,16 @@
 
       /**
        * Sessions whose title or workspace name holds the query, newest first,
-       * then the content hits the host's index answered, each once — the same
-       * merge the host's sidebar search makes.
+       * then the sessions whose messages hold it, newest hit first, each once
+       * — the same merge the host's sidebar search makes. A title match that
+       * also has a content hit shows its excerpt too.
        */
       function matchSessions(query, contentHits) {
         const q = query.toLowerCase()
         const entries = openableSessions()
         const byId = {}
+        const hits = {}
+        for (let h = 0; h < contentHits.length; h++) hits[contentHits[h].sessionId] = contentHits[h]
         const rows = []
         const included = new Set()
         for (let i = 0; i < entries.length; i++) {
@@ -144,39 +151,35 @@
           byId[entry.summary.id] = entry
           if (entry.summary.displayTitle.toLowerCase().includes(q) || entry.workspace.toLowerCase().includes(q)) {
             included.add(entry.summary.id)
-            rows.push(sessionRow(entry))
+            rows.push(sessionRow(entry, hits[entry.summary.id]))
           }
-        }
-        const snippets = {}
-        for (let h = 0; h < contentHits.length; h++) {
-          const hit = contentHits[h]
-          if (snippets[hit.sessionId] === undefined) snippets[hit.sessionId] = hit.snippet
-        }
-        for (let r = 0; r < rows.length; r++) {
-          const sessionId = rows[r].id.slice('session:'.length)
-          if (snippets[sessionId] !== undefined) rows[r].snippet = snippets[sessionId]
         }
         for (let c = 0; c < contentHits.length; c++) {
           const hit = contentHits[c]
           const entry = byId[hit.sessionId]
           if (entry === undefined || included.has(hit.sessionId)) continue
           included.add(hit.sessionId)
-          rows.push(sessionRow(entry, hit.snippet))
+          rows.push(sessionRow(entry, hit))
         }
         return rows
       }
 
       /**
-       * Ask the host's message-content index. Superseded requests are aborted
-       * by the caller; a refusal answers no hits, and the title matches stand.
-       * @returns the hits, `[{ sessionId, snippet }]`.
+       * Ask the host half's message-content search (host/search.js): user and
+       * assistant messages, matched as a literal case-insensitive substring,
+       * so part of a Chinese sentence matches too. An empty query only brings
+       * the host half's message cache up to date. Superseded requests are
+       * aborted by the caller; a failure answers no hits, and the title
+       * matches stand.
+       * @returns the hits, newest first, `[{ sessionId, snippet, match }]`.
        */
       function searchContent(query, signal) {
-        const sessions = service('sessions')
-        if (!sessions || typeof sessions.search !== 'function') return Promise.resolve([])
-        return sessions.search(query, signal).then(result => {
-          if (!result.ok) throw new Error(result.error.message)
-          return result.value.items
+        const url = query === '' ? SESSION_SEARCH_ROUTE : `${SESSION_SEARCH_ROUTE}?q=${encodeURIComponent(query)}`
+        return fetch(url, { credentials: 'same-origin', headers: { accept: 'application/json' }, signal }).then(response => {
+          return response.json().then(body => {
+            if (!response.ok || !body.ok) throw new Error(`session search answered ${response.status}: ${body.error}`)
+            return body.sessions
+          })
         })
       }
 
@@ -401,6 +404,11 @@
         skills = null
         skillSessionId = null
         const settle = () => { if (owner === generation) onLoaded() }
+        // The host half reads every stored session once before its first
+        // answer; starting that as the palette opens keeps the first query quick.
+        searchContent('', undefined).then(() => {}, reason => {
+          console.warn('dsh-claude-style: session content search could not prepare:', reason)
+        })
         loadPlugins(owner).then(settle, reason => {
           console.warn('dsh-claude-style: search could not list plugins:', reason)
           if (owner === generation) plugins = []
