@@ -174,3 +174,14 @@ body[data-dsh-claude-style] .dsh-claude-settings-picker:hover {
 body[data-dsh-claude-style] .dsh-claude-settings-picker[aria-expanded="true"] {
   border-color: var(--dsw-alias-brand-primary, #d97757);
 }
+
+/* The quick-provider picker's card (src/features/settings/quick-providers.js):
+   the shared popover card, placed like the permission popover it mirrors. */
+body[data-dsh-claude-style] .dsh-claude-quick-popover {
+  position: fixed !important;
+  min-width: 248px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  transform-origin: bottom left !important;
+}

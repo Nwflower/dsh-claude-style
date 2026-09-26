@@ -40,22 +40,22 @@
      * @returns `{ el, update, isHeld }`.
      */
     function createEffortControl(opts) {
-      const root = modelEl('div', 'dsh-claude-effort')
-      const head = modelEl('div', 'dsh-claude-effort-head')
-      const labelEl = modelEl('span', 'dsh-claude-effort-label')
-      const valueEl = modelEl('span', 'dsh-claude-effort-value')
+      const root = buildElement('div', 'dsh-claude-effort')
+      const head = buildElement('div', 'dsh-claude-effort-head')
+      const labelEl = buildElement('span', 'dsh-claude-effort-label')
+      const valueEl = buildElement('span', 'dsh-claude-effort-value')
       /* The outgoing name, absolutely positioned over the value: it takes no
          layout space and never needs removing — the out animation ends at
          opacity 0 and is re-armed on the next swap. */
-      const valueGhost = modelEl('span', 'dsh-claude-effort-value-ghost')
-      const ends = modelEl('div', 'dsh-claude-effort-ends')
-      const fasterEl = modelEl('span', 'dsh-claude-effort-end')
-      const smarterEl = modelEl('span', 'dsh-claude-effort-end')
-      const track = modelEl('div', 'dsh-claude-effort-track')
-      const fill = modelEl('div', 'dsh-claude-effort-fill')
-      const ticks = modelEl('div', 'dsh-claude-effort-ticks')
-      const matrix = modelEl('div', 'dsh-claude-effort-matrix')
-      const knob = modelEl('div', 'dsh-claude-effort-knob')
+      const valueGhost = buildElement('span', 'dsh-claude-effort-value-ghost')
+      const ends = buildElement('div', 'dsh-claude-effort-ends')
+      const fasterEl = buildElement('span', 'dsh-claude-effort-end')
+      const smarterEl = buildElement('span', 'dsh-claude-effort-end')
+      const track = buildElement('div', 'dsh-claude-effort-track')
+      const fill = buildElement('div', 'dsh-claude-effort-fill')
+      const ticks = buildElement('div', 'dsh-claude-effort-ticks')
+      const matrix = buildElement('div', 'dsh-claude-effort-matrix')
+      const knob = buildElement('div', 'dsh-claude-effort-knob')
 
       head.appendChild(labelEl)
       head.appendChild(valueEl)
@@ -296,7 +296,7 @@
         while (ticks.firstChild) ticks.removeChild(ticks.firstChild)
         const box = geometry()
         for (let i = 0; i < steps.length; i++) {
-          const dot = modelEl('span', 'dsh-claude-effort-tick')
+          const dot = buildElement('span', 'dsh-claude-effort-tick')
           dot.style.left = `${Math.round(positionFor(i) + box.size / 2)}px`
           ticks.appendChild(dot)
         }

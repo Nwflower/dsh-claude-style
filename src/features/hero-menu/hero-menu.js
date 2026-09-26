@@ -46,7 +46,8 @@
       /** The two triggers, and the card once it is stamped. */
       const TRIGGER_SELECTOR = '[class*="heroWorkspaceRow"] [aria-haspopup="menu"]'
       const CARD_SELECTOR = `[${HERO_MENU_ATTR}]`
-      let stamped = null
+      /** The open card, marked with the picker it belongs to, and the trigger it was stamped for. */
+      const cardStamp = createStamp(HERO_MENU_ATTR)
       let stampedTrigger = null
       let closeTimer = null
       let openTimer = null
@@ -191,9 +192,7 @@
       }
 
       function clearStamp() {
-        if (stamped === null) return
-        stamped.removeAttribute(HERO_MENU_ATTR)
-        stamped = null
+        cardStamp.release()
         stampedTrigger = null
       }
 
@@ -247,8 +246,9 @@
 
       /** Re-place an open card after a scroll or a resize moved its anchor. */
       function repositionHeroMenu() {
-        if (stamped === null || stampedTrigger === null) return
-        placeCard(stampedTrigger, stamped)
+        const card = cardStamp.current()
+        if (card === null || stampedTrigger === null) return
+        placeCard(stampedTrigger, card)
       }
 
       function syncHeroMenu() {
@@ -281,14 +281,9 @@
           clearStamp()
           return
         }
-        if (stamped !== cards[0]) {
-          clearStamp()
-          stamped = cards[0]
-          stampedTrigger = trigger
-        }
-        const kind = pickerKind(trigger)
-        if (stamped.getAttribute(HERO_MENU_ATTR) !== kind) stamped.setAttribute(HERO_MENU_ATTR, kind)
-        placeCard(trigger, stamped)
+        if (cardStamp.current() !== cards[0]) stampedTrigger = trigger
+        cardStamp.mark(cards[0], pickerKind(trigger))
+        placeCard(trigger, cards[0])
       }
 
       // The hero row's two host menus take part in the shared popover rule

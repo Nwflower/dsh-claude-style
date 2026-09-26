@@ -167,7 +167,7 @@
         function ensureStatsPopover() {
           if (statsPopover !== null) return statsPopover
           statsPopover = document.createElement('div')
-          statsPopover.className = 'dsh-claude-stats-popover'
+          statsPopover.className = 'dsh-claude-popover-card dsh-claude-stats-popover'
           statsPopover.setAttribute('data-open', 'false')
           statsPopover.addEventListener('mouseenter', () => {
             if (statsHideTimer) {

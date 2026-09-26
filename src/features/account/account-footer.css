@@ -95,17 +95,11 @@ body[data-dsh-claude-style] .dsh-claude-account-popover {
   width: auto !important;
   max-width: none !important;
   min-width: 0 !important;
+  /* The shared popover card (shared/popover.css), on a pure white fill. */
   background: #ffffff !important;
-  border: 1px solid var(--dsw-alias-border-l1, #e8e6dc) !important;
-  border-radius: 12px !important;
-  box-shadow: 0 8px 30px rgba(20, 20, 19, 0.12), 0 2px 8px rgba(20, 20, 19, 0.06) !important;
-  padding: 6px !important;
-  box-sizing: border-box !important;
-  z-index: 99999 !important;
   display: flex !important;
   flex-direction: column !important;
   gap: 6px !important;
-  opacity: 0 !important;
   /* The drawer's rows are built and reconciled while it is closed (the mirror
      sync only runs then), so the panel sits right above the account row with
      its icons in it. opacity alone leaves that content in the paint and
@@ -113,22 +107,13 @@ body[data-dsh-claude-style] .dsh-claude-account-popover {
      keeps the closing fade. Layout is untouched, so the closed drawer's box is
      still measurable. */
   visibility: hidden !important;
-  pointer-events: none !important;
   transform: translateY(6px) scale(0.98) !important;
   transform-origin: bottom left !important;
   transition: opacity 0.15s ease, transform 0.15s ease, visibility 0s linear 0.15s !important;
 }
 body[data-dsh-claude-style] .dsh-claude-account-popover[data-open="true"] {
-  opacity: 1 !important;
   visibility: visible !important;
-  pointer-events: auto !important;
-  transform: translateY(0) scale(1) !important;
   transition: opacity 0.15s ease, transform 0.15s ease, visibility 0s !important;
-}
-body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-account-popover {
-  background: #1e1e1d !important;
-  border-color: #2e2c29 !important;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
 }
 /* Hover bridge between trigger and popover */
 body[data-dsh-claude-style] .dsh-claude-account-popover::after {
@@ -425,3 +410,37 @@ body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] .dsh-claude-account-inject {
   width: 100% !important;
 }
 
+
+/* ---------- The account popover's header, divider and body ---------- */
+/* Popover Header. Vertical padding only: the clickable account row carries its
+   own inline padding (the row rules above), and the divider below is a
+   full-bleed rule that must not be inset by this box. */
+body[data-dsh-claude-style] .dsh-claude-account-popover-header {
+  padding: 6px 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+body[data-dsh-claude-style] .dsh-claude-account-popover-name {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: var(--dsw-alias-label-primary, #141413) !important;
+  line-height: 18px !important;
+  font-family: var(--dsw-font-family) !important;
+}
+body[data-dsh-claude-style] .dsh-claude-account-popover-divider {
+  height: 1px !important;
+  background: var(--dsw-alias-border-l1, #e8e6dc) !important;
+  margin: 2px 0 !important;
+  flex: none !important;
+}
+
+/* Popover Body & Items */
+body[data-dsh-claude-style] .dsh-claude-account-popover-body {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  max-height: 360px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}

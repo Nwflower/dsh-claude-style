@@ -1,33 +1,12 @@
 /* ---------- The effort card (its own popover) ---------- */
 /* Same card language as the model picker — the two panels open over the same
    corner and must read as one design — sized to the slider, which is the only
-   thing it holds. */
+   thing it holds. The card is the shared popover card (shared/popover.css). */
 body[data-dsh-claude-style] .dsh-claude-effort-popover {
   position: fixed !important;
   min-width: 264px !important;
   max-width: min(320px, calc(100vw - 16px)) !important;
-  background: var(--dsw-alias-bg-overlay, #ffffff) !important;
-  border: 1px solid var(--dsw-alias-border-l1, #e8e6dc) !important;
-  border-radius: 12px !important;
-  box-shadow: 0 8px 30px rgba(20, 20, 19, 0.12), 0 2px 8px rgba(20, 20, 19, 0.06) !important;
-  padding: 6px !important;
-  box-sizing: border-box !important;
-  z-index: 99999 !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  transform: translateY(4px) scale(0.98) !important;
   transform-origin: bottom right !important;
-  transition: opacity 0.15s ease, transform 0.15s ease !important;
-}
-body[data-dsh-claude-style] .dsh-claude-effort-popover[data-open="true"] {
-  opacity: 1 !important;
-  pointer-events: auto !important;
-  transform: translateY(0) scale(1) !important;
-}
-body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-effort-popover {
-  background: #1e1e1d !important;
-  border-color: #2e2c29 !important;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
 }
 
 /* ---------- Reasoning-effort slider (its own card) ---------- */

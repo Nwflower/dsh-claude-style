@@ -19,8 +19,8 @@
     function createAccountSurface(options) {
       let mode = null
       let hostContainer = null
-      /** The account menu last marked for the stylesheet, so the marker can move. */
-      let markedMenu = null
+      /** The open account menu, marked for the stylesheet. */
+      const menuStamp = createStamp(ACCOUNT_MENU_ATTR)
 
       function detect() {
         return options.hostTrigger() !== null ? 'host' : 'synthetic'
@@ -38,10 +38,8 @@
        * binds its hover behaviour on the menu the host has just mounted.
        */
       function markMenu(menu) {
-        if (markedMenu === menu) return
-        if (markedMenu !== null) markedMenu.removeAttribute(ACCOUNT_MENU_ATTR)
-        markedMenu = menu
-        if (menu !== null) menu.setAttribute(ACCOUNT_MENU_ATTR, '')
+        if (menuStamp.current() === menu) return
+        menuStamp.mark(menu)
         if (options.onMenu) options.onMenu(menu)
       }
 

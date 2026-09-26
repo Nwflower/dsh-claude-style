@@ -42,9 +42,10 @@
       /** React root holding the archived-row notice, and the show count that keys it. */
       let noticeRoot = null
       let noticeSeq = 0
-      const VIEW_ATTR = 'data-dsh-claude-ws-view'
-      const LABEL_ATTR = 'data-dsh-claude-ws-label'
-      const TREE_ATTR = 'data-dsh-claude-ws-tree'
+      /** The section's view (active / archived), its heading and the host's tree, marked for workspace.css. */
+      const viewStamp = createStamp('data-dsh-claude-ws-view')
+      const labelStamp = createStamp('data-dsh-claude-ws-label')
+      const treeStamp = createStamp('data-dsh-claude-ws-tree')
       const SEGMENTS = [
         { id: 'active', key: 'archiveActive', fallback: 'Active' },
         { id: 'archived', key: 'archiveArchived', fallback: 'Archived' }
@@ -55,8 +56,6 @@
       /** The control's sliding highlight (src/shared/sliding-pill.js). */
       const segmentPill = createSlidingPill('[aria-checked="true"]')
       let listHost = null
-      let markedLabel = null
-      let markedTree = null
       /** `null` until both host lists have arrived; then `[{ id, title, at }]`. */
       let items = null
       /** Ids, titles and times of the rows on screen, joined; a list tick that changes none of them leaves the rows alone. */
@@ -230,7 +229,7 @@
        * gives us both, and the skin's own SVG plus a native title when it does not.
        */
       function actionButton(kind, label, fallbackSvg, onClick) {
-        const wrapper = modelEl('span', 'dsh-claude-archive-action')
+        const wrapper = buildElement('span', 'dsh-claude-archive-action')
         const className = kind === 'restore' ? 'dsh-claude-archive-restore' : 'dsh-claude-archive-delete'
         const Icon = primitives === null ? null : (kind === 'restore' ? primitives.IconUnarchiveOutlineRegular : primitives.IconTrashOutlineRegular)
         if (react !== null && reactDom !== null && primitives !== null && primitives.Tooltip && Icon) {
@@ -241,7 +240,7 @@
               react.createElement(Icon, { size: 14 }))))
           return wrapper
         }
-        const button = modelEl('button', className)
+        const button = buildElement('button', className)
         button.type = 'button'
         button.setAttribute('aria-label', label)
         button.setAttribute('title', label)
@@ -252,12 +251,12 @@
       }
 
       function buildArchivedRow(item) {
-        const row = modelEl('div', 'dsh-claude-archive-row')
+        const row = buildElement('div', 'dsh-claude-archive-row')
         row.setAttribute('role', 'button')
         row.setAttribute('tabindex', '0')
         row.setAttribute('data-session-id', item.id)
-        row.appendChild(modelEl('span', 'dsh-claude-archive-title', item.title))
-        row.appendChild(modelEl('span', 'dsh-claude-archive-time', relativeTime(item.at)))
+        row.appendChild(buildElement('span', 'dsh-claude-archive-title', item.title))
+        row.appendChild(buildElement('span', 'dsh-claude-archive-time', relativeTime(item.at)))
         // The host's archived rows offer an unarchive action; the skin's list
         // carries the same pair, so leaving the archived view is not the only way
         // back to a conversation.
@@ -283,21 +282,21 @@
         actionRoots = []
         while (listHost.firstChild) listHost.removeChild(listHost.firstChild)
         if (items === null) {
-          listHost.appendChild(modelEl('div', 'dsh-claude-archive-status', copyLabel('archiveLoading', 'Loading…')))
+          listHost.appendChild(buildElement('div', 'dsh-claude-archive-status', copyLabel('archiveLoading', 'Loading…')))
           return
         }
         if (items.length === 0) {
-          listHost.appendChild(modelEl('div', 'dsh-claude-archive-status', copyLabel('archiveEmpty', 'No archived conversations')))
+          listHost.appendChild(buildElement('div', 'dsh-claude-archive-status', copyLabel('archiveEmpty', 'No archived conversations')))
           return
         }
         for (let i = 0; i < items.length; i++) listHost.appendChild(buildArchivedRow(items[i]))
       }
 
       function buildControl() {
-        const group = modelEl('div', 'dsh-claude-ws-segments')
+        const group = buildElement('div', 'dsh-claude-ws-segments')
         group.setAttribute('role', 'radiogroup')
         for (let i = 0; i < SEGMENTS.length; i++) {
-          const item = modelEl('button', 'dsh-claude-ws-segment', '')
+          const item = buildElement('button', 'dsh-claude-ws-segment', '')
           item.type = 'button'
           item.setAttribute('role', 'radio')
           item.setAttribute('data-view', SEGMENTS[i].id)
@@ -328,11 +327,7 @@
         // Until the host's workspace and session services are both reachable
         // the section keeps its plain label.
         if (!watch()) return
-        if (markedLabel !== label) {
-          if (markedLabel !== null) markedLabel.removeAttribute(LABEL_ATTR)
-          markedLabel = label
-          label.setAttribute(LABEL_ATTR, '')
-        }
+        labelStamp.mark(label)
         if (control === null || control.parentElement !== header) {
           if (control !== null && control.parentElement !== null) control.parentElement.removeChild(control)
           control = buildControl()
@@ -352,16 +347,12 @@
         segmentPill.sync(control)
         const tree = findTree(label)
         if (tree === null) return
-        if (markedTree !== tree) {
-          if (markedTree !== null) markedTree.removeAttribute(TREE_ATTR)
-          markedTree = tree
-          tree.setAttribute(TREE_ATTR, '')
-        }
+        treeStamp.mark(tree)
         const host = tree.parentElement
         if (host === null) return
         if (listHost === null || listHost.parentElement !== host) {
           if (listHost !== null && listHost.parentElement !== null) listHost.parentElement.removeChild(listHost)
-          listHost = modelEl('div', 'dsh-claude-archive-list')
+          listHost = buildElement('div', 'dsh-claude-archive-list')
           host.insertBefore(listHost, tree.nextSibling)
           renderList()
         }
@@ -370,7 +361,7 @@
         // one is built elsewhere. Sweep every copy but the live one, the same way
         // the stats popover sweeps its strays.
         removeStrayNodes(document, '.dsh-claude-archive-list', [listHost])
-        if (host.getAttribute(VIEW_ATTR) !== view) host.setAttribute(VIEW_ATTR, view)
+        viewStamp.mark(host, view)
       }
 
       ui.workspace = { sync }
@@ -392,12 +383,11 @@
         segmentPill.release()
         if (control !== null && control.parentElement !== null) control.parentElement.removeChild(control)
         if (listHost !== null && listHost.parentElement !== null) listHost.parentElement.removeChild(listHost)
-        if (markedLabel !== null) markedLabel.removeAttribute(LABEL_ATTR)
-        if (markedTree !== null) markedTree.removeAttribute(TREE_ATTR)
+        labelStamp.release()
+        treeStamp.release()
+        viewStamp.release()
         control = null
         listHost = null
-        markedLabel = null
-        markedTree = null
         delete ui.workspace
       }
     }

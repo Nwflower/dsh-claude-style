@@ -176,22 +176,17 @@
        * so the hover plate covers the name and not the divider that follows it.
        */
       function buildAccountHeader(username) {
-        const header = document.createElement('div')
-        header.className = 'dsh-claude-account-popover-header'
+        const header = buildElement('div', 'dsh-claude-account-popover-header')
         header.setAttribute('data-dsh-claude-ban-row', '')
 
-        const rowEl = document.createElement('div')
-        rowEl.className = 'dsh-claude-account-popover-row'
+        const rowEl = buildElement('div', 'dsh-claude-account-popover-row')
         rowEl.setAttribute('role', 'button')
         rowEl.setAttribute('tabindex', '0')
         rowEl.setAttribute('aria-haspopup', 'dialog')
 
-        const nameEl = document.createElement('div')
-        nameEl.className = 'dsh-claude-account-popover-name'
-        nameEl.textContent = username
+        const nameEl = buildElement('div', 'dsh-claude-account-popover-name', username)
 
-        const divider = document.createElement('div')
-        divider.className = 'dsh-claude-account-popover-divider'
+        const divider = buildElement('div', 'dsh-claude-account-popover-divider')
 
         rowEl.appendChild(nameEl)
         header.appendChild(rowEl)
@@ -247,8 +242,7 @@
 
       /** The container injected at the head of the host's account menu. */
       function buildHostContainer() {
-        const container = document.createElement('div')
-        container.className = 'dsh-claude-account-inject'
+        const container = buildElement('div', 'dsh-claude-account-inject')
         container.appendChild(buildAccountHeader(accountDisplayName(hostMenu.trigger())))
         return container
       }

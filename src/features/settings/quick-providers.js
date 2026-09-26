@@ -2,9 +2,9 @@
      * The settings page's quick-provider picker — the providers whose models the
      * model picker's first level carries.
      *
-     * It is the permission popover's design in multi-select form: the same card
-     * and the same rows (`.dsh-claude-perm-popover` is that shared card, the name
-     * is historical), with the accent check marking the chosen providers. It is a
+     * It is the permission popover's design in multi-select form: the shared
+     * popover card and rows (shared/popover.css), with the accent check marking
+     * the chosen providers. It is a
      * settings control rather than a takeover, so it opens on click only —
      * hovering a settings row should not unfold a menu — and it stays open while
      * rows are toggled.
@@ -47,14 +47,14 @@
 
       /** One provider: its name, how many models it offers, and a check when chosen. */
       function buildRow(provider, chosen, stale) {
-        const row = modelEl('button', 'dsh-claude-popover-item')
-        if (stale) row.classList.add('dsh-claude-model-stale')
+        const row = buildElement('button', 'dsh-claude-popover-item')
+        if (stale) row.classList.add('dsh-claude-popover-item-stale')
         row.type = 'button'
         row.setAttribute('role', 'menuitemcheckbox')
         row.setAttribute('aria-checked', chosen ? 'true' : 'false')
-        row.appendChild(modelEl('span', 'dsh-claude-popover-item-text', provider.name))
-        row.appendChild(modelEl('span', 'dsh-claude-popover-item-badge', stale ? settingsCopy('quickRemoved', 'Removed') : String(provider.count)))
-        const check = modelEl('span', 'dsh-claude-model-check')
+        row.appendChild(buildElement('span', 'dsh-claude-popover-item-text', provider.name))
+        row.appendChild(buildElement('span', 'dsh-claude-popover-item-badge', stale ? settingsCopy('quickRemoved', 'Removed') : String(provider.count)))
+        const check = buildElement('span', 'dsh-claude-popover-check')
         check.innerHTML = chosen ? CHECK_SVG : ''
         row.appendChild(check)
         row.addEventListener('click', e => {
@@ -73,7 +73,7 @@
         if (cardBody === null) return
         while (cardBody.firstChild) cardBody.removeChild(cardBody.firstChild)
         if (providers.length === 0) {
-          cardBody.appendChild(modelEl('div', 'dsh-claude-model-status', settingsCopy('quickLoading', 'Loading providers…')))
+          cardBody.appendChild(buildElement('div', 'dsh-claude-popover-status', settingsCopy('quickLoading', 'Loading providers…')))
           return
         }
         const chosen = readPrefs().quickProviders
@@ -100,10 +100,10 @@
         anchor.setAttribute('aria-expanded', 'true')
         onWrite = write
         providers = ui.model && typeof ui.model.providers === 'function' ? ui.model.providers() : []
-        card = modelEl('div', 'dsh-claude-perm-popover')
+        card = buildElement('div', 'dsh-claude-popover-card dsh-claude-quick-popover')
         card.setAttribute('role', 'menu')
         card.setAttribute('data-open', 'true')
-        cardBody = modelEl('div', 'dsh-claude-model-popover-body')
+        cardBody = buildElement('div', 'dsh-claude-popover-body')
         card.appendChild(cardBody)
         renderBody()
         document.body.appendChild(card)

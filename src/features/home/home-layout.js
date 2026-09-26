@@ -212,8 +212,7 @@
         }
         if (coldSeat !== null && coldSeat.stack === stack && coldSeat.element.parentElement === stack) return
         unmountColdSeat()
-        const element = document.createElement('div')
-        element.className = 'dsh-claude-home-seat'
+        const element = buildElement('div', 'dsh-claude-home-seat')
         stack.appendChild(element)
         const root = ReactDOM.createRoot(element)
         root.render(React.createElement(HomeUsagePanel))

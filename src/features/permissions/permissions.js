@@ -211,8 +211,7 @@
        * absent instead of drawn dead.
        */
       function buildSegments(onPick, specs) {
-        const group = document.createElement('div')
-        group.className = SEGMENTS_CLASS
+        const group = buildElement('div', SEGMENTS_CLASS)
         group.setAttribute('role', 'radiogroup')
         group.setAttribute('aria-label', 'Permission')
         group.setAttribute('data-composer-segments', '')
@@ -277,8 +276,7 @@
         col.appendChild(itemDesc)
         item.appendChild(col)
 
-        const check = document.createElement('span')
-        check.className = 'dsh-claude-perm-check'
+        const check = buildElement('span', 'dsh-claude-perm-check')
         check.style.cssText = 'font-size:12px; color:var(--dsw-alias-brand-primary, #d97757); margin-left:8px; display:none;'
         check.textContent = '✓'
         item.appendChild(check)
@@ -319,8 +317,7 @@
 
       function buildPermTriggerAndPopover(onPick) {
         permPick = onPick
-        const container = document.createElement('div')
-        container.className = 'dsh-claude-perm-container'
+        const container = buildElement('div', 'dsh-claude-perm-container')
 
         const btn = document.createElement('button')
         btn.type = 'button'
@@ -328,19 +325,15 @@
         btn.setAttribute('aria-haspopup', 'menu')
         btn.setAttribute('aria-expanded', 'false')
 
-        const label = document.createElement('span')
-        label.className = 'dsh-claude-perm-label'
-        label.textContent = 'Accept edits'
+        const label = buildElement('span', 'dsh-claude-perm-label', 'Accept edits')
 
-        const chevron = document.createElement('span')
-        chevron.className = 'dsh-claude-perm-chevron'
+        const chevron = buildElement('span', 'dsh-claude-perm-chevron')
         chevron.setAttribute('aria-hidden', 'true')
 
         btn.appendChild(label)
         btn.appendChild(chevron)
 
-        const popover = document.createElement('div')
-        popover.className = 'dsh-claude-perm-popover'
+        const popover = buildElement('div', 'dsh-claude-popover-card dsh-claude-perm-popover')
         popover.setAttribute('role', 'menu')
 
         function openPerm() {

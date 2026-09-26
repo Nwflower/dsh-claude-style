@@ -182,8 +182,7 @@
         closeBanScreen()
         if (typeof document === 'undefined' || document.body === null) return
 
-        const root = document.createElement('div')
-        root.className = 'dsh-claude-ban'
+        const root = buildElement('div', 'dsh-claude-ban')
         root.setAttribute('role', 'dialog')
         root.setAttribute('aria-modal', 'true')
         root.setAttribute('data-dsh-ban', '')

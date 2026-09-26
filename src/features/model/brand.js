@@ -1,10 +1,3 @@
-    function modelEl(tag, cls, text) {
-      const el = document.createElement(tag)
-      if (cls) el.className = cls
-      if (text !== void 0 && text !== null) el.textContent = text
-      return el
-    }
-
     /**
      * The brand mark for one model: the vendor that made it, not the route it is
      * resold through — an OpenRouter group listing Claude models shows Anthropic
@@ -60,14 +53,14 @@
      * @returns the label element.
      */
     function buildModelLabel(name, brand) {
-      const el = modelEl('span', 'dsh-claude-model-name')
+      const el = buildElement('span', 'dsh-claude-model-name')
       const text = typeof name === 'string' ? name : ''
       const mark = modelCombine(brand, text)
       if (mark === null) {
         el.textContent = text
         return el
       }
-      const box = modelEl('span', 'dsh-claude-model-combine')
+      const box = buildElement('span', 'dsh-claude-model-combine')
       box.setAttribute('aria-hidden', 'true')
       box.innerHTML = mark.svg
       const head = mark.at === -1 ? '' : text.slice(0, mark.at)
@@ -77,6 +70,6 @@
       if (head) el.appendChild(document.createTextNode(head))
       el.appendChild(box)
       el.appendChild(document.createTextNode(tail))
-      el.appendChild(modelEl('span', 'dsh-claude-model-combine-alt', tail ? `${mark.word} ` : mark.word))
+      el.appendChild(buildElement('span', 'dsh-claude-model-combine-alt', tail ? `${mark.word} ` : mark.word))
       return el
     }

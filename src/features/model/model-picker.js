@@ -190,7 +190,7 @@
         for (let child = modelFooter.firstChild; child !== null; child = child.nextSibling) stale.push(child)
         for (let i = 0; i < stale.length; i++) modelFooter.removeChild(stale[i])
         if (!showMore) return
-        modelFooter.appendChild(modelEl('div', 'dsh-claude-model-divider'))
+        modelFooter.appendChild(buildElement('div', 'dsh-claude-model-divider'))
         modelFooter.appendChild(modelRows.buildModelCell(copyLabel('moreLabel', MODEL_MORE_LABEL)))
       }
 
@@ -218,12 +218,12 @@
         // loading line.
         const seated = groups.length > 0 && current !== null
         if (!seated && (status === 'idle' || status === 'loading' || status === 'selecting')) {
-          modelBody.appendChild(modelEl('div', 'dsh-claude-model-status', copyLabel('loading', MODEL_LOADING_LABEL)))
+          modelBody.appendChild(buildElement('div', 'dsh-claude-popover-status', copyLabel('loading', MODEL_LOADING_LABEL)))
           layoutModelFooter(false)
         } else {
           const sections = modelRows.levelOneSections(groups)
           if (sections.length === 0) {
-            modelBody.appendChild(modelEl('div', 'dsh-claude-model-status', copyLabel('empty', MODEL_EMPTY_LABEL)))
+            modelBody.appendChild(buildElement('div', 'dsh-claude-popover-status', copyLabel('empty', MODEL_EMPTY_LABEL)))
           } else {
             for (let s = 0; s < sections.length; s++) {
               const section = sections[s]
@@ -253,7 +253,7 @@
             // naming (the official source) adds nothing here.
             const currentRuleName = current.group.id === MODEL_OFFICIAL_GROUP ? '' : (current.group.name || current.group.id)
             if (currentRuleName !== '') modelBody.appendChild(modelRows.buildProviderRule(currentRuleName))
-            const currentRow = modelEl('button', 'dsh-claude-model-option')
+            const currentRow = buildElement('button', 'dsh-claude-model-option')
             currentRow.type = 'button'
             currentRow.setAttribute('role', 'menuitemradio')
             currentRow.setAttribute('aria-checked', 'true')
@@ -262,13 +262,13 @@
             // The brand id is the row's styling hook here too, so this row wears
             // the same vendor lockup and face as the list entry it stands for.
             if (currentBrand) currentRow.setAttribute('data-brand', currentBrand)
-            const currentCopy = modelEl('span', 'dsh-claude-model-copy')
+            const currentCopy = buildElement('span', 'dsh-claude-model-copy')
             const currentLabel = buildModelLabel(currentName, currentBrand)
             currentCopy.appendChild(currentLabel)
             const currentDesc = modelDescription(ctx, current.group.id, current.model)
-            if (currentDesc) currentCopy.appendChild(modelEl('span', 'dsh-claude-model-desc', currentDesc))
+            if (currentDesc) currentCopy.appendChild(buildElement('span', 'dsh-claude-model-desc', currentDesc))
             currentRow.appendChild(currentCopy)
-            const currentCheck = modelEl('span', 'dsh-claude-model-check')
+            const currentCheck = buildElement('span', 'dsh-claude-popover-check')
             currentCheck.innerHTML = MODEL_CHECK_SVG
             currentRow.appendChild(currentCheck)
             currentRow.addEventListener('click', e => {
@@ -316,12 +316,12 @@
         for (let g2 = 0; g2 < rest.length; g2++) {
           const group = rest[g2]
           if (group.models.length === 0) continue
-          const groupSection = modelEl('div', 'dsh-claude-model-group-section')
-          const groupRow = modelEl('div', 'dsh-claude-model-group-row')
-          const groupLabel = modelEl('div', 'dsh-claude-model-group')
+          const groupSection = buildElement('div', 'dsh-claude-model-group-section')
+          const groupRow = buildElement('div', 'dsh-claude-model-group-row')
+          const groupLabel = buildElement('div', 'dsh-claude-model-group')
           // The group label is the provider's name alone: a mark there would repeat
           // what the rows below already carry inside their lockups.
-          groupLabel.appendChild(modelEl('span', 'dsh-claude-model-group-name', group.name))
+          groupLabel.appendChild(buildElement('span', 'dsh-claude-model-group-name', group.name))
           groupRow.appendChild(groupLabel)
           groupSection.appendChild(groupRow)
           // A provider's models read in id order, so the list is scannable and stays
@@ -335,7 +335,7 @@
           modelSubBody.appendChild(groupSection)
         }
         if (modelSubBody.firstChild === null) {
-            modelSubBody.appendChild(modelEl('div', 'dsh-claude-model-status', copyLabel('empty', MODEL_EMPTY_LABEL)))
+            modelSubBody.appendChild(buildElement('div', 'dsh-claude-popover-status', copyLabel('empty', MODEL_EMPTY_LABEL)))
         }
       }
 
@@ -374,11 +374,11 @@
         if (modelPop === null || modelPop.parentElement === null) {
           if (modelPop !== null && modelPop.parentElement !== null) modelPop.parentElement.removeChild(modelPop)
           modelPop = document.createElement('div')
-          modelPop.className = 'dsh-claude-model-popover'
+          modelPop.className = 'dsh-claude-popover-card dsh-claude-model-popover'
           modelPop.setAttribute('role', 'menu')
           modelPop.setAttribute('data-open', 'false')
           modelBody = document.createElement('div')
-          modelBody.className = 'dsh-claude-model-popover-body'
+          modelBody.className = 'dsh-claude-popover-body'
           modelPop.appendChild(modelBody)
           modelFooter = document.createElement('div')
           modelFooter.className = 'dsh-claude-model-footer'
@@ -413,11 +413,11 @@
         if (modelSubPop === null || modelSubPop.parentElement === null) {
           if (modelSubPop !== null && modelSubPop.parentElement !== null) modelSubPop.parentElement.removeChild(modelSubPop)
           modelSubPop = document.createElement('div')
-          modelSubPop.className = 'dsh-claude-model-popover dsh-claude-model-popover-sub'
+          modelSubPop.className = 'dsh-claude-popover-card dsh-claude-model-popover dsh-claude-model-popover-sub'
           modelSubPop.setAttribute('role', 'menu')
           modelSubPop.setAttribute('data-open', 'false')
           modelSubBody = document.createElement('div')
-          modelSubBody.className = 'dsh-claude-model-popover-body'
+          modelSubBody.className = 'dsh-claude-popover-body'
           modelSubPop.appendChild(modelSubBody)
           modelSubPop.addEventListener('mouseenter', cancelCloseModel)
           modelSubPop.addEventListener('mouseleave', scheduleCloseModel)

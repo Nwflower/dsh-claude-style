@@ -187,7 +187,7 @@
         if (effortPop === null || effortPop.parentElement === null) {
           if (effortPop !== null && effortPop.parentElement !== null) effortPop.parentElement.removeChild(effortPop)
           effortPop = document.createElement('div')
-          effortPop.className = 'dsh-claude-effort-popover'
+          effortPop.className = 'dsh-claude-popover-card dsh-claude-effort-popover'
           effortPop.setAttribute('role', 'menu')
           effortPop.setAttribute('data-open', 'false')
           effortPop.addEventListener('mouseenter', cancelCloseEffort)

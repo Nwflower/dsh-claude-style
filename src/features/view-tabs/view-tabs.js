@@ -57,10 +57,8 @@
       const TITLEBAR_ATTR = 'data-dsh-titlebar-tabs'
       /** Whether the last pass saw the host's Windows titlebar marker. */
       let titlebar = false
-      /** The strip attribute every strip rule in view-tabs.css keys on. */
-      const STRIP_ATTR = 'data-dsh-view-tabs'
-      /** The strip last stamped, so a re-rendered strip is stamped again. */
-      let stamped = null
+      /** The strip mark every strip rule in view-tabs.css keys on. */
+      const stripStamp = createStamp('data-dsh-view-tabs')
       const pill = createSlidingPill('[aria-selected="true"]')
 
       /**
@@ -112,19 +110,11 @@
         return best
       }
 
-      /** Stamp the strip the stylesheet styles; a strip React replaced gives its stamp up. */
-      function stampStrip(strip) {
-        if (strip === stamped) return
-        if (stamped !== null) stamped.removeAttribute(STRIP_ATTR)
-        stamped = strip
-        if (strip !== null) strip.setAttribute(STRIP_ATTR, '')
-      }
-
       function sync() {
         syncTitlebar()
         const header = document.querySelector(HEADER)
         const strip = header === null ? null : header.querySelector('[class*="_tabs"]')
-        stampStrip(strip)
+        stripStamp.mark(strip)
         pill.sync(strip)
         if (strip === null) return
         // Windows titlebar mode places the strip itself (view-tabs.css): it is
@@ -175,7 +165,7 @@
         const strip = header === null ? null : header.querySelector('[class*="_tabs"]')
         if (strip !== null) strip.style.removeProperty('--dsh-view-tabs-shift')
         pill.release()
-        stampStrip(null)
+        stripStamp.release()
         last = null
         lastEl = null
         delete ui.viewTabs

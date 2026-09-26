@@ -1,35 +1,49 @@
-/* Popover Header. Vertical padding only: the clickable account row carries its
-   own inline padding (features/account/account-footer.css), and the divider below is a
-   full-bleed rule that must not be inset by this box. */
-body[data-dsh-claude-style] .dsh-claude-account-popover-header {
-  padding: 6px 0 !important;
+/* ---------- Popover card: the skin's own floating cards ---------- */
+/* Every card the skin builds (permission, model picker, effort, account,
+   session stats, quick providers) wears this shell: one fill, hairline, 12px
+   radius, shadow and 6px inset, closed until data-open="true" and opening with
+   the same short rise. Each card's own stylesheet adds only what differs — its
+   placement, its width limits, the corner it grows from — and comes later in
+   the cascade, so it wins where the two overlap. */
+body[data-dsh-claude-style] .dsh-claude-popover-card {
+  background: var(--dsw-alias-bg-overlay, #ffffff) !important;
+  border: 1px solid var(--dsw-alias-border-l1, #e8e6dc) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 30px rgba(20, 20, 19, 0.12), 0 2px 8px rgba(20, 20, 19, 0.06) !important;
+  padding: 6px !important;
+  box-sizing: border-box !important;
+  z-index: 99999 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(4px) scale(0.98) !important;
+  transition: opacity 0.15s ease, transform 0.15s ease !important;
+}
+body[data-dsh-claude-style] .dsh-claude-popover-card[data-open="true"] {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: translateY(0) scale(1) !important;
+}
+body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-popover-card {
+  background: #1e1e1d !important;
+  border-color: #2e2c29 !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+/* A card's list: rows stacked with a hairline of air. */
+body[data-dsh-claude-style] .dsh-claude-popover-body {
   display: flex !important;
   flex-direction: column !important;
-  gap: 2px !important;
+  gap: 3px !important;
+  min-width: 0 !important;
 }
-body[data-dsh-claude-style] .dsh-claude-account-popover-name {
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  color: var(--dsw-alias-label-primary, #141413) !important;
-  line-height: 18px !important;
-  font-family: var(--dsw-font-family) !important;
-}
-body[data-dsh-claude-style] .dsh-claude-account-popover-divider {
-  height: 1px !important;
-  background: var(--dsw-alias-border-l1, #e8e6dc) !important;
-  margin: 2px 0 !important;
-  flex: none !important;
+/* A line in place of rows: loading, or nothing to list. */
+body[data-dsh-claude-style] .dsh-claude-popover-status {
+  color: var(--dsw-alias-label-tertiary, #8f8d84) !important;
+  font-size: 12px !important;
+  line-height: 20px !important;
+  padding: 4px 8px !important;
 }
 
-/* Popover Body & Items */
-body[data-dsh-claude-style] .dsh-claude-account-popover-body {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 2px !important;
-  max-height: 360px !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-}
+/* ---------- Popover rows ---------- */
 body[data-dsh-claude-style] .dsh-claude-popover-item {
   width: 100% !important;
   min-height: 32px !important;
@@ -75,6 +89,13 @@ body[data-dsh-claude-style] .dsh-claude-popover-item-text {
   white-space: nowrap !important;
   text-align: left !important;
 }
+/* The current choice's check, in the accent. */
+body[data-dsh-claude-style] .dsh-claude-popover-check {
+  flex: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  color: var(--dsw-alias-brand-primary, #d97757) !important;
+}
 body[data-dsh-claude-style] .dsh-claude-popover-item-badge {
   margin-left: auto !important;
   font-size: 10px !important;
@@ -86,11 +107,11 @@ body[data-dsh-claude-style] .dsh-claude-popover-item-badge {
 }
 /* A provider the catalog no longer offers: its stored row stays checked but is
    muted, so it reads as "this used to be picked" and can be unchecked away. */
-body[data-dsh-claude-style] .dsh-claude-popover-item.dsh-claude-model-stale .dsh-claude-popover-item-text,
-body[data-dsh-claude-style] .dsh-claude-popover-item.dsh-claude-model-stale .dsh-claude-popover-item-badge {
+body[data-dsh-claude-style] .dsh-claude-popover-item.dsh-claude-popover-item-stale .dsh-claude-popover-item-text,
+body[data-dsh-claude-style] .dsh-claude-popover-item.dsh-claude-popover-item-stale .dsh-claude-popover-item-badge {
   color: var(--dsw-alias-label-tertiary, #8f8d84) !important;
 }
-body[data-dsh-claude-style] .dsh-claude-popover-item.dsh-claude-model-stale .dsh-claude-popover-item-badge {
+body[data-dsh-claude-style] .dsh-claude-popover-item.dsh-claude-popover-item-stale .dsh-claude-popover-item-badge {
   background: transparent !important;
 }
 

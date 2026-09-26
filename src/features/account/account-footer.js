@@ -213,7 +213,7 @@
           if (accountPopover && accountPopover.parentElement) accountPopover.parentElement.removeChild(accountPopover)
           accountPopover = document.createElement('div')
           accountPopover.id = 'dsh-claude-account-popover'
-          accountPopover.className = 'dsh-claude-account-popover'
+          accountPopover.className = 'dsh-claude-popover-card dsh-claude-account-popover'
           accountPopover.setAttribute('data-open', 'false')
 
           accountPopover.addEventListener('mouseenter', () => {

@@ -72,6 +72,7 @@ const FRAGMENTS = [
   'core/prefs.js',
   'core/model-copy.js',
   'core/i18n.js',
+  'shared/dom.js',
   'shared/popover.js',
   'shared/sliding-pill.js',
   'features/selection/selection.js',
@@ -112,6 +113,10 @@ const FRAGMENTS = [
 const STYLE_FILES = [
   { file: 'theme/tokens.css' },
   { file: 'theme/typography.css' },
+  // Shared parts before every feature: a feature's own rule comes later and
+  // wins where the two meet at the same specificity.
+  { file: 'shared/popover.css' },
+  { file: 'shared/sliding-pill.css' },
   { file: 'theme/chrome.css' },
   { file: 'features/view-tabs/view-tabs.css' },
   { file: 'theme/hero.css' },
@@ -119,14 +124,12 @@ const STYLE_FILES = [
   { file: 'features/composer/inline.css', gate: true },
   { file: 'features/composer/inline-bar.css', gate: true },
   { file: 'theme/sidebar.css' },
-  { file: 'shared/sliding-pill.css' },
   { file: 'features/workspace/workspace.css' },
   { file: 'features/permissions/permissions.css' },
   { file: 'features/account/account-footer.css' },
   { file: 'features/ban-screen/ban-screen.css' },
   { file: 'features/model/model-picker.css' },
   { file: 'features/effort/effort-picker.css' },
-  { file: 'shared/popover.css' },
   { file: 'features/hero-menu/hero-menu.css', gate: true },
   { file: 'features/account/footer-takeover.css' },
   { file: 'theme/third-party.css' },

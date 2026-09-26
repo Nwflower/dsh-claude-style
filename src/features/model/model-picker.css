@@ -1,8 +1,8 @@
 /* ---------- Claude Code layout: model picker ---------- */
 /* Replaces the host's two-pane model menu: level 1 carries the current
    provider's models, a divider, the effort row and a More models row; both
-   rows open their level 2 beside this popover. Container metrics mirror the
-   permission popover so the two read as one design. */
+   rows open their level 2 beside this popover. The card is the shared popover
+   card (shared/popover.css); what is the picker's own is below. */
 body[data-dsh-claude-style] .dsh-claude-model-popover {
   position: fixed !important;
   min-width: 248px !important;
@@ -13,37 +13,10 @@ body[data-dsh-claude-style] .dsh-claude-model-popover {
      overflow-y stays for the sub popover, whose whole card scrolls. */
   max-height: calc(100vh - 80px) !important;
   overflow-y: auto !important;
-  background: var(--dsw-alias-bg-overlay, #ffffff) !important;
-  border: 1px solid var(--dsw-alias-border-l1, #e8e6dc) !important;
-  border-radius: 12px !important;
-  box-shadow: 0 8px 30px rgba(20, 20, 19, 0.12), 0 2px 8px rgba(20, 20, 19, 0.06) !important;
-  padding: 6px !important;
-  box-sizing: border-box !important;
-  z-index: 99999 !important;
   display: flex !important;
   flex-direction: column !important;
   gap: 6px !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  transform: translateY(4px) scale(0.98) !important;
   transform-origin: bottom right !important;
-  transition: opacity 0.15s ease, transform 0.15s ease !important;
-}
-body[data-dsh-claude-style] .dsh-claude-model-popover[data-open="true"] {
-  opacity: 1 !important;
-  pointer-events: auto !important;
-  transform: translateY(0) scale(1) !important;
-}
-body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-model-popover {
-  background: #1e1e1d !important;
-  border-color: #2e2c29 !important;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
-}
-body[data-dsh-claude-style] .dsh-claude-model-popover-body {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 3px !important;
-  min-width: 0 !important;
 }
 /* Level 1 splits into a scrollable list and a pinned footer: the model rows
    scroll under the divider / effort / more-models rows, which never leave the
@@ -52,7 +25,7 @@ body[data-dsh-claude-style] .dsh-claude-model-popover-body {
 body[data-dsh-claude-style] .dsh-claude-model-popover:not(.dsh-claude-model-popover-sub) {
   overflow: hidden !important;
 }
-body[data-dsh-claude-style] .dsh-claude-model-popover:not(.dsh-claude-model-popover-sub) .dsh-claude-model-popover-body {
+body[data-dsh-claude-style] .dsh-claude-model-popover:not(.dsh-claude-model-popover-sub) .dsh-claude-popover-body {
   flex: 1 1 auto !important;
   min-height: 0 !important;
   overflow-y: auto !important;
@@ -63,12 +36,6 @@ body[data-dsh-claude-style] .dsh-claude-model-footer {
   flex-direction: column !important;
   gap: 2px !important;
   min-width: 0 !important;
-}
-body[data-dsh-claude-style] .dsh-claude-model-status {
-  color: var(--dsw-alias-label-tertiary, #8f8d84) !important;
-  font-size: 12px !important;
-  line-height: 20px !important;
-  padding: 4px 8px !important;
 }
 /* The sub popover is taller than the first level and sized by its content: the
    cap is only the viewport, so a short provider list does not leave a tall empty
@@ -207,12 +174,6 @@ body[data-dsh-claude-style] .dsh-claude-model-desc {
   font-size: 11px !important;
   line-height: 14px !important;
   color: var(--dsw-alias-label-tertiary, #8f8d84) !important;
-}
-body[data-dsh-claude-style] .dsh-claude-model-check {
-  flex: none !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  color: var(--dsw-alias-brand-primary, #d97757) !important;
 }
 /* The picker's two hairlines share one declaration: the provider header's rule
    and the divider that closes the model list. Same colour, same thickness, same

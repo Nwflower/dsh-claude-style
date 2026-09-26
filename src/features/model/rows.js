@@ -35,14 +35,14 @@
          * stay clean.
          */
         function buildProviderRule(name) {
-            const rule = modelEl('div', 'dsh-claude-model-rule')
-            if (name) rule.appendChild(modelEl('span', 'dsh-claude-model-rule-name', name))
+            const rule = buildElement('div', 'dsh-claude-model-rule')
+            if (name) rule.appendChild(buildElement('span', 'dsh-claude-model-rule-name', name))
             return rule
         }
 
         /** One selectable model row: brand mark, name, optional description line and a check when current. */
         function buildModelOption(group, model, selected, withDescription) {
-            const item = modelEl('button', 'dsh-claude-model-option')
+            const item = buildElement('button', 'dsh-claude-model-option')
             item.type = 'button'
             item.setAttribute('role', 'menuitemradio')
             item.setAttribute('aria-checked', selected ? 'true' : 'false')
@@ -53,7 +53,7 @@
             // here: it rides inside the label's lockup. The scheduler's attributeFilter
             // does not watch data-*, so this write cannot re-trigger a pass.
             if (brand) item.setAttribute('data-brand', brand)
-            const copy = modelEl('span', 'dsh-claude-model-copy')
+            const copy = buildElement('span', 'dsh-claude-model-copy')
             copy.appendChild(buildModelLabel(model.name, brand))
             // The description belongs to level 1 only: that list is the official
             // catalog, short enough that the line is what tells the models apart,
@@ -61,9 +61,9 @@
             // as names alone. One line, in the shell's language — the copy document is
             // localized rather than stacked, so a row never carries two languages.
             const desc = withDescription ? modelDescription(ctx, group.id, model) : ''
-            if (desc) copy.appendChild(modelEl('span', 'dsh-claude-model-desc', desc))
+            if (desc) copy.appendChild(buildElement('span', 'dsh-claude-model-desc', desc))
             item.appendChild(copy)
-            const check = modelEl('span', 'dsh-claude-model-check')
+            const check = buildElement('span', 'dsh-claude-popover-check')
             check.innerHTML = selected ? MODEL_CHECK_SVG : ''
             item.appendChild(check)
             item.addEventListener('click', ((g, m) => e => {
@@ -75,11 +75,11 @@
 
         /** The More-models row: label + chevron, hover opens the second level. */
         function buildModelCell(label) {
-            const cell = modelEl('button', 'dsh-claude-model-cell')
+            const cell = buildElement('button', 'dsh-claude-model-cell')
             cell.type = 'button'
             cell.setAttribute('role', 'menuitem')
-            cell.appendChild(modelEl('span', 'dsh-claude-model-cell-label', label))
-            const chevron = modelEl('span', 'dsh-claude-model-cell-chevron')
+            cell.appendChild(buildElement('span', 'dsh-claude-model-cell-label', label))
+            const chevron = buildElement('span', 'dsh-claude-model-cell-chevron')
             chevron.innerHTML = MODEL_CHEVRON_SVG
             cell.appendChild(chevron)
             cell.addEventListener('mouseenter', () => {

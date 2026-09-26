@@ -124,35 +124,15 @@ body[data-dsh-claude-style] .dsh-claude-perm-chevron::after {
 body[data-dsh-claude-style] .dsh-claude-perm-btn[data-open="true"] .dsh-claude-perm-chevron::after {
   transform: rotate(180deg);
 }
+/* The preset list's card is the shared popover card (shared/popover.css). */
 body[data-dsh-claude-style] .dsh-claude-perm-popover {
   position: fixed !important;
   min-width: 248px !important;
-  background: var(--dsw-alias-bg-overlay, #ffffff) !important;
-  border: 1px solid var(--dsw-alias-border-l1, #e8e6dc) !important;
-  border-radius: 12px !important;
-  box-shadow: 0 8px 30px rgba(20, 20, 19, 0.12), 0 2px 8px rgba(20, 20, 19, 0.06) !important;
-  padding: 6px !important;
-  box-sizing: border-box !important;
-  z-index: 99999 !important;
   display: flex !important;
   flex-direction: column !important;
   /* Two-line preset rows (label + description) need air between them: the
      2px gap read as one solid block, so each row is separated by 6px. */
   gap: 6px !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  transform: translateY(4px) scale(0.98) !important;
   transform-origin: bottom left !important;
-  transition: opacity 0.15s ease, transform 0.15s ease !important;
-}
-body[data-dsh-claude-style] .dsh-claude-perm-popover[data-open="true"] {
-  opacity: 1 !important;
-  pointer-events: auto !important;
-  transform: translateY(0) scale(1) !important;
-}
-body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-perm-popover {
-  background: #1e1e1d !important;
-  border-color: #2e2c29 !important;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
 }
 
