@@ -951,7 +951,7 @@ const PROBE = `(function () {
       r.lateAfter = document.body.getAttribute('data-dsh-claude-home-layout')
     }
     if (window.SMOKE_CASE === 'popovers') {
-      // The shared popover rule (popover-utils.js): the dwell keeps a pointer that
+      // The shared popover rule (shared/popover.js): the dwell keeps a pointer that
       // merely crosses a trigger from unfolding anything, and only one card is up
       // at a time — whichever opens last folds the one before it.
       // The controls are built by the first scheduler pass, not by apply().

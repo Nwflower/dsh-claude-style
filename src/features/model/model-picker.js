@@ -538,7 +538,7 @@
       }
 
 
-      // The picker takes part in the shared popover rule (popover-utils.js): one
+      // The picker takes part in the shared popover rule (shared/popover.js): one
       // entry for BOTH levels, so opening the More-models card never folds the
       // card that carries it.
       registerPopover('model', closeModelPopovers)

@@ -13,21 +13,20 @@
 
 ## Behavioral Red Lines
 
-- Import needed libraries directly; never guard imports with try/catch. Recorded exception: the settings layer's guarded schemastery import in docs/architecture.md D10; any new exception must be written into that file first.
+- Import needed libraries directly; never guard imports with try/catch. Recorded exception: the host half's guarded schemastery import in docs/architecture.md D10; any new exception must be written into that file first.
 - Never enter plan mode on your own initiative.
 - Never use Git to roll back any code. When the user says "roll back", it always means manually restoring code to its previous state with the edit tools.
 - Never read from or write to the system temp directory; intermediate artifacts go to `.debug/` (gitignored).
 - When the user provides a web link, read the full content of the link before starting execution; when you discover a mistake in how a library is used, re-read the full content of that link first.
 - Do not minimize dependencies; never reinvent the wheel to avoid a dependency (this repository's "zero build toolchain, zero runtime dependencies" is the D1 architectural constraint and is excluded from this rule).
-- Code must fail fast: throw at the point of error, never swallow errors, never fall back silently. Recorded exception: per-feature failure isolation in docs/architecture.md D12 is a deliberate decision, and the fallbacks in each feature's install/sync stay.
+- Code must fail fast: throw at the point of error, never swallow errors, never fall back silently. The only catches allowed are the ones docs/architecture.md D12 lists, each with its reason written beside it.
 - No mocks, no fake implementations, no workarounds that exist only to make tests pass.
 - The user may withdraw or modify your changes at any time: re-read the file before continuing to edit, and build on the latest state the user left; never re-add content the user deleted.
 - If the user asks about something else mid-task: answer immediately if you can, then resume the original task right away — never abandon a task half-done.
 - When fixing errors in documentation or code, leave no trace of the error in the update.
 - Every feature must be implemented, run, tested, and iterated until it works correctly; never stop after an initial implementation and ask the user to test. The verification gates for this repository are in "Change Workflow".
 - Never inline long multi-line scripts on the command line; write the script to a file (in `.debug/`) first, then run it.
-- Python files start with no docstring and no shebang; comments are in Chinese with technical terms kept in English; do not over-comment.
-- Never modify code programmatically (heredoc, Python scripts, sed, perl, etc.), even if the user asks; all code changes go through the edit tools.
+- Authored changes — new logic, new copy, new rules — go through the edit tools. Mechanical transformations across files (moving files, renaming identifiers or class names, rewriting paths, migrating syntax) may be scripted: write the script to `.debug/`, run it, read the whole resulting diff, and pass the gates; such a script never writes new logic.
 - Never hand-write parsers that parse mature file formats as strings or byte streams; use a third-party library, or avoid parsing.
 - A user message ending in a question mark is a question: answer only the question; do not offer a better approach, do not ask counter-questions, do not end with "ready when you are".
 - After the user points out a mistake, continue working from the premise that the spot is wrong; do not restate why the mistake was wrong.
@@ -35,73 +34,82 @@
 
 ## Principles
 
-- This repository only builds a Web theme plugin; it never modifies the DSH engine, apiproxy, or the official UI packages. All effects are achieved on the browser side through CSS overrides and client-side DOM overrides.
-- Zero build toolchain, zero runtime dependencies: `scripts/build.mjs` concatenates the `src/` fragments verbatim in a fixed order into the single file `lib/client.js`. Do not introduce bundlers like esbuild/rollup, do not introduce any new dependency (the DSH module loader has no relative require and no asset URLs — this architecture must be preserved, see docs/architecture.md D1).
-- `lib/client.js`, `lib/model-descriptions.json`, and `lib/claude-mark.svg` are build artifacts; never edit them by hand — run `npm run build` after changing `src/`. `host/index.js` is the handwritten host side and can be edited directly.
+- This repository only builds a Web theme plugin; it never modifies the DSH engine, apiproxy, or the official UI packages. All effects are achieved on the browser side through CSS overrides and client-side DOM overrides (docs/architecture.md D2).
+- Zero build toolchain, zero runtime dependencies: `scripts/build.mjs` concatenates the `src/` fragments verbatim in a fixed order into the single file `lib/client.js`. Do not introduce bundlers like esbuild/rollup, do not introduce any new runtime dependency (the DSH module loader has no relative require and no asset URLs — see docs/architecture.md D1). One-off development tools run from `.debug/` and never enter `package.json`.
+- `lib/` holds build output only — `client.js`, `model-descriptions.json`, `claude-mark.svg` — never edited by hand; run `npm run build` after changing `src/`. The handwritten host half lives in `host/`.
 - The npm package does not distribute the Anthropic Sans/Serif fonts; `fonts/` is a repository-only download. Anthropic fonts are copyrighted by Anthropic and are not covered by MIT. The JetBrains Mono code font ships with the plugin package under the SIL OFL.
-- Public documentation (bilingual README, docs, CHANGELOG) never shows internal numbering.
+- Public documentation (bilingual README, CHANGELOG) never shows internal numbering; the decision numbers in docs/architecture.md are stable identifiers that code comments cite.
 - Local debug scripts, screenshots, and intermediate artifacts all go into `.debug/` and are never committed.
-- Read `docs/architecture.md` (architectural decisions and trade-offs) before structural changes; never contradict recorded decisions. If a decision truly must be overturned, first explain in that document why the old decision no longer holds.
+- Read `docs/architecture.md` (the decisions currently in force) before structural changes; never contradict a recorded decision. If a decision truly must be overturned, first rewrite that entry and say why the old decision no longer holds.
 - Conflict priority: the user's current instruction > current repository code > this file > docs/. Whether a convention overturned by a current instruction gets written back into documentation is the user's call — the AI does not guess on the spot.
 
-## Size Stop Lines (Mechanically Triggered, Not Judgment-Based)
+## Stop Lines
 
-- When any fragment under `src/` (.js/.css) approaches 750 lines: stop adding new features to it, output a split proposal and wait for user confirmation; until the proposal is approved, that file gets bugfixes only. The split layout and relocation discipline are in docs/architecture.md D13.
-- When the same host selector pattern or the same DOM query logic appears for the 3rd time: likewise stop and propose a merge; do not write a 4th copy.
-- These two are hard stop lines for the executing model: stop the moment they trigger, without first judging "whether it's worth it".
+- When a fragment under `src/` (.js/.css) approaches 750 lines: stop adding features to it, and propose splitting it along its responsibilities inside its feature folder (helper factories, docs/architecture.md D13 / D18); wait for the user's confirmation, and until then the file gets bug fixes only.
+- When the same host selector pattern or the same DOM query logic appears for the 3rd time: stop and move it into `src/shared/` (or `src/core/host.js` for host accessors); do not write a 3rd copy.
+- These are hard stop lines: stop the moment they trigger, without first judging "whether it's worth it".
 
 ## Commands
 
 ```sh
-npm run build            # Concatenate src/ → lib/client.js; validate %%TOKEN%%, CSS gate, syntax, and model-descriptions.json
-npm run smoke            # Smoke-test the lib/ artifacts: fences on host-side private routes; in headless Chrome: startup, 0 idle passes, no markup injection, Enter stays with the host, feature isolation, clean teardown
-node scripts/probe.cjs --token <launch-token>   # Headless Chrome asserting composer invariants against a running GUI
-node scripts/probe-timing.cjs --token <launch-token>   # Itemized timing: startup long tasks and resources, model catalog readiness, open latency, line composition, lockup markup parsing, heap
-node scripts/shoot.cjs --token <launch-token>   # Re-shoot the README screenshots (docs/light.png / docs/dark.png)
+npm run build            # src/ → lib/client.js; checks listed files, %%TOKEN%%, composer gate, :has() placement, syntax, model copy; prints the build id
+npm run smoke            # lib/ against a stand-in host: private-route fences; in headless Chrome: startup, 0 idle passes, no markup injection, Enter stays with the host, feature isolation, no uncaught errors, clean teardown
+node scripts/probe.cjs --token <launch-token>          # composer invariants against a running `dsh web`
+node scripts/probe-timing.cjs --token <launch-token>   # itemized timing: startup, model catalog readiness, open latency, heap
+node scripts/shoot.cjs --token <launch-token>          # re-shoot the README screenshots (docs/light.png / docs/dark.png)
 ```
 
-probe / shoot need a running `dsh web` instance; the token comes from the `/?token=…` in the GUI URL (or the `DSH_WEB_TOKEN` environment variable). smoke does not — it checks the artifacts against a stand-in host page. All three require a local Chrome/Edge (set `CHROME_PATH` to specify one).
+probe / probe-timing / shoot need a running `dsh web` instance (default `http://127.0.0.1:3080`; `--url` for another); the token is the `/?token=…` in the GUI URL (or `DSH_WEB_TOKEN`). smoke needs no running instance. All of them need a local Chrome/Edge (`CHROME_PATH` to choose one).
 
 ### Live inspection
 
-Read the running GUI before starting any probe instance: `desktop.eval` evaluates an expression inside the live page (the desktop window or a `dsh web` tab) and returns its value, so the skin's real rendering and the host's real markup can be read straight from the window the user is looking at. The skin is applied when `document.body.hasAttribute('data-dsh-claude-style')`.
+Read the running GUI before starting a probe:
 
-Two facts decide what that page is actually running:
-
-- **A page keeps the bundle it loaded.** Compare `performance.timeOrigin` in the page against `lib/client.js`'s modification time: a page older than the last build runs stale code, so a symptom reported from it may already be fixed — or may predate the change entirely. Ask for a reload before treating a screenshot as evidence about the current build.
-- **The engine checkout is a sibling of this repository** (`../deepseek-harness`, `D:\Build\deepseek-harness` here): `@deepseek-ai/dsh-root`, the host version under test. The host's own client bundles live at `packages/client/*/lib/client.js` — the same files the GUI runs — so read the host's markup and wiring there rather than unpacking npm tarballs. A second copy of the published packages sits in the npm global root and in `%APPDATA%\@deepseek-ai\dsh-desktop`.
+- **Desktop window**: `node D:\Build\dsh-desktop-bridge\bin\bridge.cjs "<expression>"` evaluates an expression in the desktop window the user is looking at and prints the value (`--stdin` reads a longer script from a file). The same bridge is the `desktop_eval` tool for the DSH model.
+- **`dsh web` tab**: open the GUI URL in a browser the agent can drive and evaluate there.
+- **Which build a page runs**: `document.body.getAttribute('data-dsh-claude-style')` is the build id of the bundle the page is running; `npm run build` prints the id it wrote. A hot reload swaps the bundle without reloading the page, so the page's load time says nothing about its code. A page that has gone through many hot reloads can carry state from older generations; reload it before treating what it shows as evidence.
+- **The engine checkout is a sibling of this repository** (`../deepseek-harness`, `D:\Build\deepseek-harness` here): `@deepseek-ai/dsh-root`, the host version under test. The host's own client sources and bundles live under `packages/client/*/` — read the host's markup, contracts (e.g. the renderer's `[data-slot]` anchors) and wiring there rather than unpacking npm tarballs.
 
 ## Repository Layout
 
-- `src/` — all source code. The fragment list and assembly order live in `scripts/build.mjs` (`FRAGMENTS` / `STYLE_FILES`, enforced by the build); the feature list lives in `src/entry.js` (`FEATURES`) — those two lists are authoritative, this section does not enumerate files. Layout conventions: `constants.js` is evaluated at build time to fill %%TOKEN%% placeholders; `context/` holds host accessors, the preference store, model copy, i18n; `overrides/` holds one fragment per feature plus the shared popover-utils and the scheduler, and a feature split into helper fragments gets a subdirectory named after it (split layout in docs/architecture.md D13); `styles/` splits into root stylesheets, `composer/` and `components/`; `assets/brand/*.svg` are brand marks inlined as CSS data URIs at build time; `assets/icons/combine/*.svg` are vendor lockups (icon + vendor wordmark combined into one SVG) inlined at build time as a JS markup table; `assets/icons/*.svg` are hand-provided lockup assets, same level as the generated `combine/`, taking priority over network fetching during vendoring; `model-descriptions.json` is model copy data + the `brands` brand bindings and `brands.lockups` override table.
-- `lib/` is the artifact directory: `client.js`, `model-descriptions.json` and `claude-mark.svg` are build output, never hand-edited (the icon is copied from `src/assets/brand/claude-mark-clay.svg` — it is `package.json`'s `icon`, which the 0.1.7 plugin manifest reads for the plugin card icon). The host side is handwritten: `index.js` and its sibling modules (e.g. the usage roll-up), providing private routes like `/dsh-claude-style/model-descriptions.json` — security constraints in docs/architecture.md D11.
-- `locale/` (plugin metadata localization): `meta.title` / `meta.description` in `<language>.json`, read by the 0.1.7 plugin card and detail page; `exports` must cover them with the `"./locale/*"` wildcard — the host resolves through exports file by file, and a missing one throws during enumeration, degrading the entire metadata (including the icon) to `meta.error`.
+The assembly order lives in `scripts/build.mjs` (`FRAGMENTS` / `STYLE_FILES`) and the feature list in `src/entry.js` (`FEATURES`); those lists are authoritative and the build refuses a source file neither list names. The layout (docs/architecture.md D18):
+
+- `src/core/` — host accessors (`host.js`), the preference store, model copy, i18n, the scheduler.
+- `src/shared/` — parts more than one feature uses, JS beside CSS: `dom.js` (`buildElement`, `createStamp`), `notify.js` (`notifyAll`), `popover.*` (anchoring, hover intent, the popover registry, the card shell and rows), `sliding-pill.*` (the segmented controls' sliding highlight).
+- `src/theme/` — the global look no single feature owns (tokens, typography, chrome, hero brand, sidebar, third-party fixes).
+- `src/features/<feature>/` — one feature's installer, its helper factories and its stylesheets, side by side; the main file carries the feature's name.
+- `src/constants.js` is evaluated at build time to fill `%%TOKEN%%` placeholders; `src/model-descriptions.json` is model copy data plus the `brands` bindings; `src/assets/brand/*.svg` are brand marks inlined as CSS data URIs; `src/assets/icons/combine/*.svg` are vendor lockups inlined as a JS markup table; `src/assets/icons/*.svg` are hand-provided lockup assets that take priority over network fetching during vendoring.
+- `host/` — the handwritten host half (`index.js` and its sibling modules): private routes and the settings `Config` (docs/architecture.md D10, D11).
+- `lib/` — build output only. `claude-mark.svg` is `package.json`'s `icon`, copied from `src/assets/brand/claude-mark-clay.svg`.
+- `locale/` — plugin metadata localization (`meta.title` / `meta.description` per `<language>.json`); `exports` must cover them with `"./locale/*"`, or the host degrades the whole metadata (icon included) to `meta.error`.
 - `skin.json` is the skin manifest; `cordis.patch.yml` inserts `ui-skin-claude-style` into the web roster.
-- `scripts/` — build and regression tools (`fetch-lobe-combines.py` is the only networked script: run by hand, never part of the build; it fetches Lobe assets per the brand table in `model-descriptions.json` and composes the lockups); `docs/` — documentation and screenshots; `fonts/` — font files (JetBrains Mono ships in the package; Anthropic fonts are repository-only downloads).
+- `scripts/` — build and regression tools (`fetch-lobe-combines.py` is the only networked script: run by hand, never part of the build); `docs/` — architecture, style guide, screenshots; `fonts/` — font files.
 - `.debug/` and `node_modules/` are never committed.
 
 ## Core Conventions
 
 ### CSS
 
-- Every rule must hang under `body[data-dsh-claude-style]`; dark tokens are the base, light overrides go under `:not([data-ds-dark-theme])`. Light main canvas `#FCFCFB`, dark `#141413`, accent ember orange `#D97757`; no pure white, pure black, or cold grays.
-- Composer-related rules must sit below the `/* @composer-gate */` marker; the build stamps the `[%%COMPOSER_ATTR%%]` gate onto every rule below the marker — a missed one fails the build (see docs/architecture.md D4).
+- Every rule hangs under `body[data-dsh-claude-style]`; dark tokens are the base, light overrides go under `:not([data-ds-dark-theme])`. Light main canvas `#FCFCFB`, dark `#141413`, accent ember orange `#D97757`; no pure white, pure black, or cold grays.
+- Composer rules sit below the `/* @composer-gate */` marker; the build stamps the composer gate onto every rule below it (docs/architecture.md D4).
+- `:has()` only in a selector's last compound; structure-dependent state is written as an attribute by the feature's pass (docs/architecture.md D9). The build refuses the other placement.
+- A feature never borrows another feature's class names; shared looks use the neutral shared classes (`dsh-claude-popover-card`, `dsh-claude-popover-item`, …).
 - Design tokens and shape rules live in `docs/STYLE.md`; read it before changing visuals.
 
 ### Host Selector Discipline
 
-The host uses hashed CSS-module class names. Two inviolable rules: substring matching uses only the **longest stable fragment** (`[class*="_row"]`, never `[class*="row"]`); never override the host's active-period layout contract on `[class*="viewArea"]`. After adding a substring selector, you must check for collateral damage. Incident background and details in `docs/STYLE.md` and docs/architecture.md D3.
+Full rules in docs/architecture.md D3 and D19. In short: prefer the host's contracts (`[data-slot="<key>"]` anchors, the host's own data-* attributes), then marks the skin's pass writes (`data-dsh-claude-control` on the composer's buttons), then hashed class substrings — and those use the longest stable fragment (`[class*="_row"]`, never `[class*="row"]`); broad fragments only in deliberately global rules. Never match host elements by their visible text. Never override the host's active-period layout contract on `[class*="viewArea"]`. After adding a substring selector, compare what it matches on a live page.
 
 ### JS Fragments
 
-All fragments share one factory scope: **no import/export**, keep 4-space base indentation and ES5 style; `%%TOKEN%%` is replaced by the build and no residue may remain in the artifact; React is obtained only via the loader's `require('react')`. The fragment list and concatenation order are in `scripts/build.mjs`; helper fragments export top-level `createX(...)` factories, features are installed and ordered uniformly through entry.js's FEATURES table — the contract is in docs/architecture.md D13.
+All fragments share one factory scope: no import/export, 4-space base indentation, modern syntax (`const`/`let`, arrow functions, optional chaining). React comes from the build's header (`require('react')`); other host packages are `require`d directly where they are used. Helper fragments export top-level `createX(...)` factories named after their feature; features are installed and ordered through `src/entry.js`'s FEATURES table (docs/architecture.md D13). Reach for the shared parts before writing a local version: `buildElement`, `createStamp`, `notifyAll`, `createSlidingPill`, the popover utilities.
 
 ### Model Copy Is Data, Not Bundle
 
 - `src/model-descriptions.json` is validated at build time and **copied** to `lib/`; the browser side fetches it through the host route the first time it renders a picker. Extending the copy table requires no JS change.
 - Each entry is `{ locale: text }`; lookup degrades through: exact entry → family rule → tier rule → catalog's own text.
 - The copy is product-line copy: mapped by name pattern, unchanged across version iterations and retirements; never add self-invented tier prefixes (like "Flagship tier:"); never repeat the model name already in the row.
-- Family rules are ordered and must be anchored (e.g. the `flash` rule is scoped to deepseek); **never write superlatives like "strongest/flagship"** — superlatives are only allowed in exact entries bound to a concrete version number, otherwise old models get mislabeled as flagship. Full policy in docs/architecture.md D5.
+- Family rules are ordered and must be anchored (e.g. the `flash` rule is scoped to deepseek); **never write superlatives like "strongest/flagship"** — superlatives are only allowed in exact entries bound to a concrete version number. Full policy in docs/architecture.md D5.
 
 ### Screenshots and Privacy
 
@@ -109,17 +117,18 @@ All fragments share one factory scope: **no import/export**, keep 4-space base i
 
 ## Change Workflow
 
-1. Change `src/` (CSS or JS fragments); never touch `lib/client.js`.
-2. `npm run build` to regenerate artifacts and pass the syntax gate.
-3. `npm run smoke` to smoke-test the artifacts against the stand-in host; with a `dsh web` instance running, also run `node scripts/probe.cjs --token <token>` to assert the composer invariants (pinned to bottom, starts single-line, grows with content, restores when cleared).
+1. Change `src/` (or `host/`); never touch `lib/`.
+2. `npm run build` to regenerate the artifacts and pass the build's checks.
+3. `npm run smoke`; with a `dsh web` instance running, also `node scripts/probe.cjs --token <token>` (composer pinned to the bottom, starts single-line, grows with content, restores when cleared). Check the live page too (see Live inspection), including after a hot reload.
 4. Visual changes are checked by the user in both light and dark modes; when README screenshots go stale, re-shoot them with `shoot.cjs`.
-5. Sync documentation: the bilingual READMEs (`README.md` Chinese / `README.en.md` English) change together; behavioral changes go into `CHANGELOG.md`'s `[Unreleased]` section — format in "Git and Release".
+5. Sync documentation: the bilingual READMEs (`README.md` Chinese / `README.en.md` English) change together; behavioral changes go into `CHANGELOG.md`'s `[Unreleased]` section — format in "Git and Release"; a changed decision goes into docs/architecture.md.
 6. A feature is done when all gates pass and behavior is verified correct; if a gate fails, keep fixing — never hand it to the user for testing.
 
 ## Git and Release
 
-- Use conventional commit prefixes (`fix(scope):` / `refactor(scope):` / `docs(scope):` / `chore(release):` etc.); one logical change per commit, no WIP commits, no unrelated changes mixed in.
-- Required before committing: `npm run build` succeeds and the working tree has no stray files. `lib/client.js` and `lib/model-descriptions.json` are build output and are **not** committed with the source: while a parallel session edits the same tree they stay out of the commit entirely, and each session commits only its own source. At release the complete artifacts are rebuilt from `src/` and committed together with the release commit — users consume versions, not commits.
+- Use conventional commit prefixes (`fix(scope):` / `refactor(scope):` / `docs(scope):` / `chore(release):` etc.); one logical change per commit, no WIP commits, no unrelated changes mixed in. A commit that only moves files is kept apart from commits that change logic.
+- Required before committing: `npm run build` succeeds and the working tree has no stray files. `lib/` artifacts are **not** committed with the source; at release the complete artifacts are rebuilt from `src/` and committed with the release commit — users consume versions, not commits.
+- Another session may be editing the same working tree. Commit only your own changes: stage whole files only when every change in them is yours, otherwise stage your hunks alone (`git apply --cached` of the filtered hunks). Before committing, export the index (`git checkout-index -a --prefix=.debug/<dir>/`) and run the build and smoke there, so the commit is checked exactly as it will be stored.
 - Release flow: update CHANGELOG → `npm version patch|minor` → `npm run build` and commit the rebuilt `lib/` artifacts → tag → `npm publish` (`prepublishOnly` re-runs the build automatically) → GitHub Release, with release notes taken from the CHANGELOG section for that version.
 - CHANGELOG format (same spec as dsh upstream release notes):
   - Version sections: `## [x.y.z] - YYYY-MM-DD`, newest on top; in-development changes go under `## [Unreleased]`.

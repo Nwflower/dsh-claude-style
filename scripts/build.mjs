@@ -445,7 +445,24 @@ function validateModelCopy(doc, lobeBrands) {
   return Object.keys(doc.exact).length
 }
 
+/**
+ * Refuse a source file that no list names: a fragment or stylesheet added
+ * under src/ but left out of FRAGMENTS / STYLE_FILES would otherwise simply
+ * not ship, with nothing to say so.
+ */
+function checkListed() {
+  const listed = new Set([...FRAGMENTS, ...STYLE_FILES.map((fileDef) => fileDef.file)])
+  const walk = (dir) => fs.readdirSync(path.join(SRC, dir), { withFileTypes: true }).flatMap((entry) => {
+    const rel = dir === '' ? entry.name : `${dir}/${entry.name}`
+    if (entry.isDirectory()) return rel === 'assets' ? [] : walk(rel)
+    return /\.(js|css)$/.test(entry.name) ? [rel] : []
+  })
+  const unlisted = walk('').filter((file) => !listed.has(file))
+  if (unlisted.length > 0) throw new Error(`build: src/${unlisted[0]} is in no list; add it to FRAGMENTS or STYLE_FILES`)
+}
+
 function main() {
+  checkListed()
   const tokens = { ...loadTokens(), ...loadSvgAssets() }
   const combines = loadCombines()
 

@@ -147,7 +147,7 @@
         isOpen() { return surface.mode() === 'synthetic' && isPopoverOpen() },
         close: closeSurface
       })
-      // The account area takes part in the shared popover rule (popover-utils.js):
+      // The account area takes part in the shared popover rule (shared/popover.js):
       // ONE entry for both surfaces, since a given host has only one of them.
       registerPopover('account', closeAccountSurfaces)
       /** The entry row's width, as last written to the stylesheet. */
@@ -271,7 +271,7 @@
 
       /**
        * Close whichever account surface is up, for the shared popover rule
-       * (popover-utils.js): the self-built drawer directly, the host's menu the
+       * (shared/popover.js): the self-built drawer directly, the host's menu the
        * way the host dismisses it. Both halves are no-ops while their surface is
        * down, so this is safe to call on every open of every other popover.
        */

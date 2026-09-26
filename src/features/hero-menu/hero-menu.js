@@ -287,7 +287,7 @@
       }
 
       // The hero row's two host menus take part in the shared popover rule
-      // (popover-utils.js): the entry closes whatever menu the row has open,
+      // (shared/popover.js): the entry closes whatever menu the row has open,
       // however that menu was opened.
       registerPopover('hero', closeHeroMenu)
 

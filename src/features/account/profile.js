@@ -123,7 +123,9 @@
       /**
        * Follow the account stream the host's own account UI reads, through
        * `remote.$stream`, which reopens it across reconnects. It is an async
-       * iterable; this half is ES5, so it is stepped by hand.
+       * iterable, stepped by hand: leaving a `for await` would call the
+       * iterator's return() and close the stream, whose disposal belongs to
+       * stopFollowingAccount().
        *
        * Client HMR drops the old generation's disposals, so its stream would stay
        * open and read again on every sign-in. The newest generation marks the
@@ -134,8 +136,7 @@
       function followAccount() {
         const account = accountService()
         const remote = ctx.get('remote')
-        if (account === null || typeof account.watch !== 'function' || !remote || typeof remote.$stream !== 'function' ||
-            typeof Symbol !== 'function' || !Symbol.asyncIterator) return false
+        if (account === null || typeof account.watch !== 'function' || typeof remote?.$stream !== 'function') return false
         const stream = remote.$stream({
           name: 'dsh-claude-style account',
           open(signal) { return account.watch(signal) },

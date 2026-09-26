@@ -177,7 +177,7 @@ body[data-dsh-claude-style] .dsh-claude-account-photo[hidden] {
 }
 
 /* The launcher's own skin, when the instance was started with one: the head is
-   a canvas cropped out of the texture the host serves (src/overrides/account/
+   a canvas cropped out of the texture the host serves (src/features/account/
    rows.js), so it is the picture, not the mark, that fills the box. The mark is
    dropped only while that canvas is mounted — a skin whose bytes never arrived
    leaves the attribute off and the mark in place. The pixels are a Minecraft
