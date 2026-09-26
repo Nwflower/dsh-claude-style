@@ -21,6 +21,14 @@
      * marker onto <body> so the stylesheet can switch, and skips the measured
      * shift entirely there.
      *
+     * The strip's active pill slides between tabs. It is one pseudo-element on
+     * the strip (chrome.css), placed by two custom properties this writes from
+     * the active tab's box: `--dsh-view-tabs-pill-x` and `--dsh-view-tabs-pill-w`.
+     * The `data-dsh-view-tabs-pill` attribute brings the pseudo-element into
+     * being, and it is set in the same frame as the first placement, so the pill
+     * appears where it belongs and only later moves animate. Without the
+     * attribute (this feature retired) the active tab keeps its own background.
+     *
      * @param ctx - client context.
      * @param ui - shared handle table.
      * @returns teardown.
@@ -49,6 +57,19 @@
       var TITLEBAR_ATTR = 'data-dsh-titlebar-tabs'
       /** Whether the last pass saw the host's Windows titlebar marker. */
       var titlebar = false
+      /** The strip attribute the stylesheet draws the sliding pill for. */
+      var PILL_ATTR = 'data-dsh-view-tabs-pill'
+      /** The pill's last written offset and width, and the strip they went to. */
+      var pillX = null
+      var pillW = null
+      var pillEl = null
+      /**
+       * Tab widths change without a DOM mutation when a font finishes loading;
+       * the strip hugs its tabs, so its own size change re-places the pill.
+       */
+      var pillObserver = new ResizeObserver(function () {
+        if (pillEl !== null) syncPill(pillEl)
+      })
 
       /**
        * Mirror the host's Windows titlebar marker onto <body>, the way D9 moves
@@ -99,14 +120,48 @@
         return best
       }
 
+      /**
+       * Place the sliding pill under the active tab. The offset is taken from
+       * the two boxes' left edges, so the strip's own transform (the measured
+       * shift, the titlebar centring) moves both alike and cancels out.
+       */
+      function syncPill(strip) {
+        if (strip !== pillEl) {
+          if (pillEl !== null) pillObserver.unobserve(pillEl)
+          pillEl = strip
+          pillX = null
+          pillW = null
+          pillObserver.observe(strip)
+        }
+        var active = strip.querySelector('[aria-selected="true"]')
+        var stripBox = rect(strip)
+        var tabBox = rect(active)
+        if (stripBox === null || tabBox === null) {
+          if (strip.hasAttribute(PILL_ATTR)) strip.removeAttribute(PILL_ATTR)
+          pillX = null
+          pillW = null
+          return
+        }
+        var x = Math.round((tabBox.left - stripBox.left - strip.clientLeft) * 100) / 100
+        var w = Math.round(tabBox.width * 100) / 100
+        if (x === pillX && w === pillW) return
+        pillX = x
+        pillW = w
+        strip.style.setProperty('--dsh-view-tabs-pill-x', x + 'px')
+        strip.style.setProperty('--dsh-view-tabs-pill-w', w + 'px')
+        if (!strip.hasAttribute(PILL_ATTR)) strip.setAttribute(PILL_ATTR, '')
+      }
+
       function sync() {
         syncTitlebar()
         var header = document.querySelector(HEADER)
         if (header === null) return
+        var strip = header.querySelector('[class*="_tabs"]')
+        if (strip === null) return
+        syncPill(strip)
         // Windows titlebar mode places the strip itself (chrome.css): it is
         // fixed there, so neither the measured shift nor the fallback applies.
         if (titlebar) return
-        var strip = header.querySelector('[class*="_tabs"]')
         var stripBox = rect(strip)
         if (stripBox === null) return
         var headerBox = rect(header)
@@ -151,6 +206,15 @@
         var header = document.querySelector(HEADER)
         var strip = header === null ? null : header.querySelector('[class*="_tabs"]')
         if (strip !== null) strip.style.removeProperty('--dsh-view-tabs-shift')
+        pillObserver.disconnect()
+        if (pillEl !== null) {
+          pillEl.removeAttribute(PILL_ATTR)
+          pillEl.style.removeProperty('--dsh-view-tabs-pill-x')
+          pillEl.style.removeProperty('--dsh-view-tabs-pill-w')
+        }
+        pillEl = null
+        pillX = null
+        pillW = null
         last = null
         lastEl = null
         delete ui.viewTabs

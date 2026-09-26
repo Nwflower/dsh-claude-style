@@ -266,6 +266,8 @@ body[data-dsh-claude-style] [class*="header"]:has([class*="_tabs"]) [class*="_ta
      10px up from y=50) holds the rest of the time. */
   justify-self: center !important;
   transform: translateY(var(--dsh-view-tabs-shift, -10px)) !important;
+  /* The sliding pill below is absolutely placed against the strip. */
+  position: relative !important;
   /* A view switcher, not furniture: it fades in when the pointer is in the
      conversation pane and out when it leaves, the same idiom as the sidebar's
      进行中 / 已归档 control. Opacity, not display, so the header keeps its height
@@ -297,7 +299,10 @@ body[data-dsh-claude-style] [class*="header"]:has([class*="_tabs"]) [class*="_ta
   cursor: pointer !important;
   user-select: none !important;
   -webkit-user-select: none !important;
-  transition: background-color 0.12s ease, color 0.12s ease !important;
+  /* Above the sliding pill, which is the strip's first painted box. */
+  position: relative !important;
+  z-index: 1 !important;
+  transition: color 0.2s ease !important;
 }
 body[data-dsh-claude-style] [class*="header"]:has([class*="_tabs"]) [class*="_tabs"] > [class*="_tab"]:hover {
   color: var(--dsw-alias-label-primary, #141413) !important;
@@ -313,6 +318,40 @@ body[data-dsh-claude-style][data-ds-dark-theme] [class*="header"]:has([class*="_
   background: rgba(255, 255, 255, 0.14) !important;
   color: #f5f4ef !important;
   box-shadow: none !important;
+}
+/* The sliding pill: one raised box that travels to the active tab, instead of
+   the old pill fading out on one tab and in on the next. src/overrides/view-tabs.js
+   measures the active tab and writes its offset and width; the strip attribute
+   that brings the pill into being lands in the same frame as the first
+   placement, so the pill appears in place and only later moves slide. While it
+   is there, the active tab's own background gives way to it. */
+body[data-dsh-claude-style] [class*="header"]:has([class*="_tabs"]) [class*="_tabs"][data-dsh-view-tabs-pill]::before {
+  content: "" !important;
+  position: absolute !important;
+  top: 2px !important;
+  bottom: 2px !important;
+  left: 0 !important;
+  width: var(--dsh-view-tabs-pill-w, 0px) !important;
+  transform: translateX(var(--dsh-view-tabs-pill-x, 0px)) !important;
+  border-radius: 5px !important;
+  background: var(--dsw-alias-bg-overlay, #ffffff) !important;
+  box-shadow: 0 1px 2px rgba(20, 20, 19, 0.10) !important;
+  pointer-events: none !important;
+  transition: transform 0.24s cubic-bezier(0.22, 0.61, 0.36, 1), width 0.24s cubic-bezier(0.22, 0.61, 0.36, 1) !important;
+}
+body[data-dsh-claude-style][data-ds-dark-theme] [class*="header"]:has([class*="_tabs"]) [class*="_tabs"][data-dsh-view-tabs-pill]::before {
+  background: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: none !important;
+}
+body[data-dsh-claude-style] [class*="header"]:has([class*="_tabs"]) [class*="_tabs"][data-dsh-view-tabs-pill] > [class*="_tab"][aria-selected="true"],
+body[data-dsh-claude-style] [class*="header"]:has([class*="_tabs"]) [class*="_tabs"][data-dsh-view-tabs-pill] > [class*="_tab"][class*="Active"] {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  body[data-dsh-claude-style] [class*="header"]:has([class*="_tabs"]) [class*="_tabs"][data-dsh-view-tabs-pill]::before {
+    transition: none !important;
+  }
 }
 /* The shipped active-tab underline has no place in a pill. */
 body[data-dsh-claude-style] [class*="header"]:has([class*="_tabs"]) [class*="_tabs"] > [class*="_tab"]::after {

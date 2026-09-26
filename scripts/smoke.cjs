@@ -1133,6 +1133,44 @@ const PROBE = `(function () {
       r.greeting.high = await arrive(0.999)
       greetRoot.remove()
       await sleep(150)
+      // The conversation view tabs (ConversationSession's strip): the pill is
+      // drawn under the active tab without sliding in, then slides to the tab a
+      // switch selects. The strip stays until the teardown, which must take the
+      // pill back off it.
+      var viewHeader = document.createElement('div')
+      viewHeader.className = '_c_header_1'
+      viewHeader.innerHTML = '<div class="_c_tabs_1" role="tablist" data-conversation-tabs="">' +
+        '<button type="button" role="tab" aria-selected="true" class="_c_tab_1 _c_tabActive_1">Chat</button>' +
+        '<button type="button" role="tab" aria-selected="false" class="_c_tab_1">Trajectory</button>' +
+        '<button type="button" role="tab" aria-selected="false" class="_c_tab_1">Context</button></div>'
+      document.body.appendChild(viewHeader)
+      await sleep(150)
+      var viewStrip = viewHeader.firstChild
+      var viewTabs = viewStrip.children
+      var pillState = function (tab) {
+        var stripBox = viewStrip.getBoundingClientRect()
+        var tabBox = tab.getBoundingClientRect()
+        var slides = viewStrip.getAnimations({ subtree: true }).filter(function (a) {
+          return a.effect && a.effect.pseudoElement === '::before'
+        })
+        return {
+          attr: viewStrip.hasAttribute('data-dsh-view-tabs-pill'),
+          content: getComputedStyle(viewStrip, '::before').content,
+          x: parseFloat(viewStrip.style.getPropertyValue('--dsh-view-tabs-pill-x')),
+          w: parseFloat(viewStrip.style.getPropertyValue('--dsh-view-tabs-pill-w')),
+          tabX: tabBox.left - stripBox.left,
+          tabW: tabBox.width,
+          tabFill: getComputedStyle(tab).backgroundColor,
+          slides: slides.map(function (a) { return a.transitionProperty }),
+        }
+      }
+      r.viewPill = { first: pillState(viewTabs[0]) }
+      viewTabs[0].setAttribute('aria-selected', 'false')
+      viewTabs[0].className = '_c_tab_1'
+      viewTabs[2].setAttribute('aria-selected', 'true')
+      viewTabs[2].className = '_c_tab_1 _c_tabActive_1'
+      await sleep(60)
+      r.viewPill.switched = pillState(viewTabs[2])
     }
     if (window.SMOKE_CASE === 'default' && statsRoot) {
       // The host's panels mount on its own commit, later than the skin's old
@@ -1474,6 +1512,7 @@ const PROBE = `(function () {
       r.leftMarkers = document.querySelectorAll('[data-dsh-claude-footer-entry], [data-dsh-claude-footer-hidden], [data-dsh-claude-footer-overlay], [data-dsh-claude-model-host], [data-dsh-claude-account-host-row], [data-dsh-claude-stats-mode]').length
       r.leftAttrs = Array.prototype.filter.call(document.body.attributes, function (a) { return /^data-dsh-(claude|window)/.test(a.name) }).map(function (a) { return a.name })
       r.leftStylesheet = !!document.getElementById('dsh-claude-style-style')
+      if (viewStrip) r.viewPill.left = viewStrip.hasAttribute('data-dsh-view-tabs-pill') || viewStrip.style.length > 0
       var hostRowEnd = document.getElementById('host-account')
       r.hostRowEnd = hostRowEnd === null ? null : {
         visibility: getComputedStyle(hostRowEnd).visibility,
@@ -1626,6 +1665,15 @@ const CASES = {
         greeting.high !== greeting.low,
       JSON.stringify(greeting))
     check('the classic hero page carries no crab', r.classicCrab === false, JSON.stringify(r.classicCrab))
+    const pill = r.viewPill || {}
+    const under = (s) => !!s && s.attr && s.content !== 'none' && Math.abs(s.x - s.tabX) < 0.5 &&
+      Math.abs(s.w - s.tabW) < 0.5 && s.tabFill === 'rgba(0, 0, 0, 0)'
+    check('the view tabs draw their pill under the active tab without sliding in',
+      under(pill.first) && pill.first.slides.length === 0, JSON.stringify(pill.first))
+    check('a view switch slides the pill to the newly active tab',
+      under(pill.switched) && pill.switched.slides.indexOf('transform') !== -1 && pill.switched.x > pill.first.x,
+      JSON.stringify(pill.switched))
+    check('teardown takes the pill and its placement off the view tabs', pill.left === false, JSON.stringify(pill.left))
     check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
     check('detailed stats keep the merged sentence: host icons hidden, our separator in',
       r.statsMode === 'detailed' && r.statsIcons !== null && r.statsIcons.length === 2 &&

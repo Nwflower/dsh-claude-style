@@ -389,7 +389,7 @@ assembly order itself is authoritative in `scripts/build.mjs`
 | `src/overrides/ban-screen.js` | account-hold easter egg installer |
 | `src/overrides/theme-flip.js` | suppresses transitions during a theme flip, so colours and shapes land together |
 | `src/overrides/workspace-view.js` | workspace section feature: the 进行中 / 已归档 segments and the archived list (row delete goes through the plugin's own route) |
-| `src/overrides/view-tabs.js` | conversation view tabs: moves the tab bar onto the title row when it fits |
+| `src/overrides/view-tabs.js` | conversation view tabs: moves the tab bar onto the title row when it fits, and places the pill that slides to the active tab |
 | `src/overrides/home-layout.js` | home layout feature shell: writes the layout attribute, registers the usage panel into the host's dock seat, and draws the panel's head |
 | `src/overrides/home/data.js` | the usage panel's data: the roll-up route, the session list's fallback, and the figures both tabs read |
 | `src/overrides/home/overview.js` | the usage panel's Overview tab: stat cells, heat grid, yardstick line |
