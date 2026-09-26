@@ -24,12 +24,9 @@
      * the legacy `list.current` so older hosts keep working.
      */
     function currentSessionId(ctx, sessions) {
-      try {
-        const uiSession = ctx.get('uiSession')
-        const current = uiSession === void 0 || uiSession === null ? null : uiSession.current
-        const value = current === void 0 || current === null ? null : current.value
-        if (value !== void 0 && value !== null && typeof value.key === 'string') return value.key
-      } catch (error) { /* fall through to the legacy snapshot field */ }
+      const uiSession = ctx.get('uiSession')
+      const value = uiSession?.current?.value
+      if (typeof value?.key === 'string') return value.key
       return sessions.list.getSnapshot().current
     }
 
@@ -44,16 +41,12 @@
     }
 
     function currentPreset(session) {
-      try {
-        const snapshot = session.projections.faceOf('permissions').getSnapshot()
-        if (snapshot === void 0 || snapshot === null) return null
-        // dsh 0.2+ projection faces hand back the bare value (e.g. the preset
-        // id string); older hosts wrapped it as `{ currentValue }`.
-        if (typeof snapshot === 'object' && 'currentValue' in snapshot) return snapshot.currentValue
-        return snapshot
-      } catch (error) {
-        return null
-      }
+      const snapshot = session.projections.faceOf('permissions').getSnapshot()
+      if (snapshot === void 0 || snapshot === null) return null
+      // dsh 0.2+ projection faces hand back the bare value (e.g. the preset
+      // id string); older hosts wrapped it as `{ currentValue }`.
+      if (typeof snapshot === 'object' && 'currentValue' in snapshot) return snapshot.currentValue
+      return snapshot
     }
 
     /**
@@ -96,19 +89,11 @@
     let probedUsername = readStoredProbeUsername()
 
     function readStoredProbeUsername() {
-      try {
-        if (typeof localStorage === 'undefined') return ''
-        return localStorage.getItem(PROBED_USERNAME_KEY) || ''
-      } catch (error) {
-        return ''
-      }
+      return localStorage.getItem(PROBED_USERNAME_KEY) || ''
     }
 
     function storeProbeUsername(value) {
-      try {
-        if (typeof localStorage === 'undefined' || !value) return
-        localStorage.setItem(PROBED_USERNAME_KEY, value)
-      } catch (error) { /* storage may be unavailable */ }
+      if (value) localStorage.setItem(PROBED_USERNAME_KEY, value)
     }
 
     function onUsernameLoaded(listener) {
@@ -122,27 +107,20 @@
     function loadUsername() {
       if (usernameRequested) return
       usernameRequested = true
-      if (typeof fetch !== 'function') return
-      try {
-        fetch(USERNAME_ROUTE, { credentials: 'same-origin' })
-          .then(response => {
-            if (!response.ok) throw new Error(`HTTP ${response.status}`)
-            return response.json()
-          })
-          .then(data => {
-            if (!data || data.ok !== true || typeof data.username !== 'string') return
-            usernameFromHost = data.username.trim().slice(0, USERNAME_MAX)
-            if (usernameFromHost) {
-              probedUsername = usernameFromHost
-              storeProbeUsername(usernameFromHost)
-            }
-            const listeners = usernameListeners.slice()
-            for (let i = 0; i < listeners.length; i++) {
-              try { listeners[i](usernameFromHost) } catch (error) { /* listener error */ }
-            }
-          })
-          .catch(() => { /* the cached probe or 'User' stays */ })
-      } catch (error) { /* no fetch: fallback stays */ }
+      fetch(USERNAME_ROUTE, { credentials: 'same-origin' })
+        .then(response => {
+          if (!response.ok) throw new Error(`HTTP ${response.status}`)
+          return response.json()
+        })
+        .then(data => {
+          if (!data || data.ok !== true || typeof data.username !== 'string') return
+          usernameFromHost = data.username.trim().slice(0, USERNAME_MAX)
+          if (usernameFromHost) {
+            probedUsername = usernameFromHost
+            storeProbeUsername(usernameFromHost)
+          }
+          notifyAll(usernameListeners, usernameFromHost)
+        }, () => { /* the host half did not answer: the cached probe or 'User' stays */ })
     }
 
     /**
@@ -166,25 +144,18 @@
     function loadHdsl() {
       if (hdslRequested) return
       hdslRequested = true
-      if (typeof fetch !== 'function') return
-      try {
-        fetch(HDSL_ROUTE, { credentials: 'same-origin' })
-          .then(response => {
-            if (!response.ok) throw new Error(`HTTP ${response.status}`)
-            return response.json()
-          })
-          .then(data => {
-            if (!data || data.ok !== true || data.contract !== true) return
-            hdslContract = true
-            hdslName = typeof data.name === 'string' ? data.name.trim().slice(0, USERNAME_MAX) : ''
-            hdslAvatar = data.hasSkinImage === true
-            const listeners = hdslListeners.slice()
-            for (let i = 0; i < listeners.length; i++) {
-              try { listeners[i]() } catch (error) { /* listener error */ }
-            }
-          })
-          .catch(() => { /* not launched by HDSL: the chain skips it */ })
-      } catch (error) { /* no fetch: the chain skips it */ }
+      fetch(HDSL_ROUTE, { credentials: 'same-origin' })
+        .then(response => {
+          if (!response.ok) throw new Error(`HTTP ${response.status}`)
+          return response.json()
+        })
+        .then(data => {
+          if (!data || data.ok !== true || data.contract !== true) return
+          hdslContract = true
+          hdslName = typeof data.name === 'string' ? data.name.trim().slice(0, USERNAME_MAX) : ''
+          hdslAvatar = data.hasSkinImage === true
+          notifyAll(hdslListeners)
+        }, () => { /* the host half did not answer: the chain skips the launcher */ })
     }
 
     /**

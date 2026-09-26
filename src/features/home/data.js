@@ -136,12 +136,7 @@
       let disposed = false
 
       function emit() {
-        const current = listeners.slice()
-        for (let i = 0; i < current.length; i++) {
-          try {
-            current[i]()
-          } catch (error) { /* one bad listener must not stop the rest */ }
-        }
+        notifyAll(listeners)
       }
 
       function subscribe(listener) {
@@ -167,15 +162,7 @@
         if (disposed || usage.loading) return
         if (!force && usage.value !== null && !usage.computing) return
         usage.loading = true
-        let request
-        try {
-          request = fetch(USAGE_ROUTE, { credentials: 'same-origin', headers: { accept: 'application/json' } })
-        } catch (error) {
-          usage.loading = false
-          usage.error = 'unavailable'
-          emit()
-          return
-        }
+        const request = fetch(USAGE_ROUTE, { credentials: 'same-origin', headers: { accept: 'application/json' } })
         request.then(response => response !== null && response.ok === true ? response.json() : null).then(body => {
           usage.loading = false
           if (disposed) return
@@ -280,12 +267,7 @@
       /** Read the session list once; a host without the remote service keeps the route's answer. */
       function loadSessionSummary() {
         if (disposed || listLoading || listSummary !== null) return
-        let sessions
-        try {
-          sessions = ctx.get('remote.session')
-        } catch (error) {
-          sessions = undefined
-        }
+        const sessions = ctx.get('remote.session')
         if (sessions === undefined || sessions === null || typeof sessions.list !== 'function') return
         listLoading = true
         sessions.list({}).then(result => {

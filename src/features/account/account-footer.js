@@ -49,10 +49,11 @@
         // Mirrors are frozen while the popover is open (footer-mirror.sync
         // bails), so reconcile them here — before the reveal — to show fresh
         // content/order and bind click targets for the upcoming interaction.
+        // Opening must not fail because of a mirror sync; a failing one is reported.
         try {
           const footArea = findFootArea()
           if (footArea) mirror.sync(footArea)
-        } catch (error) { /* opening must never fail because of a mirror sync */ }
+        } catch (error) { reportError(error) }
         // Resolve the rail anchor before the reveal so the panel never paints at
         // its stale coordinates for a frame.
         positionAccountPopover()

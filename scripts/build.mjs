@@ -73,6 +73,7 @@ const FRAGMENTS = [
   'core/model-copy.js',
   'core/i18n.js',
   'shared/dom.js',
+  'shared/notify.js',
   'shared/popover.js',
   'shared/sliding-pill.js',
   'features/selection/selection.js',

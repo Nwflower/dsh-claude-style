@@ -27,23 +27,15 @@
     let fallbackBanLocale = readStoredBanLocale()
 
     function readStoredBanLocale() {
-      try {
-        if (typeof localStorage === 'undefined') return ''
-        const stored = localStorage.getItem(BAN_LOCALE_STORAGE_KEY) || ''
-        return !BAN_LOCALES.includes(stored) ? '' : stored
-      } catch (error) {
-        return ''
-      }
+      const stored = localStorage.getItem(BAN_LOCALE_STORAGE_KEY) || ''
+      return !BAN_LOCALES.includes(stored) ? '' : stored
     }
 
     /** Persist (or clear) the local language choice; anything else is refused. */
     function setFallbackBanLocale(value) {
       fallbackBanLocale = !BAN_LOCALES.includes(value) ? '' : value
-      try {
-        if (typeof localStorage === 'undefined') return
-        if (fallbackBanLocale) localStorage.setItem(BAN_LOCALE_STORAGE_KEY, fallbackBanLocale)
-        else localStorage.removeItem(BAN_LOCALE_STORAGE_KEY)
-      } catch (error) { /* storage may be unavailable */ }
+      if (fallbackBanLocale) localStorage.setItem(BAN_LOCALE_STORAGE_KEY, fallbackBanLocale)
+      else localStorage.removeItem(BAN_LOCALE_STORAGE_KEY)
     }
 
     /**
@@ -97,15 +89,9 @@
      * as.
      */
     function settingsNamespaceCandidates(ctx) {
-      let entryId = null
-      try {
-        const entry = ctx && ctx.fiber ? ctx.fiber.entry : null
-        const id = entry ? entry.id : null
-        if (typeof id === 'string' && id !== '') {
-          const colon = id.lastIndexOf(':')
-          entryId = colon === -1 ? id : id.slice(colon + 1)
-        }
-      } catch (error) { /* no loader entry (the dynamic façade hides fiber): fall back */ }
+      // The dynamic façade can hide the fiber; the other two candidates remain.
+      const id = ctx?.fiber?.entry?.id
+      const entryId = typeof id === 'string' && id !== '' ? id.slice(id.lastIndexOf(':') + 1) : null
       return [entryId, PACKAGE_NAME, SETTINGS_ENTRY_FALLBACK]
     }
 
@@ -123,46 +109,26 @@
      * @returns the first served candidate, or null when none is served yet.
      */
     function servedNamespace(forms, candidates) {
-      try {
-        const mirror = typeof forms.describe === 'function' ? forms.describe() : null
-        const snapshot = mirror && typeof mirror.getSnapshot === 'function' ? mirror.getSnapshot() : null
-        const view = snapshot ? snapshot.view : null
-        const namespaces = view ? view.namespaces : null
-        if (namespaces) {
-          for (let i = 0; i < candidates.length; i++) {
-            const candidate = candidates[i]
-            if (typeof candidate !== 'string' || candidate === '') continue
-            for (let j = 0; j < namespaces.length; j++) {
-              if (namespaces[j] && namespaces[j].ns === candidate) return candidate
-            }
-          }
-        }
-      } catch (error) { /* mirror unreadable: nothing is bound yet */ }
+      const namespaces = forms.describe?.()?.getSnapshot?.()?.view?.namespaces
+      if (!namespaces) return null
+      for (const candidate of candidates) {
+        if (typeof candidate !== 'string' || candidate === '') continue
+        if (namespaces.some(served => served?.ns === candidate)) return candidate
+      }
       return null
     }
 
     /** Whether the host serves namespaces to the browser. */
     function hostConfigForms(ctx) {
-      try {
-        if (!ctx || typeof ctx.get !== 'function') return null
-        const forms = ctx.get('configForms')
-        return forms !== null && forms !== undefined && typeof forms.get === 'function' ? forms : null
-      } catch (error) {
-        return null
-      }
+      const forms = ctx?.get('configForms')
+      return typeof forms?.get === 'function' ? forms : null
     }
 
     /** The form's current field values, or null while it is not ready. */
     function readFormValue() {
-      if (prefsForm === null) return null
-      try {
-        const snapshot = prefsForm.getSnapshot()
-        if (snapshot === null || snapshot === undefined) return null
-        if (snapshot.status !== 'ready') return null
-        return snapshot.value && typeof snapshot.value === 'object' ? snapshot.value : null
-      } catch (error) {
-        return null
-      }
+      const snapshot = prefsForm?.getSnapshot()
+      if (snapshot?.status !== 'ready') return null
+      return snapshot.value && typeof snapshot.value === 'object' ? snapshot.value : null
     }
 
     /**
@@ -181,24 +147,18 @@
       // defaults, every write refused).
       const namespace = servedNamespace(forms, settingsNamespaceCandidates(ctx))
       if (namespace === null) return false
-      let form = null
-      try {
-        form = forms.get(namespace)
-      } catch (error) {
-        form = null
-      }
-      if (form === null || form === undefined || typeof form.getSnapshot !== 'function') return false
+      const form = forms.get(namespace)
+      if (typeof form?.getSnapshot !== 'function') return false
       prefsForm = form
+      // A form without a subscribe face leaves the reads on demand.
       if (typeof form.subscribe === 'function') {
-        try {
-          prefsFormUnsubscribe = form.subscribe(() => {
-            const value = readFormValue()
-            if (value === null) return
-            prefsAvailable = true
-            adoptPrefs(normalizePrefs(value))
-            replayPendingBanLocale(value)
-          })
-        } catch (error) { /* no subscribe face: reads stay on demand */ }
+        prefsFormUnsubscribe = form.subscribe(() => {
+          const value = readFormValue()
+          if (value === null) return
+          prefsAvailable = true
+          adoptPrefs(normalizePrefs(value))
+          replayPendingBanLocale(value)
+        })
       }
       return true
     }
@@ -217,26 +177,19 @@
      */
     function watchNamespace(forms, ctx) {
       if (prefsBinding) return
-      let mirror = null
-      try {
-        mirror = typeof forms.describe === 'function' ? forms.describe() : null
-      } catch (error) {
-        mirror = null
-      }
-      if (mirror === null) return
+      const mirror = forms.describe?.()
+      if (!mirror) return
       prefsBinding = true
       const attempt = () => {
         if (prefsForm === null && !bindServedForm(forms, ctx)) return
         if (prefsWatchOff !== null) {
-          try { prefsWatchOff() } catch (error) { /* already gone */ }
+          prefsWatchOff()
           prefsWatchOff = null
         }
         loadPrefs()
       }
-      try {
-        if (typeof mirror.subscribe === 'function') prefsWatchOff = mirror.subscribe(attempt)
-        if (typeof mirror.ensure === 'function') mirror.ensure()
-      } catch (error) { /* the mirror may already be gone */ }
+      if (typeof mirror.subscribe === 'function') prefsWatchOff = mirror.subscribe(attempt)
+      if (typeof mirror.ensure === 'function') mirror.ensure()
       attempt()
     }
 
@@ -262,11 +215,11 @@
     /** Release the form and directory subscriptions this module opened. */
     function disposePrefsBinding() {
       if (prefsFormUnsubscribe !== null) {
-        try { prefsFormUnsubscribe() } catch (error) { /* already gone */ }
+        prefsFormUnsubscribe()
         prefsFormUnsubscribe = null
       }
       if (prefsWatchOff !== null) {
-        try { prefsWatchOff() } catch (error) { /* already gone */ }
+        prefsWatchOff()
         prefsWatchOff = null
       }
       prefsBinding = false
@@ -282,10 +235,7 @@
      * always wins once it carries a non-empty username.
      */
     const USERNAME_STORAGE_KEY = 'dsh-claude-style.username'
-    let fallbackUsername = ''
-    try {
-      fallbackUsername = typeof localStorage === 'undefined' ? '' : (localStorage.getItem(USERNAME_STORAGE_KEY) || '')
-    } catch (error) { fallbackUsername = '' }
+    let fallbackUsername = localStorage.getItem(USERNAME_STORAGE_KEY) || ''
 
     function readFallbackUsername() {
       return fallbackUsername
@@ -293,11 +243,8 @@
 
     function setFallbackUsername(value) {
       fallbackUsername = value
-      try {
-        if (typeof localStorage === 'undefined') return
-        if (value) localStorage.setItem(USERNAME_STORAGE_KEY, value)
-        else localStorage.removeItem(USERNAME_STORAGE_KEY)
-      } catch (error) { /* storage may be unavailable */ }
+      if (value) localStorage.setItem(USERNAME_STORAGE_KEY, value)
+      else localStorage.removeItem(USERNAME_STORAGE_KEY)
     }
 
     /**
@@ -347,12 +294,7 @@
       document.body.setAttribute(BRAND_ATTR, next.brand)
       if (next.collapseFooter && !footerTakeoverRetired) document.body.setAttribute(FOOTER_ATTR, '')
       else document.body.removeAttribute(FOOTER_ATTR)
-      const listeners = prefsListeners.slice()
-      for (let i = 0; i < listeners.length; i++) {
-        try {
-          listeners[i](next)
-        } catch (error) { /* one bad listener must not stop the rest */ }
-      }
+      notifyAll(prefsListeners, next)
     }
 
     /**
@@ -459,14 +401,18 @@
       }
       const step = name => accepted => {
         if (accepted === false) return false
+        let pending
         try {
-          const pending = prefsForm.set(name, patch[name])
-          return pending && typeof pending.then === 'function'
-            ? pending.then(ok => ok === true)
-            : true
+          pending = prefsForm.set(name, patch[name])
         } catch (error) {
+          // set() refuses a field path the entry's Config does not carry by
+          // throwing before anything crosses the wire: that is a refusal, which
+          // the caller answers with a re-read and the page's notice.
           return false
         }
+        return pending && typeof pending.then === 'function'
+          ? pending.then(ok => ok === true)
+          : true
       }
       let run = Promise.resolve(true)
       for (let i = 0; i < keys.length; i++) run = run.then(step(keys[i]))

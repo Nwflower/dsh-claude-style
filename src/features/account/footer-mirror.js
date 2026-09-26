@@ -29,7 +29,7 @@
             const role = el.getAttribute('role') || ''
             let overlay = role === 'dialog' || role === 'menu' || role === 'listbox'
             if (!overlay) {
-              try { overlay = window.getComputedStyle(el).position === 'fixed' } catch (e) { overlay = false }
+              overlay = window.getComputedStyle(el).position === 'fixed'
             }
             if (overlay) el.setAttribute('data-dsh-claude-footer-overlay', '')
           }
@@ -409,15 +409,11 @@
                   // from the live footer DOM. Covers the rare case where the
                   // stored node was detached by a host re-render while the
                   // popover was open.
-                  try {
-                    const fa = findFootArea()
-                    const actions = fa ? fa.querySelector('[class*="footerActions"]') : null
-                    const liveEntries = actions ? footerEntriesOf(actions) : []
-                    const liveEntry = liveEntries[idx] || null
-                    live = liveEntry ? findFooterTrigger(liveEntry) : null
-                  } catch (error) {
-                    live = null
-                  }
+                  const fa = findFootArea()
+                  const actions = fa ? fa.querySelector('[class*="footerActions"]') : null
+                  const liveEntries = actions ? footerEntriesOf(actions) : []
+                  const liveEntry = liveEntries[idx] || null
+                  live = liveEntry ? findFooterTrigger(liveEntry) : null
                 }
                 if (live && typeof live.click === 'function') live.click()
               })
@@ -433,10 +429,11 @@
             // index. Done on every pass, for new and reused items alike.
             item.__dshActivator = activator
             })(footerEntries[f], f)
-          } catch (err) {
+          } catch (error) {
             // A single broken entry must not abort the rest of the mirror
             // sync (which would leave later items without a rebound
-            // activator or un-ordered).
+            // activator or un-ordered); it is reported.
+            reportError(error)
           }
         }
 

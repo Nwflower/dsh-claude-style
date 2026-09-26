@@ -73,7 +73,7 @@
           // CSSTransition carries transitionProperty; CSSAnimation does not.
           if (!anim || typeof anim.transitionProperty !== 'string') continue
           if (!THEME_FLIP_PROPS[anim.transitionProperty]) continue
-          try { anim.cancel() } catch (error) { /* already finished */ }
+          anim.cancel()
         }
       }
 

@@ -14,7 +14,8 @@
         if (disposed) return
         disposed = true
         for (let i = installed.length - 1; i >= 0; i--) {
-          try { installed[i].stop() } catch (error) { /* one teardown must not block the rest */ }
+          // One teardown must not block the rest (D12); a failing one is reported.
+          try { installed[i].stop() } catch (error) { reportError(error) }
         }
         installed = []
         setHostContext(null)
@@ -59,7 +60,8 @@
           if (entry.name !== name) return
           const stop = entry.stop
           installed.splice(i, 1)
-          try { stop() } catch (error) { /* it was failing already */ }
+          // Retiring goes through even when the feature's own teardown fails too.
+          try { stop() } catch (error) { reportError(error) }
           break
         }
         if (name === 'footer') retireFooterTakeover()

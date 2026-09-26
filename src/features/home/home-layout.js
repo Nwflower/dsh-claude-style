@@ -256,9 +256,7 @@
         document.body.removeAttribute(HOME_LAYOUT_ATTR)
         document.body.removeAttribute(HOME_HERO_ATTR)
         if (slotsFiber !== null) {
-          try {
-            if (typeof slotsFiber.dispose === 'function') slotsFiber.dispose()
-          } catch (error) { /* the fiber may already be gone during teardown */ }
+          if (typeof slotsFiber.dispose === 'function') slotsFiber.dispose()
           slotsFiber = null
         }
         delete ui.homeLayout

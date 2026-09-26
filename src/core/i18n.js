@@ -1,16 +1,14 @@
     /** The shell's active locale id, or the document fallback when it cannot be read. */
     function activeLocale(ctx) {
-      const c = ctx || hostCtx
-      try {
-        if (c && typeof c.get === 'function') {
-          const locale = c.get('locale')
-          if (locale && typeof locale.getSnapshot === 'function') {
-            const active = locale.getSnapshot().active
-            if (typeof active === 'string' && active) return active
-          }
-        }
-      } catch (error) { /* no locale service: keep the fallback language */ }
+      const active = (ctx || hostCtx)?.get('locale')?.getSnapshot().active
+      if (typeof active === 'string' && active) return active
       return modelCopy === null ? MODEL_COPY_FALLBACK_LOCALE : modelCopy.fallback
+    }
+
+    /** Fill a copy string's `{name}` slots from `params`; a slot with no value stays as written. */
+    function fillTemplate(text, params) {
+      if (!params) return text
+      return text.replace(/\{(\w+)\}/g, (match, name) => Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match)
     }
 
     /** One localized string out of a `{ locale: text }` pair, fallback locale last. */
@@ -35,10 +33,8 @@
      * from `params`, so a label with a slot stays translatable.
      */
     function copyLabel(key, fallback, params) {
-      let text = modelCopy === null || !modelCopy.ui ? '' : localized(modelCopy.ui[key])
-      if (!text) text = fallback
-      if (!params) return text
-      return text.replace(/\{(\w+)\}/g, (match, name) => Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match)
+      const text = modelCopy === null || !modelCopy.ui ? '' : localized(modelCopy.ui[key])
+      return fillTemplate(text || fallback, params)
     }
 
     /**
@@ -47,10 +43,8 @@
      * English constants stay as the fallback for a failed fetch.
      */
     function settingsCopy(key, fallback, params) {
-      let text = modelCopy === null || !modelCopy.settings ? '' : localized(modelCopy.settings[key])
-      if (!text) text = fallback
-      if (!params) return text
-      return text.replace(/\{(\w+)\}/g, (match, name) => Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match)
+      const text = modelCopy === null || !modelCopy.settings ? '' : localized(modelCopy.settings[key])
+      return fillTemplate(text || fallback, params)
     }
 
     /**
@@ -66,8 +60,6 @@
       const want = readPrefs().banLocale
       let text = pair && typeof pair === 'object' && typeof pair[want] === 'string' ? pair[want] : ''
       if (!text) text = localized(pair)
-      if (!text) text = fallback
-      if (!params) return text
-      return text.replace(/\{(\w+)\}/g, (match, name) => Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match)
+      return fillTemplate(text || fallback, params)
     }
 

@@ -412,10 +412,6 @@
           delete ui.settingsNav
         }
         quickProviderApi = null
-        try {
-          if (fiber && typeof fiber.dispose === 'function') fiber.dispose()
-        } catch (error) {
-          /* the fiber may already be gone during teardown */
-        }
+        if (fiber && typeof fiber.dispose === 'function') fiber.dispose()
       }
     }

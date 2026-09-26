@@ -365,6 +365,12 @@ const STAND_IN = `(function () {
   var raf = window.requestAnimationFrame.bind(window)
   window.requestAnimationFrame = function (cb) { return raf(function (t) { window.__passes++; cb(t) }) }
   window.__errors = []
+  // Errors nothing caught: thrown out of a callback, reported through
+  // reportError(), or a promise rejection no one handled. The skin must leave
+  // none behind in any case.
+  window.__uncaught = []
+  window.addEventListener('error', function (event) { window.__uncaught.push(String(event.error && event.error.stack || event.message)) })
+  window.addEventListener('unhandledrejection', function (event) { window.__uncaught.push('unhandled rejection: ' + String(event.reason && event.reason.stack || event.reason)) })
   var consoleError = console.error
   console.error = function () {
     window.__errors.push(Array.prototype.map.call(arguments, String).join(' '))
@@ -688,8 +694,8 @@ const STAND_IN = `(function () {
       })
     },
   }
-  // Host API drift at sync time: a session list that throws, which only the
-  // permission control reads on every pass. The auto mode cases carry a real
+  // Host API drift at sync time: a session list that throws, which the
+  // permission control and the model picker read on every pass. The auto mode cases carry a real
   // session instead: the control reads the running preset from its projection
   // and switches through the host permission command; the case asserts both.
   var permissionCommands = []
@@ -853,8 +859,19 @@ const STAND_IN = `(function () {
     },
     useEffect: function () {},
     useRef: function (v) { return { current: v } },
+    useLayoutEffect: function () {},
   }
   window.__react = react
+  // The host's ui-primitives, as far as the skin uses them: the components its
+  // own rows and notices render (inert here, like every element above).
+  var primitive = function (type) { return function (props) { return { type: type, props: props } } }
+  var primitives = {
+    Tooltip: primitive('Tooltip'),
+    Toast: primitive('Toast'),
+    IconUnarchiveOutlineRegular: primitive('IconUnarchiveOutlineRegular'),
+    IconTrashOutlineRegular: primitive('IconTrashOutlineRegular'),
+    IconWarningOutlineRegular: primitive('IconWarningOutlineRegular'),
+  }
   // The host's react-dom/client. Each root records the element it was created
   // on, how many times it was asked to render and whether it was unmounted, so
   // the probe can follow a root the skin mounts on a seat of its own.
@@ -877,6 +894,7 @@ const STAND_IN = `(function () {
       window.__skin = def.factory(function (name) {
         if (name === 'react') return react
         if (name === 'react-dom/client') return reactDom
+        if (name === '@deepseek-ai/dsh-client-ui-primitives') return primitives
         throw new Error('no module ' + name)
       })
     },
@@ -1552,6 +1570,7 @@ const PROBE = `(function () {
     await sleep(50)
     r.pwned = window.__pwned
     r.errors = window.__errors.slice()
+    r.uncaught = window.__uncaught.slice()
     if (r.teardownRegistered) {
       // Dispose with a pass pending, the way a live page is disposed mid-stream:
       // the mutation's observer callback runs before the await resumes, so a
@@ -1685,6 +1704,8 @@ function contrast(a, b) {
 
 /** Checks every case shares: a clean teardown and an idle scheduler. */
 function commonChecks(r) {
+  check('nothing the skin runs leaves an uncaught error or an unhandled rejection',
+    Array.isArray(r.uncaught) && r.uncaught.length === 0, (r.uncaught || []).join(' | ').slice(0, 600))
   check('the home layout attribute follows the preference',
     r.homeLayoutAttr === r.homeLayoutExpected,
     JSON.stringify({ attribute: r.homeLayoutAttr, expected: r.homeLayoutExpected }))
@@ -1912,7 +1933,8 @@ const CASES = {
   },
   'sync-fault'(r) {
     check('apply() completes', r.applyError === null, r.applyError)
-    check('only the permission control was switched off', r.errors.length === 1 && r.errors[0].includes('"permissions"'), r.errors.join(' | '))
+    check('only the two features that read the session list were switched off: the permission control and the model picker',
+      r.errors.length === 2 && r.errors.some((e) => e.includes('"permissions"')) && r.errors.some((e) => e.includes('"model"')), r.errors.join(' | '))
     check("the host's own access button is handed back", r.hostAccessVisible === true, JSON.stringify(r.hostAccessVisible))
     check('the composer restyle keeps running', r.composerRestyle === true, JSON.stringify(r.composerRestyle))
     check('the rest of the skin keeps running', r.stylesheet && r.accountUser === 'Tester', JSON.stringify(r.accountUser))
@@ -1936,11 +1958,11 @@ const CASES = {
       drew('overview', 'dsh-claude-home-stat') && drew('overview', 'dsh-claude-home-heat'),
       JSON.stringify(renders.overview))
     const said = (tab, pattern) => renders[tab] !== undefined && renders[tab].texts.some((text) => pattern.test(text))
-    check('all time: the peak hour and the book line read the whole history (500k steps down to Death\'s End)',
-      said('overview', /^3 AM$/) && said('overview', /^You've used ~1× more tokens than Death's End\.$/),
+    check('all time: the peak hour and the book line read the whole history (500k steps down to Moby-Dick)',
+      said('overview', /^3 AM$/) && said('overview', /^You've used ~2× more tokens than Moby-Dick\.$/),
       JSON.stringify(renders.overview && renders.overview.texts))
-    check('7d: the peak hour and the book line follow the range window (250k steps down to Dracula)',
-      said('overview-7d', /^3 PM$/) && said('overview-7d', /^You've used ~1× more tokens than Dracula\.$/),
+    check('7d: the peak hour and the book line follow the range window (250k steps down to Pride and Prejudice)',
+      said('overview-7d', /^3 PM$/) && said('overview-7d', /^You've used ~2× more tokens than Pride and Prejudice\.$/),
       JSON.stringify(renders['overview-7d'] && renders['overview-7d'].texts))
     check('the usage panel renders its Models tab: stacked chart and ranked list',
       drew('models', 'dsh-claude-home-chart-seg') && drew('models', 'dsh-claude-home-model'),

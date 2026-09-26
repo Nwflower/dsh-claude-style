@@ -24,31 +24,21 @@
     function loadModelCopy() {
       if (modelCopyRequested) return
       modelCopyRequested = true
-      if (typeof fetch !== 'function') return
-      try {
-        fetch(MODEL_COPY_ROUTE, { credentials: 'same-origin' })
-          .then(response => {
-            if (!response.ok) throw new Error(`HTTP ${response.status}`)
-            return response.json()
-          })
-          .then(doc => {
-            modelCopy = indexModelCopy(doc)
-            if (modelCopy === null) return
-            const listeners = modelCopyListeners.slice()
-            for (let i = 0; i < listeners.length; i++) {
-              try {
-                listeners[i](modelCopy)
-              } catch (error) { /* listener error */ }
-            }
-          })
-          .catch(() => { /* fallback copy stays */ })
-      } catch (error) { /* no fetch: fallback copy stays */ }
+      fetch(MODEL_COPY_ROUTE, { credentials: 'same-origin' })
+        .then(response => {
+          if (!response.ok) throw new Error(`HTTP ${response.status}`)
+          return response.json()
+        })
+        .then(doc => {
+          modelCopy = indexModelCopy(doc)
+          if (modelCopy !== null) notifyAll(modelCopyListeners, modelCopy)
+        }, () => { /* the host half did not answer: the bundle's English constants stay */ })
     }
 
     /**
      * Compile a copy document into the shape lookups want: a folded id index,
      * the alias table, and the rule lists with their regexps built once.
-     * @param doc - parsed document; anything malformed is dropped, not fatal.
+     * @param doc - parsed document, as validated by the build.
      * @returns the index, or null when the document is unusable.
      */
     function indexModelCopy(doc) {
@@ -83,9 +73,8 @@
         for (let i = 0; i < (rules || []).length; i++) {
           const rule = rules[i]
           if (!rule || typeof rule.match !== 'string') continue
-          try {
-            out.push({ re: new RegExp(rule.match, 'i'), key: rule.key, text: rule.text })
-          } catch (error) { /* a malformed rule is skipped, not fatal */ }
+          // The build compiles every rule before it ships the document.
+          out.push({ re: new RegExp(rule.match, 'i'), key: rule.key, text: rule.text })
         }
         return out
       }
@@ -97,9 +86,7 @@
       for (let b = 0; b < (brands.models || []).length; b++) {
         const brandRule = brands.models[b]
         if (!brandRule || typeof brandRule.match !== 'string' || typeof brandRule.brand !== 'string') continue
-        try {
-          brandRules.push({ re: new RegExp(brandRule.match, 'i'), brand: brandRule.brand })
-        } catch (error) { /* a malformed rule is skipped, not fatal */ }
+        brandRules.push({ re: new RegExp(brandRule.match, 'i'), brand: brandRule.brand })
       }
       index.brandRules = brandRules
       return index

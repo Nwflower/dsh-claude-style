@@ -145,7 +145,7 @@
         close()
         unregisterPopover('quickProviders')
         if (unsubscribe !== null) {
-          try { unsubscribe() } catch (error) { /* already disposed */ }
+          unsubscribe()
           unsubscribe = null
         }
         delete ui.quickProviders

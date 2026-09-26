@@ -132,12 +132,10 @@
         // load() is async — the host itself guards with .catch(() => {}); a bare
         // try/catch cannot see its rejection.
         if (dir && typeof dir.load === 'function') {
-          try {
-            const pending = dir.load()
-            if (pending && typeof pending.catch === 'function') {
-              pending.catch(() => { /* the store's error surface covers a failure */ })
-            }
-          } catch (error) { /* synchronous failure — the store's error surface covers it */ }
+          const pending = dir.load()
+          if (pending && typeof pending.catch === 'function') {
+            pending.catch(() => { /* the store's error surface covers a failure */ })
+          }
         }
         if (modelSubPop) modelSubPop.setAttribute('data-open', 'false')
         renderModelBody()
@@ -155,12 +153,11 @@
       function pickModel(provider, modelId) {
         const dir = modelCatalog.directory()
         if (dir === null) return
-        try {
-          // select() is async and rejects on a failed selection; swallow the
-          // rejection the way the host's own seat wrapper does.
-          const pending = dir.select({ provider, model: modelId })
-          if (pending && typeof pending.catch === 'function') pending.catch(() => {})
-        } catch (error) { /* rejected selections surface on the host's toast */ }
+        // select() is async and rejects on a failed selection, which the host's
+        // toast reports; the rejection is dropped the way the host's own seat
+        // wrapper drops it.
+        const pending = dir.select({ provider, model: modelId })
+        if (pending && typeof pending.catch === 'function') pending.catch(() => {})
         closeModelPopovers()
       }
 
@@ -171,10 +168,9 @@
         if (dir === null || !snap || snap.current === null) return
         const selection = { provider: snap.current.provider, model: snap.current.model }
         if (effort !== void 0) selection.reasoningEffort = effort
-        try {
-          const pending = dir.select(selection)
-          if (pending && typeof pending.catch === 'function') pending.catch(() => {})
-        } catch (error) { /* rejected selections surface on the host's toast */ }
+        // A rejected selection is reported by the host's toast (see pickModel).
+        const pending = dir.select(selection)
+        if (pending && typeof pending.catch === 'function') pending.catch(() => {})
       }
 
       /**

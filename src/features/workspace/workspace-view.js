@@ -19,24 +19,13 @@
      * @returns teardown.
      */
     function installWorkspaceView(ctx, ui) {
-      /** Trash can for one archived row. */
-      const DELETE_SVG = '<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.6 4.2h10.8"/><path d="M6.4 4.2V3a.8.8 0 0 1 .8-.8h1.6a.8.8 0 0 1 .8.8v1.2"/><path d="M4.2 4.2l.6 8.3a1 1 0 0 0 1 .9h4.4a1 1 0 0 0 1-.9l.6-8.3"/><path d="M6.7 6.8v4M9.3 6.8v4"/></svg>'
-      /** Tray with an up arrow: put this conversation back among the live ones. */
-      const RESTORE_SVG = '<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.6 9.2v3.4a1 1 0 0 0 1 1h8.8a1 1 0 0 0 1-1V9.2"/><path d="M8 10.4V2.6"/><path d="M5.2 5.4L8 2.6l2.8 2.8"/></svg>'
       /**
-       * The host's own Tooltip and icons, reached through the plugin loader's
-       * `require` — the same packages its UI uses, so these row actions look and
-       * behave like the host's. `@deepseek-ai/dsh-client-ui-primitives` exports
-       * `Tooltip`, `IconUnarchiveOutlineRegular` and `IconTrashOutlineRegular`.
-       * Guarded: a loader that hands over nothing leaves the skin's own SVG and a
-       * native title in place.
+       * The host's own Tooltip, Toast and icons, reached through the plugin
+       * loader's `require` — the same packages its UI uses, so these row actions
+       * and the notice look and behave like the host's.
        */
-      let primitives = null
-      let react = null
-      let reactDom = null
-      try { primitives = require('@deepseek-ai/dsh-client-ui-primitives') } catch (error) { primitives = null }
-      try { react = require('react') } catch (error) { react = null }
-      try { reactDom = require('react-dom/client') } catch (error) { reactDom = null }
+      const primitives = require('@deepseek-ai/dsh-client-ui-primitives')
+      const reactDom = require('react-dom/client')
       /** React roots holding the row actions, unmounted when the list is rebuilt. */
       let actionRoots = []
       /** React root holding the archived-row notice, and the show count that keys it. */
@@ -73,7 +62,7 @@
       let disposed = false
 
       function service(name) {
-        try { return ctx.get(name) } catch (error) { return undefined }
+        return ctx.get(name)
       }
 
       function findSection() {
@@ -177,16 +166,13 @@
        * the body, and a new key restarts it the way the host re-shows it.
        */
       function notifyArchivedNotOpenable() {
-        if (react === null || reactDom === null || primitives === null || !primitives.Toast || !primitives.IconWarningOutlineRegular) {
-          throw new Error('dsh-claude-style: the host Toast is not reachable through the plugin loader')
-        }
         const t = ctx.get('locale').bind('workspace')
         if (noticeRoot === null) noticeRoot = reactDom.createRoot(document.createElement('div'))
         noticeSeq++
-        noticeRoot.render(react.createElement(primitives.Toast, {
+        noticeRoot.render(React.createElement(primitives.Toast, {
           key: `toast-${noticeSeq}`,
           text: t('toast.archivedNotOpenable'),
-          icon: react.createElement(primitives.IconWarningOutlineRegular),
+          icon: React.createElement(primitives.IconWarningOutlineRegular),
           onDone() { if (noticeRoot !== null) noticeRoot.render(null) },
         }))
       }
@@ -198,8 +184,8 @@
        * workspace controller archives and unarchives; the agent protocol's
        * session delete is the host delegating to an ACP agent that owns the
        * storage), so the skin's host half removes the session's stored directory
-       * and answers here. The row stays on any refusal — the host refuses a live
-       * session, and the next read tells the truth.
+       * and answers here. The row stays on a refusal — the host refuses a live
+       * session — and the refusal is logged the way an unarchive refusal is.
        */
       function removeArchived(id) {
         fetch(SESSION_DELETE_ROUTE, {
@@ -207,11 +193,13 @@
           credentials: 'same-origin',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ sessionId: id }),
-        }).then(response => response.ok ? response.json() : null).then(result => {
-          if (result === null || result.ok !== true) return
+        }).then(response => response.json()).then(result => {
+          if (result.ok !== true) throw new Error(result.error || 'refused')
           deletedIds[id] = true
           refreshItems()
-        }).catch(() => { /* the row stays; the next read tells the truth */ })
+        }).catch(reason => {
+          console.warn('dsh-claude-style: session delete rejected:', reason)
+        })
       }
 
       /**
@@ -224,29 +212,16 @@
         })
       }
 
-      /**
-       * One row action: the host's icon inside the host's tooltip when the loader
-       * gives us both, and the skin's own SVG plus a native title when it does not.
-       */
-      function actionButton(kind, label, fallbackSvg, onClick) {
+      /** One row action: the host's icon inside the host's tooltip. */
+      function actionButton(kind, label, onClick) {
         const wrapper = buildElement('span', 'dsh-claude-archive-action')
         const className = kind === 'restore' ? 'dsh-claude-archive-restore' : 'dsh-claude-archive-delete'
-        const Icon = primitives === null ? null : (kind === 'restore' ? primitives.IconUnarchiveOutlineRegular : primitives.IconTrashOutlineRegular)
-        if (react !== null && reactDom !== null && primitives !== null && primitives.Tooltip && Icon) {
-          const root = reactDom.createRoot(wrapper)
-          actionRoots.push(root)
-          root.render(react.createElement(primitives.Tooltip, { label, side: 'top', delayMs: 500 },
-            react.createElement('button', { type: 'button', className, 'aria-label': label, title: label, onClick },
-              react.createElement(Icon, { size: 14 }))))
-          return wrapper
-        }
-        const button = buildElement('button', className)
-        button.type = 'button'
-        button.setAttribute('aria-label', label)
-        button.setAttribute('title', label)
-        button.innerHTML = fallbackSvg
-        button.addEventListener('click', onClick)
-        wrapper.appendChild(button)
+        const Icon = kind === 'restore' ? primitives.IconUnarchiveOutlineRegular : primitives.IconTrashOutlineRegular
+        const root = reactDom.createRoot(wrapper)
+        actionRoots.push(root)
+        root.render(React.createElement(primitives.Tooltip, { label, side: 'top', delayMs: 500 },
+          React.createElement('button', { type: 'button', className, 'aria-label': label, title: label, onClick },
+            React.createElement(Icon, { size: 14 }))))
         return wrapper
       }
 
@@ -260,11 +235,11 @@
         // The host's archived rows offer an unarchive action; the skin's list
         // carries the same pair, so leaving the archived view is not the only way
         // back to a conversation.
-        row.appendChild(actionButton('restore', copyLabel('archiveRestore', 'Unarchive conversation'), RESTORE_SVG, event => {
+        row.appendChild(actionButton('restore', copyLabel('archiveRestore', 'Unarchive conversation'), event => {
           event.stopPropagation()
           restoreArchived(item.id)
         }))
-        row.appendChild(actionButton('delete', copyLabel('archiveDelete', 'Delete conversation'), DELETE_SVG, event => {
+        row.appendChild(actionButton('delete', copyLabel('archiveDelete', 'Delete conversation'), event => {
           event.stopPropagation()
           removeArchived(item.id)
         }))
@@ -277,7 +252,7 @@
         // The actions live in React roots; drop them before the rows go, or every
         // rebuild would leave a tree behind.
         for (let r = 0; r < actionRoots.length; r++) {
-          try { actionRoots[r].unmount() } catch (error) { /* already gone */ }
+          actionRoots[r].unmount()
         }
         actionRoots = []
         while (listHost.firstChild) listHost.removeChild(listHost.firstChild)
@@ -369,7 +344,7 @@
       return () => {
         disposed = true
         for (let r = 0; r < actionRoots.length; r++) {
-          try { actionRoots[r].unmount() } catch (error) { /* already gone */ }
+          actionRoots[r].unmount()
         }
         actionRoots = []
         if (noticeRoot !== null) {

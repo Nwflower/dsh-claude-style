@@ -19,9 +19,9 @@
           clientX: Math.round(rect.left + rect.width / 2),
           clientY: Math.round(rect.top + rect.height / 2)
         }
-        try { el.dispatchEvent(new PointerEvent('pointerdown', init)) } catch (error) { /* older engines */ }
+        el.dispatchEvent(new PointerEvent('pointerdown', init))
         el.dispatchEvent(new MouseEvent('mousedown', init))
-        try { el.dispatchEvent(new PointerEvent('pointerup', init)) } catch (error) { /* older engines */ }
+        el.dispatchEvent(new PointerEvent('pointerup', init))
         el.dispatchEvent(new MouseEvent('mouseup', init))
         el.click()
       }

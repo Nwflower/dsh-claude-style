@@ -397,11 +397,7 @@
       }
 
       function releaseCapture() {
-        try {
-          if (pointerId !== null && track.hasPointerCapture && track.hasPointerCapture(pointerId)) {
-            track.releasePointerCapture(pointerId)
-          }
-        } catch (error) { /* the capture may already be gone */ }
+        if (pointerId !== null && track.hasPointerCapture(pointerId)) track.releasePointerCapture(pointerId)
         pointerId = null
       }
 
@@ -458,7 +454,7 @@
         held = true
         document.addEventListener('pointerup', onHeldRelease, true)
         document.addEventListener('pointercancel', onHeldRelease, true)
-        try { track.setPointerCapture(e.pointerId) } catch (error) { /* capture is a nicety */ }
+        track.setPointerCapture(e.pointerId)
         if (typeof opts.onDragStart === 'function') opts.onDragStart()
         const x = pointerTravel(e.clientX)
         /* Glide to the press position. The drag state (and with it the

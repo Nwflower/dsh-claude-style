@@ -22,9 +22,7 @@
       let accountRetries = 0
 
       function accountService() {
-        let account = null
-        try { account = ctx.get('remote.account') } catch (error) { account = null }
-        return account === undefined ? null : account
+        return ctx.get('remote.account') ?? null
       }
 
       function showAccount(name, avatar) {
@@ -119,7 +117,7 @@
         const stream = accountStream
         accountStream = null
         if (document.body.__dshAccountStream === stream) document.body.__dshAccountStream = null
-        try { stream.dispose() } catch (error) { /* already closed */ }
+        stream.dispose()
       }
 
       /**
@@ -135,8 +133,7 @@
        */
       function followAccount() {
         const account = accountService()
-        let remote = null
-        try { remote = ctx.get('remote') } catch (error) { remote = null }
+        const remote = ctx.get('remote')
         if (account === null || typeof account.watch !== 'function' || !remote || typeof remote.$stream !== 'function' ||
             typeof Symbol !== 'function' || !Symbol.asyncIterator) return false
         const stream = remote.$stream({
@@ -191,7 +188,7 @@
         apply: onAccountState,
         stop() {
           if (accountFiber !== null && typeof accountFiber.dispose === 'function') {
-            try { accountFiber.dispose() } catch (error) { /* the fiber may already be gone */ }
+            accountFiber.dispose()
           }
           stopFollowingAccount()
         }

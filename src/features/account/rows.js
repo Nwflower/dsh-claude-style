@@ -20,13 +20,9 @@
        */
       function accountPhotoUrl(raw) {
         if (raw === HDSL_SKIN_ROUTE) return raw
-        if (typeof raw !== 'string' || raw === '') return null
-        try {
-          const url = new URL(raw, window.location.href)
-          return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : null
-        } catch (error) {
-          return null
-        }
+        if (typeof raw !== 'string' || raw === '' || !URL.canParse(raw, window.location.href)) return null
+        const url = new URL(raw, window.location.href)
+        return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : null
       }
 
       /** The head's canvas, and what a pass needs to decide whether to keep it. */

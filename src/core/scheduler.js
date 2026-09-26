@@ -44,9 +44,7 @@
      * without it, so the console line is the only trace — it names the feature.
      */
     function reportFeatureFailure(name, error) {
-      try {
-        console.error(`[dsh-claude-style] "${name}" failed and was switched off:`, error)
-      } catch (ignored) { /* no console */ }
+      console.error(`[dsh-claude-style] "${name}" failed and was switched off:`, error)
     }
 
     function installScheduler(ctx, ui, passFeatures, hookFeatures) {
@@ -58,6 +56,15 @@
       const PASS_FEATURES = passFeatures || []
       /** Every installed feature handle, in install order, for the event hooks. */
       const HOOK_FEATURES = hookFeatures || []
+      // The pass state comes first: subscribing to the preferences below can
+      // call schedule() before this function returns (a settings form that is
+      // already served answers synchronously — a hot reload does exactly that).
+      // Chat streaming mutates the tree constantly; coalesce to one pass a frame.
+      let scheduled = false
+      /** The frame the pending pass waits on, so the teardown can cancel it. */
+      let pendingFrame = 0
+      /** Set by the teardown: no pass may be scheduled, or run, after it. */
+      let stopped = false
 
       function onGlobalPointerDown(e) {
         const target = e.target
@@ -176,54 +183,37 @@
         }
         schedule()
       }
-      let localeUnsubscribe = null
-      try {
-        const localeService = ctx.get('locale')
-        if (localeService && typeof localeService.subscribe === 'function') {
-          localeUnsubscribe = localeService.subscribe(onCopyChange)
-        }
-      } catch (error) { /* no locale service: the picker keeps the fallback language */ }
+      // Without a locale service the picker keeps the fallback language.
+      const localeService = ctx.get('locale')
+      const localeUnsubscribe = typeof localeService?.subscribe === 'function' ? localeService.subscribe(onCopyChange) : null
 
       // Preferences gate the stylesheet and this scheduler both — the footer
       // takeover adds or removes the account row, and the composer scope flips
       // an attribute the stylesheet reads — so a change re-runs the pass. The
       // first read also arrives through here, which is what replaces the
       // defaults with the stored values.
-      let prefsUnsubscribe = null
-      prefsUnsubscribe = subscribePrefs(onCopyChange)
+      const prefsUnsubscribe = subscribePrefs(onCopyChange)
       loadPrefs()
 
-      let modelCopyUnsubscribe = null
-      modelCopyUnsubscribe = onModelCopyLoaded(onCopyChange)
+      const modelCopyUnsubscribe = onModelCopyLoaded(onCopyChange)
 
-      let usernameUnsubscribe = null
-      usernameUnsubscribe = onUsernameLoaded(() => {
+      const usernameUnsubscribe = onUsernameLoaded(() => {
         schedule()
       })
 
       // The HDSL contract lands after the first pass too, and it can carry both
       // the nickname and the picture, so its arrival repaints the same way.
-      let hdslUnsubscribe = null
-      hdslUnsubscribe = onHdslLoaded(() => {
+      const hdslUnsubscribe = onHdslLoaded(() => {
         schedule()
       })
 
-      // Chat streaming mutates the tree constantly; coalesce to one pass a frame.
-      let scheduled = false
-      /** The frame the pending pass waits on, so the teardown can cancel it. */
-      let pendingFrame = 0
-      /** Set by the teardown: no pass may be scheduled, or run, after it. */
-      let stopped = false
-      let composerCardObserver = null
       let observedCard = null
-      if (typeof ResizeObserver !== 'undefined') {
-        composerCardObserver = new ResizeObserver(() => {
-          // The card resizing moves the anchors pinned to it (the rail toggle,
-          // a container width change) with no window resize: re-pin in the same
-          // frame, or a JS-pinned control trails the ones CSS just reflowed.
-          repositionFeatures('composer')
-        })
-      }
+      const composerCardObserver = new ResizeObserver(() => {
+        // The card resizing moves the anchors pinned to it (the rail toggle,
+        // a container width change) with no window resize: re-pin in the same
+        // frame, or a JS-pinned control trails the ones CSS just reflowed.
+        repositionFeatures('composer')
+      })
 
       /** Failed passes in a row after which a feature's sync is switched off. */
       const SYNC_FAILURE_LIMIT = 3
@@ -260,16 +250,12 @@
           scheduled = false
           if (stopped) return
           for (let i = 0; i < PASS_FEATURES.length; i++) runSync(PASS_FEATURES[i])
-          try {
-            if (composerCardObserver) {
-              const currentCard = document.querySelector('[data-composer-card]')
-              if (currentCard !== observedCard) {
-                if (observedCard) composerCardObserver.unobserve(observedCard)
-                observedCard = currentCard
-                if (observedCard) composerCardObserver.observe(observedCard)
-              }
-            }
-          } catch (error) { /* the next pass tries again */ }
+          const currentCard = document.querySelector('[data-composer-card]')
+          if (currentCard !== observedCard) {
+            if (observedCard) composerCardObserver.unobserve(observedCard)
+            observedCard = currentCard
+            if (observedCard) composerCardObserver.observe(observedCard)
+          }
         })
       }
       ui.schedule = schedule
@@ -305,32 +291,14 @@
         clockTimer = null
         window.removeEventListener('resize', onFixedPopoverViewportChange)
         window.removeEventListener('scroll', onFixedPopoverViewportChange, true)
-        if (localeUnsubscribe !== null) {
-          try { localeUnsubscribe() } catch (error) { /* already disposed */ }
-          localeUnsubscribe = null
-        }
-        if (prefsUnsubscribe !== null) {
-          try { prefsUnsubscribe() } catch (error) { /* already disposed */ }
-          prefsUnsubscribe = null
-        }
-        if (modelCopyUnsubscribe !== null) {
-          try { modelCopyUnsubscribe() } catch (error) { /* already disposed */ }
-          modelCopyUnsubscribe = null
-        }
-        if (usernameUnsubscribe !== null) {
-          try { usernameUnsubscribe() } catch (error) { /* already disposed */ }
-          usernameUnsubscribe = null
-        }
-        if (hdslUnsubscribe !== null) {
-          try { hdslUnsubscribe() } catch (error) { /* already disposed */ }
-          hdslUnsubscribe = null
-        }
+        if (localeUnsubscribe !== null) localeUnsubscribe()
+        prefsUnsubscribe()
+        modelCopyUnsubscribe()
+        usernameUnsubscribe()
+        hdslUnsubscribe()
         observer.disconnect()
-        if (composerCardObserver) {
-          composerCardObserver.disconnect()
-          composerCardObserver = null
-          observedCard = null
-        }
+        composerCardObserver.disconnect()
+        observedCard = null
         document.removeEventListener('pointerdown', onGlobalPointerDown)
         document.removeEventListener('keydown', onGlobalKeyDown, true)
         document.removeEventListener('input', onComposerInput, true)

@@ -137,9 +137,8 @@
       }
 
       function probeAutoPreset() {
-        let namespace = null
-        try { namespace = ctx.get('remote.permissionPresets') } catch (error) { namespace = null }
-        if (namespace === null || namespace === void 0 || typeof namespace.catalog !== 'function') {
+        const namespace = ctx.get('remote.permissionPresets')
+        if (typeof namespace?.catalog !== 'function') {
           if (typeof ctx.inject !== 'function') {
             autoPresetError = new Error('permission: the host exposes no remote.permissionPresets catalog')
             ui.schedule()
@@ -196,9 +195,8 @@
         } else {
           probeAutoPreset()
         }
-        let remoteRoot = null
-        try { remoteRoot = ctx.get('remote') } catch (error) { remoteRoot = null }
-        if (remoteRoot !== null && remoteRoot !== void 0 && typeof remoteRoot.$on === 'function') {
+        const remoteRoot = ctx.get('remote')
+        if (typeof remoteRoot?.$on === 'function') {
           catalogChangedDisposer = remoteRoot.$on('permission-presets/catalog-changed', () => {
             probeAutoPreset()
           })
@@ -636,7 +634,7 @@
         if (permHoverIntent) permHoverIntent.cancel()
         dropAutoPresetRead()
         if (catalogFiber !== null && typeof catalogFiber.dispose === 'function') {
-          try { catalogFiber.dispose() } catch (error) { /* the fiber may already be gone */ }
+          catalogFiber.dispose()
           catalogFiber = null
         }
         if (catalogChangedDisposer !== null) {

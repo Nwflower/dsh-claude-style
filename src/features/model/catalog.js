@@ -29,20 +29,13 @@
          * resolves to null on current hosts and the picker never loads.
          */
         function currentModelSessionId() {
-            try {
-                const sessions = ctx.get('sessions')
-                if (sessions === void 0 || sessions === null) return null
-                const id = currentSessionId(ctx, sessions)
-                return id === void 0 || id === null ? null : id
-            } catch (error) {
-                return null
-            }
+            const sessions = ctx.get('sessions')
+            if (sessions === void 0 || sessions === null) return null
+            return currentSessionId(ctx, sessions) ?? null
         }
 
         function dropSubscription() {
-            if (modelSub) {
-                try { modelSub() } catch (error) { /* already disposed */ }
-            }
+            if (modelSub) modelSub()
             modelSub = null
         }
 
@@ -59,35 +52,31 @@
             dropSubscription()
             modelDir = null
             modelSessionId = null
-            try {
-                const dirs = ctx.get('modelDirectories')
-                if (dirs && typeof dirs.directoryFor === 'function') {
+            const dirs = ctx.get('modelDirectories')
+            if (typeof dirs?.directoryFor === 'function') {
+                try {
                     modelDir = dirs.directoryFor(id)
+                } catch (error) {
+                    // The host throws for a session id that has not materialized
+                    // its scope yet (ui-model-selection directoryFor): no directory
+                    // this time, and the next pass asks again.
+                    modelDir = null
                 }
-            } catch (error) {
-                modelDir = null
             }
             modelSessionId = id
             // The directory INSTANCE only carries load/select — its reactive state
             // hangs off the `.store` snapshot store (the host hands that same store
             // to its own menu as `directory`). Subscribe to the store, never to the
-            // instance, and never let a subscribe failure discard the directory.
-            if (modelDir !== null) {
-                const store = modelDir.store
-                if (store && typeof store.subscribe === 'function') {
-                    try {
-                        modelSub = store.subscribe(() => { notifyProviders(); if (schedule) schedule() })
-                    } catch (error) {
-                        modelSub = null
-                    }
-                }
+            // instance.
+            if (typeof modelDir?.store?.subscribe === 'function') {
+                modelSub = modelDir.store.subscribe(() => { notifyProviders(); if (schedule) schedule() })
             }
             return modelDir
         }
 
         function snapshot() {
             if (modelDir === null || !modelDir.store) return null
-            try { return modelDir.store.getSnapshot() } catch (error) { return null }
+            return modelDir.store.getSnapshot()
         }
 
         /**
@@ -114,11 +103,7 @@
         /** Tell the settings picker the provider list moved (catalog arrived, changed). */
         function notifyProviders() {
             if (providerListeners.length === 0) return
-            const list = providers()
-            const listeners = providerListeners.slice()
-            for (let i = 0; i < listeners.length; i++) {
-                try { listeners[i](list) } catch (error) { /* one listener must not block the rest */ }
-            }
+            notifyAll(providerListeners, providers())
         }
 
         /**
@@ -140,12 +125,10 @@
         function warm() {
             if (modelWarmRequested || modelDir === null || typeof modelDir.load !== 'function') return
             modelWarmRequested = true
-            try {
-                const pending = modelDir.load()
-                if (pending && typeof pending.catch === 'function') {
-                    pending.catch(() => { /* surfaced by the store, not here */ })
-                }
-            } catch (error) { /* synchronous failure — the store's error surface covers it */ }
+            const pending = modelDir.load()
+            if (pending && typeof pending.catch === 'function') {
+                pending.catch(() => { /* surfaced by the store, not here */ })
+            }
         }
 
         /** The current selection resolved to its group + model entries. */
