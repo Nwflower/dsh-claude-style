@@ -23,14 +23,14 @@
      * answers the write with its unchanged value, so the segment flips back
      * with nothing to explain it.
      */
-    var BAN_LOCALE_STORAGE_KEY = 'dsh-claude-style.banLocale'
-    var fallbackBanLocale = readStoredBanLocale()
+    const BAN_LOCALE_STORAGE_KEY = 'dsh-claude-style.banLocale'
+    let fallbackBanLocale = readStoredBanLocale()
 
     function readStoredBanLocale() {
       try {
         if (typeof localStorage === 'undefined') return ''
-        var stored = localStorage.getItem(BAN_LOCALE_STORAGE_KEY) || ''
-        return BAN_LOCALES.indexOf(stored) === -1 ? '' : stored
+        const stored = localStorage.getItem(BAN_LOCALE_STORAGE_KEY) || ''
+        return !BAN_LOCALES.includes(stored) ? '' : stored
       } catch (error) {
         return ''
       }
@@ -38,7 +38,7 @@
 
     /** Persist (or clear) the local language choice; anything else is refused. */
     function setFallbackBanLocale(value) {
-      fallbackBanLocale = BAN_LOCALES.indexOf(value) === -1 ? '' : value
+      fallbackBanLocale = !BAN_LOCALES.includes(value) ? '' : value
       try {
         if (typeof localStorage === 'undefined') return
         if (fallbackBanLocale) localStorage.setItem(BAN_LOCALE_STORAGE_KEY, fallbackBanLocale)
@@ -56,10 +56,10 @@
      */
     function resolveBanLocale(hostValue) {
       if (fallbackBanLocale) return fallbackBanLocale
-      return BAN_LOCALES.indexOf(hostValue) === -1 ? DEFAULT_BAN_LOCALE : hostValue
+      return !BAN_LOCALES.includes(hostValue) ? DEFAULT_BAN_LOCALE : hostValue
     }
 
-    var prefs = {
+    let prefs = {
       brand: DEFAULT_BRAND,
       collapseFooter: true,
       autoPopover: DEFAULT_AUTO_POPOVER,
@@ -70,8 +70,8 @@
       banLocale: fallbackBanLocale || DEFAULT_BAN_LOCALE,
       homeLayout: DEFAULT_HOME_LAYOUT,
     }
-    var prefsAvailable = false
-    var prefsListeners = []
+    let prefsAvailable = false
+    const prefsListeners = []
 
     /**
      * The official settings form.
@@ -81,13 +81,13 @@
      * plugin's profile entry id. It stays null until the service serves that
      * namespace; until then the defaults hold.
      */
-    var prefsForm = null
+    let prefsForm = null
     /** Disposer for the bound form's own change subscription. */
-    var prefsFormUnsubscribe = null
+    let prefsFormUnsubscribe = null
     /** Disposer for the served-namespace directory watch, while one is open. */
-    var prefsWatchOff = null
+    let prefsWatchOff = null
     /** Whether the served-namespace directory is already being watched. */
-    var prefsBinding = false
+    let prefsBinding = false
 
     /**
      * Candidate namespaces, best first: the running loader entry id (host
@@ -97,12 +97,12 @@
      * as.
      */
     function settingsNamespaceCandidates(ctx) {
-      var entryId = null
+      let entryId = null
       try {
-        var entry = ctx && ctx.fiber ? ctx.fiber.entry : null
-        var id = entry ? entry.id : null
+        const entry = ctx && ctx.fiber ? ctx.fiber.entry : null
+        const id = entry ? entry.id : null
         if (typeof id === 'string' && id !== '') {
-          var colon = id.lastIndexOf(':')
+          const colon = id.lastIndexOf(':')
           entryId = colon === -1 ? id : id.slice(colon + 1)
         }
       } catch (error) { /* no loader entry (the dynamic façade hides fiber): fall back */ }
@@ -124,15 +124,15 @@
      */
     function servedNamespace(forms, candidates) {
       try {
-        var mirror = typeof forms.describe === 'function' ? forms.describe() : null
-        var snapshot = mirror && typeof mirror.getSnapshot === 'function' ? mirror.getSnapshot() : null
-        var view = snapshot ? snapshot.view : null
-        var namespaces = view ? view.namespaces : null
+        const mirror = typeof forms.describe === 'function' ? forms.describe() : null
+        const snapshot = mirror && typeof mirror.getSnapshot === 'function' ? mirror.getSnapshot() : null
+        const view = snapshot ? snapshot.view : null
+        const namespaces = view ? view.namespaces : null
         if (namespaces) {
-          for (var i = 0; i < candidates.length; i++) {
-            var candidate = candidates[i]
+          for (let i = 0; i < candidates.length; i++) {
+            const candidate = candidates[i]
             if (typeof candidate !== 'string' || candidate === '') continue
-            for (var j = 0; j < namespaces.length; j++) {
+            for (let j = 0; j < namespaces.length; j++) {
               if (namespaces[j] && namespaces[j].ns === candidate) return candidate
             }
           }
@@ -145,7 +145,7 @@
     function hostConfigForms(ctx) {
       try {
         if (!ctx || typeof ctx.get !== 'function') return null
-        var forms = ctx.get('configForms')
+        const forms = ctx.get('configForms')
         return forms !== null && forms !== undefined && typeof forms.get === 'function' ? forms : null
       } catch (error) {
         return null
@@ -156,7 +156,7 @@
     function readFormValue() {
       if (prefsForm === null) return null
       try {
-        var snapshot = prefsForm.getSnapshot()
+        const snapshot = prefsForm.getSnapshot()
         if (snapshot === null || snapshot === undefined) return null
         if (snapshot.status !== 'ready') return null
         return snapshot.value && typeof snapshot.value === 'object' ? snapshot.value : null
@@ -179,9 +179,9 @@
       // Only bind a namespace the host actually serves; a generated loader id
       // would yield a controller for nobody's namespace (reads stuck at the
       // defaults, every write refused).
-      var namespace = servedNamespace(forms, settingsNamespaceCandidates(ctx))
+      const namespace = servedNamespace(forms, settingsNamespaceCandidates(ctx))
       if (namespace === null) return false
-      var form = null
+      let form = null
       try {
         form = forms.get(namespace)
       } catch (error) {
@@ -191,8 +191,8 @@
       prefsForm = form
       if (typeof form.subscribe === 'function') {
         try {
-          prefsFormUnsubscribe = form.subscribe(function () {
-            var value = readFormValue()
+          prefsFormUnsubscribe = form.subscribe(() => {
+            const value = readFormValue()
             if (value === null) return
             prefsAvailable = true
             adoptPrefs(normalizePrefs(value))
@@ -217,7 +217,7 @@
      */
     function watchNamespace(forms, ctx) {
       if (prefsBinding) return
-      var mirror = null
+      let mirror = null
       try {
         mirror = typeof forms.describe === 'function' ? forms.describe() : null
       } catch (error) {
@@ -225,7 +225,7 @@
       }
       if (mirror === null) return
       prefsBinding = true
-      var attempt = function () {
+      const attempt = () => {
         if (prefsForm === null && !bindServedForm(forms, ctx)) return
         if (prefsWatchOff !== null) {
           try { prefsWatchOff() } catch (error) { /* already gone */ }
@@ -250,7 +250,7 @@
      */
     function adoptSettingsForm(ctx) {
       if (prefsForm === null) {
-        var forms = hostConfigForms(ctx)
+        const forms = hostConfigForms(ctx)
         if (forms === null) return false
         if (!bindServedForm(forms, ctx)) watchNamespace(forms, ctx)
       }
@@ -281,8 +281,8 @@
      * keeps the setting usable until the host is reloaded, and the host value
      * always wins once it carries a non-empty username.
      */
-    var USERNAME_STORAGE_KEY = 'dsh-claude-style.username'
-    var fallbackUsername = ''
+    const USERNAME_STORAGE_KEY = 'dsh-claude-style.username'
+    let fallbackUsername = ''
     try {
       fallbackUsername = typeof localStorage === 'undefined' ? '' : (localStorage.getItem(USERNAME_STORAGE_KEY) || '')
     } catch (error) { fallbackUsername = '' }
@@ -307,8 +307,8 @@
      * restyle both HIDE host controls, and a takeover whose replacement is gone
      * would leave nothing in their place.
      */
-    var footerTakeoverRetired = false
-    var composerRestyleRetired = false
+    let footerTakeoverRetired = false
+    let composerRestyleRetired = false
 
     /** Give the sidebar footer back to the host for the rest of this generation. */
     function retireFooterTakeover() {
@@ -330,8 +330,8 @@
     /** Observe preference changes; returns the unsubscriber. */
     function subscribePrefs(listener) {
       prefsListeners.push(listener)
-      return function () {
-        var index = prefsListeners.indexOf(listener)
+      return () => {
+        const index = prefsListeners.indexOf(listener)
         if (index !== -1) prefsListeners.splice(index, 1)
       }
     }
@@ -347,8 +347,8 @@
       document.body.setAttribute(BRAND_ATTR, next.brand)
       if (next.collapseFooter && !footerTakeoverRetired) document.body.setAttribute(FOOTER_ATTR, '')
       else document.body.removeAttribute(FOOTER_ATTR)
-      var listeners = prefsListeners.slice()
-      for (var i = 0; i < listeners.length; i++) {
+      const listeners = prefsListeners.slice()
+      for (let i = 0; i < listeners.length; i++) {
         try {
           listeners[i](next)
         } catch (error) { /* one bad listener must not stop the rest */ }
@@ -365,10 +365,10 @@
      */
     function loadPrefs() {
       if (prefsForm === null) return
-      var formValue = readFormValue()
+      const formValue = readFormValue()
       if (formValue === null) return
       prefsAvailable = true
-      var formName = typeof formValue.username === 'string' ? formValue.username.trim() : ''
+      const formName = typeof formValue.username === 'string' ? formValue.username.trim() : ''
       if (formName) setFallbackUsername('')
       adoptPrefs(normalizePrefs(formValue))
       replayPendingBanLocale(formValue)
@@ -382,7 +382,7 @@
     function normalizeAutoPopover(value) {
       if (value === true) return AUTO_POPOVER_ALL
       if (value === false) return AUTO_POPOVER_OFF
-      return AUTO_POPOVER_SCOPES.indexOf(value) === -1 ? DEFAULT_AUTO_POPOVER : value
+      return !AUTO_POPOVER_SCOPES.includes(value) ? DEFAULT_AUTO_POPOVER : value
     }
 
     /**
@@ -395,11 +395,11 @@
      */
     function normalizeQuickProviders(value) {
       if (!Array.isArray(value)) return []
-      var out = []
-      for (var i = 0; i < value.length && out.length < QUICK_PROVIDERS_MAX; i++) {
-        var id = value[i]
+      const out = []
+      for (let i = 0; i < value.length && out.length < QUICK_PROVIDERS_MAX; i++) {
+        const id = value[i]
         if (typeof id !== 'string' || id === '' || id.length > PROVIDER_ID_MAX) continue
-        if (id === MODEL_OFFICIAL_GROUP || out.indexOf(id) !== -1) continue
+        if (id === MODEL_OFFICIAL_GROUP || out.includes(id)) continue
         out.push(id)
       }
       return out
@@ -407,17 +407,17 @@
 
     /** Clamp one host value into the preference shape (the host already did this). */
     function normalizePrefs(value) {
-      var section = value && typeof value === 'object' ? value : {}
+      const section = value && typeof value === 'object' ? value : {}
       return {
         brand: section.brand === BRAND_ANTHROPIC || section.brand === BRAND_OFF ? section.brand : BRAND_CLAUDE,
         collapseFooter: section.collapseFooter !== false,
         autoPopover: normalizeAutoPopover(section.autoPopover),
-        composerScope: COMPOSER_SCOPES.indexOf(section.composerScope) === -1 ? 'all' : section.composerScope,
+        composerScope: !COMPOSER_SCOPES.includes(section.composerScope) ? 'all' : section.composerScope,
         modelPicker: section.modelPicker !== false,
         quickProviders: normalizeQuickProviders(section.quickProviders),
         username: (typeof section.username === 'string' ? section.username.trim().slice(0, USERNAME_MAX) : '') || fallbackUsername,
         banLocale: resolveBanLocale(section.banLocale),
-        homeLayout: HOME_LAYOUTS.indexOf(section.homeLayout) === -1 ? DEFAULT_HOME_LAYOUT : section.homeLayout,
+        homeLayout: !HOME_LAYOUTS.includes(section.homeLayout) ? DEFAULT_HOME_LAYOUT : section.homeLayout,
       }
     }
 
@@ -431,10 +431,10 @@
      * the value back and drops the fallback — so the setting migrates itself
      * instead of having to be picked again after the app restarts.
      */
-    var banLocaleReplayed = false
+    let banLocaleReplayed = false
     function replayPendingBanLocale(hostValue) {
       if (banLocaleReplayed || !fallbackBanLocale) return
-      var hostLocale = hostValue && typeof hostValue.banLocale === 'string' ? hostValue.banLocale : ''
+      const hostLocale = hostValue && typeof hostValue.banLocale === 'string' ? hostValue.banLocale : ''
       if (hostLocale === fallbackBanLocale) return
       banLocaleReplayed = true
       savePrefs({ banLocale: fallbackBanLocale })
@@ -453,44 +453,42 @@
      * @returns a promise for the resolved preferences, or null when refused.
      */
     function savePrefsViaForm(patch) {
-      var keys = []
-      for (var key in patch) {
+      const keys = []
+      for (const key in patch) {
         if (Object.prototype.hasOwnProperty.call(patch, key)) keys.push(key)
       }
-      var step = function (name) {
-        return function (accepted) {
-          if (accepted === false) return false
-          try {
-            var pending = prefsForm.set(name, patch[name])
-            return pending && typeof pending.then === 'function'
-              ? pending.then(function (ok) { return ok === true })
-              : true
-          } catch (error) {
-            return false
-          }
+      const step = name => accepted => {
+        if (accepted === false) return false
+        try {
+          const pending = prefsForm.set(name, patch[name])
+          return pending && typeof pending.then === 'function'
+            ? pending.then(ok => ok === true)
+            : true
+        } catch (error) {
+          return false
         }
       }
-      var run = Promise.resolve(true)
-      for (var i = 0; i < keys.length; i++) run = run.then(step(keys[i]))
-      return run.then(function (accepted) {
+      let run = Promise.resolve(true)
+      for (let i = 0; i < keys.length; i++) run = run.then(step(keys[i]))
+      return run.then(accepted => {
         if (accepted === false) {
           // Refused (a stale revision, or a field this Config does not carry):
           // re-read rather than guess.
           loadPrefs()
           return null
         }
-        var value = readFormValue()
+        const value = readFormValue()
         if (value !== null) {
           prefsAvailable = true
           if (typeof patch.username === 'string') {
-            var hostName = typeof value.username === 'string' ? value.username.trim() : ''
+            const hostName = typeof value.username === 'string' ? value.username.trim() : ''
             setFallbackUsername(hostName ? '' : patch.username)
           }
           // The host echoing the value back is the only proof it knows the
           // field; anything else means the write did not land and the local
           // fallback has to keep it.
           if (typeof patch.banLocale === 'string') {
-            var hostLocale = typeof value.banLocale === 'string' ? value.banLocale : ''
+            const hostLocale = typeof value.banLocale === 'string' ? value.banLocale : ''
             setFallbackBanLocale(hostLocale === patch.banLocale ? '' : patch.banLocale)
           }
           adoptPrefs(normalizePrefs(value))

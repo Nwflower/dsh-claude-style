@@ -21,22 +21,22 @@
      * @returns teardown.
      */
     function installMascot(ui) {
-      var SVG_NS = 'http://www.w3.org/2000/svg'
+      const SVG_NS = 'http://www.w3.org/2000/svg'
       /** One sprite cell, in CSS pixels. */
-      var CELL = 4
+      const CELL = 4
       /**
        * The canvas, in cells: the crab stands in the right thirteen columns
        * and the bottom eight rows; the room to its left and above is where the
        * rod swings.
        */
-      var CANVAS_COLUMNS = 24
-      var CANVAS_ROWS = 12
+      const CANVAS_COLUMNS = 24
+      const CANVAS_ROWS = 12
       /** Where a pose's first row and column land on the canvas. */
-      var CRAB_LEFT = 11
-      var CRAB_TOP = 4
+      const CRAB_LEFT = 11
+      const CRAB_TOP = 4
       /** The quiet spell between two unprompted routines, in milliseconds. */
-      var IDLE_MIN_MS = 25000
-      var IDLE_SPAN_MS = 20000
+      const IDLE_MIN_MS = 25000
+      const IDLE_SPAN_MS = 20000
 
       /**
        * The poses, drawn thirteen cells wide from the crab's own left edge:
@@ -46,7 +46,7 @@
        * row above the head (`above`) for an arm raised over it. `rod` is the
        * fishing rod as canvas points, with an optional lure square.
        */
-      var FRONT = [
+      const FRONT = [
         '..#########..',
         '..#o#####o#..',
         '..#########..',
@@ -56,7 +56,7 @@
         '..#..#.#..#..',
         '..#..#.#..#..',
       ]
-      var TURN = [
+      const TURN = [
         '...########..',
         '...#o###o####',
         '...##########',
@@ -66,7 +66,7 @@
         '...#.#..#.#..',
         '...#.#..#.#..',
       ]
-      var WINK = [
+      const WINK = [
         '...########..',
         '...#o###d####',
         '...##########',
@@ -76,7 +76,7 @@
         '...#.#..#.#..',
         '...#.#..#.#..',
       ]
-      var CAST_UP = [
+      const CAST_UP = [
         '.##########..',
         '..#o#####o#..',
         '..#########..',
@@ -86,7 +86,7 @@
         '..#..#.#..#..',
         '..#..#.#..#..',
       ]
-      var CAST_SWING = [
+      const CAST_SWING = [
         '..#########..',
         '..#o#####o#..',
         '..#########..',
@@ -96,7 +96,7 @@
         '..#..#.#..#..',
         '..#..#.#..#..',
       ]
-      var CAST_DOWN = [
+      const CAST_DOWN = [
         '..#########..',
         '..#o#####o#..',
         '..#########..',
@@ -106,7 +106,7 @@
         '..#..#.#..#..',
         '..#..#.#..#..',
       ]
-      var HOP = [
+      const HOP = [
         '..##....##...',
         '..########s..',
         '..#o####o#s..',
@@ -117,7 +117,7 @@
         '..#.#..#.#...',
         '..#.#..#.#...',
       ]
-      var FISH_A = [
+      const FISH_A = [
         '...#######s..',
         '...o##o###s..',
         '...#######s..',
@@ -127,7 +127,7 @@
         '...l.l.l.l...',
         '.............',
       ]
-      var FISH_B = [
+      const FISH_B = [
         '...#######s..',
         '...o##o###s..',
         '...#######s..',
@@ -137,7 +137,7 @@
         '...l.l.l.l...',
         '.............',
       ]
-      var FISH_TURN = [
+      const FISH_TURN = [
         '...#######s..',
         '...O##O###s..',
         '...#######s..',
@@ -149,8 +149,8 @@
       ]
 
       /** The rod laid on the card's edge: tip up and out, handle at the crab's foot. */
-      var ROD_RESTING = { points: [[46, 47], [30, 47], [20, 37]] }
-      var POSES = {
+      const ROD_RESTING = { points: [[46, 47], [30, 47], [20, 37]] }
+      const POSES = {
         front: { rows: FRONT },
         turn: { rows: TURN },
         wink: { rows: WINK },
@@ -164,18 +164,18 @@
         putAway: { rows: TURN, rod: { points: [[46, 30], [36, 34], [28, 36]] } },
       }
       /** Claude Code's routine, pose by pose, each held for its milliseconds. */
-      var ROUTINE = [
+      const ROUTINE = [
         ['turn', 70], ['wink', 400], ['castUp', 200], ['castSwing', 70], ['castDown', 200], ['hop', 130],
         ['fishTurn', 70], ['fishA', 280], ['fishB', 210], ['fishA', 280], ['fishB', 210], ['fishA', 280], ['fishB', 210],
         ['fishTurn', 70], ['putAway', 70], ['turn', 270], ['front', 0],
       ]
 
-      var root = null
-      var groups = {}
-      var shown = 'front'
-      var playing = false
-      var stepTimer = null
-      var idleTimer = null
+      let root = null
+      let groups = {}
+      let shown = 'front'
+      let playing = false
+      let stepTimer = null
+      let idleTimer = null
 
       /** Whether the reader asks the system for reduced motion, as of now. */
       function reducedMotion() {
@@ -183,7 +183,7 @@
       }
 
       function rect(parent, className, x, y, width, height) {
-        var node = document.createElementNS(SVG_NS, 'rect')
+        const node = document.createElementNS(SVG_NS, 'rect')
         node.setAttribute('class', className)
         node.setAttribute('x', String(x))
         node.setAttribute('y', String(y))
@@ -194,55 +194,55 @@
 
       /** One pose as an SVG group: shell runs merged per row, eyes and rod on top. */
       function drawPose(name, pose) {
-        var group = document.createElementNS(SVG_NS, 'g')
+        const group = document.createElementNS(SVG_NS, 'g')
         group.setAttribute('data-pose', name)
         if (name !== shown) group.setAttribute('display', 'none')
-        var top = CRAB_TOP - (pose.above ? 1 : 0)
-        var eyes = []
-        var legs = []
-        for (var r = 0; r < pose.rows.length; r++) {
-          var row = pose.rows[r]
-          var y = (top + r) * CELL
-          var c = 0
+        const top = CRAB_TOP - (pose.above ? 1 : 0)
+        const eyes = []
+        const legs = []
+        for (let r = 0; r < pose.rows.length; r++) {
+          const row = pose.rows[r]
+          const y = (top + r) * CELL
+          let c = 0
           while (c < row.length) {
-            var mark = row.charAt(c)
+            const mark = row.charAt(c)
             if (mark === '.') { c++; continue }
             if (mark === 'l') {
-              legs.push({ x: (CRAB_LEFT + c) * CELL, y: y })
+              legs.push({ x: (CRAB_LEFT + c) * CELL, y })
               c++
               continue
             }
-            var fill = mark === 's' ? 's' : '#'
-            var start = c
+            const fill = mark === 's' ? 's' : '#'
+            const start = c
             // An eye sits on shell, so the shell run carries on under it.
-            while (c < row.length && '.l'.indexOf(row.charAt(c)) === -1 && (row.charAt(c) === 's') === (fill === 's')) {
-              if ('oOd'.indexOf(row.charAt(c)) !== -1) eyes.push({ mark: row.charAt(c), x: (CRAB_LEFT + c) * CELL, y: y })
+            while (c < row.length && !'.l'.includes(row.charAt(c)) && (row.charAt(c) === 's') === (fill === 's')) {
+              if ('oOd'.includes(row.charAt(c))) eyes.push({ mark: row.charAt(c), x: (CRAB_LEFT + c) * CELL, y })
               c++
             }
             rect(group, fill === 's' ? 'dsh-claude-mascot-shade' : 'dsh-claude-mascot-shell', (CRAB_LEFT + start) * CELL, y, (c - start) * CELL, CELL)
           }
         }
-        for (var l = 0; l < legs.length; l++) {
-          var leg = legs[l]
-          var slant = document.createElementNS(SVG_NS, 'polygon')
+        for (let l = 0; l < legs.length; l++) {
+          const leg = legs[l]
+          const slant = document.createElementNS(SVG_NS, 'polygon')
           slant.setAttribute('class', 'dsh-claude-mascot-shell')
           slant.setAttribute('points', [
             [leg.x, leg.y], [leg.x + CELL, leg.y], [leg.x + CELL + CELL / 2, leg.y + 2 * CELL], [leg.x + CELL / 2, leg.y + 2 * CELL],
-          ].map(function (point) { return point.join(',') }).join(' '))
+          ].map(point => point.join(',')).join(' '))
           group.appendChild(slant)
         }
-        for (var e = 0; e < eyes.length; e++) {
-          var eye = eyes[e]
+        for (let e = 0; e < eyes.length; e++) {
+          const eye = eyes[e]
           if (eye.mark === 'o') rect(group, 'dsh-claude-mascot-eye', eye.x, eye.y, CELL, CELL)
           else if (eye.mark === 'O') rect(group, 'dsh-claude-mascot-eye', eye.x, eye.y - 1, CELL, CELL + 2)
           else rect(group, 'dsh-claude-mascot-eye', eye.x - 1, eye.y + 1, CELL + 2, 2)
         }
         if (pose.rod) {
-          var line = document.createElementNS(SVG_NS, 'polyline')
+          const line = document.createElementNS(SVG_NS, 'polyline')
           line.setAttribute('class', 'dsh-claude-mascot-rod')
-          line.setAttribute('points', pose.rod.points.map(function (point) { return point.join(',') }).join(' '))
+          line.setAttribute('points', pose.rod.points.map(point => point.join(',')).join(' '))
           group.appendChild(line)
-          var lure = pose.rod.lure
+          const lure = pose.rod.lure
           if (lure) rect(group, 'dsh-claude-mascot-lure', lure[0], lure[1], lure[2], lure[2])
         }
         return group
@@ -253,16 +253,16 @@
         root.className = 'dsh-claude-mascot'
         root.setAttribute('aria-hidden', 'true')
         root.setAttribute('data-pose', shown)
-        var svg = document.createElementNS(SVG_NS, 'svg')
-        svg.setAttribute('viewBox', '0 0 ' + CANVAS_COLUMNS * CELL + ' ' + CANVAS_ROWS * CELL)
+        const svg = document.createElementNS(SVG_NS, 'svg')
+        svg.setAttribute('viewBox', `0 0 ${CANVAS_COLUMNS * CELL} ${CANVAS_ROWS * CELL}`)
         svg.setAttribute('width', String(CANVAS_COLUMNS * CELL))
         svg.setAttribute('height', String(CANVAS_ROWS * CELL))
-        for (var name in POSES) {
+        for (const name in POSES) {
           groups[name] = drawPose(name, POSES[name])
           svg.appendChild(groups[name])
         }
         // The pointer only meets the crab itself, never the rod's empty room.
-        var hit = document.createElementNS(SVG_NS, 'rect')
+        const hit = document.createElementNS(SVG_NS, 'rect')
         hit.setAttribute('class', 'dsh-claude-mascot-hit')
         hit.setAttribute('x', String(CRAB_LEFT * CELL))
         hit.setAttribute('y', String(CRAB_TOP * CELL))
@@ -298,9 +298,9 @@
         if (playing || root === null || !root.isConnected) return
         if (reducedMotion() && !(event && event.type === 'click')) return
         playing = true
-        var step = 0
+        let step = 0
         function next() {
-          var entry = ROUTINE[step]
+          const entry = ROUTINE[step]
           show(entry[0])
           step++
           if (step >= ROUTINE.length) {
@@ -315,7 +315,7 @@
 
       /** The next unprompted routine, some time from now, while the page is in view. */
       function scheduleIdle() {
-        idleTimer = setTimeout(function () {
+        idleTimer = setTimeout(() => {
           if (!document.hidden) play()
           scheduleIdle()
         }, IDLE_MIN_MS + Math.random() * IDLE_SPAN_MS)
@@ -323,7 +323,7 @@
 
       /** Each pass: the crab rides the studio hero's card, and leaves with it. */
       function sync() {
-        var card = readPrefs().homeLayout === HOME_LAYOUT_STUDIO ? ui.composer.heroCard() : null
+        const card = readPrefs().homeLayout === HOME_LAYOUT_STUDIO ? ui.composer.heroCard() : null
         if (card === null) {
           if (root !== null && root.parentNode !== null) {
             stopRoutine()
@@ -335,10 +335,10 @@
         if (root.parentNode !== card) card.appendChild(root)
       }
 
-      ui.mascot = { sync: sync }
+      ui.mascot = { sync }
       scheduleIdle()
 
-      return function () {
+      return () => {
         stopRoutine()
         clearTimeout(idleTimer)
         idleTimer = null

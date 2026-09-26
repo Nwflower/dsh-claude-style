@@ -20,19 +20,19 @@
      * per-day per-model totals the models chart stacks.
      */
     /** Where the roll-up lands while the host half is still folding. */
-    var HOME_POLL_MS = 800
+    const HOME_POLL_MS = 800
     /** Polls per load; a cold fold over a large history takes a few seconds. */
-    var HOME_POLL_MAX = 15
+    const HOME_POLL_MAX = 15
     /** Heat-grid columns: twenty-six weeks of days, Sunday first — Claude Code's span. */
-    var HOME_HEAT_WEEKS = 26
+    const HOME_HEAT_WEEKS = 26
     /** A day's heat is bucketed into four steps against the busiest day shown. */
-    var HOME_HEAT_STEPS = 4
+    const HOME_HEAT_STEPS = 4
     /**
      * The yardstick line's books, shortest first: each title's copy key, its
      * English fallback, and its length in tokens (its word count at the same
      * 1.3 tokens a word The Hobbit's 123k comes from).
      */
-    var HOME_BOOKS = [
+    const HOME_BOOKS = [
       { key: 'homeBookAnimalFarm', title: 'Animal Farm', tokens: 39000 },
       { key: 'homeBookGatsby', title: 'The Great Gatsby', tokens: 61000 },
       { key: 'homeBookPhilosophersStone', title: "Harry Potter and the Philosopher's Stone", tokens: 100000 },
@@ -46,11 +46,11 @@
       { key: 'homeBookLostTime', title: 'In Search of Lost Time', tokens: 1647000 },
     ]
     /** The models chart's own window, in days: Claude Code's chart spans a month. */
-    var HOME_CHART_DAYS = 30
+    const HOME_CHART_DAYS = 30
     /** Models the ranked list shows before its "show more" row. */
-    var HOME_MODEL_ROWS = 6
+    const HOME_MODEL_ROWS = 6
     /** The range pills: all time, or the last 30/7 calendar days including today. */
-    var HOME_RANGES = [
+    const HOME_RANGES = [
       { id: 'all', labelKey: 'homeRangeAll', fallback: 'All', days: 0 },
       { id: '30d', labelKey: 'homeRange30d', fallback: '30d', days: 30 },
       { id: '7d', labelKey: 'homeRange7d', fallback: '7d', days: 7 },
@@ -58,8 +58,8 @@
 
     /** A local calendar day, matching the host half's day keys. */
     function homeDayKey(date) {
-      var pad = function (value) { return value < 10 ? '0' + value : String(value) }
-      return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate())
+      const pad = value => value < 10 ? `0${value}` : String(value)
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
     }
 
     /** The short day-label formatter, in the shell's language: "Aug 26", "8月26日". */
@@ -69,14 +69,14 @@
 
     /** One day key as a short label, through `homeShortDateFormat()`'s formatter. */
     function homeShortDate(format, day) {
-      var parts = day.split('-')
+      const parts = day.split('-')
       return format.format(new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])))
     }
 
     /** The first day key of a range window; all time has none. */
     function homeRangeStart(windowDays) {
       if (!windowDays) return null
-      var start = new Date()
+      const start = new Date()
       start.setHours(0, 0, 0, 0)
       start.setDate(start.getDate() - (windowDays - 1))
       return homeDayKey(start)
@@ -84,21 +84,21 @@
 
     /** One token count, short enough for a stat cell or an axis label. */
     function formatHomeTokens(count) {
-      var value = Number(count) || 0
-      if (value >= 1e9) return (value / 1e9).toFixed(2) + 'B'
-      if (value >= 1e6) return (value / 1e6).toFixed(1) + 'M'
-      if (value >= 1e3) return (value / 1e3).toFixed(1) + 'K'
+      const value = Number(count) || 0
+      if (value >= 1e9) return `${(value / 1e9).toFixed(2)}B`
+      if (value >= 1e6) return `${(value / 1e6).toFixed(1)}M`
+      if (value >= 1e3) return `${(value / 1e3).toFixed(1)}K`
       return String(Math.round(value))
     }
 
     function formatHomeCount(count) {
-      var value = Math.round(Number(count) || 0)
+      const value = Math.round(Number(count) || 0)
       return String(value).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
     }
 
     /** A settlement hour as Claude Code writes it: "5 AM" / "下午 3 点". */
     function formatHomeHour(hour) {
-      var h12 = hour % 12 === 0 ? 12 : hour % 12
+      const h12 = hour % 12 === 0 ? 12 : hour % 12
       return copyLabel(hour < 12 ? 'homeHourAm' : 'homeHourPm', hour < 12 ? '{hour} AM' : '{hour} PM', { hour: h12 })
     }
 
@@ -128,16 +128,16 @@
      */
     function createHomeUsage(ctx) {
       /** What the panel draws: the last answer, whether more is coming, and why not. */
-      var usage = { value: null, computing: false, error: null, loading: false, polls: 0 }
-      var listSummary = null
-      var listLoading = false
-      var listeners = []
-      var pollTimer = null
-      var disposed = false
+      const usage = { value: null, computing: false, error: null, loading: false, polls: 0 }
+      let listSummary = null
+      let listLoading = false
+      const listeners = []
+      let pollTimer = null
+      let disposed = false
 
       function emit() {
-        var current = listeners.slice()
-        for (var i = 0; i < current.length; i++) {
+        const current = listeners.slice()
+        for (let i = 0; i < current.length; i++) {
           try {
             current[i]()
           } catch (error) { /* one bad listener must not stop the rest */ }
@@ -146,8 +146,8 @@
 
       function subscribe(listener) {
         listeners.push(listener)
-        return function () {
-          var index = listeners.indexOf(listener)
+        return () => {
+          const index = listeners.indexOf(listener)
           if (index !== -1) listeners.splice(index, 1)
         }
       }
@@ -167,7 +167,7 @@
         if (disposed || usage.loading) return
         if (!force && usage.value !== null && !usage.computing) return
         usage.loading = true
-        var request
+        let request
         try {
           request = fetch(USAGE_ROUTE, { credentials: 'same-origin', headers: { accept: 'application/json' } })
         } catch (error) {
@@ -176,9 +176,7 @@
           emit()
           return
         }
-        request.then(function (response) {
-          return response !== null && response.ok === true ? response.json() : null
-        }).then(function (body) {
+        request.then(response => response !== null && response.ok === true ? response.json() : null).then(body => {
           usage.loading = false
           if (disposed) return
           if (body === null || body.ok !== true) {
@@ -194,12 +192,12 @@
             if (usage.polls >= HOME_POLL_MAX) return
             usage.polls += 1
             stopPolling()
-            pollTimer = setTimeout(function () {
+            pollTimer = setTimeout(() => {
               pollTimer = null
               loadUsage(true)
             }, HOME_POLL_MS)
           }
-        }).catch(function () {
+        }).catch(() => {
           usage.loading = false
           if (disposed) return
           usage.error = 'unavailable'
@@ -222,38 +220,38 @@
        * which is exactly why the panel names the source it drew from.
        */
       function summarizeSessionList(rows) {
-        var tokens = 0
-        var dayCount = {}
-        var byDay = {}
-        var byModel = {}
-        var entries = []
-        for (var i = 0; i < rows.length; i++) {
-          var row = rows[i]
-          var values = row !== null && row !== undefined && row.projections !== undefined && row.projections !== null
+        let tokens = 0
+        const dayCount = {}
+        const byDay = {}
+        const byModel = {}
+        const entries = []
+        for (let i = 0; i < rows.length; i++) {
+          const row = rows[i]
+          const values = row !== null && row !== undefined && row.projections !== undefined && row.projections !== null
             ? row.projections.values
             : null
           if (values === null || values === undefined) continue
-          var meta = values.sessionListMetadata
+          const meta = values.sessionListMetadata
           if (meta !== null && meta !== undefined && meta.blank === true) continue
-          var bucket = values.tokenUsage
-          var total = bucket === null || bucket === undefined ? 0
+          const bucket = values.tokenUsage
+          const total = bucket === null || bucket === undefined ? 0
             : (bucket.uncachedInputTokens || 0) + (bucket.outputTokens || 0)
               + (bucket.cacheReadTokens || 0) + (bucket.cacheWriteTokens || 0)
           tokens += total
-          var at = meta !== null && meta !== undefined && typeof meta.lastPromptAt === 'number'
+          const at = meta !== null && meta !== undefined && typeof meta.lastPromptAt === 'number'
             ? meta.lastPromptAt
             : row.updatedAt
-          var selection = values.modelSelection
-          var picked = selection !== null && selection !== undefined ? (selection.next || selection.lastUsed) : null
-          var id = picked !== null && picked !== undefined && typeof picked.model === 'string' ? picked.model : null
+          const selection = values.modelSelection
+          const picked = selection !== null && selection !== undefined ? (selection.next || selection.lastUsed) : null
+          const id = picked !== null && picked !== undefined && typeof picked.model === 'string' ? picked.model : null
           entries.push({ at: typeof at === 'number' ? at : 0, tokens: total, model: id })
           if (typeof at === 'number') {
-            var day = homeDayKey(new Date(at))
+            const day = homeDayKey(new Date(at))
             dayCount[day] = true
             byDay[day] = (byDay[day] || 0) + total
           }
           if (id !== null) {
-            var cell = byModel[id]
+            let cell = byModel[id]
             if (cell === undefined) {
               cell = { tokens: 0, sessions: 0, lastAt: 0 }
               byModel[id] = cell
@@ -263,26 +261,26 @@
             if (typeof at === 'number' && at > cell.lastAt) cell.lastAt = at
           }
         }
-        var favorite = null
-        var best = 0
-        var models = []
-        for (var name in byModel) {
+        let favorite = null
+        let best = 0
+        const models = []
+        for (const name in byModel) {
           models.push({ id: name, tokens: byModel[name].tokens, sessions: byModel[name].sessions, lastAt: byModel[name].lastAt })
           if (byModel[name].sessions > best) {
             best = byModel[name].sessions
             favorite = name
           }
         }
-        models.sort(function (left, right) { return right.tokens - left.tokens })
-        var days = []
-        for (var date in byDay) days.push({ date: date, total: byDay[date] })
-        return { tokens: tokens, sessions: entries.length, activeDays: Object.keys(dayCount).length, model: favorite, models: models, days: days, entries: entries }
+        models.sort((left, right) => right.tokens - left.tokens)
+        const days = []
+        for (const date in byDay) days.push({ date, total: byDay[date] })
+        return { tokens, sessions: entries.length, activeDays: Object.keys(dayCount).length, model: favorite, models, days, entries }
       }
 
       /** Read the session list once; a host without the remote service keeps the route's answer. */
       function loadSessionSummary() {
         if (disposed || listLoading || listSummary !== null) return
-        var sessions
+        let sessions
         try {
           sessions = ctx.get('remote.session')
         } catch (error) {
@@ -290,31 +288,31 @@
         }
         if (sessions === undefined || sessions === null || typeof sessions.list !== 'function') return
         listLoading = true
-        sessions.list({}).then(function (result) {
+        sessions.list({}).then(result => {
           listLoading = false
           if (disposed) return
-          var items = result !== null && result !== undefined && result.ok === true
+          const items = result !== null && result !== undefined && result.ok === true
             && result.value !== null && result.value !== undefined && Array.isArray(result.value.items)
             ? result.value.items
             : null
           if (items === null) return
           listSummary = summarizeSessionList(items)
           emit()
-        }).catch(function () {
+        }).catch(() => {
           listLoading = false
         })
       }
 
       return {
-        state: function () { return usage },
-        list: function () { return listSummary },
-        listLoading: function () { return listLoading },
-        subscribe: subscribe,
+        state() { return usage },
+        list() { return listSummary },
+        listLoading() { return listLoading },
+        subscribe,
         /** Ask every view to re-render; a state change outside the store uses it. */
         notify: emit,
         load: loadUsage,
         loadList: loadSessionSummary,
-        stop: function () {
+        stop() {
           disposed = true
           stopPolling()
           listeners.length = 0
@@ -328,35 +326,35 @@
      * cells with no heat, which is exactly what an empty cell means.
      */
     function homeHeatGrid(days) {
-      var byDate = {}
-      var callsByDate = {}
-      var list = days === null || days === undefined ? [] : days
+      const byDate = {}
+      const callsByDate = {}
+      const list = days === null || days === undefined ? [] : days
       // A day's messages are its settled calls; the session list's fallback has
       // no per-day count, so its cells carry none.
-      var counted = true
-      for (var i = 0; i < list.length; i++) {
+      let counted = true
+      for (let i = 0; i < list.length; i++) {
         byDate[list[i].date] = homeDayTokens(list[i])
         if (typeof list[i].calls === 'number') callsByDate[list[i].date] = list[i].calls
         else counted = false
       }
-      var today = new Date()
+      const today = new Date()
       today.setHours(0, 0, 0, 0)
-      var start = new Date(today)
+      const start = new Date(today)
       start.setDate(start.getDate() - (HOME_HEAT_WEEKS * 7 - 1))
       start.setDate(start.getDate() - start.getDay())
-      var cells = []
-      var peak = 0
-      for (var cursor = new Date(start); cursor <= today; cursor.setDate(cursor.getDate() + 1)) {
-        var key = homeDayKey(cursor)
-        var tokens = byDate[key] || 0
+      const cells = []
+      let peak = 0
+      for (const cursor = new Date(start); cursor <= today; cursor.setDate(cursor.getDate() + 1)) {
+        const key = homeDayKey(cursor)
+        const tokens = byDate[key] || 0
         if (tokens > peak) peak = tokens
-        cells.push({ date: key, tokens: tokens, messages: counted ? callsByDate[key] || 0 : null, level: 0 })
+        cells.push({ date: key, tokens, messages: counted ? callsByDate[key] || 0 : null, level: 0 })
       }
-      for (var c = 0; c < cells.length; c++) {
+      for (let c = 0; c < cells.length; c++) {
         if (cells[c].tokens === 0 || peak === 0) continue
         cells[c].level = Math.max(1, Math.min(HOME_HEAT_STEPS, Math.ceil(cells[c].tokens / peak * HOME_HEAT_STEPS)))
       }
-      return { cells: cells, peak: peak }
+      return { cells, peak }
     }
 
     /**
@@ -368,23 +366,24 @@
      */
     function homeModelList(value, listed) {
       if (value !== null && Array.isArray(value.models) && value.models.length > 0) {
-        return value.models.map(function (entry) {
-          return {
-            id: entry.id,
-            input: entry.input || 0,
-            output: entry.output || 0,
-            cacheRead: entry.cacheRead || 0,
-            cacheWrite: entry.cacheWrite || 0,
-            tokens: homeModelTokens(entry),
-            sessions: entry.sessions,
-            lastAt: entry.lastAt,
-          }
-        })
+        return value.models.map(entry => ({
+          id: entry.id,
+          input: entry.input || 0,
+          output: entry.output || 0,
+          cacheRead: entry.cacheRead || 0,
+          cacheWrite: entry.cacheWrite || 0,
+          tokens: homeModelTokens(entry),
+          sessions: entry.sessions,
+          lastAt: entry.lastAt
+        }))
       }
       if (listed === null) return null
-      return listed.models.map(function (entry) {
-        return { id: entry.id, tokens: entry.tokens, sessions: entry.sessions, lastAt: entry.lastAt }
-      })
+      return listed.models.map(entry => ({
+        id: entry.id,
+        tokens: entry.tokens,
+        sessions: entry.sessions,
+        lastAt: entry.lastAt
+      }))
     }
 
     /**
@@ -397,16 +396,16 @@
      */
     function homeModelDays(value, windowDays) {
       if (value === null || !Array.isArray(value.days)) return null
-      var span = windowDays > 0 && windowDays < HOME_CHART_DAYS ? windowDays : HOME_CHART_DAYS
-      var start = homeRangeStart(span)
-      var columns = []
-      for (var i = 0; i < value.days.length; i++) {
-        var day = value.days[i]
+      const span = windowDays > 0 && windowDays < HOME_CHART_DAYS ? windowDays : HOME_CHART_DAYS
+      const start = homeRangeStart(span)
+      const columns = []
+      for (let i = 0; i < value.days.length; i++) {
+        const day = value.days[i]
         if (day.date < start || day.models === undefined || day.models === null) continue
         columns.push({ date: day.date, models: day.models })
       }
       if (columns.length === 0) return null
-      columns.sort(function (left, right) { return left.date < right.date ? -1 : 1 })
+      columns.sort((left, right) => left.date < right.date ? -1 : 1)
       return columns
     }
 
@@ -420,21 +419,21 @@
      * @returns the figures both views read.
      */
     function homePanelData(state, listed, range, bookPick) {
-      var value = state.value
-      var ready = value !== null && value.totals !== undefined
-      var totals = ready ? value.totals : null
-      var known = ready || listed !== null
-      var windowDays = 0
-      for (var r = 0; r < HOME_RANGES.length; r++) {
+      const value = state.value
+      const ready = value !== null && value.totals !== undefined
+      const totals = ready ? value.totals : null
+      const known = ready || listed !== null
+      let windowDays = 0
+      for (let r = 0; r < HOME_RANGES.length; r++) {
         if (HOME_RANGES[r].id === range) windowDays = HOME_RANGES[r].days
       }
-      var start = homeRangeStart(windowDays)
-      var startMs = start === null ? null : new Date(start + 'T00:00:00').getTime()
-      var inRange = function (date) { return start === null || date >= start }
-      var tokens = 0
-      var calls = null
-      var sessions = null
-      var activeDays = null
+      const start = homeRangeStart(windowDays)
+      const startMs = start === null ? null : new Date(`${start}T00:00:00`).getTime()
+      const inRange = date => start === null || date >= start
+      let tokens = 0
+      let calls = null
+      let sessions = null
+      let activeDays = null
       if (ready && start === null) {
         // All time reads the fold's own totals; its session count is already the
         // distinct union over every day.
@@ -447,20 +446,20 @@
         // when the host half carries them on every day; an older host half has
         // none, and the per-day counts then sum to an upper bound rather than
         // reading zero.
-        var ids = {}
-        var everyDayHasIds = true
-        var daySessions = 0
+        const ids = {}
+        let everyDayHasIds = true
+        let daySessions = 0
         calls = 0
         sessions = 0
         activeDays = 0
-        for (var d = 0; d < value.days.length; d++) {
-          var day = value.days[d]
+        for (let d = 0; d < value.days.length; d++) {
+          const day = value.days[d]
           if (!inRange(day.date)) continue
           tokens += homeDayTokens(day)
           calls += day.calls || 0
           activeDays += 1
           if (Array.isArray(day.sessionIds)) {
-            for (var s = 0; s < day.sessionIds.length; s++) ids[day.sessionIds[s]] = true
+            for (let s = 0; s < day.sessionIds.length; s++) ids[day.sessionIds[s]] = true
           } else {
             everyDayHasIds = false
           }
@@ -472,47 +471,47 @@
         // day, so the window keeps the sessions whose last prompt falls inside.
         sessions = 0
         activeDays = 0
-        for (var e = 0; e < listed.entries.length; e++) {
-          var item = listed.entries[e]
+        for (let e = 0; e < listed.entries.length; e++) {
+          const item = listed.entries[e]
           if (startMs !== null && item.at < startMs) continue
           tokens += item.tokens
           sessions += 1
         }
-        for (var ld = 0; ld < listed.days.length; ld++) {
+        for (let ld = 0; ld < listed.days.length; ld++) {
           if (inRange(listed.days[ld].date)) activeDays += 1
         }
       }
       // The hour histogram is the fold's own (behind a cost-meter answer it
       // lands a moment later). All time reads the whole histogram; a window sums
       // its own days' histograms, so the peak hour follows the range pills.
-      var hourCounts = null
+      let hourCounts = null
       if (ready && start === null && Array.isArray(value.hours)) hourCounts = value.hours
       else if (ready && start !== null && Array.isArray(value.days)) {
-        for (var hd = 0; hd < value.days.length; hd++) {
-          var hourDay = value.days[hd]
+        for (let hd = 0; hd < value.days.length; hd++) {
+          const hourDay = value.days[hd]
           if (!inRange(hourDay.date) || !Array.isArray(hourDay.hours)) continue
           if (hourCounts === null) hourCounts = new Array(24).fill(0)
-          for (var dh = 0; dh < 24; dh++) hourCounts[dh] += Number(hourDay.hours[dh]) || 0
+          for (let dh = 0; dh < 24; dh++) hourCounts[dh] += Number(hourDay.hours[dh]) || 0
         }
       }
-      var peakHour = null
+      let peakHour = null
       if (hourCounts !== null) {
-        var bestHour = 0
-        var hourSum = 0
-        for (var h = 0; h < 24; h++) {
-          var hourCount = Number(hourCounts[h]) || 0
+        let bestHour = 0
+        let hourSum = 0
+        for (let h = 0; h < 24; h++) {
+          const hourCount = Number(hourCounts[h]) || 0
           hourSum += hourCount
           if (hourCount > (Number(hourCounts[bestHour]) || 0)) bestHour = h
         }
         if (hourSum > 0) peakHour = formatHomeHour(bestHour)
       }
-      var model = null
+      let model = null
       if (listed !== null) {
         if (start === null) model = listed.model
         else {
-          var bestSessions = 0
-          for (var m = 0; m < listed.models.length; m++) {
-            var windowed = listed.models[m]
+          let bestSessions = 0
+          for (let m = 0; m < listed.models.length; m++) {
+            const windowed = listed.models[m]
             if (windowed.lastAt < startMs || windowed.sessions <= bestSessions) continue
             bestSessions = windowed.sessions
             model = windowed.id
@@ -524,35 +523,35 @@
       // The panel draws its book once; a window that has not passed that book
       // yet steps down to the longest book it has passed, so switching ranges
       // keeps the same book whenever the totals allow.
-      var fun = null
-      var bookIndex = Math.min(HOME_BOOKS.length - 1, Math.floor(bookPick * HOME_BOOKS.length))
+      let fun = null
+      let bookIndex = Math.min(HOME_BOOKS.length - 1, Math.floor(bookPick * HOME_BOOKS.length))
       while (bookIndex >= 0 && tokens < HOME_BOOKS[bookIndex].tokens) bookIndex -= 1
       if (bookIndex >= 0) {
-        var book = HOME_BOOKS[bookIndex]
+        const book = HOME_BOOKS[bookIndex]
         fun = copyLabel('homeFunBook', "You've used ~{count}× more tokens than {book}.", {
           count: formatHomeCount(Math.round(tokens / book.tokens)),
           book: copyLabel(book.key, book.title),
         })
       }
-      var models = homeModelList(value, listed)
+      const models = homeModelList(value, listed)
       return {
-        ready: ready,
-        value: value,
-        listed: listed,
-        known: known,
-        windowDays: windowDays,
-        start: start,
-        startMs: startMs,
-        inRange: inRange,
-        tokens: tokens,
-        calls: calls,
-        sessions: sessions,
-        activeDays: activeDays,
-        peakHour: peakHour,
-        model: model,
+        ready,
+        value,
+        listed,
+        known,
+        windowDays,
+        start,
+        startMs,
+        inRange,
+        tokens,
+        calls,
+        sessions,
+        activeDays,
+        peakHour,
+        model,
         grid: homeHeatGrid(ready ? value.days : (listed === null ? null : listed.days)),
-        fun: fun,
-        models: models,
+        fun,
+        models,
         modelDays: homeModelDays(value, windowDays),
       }
     }

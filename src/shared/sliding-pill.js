@@ -24,12 +24,12 @@
      *   one; null just takes it off); `release` takes it off and stops watching.
      */
     function createSlidingPill(activeSelector) {
-      var PILL_ATTR = 'data-dsh-claude-pill'
-      var control = null
+      const PILL_ATTR = 'data-dsh-claude-pill'
+      let control = null
       /** The last written offset and width, so an unchanged placement writes nothing. */
-      var lastX = null
-      var lastW = null
-      var observer = new ResizeObserver(function () {
+      let lastX = null
+      let lastW = null
+      const observer = new ResizeObserver(() => {
         if (control !== null) place()
       })
 
@@ -42,20 +42,20 @@
       }
 
       function place() {
-        var active = control.querySelector(activeSelector)
-        var box = control.getBoundingClientRect()
-        var itemBox = active === null ? null : active.getBoundingClientRect()
+        const active = control.querySelector(activeSelector)
+        const box = control.getBoundingClientRect()
+        const itemBox = active === null ? null : active.getBoundingClientRect()
         if (box.width === 0 || itemBox === null || itemBox.width === 0) {
           if (control.hasAttribute(PILL_ATTR)) clear(control)
           return
         }
-        var x = Math.round((itemBox.left - box.left - control.clientLeft) * 100) / 100
-        var w = Math.round(itemBox.width * 100) / 100
+        const x = Math.round((itemBox.left - box.left - control.clientLeft) * 100) / 100
+        const w = Math.round(itemBox.width * 100) / 100
         if (x === lastX && w === lastW && control.hasAttribute(PILL_ATTR)) return
         lastX = x
         lastW = w
-        control.style.setProperty('--dsh-claude-pill-x', x + 'px')
-        control.style.setProperty('--dsh-claude-pill-w', w + 'px')
+        control.style.setProperty('--dsh-claude-pill-x', `${x}px`)
+        control.style.setProperty('--dsh-claude-pill-w', `${w}px`)
         if (!control.hasAttribute(PILL_ATTR)) control.setAttribute(PILL_ATTR, '')
       }
 
@@ -78,5 +78,5 @@
         control = null
       }
 
-      return { sync: sync, release: release }
+      return { sync, release }
     }

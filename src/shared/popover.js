@@ -1,4 +1,4 @@
-    var POPOVER_MARGIN = 8
+    const POPOVER_MARGIN = 8
 
     /**
      * Position a fixed-position popover relative to its trigger.
@@ -16,12 +16,12 @@
      */
     function positionAnchoredPopover(trigger, pop, opts) {
       opts = opts || {}
-      var rect = trigger.getBoundingClientRect()
-      var width = pop.offsetWidth
-      var height = pop.offsetHeight
-      var margin = opts.margin || POPOVER_MARGIN
-      var x
-      var y
+      const rect = trigger.getBoundingClientRect()
+      const width = pop.offsetWidth
+      const height = pop.offsetHeight
+      const margin = opts.margin || POPOVER_MARGIN
+      let x
+      let y
       if (opts.side === 'right') {
         x = rect.right + margin
         if (x + width > window.innerWidth - margin) {
@@ -37,8 +37,8 @@
       // open, and an identical write still dirties layout — the next geometry
       // read (the drag paths read rect/offset every frame) would then force a
       // synchronous recalc. Skip the write when the anchor did not move.
-      var leftValue = Math.round(x) + 'px'
-      var topValue = Math.round(y) + 'px'
+      const leftValue = `${Math.round(x)}px`
+      const topValue = `${Math.round(y)}px`
       if (opts.important) {
         if (pop.style.left !== leftValue) pop.style.setProperty('left', leftValue, 'important')
         if (pop.style.top !== topValue) pop.style.setProperty('top', topValue, 'important')
@@ -46,7 +46,7 @@
         if (pop.style.left !== leftValue) pop.style.left = leftValue
         if (pop.style.top !== topValue) pop.style.top = topValue
       }
-      return { x: x, y: y }
+      return { x, y }
     }
 
     /**
@@ -60,8 +60,8 @@
      * gap between a trigger and its card without the card vanishing underneath
      * it.
      */
-    var POPOVER_OPEN_DELAY = 100
-    var POPOVER_CLOSE_DELAY = 100
+    const POPOVER_OPEN_DELAY = 100
+    const POPOVER_CLOSE_DELAY = 100
 
     /**
      * Hover-intent helper shared by the model picker, permission popover and
@@ -75,10 +75,10 @@
      * one call).
      */
     function createHoverIntent(open, close, openDelay, closeDelay) {
-      var openTimer = null
-      var closeTimer = null
+      let openTimer = null
+      let closeTimer = null
       return {
-        cancel: function () {
+        cancel() {
           if (openTimer) {
             clearTimeout(openTimer)
             openTimer = null
@@ -88,20 +88,20 @@
             closeTimer = null
           }
         },
-        scheduleOpen: function () {
+        scheduleOpen() {
           if (openTimer) clearTimeout(openTimer)
-          openTimer = setTimeout(function () {
+          openTimer = setTimeout(() => {
             openTimer = null
             open()
           }, openDelay)
         },
-        scheduleClose: function () {
+        scheduleClose() {
           if (openTimer) {
             clearTimeout(openTimer)
             openTimer = null
           }
           if (closeTimer) clearTimeout(closeTimer)
-          closeTimer = setTimeout(function () {
+          closeTimer = setTimeout(() => {
             closeTimer = null
             close()
           }, closeDelay)
@@ -122,7 +122,7 @@
      * open": a card the user dismissed with Escape or an outside press leaves no
      * stale entry behind.
      */
-    var popoverRegistry = []
+    const popoverRegistry = []
 
     /**
      * Register (or replace) one popover's closer. Replacing by name is what makes
@@ -130,18 +130,18 @@
      * closer is still registered and points at a scope that is gone.
      */
     function registerPopover(name, close) {
-      for (var i = 0; i < popoverRegistry.length; i++) {
+      for (let i = 0; i < popoverRegistry.length; i++) {
         if (popoverRegistry[i].name === name) {
           popoverRegistry[i].close = close
           return
         }
       }
-      popoverRegistry.push({ name: name, close: close })
+      popoverRegistry.push({ name, close })
     }
 
     /** Drop one popover's entry when its feature is torn down. */
     function unregisterPopover(name) {
-      for (var i = 0; i < popoverRegistry.length; i++) {
+      for (let i = 0; i < popoverRegistry.length; i++) {
         if (popoverRegistry[i].name === name) {
           popoverRegistry.splice(i, 1)
           return
@@ -154,7 +154,7 @@
      * open, so two cards never share the screen.
      */
     function closeOtherPopovers(name) {
-      for (var i = 0; i < popoverRegistry.length; i++) {
+      for (let i = 0; i < popoverRegistry.length; i++) {
         if (popoverRegistry[i].name === name) continue
         popoverRegistry[i].close()
       }
@@ -174,9 +174,9 @@
      * @param keep - the live nodes this generation holds (null entries match nothing).
      */
     function removeStrayNodes(scope, selector, keep) {
-      var nodes = scope.querySelectorAll(selector)
-      for (var i = 0; i < nodes.length; i++) {
-        if (keep.indexOf(nodes[i]) !== -1) continue
+      const nodes = scope.querySelectorAll(selector)
+      for (let i = 0; i < nodes.length; i++) {
+        if (keep.includes(nodes[i])) continue
         if (nodes[i].parentElement !== null) nodes[i].parentElement.removeChild(nodes[i])
       }
     }

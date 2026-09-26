@@ -23,7 +23,7 @@
      * row is React-rendered while that card is imperative, so the row reaches the
      * popover through this handle.
      */
-    var quickProviderApi = null
+    let quickProviderApi = null
 
     /**
      * One segmented control on the page, carrying the shared sliding highlight
@@ -32,49 +32,49 @@
      * painted — and taken off when the group unmounts.
      */
     function ClaudeStyleSegmentGroup(props) {
-      var group = React.useRef(null)
-      var pill = React.useRef(null)
-      React.useLayoutEffect(function () {
+      const group = React.useRef(null)
+      const pill = React.useRef(null)
+      React.useLayoutEffect(() => {
         pill.current = createSlidingPill('[data-active]')
-        return function () {
+        return () => {
           pill.current.release()
           pill.current = null
         }
       }, [])
-      React.useLayoutEffect(function () {
+      React.useLayoutEffect(() => {
         pill.current.sync(group.current)
       })
       return React.createElement('div', { ref: group, className: SEGMENTS_CLASS, role: 'group' }, props.children)
     }
 
     function ClaudeStyleSettingsSection(props) {
-      var state = React.useState(readPrefs())
-      var prefs = state[0]
-      var setPrefs = state[1]
-      var errorState = React.useState(null)
-      var error = errorState[0]
-      var setError = errorState[1]
-      var usernameState = React.useState(prefs.username)
-      var username = usernameState[0]
-      var setUsername = usernameState[1]
-      var usernameTimer = React.useRef(null)
-      var quickTrigger = React.useRef(null)
+      const state = React.useState(readPrefs())
+      const prefs = state[0]
+      const setPrefs = state[1]
+      const errorState = React.useState(null)
+      const error = errorState[0]
+      const setError = errorState[1]
+      const usernameState = React.useState(prefs.username)
+      const username = usernameState[0]
+      const setUsername = usernameState[1]
+      const usernameTimer = React.useRef(null)
+      const quickTrigger = React.useRef(null)
 
       // The skin's own apply-side writes land here too (a reload, a conflict
       // re-read), so the page never drifts from what the document says.
-      React.useEffect(function () {
+      React.useEffect(() => {
         syncSettingsNav()
-        var alive = true
-        var unsubscribe = subscribePrefs(function (next) {
+        let alive = true
+        const unsubscribe = subscribePrefs(next => {
           if (alive) {
             setPrefs(next)
             setUsername(next.username)
           }
         })
-        var unsubscribeCopy = onModelCopyLoaded(function () {
-          if (alive) setPrefs(function (p) { return Object.assign({}, p) })
+        const unsubscribeCopy = onModelCopyLoaded(() => {
+          if (alive) setPrefs(p => Object.assign({}, p))
         })
-        return function () {
+        return () => {
           alive = false
           unsubscribe()
           if (unsubscribeCopy) unsubscribeCopy()
@@ -86,33 +86,33 @@
        * Apply one change. The control flips immediately and the host write
        * follows; a refusal re-reads the authoritative value and says so.
        */
-      var write = function (patch) {
+      const write = patch => {
         setError(null)
         setPrefs(Object.assign({}, prefs, patch))
-        savePrefs(patch).then(function (result) {
+        savePrefs(patch).then(result => {
           if (result === null) setError(settingsCopy('unavailable', 'The settings store is unavailable, so changes will not be saved.'))
         })
       }
 
-      var saveUsernameNow = function (value) {
-        var next = value.trim().slice(0, USERNAME_MAX)
+      const saveUsernameNow = value => {
+        const next = value.trim().slice(0, USERNAME_MAX)
         if (next === readPrefs().username) return
         setError(null)
         setPrefs(Object.assign({}, readPrefs(), { username: next }))
-        savePrefs({ username: next }).then(function (result) {
+        savePrefs({ username: next }).then(result => {
           if (result === null) setError(settingsCopy('unavailable', 'The settings store is unavailable, so changes will not be saved.'))
         })
       }
 
-      var queueUsernameSave = function (value) {
+      const queueUsernameSave = value => {
         if (usernameTimer.current) clearTimeout(usernameTimer.current)
-        usernameTimer.current = setTimeout(function () {
+        usernameTimer.current = setTimeout(() => {
           usernameTimer.current = null
           saveUsernameNow(value)
         }, 600)
       }
 
-      var commitUsername = function () {
+      const commitUsername = () => {
         if (usernameTimer.current) {
           clearTimeout(usernameTimer.current)
           usernameTimer.current = null
@@ -120,9 +120,9 @@
         saveUsernameNow(username)
       }
 
-      var segment = function (options, active, onPick) {
-        var buttons = []
-        for (var i = 0; i < options.length; i++) {
+      const segment = (options, active, onPick) => {
+        const buttons = []
+        for (let i = 0; i < options.length; i++) {
           buttons.push(React.createElement(
             'button',
             {
@@ -131,10 +131,8 @@
               className: SEGMENT_CLASS,
               'data-active': options[i].value === active ? '' : undefined,
               'aria-pressed': options[i].value === active ? 'true' : 'false',
-              onClick: (function (value) {
-                return function () {
-                  if (value !== active) onPick(value)
-                }
+              onClick: (value => () => {
+                if (value !== active) onPick(value)
               })(options[i].value),
             },
             options[i].label,
@@ -143,67 +141,63 @@
         return React.createElement(ClaudeStyleSegmentGroup, null, buttons)
       }
 
-      var toggle = function (on, onPick) {
-        return React.createElement(
-          'button',
-          {
-            type: 'button',
-            className: 'dsh-claude-settings-switch',
-            role: 'switch',
-            'aria-checked': on ? 'true' : 'false',
-            'data-on': on ? '' : undefined,
-            onClick: function () { onPick(!on) },
-          },
-          React.createElement('span', { className: 'dsh-claude-settings-switch-knob' }),
-        )
-      }
+      const toggle = (on, onPick) => React.createElement(
+        'button',
+        {
+          type: 'button',
+          className: 'dsh-claude-settings-switch',
+          role: 'switch',
+          'aria-checked': on ? 'true' : 'false',
+          'data-on': on ? '' : undefined,
+          onClick() { onPick(!on) },
+        },
+        React.createElement('span', { className: 'dsh-claude-settings-switch-knob' }),
+      )
 
-      var row = function (key, title, description, control) {
-        return React.createElement(
+      const row = (key, title, description, control) => React.createElement(
+        'div',
+        { className: 'dsh-claude-settings-row', key },
+        React.createElement(
           'div',
-          { className: 'dsh-claude-settings-row', key: key },
-          React.createElement(
-            'div',
-            { className: 'dsh-claude-settings-row-text' },
-            React.createElement('div', { className: 'dsh-claude-settings-row-title' }, title),
-            React.createElement('div', { className: 'dsh-claude-settings-row-desc' }, description),
-          ),
-          control,
-        )
-      }
+          { className: 'dsh-claude-settings-row-text' },
+          React.createElement('div', { className: 'dsh-claude-settings-row-title' }, title),
+          React.createElement('div', { className: 'dsh-claude-settings-row-desc' }, description),
+        ),
+        control,
+      )
 
-      var brandOptions = [
+      const brandOptions = [
         { value: BRAND_OFF, label: settingsCopy('brandOff', 'Off') },
         { value: BRAND_CLAUDE, label: settingsCopy('brandClaude', 'Claude') },
         { value: BRAND_ANTHROPIC, label: settingsCopy('brandAnthropic', 'Anthropic') },
       ]
-      var scopeOptions = [
+      const scopeOptions = [
         { value: 'off', label: settingsCopy('scopeOff', 'Off') },
         { value: 'hero', label: settingsCopy('scopeHero', 'Home only') },
         { value: 'conversation', label: settingsCopy('scopeConversation', 'Conversation only') },
         { value: 'all', label: settingsCopy('scopeAll', 'All') },
       ]
-      var banLocaleOptions = [
+      const banLocaleOptions = [
         { value: BAN_LOCALE_ZH, label: settingsCopy('banLocaleZh', '中文') },
         { value: BAN_LOCALE_EN, label: settingsCopy('banLocaleEn', 'English') },
       ]
-      var autoPopoverOptions = [
+      const autoPopoverOptions = [
         { value: AUTO_POPOVER_OFF, label: settingsCopy('autoPopoverOff', 'Off') },
         { value: AUTO_POPOVER_ACCOUNT, label: settingsCopy('autoPopoverAccount', 'Account only') },
         { value: AUTO_POPOVER_ALL, label: settingsCopy('autoPopoverAll', 'All') },
       ]
-      var homeLayoutOptions = [
+      const homeLayoutOptions = [
         { value: HOME_LAYOUT_CLASSIC, label: settingsCopy('homeClassic', 'Classic') },
         { value: HOME_LAYOUT_STUDIO, label: settingsCopy('homeStudio', 'Studio') },
       ]
 
       /** What the quick-provider trigger reads: how many, or nothing chosen. */
-      var quickSummary = function (chosen) {
+      const quickSummary = chosen => {
         if (chosen.length === 0) return settingsCopy('quickNone', 'None')
         return settingsCopy('quickCount', '{count} providers', { count: chosen.length })
       }
 
-      var rows = [
+      const rows = [
         row(
           'username',
           settingsCopy('usernameTitle', 'Username'),
@@ -216,12 +210,12 @@
             placeholder: settingsCopy('usernamePlaceholder', 'Auto-detect account or host user'),
             spellCheck: false,
             autoComplete: 'off',
-            onChange: function (e) {
+            onChange(e) {
               setUsername(e.target.value)
               queueUsernameSave(e.target.value)
             },
             onBlur: commitUsername,
-            onKeyDown: function (e) {
+            onKeyDown(e) {
               if (e.key === 'Enter') {
                 e.preventDefault()
                 commitUsername()
@@ -237,37 +231,37 @@
           'brand',
           settingsCopy('brandTitle', 'Brand mark'),
           settingsCopy('brandDesc', 'Which brand mark the sidebar shows. "Off" leaves the host\'s own brand area untouched.'),
-          segment(brandOptions, prefs.brand, function (value) { write({ brand: value }) }),
+          segment(brandOptions, prefs.brand, value => { write({ brand: value }) }),
         ),
         row(
           'collapseFooter',
           settingsCopy('collapseTitle', 'Collapse the sidebar settings area'),
           settingsCopy('collapseDesc', 'Fold the sidebar footer\'s settings entry into the account popover. Off hands the footer back to the host entirely.'),
-          toggle(prefs.collapseFooter, function (value) { write({ collapseFooter: value }) }),
+          toggle(prefs.collapseFooter, value => { write({ collapseFooter: value }) }),
         ),
         row(
           'autoPopover',
           settingsCopy('autoPopoverTitle', 'Open popovers on hover'),
           settingsCopy('autoPopoverDesc', 'Which popovers hover opens. Off leaves them all click-to-open.'),
-          segment(autoPopoverOptions, prefs.autoPopover, function (value) { write({ autoPopover: value }) }),
+          segment(autoPopoverOptions, prefs.autoPopover, value => { write({ autoPopover: value }) }),
         ),
         row(
           'composerScope',
           settingsCopy('composerTitle', 'Composer restyle'),
           settingsCopy('composerDesc', 'Which input area the skin restyles: the new-conversation page, the conversation, or both.'),
-          segment(scopeOptions, prefs.composerScope, function (value) { write({ composerScope: value }) }),
+          segment(scopeOptions, prefs.composerScope, value => { write({ composerScope: value }) }),
         ),
         row(
           'homeLayout',
           settingsCopy('homeTitle', 'Home layout'),
           settingsCopy('homeDesc', 'The new-conversation page: the centered hero, or the dashboard form with the greeting at the top left, the composer at the bottom edge and the usage panel in between.'),
-          segment(homeLayoutOptions, prefs.homeLayout, function (value) { write({ homeLayout: value }) }),
+          segment(homeLayoutOptions, prefs.homeLayout, value => { write({ homeLayout: value }) }),
         ),
         row(
           'modelPicker',
           settingsCopy('pickerTitle', 'Redraw the model picker'),
           settingsCopy('pickerDesc', 'Replace the composer\'s model seat with the two-level Claude-style menu. Off hands the model menu back to the host; the rest of the composer restyle is unaffected.'),
-          toggle(prefs.modelPicker, function (value) { write({ modelPicker: value }) }),
+          toggle(prefs.modelPicker, value => { write({ modelPicker: value }) }),
         ),
         row(
           'quickProviders',
@@ -279,9 +273,9 @@
             className: 'dsh-claude-settings-picker',
             'aria-haspopup': 'menu',
             'aria-expanded': 'false',
-            onClick: function () {
+            onClick() {
               if (quickProviderApi === null || quickTrigger.current === null) return
-              quickProviderApi.toggle(quickTrigger.current, function (next) { write({ quickProviders: next }) })
+              quickProviderApi.toggle(quickTrigger.current, next => { write({ quickProviders: next }) })
             },
           }, quickSummary(prefs.quickProviders)),
         ),
@@ -289,7 +283,7 @@
           'banLocale',
           settingsCopy('banLocaleTitle', 'Account-hold easter egg language'),
           settingsCopy('banLocaleDesc', 'The language the account-hold page (click the account row in the sidebar footer popover) is written in. It is its own choice, so the page reads the way Claude wrote it whatever the interface language is.'),
-          segment(banLocaleOptions, prefs.banLocale, function (value) { write({ banLocale: value }) }),
+          segment(banLocaleOptions, prefs.banLocale, value => { write({ banLocale: value }) }),
         ),
       ]
 
@@ -300,7 +294,7 @@
       // The plugin page already heads the form with the bundle's own title and
       // description, so the embedded rendering drops the skin's title rather
       // than printing it twice.
-      var embedded = !!(props && props.embed)
+      const embedded = !!(props && props.embed)
       return React.createElement(
         'div',
         { className: embedded ? 'dsh-claude-settings dsh-claude-settings-embedded' : 'dsh-claude-settings' },
@@ -343,14 +337,14 @@
      * can replace the host's default settings gear with the black Claude mark.
      */
     function syncSettingsNav() {
-      var navList = document.querySelector(':is([class*="settingsArea"], [class*="_overlay"], [class*="SettingsRoot"]) [class*="_navList"]')
+      const navList = document.querySelector(':is([class*="settingsArea"], [class*="_overlay"], [class*="SettingsRoot"]) [class*="_navList"]')
       if (!navList) return
-      var buttons = navList.querySelectorAll('button')
-      var targetTitle = (typeof settingsCopy === 'function' ? settingsCopy('title', 'Claude Style') : 'Claude Style') || 'Claude Style'
-      for (var i = 0; i < buttons.length; i++) {
-        var btn = buttons[i]
-        var label = btn.querySelector('[class*="_navLabel"]') || btn
-        var text = (label.textContent || '').trim()
+      const buttons = navList.querySelectorAll('button')
+      const targetTitle = (typeof settingsCopy === 'function' ? settingsCopy('title', 'Claude Style') : 'Claude Style') || 'Claude Style'
+      for (let i = 0; i < buttons.length; i++) {
+        const btn = buttons[i]
+        const label = btn.querySelector('[class*="_navLabel"]') || btn
+        const text = (label.textContent || '').trim()
         if (text === 'Claude Style' || text === targetTitle) {
           if (btn.getAttribute('data-dsh-section') !== 'claude-style') {
             btn.setAttribute('data-dsh-section', 'claude-style')
@@ -371,55 +365,49 @@
           sync: syncSettingsNav,
           /** A pointer press anywhere: the nav's class changes are outside the
            * observer's attributeFilter, so no pass would fire for them. */
-          onPointerDown: function () { syncSettingsNav() },
+          onPointerDown() { syncSettingsNav() },
         }
         quickProviderApi = ui.quickProviders || null
       }
-      if (typeof ctx.inject !== 'function') return function () {}
-      var fiber = ctx.inject(['slots'], function (scope) {
-        var slots = scope.get('slots')
+      if (typeof ctx.inject !== 'function') return () => {}
+      const fiber = ctx.inject(['slots'], scope => {
+        const slots = scope.get('slots')
         if (slots === void 0 || slots === null || typeof slots.inject !== 'function') return
         // 0.1.7 keeps a bundle's own configuration on the plugin's page: the
         // entry is keyed by the bundle's package name and rendered there —
         // `view: 'page'` for the form, `view: 'summary'` for the card's
         // one-liner. The slot is declared by that host's plugin manager, so this
         // registration is a no-op on an older host.
-        scope.effect(function () {
-          return slots.inject(BUNDLE_CONFIG_SLOT, function () {
-            return slots.register(
-              {
-                name: BUNDLE_CONFIG_SLOT,
-                key: PACKAGE_NAME,
-                label: function () { return settingsCopy('title', 'Claude Style') },
-              },
-              ClaudeStyleBundleConfig,
-            )
-          })
-        }, 'dsh-claude-style: plugin page')
+        scope.effect(() => slots.inject(BUNDLE_CONFIG_SLOT, () => slots.register(
+          {
+            name: BUNDLE_CONFIG_SLOT,
+            key: PACKAGE_NAME,
+            label() { return settingsCopy('title', 'Claude Style') },
+          },
+          ClaudeStyleBundleConfig,
+        )), 'dsh-claude-style: plugin page')
         // The full-page section is the older host's seat. 0.1.7 still declares
         // the slot, but there the skin's settings live on its plugin page — and
         // a host that serves `configForms` is by definition the newer one, so
         // that check tells the two apart without a version probe. (The settings
         // shell cannot have declared this slot before `configForms` mounted: it
         // injects the service itself.)
-        scope.effect(function () {
-          return slots.inject(SETTINGS_SECTION_SLOT, function () {
-            if (hostConfigForms(ctx) !== null) return function () {}
-            return slots.register(
-              {
-                name: SETTINGS_SECTION_SLOT,
-                id: 'claude-style',
-                order: 22,
-                // A function, so the navigation entry localizes once the copy
-                // document has arrived; the literal is the pre-fetch fallback.
-                label: function () { return settingsCopy('title', 'Claude Style') },
-              },
-              ClaudeStyleSettingsSection,
-            )
-          })
-        }, 'dsh-claude-style: settings section')
+        scope.effect(() => slots.inject(SETTINGS_SECTION_SLOT, () => {
+          if (hostConfigForms(ctx) !== null) return () => {}
+          return slots.register(
+            {
+              name: SETTINGS_SECTION_SLOT,
+              id: 'claude-style',
+              order: 22,
+              // A function, so the navigation entry localizes once the copy
+              // document has arrived; the literal is the pre-fetch fallback.
+              label() { return settingsCopy('title', 'Claude Style') },
+            },
+            ClaudeStyleSettingsSection,
+          )
+        }), 'dsh-claude-style: settings section')
       })
-      return function () {
+      return () => {
         if (ui && ui.settingsNav) {
           delete ui.settingsNav
         }

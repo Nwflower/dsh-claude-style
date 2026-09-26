@@ -14,14 +14,14 @@
       function statCell(key, label, text, skeleton) {
         return React.createElement(
           'div',
-          { key: key, className: 'dsh-claude-home-stat', 'data-stat': key, 'data-skeleton': skeleton ? '' : undefined },
+          { key, className: 'dsh-claude-home-stat', 'data-stat': key, 'data-skeleton': skeleton ? '' : undefined },
           React.createElement('span', { className: 'dsh-claude-home-stat-label' }, label),
           React.createElement('span', { className: 'dsh-claude-home-stat-value', title: skeleton ? undefined : text }, skeleton ? '' : text),
         )
       }
 
       /** Columns at each end of the grid whose tip pill lines up with its cell's outer edge. */
-      var HOME_TIP_EDGE = 3
+      const HOME_TIP_EDGE = 3
 
       /**
        * A heat cell's tip, Claude Code's own: the day and its messages,
@@ -29,15 +29,15 @@
        * count, so its cells name their tokens instead.
        */
       function heatTip(format, cell) {
-        var date = homeShortDate(format, cell.date)
-        if (cell.messages !== null) return date + ' — ' + formatHomeCount(cell.messages)
-        return copyLabel('homeHeatTipTokens', '{date} — {tokens} tokens', { date: date, tokens: formatHomeTokens(cell.tokens) })
+        const date = homeShortDate(format, cell.date)
+        if (cell.messages !== null) return `${date} — ${formatHomeCount(cell.messages)}`
+        return copyLabel('homeHeatTipTokens', '{date} — {tokens} tokens', { date, tokens: formatHomeTokens(cell.tokens) })
       }
 
       function view(data) {
-        var skeleton = !data.known
-        var format = homeShortDateFormat()
-        var columns = Math.ceil(data.grid.cells.length / 7)
+        const skeleton = !data.known
+        const format = homeShortDateFormat()
+        const columns = Math.ceil(data.grid.cells.length / 7)
         return React.createElement(
           React.Fragment,
           null,
@@ -54,9 +54,9 @@
           React.createElement(
             'div',
             { className: 'dsh-claude-home-heat', 'data-skeleton': data.known ? undefined : '' },
-            data.grid.cells.map(function (cell, index) {
-              var tip = skeleton ? undefined : heatTip(format, cell)
-              var column = Math.floor(index / 7)
+            data.grid.cells.map((cell, index) => {
+              const tip = skeleton ? undefined : heatTip(format, cell)
+              const column = Math.floor(index / 7)
               return React.createElement('span', {
                 key: cell.date,
                 className: 'dsh-claude-home-heat-cell',
@@ -74,5 +74,5 @@
         )
       }
 
-      return { view: view }
+      return { view }
     }

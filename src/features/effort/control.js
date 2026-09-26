@@ -40,22 +40,22 @@
      * @returns `{ el, update, isHeld }`.
      */
     function createEffortControl(opts) {
-      var root = modelEl('div', 'dsh-claude-effort')
-      var head = modelEl('div', 'dsh-claude-effort-head')
-      var labelEl = modelEl('span', 'dsh-claude-effort-label')
-      var valueEl = modelEl('span', 'dsh-claude-effort-value')
+      const root = modelEl('div', 'dsh-claude-effort')
+      const head = modelEl('div', 'dsh-claude-effort-head')
+      const labelEl = modelEl('span', 'dsh-claude-effort-label')
+      const valueEl = modelEl('span', 'dsh-claude-effort-value')
       /* The outgoing name, absolutely positioned over the value: it takes no
          layout space and never needs removing — the out animation ends at
          opacity 0 and is re-armed on the next swap. */
-      var valueGhost = modelEl('span', 'dsh-claude-effort-value-ghost')
-      var ends = modelEl('div', 'dsh-claude-effort-ends')
-      var fasterEl = modelEl('span', 'dsh-claude-effort-end')
-      var smarterEl = modelEl('span', 'dsh-claude-effort-end')
-      var track = modelEl('div', 'dsh-claude-effort-track')
-      var fill = modelEl('div', 'dsh-claude-effort-fill')
-      var ticks = modelEl('div', 'dsh-claude-effort-ticks')
-      var matrix = modelEl('div', 'dsh-claude-effort-matrix')
-      var knob = modelEl('div', 'dsh-claude-effort-knob')
+      const valueGhost = modelEl('span', 'dsh-claude-effort-value-ghost')
+      const ends = modelEl('div', 'dsh-claude-effort-ends')
+      const fasterEl = modelEl('span', 'dsh-claude-effort-end')
+      const smarterEl = modelEl('span', 'dsh-claude-effort-end')
+      const track = modelEl('div', 'dsh-claude-effort-track')
+      const fill = modelEl('div', 'dsh-claude-effort-fill')
+      const ticks = modelEl('div', 'dsh-claude-effort-ticks')
+      const matrix = modelEl('div', 'dsh-claude-effort-matrix')
+      const knob = modelEl('div', 'dsh-claude-effort-knob')
 
       head.appendChild(labelEl)
       head.appendChild(valueEl)
@@ -74,12 +74,12 @@
       track.setAttribute('role', 'slider')
       track.setAttribute('tabindex', '0')
       /** The top rung's dot matrix (effort/matrix.js). */
-      var dotMatrix = createEffortMatrix(track, matrix)
+      const dotMatrix = createEffortMatrix(track, matrix)
 
       /** The ladder in force, the level it is on, and the words around it. */
-      var steps = []
-      var selected = -1
-      var live = -1
+      let steps = []
+      let selected = -1
+      let live = -1
       /**
        * A press and a drag are two states, not one. `pressed` starts on
        * pointerdown and the knob GLIDES to the press position (the stylesheet's
@@ -90,23 +90,23 @@
        * would kill the glide before the browser ever started it: the transition
        * list is read at the next style recalc, by which time the flag is on.
        */
-      var pressed = false
-      var dragging = false
+      let pressed = false
+      let dragging = false
       /**
        * The PHYSICAL hold: down at pointerdown, up only at the real release.
        * `pressed` ends early when the pointer leaves the control (the gesture
        * settles there), but the picker's hover-close must stand down until the
        * button is up — the card closing mid-hold read as a crash.
        */
-      var held = false
-      var painted = false
-      var pointerId = null
+      let held = false
+      let painted = false
+      let pointerId = null
       /** The dash shown when there is no level to name; cached, not re-read per move. */
-      var noneLabel = ''
+      let noneLabel = ''
       /** Whether the top-rung treatment (the matrix) is on. */
-      var apexOn = false
+      let apexOn = false
       /** The track width the ticks were laid out for, so a late layout re-does them. */
-      var ticksWidth = -1
+      let ticksWidth = -1
       /**
        * The level just committed, and whether the host has echoed it back yet.
        * The host's catalog snapshot TRAILS the commit — its selection RPC is
@@ -117,12 +117,12 @@
        * keeps the knob on the committed level; the echo (or the safety timeout,
        * for a commit that never lands) ends the wait.
        */
-      var pendingEcho = false
-      var pendingId = void 0
-      var pendingTimer = 0
+      let pendingEcho = false
+      let pendingId = void 0
+      let pendingTimer = 0
       /** Longest a commit waits for its echo before the host is trusted again.
           Host selections have been measured at up to ~8s on slow providers. */
-      var PENDING_ECHO_MS = 12000
+      const PENDING_ECHO_MS = 12000
 
       /**
        * The ladder as ordered steps, the step in force, and the words. A model
@@ -133,22 +133,22 @@
        * the steps with an undefined id.
        */
       function state() {
-        var effort = opts.read()
-        var list = []
-        var index = -1
+        const effort = opts.read()
+        const list = []
+        let index = -1
         if (effort !== null) {
           if (effort.reasoning.defaultEffort === void 0) list.push({ id: void 0, name: MODEL_EFFORT_DEFAULT })
-          for (var i = 0; i < effort.reasoning.efforts.length; i++) {
+          for (let i = 0; i < effort.reasoning.efforts.length; i++) {
             list.push({ id: effort.reasoning.efforts[i].id, name: effort.reasoning.efforts[i].name })
           }
           index = 0
-          for (var s = 0; s < list.length; s++) {
+          for (let s = 0; s < list.length; s++) {
             if (list[s].id === effort.effective) { index = s; break }
           }
         }
         return {
           steps: list,
-          index: index,
+          index,
           labels: {
             label: copyLabel('effortLabel', MODEL_EFFORT_LABEL),
             faster: copyLabel('effortFaster', MODEL_EFFORT_FASTER),
@@ -160,13 +160,13 @@
 
       /** How wide the knob is, and how far its centre may travel. */
       function geometry() {
-        var size = knob.offsetWidth || 16
-        return { size: size, span: Math.max(0, track.clientWidth - size) }
+        const size = knob.offsetWidth || 16
+        return { size, span: Math.max(0, track.clientWidth - size) }
       }
 
       /** The knob's x for one level. No levels (or a single one) rest at the end. */
       function positionFor(index) {
-        var box = geometry()
+        const box = geometry()
         if (index < 0 || steps.length < 2) return box.span
         return (index / (steps.length - 1)) * box.span
       }
@@ -186,17 +186,17 @@
        * it AFTER the scale in the product, so a 1.1 lift would scale the travel
        * itself (see the stylesheet's note on the knob).
        */
-      var lastTravel = ''
-      var lastWidth = ''
+      let lastTravel = ''
+      let lastWidth = ''
 
       function place(x, animate) {
-        var px = Math.round(x)
-        var value = px + 'px'
+        const px = Math.round(x)
+        const value = `${px}px`
         /* The fill runs from the track's left end to the knob's centre (+8 is
            half the 16px knob from the stylesheet) and disappears under the
            opaque knob, so its right end is never seen. An empty ladder selects
            nothing, and nothing stays unfilled. */
-        var width = steps.length === 0 ? '0px' : (px + 8) + 'px'
+        const width = steps.length === 0 ? '0px' : `${px + 8}px`
         /* Same-value guard: update() runs on every scheduler pass, and re-writing
            an unchanged position would run the transition dance's forced reflow
            for nothing — worse, mid-glide it cancels the transition and snaps the
@@ -220,8 +220,8 @@
 
       /** Where the pointer sits along the track, in knob-travel units. */
       function pointerTravel(clientX) {
-        var box = geometry()
-        var raw = clientX - track.getBoundingClientRect().left - box.size / 2
+        const box = geometry()
+        const raw = clientX - track.getBoundingClientRect().left - box.size / 2
         return Math.max(0, Math.min(box.span, raw))
       }
 
@@ -234,7 +234,7 @@
        * `1 - D·cos(2πt)` would reach zero and the travel would stop being
        * monotone, so the knob could jump backwards.
        */
-      var DETENT = 0.8
+      const DETENT = 0.8
 
       /**
        * The detent transfer: raw pointer travel → knob travel. Within one
@@ -248,12 +248,12 @@
        */
       function dampTravel(x) {
         if (steps.length < 2) return x
-        var box = geometry()
+        const box = geometry()
         if (box.span === 0) return x
-        var seg = box.span / (steps.length - 1)
-        var index = Math.floor(x / seg)
+        const seg = box.span / (steps.length - 1)
+        const index = Math.floor(x / seg)
         if (index >= steps.length - 1) return x
-        var t = (x - index * seg) / seg
+        const t = (x - index * seg) / seg
         return (index + t - DETENT * Math.sin(2 * Math.PI * t) / (2 * Math.PI)) * seg
       }
 
@@ -261,8 +261,8 @@
       function nearest(x) {
         if (steps.length === 0) return -1
         if (steps.length === 1) return 0
-        var box = geometry()
-        var ratio = box.span === 0 ? 0 : x / box.span
+        const box = geometry()
+        const ratio = box.span === 0 ? 0 : x / box.span
         return Math.max(0, Math.min(steps.length - 1, Math.round(ratio * (steps.length - 1))))
       }
 
@@ -274,7 +274,7 @@
        * scheduler's observer sees — to actual transitions.
        */
       function paintApex(at) {
-        var want = steps.length > 1 && at === steps.length - 1
+        const want = steps.length > 1 && at === steps.length - 1
         if (want === apexOn) return
         if (want && !dotMatrix.ensure()) return
         apexOn = want
@@ -290,14 +290,14 @@
        * the passed ones, and the opaque knob swallows the current one.
        */
       function paintTicks() {
-        var w = track.clientWidth
+        const w = track.clientWidth
         if (!w || w === ticksWidth) return
         ticksWidth = w
         while (ticks.firstChild) ticks.removeChild(ticks.firstChild)
-        var box = geometry()
-        for (var i = 0; i < steps.length; i++) {
-          var dot = modelEl('span', 'dsh-claude-effort-tick')
-          dot.style.left = Math.round(positionFor(i) + box.size / 2) + 'px'
+        const box = geometry()
+        for (let i = 0; i < steps.length; i++) {
+          const dot = modelEl('span', 'dsh-claude-effort-tick')
+          dot.style.left = `${Math.round(positionFor(i) + box.size / 2)}px`
           ticks.appendChild(dot)
         }
       }
@@ -329,15 +329,15 @@
        * as a rolling counter, which is the point.
        */
       function paintValue() {
-        var at = pressed ? live : selected
-        var text = at >= 0 && steps[at] ? steps[at].name : noneLabel
+        const at = pressed ? live : selected
+        const text = at >= 0 && steps[at] ? steps[at].name : noneLabel
         if (valueEl.textContent !== text) {
-          var previous = valueEl.textContent
+          const previous = valueEl.textContent
           if (previous !== '') {
             /* Anchor the ghost where the value sits (offsetLeft is measured
                against the positioned head, and the ghost shares that space). */
             valueGhost.textContent = previous
-            valueGhost.style.left = valueEl.offsetLeft + 'px'
+            valueGhost.style.left = `${valueEl.offsetLeft}px`
             restartAnimation(valueGhost)
           }
           valueEl.textContent = text
@@ -365,7 +365,7 @@
           track.removeAttribute('aria-valuetext')
           return
         }
-        var at = Math.max(0, selected)
+        const at = Math.max(0, selected)
         root.removeAttribute('data-empty')
         track.removeAttribute('aria-disabled')
         track.setAttribute('aria-valuemin', '0')
@@ -421,7 +421,7 @@
         dragging = false
         root.removeAttribute('data-dragging')
         releaseCapture()
-        var index = live
+        const index = live
         live = -1
         /* Commit FIRST, then paint ONCE on the committed level. Painting before
            the commit read the OLD `selected`: the name went back to the level
@@ -460,7 +460,7 @@
         document.addEventListener('pointercancel', onHeldRelease, true)
         try { track.setPointerCapture(e.pointerId) } catch (error) { /* capture is a nicety */ }
         if (typeof opts.onDragStart === 'function') opts.onDragStart()
-        var x = pointerTravel(e.clientX)
+        const x = pointerTravel(e.clientX)
         /* Glide to the press position. The drag state (and with it the
            transition-off flag) only starts on the first MOVE — see the flags'
            note: setting it here would suppress the very transition that makes
@@ -478,21 +478,21 @@
        * writes after (one transform + the level name) — so the drag costs one
        * layout flush per frame instead of one forced reflow per event.
        */
-      var pendingFrame = 0
-      var moveQueued = false
-      var pendingX = 0
-      var pendingY = 0
+      let pendingFrame = 0
+      let moveQueued = false
+      let pendingX = 0
+      let pendingY = 0
 
       function applyPending() {
         if (!pressed) return
-        var box = root.getBoundingClientRect()
+        const box = root.getBoundingClientRect()
         // Leaving the control ends the gesture where it stands — the knob
         // settles on the nearest level instead of trailing the pointer away.
         if (pendingX < box.left - 6 || pendingX > box.right + 6 || pendingY < box.top - 6 || pendingY > box.bottom + 6) {
           settle()
           return
         }
-        var x = pointerTravel(pendingX)
+        const x = pointerTravel(pendingX)
         place(dampTravel(x), false)
         live = nearest(x)
         paintValue()
@@ -510,7 +510,7 @@
         pendingY = e.clientY
         if (moveQueued) return
         moveQueued = true
-        pendingFrame = requestAnimationFrame(function () {
+        pendingFrame = requestAnimationFrame(() => {
           moveQueued = false
           pendingFrame = 0
           applyPending()
@@ -519,12 +519,12 @@
 
       track.addEventListener('pointerdown', onPointerDown)
       track.addEventListener('pointermove', onPointerMove)
-      track.addEventListener('pointerup', function () { settle() })
-      track.addEventListener('pointercancel', function () { settle() })
-      track.addEventListener('keydown', function (e) {
+      track.addEventListener('pointerup', () => { settle() })
+      track.addEventListener('pointercancel', () => { settle() })
+      track.addEventListener('keydown', e => {
         if (steps.length === 0) return
-        var base = selected < 0 ? 0 : selected
-        var next = base
+        const base = selected < 0 ? 0 : selected
+        let next = base
         if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') next = Math.max(0, base - 1)
         else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') next = Math.min(steps.length - 1, base + 1)
         else if (e.key === 'Home') next = 0
@@ -544,10 +544,10 @@
        * selected level moved on its own (the host echoing a selection back).
        */
       function update() {
-        var next = state()
-        var changed = next.steps.length !== steps.length
+        const next = state()
+        let changed = next.steps.length !== steps.length
         if (!changed) {
-          for (var i = 0; i < next.steps.length; i++) {
+          for (let i = 0; i < next.steps.length; i++) {
             if (next.steps[i].id !== steps[i].id) { changed = true; break }
           }
         }
@@ -563,7 +563,7 @@
           clearPending()
         }
         if (!pressed && !pendingEcho) {
-          var moved = painted && !changed && selected !== next.index
+          const moved = painted && !changed && selected !== next.index
           selected = next.index
           place(positionFor(selected), moved)
           painted = true
@@ -575,11 +575,11 @@
 
       return {
         el: root,
-        update: update,
+        update,
         // The picker's hover-close guard keys on the PHYSICAL hold: from
         // pointerdown until the real release, wherever it lands. `pressed`
         // ends earlier — at the boundary settle — which is exactly when the
         // pointer is on its way out of the card.
-        isHeld: function () { return held },
+        isHeld() { return held },
       }
     }

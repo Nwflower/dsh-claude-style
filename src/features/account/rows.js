@@ -10,7 +10,7 @@
      * (src/core/host.js).
      */
     function createAccountRows(options) {
-      var hostMenu = options.hostMenu
+      const hostMenu = options.hostMenu
 
       /**
        * The profile picture's address, or null when there is none usable. It
@@ -22,7 +22,7 @@
         if (raw === HDSL_SKIN_ROUTE) return raw
         if (typeof raw !== 'string' || raw === '') return null
         try {
-          var url = new URL(raw, window.location.href)
+          const url = new URL(raw, window.location.href)
           return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : null
         } catch (error) {
           return null
@@ -30,10 +30,10 @@
       }
 
       /** The head's canvas, and what a pass needs to decide whether to keep it. */
-      var headCanvas = null
+      let headCanvas = null
       /** A load has been started; the route is read once per page, so is a failure. */
-      var headRequested = false
-      var headFailed = false
+      let headRequested = false
+      let headFailed = false
 
       /**
        * Draw the head out of a launcher skin, the way the launcher's own
@@ -46,11 +46,11 @@
        * @returns whether a head was drawn.
        */
       function drawLauncherHead(canvas, image) {
-        var box = canvas.width
-        var scale = image.naturalWidth / 64
-        var context = canvas.getContext('2d')
+        const box = canvas.width
+        const scale = image.naturalWidth / 64
+        const context = canvas.getContext('2d')
         if (context === null || scale < 1 || scale !== Math.floor(scale)) return false
-        var offset = Math.round(box / 18)
+        const offset = Math.round(box / 18)
         context.clearRect(0, 0, box, box)
         // The face is a 8×8 texel block drawn inside the inset; the pixels are
         // already at the right size, so smoothing would only blur them.
@@ -67,9 +67,9 @@
        */
       function loadLauncherHead() {
         headRequested = true
-        var image = new Image()
+        const image = new Image()
         image.decoding = 'async'
-        image.addEventListener('load', function () {
+        image.addEventListener('load', () => {
           if (image.naturalWidth !== image.naturalHeight || image.naturalWidth < 64) {
             headFailed = true
             wake()
@@ -85,7 +85,7 @@
           if (!drawLauncherHead(headCanvas, image)) headFailed = true
           wake()
         })
-        image.addEventListener('error', function () {
+        image.addEventListener('error', () => {
           headFailed = true
           wake()
         })
@@ -99,7 +99,7 @@
 
       /** Drop the account profile's photo, if one is mounted. */
       function clearAccountPhoto(avatarEl) {
-        var photo = avatarEl.querySelector('.dsh-claude-account-photo')
+        const photo = avatarEl.querySelector('.dsh-claude-account-photo')
         if (photo === null) return
         avatarEl.removeChild(photo)
         if (avatarEl.hasAttribute('data-dsh-claude-photo')) avatarEl.removeAttribute('data-dsh-claude-photo')
@@ -140,7 +140,7 @@
        */
       function syncAccountAvatar(avatarEl) {
         if (avatarEl === null) return
-        var src = accountPhotoUrl(resolveAvatarUrl())
+        const src = accountPhotoUrl(resolveAvatarUrl())
         if (src === HDSL_SKIN_ROUTE) {
           // The launcher's picture only ever shows as the cropped head.
           clearAccountPhoto(avatarEl)
@@ -148,7 +148,7 @@
           return
         }
         detachLauncherHead(avatarEl)
-        var photo = avatarEl.querySelector('.dsh-claude-account-photo')
+        let photo = avatarEl.querySelector('.dsh-claude-account-photo')
         if (src === null) {
           clearAccountPhoto(avatarEl)
           return
@@ -160,8 +160,8 @@
           photo.decoding = 'async'
           photo.draggable = false
           photo.referrerPolicy = 'no-referrer'
-          photo.addEventListener('load', function () { photo.hidden = false })
-          photo.addEventListener('error', function () { photo.hidden = true })
+          photo.addEventListener('load', () => { photo.hidden = false })
+          photo.addEventListener('error', () => { photo.hidden = true })
           avatarEl.appendChild(photo)
         }
         if (photo.getAttribute('src') !== src) photo.src = src
@@ -176,21 +176,21 @@
        * so the hover plate covers the name and not the divider that follows it.
        */
       function buildAccountHeader(username) {
-        var header = document.createElement('div')
+        const header = document.createElement('div')
         header.className = 'dsh-claude-account-popover-header'
         header.setAttribute('data-dsh-claude-ban-row', '')
 
-        var rowEl = document.createElement('div')
+        const rowEl = document.createElement('div')
         rowEl.className = 'dsh-claude-account-popover-row'
         rowEl.setAttribute('role', 'button')
         rowEl.setAttribute('tabindex', '0')
         rowEl.setAttribute('aria-haspopup', 'dialog')
 
-        var nameEl = document.createElement('div')
+        const nameEl = document.createElement('div')
         nameEl.className = 'dsh-claude-account-popover-name'
         nameEl.textContent = username
 
-        var divider = document.createElement('div')
+        const divider = document.createElement('div')
         divider.className = 'dsh-claude-account-popover-divider'
 
         rowEl.appendChild(nameEl)
@@ -207,10 +207,10 @@
        * read failed still shows what it renders.
        */
       function accountDisplayName(hostRow) {
-        var resolved = resolveDisplayName()
+        const resolved = resolveDisplayName()
         if (resolved) return resolved
         if (hostRow !== null) {
-          var label = (hostRow.textContent || '').trim()
+          const label = (hostRow.textContent || '').trim()
           if (label) return label
         }
         return 'User'
@@ -224,19 +224,19 @@
        */
       function syncAccountHeader(root, hostRow) {
         if (root === null) return
-        var nameEl = root.querySelector('.dsh-claude-account-popover-name')
-        var username = accountDisplayName(hostRow)
+        const nameEl = root.querySelector('.dsh-claude-account-popover-name')
+        const username = accountDisplayName(hostRow)
         if (nameEl && nameEl.textContent !== username) nameEl.textContent = username
-        var banRow = root.querySelector('[data-dsh-claude-ban-row]')
+        const banRow = root.querySelector('[data-dsh-claude-ban-row]')
         if (banRow && !banRow.__dshBanBound) {
           banRow.__dshBanBound = true
-          banRow.addEventListener('click', function (e) {
+          banRow.addEventListener('click', e => {
             // The row's gesture is the easter egg, not a menu selection.
             e.preventDefault()
             e.stopPropagation()
             options.openBan()
           })
-          banRow.addEventListener('keydown', function (e) {
+          banRow.addEventListener('keydown', e => {
             if (e.key !== 'Enter' && e.key !== ' ') return
             e.preventDefault()
             e.stopPropagation()
@@ -247,7 +247,7 @@
 
       /** The container injected at the head of the host's account menu. */
       function buildHostContainer() {
-        var container = document.createElement('div')
+        const container = document.createElement('div')
         container.className = 'dsh-claude-account-inject'
         container.appendChild(buildAccountHeader(accountDisplayName(hostMenu.trigger())))
         return container
@@ -255,7 +255,7 @@
 
       /** The settings row, needed on the self-built path only. */
       function buildSettingsItem() {
-        var item = document.createElement('button')
+        const item = document.createElement('button')
         item.type = 'button'
         item.className = 'dsh-claude-popover-item'
         item.setAttribute('data-action', 'settings')
@@ -267,7 +267,7 @@
             '</svg>' +
           '</span>' +
           '<span class="dsh-claude-popover-item-text"></span>'
-        item.addEventListener('click', function (e) {
+        item.addEventListener('click', e => {
           e.stopPropagation()
           hostMenu.openSettings()
         })
@@ -282,14 +282,14 @@
        */
       function syncSettingsItem(settingsItem) {
         if (settingsItem === null) return
-        var labelText = '设置'
-        var trigger = hostMenu.settingsTrigger()
+        let labelText = '设置'
+        const trigger = hostMenu.settingsTrigger()
         if (trigger) {
-          var txt = (trigger.textContent || '').trim()
+          let txt = (trigger.textContent || '').trim()
           if (!txt) txt = trigger.getAttribute('aria-label') || ''
           if (txt) labelText = txt
         }
-        var txtEl = settingsItem.querySelector('.dsh-claude-popover-item-text')
+        const txtEl = settingsItem.querySelector('.dsh-claude-popover-item-text')
         if (txtEl && txtEl.textContent !== labelText) txtEl.textContent = labelText
       }
 
@@ -297,8 +297,8 @@
         syncAvatar: syncAccountAvatar,
         buildHeader: buildAccountHeader,
         syncHeader: syncAccountHeader,
-        buildHostContainer: buildHostContainer,
-        buildSettingsItem: buildSettingsItem,
-        syncSettingsItem: syncSettingsItem
+        buildHostContainer,
+        buildSettingsItem,
+        syncSettingsItem
       }
     }

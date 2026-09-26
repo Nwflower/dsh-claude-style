@@ -1,14 +1,14 @@
     function installPermissions(ctx, ui) {
-      var segments = null
+      let segments = null
       /** The segment group's sliding highlight (src/shared/sliding-pill.js). */
-      var segmentPill = createSlidingPill('[data-active]')
-      var permContainer = null
-      var permBtn = null
-      var permLabel = null
-      var permPopover = null
-      var permHoverIntent = null
+      const segmentPill = createSlidingPill('[data-active]')
+      let permContainer = null
+      let permBtn = null
+      let permLabel = null
+      let permPopover = null
+      let permHoverIntent = null
       /** The pick path the rows call back into; the rows are rebuilt, the path is not. */
-      var permPick = null
+      let permPick = null
 
       /**
        * The host's permission catalog: every preset this deployment offers, in
@@ -16,30 +16,30 @@
        * authority on what is switchable — a third-party plugin's preset rides
        * in it — while PERMISSION_PRESETS decides how a known one reads.
        */
-      var catalogOptions = null
+      let catalogOptions = null
       /**
        * The preset a new session starts in (the catalog's `defaultPreset`: the
        * configured default, or the one the host infers). The cold start screen
        * has no session to read a preset from, so its segments show this one.
        * null until a catalog read settled.
        */
-      var defaultPreset = null
+      let defaultPreset = null
       /** Whether the last pass drew the segments on the cold start screen. */
-      var coldStartShown = false
+      let coldStartShown = false
       /** The first catalog failure; thrown on the next sync to retire the feature. */
-      var autoPresetError = null
-      var catalogFiber = null
-      var catalogChangedDisposer = null
+      let autoPresetError = null
+      let catalogFiber = null
+      let catalogChangedDisposer = null
       /** What the popover and the segment group currently render, so a change rebuilds them. */
-      var renderedRows = ''
-      var renderedRowsFor = null
-      var renderedSegments = ''
+      let renderedRows = ''
+      let renderedRowsFor = null
+      let renderedSegments = ''
 
       /** The catalog's entry for one preset, or null. */
       function catalogOption(preset) {
         if (catalogOptions === null) return null
-        for (var i = 0; i < catalogOptions.length; i++) {
-          var option = catalogOptions[i]
+        for (let i = 0; i < catalogOptions.length; i++) {
+          const option = catalogOptions[i]
           if (option !== null && typeof option === 'object' && option.value === preset) return option
         }
         return null
@@ -53,57 +53,57 @@
        * rather than dead ones.
        */
       function presetOffered(preset) {
-        if (catalogOptions === null) return PERMISSION_SHIPPED_PRESETS.indexOf(preset) !== -1
+        if (catalogOptions === null) return PERMISSION_SHIPPED_PRESETS.includes(preset)
         return catalogOption(preset) !== null
       }
 
       /** The name a preset reads as: the skin's table first, then the host's own name. */
       function presetLabel(preset) {
-        var known = PERMISSION_PRESETS[preset]
+        const known = PERMISSION_PRESETS[preset]
         if (known !== undefined) return known.label
-        var option = catalogOption(preset)
+        const option = catalogOption(preset)
         if (option !== null && typeof option.name === 'string' && option.name !== '') return option.name
-        var current = PERMISSION_CURRENT_LABELS[preset]
+        const current = PERMISSION_CURRENT_LABELS[preset]
         return current === undefined ? preset : current
       }
 
       /** The one line under that name, from the same two sources. */
       function presetDesc(preset) {
-        var known = PERMISSION_PRESETS[preset]
+        const known = PERMISSION_PRESETS[preset]
         if (known !== undefined) return known.desc
-        var option = catalogOption(preset)
+        const option = catalogOption(preset)
         return option !== null && typeof option.description === 'string' ? option.description : ''
       }
 
       /** Every preset the control offers, in the order its rows list them. */
       function offeredPresets() {
-        var i
+        let i
         if (catalogOptions === null) return PERMISSION_SHIPPED_PRESETS.slice()
-        var offered = []
+        const offered = []
         for (i = 0; i < catalogOptions.length; i++) {
-          var option = catalogOptions[i]
+          const option = catalogOptions[i]
           if (option === null || typeof option !== 'object') continue
           if (typeof option.value !== 'string' || option.value === '') continue
-          if (offered.indexOf(option.value) === -1) offered.push(option.value)
+          if (!offered.includes(option.value)) offered.push(option.value)
         }
         // The skin's order for the presets it knows; anything else the host
         // offers follows in the host's own order.
-        var ordered = []
+        const ordered = []
         for (i = 0; i < PERMISSION_ORDER.length; i++) {
-          if (offered.indexOf(PERMISSION_ORDER[i]) !== -1) ordered.push(PERMISSION_ORDER[i])
+          if (offered.includes(PERMISSION_ORDER[i])) ordered.push(PERMISSION_ORDER[i])
         }
         for (i = 0; i < offered.length; i++) {
-          if (ordered.indexOf(offered[i]) === -1) ordered.push(offered[i])
+          if (!ordered.includes(offered[i])) ordered.push(offered[i])
         }
         return ordered
       }
 
       /** The segments to draw: each slot bound to the first of its presets the host offers. */
       function resolvedSegments() {
-        var out = []
-        for (var i = 0; i < PERMISSION_SEGMENTS.length; i++) {
-          var slot = PERMISSION_SEGMENTS[i]
-          for (var j = 0; j < slot.presets.length; j++) {
+        const out = []
+        for (let i = 0; i < PERMISSION_SEGMENTS.length; i++) {
+          const slot = PERMISSION_SEGMENTS[i]
+          for (let j = 0; j < slot.presets.length; j++) {
             if (!presetOffered(slot.presets[j])) continue
             out.push({ label: slot.label, preset: slot.presets[j] })
             break
@@ -122,10 +122,10 @@
        * exhausted the failure is remembered and thrown on the next sync, which
        * retires this feature and hands the shipped access button back (D12).
        */
-      var AUTO_PRESET_RETRY_MS = [1000, 5000]
-      var autoPresetRetries = 0
-      var autoPresetRead = 0
-      var autoPresetRetry = null
+      const AUTO_PRESET_RETRY_MS = [1000, 5000]
+      let autoPresetRetries = 0
+      let autoPresetRead = 0
+      let autoPresetRetry = null
 
       /** Invalidate the read in flight and drop any retry still waiting. */
       function dropAutoPresetRead() {
@@ -137,7 +137,7 @@
       }
 
       function probeAutoPreset() {
-        var namespace = null
+        let namespace = null
         try { namespace = ctx.get('remote.permissionPresets') } catch (error) { namespace = null }
         if (namespace === null || namespace === void 0 || typeof namespace.catalog !== 'function') {
           if (typeof ctx.inject !== 'function') {
@@ -147,8 +147,8 @@
           return
         }
         dropAutoPresetRead()
-        var read = autoPresetRead
-        namespace.catalog().then(function (result) {
+        const read = autoPresetRead
+        namespace.catalog().then(result => {
           if (read !== autoPresetRead) return
           if (result === null || typeof result !== 'object' || result.ok !== true ||
               result.value === null || typeof result.value !== 'object' ||
@@ -164,14 +164,14 @@
           catalogOptions = result.value.options.slice()
           defaultPreset = result.value.defaultPreset
           ui.schedule()
-        }, function () {
+        }, () => {
           if (read !== autoPresetRead) return
           if (autoPresetRetries >= AUTO_PRESET_RETRY_MS.length) {
-            autoPresetError = new Error('permission: the permissionPresets catalog read failed ' + (AUTO_PRESET_RETRY_MS.length + 1) + ' times')
+            autoPresetError = new Error(`permission: the permissionPresets catalog read failed ${AUTO_PRESET_RETRY_MS.length + 1} times`)
             ui.schedule()
             return
           }
-          autoPresetRetry = setTimeout(function () {
+          autoPresetRetry = setTimeout(() => {
             autoPresetRetry = null
             probeAutoPreset()
           }, AUTO_PRESET_RETRY_MS[autoPresetRetries++])
@@ -187,19 +187,19 @@
        */
       function startAutoPresetProbe() {
         if (typeof ctx.inject === 'function') {
-          catalogFiber = ctx.inject(['remote.permissionPresets'], function (scope) {
-            scope.effect(function () {
+          catalogFiber = ctx.inject(['remote.permissionPresets'], scope => {
+            scope.effect(() => {
               probeAutoPreset()
-              return function () {}
+              return () => {}
             }, 'dsh-claude-style: permission catalog')
           })
         } else {
           probeAutoPreset()
         }
-        var remoteRoot = null
+        let remoteRoot = null
         try { remoteRoot = ctx.get('remote') } catch (error) { remoteRoot = null }
         if (remoteRoot !== null && remoteRoot !== void 0 && typeof remoteRoot.$on === 'function') {
-          catalogChangedDisposer = remoteRoot.$on('permission-presets/catalog-changed', function () {
+          catalogChangedDisposer = remoteRoot.$on('permission-presets/catalog-changed', () => {
             probeAutoPreset()
           })
         }
@@ -211,14 +211,14 @@
        * absent instead of drawn dead.
        */
       function buildSegments(onPick, specs) {
-        var group = document.createElement('div')
+        const group = document.createElement('div')
         group.className = SEGMENTS_CLASS
         group.setAttribute('role', 'radiogroup')
         group.setAttribute('aria-label', 'Permission')
         group.setAttribute('data-composer-segments', '')
-        for (var i = 0; i < specs.length; i++) {
-          var spec = specs[i]
-          var item = document.createElement('button')
+        for (let i = 0; i < specs.length; i++) {
+          const spec = specs[i]
+          const item = document.createElement('button')
           item.type = 'button'
           item.className = SEGMENT_CLASS
           item.setAttribute('role', 'radio')
@@ -226,19 +226,19 @@
           item.textContent = spec.label
           group.appendChild(item)
         }
-        group.addEventListener('click', function (event) {
-          var target = event.target
-          var item = target !== null && typeof target.closest === 'function' ? target.closest('.' + SEGMENT_CLASS) : null
+        group.addEventListener('click', event => {
+          const target = event.target
+          const item = target !== null && typeof target.closest === 'function' ? target.closest(`.${SEGMENT_CLASS}`) : null
           if (item === null || !group.contains(item)) return
           onPick(item.getAttribute('data-preset'))
         })
         return group
       }
 
-      var permDocPointerListener = null
-      var permResizeListener = null
+      let permDocPointerListener = null
+      let permResizeListener = null
       /** The session-stats card (src/features/permissions/session-stats.js). */
-      var stats = createSessionStats()
+      const stats = createSessionStats()
 
       /** Every dismiss route (item pick, outside pointer, resize/scroll, Escape) closes the menu through this one path. */
       function closePermMenu() {
@@ -256,20 +256,20 @@
        * the rows stay consistent with each other.
        */
       function buildPermRow(preset) {
-        var item = document.createElement('button')
+        const item = document.createElement('button')
         item.type = 'button'
         item.className = 'dsh-claude-popover-item'
         item.setAttribute('role', 'menuitem')
         item.setAttribute('data-preset', preset)
 
-        var col = document.createElement('div')
+        const col = document.createElement('div')
         col.style.cssText = 'display:flex; flex-direction:column; gap:2px; flex:1; text-align:left; min-width:0;'
 
-        var itemTitle = document.createElement('span')
+        const itemTitle = document.createElement('span')
         itemTitle.style.cssText = 'font-weight:500; font-size:13px; line-height:16px;'
         itemTitle.textContent = presetLabel(preset)
 
-        var itemDesc = document.createElement('span')
+        const itemDesc = document.createElement('span')
         itemDesc.style.cssText = 'font-size:11px; line-height:14px; color:var(--dsw-alias-label-tertiary);'
         itemDesc.textContent = presetDesc(preset)
 
@@ -277,13 +277,13 @@
         col.appendChild(itemDesc)
         item.appendChild(col)
 
-        var check = document.createElement('span')
+        const check = document.createElement('span')
         check.className = 'dsh-claude-perm-check'
         check.style.cssText = 'font-size:12px; color:var(--dsw-alias-brand-primary, #d97757); margin-left:8px; display:none;'
         check.textContent = '✓'
         item.appendChild(check)
 
-        item.addEventListener('click', function (e) {
+        item.addEventListener('click', e => {
           e.stopPropagation()
           closePermMenu()
           if (permPick !== null) permPick(preset)
@@ -306,49 +306,49 @@
        */
       function syncPermRows() {
         if (permPopover === null) return
-        var wanted = offeredPresets()
-        var signature = wanted.join('|')
+        const wanted = offeredPresets()
+        const signature = wanted.join('|')
         if (signature === renderedRows && renderedRowsFor === permPopover) return
         renderedRows = signature
         renderedRowsFor = permPopover
         while (permPopover.firstChild !== null) permPopover.removeChild(permPopover.firstChild)
-        for (var i = 0; i < wanted.length; i++) permPopover.appendChild(buildPermRow(wanted[i]))
+        for (let i = 0; i < wanted.length; i++) permPopover.appendChild(buildPermRow(wanted[i]))
       }
 
       registerPopover('permission', closePermMenu)
 
       function buildPermTriggerAndPopover(onPick) {
         permPick = onPick
-        var container = document.createElement('div')
+        const container = document.createElement('div')
         container.className = 'dsh-claude-perm-container'
 
-        var btn = document.createElement('button')
+        const btn = document.createElement('button')
         btn.type = 'button'
         btn.className = 'dsh-claude-perm-btn'
         btn.setAttribute('aria-haspopup', 'menu')
         btn.setAttribute('aria-expanded', 'false')
 
-        var label = document.createElement('span')
+        const label = document.createElement('span')
         label.className = 'dsh-claude-perm-label'
         label.textContent = 'Accept edits'
 
-        var chevron = document.createElement('span')
+        const chevron = document.createElement('span')
         chevron.className = 'dsh-claude-perm-chevron'
         chevron.setAttribute('aria-hidden', 'true')
 
         btn.appendChild(label)
         btn.appendChild(chevron)
 
-        var popover = document.createElement('div')
+        const popover = document.createElement('div')
         popover.className = 'dsh-claude-perm-popover'
         popover.setAttribute('role', 'menu')
 
         function openPerm() {
           if (permHoverIntent) permHoverIntent.cancel()
           closeOtherPopovers('permission')
-          var rect = btn.getBoundingClientRect()
-          popover.style.left = Math.max(8, rect.left) + 'px'
-          popover.style.bottom = Math.max(8, window.innerHeight - rect.top + 6) + 'px'
+          const rect = btn.getBoundingClientRect()
+          popover.style.left = `${Math.max(8, rect.left)}px`
+          popover.style.bottom = `${Math.max(8, window.innerHeight - rect.top + 6)}px`
           btn.setAttribute('data-open', 'true')
           btn.setAttribute('aria-expanded', 'true')
           popover.setAttribute('data-open', 'true')
@@ -356,22 +356,22 @@
 
         permHoverIntent = createHoverIntent(openPerm, closePermMenu, POPOVER_OPEN_DELAY, POPOVER_CLOSE_DELAY)
 
-        btn.addEventListener('mouseenter', function () {
+        btn.addEventListener('mouseenter', () => {
           if (readPrefs().autoPopover === AUTO_POPOVER_ALL) permHoverIntent.scheduleOpen()
         })
-        btn.addEventListener('mouseleave', function () {
+        btn.addEventListener('mouseleave', () => {
           if (readPrefs().autoPopover === AUTO_POPOVER_ALL) permHoverIntent.scheduleClose()
         })
-        popover.addEventListener('mouseenter', function () {
+        popover.addEventListener('mouseenter', () => {
           permHoverIntent.cancel()
         })
-        popover.addEventListener('mouseleave', function () {
+        popover.addEventListener('mouseleave', () => {
           permHoverIntent.scheduleClose()
         })
 
-        btn.addEventListener('click', function (e) {
+        btn.addEventListener('click', e => {
           e.stopPropagation()
-          var isOpen = btn.getAttribute('data-open') === 'true'
+          const isOpen = btn.getAttribute('data-open') === 'true'
           if (isOpen) {
             closePermMenu()
           } else {
@@ -380,7 +380,7 @@
         })
 
         if (!permDocPointerListener) {
-          permDocPointerListener = function (e) {
+          permDocPointerListener = e => {
             if (permPopover && permBtn && permPopover.getAttribute('data-open') === 'true') {
               if (!permBtn.contains(e.target) && !permPopover.contains(e.target)) closePermMenu()
             }
@@ -389,7 +389,7 @@
         }
 
         if (!permResizeListener) {
-          permResizeListener = function () {
+          permResizeListener = () => {
             if (permPopover && permBtn && permPopover.getAttribute('data-open') === 'true') closePermMenu()
           }
           window.addEventListener('resize', permResizeListener)
@@ -404,10 +404,10 @@
         document.body.appendChild(popover)
 
         return {
-          container: container,
-          btn: btn,
-          label: label,
-          popover: popover
+          container,
+          btn,
+          label,
+          popover
         }
       }
 
@@ -419,17 +419,17 @@
         // The running preset reads as its Claude-flavored name; a value no
         // preset carries (the host's `custom`) reads as the host's own word for
         // it rather than as the machine value.
-        var matchedLabel = preset === null ? 'Accept edits' : presetLabel(preset)
+        const matchedLabel = preset === null ? 'Accept edits' : presetLabel(preset)
         // Same-value guard: this runs on every pass, and an identical
         // textContent write still replaces the text node — a mutation that
         // schedules the next pass, so the page never went idle.
         if (permLabel.textContent !== matchedLabel) permLabel.textContent = matchedLabel
 
-        var items = permPopover.querySelectorAll('[data-preset]')
-        for (var j = 0; j < items.length; j++) {
-          var it = items[j]
-          var isCurrent = it.getAttribute('data-preset') === preset
-          var check = it.querySelector('.dsh-claude-perm-check')
+        const items = permPopover.querySelectorAll('[data-preset]')
+        for (let j = 0; j < items.length; j++) {
+          const it = items[j]
+          const isCurrent = it.getAttribute('data-preset') === preset
+          const check = it.querySelector('.dsh-claude-perm-check')
           if (check) {
             check.style.display = isCurrent ? 'inline' : 'none'
           }
@@ -447,7 +447,7 @@
        * switch must hand the shipped access button back, and the refusal must
        * not pass silently.
        */
-      var submitError = null
+      let submitError = null
 
       /**
        * Request the preset switch through the host's `/permission` command —
@@ -458,21 +458,21 @@
        * projection alone.
        */
       function submitPreset(preset) {
-        var session = currentSession(ctx)
+        const session = currentSession(ctx)
         if (session === null) return
-        var settled = session.command('/permission ' + preset)
+        const settled = session.command(`/permission ${preset}`)
         if (settled === void 0 || typeof settled.then !== 'function') return
-        settled.then(function (result) {
+        settled.then(result => {
           if (result === null || typeof result !== 'object' || result.ok !== true) {
-            submitError = new Error('permission: the /permission ' + preset + ' command was refused')
+            submitError = new Error(`permission: the /permission ${preset} command was refused`)
           } else if (result.value === null || typeof result.value !== 'object' || result.value.matched !== true) {
             submitError = new Error('permission: the host offers no /permission command')
           } else {
             submitError = null
           }
           ui.schedule()
-        }, function () {
-          submitError = new Error('permission: the /permission ' + preset + ' command failed')
+        }, () => {
+          submitError = new Error(`permission: the /permission ${preset} command failed`)
           ui.schedule()
         })
       }
@@ -484,7 +484,7 @@
        * A same-value pick writes nothing.
        */
       function pick(preset) {
-        var session = currentSession(ctx)
+        const session = currentSession(ctx)
         if (session === null || preset === null) return
         if (preset === currentPreset(session)) return
         submitPreset(preset)
@@ -492,14 +492,14 @@
 
       // Re-insert when a re-render swapped the host row, then mirror the running preset.
       function syncSegments() {
-        var isHero = ui.composer.isHero()
-        var composerOn = ui.composer.isActive()
+        const isHero = ui.composer.isHero()
+        const composerOn = ui.composer.isActive()
 
-        var existingPermContainers = document.querySelectorAll('.dsh-claude-perm-container')
-        var existingSegments = document.querySelectorAll('.' + SEGMENTS_CLASS + '[data-composer-segments]')
+        const existingPermContainers = document.querySelectorAll('.dsh-claude-perm-container')
+        const existingSegments = document.querySelectorAll(`.${SEGMENTS_CLASS}[data-composer-segments]`)
 
         if (!composerOn) {
-          for (var ep = 0; ep < existingPermContainers.length; ep++) {
+          for (let ep = 0; ep < existingPermContainers.length; ep++) {
             existingPermContainers[ep].remove()
           }
           if (permPopover && permPopover.parentElement) {
@@ -510,7 +510,7 @@
           permLabel = null
           permPopover = null
 
-          for (var es0 = 0; es0 < existingSegments.length; es0++) {
+          for (let es0 = 0; es0 < existingSegments.length; es0++) {
             existingSegments[es0].remove()
           }
           segments = null
@@ -519,16 +519,16 @@
           return
         }
 
-        var session = currentSession(ctx)
-        var trigger = findAccessTrigger()
+        const session = currentSession(ctx)
+        const trigger = findAccessTrigger()
         // The cold start screen (no session yet) renders no access button: the
         // host leaves the card's mode strip empty and turns the whole card into
         // the workspace pick target. The segments take that strip and show the
         // preset the new session will start in; they are disabled there, so a
         // press falls through to the card and opens the workspace picker like
         // every other control on it.
-        var coldStart = trigger === null && isHero && session === null
-        var host = coldStart
+        const coldStart = trigger === null && isHero && session === null
+        const host = coldStart
           ? document.querySelector('[data-composer-card][class*="_cardWorkspaceTrigger"] [class*="_modes"]')
           : trigger === null ? null : trigger.parentElement
         // The default can change in Settings without a catalog event, so each
@@ -537,10 +537,10 @@
         coldStartShown = coldStart
         if (host === null) return
 
-        var preset = coldStart ? defaultPreset : session === null ? null : currentPreset(session)
+        const preset = coldStart ? defaultPreset : session === null ? null : currentPreset(session)
 
         if (isHero) {
-          for (var i = 0; i < existingPermContainers.length; i++) {
+          for (let i = 0; i < existingPermContainers.length; i++) {
             existingPermContainers[i].remove()
           }
           if (permPopover && permPopover.parentElement) {
@@ -555,21 +555,21 @@
           // takes the Auto slot when it is offered, and a slot with no offered
           // preset is not drawn. Rebuild when the binding changed; the shipped
           // group is reused otherwise, so a pass leaves the DOM alone.
-          var segmentSpecs = resolvedSegments()
-          var segmentSignature = segmentSpecs.map(function (spec) { return spec.label + '=' + spec.preset }).join('|')
+          const segmentSpecs = resolvedSegments()
+          const segmentSignature = segmentSpecs.map(spec => `${spec.label}=${spec.preset}`).join('|')
           if (existingSegments.length > 1) {
-            for (var s = 1; s < existingSegments.length; s++) existingSegments[s].remove()
+            for (let s = 1; s < existingSegments.length; s++) existingSegments[s].remove()
           }
           if (segmentSignature === renderedSegments && existingSegments.length === 1 && host.contains(existingSegments[0])) {
             segments = existingSegments[0]
           } else {
             renderedSegments = segmentSignature
-            for (var s2 = 0; s2 < existingSegments.length; s2++) existingSegments[s2].remove()
+            for (let s2 = 0; s2 < existingSegments.length; s2++) existingSegments[s2].remove()
             segments = buildSegments(pick, segmentSpecs)
             host.insertBefore(segments, host.firstChild)
           }
-          for (var j = 0; j < segments.children.length; j++) {
-            var item = segments.children[j]
+          for (let j = 0; j < segments.children.length; j++) {
+            const item = segments.children[j]
             if (item.disabled !== coldStart) item.disabled = coldStart
             if (item.getAttribute('data-preset') === preset) {
               item.setAttribute('data-active', '')
@@ -581,16 +581,16 @@
           }
           segmentPill.sync(segments)
         } else {
-          for (var es = 0; es < existingSegments.length; es++) {
+          for (let es = 0; es < existingSegments.length; es++) {
             existingSegments[es].remove()
           }
           segments = null
           segmentPill.sync(null)
 
-          var allExisting = document.querySelectorAll('.dsh-claude-perm-container')
+          const allExisting = document.querySelectorAll('.dsh-claude-perm-container')
           if (allExisting.length > 0) {
             permContainer = allExisting[0]
-            for (var p = 1; p < allExisting.length; p++) {
+            for (let p = 1; p < allExisting.length; p++) {
               allExisting[p].remove()
             }
             if (permContainer.parentElement !== host) {
@@ -603,7 +603,7 @@
             // without it updatePermState would early-return forever.
             if (permPopover === null) permPopover = document.querySelector('.dsh-claude-perm-popover')
           } else {
-            var res = buildPermTriggerAndPopover(pick)
+            const res = buildPermTriggerAndPopover(pick)
             permContainer = res.container
             permBtn = res.btn
             permLabel = res.label
@@ -615,7 +615,7 @@
       }
 
       ui.permissions = {
-        sync: function () {
+        sync() {
           if (autoPresetError !== null) throw autoPresetError
           if (submitError !== null) throw submitError
           stats.sync()
@@ -626,7 +626,7 @@
          * card. There is deliberately no 'outside' route — the menu runs its
          * own document pointerdown listener (see buildPermTriggerAndPopover).
          */
-        close: function (reason) {
+        close(reason) {
           closePermMenu()
           if (reason === 'composer') stats.close()
         }
@@ -637,7 +637,7 @@
       document.body.setAttribute(PERMISSIONS_ATTR, '')
       startAutoPresetProbe()
 
-      return function () {
+      return () => {
         stats.teardown()
         unregisterPopover('permission')
         if (permHoverIntent) permHoverIntent.cancel()
@@ -660,7 +660,7 @@
           permResizeListener = null
         }
         segmentPill.release()
-        removeStrayNodes(document, '.' + SEGMENTS_CLASS + '[data-composer-segments], .dsh-claude-perm-container, .dsh-claude-perm-popover', [])
+        removeStrayNodes(document, `.${SEGMENTS_CLASS}[data-composer-segments], .dsh-claude-perm-container, .dsh-claude-perm-popover`, [])
         segments = null
         permPopover = null
         permBtn = null

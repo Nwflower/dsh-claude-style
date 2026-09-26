@@ -31,25 +31,25 @@
      */
     function installHomeLayout(ctx, ui) {
       /** The host's list slot between the hero greeting and the composer card. */
-      var DOCK_SLOT = 'conversation.input.dock'
+      const DOCK_SLOT = 'conversation.input.dock'
 
-      var layout = DEFAULT_HOME_LAYOUT
+      let layout = DEFAULT_HOME_LAYOUT
       /** Whether the last pass saw the new-conversation hero, as of that reading. */
-      var lastHero = false
+      let lastHero = false
       /**
        * The yardstick book's draw. It is held here, not in the panel: the dock
        * seat keeps the panel mounted inside a conversation too, and the draw is
        * renewed each time the page comes back to the new-conversation hero.
        */
-      var bookPick = Math.random()
-      var slotsFiber = null
-      var ReactDOM = require('react-dom/client')
+      let bookPick = Math.random()
+      let slotsFiber = null
+      const ReactDOM = require('react-dom/client')
       /** The cold start screen's panel: `{ stack, element, root }`, or null. */
-      var coldSeat = null
+      let coldSeat = null
 
-      var usage = createHomeUsage(ctx)
-      var overview = createHomeOverview()
-      var models = createHomeModels()
+      const usage = createHomeUsage(ctx)
+      const overview = createHomeOverview()
+      const models = createHomeModels()
 
       /**
        * Whether the page currently shows the new-conversation hero.
@@ -72,7 +72,7 @@
        * host's phase marker.
        */
       function writeHeroAttr(hero) {
-        var studioHero = layout === HOME_LAYOUT_STUDIO && hero
+        const studioHero = layout === HOME_LAYOUT_STUDIO && hero
         if (studioHero === document.body.hasAttribute(HOME_HERO_ATTR)) return
         if (studioHero) document.body.setAttribute(HOME_HERO_ATTR, '')
         else document.body.removeAttribute(HOME_HERO_ATTR)
@@ -91,11 +91,9 @@
 
       /** Re-render on every store change. */
       function useUsage() {
-        var pair = React.useState(0)
-        var bump = pair[1]
-        React.useEffect(function () {
-          return usage.subscribe(function () { bump(function (count) { return count + 1 }) })
-        }, [])
+        const pair = React.useState(0)
+        const bump = pair[1]
+        React.useEffect(() => usage.subscribe(() => { bump(count => count + 1) }), [])
         return usage.state()
       }
 
@@ -111,15 +109,15 @@
        * own windows, the way Claude Code's do.
        */
       function HomeUsagePanel() {
-        var state = useUsage()
-        var tabState = React.useState('overview')
-        var tab = tabState[0]
-        var setTab = tabState[1]
-        var rangeState = React.useState('all')
-        var range = rangeState[0]
-        var setRange = rangeState[1]
+        const state = useUsage()
+        const tabState = React.useState('overview')
+        const tab = tabState[0]
+        const setTab = tabState[1]
+        const rangeState = React.useState('all')
+        const range = rangeState[0]
+        const setRange = rangeState[1]
         if (layout !== HOME_LAYOUT_STUDIO || !heroPhase()) return null
-        var data = homePanelData(state, usage.list(), range, bookPick)
+        const data = homePanelData(state, usage.list(), range, bookPick)
 
         function tabButton(id, label) {
           return React.createElement('button', {
@@ -128,7 +126,7 @@
             className: 'dsh-claude-home-tab',
             'data-active': tab === id ? '' : undefined,
             'aria-pressed': tab === id,
-            onClick: function () { setTab(id) },
+            onClick() { setTab(id) },
           }, label)
         }
 
@@ -155,21 +153,19 @@
               React.createElement(
                 'div',
                 { className: 'dsh-claude-home-ranges' },
-                HOME_RANGES.map(function (item) {
-                  return React.createElement('button', {
-                    key: item.id,
-                    type: 'button',
-                    className: 'dsh-claude-home-range',
-                    'data-active': range === item.id ? '' : undefined,
-                    'aria-pressed': range === item.id,
-                    onClick: function () { setRange(item.id) },
-                  }, copyLabel(item.labelKey, item.fallback))
-                }),
+                HOME_RANGES.map(item => React.createElement('button', {
+                  key: item.id,
+                  type: 'button',
+                  className: 'dsh-claude-home-range',
+                  'data-active': range === item.id ? '' : undefined,
+                  'aria-pressed': range === item.id,
+                  onClick() { setRange(item.id) },
+                }, copyLabel(item.labelKey, item.fallback))),
               ),
             ),
           ),
           tab === 'models'
-            ? React.createElement(models.component, { data: data })
+            ? React.createElement(models.component, { data })
             : overview.view(data),
         )
       }
@@ -182,17 +178,13 @@
        */
       function registerPanel() {
         if (typeof ctx.inject !== 'function') return
-        slotsFiber = ctx.inject(['slots'], function (scope) {
-          var slots = scope.get('slots')
+        slotsFiber = ctx.inject(['slots'], scope => {
+          const slots = scope.get('slots')
           if (slots === undefined || slots === null || typeof slots.inject !== 'function') return
-          scope.effect(function () {
-            return slots.inject(DOCK_SLOT, function () {
-              // A list seat keys its entries by id; the dock also carries the
-              // host's todo, queue and goal bars, so the id is what keeps this
-              // panel's slot stable across their re-renders.
-              return slots.register({ name: DOCK_SLOT, id: 'claude-style-usage', order: 40 }, HomeUsagePanel)
-            })
-          }, 'dsh-claude-style: home usage panel')
+          scope.effect(() => slots.inject(DOCK_SLOT, () => // A list seat keys its entries by id; the dock also carries the
+          // host's todo, queue and goal bars, so the id is what keeps this
+          // panel's slot stable across their re-renders.
+          slots.register({ name: DOCK_SLOT, id: 'claude-style-usage', order: 40 }, HomeUsagePanel)), 'dsh-claude-style: home usage panel')
         })
       }
 
@@ -211,26 +203,26 @@
        * is re-mounted on the new stack.
        */
       function syncColdSeat() {
-        var stack = document.body.hasAttribute(HOME_HERO_ATTR)
+        const stack = document.body.hasAttribute(HOME_HERO_ATTR)
           ? document.querySelector('[class*="_composerStack"][class*="_composerHero"]')
           : null
-        if (stack === null || stack.querySelector(':scope > [data-slot="' + DOCK_SLOT + '"]') !== null) {
+        if (stack === null || stack.querySelector(`:scope > [data-slot="${DOCK_SLOT}"]`) !== null) {
           unmountColdSeat()
           return
         }
         if (coldSeat !== null && coldSeat.stack === stack && coldSeat.element.parentElement === stack) return
         unmountColdSeat()
-        var element = document.createElement('div')
+        const element = document.createElement('div')
         element.className = 'dsh-claude-home-seat'
         stack.appendChild(element)
-        var root = ReactDOM.createRoot(element)
+        const root = ReactDOM.createRoot(element)
         root.render(React.createElement(HomeUsagePanel))
-        coldSeat = { stack: stack, element: element, root: root }
+        coldSeat = { stack, element, root }
       }
 
       /** Each pass reads the preference and the phase; only a change re-renders. */
       function sync() {
-        var next = readPrefs().homeLayout
+        const next = readPrefs().homeLayout
         if (next !== layout) {
           setLayout(next)
           syncColdSeat()
@@ -240,7 +232,7 @@
         // session, or the new-session row), and the panel's visibility follows
         // it — so the flip has to reach the component, and the stylesheet's
         // studio rules follow it through the document mark.
-        var hero = heroPhase()
+        const hero = heroPhase()
         writeHeroAttr(hero)
         if (hero !== lastHero) {
           lastHero = hero
@@ -254,12 +246,12 @@
         }
       }
 
-      ui.homeLayout = { sync: sync }
+      ui.homeLayout = { sync }
 
       registerPanel()
       setLayout(readPrefs().homeLayout)
 
-      return function () {
+      return () => {
         unmountColdSeat()
         usage.stop()
         document.body.removeAttribute(HOME_LAYOUT_ATTR)

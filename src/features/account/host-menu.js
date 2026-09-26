@@ -13,8 +13,8 @@
       /** A click the host's React handlers actually see (pointerdown + click). */
       function realClick(el) {
         if (el === null || el === undefined) return
-        var rect = el.getBoundingClientRect()
-        var init = {
+        const rect = el.getBoundingClientRect()
+        const init = {
           bubbles: true, cancelable: true, composed: true, button: 0, buttons: 1,
           clientX: Math.round(rect.left + rect.width / 2),
           clientY: Math.round(rect.top + rect.height / 2)
@@ -35,14 +35,14 @@
        * itself ("账号菜单" / "Account menu"), so the label is matched first.
        */
       function hostAccountTrigger() {
-        var foot = findFootArea()
-        var scopes = [foot, document]
-        for (var s = 0; s < scopes.length; s++) {
+        const foot = findFootArea()
+        const scopes = [foot, document]
+        for (let s = 0; s < scopes.length; s++) {
           if (scopes[s] === null || scopes[s] === undefined) continue
-          var anchors = scopes[s].querySelectorAll('[aria-haspopup="menu"]')
-          for (var i = 0; i < anchors.length; i++) {
-            var el = anchors[i]
-            if (String(el.className || '').indexOf('dsh-claude-') !== -1) continue
+          const anchors = scopes[s].querySelectorAll('[aria-haspopup="menu"]')
+          for (let i = 0; i < anchors.length; i++) {
+            const el = anchors[i]
+            if (String(el.className || '').includes('dsh-claude-')) continue
             if (/账号|account/i.test(el.getAttribute('aria-label') || '')) return el
           }
         }
@@ -59,11 +59,11 @@
        * pill beside it — the settings row read "Retry update" and clicked it.
        */
       function hostSettingsTrigger() {
-        var foot = findFootArea()
+        const foot = findFootArea()
         return foot === null ? null : foot.querySelector('[class*="settingsArea"] button[aria-haspopup="dialog"]')
       }
 
-      var SETTINGS_LABEL = /^(设置|settings)$/i
+      const SETTINGS_LABEL = /^(设置|settings)$/i
 
       /**
        * Whether an open `role=menu` is the host's account menu.
@@ -74,12 +74,12 @@
        * or both a settings and a feedback row.
        */
       function isAccountMenu(menu) {
-        var items = menu.querySelectorAll('[role="menuitem"]')
-        var sign = false
-        var settings = false
-        var feedback = false
-        for (var i = 0; i < items.length; i++) {
-          var text = (items[i].textContent || '').trim()
+        const items = menu.querySelectorAll('[role="menuitem"]')
+        let sign = false
+        let settings = false
+        let feedback = false
+        for (let i = 0; i < items.length; i++) {
+          const text = (items[i].textContent || '').trim()
           if (/退出登录|登出|Sign out|登录|Sign in/i.test(text)) sign = true
           if (SETTINGS_LABEL.test(text)) settings = true
           if (/反馈|Feedback|contact|意见/i.test(text)) feedback = true
@@ -89,8 +89,8 @@
 
       /** The host's open account menu, or null while it is closed. */
       function findAccountMenu() {
-        var menus = document.querySelectorAll('[role="menu"]')
-        for (var i = 0; i < menus.length; i++) {
+        const menus = document.querySelectorAll('[role="menu"]')
+        for (let i = 0; i < menus.length; i++) {
           if (isAccountMenu(menus[i])) return menus[i]
         }
         return null
@@ -114,22 +114,22 @@
        */
       function openHostSettings() {
         options.close()
-        var trigger = hostSettingsTrigger()
+        const trigger = hostSettingsTrigger()
         if (trigger !== null) {
           trigger.click()
           return
         }
-        var account = hostAccountTrigger()
+        const account = hostAccountTrigger()
         if (account === null) return
         realClick(account)
-        var tries = 0
+        let tries = 0
         function look() {
-          var menu = findAccountMenu()
+          const menu = findAccountMenu()
           if (menu !== null) {
-            var items = menu.querySelectorAll('[role="menuitem"]')
-            var previous = menu.style.visibility
+            const items = menu.querySelectorAll('[role="menuitem"]')
+            const previous = menu.style.visibility
             menu.style.visibility = 'hidden'
-            for (var k = 0; k < items.length; k++) {
+            for (let k = 0; k < items.length; k++) {
               if (SETTINGS_LABEL.test((items[k].textContent || '').trim())) {
                 realClick(items[k])
                 menu.style.visibility = previous
@@ -161,7 +161,7 @@
        * menu shut.
        */
       function openAccountMenu() {
-        var trigger = hostAccountTrigger()
+        const trigger = hostAccountTrigger()
         if (trigger === null) return
         trigger.click()
       }
@@ -170,7 +170,7 @@
         trigger: hostAccountTrigger,
         settingsTrigger: hostSettingsTrigger,
         findMenu: findAccountMenu,
-        menuViewport: menuViewport,
+        menuViewport,
         openMenu: openAccountMenu,
         openSettings: openHostSettings
       }

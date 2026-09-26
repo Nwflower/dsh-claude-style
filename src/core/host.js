@@ -1,9 +1,9 @@
     function findAccessTrigger() {
-      var prefixes = ['访问模式', 'Access mode']
-      var buttons = document.querySelectorAll('button[aria-label]')
-      for (var i = 0; i < buttons.length; i++) {
-        var label = buttons[i].getAttribute('aria-label') || ''
-        for (var j = 0; j < prefixes.length; j++) {
+      const prefixes = ['访问模式', 'Access mode']
+      const buttons = document.querySelectorAll('button[aria-label]')
+      for (let i = 0; i < buttons.length; i++) {
+        const label = buttons[i].getAttribute('aria-label') || ''
+        for (let j = 0; j < prefixes.length; j++) {
           if (label.indexOf(prefixes[j]) === 0) return buttons[i]
         }
       }
@@ -25,27 +25,27 @@
      */
     function currentSessionId(ctx, sessions) {
       try {
-        var uiSession = ctx.get('uiSession')
-        var current = uiSession === void 0 || uiSession === null ? null : uiSession.current
-        var value = current === void 0 || current === null ? null : current.value
+        const uiSession = ctx.get('uiSession')
+        const current = uiSession === void 0 || uiSession === null ? null : uiSession.current
+        const value = current === void 0 || current === null ? null : current.value
         if (value !== void 0 && value !== null && typeof value.key === 'string') return value.key
       } catch (error) { /* fall through to the legacy snapshot field */ }
       return sessions.list.getSnapshot().current
     }
 
     function currentSession(ctx) {
-      var sessions = ctx.get('sessions')
+      const sessions = ctx.get('sessions')
       if (sessions === void 0 || sessions === null) return null
-      var id = currentSessionId(ctx, sessions)
+      const id = currentSessionId(ctx, sessions)
       if (id === void 0 || id === null) return null
-      var binding = sessions.binding(id)
+      const binding = sessions.binding(id)
       if (binding === void 0 || binding === null) return null
       return binding.session === void 0 ? null : binding.session
     }
 
     function currentPreset(session) {
       try {
-        var snapshot = session.projections.faceOf('permissions').getSnapshot()
+        const snapshot = session.projections.faceOf('permissions').getSnapshot()
         if (snapshot === void 0 || snapshot === null) return null
         // dsh 0.2+ projection faces hand back the bare value (e.g. the preset
         // id string); older hosts wrapped it as `{ currentValue }`.
@@ -70,8 +70,8 @@
      * through the setters below, so the greeting, the account row and the hold
      * screen all read this one place.
      */
-    var accountName = ''
-    var accountAvatar = ''
+    let accountName = ''
+    let accountAvatar = ''
 
     /** The account profile's contribution; called when its read answers. */
     function setAccountIdentity(name, avatar) {
@@ -87,13 +87,13 @@
      * so a reload shows the name from the first frame instead of `User`. No
      * workspace parsing, no polling.
      */
-    var usernameFromHost = ''
-    var usernameRequested = false
-    var usernameListeners = []
+    let usernameFromHost = ''
+    let usernameRequested = false
+    const usernameListeners = []
 
     /** Last OS-user probe this browser saw; the cache that outlives the page. */
-    var PROBED_USERNAME_KEY = 'dsh-claude-style.probed-username'
-    var probedUsername = readStoredProbeUsername()
+    const PROBED_USERNAME_KEY = 'dsh-claude-style.probed-username'
+    let probedUsername = readStoredProbeUsername()
 
     function readStoredProbeUsername() {
       try {
@@ -113,8 +113,8 @@
 
     function onUsernameLoaded(listener) {
       usernameListeners.push(listener)
-      return function () {
-        var index = usernameListeners.indexOf(listener)
+      return () => {
+        const index = usernameListeners.indexOf(listener)
         if (index !== -1) usernameListeners.splice(index, 1)
       }
     }
@@ -125,23 +125,23 @@
       if (typeof fetch !== 'function') return
       try {
         fetch(USERNAME_ROUTE, { credentials: 'same-origin' })
-          .then(function (response) {
-            if (!response.ok) throw new Error('HTTP ' + response.status)
+          .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`)
             return response.json()
           })
-          .then(function (data) {
+          .then(data => {
             if (!data || data.ok !== true || typeof data.username !== 'string') return
             usernameFromHost = data.username.trim().slice(0, USERNAME_MAX)
             if (usernameFromHost) {
               probedUsername = usernameFromHost
               storeProbeUsername(usernameFromHost)
             }
-            var listeners = usernameListeners.slice()
-            for (var i = 0; i < listeners.length; i++) {
+            const listeners = usernameListeners.slice()
+            for (let i = 0; i < listeners.length; i++) {
               try { listeners[i](usernameFromHost) } catch (error) { /* listener error */ }
             }
           })
-          .catch(function () { /* the cached probe or 'User' stays */ })
+          .catch(() => { /* the cached probe or 'User' stays */ })
       } catch (error) { /* no fetch: fallback stays */ }
     }
 
@@ -149,16 +149,16 @@
      * The HDSL launcher's account contract, when this instance was launched by
      * it. Read once: the contract is fixed for the process lifetime.
      */
-    var hdslContract = false
-    var hdslName = ''
-    var hdslAvatar = false
-    var hdslRequested = false
-    var hdslListeners = []
+    let hdslContract = false
+    let hdslName = ''
+    let hdslAvatar = false
+    let hdslRequested = false
+    const hdslListeners = []
 
     function onHdslLoaded(listener) {
       hdslListeners.push(listener)
-      return function () {
-        var index = hdslListeners.indexOf(listener)
+      return () => {
+        const index = hdslListeners.indexOf(listener)
         if (index !== -1) hdslListeners.splice(index, 1)
       }
     }
@@ -169,21 +169,21 @@
       if (typeof fetch !== 'function') return
       try {
         fetch(HDSL_ROUTE, { credentials: 'same-origin' })
-          .then(function (response) {
-            if (!response.ok) throw new Error('HTTP ' + response.status)
+          .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`)
             return response.json()
           })
-          .then(function (data) {
+          .then(data => {
             if (!data || data.ok !== true || data.contract !== true) return
             hdslContract = true
             hdslName = typeof data.name === 'string' ? data.name.trim().slice(0, USERNAME_MAX) : ''
             hdslAvatar = data.hasSkinImage === true
-            var listeners = hdslListeners.slice()
-            for (var i = 0; i < listeners.length; i++) {
+            const listeners = hdslListeners.slice()
+            for (let i = 0; i < listeners.length; i++) {
               try { listeners[i]() } catch (error) { /* listener error */ }
             }
           })
-          .catch(function () { /* not launched by HDSL: the chain skips it */ })
+          .catch(() => { /* not launched by HDSL: the chain skips it */ })
       } catch (error) { /* no fetch: the chain skips it */ }
     }
 
@@ -192,7 +192,7 @@
      * @returns the winning name, without the `User` default.
      */
     function resolveDisplayName() {
-      var custom = readPrefs().username || readFallbackUsername()
+      const custom = readPrefs().username || readFallbackUsername()
       if (custom) return custom
       if (accountName) return accountName
       if (hdslName) return hdslName
@@ -218,7 +218,7 @@
      * Host context reference for services that need to read host state
      * (e.g. locale) outside of apply(ctx)'s direct call stack.
      */
-    var hostCtx = null
+    let hostCtx = null
     function setHostContext(ctx) {
       hostCtx = ctx
       // A new host context means a new OS user and a new launcher: the next

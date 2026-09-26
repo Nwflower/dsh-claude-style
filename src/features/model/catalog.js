@@ -12,14 +12,14 @@
      * @param options - { ctx, schedule }.
      */
     function createModelCatalog(options) {
-        var ctx = options.ctx
-        var schedule = options.schedule
-        var modelSub = null
-        var modelDir = null
-        var modelSessionId = null
-        var modelWarmRequested = false
+        const ctx = options.ctx
+        const schedule = options.schedule
+        let modelSub = null
+        let modelDir = null
+        let modelSessionId = null
+        let modelWarmRequested = false
         /** Settings-page listeners waiting on the provider list. */
-        var providerListeners = []
+        const providerListeners = []
 
         /**
          * The current session id. The Session Controller dropped
@@ -30,9 +30,9 @@
          */
         function currentModelSessionId() {
             try {
-                var sessions = ctx.get('sessions')
+                const sessions = ctx.get('sessions')
                 if (sessions === void 0 || sessions === null) return null
-                var id = currentSessionId(ctx, sessions)
+                const id = currentSessionId(ctx, sessions)
                 return id === void 0 || id === null ? null : id
             } catch (error) {
                 return null
@@ -48,7 +48,7 @@
 
         /** Resolve the session's directory (and observe it) once per session. */
         function directory() {
-            var id = currentModelSessionId()
+            const id = currentModelSessionId()
             if (id === null) {
                 dropSubscription()
                 modelDir = null
@@ -60,7 +60,7 @@
             modelDir = null
             modelSessionId = null
             try {
-                var dirs = ctx.get('modelDirectories')
+                const dirs = ctx.get('modelDirectories')
                 if (dirs && typeof dirs.directoryFor === 'function') {
                     modelDir = dirs.directoryFor(id)
                 }
@@ -73,10 +73,10 @@
             // to its own menu as `directory`). Subscribe to the store, never to the
             // instance, and never let a subscribe failure discard the directory.
             if (modelDir !== null) {
-                var store = modelDir.store
+                const store = modelDir.store
                 if (store && typeof store.subscribe === 'function') {
                     try {
-                        modelSub = store.subscribe(function () { notifyProviders(); if (schedule) schedule() })
+                        modelSub = store.subscribe(() => { notifyProviders(); if (schedule) schedule() })
                     } catch (error) {
                         modelSub = null
                     }
@@ -101,10 +101,10 @@
         function providers() {
             directory()
             warm()
-            var snap = snapshot()
-            var groups = (snap && snap.groups) || []
-            var out = []
-            for (var i = 0; i < groups.length; i++) {
+            const snap = snapshot()
+            const groups = (snap && snap.groups) || []
+            const out = []
+            for (let i = 0; i < groups.length; i++) {
                 if (groups[i].models.length === 0) continue
                 out.push({ id: groups[i].id, name: groups[i].name || groups[i].id, count: groups[i].models.length })
             }
@@ -114,9 +114,9 @@
         /** Tell the settings picker the provider list moved (catalog arrived, changed). */
         function notifyProviders() {
             if (providerListeners.length === 0) return
-            var list = providers()
-            var listeners = providerListeners.slice()
-            for (var i = 0; i < listeners.length; i++) {
+            const list = providers()
+            const listeners = providerListeners.slice()
+            for (let i = 0; i < listeners.length; i++) {
                 try { listeners[i](list) } catch (error) { /* one listener must not block the rest */ }
             }
         }
@@ -141,9 +141,9 @@
             if (modelWarmRequested || modelDir === null || typeof modelDir.load !== 'function') return
             modelWarmRequested = true
             try {
-                var pending = modelDir.load()
+                const pending = modelDir.load()
                 if (pending && typeof pending.catch === 'function') {
-                    pending.catch(function () { /* surfaced by the store, not here */ })
+                    pending.catch(() => { /* surfaced by the store, not here */ })
                 }
             } catch (error) { /* synchronous failure — the store's error surface covers it */ }
         }
@@ -151,11 +151,11 @@
         /** The current selection resolved to its group + model entries. */
         function current(snap) {
             if (!snap || snap.current === null) return null
-            for (var g = 0; g < snap.groups.length; g++) {
-                var group = snap.groups[g]
+            for (let g = 0; g < snap.groups.length; g++) {
+                const group = snap.groups[g]
                 if (group.id !== snap.current.provider) continue
-                for (var m = 0; m < group.models.length; m++) {
-                    if (group.models[m].id === snap.current.model) return { group: group, model: group.models[m] }
+                for (let m = 0; m < group.models.length; m++) {
+                    if (group.models[m].id === snap.current.model) return { group, model: group.models[m] }
                 }
             }
             return null
@@ -163,28 +163,28 @@
 
         /** Reasoning metadata + the effective effort for the current model. */
         function effort(snap) {
-            var active = current(snap)
+            const active = current(snap)
             if (active === null || !active.model.reasoning) return null
-            var reasoning = active.model.reasoning
-            var effective = snap.current.reasoningEffort !== void 0 ? snap.current.reasoningEffort : reasoning.defaultEffort
-            var label = MODEL_EFFORT_DEFAULT
+            const reasoning = active.model.reasoning
+            const effective = snap.current.reasoningEffort !== void 0 ? snap.current.reasoningEffort : reasoning.defaultEffort
+            let label = MODEL_EFFORT_DEFAULT
             if (effective !== void 0) {
                 label = effective
-                for (var i = 0; i < reasoning.efforts.length; i++) {
+                for (let i = 0; i < reasoning.efforts.length; i++) {
                     if (reasoning.efforts[i].id === effective) {
                         label = reasoning.efforts[i].name
                         break
                     }
                 }
             }
-            return { reasoning: reasoning, effective: effective, label: label }
+            return { reasoning, effective, label }
         }
 
         /** Register a provider-list listener; the returned call removes it again. */
         function onProviders(listener) {
             providerListeners.push(listener)
-            return function () {
-                var at = providerListeners.indexOf(listener)
+            return () => {
+                const at = providerListeners.indexOf(listener)
                 if (at !== -1) providerListeners.splice(at, 1)
             }
         }
@@ -202,15 +202,15 @@
         }
 
         return {
-            directory: directory,
-            snapshot: snapshot,
-            providers: providers,
-            notifyProviders: notifyProviders,
-            warm: warm,
-            current: current,
-            effort: effort,
-            onProviders: onProviders,
-            reset: reset,
-            resetWarm: resetWarm
+            directory,
+            snapshot,
+            providers,
+            notifyProviders,
+            warm,
+            current,
+            effort,
+            onProviders,
+            reset,
+            resetWarm
         }
     }

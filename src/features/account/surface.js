@@ -17,10 +17,10 @@
      * re-inserting the node we still hold, so our rows survive it unchanged.
      */
     function createAccountSurface(options) {
-      var mode = null
-      var hostContainer = null
+      let mode = null
+      let hostContainer = null
       /** The account menu last marked for the stylesheet, so the marker can move. */
-      var markedMenu = null
+      let markedMenu = null
 
       function detect() {
         return options.hostTrigger() !== null ? 'host' : 'synthetic'
@@ -46,7 +46,7 @@
       }
 
       function syncHost() {
-        var menu = options.findMenu()
+        const menu = options.findMenu()
         if (menu === null) {
           // Closed: the host unmounted the list, and our node is dead to us.
           markMenu(null)
@@ -54,7 +54,7 @@
           return
         }
         markMenu(menu)
-        var viewport = options.menuViewport(menu)
+        const viewport = options.menuViewport(menu)
         if (viewport === null) {
           hostContainer = null
           return
@@ -66,7 +66,7 @@
       }
 
       function sync() {
-        var next = detect()
+        const next = detect()
         if (next !== mode) {
           mode = next
           hostContainer = null
@@ -76,9 +76,9 @@
       }
 
       return {
-        mode: function () { return mode },
-        container: container,
-        clearMenu: function () { markMenu(null) },
-        sync: sync
+        mode() { return mode },
+        container,
+        clearMenu() { markMenu(null) },
+        sync
       }
     }

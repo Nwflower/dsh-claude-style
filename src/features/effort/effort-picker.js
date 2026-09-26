@@ -24,9 +24,9 @@
      * @returns a teardown function.
      */
     function installEffortPicker(ctx, ui) {
-      var effortBtn = null
-      var effortPop = null
-      var effortSlider = null
+      let effortBtn = null
+      let effortPop = null
+      let effortSlider = null
       /**
        * The last ladder the seat named. A selection makes the host re-enumerate
        * the whole directory for seconds, and the snapshot can go blank in that
@@ -34,10 +34,10 @@
        * empty state just because the answer is in flight. Only a SETTLED seat
        * that names no ladder takes the trigger away.
        */
-      var lastEffort = null
-      var effortHoverIntent = createHoverIntent(
-        function () { openEffortPopover() },
-        function () { closeEffortPopover() },
+      let lastEffort = null
+      const effortHoverIntent = createHoverIntent(
+        () => { openEffortPopover() },
+        () => { closeEffortPopover() },
         POPOVER_OPEN_DELAY,
         POPOVER_CLOSE_DELAY
       )
@@ -58,7 +58,7 @@
        * ladder returns null, which is the control's empty state.
        */
       function readEffort() {
-        var info = effortInfo()
+        const info = effortInfo()
         if (info !== null) {
           lastEffort = info
           return info
@@ -81,7 +81,7 @@
        * edge (see positionEffortTrigger), or the gap outlives the trigger.
        */
       function releaseModelMargin() {
-        var modelBtn = modelTrigger()
+        const modelBtn = modelTrigger()
         if (modelBtn !== null && modelBtn.style.marginRight !== '') modelBtn.style.marginRight = ''
       }
 
@@ -114,7 +114,7 @@
        * seat moves with the window and the composer's own growth). */
       function positionEffortTrigger() {
         if (effortBtn === null) return
-        var modelBtn = modelTrigger()
+        const modelBtn = modelTrigger()
         if (modelBtn === null) {
           effortBtn.style.display = 'none'
           return
@@ -133,7 +133,7 @@
         // A seat the host keeps in the DOM without laying it out (another view is
         // up, or an ancestor is hidden) reports a zero box; pinning to it put the
         // trigger in the window's top-left corner. No box, no trigger.
-        var seatBox = modelBtn.getBoundingClientRect()
+        const seatBox = modelBtn.getBoundingClientRect()
         if (seatBox.width === 0 || seatBox.height === 0) {
           hideEffortTrigger()
           return
@@ -142,11 +142,11 @@
         // (its seat returned) would otherwise read offsetWidth 0, reserve no
         // room for that one pass and overlap the control that follows.
         if (effortBtn.style.display !== 'inline-flex') effortBtn.style.display = 'inline-flex'
-        var need = Math.max(0, effortBtn.offsetWidth - 6)
-        if (modelBtn.style.marginRight !== need + 'px') modelBtn.style.marginRight = need + 'px'
-        var shifted = modelBtn.getBoundingClientRect()
-        effortBtn.style.left = Math.round(shifted.right + 2) + 'px'
-        effortBtn.style.top = Math.round(shifted.top + (shifted.height - effortBtn.offsetHeight) / 2) + 'px'
+        const need = Math.max(0, effortBtn.offsetWidth - 6)
+        if (modelBtn.style.marginRight !== `${need}px`) modelBtn.style.marginRight = `${need}px`
+        const shifted = modelBtn.getBoundingClientRect()
+        effortBtn.style.left = `${Math.round(shifted.right + 2)}px`
+        effortBtn.style.top = `${Math.round(shifted.top + (shifted.height - effortBtn.offsetHeight) / 2)}px`
       }
 
       /** The slider, built once; the card holds this node for its whole life. */
@@ -154,7 +154,7 @@
         if (effortSlider === null) {
           effortSlider = createEffortControl({
             read: readEffort,
-            onPick: function (levelId) {
+            onPick(levelId) {
               if (ui.model && typeof ui.model.pickEffort === 'function') ui.model.pickEffort(levelId)
             },
             // A drag must not be cut short by the hover-close timer: the pointer
@@ -163,9 +163,9 @@
             // ...and a hold that leaves the card closes it on the RELEASE, not
             // at the boundary crossing (the mouseleave guard stands down while
             // the button is held; this is the other half).
-            onDragEnd: function (e) {
+            onDragEnd(e) {
               if (effortPop === null || effortPop.getAttribute('data-open') !== 'true') return
-              var under = e && typeof e.clientX === 'number' ? document.elementFromPoint(e.clientX, e.clientY) : null
+              const under = e && typeof e.clientX === 'number' ? document.elementFromPoint(e.clientX, e.clientY) : null
               if (under !== null && effortPop.contains(under)) return
               closeEffortPopover()
             },
@@ -181,7 +181,7 @@
        * starts from null. The model picker sweeps its own strays the same way.
        */
       function ensureEffortChrome() {
-        var slot = seat()
+        const slot = seat()
         if (slot !== null) removeStrayNodes(slot, '.dsh-claude-effort-btn', [effortBtn])
         removeStrayNodes(document, 'body > .dsh-claude-effort-popover', [effortPop])
         if (effortPop === null || effortPop.parentElement === null) {
@@ -191,7 +191,7 @@
           effortPop.setAttribute('role', 'menu')
           effortPop.setAttribute('data-open', 'false')
           effortPop.addEventListener('mouseenter', cancelCloseEffort)
-          effortPop.addEventListener('mouseleave', function () {
+          effortPop.addEventListener('mouseleave', () => {
             // A hold must not be cut short by the hover-close timer: the
             // slider settles at its own edge while the pointer travels on
             // with the button down, and the card closing mid-hold read as a
@@ -203,7 +203,7 @@
         }
         // Append the slider only when it is not already the card's child: a
         // detach/re-append would restart its animations (see the header note).
-        var control = effortControlElement()
+        const control = effortControlElement()
         if (control.parentElement !== effortPop) effortPop.appendChild(control)
       }
 
@@ -226,7 +226,7 @@
 
       /** Re-point the trigger and the slider at the seat in force (every pass). */
       function syncEffortControl() {
-        var slot = seat()
+        const slot = seat()
         // No seat to sit beside, or no model trigger to attach to: the trigger
         // comes down (see hideEffortTrigger).
         if (slot === null || modelTrigger() === null) {
@@ -240,7 +240,7 @@
           if (effortSlider !== null) effortSlider.update()
           return
         }
-        var info = effortInfo()
+        const info = effortInfo()
         if (info === null) {
           // A catalog that cannot name the seat (the current selection is not in
           // its snapshot yet) has said nothing about that seat's levels: the
@@ -262,13 +262,13 @@
           effortBtn.innerHTML = '<span class="dsh-claude-effort-btn-label"></span>'
           // Same contract as the model trigger: hover under the "All" scope,
           // click-only otherwise.
-          effortBtn.addEventListener('mouseenter', function () {
+          effortBtn.addEventListener('mouseenter', () => {
             if (readPrefs().autoPopover === AUTO_POPOVER_ALL) effortHoverIntent.scheduleOpen()
           })
-          effortBtn.addEventListener('mouseleave', function () {
+          effortBtn.addEventListener('mouseleave', () => {
             if (readPrefs().autoPopover === AUTO_POPOVER_ALL) effortHoverIntent.scheduleClose()
           })
-          effortBtn.addEventListener('click', function (e) {
+          effortBtn.addEventListener('click', e => {
             e.stopPropagation()
             if (effortPop !== null && effortPop.getAttribute('data-open') === 'true') closeEffortPopover()
             else openEffortPopover()
@@ -282,9 +282,9 @@
         // Same-value guards: sync runs on every scheduler pass, and an identical
         // write still mutates the DOM (textContent replaces the text node;
         // setAttribute queues a record the scheduler's observer sees).
-        var labelEl = effortBtn.querySelector('.dsh-claude-effort-btn-label')
+        const labelEl = effortBtn.querySelector('.dsh-claude-effort-btn-label')
         if (labelEl !== null && labelEl.textContent !== info.label) labelEl.textContent = info.label
-        var aria = copyLabel('effortLabel', MODEL_EFFORT_LABEL) + ' ' + info.label
+        const aria = `${copyLabel('effortLabel', MODEL_EFFORT_LABEL)} ${info.label}`
         if (effortBtn.getAttribute('aria-label') !== aria) effortBtn.setAttribute('aria-label', aria)
         if (effortSlider !== null) effortSlider.update()
         positionEffortTrigger()
@@ -318,7 +318,7 @@
          * is NOT one of its dismiss routes (the model picker closes there, this
          * one does not), so that reason is ignored.
          */
-        close: function (reason) {
+        close(reason) {
           if (reason === 'composer') return
           closeEffortPopover()
         },
@@ -330,11 +330,11 @@
          * resize); without it the pin waited for the next pass and visibly
          * trailed the controls it sits between.
          */
-        reposition: function () {
+        reposition() {
           positionEffortTrigger()
           positionEffortPopover()
         },
-        teardown: teardown,
+        teardown,
       }
       return teardown
     }

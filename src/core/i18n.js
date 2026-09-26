@@ -1,11 +1,11 @@
     /** The shell's active locale id, or the document fallback when it cannot be read. */
     function activeLocale(ctx) {
-      var c = ctx || hostCtx
+      const c = ctx || hostCtx
       try {
         if (c && typeof c.get === 'function') {
-          var locale = c.get('locale')
+          const locale = c.get('locale')
           if (locale && typeof locale.getSnapshot === 'function') {
-            var active = locale.getSnapshot().active
+            const active = locale.getSnapshot().active
             if (typeof active === 'string' && active) return active
           }
         }
@@ -16,15 +16,15 @@
     /** One localized string out of a `{ locale: text }` pair, fallback locale last. */
     function localized(pair, ctx) {
       if (!pair || typeof pair !== 'object') return ''
-      var loc = activeLocale(ctx)
-      var text = pair[loc]
+      const loc = activeLocale(ctx)
+      const text = pair[loc]
       if (typeof text === 'string' && text) return text
-      var prefix = typeof loc === 'string' && loc.indexOf('-') !== -1 ? loc.split('-')[0] : (typeof loc === 'string' && loc.indexOf('_') !== -1 ? loc.split('_')[0] : '')
+      const prefix = typeof loc === 'string' && loc.includes('-') ? loc.split('-')[0] : (typeof loc === 'string' && loc.includes('_') ? loc.split('_')[0] : '')
       if (prefix && typeof pair[prefix] === 'string' && pair[prefix]) return pair[prefix]
-      var fallback = modelCopy === null ? MODEL_COPY_FALLBACK_LOCALE : modelCopy.fallback
-      var backstop = pair[fallback]
+      const fallback = modelCopy === null ? MODEL_COPY_FALLBACK_LOCALE : modelCopy.fallback
+      const backstop = pair[fallback]
       if (typeof backstop === 'string' && backstop) return backstop
-      var fallbackPrefix = typeof fallback === 'string' && fallback.indexOf('-') !== -1 ? fallback.split('-')[0] : ''
+      const fallbackPrefix = typeof fallback === 'string' && fallback.includes('-') ? fallback.split('-')[0] : ''
       if (fallbackPrefix && typeof pair[fallbackPrefix] === 'string' && pair[fallbackPrefix]) return pair[fallbackPrefix]
       return ''
     }
@@ -35,12 +35,10 @@
      * from `params`, so a label with a slot stays translatable.
      */
     function copyLabel(key, fallback, params) {
-      var text = modelCopy === null || !modelCopy.ui ? '' : localized(modelCopy.ui[key])
+      let text = modelCopy === null || !modelCopy.ui ? '' : localized(modelCopy.ui[key])
       if (!text) text = fallback
       if (!params) return text
-      return text.replace(/\{(\w+)\}/g, function (match, name) {
-        return Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match
-      })
+      return text.replace(/\{(\w+)\}/g, (match, name) => Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match)
     }
 
     /**
@@ -49,12 +47,10 @@
      * English constants stay as the fallback for a failed fetch.
      */
     function settingsCopy(key, fallback, params) {
-      var text = modelCopy === null || !modelCopy.settings ? '' : localized(modelCopy.settings[key])
+      let text = modelCopy === null || !modelCopy.settings ? '' : localized(modelCopy.settings[key])
       if (!text) text = fallback
       if (!params) return text
-      return text.replace(/\{(\w+)\}/g, function (match, name) {
-        return Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match
-      })
+      return text.replace(/\{(\w+)\}/g, (match, name) => Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match)
     }
 
     /**
@@ -66,14 +62,12 @@
      * document's own fallback locale.
      */
     function banCopy(key, fallback, params) {
-      var pair = modelCopy === null || !modelCopy.ban ? null : modelCopy.ban[key]
-      var want = readPrefs().banLocale
-      var text = pair && typeof pair === 'object' && typeof pair[want] === 'string' ? pair[want] : ''
+      const pair = modelCopy === null || !modelCopy.ban ? null : modelCopy.ban[key]
+      const want = readPrefs().banLocale
+      let text = pair && typeof pair === 'object' && typeof pair[want] === 'string' ? pair[want] : ''
       if (!text) text = localized(pair)
       if (!text) text = fallback
       if (!params) return text
-      return text.replace(/\{(\w+)\}/g, function (match, name) {
-        return Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match
-      })
+      return text.replace(/\{(\w+)\}/g, (match, name) => Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match)
     }
 

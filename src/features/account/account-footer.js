@@ -11,32 +11,32 @@
      */
     function installAccountFooter(ctx, ui) {
       /** The marker the stylesheet hangs the host account row's Claude shape on. */
-      var HOST_ROW_ATTR = 'data-dsh-claude-account-host-row'
-      var profile = createAccountProfile(ctx, function () {
+      const HOST_ROW_ATTR = 'data-dsh-claude-account-host-row'
+      const profile = createAccountProfile(ctx, () => {
         if (typeof ui.schedule === 'function') ui.schedule()
       })
-      var accountBtn = null
-      var accountPopover = null
-      var popoverBody = null
-      var settingsItem = null
-      var popoverHoverIntent = createHoverIntent(openPopover, closePopover, POPOVER_OPEN_DELAY, POPOVER_CLOSE_DELAY)
+      let accountBtn = null
+      let accountPopover = null
+      let popoverBody = null
+      let settingsItem = null
+      const popoverHoverIntent = createHoverIntent(openPopover, closePopover, POPOVER_OPEN_DELAY, POPOVER_CLOSE_DELAY)
       // The host path's hover intent. The host owns its menu and unmounts it on
       // close, so this drives the host's trigger and dismisses the menu with the
       // Escape the host's own Menu handles.
-      var hostHoverIntent = createHoverIntent(openHostMenu, closeHostMenuForHover, POPOVER_OPEN_DELAY, POPOVER_CLOSE_DELAY)
+      const hostHoverIntent = createHoverIntent(openHostMenu, closeHostMenuForHover, POPOVER_OPEN_DELAY, POPOVER_CLOSE_DELAY)
       /**
        * Identity of the row bindings THIS generation installed. A client reload
        * drops the old generation's disposals but the host's row node outlives
        * them, so a boolean guard would leave the new generation's listeners
        * unattached (the same reason session-stats keeps a binding token).
        */
-      var hostRowBindingToken = {}
+      const hostRowBindingToken = {}
       // Whether the popover is up because it was CLICKED (rather than hovered).
       // Clicking the account row opens the ban-screen easter egg and leaves the
       // pointer inside the popover, so without this the row's own mouseleave
       // would tear the popover down behind the overlay; a click-opened popover
       // instead stays until the pointer leaves the whole footer.
-      var popoverOpenedByClick = false
+      let popoverOpenedByClick = false
 
       function isPopoverOpen() {
         return !!(accountPopover && accountPopover.getAttribute('data-open') === 'true')
@@ -50,7 +50,7 @@
         // bails), so reconcile them here — before the reveal — to show fresh
         // content/order and bind click targets for the upcoming interaction.
         try {
-          var footArea = findFootArea()
+          const footArea = findFootArea()
           if (footArea) mirror.sync(footArea)
         } catch (error) { /* opening must never fail because of a mirror sync */ }
         // Resolve the rail anchor before the reveal so the panel never paints at
@@ -115,15 +115,15 @@
         positionAnchoredPopover(accountBtn, accountPopover, { side: 'right', important: true })
       }
 
-      var hostMenu = createHostAccountMenu({ close: closePopover })
-      var rows = createAccountRows({
-        hostMenu: hostMenu,
+      const hostMenu = createHostAccountMenu({ close: closePopover })
+      const rows = createAccountRows({
+        hostMenu,
         // Drawing the launcher's head is asynchronous and changes no DOM the
         // observer can see, so the picture asks for the pass that paints it.
-        onChange: function () {
+        onChange() {
           if (typeof ui.schedule === 'function') ui.schedule()
         },
-        openBan: function () {
+        openBan() {
           // Leave the surface up: the overlay is a full-window surface, so what
           // is behind it does not matter, and the footer is left as the user
           // had it once the screen is dismissed.
@@ -131,29 +131,29 @@
           if (ui.ban) ui.ban.open()
         }
       })
-      var surface = createAccountSurface({
+      const surface = createAccountSurface({
         hostTrigger: hostMenu.trigger,
         findMenu: hostMenu.findMenu,
         menuViewport: hostMenu.menuViewport,
         buildContainer: rows.buildHostContainer,
-        syntheticContainer: function () { return popoverBody },
+        syntheticContainer() { return popoverBody },
         onMode: onSurfaceMode,
         onMenu: onHostMenuChanged
       })
-      var mirror = createFooterMirror({
-        body: function () { return surface.container() },
-        anchor: function () { return settingsItem },
-        isOpen: function () { return surface.mode() === 'synthetic' && isPopoverOpen() },
+      const mirror = createFooterMirror({
+        body() { return surface.container() },
+        anchor() { return settingsItem },
+        isOpen() { return surface.mode() === 'synthetic' && isPopoverOpen() },
         close: closeSurface
       })
       // The account area takes part in the shared popover rule (popover-utils.js):
       // ONE entry for both surfaces, since a given host has only one of them.
       registerPopover('account', closeAccountSurfaces)
       /** The entry row's width, as last written to the stylesheet. */
-      var accountWidth = 0
+      let accountWidth = 0
       /** The self-built drawer's distance from the footer's edges, as last written. */
-      var accountInsetLeft = -1
-      var accountInsetRight = -1
+      let accountInsetLeft = -1
+      let accountInsetRight = -1
 
       /**
        * Build (or reuse) the self-built trigger and popover and return the
@@ -165,7 +165,7 @@
        * name).
        */
       function ensureSynthetic(footArea) {
-        var username = getUsername(ctx)
+        const username = getUsername(ctx)
         removeStrayNodes(footArea, '.dsh-claude-account-btn', [accountBtn])
         removeStrayNodes(document, '.dsh-claude-account-popover', [accountPopover])
 
@@ -189,13 +189,13 @@
           // way in (and the only way out, so a click-opened popover does not
           // vanish when the pointer leaves). The account row is the one popover
           // the `account` scope keeps on hover.
-          accountBtn.addEventListener('mouseenter', function () {
+          accountBtn.addEventListener('mouseenter', () => {
             if (readPrefs().autoPopover !== AUTO_POPOVER_OFF) popoverHoverIntent.scheduleOpen()
           })
-          accountBtn.addEventListener('mouseleave', function () {
+          accountBtn.addEventListener('mouseleave', () => {
             if (readPrefs().autoPopover !== AUTO_POPOVER_OFF && !popoverOpenedByClick) scheduleClosePopover()
           })
-          accountBtn.addEventListener('click', function (e) {
+          accountBtn.addEventListener('click', e => {
             e.stopPropagation()
             togglePopover()
           })
@@ -205,7 +205,7 @@
         // OS user, the account profile), so they are written as text and as an
         // image source, never spliced into markup — and synced on every pass, so a
         // profile that lands after the row was built still shows up.
-        var userEl = accountBtn.querySelector('.dsh-claude-account-user')
+        const userEl = accountBtn.querySelector('.dsh-claude-account-user')
         if (userEl && userEl.textContent !== username) userEl.textContent = username
         rows.syncAvatar(accountBtn.querySelector('.dsh-claude-account-avatar'))
 
@@ -216,10 +216,10 @@
           accountPopover.className = 'dsh-claude-account-popover'
           accountPopover.setAttribute('data-open', 'false')
 
-          accountPopover.addEventListener('mouseenter', function () {
+          accountPopover.addEventListener('mouseenter', () => {
             cancelClosePopover()
           })
-          accountPopover.addEventListener('mouseleave', function () {
+          accountPopover.addEventListener('mouseleave', () => {
             scheduleClosePopover()
           })
 
@@ -259,7 +259,7 @@
        */
       function closeSurface() {
         if (surface.mode() === 'host') {
-          var menu = hostMenu.findMenu()
+          const menu = hostMenu.findMenu()
           if (menu !== null) {
             menu.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
           }
@@ -311,9 +311,9 @@
        * elsewhere dismisses the menu; the next leave closes it.
        */
       function closeHostMenuForHover() {
-        var row = hostMenu.trigger()
+        const row = hostMenu.trigger()
         if (row !== null && row.matches(':hover')) return
-        var menu = hostMenu.findMenu()
+        const menu = hostMenu.findMenu()
         if (menu !== null && menu.matches(':hover')) return
         closeSurface()
       }
@@ -326,17 +326,17 @@
       function bindHostRowHover(row) {
         if (row.__dshHostRowToken === hostRowBindingToken) return
         row.__dshHostRowToken = hostRowBindingToken
-        row.addEventListener('mouseenter', function () {
+        row.addEventListener('mouseenter', () => {
           if (readPrefs().autoPopover !== AUTO_POPOVER_OFF) hostHoverIntent.scheduleOpen()
         })
-        row.addEventListener('mouseleave', function () {
+        row.addEventListener('mouseleave', () => {
           if (readPrefs().autoPopover !== AUTO_POPOVER_OFF) hostHoverIntent.scheduleClose()
         })
         // The row's own click opens the menu too (autoPopover off, or a press
         // before the hover delay elapsed). A listener on the row runs in the
         // target phase, ahead of the host's own delegated onClick, so the armed
         // marker is in place before the host mounts the card.
-        row.addEventListener('click', function () {
+        row.addEventListener('click', () => {
           armAccountMenu()
         })
       }
@@ -353,10 +353,10 @@
         }
         if (menu.__dshHostHoverBound) return
         menu.__dshHostHoverBound = true
-        menu.addEventListener('mouseenter', function () {
+        menu.addEventListener('mouseenter', () => {
           if (readPrefs().autoPopover !== AUTO_POPOVER_OFF) hostHoverIntent.cancel()
         })
-        menu.addEventListener('mouseleave', function () {
+        menu.addEventListener('mouseleave', () => {
           if (readPrefs().autoPopover !== AUTO_POPOVER_OFF) hostHoverIntent.scheduleClose()
         })
       }
@@ -394,12 +394,12 @@
         // The menu marker goes with the takeover: an open host menu must not
         // keep the skin's card styling after the footer is handed back.
         surface.clearMenu()
-        var injected = document.querySelectorAll('.dsh-claude-account-inject')
-        for (var i = 0; i < injected.length; i++) {
+        const injected = document.querySelectorAll('.dsh-claude-account-inject')
+        for (let i = 0; i < injected.length; i++) {
           if (injected[i].parentElement) injected[i].parentElement.removeChild(injected[i])
         }
-        var marked = document.querySelectorAll('[' + HOST_ROW_ATTR + ']')
-        for (var m = 0; m < marked.length; m++) marked[m].removeAttribute(HOST_ROW_ATTR)
+        const marked = document.querySelectorAll(`[${HOST_ROW_ATTR}]`)
+        for (let m = 0; m < marked.length; m++) marked[m].removeAttribute(HOST_ROW_ATTR)
         if (footArea) mirror.clear(footArea)
       }
 
@@ -415,28 +415,28 @@
        */
       function syncAccountRowBox(row, footArea) {
         if (row === null) return
-        var rowRect = row.getBoundingClientRect()
-        var rowWidth = Math.round(rowRect.width)
+        const rowRect = row.getBoundingClientRect()
+        const rowWidth = Math.round(rowRect.width)
         if (rowWidth > 0 && rowWidth !== accountWidth) {
           accountWidth = rowWidth
-          document.body.style.setProperty('--dsh-claude-account-width', rowWidth + 'px')
+          document.body.style.setProperty('--dsh-claude-account-width', `${rowWidth}px`)
         }
         if (surface.mode() !== 'synthetic') return
-        var footRect = footArea.getBoundingClientRect()
-        var left = Math.round(rowRect.left - footRect.left)
-        var right = Math.round(footRect.right - rowRect.right)
+        const footRect = footArea.getBoundingClientRect()
+        const left = Math.round(rowRect.left - footRect.left)
+        const right = Math.round(footRect.right - rowRect.right)
         if (left !== accountInsetLeft) {
           accountInsetLeft = left
-          document.body.style.setProperty('--dsh-claude-account-inset-left', left + 'px')
+          document.body.style.setProperty('--dsh-claude-account-inset-left', `${left}px`)
         }
         if (right !== accountInsetRight) {
           accountInsetRight = right
-          document.body.style.setProperty('--dsh-claude-account-inset-right', right + 'px')
+          document.body.style.setProperty('--dsh-claude-account-inset-right', `${right}px`)
         }
       }
 
       function syncAccountFooter() {
-        var footArea = findFootArea()
+        const footArea = findFootArea()
         if (footArea === null) return
 
         if (!readPrefs().collapseFooter) {
@@ -453,13 +453,13 @@
         // The host's own account row is the entry on the host path: mark it so
         // the stylesheet can repaint it as a Claude row. It is left in the host's
         // DOM and flow, never moved or copied.
-        var hostTrigger = hostMenu.trigger()
+        const hostTrigger = hostMenu.trigger()
         if (hostTrigger !== null && !hostTrigger.hasAttribute(HOST_ROW_ATTR)) hostTrigger.setAttribute(HOST_ROW_ATTR, '')
         // The entry row — the host's own row, or the self-built button — is the
         // shape both cards have to match, so its box is measured here and handed
         // to the stylesheet. The hover preference is bound on the host's row in
         // the same pass, since the host renders that row itself.
-        var entryRow = surface.mode() === 'host' ? hostTrigger : accountBtn
+        const entryRow = surface.mode() === 'host' ? hostTrigger : accountBtn
         syncAccountRowBox(entryRow, footArea)
         if (hostTrigger !== null) bindHostRowHover(hostTrigger)
 
@@ -469,7 +469,7 @@
         // opened once. Only the mirroring needs a container to write into.
         mirror.sync(footArea)
 
-        var root = surface.mode() === 'host' ? surface.container() : accountPopover
+        const root = surface.mode() === 'host' ? surface.container() : accountPopover
         if (root === null) return
         rows.syncHeader(root, hostTrigger)
         // The rail toggle (and any reflow) moves the anchor without a window
@@ -488,7 +488,7 @@
          * the drawer is null, so this is a no-op and the host keeps its own
          * dismissal.
          */
-        close: function (reason) {
+        close(reason) {
           if (reason === 'outside' && !isPopoverOpen()) return
           closePopover()
         },
@@ -498,29 +498,29 @@
          * unconditional preventDefault; this returns whether it acted, which the
          * scheduler does not gate on.
          */
-        onKey: function (e) {
+        onKey(e) {
           if ((e.ctrlKey || e.metaKey) && e.key === ',') {
             hostMenu.openSettings()
             return true
           }
           return false
         },
-        owns: function (target) {
+        owns(target) {
           if (!target) return false
           if (accountBtn !== null && accountBtn.contains(target)) return true
           if (accountPopover !== null && accountPopover.contains(target)) return true
-          var container = surface.container()
+          const container = surface.container()
           return container !== null && container.contains(target)
         },
-        isOpen: function () { return isPopoverOpen() },
+        isOpen() { return isPopoverOpen() },
         /** Re-anchor an open drawer after a viewport change; a closed one has
          * nothing to place. */
-        reposition: function () {
+        reposition() {
           if (!isPopoverOpen()) return
           positionAccountPopover()
         }
       }
-      return function () {
+      return () => {
         profile.stop()
         unregisterPopover('account')
         dropAccountFooter(findFootArea())

@@ -1,5 +1,5 @@
     function modelEl(tag, cls, text) {
-      var el = document.createElement(tag)
+      const el = document.createElement(tag)
       if (cls) el.className = cls
       if (text !== void 0 && text !== null) el.textContent = text
       return el
@@ -21,8 +21,8 @@
      */
     function modelBrand(modelId) {
       if (modelCopy !== null) {
-        var id = String(modelId === void 0 || modelId === null ? '' : modelId).toLowerCase()
-        for (var i = 0; i < modelCopy.brandRules.length; i++) {
+        const id = String(modelId === void 0 || modelId === null ? '' : modelId).toLowerCase()
+        for (let i = 0; i < modelCopy.brandRules.length; i++) {
           if (modelCopy.brandRules[i].re.test(id)) return modelCopy.brandRules[i].brand
         }
       }
@@ -43,9 +43,9 @@
      */
     function modelCombine(brand, name) {
       if (brand === null || !COMBINE_SVGS[brand]) return null
-      var word = COMBINE_WORDS[brand]
-      var at = word === void 0 ? -1 : name.toLowerCase().indexOf(word.toLowerCase())
-      return { id: brand, word: word, svg: COMBINE_SVGS[brand], at: at }
+      const word = COMBINE_WORDS[brand]
+      const at = word === void 0 ? -1 : name.toLowerCase().indexOf(word.toLowerCase())
+      return { id: brand, word, svg: COMBINE_SVGS[brand], at }
     }
 
     /**
@@ -60,23 +60,23 @@
      * @returns the label element.
      */
     function buildModelLabel(name, brand) {
-      var el = modelEl('span', 'dsh-claude-model-name')
-      var text = typeof name === 'string' ? name : ''
-      var mark = modelCombine(brand, text)
+      const el = modelEl('span', 'dsh-claude-model-name')
+      const text = typeof name === 'string' ? name : ''
+      const mark = modelCombine(brand, text)
       if (mark === null) {
         el.textContent = text
         return el
       }
-      var box = modelEl('span', 'dsh-claude-model-combine')
+      const box = modelEl('span', 'dsh-claude-model-combine')
       box.setAttribute('aria-hidden', 'true')
       box.innerHTML = mark.svg
-      var head = mark.at === -1 ? '' : text.slice(0, mark.at)
+      const head = mark.at === -1 ? '' : text.slice(0, mark.at)
       // The word's own separator goes with the word: the lockup's margin stands in
       // for it, so the label does not end up with two gaps.
-      var tail = mark.at === -1 ? text : text.slice(mark.at + mark.word.length).replace(/^[\s\-–—]+/, '')
+      const tail = mark.at === -1 ? text : text.slice(mark.at + mark.word.length).replace(/^[\s\-–—]+/, '')
       if (head) el.appendChild(document.createTextNode(head))
       el.appendChild(box)
       el.appendChild(document.createTextNode(tail))
-      el.appendChild(modelEl('span', 'dsh-claude-model-combine-alt', tail ? mark.word + ' ' : mark.word))
+      el.appendChild(modelEl('span', 'dsh-claude-model-combine-alt', tail ? `${mark.word} ` : mark.word))
       return el
     }

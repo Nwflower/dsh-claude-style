@@ -13,7 +13,7 @@
      * its first paint instead of inheriting the focused default.
      */
     function installSelectionFocus() {
-      var body = document.body
+      const body = document.body
 
       function sync() {
         if (document.hasFocus()) body.removeAttribute(WINDOW_BLUR_ATTR)
@@ -26,7 +26,7 @@
       window.addEventListener('blur', sync, true)
       sync()
 
-      return function () {
+      return () => {
         window.removeEventListener('focus', sync, true)
         window.removeEventListener('blur', sync, true)
         body.removeAttribute(WINDOW_BLUR_ATTR)

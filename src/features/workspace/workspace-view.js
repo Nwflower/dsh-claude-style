@@ -20,9 +20,9 @@
      */
     function installWorkspaceView(ctx, ui) {
       /** Trash can for one archived row. */
-      var DELETE_SVG = '<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.6 4.2h10.8"/><path d="M6.4 4.2V3a.8.8 0 0 1 .8-.8h1.6a.8.8 0 0 1 .8.8v1.2"/><path d="M4.2 4.2l.6 8.3a1 1 0 0 0 1 .9h4.4a1 1 0 0 0 1-.9l.6-8.3"/><path d="M6.7 6.8v4M9.3 6.8v4"/></svg>'
+      const DELETE_SVG = '<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.6 4.2h10.8"/><path d="M6.4 4.2V3a.8.8 0 0 1 .8-.8h1.6a.8.8 0 0 1 .8.8v1.2"/><path d="M4.2 4.2l.6 8.3a1 1 0 0 0 1 .9h4.4a1 1 0 0 0 1-.9l.6-8.3"/><path d="M6.7 6.8v4M9.3 6.8v4"/></svg>'
       /** Tray with an up arrow: put this conversation back among the live ones. */
-      var RESTORE_SVG = '<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.6 9.2v3.4a1 1 0 0 0 1 1h8.8a1 1 0 0 0 1-1V9.2"/><path d="M8 10.4V2.6"/><path d="M5.2 5.4L8 2.6l2.8 2.8"/></svg>'
+      const RESTORE_SVG = '<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.6 9.2v3.4a1 1 0 0 0 1 1h8.8a1 1 0 0 0 1-1V9.2"/><path d="M8 10.4V2.6"/><path d="M5.2 5.4L8 2.6l2.8 2.8"/></svg>'
       /**
        * The host's own Tooltip and icons, reached through the plugin loader's
        * `require` — the same packages its UI uses, so these row actions look and
@@ -31,59 +31,59 @@
        * Guarded: a loader that hands over nothing leaves the skin's own SVG and a
        * native title in place.
        */
-      var primitives = null
-      var react = null
-      var reactDom = null
+      let primitives = null
+      let react = null
+      let reactDom = null
       try { primitives = require('@deepseek-ai/dsh-client-ui-primitives') } catch (error) { primitives = null }
       try { react = require('react') } catch (error) { react = null }
       try { reactDom = require('react-dom/client') } catch (error) { reactDom = null }
       /** React roots holding the row actions, unmounted when the list is rebuilt. */
-      var actionRoots = []
+      let actionRoots = []
       /** React root holding the archived-row notice, and the show count that keys it. */
-      var noticeRoot = null
-      var noticeSeq = 0
-      var VIEW_ATTR = 'data-dsh-claude-ws-view'
-      var LABEL_ATTR = 'data-dsh-claude-ws-label'
-      var TREE_ATTR = 'data-dsh-claude-ws-tree'
-      var SEGMENTS = [
+      let noticeRoot = null
+      let noticeSeq = 0
+      const VIEW_ATTR = 'data-dsh-claude-ws-view'
+      const LABEL_ATTR = 'data-dsh-claude-ws-label'
+      const TREE_ATTR = 'data-dsh-claude-ws-tree'
+      const SEGMENTS = [
         { id: 'active', key: 'archiveActive', fallback: 'Active' },
         { id: 'archived', key: 'archiveArchived', fallback: 'Archived' }
       ]
-      var LABEL_TEXTS = ['工作区', 'Workspace']
-      var view = 'active'
-      var control = null
+      const LABEL_TEXTS = ['工作区', 'Workspace']
+      let view = 'active'
+      let control = null
       /** The control's sliding highlight (src/shared/sliding-pill.js). */
-      var segmentPill = createSlidingPill('[aria-checked="true"]')
-      var listHost = null
-      var markedLabel = null
-      var markedTree = null
+      const segmentPill = createSlidingPill('[aria-checked="true"]')
+      let listHost = null
+      let markedLabel = null
+      let markedTree = null
       /** `null` until both host lists have arrived; then `[{ id, title, at }]`. */
-      var items = null
+      let items = null
       /** Ids, titles and times of the rows on screen, joined; a list tick that changes none of them leaves the rows alone. */
-      var renderedKey
+      let renderedKey
       /** Rows deleted through the host half: the archive set keeps their ids until the host forgets them. */
-      var deletedIds = {}
+      const deletedIds = {}
       /**
        * The host's workspace and session services, once both are reachable;
        * until then the section keeps its plain label. `unwatch` drops the two
        * list subscriptions.
        */
-      var workspaces = null
-      var sessions = null
-      var unwatch = null
-      var disposed = false
+      let workspaces = null
+      let sessions = null
+      let unwatch = null
+      let disposed = false
 
       function service(name) {
         try { return ctx.get(name) } catch (error) { return undefined }
       }
 
       function findSection() {
-        var labels = document.querySelectorAll('[class*="sectionLabel"]')
-        var first = null
-        for (var i = 0; i < labels.length; i++) {
-          var text = (labels[i].textContent || '').trim()
+        const labels = document.querySelectorAll('[class*="sectionLabel"]')
+        let first = null
+        for (let i = 0; i < labels.length; i++) {
+          const text = (labels[i].textContent || '').trim()
           if (first === null) first = labels[i]
-          for (var t = 0; t < LABEL_TEXTS.length; t++) {
+          for (let t = 0; t < LABEL_TEXTS.length; t++) {
             if (text === LABEL_TEXTS[t]) return labels[i]
           }
         }
@@ -95,12 +95,12 @@
        * CLASSES are the stable fallback, and the skin's own stylesheet already
        * keys off them.
        */
-      var TREE_ROW_SELECTOR = '[data-row-key], [class*="sessionRow"], [class*="projectRow"]'
+      const TREE_ROW_SELECTOR = '[data-row-key], [class*="sessionRow"], [class*="projectRow"]'
 
       function findTree(label) {
-        var region = label.parentElement
+        let region = label.parentElement
         while (region !== null && region !== document.body) {
-          var tree = region.querySelector('[role="tree"], [class*="list"]')
+          const tree = region.querySelector('[role="tree"], [class*="list"]')
           if (tree !== null && tree.querySelector(TREE_ROW_SELECTOR) !== null) return tree
           region = region.parentElement
         }
@@ -109,10 +109,10 @@
 
       function relativeTime(at) {
         if (typeof at !== 'number' || !isFinite(at)) return ''
-        var minutes = Math.floor((Date.now() - at) / 60000)
+        const minutes = Math.floor((Date.now() - at) / 60000)
         if (minutes < 1) return copyLabel('archiveJustNow', 'Just now')
         if (minutes < 60) return copyLabel('archiveMinutes', '{count} min', { count: minutes })
-        var hours = Math.floor(minutes / 60)
+        const hours = Math.floor(minutes / 60)
         if (hours < 24) return copyLabel('archiveHours', '{count} h', { count: hours })
         return copyLabel('archiveDays', '{count} d', { count: Math.floor(hours / 24) })
       }
@@ -127,15 +127,15 @@
        */
       function watch() {
         if (unwatch !== null) return true
-        var nextWorkspaces = service('workspaces')
-        var nextSessions = service('sessions')
+        const nextWorkspaces = service('workspaces')
+        const nextSessions = service('sessions')
         if (nextWorkspaces === undefined || nextWorkspaces === null || nextWorkspaces.list === undefined) return false
         if (nextSessions === undefined || nextSessions === null || nextSessions.list === undefined) return false
         workspaces = nextWorkspaces
         sessions = nextSessions
-        var stopArchive = workspaces.list.subscribe(refreshItems)
-        var stopSessions = sessions.list.subscribe(refreshItems)
-        unwatch = function () {
+        const stopArchive = workspaces.list.subscribe(refreshItems)
+        const stopSessions = sessions.list.subscribe(refreshItems)
+        unwatch = () => {
           stopArchive()
           stopSessions()
         }
@@ -150,21 +150,21 @@
        */
       function refreshItems() {
         if (disposed) return
-        var archive = workspaces.list.getSnapshot()
-        var list = sessions.list.getSnapshot()
+        const archive = workspaces.list.getSnapshot()
+        const list = sessions.list.getSnapshot()
         if (archive.phase !== 'ready' || list.phase !== 'ready') {
           items = null
         } else {
           items = []
-          for (var i = 0; i < archive.archivedSessionIds.length; i++) {
-            var id = archive.archivedSessionIds[i]
-            var summary = list.byId[id]
+          for (let i = 0; i < archive.archivedSessionIds.length; i++) {
+            const id = archive.archivedSessionIds[i]
+            const summary = list.byId[id]
             if (summary === undefined || summary.origin === 'subagent' || summary.blank || deletedIds[id] === true) continue
-            items.push({ id: id, title: summary.displayTitle, at: summary.updatedAt })
+            items.push({ id, title: summary.displayTitle, at: summary.updatedAt })
           }
-          items.sort(function (a, b) { return b.at - a.at })
+          items.sort((a, b) => b.at - a.at)
         }
-        var key = items === null ? null : items.map(function (item) { return item.id + '\n' + item.title + '\n' + item.at }).join('\n')
+        const key = items === null ? null : items.map(item => `${item.id}\n${item.title}\n${item.at}`).join('\n')
         if (key === renderedKey) return
         renderedKey = key
         renderList()
@@ -181,14 +181,14 @@
         if (react === null || reactDom === null || primitives === null || !primitives.Toast || !primitives.IconWarningOutlineRegular) {
           throw new Error('dsh-claude-style: the host Toast is not reachable through the plugin loader')
         }
-        var t = ctx.get('locale').bind('workspace')
+        const t = ctx.get('locale').bind('workspace')
         if (noticeRoot === null) noticeRoot = reactDom.createRoot(document.createElement('div'))
         noticeSeq++
         noticeRoot.render(react.createElement(primitives.Toast, {
-          key: 'toast-' + noticeSeq,
+          key: `toast-${noticeSeq}`,
           text: t('toast.archivedNotOpenable'),
           icon: react.createElement(primitives.IconWarningOutlineRegular),
-          onDone: function () { if (noticeRoot !== null) noticeRoot.render(null) },
+          onDone() { if (noticeRoot !== null) noticeRoot.render(null) },
         }))
       }
 
@@ -208,13 +208,11 @@
           credentials: 'same-origin',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ sessionId: id }),
-        }).then(function (response) {
-          return response.ok ? response.json() : null
-        }).then(function (result) {
+        }).then(response => response.ok ? response.json() : null).then(result => {
           if (result === null || result.ok !== true) return
           deletedIds[id] = true
           refreshItems()
-        }).catch(function () { /* the row stays; the next read tells the truth */ })
+        }).catch(() => { /* the row stays; the next read tells the truth */ })
       }
 
       /**
@@ -222,7 +220,7 @@
        * on the archive set's next tick; a refusal leaves it in place.
        */
       function restoreArchived(id) {
-        workspaces.unarchiveSession(id).catch(function (reason) {
+        workspaces.unarchiveSession(id).catch(reason => {
           console.warn('dsh-claude-style: session unarchive rejected:', reason)
         })
       }
@@ -232,18 +230,18 @@
        * gives us both, and the skin's own SVG plus a native title when it does not.
        */
       function actionButton(kind, label, fallbackSvg, onClick) {
-        var wrapper = modelEl('span', 'dsh-claude-archive-action')
-        var className = kind === 'restore' ? 'dsh-claude-archive-restore' : 'dsh-claude-archive-delete'
-        var Icon = primitives === null ? null : (kind === 'restore' ? primitives.IconUnarchiveOutlineRegular : primitives.IconTrashOutlineRegular)
+        const wrapper = modelEl('span', 'dsh-claude-archive-action')
+        const className = kind === 'restore' ? 'dsh-claude-archive-restore' : 'dsh-claude-archive-delete'
+        const Icon = primitives === null ? null : (kind === 'restore' ? primitives.IconUnarchiveOutlineRegular : primitives.IconTrashOutlineRegular)
         if (react !== null && reactDom !== null && primitives !== null && primitives.Tooltip && Icon) {
-          var root = reactDom.createRoot(wrapper)
+          const root = reactDom.createRoot(wrapper)
           actionRoots.push(root)
-          root.render(react.createElement(primitives.Tooltip, { label: label, side: 'top', delayMs: 500 },
-            react.createElement('button', { type: 'button', className: className, 'aria-label': label, title: label, onClick: onClick },
+          root.render(react.createElement(primitives.Tooltip, { label, side: 'top', delayMs: 500 },
+            react.createElement('button', { type: 'button', className, 'aria-label': label, title: label, onClick },
               react.createElement(Icon, { size: 14 }))))
           return wrapper
         }
-        var button = modelEl('button', className)
+        const button = modelEl('button', className)
         button.type = 'button'
         button.setAttribute('aria-label', label)
         button.setAttribute('title', label)
@@ -254,7 +252,7 @@
       }
 
       function buildArchivedRow(item) {
-        var row = modelEl('div', 'dsh-claude-archive-row')
+        const row = modelEl('div', 'dsh-claude-archive-row')
         row.setAttribute('role', 'button')
         row.setAttribute('tabindex', '0')
         row.setAttribute('data-session-id', item.id)
@@ -263,11 +261,11 @@
         // The host's archived rows offer an unarchive action; the skin's list
         // carries the same pair, so leaving the archived view is not the only way
         // back to a conversation.
-        row.appendChild(actionButton('restore', copyLabel('archiveRestore', 'Unarchive conversation'), RESTORE_SVG, function (event) {
+        row.appendChild(actionButton('restore', copyLabel('archiveRestore', 'Unarchive conversation'), RESTORE_SVG, event => {
           event.stopPropagation()
           restoreArchived(item.id)
         }))
-        row.appendChild(actionButton('delete', copyLabel('archiveDelete', 'Delete conversation'), DELETE_SVG, function (event) {
+        row.appendChild(actionButton('delete', copyLabel('archiveDelete', 'Delete conversation'), DELETE_SVG, event => {
           event.stopPropagation()
           removeArchived(item.id)
         }))
@@ -279,7 +277,7 @@
         if (listHost === null) return
         // The actions live in React roots; drop them before the rows go, or every
         // rebuild would leave a tree behind.
-        for (var r = 0; r < actionRoots.length; r++) {
+        for (let r = 0; r < actionRoots.length; r++) {
           try { actionRoots[r].unmount() } catch (error) { /* already gone */ }
         }
         actionRoots = []
@@ -292,22 +290,22 @@
           listHost.appendChild(modelEl('div', 'dsh-claude-archive-status', copyLabel('archiveEmpty', 'No archived conversations')))
           return
         }
-        for (var i = 0; i < items.length; i++) listHost.appendChild(buildArchivedRow(items[i]))
+        for (let i = 0; i < items.length; i++) listHost.appendChild(buildArchivedRow(items[i]))
       }
 
       function buildControl() {
-        var group = modelEl('div', 'dsh-claude-ws-segments')
+        const group = modelEl('div', 'dsh-claude-ws-segments')
         group.setAttribute('role', 'radiogroup')
-        for (var i = 0; i < SEGMENTS.length; i++) {
-          var item = modelEl('button', 'dsh-claude-ws-segment', '')
+        for (let i = 0; i < SEGMENTS.length; i++) {
+          const item = modelEl('button', 'dsh-claude-ws-segment', '')
           item.type = 'button'
           item.setAttribute('role', 'radio')
           item.setAttribute('data-view', SEGMENTS[i].id)
           group.appendChild(item)
         }
-        group.addEventListener('click', function (event) {
-          var target = event.target
-          var item = target !== null && typeof target.closest === 'function' ? target.closest('.dsh-claude-ws-segment') : null
+        group.addEventListener('click', event => {
+          const target = event.target
+          const item = target !== null && typeof target.closest === 'function' ? target.closest('.dsh-claude-ws-segment') : null
           if (item === null) return
           event.stopPropagation()
           event.preventDefault()
@@ -324,9 +322,9 @@
       }
 
       function sync() {
-        var label = findSection()
+        const label = findSection()
         if (label === null || label.parentElement === null) return
-        var header = label.parentElement
+        const header = label.parentElement
         // Until the host's workspace and session services are both reachable
         // the section keeps its plain label.
         if (!watch()) return
@@ -340,26 +338,26 @@
           control = buildControl()
           header.insertBefore(control, header.firstChild)
         }
-        for (var i = 0; i < control.children.length; i++) {
-          var item = control.children[i]
-          var id = item.getAttribute('data-view')
-          for (var s = 0; s < SEGMENTS.length; s++) {
+        for (let i = 0; i < control.children.length; i++) {
+          const item = control.children[i]
+          const id = item.getAttribute('data-view')
+          for (let s = 0; s < SEGMENTS.length; s++) {
             if (SEGMENTS[s].id !== id) continue
-            var text = copyLabel(SEGMENTS[s].key, SEGMENTS[s].fallback)
+            const text = copyLabel(SEGMENTS[s].key, SEGMENTS[s].fallback)
             if (item.textContent !== text) item.textContent = text
           }
-          var on = id === view
+          const on = id === view
           if (item.getAttribute('aria-checked') !== (on ? 'true' : 'false')) item.setAttribute('aria-checked', on ? 'true' : 'false')
         }
         segmentPill.sync(control)
-        var tree = findTree(label)
+        const tree = findTree(label)
         if (tree === null) return
         if (markedTree !== tree) {
           if (markedTree !== null) markedTree.removeAttribute(TREE_ATTR)
           markedTree = tree
           tree.setAttribute(TREE_ATTR, '')
         }
-        var host = tree.parentElement
+        const host = tree.parentElement
         if (host === null) return
         if (listHost === null || listHost.parentElement !== host) {
           if (listHost !== null && listHost.parentElement !== null) listHost.parentElement.removeChild(listHost)
@@ -375,11 +373,11 @@
         if (host.getAttribute(VIEW_ATTR) !== view) host.setAttribute(VIEW_ATTR, view)
       }
 
-      ui.workspace = { sync: sync }
+      ui.workspace = { sync }
 
-      return function () {
+      return () => {
         disposed = true
-        for (var r = 0; r < actionRoots.length; r++) {
+        for (let r = 0; r < actionRoots.length; r++) {
           try { actionRoots[r].unmount() } catch (error) { /* already gone */ }
         }
         actionRoots = []

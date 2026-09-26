@@ -14,13 +14,13 @@
      */
     function installComposer(ctx, ui) {
       /** Whether the page shows the hero composer, as of the last reading. */
-      var hero = false
+      let hero = false
       /** Whether the composer restyle applies to the page shown, as of the last reading. */
-      var active = false
+      let active = false
       /** Whether the studio home layout owns the hero page, as of the last reading. */
-      var studioHome = false
+      let studioHome = false
       /** The hero page's composer card, or null off the hero page, as of the last pass. */
-      var heroCard = null
+      let heroCard = null
 
       /**
        * Read the page's composer state. The host marks the conversation root
@@ -31,7 +31,7 @@
        */
       function readState() {
         hero = document.querySelector('[data-phase="hero"]') !== null
-        var scope = readPrefs().composerScope
+        const scope = readPrefs().composerScope
         active = !composerRestyleRetired && (scope === 'all' || (hero ? scope === 'hero' : scope === 'conversation'))
         studioHome = hero && readPrefs().homeLayout === HOME_LAYOUT_STUDIO
       }
@@ -47,13 +47,13 @@
        * single-line form, so a studio hero page stamps `inline`, not `hero`.
        */
       function syncVariant(cards) {
-        var value = hero && !studioHome ? 'hero' : 'inline'
-        var syncedStacks = []
-        for (var c = 0; c < cards.length; c++) {
-          var card = cards[c]
+        const value = hero && !studioHome ? 'hero' : 'inline'
+        const syncedStacks = []
+        for (let c = 0; c < cards.length; c++) {
+          const card = cards[c]
           if (card.getAttribute('data-composer-variant') !== value) card.setAttribute('data-composer-variant', value)
-          var stack = card.closest('[class*="composerStack"]')
-          if (stack !== null && syncedStacks.indexOf(stack) === -1) {
+          const stack = card.closest('[class*="composerStack"]')
+          if (stack !== null && !syncedStacks.includes(stack)) {
             if (stack.getAttribute('data-composer-variant') !== value) {
               stack.setAttribute('data-composer-variant', value)
             }
@@ -63,41 +63,41 @@
       }
 
       /** The input rail inside a card: the attachment shell and its scrolling inner rail. */
-      var ATTACHMENT_RAIL = '[class*="rail"]:not([class*="trailing"])'
+      const ATTACHMENT_RAIL = '[class*="rail"]:not([class*="trailing"])'
       /** Anything in a card that means it carries attachments. */
-      var ATTACHMENT_PRESENT = '[class*="imageItem"], [class*="thumbnail"], [class*="FileCard"], ' + ATTACHMENT_RAIL + ' :is([class*="item"], img, [class*="card"])'
+      const ATTACHMENT_PRESENT = `[class*="imageItem"], [class*="thumbnail"], [class*="FileCard"], ${ATTACHMENT_RAIL} :is([class*="item"], img, [class*="card"])`
       /**
        * The attachment tiles the stylesheet reshapes into thumbnails. They are
        * found here once per pass and marked, so the rules read one attribute
        * instead of re-running this list, with its structural :has(img), on
        * every DOM change.
        */
-      var ATTACHMENT_TILES = ATTACHMENT_RAIL + ' :is([class*="imageItem"], [class*="thumbnail"], [class*="FileCard"], [class*="item"]:has(img), [class*="card"]:has(img), [class*="attachment"]:has(img))'
-      var ATTACHMENT_TILE_ATTR = 'data-dsh-claude-attachment'
+      const ATTACHMENT_TILES = `${ATTACHMENT_RAIL} :is([class*="imageItem"], [class*="thumbnail"], [class*="FileCard"], [class*="item"]:has(img), [class*="card"]:has(img), [class*="attachment"]:has(img))`
+      const ATTACHMENT_TILE_ATTR = 'data-dsh-claude-attachment'
 
       /** Mark the cards that carry attachments, and the tiles inside them. */
       function syncAttachments(cards) {
-        var tiles = []
-        for (var ci = 0; ci < cards.length; ci++) {
-          var card = cards[ci]
+        const tiles = []
+        for (let ci = 0; ci < cards.length; ci++) {
+          const card = cards[ci]
           if (active && card.querySelector(ATTACHMENT_PRESENT) !== null) {
             if (card.getAttribute('data-has-attachments') !== 'true') card.setAttribute('data-has-attachments', 'true')
-            var found = card.querySelectorAll(ATTACHMENT_TILES)
-            for (var t = 0; t < found.length; t++) tiles.push(found[t])
+            const found = card.querySelectorAll(ATTACHMENT_TILES)
+            for (let t = 0; t < found.length; t++) tiles.push(found[t])
           } else if (card.hasAttribute('data-has-attachments')) {
             card.removeAttribute('data-has-attachments')
           }
         }
-        var marked = document.querySelectorAll('[' + ATTACHMENT_TILE_ATTR + ']')
-        for (var m = 0; m < marked.length; m++) {
-          if (tiles.indexOf(marked[m]) === -1) marked[m].removeAttribute(ATTACHMENT_TILE_ATTR)
+        const marked = document.querySelectorAll(`[${ATTACHMENT_TILE_ATTR}]`)
+        for (let m = 0; m < marked.length; m++) {
+          if (!tiles.includes(marked[m])) marked[m].removeAttribute(ATTACHMENT_TILE_ATTR)
         }
-        for (var n = 0; n < tiles.length; n++) {
+        for (let n = 0; n < tiles.length; n++) {
           if (!tiles[n].hasAttribute(ATTACHMENT_TILE_ATTR)) tiles[n].setAttribute(ATTACHMENT_TILE_ATTR, '')
         }
       }
 
-      var DRAFT_EMPTY_ATTR = 'data-dsh-claude-draft-empty'
+      const DRAFT_EMPTY_ATTR = 'data-dsh-claude-draft-empty'
 
       /**
        * Mark the cards whose draft is empty. The host's editor shows its
@@ -108,8 +108,8 @@
        * DOM change, so the pass that follows it moves the mark in the same frame.
        */
       function syncDraftState(cards) {
-        for (var i = 0; i < cards.length; i++) {
-          var empty = cards[i].querySelector('[data-composer-placeholder]') !== null
+        for (let i = 0; i < cards.length; i++) {
+          const empty = cards[i].querySelector('[data-composer-placeholder]') !== null
           if (empty === cards[i].hasAttribute(DRAFT_EMPTY_ATTR)) continue
           if (empty) cards[i].setAttribute(DRAFT_EMPTY_ATTR, '')
           else cards[i].removeAttribute(DRAFT_EMPTY_ATTR)
@@ -127,13 +127,13 @@
       /** The meter the host parks in that dock, or null when it is not there. */
       function dockedContextMeter(dock) {
         if (dock === null) return null
-        var triggers = dock.querySelectorAll('button[aria-haspopup="dialog"]')
-        for (var i = 0; i < triggers.length; i++) {
+        const triggers = dock.querySelectorAll('button[aria-haspopup="dialog"]')
+        for (let i = 0; i < triggers.length; i++) {
           // The meter's trigger IS the occupancy reading ("42%") and no stats
           // pill ever is, so the label alone identifies it without a class name
           // (the host hashes those per build).
           if (!/^\d{1,3}%$/.test((triggers[i].textContent || '').trim())) continue
-          var node = triggers[i]
+          let node = triggers[i]
           while (node.parentElement !== null && node.parentElement !== dock) node = node.parentElement
           return node
         }
@@ -141,7 +141,7 @@
       }
 
       /** The room the meter takes at the toolbar row's right end, as last written. */
-      var meterRoom = ''
+      let meterRoom = ''
 
       /**
        * Stamp the context-occupancy meter and keep its room on the toolbar row.
@@ -154,11 +154,11 @@
        * cluster's own 8px gap, written only on a change.
        */
       function stampContextMeter(card) {
-        var meter = card === void 0 ? null : dockedContextMeter(composerDock(card))
-        var room = ''
+        const meter = card === void 0 ? null : dockedContextMeter(composerDock(card))
+        let room = ''
         if (meter !== null) {
           if (!meter.hasAttribute('data-dsh-claude-context-meter')) meter.setAttribute('data-dsh-claude-context-meter', '')
-          if (active && meter.offsetWidth > 0) room = (meter.offsetWidth + 8) + 'px'
+          if (active && meter.offsetWidth > 0) room = `${meter.offsetWidth + 8}px`
         }
         if (room === meterRoom) return
         meterRoom = room
@@ -184,13 +184,13 @@
           document.body.removeAttribute('data-dsh-claude-composer-hidden')
           return
         }
-        var chatActive = true
-        var seat = document.querySelector('[data-composer-seat]')
-        var root = seat && seat.closest ? seat.closest('[data-phase]') : null
+        let chatActive = true
+        const seat = document.querySelector('[data-composer-seat]')
+        const root = seat && seat.closest ? seat.closest('[data-phase]') : null
         if (root) {
-          var list = root.querySelector('[role="tablist"]')
+          const list = root.querySelector('[role="tablist"]')
           if (list) {
-            var first = list.querySelector('[role="tab"]')
+            const first = list.querySelector('[role="tab"]')
             if (first) chatActive = first.getAttribute('aria-selected') === 'true'
           }
         }
@@ -200,7 +200,7 @@
 
       function syncComposer() {
         readState()
-        var cards = document.querySelectorAll('[data-composer-card]')
+        const cards = document.querySelectorAll('[data-composer-card]')
         heroCard = hero && cards.length > 0 ? cards[0] : null
         syncVariant(cards)
         if (active !== document.body.hasAttribute(COMPOSER_ATTR)) {
@@ -219,10 +219,10 @@
        * not one of its controls means the field.
        */
       function focusEditorOnPress(target) {
-        var card = target && target.closest && target.closest('[data-composer-card][data-composer-variant="inline"]')
+        const card = target && target.closest && target.closest('[data-composer-card][data-composer-variant="inline"]')
         if (!card) return
         if (target.closest('button, [role="button"], [role="menu"], [role="radiogroup"], input, select')) return
-        var input = card.querySelector('[data-composer-input]')
+        const input = card.querySelector('[data-composer-input]')
         if (input && document.activeElement !== input) {
           input.focus()
         }
@@ -235,9 +235,9 @@
        * 150px of the end counts as at the end.
        */
       function followTranscript() {
-        var scroller = document.querySelector('[data-conversation-scroll], [class*="scrollBody"]')
+        const scroller = document.querySelector('[data-conversation-scroll], [class*="scrollBody"]')
         if (scroller) {
-          var dist = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight
+          const dist = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight
           if (dist < 150) {
             scroller.scrollTop = scroller.scrollHeight
           }
@@ -247,30 +247,30 @@
       ui.composer = {
         sync: syncComposer,
         /** Whether the page shows the hero composer, as of this pass. */
-        isHero: function () { return hero },
+        isHero() { return hero },
         /** The hero page's composer card as of this pass, or null off the hero page. */
-        heroCard: function () { return heroCard },
+        heroCard() { return heroCard },
         /** Whether the composer restyle applies to the page shown, as of this pass. */
-        isActive: function () { return active && !composerRestyleRetired },
+        isActive() { return active && !composerRestyleRetired },
         /** A copy source changed, the composer-scope preference among them: read again now. */
         onCopyChange: readState,
         onPointerDown: focusEditorOnPress,
         /** The composer card changed size: the transcript follows it. */
-        reposition: function (reason) {
+        reposition(reason) {
           if (reason === 'composer') followTranscript()
         }
       }
       readState()
 
-      return function () {
+      return () => {
         active = false
         heroCard = null
         if (document.body.hasAttribute(COMPOSER_ATTR)) document.body.removeAttribute(COMPOSER_ATTR)
         document.body.removeAttribute('data-dsh-claude-composer-hidden')
-        var marks = ['data-composer-variant', 'data-has-attachments', ATTACHMENT_TILE_ATTR, DRAFT_EMPTY_ATTR, 'data-dsh-claude-context-meter']
-        for (var k = 0; k < marks.length; k++) {
-          var marked = document.querySelectorAll('[' + marks[k] + ']')
-          for (var i = 0; i < marked.length; i++) marked[i].removeAttribute(marks[k])
+        const marks = ['data-composer-variant', 'data-has-attachments', ATTACHMENT_TILE_ATTR, DRAFT_EMPTY_ATTR, 'data-dsh-claude-context-meter']
+        for (let k = 0; k < marks.length; k++) {
+          const marked = document.querySelectorAll(`[${marks[k]}]`)
+          for (let i = 0; i < marked.length; i++) marked[i].removeAttribute(marks[k])
         }
         if (meterRoom !== '') {
           meterRoom = ''

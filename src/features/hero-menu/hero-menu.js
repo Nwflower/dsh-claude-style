@@ -39,22 +39,22 @@
      */
     function installHeroMenu(ctx, ui) {
       /** Air between the trigger and the card, and the viewport's own margin. */
-      var GAP = 6
-      var MARGIN = 12
+      const GAP = 6
+      const MARGIN = 12
       /** Long enough to cross the gap above, short enough to still read as hover. */
-      var CLOSE_DELAY = POPOVER_CLOSE_DELAY
+      const CLOSE_DELAY = POPOVER_CLOSE_DELAY
       /** The two triggers, and the card once it is stamped. */
-      var TRIGGER_SELECTOR = '[class*="heroWorkspaceRow"] [aria-haspopup="menu"]'
-      var CARD_SELECTOR = '[' + HERO_MENU_ATTR + ']'
-      var stamped = null
-      var stampedTrigger = null
-      var closeTimer = null
-      var openTimer = null
-      var openedByHover = false
+      const TRIGGER_SELECTOR = '[class*="heroWorkspaceRow"] [aria-haspopup="menu"]'
+      const CARD_SELECTOR = `[${HERO_MENU_ATTR}]`
+      let stamped = null
+      let stampedTrigger = null
+      let closeTimer = null
+      let openTimer = null
+      let openedByHover = false
       /** The trigger the hover opened. The row has TWO of them (workspace, preset). */
-      var hoverTrigger = null
+      let hoverTrigger = null
       /** The hero trigger the pointer last entered: the picker a click just used. */
-      var pointerTrigger = null
+      let pointerTrigger = null
 
       function cancelHoverClose() {
         if (closeTimer === null) return
@@ -93,7 +93,7 @@
 
       function scheduleHoverOpen(trigger) {
         cancelHoverOpen()
-        openTimer = setTimeout(function () { openFromHover(trigger) }, POPOVER_OPEN_DELAY)
+        openTimer = setTimeout(() => { openFromHover(trigger) }, POPOVER_OPEN_DELAY)
       }
 
       /**
@@ -106,15 +106,15 @@
         cancelHoverOpen()
         openedByHover = false
         hoverTrigger = null
-        var open = openTriggers()
-        for (var i = 0; i < open.length; i++) open[i].click()
+        const open = openTriggers()
+        for (let i = 0; i < open.length; i++) open[i].click()
       }
 
       /** Close what hover opened; a click-opened menu is left alone. */
       function closeFromHover() {
         closeTimer = null
         if (!openedByHover) return
-        var trigger = hoverTrigger
+        const trigger = hoverTrigger
         openedByHover = false
         hoverTrigger = null
         if (trigger === null || trigger.getAttribute('aria-expanded') !== 'true') return
@@ -127,8 +127,8 @@
        * node it replaced answers no click anyway.
        */
       function closeSiblingHeroMenus(trigger) {
-        var open = openTriggers()
-        for (var i = 0; i < open.length; i++) {
+        const open = openTriggers()
+        for (let i = 0; i < open.length; i++) {
           if (open[i] !== trigger) open[i].click()
         }
       }
@@ -151,12 +151,12 @@
 
       function onHeroPointerOver(e) {
         if (!hoverEnabled()) return
-        var target = e.target
+        const target = e.target
         if (closestWithin(target, CARD_SELECTOR) !== null) {
           cancelHoverClose()
           return
         }
-        var trigger = closestWithin(target, TRIGGER_SELECTOR)
+        const trigger = closestWithin(target, TRIGGER_SELECTOR)
         if (trigger === null) return
         pointerTrigger = trigger
         cancelHoverClose()
@@ -165,10 +165,10 @@
 
       function onHeroPointerOut(e) {
         if (!hoverEnabled()) return
-        var target = e.target
+        const target = e.target
         if (closestWithin(target, CARD_SELECTOR) === null && closestWithin(target, TRIGGER_SELECTOR) === null) return
         // Moving onto the other half — the card, or the trigger — is not a leave.
-        var next = e.relatedTarget
+        const next = e.relatedTarget
         if (closestWithin(next, CARD_SELECTOR) !== null || closestWithin(next, TRIGGER_SELECTOR) !== null) return
         cancelHoverOpen()
         scheduleHoverClose()
@@ -199,9 +199,9 @@
 
       /** The hero row's open pickers: the workspace chip and the preset seat. */
       function rowTriggers() {
-        var nodes = document.querySelectorAll('[class*="heroWorkspaceRow"] [aria-haspopup="menu"][aria-expanded="true"]')
-        var found = []
-        for (var i = 0; i < nodes.length; i++) found.push(nodes[i])
+        const nodes = document.querySelectorAll('[class*="heroWorkspaceRow"] [aria-haspopup="menu"][aria-expanded="true"]')
+        const found = []
+        for (let i = 0; i < nodes.length; i++) found.push(nodes[i])
         return found
       }
 
@@ -213,15 +213,15 @@
        * again, which is how a "close everything" pass used to leave the card up.
        */
       function openTriggers() {
-        var row = rowTriggers()
+        const row = rowTriggers()
         if (row.length > 0) return row
-        var card = document.querySelector('[class*="cardWorkspaceTrigger"] [aria-expanded="true"]')
+        const card = document.querySelector('[class*="cardWorkspaceTrigger"] [aria-expanded="true"]')
         return card === null ? [] : [card]
       }
 
       /** The trigger whose picker is open, or null. */
       function openTrigger() {
-        var open = openTriggers()
+        const open = openTriggers()
         return open.length === 0 ? null : open[0]
       }
 
@@ -232,17 +232,17 @@
        * for the next pass rather than pinned to a zero-sized guess.
        */
       function placeCard(trigger, card) {
-        var rect = trigger.getBoundingClientRect()
-        var width = card.offsetWidth
-        var height = card.offsetHeight
+        const rect = trigger.getBoundingClientRect()
+        const width = card.offsetWidth
+        const height = card.offsetHeight
         if (width === 0 || height === 0) return
-        var left = rect.right + GAP
+        let left = rect.right + GAP
         if (left + width > window.innerWidth - MARGIN) left = rect.left - GAP - width
         left = Math.max(MARGIN, Math.min(left, window.innerWidth - width - MARGIN))
-        var top = rect.bottom - height
+        let top = rect.bottom - height
         top = Math.max(MARGIN, Math.min(top, window.innerHeight - height - MARGIN))
-        card.style.setProperty('--dsh-claude-hero-menu-x', Math.round(left) + 'px')
-        card.style.setProperty('--dsh-claude-hero-menu-y', Math.round(top) + 'px')
+        card.style.setProperty('--dsh-claude-hero-menu-x', `${Math.round(left)}px`)
+        card.style.setProperty('--dsh-claude-hero-menu-y', `${Math.round(top)}px`)
       }
 
       /** Re-place an open card after a scroll or a resize moved its anchor. */
@@ -252,7 +252,7 @@
       }
 
       function syncHeroMenu() {
-        var trigger = openTrigger()
+        const trigger = openTrigger()
         if (trigger === null) {
           // The menu is shut — by a click, by Escape or by an outside press — so
           // whatever hover opened it no longer owns it.
@@ -268,15 +268,15 @@
         // pointer is on stays (a click on it is the newest intent), the row's
         // other pickers fold. The hover path never arrives here: openFromHover
         // folds the sibling before it presses.
-        var open = openTriggers()
+        const open = openTriggers()
         if (open.length > 1) {
-          closeSiblingHeroMenus(open.indexOf(pointerTrigger) === -1 ? trigger : pointerTrigger)
+          closeSiblingHeroMenus(!open.includes(pointerTrigger) ? trigger : pointerTrigger)
           clearStamp()
           return
         }
         // The skin's own popovers carry their own classes, so excluding them
         // leaves the host's menus only.
-        var cards = document.querySelectorAll('body > [role="menu"]:not([class*="dsh-claude"])')
+        const cards = document.querySelectorAll('body > [role="menu"]:not([class*="dsh-claude"])')
         if (cards.length !== 1) {
           clearStamp()
           return
@@ -286,7 +286,7 @@
           stamped = cards[0]
           stampedTrigger = trigger
         }
-        var kind = pickerKind(trigger)
+        const kind = pickerKind(trigger)
         if (stamped.getAttribute(HERO_MENU_ATTR) !== kind) stamped.setAttribute(HERO_MENU_ATTR, kind)
         placeCard(trigger, stamped)
       }
@@ -297,7 +297,7 @@
       registerPopover('hero', closeHeroMenu)
 
       ui.heroMenu = { sync: syncHeroMenu, reposition: repositionHeroMenu }
-      return function () {
+      return () => {
         cancelHoverClose()
         cancelHoverOpen()
         openedByHover = false

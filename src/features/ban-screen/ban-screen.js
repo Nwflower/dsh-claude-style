@@ -25,7 +25,7 @@
      * has to work around.
      */
     function installBanScreen(ctx, ui) {
-      var banRoot = null
+      let banRoot = null
 
       /**
        * Close the easter egg. Safe to call at any time (teardown, a second
@@ -41,7 +41,7 @@
 
       /** Whether `node` is one of the overlay's own dismiss controls. */
       function isBanDismissTarget(node) {
-        var el = node
+        let el = node
         while (el && el !== banRoot) {
           if (el.nodeType === 1 && el.hasAttribute('data-dsh-ban-dismiss')) return true
           el = el.parentElement
@@ -59,9 +59,7 @@
        * the lock shipped at nearly 4px instead of the traced weight).
        */
       function banSvg(body, strokeWidth) {
-        return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' +
-          (strokeWidth === undefined ? 1.6 : strokeWidth) + '" ' +
-          'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + body + '</svg>'
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${strokeWidth === undefined ? 1.6 : strokeWidth}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`
       }
 
       /**
@@ -88,7 +86,7 @@
        * is drawn at (a 2px line on a 77px lock).
        */
       /** The overlay's icon set, in one place so the markup below stays readable. */
-      var BAN_ICONS = {
+      const BAN_ICONS = {
         lock: banSvg(
           // body: top edge, right side (with its outward bow), bottom edge, left side
           '<path d="M4.412 9.025 C9.287 8.894 14.136 9.077 19.379 9.182' +
@@ -152,26 +150,26 @@
        * two. The time part follows the chosen language's own convention — the
        * AM/PM clock in English, the 24-hour clock in Chinese.
        */
-      var BAN_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+      const BAN_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
       function formatBanStamp(date) {
-        var datePart = BAN_MONTHS[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear()
-        var timePart
+        const datePart = `${BAN_MONTHS[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
+        let timePart
         if (readPrefs().banLocale === BAN_LOCALE_ZH) {
-          var hh = date.getHours()
-          var mm = date.getMinutes()
-          timePart = (hh < 10 ? '0' + hh : String(hh)) + ':' + (mm < 10 ? '0' + mm : String(mm))
+          const hh = date.getHours()
+          const mm = date.getMinutes()
+          timePart = `${hh < 10 ? `0${hh}` : String(hh)}:${mm < 10 ? `0${mm}` : String(mm)}`
         } else {
-          var hours = date.getHours()
-          var hour12 = hours % 12
+          const hours = date.getHours()
+          let hour12 = hours % 12
           if (hour12 === 0) hour12 = 12
-          var minutes = date.getMinutes()
-          timePart = hour12 + ':' + (minutes < 10 ? '0' + minutes : String(minutes)) + ' ' + (hours < 12 ? 'AM' : 'PM')
+          const minutes = date.getMinutes()
+          timePart = `${hour12}:${minutes < 10 ? `0${minutes}` : String(minutes)} ${hours < 12 ? 'AM' : 'PM'}`
         }
-        return datePart + ', ' + timePart
+        return `${datePart}, ${timePart}`
       }
 
       /** When the open overlay is dated, so a refresh never re-dates the page. */
-      var banOpenedAt = null
+      let banOpenedAt = null
 
       /**
        * Show the screen.
@@ -184,105 +182,29 @@
         closeBanScreen()
         if (typeof document === 'undefined' || document.body === null) return
 
-        var root = document.createElement('div')
+        const root = document.createElement('div')
         root.className = 'dsh-claude-ban'
         root.setAttribute('role', 'dialog')
         root.setAttribute('aria-modal', 'true')
         root.setAttribute('data-dsh-ban', '')
 
         banOpenedAt = bannedAt instanceof Date ? bannedAt : new Date()
-        var stamp = formatBanStamp(banOpenedAt)
-        var username = getUsername(ctx)
+        const stamp = formatBanStamp(banOpenedAt)
+        const username = getUsername(ctx)
 
         // The wordmark follows the brand preference like the sidebar does; the
         // "off" choice only drops the starburst, since a bare "Claude" text
         // wordmark is what the page is.
-        var brand = readPrefs().brand
-        var showMark = brand !== BRAND_OFF
-        var useAnthropic = brand === BRAND_ANTHROPIC
+        const brand = readPrefs().brand
+        const showMark = brand !== BRAND_OFF
+        const useAnthropic = brand === BRAND_ANTHROPIC
 
         root.innerHTML =
-          '<div class="dsh-claude-ban-bar">' +
-            '<div class="dsh-claude-ban-brand">' +
-              (showMark ? '<span class="dsh-claude-ban-mark"></span>' : '') +
-              '<span class="dsh-claude-ban-word"></span>' +
-            '</div>' +
-            '<div class="dsh-claude-ban-bar-actions">' +
-              '<button type="button" class="dsh-claude-ban-signout" data-dsh-ban-dismiss>' +
-                banCopy('signOut', 'Sign out') +
-              '</button>' +
-              '<div class="dsh-claude-ban-window" aria-hidden="true">' +
-                '<button type="button" class="dsh-claude-ban-win" tabindex="-1" data-dsh-ban-dismiss>' + BAN_ICONS.minimize + '</button>' +
-                '<button type="button" class="dsh-claude-ban-win" tabindex="-1" data-dsh-ban-dismiss>' + BAN_ICONS.restore + '</button>' +
-                '<button type="button" class="dsh-claude-ban-win" tabindex="-1" data-dsh-ban-dismiss>' + BAN_ICONS.close + '</button>' +
-              '</div>' +
-            '</div>' +
-          '</div>' +
-          '<div class="dsh-claude-ban-toast" data-dsh-ban-dismiss role="status">' +
-            '<span class="dsh-claude-ban-toast-icon">' + BAN_ICONS.warning + '</span>' +
-            '<span class="dsh-claude-ban-toast-text"></span>' +
-            '<span class="dsh-claude-ban-toast-close">' + BAN_ICONS.close + '</span>' +
-          '</div>' +
-          '<div class="dsh-claude-ban-scroll">' +
-            '<div class="dsh-claude-ban-column">' +
-              '<span class="dsh-claude-ban-lock">' + BAN_ICONS.lock + '</span>' +
-              '<h1 class="dsh-claude-ban-title">' + banCopy('title', 'Your account is on hold') + '</h1>' +
-              '<p class="dsh-claude-ban-lead">' +
-                banCopy('lead', 'We put your account on hold on <strong>{time}</strong> because of unusual activity. Your chats and data are safe.', { time: stamp }) +
-              '</p>' +
-              '<p class="dsh-claude-ban-lead">' + banCopy('leadError', 'If you think this hold is an error, you can request an account review.') + '</p>' +
-              '<p class="dsh-claude-ban-next">' + banCopy('nextLabel', 'What happens next:') + '</p>' +
-              '<div class="dsh-claude-ban-card">' +
-                '<div class="dsh-claude-ban-step">' +
-                  '<span class="dsh-claude-ban-step-num">1</span>' +
-                  '<span class="dsh-claude-ban-step-body">' +
-                    '<span class="dsh-claude-ban-step-title">' + banCopy('step1Title', 'Request a review') + '</span>' +
-                    '<span class="dsh-claude-ban-step-desc">' + banCopy('step1Desc', 'Tell us more about what happened.') + '</span>' +
-                  '</span>' +
-                '</div>' +
-                '<div class="dsh-claude-ban-step">' +
-                  '<span class="dsh-claude-ban-step-num">2</span>' +
-                  '<span class="dsh-claude-ban-step-body">' +
-                    '<span class="dsh-claude-ban-step-title">' + banCopy('step2Title', 'We\u2019ll review your account') + '</span>' +
-                    '<span class="dsh-claude-ban-step-desc">' + banCopy('step2Desc', 'A team member will review your request and account activity together.') + '</span>' +
-                  '</span>' +
-                '</div>' +
-                '<div class="dsh-claude-ban-step">' +
-                  '<span class="dsh-claude-ban-step-num">3</span>' +
-                  '<span class="dsh-claude-ban-step-body">' +
-                    '<span class="dsh-claude-ban-step-title">' + banCopy('step3Title', 'We\u2019ll email you the outcome') + '</span>' +
-                    '<span class="dsh-claude-ban-step-desc">' + banCopy('step3Desc', 'Reviews take about 10 days.') + '</span>' +
-                  '</span>' +
-                '</div>' +
-              '</div>' +
-              '<button type="button" class="dsh-claude-ban-primary" data-dsh-ban-dismiss>' +
-                banCopy('review', 'Request a review') +
-              '</button>' +
-              '<h2 class="dsh-claude-ban-subtitle">' + banCopy('whatYouCanDo', 'What you can do') + '</h2>' +
-              '<div class="dsh-claude-ban-card dsh-claude-ban-actions">' +
-                '<button type="button" class="dsh-claude-ban-action" data-dsh-ban-dismiss>' +
-                  '<span class="dsh-claude-ban-action-icon">' + BAN_ICONS.download + '</span>' +
-                  '<span class="dsh-claude-ban-action-text">' +
-                    '<span class="dsh-claude-ban-action-title">' + banCopy('exportTitle', 'Export your data') + '</span>' +
-                    '<span class="dsh-claude-ban-action-desc">' + banCopy('exportDesc', 'We\u2019ll package up your conversations, projects, and settings for download. This might take some time to complete.') + '</span>' +
-                  '</span>' +
-                  '<span class="dsh-claude-ban-action-chevron">' + BAN_ICONS.chevron + '</span>' +
-                '</button>' +
-                '<button type="button" class="dsh-claude-ban-action" data-dsh-ban-dismiss>' +
-                  '<span class="dsh-claude-ban-action-icon">' + BAN_ICONS.trash + '</span>' +
-                  '<span class="dsh-claude-ban-action-text">' +
-                    '<span class="dsh-claude-ban-action-title dsh-claude-ban-action-title-danger">' + banCopy('deleteTitle', 'Delete your account') + '</span>' +
-                    '<span class="dsh-claude-ban-action-desc">' + banCopy('deleteDesc', 'You can permanently delete your account and data. This can\u2019t be undone.') + '</span>' +
-                  '</span>' +
-                  '<span class="dsh-claude-ban-action-chevron">' + BAN_ICONS.chevron + '</span>' +
-                '</button>' +
-              '</div>' +
-            '</div>' +
-          '</div>'
+          `<div class="dsh-claude-ban-bar"><div class="dsh-claude-ban-brand">${showMark ? '<span class="dsh-claude-ban-mark"></span>' : ''}<span class="dsh-claude-ban-word"></span></div><div class="dsh-claude-ban-bar-actions"><button type="button" class="dsh-claude-ban-signout" data-dsh-ban-dismiss>${banCopy('signOut', 'Sign out')}</button><div class="dsh-claude-ban-window" aria-hidden="true"><button type="button" class="dsh-claude-ban-win" tabindex="-1" data-dsh-ban-dismiss>${BAN_ICONS.minimize}</button><button type="button" class="dsh-claude-ban-win" tabindex="-1" data-dsh-ban-dismiss>${BAN_ICONS.restore}</button><button type="button" class="dsh-claude-ban-win" tabindex="-1" data-dsh-ban-dismiss>${BAN_ICONS.close}</button></div></div></div><div class="dsh-claude-ban-toast" data-dsh-ban-dismiss role="status"><span class="dsh-claude-ban-toast-icon">${BAN_ICONS.warning}</span><span class="dsh-claude-ban-toast-text"></span><span class="dsh-claude-ban-toast-close">${BAN_ICONS.close}</span></div><div class="dsh-claude-ban-scroll"><div class="dsh-claude-ban-column"><span class="dsh-claude-ban-lock">${BAN_ICONS.lock}</span><h1 class="dsh-claude-ban-title">${banCopy('title', 'Your account is on hold')}</h1><p class="dsh-claude-ban-lead">${banCopy('lead', 'We put your account on hold on <strong>{time}</strong> because of unusual activity. Your chats and data are safe.', { time: stamp })}</p><p class="dsh-claude-ban-lead">${banCopy('leadError', 'If you think this hold is an error, you can request an account review.')}</p><p class="dsh-claude-ban-next">${banCopy('nextLabel', 'What happens next:')}</p><div class="dsh-claude-ban-card"><div class="dsh-claude-ban-step"><span class="dsh-claude-ban-step-num">1</span><span class="dsh-claude-ban-step-body"><span class="dsh-claude-ban-step-title">${banCopy('step1Title', 'Request a review')}</span><span class="dsh-claude-ban-step-desc">${banCopy('step1Desc', 'Tell us more about what happened.')}</span></span></div><div class="dsh-claude-ban-step"><span class="dsh-claude-ban-step-num">2</span><span class="dsh-claude-ban-step-body"><span class="dsh-claude-ban-step-title">${banCopy('step2Title', 'We\u2019ll review your account')}</span><span class="dsh-claude-ban-step-desc">${banCopy('step2Desc', 'A team member will review your request and account activity together.')}</span></span></div><div class="dsh-claude-ban-step"><span class="dsh-claude-ban-step-num">3</span><span class="dsh-claude-ban-step-body"><span class="dsh-claude-ban-step-title">${banCopy('step3Title', 'We\u2019ll email you the outcome')}</span><span class="dsh-claude-ban-step-desc">${banCopy('step3Desc', 'Reviews take about 10 days.')}</span></span></div></div><button type="button" class="dsh-claude-ban-primary" data-dsh-ban-dismiss>${banCopy('review', 'Request a review')}</button><h2 class="dsh-claude-ban-subtitle">${banCopy('whatYouCanDo', 'What you can do')}</h2><div class="dsh-claude-ban-card dsh-claude-ban-actions"><button type="button" class="dsh-claude-ban-action" data-dsh-ban-dismiss><span class="dsh-claude-ban-action-icon">${BAN_ICONS.download}</span><span class="dsh-claude-ban-action-text"><span class="dsh-claude-ban-action-title">${banCopy('exportTitle', 'Export your data')}</span><span class="dsh-claude-ban-action-desc">${banCopy('exportDesc', 'We\u2019ll package up your conversations, projects, and settings for download. This might take some time to complete.')}</span></span><span class="dsh-claude-ban-action-chevron">${BAN_ICONS.chevron}</span></button><button type="button" class="dsh-claude-ban-action" data-dsh-ban-dismiss><span class="dsh-claude-ban-action-icon">${BAN_ICONS.trash}</span><span class="dsh-claude-ban-action-text"><span class="dsh-claude-ban-action-title dsh-claude-ban-action-title-danger">${banCopy('deleteTitle', 'Delete your account')}</span><span class="dsh-claude-ban-action-desc">${banCopy('deleteDesc', 'You can permanently delete your account and data. This can\u2019t be undone.')}</span></span><span class="dsh-claude-ban-action-chevron">${BAN_ICONS.chevron}</span></button></div></div></div>`
         // The username is user- and host-supplied text (a preference, the OS user,
         // the account nickname), so it is written as text, never spliced into the
         // markup above.
-        root.querySelector('.dsh-claude-ban-toast-text').textContent = username + ': account_banned'
+        root.querySelector('.dsh-claude-ban-toast-text').textContent = `${username}: account_banned`
 
         // One listener for every way out that is a click: the markup marks each
         // control with `data-dsh-ban-dismiss`, and a click that lands on the
@@ -290,7 +212,7 @@
         // keyboard way out is Esc, handled with the other overlays in
         // scheduler.js — deliberately not a window `blur`, which would close
         // the page the moment the reader switched windows to look something up.
-        root.addEventListener('click', function (e) {
+        root.addEventListener('click', e => {
           if (isBanDismissTarget(e.target)) closeBanScreen()
         })
 
@@ -310,11 +232,11 @@
          * 'composer' for composer focus and 'outside' for a press; neither may
          * dismiss a page the reader is looking at.
          */
-        close: function (reason) {
+        close(reason) {
           if (reason === 'composer' || reason === 'outside') return
           closeBanScreen()
         },
-        isOpen: function () {
+        isOpen() {
           return banRoot !== null
         },
         /**
@@ -326,7 +248,7 @@
          * copy source; the shipped code only did it for a preferences change,
          * which is a no-op while closed and the more correct rebuild while open.
          */
-        onCopyChange: function () {
+        onCopyChange() {
           if (banRoot === null) return
           openBanScreen(banOpenedAt === null ? new Date() : banOpenedAt)
         },

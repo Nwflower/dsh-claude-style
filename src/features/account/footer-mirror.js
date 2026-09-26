@@ -18,16 +18,16 @@
        */
       function syncFooterActionVisibility(footerActions) {
         if (!footerActions) return []
-        var entries = footerEntriesOf(footerActions)
-        for (var i = 0; i < entries.length; i++) {
-          var entry = entries[i]
+        const entries = footerEntriesOf(footerActions)
+        for (let i = 0; i < entries.length; i++) {
+          const entry = entries[i]
           entry.setAttribute('data-dsh-claude-footer-entry', '')
-          var all = entry.querySelectorAll('*')
-          for (var j = 0; j < all.length; j++) {
-            var el = all[j]
+          const all = entry.querySelectorAll('*')
+          for (let j = 0; j < all.length; j++) {
+            const el = all[j]
             if (el.hasAttribute('data-dsh-claude-footer-overlay')) continue
-            var role = el.getAttribute('role') || ''
-            var overlay = role === 'dialog' || role === 'menu' || role === 'listbox'
+            const role = el.getAttribute('role') || ''
+            let overlay = role === 'dialog' || role === 'menu' || role === 'listbox'
             if (!overlay) {
               try { overlay = window.getComputedStyle(el).position === 'fixed' } catch (e) { overlay = false }
             }
@@ -47,14 +47,14 @@
        * Dead cells (`data-slot-error`) never mirror.
        */
       function footerEntriesOf(footerActions) {
-        var entries = []
-        var kids = footerActions.children
-        for (var i = 0; i < kids.length; i++) {
-          var kid = kids[i]
+        const entries = []
+        const kids = footerActions.children
+        for (let i = 0; i < kids.length; i++) {
+          const kid = kids[i]
           if (kid.hasAttribute('data-slot-error')) continue
           if (kid.hasAttribute('data-slot')) {
-            var slotKids = kid.children
-            for (var j = 0; j < slotKids.length; j++) {
+            const slotKids = kid.children
+            for (let j = 0; j < slotKids.length; j++) {
               if (!slotKids[j].hasAttribute('data-slot-error')) entries.push(slotKids[j])
             }
           } else {
@@ -72,8 +72,8 @@
         }
         if (el.querySelector('[data-dsh-claude-footer-overlay]') !== null) {
           el.removeAttribute('data-dsh-claude-footer-hidden')
-          var kids = el.children
-          for (var i = 0; i < kids.length; i++) markFooterHiddenBranches(kids[i])
+          const kids = el.children
+          for (let i = 0; i < kids.length; i++) markFooterHiddenBranches(kids[i])
           return
         }
         el.setAttribute('data-dsh-claude-footer-hidden', '')
@@ -86,16 +86,16 @@
        * markup, and is replaced only when the source's markup changed.
        */
       function syncMirrorItem(item, iconEl, text, badge) {
-        var iconBox = item.querySelector('.dsh-claude-popover-item-icon')
-        var iconHtml = iconEl ? iconEl.outerHTML : ''
+        const iconBox = item.querySelector('.dsh-claude-popover-item-icon')
+        const iconHtml = iconEl ? iconEl.outerHTML : ''
         if (iconBox !== null && iconBox.__dshIconHtml !== iconHtml) {
           iconBox.__dshIconHtml = iconHtml
           while (iconBox.firstChild) iconBox.removeChild(iconBox.firstChild)
           if (iconEl) iconBox.appendChild(iconEl.cloneNode(true))
         }
-        var textBox = item.querySelector('.dsh-claude-popover-item-text')
+        const textBox = item.querySelector('.dsh-claude-popover-item-text')
         if (textBox !== null && textBox.textContent !== text) textBox.textContent = text
-        var badgeBox = item.querySelector('.dsh-claude-popover-item-badge')
+        let badgeBox = item.querySelector('.dsh-claude-popover-item-badge')
         if (badge) {
           if (badgeBox === null) {
             badgeBox = document.createElement('span')
@@ -110,13 +110,13 @@
 
       /** Remove the mirrored text item for one entry index, if present. */
       function removeActionMirror(idx) {
-        var item = options.body().querySelector('[data-action-index="' + idx + '"]')
+        const item = options.body().querySelector(`[data-action-index="${idx}"]`)
         if (item && item.parentElement) item.parentElement.removeChild(item)
       }
 
       /** Remove the embedded widget clone for one entry index, if present. */
       function removeEmbedMirror(idx) {
-        var embed = options.body().querySelector('[data-embed-index="' + idx + '"]')
+        const embed = options.body().querySelector(`[data-embed-index="${idx}"]`)
         if (embed && embed.parentElement) embed.parentElement.removeChild(embed)
       }
 
@@ -134,14 +134,14 @@
         if (trigger === entry) {
           // Only genuinely interactive ROOTS count as actions; a clickable
           // container (a region or tabindex wrapper) is still a widget.
-          var tag = entry.tagName
-          var role = entry.getAttribute('role') || ''
+          const tag = entry.tagName
+          const role = entry.getAttribute('role') || ''
           return tag === 'BUTTON' || tag === 'A' || role === 'button'
         }
         // Semantic meter markup is always a widget, however small.
         if (entry.querySelector('[role="progressbar"], [role="meter"], meter, progress') !== null) return false
-        var entryText = textExcludingOverlays(entry)
-        var triggerText = (trigger.textContent || '').trim()
+        const entryText = textExcludingOverlays(entry)
+        const triggerText = (trigger.textContent || '').trim()
         // Tight slack: the trigger must account for essentially all of the
         // entry's visible text. A balance box reading "余额¥10.07" beside an
         // icon-only trigger already exceeds it — and its bar must survive.
@@ -150,10 +150,10 @@
 
       /** Visible text of an entry, skipping overlay subtrees. */
       function textExcludingOverlays(entry) {
-        var text = ''
-        var walker = document.createTreeWalker(entry, 4 /* SHOW_TEXT */, {
-          acceptNode: function (node) {
-            var p = node.parentElement
+        let text = ''
+        const walker = document.createTreeWalker(entry, 4 /* SHOW_TEXT */, {
+          acceptNode(node) {
+            let p = node.parentElement
             while (p && p !== entry) {
               if (p.hasAttribute('data-dsh-claude-footer-overlay')) return 2 // REJECT
               p = p.parentElement
@@ -182,15 +182,15 @@
        * trigger at all.
        */
       function syncEmbedMirror(entry, idx, forward) {
-        var embed = options.body().querySelector('[data-embed-index="' + idx + '"]')
+        let embed = options.body().querySelector(`[data-embed-index="${idx}"]`)
         if (!embed) {
           embed = document.createElement('div')
           embed.className = 'dsh-claude-popover-embed'
           embed.setAttribute('data-embed-index', idx)
-          embed.addEventListener('click', function (e) {
+          embed.addEventListener('click', e => {
             if (!embed.__dshEntry) return
             e.stopPropagation()
-            var activator = resolveEmbedActivator(e.target, embed)
+            const activator = resolveEmbedActivator(e.target, embed)
             if (activator) activator.click()
           })
           options.body().insertBefore(embed, options.anchor())
@@ -202,21 +202,21 @@
         } else {
           embed.removeAttribute('data-clickable')
         }
-        var clone = entry.cloneNode(true)
+        const clone = entry.cloneNode(true)
         clone.removeAttribute('id')
         clone.removeAttribute('data-dsh-claude-footer-entry')
         clone.removeAttribute('data-dsh-claude-footer-hidden')
         clone.removeAttribute('data-dsh-claude-footer-overlay')
-        var overlays = clone.querySelectorAll('[data-dsh-claude-footer-overlay]')
-        for (var o = 0; o < overlays.length; o++) {
+        const overlays = clone.querySelectorAll('[data-dsh-claude-footer-overlay]')
+        for (let o = 0; o < overlays.length; o++) {
           overlays[o].parentElement.removeChild(overlays[o])
         }
-        var stripped = clone.querySelectorAll('[id], [data-dsh-claude-footer-hidden]')
-        for (var s = 0; s < stripped.length; s++) {
+        const stripped = clone.querySelectorAll('[id], [data-dsh-claude-footer-hidden]')
+        for (let s = 0; s < stripped.length; s++) {
           stripped[s].removeAttribute('id')
           stripped[s].removeAttribute('data-dsh-claude-footer-hidden')
         }
-        var html = clone.outerHTML
+        const html = clone.outerHTML
         if (embed.getAttribute('data-embed-html') !== html) {
           embed.setAttribute('data-embed-html', html)
           while (embed.firstChild) embed.removeChild(embed.firstChild)
@@ -224,7 +224,7 @@
         }
       }
 
-      var INTERACTIVE_SELECTOR = 'button, [role="button"], a[href], [tabindex], input, select, summary'
+      const INTERACTIVE_SELECTOR = 'button, [role="button"], a[href], [tabindex], input, select, summary'
 
       /**
        * Map a click inside the embedded clone back to the matching control
@@ -239,25 +239,25 @@
        * entry's primary trigger.
        */
       function resolveEmbedActivator(clicked, embed) {
-        var entry = embed.__dshEntry
-        var cloneRoot = embed.firstChild
+        const entry = embed.__dshEntry
+        const cloneRoot = embed.firstChild
         if (!entry || !cloneRoot || !clicked || clicked.nodeType !== 1) return embed.__dshForward
         if (clicked === embed || clicked === cloneRoot) return embed.__dshForward
         // Child-index path from the clicked clone node up to the clone root.
-        var path = []
-        var node = clicked
+        const path = []
+        let node = clicked
         while (node && node !== cloneRoot) {
-          var parent = node.parentElement
+          const parent = node.parentElement
           if (!parent) return embed.__dshForward
           path.unshift(Array.prototype.indexOf.call(parent.children, node))
           node = parent
         }
         // Replay the path on the live entry, verifying shape level by level.
-        var original = entry
-        var cloneNode = cloneRoot
-        for (var i = 0; i < path.length; i++) {
-          var nextClone = cloneNode.children[path[i]]
-          var nextOrig = original.children[path[i]]
+        let original = entry
+        let cloneNode = cloneRoot
+        for (let i = 0; i < path.length; i++) {
+          const nextClone = cloneNode.children[path[i]]
+          const nextOrig = original.children[path[i]]
           if (!nextClone || !nextOrig || nextClone.tagName !== nextOrig.tagName) {
             return embed.__dshForward
           }
@@ -266,7 +266,7 @@
         }
         // Nearest interactive element at or above the mapped original,
         // bounded by the entry and never inside an overlay subtree.
-        var target = original
+        let target = original
         while (target) {
           if (target !== entry && target.matches && target.matches(INTERACTIVE_SELECTOR) &&
               !hasOverlayAncestor(target, entry)) {
@@ -280,7 +280,7 @@
 
       /** Whether `el` sits inside an overlay-marked subtree above `entry`. */
       function hasOverlayAncestor(el, entry) {
-        var node = el
+        let node = el
         while (node && node !== entry) {
           if (node.hasAttribute && node.hasAttribute('data-dsh-claude-footer-overlay')) return true
           node = node.parentElement
@@ -294,16 +294,16 @@
        * and those must never become the popover item's activation target).
        */
       function findFooterTrigger(entry) {
-        var selector = INTERACTIVE_SELECTOR
+        const selector = INTERACTIVE_SELECTOR
         if (entry.matches && entry.matches(selector) &&
             !entry.hasAttribute('data-dsh-claude-footer-overlay')) {
           return entry
         }
-        var found = entry.querySelectorAll(selector)
-        for (var i = 0; i < found.length; i++) {
-          var candidate = found[i]
-          var node = candidate
-          var insideOverlay = false
+        const found = entry.querySelectorAll(selector)
+        for (let i = 0; i < found.length; i++) {
+          const candidate = found[i]
+          let node = candidate
+          let insideOverlay = false
           while (node && node !== entry) {
             if (node.hasAttribute && node.hasAttribute('data-dsh-claude-footer-overlay')) {
               insideOverlay = true
@@ -317,9 +317,9 @@
       }
 
       function sync(footArea) {
-        var footerActions = footArea.querySelector('[class*="footerActions"]')
-        var footerEntries = syncFooterActionVisibility(footerActions)
-        var body = options.body()
+        const footerActions = footArea.querySelector('[class*="footerActions"]')
+        const footerEntries = syncFooterActionVisibility(footerActions)
+        const body = options.body()
 
         // A closed host drawer has no container to mirror into, but the entries
         // above are hidden in place all the same: the host re-renders them, and a
@@ -336,17 +336,17 @@
         // keeps being hidden even with the popover open.
         if (options.isOpen()) return
 
-        var existingActionItems = body.querySelectorAll('[data-action-index], [data-embed-index]')
-        for (var ea = 0; ea < existingActionItems.length; ea++) {
-          var staleIdx = parseInt(existingActionItems[ea].getAttribute('data-action-index') || existingActionItems[ea].getAttribute('data-embed-index'), 10)
+        const existingActionItems = body.querySelectorAll('[data-action-index], [data-embed-index]')
+        for (let ea = 0; ea < existingActionItems.length; ea++) {
+          const staleIdx = parseInt(existingActionItems[ea].getAttribute('data-action-index') || existingActionItems[ea].getAttribute('data-embed-index'), 10)
           if (isNaN(staleIdx) || staleIdx >= footerEntries.length) {
             existingActionItems[ea].parentElement.removeChild(existingActionItems[ea])
           }
         }
 
-        for (var f = 0; f < footerEntries.length; f++) {
+        for (let f = 0; f < footerEntries.length; f++) {
           try {
-            (function (entry, idx) {
+            ((entry, idx) => {
             // The host's account area also lives in the footer, and its logout
             // button used to be mirrored into the drawer's header (the stray [→]
             // icon above the account name). Skip anything that is a menu anchor or
@@ -357,11 +357,11 @@
             // The host's sign-out row is ICON-ONLY, so its text says nothing. Read
             // the label/title/class, and skip anything living in the host's account
             // area — that is where the stray [→] in the drawer header came from.
-            var entryLabel = (entry.getAttribute('aria-label') || '') + ' ' + (entry.getAttribute('title') || '') + ' ' + String(entry.className || '')
+            const entryLabel = `${entry.getAttribute('aria-label') || ''} ${entry.getAttribute('title') || ''} ${String(entry.className || '')}`
             if (/退出|登出|注销|sign ?out|log ?out|logout/i.test(entryLabel)) return
             if (typeof entry.closest === 'function' && entry.closest('[class*="account"]') !== null) return
-            var trigger = findFooterTrigger(entry)
-            var hasContent = (entry.textContent || '').trim() !== '' ||
+            const trigger = findFooterTrigger(entry)
+            const hasContent = (entry.textContent || '').trim() !== '' ||
                              entry.querySelector('svg, img, canvas') !== null
 
             // Rich widgets (progress bars, stat panels) cannot collapse into
@@ -381,11 +381,11 @@
 
             // The mirrored item activates the first interactive element
             // outside any overlay.
-            var activator = trigger
-            var item = body.querySelector('[data-action-index="' + idx + '"]')
-            var iconEl = (trigger && trigger.querySelector('svg')) || entry.querySelector('svg')
-            var text = activator.getAttribute('aria-label') || (activator.textContent || '').trim() || '插件'
-            var badge = activator.getAttribute('data-cordis-badge') || entry.getAttribute('data-cordis-badge') || ''
+            const activator = trigger
+            let item = body.querySelector(`[data-action-index="${idx}"]`)
+            const iconEl = (trigger && trigger.querySelector('svg')) || entry.querySelector('svg')
+            const text = activator.getAttribute('aria-label') || (activator.textContent || '').trim() || '插件'
+            const badge = activator.getAttribute('data-cordis-badge') || entry.getAttribute('data-cordis-badge') || ''
 
             if (!item) {
               item = document.createElement('button')
@@ -396,24 +396,24 @@
                 '<span class="dsh-claude-popover-item-icon"></span>' +
                 '<span class="dsh-claude-popover-item-text"></span>'
 
-              item.addEventListener('click', function (e) {
+              item.addEventListener('click', e => {
                 e.stopPropagation()
                 options.close()
                 // The activator is rebound on every (closed-state) sync pass
                 // (`item.__dshActivator`), never captured at creation — the
                 // host re-sorts list slots by `order` on each render, so the
                 // entry behind an index changes over time.
-                var live = item.__dshActivator
+                let live = item.__dshActivator
                 if (!live || typeof live.click !== 'function') {
                   // Safety net: re-resolve the current trigger for this index
                   // from the live footer DOM. Covers the rare case where the
                   // stored node was detached by a host re-render while the
                   // popover was open.
                   try {
-                    var fa = findFootArea()
-                    var actions = fa ? fa.querySelector('[class*="footerActions"]') : null
-                    var liveEntries = actions ? footerEntriesOf(actions) : []
-                    var liveEntry = liveEntries[idx] || null
+                    const fa = findFootArea()
+                    const actions = fa ? fa.querySelector('[class*="footerActions"]') : null
+                    const liveEntries = actions ? footerEntriesOf(actions) : []
+                    const liveEntry = liveEntries[idx] || null
                     live = liveEntry ? findFooterTrigger(liveEntry) : null
                   } catch (error) {
                     live = null
@@ -447,17 +447,17 @@
         // the popover frozen in a stale order that no longer matches the
         // real controls. Re-append action items and embedded widgets in
         // entry-index order.
-        var mirrors = []
-        for (var mi = 0; mi < body.children.length; mi++) {
-          var mirrorNode = body.children[mi]
+        const mirrors = []
+        for (let mi = 0; mi < body.children.length; mi++) {
+          const mirrorNode = body.children[mi]
           if (mirrorNode === options.anchor()) continue
           if (mirrorNode.hasAttribute('data-action-index') || mirrorNode.hasAttribute('data-embed-index')) {
             mirrors.push(mirrorNode)
           }
         }
-        mirrors.sort(function (a, b) {
-          var ai = parseInt(a.getAttribute('data-action-index') || a.getAttribute('data-embed-index'), 10) || 0
-          var bi = parseInt(b.getAttribute('data-action-index') || b.getAttribute('data-embed-index'), 10) || 0
+        mirrors.sort((a, b) => {
+          const ai = parseInt(a.getAttribute('data-action-index') || a.getAttribute('data-embed-index'), 10) || 0
+          const bi = parseInt(b.getAttribute('data-action-index') || b.getAttribute('data-embed-index'), 10) || 0
           return ai - bi
         })
         // Walk back from the settings row and move a mirror only when it is out
@@ -465,8 +465,8 @@
         // mirror on every pass once there were two (each insert lands after the
         // ones already placed), and each move is a mutation that schedules the
         // next pass — the scheduler never went idle.
-        var nextMirror = options.anchor()
-        for (var mr = mirrors.length - 1; mr >= 0; mr--) {
+        let nextMirror = options.anchor()
+        for (let mr = mirrors.length - 1; mr >= 0; mr--) {
           if (mirrors[mr].nextSibling !== nextMirror) body.insertBefore(mirrors[mr], nextMirror)
           nextMirror = mirrors[mr]
         }
@@ -474,15 +474,15 @@
 
       /** Drop every takeover marker from the host's footer entries. */
       function clear(footArea) {
-        var marked = footArea.querySelectorAll(
+        const marked = footArea.querySelectorAll(
           '[data-dsh-claude-footer-entry], [data-dsh-claude-footer-hidden], [data-dsh-claude-footer-overlay]',
         )
-        for (var i = 0; i < marked.length; i++) {
+        for (let i = 0; i < marked.length; i++) {
           marked[i].removeAttribute('data-dsh-claude-footer-entry')
           marked[i].removeAttribute('data-dsh-claude-footer-hidden')
           marked[i].removeAttribute('data-dsh-claude-footer-overlay')
         }
       }
 
-      return { sync: sync, clear: clear }
+      return { sync, clear }
     }

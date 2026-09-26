@@ -26,11 +26,11 @@
      * in the scheduler: the scheduler's pass observer only watches
      * aria-label/aria-selected (D9), and this flag must not feed it.
      */
-    var THEME_FLIP_ATTR = 'data-dsh-theme-transitioning'
-    var THEME_FLIP_MS = 300
+    const THEME_FLIP_ATTR = 'data-dsh-theme-transitioning'
+    const THEME_FLIP_MS = 300
     // Paint properties a theme flip changes; cancelling their transitions
     // snaps them to the new theme's values in one frame.
-    var THEME_FLIP_PROPS = {
+    const THEME_FLIP_PROPS = {
       'border-color': true,
       'border': true,
       'border-top-color': true,
@@ -50,9 +50,9 @@
     }
 
     function installThemeFlip() {
-      var body = document.body
-      var root = document.documentElement
-      var flipTimer = null
+      const body = document.body
+      const root = document.documentElement
+      let flipTimer = null
 
       // The flag lives on <html> AND <body> so the suppression selector can
       // out-specify the gated composer rules it can (html[flag] body[skin][flag] *).
@@ -67,9 +67,9 @@
       }
 
       function cancelThemeTransitions() {
-        var anims = document.getAnimations()
-        for (var i = 0; i < anims.length; i++) {
-          var anim = anims[i]
+        const anims = document.getAnimations()
+        for (let i = 0; i < anims.length; i++) {
+          const anim = anims[i]
           // CSSTransition carries transitionProperty; CSSAnimation does not.
           if (!anim || typeof anim.transitionProperty !== 'string') continue
           if (!THEME_FLIP_PROPS[anim.transitionProperty]) continue
@@ -85,21 +85,21 @@
         cancelThemeTransitions()
         // The host may commit more of the flip after us; sweep the next two
         // frames to catch those starts as well.
-        requestAnimationFrame(function () {
+        requestAnimationFrame(() => {
           cancelThemeTransitions()
           requestAnimationFrame(cancelThemeTransitions)
         })
         if (flipTimer !== null) clearTimeout(flipTimer)
-        flipTimer = setTimeout(function () {
+        flipTimer = setTimeout(() => {
           setFlag(false)
           flipTimer = null
         }, THEME_FLIP_MS)
       }
 
-      var themeObserver = new MutationObserver(onThemeFlip)
+      const themeObserver = new MutationObserver(onThemeFlip)
       themeObserver.observe(body, { attributes: true, attributeFilter: ['data-ds-dark-theme'] })
 
-      return function () {
+      return () => {
         themeObserver.disconnect()
         if (flipTimer !== null) clearTimeout(flipTimer)
         setFlag(false)

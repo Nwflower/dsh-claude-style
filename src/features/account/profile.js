@@ -14,15 +14,15 @@
      * change; the row keeps what it shows meanwhile.
      */
     function createAccountProfile(ctx, onChange) {
-      var accountName = null
-      var accountAvatar = null
-      var ACCOUNT_RETRY_MS = [2000, 10000, 30000]
-      var accountRead = 0
-      var accountRetry = null
-      var accountRetries = 0
+      let accountName = null
+      let accountAvatar = null
+      const ACCOUNT_RETRY_MS = [2000, 10000, 30000]
+      let accountRead = 0
+      let accountRetry = null
+      let accountRetries = 0
 
       function accountService() {
-        var account = null
+        let account = null
         try { account = ctx.get('remote.account') } catch (error) { account = null }
         return account === undefined ? null : account
       }
@@ -51,18 +51,18 @@
 
       function retryAccount() {
         if (accountRetries >= ACCOUNT_RETRY_MS.length) return
-        accountRetry = setTimeout(function () {
+        accountRetry = setTimeout(() => {
           accountRetry = null
           loadAccount()
         }, ACCOUNT_RETRY_MS[accountRetries++])
       }
 
       function loadAccount() {
-        var account = accountService()
+        const account = accountService()
         if (account === null || typeof account.getProfile !== 'function') return
         dropAccountRead()
-        var read = accountRead
-        account.getProfile().then(function (result) {
+        const read = accountRead
+        account.getProfile().then(result => {
           if (read !== accountRead) return
           if (!result || result.ok !== true) { retryAccount(); return }
           if (!result.value) {
@@ -72,12 +72,12 @@
             else showAccount(null, null)
             return
           }
-          var profile = result.value.profile || result.value
+          const profile = result.value.profile || result.value
           // A 'failed' profile is a platform miss, not a sign-out.
           if (!profile || profile.status !== 'ready' || !profile.value) { retryAccount(); return }
           accountRetries = 0
           showAccount(profile.value.name || profile.value.contact || null, profile.value.avatarUrl || profile.avatarUrl || null)
-        }, function () {
+        }, () => {
           if (read === accountRead) retryAccount()
         })
       }
@@ -90,15 +90,15 @@
        * over a stored one. The rest — a sign-in still waiting on the browser, a
        * failed attempt, the same state again after a reconnect — read nothing.
        */
-      var accountState = null
-      var accountSignIn = null
+      let accountState = null
+      let accountSignIn = null
       function onAccountState(view) {
         if (view === null || typeof view !== 'object') return
-        var signedIn = view.status === 'credential-stored'
-        var attempt = view.attempt
+        const signedIn = view.status === 'credential-stored'
+        const attempt = view.attempt
         if (!signedIn) accountSignIn = null
         else if (attempt && (attempt.phase === 'committing' || attempt.phase === 'succeeded')) accountSignIn = attempt.id
-        var state = signedIn ? 'signed-in:' + (accountSignIn || '') : 'signed-out'
+        const state = signedIn ? `signed-in:${accountSignIn || ''}` : 'signed-out'
         if (state === accountState) return
         accountState = state
         accountRetries = 0
@@ -110,13 +110,13 @@
         }
       }
 
-      var accountStream = null
+      let accountStream = null
 
       /** Close this generation's account stream and drop its reads. */
       function stopFollowingAccount() {
         dropAccountRead()
         if (accountStream === null) return
-        var stream = accountStream
+        const stream = accountStream
         accountStream = null
         if (document.body.__dshAccountStream === stream) document.body.__dshAccountStream = null
         try { stream.dispose() } catch (error) { /* already closed */ }
@@ -134,27 +134,27 @@
        * @returns whether there is a stream to follow.
        */
       function followAccount() {
-        var account = accountService()
-        var remote = null
+        const account = accountService()
+        let remote = null
         try { remote = ctx.get('remote') } catch (error) { remote = null }
         if (account === null || typeof account.watch !== 'function' || !remote || typeof remote.$stream !== 'function' ||
             typeof Symbol !== 'function' || !Symbol.asyncIterator) return false
-        var stream = remote.$stream({
+        const stream = remote.$stream({
           name: 'dsh-claude-style account',
-          open: function (signal) { return account.watch(signal) },
-          ended: function () { return new Error('account stream ended') }
+          open(signal) { return account.watch(signal) },
+          ended() { return new Error('account stream ended') }
         })
-        var frames = stream[Symbol.asyncIterator]()
+        const frames = stream[Symbol.asyncIterator]()
         accountStream = stream
         document.body.__dshAccountStream = stream
         function next() {
-          frames.next().then(function (step) {
+          frames.next().then(step => {
             if (accountStream !== stream || step.done) return
             if (document.body.__dshAccountStream !== stream) { stopFollowingAccount(); return }
             onAccountState(step.value.value)
             if (typeof step.value.accept === 'function') step.value.accept()
             next()
-          }, function () {
+          }, () => {
             // Closed for good. Before a first frame that would leave the row
             // with no read at all.
             if (accountStream === stream && accountState === null) loadAccount()
@@ -172,10 +172,10 @@
        * waits for `slots`. With the stream, its first frame makes the first
        * read; a host without `ctx.inject` gets one read now.
        */
-      var accountFiber = null
+      let accountFiber = null
       if (typeof ctx.inject === 'function') {
-        accountFiber = ctx.inject(['remote.account'], function (scope) {
-          scope.effect(function () {
+        accountFiber = ctx.inject(['remote.account'], scope => {
+          scope.effect(() => {
             if (!followAccount()) loadAccount()
             return stopFollowingAccount
           }, 'dsh-claude-style: account')
@@ -184,12 +184,12 @@
         loadAccount()
       }
       return {
-        name: function () { return accountName },
-        avatar: function () { return accountAvatar },
-        state: function () { return accountState },
+        name() { return accountName },
+        avatar() { return accountAvatar },
+        state() { return accountState },
         service: accountService,
         apply: onAccountState,
-        stop: function () {
+        stop() {
           if (accountFiber !== null && typeof accountFiber.dispose === 'function') {
             try { accountFiber.dispose() } catch (error) { /* the fiber may already be gone */ }
           }

@@ -34,34 +34,34 @@
      * @returns teardown.
      */
     function installViewTabs(ctx, ui) {
-      var HEADER = '[class*="header"]:has([class*="_tabs"])'
-      var STRIP = HEADER + ' [class*="_tabs"]'
+      const HEADER = '[class*="header"]:has([class*="_tabs"])'
+      const STRIP = `${HEADER} [class*="_tabs"]`
       /**
        * The title's TEXT, not its row or cluster: `.titleRow` is a flex row and the
        * cluster takes up the slack, so testing against them reported a clash on
        * every window and the strip never lifted. The crumb is the content-sized
        * element that actually draws the words.
        */
-      var TITLE = '[class*="crumbCurrent"], [class*="crumb"], [class*="titleCluster"]'
-      var ACTIONS = '[class*="headerActions"], [class*="headerUtilities"]'
+      const TITLE = '[class*="crumbCurrent"], [class*="crumb"], [class*="titleCluster"]'
+      const ACTIONS = '[class*="headerActions"], [class*="headerUtilities"]'
       /** The stylesheet's fallback: the strip's own row, 10px up from y=50. */
-      var FALLBACK = -10
+      const FALLBACK = -10
       /** The header's own top inset; the lifted strip may not enter it. */
-      var TOP_INSET = 8
+      const TOP_INSET = 8
       /** Breathing room between the lifted strip and whatever shares the line. */
-      var CLEARANCE = 6
-      var last = null
+      const CLEARANCE = 6
+      let last = null
       /** The element last was written to: a re-rendered strip must be told again. */
-      var lastEl = null
+      let lastEl = null
       /** The body marker the stylesheet reads for the fixed titlebar placement. */
-      var TITLEBAR_ATTR = 'data-dsh-titlebar-tabs'
+      const TITLEBAR_ATTR = 'data-dsh-titlebar-tabs'
       /** Whether the last pass saw the host's Windows titlebar marker. */
-      var titlebar = false
+      let titlebar = false
       /** The strip attribute every strip rule in view-tabs.css keys on. */
-      var STRIP_ATTR = 'data-dsh-view-tabs'
+      const STRIP_ATTR = 'data-dsh-view-tabs'
       /** The strip last stamped, so a re-rendered strip is stamped again. */
-      var stamped = null
-      var pill = createSlidingPill('[aria-selected="true"]')
+      let stamped = null
+      const pill = createSlidingPill('[aria-selected="true"]')
 
       /**
        * Mirror the host's Windows titlebar marker onto <body>, the way D9 moves
@@ -71,7 +71,7 @@
        * nothing.
        */
       function syncTitlebar() {
-        var next = document.documentElement.hasAttribute('data-windows-titlebar')
+        const next = document.documentElement.hasAttribute('data-windows-titlebar')
         if (next === titlebar) return
         titlebar = next
         if (next) document.body.setAttribute(TITLEBAR_ATTR, '')
@@ -80,16 +80,16 @@
 
       function rect(el) {
         if (el === null || el === undefined) return null
-        var box = el.getBoundingClientRect()
+        const box = el.getBoundingClientRect()
         if (box.width === 0 && box.height === 0) return null
         return box
       }
 
       /** The boxes the strip would share the title's line with. */
       function neighbours(header) {
-        var out = []
-        var title = titleBoxOf(header)
-        var actions = rect(header.querySelector(ACTIONS))
+        const out = []
+        const title = titleBoxOf(header)
+        const actions = rect(header.querySelector(ACTIONS))
         if (title !== null) out.push(title)
         if (actions !== null) out.push(actions)
         return out
@@ -102,10 +102,10 @@
        * the narrowest match instead: that is the element drawing the words.
        */
       function titleBoxOf(header) {
-        var all = header.querySelectorAll(TITLE)
-        var best = null
-        for (var i = 0; i < all.length; i++) {
-          var box = rect(all[i])
+        const all = header.querySelectorAll(TITLE)
+        let best = null
+        for (let i = 0; i < all.length; i++) {
+          const box = rect(all[i])
           if (box === null) continue
           if (best === null || box.width <= best.width) best = box
         }
@@ -122,37 +122,37 @@
 
       function sync() {
         syncTitlebar()
-        var header = document.querySelector(HEADER)
-        var strip = header === null ? null : header.querySelector('[class*="_tabs"]')
+        const header = document.querySelector(HEADER)
+        const strip = header === null ? null : header.querySelector('[class*="_tabs"]')
         stampStrip(strip)
         pill.sync(strip)
         if (strip === null) return
         // Windows titlebar mode places the strip itself (view-tabs.css): it is
         // fixed there, so neither the measured shift nor the fallback applies.
         if (titlebar) return
-        var stripBox = rect(strip)
+        const stripBox = rect(strip)
         if (stripBox === null) return
-        var headerBox = rect(header)
+        const headerBox = rect(header)
         if (headerBox === null) return
         // The strip's own layout position, with the shift we may already have
         // applied taken back out: rect.top moves with the transform.
-        var applied = parseFloat(strip.style.getPropertyValue('--dsh-view-tabs-shift'))
+        let applied = parseFloat(strip.style.getPropertyValue('--dsh-view-tabs-shift'))
         if (!isFinite(applied)) applied = FALLBACK
-        var naturalTop = stripBox.top - applied
-        var titleBox = titleBoxOf(header)
-        var shift = FALLBACK
+        const naturalTop = stripBox.top - applied
+        const titleBox = titleBoxOf(header)
+        let shift = FALLBACK
         if (titleBox !== null) {
-          var want = titleBox.top + titleBox.height / 2 - naturalTop - stripBox.height / 2
+          let want = titleBox.top + titleBox.height / 2 - naturalTop - stripBox.height / 2
           // Room above: the lifted strip stays under the header's top inset.
-          var top = naturalTop + want
+          const top = naturalTop + want
           if (top < headerBox.top + TOP_INSET) want = headerBox.top + TOP_INSET - naturalTop
           // Room sideways: centred, it must clear the title and the actions.
-          var left = stripBox.left
-          var right = stripBox.right
-          var clash = false
-          var others = neighbours(header)
-          for (var i = 0; i < others.length; i++) {
-            var box = others[i]
+          const left = stripBox.left
+          const right = stripBox.right
+          let clash = false
+          const others = neighbours(header)
+          for (let i = 0; i < others.length; i++) {
+            const box = others[i]
             if (box === null) continue
             if (right > box.left - CLEARANCE && left < box.right + CLEARANCE) clash = true
           }
@@ -161,18 +161,18 @@
         if (shift === last && strip === lastEl) return
         last = shift
         lastEl = strip
-        strip.style.setProperty('--dsh-view-tabs-shift', shift + 'px')
+        strip.style.setProperty('--dsh-view-tabs-shift', `${shift}px`)
       }
 
-      ui.viewTabs = { sync: sync }
+      ui.viewTabs = { sync }
 
-      return function () {
+      return () => {
         if (titlebar) {
           document.body.removeAttribute(TITLEBAR_ATTR)
           titlebar = false
         }
-        var header = document.querySelector(HEADER)
-        var strip = header === null ? null : header.querySelector('[class*="_tabs"]')
+        const header = document.querySelector(HEADER)
+        const strip = header === null ? null : header.querySelector('[class*="_tabs"]')
         if (strip !== null) strip.style.removeProperty('--dsh-view-tabs-shift')
         pill.release()
         stampStrip(null)

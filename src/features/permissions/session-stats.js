@@ -10,16 +10,16 @@
      * @returns { sync, close, teardown }.
      */
     function createSessionStats() {
-        var statsPopover = null
-        var statsHideTimer = null
+        let statsPopover = null
+        let statsHideTimer = null
         /** Identity of the stats bindings THIS generation installed (see bindStatsHover). */
-        var statsBindingToken = {}
+        const statsBindingToken = {}
         /**
          * The stats row's host mode, stamped by syncStatsSummary. The host keeps
          * the performanceUsage preference in its React state and never puts it
          * on the DOM, so the stylesheet and the hover binding read this marker.
          */
-        var STATS_MODE_ATTR = 'data-dsh-claude-stats-mode'
+        const STATS_MODE_ATTR = 'data-dsh-claude-stats-mode'
 
         /** The host's stats root, or null when this conversation has no row. */
         function statsRoot() {
@@ -41,11 +41,11 @@
         }
 
         function statsRowsFrom(panel) {
-          var rows = []
+          const rows = []
           if (panel === null) return rows
-          var dts = panel.querySelectorAll('dt')
-          for (var i = 0; i < dts.length; i++) {
-            var dd = dts[i].nextElementSibling
+          const dts = panel.querySelectorAll('dt')
+          for (let i = 0; i < dts.length; i++) {
+            const dd = dts[i].nextElementSibling
             rows.push({
               label: (dts[i].textContent || '').trim(),
               value: dd === null ? '' : (dd.textContent || '').trim(),
@@ -55,27 +55,27 @@
         }
 
         /** How long one pill's panel may take to mount (the host commits on its own schedule). */
-        var STATS_PANEL_POLL_MS = 25
-        var STATS_PANEL_ATTEMPTS = 32
+        const STATS_PANEL_POLL_MS = 25
+        const STATS_PANEL_ATTEMPTS = 32
         /** When a click is repeated inside that window, and how often. */
-        var STATS_PANEL_REPRESS_AT = 12
-        var STATS_PANEL_REPRESS_MAX = 2
+        const STATS_PANEL_REPRESS_AT = 12
+        const STATS_PANEL_REPRESS_MAX = 2
         /** How often a read that could not open a panel is retried, and after what delay. */
-        var STATS_READ_RETRIES = 1
-        var STATS_RETRY_MS = 120
+        const STATS_READ_RETRIES = 1
+        const STATS_RETRY_MS = 120
         /** How long after a short card the one late re-read runs. */
-        var STATS_FILL_MS = 700
+        const STATS_FILL_MS = 700
 
         /** The stats panel that is open right now, with the kind its own marker names. */
         function openStatsPanel() {
-          var details = document.querySelector('[data-session-stats-details]')
+          const details = document.querySelector('[data-session-stats-details]')
           if (details !== null) {
-            var detailsDialog = details.closest('[role="dialog"]')
+            const detailsDialog = details.closest('[role="dialog"]')
             if (detailsDialog !== null) return { kind: 'details', panel: detailsDialog }
           }
-          var usage = document.querySelector('[data-session-stats-usage]')
+          const usage = document.querySelector('[data-session-stats-usage]')
           if (usage !== null) {
-            var usageDialog = usage.closest('[role="dialog"]')
+            const usageDialog = usage.closest('[role="dialog"]')
             if (usageDialog !== null) return { kind: 'usage', panel: usageDialog }
           }
           return null
@@ -83,9 +83,9 @@
 
         /** The row's pill buttons as they are right now (the host replaces them on re-render). */
         function statsPillAt(index) {
-          var root = statsRoot()
+          const root = statsRoot()
           if (root === null) return null
-          var buttons = root.querySelectorAll('button')
+          const buttons = root.querySelectorAll('button')
           return index < buttons.length ? buttons[index] : null
         }
 
@@ -105,19 +105,19 @@
          * reports a failure, which is not an absent section.
          */
         function readStatsPill(index, done) {
-          var presses = 0
+          let presses = 0
           function press() {
-            var pill = statsPillAt(index)
+            const pill = statsPillAt(index)
             if (pill === null) return false
             if (pill.getAttribute('aria-expanded') !== 'true') pill.click()
             return true
           }
           if (!press()) { done(null); return }
-          var attempts = 0
+          let attempts = 0
           function read() {
-            var pill = statsPillAt(index)
+            const pill = statsPillAt(index)
             if (pill === null) { done({ failed: true, rows: [] }); return }
-            var open = pill.getAttribute('aria-expanded') === 'true' ? openStatsPanel() : null
+            const open = pill.getAttribute('aria-expanded') === 'true' ? openStatsPanel() : null
             if (open === null && attempts < STATS_PANEL_ATTEMPTS) {
               attempts += 1
               if (attempts === STATS_PANEL_REPRESS_AT && presses < STATS_PANEL_REPRESS_MAX) {
@@ -144,13 +144,13 @@
          */
         function collectStatsData(done) {
           if (statsRoot() === null) { done([], false); return }
-          readStatsPill(0, function (first) {
-            readStatsPill(1, function (second) {
-              var reads = [first, second]
-              var sections = []
-              var incomplete = false
-              for (var i = 0; i < reads.length; i++) {
-                var read = reads[i]
+          readStatsPill(0, first => {
+            readStatsPill(1, second => {
+              const reads = [first, second]
+              const sections = []
+              let incomplete = false
+              for (let i = 0; i < reads.length; i++) {
+                const read = reads[i]
                 if (read === null) continue
                 if (read.failed === true || read.rows.length === 0) {
                   incomplete = true
@@ -158,9 +158,7 @@
                 }
                 sections.push(read)
               }
-              sections.sort(function (a, b) {
-                return (a.kind === 'details' ? 0 : 1) - (b.kind === 'details' ? 0 : 1)
-              })
+              sections.sort((a, b) => (a.kind === 'details' ? 0 : 1) - (b.kind === 'details' ? 0 : 1))
               done(sections, incomplete)
             })
           })
@@ -171,7 +169,7 @@
           statsPopover = document.createElement('div')
           statsPopover.className = 'dsh-claude-stats-popover'
           statsPopover.setAttribute('data-open', 'false')
-          statsPopover.addEventListener('mouseenter', function () {
+          statsPopover.addEventListener('mouseenter', () => {
             if (statsHideTimer) {
               clearTimeout(statsHideTimer)
               statsHideTimer = null
@@ -203,25 +201,22 @@
 
         function scheduleHideStatsPopover() {
           if (statsHideTimer) clearTimeout(statsHideTimer)
-          statsHideTimer = setTimeout(function () {
+          statsHideTimer = setTimeout(() => {
             statsHideTimer = null
             hideStatsPopover()
           }, POPOVER_CLOSE_DELAY)
         }
 
         function renderStatsPopover(sections) {
-          var pop = ensureStatsPopover()
-          var html = '<div class="dsh-claude-stats-popover-body">'
-          for (var sIndex = 0; sIndex < sections.length; sIndex++) {
-            var section = sections[sIndex]
+          const pop = ensureStatsPopover()
+          let html = '<div class="dsh-claude-stats-popover-body">'
+          for (let sIndex = 0; sIndex < sections.length; sIndex++) {
+            const section = sections[sIndex]
             if (section.rows.length === 0) continue
-            if (section.title) html += '<div class="dsh-claude-stats-popover-section">' + statsEscape(section.title) + '</div>'
+            if (section.title) html += `<div class="dsh-claude-stats-popover-section">${statsEscape(section.title)}</div>`
             html += '<div class="dsh-claude-stats-popover-grid">'
-            for (var r = 0; r < section.rows.length; r++) {
-              html += '<div class="dsh-claude-stats-popover-item">'
-                + '<div class="dsh-claude-stats-popover-label">' + statsEscape(section.rows[r].label) + '</div>'
-                + '<div class="dsh-claude-stats-popover-value">' + statsEscape(section.rows[r].value) + '</div>'
-                + '</div>'
+            for (let r = 0; r < section.rows.length; r++) {
+              html += `<div class="dsh-claude-stats-popover-item"><div class="dsh-claude-stats-popover-label">${statsEscape(section.rows[r].label)}</div><div class="dsh-claude-stats-popover-value">${statsEscape(section.rows[r].value)}</div></div>`
             }
             html += '</div>'
           }
@@ -235,20 +230,20 @@
         }
 
         /** How many sections the card currently shows. */
-        var renderedSections = 0
+        let renderedSections = 0
 
         /** Place the card above the stats row, clamped to the viewport. */
         function placeStatsPopover(anchor) {
-          var pop = ensureStatsPopover()
-          var live = statsRoot() || anchor
+          const pop = ensureStatsPopover()
+          const live = statsRoot() || anchor
           if (live === null) return
-          var rect = live.getBoundingClientRect()
-          var width = pop.offsetWidth
-          var height = pop.offsetHeight
-          var left = Math.max(8, Math.min(rect.left + rect.width / 2 - width / 2, window.innerWidth - width - 8))
-          var top = Math.max(8, rect.top - height - 8)
-          pop.style.left = left + 'px'
-          pop.style.top = top + 'px'
+          const rect = live.getBoundingClientRect()
+          const width = pop.offsetWidth
+          const height = pop.offsetHeight
+          const left = Math.max(8, Math.min(rect.left + rect.width / 2 - width / 2, window.innerWidth - width - 8))
+          const top = Math.max(8, rect.top - height - 8)
+          pop.style.left = `${left}px`
+          pop.style.top = `${top}px`
         }
 
         function showStatsSections(anchor, sections) {
@@ -266,7 +261,7 @@
           // The card reads the host's two dialogs, which only the detailed row
           // renders. A compact row has no trigger and no panel, so a hover or a
           // click there must not start a read.
-          var modeRoot = statsRoot() || anchor
+          const modeRoot = statsRoot() || anchor
           if (modeRoot === null || modeRoot.getAttribute(STATS_MODE_ATTR) !== 'detailed') return
           if (statsHideTimer) {
             clearTimeout(statsHideTimer)
@@ -287,21 +282,21 @@
          * shrinks it.
          */
         function readStatsCard(anchor, attempt) {
-          collectStatsData(function (sections, incomplete) {
+          collectStatsData((sections, incomplete) => {
             if (sections.length === 0) return
             if (incomplete && attempt < STATS_READ_RETRIES) {
-              setTimeout(function () { readStatsCard(anchor, attempt + 1) }, STATS_RETRY_MS)
+              setTimeout(() => { readStatsCard(anchor, attempt + 1) }, STATS_RETRY_MS)
               return
             }
             if (incomplete && isStatsPopoverOpen()) return
             showStatsSections(anchor, sections)
-            if (incomplete) setTimeout(function () { fillStatsCard(anchor) }, STATS_FILL_MS)
+            if (incomplete) setTimeout(() => { fillStatsCard(anchor) }, STATS_FILL_MS)
           })
         }
 
         /** One late re-read for a card that came up short; it only ever adds. */
         function fillStatsCard(anchor) {
-          collectStatsData(function (sections, incomplete) {
+          collectStatsData((sections, incomplete) => {
             if (incomplete || sections.length === 0) return
             if (!isStatsPopoverOpen()) return
             if (sections.length <= renderedSections) return
@@ -317,7 +312,7 @@
           // generation's listeners never existed.
           if (root.__dshStatsHoverToken === statsBindingToken) return
           root.__dshStatsHoverToken = statsBindingToken
-          var openTimer = null
+          let openTimer = null
           function cancelOpen() {
             if (openTimer) {
               clearTimeout(openTimer)
@@ -330,15 +325,15 @@
           // permission selector to the model trigger used to unfold the card on
           // the way past. A passing pointer never stays the dwell out; a pointer
           // the user actually parked there does.
-          root.addEventListener('mouseenter', function () {
+          root.addEventListener('mouseenter', () => {
             cancelOpen()
             if (readPrefs().autoPopover !== AUTO_POPOVER_ALL) return
-            openTimer = setTimeout(function () {
+            openTimer = setTimeout(() => {
               openTimer = null
               showStatsPopover(root)
             }, 300)
           })
-          root.addEventListener('mouseleave', function () {
+          root.addEventListener('mouseleave', () => {
             cancelOpen()
             // Unconditional, unlike the open side: a card opened by CLICK has to
             // close when the pointer leaves, whatever the hover switch says.
@@ -355,7 +350,7 @@
           // (the card kept flipping between "会话统计 + Token 用量" and "Token 用量"
           // alone) and why the card stopped closing — every re-entry cancelled the
           // pending hide.
-          root.addEventListener('click', function (event) {
+          root.addEventListener('click', event => {
             if (event && event.isTrusted === false) return
             cancelOpen()
             showStatsPopover(root)
@@ -378,17 +373,17 @@
         function hostStatsDetailed(root) {
           if (root.querySelector('button[aria-haspopup="dialog"]') !== null) return true
           if (document.querySelector('[data-session-stats-details], [data-session-stats-usage]') !== null) return true
-          var children = root.children
-          for (var i = 0; i < children.length; i++) {
+          const children = root.children
+          for (let i = 0; i < children.length; i++) {
             if (children[i].querySelector('button, span') !== null) return true
           }
           return false
         }
 
         function syncStatsSummary() {
-          var root = statsRoot()
+          const root = statsRoot()
           if (root === null) return
-          var mode = hostStatsDetailed(root) ? 'detailed' : 'compact'
+          const mode = hostStatsDetailed(root) ? 'detailed' : 'compact'
           if (root.getAttribute(STATS_MODE_ATTR) !== mode) root.setAttribute(STATS_MODE_ATTR, mode)
           if (mode === 'compact') {
             // The host draws its own icon readings with its own spacing, and
@@ -397,28 +392,28 @@
             hideStatsPopover()
             return
           }
-          var buttons = root.querySelectorAll('button')
-          var timeText = ''
-          var usageText = ''
-          for (var i = 0; i < buttons.length; i++) {
-            var button = buttons[i]
-            var aria = button.getAttribute('aria-label') || ''
-            var parts = aria.split(' · ')
-            var isTime = /轮|步|turns?|steps?/i.test(aria)
+          const buttons = root.querySelectorAll('button')
+          let timeText = ''
+          let usageText = ''
+          for (let i = 0; i < buttons.length; i++) {
+            const button = buttons[i]
+            const aria = button.getAttribute('aria-label') || ''
+            const parts = aria.split(' · ')
+            const isTime = /轮|步|turns?|steps?/i.test(aria)
             if (isTime) {
-              var counts = (parts[0] || '').match(/\d[\d,]*/g) || []
-              var turns = counts[0] || '0'
-              var steps = counts[1] || '0'
-              var tps = (parts[1] || '').match(/([\d.,]+[KMB]?)\s*tok\/s/i)
-              timeText = turns + '轮' + steps + '步' + (tps ? ' · ' + tps[1] + 'tok/s' : '')
+              const counts = (parts[0] || '').match(/\d[\d,]*/g) || []
+              const turns = counts[0] || '0'
+              const steps = counts[1] || '0'
+              const tps = (parts[1] || '').match(/([\d.,]+[KMB]?)\s*tok\/s/i)
+              timeText = `${turns}轮${steps}步${tps ? ` · ${tps[1]}tok/s` : ''}`
             } else {
-              var total = (parts[0] || '').match(/([\d.,]+[KMB]?)\s*tok/i)
-              var cache = (parts[1] || '').match(/([\d.]+)\s*%/)
-              usageText = (total ? total[1] + ' tok' : (parts[0] || '')) + (cache ? ' · ' + cache[1] + '% Cache' : '')
+              const total = (parts[0] || '').match(/([\d.,]+[KMB]?)\s*tok/i)
+              const cache = (parts[1] || '').match(/([\d.]+)\s*%/)
+              usageText = (total ? `${total[1]} tok` : (parts[0] || '')) + (cache ? ` · ${cache[1]}% Cache` : '')
             }
           }
           if (buttons.length === 1) {
-            var only = timeText || usageText
+            const only = timeText || usageText
             timeText = only
             usageText = only
           }
@@ -433,14 +428,14 @@
 
         return {
             /** Re-sweep strays left by a previous generation, then refresh the sentence. */
-            sync: function () {
+            sync() {
                 sweepStrayStatsPopovers()
                 syncStatsSummary()
             },
             /** Close the card (composer focus). */
             close: hideStatsPopover,
             /** Remove the card and its hide timer. */
-            teardown: function () {
+            teardown() {
                 unregisterPopover('stats')
                 if (statsHideTimer) {
                     clearTimeout(statsHideTimer)
@@ -450,7 +445,7 @@
                 statsPopover = null
                 // Hand the host node back unmarked: the mode attribute and the
                 // sentence variables are ours.
-                var root = statsRoot()
+                const root = statsRoot()
                 if (root !== null) {
                     root.removeAttribute(STATS_MODE_ATTR)
                     root.style.removeProperty('--dsh-stats-time')

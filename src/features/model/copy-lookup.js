@@ -18,19 +18,19 @@
     /** Exact entry: `provider/model`, bare id, folded id, then the alias table. */
     function exactModelCopy(groupId, modelId) {
       if (modelCopy === null) return null
-      var gid = String(groupId === void 0 || groupId === null ? '' : groupId).toLowerCase()
-      var mid = String(modelId === void 0 || modelId === null ? '' : modelId)
-      var midLower = mid.toLowerCase()
-      var byProvider = modelCopy.exact[groupId + '/' + mid] || modelCopy.exact[gid + '/' + midLower]
+      const gid = String(groupId === void 0 || groupId === null ? '' : groupId).toLowerCase()
+      const mid = String(modelId === void 0 || modelId === null ? '' : modelId)
+      const midLower = mid.toLowerCase()
+      const byProvider = modelCopy.exact[`${groupId}/${mid}`] || modelCopy.exact[`${gid}/${midLower}`]
       if (byProvider) return byProvider
       if (modelCopy.exact[mid]) return modelCopy.exact[mid]
       if (modelCopy.exact[midLower]) return modelCopy.exact[midLower]
-      var folded = normalizeModelId(mid)
+      const folded = normalizeModelId(mid)
       if (modelCopy.folded[folded]) return modelCopy.folded[folded]
-      var alias = modelCopy.aliases[mid] || modelCopy.aliases[midLower] || modelCopy.aliases[folded] || (modelCopy.foldedAliases && modelCopy.foldedAliases[folded])
+      const alias = modelCopy.aliases[mid] || modelCopy.aliases[midLower] || modelCopy.aliases[folded] || (modelCopy.foldedAliases && modelCopy.foldedAliases[folded])
       if (alias) {
         if (modelCopy.exact[alias]) return modelCopy.exact[alias]
-        var foldedAlias = normalizeModelId(alias)
+        const foldedAlias = normalizeModelId(alias)
         if (modelCopy.folded[foldedAlias]) return modelCopy.folded[foldedAlias]
       }
       return null
@@ -43,11 +43,11 @@
      */
     function familyModelCopy(groupId, modelId) {
       if (modelCopy === null) return null
-      var id = String(modelId === void 0 || modelId === null ? '' : modelId).toLowerCase()
-      var haystacks = [id, String(groupId === void 0 || groupId === null ? '' : groupId).toLowerCase() + '/' + id]
-      for (var h = 0; h < haystacks.length; h++) {
-        for (var i = 0; i < modelCopy.families.length; i++) {
-          var rule = modelCopy.families[i]
+      const id = String(modelId === void 0 || modelId === null ? '' : modelId).toLowerCase()
+      const haystacks = [id, `${String(groupId === void 0 || groupId === null ? '' : groupId).toLowerCase()}/${id}`]
+      for (let h = 0; h < haystacks.length; h++) {
+        for (let i = 0; i < modelCopy.families.length; i++) {
+          const rule = modelCopy.families[i]
           if (!rule.re.test(haystacks[h])) continue
           if (rule.key) return modelCopy.exact[rule.key] || null
           return rule.text
@@ -59,8 +59,8 @@
     /** Last-resort tier rule, read out of the id itself. */
     function tierModelCopy(modelId) {
       if (modelCopy === null) return null
-      var id = String(modelId === void 0 || modelId === null ? '' : modelId).toLowerCase()
-      for (var i = 0; i < modelCopy.tiers.length; i++) {
+      const id = String(modelId === void 0 || modelId === null ? '' : modelId).toLowerCase()
+      for (let i = 0; i < modelCopy.tiers.length; i++) {
         if (modelCopy.tiers[i].re.test(id)) return modelCopy.tiers[i].text
       }
       return null
@@ -71,9 +71,9 @@
      * `ctx` is the caller's context, used only to read the shell's locale.
      */
     function modelDescription(ctx, groupId, model) {
-      var id = typeof model.id === 'string' ? model.id : ''
-      var pair = exactModelCopy(groupId, id) || familyModelCopy(groupId, id) || tierModelCopy(id)
-      var text = localized(pair, ctx)
+      const id = typeof model.id === 'string' ? model.id : ''
+      const pair = exactModelCopy(groupId, id) || familyModelCopy(groupId, id) || tierModelCopy(id)
+      const text = localized(pair, ctx)
       if (text) return text
       return typeof model.description === 'string' ? model.description : ''
     }

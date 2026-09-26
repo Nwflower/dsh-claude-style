@@ -45,28 +45,37 @@
      */
     function reportFeatureFailure(name, error) {
       try {
-        console.error('[dsh-claude-style] "' + name + '" failed and was switched off:', error)
+        console.error(`[dsh-claude-style] "${name}" failed and was switched off:`, error)
       } catch (ignored) { /* no console */ }
     }
 
     function installScheduler(ctx, ui, passFeatures, hookFeatures) {
+      /**
+       * The features a pass syncs (their `ui` handle names), in pass order.
+       * entry.js passes them in FEATURES order, filtered to handles that exist
+       * and have a `sync`.
+       */
+      const PASS_FEATURES = passFeatures || []
+      /** Every installed feature handle, in install order, for the event hooks. */
+      const HOOK_FEATURES = hookFeatures || []
+
       function onGlobalPointerDown(e) {
-        var target = e.target
+        const target = e.target
         // A press a feature does not own closes it: the model picker and the
         // effort card are hover-driven popovers, the account drawer a click one.
         // Features without an `owns` keep their own dismiss route — permissions
         // runs its own outside-press listener, and quickProviders closes only on
         // composer focus — so none gains a route it did not have.
-        for (var i = 0; i < HOOK_FEATURES.length; i++) {
-          var handle = ui[HOOK_FEATURES[i]]
+        for (let i = 0; i < HOOK_FEATURES.length; i++) {
+          const handle = ui[HOOK_FEATURES[i]]
           if (!handle || typeof handle.owns !== 'function' || typeof handle.close !== 'function') continue
           if (target && !handle.owns(target)) handle.close('outside')
         }
         // A press also drives hooks that are not about closing: settingsNav's
         // class changes are outside the observer's attributeFilter, so its sync
         // runs on the press itself. It is last, in feature order.
-        for (var j = 0; j < HOOK_FEATURES.length; j++) {
-          var pressed = ui[HOOK_FEATURES[j]]
+        for (let j = 0; j < HOOK_FEATURES.length; j++) {
+          const pressed = ui[HOOK_FEATURES[j]]
           if (pressed && typeof pressed.onPointerDown === 'function') pressed.onPointerDown(target)
         }
       }
@@ -77,16 +86,16 @@
           // overlay is the one layer that does NOT close on a window blur (it is
           // meant to be read, and reading it may mean switching windows), so Esc
           // is its keyboard way out; a feature that ignores the reason is skipped.
-          for (var i = 0; i < HOOK_FEATURES.length; i++) {
-            var handle = ui[HOOK_FEATURES[i]]
+          for (let i = 0; i < HOOK_FEATURES.length; i++) {
+            const handle = ui[HOOK_FEATURES[i]]
             if (handle && typeof handle.close === 'function') handle.close('escape')
           }
         }
         if ((e.ctrlKey || e.metaKey) && e.key === ',') {
           // Unconditional: the hook's return value never gates this.
           e.preventDefault()
-          for (var k = 0; k < HOOK_FEATURES.length; k++) {
-            var keyHandle = ui[HOOK_FEATURES[k]]
+          for (let k = 0; k < HOOK_FEATURES.length; k++) {
+            const keyHandle = ui[HOOK_FEATURES[k]]
             if (keyHandle && typeof keyHandle.onKey === 'function') keyHandle.onKey(e)
           }
         }
@@ -107,23 +116,23 @@
       // it lives and dies with the host's hover state, and syncHeroMenu notices
       // when it is gone — so it has no hook and is simply skipped.
       function onComposerFocusIn(e) {
-        var target = e.target
+        const target = e.target
         if (!target || typeof target.closest !== 'function') return
         if (target.closest('[data-composer-card]') === null) return
-        for (var i = 0; i < HOOK_FEATURES.length; i++) {
-          var handle = ui[HOOK_FEATURES[i]]
+        for (let i = 0; i < HOOK_FEATURES.length; i++) {
+          const handle = ui[HOOK_FEATURES[i]]
           if (handle && typeof handle.close === 'function') handle.close('composer')
         }
       }
 
       function onComposerInput(e) {
-        var target = e.target
+        const target = e.target
         if (!target) return
         if (target.hasAttribute && (target.hasAttribute('data-composer-input') || (target.closest && target.closest('[data-composer-input]')))) {
           // The [data-composer-input] filter stays in this event pipe; a feature
           // is only told that a composer-input event happened.
-          for (var i = 0; i < HOOK_FEATURES.length; i++) {
-            var handle = ui[HOOK_FEATURES[i]]
+          for (let i = 0; i < HOOK_FEATURES.length; i++) {
+            const handle = ui[HOOK_FEATURES[i]]
             if (handle && typeof handle.onInput === 'function') handle.onInput(target)
           }
         }
@@ -139,8 +148,8 @@
       // knows only the hook: a feature with a `reposition(reason)` re-resolves
       // its own anchor (and checks whether it is open).
       function repositionFeatures(reason) {
-        for (var i = 0; i < HOOK_FEATURES.length; i++) {
-          var handle = ui[HOOK_FEATURES[i]]
+        for (let i = 0; i < HOOK_FEATURES.length; i++) {
+          const handle = ui[HOOK_FEATURES[i]]
           if (handle && typeof handle.reposition === 'function') handle.reposition(reason)
         }
       }
@@ -161,15 +170,15 @@
       // painted; subscribing here (rather than reading the locale at render time
       // only) is what makes the change land while a popover is open.
       function onCopyChange() {
-        for (var i = 0; i < HOOK_FEATURES.length; i++) {
-          var handle = ui[HOOK_FEATURES[i]]
+        for (let i = 0; i < HOOK_FEATURES.length; i++) {
+          const handle = ui[HOOK_FEATURES[i]]
           if (handle && typeof handle.onCopyChange === 'function') handle.onCopyChange()
         }
         schedule()
       }
-      var localeUnsubscribe = null
+      let localeUnsubscribe = null
       try {
-        var localeService = ctx.get('locale')
+        const localeService = ctx.get('locale')
         if (localeService && typeof localeService.subscribe === 'function') {
           localeUnsubscribe = localeService.subscribe(onCopyChange)
         }
@@ -180,35 +189,35 @@
       // an attribute the stylesheet reads — so a change re-runs the pass. The
       // first read also arrives through here, which is what replaces the
       // defaults with the stored values.
-      var prefsUnsubscribe = null
+      let prefsUnsubscribe = null
       prefsUnsubscribe = subscribePrefs(onCopyChange)
       loadPrefs()
 
-      var modelCopyUnsubscribe = null
+      let modelCopyUnsubscribe = null
       modelCopyUnsubscribe = onModelCopyLoaded(onCopyChange)
 
-      var usernameUnsubscribe = null
-      usernameUnsubscribe = onUsernameLoaded(function () {
+      let usernameUnsubscribe = null
+      usernameUnsubscribe = onUsernameLoaded(() => {
         schedule()
       })
 
       // The HDSL contract lands after the first pass too, and it can carry both
       // the nickname and the picture, so its arrival repaints the same way.
-      var hdslUnsubscribe = null
-      hdslUnsubscribe = onHdslLoaded(function () {
+      let hdslUnsubscribe = null
+      hdslUnsubscribe = onHdslLoaded(() => {
         schedule()
       })
 
       // Chat streaming mutates the tree constantly; coalesce to one pass a frame.
-      var scheduled = false
+      let scheduled = false
       /** The frame the pending pass waits on, so the teardown can cancel it. */
-      var pendingFrame = 0
+      let pendingFrame = 0
       /** Set by the teardown: no pass may be scheduled, or run, after it. */
-      var stopped = false
-      var composerCardObserver = null
-      var observedCard = null
+      let stopped = false
+      let composerCardObserver = null
+      let observedCard = null
       if (typeof ResizeObserver !== 'undefined') {
-        composerCardObserver = new ResizeObserver(function () {
+        composerCardObserver = new ResizeObserver(() => {
           // The card resizing moves the anchors pinned to it (the rail toggle,
           // a container width change) with no window resize: re-pin in the same
           // frame, or a JS-pinned control trails the ones CSS just reflowed.
@@ -216,17 +225,9 @@
         })
       }
 
-      /**
-       * The features a pass syncs (their `ui` handle names), in pass order.
-       * entry.js passes them in FEATURES order, filtered to handles that exist
-       * and have a `sync`.
-       */
-      var PASS_FEATURES = passFeatures || []
-      /** Every installed feature handle, in install order, for the event hooks. */
-      var HOOK_FEATURES = hookFeatures || []
       /** Failed passes in a row after which a feature's sync is switched off. */
-      var SYNC_FAILURE_LIMIT = 3
-      var syncFailures = {}
+      const SYNC_FAILURE_LIMIT = 3
+      const syncFailures = {}
 
       /**
        * Run one feature's sync in isolation. A sync that throws is retried on the
@@ -237,9 +238,9 @@
        * on every pass.)
        */
       function runSync(name) {
-        var feature = ui[name]
+        const feature = ui[name]
         if (!feature || typeof feature.sync !== 'function') return
-        var failures = syncFailures[name] || 0
+        const failures = syncFailures[name] || 0
         if (failures >= SYNC_FAILURE_LIMIT) return
         try {
           feature.sync()
@@ -255,13 +256,13 @@
       function schedule() {
         if (scheduled || stopped) return
         scheduled = true
-        pendingFrame = requestAnimationFrame(function () {
+        pendingFrame = requestAnimationFrame(() => {
           scheduled = false
           if (stopped) return
-          for (var i = 0; i < PASS_FEATURES.length; i++) runSync(PASS_FEATURES[i])
+          for (let i = 0; i < PASS_FEATURES.length; i++) runSync(PASS_FEATURES[i])
           try {
             if (composerCardObserver) {
-              var currentCard = document.querySelector('[data-composer-card]')
+              const currentCard = document.querySelector('[data-composer-card]')
               if (currentCard !== observedCard) {
                 if (observedCard) composerCardObserver.unobserve(observedCard)
                 observedCard = currentCard
@@ -273,7 +274,7 @@
       }
       ui.schedule = schedule
 
-      var observer = new MutationObserver(schedule)
+      const observer = new MutationObserver(schedule)
       observer.observe(document.body, {
         childList: true,
         characterData: true,
@@ -289,9 +290,9 @@
       // has no DOM change to wake a pass, so the clock runs one every minute
       // while the app stays open. The syncs skip identical writes, so this
       // cannot feed the observer.
-      var clockTimer = setInterval(schedule, 60000)
+      let clockTimer = setInterval(schedule, 60000)
 
-      return function () {
+      return () => {
         // A pass already requested would run against torn-down features and
         // build their DOM again after the teardown (measured: dozens of skin
         // nodes and the composer's body attribute came back). Cancel it, and
