@@ -155,7 +155,7 @@
           const panel = fallback.nextElementSibling
           return panel === null ? null : { element: panel, session, place: 'panel' }
         }
-        const stack = seat.querySelector('[class*="composerStack"]')
+        const stack = seat.querySelector(COMPOSER_STACK)
         return stack === null ? null : { element: stack, session, place: 'stack' }
       }
 

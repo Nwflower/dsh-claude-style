@@ -16,6 +16,13 @@
     }
 
     /**
+     * The host's composer stack (ui-conversation's `.composerStack`): the
+     * composer card with the cards stacked above it, and on the new-session
+     * page the hero around them (`_composerHero` beside it there).
+     */
+    const COMPOSER_STACK = '[class*="_composerStack"]'
+
+    /**
      * The current-session selection left the Session Controller in dsh 0.2:
      * the list snapshot no longer carries `current`, and the main-view
      * selection is projected by the `uiSession` service as a binding source

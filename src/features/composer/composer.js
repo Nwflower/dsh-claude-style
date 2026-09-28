@@ -52,7 +52,7 @@
         for (let c = 0; c < cards.length; c++) {
           const card = cards[c]
           if (card.getAttribute('data-composer-variant') !== value) card.setAttribute('data-composer-variant', value)
-          const stack = card.closest('[class*="composerStack"]')
+          const stack = card.closest(COMPOSER_STACK)
           if (stack !== null && !syncedStacks.includes(stack)) {
             if (stack.getAttribute('data-composer-variant') !== value) {
               stack.setAttribute('data-composer-variant', value)

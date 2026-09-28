@@ -204,7 +204,7 @@
        */
       function syncColdSeat() {
         const stack = document.body.hasAttribute(HOME_HERO_ATTR)
-          ? document.querySelector('[class*="_composerStack"][class*="_composerHero"]')
+          ? document.querySelector(`${COMPOSER_STACK}[class*="_composerHero"]`)
           : null
         if (stack === null || stack.querySelector(`:scope > [data-slot="${DOCK_SLOT}"]`) !== null) {
           unmountColdSeat()
