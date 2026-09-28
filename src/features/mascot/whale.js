@@ -251,7 +251,8 @@
 
       /** A once animation reached its last frame: whoever asked for it lets go. */
       function finish(key, now) {
-        if (reaction !== null && reaction.key === key) reaction = null
+        // A fresh reaction has not played yet: the one ending is its predecessor.
+        if (reaction !== null && reaction.key === key && !reaction.fresh) reaction = null
         if (extra === key) {
           extra = null
           nextExtraAt = now + EXTRA_MIN_MS + Math.random() * EXTRA_SPAN_MS
@@ -275,7 +276,7 @@
           finish(current.key, now)
         }
         const next = decide(now)
-        const switching = current === null || next.key !== current.key
+        const switching = current === null || next.key !== current.key || (reaction !== null && reaction.fresh)
         // A state that just arrived is not pushed off by an equal or lower one
         // within MIN_SHOW_MS, so thinking and typing do not flicker. A reaction
         // gives way the moment it ends.
@@ -285,7 +286,10 @@
           if (sheetReady(next.key)) show(next, now)
           // A once animation whose sheet never came counts as played, so the
           // whale does not wait on it for good.
-          else if (next.mode === 'once' && sheets.get(next.key) === 'failed') finish(next.key, now)
+          else if (next.mode === 'once' && sheets.get(next.key) === 'failed') {
+            if (reaction !== null) reaction.fresh = false
+            finish(next.key, now)
+          }
         }
         if (!document.hidden) draw(now)
         schedule()
@@ -294,6 +298,7 @@
       function show(next, now) {
         const sheet = DEEPY_SHEETS[next.key]
         current = { key: next.key, mode: next.mode, priority: next.priority, start: now }
+        if (reaction !== null && reaction.key === next.key) reaction.fresh = false
         drawnFrame = -1
         const style = root.style
         style.setProperty('--dsh-claude-deepy-sheet', `url("${sheetUrl(next.key)}")`)
@@ -330,10 +335,14 @@
         }, delay)
       }
 
+      /**
+       * The reader's hand on the whale. A reaction always starts from its
+       * first frame (`fresh` until it is shown, even over the same reaction
+       * still on screen); until its sheet is decoded, what is on screen keeps
+       * playing.
+       */
       function react(key, mode) {
-        reaction = { key, mode }
-        // A reaction always starts from its first frame.
-        current = null
+        reaction = { key, mode, fresh: true }
         step()
       }
 
