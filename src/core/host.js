@@ -40,6 +40,28 @@
       return binding.session === void 0 ? null : binding.session
     }
 
+    /**
+     * What an open turn is doing, read off the host's chat snapshot (ui-chat's
+     * `chat` target of uiConversation): its newest step's assistant output
+     * while that streams — `{ kind: 'assistant', assistant, newest }`, with
+     * `newest` the kind of its newest block, null before the first — else
+     * `{ kind: 'tools' }` while one of the turn's tool calls runs, else null:
+     * the turn waits on the model.
+     */
+    function readTurnActivity(snapshot, turn) {
+      const step = turn.steps.length === 0 ? undefined : turn.steps[turn.steps.length - 1]
+      const assistant = step === undefined ? undefined : step.data.get('assistant-step')
+      if (assistant !== undefined && assistant.status === 'running') {
+        const blocks = assistant.blocks
+        return { kind: 'assistant', assistant, newest: blocks.length === 0 ? null : blocks[blocks.length - 1].kind }
+      }
+      const calls = snapshot.legacy.runningCalls
+      for (let i = 0; i < calls.length; i++) {
+        if (calls[i].turn === turn.turn) return { kind: 'tools' }
+      }
+      return null
+    }
+
     function currentPreset(session) {
       const snapshot = session.projections.faceOf('permissions').getSnapshot()
       if (snapshot === void 0 || snapshot === null) return null

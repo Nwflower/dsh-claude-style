@@ -120,16 +120,15 @@
        * place), else the turn's running tool calls, else a wait for the model.
        */
       function phaseText(key, snapshot, turn, now, t) {
-        const step = turn.steps.length === 0 ? undefined : turn.steps[turn.steps.length - 1]
-        const assistant = step === undefined ? undefined : step.data.get('assistant-step')
-        if (assistant !== undefined && assistant.status === 'running') {
+        const activity = readTurnActivity(snapshot, turn)
+        if (activity !== null && activity.kind === 'assistant') {
+          const assistant = activity.assistant
           let seen = reasoning.get(key)
           if (seen === undefined || seen.step !== assistant.step) {
             seen = { step: assistant.step, from: null, until: null }
             reasoning.set(key, seen)
           }
-          const blocks = assistant.blocks
-          const newest = blocks.length === 0 ? null : blocks[blocks.length - 1].kind
+          const newest = activity.newest
           if (newest === 'reasoning') {
             if (seen.from === null) seen.from = now
             seen.until = null
@@ -146,10 +145,7 @@
             ? copyLabel('turnStatusToolCall', 'Preparing a tool call…')
             : copyLabel('turnStatusWriting', 'Writing…')
         }
-        const calls = snapshot.legacy.runningCalls
-        for (let i = 0; i < calls.length; i++) {
-          if (calls[i].turn === turn.turn) return copyLabel('turnStatusTools', 'Running tools…')
-        }
+        if (activity !== null && activity.kind === 'tools') return copyLabel('turnStatusTools', 'Running tools…')
         return copyLabel('turnStatusWaiting', 'Waiting for the model…')
       }
 

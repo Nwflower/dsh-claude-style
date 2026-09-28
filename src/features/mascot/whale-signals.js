@@ -100,18 +100,10 @@
         const order = snapshot.timeline.turnOrder
         const turn = order.length === 0 ? undefined : snapshot.timeline.turns.get(order[order.length - 1])
         if (turn === undefined || turn.status !== 'open') return null
-        const step = turn.steps.length === 0 ? undefined : turn.steps[turn.steps.length - 1]
-        const assistant = step === undefined ? undefined : step.data.get('assistant-step')
-        if (assistant !== undefined && assistant.status === 'running') {
-          const blocks = assistant.blocks
-          const newest = blocks.length === 0 ? null : blocks[blocks.length - 1].kind
-          return newest === null || newest === 'reasoning' ? 'thinking' : 'working'
-        }
-        const calls = snapshot.legacy.runningCalls
-        for (let i = 0; i < calls.length; i++) {
-          if (calls[i].turn === turn.turn) return 'working'
-        }
-        return 'thinking'
+        const activity = readTurnActivity(snapshot, turn)
+        if (activity === null) return 'thinking'
+        if (activity.kind === 'tools') return 'working'
+        return activity.newest === null || activity.newest === 'reasoning' ? 'thinking' : 'working'
       }
 
       /**
