@@ -183,7 +183,9 @@
   var launcherCase = LAUNCHER[CASE] !== undefined
   var username = CASE === 'markup' ? MARKUP : CASE === 'desktop' || launcherCase ? '' : 'Tester'
   var form = {
-    getSnapshot: function () { return { status: 'ready', value: { username: username, collapseFooter: true, homeLayout: CASE === 'studio' ? 'studio' : 'classic' } } },
+    // The deepy case stores the DeepSeek brand under the value earlier builds
+    // wrote for it ("off"), which has to read as the DeepSeek brand.
+    getSnapshot: function () { return { status: 'ready', value: { username: username, collapseFooter: true, homeLayout: CASE === 'studio' ? 'studio' : 'classic', brand: CASE === 'deepy' ? 'off' : undefined } } },
     subscribe: function () { return function () {} },
     set: function () { return Promise.resolve(true) },
   }
@@ -393,7 +395,74 @@
       }
     },
   } : undefined
-  var sessions = CASE === 'turn-status' ? {
+  // The deepy case: the session the DeepSeek brand's whale follows, as the
+  // host's services describe it — the session status (uiSession), the session
+  // list with its subagent catalog, the chat snapshot's open turn and the
+  // session's event feed. The probe drives all four through __deepy.
+  var deepy = CASE === 'deepy' ? (function () {
+    var statusListeners = []
+    var feedListeners = []
+    var status = new Map()
+    var list = { ids: ['smoke-deepy'], byId: { 'smoke-deepy': { id: 'smoke-deepy', running: false } }, projectionsBySession: {} }
+    var feed = { change: { kind: 'replace', entries: [] } }
+    var snapshot = { timeline: { turnOrder: [], turns: new Map() }, legacy: { runningCalls: [] } }
+    function notify(listeners) { listeners.slice().forEach(function (listener) { listener() }) }
+    function subscribe(listeners) {
+      return function (listener) {
+        listeners.push(listener)
+        return function () {
+          var at = listeners.indexOf(listener)
+          if (at !== -1) listeners.splice(at, 1)
+        }
+      }
+    }
+    window.__deepy = {
+      /** One session's status entry; the whole map is replaced, as the host's is. */
+      setStatus: function (id, entry) {
+        status = new Map(status)
+        status.set(id, Object.assign({ running: false, pendingInteraction: undefined, completionUnread: false }, entry))
+        notify(statusListeners)
+      },
+      /** The open turn: `newest` is its streaming step's newest block kind, or null for a closed turn. */
+      setTurn: function (newest) {
+        var steps = newest === undefined ? [] : [{ step: 1, data: { get: function (kind) {
+          return kind === 'assistant-step' ? { status: 'running', step: 1, blocks: newest === 'none' ? [] : [{ kind: newest }] } : undefined
+        } } }]
+        var turn = { turn: 1, status: newest === null ? 'closed' : 'open', steps: newest === null ? [] : steps }
+        snapshot = { timeline: { turnOrder: [1], turns: new Map([[1, turn]]) }, legacy: { runningCalls: [] } }
+      },
+      /** More top-level sessions, for the working tiers. */
+      addSessions: function (ids) {
+        list = { ids: list.ids.concat(ids), byId: Object.assign({}, list.byId), projectionsBySession: list.projectionsBySession }
+        ids.forEach(function (id) { list.byId[id] = { id: id, running: false } })
+      },
+      setSubagents: function (children) {
+        list = {
+          ids: list.ids,
+          byId: Object.assign({}, list.byId),
+          projectionsBySession: { 'smoke-deepy': { values: { subagentCatalog: children.map(function (id) { return { id: id } }) } } },
+        }
+        children.forEach(function (id) { list.byId[id] = { id: id, origin: 'subagent', running: false } })
+      },
+      /** Append one live event to the session's feed. */
+      emit: function (event) {
+        feed = { change: { kind: 'append', entries: [{ type: 'event', event: event }] } }
+        notify(feedListeners)
+      },
+    }
+    var eventSource = { getSnapshot: function () { return feed }, subscribe: subscribe(feedListeners) }
+    return {
+      sessions: {
+        list: { getSnapshot: function () { return list } },
+        binding: function (id) { return id === 'smoke-deepy' ? { sessionId: id, eventSource: eventSource } : undefined },
+      },
+      uiSession: { sessionStatus: { getSnapshot: function () { return status }, subscribe: subscribe(statusListeners) } },
+      conversation: {
+        binding: function () { return { target: function () { return { getSnapshot: function () { return snapshot } } } } },
+      },
+    }
+  })() : undefined
+  var sessions = CASE === 'deepy' ? deepy.sessions : CASE === 'turn-status' ? {
     list: { getSnapshot: function () { return { current: undefined } } },
     binding: function (id) { return id === 'smoke-session' ? {} : undefined },
   } : CASE === 'sync-fault'
@@ -463,7 +532,8 @@
       if (name === 'remote.permissionPresets') return permissionPresets
       if (name === 'remote') return CASE === 'desktop' ? remote : undefined
       if (name === 'sessions') return sessions
-      if (name === 'uiConversation') return turnStatusChat
+      if (name === 'uiConversation') return deepy !== undefined ? deepy.conversation : turnStatusChat
+      if (name === 'uiSession') return deepy !== undefined ? deepy.uiSession : undefined
       if (name === 'locale') return turnStatusLocale
       if (name === 'slots') return slotRegistry
       return undefined

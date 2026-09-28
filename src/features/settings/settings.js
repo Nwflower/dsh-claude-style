@@ -230,7 +230,7 @@
         row(
           'brand',
           settingsCopy('brandTitle', 'Brand mark'),
-          settingsCopy('brandDesc', 'The brand mark in the sidebar and on the home page. DeepSeek keeps the host\'s own DeepSeek mark in DeepSeek blue and turns the whole palette blue (a sky-tinted white in light, a blue-black in dark).'),
+          settingsCopy('brandDesc', 'The brand mark in the sidebar and on the home page. DeepSeek keeps the host\'s own DeepSeek mark in DeepSeek blue, turns the whole palette blue (a sky-tinted white in light, a blue-black in dark) and puts Deepy the pixel whale on the composer in place of the crab.'),
           segment(brandOptions, prefs.brand, value => { write({ brand: value }) }),
         ),
         row(

@@ -10,6 +10,8 @@
  *                                %%TOKEN%% placeholders); brand SVGs live in src/assets/
  *   src/assets/icons/combine/*.svg     vendor lockups (mark + wordmark in one),
  *                                inlined as JS markup tables
+ *   src/assets/mascot/deepy/*.png      Deepy's animation sheets, copied to
+ *                                lib/deepy/ for the host half to serve
  *   src/core/                    host accessors, prefs, model copy, i18n, scheduler
  *   src/shared/                  parts more than one feature uses (JS + CSS)
  *   src/theme/*.css              the global look no single feature owns
@@ -40,10 +42,13 @@ const ASSETS = path.join(SRC, 'assets')
 const BRAND_ASSETS = path.join(ASSETS, 'brand')
 /** The composer crab's sprite strips, inlined as CSS data URIs. */
 const MASCOT_ASSETS = path.join(ASSETS, 'mascot')
+/** Deepy's animation sheets, copied to lib/deepy/ for the host half to serve. */
+const DEEPY_ASSETS = path.join(MASCOT_ASSETS, 'deepy')
 /** Vendored vendor lockups (src/assets/icons/combine); mark + wordmark per brand id. */
 const COMBINE_ASSETS = path.join(ASSETS, 'icons', 'combine')
 const LIB = path.join(ROOT, 'lib')
 const OUT = path.join(LIB, 'client.js')
+const DEEPY_OUT = path.join(LIB, 'deepy')
 
 /**
  * Model copy ships as DATA beside the bundle, not inside it: the browser half
@@ -111,6 +116,8 @@ const FRAGMENTS = [
   'features/home/overview.js',
   'features/home/models.js',
   'features/home/home-layout.js',
+  'features/mascot/whale-signals.js',
+  'features/mascot/whale.js',
   'features/mascot/mascot.js',
   'core/scheduler.js',
   'features/settings/settings.js',
@@ -147,6 +154,7 @@ const STYLE_FILES = [
   { file: 'features/home/home-overview.css' },
   { file: 'features/home/home-models.css' },
   { file: 'features/mascot/mascot.css' },
+  { file: 'features/mascot/whale.css' },
   { file: 'features/theme-flip/theme-flip.css' },
 ]
 
@@ -350,6 +358,54 @@ function loadPngAssets() {
     out[token] = 'url("data:image/png;base64,' + fs.readFileSync(path.join(MASCOT_ASSETS, file)).toString('base64') + '")'
   }
   return out
+}
+
+/**
+ * The file name a Deepy sheet may have: the host half serves exactly the names
+ * this shape allows (host/index.js, DEEPY_FILE), so a name outside it would be
+ * copied and never served.
+ */
+const DEEPY_FILE = /^[a-z]+(?:-[a-z]+)*\.png$/
+
+/**
+ * Copy Deepy's sheets to lib/deepy/.
+ *
+ * The animation table in src/constants.js (DEEPY_SHEETS) is the list. Each
+ * entry needs its sheet and a well-formed row — a frame count, a crop box
+ * inside the 52×52 grid, a still frame the sheet holds — and a sheet no entry
+ * names is refused, so the package never ships a sheet the whale cannot play
+ * or an entry that would draw nothing. The sheets are too large to inline
+ * (about 0.4 MB together), and the browser only fetches the ones it plays.
+ *
+ * @returns the number of sheets and their total size, for the build log.
+ */
+function copyDeepySheets() {
+  const constants = fs.readFileSync(path.join(SRC, 'constants.js'), 'utf8')
+  const sheets = new Function(`${constants}\n    return DEEPY_SHEETS`)()
+  const names = Object.keys(sheets)
+  const files = fs.readdirSync(DEEPY_ASSETS)
+  for (const file of files) {
+    if (!DEEPY_FILE.test(file)) throw new Error(`build: src/assets/mascot/deepy/${file} is not a sheet name the host half serves`)
+    if (!names.includes(file.slice(0, -4))) throw new Error(`build: src/assets/mascot/deepy/${file} has no entry in DEEPY_SHEETS`)
+  }
+  for (const name of names) {
+    const sheet = sheets[name]
+    const [x, y, w, h] = Array.isArray(sheet.box) ? sheet.box : []
+    const whole = [sheet.frames, sheet.still, x, y, w, h].every(Number.isInteger)
+    if (!whole || sheet.frames < 1 || sheet.still < 0 || sheet.still >= sheet.frames || x < 0 || y < 0 || w < 1 || h < 1 || x + w > 52 || y + h > 52) {
+      throw new Error(`build: DEEPY_SHEETS["${name}"] needs whole frames, still < frames and a box inside the 52×52 grid`)
+    }
+    if (!files.includes(`${name}.png`)) throw new Error(`build: DEEPY_SHEETS["${name}"] has no sheet in src/assets/mascot/deepy/`)
+  }
+  fs.rmSync(DEEPY_OUT, { recursive: true, force: true })
+  fs.mkdirSync(DEEPY_OUT)
+  let bytes = 0
+  for (const name of names) {
+    const target = path.join(DEEPY_OUT, `${name}.png`)
+    fs.copyFileSync(path.join(DEEPY_ASSETS, `${name}.png`), target)
+    bytes += fs.statSync(target).size
+  }
+  return { count: names.length, bytes }
 }
 
 /**
@@ -592,6 +648,9 @@ function main() {
   const iconTarget = path.join(LIB, ICON_FILE)
   fs.copyFileSync(iconSource, iconTarget)
   console.log(`built lib/${ICON_FILE} (${fs.statSync(iconTarget).size} bytes) from src/assets/brand/${ICON_SOURCE}`)
+
+  const deepy = copyDeepySheets()
+  console.log(`built lib/deepy/ (${deepy.count} sheets, ${deepy.bytes} bytes) from src/assets/mascot/deepy/`)
 }
 
 main()

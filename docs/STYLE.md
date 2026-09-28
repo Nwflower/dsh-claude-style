@@ -23,7 +23,7 @@ Rules:
 
 **The DeepSeek brand's palettes.** The DeepSeek brand turns both palettes
 blue. The single accent is DeepSeek's brand blue `#4D6BFE` — the colour of its
-whale logo — with a darker step for text links on the light canvas
+whale logo and of Deepy — with a darker step for text links on the light canvas
 and a lighter one on the dark; the sidebar's whale and wordmark and the hero's
 fish take it as their ink. The neutrals are the host's own cool family (its
 `neutral-bluish` ramp) under a sky-tinted white in light and a blue-black in
@@ -407,6 +407,37 @@ side-on stance, a spell of fishing, and the rod reeled in as it turns back to
 face front. With reduced motion requested, only a click plays it: the pointer
 passing by and the idle timer leave it still. Only the crab takes the pointer;
 the room the rod swings through does not.
+
+## Deepy · 小鲸鱼
+
+Under the DeepSeek brand the crab gives way to Deepy, the pixel whale of the
+Deepy theme pack: a 52×52 grid of logical pixels drawn at 2px a pixel (a 104px
+square), its ground line — row 48.5, the middle of its shadow — on the top edge
+of what it stands on, its box 8px in from the right end of the card it stands
+over. On the home page that is the composer card (both layouts); in a
+conversation it is the whole input area, and the panel that replaces the card
+while the reader is asked for something (those panels start 6–8px above their
+card). Every frame lasts 50ms. The sheets carry five device pixels to a logical
+pixel and are scaled down smoothly, so the whale stays crisp from 1× to 2×
+screens without `image-rendering: pixelated`, which would drop rows on a
+downscale. The body is Deepy's blue `#4E6FFF` with a navy `#142660` outline and
+a white belly in both themes; on the dark canvas the outline and the soft shadow
+recede and the blue body carries the shape. Only the resting body (columns
+12–44, rows 30–48) takes the pointer. With reduced motion requested each state
+holds its still frame; a click or a pull still plays its reaction.
+
+| State | Animation | Still frame |
+|---|---|---|
+| idle, every 20–40 s a look around or a spout | `idle`, `idle-look`, `idle-spout` | 0 |
+| the model reasons or has not answered | `thinking` | 20 |
+| the model writes or tools run: 1 / 2 / 3+ sessions at work | `typing` / `music` / `building` | 16 / 0 / 0 |
+| subagents running: 1 / 2+ | `music` / `conducting` | 0 / 6 |
+| a compaction runs | `compacting` | 20 |
+| an approval, a question or a plan review waits | `notification` | 12 |
+| a tool call or a turn failed (4.8 s) | `error` | 24 |
+| a turn or a compaction finished (5.2 s) | `happy` | 44 |
+| a quiet minute / the next pointer move or key | `sleeping` / `waking` | 10 / 29 |
+| a click on the face / the tail, four quick clicks, a pull | `poke-left` / `poke-right`, `tickle`, `drag` | 0 |
 
 ## Implementation notes
 

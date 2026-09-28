@@ -743,6 +743,134 @@
         live: lineOf(statusButtons[1]),
       }
     }
+    // The DeepSeek brand, stored under its old name ("off"): the whale takes
+    // the crab's place and the canvas turns sky white. On the home page it
+    // stands on the card; on the conversation page it follows the session's
+    // work from the top of the input area, and stands on the panel that takes
+    // the card's place while the reader is asked for something.
+    if (window.SMOKE_CASE === 'deepy') {
+      var driver = window.__deepy
+      var whaleNow = function () {
+        var node = document.querySelector('.dsh-claude-deepy')
+        if (node === null) return null
+        return {
+          animation: node.getAttribute('data-animation'),
+          ready: node.hasAttribute('data-ready'),
+          place: node.parentElement === null ? null : node.parentElement.getAttribute('data-dsh-claude-deepy-anchor'),
+          frame: node.querySelector('.dsh-claude-deepy-sprite').style.backgroundPosition,
+          sheet: getComputedStyle(node.querySelector('.dsh-claude-deepy-sprite')).backgroundImage,
+        }
+      }
+      var wakeDeepyPass = function () {
+        var node = document.createElement('span')
+        document.body.appendChild(node)
+        document.body.removeChild(node)
+      }
+      var bodyStyle = getComputedStyle(document.body)
+      r.deepy = {
+        brand: document.body.getAttribute('data-dsh-claude-brand'),
+        canvas: bodyStyle.backgroundColor,
+        accent: bodyStyle.getPropertyValue('--dsw-alias-brand-primary').trim(),
+        link: bodyStyle.getPropertyValue('--dsw-alias-link').trim(),
+      }
+      // The dark palette, read with the host's dark marker set for a moment.
+      document.body.setAttribute('data-ds-dark-theme', '')
+      var darkStyle = getComputedStyle(document.body)
+      r.deepy.dark = {
+        canvas: darkStyle.backgroundColor,
+        accent: darkStyle.getPropertyValue('--dsw-alias-brand-primary').trim(),
+        raised: darkStyle.getPropertyValue('--dsh-claude-raised').trim(),
+      }
+      document.body.removeAttribute('data-ds-dark-theme')
+      var deepyHero = document.createElement('div')
+      deepyHero.setAttribute('data-phase', 'hero')
+      document.body.appendChild(deepyHero)
+      await sleep(500)
+      r.deepy.home = whaleNow()
+      r.deepy.crab = document.querySelector('.dsh-claude-mascot') !== null
+      // Frames change on the whale's own node, and no frame wakes a pass.
+      var deepyPasses = window.__passes
+      await sleep(600)
+      r.deepy.idle = { before: r.deepy.home && r.deepy.home.frame, after: whaleNow().frame, passes: window.__passes - deepyPasses }
+      // A click on its face pokes it.
+      var hit = document.querySelector('.dsh-claude-deepy-hit')
+      var hitBox = hit.getBoundingClientRect()
+      var press = { pointerId: 1, pointerType: 'mouse', isPrimary: true, button: 0, clientX: hitBox.left + 6, clientY: hitBox.top + hitBox.height / 2, bubbles: true }
+      hit.dispatchEvent(new PointerEvent('pointerdown', Object.assign({ buttons: 1 }, press)))
+      hit.dispatchEvent(new PointerEvent('pointerup', Object.assign({ buttons: 0 }, press)))
+      await sleep(250)
+      r.deepy.poke = whaleNow()
+      // The poke plays out (2s) before the page moves on.
+      await sleep(1900)
+      deepyHero.remove()
+      // The conversation page: the host's composer seat, its chain wrapper and
+      // the composer stack inside it.
+      var deepyConversation = document.createElement('div')
+      deepyConversation.setAttribute('data-phase', 'active')
+      deepyConversation.innerHTML = '<div data-conversation-content data-conversation-session="smoke-deepy"><div data-composer-seat>' +
+        '<div data-slot="conversation.composer" style="display:contents">' +
+        '<div data-chain-overlay-fallback="conversation.composer" style="display:contents">' +
+        '<div class="_x_composerStack_1"><div class="_x_inputBar_1">input</div></div></div></div></div></div>'
+      document.body.appendChild(deepyConversation)
+      driver.setStatus('smoke-deepy', { running: true })
+      driver.setTurn('reasoning')
+      wakeDeepyPass()
+      await sleep(400)
+      r.deepy.thinking = whaleNow()
+      driver.setTurn('text')
+      wakeDeepyPass()
+      await sleep(250)
+      r.deepy.typing = whaleNow()
+      // Two more sessions at work: the hard hat, once the typing whale has
+      // held the stage for its second.
+      driver.addSessions(['smoke-two', 'smoke-three'])
+      driver.setStatus('smoke-two', { running: true })
+      driver.setStatus('smoke-three', { running: true })
+      await sleep(1300)
+      r.deepy.building = whaleNow()
+      // An approval: the host hides the composer and mounts its panel after it.
+      var fallback = deepyConversation.querySelector('[data-chain-overlay-fallback]')
+      var panel = document.createElement('div')
+      panel.setAttribute('data-approval-key', 'smoke')
+      panel.textContent = 'approve?'
+      fallback.style.display = 'none'
+      fallback.parentElement.appendChild(panel)
+      driver.setStatus('smoke-deepy', { running: true, pendingInteraction: { kind: 'approval', key: 'smoke' } })
+      await sleep(400)
+      r.deepy.notification = whaleNow()
+      // Answered and finished; a compaction starts, then ends.
+      panel.remove()
+      fallback.style.display = 'contents'
+      driver.setTurn(null)
+      driver.setStatus('smoke-deepy', { running: false })
+      driver.setStatus('smoke-two', { running: false })
+      driver.setStatus('smoke-three', { running: false })
+      driver.emit({ type: 'compaction/start', seq: 1, time: Date.now(), data: { compactionId: 'c1', turn: null } })
+      wakeDeepyPass()
+      // Each state holds the stage for a second against a lesser one.
+      await sleep(1100)
+      r.deepy.compacting = whaleNow()
+      await sleep(100)
+      driver.emit({ type: 'compaction/end', seq: 2, time: Date.now(), data: { compactionId: 'c1', turn: null } })
+      await sleep(600)
+      r.deepy.celebrating = whaleNow()
+      driver.emit({ type: 'tool/result', seq: 3, time: Date.now(), data: { turn: 2, step: 1, message: { isError: true } } })
+      await sleep(400)
+      r.deepy.failed = whaleNow()
+      // Reduced motion: the state's still frame, held.
+      var deepyMatchMedia = window.matchMedia
+      window.matchMedia = function (query) {
+        return query === '(prefers-reduced-motion: reduce)' ? { matches: true } : deepyMatchMedia.call(window, query)
+      }
+      await sleep(150)
+      var stillBefore = whaleNow().frame
+      await sleep(400)
+      r.deepy.still = { before: stillBefore, after: whaleNow().frame }
+      window.matchMedia = deepyMatchMedia
+      deepyConversation.remove()
+      await sleep(200)
+      r.deepy.gone = whaleNow() === null && document.querySelectorAll('[data-dsh-claude-deepy-anchor]').length === 0
+    }
     // The host's own account row, when the host has one: the skin marks it and
     // repaints it as a Claude row, so the teardown has to hand it back exactly as
     // the host rendered it (D12).
@@ -791,7 +919,7 @@
       await sleep(200)
       r.passesAfterTeardown = window.__passes - before
       r.leftNodes = document.querySelectorAll('[class*="dsh-claude-"]').length
-      r.leftMarkers = document.querySelectorAll('[data-dsh-claude-footer-entry], [data-dsh-claude-footer-hidden], [data-dsh-claude-footer-overlay], [data-dsh-claude-model-host], [data-dsh-claude-account-host-row], [data-dsh-claude-stats-mode], [data-dsh-claude-turn-state], [data-dsh-claude-turn-status], [style*="--dsh-claude-turn-order"]').length
+      r.leftMarkers = document.querySelectorAll('[data-dsh-claude-footer-entry], [data-dsh-claude-footer-hidden], [data-dsh-claude-footer-overlay], [data-dsh-claude-model-host], [data-dsh-claude-account-host-row], [data-dsh-claude-stats-mode], [data-dsh-claude-turn-state], [data-dsh-claude-turn-status], [style*="--dsh-claude-turn-order"], [data-dsh-claude-deepy-anchor]').length
       r.leftAttrs = Array.prototype.filter.call(document.body.attributes, function (a) { return /^data-dsh-(claude|window)/.test(a.name) }).map(function (a) { return a.name })
       r.leftStylesheet = !!document.getElementById('dsh-claude-style-style')
       if (viewStrip) r.viewPill.left = viewStrip.hasAttribute('data-dsh-claude-pill') || viewStrip.hasAttribute('data-dsh-view-tabs') || viewStrip.style.length > 0

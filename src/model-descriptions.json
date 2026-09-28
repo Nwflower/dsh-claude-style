@@ -139,8 +139,8 @@
     "title": { "zh": "Claude Style", "en": "Claude Style" },
     "brandTitle": { "zh": "修改品牌标识", "en": "Brand mark" },
     "brandDesc": {
-      "zh": "侧栏与首页显示的品牌标识。选 DeepSeek 时保留宿主自己的 DeepSeek 标识并画成 DeepSeek 蓝，整套配色换成蓝色系（亮色为淡天蓝的亮白，暗色为蓝黑）。",
-      "en": "The brand mark in the sidebar and on the home page. DeepSeek keeps the host's own DeepSeek mark in DeepSeek blue and turns the whole palette blue (a sky-tinted white in light, a blue-black in dark)."
+      "zh": "侧栏与首页显示的品牌标识。选 DeepSeek 时保留宿主自己的 DeepSeek 标识并画成 DeepSeek 蓝，整套配色换成蓝色系（亮色为淡天蓝的亮白，暗色为蓝黑），输入框上的像素螃蟹换成小鲸鱼 Deepy。",
+      "en": "The brand mark in the sidebar and on the home page. DeepSeek keeps the host's own DeepSeek mark in DeepSeek blue, turns the whole palette blue (a sky-tinted white in light, a blue-black in dark) and puts Deepy the pixel whale on the composer in place of the crab."
     },
     "collapseTitle": { "zh": "重绘设置弹层", "en": "Collapse the sidebar settings area" },
     "collapseDesc": {

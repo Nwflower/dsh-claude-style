@@ -128,7 +128,7 @@
         { name: 'selection', install: installSelectionFocus },
         { name: 'composer', install() { return installComposer(ctx, ui) } }, // 输入区的布局：每轮先读 hero / 重绘状态，写形态、闸门、附件与上下文圆环
         { name: 'homeLayout', install() { return installHomeLayout(ctx, ui) } }, // 首页版面：打版面属性 + 注册用量面板（数据来自宿主半边的汇总路由）
-        { name: 'mascot', install() { return installMascot(ui) } }, // 工作台首页输入卡片上沿的像素螃蟹：点它、指针离开它时（也会偶尔自己）钓一次鱼
+        { name: 'mascot', install() { return installMascot(ctx, ui) } }, // 工作台首页输入卡片上沿的像素螃蟹：点它、指针离开它时（也会偶尔自己）钓一次鱼；DeepSeek 品牌下换成小鲸鱼 Deepy，首页与对话页都在，随智能体的工作状态换动画
         { name: 'copy', install() { return installCopy(ctx, ui) } },
         { name: 'permissions', install() { return installPermissions(ctx, ui) } },
         { name: 'model', install() { return installModelPicker(ctx, ui) } },

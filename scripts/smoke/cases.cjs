@@ -479,6 +479,38 @@ const CASES = {
       JSON.stringify(failed))
     commonChecks(r)
   },
+  deepy(r) {
+    check('apply() completes', r.applyError === null, r.applyError)
+    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    const deepy = r.deepy || {}
+    const is = (state, animation, place) => !!state && state.animation === animation && state.place === place && state.ready === true
+    check('the brand stored as "off" reads as DeepSeek, and the light canvas turns sky white',
+      deepy.brand === 'deepseek' && deepy.canvas === 'rgb(247, 250, 255)', JSON.stringify({ brand: deepy.brand, canvas: deepy.canvas }))
+    check('the DeepSeek brand turns blue: DeepSeek\'s brand blue for the accent, a blue link, a blue-black dark canvas',
+      deepy.accent === '#4d6bfe' && deepy.link === '#3b56d9' && !!deepy.dark && deepy.dark.canvas === 'rgb(19, 22, 29)' &&
+        deepy.dark.accent === '#4d6bfe' && deepy.dark.raised === '#1b1f28',
+      JSON.stringify({ accent: deepy.accent, link: deepy.link, dark: deepy.dark }))
+    check('the whale takes the crab\'s place on the home card, idling, drawn from its sheet on the host half\'s route',
+      is(deepy.home, 'idle', 'card') && deepy.crab === false && /\/dsh-claude-style\/deepy\/idle\.png\?v=/.test(deepy.home.sheet),
+      JSON.stringify({ home: deepy.home, crab: deepy.crab }))
+    check('its frames change on its own node without waking a pass',
+      !!deepy.idle && deepy.idle.before !== deepy.idle.after && deepy.idle.passes === 0, JSON.stringify(deepy.idle))
+    check('a click on its face pokes it', is(deepy.poke, 'poke-left', 'card'), JSON.stringify(deepy.poke))
+    check('on the conversation page it stands on the input area and thinks while the model reasons',
+      is(deepy.thinking, 'thinking', 'stack'), JSON.stringify(deepy.thinking))
+    check('it types while the model writes', is(deepy.typing, 'typing', 'stack'), JSON.stringify(deepy.typing))
+    check('with three sessions at work it puts on the hard hat', is(deepy.building, 'building', 'stack'), JSON.stringify(deepy.building))
+    check('an approval puts it on the approval panel, ringing the notification bubble',
+      is(deepy.notification, 'notification', 'panel'), JSON.stringify(deepy.notification))
+    check('a running compaction plays the compaction', is(deepy.compacting, 'compacting', 'stack'), JSON.stringify(deepy.compacting))
+    check('a finished compaction is celebrated', is(deepy.celebrating, 'happy', 'stack'), JSON.stringify(deepy.celebrating))
+    check('a failed tool call shakes it, over the celebration', is(deepy.failed, 'error', 'stack'), JSON.stringify(deepy.failed))
+    // The error sheet's still frame is its 24th: column 0, row 3 of 33-pixel-high frames at 2px a pixel.
+    check('under reduced motion it holds the state\'s still frame',
+      !!deepy.still && deepy.still.before === '0px -198px' && deepy.still.after === '0px -198px', JSON.stringify(deepy.still))
+    check('it leaves with the conversation, and takes its anchor mark along', deepy.gone === true, JSON.stringify(deepy.gone))
+    commonChecks(r)
+  },
 }
 
 module.exports = { CASES }

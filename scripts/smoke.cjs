@@ -9,7 +9,8 @@
  * own same-origin fetch, plus the deletion route's own guards (POST only, the id
  * shape, an open session, a path-shaped id) and a real deletion against a
  * scratch harness home under .debug/ — once through a host that offers
- * `connection.requestRejection()` and once through the local stand-in.
+ * `connection.requestRejection()` and once through the local stand-in. The
+ * public prefix route serves Deepy's sheets from lib/deepy/ and nothing else.
  *
  * Browser half, in headless Chrome/Edge over CDP: `lib/client.js` is loaded into
  * a page that stands in for the host (module loader, ctx, a sidebar footer with
@@ -31,6 +32,10 @@
  *                as text, never as markup;
  *   - isolation  a host API that breaks one feature — at install or at sync —
  *                retires only that feature and hands its surface back (D12);
+ *   - deepy      the DeepSeek brand: the whale stands on the home card and on
+ *                the conversation's input area (or the panel replacing its
+ *                card), follows the session's state and moments, changes
+ *                frames without waking a pass, and leaves with the page;
  *   - teardown   dispose leaves no skin node, marker, body attribute or
  *                stylesheet behind, and no pass runs afterwards.
  *
@@ -45,8 +50,9 @@
 'use strict'
 const fs = require('fs')
 const http = require('http')
+const path = require('path')
 const { findChrome, launchChrome, connectTab } = require('./chrome.cjs')
-const { CLIENT, SKIN_FIXTURE, SKIN_CASES, sleep, check, failures } = require('./smoke/shared.cjs')
+const { ROOT, CLIENT, SKIN_FIXTURE, SKIN_CASES, sleep, check, failures } = require('./smoke/shared.cjs')
 const { hostHalf } = require('./smoke/host-half.cjs')
 const { page } = require('./smoke/page.cjs')
 const { CASES } = require('./smoke/cases.cjs')
@@ -104,6 +110,16 @@ async function browserHalf() {
       }
       res.writeHead(200, { 'content-type': 'image/png' })
       res.end(fs.readFileSync(SKIN_FIXTURE))
+    } else if (/^dsh-claude-style\/deepy\/[a-z]+(?:-[a-z]+)*\.png$/.test(name)) {
+      // Deepy's sheets, from the build output the host half serves them from.
+      const sheet = path.join(ROOT, 'lib', 'deepy', name.slice('dsh-claude-style/deepy/'.length))
+      if (!fs.existsSync(sheet)) {
+        res.writeHead(404)
+        res.end()
+        return
+      }
+      res.writeHead(200, { 'content-type': 'image/png' })
+      res.end(fs.readFileSync(sheet))
     } else if (Object.prototype.hasOwnProperty.call(CASES, name)) {
       current = name
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })

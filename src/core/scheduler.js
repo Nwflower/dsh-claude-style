@@ -32,6 +32,11 @@
      * @property {Function} [onKey] `onKey(event) → boolean`: a keydown, after
      *     the scheduler's own Esc handling. The return value does not gate the
      *     scheduler's unconditional Ctrl+, preventDefault.
+     * @property {Function} [onActivity] `onActivity()`: the reader moved the
+     *     pointer, pressed it or pressed a key (the skin's own synthetic Esc
+     *     aside). Deepy falls asleep after a quiet minute and wakes on the next
+     *     one; the hook only records the moment, so a pointer sweep costs no
+     *     pass.
      *
      * Cross-feature reads outside the scheduler stay direct handle reads:
      *   copy, permissions → composer.{isHero, isActive}
@@ -69,7 +74,16 @@
       /** Set by the teardown: no pass may be scheduled, or run, after it. */
       let stopped = false
 
+      /** The reader is at the page: every feature with an `onActivity` hears it. */
+      function onGlobalActivity() {
+        for (let i = 0; i < HOOK_FEATURES.length; i++) {
+          const handle = ui[HOOK_FEATURES[i]]
+          if (handle && typeof handle.onActivity === 'function') handle.onActivity()
+        }
+      }
+
       function onGlobalPointerDown(e) {
+        onGlobalActivity()
         const target = e.target
         // A press a feature does not own closes it: the model picker and the
         // effort card are hover-driven popovers, the account drawer a click one.
@@ -98,6 +112,7 @@
         // just entered, because the footer's hover close fires behind that
         // overlay the moment it covers the pointer.
         if (e.__dshHostMenuEscape === true) return
+        onGlobalActivity()
         if (e.key === 'Escape') {
           // Every feature's own Esc route, in feature order. The account-hold
           // overlay is the one layer that does NOT close on a window blur (it is
@@ -163,6 +178,7 @@
       }
 
       document.addEventListener('pointerdown', onGlobalPointerDown)
+      document.addEventListener('pointermove', onGlobalActivity, { passive: true })
       document.addEventListener('keydown', onGlobalKeyDown, true)
       document.addEventListener('input', onComposerInput, true)
       document.addEventListener('compositionend', onComposerInput, true)
@@ -317,6 +333,7 @@
         composerCardObserver.disconnect()
         observedCard = null
         document.removeEventListener('pointerdown', onGlobalPointerDown)
+        document.removeEventListener('pointermove', onGlobalActivity, { passive: true })
         document.removeEventListener('keydown', onGlobalKeyDown, true)
         document.removeEventListener('input', onComposerInput, true)
         document.removeEventListener('compositionend', onComposerInput, true)

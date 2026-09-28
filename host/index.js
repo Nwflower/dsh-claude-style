@@ -1,7 +1,7 @@
 /**
  * Host half of dsh-claude-style.
  *
- * The skin's effect is browser-only. This half exists for the three things a
+ * The skin's effect is browser-only. This half exists for the things a
  * browser-only plugin cannot do:
  *
  *   1. Serve the model copy document. That table is DATA, not code — it ships
@@ -21,6 +21,10 @@
  *   3. Resolve the OS user once for the browser half. The username route answers
  *      a single GET and the browser caches it; it runs the host's own request
  *      fence first — see refusalOf().
+ *   4. Serve Deepy's animation sheets. The DeepSeek brand's pixel whale plays
+ *      about 0.4 MB of sprite sheets, too much to inline into the bundle, so
+ *      they ship as files beside it and the browser fetches each one the
+ *      first time its animation plays.
  *
  * The registrations are defensive. A host without a web server, or with the
  * route prefix already taken, or with the settings service absent, must still
@@ -56,6 +60,15 @@ const FONT_FILES = {
   'AnthropicSansWebText.ttf': 'font/ttf',
   'AnthropicSerifWebText.ttf': 'font/ttf',
 }
+/**
+ * Deepy's animation sheets, served under `${ROUTE_PREFIX}/deepy/` from the
+ * build output in `lib/deepy/`. The file name is the whole request contract
+ * and its shape admits no separator and no dot segment, so nothing outside
+ * that directory is reachable; a name with no sheet is a 404. The browser
+ * half puts its build id in the query, so a long cache never serves a sheet
+ * from another build.
+ */
+const DEEPY_FILE = /^[a-z]+(?:-[a-z]+)*\.png$/
 /** One-shot host OS user route; the browser half caches the response. */
 const USERNAME_PATH = `${ROUTE_PREFIX}/username`
 /**
@@ -556,6 +569,7 @@ export function apply(ctx) {
   // The copy document is build output beside the client bundle in lib/.
   const file = join(here, '..', 'lib', COPY_FILE)
   const fontsDir = join(here, '..', 'fonts')
+  const deepyDir = join(here, '..', 'lib', 'deepy')
 
   /**
    * Answer one request under the route prefix with a static file.
@@ -616,6 +630,14 @@ export function apply(ctx) {
               sendFile(res, req.method, join(fontsDir, sub.slice('/fonts/'.length)), {
                 'content-type': font,
                 'cache-control': 'public, max-age=86400',
+              })
+              return
+            }
+            const sheet = sub.startsWith('/deepy/') ? sub.slice('/deepy/'.length) : ''
+            if (DEEPY_FILE.test(sheet)) {
+              sendFile(res, req.method, join(deepyDir, sheet), {
+                'content-type': 'image/png',
+                'cache-control': 'public, max-age=31536000, immutable',
               })
               return
             }

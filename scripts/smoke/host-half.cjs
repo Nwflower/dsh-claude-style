@@ -374,6 +374,41 @@ async function hostHalf() {
     liveHeld === 1 && liveReads.filter((id) => id === 'session-a').length === 2 &&
       grown.sessions[0]?.seq === 3 && grown.sessions[0]?.snippet === '再看一次搜索框',
     JSON.stringify({ liveReads, grown }))
+
+  // Deepy's sheets, on the public prefix route: the build output under
+  // lib/deepy/, and nothing else however the name is spelled.
+  console.log('\nhost half — public assets')
+  const assets = fakeHost(mod, {})
+  const sheet = await requestAsset(assets, '/dsh-claude-style/deepy/idle.png?v=0123456789ab')
+  check("Deepy's sheet is served from the build output, cached for good under its build-stamped address",
+    sheet.status === 200 && sheet.headers['content-type'] === 'image/png' && /immutable/.test(sheet.headers['cache-control']) &&
+      sheet.raw !== null && Buffer.compare(sheet.raw, fs.readFileSync(path.join(ROOT, 'lib', 'deepy', 'idle.png'))) === 0,
+    `HTTP ${sheet.status} ${JSON.stringify(sheet.headers)}`)
+  for (const url of ['/dsh-claude-style/deepy/missing.png', '/dsh-claude-style/deepy/..%2fclient.js',
+    '/dsh-claude-style/deepy/../../package.json', '/dsh-claude-style/deepy/Idle.png', '/dsh-claude-style/deepy/idle.png/x']) {
+    const answer = await requestAsset(assets, url)
+    check(`nothing but a sheet answers under the sheets' path: ${url}`, answer.status === 404, `HTTP ${answer.status}`)
+  }
+}
+
+/**
+ * One GET through the plugin's public prefix route (the model copy, the fonts,
+ * Deepy's sheets); resolves with the status, the headers the route wrote and
+ * the bytes.
+ */
+function requestAsset(host, url) {
+  return new Promise((resolve) => {
+    const res = {
+      status: 0,
+      headers: {},
+      writeHead(status, headers) {
+        this.status = status
+        this.headers = headers || {}
+      },
+      end(chunk) { resolve({ status: this.status, headers: this.headers, raw: chunk === undefined ? null : chunk }) },
+    }
+    host.routes['/dsh-claude-style'].handler({ method: 'GET', url, headers: {} }, res)
+  })
 }
 
 module.exports = { hostHalf }

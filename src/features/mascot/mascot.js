@@ -19,10 +19,14 @@
      * reading (`ui.composer.heroCard`), and the crab is the skin's own node
      * appended to it, re-appended when the host replaces the card.
      *
+     * The DeepSeek brand puts Deepy the pixel whale on the composer instead
+     * (src/features/mascot/whale.js), and the crab leaves the page.
+     *
+     * @param ctx - client context.
      * @param ui - shared handle table.
      * @returns teardown.
      */
-    function installMascot(ui) {
+    function installMascot(ctx, ui) {
       /** How long each frame of the routine holds, as in Claude Code's animation. */
       const FRAME_MS = 80
       /**
@@ -103,9 +107,18 @@
         }, IDLE_MIN_MS + Math.random() * IDLE_SPAN_MS)
       }
 
-      /** Each pass: the crab rides the studio hero's card, and leaves with it. */
+      const whale = createMascotWhale(ctx, ui)
+
+      /**
+       * Each pass: the crab rides the studio hero's card, and leaves with it.
+       * Under the DeepSeek brand the whale takes the composer and the crab
+       * stays off the page.
+       */
       function sync() {
-        const card = readPrefs().homeLayout === HOME_LAYOUT_STUDIO ? ui.composer.heroCard() : null
+        const deepseek = readPrefs().brand === BRAND_DEEPSEEK
+        if (deepseek) whale.sync()
+        else whale.release()
+        const card = !deepseek && readPrefs().homeLayout === HOME_LAYOUT_STUDIO ? ui.composer.heroCard() : null
         if (card === null) {
           if (root !== null && root.parentNode !== null) {
             stopRoutine()
@@ -117,13 +130,14 @@
         if (root.parentNode !== card) card.appendChild(root)
       }
 
-      ui.mascot = { sync }
+      ui.mascot = { sync, onActivity: whale.onActivity }
       scheduleIdle()
 
       return () => {
         stopRoutine()
         clearTimeout(idleTimer)
         idleTimer = null
+        whale.dispose()
         if (root !== null && root.parentNode !== null) root.parentNode.removeChild(root)
         root = null
         delete ui.mascot
