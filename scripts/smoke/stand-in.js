@@ -403,8 +403,16 @@
     var statusListeners = []
     var feedListeners = []
     var status = new Map()
+    var chatListeners = []
     var list = { ids: ['smoke-deepy'], byId: { 'smoke-deepy': { id: 'smoke-deepy', running: false } }, projectionsBySession: {} }
-    var feed = { change: { kind: 'replace', entries: [] } }
+    // The feed's window, as the host's MutableSessionEventSource publishes it:
+    // every entry so far, a revision per change, and the change itself.
+    var feedEntries = []
+    var feed = { entries: feedEntries, revision: 0, change: { kind: 'replace', entries: feedEntries } }
+    function publishFeed(change) {
+      feed = { entries: feedEntries, revision: feed.revision + 1, change: change }
+      notify(feedListeners)
+    }
     var snapshot = { timeline: { turnOrder: [], turns: new Map() }, legacy: { runningCalls: [] } }
     function notify(listeners) { listeners.slice().forEach(function (listener) { listener() }) }
     function subscribe(listeners) {
@@ -430,7 +438,10 @@
         } } }]
         var turn = { turn: 1, status: newest === null ? 'closed' : 'open', steps: newest === null ? [] : steps }
         snapshot = { timeline: { turnOrder: [1], turns: new Map([[1, turn]]) }, legacy: { runningCalls: [] } }
+        notify(chatListeners)
       },
+      /** Whether anything subscribed to the chat target, the subscription that activates it on the host. */
+      chatFollowed: function () { return chatListeners.length > 0 },
       /** More top-level sessions, for the working tiers. */
       addSessions: function (ids) {
         list = { ids: list.ids.concat(ids), byId: Object.assign({}, list.byId), projectionsBySession: list.projectionsBySession }
@@ -446,11 +457,21 @@
       },
       /** Append one live event to the session's feed. */
       emit: function (event) {
-        feed = { change: { kind: 'append', entries: [{ type: 'event', event: event }] } }
-        notify(feedListeners)
+        var entries = [{ type: 'event', event: event }]
+        feedEntries = feedEntries.concat(entries)
+        publishFeed({ kind: 'append', entries: entries })
+      },
+      /**
+       * A reconnect: the feed sends its window again whole, with `events` the
+       * connection missed at its end.
+       */
+      resend: function (events) {
+        feedEntries = feedEntries.concat(events.map(function (event) { return { type: 'event', event: event } }))
+        publishFeed({ kind: 'replace', entries: feedEntries })
       },
     }
     var eventSource = { getSnapshot: function () { return feed }, subscribe: subscribe(feedListeners) }
+    var chatTarget = { getSnapshot: function () { return snapshot }, subscribe: subscribe(chatListeners) }
     return {
       sessions: {
         list: { getSnapshot: function () { return list } },
@@ -458,7 +479,7 @@
       },
       uiSession: { sessionStatus: { getSnapshot: function () { return status }, subscribe: subscribe(statusListeners) } },
       conversation: {
-        binding: function () { return { target: function () { return { getSnapshot: function () { return snapshot } } } } },
+        binding: function () { return { target: function () { return chatTarget } } },
       },
     }
   })() : undefined

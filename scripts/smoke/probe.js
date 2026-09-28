@@ -817,6 +817,7 @@
       wakeDeepyPass()
       await sleep(400)
       r.deepy.thinking = whaleNow()
+      r.deepy.chatFollowed = driver.chatFollowed()
       driver.setTurn('text')
       wakeDeepyPass()
       await sleep(250)
@@ -867,6 +868,14 @@
       await sleep(400)
       r.deepy.still = { before: stillBefore, after: whaleNow().frame }
       window.matchMedia = deepyMatchMedia
+      // A compaction starts; the connection drops and the feed comes back
+      // whole with the compaction's end in it. The shake above holds 4.8s.
+      driver.emit({ type: 'compaction/start', seq: 4, time: Date.now(), data: { compactionId: 'c2', turn: null } })
+      await sleep(4200)
+      r.deepy.resendBefore = whaleNow()
+      driver.resend([{ type: 'compaction/end', seq: 5, time: Date.now(), data: { compactionId: 'c2', turn: null } }])
+      await sleep(1200)
+      r.deepy.resent = whaleNow()
       deepyConversation.remove()
       await sleep(200)
       r.deepy.gone = whaleNow() === null && document.querySelectorAll('[data-dsh-claude-deepy-anchor]').length === 0

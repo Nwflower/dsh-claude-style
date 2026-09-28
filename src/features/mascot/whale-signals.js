@@ -8,14 +8,17 @@
      * the one interaction it waits on — an approval, a question, a plan
      * review), the session list (which sessions are top level, and the
      * subagents each one has started) and the chat snapshot (`uiConversation`,
-     * target `chat`: the open turn, the step streaming in it and the tool calls
-     * still running). The moments come from the followed session's event feed
+     * target `chat`, subscribed while the session is followed: the open turn,
+     * the step streaming in it and the tool calls still running). The moments
+     * come from the followed session's event feed
      * (`sessions.binding(id).eventSource`), whose appended events arrive live
      * and in order: a turn ending, a tool result that failed, a compaction
      * starting and ending. The chat target shows an automatic compaction only
-     * once it has finished, so the feed is the one place a running one shows.
-     * On the home page, a session that finishes out of view (the host's
-     * `completionUnread`, the sidebar's green dot) is the moment.
+     * once it has finished, so the feed is the one place a running one shows:
+     * the feed's whole window tells which compactions run when it is loaded or
+     * sent again, its appended events in between. On the home page, a session
+     * that finishes out of view (the host's `completionUnread`, the sidebar's
+     * green dot) is the moment.
      *
      * The names follow the Clawd on Desk theme Deepy was drawn for: a state
      * picks an animation, and its priority decides which of two states shows.
@@ -23,7 +26,8 @@
      * @param ctx - client context.
      * @param onMoment - `onMoment(moment)` with 'error' or 'attention'.
      * @param onChange - the state may have changed with no DOM change to wake a
-     *     pass: the session status moved, or a compaction started or ended.
+     *     pass: the session status moved, the chat target published, or a
+     *     compaction started or ended.
      * @returns `{ follow, read, dispose }`.
      */
     function createMascotWhaleSignals(ctx, onMoment, onChange) {
@@ -35,6 +39,9 @@
       /** The session whose feed is followed; null on the home page, undefined before the first follow. */
       let followed
       let stopFeed = null
+      /** The followed session's chat target (`uiConversation`, target `chat`), subscribed while followed. */
+      let chat = null
+      let stopChat = null
       /** Compactions of the followed session that started and have not ended. */
       const compactions = new Set()
       /** Sessions finished out of view at the last status read; null before the first. */
@@ -80,11 +87,8 @@
         return { state: 'working', animation: busy >= 3 ? 'building' : busy === 2 ? 'music' : 'typing', priority: 3 }
       }
 
-      function chatSnapshot(id) {
-        const conversation = ctx.get('uiConversation')
-        const sessions = ctx.get('sessions')
-        if (!conversation || !sessions || !sessions.binding(id)) return null
-        return conversation.binding(id).target('chat').getSnapshot() ?? null
+      function chatSnapshot() {
+        return chat === null ? null : chat.getSnapshot() ?? null
       }
 
       /**
@@ -142,7 +146,7 @@
           if (isRunning(subagents[i].id, status, list)) juggling++
         }
         if (juggling > 0) return { state: 'juggling', animation: juggling >= 2 ? 'conducting' : 'music', priority: 4 }
-        const snapshot = chatSnapshot(sessionId)
+        const snapshot = chatSnapshot()
         const phase = snapshot === null ? null : turnPhase(snapshot)
         if (phase === 'working') return working(Math.max(1, busy))
         if (phase === 'thinking' || isRunning(sessionId, status, list)) return THINKING
@@ -170,16 +174,30 @@
       }
 
       /**
+       * Take the running compactions from a whole event window: the ones it
+       * starts and does not end. A window the feed loads or sends again whole
+       * (a reconnect does) settles the set; appended events keep it current
+       * in between.
+       */
+      function adoptCompactions(entries) {
+        compactions.clear()
+        for (let i = 0; i < entries.length; i++) {
+          const entry = entries[i]
+          if (entry.type !== 'event') continue
+          if (entry.event.type === 'compaction/start') compactions.add(entry.event.data.compactionId)
+          else if (entry.event.type === 'compaction/end') compactions.delete(entry.event.data.compactionId)
+        }
+      }
+
+      /**
        * Follow one session's feed (null: the home page, no feed). Only events
-       * appended from here on count — the history a feed loads or replaces is
-       * the past. A session whose binding is not up yet is followed on a later
-       * call.
+       * appended from here on are moments — the history a feed loads or
+       * replaces is the past, and only tells which compactions still run. A
+       * session whose binding is not up yet is followed on a later call.
        */
       function follow(sessionId) {
         if (sessionId === followed) return
-        if (stopFeed !== null) stopFeed()
-        stopFeed = null
-        compactions.clear()
+        unfollow()
         followed = sessionId
         if (sessionId === null) return
         const feed = ctx.get('sessions')?.binding(sessionId)?.eventSource
@@ -187,8 +205,24 @@
           followed = undefined
           return
         }
+        const conversation = ctx.get('uiConversation')
+        if (conversation) {
+          // The host builds the chat target only for a subscriber (or while the
+          // shell shows the chat view), and its publications are the ones that
+          // tell a streaming step's progress; a bare read would see nothing on
+          // the trajectory view.
+          chat = conversation.binding(sessionId).target('chat')
+          stopChat = chat.subscribe(onChange)
+        }
+        adoptCompactions(feed.getSnapshot().entries)
         stopFeed = feed.subscribe(() => {
-          const change = feed.getSnapshot().change
+          const latest = feed.getSnapshot()
+          const change = latest.change
+          if (change.kind === 'replace') {
+            adoptCompactions(latest.entries)
+            onChange()
+            return
+          }
           if (change.kind !== 'append') return
           for (let i = 0; i < change.entries.length; i++) {
             if (change.entries[i].type === 'event') take(change.entries[i].event)
@@ -215,12 +249,20 @@
         onChange()
       }
 
-      function dispose() {
+      /** Stop following the session followed so far. */
+      function unfollow() {
         if (stopFeed !== null) stopFeed()
         stopFeed = null
-        if (stopStatus !== null) stopStatus()
+        if (stopChat !== null) stopChat()
+        stopChat = null
+        chat = null
         compactions.clear()
         followed = undefined
+      }
+
+      function dispose() {
+        unfollow()
+        if (stopStatus !== null) stopStatus()
       }
 
       onStatus()

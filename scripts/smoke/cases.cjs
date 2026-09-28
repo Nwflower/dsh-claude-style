@@ -498,6 +498,8 @@ const CASES = {
     check('a click on its face pokes it', is(deepy.poke, 'poke-left', 'card'), JSON.stringify(deepy.poke))
     check('on the conversation page it stands on the input area and thinks while the model reasons',
       is(deepy.thinking, 'thinking', 'stack'), JSON.stringify(deepy.thinking))
+    check('it subscribes to the session\'s chat target, which the host builds only for a subscriber',
+      deepy.chatFollowed === true, JSON.stringify(deepy.chatFollowed))
     check('it types while the model writes', is(deepy.typing, 'typing', 'stack'), JSON.stringify(deepy.typing))
     check('with three sessions at work it puts on the hard hat', is(deepy.building, 'building', 'stack'), JSON.stringify(deepy.building))
     check('an approval puts it on the approval panel, ringing the notification bubble',
@@ -508,6 +510,9 @@ const CASES = {
     // The error sheet's still frame is its 24th: column 0, row 3 of 33-pixel-high frames at 2px a pixel.
     check('under reduced motion it holds the state\'s still frame',
       !!deepy.still && deepy.still.before === '0px -198px' && deepy.still.after === '0px -198px', JSON.stringify(deepy.still))
+    check('a compaction whose end comes back with the whole feed after a reconnect stops playing, uncelebrated',
+      is(deepy.resendBefore, 'compacting', 'stack') && is(deepy.resent, 'idle', 'stack'),
+      JSON.stringify({ before: deepy.resendBefore, after: deepy.resent }))
     check('it leaves with the conversation, and takes its anchor mark along', deepy.gone === true, JSON.stringify(deepy.gone))
     commonChecks(r)
   },
