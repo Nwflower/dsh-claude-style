@@ -876,6 +876,29 @@
       driver.resend([{ type: 'compaction/end', seq: 5, time: Date.now(), data: { compactionId: 'c2', turn: null } }])
       await sleep(1200)
       r.deepy.resent = whaleNow()
+      // The quiet minute to sleep, with the page's clock moved ahead: a minute
+      // of work is no quiet spell, a minute idle is, and a pointer move wakes it.
+      var deepyClock = Date.now
+      var deepyAhead = 0
+      Date.now = function () { return deepyClock.call(Date) + deepyAhead }
+      driver.setStatus('smoke-deepy', { running: true })
+      driver.setTurn('text')
+      await sleep(300)
+      deepyAhead += 61000
+      await sleep(200)
+      driver.setTurn(null)
+      driver.setStatus('smoke-deepy', { running: false })
+      await sleep(1200)
+      r.deepy.afterWork = whaleNow()
+      deepyAhead += 61000
+      await sleep(400)
+      r.deepy.asleep = whaleNow()
+      // Asleep for its second on stage first, as any state holds it.
+      await sleep(700)
+      document.dispatchEvent(new PointerEvent('pointermove', { bubbles: true }))
+      await sleep(400)
+      r.deepy.woken = whaleNow()
+      Date.now = deepyClock
       deepyConversation.remove()
       await sleep(200)
       r.deepy.gone = whaleNow() === null && document.querySelectorAll('[data-dsh-claude-deepy-anchor]').length === 0

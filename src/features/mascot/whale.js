@@ -19,7 +19,8 @@
      * shake after a failed tool call or turn; the celebration when a turn or
      * a compaction finishes. The home page reads the whole workspace. Between
      * jobs it looks around or spouts now and then, falls asleep after a quiet
-     * minute and wakes up startled at the next pointer move or key press. A
+     * minute — no work to show and no pointer move or key press — and wakes
+     * up startled at the next pointer move or key press. A
      * click on its face or its tail pokes it, four quick clicks tickle it, and
      * pressing it and pulling lifts it for as long as the press lasts.
      *
@@ -80,7 +81,8 @@
       let extra = null
       let waking = false
       let asleep = false
-      let lastActivity = Date.now()
+      /** Where the quiet spell starts: the reader's last pointer move or key, or the whale's last work. */
+      let quietSince = Date.now()
       let nextExtraAt = 0
       /** The animation on screen: `{ key, mode, priority, start }`. */
       let current = null
@@ -172,7 +174,7 @@
         }
         if (root === null) build()
         if (signals === null) {
-          lastActivity = Date.now()
+          quietSince = Date.now()
           signals = createMascotWhaleSignals(ctx, onMoment, refresh)
         }
         if (root.parentNode !== stand.element) stand.element.appendChild(root)
@@ -229,9 +231,11 @@
           waking = false
           extra = null
           nextExtraAt = 0
+          // Work on screen is no quiet spell: the minute to sleep starts when it ends.
+          quietSince = now
           return { key: pick.animation, mode: 'loop', priority: pick.priority }
         }
-        if (!asleep && now - lastActivity >= SLEEP_AFTER_MS) {
+        if (!asleep && now - quietSince >= SLEEP_AFTER_MS) {
           asleep = true
           extra = null
         }
@@ -379,13 +383,17 @@
         }
       }
 
-      /** The reader is at the page: a sleeping whale wakes up, startled unless stillness was asked for. */
+      /**
+       * The reader is at the page: a sleeping whale wakes up, startled unless
+       * stillness was asked for. The hook only records it — the whale's own
+       * next tick plays the waking — so the scheduler's pointer and key paths
+       * run none of the whale's drawing.
+       */
       function onActivity() {
-        lastActivity = Date.now()
+        quietSince = Date.now()
         if (!asleep) return
         asleep = false
         waking = !reducedMotion()
-        step()
       }
 
       /** The page shows no stand: the whale leaves it, and its reading stops. */

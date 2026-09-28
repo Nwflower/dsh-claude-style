@@ -513,6 +513,9 @@ const CASES = {
     check('a compaction whose end comes back with the whole feed after a reconnect stops playing, uncelebrated',
       is(deepy.resendBefore, 'compacting', 'stack') && is(deepy.resent, 'idle', 'stack'),
       JSON.stringify({ before: deepy.resendBefore, after: deepy.resent }))
+    check('a minute of work is no quiet spell: the work ends and it idles; a quiet minute puts it to sleep; a pointer move wakes it',
+      is(deepy.afterWork, 'idle', 'stack') && is(deepy.asleep, 'sleeping', 'stack') && is(deepy.woken, 'waking', 'stack'),
+      JSON.stringify({ afterWork: deepy.afterWork, asleep: deepy.asleep, woken: deepy.woken }))
     check('it leaves with the conversation, and takes its anchor mark along', deepy.gone === true, JSON.stringify(deepy.gone))
     commonChecks(r)
   },

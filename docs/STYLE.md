@@ -436,7 +436,7 @@ holds its still frame; a click or a pull still plays its reaction.
 | an approval, a question or a plan review waits | `notification` | 12 |
 | a tool call or a turn failed (4.8 s) | `error` | 24 |
 | a turn or a compaction finished (5.2 s) | `happy` | 44 |
-| a quiet minute / the next pointer move or key | `sleeping` / `waking` | 10 / 29 |
+| a quiet minute (no work, no pointer move or key) / the next pointer move or key | `sleeping` / `waking` | 10 / 29 |
 | a click on the face / the tail, four quick clicks, a pull | `poke-left` / `poke-right`, `tickle`, `drag` | 0 |
 
 ## Implementation notes
