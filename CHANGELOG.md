@@ -2,6 +2,18 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [Unreleased]
+
+[中文](#cn-Unreleased) | [English](#en-Unreleased)
+
+<h3 id="cn-Unreleased">体验优化</h3>
+
+- **品牌标识的「关闭」改名为 DeepSeek，整套配色换成 DeepSeek 蓝色系**：设置页「修改品牌标识」原来的「关闭」现在明确写作 DeepSeek（设置值由 `off` 改为 `deepseek`，已经存下的 `off` 照样读作 DeepSeek）。选它时强调色由陶烬橙换成 DeepSeek 的品牌蓝 `#4D6BFE`，主按钮、开关、勾选、焦点框、链接与轮次状态行都跟着变；亮色画布从偏黄的象牙白换成带一点天蓝的亮白 `#F7FAFF`（侧栏 `#F3F7FE`），暗色画布从暖黑换成蓝黑 `#13161D`，边框、各级灰色文字、弹层与菜单卡片、搜索面板、分段控件、表头与滚动条一并换成冷色，用户消息气泡带一点蓝，行内代码用正文颜色。侧栏与首页照旧显示宿主自己的 DeepSeek 鲸鱼与字标，并画成 DeepSeek 蓝；账号行没有头像时、进行中与结束轮次的状态行，原来的 Claude 标也换成 DeepSeek 的鲸鱼标（进行中时摇摆着游动）。Claude 与 Anthropic 两档的样子不变。
+
+<h3 id="en-Unreleased">Improvements</h3>
+
+- **The brand mark's "Off" is now DeepSeek, with the whole palette in DeepSeek blue**: the settings page's Brand mark row now names its first choice DeepSeek (the setting's value changes from `off` to `deepseek`, and a stored `off` still reads as DeepSeek). It trades the ember orange accent for DeepSeek's brand blue `#4D6BFE` across primary buttons, switches, checks, focus rings, links and the turn status line; the yellowish ivory light canvas gives way to a white with a touch of sky blue, `#F7FAFF` (sidebar `#F3F7FE`), and the warm-black dark canvas to a blue-black `#13161D`, with the hairlines, grey inks, popover and menu cards, search palette, segmented controls, table headers and scrollbars turning cool, user bubbles taking a touch of blue and inline code set in the body ink. The sidebar and the home page keep the host's own DeepSeek whale and wordmark, painted DeepSeek blue; the account row's picture without an avatar and the status line of running and ended turns trade the Claude mark for DeepSeek's whale (which sways as it swims while the turn runs). The Claude and Anthropic choices look as before.
+
 ## [0.9.1] - 2026-09-27
 
 [中文](#cn-0.9.1) | [English](#en-0.9.1)

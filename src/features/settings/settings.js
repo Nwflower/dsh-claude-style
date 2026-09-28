@@ -167,7 +167,7 @@
       )
 
       const brandOptions = [
-        { value: BRAND_OFF, label: settingsCopy('brandOff', 'Off') },
+        { value: BRAND_DEEPSEEK, label: settingsCopy('brandDeepseek', 'DeepSeek') },
         { value: BRAND_CLAUDE, label: settingsCopy('brandClaude', 'Claude') },
         { value: BRAND_ANTHROPIC, label: settingsCopy('brandAnthropic', 'Anthropic') },
       ]
@@ -230,7 +230,7 @@
         row(
           'brand',
           settingsCopy('brandTitle', 'Brand mark'),
-          settingsCopy('brandDesc', 'Which brand mark the sidebar shows. "Off" leaves the host\'s own brand area untouched.'),
+          settingsCopy('brandDesc', 'The brand mark in the sidebar and on the home page. DeepSeek keeps the host\'s own DeepSeek mark in DeepSeek blue and turns the whole palette blue (a sky-tinted white in light, a blue-black in dark).'),
           segment(brandOptions, prefs.brand, value => { write({ brand: value }) }),
         ),
         row(

@@ -67,6 +67,11 @@ const CASES = {
         greeting.high !== greeting.low,
       JSON.stringify(greeting))
     check('the classic hero page carries no crab', r.classicCrab === false, JSON.stringify(r.classicCrab))
+    const palette = r.claudePalette || {}
+    check('the Claude brand keeps its ivory and warm-black canvases and the clay accent',
+      palette.canvas === 'rgb(252, 252, 251)' && palette.accent === '#d97757' && !!palette.dark &&
+        palette.dark.canvas === 'rgb(20, 20, 19)' && palette.dark.accent === '#d97757' && palette.dark.raised === '#1e1e1d',
+      JSON.stringify(palette))
     const pill = r.viewPill || {}
     const under = (s) => !!s && s.attr && s.content !== 'none' && Math.abs(s.x - s.itemX) < 0.5 &&
       Math.abs(s.w - s.itemW) < 0.5 && s.itemFill === 'rgba(0, 0, 0, 0)'

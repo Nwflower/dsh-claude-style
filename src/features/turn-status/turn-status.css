@@ -55,3 +55,18 @@ body[data-dsh-claude-style] button[data-dsh-claude-turn-state="live"]::before {
   50% { transform: rotate(180deg) scale(0.78); }
   100% { transform: rotate(360deg) scale(1); }
 }
+/* Under the DeepSeek brand the mark is DeepSeek's whale, in the accent; a
+   running turn has it swim — a tilt and a bob — where the spark turns. */
+body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_DEEPSEEK%%"] button[data-dsh-claude-turn-status]::before {
+  width: 16px;
+  -webkit-mask-image: %%DEEPSEEK_MARK%%;
+  mask-image: %%DEEPSEEK_MARK%%;
+}
+body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_DEEPSEEK%%"] button[data-dsh-claude-turn-state="live"]::before {
+  animation: 1.6s ease-in-out infinite dsh-claude-turn-swim;
+}
+@keyframes dsh-claude-turn-swim {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-1.5px) rotate(-10deg); }
+  75% { transform: translateY(1px) rotate(8deg); }
+}

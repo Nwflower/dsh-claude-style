@@ -100,7 +100,7 @@ body[data-dsh-claude-style] .dsh-claude-settings-switch {
 }
 
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) .dsh-claude-settings-switch {
-  background: #f6f6f4;
+  background: var(--dsh-claude-chip);
 }
 
 body[data-dsh-claude-style] .dsh-claude-settings-switch[data-on] {

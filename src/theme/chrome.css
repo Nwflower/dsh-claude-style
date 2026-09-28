@@ -1,13 +1,13 @@
 /* --- 2.3 Host Chrome Restyling (Sidebar, Composer, Buttons) --- */
 /* ---------- canvas + hairline structure ---------- */
 body[data-dsh-claude-style] :is([data-pane="sidebar"], [class*="sidebarCol"], .dshDesktopSidebarSurface) {
-  --dsw-specific-sidebar-fill: #141413 !important;
-  background: #141413 !important;
-  border-right: 1px solid #242320 !important;
+  --dsw-specific-sidebar-fill: var(--dsh-claude-sidebar-canvas) !important;
+  background: var(--dsh-claude-sidebar-canvas) !important;
+  border-right: 1px solid var(--dsw-alias-border-l1) !important;
 }
 
 body[data-dsh-claude-style] :is([data-pane="conversation"], [class*="centerCol"]) {
-  background: #141413;
+  background: var(--dsh-claude-canvas);
 }
 
 /* ---------- clay accent: one emphasis color, disciplined ---------- */
@@ -16,15 +16,15 @@ body[data-dsh-claude-style] :is([data-pane="conversation"], [class*="centerCol"]
    control, not a text link: it states its own ink, and repainting it here leaves
    the label the same clay as the fill underneath it. */
 body[data-dsh-claude-style] a:not([class*="_linkButton"]) {
-  color: #e08a6d;
+  color: var(--dsw-alias-link);
 }
 
 body[data-dsh-claude-style] a:not([class*="_linkButton"]):hover {
-  color: #f0a488;
+  color: var(--dsh-claude-link-hover);
 }
 
 body[data-dsh-claude-style] button[class*="brand"] {
-  color: #d97757;
+  color: var(--dsw-alias-brand-primary);
 }
 
 /* The baked-in wordmark "HARNESS" badge (a pill rect + its letter paths)
@@ -40,7 +40,7 @@ body[data-dsh-claude-style] button[class*="_brand"],
 body[data-dsh-claude-style] button[class*="_primary"],
 body[data-dsh-claude-style] [data-slot="sidebar.settings"] > :is(button, [role="button"]) {
   border-radius: 9999px;
-  background: #d97757;
+  background: var(--dsw-alias-button-primary-fill);
   color: #ffffff;
   font-weight: 500;
 }
@@ -48,14 +48,14 @@ body[data-dsh-claude-style] [data-slot="sidebar.settings"] > :is(button, [role="
 body[data-dsh-claude-style] button[class*="_brand"]:hover,
 body[data-dsh-claude-style] button[class*="_primary"]:hover,
 body[data-dsh-claude-style] [data-slot="sidebar.settings"] > :is(button, [role="button"]):hover {
-  background: #e08a6d;
+  background: var(--dsw-alias-button-primary-hover);
 }
 
 /* Brand logo chip: drop the loud clay pill so the mark + wordmark sit on
    the canvas. That pill also carried a 9999px radius, and together with the
    button overflow:hidden its arc clipped the leading edge of the mark — so
    the radius goes as well. Adaptive logo color: espresso on light, ivory
-   on dark. */
+   on dark (--dsh-claude-logo-ink; the DeepSeek brand's own blue under it). */
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[class*="brand"],
 body[data-dsh-claude-style][data-ds-dark-theme] button[class*="brand"] {
   background: transparent !important;
@@ -64,11 +64,11 @@ body[data-dsh-claude-style][data-ds-dark-theme] button[class*="brand"] {
 }
 
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[class*="brand"] {
-  color: #141413 !important;
+  color: var(--dsh-claude-logo-ink) !important;
 }
 
 body[data-dsh-claude-style][data-ds-dark-theme] button[class*="brand"] {
-  color: #faf9f5 !important;
+  color: var(--dsh-claude-logo-ink) !important;
 }
 
 /* badges: full pill */
@@ -79,7 +79,7 @@ body[data-dsh-claude-style] :is([class*="badge"], [class*="Badge"], [class*="_ta
 /* ---------- chrome details ---------- */
 body[data-dsh-claude-style] * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(58, 56, 51, 0.9) transparent;
+  scrollbar-color: var(--dsh-claude-scrollbar) transparent;
 }
 
 body[data-dsh-claude-style] ::-webkit-scrollbar {
@@ -92,12 +92,12 @@ body[data-dsh-claude-style] ::-webkit-scrollbar-track {
 }
 
 body[data-dsh-claude-style] ::-webkit-scrollbar-thumb {
-  background: rgba(58, 56, 51, 0.9);
+  background: var(--dsh-claude-scrollbar);
   border-radius: 9999px;
 }
 
 body[data-dsh-claude-style] ::-webkit-scrollbar-thumb:hover {
-  background: rgba(107, 106, 101, 0.9);
+  background: var(--dsh-claude-scrollbar-hover);
 }
 
 /* Text selection: two solid paints, identical on both canvases.

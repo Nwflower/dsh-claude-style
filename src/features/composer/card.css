@@ -139,7 +139,7 @@ body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[data-dsh-claude-con
 }
 
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[data-dsh-claude-control="commands"]:hover:not(:disabled) {
-  background: #f6f6f4;
+  background: var(--dsh-claude-chip);
 }
 
 /* Model selector: the same type size as the permission segments and the
@@ -152,7 +152,7 @@ body[data-dsh-claude-style] [data-composer-card] [class*="_trigger"] {
 }
 
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-composer-card] [class*="_trigger"]:hover:not(:disabled) {
-  background: #f6f6f4;
+  background: var(--dsh-claude-chip);
 }
 
 body[data-dsh-claude-style] [data-composer-card] [class*="_chevron"] {

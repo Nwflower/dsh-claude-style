@@ -186,8 +186,15 @@
     /** Brand marks selectable from the settings page. `claude` is the default. */
     const BRAND_CLAUDE = 'claude'
     const BRAND_ANTHROPIC = 'anthropic'
-    /** Leave the brand area entirely to the host: neither brand variant matches. */
-    const BRAND_OFF = 'off'
+    /**
+     * The DeepSeek brand: the host's own brand area stays (neither Claude
+     * variant matches) and takes DeepSeek's brand blue, both palettes turn
+     * blue (theme/tokens.css), and the skin's Claude marks give way to
+     * DeepSeek's whale.
+     */
+    const BRAND_DEEPSEEK = 'deepseek'
+    /** What earlier builds stored for the DeepSeek choice, when it was labelled "Off". */
+    const BRAND_DEEPSEEK_LEGACY = 'off'
     const DEFAULT_BRAND = BRAND_CLAUDE
     /** The document attribute the stylesheet switches on. */
     const BRAND_ATTR = 'data-dsh-claude-brand'

@@ -88,6 +88,22 @@ body[data-dsh-claude-style][data-ds-dark-theme] {
   /* The host's "new color" brand accent (shipped under this doubled suffix)
      resolves to a deepseek blue in both palettes; the skin has one accent. */
   --dsw-alias-brand-primary-new-colorprimary-new-color: #d97757;
+  /* The skin's own surfaces and inks, named once so the DeepSeek palettes
+     below restate them in one place: the canvas and the sidebar's, the fill of
+     a raised card (popovers, menus, the search palette), the strongest ink of
+     an active row, a session title at rest, a table's header row, the
+     scrollbar thumb at rest and under the pointer, a text link under the
+     pointer, and the sidebar's brand art. */
+  --dsh-claude-canvas: #141413;
+  --dsh-claude-sidebar-canvas: #141413;
+  --dsh-claude-raised: #1e1e1d;
+  --dsh-claude-ink-strong: #f5f4ef;
+  --dsh-claude-session-ink: #8c8983;
+  --dsh-claude-table-head: #242320;
+  --dsh-claude-scrollbar: rgba(58, 56, 51, 0.9);
+  --dsh-claude-scrollbar-hover: rgba(107, 106, 101, 0.9);
+  --dsh-claude-link-hover: #f0a488;
+  --dsh-claude-logo-ink: #faf9f5;
 }
 
 /* ================= light variant: ivory editorial ================= */
@@ -147,70 +163,190 @@ body[data-dsh-claude-style]:not([data-ds-dark-theme]) {
   --dsh-claude-inline-code-fg: #943333;
   --dsh-claude-link: #184f95;
   --dsh-claude-link-underline: rgba(24, 79, 149, 0.6);
+  /* The skin's own light surfaces and inks: the dark block's set, plus the
+     resting plate of a segmented control or a switch. */
+  --dsh-claude-canvas: #fcfcfb;
+  --dsh-claude-sidebar-canvas: #fbfbf9;
+  --dsh-claude-chip: #f6f6f4;
+  --dsh-claude-table-head: #f0f0ef;
+  --dsh-claude-scrollbar: rgba(208, 205, 193, 0.9);
+  --dsh-claude-scrollbar-hover: rgba(143, 138, 126, 0.8);
+  --dsh-claude-link-hover: #a94f2f;
+  --dsh-claude-logo-ink: #141413;
+}
+
+/* ================= the DeepSeek brand: blue ================= */
+/* The DeepSeek brand turns both palettes blue. The accent is DeepSeek's own
+   brand blue #4D6BFE — the colour of its whale logo — on every fill,
+   check and focus ring the clay took, with a lighter step for text on
+   the dark canvas; the sidebar's whale and wordmark take it as well. The
+   neutrals are cool: a sky-tinted white canvas with the host's bluish inks
+   (its neutral-bluish ramp) in light, a blue-black canvas in dark. User
+   bubbles take a blue tint, as the host's own do, and inline code keeps the
+   body ink, as the host draws it. Claude's violet top rung stays. */
+body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_DEEPSEEK%%"]:not([data-ds-dark-theme]) {
+  --dsw-alias-bg-base: #f7faff;
+  --dsw-alias-bg-layer-1: #f7faff;
+  --dsw-alias-bg-layer-2: #f3f7fe;
+  --dsw-alias-bg-layer-3: #eff4fd;
+  --dsw-alias-border-l1: #e1e8f4;
+  --dsw-alias-border-l2: #d6dfee;
+  --dsw-alias-border-l3: #c7d2e6;
+  --dsw-alias-brand-primary: #4d6bfe;
+  --dsw-alias-brand-text: #f7faff;
+  --dsw-alias-button-primary-fill: #4d6bfe;
+  --dsw-alias-button-primary-hover: #3a57e8;
+  --dsw-alias-button-info-fill: #4d6bfe;
+  --dsw-alias-button-info-hover: #3a57e8;
+  --dsw-alias-interactive-bg-active: rgba(77, 107, 254, 0.22);
+  --dsw-alias-label-primary: #0f1115;
+  --dsw-alias-label-primary-bluish: #0f1115;
+  --dsw-alias-label-secondary: #61666b;
+  --dsw-alias-label-tertiary: #81858c;
+  --dsw-alias-label-caption: #adb2b8;
+  --dsw-alias-state-business-primary: #4d6bfe;
+  --dsw-alias-state-business-tertiary: #e3e9ff;
+  --dsw-alias-link: #3b56d9;
+  --dsw-alias-brand-primary-new-colorprimary-new-color: #4d6bfe;
+  --dsw-specific-selector: #f3f7fe;
+  --dsw-specific-sidebar-fill: #f3f7fe;
+  --dsw-specific-bubble: #e6edfd;
+  --dsw-alias-interactive-bg-hover-solid: #e9eff9;
+  --dsh-claude-hover-bg: rgba(38, 49, 72, 0.08);
+  --dsh-claude-inline-code-bg: rgba(38, 49, 72, 0.05);
+  --dsh-claude-inline-code-fg: var(--dsw-alias-label-primary);
+  --dsh-claude-link: #3b56d9;
+  --dsh-claude-link-underline: rgba(59, 86, 217, 0.6);
+  --dsh-claude-link-hover: #2c43b8;
+  --dsh-claude-logo-ink: #4d6bfe;
+  --dsh-claude-canvas: #f7faff;
+  --dsh-claude-sidebar-canvas: #f3f7fe;
+  --dsh-claude-chip: #eef3fb;
+  --dsh-claude-table-head: #eaf0f9;
+  --dsh-claude-scrollbar: rgba(199, 210, 230, 0.9);
+  --dsh-claude-scrollbar-hover: rgba(129, 133, 140, 0.8);
+}
+
+body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_DEEPSEEK%%"][data-ds-dark-theme] {
+  --dsw-alias-bg-base: #13161d;
+  --dsw-alias-bg-layer-1: #1a1e27;
+  --dsw-alias-bg-layer-2: #212631;
+  --dsw-alias-bg-layer-3: #2a303c;
+  --dsw-alias-bg-overlay: #212631;
+  --dsw-alias-border-l1: #212631;
+  --dsw-alias-border-l2: #2a303c;
+  --dsw-alias-border-l3: #363d4b;
+  --dsw-alias-brand-primary: #4d6bfe;
+  --dsw-alias-brand-text: #eef1f8;
+  --dsw-alias-button-primary-fill: #4d6bfe;
+  --dsw-alias-button-primary-hover: #6a84ff;
+  --dsw-alias-button-elevated-fill: #212631;
+  --dsw-alias-button-floating-fill: #212631;
+  --dsw-alias-button-floating-hover: #2a303c;
+  --dsw-alias-button-info-fill: #4d6bfe;
+  --dsw-alias-button-info-hover: #6a84ff;
+  --dsw-alias-interactive-bg-active: rgba(77, 107, 254, 0.30);
+  --dsw-alias-interactive-bg-hover-solid: #2a303c;
+  --dsw-alias-label-primary: #eef1f8;
+  --dsw-alias-label-primary-bluish: #eef1f8;
+  --dsw-alias-label-secondary: #aeb5c4;
+  --dsw-alias-label-tertiary: #8a92a3;
+  --dsw-alias-label-caption: #666e7e;
+  --dsw-alias-state-business-primary: #6a84ff;
+  --dsw-alias-state-business-tertiary: #253056;
+  --dsw-alias-link: #8fa4ff;
+  --dsw-alias-markdown-code-block: #1a1e27;
+  --dsw-alias-markdown-code-block-banner: #212631;
+  --dsw-alias-brand-primary-new-colorprimary-new-color: #4d6bfe;
+  --dsw-specific-input-major: #0e1117;
+  --dsw-specific-selector: #2a303c;
+  --dsw-specific-sidebar-fill: #13161d;
+  --dsw-specific-bubble: #232a3a;
+  --dsh-claude-inline-code-fg: var(--dsw-alias-label-primary);
+  --dsh-claude-link: #8fa4ff;
+  --dsh-claude-link-underline: rgba(143, 164, 255, 0.6);
+  --dsh-claude-link-hover: #b0c0ff;
+  --dsh-claude-logo-ink: #4d6bfe;
+  --dsh-claude-canvas: #13161d;
+  --dsh-claude-sidebar-canvas: #13161d;
+  --dsh-claude-raised: #1b1f28;
+  --dsh-claude-ink-strong: #e9edf6;
+  --dsh-claude-session-ink: #8a91a0;
+  --dsh-claude-table-head: #212631;
+  --dsh-claude-scrollbar: rgba(54, 61, 75, 0.9);
+  --dsh-claude-scrollbar-hover: rgba(104, 112, 128, 0.9);
 }
 
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) {
-  color: #141413;
+  color: var(--dsw-alias-label-primary);
+  background-color: var(--dsh-claude-canvas) !important;
+}
+
+/* The document element sits above the body and cannot read its tokens, so
+   each palette states its canvas here. */
+html:has(body[data-dsh-claude-style]:not([data-ds-dark-theme])) {
   background-color: #fcfcfb !important;
 }
 
-html:has(body[data-dsh-claude-style]:not([data-ds-dark-theme])),
+html:has(body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_DEEPSEEK%%"]:not([data-ds-dark-theme])) {
+  background-color: #f7faff !important;
+}
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) #root {
-  background-color: #fcfcfb !important;
+  background-color: var(--dsh-claude-canvas) !important;
 }
 
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) :is([data-pane="sidebar"], [class*="sidebarCol"], .dshDesktopSidebarSurface) {
-  --dsw-specific-sidebar-fill: #fbfbf9 !important;
-  background: #fbfbf9 !important;
-  border-right: 1px solid #e8e6dc !important;
+  --dsw-specific-sidebar-fill: var(--dsh-claude-sidebar-canvas) !important;
+  background: var(--dsh-claude-sidebar-canvas) !important;
+  border-right: 1px solid var(--dsw-alias-border-l1) !important;
 }
 
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) :is([data-pane="conversation"], [class*="centerCol"]) {
-  background: #fcfcfb !important;
+  background: var(--dsh-claude-canvas) !important;
 }
 
 /* The light half of the anchor ink in theme/chrome.css; both leave a host button
    class (`_linkButton`) to the ink that class states for itself. */
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) a:not([class*="_linkButton"]) {
-  color: #c6613f;
+  color: var(--dsw-alias-link);
 }
 
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) a:not([class*="_linkButton"]):hover {
-  color: #a94f2f;
+  color: var(--dsh-claude-link-hover);
 }
 
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[class*="_brand"],
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[class*="_primary"],
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-slot="sidebar.settings"] > :is(button, [role="button"]) {
-  background: #d97757;
+  background: var(--dsw-alias-button-primary-fill);
   color: #ffffff;
 }
 
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[class*="_brand"]:hover,
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[class*="_primary"]:hover,
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-slot="sidebar.settings"] > :is(button, [role="button"]):hover {
-  background: #c6613f;
+  background: var(--dsw-alias-button-primary-hover);
 }
 
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) blockquote {
-  color: #6e6a60;
+  color: var(--dsw-alias-label-secondary);
   border-left-color: var(--dsw-alias-label-caption);
   background: rgba(20, 20, 19, 0.04);
 }
 
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) pre {
-  border-color: #e8e6dc;
+  border-color: var(--dsw-alias-border-l1);
 }
 
 
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) * {
-  scrollbar-color: rgba(208, 205, 193, 0.9) transparent;
+  scrollbar-color: var(--dsh-claude-scrollbar) transparent;
 }
 
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) ::-webkit-scrollbar-thumb {
-  background: rgba(208, 205, 193, 0.9);
+  background: var(--dsh-claude-scrollbar);
 }
 
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) ::-webkit-scrollbar-thumb:hover {
-  background: rgba(143, 138, 126, 0.8);
+  background: var(--dsh-claude-scrollbar-hover);
 }

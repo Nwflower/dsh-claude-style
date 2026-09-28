@@ -48,8 +48,8 @@
 /* ---------- typography: serif display + sans UI + mono code ---------- */
 body[data-dsh-claude-style] {
   font-family: var(--dsw-font-family);
-  color: #faf9f5;
-  background-color: #141413;
+  color: var(--dsw-alias-label-primary);
+  background-color: var(--dsh-claude-canvas);
 }
 
 body[data-dsh-claude-style] :is(h1, h2, h3, h4, [class*="headline"], [class*="title"]) {
@@ -99,12 +99,12 @@ body[data-dsh-claude-style] [class*="markdown"] :is(th, td) {
 
 body[data-dsh-claude-style] [class*="tableScroll"] thead th,
 body[data-dsh-claude-style] [class*="tableScroll"] thead td {
-  background: #f0f0ef !important;
+  background: var(--dsh-claude-table-head, #f0f0ef) !important;
 }
 
 body[data-dsh-claude-style][data-ds-dark-theme] [class*="tableScroll"] thead th,
 body[data-dsh-claude-style][data-ds-dark-theme] [class*="tableScroll"] thead td {
-  background: #242320 !important;
+  background: var(--dsh-claude-table-head) !important;
 }
 
 /* Table frame: same 0.5px line the host uses for row separators, rounded
@@ -181,7 +181,7 @@ body[data-dsh-claude-style] :is([class*="caption"], [class*="sectionLabel"]) {
 body[data-dsh-claude-style] blockquote {
   font-family: var(--dsw-font-prose);
   font-style: normal;
-  color: #b0aea5;
+  color: var(--dsw-alias-label-secondary);
   border-left: 2px solid var(--dsw-alias-label-caption);
   background: rgba(250, 249, 245, 0.06);
   border-radius: 0 8px 8px 0;

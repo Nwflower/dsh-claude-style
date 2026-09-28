@@ -69,6 +69,15 @@ body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_ANTHROPIC%%"] [class*="brand
   mask: %%ANTHROPIC_BRAND_WORD%% center / contain no-repeat;
 }
 
+/* DeepSeek: the host's own whale and wordmark, in DeepSeek's brand blue the
+   way its logo is drawn. The expanded brand is a button on most platforms
+   (theme/chrome.css inks that button too) and a plain row on macOS, and the
+   collapsed rail's whale sits in the sidebar toggle, so the art is inked where
+   it sits. */
+body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_DEEPSEEK%%"] :is([class*="brandIdentity"], [class*="railMark"]) {
+  color: var(--dsh-claude-logo-ink) !important;
+}
+
 /* ---------- Claude Code layout: new session button ---------- */
 /* Narrow height matching conversation row, left-aligned plus icon. No plate at
    rest — Claude's own sidebar keeps every row flat until the pointer is on it —
@@ -110,7 +119,7 @@ body[data-dsh-claude-style] [class*="_frame"]:not([data-sidebar-collapsed]) > [c
   background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
 }
 body[data-dsh-claude-style][data-ds-dark-theme] [class*="_frame"]:not([data-sidebar-collapsed]) > [class*="_sidebarCol"] button[class*="newSession"] {
-  color: #f5f4ef !important;
+  color: var(--dsh-claude-ink-strong) !important;
 }
 body[data-dsh-claude-style][data-ds-dark-theme] [class*="_frame"]:not([data-sidebar-collapsed]) > [class*="_sidebarCol"] button[class*="newSession"]:hover {
   background: rgba(255, 255, 255, 0.08) !important;
@@ -204,7 +213,7 @@ body[data-dsh-claude-style] button[class*="panelRow"]:hover {
   background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
 }
 body[data-dsh-claude-style][data-ds-dark-theme] button[class*="panelRow"] {
-  color: #f5f4ef !important;
+  color: var(--dsh-claude-ink-strong) !important;
 }
 body[data-dsh-claude-style][data-ds-dark-theme] button[class*="panelRow"]:hover {
   background: rgba(255, 255, 255, 0.08) !important;
@@ -250,13 +259,13 @@ body[data-dsh-claude-style] [class*="sessionRow"] [class*="title"] {
   transition: color 0.12s ease !important;
 }
 body[data-dsh-claude-style][data-ds-dark-theme] [class*="sessionRow"] [class*="title"] {
-  color: #8c8983 !important;
+  color: var(--dsh-claude-session-ink) !important;
 }
 body[data-dsh-claude-style] [class*="sessionRow"]:is(:hover, [class*="_selected"], [class*="_active"], [class*="menuOpen"], [aria-selected="true"], [data-selected="true"]) [class*="title"] {
   color: var(--dsw-alias-label-primary, #141413) !important;
 }
 body[data-dsh-claude-style][data-ds-dark-theme] [class*="sessionRow"]:is(:hover, [class*="_selected"], [class*="_active"], [class*="menuOpen"], [aria-selected="true"], [data-selected="true"]) [class*="title"] {
-  color: #f5f4ef !important;
+  color: var(--dsh-claude-ink-strong) !important;
 }
 body[data-dsh-claude-style] [class*="sessionRow"] [class*="_time"] {
   font-size: 11px !important;
@@ -415,7 +424,7 @@ body[data-dsh-claude-style] svg[data-state="ongoing"] {
   border-radius: 50% !important;
   corner-shape: round !important;
   border: 1.5px solid rgba(255, 255, 255, 0.18) !important;
-  border-top-color: #faf9f5 !important;
+  border-top-color: var(--dsw-alias-label-primary) !important;
   animation: 0.85s linear infinite dsh-claude-win11-spin !important;
   transform-origin: center center !important;
   display: inline-block !important;
@@ -426,7 +435,7 @@ body[data-dsh-claude-style] svg[data-state="ongoing"] {
 }
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) svg[data-state="ongoing"] {
   border-color: rgba(20, 20, 19, 0.12) !important;
-  border-top-color: #6e6a60 !important;
+  border-top-color: var(--dsw-alias-label-secondary) !important;
 }
 body[data-dsh-claude-style] svg[data-state="ongoing"] * {
   display: none !important;

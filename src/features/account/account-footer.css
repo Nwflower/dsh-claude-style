@@ -10,7 +10,7 @@ body[data-dsh-claude-style] [class*="footArea"] {
   box-sizing: border-box !important;
 }
 body[data-dsh-claude-style][data-ds-dark-theme] [class*="footArea"] {
-  border-top-color: #2e2c29 !important;
+  border-top-color: var(--dsw-alias-border-l2) !important;
 }
 
 /* Account trigger button in sidebar */
@@ -44,6 +44,11 @@ body[data-dsh-claude-style] .dsh-claude-account-avatar {
   border-radius: 50%;
   corner-shape: round;
   overflow: hidden;
+}
+/* Under the DeepSeek brand the picture with no account behind it is DeepSeek's
+   whale, in its brand blue. */
+body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_DEEPSEEK%%"] .dsh-claude-account-avatar {
+  background-image: %%DEEPSEEK_MARK%%;
 }
 body[data-dsh-claude-style] .dsh-claude-account-label {
   flex: 1;
@@ -95,8 +100,8 @@ body[data-dsh-claude-style] .dsh-claude-account-popover {
   width: auto !important;
   max-width: none !important;
   min-width: 0 !important;
-  /* The shared popover card (shared/popover.css), on the ivory canvas fill. */
-  background: #fcfcfb !important;
+  /* The shared popover card (shared/popover.css), on the canvas fill. */
+  background: var(--dsh-claude-canvas, #fcfcfb) !important;
   display: flex !important;
   flex-direction: column !important;
   gap: 6px !important;
@@ -312,12 +317,12 @@ body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] {
   padding: 6px !important;
   border: 1px solid var(--dsw-alias-border-l1, #e8e6dc) !important;
   border-radius: 12px !important;
-  background: #fcfcfb !important;
+  background: var(--dsh-claude-canvas, #fcfcfb) !important;
   box-shadow: 0 8px 30px rgba(20, 20, 19, 0.12), 0 2px 8px rgba(20, 20, 19, 0.06) !important;
   /* The card's visible fill is the MenuSurface material layer, not this box:
-     the surface token is rebound here so that layer paints the same ivory
+     the surface token is rebound here so that layer paints the same canvas
      fill, and its backdrop blur is dropped for the flat skin card. */
-  --dsw-menu-surface-fill: #fcfcfb;
+  --dsw-menu-surface-fill: var(--dsh-claude-canvas, #fcfcfb);
   --dsw-menu-backdrop-filter: none;
   font-family: var(--dsw-font-family) !important;
 }
@@ -341,10 +346,10 @@ body[data-dsh-claude-style][%%ACCOUNT_ARMED_ATTR%%] div[role="menu"][data-menu-m
   }
 }
 body[data-dsh-claude-style][data-ds-dark-theme] [%%ACCOUNT_MENU_ATTR%%] {
-  background: #1e1e1d !important;
-  border-color: #2e2c29 !important;
+  background: var(--dsh-claude-raised) !important;
+  border-color: var(--dsw-alias-border-l2) !important;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
-  --dsw-menu-surface-fill: #1e1e1d;
+  --dsw-menu-surface-fill: var(--dsh-claude-raised);
 }
 
 /* The host's rows. itemWrap is the shared Menu's row wrapper; the bare item

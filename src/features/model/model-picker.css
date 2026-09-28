@@ -65,7 +65,7 @@ body[data-dsh-claude-style] .dsh-claude-model-group-row {
 }
 
 body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-model-group-row {
-  background: #1e1e1d !important;
+  background: var(--dsh-claude-raised) !important;
 }
 
 body[data-dsh-claude-style] .dsh-claude-model-group {

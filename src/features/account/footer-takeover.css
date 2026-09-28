@@ -177,6 +177,6 @@ body[data-dsh-claude-style] .dsh-claude-popover-embed[data-clickable]:hover {
 }
 
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) .dsh-claude-popover-embed {
-  border-bottom-color: #e8e6dc;
+  border-bottom-color: var(--dsw-alias-border-l1);
 }
 

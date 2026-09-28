@@ -189,11 +189,11 @@ function loadTokens() {
   const factory = new Function(`
     ${constants}
     return {
-      SANS, SERIF, PROSE, MONO, BRAND_ATTR, BRAND_ANTHROPIC, BRAND_CLAUDE, FOOTER_ATTR, COMPOSER_ATTR, PERMISSIONS_ATTR, ACCOUNT_MENU_ATTR, ACCOUNT_ARMED_ATTR, HERO_MENU_ATTR,
+      SANS, SERIF, PROSE, MONO, BRAND_ATTR, BRAND_ANTHROPIC, BRAND_CLAUDE, BRAND_DEEPSEEK, FOOTER_ATTR, COMPOSER_ATTR, PERMISSIONS_ATTR, ACCOUNT_MENU_ATTR, ACCOUNT_ARMED_ATTR, HERO_MENU_ATTR,
       // "a skin brand is selected": the brand preference's third value is
-      // "off", which must match neither variant — so the shared rules that
-      // hide the host's mark and paint the ::before are gated on this rather
-      // than on :not(anthropic), which "off" would satisfy.
+      // "deepseek", which must match neither variant — so the shared rules
+      // that hide the host's mark and paint the ::before are gated on this
+      // rather than on :not(anthropic), which "deepseek" would satisfy.
       BRAND_ACTIVE: ':is([' + BRAND_ATTR + '="' + BRAND_CLAUDE + '"], [' + BRAND_ATTR + '="' + BRAND_ANTHROPIC + '"])',
       CLAUDE_WORD_WIDTH: (18 * CLAUDE_WORD_ASPECT).toFixed(1),
     }
@@ -318,6 +318,9 @@ const SVG_TOKENS = {
   ANTHROPIC_MARK: 'anthropic-mark.svg',
   ANTHROPIC_BRAND_MARK: 'anthropic-brand-mark.svg',
   ANTHROPIC_BRAND_WORD: 'anthropic-brand-word.svg',
+  // The host's own whale mark (ui-primitives FishLogo, FISH_LOGO_PATH), in
+  // DeepSeek's brand blue: a picture where it is painted, a shape where it masks.
+  DEEPSEEK_MARK: 'deepseek-mark.svg',
 }
 
 /** Read one SVG source and wrap it as a CSS url() data URI. */

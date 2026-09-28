@@ -139,8 +139,8 @@
     "title": { "zh": "Claude Style", "en": "Claude Style" },
     "brandTitle": { "zh": "修改品牌标识", "en": "Brand mark" },
     "brandDesc": {
-      "zh": "显示的LOGO",
-      "en": "Which brand mark the sidebar shows. \"Off\" leaves the host's own brand area untouched."
+      "zh": "侧栏与首页显示的品牌标识。选 DeepSeek 时保留宿主自己的 DeepSeek 标识并画成 DeepSeek 蓝，整套配色换成蓝色系（亮色为淡天蓝的亮白，暗色为蓝黑）。",
+      "en": "The brand mark in the sidebar and on the home page. DeepSeek keeps the host's own DeepSeek mark in DeepSeek blue and turns the whole palette blue (a sky-tinted white in light, a blue-black in dark)."
     },
     "collapseTitle": { "zh": "重绘设置弹层", "en": "Collapse the sidebar settings area" },
     "collapseDesc": {
@@ -187,7 +187,7 @@
       "en": "Shown in the new-conversation greeting and the account row. Leave empty to use the signed-in account name, then the HDSL launcher's account name, then the local system user."
     },
     "usernamePlaceholder": { "zh": "自动解析账号或系统用户", "en": "Auto-detect account or host user" },
-    "brandOff": { "zh": "关闭", "en": "Off" },
+    "brandDeepseek": { "zh": "DeepSeek", "en": "DeepSeek" },
     "brandClaude": { "zh": "Claude", "en": "Claude" },
     "brandAnthropic": { "zh": "Anthropic", "en": "Anthropic" },
     "scopeOff": { "zh": "关闭", "en": "Off" },

@@ -286,6 +286,21 @@
     r.seatIdle = seatState(seats[0])
     r.seatRunning = seatState(seats[1])
     if (window.SMOKE_CASE === 'default') {
+      // The Claude palette, light and dark: the ivory and warm-black canvases,
+      // the clay accent, the raised card fill.
+      var claudeLight = getComputedStyle(document.body)
+      r.claudePalette = {
+        canvas: claudeLight.backgroundColor,
+        accent: claudeLight.getPropertyValue('--dsw-alias-brand-primary').trim(),
+      }
+      document.body.setAttribute('data-ds-dark-theme', '')
+      var claudeDark = getComputedStyle(document.body)
+      r.claudePalette.dark = {
+        canvas: claudeDark.backgroundColor,
+        accent: claudeDark.getPropertyValue('--dsw-alias-brand-primary').trim(),
+        raised: claudeDark.getPropertyValue('--dsh-claude-raised').trim(),
+      }
+      document.body.removeAttribute('data-ds-dark-theme')
       // The classic hero's welcome is drawn on arrival and holds between
       // passes: the draw pinned to either end of its pool gives two different
       // lines, and a further pass leaves the drawn one alone.

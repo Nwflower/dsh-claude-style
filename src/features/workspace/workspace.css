@@ -96,7 +96,7 @@ body[data-dsh-claude-style] .dsh-claude-ws-segment[aria-checked="true"] {
 }
 body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-ws-segment[aria-checked="true"] {
   background: rgba(255, 255, 255, 0.14) !important;
-  color: #f5f4ef !important;
+  color: var(--dsh-claude-ink-strong) !important;
   box-shadow: none !important;
 }
 /* The control's sliding pill (shared/sliding-pill.css places and moves it;

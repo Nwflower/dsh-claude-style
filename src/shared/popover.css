@@ -24,8 +24,8 @@ body[data-dsh-claude-style] .dsh-claude-popover-card[data-open="true"] {
   transform: translateY(0) scale(1) !important;
 }
 body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-popover-card {
-  background: #1e1e1d !important;
-  border-color: #2e2c29 !important;
+  background: var(--dsh-claude-raised) !important;
+  border-color: var(--dsw-alias-border-l2) !important;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
 }
 /* A card's list: rows stacked with a hairline of air. */

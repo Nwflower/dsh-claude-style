@@ -347,11 +347,20 @@
       return out
     }
 
+    /**
+     * Clamp the brand. A value stored by an earlier build under the DeepSeek
+     * choice's old name reads as that choice.
+     */
+    function normalizeBrand(value) {
+      if (value === BRAND_ANTHROPIC || value === BRAND_DEEPSEEK) return value
+      return value === BRAND_DEEPSEEK_LEGACY ? BRAND_DEEPSEEK : BRAND_CLAUDE
+    }
+
     /** Clamp one host value into the preference shape (the host already did this). */
     function normalizePrefs(value) {
       const section = value && typeof value === 'object' ? value : {}
       return {
-        brand: section.brand === BRAND_ANTHROPIC || section.brand === BRAND_OFF ? section.brand : BRAND_CLAUDE,
+        brand: normalizeBrand(section.brand),
         collapseFooter: section.collapseFooter !== false,
         autoPopover: normalizeAutoPopover(section.autoPopover),
         composerScope: !COMPOSER_SCOPES.includes(section.composerScope) ? 'all' : section.composerScope,

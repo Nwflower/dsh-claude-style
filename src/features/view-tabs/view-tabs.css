@@ -76,7 +76,7 @@ body[data-dsh-claude-style] [data-dsh-view-tabs] > [class*="_tab"][class*="Activ
 body[data-dsh-claude-style][data-ds-dark-theme] [data-dsh-view-tabs] > [class*="_tab"][aria-selected="true"],
 body[data-dsh-claude-style][data-ds-dark-theme] [data-dsh-view-tabs] > [class*="_tab"][class*="Active"] {
   background: rgba(255, 255, 255, 0.14) !important;
-  color: #f5f4ef !important;
+  color: var(--dsh-claude-ink-strong) !important;
   box-shadow: none !important;
 }
 /* The strip's sliding pill (shared/sliding-pill.css places and moves it):

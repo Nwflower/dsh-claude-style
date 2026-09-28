@@ -192,10 +192,10 @@
         const username = getUsername(ctx)
 
         // The wordmark follows the brand preference like the sidebar does; the
-        // "off" choice only drops the starburst, since a bare "Claude" text
+        // DeepSeek choice only drops the starburst, since a bare "Claude" text
         // wordmark is what the page is.
         const brand = readPrefs().brand
-        const showMark = brand !== BRAND_OFF
+        const showMark = brand !== BRAND_DEEPSEEK
         const useAnthropic = brand === BRAND_ANTHROPIC
 
         root.innerHTML =

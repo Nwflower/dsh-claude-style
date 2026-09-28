@@ -31,7 +31,7 @@ body[data-dsh-claude-style] .dsh-claude-search-trigger {
   gap: 8px !important;
   border: 1px solid var(--dsw-alias-border-l1, #e8e6dc) !important;
   border-radius: 8px !important;
-  background: #fcfcfb !important;
+  background: var(--dsh-claude-canvas, #fcfcfb) !important;
   color: var(--dsw-alias-label-tertiary, #8f8d84) !important;
   font-family: var(--dsw-font-family) !important;
   font-size: 14px !important;
@@ -42,8 +42,8 @@ body[data-dsh-claude-style] .dsh-claude-search-trigger {
   -webkit-app-region: no-drag !important;
 }
 body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-trigger {
-  border-color: #2e2c29 !important;
-  background: #1e1e1d !important;
+  border-color: var(--dsw-alias-border-l2) !important;
+  background: var(--dsh-claude-raised) !important;
 }
 body[data-dsh-claude-style] [data-slot="sidebar"]:hover [data-dsh-claude-search-row] > .dsh-claude-search-trigger,
 body[data-dsh-claude-style] [data-dsh-claude-search-row] > .dsh-claude-search-trigger:focus-visible {
@@ -132,7 +132,7 @@ body[data-dsh-claude-style] .dsh-claude-search-dialog {
   gap: 0 !important;
   border: 1px solid var(--dsw-alias-border-l1, #e8e6dc) !important;
   border-radius: 16px !important;
-  background: #fcfcfb !important;
+  background: var(--dsh-claude-canvas, #fcfcfb) !important;
   box-shadow: 0 16px 48px rgba(20, 20, 19, 0.14), 0 2px 8px rgba(20, 20, 19, 0.06) !important;
 }
 body[data-dsh-claude-style] [data-dsh-claude-search-closing] > .dsh-claude-search-dialog {
@@ -157,8 +157,8 @@ body[data-dsh-claude-style] [data-dsh-claude-search-closing] {
   to { opacity: 0; }
 }
 body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-dialog {
-  border-color: #2e2c29 !important;
-  background: #1e1e1d !important;
+  border-color: var(--dsw-alias-border-l2) !important;
+  background: var(--dsh-claude-raised) !important;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
 }
 body[data-dsh-claude-style] .dsh-claude-search {
@@ -381,7 +381,7 @@ body[data-dsh-claude-style] .dsh-claude-search-key {
   line-height: 1 !important;
 }
 body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-key {
-  border-color: #3a3834 !important;
+  border-color: var(--dsw-alias-border-l3) !important;
 }
 body[data-dsh-claude-style] .dsh-claude-search-foot {
   display: flex !important;
@@ -393,7 +393,7 @@ body[data-dsh-claude-style] .dsh-claude-search-foot {
   font-size: 13px !important;
 }
 body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-foot {
-  border-top-color: #2e2c29 !important;
+  border-top-color: var(--dsw-alias-border-l2) !important;
 }
 body[data-dsh-claude-style] .dsh-claude-search-hint {
   display: inline-flex !important;

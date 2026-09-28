@@ -21,6 +21,37 @@ Rules:
 - Never pure white, never pure black, never cool grays.
 - Accent usage stays under ~10% of visible elements.
 
+**The DeepSeek brand's palettes.** The DeepSeek brand turns both palettes
+blue. The single accent is DeepSeek's brand blue `#4D6BFE` — the colour of its
+whale logo — with a darker step for text links on the light canvas
+and a lighter one on the dark; the sidebar's whale and wordmark and the hero's
+fish take it as their ink. The neutrals are the host's own cool family (its
+`neutral-bluish` ramp) under a sky-tinted white in light and a blue-black in
+dark. User bubbles take a blue tint as the host's own do, and inline code keeps
+the body ink as the host draws it. The skin's Claude marks (the account row's
+picture without an avatar, the turn status line's spark) become DeepSeek's
+whale (`src/assets/brand/deepseek-mark.svg`, the host's `FISH_LOGO_PATH`); the
+violet top rung of the reasoning slider stays.
+
+| Token | Claude light | DeepSeek light | Claude dark | DeepSeek dark | Use |
+|---|---|---|---|---|---|
+| accent | `#D97757` | `#4D6BFE` | `#D97757` | `#4D6BFE` | brand primary, primary / info fills, checks, business primary (dark `#6A84FF`) |
+| accent hover | `#C6613F` | `#3A57E8` | `#E08A6D` | `#6A84FF` | primary / info button hover |
+| link | `#C6613F` / `#A94F2F` | `#3B56D9` / `#2C43B8` | `#E08A6D` / `#F0A488` | `#8FA4FF` / `#B0C0FF` | text link at rest / under the pointer |
+| markdown link | `#184F95` | `#3B56D9` | `#8AB4F8` | `#8FA4FF` | `--dsh-claude-link` |
+| brand art | `#141413` | `#4D6BFE` | `#FAF9F5` | `#4D6BFE` | sidebar whale and wordmark, `--dsh-claude-logo-ink` |
+| canvas | `#FCFCFB` | `#F7FAFF` | `#141413` | `#13161D` | bg base / layer 1, `--dsh-claude-canvas` |
+| sidebar | `#FBFBF9` | `#F3F7FE` | `#141413` | `#13161D` | sidebar, `--dsh-claude-sidebar-canvas` |
+| layers | `#FBFBF9` / `#F9F9F6` | `#F3F7FE` / `#EFF4FD` | `#242320` / `#2E2C29` | `#212631` / `#2A303C` | layer 2 / layer 3 |
+| raised card | canvas | canvas | `#1E1E1D` | `#1B1F28` | popovers, menus, search palette, `--dsh-claude-raised` |
+| hairlines | `#E8E6DC` / `#DEDCD2` / `#D0CDC1` | `#E1E8F4` / `#D6DFEE` / `#C7D2E6` | `#242320` / `#2E2C29` / `#3A3833` | `#212631` / `#2A303C` / `#363D4B` | border l1 / l2 / l3 |
+| solid hover | `#F0EFE9` | `#E9EFF9` | `#2E2C29` | `#2A303C` | the host's solid hover chip |
+| chip | `#F6F6F4` | `#EEF3FB` | selector | selector | segmented control and switch at rest, `--dsh-claude-chip` |
+| table head | `#F0F0EF` | `#EAF0F9` | `#242320` | `#212631` | `--dsh-claude-table-head` |
+| inks | `#141413` / `#6E6A60` / `#8F8A7E` / `#A6A094` | `#0F1115` / `#61666B` / `#81858C` / `#ADB2B8` | `#FAF9F5` / `#B0AEA5` / `#8F8D84` / `#6B6A65` | `#EEF1F8` / `#AEB5C4` / `#8A92A3` / `#666E7E` | label primary / secondary / tertiary / caption |
+| user bubble | hover wash | `#E6EDFD` | host's | `#232A3A` | `--dsw-specific-bubble` |
+| hover wash | `rgba(0, 0, 0, 0.08)` | `rgba(38, 49, 72, 0.08)` | `rgba(255, 255, 255, 0.08)` | `rgba(255, 255, 255, 0.08)` | `--dsh-claude-hover-bg` |
+
 **Host token bindings.** The skin supplies its palette through the host's own
 alias tokens, so a host control that reads more than one token for one surface
 has to be given all of them. A filled primary button is that case: the host takes

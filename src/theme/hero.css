@@ -30,6 +30,12 @@ body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_ANTHROPIC%%"] [class*="fishH
   background-image: %%ANTHROPIC_MARK%%;
 }
 
+/* The DeepSeek brand keeps the host's own fish, and paints it in DeepSeek's
+   brand blue (the host inks it with the headline's primary label). */
+body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_DEEPSEEK%%"] [class*="fishHitbox"] svg {
+  color: var(--dsh-claude-logo-ink);
+}
+
 /* The preview badge has no Claude Code counterpart. */
 body[data-dsh-claude-style] [class*="previewBadge"] {
   display: none !important;

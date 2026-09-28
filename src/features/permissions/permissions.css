@@ -22,7 +22,7 @@ body[data-dsh-claude-style] .dsh-claude-segments {
 }
 
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) .dsh-claude-segments {
-  background: #f6f6f4;
+  background: var(--dsh-claude-chip);
 }
 
 body[data-dsh-claude-style] .dsh-claude-segment {
@@ -98,7 +98,7 @@ body[data-dsh-claude-style] .dsh-claude-perm-btn {
   transition: background-color 0.12s ease !important;
 }
 body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-perm-btn {
-  color: #faf9f5 !important;
+  color: var(--dsw-alias-label-primary) !important;
 }
 body[data-dsh-claude-style] .dsh-claude-perm-btn:hover,
 body[data-dsh-claude-style] .dsh-claude-perm-btn[data-open="true"] {
