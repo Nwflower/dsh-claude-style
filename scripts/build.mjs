@@ -77,6 +77,7 @@ const ICON_FILE = 'claude-mark.svg'
 const FRAGMENTS = [
   'constants.js',
   'core/host.js',
+  'core/desktop-band.js',
   'core/prefs.js',
   'core/model-copy.js',
   'core/i18n.js',
