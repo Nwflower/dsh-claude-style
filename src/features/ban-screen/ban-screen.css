@@ -166,25 +166,38 @@ body[data-dsh-claude-style] .dsh-claude-ban-win:hover {
   color: var(--dsh-ban-text);
 }
 
-/* ---------- Desktop caption band: the bar rides the native titlebar row ---------- */
-/* Windows titlebar mode (ban-screen.js stamps data-dsh-ban-titlebar, once per
-   open) puts the top --dsh-ban-caption-height pixels under a NATIVE layer: the
-   shell paints that band with the colour it measures off
-   --dsw-specific-sidebar-fill and draws the window buttons at its right end, and
-   no page content can cover it. So the bar stops drawing its own three window
-   buttons — the band already shows a cluster — and moves its content up onto the
-   band; the overlay lends the band the page's canvas colour while it is open
-   (holdCaptionFill), which is what lets the lockup and Sign out read as that
-   row's own content the way Claude's titlebar carries them. The right padding
-   keeps Sign out clear of the native buttons.
-   The band has to keep moving the window, so the bar claims the DRAG region for
+/* ---------- Desktop caption strip: the bar rides the native titlebar row ---------- */
+/* Both desktop platforms hand the top of the window to a NATIVE layer, and
+   ban-screen.js stamps data-dsh-ban-titlebar on the overlay once per open
+   whenever the shared desktopBand() reports a strip, together with the strip's
+   height (--dsh-ban-caption-height) and the width its window controls occupy
+   (--dsh-ban-caption-controls) and the end those controls take
+   (data-dsh-ban-controls). So the bar stops drawing its own three window buttons
+   — the strip already shows a cluster — and moves its content up onto the strip,
+   clear of that cluster: Windows draws its caption buttons at the RIGHT end and
+   macOS draws its traffic lights at the LEFT, which is the one thing the two
+   platforms lay out differently. The Windows shell paints its strip with the
+   colour it measures off --dsw-specific-sidebar-fill, so the overlay lends it
+   the page's canvas colour while it is open (holdCaptionFill), which is what
+   lets the lockup and Sign out read as that row's own content the way Claude's
+   titlebar carries them; macOS paints the strip as the vibrancy sidebar, which
+   no token of ours reaches.
+   The strip has to keep moving the window, so the bar claims the DRAG region for
    itself and only the one control inside it opts out: the overlay covers the
-   host's own caption strip (`.frame::before`), and a drag region the pointer
-   cannot reach is no region at all. */
+   host's own drag regions (the Windows frame's `.frame::before` strip, and on
+   macOS the elements the host marks `data-window-drag`), and a drag region the
+   pointer cannot reach is no region at all. */
 body[data-dsh-claude-style] .dsh-claude-ban[data-dsh-ban-titlebar] .dsh-claude-ban-bar {
-  height: var(--dsh-ban-caption-height, var(--dsh-windows-titlebar-height, 40px)) !important;
+  height: var(--dsh-ban-caption-height, 40px) !important;
   padding: 0 calc(var(--dsh-ban-caption-controls, 140px) + 10px) 0 44px !important;
   -webkit-app-region: drag;
+}
+
+/* macOS: the traffic lights sit at the LEFT end of the strip, so the bar keeps
+   its own leading inset clear of them and gives the trailing end back to the
+   row. */
+body[data-dsh-claude-style] .dsh-claude-ban[data-dsh-ban-titlebar][data-dsh-ban-controls="left"] .dsh-claude-ban-bar {
+  padding: 0 10px 0 calc(var(--dsh-ban-caption-controls, 88px) + 10px) !important;
 }
 
 /* The lockup sits a touch below the row's midline: the wordmark's ink fills its
@@ -204,11 +217,11 @@ body[data-dsh-claude-style] .dsh-claude-ban[data-dsh-ban-titlebar] .dsh-claude-b
 }
 
 body[data-dsh-claude-style] .dsh-claude-ban[data-dsh-ban-titlebar] .dsh-claude-ban-scroll {
-  inset: calc(var(--dsh-ban-caption-height, var(--dsh-windows-titlebar-height, 40px)) + 6px) 0 0 0;
+  inset: calc(var(--dsh-ban-caption-height, 40px) + 6px) 0 0 0;
 }
 
 body[data-dsh-claude-style] .dsh-claude-ban[data-dsh-ban-titlebar] .dsh-claude-ban-toast {
-  top: calc(var(--dsh-ban-caption-height, var(--dsh-windows-titlebar-height, 40px)) + 16px);
+  top: calc(var(--dsh-ban-caption-height, 40px) + 16px);
 }
 
 /* ---------- account_banned toast ---------- */
