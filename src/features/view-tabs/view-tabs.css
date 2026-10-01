@@ -110,7 +110,10 @@ body[data-dsh-claude-style] [data-dsh-view-tabs] > [class*="_tab"]::after {
    the titlebar, horizontally centred in the window — the same row the host
    gives the collapsed sidebar's new-session button. The measured
    --dsh-view-tabs-shift is not written in this mode, so the base transform
-   gives way. */
+   gives way.
+   macOS has no such block: its shell leaves the frame unpadded, so the
+   conversation header draws its first row inside the strip and the measured
+   shift seats the tabs on the row beneath it (view-tabs.js). */
 body[data-dsh-claude-style][data-dsh-titlebar-tabs] [data-dsh-view-tabs] {
   position: fixed !important;
   top: calc(var(--dsh-windows-titlebar-height, 40px) / 2) !important;
