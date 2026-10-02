@@ -1,7 +1,9 @@
 /* @composer-gate */
-/* Model trigger in trailing */
-body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [class*="_trailing"] > :first-child,
-body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [class*="_trailing"] :is([class*="trigger" i], [class*="model" i], [class*="Model"]) {
+/* Model trigger in the host's contract slot. Keep the match at the slot's
+   direct children so a foreign model menu nested inside the seat stays out of
+   the composer trigger styles. */
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] > :first-child,
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] > .dsh-claude-model-btn {
   display: inline-flex !important;
   align-items: center !important;
   font-size: 13px !important;

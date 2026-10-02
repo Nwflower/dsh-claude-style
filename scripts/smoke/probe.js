@@ -26,6 +26,23 @@
   }
   window.__smoke = (async function () {
     var r = { applyError: window.__applyError, teardownRegistered: typeof window.__dispose === 'function' }
+    // Let the first scheduler pass settle before probing with a temporary node.
+    // The live skin observes composer mutations; probing during its initial pass
+    // can race the permission fixture used by the automode case.
+    await sleep(500)
+    // A third-party seat may render its model menu below the host's model slot.
+    // The composer trigger rule must not turn that nested menu into an inline
+    // flex container merely because its hashed class contains "model".
+    var trailing = document.querySelector('[class*="_trailing"]')
+    if (trailing === null) {
+      r.foreignModelMenuDisplay = null
+    } else {
+      var foreignModelMenu = document.createElement('div')
+      foreignModelMenu.className = '_foreign_modelMenu_1'
+      trailing.appendChild(foreignModelMenu)
+      r.foreignModelMenuDisplay = getComputedStyle(foreignModelMenu).display
+      trailing.removeChild(foreignModelMenu)
+    }
     // The account menu is counted by content (its Sign out row): a role=menu
     // portal exists only while its menu is open — ours included — so the row
     // the host itself renders is the stable test.
