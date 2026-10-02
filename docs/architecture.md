@@ -11,7 +11,7 @@
 按主题：
 
 - 构建与源码：D1 拼接构建 · D5 模型文案是数据 · D18 源码布局与共用部件层 · D4 输入框样式门控
-- 宿主边界：D2 只做浏览器半边 · D3 宿主选择器纪律 · D19 宿主契约与构建编号 · D10 设置传输 · D11 私有路由与字符串安全
+- 宿主边界：D2 只做浏览器半边 · D3 宿主选择器纪律 · D19 宿主契约与构建编号 · D10 设置传输 · D11 私有路由与字符串安全 · D28 桌面标题带的一处读取
 - 运行时：D6 单一调度器 · D13 功能契约 · D12 快速失败与功能隔离 · D9 样式性能
 - 功能：D14 账号表面 · D15 HDSL 契约 · D16 弹层基准 · D17 权限档位 · D20 滑动高亮 · D21 已归档列表 · D22 搜索面板 · D23 轮次状态行 · D24 小鲸鱼 Deepy · D25 封号彩蛋页的桌面顶栏 · D26 动画效果偏好 · D27 会话数字收进上下文弹层
 - 分发：D7 行为层与皮肤同包 · D8 多主题
@@ -245,11 +245,12 @@
 ## D25. 封号彩蛋页在桌面端骑在系统标题栏那一行上
 
 - **决定**：
-  - Windows 桌面壳把窗口最上面 `--dsh-windows-titlebar-height` 那一行交给系统层：它用宿主量出来的 `--dsw-specific-sidebar-fill` 涂满这条横带，右端画窗口按钮，页面内容盖不住它，也点不到按钮下面。彩蛋页因此不再画自己那套最小化 / 还原 / 关闭，顶栏改骑在这条横带上：`ban-screen.js` 打开时读 `navigator.windowControlsOverlay` 的标题栏区域，取横带高度与按钮占用的宽度，写成 `--dsh-ban-caption-height` / `--dsh-ban-caption-controls` 并给浮层打 `data-dsh-ban-titlebar`，样式表据此把字标与「退出登录」排进这一行（只有横带存在、且 Window Controls Overlay 可见时才这么排；全屏时 overlay 不可见，回到原来的版面）。
-  - 横带要跟着页面走：浮层打开期间把页面自己的 `--dsh-ban-canvas` 写到 `<body>` 的 `--dsw-specific-sidebar-fill` 上——桌面壳的探针读的正是这个令牌，`<body>` 的 style 一变它就重画横带——关闭时撤掉。这一行是窗口的拖拽区，浮层盖住了宿主自己的拖拽条（ui-layout 的 `.frame::before`），所以顶栏自己声明 `-webkit-app-region: drag`，里面只有「退出登录」一个控件写 `no-drag`。
+  - 两个桌面平台都把窗口最上面一条交给系统层，彩蛋页因此不再画自己那套最小化 / 还原 / 关闭，顶栏改骑在这条横带上：`ban-screen.js` 打开时问一次 `desktopBand()`（D28），把横带高度与窗口控件占用的宽度写成 `--dsh-ban-caption-height` / `--dsh-ban-caption-controls`，把控件所在的一端写成 `data-dsh-ban-controls`，并给浮层打 `data-dsh-ban-titlebar`；样式表据此把字标与「退出登录」排进这一行，并按控件所在的一端让出那一段宽度——Windows 的三个窗口按钮在右端，macOS 的三个红黄绿按钮在左端。
+  - Windows 的横带要跟着页面走：浮层打开期间把页面自己的 `--dsh-ban-canvas` 写到 `<body>` 的 `--dsw-specific-sidebar-fill` 上——桌面壳的探针读的正是这个令牌，`<body>` 的 style 一变它就重画横带——关闭时撤掉。这一步只在 Windows 调用：macOS 的横带由系统自己的半透明材质画出，页面写不到它。
+  - 这一行是窗口的拖拽区，浮层盖住了宿主自己的拖拽区（Windows 的 `.frame::before` 横条，以及 macOS 上宿主标了 `data-window-drag` 的那些元素），所以顶栏自己声明 `-webkit-app-region: drag`，里面只有「退出登录」一个控件写 `no-drag`。
   - 这页画的始终是 Claude 自己的星芒加字标，与品牌偏好无关（它复刻的是 Claude 的一页）。
 - **理由**：桌面端的系统标题栏是原生层，页面既盖不住也画不上；把这一行接过来，整窗浮层才像一整个窗口，而不是窗口里嵌了一页。
-- **代价**：依赖 `html[data-windows-titlebar]`、`--dsh-windows-titlebar-height`、`--dsw-specific-sidebar-fill` 探针与 Window Controls Overlay API 的现状；桌面壳不再量这个令牌时横带保持主题色，页面顶端的字标会被横带盖住。
+- **代价**：依赖 `data-windows-titlebar` 与 `data-platform="darwin"`、`--dsh-frame-top-clearance`、Windows 的 `--dsw-specific-sidebar-fill` 探针与 Window Controls Overlay API 的现状；桌面壳不再量这些时横带保持主题色，页面顶端的字标会被横带盖住。
 - **重审条件**：宿主或桌面壳给出整窗浮层的插槽，或允许浮层隐藏标题栏时，改用那个。
 
 ## D26. 动画效果偏好：一处解析，两处读同一个值
@@ -274,3 +275,10 @@
 - **理由**：会话的所有数字只留一个去处，输入行只剩右端那只计量环；面板本体、开合与关合都还是宿主的。读投影让插件画的是数据，不是别人渲染出来的文字——既不重复渲染，也能随会话实时更新。
 - **代价**：依赖宿主两个投影单元的键名与值形状、`chat` 命名空间的键、会话面上的 `projections.faceOf`，以及统计行的结构（据此判断详细 / 简洁）。宿主不装这两个投影单元时，面板里没有这两组数字（那时宿主的胶囊同样没有数据）。弹层的左右位置另依赖宿主的放置方式与计量环的现状；宿主改从右缘放下弹层、或给面板一个固定宽度时，这段接管要跟着核对。
 - **重审条件**：宿主把这些数字放进它自己的面板，或给统计行一个可悬挂的插槽时，改回宿主的。
+
+## D28. 桌面标题带只在一处读取
+
+- **决定**：`src/core/desktop-band.js` 的 `desktopBand()` 是皮肤读取桌面标题带的唯一入口，一次回答三个问题：这条横带在不在、多高、窗口控件占哪一端，返回值形如 `{ platform, height, controls: { side, size } }`，没有横带时返回 `null`。判据全部取宿主自己的契约：标记用 `data-windows-titlebar` 与 `data-platform="darwin"`，高度用 `--dsh-frame-top-clearance`（宿主在两个平台都写它，Windows 上它是 `--dsh-windows-titlebar-height` 的别名，读取时经计算样式把别名解开），Windows 的控件宽度仍以 Window Controls Overlay API 为准、取不到量值时回落到 140px，macOS 的控件在左端、宽度取宿主自己的 leading seat 起点 88px。macOS 全屏时窗口控件收起，这里答 `null`；Windows 的答案与引入这个模块之前逐字相同，`data-fullscreen` 不参与那个平台的分支。
+- **理由**：封号彩蛋页是第一个读者；判据若写在每个读者里，两个平台的三处分歧就要在每一处重复一遍。集中之后 Windows 的行为不变，macOS 拿到的是同一套答案换成本平台的量值。
+- **代价**：多一个片段，每次调用多一次 `getComputedStyle` 读取；`--dsh-frame-top-clearance` 缺席时回落到模块内的常数（macOS 48px、Windows 40px）。
+- **重审条件**：宿主给出统一的标题带插槽或平台无关的度量接口时，改读宿主的接口。

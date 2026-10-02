@@ -25,14 +25,8 @@
      */
     function installBanScreen(ctx, ui) {
       let banRoot = null
-      /** Whether the open overlay has lent its canvas colour to the caption band. */
+      /** Whether the open overlay has lent its canvas colour to the Windows caption band. */
       let captionFillHeld = false
-      /**
-       * The width the Desktop's window buttons occupy when the Window Controls
-       * Overlay API is there but carries no measurement yet: Windows' three
-       * caption buttons at their standard size. A fallback only.
-       */
-      const CAPTION_CONTROLS_FALLBACK = 140
 
       // A client hot reload drops a generation's disposals without running them,
       // so an overlay left open across one keeps its node — and the caption fill
@@ -56,54 +50,17 @@
       }
 
       /**
-       * The Desktop caption band's shape, or null when the window has none.
+       * Lend the page's canvas colour to the Windows caption band while the
+       * overlay is open.
        *
-       * Windows titlebar mode (`html[data-windows-titlebar]`) hands the top
-       * `--dsh-windows-titlebar-height` pixels to a NATIVE layer: the shell
-       * paints it with the colour it measures off `--dsw-specific-sidebar-fill`
-       * and draws the three window buttons at its right end, and no page
-       * content can cover it. Two things follow for this overlay — the band
-       * already shows a window cluster, so the page must not draw its own
-       * (that is the duplicate the Desktop showed), and the lockup and Sign out
-       * can ride the caption row only while the band carries the page's own
-       * canvas colour (holdCaptionFill).
-       *
-       * The band's height and the width its buttons occupy come from the Window
-       * Controls Overlay API, so they follow the platform's own metrics rather
-       * than a constant; a window whose overlay is hidden (fullscreen) has no
-       * band and keeps the shipped layout.
-       *
-       * @returns `{ height, controls }` in CSS pixels, or null.
-       */
-      function captionMetrics() {
-        if (!document.documentElement.hasAttribute('data-windows-titlebar')) return null
-        const overlay = navigator.windowControlsOverlay
-        if (!overlay || overlay.visible !== true) return null
-        const rect = typeof overlay.getTitlebarAreaRect === 'function' ? overlay.getTitlebarAreaRect() : null
-        if (rect && rect.width > 0 && rect.height > 0) {
-          return {
-            height: Math.round(rect.height),
-            controls: Math.max(0, Math.round(window.innerWidth - rect.right)),
-          }
-        }
-        // The API is there but has no measurement yet: the declared caption
-        // height and Windows' three caption buttons at their standard size.
-        const declared = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--dsh-windows-titlebar-height'))
-        return {
-          height: isFinite(declared) && declared > 0 ? Math.round(declared) : 40,
-          controls: CAPTION_CONTROLS_FALLBACK,
-        }
-      }
-
-      /**
-       * Lend the page's canvas colour to the caption band while the overlay is
-       * open.
-       *
-       * The Desktop measures `--dsw-specific-sidebar-fill` off a probe inside
-       * `<body>` and repaints the band whenever `<body>`'s style attribute
-       * changes, so an inline value here reaches the band and `closeBanScreen`
-       * gives the theme's own colour back. Nothing else is visible while the
-       * page is up — it covers the sidebar whose fill this token names.
+       * The Windows Desktop measures `--dsw-specific-sidebar-fill` off a probe
+       * inside `<body>` and repaints the band whenever `<body>`'s style
+       * attribute changes, so an inline value here reaches the band and
+       * `closeBanScreen` gives the theme's own colour back. macOS paints its
+       * strip from its own metrics and reads no such token, which is why this
+       * is only ever called for `win32` (openBanScreen). Nothing else is
+       * visible while the page is up — it covers the sidebar whose fill this
+       * token names.
        */
       function holdCaptionFill() {
         if (banRoot === null) return
@@ -295,17 +252,27 @@
         banRoot = root
         document.body.appendChild(root)
 
-        // On the Desktop the bar rides the native caption band: the page's own
-        // window cluster goes (the band draws one) and the band is repainted in
-        // the page's canvas so the lockup and Sign out read as that band's own
-        // content. Both are decided here, once per open — the band cannot appear
-        // or vanish while the page is up.
-        const caption = captionMetrics()
-        if (caption !== null) {
+        // On the Desktop the bar rides the native caption strip, whose shape
+        // the shared desktopBand() resolves once for every consumer: Windows
+        // marks `<html>` with `data-windows-titlebar` and draws its three
+        // caption buttons at the right end, macOS marks it
+        // `data-platform="darwin"` and draws its traffic lights at the left.
+        // When a strip is reported the page's own window cluster goes (the
+        // strip already draws one) and the lockup and Sign out are laid into
+        // that row — on Windows only after the band has taken the page's canvas
+        // colour, which is what makes them read as the row's own content. A
+        // null band means the platform publishes no strip: Windows answers
+        // through the Window Controls Overlay API, which reports itself hidden
+        // while the window is fullscreen, and on macOS the shell hides the
+        // traffic lights. All of it is decided here, once per open: the strip
+        // cannot appear or vanish while the page is up.
+        const band = desktopBand()
+        if (band !== null) {
           root.setAttribute('data-dsh-ban-titlebar', '')
-          root.style.setProperty('--dsh-ban-caption-height', `${caption.height}px`)
-          root.style.setProperty('--dsh-ban-caption-controls', `${caption.controls}px`)
-          holdCaptionFill()
+          root.setAttribute('data-dsh-ban-controls', band.controls.side)
+          root.style.setProperty('--dsh-ban-caption-height', `${band.height}px`)
+          root.style.setProperty('--dsh-ban-caption-controls', `${band.controls.size}px`)
+          if (band.platform === 'win32') holdCaptionFill()
         }
       }
 

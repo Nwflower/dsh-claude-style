@@ -21,6 +21,14 @@
      * marker onto <body> so the stylesheet can switch, and skips the measured
      * shift entirely there.
      *
+     * macOS keeps the measured path. Its shell hands the top of the window to
+     * the traffic lights and pads no content around them: the host sets
+     * `--dsh-frame-top-clearance: 48px` under `html[data-platform=darwin]` and
+     * leaves `--dsh-frame-chrome-top` at 0, so the conversation header keeps its
+     * own top inset and draws its first row inside that strip. A fixed strip
+     * would land on the title and the header actions; the measured shift already
+     * seats it on the row beneath the strip.
+     *
      * The strip itself is stamped `data-dsh-view-tabs`, and every strip rule in
      * view-tabs.css keys on that attribute. Finding the strip is a query this pass
      * runs once; as a stylesheet selector (`header:has(tabs) tabs`) it made the

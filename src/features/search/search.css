@@ -57,16 +57,23 @@ body[data-dsh-claude-style] [data-dsh-claude-search-row] > [class*="_brand"]:has
   visibility: hidden !important;
   pointer-events: none !important;
 }
-/* The desktop shell's sidebar column starts under its 40px titlebar, which
-   left the brand a titlebar's height lower than on the web; the row rises by
-   10px — as far as it goes with the 32px box still wholly below the titlebar,
-   where the column's top edge would cut it. */
+/* The Windows desktop shell's sidebar column starts under its 40px titlebar,
+   which left the brand a titlebar's height lower than on the web; the row rises
+   by 10px — as far as it goes with the 32px box still wholly below the titlebar,
+   where the column's top edge would cut it. macOS takes no offset: the host pads
+   nothing around the traffic lights, and its own `_topStrip + _logoRow` margin
+   (-12px) already seats the row's content at the 48px it declares for
+   --dsh-frame-top-clearance; -10px would override that margin and move the row
+   2px down. */
 html[data-windows-titlebar] body[data-dsh-claude-style] [data-slot="sidebar"] [class*="_logoRow"] {
   margin-top: -10px !important;
 }
-/* There the toggle takes no cell, so the row keeps a single column: a second,
-   empty one would still cost the brand and the box the column gap. */
-html[data-windows-titlebar] body[data-dsh-claude-style] [data-dsh-claude-search-row] {
+/* On both desktop shells the host's toggle takes no cell in the row: macOS
+   renders it inside its own 52px `_topStrip`, Windows fixes it into the caption
+   overlay. The row keeps a single column there — a second, empty one would
+   still cost the brand and the box the host logo row's 8px gap. */
+html[data-windows-titlebar] body[data-dsh-claude-style] [data-dsh-claude-search-row],
+html[data-platform=darwin] body[data-dsh-claude-style] [data-dsh-claude-search-row] {
   grid-template-columns: minmax(0, 1fr) !important;
 }
 /* The host's own sidebar search stays mounted, since its shortcut (Ctrl+K)
