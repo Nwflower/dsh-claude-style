@@ -26,23 +26,6 @@
   }
   window.__smoke = (async function () {
     var r = { applyError: window.__applyError, teardownRegistered: typeof window.__dispose === 'function' }
-    // Let the first scheduler pass settle before probing with a temporary node.
-    // The live skin observes composer mutations; probing during its initial pass
-    // can race the permission fixture used by the automode case.
-    await sleep(500)
-    // A third-party seat may render its model menu below the host's model slot.
-    // The composer trigger rule must not turn that nested menu into an inline
-    // flex container merely because its hashed class contains "model".
-    var trailing = document.querySelector('[class*="_trailing"]')
-    if (trailing === null) {
-      r.foreignModelMenuDisplay = null
-    } else {
-      var foreignModelMenu = document.createElement('div')
-      foreignModelMenu.className = '_foreign_modelMenu_1'
-      trailing.appendChild(foreignModelMenu)
-      r.foreignModelMenuDisplay = getComputedStyle(foreignModelMenu).display
-      trailing.removeChild(foreignModelMenu)
-    }
     // The account menu is counted by content (its Sign out row): a role=menu
     // portal exists only while its menu is open — ours included — so the row
     // the host itself renders is the stable test.
@@ -596,6 +579,26 @@
     r.homeLayoutExpected = window.SMOKE_CASE === 'studio' ? 'studio' : null
     r.slotRegistrations = window.__slots || null
     r.composerRestyle = document.body.hasAttribute('data-dsh-claude-composer-active')
+    // The host's model seat inside an inline card, with a menu another plugin
+    // nests in it (its hashed class says "model"). Read and removed within one
+    // task, so no skin pass ever sees it: the trigger rule must reach the
+    // host's trigger, leave the nested menu its block layout, and leave the
+    // seat root hidden once the picker marks it.
+    var modelCard = document.createElement('div')
+    modelCard.setAttribute('data-composer-card', '')
+    modelCard.setAttribute('data-composer-variant', 'inline')
+    modelCard.innerHTML = '<div class="_x_trailing_2"><div data-slot="conversation.input.model" style="display:contents">' +
+      '<div class="_m_root_1"><button type="button" class="_m_trigger_1">model-a</button>' +
+      '<div class="_m_menu_1"><div class="_p_providerModelMenu_1"></div></div></div></div></div>'
+    document.body.appendChild(modelCard)
+    var modelSeatRoot = modelCard.querySelector('._m_root_1')
+    r.modelSeat = {
+      trigger: getComputedStyle(modelCard.querySelector('._m_trigger_1')).display,
+      nestedMenu: getComputedStyle(modelCard.querySelector('._p_providerModelMenu_1')).display,
+    }
+    modelSeatRoot.setAttribute('data-dsh-claude-model-host', '')
+    r.modelSeat.markedRoot = getComputedStyle(modelSeatRoot).display
+    modelCard.remove()
     if (window.SMOKE_CASE === 'studio') {
       // Render the registered panel on the hero page, once per tab, the way
       // the dock seat would: a throw here is the slot's error boundary on the

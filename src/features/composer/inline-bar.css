@@ -1,8 +1,10 @@
 /* @composer-gate */
-/* Model trigger in the host's contract slot. Keep the match at the slot's
-   direct children so a foreign model menu nested inside the seat stays out of
-   the composer trigger styles. */
-body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] > :first-child,
+/* Model trigger in the host's contract slot: the skin's own button, and the
+   host's trigger when the picker preference hands the seat back. Both are
+   named by their exact place in the seat, so a menu another plugin nests
+   inside the seat keeps its own layout, and the seat root the picker hides is
+   never matched — a display here would outrank the hide rule below. */
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] > [class*="_root"] > [class*="_trigger"],
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] > .dsh-claude-model-btn {
   display: inline-flex !important;
   align-items: center !important;
