@@ -22,6 +22,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 - **小鲸鱼不再把阴影画在目标、待办与排队卡片上**：DeepSeek 品牌下，小鲸鱼被叠在输入卡片上方的目标、待办与排队卡片顶起时，它身下阴影的末端落在那张卡片的最上缘。现在小鲸鱼抬高 3 像素，阴影落在卡片上，卡片上不再压着一道暗色。
 - **侧栏搜索框与它下面的按钮等高、间距一致，桌面端也不再被顶栏盖住**：搜索框以前比「新会话」「插件」这些行高出 4 像素，与它们相隔也只有 4 像素，排在这一列里比其余各行都松。现在搜索框与各按钮同为 28 像素高，与「新会话」的间隔为 6 像素，与各按钮之间的间隔相同；Windows 桌面端那一行为此少抬高 4 像素，搜索框整块落在顶栏下方，不再被截去上缘。
+- **模型选择器右端不再被上下文计量环压住**：在「轨迹」或「上下文」标签页停留后切换对话，模型选择器最右端的档位文字会落在计量环上，并一直保持到上下文数字再次变化；现在回到对话页就恢复两者的间距。
 
 ### 其他变更
 
@@ -43,6 +44,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 - **Deepy no longer paints its shadow across the goal, todo and queue cards**: under the DeepSeek brand, when the goal, todo or queue cards pushed the whale up off the composer card, the tail of the shadow under it landed on the top edge of that card. The whale now sits 3px higher: the shadow rests on the card instead of a dark band being stamped across it.
 - **The sidebar search box matches the height and the rhythm of the rows under it, and no longer hides under the desktop titlebar**: the box stood 4px taller than New session, Plugins and the rows below them, and sat 4px from New session, which left the top of the list looser than the rest of it. The box is 28px like those rows now, 6px above New session, the same step the rows take among themselves; on the Windows Desktop that row rises 4px less, which keeps the whole box below the titlebar instead of cutting its top edge.
+- **The right end of the model trigger no longer sits under the context meter**: after a spell on the Trajectory or Context tab, switching conversations brought the right end of the model trigger under the occupancy ring, and it stayed there until the reading moved again; coming back to the conversation now restores the clearance between the two.
 
 ### Chores
 

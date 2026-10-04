@@ -131,6 +131,29 @@ async function probe(port) {
   const s2 = await state()
   check('clears back to one line', s2.inputH === 24, 'inputH=' + s2.inputH)
 
+  // The model trigger and the context meter share the row's right end: the
+  // trailing cluster keeps the meter's room free through the body variable the
+  // composer pass writes. While the composer is shown the two must not overlap —
+  // a pass that measured the meter with no box used to take that room away and
+  // leave the trigger's right end under the ring.
+  const clearance = () => evalJs(`(() => {
+    const card = document.querySelector('[data-composer-card]')
+    const trailing = card === null ? null : card.querySelector('[class*="_row"] > [class*="_trailing"]')
+    const meter = document.querySelector('[data-dsh-claude-context-meter]')
+    if (trailing === null || meter === null) return null
+    const t = trailing.getBoundingClientRect()
+    const m = meter.getBoundingClientRect()
+    return {
+      clear: t.right <= m.left + 1,
+      trailingRight: Math.round(t.right),
+      meterLeft: Math.round(m.left),
+      room: document.body.style.getPropertyValue('--dsh-claude-meter-room') || '(unset)',
+    }
+  })()`)
+
+  const clearanceState = await clearance()
+  check('model trigger clears the meter', clearanceState !== null && clearanceState.clear === true, JSON.stringify(clearanceState))
+
   console.log(failures === 0 ? '\nALL CHECKS PASSED' : `\n${failures} CHECK(S) FAILED`)
   return failures
 }

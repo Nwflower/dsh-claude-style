@@ -159,6 +159,9 @@ const CASES = {
       JSON.stringify({ aligned: r.context.aligned, edgeAligned: r.context.edgeAligned }))
     check('leaving the meter closes the popover and takes the block with it',
       r.context.closedAfterLeave === true, JSON.stringify(r.context.closedAfterLeave))
+    check('the meter\'s room survives a reading taken with no box',
+      r.context.roomBefore !== '' && /^\d+px$/.test(r.context.roomAfter || ''),
+      JSON.stringify({ before: r.context.roomBefore, after: r.context.roomAfter }))
     commonChecks(r)
   },
   // The auto mode cases: the ladder follows the host catalog, so a third-party

@@ -168,7 +168,7 @@
         return null
       }
 
-      /** The room the meter takes at the toolbar row's right end, as last written. */
+      /** The room the meter takes at the toolbar row's right end, as the row carries it. */
       let meterRoom = ''
       /** The meter node the room was measured from, and the reading and scope it had then. */
       let meterNode = null
@@ -184,12 +184,19 @@
        * the dock over the toolbar row and puts the meter at the row's right end,
        * after the model and effort triggers; the trailing cluster keeps that
        * room free through --dsh-claude-meter-room — the meter's width plus the
-       * cluster's own 8px gap, written only on a change.
+       * cluster's own 8px gap.
        *
        * The meter is re-resolved only when the cached node left the tree, and
        * its width is re-read only when its reading moved (the trigger IS the
        * percentage text, whose width follows the text): a pass with an unmoved
        * meter reads no layout, which during streaming would otherwise force one.
+       * A reading taken with no box — the composer's seat is display: none while
+       * another conversation tab is up — is no reading: it stays unrecorded, the
+       * row keeps the room it has, and the next pass measures again.
+       *
+       * The write is decided against the value the document carries: a variable
+       * another generation or feature cleared has to come back, and the
+       * declaration is the cheapest thing to ask.
        */
       function stampContextMeter(card) {
         if (meterNode !== null && !meterNode.isConnected) {
@@ -207,14 +214,23 @@
           // Re-measure when the reading moved or the restyle scope flipped:
           // either can change what the room should be.
           if (reading !== meterReading || active !== meterMeasuredActive) {
-            meterReading = reading
-            meterMeasuredActive = active
-            meterWidth = active ? meter.offsetWidth : 0
+            const width = active ? meter.offsetWidth : 0
+            // A zero width with the restyle on is the composer having no box
+            // right now, never a meter that takes no room.
+            if (!active || width > 0) {
+              meterReading = reading
+              meterMeasuredActive = active
+              meterWidth = width
+            }
           }
-          if (active && meterWidth > 0) room = `${meterWidth + 8}px`
+          if (active) room = meterWidth > 0 ? `${meterWidth + 8}px` : meterRoom
         }
         meterNode = meter
-        if (room === meterRoom) return
+        const written = document.body.style.getPropertyValue('--dsh-claude-meter-room')
+        if (room === written) {
+          meterRoom = room
+          return
+        }
         meterRoom = room
         if (room === '') document.body.style.removeProperty('--dsh-claude-meter-room')
         else document.body.style.setProperty('--dsh-claude-meter-room', room)

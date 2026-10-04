@@ -514,6 +514,22 @@
       if (statsMeter !== null) statsMeter.dispatchEvent(new MouseEvent('mouseleave'))
       await sleep(500)
       r.context.closedAfterLeave = document.querySelector('.dsh-claude-context-stats') === null
+      // The room the skin keeps for the meter is what holds the model trigger
+      // clear of the ring. A pass that measures the meter with no box — the seat
+      // is display: none while another conversation tab is up — is no reading,
+      // so the row keeps its room and the pass after the box returns measures
+      // again. Taking the room away here left the trigger under the ring until
+      // the reading itself moved.
+      r.context.roomBefore = document.body.style.getPropertyValue('--dsh-claude-meter-room')
+      var meterButton = statsMeter === null ? null : statsMeter.querySelector('button')
+      if (statsMeter !== null) statsMeter.style.display = 'none'
+      if (meterButton !== null) meterButton.textContent = meterButton.textContent === '43%' ? '44%' : '43%'
+      statsCard.appendChild(document.createElement('span'))
+      await sleep(400)
+      if (statsMeter !== null) statsMeter.style.display = ''
+      statsCard.appendChild(document.createElement('span'))
+      await sleep(400)
+      r.context.roomAfter = document.body.style.getPropertyValue('--dsh-claude-meter-room')
     }
     var drawer = document.querySelector('.dsh-claude-account-popover-body')
     r.drawer = drawer ? Array.prototype.map.call(drawer.children, function (c) {
