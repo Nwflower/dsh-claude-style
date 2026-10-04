@@ -2,6 +2,18 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [Unreleased]
+
+[中文](#cn-unreleased) | [English](#en-unreleased)
+
+<h3 id="cn-unreleased">问题修复</h3>
+
+- **拖入附件后，输入区工具栏打开的面板不再被附件区域遮住**：附件存在时，从输入区工具栏按钮打开的面板（模型选择、思考强度等）中间被上方那块附件区域盖住一大截，只在卡片上方和输入框下方各露出一条边，面板里的行点不到。现在这类面板完整显示。
+
+<h3 id="en-unreleased">Bug Fixes</h3>
+
+- **A panel opened from the composer's toolbar is no longer covered by the attachment area**: with an attachment in the composer, a panel opened from a toolbar button — the model picker, the reasoning-effort slider — lost its middle to the attachment area above it and showed only a strip above the card and another below the input box, so none of its rows could be clicked. Such panels now draw in full.
+
 ## [0.10.5] - 2026-10-04
 
 [中文](#cn-0.10.5) | [English](#en-0.10.5)

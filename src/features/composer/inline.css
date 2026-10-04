@@ -120,7 +120,6 @@ body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant
      the rail needs no canvas-coloured shadow of its own to add to it. */
   box-shadow: none !important;
   position: relative !important;
-  z-index: 4 !important;
   transition: border-color 0.12s ease, box-shadow 0.12s ease !important;
 }
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-composer-card][data-composer-variant="inline"][data-has-attachments="true"] [class*="_rail"],
