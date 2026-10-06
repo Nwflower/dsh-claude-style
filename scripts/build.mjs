@@ -91,6 +91,7 @@ const FRAGMENTS = [
   'core/prefs.js',
   'core/model-copy.js',
   'core/i18n.js',
+  'core/stylesheet.js',
   'shared/dom.js',
   'shared/notify.js',
   'shared/resource.js',
