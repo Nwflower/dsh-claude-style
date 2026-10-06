@@ -20,7 +20,7 @@ The repository is moving to the architecture in `docs/decisions/` (D36–D48). A
 - Never use Git to roll back code. "Roll back" from the user always means restoring the previous state by hand with the edit tools.
 - Never read from or write to the system temp directory; intermediate artifacts go to `.debug/` (gitignored).
 - When the user provides a web link, read its full content before starting; when a library turns out to be used wrongly, re-read that link in full first.
-- Do not reinvent a wheel to avoid a dependency. Zero *runtime* dependencies is kept by marking the host packages external (D36).
+- Do not reinvent a wheel to avoid a dependency. The package has zero *runtime* dependencies: React and the host packages come from the host at runtime (D36).
 - Fail fast: throw where the error is, never swallow it, never fall back silently. The only catches allowed are the ones D12 lists, each with its reason beside it.
 - No mocks, no fake implementations, no workarounds that exist only to make tests pass.
 - The user may withdraw or modify your changes at any time: re-read a file before continuing to edit it, build on the latest state, never re-add what the user deleted.
@@ -40,7 +40,7 @@ The repository is moving to the architecture in `docs/decisions/` (D36–D48). A
 - Read the relevant decisions in `docs/decisions/` before a structural change; never contradict one. If a decision must be overturned, first write the replacing decision and retire the old number (D48).
 - Public documentation (the bilingual READMEs, the CHANGELOG) never shows decision numbers.
 - The Anthropic Sans/Serif fonts are Anthropic's, for personal use, not covered by MIT, and never shipped in the npm package; `fonts/` is a repository-only download. JetBrains Mono, Inter and Noto Serif ship under the SIL OFL 1.1. The pixel crab is Anthropic's character and its sheets are not covered by MIT. Deepy's sheets are by calmly-eating-bugs (@wp3171216237); `showcase/gifs/` holds that author's GIFs and stays out of the package.
-- Local debug scripts, screenshots and intermediate artifacts go into `.debug/` and are never committed.
+- Local debug scripts, screenshots and intermediate artifacts go into `.debug/` and are never committed. Drafts are deleted when the task ends; `race.cjs`, `send-trace.cjs` and `sample-flight.cjs` stay until D45 turns them into maintained tools.
 
 ## Stop Lines
 
@@ -60,7 +60,7 @@ Hard stops: stop the moment one triggers, without first judging whether it is wo
 
 ### Host Selectors
 
-Full rules in D3 and D19. Prefer the host's contracts (`[data-slot="<key>"]`, the host's own `data-*`), then marks the skin writes by structure, then hashed class substrings with the longest stable fragment (`[class*="_row"]`, never `[class*="row"]`). Never match host elements by visible text. Never override the host's active-period layout on `[class*="viewArea"]`. After adding a substring selector, compare what it matches on a live page.
+Read D3 and D19 before adding a host selector. After adding a substring selector, compare what it matches on a live page.
 
 ### Comments
 
@@ -68,7 +68,7 @@ Comments carry only what a reader needs to keep the code correct: why the code h
 
 ### Model Copy
 
-Model copy is data (D5): exact entry → family rule → tier rule → the catalog's own text. Copy belongs to a product line, never to a version; no self-invented tier prefixes, no repeating the model name; family rules are ordered and anchored; superlatives only in exact entries bound to a version number.
+Read D5 before editing `src/model-descriptions.json`.
 
 ### Screenshots and Privacy
 
@@ -116,7 +116,7 @@ The quick tier leaves out the motion cases; a feature whose cases all watch moti
 2. `npm run build`.
 3. While iterating, `npm run smoke -- --quick --feature <dir>` (without `--quick` for motion features); with a `dsh web` running, also `probe.cjs`; check the live page, including after a hot reload. Timing and ordering against the real host is verified on a real instance — the smoke stand-in does not reproduce it.
 4. Visual changes are checked by the user in light and dark; re-shoot stale README screenshots with `shoot.cjs`.
-5. Sync documents: the bilingual READMEs change together; behavior changes go into the CHANGELOG's `[Unreleased]`; a changed decision is rewritten in `docs/decisions/`.
+5. Sync documents: the bilingual READMEs change together; behavior changes go into the CHANGELOG's `[Unreleased]`; a changed decision is rewritten in `docs/decisions/` following D48's template, and its row in the hand-written index `docs/decisions/README.md` is updated with it.
 6. Done means the build and the relevant smoke pass and the behavior is verified; the full smoke is the release gate. If a gate fails, keep fixing.
 
 ## Git and Release

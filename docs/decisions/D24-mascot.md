@@ -1,13 +1,12 @@
 # D24. 吉祥物：宿主的状态、一套播放器、两个角色
 
 - **状态**：已实施
-- **关联**：D26、D38、D40
+- **关联**：D26、D38、D40、D49
 - **迁移**：帧图交付由 D38 规定（待实施，现状写在 D38）
 
 ## 决定
 
-- 品牌偏好有两档：Claude（默认）与 DeepSeek（值为 `deepseek`；早先存下的 `off` 读作 DeepSeek，`anthropic` 读作 Claude）。DeepSeek 一档保留宿主自己的品牌区并画成 DeepSeek 蓝，配色为 Claude 时亮暗两套都换成蓝色系；皮肤自己画的 Claude 标（账号行的兜底头像、轮次状态行的火花）换成宿主的鲸鱼标（`FISH_LOGO_PATH`）。配色切换只靠令牌：DeepSeek 的亮暗两块（多一个品牌属性，优先级更高）整组重写宿主的别名令牌与皮肤的私有令牌，各功能样式表一律读令牌。
-- 吉祥物与品牌分开：`mascot` 偏好有 `brand`（默认：Claude 品牌下是螃蟹、DeepSeek 品牌下是 Deepy）、`crab`、`deepy`、`off` 四档，解析后的角色写成 `<body data-dsh-claude-mascot="crab|deepy|off">`；`mascotScope` 有 `home` 与 `all`（默认）两档。`src/features/mascot/mascot.js` 让一个角色出场、另一个释放，页面上最多一只。
+- 吉祥物与品牌（D49）分开：`mascot` 偏好有 `brand`（默认：Claude 品牌下是螃蟹、DeepSeek 品牌下是 Deepy）、`crab`、`deepy`、`off` 四档，解析后的角色写成 `<body data-dsh-claude-mascot="crab|deepy|off">`；`mascotScope` 有 `home` 与 `all`（默认）两档。`src/features/mascot/mascot.js` 让一个角色出场、另一个释放，页面上最多一只。
 - 站位：首页站在输入卡片上沿。对话页只认主对话区（`[data-phase="active"]` 里的 `[data-conversation-session]`），站在输入区 composerStack 的上沿；宿主的 composer 链选出替代面板时（ui-renderer 把 `[data-chain-overlay-fallback="conversation.composer"]` 内联写成 `display: none`，面板紧跟其后挂载），站到那块面板上沿。站着的宿主元素打 `data-dsh-claude-<角色>-anchor`，样式表给它 `position: relative`。
 - 状态只读宿主的客户端数据：`uiSession.sessionStatus`、`sessions.list`（顶层会话与 `subagentCatalog`）、聊天快照（打开的轮次、正在输出的一步的最后一块、进行中的工具调用）。聊天快照在跟随会话期间订阅（只读不订阅时，轨迹视图下读不到内容）。一次性的时刻（轮次结束原因、失败的工具结果、压缩开始与结束）订阅会话的事件流 `sessions.binding(id).eventSource`，只处理订阅之后追加的事件；正在进行的压缩按事件流整个窗口算。首页读整个工作区：会话状态里新出现的 `completionUnread` 就是「后台做完」的时刻。
 - 状态到动画按 Deepy 为 Clawd on Desk 做的主题映射（`mascot-signals.js`），两个角色共用同一组动画名。优先级从高到低：点击与拖动的反应、出错、等待你、压缩、完成、子代理、工作、思考、空闲；工作按同时在跑的顶层会话数分三档，子代理按数目分两档。一个状态上台后一秒内不被同级或更低的换下；出错与完成各停两轮动画（4.8 秒、5.2 秒）。空闲时每二三十秒演一个空闲小节目；空闲满一分钟、其间也没有读者活动就睡着，下一次活动先演惊醒。
@@ -24,8 +23,7 @@
 
 ## 代价
 
-- 依赖 composer 链的替代方式、composerStack 的类名片段与会话状态、事件流的现状。
-- 订阅聊天目标让宿主在轨迹视图下也为这个会话构建聊天视图。
+- 依赖 composer 链的替代方式、composerStack 的类名片段与会话状态、事件流的现状；订阅聊天目标让宿主在轨迹视图下也为这个会话构建聊天视图。
 - 持续的动画每一帧改一次自己节点的样式，只牵动这一个元素的样式重算与一小块重绘。
 - 角色的动画表必须覆盖状态机用到的全部动画名。
 

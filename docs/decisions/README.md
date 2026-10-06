@@ -16,7 +16,7 @@
 | [D38](D38-assets.md) | 资源只有一条路径：内容哈希清单与通用资产路由 | 待实施 |
 | [D39](D39-on-demand-loading.md) | 按需加载：重的功能拆成单独的块 | 待实施（受上游阻塞） |
 | [D46](D46-monorepo.md) | monorepo 布局，对外仍是一个插件 | 待实施 |
-| [D47](D47-build-output.md) | 构建产物不进版本管理 | 待实施 |
+| [D47](D47-build-output.md) | 构建产物不进主分支，发布分支提供 git 安装 | 待实施 |
 
 ## 宿主边界
 
@@ -42,7 +42,7 @@
 | [D29](D29-feature-switches.md) | 功能开关：每个功能声明开关或不设开关的理由 | 已实施 |
 | [D35](D35-selection-scope.md) | 选区样式的作用范围 | 已实施 |
 | [D40](D40-observation-bus.md) | 观察总线与帧管线 | 待实施 |
-| [D41](D41-scroll-owner.md) | 会话滚动条只有一个写入者 | 待实施 |
+| [D41](D41-scroll-owner.md) | 聊天区的滚动位置只有一个写入者 | 待实施 |
 | [D42](D42-feature-manifest.md) | 功能清单 | 待实施 |
 
 ## 功能
@@ -62,6 +62,7 @@
 | [D27](D27-context-stats.md) | 会话数字收进上下文弹层 | 已实施 |
 | [D32](D32-chat-interactions.md) | 搬来的聊天区交互：自己的前缀、自己的偏好、对上游让位 | 已实施 |
 | [D34](D34-turn-navigator.md) | 对话导航：皮肤画导航条，跳转按宿主自己的刻度 | 已实施 |
+| [D49](D49-brand.md) | 品牌两档：配色切换只靠令牌 | 已实施 |
 
 ## 分发与流程
 
