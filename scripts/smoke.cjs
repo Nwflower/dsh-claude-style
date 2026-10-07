@@ -10,7 +10,8 @@
  * shape, an open session, a path-shaped id) and a real deletion against a
  * scratch harness home under .debug/ — once through a host that offers
  * `connection.requestRejection()` and once through the local stand-in. The
- * public prefix route serves Deepy's sheets from lib/deepy/ and nothing else.
+ * public prefix route serves the assets the build routed from lib/assets/,
+ * under the build's own manifest, and nothing else.
  *
  * Browser half, in headless Chrome/Edge over CDP: `lib/client.js` is loaded into
  * a page that stands in for the host (module loader, ctx, a sidebar footer with
@@ -64,6 +65,17 @@ const { ROOT, CLIENT, SKIN_FIXTURE, SKIN_CASES, sleep, check, failures, skips, s
 const { hostHalf } = require('./smoke/host-half.cjs')
 const { page } = require('./smoke/page.cjs')
 const { CASES } = require('./smoke/cases.cjs')
+
+/**
+ * The build's asset manifest: which names the page may ask for, their type and
+ * their storage (D38). The page's own server answers from it exactly as the
+ * host half does.
+ */
+const ASSETS = (() => {
+  const manifest = path.join(ROOT, 'lib', 'assets', 'manifest.json')
+  if (!fs.existsSync(manifest)) throw new Error('smoke: lib/assets/manifest.json is missing; run npm run build')
+  return JSON.parse(fs.readFileSync(manifest, 'utf8')).assets
+})()
 
 /** End the run over a command line or a table that cannot be honoured. */
 function bad(message) {
@@ -192,16 +204,30 @@ async function browserHalf(planned) {
       }
       res.writeHead(200, { 'content-type': 'image/png' })
       res.end(fs.readFileSync(SKIN_FIXTURE))
-    } else if (/^dsh-claude-style\/deepy\/[a-z]+(?:-[a-z]+)*\.png$/.test(name)) {
-      // Deepy's sheets, from the build output the host half serves them from.
-      const sheet = path.join(ROOT, 'lib', 'deepy', name.slice('dsh-claude-style/deepy/'.length))
-      if (!fs.existsSync(sheet)) {
+    } else if (name.startsWith('dsh-claude-style/assets/')) {
+      // The routed assets, from the build output the host half serves them from
+      // (D38). The manifest is the same gate here: a name the build did not
+      // produce answers 404.
+      const file = name.slice('dsh-claude-style/assets/'.length)
+      const asset = ASSETS[file]
+      if (asset === undefined) {
         res.writeHead(404)
         res.end()
         return
       }
-      res.writeHead(200, { 'content-type': 'image/png' })
-      res.end(fs.readFileSync(sheet))
+      const stored = path.join(ROOT, 'lib', 'assets', asset.encoding === 'br' ? `${file}.br` : file)
+      if (!fs.existsSync(stored)) {
+        res.writeHead(404)
+        res.end()
+        return
+      }
+      res.writeHead(200, {
+        'content-type': asset.type,
+        'cache-control': 'public, max-age=31536000, immutable',
+        // The page is a browser: it takes the stored payload as it lies.
+        ...(asset.encoding === 'br' ? { 'content-encoding': 'br' } : {}),
+      })
+      res.end(fs.readFileSync(stored))
     } else {
       const entry = pages.find((one) => one.page === name)
       if (entry === undefined) {

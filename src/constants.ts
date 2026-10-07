@@ -299,10 +299,10 @@ export const FEATURE_PREF_DEFAULTS = {
 
 /**
  * Deepy's animations (src/features/mascot/whale.ts), one sheet each under
- * src/assets/mascot/deepy/. The build copies the sheets to lib/deepy/ and
- * the host half serves them under DEEPY_ROUTE, so the browser loads a
- * sheet the first time its animation plays and never while another brand
- * is on.
+ * src/assets/mascot/deepy/. The build rebuilds each sheet as the vector the
+ * browser plays and the host half serves it under the assets route (D38), so
+ * the browser loads a sheet the first time its animation plays and never
+ * while another brand is on.
  *
  * The whale is drawn on a 52×52 grid of logical pixels, five device pixels
  * to one in the sheets. A sheet holds its animation's frames eight to a
@@ -311,11 +311,12 @@ export const FEATURE_PREF_DEFAULTS = {
  * DEEPY_FRAME_MS. `still` is the frame shown for the animation when the
  * reader asks for reduced motion.
  */
-export const DEEPY_ROUTE = '/dsh-claude-style/deepy/'
 export const DEEPY_FRAME_MS = 50
+/** Deepy's sheets' resolution: device pixels to a logical pixel (scripts/assets.mjs rebuilds them). */
+export const DEEPY_SCALE = 5
 /**
  * The transparent margin, in logical pixels, that every frame keeps on all
- * four sides when a sheet is rebuilt as a vector (whale-sheets.ts, D24).
+ * four sides in the vector the build produces (scripts/assets.mjs, D24).
  *
  * The sheets stack their frames edge to edge, and the browser draws the
  * rebuilt vector scaled down — from five pixels a logical pixel in the

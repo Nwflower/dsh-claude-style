@@ -9,6 +9,7 @@ const http = require('http')
 const path = require('path')
 const { Readable } = require('stream')
 const { pathToFileURL } = require('url')
+const { brotliDecompressSync } = require('zlib')
 const { ROOT, HOST, SKIN_FIXTURE, same, check } = require('./shared.cjs')
 
 // ---------------------------------------------------------------------------
@@ -375,19 +376,30 @@ async function hostHalf() {
       grown.sessions[0]?.seq === 3 && grown.sessions[0]?.snippet === '再看一次搜索框',
     JSON.stringify({ liveReads, grown }))
 
-  // Deepy's sheets, on the public prefix route: the build output under
-  // lib/deepy/, and nothing else however the name is spelled.
+  // The routed assets, on the public prefix route (D38): the manifest the
+  // build wrote decides what exists, a text asset is stored brotli-compressed,
+  // and nothing else answers however the name is spelled.
   console.log('\nhost half — public assets')
+  const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'lib', 'assets', 'manifest.json'), 'utf8')).assets
+  const [assetName, asset] = Object.entries(manifest)[0] ?? []
+  if (assetName === undefined) throw new Error('no routed assets in lib/assets/manifest.json; run npm run build')
+  const storedPath = path.join(ROOT, 'lib', 'assets', asset.encoding === 'br' ? `${assetName}.br` : assetName)
   const assets = fakeHost(mod, {})
-  const sheet = await requestAsset(assets, '/dsh-claude-style/deepy/idle.png?v=0123456789ab')
-  check("Deepy's sheet is served from the build output, cached for good under its build-stamped address",
-    sheet.status === 200 && sheet.headers['content-type'] === 'image/png' && /immutable/.test(sheet.headers['cache-control']) &&
-      sheet.raw !== null && Buffer.compare(sheet.raw, fs.readFileSync(path.join(ROOT, 'lib', 'deepy', 'idle.png'))) === 0,
-    `HTTP ${sheet.status} ${JSON.stringify(sheet.headers)}`)
-  for (const url of ['/dsh-claude-style/deepy/missing.png', '/dsh-claude-style/deepy/..%2fclient.js',
-    '/dsh-claude-style/deepy/../../package.json', '/dsh-claude-style/deepy/Idle.png', '/dsh-claude-style/deepy/idle.png/x']) {
+  const compressed = await requestAsset(assets, `/dsh-claude-style/assets/${assetName}`, { 'accept-encoding': 'gzip, br' })
+  check('a routed asset is served as it is stored, under its content hash and its own type, cached for good',
+    compressed.status === 200 && compressed.headers['content-type'] === asset.type && /immutable/.test(compressed.headers['cache-control']) &&
+      compressed.headers['content-encoding'] === 'br' && compressed.raw !== null &&
+      Buffer.compare(compressed.raw, fs.readFileSync(storedPath)) === 0,
+    `HTTP ${compressed.status} ${JSON.stringify(compressed.headers)}`)
+  const plain = await requestAsset(assets, `/dsh-claude-style/assets/${assetName}`)
+  check('a client that does not take brotli gets the same asset decompressed, so nothing is missing',
+    plain.status === 200 && plain.headers['content-encoding'] === undefined &&
+      plain.raw !== null && plain.raw.toString('utf8') === brotliDecompressSync(fs.readFileSync(storedPath)).toString('utf8'),
+    `HTTP ${plain.status} ${JSON.stringify(plain.headers)}`)
+  for (const url of ['/dsh-claude-style/assets/missing.svg', '/dsh-claude-style/assets/..%2fclient.js',
+    '/dsh-claude-style/assets/../../package.json', '/dsh-claude-style/assets/', `/dsh-claude-style/assets/${assetName}/x`]) {
     const answer = await requestAsset(assets, url)
-    check(`nothing but a sheet answers under the sheets' path: ${url}`, answer.status === 404, `HTTP ${answer.status}`)
+    check(`nothing but a name the build wrote answers under the assets route: ${url}`, answer.status === 404, `HTTP ${answer.status}`)
   }
 
   // The faces the package ships: each is in package.json's files and the route
@@ -404,10 +416,14 @@ async function hostHalf() {
 
 /**
  * One GET through the plugin's public prefix route (the model copy, the fonts,
- * Deepy's sheets); resolves with the status, the headers the route wrote and
+ * the routed assets); resolves with the status, the headers the route wrote and
  * the bytes.
+ *
+ * @param host - the fake host (fakeHost).
+ * @param url - the request path.
+ * @param headers - request headers; the assets route reads accept-encoding.
  */
-function requestAsset(host, url) {
+function requestAsset(host, url, headers = {}) {
   return new Promise((resolve) => {
     const res = {
       status: 0,
@@ -418,7 +434,7 @@ function requestAsset(host, url) {
       },
       end(chunk) { resolve({ status: this.status, headers: this.headers, raw: chunk === undefined ? null : chunk }) },
     }
-    host.routes['/dsh-claude-style'].handler({ method: 'GET', url, headers: {} }, res)
+    host.routes['/dsh-claude-style'].handler({ method: 'GET', url, headers }, res)
   })
 }
 

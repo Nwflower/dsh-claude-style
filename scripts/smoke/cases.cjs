@@ -1045,14 +1045,17 @@ const CASES = {
       deepy.accent === '#4d6bfe' && deepy.link === '#3b56d9' && !!deepy.dark && deepy.dark.canvas === 'rgb(19, 22, 29)' &&
         deepy.dark.accent === '#4d6bfe' && deepy.dark.raised === '#1b1f28',
       JSON.stringify({ accent: deepy.accent, link: deepy.link, dark: deepy.dark }))
-    check('the whale takes the crab\'s place on the home card, idling, playing the vector rebuilt from its sheet',
-      is(deepy.home, 'idle', 'card') && deepy.crab === false && /^url\("blob:/.test(deepy.home.sheet),
+    // The sheet is the vector the build produced, served from the assets route
+    // under the name its own content gives it (D38).
+    const served = (value) => /^url\("https?:\/\/[^"]*\/dsh-claude-style\/assets\/[0-9a-f]{12}\.svg"\)$/.test(value || '')
+    check('the whale takes the crab\'s place on the home card, idling, playing the vector the build rebuilt from its sheet',
+      is(deepy.home, 'idle', 'card') && deepy.crab === false && served(deepy.home.sheet),
       JSON.stringify({ home: deepy.home, crab: deepy.crab }))
     check('its frames change on its own node without waking a pass',
       !!deepy.idle && deepy.idle.before !== deepy.idle.after && deepy.idle.passes === 0, JSON.stringify(deepy.idle))
     check('a click on its face pokes it', is(deepy.poke, 'poke-left', 'card'), JSON.stringify(deepy.poke))
     check('the state change switches the node to another served sheet',
-      !!deepy.home && !!deepy.poke && deepy.poke.sheet !== deepy.home.sheet && /^url\("blob:/.test(deepy.poke.sheet),
+      !!deepy.home && !!deepy.poke && deepy.poke.sheet !== deepy.home.sheet && served(deepy.poke.sheet),
       JSON.stringify({ home: deepy.home.sheet, poke: deepy.poke.sheet }))
     check('the animation choice resolves onto the document: reduced holds the still frame, always plays',
       deepy.stillAttr === 'reduced' && deepy.alwaysAttr === 'full' &&

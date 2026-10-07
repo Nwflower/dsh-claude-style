@@ -2,15 +2,16 @@
  * The plugin's host routes: everything the browser half cannot reach itself.
  *
  * These are the surfaces D11 describes — the model copy document, the webfonts,
- * the OS user, the HDSL account, Deepy's sheets, session deletion and the usage
- * and search roll-ups — each registered on the host's web server under this
- * plugin's route prefix. Every route is registered on its own: one path the web
- * server refuses is reported, and the other routes still register.
+ * the OS user, the HDSL account, the routed assets, session deletion and the
+ * usage and search roll-ups — each registered on the host's web server under
+ * this plugin's route prefix. Every route is registered on its own: one path
+ * the web server refuses is reported, and the other routes still register.
  */
 import { existsSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs'
 import { userInfo } from 'node:os'
 import { dirname, join, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { brotliDecompressSync } from 'node:zlib'
 import { harnessPath } from './harness-home.js'
 import { createHdslAccount } from './hdsl.js'
 import { QUERY_MAX, createSessionSearch } from './search.js'
@@ -39,14 +40,20 @@ const FONT_FILES = {
   'NotoSerifVariable.woff2': 'font/woff2',
 }
 /**
- * Deepy's animation sheets, served under `${ROUTE_PREFIX}/deepy/` from the
- * build output in `lib/deepy/`. The file name is the whole request contract
- * and its shape admits no separator and no dot segment, so nothing outside
- * that directory is reachable; a name with no sheet is a 404. The browser
- * half puts its build id in the query, so a long cache never serves a sheet
- * from another build.
+ * The assets the build routed rather than inlined, served under
+ * `${ROUTE_PREFIX}/assets/` from the build output in `lib/assets/` (D38).
+ *
+ * The request name is the whole contract: it must be a key of the build's
+ * manifest, which is `<content hash>.<ext>` — no separator, no dot segment —
+ * so nothing outside that directory is reachable and a name the build did not
+ * produce is a 404. The name carries the content hash, so the answer may be
+ * cached for good. A text asset is stored brotli-compressed beside its name:
+ * a client that takes brotli receives it as it lies, and one that does not
+ * gets it decompressed, so the package carries the sheets once, small.
  */
-const DEEPY_FILE = /^[a-z]+(?:-[a-z]+)*\.png$/
+const ASSETS_PATH = `${ROUTE_PREFIX}/assets/`
+/** The build's asset manifest: which names exist, their type and their storage. */
+const ASSETS_MANIFEST = 'manifest.json'
 /** One-shot host OS user route; the browser half caches the response. */
 const USERNAME_PATH = `${ROUTE_PREFIX}/username`
 
@@ -288,7 +295,9 @@ export function registerRoutes(ctx, scope) {
   // The copy document is build output beside the client bundle in lib/.
   const file = join(here, '..', 'lib', COPY_FILE)
   const fontsDir = join(here, '..', 'fonts')
-  const deepyDir = join(here, '..', 'lib', 'deepy')
+  const assetsDir = join(here, '..', 'lib', 'assets')
+  /** The decompressed payload of each brotli-stored asset served to a client that cannot take it. */
+  const unpressed = new Map()
 
   /**
    * Answer one request under the route prefix with a static file.
@@ -296,23 +305,87 @@ export function registerRoutes(ctx, scope) {
    * @param method - request method; HEAD sends headers only.
    * @param path - absolute file to read.
    * @param headers - content-type / cache-control pair for the payload.
+   * @param body - the payload, when the caller already holds it.
    */
-  const sendFile = (res, method, path, headers) => {
-    // An optional font the user never dropped in, or a sheet name no build
-    // shipped, is absent: 404.
-    if (!existsSync(path)) {
+  const sendFile = (res, method, path, headers, body = null) => {
+    // An optional font the user never dropped in, or a name no build shipped,
+    // is absent: 404.
+    if (body === null && !existsSync(path)) {
       res.writeHead(404)
       res.end()
       return
     }
     // Read per request: the files are small, and an in-place edit then shows
     // up on reload without restarting the host.
-    const body = readFileSync(path)
+    const payload = body ?? readFileSync(path)
     res.writeHead(200, {
       ...headers,
-      'content-length': String(body.byteLength),
+      'content-length': String(payload.byteLength),
     })
-    res.end(method === 'HEAD' ? undefined : body)
+    res.end(method === 'HEAD' ? undefined : payload)
+  }
+
+  /**
+   * Answer one request for a routed asset (D38).
+   *
+   * The manifest is read per request, like every other file here: the build
+   * decides what exists, and a rebuild then shows up without restarting the
+   * host. A name the manifest does not carry is a 404 — that is also what
+   * keeps the directory unreachable by any other spelling.
+   *
+   * @param req - node request (its accept-encoding decides the payload).
+   * @param res - node response.
+   * @param name - the file name from the request path.
+   * @returns whether the request was answered.
+   */
+  const sendAsset = (req, res, name) => {
+    const manifest = readManifest()
+    const asset = manifest?.[name]
+    if (asset === undefined) return false
+    const stored = join(assetsDir, asset.encoding === 'br' ? `${name}.br` : name)
+    const headers = {
+      'content-type': asset.type,
+      'cache-control': 'public, max-age=31536000, immutable',
+    }
+    if (asset.encoding === 'br') {
+      if (/\bbr\b/.test(req.headers['accept-encoding'] ?? '')) {
+        sendFile(res, req.method, stored, { ...headers, 'content-encoding': 'br' })
+        return true
+      }
+      // A client that does not take brotli: the sheet is decompressed, so it
+      // is served rather than missing. Cached: the same few sheets are asked
+      // for again on every reload of a page that never got them compressed.
+      const cached = unpressed.get(name)
+      if (cached !== undefined) {
+        sendFile(res, req.method, stored, headers, cached)
+        return true
+      }
+      if (!existsSync(stored)) {
+        res.writeHead(404)
+        res.end()
+        return true
+      }
+      const body = brotliDecompressSync(readFileSync(stored))
+      unpressed.set(name, body)
+      sendFile(res, req.method, stored, headers, body)
+      return true
+    }
+    sendFile(res, req.method, stored, headers)
+    return true
+  }
+
+  /** The build's asset manifest, or undefined when the build has not run. */
+  const readManifest = () => {
+    const path = join(assetsDir, ASSETS_MANIFEST)
+    if (!existsSync(path)) return undefined
+    try {
+      return JSON.parse(readFileSync(path, 'utf8')).assets
+    } catch (error) {
+      // A manifest that cannot be read is a build that did not finish; say so
+      // once per request and answer 404 rather than failing the route (D12).
+      ctx.logger?.warn?.(`dsh-claude-style: lib/assets/${ASSETS_MANIFEST} is unreadable: ${error?.message ?? error}`)
+      return undefined
+    }
   }
 
   /**
@@ -384,12 +457,12 @@ export function registerRoutes(ctx, scope) {
           })
           return
         }
-        const sheet = sub.startsWith('/deepy/') ? sub.slice('/deepy/'.length) : ''
-        if (DEEPY_FILE.test(sheet)) {
-          sendFile(res, req.method, join(deepyDir, sheet), {
-            'content-type': 'image/png',
-            'cache-control': 'public, max-age=31536000, immutable',
-          })
+        const sheet = sub.startsWith('/assets/') ? sub.slice('/assets/'.length) : ''
+        if (sheet !== '' && !sheet.includes('/')) {
+          if (!sendAsset(req, res, sheet)) {
+            res.writeHead(404)
+            res.end()
+          }
           return
         }
         res.writeHead(404)

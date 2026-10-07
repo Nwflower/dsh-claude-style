@@ -11,8 +11,8 @@ import type { Ui } from '../../core/scheduler'
  *
  * Its animations are Deepy's Clawd on Desk theme (DEEPY_SHEETS): between
  * jobs it looks around or spouts now and then. The sheets are too large to
- * ride the bundle, so each loads from the host half the first time its
- * animation is wanted, rebuilt as a vector and cached (whale-sheets.ts).
+ * ride the bundle, so each is fetched from the host half the first time its
+ * animation is wanted (whale-sheets.ts).
  *
  * @param ctx - client context.
  * @param ui - shared handle table (`ui.composer`).
@@ -26,7 +26,7 @@ export function createMascotWhale(ctx: HostContext, ui: Ui) {
     gutter: DEEPY_GUTTER,
     extras: ['idle-look', 'idle-spout'],
     createSheets(onReady) {
-      const sheets = createMascotWhaleSheets(onReady, DEEPY_GUTTER)
+      const sheets = createMascotWhaleSheets(onReady)
       return {
         ready: sheets.ready,
         failed: sheets.failed,

@@ -15,15 +15,13 @@
  *   src/theme/*.css and the feature stylesheets   concatenated by rank (THEME_SHEETS and the manifests),
  *                                checked and gated on the syntax tree (scripts/css.mjs)
  *   src/theme/tokens.json        the design tokens: the token stylesheet and docs/STYLE.md's table
- *   src/assets/brand/*.svg       brand marks, stylesheet data URIs
- *   src/assets/icons/combine/*.svg     vendor lockups (mark + wordmark in one)
- *   src/assets/mascot/crab/*.png       the crab's sheets (scripts/draw-crab.py), data URIs
- *   src/assets/mascot/deepy/*.png      Deepy's sheets, copied to lib/deepy/ for the host half to serve
+ *   src/assets/                  every image (scripts/assets.mjs, D38): small ones inline, the rest
+ *                                written to lib/assets/<hash>.<ext> and served by the host half
  *
  * What the build produces for the browser half reaches the source as one
  * generated module, `virtual:dsh-claude-style/generated` (typed in
- * src/generated.d.ts): the stylesheet, the lockups, the sheet stamps and data
- * URIs, the build id.
+ * src/generated.d.ts): the stylesheet, the asset addresses, the lockups, the
+ * build id.
  *
  * Before anything is written, `tsc` type-checks src/ and the bundle's import
  * graph must hold no cycle: a missing import, a cycle or a constant read before
@@ -42,6 +40,8 @@ import vm from 'node:vm'
 import Ajv2020 from 'ajv/dist/2020.js'
 import addFormats from 'ajv-formats'
 import esbuild from 'esbuild'
+import { PNG } from 'pngjs'
+import { checkClaimed, checkSheetPixels, checkSheets, planAssets, vectorizeSheet, writeAssets } from './assets.mjs'
 import { TOKEN_SHEET, buildStylesheet, loadTokens, writeTokenTable } from './css.mjs'
 import manifestReader from './read-manifests.cjs'
 
@@ -52,22 +52,14 @@ const ROOT = path.resolve(import.meta.dirname, '..')
  */
 const { PREFS_DEFAULT } = await import(pathToFileURL(path.join(ROOT, 'host', 'settings.js')).href)
 const SRC = path.join(ROOT, 'src')
+/** Brand marks, mascot sheets and vendor lockups; scripts/assets.mjs plans their delivery (D38). */
 const ASSETS = path.join(SRC, 'assets')
-/** Brand marks inlined as CSS data URIs. */
+/** The plugin icon the manifest names, copied into lib/ as it is. */
 const BRAND_ASSETS = path.join(ASSETS, 'brand')
-/** The mascots' art. */
-const MASCOT_ASSETS = path.join(ASSETS, 'mascot')
-/** The composer crab's animation sheets (scripts/draw-crab.py), inlined as data URIs. */
-const CRAB_ASSETS = path.join(MASCOT_ASSETS, 'crab')
-/** Deepy's animation sheets, copied to lib/deepy/ for the host half to serve. */
-const DEEPY_ASSETS = path.join(MASCOT_ASSETS, 'deepy')
-/** Vendored vendor lockups (src/assets/icons/combine); mark + wordmark per brand id. */
-const COMBINE_ASSETS = path.join(ASSETS, 'icons', 'combine')
 /** The style guide; its token table is generated from src/theme/tokens.json. */
 const STYLE_GUIDE = path.join(ROOT, 'docs', 'STYLE.md')
 const LIB = path.join(ROOT, 'lib')
 const OUT = path.join(LIB, 'client.js')
-const DEEPY_OUT = path.join(LIB, 'deepy')
 
 /**
  * Model copy ships as DATA beside the bundle, not inside it: the browser half
@@ -210,16 +202,16 @@ const CONSTANTS = (() => {
       palette: { attribute: PALETTE_ATTR, claude: PALETTE_CLAUDE, host: PALETTE_HOST },
       typeface: { attribute: TYPEFACE_ATTR, claude: TYPEFACE_CLAUDE, host: TYPEFACE_HOST },
     },
-    ...pick(['CRAB_SHEETS', 'DEEPY_SHEETS', 'PREF_DEFAULTS']),
+    ...pick(['CRAB_SHEETS', 'DEEPY_SHEETS', 'DEEPY_SCALE', 'DEEPY_GUTTER', 'PREF_DEFAULTS']),
   }
 })()
 
 /**
- * Brand marks ship as runtime-inlined data URIs (the DSH loader exposes no
- * relative requires / asset URLs), so each src/assets/brand/*.svg is encoded into a
- * CSS url() %%TOKEN%% value here, at build time.
+ * The brand marks the stylesheets paint, as `%%TOKEN%%` placeholders (the skin
+ * has no asset URLs: the DSH loader exposes none, so a mark is a data URI or a
+ * route address, whichever the asset manifest decided).
  */
-const SVG_TOKENS = {
+const BRAND_MARKS = {
   CLAUDE_MARK: 'claude-mark.svg',
   CLAUDE_WORD: 'claude-word.svg',
   CLAUDE_MARK_CLAY: 'claude-mark-clay.svg',
@@ -229,110 +221,6 @@ const SVG_TOKENS = {
   // The host's own whale mark (ui-primitives FishLogo, FISH_LOGO_PATH), in
   // DeepSeek's brand blue: a picture where it is painted, a shape where it masks.
   DEEPSEEK_MARK: 'deepseek-mark.svg',
-}
-
-/** Read one SVG source and wrap it as a CSS url() data URI. */
-function loadSvgAssets() {
-  const out = {}
-  for (const [token, file] of Object.entries(SVG_TOKENS)) {
-    const svg = fs.readFileSync(path.join(BRAND_ASSETS, file), 'utf8').replace(/\r\n/g, '\n').trim()
-    out[token] = 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")'
-  }
-  return out
-}
-
-/**
- * The file name a mascot sheet may have. The host half serves Deepy's sheets
- * under exactly the names this shape allows (host/routes.js, DEEPY_FILE), so a
- * name outside it would be copied and never served.
- */
-const SHEET_FILE = /^[a-z]+(?:-[a-z]+)*\.png$/
-
-/**
- * Hold one mascot's sheet directory to its animation table in src/constants.ts.
- *
- * Each entry needs its files and a well-formed row — a frame count, a crop box
- * inside the character's grid, a still frame the sheet holds — and a file no
- * entry names is refused, so the package never ships a sheet the mascot cannot
- * play or an entry that would draw nothing.
- *
- * @param table - the table's name, for diagnostics.
- * @param sheets - animation → `{ frames, box, still }`.
- * @param grid - `[width, height]` of the character's grid.
- * @param dir - the sheet directory.
- * @param filesOf - animation → the file names its entry needs.
- */
-function checkSheets(table, sheets, grid, dir, filesOf) {
-  const where = path.relative(ROOT, dir).replace(/\\/g, '/')
-  const wanted = new Set(Object.keys(sheets).flatMap(filesOf))
-  const files = fs.readdirSync(dir)
-  for (const file of files) {
-    if (!SHEET_FILE.test(file) || !wanted.has(file)) throw new Error(`build: ${where}/${file} has no entry in ${table}`)
-  }
-  for (const [name, sheet] of Object.entries(sheets)) {
-    const [x, y, w, h] = Array.isArray(sheet.box) ? sheet.box : []
-    const whole = [sheet.frames, sheet.still, x, y, w, h].every(Number.isInteger)
-    if (!whole || sheet.frames < 1 || sheet.still < 0 || sheet.still >= sheet.frames || x < 0 || y < 0 || w < 1 || h < 1 || x + w > grid[0] || y + h > grid[1]) {
-      throw new Error(`build: ${table}["${name}"] needs whole frames, still < frames and a box inside the ${grid[0]}×${grid[1]} grid`)
-    }
-    for (const file of filesOf(name)) {
-      if (!files.includes(file)) throw new Error(`build: ${table}["${name}"] has no ${file} in ${where}/`)
-    }
-  }
-}
-
-/**
- * The composer crab's sheets, inlined into the bundle as CRAB_SHEET_URLS.
- *
- * Drawn by scripts/draw-crab.py into src/assets/mascot/crab/: per animation a
- * sheet in the crab's colours and an ink mask, eight frames to a row, one
- * pixel a cell, on a 52×36 grid. Together they are a few dozen kilobytes, so
- * they ride the bundle as data URIs and every animation is ready the moment
- * it is wanted.
- *
- * @returns animation → { body, ink } data URIs.
- */
-function loadCrabSheets() {
-  const sheets = CONSTANTS.CRAB_SHEETS
-  checkSheets('CRAB_SHEETS', sheets, [52, 36], CRAB_ASSETS, (name) => [`${name}.png`, `${name}-ink.png`])
-  const read = (file) => 'data:image/png;base64,' + fs.readFileSync(path.join(CRAB_ASSETS, file)).toString('base64')
-  const out = {}
-  for (const name of Object.keys(sheets)) out[name] = { body: read(`${name}.png`), ink: read(`${name}-ink.png`) }
-  return out
-}
-
-/**
- * Check Deepy's sheets before lib/ is touched, and stamp each one.
- *
- * Deepy is drawn on a 52×52 grid. The sheets are too large to inline (about
- * 0.4 MB together) and the browser only fetches the ones it plays, so they are
- * copied; every check that can fail runs here, while nothing has been written
- * yet. The stamps are emitted into the bundle as DEEPY_STAMPS: the browser
- * half keys its generated vector cache on the sheet's own stamp, so a sheet is
- * re-converted only when its own pixels change.
- *
- * @returns the sheet names in table order, their total size and their content stamps.
- */
-function planDeepySheets() {
-  const names = Object.keys(CONSTANTS.DEEPY_SHEETS)
-  checkSheets('DEEPY_SHEETS', CONSTANTS.DEEPY_SHEETS, [52, 52], DEEPY_ASSETS, (name) => [`${name}.png`])
-  let bytes = 0
-  const stamps = {}
-  for (const name of names) {
-    const sheet = fs.readFileSync(path.join(DEEPY_ASSETS, `${name}.png`))
-    bytes += sheet.byteLength
-    stamps[name] = createHash('sha256').update(sheet).digest('hex').slice(0, 12)
-  }
-  return { names, bytes, stamps }
-}
-
-/** Copy the planned sheets into lib/deepy/, replacing whatever was there. */
-function writeDeepySheets(names) {
-  fs.rmSync(DEEPY_OUT, { recursive: true, force: true })
-  fs.mkdirSync(DEEPY_OUT)
-  for (const name of names) {
-    fs.copyFileSync(path.join(DEEPY_ASSETS, `${name}.png`), path.join(DEEPY_OUT, `${name}.png`))
-  }
 }
 
 /**
@@ -345,26 +233,54 @@ function writeDeepySheets(names) {
  * data URI, because the picker stamps it into the row with `innerHTML` so the
  * mono layer inherits the row's `color`.
  *
+ * @param plan - the asset plan (planAssets); the lockups are its text entries.
+ * @param claimed - the paths the build read (checkClaimed).
  * @returns brand id → { svg, word }.
  */
-function loadCombines() {
+function loadCombines(plan, claimed) {
   const out = {}
-  if (!fs.existsSync(COMBINE_ASSETS)) return out
-  for (const name of fs.readdirSync(COMBINE_ASSETS).sort()) {
-    if (!name.endsWith('.svg')) continue
-    const id = name.slice(0, -4)
-    const svg = fs.readFileSync(path.join(COMBINE_ASSETS, name), 'utf8').replace(/\r\n/g, '\n').trim()
+  for (const [file, entry] of plan.entries) {
+    if (!file.startsWith('icons/combine/') || !file.endsWith('.svg')) continue
+    claimed.add(file)
+    const id = path.basename(file, '.svg')
+    const svg = entry.text.replace(/\r\n/g, '\n').trim()
     if (!svg.startsWith('<svg') || !svg.includes('viewBox=')) {
-      throw new Error(`build: src/assets/icons/combine/${name} is not a scalable SVG (needs <svg viewBox=…>)`)
+      throw new Error(`build: src/assets/${file} is not a scalable SVG (needs <svg viewBox=…>)`)
     }
-    if (svg.includes('</') && /<\/script/i.test(svg)) throw new Error(`build: src/assets/icons/combine/${name} carries a script end tag`)
-    if (svg.includes('\n')) throw new Error(`build: src/assets/icons/combine/${name} is multi-line; run scripts/fetch-lobe-combines.py`)
+    if (svg.includes('</') && /<\/script/i.test(svg)) throw new Error(`build: src/assets/${file} carries a script end tag`)
+    if (svg.includes('\n')) throw new Error(`build: src/assets/${file} is multi-line; run scripts/fetch-lobe-combines.py`)
     const word = /data-combine-word="([^"]+)"/.exec(svg)
-    if (word === null) throw new Error(`build: src/assets/icons/combine/${name} has no data-combine-word`)
+    if (word === null) throw new Error(`build: src/assets/${file} has no data-combine-word`)
     out[id] = { svg, word: word[1] }
   }
   if (Object.keys(out).length === 0) throw new Error('build: src/assets/icons/combine/ holds no lockups; run scripts/fetch-lobe-combines.py')
   return out
+}
+
+/**
+ * Deepy's sheets as the vectors the browser plays (D38).
+ *
+ * Each PNG is decoded, held to its animation table's crop box and frame count,
+ * and rebuilt as SVG over the sprite's own cell layout. The vector is what the
+ * asset plan ships under the sheet's name; the PNG is an input of the build.
+ *
+ * @returns the vectors to ship, keyed by their path under src/assets/, and the
+ *     PNGs they take the place of.
+ */
+function vectorizeDeepySheets() {
+  const dir = path.join(SRC, 'assets', 'mascot', 'deepy')
+  const sheets = CONSTANTS.DEEPY_SHEETS
+  checkSheets('DEEPY_SHEETS', sheets, [52, 52], dir, (name) => [`${name}.png`])
+  const generated = new Map()
+  const replaced = new Set()
+  for (const [name, sheet] of Object.entries(sheets)) {
+    const image = PNG.sync.read(fs.readFileSync(path.join(dir, `${name}.png`)))
+    checkSheetPixels('DEEPY_SHEETS', name, image, sheet, CONSTANTS.DEEPY_SCALE)
+    const { svg } = vectorizeSheet(image, sheet.box, CONSTANTS.DEEPY_SCALE, CONSTANTS.DEEPY_GUTTER)
+    generated.set(`mascot/deepy/${name}.svg`, svg)
+    replaced.add(`mascot/deepy/${name}.png`)
+  }
+  return { generated, replaced }
 }
 
 /**
@@ -588,16 +504,48 @@ async function main() {
   const manifests = manifestReader.readManifests()
   checkManifests(manifests)
   const sheets = styleFiles(manifests)
-  const tokens = { ...CONSTANTS.tokens, ...loadSvgAssets() }
-  const combines = loadCombines()
+
+  // Every image, its content hash and its address (D38). Nothing is written
+  // yet: the plan is read by everything below, and a refusal anywhere in this
+  // build must leave lib/ as it was.
+  const deepy = vectorizeDeepySheets()
+  const plan = planAssets({ srcDir: SRC, generated: deepy.generated, replaced: deepy.replaced })
+  const claimed = new Set()
+  const tokens = { ...CONSTANTS.tokens }
+  for (const [token, file] of Object.entries(BRAND_MARKS)) {
+    const entry = plan.entries.get(`brand/${file}`)
+    if (entry === undefined) throw new Error(`build: each asset is claimed or fails the build; brand/${file} (%%${token}%%) is missing`)
+    claimed.add(`brand/${file}`)
+    tokens[token] = `url("${entry.url}")`
+  }
+  const combines = loadCombines(plan, claimed)
+
+  // The crab's sheets ride the bundle: one pair of data URIs per animation.
+  const crab = {}
+  for (const name of Object.keys(CONSTANTS.CRAB_SHEETS)) {
+    const body = plan.entries.get(`mascot/crab/${name}.png`)
+    const ink = plan.entries.get(`mascot/crab/${name}-ink.png`)
+    if (body === undefined || ink === undefined) throw new Error(`build: CRAB_SHEETS["${name}"] has no sheet pair under src/assets/mascot/crab/`)
+    claimed.add(body.file)
+    claimed.add(ink.file)
+    crab[name] = { body: body.url, ink: ink.url }
+  }
+
+  // Deepy's sheets are the vectors the build produced; the addresses are the
+  // route's, one per sheet, and only the played ones are ever fetched.
+  const deepyUrls = {}
+  for (const name of Object.keys(CONSTANTS.DEEPY_SHEETS)) {
+    const entry = plan.entries.get(`mascot/deepy/${name}.svg`)
+    // vectorizeDeepySheets built every one of them, so absence is a bug here.
+    if (entry === undefined) throw new Error(`build: DEEPY_SHEETS["${name}"] has no vector; the sheets and the table disagree`)
+    claimed.add(entry.file)
+    deepyUrls[name] = entry.url
+  }
+  checkClaimed(plan, claimed)
 
   const tokenDoc = loadTokens(SRC)
   const cssText = buildStylesheet({ sheets, srcDir: SRC, tokens, tokenDoc, gates: CONSTANTS.gates })
   if (writeTokenTable(STYLE_GUIDE, tokenDoc)) console.log('built docs/STYLE.md token table from src/theme/tokens.json')
-
-  // Deepy sheet stamps: content hashes of the sheets, for the browser half's
-  // vector cache keys (planDeepySheets).
-  const deepy = planDeepySheets()
 
   const result = await esbuild.build({
     entryPoints: [path.join(SRC, 'entry.ts')],
@@ -628,8 +576,8 @@ async function main() {
       // without reloading the page, so the page's load time says nothing about
       // its code.
       BUILD_ID: BUILD_ID_SLOT,
-      DEEPY_STAMPS: deepy.stamps,
-      CRAB_SHEET_URLS: loadCrabSheets(),
+      CRAB_SHEET_URLS: crab,
+      DEEPY_SHEET_URLS: deepyUrls,
     })],
   })
   checkCycles(result.metafile)
@@ -675,8 +623,8 @@ async function main() {
   fs.copyFileSync(iconSource, iconTarget)
   console.log(`built lib/${ICON_FILE} (${fs.statSync(iconTarget).size} bytes) from src/assets/brand/${ICON_SOURCE}`)
 
-  writeDeepySheets(deepy.names)
-  console.log(`built lib/deepy/ (${deepy.names.length} sheets, ${deepy.bytes} bytes) from src/assets/mascot/deepy/`)
+  const assets = writeAssets(LIB, plan)
+  console.log(`built lib/assets/ (${assets.files} routed of ${plan.entries.size} assets, ${assets.bytes} bytes) from src/assets/`)
 }
 
 await main()

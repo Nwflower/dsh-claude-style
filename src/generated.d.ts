@@ -11,8 +11,8 @@ declare module 'virtual:dsh-claude-style/generated' {
   export const COMBINE_WORDS: Record<string, string>
   /** A hash of the bundle, written in after bundling (D19). */
   export const BUILD_ID: string
-  /** Content stamps of Deepy's sheets by animation name. */
-  export const DEEPY_STAMPS: Record<string, string>
+  /** The address each of Deepy's sheets plays from, by animation name (D38). */
+  export const DEEPY_SHEET_URLS: Record<string, string>
   /** The crab's sheets as data URIs by animation name: its body and its ink mask. */
   export const CRAB_SHEET_URLS: Record<string, { body: string, ink: string }>
 }
