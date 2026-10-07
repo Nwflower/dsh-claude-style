@@ -345,11 +345,13 @@
       await sleep(1000)
       r.idlePasses = window.__passes - from
     }
-    // The host's stats row is hidden outright, in both of its shapes: its pills
-    // stay in the document as the read's own click targets, and their dialogs
-    // are read into the context popover instead (the 'default' case below).
-    var statsRoot = document.querySelector('[data-composer-stats]')
-    r.statsHidden = statsRoot ? getComputedStyle(statsRoot).display === 'none' : null
+    // The host's statistics are hidden outright, in both of its shapes: the
+    // figures stay in the document as the read's own click targets, and their
+    // dialogs are read into the context popover instead (the 'default' case
+    // below). The host marks each figure since its 2026-09 update and marked the
+    // container around them before, so both marks are checked.
+    var statsFigures = Array.prototype.slice.call(document.querySelectorAll('[data-composer-stat], [data-composer-stats]'))
+    r.statsHidden = statsFigures.length > 0 && statsFigures.every(function (el) { return getComputedStyle(el).display === 'none' })
     r.statsStrayCards = document.querySelectorAll('.dsh-claude-stats-popover').length
     // The session list's leading seat. The host's newer rows render it through a
     // slot outlet, so an idle row's seat is not :empty — the circle has to hang

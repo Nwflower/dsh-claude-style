@@ -1,5 +1,5 @@
 import { COMPOSER_ATTR, COMPOSER_HIDDEN_ATTR, HOME_LAYOUT_STUDIO } from '../../constants'
-import { COMPOSER_STACK, closestComposerCard, findAccessTrigger, findComposerCards, findComposerPlaceholder } from '../../core/host'
+import { COMPOSER_STACK, closestComposerCard, findAccessTrigger, findComposerCards, findComposerPlaceholder, findComposerSeat, findConversationScroller } from '../../core/host'
 import { composerRestyleRetired, readPrefs } from '../../core/prefs'
 import type { HostContext } from '../../core/host'
 import type { FeatureHandle, Ui } from '../../core/scheduler'
@@ -256,7 +256,7 @@ export function install(ctx: HostContext, ui: Ui) {
    * single view) means the chat surface is all there is.
    */
   function syncChatTabComposer() {
-    const root = closestFrom(document.querySelector('[data-composer-seat]'), '[data-phase]')
+    const root = closestFrom(findComposerSeat(), '[data-phase]')
     const list = root === null ? null : root.querySelector('[role="tablist"]')
     const first = list === null ? null : list.querySelector('[role="tab"]')
     const chatActive = first === null || first.getAttribute('aria-selected') === 'true'
@@ -298,8 +298,7 @@ export function install(ctx: HostContext, ui: Ui) {
    * 150px of the end counts as at the end.
    */
   function followTranscript() {
-    // ui-conversation marks its transcript scroller with this attribute.
-    const scroller = document.querySelector('[data-conversation-scroll]')
+    const scroller = findConversationScroller()
     if (scroller === null) return
     const distance = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight
     if (distance < 150) writeScroll(scroller, scroller.scrollHeight, 'composer')

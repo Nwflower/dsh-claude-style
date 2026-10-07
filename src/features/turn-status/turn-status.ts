@@ -1,4 +1,4 @@
-import { closestConversationSession, conversationSessionId, findChatTarget, readTurnActivity } from '../../core/host'
+import { closestConversationSession, conversationSessionId, findChatFlows, findChatTarget, findTurnProcess, readTurnActivity } from '../../core/host'
 import { copyLabel } from '../../core/i18n'
 import { setAttributeIfChanged } from '../../shared/dom'
 import { formatCompactTokens, pad2 } from '../../shared/format'
@@ -190,7 +190,7 @@ export function install(ctx: HostContext, ui: Ui) {
     const after = new Map<number, HTMLElement>()
     for (let i = 0; i < rows.length; i++) {
       if (rows[i].getAttribute('data-chat-flow-kind') !== 'turn-process') continue
-      const button = rows[i].querySelector('button[data-turn-process]')
+      const button = findTurnProcess(rows[i])
       if (button === null) continue
       if (snapshot === undefined) snapshot = chatSnapshot(sessionId)
       if (snapshot === null) return
@@ -227,7 +227,7 @@ export function install(ctx: HostContext, ui: Ui) {
     const locale = ctx.get('locale')
     if (locale) {
       const t = locale.bind('chat')
-      const columns = document.querySelectorAll('[data-chat-flow]')
+      const columns = findChatFlows()
       for (let i = 0; i < columns.length; i++) syncColumn(columns[i], nextAttrs, nextOrders, live, t)
     }
     settle(nextAttrs, nextOrders)

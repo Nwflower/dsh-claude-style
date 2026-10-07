@@ -112,14 +112,16 @@ body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant
 }
 
 /* ---------- the host's stats row: hidden, its detail moved into the context popover ---------- */
-/* The host ships two pills here (turns and steps · tok/s, total tokens · cache
-   hits) with its own icons and spacing. The row is HIDDEN and stays in the
-   document: its structure still tells the detailed form from the compact one,
-   and the session's numbers are read from the host's projections
-   (features/context-stats/session-stats.ts) into the popover the context meter
-   opens. One popover for everything about the session's numbers, and the input
-   row keeps only the meter at its right end. */
-body[data-dsh-claude-style] [data-composer-stats] {
+/* The host ships two figures here (turns and steps · tok/s, total tokens · cache
+   hits) with its own icons and spacing; it marks each figure since its 2026-09
+   update and marked the container around them before, so both marks are hidden.
+   The row STAYS in the document: its structure still tells the detailed form
+   from the compact one, and the session's numbers are read from the host's
+   projections (features/context-stats/session-stats.ts) into the popover the
+   context meter opens. One popover for everything about the session's numbers,
+   and the input row keeps only the meter at its right end. */
+body[data-dsh-claude-style] [data-composer-stats],
+body[data-dsh-claude-style] [data-composer-stat] {
   display: none !important;
 }
 

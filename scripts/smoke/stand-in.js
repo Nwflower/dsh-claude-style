@@ -823,7 +823,7 @@
     document.body.appendChild(dialog)
     return dialog
   }
-  var statsPills = document.querySelectorAll('[data-composer-stats] button[aria-haspopup="dialog"]')
+  var statsPills = document.querySelectorAll('[data-composer-stat] button[aria-haspopup="dialog"]')
   for (var sp = 0; sp < statsPills.length; sp++) {
     (function (pill, index) {
       pill.setAttribute('data-stats-kind', index === 0 ? 'details' : 'usage')

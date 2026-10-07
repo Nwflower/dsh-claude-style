@@ -1,6 +1,7 @@
 import { observeSize } from '../../core/bus'
 import { AUTO_POPOVER_ALL } from '../../constants'
-import { conversationSessionId, findConversationSession } from '../../core/host'
+import { conversationSessionId, findComposerStats, findConversationSession } from '../../core/host'
+import { COMPOSER_STAT_SELECTOR } from '../../contracts/dom'
 import type { HostContext, HostText, HostValue } from '../../core/host'
 
 /** One row of the block: a label and its figure. */
@@ -409,6 +410,16 @@ export function createSessionStats(ctx: HostContext) {
    * readable.
    */
   function hostStatsDetailed(root: Element) {
+    // The current host marks each figure and leaves the container unmarked; an
+    // older one marks the container alone. Detailed reads the same in both: a
+    // figure carries the dialog trigger, compact is a bare reading.
+    const figures = root.querySelectorAll(COMPOSER_STAT_SELECTOR)
+    if (figures.length > 0) {
+      for (let i = 0; i < figures.length; i++) {
+        if (figures[i].querySelector('button[aria-haspopup="dialog"]') !== null) return true
+      }
+      return false
+    }
     if (root.querySelector('button[aria-haspopup="dialog"]') !== null) return true
     const children = root.children
     for (let i = 0; i < children.length; i++) {
@@ -498,7 +509,7 @@ export function createSessionStats(ctx: HostContext) {
   function renderContextStats() {
     const panel = contextPanel()
     if (panel === null) return
-    const root = document.querySelector('[data-composer-stats]')
+    const root = findComposerStats()
     if (root === null) return
     const chat = chatText()
     if (chat === null) return

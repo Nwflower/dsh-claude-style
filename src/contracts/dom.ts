@@ -119,6 +119,13 @@ export const PHASE_ATTRIBUTE = 'data-phase'
 export const COMPOSER_STACK_SELECTOR = '[class*="_composerStack"]'
 /** The placeholder the host's own editor draws inside the draft. */
 export const COMPOSER_PLACEHOLDER_SELECTOR = '[data-composer-placeholder]'
+/**
+ * The statistics in the composer stack. The host marks each figure since its
+ * 2026-09 update and marked one container around them before, so both are read
+ * (D3); those figures are what the context panel repeats (D27).
+ */
+export const COMPOSER_STATS_SELECTOR = '[data-composer-stats]'
+export const COMPOSER_STAT_SELECTOR = '[data-composer-stat]'
 /** The composer variant the host puts on the card (`hero` / `default`). */
 export const COMPOSER_VARIANT_ATTRIBUTE = 'data-composer-variant'
 /** The host's own access-mode trigger inside its permission slot, skipping the skin's buttons. */

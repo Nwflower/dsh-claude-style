@@ -1,5 +1,5 @@
 import { COMPOSER_HINT, HOME_LAYOUT_STUDIO, pickHeroGreeting, pickStudioGreeting } from '../../constants'
-import { findComposerCards, findComposerPlaceholder, findComposerPlaceholders, getUsername } from '../../core/host'
+import { findComposerCards, findComposerInput, findComposerPlaceholder, findComposerPlaceholders, getUsername } from '../../core/host'
 import { readPrefs } from '../../core/prefs'
 import { removeStrayNodes } from '../../shared/popover'
 import type { HostContext } from '../../core/host'
@@ -70,7 +70,7 @@ export function install(ctx: HostContext, ui: Ui) {
     const cards = findComposerCards()
     for (let ci = 0; ci < cards.length; ci++) {
       const card = cards[ci]
-      const input = card.querySelector('[data-composer-input]')
+      const input = findComposerInput(card)
       if (!input) continue
       const text = (input.textContent || '').replace(/[\u200B-\u200D\uFEFF]/g, '').trim()
       const isEmpty = text.length === 0

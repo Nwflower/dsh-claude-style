@@ -35,23 +35,19 @@ function page(name, tier, cases) {
         '  <div class="_x_settingsArea_1"><button aria-haspopup="dialog">Settings</button></div>\n' +
         '  ' + footerActions + '\n' +
       '</div>'
-  // The host's statistics row (ui-chat StatsPills) in each of its two shapes.
-  // Detailed wraps each pill in an anchor span and makes the dialog-carrying
-  // ones buttons; compact renders bare icon+reading spans with no trigger. The
-  // skin hides the row outright and reads the two dialogs into the context
-  // popover, so the row is the dock's first child here, the way the host parks
-  // it, with the context meter beside it.
+  // The host's statistics in the composer stack (ui-chat StatsPills), which the
+  // host marks per figure since its 2026-09 update. Detailed wraps each figure in
+  // an anchor span and makes the dialog-carrying ones buttons; compact renders
+  // bare reading spans with no trigger. The skin hides both marks outright and
+  // reads the two dialogs into the context popover, so the row is the dock's
+  // first child here, the way the host parks it, with the context meter beside it.
   var stats = name === 'stats-compact'
-    ? '<div data-composer-stats>' +
-        '<span class="_p_pill_1"><svg viewBox="0 0 16 16" width="14" height="14"></svg>20 tok/s</span>' +
-        '<span class="_p_pill_1"><svg viewBox="0 0 16 16" width="14" height="14"></svg>Cache hit 90%</span>' +
-      '</div>'
-    : '<div data-composer-stats>' +
-        '<span class="_a_anchor_1"><button type="button" class="_p_pill_1" aria-haspopup="dialog" aria-expanded="false" aria-label="1 turns 1 steps">' +
+    ? '<span class="_p_pill_1" data-composer-stat="time"><svg viewBox="0 0 16 16" width="14" height="14"></svg>20 tok/s</span>' +
+        '<span class="_p_pill_1" data-composer-stat="usage"><svg viewBox="0 0 16 16" width="14" height="14"></svg>Cache hit 90%</span>'
+    : '<span class="_a_anchor_1" data-composer-stat="time"><button type="button" class="_p_pill_1" aria-haspopup="dialog" aria-expanded="false" aria-label="1 turns 1 steps">' +
           '<svg viewBox="0 0 16 16" width="14" height="14"></svg><span class="_l_label_1">1 turns 1 steps</span></button></span>' +
-        '<span class="_a_anchor_1"><button type="button" class="_p_pill_1" aria-haspopup="dialog" aria-expanded="false" aria-label="105 tok · Cache hit 90%">' +
-          '<svg viewBox="0 0 16 16" width="14" height="14"></svg><span class="_l_label_1">105 tok · Cache hit 90%</span></button></span>' +
-      '</div>'
+        '<span class="_a_anchor_1" data-composer-stat="usage"><button type="button" class="_p_pill_1" aria-haspopup="dialog" aria-expanded="false" aria-label="105 tok · Cache hit 90%">' +
+          '<svg viewBox="0 0 16 16" width="14" height="14"></svg><span class="_l_label_1">105 tok · Cache hit 90%</span></button></span>'
   // The host's dock line: the stats row plus the context meter (ui-conversation
   // ContextMeter), whose trigger draws a ring of two circles beside the
   // occupancy reading — that ring is what identifies the meter

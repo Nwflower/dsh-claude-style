@@ -1,5 +1,5 @@
 import { COMPOSER_HIDDEN_ATTR } from '../../constants'
-import { COMPOSER_STACK, conversationSessionId, findConversationSession } from '../../core/host'
+import { COMPOSER_STACK, conversationSessionId, findComposerSeat, findConversationSession } from '../../core/host'
 import { motionReduced } from '../../core/prefs'
 import { createMascotSignals } from './mascot-signals'
 import type { MascotLevel, MascotMoment } from './mascot-signals'
@@ -222,7 +222,7 @@ export function createMascotPlayer(ctx: HostContext, ui: Ui, character: MascotCh
     if (!conversation) return null
     if (document.body.hasAttribute(COMPOSER_HIDDEN_ATTR)) return null
     const content = findConversationSession()
-    const seat = content === null ? null : content.querySelector('[data-composer-seat]')
+    const seat = content === null ? null : findComposerSeat(content)
     if (seat === null) return null
     const session = conversationSessionId(content)
     // The composer chain's own wrapper (ui-renderer): the host hides it

@@ -1,5 +1,5 @@
 import { HDSL_ROUTE, HDSL_SKIN_ROUTE, USERNAME_MAX, USERNAME_ROUTE } from '../constants'
-import { COMPOSER_CARD_SELECTOR, COMPOSER_PLACEHOLDER_SELECTOR, COMPOSER_STACK_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, FOOT_AREA_SELECTOR, PERMISSION_TRIGGER_SELECTOR } from '../contracts/dom'
+import { CHAT_FLOW_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_PLACEHOLDER_SELECTOR, COMPOSER_SELECTOR, COMPOSER_STACK_SELECTOR, COMPOSER_STATS_SELECTOR, COMPOSER_STAT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, FOOT_AREA_SELECTOR, PERMISSION_TRIGGER_SELECTOR, TURN_PROCESS_SELECTOR } from '../contracts/dom'
 import { readPrefs } from './prefs'
 import { closestFrom } from '../shared/dom'
 import { createHostResource } from '../shared/resource'
@@ -76,6 +76,46 @@ export function findComposerPlaceholders() {
 
 export function findComposerPlaceholder(card: Element) {
   return card.querySelector<HTMLElement>(COMPOSER_PLACEHOLDER)
+}
+
+/**
+ * The host's statistics in the composer stack: the container an older client
+ * marked around them, else the element the marked figures share. Null when the
+ * host draws none, which every reader tolerates.
+ */
+export function findComposerStats() {
+  const bar = document.querySelector<HTMLElement>(COMPOSER_STATS_SELECTOR)
+  if (bar !== null) return bar
+  const figure = document.querySelector<HTMLElement>(COMPOSER_STAT_SELECTOR)
+  return figure === null ? null : figure.parentElement
+}
+
+/** The editable draft inside `scope`: the element the caret and the send flight read. */
+export function findComposerInput(scope: ParentNode = document) {
+  return scope.querySelector<HTMLElement>(COMPOSER_INPUT_SELECTOR)
+}
+
+/**
+ * The composer seat around `scope`: a pointer or key inside it is the reader
+ * typing, which the scroll owner reads as intent that is not a scroll (D41).
+ */
+export function findComposerSeat(scope: ParentNode = document) {
+  return scope.querySelector<HTMLElement>(COMPOSER_SELECTOR)
+}
+
+/** The session scroller: the element the host hangs its own follow off (D41). */
+export function findConversationScroller() {
+  return document.querySelector<HTMLElement>(CONVERSATION_SCROLL_SELECTOR)
+}
+
+/** The chat columns on the page: the root every chat-area behaviour scopes to. */
+export function findChatFlows() {
+  return document.querySelectorAll<HTMLElement>(CHAT_FLOW_SELECTOR)
+}
+
+/** The turn-process control inside one flow row, which the status line moves. */
+export function findTurnProcess(row: ParentNode) {
+  return row.querySelector<HTMLElement>(TURN_PROCESS_SELECTOR)
 }
 
 /** The shown conversation: the element carrying its session id, and the id itself. */
