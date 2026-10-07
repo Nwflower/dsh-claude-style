@@ -11,7 +11,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, parse } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-let cached = null
+let cached: string | null = null
 
 /** @returns the plugin package's directory. */
 export function packageRoot() {

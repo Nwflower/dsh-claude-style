@@ -7,6 +7,7 @@
  * under the launcher's data directory, so this module reads the contract out of
  * the launch environment and the routes in routes.js serve it.
  */
+import type { DshContext } from './dsh.ts'
 
 /** The contract version this half understands; any other value voids the whole group. */
 const HDSL_CONTRACT = '1'
@@ -41,14 +42,22 @@ const HDSL_LAYERS = ['process', 'user-env']
  * @returns `{ read() }`, whose promise resolves to the contract or to
  *          `{ contract: false }` when HDSL did not launch this instance.
  */
-export function createHdslAccount(ctx) {
-  let reading = null
+/** What one HDSL launch reports: whether it launched this instance, and its account. */
+export interface HdslReading {
+  contract: boolean
+  name?: string | null
+  avatar?: string | null
+  [field: string]: unknown
+}
+
+export function createHdslAccount(ctx: DshContext) {
+  let reading: Promise<HdslReading> | null = null
   const read = () => {
     if (reading !== null) return reading
     reading = Promise.resolve().then(() => {
       const env = ctx.get(DSH_LAUNCH_ENVIRONMENT_KEY)
       if (typeof env?.getFrom !== 'function') return { contract: false }
-      const value = (name) => env.getFrom(name, HDSL_LAYERS)?.value
+      const value = (name: string) => env.getFrom(name, HDSL_LAYERS)?.value
       if (value('HDSL_ACCOUNT_CONTRACT') !== HDSL_CONTRACT) return { contract: false }
       const skinFile = value('HDSL_ACCOUNT_SKIN_FILE')
       const hasSkinImage = typeof skinFile === 'string' && skinFile !== ''

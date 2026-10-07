@@ -12,9 +12,10 @@
  * @returns the resolved path.
  */
 import { homedir } from 'node:os'
+import type { DshContext } from './dsh.ts'
 import { join } from 'node:path'
 
-export function harnessPath(ctx, ...segments) {
+export function harnessPath(ctx: DshContext, ...segments: string[]): string {
   const resolvePath = ctx.get('dshHomePath')
   if (typeof resolvePath === 'function') return resolvePath(...segments)
   return join(process.env.DSH_HOME ?? join(homedir(), '.dsh'), ...segments)

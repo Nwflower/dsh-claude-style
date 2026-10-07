@@ -1,0 +1,48 @@
+/**
+ * What the host half reads off the DSH plugin context (D46).
+ *
+ * The half runs inside DSH's loader, which hands it a context object; DSH ships
+ * no types for it, so this file declares the members the half actually touches,
+ * with the meaning the half gives them. Reading by name (`get`) is lenient: a
+ * host that does not provide a service answers `undefined`, and each reader
+ * decides what that means (D12).
+ */
+
+/** One host plugin context, as the half reads it. */
+export interface DshContext {
+  /** A service by name; `undefined` when the host does not provide it. */
+  get(name: string): any
+  /** Wait for services and hand back a scope that declares them. */
+  inject?(deps: string[], run: (scope: DshScope) => void): void
+  /** The host's logger, when it has one. */
+  logger?: { warn?(message: string): void, info?(message: string): void, error?(message: string): void }
+  /** Run a function and drop its disposals with this generation. */
+  effect?(run: () => void): void
+  /** The loader fiber, which carries the entry that mounted this half. */
+  fiber?: { entry?: { id?: unknown, options?: unknown } }
+}
+
+/** The scope `inject` hands back: the base context plus the declared services. */
+export interface DshScope extends DshContext {
+  webServer?: DshWebServer
+}
+
+/** The host's web server service, as the half registers routes on it. */
+export interface DshWebServer {
+  register(options: { path: string, handler: (req: DshRequest, res: DshResponse) => void }): unknown
+}
+
+/** The request the host hands a route handler. */
+export interface DshRequest {
+  method?: string
+  url?: string
+  headers: Record<string, string | string[] | undefined>
+}
+
+/** The response the host hands a route handler. */
+export interface DshResponse {
+  statusCode: number
+  setHeader(name: string, value: string): void
+  end(body?: unknown): void
+  on?(event: string, run: () => void): void
+}

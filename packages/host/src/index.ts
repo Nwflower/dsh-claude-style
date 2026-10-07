@@ -37,6 +37,7 @@
  * settings surface in settings.js; this file only mounts them.
  */
 import { registerRoutes } from './routes.js'
+import type { DshContext, DshScope } from './dsh.ts'
 import { registerSettings } from './settings.js'
 
 export const name = 'dsh-claude-style'
@@ -46,7 +47,7 @@ export { Config } from './settings.js'
  * Register the plugin's host surfaces.
  * @param ctx - host plugin context.
  */
-export function apply(ctx) {
+export function apply(ctx: DshContext) {
   // Always register through inject, never on the bare ctx. `ctx.get()` reads a
   // service leniently (no inject declaration needed), but the PROPERTY access
   // inside registerRoutes (`scope.webServer`) is gated by the fiber's inject
@@ -55,7 +56,7 @@ export function apply(ctx) {
   // waits for the service and hands registerRoutes a scope that HAS the
   // declaration, so both a boot-time apply and a hot relink register. A host
   // without a web server simply waits here, and the skin still activates.
-  if (typeof ctx.inject === 'function') ctx.inject(['webServer'], (scope) => { registerRoutes(ctx, scope) })
+  if (typeof ctx.inject === 'function') ctx.inject(['webServer'], (scope: DshScope) => { registerRoutes(ctx, scope) })
   else registerRoutes(ctx, ctx)
 
   registerSettings(ctx)

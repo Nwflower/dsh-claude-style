@@ -39,6 +39,8 @@ export function buildHostHalf({ outDir = path.join(ROOT, 'lib') } = {}) {
       if (!rel.endsWith('.ts')) throw new Error(`build: packages/host/src/${rel} is not TypeScript`)
       const source = fs.readFileSync(path.join(SOURCE, rel), 'utf8')
       const { code } = esbuild.transformSync(source, { loader: 'ts', format: 'esm', target: 'es2023' })
+      // A module that carries types only (the context contract) has nothing to ship.
+      if (code.trim() === '' || code.trim() === 'export {};') continue
       const target = path.join(to, rel.replace(/\.ts$/, '.js'))
       fs.mkdirSync(path.dirname(target), { recursive: true })
       fs.writeFileSync(target, code)
