@@ -48,7 +48,7 @@ const CACHE_VERSION = 4
 /** Session log names: v0 is `session.jsonl`, vN is `session.vN.jsonl`, `.zstd` appended. */
 const SESSION_LOG = /^session(?:\.v([1-9][0-9]*))?\.jsonl(?:\.zstd)?$/i
 /** Buckets are disjoint; reasoning tokens ride inside output. */
-const BUCKET_KEYS = ['input', 'output', 'cacheRead', 'cacheWrite']
+const BUCKET_KEYS: (keyof Buckets)[] = ['input', 'output', 'cacheRead', 'cacheWrite']
 
 /**
  * The shapes this module reads and writes. The ledger and the cache are this
