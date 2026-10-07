@@ -470,23 +470,31 @@ export function createUsage(ctx: DshContext) {
       // The cache only saves work: a file that does not parse is reported, the
       // pass folds every session again and writes a whole new file over it
       // (docs/decisions D12).
-      ctx.logger?.warn?.(`dsh-claude-style: usage cache unreadable, folding again: ${error.message}`)
+      ctx.logger?.warn?.(`dsh-claude-style: usage cache unreadable, folding again: ${(error as { message?: string }).message}`)
       return new Map()
     }
-    if (parsed === null || typeof parsed !== 'object' || parsed.version !== CACHE_VERSION) return new Map()
-    const sessions = new Map()
-    const rawSessions = parsed.sessions
+    if (parsed === null || typeof parsed !== 'object') return new Map()
+    const document = parsed as { version?: unknown, sessions?: unknown }
+    if (document.version !== CACHE_VERSION) return new Map()
+    const sessions = new Map<string, CacheSession>()
+    const rawSessions = document.sessions
     if (rawSessions === null || typeof rawSessions !== 'object') return sessions
-    for (const [id, entry] of Object.entries(rawSessions)) {
-      if (entry === null || typeof entry !== 'object') continue
+    for (const [id, value] of Object.entries(rawSessions as Record<string, unknown>)) {
+      if (value === null || typeof value !== 'object') continue
+      const entry = value as { size?: unknown, mtimeMs?: unknown, days?: unknown, hours?: unknown }
       if (!Number.isFinite(entry.size) || !Number.isFinite(entry.mtimeMs)) continue
-      sessions.set(id, { size: entry.size, mtimeMs: entry.mtimeMs, days: daysFromObject(entry.days), hours: hoursFrom(entry.hours) })
+      sessions.set(id, {
+        size: Number(entry.size),
+        mtimeMs: Number(entry.mtimeMs),
+        days: daysFromObject(entry.days),
+        hours: hoursFrom(entry.hours),
+      })
     }
     return sessions
   }
 
-  function writeCache(sessions) {
-    const document = { version: CACHE_VERSION, computedAt: Date.now(), sessions: {} }
+  function writeCache(sessions: Map<string, CacheSession>) {
+    const document: { version: number, computedAt: number, sessions: Record<string, unknown> } = { version: CACHE_VERSION, computedAt: Date.now(), sessions: {} }
     for (const [id, entry] of sessions) {
       document.sessions[id] = { size: entry.size, mtimeMs: entry.mtimeMs, days: daysToObject(entry.days), hours: entry.hours }
     }
@@ -499,15 +507,15 @@ export function createUsage(ctx: DshContext) {
     } catch (error) {
       // The cache only saves work: a write that fails is reported, and the
       // roll-up this pass computed is still served (docs/decisions D12).
-      ctx.logger?.warn?.(`dsh-claude-style: usage cache not written: ${error.message}`)
+      ctx.logger?.warn?.(`dsh-claude-style: usage cache not written: ${(error as { message?: string }).message}`)
     }
   }
 
   /** Sum the per-session day maps into one, tracking distinct sessions per day. */
-  function mergeSessions(sessions) {
-    const days = new Map()
-    const hours = new Array(24).fill(0)
-    const seen = new Set()
+  function mergeSessions(sessions: Map<string, CacheSession>): { days: Map<string, DayBuckets>, sessionCount: number, hours: number[] } {
+    const days = new Map<string, DayBuckets>()
+    const hours = new Array(24).fill(0) as number[]
+    const seen = new Set<string>()
     for (const [id, entry] of sessions) {
       seen.add(id)
       if (Array.isArray(entry.hours)) {
@@ -522,8 +530,9 @@ export function createUsage(ctx: DshContext) {
           days.set(day, target)
         }
         addBuckets(target, buckets, 1)
-        target.sessions.add(id)
-        for (let hour = 0; hour < 24; hour += 1) target.hours[hour] += buckets.hours[hour]
+        if (target.sessions instanceof Set) target.sessions.add(id)
+        const dayHours = target.hours ?? (target.hours = new Array(24).fill(0))
+        for (let hour = 0; hour < 24; hour += 1) dayHours[hour] += (buckets.hours ?? [])[hour] ?? 0
         if (buckets.models === undefined) continue
         for (const [model, cell] of buckets.models) {
           if (target.models === undefined) target.models = new Map()
