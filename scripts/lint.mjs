@@ -21,9 +21,7 @@ const MAX_LINES = 750
  * Files already past the stop line, with the size they stood at when the rule
  * was written: they may not grow until the split lands.
  */
-const OVERSIZE = {
-  'scripts/smoke/cases.cjs': { ceiling: 1070, reason: 'the smoke case table: one entry per case with its assertions, split by page is pending (D45)' },
-}
+const OVERSIZE = {}
 
 const problems = []
 
