@@ -176,12 +176,17 @@ export function createSettingsControls() {
   /**
    * One row: title and description on the left, the control on the right.
    * A block row stacks its control under the text across the row's full
-   * width.
+   * width. A row carrying a segmented control is marked as such: that control
+   * is wide, and the stylesheet keeps it on the right while it fits and gives it
+   * the next line when it does not (settings.css).
    */
   function row(key: string, title: string, description: React.ReactNode, control: React.ReactNode, block?: boolean) {
+    const classes = ['dsh-claude-settings-row']
+    if (block) classes.push('dsh-claude-settings-row-block')
+    else if (React.isValidElement(control) && control.type === ClaudeStyleSegmentGroup) classes.push('dsh-claude-settings-row-segment')
     return React.createElement(
       'div',
-      { className: block ? 'dsh-claude-settings-row dsh-claude-settings-row-block' : 'dsh-claude-settings-row', key },
+      { className: classes.join(' '), key },
       React.createElement(
         'div',
         { className: 'dsh-claude-settings-row-text' },

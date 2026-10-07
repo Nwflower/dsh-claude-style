@@ -100,7 +100,6 @@ export function createSettingsAppearanceTab(): SettingsTab {
           settingsCopy('mascotTitle', 'Mascot'),
           settingsCopy('mascotDesc', 'The pixel companion on the input area\'s top edge, animated by what the agent is doing. Follow the brand shows the pixel crab under Claude and Deepy the whale under DeepSeek.'),
           controls.segment(mascotOptions, prefs.mascot, value => { write({ mascot: value }) }),
-          true,
         ),
       },
       {

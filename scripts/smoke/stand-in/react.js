@@ -19,6 +19,11 @@
       var merged = Object.assign({}, props, { children: children })
       return typeof type === 'function' ? type(merged) : { type: type, props: merged }
     },
+    // The elements above are what this page hands the skin, so this is the shape
+    // to recognise: React's own test is the same idea against its element symbol.
+    isValidElement: function (node) {
+      return node !== null && typeof node === 'object' && 'type' in node && 'props' in node
+    },
     useState: function (v) {
       var states = react.states
       return [states !== null && Object.prototype.hasOwnProperty.call(states, v) ? states[v] : v, function () {}]

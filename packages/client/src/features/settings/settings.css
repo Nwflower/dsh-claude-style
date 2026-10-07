@@ -33,12 +33,16 @@ body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[data-dsh-section="c
    (`.dsh-claude-segments` / `.dsh-claude-segment`), so the two are literally one
    control rather than two lookalikes; the switch and the brand cards are new
    here. The rows follow the host's own settings rows (ui-chat's PreferenceRow):
-   full width, 16px above and below, a hairline between two rows. */
+   full width, 16px above and below, a hairline between two rows.
+   No side padding of its own: the host's options column already carries 24px
+   (`.options { padding: 0 24px 24px }`), and a second inset here set the skin's
+   rows 24px inside every other page's. The 16px on top is the host's own row
+   padding, so the page's heading lands where their first row's text does. */
 body[data-dsh-claude-style] .dsh-claude-settings {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 20px 24px;
+  padding: 16px 0 0;
   box-sizing: border-box;
   font-family: var(--dsw-font-family);
 }
@@ -101,6 +105,21 @@ body[data-dsh-claude-style] .dsh-claude-settings-row {
   gap: 8px;
   padding: 16px 0;
   border-top: 0.5px solid var(--dsw-alias-border-l2);
+}
+
+/* A row whose control is a segmented control (the row builder marks it) keeps it
+   on the right while the two share one line, and hands it the next line — where
+   it starts at the row's left edge, as it always did — only when it no longer
+   fits beside the text. The text's basis is the whole decision: the control is
+   `flex: none`, so the row wraps exactly when the text's room would fall under
+   this. */
+body[data-dsh-claude-style] .dsh-claude-settings-row-segment {
+  flex-wrap: wrap;
+  gap: 12px 8px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-row-segment > .dsh-claude-settings-row-text {
+  flex: 1 1 220px;
 }
 
 body[data-dsh-claude-style] .dsh-claude-settings-row-text {
