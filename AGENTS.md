@@ -78,20 +78,22 @@ Before writing to disk, `shoot.cjs` replaces workspace names, session titles, us
 
 Target layout: D46. Today:
 
-- `src/core/` host access, preferences, model copy, i18n, the scheduler; `src/shared/` parts several features use (JS beside CSS); `src/theme/` the global look no single feature owns; `src/features/<feature>/` one feature's installer, helpers and stylesheets, the main file named after the feature.
-- `src/constants.js` holds build-time constants; `src/model-descriptions.json` the model copy and `brands` bindings; `src/assets/` brand marks, mascot sheets and vendor lockups.
+- `src/core/` host access, preferences, model copy, i18n, the scheduler; `src/shared/` parts several features use (TypeScript beside CSS); `src/theme/` the global look no single feature owns; `src/features/<feature>/` one feature's installer, helpers and stylesheets, the main file named after the feature.
+- `src/constants.ts` holds build-time constants; `src/model-descriptions.json` the model copy and `brands` bindings, its shape declared in `src/model-descriptions.schema.json`; `src/assets/` brand marks, mascot sheets and vendor lockups.
+- `src/generated.d.ts` types the module the build generates; `src/globals.d.ts` the DOM additions and the element properties the skin sets; `tsconfig.json` the type check.
 - `host/` the handwritten host half (private routes, settings `Config`, HDSL, search, usage).
 - `lib/` build output only, never edited by hand.
 - `locale/<language>.json` plugin metadata; `package.json`'s `exports` must cover them with `"./locale/*"`, or the host degrades the whole metadata (icon included) to `meta.error`.
 - `skin.json` the skin manifest; `cordis.patch.yml` inserts the skin into the web roster.
 - `scripts/` build, smoke and live tools (`fetch-lobe-combines.py` is the only networked script, run by hand; `draw-crab.py` redraws the crab's sheets after a drawing change); `docs/` decisions, style guide, screenshots; `fonts/`; `showcase/gifs/`.
 
-Until D36 lands, the source is concatenated: every new `src/` file must be added to `FRAGMENTS` or `STYLE_FILES` in `scripts/build.mjs`, every feature to `FEATURES` in `src/entry.js`; fragments share one scope (no import/export, 4-space base indentation, `const`/`let`, arrow functions, optional chaining), React comes from the bundle header and other host packages are `require`d where used; helpers are top-level factories named after their feature.
+The source is TypeScript ES modules under `strict` (D36). A module nothing imports fails the build; a new stylesheet goes into `STYLE_FILES` in `scripts/build.mjs` (concatenated until D37), a new feature into `FEATURES` in `src/entry.ts` and `FEATURE_MAINS` in `scripts/build.mjs`. React and the host packages are imported by name and stay external; build-time data (stylesheet, lockups, sheet stamps, build id) is imported from `virtual:dsh-claude-style/generated`. A host value without a type yet is `HostValue` (D44); a non-null assertion `!` only marks a value the call order guarantees.
 
 ## Commands
 
 ```sh
-npm run build                                # src/ → lib/; runs the build checks; prints the build id
+npm install                                  # dev dependencies: TypeScript, esbuild, Ajv, React types
+npm run build                                # type-checks src/, bundles it into lib/client.js with its source map, runs the build checks, prints the build id
 npm run smoke                                # full run: every browser case and check, plus the host half's route checks
 npm run smoke -- --quick --feature <dir>     # iteration run: quick tier, cases covering one src/features/ directory
 npm run smoke -- --case <name>[,<name>…]     # named browser cases

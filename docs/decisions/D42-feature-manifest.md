@@ -2,7 +2,7 @@
 
 - **状态**：待实施
 - **关联**：取代 D13；承接 D29；D12、D39、D40、D44、D48
-- **现状**：`src/entry.js` 的 FEATURES 表（`{ name, handle?, pref | ungated, install }`）决定安装与刷新顺序；功能拆出的部分写成以功能名开头的顶层工厂 `createX(...)`；设置页的开关、冒烟测试的功能覆盖表、对上游的让位各自维护
+- **现状**：`src/entry.ts` 的 FEATURES 表（`{ name, handle?, pref | ungated, install }`）决定安装与刷新顺序；功能拆出的部分写成以功能名开头的顶层工厂 `createX(...)`；设置页的开关、冒烟测试的功能覆盖表、对上游的让位各自维护
 
 ## 决定
 

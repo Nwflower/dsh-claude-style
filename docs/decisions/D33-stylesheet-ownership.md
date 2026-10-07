@@ -6,9 +6,9 @@
 ## 决定
 
 - 皮肤的样式表挂载时写两个标记：`data-plugin` 是本包的包名 `dsh-claude-style`，`data-plugin-css` 是本包的键 `dsh-claude-style/client.css`（`PACKAGE_NAME` 与 `STYLE_PLUGIN_CSS`）。
-- 挂载在 `src/core/stylesheet.js` 的 `mountStylesheet()`：同名元素已存在时就地刷新（重写标记，内容不同才重写内容），没有才新建并挂到 `<head>`；拆卸只在自己仍是最后一代挂载者时移除。
-- `parkForeignSheets()` 把文档中所有未打标签、又不是本包那张的 `<style>` 标成 `dsh-claude-style/foreign-sheet`（`FOREIGN_SHEET_TAG`）。它定义在 `src/core/stylesheet.js`，在两个时机执行：`src/entry.js` 的模块作用域里，以及随页面一直活着的 `<head>` 观察者回调（`src/shared/peer-plugin.js` 的 `checkPeerPresence`）。
-- `data-plugin` 的值、`package.json` 的包名、产物里 `__ModuleLoader__.load` 的 id、profile 里的条目名四者必须一致；换用 esbuild（D36）后同样如此。
+- 挂载在 `src/core/stylesheet.ts` 的 `mountStylesheet()`：同名元素已存在时就地刷新（重写标记，内容不同才重写内容），没有才新建并挂到 `<head>`；拆卸只在自己仍是最后一代挂载者时移除。
+- `parkForeignSheets()` 把文档中所有未打标签、又不是本包那张的 `<style>` 标成 `dsh-claude-style/foreign-sheet`（`FOREIGN_SHEET_TAG`）。它定义在 `src/core/stylesheet.ts`，在两个时机执行：`src/entry.ts` 的模块作用域里，以及随页面一直活着的 `<head>` 观察者回调（`src/shared/peer-plugin.ts` 的 `checkPeerPresence`）。
+- `data-plugin` 的值、`package.json` 的包名、产物里 `__ModuleLoader__.load` 的 id、profile 里的条目名四者必须一致；构建从 `package.json` 读取包名写成加载器的 id（D36）。
 
 ## 理由
 

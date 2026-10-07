@@ -2,7 +2,7 @@
 
 - **状态**：待实施
 - **关联**：取代 D6；D41、D42
-- **现状**：`src/core/scheduler.js` 持有一个观察 `<body>` 整棵子树的 MutationObserver（子节点、字符数据，属性只看 `aria-label` / `aria-selected`），把变化合并成每帧一次刷新、按顺序调用各功能的 `sync()`；搬来的聊天区交互、分段控件、对上游的 `<head>` 观察等各自持有 MutationObserver、ResizeObserver 与监听
+- **现状**：`src/core/scheduler.ts` 持有一个观察 `<body>` 整棵子树的 MutationObserver（子节点、字符数据，属性只看 `aria-label` / `aria-selected`），把变化合并成每帧一次刷新、按顺序调用各功能的 `sync()`；搬来的聊天区交互、分段控件、对上游的 `<head>` 观察等各自持有 MutationObserver、ResizeObserver 与监听
 
 ## 决定
 

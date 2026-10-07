@@ -2,14 +2,14 @@
 
 - **状态**：已实施
 - **关联**：D12、D42
-- **迁移**：声明位置从 `src/entry.js` 的 FEATURES 表改为功能清单，构建检查改为清单的类型检查（D42，待实施）
+- **迁移**：声明位置从 `src/entry.ts` 的 FEATURES 表改为功能清单，构建检查改为清单的类型检查（D42，待实施）
 
 ## 决定
 
 - 每个功能二选一地声明 `pref: '<偏好键>'` 或 `ungated: '<理由>'`；两个都没写、两个都写，或 `pref` 不是宿主半边 `PREFS_DEFAULT` 里的键，构建拒绝。
 - 划分标准：替换或挪动宿主原有的控件与区域、或往界面上加新的可见元素的功能设开关；不设开关的是只修宿主毛病而不改变功能的（`selection`、`themeFlip`）、从属于另一个已有开关的（`copy` 与 `heroMenu` 跟随输入框改造的范围，`effort` 跟随模型选择器，`quickProviders` 是模型选择器的设置项）、只在点击时出现的（`ban`）以及设置页本身。两个功能可以共用一个开关：`contextStats`（D27）与 `permissions` 都声明 `permissionsControl`。
 - `pref` 属于 `FEATURE_PREF_DEFAULTS`（全部默认开）时统一执行：启动时关着的功能不安装；偏好每次被采用时逐个对照，关掉就运行它自己的 teardown、删掉句柄、交还接管的宿主界面，打开就重新安装，都不刷新页面。其余的 `pref`（`composerScope`、`homeLayout`、`modelPicker`、`collapseFooter`、`mascot`）由功能自己读。退役过的功能（D12）在本代内不因偏好变化装回。
-- 设置页按分页组织（通用、外观、输入区、侧栏、对话），每页的行定义在 `src/features/settings/settings-tab-*.js`，控件在 `settings-controls.js`；从属于另一项的行紧跟在它下面、两行之间不画分隔线，父项关闭时变灰、不能操作。
+- 设置页按分页组织（通用、外观、输入区、侧栏、对话），每页的行定义在 `src/features/settings/settings-tab-*.ts`，控件在 `settings-controls.ts`；从属于另一项的行紧跟在它下面、两行之间不画分隔线，父项关闭时变灰、不能操作。
 
 ## 理由
 

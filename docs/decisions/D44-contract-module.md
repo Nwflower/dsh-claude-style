@@ -2,7 +2,7 @@
 
 - **状态**：待实施
 - **关联**：承接 D3、D19 与 D32 的聊天区契约表；D42、D43、D45
-- **现状**：聊天区契约集中在 `src/shared/chat-dom.js`，宿主访问器在 `src/core/host.js`，其余选择器分散在各功能里；冒烟测试在一张按宿主结构手搭的替代页面上运行（`scripts/smoke/stand-in.js`）
+- **现状**：聊天区契约集中在 `src/shared/chat-dom.ts`，宿主访问器在 `src/core/host.ts`，其余选择器分散在各功能里；冒烟测试在一张按宿主结构手搭的替代页面上运行（`scripts/smoke/stand-in.js`）
 
 ## 决定
 

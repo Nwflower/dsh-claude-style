@@ -166,7 +166,7 @@ Both are solid (never translucent) and `!important`, so they override whatever
 colour the text underneath carries — links, inline code, syntax tokens. CSS
 cannot read window focus: Chromium reaches the inactive paint through its own
 internal `-internal-inactive-selection-*` properties, which a stylesheet cannot
-address. `src/features/selection/selection.js` therefore mirrors `document.hasFocus()`
+address. `src/features/selection/selection.ts` therefore mirrors `document.hasFocus()`
 onto `data-dsh-window-blur` and the stylesheet switches on that attribute; the
 selection itself survives the blur.
 
@@ -206,7 +206,7 @@ the account drawer, and the host's own menu primitive under the hero row's
 workspace and preset pickers — is meant to start from one recipe. New popovers
 take it rather than inventing a card.
 
-Two rules hold across all of them, both owned by `shared/popover.js`. A
+Two rules hold across all of them, both owned by `shared/popover.ts`. A
 pointer opens a card only after a **100 ms dwell** — long enough that crossing a
 28px trigger on the way somewhere else unfolds nothing — and the card closes
 100 ms after the pointer leaves. One card keeps its own number with the reason
@@ -266,7 +266,7 @@ takes the longest stable piece of whichever family it targets — `_itemWrap_`,
 never the bare local name.
 
 The hero row's two pickers are that primitive, portaled to `<body>` with no
-marker of their own. `src/features/hero-menu/hero-menu.js` stamps the open card with
+marker of their own. `src/features/hero-menu/hero-menu.ts` stamps the open card with
 `data-dsh-claude-hero-menu` and `features/hero-menu/hero-menu.css` restyles it; the
 host's other menus (sidebar row menus, the settings permission row, submenus)
 keep the host's own design on purpose. What that replaces: a 20px radius card
@@ -280,7 +280,7 @@ folder, no `＋` on the pinned add row) and the accent check on the current one.
 
 **The account card** is that primitive too, and it carries the skin's rows
 inside it. The host mounts it with nothing but its own three entries and places
-it from that geometry; `features/account/surface.js` injects the skin's container
+it from that geometry; `features/account/surface.ts` injects the skin's container
 a frame later, the card grows, and the host re-places it on the frame after the
 list changed. Nothing may be painted in between: the card would fade in at the
 height and the place it is about to leave — low, then jumping up mid-fade. So
@@ -305,7 +305,7 @@ Its horizontal place is the one thing the skin takes over. ui-chat hangs the
 panel from the anchor's LEFT edge and only then clamps it into the viewport
 (`useStatDialog`, align `start`), so a trigger at the end of the composer row
 leaves the panel against the window's right margin instead of under the ring.
-`features/context-stats/session-stats.js` reads the meter's right edge and the
+`features/context-stats/session-stats.ts` reads the meter's right edge and the
 panel's own layout width — `offsetWidth`, not its rect: the entrance scales the
 box, and a transformed rect is two per cent narrower than the one that settles —
 and writes `--dsh-claude-context-panel-left` with the mark that turns it on;
@@ -314,7 +314,7 @@ host's inline value. The reading is re-taken when the panel's box changes (a
 `ResizeObserver`) and when the viewport moves (`reposition('viewport')`).
 
 What the skin appends to it is the session's numbers
-(`features/context-stats/session-stats.js`), read from the host's `sessionStats`
+(`features/context-stats/session-stats.ts`), read from the host's `sessionStats`
 and `tokenUsage` projections — the same durable whole-log values the host's own
 pills render — never by opening the host's stat dialogs. The labels and the
 duration / token templates come from the host's `chat` locale namespace, so the
@@ -351,7 +351,7 @@ z-index 1000 and 100000) and now follows the table above. The hero row's pickers
 two ways that CSS cannot change: it mounts instead of toggling a `data-open`
 attribute, so it takes the same fade/scale as a one-shot `0.15s` animation; and
 the host places it *below* its trigger, which is where the composer sits — so
-`src/features/hero-menu/hero-menu.js` re-places it on the trigger the way the
+`src/features/hero-menu/hero-menu.ts` re-places it on the trigger the way the
 skin's own composer pickers sit: right-aligned with the trigger and opening
 upward by the same 6px air, flipping below only when the viewport leaves no room
 above, and clamped to the 8px viewport margin (`POPOVER_MARGIN`). The host
@@ -424,7 +424,7 @@ inside `…_composerStack …_composerHero` — so only the arrangement differs.
 | workspace / preset row | the card's footer tray | hairline chips directly above the card |
 | column width | the hero's centred box | a 720px composer column; the greeting and the panel form a 480px block against its left edge |
 
-The studio composer is stamped `data-composer-variant="inline"` (composer.js's
+The studio composer is stamped `data-composer-variant="inline"` (composer.ts's
 pass reads the same preference), so the home card is drawn by the conversation's
 single-line stylesheet. The classic tray rules in `features/composer/card.css` are scoped
 away from studio with `:not([data-dsh-claude-home-layout="studio"])`. That is

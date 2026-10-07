@@ -5,9 +5,9 @@
 ## 决定
 
 - 外壳：插件自建的卡片（权限、模型、推理强度、账号、快捷供应商）都带 `.dsh-claude-popover-card`，共用底色、边框、圆角、阴影、内边距、层级、开关动画与暗色配色；行、角标、勾号、状态行、主体用中性类名（`dsh-claude-popover-item` 等）。各功能的样式只写位置、宽度与展开方向。
-- 停留与宽限统一为 `shared/popover.js` 的 `POPOVER_OPEN_DELAY` / `POPOVER_CLOSE_DELAY`（100ms）；例外连同理由写在使用处（模型选择器两级卡片的收起宽限 150ms）。
+- 停留与宽限统一为 `shared/popover.ts` 的 `POPOVER_OPEN_DELAY` / `POPOVER_CLOSE_DELAY`（100ms）；例外连同理由写在使用处（模型选择器两级卡片的收起宽限 150ms）。
 - 互斥：`registerPopover(name, close)` 登记每张弹层的关闭方式，`closeOtherPopovers(name)` 在打开前关掉其余的。一个弹层的多层卡片按一项登记；宿主的菜单由驱动它的功能登记。登记表只存关闭函数，按名字覆盖登记，热重载后新一代的函数替换旧一代。
-- hero 行一项登记对应两个宿主菜单，`hero-menu.js` 自己再做一次互斥，依据是「已展开的触发器」。
+- hero 行一项登记对应两个宿主菜单，`hero-menu.ts` 自己再做一次互斥，依据是「已展开的触发器」。
 
 ## 理由
 

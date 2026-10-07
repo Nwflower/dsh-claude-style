@@ -13,7 +13,7 @@
 - 浏览器半边允许的 catch，每处写明原因：
   - 上述隔离。
   - 宿主以抛错表达的预期状态：设置表单的 `set()` 拒绝不属于该配置的字段；`modelDirectories.directoryFor` 对还没建立的会话抛错，下一轮重试；`sessionQuery.readSession` 以 `SESSION_QUERY_CORRUPT_SESSION` / `SESSION_QUERY_SESSION_NOT_FOUND` 表示某个存档读不了或已被删，内容搜索与用量汇总把这一个会话记为空并记一条警告。
-  - 文件变更行解析流式工具的原始参数：参数逐块到达，半截 JSON 是正常的中途状态，解析不了就交回宿主的输入 / 输出卡片（`features/chat-files/file-row-model.js`）。
+  - 文件变更行解析流式工具的原始参数：参数逐块到达，半截 JSON 是正常的中途状态，解析不了就交回宿主的输入 / 输出卡片（`features/chat-files/file-row-model.ts`）。
   - Promise 上表示「宿主半边没有应答」或「宿主自己会提示」的失败回调。
   - Deepy 帧图矢量化两处：Cache API 拒绝读写时当作缓存永远未命中（每次页面加载重转，控制台警告一次）；表图能解码但转换失败时回退为原 PNG 播放（控制台警告一次）。
 - 宿主半边允许的 catch，每处写明原因：

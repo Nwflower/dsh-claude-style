@@ -5,7 +5,7 @@
 
 ## 决定
 
-- 设置页「动画效果」有 `system` / `reduced` / `full` 三档（随系统 / 减弱 / 总是），默认随系统。解析只发生在 `src/core/prefs.js`：随系统时读操作系统的 `prefers-reduced-motion`，另外两档直接给出答案，结果写成 `<body data-dsh-claude-motion="reduced|full">`。偏好每次被采用时写一次；系统设置中途变化时重新解析，并让偏好监听重跑一遍。
+- 设置页「动画效果」有 `system` / `reduced` / `full` 三档（随系统 / 减弱 / 总是），默认随系统。解析只发生在 `src/core/prefs.ts`：随系统时读操作系统的 `prefers-reduced-motion`，另外两档直接给出答案，结果写成 `<body data-dsh-claude-motion="reduced|full">`。偏好每次被采用时写一次；系统设置中途变化时重新解析，并让偏好监听重跑一遍。
 - 脚本一律问 `motionReduced()`（读属性，不读媒体查询）。样式表的读者是 `theme/chrome.css` 的一条属性规则：把皮肤自己的节点（`dsh-claude-` 类名前缀与 `data-dsh-claude-` 标记）的 `animation-duration` 与 `transition-duration` 压到 0.01ms；宿主自己的过渡不在范围内。
 - 两个例外，理由写在各自的样式表里：分段控件的滑动高亮（D20）与后台任务的转圈（`theme/sidebar.css`）在减弱时照旧播放。
 

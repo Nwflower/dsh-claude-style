@@ -11,7 +11,7 @@
 | [D4](D4-composer-gate.md) | 输入框样式的构建期门控 | 已实施 |
 | [D5](D5-model-copy.md) | 模型文案是数据，不进产物 | 已实施 |
 | [D9](D9-style-performance.md) | 样式性能：结构判断写成属性，`:has()` 只放在最后一段 | 已实施 |
-| [D36](D36-modules-and-bundling.md) | TypeScript 与 ES 模块，esbuild 打出单文件产物 | 待实施 |
+| [D36](D36-modules-and-bundling.md) | TypeScript 与 ES 模块，esbuild 打出单文件产物 | 已实施 |
 | [D37](D37-css-toolchain.md) | CSS 工具链：层叠层、作用域插件、样式检查与设计令牌 | 待实施 |
 | [D38](D38-assets.md) | 资源只有一条路径：内容哈希清单与通用资产路由 | 待实施 |
 | [D39](D39-on-demand-loading.md) | 按需加载：重的功能拆成单独的块 | 待实施（受上游阻塞） |

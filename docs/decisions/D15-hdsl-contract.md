@@ -7,7 +7,7 @@
 
 - 宿主半边读 harness 启动时填好的启动环境快照（`ctx.launchEnvironment`），只信 `process` 与 `user-env` 两层（项目目录的 `.env` 会随仓库被克隆）；契约版本不为 `1` 时回 `{ contract: false }`。不 import harness 的启动环境包（`link:` 安装的插件解析不到它）。
 - `GET /dsh-claude-style/hdsl` 回账号元数据，不含头像文件路径；`GET /dsh-claude-style/hdsl-skin.png` 回贴图字节，路径只来自环境、永远不来自请求。契约在进程生命周期内不变，读一次并记住。
-- 浏览器半边：昵称 = 自定义昵称 → 官方账号昵称 → HDSL 昵称 → 探测昵称缓存 → 探测昵称 → `User`；头像 = 官方账号头像 → HDSL 头像 → Claude 徽标。两条回退都经 `src/core/host.js` 的身份存储，欢迎语与账号行只读这一处。
+- 浏览器半边：昵称 = 自定义昵称 → 官方账号昵称 → HDSL 昵称 → 探测昵称缓存 → 探测昵称 → `User`；头像 = 官方账号头像 → HDSL 头像 → Claude 徽标。两条回退都经 `src/core/host.ts` 的身份存储，欢迎语与账号行只读这一处。
 - 启动器给的是贴图集：按启动器账号列表同样的裁法取头部（脸的 8×8 贴图块按盒子 1/18 内缩，帽子层铺满），方形绘制；画完主动请求一轮刷新。
 
 ## 理由

@@ -6,11 +6,11 @@
 
 ## 决定
 
-- 吉祥物与品牌（D49）分开：`mascot` 偏好有 `brand`（默认：Claude 品牌下是螃蟹、DeepSeek 品牌下是 Deepy）、`crab`、`deepy`、`off` 四档，解析后的角色写成 `<body data-dsh-claude-mascot="crab|deepy|off">`；`mascotScope` 有 `home` 与 `all`（默认）两档。`src/features/mascot/mascot.js` 让一个角色出场、另一个释放，页面上最多一只。
+- 吉祥物与品牌（D49）分开：`mascot` 偏好有 `brand`（默认：Claude 品牌下是螃蟹、DeepSeek 品牌下是 Deepy）、`crab`、`deepy`、`off` 四档，解析后的角色写成 `<body data-dsh-claude-mascot="crab|deepy|off">`；`mascotScope` 有 `home` 与 `all`（默认）两档。`src/features/mascot/mascot.ts` 让一个角色出场、另一个释放，页面上最多一只。
 - 站位：首页站在输入卡片上沿。对话页只认主对话区（`[data-phase="active"]` 里的 `[data-conversation-session]`），站在输入区 composerStack 的上沿；宿主的 composer 链选出替代面板时（ui-renderer 把 `[data-chain-overlay-fallback="conversation.composer"]` 内联写成 `display: none`，面板紧跟其后挂载），站到那块面板上沿。站着的宿主元素打 `data-dsh-claude-<角色>-anchor`，样式表给它 `position: relative`。
 - 状态只读宿主的客户端数据：`uiSession.sessionStatus`、`sessions.list`（顶层会话与 `subagentCatalog`）、聊天快照（打开的轮次、正在输出的一步的最后一块、进行中的工具调用）。聊天快照在跟随会话期间订阅（只读不订阅时，轨迹视图下读不到内容）。一次性的时刻（轮次结束原因、失败的工具结果、压缩开始与结束）订阅会话的事件流 `sessions.binding(id).eventSource`，只处理订阅之后追加的事件；正在进行的压缩按事件流整个窗口算。首页读整个工作区：会话状态里新出现的 `completionUnread` 就是「后台做完」的时刻。
-- 状态到动画按 Deepy 为 Clawd on Desk 做的主题映射（`mascot-signals.js`），两个角色共用同一组动画名。优先级从高到低：点击与拖动的反应、出错、等待你、压缩、完成、子代理、工作、思考、空闲；工作按同时在跑的顶层会话数分三档，子代理按数目分两档。一个状态上台后一秒内不被同级或更低的换下；出错与完成各停两轮动画（4.8 秒、5.2 秒）。空闲时每二三十秒演一个空闲小节目；空闲满一分钟、其间也没有读者活动就睡着，下一次活动先演惊醒。
-- 一套播放器，两个角色：`mascot-player.js` 的 `createMascotPlayer` 是站位、状态机与播放的全部；角色（`whale.js`、`crab.js`）只给出名字、动画表、每帧时长、空闲小节目与帧图的就绪 / 失败 / 绘制 / 释放四个接口。
+- 状态到动画按 Deepy 为 Clawd on Desk 做的主题映射（`mascot-signals.ts`），两个角色共用同一组动画名。优先级从高到低：点击与拖动的反应、出错、等待你、压缩、完成、子代理、工作、思考、空闲；工作按同时在跑的顶层会话数分三档，子代理按数目分两档。一个状态上台后一秒内不被同级或更低的换下；出错与完成各停两轮动画（4.8 秒、5.2 秒）。空闲时每二三十秒演一个空闲小节目；空闲满一分钟、其间也没有读者活动就睡着，下一次活动先演惊醒。
+- 一套播放器，两个角色：`mascot-player.ts` 的 `createMascotPlayer` 是站位、状态机与播放的全部；角色（`whale.ts`、`crab.ts`）只给出名字、动画表、每帧时长、空闲小节目与帧图的就绪 / 失败 / 绘制 / 释放四个接口。
 - 播放：sprite 是 overflow-hidden 的窗口，内层胶片条带整张表图、以 transform 平移对帧；循环动画整段交给 WAAPI 的 steps 关键帧（播放期间主线程无定时器、无重绘），一次性动画以 `finished` 收尾、同刻的截止定时器兜底。状态机的时钟决策汇成单个一次性定时器。减少动态效果时停在静止帧，点击与拖动的反应照演。
 - Deepy 的画法：52×52 逻辑像素，每个逻辑像素 5 个像素（原作的原生分辨率），帧裁到能装下全部帧的最小整数逻辑像素框，八帧一行，无损调色板 PNG，由 `DEEPY_SHEETS` 登记帧数、裁切框与静止帧；页面上每个逻辑像素画成 2px。每一格四周留 `DEEPY_GUTTER`（1 个逻辑像素）的透明边：缩小取样会越过帧格边界，没有这道边，上一格帧图底部的影子会在帧图顶端画出一条灰线。每帧 50 毫秒。
 - 螃蟹的画法：`scripts/draw-crab.py` 按 Claude Code 螃蟹的比例逐帧画出，掏出电脑敲代码的那几帧取自 Claude Code 原版（`src/assets/mascot/crab-laptop-*.png`）。52×36 格、每格 1 像素，每个动画两张表：本体（壳、侧面与眼睛）和墨色遮罩（电脑、思考泡泡、字母、音符、安全帽），八帧一行、裁到最小框，由 `CRAB_SHEETS` 登记，每帧 80 毫秒（Claude Code 的节奏）。样式表按 2 像素一格、`pixelated` 放大，遮罩填主题的三级标签墨色。

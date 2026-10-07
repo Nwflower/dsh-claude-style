@@ -1,23 +1,22 @@
 # D36. TypeScript 与 ES 模块，esbuild 打出单文件产物
 
-- **状态**：待实施
+- **状态**：已实施
 - **关联**：取代 D1；D37、D39、D46
-- **现状**：`scripts/build.mjs` 按 `FRAGMENTS` / `STYLE_FILES` 的固定顺序把 `src/` 的片段原样拼成 `lib/client.js`，全部片段共用一个作用域，`%%TOKEN%%` 在构建时替换
 
 ## 决定
 
-- 源码全部改为 TypeScript 与 ES 模块，用显式的 `import` / `export` 表达依赖。漏引、循环依赖、使用尚未初始化的常量都在构建时报错。
-- esbuild 打包，`react` 与宿主包标为 external，产物仍是一个满足 DSH 加载器的单文件，以 `__ModuleLoader__.load` 注册（id 与包名一致，D33），并且压缩。零运行时依赖由 external 设定保证。
-- 现有构建检查各有去处：
-  - 「每个源文件都在清单里」由模块导入图保证，不再需要清单。
-  - 构建期常量改为直接 import，或用 esbuild 的 `define`；不再有文本占位符。
-  - 输入框门控（D4）、`:has()` 位置（D9）、配色与字体门（D30）交给 D37。
-  - 模型文案校验（D5）改为 JSON Schema（或 zod）声明。
+- 源码全部是 TypeScript 与 ES 模块，用显式的 `import` / `export` 表达依赖；`tsconfig.json` 打开 `strict`。构建先跑 `tsc`，再查打包后的导入图：漏引、循环依赖、使用尚未初始化的常量都在构建时报错，一个没有任何模块导入的源文件也报错。
+- 宿主服务与快照里的值在契约模块（D44）给出类型之前统一写成 `HostValue`；其余类型照常写全。
+- esbuild 打包，`react` 与宿主包标为 external，产物是满足 DSH 加载器的单文件：CommonJS 主体包进 `__ModuleLoader__.load` 的工厂，id 与包名一致（D33），压缩，并附 `lib/client.js.map`。零运行时依赖由 external 设定保证。
+- 构建时才有的数据（样式表文本、厂商组合标、帧图的内容戳与内联地址、构建编号）经一个生成模块 `virtual:dsh-claude-style/generated` 进入源码，类型写在 `src/generated.d.ts`。构建编号是产物内容哈希的前 12 位（D19），打包后写进等长的占位，source map 因此不受影响。
+- 原有构建检查各有去处：
+  - 「每个源文件都在清单里」由模块导入图保证。
+  - 构建期常量直接 import；样式表里的 `%%TOKEN%%` 替换与输入框门控（D4）、`:has()` 位置（D9）、配色与字体门（D30）的检查交给 D37，在那之前留在 `scripts/build.mjs`。
+  - 模型文案的结构由 `src/model-descriptions.schema.json`（JSON Schema）声明，构建用 Ajv 校验；文档内的引用、厂商组合标是否存在与语言数由构建补查（D5）。
   - 吉祥物帧图与登记表的对应关系、帧数、裁切框、静止帧的合法性交给 D38 的资源清单生成。
-  - 功能注册表与开关声明（D29）由功能清单的类型（D42）保证。
+  - 功能注册表与开关声明（D29）由功能清单的类型（D42）保证，在那之前由构建核对 `FEATURES` 表与各功能的主模块。
   - 两半偏好默认值的逐键核对随 `packages/contracts` 的单一声明取消（D10、D46）。
-  - 产物仍写入构建编号 `BUILD_ID`（产物内容哈希，D19），仍检查产物能被解析。
-- 迁移方式：片段之间的依赖今天已由命名前缀隐含表达，按名字解析就能生成 `import`；转换写成脚本放在 `.debug/`，转换后用类型检查与现有测试确认行为不变，搬动与改逻辑分开提交。
+  - 产物仍检查能被解析。
 
 ## 理由
 
@@ -26,8 +25,9 @@
 
 ## 代价
 
-- 引入 TypeScript、esbuild 与相关开发依赖；全仓库一次性迁移。
+- 开发依赖多了 TypeScript、esbuild、Ajv 与 React 的类型包。
 - 产物里的名字被压缩，排查线上问题依赖 source map。
+- `HostValue` 在 D44 之前不受类型检查，宿主结构的改变仍要靠冒烟与真实实例发现。
 
 ## 重审条件
 

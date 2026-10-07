@@ -2,6 +2,26 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [Unreleased]
+
+[中文](#cn-unreleased) | [English](#en-unreleased)
+
+<h3 id="cn-unreleased">体验优化</h3>
+
+- **插件主文件缩小一半**：浏览器每次启动都要读取并解析的插件主文件此前是 1.6 MB（1,619,502 字节），现在压缩后是 0.8 MB（817,178 字节）。
+
+### 其他变更
+
+- **附带 source map**：npm 包里新增 `lib/client.js.map`，浏览器开发者工具里的报错位置与断点能对应到插件源码。
+
+<h3 id="en-unreleased">Improvements</h3>
+
+- **The plugin's main file is half the size**: the file the browser reads and parses on every start was 1.6 MB (1,619,502 bytes); minified it is now 0.8 MB (817,178 bytes).
+
+### Chores
+
+- **Source map included**: the npm package now carries `lib/client.js.map`, so error locations and breakpoints in the browser's developer tools map back to the plugin's sources.
+
 ## [0.11.0] - 2026-10-06
 
 [中文](#cn-0.11.0) | [English](#en-0.11.0)
