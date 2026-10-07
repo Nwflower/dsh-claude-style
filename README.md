@@ -24,12 +24,12 @@
 
 <table>
   <tr>
-    <td align="center" width="50%"><img src="./docs/claude-home-light.png" alt="Claude 档工作台首页 —— 亮色" /></td>
-    <td align="center" width="50%"><img src="./docs/claude-home-dark.png" alt="Claude 档工作台首页 —— 暗色" /></td>
+    <td align="center" width="50%"><img src="./docs/screenshots/claude-home-light.png" alt="Claude 档工作台首页 —— 亮色" /></td>
+    <td align="center" width="50%"><img src="./docs/screenshots/claude-home-dark.png" alt="Claude 档工作台首页 —— 暗色" /></td>
   </tr>
   <tr>
-    <td align="center" width="50%"><img src="./docs/claude-conversation-light.png" alt="Claude 档 Markdown 对话 —— 亮色" /></td>
-    <td align="center" width="50%"><img src="./docs/claude-conversation-dark.png" alt="Claude 档 Markdown 对话 —— 暗色" /></td>
+    <td align="center" width="50%"><img src="./docs/screenshots/claude-conversation-light.png" alt="Claude 档 Markdown 对话 —— 亮色" /></td>
+    <td align="center" width="50%"><img src="./docs/screenshots/claude-conversation-dark.png" alt="Claude 档 Markdown 对话 —— 暗色" /></td>
   </tr>
 </table>
 
@@ -39,12 +39,12 @@
 
 <table>
   <tr>
-    <td align="center" width="50%"><img src="./docs/deepseek-home-light.png" alt="DeepSeek 档工作台首页 —— 亮色" /></td>
-    <td align="center" width="50%"><img src="./docs/deepseek-home-dark.png" alt="DeepSeek 档工作台首页 —— 暗色" /></td>
+    <td align="center" width="50%"><img src="./docs/screenshots/deepseek-home-light.png" alt="DeepSeek 档工作台首页 —— 亮色" /></td>
+    <td align="center" width="50%"><img src="./docs/screenshots/deepseek-home-dark.png" alt="DeepSeek 档工作台首页 —— 暗色" /></td>
   </tr>
   <tr>
-    <td align="center" width="50%"><img src="./docs/deepseek-conversation-light.png" alt="DeepSeek 档 Markdown 对话 —— 亮色" /></td>
-    <td align="center" width="50%"><img src="./docs/deepseek-conversation-dark.png" alt="DeepSeek 档 Markdown 对话 —— 暗色" /></td>
+    <td align="center" width="50%"><img src="./docs/screenshots/deepseek-conversation-light.png" alt="DeepSeek 档 Markdown 对话 —— 亮色" /></td>
+    <td align="center" width="50%"><img src="./docs/screenshots/deepseek-conversation-dark.png" alt="DeepSeek 档 Markdown 对话 —— 暗色" /></td>
   </tr>
 </table>
 
@@ -52,16 +52,16 @@
 >
 > <table>
 >   <tr>
->     <td align="center" width="25%"><img src="./showcase/gifs/idle.gif" width="120" alt="空闲" /><br />空闲</td>
->     <td align="center" width="25%"><img src="./showcase/gifs/thinking.gif" width="120" alt="思考" /><br />思考</td>
->     <td align="center" width="25%"><img src="./showcase/gifs/typing.gif" width="120" alt="写回答、调用工具" /><br />写回答、调用工具</td>
->     <td align="center" width="25%"><img src="./showcase/gifs/conducting.gif" width="120" alt="指挥子代理" /><br />指挥子代理</td>
+>     <td align="center" width="25%"><img src="./docs/gifs/idle.gif" width="120" alt="空闲" /><br />空闲</td>
+>     <td align="center" width="25%"><img src="./docs/gifs/thinking.gif" width="120" alt="思考" /><br />思考</td>
+>     <td align="center" width="25%"><img src="./docs/gifs/typing.gif" width="120" alt="写回答、调用工具" /><br />写回答、调用工具</td>
+>     <td align="center" width="25%"><img src="./docs/gifs/conducting.gif" width="120" alt="指挥子代理" /><br />指挥子代理</td>
 >   </tr>
 >   <tr>
->     <td align="center" width="25%"><img src="./showcase/gifs/notification.gif" width="120" alt="等你操作" /><br />等你操作</td>
->     <td align="center" width="25%"><img src="./showcase/gifs/error.gif" width="120" alt="失败" /><br />失败</td>
->     <td align="center" width="25%"><img src="./showcase/gifs/happy.gif" width="120" alt="完成" /><br />完成</td>
->     <td align="center" width="25%"><img src="./showcase/gifs/sleeping.gif" width="120" alt="睡着" /><br />睡着</td>
+>     <td align="center" width="25%"><img src="./docs/gifs/notification.gif" width="120" alt="等你操作" /><br />等你操作</td>
+>     <td align="center" width="25%"><img src="./docs/gifs/error.gif" width="120" alt="失败" /><br />失败</td>
+>     <td align="center" width="25%"><img src="./docs/gifs/happy.gif" width="120" alt="完成" /><br />完成</td>
+>     <td align="center" width="25%"><img src="./docs/gifs/sleeping.gif" width="120" alt="睡着" /><br />睡着</td>
 >   </tr>
 > </table>
 
@@ -138,15 +138,15 @@
 >
 > Anthropic Sans/Serif 字体版权归 Anthropic 所有，仅供个人使用，不适用 MIT 许可。
 >
-> **重要：Anthropic 字体不随 npm 包分发，仅在仓库 [`fonts/`](fonts/) 供下载**。
+> **重要：Anthropic 字体不随 npm 包分发，仅在仓库 [`packages/assets/src/fonts/anthropic/`](packages/assets/src/fonts/anthropic/) 供下载**。
 
 | 字体 | 用途 | 文件 |
 |---|---|---|
-| Anthropic Sans Web Text | 界面 / UI | [`fonts/AnthropicSansWebText.ttf`](https://github.com/Nwflower/dsh-claude-style/raw/main/fonts/AnthropicSansWebText.ttf) |
-| Anthropic Serif Web Text | 对话正文 / Markdown | [`fonts/AnthropicSerifWebText.ttf`](https://github.com/Nwflower/dsh-claude-style/raw/main/fonts/AnthropicSerifWebText.ttf) |
-| JetBrains Mono Variable | 代码 / 代码块 | [`fonts/JetBrainsMonoVariable.ttf`](https://github.com/Nwflower/dsh-claude-style/raw/main/fonts/JetBrainsMonoVariable.ttf)、[`fonts/JetBrainsMonoItalicVariable.ttf`](https://github.com/Nwflower/dsh-claude-style/raw/main/fonts/JetBrainsMonoItalicVariable.ttf) |
-| Inter | 没有 Anthropic Sans 时的界面字体 | [`fonts/InterVariable.woff2`](https://github.com/Nwflower/dsh-claude-style/raw/main/fonts/InterVariable.woff2) |
-| Noto Serif | 没有 Anthropic Serif 时的正文字体 | [`fonts/NotoSerifVariable.woff2`](https://github.com/Nwflower/dsh-claude-style/raw/main/fonts/NotoSerifVariable.woff2) |
+| Anthropic Sans Web Text | 界面 / UI | [`packages/assets/src/fonts/anthropic/AnthropicSansWebText.ttf`](https://github.com/Nwflower/dsh-claude-style/raw/main/packages/assets/src/fonts/anthropic/AnthropicSansWebText.ttf) |
+| Anthropic Serif Web Text | 对话正文 / Markdown | [`packages/assets/src/fonts/anthropic/AnthropicSerifWebText.ttf`](https://github.com/Nwflower/dsh-claude-style/raw/main/packages/assets/src/fonts/anthropic/AnthropicSerifWebText.ttf) |
+| JetBrains Mono Variable | 代码 / 代码块 | [`packages/assets/src/fonts/JetBrainsMonoVariable.ttf`](https://github.com/Nwflower/dsh-claude-style/raw/main/packages/assets/src/fonts/JetBrainsMonoVariable.ttf)、[`packages/assets/src/fonts/JetBrainsMonoItalicVariable.ttf`](https://github.com/Nwflower/dsh-claude-style/raw/main/packages/assets/src/fonts/JetBrainsMonoItalicVariable.ttf) |
+| Inter | 没有 Anthropic Sans 时的界面字体 | [`packages/assets/src/fonts/InterVariable.woff2`](https://github.com/Nwflower/dsh-claude-style/raw/main/packages/assets/src/fonts/InterVariable.woff2) |
+| Noto Serif | 没有 Anthropic Serif 时的正文字体 | [`packages/assets/src/fonts/NotoSerifVariable.woff2`](https://github.com/Nwflower/dsh-claude-style/raw/main/packages/assets/src/fonts/NotoSerifVariable.woff2) |
 
 JetBrains Mono、Inter 与 Noto Serif 采用 SIL Open Font License 1.1，随 npm 包分发，无需任何操作。Inter 与 Noto Serif 的字高、字宽与两款 Anthropic 字体几乎一致，没有启用 Anthropic 字体时由它们代替，界面与正文的排版不会因此变样；两者只含 Anthropic 字体覆盖的拉丁字符，中文照旧使用系统中文字体。
 
@@ -154,7 +154,7 @@ Anthropic 字体启用（二选一）：
 
 ① 安装到系统——Windows 双击 `.ttf` → 「安装」，macOS 用「字体册」导入；
 
-② 免安装——把 `.ttf` 复制到插件包的 `fonts/` 目录。完成后刷新页面生效。
+② 免安装——把 `.ttf` 复制到 `$DSH_HOME/dsh-claude-style/fonts/`（没有设置 `DSH_HOME` 时是 `~/.dsh/dsh-claude-style/fonts/`）。完成后刷新页面生效。
 
 ## 皮肤中心交接
 
@@ -194,7 +194,7 @@ dsh plugin --profile web add dsh-claude-style                  # npm 包（推�
 | [设计令牌](docs/STYLE.md) | 调色板、字体、形状，源码结构与宿主选择器纪律（英文） |
 | [架构决策](docs/decisions/README.md) | 每条决策一个文件：构建与源码、宿主边界、运行时与各个功能的取舍，以及正在进行的架构迁移 |
 | [更新日志](CHANGELOG.md) | 版本历史 |
-| [贡献指南](CONTRIBUTING.md) | 如何从 `src/` 构建、提交规范与截图/回归工具（英文） |
+| [贡献指南](CONTRIBUTING.md) | 如何从 `packages/client/src/` 构建、提交规范与截图/回归工具（英文） |
 
 ## 鸣谢
 

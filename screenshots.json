@@ -1,10 +1,10 @@
 [
-  "docs/claude-home-light.png",
-  "docs/claude-home-dark.png",
-  "docs/claude-conversation-light.png",
-  "docs/claude-conversation-dark.png",
-  "docs/deepseek-home-light.png",
-  "docs/deepseek-home-dark.png",
-  "docs/deepseek-conversation-light.png",
-  "docs/deepseek-conversation-dark.png"
+  "docs/screenshots/claude-home-light.png",
+  "docs/screenshots/claude-home-dark.png",
+  "docs/screenshots/claude-conversation-light.png",
+  "docs/screenshots/claude-conversation-dark.png",
+  "docs/screenshots/deepseek-home-light.png",
+  "docs/screenshots/deepseek-home-dark.png",
+  "docs/screenshots/deepseek-conversation-light.png",
+  "docs/screenshots/deepseek-conversation-dark.png"
 ]

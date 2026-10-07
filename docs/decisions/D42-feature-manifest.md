@@ -9,7 +9,7 @@
 
 - 每个功能在主模块旁放一份 `<主模块>.manifest.ts`，只放数据：`id`、可选的 `handle`、安装顺序 `order`、偏好键或不设开关的理由（D29）、让位的上游插件 `yieldsTo`（D32）、样式表及其在整张样式表里的序号、拥有的设置页开关行、覆盖它的冒烟用例、中英文的功能描述；依赖的宿主契约（D44）是 `contracts` 字段：该功能读过哪些契约条目；按需加载入口（D39）随那条决策加入。主模块导出 `install(ctx, ui)`。
 - 向观察总线（D40）与滚动主人（D41）的登记留在功能里，不进清单：两者都要在安装时定下目标元素、选项与回调，而清单只放数据；把它们写成清单字段等于把同一件事记两份，正是这份清单要消掉的东西。总线上「谁订了什么」要看时按订阅建立处查。
-- 构建在 Node 里读取全部清单（`scripts/read-manifests.cjs`），生成虚拟模块 `virtual:dsh-claude-style/features`：按 `order` 排好的运行时字段加各自的 `install`。清单本身不进产物。
+- 构建在 Node 里读取全部清单（`scripts/shared/read-manifests.cjs`），生成虚拟模块 `virtual:dsh-claude-style/features`：按 `order` 排好的运行时字段加各自的 `install`。清单本身不进产物。
 - 从清单汇总、不再各写一份的：安装与刷新顺序、样式表的拼接顺序（与主题样式表共用一套序号）、设置页的布尔开关行、冒烟测试的功能覆盖表、对上游的让位（入口按 `yieldsTo` 安装与卸下）、README 的功能介绍（D48）。
 - 功能句柄可实现的钩子：`sync`、`owns` + `close('outside')`、`onPointerDown`、`close('escape')`、`close('composer')`、`onInput`、`onFocusIn`、`reposition('viewport' | 'composer')`、`onCopyChange`、`onKey`、`onActivity`；没实现的跳过。`onKey` 收到读者的每一次按键，接手的功能自己调用 `preventDefault()`；功能退役后这个键交还宿主。
 - 退役按 `id` 或句柄匹配：只匹配到句柄时只停止 `sync`、不拆安装（设置页的导航）。

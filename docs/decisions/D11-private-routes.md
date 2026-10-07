@@ -7,7 +7,7 @@
 ## 决定
 
 - 宿主半边的私有路由（`/username`、`/usage`、`/session-search`、`/hdsl`、`/hdsl-skin.png`、`POST /session-delete`）处理前先调 `connection.requestRejection(req)`，拒绝即回 401/403。宿主没有这个服务时，插件自带的替代只放行回环请求：回环 Host、无跨站标记、Origin 与 Host 一致。
-- 公开静态资产不经栅栏，但请求里的文件名必须符合固定格式，读取只落在一个目录里：模型文案与字体是固定表里的名字，走路由的资源是构建清单（`lib/assets/manifest.json`，D38）里的哈希加扩展名。
+- 公开静态资产不经栅栏，但请求里的文件名必须符合固定格式，读取只落在固定表给出名字的目录里：模型文案取自构建输出；字体的名字先查 `$DSH_HOME/dsh-claude-style/fonts/`，没有再看包内的 `lib/fonts/`；走路由的资源是构建清单（`lib/assets/manifest.json`，D38）里的哈希加扩展名。
 - 删除会话另加四道：只接受 POST；id 符合宿主的会话 id 格式；正在打开的会话拒绝；解析后的目录必须留在会话根目录内。删除发生在宿主半边，浏览器只提交 id。
 - 删除成功时宿主半边经 `workspaceRegistry.unarchiveSession` 把 id 移出归档集合；归档集合里存储目录已消失的条目同样按删除成功应答并移出，否则归档列表会一直留着这一行。会话根目录读不了是故障，答 500。
 - 用量汇总只读：别的插件的账本只读不写，自己的缓存放在 `$DSH_HOME/cache/dsh-claude-style/`。

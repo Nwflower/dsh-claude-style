@@ -13,7 +13,7 @@
 - 原有构建检查各有去处：
   - 「每个源文件都在清单里」由模块导入图保证。
   - 构建期常量直接 import；样式表里的 `%%TOKEN%%` 替换与输入框门控（D4）、`:has()` 位置（D9）、配色与字体门（D30）的检查由 `scripts/css.mjs` 在语法树上执行（D51）。
-  - 模型文案的结构由 `packages/client/src/model-descriptions.schema.json`（JSON Schema）声明，构建用 Ajv 校验；文档内的引用、厂商组合标是否存在与语言数由构建补查（D5）。
+  - 模型文案的结构由 `packages/client/data/model-descriptions.schema.json`（JSON Schema）声明，构建用 Ajv 校验；文档内的引用、厂商组合标是否存在与语言数由构建补查（D5）。
   - 吉祥物帧图与登记表的对应关系、帧数、裁切框、静止帧的合法性交给 D38 的资源清单生成。
   - 功能注册表与开关声明（D29）由功能清单的类型（D42）保证，在那之前由构建核对 `FEATURES` 表与各功能的主模块。
   - 两半偏好默认值的逐键核对随 `packages/contracts` 的单一声明取消（D10、D46）。

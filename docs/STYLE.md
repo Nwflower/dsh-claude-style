@@ -336,7 +336,7 @@ Its horizontal place is the one thing the skin takes over. ui-chat hangs the
 panel from the anchor's LEFT edge and only then clamps it into the viewport
 (`useStatDialog`, align `start`), so a trigger at the end of the composer row
 leaves the panel against the window's right margin instead of under the ring.
-`features/context-stats/session-stats.ts` reads the meter's right edge and the
+`features/context-stats/stats-binding.ts` reads the meter's right edge and the
 panel's own layout width — `offsetWidth`, not its rect: the entrance scales the
 box, and a transformed rect is two per cent narrower than the one that settles —
 and writes `--dsh-claude-context-panel-left` with the mark that turns it on;

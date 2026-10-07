@@ -20,6 +20,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 - **公开路由变化**：`GET /dsh-claude-style/deepy/<动作>.png` 不再提供，帧图改由 `GET /dsh-claude-style/assets/<内容哈希>.svg` 提供；品牌标志、厂商组合标与螃蟹帧图同样由这份构建清单决定内联进产物还是走这条路由（小鲸鱼的 18 张帧图走路由）。更新插件后需要重启宿主，早于本次构建的宿主半边没有这条路由，小鲸鱼不会出现（控制台提示一次）。
 - **附带 source map**：npm 包里新增 `lib/client.js.map`，浏览器开发者工具里的报错位置与断点能对应到插件源码。
+- **Anthropic 字体的投放点迁到宿主目录**：把两款 Anthropic 字体复制进插件包 `fonts/` 目录后界面仍用替代字体，那个位置已不再被读取。现在的投放点是 `$DSH_HOME/dsh-claude-style/fonts/`（没有设置 `DSH_HOME` 时是 `~/.dsh/dsh-claude-style/fonts/`）：放在这里的文件优先于包内的同名文件，缺失时照旧 404 回退到系统字体与替代字体。随包分发的四款字体与它们的授权文件改由构建写入 `lib/fonts/`，仓库里的字体文件移到了 `packages/assets/src/fonts/`，两款 Anthropic 字体在其 `anthropic/` 子目录里，仍然不随 npm 包分发。
 
 <h3 id="en-unreleased">Improvements</h3>
 
@@ -35,6 +36,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 - **Public route change**: `GET /dsh-claude-style/deepy/<animation>.png` is gone; the frames are served by `GET /dsh-claude-style/assets/<content hash>.svg`, and the brand marks, the vendor lockups and the crab's sheets follow the same build manifest, which decides per file between an inline form and that route (the whale's 18 sheets take the route). Restart the host after updating: a host half older than this build has no such route and the whale will not appear (one console message).
 - **Source map included**: the npm package now carries `lib/client.js.map`, so error locations and breakpoints in the browser's developer tools map back to the plugin's sources.
+- **The Anthropic fonts are dropped into the harness home now**: copying the two Anthropic faces into the plugin package's `fonts/` directory left the look-alike faces in place, because that location is no longer read. The drop point is `$DSH_HOME/dsh-claude-style/fonts/` (`~/.dsh/dsh-claude-style/fonts/` when `DSH_HOME` is unset): a file there wins over a bundled face of the same name, and a missing one still answers 404 and falls back to the system and the look-alike faces. The four faces the package ships, with their licences, are written to `lib/fonts/` by the build, and the repository's font files moved to `packages/assets/src/fonts/`, the two Anthropic ones under its `anthropic/` directory and still outside the npm package.
 
 ## [0.11.1] - 2026-10-06
 

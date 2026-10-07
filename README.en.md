@@ -24,12 +24,12 @@ The settings page's Brand mark row switches between the Claude and DeepSeek pale
 
 <table>
   <tr>
-    <td align="center" width="50%"><img src="./docs/claude-home-light.png" alt="Claude brand, Studio home — light" /></td>
-    <td align="center" width="50%"><img src="./docs/claude-home-dark.png" alt="Claude brand, Studio home — dark" /></td>
+    <td align="center" width="50%"><img src="./docs/screenshots/claude-home-light.png" alt="Claude brand, Studio home — light" /></td>
+    <td align="center" width="50%"><img src="./docs/screenshots/claude-home-dark.png" alt="Claude brand, Studio home — dark" /></td>
   </tr>
   <tr>
-    <td align="center" width="50%"><img src="./docs/claude-conversation-light.png" alt="Claude brand, Markdown conversation — light" /></td>
-    <td align="center" width="50%"><img src="./docs/claude-conversation-dark.png" alt="Claude brand, Markdown conversation — dark" /></td>
+    <td align="center" width="50%"><img src="./docs/screenshots/claude-conversation-light.png" alt="Claude brand, Markdown conversation — light" /></td>
+    <td align="center" width="50%"><img src="./docs/screenshots/claude-conversation-dark.png" alt="Claude brand, Markdown conversation — dark" /></td>
   </tr>
 </table>
 
@@ -39,12 +39,12 @@ The settings page's Brand mark row switches between the Claude and DeepSeek pale
 
 <table>
   <tr>
-    <td align="center" width="50%"><img src="./docs/deepseek-home-light.png" alt="DeepSeek brand, Studio home — light" /></td>
-    <td align="center" width="50%"><img src="./docs/deepseek-home-dark.png" alt="DeepSeek brand, Studio home — dark" /></td>
+    <td align="center" width="50%"><img src="./docs/screenshots/deepseek-home-light.png" alt="DeepSeek brand, Studio home — light" /></td>
+    <td align="center" width="50%"><img src="./docs/screenshots/deepseek-home-dark.png" alt="DeepSeek brand, Studio home — dark" /></td>
   </tr>
   <tr>
-    <td align="center" width="50%"><img src="./docs/deepseek-conversation-light.png" alt="DeepSeek brand, Markdown conversation — light" /></td>
-    <td align="center" width="50%"><img src="./docs/deepseek-conversation-dark.png" alt="DeepSeek brand, Markdown conversation — dark" /></td>
+    <td align="center" width="50%"><img src="./docs/screenshots/deepseek-conversation-light.png" alt="DeepSeek brand, Markdown conversation — light" /></td>
+    <td align="center" width="50%"><img src="./docs/screenshots/deepseek-conversation-dark.png" alt="DeepSeek brand, Markdown conversation — dark" /></td>
   </tr>
 </table>
 
@@ -52,16 +52,16 @@ The settings page's Brand mark row switches between the Claude and DeepSeek pale
 >
 > <table>
 >   <tr>
->     <td align="center" width="25%"><img src="./showcase/gifs/idle.gif" width="120" alt="Idle" /><br />Idle</td>
->     <td align="center" width="25%"><img src="./showcase/gifs/thinking.gif" width="120" alt="Thinking" /><br />Thinking</td>
->     <td align="center" width="25%"><img src="./showcase/gifs/typing.gif" width="120" alt="Answering and calling tools" /><br />Answering and calling tools</td>
->     <td align="center" width="25%"><img src="./showcase/gifs/conducting.gif" width="120" alt="Conducting subagents" /><br />Conducting subagents</td>
+>     <td align="center" width="25%"><img src="./docs/gifs/idle.gif" width="120" alt="Idle" /><br />Idle</td>
+>     <td align="center" width="25%"><img src="./docs/gifs/thinking.gif" width="120" alt="Thinking" /><br />Thinking</td>
+>     <td align="center" width="25%"><img src="./docs/gifs/typing.gif" width="120" alt="Answering and calling tools" /><br />Answering and calling tools</td>
+>     <td align="center" width="25%"><img src="./docs/gifs/conducting.gif" width="120" alt="Conducting subagents" /><br />Conducting subagents</td>
 >   </tr>
 >   <tr>
->     <td align="center" width="25%"><img src="./showcase/gifs/notification.gif" width="120" alt="Waiting on you" /><br />Waiting on you</td>
->     <td align="center" width="25%"><img src="./showcase/gifs/error.gif" width="120" alt="Failed" /><br />Failed</td>
->     <td align="center" width="25%"><img src="./showcase/gifs/happy.gif" width="120" alt="Finished" /><br />Finished</td>
->     <td align="center" width="25%"><img src="./showcase/gifs/sleeping.gif" width="120" alt="Asleep" /><br />Asleep</td>
+>     <td align="center" width="25%"><img src="./docs/gifs/notification.gif" width="120" alt="Waiting on you" /><br />Waiting on you</td>
+>     <td align="center" width="25%"><img src="./docs/gifs/error.gif" width="120" alt="Failed" /><br />Failed</td>
+>     <td align="center" width="25%"><img src="./docs/gifs/happy.gif" width="120" alt="Finished" /><br />Finished</td>
+>     <td align="center" width="25%"><img src="./docs/gifs/sleeping.gif" width="120" alt="Asleep" /><br />Asleep</td>
 >   </tr>
 > </table>
 
@@ -136,15 +136,15 @@ Every feature that takes over part of the host's interface has its own switch; t
 
 ## Fonts
 
-> **Important: the Anthropic fonts are not bundled with the npm package.** They are available for download in this repository under [`fonts/`](fonts/). You can either install them on your system, or skip the install entirely — drop the two `.ttf` files into the plugin package's `fonts/` directory and the host will serve them as webfonts (the files are identical, so the result is the same). Either way, refresh or restart the web UI for the fonts to take effect.
+> **Important: the Anthropic fonts are not bundled with the npm package.** They are available for download in this repository under [`packages/assets/src/fonts/anthropic/`](packages/assets/src/fonts/anthropic/). You can either install them on your system, or skip the install entirely — drop the two `.ttf` files into `$DSH_HOME/dsh-claude-style/fonts/` (`~/.dsh/dsh-claude-style/fonts/` when `DSH_HOME` is unset) and the host will serve them as webfonts (the files are identical, so the result is the same). Either way, refresh or restart the web UI for the fonts to take effect.
 
 | Font | Used for | File |
 |---|---|---|
-| Anthropic Sans Web Text | Interface / UI | [`fonts/AnthropicSansWebText.ttf`](https://github.com/Nwflower/dsh-claude-style/raw/main/fonts/AnthropicSansWebText.ttf) |
-| Anthropic Serif Web Text | Conversation body / Markdown | [`fonts/AnthropicSerifWebText.ttf`](https://github.com/Nwflower/dsh-claude-style/raw/main/fonts/AnthropicSerifWebText.ttf) |
-| JetBrains Mono Variable | Code / code blocks | [`fonts/JetBrainsMonoVariable.ttf`](https://github.com/Nwflower/dsh-claude-style/raw/main/fonts/JetBrainsMonoVariable.ttf), [`fonts/JetBrainsMonoItalicVariable.ttf`](https://github.com/Nwflower/dsh-claude-style/raw/main/fonts/JetBrainsMonoItalicVariable.ttf) |
-| Inter | Interface when Anthropic Sans is absent | [`fonts/InterVariable.woff2`](https://github.com/Nwflower/dsh-claude-style/raw/main/fonts/InterVariable.woff2) |
-| Noto Serif | Conversation body when Anthropic Serif is absent | [`fonts/NotoSerifVariable.woff2`](https://github.com/Nwflower/dsh-claude-style/raw/main/fonts/NotoSerifVariable.woff2) |
+| Anthropic Sans Web Text | Interface / UI | [`packages/assets/src/fonts/anthropic/AnthropicSansWebText.ttf`](https://github.com/Nwflower/dsh-claude-style/raw/main/packages/assets/src/fonts/anthropic/AnthropicSansWebText.ttf) |
+| Anthropic Serif Web Text | Conversation body / Markdown | [`packages/assets/src/fonts/anthropic/AnthropicSerifWebText.ttf`](https://github.com/Nwflower/dsh-claude-style/raw/main/packages/assets/src/fonts/anthropic/AnthropicSerifWebText.ttf) |
+| JetBrains Mono Variable | Code / code blocks | [`packages/assets/src/fonts/JetBrainsMonoVariable.ttf`](https://github.com/Nwflower/dsh-claude-style/raw/main/packages/assets/src/fonts/JetBrainsMonoVariable.ttf), [`packages/assets/src/fonts/JetBrainsMonoItalicVariable.ttf`](https://github.com/Nwflower/dsh-claude-style/raw/main/packages/assets/src/fonts/JetBrainsMonoItalicVariable.ttf) |
+| Inter | Interface when Anthropic Sans is absent | [`packages/assets/src/fonts/InterVariable.woff2`](https://github.com/Nwflower/dsh-claude-style/raw/main/packages/assets/src/fonts/InterVariable.woff2) |
+| Noto Serif | Conversation body when Anthropic Serif is absent | [`packages/assets/src/fonts/NotoSerifVariable.woff2`](https://github.com/Nwflower/dsh-claude-style/raw/main/packages/assets/src/fonts/NotoSerifVariable.woff2) |
 
 JetBrains Mono, Inter and Noto Serif are licensed under the SIL Open Font License 1.1 and ship with the npm package; nothing to set up. Inter and Noto Serif nearly match the two Anthropic fonts in letter height and width, so without the Anthropic fonts they stand in and the interface and conversation text keep their layout. Both carry only the Latin characters the Anthropic fonts cover; Chinese text keeps using the system's Chinese fonts.
 
@@ -152,7 +152,7 @@ To enable the Anthropic fonts, choose one of the following:
 
 ① Install them on your system — on Windows, double-click each `.ttf` and choose "Install"; on macOS, import them with Font Book.
 
-② Skip the install — copy the `.ttf` files into the plugin package's `fonts/` directory, then refresh the page.
+② Skip the install — copy the `.ttf` files into `$DSH_HOME/dsh-claude-style/fonts/`, then refresh the page.
 
 > The Anthropic Sans and Serif fonts are the property of Anthropic, licensed for personal use only, and are not covered by this project's MIT license.
 
@@ -199,13 +199,13 @@ Keep only one theme enabled at a time. dsh ≥ 0.1.7 is required, and a restart 
 | [Design tokens](docs/STYLE.md) | Palette, typography, shapes, source layout, and host-selector discipline (in English) |
 | [Architecture decisions](docs/decisions/README.md) | One file per decision: build and source, the host boundary, the runtime and each feature's trade-offs, and the architecture migration in progress (in Chinese) |
 | [Changelog](CHANGELOG.md) | Version history |
-| [Contributing](CONTRIBUTING.md) | Building from `src/`, commit conventions, and the screenshot and regression tooling (in English) |
+| [Contributing](CONTRIBUTING.md) | Building from `packages/client/src/`, commit conventions, and the screenshot and regression tooling (in English) |
 
 ## Acknowledgements
 
 The conversation navigator's opening list, keyboard jumps and landing line follow SherUnlocked-4869's [dsh-plugin-msg-nav](https://github.com/SherUnlocked-4869/dsh-plugin-msg-nav) (MIT).
 
-The animation frames of Deepy the pixel whale come from the Deepy whale theme pack drawn by calmly-eating-bugs ([@wp3171216237](https://github.com/wp3171216237)), and ship with the plugin by the author's permission. Many thanks to the author! GIFs of all 20 animations, contributed by the author, are in [showcase/gifs/](showcase/gifs/).
+The animation frames of Deepy the pixel whale come from the Deepy whale theme pack drawn by calmly-eating-bugs ([@wp3171216237](https://github.com/wp3171216237)), and ship with the plugin by the author's permission. Many thanks to the author! GIFs of all 20 animations, contributed by the author, are in [docs/gifs/](docs/gifs/).
 
 The pixel crab (Clawd) is a character of Anthropic, and all rights in it remain with Anthropic. Its laptop animation is taken from Claude Code; the animations of its other states are drawn by this project after that character. The crab's frames are not covered by the MIT license (see [LICENSE](LICENSE)). This plugin is an unofficial fan work, not affiliated with or endorsed by Anthropic.
 

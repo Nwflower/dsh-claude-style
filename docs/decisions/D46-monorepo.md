@@ -3,7 +3,7 @@
 - **状态**：已实施
 - **分组**：构建与源码
 - **关联**：取代 D18 与 D8；D7、D10、D36、D38、D45、D48
-- **现状**：npm workspaces 建起来，五个包各就各位：`packages/client`（浏览器半边：宿主访问、偏好、模型文案、i18n、调度器、观察总线与帧流水线、共用部件、全局外观、各功能目录，单元测试就在旁边，构建打成 `lib/client.js`）、`packages/host`（宿主半边的七个模块，TypeScript，构建先跑它自己的类型检查再逐模块转译进 `lib/host/`，根包的 `main` 与 `exports` 指向那里）、`packages/contracts`（两半共用的契约：选择器与属性、条目表、时序假设、服务与值的形状、两半交换的载荷，按包名引用）、`packages/assets`（每张图片与资源生成器）、`packages/testing`（临时宿主、脚本化模型服务、端到端通道）。构建、清单读取、lint、单元测试与两半的类型检查都按包内路径工作；lint 的停止线覆盖 `packages/`
+- **现状**：npm workspaces 建起来，五个包各就各位：`packages/client`（浏览器半边：宿主访问、偏好、模型文案、i18n、调度器、观察总线与帧流水线、共用部件、全局外观、各功能目录，单元测试就在旁边，构建打成 `lib/client.js`）、`packages/host`（宿主半边的十二个模块，TypeScript，构建先跑它自己的类型检查，再逐模块把 `@dsh-claude-style/contracts` 的值内联后转译进 `lib/host/`——contracts 不进 npm 包，产物里不留它的 specifier；根包的 `main` 与 `exports` 指向那里）、`packages/contracts`（两半共用的契约：选择器与属性、条目表、时序假设、服务与值的形状、两半交换的载荷、偏好默认值与路由名，按包名引用）、`packages/assets`（每张图片与资源生成器）、`packages/testing`（临时宿主、脚本化模型服务、端到端通道）。构建、清单读取、lint、单元测试与两半的类型检查都按包内路径工作；lint 的停止线覆盖 `packages/` 与 `scripts/` 的全部脚本
 
 ## 决定
 
