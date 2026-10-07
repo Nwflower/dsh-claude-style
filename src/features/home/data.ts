@@ -8,7 +8,7 @@ import type { UsageAnswer, UsageDay, UsageModel, UsageReport, UsageTotals } from
 
 /**
  * The roll-up store's snapshot: the route's last answer (the host half's
- * usage fold, host/usage.js), whether more is coming, and why not.
+ * usage fold, packages/host/src/usage.js), whether more is coming, and why not.
  */
 export interface HomeUsageState {
   value: UsageReport | null

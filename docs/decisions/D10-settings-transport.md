@@ -10,7 +10,7 @@
 - 浏览器半边只有 `configForms` 一条传输：绑定宿主实际提供的命名空间（候选依次为加载器入口 id、包名、`cordis.patch.yml` 插入的 id，以宿主的命名空间目录为准），读写都经表单控制器（值、写队列、修订号栅栏）。命名空间晚到时订阅目录，到达即绑定。
 - 宿主半边导出 `Config` 作为 schema，只有 `.volatile()` 字段进表单。schemastery 以顶层 await 加守卫导入，解析不到时 `Config` 为 `undefined`、皮肤照常加载——这是「导入不包 try/catch」规定的唯一例外。
 - 设置席位注册为 `plugins.bundle.config`（键为包名）；宿主没有 `configForms` 时才注册整页的 `settings.section`。
-- 偏好字段只有一份声明：宿主半边 `host/settings.js` 的 `PREFS_DEFAULT` 生成 `Config`；浏览器半边的默认值与取值集合给出表单答复之前的初值与读到值时的规整，两者逐键逐值相同。
+- 偏好字段只有一份声明：宿主半边 `packages/host/src/settings.js` 的 `PREFS_DEFAULT` 生成 `Config`；浏览器半边的默认值与取值集合给出表单答复之前的初值与读到值时的规整，两者逐键逐值相同。
 - 偏好只存在宿主的表单里：早先存进浏览器本地存储的昵称与封号页语言，在表单第一次带值时写进表单，表单持有自己的值后删掉本地那份。
 
 ## 理由

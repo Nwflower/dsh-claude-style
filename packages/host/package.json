@@ -1,0 +1,10 @@
+{
+  "name": "@dsh-claude-style/host",
+  "description": "The host half of dsh-claude-style: private routes, the settings Config, the HDSL contract, search and the usage roll-up",
+  "version": "0.11.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js"
+  }
+}

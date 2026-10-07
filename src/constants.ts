@@ -191,7 +191,7 @@ export const SEGMENT_CLASS = 'dsh-claude-segment'
 
 /**
  * Preferences, persisted in the profile entry's settings namespace (the
- * exported Config in host/settings.js declares the fields; src/core/prefs.ts
+ * exported Config in packages/host/src/settings.js declares the fields; src/core/prefs.ts
  * reads and writes them). Each value is mirrored onto the document as an
  * attribute so the stylesheet decides what a preference means, and the
  * defaults here are the shipped behaviour.
@@ -560,7 +560,7 @@ export const HOME_LAYOUT_ATTR = 'data-dsh-claude-home-layout'
  */
 export const HOME_HERO_ATTR = 'data-dsh-claude-home-hero'
 /**
- * The host half's session-deletion route (host/routes.js, SESSION_DELETE_PATH).
+ * The host half's session-deletion route (packages/host/src/routes.js, SESSION_DELETE_PATH).
  * The harness gives the browser half no deletion API of its own, so the
  * archived row's delete button posts the session id here and the host half
  * removes the stored session directory and the id's entry in the workspace
@@ -568,13 +568,13 @@ export const HOME_HERO_ATTR = 'data-dsh-claude-home-hero'
  */
 export const SESSION_DELETE_ROUTE = '/dsh-claude-style/session-delete'
 /**
- * The host half's cross-session usage roll-up (host/routes.js, USAGE_PATH).
+ * The host half's cross-session usage roll-up (packages/host/src/routes.js, USAGE_PATH).
  * The browser half cannot read the session logs or the cost-meter ledger, so
  * the day buckets behind the home dashboard's panel arrive from here.
  */
 export const USAGE_ROUTE = '/dsh-claude-style/usage'
 /**
- * The host half's message-content search (host/search.js, SESSION_SEARCH_PATH):
+ * The host half's message-content search (packages/host/src/search.js, SESSION_SEARCH_PATH):
  * `?q=` answers the sessions whose messages hold the query; without `q` it
  * only brings its message cache up to date.
  */
@@ -604,7 +604,7 @@ export const AUTO_POPOVER_SCOPES = [AUTO_POPOVER_OFF, AUTO_POPOVER_ACCOUNT, AUTO
 /**
  * Every preference and its default: the shipped behaviour, and what holds
  * until the settings form answers. scripts/build.mjs holds this table to
- * host/settings.js's PREFS_DEFAULT, key for key and value for value. A
+ * packages/host/src/settings.js's PREFS_DEFAULT, key for key and value for value. A
  * boolean preference is on unless stored as an explicit `false`.
  */
 export interface Prefs {
@@ -674,9 +674,9 @@ export const HDSL_ROUTE = '/dsh-claude-style/hdsl'
  * (src/features/account/rows.ts).
  */
 export const HDSL_SKIN_ROUTE = '/dsh-claude-style/hdsl-skin.png'
-/** Longest accepted custom username; mirrored by host/settings.js. */
+/** Longest accepted custom username; mirrored by packages/host/src/settings.js. */
 export const USERNAME_MAX = 64
-/** Most quick-provider ids kept, and the longest id accepted; mirrored by host/settings.js. */
+/** Most quick-provider ids kept, and the longest id accepted; mirrored by packages/host/src/settings.js. */
 export const QUICK_PROVIDERS_MAX = 64
 export const PROVIDER_ID_MAX = 128
 

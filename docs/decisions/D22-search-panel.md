@@ -12,7 +12,7 @@
 - 数据读宿主的客户端服务：`sessions.list` 与 `workspaces.list`（去掉已归档、子代理与空白占位）、`remote.pluginInventory` 与 `remote.pluginManager`、当前会话的 `remote.skills`、`shortcuts.catalog`。远程命名空间在面板打开时用 `ctx.get('remote.<名字>')` 读（在根上下文直接读 `remote` 的子属性会被 cordis 以「没有 inject」拒绝）。
 - 导航用宿主自己的：`uiWorkspace.openSession` / `startSession`、`pluginNavigation.openBundle`、`layout.selectPanel`；Skill 经会话输入的 `setDraft` 与 `focus`；设置页与快捷键列表经它们在插槽登记里声明的 store（`slots.entries(key)` 条目上的 `store.create()`）打开。快捷键行打开快捷键列表，不代为执行命令（宿主的快捷键命令没有公开的执行入口）。
 - 匹配沿用宿主侧栏搜索的子串规则，排序为：标题开头、标题中的词开头、标题其他位置、第二个键（路径、包名、描述、别名）。
-- 消息内容由宿主半边的 `/session-search` 路由搜（`host/search.js`）：经 `sessionQuery.readSession` 读原始日志，只取用户与助手消息里的文本块，匹配照搬 `sessionQuery` 的 `text` 过滤（字面、不分大小写、空白可伸缩）。每个会话的消息文本连同变化标记留在内存里——存档用持久化后端 `list()` 的修订号，开着的会话用日志长度 `seq`——只重读标记变了的会话，子代理会话不读。面板打开时先发一次不带查询的请求预热；每个会话只回最新的一处命中，附摘录与命中位置。
+- 消息内容由宿主半边的 `/session-search` 路由搜（`packages/host/src/search.js`）：经 `sessionQuery.readSession` 读原始日志，只取用户与助手消息里的文本块，匹配照搬 `sessionQuery` 的 `text` 过滤（字面、不分大小写、空白可伸缩）。每个会话的消息文本连同变化标记留在内存里——存档用持久化后端 `list()` 的修订号，开着的会话用日志长度 `seq`——只重读标记变了的会话，子代理会话不读。面板打开时先发一次不带查询的请求预热；每个会话只回最新的一处命中，附摘录与命中位置。
 
 ## 理由
 

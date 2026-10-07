@@ -1,5 +1,5 @@
 /**
- * The smoke's host half, in Node: host/index.js applied to a fake cordis
+ * The smoke's host half, in Node: packages/host/src/index.js applied to a fake cordis
  * context, and its private routes driven with the request shapes that matter
  * (docs/decisions D11).
  */
@@ -17,7 +17,7 @@ const { ROOT, HOST, SKIN_FIXTURE, same, check } = require('./shared.cjs')
 // ---------------------------------------------------------------------------
 
 /**
- * host/index.js applied to a fake cordis context.
+ * packages/host/src/index.js applied to a fake cordis context.
  *
  * @param mod - the host-half module.
  * @param options - `fenced` offers the host's own request check, `home` answers

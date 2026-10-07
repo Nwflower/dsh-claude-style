@@ -41,6 +41,7 @@ import Ajv2020 from 'ajv/dist/2020.js'
 import addFormats from 'ajv-formats'
 import esbuild from 'esbuild'
 import { PNG } from 'pngjs'
+import { buildHostHalf } from '../packages/host/build.mjs'
 import { checkClaimed, checkSheetPixels, checkSheets, planAssets, vectorizeSheet, writeAssets } from '../packages/assets/assets.mjs'
 import { TOKEN_SHEET, buildStylesheet, loadTokens, writeTokenTable } from './css.mjs'
 import manifestReader from './read-manifests.cjs'
@@ -48,10 +49,10 @@ import { loadModule } from './ts-module.cjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
 /**
- * The host half's preference table (host/settings.js): the browser half's
+ * The host half's preference table (packages/host/src/settings.js): the browser half's
  * PREF_DEFAULTS and src/entry.ts's feature switches are both held to it.
  */
-const { PREFS_DEFAULT } = await import(pathToFileURL(path.join(ROOT, 'host', 'settings.js')).href)
+const { PREFS_DEFAULT } = await import(pathToFileURL(path.join(ROOT, 'packages', 'host', 'src', 'settings.js')).href)
 const SRC = path.join(ROOT, 'src')
 /** Brand marks, mascot sheets and vendor lockups; packages/assets/assets.mjs plans their delivery (D38). */
 const ASSETS = path.join(ROOT, 'packages', 'assets', 'src')
@@ -363,7 +364,7 @@ function checkListed(bundled, sheets) {
 /**
  * Hold the manifests to the rest of the repository: every feature directory
  * carries at least one manifest, and a `pref` names a key of the host half's
- * PREFS_DEFAULT (host/settings.js), the table the settings form serves.
+ * PREFS_DEFAULT (packages/host/src/settings.js), the table the settings form serves.
  *
  * @param manifests - the feature manifests (scripts/read-manifests.cjs).
  */
@@ -374,7 +375,7 @@ function checkManifests(manifests) {
   }
   for (const manifest of manifests) {
     if (manifest.pref !== undefined && !(manifest.pref in PREFS_DEFAULT)) {
-      throw new Error(`build: src/${manifest.file} names pref "${manifest.pref}", which host/settings.js PREFS_DEFAULT does not carry`)
+      throw new Error(`build: src/${manifest.file} names pref "${manifest.pref}", which packages/host/src/settings.js PREFS_DEFAULT does not carry`)
     }
   }
 }
@@ -414,10 +415,10 @@ function featuresModule(manifests) {
 function checkPrefDefaults() {
   const browser = CONSTANTS.PREF_DEFAULTS
   for (const key of new Set([...Object.keys(browser), ...Object.keys(PREFS_DEFAULT)])) {
-    if (!(key in browser)) throw new Error(`build: src/constants.ts PREF_DEFAULTS lacks "${key}", which host/settings.js PREFS_DEFAULT carries`)
-    if (!(key in PREFS_DEFAULT)) throw new Error(`build: host/settings.js PREFS_DEFAULT lacks "${key}", which src/constants.ts PREF_DEFAULTS carries`)
+    if (!(key in browser)) throw new Error(`build: src/constants.ts PREF_DEFAULTS lacks "${key}", which packages/host/src/settings.js PREFS_DEFAULT carries`)
+    if (!(key in PREFS_DEFAULT)) throw new Error(`build: packages/host/src/settings.js PREFS_DEFAULT lacks "${key}", which src/constants.ts PREF_DEFAULTS carries`)
     if (JSON.stringify(browser[key]) !== JSON.stringify(PREFS_DEFAULT[key])) {
-      throw new Error(`build: preference "${key}" defaults to ${JSON.stringify(browser[key])} in src/constants.ts but ${JSON.stringify(PREFS_DEFAULT[key])} in host/settings.js`)
+      throw new Error(`build: preference "${key}" defaults to ${JSON.stringify(browser[key])} in src/constants.ts but ${JSON.stringify(PREFS_DEFAULT[key])} in packages/host/src/settings.js`)
     }
   }
 }
@@ -712,6 +713,9 @@ async function main() {
 
   const assets = writeAssets(LIB, plan)
   console.log(`built lib/assets/ (${assets.files} routed of ${plan.entries.size} assets, ${assets.bytes} bytes) from packages/assets/src/`)
+
+  const host = buildHostHalf({ outDir: LIB })
+  console.log(`built lib/host/ (${host.files} modules) from packages/host/src/`)
 }
 
 await main()

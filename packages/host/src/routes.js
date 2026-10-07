@@ -10,10 +10,10 @@
 import { existsSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs'
 import { userInfo } from 'node:os'
 import { dirname, join, resolve, sep } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { brotliDecompressSync } from 'node:zlib'
 import { harnessPath } from './harness-home.js'
 import { createHdslAccount } from './hdsl.js'
+import { packageRoot } from './package-root.js'
 import { QUERY_MAX, createSessionSearch } from './search.js'
 import { createUsage } from './usage.js'
 
@@ -291,11 +291,12 @@ async function deleteSession(ctx, req, res) {
  *     `ctx` itself on a host whose context injects nothing.
  */
 export function registerRoutes(ctx, scope) {
-  const here = dirname(fileURLToPath(import.meta.url))
+  // The built output and the fonts hang off the plugin package's own directory.
+  const root = packageRoot()
   // The copy document is build output beside the client bundle in lib/.
-  const file = join(here, '..', 'lib', COPY_FILE)
-  const fontsDir = join(here, '..', 'fonts')
-  const assetsDir = join(here, '..', 'lib', 'assets')
+  const file = join(root, 'lib', COPY_FILE)
+  const fontsDir = join(root, 'fonts')
+  const assetsDir = join(root, 'lib', 'assets')
   /** The decompressed payload of each brotli-stored asset served to a client that cannot take it. */
   const unpressed = new Map()
 

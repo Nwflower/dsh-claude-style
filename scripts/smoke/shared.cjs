@@ -10,7 +10,8 @@ const { featureCases, readManifests } = require('../read-manifests.cjs')
 
 const ROOT = path.resolve(__dirname, '..', '..')
 const CLIENT = path.join(ROOT, 'lib', 'client.js')
-const HOST = path.join(ROOT, 'host', 'index.js')
+// The host half as the package ships it (D46): the build writes it to lib/host.
+const HOST = path.join(ROOT, 'lib', 'host', 'index.js')
 const MARKUP = '<img src=x onerror="window.__pwned=(window.__pwned||0)+1">'
 /** One transparent pixel: the launcher's avatar the HDSL case serves. */
 const PNG_1PX = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
