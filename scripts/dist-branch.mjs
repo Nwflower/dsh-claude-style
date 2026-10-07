@@ -61,7 +61,8 @@ run('tar', ['-xzf', path.join(PACK, packed), '-C', TREE, '--strip-components=1']
 const existing = run('git', ['tag', '--list', tag])
 const ancestor = existing === '' ? true : (() => {
   try {
-    run('git', ['merge-base', '--is-ancestor', `${tag}^{commit}`, 'HEAD'])
+    // No `^{commit}` peel: this runs through a shell, and cmd.exe eats the caret.
+    run('git', ['merge-base', '--is-ancestor', tag, 'HEAD'])
     return true
   } catch {
     return false
