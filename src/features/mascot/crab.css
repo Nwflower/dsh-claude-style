@@ -5,7 +5,7 @@
    lean, a note or a sparkle takes on that side. The crab writes the sheet and
    the sprite's crop box as custom properties when an animation starts; each
    frame is a translation of the strip inside the sprite's window, played by
-   the browser's animation engine (src/features/mascot/mascot-player.js), eight
+   the browser's animation engine (src/features/mascot/mascot-player.ts), eight
    frames to a sheet row. The strip carries the shell, its shaded side and the
    eyes; its ::after carries the ink mask (the laptop, the thought bubble,
    letters, notes, the hat), filled with the tertiary label ink so it stays a

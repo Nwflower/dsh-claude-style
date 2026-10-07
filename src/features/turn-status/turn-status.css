@@ -1,5 +1,5 @@
 /* ---------- Turn status line ---------- */
-/* src/features/turn-status/turn-status.js writes a flex order onto the chat
+/* src/features/turn-status/turn-status.ts writes a flex order onto the chat
    column's rows from the first running, stopped or failed turn on: that turn's
    process control goes after its work, and the rows after it (its footer,
    later turns, queued messages) step up one level each time. The chat column

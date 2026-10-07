@@ -54,7 +54,7 @@ body[data-dsh-claude-style][%%CHAT_FOLD_ATTR%%] [data-step-process][data-dsh-cla
     animation: dsh-claude-label-shimmer 1.5s cubic-bezier(0.33, 0, 0.67, 1) infinite;
   }
 
-  /* The reader's animation choice, resolved onto <body> by src/core/prefs.js
+  /* The reader's animation choice, resolved onto <body> by src/core/prefs.ts
      (D26): reduced leaves a plain static label rather than a standing gradient.
      The attribute already folds in the system setting, so no media query here —
      and one would stop the sweep for a reader who picked "always". */

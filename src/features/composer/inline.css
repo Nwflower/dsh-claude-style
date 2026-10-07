@@ -6,7 +6,7 @@
 
 /* Every rule in this file lists its selector twice. The first form reads
    data-composer-variant, which the composer feature's pass writes
-   (src/features/composer/composer.js); the second reads the host's own structure —
+   (src/features/composer/composer.ts); the second reads the host's own structure —
    data-composer-card is a host attribute that predates the skin, and a
    composerStack carrying no hero variant holds the inline card. Before the
    first pass lands, only the second form matches, so dropping it would leave
@@ -158,7 +158,7 @@ body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant
 }
 /* Attachment thumbnail card: enlarged by 75% (~140px), matching non-focus
    border without shadow. The composer pass finds the tiles once per pass and
-   marks them data-dsh-claude-attachment (src/features/composer/composer.js). */
+   marks them data-dsh-claude-attachment (src/features/composer/composer.ts). */
 body[data-dsh-claude-style] [data-composer-card] [class*="_rail"] [data-dsh-claude-attachment] {
   width: 140px !important;
   height: 140px !important;

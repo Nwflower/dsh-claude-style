@@ -852,7 +852,7 @@
   // the host portals it to <body>. Its rows are a <dl> like the stats dialogs',
   // so the skin tells the three apart by their markers (the stats dialogs carry
   // data-session-stats-*, this one carries neither) — see
-  // features/context-stats/session-stats.js contextPanel().
+  // features/context-stats/session-stats.ts contextPanel().
   var meterTrigger = document.getElementById('context-meter')
   var contextPanel = null
   if (meterTrigger !== null) {
@@ -911,7 +911,10 @@
     states: null,
     createElement: function (type, props) {
       if (!react.rendering) return null
-      var merged = Object.assign({}, props, { children: Array.prototype.slice.call(arguments, 2) })
+      // As React does, children passed as arguments replace props.children; with none passed, props.children stands.
+      var children = arguments.length > 2 ? Array.prototype.slice.call(arguments, 2)
+        : props && props.children !== undefined ? props.children : []
+      var merged = Object.assign({}, props, { children: children })
       return typeof type === 'function' ? type(merged) : { type: type, props: merged }
     },
     useState: function (v) {

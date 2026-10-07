@@ -758,7 +758,7 @@ const CASES = {
       JSON.stringify({ before: follow.readerBefore, after: follow.readerAfter }))
     // The catch-up is a curve, not a jump: a frame later the capped body is
     // still well short of its end, still moving at a tenth of a second, and held
-    // at the end once the glide has run out (scroll-ease.js).
+    // at the end once the glide has run out (scroll-ease.ts).
     check('the capped body walks to its end instead of jumping: short a frame later, still moving at a tenth of a second, at the end afterwards',
       follow.catchUpEarly > 200 && follow.catchUpMid < follow.catchUpEarly && follow.catchUpMid > AT_END_PX &&
         follow.catchUpDone <= AT_END_PX && follow.catchUpLate <= AT_END_PX,
@@ -768,7 +768,7 @@ const CASES = {
       }))
     // While the host's streaming mark is on the page, the end its own follow
     // writes is taken back before the frame paints and the spring walks the
-    // distance (chat-follow.js, scroll-ease.js).
+    // distance (chat-follow.ts, scroll-ease.ts).
     check('the stream glide takes the host\'s own pin back and walks it: well short a frame later, still walking, at the end afterwards',
       follow.glideEarly > 100 && follow.glideMid < follow.glideEarly && follow.glideMid > AT_END_PX &&
         follow.glideDone <= AT_END_PX,
@@ -919,7 +919,7 @@ const CASES = {
     check('it keeps the input row', escalated.texts.includes('t:row.input'), JSON.stringify(escalated.texts))
     check('switching the file rows off hands both seat keys back', files.offSeats === 0, JSON.stringify(files.offSeats))
     check('switching them back takes both again, without a reload', files.backSeats === 2, JSON.stringify(files.backSeats))
-    // The other plugin coming and going mid-session (src/shared/peer-plugin.js):
+    // The other plugin coming and going mid-session (src/shared/peer-plugin.ts):
     // the decision is re-taken, not frozen at install.
     const peerOn = files.peerOn || {}
     const peerOff = files.peerOff || {}
@@ -931,7 +931,7 @@ const CASES = {
     check('leaving brings the fold mark back', peerOff.foldMark === true, JSON.stringify(peerOff))
   },
   // The other chat-behaviour plugin on the page: the ported features must hand
-  // their behaviour over whole (src/shared/peer-plugin.js, D32).
+  // their behaviour over whole (src/shared/peer-plugin.ts, D32).
   'peer-chat-ux'(r) {
     basicChecks(r)
     const peer = r.peer || {}

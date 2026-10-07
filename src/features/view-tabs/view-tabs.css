@@ -2,7 +2,7 @@
 /* The host's tab strip (ConversationRoot's .tabs / .tab / .tabActive) gets
    the same shape as the sidebar's 进行中 / 已归档 control: a 7px pill shell with a
    raised pill for the active tab, instead of the shipped underline. Scoped to the
-   strip src/features/view-tabs/view-tabs.js stamps data-dsh-view-tabs on — the one in the
+   strip src/features/view-tabs/view-tabs.ts stamps data-dsh-view-tabs on — the one in the
    conversation header — so the settings page's own tabs keep their look. The
    stamp stands in for `header:has(tabs) tabs`, which made every DOM change
    re-match the whole document. */
@@ -24,7 +24,7 @@ body[data-dsh-claude-style] [data-dsh-view-tabs] {
   /* Horizontally centred in the header (the strip already spans grid-column 1/-1,
      so justify-self alone does it). The vertical shift is MEASURED, not fixed: the
      title's row also carries the header actions, so whether the strip can rise onto
-     it depends on the window — src/features/view-tabs/view-tabs.js writes
+     it depends on the window — src/features/view-tabs/view-tabs.ts writes
      --dsh-view-tabs-shift when the room is there, and this fallback (its own row,
      10px up from y=50) holds the rest of the time. */
   justify-self: center !important;
@@ -105,7 +105,7 @@ body[data-dsh-claude-style] [data-dsh-view-tabs] > [class*="_tab"]::after {
 
 /* ---------- Windows titlebar mode: the strip moves into the titlebar ---------- */
 /* The desktop shell marks <html> with data-windows-titlebar and draws the
-   titlebar strip with the frame's ::before; src/features/view-tabs/view-tabs.js mirrors
+   titlebar strip with the frame's ::before; src/features/view-tabs/view-tabs.ts mirrors
    the marker onto <body>. There the strip leaves its own row and sits fixed in
    the titlebar, horizontally centred in the window — the same row the host
    gives the collapsed sidebar's new-session button. The measured
@@ -113,7 +113,7 @@ body[data-dsh-claude-style] [data-dsh-view-tabs] > [class*="_tab"]::after {
    gives way.
    macOS has no such block: its shell leaves the frame unpadded, so the
    conversation header draws its first row inside the strip and the measured
-   shift seats the tabs on the row beneath it (view-tabs.js). */
+   shift seats the tabs on the row beneath it (view-tabs.ts). */
 body[data-dsh-claude-style][data-dsh-titlebar-tabs] [data-dsh-view-tabs] {
   position: fixed !important;
   top: calc(var(--dsh-windows-titlebar-height, 40px) / 2) !important;

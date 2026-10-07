@@ -1,7 +1,7 @@
 /* ---------- Claude Code layout: account-ban easter egg ---------- */
 /* A reproduction of Claude's own "Your account is on hold" page, shown when the
    account row at the top of the sidebar's account popover is clicked. It is an
-   easter egg, not a real state (src/features/ban-screen/ban-screen.js), and it is a
+   easter egg, not a real state (src/features/ban-screen/ban-screen.ts), and it is a
    full-window overlay rather than a page: `position: fixed` at the top of the
    stacking order, so it covers the titlebar, sidebar and composer whatever the
    host paints underneath, and can never be clipped by the sidebar column the
@@ -168,7 +168,7 @@ body[data-dsh-claude-style] .dsh-claude-ban-win:hover {
 
 /* ---------- Desktop caption strip: the bar rides the native titlebar row ---------- */
 /* Both desktop platforms hand the top of the window to a NATIVE layer, and
-   ban-screen.js stamps data-dsh-ban-titlebar on the overlay once per open
+   ban-screen.ts stamps data-dsh-ban-titlebar on the overlay once per open
    whenever the shared desktopBand() reports a strip, together with the strip's
    height (--dsh-ban-caption-height) and the width its window controls occupy
    (--dsh-ban-caption-controls) and the end those controls take

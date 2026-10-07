@@ -116,7 +116,7 @@ body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant
    hits) with its own icons and spacing. The row is HIDDEN and stays in the
    document: its structure still tells the detailed form from the compact one,
    and the session's numbers are read from the host's projections
-   (features/context-stats/session-stats.js) into the popover the context meter
+   (features/context-stats/session-stats.ts) into the popover the context meter
    opens. One popover for everything about the session's numbers, and the input
    row keeps only the meter at its right end. */
 body[data-dsh-claude-style] [data-composer-stats] {
@@ -152,7 +152,7 @@ body[data-dsh-claude-style][%%SESSION_STATS_ATTR%%] [role="dialog"]:has([data-se
 
 /* ---------- session statistics inside the context popover ---------- */
 /* Skin-owned nodes appended to the host's own panel
-   (features/context-stats/session-stats.js): the host's context rows above, the
+   (features/context-stats/session-stats.ts): the host's context rows above, the
    session's numbers below, one hairline between them.
 
    The panel itself is the host's, and the host mounts it with no entrance of
@@ -163,7 +163,7 @@ body[data-dsh-claude-style] [data-dsh-claude-context-panel] {
 }
 /* The host places the panel from the anchor's LEFT edge and only then clamps it
    into the viewport, which at the end of the composer row parks it against the
-   window's right margin, past the ring. session-stats.js reads the two boxes and
+   window's right margin, past the ring. session-stats.ts reads the two boxes and
    writes the left value that lines the panel's right edge up with the meter's —
    the hand-over the hero menu makes for the menu the host places below its own
    trigger. The mark is written together with the value, so this declaration

@@ -1,5 +1,5 @@
 /* ---------- Sliding pill: the segmented controls' shared highlight ---------- */
-/* src/shared/sliding-pill.js marks a control with data-dsh-claude-pill and
+/* src/shared/sliding-pill.ts marks a control with data-dsh-claude-pill and
    writes the active item's offset and width; this draws one box there and
    slides it on every later change. The shape and fill belong to each control
    (view-tabs.css for the conversation view tabs, permissions.css for the

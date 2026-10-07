@@ -56,7 +56,7 @@ body[data-dsh-claude-style] [%%CARET_LAYER_ATTR%%][%%CARET_LAYER_ATTR%%][%%CARET
   50% { opacity: 0; }
 }
 
-/* The reader's animation choice, resolved onto <body> (src/core/prefs.js, D26):
+/* The reader's animation choice, resolved onto <body> (src/core/prefs.ts, D26):
    reduced stills the glide and the blink, and it covers the system setting too
    because "follow the system" resolves into this same attribute. A media query
    here would ignore the choice — and would stop the caret for a reader who

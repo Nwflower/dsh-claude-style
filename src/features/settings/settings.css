@@ -82,7 +82,7 @@ body[data-dsh-claude-style] .dsh-claude-settings-row.dsh-claude-settings-row-sub
 /* The host's scroller around the page (the settings dialog's options column,
    the plugin page) always keeps the scrollbar's room: a tab short enough to
    need no scrollbar then lays out at the same width as one that does. The
-   page marks its nearest scrolling ancestor while it is mounted (settings.js). */
+   page marks its nearest scrolling ancestor while it is mounted (settings.ts). */
 body[data-dsh-claude-style] [%%SETTINGS_SCROLLER_ATTR%%] {
   scrollbar-gutter: stable;
 }
@@ -134,7 +134,7 @@ body[data-dsh-claude-style] .dsh-claude-settings-row-block > .dsh-claude-brand-p
    marks are the same assets the sidebar and hero paint — Claude's clay
    starburst, DeepSeek's whale in brand blue — inlined as CSS data URIs, so
    they read in full colour on either theme. A new brand adds one option in
-   settings.js and one [data-brand] rule here. */
+   settings.ts and one [data-brand] rule here. */
 body[data-dsh-claude-style] .dsh-claude-brand-picker {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
@@ -325,7 +325,7 @@ body[data-dsh-claude-style] .dsh-claude-settings-picker[aria-expanded="true"] {
   border-color: var(--dsw-alias-brand-primary, #d97757);
 }
 
-/* The quick-provider picker's card (src/features/settings/quick-providers.js):
+/* The quick-provider picker's card (src/features/settings/quick-providers.ts):
    the shared popover card, anchored above the trigger and right-aligned with it
    (positionAnchoredPopover), so it grows from the corner nearest the trigger —
    the bottom right, as the model picker's card does. */

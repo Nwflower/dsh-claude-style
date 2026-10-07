@@ -7,7 +7,7 @@
    The whale writes the sheet and the sprite's crop box as custom properties
    when an animation starts; each frame is a translation of the strip inside
    the sprite's window, played by the browser's animation engine
-   (src/features/mascot/whale.js); the sheet holds eight frames to a row.
+   (src/features/mascot/whale.ts); the sheet holds eight frames to a row.
    Only the whale's body takes the pointer. */
 
 /* Feet on the top edge of what it stands on. Every sheet's crop box ends 3px

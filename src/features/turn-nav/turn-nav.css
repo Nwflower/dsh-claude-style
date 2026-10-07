@@ -94,7 +94,7 @@ body[data-dsh-claude-style] .dsh-claude-turn-nav-row[data-current] .dsh-claude-t
   transform: none !important;
 }
 
-/* The card: the shared shell, laid over the rail by turn-nav.js from inside the
+/* The card: the shared shell, laid over the rail by turn-nav.ts from inside the
    rail's slot, so it counts as the conversation pane under the pointer. It
    fades in and out in place — the shell's rise would carry the rows off their
    marks. */

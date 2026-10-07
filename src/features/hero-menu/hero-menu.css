@@ -2,7 +2,7 @@
 /* ---------- Host menu primitive: the hero row's pickers ---------- */
 /* The workspace (directory) chip and the agent-preset seat open the host's
    shared Menu primitive, which portals its card to <body>. The card carries no
-   marker of its own, so src/features/hero-menu/hero-menu.js stamps the one that belongs
+   marker of its own, so src/features/hero-menu/hero-menu.ts stamps the one that belongs
    to this row with HERO_MENU_ATTR and these rules reach it alone — the host's
    other menus keep their own design. The metrics are the skin's popover
    language, the same card / rows / hover plate / accent check as

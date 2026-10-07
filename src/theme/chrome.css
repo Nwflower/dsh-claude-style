@@ -256,7 +256,7 @@ body[data-dsh-claude-style] [class*="_header"]:has([class*="_tabs"])::after {
 }
 
 /* ---------- the animation choice: reduced motion ---------- */
-/* The resolved choice rides <body data-dsh-claude-motion> (src/core/prefs.js,
+/* The resolved choice rides <body data-dsh-claude-motion> (src/core/prefs.ts,
    D26), because a stylesheet cannot talk a media query out of the system's
    setting. Scoped to the skin's own class prefix so the host's transitions stay
    as the host wrote them. Two things keep moving on purpose: the segmented

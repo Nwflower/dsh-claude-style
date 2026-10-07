@@ -74,7 +74,7 @@ const HDSL_SKIN_PATH = `${ROUTE_PREFIX}/hdsl-skin.png`
  * registry's archive set — the stored-directory miss included, so an archive
  * entry whose storage is already gone leaves the set instead of pinning its
  * row to the list. The path is also spelled in
- * src/constants.js (SESSION_DELETE_ROUTE) for the browser half; keep the two in
+ * src/constants.ts (SESSION_DELETE_ROUTE) for the browser half; keep the two in
  * step.
  */
 const SESSION_DELETE_PATH = `${ROUTE_PREFIX}/session-delete`

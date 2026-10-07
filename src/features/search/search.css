@@ -1,5 +1,5 @@
 /* ---------- Sidebar search box ---------- */
-/* src/features/search/search.js puts the box in the host's logo row, beside
+/* src/features/search/search.ts puts the box in the host's logo row, beside
    the brand, and marks the row. The row becomes a two-column grid whose first
    cell holds the brand and the box on top of each other (the web shell's
    collapse toggle keeps the second; the desktop's is fixed in the titlebar).
@@ -137,7 +137,7 @@ body[data-dsh-claude-style] .dsh-claude-search-trigger-label {
 /* ---------- Search palette ---------- */
 /* The card is the host's Modal (its mask, focus return and Esc); these rules
    only re-cut the card: wider, set high in the window, no inner gaps, and the
-   skin's own rows inside. It fades and settles in; on close search.js marks
+   skin's own rows inside. It fades and settles in; on close search.ts marks
    the overlay and keeps it mounted while card and mask fade out together. */
 body[data-dsh-claude-style] .dsh-claude-search-dialog {
   animation: dsh-claude-search-in 0.18s cubic-bezier(0.22, 0.61, 0.36, 1) !important;

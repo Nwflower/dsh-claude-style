@@ -93,7 +93,7 @@ body[data-dsh-claude-style] .dsh-claude-account-popover {
   position: absolute !important;
   bottom: calc(100% + 4px) !important;
   /* The drawer's inline edges are the account row's own, measured by
-     features/account/account-footer.js: the footer's padding box is wider than the row,
+     features/account/account-footer.ts: the footer's padding box is wider than the row,
      so a flat 0 would make the card overhang the row it hangs from. */
   left: var(--dsh-claude-account-inset-left, 0px) !important;
   right: var(--dsh-claude-account-inset-right, 0px) !important;
@@ -132,7 +132,7 @@ body[data-dsh-claude-style] .dsh-claude-account-popover::after {
 }
 
 /* The account row is the ban-screen easter egg's trigger
-   (src/features/ban-screen/ban-screen.js). The header is only the wrapper — the clickable
+   (src/features/ban-screen/ban-screen.ts). The header is only the wrapper — the clickable
    strip is the inner row, so the hover plate covers the name and not the divider
    that follows it. */
 body[data-dsh-claude-style] .dsh-claude-account-popover-row {
@@ -158,7 +158,7 @@ body[data-dsh-claude-style] .dsh-claude-account-popover-header .dsh-claude-accou
 
 /* The account mark is a background image on the span itself (see the rule above).
    When the desktop has a real avatar, the picture is an <img> layered over that
-   mark (src/features/account/account-footer.js) rather than a background: the picture
+   mark (src/features/account/account-footer.ts) rather than a background: the picture
    host expects the request without a referrer, the way the host's own avatar
    <img> sends it, and only an element can say so. A picture that fails to load
    hides itself, and the mark underneath shows instead of an empty circle. */
@@ -183,7 +183,7 @@ body[data-dsh-claude-style] .dsh-claude-account-photo[hidden] {
 
 /* The launcher's own skin, when the instance was started with one: the head is
    a canvas cropped out of the texture the host serves (src/features/account/
-   rows.js), so it is the picture, not the mark, that fills the box. The mark is
+   rows.ts), so it is the picture, not the mark, that fills the box. The mark is
    dropped only while that canvas is mounted — a skin whose bytes never arrived
    leaves the attribute off and the mark in place. The pixels are a Minecraft
    head's 8×8 face, so they are scaled without smoothing.
@@ -227,7 +227,7 @@ body[data-dsh-claude-style] .dsh-claude-account-popover .dsh-claude-popover-item
 /* ---------- Host account area ---------- */
 /* The host's own account row is the entry on a host that has one (Desktop
    0.1.7+): it stays in the host's DOM and flow and is repainted here as a
-   Claude row. features/account/account-footer.js marks it with
+   Claude row. features/account/account-footer.ts marks it with
    [data-dsh-claude-account-host-row]. */
 body[data-dsh-claude-style] [data-dsh-claude-account-host-row] {
   display: flex !important;
@@ -303,7 +303,7 @@ body[data-dsh-claude-style] .dsh-claude-account-inject {
 /* ---------- Host account menu: the skin's popover language ---------- */
 /* On a host with an account area (Desktop 0.1.7+) the host renders its own
    account menu and the skin injects only its header and plugin rows into the
-   list. features/account/surface.js marks that menu while it is open, and the
+   list. features/account/surface.ts marks that menu while it is open, and the
    rules below repaint the host's card, rows and separators with the same card /
    row / hairline language as the self-built drawer (shared/popover.css).
    Only appearance is touched: the host keeps its row order, copy and click
@@ -330,7 +330,7 @@ body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [%%ACCOUNT_MENU_ATTR%%] {
   --dsw-menu-backdrop-filter: none;
 }
 /* The entry animation is keyed on the armed marker rather than on the card
-   marker (constants.js): the armed marker is in place before the host mounts
+   marker (constants.ts): the armed marker is in place before the host mounts
    the card, so the animation runs from the card's first frame instead of
    replaying over a card that was already painted. The host's shared menu card
    is the only thing that mounts inside that window.
@@ -339,7 +339,7 @@ body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [%%ACCOUNT_MENU_ATTR%%] {
    with its own rows and places it from that geometry; the skin's container
    arrives a frame later, the card grows, and the host re-places it a frame after
    that. A card revealed on the mount frame fades in low and jumps up mid-fade,
-   so inside the armed window it stays unpainted until surface.js has seen our
+   so inside the armed window it stays unpainted until surface.ts has seen our
    rows inside it and the host's placement stand still. */
 body[data-dsh-claude-style][%%ACCOUNT_ARMED_ATTR%%] div[role="menu"][data-menu-material]:not([%%ACCOUNT_READY_ATTR%%]) {
   visibility: hidden !important;

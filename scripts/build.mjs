@@ -1,47 +1,47 @@
 #!/usr/bin/env node
 /**
- * build.mjs — assemble `lib/client.js` from the `src/` fragments and stylesheets.
+ * build.mjs — bundle `lib/client.js` from the TypeScript modules and stylesheets in `src/` (D36).
  *
- * The shipped client bundle is a single self-contained file (the DSH module
- * loader has no relative requires and no asset URLs for plugin clients), so the
- * source is split for maintenance and inlined back at build time:
+ * The DSH module loader takes one file per plugin client, registered with
+ * `__ModuleLoader__.load` and handed a `require` for the packages the host
+ * provides; it has no relative requires and no asset URLs. So esbuild bundles
+ * src/entry.ts into one minified CommonJS body with React and the host packages
+ * external, and that body is wrapped in the loader's factory:
  *
- *   src/constants.js             constants & tokens (evaluated to substitute
- *                                %%TOKEN%% placeholders); brand SVGs live in src/assets/
- *   src/assets/icons/combine/*.svg     vendor lockups (mark + wordmark in one),
- *                                inlined as JS markup tables
- *   src/assets/mascot/deepy/*.png      Deepy's animation sheets, copied to
- *                                lib/deepy/ for the host half to serve
- *   src/assets/mascot/crab/*.png       the composer crab's animation sheets
- *                                (scripts/draw-crab.py), inlined as data URIs
- *   src/core/                   host accessors, prefs, model copy, i18n, scheduler
- *   src/shared/                  parts more than one feature uses (JS + CSS)
- *   src/theme/*.css              the global look no single feature owns
- *   src/features/<name>/         one feature: its installer, its split
- *                                factories and its stylesheets, side by side
- *   src/entry.js                 apply(): the FEATURES table + exports
+ *   src/entry.ts                 apply(): the FEATURES table; imports everything else
+ *   src/constants.ts             constants; also evaluated here for the stylesheet tokens
+ *   src/core/ src/shared/ src/features/<name>/   the modules, TypeScript, strict
+ *   src/theme/*.css and the feature stylesheets   concatenated in STYLE_FILES order
+ *   src/assets/brand/*.svg       brand marks, stylesheet data URIs
+ *   src/assets/icons/combine/*.svg     vendor lockups (mark + wordmark in one)
+ *   src/assets/mascot/crab/*.png       the crab's sheets (scripts/draw-crab.py), data URIs
+ *   src/assets/mascot/deepy/*.png      Deepy's sheets, copied to lib/deepy/ for the host half to serve
  *
- * FRAGMENTS and STYLE_FILES below are the assembly order and the only list of
- * what ships.
+ * What the build produces for the browser half reaches the source as one
+ * generated module, `virtual:dsh-claude-style/generated` (typed in
+ * src/generated.d.ts): the stylesheet, the lockups, the sheet stamps and data
+ * URIs, the build id.
  *
- * `src/model-descriptions.json` is not a fragment: it is validated here and
+ * Before anything is written, `tsc` type-checks src/ and the bundle's import
+ * graph must hold no cycle: a missing import, a cycle or a constant read before
+ * it is initialized fails the build.
+ *
+ * `src/model-descriptions.json` is not bundled: it is validated here and
  * copied to `lib/`, where the host half serves it to the browser half at
- * runtime. Model copy is data, so it must not enter the bundle.
- *
- * Fragments are concatenated verbatim (they share one factory scope at
- * runtime), so each fragment must keep its 4-space base indentation and must
- * NOT use import/export.
+ * runtime. Model copy is data, so it must not enter the bundle (D5).
  */
+import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import vm from 'node:vm'
+import esbuild from 'esbuild'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
 /**
  * The host half's preference table (host/settings.js): the browser half's
- * PREF_DEFAULTS and src/entry.js's feature switches are both held to it.
+ * PREF_DEFAULTS and src/entry.ts's feature switches are both held to it.
  */
 const { PREFS_DEFAULT } = await import(pathToFileURL(path.join(ROOT, 'host', 'settings.js')).href)
 const SRC = path.join(ROOT, 'src')
@@ -83,95 +83,6 @@ const MODEL_COPY = 'model-descriptions.json'
  */
 const ICON_SOURCE = 'claude-mark-clay.svg'
 const ICON_FILE = 'claude-mark.svg'
-
-const FRAGMENTS = [
-  'constants.js',
-  'core/host.js',
-  'core/desktop-band.js',
-  'core/prefs.js',
-  'core/model-copy.js',
-  'core/i18n.js',
-  'core/stylesheet.js',
-  'shared/dom.js',
-  'shared/notify.js',
-  'shared/resource.js',
-  'shared/format.js',
-  'shared/popover.js',
-  'shared/sliding-pill.js',
-  'shared/chat-dom.js',
-  'shared/scroll-ease.js',
-  'shared/peer-plugin.js',
-  'features/selection/selection.js',
-  'features/composer/composer.js',
-  'features/copy/copy.js',
-  'features/permissions/permissions.js',
-  'features/context-stats/session-stats.js',
-  'features/context-stats/context-stats.js',
-  'features/model/brand.js',
-  'features/model/copy-lookup.js',
-  'features/model/catalog.js',
-  'features/model/rows.js',
-  'features/model/model-picker.js',
-  'features/effort/matrix.js',
-  'features/effort/control.js',
-  'features/effort/effort-picker.js',
-  'features/hero-menu/hero-menu.js',
-  'features/settings/quick-providers.js',
-  'features/account/profile.js',
-  'features/account/host-menu.js',
-  'features/account/rows.js',
-  'features/account/footer-mirror.js',
-  'features/account/surface.js',
-  'features/account/account-footer.js',
-  'features/ban-screen/ban-screen.js',
-  'features/theme-flip/theme-flip.js',
-  'features/workspace/workspace-view.js',
-  'features/search/sources.js',
-  'features/search/search.js',
-  'features/turn-status/turn-status.js',
-  'features/turn-nav/turn-nav-host.js',
-  'features/turn-nav/turn-nav.js',
-  'features/chat-follow/reader-intent.js',
-  'features/chat-follow/chat-tail.js',
-  'features/chat-follow/process-follow.js',
-  'features/chat-follow/chat-follow.js',
-  'features/chat-fold/fold-toggle.js',
-  'features/chat-fold/reasoning-fold.js',
-  'features/chat-fold/process-fold.js',
-  'features/chat-fold/chat-fold.js',
-  'features/chat-fold/fold-glide-parts.js',
-  'features/chat-fold/fold-glide.js',
-  'features/chat-reveal/reveal-engine.js',
-  'features/chat-reveal/chat-reveal.js',
-  'features/chat-files/file-row-model.js',
-  'features/chat-files/chat-files.js',
-  'features/chat-send/send-snapshot.js',
-  'features/chat-send/send-shape.js',
-  'features/chat-send/send-morph.js',
-  'features/chat-send/send-flight.js',
-  'features/caret/caret-measure.js',
-  'features/caret/caret.js',
-  'features/view-tabs/view-tabs.js',
-  'features/home/data.js',
-  'features/home/overview.js',
-  'features/home/models.js',
-  'features/home/home-layout.js',
-  'features/mascot/mascot-signals.js',
-  'features/mascot/mascot-player.js',
-  'features/mascot/whale-sheets.js',
-  'features/mascot/whale.js',
-  'features/mascot/crab.js',
-  'features/mascot/mascot.js',
-  'core/scheduler.js',
-  'features/settings/settings-controls.js',
-  'features/settings/settings-tab-general.js',
-  'features/settings/settings-tab-appearance.js',
-  'features/settings/settings-tab-composer.js',
-  'features/settings/settings-tab-sidebar.js',
-  'features/settings/settings-tab-conversation.js',
-  'features/settings/settings.js',
-  'entry.js',
-]
 
 const STYLE_FILES = [
   { file: 'theme/tokens.css' },
@@ -215,50 +126,58 @@ const STYLE_FILES = [
   { file: 'features/theme-flip/theme-flip.css' },
 ]
 
-const HEADER = (() => {
-  const jsFragments = FRAGMENTS.map((name) => ` *   - src/${name}`).join('\n')
-  const styleSheets = STYLE_FILES.map((fileDef) => ` *   - src/${fileDef.file}`).join('\n')
-  return `/**
- * Claude Style — Claude Code Desktop theme for the DeepSeek Harness web GUI.
- *
- * GENERATED FILE — do not edit. Source lives in src/ as feature fragments;
- * \`node scripts/build.mjs\` assembles this bundle.
- *
- * JS fragments (in assembly order):
- *   - src/assets/brand/*.svg   Brand marks (inlined as CSS url() data URIs at build time)
- * ${jsFragments}
- *
- * Stylesheets (in assembly order):
- * ${styleSheets}
- */
-window.__ModuleLoader__.load({
-  id: 'dsh-claude-style',
-  factory: (require) => {
-    'use strict'
-    var module = { exports: {} }
-    var exports = module.exports
+/** The package name: the loader id, the stylesheet's own tag and the profile entry all carry it (D33). */
+const PACKAGE_ID = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).name
 
-    // React is resolved through the module loader's graph, so the settings
-    // section can be a real component without a host half.
-    var React = require('react')
-`
-})()
+/** The packages the host's loader hands the factory's `require`; never bundled. */
+const HOST_PACKAGES = ['react', 'react-dom/client', '@deepseek-ai/dsh-client-ui-primitives']
 
-const FOOTER = `  },
-})
-`
+/** Stands where the build id goes until the bundle's own hash is known. */
+const BUILD_ID_SLOT = '%%BUILD_ID%%'
 
 /**
- * Evaluate src/constants.js once (pure, DOM-free): `tokens` are the %%TOKEN%%
- * values, beside them the two sheet tables and the preference defaults the
- * build checks. The file is written for both halves — the bundle inlines it
- * and host/routes.js reads it as text — so nothing imports it directly.
+ * The loader's factory around esbuild's CommonJS body: `require` resolves the
+ * external packages, and what the body puts on `module.exports` (`apply`) is
+ * what the factory returns to the host.
  */
-const CONSTANTS = new Function(`
-  ${fs.readFileSync(path.join(SRC, 'constants.js'), 'utf8')}
+const FACTORY_OPEN = `/**
+ * Claude Style — Claude Code Desktop theme for the DeepSeek Harness web GUI.
+ * GENERATED FILE — do not edit. Source lives in src/; \`npm run build\` bundles it.
+ */
+window.__ModuleLoader__.load({
+  id: ${JSON.stringify(PACKAGE_ID)},
+  factory: (require) => {
+    var module = { exports: {} }
+    var exports = module.exports`
+const FACTORY_CLOSE = `    return module.exports
+  },
+})`
+
+/**
+ * Evaluate src/constants.ts once (pure, DOM-free): `tokens` are the values the
+ * stylesheets' %%TOKEN%% placeholders take, beside them the two sheet tables
+ * and the preference defaults the build checks.
+ */
+const CONSTANTS = (() => {
+  const { outputFiles } = esbuild.buildSync({
+    entryPoints: [path.join(SRC, 'constants.ts')],
+    bundle: true,
+    format: 'cjs',
+    platform: 'neutral',
+    write: false,
+    logLevel: 'silent',
+  })
+  const module = { exports: {} }
+  vm.runInNewContext(outputFiles[0].text, { module, exports: module.exports }, { filename: 'src/constants.ts' })
+  const constants = module.exports
+  const pick = (names) => Object.fromEntries(names.map((name) => {
+    if (constants[name] === undefined) throw new Error(`build: src/constants.ts exports no ${name}`)
+    return [name, constants[name]]
+  }))
+  const { BRAND_ATTR, BRAND_CLAUDE, PALETTE_ATTR, PALETTE_CLAUDE, PALETTE_HOST, TYPEFACE_ATTR, TYPEFACE_CLAUDE, TYPEFACE_HOST } = constants
   return {
     tokens: {
-      SANS, SERIF, PROSE, MONO, BRAND_ATTR, BRAND_CLAUDE, BRAND_DEEPSEEK, MOTION_ATTR, MOTION_REDUCED, FOOTER_ATTR, COMPOSER_ATTR, PERMISSIONS_ATTR, SESSION_STATS_ATTR, CHAT_FOLLOW_ATTR, STREAM_GLIDE_ATTR, CHAT_FOLD_ATTR, CHAT_ROLLING_ATTR, CHAT_REVEAL_ATTR, CHAT_FLYING_ATTR, CARET_ATTR, CARET_LAYER_ATTR, CARET_VISIBLE_ATTR, CARET_HOST_ATTR, ACCOUNT_MENU_ATTR, ACCOUNT_ARMED_ATTR, ACCOUNT_READY_ATTR, HERO_MENU_ATTR, SETTINGS_SCROLLER_ATTR,
+      ...pick(['SANS', 'SERIF', 'PROSE', 'MONO', 'BRAND_ATTR', 'BRAND_CLAUDE', 'BRAND_DEEPSEEK', 'MOTION_ATTR', 'MOTION_REDUCED', 'FOOTER_ATTR', 'COMPOSER_ATTR', 'PERMISSIONS_ATTR', 'SESSION_STATS_ATTR', 'CHAT_FOLLOW_ATTR', 'STREAM_GLIDE_ATTR', 'CHAT_FOLD_ATTR', 'CHAT_ROLLING_ATTR', 'CHAT_REVEAL_ATTR', 'CHAT_FLYING_ATTR', 'CARET_ATTR', 'CARET_LAYER_ATTR', 'CARET_VISIBLE_ATTR', 'CARET_HOST_ATTR', 'ACCOUNT_MENU_ATTR', 'ACCOUNT_ARMED_ATTR', 'ACCOUNT_READY_ATTR', 'HERO_MENU_ATTR', 'SETTINGS_SCROLLER_ATTR']),
       // "this brand is drawn by the skin": of the two brands, DeepSeek keeps the
       // host's own brand area, so the shared rules that hide the host's mark and
       // paint the ::before are gated on the Claude brand rather than on
@@ -271,13 +190,11 @@ const CONSTANTS = new Function(`
       PALETTE_HOST: '[' + PALETTE_ATTR + '="' + PALETTE_HOST + '"]',
       TYPEFACE_CLAUDE: '[' + TYPEFACE_ATTR + '="' + TYPEFACE_CLAUDE + '"]',
       TYPEFACE_HOST: '[' + TYPEFACE_ATTR + '="' + TYPEFACE_HOST + '"]',
-      CLAUDE_WORD_WIDTH: (18 * CLAUDE_WORD_ASPECT).toFixed(1),
+      CLAUDE_WORD_WIDTH: (18 * constants.CLAUDE_WORD_ASPECT).toFixed(1),
     },
-    CRAB_SHEETS,
-    DEEPY_SHEETS,
-    PREF_DEFAULTS,
+    ...pick(['CRAB_SHEETS', 'DEEPY_SHEETS', 'PREF_DEFAULTS']),
   }
-`)()
+})()
 
 /** Marker delimiting the region of a stylesheet the composer preference gates. */
 const COMPOSER_GATE_MARKER = '/* @composer-gate */'
@@ -482,7 +399,7 @@ function loadSvgAssets() {
 const SHEET_FILE = /^[a-z]+(?:-[a-z]+)*\.png$/
 
 /**
- * Hold one mascot's sheet directory to its animation table in src/constants.js.
+ * Hold one mascot's sheet directory to its animation table in src/constants.ts.
  *
  * Each entry needs its files and a well-formed row — a frame count, a crop box
  * inside the character's grid, a still frame the sheet holds — and a file no
@@ -691,61 +608,65 @@ function validateModelCopy(doc, lobeBrands) {
 }
 
 /**
- * Refuse a source file that no list names: a fragment or stylesheet added
- * under src/ but left out of FRAGMENTS / STYLE_FILES would otherwise simply
- * not ship, with nothing to say so.
+ * Refuse a source file that does not ship: a stylesheet STYLE_FILES leaves out,
+ * or a module nothing imports, would otherwise sit in src/ with nothing to say
+ * it never reaches the page.
+ *
+ * @param bundled - the src/-relative modules in the bundle (esbuild's metafile).
  */
-function checkListed() {
-  const listed = new Set([...FRAGMENTS, ...STYLE_FILES.map((fileDef) => fileDef.file)])
+function checkListed(bundled) {
+  const listed = new Set(STYLE_FILES.map((fileDef) => fileDef.file))
   const walk = (dir) => fs.readdirSync(path.join(SRC, dir), { withFileTypes: true }).flatMap((entry) => {
     const rel = dir === '' ? entry.name : `${dir}/${entry.name}`
     if (entry.isDirectory()) return rel === 'assets' ? [] : walk(rel)
-    return /\.(js|css)$/.test(entry.name) ? [rel] : []
+    return [rel]
   })
-  const unlisted = walk('').filter((file) => !listed.has(file))
-  if (unlisted.length > 0) throw new Error(`build: src/${unlisted[0]} is in no list; add it to FRAGMENTS or STYLE_FILES`)
+  for (const file of walk('')) {
+    if (file.endsWith('.css') && !listed.has(file)) throw new Error(`build: src/${file} is in no list; add it to STYLE_FILES`)
+    if (file.endsWith('.ts') && !file.endsWith('.d.ts') && !bundled.has(file)) throw new Error(`build: src/${file} is imported by no module the bundle reaches`)
+  }
 }
 
 /**
- * Which fragment installs each feature of src/entry.js's FEATURES table.
+ * Which module installs each feature of src/entry.ts's FEATURES table.
  *
- * That table is runtime data inside a fragment the browser half evaluates, so
+ * That table is runtime data inside a module the browser half evaluates, so
  * the build cannot read it by importing it; this table is the build's own copy
- * of the id → main fragment pairing, and checkFeatureRegistry holds the three
+ * of the id → main module pairing, and checkFeatureRegistry holds the three
  * sources together. Without it, renaming a feature directory or its install id
  * would surface only at runtime, as a skin that silently never installs that
  * piece.
  */
 const FEATURE_MAINS = {
-  selection: 'features/selection/selection.js',
-  composer: 'features/composer/composer.js',
-  homeLayout: 'features/home/home-layout.js',
-  mascot: 'features/mascot/mascot.js',
-  copy: 'features/copy/copy.js',
-  permissions: 'features/permissions/permissions.js',
-  contextStats: 'features/context-stats/context-stats.js',
-  model: 'features/model/model-picker.js',
-  effort: 'features/effort/effort-picker.js',
-  heroMenu: 'features/hero-menu/hero-menu.js',
-  quickProviders: 'features/settings/quick-providers.js',
-  footer: 'features/account/account-footer.js',
-  ban: 'features/ban-screen/ban-screen.js',
-  themeFlip: 'features/theme-flip/theme-flip.js',
-  workspace: 'features/workspace/workspace-view.js',
-  search: 'features/search/search.js',
-  turnStatus: 'features/turn-status/turn-status.js',
-  turnNav: 'features/turn-nav/turn-nav.js',
-  chatFollow: 'features/chat-follow/chat-follow.js',
-  chatFold: 'features/chat-fold/chat-fold.js',
-  chatReveal: 'features/chat-reveal/chat-reveal.js',
-  chatFiles: 'features/chat-files/chat-files.js',
-  chatSend: 'features/chat-send/send-flight.js',
-  caret: 'features/caret/caret.js',
-  viewTabs: 'features/view-tabs/view-tabs.js',
-  settings: 'features/settings/settings.js',
+  selection: 'features/selection/selection.ts',
+  composer: 'features/composer/composer.ts',
+  homeLayout: 'features/home/home-layout.ts',
+  mascot: 'features/mascot/mascot.ts',
+  copy: 'features/copy/copy.ts',
+  permissions: 'features/permissions/permissions.ts',
+  contextStats: 'features/context-stats/context-stats.ts',
+  model: 'features/model/model-picker.ts',
+  effort: 'features/effort/effort-picker.ts',
+  heroMenu: 'features/hero-menu/hero-menu.ts',
+  quickProviders: 'features/settings/quick-providers.ts',
+  footer: 'features/account/account-footer.ts',
+  ban: 'features/ban-screen/ban-screen.ts',
+  themeFlip: 'features/theme-flip/theme-flip.ts',
+  workspace: 'features/workspace/workspace-view.ts',
+  search: 'features/search/search.ts',
+  turnStatus: 'features/turn-status/turn-status.ts',
+  turnNav: 'features/turn-nav/turn-nav.ts',
+  chatFollow: 'features/chat-follow/chat-follow.ts',
+  chatFold: 'features/chat-fold/chat-fold.ts',
+  chatReveal: 'features/chat-reveal/chat-reveal.ts',
+  chatFiles: 'features/chat-files/chat-files.ts',
+  chatSend: 'features/chat-send/send-flight.ts',
+  caret: 'features/caret/caret.ts',
+  viewTabs: 'features/view-tabs/view-tabs.ts',
+  settings: 'features/settings/settings.ts',
 }
 
-/** Installs in entry.js's table that are not features with a source directory. */
+/** Installs in entry.ts's table that are not features with a source directory. */
 const NON_FEATURE_INSTALLS = ['scheduler']
 
 /**
@@ -756,8 +677,8 @@ const NON_FEATURE_INSTALLS = ['scheduler']
  * ship without deciding.
  */
 function checkFeatureSwitches(entry) {
-  const block = entry.match(/const FEATURES = \[([\s\S]*?)\n\s*\]\n/)
-  if (block === null) throw new Error('build: src/entry.js has no FEATURES table')
+  const block = entry.match(/const FEATURES: Feature\[\] = \[([\s\S]*?)\n\s*\]\n/)
+  if (block === null) throw new Error('build: src/entry.ts has no FEATURES table')
   for (const line of block[1].split('\n')) {
     const name = line.match(/\bname: '([A-Za-z][A-Za-z0-9]*)'/)
     if (name === null) continue
@@ -769,23 +690,25 @@ function checkFeatureSwitches(entry) {
 }
 
 /**
- * Hold src/entry.js's FEATURES table and the src/features/ directories to the
+ * Hold src/entry.ts's FEATURES table and the src/features/ directories to the
  * pairing above: an install this table does not name, a table entry naming a
- * fragment FRAGMENTS does not list, and a feature directory no id covers all
+ * module the bundle does not reach, and a feature directory no id covers all
  * fail the build.
+ *
+ * @param bundled - the src/-relative modules in the bundle (esbuild's metafile).
  */
-function checkFeatureRegistry() {
+function checkFeatureRegistry(bundled) {
   for (const [id, file] of Object.entries(FEATURE_MAINS)) {
-    if (!FRAGMENTS.includes(file)) throw new Error(`build: feature "${id}" names ${file}, which FRAGMENTS does not list`)
+    if (!bundled.has(file)) throw new Error(`build: feature "${id}" names ${file}, which the bundle does not reach`)
   }
-  const entry = fs.readFileSync(path.join(SRC, 'entry.js'), 'utf8')
+  const entry = fs.readFileSync(path.join(SRC, 'entry.ts'), 'utf8')
   const declared = new Set([...entry.matchAll(/\bname: '([A-Za-z][A-Za-z0-9]*)'/g)].map((match) => match[1]))
   for (const id of NON_FEATURE_INSTALLS) declared.delete(id)
   for (const id of declared) {
-    if (!(id in FEATURE_MAINS)) throw new Error(`build: src/entry.js installs feature "${id}", which FEATURE_MAINS does not name`)
+    if (!(id in FEATURE_MAINS)) throw new Error(`build: src/entry.ts installs feature "${id}", which FEATURE_MAINS does not name`)
   }
   for (const id of Object.keys(FEATURE_MAINS)) {
-    if (!declared.has(id)) throw new Error(`build: FEATURE_MAINS names "${id}", which src/entry.js does not install`)
+    if (!declared.has(id)) throw new Error(`build: FEATURE_MAINS names "${id}", which src/entry.ts does not install`)
   }
   checkFeatureSwitches(entry)
   const covered = new Set(Object.values(FEATURE_MAINS).map((file) => file.split('/')[1]))
@@ -793,29 +716,84 @@ function checkFeatureRegistry() {
     .filter((item) => item.isDirectory())
     .map((item) => item.name)
   for (const dir of dirs) {
-    if (!covered.has(dir)) throw new Error(`build: src/features/${dir} has no install in src/entry.js`)
+    if (!covered.has(dir)) throw new Error(`build: src/features/${dir} has no install in src/entry.ts`)
   }
 }
 
 /**
- * Hold the browser half's preference defaults (src/constants.js PREF_DEFAULTS)
+ * Hold the browser half's preference defaults (src/constants.ts PREF_DEFAULTS)
  * to the host half's PREFS_DEFAULT: the same keys with the same values, so the
  * frames before the settings form answers show what the form will hold.
  */
 function checkPrefDefaults() {
   const browser = CONSTANTS.PREF_DEFAULTS
   for (const key of new Set([...Object.keys(browser), ...Object.keys(PREFS_DEFAULT)])) {
-    if (!(key in browser)) throw new Error(`build: src/constants.js PREF_DEFAULTS lacks "${key}", which host/settings.js PREFS_DEFAULT carries`)
-    if (!(key in PREFS_DEFAULT)) throw new Error(`build: host/settings.js PREFS_DEFAULT lacks "${key}", which src/constants.js PREF_DEFAULTS carries`)
+    if (!(key in browser)) throw new Error(`build: src/constants.ts PREF_DEFAULTS lacks "${key}", which host/settings.js PREFS_DEFAULT carries`)
+    if (!(key in PREFS_DEFAULT)) throw new Error(`build: host/settings.js PREFS_DEFAULT lacks "${key}", which src/constants.ts PREF_DEFAULTS carries`)
     if (JSON.stringify(browser[key]) !== JSON.stringify(PREFS_DEFAULT[key])) {
-      throw new Error(`build: preference "${key}" defaults to ${JSON.stringify(browser[key])} in src/constants.js but ${JSON.stringify(PREFS_DEFAULT[key])} in host/settings.js`)
+      throw new Error(`build: preference "${key}" defaults to ${JSON.stringify(browser[key])} in src/constants.ts but ${JSON.stringify(PREFS_DEFAULT[key])} in host/settings.js`)
     }
   }
 }
 
-function main() {
-  checkListed()
-  checkFeatureRegistry()
+/**
+ * Type-check src/ (tsconfig.json, strict). esbuild only strips types, so this
+ * is what turns a missing import, a misspelt name or a wrong argument into a
+ * build failure.
+ */
+function checkTypes() {
+  const tsc = path.join(ROOT, 'node_modules', 'typescript', 'bin', 'tsc')
+  try {
+    execFileSync(process.execPath, [tsc, '-p', ROOT, '--pretty'], { stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf8' })
+  } catch (error) {
+    process.stderr.write(error.stdout + error.stderr)
+    throw new Error('build: tsc reports type errors in src/ (listed above)')
+  }
+}
+
+/**
+ * Refuse an import cycle. Modules in a cycle evaluate one before the other has
+ * finished, so a constant read across it can be read before it is initialized.
+ *
+ * @param metafile - esbuild's metafile for the bundle.
+ */
+function checkCycles(metafile) {
+  const graph = new Map(Object.entries(metafile.inputs).map(([file, input]) => [file, input.imports.filter((item) => !item.external).map((item) => item.path)]))
+  const state = new Map()
+  const stack = []
+  const visit = (file) => {
+    state.set(file, 'open')
+    stack.push(file)
+    for (const next of graph.get(file) ?? []) {
+      if (state.get(next) === 'open') {
+        const cycle = [...stack.slice(stack.indexOf(next)), next].join(' → ')
+        throw new Error(`build: import cycle ${cycle}`)
+      }
+      if (!state.has(next)) visit(next)
+    }
+    stack.pop()
+    state.set(file, 'done')
+  }
+  for (const file of graph.keys()) if (!state.has(file)) visit(file)
+}
+
+/**
+ * The generated module (src/generated.d.ts) as an esbuild plugin: everything the
+ * build produces for the browser half, as named exports.
+ */
+function generatedModule(values) {
+  const contents = Object.entries(values).map(([name, value]) => `export const ${name} = ${JSON.stringify(value)}`).join('\n')
+  return {
+    name: 'generated',
+    setup(build) {
+      build.onResolve({ filter: /^virtual:dsh-claude-style\/generated$/ }, (args) => ({ path: args.path, namespace: 'generated' }))
+      build.onLoad({ filter: /.*/, namespace: 'generated' }, () => ({ contents, loader: 'js' }))
+    },
+  }
+}
+
+async function main() {
+  checkTypes()
   checkPrefDefaults()
   const tokens = { ...CONSTANTS.tokens, ...loadSvgAssets() }
   const combines = loadCombines()
@@ -834,85 +812,54 @@ function main() {
     .join('\n\n')
   checkTokenAliases(tokenNames)
 
-  const cssDecl = [
-    '    // ============================================================================',
-    '    // 样式表（由 src/ 下的 .css 内联生成，勿手改） (CSS Stylesheet)',
-    '    // ============================================================================',
-    '    var CSS = [',
-    ...cssText.split('\n').map((line) => '      ' + JSON.stringify(line) + ','),
-    "    ].join('\\n')",
-  ].join('\n')
-
-  // Vendor lockups: one markup table plus the word each lockup stands in for.
-  const combineDecl = [
-    '    // ============================================================================',
-    '    // 厂商锁定标（由 src/assets/icons/combine/*.svg 内联生成，勿手改） (Vendor lockups)',
-    '    // ============================================================================',
-    '    var COMBINE_SVGS = {',
-    ...Object.entries(combines).map(([id, item]) => `      ${JSON.stringify(id)}: ${JSON.stringify(item.svg)},`),
-    '    }',
-    '    var COMBINE_WORDS = {',
-    ...Object.entries(combines).map(([id, item]) => `      ${JSON.stringify(id)}: ${JSON.stringify(item.word)},`),
-    '    }',
-  ].join('\n')
-
-  const fragment = (name) => {
-    const text = fs.readFileSync(path.join(SRC, name), 'utf8').replace(/\r\n/g, '\n').replace(/\n+$/, '')
-    const lines = text.split('\n')
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i]
-      if (/^[ \t]*(import|export)[ \t]/m.test(line)) {
-        throw new Error(`build: src/${name} uses import/export at line ${i + 1}`)
-      }
-      if (line.trim() !== '' && !/^ {4}/.test(line) && !/^ \* /.test(line)) {
-        throw new Error(`build: src/${name} line ${i + 1} is not 4-space indented: ${line.trim().slice(0, 60)}`)
-      }
-    }
-    return text
-  }
-
-  // The build id: a hash of the bundle itself, written into it. The skin puts
-  // it on <body data-dsh-claude-style>, so a live page can be matched to the
-  // lib/client.js it runs — a hot reload swaps the bundle without reloading
-  // the page, so the page's load time says nothing about its code.
-  const BUILD_ID_SLOT = '%%BUILD_ID%%'
-  const buildDecl = [
-    '    // ============================================================================',
-    '    // 构建编号（由 scripts/build.mjs 按产物内容生成） (Build id)',
-    '    // ============================================================================',
-    `    var BUILD_ID = '${BUILD_ID_SLOT}'`,
-  ].join('\n')
-
   // Deepy sheet stamps: content hashes of the sheets, for the browser half's
   // vector cache keys (planDeepySheets).
   const deepy = planDeepySheets()
-  const deepyStampDecl = [
-    '    // ============================================================================',
-    '    // Deepy 帧图内容戳（由 scripts/build.mjs 按帧图字节生成） (Deepy sheet stamps)',
-    '    // ============================================================================',
-    `    var DEEPY_STAMPS = ${JSON.stringify(deepy.stamps)}`,
-  ].join('\n')
 
-  // The crab's sheets, inlined (loadCrabSheets).
-  const crabSheetDecl = [
-    '    // ============================================================================',
-    '    // 螃蟹帧图（由 src/assets/mascot/crab/*.png 内联生成，勿手改） (Crab sheets)',
-    '    // ============================================================================',
-    `    var CRAB_SHEET_URLS = ${JSON.stringify(loadCrabSheets())}`,
-  ].join('\n')
+  const result = await esbuild.build({
+    entryPoints: [path.join(SRC, 'entry.ts')],
+    bundle: true,
+    format: 'cjs',
+    platform: 'browser',
+    target: 'esnext',
+    charset: 'utf8',
+    minify: true,
+    sourcemap: 'linked',
+    outfile: OUT,
+    write: false,
+    metafile: true,
+    logLevel: 'silent',
+    external: HOST_PACKAGES,
+    // The factory around the body is part of the output, so the source map
+    // counts its lines.
+    banner: { js: FACTORY_OPEN },
+    footer: { js: FACTORY_CLOSE },
+    plugins: [generatedModule({
+      STYLESHEET: cssText,
+      // Vendor lockups: one markup table plus the word each lockup stands in for.
+      COMBINE_SVGS: Object.fromEntries(Object.entries(combines).map(([id, item]) => [id, item.svg])),
+      COMBINE_WORDS: Object.fromEntries(Object.entries(combines).map(([id, item]) => [id, item.word])),
+      // The build id: a hash of the bundle itself, written into it below. The
+      // skin puts it on <body data-dsh-claude-style>, so a live page can be
+      // matched to the lib/client.js it runs — a hot reload swaps the bundle
+      // without reloading the page, so the page's load time says nothing about
+      // its code.
+      BUILD_ID: BUILD_ID_SLOT,
+      DEEPY_STAMPS: deepy.stamps,
+      CRAB_SHEET_URLS: loadCrabSheets(),
+    })],
+  })
+  checkCycles(result.metafile)
+  const bundled = new Set(Object.keys(result.metafile.inputs).filter((file) => file.startsWith('src/')).map((file) => file.slice('src/'.length)))
+  checkListed(bundled)
+  checkFeatureRegistry(bundled)
 
-  const draft = [
-    HEADER,
-    fragment(FRAGMENTS[0]),
-    cssDecl,
-    combineDecl,
-    buildDecl,
-    deepyStampDecl,
-    crabSheetDecl,
-    ...FRAGMENTS.slice(1).map(fragment),
-    FOOTER,
-  ].join('\n\n')
-  const buildId = createHash('sha256').update(draft).digest('hex').slice(0, 12)
+  const output = (suffix) => result.outputFiles.find((file) => file.path.endsWith(suffix)).text
+  const draft = output('client.js')
+  const sourceMap = output('client.js.map')
+  // The slot and the id have the same length, so the source map's columns hold.
+  const buildId = createHash('sha256').update(draft).digest('hex').slice(0, BUILD_ID_SLOT.length)
+  if (draft.split(BUILD_ID_SLOT).length !== 2) throw new Error('build: the bundle does not carry the build id slot exactly once')
   const bundle = draft.replace(BUILD_ID_SLOT, buildId)
 
   // Syntax gate: the bundle must parse before it is written. The failing
@@ -936,8 +883,8 @@ function main() {
   if (!fs.existsSync(iconSource)) throw new Error(`build: src/assets/brand/${ICON_SOURCE} is missing`)
 
   fs.writeFileSync(OUT, bundle)
-  const lines = bundle.split('\n').length
-  console.log(`built lib/client.js (${lines} lines, ${bundle.length} bytes, build ${buildId}) from src/ (${STYLE_FILES.length} stylesheets + ${FRAGMENTS.length} fragments + ${Object.keys(combines).length} lockups)`)
+  fs.writeFileSync(`${OUT}.map`, sourceMap)
+  console.log(`built lib/client.js (${Buffer.byteLength(bundle)} bytes, build ${buildId}) from src/ (${bundled.size} modules + ${STYLE_FILES.length} stylesheets + ${Object.keys(combines).length} lockups)`)
 
   fs.writeFileSync(path.join(LIB, MODEL_COPY), copyText)
   console.log(`built lib/${MODEL_COPY} (${exact} exact entries, ${copy.families.length} family rules, ${copy.tiers.length} tier rules)`)
@@ -949,4 +896,4 @@ function main() {
   console.log(`built lib/deepy/ (${deepy.names.length} sheets, ${deepy.bytes} bytes) from src/assets/mascot/deepy/`)
 }
 
-main()
+await main()

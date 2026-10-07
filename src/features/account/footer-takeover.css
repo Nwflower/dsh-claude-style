@@ -9,7 +9,7 @@
    modals. The trigger row is not settingsArea's child: it renders inside the
    `sidebar.settings` slot anchor (a display:contents div), which the child
    selector alone never crossed. The host's own account row is the skin's entry
-   where it exists (features/account/account-footer.js marks it), so the row itself
+   where it exists (features/account/account-footer.ts marks it), so the row itself
    stays and only the controls next to it — the connection pill, the update pill
    ("Retry update") — go. The account menu and its sign-in dialog are portals and
    the settings panel is the row's sibling, so all three still open. */

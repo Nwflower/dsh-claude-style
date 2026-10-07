@@ -72,5 +72,12 @@
   "homepage": "https://github.com/Nwflower/dsh-claude-style#readme",
   "bugs": {
     "url": "https://github.com/Nwflower/dsh-claude-style/issues"
+  },
+  "devDependencies": {
+    "@deepseek-ai/dsh-client-ui-primitives": "0.2.1-alpha.1",
+    "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.7",
+    "esbuild": "0.28.2",
+    "typescript": "7.0.2"
   }
 }

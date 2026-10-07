@@ -1,6 +1,6 @@
 /* ---------- chat files: the file-change row ---------- */
 /* The file-change row belongs to this skin: it takes over the host's two keyed
-   seat rows for the write and edit tools (chat-files.js), and what the host's own
+   seat rows for the write and edit tools (chat-files.ts), and what the host's own
    ToolRow.module.css draws for them has build-time hashed names — not reachable,
    and not an interface. So the rules are drawn again here, with the sizes, tokens
    and rhythm of the host's own row. The line height and the leading icon are the

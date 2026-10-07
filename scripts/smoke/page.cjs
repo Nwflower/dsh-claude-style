@@ -55,7 +55,7 @@ function page(name, tier, cases) {
   // The host's dock line: the stats row plus the context meter (ui-conversation
   // ContextMeter), whose trigger draws a ring of two circles beside the
   // occupancy reading — that ring is what identifies the meter
-  // (features/composer/composer.js); the stats pills draw none.
+  // (features/composer/composer.ts); the stats pills draw none.
   var dock = '<div class="_x_dock_1">' + stats +
       '<span class="_m_meter_1"><button type="button" id="context-meter" class="_m_trigger_1" aria-haspopup="dialog" aria-expanded="false" aria-label="Context used 42%">' +
         '<svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="5.5"></circle><circle cx="7" cy="7" r="5.5"></circle></svg><span>42%</span></button></span>' +
@@ -107,7 +107,7 @@ function page(name, tier, cases) {
         '<div data-chat-flow-key="b" style="height:600px">b</div>' +
       '</div></div></div>' +
       // The host renders its own button beside the frame that holds the scroll
-      // frame, which is the shape the walk in chat-tail.js reads.
+      // frame, which is the shape the walk in chat-tail.ts reads.
       '<div id="debugTail"><button type="button">Back to the end</button></div>' +
       '<div data-step-process><div data-step-process-body><div data-step-process-content style="height:400px">capped</div></div></div>' +
       '<div data-step-process data-group-expanded-mode="detailed"><div data-step-process-body><div data-step-process-content style="height:400px">expanded</div></div></div>'
@@ -178,13 +178,13 @@ function page(name, tier, cases) {
     : ''
   // The other chat-behaviour plugin, installed: the host's own startup picture
   // names every client entry before any of them runs, which is the signal
-  // src/shared/peer-plugin.js reads first (the style element is the other one).
+  // src/shared/peer-plugin.ts reads first (the style element is the other one).
   var boot = name === 'peer-chat-ux'
     ? '<script>window.__DSH_BOOT__ = { entries: [{ id: "ui-skin-claude-style", rev: "smoke" }, { id: "@alm-allen/dsh-chat-ux", rev: "smoke" }] }</script>'
     : ''
   // The system's reduced-motion setting, driven by hand: the reveal case flips it
   // while the animation choice is "follow the system", which is the one path that
-  // reaches the features through the resolved attribute alone (src/core/prefs.js,
+  // reaches the features through the resolved attribute alone (src/core/prefs.ts,
   // refreshMotionAttribute). Only that case gets the stub; every other case keeps
   // the browser's real answer.
   var motionStub = name === 'chat-reveal'

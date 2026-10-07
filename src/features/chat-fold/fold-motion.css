@@ -52,14 +52,14 @@ body[data-dsh-claude-style][%%CHAT_FOLD_ATTR%%] [data-chat-flow] [data-disclosur
   transition: opacity 120ms ease-out, translate 120ms ease-out;
 }
 
-/* The reader's animation choice, resolved onto <body> (src/core/prefs.js, D26):
+/* The reader's animation choice, resolved onto <body> (src/core/prefs.ts, D26):
    the system setting is folded into that attribute by "follow the system", so
    this one rule covers both it and the explicit "reduced". */
 body[data-dsh-claude-style][%%MOTION_ATTR%%="%%MOTION_REDUCED%%"] [data-chat-flow] [data-disclosure-row] ~ *:not([data-turn-process-member] *, [data-turn-trigger] *) {
   transition: none;
 }
 
-/* While the door rolls (fold-glide.js hangs the mark), every card inside is laid
+/* While the door rolls (fold-glide.ts hangs the mark), every card inside is laid
    out at its natural height rather than squeezed: a body is often a flex column,
    and with the height pressed the flex would shrink away the card that can shrink
    (a code card's automatic minimum height is 0) first, so a run_code body of

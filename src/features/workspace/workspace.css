@@ -1,11 +1,11 @@
 /* ---------- Workspace section: 进行中 / 已归档 segments and the archived list ---------- */
 /* The segment control and the archived list dress the markup built by
-   src/features/workspace/workspace-view.js; sidebar-adjacent, but split from theme/sidebar.css
+   src/features/workspace/workspace-view.ts; sidebar-adjacent, but split from theme/sidebar.css
    when that file neared the 750-line stop line. */
 
 /* ---------- workspace section: 进行中 / 已归档 ---------- */
 /* The section label gives way to a two-state segment control (the skin's own
-   markup, built by src/features/workspace/workspace-view.js); the archived state swaps
+   markup, built by src/features/workspace/workspace-view.ts); the archived state swaps
    the host's tree for the skin's list, and the list's rows carry a delete
    button. The label and the control cross-fade by opacity further down. */
 body[data-dsh-claude-style] .dsh-claude-ws-segments {
@@ -119,7 +119,7 @@ body[data-dsh-claude-style] .dsh-claude-ws-segments[data-dsh-claude-pill] > .dsh
   box-shadow: none !important;
 }
 /* ---------- workspace view: the skin's own archived list ---------- */
-/* 已归档 is the skin's list (src/features/workspace/workspace-view.js), flat on purpose:
+/* 已归档 is the skin's list (src/features/workspace/workspace-view.ts), flat on purpose:
    the host's own filter buries archived rows inside collapsed workspace groups
    and its state is not reachable without clicking its menu. */
 body[data-dsh-claude-style] [data-dsh-claude-ws-view="archived"] [data-dsh-claude-ws-tree] {

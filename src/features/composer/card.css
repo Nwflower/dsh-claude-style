@@ -228,7 +228,7 @@ body[data-dsh-claude-style] [class*="heroWorkspaceRow"] :is([class*="_chevron"],
    border-box keeps the outer 34px so the row does not shift. The stop/queue/
    steer labels are untouched, so a running turn keeps its control even with an
    empty draft. The empty draft is the card's data-dsh-claude-draft-empty mark
-   (src/features/composer/composer.js). */
+   (src/features/composer/composer.ts). */
 body[data-dsh-claude-style] [data-composer-card]:not([data-has-attachments="true"])[data-dsh-claude-draft-empty] button[data-dsh-claude-control="send"] {
   box-sizing: border-box;
   background: transparent;

@@ -1,7 +1,7 @@
 /* ---------- home layout: the studio (dashboard) form and its usage panel ---------- */
 /* The hero's own markup is the host's either way; this file only rearranges it and
    draws the panel the dock slot carries. Both are keyed on the attributes
-   src/features/home/home-layout.js writes — the layout, and `data-dsh-claude-home-hero`
+   src/features/home/home-layout.ts writes — the layout, and `data-dsh-claude-home-hero`
    while the studio layout owns the new-conversation page — so the classic
    layout is untouched.
    The two tab bodies live in home-overview.css and home-models.css. */
@@ -50,7 +50,7 @@ body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [class*="_comp
 }
 
 /* The skin's own seat on the cold start screen, where the host renders no dock
-   (src/features/home/home-layout.js); like the host's anchor it generates no box. */
+   (src/features/home/home-layout.ts); like the host's anchor it generates no box. */
 body[data-dsh-claude-style] .dsh-claude-home-seat {
   display: contents;
 }

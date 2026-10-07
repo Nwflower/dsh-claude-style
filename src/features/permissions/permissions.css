@@ -3,7 +3,7 @@
 /* The shipped access control is one popup-select button; it is replaced by
    a Read | Edit | Auto | Yolo segmented control over presets — for
    as long as the permission control is installed to stand in for it. The
-   host's button is the one src/features/composer/composer.js marks as the
+   host's button is the one src/features/composer/composer.ts marks as the
    access control. */
 body[data-dsh-claude-style][data-dsh-claude-composer-active][%%PERMISSIONS_ATTR%%] button[data-dsh-claude-control="access"] {
   display: none !important;

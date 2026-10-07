@@ -1,5 +1,5 @@
 /* ---------- chat reveal: the fading-in-a-rivulets rules, one per step ---------- */
-/* Ported from dsh-chat-ux (src/features/chat-reveal/reveal-engine.js). Step 0 is
+/* Ported from dsh-chat-ux (src/features/chat-reveal/reveal-engine.ts). Step 0 is
    the faintest a character ever is, the last step is its own colour — so the text
    reaches its final colour exactly when its segment leaves the highlight registry.
 

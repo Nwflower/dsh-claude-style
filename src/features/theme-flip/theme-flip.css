@@ -9,7 +9,7 @@
    This rule only out-specifies the lower-specificity transition rules
    (html[flag] body[skin][flag] * is (0,3,2)); the higher ones (input scroll
    (0,6,1), attachment rail (0,7,1)) are covered by the forced-flush cancel
-   sweep in src/features/theme-flip/theme-flip.js. */
+   sweep in src/features/theme-flip/theme-flip.ts. */
 html[data-dsh-theme-transitioning] body[data-dsh-claude-style][data-dsh-theme-transitioning] * {
   transition: none !important;
 }

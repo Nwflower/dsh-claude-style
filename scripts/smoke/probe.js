@@ -13,7 +13,7 @@
   try { window.__skin.apply(window.__ctx) } catch (e) { window.__applyError = String((e && e.stack) || e) }
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms) }) }
   function attrs(el) { return el ? Array.prototype.map.call(el.attributes, function (a) { return a.name }) : null }
-  // A segmented control's sliding pill (src/shared/sliding-pill.js) against
+  // A segmented control's sliding pill (src/shared/sliding-pill.ts) against
   // the item it should sit under: its mark, its written placement, the item's
   // own fill (which gives way to the pill) and the transitions running on it.
   function pillState(control, item) {
@@ -74,7 +74,7 @@
       r.lateAfter = document.body.getAttribute('data-dsh-claude-home-layout')
     })
     await onlyFor(['popovers'], async function () {
-      // The shared popover rule (shared/popover.js): the dwell keeps a pointer that
+      // The shared popover rule (shared/popover.ts): the dwell keeps a pointer that
       // merely crosses a trigger from unfolding anything, and only one card is up
       // at a time — whichever opens last folds the one before it.
       // The controls are built by the first scheduler pass, not by apply().
@@ -1398,7 +1398,7 @@
       r.states.failed = whaleNow()
       // Reduced motion: the settings page's animation choice, pushed through the
       // host form the way the settings row writes it. The choice resolves onto
-      // <body> (src/core/prefs.js) and the whale holds the state's still frame.
+      // <body> (src/core/prefs.ts) and the whale holds the state's still frame.
       window.__pushForm({ motion: 'reduced' })
       await sleep(150)
       r.states.stillAttr = document.body.getAttribute('data-dsh-claude-motion')
@@ -1515,7 +1515,7 @@
       await structuralMoment()
       r.chatFollow.readerAfter = endGap()
       // The capped body's catch-up is walked in on a curve, not written in one
-      // frame (scroll-ease.js): grow the content well past the catch-up
+      // frame (scroll-ease.ts): grow the content well past the catch-up
       // threshold and sample what is left to go at three moments.
       if (cappedBody !== null) {
         var cappedContent = cappedBody.querySelector('[data-step-process-content]')
@@ -1537,7 +1537,7 @@
         // Held at the end: the ease ended there rather than being left running.
         r.chatFollow.catchUpLate = bodyGap()
       }
-      // The stream glide (chat-follow.js): with the host's own streaming mark on
+      // The stream glide (chat-follow.ts): with the host's own streaming mark on
       // the page, the end the host's follow pins the position to is taken back
       // before the frame paints and handed to the spring, so the text walks there
       // instead of jumping. The mark is the host's; the pin is what its follow
@@ -1817,7 +1817,7 @@
       await sleep(150)
       // And the system setting flipping underneath "follow the system": the
       // resolved attribute moves, the preference stream is re-run and a running
-      // engine goes with it (src/core/prefs.js, refreshMotionAttribute).
+      // engine goes with it (src/core/prefs.ts, refreshMotionAttribute).
       window.__setSystemReduced(true)
       await sleep(250)
       var revealFlipReduced = revealPeek()
@@ -1932,7 +1932,7 @@
       // The other chat-behaviour plugin arriving and leaving while the page
       // runs: the presence watch re-takes the decision, so the chat-area features
       // stand down (here: the seat keys and the install-time marks) and come
-      // back without a reload (src/shared/peer-plugin.js).
+      // back without a reload (src/shared/peer-plugin.ts).
       var fileSeats = function () {
         return (window.__slots || []).filter(function (entry) { return entry.key === 'tool.call.toolview' }).length
       }
@@ -2009,7 +2009,7 @@
       await sleep(150)
       sendFlow.remove()
     })
-    // The other chat-behaviour plugin installed (src/shared/peer-plugin.js): the
+    // The other chat-behaviour plugin installed (src/shared/peer-plugin.ts): the
     // ported features stand down whole, and the settings page shows their
     // switches off and disabled with the reason.
     await onlyFor(['peer-chat-ux'], async function () {
