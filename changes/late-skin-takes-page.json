@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-06",
+  "group": "fixes",
+  "order": 0,
+  "external": false,
+  "zh": "**启动之后才选的皮肤也会接手页面**：页面载入后才在皮肤中心选中别的皮肤时，本主题不让出页面，两套视觉叠在一起。现在无论页面启动时归谁，皮肤到来就让出、离开就接回，都不需要刷新。",
+  "en": "**A skin picked after the page loaded takes the page too**: picking another skin in the Skin Center once the page had loaded left this theme on the page, two looks painted over each other. Now the theme gives the page up when a skin arrives and takes it back when the skin leaves, whichever way the page booted, without a reload."
+}

@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-06",
+  "group": "chores",
+  "order": 1,
+  "external": false,
+  "zh": "**附带 source map**：npm 包里新增 `lib/client.js.map`，浏览器开发者工具里的报错位置与断点能对应到插件源码。",
+  "en": "**Source map included**: the npm package now carries `lib/client.js.map`, so error locations and breakpoints in the browser's developer tools map back to the plugin's sources."
+}

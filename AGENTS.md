@@ -94,6 +94,8 @@ The source is TypeScript ES modules under `strict` (D36). A module nothing impor
 ```sh
 npm install                                  # dev dependencies: TypeScript, esbuild, Ajv, Vitest, Playwright, React types
 npm run build                                # type-checks src/, bundles it into lib/client.js with its source map, runs the build checks, prints the build id
+npm run changelog                            # write the CHANGELOG's [Unreleased] section from changes/ (D48)
+npm run changelog:check                      # fail when that section differs from changes/; CI runs this
 npm run docs:index                           # write docs/decisions/README.md from the decision files (D48)
 npm run docs:check                           # fail when that index differs from the files; CI runs this
 npm test                                     # unit tests: Vitest in browser mode on the local Chrome/Edge
@@ -125,15 +127,15 @@ The quick tier leaves out the motion cases; a feature whose cases all watch moti
 2. `npm run build`.
 3. While iterating, `npm test` for the logic with unit tests and `npm run smoke -- --quick --feature <dir>` (without `--quick` for motion features); with a `dsh web` running, also `probe.cjs`; check the live page, including after a hot reload. Timing and ordering against the real host is verified on a real instance — the smoke stand-in does not reproduce it.
 4. Visual changes are checked by the user in light and dark; re-shoot stale README screenshots with `shoot.cjs`; a visual change updates the `tests/screenshots/` baselines with `tools/e2e.cjs --accept` once the user has seen the new picture.
-5. Sync documents: the bilingual READMEs change together; behavior changes go into the CHANGELOG's `[Unreleased]`; a changed decision is rewritten in `docs/decisions/` following D48's template, and the index is regenerated with `npm run docs:index`.
+5. Sync documents: the bilingual READMEs change together; a behavior change adds one file under `changes/` (D48) and `npm run changelog` writes the `[Unreleased]` section from those files — never edit that section by hand; a changed decision is rewritten in `docs/decisions/` following D48's template, and the index is regenerated with `npm run docs:index`.
 6. Done means the build, the unit tests, the relevant smoke and the end-to-end scenarios covering the change pass, and the behavior is verified; the full smoke is the release gate, and the lane runs on every change to the chat area or to timing. If a gate fails, keep fixing.
 
 ## Git and Release
 
 - Conventional commit prefixes (`fix(scope):`, `refactor(scope):`, `docs(scope):`, `chore(release):` …); commit titles and bodies in Chinese; one logical change per commit, no WIP, no unrelated changes; moves are committed apart from logic changes.
 - Another session may be editing the same working tree: commit only your own changes — whole files only when every change in them is yours, otherwise your hunks alone. Before committing, export the index (`git checkout-index -a --prefix=.debug/<dir>/`) and run the build and the relevant smoke there.
-- Until D47 lands, `lib/` is committed only with the release commit: release = update the CHANGELOG → full `npm run smoke` → `npm version patch|minor` → `npm run build` and commit the rebuilt `lib/` → tag → `npm publish` → GitHub Release with the notes from that CHANGELOG section.
-- CHANGELOG format:
+- Until D47 lands, `lib/` is committed only with the release commit: release = `node scripts/changelog.mjs --release <version>` (which turns the pending changes into the version's section and clears `changes/`) → full `npm run smoke` → `npm version patch|minor` → `npm run build` and commit the rebuilt `lib/` → tag → `npm publish` → GitHub Release with the notes from that CHANGELOG section.
+- CHANGELOG format (the `[Unreleased]` section and the release sections are written by `scripts/changelog.mjs`; the files under `changes/` are what is authored):
   - Version sections `## [x.y.z] - YYYY-MM-DD`, newest first; work in progress under `## [Unreleased]`.
   - Each section bilingual on one page: a `[中文](#cn-x.y.z) | [English](#en-x.y.z)` line, then `<h3 id="cn-x.y.z">新增功能</h3>` and `<h3 id="en-x.y.z">New Features</h3>` anchors carrying the version; further groups use plain `###`.
   - Groups, fixed in name and order: 新增功能 / 体验优化 / 问题修复 / 安全 / 移除 / 其他变更 and New Features / Improvements / Bug Fixes / Security / Removals / Chores; empty groups are omitted.
