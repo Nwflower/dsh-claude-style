@@ -179,5 +179,34 @@ export interface HostLocaleService {
   resolveText?(key: string, params?: Record<string, string | number>): unknown
 }
 
+/**
+ * The host's settings-form service (`configForms`, D10): one form per
+ * namespace, plus the catalogue of namespaces it serves.
+ */
+export interface HostConfigFormsService {
+  get(namespace: string): HostConfigForm | undefined | null
+  /** The catalogue of served namespaces; it loads on demand. */
+  describe?(): HostSnapshotSource<HostFormsDescription> & { ensure?(): unknown }
+}
+
+/** What the form service says it serves: one entry per served namespace. */
+export interface HostFormsDescription {
+  view?: { namespaces?: { ns?: unknown }[] }
+}
+
+/** One namespace's form: its current values, their changes, and a field write. */
+export interface HostConfigForm {
+  getSnapshot(): HostConfigSnapshot
+  /** Write one field; the host answers with a promise, or a plain boolean when it settles at once. */
+  set(field: string, value: unknown): Promise<unknown> | boolean | undefined
+  subscribe?(listener: () => void): () => void
+}
+
+/** One form snapshot: whether its controller is ready, and the values it holds. */
+export interface HostConfigSnapshot {
+  status?: string
+  value?: unknown
+}
+
 /** A host locale namespace's translate seat (`locale.bind(namespace)`). */
 export type HostText = (key: string, params?: Record<string, string | number>) => string

@@ -1,6 +1,7 @@
 import { AUTO_POPOVER_ALL, AUTO_POPOVER_OFF, AUTO_POPOVER_SCOPES, BRAND_ATTR, BRAND_CLAUDE, BRAND_DEEPSEEK, BRAND_DEEPSEEK_LEGACY, COMPOSER_ATTR, FOOTER_ATTR, MASCOT_ATTR, MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MODEL_OFFICIAL_GROUP, MOTION_ATTR, MOTION_FULL, MOTION_REDUCED, PACKAGE_NAME, PALETTE_ATTR, PREF_CHOICES, PREF_DEFAULTS, PROVIDER_ID_MAX, QUICK_PROVIDERS_MAX, SETTINGS_ENTRY_FALLBACK, TYPEFACE_ATTR, USERNAME_MAX } from '../constants'
 import type { Prefs } from '../constants'
-import type { HostContext, HostValue } from './host'
+import type { HostContext } from './host'
+import type { HostConfigForm, HostConfigFormsService } from '../contracts/services'
 import { notifyAll } from '../shared/notify'
 
 /**
@@ -13,7 +14,7 @@ export let prefs = normalizePrefs({})
 export const prefsListeners: ((prefs: Prefs) => void)[] = []
 
 /** The official settings form (the host's form controller, D10); null until the service serves the namespace. */
-export let prefsForm: HostValue = null
+export let prefsForm: HostConfigForm | null = null
 /** Disposer for the bound form's own change subscription. */
 export let prefsFormUnsubscribe: (() => void) | null = null
 /** Disposer for the served-namespace directory watch, while one is open. */
@@ -36,18 +37,18 @@ export function settingsNamespaceCandidates(ctx: HostContext) {
  * entry id hands back a controller for nobody's namespace: reads stay at the
  * defaults and every write is refused. The served list is the truth.
  */
-export function servedNamespace(forms: HostValue, candidates: (string | null)[]) {
+export function servedNamespace(forms: HostConfigFormsService, candidates: (string | null)[]) {
   const namespaces = forms.describe?.()?.getSnapshot?.()?.view?.namespaces
   if (!namespaces) return null
   for (const candidate of candidates) {
     if (typeof candidate !== 'string' || candidate === '') continue
-    if (namespaces.some((served: { ns?: unknown } | null) => served?.ns === candidate)) return candidate
+    if (namespaces.some((served) => served?.ns === candidate)) return candidate
   }
   return null
 }
 
 /** Whether the host serves namespaces to the browser. */
-export function hostConfigForms(ctx: HostContext | null): HostValue {
+export function hostConfigForms(ctx: HostContext | null): HostConfigFormsService | null {
   const forms = ctx?.get('configForms')
   return typeof forms?.get === 'function' ? forms : null
 }
@@ -56,11 +57,11 @@ export function hostConfigForms(ctx: HostContext | null): HostValue {
 export function readFormValue(): Record<string, unknown> | null {
   const snapshot = prefsForm?.getSnapshot()
   if (snapshot?.status !== 'ready') return null
-  return snapshot.value && typeof snapshot.value === 'object' ? snapshot.value : null
+  return snapshot.value && typeof snapshot.value === 'object' ? snapshot.value as Record<string, unknown> : null
 }
 
 /** Bind one namespace the host already serves; the controller waits for its own snapshot. */
-export function bindServedForm(forms: HostValue, ctx: HostContext) {
+export function bindServedForm(forms: HostConfigFormsService, ctx: HostContext) {
   const namespace = servedNamespace(forms, settingsNamespaceCandidates(ctx))
   if (namespace === null) return false
   const form = forms.get(namespace)
@@ -75,7 +76,7 @@ export function bindServedForm(forms: HostValue, ctx: HostContext) {
  * Watch the served-namespace directory until this plugin's namespace lands:
  * on a cold page the directory can answer after this plugin has applied.
  */
-export function watchNamespace(forms: HostValue, ctx: HostContext) {
+export function watchNamespace(forms: HostConfigFormsService, ctx: HostContext) {
   if (prefsBinding) return
   const mirror = forms.describe?.()
   if (!mirror) return
@@ -328,21 +329,21 @@ export function moveLocalPrefs(formValue: Record<string, unknown>) {
  *          not carry values yet or refused the change.
  */
 export function savePrefs(patch: Partial<Prefs>): Promise<Prefs | null> {
-  if (readFormValue() === null) return Promise.resolve(null)
+  const form = prefsForm
+  if (readFormValue() === null || form === null) return Promise.resolve(null)
   const step = (name: keyof Prefs) => (accepted: boolean): boolean | Promise<boolean> => {
     if (accepted === false) return false
     let pending
     try {
-      pending = prefsForm.set(name, patch[name])
+      pending = form.set(name, patch[name])
     } catch (error) {
       // set() refuses a field path this Config does not carry by throwing
       // before anything crosses the wire: a refusal, answered with a re-read
       // (D12).
       return false
     }
-    return pending && typeof pending.then === 'function'
-      ? pending.then((ok: unknown) => ok === true)
-      : true
+    if (typeof pending === 'boolean' || pending === undefined) return typeof pending === 'boolean' ? pending : true
+    return pending.then((ok: unknown) => ok === true)
   }
   let run = Promise.resolve(true)
   for (const key of Object.keys(patch) as (keyof Prefs)[]) run = run.then(step(key))
