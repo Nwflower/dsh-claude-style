@@ -12,6 +12,90 @@ export interface MascotLevel {
 /** A one-off moment that ends a piece of work. */
 export type MascotMoment = 'error' | 'attention'
 
+/** What the open turn is doing (turnPhase): reasoning or not answering yet, or writing and running tools. */
+export type MascotTurnPhase = 'thinking' | 'working'
+
+/** Everything a level is read from (mascotLevel). */
+export interface MascotReading {
+  /** The session on its conversation page, or null for the whole workspace on the home page. */
+  sessionId: string | null
+  status: HostSessionStatusSnapshot | null
+  list: HostSessionListSnapshot | null
+  /** A compaction of the followed session runs. */
+  compacting: boolean
+  /** The followed session's open turn; null when none is open or nothing is followed. */
+  phase: MascotTurnPhase | null
+}
+
+const IDLE: MascotLevel = { state: 'idle', animation: 'idle', priority: 1 }
+const THINKING: MascotLevel = { state: 'thinking', animation: 'thinking', priority: 2 }
+const NOTIFICATION: MascotLevel = { state: 'notification', animation: 'notification', priority: 7 }
+const SWEEPING: MascotLevel = { state: 'sweeping', animation: 'compacting', priority: 6 }
+
+/** The host's own reading of "running": the live status first, the list's summary behind it. */
+function isRunning(id: string, status: HostSessionStatusSnapshot | null, list: HostSessionListSnapshot | null) {
+  const live = status === null ? undefined : status.get(id)?.running
+  return (live ?? list?.byId[id]?.running) === true
+}
+
+/** Top-level sessions running right now, across the workspace. */
+function busySessions(status: HostSessionStatusSnapshot | null, list: HostSessionListSnapshot | null) {
+  if (list === null) return 0
+  let busy = 0
+  for (let i = 0; i < list.ids.length; i++) {
+    const id = list.ids[i]
+    if (list.byId[id]?.origin !== 'subagent' && isRunning(id, status, list)) busy++
+  }
+  return busy
+}
+
+/** The subagents a session started, as the host's session list catalogues them. */
+function subagentsOf(id: string, list: HostSessionListSnapshot | null): HostSubagentEntry[] {
+  const catalog = list?.projectionsBySession[id]?.values?.subagentCatalog
+  return Array.isArray(catalog) ? catalog as HostSubagentEntry[] : []
+}
+
+/** One working animation per crowd size, as Clawd's working tiers pick them. */
+function working(busy: number): MascotLevel {
+  return { state: 'working', animation: busy >= 3 ? 'building' : busy === 2 ? 'music' : 'typing', priority: 3 }
+}
+
+/**
+ * The state to show: for one session on its conversation page, or for the
+ * whole workspace on the home page. The reader is asked first (an interaction
+ * the session, or one of its subagents, waits on), then a compaction, the
+ * subagents at work, the turn's own phase and last whether the session runs.
+ */
+export function mascotLevel(reading: MascotReading): MascotLevel {
+  const { sessionId, status, list } = reading
+  const busy = busySessions(status, list)
+  if (sessionId === null) {
+    if (status !== null) {
+      for (const entry of status.values()) {
+        if (entry.pendingInteraction !== undefined) return NOTIFICATION
+      }
+    }
+    return busy > 0 ? working(busy) : IDLE
+  }
+  const subagents = subagentsOf(sessionId, list)
+  if (status !== null) {
+    if (status.get(sessionId)?.pendingInteraction !== undefined) return NOTIFICATION
+    // A subagent waiting on the reader holds its parent's work up too.
+    for (let i = 0; i < subagents.length; i++) {
+      if (status.get(subagents[i].id)?.pendingInteraction !== undefined) return NOTIFICATION
+    }
+  }
+  if (reading.compacting) return SWEEPING
+  let juggling = 0
+  for (let i = 0; i < subagents.length; i++) {
+    if (isRunning(subagents[i].id, status, list)) juggling++
+  }
+  if (juggling > 0) return { state: 'juggling', animation: juggling >= 2 ? 'conducting' : 'music', priority: 4 }
+  if (reading.phase === 'working') return working(Math.max(1, busy))
+  if (reading.phase === 'thinking' || isRunning(sessionId, status, list)) return THINKING
+  return IDLE
+}
+
 /**
  * What the mascot reads off the host (packages/client/src/features/mascot/mascot-player.ts):
  * the state a session — or, on the home page, the whole workspace — is in
@@ -46,11 +130,6 @@ export type MascotMoment = 'error' | 'attention'
  * @returns `{ follow, read, dispose }`.
  */
 export function createMascotSignals(ctx: HostContext, onMoment: (moment: MascotMoment) => void, onChange: () => void) {
-  const IDLE: MascotLevel = { state: 'idle', animation: 'idle', priority: 1 }
-  const THINKING: MascotLevel = { state: 'thinking', animation: 'thinking', priority: 2 }
-  const NOTIFICATION: MascotLevel = { state: 'notification', animation: 'notification', priority: 7 }
-  const SWEEPING: MascotLevel = { state: 'sweeping', animation: 'compacting', priority: 6 }
-
   /** The session whose feed is followed; null on the home page, undefined before the first follow. */
   let followed: string | null | undefined
   let stopFeed: (() => void) | null = null
@@ -86,34 +165,6 @@ export function createMascotSignals(ctx: HostContext, onMoment: (moment: MascotM
     return typeof list?.getSnapshot === 'function' ? list.getSnapshot() : null
   }
 
-  /** The host's own reading of "running": the live status first, the list's summary behind it. */
-  function isRunning(id: string, status: HostSessionStatusSnapshot | null, list: HostSessionListSnapshot | null) {
-    const live = status === null ? undefined : status.get(id)?.running
-    return (live ?? list?.byId[id]?.running) === true
-  }
-
-  /** Top-level sessions running right now, across the workspace. */
-  function busySessions(status: HostSessionStatusSnapshot | null, list: HostSessionListSnapshot | null) {
-    if (list === null) return 0
-    let busy = 0
-    for (let i = 0; i < list.ids.length; i++) {
-      const id = list.ids[i]
-      if (list.byId[id]?.origin !== 'subagent' && isRunning(id, status, list)) busy++
-    }
-    return busy
-  }
-
-  /** The subagents a session started, as the host's session list catalogues them. */
-  function subagentsOf(id: string, list: HostSessionListSnapshot | null): HostSubagentEntry[] {
-    const catalog = list?.projectionsBySession[id]?.values?.subagentCatalog
-    return Array.isArray(catalog) ? catalog as HostSubagentEntry[] : []
-  }
-
-  /** One working animation per crowd size, as Clawd's working tiers pick them. */
-  function working(busy: number): MascotLevel {
-    return { state: 'working', animation: busy >= 3 ? 'building' : busy === 2 ? 'music' : 'typing', priority: 3 }
-  }
-
   function chatSnapshot() {
     return chat === null ? null : chat.getSnapshot() ?? null
   }
@@ -123,7 +174,7 @@ export function createMascotSignals(ctx: HostContext, onMoment: (moment: MascotM
    * not answered yet, `working` while it writes an answer or a tool call
    * and while its tool calls run; null when no turn is open.
    */
-  function turnPhase(snapshot: HostChatSnapshot) {
+  function turnPhase(snapshot: HostChatSnapshot): MascotTurnPhase | null {
     const order = snapshot.timeline.turnOrder
     const turn = order.length === 0 ? undefined : snapshot.timeline.turns.get(order[order.length - 1])
     if (turn === undefined || turn.status !== 'open') return null
@@ -140,36 +191,14 @@ export function createMascotSignals(ctx: HostContext, onMoment: (moment: MascotM
    * @returns `{ state, animation, priority }`.
    */
   function read(sessionId: string | null): MascotLevel {
-    const status = statusOf()
-    const list = listOf()
-    const busy = busySessions(status, list)
-    if (sessionId === null) {
-      if (status !== null) {
-        for (const entry of status.values()) {
-          if (entry.pendingInteraction !== undefined) return NOTIFICATION
-        }
-      }
-      return busy > 0 ? working(busy) : IDLE
-    }
-    const subagents = subagentsOf(sessionId, list)
-    if (status !== null) {
-      if (status.get(sessionId)?.pendingInteraction !== undefined) return NOTIFICATION
-      // A subagent waiting on the reader holds its parent's work up too.
-      for (let i = 0; i < subagents.length; i++) {
-        if (status.get(subagents[i].id)?.pendingInteraction !== undefined) return NOTIFICATION
-      }
-    }
-    if (compactions.size > 0) return SWEEPING
-    let juggling = 0
-    for (let i = 0; i < subagents.length; i++) {
-      if (isRunning(subagents[i].id, status, list)) juggling++
-    }
-    if (juggling > 0) return { state: 'juggling', animation: juggling >= 2 ? 'conducting' : 'music', priority: 4 }
-    const snapshot = chatSnapshot()
-    const phase = snapshot === null ? null : turnPhase(snapshot)
-    if (phase === 'working') return working(Math.max(1, busy))
-    if (phase === 'thinking' || isRunning(sessionId, status, list)) return THINKING
-    return IDLE
+    const snapshot = sessionId === null ? null : chatSnapshot()
+    return mascotLevel({
+      sessionId,
+      status: statusOf(),
+      list: listOf(),
+      compacting: compactions.size > 0,
+      phase: snapshot === null ? null : turnPhase(snapshot),
+    })
   }
 
   /** One live event of the followed session. */

@@ -273,7 +273,7 @@ export function resolveMascot(current: Prefs) {
  * its set reads as its default, and the four fields with a shape of their own
  * have their own clamps.
  */
-function normalizePrefs(value: unknown): Prefs {
+export function normalizePrefs(value: unknown): Prefs {
   const section: Record<string, unknown> = value && typeof value === 'object' ? value as Record<string, unknown> : {}
   const out: Record<string, unknown> = {}
   for (const key of Object.keys(PREF_DEFAULTS) as (keyof Prefs)[]) {

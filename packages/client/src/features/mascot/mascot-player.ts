@@ -2,7 +2,9 @@ import { COMPOSER_HIDDEN_ATTR } from '../../constants'
 import { COMPOSER_STACK, conversationSessionId, findComposerSeat, findConversationSession } from '../../core/host'
 import { motionReduced } from '../../core/prefs'
 import { createMascotSignals } from './mascot-signals'
-import type { MascotLevel, MascotMoment } from './mascot-signals'
+import type { MascotMoment } from './mascot-signals'
+import { decideStage, finishStage, freshStage, nextDecisionAt, switchSettles, takeMoment } from './mascot-stage'
+import type { MascotPick, PlayMode } from './mascot-stage'
 import { buildElement, createStamp, setAttributeIfChanged } from '../../shared/dom'
 import type { HostContext } from '../../core/host'
 import type { Ui } from '../../core/scheduler'
@@ -30,35 +32,6 @@ export interface MascotCharacter {
   gutter?: number
   extras: string[]
   createSheets(onReady: () => void): MascotSheets
-}
-
-/** How an animation plays: round and round, or once to its last frame. */
-type PlayMode = 'loop' | 'once'
-
-/** What should be on screen (decide). */
-interface MascotPick {
-  key: string
-  mode: PlayMode
-  priority: number
-}
-
-/** Everything the mascot is doing on the page it stands on (freshStage). */
-interface MascotStage {
-  sessionId: string | null
-  level: MascotLevel | null
-  moment: (MascotLevel & { until: number }) | null
-  queued: MascotMoment | null
-  reaction: { key: string, mode: PlayMode, fresh: boolean } | null
-  extra: string | null
-  waking: boolean
-  asleep: boolean
-  quietSince: number
-  nextExtraAt: number
-  current: (MascotPick & { start: number, done?: boolean }) | null
-  animation: Animation | null
-  timer: ReturnType<typeof setTimeout> | null
-  clicks: number[]
-  press: { id: number, x: number, y: number, lifted: boolean } | null
 }
 
 /**
@@ -111,20 +84,6 @@ interface MascotStage {
  * @returns `{ sync, release, onActivity, dispose }`.
  */
 export function createMascotPlayer(ctx: HostContext, ui: Ui, character: MascotCharacter) {
-  /** A level state that just took the stage holds it this long against an equal or lower one. */
-  const MIN_SHOW_MS = 1000
-  /** The quiet spell before the mascot dozes off. */
-  const SLEEP_AFTER_MS = 60000
-  /** The quiet spell between two idle extras. */
-  const EXTRA_MIN_MS = 20000
-  const EXTRA_SPAN_MS = 20000
-  /** Moments hold for two rounds of their animation, as Clawd's auto-return does. */
-  const MOMENTS: Record<MascotMoment, MascotLevel & { holdMs: number }> = {
-    error: { state: 'error', animation: 'error', priority: 8, holdMs: 4800 },
-    attention: { state: 'attention', animation: 'happy', priority: 5, holdMs: 5200 },
-  }
-  /** A reaction outranks every state: it answers the reader's own hand. */
-  const REACTION_PRIORITY = 10
   /** Clicks this close in a row are one tickle when four of them land. */
   const TICKLE_GAP_MS = 450
   const TICKLE_CLICKS = 4
@@ -151,36 +110,16 @@ export function createMascotPlayer(ctx: HostContext, ui: Ui, character: MascotCh
    * Everything the mascot is doing on the page it stands on: the session it
    * follows, the moment on screen and the one waiting its turn, the
    * reaction, the idle extra, the sleep and wake flags, the quiet spell,
-   * the animation playing and the reader's own press or click run.
-   *
-   * One object, replaced whole when the mascot leaves a page: the fields
-   * reset together, so none can be forgotten.
+   * the animation playing and the reader's own press or click run
+   * (mascot-stage.ts decides on it).
    */
-  function freshStage(): MascotStage {
-    return {
-      /** The followed session id, or null on the home page. */
-      sessionId: null,
-      level: null,
-      /** The moment on screen, and the lesser one that waits for it to end. */
-      moment: null,
-      queued: null,
-      reaction: null,
-      extra: null,
-      waking: false,
-      asleep: false,
-      /** Where the quiet spell starts: the reader's last pointer move or key, or the mascot's last work. */
-      quietSince: Date.now(),
-      nextExtraAt: 0,
-      /** The animation on screen: `{ key, mode, priority, start, done? }`. */
-      current: null,
-      /** The WAAPI animation playing on the strip; null while a still frame is pinned. */
-      animation: null,
-      timer: null,
-      clicks: [],
-      press: null,
-    }
-  }
-  let stage = freshStage()
+  let stage = freshStage(Date.now())
+
+  /** What the stage's decisions read off the page: an idle extra starts only in motion, on a visible page. */
+  const surroundings = () => ({ extras: character.extras, extrasAllowed: !motionReduced() && !document.hidden, random: Math.random })
+
+  /** How long one round of an animation lasts. */
+  const playMs = (key: string) => SHEETS[key].frames * FRAME_MS
 
   /** The character's sheet pipeline. */
   const sheets = character.createSheets(onSheetReady)
@@ -271,68 +210,14 @@ export function createMascotPlayer(ctx: HostContext, ui: Ui, character: MascotCh
     step()
   }
 
-  /**
-   * A moment happened. One that outranks the moment on screen (or equals
-   * it) takes over now; a lesser one waits its turn — a turn that finishes
-   * right after a tool failed still celebrates once the shake is over.
-   */
+  /** A moment happened: it takes the stage, or waits behind a greater one (takeMoment). */
   function onMoment(name: MascotMoment) {
-    const now = Date.now()
-    if (stage.moment !== null && now < stage.moment.until && stage.moment.priority > MOMENTS[name].priority) {
-      stage.queued = name
-      return
-    }
-    startMoment(name, now)
-    step()
-  }
-
-  function startMoment(name: MascotMoment, now: number) {
-    const next = MOMENTS[name]
-    stage.moment = { state: next.state, animation: next.animation, priority: next.priority, until: now + next.holdMs }
-  }
-
-  /** What should be on screen now: `{ key, mode, priority }`. */
-  function decide(now: number, level: MascotLevel): MascotPick {
-    if (stage.moment !== null && now >= stage.moment.until) {
-      stage.moment = null
-      if (stage.queued !== null) startMoment(stage.queued, now)
-      stage.queued = null
-    }
-    if (stage.reaction !== null) return { key: stage.reaction.key, mode: stage.reaction.mode, priority: REACTION_PRIORITY }
-    const held = stage.moment
-    const pick = held !== null && held.priority >= level.priority ? held : level
-    if (pick.state !== 'idle') {
-      stage.asleep = false
-      stage.waking = false
-      stage.extra = null
-      stage.nextExtraAt = 0
-      // Work on screen is no quiet spell: the minute to sleep starts when it ends.
-      stage.quietSince = now
-      return { key: pick.animation, mode: 'loop', priority: pick.priority }
-    }
-    if (!stage.asleep && now - stage.quietSince >= SLEEP_AFTER_MS) {
-      stage.asleep = true
-      stage.extra = null
-    }
-    if (stage.asleep) return { key: 'sleeping', mode: 'loop', priority: 1 }
-    if (stage.waking) return { key: 'waking', mode: 'once', priority: 1 }
-    if (stage.extra === null && !motionReduced() && !document.hidden) {
-      if (stage.nextExtraAt === 0) stage.nextExtraAt = now + EXTRA_MIN_MS + Math.random() * EXTRA_SPAN_MS
-      else if (now >= stage.nextExtraAt) stage.extra = character.extras[Math.floor(Math.random() * character.extras.length)]
-    }
-    if (stage.extra !== null) return { key: stage.extra, mode: 'once', priority: 1 }
-    return { key: 'idle', mode: 'loop', priority: 1 }
+    if (takeMoment(stage, name, Date.now())) step()
   }
 
   /** A once animation reached its last frame: whoever asked for it lets go. */
   function finish(key: string, now: number) {
-    // A fresh reaction has not played yet: the one ending is its predecessor.
-    if (stage.reaction !== null && stage.reaction.key === key && !stage.reaction.fresh) stage.reaction = null
-    if (stage.extra === key) {
-      stage.extra = null
-      stage.nextExtraAt = now + EXTRA_MIN_MS + Math.random() * EXTRA_SPAN_MS
-    }
-    if (key === 'waking') stage.waking = false
+    finishStage(stage, key, now, Math.random)
   }
 
   /** Whether the animation choice holds what is on screen now still. */
@@ -402,17 +287,13 @@ export function createMascotPlayer(ctx: HostContext, ui: Ui, character: MascotCh
   function step() {
     if (root === null || strip === null || stage.level === null) return
     const now = Date.now()
-    if (stage.current !== null && stage.current.mode === 'once' && stage.current.done !== true && now - stage.current.start >= SHEETS[stage.current.key].frames * FRAME_MS) {
+    if (stage.current !== null && stage.current.mode === 'once' && stage.current.done !== true && now - stage.current.start >= playMs(stage.current.key)) {
       stage.current.done = true
       finish(stage.current.key, now)
     }
-    const next = decide(now, stage.level)
+    const next = decideStage(stage, now, stage.level, surroundings())
     const switching = stage.current === null || next.key !== stage.current.key || (stage.reaction !== null && stage.reaction.fresh)
-    // A state that just arrived is not pushed off by an equal or lower one
-    // within MIN_SHOW_MS, so thinking and typing do not flicker. A reaction
-    // gives way the moment it ends.
-    const settled = stage.current === null || stage.current.mode !== 'loop' || stage.current.priority === REACTION_PRIORITY ||
-      next.priority > stage.current.priority || now - stage.current.start >= MIN_SHOW_MS
+    const settled = switchSettles(stage, next, now)
     if (switching && settled) {
       if (sheets.ready(next.key)) show(root, strip, next, now)
       // A once animation whose sheet never came counts as played, so the
@@ -433,7 +314,7 @@ export function createMascotPlayer(ctx: HostContext, ui: Ui, character: MascotCh
         // play() put the new animation on the stage.
         const playing = stage.animation as Animation | null
         if (playing !== null && stage.current.mode === 'loop') {
-          playing.currentTime = (now - stage.current.start) % (SHEETS[stage.current.key].frames * FRAME_MS)
+          playing.currentTime = (now - stage.current.start) % playMs(stage.current.key)
         }
       }
     }
@@ -459,22 +340,13 @@ export function createMascotPlayer(ctx: HostContext, ui: Ui, character: MascotCh
   }
 
   /**
-   * The one timer: the next moment a time-based decision can flip — a
-   * moment's hold ending, a deferred switch settling, a once animation's
-   * last frame (backstop for its `finished`), the quiet minute to sleep,
-   * the next idle extra. Everything else arrives as an event.
+   * The one timer, armed at the next moment a time-based decision can flip
+   * (nextDecisionAt). Everything else arrives as an event.
    */
   function schedule(now: number, waitSettle: boolean) {
     if (stage.timer !== null) clearTimeout(stage.timer)
     stage.timer = null
-    let at = Infinity
-    if (stage.moment !== null) at = Math.min(at, stage.moment.until)
-    if (waitSettle && stage.current !== null) at = Math.min(at, stage.current.start + MIN_SHOW_MS)
-    if (stage.current !== null && stage.current.mode === 'once' && stage.current.done !== true) {
-      at = Math.min(at, stage.current.start + SHEETS[stage.current.key].frames * FRAME_MS)
-    }
-    if (!stage.asleep && stage.level !== null && stage.level.state === 'idle') at = Math.min(at, stage.quietSince + SLEEP_AFTER_MS)
-    if (stage.extra === null && stage.nextExtraAt > now) at = Math.min(at, stage.nextExtraAt)
+    const at = nextDecisionAt(stage, now, waitSettle, playMs)
     if (at === Infinity) return
     stage.timer = setTimeout(() => {
       stage.timer = null
@@ -562,7 +434,7 @@ export function createMascotPlayer(ctx: HostContext, ui: Ui, character: MascotCh
     if (signals !== null) signals.dispose()
     signals = null
     // One replacement for every field the page owned.
-    stage = freshStage()
+    stage = freshStage(Date.now())
   }
 
   function dispose() {

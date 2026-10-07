@@ -89,6 +89,29 @@ let scrollEaseFrameQueued = false
 /** The previous frame's timestamp, for the interval. */
 let scrollEaseLastAt = 0
 
+/**
+ * Carry a position and its speed toward a target through `seconds` of the
+ * spring, in SCROLL_EASE_STEP_S steps with the acceleration and the speed
+ * capped (see above).
+ */
+export function stepSpring(position: number, velocity: number, target: number, seconds: number) {
+  for (let spent = 0; spent < seconds; spent += SCROLL_EASE_STEP_S) {
+    const step = Math.min(SCROLL_EASE_STEP_S, seconds - spent)
+    let acceleration = SCROLL_EASE_OMEGA * SCROLL_EASE_OMEGA * (target - position) - 2 * SCROLL_EASE_OMEGA * velocity
+    acceleration = Math.max(-SCROLL_EASE_MAX_ACCEL_PX_S2, Math.min(SCROLL_EASE_MAX_ACCEL_PX_S2, acceleration))
+    // Semi-implicit Euler: the velocity steps first and the position
+    // follows it — the order that keeps a stiff spring stable.
+    velocity = Math.max(-SCROLL_EASE_MAX_SPEED_PX_S, Math.min(SCROLL_EASE_MAX_SPEED_PX_S, velocity + acceleration * step))
+    position += velocity * step
+  }
+  return { position, velocity }
+}
+
+/** Whether a position has arrived: within half a pixel of the target and nearly still. */
+export function springArrived(position: number, velocity: number, target: number) {
+  return Math.abs(target - position) <= SCROLL_EASE_DONE_PX && Math.abs(velocity) <= SCROLL_EASE_REST_PX_S
+}
+
 /** A scroll container's end: the position that shows its last pixel. */
 export function scrollEnd(element: Element) {
   return element.scrollHeight - element.clientHeight
@@ -192,18 +215,10 @@ function stepScrollEase(now: number) {
     if (Math.abs(target - position) > ease.lead) {
       position = target - Math.sign(target - position) * ease.lead
     }
-    let velocity = ease.velocity
-    for (let spent = 0; spent < seconds; spent += SCROLL_EASE_STEP_S) {
-      const step = Math.min(SCROLL_EASE_STEP_S, seconds - spent)
-      let acceleration = SCROLL_EASE_OMEGA * SCROLL_EASE_OMEGA * (target - position) - 2 * SCROLL_EASE_OMEGA * velocity
-      acceleration = Math.max(-SCROLL_EASE_MAX_ACCEL_PX_S2, Math.min(SCROLL_EASE_MAX_ACCEL_PX_S2, acceleration))
-      // Semi-implicit Euler: the velocity steps first and the position
-      // follows it — the order that keeps a stiff spring stable.
-      velocity = Math.max(-SCROLL_EASE_MAX_SPEED_PX_S, Math.min(SCROLL_EASE_MAX_SPEED_PX_S, velocity + acceleration * step))
-      position += velocity * step
-    }
-    position = Math.max(0, Math.min(floor, position))
-    if (Math.abs(target - position) <= SCROLL_EASE_DONE_PX && Math.abs(velocity) <= SCROLL_EASE_REST_PX_S) {
+    const motion = stepSpring(position, ease.velocity, target, seconds)
+    const velocity = motion.velocity
+    position = Math.max(0, Math.min(floor, motion.position))
+    if (springArrived(position, velocity, target)) {
       writeScrollEase(element, ease, target)
       scrollEasing.delete(element)
       continue
