@@ -53,25 +53,28 @@ module.exports = {
     const laid = b.laid || {}
     const marks = laid.marks || {}
     const right = b.viewportRight - (b.controls + b.air)
-    const top = Math.round((b.band - 28) / 2)
+    /** The caption row's own middle for a 28px box; the title sits the skin's optical drop below it. */
+    const middle = Math.round((b.band - 28) / 2)
+    const top = middle + b.titleDrop
     // Where the row sits with the lift taken back out: the header's own inset.
     const naturalRow = laid.row.y - parseFloat(laid.rowLift || '0')
     check('the caption row takes both sides: the title at the row\'s left, the two control clusters against the caption buttons',
       marks.band === 'title actions' && marks.title === true && marks.utilities === true && marks.corner === true &&
         laid.title.x === laid.row.x && laid.title.y === top &&
-        laid.utilities.y === top && laid.corner.right === right && laid.corner.y === top &&
+        laid.utilities.y === middle && laid.corner.right === right && laid.corner.y === middle &&
         laid.utilities.right === laid.corner.x - b.air,
       JSON.stringify(laid))
     check('the pieces placed there are fixed, stacked over the page and clickable inside the shell\'s drag region',
       laid.titlePosition === 'fixed' && laid.titleZ === '30' &&
         laid.titleRegion === 'no-drag' && laid.utilitiesRegion === 'no-drag' && laid.cornerRegion === 'no-drag',
       JSON.stringify({ position: laid.titlePosition, z: laid.titleZ, regions: [laid.titleRegion, laid.utilitiesRegion, laid.cornerRegion] }))
-    check('the title is handed the room it was measured, and the row it left tucks under it with the preset closed up to its left',
-      laid.titleLeft === laid.row.x + 'px' && laid.titleMax === laid.strip.x - b.air - laid.title.x + 'px' &&
+    check('the title is handed the room left between its own edge and the controls once the strip\'s width is reserved, and the row it left tucks under it',
+      laid.titleLeft === laid.row.x + 'px' &&
+        laid.titleMax === laid.utilities.x - b.air - ((laid.strip.right - laid.strip.x) + b.air) - laid.title.x + 'px' &&
         laid.row.y === laid.title.y + 28 - b.tuck && laid.rowPosition === 'relative' && laid.rowOffset === laid.rowLift &&
         laid.row.y === laid.rowLift.replace('px', '') * 1 + laid.header.y + parseFloat(laid.headerPaddingTop) &&
         laid.preset.x === laid.row.x,
-      JSON.stringify({ left: laid.titleLeft, max: laid.titleMax, lift: laid.rowLift, offset: laid.rowOffset, row: laid.row, header: laid.header, preset: laid.preset }))
+      JSON.stringify({ left: laid.titleLeft, max: laid.titleMax, lift: laid.rowLift, offset: laid.rowOffset, row: laid.row, header: laid.header, preset: laid.preset, utilities: laid.utilities, strip: laid.strip }))
     const solo = b.solo || {}
     check('with the corner seat empty — the right sidebar is open — the cluster that is there still lifts, into the corner\'s own place',
       solo.marks.band === 'title actions' && solo.marks.corner === false && solo.utilities.right === right,

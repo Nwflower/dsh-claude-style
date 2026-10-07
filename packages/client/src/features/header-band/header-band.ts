@@ -54,10 +54,17 @@ import type manifest from './header-band.manifest'
 export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The body marker: which parts of the row the caption row holds, as a token list. */
   const BAND_ATTR = 'data-dsh-header-band'
-  /** The title's stamp, and the two numbers its rule reads. */
+  /** The title's stamp, and the numbers its rule reads. */
   const TITLE_ATTR = 'data-dsh-header-title'
   const TITLE_LEFT = '--dsh-header-band-left'
   const TITLE_MAX = '--dsh-header-band-max'
+  const TITLE_TOP = '--dsh-header-band-title-top'
+  /**
+   * How far below the caption row's middle the title sits: its text draws 20px
+   * in a 28px box, so a box centred on the row leaves the line reading high
+   * against the controls beside it.
+   */
+  const TITLE_NUDGE = 2
   /**
    * The row's own stamp and the negative top margin its rule reads: with the
    * title gone the row holds only the controls, and the host's top inset for a
@@ -69,6 +76,13 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const ACTIONS_ATTR = 'data-dsh-header-actions'
   const CORNER_ATTR = 'data-dsh-header-corner'
   const ACTIONS_RIGHT = '--dsh-header-band-right'
+  /**
+   * The view-tab strip's own stamp and the centre its rule reads: view-tabs
+   * places the strip at the window's centre, which stops reading as the middle
+   * of the row once the title and the controls stand on either side of it.
+   */
+  const TABS_ATTR = 'data-dsh-header-band-tabs'
+  const TABS_LEFT = '--dsh-header-band-tabs-left'
   /** The two tokens the body marker carries. */
   const TITLE_TOKEN = 'title'
   const ACTIONS_TOKEN = 'actions'
@@ -90,6 +104,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const titleStamp = createStamp<HTMLElement>(TITLE_ATTR)
   const actionsStamp = createStamp<HTMLElement>(ACTIONS_ATTR)
   const cornerStamp = createStamp<HTMLElement>(CORNER_ATTR)
+  const tabsStamp = createStamp<HTMLElement>(TABS_ATTR)
   /** The row whose size the pass follows. */
   let watched: HTMLElement | null = null
   /** Stops watching it. */
@@ -125,6 +140,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     titleStamp.release()
     actionsStamp.release()
     cornerStamp.release()
+    tabsStamp.release()
     document.body.removeAttribute(BAND_ATTR)
   }
 
@@ -161,9 +177,15 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const utilities = row.querySelector<HTMLElement>(HEADER_UTILITIES_SELECTOR)
     const corner = row.querySelector<HTMLElement>(HEADER_CORNER_SELECTOR)
     // Only a strip the view-tabs feature has already lifted shares the caption
-    // row; one still drawn in the header's own row takes nothing from it.
-    const stripBox = rect(header === null ? null : header.querySelector(VIEW_TABS_STRIP_SELECTOR))
-    const strip = stripBox !== null && stripBox.top < band.height ? stripBox : null
+    // row; one still drawn in the header's own row takes nothing from it. Its
+    // room is read off the width rather than the box: view-tabs centres it on
+    // the window, this pass then moves it, and a fit decided against the moved
+    // box would answer differently on the next pass.
+    const stripEl = header === null ? null : header.querySelector<HTMLElement>(VIEW_TABS_STRIP_SELECTOR)
+    const stripBox = rect(stripEl)
+    const inBand = stripBox !== null && stripBox.top < band.height
+    const stripWidth = stripBox === null || !inBand ? 0 : stripBox.width
+    const stripRight = stripWidth === 0 ? 0 : document.documentElement.clientWidth / 2 + stripWidth / 2
     // The shell's own menu seat takes the row's left end, and the collapsed
     // sidebar's control sits left of it whether the seat is mounted or not.
     const menuBox = rect(document.querySelector(WINDOWS_MENU_SELECTOR))
@@ -186,10 +208,16 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     // depend on the title; the title then takes what is left of the row's
     // left end, up to the first thing in its way.
     const liftActions = clusterWidth > 0 &&
-      edge - clusterWidth >= Math.max(furniture, strip === null ? 0 : strip.right) + GAP
+      edge - clusterWidth >= Math.max(furniture, stripRight) + GAP
     const left = Math.max(rowBox.left, furniture + GAP)
-    const limit = Math.min(strip === null ? Infinity : strip.left, liftActions ? edge - clusterWidth : Infinity) - GAP
-    const room = limit - left
+    // Where the row's right-hand content ends: the controls when they are lifted,
+    // the caption buttons when they stayed in the row.
+    const rightStop = liftActions ? edge - clusterWidth : document.documentElement.clientWidth - band.controls.size
+    // The title's room runs up to that end, less the strip's own width and the
+    // air on both sides of it: the strip is centred in what is left between the
+    // two, so its width is reserved here rather than read off a position it is
+    // about to leave.
+    const room = rightStop - GAP - (inBand ? stripWidth + GAP : 0) - left
     const titleBox = rect(title)
     const liftTitle = title !== null && room >= MIN_TITLE
     // The row the title leaves holds only controls, and the host's inset for a
@@ -200,8 +228,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     // and nothing would wake a second pass. Where the offset already applied is
     // taken back out, or the pass would read the raised row as needing no rise.
     const titleHeight = titleBox === null ? 0 : titleBox.height
+    const titleCentre = band.height / 2 + TITLE_NUDGE
     const applied = parseFloat(row.style.getPropertyValue(ROW_LIFT))
-    const rise = !liftTitle ? 0 : Math.max(0, Math.round(rowBox.top - (isFinite(applied) ? applied : 0) - ((band.height + titleHeight) / 2 - ROW_TUCK)))
+    const rise = !liftTitle ? 0 : Math.max(0, Math.round(rowBox.top - (isFinite(applied) ? applied : 0) - (titleCentre + titleHeight / 2 - ROW_TUCK)))
 
     rowStamp.mark(liftTitle ? row : null)
     if (liftTitle) setVar(row, ROW_LIFT, `${-rise}px`)
@@ -209,6 +238,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (liftTitle && title !== null) {
       setVar(title, TITLE_LEFT, `${Math.round(left)}px`)
       setVar(title, TITLE_MAX, `${Math.round(room)}px`)
+      setVar(title, TITLE_TOP, `${Math.round(titleCentre)}px`)
     }
     actionsStamp.mark(liftActions && utilitiesBox !== null ? utilities : null)
     cornerStamp.mark(liftActions && cornerBox !== null ? corner : null)
@@ -217,6 +247,16 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       if (utilities !== null && utilitiesBox !== null) setVar(utilities, ACTIONS_RIGHT, `${Math.round(utilitiesRight)}px`)
       if (corner !== null && cornerBox !== null) setVar(corner, ACTIONS_RIGHT, `${Math.round(cornerRight)}px`)
     }
+    // view-tabs centres the strip on the window; with the title and the controls
+    // standing on either side of it that stops reading as the middle of the row,
+    // so it takes the middle of what is left between them — or between the
+    // shell's own left end and the caption buttons when a side stayed in the row.
+    const stripInBand = inBand && stripEl !== null
+    if (stripInBand && stripEl !== null) {
+      const leftStop = liftTitle && titleBox !== null ? left + titleBox.width : furniture
+      setVar(stripEl, TABS_LEFT, `${Math.round((leftStop + rightStop) / 2)}px`)
+    }
+    tabsStamp.mark(stripInBand ? stripEl : null)
 
     const tokens = `${liftTitle ? TITLE_TOKEN : ''} ${liftActions ? ACTIONS_TOKEN : ''}`.trim()
     if (tokens === '') document.body.removeAttribute(BAND_ATTR)
@@ -230,13 +270,16 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const title = titleStamp.current()
     const utilities = actionsStamp.current()
     const corner = cornerStamp.current()
+    const strip = tabsStamp.current()
     if (row !== null) row.style.removeProperty(ROW_LIFT)
     if (title !== null) {
       title.style.removeProperty(TITLE_LEFT)
       title.style.removeProperty(TITLE_MAX)
+      title.style.removeProperty(TITLE_TOP)
     }
     if (utilities !== null) utilities.style.removeProperty(ACTIONS_RIGHT)
     if (corner !== null) corner.style.removeProperty(ACTIONS_RIGHT)
+    if (strip !== null) strip.style.removeProperty(TABS_LEFT)
     clear()
     watch(null)
     delete ui.headerBand

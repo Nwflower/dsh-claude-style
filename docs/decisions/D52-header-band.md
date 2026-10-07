@@ -11,8 +11,9 @@
 - 两簇各自判定：右侧栏打开时 `headerCorner` 是空位（那一栏自己的控件接管了它），有簇可抬就抬，缺的那一簇不留空隙，另一簇也不因此失去位置。
 - 标题离开后，标题行只剩控件：它按标题自己的盒子向上挪 `ROW_TUCK`（行内文字与标题文字之间约 10px），用 `position: relative` 的偏移而不是外边距——外边距会改变行在宿主网格里的高度，偏移不动头部高度，也不给 fixed 子元素造新的包含块。行本身声明 `-webkit-app-region: no-drag`，它的上沿此时落在桌面壳的拖动区里。
 - 宿主用挂在标题行上的容器查询（行宽 540px 以下时隐藏芯片文字）保护标题与控件共享的那一行；标题进入横带后那一行只剩控件、宽度够用，因此在这个模式下把行内被藏起的标签重新显示，控件不会凭空消失。
-- `<body>` 上的 `data-dsh-header-band` 是模式标记，取值为 `title`、`actions` 或两者；四个元素标记（`data-dsh-header-title`、`data-dsh-header-row`、`data-dsh-header-actions`、`data-dsh-header-corner`）让样式表不写宿主的类名。
-- 横带里的落位全部来自测量：窗口按钮的预留宽度与横带高度取自 `desktopBand()`（D28），行的左端取自标题行本身，标签条的盒子取自 view-tabs 摆放后的位置，桌面壳自己那一格（`[data-windows-menu]`）占住的左端让出来；收起侧栏是列宽动画、没有 DOM 变化，因此订阅标题行的尺寸，变化时在同一帧重排。
+- `<body>` 上的 `data-dsh-header-band` 是模式标记，取值为 `title`、`actions` 或两者；四个元素标记（`data-dsh-header-title`、`data-dsh-header-row`、`data-dsh-header-actions`、`data-dsh-header-corner`）与标签条上的 `data-dsh-header-band-tabs` 让样式表不写宿主的类名。
+- 横带里的落位全部来自测量：窗口按钮的预留宽度与横带高度取自 `desktopBand()`（D28），行的左端取自标题行本身，标签条的宽度取自它自己的盒子（view-tabs 把它按窗口居中摆放，本功能随后再移动它，因此余量判定读宽度、不读移动后的位置），桌面壳自己那一格（`[data-windows-menu]`）占住的左端让出来；收起侧栏是列宽动画、没有 DOM 变化，因此订阅标题行的尺寸，变化时在同一帧重排。
+- 标签条本身由 view-tabs 摆放：它在横带里取两者的中线——左侧是标题的右沿（标题留在原行时是桌面壳的左端），右侧是控件簇的左沿（控件留在原行时是窗口按钮的预留边）——写进 `--dsh-header-band-tabs-left`，样式表把 `left` 从窗口中心改读这个值，标签条自己的 `translate(-50%, -50%)` 保持居中。
 - 横带是桌面壳的拖动区，抬上去的每一块都声明 `-webkit-app-region: no-drag`。macOS 不动：那边的外壳不给内容留上下内边距，标题行本来就画在红绿灯那一条里。
 
 ## 理由

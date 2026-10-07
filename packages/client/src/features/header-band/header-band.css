@@ -8,7 +8,8 @@
 
 body[data-dsh-claude-style][data-dsh-header-band~="title"] [data-dsh-header-title] {
   position: fixed !important;
-  top: calc(var(--dsh-windows-titlebar-height, 40px) / 2) !important;
+  /* The pass centres the box on the row's middle plus its own optical nudge. */
+  top: var(--dsh-header-band-title-top, calc(var(--dsh-windows-titlebar-height, 40px) / 2)) !important;
   left: var(--dsh-header-band-left) !important;
   /* The room the pass measured: past it the title would run into the tab strip
      or the controls. The title's own crumb ellipsizes inside whatever width
@@ -18,6 +19,14 @@ body[data-dsh-claude-style][data-dsh-header-band~="title"] [data-dsh-header-titl
   transform: translateY(-50%) !important;
   z-index: 30 !important;
   -webkit-app-region: no-drag !important;
+}
+
+/* The view-tab strip: view-tabs places it at the window's centre, and with the
+   title and the controls standing on either side of it that no longer reads as
+   the middle of the row. The pass hands it the middle of what is left between
+   them, and the strip's own translate keeps it centred on that value. */
+body[data-dsh-claude-style][data-dsh-titlebar-tabs] [data-dsh-header-band-tabs] {
+  left: var(--dsh-header-band-tabs-left, 50%) !important;
 }
 
 /* The row the title left: what it still holds — the preset picker, the

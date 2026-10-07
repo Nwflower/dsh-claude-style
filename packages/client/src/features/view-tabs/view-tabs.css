@@ -136,6 +136,13 @@ body[data-dsh-claude-style][data-dsh-titlebar-tabs] [data-dsh-view-tabs] {
 body[data-dsh-claude-style][data-dsh-titlebar-tabs] [data-dsh-view-tabs]:hover {
   opacity: 1 !important;
 }
+/* The pane-hover reveal above cannot outweigh this mode's own resting opacity,
+   which is stated with `!important` because the strip is fixed over the caption
+   row; without this the strip only answers the pointer once it is already in
+   that row. */
+body[data-dsh-claude-style][data-dsh-titlebar-tabs] [class*="centerCol"]:hover [data-dsh-view-tabs] {
+  opacity: 1 !important;
+}
 /* The strip's row is gone from the flow, so the header takes the shape it has
    when it owns no tab strip: no min-height, and the bottom padding the host
    gives that shape. */
