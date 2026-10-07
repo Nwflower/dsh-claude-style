@@ -9,7 +9,7 @@
  * external, and that body is wrapped in the loader's factory:
  *
  *   packages/client/src/entry.ts                 apply(): the FEATURES table; imports everything else
- *   packages/client/src/constants.ts             constants; also evaluated here for the stylesheet tokens
+ *   packages/client/src/constants.ts             constants; also evaluated here for the stylesheet gates
  *   packages/client/src/core/ packages/client/src/shared/ packages/client/src/features/<name>/   the modules, TypeScript, strict
  *   packages/client/src/features/<dir>/<main>.manifest.ts   each feature's manifest (D42), read by scripts/shared/read-manifests.cjs
  *   packages/client/src/theme/*.css and the feature stylesheets   concatenated by rank (THEME_SHEETS and the manifests),
@@ -27,36 +27,32 @@
  *
  * Before anything is written, `tsc` type-checks packages/client/src/ and the bundle's import
  * graph must hold no cycle: a missing import, a cycle or a constant read before
- * it is initialized fails the build.
+ * it is initialized fails the build. Those refusals and the contract tables'
+ * are in scripts/build-checks.mjs, the stylesheets' in scripts/css.mjs; the two
+ * generated modules are scripts/virtual-modules.mjs.
  *
- * `packages/client/data/model-descriptions.json` is not bundled: it is validated here and
- * copied to `lib/`, where the host half serves it to the browser half at
- * runtime. Model copy is data, so it must not enter the bundle (D5).
+ * `packages/client/data/model-descriptions.json` is not bundled: it is validated
+ * (scripts/model-copy.mjs) and copied to `lib/`, where the host half serves it to
+ * the browser half at runtime. Model copy is data, so it must not enter the bundle (D5).
  */
-import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 import vm from 'node:vm'
-import Ajv2020 from 'ajv/dist/2020.js'
-import addFormats from 'ajv-formats'
 import esbuild from 'esbuild'
 import { PNG } from 'pngjs'
 import { buildHostHalf } from '../packages/host/build.mjs'
 import { buildFonts, checkClaimed, checkSheetPixels, checkSheets, planAssets, vectorizeSheet, writeAssets } from '../packages/assets/assets.mjs'
+import { checkContracts, checkCycles, checkListed, checkManifests, checkScrollOwner, checkTypes } from './build-checks.mjs'
 import { TOKEN_SHEET, buildStylesheet, loadTokens, writeTokenTable } from './css.mjs'
+import { MODEL_COPY, validateModelCopy } from './model-copy.mjs'
 import manifestReader from './shared/read-manifests.cjs'
-import { loadModule, loadModuleEsm } from './shared/ts-module.cjs'
+import { loadModule } from './shared/ts-module.cjs'
+import { featuresModule, generatedModule } from './virtual-modules.mjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
-/**
- * The preference table both halves share (packages/contracts/src/prefs.ts, D46):
- * the host half's Config is derived from it and every feature manifest's `pref`
- * has to name a key of it.
- */
-const { PREFS_DEFAULT } = await loadModuleEsm('packages/contracts/src/prefs.ts')
 const SRC = path.join(ROOT, 'packages', 'client', 'src')
-/** The model copy and its schema: data beside the browser half's code, never bundled. */
+/** The model copy: data beside the browser half's code, never bundled. */
 const DATA = path.join(ROOT, 'packages', 'client', 'data')
 /** Brand marks, mascot sheets and vendor lockups; packages/assets/assets.mjs plans their delivery (D38). */
 const ASSETS = path.join(ROOT, 'packages', 'assets', 'src')
@@ -66,18 +62,6 @@ const BRAND_ASSETS = path.join(ASSETS, 'brand')
 const STYLE_GUIDE = path.join(ROOT, 'docs', 'STYLE.md')
 const LIB = path.join(ROOT, 'lib')
 const OUT = path.join(LIB, 'client.js')
-
-/**
- * Model copy ships as DATA beside the bundle, not inside it: the browser half
- * fetches it at runtime (the host half serves it), so the table grows without
- * touching this build. It is validated here so a malformed table fails the
- * build instead of the picker.
- */
-const MODEL_COPY = 'model-descriptions.json'
-/** The model copy's declared shape; validateModelCopy adds the references a schema cannot see. */
-const MODEL_COPY_SCHEMA = 'model-descriptions.schema.json'
-const validateModelCopyShape = addFormats(new Ajv2020({ allErrors: true }), ['regex'])
-  .compile(JSON.parse(fs.readFileSync(path.join(DATA, MODEL_COPY_SCHEMA), 'utf8')))
 
 /**
  * The plugin icon the 0.1.7 plugin manifest reads.
@@ -193,10 +177,6 @@ const CONSTANTS = (() => {
   }
 })()
 
-/** The page states and check kinds packages/contracts/src/table.ts records (D44, D45). */
-const PROBE_STATES = new Set(['any', 'hero', 'sending', 'streaming', 'conversation', 'menu', 'dark'])
-const PROBE_KINDS = new Set(['selector', 'attribute', 'property', 'global', 'value', 'rail-geometry', 'none'])
-
 /**
  * The brand marks the stylesheets paint, each as the custom property
  * `--dsh-claude-image-<name>` the token sheet declares (the skin has no asset
@@ -273,295 +253,6 @@ function vectorizeDeepySheets() {
     replaced.add(`mascot/deepy/${name}.png`)
   }
   return { generated, replaced }
-}
-
-/**
- * Check the model copy document before it ships. Every failure here is one the
- * picker could otherwise only express as a silently missing or wrong line, so
- * they all throw.
- *
- * The document's shape is declared in packages/client/data/model-descriptions.schema.json: the
- * tables, the `{locale: text}` lines, a rule's compilable `match` and its `key`
- * or `text`. What a schema cannot see is checked after it: a `families[].key`,
- * `tiers[].key` or `aliases` target must name an `exact` entry, every brand id
- * must be a vendored lockup under packages/assets/src/icons/combine/ (a typo would render
- * as a silently missing mark on one row), and the document must carry at least
- * two locales.
- *
- * @param doc - parsed `packages/client/data/model-descriptions.json`.
- * @param lobeBrands - the vendored lockups keyed by brand id (loadCombines).
- * @returns the number of exact entries, for the build log.
- */
-function validateModelCopy(doc, lobeBrands) {
-  const fail = (message) => {
-    throw new Error(`build: ${MODEL_COPY} ${message}`)
-  }
-  if (!validateModelCopyShape(doc)) {
-    fail(validateModelCopyShape.errors.map((error) => `${error.instancePath || '/'} ${error.message}`).join('; '))
-  }
-
-  const requireEntry = (where, key) => {
-    if (!(key in doc.exact)) fail(`${where} points at unknown entry "${key}"`)
-  }
-  for (const [from, to] of Object.entries(doc.aliases ?? {})) requireEntry(`alias "${from}"`, to)
-  for (const list of ['families', 'tiers']) {
-    for (const [index, rule] of (doc[list] ?? []).entries()) {
-      if (rule.key !== undefined) requireEntry(`${list}[${index}]`, rule.key)
-    }
-  }
-
-  const requireBrand = (where, brand) => {
-    if (!(brand in lobeBrands)) fail(`${where} names brand "${brand}", which has no vendored lockup in packages/assets/src/icons/combine/`)
-  }
-  for (const [provider, brand] of Object.entries(doc.brands.providers ?? {})) requireBrand(`brands.providers["${provider}"]`, brand)
-  for (const [index, rule] of doc.brands.models.entries()) requireBrand(`brands.models[${index}].brand`, rule.brand)
-
-  const locales = new Set([doc.fallback])
-  const addLocales = (pair) => {
-    for (const locale of Object.keys(pair)) locales.add(locale)
-  }
-  for (const pair of Object.values(doc.exact)) addLocales(pair)
-  for (const group of ['ui', 'settings', 'ban']) {
-    for (const pair of Object.values(doc[group] ?? {})) addLocales(pair)
-  }
-  for (const list of ['families', 'tiers']) {
-    for (const rule of doc[list] ?? []) {
-      if (rule.text !== undefined) addLocales(rule.text)
-    }
-  }
-  if (locales.size < 2) fail('carries fewer than two locales; i18n needs at least the fallback and one translation')
-  return Object.keys(doc.exact).length
-}
-
-/**
- * Refuse a source file that does not ship: a stylesheet no manifest and no
- * theme entry names, or a module nothing imports, would otherwise sit in packages/client/src/
- * with no way to reach the page. Manifests are data the build reads, the
- * contract table is read by the build and the tests (D44), and unit tests run
- * under Vitest; none of them is a module the bundle carries.
- *
- * @param bundled - the modules in the bundle (esbuild's metafile), relative to packages/client/src.
- * @param sheets - every stylesheet the bundle carries (styleFiles).
- */
-function checkListed(bundled, sheets) {
-  const listed = new Set(sheets.map((sheet) => sheet.file))
-  const walk = (dir) => fs.readdirSync(path.join(SRC, dir), { withFileTypes: true }).flatMap((entry) => {
-    const rel = dir === '' ? entry.name : `${dir}/${entry.name}`
-    if (entry.isDirectory()) return rel === 'assets' ? [] : walk(rel)
-    return [rel]
-  })
-  for (const file of walk('')) {
-    if (file.endsWith('.css') && !listed.has(file)) throw new Error(`build: packages/client/src/${file} is in no list; add it to its feature's manifest or to THEME_SHEETS`)
-    if (file.endsWith('.manifest.ts') || file.endsWith('.test.ts') || file.endsWith('.d.ts')) continue
-    if (file.endsWith('.ts') && !bundled.has(file)) throw new Error(`build: packages/client/src/${file} is imported by no module the bundle reaches`)
-  }
-}
-
-/**
- * Hold the manifests to the rest of the repository: every feature directory
- * carries at least one manifest, and a `pref` names a key of the shared
- * preference table (packages/contracts/src/prefs.ts, D46), the table the
- * settings form serves.
- *
- * @param manifests - the feature manifests (scripts/shared/read-manifests.cjs).
- */
-function checkManifests(manifests) {
-  const covered = new Set(manifests.map((manifest) => manifest.dir))
-  for (const dir of fs.readdirSync(path.join(SRC, 'features'), { withFileTypes: true })) {
-    if (dir.isDirectory() && !covered.has(dir.name)) throw new Error(`build: packages/client/src/features/${dir.name}/ has no manifest`)
-  }
-  for (const manifest of manifests) {
-    if (manifest.pref !== undefined && !(manifest.pref in PREFS_DEFAULT)) {
-      throw new Error(`build: packages/client/src/${manifest.file} names pref "${manifest.pref}", which packages/contracts/src/prefs.ts PREFS_DEFAULT does not carry`)
-    }
-  }
-}
-
-/** The manifest fields the browser half reads (FeatureRuntime in packages/client/src/core/feature.ts). */
-const RUNTIME_FIELDS = ['id', 'handle', 'order', 'pref', 'ungated', 'yieldsTo', 'switchRow']
-
-/**
- * The feature registry, `virtual:dsh-claude-style/features`: each manifest's
- * runtime fields beside its main module's `install`, in install order. The
- * manifests themselves stay out of the bundle — their descriptions and test
- * coverage are of no use to the page.
- *
- * @param manifests - the feature manifests in install order.
- */
-function featuresModule(manifests) {
-  const imports = manifests.map((manifest, index) => `import { install as install${index} } from ${JSON.stringify(`./${manifest.main}`)}`)
-  const entries = manifests.map((manifest, index) => {
-    const runtime = Object.fromEntries(RUNTIME_FIELDS.filter((field) => manifest[field] !== undefined).map((field) => [field, manifest[field]]))
-    return `  { ...${JSON.stringify(runtime)}, install: install${index} },`
-  })
-  const contents = `${imports.join('\n')}\nexport const FEATURES = [\n${entries.join('\n')}\n]\n`
-  return {
-    name: 'features',
-    setup(build) {
-      build.onResolve({ filter: /^virtual:dsh-claude-style\/features$/ }, (args) => ({ path: args.path, namespace: 'features' }))
-      build.onLoad({ filter: /.*/, namespace: 'features' }, () => ({ contents, loader: 'js', resolveDir: SRC }))
-    },
-  }
-}
-
-/**
- * Type-check packages/client/src/ (tsconfig.json, strict). esbuild only strips types, so this
- * is what turns a missing import, a misspelt name or a wrong argument into a
- * build failure.
- */
-function checkTypes() {
-  const tsc = path.join(ROOT, 'node_modules', 'typescript', 'bin', 'tsc')
-  try {
-    execFileSync(process.execPath, [tsc, '-p', ROOT, '--pretty'], { stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf8' })
-  } catch (error) {
-    process.stderr.write(error.stdout + error.stderr)
-    throw new Error('build: tsc reports type errors in packages/client/src/ (listed above)')
-  }
-}
-
-/**
- * Refuse an import cycle. Modules in a cycle evaluate one before the other has
- * finished, so a constant read across it can be read before it is initialized.
- *
- * @param metafile - esbuild's metafile for the bundle.
- */
-function checkCycles(metafile) {
-  const graph = new Map(Object.entries(metafile.inputs).map(([file, input]) => [file, input.imports.filter((item) => !item.external).map((item) => item.path)]))
-  const state = new Map()
-  const stack = []
-  const visit = (file) => {
-    state.set(file, 'open')
-    stack.push(file)
-    for (const next of graph.get(file) ?? []) {
-      if (state.get(next) === 'open') {
-        const cycle = [...stack.slice(stack.indexOf(next)), next].join(' → ')
-        throw new Error(`build: import cycle ${cycle}`)
-      }
-      if (!state.has(next)) visit(next)
-    }
-    stack.pop()
-    state.set(file, 'done')
-  }
-  for (const file of graph.keys()) if (!state.has(file)) visit(file)
-}
-
-/**
- * Hold the host contract together (D44).
- *
- * The literals the skin keys on live in packages/contracts/src/dom.ts and the table of
- * what they mean in packages/contracts/src/table.ts; neither may drift from the other,
- * and every entry has to be claimed by a feature manifest (D42), so a selector
- * cannot enter the skin without a note and an owner, and a host upgrade can be
- * audited by walking one list.
- *
- * @param manifests - the feature manifests (scripts/shared/read-manifests.cjs).
- * @returns the table, for the build log.
- */
-function checkContracts(manifests) {
-  const literals = loadModule('packages/contracts/src/dom.ts')
-  const { HOST_DOM: table } = loadModule('packages/contracts/src/table.ts')
-  if (!Array.isArray(table) || table.length === 0) throw new Error('build: packages/contracts/src/table.ts exports no HOST_DOM')
-  const listed = new Set()
-  for (const entry of table) {
-    if (typeof entry.id !== 'string' || entry.id === '' || typeof entry.use !== 'string' || entry.use === '') {
-      throw new Error(`build: packages/contracts/src/table.ts has an entry without an id and a use: ${JSON.stringify(entry)}`)
-    }
-    if (listed.has(entry.id)) throw new Error(`build: packages/contracts/src/table.ts lists "${entry.id}" twice`)
-    listed.add(entry.id)
-  }
-  // Every entry says how the contract test checks it (D44), so a host upgrade
-  // walks one list with no entry quietly unchecked.
-  for (const entry of table) {
-    const probe = entry.probe
-    if (probe === null || typeof probe !== 'object') throw new Error(`build: packages/contracts/src/table.ts entry "${entry.id}" has no probe`)
-    if (!PROBE_STATES.has(probe.state)) throw new Error(`build: packages/contracts/src/table.ts entry "${entry.id}" has probe state "${probe.state}"`)
-    if (!PROBE_KINDS.has(probe.kind)) throw new Error(`build: packages/contracts/src/table.ts entry "${entry.id}" has probe kind "${probe.kind}"`)
-    if (probe.within !== undefined && !listed.has(probe.within)) throw new Error(`build: packages/contracts/src/table.ts entry "${entry.id}" is checked within "${probe.within}", which the table does not list`)
-  }
-  const values = new Set(table.map((entry) => entry.value))
-  for (const [name, value] of Object.entries(literals)) {
-    if (!/^[A-Z][A-Z0-9_]*$/.test(name) || (typeof value !== 'string' && typeof value !== 'number')) continue
-    if (!values.has(String(value))) {
-      throw new Error(`build: packages/contracts/src/dom.ts exports ${name} (${JSON.stringify(value)}) with no entry in packages/contracts/src/table.ts`)
-    }
-  }
-  const claimed = new Set()
-  for (const manifest of manifests) {
-    for (const id of manifest.contracts) {
-      if (!listed.has(id)) throw new Error(`build: packages/client/src/${manifest.file} names host contract "${id}", which packages/contracts/src/table.ts does not list`)
-      claimed.add(id)
-    }
-  }
-  const unclaimed = table.filter((entry) => entry.owner !== 'core' && !claimed.has(entry.id)).map((entry) => entry.id)
-  if (unclaimed.length > 0) throw new Error(`build: packages/contracts/src/table.ts entries no feature manifest claims: ${unclaimed.join(', ')}`)
-  checkTiming()
-  return table
-}
-
-/**
- * Hold the timing table to its checks (D44).
- *
- * The timing assumptions live in packages/contracts/src/timing.ts, each naming what holds
- * it: a scenario of the end-to-end lane or a unit test beside its module. Both
- * names have to exist, so an assumption cannot enter the table with nothing that
- * would notice it changing.
- */
-function checkTiming() {
-  const { E2E_SCENARIOS, HOST_TIMING } = loadModule('packages/contracts/src/timing.ts')
-  if (!Array.isArray(HOST_TIMING) || HOST_TIMING.length === 0) throw new Error('build: packages/contracts/src/timing.ts exports no HOST_TIMING')
-  const scenarios = new Set(E2E_SCENARIOS)
-  const seen = new Set()
-  for (const entry of HOST_TIMING) {
-    for (const field of ['id', 'assumption', 'use']) {
-      if (typeof entry[field] !== 'string' || entry[field] === '') throw new Error(`build: packages/contracts/src/timing.ts has an entry without ${field}: ${JSON.stringify(entry)}`)
-    }
-    if (seen.has(entry.id)) throw new Error(`build: packages/contracts/src/timing.ts lists "${entry.id}" twice`)
-    seen.add(entry.id)
-    if (!Array.isArray(entry.checks) || entry.checks.length === 0) throw new Error(`build: packages/contracts/src/timing.ts entry "${entry.id}" names no check`)
-    for (const check of entry.checks) {
-      const [kind, name] = String(check).split(':')
-      if (kind === 'scenario') {
-        if (!scenarios.has(name)) throw new Error(`build: packages/contracts/src/timing.ts entry "${entry.id}" names the lane scenario "${name}", which packages/testing/e2e.cjs does not run`)
-        continue
-      }
-      if (kind === 'test') {
-        if (!fs.existsSync(path.join(ROOT, name))) throw new Error(`build: packages/contracts/src/timing.ts entry "${entry.id}" names the test "${name}", which does not exist`)
-        continue
-      }
-      throw new Error(`build: packages/contracts/src/timing.ts entry "${entry.id}" has the check "${check}", which is neither scenario:<name> nor test:<path>`)
-    }
-  }
-}
-
-/**
- * Refuse a module other than the scroll owner importing the spring: the chat
- * area's positions have one writer (D41), and a direct ease would bypass its
- * arbitration.
- *
- * @param metafile - esbuild's metafile for the bundle.
- */
-function checkScrollOwner(metafile) {
-  for (const [file, input] of Object.entries(metafile.inputs)) {
-    if (file === 'packages/client/src/shared/scroll-owner.ts') continue
-    if (input.imports.some((item) => item.path === 'packages/client/src/shared/scroll-ease.ts')) {
-      throw new Error(`build: ${file} imports shared/scroll-ease.ts; positions go through shared/scroll-owner.ts (D41)`)
-    }
-  }
-}
-
-/**
- * The generated module (packages/client/src/generated.d.ts) as an esbuild plugin: everything the
- * build produces for the browser half, as named exports.
- */
-function generatedModule(values) {
-  const contents = Object.entries(values).map(([name, value]) => `export const ${name} = ${JSON.stringify(value)}`).join('\n')
-  return {
-    name: 'generated',
-    setup(build) {
-      build.onResolve({ filter: /^virtual:dsh-claude-style\/generated$/ }, (args) => ({ path: args.path, namespace: 'generated' }))
-      build.onLoad({ filter: /.*/, namespace: 'generated' }, () => ({ contents, loader: 'js' }))
-    },
-  }
 }
 
 async function main() {
