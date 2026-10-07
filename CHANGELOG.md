@@ -8,7 +8,8 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 <h3 id="cn-unreleased">体验优化</h3>
 
-- **插件主文件缩小一半**：浏览器每次启动都要读取并解析的插件主文件此前是 1.6 MB（1,619,502 字节），现在压缩后是 0.8 MB（817,178 字节）。
+- **插件主文件缩小一半**：浏览器每次启动都要读取并解析的插件主文件此前是 1.6 MB（1,619,502 字节），现在压缩后是 0.8 MB（816,520 字节）。
+- **小鲸鱼的帧图改为矢量取用**：Deepy 的 18 张帧图此前由浏览器在某个动作第一次出现时下载 PNG、在画布上重建成矢量、再存进 Cache API；现在构建期就把它们转成矢量，按内容哈希长期缓存。第一次播放不再有重建的停顿，观感与之前一致；随包携带的帧图从 426 KB 变为 658 KB（brotli 后）。
 
 ### 问题修复
 
@@ -17,11 +18,13 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 ### 其他变更
 
+- **公开路由变化**：`GET /dsh-claude-style/deepy/<动作>.png` 不再提供，帧图改由 `GET /dsh-claude-style/assets/<内容哈希>.svg` 提供；品牌标志、厂商组合标与螃蟹帧图同样由这份构建清单决定内联进产物还是走这条路由（小鲸鱼的 18 张帧图走路由）。更新插件后需要重启宿主，早于本次构建的宿主半边没有这条路由，小鲸鱼不会出现（控制台提示一次）。
 - **附带 source map**：npm 包里新增 `lib/client.js.map`，浏览器开发者工具里的报错位置与断点能对应到插件源码。
 
 <h3 id="en-unreleased">Improvements</h3>
 
-- **The plugin's main file is half the size**: the file the browser reads and parses on every start was 1.6 MB (1,619,502 bytes); minified it is now 0.8 MB (817,178 bytes).
+- **The plugin's main file is half the size**: the file the browser reads and parses on every start was 1.6 MB (1,619,502 bytes); minified it is now 0.8 MB (816,520 bytes).
+- **Deepy's frames are taken as vectors**: the whale's 18 sheets used to be downloaded as PNGs the first time an animation appeared, rebuilt into a vector on a canvas and kept in the Cache API; the build now produces the vectors and they are cached for good under their content hash. The first play no longer pauses to rebuild and the whale looks the same; the sheets that ship with the package go from 426 KB to 658 KB (brotli).
 
 ### Bug Fixes
 
@@ -30,6 +33,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 ### Chores
 
+- **Public route change**: `GET /dsh-claude-style/deepy/<animation>.png` is gone; the frames are served by `GET /dsh-claude-style/assets/<content hash>.svg`, and the brand marks, the vendor lockups and the crab's sheets follow the same build manifest, which decides per file between an inline form and that route (the whale's 18 sheets take the route). Restart the host after updating: a host half older than this build has no such route and the whale will not appear (one console message).
 - **Source map included**: the npm package now carries `lib/client.js.map`, so error locations and breakpoints in the browser's developer tools map back to the plugin's sources.
 
 ## [0.11.1] - 2026-10-06

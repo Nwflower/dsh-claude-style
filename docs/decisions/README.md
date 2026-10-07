@@ -13,7 +13,7 @@
 | [D9](D9-style-performance.md) | 样式性能：结构判断写成属性，`:has()` 只放在最后一段 | 已实施 |
 | [D36](D36-modules-and-bundling.md) | TypeScript 与 ES 模块，esbuild 打出单文件产物 | 已实施 |
 | [D51](D51-css-toolchain.md) | CSS 工具链：语法树上的检查与一份令牌数据 | 已实施 |
-| [D38](D38-assets.md) | 资源只有一条路径：内容哈希清单与通用资产路由 | 待实施 |
+| [D38](D38-assets.md) | 资源只有一条路径：内容哈希清单与通用资产路由 | 已实施 |
 | [D39](D39-on-demand-loading.md) | 按需加载：重的功能拆成单独的块 | 待实施（受上游阻塞） |
 | [D46](D46-monorepo.md) | monorepo 布局，对外仍是一个插件 | 待实施 |
 | [D47](D47-build-output.md) | 构建产物不进主分支，发布分支提供 git 安装 | 待实施 |
