@@ -54,7 +54,7 @@ Hard stops: stop the moment one triggers, without first judging whether it is wo
 ### CSS
 
 - The build checks scope, the composer gate, `:has()` placement and the token gates on the syntax tree (D51). Dark tokens are the base, light overrides go under `:not([data-ds-dark-theme])`. Light canvas `#FCFCFB`, dark `#141413`, accent ember orange `#D97757`; no pure white, pure black or cold grays.
-- Token values and host aliases live in `src/theme/tokens.json`; the token stylesheet and the token table in `docs/STYLE.md` are generated from it.
+- Token values and host aliases live in `packages/client/src/theme/tokens.json`; the token stylesheet and the token table in `docs/STYLE.md` are generated from it.
 - A feature never borrows another feature's class names; shared looks use the neutral shared classes (`dsh-claude-popover-card`, `dsh-claude-popover-item`, …).
 - Design tokens and shape rules are in `docs/STYLE.md`; read it before changing visuals.
 
@@ -68,7 +68,7 @@ Comments carry only what a reader needs to keep the code correct: why the code h
 
 ### Model Copy
 
-Read D5 before editing `src/model-descriptions.json`.
+Read D5 before editing `packages/client/src/model-descriptions.json`.
 
 ### Screenshots and Privacy
 
@@ -78,17 +78,17 @@ Before writing to disk, `scripts/privacy.cjs` replaces workspace names, session 
 
 Target layout: D46. Today:
 
-- `src/core/` host access, preferences, model copy, i18n, the scheduler, the observation bus and the frame pipeline (D40), with their unit tests beside them (`*.test.ts`); `src/shared/` parts several features use (TypeScript beside CSS); `src/theme/` the global look no single feature owns and the design tokens (`tokens.json`, its shape in `tokens.schema.json`); `src/features/<feature>/` one feature's installer, helpers and stylesheets, the main file named after the feature.
+- `packages/client/src/core/` host access, preferences, model copy, i18n, the scheduler, the observation bus and the frame pipeline (D40), with their unit tests beside them (`*.test.ts`); `packages/client/src/shared/` parts several features use (TypeScript beside CSS); `packages/client/src/theme/` the global look no single feature owns and the design tokens (`tokens.json`, its shape in `tokens.schema.json`); `packages/client/src/features/<feature>/` one feature's installer, helpers and stylesheets, the main file named after the feature.
 - `packages/` the npm workspaces (D46): `packages/contracts` holds what both halves share — the host contract (`src/dom.ts` the selectors and attributes the skin reads, `src/table.ts` the same list with what each means and who reads it, `src/timing.ts` the timing assumptions, `src/services.ts` the service and value shapes, `src/usage.ts` the payloads the two halves exchange). Import it by package name (`@dsh-claude-style/contracts/services`); the type check and the bundler both resolve it through `tsconfig.json`'s `paths`, and the build loads those tables by repository path.
-- `src/constants.ts` holds build-time constants; `src/model-descriptions.json` the model copy and `brands` bindings, its shape declared in `src/model-descriptions.schema.json`; `packages/assets/src/` every image, from brand marks to mascot sheets (`packages/assets/assets.mjs` decides inline or route, D38).
-- `src/generated.d.ts` types the module the build generates; `src/globals.d.ts` the DOM additions and the element properties the skin sets; `tsconfig.json` the type check.
+- `packages/client/src/constants.ts` holds build-time constants; `packages/client/src/model-descriptions.json` the model copy and `brands` bindings, its shape declared in `packages/client/src/model-descriptions.schema.json`; `packages/assets/src/` every image, from brand marks to mascot sheets (`packages/assets/assets.mjs` decides inline or route, D38).
+- `packages/client/src/generated.d.ts` types the module the build generates; `packages/client/src/globals.d.ts` the DOM additions and the element properties the skin sets; `tsconfig.json` the type check.
 - `packages/host/` the handwritten host half (private routes, settings `Config`, HDSL, search, usage); the build writes it into `lib/host/`, which the package's `main` and `exports` point at.
 - `lib/` build output only, never edited by hand and never committed (D47).
 - `locale/<language>.json` plugin metadata; `package.json`'s `exports` must cover them with `"./locale/*"`, or the host degrades the whole metadata (icon included) to `meta.error`.
 - `skin.json` the skin manifest; `cordis.patch.yml` inserts the skin into the web roster.
 - `scripts/` build (`build.mjs`, `css.mjs` for stylesheets), smoke and live tools (`fetch-lobe-combines.py` is the only networked script, run by hand; `draw-crab.py` redraws the crab's sheets after a drawing change); `scripts/privacy.cjs` the replacements and the sweep before a screenshot reaches disk; `packages/assets/` the images and the generator that decides how each is delivered (`assets.mjs`); `packages/testing/` the maintained runnable tools (D45): `dsh-web.cjs` the scratch host, `mock-llm.cjs` the scripted model service, `e2e.cjs` the end-to-end lane; `tests/screenshots/` the reviewed baselines; `docs/` decisions, style guide, screenshots; `fonts/`; `showcase/gifs/`.
 
-The source is TypeScript ES modules under `strict` (D36). A module nothing imports fails the build; a feature is a directory under `src/features/` whose main module exports `install(ctx, ui)` beside a `<main>.manifest.ts` (D42) — its order, switch, stylesheets with their ranks, settings switch row, smoke cases and description; a stylesheet that belongs to no feature goes into `THEME_SHEETS` in `scripts/build.mjs`. React and the host packages are imported by name and stay external; build-time data (stylesheet, asset addresses, lockups, build id) is imported from `virtual:dsh-claude-style/generated`. A host value without a type yet is `HostValue` (D44); a non-null assertion `!` only marks a value the call order guarantees.
+The source is TypeScript ES modules under `strict` (D36). A module nothing imports fails the build; a feature is a directory under `packages/client/src/features/` whose main module exports `install(ctx, ui)` beside a `<main>.manifest.ts` (D42) — its order, switch, stylesheets with their ranks, settings switch row, smoke cases and description; a stylesheet that belongs to no feature goes into `THEME_SHEETS` in `scripts/build.mjs`. React and the host packages are imported by name and stay external; build-time data (stylesheet, asset addresses, lockups, build id) is imported from `virtual:dsh-claude-style/generated`. A host value without a type yet is `HostValue` (D44); a non-null assertion `!` only marks a value the call order guarantees.
 
 ## Commands
 
@@ -104,7 +104,7 @@ npm run docs:index                           # write docs/decisions/README.md fr
 npm run docs:check                           # fail when that index differs from the files; CI runs this
 npm test                                     # unit tests: Vitest in browser mode on the local Chrome/Edge
 npm run smoke                                # full run: every browser case and check, plus the host half's route checks
-npm run smoke -- --quick --feature <dir>     # iteration run: quick tier, cases covering one src/features/ directory
+npm run smoke -- --quick --feature <dir>     # iteration run: quick tier, cases covering one packages/client/src/features/ directory
 npm run smoke -- --case <name>[,<name>…]     # named browser cases
 npm run smoke -- --feature <dir>[,<dir>…]    # cases covering those directories (the `cases` of their manifests)
 node scripts/probe.cjs --token <launch-token>          # composer invariants against a running dsh web

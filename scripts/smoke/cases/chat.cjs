@@ -186,7 +186,7 @@ module.exports = {
     check('it keeps the input row', escalated.texts.includes('t:row.input'), JSON.stringify(escalated.texts))
     check('switching the file rows off hands both seat keys back', files.offSeats === 0, JSON.stringify(files.offSeats))
     check('switching them back takes both again, without a reload', files.backSeats === 2, JSON.stringify(files.backSeats))
-    // The other plugin coming and going mid-session (src/shared/peer-plugin.ts):
+    // The other plugin coming and going mid-session (packages/client/src/shared/peer-plugin.ts):
     // the decision is re-taken, not frozen at install.
     const peerOn = files.peerOn || {}
     const peerOff = files.peerOff || {}

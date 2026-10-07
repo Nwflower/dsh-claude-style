@@ -61,7 +61,7 @@ const HOST = {
 }
 
 /**
- * The skin's own marks (src/constants.ts): the stand-in the composer leaves
+ * The skin's own marks (packages/client/src/constants.ts): the stand-in the composer leaves
  * behind for the send flight, and the attribute it puts on the real row while
  * that stand-in flies, which the flight stylesheet hides.
  */

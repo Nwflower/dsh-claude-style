@@ -6,7 +6,7 @@
 
 ## 决定
 
-- 吉祥物与品牌（D50）分开：`mascot` 偏好有 `brand`（默认：Claude 品牌下是螃蟹、DeepSeek 品牌下是 Deepy）、`crab`、`deepy`、`off` 四档，解析后的角色写成 `<body data-dsh-claude-mascot="crab|deepy|off">`；`mascotScope` 有 `home` 与 `all`（默认）两档。`src/features/mascot/mascot.ts` 让一个角色出场、另一个释放，页面上最多一只。
+- 吉祥物与品牌（D50）分开：`mascot` 偏好有 `brand`（默认：Claude 品牌下是螃蟹、DeepSeek 品牌下是 Deepy）、`crab`、`deepy`、`off` 四档，解析后的角色写成 `<body data-dsh-claude-mascot="crab|deepy|off">`；`mascotScope` 有 `home` 与 `all`（默认）两档。`packages/client/src/features/mascot/mascot.ts` 让一个角色出场、另一个释放，页面上最多一只。
 - 站位：首页站在输入卡片上沿。对话页只认主对话区（`[data-phase="active"]` 里的 `[data-conversation-session]`），站在输入区 composerStack 的上沿；宿主的 composer 链选出替代面板时（ui-renderer 把 `[data-chain-overlay-fallback="conversation.composer"]` 内联写成 `display: none`，面板紧跟其后挂载），站到那块面板上沿。站着的宿主元素打 `data-dsh-claude-<角色>-anchor`，样式表给它 `position: relative`。
 - 状态只读宿主的客户端数据：`uiSession.sessionStatus`、`sessions.list`（顶层会话与 `subagentCatalog`）、聊天快照（打开的轮次、正在输出的一步的最后一块、进行中的工具调用）。聊天快照在跟随会话期间订阅（只读不订阅时，轨迹视图下读不到内容）。一次性的时刻（轮次结束原因、失败的工具结果、压缩开始与结束）订阅会话的事件流 `sessions.binding(id).eventSource`，只处理订阅之后追加的事件；正在进行的压缩按事件流整个窗口算。首页读整个工作区：会话状态里新出现的 `completionUnread` 就是「后台做完」的时刻。
 - 状态到动画按 Deepy 为 Clawd on Desk 做的主题映射（`mascot-signals.ts`），两个角色共用同一组动画名。优先级从高到低：点击与拖动的反应、出错、等待你、压缩、完成、子代理、工作、思考、空闲；工作按同时在跑的顶层会话数分三档，子代理按数目分两档。一个状态上台后一秒内不被同级或更低的换下；出错与完成各停两轮动画（4.8 秒、5.2 秒）。空闲时每二三十秒演一个空闲小节目；空闲满一分钟、其间也没有读者活动就睡着，下一次活动先演惊醒。

@@ -12,7 +12,7 @@
   - `:has()` 只在所在选择器的最后一段，`:is()`、`:not()` 里的每一层都一样（D9）。
   - 令牌门：写 `--dsw-` 颜色令牌的规则每个选择器都在作用域那一段挂配色门，写 `--dsw-font-*` 的挂字体门；Claude 一档定义的每个私有令牌在宿主一档都有别名（D30）。
   - 输入框门控：带门控的样式表在 `/* @composer-gate */` 注释以下的每条规则，门控属性盖到作用域那一段上；缺少标记或标记以下没有规则即构建失败（D4）。
-- 设计令牌写在 `src/theme/tokens.json`，结构由 `src/theme/tokens.schema.json` 声明、构建用 Ajv 校验：字体令牌的 Claude 与宿主两档、推理强度顶档的亮暗两色、颜色令牌在 Claude 品牌亮暗两套里的值、DeepSeek 品牌与之不同的值、宿主一档的别名，以及令牌的用途与取值缘由。构建由它生成令牌样式表（排位最前），并把 `docs/STYLE.md` 里标记之间的令牌表重写一遍；两处都不手改。
+- 设计令牌写在 `packages/client/src/theme/tokens.json`，结构由 `packages/client/src/theme/tokens.schema.json` 声明、构建用 Ajv 校验：字体令牌的 Claude 与宿主两档、推理强度顶档的亮暗两色、颜色令牌在 Claude 品牌亮暗两套里的值、DeepSeek 品牌与之不同的值、宿主一档的别名，以及令牌的用途与取值缘由。构建由它生成令牌样式表（排位最前），并把 `docs/STYLE.md` 里标记之间的令牌表重写一遍；两处都不手改。
 
 ## 理由
 

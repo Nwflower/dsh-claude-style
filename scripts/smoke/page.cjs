@@ -174,7 +174,7 @@ function page(name, tier, cases) {
     : ''
   // The other chat-behaviour plugin, installed: the host's own startup picture
   // names every client entry before any of them runs, which is the signal
-  // src/shared/peer-plugin.ts reads first (the style element is the other one).
+  // packages/client/src/shared/peer-plugin.ts reads first (the style element is the other one).
   var boot = name === 'peer-chat-ux'
     ? '<script>window.__DSH_BOOT__ = { entries: [{ id: "ui-skin-claude-style", rev: "smoke" }, { id: "@alm-allen/dsh-chat-ux", rev: "smoke" }] }</script>'
     : ''
@@ -186,7 +186,7 @@ function page(name, tier, cases) {
     : ''
   // The system's reduced-motion setting, driven by hand: the reveal case flips it
   // while the animation choice is "follow the system", which is the one path that
-  // reaches the features through the resolved attribute alone (src/core/prefs.ts,
+  // reaches the features through the resolved attribute alone (packages/client/src/core/prefs.ts,
   // refreshMotionAttribute). Only that case gets the stub; every other case keeps
   // the browser's real answer.
   var motionStub = name === 'chat-reveal'

@@ -7,7 +7,7 @@ const { MARKUP, SKIN_FACE, SKIN_HAT, same, check, contrast, basicChecks, commonC
 
 module.exports = {
   // The other chat-behaviour plugin on the page: the ported features must hand
-  // their behaviour over whole (src/shared/peer-plugin.ts, D32).
+  // their behaviour over whole (packages/client/src/shared/peer-plugin.ts, D32).
   'peer-chat-ux'(r) {
     basicChecks(r)
     const peer = r.peer || {}
@@ -46,7 +46,7 @@ module.exports = {
       JSON.stringify(settings.refusing))
     commonChecks(r)
   },
-  // Another plugin owns the page from the first frame (src/shared/visual-owner.ts,
+  // Another plugin owns the page from the first frame (packages/client/src/shared/visual-owner.ts,
   // D49): the theme paints nothing, keeps its settings section, and takes the
   // page back the moment the owner leaves.
   'skin-center-handoff'(r) {
@@ -73,7 +73,7 @@ module.exports = {
     // No commonChecks: the shared baseline asserts a page the theme owns, and
     // this case's page is the other owner's until the last check hands it back.
   },
-  // A skin arriving after the theme took the page (src/shared/visual-owner.ts,
+  // A skin arriving after the theme took the page (packages/client/src/shared/visual-owner.ts,
   // D49): the theme stands down then, and takes the page back when it leaves.
   'skin-center-arrival'(r) {
     basicChecks(r)

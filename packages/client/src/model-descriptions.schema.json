@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "dsh-claude-style model copy",
+  "description": "The shape of packages/client/src/model-descriptions.json. References across the document and to the vendored lockups are checked by scripts/build.mjs.",
+  "type": "object",
+  "required": ["fallback", "exact", "brands"],
+  "properties": {
+    "version": { "type": "integer" },
+    "fallback": { "description": "The locale id read when the shell language has no line.", "type": "string", "minLength": 1 },
+    "ui": { "$ref": "#/$defs/localizedTable" },
+    "settings": { "$ref": "#/$defs/localizedTable" },
+    "ban": { "$ref": "#/$defs/localizedTable" },
+    "exact": { "description": "Model id to its line.", "$ref": "#/$defs/localizedTable" },
+    "aliases": {
+      "description": "Model id to the exact entry it reads.",
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "families": { "type": "array", "items": { "$ref": "#/$defs/copyRule" } },
+    "tiers": { "type": "array", "items": { "$ref": "#/$defs/copyRule" } },
+    "brands": {
+      "type": "object",
+      "required": ["models"],
+      "properties": {
+        "note": { "type": "string" },
+        "providers": {
+          "description": "Provider id to brand id.",
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/brandId" }
+        },
+        "models": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["match", "brand"],
+            "properties": {
+              "match": { "$ref": "#/$defs/pattern" },
+              "brand": { "$ref": "#/$defs/brandId" },
+              "note": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "localized": {
+      "description": "Locale id to a line of copy.",
+      "type": "object",
+      "additionalProperties": { "type": "string", "pattern": "\\S" }
+    },
+    "localizedTable": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/localized" }
+    },
+    "pattern": { "type": "string", "format": "regex" },
+    "brandId": { "type": "string", "minLength": 1 },
+    "copyRule": {
+      "description": "A name pattern and either the exact entry it reads (key) or its own line (text).",
+      "type": "object",
+      "required": ["match"],
+      "properties": {
+        "match": { "$ref": "#/$defs/pattern" },
+        "key": { "type": "string" },
+        "text": { "$ref": "#/$defs/localized" },
+        "note": { "type": "string" }
+      },
+      "anyOf": [{ "required": ["key"] }, { "required": ["text"] }]
+    }
+  }
+}

@@ -18,7 +18,7 @@
 
 ## 代价
 
-- Claude 一档的令牌规则多一个属性选择器；新的私有颜色令牌在 `src/theme/tokens.json` 里要同时写 Claude 的值与宿主一档的别名（D51）；功能样式表里画面的颜色要读令牌，不能写字面值。
+- Claude 一档的令牌规则多一个属性选择器；新的私有颜色令牌在 `packages/client/src/theme/tokens.json` 里要同时写 Claude 的值与宿主一档的别名（D51）；功能样式表里画面的颜色要读令牌，不能写字面值。
 
 ## 重审条件
 

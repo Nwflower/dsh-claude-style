@@ -1,0 +1,142 @@
+/* ---------- chat reveal: the fading-in-a-rivulets rules, one per step ---------- */
+/* Ported from dsh-chat-ux (packages/client/src/features/chat-reveal/reveal-engine.ts). Step 0 is
+   the faintest a character ever is, the last step is its own colour — so the text
+   reaches its final colour exactly when its segment leaves the highlight registry.
+
+   The fade is a change of the text's own alpha, never a swap of colours: every
+   step paints the character in the colour it will come to rest in (its own,
+   published per element to --dsh-claude-run-color by the engine) and walks the
+   alpha from CHAT_REVEAL_MIN_OPACITY to fully opaque. ::highlight() accepts no
+   opacity — its property set is small and does not include it — so the alpha rides
+   on color, and color-mix(in srgb, C p%, transparent) is exactly that: mixing with
+   transparent weights the result's alpha by p and leaves the hue alone.
+
+   Every rule is scoped under the streaming containers: the fade happens nowhere
+   else, and elements outside one are filtered out by their ancestor during style
+   matching and cost nothing. The two selectors per step cover the container's own
+   text and text inside any element under it.
+
+   The step count and the names are the engine's own (CHAT_REVEAL_STEPS,
+   CHAT_REVEAL_HIGHLIGHT_PREFIX): 24 steps and dsh-claude-tok-<n>, spelled here by
+   hand. The alphas are CHAT_REVEAL_MIN_OPACITY + (1 - CHAT_REVEAL_MIN_OPACITY) *
+   n / 23, in percent to two decimals. */
+
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming]::highlight(dsh-claude-tok-0),
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming] ::highlight(dsh-claude-tok-0) {
+  color: color-mix(in srgb, var(--dsh-claude-run-color, currentColor) 20.00%, transparent);
+}
+
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming]::highlight(dsh-claude-tok-1),
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming] ::highlight(dsh-claude-tok-1) {
+  color: color-mix(in srgb, var(--dsh-claude-run-color, currentColor) 23.48%, transparent);
+}
+
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming]::highlight(dsh-claude-tok-2),
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming] ::highlight(dsh-claude-tok-2) {
+  color: color-mix(in srgb, var(--dsh-claude-run-color, currentColor) 26.96%, transparent);
+}
+
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming]::highlight(dsh-claude-tok-3),
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming] ::highlight(dsh-claude-tok-3) {
+  color: color-mix(in srgb, var(--dsh-claude-run-color, currentColor) 30.43%, transparent);
+}
+
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming]::highlight(dsh-claude-tok-4),
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming] ::highlight(dsh-claude-tok-4) {
+  color: color-mix(in srgb, var(--dsh-claude-run-color, currentColor) 33.91%, transparent);
+}
+
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming]::highlight(dsh-claude-tok-5),
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming] ::highlight(dsh-claude-tok-5) {
+  color: color-mix(in srgb, var(--dsh-claude-run-color, currentColor) 37.39%, transparent);
+}
+
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming]::highlight(dsh-claude-tok-6),
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming] ::highlight(dsh-claude-tok-6) {
+  color: color-mix(in srgb, var(--dsh-claude-run-color, currentColor) 40.87%, transparent);
+}
+
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming]::highlight(dsh-claude-tok-7),
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming] ::highlight(dsh-claude-tok-7) {
+  color: color-mix(in srgb, var(--dsh-claude-run-color, currentColor) 44.35%, transparent);
+}
+
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming]::highlight(dsh-claude-tok-8),
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming] ::highlight(dsh-claude-tok-8) {
+  color: color-mix(in srgb, var(--dsh-claude-run-color, currentColor) 47.83%, transparent);
+}
+
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming]::highlight(dsh-claude-tok-9),
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming] ::highlight(dsh-claude-tok-9) {
+  color: color-mix(in srgb, var(--dsh-claude-run-color, currentColor) 51.30%, transparent);
+}
+
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming]::highlight(dsh-claude-tok-10),
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming] ::highlight(dsh-claude-tok-10) {
+  color: color-mix(in srgb, var(--dsh-claude-run-color, currentColor) 54.78%, transparent);
+}
+
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming]::highlight(dsh-claude-tok-11),
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming] ::highlight(dsh-claude-tok-11) {
+  color: color-mix(in srgb, var(--dsh-claude-run-color, currentColor) 58.26%, transparent);
+}
+
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming]::highlight(dsh-claude-tok-12),
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming] ::highlight(dsh-claude-tok-12) {
+  color: color-mix(in srgb, var(--dsh-claude-run-color, currentColor) 61.74%, transparent);
+}
+
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming]::highlight(dsh-claude-tok-13),
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming] ::highlight(dsh-claude-tok-13) {
+  color: color-mix(in srgb, var(--dsh-claude-run-color, currentColor) 65.22%, transparent);
+}
+
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming]::highlight(dsh-claude-tok-14),
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming] ::highlight(dsh-claude-tok-14) {
+  color: color-mix(in srgb, var(--dsh-claude-run-color, currentColor) 68.70%, transparent);
+}
+
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming]::highlight(dsh-claude-tok-15),
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming] ::highlight(dsh-claude-tok-15) {
+  color: color-mix(in srgb, var(--dsh-claude-run-color, currentColor) 72.17%, transparent);
+}
+
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming]::highlight(dsh-claude-tok-16),
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming] ::highlight(dsh-claude-tok-16) {
+  color: color-mix(in srgb, var(--dsh-claude-run-color, currentColor) 75.65%, transparent);
+}
+
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming]::highlight(dsh-claude-tok-17),
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming] ::highlight(dsh-claude-tok-17) {
+  color: color-mix(in srgb, var(--dsh-claude-run-color, currentColor) 79.13%, transparent);
+}
+
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming]::highlight(dsh-claude-tok-18),
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming] ::highlight(dsh-claude-tok-18) {
+  color: color-mix(in srgb, var(--dsh-claude-run-color, currentColor) 82.61%, transparent);
+}
+
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming]::highlight(dsh-claude-tok-19),
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming] ::highlight(dsh-claude-tok-19) {
+  color: color-mix(in srgb, var(--dsh-claude-run-color, currentColor) 86.09%, transparent);
+}
+
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming]::highlight(dsh-claude-tok-20),
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming] ::highlight(dsh-claude-tok-20) {
+  color: color-mix(in srgb, var(--dsh-claude-run-color, currentColor) 89.57%, transparent);
+}
+
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming]::highlight(dsh-claude-tok-21),
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming] ::highlight(dsh-claude-tok-21) {
+  color: color-mix(in srgb, var(--dsh-claude-run-color, currentColor) 93.04%, transparent);
+}
+
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming]::highlight(dsh-claude-tok-22),
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming] ::highlight(dsh-claude-tok-22) {
+  color: color-mix(in srgb, var(--dsh-claude-run-color, currentColor) 96.52%, transparent);
+}
+
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming]::highlight(dsh-claude-tok-23),
+body[data-dsh-claude-style][%%CHAT_REVEAL_ATTR%%] [data-streaming] ::highlight(dsh-claude-tok-23) {
+  color: color-mix(in srgb, var(--dsh-claude-run-color, currentColor) 100.00%, transparent);
+}

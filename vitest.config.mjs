@@ -16,7 +16,7 @@ export default defineConfig({
     alias: { '@dsh-claude-style/contracts': path.resolve(import.meta.dirname, 'packages/contracts/src') },
   },
   test: {
-    include: ['src/**/*.test.ts'],
+    include: ['packages/client/src/**/*.test.ts'],
     // Failure screenshots and other attachments are local artifacts.
     attachmentsDir: '.debug/vitest',
     browser: {

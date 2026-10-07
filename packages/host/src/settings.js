@@ -12,7 +12,7 @@
 /**
  * The preference list. This one table is every field declaration: the Config
  * below is generated from it, and scripts/build.mjs imports it to hold the
- * browser half's PREF_DEFAULTS (src/constants.ts) and src/entry.ts's feature
+ * browser half's PREF_DEFAULTS (packages/client/src/constants.ts) and packages/client/src/entry.ts's feature
  * switches to it.
  */
 export const PREFS_DEFAULT = Object.freeze({

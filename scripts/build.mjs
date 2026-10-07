@@ -5,29 +5,29 @@
  * The DSH module loader takes one file per plugin client, registered with
  * `__ModuleLoader__.load` and handed a `require` for the packages the host
  * provides; it has no relative requires and no asset URLs. So esbuild bundles
- * src/entry.ts into one minified CommonJS body with React and the host packages
+ * packages/client/src/entry.ts into one minified CommonJS body with React and the host packages
  * external, and that body is wrapped in the loader's factory:
  *
- *   src/entry.ts                 apply(): the FEATURES table; imports everything else
- *   src/constants.ts             constants; also evaluated here for the stylesheet tokens
- *   src/core/ src/shared/ src/features/<name>/   the modules, TypeScript, strict
- *   src/features/<dir>/<main>.manifest.ts   each feature's manifest (D42), read by scripts/read-manifests.cjs
- *   src/theme/*.css and the feature stylesheets   concatenated by rank (THEME_SHEETS and the manifests),
+ *   packages/client/src/entry.ts                 apply(): the FEATURES table; imports everything else
+ *   packages/client/src/constants.ts             constants; also evaluated here for the stylesheet tokens
+ *   packages/client/src/core/ packages/client/src/shared/ packages/client/src/features/<name>/   the modules, TypeScript, strict
+ *   packages/client/src/features/<dir>/<main>.manifest.ts   each feature's manifest (D42), read by scripts/read-manifests.cjs
+ *   packages/client/src/theme/*.css and the feature stylesheets   concatenated by rank (THEME_SHEETS and the manifests),
  *                                checked and gated on the syntax tree (scripts/css.mjs)
- *   src/theme/tokens.json        the design tokens: the token stylesheet and docs/STYLE.md's table
+ *   packages/client/src/theme/tokens.json        the design tokens: the token stylesheet and docs/STYLE.md's table
  *   packages/assets/src/                  every image (packages/assets/assets.mjs, D38): small ones inline, the rest
  *                                written to lib/assets/<hash>.<ext> and served by the host half
  *
  * What the build produces for the browser half reaches the source as one
  * generated module, `virtual:dsh-claude-style/generated` (typed in
- * src/generated.d.ts): the stylesheet, the asset addresses, the lockups, the
+ * packages/client/src/generated.d.ts): the stylesheet, the asset addresses, the lockups, the
  * build id.
  *
  * Before anything is written, `tsc` type-checks src/ and the bundle's import
  * graph must hold no cycle: a missing import, a cycle or a constant read before
  * it is initialized fails the build.
  *
- * `src/model-descriptions.json` is not bundled: it is validated here and
+ * `packages/client/src/model-descriptions.json` is not bundled: it is validated here and
  * copied to `lib/`, where the host half serves it to the browser half at
  * runtime. Model copy is data, so it must not enter the bundle (D5).
  */
@@ -50,15 +50,15 @@ import { loadModule } from './ts-module.cjs'
 const ROOT = path.resolve(import.meta.dirname, '..')
 /**
  * The host half's preference table (packages/host/src/settings.js): the browser half's
- * PREF_DEFAULTS and src/entry.ts's feature switches are both held to it.
+ * PREF_DEFAULTS and packages/client/src/entry.ts's feature switches are both held to it.
  */
 const { PREFS_DEFAULT } = await import(pathToFileURL(path.join(ROOT, 'packages', 'host', 'src', 'settings.js')).href)
-const SRC = path.join(ROOT, 'src')
+const SRC = path.join(ROOT, 'packages', 'client', 'src')
 /** Brand marks, mascot sheets and vendor lockups; packages/assets/assets.mjs plans their delivery (D38). */
 const ASSETS = path.join(ROOT, 'packages', 'assets', 'src')
 /** The plugin icon the manifest names, copied into lib/ as it is. */
 const BRAND_ASSETS = path.join(ASSETS, 'brand')
-/** The style guide; its token table is generated from src/theme/tokens.json. */
+/** The style guide; its token table is generated from packages/client/src/theme/tokens.json. */
 const STYLE_GUIDE = path.join(ROOT, 'docs', 'STYLE.md')
 const LIB = path.join(ROOT, 'lib')
 const OUT = path.join(LIB, 'client.js')
@@ -99,7 +99,7 @@ const ICON_FILE = 'claude-mark.svg'
  * the later one wins.
  */
 const THEME_SHEETS = [
-  // Generated from src/theme/tokens.json (scripts/css.mjs).
+  // Generated from packages/client/src/theme/tokens.json (scripts/css.mjs).
   { file: TOKEN_SHEET, rank: 5 },
   { file: 'theme/tokens.css', rank: 10 },
   { file: 'theme/typography.css', rank: 20 },
@@ -160,14 +160,14 @@ const FACTORY_CLOSE = `    return module.exports
 })`
 
 /**
- * Evaluate src/constants.ts once (pure, DOM-free): `tokens` are the values the
+ * Evaluate packages/client/src/constants.ts once (pure, DOM-free): `tokens` are the values the
  * stylesheets' %%TOKEN%% placeholders take, beside them the two sheet tables
  * and the preference defaults the build checks.
  */
 const CONSTANTS = (() => {
-  const constants = loadModule('src/constants.ts')
+  const constants = loadModule('packages/client/src/constants.ts')
   const pick = (names) => Object.fromEntries(names.map((name) => {
-    if (constants[name] === undefined) throw new Error(`build: src/constants.ts exports no ${name}`)
+    if (constants[name] === undefined) throw new Error(`build: packages/client/src/constants.ts exports no ${name}`)
     return [name, constants[name]]
   }))
   const { BRAND_ATTR, BRAND_CLAUDE, PALETTE_ATTR, PALETTE_CLAUDE, PALETTE_HOST, TYPEFACE_ATTR, TYPEFACE_CLAUDE, TYPEFACE_HOST } = constants
@@ -284,7 +284,7 @@ function vectorizeDeepySheets() {
  * picker could otherwise only express as a silently missing or wrong line, so
  * they all throw.
  *
- * The document's shape is declared in src/model-descriptions.schema.json: the
+ * The document's shape is declared in packages/client/src/model-descriptions.schema.json: the
  * tables, the `{locale: text}` lines, a rule's compilable `match` and its `key`
  * or `text`. What a schema cannot see is checked after it: a `families[].key`,
  * `tiers[].key` or `aliases` target must name an `exact` entry, every brand id
@@ -292,7 +292,7 @@ function vectorizeDeepySheets() {
  * as a silently missing mark on one row), and the document must carry at least
  * two locales.
  *
- * @param doc - parsed `src/model-descriptions.json`.
+ * @param doc - parsed `packages/client/src/model-descriptions.json`.
  * @param lobeBrands - the vendored lockups keyed by brand id (loadCombines).
  * @returns the number of exact entries, for the build log.
  */
@@ -371,7 +371,7 @@ function checkListed(bundled, sheets) {
 function checkManifests(manifests) {
   const covered = new Set(manifests.map((manifest) => manifest.dir))
   for (const dir of fs.readdirSync(path.join(SRC, 'features'), { withFileTypes: true })) {
-    if (dir.isDirectory() && !covered.has(dir.name)) throw new Error(`build: src/features/${dir.name}/ has no manifest`)
+    if (dir.isDirectory() && !covered.has(dir.name)) throw new Error(`build: packages/client/src/features/${dir.name}/ has no manifest`)
   }
   for (const manifest of manifests) {
     if (manifest.pref !== undefined && !(manifest.pref in PREFS_DEFAULT)) {
@@ -380,7 +380,7 @@ function checkManifests(manifests) {
   }
 }
 
-/** The manifest fields the browser half reads (FeatureRuntime in src/core/feature.ts). */
+/** The manifest fields the browser half reads (FeatureRuntime in packages/client/src/core/feature.ts). */
 const RUNTIME_FIELDS = ['id', 'handle', 'order', 'pref', 'ungated', 'yieldsTo', 'switchRow']
 
 /**
@@ -408,17 +408,17 @@ function featuresModule(manifests) {
 }
 
 /**
- * Hold the browser half's preference defaults (src/constants.ts PREF_DEFAULTS)
+ * Hold the browser half's preference defaults (packages/client/src/constants.ts PREF_DEFAULTS)
  * to the host half's PREFS_DEFAULT: the same keys with the same values, so the
  * frames before the settings form answers show what the form will hold.
  */
 function checkPrefDefaults() {
   const browser = CONSTANTS.PREF_DEFAULTS
   for (const key of new Set([...Object.keys(browser), ...Object.keys(PREFS_DEFAULT)])) {
-    if (!(key in browser)) throw new Error(`build: src/constants.ts PREF_DEFAULTS lacks "${key}", which packages/host/src/settings.js PREFS_DEFAULT carries`)
-    if (!(key in PREFS_DEFAULT)) throw new Error(`build: packages/host/src/settings.js PREFS_DEFAULT lacks "${key}", which src/constants.ts PREF_DEFAULTS carries`)
+    if (!(key in browser)) throw new Error(`build: packages/client/src/constants.ts PREF_DEFAULTS lacks "${key}", which packages/host/src/settings.js PREFS_DEFAULT carries`)
+    if (!(key in PREFS_DEFAULT)) throw new Error(`build: packages/host/src/settings.js PREFS_DEFAULT lacks "${key}", which packages/client/src/constants.ts PREF_DEFAULTS carries`)
     if (JSON.stringify(browser[key]) !== JSON.stringify(PREFS_DEFAULT[key])) {
-      throw new Error(`build: preference "${key}" defaults to ${JSON.stringify(browser[key])} in src/constants.ts but ${JSON.stringify(PREFS_DEFAULT[key])} in packages/host/src/settings.js`)
+      throw new Error(`build: preference "${key}" defaults to ${JSON.stringify(browser[key])} in packages/client/src/constants.ts but ${JSON.stringify(PREFS_DEFAULT[key])} in packages/host/src/settings.js`)
     }
   }
 }
@@ -561,15 +561,15 @@ function checkTiming() {
  */
 function checkScrollOwner(metafile) {
   for (const [file, input] of Object.entries(metafile.inputs)) {
-    if (file === 'src/shared/scroll-owner.ts') continue
-    if (input.imports.some((item) => item.path === 'src/shared/scroll-ease.ts')) {
+    if (file === 'packages/client/src/shared/scroll-owner.ts') continue
+    if (input.imports.some((item) => item.path === 'packages/client/src/shared/scroll-ease.ts')) {
       throw new Error(`build: ${file} imports shared/scroll-ease.ts; positions go through shared/scroll-owner.ts (D41)`)
     }
   }
 }
 
 /**
- * The generated module (src/generated.d.ts) as an esbuild plugin: everything the
+ * The generated module (packages/client/src/generated.d.ts) as an esbuild plugin: everything the
  * build produces for the browser half, as named exports.
  */
 function generatedModule(values) {
@@ -631,7 +631,7 @@ async function main() {
 
   const tokenDoc = loadTokens(SRC)
   const cssText = buildStylesheet({ sheets, srcDir: SRC, tokens, tokenDoc, gates: CONSTANTS.gates })
-  if (writeTokenTable(STYLE_GUIDE, tokenDoc)) console.log('built docs/STYLE.md token table from src/theme/tokens.json')
+  if (writeTokenTable(STYLE_GUIDE, tokenDoc)) console.log('built docs/STYLE.md token table from packages/client/src/theme/tokens.json')
 
   const result = await esbuild.build({
     entryPoints: [path.join(SRC, 'entry.ts')],
@@ -668,7 +668,9 @@ async function main() {
   })
   checkCycles(result.metafile)
   checkScrollOwner(result.metafile)
-  const bundled = new Set(Object.keys(result.metafile.inputs).filter((file) => file.startsWith('src/')).map((file) => file.slice('src/'.length)))
+  // The metafile keys paths the way esbuild saw them: repository-relative.
+  const prefix = `${path.relative(ROOT, SRC).split(path.sep).join('/')}/`
+  const bundled = new Set(Object.keys(result.metafile.inputs).filter((file) => file.startsWith(prefix)).map((file) => file.slice(prefix.length)))
   checkListed(bundled, sheets)
 
   const output = (suffix) => result.outputFiles.find((file) => file.path.endsWith(suffix)).text

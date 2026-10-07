@@ -2,7 +2,7 @@
  * What the smoke's parts share: the paths to the built plugin, the fixtures,
  * `check` with the run's tier, and the two tables the runner reads — which cases
  * watch motion (the quick tier leaves them out) and which cases cover which
- * feature directory under src/features/.
+ * feature directory under packages/client/src/features/.
  */
 'use strict'
 const path = require('path')
@@ -53,7 +53,7 @@ const tierName = () => tier
 const TIMING_CASES = ['chat-follow', 'chat-fold', 'chat-reveal', 'chat-send', 'crab-states', 'deepy', 'popovers']
 
 /**
- * Which cases cover which directory under `src/features/`, gathered from the
+ * Which cases cover which directory under `packages/client/src/features/`, gathered from the
  * feature manifests (D42). A directory with an empty list has no case of its
  * own, and `--feature` refuses it rather than running something unrelated;
  * the runner refuses a case name the case table lacks.

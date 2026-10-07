@@ -1,0 +1,66 @@
+/* ---------- chat fold: the process group's live label ---------- */
+/* While a group is open and its header carries a live detail, that header's text
+   is the label and the detail joined in one text node (the host's separator is
+   " · "), and the detail is the same text the group's thinking row is streaming
+   — two places growing at once. CSS cannot split a text node, so the label half
+   is written onto the header as an attribute and stands in for the whole text
+   while the body is open: the header, its icon and its control stay where they
+   are. Closing the body brings the original text straight back, and a tier
+   without live detail never matches.
+
+   The stand-in text needs its own sweep: the animation lived on the element that
+   was hidden along with it. The gradient, its half width and its period follow
+   the host's TextShimmer; only the keyframes name is ours, because the host's
+   own animation names live in CSS Modules and change with every build. */
+
+body[data-dsh-claude-style][%%CHAT_FOLD_ATTR%%] [data-step-process][data-dsh-claude-live-detail][data-dsh-claude-open] button[data-process-activity] > :is([data-shimmer], [data-text-shimmer]) {
+  display: none;
+}
+
+body[data-dsh-claude-style][%%CHAT_FOLD_ATTR%%] [data-step-process][data-dsh-claude-live-detail][data-dsh-claude-open] button[data-process-activity]::after {
+  content: attr(data-dsh-claude-label);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes dsh-claude-label-shimmer {
+  66.6667%, 100% { background-position: 0% center; }
+}
+
+/* Only a browser that can draw the gradient hands its text over to a background;
+   one that cannot keeps a plain static label instead of a background it cannot
+   paint and the text lost with it.
+
+   The parenthesised test has to be a property and value. A bare function call
+   (color-mix(...)) is an unknown function form and always false, which would
+   skip the whole block silently: the text stays, the sweep is gone, and nothing
+   says so. */
+@supports (color: color-mix(in oklab, currentColor 50%, transparent)) and ((-webkit-background-clip: text) or (background-clip: text)) {
+  body[data-dsh-claude-style][%%CHAT_FOLD_ATTR%%] [data-step-process][data-dsh-claude-live-detail][data-dsh-claude-open] button[data-process-activity]::after {
+    background-image: linear-gradient(
+      90deg,
+      currentColor calc(50% - var(--dsh-claude-label-spread, 0px)),
+      color-mix(in oklab, currentColor 50%, transparent),
+      currentColor calc(50% + var(--dsh-claude-label-spread, 0px))
+    );
+    background-position: 100% center;
+    background-repeat: no-repeat;
+    background-size: 250% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: dsh-claude-label-shimmer 1.5s cubic-bezier(0.33, 0, 0.67, 1) infinite;
+  }
+
+  /* The reader's animation choice, resolved onto <body> by packages/client/src/core/prefs.ts
+     (D26): reduced leaves a plain static label rather than a standing gradient.
+     The attribute already folds in the system setting, so no media query here —
+     and one would stop the sweep for a reader who picked "always". */
+  body[data-dsh-claude-style][%%CHAT_FOLD_ATTR%%][%%MOTION_ATTR%%="%%MOTION_REDUCED%%"] [data-step-process][data-dsh-claude-live-detail][data-dsh-claude-open] button[data-process-activity]::after {
+    background-image: none;
+    -webkit-text-fill-color: currentColor;
+    animation: none;
+  }
+}

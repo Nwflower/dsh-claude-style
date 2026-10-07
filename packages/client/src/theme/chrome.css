@@ -1,0 +1,268 @@
+/* --- 2.3 Host Chrome Restyling (Sidebar, Composer, Buttons) --- */
+/* ---------- canvas + hairline structure ---------- */
+/* Under the Claude palette the skin paints the columns; under "follow the
+   host" they take the host's own tokens and only the hairline stays. */
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% :is([data-pane="sidebar"], [class*="sidebarCol"], .dshDesktopSidebarSurface) {
+  --dsw-specific-sidebar-fill: var(--dsh-claude-sidebar-canvas) !important;
+  background: var(--dsh-claude-sidebar-canvas) !important;
+}
+
+body[data-dsh-claude-style] :is([data-pane="sidebar"], [class*="sidebarCol"], .dshDesktopSidebarSurface) {
+  border-right: 1px solid var(--dsw-alias-border-l1) !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% :is([data-pane="conversation"], [class*="centerCol"]) {
+  background: var(--dsh-claude-canvas);
+}
+
+/* ---------- Windows titlebar: the columns run to the window's top ---------- */
+/* The shell keeps a caption row above every column and paints the three window
+   buttons over it; the skin clears the row and each column paints its own fill
+   up through it (D31). */
+html[data-windows-titlebar] body[data-dsh-claude-style] [class*="_frame"]:has(> [class*="_sidebarCol"]) {
+  --dsh-windows-content-radius: 0px;
+  background: var(--dsh-claude-canvas) !important;
+}
+
+html[data-windows-titlebar] body[data-dsh-claude-style] [class*="_frame"]:has(> [class*="_sidebarCol"])::before {
+  background: transparent !important;
+}
+
+html[data-windows-titlebar] body[data-dsh-claude-style] > span[style*="--dsw-specific-sidebar-fill"] {
+  background-color: transparent !important;
+}
+
+html[data-windows-titlebar] body[data-dsh-claude-style] [class*="_frame"] > [class*="_sidebarCol"] {
+  box-shadow: 0 calc(-1 * var(--dsh-windows-titlebar-height)) 0 0 var(--dsh-claude-sidebar-canvas);
+}
+
+html[data-windows-titlebar] body[data-dsh-claude-style] [class*="_frame"] > [class*="_centerCol"] {
+  box-shadow: 0 calc(-1 * var(--dsh-windows-titlebar-height)) 0 0 var(--dsh-claude-canvas);
+}
+
+/* The handle is 8px wide, centred on the column edge; the sidebar's 1px
+   hairline is the last pixel inside the column, 3px into the handle. */
+html[data-windows-titlebar] body[data-dsh-claude-style] [class*="_frame"] > [data-side="sidebar"]::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  bottom: 100%;
+  height: var(--dsh-windows-titlebar-height);
+  border-left: 1px solid var(--dsw-alias-border-l1);
+  pointer-events: none;
+}
+
+/* ---------- clay accent: one emphasis color, disciplined ---------- */
+/* A host button anchor (`_linkButton`, e.g. the settings page's 充值) states its
+   own ink; repainting it here would paint the label the same colour as its fill. */
+body[data-dsh-claude-style] a:not([class*="_linkButton"]) {
+  color: var(--dsw-alias-link);
+}
+
+body[data-dsh-claude-style] a:not([class*="_linkButton"]):hover {
+  color: var(--dsh-claude-link-hover);
+}
+
+body[data-dsh-claude-style] button[class*="brand"]:not([class*="dsh-claude"]) {
+  color: var(--dsw-alias-brand-primary);
+}
+
+/* The baked-in wordmark badge (pill rect + letter paths) crowds the whale and
+   the wordmark; hide it so the brand reads as mark + word. */
+body[data-dsh-claude-style] button[class*="brand"]:not([class*="dsh-claude"]) rect[fill="currentColor"],
+body[data-dsh-claude-style] button[class*="brand"]:not([class*="dsh-claude"]) path[fill*="label-primary-inverted"] {
+  display: none;
+}
+
+/* pill CTAs: send + settings sidebar actions */
+body[data-dsh-claude-style] button[class*="_brand"],
+body[data-dsh-claude-style] button[class*="_primary"],
+body[data-dsh-claude-style] [data-slot="sidebar.settings"] > :is(button, [role="button"]) {
+  border-radius: 9999px;
+  background: var(--dsw-alias-button-primary-fill);
+  color: #ffffff;
+  font-weight: 500;
+}
+
+body[data-dsh-claude-style] button[class*="_brand"]:hover,
+body[data-dsh-claude-style] button[class*="_primary"]:hover,
+body[data-dsh-claude-style] [data-slot="sidebar.settings"] > :is(button, [role="button"]):hover {
+  background: var(--dsw-alias-button-primary-hover);
+}
+
+/* Brand logo chip: the clay pill goes, so the mark and wordmark sit on the
+   canvas and the pill's arc stops clipping the mark's leading edge. Every
+   "brand" rule excludes the skin's own controls: the settings page's brand
+   cards carry the same substring and draw their own box. */
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[class*="brand"]:not([class*="dsh-claude"]),
+body[data-dsh-claude-style][data-ds-dark-theme] button[class*="brand"]:not([class*="dsh-claude"]) {
+  background: transparent !important;
+  border: none;
+  border-radius: 0;
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[class*="brand"]:not([class*="dsh-claude"]) {
+  color: var(--dsh-claude-logo-ink) !important;
+}
+
+body[data-dsh-claude-style][data-ds-dark-theme] button[class*="brand"]:not([class*="dsh-claude"]) {
+  color: var(--dsh-claude-logo-ink) !important;
+}
+
+/* Host badges and tags: full pill, each named by its own CSS-module class (D3),
+   so a plugin's own badge keeps the shape it draws. corner-shape: round undoes
+   the host's superellipse sheet, which squares a pill's ends. */
+body[data-dsh-claude-style] :is(
+  [class*="_tagSystem"],
+  [class*="_tagUser"],
+  [class*="_tagContext"],
+  [class*="_tagMessage"],
+  [class*="_tagTool"],
+  [class*="_tagSubtool"],
+  [class*="_kindTag"]:not([class*="_kindTagIcon"], [class*="_kindTagLabel"]),
+  [class*="_rowTag"],
+  [class*="_optionLine"] > [class*="_badge"],
+  [class*="_attemptBadge"],
+  [class*="_keyBadge"]
+) {
+  border-radius: 9999px;
+  corner-shape: round;
+}
+
+/* ---------- chrome details ---------- */
+body[data-dsh-claude-style] * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--dsh-claude-scrollbar) transparent;
+}
+
+body[data-dsh-claude-style] ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+body[data-dsh-claude-style] ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body[data-dsh-claude-style] ::-webkit-scrollbar-thumb {
+  background: var(--dsh-claude-scrollbar);
+  border-radius: 9999px;
+}
+
+body[data-dsh-claude-style] ::-webkit-scrollbar-thumb:hover {
+  background: var(--dsh-claude-scrollbar-hover);
+}
+
+/* Text selection: white on blue, gray on black while the window is blurred.
+   !important and solid colours because the paint has to cover the ink the host
+   and this skin put under it (links, code, syntax tokens). The unfocused rule
+   comes after the focused one at the same weight, so the attribute decides.
+   Scope: text blocks in the conversation and the draft editor only (D35).
+   Selection styles inherit, so the blocks carry their inline descendants. */
+body[data-dsh-claude-style] :is([data-chat-flow], [data-lexical-editor]) :is(p, li, td, th, blockquote, pre, h1, h2, h3, h4, h5, h6)::selection {
+  background-color: #3366d0 !important;
+  color: #ffffff !important;
+}
+
+body[data-dsh-claude-style][data-dsh-window-blur] :is([data-chat-flow], [data-lexical-editor]) :is(p, li, td, th, blockquote, pre, h1, h2, h3, h4, h5, h6)::selection {
+  background-color: #c7c7c6 !important;
+  color: #000000 !important;
+}
+
+/* Inline-code chips: the chip's own background paints above the selection
+   highlight, so these paints are the channel-wise inverse of that wash. */
+body[data-dsh-claude-style] [data-chat-flow] code:not(pre code)::selection {
+  background-color: rgb(40, 94, 206) !important;
+}
+
+body[data-dsh-claude-style][data-dsh-window-blur] [data-chat-flow] code:not(pre code)::selection {
+  background-color: rgb(196, 196, 195) !important;
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-chat-flow] code:not(pre code)::selection {
+  background-color: rgb(54, 107, 219) !important;
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme])[data-dsh-window-blur] [data-chat-flow] code:not(pre code)::selection {
+  background-color: rgb(209, 209, 208) !important;
+}
+
+body[data-dsh-claude-style] :is(button, input, textarea, select, [role="button"], [role="tab"], [role="treeitem"]) {
+  outline: none;
+}
+
+/* Keyboard focus ring: espresso ink on light, bright ivory on dark — a
+   near-black canvas gets a light ring. */
+body[data-dsh-claude-style] :is(button, input, textarea, select, [role="button"], [role="tab"], [role="treeitem"]):focus-visible {
+  outline: 2px solid rgba(20, 20, 19, 0.45);
+  outline-offset: 1px;
+}
+
+body[data-dsh-claude-style][data-ds-dark-theme] :is(button, input, textarea, select, [role="button"], [role="tab"], [role="treeitem"]):focus-visible {
+  outline-color: rgba(250, 249, 245, 0.60);
+}
+
+/* ---------- composer dock overlays ---------- */
+/* The queue, the todo list and the goal bar live inside the composer seat,
+   which is its own stacking context (sticky + z-index 7); a z-index on them
+   orders them among the seat's children and cannot lift them over the message
+   cards, which sit outside the seat. */
+
+/* The header actions sit outside that seat, so their z-index is read against
+   the page: 9 clears the message layer (pinned headers 7, back-to-bottom 8) and
+   stays under ui-dockkit's dock layers (10, 40 fullscreen). */
+body[data-dsh-claude-style] [data-slot="conversation.session.header.actions"] > * {
+  position: relative;
+  z-index: 9 !important;
+}
+
+/* The queue dock's spacing is the host's to own: its own rule cancels the stack
+   gap and tucks 3px under the input card. No rule here on purpose — re-add one
+   only if the host changes its geometry. */
+
+/* The conversation header carries the host's own bottom border — the line under
+   the tabs; the transcript's top fade below takes over that job. Scoped with
+   :has() to the header that owns the tab strip, so no other header loses its edge. */
+body[data-dsh-claude-style] [class*="_header"]:has([class*="_tabs"]) {
+  border-bottom-color: transparent !important;
+  /* The host's header rule sets no position, so it is static and an absolutely
+     positioned band would anchor to a far ancestor. The stickiness lives on the
+     header's parent, so relative is safe here. */
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* The transcript's top fade: the header already covers the transcript, so the
+   band hangs off the header's own bottom edge and follows it. One knob,
+   --dsh-transcript-fade-h, matching the composer's own fade. */
+body[data-dsh-claude-style] [class*="_header"]:has([class*="_tabs"])::after {
+  content: "" !important;
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 100% !important;
+  height: var(--dsh-transcript-fade-h, 28px) !important;
+  /* Four stops: a straight ramp reads as a haze band, and color-mix keeps the
+     paint theme-aware. */
+  background: linear-gradient(
+    to bottom,
+    var(--dsw-alias-bg-base, #FCFCFB) 0%,
+    color-mix(in srgb, var(--dsw-alias-bg-base, #FCFCFB) 82%, transparent) 32%,
+    color-mix(in srgb, var(--dsw-alias-bg-base, #FCFCFB) 40%, transparent) 68%,
+    transparent 100%
+  ) !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+/* ---------- the animation choice: reduced motion ---------- */
+/* The resolved choice rides <body data-dsh-claude-motion> (packages/client/src/core/prefs.ts,
+   D26), because a stylesheet cannot talk a media query out of the system's
+   setting. Scoped to the skin's own class prefix so the host's transitions stay
+   as the host wrote them. Two things keep moving on purpose: the segmented
+   controls' sliding pill and the background-work ring (theme/sidebar.css). */
+body[data-dsh-claude-style][%%MOTION_ATTR%%="%%MOTION_REDUCED%%"] [class*="dsh-claude-"] {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}

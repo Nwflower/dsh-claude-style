@@ -14,5 +14,5 @@
       "@dsh-claude-style/contracts/*": ["./packages/contracts/src/*"]
     }
   },
-  "include": ["src", "packages/contracts/src"]
+  "include": ["packages/client/src", "packages/contracts/src"]
 }

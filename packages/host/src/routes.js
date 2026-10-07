@@ -19,7 +19,7 @@ import { createUsage } from './usage.js'
 
 /** Route prefix this plugin owns; the browser half reads `${ROUTE_PREFIX}/${COPY_FILE}`. */
 const ROUTE_PREFIX = '/dsh-claude-style'
-/** The copy document, built from `src/model-descriptions.json` by scripts/build.mjs. */
+/** The copy document, built from `packages/client/src/model-descriptions.json` by scripts/build.mjs. */
 const COPY_FILE = 'model-descriptions.json'
 /**
  * Webfonts this plugin serves under `${ROUTE_PREFIX}/fonts/`, mapped to their
@@ -81,7 +81,7 @@ const HDSL_SKIN_PATH = `${ROUTE_PREFIX}/hdsl-skin.png`
  * registry's archive set — the stored-directory miss included, so an archive
  * entry whose storage is already gone leaves the set instead of pinning its
  * row to the list. The path is also spelled in
- * src/constants.ts (SESSION_DELETE_ROUTE) for the browser half; keep the two in
+ * packages/client/src/constants.ts (SESSION_DELETE_ROUTE) for the browser half; keep the two in
  * step.
  */
 const SESSION_DELETE_PATH = `${ROUTE_PREFIX}/session-delete`

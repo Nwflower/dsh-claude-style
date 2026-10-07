@@ -22,7 +22,7 @@
  * color, each row's runs extended downwards into rectangles. The PNGs are
  * inputs of the build and never reach `lib/`.
  *
- * The manifest is also the gate: a file under `src/assets/` that no table or
+ * The manifest is also the gate: a file under `packages/client/src/assets/` that no table or
  * token claims fails the build, so an image added for one run cannot ship
  * unused.
  */
@@ -47,7 +47,7 @@ const CONTENT_TYPES = {
 }
 
 /**
- * Files under src/assets/ that the package does not ship: drawing material for
+ * Files under packages/client/src/assets/ that the package does not ship: drawing material for
  * the hand-run scripts. They are inputs, so listing them here is what says the
  * manifest is not silently missing them.
  */
@@ -66,7 +66,7 @@ export const SOURCE_ONLY = new Set([
 const SHEET_FILE = /^[a-z]+(?:-[a-z]+)*\.png$/
 
 /**
- * Hold one mascot's sheet directory to its animation table in src/constants.ts.
+ * Hold one mascot's sheet directory to its animation table in packages/client/src/constants.ts.
  *
  * Each entry needs its files and a well-formed row — a frame count, a crop box
  * inside the character's grid, a still frame the sheet holds — and a file no
@@ -272,7 +272,7 @@ export function planAssets({ assetsDir, generated = new Map(), replaced = new Se
 }
 
 /**
- * Refuse an asset nothing names: a file under src/assets/ that no animation
+ * Refuse an asset nothing names: a file under packages/client/src/assets/ that no animation
  * table, brand token or lockup reads would otherwise ship (or sit in the
  * repository) with nothing to say it is unused.
  *
@@ -281,7 +281,7 @@ export function planAssets({ assetsDir, generated = new Map(), replaced = new Se
  */
 export function checkClaimed(plan, claimed) {
   for (const file of plan.entries.keys()) {
-    if (!claimed.has(file)) throw new Error(`build: src/assets/${file} is read by nothing; name it in an animation table, a brand token or delete it`)
+    if (!claimed.has(file)) throw new Error(`build: packages/client/src/assets/${file} is read by nothing; name it in an animation table, a brand token or delete it`)
   }
 }
 

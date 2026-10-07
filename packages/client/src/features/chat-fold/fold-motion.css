@@ -1,0 +1,73 @@
+/* ---------- chat fold: a body's entrance, and the door while it rolls ---------- */
+/* The host's DisclosureRow unmounts a body whole when it closes ({open &&
+   children}, ui-primitives' DisclosureRow.tsx), so the frame it is inserted on is
+   the only chance to attach a transition: @starting-style gives it a start value
+   and the body fades in from 2px above instead of snapping into place. This
+   covers every such row in the chat area — tool cards, thinking rows, system
+   notices, context injections, the generic command card — and the feature's own
+   file-change rows once they land.
+
+   Only opacity and translate move; the height is final at insertion. The chat
+   area is one scrolling container with a follow, and a process group's body has
+   its own ResizeObserver follow inside it: rewriting the height frame by frame
+   would send both chasing a moving target, and the paging anchors are recorded
+   by element position, which would drift during the animation. So this is a fade,
+   not an unfold.
+
+   The closed direction has no exit: the element is removed in the same frame and
+   CSS has no old value to transition from. An exit would mean taking over the
+   render.
+
+   The selector anchors on data-disclosure-row, an attribute DisclosureRow emits
+   itself rather than a hashed class name, so a host release cannot break it.
+   Every sibling after the row is its body.
+
+   Two exclusions:
+
+     outside the chat area  [data-disclosure-row] comes from a page-wide
+                            component that file previews and workflow panels use
+                            too, and they should not follow the chat area's rules:
+                            the rule is scoped to [data-chat-flow].
+     the turn's header      at the end of a turn the host gathers that turn's
+                            non-final content under its header (the "took X
+                            seconds" button, [data-turn-process]), and opening it
+                            brings those process members back into view at once —
+                            every body inside them would be treated as "just
+                            inserted" and dozens would fade in from 2px above,
+                            sliding the whole block into place. The process
+                            members carry the host's own data-turn-process-member,
+                            so that subtree is excluded whole; the turn's trigger
+                            notice ([data-turn-trigger]) likewise. */
+@starting-style {
+  body[data-dsh-claude-style][%%CHAT_FOLD_ATTR%%] [data-chat-flow] [data-disclosure-row] ~ *:not([data-turn-process-member] *, [data-turn-trigger] *) {
+    opacity: 0;
+    translate: 0 -2px;
+  }
+}
+
+/* The entrance: 2px up and a fade, at the 120 ms the chat area already uses
+   (MessageItem and the TurnNavigator preview match it). It rides the folding
+   switch with the rest of the feature: off leaves the host's own insertion. */
+body[data-dsh-claude-style][%%CHAT_FOLD_ATTR%%] [data-chat-flow] [data-disclosure-row] ~ *:not([data-turn-process-member] *, [data-turn-trigger] *) {
+  transition: opacity 120ms ease-out, translate 120ms ease-out;
+}
+
+/* The reader's animation choice, resolved onto <body> (packages/client/src/core/prefs.ts, D26):
+   the system setting is folded into that attribute by "follow the system", so
+   this one rule covers both it and the explicit "reduced". */
+body[data-dsh-claude-style][%%MOTION_ATTR%%="%%MOTION_REDUCED%%"] [data-chat-flow] [data-disclosure-row] ~ *:not([data-turn-process-member] *, [data-turn-trigger] *) {
+  transition: none;
+}
+
+/* While the door rolls (fold-glide.ts hangs the mark), every card inside is laid
+   out at its natural height rather than squeezed: a body is often a flex column,
+   and with the height pressed the flex would shrink away the card that can shrink
+   (a code card's automatic minimum height is 0) first, so a run_code body of
+   "code card plus output card" would roll in two stages. Marked, each card takes
+   its own height and only the frame clips. The mark goes away with the door and
+   the layout returns to the host's own — at the end point the two arrangements
+   agree to the pixel. !important because nothing may change it during those
+   200 ms. */
+body[data-dsh-claude-style] [%%CHAT_ROLLING_ATTR%%] > * {
+  flex: none !important;
+}

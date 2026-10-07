@@ -15,7 +15,7 @@ carries the shell, its shaded side and the eyes in their colours;
 `<key>-ink.png` is a mask the stylesheet fills with the theme's quiet ink
 (the laptop, thought dots, letters, notes, the hat). A sheet holds eight
 frames to a row, each cropped to the smallest box that holds every frame of
-that animation. The script prints the CRAB_SHEETS table src/constants.js
+that animation. The script prints the CRAB_SHEETS table packages/client/src/constants.js
 carries.
 """
 import os

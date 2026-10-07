@@ -13,7 +13,7 @@
   try { window.__skin.apply(window.__ctx) } catch (e) { window.__applyError = String((e && e.stack) || e) }
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms) }) }
   function attrs(el) { return el ? Array.prototype.map.call(el.attributes, function (a) { return a.name }) : null }
-  // A segmented control's sliding pill (src/shared/sliding-pill.ts) against
+  // A segmented control's sliding pill (packages/client/src/shared/sliding-pill.ts) against
   // the item it should sit under: its mark, its written placement, the item's
   // own fill (which gives way to the pill) and the transitions running on it.
   function pillState(control, item) {
@@ -1400,7 +1400,7 @@
       r.states.failed = whaleNow()
       // Reduced motion: the settings page's animation choice, pushed through the
       // host form the way the settings row writes it. The choice resolves onto
-      // <body> (src/core/prefs.ts) and the whale holds the state's still frame.
+      // <body> (packages/client/src/core/prefs.ts) and the whale holds the state's still frame.
       window.__pushForm({ motion: 'reduced' })
       await sleep(150)
       r.states.stillAttr = document.body.getAttribute('data-dsh-claude-motion')
@@ -1474,7 +1474,7 @@
         await sleep(200)
       }
     })
-    // The ported chat-follow feature (src/features/chat-follow/): a structural
+    // The ported chat-follow feature (packages/client/src/features/chat-follow/): a structural
     // moment hands the host's follow back, and a reader who took the scroll
     // over himself is left where he is.
     await onlyFor(['chat-follow'], async function () {
@@ -1592,7 +1592,7 @@
       await sleep(200)
       r.chatFollow.glideButtonBack = document.querySelector('[data-dsh-claude-stream-glide]') === null
     })
-    // The ported caret motion (src/features/caret/): the focused composer
+    // The ported caret motion (packages/client/src/features/caret/): the focused composer
     // surface gets a drawn caret and the native one gives way; switching the
     // feature off takes both away and gives the native one back.
     await onlyFor(['caret'], async function () {
@@ -1661,7 +1661,7 @@
       window.__pushForm({ motion: 'system' })
       await sleep(250)
     })
-    // The ported automatic folding (src/features/chat-fold/): a running thinking
+    // The ported automatic folding (packages/client/src/features/chat-fold/): a running thinking
     // row and a running process group are opened at install, both fold back when
     // their section ends, a tier that does not cap its body is never pressed, and
     // a group the reader opened himself in that phase stays open.
@@ -1774,7 +1774,7 @@
       await sleep(200)
       r.fold.animationsBack = { mark: document.body.hasAttribute('data-dsh-claude-chat-fold') }
     })
-    // The ported token reveal (src/features/chat-reveal/): characters arriving in
+    // The ported token reveal (packages/client/src/features/chat-reveal/): characters arriving in
     // a streaming container are registered as named highlights from the faintest
     // step, they are gone once faded, and the preference withdraws the engine
     // whole.
@@ -1819,7 +1819,7 @@
       await sleep(150)
       // And the system setting flipping underneath "follow the system": the
       // resolved attribute moves, the preference stream is re-run and a running
-      // engine goes with it (src/core/prefs.ts, refreshMotionAttribute).
+      // engine goes with it (packages/client/src/core/prefs.ts, refreshMotionAttribute).
       window.__setSystemReduced(true)
       await sleep(250)
       var revealFlipReduced = revealPeek()
@@ -1832,7 +1832,7 @@
         reduced: revealReduced, systemFlip: { reduced: revealFlipReduced, back: revealFlipBack },
       }
     })
-    // The ported file-change row (src/features/chat-files/): the two keyed seats
+    // The ported file-change row (packages/client/src/features/chat-files/): the two keyed seats
     // are claimed from the tool view slot, and one row renders its collapsed tail
     // and its expanded card from the call's own arguments and metadata.
     await onlyFor(['chat-files'], async function () {
@@ -1934,7 +1934,7 @@
       // The other chat-behaviour plugin arriving and leaving while the page
       // runs: the presence watch re-takes the decision, so the chat-area features
       // stand down (here: the seat keys and the install-time marks) and come
-      // back without a reload (src/shared/peer-plugin.ts).
+      // back without a reload (packages/client/src/shared/peer-plugin.ts).
       var fileSeats = function () {
         return (window.__slots || []).filter(function (entry) { return entry.key === 'tool.call.toolview' }).length
       }
@@ -1951,7 +1951,7 @@
       await sleep(250)
       r.files.peerOff = { seats: fileSeats(), foldMark: document.body.hasAttribute('data-dsh-claude-chat-fold') }
     })
-    // The ported send flight (src/features/chat-send/): a submission lifts a
+    // The ported send flight (packages/client/src/features/chat-send/): a submission lifts a
     // stand-in off the composer card, hides the real row while it flies, and puts
     // everything back when it lands.
     await onlyFor(['chat-send'], async function () {
@@ -2011,7 +2011,7 @@
       await sleep(150)
       sendFlow.remove()
     })
-    // The other chat-behaviour plugin installed (src/shared/peer-plugin.ts): the
+    // The other chat-behaviour plugin installed (packages/client/src/shared/peer-plugin.ts): the
     // ported features stand down whole, and the settings page shows their
     // switches off and disabled with the reason.
     await onlyFor(['peer-chat-ux'], async function () {

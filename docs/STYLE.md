@@ -34,11 +34,11 @@ picture without an avatar, the turn status line's spark) become DeepSeek's
 whale (`packages/assets/src/brand/deepseek-mark.svg`, the host's `FISH_LOGO_PATH`); the
 violet top rung of the reasoning slider stays.
 
-The table below is generated from `src/theme/tokens.json` by `npm run build`;
+The table below is generated from `packages/client/src/theme/tokens.json` by `npm run build`;
 edit the JSON, not the table. A DeepSeek cell shows the Claude value the brand
 keeps where it states none of its own; `—` is a token that theme leaves unset.
 
-<!-- generated:tokens (src/theme/tokens.json) -->
+<!-- generated:tokens (packages/client/src/theme/tokens.json) -->
 | Token | Claude light | DeepSeek light | Claude dark | DeepSeek dark | Host alias | Use |
 |---|---|---|---|---|---|---|
 | `--dsw-alias-bg-base` | `#fcfcfb` | `#fafbff` | `#141413` | `#13161d` | host's own |  |
@@ -126,7 +126,7 @@ The skin's own surfaces read only its private tokens and host tokens. Under the
 host palette each private token is an alias of a host token (the token table's
 Host alias column), so those surfaces follow whoever paints the host's. A new
 private colour token gets its Claude values and its host alias in
-`src/theme/tokens.json`; the build refuses a private token without an alias.
+`packages/client/src/theme/tokens.json`; the build refuses a private token without an alias.
 Cards take the host's overlay layer rather than its canvas: a plugin that
 clears the canvas still gives its overlays a readable fill, and the shared
 popover card blurs what lies behind it (`blur(16px) saturate(1.4)`).
@@ -197,7 +197,7 @@ Both are solid (never translucent) and `!important`, so they override whatever
 colour the text underneath carries — links, inline code, syntax tokens. CSS
 cannot read window focus: Chromium reaches the inactive paint through its own
 internal `-internal-inactive-selection-*` properties, which a stylesheet cannot
-address. `src/features/selection/selection.ts` therefore mirrors `document.hasFocus()`
+address. `packages/client/src/features/selection/selection.ts` therefore mirrors `document.hasFocus()`
 onto `data-dsh-window-blur` and the stylesheet switches on that attribute; the
 selection itself survives the blur.
 
@@ -297,7 +297,7 @@ takes the longest stable piece of whichever family it targets — `_itemWrap_`,
 never the bare local name.
 
 The hero row's two pickers are that primitive, portaled to `<body>` with no
-marker of their own. `src/features/hero-menu/hero-menu.ts` stamps the open card with
+marker of their own. `packages/client/src/features/hero-menu/hero-menu.ts` stamps the open card with
 `data-dsh-claude-hero-menu` and `features/hero-menu/hero-menu.css` restyles it; the
 host's other menus (sidebar row menus, the settings permission row, submenus)
 keep the host's own design on purpose. What that replaces: a 20px radius card
@@ -382,7 +382,7 @@ z-index 1000 and 100000) and now follows the table above. The hero row's pickers
 two ways that CSS cannot change: it mounts instead of toggling a `data-open`
 attribute, so it takes the same fade/scale as a one-shot `0.15s` animation; and
 the host places it *below* its trigger, which is where the composer sits — so
-`src/features/hero-menu/hero-menu.ts` re-places it on the trigger the way the
+`packages/client/src/features/hero-menu/hero-menu.ts` re-places it on the trigger the way the
 skin's own composer pickers sit: right-aligned with the trigger and opening
 upward by the same 6px air, flipping below only when the viewport leaves no room
 above, and clamped to the 8px viewport margin (`POPOVER_MARGIN`). The host
@@ -443,7 +443,7 @@ control.
 
 The new-conversation page has two arrangements. `homeLayout` (settings: Home
 layout) writes `data-dsh-claude-home-layout` onto `<body>` and
-`src/features/home/home-panel.css` branches on it. Both are the host's own
+`packages/client/src/features/home/home-panel.css` branches on it. Both are the host's own
 hero markup — the greeting, the workspace row, the dock and the composer card
 inside `…_composerStack …_composerHero` — so only the arrangement differs.
 
@@ -625,9 +625,9 @@ plays its reaction.
 
 - Every rule is scoped under `body[data-dsh-claude-style]`.
 - Dark tokens are the base; light overrides use `:not([data-ds-dark-theme])`.
-- A surface's stylesheet sits beside its feature under `src/features/<feature>/`;
-  the look no single feature owns is in `src/theme/`, and the parts several
+- A surface's stylesheet sits beside its feature under `packages/client/src/features/<feature>/`;
+  the look no single feature owns is in `packages/client/src/theme/`, and the parts several
   features share (the popover card and rows, the sliding highlight) are in
-  `src/shared/`. The host selector discipline and the style checks the build
+  `packages/client/src/shared/`. The host selector discipline and the style checks the build
   runs are in `docs/decisions/` (D3, D4, D9, D19, D30, D51).
 

@@ -1,6 +1,6 @@
 'use strict'
 /**
- * Read the feature manifests (src/features/**\/<main>.manifest.ts, D42).
+ * Read the feature manifests (packages/client/src/features/**\/<main>.manifest.ts, D42).
  *
  * A manifest is data only, so it is evaluated here in Node: esbuild bundles
  * every manifest into one CommonJS body and the body runs in a fresh vm
@@ -15,7 +15,8 @@ const vm = require('node:vm')
 const esbuild = require('esbuild')
 
 const ROOT = path.resolve(__dirname, '..')
-const SRC = path.join(ROOT, 'src')
+// The browser half lives in its own package (D46).
+const SRC = path.join(ROOT, 'packages', 'client', 'src')
 const FEATURES = path.join(SRC, 'features')
 const SUFFIX = '.manifest.ts'
 
@@ -78,7 +79,7 @@ function checkManifests(manifests) {
       fail(manifest, 'needs "contracts": the host contract ids its own modules name (D44)')
     }
     for (const sheet of manifest.stylesheets) {
-      if (!fs.existsSync(path.join(FEATURES, manifest.dir, sheet.file))) fail(manifest, `names the stylesheet ${sheet.file}, which src/features/${manifest.dir}/ does not hold`)
+      if (!fs.existsSync(path.join(FEATURES, manifest.dir, sheet.file))) fail(manifest, `names the stylesheet ${sheet.file}, which packages/client/src/features/${manifest.dir}/ does not hold`)
     }
     if (manifest.switchRow !== undefined) {
       if (manifest.pref === undefined) fail(manifest, 'has a switch row but no "pref"')

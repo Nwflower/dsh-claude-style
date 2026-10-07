@@ -13,7 +13,7 @@
  *   composer     the rules below a sheet's `@composer-gate` comment get the
  *                composer gate stamped onto their scope compound (D4)
  *
- * The token stylesheet is generated from src/theme/tokens.json, and so is the
+ * The token stylesheet is generated from packages/client/src/theme/tokens.json, and so is the
  * token table in docs/STYLE.md.
  */
 import fs from 'node:fs'
@@ -32,7 +32,7 @@ const COMPOSER_GATE_MARKER = '@composer-gate'
 export const TOKEN_SHEET = 'theme/tokens.json'
 const TOKEN_SCHEMA = 'theme/tokens.schema.json'
 /** The region of docs/STYLE.md the token table is written into. */
-const TABLE_BEGIN = '<!-- generated:tokens (src/theme/tokens.json) -->'
+const TABLE_BEGIN = '<!-- generated:tokens (packages/client/src/theme/tokens.json) -->'
 const TABLE_END = '<!-- /generated:tokens -->'
 
 /** Substitute %%TOKEN%% placeholders in one stylesheet; throws on leftovers. */
@@ -175,7 +175,7 @@ function processSheet(sheet, text, gates, names) {
 /* ---------- tokens ---------- */
 
 /**
- * Read and validate src/theme/tokens.json: its declared shape, and each token
+ * Read and validate packages/client/src/theme/tokens.json: its declared shape, and each token
  * named once per group.
  */
 export function loadTokens(srcDir) {
@@ -280,7 +280,7 @@ export function writeTokenTable(stylePath, doc) {
  * @param options.sheets - `{ file, rank, gate? }` in cascade order (TOKEN_SHEET generated).
  * @param options.srcDir - the source directory.
  * @param options.tokens - the placeholder values.
- * @param options.tokenDoc - src/theme/tokens.json (loadTokens).
+ * @param options.tokenDoc - packages/client/src/theme/tokens.json (loadTokens).
  * @param options.gates - `{ composer, palette: { attribute, claude, host }, typeface: { attribute, claude, host } }`.
  * @returns the stylesheet text.
  */

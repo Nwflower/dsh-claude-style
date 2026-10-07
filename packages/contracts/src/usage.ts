@@ -2,7 +2,7 @@
  * The usage payload the plugin's two halves exchange (D27's panel, D38's route).
  *
  * `packages/host/src/usage.js` answers `GET /dsh-claude-style/usage` with this shape and the
- * browser half reads it in `src/features/home/data.ts`; the session list's own
+ * browser half reads it in `packages/client/src/features/home/data.ts`; the session list's own
  * roll-up (`sessions.list`, a host service) answers a narrower version of the
  * same entries, which is why several fields below are optional. These types are
  * the plugin's own contract rather than the host's, so they live beside the code

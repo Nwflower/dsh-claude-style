@@ -48,7 +48,7 @@
  * Usage: node scripts/smoke.cjs [--case <name>[,<name>…]] [--feature <dir>[,<dir>…]] [--quick]
  *        (CHROME_PATH overrides the browser lookup)
  *        --case runs the named browser cases alone, --feature the cases that
- *        cover the named directories under src/features/; both may be repeated,
+ *        cover the named directories under packages/client/src/features/; both may be repeated,
  *        combined, and neither means every case. --quick leaves out the cases
  *        and the checks that watch motion (TIMING_CASES in scripts/smoke/
  *        shared.cjs). Cases that share a stand-in configuration and a markup
@@ -85,7 +85,7 @@ function bad(message) {
 
 /**
  * What the command line asked for: `--case a,b` names cases, `--feature dir`
- * names a directory under src/features/ and stands for the cases the table
+ * names a directory under packages/client/src/features/ and stands for the cases the table
  * gives it, `--quick` picks the tier. Both name flags may be repeated and
  * combined. An unknown argument, case or directory ends the run with exit 2, so
  * a misspelling cannot pass as a full run.
@@ -115,7 +115,7 @@ function selection() {
         continue
       }
       if (!Object.hasOwn(FEATURE_CASES, name)) bad(`no feature directory named "${name}" — the directories are: ${Object.keys(FEATURE_CASES).join(', ')}`)
-      if (FEATURE_CASES[name].length === 0) bad(`src/features/${name}/ has no smoke case of its own`)
+      if (FEATURE_CASES[name].length === 0) bad(`packages/client/src/features/${name}/ has no smoke case of its own`)
       cases.push(...FEATURE_CASES[name])
     }
   }
@@ -129,7 +129,7 @@ function selection() {
 function checkFeatureTable() {
   for (const [name, covered] of Object.entries(FEATURE_CASES)) {
     for (const one of covered) {
-      if (!Object.hasOwn(CASES, one)) bad(`a manifest in src/features/${name}/ names the case "${one}", which the case table does not hold`)
+      if (!Object.hasOwn(CASES, one)) bad(`a manifest in packages/client/src/features/${name}/ names the case "${one}", which the case table does not hold`)
     }
   }
 }
