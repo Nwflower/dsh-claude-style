@@ -1,4 +1,4 @@
-import { COMPOSER_SELECTOR, SCROLL_KEYS } from '../../shared/chat-dom'
+import { COMPOSER_SELECTOR, SCROLL_KEYS } from './chat-dom'
 
 /**
  * Whether an event is the reader taking the scroll over.

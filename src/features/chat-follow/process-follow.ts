@@ -1,6 +1,6 @@
 import { observeSize } from '../../core/bus'
 import { motionReduced } from '../../core/prefs'
-import { isReaderScrollIntent } from './reader-intent'
+import { isReaderScrollIntent } from '../../shared/reader-intent'
 import { PROCESS_BODY_SELECTOR, PROCESS_CONTENT_SELECTOR, PROCESS_EXPANDED_MODE_ATTRIBUTE } from '../../shared/chat-dom'
 import { easeScrollToEnd, stopScrollEase } from '../../shared/scroll-ease'
 

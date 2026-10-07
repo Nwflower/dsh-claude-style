@@ -2,10 +2,10 @@ import { CHAT_FOLLOW_ATTR, STREAM_GLIDE_ATTR } from '../../constants'
 import { observeSize, subscribeMutations } from '../../core/bus'
 import { requestFrame } from '../../core/frame'
 import { motionReduced } from '../../core/prefs'
-import { conversationScroller, ensureFollowTail, findFollowTailButton, isAtBottom } from './chat-tail'
+import { ensureFollowTail } from './chat-tail'
 import { createChatProcessFollow } from './process-follow'
-import { isReaderScrollIntent } from './reader-intent'
-import { CHAT_CALL_SELECTOR, CHAT_FLOW_SELECTOR, COMPOSER_SELECTOR, CONVERSATION_SCROLL_SELECTOR, FLOW_BLOCK_SELECTOR, FOLLOWING_TAIL_ATTRIBUTE, FOLLOWING_TAIL_SELECTOR, RUNNING_STATE, SHIMMER_SELECTOR, STREAMING_SELECTOR, SUBMISSION_ECHO_SELECTOR, THINK_ROW_SELECTOR } from '../../shared/chat-dom'
+import { isReaderScrollIntent } from '../../shared/reader-intent'
+import { CHAT_CALL_SELECTOR, CHAT_FLOW_SELECTOR, COMPOSER_SELECTOR, CONVERSATION_SCROLL_SELECTOR, FLOW_BLOCK_SELECTOR, FOLLOWING_TAIL_ATTRIBUTE, FOLLOWING_TAIL_SELECTOR, RUNNING_STATE, SHIMMER_SELECTOR, STREAMING_SELECTOR, SUBMISSION_ECHO_SELECTOR, THINK_ROW_SELECTOR, conversationScroller, findFollowTailButton, isAtBottom } from '../../shared/chat-dom'
 import { SCROLL_EASE_LEAD_PX, easeScrollToEnd, scrollEasePosition, stopScrollEase } from '../../shared/scroll-ease'
 import type { HostContext } from '../../core/host'
 import type { Ui } from '../../core/scheduler'
@@ -131,8 +131,7 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
   let glideScroller: HTMLElement | null = null
   /** The flow column the glide's resize observer watches. */
   let glideColumn: HTMLElement | null = null
-  /** The resize observer made for glideColumn (see glideSync). */
-  /** Stops the glide's size subscription. */
+  /** Stops the glide's size subscription on glideColumn (see glideSync). */
   let stopGlideSize: (() => void) | null = null
   /** The column's height as the glide last saw it; the growth a frame is measured against. */
   let glideHeight = 0

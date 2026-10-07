@@ -1,7 +1,7 @@
 import { requestFrame } from '../../core/frame'
 import { CHAT_ROLLING_ATTR } from '../../constants'
 import { FOLLOW_LOOK_TOTAL_MS, ensureFollowTail } from '../chat-follow/chat-tail'
-import { isReaderScrollIntent } from '../chat-follow/reader-intent'
+import { isReaderScrollIntent } from '../../shared/reader-intent'
 import { CONVERSATION_SCROLL_SELECTOR, FOLLOW_THRESHOLD_PX, PROCESS_BODY_SELECTOR } from '../../shared/chat-dom'
 
 /**
