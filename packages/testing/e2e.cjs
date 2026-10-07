@@ -10,12 +10,14 @@
  * the answer streams in, that the send flight hands the reader's words over
  * without a blank frame, and that both palettes capture the README frame's own
  * picture with nothing personal in it. The `contract` scenario walks packages/contracts/src/table.ts against the same page, so
- * each host literal the skin depends on is checked where it lives (D44).
+ * each host literal the skin depends on is checked where it lives (D44), and the
+ * `importance` scenario holds every `!important` the skin writes to one the page
+ * needs (packages/testing/importance.cjs, D51).
  * Every scenario runs against its own scratch instance, so nothing a scenario
  * writes can reach another.
  *
  * Usage: node packages/testing/e2e.cjs [--scenario <name>[,<name>…]] [--headed] [--out <dir>] [--delay <ms>]
- *        scenarios: conversation, tool, send, scroll, contract, shots
+ *        scenarios: conversation, tool, send, scroll, contract, importance, shots
  *        (default: every scenario)
  */
 'use strict'
@@ -647,7 +649,7 @@ async function main() {
       + `${unknown.length > 0 ? `; named there but missing here: ${unknown.join(', ')}` : ''}`
       + `${unnamed.length > 0 ? `; run here but unnamed there: ${unnamed.join(', ')}` : ''}`)
   }
-  const names = (argOf('scenario') ?? 'conversation,tool,send,scroll,contract,shots').split(',').map((name) => name.trim()).filter(Boolean)
+  const names = (argOf('scenario') ?? 'conversation,tool,send,scroll,contract,importance,shots').split(',').map((name) => name.trim()).filter(Boolean)
   const out = path.resolve(argOf('out') ?? DEFAULT_OUT)
   const options = {
     headed: args.includes('--headed'),
