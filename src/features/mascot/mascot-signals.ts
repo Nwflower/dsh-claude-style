@@ -1,5 +1,6 @@
 import { findChatTarget, readTurnActivity } from '../../core/host'
-import type { HostContext, HostValue } from '../../core/host'
+import type { HostContext } from '../../core/host'
+import type { HostChatSnapshot, HostChatTarget, HostFeedEntry, HostSessionEvent, HostSessionListSnapshot, HostSessionStatusSnapshot, HostSnapshotSource, HostSubagentEntry } from '../../contracts/services'
 
 /** A state the mascot shows: its name, the animation that plays it, and how much it outranks. */
 export interface MascotLevel {
@@ -54,7 +55,7 @@ export function createMascotSignals(ctx: HostContext, onMoment: (moment: MascotM
   let followed: string | null | undefined
   let stopFeed: (() => void) | null = null
   /** The followed session's chat target (`uiConversation`, target `chat`), subscribed while followed. */
-  let chat: HostValue = null
+  let chat: HostChatTarget | null = null
   let stopChat: (() => void) | null = null
   /** Compactions of the followed session that started and have not ended. */
   const compactions = new Set<string>()
@@ -67,10 +68,10 @@ export function createMascotSignals(ctx: HostContext, onMoment: (moment: MascotM
    * for the whole generation. A newly appeared source is subscribed there
    * and then; a swapped one replaces its subscription.
    */
-  let statusSource: HostValue
+  let statusSource: HostSnapshotSource<HostSessionStatusSnapshot> | undefined
   let stopStatus: (() => void) | null = null
 
-  function statusOf(): HostValue {
+  function statusOf(): HostSessionStatusSnapshot | null {
     const source = ctx.get('uiSession')?.sessionStatus
     if (source !== statusSource) {
       if (stopStatus !== null) stopStatus()
@@ -80,19 +81,19 @@ export function createMascotSignals(ctx: HostContext, onMoment: (moment: MascotM
     return typeof source?.getSnapshot === 'function' ? source.getSnapshot() : null
   }
 
-  function listOf(): HostValue {
+  function listOf(): HostSessionListSnapshot | null {
     const list = ctx.get('sessions')?.list
     return typeof list?.getSnapshot === 'function' ? list.getSnapshot() : null
   }
 
   /** The host's own reading of "running": the live status first, the list's summary behind it. */
-  function isRunning(id: string, status: HostValue, list: HostValue) {
+  function isRunning(id: string, status: HostSessionStatusSnapshot | null, list: HostSessionListSnapshot | null) {
     const live = status === null ? undefined : status.get(id)?.running
     return (live ?? list?.byId[id]?.running) === true
   }
 
   /** Top-level sessions running right now, across the workspace. */
-  function busySessions(status: HostValue, list: HostValue) {
+  function busySessions(status: HostSessionStatusSnapshot | null, list: HostSessionListSnapshot | null) {
     if (list === null) return 0
     let busy = 0
     for (let i = 0; i < list.ids.length; i++) {
@@ -103,9 +104,9 @@ export function createMascotSignals(ctx: HostContext, onMoment: (moment: MascotM
   }
 
   /** The subagents a session started, as the host's session list catalogues them. */
-  function subagentsOf(id: string, list: HostValue): HostValue[] {
+  function subagentsOf(id: string, list: HostSessionListSnapshot | null): HostSubagentEntry[] {
     const catalog = list?.projectionsBySession[id]?.values?.subagentCatalog
-    return Array.isArray(catalog) ? catalog : []
+    return Array.isArray(catalog) ? catalog as HostSubagentEntry[] : []
   }
 
   /** One working animation per crowd size, as Clawd's working tiers pick them. */
@@ -122,7 +123,7 @@ export function createMascotSignals(ctx: HostContext, onMoment: (moment: MascotM
    * not answered yet, `working` while it writes an answer or a tool call
    * and while its tool calls run; null when no turn is open.
    */
-  function turnPhase(snapshot: HostValue) {
+  function turnPhase(snapshot: HostChatSnapshot) {
     const order = snapshot.timeline.turnOrder
     const turn = order.length === 0 ? undefined : snapshot.timeline.turns.get(order[order.length - 1])
     if (turn === undefined || turn.status !== 'open') return null
@@ -172,22 +173,21 @@ export function createMascotSignals(ctx: HostContext, onMoment: (moment: MascotM
   }
 
   /** One live event of the followed session. */
-  function take(event: HostValue) {
-    const data = event.data
+  function take(event: HostSessionEvent) {
     if (event.type === 'turn/end') {
-      const kind = data.reason.kind
+      const kind = event.data.reason.kind
       if (kind === 'completed' || kind === 'max-tokens') onMoment('attention')
       else if (kind === 'error' || kind === 'blocked') onMoment('error')
     } else if (event.type === 'tool/result') {
       // A call cut short by a stop is not a failure the mascot reacts to.
-      if (data.message.isError === true && data.error?.name !== 'AbortError') onMoment('error')
+      if (event.data.message.isError === true && event.data.error?.name !== 'AbortError') onMoment('error')
     } else if (event.type === 'compaction/start') {
-      compactions.add(data.compactionId)
+      compactions.add(event.data.compactionId)
       onChange()
     } else if (event.type === 'compaction/end') {
-      compactions.delete(data.compactionId)
+      compactions.delete(event.data.compactionId)
       onChange()
-      onMoment(data.error === undefined ? 'attention' : 'error')
+      onMoment(event.data.error === undefined ? 'attention' : 'error')
     }
   }
 
@@ -197,7 +197,7 @@ export function createMascotSignals(ctx: HostContext, onMoment: (moment: MascotM
    * (a reconnect does) settles the set; appended events keep it current
    * in between.
    */
-  function adoptCompactions(entries: HostValue[]) {
+  function adoptCompactions(entries: HostFeedEntry[]) {
     compactions.clear()
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i]

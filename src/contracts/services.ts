@@ -19,10 +19,54 @@ export interface HostSnapshotSource<Snapshot> {
   subscribe(listener: () => void): () => void
 }
 
-/** The session list's own snapshot: which session the shell shows. */
+/** The session list's own snapshot: which session the shell shows, and every row's summary. */
 export interface HostSessionListSnapshot {
   current?: string | null
-  [field: string]: unknown
+  ids: string[]
+  byId: Record<string, HostSessionSummary>
+  /** Per-session projection values the list carries, such as a session's subagent catalog. */
+  projectionsBySession: Record<string, { values?: { subagentCatalog?: unknown[] } }>
+}
+
+/** One row of the session list: whether it runs, and whether it is a subagent's. */
+export interface HostSessionSummary {
+  running?: boolean
+  origin?: string
+}
+
+/** The live status map (`uiSession.sessionStatus`): how each session is doing right now, by id. */
+export interface HostSessionStatusSnapshot extends Iterable<[string, HostSessionStatus]> {
+  get(id: string): HostSessionStatus | undefined
+  values(): IterableIterator<HostSessionStatus>
+}
+
+/** One session's live status: whether it runs, waits on the reader, or finished unread. */
+export interface HostSessionStatus {
+  running?: boolean
+  pendingInteraction?: unknown
+  completionUnread?: boolean
+}
+
+/** A subagent as the session list catalogues it: its id, and the ones it started. */
+export interface HostSubagentEntry {
+  id: string
+}
+
+/**
+ * One event of a session's feed, of the four types the skin reads: a turn
+ * ending, a tool result, and a compaction starting or finishing. A host that
+ * adds another type is ignored by the reader, which compares the type first.
+ */
+export type HostSessionEvent =
+  | { type: 'turn/end', data: { reason: { kind?: string } } }
+  | { type: 'tool/result', data: { message: { isError?: boolean }, error?: { name?: string } } }
+  | { type: 'compaction/start', data: { compactionId: string } }
+  | { type: 'compaction/end', data: { compactionId: string, error?: unknown } }
+
+/** One entry of a feed window: a live event, or the host's own bookkeeping. */
+export interface HostFeedEntry {
+  type: string
+  event: HostSessionEvent
 }
 
 /** The `sessions` service: the list, one session's binding, and a refresh. */
@@ -38,7 +82,7 @@ export interface HostSessionsService {
  */
 export interface HostSessionBinding {
   session?: HostSession
-  eventSource?: HostSnapshotSource<{ entries: unknown[] }>
+  eventSource?: HostSnapshotSource<{ entries: HostFeedEntry[] }>
 }
 
 /** One session: its projections, which the skin reads by face name, and its command seat. */
@@ -59,7 +103,7 @@ export interface HostCommandResult {
 /** The shell's `uiSession`: which session is selected, and how it is doing. */
 export interface HostUiSessionService {
   current?: { value?: { key?: unknown } }
-  sessionStatus?: HostSnapshotSource<unknown>
+  sessionStatus?: HostSnapshotSource<HostSessionStatusSnapshot>
 }
 
 /** The shell's `uiConversation`: one session's conversation binding. */
@@ -85,21 +129,24 @@ export interface HostChatTarget {
 
 /** The chat snapshot: the assembled timeline, the legacy view of it, and the turn navigator. */
 export interface HostChatSnapshot {
-  timeline?: HostChatTimeline
+  /** The assembled timeline; the host builds it before publishing the snapshot. */
+  timeline: HostChatTimeline
   legacy?: { runningCalls?: HostRunningCall[] }
   /** The turn navigator's own list of the loaded window's turns. */
   navigation?: { items?(): unknown[] }
 }
 
-/** The timeline: its turns by number, and the id of the newest turn. */
+/** The timeline: its turns by number, the order they come in, and the newest turn's id. */
 export interface HostChatTimeline {
   turns: Map<number, HostTurn>
+  turnOrder: number[]
   newestTurnId?: string | null
 }
 
-/** One turn: its steps, in order, and its own number. */
+/** One turn: its steps in order, its own number, and whether it is still open. */
 export interface HostTurn {
   turn: number
+  status?: string
   steps: HostStep[]
 }
 
