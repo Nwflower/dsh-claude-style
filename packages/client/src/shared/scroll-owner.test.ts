@@ -1,6 +1,6 @@
 import { afterEach, expect, test } from 'vitest'
 import { MOTION_ATTR, MOTION_FULL, MOTION_REDUCED } from '../constants'
-import { easeScrollFor, easeScrollToEndFor, joinScrollOwner, readerHolds, readerMovedSince, stopScrollFor, submissionHolds, writeScroll } from './scroll-owner'
+import { easeScrollFor, easeScrollToEndFor, isApplePlatform, joinScrollOwner, readerHolds, readerMovedSince, stopScrollFor, submissionHolds, writeScroll } from './scroll-owner'
 
 const nextFrame = () => new Promise<number>(resolve => requestAnimationFrame(resolve))
 const wanted = () => true
@@ -206,6 +206,25 @@ test('outside the conversation, and under reduced motion, the wheel is left to t
   expect(wheelOver(other, 300).defaultPrevented).toBe(false)
   setMotion(MOTION_REDUCED)
   const scroller = await wheelBox('data-conversation-scroll')
+  const event = wheelOver(scroller, 300)
+  expect(event.defaultPrevented).toBe(false)
+  expect(scroller.scrollTop).toBe(0)
+})
+
+test('Apple platforms are recognised by the shell marker or by the browser itself', () => {
+  expect(isApplePlatform('darwin', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)')).toBe(true)
+  expect(isApplePlatform('win32', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)')).toBe(true)
+  expect(isApplePlatform(null, 'Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X)')).toBe(true)
+  expect(isApplePlatform('win32', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)')).toBe(false)
+  expect(isApplePlatform(null, 'Mozilla/5.0 (X11; Linux x86_64)')).toBe(false)
+})
+
+test('on an Apple platform the wheel keeps the platform\'s own rendering', async () => {
+  setMotion(MOTION_FULL)
+  join()
+  const scroller = await wheelBox('data-conversation-scroll')
+  document.documentElement.setAttribute('data-platform', 'darwin')
+  cleanups.push(() => document.documentElement.removeAttribute('data-platform'))
   const event = wheelOver(scroller, 300)
   expect(event.defaultPrevented).toBe(false)
   expect(scroller.scrollTop).toBe(0)

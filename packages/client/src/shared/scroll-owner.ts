@@ -1,7 +1,7 @@
 import { STREAM_GLIDE_ATTR } from '../constants'
 import { subscribeMutations } from '../core/bus'
 import { motionReduced } from '../core/prefs'
-import { CONVERSATION_SCROLL_SELECTOR, FLOW_KIND_ATTRIBUTE, FOLLOWING_TAIL_SELECTOR, FOLLOW_THRESHOLD_PX, PROCESS_BODY_SELECTOR, SUBMISSION_ECHO_SELECTOR, USER_ROW_KIND } from '@dsh-claude-style/contracts/dom'
+import { CONVERSATION_SCROLL_SELECTOR, FLOW_KIND_ATTRIBUTE, FOLLOWING_TAIL_SELECTOR, FOLLOW_THRESHOLD_PX, PLATFORM_ATTRIBUTE, PROCESS_BODY_SELECTOR, SUBMISSION_ECHO_SELECTOR, USER_ROW_KIND } from '@dsh-claude-style/contracts/dom'
 import { conversationScroller, findFollowTailButton } from './chat-dom'
 import { isReaderScrollIntent } from './reader-intent'
 import { SCROLL_EASE_LEAD_PX, easeScroll, isScrollEasing, scrollEasePosition, scrollEnd, stopScrollEase } from './scroll-ease'
@@ -227,6 +227,20 @@ function innerScrollerMoves(target: EventTarget | null, outer: HTMLElement, delt
 }
 
 /**
+ * Whether this page runs on an Apple platform, where the wheel is already the
+ * motion the spring imitates: the platform's own scrolling carries the momentum
+ * and the edge bounce, and the skin leaves it alone (see onWheel).
+ *
+ * The desktop shells mark the platform on `<html>` (the host's own contract);
+ * a browser is read from its platform string, where a Mac — and an iPad, which
+ * reports itself as one — is what matters.
+ */
+export function isApplePlatform(marker: string | null, userAgent: string) {
+  if (marker === 'darwin') return true
+  return /\b(Macintosh|Mac OS X|iPhone|iPad|iPod)\b/.test(userAgent)
+}
+
+/**
  * The reader's wheel on the conversation: its distance is added to a target the
  * spring walks to, instead of the browser writing the position as it likes.
  *
@@ -245,12 +259,18 @@ function innerScrollerMoves(target: EventTarget | null, outer: HTMLElement, delt
  * wheel alone entirely (D26). Hanging it on that element rather than on the
  * document is what keeps the cost where it belongs: a wheel anywhere else on the
  * page then never waits for this main-thread listener.
+ *
+ * Apple platforms keep their own rendering: Windows has no momentum of its own
+ * and stops dead at the edge, which is what this takeover is for; a Mac already
+ * scrolls with a curve and bounces at the ends, and the spring would only take
+ * that away.
  */
 function onWheel(event: WheelEvent) {
   const scroller = event.currentTarget
   if (!(scroller instanceof HTMLElement)) return
   // Ctrl+wheel is the browser's zoom, and an event another handler already took is its own.
   if (event.defaultPrevented || event.ctrlKey || motionReduced()) return
+  if (isApplePlatform(document.documentElement.getAttribute(PLATFORM_ATTRIBUTE), navigator.userAgent)) return
   const room = scrollEnd(scroller)
   if (room <= 0) return
   const delta = wheelDistance(event, scroller)
