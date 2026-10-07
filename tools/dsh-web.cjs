@@ -42,10 +42,15 @@ function run(command, options = {}) {
  * @param options.home - the scratch `$DSH_HOME` (created when absent).
  * @param options.profile - the profile to boot.
  * @param options.port - the port; 0 lets the OS pick one.
- * @param options.patch - loader patch entries (YAML text) written into the
- *     profile's own patch layer before boot: how a lane points the host's model
- *     adapter at the scripted service (tools/mock-llm.cjs, D45).
+ * @param options.patch - loader patch entries (YAML text) written into a `--patch`
+ *     overlay before boot: how a lane points the host's model adapter at the
+ *     scripted service (tools/mock-llm.cjs, D45).
  * @param options.env - extra environment for the host process.
+ * @param options.resetState - clear the home's sessions and their sidebar cache
+ *     first, so a lane that asserts on what the page shows starts from an empty
+ *     conversation list. The profile stays — it holds the plugin link and the
+ *     onboarding steps already answered — and so does the workspace registry,
+ *     without which the shell asks for a workspace instead of starting a turn.
  * @param options.timeoutMs - how long to wait for the printed URL.
  * @returns `{ url, home, stop() }`; `stop` ends the host and everything it spawned.
  */
@@ -55,6 +60,11 @@ async function start(options = {}) {
   const port = options.port ?? 0
   const timeoutMs = options.timeoutMs ?? 120000
   fs.mkdirSync(home, { recursive: true })
+  if (options.resetState === true) {
+    for (const entry of ['sessions', path.join('storages', 'session_projcache'), path.join('cache', 'dsh-claude-style', 'usage.json')]) {
+      fs.rmSync(path.join(home, entry), { recursive: true, force: true })
+    }
+  }
   // Idempotent: the profile is initialized and the checkout linked into it on
   // the first run, and pnpm reports "already up to date" afterwards.
   run(`dsh plugin --profile ${profile} add "${ROOT}"`, { env: { ...process.env, DSH_HOME: home } })

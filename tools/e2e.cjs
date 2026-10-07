@@ -6,21 +6,36 @@
  * The smoke's stand-in page reproduces the structure its author knows; this lane
  * runs the assembled client and asserts what only it shows — that a scripted
  * answer renders as the reader sees it, that a scripted tool call becomes a row
- * with its result, and that the conversation never jumps or slides backward
- * while the answer streams in. Every scenario runs against its own scratch
- * instance, so nothing a scenario writes can reach another.
+ * with its result, that the conversation never jumps or slides backward while
+ * the answer streams in, and that both palettes still capture the same picture.
+ * Every scenario runs against its own scratch instance, so nothing a scenario
+ * writes can reach another.
  *
  * Usage: node tools/e2e.cjs [--scenario <name>[,<name>…]] [--headed] [--out <dir>] [--delay <ms>]
- *        scenarios: conversation (default), tool, scroll
+ *                            [--baseline <dir>] [--accept]
+ *        scenarios: conversation (default), tool, scroll, shots
+ *        --accept writes the captured screenshots as the comparison baseline.
  */
 'use strict'
 const fs = require('node:fs')
 const path = require('node:path')
 const { start, openPage, waitForSkin, dismissOverlays } = require('./dsh-web.cjs')
 const { startMockLlm } = require('./mock-llm.cjs')
+const { CANVAS } = require('../scripts/shoot.cjs')
+const { sanitizePage } = require('../scripts/privacy.cjs')
 
 const ROOT = path.resolve(__dirname, '..')
 const DEFAULT_OUT = path.join(ROOT, '.debug', 'e2e', 'out')
+/** Screenshot baselines: the reviewed picture each run has to reproduce. */
+const DEFAULT_BASELINE = path.join(ROOT, 'tests', 'screenshots')
+/**
+ * The share of differing pixels a capture may have and still count as the same
+ * picture. Two runs of the same scenario differ in the live numbers the page
+ * carries — the clock, the throughput meter, the mascot's frame — which measures
+ * 0.08% of the frame; the bound is twice that, while a moved panel or a changed
+ * palette moves an order of magnitude more.
+ */
+const MAX_DIFFERENT_PIXELS = 0.002
 
 /**
  * The host's page markers this lane reads. Each one is a D44 entry in
@@ -113,13 +128,94 @@ function check(name, ok, detail) {
   return { name, ok: ok === true, detail: detail === undefined ? '' : String(detail) }
 }
 
+/**
+ * Capture the page in both palettes and prove the picture is fit to keep: the
+ * palette is the one the brand resolves to, the visible text carries no personal
+ * data (scripts/privacy.cjs), and — when a baseline exists or `--accept` was
+ * asked for — the capture matches the reviewed picture.
+ */
+async function captureBothSchemes(context) {
+  const { page, browser, out, baseline, accept } = context
+  const brand = await page.evaluate(() => document.body.getAttribute('data-dsh-claude-brand'))
+  const canvas = CANVAS[brand]
+  if (canvas === undefined) throw new Error(`the page carries brand "${brand}", which has no recorded palette`)
+  const files = []
+  const checks = []
+  for (const scheme of ['light', 'dark']) {
+    if (scheme === 'dark') {
+      // The same DOM flip the theme service's presenter produces for the dark
+      // snapshot; no durable preference is read or written.
+      await page.evaluate(() => document.body.setAttribute('data-ds-dark-theme', ''))
+    }
+    const background = await page.evaluate(() => getComputedStyle(document.body).backgroundColor)
+    const wanted = canvas[scheme]
+    if (background !== wanted) throw new Error(`${scheme} palette did not take effect (body bg ${background}, expected ${wanted})`)
+    const { caught, visibleText } = await sanitizePage((expression) => page.evaluate(expression))
+    const file = path.join(out, `shots-${scheme}.png`)
+    await page.screenshot({ path: file })
+    files.push(file)
+    checks.push(check(`${scheme} 截图的可见文本没有个人数据`, true, `sweep caught ${caught.length}; ${visibleText.replace(/\s+/g, ' ').length} chars`))
+    const baselineFile = path.join(baseline, `shots-${scheme}.png`)
+    if (accept) {
+      fs.mkdirSync(baseline, { recursive: true })
+      fs.copyFileSync(file, baselineFile)
+      checks.push(check(`${scheme} 截图写成了基线`, true, baselineFile))
+      continue
+    }
+    if (!fs.existsSync(baselineFile)) {
+      checks.push(check(`${scheme} 截图与基线一致`, false, `no baseline at ${baselineFile} — review the capture in ${file}, then run with --accept`))
+      continue
+    }
+    const { ratio, sizeChanged } = await compareImages(browser, baselineFile, file)
+    checks.push(check(`${scheme} 截图与基线一致`, ratio <= MAX_DIFFERENT_PIXELS, `${(ratio * 100).toFixed(3)}% of pixels differ${sizeChanged ? ' (size changed)' : ''}, allowed ${(MAX_DIFFERENT_PIXELS * 100).toFixed(1)}%`))
+  }
+  return { checks, files }
+}
+
+/**
+ * Compare two PNGs inside the browser, so no image decoder lives in this tool:
+ * the page draws both onto a canvas and counts the pixels that differ by more
+ * than the channel tolerance antialiasing moves.
+ */
+async function compareImages(browser, before, after) {
+  const page = await browser.newPage()
+  try {
+    return await page.evaluate(async ([first, second]) => {
+      const load = (dataUrl) => new Promise((resolve, reject) => {
+        const image = new Image()
+        image.onload = () => resolve(image)
+        image.onerror = () => reject(new Error('a screenshot did not decode'))
+        image.src = dataUrl
+      })
+      const [a, b] = await Promise.all([load(first), load(second)])
+      if (a.width !== b.width || a.height !== b.height) return { ratio: 1, sizeChanged: true }
+      const canvas = new OffscreenCanvas(a.width, a.height)
+      const context = canvas.getContext('2d')
+      const pixels = (image) => {
+        context.clearRect(0, 0, a.width, a.height)
+        context.drawImage(image, 0, 0)
+        return context.getImageData(0, 0, a.width, a.height).data
+      }
+      const one = pixels(a)
+      const two = pixels(b)
+      let differing = 0
+      for (let at = 0; at < one.length; at += 4) {
+        if (Math.abs(one[at] - two[at]) > 8 || Math.abs(one[at + 1] - two[at + 1]) > 8 || Math.abs(one[at + 2] - two[at + 2]) > 8) differing += 1
+      }
+      return { ratio: differing / (a.width * a.height), sizeChanged: false }
+    }, [`data:image/png;base64,${fs.readFileSync(before).toString('base64')}`, `data:image/png;base64,${fs.readFileSync(after).toString('base64')}`])
+  } finally {
+    await page.close()
+  }
+}
+
 /** The scenarios: each boots its own instance, sends its prompt, and asserts. */
 const SCENARIOS = {
   /** A scripted answer: the reader's message, the thought, the markdown. */
   conversation: {
     script: 'greeting',
     prompt: 'hello there',
-    async assert(page, session) {
+    async assert({ page, session }) {
       const flow = await readFlow(page)
       return [
         check('读者的消息成为一行', flow.userRows === 1 && flow.text.includes('hello there'), `userRows=${flow.userRows}`),
@@ -134,7 +230,7 @@ const SCENARIOS = {
   tool: {
     script: 'inspect',
     prompt: 'look at the workspace',
-    async assert(page, session) {
+    async assert({ page, session }) {
       const flow = await readFlow(page)
       return [
         check('工具调用单独成行', flow.toolRows === 1, `toolRows=${flow.toolRows}`),
@@ -152,7 +248,7 @@ const SCENARIOS = {
     delayMs: 300,
     // A short viewport, so the streamed answer outgrows it and the tail has to follow.
     viewport: { width: 1280, height: 600 },
-    async assert(page, session, trace) {
+    async assert({ session, trace }) {
       const following = trace.filter((frame) => frame.following)
       const gaps = following.map((frame) => frame.gap)
       const worst = gaps.length === 0 ? 0 : Math.max(...gaps)
@@ -177,6 +273,23 @@ const SCENARIOS = {
       ]
     },
   },
+  /** Both palettes captured, swept for personal data, and compared with the baseline. */
+  shots: {
+    script: 'greeting',
+    prompt: 'hello there',
+    // The README frame's own size, so a baseline is the picture shipped in the docs.
+    viewport: { width: 1440, height: 900 },
+    async assert(context) {
+      const { session } = context
+      const flow = await readFlow(context.page)
+      const capture = await captureBothSchemes(context)
+      return [
+        check('脚本回答已渲染', flow.text.includes('Hello') && flow.streaming === 0, `streaming=${flow.streaming}`),
+        ...capture.checks,
+        check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),
+      ]
+    },
+  },
 }
 
 /** Run one scenario on its own instance, and return its checks and trace. */
@@ -190,7 +303,7 @@ async function runScenario(name, options) {
     `    baseURL: ${mock.url}`,
     '    apiKeyEnv: DSH_E2E_MOCK_KEY',
   ].join('\n')
-  const host = await start({ patch, env: { DSH_E2E_MOCK_KEY: 'mock' }, home: options.home })
+  const host = await start({ patch, env: { DSH_E2E_MOCK_KEY: 'mock' }, home: options.home, resetState: true })
   process.stdout.write(`\n== ${name} ==  mock ${mock.url}  host ${host.url}\n`)
   let session
   try {
@@ -202,7 +315,7 @@ async function runScenario(name, options) {
     await sendPrompt(page, scenario.prompt)
     await waitForTurn(page)
     const trace = await page.evaluate(() => window.__e2eTrace ?? [])
-    const checks = await scenario.assert(page, session, trace)
+    const checks = await scenario.assert({ page, browser: session.browser, session, trace, out: options.out, baseline: options.baseline, accept: options.accept })
     for (const item of checks) process.stdout.write(`  ${item.ok ? '✓' : '✗'} ${item.name}${item.detail === '' ? '' : `  — ${item.detail}`}\n`)
     const failed = checks.filter((item) => !item.ok).length
     return { scenario: name, checks, failed, requested: mock.requests.length, trace }
@@ -223,8 +336,11 @@ async function main() {
   const out = path.resolve(argOf('out') ?? DEFAULT_OUT)
   const options = {
     headed: args.includes('--headed'),
+    accept: args.includes('--accept'),
     delayMs: argOf('delay') === undefined ? undefined : Number(argOf('delay')),
     home: argOf('home'),
+    out,
+    baseline: path.resolve(argOf('baseline') ?? DEFAULT_BASELINE),
   }
   fs.mkdirSync(out, { recursive: true })
   const results = []
