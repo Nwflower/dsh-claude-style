@@ -3,13 +3,13 @@
 - **状态**：部分实施
 - **分组**：构建与源码
 - **关联**：取代 D18 与 D8；D7、D10、D36、D38、D45、D48
-- **现状**：npm workspaces 建起来，五个包全部就位：`packages/client`（浏览器半边：宿主访问、偏好、模型文案、i18n、调度器、观察总线与帧流水线、共用部件、全局外观、各功能目录，单元测试就在旁边）、`packages/host`（宿主半边的七个模块，构建写进 `lib/host/`，根包的 `main` 与 `exports` 指向那里，仍是 JavaScript）、`packages/contracts`（两半共用的契约：选择器与属性、条目表、时序假设、服务与值的形状、两半交换的载荷）、`packages/assets`（每张图片与资源生成器）、`packages/testing`（临时宿主、脚本化模型服务、端到端通道）。构建、清单读取、lint、单元测试与类型检查都按包内路径工作；lint 的停止线覆盖 `packages/`。这条决策还差的最后一项：宿主半边从 JavaScript 转成 TypeScript
+- **现状**：npm workspaces 建起来，五个包全部就位：`packages/client`（浏览器半边：宿主访问、偏好、模型文案、i18n、调度器、观察总线与帧流水线、共用部件、全局外观、各功能目录，单元测试就在旁边）、`packages/host`（宿主半边的七个模块，已是 TypeScript，构建逐模块转译进 `lib/host/`，根包的 `main` 与 `exports` 指向那里）、`packages/contracts`（两半共用的契约：选择器与属性、条目表、时序假设、服务与值的形状、两半交换的载荷）、`packages/assets`（每张图片与资源生成器）、`packages/testing`（临时宿主、脚本化模型服务、端到端通道）。构建、清单读取、lint、单元测试与类型检查都按包内路径工作；lint 的停止线覆盖 `packages/`。这条决策还差的最后一步：宿主半边在 strict 下还有约 190 处类型待补，补完再接进构建的类型检查
 
 ## 决定
 
 - 用 npm workspaces 组织：
   - `packages/client`：浏览器半边；内部仍按功能分目录，一个功能的脚本与样式放在同一目录、主文件以功能命名，多个功能共用的部件单独成层，不属于任何功能的全局外观单独成层。已搬。
-  - `packages/host`：宿主半边，同样改用 TypeScript。已搬（仍是 JavaScript，转 TypeScript 待做）
+  - `packages/host`：宿主半边，同样改用 TypeScript。已搬，源码已是 TypeScript；strict 下的类型收尾待做。
   - `packages/contracts`：两半共用的常量、路由名、偏好键与默认值（D10）、宿主契约（D44）。已搬。
   - `packages/assets`：资源与清单生成（D38）。已搬。
   - `packages/testing`：模拟模型服务、轨迹记录工具（D45）。已搬。
