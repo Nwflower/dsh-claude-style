@@ -115,9 +115,10 @@ light, a raised gray in dark).
 
 The Colours and Typefaces rows each choose who paints: **Claude** (the default)
 or **Follow the host**. Every rule that writes a host token carries the Claude
-gate in its selector — `%%PALETTE_CLAUDE%%` for colours, `%%TYPEFACE_CLAUDE%%`
-for `--dsw-font-*` — and so does every rule that paints the skin's canvas onto
-the host's frame (`<html>`, `<body>`, `#root`, the sidebar and conversation
+gate in its selector — `[data-dsh-claude-palette="claude"]` for colours,
+`[data-dsh-claude-typeface="claude"]` for `--dsw-font-*` — and so does every
+rule that paints the skin's canvas onto the host's frame (`<html>`, `<body>`,
+`#root`, the sidebar and conversation
 columns); the build refuses an ungated one. Under "follow the host" those rules
 drop out: the host's own tokens stand, or another theme plugin's, such as a
 wallpaper plugin that clears the canvas and turns the overlays to glass.
