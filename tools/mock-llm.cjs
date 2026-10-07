@@ -41,6 +41,12 @@ const MESSAGES_PATH = '/v1/messages'
  * `tool_use`, and the host then runs that tool and asks again. The last
  * conversation reply repeats, so a turn that keeps asking still gets an answer.
  */
+
+/** A long answer, in a few pieces: enough lines that the column outgrows the viewport. */
+const LONG_LINES = Array.from({ length: 40 }, (_, index) => `- line ${index + 1}: the tail stays in view\n`)
+const LONG_PIECES = []
+for (let at = 0; at < LONG_LINES.length; at += 5) LONG_PIECES.push(LONG_LINES.slice(at, at + 5).join(''))
+
 const SCRIPTS = {
   /** The lane's default: a thought, then markdown in a few pieces. */
   greeting: {
@@ -73,6 +79,16 @@ const SCRIPTS = {
       },
     ],
     auxiliary: { text: ['Scripted inspection'] },
+  },
+  /** Enough streamed lines to push the column past the viewport edge. */
+  long: {
+    conversation: [
+      {
+        thinking: ['A long answer shows the tail staying in view while the column grows.'],
+        text: ['# Long answer\n\n', ...LONG_PIECES, '\nLast line.'],
+      },
+    ],
+    auxiliary: { text: ['Scripted long answer'] },
   },
 }
 
