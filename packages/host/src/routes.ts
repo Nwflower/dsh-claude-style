@@ -11,7 +11,7 @@ import { existsSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs
 import { userInfo } from 'node:os'
 import { dirname, join, resolve, sep } from 'node:path'
 import { brotliDecompressSync } from 'node:zlib'
-import type { DshContext, DshRequest, DshResponse, DshScope } from './dsh.js'
+import type { DshContext, DshRequest, DshResponse, DshRoute, DshScope } from './dsh.js'
 import { harnessPath } from './harness-home.js'
 import { createHdslAccount } from './hdsl.js'
 import type { HdslReading } from './hdsl.js'
@@ -386,7 +386,7 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
     } catch (error) {
       // A manifest that cannot be read is a build that did not finish; say so
       // once per request and answer 404 rather than failing the route (D12).
-      ctx.logger?.warn?.(`dsh-claude-style: lib/assets/${ASSETS_MANIFEST} is unreadable: ${error?.message ?? error}`)
+      ctx.logger?.warn?.(`dsh-claude-style: lib/assets/${ASSETS_MANIFEST} is unreadable: ${(error as { message?: string } | null)?.message ?? String(error)}`)
       return undefined
     }
   }
@@ -396,7 +396,7 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
    * @returns whether the request was turned away.
    */
   const methodRefused = (req: DshRequest, res: DshResponse, methods: string[]) => {
-    if (methods.includes(req.method)) return false
+    if (req.method !== undefined && methods.includes(req.method)) return false
     res.writeHead(405, { allow: methods.join(', ') })
     res.end()
     return true
@@ -428,9 +428,9 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
      * register, because a throw here would fail this fiber and drop the client
      * bundle — the whole skin — with it (docs/decisions D12).
      */
-    const register = (label: string, route: { path: string, handler: (req: DshRequest, res: DshResponse) => void }) => {
+    const register = (label: string, route: DshRoute) => {
       try {
-        disposers.push(scope.webServer.register(route))
+        disposers.push(scope.webServer?.register(route) as () => void)
       } catch (error) {
         report(`${label} route unavailable`, error)
       }
@@ -444,17 +444,17 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
         /* v8 ignore next -- node:http always sets url on server requests. */
         const sub = new URL(req.url ?? '/', 'http://x').pathname.slice(ROUTE_PREFIX.length)
         if (sub === `/${COPY_FILE}`) {
-          sendFile(res, req.method, file, {
+          sendFile(res, req.method ?? 'GET', file, {
             'content-type': 'application/json; charset=utf-8',
             'cache-control': 'no-cache',
           })
           return
         }
-        const font = sub.startsWith('/fonts/') ? FONT_FILES[sub.slice('/fonts/'.length)] : undefined
+        const font = sub.startsWith('/fonts/') ? (FONT_FILES as Record<string, string | undefined>)[sub.slice('/fonts/'.length)] : undefined
         if (font !== undefined) {
           // The filename changes with the package, so a long cache is safe
           // and keeps the code face off the network after first paint.
-          sendFile(res, req.method, join(fontsDir, sub.slice('/fonts/'.length)), {
+          sendFile(res, req.method ?? 'GET', join(fontsDir, sub.slice('/fonts/'.length)), {
             'content-type': font,
             'cache-control': 'public, max-age=86400',
           })
@@ -505,7 +505,7 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
           const { skinFile, ...account } = profile
           sendJson(res, 200, { ok: true, ...account })
         }, (error: unknown) => {
-          sendJson(res, 500, { ok: false, error: String(error?.message ?? error) })
+          sendJson(res, 500, { ok: false, error: String((error as { message?: string } | null)?.message ?? String(error)) })
         })
       },
     })
@@ -549,7 +549,7 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
         // A fault anywhere in the deletion answers 500 with its message.
         void deleteSession(ctx, req, res).catch((error: unknown) => {
           if (res.headersSent) res.destroy()
-          else sendJson(res, 500, { ok: false, error: String(error?.message ?? error) })
+          else sendJson(res, 500, { ok: false, error: String((error as { message?: string } | null)?.message ?? String(error)) })
         })
       },
     })
@@ -592,10 +592,10 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
         const answer = query === ''
           ? sessionSearch.warm().then(() => ({ sessions: [] }))
           : sessionSearch.search(query)
-        void answer.then((value: unknown) => {
+        void answer.then((value: object) => {
           sendJson(res, 200, { ok: true, ...value })
         }, (error: unknown) => {
-          sendJson(res, 500, { ok: false, error: String(error?.message ?? error) })
+          sendJson(res, 500, { ok: false, error: String((error as { message?: string } | null)?.message ?? String(error)) })
         })
       },
     })

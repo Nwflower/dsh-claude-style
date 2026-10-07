@@ -39,7 +39,16 @@ export interface DshSettings {
 
 /** The host's web server service, as the half registers routes on it. */
 export interface DshWebServer {
-  register(options: { path: string, handler: (req: DshRequest, res: DshResponse) => void }): unknown
+  /** Register one route; a path another plugin holds is refused by throwing, and the answer disposes it. */
+  register(options: DshRoute): unknown
+}
+
+/** One route registration: the path it answers, how paths match, and its handler. */
+export interface DshRoute {
+  path: string
+  /** `prefix` matches every path under `path`; a route without it matches the path alone. */
+  kind?: string
+  handler: (req: DshRequest, res: DshResponse) => void
 }
 
 /** The request the host's web server hands a route handler: Node's own. */
