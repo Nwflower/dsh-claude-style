@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # The gates that need no host: the build checks, the unit tests in a real
+  # browser, and the smoke's stand-in page plus the host half's routes.
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+      - run: npm run smoke
+
+  # The assembled host: a scratch `dsh web` with this checkout's plugin and the
+  # scripted model service, driven through a real conversation (D45).
+  e2e:
+    runs-on: ubuntu-latest
+    needs: verify
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      # The lane boots the host's own CLI, which needs pnpm to install a
+      # profile's plugins.
+      - run: npm install --global pnpm@11 @deepseek-ai/dsh@0.2.1-alpha.1
+      - run: node tools/e2e.cjs --scenario conversation,tool,send,scroll
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-traces
+          path: .debug/e2e/out
+          if-no-files-found: ignore
+
+  # The screenshots compare against the baselines in tests/screenshots, which
+  # were captured on Windows; text rendering differs enough between platforms
+  # that the comparison runs where the baselines came from.
+  screenshots:
+    runs-on: windows-latest
+    needs: verify
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm install --global pnpm@11 @deepseek-ai/dsh@0.2.1-alpha.1
+      - run: node tools/e2e.cjs --scenario shots
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-screenshots
+          path: .debug/e2e/shots
+          if-no-files-found: ignore
