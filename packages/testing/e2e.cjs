@@ -22,6 +22,7 @@
 const fs = require('node:fs')
 const path = require('node:path')
 const { start, openPage, waitForSkin, dismissOverlays, firstRunOverlayText } = require('./dsh-web.cjs')
+const { importanceScenario } = require('./importance.cjs')
 const { startMockLlm } = require('./mock-llm.cjs')
 const { CANVAS } = require('../../scripts/shoot.cjs')
 const { sanitizePage } = require('../../scripts/shared/privacy.cjs')
@@ -540,6 +541,8 @@ const SCENARIOS = {
       ]
     },
   },
+  /** Every `!important` the skin writes is needed on the real page (packages/testing/importance.cjs, D51). */
+  importance: importanceScenario({ check, sendPrompt, waitForTurn, host: HOST }),
   /** Both palettes captured to the run's out directory and swept for personal data. */
   shots: {
     script: 'greeting',
