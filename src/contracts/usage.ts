@@ -76,8 +76,9 @@ export interface UsageTotals {
 }
 
 /**
- * The route's envelope: whether the read worked, the report behind it, and
- * whether the host half is still folding (in which case the panel polls again).
+ * The usage route's envelope: whether the read worked, the report behind it,
+ * and whether the host half is still folding (in which case the panel polls
+ * again).
  */
 export interface UsageAnswer {
   ok?: boolean
@@ -85,3 +86,23 @@ export interface UsageAnswer {
   computing?: boolean
   error?: string
 }
+
+/**
+ * The answer of the plugin's own content search (`host/search.js`,
+ * `GET /dsh-claude-style/session-search`): the hits, each naming its session
+ * and the match inside the excerpt.
+ */
+export interface SearchAnswer {
+  ok?: boolean
+  error?: string
+  sessions?: ContentHit[]
+}
+
+/** One content hit: the session it belongs to, the excerpt, and the match's range inside it. */
+export interface ContentHit {
+  sessionId: string
+  snippet: string
+  /** The matched span of `snippet`, as `[start, end]`. */
+  match: [number, number]
+}
+

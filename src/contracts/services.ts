@@ -28,10 +28,126 @@ export interface HostSessionListSnapshot {
   projectionsBySession: Record<string, { values?: { subagentCatalog?: unknown[] } }>
 }
 
-/** One row of the session list: whether it runs, and whether it is a subagent's. */
+/** One row of the session list: what the search palette and the home figures read of it. */
 export interface HostSessionSummary {
+  id: string
+  /** Whether it runs right now (the mascot's crowd count). */
   running?: boolean
+  /** `subagent` for a child session, which the palette leaves out. */
   origin?: string
+  /** A placeholder the host never prompted. */
+  blank?: boolean
+  displayTitle: string
+  updatedAt: number
+}
+
+/** The workspace list (`workspaces.list`): the workspace rows, and which sessions are archived. */
+export interface HostWorkspaceListSnapshot {
+  items: HostWorkspaceRow[]
+  archivedSessionIds: string[]
+}
+
+/** One workspace: its identity, its name, where it lives, and the sessions under it. */
+export interface HostWorkspaceRow {
+  workspaceId: string
+  title: string
+  path: string
+  sessionIds: string[]
+}
+
+/** The `workspaces` service: the list, and taking one session back out of the archive. */
+export interface HostWorkspacesService {
+  list: HostSnapshotSource<HostWorkspaceListSnapshot>
+  unarchiveSession(id: string): unknown
+}
+
+/** One shortcut row: its command id, its label, its keycaps and its aliases. */
+export interface HostShortcutRow {
+  id: string
+  label?: string
+  keys?: string[]
+  aliases?: string[]
+}
+
+/** The `shortcuts` service: the command catalog and the fixed one. */
+export interface HostShortcutsService {
+  catalog: HostSnapshotSource<HostShortcutRow[]>
+  fixedCatalog: HostSnapshotSource<HostShortcutRow[]>
+}
+
+/** The `slots` service: what is registered under a key, and how a plugin adds its own. */
+export interface HostSlotsService {
+  entries(key: string): HostSlotRegistration[]
+  register(key: string, id: string, component: unknown): unknown
+  inject?(key: string, id: string, component: unknown): unknown
+}
+
+/** One registered slot entry: how it was declared, and the store it hands out. */
+export interface HostSlotRegistration {
+  options: { id?: string }
+  store?: { create(): HostSlotStore }
+}
+
+/** A slot's own store, as far as the palette presses it (the shortcut reference). */
+export interface HostSlotStore {
+  actions: { open(): void, search(query: string): void }
+}
+
+/** The profile manager's plugin inventory: whether it can manage anything at all. */
+export interface HostInventoryAnswer {
+  ok?: boolean
+  error?: { message?: string }
+  value: { managementAvailable?: boolean }
+}
+
+/** One plugin bundle the profile manager lists; a bundle that failed to load carries `error`. */
+export interface HostPluginBundle {
+  name: string
+  error?: unknown
+  /** The bundle's own description, for a bundle whose manifest names none. */
+  description?: string
+  /** The bundle's own manifest text, which the host resolves through the locale service. */
+  meta?: { title?: unknown, description?: unknown, icon?: string }
+}
+
+/** The plugin manager's answer to `listBundles()`. */
+export interface HostBundleListAnswer {
+  ok?: boolean
+  error?: { message?: string }
+  value: HostPluginBundle[]
+}
+
+/** One skill of the open session's catalog. */
+export interface HostSkill {
+  name: string
+  description?: string
+}
+
+/** The skill catalog's answer (`remote.skills.list`). */
+export interface HostSkillListAnswer {
+  ok?: boolean
+  error?: { message?: string }
+  value: { skills: HostSkill[] }
+}
+
+/**
+ * A session binding's own context, which the conversation service keys its
+ * input by; the plugin's `HostContext` satisfies it by shape.
+ */
+export interface HostServiceLookup {
+  get(name: string): any
+}
+
+/** The `conversation` service: the composer input of one session's context. */
+export interface HostConversationService {
+  input: { for(ctx: HostServiceLookup): HostConversationInput }
+}
+
+/** One session's composer input: its draft, and writing it back. */
+export interface HostConversationInput {
+  state: HostSnapshotSource<{ draft: string }>
+  setDraft(draft: string): void
+  focus(): void
 }
 
 /** The live status map (`uiSession.sessionStatus`): how each session is doing right now, by id. */
@@ -54,7 +170,7 @@ export interface HostSubagentEntry {
 
 /** One row of the remote session list (`remote.session.list`): its projections, and when it moved. */
 export interface HostSessionRow {
-  updatedAt?: number
+  updatedAt: number
   projections?: { values?: HostSessionProjectionValues }
 }
 
@@ -105,19 +221,23 @@ export interface HostSessionsService {
 }
 
 /**
- * One session's binding: the session itself, and the live event feed the
- * mascot reads to see compaction start and finish.
+ * One session's binding: the session itself, the live event feed the mascot
+ * reads to see compaction start and finish, and the binding's own context.
  */
 export interface HostSessionBinding {
   session?: HostSession
   eventSource?: HostSnapshotSource<{ entries: HostFeedEntry[] }>
+  /** The binding's own context, which its services are read through. */
+  ctx: HostServiceLookup
 }
 
-/** One session: its projections, which the skin reads by face name, and its command seat. */
+/** One session: its projections, which the skin reads by face name, its state, and its command seat. */
 export interface HostSession {
   projections?: {
     faceOf(name: string): HostSnapshotSource<unknown>
   }
+  /** The session's own state: `open` while the shell has it mounted. */
+  getSnapshot?(): { openState?: string }
   /** Run one of the host's own slash commands in this session (`/permission …`); nulls for a host without it. */
   command(text: string): Promise<HostCommandResult> | null | undefined
 }

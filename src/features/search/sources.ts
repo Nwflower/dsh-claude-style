@@ -2,6 +2,8 @@ import { SESSION_SEARCH_ROUTE } from '../../constants'
 import { currentSessionId } from '../../core/host'
 import { copyLabel } from '../../core/i18n'
 import type { HostContext, HostValue } from '../../core/host'
+import type { ContentHit, SearchAnswer } from '../../contracts/usage'
+import type { HostBundleListAnswer, HostConversationInput, HostConversationService, HostInventoryAnswer, HostPluginBundle, HostSessionBinding, HostSessionSummary, HostShortcutRow, HostShortcutsService, HostSkill, HostSkillListAnswer, HostSlotsService, HostSlotStore, HostWorkspaceListSnapshot } from '../../contracts/services'
 
 /** The kinds of thing the palette lists, and the filter that shows them all. */
 export type SearchKind = 'session' | 'project' | 'plugin' | 'skill' | 'shortcut' | 'action'
@@ -23,11 +25,7 @@ export interface SearchRow {
 }
 
 /** One content hit from the host half's message search: the session, the excerpt, the match within it. */
-export interface ContentHit {
-  sessionId: string
-  snippet: string
-  match: [number, number]
-}
+export type { ContentHit } from '../../contracts/usage'
 
 /** One section of the palette. */
 export interface SearchSection {
@@ -72,8 +70,8 @@ export function createSearchSources(ctx: HostContext) {
   const RECENT_LIMIT = 5
 
   /** Plugins and skills are read once per palette opening; `null` until they answer. */
-  let plugins: HostValue[] | null = null
-  let skills: HostValue[] | null = null
+  let plugins: HostPluginBundle[] | null = null
+  let skills: HostSkill[] | null = null
   let skillSessionId: string | null = null
   let generation = 0
 
@@ -98,7 +96,7 @@ export function createSearchSources(ctx: HostContext) {
   }
 
   /** The store a host slot registration declares, e.g. the settings shell or the shortcut reference. */
-  function slotStore(key: string, id?: string): HostValue {
+  function slotStore(key: string, id?: string): HostSlotStore | null {
     const slots = service('slots')
     if (!slots) return null
     const entries = slots.entries(key)
@@ -118,7 +116,7 @@ export function createSearchSources(ctx: HostContext) {
   }
 
   /** Workspace title by session id, from the workspace list's own accounting. */
-  function workspaceTitles(snapshot: HostValue) {
+  function workspaceTitles(snapshot: HostWorkspaceListSnapshot) {
     const titles: Record<string, string> = {}
     for (let i = 0; i < snapshot.items.length; i++) {
       const workspace = snapshot.items[i]
@@ -142,7 +140,7 @@ export function createSearchSources(ctx: HostContext) {
     const archive = workspaces.list.getSnapshot()
     const archived = new Set(archive.archivedSessionIds)
     const titles = workspaceTitles(archive)
-    const rows: { summary: HostValue, workspace: string }[] = []
+    const rows: { summary: HostSessionSummary, workspace: string }[] = []
     for (let i = 0; i < list.ids.length; i++) {
       const summary = list.byId[list.ids[i]]
       if (summary === undefined || summary.blank || summary.origin === 'subagent' || archived.has(summary.id)) continue
@@ -153,7 +151,7 @@ export function createSearchSources(ctx: HostContext) {
   }
 
   /** A session row; `hit`, when given, is its content hit — the excerpt and the match within it. */
-  function sessionRow(entry: { summary: HostValue, workspace: string }, hit?: ContentHit): SearchRow {
+  function sessionRow(entry: { summary: HostSessionSummary, workspace: string }, hit?: ContentHit): SearchRow {
     const id = entry.summary.id
     return {
       kind: 'session',
@@ -179,7 +177,7 @@ export function createSearchSources(ctx: HostContext) {
   function matchSessions(query: string, contentHits: ContentHit[]) {
     const q = query.toLowerCase()
     const entries = openableSessions()
-    const byId: Record<string, { summary: HostValue, workspace: string }> = {}
+    const byId: Record<string, { summary: HostSessionSummary, workspace: string }> = {}
     const hits: Record<string, ContentHit> = {}
     for (let h = 0; h < contentHits.length; h++) hits[contentHits[h].sessionId] = contentHits[h]
     const rows: SearchRow[] = []
@@ -214,9 +212,9 @@ export function createSearchSources(ctx: HostContext) {
   function searchContent(query: string, signal: AbortSignal | undefined): Promise<ContentHit[]> {
     const url = query === '' ? SESSION_SEARCH_ROUTE : `${SESSION_SEARCH_ROUTE}?q=${encodeURIComponent(query)}`
     return fetch(url, { credentials: 'same-origin', headers: { accept: 'application/json' }, signal }).then(response => {
-      return response.json().then((body: HostValue) => {
+      return response.json().then((body: SearchAnswer) => {
         if (!response.ok || !body.ok) throw new Error(`session search answered ${response.status}: ${body.error}`)
-        return body.sessions
+        return body.sessions ?? []
       })
     })
   }
@@ -224,7 +222,7 @@ export function createSearchSources(ctx: HostContext) {
   function projectRows(): SearchRow[] {
     const workspaces = service('workspaces')
     if (!workspaces) return []
-    const items: HostValue[] = workspaces.list.getSnapshot().items
+    const items: HostWorkspaceListSnapshot['items'] = workspaces.list.getSnapshot().items
     return items.map(workspace => ({
       kind: 'project',
       id: `project:${workspace.workspaceId}`,
@@ -275,14 +273,14 @@ export function createSearchSources(ctx: HostContext) {
       plugins = []
       return Promise.resolve()
     }
-    return inventory.list().then((answer: HostValue) => {
-      if (!answer.ok) throw new Error(answer.error.message)
+    return inventory.list().then((answer: HostInventoryAnswer) => {
+      if (!answer.ok) throw new Error(answer.error?.message ?? 'the plugin inventory answered without a reason')
       if (answer.value.managementAvailable !== true) return []
-      return manager.listBundles().then((bundles: HostValue) => {
-        if (!bundles.ok) throw new Error(bundles.error.message)
-        return bundles.value.filter((bundle: HostValue) => bundle.error === undefined)
+      return manager.listBundles().then((bundles: HostBundleListAnswer) => {
+        if (!bundles.ok) throw new Error(bundles.error?.message ?? 'the plugin manager answered without a reason')
+        return bundles.value.filter((bundle) => bundle.error === undefined)
       })
-    }).then((list: HostValue[]) => {
+    }).then((list: HostPluginBundle[]) => {
       if (owner !== generation) return
       plugins = list.slice().sort((a, b) => shortPackageName(a.name).localeCompare(shortPackageName(b.name)))
     })
@@ -302,7 +300,7 @@ export function createSearchSources(ctx: HostContext) {
    * Put `/name ` at the head of the session's draft and hand the keyboard
    * back to the composer: a leading `/name` is how the host invokes a skill.
    */
-  function insertSkill(binding: HostValue, name: string) {
+  function insertSkill(binding: HostSessionBinding, name: string) {
     const conversation = binding.ctx.get('conversation')
     if (!conversation) throw new Error('search: the conversation service is not available')
     const input = conversation.input.for(binding.ctx)
@@ -334,8 +332,8 @@ export function createSearchSources(ctx: HostContext) {
       skillSessionId = null
       return Promise.resolve()
     }
-    return catalog.list({ sessionId: open.id }).then((result: HostValue) => {
-      if (!result.ok) throw new Error(result.error.message)
+    return catalog.list({ sessionId: open.id }).then((result: HostSkillListAnswer) => {
+      if (!result.ok) throw new Error(result.error?.message ?? 'the skill catalog answered without a reason')
       if (owner !== generation) return
       skills = result.value.skills
       skillSessionId = open.id
@@ -347,16 +345,17 @@ export function createSearchSources(ctx: HostContext) {
     if (!shortcuts) return []
     const rows: SearchRow[] = []
     const seen = new Set<string>()
-    const add = (entry: HostValue) => {
-      if (seen.has(entry.id) || !entry.label) return
+    const add = (entry: HostShortcutRow) => {
+      const label = entry.label
+      if (seen.has(entry.id) || label === undefined || label === '') return
       seen.add(entry.id)
       rows.push({
         kind: 'shortcut',
         id: `shortcut:${entry.id}`,
-        title: entry.label,
+        title: label,
         keys: entry.keys,
         label: (entry.aliases || []).join(' '),
-        run() { openShortcutReference(entry.label) },
+        run() { openShortcutReference(label) },
       })
     }
     shortcuts.catalog.getSnapshot().forEach(add)
@@ -389,7 +388,7 @@ export function createSearchSources(ctx: HostContext) {
         icon: 'settings',
         title: copyLabel('searchActionSettings', 'Settings'),
         keys: commandKeys('settings.open'),
-        run() { slotStore('sidebar.settings').actions.open() },
+        run() { slotStore('sidebar.settings')?.actions.open() },
       })
     }
     if (slotStore('shell.overlay', 'shortcuts') !== null) {
