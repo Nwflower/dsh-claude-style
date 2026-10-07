@@ -102,6 +102,7 @@ npm run smoke -- --feature <dir>[,<dir>…]    # cases covering those directorie
 node scripts/probe.cjs --token <launch-token>          # composer invariants against a running dsh web
 node scripts/probe-timing.cjs --token <launch-token>   # startup, catalog readiness, open latency, heap
 node scripts/shoot.cjs --token <launch-token> --brand <claude|deepseek> --scene <home|conversation>   # re-shoot one README screenshot pair
+node tools/dsh-web.cjs                       # boot a scratch dsh web (`$DSH_HOME` under .debug/) with this checkout linked in, and print its URL
 ```
 
 The quick tier leaves out the motion cases; a feature whose cases all watch motion needs the run without `--quick`. probe, probe-timing and shoot need a running `dsh web` (default `http://127.0.0.1:3080`, `--url` for another; the token is the `/?token=…` in the GUI URL or `DSH_WEB_TOKEN`). All of them need a local Chrome/Edge (`CHROME_PATH` to choose one).
