@@ -2,7 +2,8 @@ import { requestFrame } from '../../core/frame'
 import { closestConversationSession, conversationSessionId, findChatTarget, findConversationSession } from '../../core/host'
 import { CONVERSATION_SCROLL_SELECTOR, TURN_RAIL_CURRENT_SELECTOR, TURN_RAIL_INSET, TURN_RAIL_MARK_SELECTOR, TURN_RAIL_PITCH, TURN_RAIL_SCROLLER_SELECTOR, TURN_RAIL_SELECTOR } from '../../contracts/dom'
 import { closestFrom } from '../../shared/dom'
-import type { HostContext, HostValue } from '../../core/host'
+import type { HostContext, HostText } from '../../core/host'
+import type { HostLoadedTurn, HostOutlineTurn } from '../../contracts/services'
 
 /** One turn the rail shows: its number, the prompt that opened it, and whether the chat snapshot holds it. */
 export interface TurnItem {
@@ -38,7 +39,7 @@ export function createTurnNavHost(ctx: HostContext) {
   /** The rail last found, kept while it stays the shown conversation's. */
   let rail: HTMLElement | null = null
   /** What the turns were built from: the two sources' identities, and the result. */
-  let sources: { sessionId: string, outline: HostValue, loaded: HostValue[] } | null = null
+  let sources: { sessionId: string, outline: HostOutlineTurn[] | undefined, loaded: HostLoadedTurn[] } | null = null
   let items: TurnItem[] = []
   /** The jump in flight: its generation and what cancels the frame it waits on. */
   let jumpGeneration = 0
@@ -76,13 +77,13 @@ export function createTurnNavHost(ctx: HostContext) {
   }
 
   /** The whole-log outline's current value (the `turnOutline` projection), or undefined. */
-  function outlineValue(sessionId: string): HostValue {
+  function outlineValue(sessionId: string): HostOutlineTurn[] | undefined {
     const face = ctx.get('sessions')?.binding(sessionId)?.session?.projections?.faceOf('turnOutline')
     return typeof face?.getSnapshot === 'function' ? face.getSnapshot() : undefined
   }
 
   /** The loaded window's turns, as the chat snapshot's turn navigation lists them. */
-  function loadedTurns(sessionId: string): HostValue[] {
+  function loadedTurns(sessionId: string): HostLoadedTurn[] {
     const target = findChatTarget(ctx, sessionId)
     const navigation = target === null ? undefined : target.getSnapshot()?.navigation
     return typeof navigation?.items === 'function' ? navigation.items() : []
@@ -119,7 +120,7 @@ export function createTurnNavHost(ctx: HostContext) {
   }
 
   /** The host's `chat` namespace translate seat, or null when it is absent. */
-  function chatText(): HostValue {
+  function chatText(): HostText | null {
     const locale = ctx.get('locale')
     return typeof locale?.bind === 'function' ? locale.bind('chat') : null
   }

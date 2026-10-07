@@ -161,7 +161,20 @@ export interface HostChatSnapshot {
   timeline: HostChatTimeline
   legacy?: { runningCalls?: HostRunningCall[] }
   /** The turn navigator's own list of the loaded window's turns. */
-  navigation?: { items?(): unknown[] }
+  navigation?: { items?(): HostLoadedTurn[] }
+}
+
+/** One turn of the loaded window, as the chat snapshot's turn navigation lists them. */
+export interface HostLoadedTurn {
+  turn: number
+  prompt: string
+}
+
+/** One turn of the whole-log outline (the `turnOutline` projection), with the sequence it arrived in. */
+export interface HostOutlineTurn {
+  turn: number
+  seq: number
+  prompt?: string
 }
 
 /** The timeline: its turns by number, the order they come in, and the newest turn's id. */
