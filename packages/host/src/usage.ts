@@ -50,19 +50,92 @@ const SESSION_LOG = /^session(?:\.v([1-9][0-9]*))?\.jsonl(?:\.zstd)?$/i
 /** Buckets are disjoint; reasoning tokens ride inside output. */
 const BUCKET_KEYS = ['input', 'output', 'cacheRead', 'cacheWrite']
 
+/**
+ * The shapes this module reads and writes. The ledger and the cache are this
+ * plugin's own documents (the versions above), and the raw log events come from
+ * the host's session reader; none of them ships types, so they are declared
+ * here with the members this reader touches.
+ */
+
+/** The four disjoint buckets of one day, model or window, plus its settled calls. */
+interface Buckets {
+  input: number
+  output: number
+  cacheRead: number
+  cacheWrite: number
+  calls: number
+}
+
+/** One day's buckets, with the sessions behind it and, when known, the hours and models. */
+interface DayBuckets extends Buckets {
+  sessions?: Set<string> | number
+  sessionIds?: string[]
+  hours?: number[]
+  models?: Map<string, Buckets>
+}
+
+/** The ledger document the cost meter writes. */
+interface LedgerDocument {
+  version?: number
+  days?: Record<string, Buckets>
+  models?: Record<string, Buckets>
+  computedAt?: number
+  source?: string
+}
+
+/** One stored session in the cache document. */
+interface CacheSession {
+  size: number
+  mtimeMs: number
+  days: Map<string, DayBuckets>
+  hours: number[]
+}
+
+/** The cache document: the sessions it knows and the fingerprints it read them at. */
+interface CacheDocument {
+  version?: number
+  sessions?: Record<string, { size?: number, mtimeMs?: number, days?: Record<string, Partial<Buckets> & { hours?: number[] }>, hours?: number[] }>
+}
+
+/** One raw log event, as the usage samples are read out of it. */
+interface UsageEvent {
+  type?: string
+  seq?: number
+  time?: number
+  data?: {
+    usage?: UsageSample
+    stream?: { type?: string, chunk?: { type?: string, usage?: UsageSample } }[]
+    message?: { source?: { model?: unknown }, usage?: UsageSample }
+  }
+}
+
+/** One usage sample, in the host's own token names. */
+interface UsageSample {
+  inputTokens?: unknown
+  outputTokens?: unknown
+  cacheReadTokens?: unknown
+  cacheWriteTokens?: unknown
+}
+
+/** What one session's fold produced: its days and its hours. */
+interface FoldedSession {
+  days: Map<string, DayBuckets>
+  hours: number[]
+}
+
 /** A local calendar day, the same key the cost-meter ledger uses. */
-function dayKey(time) {
+function dayKey(time: number): string | null {
   const date = new Date(time)
   if (!Number.isFinite(date.getTime())) return null
-  const pad = (value) => String(value).padStart(2, '0')
+  const pad = (value: number) => String(value).padStart(2, '0')
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
 
-function emptyBuckets() {
+function emptyBuckets(): Buckets {
   return { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, calls: 0 }
 }
 
-function addBuckets(target, buckets, sign) {
+function addBuckets(target: Buckets, buckets: Partial<Buckets> | null | undefined, sign: number) {
   for (const key of BUCKET_KEYS) {
     const value = Number(buckets?.[key])
     if (Number.isFinite(value) && value !== 0) target[key] += sign * value
@@ -76,7 +149,7 @@ function addBuckets(target, buckets, sign) {
  * `assistant/message` may carry it directly; otherwise the sample is the last
  * raw `usage` chunk of the settlement's compact stream.
  */
-function usageOf(event) {
+function usageOf(event: UsageEvent): UsageSample | undefined {
   const data = event?.data
   if (data === null || data === undefined || typeof data !== 'object') return undefined
   if (event.type === 'assistant/message' && data.usage !== undefined) return data.usage
@@ -94,8 +167,8 @@ function usageOf(event) {
 }
 
 /** The four disjoint buckets of one usage sample. */
-function bucketsFrom(usage) {
-  const count = (value) => (Number.isFinite(Number(value)) ? Number(value) : 0)
+function bucketsFrom(usage: UsageSample | null | undefined): Buckets {
+  const count = (value: unknown) => (Number.isFinite(Number(value)) ? Number(value) : 0)
   return {
     input: count(usage?.inputTokens),
     output: count(usage?.outputTokens),
@@ -105,19 +178,19 @@ function bucketsFrom(usage) {
   }
 }
 
-function bucketsEqual(left, right) {
+function bucketsEqual(left: Buckets, right: Buckets) {
   return BUCKET_KEYS.every((key) => left[key] === right[key])
 }
 
 /** A stored 24-slot hour histogram, or an empty one when the entry has none. */
-function hoursFrom(raw) {
+function hoursFrom(raw: unknown): number[] {
   return Array.isArray(raw) && raw.length === 24
     ? raw.map((value) => (Number.isFinite(Number(value)) ? Number(value) : 0))
     : new Array(24).fill(0)
 }
 
 /** The four disjoint buckets of one day or one model, summed. */
-function bucketTotal(buckets) {
+function bucketTotal(buckets: Partial<Buckets> | null | undefined): number {
   let total = 0
   for (const key of BUCKET_KEYS) total += Number(buckets?.[key]) || 0
   return total
@@ -130,7 +203,7 @@ function bucketTotal(buckets) {
  * that committed no surface message keeps its usage but has no route to attribute
  * it to, and its tokens then count toward the day alone.
  */
-function modelOf(event) {
+function modelOf(event: UsageEvent): string | null {
   const model = event?.data?.message?.source?.model
   return typeof model === 'string' && model !== '' ? model : null
 }
