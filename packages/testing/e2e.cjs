@@ -21,7 +21,7 @@
 'use strict'
 const fs = require('node:fs')
 const path = require('node:path')
-const { start, openPage, waitForSkin, dismissOverlays } = require('./dsh-web.cjs')
+const { start, openPage, waitForSkin, dismissOverlays, firstRunOverlayText } = require('./dsh-web.cjs')
 const { startMockLlm } = require('./mock-llm.cjs')
 const { CANVAS } = require('../../scripts/shoot.cjs')
 const { sanitizePage } = require('../../scripts/shared/privacy.cjs')
@@ -513,7 +513,10 @@ async function runScenario(name, options) {
     session = await openPage(host.url, { headless: options.headed !== true, ...scenario.viewport })
     const { page } = session
     await waitForSkin(page)
-    if (!(await dismissOverlays(page))) throw new Error('the shell left a first-run overlay open')
+    if (!(await dismissOverlays(page))) {
+      const left = await firstRunOverlayText(page)
+      throw new Error(`the shell left a first-run overlay open${left === '' ? '' : `: ${left}`}`)
+    }
     const context = { page, session, trace: [], notes: {}, out: options.out }
     if (scenario.beforeSend !== undefined) await scenario.beforeSend(context)
     await startTrace(page)
