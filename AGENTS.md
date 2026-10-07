@@ -53,8 +53,8 @@ Hard stops: stop the moment one triggers, without first judging whether it is wo
 
 ### CSS
 
-- Every rule is scoped under `body[data-dsh-claude-style]`; dark tokens are the base, light overrides go under `:not([data-ds-dark-theme])`. Light canvas `#FCFCFB`, dark `#141413`, accent ember orange `#D97757`; no pure white, pure black or cold grays.
-- Composer rules are gated (D4); `:has()` only in a selector's last compound (D9); rules that write host tokens carry the palette or typeface gate (D30).
+- The build checks scope, the composer gate, `:has()` placement and the token gates on the syntax tree (D51). Dark tokens are the base, light overrides go under `:not([data-ds-dark-theme])`. Light canvas `#FCFCFB`, dark `#141413`, accent ember orange `#D97757`; no pure white, pure black or cold grays.
+- Token values and host aliases live in `src/theme/tokens.json`; the token stylesheet and the token table in `docs/STYLE.md` are generated from it.
 - A feature never borrows another feature's class names; shared looks use the neutral shared classes (`dsh-claude-popover-card`, `dsh-claude-popover-item`, …).
 - Design tokens and shape rules are in `docs/STYLE.md`; read it before changing visuals.
 
@@ -78,14 +78,14 @@ Before writing to disk, `shoot.cjs` replaces workspace names, session titles, us
 
 Target layout: D46. Today:
 
-- `src/core/` host access, preferences, model copy, i18n, the scheduler, the observation bus and the frame pipeline (D40), with their unit tests beside them (`*.test.ts`); `src/shared/` parts several features use (TypeScript beside CSS); `src/theme/` the global look no single feature owns; `src/features/<feature>/` one feature's installer, helpers and stylesheets, the main file named after the feature.
+- `src/core/` host access, preferences, model copy, i18n, the scheduler, the observation bus and the frame pipeline (D40), with their unit tests beside them (`*.test.ts`); `src/shared/` parts several features use (TypeScript beside CSS); `src/theme/` the global look no single feature owns and the design tokens (`tokens.json`, its shape in `tokens.schema.json`); `src/features/<feature>/` one feature's installer, helpers and stylesheets, the main file named after the feature.
 - `src/constants.ts` holds build-time constants; `src/model-descriptions.json` the model copy and `brands` bindings, its shape declared in `src/model-descriptions.schema.json`; `src/assets/` brand marks, mascot sheets and vendor lockups.
 - `src/generated.d.ts` types the module the build generates; `src/globals.d.ts` the DOM additions and the element properties the skin sets; `tsconfig.json` the type check.
 - `host/` the handwritten host half (private routes, settings `Config`, HDSL, search, usage).
 - `lib/` build output only, never edited by hand.
 - `locale/<language>.json` plugin metadata; `package.json`'s `exports` must cover them with `"./locale/*"`, or the host degrades the whole metadata (icon included) to `meta.error`.
 - `skin.json` the skin manifest; `cordis.patch.yml` inserts the skin into the web roster.
-- `scripts/` build, smoke and live tools (`fetch-lobe-combines.py` is the only networked script, run by hand; `draw-crab.py` redraws the crab's sheets after a drawing change); `docs/` decisions, style guide, screenshots; `fonts/`; `showcase/gifs/`.
+- `scripts/` build (`build.mjs`, its stylesheet half `css.mjs`), smoke and live tools (`fetch-lobe-combines.py` is the only networked script, run by hand; `draw-crab.py` redraws the crab's sheets after a drawing change); `docs/` decisions, style guide, screenshots; `fonts/`; `showcase/gifs/`.
 
 The source is TypeScript ES modules under `strict` (D36). A module nothing imports fails the build; a feature is a directory under `src/features/` whose main module exports `install(ctx, ui)` beside a `<main>.manifest.ts` (D42) — its order, switch, stylesheets with their ranks, settings switch row, smoke cases and description; a stylesheet that belongs to no feature goes into `THEME_SHEETS` in `scripts/build.mjs`. React and the host packages are imported by name and stay external; build-time data (stylesheet, lockups, sheet stamps, build id) is imported from `virtual:dsh-claude-style/generated`. A host value without a type yet is `HostValue` (D44); a non-null assertion `!` only marks a value the call order guarantees.
 

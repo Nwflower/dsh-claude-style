@@ -1,13 +1,12 @@
 # D9. 样式性能：结构判断写成属性，`:has()` 只放在最后一段
 
 - **状态**：已实施
-- **关联**：D37、D40
-- **迁移**：`:has()` 位置检查改为 Stylelint 规则（D37，待实施）；结构属性改在帧管线的写阶段写入（D40，待实施）
+- **关联**：D40、D51
 
 ## 决定
 
 - 依赖 DOM 结构的判断由脚本算好、写成属性，样式只读属性：输入框形态 `data-composer-variant`、附件 `data-dsh-claude-attachment`、草稿为空 `data-dsh-claude-draft-empty`、控件 `data-dsh-claude-control`（D19）、视图标签条 `data-dsh-view-tabs`。
-- `:has()` 只出现在选择器的最后一段（`A:has(B)`、`A :has(B)`），后面不接后代或兄弟选择器（`A:has(B) C`、`body:not(:has(B)) C` 都不允许）；构建拒绝违规写法。
+- `:has()` 只出现在选择器的最后一段（`A:has(B)`、`A :has(B)`），后面不接后代或兄弟选择器（`A:has(B) C`、`body:not(:has(B)) C` 都不允许）；构建在语法树上逐层检查，拒绝违规写法（D51）。
 
 ## 理由
 

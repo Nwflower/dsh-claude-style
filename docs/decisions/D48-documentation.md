@@ -2,7 +2,7 @@
 
 - **状态**：部分实施（决策一文件一条、AGENTS.md 只留工作流与红线已实施；索引生成、变更片段、README 生成、把可由工具强制的规则移进 lint 待实施）
 - **关联**：D42
-- **现状**：决策记录在 `docs/decisions/` 下一文件一条，索引 `docs/decisions/README.md` 手写；CHANGELOG 与中英文 README 手工同步；作用域前缀、`:has()` 位置、停止线与注释规范仍写在 AGENTS.md 里，等 D37 与 lint 接手
+- **现状**：决策记录在 `docs/decisions/` 下一文件一条，索引 `docs/decisions/README.md` 手写；CHANGELOG 与中英文 README 手工同步；停止线与注释规范仍写在 AGENTS.md 里，等 lint 接手；作用域、`:has()` 位置与令牌门已由构建检查（D51）
 
 ## 决定
 
