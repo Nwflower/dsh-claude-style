@@ -31,11 +31,60 @@ const SNIPPET_CHARS = 140
 export const QUERY_MAX = 200
 
 /**
+ * The host services this module reads, and the shapes it keeps between reads.
+ * The host ships no types for them, so each is declared with the members the
+ * reader touches.
+ */
+interface SessionQueryService {
+  readSession(sessionId: string): Promise<{ events: LogEvent[] }>
+}
+
+/** One raw log event, as the messages are read out of it. */
+interface LogEvent {
+  type: string
+  seq: number
+  time: number
+  data: { content?: ContentBlock[], message?: { content?: ContentBlock[] } }
+}
+
+/** One block of a message's content; only text blocks carry searchable text. */
+interface ContentBlock {
+  type: string
+  text: string
+}
+
+/** The persistence service: one snapshot per stored session, with its revision. */
+interface PersistenceService {
+  list(): Promise<{ header: { id: string, origin?: string }, revision: string | number }[]>
+}
+
+/** The sessions service: the sessions the host holds open right now. */
+interface SessionsService {
+  list(): { id: string, seq: number, header: { origin?: string } }[]
+}
+
+/** One searchable message. */
+interface SearchMessage {
+  seq: number
+  time: number
+  role: 'user' | 'assistant'
+  text: string
+}
+
+/** One cached session: the change token it was read at, and its messages. */
+interface CachedSession {
+  revision: string
+  messages: SearchMessage[]
+}
+
+import type { DshContext } from './dsh.ts'
+
+/**
  * The query service's own text rule (dsh-session-query `compileSessionTextFilter`):
  * whitespace-separated parts, each escaped, joined by `\s+`, Unicode and
  * case-insensitive.
  */
-function compileQuery(query) {
+function compileQuery(query: string) {
   const pattern = query
     .trim()
     .split(/\s+/u)
@@ -45,8 +94,8 @@ function compileQuery(query) {
 }
 
 /** The text blocks of one message's content, joined by newlines. */
-function messageText(content) {
-  const parts = []
+function messageText(content: ContentBlock[]) {
+  const parts: string[] = []
   for (const block of content) {
     if (block.type === 'text' && block.text.trim() !== '') parts.push(block.text)
   }
@@ -54,12 +103,12 @@ function messageText(content) {
 }
 
 /** User and assistant messages of one raw log that carry text, as `{ seq, time, role, text }`. */
-function messagesOf(events) {
-  const messages = []
+function messagesOf(events: LogEvent[]) {
+  const messages: SearchMessage[] = []
   for (const event of events) {
     let text = ''
-    if (event.type === 'user/message') text = messageText(event.data.content)
-    else if (event.type === 'assistant/message') text = messageText(event.data.message.content)
+    if (event.type === 'user/message') text = messageText(event.data.content ?? [])
+    else if (event.type === 'assistant/message') text = messageText(event.data.message?.content ?? [])
     else continue
     if (text !== '') messages.push({ seq: event.seq, time: event.time, role: event.type === 'user/message' ? 'user' : 'assistant', text })
   }
@@ -67,21 +116,22 @@ function messagesOf(events) {
 }
 
 /** One line of context around the match: whitespace collapsed, ellipses where cut. */
-function snippetOf(text, index, length) {
+function snippetOf(text: string, index: number, length: number) {
   const start = Math.max(0, index - SNIPPET_LEAD)
   const end = Math.min(text.length, Math.max(start + SNIPPET_CHARS, index + length))
-  const flat = (value) => value.replace(/\s+/gu, ' ')
+  const flat = (value: string) => value.replace(/\s+/gu, ' ')
   const head = `${start > 0 ? '…' : ''}${flat(text.slice(start, index)).trimStart()}`
   const match = flat(text.slice(index, index + length))
   const tail = `${flat(text.slice(index + length, end)).trimEnd()}${end < text.length ? '…' : ''}`
-  return { snippet: head + match + tail, match: [head.length, head.length + match.length] }
+  const span: [number, number] = [head.length, head.length + match.length]
+  return { snippet: head + match + tail, match: span }
 }
 
-export function createSessionSearch(ctx) {
+export function createSessionSearch(ctx: DshContext) {
   /** Session id → { revision, messages }; `revision` is `stored:<revision>` or `live:<log length>`. */
-  const cache = new Map()
+  const cache = new Map<string, CachedSession>()
   /** The catch-up in flight, shared by the searches that arrive meanwhile. */
-  let refreshing = null
+  let refreshing: Promise<void> | null = null
 
   /**
    * One session's messages. The query service throws to say a stored log is
@@ -89,13 +139,14 @@ export function createSessionSearch(ctx) {
    * then holds nothing until its change token moves again, and the rest of
    * the history stays searchable (docs/decisions D12).
    */
-  async function readMessages(query, sessionId) {
+  async function readMessages(query: SessionQueryService, sessionId: string): Promise<SearchMessage[]> {
     try {
       const log = await query.readSession(sessionId)
       return messagesOf(log.events)
     } catch (error) {
-      if (error?.code !== 'SESSION_QUERY_CORRUPT_SESSION' && error?.code !== 'SESSION_QUERY_SESSION_NOT_FOUND') throw error
-      ctx.logger?.warn?.(`dsh-claude-style: session ${sessionId} left out of content search: ${error.message}`)
+      const failure = error as { code?: string, message?: string }
+      if (failure?.code !== 'SESSION_QUERY_CORRUPT_SESSION' && failure?.code !== 'SESSION_QUERY_SESSION_NOT_FOUND') throw error
+      ctx.logger?.warn?.(`dsh-claude-style: session ${sessionId} left out of content search: ${failure.message}`)
       return []
     }
   }
@@ -106,7 +157,7 @@ export function createSessionSearch(ctx) {
     const persistence = ctx.get('sessionPersistence')
     const sessions = ctx.get('sessions')
     if (!query || !persistence || !sessions) throw new Error('the host exposes no session query, persistence or session service')
-    const wanted = new Map()
+    const wanted = new Map<string, string>()
     for (const snapshot of await persistence.list()) {
       if (snapshot.header.origin !== 'subagent') wanted.set(snapshot.header.id, `stored:${snapshot.revision}`)
     }
@@ -118,7 +169,7 @@ export function createSessionSearch(ctx) {
     for (const id of cache.keys()) {
       if (!wanted.has(id)) cache.delete(id)
     }
-    const stale = []
+    const stale: [string, string][] = []
     for (const [id, revision] of wanted) {
       const cached = cache.get(id)
       if (cached === undefined || cached.revision !== revision) stale.push([id, revision])
@@ -130,7 +181,7 @@ export function createSessionSearch(ctx) {
         cache.set(id, { revision, messages: await readMessages(query, id) })
       }
     }
-    const workers = []
+    const workers: Promise<void>[] = []
     for (let i = 0; i < READ_CONCURRENCY; i++) workers.push(worker())
     await Promise.all(workers)
   }
@@ -146,10 +197,10 @@ export function createSessionSearch(ctx) {
    * Sessions whose messages hold the query, newest hit first, each with its
    * newest hit: `{ sessions: [{ sessionId, seq, time, role, snippet, match }], scanned }`.
    */
-  async function search(text) {
+  async function search(text: string) {
     await catchUp()
     const pattern = compileQuery(text)
-    const hits = []
+    const hits: { sessionId: string, seq: number, time: number, role: string, snippet: string, match: [number, number] }[] = []
     for (const [sessionId, entry] of cache) {
       for (let i = entry.messages.length - 1; i >= 0; i--) {
         const message = entry.messages[i]
