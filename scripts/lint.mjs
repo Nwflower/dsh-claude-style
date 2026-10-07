@@ -58,10 +58,9 @@ function decisionNumbers() {
 // 1. The stop line.
 const sources = [
   ...filesUnder(path.join(ROOT, 'src'), ['.ts', '.css']),
-  ...filesUnder(path.join(ROOT, 'packages'), ['.ts', '.css']),
+  ...filesUnder(path.join(ROOT, 'packages'), ['.ts', '.css', '.cjs']),
   ...filesUnder(path.join(ROOT, 'host'), ['.js']),
   ...filesUnder(path.join(ROOT, 'scripts'), ['.mjs', '.cjs']),
-  ...filesUnder(path.join(ROOT, 'tools'), ['.cjs']),
 ].filter((file) => !/\.test\.ts$/.test(file) && !/\.d\.ts$/.test(file))
 for (const file of sources) {
   const lines = fs.readFileSync(file, 'utf8').split('\n').length

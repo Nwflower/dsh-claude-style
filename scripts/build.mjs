@@ -539,7 +539,7 @@ function checkTiming() {
     for (const check of entry.checks) {
       const [kind, name] = String(check).split(':')
       if (kind === 'scenario') {
-        if (!scenarios.has(name)) throw new Error(`build: src/contracts/timing.ts entry "${entry.id}" names the lane scenario "${name}", which tools/e2e.cjs does not run`)
+        if (!scenarios.has(name)) throw new Error(`build: src/contracts/timing.ts entry "${entry.id}" names the lane scenario "${name}", which packages/testing/e2e.cjs does not run`)
         continue
       }
       if (kind === 'test') {

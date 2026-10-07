@@ -27,7 +27,7 @@ const fs = require('node:fs')
 const http = require('node:http')
 const path = require('node:path')
 
-const ROOT = path.resolve(__dirname, '..')
+const ROOT = path.resolve(__dirname, '..', '..')
 const DEFAULT_LOG = path.join(ROOT, '.debug', 'e2e', 'mock')
 const MODEL = 'deepseek-flash'
 const MESSAGES_PATH = '/v1/messages'

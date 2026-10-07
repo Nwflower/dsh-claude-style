@@ -24,9 +24,9 @@ const { spawn, spawnSync } = require('node:child_process')
 const fs = require('node:fs')
 const path = require('node:path')
 const { chromium } = require('playwright')
-const chrome = require('../scripts/chrome.cjs')
+const chrome = require('../../scripts/chrome.cjs')
 
-const ROOT = path.resolve(__dirname, '..')
+const ROOT = path.resolve(__dirname, '..', '..')
 /** The scratch host's home: build output, so it lives with the other debug artifacts. */
 const DEFAULT_HOME = path.join(ROOT, '.debug', 'e2e', 'home')
 
