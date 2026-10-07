@@ -40,25 +40,11 @@
 const fs = require('fs')
 const path = require('path')
 const { findChrome, launchChrome, connectTab } = require('./chrome.cjs')
+const { SESSION_NAMES, sanitizePage } = require('./privacy.cjs')
 
 const WIDTH = 1440
 /** The home page fits the classic frame; a conversation turn needs the taller one. */
 const HEIGHTS = { home: 900, conversation: 1240 }
-
-/** Neutral stand-ins for the sidebar workspace rows and the session titles. */
-const PROJECT_NAMES = ['demo-project', 'sample-app', 'docs-site', 'theme-lab', 'notes-app', 'e-comm-demo']
-const SESSION_NAMES = [
-  'Fix flaky onboarding test',
-  'Add CSV export',
-  'Refactor auth flow',
-  'Polish settings page',
-  'Update README screenshots',
-  'Investigate scroll jitter',
-  'Migrate build script',
-  'Trim bundle size',
-  'Markdown rendering tour',
-]
-const USERNAME = 'Ada'
 
 /** The conversation scene's only admissible user message, and its session's default title. */
 const DEMO_PROMPT = '用一段简短的示例，展示你支持的 Markdown 格式。'
@@ -75,104 +61,7 @@ const CANVAS = {
   deepseek: { light: 'rgb(247, 250, 255)', dark: 'rgb(19, 22, 29)' },
 }
 
-/**
- * Personal-data regex sources, kept as strings so the page sweep and the
- * final assertion rebuild from one copy. LEAK covers the local username,
- * drive paths and quota amounts; PATH and BALANCE cover the two rewrites.
- */
-const USERNAME_RE_SOURCE = 'Nwflower'
-const PATH_RE_SOURCE = '[A-Z]:[\\\\/][^\\\\s"\']*'
-const BALANCE_RE_SOURCE = '\u00a5\\s?[0-9][0-9.,]*'
-
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
-
-/**
- * Replace sidebar titles with stand-ins; swap the username nodes for static
- * ones under a different class — the theme's footer sync re-writes any node
- * still carrying `.dsh-claude-account-user` with the inferred real name, so
- * the stand-in must be invisible to that query. The name the account row
- * shows is replaced everywhere else too (the studio greeting says it).
- *
- * A title that already is a stand-in — bare, or after a source label such as
- * "Claude · " — stays, and so does a blank session's, which is the host's own
- * label for one (the same words as its New session button); the others take
- * the stand-ins no row uses yet.
- */
-const SANITIZE_JS = `(() => {
-  const blank = ((document.querySelector('button[class*="newSession"]') || {}).innerText || '').trim().split('\\n')[0]
-  const swap = (elements, names) => {
-    const standIn = (text) => names.find((name) => text === name || text.endsWith(' · ' + name))
-    const used = new Set(elements.map((el) => standIn((el.textContent || '').trim())).filter(Boolean))
-    const spare = names.filter((name) => !used.has(name))
-    let swapped = 0
-    elements.forEach((el, i) => {
-      const text = (el.textContent || '').trim()
-      if (!text || text === blank || standIn(text)) return
-      el.textContent = spare.length > 0 ? spare.shift() : names[i % names.length]
-      swapped++
-    })
-    return swapped
-  }
-  let swapped = 0
-  swapped += swap([...document.querySelectorAll('[class*="projectRow"] [class*="projectText"]')], ${JSON.stringify(PROJECT_NAMES)})
-  swapped += swap([...document.querySelectorAll('[class*="sessionRow"] [class*="title"]')], ${JSON.stringify(SESSION_NAMES)})
-  const shown = ((document.querySelector('.dsh-claude-account-user') || {}).textContent || '').trim()
-  if (shown.length >= 2 && shown !== ${JSON.stringify(USERNAME)}) {
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
-    while (walker.nextNode()) {
-      const node = walker.currentNode
-      if ((node.nodeValue || '').includes(shown) && !node.parentElement.closest('.dsh-claude-account-user')) {
-        node.nodeValue = node.nodeValue.split(shown).join(${JSON.stringify(USERNAME)})
-        swapped++
-      }
-    }
-  }
-  document.querySelectorAll('.dsh-claude-account-user').forEach((el) => {
-    const rep = document.createElement('span')
-    rep.className = 'dsh-claude-account-you'
-    rep.style.cssText = 'font-weight:500;color:var(--dsw-alias-label-primary);'
-    rep.textContent = ${JSON.stringify(USERNAME)}
-    el.replaceWith(rep)
-    swapped++
-  })
-  document.querySelectorAll('.dsh-claude-account-popover-name').forEach((el) => {
-    const rep = document.createElement('div')
-    rep.className = 'dsh-claude-account-popover-name-static'
-    rep.style.cssText = 'font-size:14px;font-weight:600;line-height:18px;color:var(--dsw-alias-label-primary);'
-    rep.textContent = ${JSON.stringify(USERNAME)}
-    el.replaceWith(rep)
-    swapped++
-  })
-  return swapped
-})()`
-
-/** Rewrite any surviving username / drive-path / quota text; report what was caught. */
-const SWEEP_JS = `(() => {
-  const userRe = new RegExp(${JSON.stringify(USERNAME_RE_SOURCE)}, 'gi')
-  const pathRe = new RegExp(${JSON.stringify(PATH_RE_SOURCE)}, 'g')
-  const balRe = new RegExp(${JSON.stringify(BALANCE_RE_SOURCE)}, 'g')
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
-  const caught = []
-  while (walker.nextNode()) {
-    const node = walker.currentNode
-    const text = node.nodeValue || ''
-    userRe.lastIndex = 0; pathRe.lastIndex = 0; balRe.lastIndex = 0
-    if (userRe.test(text) || pathRe.test(text) || balRe.test(text)) {
-      caught.push(text.trim().slice(0, 80))
-      node.nodeValue = text
-        .replace(userRe, ${JSON.stringify(USERNAME)})
-        .replace(pathRe, '…')
-        .replace(balRe, '\u00a5\u2022\u2022')
-    }
-  }
-  return caught
-})()`
-
-/** The palette must not contain personal data anywhere in its visible text. */
-function assertClean(visibleText) {
-  const leak = new RegExp(`${USERNAME_RE_SOURCE}|${PATH_RE_SOURCE}|${BALANCE_RE_SOURCE}`, 'i')
-  if (leak.test(visibleText)) throw new Error('sensitive text still visible after sanitize')
-}
 
 /**
  * Open the conversation titled `title` from the sidebar, and prove it is the
@@ -233,10 +122,7 @@ async function captureOnce(conn, options, scheme, outFile) {
     throw new Error(`${scheme} palette did not take effect (body bg ${bg}, expected ${wantBg})`)
   }
 
-  const swapped = await evalJs(SANITIZE_JS)
-  const caught = await evalJs(SWEEP_JS)
-  const visibleText = await evalJs(`document.body.innerText`)
-  assertClean(visibleText)
+  const { swapped, caught, visibleText } = await sanitizePage((expression) => evalJs(expression))
 
   // Presenter re-applies can race the flip; re-assert the palette at the last
   // moment so a wiped attribute fails the run instead of shipping a light
@@ -265,9 +151,6 @@ async function captureOnce(conn, options, scheme, outFile) {
  * @returns the two files written.
  */
 async function shoot(options) {
-  if (!new RegExp(`${USERNAME_RE_SOURCE}|${PATH_RE_SOURCE}`, 'i').test('C:\\Users\\Nwflower\\tmp')) {
-    throw new Error('leak regex failed self-test')
-  }
   const brand = options.brand || 'claude'
   const scene = options.scene || 'home'
   if (!CANVAS[brand]) throw new Error(`unknown brand "${brand}" (claude or deepseek)`)
@@ -297,7 +180,7 @@ async function shoot(options) {
   return files
 }
 
-module.exports = { shoot, DEMO_PROMPT, DEMO_TITLE }
+module.exports = { shoot, DEMO_PROMPT, DEMO_TITLE, CANVAS }
 
 if (require.main === module) {
   const args = process.argv.slice(2)
