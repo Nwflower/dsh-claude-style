@@ -8,6 +8,7 @@
  * the profile tree (see resolveSchemaFactory). A host that cannot resolve the
  * package still loads the skin — it just loses the settings form.
  */
+import type { DshContext, DshScope } from './dsh.ts'
 
 /**
  * The preference list. This one table is every field declaration: the Config
@@ -54,25 +55,47 @@ export const PREFS_DEFAULT = Object.freeze({
  *
  * @returns the schema factory, or null when neither path resolves.
  */
-async function resolveSchemaFactory() {
+async function resolveSchemaFactory(): Promise<SchemaFactory | null> {
   try {
     const { createRequire } = await import('node:module')
     const anchor = typeof process.argv[1] === 'string' && process.argv[1] !== '' ? process.argv[1] : process.execPath
     const factory = createRequire(anchor)('@deepseek-ai/schemastery')
-    if (factory !== null && factory !== undefined && typeof factory.object === 'function') return factory
+    if (factory !== null && factory !== undefined && typeof factory.object === 'function') return factory as SchemaFactory
   } catch { /* the anchor carries no schemastery: try normal resolution */ }
   try {
-    const module = await import('@deepseek-ai/schemastery')
-    return module?.default ?? module?.Schema ?? null
+    // The specifier stays a value: the module is optional, so neither the type
+    // check nor the build may require it to be installed.
+    const specifier = '@deepseek-ai/schemastery'
+    const resolved = await import(specifier)
+    const factory = resolved?.default ?? resolved?.Schema ?? null
+    return factory !== null && factory !== undefined && typeof factory.object === 'function' ? factory as SchemaFactory : null
   } catch {
     return null
   }
 }
 
+/**
+ * The schema factory the host provides (`@deepseek-ai/schemastery`), as far as
+ * this half uses it: it is resolved at runtime and may be absent (D10), so the
+ * shape is declared here rather than imported.
+ */
+interface SchemaFactory {
+  object(fields: Record<string, unknown>): unknown
+  string(): SchemaField
+  boolean(): SchemaField
+  array(item: unknown): SchemaField
+}
+
+/** One schema field: its default, and the `volatile()` marker when the factory has it. */
+interface SchemaField {
+  default(value: unknown): SchemaField
+  volatile?(): SchemaField
+}
+
 const SchemaFactory = await resolveSchemaFactory()
 
 /** Mark one field editable by the settings page, where the factory supports it. */
-function volatileField(field) {
+function volatileField(field: SchemaField | null | undefined) {
   return typeof field?.volatile === 'function' ? field.volatile() : field
 }
 
@@ -81,7 +104,7 @@ function volatileField(field) {
  * field type (an array is an array of strings), so PREFS_DEFAULT stays the
  * only field list.
  */
-function prefsField(Schema, key) {
+function prefsField(Schema: SchemaFactory, key: keyof typeof PREFS_DEFAULT) {
   const value = PREFS_DEFAULT[key]
   const field = Array.isArray(value)
     ? Schema.array(Schema.string())
@@ -111,7 +134,7 @@ function prefsField(Schema, key) {
 export const Config = SchemaFactory === null
   ? undefined
   : SchemaFactory.object(Object.fromEntries(
-      Object.keys(PREFS_DEFAULT).map(key => [key, volatileField(prefsField(SchemaFactory, key))]),
+      Object.keys(PREFS_DEFAULT).map(key => [key, volatileField(prefsField(SchemaFactory, key as keyof typeof PREFS_DEFAULT))]),
     ))
 
 /**
@@ -125,9 +148,9 @@ export const Config = SchemaFactory === null
  *
  * @param ctx - host plugin context.
  */
-export function registerSettings(ctx) {
+export function registerSettings(ctx: DshContext) {
   if (typeof ctx.inject !== 'function') return
-  ctx.inject(['settings'], (scope) => {
+  ctx.inject(['settings'], (scope: DshScope) => {
     const settings = scope.settings
     if (typeof settings?.configure !== 'function') return
     scope.effect(

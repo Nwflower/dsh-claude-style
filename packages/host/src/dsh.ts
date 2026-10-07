@@ -25,6 +25,14 @@ export interface DshContext {
 /** The scope `inject` hands back: the base context plus the declared services. */
 export interface DshScope extends DshContext {
   webServer?: DshWebServer
+  settings?: DshSettings
+  /** Run a function and drop it with this generation, naming it in the host's log. */
+  effect(run: () => void, name?: string): void
+}
+
+/** The host's settings domain, as the half configures it. */
+export interface DshSettings {
+  configure(options: { auto?: boolean }, fiber?: unknown): unknown
 }
 
 /** The host's web server service, as the half registers routes on it. */
