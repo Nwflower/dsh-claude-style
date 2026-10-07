@@ -1,3 +1,5 @@
+import type { IncomingMessage, ServerResponse } from 'node:http'
+
 /**
  * What the host half reads off the DSH plugin context (D46).
  *
@@ -40,17 +42,8 @@ export interface DshWebServer {
   register(options: { path: string, handler: (req: DshRequest, res: DshResponse) => void }): unknown
 }
 
-/** The request the host hands a route handler. */
-export interface DshRequest {
-  method?: string
-  url?: string
-  headers: Record<string, string | string[] | undefined>
-}
+/** The request the host's web server hands a route handler: Node's own. */
+export type DshRequest = IncomingMessage
 
-/** The response the host hands a route handler. */
-export interface DshResponse {
-  statusCode: number
-  setHeader(name: string, value: string): void
-  end(body?: unknown): void
-  on?(event: string, run: () => void): void
-}
+/** The response the host's web server hands a route handler: Node's own. */
+export type DshResponse = ServerResponse

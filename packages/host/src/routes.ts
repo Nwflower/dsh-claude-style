@@ -11,8 +11,10 @@ import { existsSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs
 import { userInfo } from 'node:os'
 import { dirname, join, resolve, sep } from 'node:path'
 import { brotliDecompressSync } from 'node:zlib'
+import type { DshContext, DshRequest, DshResponse, DshScope } from './dsh.js'
 import { harnessPath } from './harness-home.js'
 import { createHdslAccount } from './hdsl.js'
+import type { HdslReading } from './hdsl.js'
 import { packageRoot } from './package-root.js'
 import { QUERY_MAX, createSessionSearch } from './search.js'
 import { createUsage } from './usage.js'
@@ -127,7 +129,7 @@ const DELETE_BODY_MAX = 4096
  * @param req - node request.
  * @returns 401 / 403, or undefined when the request may proceed.
  */
-function refusalOf(ctx, req) {
+function refusalOf(ctx: DshContext, req: DshRequest) {
   const connection = ctx.get('connection')
   if (typeof connection?.requestRejection === 'function') return connection.requestRejection(req)
   const host = req.headers.host
@@ -146,7 +148,7 @@ function refusalOf(ctx, req) {
 }
 
 /** Send one JSON response. */
-function sendJson(res, status, payload) {
+function sendJson(res: DshResponse, status: number, payload: unknown) {
   const body = Buffer.from(JSON.stringify(payload))
   res.writeHead(status, {
     'content-type': 'application/json; charset=utf-8',
@@ -165,7 +167,7 @@ function sendJson(res, status, payload) {
  * deletion. A read that throws fails the request (500), which refuses the
  * deletion as well.
  */
-function sessionIsLive(ctx, sessionId) {
+function sessionIsLive(ctx: DshContext, sessionId: string): boolean {
   const sessions = ctx.get('sessions')
   // A host with no sessions service holds nothing open.
   if (sessions === null || sessions === undefined) return false
@@ -183,18 +185,18 @@ function sessionIsLive(ctx, sessionId) {
 }
 
 /** One bounded request body, or null when it is oversized or unreadable. */
-function readRequestBody(req, limit) {
-  return new Promise((settle) => {
-    const chunks = []
+function readRequestBody(req: DshRequest, limit: number): Promise<string | null> {
+  return new Promise<string | null>((settle) => {
+    const chunks: Buffer[] = []
     let size = 0
-    req.on('data', (chunk) => {
+    req.on('data', (chunk: Buffer | string) => {
       size += chunk.length
       if (size > limit) {
         settle(null)
         req.destroy()
         return
       }
-      chunks.push(chunk)
+      chunks.push(Buffer.from(chunk))
     })
     req.on('end', () => settle(Buffer.concat(chunks).toString('utf8')))
     req.on('error', () => settle(null))
@@ -210,7 +212,7 @@ function readRequestBody(req, limit) {
  * propagates: the route answers 500, the row stays, and the next delete
  * retries through the miss branch.
  */
-async function unarchiveSession(ctx, sessionId) {
+async function unarchiveSession(ctx: DshContext, sessionId: string) {
   const registry = ctx.get('workspaceRegistry')
   if (typeof registry?.unarchiveSession !== 'function') return
   await registry.unarchiveSession(sessionId)
@@ -233,7 +235,7 @@ async function unarchiveSession(ctx, sessionId) {
  * the set either way and the row is gone for good instead of coming back on
  * the next reload.
  */
-async function deleteSession(ctx, req, res) {
+async function deleteSession(ctx: DshContext, req: DshRequest, res: DshResponse) {
   const refused = refusalOf(ctx, req)
   if (refused !== undefined) {
     sendJson(res, refused, { ok: false, error: refused === 401 ? 'unauthorized' : 'forbidden' })
@@ -290,7 +292,7 @@ async function deleteSession(ctx, req, res) {
  * @param scope - the inject scope that carries the `webServer` declaration, or
  *     `ctx` itself on a host whose context injects nothing.
  */
-export function registerRoutes(ctx, scope) {
+export function registerRoutes(ctx: DshContext, scope: DshScope) {
   // The built output and the fonts hang off the plugin package's own directory.
   const root = packageRoot()
   // The copy document is build output beside the client bundle in lib/.
@@ -308,7 +310,7 @@ export function registerRoutes(ctx, scope) {
    * @param headers - content-type / cache-control pair for the payload.
    * @param body - the payload, when the caller already holds it.
    */
-  const sendFile = (res, method, path, headers, body = null) => {
+  const sendFile = (res: DshResponse, method: string, path: string, headers: Record<string, string>, body: Buffer | null = null) => {
     // An optional font the user never dropped in, or a name no build shipped,
     // is absent: 404.
     if (body === null && !existsSync(path)) {
@@ -339,7 +341,7 @@ export function registerRoutes(ctx, scope) {
    * @param name - the file name from the request path.
    * @returns whether the request was answered.
    */
-  const sendAsset = (req, res, name) => {
+  const sendAsset = (req: DshRequest, res: DshResponse, name: string) => {
     const manifest = readManifest()
     const asset = manifest?.[name]
     if (asset === undefined) return false
@@ -350,7 +352,7 @@ export function registerRoutes(ctx, scope) {
     }
     if (asset.encoding === 'br') {
       if (/\bbr\b/.test(req.headers['accept-encoding'] ?? '')) {
-        sendFile(res, req.method, stored, { ...headers, 'content-encoding': 'br' })
+        sendFile(res, req.method ?? 'GET', stored, { ...headers, 'content-encoding': 'br' })
         return true
       }
       // A client that does not take brotli: the sheet is decompressed, so it
@@ -358,7 +360,7 @@ export function registerRoutes(ctx, scope) {
       // for again on every reload of a page that never got them compressed.
       const cached = unpressed.get(name)
       if (cached !== undefined) {
-        sendFile(res, req.method, stored, headers, cached)
+        sendFile(res, req.method ?? 'GET', stored, headers, cached)
         return true
       }
       if (!existsSync(stored)) {
@@ -368,10 +370,10 @@ export function registerRoutes(ctx, scope) {
       }
       const body = brotliDecompressSync(readFileSync(stored))
       unpressed.set(name, body)
-      sendFile(res, req.method, stored, headers, body)
+      sendFile(res, req.method ?? 'GET', stored, headers, body)
       return true
     }
-    sendFile(res, req.method, stored, headers)
+    sendFile(res, req.method ?? 'GET', stored, headers)
     return true
   }
 
@@ -393,7 +395,7 @@ export function registerRoutes(ctx, scope) {
    * Answer 405 for a request whose method the route does not take.
    * @returns whether the request was turned away.
    */
-  const methodRefused = (req, res, methods) => {
+  const methodRefused = (req: DshRequest, res: DshResponse, methods: string[]) => {
     if (methods.includes(req.method)) return false
     res.writeHead(405, { allow: methods.join(', ') })
     res.end()
@@ -406,7 +408,7 @@ export function registerRoutes(ctx, scope) {
    * otherwise (see refusalOf).
    * @returns whether the request was turned away.
    */
-  const fenceRefused = (req, res) => {
+  const fenceRefused = (req: DshRequest, res: DshResponse) => {
     const refused = refusalOf(ctx, req)
     if (refused === undefined) return false
     sendJson(res, refused, { ok: false, error: refused === 401 ? 'unauthorized' : 'forbidden' })
@@ -414,8 +416,8 @@ export function registerRoutes(ctx, scope) {
   }
 
   scope.effect(() => {
-    const disposers = []
-    const report = (message, error) => ctx.logger?.warn?.(`dsh-claude-style: ${message}: ${error?.message ?? error}`)
+    const disposers: (() => void)[] = []
+    const report = (message: string, error: unknown) => ctx.logger?.warn?.(`dsh-claude-style: ${message}: ${(error as { message?: string } | null)?.message ?? String(error)}`)
     const usage = createUsage(ctx)
     const hdsl = createHdslAccount(ctx)
     const sessionSearch = createSessionSearch(ctx)
@@ -426,7 +428,7 @@ export function registerRoutes(ctx, scope) {
      * register, because a throw here would fail this fiber and drop the client
      * bundle — the whole skin — with it (docs/decisions D12).
      */
-    const register = (label, route) => {
+    const register = (label: string, route: { path: string, handler: (req: DshRequest, res: DshResponse) => void }) => {
       try {
         disposers.push(scope.webServer.register(route))
       } catch (error) {
@@ -437,7 +439,7 @@ export function registerRoutes(ctx, scope) {
     register('model copy', {
       kind: 'prefix',
       path: ROUTE_PREFIX,
-      handler: (req, res) => {
+      handler: (req: DshRequest, res: DshResponse) => {
         if (methodRefused(req, res, ['GET', 'HEAD'])) return
         /* v8 ignore next -- node:http always sets url on server requests. */
         const sub = new URL(req.url ?? '/', 'http://x').pathname.slice(ROUTE_PREFIX.length)
@@ -474,7 +476,7 @@ export function registerRoutes(ctx, scope) {
     register('username', {
       kind: 'exact',
       path: USERNAME_PATH,
-      handler: (req, res) => {
+      handler: (req: DshRequest, res: DshResponse) => {
         // One-shot OS user resolution for the browser half; it caches the
         // response and never polls. The exact route wins over the prefix above.
         if (methodRefused(req, res, ['GET', 'HEAD'])) return
@@ -493,16 +495,16 @@ export function registerRoutes(ctx, scope) {
     register('HDSL account', {
       kind: 'exact',
       path: HDSL_PATH,
-      handler: (req, res) => {
+      handler: (req: DshRequest, res: DshResponse) => {
         // Read-only and same-origin only; the player's avatar path is dropped
         // here: the browser half needs a picture, not the home directory it
         // lives in.
         if (methodRefused(req, res, ['GET', 'HEAD'])) return
         if (fenceRefused(req, res)) return
-        hdsl.read().then((profile) => {
+        hdsl.read().then((profile: HdslReading) => {
           const { skinFile, ...account } = profile
           sendJson(res, 200, { ok: true, ...account })
-        }, (error) => {
+        }, (error: unknown) => {
           sendJson(res, 500, { ok: false, error: String(error?.message ?? error) })
         })
       },
@@ -511,7 +513,7 @@ export function registerRoutes(ctx, scope) {
     register('HDSL skin', {
       kind: 'exact',
       path: HDSL_SKIN_PATH,
-      handler: (req, res) => {
+      handler: (req: DshRequest, res: DshResponse) => {
         // The player's own avatar. The path comes from the environment and
         // never from the request, so this route cannot be pointed anywhere; a
         // missing file is a 404 and the browser half falls back to the brand
@@ -519,7 +521,7 @@ export function registerRoutes(ctx, scope) {
         if (methodRefused(req, res, ['GET', 'HEAD'])) return
         if (fenceRefused(req, res)) return
         // A failed read propagates to the web server, which logs it and answers.
-        return hdsl.read().then((profile) => {
+        return hdsl.read().then((profile: HdslReading) => {
           // A file removed under the launcher is a 404 like no file at all.
           if (typeof profile.skinFile !== 'string' || !existsSync(profile.skinFile)) {
             res.writeHead(404, { 'cache-control': 'no-store' })
@@ -540,12 +542,12 @@ export function registerRoutes(ctx, scope) {
     register('session delete', {
       kind: 'exact',
       path: SESSION_DELETE_PATH,
-      handler: (req, res) => {
+      handler: (req: DshRequest, res: DshResponse) => {
         // POST only: the browser half sends one id, and a GET must never
         // reach the filesystem.
         if (methodRefused(req, res, ['POST'])) return
         // A fault anywhere in the deletion answers 500 with its message.
-        void deleteSession(ctx, req, res).catch((error) => {
+        void deleteSession(ctx, req, res).catch((error: unknown) => {
           if (res.headersSent) res.destroy()
           else sendJson(res, 500, { ok: false, error: String(error?.message ?? error) })
         })
@@ -555,7 +557,7 @@ export function registerRoutes(ctx, scope) {
     register('usage', {
       kind: 'exact',
       path: USAGE_PATH,
-      handler: (req, res) => {
+      handler: (req: DshRequest, res: DshResponse) => {
         // Read-only and same-origin only: the answer is the plugin's own
         // aggregate over the user's session history, which is why it runs the
         // same fence as the username route.
@@ -581,7 +583,7 @@ export function registerRoutes(ctx, scope) {
     register('session search', {
       kind: 'exact',
       path: SESSION_SEARCH_PATH,
-      handler: (req, res) => {
+      handler: (req: DshRequest, res: DshResponse) => {
         // Read-only, behind the same fence as the usage route: the answer
         // quotes the user's own conversations.
         if (methodRefused(req, res, ['GET'])) return
@@ -590,9 +592,9 @@ export function registerRoutes(ctx, scope) {
         const answer = query === ''
           ? sessionSearch.warm().then(() => ({ sessions: [] }))
           : sessionSearch.search(query)
-        void answer.then((value) => {
+        void answer.then((value: unknown) => {
           sendJson(res, 200, { ok: true, ...value })
-        }, (error) => {
+        }, (error: unknown) => {
           sendJson(res, 500, { ok: false, error: String(error?.message ?? error) })
         })
       },

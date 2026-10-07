@@ -57,7 +57,7 @@ export function apply(ctx: DshContext) {
   // declaration, so both a boot-time apply and a hot relink register. A host
   // without a web server simply waits here, and the skin still activates.
   if (typeof ctx.inject === 'function') ctx.inject(['webServer'], (scope: DshScope) => { registerRoutes(ctx, scope) })
-  else registerRoutes(ctx, ctx)
+  else registerRoutes(ctx, ctx as DshScope)
 
   registerSettings(ctx)
 }
