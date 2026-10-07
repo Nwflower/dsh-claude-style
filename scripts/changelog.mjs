@@ -34,10 +34,10 @@ const GROUPS = [
   { key: 'chores', zh: '其他变更', en: 'Chores' },
 ]
 
-/** Every pending change, read and validated. */
+/** Every pending change, read and validated. A release clears the directory, and git keeps no empty one: no directory is no pending change. */
 function readFragments() {
-  if (!fs.existsSync(CHANGES)) throw new Error('changelog: docs/changes/ does not exist')
   const fragments = []
+  if (!fs.existsSync(CHANGES)) return fragments
   for (const name of fs.readdirSync(CHANGES)) {
     if (!/^[a-z0-9][a-z0-9-]*\.json$/.test(name)) throw new Error(`changelog: docs/changes/${name} is not <slug>.json`)
     const fragment = JSON.parse(fs.readFileSync(path.join(CHANGES, name), 'utf8'))
