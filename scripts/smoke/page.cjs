@@ -182,6 +182,12 @@ function page(name, tier, cases) {
   var boot = name === 'peer-chat-ux'
     ? '<script>window.__DSH_BOOT__ = { entries: [{ id: "ui-skin-claude-style", rev: "smoke" }, { id: "@alm-allen/dsh-chat-ux", rev: "smoke" }] }</script>'
     : ''
+  // A skin owns the page from the first frame: the skin center injects this
+  // attribute into the served document, before any bundle is evaluated, which
+  // is what lets the theme answer before it paints (D49).
+  var skinOwner = name === 'skin-center-handoff'
+    ? '<script>document.documentElement.setAttribute("data-dsh-skin", "blue-fantasy")</script>'
+    : ''
   // The system's reduced-motion setting, driven by hand: the reveal case flips it
   // while the animation choice is "follow the system", which is the one path that
   // reaches the features through the resolved attribute alone (src/core/prefs.ts,
@@ -211,6 +217,7 @@ function page(name, tier, cases) {
 <html><head><meta charset="utf-8"><title>dsh-claude-style smoke: ${name}</title></head>
 <body>
 ${boot}
+${skinOwner}
 ${motionStub}
 ${footer}
 <div class="_x_treeBody_1" role="tree">

@@ -719,12 +719,14 @@
   // plugin page's config slot instead, so the probe can render the page. The
   // peer case declares those two plus the tool seat, so the probe can see both
   // the page it greys out and the seat keys the file rows must leave alone.
-  var slotRegistry = CASE === 'studio' || CASE === 'settings' || CASE === 'chat-files' || CASE === 'peer-chat-ux' ? {
+  var slotRegistry = CASE === 'studio' || CASE === 'settings' || CASE === 'chat-files' || CASE === 'peer-chat-ux' || CASE === 'skin-center-handoff' || CASE === 'skin-center-arrival' ? {
     inject: function (key, callback) {
       var declared = CASE === 'studio'
         ? key === 'conversation.input.dock'
         : CASE === 'chat-files'
           ? key === 'tool.call.toolview'
+          : CASE === 'skin-center-handoff' || CASE === 'skin-center-arrival'
+            ? key === 'settings.section' || key === 'plugins.bundle.config'
           : CASE === 'peer-chat-ux'
             ? key === 'tool.call.toolview' || key === 'settings.section' || key === 'plugins.bundle.config'
             : key === 'settings.section' || key === 'plugins.bundle.config'
@@ -782,7 +784,7 @@
   // same way. The other cases keep no inject, which is what makes them read
   // synchronously at install (the install-fault case depends on that read
   // throwing).
-  if (CASE === 'desktop' || CASE === 'studio' || CASE === 'settings' || CASE === 'chat-files' || CASE === 'peer-chat-ux') {
+  if (CASE === 'desktop' || CASE === 'studio' || CASE === 'settings' || CASE === 'chat-files' || CASE === 'peer-chat-ux' || CASE === 'skin-center-handoff' || CASE === 'skin-center-arrival') {
     window.__ctx.inject = function (deps, cb) {
       var disposers = []
       cb({

@@ -2108,6 +2108,64 @@
       }
       peerChat.remove()
     })
+    // The other owner of the page, a skin, from the first frame (D49): the theme
+    // stands its whole visual down and keeps the settings section, then takes
+    // the page back when the skin leaves.
+    await onlyFor(['skin-center-handoff'], async function () {
+      // The settings section registers through ctx.inject, so its seat appears
+      // on a later turn than apply() returns.
+      await sleep(400)
+      var owner = {
+        sheet: document.getElementById('dsh-claude-style-style') !== null,
+        live: document.body.hasAttribute('data-dsh-claude-style'),
+        handoff: document.body.hasAttribute('data-dsh-claude-style-handoff'),
+        bodyAttrs: attrs(document.body),
+        settingsRegistered: typeof (window.__slotComponents || {})['claude-style'] !== 'undefined',
+        uncaught: window.__uncaught.length,
+      }
+      // The owner leaves: the theme takes the page back in one observer turn.
+      document.documentElement.removeAttribute('data-dsh-skin')
+      await sleep(300)
+      owner.afterRelease = {
+        sheet: document.getElementById('dsh-claude-style-style') !== null,
+        live: document.body.hasAttribute('data-dsh-claude-style'),
+        handoff: document.body.hasAttribute('data-dsh-claude-style-handoff'),
+      }
+      // And it returns: the theme gives the page back without a reload.
+      document.documentElement.setAttribute('data-dsh-skin', 'blue-fantasy')
+      await sleep(300)
+      owner.afterReturn = {
+        sheet: document.getElementById('dsh-claude-style-style') !== null,
+        live: document.body.hasAttribute('data-dsh-claude-style'),
+      }
+      r.owner = owner
+    })
+    // The other owner arriving after the theme took the page (D49): the watch
+    // follows a flip whichever way the page booted.
+    await onlyFor(['skin-center-arrival'], async function () {
+      await sleep(400)
+      var arrival = {
+        before: {
+          sheet: document.getElementById('dsh-claude-style-style') !== null,
+          live: document.body.hasAttribute('data-dsh-claude-style'),
+        },
+      }
+      document.documentElement.setAttribute('data-dsh-skin', 'blue-fantasy')
+      await sleep(300)
+      arrival.yielded = {
+        sheet: document.getElementById('dsh-claude-style-style') !== null,
+        live: document.body.hasAttribute('data-dsh-claude-style'),
+        handoff: document.body.hasAttribute('data-dsh-claude-style-handoff'),
+        settingsRegistered: typeof (window.__slotComponents || {})['claude-style'] !== 'undefined',
+      }
+      document.documentElement.removeAttribute('data-dsh-skin')
+      await sleep(300)
+      arrival.back = {
+        sheet: document.getElementById('dsh-claude-style-style') !== null,
+        live: document.body.hasAttribute('data-dsh-claude-style'),
+      }
+      r.arrival = arrival
+    })
     // The host's own account row, when the host has one: the skin marks it and
     // repaints it as a Claude row, so the teardown has to hand it back exactly as
     // the host rendered it (D12).

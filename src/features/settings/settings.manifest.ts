@@ -6,7 +6,7 @@ export default {
   order: 260,
   ungated: '设置页本身',
   stylesheets: [{ file: 'settings.css', rank: 310 }],
-  cases: ['settings', 'late-forms'],
+  cases: ['settings', 'late-forms', 'skin-center-handoff', 'skin-center-arrival'],
   description: {
     zh: {
       title: '设置页',

@@ -10,6 +10,11 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 - **插件主文件缩小一半**：浏览器每次启动都要读取并解析的插件主文件此前是 1.6 MB（1,619,502 字节），现在压缩后是 0.8 MB（817,178 字节）。
 
+### 问题修复
+
+- **启动之后才选的皮肤也会接手页面**：页面载入后才在皮肤中心选中别的皮肤时，本主题不让出页面，两套视觉叠在一起。现在无论页面启动时归谁，皮肤到来就让出、离开就接回，都不需要刷新。
+- **与壁纸插件共存**：0.11.1 在启动时已有壁纸渲染（`body[data-we-wallpaper]`）的页面上整页让出，「与其他主题插件同时使用」里壁纸透过侧栏与玻璃弹层的效果随之失效。现在只为皮肤中心的皮肤（`html[data-dsh-skin]`）让路，壁纸在渲染时本主题照常工作。对外契约：不再读取 `body[data-we-wallpaper]`。
+
 ### 其他变更
 
 - **附带 source map**：npm 包里新增 `lib/client.js.map`，浏览器开发者工具里的报错位置与断点能对应到插件源码。
@@ -18,9 +23,28 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 - **The plugin's main file is half the size**: the file the browser reads and parses on every start was 1.6 MB (1,619,502 bytes); minified it is now 0.8 MB (817,178 bytes).
 
+### Bug Fixes
+
+- **A skin picked after the page loaded takes the page too**: picking another skin in the Skin Center once the page had loaded left this theme on the page, two looks painted over each other. Now the theme gives the page up when a skin arrives and takes it back when the skin leaves, whichever way the page booted, without a reload.
+- **Sharing the page with a wallpaper plugin**: 0.11.1 gave the whole page up when a wallpaper was already rendering at boot (`body[data-we-wallpaper]`), which lost the wallpaper showing through the sidebar and the glass popovers described under Alongside other theme plugins. Now only a Skin Center skin (`html[data-dsh-skin]`) makes the theme yield; while a wallpaper renders the theme keeps working. External contract: `body[data-we-wallpaper]` is no longer read.
+
 ### Chores
 
 - **Source map included**: the npm package now carries `lib/client.js.map`, so error locations and breakpoints in the browser's developer tools map back to the plugin's sources.
+
+## [0.11.1] - 2026-10-06
+
+[中文](#cn-0.11.1) | [English](#en-0.11.1)
+
+<h3 id="cn-0.11.1">新增功能</h3>
+
+- **与皮肤中心交接**：DSH 皮肤中心把本主题列为可选皮肤。选中它即把整页交给本插件，换选其他皮肤、官方默认或壁纸在跑时页面自动交还，无需刷新。判定读皮肤中心注入服务端 HTML 的 `html[data-dsh-skin]` 与壁纸插件的 `body[data-we-wallpaper]`，两者任一存在即让路：让路期间不挂样式表、不安装功能、不占用任何文档属性，只保留设置页与偏好。构建在 `body` 上盖 `data-dsh-claude-style-handoff` 标记自己支持让路。
+
+<h3 id="en-0.11.1">New Features</h3>
+
+- **Skin center handoff**: the DSH Skin Center offers this theme as a selectable skin. Selecting it hands the whole page to this plugin; selecting another skin, the official default, or a running wallpaper takes the page back without a reload. The verdict reads the `html[data-dsh-skin]` attribute the Skin Center injects into the served document and the wallpaper plugin's `body[data-we-wallpaper]`; either one means yielding, and while yielded the theme mounts no stylesheet, installs no feature and claims no document attribute, keeping only its settings page and preferences. A build stamps `data-dsh-claude-style-handoff` on `body` to say it can do this.
+
+**Full Changelog**: [v0.11.0...v0.11.1](https://github.com/Nwflower/dsh-claude-style/compare/v0.11.0...v0.11.1)
 
 ## [0.11.0] - 2026-10-06
 

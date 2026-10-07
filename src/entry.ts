@@ -1,4 +1,4 @@
-import { BRAND_ATTR, COMPOSER_ATTR, FEATURE_PREF_DEFAULTS, FOOTER_ATTR, HOME_HERO_ATTR, HOME_LAYOUT_ATTR, MASCOT_ATTR, MOTION_ATTR, PALETTE_ATTR, TYPEFACE_ATTR, WINDOW_BLUR_ATTR } from './constants'
+import { BRAND_ATTR, COMPOSER_ATTR, FEATURE_PREF_DEFAULTS, FOOTER_ATTR, HANDOFF_ATTR, HOME_HERO_ATTR, HOME_LAYOUT_ATTR, MASCOT_ATTR, MOTION_ATTR, PALETTE_ATTR, TYPEFACE_ATTR, WINDOW_BLUR_ATTR } from './constants'
 import { loadHdsl, loadUsername, setHostContext } from './core/host'
 import type { HostContext } from './core/host'
 import { loadModelCopy } from './core/model-copy'
@@ -7,6 +7,7 @@ import { installScheduler, reportFeatureFailure } from './core/scheduler'
 import type { Ui } from './core/scheduler'
 import { mountStylesheet, parkForeignSheets } from './core/stylesheet'
 import { peerPresent, subscribePeerPresence } from './shared/peer-plugin'
+import { externalOwnerActive, subscribeExternalOwner } from './shared/visual-owner'
 import { setFeatureRegistry } from './core/feature'
 import type { Feature } from './core/feature'
 import { FEATURES } from 'virtual:dsh-claude-style/features'
@@ -45,35 +46,39 @@ export function apply(ctx: HostContext) {
   let offSwitches: (() => void) | null = null
   /** Keeps the other chat plugin's presence watch alive; set once the features install. */
   let offPeerWatch: (() => void) | null = null
+  /** Watches the skin center's stamp on the page; D49. */
+  let offOwnerWatch: (() => void) | null = null
   /** Unmounts this generation's stylesheet; set once the sheet is mounted. */
   let stopStylesheet: (() => void) | null = null
   let disposed = false
+  /** True while a skin owns the page and this theme stands down (D49). */
+  let yielded = externalOwnerActive()
 
   /**
-   * Undo everything this generation installed. Idempotent: the host runs it
-   * on dispose (the effect below), and apply() runs it itself when the
-   * scheduler cannot be installed.
+   * Give the page back, keeping the features `keep` names: run every other
+   * feature's teardown and take this package's body attributes and stylesheet
+   * away. A yield keeps the settings section and the preference binding: the
+   * reader must still reach the plugin's own page, and another plugin taking
+   * the screen uninstalls nothing of the reader's (D49).
    */
-  function teardown() {
-    if (disposed) return
-    disposed = true
-    // First, so no preference flip installs a feature mid-teardown.
+  function release(keep: string[] = []) {
+    // First, so no preference flip installs a feature mid-release.
     if (offSwitches !== null) {
       offSwitches()
       offSwitches = null
     }
-    if (offPeerWatch !== null) {
-      offPeerWatch()
-      offPeerWatch = null
-    }
+    const kept = []
     for (let i = installed.length - 1; i >= 0; i--) {
+      if (keep.includes(installed[i].id)) {
+        kept.push(installed[i])
+        continue
+      }
       // One teardown must not block the rest (D12); a failing one is reported.
       try { installed[i].stop() } catch (error) { reportError(error) }
     }
-    installed = []
-    setHostContext(null)
-    disposePrefsBinding()
+    installed = kept.reverse()
     body.removeAttribute('data-dsh-claude-style')
+    body.removeAttribute(HANDOFF_ATTR)
     body.removeAttribute(BRAND_ATTR)
     body.removeAttribute(PALETTE_ATTR)
     body.removeAttribute(TYPEFACE_ATTR)
@@ -86,7 +91,31 @@ export function apply(ctx: HostContext) {
     body.removeAttribute(WINDOW_BLUR_ATTR)
     // This generation's own sheet, handed over rather than taken away when a
     // newer generation has mounted after it (mountStylesheet).
-    if (stopStylesheet !== null) stopStylesheet()
+    if (stopStylesheet !== null) {
+      stopStylesheet()
+      stopStylesheet = null
+    }
+  }
+
+  /**
+   * Undo everything this generation installed. Idempotent: the host runs it
+   * on dispose (the effect below), and own() runs it itself when the
+   * scheduler cannot be installed.
+   */
+  function teardown() {
+    if (disposed) return
+    disposed = true
+    if (offOwnerWatch !== null) {
+      offOwnerWatch()
+      offOwnerWatch = null
+    }
+    release()
+    if (offPeerWatch !== null) {
+      offPeerWatch()
+      offPeerWatch = null
+    }
+    setHostContext(null)
+    disposePrefsBinding()
   }
 
   // Registered before anything is installed: registered last, a feature that
@@ -174,9 +203,47 @@ export function apply(ctx: HostContext) {
     }
   }
 
-  // The value is the build id (scripts/build.mjs): the stylesheet keys on
-  // the attribute alone, and a live page reads which lib/client.js it runs.
-  body.setAttribute('data-dsh-claude-style', BUILD_ID)
+  /**
+   * Take the page: stamp, mount the sheet, install the features, schedule.
+   * Idempotent over what is already installed, so taking the page back after
+   * a yield leaves the settings section alone (D49); a feature retired after
+   * failing stays retired (D12).
+   *
+   * FEATURES is the registry the build generates from the manifests (D42),
+   * in install order; the scheduler's pass order is the same order. A live
+   * feature follows its switch and the plugins it yields to; the rest
+   * install once. A `pref` outside FEATURE_PREF_DEFAULTS is read by the
+   * feature itself.
+   */
+  function own() {
+    // The value is the build id (scripts/build.mjs): the stylesheet keys on
+    // the attribute alone, and a live page reads which lib/client.js it runs.
+    body.setAttribute('data-dsh-claude-style', BUILD_ID)
+    // The handoff marker rides the live stamp: its presence is what lets the
+    // skin center offer this theme as a selectable look (D49).
+    body.setAttribute(HANDOFF_ATTR, BUILD_ID)
+    adoptPrefs(prefs)
+    // The sheet carries this package's own tags and is unmounted by
+    // release(); the features install onto a page that already wears it.
+    if (stopStylesheet === null) stopStylesheet = mountStylesheet()
+    for (const feature of FEATURES) {
+      if (failed.has(feature.id) || installed.some(entry => entry.id === feature.id)) continue
+      if (isLive(feature)) applySwitch(feature)
+      else installFeature(feature)
+    }
+    if (offSwitches === null) {
+      offSwitches = subscribePrefs(() => {
+        for (const feature of live) applySwitch(feature)
+        if (typeof ui.schedule === 'function') ui.schedule()
+      })
+    }
+    // Last: its passes read the `ui` handles lazily. Without it nothing syncs,
+    // and a live stylesheet over overrides that never run is worse than no
+    // skin at all — so if it cannot install, the whole skin rolls back.
+    if (installed.some(entry => entry.id === 'scheduler')) return
+    if (!install('scheduler', 'scheduler', () => installScheduler(ctx, ui, handleNames))) teardown()
+  }
+
   setHostContext(ctx)
   // Bind the official settings form before anything reads a preference:
   // the host serves namespaces through `ctx.configForms`. Bound once here,
@@ -191,37 +258,36 @@ export function apply(ctx: HostContext) {
   // Preferences are read asynchronously from the host settings namespace;
   // applying the defaults first keeps every gated rule in a defined state
   // for the frames before that read settles, and is exactly the shipped
-  // behaviour when it never does.
+  // behaviour when it never does. This runs while yielded too: the reader
+  // must still reach the settings page and see their own values (D49).
   adoptPrefs(prefs)
 
-  // The sheet carries this package's own tags and is unmounted by the
-  // teardown below; the features install onto a page that already wears it.
-  stopStylesheet = mountStylesheet()
-
-  // FEATURES is the registry the build generates from the manifests (D42),
-  // in install order; the scheduler's pass order is the same order. A live
-  // feature follows its switch and the plugins it yields to; the rest
-  // install once. A `pref` outside FEATURE_PREF_DEFAULTS is read by the
-  // feature itself.
   setFeatureRegistry(FEATURES)
   const live = FEATURES.filter(isLive)
-  for (const feature of FEATURES) {
-    if (isLive(feature)) applySwitch(feature)
-    else installFeature(feature)
-  }
-  offSwitches = subscribePrefs(() => {
-    for (const feature of live) applySwitch(feature)
-    if (typeof ui.schedule === 'function') ui.schedule()
-  })
+  const handleNames = FEATURES.map(feature => feature.handle ?? feature.id)
   // Keep the presence watch alive for the page's lifetime: another plugin
   // arriving or leaving re-runs the preference stream, which brings the
   // features that yield to it in or out (src/shared/peer-plugin.ts). The
   // subscription itself carries no logic.
   offPeerWatch = subscribePeerPresence(() => {})
+  // A skin can arrive or leave whichever way the page booted; the
+  // verdict is read again on every flip rather than remembered (D49).
+  offOwnerWatch = subscribeExternalOwner(active => {
+    if (active === yielded) return
+    yielded = active
+    if (active) release(['settings'])
+    else own()
+  })
 
-  // Last: its passes read the `ui` handles lazily. Without it nothing syncs,
-  // and a live stylesheet over overrides that never run is worse than no
-  // skin at all — so if it cannot install, the whole skin rolls back.
-  const handleNames = FEATURES.map(feature => feature.handle ?? feature.id)
-  if (!install('scheduler', 'scheduler', () => installScheduler(ctx, ui, handleNames))) teardown()
+  if (yielded) {
+    // A skin already has this page (D49). The settings section is the
+    // one feature that stays: the reader still has to reach this theme's own
+    // page. adoptPrefs above stamped this theme's own body attributes; a
+    // yielded page carries none of them, so the release strips exactly what
+    // it stamped and leaves the section alone.
+    installFeature(FEATURES.find(feature => feature.id === 'settings')!)
+    release(['settings'])
+    return
+  }
+  own()
 }

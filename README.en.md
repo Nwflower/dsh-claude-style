@@ -123,6 +123,23 @@ To enable the Anthropic fonts, choose one of the following:
 
 > The Anthropic Sans and Serif fonts are the property of Anthropic, licensed for personal use only, and are not covered by this project's MIT license.
 
+## Skin center handoff
+
+This theme is also offered as a **skin** in the DSH Skin Center. Selecting it there hands the whole page to this
+plugin; selecting another skin or the official default takes the page back without a reload.
+
+- The answer holds from the first frame: the Skin Center stamps `html[data-dsh-skin]` into the served document, so a
+  page that boots with a skin already painting never flashes a frame of this theme first.
+- While another skin paints the page this theme mounts no stylesheet, installs no feature and claims no document
+  attribute at all. It takes the page back when the skin leaves and gives it back when a skin returns, a skin
+  picked after the page loaded included.
+- A wallpaper plugin is not another owner: while a wallpaper renders this theme keeps working, as described under
+  "Alongside other theme plugins" above.
+- The settings page and every stored preference survive the handoff. A skin taking the screen does not uninstall
+  anything, and closing the Skin Center does not throw away what you configured here.
+- `data-dsh-claude-style-handoff` on `body` marks a build that can do this; the Skin Center offers the row only
+  while it is there.
+
 ## Installation
 
 1. From the official plugin page, add the plugin below and it installs.
