@@ -1,9 +1,9 @@
 # D47. 构建产物不进主分支，发布分支提供 git 安装
 
-- **状态**：待实施
+- **状态**：部分实施
 - **分组**：构建与源码
 - **关联**：D36、D45
-- **现状**：`lib/` 被版本管理跟踪，但只在发版时重建、随发版一起提交，平时工作区里留着一个改过的 `lib/client.js`；README 的 GitHub 安装直接装 `master`
+- **现状**：`lib/` 已加入 `.gitignore` 并从版本管理里移出；`scripts/dist-branch.mjs` 把 npm 会发布的同一份文件写成一个孤立的 `dist` 提交并打上版本标签（本机已核对该分支的内容与标签保护），`.github/workflows/release.yml` 在标签推送后跑门、发布 npm 并推送该分支；首次推送与 README 的 GitHub 安装行改指 `#dist` 待这次发版进行
 
 ## 决定
 

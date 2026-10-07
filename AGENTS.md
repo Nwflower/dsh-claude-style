@@ -82,7 +82,7 @@ Target layout: D46. Today:
 - `src/constants.ts` holds build-time constants; `src/model-descriptions.json` the model copy and `brands` bindings, its shape declared in `src/model-descriptions.schema.json`; `src/assets/` every image, from brand marks to mascot sheets (`scripts/assets.mjs` decides inline or route, D38).
 - `src/generated.d.ts` types the module the build generates; `src/globals.d.ts` the DOM additions and the element properties the skin sets; `tsconfig.json` the type check.
 - `host/` the handwritten host half (private routes, settings `Config`, HDSL, search, usage).
-- `lib/` build output only, never edited by hand.
+- `lib/` build output only, never edited by hand and never committed (D47).
 - `locale/<language>.json` plugin metadata; `package.json`'s `exports` must cover them with `"./locale/*"`, or the host degrades the whole metadata (icon included) to `meta.error`.
 - `skin.json` the skin manifest; `cordis.patch.yml` inserts the skin into the web roster.
 - `scripts/` build (`build.mjs`, `css.mjs` for stylesheets, `assets.mjs` for images), smoke and live tools (`fetch-lobe-combines.py` is the only networked script, run by hand; `draw-crab.py` redraws the crab's sheets after a drawing change); `scripts/privacy.cjs` the replacements and the sweep before a screenshot reaches disk; `tools/` the maintained runnable tools (D45): `dsh-web.cjs` the scratch host, `mock-llm.cjs` the scripted model service, `e2e.cjs` the end-to-end lane; `tests/screenshots/` the reviewed baselines; `docs/` decisions, style guide, screenshots; `fonts/`; `showcase/gifs/`.
@@ -134,7 +134,8 @@ The quick tier leaves out the motion cases; a feature whose cases all watch moti
 
 - Conventional commit prefixes (`fix(scope):`, `refactor(scope):`, `docs(scope):`, `chore(release):` …); commit titles and bodies in Chinese; one logical change per commit, no WIP, no unrelated changes; moves are committed apart from logic changes.
 - Another session may be editing the same working tree: commit only your own changes — whole files only when every change in them is yours, otherwise your hunks alone. Before committing, export the index (`git checkout-index -a --prefix=.debug/<dir>/`) and run the build and the relevant smoke there.
-- Until D47 lands, `lib/` is committed only with the release commit: release = `node scripts/changelog.mjs --release <version>` (which turns the pending changes into the version's section and clears `changes/`) → full `npm run smoke` → `npm version patch|minor` → `npm run build` and commit the rebuilt `lib/` → tag → `npm publish` → GitHub Release with the notes from that CHANGELOG section.
+- `lib/` is build output and never committed (D47): it is gitignored on `master`, built by the gates, and shipped by npm and by the `dist` branch.
+- Release: `node scripts/changelog.mjs --release <version>` (the pending changes become that version's section and `changes/` is cleared) → `npm version patch|minor` → commit the two and push the tag. The Release workflow then runs the gates, publishes to npm, and writes `dist` plus the version tag with the very files npm got; `scripts/dist-branch.mjs --push` does that last step by hand if needed.
 - CHANGELOG format (the `[Unreleased]` section and the release sections are written by `scripts/changelog.mjs`; the files under `changes/` are what is authored):
   - Version sections `## [x.y.z] - YYYY-MM-DD`, newest first; work in progress under `## [Unreleased]`.
   - Each section bilingual on one page: a `[中文](#cn-x.y.z) | [English](#en-x.y.z)` line, then `<h3 id="cn-x.y.z">新增功能</h3>` and `<h3 id="en-x.y.z">New Features</h3>` anchors carrying the version; further groups use plain `###`.

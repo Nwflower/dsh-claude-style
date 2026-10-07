@@ -2,5 +2,8 @@ node_modules/
 *.log
 .DS_Store
 
+# Build output: CI builds it, npm carries it, and the dist branch serves it (D47)
+lib/
+
 # Local debugging scratch (Chrome profile, CDP scripts, screenshots)
 .debug/

@@ -1,0 +1,35 @@
+name: Release
+
+# A release starts from a tag the maintainer pushes: the version's CHANGELOG
+# section and the bumped package.json are already in that commit. The job runs
+# the gates again, publishes the package to npm, and writes the same files to
+# the `dist` branch so a git install needs no build (D47).
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - run: npm run docs:check
+      - run: npm run changelog:check
+      - run: npm test
+      - run: npm run smoke
+      # The same build npm gets: `npm pack` builds through prepublishOnly.
+      - run: node scripts/dist-branch.mjs --push
+      - run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
