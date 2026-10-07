@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-07",
-  "group": "fixes",
-  "order": 3,
-  "external": false,
-  "zh": "**吉祥物的分段控件回到右侧**：吉祥物这一行此前固定把控件排到文字下面（与品牌卡片同一套排法）。现在控件与文字同占一行、靠右对齐，只有在放不下时才落到下一行并从左边开始——判定用文字列的最小宽度（220px），控件本身不收缩。",
-  "en": "**The mascot's segmented control is back on the right**: the mascot row used to stack its control under the text, the layout the brand cards use. The control now shares the row and sits at its right edge, and drops to a line of its own starting at the left only when it no longer fits — decided by the text column's minimum width (220px), since the control itself never shrinks."
-}

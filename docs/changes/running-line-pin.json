@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-07",
-  "group": "improvements",
-  "order": 2,
-  "external": false,
-  "zh": "**进行中的状态行不再随内容上下跳动**：宿主把「深度求索中」这一行画成聊天流的最后一行，答案流式追加时它跟着内容底部一起被推下去、跟随的滑动再把它拉回来，盯着末尾看时就是不停跳动。现在只要读者的跟随还开着，这一行就钉在输入框上方（输入框高度 + 上方的渐隐带 + 宿主的 16px 正文内边距），也就是跟随追上时它本来停的位置：突发的追加不再带动它，往回翻看历史时它照常留在文档位置，不会浮在读者正在读的内容上。",
-  "en": "**The running status line no longer rides the content**: the host draws its \"deep diving\" row as the chat flow's last row, so every burst of a streaming answer pushes it down and the follow's glide drags it back, which reads as continuous jumping at the tail. While the reader's follow is on, the row is now pinned above the composer — the composer's height, the fade band above it and the host's 16px transcript padding — which is where it already comes to rest once the glide has caught up: a burst no longer moves it, and scrolled back through history it keeps its document place instead of floating over what the reader went back to read."
-}

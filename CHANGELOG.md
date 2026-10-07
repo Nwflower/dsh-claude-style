@@ -4,9 +4,11 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 ## [Unreleased]
 
-[中文](#cn-unreleased) | [English](#en-unreleased)
+## [0.12.0] - 2026-10-07
 
-<h3 id="cn-unreleased">新增功能</h3>
+[中文](#cn-0.12.0) | [English](#en-0.12.0)
+
+<h3 id="cn-0.12.0">新增功能</h3>
 
 - 桌面端把会话标题与标题行里的控件抬进窗口顶端的标题栏：标题靠左、控件靠右排在窗口按钮之前，标题行剩下的内容左移并上提到标题下面；放不下的一侧留在原来的行里。
 
@@ -17,8 +19,10 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **小鲸鱼的帧图改为矢量取用**：Deepy 的 18 张帧图此前由浏览器在某个动作第一次出现时下载 PNG、在画布上重建成矢量、再存进 Cache API；现在构建期就把它们转成矢量，按内容哈希长期缓存。第一次播放不再有重建的停顿，观感与之前一致；随包携带的帧图从 426 KB 变为 658 KB（brotli 后）。
 - **浏览器里的侧栏品牌行**：非桌面外壳（浏览器页面）下侧栏品牌行是这一列的第一行，列顶部只有 6px 内边距，logo 贴着窗口上沿；品牌左侧也比「新会话」的加号圆片靠左 8px。现在浏览器页面给这一行加 8px 顶部边距，品牌带上这一行自己的 8px 左内边距，鲸鱼/星芒的左缘与加号圆片的左缘对齐。桌面外壳（Windows 标题栏、macOS）与折叠后的窄栏不变。
 - **进行中的状态行不再随内容上下跳动**：宿主把「深度求索中」这一行画成聊天流的最后一行，答案流式追加时它跟着内容底部一起被推下去、跟随的滑动再把它拉回来，盯着末尾看时就是不停跳动。现在只要读者的跟随还开着，这一行就钉在输入框上方（输入框高度 + 上方的渐隐带 + 宿主的 16px 正文内边距），也就是跟随追上时它本来停的位置：突发的追加不再带动它，往回翻看历史时它照常留在文档位置，不会浮在读者正在读的内容上。
-- **滚轮滚动改走同一条弹簧**（Windows 与其他非 Apple 平台）：主对话里的滚轮不再由浏览器直接写位置，距离交给滚动主人那条临界阻尼弹簧走完（新增 `wheel` 来源，优先级在 `composer` 之上、`fold` 之下）。一串滚轮格不再把整段距离压在一帧里：速度从静止连续加上去、中段限速、末段收尾，落点在半像素以内；第二格接着上一段滑行延长，不重新起跑。macOS 与 iPadOS 上完全不接管，平台自己的惯性曲线与边缘回弹照旧；指针与滚动条之间还有能朝这个方向滚动的嵌套滚动条、按住 Ctrl（缩放），或读者的动效选择是「关闭」时，滚轮也照旧交给浏览器。监听挂在会话滚动条自己身上，页面其它地方的滚轮不必等主线程。
 - 分栏的右侧栏：两栏各自仍是独立的圆角卡片，中间那条分栏线不再画（拖动时的提示照旧），两栏之间的距离从 16px 收到 6px，每栏到列边的距离从 8px 收到 6px。
+- 手机宽度下的输入框下沿：权限选择器收起下三角，权限与模型选择器按窄屏上限截断，上下文只留圆环不显示数字；那一行同时不再溢出卡片——模型名随行收缩、输入框下方的停靠层不再保留桌面那两份留白，圆环因此回到卡片里、也不再压在推理等级上。
+- 输入框下沿的权限档位：按钮不再画下三角（任何宽度都是），档位名过长时在按钮内截断；已经打开的档位卡在布局移动时会重新贴回它的触发按钮，而不再留在原处。
+- 宿主的「回到底部」按钮改到输入框上方的正中：它原先长在对话栏右缘，正好压在站在输入卡片上的吉祥物身上；按钮仍是宿主的那个，皮肤只挪位置。
 
 ### 问题修复
 
@@ -31,6 +35,9 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **设置页不再多出一层内边距**：皮肤自己的设置页带了 24px 横向内边距，而宿主的选项列本来就有 24px，于是整页比其余设置页（宿主自己的与别的插件的）向右缩进 24px、顶部也多 20px。现在横向不留内边距，顶部只留宿主行自己的 16px，标题与第一行文字和其余设置页在同一条竖线上。
 - **吉祥物的分段控件回到右侧**：吉祥物这一行此前固定把控件排到文字下面（与品牌卡片同一套排法）。现在控件与文字同占一行、靠右对齐，只有在放不下时才落到下一行并从左边开始——判定用文字列的最小宽度（220px），控件本身不收缩。
 - **欢迎语与账号区跟随登录的 DeepSeek 账号**：此前这两处只显示自定义用户名或本机系统用户名，登录账号的昵称从不出现；现在桌面端登录后显示账号昵称，自定义用户名仍然优先，账号资料读不到时才回退到 HDSL 昵称与本机系统用户名。
+- 顶栏里的对话 / 轨迹标签条：标题与控件分列两侧时，标签条改取两者之间余下空当的中线（原先按窗口居中，两侧有内容后看着偏左）；鼠标在对话区时标签条重新能唤起（本表自己的静置透明度带 !important，唤起规则少了它就一直压不过去，网页端同样受影响）。
+- 顶栏里的会话标题不再过早截断：标题的可用宽度改为直接留出标签条自身的宽度与两侧的空隙，而不是去读标签条「按窗口居中」时的位置——标签条随后会被推到标题与控件之间的中线，那个位置本来就会被放弃，标题因此在小一半的宽度上就开始省略号。标题同时下移 2px，在标题栏里读起来才是垂直居中。
+- 用对话导航跳到某一轮之后，新输出不再把位置拖回页底：跳转算读者自己选定的阅读位置，接管与滚轮相同，跟随与流式滑行在这一期间让开，读者自己回到页底时解除。
 
 ### 其他变更
 
@@ -38,7 +45,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **附带 source map**：npm 包里新增 `lib/client.js.map`，浏览器开发者工具里的报错位置与断点能对应到插件源码。
 - **Anthropic 字体的投放点迁到宿主目录**：把两款 Anthropic 字体复制进插件包 `fonts/` 目录后界面仍用替代字体，那个位置已不再被读取。现在的投放点是 `$DSH_HOME/dsh-claude-style/fonts/`（没有设置 `DSH_HOME` 时是 `~/.dsh/dsh-claude-style/fonts/`）：放在这里的文件优先于包内的同名文件，缺失时照旧 404 回退到系统字体与替代字体。随包分发的四款字体与它们的授权文件改由构建写入 `lib/fonts/`，仓库里的字体文件移到了 `packages/assets/src/fonts/`，两款 Anthropic 字体在其 `anthropic/` 子目录里，仍然不随 npm 包分发。
 
-<h3 id="en-unreleased">New Features</h3>
+<h3 id="en-0.12.0">New Features</h3>
 
 - On the desktop the conversation's title and the header's controls rise into the window's own caption row — the title at the left, the controls at the right before the window buttons — and what is left of the title row closes up to the left and rides up under the title. A side without room stays in the header's own row.
 
@@ -49,8 +56,10 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **Deepy's frames are taken as vectors**: the whale's 18 sheets used to be downloaded as PNGs the first time an animation appeared, rebuilt into a vector on a canvas and kept in the Cache API; the build now produces the vectors and they are cached for good under their content hash. The first play no longer pauses to rebuild and the whale looks the same; the sheets that ship with the package go from 426 KB to 658 KB (brotli).
 - **The sidebar brand row in a browser**: without a desktop shell the brand row is the column's first row, so 6px of column padding was the whole inset and the logo sat against the window's top edge; the brand also started 8px left of the New session plus chip. A browser page now gives that row 8px of top margin and the brand the row's own 8px leading inset, so the whale or starburst's left edge lands on the chip's. The desktop shells (Windows titlebar, macOS) and the collapsed rail are unchanged.
 - **The running status line no longer rides the content**: the host draws its "deep diving" row as the chat flow's last row, so every burst of a streaming answer pushes it down and the follow's glide drags it back, which reads as continuous jumping at the tail. While the reader's follow is on, the row is now pinned above the composer — the composer's height, the fade band above it and the host's 16px transcript padding — which is where it already comes to rest once the glide has caught up: a burst no longer moves it, and scrolled back through history it keeps its document place instead of floating over what the reader went back to read.
-- **The wheel scrolls on the same spring** (Windows and other non-Apple platforms): a wheel over the main conversation no longer lets the browser write the position — the distance is handed to the scroll owner's critically damped spring (a new `wheel` source, ranked above `composer` and below `fold`). A burst of notches no longer puts the whole distance on one frame: the speed builds from rest, is capped through the middle and eases into a landing within half a pixel, and a second notch extends the glide in flight instead of restarting it. macOS and iPadOS are left alone entirely, keeping the platform's own momentum curve and edge bounce; a nested scroller that can still move that way, a held Ctrl (zoom) and the reader's "no animation" choice also leave the wheel to the browser. The listener hangs on the conversation's own scroller, so a wheel anywhere else on the page never waits on the main thread.
 - In a split right sidebar each pane stays its own rounded card: the line the dock draws between them is gone (the drag highlight stays), the gap between the two comes in from 16px to 6px, and each pane now sits 6px from the column's edge instead of 8px.
+- The composer's bottom line at a phone's width: the permission control drops its chevron, the permission and model controls truncate at narrow-screen caps, and the context meter keeps the ring without its number. The row no longer runs past the card either — the model name shrinks with it and the dock line under the card gives up the two desktop-sized reserves — so the ring lands inside the card instead of under the reasoning level.
+- The permission tier control on the composer's bottom line drops its chevron at every width, not just on a phone, and a long tier name truncates inside the button. An open tier card is also placed again when the layout under it moves, instead of hanging where its trigger used to be.
+- The host's back-to-end button now sits centred above the composer. Its shipped place is the conversation column's right edge, which is where the mascot stands on the composer card; the button stays the host's own and only its placement is the skin's.
 
 ### Bug Fixes
 
@@ -63,6 +72,9 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **The settings page no longer adds an inset of its own**: the skin's page carried 24px of side padding while the host's options column already has 24px, which set the whole page — and its top, by another 20px — 24px inside the host's own pages and other plugins'. The page now keeps no side padding and only the host row's own 16px on top, so its heading and first row line up with every other page's.
 - **The mascot's segmented control is back on the right**: the mascot row used to stack its control under the text, the layout the brand cards use. The control now shares the row and sits at its right edge, and drops to a line of its own starting at the left only when it no longer fits — decided by the text column's minimum width (220px), since the control itself never shrinks.
 - **The welcome line and the account area follow the signed-in DeepSeek account**: both used to show the custom username or the local system user, never the signed-in account's nickname; on the desktop they now show the account nickname, a custom username still wins, and the HDSL name and the local system user remain the fallbacks for a profile that cannot be read.
+- The Chat / Trajectory strip in the caption row: with the title and the controls standing on either side, the strip now takes the middle of the room left between them (it was centred on the window, which reads off-centre once both sides carry something), and hovering the conversation brings it back — the sheet's own resting opacity is stated with !important, so the reveal rule needed it too, on the web as much as on the desktop.
+- The session title in the caption row no longer truncates early: its room is now the space up to the controls with the tab strip's own width and the air on both sides reserved, rather than the strip's window-centred position — the strip is then pushed to the middle between the title and the controls, so that position was one it was about to leave and the title began ellipsizing at half the width it had. The title also sits 2px lower, which is what reads as vertically centred in the caption row.
+- After a jump to a turn from the conversation navigator, new output no longer drags the position back to the end: the jump counts as the reader choosing where to read, so it holds the conversation the way his own wheel does — the follow and the stream glide stand down until he comes back to the end himself.
 
 ### Chores
 

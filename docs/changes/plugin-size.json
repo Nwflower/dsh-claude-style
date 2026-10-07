@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-06",
-  "group": "improvements",
-  "order": 0,
-  "external": false,
-  "zh": "**插件主文件缩小一半**：浏览器每次启动都要读取并解析的插件主文件此前是 1.6 MB（1,619,502 字节），现在压缩后是 0.8 MB（816,520 字节）。",
-  "en": "**The plugin's main file is half the size**: the file the browser reads and parses on every start was 1.6 MB (1,619,502 bytes); minified it is now 0.8 MB (816,520 bytes)."
-}

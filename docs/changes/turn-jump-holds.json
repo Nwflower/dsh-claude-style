@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-07",
-  "group": "fixes",
-  "order": 6,
-  "external": false,
-  "zh": "用对话导航跳到某一轮之后，新输出不再把位置拖回页底：跳转算读者自己选定的阅读位置，接管与滚轮相同，跟随与流式滑行在这一期间让开，读者自己回到页底时解除。",
-  "en": "After a jump to a turn from the conversation navigator, new output no longer drags the position back to the end: the jump counts as the reader choosing where to read, so it holds the conversation the way his own wheel does — the follow and the stream glide stand down until he comes back to the end himself."
-}

@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-06",
-  "group": "fixes",
-  "order": 1,
-  "external": true,
-  "zh": "**与壁纸插件共存**：0.11.1 在启动时已有壁纸渲染（`body[data-we-wallpaper]`）的页面上整页让出，「与其他主题插件同时使用」里壁纸透过侧栏与玻璃弹层的效果随之失效。现在只为皮肤中心的皮肤（`html[data-dsh-skin]`）让路，壁纸在渲染时本主题照常工作。对外契约：不再读取 `body[data-we-wallpaper]`。",
-  "en": "**Sharing the page with a wallpaper plugin**: 0.11.1 gave the whole page up when a wallpaper was already rendering at boot (`body[data-we-wallpaper]`), which lost the wallpaper showing through the sidebar and the glass popovers described under Alongside other theme plugins. Now only a Skin Center skin (`html[data-dsh-skin]`) makes the theme yield; while a wallpaper renders the theme keeps working. External contract: `body[data-we-wallpaper]` is no longer read."
-}

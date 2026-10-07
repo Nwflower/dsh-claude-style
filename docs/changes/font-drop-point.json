@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-07",
-  "group": "chores",
-  "order": 2,
-  "external": true,
-  "zh": "**Anthropic 字体的投放点迁到宿主目录**：把两款 Anthropic 字体复制进插件包 `fonts/` 目录后界面仍用替代字体，那个位置已不再被读取。现在的投放点是 `$DSH_HOME/dsh-claude-style/fonts/`（没有设置 `DSH_HOME` 时是 `~/.dsh/dsh-claude-style/fonts/`）：放在这里的文件优先于包内的同名文件，缺失时照旧 404 回退到系统字体与替代字体。随包分发的四款字体与它们的授权文件改由构建写入 `lib/fonts/`，仓库里的字体文件移到了 `packages/assets/src/fonts/`，两款 Anthropic 字体在其 `anthropic/` 子目录里，仍然不随 npm 包分发。",
-  "en": "**The Anthropic fonts are dropped into the harness home now**: copying the two Anthropic faces into the plugin package's `fonts/` directory left the look-alike faces in place, because that location is no longer read. The drop point is `$DSH_HOME/dsh-claude-style/fonts/` (`~/.dsh/dsh-claude-style/fonts/` when `DSH_HOME` is unset): a file there wins over a bundled face of the same name, and a missing one still answers 404 and falls back to the system and the look-alike faces. The four faces the package ships, with their licences, are written to `lib/fonts/` by the build, and the repository's font files moved to `packages/assets/src/fonts/`, the two Anthropic ones under its `anthropic/` directory and still outside the npm package."
-}

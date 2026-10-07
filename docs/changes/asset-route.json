@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-06",
-  "group": "chores",
-  "order": 0,
-  "external": true,
-  "zh": "**公开路由变化**：`GET /dsh-claude-style/deepy/<动作>.png` 不再提供，帧图改由 `GET /dsh-claude-style/assets/<内容哈希>.svg` 提供；品牌标志、厂商组合标与螃蟹帧图同样由这份构建清单决定内联进产物还是走这条路由（小鲸鱼的 18 张帧图走路由）。更新插件后需要重启宿主，早于本次构建的宿主半边没有这条路由，小鲸鱼不会出现（控制台提示一次）。",
-  "en": "**Public route change**: `GET /dsh-claude-style/deepy/<animation>.png` is gone; the frames are served by `GET /dsh-claude-style/assets/<content hash>.svg`, and the brand marks, the vendor lockups and the crab's sheets follow the same build manifest, which decides per file between an inline form and that route (the whale's 18 sheets take the route). Restart the host after updating: a host half older than this build has no such route and the whale will not appear (one console message)."
-}

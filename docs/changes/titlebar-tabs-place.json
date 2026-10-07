@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-07",
-  "group": "fixes",
-  "order": 4,
-  "external": false,
-  "zh": "顶栏里的对话 / 轨迹标签条：标题与控件分列两侧时，标签条改取两者之间余下空当的中线（原先按窗口居中，两侧有内容后看着偏左）；鼠标在对话区时标签条重新能唤起（本表自己的静置透明度带 !important，唤起规则少了它就一直压不过去，网页端同样受影响）。",
-  "en": "The Chat / Trajectory strip in the caption row: with the title and the controls standing on either side, the strip now takes the middle of the room left between them (it was centred on the window, which reads off-centre once both sides carry something), and hovering the conversation brings it back — the sheet's own resting opacity is stated with !important, so the reveal rule needed it too, on the web as much as on the desktop."
-}

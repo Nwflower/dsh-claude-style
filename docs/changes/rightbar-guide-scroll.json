@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-07",
-  "group": "fixes",
-  "order": 0,
-  "external": false,
-  "zh": "右侧栏「开始」页的项目一屏放不下时，整列被上下同时裁掉，既看不到第一项也滚不到最后一项；现在这一列自己滚动，列表短时依旧居中。",
-  "en": "The right sidebar's start page clipped its entries at both ends once the list outgrew the pane, hiding the first rows with no way to scroll; the column scrolls now, and still centers the list while it fits."
-}

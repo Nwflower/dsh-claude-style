@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-07",
-  "group": "fixes",
-  "order": 5,
-  "external": false,
-  "zh": "顶栏里的会话标题不再过早截断：标题的可用宽度改为直接留出标签条自身的宽度与两侧的空隙，而不是去读标签条「按窗口居中」时的位置——标签条随后会被推到标题与控件之间的中线，那个位置本来就会被放弃，标题因此在小一半的宽度上就开始省略号。标题同时下移 2px，在标题栏里读起来才是垂直居中。",
-  "en": "The session title in the caption row no longer truncates early: its room is now the space up to the controls with the tab strip's own width and the air on both sides reserved, rather than the strip's window-centred position — the strip is then pushed to the middle between the title and the controls, so that position was one it was about to leave and the title began ellipsizing at half the width it had. The title also sits 2px lower, which is what reads as vertically centred in the caption row."
-}

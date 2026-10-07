@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-07",
-  "group": "improvements",
-  "order": 6,
-  "external": false,
-  "zh": "手机宽度下的输入框下沿：权限选择器收起下三角，权限与模型选择器按窄屏上限截断，上下文只留圆环不显示数字；那一行同时不再溢出卡片——模型名随行收缩、输入框下方的停靠层不再保留桌面那两份留白，圆环因此回到卡片里、也不再压在推理等级上。",
-  "en": "The composer's bottom line at a phone's width: the permission control drops its chevron, the permission and model controls truncate at narrow-screen caps, and the context meter keeps the ring without its number. The row no longer runs past the card either — the model name shrinks with it and the dock line under the card gives up the two desktop-sized reserves — so the ring lands inside the card instead of under the reasoning level."
-}

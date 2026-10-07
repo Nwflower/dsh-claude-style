@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-07",
-  "group": "fixes",
-  "order": 2,
-  "external": false,
-  "zh": "**设置页不再多出一层内边距**：皮肤自己的设置页带了 24px 横向内边距，而宿主的选项列本来就有 24px，于是整页比其余设置页（宿主自己的与别的插件的）向右缩进 24px、顶部也多 20px。现在横向不留内边距，顶部只留宿主行自己的 16px，标题与第一行文字和其余设置页在同一条竖线上。",
-  "en": "**The settings page no longer adds an inset of its own**: the skin's page carried 24px of side padding while the host's options column already has 24px, which set the whole page — and its top, by another 20px — 24px inside the host's own pages and other plugins'. The page now keeps no side padding and only the host row's own 16px on top, so its heading and first row line up with every other page's."
-}

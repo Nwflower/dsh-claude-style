@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-07",
-  "group": "fixes",
-  "order": 1,
-  "external": false,
-  "zh": "成本计量插件停止写入后，用量面板把它覆盖的历史（8/24 起 26 天、11.23B Token）整份丢掉，改由会话日志现折，面板只剩日志还在的那部分（13 天、6.47B）；现在两个来源按日期合并，账本认识的天仍用账本的数，只有它没覆盖的日期由折算补上，面板恢复完整历史。",
-  "en": "Once the cost-meter plugin stopped writing, the usage panel discarded the whole history the ledger covered (11.23B tokens over 26 days from 8/24) and fell back to folding the session logs, which left it with only the part the logs still held (6.47B over 13 days); the two accounts now merge by date, the ledger keeps the days it knows and the fold fills only the dates past its newest, so the panel shows the whole history again."
-}

@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-07",
-  "group": "fixes",
-  "order": 2,
-  "external": false,
-  "zh": "**发送的替身不再在真实消息行缺席时淡出**：宿主的回显气泡只活约 159 毫秒，真实消息行要一秒以上才挂上，而替身按自己的时间表在 400 毫秒落地淡出，那一段里目标位置空着——读者看到刚发出的气泡淡成页面背景，随后整条又冒出来。现在降落前先确认有一条行在页面上可以交接：没有就把替身停在原地（保持可见、继续跟随目标位置），真实行一到立刻交接；宿主始终没挂上行时按 2.5 秒兜底把页面交还宿主。",
-  "en": "**The stand-in no longer fades out with no message row to land on**: the host's echo bubble lives about 159 ms while the real row takes over a second to mount, and the stand-in faded out on its own 400 ms schedule — with nothing at the destination, the reader watched the bubble they had just sent fade into the page and then the whole message pop back. The hand-over now waits until there is a row on the page to take the message: the stand-in holds where it is (visible, still following the destination) and hands over the moment the row mounts, with a 2.5 s backstop that gives the page back to the host if no row ever comes."
-}
