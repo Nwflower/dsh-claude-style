@@ -44,6 +44,7 @@ import { PNG } from 'pngjs'
 import { checkClaimed, checkSheetPixels, checkSheets, planAssets, vectorizeSheet, writeAssets } from './assets.mjs'
 import { TOKEN_SHEET, buildStylesheet, loadTokens, writeTokenTable } from './css.mjs'
 import manifestReader from './read-manifests.cjs'
+import { loadModule } from './ts-module.cjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
 /**
@@ -163,17 +164,7 @@ const FACTORY_CLOSE = `    return module.exports
  * and the preference defaults the build checks.
  */
 const CONSTANTS = (() => {
-  const { outputFiles } = esbuild.buildSync({
-    entryPoints: [path.join(SRC, 'constants.ts')],
-    bundle: true,
-    format: 'cjs',
-    platform: 'neutral',
-    write: false,
-    logLevel: 'silent',
-  })
-  const module = { exports: {} }
-  vm.runInNewContext(outputFiles[0].text, { module, exports: module.exports }, { filename: 'src/constants.ts' })
-  const constants = module.exports
+  const constants = loadModule('constants.ts')
   const pick = (names) => Object.fromEntries(names.map((name) => {
     if (constants[name] === undefined) throw new Error(`build: src/constants.ts exports no ${name}`)
     return [name, constants[name]]
@@ -208,6 +199,9 @@ const CONSTANTS = (() => {
 
 /** The host contract's table: build and test data, so it stays out of the bundle (D44). */
 const CONTRACT_TABLE = 'contracts/table.ts'
+/** The page states and check kinds src/contracts/table.ts records (D44, D45). */
+const PROBE_STATES = new Set(['any', 'hero', 'sending', 'streaming', 'conversation', 'menu', 'dark'])
+const PROBE_KINDS = new Set(['selector', 'attribute', 'property', 'global', 'value', 'rail-geometry', 'none'])
 
 /**
  * The brand marks the stylesheets paint, as `%%TOKEN%%` placeholders (the skin
@@ -472,27 +466,6 @@ function checkCycles(metafile) {
 }
 
 /**
- * Evaluate one data-only module in Node, as the manifests are read
- * (scripts/read-manifests.cjs): esbuild bundles it and the body runs in a fresh
- * vm context, so a module that is build and test data costs the page nothing.
- *
- * @param file - src/-relative module path.
- */
-function evalModule(file) {
-  const { outputFiles } = esbuild.buildSync({
-    entryPoints: [path.join(SRC, file)],
-    bundle: true,
-    format: 'cjs',
-    platform: 'neutral',
-    write: false,
-    logLevel: 'silent',
-  })
-  const module = { exports: {} }
-  vm.runInNewContext(outputFiles[0].text, { module, exports: module.exports }, { filename: file })
-  return module.exports
-}
-
-/**
  * Hold the host contract together (D44).
  *
  * The literals the skin keys on live in src/contracts/dom.ts and the table of
@@ -505,8 +478,8 @@ function evalModule(file) {
  * @returns the table, for the build log.
  */
 function checkContracts(manifests) {
-  const literals = evalModule('contracts/dom.ts')
-  const { HOST_DOM: table } = evalModule('contracts/table.ts')
+  const literals = loadModule('contracts/dom.ts')
+  const { HOST_DOM: table } = loadModule('contracts/table.ts')
   if (!Array.isArray(table) || table.length === 0) throw new Error('build: src/contracts/table.ts exports no HOST_DOM')
   const listed = new Set()
   for (const entry of table) {
@@ -515,6 +488,15 @@ function checkContracts(manifests) {
     }
     if (listed.has(entry.id)) throw new Error(`build: src/contracts/table.ts lists "${entry.id}" twice`)
     listed.add(entry.id)
+  }
+  // Every entry says how the contract test checks it (D44), so a host upgrade
+  // walks one list with no entry quietly unchecked.
+  for (const entry of table) {
+    const probe = entry.probe
+    if (probe === null || typeof probe !== 'object') throw new Error(`build: src/contracts/table.ts entry "${entry.id}" has no probe`)
+    if (!PROBE_STATES.has(probe.state)) throw new Error(`build: src/contracts/table.ts entry "${entry.id}" has probe state "${probe.state}"`)
+    if (!PROBE_KINDS.has(probe.kind)) throw new Error(`build: src/contracts/table.ts entry "${entry.id}" has probe kind "${probe.kind}"`)
+    if (probe.within !== undefined && !listed.has(probe.within)) throw new Error(`build: src/contracts/table.ts entry "${entry.id}" is checked within "${probe.within}", which the table does not list`)
   }
   const values = new Set(table.map((entry) => entry.value))
   for (const [name, value] of Object.entries(literals)) {

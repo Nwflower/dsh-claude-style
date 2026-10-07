@@ -1,7 +1,7 @@
 /**
  * The host contract as one table (D44): the literals in src/contracts/dom.ts,
- * each with what the skin reads it for and the host build it was verified
- * against.
+ * each with what the skin reads it for, the host build it was verified against,
+ * and how the contract test checks it on a live host (D45).
  *
  * The table is build and test data rather than runtime data: the browser bundle
  * carries the literals alone, so the notes cost the page nothing. The build
@@ -16,6 +16,41 @@ import { ACCOUNT_TRIGGER_SELECTOR, CHAIN_OVERLAY_FALLBACK_ATTRIBUTE, CHAT_CALL_S
 export const HOST_VERIFIED = '0.2.1-alpha.1'
 
 /**
+ * The page state an entry is checked in (D45): the empty page, the moment a
+ * submission goes through, an answer streaming in, a settled conversation of two
+ * turns, the host's own account menu open, or the host's dark flip. `any` holds
+ * everywhere the page is served.
+ */
+export type HostDomProbeState = 'any' | 'hero' | 'sending' | 'streaming' | 'conversation' | 'menu' | 'dark'
+
+/**
+ * How the literal is checked:
+ *
+ * - `selector` — it matches at least `min` elements (default 1).
+ * - `attribute` — some element carries it.
+ * - `property` — the document element resolves it as a custom property.
+ * - `global` — the dotted path resolves on the page.
+ * - `value` — the string appears as the value of some attribute.
+ * - `rail-geometry` — the rail's marks and its scroller's content height agree
+ *   with `turn.rail-pitch` and `turn.rail-inset`.
+ * - `none` — no page form: a number, a value only another platform writes, or a
+ *   literal of a plugin this instance does not install. The behaviour scenarios
+ *   and the unit tests hold these; the contract test reports them by id so a
+ *   host upgrade still walks the whole list.
+ */
+export type HostDomProbeKind = 'selector' | 'attribute' | 'property' | 'global' | 'value' | 'rail-geometry' | 'none'
+
+/** How the contract test checks one entry against a live host. */
+export interface HostDomProbe {
+  state: HostDomProbeState
+  kind: HostDomProbeKind
+  /** At least how many matches a selector needs; defaults to 1. */
+  min?: number
+  /** The entry a relative selector or a geometry check is resolved against. */
+  within?: string
+}
+
+/**
  * One entry of the table: the literal the host writes, and what the skin reads
  * it for.
  */
@@ -24,6 +59,8 @@ export interface HostDomEntry {
   id: string
   /** The literal, as the host writes it. */
   value: string
+  /** How the contract test checks it (D45). */
+  probe: HostDomProbe
   /** What the host means by it, and what reads it. */
   use: string
   /**
@@ -35,69 +72,69 @@ export interface HostDomEntry {
 }
 
 export const HOST_DOM: HostDomEntry[] = [
-  { id: 'chat.flow-block', value: FLOW_BLOCK_SELECTOR, use: 'a new flow block: this piece of the stream moved on' },
-  { id: 'chat.flow', value: CHAT_FLOW_SELECTOR, use: 'the chat column: the root every chat-area behaviour scopes to' },
-  { id: 'chat.call', value: CHAT_CALL_SELECTOR, use: 'one tool call row: structure the follow watches for' },
-  { id: 'chat.think-row', value: THINK_ROW_SELECTOR, use: 'one thinking row, folded and quoted by its phase' },
-  { id: 'chat.think-running', value: RUNNING_STATE, use: 'the phase value while the model is still thinking' },
-  { id: 'chat.streaming', value: STREAMING_SELECTOR, use: 'the markdown container while an answer streams' },
-  { id: 'chat.streaming-attribute', value: STREAMING_ATTRIBUTE, use: 'the same mark as an attribute name, watched appearing and going' },
-  { id: 'chat.shimmer', value: SHIMMER_SELECTOR, use: 'TextShimmer still sweeping: that content is still moving' },
-  { id: 'chat.scroller', value: CONVERSATION_SCROLL_SELECTOR, use: 'the session scroller the host hangs its own follow off' },
-  { id: 'chat.following-tail', value: FOLLOWING_TAIL_SELECTOR, use: 'present while the host follow is on; the scroll owner hands it back through it' },
-  { id: 'chat.following-tail-attribute', value: FOLLOWING_TAIL_ATTRIBUTE, use: 'the same mark as an attribute name' },
-  { id: 'chat.follow-threshold', value: String(FOLLOW_THRESHOLD_PX), use: 'how close to the end counts as reading the tail, by the host\u2019s own line' },
-  { id: 'composer.seat', value: COMPOSER_SELECTOR, use: 'the composer seat: a pointer or key inside it is the reader typing' },
-  { id: 'composer.input', value: COMPOSER_INPUT_SELECTOR, use: 'the editable draft: caret motion and the send flight read it' },
-  { id: 'composer.card', value: COMPOSER_CARD_SELECTOR, use: 'the composer card the send flight lifts a copy of' },
-  { id: 'composer.scroll', value: COMPOSER_SCROLL_SELECTOR, use: 'the draft\u2019s own scroll area inside the card' },
-  { id: 'composer.textarea', value: COMPOSER_TEXTAREA_SELECTOR, use: 'a question card\u2019s answer box or a queued message\u2019s inline editor' },
-  { id: 'composer.echo', value: SUBMISSION_ECHO_SELECTOR, use: 'the echo bubble mounted the moment a submission goes through' },
-  { id: 'composer.stack', value: COMPOSER_STACK_SELECTOR, use: 'the card with the todo, goal and queue cards stacked above it' },
-  { id: 'composer.placeholder', value: COMPOSER_PLACEHOLDER_SELECTOR, use: 'the placeholder the host\u2019s own editor draws inside the draft' },
-  { id: 'composer.variant', value: COMPOSER_VARIANT_ATTRIBUTE, use: 'which composer the host rendered: the hero\u2019s or the conversation\u2019s' },
-  { id: 'composer.access-trigger', value: PERMISSION_TRIGGER_SELECTOR, use: 'the host\u2019s access-mode trigger inside its permission slot' },
-  { id: 'composer.fallback-panel', value: CHAIN_OVERLAY_FALLBACK_ATTRIBUTE, use: 'the host\u2019s panel that replaces the composer card, which the mascot stands on' },
-  { id: 'process.group', value: PROCESS_GROUP_SELECTOR, use: 'every process group root: auto-fold and the fold glide work on it' },
-  { id: 'process.body', value: PROCESS_BODY_SELECTOR, use: 'a group\u2019s capped body, with its own scrollbar' },
-  { id: 'process.content', value: PROCESS_CONTENT_SELECTOR, use: 'the layer inside a body that actually changes size' },
-  { id: 'process.expanded-mode', value: PROCESS_EXPANDED_MODE_ATTRIBUTE, use: 'on a group root while the tier does not cap the body' },
-  { id: 'process.activity', value: PROCESS_ACTIVITY_SELECTOR, use: 'a process group\u2019s header control' },
-  { id: 'chat.turn-attribute', value: CHAT_TURN_ATTRIBUTE, use: 'the turn a chat row belongs to' },
-  { id: 'chat.user-row', value: FLOW_KIND_ATTRIBUTE, use: 'what a flow row is; `user` marks a settled user row' },
-  { id: 'chat.user-kind', value: USER_ROW_KIND, use: 'the kind value of a settled user row, whose arrival stands the stream glide down' },
-  { id: 'turn.process', value: TURN_PROCESS_SELECTOR, use: 'the host\u2019s turn-process control the status line moves' },
-  { id: 'fold.disclosure', value: DISCLOSURE_ROW_SELECTOR, use: 'a DisclosureRow: the fold glide presses its own body' },
-  { id: 'fold.toggle', value: FOLD_TOGGLE_SELECTOR, use: 'any other control that opens and closes something' },
-  { id: 'fold.skipped', value: FOLD_SKIPPED_CONTROL_SELECTOR, use: 'a turn\u2019s header and trigger notice: skipped whole' },
-  { id: 'turn.rail', value: TURN_RAIL_SELECTOR, use: 'the host\u2019s turn rail, which the skin\u2019s navigator replaces in place' },
-  { id: 'turn.rail-scroller', value: TURN_RAIL_SCROLLER_SELECTOR, use: 'the rail\u2019s own scroller, whose content height gives the mark count' },
-  { id: 'turn.rail-mark', value: TURN_RAIL_MARK_SELECTOR, use: 'one rail mark, keyed by position in the rail\u2019s list' },
-  { id: 'turn.rail-current', value: TURN_RAIL_CURRENT_SELECTOR, use: 'the mark of the turn at the reading position' },
-  { id: 'turn.rail-pitch', value: String(TURN_RAIL_PITCH), use: 'the rail\u2019s fixed pitch, which the skin\u2019s own rail matches' },
-  { id: 'turn.rail-inset', value: String(TURN_RAIL_INSET), use: 'the rail\u2019s inset at each end' },
-  { id: 'conversation.session', value: CONVERSATION_SESSION_SELECTOR, use: 'the shown conversation column' },
-  { id: 'conversation.session-attribute', value: CONVERSATION_SESSION_ATTRIBUTE, use: 'the session id the column carries' },
-  { id: 'shell.phase', value: PHASE_ATTRIBUTE, use: 'the page\u2019s phase: hero before a session is chosen, active once one is shown' },
-  { id: 'shell.foot-area', value: FOOT_AREA_SELECTOR, use: 'the sidebar footer block the account entry lives in' },
-  { id: 'shell.menu', value: MENU_ROLE_SELECTOR, use: 'an open host menu: the foreground, and where the account rows go' },
-  { id: 'shell.menu-list', value: MENU_LIST_SELECTOR, use: 'the host menu\u2019s own list element' },
-  { id: 'shell.foreground', value: FOREGROUND_SELECTOR, use: 'everything that counts as foreground: a modal dialog or an open menu' },
-  { id: 'shell.account-trigger', value: ACCOUNT_TRIGGER_SELECTOR, use: 'the host\u2019s own account trigger in the footer' },
-  { id: 'shell.settings-button', value: SETTINGS_BUTTON_SELECTOR, use: 'the host\u2019s settings button the account menu rows open' },
-  { id: 'shell.footer-actions', value: FOOTER_ACTIONS_SELECTOR, use: 'the footer\u2019s action list the drawer mirrors' },
-  { id: 'shell.slot-anchor', value: SLOT_ANCHOR_SELECTOR, use: 'a slot anchor; its children are the host\u2019s real entries' },
-  { id: 'shell.windows-titlebar', value: WINDOWS_TITLEBAR_ATTRIBUTE, use: 'the Windows caption row is on this page' },
-  { id: 'shell.platform', value: PLATFORM_ATTRIBUTE, use: 'which platform the shell runs on' },
-  { id: 'shell.fullscreen', value: FULLSCREEN_ATTRIBUTE, use: 'the macOS window is fullscreen, so its traffic lights are away' },
-  { id: 'shell.top-clearance', value: FRAME_TOP_CLEARANCE_PROPERTY, use: 'the caption strip\u2019s height, which the band layout reads' },
-  { id: 'shell.skin-center', value: SKIN_CENTER_ATTRIBUTE, use: 'another skin owns the page; this theme yields (D49)', owner: 'core' },
-  { id: 'shell.dark-theme', value: DARK_THEME_ATTRIBUTE, use: 'the host flipped its own light/dark theme' },
-  { id: 'boot.graph', value: '__DSH_BOOT__', use: 'the boot graph, naming every client entry before any of them runs', owner: 'core' },
-  { id: 'boot.peer-entry', value: 'dsh-chat-ux', use: 'the peer plugin\u2019s entry id inside the boot graph, read to stand the chat features down (D32)', owner: 'core' },
-  { id: 'boot.peer-sheet', value: PEER_SHEET_SELECTOR, use: 'the peer plugin\u2019s own stylesheet, the other half of that verdict' },
-  { id: 'head.untagged-sheets', value: UNTAGGED_SHEET_SELECTOR, use: 'every untagged stylesheet, which the host\u2019s claim sweep would otherwise take', owner: 'core' },
-  { id: 'api.highlight', value: 'CSS.highlights', use: 'the swept-text registry the token reveal needs; a browser without it gets no engine' },
-  { id: 'api.highlight-constructor', value: 'Highlight', use: 'the constructor that registry is built from' },
-  { id: 'api.window-controls', value: 'navigator.windowControlsOverlay', use: 'the desktop caption-button overlay, read to place the title bar band' },
+  { id: 'chat.flow-block', value: FLOW_BLOCK_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'a new flow block: this piece of the stream moved on' },
+  { id: 'chat.flow', value: CHAT_FLOW_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'the chat column: the root every chat-area behaviour scopes to' },
+  { id: 'chat.call', value: CHAT_CALL_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'one tool call row: structure the follow watches for' },
+  { id: 'chat.think-row', value: THINK_ROW_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'one thinking row, folded and quoted by its phase' },
+  { id: 'chat.think-running', value: RUNNING_STATE, probe: { state: 'streaming', kind: 'value' }, use: 'the phase value while the model is still thinking' },
+  { id: 'chat.streaming', value: STREAMING_SELECTOR, probe: { state: 'streaming', kind: 'selector' }, use: 'the markdown container while an answer streams' },
+  { id: 'chat.streaming-attribute', value: STREAMING_ATTRIBUTE, probe: { state: 'streaming', kind: 'attribute' }, use: 'the same mark as an attribute name, watched appearing and going' },
+  { id: 'chat.shimmer', value: SHIMMER_SELECTOR, probe: { state: 'streaming', kind: 'selector' }, use: 'TextShimmer still sweeping: that content is still moving' },
+  { id: 'chat.scroller', value: CONVERSATION_SCROLL_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'the session scroller the host hangs its own follow off' },
+  { id: 'chat.following-tail', value: FOLLOWING_TAIL_SELECTOR, probe: { state: 'streaming', kind: 'selector' }, use: 'present while the host follow is on; the scroll owner hands it back through it' },
+  { id: 'chat.following-tail-attribute', value: FOLLOWING_TAIL_ATTRIBUTE, probe: { state: 'streaming', kind: 'attribute' }, use: 'the same mark as an attribute name' },
+  { id: 'chat.follow-threshold', value: String(FOLLOW_THRESHOLD_PX), probe: { state: 'any', kind: 'none' }, use: 'how close to the end counts as reading the tail, by the host\u2019s own line' },
+  { id: 'composer.seat', value: COMPOSER_SELECTOR, probe: { state: 'hero', kind: 'selector' }, use: 'the composer seat: a pointer or key inside it is the reader typing' },
+  { id: 'composer.input', value: COMPOSER_INPUT_SELECTOR, probe: { state: 'hero', kind: 'selector' }, use: 'the editable draft: caret motion and the send flight read it' },
+  { id: 'composer.card', value: COMPOSER_CARD_SELECTOR, probe: { state: 'hero', kind: 'selector' }, use: 'the composer card the send flight lifts a copy of' },
+  { id: 'composer.scroll', value: COMPOSER_SCROLL_SELECTOR, probe: { state: 'hero', kind: 'selector' }, use: 'the draft\u2019s own scroll area inside the card' },
+  { id: 'composer.textarea', value: COMPOSER_TEXTAREA_SELECTOR, probe: { state: 'any', kind: 'none' }, use: 'a question card\u2019s answer box or a queued message\u2019s inline editor; neither is on the page of a plain turn' },
+  { id: 'composer.echo', value: SUBMISSION_ECHO_SELECTOR, probe: { state: 'sending', kind: 'selector' }, use: 'the echo bubble mounted the moment a submission goes through' },
+  { id: 'composer.stack', value: COMPOSER_STACK_SELECTOR, probe: { state: 'hero', kind: 'selector' }, use: 'the card with the todo, goal and queue cards stacked above it' },
+  { id: 'composer.placeholder', value: COMPOSER_PLACEHOLDER_SELECTOR, probe: { state: 'hero', kind: 'selector' }, use: 'the placeholder the host\u2019s own editor draws inside the draft' },
+  { id: 'composer.variant', value: COMPOSER_VARIANT_ATTRIBUTE, probe: { state: 'hero', kind: 'attribute' }, use: 'which composer the host rendered: the hero\u2019s or the conversation\u2019s' },
+  { id: 'composer.access-trigger', value: PERMISSION_TRIGGER_SELECTOR, probe: { state: 'hero', kind: 'selector' }, use: 'the host\u2019s access-mode trigger inside its permission slot' },
+  { id: 'composer.fallback-panel', value: CHAIN_OVERLAY_FALLBACK_ATTRIBUTE, probe: { state: 'any', kind: 'none' }, use: 'the host\u2019s panel that replaces the composer card, which the mascot stands on' },
+  { id: 'process.group', value: PROCESS_GROUP_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'every process group root: auto-fold and the fold glide work on it' },
+  { id: 'process.body', value: PROCESS_BODY_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'a group\u2019s capped body, with its own scrollbar' },
+  { id: 'process.content', value: PROCESS_CONTENT_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'the layer inside a body that actually changes size' },
+  { id: 'process.expanded-mode', value: PROCESS_EXPANDED_MODE_ATTRIBUTE, probe: { state: 'any', kind: 'none' }, use: 'on a group root while the tier does not cap the body; the lane\u2019s tiers all cap it' },
+  { id: 'process.activity', value: PROCESS_ACTIVITY_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'a process group\u2019s header control' },
+  { id: 'chat.turn-attribute', value: CHAT_TURN_ATTRIBUTE, probe: { state: 'conversation', kind: 'attribute' }, use: 'the turn a chat row belongs to' },
+  { id: 'chat.user-row', value: FLOW_KIND_ATTRIBUTE, probe: { state: 'conversation', kind: 'attribute' }, use: 'what a flow row is; `user` marks a settled user row' },
+  { id: 'chat.user-kind', value: USER_ROW_KIND, probe: { state: 'conversation', kind: 'value' }, use: 'the kind value of a settled user row, whose arrival stands the stream glide down' },
+  { id: 'turn.process', value: TURN_PROCESS_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'the host\u2019s turn-process control the status line moves' },
+  { id: 'fold.disclosure', value: DISCLOSURE_ROW_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'a DisclosureRow: the fold glide presses its own body' },
+  { id: 'fold.toggle', value: FOLD_TOGGLE_SELECTOR, probe: { state: 'any', kind: 'selector' }, use: 'any other control that opens and closes something' },
+  { id: 'fold.skipped', value: FOLD_SKIPPED_CONTROL_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'a turn\u2019s header and trigger notice: skipped whole' },
+  { id: 'turn.rail', value: TURN_RAIL_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'the host\u2019s turn rail, which the skin\u2019s navigator replaces in place' },
+  { id: 'turn.rail-scroller', value: TURN_RAIL_SCROLLER_SELECTOR, probe: { state: 'conversation', kind: 'selector', within: 'turn.rail' }, use: 'the rail\u2019s own scroller, whose content height gives the mark count' },
+  { id: 'turn.rail-mark', value: TURN_RAIL_MARK_SELECTOR, probe: { state: 'conversation', kind: 'selector', within: 'turn.rail', min: 2 }, use: 'one rail mark, keyed by position in the rail\u2019s list' },
+  { id: 'turn.rail-current', value: TURN_RAIL_CURRENT_SELECTOR, probe: { state: 'conversation', kind: 'selector', within: 'turn.rail' }, use: 'the mark of the turn at the reading position' },
+  { id: 'turn.rail-pitch', value: String(TURN_RAIL_PITCH), probe: { state: 'conversation', kind: 'rail-geometry' }, use: 'the rail\u2019s fixed pitch, which the skin\u2019s own rail matches' },
+  { id: 'turn.rail-inset', value: String(TURN_RAIL_INSET), probe: { state: 'any', kind: 'none' }, use: 'the rail\u2019s inset at each end, read by the same geometry check as turn.rail-pitch' },
+  { id: 'conversation.session', value: CONVERSATION_SESSION_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'the shown conversation column' },
+  { id: 'conversation.session-attribute', value: CONVERSATION_SESSION_ATTRIBUTE, probe: { state: 'conversation', kind: 'attribute' }, use: 'the session id the column carries' },
+  { id: 'shell.phase', value: PHASE_ATTRIBUTE, probe: { state: 'any', kind: 'attribute' }, use: 'the page\u2019s phase: hero before a session is chosen, active once one is shown' },
+  { id: 'shell.foot-area', value: FOOT_AREA_SELECTOR, probe: { state: 'any', kind: 'selector' }, use: 'the sidebar footer block the account entry lives in' },
+  { id: 'shell.menu', value: MENU_ROLE_SELECTOR, probe: { state: 'menu', kind: 'selector' }, use: 'an open host menu: the foreground, and where the account rows go' },
+  { id: 'shell.menu-list', value: MENU_LIST_SELECTOR, probe: { state: 'menu', kind: 'selector' }, use: 'the host menu\u2019s own list element' },
+  { id: 'shell.foreground', value: FOREGROUND_SELECTOR, probe: { state: 'menu', kind: 'selector' }, use: 'everything that counts as foreground: a modal dialog or an open menu' },
+  { id: 'shell.account-trigger', value: ACCOUNT_TRIGGER_SELECTOR, probe: { state: 'any', kind: 'none' }, use: 'the host\u2019s own account trigger in the footer, marked with the sign-in state; the web build mounts no account menu there, so the skin\u2019s account surface builds itself' },
+  { id: 'shell.settings-button', value: SETTINGS_BUTTON_SELECTOR, probe: { state: 'any', kind: 'selector' }, use: 'the host\u2019s settings button the account menu rows open' },
+  { id: 'shell.footer-actions', value: FOOTER_ACTIONS_SELECTOR, probe: { state: 'any', kind: 'selector' }, use: 'the footer\u2019s action list the drawer mirrors' },
+  { id: 'shell.slot-anchor', value: SLOT_ANCHOR_SELECTOR, probe: { state: 'any', kind: 'selector' }, use: 'a slot anchor; its children are the host\u2019s real entries' },
+  { id: 'shell.windows-titlebar', value: WINDOWS_TITLEBAR_ATTRIBUTE, probe: { state: 'any', kind: 'none' }, use: 'the Windows caption row is on this page: only the desktop shell writes it' },
+  { id: 'shell.platform', value: PLATFORM_ATTRIBUTE, probe: { state: 'any', kind: 'none' }, use: 'which platform the shell runs on; the host marks `darwin` on the desktop and plain web never sets it' },
+  { id: 'shell.fullscreen', value: FULLSCREEN_ATTRIBUTE, probe: { state: 'any', kind: 'none' }, use: 'the macOS window is fullscreen, so its traffic lights are away; only the desktop shell writes it' },
+  { id: 'shell.top-clearance', value: FRAME_TOP_CLEARANCE_PROPERTY, probe: { state: 'any', kind: 'none' }, use: 'the caption strip\u2019s height, which the band layout reads; only the desktop shell declares it' },
+  { id: 'shell.skin-center', value: SKIN_CENTER_ATTRIBUTE, probe: { state: 'any', kind: 'none' }, use: 'another skin owns the page; this theme yields (D49). The host\u2019s skin center writes it, and the web profile mounts none' },
+  { id: 'shell.dark-theme', value: DARK_THEME_ATTRIBUTE, probe: { state: 'dark', kind: 'attribute' }, use: 'the host flipped its own light/dark theme' },
+  { id: 'boot.graph', value: '__DSH_BOOT__', probe: { state: 'any', kind: 'global' }, use: 'the boot graph, naming every client entry before any of them runs', owner: 'core' },
+  { id: 'boot.peer-entry', value: 'dsh-chat-ux', probe: { state: 'any', kind: 'none' }, use: 'the peer plugin\u2019s entry id inside the boot graph, read to stand the chat features down (D32); this instance does not install it', owner: 'core' },
+  { id: 'boot.peer-sheet', value: PEER_SHEET_SELECTOR, probe: { state: 'any', kind: 'none' }, use: 'the peer plugin\u2019s own stylesheet, the other half of that verdict; this instance does not install it' },
+  { id: 'head.untagged-sheets', value: UNTAGGED_SHEET_SELECTOR, probe: { state: 'any', kind: 'none' }, use: 'every untagged stylesheet, which the host\u2019s claim sweep would otherwise take; read in the boot sweep, before the host tags its sheets, and the smoke\u2019s sibling cases hold it', owner: 'core' },
+  { id: 'api.highlight', value: 'CSS.highlights', probe: { state: 'any', kind: 'global' }, use: 'the swept-text registry the token reveal needs; a browser without it gets no engine' },
+  { id: 'api.highlight-constructor', value: 'Highlight', probe: { state: 'any', kind: 'global' }, use: 'the constructor that registry is built from' },
+  { id: 'api.window-controls', value: 'navigator.windowControlsOverlay', probe: { state: 'any', kind: 'none' }, use: 'the desktop caption-button overlay, read to place the title bar band; a web page never has it' },
 ]

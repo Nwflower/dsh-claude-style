@@ -7,22 +7,27 @@
  * runs the assembled client and asserts what only it shows — that a scripted
  * answer renders as the reader sees it, that a scripted tool call becomes a row
  * with its result, that the conversation never jumps or slides backward while
- * the answer streams in, and that both palettes still capture the same picture.
+ * the answer streams in, that the send flight hands the reader's words over
+ * without a blank frame, and that both palettes still capture the same picture.
+ * The `contract` scenario walks src/contracts/table.ts against the same page, so
+ * each host literal the skin depends on is checked where it lives (D44).
  * Every scenario runs against its own scratch instance, so nothing a scenario
  * writes can reach another.
  *
  * Usage: node tools/e2e.cjs [--scenario <name>[,<name>…]] [--headed] [--out <dir>] [--delay <ms>]
  *                            [--baseline <dir>] [--accept]
- *        scenarios: conversation, tool, send, scroll, shots (default: all but shots)
- *        --accept writes the captured screenshots as the comparison baseline.
+ *        scenarios: conversation, tool, send, scroll, contract, shots
+ *        (default: all but shots, which needs a reviewed baseline) *        --accept writes the captured screenshots as the comparison baseline.
  */
 'use strict'
 const fs = require('node:fs')
 const path = require('node:path')
+const { PNG } = require('pngjs')
 const { start, openPage, waitForSkin, dismissOverlays } = require('./dsh-web.cjs')
 const { startMockLlm } = require('./mock-llm.cjs')
 const { CANVAS } = require('../scripts/shoot.cjs')
 const { sanitizePage } = require('../scripts/privacy.cjs')
+const { loadModule } = require('../scripts/ts-module.cjs')
 
 const ROOT = path.resolve(__dirname, '..')
 const DEFAULT_OUT = path.join(ROOT, '.debug', 'e2e', 'out')
@@ -51,6 +56,8 @@ const HOST = {
   turnProcess: 'button[data-turn-process]', // TURN_PROCESS_SELECTOR
   scroller: '[data-conversation-scroll]', // CONVERSATION_SCROLL_SELECTOR
   followingTail: '[data-chat-following-tail]', // FOLLOWING_TAIL_SELECTOR
+  echo: '[data-submission-echo]', // SUBMISSION_ECHO_SELECTOR
+  accountTrigger: '[aria-haspopup="menu"][data-signed-out]', // ACCOUNT_TRIGGER_SELECTOR
 }
 
 /**
@@ -61,6 +68,7 @@ const HOST = {
 const SKIN = {
   sendGhost: '[data-dsh-claude-send-ghost]', // CHAT_SEND_GHOST_ATTR
   flyingMark: 'data-dsh-claude-send-flight', // CHAT_FLYING_ATTR
+  echoAttribute: 'data-submission-echo', // SUBMISSION_ECHO_SELECTOR without its brackets
 }
 
 /** Both tables, for the sampler that runs inside the page. */
@@ -149,6 +157,7 @@ async function startTrace(page) {
       const rows = [...document.querySelectorAll(host.userRow)]
       const last = rows.length === 0 ? null : rows[rows.length - 1]
       frame.ghost = ghost !== null
+      frame.echo = document.querySelector(host.echo) !== null || (last !== null && last.hasAttribute(host.echoAttribute))
       frame.ghostWords = words(ghost)
       frame.rows = rows.length
       frame.rowFlying = last !== null && last.hasAttribute(host.flyingMark)
@@ -175,9 +184,129 @@ async function startTrace(page) {
   }, MARKS)
 }
 
+/**
+ * Run the probes of the given states and keep the results under
+ * `context.notes.contract`, where the report and the scenario's checks read them.
+ */
+async function recordProbes(context, states, windowMs = 0) {
+  const list = Array.isArray(states) ? states : [states]
+  const results = await probeContract(context.page, list, windowMs)
+  for (const result of results) context.notes.contract.push(result)
+}
+
 /** One assertion with the evidence behind it. */
 function check(name, ok, detail) {
   return { name, ok: ok === true, detail: detail === undefined ? '' : String(detail) }
+}
+
+/**
+ * Check the entries of the host contract table that belong to the given page
+ * states (D44) — the same lists the build holds the skin to, read through the
+ * same loader, so a selector cannot pass the build and go unchecked here.
+ *
+ * The momentary states (`sending`, `streaming`) are read in one window: the
+ * checks repeat until every entry has passed once or the window closes, and a
+ * pass from an earlier tick is kept, because those states come and go.
+ *
+ * @returns one result per entry: `{ id, state, ok, observed }`.
+ */
+async function probeContract(page, states, windowMs = 0) {
+  const { HOST_DOM } = loadModule('contracts/table.ts')
+  const entries = HOST_DOM.filter((entry) => states.includes(entry.probe.state))
+  const frames = windowMs === 0 ? 0 : Math.round(windowMs / 16)
+  const deadline = Date.now() + windowMs
+  let results = await page.evaluate(runProbes, { table: HOST_DOM, entries, frames })
+  while (frames > 0 && results.some((result) => !result.ok) && Date.now() < deadline) {
+    await page.waitForTimeout(200)
+    const watch = await page.evaluate(() => ({ results: window.__contractWatch.results, done: window.__contractWatch.done }))
+    results = watch.results
+    if (watch.done) break
+  }
+  return results
+}
+
+/**
+ * The probe checks, in the page. `kind` is the table's own vocabulary; an
+ * unknown kind throws so a new one cannot pass unnoticed.
+ *
+ * `frames` arms a per-frame watcher instead of checking once: a state that
+ * lasts a moment (the submission echo is on the page for about three frames)
+ * is only visible to a `requestAnimationFrame` loop. The watcher keeps the first
+ * passing observation of each entry and stops when every entry has one or the
+ * frames run out; `probeContract` reads it back.
+ */
+function runProbes({ table, entries, frames = 0 }) {
+  // Attribute values are read once per tick rather than once per entry: the
+  // momentary states arrive while the watcher runs, so the set has to be fresh.
+  let values = new Set()
+  const collectValues = () => {
+    const found = new Set()
+    for (const element of document.querySelectorAll('*')) {
+      for (const attribute of element.attributes) found.add(attribute.value)
+    }
+    return found
+  }
+  values = collectValues()
+  const byId = new Map(table.map((entry) => [entry.id, entry]))
+  const path_ = (expression) => expression.split('.').reduce((value, key) => value === undefined || value === null ? undefined : value[key], window)
+  const railGeometry = () => {
+    const within = byId.get(entries.find((entry) => entry.probe.kind === 'rail-geometry').probe.within ?? 'turn.rail').value
+    const rail = document.querySelector(within)
+    const scroller = rail === null ? null : rail.querySelector(byId.get('turn.rail-scroller').value)
+    if (scroller === null) return 'no rail scroller'
+    const marks = rail.querySelectorAll(byId.get('turn.rail-mark').value).length
+    const pitch = Number(byId.get('turn.rail-pitch').value)
+    const inset = Number(byId.get('turn.rail-inset').value)
+    const expected = marks * pitch + 2 * (inset - pitch / 2)
+    return Math.abs(scroller.scrollHeight - expected) <= 1 ? null : `${marks} marks, scroller ${scroller.scrollHeight}px, expected ${expected}px`
+  }
+  const checkEntry = (entry) => {
+    const probe = entry.probe
+    const root = probe.within === undefined ? document : document.querySelector(byId.get(probe.within).value)
+    if (probe.kind === 'selector') {
+      const matches = root === null ? 0 : root.querySelectorAll(entry.value).length
+      return { ok: matches >= (probe.min ?? 1), observed: `${matches} match${matches === 1 ? '' : 'es'}` }
+    }
+    if (probe.kind === 'attribute') {
+      const matches = document.querySelectorAll(`[${entry.value}]`).length
+      return { ok: matches > 0, observed: `${matches} element${matches === 1 ? '' : 's'}` }
+    }
+    if (probe.kind === 'property') {
+      const resolved = getComputedStyle(document.documentElement).getPropertyValue(entry.value).trim()
+      return { ok: resolved !== '', observed: resolved === '' ? 'not resolved' : `"${resolved}"` }
+    }
+    if (probe.kind === 'global') {
+      const resolved = path_(entry.value)
+      return { ok: resolved !== undefined, observed: typeof resolved }
+    }
+    if (probe.kind === 'value') {
+      const present = values.has(entry.value)
+      return { ok: present, observed: present ? 'present as an attribute value' : 'nowhere in the attributes' }
+    }
+    if (probe.kind === 'rail-geometry') {
+      const failure = railGeometry()
+      return { ok: failure === null, observed: failure ?? 'marks and scroller agree' }
+    }
+    if (probe.kind === 'none') {
+      // No page form: the behaviour scenarios and the unit tests hold it.
+      return { ok: true, observed: 'reported, not checked here' }
+    }
+    throw new Error(`contract: unknown probe kind "${probe.kind}" on "${entry.id}" (state ${probe.state})`)
+  }
+  const results = () => entries.map((entry) => ({ id: entry.id, state: entry.probe.state, ...checkEntry(entry) }))
+  if (frames === 0) return results()
+  const watch = { results: results(), done: false }
+  window.__contractWatch = watch
+  let at = 0
+  const tick = () => {
+    at += 1
+    values = collectValues()
+    watch.results = watch.results.map((result, index) => (result.ok ? result : { ...result, ...checkEntry(entries[index]) }))
+    watch.done = watch.results.every((result) => result.ok) || at >= frames
+    if (!watch.done) requestAnimationFrame(tick)
+  }
+  requestAnimationFrame(tick)
+  return watch.results
 }
 
 /**
@@ -187,7 +316,7 @@ function check(name, ok, detail) {
  * asked for — the capture matches the reviewed picture.
  */
 async function captureBothSchemes(context) {
-  const { page, browser, out, baseline, accept } = context
+  const { page, out, baseline, accept } = context
   const brand = await page.evaluate(() => document.body.getAttribute('data-dsh-claude-brand'))
   const canvas = CANVAS[brand]
   if (canvas === undefined) throw new Error(`the page carries brand "${brand}", which has no recorded palette`)
@@ -218,47 +347,26 @@ async function captureBothSchemes(context) {
       checks.push(check(`${scheme} 截图与基线一致`, false, `no baseline at ${baselineFile} — review the capture in ${file}, then run with --accept`))
       continue
     }
-    const { ratio, sizeChanged } = await compareImages(browser, baselineFile, file)
+    const { ratio, sizeChanged } = compareImages(baselineFile, file)
     checks.push(check(`${scheme} 截图与基线一致`, ratio <= MAX_DIFFERENT_PIXELS, `${(ratio * 100).toFixed(3)}% of pixels differ${sizeChanged ? ' (size changed)' : ''}, allowed ${(MAX_DIFFERENT_PIXELS * 100).toFixed(1)}%`))
   }
   return { checks, files }
 }
 
 /**
- * Compare two PNGs inside the browser, so no image decoder lives in this tool:
- * the page draws both onto a canvas and counts the pixels that differ by more
- * than the channel tolerance antialiasing moves.
+ * Compare two PNGs: the share of pixels whose red, green or blue channel differs
+ * by more than antialiasing moves. The decode is pngjs, the same library the
+ * build reads Deepy's sheets with.
  */
-async function compareImages(browser, before, after) {
-  const page = await browser.newPage()
-  try {
-    return await page.evaluate(async ([first, second]) => {
-      const load = (dataUrl) => new Promise((resolve, reject) => {
-        const image = new Image()
-        image.onload = () => resolve(image)
-        image.onerror = () => reject(new Error('a screenshot did not decode'))
-        image.src = dataUrl
-      })
-      const [a, b] = await Promise.all([load(first), load(second)])
-      if (a.width !== b.width || a.height !== b.height) return { ratio: 1, sizeChanged: true }
-      const canvas = new OffscreenCanvas(a.width, a.height)
-      const context = canvas.getContext('2d')
-      const pixels = (image) => {
-        context.clearRect(0, 0, a.width, a.height)
-        context.drawImage(image, 0, 0)
-        return context.getImageData(0, 0, a.width, a.height).data
-      }
-      const one = pixels(a)
-      const two = pixels(b)
-      let differing = 0
-      for (let at = 0; at < one.length; at += 4) {
-        if (Math.abs(one[at] - two[at]) > 8 || Math.abs(one[at + 1] - two[at + 1]) > 8 || Math.abs(one[at + 2] - two[at + 2]) > 8) differing += 1
-      }
-      return { ratio: differing / (a.width * a.height), sizeChanged: false }
-    }, [`data:image/png;base64,${fs.readFileSync(before).toString('base64')}`, `data:image/png;base64,${fs.readFileSync(after).toString('base64')}`])
-  } finally {
-    await page.close()
+function compareImages(before, after) {
+  const one = PNG.sync.read(fs.readFileSync(before))
+  const two = PNG.sync.read(fs.readFileSync(after))
+  if (one.width !== two.width || one.height !== two.height) return { ratio: 1, sizeChanged: true }
+  let differing = 0
+  for (let at = 0; at < one.data.length; at += 4) {
+    if (Math.abs(one.data[at] - two.data[at]) > 8 || Math.abs(one.data[at + 1] - two.data[at + 1]) > 8 || Math.abs(one.data[at + 2] - two.data[at + 2]) > 8) differing += 1
   }
+  return { ratio: differing / (one.width * one.height), sizeChanged: false }
 }
 
 /** The scenarios: each boots its own instance, sends its prompt, and asserts. */
@@ -353,6 +461,61 @@ const SCENARIOS = {
       ]
     },
   },
+  /** The host contract table, entry by entry, in the page state each one lives in (D44). */
+  contract: {
+    script: 'inspect',
+    prompt: 'look at the workspace',
+    // A slow stream, so the states that last a moment are wide enough to read.
+    delayMs: 400,
+    /** The empty page: the hero composer, the shell, the boot graph, the document. */
+    async beforeSend(context) {
+      context.notes.contract = []
+      await recordProbes(context, 'hero')
+      await recordProbes(context, 'any')
+    },
+    /**
+     * A second turn brings the states the first one has already left: the
+     * submission echo while the flight is up, the streaming marks, and a second
+     * mark in the turn rail. The probes for those states have to be read inside
+     * this send, so they run before the turn is waited for.
+     */
+    async afterTurn(context) {
+      const second = sendPrompt(context.page, 'look again')
+      // One window over both momentary states: the submission goes through while
+      // the echo is expected, and the answer streams right after it.
+      await recordProbes(context, ['sending', 'streaming'], 9000)
+      await second
+      await waitForTurn(context.page)
+      await recordProbes(context, 'conversation')
+      // Any host menu does: the account menu the skin keys on is not mounted by
+      // this build, and every menu shares the role, the list and the foreground.
+      const trigger = context.page.locator('[aria-haspopup="menu"]:not([class*="dsh-claude"]):visible').first()
+      if (await trigger.count() > 0) {
+        await trigger.click()
+        await recordProbes(context, 'menu', 3000)
+        await context.page.keyboard.press('Escape')
+      }
+      await context.page.evaluate(() => document.body.setAttribute('data-ds-dark-theme', ''))
+      await recordProbes(context, 'dark')
+    },
+    async assert({ session, notes }) {
+      const results = notes.contract
+      const byState = (state) => results.filter((result) => result.state === state)
+      const failed = results.filter((result) => !result.ok)
+      const unchecked = results.filter((result) => result.observed === 'reported, not checked here')
+      const line = (state) => {
+        const state_ = byState(state)
+        const broken = state_.filter((result) => !result.ok).map((result) => `${result.id} (${result.observed})`)
+        return check(`${state} 状态的条目都在`, broken.length === 0, `${state_.length} 条${broken.length === 0 ? '' : `，失效：${broken.join('、')}`}`)
+      }
+      return [
+        ...[...new Set(results.map((result) => result.state))].map((state) => line(state)),
+        check('没有页面形态的条目已逐条列出', unchecked.length > 0, `${unchecked.length} 条由行为场景与单元测试持有：${unchecked.map((result) => result.id).join('、')}`),
+        check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),
+        ...failed.slice(0, 8).map((result) => check(`契约条目 ${result.id} 仍然成立`, false, `${result.observed}（${result.state}）`)),
+      ]
+    },
+  },
   /** Both palettes captured, swept for personal data, and compared with the baseline. */
   shots: {
     script: 'greeting',
@@ -391,14 +554,17 @@ async function runScenario(name, options) {
     const { page } = session
     await waitForSkin(page)
     if (!(await dismissOverlays(page))) throw new Error('the shell left a first-run overlay open')
+    const context = { page, session, trace: [], notes: {}, out: options.out, baseline: options.baseline, accept: options.accept }
+    if (scenario.beforeSend !== undefined) await scenario.beforeSend(context)
     await startTrace(page)
     await sendPrompt(page, scenario.prompt)
     await waitForTurn(page)
-    const trace = await page.evaluate(() => window.__e2eTrace ?? [])
-    const checks = await scenario.assert({ page, browser: session.browser, session, trace, out: options.out, baseline: options.baseline, accept: options.accept })
+    context.trace = await page.evaluate(() => window.__e2eTrace ?? [])
+    if (scenario.afterTurn !== undefined) await scenario.afterTurn(context)
+    const checks = await scenario.assert(context)
     for (const item of checks) process.stdout.write(`  ${item.ok ? '✓' : '✗'} ${item.name}${item.detail === '' ? '' : `  — ${item.detail}`}\n`)
     const failed = checks.filter((item) => !item.ok).length
-    return { scenario: name, checks, failed, requested: mock.requests.length, trace }
+    return { scenario: name, checks, failed, requested: mock.requests.length, trace: context.trace, notes: context.notes }
   } finally {
     if (session !== undefined) await session.close()
     host.stop()
@@ -412,7 +578,7 @@ async function main() {
     const at = args.indexOf(`--${flag}`)
     return at === -1 ? undefined : args[at + 1]
   }
-  const names = (argOf('scenario') ?? 'conversation,tool,send,scroll').split(',').map((name) => name.trim()).filter(Boolean)
+  const names = (argOf('scenario') ?? 'conversation,tool,send,scroll,contract').split(',').map((name) => name.trim()).filter(Boolean)
   const out = path.resolve(argOf('out') ?? DEFAULT_OUT)
   const options = {
     headed: args.includes('--headed'),
