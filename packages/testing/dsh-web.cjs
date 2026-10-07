@@ -164,14 +164,26 @@ async function dismissOverlays(page, options = {}) {
   let answered = null
   for (let attempt = 0; attempt < (options.limit ?? 6); attempt++) {
     const dialogs = open()
-    if (await dialogs.count() === 0) return true
+    if (await dialogs.count() === 0) break
     const text = await dialogs.last().innerText()
     if (text === answered) return false
     answered = text
     await dialogs.last().locator('button:visible').first().click({ force: true })
     await page.waitForTimeout(600)
   }
-  return (await open().count()) === 0
+  // A first-run overlay is not always a dialog: the shell also draws its
+  // onboarding as a presentation root over a mask, and that mask swallows the
+  // clicks a scenario makes. Answer the root's own button, and fall back to
+  // Escape for a step that carries none.
+  for (let attempt = 0; attempt < (options.limit ?? 6); attempt++) {
+    const roots = page.locator('[role="presentation"]:visible')
+    if (await roots.count() === 0) break
+    const button = roots.last().locator('button:visible').first()
+    if (await button.count() > 0) await button.click({ force: true })
+    else await page.keyboard.press('Escape')
+    await page.waitForTimeout(600)
+  }
+  return (await open().count()) === 0 && (await page.locator('[role="presentation"]:visible').count()) === 0
 }
 
 module.exports = { start, openPage, waitForSkin, dismissOverlays, DEFAULT_HOME }

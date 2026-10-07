@@ -601,6 +601,13 @@ async function main() {
     baseline: path.resolve(argOf('baseline') ?? DEFAULT_BASELINE),
   }
   fs.mkdirSync(out, { recursive: true })
+  // The first boot of the scratch host installs this checkout into the scratch
+  // profile, which on a cold machine outlasts the waits a scenario makes on the
+  // page. Booting once up front keeps that cost out of the first scenario.
+  if (names.length > 1) {
+    const warm = await start({ home: options.home, env: {}, resetState: false })
+    warm.stop()
+  }
   const results = []
   for (const name of names) {
     const result = await runScenario(name, options)
