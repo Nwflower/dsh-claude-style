@@ -17,6 +17,8 @@ import { SCROLL_EASE_LEAD_PX, easeScroll, isScrollEasing, scrollEasePosition, sc
  *   fold      a fold's own position work: putting the position back after
  *             the skin's press on a group header, and handing the follow
  *             back once a door has rolled
+ *   wheel     the reader's own wheel: its distance is handed to the spring
+ *             instead of the browser (onWheel)
  *   composer  keeping a reader at the end while the composer card changes height
  *   follow    the follow's hand-back at a structural moment
  *   stream    the stream glide: taking the host's pin back and walking the
@@ -32,7 +34,7 @@ import { SCROLL_EASE_LEAD_PX, easeScroll, isScrollEasing, scrollEasePosition, sc
  *   - stream requests are refused, and their eases end, for a while after
  *     the reader's own message arrives: the host's jump to it stands;
  *   - while the reader's animation choice means "no animation", an ease is
- *     its destination written at once.
+ *     its destination written at once, and the wheel is left to the browser.
  *
  * The host's side of the follow is handed over here too: the pin a frame of
  * streaming writes is taken back (takeBackHostPin), the host's follow is lit
@@ -42,7 +44,7 @@ import { SCROLL_EASE_LEAD_PX, easeScroll, isScrollEasing, scrollEasePosition, sc
 
 export { SCROLL_EASE_LEAD_PX }
 
-export type ScrollSource ='jump' | 'fold' | 'composer' | 'follow' | 'stream' | 'process'
+export type ScrollSource ='jump' | 'fold' | 'composer' | 'wheel' | 'follow' | 'stream' | 'process'
 
 /** Each source's rank; a higher rank's claim stands over a lower one's. */
 const SCROLL_SOURCE_RANK: Record<ScrollSource, number> = {
@@ -50,8 +52,9 @@ const SCROLL_SOURCE_RANK: Record<ScrollSource, number> = {
   stream: 2,
   follow: 2,
   composer: 3,
-  fold: 4,
-  jump: 5,
+  wheel: 4,
+  fold: 5,
+  jump: 6,
 }
 /** The sources that only follow the end: the reader holding a container stops them. */
 const FOLLOWING_SOURCES = new Set<ScrollSource>(['follow', 'stream', 'process'])
@@ -157,13 +160,18 @@ export function submissionHolds() {
   return performance.now() < submissionHoldUntil
 }
 
+/** The conversation's scroller right now; a session switch replaces the element, so it is checked before every use. */
+function currentScroller() {
+  if (scrollerCache === null || !scrollerCache.isConnected) scrollerCache = conversationScroller()
+  return scrollerCache
+}
+
 function noteIntent(event: Event) {
   if (!isReaderScrollIntent(event)) return
   if (MOVING_INTENT_TYPES.has(event.type)) lastMovingIntentAt = performance.now()
   if (event.type !== 'touchmove') {
     // The container is cached: a trackpad sends hundreds of these a second.
-    if (scrollerCache === null || !scrollerCache.isConnected) scrollerCache = conversationScroller()
-    const scroller = scrollerCache
+    const scroller = currentScroller()
     // Only once the content has grown a scrollbar: before that there is nothing to hold.
     if (scroller !== null && scroller.scrollHeight - scroller.clientHeight > 0) held.add(scroller)
   }
@@ -177,6 +185,86 @@ function noteIntent(event: Event) {
   // A scroll key the host has already handled knows where it is going.
   if (event.type === 'keydown' && event.defaultPrevented) return
   held.add(body)
+}
+
+/** Where the reader's wheel is walking each container: kept across events, so a second notch extends the glide in flight. */
+const wheelTargets = new WeakMap<Element, number>()
+/** The height one wheel line means, read once per container (deltaMode 1, a mouse wheel on some platforms). */
+const wheelLines = new WeakMap<Element, number>()
+
+/** The height one `DOM_DELTA_LINE` step means on this container; 16px when the style does not say. */
+function wheelLineHeight(container: Element) {
+  const known = wheelLines.get(container)
+  if (known !== undefined) return known
+  const parsed = Number.parseFloat(getComputedStyle(container).lineHeight)
+  const height = Number.isFinite(parsed) && parsed > 0 ? parsed : 16
+  wheelLines.set(container, height)
+  return height
+}
+
+/** One wheel event's distance in pixels along the vertical axis. */
+function wheelDistance(event: WheelEvent, container: HTMLElement) {
+  if (event.deltaMode === 1) return event.deltaY * wheelLineHeight(container)
+  if (event.deltaMode === 2) return event.deltaY * container.clientHeight
+  return event.deltaY
+}
+
+/**
+ * Whether a scroll container between the pointer and `outer` can still move in
+ * `delta`'s direction. A wheel over a capped process body, a diff, or any other
+ * nested scroller belongs to that scroller, and the browser is left to chain it
+ * to the conversation when it runs out.
+ */
+function innerScrollerMoves(target: EventTarget | null, outer: HTMLElement, delta: number) {
+  for (let node = target instanceof Element ? target : null; node !== null && node !== outer; node = node.parentElement) {
+    const overflow = getComputedStyle(node).overflowY
+    if (overflow !== 'auto' && overflow !== 'scroll') continue
+    const room = node.scrollHeight - node.clientHeight
+    if (room <= 0) continue
+    if (delta < 0 ? node.scrollTop > 0 : node.scrollTop < room) return true
+  }
+  return false
+}
+
+/**
+ * The reader's wheel on the conversation: its distance is added to a target the
+ * spring walks to, instead of the browser writing the position as it likes.
+ *
+ * Why: every other position in this area is written by the spring
+ * (shared/scroll-ease.ts), and a wheel that the browser moves itself lands as a
+ * jolt next to them — a burst of notches puts the whole distance on one frame,
+ * and a trackpad's momentum fights the follow. Handing the wheel to the spring
+ * makes the reader's own scrolling the same motion as the skin's, keeps the
+ * speed within what the eye reads as motion (its caps), and lets a second notch
+ * extend the glide already in flight — the spring re-reads its destination every
+ * frame, so there is no restart and no stutter (see easeScroll's note).
+ *
+ * The event is only taken over where the position is really ours to write: the
+ * conversation's own scroller is where the listener hangs, no nested scroller in
+ * between may still move, and the reader's "no animation" choice leaves the
+ * wheel alone entirely (D26). Hanging it on that element rather than on the
+ * document is what keeps the cost where it belongs: a wheel anywhere else on the
+ * page then never waits for this main-thread listener.
+ */
+function onWheel(event: WheelEvent) {
+  const scroller = event.currentTarget
+  if (!(scroller instanceof HTMLElement)) return
+  // Ctrl+wheel is the browser's zoom, and an event another handler already took is its own.
+  if (event.defaultPrevented || event.ctrlKey || motionReduced()) return
+  const room = scrollEnd(scroller)
+  if (room <= 0) return
+  const delta = wheelDistance(event, scroller)
+  if (!Number.isFinite(delta) || delta === 0) return
+  if (innerScrollerMoves(event.target, scroller, delta)) return
+  // A wheel arriving while a following ease is in flight is measured from what
+  // the reader sees; one arriving while the wheel's own glide is in flight
+  // extends its target.
+  const running = runningSource(scroller)
+  const from = running === 'wheel' ? wheelTargets.get(scroller) ?? scroller.scrollTop : scroller.scrollTop
+  wheelTargets.set(scroller, Math.max(0, Math.min(room, from + delta)))
+  event.preventDefault()
+  // No lead: a flick's whole distance is glided, never shortened with a jump.
+  easeScrollFor(scroller, 'wheel', element => wheelTargets.get(element) ?? element.scrollTop, () => true, Number.POSITIVE_INFINITY)
 }
 
 /**
@@ -206,6 +294,23 @@ function noteSubmission(records: MutationRecord[]) {
   }
 }
 
+/** The scroller the wheel listener hangs on; a session switch replaces the element. */
+let wheelScroller: HTMLElement | null = null
+
+/** Keep the wheel listener on the conversation's current scroller (see onWheel). */
+function syncWheelListener() {
+  if (wheelScroller !== null && wheelScroller.isConnected) return
+  if (wheelScroller !== null) wheelScroller.removeEventListener('wheel', onWheel)
+  wheelScroller = currentScroller()
+  if (wheelScroller !== null) wheelScroller.addEventListener('wheel', onWheel, { passive: false })
+}
+
+/** Every observed change of the body: a submission's arrival, and the scroller the wheel listener follows. */
+function noteBodyChanges(records: MutationRecord[]) {
+  syncWheelListener()
+  noteSubmission(records)
+}
+
 /**
  * Use the owner while a feature is installed: its intent, scroll and
  * submission watches live while any feature does.
@@ -216,7 +321,8 @@ export function joinScrollOwner() {
   if (members === 1) {
     for (const type of INTENT_TYPES) document.addEventListener(type, noteIntent, { capture: true, passive: true })
     window.addEventListener('scroll', noteScroll, { capture: true, passive: true })
-    stopSubmissionWatch = subscribeMutations(document.body, { childList: true, subtree: true }, noteSubmission)
+    syncWheelListener()
+    stopSubmissionWatch = subscribeMutations(document.body, { childList: true, subtree: true }, noteBodyChanges)
   }
   let left = false
   return () => {
@@ -225,6 +331,8 @@ export function joinScrollOwner() {
     members -= 1
     if (members > 0) return
     for (const type of INTENT_TYPES) document.removeEventListener(type, noteIntent, true)
+    if (wheelScroller !== null) wheelScroller.removeEventListener('wheel', onWheel)
+    wheelScroller = null
     window.removeEventListener('scroll', noteScroll, true)
     if (stopSubmissionWatch !== null) stopSubmissionWatch()
     stopSubmissionWatch = null
