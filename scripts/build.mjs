@@ -197,8 +197,8 @@ const CONSTANTS = (() => {
   }
 })()
 
-/** The host contract's tables: build and test data, so they stay out of the bundle (D44). */
-const CONTRACT_TABLES = ['contracts/table.ts', 'contracts/timing.ts']
+/** The host contract's own modules: data and types, so they stay out of the bundle (D44). */
+const CONTRACT_FILES = ['contracts/table.ts', 'contracts/timing.ts', 'contracts/services.ts']
 /** The page states and check kinds src/contracts/table.ts records (D44, D45). */
 const PROBE_STATES = new Set(['any', 'hero', 'sending', 'streaming', 'conversation', 'menu', 'dark'])
 const PROBE_KINDS = new Set(['selector', 'attribute', 'property', 'global', 'value', 'rail-geometry', 'none'])
@@ -357,7 +357,7 @@ function checkListed(bundled, sheets) {
   })
   for (const file of walk('')) {
     if (file.endsWith('.css') && !listed.has(file)) throw new Error(`build: src/${file} is in no list; add it to its feature's manifest or to THEME_SHEETS`)
-    if (file.endsWith('.manifest.ts') || file.endsWith('.test.ts') || file.endsWith('.d.ts') || CONTRACT_TABLES.includes(file)) continue
+    if (file.endsWith('.manifest.ts') || file.endsWith('.test.ts') || file.endsWith('.d.ts') || CONTRACT_FILES.includes(file)) continue
     if (file.endsWith('.ts') && !bundled.has(file)) throw new Error(`build: src/${file} is imported by no module the bundle reaches`)
   }
 }

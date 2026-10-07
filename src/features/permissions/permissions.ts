@@ -434,8 +434,8 @@ export function install(ctx: HostContext, ui: Ui) {
     const session = currentSession(ctx)
     if (session === null) return
     const settled = session.command(`/permission ${preset}`)
-    if (settled === undefined || typeof settled.then !== 'function') return
-    settled.then((result: HostValue) => {
+    if (settled === undefined || settled === null) return
+    settled.then((result) => {
       if (result === null || typeof result !== 'object' || result.ok !== true) {
         submitError = new Error(`permission: the /permission ${preset} command was refused`)
       } else if (result.value === null || typeof result.value !== 'object' || result.value.matched !== true) {

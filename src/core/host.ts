@@ -1,5 +1,6 @@
 import { HDSL_ROUTE, HDSL_SKIN_ROUTE, USERNAME_MAX, USERNAME_ROUTE } from '../constants'
 import { CHAT_FLOW_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_PLACEHOLDER_SELECTOR, COMPOSER_SELECTOR, COMPOSER_STACK_SELECTOR, COMPOSER_STATS_SELECTOR, COMPOSER_STAT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, FOOT_AREA_SELECTOR, PERMISSION_TRIGGER_SELECTOR, TURN_PROCESS_SELECTOR } from '../contracts/dom'
+import type { HostAssistantStep, HostChatSnapshot, HostChatTarget, HostSession, HostSessionsService, HostTurn, HostUiConversationService, HostUiSessionService } from '../contracts/services'
 import { readPrefs } from './prefs'
 import { closestFrom } from '../shared/dom'
 import { createHostResource } from '../shared/resource'
@@ -22,12 +23,13 @@ export interface HostContext {
 
 /**
  * A value read off a host service or snapshot: a session, a catalog group, a
- * chat node. Its shape is the host's own; the contract module types it (D44).
+ * chat node. Its shape is the host's own; the contract module types the ones
+ * the skin reads by name (D44, `contracts/services.ts`).
  */
 export type HostValue = any
 
 /** A host locale namespace's translate seat (`locale.bind(namespace)`): a key and its parameters to text. */
-export type HostText = (key: string, params?: Record<string, string | number>) => string
+export type { HostText } from '../contracts/services'
 
 /** The scope `inject` opened: disposing it runs the effects registered in it. */
 export interface HostFiber {
@@ -149,15 +151,15 @@ export const COMPOSER_STACK = COMPOSER_STACK_SELECTOR
  * `uiSession` service; the legacy `list.current` is read as a fallback so
  * older hosts keep working.
  */
-export function currentSessionId(ctx: HostContext, sessions: HostValue): string | null | undefined {
-  const uiSession = ctx.get('uiSession')
+export function currentSessionId(ctx: HostContext, sessions: HostSessionsService): string | null | undefined {
+  const uiSession = ctx.get('uiSession') as HostUiSessionService | undefined
   const value = uiSession?.current?.value
   if (typeof value?.key === 'string') return value.key
   return sessions.list.getSnapshot().current
 }
 
-export function currentSession(ctx: HostContext): HostValue {
-  const sessions = ctx.get('sessions')
+export function currentSession(ctx: HostContext): HostSession | null {
+  const sessions = ctx.get('sessions') as HostSessionsService | undefined
   if (sessions === undefined || sessions === null) return null
   const id = currentSessionId(ctx, sessions)
   if (id === undefined || id === null) return null
@@ -173,10 +175,11 @@ export function currentSession(ctx: HostContext): HostValue {
  * the shell shows that session's chat view, so a bare read on the trajectory
  * view sees nothing.
  */
-export function findChatTarget(ctx: HostContext, sessionId: string): HostValue {
-  const conversation = ctx.get('uiConversation')
-  if (!conversation || !ctx.get('sessions')?.binding(sessionId)) return null
-  return conversation.binding(sessionId).target('chat')
+export function findChatTarget(ctx: HostContext, sessionId: string): HostChatTarget | null {
+  const conversation = ctx.get('uiConversation') as HostUiConversationService | undefined
+  const sessions = ctx.get('sessions') as HostSessionsService | undefined
+  if (!conversation || !sessions?.binding(sessionId)) return null
+  return conversation.binding(sessionId).target('chat') ?? null
 }
 
 /**
@@ -185,14 +188,14 @@ export function findChatTarget(ctx: HostContext, sessionId: string): HostValue {
  * newest block, null before the first), else `{ kind: 'tools' }` while one of
  * the turn's tool calls runs, else null — the turn waits on the model.
  */
-export function readTurnActivity(snapshot: HostValue, turn: HostValue): TurnActivity | null {
+export function readTurnActivity(snapshot: HostChatSnapshot, turn: HostTurn): TurnActivity | null {
   const step = turn.steps.length === 0 ? undefined : turn.steps[turn.steps.length - 1]
   const assistant = step === undefined ? undefined : step.data.get('assistant-step')
   if (assistant !== undefined && assistant.status === 'running') {
     const blocks = assistant.blocks
     return { kind: 'assistant', assistant, newest: blocks.length === 0 ? null : blocks[blocks.length - 1].kind }
   }
-  const calls = snapshot.legacy.runningCalls
+  const calls = snapshot.legacy?.runningCalls ?? []
   for (let i = 0; i < calls.length; i++) {
     if (calls[i].turn === turn.turn) return { kind: 'tools' }
   }
@@ -200,14 +203,14 @@ export function readTurnActivity(snapshot: HostValue, turn: HostValue): TurnActi
 }
 
 /** What an open turn is doing (readTurnActivity). */
-export type TurnActivity = { kind: 'assistant', assistant: HostValue, newest: string | null } | { kind: 'tools' }
+export type TurnActivity = { kind: 'assistant', assistant: HostAssistantStep, newest: string | null } | { kind: 'tools' }
 
-export function currentPreset(session: HostValue): string | null {
-  const snapshot = session.projections.faceOf('permissions').getSnapshot()
+export function currentPreset(session: HostSession): string | null {
+  const snapshot = session.projections?.faceOf('permissions').getSnapshot()
   if (snapshot === undefined || snapshot === null) return null
   // dsh 0.2+ projection faces hand back the bare value; older hosts wrapped it.
-  if (typeof snapshot === 'object' && 'currentValue' in snapshot) return snapshot.currentValue
-  return snapshot
+  if (typeof snapshot === 'object' && 'currentValue' in snapshot) return (snapshot as { currentValue: string }).currentValue
+  return typeof snapshot === 'string' ? snapshot : null
 }
 
 /**
