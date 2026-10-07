@@ -439,3 +439,45 @@ export interface HostConfigSnapshot {
 
 /** A host locale namespace's translate seat (`locale.bind(namespace)`). */
 export type HostText = (key: string, params?: Record<string, string | number>) => string
+
+/** The account service (`remote.account`): the profile read, and the state stream. */
+export interface HostAccountService {
+  getProfile(): Promise<HostAccountAnswer>
+  watch(signal: AbortSignal): AsyncIterable<HostAccountFrame>
+}
+
+/** The profile read's answer: the profile, or nothing when no credential is stored. */
+export interface HostAccountAnswer {
+  ok?: boolean
+  value?: HostAccountProfile
+}
+
+/** One account profile: `ready` once its platform answered, with the name, contact and picture. */
+export interface HostAccountProfile {
+  status?: string
+  value?: { name?: string, contact?: string, avatarUrl?: string }
+  avatarUrl?: string
+  /** The host some platforms answer with: the profile nested under its own key. */
+  profile?: HostAccountProfile
+}
+
+/** One frame of the account state stream: whether a credential is stored, and how a sign-in is doing. */
+export interface HostAccountFrame {
+  status?: string
+  attempt?: { phase?: string, id?: string }
+}
+
+/**
+ * A handle from `remote.$stream`: an async iterable stepped by hand, which
+ * reopens itself across reconnects and is disposed by its owner.
+ */
+export interface HostStream<Frame> {
+  dispose(): void
+  [Symbol.asyncIterator](): { next(): Promise<HostStreamStep<Frame>> }
+}
+
+/** One step of a stream: the frame, whether the stream ended, and the frame's own acknowledgement. */
+export interface HostStreamStep<Frame> {
+  done?: boolean
+  value: { value: Frame, accept?(): void }
+}

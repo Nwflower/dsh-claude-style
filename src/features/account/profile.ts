@@ -1,5 +1,6 @@
 import { setAccountIdentity } from '../../core/host'
-import type { HostContext, HostFiber, HostValue } from '../../core/host'
+import type { HostContext, HostFiber } from '../../core/host'
+import type { HostAccountAnswer, HostAccountFrame, HostAccountService, HostStream, HostStreamStep } from '../../contracts/services'
 
 /**
  * The signed-in account, when the desktop has one: `remote.account.getProfile()`
@@ -24,7 +25,7 @@ export function createAccountProfile(ctx: HostContext, onChange: () => void) {
   let accountRetry: ReturnType<typeof setTimeout> | null = null
   let accountRetries = 0
 
-  function accountService(): HostValue {
+  function accountService(): HostAccountService | null {
     return ctx.get('remote.account') ?? null
   }
 
@@ -63,7 +64,7 @@ export function createAccountProfile(ctx: HostContext, onChange: () => void) {
     if (account === null || typeof account.getProfile !== 'function') return
     dropAccountRead()
     const read = accountRead
-    account.getProfile().then((result: HostValue) => {
+    account.getProfile().then((result: HostAccountAnswer) => {
       if (read !== accountRead) return
       if (!result || result.ok !== true) { retryAccount(); return }
       if (!result.value) {
@@ -93,12 +94,12 @@ export function createAccountProfile(ctx: HostContext, onChange: () => void) {
    */
   let accountState: string | null = null
   let accountSignIn: string | null = null
-  function onAccountState(view: HostValue) {
+  function onAccountState(view: HostAccountFrame) {
     if (view === null || typeof view !== 'object') return
     const signedIn = view.status === 'credential-stored'
     const attempt = view.attempt
     if (!signedIn) accountSignIn = null
-    else if (attempt && (attempt.phase === 'committing' || attempt.phase === 'succeeded')) accountSignIn = attempt.id
+    else if (attempt && (attempt.phase === 'committing' || attempt.phase === 'succeeded')) accountSignIn = attempt.id ?? null
     const state = signedIn ? `signed-in:${accountSignIn || ''}` : 'signed-out'
     if (state === accountState) return
     accountState = state
@@ -111,7 +112,7 @@ export function createAccountProfile(ctx: HostContext, onChange: () => void) {
     }
   }
 
-  let accountStream: HostValue = null
+  let accountStream: HostStream<HostAccountFrame> | null = null
 
   /** Close this generation's account stream and drop its reads. */
   function stopFollowingAccount() {
@@ -149,7 +150,7 @@ export function createAccountProfile(ctx: HostContext, onChange: () => void) {
     accountStream = stream
     document.body.__dshAccountStream = stream
     function next() {
-      frames.next().then((step: HostValue) => {
+      frames.next().then((step: HostStreamStep<HostAccountFrame>) => {
         if (accountStream !== stream || step.done) return
         if (document.body.__dshAccountStream !== stream) { stopFollowingAccount(); return }
         onAccountState(step.value.value)
