@@ -292,9 +292,10 @@ function daysToObject(days: Map<string, DayBuckets>): Record<string, unknown> {
   const out: Record<string, unknown> = {}
   for (const [day, buckets] of days) {
     const entry: Record<string, unknown> = { ...buckets, models: undefined, sessions: undefined }
+    const cells: Record<string, Buckets> = {}
     if (buckets.models !== undefined) {
-      entry.models = {}
-      for (const [model, cell] of buckets.models) entry.models[model] = cell
+      for (const [model, cell] of buckets.models) cells[model] = cell
+      entry.models = cells
     }
     out[day] = entry
   }
@@ -302,21 +303,23 @@ function daysToObject(days: Map<string, DayBuckets>): Record<string, unknown> {
 }
 
 function daysFromObject(raw: unknown): Map<string, DayBuckets> {
-  const days = new Map()
+  const days = new Map<string, DayBuckets>()
   if (raw === null || typeof raw !== 'object') return days
   for (const [day, buckets] of Object.entries(raw)) {
     if (buckets === null || typeof buckets !== 'object') continue
-    const clean = emptyBuckets()
-    addBuckets(clean, buckets, 1)
-    clean.hours = hoursFrom(buckets.hours)
-    if (buckets.models !== null && typeof buckets.models === 'object') {
-      clean.models = new Map()
-      for (const [model, cell] of Object.entries(buckets.models)) {
+    const stored = buckets as { hours?: unknown, models?: unknown } & Partial<Buckets>
+    const clean: DayBuckets = emptyBuckets()
+    addBuckets(clean, stored, 1)
+    clean.hours = hoursFrom(stored.hours)
+    if (stored.models !== null && typeof stored.models === 'object') {
+      const models = new Map<string, Buckets>()
+      for (const [model, cell] of Object.entries(stored.models as Record<string, unknown>)) {
         if (cell === null || typeof cell !== 'object') continue
         const into = emptyBuckets()
-        addBuckets(into, cell, 1)
-        clean.models.set(model, into)
+        addBuckets(into, cell as Partial<Buckets>, 1)
+        models.set(model, into)
       }
+      clean.models = models
     }
     days.set(day, clean)
   }
@@ -324,8 +327,8 @@ function daysFromObject(raw: unknown): Map<string, DayBuckets> {
 }
 
 /** The newest generation of a session directory's log, with its fingerprint. */
-function newestLog(dir: string) {
-  let best = null
+function newestLog(dir: string): { path: string, size: number, mtimeMs: number } | null {
+  let best: { name: string, version: number, compressed: boolean } | null = null
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     if (!entry.isFile()) continue
     const match = SESSION_LOG.exec(entry.name)
