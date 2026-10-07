@@ -13,7 +13,7 @@
   - `packages/testing/mock-llm.cjs` 是脚本化的模型服务，按 Messages 协议回答宿主路由，脚本按请求顺序交付；只有模型是脚本化的，agent 循环、会话、客户端各层与渲染都是发行版宿主。
   - `packages/testing/e2e.cjs` 的每个场景各起一套实例，断言各自的东西：`conversation` 读者的消息成行、脚本回答的 Markdown 与思考过程归组；`tool` 工具调用单独成行并带调用编号、结果之后的回答渲染出来；`send` 发送起飞期间替身离开页面、真行不可见、读者的字每一帧都看得见、替身带走了输入卡片的字体；`scroll` 逐帧记录滚动位置与内容高度，断言没有一帧在内容没有变短时倒退、没有一帧在内容没有增长时把尾部留在视野之外；`importance` 走过首页、对话、草稿、流式输出、各个弹层与菜单、附件、暗色与品牌和配色的切换以及每条 `:hover` 规则的悬停，逐条判定皮肤的 `!important` 是否需要，一条多余即失败；设置 `DSH_IMPORTANCE_REFERENCE` 时每个状态还与一张旧样式表逐元素比对（D51）；`shots` 亮暗两套截图。
   - 截图沿用写盘前的隐私替换与泄漏扫描（`scripts/shared/privacy.cjs`，与 `scripts/shoot.cjs` 共用），两套明暗各写一张到本次运行的输出目录供人查看；仓库不存比对基线，画面是否变样由用户看过再定。
-- 持续集成（`.github/workflows/ci.yml`）：构建检查、单元测试与完整冒烟在 Linux 上跑；端到端的行为场景与截图捕获也在 Linux 上跑。
+- 持续集成（`.github/workflows/ci.yml`）：构建检查、单元测试与完整冒烟在 Linux 上跑；完整冒烟另在 Windows 上跑一遍，读者的桌面端在 Windows，宿主半边在那里读会话目录、盘符路径与文件时间；端到端的行为场景与截图捕获在 Linux 上跑，宿主版本固定；`contract` 场景另对宿主最新的预发布版（npm 的 `alpha` 标签）跑一遍，宿主改动了皮肤读的契约时先在这里报出，只作预警，不挡合并。每个任务都有时限；工作流用到的 Actions 由 Dependabot 每周提更新（`.github/dependabot.yml`）。
 - `.debug/` 里有价值的探针已升级为有维护的工具：逐帧滚动记录并入 `packages/testing/e2e.cjs` 的 `scroll` 场景，发送过程录制并入 `send` 场景的逐帧采样，替身采样并入同一份采样；其余草稿在会话结束时删除。
 
 ## 理由

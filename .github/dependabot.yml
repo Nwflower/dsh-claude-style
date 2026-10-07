@@ -1,0 +1,16 @@
+# The workflows' actions only. The development dependencies move by hand with
+# the gates run, and React and the host packages come from the host at runtime
+# (D36).
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        patterns:
+          - '*'

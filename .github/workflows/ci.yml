@@ -10,12 +10,16 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   # The gates that need no host: the build checks, the unit tests in a real
   # browser, the decisions index against the files it lists, and the smoke's
   # stand-in page plus the host half's routes.
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -31,11 +35,27 @@ jobs:
       - run: npm test
       - run: npm run smoke
 
+  # The readers' desktop runs on Windows, and the host half reads session
+  # directories, drive-letter paths and file times there (D45).
+  smoke-windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run smoke
+
   # The assembled host: a scratch `dsh web` with this checkout's plugin and the
   # scripted model service, driven through a real conversation (D45).
   e2e:
     runs-on: ubuntu-latest
     needs: verify
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -52,5 +72,30 @@ jobs:
         if: always()
         with:
           name: e2e-traces
+          path: .debug/e2e/out
+          if-no-files-found: ignore
+
+  # The host's newest prerelease against the contract the skin reads, ahead of
+  # the pinned version above: a selector or entry that stopped holding shows up
+  # here before the pin moves. Advisory, it holds no merge back (D45).
+  contract-host-alpha:
+    runs-on: ubuntu-latest
+    needs: verify
+    continue-on-error: true
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm install --global pnpm@11 @deepseek-ai/dsh@alpha
+      - run: node packages/testing/e2e.cjs --scenario contract
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-traces-host-alpha
           path: .debug/e2e/out
           if-no-files-found: ignore
