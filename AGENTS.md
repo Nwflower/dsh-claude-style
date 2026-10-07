@@ -60,7 +60,7 @@ Hard stops: stop the moment one triggers, without first judging whether it is wo
 
 ### Host Selectors
 
-Read D3 and D19 before adding a host selector. After adding a substring selector, compare what it matches on a live page. A new selector goes into `src/contracts/dom.ts` with an entry in `src/contracts/table.ts` (its id, what it means, the host build it was verified against) and that id in the `contracts` list of every feature manifest that reads it; the build refuses a literal without a table entry and an entry no manifest claims.
+Read D3 and D19 before adding a host selector. After adding a substring selector, compare what it matches on a live page. A new selector goes into `packages/contracts/src/dom.ts` with an entry in `packages/contracts/src/table.ts` (its id, what it means, the host build it was verified against) and that id in the `contracts` list of every feature manifest that reads it; the build refuses a literal without a table entry and an entry no manifest claims.
 
 ### Comments
 
@@ -78,7 +78,8 @@ Before writing to disk, `scripts/privacy.cjs` replaces workspace names, session 
 
 Target layout: D46. Today:
 
-- `src/core/` host access, preferences, model copy, i18n, the scheduler, the observation bus and the frame pipeline (D40), with their unit tests beside them (`*.test.ts`); `src/contracts/` the host contract (D44): `dom.ts` the selectors and attributes the skin reads, `table.ts` the same list with what each means and who reads it; `src/shared/` parts several features use (TypeScript beside CSS); `src/theme/` the global look no single feature owns and the design tokens (`tokens.json`, its shape in `tokens.schema.json`); `src/features/<feature>/` one feature's installer, helpers and stylesheets, the main file named after the feature.
+- `src/core/` host access, preferences, model copy, i18n, the scheduler, the observation bus and the frame pipeline (D40), with their unit tests beside them (`*.test.ts`); `src/shared/` parts several features use (TypeScript beside CSS); `src/theme/` the global look no single feature owns and the design tokens (`tokens.json`, its shape in `tokens.schema.json`); `src/features/<feature>/` one feature's installer, helpers and stylesheets, the main file named after the feature.
+- `packages/` the npm workspaces (D46): `packages/contracts` holds what both halves share — the host contract (`src/dom.ts` the selectors and attributes the skin reads, `src/table.ts` the same list with what each means and who reads it, `src/timing.ts` the timing assumptions, `src/services.ts` the service and value shapes, `src/usage.ts` the payloads the two halves exchange). Import it by package name (`@dsh-claude-style/contracts/services`); the type check and the bundler both resolve it through `tsconfig.json`'s `paths`, and the build loads those tables by repository path.
 - `src/constants.ts` holds build-time constants; `src/model-descriptions.json` the model copy and `brands` bindings, its shape declared in `src/model-descriptions.schema.json`; `src/assets/` every image, from brand marks to mascot sheets (`scripts/assets.mjs` decides inline or route, D38).
 - `src/generated.d.ts` types the module the build generates; `src/globals.d.ts` the DOM additions and the element properties the skin sets; `tsconfig.json` the type check.
 - `host/` the handwritten host half (private routes, settings `Config`, HDSL, search, usage).
