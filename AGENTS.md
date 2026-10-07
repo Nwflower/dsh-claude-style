@@ -95,6 +95,8 @@ The source is TypeScript ES modules under `strict` (D36). A module nothing impor
 npm install                                  # dev dependencies: TypeScript, esbuild, Ajv, Vitest, Playwright, React types
 npm run build                                # type-checks src/, bundles it into lib/client.js with its source map, runs the build checks, prints the build id
 npm run lint                                 # the rules that need no build: the stop line, Markdown links, decision citations (D48)
+npm run readme                               # write the READMEs' feature list from the feature manifests (D48)
+npm run readme:check                         # fail when that list differs from the manifests; CI runs this
 npm run changelog                            # write the CHANGELOG's [Unreleased] section from changes/ (D48)
 npm run changelog:check                      # fail when that section differs from changes/; CI runs this
 npm run docs:index                           # write docs/decisions/README.md from the decision files (D48)
@@ -128,7 +130,7 @@ The quick tier leaves out the motion cases; a feature whose cases all watch moti
 2. `npm run build`.
 3. While iterating, `npm test` for the logic with unit tests and `npm run smoke -- --quick --feature <dir>` (without `--quick` for motion features); with a `dsh web` running, also `probe.cjs`; check the live page, including after a hot reload. Timing and ordering against the real host is verified on a real instance — the smoke stand-in does not reproduce it.
 4. Visual changes are checked by the user in light and dark; re-shoot stale README screenshots with `shoot.cjs`; a visual change updates the `tests/screenshots/` baselines with `tools/e2e.cjs --accept` once the user has seen the new picture.
-5. Sync documents: the bilingual READMEs change together; a behavior change adds one file under `changes/` (D48) and `npm run changelog` writes the `[Unreleased]` section from those files — never edit that section by hand; a changed decision is rewritten in `docs/decisions/` following D48's template, and the index is regenerated with `npm run docs:index`.
+5. Sync documents: the bilingual READMEs change together, and the feature list inside them comes from the manifests — edit a feature's `description` and run `npm run readme`; a behavior change adds one file under `changes/` (D48) and `npm run changelog` writes the `[Unreleased]` section from those files — never edit that section by hand; a changed decision is rewritten in `docs/decisions/` following D48's template, and the index is regenerated with `npm run docs:index`.
 6. Done means the build, the unit tests, the relevant smoke and the end-to-end scenarios covering the change pass, and the behavior is verified; the full smoke is the release gate, and the lane runs on every change to the chat area or to timing. If a gate fails, keep fixing.
 
 ## Git and Release

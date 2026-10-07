@@ -24,6 +24,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
+      - run: npm run readme:check
       - run: npm run docs:check
       - run: npm run changelog:check
       - run: npm run build

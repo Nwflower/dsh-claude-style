@@ -12,6 +12,8 @@
     "docs:index": "node scripts/decisions-index.mjs",
     "docs:check": "node scripts/decisions-index.mjs --check",
     "lint": "node scripts/lint.mjs",
+    "readme": "node scripts/readme.mjs",
+    "readme:check": "node scripts/readme.mjs --check",
     "probe": "node scripts/probe.cjs",
     "smoke": "node scripts/smoke.cjs",
     "test": "vitest run",
