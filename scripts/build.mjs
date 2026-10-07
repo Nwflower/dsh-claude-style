@@ -35,7 +35,6 @@ import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
 import vm from 'node:vm'
 import Ajv2020 from 'ajv/dist/2020.js'
 import addFormats from 'ajv-formats'
@@ -45,14 +44,14 @@ import { buildHostHalf } from '../packages/host/build.mjs'
 import { checkClaimed, checkSheetPixels, checkSheets, planAssets, vectorizeSheet, writeAssets } from '../packages/assets/assets.mjs'
 import { TOKEN_SHEET, buildStylesheet, loadTokens, writeTokenTable } from './css.mjs'
 import manifestReader from './read-manifests.cjs'
-import { loadModule } from './ts-module.cjs'
+import { loadModule, loadModuleEsm } from './ts-module.cjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
 /**
- * The host half's preference table (packages/host/src/settings.js): the browser half's
+ * The host half's preference table (packages/host/src/settings.ts): the browser half's
  * PREF_DEFAULTS and packages/client/src/entry.ts's feature switches are both held to it.
  */
-const { PREFS_DEFAULT } = await import(pathToFileURL(path.join(ROOT, 'packages', 'host', 'src', 'settings.js')).href)
+const { PREFS_DEFAULT } = await loadModuleEsm('packages/host/src/settings.ts')
 const SRC = path.join(ROOT, 'packages', 'client', 'src')
 /** Brand marks, mascot sheets and vendor lockups; packages/assets/assets.mjs plans their delivery (D38). */
 const ASSETS = path.join(ROOT, 'packages', 'assets', 'src')

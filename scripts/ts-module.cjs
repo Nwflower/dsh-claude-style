@@ -37,4 +37,23 @@ function loadModule(file) {
   return module.exports
 }
 
-module.exports = { loadModule, ROOT, SRC }
+/**
+ * Evaluate one module that uses top-level await, which the CJS path above
+ * cannot carry: the bundle is handed to the ESM loader as a data URL.
+ *
+ * @param file - repository-relative module path, extension included.
+ * @returns the module's exports object.
+ */
+async function loadModuleEsm(file) {
+  const { outputFiles } = esbuild.buildSync({
+    entryPoints: [path.join(ROOT, file)],
+    bundle: true,
+    format: 'esm',
+    platform: 'neutral',
+    write: false,
+    logLevel: 'silent',
+  })
+  return import(`data:text/javascript;base64,${Buffer.from(outputFiles[0].text).toString('base64')}`)
+}
+
+module.exports = { loadModule, loadModuleEsm, ROOT, SRC }
