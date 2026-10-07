@@ -1,6 +1,7 @@
 import { subscribeMutations } from '../../core/bus'
 import { requestFrame } from '../../core/frame'
 import { beginChatFoldToggle, endChatFoldToggle, isChatFoldToggle } from './fold-toggle'
+import { writeScroll } from '../../shared/scroll-owner'
 import { CONVERSATION_SCROLL_SELECTOR, FOLLOW_THRESHOLD_PX, PROCESS_BODY_SELECTOR, PROCESS_EXPANDED_MODE_ATTRIBUTE, PROCESS_GROUP_SELECTOR, RUNNING_STATE, SHIMMER_SELECTOR } from '../../shared/chat-dom'
 
 /**
@@ -143,7 +144,7 @@ export function createProcessFold() {
       // would read it as the reader moving and switch its follow off. At the
       // bottom it is pinned there.
       if (scroller !== null && scrollTop !== null && scroller.scrollTop !== scrollTop) {
-        scroller.scrollTop = wasAtBottom ? scroller.scrollHeight : scrollTop
+        writeScroll(scroller, wasAtBottom ? scroller.scrollHeight : scrollTop, 'fold')
       }
       // With the reader already on the header this puts the focus back where
       // it was and changes nothing.

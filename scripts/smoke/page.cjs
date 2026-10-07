@@ -107,7 +107,7 @@ function page(name, tier, cases) {
         '<div data-chat-flow-key="b" style="height:600px">b</div>' +
       '</div></div></div>' +
       // The host renders its own button beside the frame that holds the scroll
-      // frame, which is the shape the walk in chat-tail.ts reads.
+      // frame, which is the shape handBackFollow in shared/scroll-owner.ts reads.
       '<div id="debugTail"><button type="button">Back to the end</button></div>' +
       '<div data-step-process><div data-step-process-body><div data-step-process-content style="height:400px">capped</div></div></div>' +
       '<div data-step-process data-group-expanded-mode="detailed"><div data-step-process-body><div data-step-process-content style="height:400px">expanded</div></div></div>'

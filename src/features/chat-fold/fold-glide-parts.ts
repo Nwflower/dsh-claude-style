@@ -1,8 +1,7 @@
 import { requestFrame } from '../../core/frame'
 import { CHAT_ROLLING_ATTR } from '../../constants'
-import { FOLLOW_LOOK_TOTAL_MS, ensureFollowTail } from '../chat-follow/chat-tail'
-import { isReaderScrollIntent } from '../../shared/reader-intent'
 import { CONVERSATION_SCROLL_SELECTOR, FOLLOW_THRESHOLD_PX, PROCESS_BODY_SELECTOR } from '../../shared/chat-dom'
+import { handBackFollow, readerMovedSince } from '../../shared/scroll-owner'
 
 /**
  * The measuring and bookkeeping half of the fold glide (fold-glide.ts): what
@@ -40,15 +39,6 @@ export const FOLD_POPUP_SELECTOR = '[aria-haspopup]'
 export const FOLD_SKIPPED_CONTROL_SELECTOR = '[data-turn-process], [data-turn-trigger]'
 /** How many frames to wait at most for React to take the collapse before the shutdown animation is withdrawn. */
 export const FOLD_SHUT_CONFIRM_FRAMES = 3
-/**
- * How long one fold's intent listener lives.
- *
- * It has to cover three stretches: waiting for React to take the click,
- * waiting for the door to roll, and the looks at the follow attribute after
- * it settled. Short, and the reader's own move in those last looks goes
- * unseen.
- */
-export const FOLD_WATCH_TTL_MS = FOLD_INTENT_TTL_MS + FOLD_ROLL_MS + FOLLOW_LOOK_TOTAL_MS
 /** After the door lands, "the position belongs to the animation" is counted this much longer, so the settle frame does not meet the follow guard. */
 export const FOLD_BUSY_GRACE_MS = 50
 /**
@@ -157,8 +147,8 @@ export function foldProcessBody(control: Element) {
 /**
  * Whether the reader is at the session's end right now.
  *
- * This one walks up from the pressed control; follow-tail.js answers the same
- * question from the scroller. Same test, different entrance.
+ * This one walks up from the pressed control; shared/chat-dom.ts's isAtBottom
+ * answers the same question from the scroller. Same test, different entrance.
  */
 export function foldControlAtBottom(control: Element) {
   const scroller = control.closest(CONVERSATION_SCROLL_SELECTOR)
@@ -168,32 +158,22 @@ export function foldControlAtBottom(control: Element) {
 }
 
 /**
- * Hang a "did the reader take the scroll over" listener that lives only until
- * this fold settles.
+ * Start watching whether the reader takes the scroll over before this fold
+ * settles.
  *
  * The settle hands the position back to the host's follow, and that only
  * holds for a reader who was at the bottom: the settle comes a couple of
  * hundred milliseconds after the press, and he can take over in between —
- * his intent is only visible in events. A pointer or key inside the composer
- * does not count: he is typing, not scrolling.
+ * his intent is only visible in events, which the scroll owner reads
+ * (readerMovedSince). A pointer or key inside the composer does not count:
+ * he is typing, not scrolling.
  *
  * @param atBottom - whether the reader was at the bottom when the fold began.
  * @returns this fold's settle credentials.
  */
 export function foldWatchReader(atBottom: boolean) {
-  let moved = false
-  const note = (event: Event) => {
-    if (isReaderScrollIntent(event)) moved = true
-  }
-  // These four are read: they all really move the position. The host's own
-  // reading intents carry beforematch as well; this one does not.
-  const types = ['wheel', 'touchstart', 'pointerdown', 'keydown']
-  for (const type of types) document.addEventListener(type, note, true)
-  const stop = () => {
-    for (const type of types) document.removeEventListener(type, note, true)
-  }
-  window.setTimeout(stop, FOLD_WATCH_TTL_MS)
-  return { atBottom, moved: () => moved, stop }
+  const since = performance.now()
+  return { atBottom, moved: () => readerMovedSince(since) }
 }
 
 /** One fold's settle credentials (foldWatchReader). */
@@ -206,25 +186,17 @@ export type FoldWatch = ReturnType<typeof foldWatchReader>
  * A fold is a large height change, and the host's follow is switched off by a
  * scroll that looks like the reader moving without reaching the end — its own
  * "back to the end" button is the only way in again. This decides whether the
- * hand-back still stands; how it is done (pin first, press the button only if
- * the attribute does not come back) is in chat-tail.ts, the same road the
- * follow guard takes.
+ * hand-back still stands; how it is done (walk first, press the button only if
+ * the attribute does not come back) is the scroll owner's handBackFollow, the
+ * same road the follow guard takes.
  *
  * The test is "the reader was at the bottom when the fold began": if he was
  * reading higher up, the hand-back is none of his business.
  */
 export function foldHandBackFollow(watch: FoldWatch) {
-  if (!watch.atBottom) {
-    watch.stop()
-    return
-  }
-  ensureFollowTail({
-    // He took the scroll over himself in between: the hand-back is void.
-    stillWanted: () => !watch.moved(),
-    onSettled: () => {
-      watch.stop()
-    },
-  })
+  if (!watch.atBottom) return
+  // He took the scroll over himself in between: the hand-back is void.
+  handBackFollow('fold', { stillWanted: () => !watch.moved() })
 }
 
 /**

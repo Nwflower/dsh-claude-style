@@ -1,8 +1,6 @@
 import { observeSize } from '../../core/bus'
-import { motionReduced } from '../../core/prefs'
-import { isReaderScrollIntent } from '../../shared/reader-intent'
 import { PROCESS_BODY_SELECTOR, PROCESS_CONTENT_SELECTOR, PROCESS_EXPANDED_MODE_ATTRIBUTE } from '../../shared/chat-dom'
-import { easeScrollToEnd, stopScrollEase } from '../../shared/scroll-ease'
+import { easeScrollToEndFor, joinScrollOwner, readerHolds, releaseReader, stopScrollFor } from '../../shared/scroll-owner'
 
 /**
  * The capped process group's follow: inside it, thinking and tool output do
@@ -20,20 +18,18 @@ import { easeScrollToEnd, stopScrollEase } from '../../shared/scroll-ease'
  *
  * Together they leave the position 20 to 50 px off the end — exactly the
  * last two lines. Nothing here changes the host's own state: past
- * CATCH_UP_GAP_PX the catch-up walks the body's scrollTop to its end on a
- * curve (shared/scroll-ease.ts, so the text above the last line is pushed up
- * smoothly rather than in a jump), and inside that threshold it leaves the
- * host's smooth scroll alone, which is the pleasant one while it keeps up.
- * The reader scrolling inside a body hands that body over until he comes
- * back to its end.
+ * CATCH_UP_GAP_PX the catch-up asks the scroll owner to walk the body's
+ * position to its end (shared/scroll-owner.ts, D41), so the text above the
+ * last line is pushed up smoothly rather than in a jump, and inside that
+ * threshold it leaves the host's smooth scroll alone, which is the pleasant
+ * one while it keeps up. The reader scrolling inside a body holds that body
+ * until he comes back to its end (the owner's readerHolds).
  *
  * The catch-up and the host's own follow do not fight: moving scrollTop
  * runs its onScroll, and it reads a position at the end as the reader
  * reaching the end — which lights its follow up again and drops the
  * animation target that was stuck.
  */
-/** How close to a body's end the reader has to be for the hand-over to end. */
-export const PROCESS_RELEASE_THRESHOLD_PX = 4
 /**
  * Past this the catch-up takes over. Inside it the host's smooth scroll
  * gets to finish; measured while streaming, its steady-state lag runs
@@ -42,23 +38,15 @@ export const PROCESS_RELEASE_THRESHOLD_PX = 4
 export const CATCH_UP_GAP_PX = 40
 /** How often the watched bodies are brought up to date; session switches and groups coming and going ride it. */
 export const PROCESS_SYNC_INTERVAL_MS = 500
-/**
- * The intent events read here: the wheel, a touch drag (touchmove as well),
- * the pointer and the scroll keys. One more than the host's own reading
- * intents (a drag inside a body counts) and one fewer (in-page find has
- * nothing to do with a body).
- */
-export const PROCESS_INTENT_TYPES = ['wheel', 'touchstart', 'touchmove', 'pointerdown', 'keydown']
 
 /**
  * Watch every process group's body on the page and catch up the ones that
  * fall behind.
  *
- * @returns teardown: the size subscriptions, the listeners and the timer go away.
+ * @returns teardown: the size subscriptions and the timer go away.
  */
 export function createChatProcessFollow() {
-  /** A body the reader has really scrolled in, until he comes back to its end. */
-  const takenOver = new WeakSet<Element>()
+  const leaveOwner = joinScrollOwner()
   /** The bodies watched, each with the content layer it currently has and what stops watching the two. */
   const watched = new Map<Element, { content: Element | null, stopBody: () => void, stopContent: (() => void) | null }>()
   /** Set by the teardown, so an ease in flight stops with the feature. */
@@ -79,47 +67,14 @@ export function createChatProcessFollow() {
 
   /** Past the threshold, walk the body's position to its end on a curve. */
   const catchUp = (body: Element) => {
-    if (takenOver.has(body)) return
+    if (readerHolds(body)) return
     if (!followable(body)) return
     if (gapOf(body) <= CATCH_UP_GAP_PX) return
     // Written outright, the catch-up lands as a jump of forty-odd pixels
     // several times a second while text streams, which reads as the
-    // paragraph above the last line snapping upward; the position is eased
-    // there instead (shared/scroll-ease.ts). The reader's animation choice still
-    // means "no animation", so reduced motion keeps the direct write.
-    if (motionReduced()) {
-      body.scrollTop = body.scrollHeight
-      return
-    }
-    easeScrollToEnd(body, () => !stopped && !takenOver.has(body) && followable(body))
-  }
-
-  /**
-   * Note that the reader took this body's scroll over.
-   *
-   * A pointer on the body's content does not count: that is opening a row,
-   * not touching the scrollbar. The scrollbar is the body's own strip, and
-   * an event aimed at it has the body as its target.
-   */
-  const noteIntent = (event: Event) => {
-    const target = event.target
-    if (!(target instanceof Element)) return
-    const body = target.closest(PROCESS_BODY_SELECTOR)
-    if (body === null) return
-    if (event.type === 'pointerdown' && target !== body) return
-    if (!isReaderScrollIntent(event)) return
-    // A scroll key the host has already handled is not ours to read: it knows where it is going.
-    if (event.type === 'keydown' && event.defaultPrevented) return
-    takenOver.add(body)
-  }
-
-  /** The reader came back to this body's end: the hand-over ends. */
-  const noteScroll = (event: Event) => {
-    const target = event.target
-    if (!(target instanceof HTMLElement)) return
-    if (!target.matches(PROCESS_BODY_SELECTOR)) return
-    if (gapOf(target) > PROCESS_RELEASE_THRESHOLD_PX) return
-    takenOver.delete(target)
+    // paragraph above the last line snapping upward; the owner eases it there
+    // instead, and writes it outright under reduced motion.
+    easeScrollToEndFor(body, 'process', () => !stopped && followable(body))
   }
 
   // Every content change is judged once. Watching the body itself matters
@@ -160,35 +115,32 @@ export function createChatProcessFollow() {
     }
     for (const [body, entry] of [...watched]) {
       if (present.has(body)) {
-        // A body that was folded and is open again should not carry the last hand-over over.
-        if (body.hasAttribute('hidden')) takenOver.delete(body)
+        // A body that was folded and is open again should not carry the last hold over.
+        if (body.hasAttribute('hidden')) releaseReader(body)
         continue
       }
       watched.delete(body)
-      takenOver.delete(body)
+      releaseReader(body)
       entry.stopBody()
       if (entry.stopContent !== null) entry.stopContent()
       // A body leaving the page takes its ease with it; the loop would drop
       // it anyway (it is no longer connected), and this is the tidier exit.
-      stopScrollEase(body)
+      stopScrollFor(body, 'process')
     }
   }
 
   const timer = window.setInterval(sync, PROCESS_SYNC_INTERVAL_MS)
-  window.addEventListener('scroll', noteScroll, { capture: true, passive: true })
-  for (const type of PROCESS_INTENT_TYPES) window.addEventListener(type, noteIntent, { capture: true, passive: true })
   sync()
 
   return () => {
     stopped = true
     window.clearInterval(timer)
-    window.removeEventListener('scroll', noteScroll, true)
-    for (const type of PROCESS_INTENT_TYPES) window.removeEventListener(type, noteIntent, true)
     for (const [body, entry] of watched) {
       entry.stopBody()
       if (entry.stopContent !== null) entry.stopContent()
-      stopScrollEase(body)
+      stopScrollFor(body, 'process')
     }
     watched.clear()
+    leaveOwner()
   }
 }

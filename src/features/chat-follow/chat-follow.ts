@@ -1,36 +1,27 @@
-import { CHAT_FOLLOW_ATTR, STREAM_GLIDE_ATTR } from '../../constants'
+import { CHAT_FOLLOW_ATTR } from '../../constants'
 import { observeSize, subscribeMutations } from '../../core/bus'
 import { requestFrame } from '../../core/frame'
 import { motionReduced } from '../../core/prefs'
-import { ensureFollowTail } from './chat-tail'
 import { createChatProcessFollow } from './process-follow'
-import { isReaderScrollIntent } from '../../shared/reader-intent'
-import { CHAT_CALL_SELECTOR, CHAT_FLOW_SELECTOR, COMPOSER_SELECTOR, CONVERSATION_SCROLL_SELECTOR, FLOW_BLOCK_SELECTOR, FOLLOWING_TAIL_ATTRIBUTE, FOLLOWING_TAIL_SELECTOR, RUNNING_STATE, SHIMMER_SELECTOR, STREAMING_SELECTOR, SUBMISSION_ECHO_SELECTOR, THINK_ROW_SELECTOR, conversationScroller, findFollowTailButton, isAtBottom } from '../../shared/chat-dom'
-import { SCROLL_EASE_LEAD_PX, easeScrollToEnd, scrollEasePosition, stopScrollEase } from '../../shared/scroll-ease'
+import { CHAT_CALL_SELECTOR, CHAT_FLOW_SELECTOR, COMPOSER_SELECTOR, CONVERSATION_SCROLL_SELECTOR, FLOW_BLOCK_SELECTOR, FOLLOWING_TAIL_ATTRIBUTE, RUNNING_STATE, SHIMMER_SELECTOR, STREAMING_SELECTOR, THINK_ROW_SELECTOR, conversationScroller } from '../../shared/chat-dom'
+import { SCROLL_EASE_LEAD_PX, easeScrollToEndFor, handBackFollow, holdFollowButton, joinScrollOwner, readerHolds, releaseFollowButton, stopScrollFor, submissionHolds, takeBackHostPin } from '../../shared/scroll-owner'
 import type { HostContext } from '../../core/host'
 import type { Ui } from '../../core/scheduler'
 
-/**
+/*
  * Enhanced follow and the capped process group's follow, ported from
  * dsh-chat-ux. Both ride one preference, as they do upstream: they are the
  * two halves of the same hand-back.
  *
- * The moments that lose the host's follow, the guard that watches for them,
- * and the hand-back itself are in follow-guard.js and chat-tail.ts; the
- * catch-up inside a capped body is in process-follow.ts.
- *
- * @param ctx - client context.
- * @param ui - shared handle table; a fold glide running elsewhere
- *     (src/features/chat-fold/) owns the position until it lands, so the
- *     hand-back waits it out when that feature is installed.
- * @returns teardown.
+ * The guard that watches for the moments that lose the host's follow is
+ * below; the hand-back itself and every position write are the scroll
+ * owner's (shared/scroll-owner.ts, D41); the catch-up inside a capped body is
+ * in process-follow.ts.
  */
 /** One tool call's row, and one flow block, in one selector: a new node either way. */
 export const FOLLOW_STRUCTURE_SELECTOR = FLOW_BLOCK_SELECTOR + ', ' + CHAT_CALL_SELECTOR
 /** Content is streaming: the host writes both marks, and only then is there a follow to lose. */
 export const FOLLOW_RUNNING_SELECTOR = STREAMING_SELECTOR + ', ' + SHIMMER_SELECTOR
-/** The intent events the guard reads; the same family as the host's own reading intents. */
-export const FOLLOW_INTENT_TYPES = ['wheel', 'touchstart', 'pointerdown', 'keydown', 'beforematch']
 /** Two hand-backs never land closer than this, so a run of tool calls cannot pin the position. */
 export const FOLLOW_MIN_INTERVAL_MS = 200
 /**
@@ -44,43 +35,18 @@ export const FOLLOW_ACTIVITY_GRACE_MS = 2000
 /** A fold glide in flight is waited out; after this many waits the round is dropped. */
 export const FOLLOW_FOLD_WAIT_MS = 150
 export const FOLLOW_FOLD_WAIT_ATTEMPTS = 4
-/**
- * How far the position has to move past the glide's own last reading before
- * it counts as the host pinning it rather than the spring taking its own
- * step (both happen inside one frame; see the glide below).
- */
-export const GLIDE_PIN_TOLERANCE_PX = 1
-/**
- * The two arrivals that are the reader's own submission rather than content
- * streaming in: his own message row, and the echo the host mounts in its
- * place before the real row takes over.
- */
-export const GLIDE_SUBMIT_SELECTOR = '[data-chat-flow-kind="user"], ' + SUBMISSION_ECHO_SELECTOR
-/**
- * How long the glide stands down after one of them arrives.
- *
- * The host's own jump to a freshly sent message is deliberate and is not the
- * glide's to take back — the reader has to see the message he just sent —
- * and the echo is swapped for the real row about a second later, which moves
- * the position again. The stand-down covers both.
- */
-export const GLIDE_SUBMIT_HOLD_MS = 1200
 
 /**
  * Watch the whole page for the moments that lose the host's follow, and hand
- * the position back at each of them.
+ * the position back at each of them; while content streams, glide the
+ * position instead of letting the host write the end in one frame. Every
+ * write goes through the scroll owner (D41).
  *
  * @param foldBusy - whether a fold glide is animating a height right now.
- * @returns teardown: the observer and the intent listeners go away.
+ * @returns teardown: the subscriptions go away.
  */
 export function createChatFollowGuard(foldBusy: () => boolean) {
-  /** Whether the reader has taken the scroll over and not come back to the end. */
-  let readerTookOver = false
-  /**
-   * The scroller read last time. A session switch replaces the whole frame,
-   * so it is checked before every use.
-   */
-  let scrollerCache: HTMLElement | null = null
+  const leaveOwner = joinScrollOwner()
   /** When the last hand-back really landed, for the throttle. */
   let lastEnsureAt = 0
   /** When structure last changed, for the grace above. */
@@ -90,22 +56,10 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
   let structureSeen = false
   let guardSeen = false
 
-  /**
-   * Whether the reader is reading up there right now.
-   *
-   * He sets it once, and the position clears it: back within the line means
-   * he is done (or pressed the host's own button). That needs no "no
-   * movement for this long" timer, which would drag him back while he
-   * reads slowly.
-   */
+  /** Whether the reader is reading up there right now (the owner's hold on the conversation). */
   const readerAway = () => {
-    if (!readerTookOver) return false
     const scroller = conversationScroller()
-    // Without a scroller, assume he is still up there and leave this round alone.
-    if (scroller === null) return true
-    if (!isAtBottom(scroller)) return true
-    readerTookOver = false
-    return false
+    return scroller !== null && readerHolds(scroller)
   }
 
   /** Whether work counts as in progress right now. */
@@ -115,32 +69,25 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
   // ---------- the stream glide ----------
   //
   // While work is streaming and the reader is at the end, the host follows by
-  // writing the end outright the moment content grows — measured on this
-  // build: the position never sat more than three pixels off the end, so the
-  // text above the last line was pushed up in one frame on every burst. The
-  // glide takes that write back before the frame paints and hands the
-  // distance to the spring (shared/scroll-ease.ts, the same walk the catch-up and
-  // the hand-back use), so the position travels there instead.
+  // writing the end outright the moment content grows — the position never
+  // sat more than three pixels off the end, so the text above the last line
+  // was pushed up in one frame on every burst. The glide takes that write back
+  // before the frame paints and hands the distance to the spring, so the
+  // position travels there instead.
   //
   // Every reading is an element read plus at most one style write, and all of
   // it is gated on work being in progress: with the stream idle this costs
   // one attribute read per mutation batch and nothing else.
-  /** Where the glide last saw the position, and on which scroller; the reading a pin is measured against. */
-  let glideSeen: { element: HTMLElement, top: number } | null = null
-  /** The scroller glideSeen belongs to. A session switch replaces the frame whole. */
+  /** The scroller the glide last held; a session switch replaces the frame whole. */
   let glideScroller: HTMLElement | null = null
-  /** The flow column the glide's resize observer watches. */
+  /** The flow column the glide reads growth from. */
   let glideColumn: HTMLElement | null = null
   /** Stops the glide's size subscription on glideColumn (see glideSync). */
   let stopGlideSize: (() => void) | null = null
   /** The column's height as the glide last saw it; the growth a frame is measured against. */
   let glideHeight = 0
-  /** The host's own button while the glide keeps it out of sight. */
-  let glideButton: HTMLElement | null = null
   /** Whether the glide is holding the position right now. */
   let glideHeld = false
-  /** Until this moment the glide stands down: a message the reader sent just arrived. */
-  let glideHoldUntil = 0
 
   /** Whether content is arriving right now: the mark the host writes while it streams. */
   const streaming = () => document.querySelector(FOLLOW_RUNNING_SELECTOR) !== null
@@ -156,51 +103,20 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
     // The reader's animation choice means "no animation": nothing to walk.
     if (motionReduced()) return false
     // The reader's own message has just arrived: the host's jump to it stands.
-    if (performance.now() < glideHoldUntil) return false
+    if (submissionHolds()) return false
     if (!streaming()) return false
     if (readerAway()) return false
-    if (typeof foldBusy === 'function' && foldBusy()) return false
+    if (foldBusy()) return false
     return true
   }
 
   /**
    * The test the spring asks every frame: the glide's own gates without the
    * "work in progress" one, because the trail left by the last token still
-   * has to land after the stream has stopped.
+   * has to land after the stream has stopped. The reader's hold and his own
+   * message are the owner's to ask.
    */
-  const glideWanted = () => !motionReduced() && !readerAway()
-    && performance.now() >= glideHoldUntil
-    && !(typeof foldBusy === 'function' && foldBusy())
-
-  /** Let the host's button show again. */
-  const unhideGlideButton = () => {
-    if (glideButton === null) return
-    glideButton.removeAttribute(STREAM_GLIDE_ATTR)
-    glideButton = null
-  }
-
-  /**
-   * Keep the host's own button out of sight while the glide follows.
-   *
-   * A position held off the end reads to the host as a reader who left the
-   * end, so its settlement turns the follow off and it renders that button
-   * although the glide is following. The mark is this skin's own and the
-   * stylesheet hides the button; the host's state is untouched, and the mark
-   * goes away the moment the glide lets go.
-   */
-  const hideGlideButton = () => {
-    if (document.querySelector(FOLLOWING_TAIL_SELECTOR) !== null) {
-      unhideGlideButton()
-      return
-    }
-    const button = findFollowTailButton()
-    if (button === glideButton) return
-    unhideGlideButton()
-    if (button !== null) {
-      button.setAttribute(STREAM_GLIDE_ATTR, '')
-      glideButton = button
-    }
-  }
+  const glideWanted = () => !motionReduced() && !foldBusy()
 
   /**
    * Watch the flow column the glide reads growth from; a session switch
@@ -239,20 +155,16 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
   /**
    * Hold the position through one frame of streaming.
    *
-   * This runs from the resize observer below, which the browser calls after
-   * the host's own (see glideSync), so a pin written this frame is still
-   * taken back before it paints: the distance it added stays with the
-   * spring. The reference is
-   * the spring's own last write while it is easing, and the last position
-   * the glide saw otherwise. Only a move *down* is undone — an upward one is
-   * the reader, or the host going somewhere else, and neither is the glide's
-   * to take back.
+   * This runs from the size subscription above, which the browser calls
+   * after the host's own resize observer, so a pin written this frame is
+   * still taken back before it paints: the distance it added stays with the
+   * spring (takeBackHostPin).
    */
   const glideCheck = (grew?: number) => {
     if (!glidePinning()) {
       if (glideHeld) {
         glideHeld = false
-        unhideGlideButton()
+        releaseFollowButton()
       }
       return
     }
@@ -261,49 +173,15 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
     if (scroller === null) return
     glideHeld = true
     glideScroller = scroller
-    hideGlideButton()
-    const end = scroller.scrollHeight - scroller.clientHeight
-    // The frame's own step first: a position the spring has just written is
-    // one this frame is allowed to be at, so it can never read as an undone
-    // pin. Failing that, the position this scroller was last seen at — read
-    // before this frame's own callbacks, so it is where the frame started,
-    // which is what a pin written during the frame has to be measured
-    // against. Failing that too (a scroller that has never scrolled), the end
-    // this frame started at: this frame's end less the growth the column
-    // reported.
-    let expected = scrollEasePosition(scroller)
-    if (expected === null && glideSeen !== null && glideSeen.element === scroller) expected = glideSeen.top
-    if (expected === null && typeof grew === 'number' && grew > 0) expected = Math.max(0, end - grew)
-    if (expected !== null && scroller.scrollTop - expected > GLIDE_PIN_TOLERANCE_PX) {
-      scroller.scrollTop = expected
-    }
-    if (end - scroller.scrollTop > 0.5) easeScrollToEnd(scroller, glideWanted)
-  }
-
-  /**
-   * Track the position a pin is measured against.
-   *
-   * Scroll events are fired before a frame's own callbacks, so this carries
-   * the position the frame started at — which is exactly what a pin written
-   * during that frame has to be measured against.
-   */
-  const noteGlideScroll = (event: Event) => {
-    const target = event.target
-    if (target instanceof HTMLElement && target.matches(CONVERSATION_SCROLL_SELECTOR)) {
-      // Kept with its element: a session switch replaces the scroller, and
-      // the old reading must not be measured against the new one.
-      glideSeen = { element: target, top: target.scrollTop }
-    }
+    holdFollowButton()
+    takeBackHostPin(scroller, grew)
+    if (scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop > 0.5) easeScrollToEndFor(scroller, 'stream', glideWanted)
   }
 
   /**
    * The column's own box is what grows while text streams, and a resize is
-   * reported after the host's callback in the same step, so the growth read
-   * here is the distance the host's pin added this frame. Growth that leaves
-   * the column's box alone (a text node only) still arrives through the page
-   * observer below, where the spring's own last write is the reference. The
-   * scroller and the composer seat carry no growth to read; the host pins on
-   * them too, and that pin is taken back the same way.
+   * the moment the host has just pinned the end: read the growth this frame
+   * brought, then hold.
    */
   const onGlideResize = (entries: ResizeObserverEntry[]) => {
     let grew = 0
@@ -339,7 +217,7 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
     // More than a screen off the end is the reader reading higher up, not a follow that fell one step behind.
     if (scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop > scroller.clientHeight) return
     // A fold glide is moving the height, and the position is its business until it lands.
-    if (typeof foldBusy === 'function' && foldBusy()) {
+    if (foldBusy()) {
       const tries = typeof attempt === 'number' ? attempt : 0
       if (tries >= FOLLOW_FOLD_WAIT_ATTEMPTS) return
       window.setTimeout(() => ensure(tries + 1), FOLLOW_FOLD_WAIT_MS)
@@ -348,7 +226,7 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
     const now = performance.now()
     if (now - lastEnsureAt < FOLLOW_MIN_INTERVAL_MS) return
     lastEnsureAt = now
-    ensureFollowTail({ stillWanted: () => !readerAway() })
+    handBackFollow('follow', { stillWanted: () => !readerAway() })
   }
 
   /** A batch of mutations is settled: decide whether to act. */
@@ -381,35 +259,6 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
     return node.matches(FOLLOW_STRUCTURE_SELECTOR) || node.querySelector(FOLLOW_STRUCTURE_SELECTOR) !== null
   }
 
-  /**
-   * Whether a node, or the subtree it brings, is a message the reader has
-   * just sent — his own row, or the echo the host mounts in its place.
-   */
-  const arrivesFromComposer = (node: Node) => node instanceof Element
-    && (node.matches(GLIDE_SUBMIT_SELECTOR) || node.querySelector(GLIDE_SUBMIT_SELECTOR) !== null)
-
-  /**
-   * Note that the reader took the scroll over.
-   *
-   * Only once the content has really grown a scrollbar: before that there
-   * is nothing to scroll, and setting the flag would make the guard wait a
-   * round for nothing. What counts as his intent is isReaderScrollIntent's
-   * call: inside the composer and keys that cannot scroll do not count.
-   */
-  const noteReaderIntent = (event: Event) => {
-    // Once taken over there is nothing to judge: this function only sets the
-    // flag, and the dozens of events behind one gesture cannot change it.
-    if (readerTookOver) return
-    if (!isReaderScrollIntent(event)) return
-    // The container is cached: a trackpad sends hundreds of these a second,
-    // and each read is a document query plus two geometry values landing
-    // exactly while the reader scrolls and new content dirties the layout.
-    if (scrollerCache === null || !scrollerCache.isConnected) scrollerCache = conversationScroller()
-    const scroller = scrollerCache
-    if (scroller === null || scroller.scrollHeight - scroller.clientHeight <= 0) return
-    readerTookOver = true
-  }
-
   const onRecords = (records: MutationRecord[]) => {
     for (const record of records) {
       if (record.type === 'attributes') {
@@ -438,30 +287,13 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
     // Text arriving is the glide's own signal and carries no structure: a
     // character-data change, or a node added or removed anywhere, is enough
     // to ask. Attribute batches (a streaming mark flipping) are skipped,
-    // which keeps the common idle case down to a boolean per batch. A node
-    // that is the reader's own message is not streaming content: it stands
-    // the glide down instead of feeding it (GLIDE_SUBMIT_HOLD_MS).
-    let contentArrived = false
-    for (const record of records) {
-      if (record.type === 'characterData') {
-        contentArrived = true
-        continue
-      }
-      for (const node of record.addedNodes) {
-        if (arrivesFromComposer(node)) glideHoldUntil = performance.now() + GLIDE_SUBMIT_HOLD_MS
-        contentArrived = true
-      }
-      for (const node of record.removedNodes) {
-        if (arrivesFromComposer(node)) glideHoldUntil = performance.now() + GLIDE_SUBMIT_HOLD_MS
-        contentArrived = true
-      }
-    }
+    // which keeps the common idle case down to a boolean per batch. The
+    // reader's own message stands the glide down (the owner's submission
+    // hold, which hears the batch before this subscription does).
+    const contentArrived = records.some(record => record.type === 'characterData' || record.addedNodes.length > 0 || record.removedNodes.length > 0)
     if (contentArrived) glideCheck()
   }
 
-  for (const type of FOLLOW_INTENT_TYPES) {
-    document.addEventListener(type, noteReaderIntent, { capture: true, passive: true })
-  }
   const stopMutations = subscribeMutations(document.body, {
     subtree: true,
     childList: true,
@@ -469,23 +301,18 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
     attributeFilter: ['data-state', FOLLOWING_TAIL_ATTRIBUTE],
     attributeOldValue: true,
   }, onRecords)
-  // The reading a pin is measured against; scroll events are fired before
-  // the frame's own callbacks, so this always carries the position the frame
-  // started at (see noteGlideScroll).
-  window.addEventListener('scroll', noteGlideScroll, { capture: true, passive: true })
 
   return () => {
     stopMutations()
-    for (const type of FOLLOW_INTENT_TYPES) document.removeEventListener(type, noteReaderIntent, true)
-    window.removeEventListener('scroll', noteGlideScroll, true)
     if (stopGlideSize !== null) stopGlideSize()
     stopGlideSize = null
-    unhideGlideButton()
+    releaseFollowButton()
     // The glide's own easing stops with the feature; a hand-back in flight
-    // elsewhere on the page is not this teardown's business.
-    if (glideScroller !== null) stopScrollEase(glideScroller)
+    // is the owner's to finish.
+    if (glideScroller !== null) stopScrollFor(glideScroller, 'stream')
     glideScroller = null
     glideColumn = null
+    leaveOwner()
   }
 }
 

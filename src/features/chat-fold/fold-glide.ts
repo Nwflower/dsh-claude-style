@@ -4,6 +4,7 @@ import { FOLD_DISCLOSURE_SELECTOR, FOLD_INTENT_TTL_MS, FOLD_POPUP_SELECTOR, FOLD
 import type { FoldWatch } from './fold-glide-parts'
 import { isChatFoldToggle } from './fold-toggle'
 import { CHAT_FLOW_SELECTOR, PROCESS_GROUP_SELECTOR, THINK_ROW_SELECTOR } from '../../shared/chat-dom'
+import { joinScrollOwner } from '../../shared/scroll-owner'
 
 /**
  * When a fold closes, the content below is pushed away and the body rolls up
@@ -203,26 +204,17 @@ export function installChatFoldGlide() {
     glideIntent = null
     if (current === null) return
     const watch = current.watch
-    // Nothing to animate on this road: settling is withdrawing the listener.
-    if (Date.now() - current.takenAt > FOLD_INTENT_TTL_MS || reduceMotion()) {
-      watch.stop()
-      return
-    }
+    // Nothing to animate on this road.
+    if (Date.now() - current.takenAt > FOLD_INTENT_TTL_MS || reduceMotion()) return
     // A process group: the root is pressed, not the body — the body carries
     // its own scrollbar and the host's follow is watching it.
     if (current.groupRoot !== null && current.groupBody !== null) {
-      if (current.groupBody.hasAttribute('hidden')) {
-        watch.stop()
-        return
-      }
+      if (current.groupBody.hasAttribute('hidden')) return
       foldSettleAfter(watch, rollOpen(current.groupRoot, current.collapsedHeight))
       return
     }
     const body = foldExpandedBody(current.control)
-    if (body === null) {
-      watch.stop()
-      return
-    }
+    if (body === null) return
     // A DisclosureRow: the body is a plain block, and pressing its height is
     // "show as much as it has pulled down".
     foldSettleAfter(watch, rollOpen(body, 0))
@@ -256,8 +248,7 @@ export function installChatFoldGlide() {
       event.preventDefault()
       return
     }
-    // The previous opening direction's wait is void, and its intent listener goes with it.
-    if (glideIntent !== null) glideIntent.watch.stop()
+    // The previous opening direction's wait is void.
     glideIntent = null
     // The control: a DisclosureRow, or any other button carrying aria-expanded
     // (a process group's header among them).
@@ -311,6 +302,7 @@ export function installChatFoldGlide() {
     })
   }
 
+  const leaveOwner = joinScrollOwner()
   document.addEventListener('click', onClick, true)
   // hidden is watched too: a process group folds with
   // setAttribute('hidden', 'until-found'), an attribute change alone, which
@@ -321,7 +313,7 @@ export function installChatFoldGlide() {
   return () => {
     document.removeEventListener('click', onClick, true)
     stopMutations()
-    if (glideIntent !== null) glideIntent.watch.stop()
     glideIntent = null
+    leaveOwner()
   }
 }

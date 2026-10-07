@@ -7,7 +7,7 @@ import type { TurnItem } from './turn-nav-host'
 import { CHAT_TURN_ATTRIBUTE, TURN_RAIL_CURRENT_SELECTOR } from '../../shared/chat-dom'
 import { buildElement, closestFrom } from '../../shared/dom'
 import { POPOVER_CLOSE_DELAY, closeOtherPopovers, createHoverIntent, registerPopover, unregisterPopover } from '../../shared/popover'
-import { easeScroll, scrollEasePosition } from '../../shared/scroll-ease'
+import { easeScrollFor, scrollPositionFor, writeScroll } from '../../shared/scroll-owner'
 import type { HostContext } from '../../core/host'
 import type { Ui } from '../../core/scheduler'
 
@@ -347,7 +347,7 @@ export function install(ctx: HostContext, ui: Ui) {
 
   /**
    * Walk the conversation from where it was to where the host just put it,
-   * on the skin's scroll curve (shared/scroll-ease.ts).
+   * through the scroll owner (shared/scroll-owner.ts, D41).
    *
    * The host lands a loaded turn inside the press itself, writing the
    * position in one frame; that write is taken back before the frame paints
@@ -360,10 +360,10 @@ export function install(ctx: HostContext, ui: Ui) {
     if (scroller === null || before === null || motionReduced()) return
     const landed = scroller.scrollTop
     if (Math.abs(landed - before) <= 1) return
-    scroller.scrollTop = before
-    easeScroll(scroller, () => landed, () => {
+    if (!writeScroll(scroller, before, 'jump')) return
+    easeScrollFor(scroller, 'jump', () => landed, () => {
       if (stopped) return false
-      const written = scrollEasePosition(scroller)
+      const written = scrollPositionFor(scroller)
       return written === null || Math.abs(scroller.scrollTop - written) <= 1.5
     }, TURN_NAV_GLIDE_LEAD_PX)
   }

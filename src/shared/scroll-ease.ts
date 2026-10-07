@@ -3,10 +3,9 @@ import { requestFrame } from '../core/frame'
  * Walk a scroll container's position to where it is going instead of
  * writing it in one frame: the one scroll motion the skin draws.
  *
- * Its readers: the stream glide and the hand-back walk the conversation to
- * its end (features/chat-follow), the capped process body's catch-up walks
- * that body to its end (process-follow.ts), and the conversation navigator
- * walks the conversation to the turn it jumped to (features/turn-nav).
+ * Its one reader is the scroll owner (shared/scroll-owner.ts, D41), which
+ * decides whose request the spring carries on each container; the build
+ * fails when anything else imports this module.
  *
  * The curve is a critically damped spring:
  *
@@ -127,11 +126,6 @@ export function easeScroll(element: Element, destination: (element: Element) => 
   requestFrame({ write: stepScrollEase })
 }
 
-/** Start (or keep) easing this element's position to its end, wherever the end goes. */
-export function easeScrollToEnd(element: Element, wanted: () => boolean) {
-  easeScroll(element, scrollEnd, wanted)
-}
-
 /** End this element's ease, leaving the position where it is. */
 export function stopScrollEase(element: Element) {
   scrollEasing.delete(element)
@@ -149,8 +143,8 @@ export function isScrollEasing(element: Element) {
  * The position the ease last wrote on this element, or null while it is not
  * easing on it.
  *
- * The stream glide (chat-follow.ts) reads it to tell the host's pin apart
- * from the spring's own step inside one frame: the host writes the end
+ * The scroll owner reads it to tell the host's pin apart from the spring's
+ * own step inside one frame (takeBackHostPin): the host writes the end
  * outright the moment content grows, and the distance that write added has
  * to go back to the spring instead of painting.
  * @param element - the scroll container.

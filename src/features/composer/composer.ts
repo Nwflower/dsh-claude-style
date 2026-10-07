@@ -4,6 +4,7 @@ import { composerRestyleRetired, readPrefs } from '../../core/prefs'
 import type { HostContext } from '../../core/host'
 import type { FeatureHandle, Ui } from '../../core/scheduler'
 import { closestFrom, setAttributeIfChanged } from '../../shared/dom'
+import { writeScroll } from '../../shared/scroll-owner'
 
 /** What other features read off the composer's reading (ui.composer). */
 export interface ComposerHandle extends FeatureHandle {
@@ -301,7 +302,7 @@ export function install(ctx: HostContext, ui: Ui) {
     const scroller = document.querySelector('[data-conversation-scroll]')
     if (scroller === null) return
     const distance = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight
-    if (distance < 150) scroller.scrollTop = scroller.scrollHeight
+    if (distance < 150) writeScroll(scroller, scroller.scrollHeight, 'composer')
   }
 
   ui.composer = {
