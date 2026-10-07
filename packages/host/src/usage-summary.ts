@@ -44,7 +44,7 @@ function bucketTotal(buckets: Partial<Buckets> | null | undefined): number {
 }
 
 /** Sum the per-session day maps into one, tracking distinct sessions per day. */
-export function mergeSessions(sessions: Map<string, CacheSession>): { days: Map<string, DayBuckets>, sessionCount: number, hours: number[] } {
+export function mergeSessions(sessions: ReadonlyMap<string, CacheSession>): { days: Map<string, DayBuckets>, sessionCount: number, hours: number[] } {
   const days = new Map<string, DayBuckets>()
   const hours = new Array(24).fill(0) as number[]
   const seen = new Set<string>()
@@ -190,36 +190,13 @@ export function mergeLedgerFold(
     if (date > lastLedgerDay) lastLedgerDay = date
     for (const id of buckets.sessionIds ?? []) sessionIds.add(id)
   }
+  // An uncovered day is the fold's whole day: its model split, the sessions
+  // that settled on it and its hour histogram, as the fold alone would answer.
   let folded = false
-  for (const [, entry] of sessions) {
-    for (const [date, buckets] of entry.days) {
-      if (date <= lastLedgerDay) continue
-      const target = days.get(date)
-      if (target === undefined) {
-        days.set(date, {
-          input: buckets.input,
-          output: buckets.output,
-          cacheRead: buckets.cacheRead,
-          cacheWrite: buckets.cacheWrite,
-          calls: buckets.calls,
-          sessions: 1,
-          sessionIds: [],
-          hours: buckets.hours === undefined ? new Array(24).fill(0) : [...buckets.hours],
-        })
-        folded = true
-        continue
-      }
-      // A second session settling on the same uncovered day: its tokens join
-      // the day, its settlements join the hour histogram.
-      target.input += buckets.input
-      target.output += buckets.output
-      target.cacheRead += buckets.cacheRead
-      target.cacheWrite += buckets.cacheWrite
-      target.calls += buckets.calls
-      target.sessions = (Number.isFinite(target.sessions) ? Number(target.sessions) : 0) + 1
-      const hours = target.hours ?? (target.hours = new Array(24).fill(0))
-      for (let hour = 0; hour < 24; hour += 1) hours[hour] += buckets.hours?.[hour] ?? 0
-    }
+  for (const [date, buckets] of mergeSessions(sessions).days) {
+    if (date <= lastLedgerDay) continue
+    days.set(date, buckets)
+    folded = true
   }
   // Which sessions belong to the uncovered days: the ones whose log was last
   // written on one of them. A log rewritten later may also hold ledger days,

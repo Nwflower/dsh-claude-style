@@ -246,32 +246,35 @@ async function hostHalf() {
       JSON.stringify({ status: settled.status, body: settled.body, registry: realRegistry }))
   }
 
-  // The usage roll-up from a cost-meter ledger: its per-day `byProviderModel`
-  // becomes the day's per-model map, one model served by two providers is one
-  // cell, and a key without a provider prefix is the model itself. The ledger
-  // has no hours, so the fold over the one stored log supplies them, per day.
-  // The ledger covers today, the day the log was written, so it answers.
-  console.log('\nhost half — usage roll-up from the cost-meter ledger')
+  // The usage roll-up from a cost-meter ledger that stopped writing yesterday,
+  // merged with the fold over the one stored log by date (D53): its per-day
+  // `byProviderModel` becomes the day's per-model map, one model served by two
+  // providers is one cell, and a key without a provider prefix is the model
+  // itself. A day the ledger knows stays the ledger's (the log's settlement on
+  // it is not added); today, past the ledger's newest day, is the fold's whole
+  // day, with its model split, its session and its hours.
+  console.log('\nhost half — usage roll-up from the cost-meter ledger and the fold')
   const USAGE = '/dsh-claude-style/usage'
   const now = new Date()
   const at = (dayOffset, hour) => new Date(now.getFullYear(), now.getMonth(), now.getDate() + dayOffset, hour, 10)
   const localDay = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
   const today = localDay(at(0, 15))
   const yesterday = localDay(at(-1, 9))
+  const dayBefore = localDay(at(-2, 9))
   fs.rmSync(scratchHome, { recursive: true, force: true })
   fs.mkdirSync(path.join(scratchHome, 'storages', 'cost-meter'), { recursive: true })
   const cell = (input, output) => ({ input, output, cacheRead: 0, cacheWrite: 0, calls: 1 })
   fs.writeFileSync(path.join(scratchHome, 'storages', 'cost-meter', 'ledger.json'), JSON.stringify({
     version: 1,
     days: {
-      [today]: {
+      [yesterday]: {
         input: 700, output: 70, cacheRead: 0, cacheWrite: 0, calls: 3,
-        sessions: [{ id: 's1' }, { id: 's2' }],
+        sessions: [{ id: 'ledger-1' }, { id: 'ledger-2' }],
         byProviderModel: { 'alpha:model-a': cell(300, 30), 'beta:model-a': cell(200, 20), 'model-b': cell(200, 20) },
       },
-      [yesterday]: {
+      [dayBefore]: {
         input: 100, output: 10, cacheRead: 0, cacheWrite: 0, calls: 1,
-        sessions: [{ id: 's1' }],
+        sessions: [{ id: 'ledger-1' }],
         byProviderModel: { 'alpha:model-b': cell(100, 10) },
       },
     },
@@ -297,23 +300,30 @@ async function hostHalf() {
   }
   const value = usage?.value ?? {}
   const days = Array.isArray(value.days) ? value.days : []
-  check('the ledger answers the roll-up', value.source === 'cost-meter' && value.totals?.sessions === 2,
+  check('the ledger and the fold merge by date, the sessions are their union',
+    value.source === 'cost-meter+local' && value.totals?.sessions === 3 && value.totals?.activeDays === 3 &&
+      value.totals?.input === 810 && value.totals?.output === 81,
     JSON.stringify({ source: value.source, totals: value.totals }))
-  check("each ledger day carries its per-model tokens, providers merged",
-    days.length === 2 && days[1].date === today &&
-      JSON.stringify(days[1].models) === JSON.stringify({ 'model-a': 550, 'model-b': 220 }) &&
-      JSON.stringify(days[0].models) === JSON.stringify({ 'model-b': 110 }),
+  check("each ledger day carries its per-model tokens, providers merged, the fold's settlement not added",
+    days.length === 3 && days[0].date === dayBefore && days[1].date === yesterday &&
+      JSON.stringify(days[0].models) === JSON.stringify({ 'model-b': 110 }) &&
+      JSON.stringify(days[1].models) === JSON.stringify({ 'model-a': 550, 'model-b': 220 }),
     JSON.stringify(days.map((day) => [day.date, day.models])))
+  check("the day past the ledger is the fold's, with its model split and its session",
+    days[2]?.date === today && JSON.stringify(days[2].models) === JSON.stringify({ 'model-b': 11 }) &&
+      JSON.stringify(days[2].sessionIds) === JSON.stringify(['s1']) && days[2].sessions === 1,
+    JSON.stringify(days[2]))
   check('the ranked models carry the input/output split across days',
     Array.isArray(value.models) && value.models.length === 2 &&
       value.models[0].id === 'model-a' && value.models[0].input === 500 && value.models[0].output === 50 &&
-      value.models[1].id === 'model-b' && value.models[1].tokens === 330,
+      value.models[1].id === 'model-b' && value.models[1].tokens === 341,
     JSON.stringify(value.models))
   const hourOf = (hours) => (Array.isArray(hours) ? hours.indexOf(1) : null)
-  check('behind the ledger, the fold supplies the hour histograms, whole and per day',
-    Array.isArray(value.hours) && value.hours[9] === 1 && value.hours[15] === 1 &&
-      hourOf(days[0]?.hours) === 9 && hourOf(days[1]?.hours) === 15 &&
-      days.every((day) => day.hours.reduce((sum, count) => sum + count, 0) === 1),
+  const sum = (hours) => hours.reduce((total, count) => total + count, 0)
+  check('only the folded day has an hour histogram, and the whole one is its own',
+    Array.isArray(value.hours) && value.hours[15] === 1 && sum(value.hours) === 1 &&
+      days[0]?.hours === undefined && days[1]?.hours === undefined &&
+      hourOf(days[2]?.hours) === 15 && sum(days[2].hours) === 1,
     JSON.stringify({ hours: value.hours, days: days.map((day) => [day.date, day.hours]) }))
   fs.rmSync(scratchHome, { recursive: true, force: true })
 
