@@ -78,7 +78,7 @@ Before writing to disk, `shoot.cjs` replaces workspace names, session titles, us
 
 Target layout: D46. Today:
 
-- `src/core/` host access, preferences, model copy, i18n, the scheduler; `src/shared/` parts several features use (TypeScript beside CSS); `src/theme/` the global look no single feature owns; `src/features/<feature>/` one feature's installer, helpers and stylesheets, the main file named after the feature.
+- `src/core/` host access, preferences, model copy, i18n, the scheduler, the observation bus and the frame pipeline (D40), with their unit tests beside them (`*.test.ts`); `src/shared/` parts several features use (TypeScript beside CSS); `src/theme/` the global look no single feature owns; `src/features/<feature>/` one feature's installer, helpers and stylesheets, the main file named after the feature.
 - `src/constants.ts` holds build-time constants; `src/model-descriptions.json` the model copy and `brands` bindings, its shape declared in `src/model-descriptions.schema.json`; `src/assets/` brand marks, mascot sheets and vendor lockups.
 - `src/generated.d.ts` types the module the build generates; `src/globals.d.ts` the DOM additions and the element properties the skin sets; `tsconfig.json` the type check.
 - `host/` the handwritten host half (private routes, settings `Config`, HDSL, search, usage).
@@ -92,8 +92,9 @@ The source is TypeScript ES modules under `strict` (D36). A module nothing impor
 ## Commands
 
 ```sh
-npm install                                  # dev dependencies: TypeScript, esbuild, Ajv, React types
+npm install                                  # dev dependencies: TypeScript, esbuild, Ajv, Vitest, Playwright, React types
 npm run build                                # type-checks src/, bundles it into lib/client.js with its source map, runs the build checks, prints the build id
+npm test                                     # unit tests: Vitest in browser mode on the local Chrome/Edge
 npm run smoke                                # full run: every browser case and check, plus the host half's route checks
 npm run smoke -- --quick --feature <dir>     # iteration run: quick tier, cases covering one src/features/ directory
 npm run smoke -- --case <name>[,<name>…]     # named browser cases
@@ -116,10 +117,10 @@ The quick tier leaves out the motion cases; a feature whose cases all watch moti
 
 1. Change `src/` or `host/`; never touch `lib/`.
 2. `npm run build`.
-3. While iterating, `npm run smoke -- --quick --feature <dir>` (without `--quick` for motion features); with a `dsh web` running, also `probe.cjs`; check the live page, including after a hot reload. Timing and ordering against the real host is verified on a real instance — the smoke stand-in does not reproduce it.
+3. While iterating, `npm test` for the logic with unit tests and `npm run smoke -- --quick --feature <dir>` (without `--quick` for motion features); with a `dsh web` running, also `probe.cjs`; check the live page, including after a hot reload. Timing and ordering against the real host is verified on a real instance — the smoke stand-in does not reproduce it.
 4. Visual changes are checked by the user in light and dark; re-shoot stale README screenshots with `shoot.cjs`.
 5. Sync documents: the bilingual READMEs change together; behavior changes go into the CHANGELOG's `[Unreleased]`; a changed decision is rewritten in `docs/decisions/` following D48's template, and its row in the hand-written index `docs/decisions/README.md` is updated with it.
-6. Done means the build and the relevant smoke pass and the behavior is verified; the full smoke is the release gate. If a gate fails, keep fixing.
+6. Done means the build, the unit tests and the relevant smoke pass and the behavior is verified; the full smoke is the release gate. If a gate fails, keep fixing.
 
 ## Git and Release
 

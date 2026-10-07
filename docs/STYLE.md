@@ -310,8 +310,8 @@ panel's own layout width — `offsetWidth`, not its rect: the entrance scales th
 box, and a transformed rect is two per cent narrower than the one that settles —
 and writes `--dsh-claude-context-panel-left` with the mark that turns it on;
 `features/composer/inline-bar.css` reads it with `!important`, which outranks the
-host's inline value. The reading is re-taken when the panel's box changes (a
-`ResizeObserver`) and when the viewport moves (`reposition('viewport')`).
+host's inline value. The reading is re-taken when the panel's box changes (a size
+subscription on the observation bus) and when the viewport moves (`reposition('viewport')`).
 
 What the skin appends to it is the session's numbers
 (`features/context-stats/session-stats.ts`), read from the host's `sessionStats`

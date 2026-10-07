@@ -5,7 +5,7 @@
 
 ## 决定
 
-- `html[data-dsh-skin]` 回答「这一页现在归谁」：皮肤中心在皮肤作画时盖上它（值是皮肤 id），它在即让路。`src/shared/visual-owner.ts` 读它，`apply()` 开头同步读一次，之后无论启动时是否让路，都由一个 MutationObserver 跟随真实翻转；判定每次重算，不跨翻转缓存。
+- `html[data-dsh-skin]` 回答「这一页现在归谁」：皮肤中心在皮肤作画时盖上它（值是皮肤 id），它在即让路。`src/shared/visual-owner.ts` 读它，`apply()` 开头同步读一次，之后无论启动时是否让路，都由观察总线上的一个订阅（D40）跟随真实翻转；判定每次重算，不跨翻转缓存。
 - 壁纸插件不是属主：壁纸画在外壳背后，本主题与它共存，配色选「跟随宿主」时弹层带上它的玻璃效果（D30）。
 - 让路时：保留 `setHostContext`、`adoptSettingsForm` 与 `ctx.inject(['configForms'])`、`loadModelCopy` / `loadUsername` / `loadHdsl`、`adoptPrefs`，只安装 `settings` 一个功能；不盖 `data-dsh-claude-style`、不挂样式表、不跑调度器。模块作用域的 `parkForeignSheets()` 照常运行（兄弟包的样式表不能等本皮肤）。
 - 抢回页面时（`own()`）：盖上 `data-dsh-claude-style` 与 `data-dsh-claude-style-handoff`、重新 `adoptPrefs`、挂样式表、装齐功能、装调度器；已在装的功能不重复安装。交还页面时（`release(keep)`）：跑完每个功能的 teardown、撤掉本包在 body 上的全部属性与样式表，`keep` 名单里的功能留下。
@@ -20,9 +20,8 @@
 
 ## 代价
 
-- 在 D40 落地前多一个常驻观察者（D40 只豁免了 head 的 childList 那一个）。
 - 让路期间整页惰性：设置页以宿主样式渲染，页面上的其他本包行为全部停摆。
-- 翻转会带来一次可见的重新挂载；判定在观察者回调里重算，不缓存。
+- 翻转会带来一次可见的重新挂载；判定在订阅回调里重算，不缓存。
 
 ## 重审条件
 
