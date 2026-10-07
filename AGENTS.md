@@ -40,7 +40,7 @@ The repository is moving to the architecture in `docs/decisions/` (D36–D48). A
 - Read the relevant decisions in `docs/decisions/` before a structural change; never contradict one. If a decision must be overturned, first write the replacing decision and retire the old number (D48).
 - Public documentation (the bilingual READMEs, the CHANGELOG) never shows decision numbers.
 - The Anthropic Sans/Serif fonts are Anthropic's, for personal use, not covered by MIT, and never shipped in the npm package; `fonts/` is a repository-only download. JetBrains Mono, Inter and Noto Serif ship under the SIL OFL 1.1. The pixel crab is Anthropic's character and its sheets are not covered by MIT. Deepy's sheets are by calmly-eating-bugs (@wp3171216237); `showcase/gifs/` holds that author's GIFs and stays out of the package.
-- Local debug scripts, screenshots and intermediate artifacts go into `.debug/` and are never committed. Drafts are deleted when the task ends; `race.cjs`, `send-trace.cjs` and `sample-flight.cjs` stay until D45 turns them into maintained tools.
+- Local debug scripts, screenshots and intermediate artifacts go into `.debug/` and are never committed. Drafts are deleted when the task ends; a probe worth keeping becomes a scenario in `tools/e2e.cjs` (D45).
 
 ## Stop Lines
 
@@ -72,7 +72,7 @@ Read D5 before editing `src/model-descriptions.json`.
 
 ### Screenshots and Privacy
 
-Before writing to disk, `shoot.cjs` replaces workspace names, session titles, usernames, drive-letter paths and balances with neutral stand-ins and runs a leak scan; a failed scan fails the run and is never bypassed. The conversation scene opens the sidebar conversation titled `Markdown rendering tour` and refuses one holding any user message other than the demo prompt in `scripts/shoot.cjs`.
+Before writing to disk, `scripts/privacy.cjs` replaces workspace names, session titles, usernames, drive-letter paths and balances with neutral stand-ins and runs a leak scan; a failed scan fails the run and is never bypassed. `shoot.cjs` and the end-to-end lane's `shots` scenario both go through it, and the lane compares the capture with the baseline in `tests/screenshots/`. The conversation scene opens the sidebar conversation titled `Markdown rendering tour` and refuses one holding any user message other than the demo prompt in `scripts/shoot.cjs`.
 
 ## Current Layout
 
@@ -85,7 +85,7 @@ Target layout: D46. Today:
 - `lib/` build output only, never edited by hand.
 - `locale/<language>.json` plugin metadata; `package.json`'s `exports` must cover them with `"./locale/*"`, or the host degrades the whole metadata (icon included) to `meta.error`.
 - `skin.json` the skin manifest; `cordis.patch.yml` inserts the skin into the web roster.
-- `scripts/` build (`build.mjs`, `css.mjs` for stylesheets, `assets.mjs` for images), smoke and live tools (`fetch-lobe-combines.py` is the only networked script, run by hand; `draw-crab.py` redraws the crab's sheets after a drawing change); `docs/` decisions, style guide, screenshots; `fonts/`; `showcase/gifs/`.
+- `scripts/` build (`build.mjs`, `css.mjs` for stylesheets, `assets.mjs` for images), smoke and live tools (`fetch-lobe-combines.py` is the only networked script, run by hand; `draw-crab.py` redraws the crab's sheets after a drawing change); `scripts/privacy.cjs` the replacements and the sweep before a screenshot reaches disk; `tools/` the maintained runnable tools (D45): `dsh-web.cjs` the scratch host, `mock-llm.cjs` the scripted model service, `e2e.cjs` the end-to-end lane; `tests/screenshots/` the reviewed baselines; `docs/` decisions, style guide, screenshots; `fonts/`; `showcase/gifs/`.
 
 The source is TypeScript ES modules under `strict` (D36). A module nothing imports fails the build; a feature is a directory under `src/features/` whose main module exports `install(ctx, ui)` beside a `<main>.manifest.ts` (D42) — its order, switch, stylesheets with their ranks, settings switch row, smoke cases and description; a stylesheet that belongs to no feature goes into `THEME_SHEETS` in `scripts/build.mjs`. React and the host packages are imported by name and stay external; build-time data (stylesheet, asset addresses, lockups, build id) is imported from `virtual:dsh-claude-style/generated`. A host value without a type yet is `HostValue` (D44); a non-null assertion `!` only marks a value the call order guarantees.
 
@@ -103,9 +103,12 @@ node scripts/probe.cjs --token <launch-token>          # composer invariants aga
 node scripts/probe-timing.cjs --token <launch-token>   # startup, catalog readiness, open latency, heap
 node scripts/shoot.cjs --token <launch-token> --brand <claude|deepseek> --scene <home|conversation>   # re-shoot one README screenshot pair
 node tools/dsh-web.cjs                       # boot a scratch dsh web (`$DSH_HOME` under .debug/) with this checkout linked in, and print its URL
+node tools/e2e.cjs                           # the end-to-end lane: scratch host plus a scripted model service, asserting on the real page
+node tools/e2e.cjs --scenario <name>[,<name>…] [--headed] [--baseline <dir>] [--accept]   # one scenario; --accept refreshes a screenshot baseline
+node tools/mock-llm.cjs                      # the scripted model service on its own, printing the base URL to configure a route with
 ```
 
-The quick tier leaves out the motion cases; a feature whose cases all watch motion needs the run without `--quick`. probe, probe-timing and shoot need a running `dsh web` (default `http://127.0.0.1:3080`, `--url` for another; the token is the `/?token=…` in the GUI URL or `DSH_WEB_TOKEN`). All of them need a local Chrome/Edge (`CHROME_PATH` to choose one).
+The quick tier leaves out the motion cases; a feature whose cases all watch motion needs the run without `--quick`. probe, probe-timing and shoot need a running `dsh web` (default `http://127.0.0.1:3080`, `--url` for another; the token is the `/?token=…` in the GUI URL or `DSH_WEB_TOKEN`). All of them need a local Chrome/Edge (`CHROME_PATH` to choose one). `tools/e2e.cjs` boots its own host and needs no running instance; its scenarios, their scripts and their bounds are in D45.
 
 ### Live Inspection
 
@@ -119,9 +122,9 @@ The quick tier leaves out the motion cases; a feature whose cases all watch moti
 1. Change `src/` or `host/`; never touch `lib/`.
 2. `npm run build`.
 3. While iterating, `npm test` for the logic with unit tests and `npm run smoke -- --quick --feature <dir>` (without `--quick` for motion features); with a `dsh web` running, also `probe.cjs`; check the live page, including after a hot reload. Timing and ordering against the real host is verified on a real instance — the smoke stand-in does not reproduce it.
-4. Visual changes are checked by the user in light and dark; re-shoot stale README screenshots with `shoot.cjs`.
+4. Visual changes are checked by the user in light and dark; re-shoot stale README screenshots with `shoot.cjs`; a visual change updates the `tests/screenshots/` baselines with `tools/e2e.cjs --accept` once the user has seen the new picture.
 5. Sync documents: the bilingual READMEs change together; behavior changes go into the CHANGELOG's `[Unreleased]`; a changed decision is rewritten in `docs/decisions/` following D48's template, and its row in the hand-written index `docs/decisions/README.md` is updated with it.
-6. Done means the build, the unit tests and the relevant smoke pass and the behavior is verified; the full smoke is the release gate. If a gate fails, keep fixing.
+6. Done means the build, the unit tests, the relevant smoke and the end-to-end scenarios covering the change pass, and the behavior is verified; the full smoke is the release gate, and the lane runs on every change to the chat area or to timing. If a gate fails, keep fixing.
 
 ## Git and Release
 
