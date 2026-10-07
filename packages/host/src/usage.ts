@@ -546,13 +546,14 @@ export function createUsage(ctx: DshContext) {
       }
     }
     for (const day of days.values()) {
-      day.sessionIds = [...day.sessions].sort()
-      day.sessions = day.sessions.size
+      const behind = day.sessions instanceof Set ? [...day.sessions].sort() : []
+      day.sessionIds = behind
+      day.sessions = behind.length
     }
     return { days, sessionCount: seen.size, hours }
   }
 
-  function summarize(days, sessionCount, source, hours) {
+  function summarize(days: Map<string, DayBuckets>, sessionCount: number, source: string, hours?: number[]): UsageSnapshot {
     const list = [...days.entries()].map(([date, buckets]) => ({
       date,
       input: buckets.input,
@@ -574,7 +575,7 @@ export function createUsage(ctx: DshContext) {
       ...(buckets.hours === undefined ? {} : { hours: buckets.hours }),
     })).sort((left, right) => (left.date < right.date ? -1 : 1))
     const totals = emptyBuckets()
-    const byModel = new Map()
+    const byModel = new Map<string, Buckets>()
     for (const buckets of days.values()) {
       addBuckets(totals, buckets, 1)
       if (buckets.models === undefined) continue
@@ -611,7 +612,7 @@ export function createUsage(ctx: DshContext) {
   }
 
   /** Read one session's events through the host's own reader. */
-  async function readEvents(sessionId) {
+  async function readEvents(sessionId: string) {
     const query = ctx.get('sessionQuery')
     if (query === null || query === undefined || typeof query.readSession !== 'function') return null
     let snapshot
@@ -630,9 +631,9 @@ export function createUsage(ctx: DshContext) {
   }
 
   /** Fold every session whose log changed since the cache was written. */
-  async function computeLocal(logs) {
+  async function computeLocal(logs: { id: string, path: string, size: number, mtimeMs: number }[]) {
     const cache = readCache()
-    const sessions = new Map()
+    const sessions = new Map<string, CacheSession>()
     let read = 0
     let failed = 0
     for (const log of logs) {
@@ -667,7 +668,7 @@ export function createUsage(ctx: DshContext) {
    * @param publish - receives an answer that is already worth serving while the
    *   rest of the pass is still running.
    */
-  async function compute(publish) {
+  async function compute(publish: boolean) {
     const root = resolve(join(home(), 'sessions'))
     const logs = listSessionLogs(root)
     const ledgerDays = readLedger()
@@ -705,7 +706,7 @@ export function createUsage(ctx: DshContext) {
     return await computeLocal(logs)
   }
 
-  function refresh() {
+  function refresh(): Promise<void> {
     if (disposed) return Promise.resolve(null)
     if (pending !== null) return pending
     state = state === null ? { value: null, computing: true } : { ...state, computing: true }
