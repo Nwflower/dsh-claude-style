@@ -29,7 +29,7 @@ Font files notice:
   They are included in this repository for personal use only and are **not**
   covered by the MIT license above; all rights remain with Anthropic. The npm
   package does not ship these files.
-Provider icon notice: the files under `src/assets/icons/providers/` (and their
+Provider icon notice: the files under `packages/assets/src/icons/providers/` (and their
 `lib/icons/providers/` build copy) are vendored from farion1231/cc-switch
 (MIT License, Copyright (c) 2025 Jason Young). They are redistributed under
 the MIT License; brand names and logos remain trademarks of their respective
@@ -40,9 +40,9 @@ owners.
   (`fonts/OFL.txt`). They may be redistributed with this plugin.
 
 Crab artwork notice: the pixel crab (Clawd) is a character of Anthropic, and
-all rights in it remain with Anthropic. `src/assets/mascot/crab-laptop-body.png`
-and `src/assets/mascot/crab-laptop-ink.png` are frames of Claude Code's own
-animation; the sheets under `src/assets/mascot/crab/` are drawn by this project
+all rights in it remain with Anthropic. `packages/assets/src/mascot/crab-laptop-body.png`
+and `packages/assets/src/mascot/crab-laptop-ink.png` are frames of Claude Code's own
+animation; the sheets under `packages/assets/src/mascot/crab/` are drawn by this project
 after that character (by `scripts/draw-crab.py`, which carries the drawings).
 These files, and their copies inlined into `lib/client.js`, are **not** covered
 by the MIT license above. This plugin is an unofficial fan work, not affiliated

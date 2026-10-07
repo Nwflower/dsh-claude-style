@@ -15,7 +15,7 @@
  *   src/theme/*.css and the feature stylesheets   concatenated by rank (THEME_SHEETS and the manifests),
  *                                checked and gated on the syntax tree (scripts/css.mjs)
  *   src/theme/tokens.json        the design tokens: the token stylesheet and docs/STYLE.md's table
- *   src/assets/                  every image (scripts/assets.mjs, D38): small ones inline, the rest
+ *   packages/assets/src/                  every image (packages/assets/assets.mjs, D38): small ones inline, the rest
  *                                written to lib/assets/<hash>.<ext> and served by the host half
  *
  * What the build produces for the browser half reaches the source as one
@@ -41,7 +41,7 @@ import Ajv2020 from 'ajv/dist/2020.js'
 import addFormats from 'ajv-formats'
 import esbuild from 'esbuild'
 import { PNG } from 'pngjs'
-import { checkClaimed, checkSheetPixels, checkSheets, planAssets, vectorizeSheet, writeAssets } from './assets.mjs'
+import { checkClaimed, checkSheetPixels, checkSheets, planAssets, vectorizeSheet, writeAssets } from '../packages/assets/assets.mjs'
 import { TOKEN_SHEET, buildStylesheet, loadTokens, writeTokenTable } from './css.mjs'
 import manifestReader from './read-manifests.cjs'
 import { loadModule } from './ts-module.cjs'
@@ -53,8 +53,8 @@ const ROOT = path.resolve(import.meta.dirname, '..')
  */
 const { PREFS_DEFAULT } = await import(pathToFileURL(path.join(ROOT, 'host', 'settings.js')).href)
 const SRC = path.join(ROOT, 'src')
-/** Brand marks, mascot sheets and vendor lockups; scripts/assets.mjs plans their delivery (D38). */
-const ASSETS = path.join(SRC, 'assets')
+/** Brand marks, mascot sheets and vendor lockups; packages/assets/assets.mjs plans their delivery (D38). */
+const ASSETS = path.join(ROOT, 'packages', 'assets', 'src')
 /** The plugin icon the manifest names, copied into lib/ as it is. */
 const BRAND_ASSETS = path.join(ASSETS, 'brand')
 /** The style guide; its token table is generated from src/theme/tokens.json. */
@@ -240,15 +240,15 @@ function loadCombines(plan, claimed) {
     const id = path.basename(file, '.svg')
     const svg = entry.text.replace(/\r\n/g, '\n').trim()
     if (!svg.startsWith('<svg') || !svg.includes('viewBox=')) {
-      throw new Error(`build: src/assets/${file} is not a scalable SVG (needs <svg viewBox=…>)`)
+      throw new Error(`build: packages/assets/src/${file} is not a scalable SVG (needs <svg viewBox=…>)`)
     }
-    if (svg.includes('</') && /<\/script/i.test(svg)) throw new Error(`build: src/assets/${file} carries a script end tag`)
-    if (svg.includes('\n')) throw new Error(`build: src/assets/${file} is multi-line; run scripts/fetch-lobe-combines.py`)
+    if (svg.includes('</') && /<\/script/i.test(svg)) throw new Error(`build: packages/assets/src/${file} carries a script end tag`)
+    if (svg.includes('\n')) throw new Error(`build: packages/assets/src/${file} is multi-line; run scripts/fetch-lobe-combines.py`)
     const word = /data-combine-word="([^"]+)"/.exec(svg)
-    if (word === null) throw new Error(`build: src/assets/${file} has no data-combine-word`)
+    if (word === null) throw new Error(`build: packages/assets/src/${file} has no data-combine-word`)
     out[id] = { svg, word: word[1] }
   }
-  if (Object.keys(out).length === 0) throw new Error('build: src/assets/icons/combine/ holds no lockups; run scripts/fetch-lobe-combines.py')
+  if (Object.keys(out).length === 0) throw new Error('build: packages/assets/src/icons/combine/ holds no lockups; run scripts/fetch-lobe-combines.py')
   return out
 }
 
@@ -259,11 +259,11 @@ function loadCombines(plan, claimed) {
  * and rebuilt as SVG over the sprite's own cell layout. The vector is what the
  * asset plan ships under the sheet's name; the PNG is an input of the build.
  *
- * @returns the vectors to ship, keyed by their path under src/assets/, and the
+ * @returns the vectors to ship, keyed by their path under packages/assets/src/, and the
  *     PNGs they take the place of.
  */
 function vectorizeDeepySheets() {
-  const dir = path.join(SRC, 'assets', 'mascot', 'deepy')
+  const dir = path.join(ASSETS, 'mascot', 'deepy')
   const sheets = CONSTANTS.DEEPY_SHEETS
   checkSheets('DEEPY_SHEETS', sheets, [52, 52], dir, (name) => [`${name}.png`])
   const generated = new Map()
@@ -287,7 +287,7 @@ function vectorizeDeepySheets() {
  * tables, the `{locale: text}` lines, a rule's compilable `match` and its `key`
  * or `text`. What a schema cannot see is checked after it: a `families[].key`,
  * `tiers[].key` or `aliases` target must name an `exact` entry, every brand id
- * must be a vendored lockup under src/assets/icons/combine/ (a typo would render
+ * must be a vendored lockup under packages/assets/src/icons/combine/ (a typo would render
  * as a silently missing mark on one row), and the document must carry at least
  * two locales.
  *
@@ -314,7 +314,7 @@ function validateModelCopy(doc, lobeBrands) {
   }
 
   const requireBrand = (where, brand) => {
-    if (!(brand in lobeBrands)) fail(`${where} names brand "${brand}", which has no vendored lockup in src/assets/icons/combine/`)
+    if (!(brand in lobeBrands)) fail(`${where} names brand "${brand}", which has no vendored lockup in packages/assets/src/icons/combine/`)
   }
   for (const [provider, brand] of Object.entries(doc.brands.providers ?? {})) requireBrand(`brands.providers["${provider}"]`, brand)
   for (const [index, rule] of doc.brands.models.entries()) requireBrand(`brands.models[${index}].brand`, rule.brand)
@@ -594,7 +594,7 @@ async function main() {
   // yet: the plan is read by everything below, and a refusal anywhere in this
   // build must leave lib/ as it was.
   const deepy = vectorizeDeepySheets()
-  const plan = planAssets({ srcDir: SRC, generated: deepy.generated, replaced: deepy.replaced })
+  const plan = planAssets({ assetsDir: ASSETS, generated: deepy.generated, replaced: deepy.replaced })
   const claimed = new Set()
   const tokens = { ...CONSTANTS.tokens }
   for (const [token, file] of Object.entries(BRAND_MARKS)) {
@@ -610,7 +610,7 @@ async function main() {
   for (const name of Object.keys(CONSTANTS.CRAB_SHEETS)) {
     const body = plan.entries.get(`mascot/crab/${name}.png`)
     const ink = plan.entries.get(`mascot/crab/${name}-ink.png`)
-    if (body === undefined || ink === undefined) throw new Error(`build: CRAB_SHEETS["${name}"] has no sheet pair under src/assets/mascot/crab/`)
+    if (body === undefined || ink === undefined) throw new Error(`build: CRAB_SHEETS["${name}"] has no sheet pair under packages/assets/src/mascot/crab/`)
     claimed.add(body.file)
     claimed.add(ink.file)
     crab[name] = { body: body.url, ink: ink.url }
@@ -697,7 +697,7 @@ async function main() {
   const copyText = JSON.stringify(copy, null, 2) + '\n'
   const iconSource = path.join(BRAND_ASSETS, ICON_SOURCE)
   const iconTarget = path.join(LIB, ICON_FILE)
-  if (!fs.existsSync(iconSource)) throw new Error(`build: src/assets/brand/${ICON_SOURCE} is missing`)
+  if (!fs.existsSync(iconSource)) throw new Error(`build: packages/assets/src/brand/${ICON_SOURCE} is missing`)
 
   fs.mkdirSync(LIB, { recursive: true })
   fs.writeFileSync(OUT, bundle)
@@ -708,10 +708,10 @@ async function main() {
   console.log(`built lib/${MODEL_COPY} (${exact} exact entries, ${copy.families.length} family rules, ${copy.tiers.length} tier rules)`)
 
   fs.copyFileSync(iconSource, iconTarget)
-  console.log(`built lib/${ICON_FILE} (${fs.statSync(iconTarget).size} bytes) from src/assets/brand/${ICON_SOURCE}`)
+  console.log(`built lib/${ICON_FILE} (${fs.statSync(iconTarget).size} bytes) from packages/assets/src/brand/${ICON_SOURCE}`)
 
   const assets = writeAssets(LIB, plan)
-  console.log(`built lib/assets/ (${assets.files} routed of ${plan.entries.size} assets, ${assets.bytes} bytes) from src/assets/`)
+  console.log(`built lib/assets/ (${assets.files} routed of ${plan.entries.size} assets, ${assets.bytes} bytes) from packages/assets/src/`)
 }
 
 await main()

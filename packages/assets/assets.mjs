@@ -224,25 +224,25 @@ export function vectorizeSheet(image, box, scale, gutter) {
 }
 
 /**
- * Every file under `src/assets/`, with its content hash and the address it is
- * reached by.
+ * Every file under the assets directory, with its content hash and the address
+ * it is reached by.
  *
- * @param options.srcDir - the source directory.
+ * @param options.assetsDir - the directory the images live in.
  * @param options.generated - assets the build produced rather than read:
- *     src-relative path → text (a mascot's vector, in place of its source PNG).
+ *     path under the directory → text (a mascot's vector, in place of its source PNG).
  * @param options.replaced - paths under assets/ whose generated asset takes
  *     their place: the file is an input of the build and does not ship.
  * @param options.sourceOnly - paths under assets/ that do not ship.
  * @param options.limit - the largest file inlined.
  * @returns `{ entries, routed }`; `entries` is keyed by the path under assets/.
  */
-export function planAssets({ srcDir, generated = new Map(), replaced = new Set(), sourceOnly = SOURCE_ONLY, limit = INLINE_LIMIT_BYTES }) {
-  const root = path.join(srcDir, 'assets')
+export function planAssets({ assetsDir, generated = new Map(), replaced = new Set(), sourceOnly = SOURCE_ONLY, limit = INLINE_LIMIT_BYTES }) {
+  const root = assetsDir
   const entries = new Map()
   const add = (file, bytes, text) => {
     const extension = path.extname(file)
     const type = CONTENT_TYPES[extension]
-    if (type === undefined) throw new Error(`build: src/assets/${file} has no content type; add its extension to scripts/assets.mjs`)
+    if (type === undefined) throw new Error(`build: packages/assets/src/${file} has no content type; add its extension to packages/assets/assets.mjs`)
     const hash = createHash('sha256').update(bytes).digest('hex').slice(0, 12)
     const inline = bytes.byteLength <= limit
     const name = hash + extension

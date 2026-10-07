@@ -3,7 +3,7 @@ import { DEEPY_SHEET_URLS } from 'virtual:dsh-claude-style/generated'
 /**
  * Deepy's sheets, as the addresses the sprite paints from.
  *
- * Each sheet is the vector the build produced (scripts/assets.mjs, D38), served
+ * Each sheet is the vector the build produced (packages/assets/assets.mjs, D38), served
  * by the host half under the assets route and named after its own content, so
  * the browser fetches a sheet once and caches it for good. Nothing is converted
  * here: the first time an animation is wanted its image is decoded ahead of the

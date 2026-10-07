@@ -13,7 +13,7 @@
 - 一套播放器，两个角色：`mascot-player.ts` 的 `createMascotPlayer` 是站位、状态机与播放的全部；角色（`whale.ts`、`crab.ts`）只给出名字、动画表、每帧时长、空闲小节目与帧图的就绪 / 失败 / 绘制 / 释放四个接口。
 - 播放：sprite 是 overflow-hidden 的窗口，内层胶片条带整张表图、以 transform 平移对帧；循环动画整段交给 WAAPI 的 steps 关键帧（播放期间主线程无定时器、无重绘），一次性动画以 `finished` 收尾、同刻的截止定时器兜底。状态机的时钟决策汇成单个一次性定时器。减少动态效果时停在静止帧，点击与拖动的反应照演。
 - Deepy 的画法：52×52 逻辑像素，每个逻辑像素 5 个像素（原作的原生分辨率），帧裁到能装下全部帧的最小整数逻辑像素框，八帧一行，无损调色板 PNG，由 `DEEPY_SHEETS` 登记帧数、裁切框与静止帧；页面上每个逻辑像素画成 2px。构建把每张表重建成 SVG（D38），每一格四周留 `DEEPY_GUTTER`（1 个逻辑像素）的透明边：缩小取样会越过帧格边界，没有这道边，上一格帧图底部的影子会在帧图顶端画出一条灰线。每帧 50 毫秒。
-- 螃蟹的画法：`scripts/draw-crab.py` 按 Claude Code 螃蟹的比例逐帧画出，掏出电脑敲代码的那几帧取自 Claude Code 原版（`src/assets/mascot/crab-laptop-*.png`）。52×36 格、每格 1 像素，每个动画两张表：本体（壳、侧面与眼睛）和墨色遮罩（电脑、思考泡泡、字母、音符、安全帽），八帧一行、裁到最小框，由 `CRAB_SHEETS` 登记，每帧 80 毫秒（Claude Code 的节奏）。样式表按 2 像素一格、`pixelated` 放大，遮罩填主题的三级标签墨色。
+- 螃蟹的画法：`scripts/draw-crab.py` 按 Claude Code 螃蟹的比例逐帧画出，掏出电脑敲代码的那几帧取自 Claude Code 原版（`packages/assets/src/mascot/crab-laptop-*.png`）。52×36 格、每格 1 像素，每个动画两张表：本体（壳、侧面与眼睛）和墨色遮罩（电脑、思考泡泡、字母、音符、安全帽），八帧一行、裁到最小框，由 `CRAB_SHEETS` 登记，每帧 80 毫秒（Claude Code 的节奏）。样式表按 2 像素一格、`pixelated` 放大，遮罩填主题的三级标签墨色。
 
 ## 理由
 

@@ -1,0 +1,10 @@
+{
+  "name": "@dsh-claude-style/assets",
+  "description": "Every image dsh-claude-style ships, and the generator that decides how each is delivered (D38)",
+  "version": "0.11.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./assets.mjs"
+  }
+}

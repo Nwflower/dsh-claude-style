@@ -20,7 +20,7 @@ Where the pieces come from (all pinned to one upstream version):
   variants exist, and each `es/<Icon>/style.js` has the composition ratios
   (`TEXT_MULTIPLE`, `SPACE_MULTIPLE`, `COLOR_PRIMARY`).
 
-Each vendor becomes one SVG under `src/assets/icons/combine/`:
+Each vendor becomes one SVG under `packages/assets/src/icons/combine/`:
 
     <svg viewBox="0 0 <width> <cap band>">
       <g class="dsh-combine-color">…</g>   colour canvas: the colour art
@@ -564,7 +564,7 @@ def main():
         written.append(brand)
 
     total = sum(os.path.getsize(os.path.join(OUT_DIR, f)) for f in os.listdir(OUT_DIR))
-    print('wrote %d lockups to src/assets/icons/combine (%d B)' % (len(written), total))
+    print('wrote %d lockups to packages/assets/src/icons/combine (%d B)' % (len(written), total))
     print('  colour layer from Lobe artwork : %d' % (len(written) - len(tinted) - len(mono_only)))
     print('  colour layer tinted (no artwork): %s' % (', '.join(tinted) or '—'))
     print('  mono only (tint fails contrast on light): %s' % (

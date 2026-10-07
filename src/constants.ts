@@ -299,7 +299,7 @@ export const FEATURE_PREF_DEFAULTS = {
 
 /**
  * Deepy's animations (src/features/mascot/whale.ts), one sheet each under
- * src/assets/mascot/deepy/. The build rebuilds each sheet as the vector the
+ * packages/assets/src/mascot/deepy/. The build rebuilds each sheet as the vector the
  * browser plays and the host half serves it under the assets route (D38), so
  * the browser loads a sheet the first time its animation plays and never
  * while another brand is on.
@@ -312,11 +312,11 @@ export const FEATURE_PREF_DEFAULTS = {
  * reader asks for reduced motion.
  */
 export const DEEPY_FRAME_MS = 50
-/** Deepy's sheets' resolution: device pixels to a logical pixel (scripts/assets.mjs rebuilds them). */
+/** Deepy's sheets' resolution: device pixels to a logical pixel (packages/assets/assets.mjs rebuilds them). */
 export const DEEPY_SCALE = 5
 /**
  * The transparent margin, in logical pixels, that every frame keeps on all
- * four sides in the vector the build produces (scripts/assets.mjs, D24).
+ * four sides in the vector the build produces (packages/assets/assets.mjs, D24).
  *
  * The sheets stack their frames edge to edge, and the browser draws the
  * rebuilt vector scaled down — from five pixels a logical pixel in the
@@ -351,7 +351,7 @@ export const DEEPY_SHEETS: Record<string, { frames: number, box: number[], still
 
 /**
  * The composer crab's animations (src/features/mascot/crab.ts), drawn by
- * scripts/draw-crab.py into src/assets/mascot/crab/: one sheet in the crab's
+ * scripts/draw-crab.py into packages/assets/src/mascot/crab/: one sheet in the crab's
  * colours and one ink mask per animation, inlined by the build as
  * CRAB_SHEET_URLS.
  *
@@ -680,7 +680,7 @@ export const USERNAME_MAX = 64
 export const QUICK_PROVIDERS_MAX = 64
 export const PROVIDER_ID_MAX = 128
 
-/** Wordmark aspect ratio; scripts/build.mjs sizes the sidebar word height from it (geometry lives in src/assets/claude-word.svg). */
+/** Wordmark aspect ratio; scripts/build.mjs sizes the sidebar word height from it (geometry lives in packages/assets/src/claude-word.svg). */
 export const CLAUDE_WORD_ASPECT = 512.22 / 121.54
 
 export const SANS = "'Anthropic Sans Web Text','Claude Style Inter','Noto Sans SC','Source Han Sans SC',-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei','Helvetica Neue',Helvetica,Arial,sans-serif"

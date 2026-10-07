@@ -1,4 +1,4 @@
-"""Draw the composer crab's animation sheets (src/assets/mascot/crab/).
+"""Draw the composer crab's animation sheets (packages/assets/src/mascot/crab/).
 
 Run by hand after changing a drawing; the build never runs it:
 
@@ -7,7 +7,7 @@ Run by hand after changing a drawing; the build never runs it:
 Needs Pillow. The crab is drawn on a 52x36 grid of cells, one pixel a cell,
 feet on the bottom row and the right claw four columns in from the right
 edge (the room a lean, a note or a sparkle takes on that side) — the stance
-of Claude Code's own crab, whose laptop routine (src/assets/mascot/
+of Claude Code's own crab, whose laptop routine (packages/assets/src/mascot/
 crab-laptop-body.png and crab-laptop-ink.png, 34x23 cells a frame: the crab
 pulls out a laptop, types, and puts it away) is laid onto the same grid for the
 typing animations. Every animation is written as two sheets: `<key>.png`

@@ -31,7 +31,7 @@ blue-black in dark. User bubbles take a blue tint as the host's own do, and
 inline code keeps the body ink as the host draws it. The skin's Claude marks
 (the account row's
 picture without an avatar, the turn status line's spark) become DeepSeek's
-whale (`src/assets/brand/deepseek-mark.svg`, the host's `FISH_LOGO_PATH`); the
+whale (`packages/assets/src/brand/deepseek-mark.svg`, the host's `FISH_LOGO_PATH`); the
 violet top rung of the reasoning slider stays.
 
 The table below is generated from `src/theme/tokens.json` by `npm run build`;
