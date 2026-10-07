@@ -52,6 +52,10 @@ fs.mkdirSync(PACK, { recursive: true })
 fs.mkdirSync(TREE, { recursive: true })
 
 // The tarball is the npm package: its file list, its manifest and its build.
+// The build runs here rather than being assumed: `lib/` is not in version
+// control (D47), so a fresh checkout has none, and `npm pack` alone would ship a
+// package whose `main` points at a file that is not in it.
+run('npm', ['run', 'build'])
 const packed = run('npm', ['pack', '--pack-destination', PACK]).split('\n').pop()
 run('tar', ['-xzf', path.join(PACK, packed), '-C', TREE, '--strip-components=1'])
 
