@@ -123,8 +123,12 @@ interface UsageSample {
 }
 
 /** What the service reads out: the summarized days, models and totals, or null before the first read. */
-interface UsageSnapshot {
+interface UsageSummary {
   source: string
+  /** Set when the figures could not be read at all this pass. */
+  unavailable?: boolean
+  /** Set when only part of the sessions could be folded. */
+  read?: boolean
   computedAt: number
   days: Record<string, unknown>[]
   models: Record<string, unknown>[]
@@ -132,6 +136,21 @@ interface UsageSnapshot {
   lastDay: string | null
   hours?: number[]
   totals: Record<string, unknown>
+}
+
+/** One session log on disk: its id, its path and its fingerprint. */
+interface SessionLog {
+  id: string
+  path: string
+  size: number
+  mtimeMs: number
+}
+
+/** The service's state: the last summary, whether more is coming, and why not. */
+interface UsageState {
+  value: UsageSummary | null
+  computing: boolean
+  error?: string
 }
 
 /** What one session's fold produced: its days and its hours. */
@@ -390,8 +409,8 @@ export function createUsage(ctx: DshContext) {
   // The harness home, resolved per read through the one shared accessor.
   const home = () => harnessPath(ctx)
 
-  let state: UsageSnapshot | null = null
-  let pending: Promise<void> | null = null
+  let state: UsageState | null = null
+  let pending: Promise<UsageSummary | null> | null = null
   let disposed = false
 
   function readLedger(): Map<string, DayBuckets> | null {
@@ -553,7 +572,7 @@ export function createUsage(ctx: DshContext) {
     return { days, sessionCount: seen.size, hours }
   }
 
-  function summarize(days: Map<string, DayBuckets>, sessionCount: number, source: string, hours?: number[]): UsageSnapshot {
+  function summarize(days: Map<string, DayBuckets>, sessionCount: number, source: string, hours?: number[]): UsageSummary {
     const list = [...days.entries()].map(([date, buckets]) => ({
       date,
       input: buckets.input,
@@ -631,7 +650,7 @@ export function createUsage(ctx: DshContext) {
   }
 
   /** Fold every session whose log changed since the cache was written. */
-  async function computeLocal(logs: { id: string, path: string, size: number, mtimeMs: number }[]) {
+  async function computeLocal(logs: SessionLog[]) {
     const cache = readCache()
     const sessions = new Map<string, CacheSession>()
     let read = 0
@@ -668,7 +687,7 @@ export function createUsage(ctx: DshContext) {
    * @param publish - receives an answer that is already worth serving while the
    *   rest of the pass is still running.
    */
-  async function compute(publish: boolean) {
+  async function compute(publish: (partial: UsageSummary) => void) {
     const root = resolve(join(home(), 'sessions'))
     const logs = listSessionLogs(root)
     const ledgerDays = readLedger()
@@ -682,9 +701,9 @@ export function createUsage(ctx: DshContext) {
         return day !== null && day > newest ? day : newest
       }, '')
       if (activityLast === '' || activityLast <= ledgerLast) {
-        const sessionIds = new Set()
+        const sessionIds = new Set<string>()
         for (const buckets of ledgerDays.values()) {
-          for (const id of buckets.sessionIds) sessionIds.add(id)
+          for (const id of buckets.sessionIds ?? []) sessionIds.add(id)
         }
         const ledgerValue = { ...summarize(ledgerDays, sessionIds.size, 'cost-meter'), sessions: logs.length }
         if (logs.length === 0) return ledgerValue
@@ -706,7 +725,7 @@ export function createUsage(ctx: DshContext) {
     return await computeLocal(logs)
   }
 
-  function refresh(): Promise<void> {
+  function refresh(): Promise<UsageSummary | null> {
     if (disposed) return Promise.resolve(null)
     if (pending !== null) return pending
     state = state === null ? { value: null, computing: true } : { ...state, computing: true }
