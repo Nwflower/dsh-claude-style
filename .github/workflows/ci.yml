@@ -12,7 +12,8 @@ concurrency:
 
 jobs:
   # The gates that need no host: the build checks, the unit tests in a real
-  # browser, and the smoke's stand-in page plus the host half's routes.
+  # browser, the decisions index against the files it lists, and the smoke's
+  # stand-in page plus the host half's routes.
   verify:
     runs-on: ubuntu-latest
     steps:
@@ -22,6 +23,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - run: npm run docs:check
       - run: npm run build
       - run: npm test
       - run: npm run smoke

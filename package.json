@@ -7,6 +7,8 @@
   "icon": "lib/claude-mark.svg",
   "scripts": {
     "build": "node scripts/build.mjs",
+    "docs:index": "node scripts/decisions-index.mjs",
+    "docs:check": "node scripts/decisions-index.mjs --check",
     "probe": "node scripts/probe.cjs",
     "smoke": "node scripts/smoke.cjs",
     "test": "vitest run",
