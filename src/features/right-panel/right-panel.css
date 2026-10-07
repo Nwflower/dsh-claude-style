@@ -1,0 +1,133 @@
+/* ---------- the right column's landing cards (D52) ---------- */
+/* The stack the guide carries: one card per group of the session's numbers, in
+   the reference panel's card language — the skin's card radius and hairline, a
+   15px section title with a chevron, and 13px label/value rows. The stack is
+   skin-owned, so every rule is scoped to its own mark. */
+body[data-dsh-claude-style] [data-dsh-claude-panel-cards] {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 380px !important;
+  max-width: 100% !important;
+  margin: 0 0 18px 0 !important;
+  border-radius: 12px !important;
+  corner-shape: round !important;
+  overflow: hidden !important;
+  text-align: left !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-dsh-claude-panel-cards] {
+  background: var(--dsh-claude-card) !important;
+  border: 1px solid var(--dsw-alias-border-l1) !important;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-panel-cards] [data-dsh-claude-panel-card] {
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 14px 16px 12px !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-dsh-claude-panel-cards] [data-dsh-claude-panel-card] + [data-dsh-claude-panel-card] {
+  border-top: 1px solid var(--dsw-alias-border-l1) !important;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-panel-cards] .dsh-claude-panel-card-head {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  min-height: 22px !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-dsh-claude-panel-cards] .dsh-claude-panel-card-title {
+  color: var(--dsw-alias-label-primary) !important;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-panel-cards] .dsh-claude-panel-card-title {
+  font: 600 15px / 22px var(--dsw-font-family) !important;
+  letter-spacing: normal !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-dsh-claude-panel-cards] .dsh-claude-panel-card-chevron {
+  background: var(--dsw-alias-label-tertiary) !important;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-panel-cards] .dsh-claude-panel-card-chevron {
+  display: inline-block !important;
+  width: 12px !important;
+  height: 12px !important;
+  flex: none !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-panel-cards] [data-dsh-claude-panel-row] {
+  display: flex !important;
+  align-items: baseline !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  min-height: 20px !important;
+  margin-top: 6px !important;
+  font: 400 13px / 20px var(--dsw-font-family) !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-dsh-claude-panel-cards] .dsh-claude-panel-card-label {
+  color: var(--dsw-alias-label-secondary) !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-dsh-claude-panel-cards] .dsh-claude-panel-card-value {
+  color: var(--dsw-alias-label-primary) !important;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-panel-cards] .dsh-claude-panel-card-value {
+  flex: none !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-panel-cards] [data-dsh-claude-panel-trail] {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0 !important;
+  margin-top: 10px !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-dsh-claude-panel-cards] .dsh-claude-panel-card-dot {
+  border-color: var(--dsw-alias-border-l2) !important;
+  color: var(--dsw-alias-label-caption) !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-dsh-claude-panel-cards] .dsh-claude-panel-card-link {
+  background: var(--dsw-alias-border-l1) !important;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-panel-cards] .dsh-claude-panel-card-dot {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 22px !important;
+  height: 22px !important;
+  box-sizing: border-box !important;
+  flex: none !important;
+  border: 1px solid var(--dsw-alias-border-l2) !important;
+  border-radius: 50% !important;
+  corner-shape: round !important;
+  background: transparent !important;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-panel-cards] .dsh-claude-panel-card-dot[data-dsh-claude-panel-dot="done"]::after {
+  content: "" !important;
+  display: block !important;
+  width: 10px !important;
+  height: 10px !important;
+  background: currentColor !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5l3 3 6-7'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5l3 3 6-7'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-dsh-claude-panel-cards] .dsh-claude-panel-card-dot[data-dsh-claude-panel-dot="current"] {
+  background: var(--dsw-alias-bg-layer-3) !important;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-panel-cards] .dsh-claude-panel-card-link {
+  width: 8px !important;
+  height: 1px !important;
+  flex: none !important;
+}

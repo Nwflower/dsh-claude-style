@@ -294,6 +294,8 @@
       const FEATURES = [
         { name: 'selection', ungated: '修宿主失焦时的选区颜色，不改变功能', install: installSelectionFocus },
         { name: 'composer', pref: 'composerScope', install() { return installComposer(ctx, ui) } }, // 输入区的布局：每轮先读 hero / 重绘状态，写形态、闸门、附件与上下文圆环
+        { name: 'composerLists', ungated: '列表编辑跟随输入区重绘范围', install() { return installComposerLists(ctx, ui) } },
+        { name: 'rightPanel', ungated: '右栏卡片跟随主题面板的表面样式', install() { return installRightPanel(ctx, ui) } },
         { name: 'homeLayout', pref: 'homeLayout', install() { return installHomeLayout(ctx, ui) } }, // 首页版面：打版面属性 + 注册用量面板（数据来自宿主半边的汇总路由）
         { name: 'mascot', pref: 'mascot', install() { return installMascot(ctx, ui) } }, // 工作台首页输入卡片上沿的像素螃蟹：点它、指针离开它时（也会偶尔自己）钓一次鱼；DeepSeek 品牌下换成小鲸鱼 Deepy，首页与对话页都在，随智能体的工作状态换动画
         { name: 'copy', ungated: '提示语跟随输入框改造的范围，问候语跟随首页版面', install() { return installCopy(ctx, ui) } },
@@ -307,7 +309,7 @@
         { name: 'ban', ungated: '彩蛋页只在点击账号行时出现', install() { return installBanScreen(ctx, ui) } }, // 账户横条的封号彩蛋（账户弹层把点击交给 ui.ban）
         { name: 'themeFlip', ungated: '修主题切换瞬间的颜色跳变，不改变功能', install: installThemeFlip }, // 主题翻转瞬间抑制过渡，修掉「先色后样」
         { name: 'workspace', pref: 'workspaceView', install() { return installWorkspaceView(ctx, ui) } }, // 侧栏工作区：进行中 / 已归档 分段 + 归档行删除
-        { name: 'search', pref: 'sidebarSearch', install() { return installSearch(ctx, ui) } }, // 侧栏品牌行的搜索框 + 搜索面板（会话、项目、插件、Skill、快捷键）
+        { name: 'search', pref: 'sidebarSearch', install() { return installSearch(ctx, ui) } }, // 侧栏工具行的搜索图标 + 搜索面板（会话、项目、插件、Skill、快捷键）
         { name: 'turnStatus', pref: 'turnStatus', install() { return installTurnStatus(ctx, ui) } }, // 进行中、已停止与失败轮次的状态行：移到这一轮工作的末尾，火花 + 用时 · 输出 tokens · 当前动作（或已停止 / 处理失败）
         { name: 'turnNav', pref: 'turnNav', install() { return installTurnNav(ctx, ui) } }, // 对话导航：宿主的轮次导航条在指针停留时展开成整列提问，Alt+↑ / Alt+↓ 跳到上一轮或下一轮，跳到的那一轮开头闪一条横线
         { name: 'chatFollow', pref: 'chatAnimations', install() { return installChatFollow(ctx, ui) } }, // 聊天区跟随：结构时刻把滚动交还给宿主跟随，封顶过程组里不让最新两行悬着

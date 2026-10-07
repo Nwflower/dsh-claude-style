@@ -342,16 +342,17 @@
       function sync() {
         const label = findSection()
         if (label === null || label.parentElement === null) return
-        const header = label.parentElement
+        const sidebar = document.querySelector('[data-slot="sidebar"]')
+        const toolbar = sidebar?.querySelector('[class*="_logoRow"]')
+        const container = toolbar?.parentElement
+        const newSession = container?.querySelector(':scope > [class*="_newSession"]')
+        if (container === null || container === undefined || newSession === null || newSession === undefined) return
         // Until the host's workspace and session services are both reachable
         // the section keeps its plain label.
         if (!watch()) return
         labelStamp.mark(label)
-        if (control === null || control.parentElement !== header) {
-          if (control !== null && control.parentElement !== null) control.parentElement.removeChild(control)
-          control = buildControl()
-          header.insertBefore(control, header.firstChild)
-        }
+        if (control === null) control = buildControl()
+        if (control.parentElement !== container) container.insertBefore(control, newSession)
         for (let i = 0; i < control.children.length; i++) {
           const item = control.children[i]
           const id = item.getAttribute('data-view')

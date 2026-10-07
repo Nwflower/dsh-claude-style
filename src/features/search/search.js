@@ -99,20 +99,22 @@
       }
 
       function syncTrigger() {
-        const brand = document.querySelector('[data-slot="sidebar"] [class*="_logoRow"] > [class*="_brand"]')
-        const row = brand === null ? null : brand.parentElement
+        const sidebar = document.querySelector('[data-slot="sidebar"]')
+        const brand = sidebar?.querySelector('[class*="_logoRow"] > [class*="_brand"]') ?? null
+        const row = brand === null ? null : sidebar.querySelector('[class*="_topStrip"]') ?? brand.parentElement
         if (row === null) {
           if (trigger !== null && trigger.parentElement !== null) trigger.parentElement.removeChild(trigger)
           rowStamp.release()
           return
         }
         if (trigger === null) trigger = buildTrigger()
-        if (trigger.parentElement !== row) row.insertBefore(trigger, brand.nextSibling)
+        if (trigger.parentElement !== row) row.appendChild(trigger)
         rowStamp.mark(row)
         const label = copyLabel('searchPlaceholder', 'Search')
         const text = trigger.children[1]
         if (text.textContent !== label) text.textContent = label
         setAttributeIfChanged(trigger, 'aria-label', label)
+        setAttributeIfChanged(trigger, 'title', label)
         syncTriggerKeys(trigger.children[2])
       }
 

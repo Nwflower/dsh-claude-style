@@ -1,0 +1,199 @@
+/* --- 2.4 Right panel: the host's dockkit pane on the skin's warm surface --- */
+/* The right column is the host's own right sidebar: one dockkit pane per column
+   ([data-dockkit-pane]) carrying a header strip ([data-dockkit-strip]) with the
+   tab set and the pane's icon buttons, then the pane body. The shipped pane
+   hairlines with a cold white line and its strip has no divider, so the panel
+   stands beside the warm sidebar as a surface of its own. Every rule is scoped
+   to [data-rightbar-col]: the same dockkit markers also drive the bottom panel
+   and the floating panes, which this decision does not reach (D52). */
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] [data-dockkit-pane] {
+  background: var(--dsh-claude-canvas) !important;
+  border-left: 1px solid var(--dsw-alias-border-l1) !important;
+}
+
+/* The header takes the same 1px hairline the sidebar uses, so the tab strip and
+   the body read as two layers of one panel. */
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] [data-dockkit-strip] {
+  border-bottom: 1px solid var(--dsw-alias-border-l1) !important;
+}
+
+/* ---------- the tab set: the panel's title line ---------- */
+/* A tab is a label, not a segment: the current one takes the primary ink, the
+   others the tertiary, and a clickable label washes under the pointer. */
+body[data-dsh-claude-style] [data-rightbar-col] [data-dockkit-tab] {
+  height: 28px !important;
+  padding: 0 8px !important;
+  border-radius: 6px !important;
+  font: 500 13px / 18px var(--dsw-font-family) !important;
+  transition: background-color 0.12s ease, color 0.12s ease !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] [data-dockkit-tab] {
+  background: transparent !important;
+  color: var(--dsw-alias-label-tertiary) !important;
+}
+
+body[data-dsh-claude-style] [data-rightbar-col] [data-dockkit-tab]:hover {
+  background: var(--dsh-claude-hover-bg) !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] [data-dockkit-tab]:is([aria-selected="true"], [class*="_tabActive"]) {
+  color: var(--dsw-alias-label-primary) !important;
+}
+
+/* ---------- the pane's own icon buttons ---------- */
+body[data-dsh-claude-style] [data-rightbar-col] :is([data-dockkit-split-button], [data-sidebar-right-mode], [data-sidebar-right-toggle]) {
+  width: 28px !important;
+  height: 28px !important;
+  padding: 6px !important;
+  border-radius: 6px !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] :is([data-dockkit-split-button], [data-sidebar-right-mode], [data-sidebar-right-toggle]) {
+  color: var(--dsw-alias-label-secondary) !important;
+}
+
+body[data-dsh-claude-style] [data-rightbar-col] :is([data-dockkit-split-button], [data-sidebar-right-mode], [data-sidebar-right-toggle]):hover {
+  background: var(--dsh-claude-hover-bg) !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] :is([data-dockkit-split-button], [data-sidebar-right-mode], [data-sidebar-right-toggle]):hover {
+  color: var(--dsw-alias-label-primary) !important;
+}
+
+/* ---------- the guide an empty panel opens on ---------- */
+/* The shipped guide paints a cool compass over layer-1 capsules; the compass
+   takes a skin ink and the capsules the rows' hairline. The raised fill is added
+   under the dark palettes only: --dsh-claude-raised has no light value, and the
+   light capsule already sits on the host's own layer-1 fill. */
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] [data-slot="sidebar.right.tab.guide"] [class*="_hero"] {
+  color: var(--dsw-alias-label-caption) !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] [data-slot="sidebar.right.tab.guide"] button[class*="_entry"] {
+  /* The shipped capsule rounds to 20px; the skin's card radius is 12px. */
+  border: 1px solid var(--dsw-alias-border-l1) !important;
+  border-radius: 12px !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%%[data-ds-dark-theme] [data-rightbar-col] [data-slot="sidebar.right.tab.guide"] button[class*="_entry"] {
+  background: var(--dsh-claude-raised) !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] [data-slot="sidebar.right.tab.guide"] button[class*="_entry"] [class*="_entryDescription"] {
+  color: var(--dsw-alias-label-tertiary) !important;
+}
+
+/* ---------- what the panels themselves draw ---------- */
+/* Each panel brings its own module (the files panel's prefix is nArs4W_, the
+   shared icon button U62vHa_iconButton), so these rules take the pieces every
+   panel repeats — its search field, its icon buttons and its tree rows — and
+   leave each panel's own layout alone. The row and field metrics are the skin's
+   (docs/STYLE.md's row recipe), which is what the reference panel shows. */
+body[data-dsh-claude-style] [data-rightbar-col] [class*="_editorSearchInput"] {
+  height: 28px !important;
+  padding: 0 12px !important;
+  border-radius: 8px !important;
+  font: 400 13px / 18px var(--dsw-font-family) !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] [class*="_editorSearchInput"] {
+  background: var(--dsw-alias-bg-layer-1) !important;
+  border: 1px solid var(--dsw-alias-border-l1) !important;
+  color: var(--dsw-alias-label-primary) !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] [class*="_editorSearchInput"]::placeholder {
+  color: var(--dsw-alias-label-tertiary) !important;
+}
+
+body[data-dsh-claude-style] [data-rightbar-col] [class*="_iconButton"] {
+  border-radius: 6px !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] [class*="_iconButton"] {
+  color: var(--dsw-alias-label-secondary) !important;
+}
+
+body[data-dsh-claude-style] [data-rightbar-col] [class*="_iconButton"]:hover {
+  background: var(--dsh-claude-hover-bg) !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] [class*="_iconButton"]:hover {
+  color: var(--dsw-alias-label-primary) !important;
+}
+
+body[data-dsh-claude-style] [data-rightbar-col] :is([class*="_explorerRow"], [class*="_explorerDir"], [class*="_explorerHidden"]) {
+  height: 30px !important;
+  border-radius: 6px !important;
+  font: 400 13px / 20px var(--dsw-font-family) !important;
+}
+
+body[data-dsh-claude-style] [data-rightbar-col] :is([class*="_explorerRow"], [class*="_explorerDir"], [class*="_explorerHidden"]):hover {
+  background: var(--dsh-claude-hover-bg) !important;
+}
+
+body[data-dsh-claude-style] [data-rightbar-col] :is([class*="_explorerName"], [class*="_explorerDirChanged"]) {
+  font-size: 13px !important;
+}
+
+/* ---------- the cards and chips every panel builds from ---------- */
+/* The panels differ (the files panel draws rows, the agent-teams panel draws a
+   canvas of node cards) but they repeat two shapes: a rounded card with the
+   skin's hairline, and a small chip for a state. Both take the skin's card
+   recipe, so a panel reads as Claude's does without touching its layout. */
+body[data-dsh-claude-style] [data-rightbar-col] :is([class*="_node"], [class*="_teamBoard"], [class*="_cardBar"], [class*="_controls"]) {
+  border-radius: 12px !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] :is([class*="_node"], [class*="_teamBoard"], [class*="_cardBar"], [class*="_controls"]) {
+  border-color: var(--dsw-alias-border-l1) !important;
+}
+
+body[data-dsh-claude-style] [data-rightbar-col] :is([class*="_teamBoard"], [class*="_cardBar"], [class*="_controls"]) {
+  border-width: 1px !important;
+  border-style: solid !important;
+}
+
+body[data-dsh-claude-style] [data-rightbar-col] :is([class*="_kindBadge"], [class*="_teamBoardCount"], [class*="_explorerRef"]) {
+  display: inline-flex !important;
+  align-items: center !important;
+  height: 20px !important;
+  padding: 0 8px !important;
+  border-radius: 999px !important;
+  font: 400 11px / 16px var(--dsw-font-family) !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] :is([class*="_kindBadge"], [class*="_teamBoardCount"], [class*="_explorerRef"]) {
+  border-color: var(--dsw-alias-border-l1) !important;
+  color: var(--dsw-alias-label-tertiary) !important;
+}
+
+/* The agent-teams header names the session; the panel gives it a hairline and a
+   heading the way a Claude panel titles a section. */
+body[data-dsh-claude-style] [data-rightbar-col] [class*="_subagentHeader"] {
+  height: 36px !important;
+  border-bottom: 1px solid var(--dsw-alias-border-l1) !important;
+}
+
+body[data-dsh-claude-style] [data-rightbar-col] :is([class*="_subagentHeading"], [class*="_cardName"]) {
+  font: 500 13px / 18px var(--dsw-font-family) !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] :is([class*="_subagentHeading"], [class*="_cardName"]) {
+  color: var(--dsw-alias-label-primary) !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] :is([class*="_subagentSubject"], [class*="_teamEmpty"]) {
+  color: var(--dsw-alias-label-tertiary) !important;
+}
+
+body[data-dsh-claude-style] [data-rightbar-col] :is([class*="_teamBoardBar"], [class*="_outline_"]) {
+  border-radius: 6px !important;
+  font: 500 12px / 18px var(--dsw-font-family) !important;
+}
+
+body[data-dsh-claude-style] [data-rightbar-col] :is([class*="_teamBoardBar"], [class*="_outline_"]):hover {
+  background: var(--dsh-claude-hover-bg) !important;
+}

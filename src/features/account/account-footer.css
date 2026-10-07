@@ -56,8 +56,8 @@ body[data-dsh-claude-style] .dsh-claude-account-label {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 13px;
-  line-height: 18px;
+  font-size: 14px;
+  line-height: 20px;
   font-family: var(--dsw-font-family);
 }
 body[data-dsh-claude-style] .dsh-claude-account-user {

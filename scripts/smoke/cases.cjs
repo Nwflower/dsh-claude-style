@@ -48,11 +48,41 @@ function commonChecks(r) {
       contrast(r.topUpInk, r.topUpFill) >= 3,
     JSON.stringify({ ink: r.topUpInk, fill: r.topUpFill }))
   check('the idle session seat draws the status circle through the slot outlet',
-    r.seatIdle !== null && r.seatIdle.content !== 'none' && r.seatIdle.width === '5px',
+    r.seatIdle !== null && r.seatIdle.content !== 'none' && r.seatIdle.width === '6px',
     JSON.stringify(r.seatIdle))
   check('a seat carrying the running status dot draws no circle',
     r.seatRunning !== null && r.seatRunning.content === 'none' && r.seatRunning.svgs > 0,
     JSON.stringify(r.seatRunning))
+  const panel = r.rightPanel
+  check('the right panel takes the skin canvas and the warm hairline',
+    panel !== null && panel.pane !== null && panel.pane.borderLeft === `1px ${panel.hairline}`,
+    JSON.stringify(panel && panel.pane))
+  check('the right panel header takes the same hairline',
+    panel !== null && panel.strip !== null && panel.strip.borderBottom === `1px ${panel.hairline}`,
+    JSON.stringify(panel && panel.strip))
+  check('a right panel tab is a 28px label',
+    panel !== null && panel.tab !== null && panel.tab.height === 28 && panel.tab.radius === '6px' && panel.tab.font === '13px/18px 500',
+    JSON.stringify(panel && panel.tab))
+  check('a right panel icon button is a 28px square with 6px corners',
+    panel !== null && panel.icon !== null && panel.icon.height === 28 && panel.icon.radius === '6px',
+    JSON.stringify(panel && panel.icon))
+  check('the right panel search field is a 28px field with an 8px radius',
+    panel !== null && panel.search !== null && panel.search.height === 30 && panel.search.radius === '8px' && panel.search.font === '13px/18px 400',
+    JSON.stringify(panel && panel.search))
+  check('a right panel tree row is a 30px row',
+    panel !== null && panel.row !== null && panel.row.height === 30 && panel.row.radius === '6px' && panel.row.font === '13px/20px 400',
+    JSON.stringify(panel && panel.row))
+  check('a right panel node card and its board take the skin card radius',
+    panel !== null && panel.node !== null && panel.node.radius === '12px' &&
+      panel.board !== null && panel.board.radius === '12px' && panel.board.borderTopColor === panel.hairline,
+    JSON.stringify(panel && { node: panel.node, board: panel.board }))
+  check('a right panel chip is a 20px pill',
+    panel !== null && panel.badge !== null && panel.badge.height === 20 && panel.badge.radius === '999px',
+    JSON.stringify(panel && panel.badge))
+  check('a right panel section header takes a hairline over a 13px label',
+    panel !== null && panel.header !== null && panel.header.borderBottom === `1px ${panel.hairline}` &&
+      panel.name !== null && panel.name.font === '13px/18px 500',
+    JSON.stringify(panel && { header: panel.header, name: panel.name }))
   check('scheduler idle once settled (0 passes in 1 s)', r.idlePasses === 0, `${r.idlePasses} passes`, 'timing')
   check('a closed popover card claims no menu role for the host\'s keyboard arbitration',
     r.closedMenuCards === 0, `${r.closedMenuCards} closed cards carry role=menu`)
@@ -137,13 +167,12 @@ const CASES = {
     check('Enter on an open composer menu reaches the host', same(r.keys, ['host picked the menu item']), JSON.stringify(r.keys))
     commonChecks(r)
   },
-  // The sidebar's search box: placed in the brand row, resting hidden, opening
-  // the host's modal through a root of the skin's own.
+  // The sidebar's toolbar search opens the host modal through the skin's own root.
   search(r) {
     basicChecks(r)
     const search = r.search || {}
-    check('the search box goes in the brand row beside the brand, and rests hidden until the sidebar is hovered',
-      search.placed === true && search.rowMarked === true && search.resting === 'hidden', JSON.stringify(search))
+    check('the search icon stays visible in the sidebar toolbar',
+      search.placed === true && search.rowMarked === true && search.resting === 'visible', JSON.stringify(search))
     check('pressing the search box renders the host modal through a root of the skin\'s own', search.modalRendered === true, JSON.stringify(search))
     check('teardown takes the search box, its row mark and its root away',
       search.left === 0 && search.rootUnmounted === true, JSON.stringify(search))
@@ -190,6 +219,25 @@ const CASES = {
       JSON.stringify({ hidden: r.statsHidden, cards: r.statsStrayCards }))
     check('the host\'s panel takes the skin\'s own entrance, stamped by the feature',
       r.context.panelStamped === true, JSON.stringify(r.context.panelStamped))
+    check("the guide carries the skin's landing cards, read from the session's own projections",
+      r.landing !== null && r.landing.cards === 2 && r.landing.rows === 6,
+      JSON.stringify(r.landing && { cards: r.landing.cards, rows: r.landing.rows }))
+    check('a landing card is a 12px card on the skin fill, with the warm hairline',
+      r.landing !== null && r.landing.radius === '12px' && r.landing.fill === r.landing.cardToken &&
+        r.landing.border === `1px ${r.landing.hairline}`,
+      JSON.stringify(r.landing && { radius: r.landing.radius, fill: r.landing.fill, card: r.landing.cardToken, border: r.landing.border, hairline: r.landing.hairline }))
+    check('a landing title is a 15px label in the primary ink, a landing row a 13px row',
+      r.landing !== null && r.landing.title === '15px/22px 600' && r.landing.titleInk === r.landing.primary &&
+        r.landing.row === '13px/20px 400',
+      JSON.stringify(r.landing && { title: r.landing.title, ink: r.landing.titleInk, primary: r.landing.primary, row: r.landing.row }))
+    check("a landing card trails one 22px circle per turn, the last one current",
+      r.landing !== null && r.landing.trail !== null && r.landing.trail.dots === 2 &&
+        r.landing.trail.done === 1 && r.landing.trail.current === 1 && r.landing.trail.size === 22,
+      JSON.stringify(r.landing && r.landing.trail))
+    check("the landing cards carry the host's own words for the session's numbers",
+      r.landing !== null && r.landing.labels.length === 6 && r.landing.values.length === 6 &&
+        r.landing.values.every((value) => value !== ''),
+      JSON.stringify(r.landing && { labels: r.landing.labels, values: r.landing.values }))
     check('another plugin\'s popover is not taken for the host\'s panel, and the marks a previous generation left on it are cleared',
       r.context.panelId === 'context-panel' && r.context.strayBlockGone === true && r.context.foreignUnmarked === true,
       JSON.stringify({ panel: r.context.panelId, strayGone: r.context.strayBlockGone, foreignUnmarked: r.context.foreignUnmarked }))

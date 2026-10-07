@@ -98,13 +98,13 @@ body[data-dsh-claude-style]%%PALETTE_CLAUDE%%[data-ds-dark-theme] {
      blue in both palettes; the skin has one accent. */
   --dsw-alias-brand-primary-new-colorprimary-new-color: #d97757;
   --dsh-claude-canvas: #141413;
-  --dsh-claude-sidebar-canvas: #141413;
+  --dsh-claude-sidebar-canvas: #111110;
   --dsh-claude-raised: #1e1e1d;
   --dsh-claude-card: #1e1e1d;
   --dsh-claude-inverse-fill: #faf9f5;
   --dsh-claude-inverse-ink: #141413;
   --dsh-claude-ink-strong: #f5f4ef;
-  --dsh-claude-session-ink: #8c8983;
+  --dsh-claude-session-ink: #c2c0b8;
   --dsh-claude-table-head: #242320;
   --dsh-claude-scrollbar: rgba(58, 56, 51, 0.9);
   --dsh-claude-scrollbar-hover: rgba(107, 106, 101, 0.9);
@@ -352,6 +352,14 @@ body[data-dsh-claude-style]:not([data-ds-dark-theme]) ::-webkit-scrollbar-thumb:
   background: var(--dsh-claude-scrollbar-hover);
 }
 
+/* Sidebar selection is a separate surface from pointer hover (D50). */
+body[data-dsh-claude-style] {
+  --dsh-claude-sidebar-selected: var(--dsw-alias-interactive-bg-hover-solid);
+}
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%%[%%BRAND_ATTR%%="%%BRAND_CLAUDE%%"][data-ds-dark-theme] {
+  --dsh-claude-sidebar-selected: #343433;
+}
+
 /* ================= following the host's colours ================= */
 /* Every private surface and ink the skin's nodes read aliases a host token, so
    they take whatever the host — or a wallpaper's glass — paints. Cards alias the
@@ -360,6 +368,7 @@ body[data-dsh-claude-style]:not([data-ds-dark-theme]) ::-webkit-scrollbar-thumb:
 body[data-dsh-claude-style]%%PALETTE_HOST%% {
   --dsh-claude-canvas: var(--dsw-alias-bg-base);
   --dsh-claude-sidebar-canvas: var(--dsw-specific-sidebar-fill);
+  --dsh-claude-sidebar-selected: var(--dsw-alias-interactive-bg-hover-solid);
   --dsh-claude-raised: var(--dsw-alias-bg-overlay);
   --dsh-claude-card: var(--dsw-alias-bg-overlay);
   --dsh-claude-chip: var(--dsw-specific-selector);

@@ -5,7 +5,7 @@
 
 ## 决定
 
-- 放置：侧栏搜索框插在宿主品牌行（`[data-slot="sidebar"]` 里的 `_logoRow`）的品牌旁边，只在这一行带宽版品牌时放置。这一行改成网格，品牌与搜索框同占第一格，两者的淡入淡出交给样式表的 `[data-slot="sidebar"]:hover`。
+- 放置：按 D50 使用侧栏顶部常驻搜索图标，浏览器位于 `_logoRow`，macOS 位于 `_topStrip`，与宿主折叠控制并排。
 - 快捷键：宿主的 `session.search` 没有可替换的公开入口，它的效果是展开宿主自己的侧栏搜索并聚焦输入框。宿主的这块搜索因此保持挂载、只从视觉与布局里拿掉；焦点落进它的输入框时搜索面板打开，并经宿主自己的清除按钮把它收回，快捷键改绑后也跟着走。
 - 面板是宿主 ui-primitives 的 `Modal`：遮罩、焦点归还、Esc 与模态层都用宿主的；卡片里的行由皮肤搭。它不套 D16 的弹层外壳，但登记进弹层互斥表。`Modal` 关闭即卸载，所以关闭时先给遮罩层打标记、保持挂载淡出，淡出结束后再卸载，标记在卸载之后才撤（否则重播一帧入场动画）。
 - 数据读宿主的客户端服务：`sessions.list` 与 `workspaces.list`（去掉已归档、子代理与空白占位）、`remote.pluginInventory` 与 `remote.pluginManager`、当前会话的 `remote.skills`、`shortcuts.catalog`。远程命名空间在面板打开时用 `ctx.get('remote.<名字>')` 读（在根上下文直接读 `remote` 的子属性会被 cordis 以「没有 inject」拒绝）。

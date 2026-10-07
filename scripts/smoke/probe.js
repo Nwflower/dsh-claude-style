@@ -365,6 +365,43 @@
     }
     r.seatIdle = seatState(seats[0])
     r.seatRunning = seatState(seats[1])
+    // The right column: the host's dockkit pane, its header strip, and the
+    // shapes each panel repeats. The hairline is read from the resolved token,
+    // so the checks hold under either palette (D52).
+    var rightPanel = document.querySelector('[data-rightbar-col] [data-dockkit-pane]')
+    function rightStyle(el) {
+      if (!el) return null
+      var s = getComputedStyle(el)
+      var b = el.getBoundingClientRect()
+      return {
+        height: Math.round(b.height),
+        radius: s.borderTopLeftRadius,
+        font: s.fontSize + '/' + s.lineHeight + ' ' + s.fontWeight,
+        borderLeft: s.borderLeftWidth + ' ' + s.borderLeftColor,
+        borderBottom: s.borderBottomWidth + ' ' + s.borderBottomColor,
+        borderTopColor: s.borderTopColor,
+        color: s.color,
+      }
+    }
+    var tokenProbe = document.createElement('span')
+    tokenProbe.style.color = 'var(--dsw-alias-border-l1)'
+    document.body.appendChild(tokenProbe)
+    var rightHairline = getComputedStyle(tokenProbe).color
+    tokenProbe.remove()
+    r.rightPanel = rightPanel === null ? null : {
+      hairline: rightHairline,
+      pane: rightStyle(rightPanel),
+      strip: rightStyle(document.querySelector('[data-rightbar-col] [data-dockkit-strip]')),
+      tab: rightStyle(document.querySelector('[data-rightbar-col] [data-dockkit-tab]')),
+      icon: rightStyle(document.querySelector('[data-rightbar-col] [class*="_iconButton"]')),
+      search: rightStyle(document.querySelector('[data-rightbar-col] [class*="_editorSearchInput"]')),
+      row: rightStyle(document.querySelector('[data-rightbar-col] [class*="_explorerRow"]')),
+      node: rightStyle(document.querySelector('[data-rightbar-col] [class*="_node"]')),
+      board: rightStyle(document.querySelector('[data-rightbar-col] [class*="_teamBoard"]')),
+      badge: rightStyle(document.querySelector('[data-rightbar-col] [class*="_kindBadge"]')),
+      header: rightStyle(document.querySelector('[data-rightbar-col] [class*="_subagentHeader"]')),
+      name: rightStyle(document.querySelector('[data-rightbar-col] [class*="_cardName"]')),
+    }
     await onlyFor(['brand'], async function () {
       // The Claude palette, light and dark: the ivory and warm-black canvases,
       // the clay accent, the raised card fill.
@@ -466,9 +503,8 @@
       r.controls.back = controlOf('send')
     })
     await onlyFor(['search'], async function () {
-      // The sidebar's brand row (ui-sidebar SidebarRoot): the search box goes in
-      // beside the wide brand, and pressing it renders the host's Modal through
-      // a root of the skin's own.
+      // SidebarRoot places collapse and persistent search in the toolbar.
+      // Pressing search renders the host's Modal through the skin's own root.
       var sidebarSlot = document.createElement('div')
       sidebarSlot.setAttribute('data-slot', 'sidebar')
       sidebarSlot.innerHTML = '<div class="_n_root_1"><div class="_n_logoRow_1" data-window-drag="true">' +
@@ -483,7 +519,8 @@
       await sleep(60)
       searchRoot = window.__roots[rootsBefore]
       r.search = {
-        placed: !!searchTrigger && searchTrigger.previousElementSibling === logoRow.firstElementChild,
+        placed: !!searchTrigger && searchTrigger === logoRow.lastElementChild &&
+          searchTrigger.previousElementSibling.matches('[class*="_toggle"]'),
         rowMarked: logoRow.hasAttribute('data-dsh-claude-search-row'),
         resting: searchTrigger ? getComputedStyle(searchTrigger).visibility : null,
         modalRendered: !!searchRoot && searchRoot.renders > 0,
@@ -523,6 +560,49 @@
       window.__pushStats('sessionStats', { turns: 2, steps: 3, llmMs: 1200, toolMs: 400, ttftMs: 800, ttftSteps: 1, decodeMs: 2000, decodeTokens: 210 })
       window.__pushStats('tokenUsage', { uncachedInputTokens: 1000, outputTokens: 105, cacheReadTokens: 9000, cacheWriteTokens: 0 })
       await sleep(200)
+      // The right column's landing cards are skin-owned: with the projections
+      // served, the guide's stack reads them (D52).
+      r.landing = (function () {
+        var landingStack = document.querySelector('[data-dsh-claude-panel-cards]')
+        if (landingStack === null) return null
+        function token(name) {
+          var probe = document.createElement('span')
+          probe.style.color = 'var(' + name + ')'
+          document.body.appendChild(probe)
+          var reading = getComputedStyle(probe).color
+          probe.remove()
+          return reading
+        }
+        var stackStyle = getComputedStyle(landingStack)
+        var landingTitle = landingStack.querySelector('.dsh-claude-panel-card-title')
+        var landingRow = landingStack.querySelector('[data-dsh-claude-panel-row]')
+        return {
+          cards: landingStack.querySelectorAll('[data-dsh-claude-panel-card]').length,
+          rows: landingStack.querySelectorAll('[data-dsh-claude-panel-row]').length,
+          radius: stackStyle.borderTopLeftRadius,
+          fill: stackStyle.backgroundColor,
+          cardToken: token('--dsh-claude-card'),
+          border: stackStyle.borderTopWidth + ' ' + stackStyle.borderTopColor,
+          hairline: token('--dsw-alias-border-l1'),
+          primary: token('--dsw-alias-label-primary'),
+          title: landingTitle === null ? null : getComputedStyle(landingTitle).fontSize + '/' + getComputedStyle(landingTitle).lineHeight + ' ' + getComputedStyle(landingTitle).fontWeight,
+          titleInk: landingTitle === null ? null : getComputedStyle(landingTitle).color,
+          row: landingRow === null ? null : getComputedStyle(landingRow).fontSize + '/' + getComputedStyle(landingRow).lineHeight + ' ' + getComputedStyle(landingRow).fontWeight,
+          trail: (function () {
+            var trail = landingStack.querySelector('[data-dsh-claude-panel-trail]')
+            if (trail === null) return null
+            var dot = trail.querySelector('[data-dsh-claude-panel-dot]')
+            return {
+              dots: trail.querySelectorAll('[data-dsh-claude-panel-dot]').length,
+              done: trail.querySelectorAll('[data-dsh-claude-panel-dot="done"]').length,
+              current: trail.querySelectorAll('[data-dsh-claude-panel-dot="current"]').length,
+              size: dot === null ? null : Math.round(dot.getBoundingClientRect().width),
+            }
+          })(),
+          labels: Array.prototype.map.call(landingStack.querySelectorAll('.dsh-claude-panel-card-label'), function (l) { return (l.textContent || '').trim() }),
+          values: Array.prototype.map.call(landingStack.querySelectorAll('.dsh-claude-panel-card-value'), function (v) { return (v.textContent || '').trim() }),
+        }
+      })()
       var statsBlock = document.querySelector('.dsh-claude-context-stats')
       var statsPanel = statsBlock === null ? null : statsBlock.closest('[role="dialog"]')
       r.context.opened = statsPanel !== null
@@ -978,11 +1058,11 @@
       switchSidebar.innerHTML = '<div class="_n_root_1"><div class="_n_logoRow_1" data-window-drag="true">' +
         '<button type="button" class="_n_brand_1 _n_wide_1" aria-label="New session">brand</button>' +
         '<button type="button" class="_n_iconButton_1 _n_toggle_1" aria-label="Collapse sidebar">toggle</button></div>' +
-        // One hash prefix for the section, its header, its label and its list
-        // area, the way the host's CSS modules name them (the skin finds the
-        // workspace section by that shared prefix, never by the label text).
-        '<div class="_w1_root"><div class="_w1_sectionHeader"><span class="_w1_sectionLabel _w1_wide">Workspaces</span></div>' +
-        '<div role="tree" class="_w1_listArea"><div data-row-key="w1" class="_w1_projectRow">project</div></div></div></div>'
+        // SidebarRoot owns New Session before the workspace outlet; the view
+        // switch is inserted immediately above that host action.
+        '<button type="button" class="_n_newSession_1">New session</button>' +
+        '<div data-slot="sidebar.workspaces"><div class="_w1_root"><div class="_w1_sectionHeader"><span class="_w1_sectionLabel _w1_wide">Workspaces</span></div>' +
+        '<div role="tree" class="_w1_listArea"><div data-row-key="w1" class="_w1_projectRow">project</div></div></div></div></div>'
       document.body.appendChild(switchSidebar)
       var switchHeader = document.createElement('div')
       switchHeader.className = '_c_header_1'
