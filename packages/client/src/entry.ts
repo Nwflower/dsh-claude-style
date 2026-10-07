@@ -1,8 +1,8 @@
-import { BRAND_ATTR, COMPOSER_ATTR, FEATURE_PREF_DEFAULTS, FOOTER_ATTR, HANDOFF_ATTR, HOME_HERO_ATTR, HOME_LAYOUT_ATTR, MASCOT_ATTR, MOTION_ATTR, PALETTE_ATTR, TYPEFACE_ATTR, WINDOW_BLUR_ATTR } from './constants'
+import { FEATURE_PREF_DEFAULTS, HANDOFF_ATTR } from './constants'
 import { loadHdsl, loadUsername, setHostContext } from './core/host'
 import type { HostContext } from './core/host'
 import { loadModelCopy } from './core/model-copy'
-import { adoptPrefs, adoptSettingsForm, disposePrefsBinding, prefs, readPrefs, retireComposerRestyle, retireFooterTakeover, subscribePrefs } from './core/prefs'
+import { adoptPrefs, adoptSettingsForm, clearPrefsAttributes, disposePrefsBinding, prefs, readPrefs, retireComposerRestyle, retireFooterTakeover, subscribePrefs } from './core/prefs'
 import { installScheduler, reportFeatureFailure } from './core/scheduler'
 import type { HandleName, Ui } from './core/scheduler'
 import { mountStylesheet, parkForeignSheets } from './core/stylesheet'
@@ -77,18 +77,11 @@ export function apply(ctx: HostContext) {
       try { installed[i].stop() } catch (error) { reportError(error) }
     }
     installed = kept.reverse()
+    // Each body attribute goes with whoever writes it: a feature's own with
+    // its teardown above, the preference mirror's here, the stamps last.
+    clearPrefsAttributes()
     body.removeAttribute('data-dsh-claude-style')
     body.removeAttribute(HANDOFF_ATTR)
-    body.removeAttribute(BRAND_ATTR)
-    body.removeAttribute(PALETTE_ATTR)
-    body.removeAttribute(TYPEFACE_ATTR)
-    body.removeAttribute(MASCOT_ATTR)
-    body.removeAttribute(MOTION_ATTR)
-    body.removeAttribute(FOOTER_ATTR)
-    body.removeAttribute(COMPOSER_ATTR)
-    body.removeAttribute(HOME_LAYOUT_ATTR)
-    body.removeAttribute(HOME_HERO_ATTR)
-    body.removeAttribute(WINDOW_BLUR_ATTR)
     // This generation's own sheet, handed over rather than taken away when a
     // newer generation has mounted after it (mountStylesheet).
     if (stopStylesheet !== null) {

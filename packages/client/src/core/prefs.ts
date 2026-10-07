@@ -173,6 +173,11 @@ export function adoptPrefs(next: Prefs) {
   notifyAll(prefsListeners, next)
 }
 
+/** Take back every attribute adoptPrefs mirrors onto the document: the page goes back to the host (entry.ts). */
+export function clearPrefsAttributes() {
+  for (const name of [BRAND_ATTR, PALETTE_ATTR, TYPEFACE_ATTR, MASCOT_ATTR, MOTION_ATTR, FOOTER_ATTR]) document.body.removeAttribute(name)
+}
+
 /** Whether the operating system asks for reduced motion right now. */
 function systemPrefersReducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
