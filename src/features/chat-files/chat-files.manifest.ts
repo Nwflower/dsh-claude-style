@@ -3,6 +3,7 @@ import type { FeatureManifest } from '../../core/feature'
 export default {
   id: 'chatFiles',
   order: 220,
+  contracts: ['chat.think-running'],
   pref: 'chatAnimations',
   yieldsTo: 'dsh-chat-ux',
   stylesheets: [{ file: 'chat-files.css', rank: 190 }],

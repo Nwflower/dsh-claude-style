@@ -3,6 +3,7 @@ import type { FeatureManifest } from '../../core/feature'
 export default {
   id: 'search',
   order: 160,
+  contracts: [],
   pref: 'sidebarSearch',
   stylesheets: [{ file: 'search.css', rank: 130 }],
   switchRow: {

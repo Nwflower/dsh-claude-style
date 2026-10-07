@@ -3,6 +3,7 @@ import type { FeatureManifest } from '../../core/feature'
 export default {
   id: 'themeFlip',
   order: 140,
+  contracts: ['shell.dark-theme'],
   ungated: '修主题切换瞬间的颜色跳变，不改变功能',
   stylesheets: [{ file: 'theme-flip.css', rank: 370 }],
   cases: [],

@@ -74,6 +74,9 @@ function checkManifests(manifests) {
     orders.set(manifest.order, manifest.file)
     if ((manifest.pref === undefined) === (manifest.ungated === undefined)) fail(manifest, 'must declare exactly one of "pref" and "ungated"')
     if (!fs.existsSync(path.join(SRC, manifest.main))) fail(manifest, `has no main module src/${manifest.main}`)
+    if (!Array.isArray(manifest.contracts) || manifest.contracts.some((id) => typeof id !== 'string' || id === '')) {
+      fail(manifest, 'needs "contracts": the host contract ids its own modules name (D44)')
+    }
     for (const sheet of manifest.stylesheets) {
       if (!fs.existsSync(path.join(FEATURES, manifest.dir, sheet.file))) fail(manifest, `names the stylesheet ${sheet.file}, which src/features/${manifest.dir}/ does not hold`)
     }

@@ -1,3 +1,4 @@
+import { UNTAGGED_SHEET_SELECTOR } from '../contracts/dom'
 import { STYLESHEET } from 'virtual:dsh-claude-style/generated'
 import { FOREIGN_SHEET_TAG, PACKAGE_NAME, STYLE_ID, STYLE_PLUGIN_CSS } from '../constants'
 
@@ -24,7 +25,7 @@ export let sheetGeneration = 0
  * a sheet arriving after it.
  */
 export function parkForeignSheets() {
-  const untagged = document.querySelectorAll<HTMLStyleElement>('style:not([data-plugin])')
+  const untagged = document.querySelectorAll<HTMLStyleElement>(UNTAGGED_SHEET_SELECTOR)
   for (const el of untagged) {
     if (el.id !== STYLE_ID) el.dataset.plugin = FOREIGN_SHEET_TAG
   }

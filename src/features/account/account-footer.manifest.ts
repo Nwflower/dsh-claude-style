@@ -3,6 +3,7 @@ import type { FeatureManifest } from '../../core/feature'
 export default {
   id: 'footer',
   order: 120,
+  contracts: ['shell.account-trigger', 'shell.foot-area', 'shell.footer-actions', 'shell.menu', 'shell.menu-list', 'shell.settings-button'],
   pref: 'collapseFooter',
   stylesheets: [
     { file: 'account-footer.css', rank: 240 },

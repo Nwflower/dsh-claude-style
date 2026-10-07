@@ -4,7 +4,7 @@ import { conversationSessionId, findConversationSession } from '../../core/host'
 import { motionReduced } from '../../core/prefs'
 import { createTurnNavHost } from './turn-nav-host'
 import type { TurnItem } from './turn-nav-host'
-import { CHAT_TURN_ATTRIBUTE, TURN_RAIL_CURRENT_SELECTOR } from '../../shared/chat-dom'
+import { CHAT_TURN_ATTRIBUTE, PEER_SHEET_SELECTOR, TURN_RAIL_CURRENT_SELECTOR } from '../../contracts/dom'
 import { buildElement, closestFrom } from '../../shared/dom'
 import { POPOVER_CLOSE_DELAY, closeOtherPopovers, createHoverIntent, registerPopover, unregisterPopover } from '../../shared/popover'
 import { easeScrollFor, scrollPositionFor, writeScroll } from '../../shared/scroll-owner'
@@ -69,7 +69,7 @@ export function install(ctx: HostContext, ui: Ui) {
    */
   const KEY_REPEAT_MS = 1200
   /** dsh-plugin-msg-nav's stylesheet, in the head while its browser half is live. */
-  const MSG_NAV_STYLE_SELECTOR = 'style[data-plugin-css="dsh-plugin-msg-nav/style.css"]'
+  const MSG_NAV_STYLE_SELECTOR = PEER_SHEET_SELECTOR
   /** A layer that holds the foreground: the host arbitrates its own keys by the same query. */
   const FOREGROUND_SELECTOR = '[role="dialog"][aria-modal="true"], [role="menu"]'
 

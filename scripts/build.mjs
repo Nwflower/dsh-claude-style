@@ -206,6 +206,9 @@ const CONSTANTS = (() => {
   }
 })()
 
+/** The host contract's table: build and test data, so it stays out of the bundle (D44). */
+const CONTRACT_TABLE = 'contracts/table.ts'
+
 /**
  * The brand marks the stylesheets paint, as `%%TOKEN%%` placeholders (the skin
  * has no asset URLs: the DSH loader exposes none, so a mark is a data URI or a
@@ -344,8 +347,9 @@ function validateModelCopy(doc, lobeBrands) {
 /**
  * Refuse a source file that does not ship: a stylesheet no manifest and no
  * theme entry names, or a module nothing imports, would otherwise sit in src/
- * with nothing to say it never reaches the page. Manifests are data the build
- * reads and unit tests run under Vitest; neither is a module the bundle carries.
+ * with no way to reach the page. Manifests are data the build reads, the
+ * contract table is read by the build and the tests (D44), and unit tests run
+ * under Vitest; none of them is a module the bundle carries.
  *
  * @param bundled - the src/-relative modules in the bundle (esbuild's metafile).
  * @param sheets - every stylesheet the bundle carries (styleFiles).
@@ -359,7 +363,7 @@ function checkListed(bundled, sheets) {
   })
   for (const file of walk('')) {
     if (file.endsWith('.css') && !listed.has(file)) throw new Error(`build: src/${file} is in no list; add it to its feature's manifest or to THEME_SHEETS`)
-    if (file.endsWith('.manifest.ts') || file.endsWith('.test.ts') || file.endsWith('.d.ts')) continue
+    if (file.endsWith('.manifest.ts') || file.endsWith('.test.ts') || file.endsWith('.d.ts') || file === CONTRACT_TABLE) continue
     if (file.endsWith('.ts') && !bundled.has(file)) throw new Error(`build: src/${file} is imported by no module the bundle reaches`)
   }
 }
@@ -468,6 +472,70 @@ function checkCycles(metafile) {
 }
 
 /**
+ * Evaluate one data-only module in Node, as the manifests are read
+ * (scripts/read-manifests.cjs): esbuild bundles it and the body runs in a fresh
+ * vm context, so a module that is build and test data costs the page nothing.
+ *
+ * @param file - src/-relative module path.
+ */
+function evalModule(file) {
+  const { outputFiles } = esbuild.buildSync({
+    entryPoints: [path.join(SRC, file)],
+    bundle: true,
+    format: 'cjs',
+    platform: 'neutral',
+    write: false,
+    logLevel: 'silent',
+  })
+  const module = { exports: {} }
+  vm.runInNewContext(outputFiles[0].text, { module, exports: module.exports }, { filename: file })
+  return module.exports
+}
+
+/**
+ * Hold the host contract together (D44).
+ *
+ * The literals the skin keys on live in src/contracts/dom.ts and the table of
+ * what they mean in src/contracts/table.ts; neither may drift from the other,
+ * and every entry has to be claimed by a feature manifest (D42), so a selector
+ * cannot enter the skin without a note and an owner, and a host upgrade can be
+ * audited by walking one list.
+ *
+ * @param manifests - the feature manifests (scripts/read-manifests.cjs).
+ * @returns the table, for the build log.
+ */
+function checkContracts(manifests) {
+  const literals = evalModule('contracts/dom.ts')
+  const { HOST_DOM: table } = evalModule('contracts/table.ts')
+  if (!Array.isArray(table) || table.length === 0) throw new Error('build: src/contracts/table.ts exports no HOST_DOM')
+  const listed = new Set()
+  for (const entry of table) {
+    if (typeof entry.id !== 'string' || entry.id === '' || typeof entry.use !== 'string' || entry.use === '') {
+      throw new Error(`build: src/contracts/table.ts has an entry without an id and a use: ${JSON.stringify(entry)}`)
+    }
+    if (listed.has(entry.id)) throw new Error(`build: src/contracts/table.ts lists "${entry.id}" twice`)
+    listed.add(entry.id)
+  }
+  const values = new Set(table.map((entry) => entry.value))
+  for (const [name, value] of Object.entries(literals)) {
+    if (!/^[A-Z][A-Z0-9_]*$/.test(name) || (typeof value !== 'string' && typeof value !== 'number')) continue
+    if (!values.has(String(value))) {
+      throw new Error(`build: src/contracts/dom.ts exports ${name} (${JSON.stringify(value)}) with no entry in src/contracts/table.ts`)
+    }
+  }
+  const claimed = new Set()
+  for (const manifest of manifests) {
+    for (const id of manifest.contracts) {
+      if (!listed.has(id)) throw new Error(`build: src/${manifest.file} names host contract "${id}", which src/contracts/table.ts does not list`)
+      claimed.add(id)
+    }
+  }
+  const unclaimed = table.filter((entry) => entry.owner !== 'core' && !claimed.has(entry.id)).map((entry) => entry.id)
+  if (unclaimed.length > 0) throw new Error(`build: src/contracts/table.ts entries no feature manifest claims: ${unclaimed.join(', ')}`)
+  return table
+}
+
+/**
  * Refuse a module other than the scroll owner importing the spring: the chat
  * area's positions have one writer (D41), and a direct ease would bypass its
  * arbitration.
@@ -503,6 +571,7 @@ async function main() {
   checkPrefDefaults()
   const manifests = manifestReader.readManifests()
   checkManifests(manifests)
+  checkContracts(manifests)
   const sheets = styleFiles(manifests)
 
   // Every image, its content hash and its address (D38). Nothing is written

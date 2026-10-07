@@ -1,7 +1,7 @@
 import { subscribeMutations } from '../../core/bus'
 import { requestFrame } from '../../core/frame'
 import { beginChatFoldToggle, endChatFoldToggle, isChatFoldToggle } from './fold-toggle'
-import { RUNNING_STATE, THINK_ROW_SELECTOR } from '../../shared/chat-dom'
+import { RUNNING_STATE, THINK_ROW_SELECTOR } from '../../contracts/dom'
 
 /**
  * Keep a thinking row open while the model is still reasoning, and fold it

@@ -4,6 +4,7 @@ export default {
   id: 'settings',
   handle: 'settingsNav',
   order: 260,
+  contracts: [],
   ungated: '设置页本身',
   stylesheets: [{ file: 'settings.css', rank: 310 }],
   cases: ['settings', 'late-forms', 'skin-center-handoff', 'skin-center-arrival'],

@@ -1,3 +1,5 @@
+import { FRAME_TOP_CLEARANCE_PROPERTY, FULLSCREEN_ATTRIBUTE, WINDOWS_TITLEBAR_ATTRIBUTE } from '../contracts/dom'
+
 /** macOS: the clearance the traffic lights need, read off the host's own leading seat. */
 export const MAC_TRAFFIC_LIGHTS = 88
 /** macOS: the strip height the host declares, used when the token is absent. */
@@ -21,7 +23,7 @@ export const WIN_BAND_HEIGHT = 40
  * @returns the height in CSS pixels.
  */
 export function bandHeight(fallback: number) {
-  const declared = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--dsh-frame-top-clearance'))
+  const declared = parseFloat(getComputedStyle(document.documentElement).getPropertyValue(FRAME_TOP_CLEARANCE_PROPERTY))
   return isFinite(declared) && declared > 0 ? Math.round(declared) : fallback
 }
 
@@ -56,7 +58,7 @@ export function bandHeight(fallback: number) {
  */
 export function desktopBand() {
   const root = document.documentElement
-  if (root.hasAttribute('data-windows-titlebar')) {
+  if (root.hasAttribute(WINDOWS_TITLEBAR_ATTRIBUTE)) {
     const overlay = navigator.windowControlsOverlay
     if (!overlay || overlay.visible !== true) return null
     const rect = typeof overlay.getTitlebarAreaRect === 'function' ? overlay.getTitlebarAreaRect() : null
@@ -77,7 +79,7 @@ export function desktopBand() {
     }
   }
   if (root.dataset.platform === 'darwin') {
-    if (root.hasAttribute('data-fullscreen')) return null
+    if (root.hasAttribute(FULLSCREEN_ATTRIBUTE)) return null
     return {
       platform: 'darwin',
       height: bandHeight(MAC_BAND_HEIGHT),

@@ -1,4 +1,5 @@
 import { HDSL_ROUTE, HDSL_SKIN_ROUTE, USERNAME_MAX, USERNAME_ROUTE } from '../constants'
+import { COMPOSER_CARD_SELECTOR, COMPOSER_PLACEHOLDER_SELECTOR, COMPOSER_STACK_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, FOOT_AREA_SELECTOR, PERMISSION_TRIGGER_SELECTOR } from '../contracts/dom'
 import { readPrefs } from './prefs'
 import { closestFrom } from '../shared/dom'
 import { createHostResource } from '../shared/resource'
@@ -39,12 +40,12 @@ export interface HostFiber {
  * the skin inserts its own buttons inside that wrapper, so those are skipped.
  */
 export function findAccessTrigger() {
-  return document.querySelector<HTMLButtonElement>('[data-slot="conversation.input.permission"] button:not([class*="dsh-claude"])')
+  return document.querySelector<HTMLButtonElement>(PERMISSION_TRIGGER_SELECTOR)
 }
 
 /** The sidebar footer, where the account row and the plugin footer entries live. */
 export function findFootArea() {
-  return document.querySelector<HTMLElement>('[class*="footArea"]')
+  return document.querySelector<HTMLElement>(FOOT_AREA_SELECTOR)
 }
 
 /**
@@ -52,8 +53,8 @@ export function findFootArea() {
  * and the placeholder its editor draws. The card's variant is the skin's own
  * marking (D9); every reader goes through these, so the selectors live once.
  */
-export const COMPOSER_CARD = '[data-composer-card]'
-export const COMPOSER_PLACEHOLDER = '[data-composer-placeholder]'
+export const COMPOSER_CARD = COMPOSER_CARD_SELECTOR
+export const COMPOSER_PLACEHOLDER = COMPOSER_PLACEHOLDER_SELECTOR
 
 export function findComposerCards() {
   return document.querySelectorAll<HTMLElement>(COMPOSER_CARD)
@@ -66,7 +67,7 @@ export function findComposerCard() {
 /** The composer card `node` sits in, or null; `variant` narrows it to one variant. */
 export function closestComposerCard(node: EventTarget | null | undefined, variant?: string) {
   if (variant === undefined) return closestFrom(node, COMPOSER_CARD)
-  return closestFrom(node, `${COMPOSER_CARD}[data-composer-variant="${variant}"]`)
+  return closestFrom(node, `${COMPOSER_CARD}[${COMPOSER_VARIANT_ATTRIBUTE}="${variant}"]`)
 }
 
 export function findComposerPlaceholders() {
@@ -78,11 +79,11 @@ export function findComposerPlaceholder(card: Element) {
 }
 
 /** The shown conversation: the element carrying its session id, and the id itself. */
-export const CONVERSATION_SESSION_ATTR = 'data-conversation-session'
+export const CONVERSATION_SESSION_ATTR = CONVERSATION_SESSION_ATTRIBUTE
 export const CONVERSATION_SESSION = `[${CONVERSATION_SESSION_ATTR}]`
 
 export function findConversationSession() {
-  return document.querySelector<HTMLElement>(`[data-phase="active"] ${CONVERSATION_SESSION}`)
+  return document.querySelector<HTMLElement>(CONVERSATION_SESSION_SELECTOR)
 }
 
 export function closestConversationSession(node: EventTarget | null | undefined) {
@@ -101,7 +102,7 @@ export function conversationSessionId(host: Element | null | undefined) {
  * card with the cards stacked above it, and on the new-session page the hero
  * around them.
  */
-export const COMPOSER_STACK = '[class*="_composerStack"]'
+export const COMPOSER_STACK = COMPOSER_STACK_SELECTOR
 
 /**
  * The selected session id. dsh 0.2 moved it off the list snapshot onto the

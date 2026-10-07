@@ -3,6 +3,7 @@ import type { FeatureManifest } from '../../core/feature'
 export default {
   id: 'selection',
   order: 10,
+  contracts: [],
   ungated: '修宿主失焦时的选区颜色，不改变功能',
   stylesheets: [],
   cases: [],

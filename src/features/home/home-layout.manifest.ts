@@ -3,6 +3,7 @@ import type { FeatureManifest } from '../../core/feature'
 export default {
   id: 'homeLayout',
   order: 30,
+  contracts: ['composer.stack', 'shell.phase'],
   pref: 'homeLayout',
   stylesheets: [
     { file: 'home-panel.css', rank: 320 },

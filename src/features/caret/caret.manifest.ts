@@ -3,6 +3,7 @@ import type { FeatureManifest } from '../../core/feature'
 export default {
   id: 'caret',
   order: 240,
+  contracts: ['composer.input', 'composer.textarea'],
   pref: 'caretMotion',
   yieldsTo: 'dsh-chat-ux',
   stylesheets: [{ file: 'caret.css', rank: 220 }],

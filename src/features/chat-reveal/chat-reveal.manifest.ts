@@ -3,6 +3,7 @@ import type { FeatureManifest } from '../../core/feature'
 export default {
   id: 'chatReveal',
   order: 210,
+  contracts: ['api.highlight', 'api.highlight-constructor', 'chat.streaming', 'chat.streaming-attribute'],
   pref: 'chatAnimations',
   yieldsTo: 'dsh-chat-ux',
   stylesheets: [{ file: 'reveal-rules.css', rank: 180 }],

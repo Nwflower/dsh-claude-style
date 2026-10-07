@@ -33,6 +33,12 @@ export interface FeatureFields {
   switchRow?: FeatureSwitchRow
   /** The smoke cases that cover the feature (`npm run smoke -- --feature <dir>`). */
   cases: string[]
+  /**
+   * The host contract's entries this feature's own modules name
+   * (src/contracts/table.ts, D44): the answer to "what breaks if the host
+   * changes this", and the build refuses an entry no manifest claims.
+   */
+  contracts: string[]
   /** What the feature does, for a reader: the README's feature paragraphs (D48). */
   description: { zh: FeatureCopy, en: FeatureCopy }
 }

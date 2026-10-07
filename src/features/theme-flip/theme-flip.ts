@@ -1,3 +1,4 @@
+import { DARK_THEME_ATTRIBUTE } from '../../contracts/dom'
 import { subscribeMutations } from '../../core/bus'
 import { requestFrame } from '../../core/frame'
 
@@ -105,7 +106,7 @@ export function install() {
   }
 
   // Called inside the flip's own mutation microtask, before any paint (D40).
-  const stopThemeWatch = subscribeMutations(body, { attributeFilter: ['data-ds-dark-theme'] }, onThemeFlip)
+  const stopThemeWatch = subscribeMutations(body, { attributeFilter: [DARK_THEME_ATTRIBUTE] }, onThemeFlip)
 
   return () => {
     stopThemeWatch()

@@ -3,6 +3,7 @@ import type { FeatureManifest } from '../../core/feature'
 export default {
   id: 'turnStatus',
   order: 170,
+  contracts: ['chat.flow', 'chat.turn-attribute', 'chat.user-row', 'conversation.session', 'conversation.session-attribute', 'turn.process'],
   pref: 'turnStatus',
   stylesheets: [{ file: 'turn-status.css', rank: 140 }],
   switchRow: {

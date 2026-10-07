@@ -3,6 +3,7 @@ import type { FeatureManifest } from '../../core/feature'
 export default {
   id: 'ban',
   order: 130,
+  contracts: ['api.window-controls', 'shell.fullscreen', 'shell.platform', 'shell.top-clearance', 'shell.windows-titlebar'],
   ungated: '彩蛋页只在点击账号行时出现',
   stylesheets: [{ file: 'ban-screen.css', rank: 250 }],
   cases: ['desktop'],

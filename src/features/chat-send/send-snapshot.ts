@@ -1,4 +1,4 @@
-import { COMPOSER_SCROLL_SELECTOR } from '../../shared/chat-dom'
+import { COMPOSER_SCROLL_SELECTOR } from '../../contracts/dom'
 
 /**
  * The send flight's capture, ported from dsh-chat-ux: everything taken off the

@@ -3,6 +3,7 @@ import type { FeatureManifest } from '../../core/feature'
 export default {
   id: 'copy',
   order: 50,
+  contracts: ['composer.input'],
   ungated: '提示语跟随输入框改造的范围，问候语跟随首页版面',
   stylesheets: [],
   cases: ['hero', 'late-forms'],
