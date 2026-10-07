@@ -15,6 +15,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 ### 问题修复
 
 - **启动之后才选的皮肤也会接手页面**：页面载入后才在皮肤中心选中别的皮肤时，本主题不让出页面，两套视觉叠在一起。现在无论页面启动时归谁，皮肤到来就让出、离开就接回，都不需要刷新。
+- **发送时替身不再闪出卡片底色**（#29）：提交那一帧宿主的渲染会占住主线程，而替身的两层底色与光晕是各自独立的动画，可能落在壳的缩放之后——卡片那一层（输入区大小的白底）于是盖在已经缩成气泡的壳上，读者看到气泡上半先白再蓝。现在壳在形状走完归位的那一刻，两层底色与光晕一并写定（气泡那层铺满形状、卡片那层透明、光晕熄灭）并撤掉各自的动画：替身长什么样由布局决定，不再取决于哪条动画跑到了哪里。
 - **与壁纸插件共存**：0.11.1 在启动时已有壁纸渲染（`body[data-we-wallpaper]`）的页面上整页让出，「与其他主题插件同时使用」里壁纸透过侧栏与玻璃弹层的效果随之失效。现在只为皮肤中心的皮肤（`html[data-dsh-skin]`）让路，壁纸在渲染时本主题照常工作。对外契约：不再读取 `body[data-we-wallpaper]`。
 
 ### 其他变更
@@ -32,6 +33,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 ### Bug Fixes
 
 - **A skin picked after the page loaded takes the page too**: picking another skin in the Skin Center once the page had loaded left this theme on the page, two looks painted over each other. Now the theme gives the page up when a skin arrives and takes it back when the skin leaves, whichever way the page booted, without a reload.
+- **The send stand-in no longer flashes the card's fill** (#29): the submission's own render holds the main thread for a frame, and the stand-in's two fills and its halo are animations of their own, so one of them can fall behind the shell's snap — the card's fill, a white band the size of the draft area, then paints over a shell that is already the bubble, which reads as the bubble's top turning white before it turns blue. The snap that normalises the shell now writes all three end states in the same task (the bubble's fill across the shape, the card's fill out, the halo out) and cancels their animations: the stand-in's look follows the layout rather than any animation's clock.
 - **Sharing the page with a wallpaper plugin**: 0.11.1 gave the whole page up when a wallpaper was already rendering at boot (`body[data-we-wallpaper]`), which lost the wallpaper showing through the sidebar and the glass popovers described under Alongside other theme plugins. Now only a Skin Center skin (`html[data-dsh-skin]`) makes the theme yield; while a wallpaper renders the theme keeps working. External contract: `body[data-we-wallpaper]` is no longer read.
 
 ### Chores

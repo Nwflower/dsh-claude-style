@@ -324,6 +324,22 @@ export function startMorph(snapshot: ComposerSnapshot, bubble: HTMLElement, end:
   }
 
   let normalized = false
+  /** The fills' and the halo's runs: the seal in `compact` cancels exactly these. */
+  const sealed: Animation[] = []
+  /**
+   * Put one of the two fill layers exactly on the shell's box, at the given
+   * opacity. The size is written rather than `100%`: the fills hang in the
+   * scaler, whose layout box is the larger of the two cards, not the shell.
+   */
+  const sealFill = (element: HTMLElement, width: number, height: number, radius: number, opacity: string) => {
+    element.style.left = '0px'
+    element.style.top = '0px'
+    element.style.width = width + 'px'
+    element.style.height = height + 'px'
+    element.style.borderRadius = radius + 'px'
+    element.style.transform = 'none'
+    element.style.opacity = opacity
+  }
   /**
    * Once the shape's stretch is over, normalise the shell: the layout size
    * becomes the visible size of that moment and both scales return to 1.
@@ -344,6 +360,15 @@ export function startMorph(snapshot: ComposerSnapshot, bubble: HTMLElement, end:
    * of the shape the width stops moving, but the words can still make the frame
    * taller, and comparing against the very last sample would jump on the
    * normalising frame.
+   *
+   * The two fills and the halo are sealed with it. They are animations of their
+   * own, and this snap is written on the main thread while they may still be
+   * behind: the submission's own render holds the main thread, the compositor
+   * keeps its own animations running, and a fill that has not moved yet paints
+   * the card's surface — a band the size of the draft area — over a shell that
+   * is already the bubble. Writing their end state here, in the same task as
+   * the snap, is what makes the stand-in's look a fact of the layout rather than
+   * of any animation's clock.
    * @param u - the progress right now; nothing happens before the shape's stretch is over.
    */
   const compact = (u: number) => {
@@ -359,6 +384,10 @@ export function startMorph(snapshot: ComposerSnapshot, bubble: HTMLElement, end:
     shell.style.transform = 'none'
     shell.style.borderRadius = final.radius + 'px'
     scaler.style.transform = 'none'
+    sealFill(bubbleFill, final.visible, final.height, final.radius, '1')
+    sealFill(cardFill, final.visible, final.height, final.radius, '0')
+    halo.style.opacity = '0'
+    for (const animation of sealed) animation.cancel()
   }
   // The fills: from the surface's box to the shape's visible box, both edges
   // moving on the shape's own `m`, so the box they reach at the end of the
@@ -373,22 +402,22 @@ export function startMorph(snapshot: ComposerSnapshot, bubble: HTMLElement, end:
       + width / Math.max(surface.width, CHAT_MIN_REVERSE_DIVISOR) + ', '
       + height / Math.max(surface.height, CHAT_MIN_REVERSE_DIVISOR) + ')'
   }
-  run(bubbleFill, between(0, CHAT_MORPH_END, sample => ({ transform: fillTransform(sample) })))
-  run(cardFill, between(0, CHAT_MORPH_END, sample => ({
+  sealed.push(run(bubbleFill, between(0, CHAT_MORPH_END, sample => ({ transform: fillTransform(sample) }))))
+  sealed.push(run(cardFill, between(0, CHAT_MORPH_END, sample => ({
     transform: fillTransform(sample),
     opacity: String(1 - sample.m),
-  })))
+  }))))
   // The halo hangs outside the shell so the shell's `overflow: hidden` cannot
   // clip it — its shadow would otherwise paint past the visible right edge
   // (measured: 24px past the column on every frame). Its scale accounts for the
   // surface plus the shadow's spread, putting the shadow's outer edge right on
   // the visible right edge.
   const shadow = chatSendShadowSpread(snapshot.shadow)
-  run(halo, between(0, CHAT_MORPH_END, sample => ({
+  sealed.push(run(halo, between(0, CHAT_MORPH_END, sample => ({
     transform: 'scale(' + sample.visible / (surface.left + surface.width + shadow) + ', '
       + sample.height / (surface.top + surface.height + shadow) + ')',
     opacity: String(Math.max(0, 1 - sample.m / CHAT_HALO_GONE_AT)),
-  }), 2))
+  }), 2)))
   for (const piece of snapshot.chrome) {
     const x = piece.rect[0]
     const y = piece.rect[1]

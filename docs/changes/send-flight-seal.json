@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-07",
+  "group": "fixes",
+  "order": 1,
+  "external": false,
+  "zh": "**发送时替身不再闪出卡片底色**（#29）：提交那一帧宿主的渲染会占住主线程，而替身的两层底色与光晕是各自独立的动画，可能落在壳的缩放之后——卡片那一层（输入区大小的白底）于是盖在已经缩成气泡的壳上，读者看到气泡上半先白再蓝。现在壳在形状走完归位的那一刻，两层底色与光晕一并写定（气泡那层铺满形状、卡片那层透明、光晕熄灭）并撤掉各自的动画：替身长什么样由布局决定，不再取决于哪条动画跑到了哪里。",
+  "en": "**The send stand-in no longer flashes the card's fill** (#29): the submission's own render holds the main thread for a frame, and the stand-in's two fills and its halo are animations of their own, so one of them can fall behind the shell's snap — the card's fill, a white band the size of the draft area, then paints over a shell that is already the bubble, which reads as the bubble's top turning white before it turns blue. The snap that normalises the shell now writes all three end states in the same task (the bubble's fill across the shape, the card's fill out, the halo out) and cancels their animations: the stand-in's look follows the layout rather than any animation's clock."
+}

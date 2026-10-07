@@ -204,6 +204,11 @@ module.exports = {
     check('when the flight lands the stand-in is gone', landed.ghost === false, JSON.stringify(landed))
     check('the row is visible again when the flight lands',
       landed.hidden === false && landed.visibility === 'visible', JSON.stringify(landed))
+    // A fill left behind by the submission (the state send-morph.ts's seal
+    // exists for) must not paint over the bubble once the shape has stretched.
+    const seal = send.seal || {}
+    check('the stand-in\'s fills are sealed with the shape: only the bubble paints over the destination',
+      seal.frozen === 2 && seal.sealed === true && seal.lateLight === 0, JSON.stringify(seal))
     const sendReduced = send.reduced || {}
     check('the animation choice reaches it too: Reduced flies nothing and leaves the row visible (D26)',
       sendReduced.ghost === false && sendReduced.hidden === false && sendReduced.visibility === 'visible',
