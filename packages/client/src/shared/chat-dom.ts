@@ -9,9 +9,32 @@ import { CHAT_FLOW_SELECTOR, CONVERSATION_SCROLL_SELECTOR, FOLLOW_THRESHOLD_PX }
 /** The keys that scroll the viewport; the same set the host reads. */
 export const SCROLL_KEYS = new Set(['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '])
 
-/** The session's scroll container: the host hangs its follow and its fold animation on it. */
+/**
+ * The session's scroll container: the host hangs its follow and its fold
+ * animation on it.
+ *
+ * Kept once it is read: every feature that writes a scroll position asks for it
+ * on each frame of a stream, and a document query made after the host's own
+ * write forces a style pass over the whole page (D9). A session switch replaces
+ * the element, which detaches the one held here.
+ */
+let scroller: HTMLElement | null = null
+
 export function conversationScroller() {
-  return document.querySelector<HTMLElement>(CONVERSATION_SCROLL_SELECTOR)
+  if (scroller === null || !scroller.isConnected) scroller = document.querySelector<HTMLElement>(CONVERSATION_SCROLL_SELECTOR)
+  return scroller
+}
+
+/**
+ * The conversation's message column, kept the way the scroller is: the stream
+ * glide asks for it on every frame it holds the position. A session switch
+ * replaces the element, which detaches the one held here.
+ */
+let column: HTMLElement | null = null
+
+export function conversationColumn() {
+  if (column === null || !column.isConnected) column = document.querySelector<HTMLElement>(CHAT_FLOW_SELECTOR)
+  return column
 }
 
 /**
@@ -35,8 +58,11 @@ export function isAtBottom(scroller: Element) {
  * @returns the button, or null when the frame or the button is not there.
  */
 export function findFollowTailButton() {
-  const column = document.querySelector(CHAT_FLOW_SELECTOR)
-  const root = column === null || column.parentElement === null ? null : column.parentElement.parentElement
+  const root = (() => {
+    const column = conversationColumn()
+    if (column === null || column.parentElement === null) return null
+    return column.parentElement.parentElement
+  })()
   if (root === null || root.nextElementSibling === null) return null
   return root.nextElementSibling.querySelector('button')
 }

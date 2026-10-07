@@ -74,7 +74,7 @@ const SCROLL_EASE_NOMINAL_FRAME_MS = 16.7
 
 /** One element's ease: where it is going, whether it is still wanted, and the motion it carries. */
 export interface ScrollEase {
-  destination: (element: Element) => number
+  destination: (element: Element, end: number) => number
   wanted: () => boolean
   lead: number
   velocity: number
@@ -121,13 +121,15 @@ export function scrollEnd(element: Element) {
  * Start (or keep) easing this element's position toward a destination.
  *
  * @param element - the scroll container.
- * @param destination - asked every frame: the position wanted now.
+ * @param destination - asked every frame with the end this frame already read:
+ *     the position wanted now. The one destination that is that end itself gets
+ *     it without a second reading (a reading forces a layout pass, D9).
  * @param wanted - asked every frame; false ends this element's ease where it is.
  * @param lead - the longest stretch glided; a farther destination is first
  *     closed to it. A jump the reader asked for wants a short one: the glide
  *     only has to say which way the page went.
  */
-export function easeScroll(element: Element, destination: (element: Element) => number, wanted: () => boolean, lead = SCROLL_EASE_LEAD_PX) {
+export function easeScroll(element: Element, destination: (element: Element, end: number) => number, wanted: () => boolean, lead = SCROLL_EASE_LEAD_PX) {
   // A run already in flight keeps the motion it is carrying: the re-arm is
   // for re-reading the tests, and zeroing the speed would re-do the take-off
   // the spring exists to avoid.
@@ -204,7 +206,7 @@ function stepScrollEase(now: number) {
       continue
     }
     const floor = scrollEnd(element)
-    const target = Math.max(0, Math.min(floor, ease.destination(element)))
+    const target = Math.max(0, Math.min(floor, ease.destination(element, floor)))
     // The fraction the ease keeps, unless someone else moved the position
     // since its last write: then the position is taken where it is.
     let position = ease.position

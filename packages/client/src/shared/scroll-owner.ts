@@ -1,7 +1,7 @@
 import { STREAM_GLIDE_ATTR } from '../constants'
 import { subscribeMutations } from '../core/bus'
 import { motionReduced } from '../core/prefs'
-import { CONVERSATION_SCROLL_SELECTOR, FLOW_KIND_ATTRIBUTE, FOLLOWING_TAIL_SELECTOR, FOLLOW_THRESHOLD_PX, PROCESS_BODY_SELECTOR, SUBMISSION_ECHO_SELECTOR, USER_ROW_KIND } from '@dsh-claude-style/contracts/dom'
+import { CONVERSATION_SCROLL_SELECTOR, FLOW_KIND_ATTRIBUTE, FOLLOW_THRESHOLD_PX, PROCESS_BODY_SELECTOR, SUBMISSION_ECHO_SELECTOR, USER_ROW_KIND } from '@dsh-claude-style/contracts/dom'
 import { conversationScroller, findFollowTailButton } from './chat-dom'
 import { isReaderScrollIntent } from './reader-intent'
 import { SCROLL_EASE_LEAD_PX, easeScroll, isScrollEasing, scrollEasePosition, scrollEnd, stopScrollEase } from './scroll-ease'
@@ -106,8 +106,6 @@ let submissionHoldUntil = 0
 let seen: { element: Element, top: number } | null = null
 /** The host's back-to-end button while it is kept out of sight. */
 let heldButton: HTMLElement | null = null
-/** The conversation scroller read last; a session switch replaces it, so it is checked before every use. */
-let scrollerCache: HTMLElement | null = null
 /** How many features use the owner; its listeners live while one does. */
 let members = 0
 let stopSubmissionWatch: (() => void) | null = null
@@ -173,18 +171,13 @@ export function submissionHolds() {
   return performance.now() < submissionHoldUntil
 }
 
-/** The conversation's scroller right now; a session switch replaces the element, so it is checked before every use. */
-function currentScroller() {
-  if (scrollerCache === null || !scrollerCache.isConnected) scrollerCache = conversationScroller()
-  return scrollerCache
-}
-
 function noteIntent(event: Event) {
   if (!isReaderScrollIntent(event)) return
   if (MOVING_INTENT_TYPES.has(event.type)) lastMovingIntentAt = performance.now()
   if (event.type !== 'touchmove') {
-    // The container is cached: a trackpad sends hundreds of these a second.
-    const scroller = currentScroller()
+    // The container is kept by shared/chat-dom.ts: a trackpad sends hundreds of
+    // these a second.
+    const scroller = conversationScroller()
     // Only once the content has grown a scrollbar: before that there is nothing to hold.
     if (scroller !== null && scroller.scrollHeight - scroller.clientHeight > 0) held.add(scroller)
   }
@@ -255,7 +248,6 @@ export function joinScrollOwner() {
     if (stopSubmissionWatch !== null) stopSubmissionWatch()
     stopSubmissionWatch = null
     releaseFollowButton()
-    scrollerCache = null
     seen = null
   }
 }
@@ -280,11 +272,11 @@ export function writeScroll(container: Element, value: number, source: ScrollSou
  * @param lead - the longest stretch glided (shared/scroll-ease.ts).
  * @returns whether the request was carried out.
  */
-export function easeScrollFor(container: Element, source: ScrollSource, destination: (element: Element) => number, wanted: () => boolean, lead = SCROLL_EASE_LEAD_PX) {
+export function easeScrollFor(container: Element, source: ScrollSource, destination: (element: Element, end: number) => number, wanted: () => boolean, lead = SCROLL_EASE_LEAD_PX) {
   if (!claim(container, source)) return false
   if (motionReduced()) {
     stopScrollEase(container)
-    container.scrollTop = destination(container)
+    container.scrollTop = destination(container, scrollEnd(container))
     return true
   }
   const following = FOLLOWING_SOURCES.has(source)
@@ -297,7 +289,7 @@ export function easeScrollFor(container: Element, source: ScrollSource, destinat
 
 /** Walk a container's position to its end, wherever the end goes. */
 export function easeScrollToEndFor(container: Element, source: ScrollSource, wanted: () => boolean) {
-  return easeScrollFor(container, source, scrollEnd, wanted)
+  return easeScrollFor(container, source, (_element, end) => end, wanted)
 }
 
 /** End the ease running on a container, when it serves `source` (or whichever source, without one). */
@@ -324,14 +316,21 @@ export function scrollPositionFor(container: Element) {
  * the frame started at — this frame's end less the column's reported growth.
  * Only a move down is taken back: an upward one is the reader, or the host
  * going somewhere else.
+ *
+ * @param scroller - the conversation's scroller.
+ * @param end - the end of its content, read by the caller: reading it here as
+ *     well paid a second layout pass in the same frame (D9).
  * @param grew - how far the message column grew this frame, when it did.
+ * @returns the position the scroller sits at now, so the caller needs no
+ *     reading of its own after a write.
  */
-export function takeBackHostPin(scroller: HTMLElement, grew?: number) {
-  const end = scroller.scrollHeight - scroller.clientHeight
+export function takeBackHostPin(scroller: HTMLElement, end: number, grew?: number) {
   let expected = scrollEasePosition(scroller)
   if (expected === null && seen !== null && seen.element === scroller) expected = seen.top
   if (expected === null && typeof grew === 'number' && grew > 0) expected = Math.max(0, end - grew)
-  if (expected !== null && scroller.scrollTop - expected > HOST_PIN_TOLERANCE_PX) writeScroll(scroller, expected, 'stream')
+  const top = scroller.scrollTop
+  if (expected === null || top - expected <= HOST_PIN_TOLERANCE_PX) return top
+  return writeScroll(scroller, expected, 'stream') ? expected : top
 }
 
 /**
@@ -342,10 +341,9 @@ export function takeBackHostPin(scroller: HTMLElement, grew?: number) {
  * the button; the host's state is untouched.
  */
 export function holdFollowButton() {
-  if (document.querySelector(FOLLOWING_TAIL_SELECTOR) !== null) {
-    releaseFollowButton()
-    return
-  }
+  // The host renders that button only while its follow is off, so finding one
+  // is the reading the marker used to be asked for — and finding it costs the
+  // structure walk rather than a document query on every frame of a stream (D9).
   const button = findFollowTailButton()
   if (button === heldButton) return
   releaseFollowButton()
@@ -412,14 +410,14 @@ export function handBackFollow(source: ScrollSource, options?: { stillWanted?: (
       return
     }
     // A pinned position does not mean the follow is back: the settlement may
-    // switch it off a beat later, and after that only the button brings it back.
-    if (document.querySelector(FOLLOWING_TAIL_SELECTOR) === null) {
-      const button = findFollowTailButton()
-      if (button !== null) {
-        button.click()
-        if (onSettled !== null) onSettled()
-        return
-      }
+    // switch it off a beat later, and after that only the button brings it
+    // back. The button stands on the page only while the follow is off, so
+    // finding one is the reading.
+    const button = findFollowTailButton()
+    if (button !== null) {
+      button.click()
+      if (onSettled !== null) onSettled()
+      return
     }
     window.setTimeout(look, FOLLOW_LOOK_INTERVAL_MS)
   }

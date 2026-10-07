@@ -3,8 +3,8 @@ import { observeSize, subscribeMutations } from '../../core/bus'
 import { requestFrame } from '../../core/frame'
 import { motionReduced } from '../../core/prefs'
 import { createChatProcessFollow } from './process-follow'
-import { CHAT_CALL_SELECTOR, CHAT_FLOW_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_SELECTOR, CONVERSATION_SCROLL_SELECTOR, FLOW_BLOCK_SELECTOR, FOLLOWING_TAIL_ATTRIBUTE, RUNNING_STATE, SHIMMER_SELECTOR, STREAMING_SELECTOR, THINK_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
-import { conversationScroller, findFollowTailButton } from '../../shared/chat-dom'
+import { CHAT_CALL_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_SELECTOR, CONVERSATION_SCROLL_SELECTOR, FLOW_BLOCK_SELECTOR, FOLLOWING_TAIL_ATTRIBUTE, RUNNING_STATE, SHIMMER_SELECTOR, STREAMING_SELECTOR, THINK_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { conversationColumn, conversationScroller, findFollowTailButton } from '../../shared/chat-dom'
 import { createStamp } from '../../shared/dom'
 import { SCROLL_EASE_LEAD_PX, easeScrollToEndFor, handBackFollow, holdFollowButton, joinScrollOwner, readerHolds, releaseFollowButton, stopScrollFor, submissionHolds, takeBackHostPin } from '../../shared/scroll-owner'
 import type { HostContext } from '../../core/host'
@@ -145,8 +145,16 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
   /** Whether the glide is holding the position right now. */
   let glideHeld = false
 
-  /** Whether content is arriving right now: the mark the host writes while it streams. */
-  const streaming = () => document.querySelector(FOLLOW_RUNNING_SELECTOR) !== null
+  /**
+   * Whether content is arriving right now: the mark the host writes while it
+   * streams. It is looked for inside the message column rather than across the
+   * document — the mark lives there, and a document query made after the host's
+   * own write forces a style pass over the whole page (D9).
+   */
+  const streaming = () => {
+    const column = conversationColumn()
+    return column !== null && column.querySelector(FOLLOW_RUNNING_SELECTOR) !== null
+  }
 
   /**
    * Whether the glide owns the position right now.
@@ -189,7 +197,9 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
    * unseen.
    */
   const glideSync = () => {
-    const column = document.querySelector<HTMLElement>(CHAT_FLOW_SELECTOR)
+    // The column is kept by shared/chat-dom.ts: asking the document for it on
+    // every frame of a stream forced a style pass over the whole page (D9).
+    const column = conversationColumn()
     if (column === glideColumn) return
     if (stopGlideSize !== null) stopGlideSize()
     stopGlideSize = null
@@ -230,8 +240,11 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
     glideHeld = true
     glideScroller = scroller
     holdFollowButton()
-    takeBackHostPin(scroller, grew)
-    if (scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop > 0.5) easeScrollToEndFor(scroller, 'stream', glideWanted)
+    // One reading of the end serves the pin and the question after it: reading
+    // it again in the same frame paid another layout pass (D9).
+    const end = scroller.scrollHeight - scroller.clientHeight
+    const top = takeBackHostPin(scroller, end, grew)
+    if (end - top > 0.5) easeScrollToEndFor(scroller, 'stream', glideWanted)
   }
 
   /**
