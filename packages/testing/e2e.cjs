@@ -98,6 +98,47 @@ async function sendPrompt(page, text) {
   await page.keyboard.type(text)
   await page.waitForTimeout(200)
   await page.keyboard.press('Enter')
+  // The host echoes the submission as its own row; the row is attached even
+  // while the send flight hides it, so this waits for attachment alone. Without
+  // it the turn never started, and the timeout further on would say nothing
+  // about why.
+  try {
+    await page.waitForSelector(HOST.userRow, { state: 'attached', timeout: 20000 })
+  } catch {
+    throw new Error('the composer did not hand the prompt to a turn (no user row appeared)')
+  }
+}
+
+/**
+ * What the page looked like when a scenario failed: a picture, the console
+ * problems, and the markers a timeout usually turns on — the composer's own
+ * value, the host flow rows that did appear, any overlay still open. The lane
+ * writes these into its output directory, which CI keeps as an artifact.
+ */
+async function captureFailure(session, out, name) {
+  const { page } = session
+  const file = path.join(out, `${name}-failure.png`)
+  await page.screenshot({ path: file }).catch(() => {})
+  const state = await page.evaluate(() => {
+    const input = document.querySelector('[data-composer-input]')
+    return {
+      url: location.href,
+      composerValue: input === null ? null : (input.value ?? input.textContent ?? ''),
+      rows: [...document.querySelectorAll('[data-chat-flow-kind]')].map((row) => row.getAttribute('data-chat-flow-kind')),
+      dialogs: [...document.querySelectorAll('[role="dialog"]')]
+        .filter((node) => node.offsetParent !== null)
+        .map((node) => (node.innerText || '').replace(/\s+/g, ' ').slice(0, 160)),
+      skin: document.body.getAttribute('data-dsh-claude-style'),
+    }
+  }).catch((error) => ({ error: String(error) }))
+  const report = [
+    `scenario: ${name}`,
+    `problems (${session.problems.length}):`,
+    ...session.problems.slice(0, 20).map((line) => `  ${line}`),
+    `state: ${JSON.stringify(state, null, 2)}`,
+  ].join('\n')
+  fs.writeFileSync(path.join(out, `${name}-failure.txt`), `${report}\n`)
+  process.stdout.write(`  failure evidence: ${file}\n`)
 }
 
 /** Wait until the turn has settled: its tail row is there and nothing streams. */
@@ -528,6 +569,9 @@ async function runScenario(name, options) {
     for (const item of checks) process.stdout.write(`  ${item.ok ? '✓' : '✗'} ${item.name}${item.detail === '' ? '' : `  — ${item.detail}`}\n`)
     const failed = checks.filter((item) => !item.ok).length
     return { scenario: name, checks, failed, requested: mock.requests.length, trace: context.trace, notes: context.notes }
+  } catch (error) {
+    if (session !== undefined) await captureFailure(session, options.out, name).catch(() => {})
+    throw error
   } finally {
     if (session !== undefined) await session.close()
     host.stop()
