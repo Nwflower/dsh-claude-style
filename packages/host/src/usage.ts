@@ -309,7 +309,7 @@ function foldSession(events: UsageEvent[]): FoldedSession {
     const model = modelOf(event)
     const turn = event.data?.turn
     const step = event.data?.step
-    const previous: Settlement | null = last
+    const previous = last as Settlement | null
     const replacing = previous !== null && previous.turn === turn && previous.step === step
     if (replacing && previous !== null && bucketsEqual(previous.buckets, buckets)) continue
     if (replacing && previous !== null) bump(previous.day, previous.hour, previous.buckets, -1, previous.model)
@@ -382,8 +382,8 @@ function newestLog(dir: string): { path: string, size: number, mtimeMs: number }
  * Every stored session: id, newest log, and that log's fingerprint. A harness
  * home that has never stored a session has no sessions root yet.
  */
-function listSessionLogs(root: string): string[] {
-  const out: string[] = []
+function listSessionLogs(root: string): SessionLog[] {
+  const out: SessionLog[] = []
   if (!existsSync(root)) return out
   for (const project of readdirSync(root, { withFileTypes: true })) {
     if (!project.isDirectory()) continue
@@ -641,12 +641,13 @@ export function createUsage(ctx: DshContext) {
       // The query service throws these two to say a stored log is unreadable
       // or went away between the listing and the read: that session is
       // skipped and retried on the next pass (docs/decisions D12).
-      if (error?.code !== 'SESSION_QUERY_CORRUPT_SESSION' && error?.code !== 'SESSION_QUERY_SESSION_NOT_FOUND') throw error
-      ctx.logger?.warn?.(`dsh-claude-style: session ${sessionId} left out of the usage roll-up: ${error.message}`)
+      const failure = error as { code?: string, message?: string }
+      if (failure?.code !== 'SESSION_QUERY_CORRUPT_SESSION' && failure?.code !== 'SESSION_QUERY_SESSION_NOT_FOUND') throw error
+      ctx.logger?.warn?.(`dsh-claude-style: session ${sessionId} left out of the usage roll-up: ${failure.message}`)
       return null
     }
     const events = snapshot?.events
-    return Array.isArray(events) ? events : null
+    return Array.isArray(events) ? events as UsageEvent[] : null
   }
 
   /** Fold every session whose log changed since the cache was written. */
@@ -687,7 +688,7 @@ export function createUsage(ctx: DshContext) {
    * @param publish - receives an answer that is already worth serving while the
    *   rest of the pass is still running.
    */
-  async function compute(publish: (partial: UsageSummary) => void) {
+  async function compute(publish: (partial: UsageSummary) => void): Promise<UsageSummary> {
     const root = resolve(join(home(), 'sessions'))
     const logs = listSessionLogs(root)
     const ledgerDays = readLedger()
@@ -722,29 +723,29 @@ export function createUsage(ctx: DshContext) {
       }
     }
     if (logs.length === 0) return summarize(new Map(), 0, 'local', new Array(24).fill(0))
-    return await computeLocal(logs)
+    return await computeLocal(logs) as UsageSummary
   }
 
   function refresh(): Promise<UsageSummary | null> {
     if (disposed) return Promise.resolve(null)
     if (pending !== null) return pending
     state = state === null ? { value: null, computing: true } : { ...state, computing: true }
-    pending = compute((partial) => {
+    pending = compute((partial: UsageSummary) => {
       if (!disposed) state = { value: partial, computing: true }
     }).then(
-      (value) => {
+      (value): UsageSummary | null => {
         pending = null
         if (disposed) return value
         state = { value, computing: false }
         return value
       },
-      (error) => {
+      (error): UsageSummary | null => {
         pending = null
-        if (!disposed) state = { value: state?.value ?? null, computing: false, error: String(error?.message ?? error) }
+        if (!disposed) state = { value: state?.value ?? null, computing: false, error: String((error as { message?: string } | null)?.message ?? error) }
         return null
       },
     )
-    return pending
+    return pending ?? Promise.resolve(null)
   }
 
   return {

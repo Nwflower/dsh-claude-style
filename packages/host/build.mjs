@@ -11,11 +11,27 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
+import { execFileSync } from 'node:child_process'
 import esbuild from 'esbuild'
 
 const PACKAGE = path.resolve(import.meta.dirname)
 const ROOT = path.resolve(PACKAGE, '..', '..')
 const SOURCE = path.join(PACKAGE, 'src')
+
+/**
+ * Type-check the host half (its own tsconfig, strict).
+ *
+ * @returns the number of modules checked, for the build log.
+ */
+function checkTypes() {
+  const tsc = path.join(ROOT, 'node_modules', 'typescript', 'bin', 'tsc')
+  try {
+    execFileSync(process.execPath, [tsc, '-p', PACKAGE, '--pretty'], { stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf8' })
+  } catch (error) {
+    throw new Error(`build: tsc reports type errors in the host half:\n${error.stdout ?? ''}${error.stderr ?? ''}`)
+  }
+  return fs.readdirSync(SOURCE).filter((name) => name.endsWith('.ts')).length
+}
 
 /**
  * Transpile every module of the host half into `lib/host/`.
@@ -24,6 +40,7 @@ const SOURCE = path.join(PACKAGE, 'src')
  * @returns `{ files, bytes }` of what was written, for the build log.
  */
 export function buildHostHalf({ outDir = path.join(ROOT, 'lib') } = {}) {
+  checkTypes()
   const to = path.join(outDir, 'host')
   fs.rmSync(to, { recursive: true, force: true })
   fs.mkdirSync(to, { recursive: true })
