@@ -198,7 +198,7 @@ const CONSTANTS = (() => {
 })()
 
 /** The host contract's own modules: data and types, so they stay out of the bundle (D44). */
-const CONTRACT_FILES = ['contracts/table.ts', 'contracts/timing.ts', 'contracts/services.ts']
+const CONTRACT_FILES = ['contracts/table.ts', 'contracts/timing.ts', 'contracts/services.ts', 'contracts/usage.ts']
 /** The page states and check kinds src/contracts/table.ts records (D44, D45). */
 const PROBE_STATES = new Set(['any', 'hero', 'sending', 'streaming', 'conversation', 'menu', 'dark'])
 const PROBE_KINDS = new Set(['selector', 'attribute', 'property', 'global', 'value', 'rail-geometry', 'none'])

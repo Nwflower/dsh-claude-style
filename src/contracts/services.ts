@@ -52,6 +52,34 @@ export interface HostSubagentEntry {
   id: string
 }
 
+/** One row of the remote session list (`remote.session.list`): its projections, and when it moved. */
+export interface HostSessionRow {
+  updatedAt?: number
+  projections?: { values?: HostSessionProjectionValues }
+}
+
+/**
+ * The projection values a session row carries, as the home panel sums them:
+ * whether the session is blank, when it was last prompted, what it has spent,
+ * and which model it is on.
+ */
+export interface HostSessionProjectionValues {
+  sessionListMetadata?: { blank?: boolean, lastPromptAt?: number }
+  tokenUsage?: {
+    uncachedInputTokens?: number
+    outputTokens?: number
+    cacheReadTokens?: number
+    cacheWriteTokens?: number
+  }
+  modelSelection?: { next?: { model?: string }, lastUsed?: { model?: string } }
+}
+
+/** What the remote session list answers: whether it worked, and the rows. */
+export interface HostRemoteListAnswer {
+  ok?: boolean
+  value?: { items?: HostSessionRow[] }
+}
+
 /**
  * One event of a session's feed, of the four types the skin reads: a turn
  * ending, a tool result, and a compaction starting or finishing. A host that

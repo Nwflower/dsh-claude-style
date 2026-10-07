@@ -2,14 +2,16 @@ import { USAGE_ROUTE } from '../../constants'
 import { activeLocale, copyLabel } from '../../core/i18n'
 import { pad2 } from '../../shared/format'
 import { notifyAll } from '../../shared/notify'
-import type { HostContext, HostValue } from '../../core/host'
+import type { HostContext } from '../../core/host'
+import type { HostRemoteListAnswer, HostSessionRow } from '../../contracts/services'
+import type { UsageAnswer, UsageDay, UsageModel, UsageReport, UsageTotals } from '../../contracts/usage'
 
 /**
  * The roll-up store's snapshot: the route's last answer (the host half's
  * usage fold, host/usage.js), whether more is coming, and why not.
  */
 export interface HomeUsageState {
-  value: HostValue
+  value: UsageReport | null
   computing: boolean
   error: string | null
   loading: boolean
@@ -203,14 +205,14 @@ export function formatHomeHour(hour: number) {
  * buckets; the session list's roll-up can only carry one total per day, so it
  * is read when present.
  */
-export function homeDayTokens(day: HostValue): number {
+export function homeDayTokens(day: UsageDay | UsageTotals): number {
   if (day === null || day === undefined) return 0
   if (day.total !== undefined) return Number(day.total) || 0
   return (day.input || 0) + (day.output || 0) + (day.cacheRead || 0) + (day.cacheWrite || 0)
 }
 
 /** One model's bucket sum, for the ranked list's input and output columns. */
-export function homeModelTokens(entry: HostValue): number {
+export function homeModelTokens(entry: UsageModel): number {
   if (entry.tokens !== undefined) return Number(entry.tokens) || 0
   return (entry.input || 0) + (entry.output || 0) + (entry.cacheRead || 0) + (entry.cacheWrite || 0)
 }
@@ -259,7 +261,7 @@ export function createHomeUsage(ctx: HostContext) {
     if (!force && usage.value !== null && !usage.computing) return
     usage.loading = true
     const request = fetch(USAGE_ROUTE, { credentials: 'same-origin', headers: { accept: 'application/json' } })
-    request.then(response => response !== null && response.ok === true ? response.json() : null).then((body: HostValue) => {
+    request.then(response => response !== null && response.ok === true ? response.json() : null).then((body: UsageAnswer | null) => {
       usage.loading = false
       if (disposed) return
       if (body === null || body.ok !== true) {
@@ -302,7 +304,7 @@ export function createHomeUsage(ctx: HostContext) {
    * list has no per-day split, so this is coarser than the host half's fold,
    * which is exactly why the panel names the source it drew from.
    */
-  function summarizeSessionList(rows: HostValue[]): ListSummary {
+  function summarizeSessionList(rows: HostSessionRow[]): ListSummary {
     let tokens = 0
     const dayCount: Record<string, boolean> = {}
     const byDay: Record<string, number> = {}
@@ -366,7 +368,7 @@ export function createHomeUsage(ctx: HostContext) {
     const sessions = ctx.get('remote.session')
     if (sessions === undefined || sessions === null || typeof sessions.list !== 'function') return
     listLoading = true
-    sessions.list({}).then((result: HostValue) => {
+    sessions.list({}).then((result: HostRemoteListAnswer) => {
       listLoading = false
       if (disposed) return
       const items = result !== null && result !== undefined && result.ok === true
@@ -403,7 +405,7 @@ export function createHomeUsage(ctx: HostContext) {
  * back HOME_HEAT_WEEKS weeks from today. Days the roll-up does not cover are
  * cells with no heat, which is exactly what an empty cell means.
  */
-export function homeHeatGrid(days: HostValue[] | null | undefined) {
+export function homeHeatGrid(days: UsageDay[] | null | undefined) {
   const byDate: Record<string, number> = {}
   const callsByDate: Record<string, number> = {}
   const list = days === null || days === undefined ? [] : days
@@ -412,7 +414,8 @@ export function homeHeatGrid(days: HostValue[] | null | undefined) {
   let counted = true
   for (let i = 0; i < list.length; i++) {
     byDate[list[i].date] = homeDayTokens(list[i])
-    if (typeof list[i].calls === 'number') callsByDate[list[i].date] = list[i].calls
+    const calls = list[i].calls
+    if (typeof calls === 'number') callsByDate[list[i].date] = calls
     else counted = false
   }
   const today = new Date()
@@ -443,8 +446,9 @@ export interface HomeModel {
   cacheRead?: number
   cacheWrite?: number
   tokens: number
-  sessions: number
-  lastAt: number
+  /** The list's own count of sessions on this model; the fold's answer carries no such count. */
+  sessions?: number
+  lastAt?: number
 }
 
 /**
@@ -454,9 +458,9 @@ export interface HomeModel {
  * its answer carries each model's four buckets; the session list carries one
  * total per model and no split. Both are sorted by tokens.
  */
-export function homeModelList(value: HostValue, listed: ListSummary | null): HomeModel[] | null {
+export function homeModelList(value: UsageReport | null, listed: ListSummary | null): HomeModel[] | null {
   if (value !== null && Array.isArray(value.models) && value.models.length > 0) {
-    return value.models.map((entry: HostValue) => ({
+    return value.models.map((entry: UsageModel) => ({
       id: entry.id,
       input: entry.input || 0,
       output: entry.output || 0,
@@ -484,7 +488,7 @@ export function homeModelList(value: HostValue, listed: ListSummary | null): Hom
  * whose samples are all unattributed carries no models and draws no stack —
  * its share of the day simply stays out of the chart.
  */
-export function homeModelDays(value: HostValue, windowDays: number) {
+export function homeModelDays(value: UsageReport | null, windowDays: number) {
   if (value === null || !Array.isArray(value.days)) return null
   const span = windowDays > 0 && windowDays < HOME_CHART_DAYS ? windowDays : HOME_CHART_DAYS
   // The span is at least a day, so the window has a first day.
@@ -525,13 +529,13 @@ export function homePanelData(state: HomeUsageState, listed: ListSummary | null,
   let calls: number | null = null
   let sessions: number | null = null
   let activeDays: number | null = null
-  if (ready && start === null) {
+  if (ready && start === null && totals !== null) {
     // All time reads the fold's own totals; its session count is already the
     // distinct union over every day.
     tokens = homeDayTokens(totals)
-    calls = totals.calls
-    sessions = totals.sessions
-    activeDays = totals.activeDays
+    calls = totals.calls ?? null
+    sessions = totals.sessions ?? null
+    activeDays = totals.activeDays ?? null
   } else if (ready) {
     // A window sums the per-day buckets. Sessions union the per-day id lists
     // when the host half carries them on every day; an older host half has
