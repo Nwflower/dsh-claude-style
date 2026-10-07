@@ -54,6 +54,7 @@ Hard stops: stop the moment one triggers, without first judging whether it is wo
 ### CSS
 
 - Stylesheets are plain CSS: attributes are spelled out, and a brand mark is read as `var(--dsh-claude-image-<name>)`. The build checks scope, the composer gate, `:has()` placement, the token gates and that every `data-dsh-*` attribute a selector reads is written somewhere in the TypeScript, on the syntax tree (D51). Dark tokens are the base, light overrides go under `:not([data-ds-dark-theme])`. Light canvas `#FCFCFB`, dark `#141413`, accent ember orange `#D97757`; no pure white, pure black or cold grays.
+- `!important` only where the page needs it: over a host `!important`, an inline style or another skin rule. The lane's `importance` scenario drops each one on the real page and fails on any that changes nothing (D51); run it after writing one.
 - Token values and host aliases live in `packages/client/src/theme/tokens.json`; the token stylesheet and the token table in `docs/STYLE.md` are generated from it.
 - A feature never borrows another feature's class names; shared looks use the neutral shared classes (`dsh-claude-popover-card`, `dsh-claude-popover-item`, …).
 - Design tokens and shape rules are in `docs/STYLE.md`; read it before changing visuals.
@@ -113,6 +114,7 @@ node scripts/shoot.cjs --token <launch-token> --brand <claude|deepseek> --scene 
 node packages/testing/dsh-web.cjs                       # boot a scratch dsh web (`$DSH_HOME` under .debug/) with this checkout linked in, and print its URL
 node packages/testing/e2e.cjs                           # the end-to-end lane: scratch host plus a scripted model service, asserting on the real page
 node packages/testing/e2e.cjs --scenario <name>[,<name>…] [--headed]   # one scenario; the shots scenario writes its captures to the trace directory
+DSH_IMPORTANCE_REFERENCE=<old.css> node packages/testing/e2e.cjs --scenario importance   # also compare every page state with an earlier stylesheet, element by element (importance-sheet.css of an earlier run)
 node packages/testing/mock-llm.cjs                      # the scripted model service on its own, printing the base URL to configure a route with
 ```
 
