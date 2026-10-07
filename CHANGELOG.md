@@ -10,6 +10,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 - **插件主文件缩小一半**：浏览器每次启动都要读取并解析的插件主文件此前是 1.6 MB（1,619,502 字节），现在压缩后是 0.8 MB（816,520 字节）。
 - **小鲸鱼的帧图改为矢量取用**：Deepy 的 18 张帧图此前由浏览器在某个动作第一次出现时下载 PNG、在画布上重建成矢量、再存进 Cache API；现在构建期就把它们转成矢量，按内容哈希长期缓存。第一次播放不再有重建的停顿，观感与之前一致；随包携带的帧图从 426 KB 变为 658 KB（brotli 后）。
+- **浏览器里的侧栏品牌行**：非桌面外壳（浏览器页面）下侧栏品牌行是这一列的第一行，列顶部只有 6px 内边距，logo 贴着窗口上沿；品牌左侧也比「新会话」的加号圆片靠左 8px。现在浏览器页面给这一行加 8px 顶部边距，品牌带上这一行自己的 8px 左内边距，鲸鱼/星芒的左缘与加号圆片的左缘对齐。桌面外壳（Windows 标题栏、macOS）与折叠后的窄栏不变。
 
 ### 问题修复
 
@@ -26,6 +27,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 - **The plugin's main file is half the size**: the file the browser reads and parses on every start was 1.6 MB (1,619,502 bytes); minified it is now 0.8 MB (816,520 bytes).
 - **Deepy's frames are taken as vectors**: the whale's 18 sheets used to be downloaded as PNGs the first time an animation appeared, rebuilt into a vector on a canvas and kept in the Cache API; the build now produces the vectors and they are cached for good under their content hash. The first play no longer pauses to rebuild and the whale looks the same; the sheets that ship with the package go from 426 KB to 658 KB (brotli).
+- **The sidebar brand row in a browser**: without a desktop shell the brand row is the column's first row, so 6px of column padding was the whole inset and the logo sat against the window's top edge; the brand also started 8px left of the New session plus chip. A browser page now gives that row 8px of top margin and the brand the row's own 8px leading inset, so the whale or starburst's left edge lands on the chip's. The desktop shells (Windows titlebar, macOS) and the collapsed rail are unchanged.
 
 ### Bug Fixes
 

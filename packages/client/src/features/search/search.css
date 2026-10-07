@@ -77,6 +77,21 @@ body[data-dsh-claude-style] [data-dsh-claude-search-row] > [class*="_brand"]:has
 html[data-windows-titlebar] body[data-dsh-claude-style] [data-slot="sidebar"] [class*="_logoRow"] {
   margin-top: -6px !important;
 }
+/* Where no desktop shell owns the column's top — a browser page — the row is the
+   column's first row, and the root's own 6px was the whole inset: the brand sat
+   against the window's top edge. A step of the rows' own 6px, rounded to the
+   row's 8px inline padding, lifts it clear. The attribute is what the collapsed
+   rail lacks, so it keeps the host's 18px. */
+html:not([data-windows-titlebar]):not([data-platform="darwin"]) body[data-dsh-claude-style] [data-dsh-claude-search-row] {
+  margin-top: 8px !important;
+}
+/* The host gives its own logo row a 4px leading edge, and the brand another 4px
+   under the Windows caption row; the row's zeroed padding drops both, so the
+   brand takes the row's 8px and its mark's left edge lands on the new-session
+   chip's. */
+html:not([data-windows-titlebar]):not([data-platform="darwin"]) body[data-dsh-claude-style] [data-dsh-claude-search-row] > [class*="_brand"] {
+  padding-left: 8px !important;
+}
 /* On both desktop shells the host's toggle takes no cell in the row: macOS
    renders it inside its own 52px `_topStrip`, Windows fixes it into the caption
    overlay. The row keeps a single column there — a second, empty one would
