@@ -3,7 +3,7 @@
 - **状态**：部分实施
 - **分组**：构建与源码
 - **关联**：取代 D18 与 D8；D7、D10、D36、D38、D45、D48
-- **现状**：npm workspaces 已经建起来，`packages/contracts` 是第一个包：两半共用的契约（选择器与属性、条目表、时序假设、服务与值的形状、两半交换的载荷）都在里面，浏览器半边按包名引用，类型检查与打包共用 `tsconfig` 的 paths，构建与端到端通道按仓库根路径载入这些表；lint 的停止线覆盖 `packages/`。其余四个包还没搬：`src/` 仍是浏览器半边（`core/`、`shared/`、`theme/`、`features/<功能>/`），`host/` 是纯 JavaScript 的宿主半边，`scripts/` 里是构建与测试工具，`src/assets/` 与 `scripts/assets.mjs` 管资源，`lib/` 是构建产物
+- **现状**：npm workspaces 已经建起来，两个包就位。`packages/contracts`：两半共用的契约（选择器与属性、条目表、时序假设、服务与值的形状、两半交换的载荷），浏览器半边按包名引用，类型检查、打包与单元测试共用同一处路径配置，构建与端到端通道按仓库根路径载入这些表。`packages/testing`：临时宿主、脚本化模型服务与端到端通道三个工具，各自的仓库根与引用路径跟着改。lint 的停止线覆盖 `packages/`。其余三个包还没搬：`src/` 仍是浏览器半边（`core/`、`shared/`、`theme/`、`features/<功能>/`），`host/` 是纯 JavaScript 的宿主半边，`src/assets/` 与 `scripts/assets.mjs` 管资源，`lib/` 是构建产物
 
 ## 决定
 
@@ -12,7 +12,7 @@
   - `packages/host`：宿主半边，同样改用 TypeScript。
   - `packages/contracts`：两半共用的常量、路由名、偏好键与默认值（D10）、宿主契约（D44）。已搬。
   - `packages/assets`：资源与清单生成（D38）。
-  - `packages/testing`：模拟模型服务、轨迹记录工具（D45）。
+  - `packages/testing`：模拟模型服务、轨迹记录工具（D45）。已搬。
 - 搬动分批：一个包一次，每次搬完都过一遍构建、单元测试、相关冒烟与端到端通道；包的路径引用由脚本改，改完读整份差异。
 - 对外只发布一个插件（D7）。
 - 包内的停止线（文件行数、第 3 份重复）与类名规则由 lint 执行；lint 覆盖之前写在 AGENTS.md 里（D48）。
