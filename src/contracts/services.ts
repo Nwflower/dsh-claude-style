@@ -194,6 +194,30 @@ export interface HostModelReasoning {
   efforts: { id: string, name: string }[]
 }
 
+/**
+ * One block of a turn's timeline, as the tool rows read it: a running call's
+ * own block (`phase`, `name`, `argsRaw`) or the settled node the result
+ * brought back (`kind`, `call`, `meta`, `isError`, `error`, `content`). The
+ * members are optional because the two stages carry different ones.
+ */
+export interface HostChatBlock {
+  /** Set on a settled node; a running block carries none. */
+  kind?: string
+  phase?: string
+  name?: string
+  argsRaw?: string
+  /** The call a settled node reports: its tool name and the raw arguments. */
+  call?: { name: string, argsRaw: string }
+  /** Whether the call failed. */
+  isError?: boolean
+  /** The host's own error, when the call failed. */
+  error?: { code?: string, message?: string, name?: string }
+  /** What the tool reported, as the row's hunks read it. */
+  meta?: unknown
+  /** A settled result's blocks. */
+  content?: { type?: string, text?: string }[]
+}
+
 /** The live status map (`uiSession.sessionStatus`): how each session is doing right now, by id. */
 export interface HostSessionStatusSnapshot extends Iterable<[string, HostSessionStatus]> {
   get(id: string): HostSessionStatus | undefined

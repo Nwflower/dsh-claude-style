@@ -1,4 +1,5 @@
-import type { HostText, HostValue } from '../../core/host'
+import type { HostText } from '../../core/host'
+import type { HostChatBlock } from '../../contracts/services'
 
 /**
  * The file-change row's derivations, kept apart from its React component
@@ -86,9 +87,10 @@ export const CHAT_DIFF_MAX_LINES = 9
  * This row's call head: a settled call reads the one its result node brought
  * back, a running one its own arguments.
  */
-export function chatFileCallHead(block: HostValue): { name: string, argsRaw: string } | null {
-  if ('kind' in block) return block.call
-  return block.phase === 'start' ? { name: block.name, argsRaw: block.argsRaw } : null
+export function chatFileCallHead(block: HostChatBlock): { name: string, argsRaw: string } | null {
+  if ('kind' in block) return block.call ?? null
+  if (block.phase !== 'start') return null
+  return { name: block.name ?? '', argsRaw: block.argsRaw ?? '' }
 }
 
 /** Parse the raw argument JSON; null when it is cut off mid-stream or is not an object. */
@@ -173,19 +175,20 @@ export function chatFileIntendedHunks(name: string, args: CallArgs | null): File
  * Read the hunks the result metadata says were really applied.
  * @returns the hunks, `empty` when the metadata says nothing changed, or null when it is unusable.
  */
-export function chatFileAppliedHunks(meta: HostValue): FileHunk[] | 'empty' | null {
+export function chatFileAppliedHunks(meta: unknown): FileHunk[] | 'empty' | null {
   if (typeof meta !== 'object' || meta === null || Array.isArray(meta)) return null
-  const diffs = meta.diffs
+  // The tool's own metadata: it arrives as JSON, so every field is checked here.
+  const diffs = (meta as { diffs?: unknown }).diffs
   if (!Array.isArray(diffs)) return null
   if (diffs.length === 0) return 'empty'
   const hunks: FileHunk[] = []
   for (const hunk of diffs) {
     if (typeof hunk !== 'object' || hunk === null) return null
-    const { path, oldText, newText } = hunk
+    const { path, oldText, newText } = hunk as { path?: unknown, oldText?: unknown, newText?: unknown }
     if (typeof path !== 'string') return null
-    if (oldText !== null && typeof oldText !== 'string') return null
+    if (oldText !== null && oldText !== undefined && typeof oldText !== 'string') return null
     if (typeof newText !== 'string') return null
-    hunks.push({ path, oldText, newText })
+    hunks.push({ path, oldText: oldText ?? null, newText })
   }
   return hunks
 }
@@ -198,15 +201,15 @@ export function chatFileAppliedHunks(meta: HostValue): FileHunk[] | 'empty' | nu
  * fallback.
  * @returns the hunks to draw, or null when this row has none.
  */
-export function chatFileDiffHunks(block: HostValue, args: CallArgs | null) {
+export function chatFileDiffHunks(block: HostChatBlock, args: CallArgs | null) {
   if (!('kind' in block)) {
     if (block.phase === 'preparing') return null
-    return chatFileIntendedHunks(block.name, args)
+    return chatFileIntendedHunks(block.name ?? '', args)
   }
   if (block.isError) return null
   const applied = chatFileAppliedHunks(block.meta)
   if (applied !== null && applied !== 'empty') return applied
-  if (block.call === null) return null
+  if (block.call === undefined || block.call === null) return null
   return chatFileIntendedHunks(block.call.name, args)
 }
 
@@ -214,7 +217,7 @@ export function chatFileDiffHunks(block: HostValue, args: CallArgs | null) {
  * Everything this row renders from.
  * @returns the row's model.
  */
-export function chatFileRowModel(toolName: string, block: HostValue, args: CallArgs | null, cwd: string | undefined, home: string | undefined) {
+export function chatFileRowModel(toolName: string, block: HostChatBlock, args: CallArgs | null, cwd: string | undefined, home: string | undefined) {
   const done = 'kind' in block
   const head = chatFileCallHead(block)
   const state: FileRowState = !done
@@ -238,16 +241,16 @@ export function chatFileRowModel(toolName: string, block: HostValue, args: CallA
  * Flatten a settled result into display text: text blocks as they are, every
  * other block as JSON. A result with no content falls back to its error.
  */
-export function chatFileResultText(node: HostValue) {
+export function chatFileResultText(node: HostChatBlock) {
   const parts: string[] = []
-  for (const block of node.content) {
+  for (const block of node.content ?? []) {
     if (block.type === 'text' && typeof block.text === 'string') {
       parts.push(block.text)
       continue
     }
     parts.push(JSON.stringify(block, null, 2))
   }
-  if (parts.length === 0 && node.error !== undefined) parts.push(node.error.name + ': ' + node.error.code)
+  if (parts.length === 0 && node.error !== undefined) parts.push(`${node.error.name ?? ''}: ${node.error.code ?? ''}`)
   return parts.join('\n')
 }
 
