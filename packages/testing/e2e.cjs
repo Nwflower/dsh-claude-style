@@ -45,6 +45,7 @@ const HOST = {
   scroller: '[data-conversation-scroll]', // CONVERSATION_SCROLL_SELECTOR
   followingTail: '[data-chat-following-tail]', // FOLLOWING_TAIL_SELECTOR
   echo: '[data-submission-echo]', // SUBMISSION_ECHO_SELECTOR
+  running: '[data-chat-running]', // CHAT_RUNNING_SELECTOR
   accountTrigger: '[aria-haspopup="menu"][data-signed-out]', // ACCOUNT_TRIGGER_SELECTOR
 }
 
@@ -192,6 +193,10 @@ async function startTrace(page) {
       frame.rowFlying = last !== null && last.hasAttribute(host.flyingMark)
       frame.rowVisible = visible(last)
       frame.rowWords = words(last)
+      // The live turn's own status line at the end of the flow: the skin pins it
+      // while the reader is at the tail, so its screen position is the check.
+      const running = document.querySelector(host.running)
+      frame.running = running === null ? null : Math.round(running.getBoundingClientRect().top)
       if (ghost !== null && takeOff === null) {
         // The stand-in is a clone of the composer card appended to the page, so
         // the real card is the first one the stand-in does not contain.
@@ -423,6 +428,16 @@ const SCENARIOS = {
       // to the tail opening while nothing arrived.
       const backward = sampled.filter((frame, i) => i > 0 && frame.top < sampled[i - 1].top && frame.height >= sampled[i - 1].height)
       const escaped = sampled.filter((frame, i) => i > 0 && frame.gap > sampled[i - 1].gap + 1 && frame.height <= sampled[i - 1].height)
+      // The live turn's own status line, pinned by the skin while the reader is
+      // at the tail. Measured once the transcript is taller than the viewport
+      // (`clientHeight = height - gap - top`): with less than a screenful the row
+      // legitimately rides the content's end, and with the follow off the pin is
+      // not on the page.
+      const live = sampled.filter((frame) => frame.running !== null && frame.running !== undefined
+        && frame.following
+        && frame.height - frame.gap - frame.top < frame.height)
+      const tops = live.map((frame) => frame.running)
+      const spread = tops.length === 0 ? 0 : Math.max(...tops) - Math.min(...tops)
       return [
         check('逐帧采样真的在跑', sampled.length > 30, `frames=${sampled.length}`),
         check('回答在采样期间长出来', grown > 100, `grew ${grown}px during the trace`),
@@ -431,6 +446,7 @@ const SCENARIOS = {
         check('尾部没有自己跑远', escaped.length === 0, `escaped=${escaped.length}${escaped.length === 0 ? '' : ` at ${escaped.slice(0, 3).map((f) => f.t).join(',')}ms`}`),
         check('跟随期间尾部留在视野里', worst <= MAX_FOLLOW_GAP_PX, `maxGap=${worst}px of ${following.length} following frames`),
         check('落定后回到末尾', last !== undefined && last.gap <= 4, `lastGap=${last === undefined ? 'n/a' : last.gap}`),
+        check('满屏之后宿主的状态行不再随内容移动', live.length > 10 && spread <= 2, `overflowing frames with the row=${live.length}, top ${tops.length === 0 ? 'n/a' : `${Math.min(...tops)}..${Math.max(...tops)}`}`),
         check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),
       ]
     },

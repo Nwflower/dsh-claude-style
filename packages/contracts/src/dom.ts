@@ -48,6 +48,12 @@ export const FOLLOWING_TAIL_ATTRIBUTE = 'data-chat-following-tail'
 export const FOLLOWING_TAIL_SELECTOR = '[data-chat-following-tail]'
 /** How close to the end counts as reading the tail: the host's own threshold. */
 export const FOLLOW_THRESHOLD_PX = 25
+/**
+ * The live turn's status line — the host's "deep diving" row — mounted as the
+ * chat flow's last row while the session runs, with its own label and its own
+ * ticking clock.
+ */
+export const CHAT_RUNNING_SELECTOR = '[data-chat-running]'
 /** The composer area: a pointer or key inside it is the reader typing, not taking the scroll over. */
 export const COMPOSER_SELECTOR = '[data-composer-seat]'
 /** The composer's editable surface (contenteditable); the caret motion is drawn for it. */
