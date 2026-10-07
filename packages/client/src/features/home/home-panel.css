@@ -27,11 +27,11 @@ body[data-dsh-claude-style][data-dsh-claude-home-hero] [class*="_composerStack"]
      studio column has to fill the seat for the card to reach the bottom edge.
      Naming the stack by both its classes matches that gated rule's weight, and
      this sheet comes after it, so the studio column wins. */
-  flex: 1 1 auto !important;
+  flex: 1 1 auto;
   box-sizing: border-box;
   width: 100%;
   max-width: 720px;
-  height: auto !important;
+  height: auto;
   min-height: 0;
   margin-inline: auto;
   gap: 10px;

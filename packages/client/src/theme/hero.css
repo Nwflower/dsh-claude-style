@@ -9,7 +9,7 @@ body[data-dsh-claude-style][data-dsh-claude-brand="claude"] [class*="fishHitbox"
 }
 
 body[data-dsh-claude-style][data-dsh-claude-brand="claude"] [class*="fishHitbox"] svg {
-  display: none !important;
+  display: none;
 }
 
 body[data-dsh-claude-style][data-dsh-claude-brand="claude"] [class*="fishHitbox"]::before {
@@ -34,7 +34,7 @@ body[data-dsh-claude-style][data-dsh-claude-brand="deepseek"] [class*="fishHitbo
 
 /* The preview badge has no Claude Code counterpart. */
 body[data-dsh-claude-style] [class*="previewBadge"] {
-  display: none !important;
+  display: none;
 }
 
 /* Headline: the shipped 26px/32px editorial display, then 15% back off that

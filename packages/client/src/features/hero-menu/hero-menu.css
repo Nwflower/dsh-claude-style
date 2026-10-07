@@ -15,9 +15,9 @@
    stable piece of the class — never the bare local name. */
 
 body[data-dsh-claude-style] [data-dsh-claude-hero-menu] {
-  min-width: 248px !important;
-  max-width: min(360px, calc(100vw - 16px)) !important;
-  max-height: min(440px, calc(100vh - 96px)) !important;
+  min-width: 248px;
+  max-width: min(360px, calc(100vw - 16px));
+  max-height: min(440px, calc(100vh - 96px));
   /* The host re-places this card from its own geometry on every frame while it
      is open, writing plain inline `left` / `top`; an inline write from the
      browser half would survive only until that frame. The position travels in
@@ -26,20 +26,20 @@ body[data-dsh-claude-style] [data-dsh-claude-hero-menu] {
      holds the position the stamping pass gave it. */
   left: var(--dsh-claude-hero-menu-x, 0px) !important;
   top: var(--dsh-claude-hero-menu-y, 0px) !important;
-  padding: 6px !important;
-  gap: 6px !important;
-  border: 1px solid var(--dsw-alias-border-l1, #e8e6dc) !important;
-  border-radius: 12px !important;
-  background: var(--dsw-alias-bg-overlay, #ffffff) !important;
-  box-shadow: 0 8px 30px rgba(20, 20, 19, 0.12), 0 2px 8px rgba(20, 20, 19, 0.06) !important;
-  z-index: 99999 !important;
-  font-family: var(--dsw-font-family) !important;
+  padding: 6px;
+  gap: 6px;
+  border: 1px solid var(--dsw-alias-border-l1, #e8e6dc);
+  border-radius: 12px;
+  background: var(--dsw-alias-bg-overlay, #ffffff);
+  box-shadow: 0 8px 30px rgba(20, 20, 19, 0.12), 0 2px 8px rgba(20, 20, 19, 0.06);
+  z-index: 99999;
+  font-family: var(--dsw-font-family);
   /* The host mounts the card instead of toggling a `data-open` attribute, so
      the skin's open transition becomes a one-shot animation with the same
      values. Its origin is the corner nearest the trigger: the card opens above
      the trigger's right edge, as the skin's composer pickers do. */
-  transform-origin: bottom right !important;
-  animation: dsh-claude-hero-menu-in 0.15s ease !important;
+  transform-origin: bottom right;
+  animation: dsh-claude-hero-menu-in 0.15s ease;
 }
 @keyframes dsh-claude-hero-menu-in {
   from {
@@ -59,14 +59,14 @@ body[data-dsh-claude-style][data-ds-dark-theme] [data-dsh-claude-hero-menu] {
 
 /* One row height, one radius, one hover plate for both pickers. */
 body[data-dsh-claude-style] [data-dsh-claude-hero-menu] [class*="_itemWrap_"] > [role="menuitem"] {
-  min-height: 32px !important;
-  padding: 2px 7px !important;
-  gap: 8px !important;
-  border-radius: 6px !important;
-  font-size: 13px !important;
-  line-height: 20px !important;
-  color: var(--dsw-alias-label-primary, #141413) !important;
-  transition: background-color 0.12s ease !important;
+  min-height: 32px;
+  padding: 2px 7px;
+  gap: 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--dsw-alias-label-primary, #141413);
+  transition: background-color 0.12s ease;
 }
 body[data-dsh-claude-style] [data-dsh-claude-hero-menu] [class*="_itemWrap_"] > [role="menuitem"]:hover:not(:disabled) {
   background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
@@ -76,35 +76,35 @@ body[data-dsh-claude-style] [data-dsh-claude-hero-menu] [class*="_itemWrap_"] > 
   cursor: not-allowed !important;
 }
 body[data-dsh-claude-style] [data-dsh-claude-hero-menu] [class*="_itemIcon_"] {
-  width: 16px !important;
-  height: 16px !important;
-  color: var(--dsw-alias-label-secondary, #787672) !important;
+  width: 16px;
+  height: 16px;
+  color: var(--dsw-alias-label-secondary, #787672);
 }
 body[data-dsh-claude-style] [data-dsh-claude-hero-menu] [class*="_itemIcon_"] svg {
-  width: 16px !important;
-  height: 16px !important;
+  width: 16px;
+  height: 16px;
 }
 body[data-dsh-claude-style] [data-dsh-claude-hero-menu] [class*="_itemLabel_"] {
-  font-size: 13px !important;
-  line-height: 20px !important;
+  font-size: 13px;
+  line-height: 20px;
 }
 /* The current row is marked by the accent, as in the model picker. */
 body[data-dsh-claude-style] [data-dsh-claude-hero-menu] [class*="_check_"] {
-  flex: none !important;
-  color: var(--dsw-alias-brand-primary, #d97757) !important;
+  flex: none;
+  color: var(--dsw-alias-brand-primary, #d97757);
 }
 
 /* The preset rows are two lines (name + description), so the height above is a
    floor rather than a cap. */
 body[data-dsh-claude-style] [data-dsh-claude-hero-menu] [class*="_itemName"] {
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  line-height: 16px !important;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 16px;
 }
 body[data-dsh-claude-style] [data-dsh-claude-hero-menu] [class*="_itemDesc"] {
-  font-size: 11px !important;
-  line-height: 14px !important;
-  color: var(--dsw-alias-label-tertiary, #8f8d84) !important;
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--dsw-alias-label-tertiary, #8f8d84);
 }
 
 /* Heading and separator rows. */
@@ -126,9 +126,9 @@ body[data-dsh-claude-style] [data-dsh-claude-hero-menu] [role="separator"] {
 /* The pinned footer ("添加工作区…") keeps the host's spacing with the skin's
    hairline. */
 body[data-dsh-claude-style] [data-dsh-claude-hero-menu] > [class*="_footer_"] {
-  margin-top: 4px !important;
-  padding-top: 4px !important;
-  border-top: 1px solid var(--dsw-alias-border-l1, #e8e6dc) !important;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--dsw-alias-border-l1, #e8e6dc);
 }
 
 /* The workspace picker is Claude Code's folder menu: a narrow card of plain
@@ -137,25 +137,25 @@ body[data-dsh-claude-style] [data-dsh-claude-hero-menu] > [class*="_footer_"] {
    with it; the rows sit closer together than the preset card's two-line rows
    need to. The current folder keeps the accent check. */
 body[data-dsh-claude-style] [data-dsh-claude-hero-menu="workspace"] {
-  min-width: 180px !important;
-  max-width: min(280px, calc(100vw - 16px)) !important;
-  padding: 4px !important;
-  gap: 4px !important;
+  min-width: 180px;
+  max-width: min(280px, calc(100vw - 16px));
+  padding: 4px;
+  gap: 4px;
 }
 body[data-dsh-claude-style] [data-dsh-claude-hero-menu="workspace"] [class*="_itemWrap_"] > [role="menuitem"] {
-  min-height: 26px !important;
-  padding: 3px 10px !important;
+  min-height: 26px;
+  padding: 3px 10px;
 }
 body[data-dsh-claude-style] [data-dsh-claude-hero-menu="workspace"] [class*="_itemIcon_"] {
-  display: none !important;
+  display: none;
 }
 body[data-dsh-claude-style] [data-dsh-claude-hero-menu="workspace"] [class*="_check_"] {
-  width: 14px !important;
-  height: 14px !important;
+  width: 14px;
+  height: 14px;
 }
 body[data-dsh-claude-style] [data-dsh-claude-hero-menu="workspace"] > [class*="_footer_"] {
-  margin-top: 0 !important;
-  padding-top: 4px !important;
+  margin-top: 0;
+  padding-top: 4px;
 }
 
 /* The card's padding is the skin's 6px rather than the host's 4px, so a side

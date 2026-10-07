@@ -2,33 +2,33 @@
    "follow the host" none of them apply. */
 body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-ds-dark-theme]) {
   color: var(--dsw-alias-label-primary);
-  background-color: var(--dsh-claude-canvas) !important;
+  background-color: var(--dsh-claude-canvas);
 }
 
 /* The document element sits above the body and cannot read its tokens, so each
    palette states its canvas here. */
 html:has(body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-ds-dark-theme])) {
-  background-color: #fcfcfb !important;
+  background-color: #fcfcfb;
 }
 
 html:has(body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-brand="deepseek"]:not([data-ds-dark-theme])) {
-  background-color: #fafbff !important;
+  background-color: #fafbff;
 }
 body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-ds-dark-theme]) #root {
-  background-color: var(--dsh-claude-canvas) !important;
+  background-color: var(--dsh-claude-canvas);
 }
 
 body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-ds-dark-theme]) :is([data-pane="sidebar"], [class*="sidebarCol"], .dshDesktopSidebarSurface) {
-  --dsw-specific-sidebar-fill: var(--dsh-claude-sidebar-canvas) !important;
-  background: var(--dsh-claude-sidebar-canvas) !important;
+  --dsw-specific-sidebar-fill: var(--dsh-claude-sidebar-canvas);
+  background: var(--dsh-claude-sidebar-canvas);
 }
 
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) :is([data-pane="sidebar"], [class*="sidebarCol"], .dshDesktopSidebarSurface) {
-  border-right: 1px solid var(--dsw-alias-border-l1) !important;
+  border-right: 1px solid var(--dsw-alias-border-l1);
 }
 
 body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-ds-dark-theme]) :is([data-pane="conversation"], [class*="centerCol"]) {
-  background: var(--dsh-claude-canvas) !important;
+  background: var(--dsh-claude-canvas);
 }
 
 /* The light half of the anchor ink in theme/chrome.css; both leave a host button

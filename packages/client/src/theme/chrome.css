@@ -2,12 +2,12 @@
 /* Under the Claude palette the skin paints the columns; under "follow the
    host" they take the host's own tokens and only the hairline stays. */
 body[data-dsh-claude-style][data-dsh-claude-palette="claude"] :is([data-pane="sidebar"], [class*="sidebarCol"], .dshDesktopSidebarSurface) {
-  --dsw-specific-sidebar-fill: var(--dsh-claude-sidebar-canvas) !important;
-  background: var(--dsh-claude-sidebar-canvas) !important;
+  --dsw-specific-sidebar-fill: var(--dsh-claude-sidebar-canvas);
+  background: var(--dsh-claude-sidebar-canvas);
 }
 
 body[data-dsh-claude-style] :is([data-pane="sidebar"], [class*="sidebarCol"], .dshDesktopSidebarSurface) {
-  border-right: 1px solid var(--dsw-alias-border-l1) !important;
+  border-right: 1px solid var(--dsw-alias-border-l1);
 }
 
 body[data-dsh-claude-style][data-dsh-claude-palette="claude"] :is([data-pane="conversation"], [class*="centerCol"]) {
@@ -95,17 +95,17 @@ body[data-dsh-claude-style] [data-slot="sidebar.settings"] > :is(button, [role="
    cards carry the same substring and draw their own box. */
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[class*="brand"]:not([class*="dsh-claude"]),
 body[data-dsh-claude-style][data-ds-dark-theme] button[class*="brand"]:not([class*="dsh-claude"]) {
-  background: transparent !important;
+  background: transparent;
   border: none;
   border-radius: 0;
 }
 
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[class*="brand"]:not([class*="dsh-claude"]) {
-  color: var(--dsh-claude-logo-ink) !important;
+  color: var(--dsh-claude-logo-ink);
 }
 
 body[data-dsh-claude-style][data-ds-dark-theme] button[class*="brand"]:not([class*="dsh-claude"]) {
-  color: var(--dsh-claude-logo-ink) !important;
+  color: var(--dsh-claude-logo-ink);
 }
 
 /* Host badges and tags: full pill, each named by its own CSS-module class (D3),
@@ -212,7 +212,7 @@ body[data-dsh-claude-style][data-ds-dark-theme] :is(button, input, textarea, sel
    stays under ui-dockkit's dock layers (10, 40 fullscreen). */
 body[data-dsh-claude-style] [data-slot="conversation.session.header.actions"] > * {
   position: relative;
-  z-index: 9 !important;
+  z-index: 9;
 }
 
 /* The queue dock's spacing is the host's to own: its own rule cancels the stack
@@ -223,24 +223,24 @@ body[data-dsh-claude-style] [data-slot="conversation.session.header.actions"] > 
    the tabs; the transcript's top fade below takes over that job. Scoped with
    :has() to the header that owns the tab strip, so no other header loses its edge. */
 body[data-dsh-claude-style] [class*="_header"]:has([class*="_tabs"]) {
-  border-bottom-color: transparent !important;
+  border-bottom-color: transparent;
   /* The host's header rule sets no position, so it is static and an absolutely
      positioned band would anchor to a far ancestor. The stickiness lives on the
      header's parent, so relative is safe here. */
-  position: relative !important;
-  overflow: visible !important;
+  position: relative;
+  overflow: visible;
 }
 
 /* The transcript's top fade: the header already covers the transcript, so the
    band hangs off the header's own bottom edge and follows it. One knob,
    --dsh-transcript-fade-h, matching the composer's own fade. */
 body[data-dsh-claude-style] [class*="_header"]:has([class*="_tabs"])::after {
-  content: "" !important;
-  position: absolute !important;
-  left: 0 !important;
-  right: 0 !important;
-  top: 100% !important;
-  height: var(--dsh-transcript-fade-h, 28px) !important;
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: var(--dsh-transcript-fade-h, 28px);
   /* Four stops: a straight ramp reads as a haze band, and color-mix keeps the
      paint theme-aware. */
   background: linear-gradient(
@@ -249,9 +249,9 @@ body[data-dsh-claude-style] [class*="_header"]:has([class*="_tabs"])::after {
     color-mix(in srgb, var(--dsw-alias-bg-base, #FCFCFB) 82%, transparent) 32%,
     color-mix(in srgb, var(--dsw-alias-bg-base, #FCFCFB) 40%, transparent) 68%,
     transparent 100%
-  ) !important;
-  pointer-events: none !important;
-  z-index: 1 !important;
+  );
+  pointer-events: none;
+  z-index: 1;
 }
 
 /* ---------- the animation choice: reduced motion ---------- */

@@ -54,7 +54,7 @@ body[data-dsh-claude-style][data-dsh-claude-brand="claude"] [class*="brandIdenti
    collapsed rail's whale sits in the sidebar toggle, so the art is inked where it
    sits. */
 body[data-dsh-claude-style][data-dsh-claude-brand="deepseek"] :is([class*="brandIdentity"], [class*="railMark"]) {
-  color: var(--dsh-claude-logo-ink) !important;
+  color: var(--dsh-claude-logo-ink);
 }
 
 /* ---------- Claude Code layout: new session button ---------- */
@@ -65,35 +65,35 @@ body[data-dsh-claude-style][data-dsh-claude-brand="deepseek"] :is([class*="brand
    carries the collapsed marker and holds the sidebar column as a direct child —
    `body:not(:has(collapsed))` made every DOM change re-match the document. */
 body[data-dsh-claude-style] [class*="_frame"]:not([data-sidebar-collapsed]) > [class*="_sidebarCol"] button[class*="newSession"] {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  text-align: left !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
-  height: 28px !important;
-  line-height: 28px !important;
-  padding: 0 8px !important;
-  margin: 0 0 6px 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  width: 100%;
+  box-sizing: border-box;
+  height: 28px;
+  line-height: 28px;
+  padding: 0 8px;
+  margin: 0 0 6px 0;
   border: none !important;
-  border-radius: 6px !important;
-  background: transparent !important;
-  color: var(--dsw-alias-label-primary, #141413) !important;
-  font-family: var(--dsw-font-family) !important;
-  font-size: 13px !important;
-  font-weight: 500 !important;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-primary, #141413);
+  font-family: var(--dsw-font-family);
+  font-size: 13px;
+  font-weight: 500;
   /* Explicit, so the label's x does not depend on the host's gap: both sidebar
      rows place their text at padding + 20px icon box + 6px. */
-  gap: 6px !important;
-  cursor: pointer !important;
-  box-shadow: none !important;
-  transition: background-color 0.12s ease !important;
+  gap: 6px;
+  cursor: pointer;
+  box-shadow: none;
+  transition: background-color 0.12s ease;
 }
 body[data-dsh-claude-style] [class*="_frame"]:not([data-sidebar-collapsed]) > [class*="_sidebarCol"] button[class*="newSession"]:hover {
-  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
 }
 body[data-dsh-claude-style][data-ds-dark-theme] [class*="_frame"]:not([data-sidebar-collapsed]) > [class*="_sidebarCol"] button[class*="newSession"] {
-  color: var(--dsh-claude-ink-strong) !important;
+  color: var(--dsh-claude-ink-strong);
 }
 body[data-dsh-claude-style][data-ds-dark-theme] [class*="_frame"]:not([data-sidebar-collapsed]) > [class*="_sidebarCol"] button[class*="newSession"]:hover {
   background: rgba(255, 255, 255, 0.08) !important;
@@ -104,39 +104,39 @@ body[data-dsh-claude-style] [data-sidebar-collapsed] button[class*="newSession"]
   background: transparent !important;
 }
 body[data-dsh-claude-style] button[class*="newSession"] svg {
-  display: none !important;
+  display: none;
 }
 /* The expanded row centers its label inside a flex-1 mask and parks the shortcut
    at the far right; Claude's row reads left to right from the chip. */
 body[data-dsh-claude-style] button[class*="newSession"] [class*="newSessionContent"] {
-  justify-content: flex-start !important;
+  justify-content: flex-start;
 }
 /* The chip paints BOTH the circular fill and the plus. A mask cannot: it clips the
    element to the glyph and takes the fill with it, so the plus is a background
    image, which costs the currentColor adaptivity and buys a theme pair below. */
 body[data-dsh-claude-style] button[class*="newSession"]::before {
   content: "";
-  display: inline-block !important;
-  width: 20px !important;
-  height: 20px !important;
-  margin-right: 0 !important;
-  flex: none !important;
-  border-radius: 50% !important;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  margin-right: 0;
+  flex: none;
+  border-radius: 50%;
   /* The page inherits `corner-shape: superellipse(1.5)` from <html>, which turns a
      50% radius into a pebble; the host's own spinner/dot/toggle rules say round
      for the same reason. */
-  corner-shape: round !important;
-  background-color: rgba(0, 0, 0, 0.10) !important;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23141413' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='6' x2='12' y2='18'></line><line x1='6' y1='12' x2='18' y2='12'></line></svg>") !important;
-  background-repeat: no-repeat !important;
-  background-position: center !important;
-  background-size: 12px 12px !important;
-  -webkit-mask: none !important;
-  mask: none !important;
+  corner-shape: round;
+  background-color: rgba(0, 0, 0, 0.10);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23141413' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='6' x2='12' y2='18'></line><line x1='6' y1='12' x2='18' y2='12'></line></svg>");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 12px 12px;
+  -webkit-mask: none;
+  mask: none;
 }
 body[data-dsh-claude-style][data-ds-dark-theme] button[class*="newSession"]::before {
-  background-color: rgba(255, 255, 255, 0.14) !important;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23faf9f5' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='6' x2='12' y2='18'></line><line x1='6' y1='12' x2='18' y2='12'></line></svg>") !important;
+  background-color: rgba(255, 255, 255, 0.14);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23faf9f5' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='6' x2='12' y2='18'></line><line x1='6' y1='12' x2='18' y2='12'></line></svg>");
 }
 
 /* ---------- the sidebar's panel rows (插件 + plugin entries) ---------- */
@@ -145,49 +145,49 @@ body[data-dsh-claude-style][data-ds-dark-theme] button[class*="newSession"]::bef
    new-session metrics — including the 20px icon box, so both labels start at the
    same x. */
 body[data-dsh-claude-style] nav[class*="panelList"] {
-  gap: 0 !important;
+  gap: 0;
 }
 body[data-dsh-claude-style] button[class*="panelRow"] {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  text-align: left !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
-  height: 28px !important;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  width: 100%;
+  box-sizing: border-box;
+  height: 28px;
   /* The host floors this row at 36px with a min-height, which `height` alone
      cannot beat. */
-  min-height: 28px !important;
-  line-height: 28px !important;
-  padding: 0 8px !important;
-  margin: 0 0 6px 0 !important;
+  min-height: 28px;
+  line-height: 28px;
+  padding: 0 8px;
+  margin: 0 0 6px 0;
   border: none !important;
-  border-radius: 6px !important;
-  background: transparent !important;
-  color: var(--dsw-alias-label-primary, #141413) !important;
-  font-family: var(--dsw-font-family) !important;
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  gap: 6px !important;
-  cursor: pointer !important;
-  box-shadow: none !important;
-  transition: background-color 0.12s ease !important;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-primary, #141413);
+  font-family: var(--dsw-font-family);
+  font-size: 13px;
+  font-weight: 500;
+  gap: 6px;
+  cursor: pointer;
+  box-shadow: none;
+  transition: background-color 0.12s ease;
 }
 body[data-dsh-claude-style] button[class*="panelRow"]:hover {
-  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
 }
 body[data-dsh-claude-style][data-ds-dark-theme] button[class*="panelRow"] {
-  color: var(--dsh-claude-ink-strong) !important;
+  color: var(--dsh-claude-ink-strong);
 }
 body[data-dsh-claude-style][data-ds-dark-theme] button[class*="panelRow"]:hover {
   background: rgba(255, 255, 255, 0.08) !important;
 }
 /* A 13px glyph in a 20px box: the box the new-session chip occupies. */
 body[data-dsh-claude-style] button[class*="panelRow"] svg {
-  width: 13px !important;
-  height: 13px !important;
-  margin: 0 3.5px !important;
-  flex: none !important;
+  width: 13px;
+  height: 13px;
+  margin: 0 3.5px;
+  flex: none;
 }
 
 /* ---------- sidebar rows: the icon turns a quarter on hover ---------- */
@@ -195,80 +195,80 @@ body[data-dsh-claude-style] button[class*="panelRow"] svg {
    transition turns it back when the pointer leaves. */
 body[data-dsh-claude-style] button[class*="newSession"]::before,
 body[data-dsh-claude-style] button[class*="panelRow"] svg {
-  transition: transform 0.25s ease !important;
-  transform-origin: center !important;
+  transition: transform 0.25s ease;
+  transform-origin: center;
 }
 body[data-dsh-claude-style] button[class*="newSession"]:hover::before,
 body[data-dsh-claude-style] button[class*="panelRow"]:hover svg {
-  transform: rotate(90deg) !important;
+  transform: rotate(90deg);
 }
 
 /* ---------- Claude Code layout: workspace & session sidebar ---------- */
 /* Typography: Anthropic Sans and compact sizes */
 body[data-dsh-claude-style] :is([data-pane="sidebar"], [class*="sidebarCol"], [class*="treeBody"], [role="tree"]) :is([class*="title"], [class*="projectText"], [class*="sectionLabel"], [class*="sessionRow"], [class*="projectRow"], [class*="_time"]) {
-  font-family: var(--dsw-font-family) !important;
+  font-family: var(--dsw-font-family);
 }
 body[data-dsh-claude-style] [class*="projectRow"] [class*="title"] {
-  font-size: 13px !important;
-  line-height: 18px !important;
-  letter-spacing: normal !important;
+  font-size: 13px;
+  line-height: 18px;
+  letter-spacing: normal;
 }
 body[data-dsh-claude-style] [class*="sessionRow"] [class*="title"] {
-  font-size: 13px !important;
-  line-height: 18px !important;
-  letter-spacing: normal !important;
-  color: var(--dsw-alias-label-secondary, #787672) !important;
-  transition: color 0.12s ease !important;
+  font-size: 13px;
+  line-height: 18px;
+  letter-spacing: normal;
+  color: var(--dsw-alias-label-secondary, #787672);
+  transition: color 0.12s ease;
 }
 body[data-dsh-claude-style][data-ds-dark-theme] [class*="sessionRow"] [class*="title"] {
-  color: var(--dsh-claude-session-ink) !important;
+  color: var(--dsh-claude-session-ink);
 }
 body[data-dsh-claude-style] [class*="sessionRow"]:is(:hover, [class*="_selected"], [class*="_active"], [class*="menuOpen"], [aria-selected="true"], [data-selected="true"]) [class*="title"] {
-  color: var(--dsw-alias-label-primary, #141413) !important;
+  color: var(--dsw-alias-label-primary, #141413);
 }
 body[data-dsh-claude-style][data-ds-dark-theme] [class*="sessionRow"]:is(:hover, [class*="_selected"], [class*="_active"], [class*="menuOpen"], [aria-selected="true"], [data-selected="true"]) [class*="title"] {
-  color: var(--dsh-claude-ink-strong) !important;
+  color: var(--dsh-claude-ink-strong);
 }
 body[data-dsh-claude-style] [class*="sessionRow"] [class*="_time"] {
-  font-size: 11px !important;
-  line-height: 16px !important;
+  font-size: 11px;
+  line-height: 16px;
 }
 body[data-dsh-claude-style] [class*="sectionLabel"] {
-  font-size: 12px !important;
-  line-height: 16px !important;
+  font-size: 12px;
+  line-height: 16px;
 }
 
 /* Compact scale: shrunken heights, margins and paddings */
 body[data-dsh-claude-style] [class*="projectRow"] {
-  height: 28px !important;
-  min-height: 28px !important;
-  padding: 0 6px !important;
-  gap: 4px !important;
-  border-radius: 6px !important;
+  height: 28px;
+  min-height: 28px;
+  padding: 0 6px;
+  gap: 4px;
+  border-radius: 6px;
 }
 body[data-dsh-claude-style] [class*="sessionRow"] {
-  height: 28px !important;
-  min-height: 28px !important;
-  padding: 0 6px !important;
-  gap: 0 !important;
-  border-radius: 6px !important;
+  height: 28px;
+  min-height: 28px;
+  padding: 0 6px;
+  gap: 0;
+  border-radius: 6px;
 }
 body[data-dsh-claude-style] [class*="sessionRow"] [class*="title"] {
-  margin: 0 4px !important;
+  margin: 0 4px;
 }
 body[data-dsh-claude-style] [class*="groupSection"] > * + * {
-  margin-top: 1px !important;
+  margin-top: 1px;
 }
 body[data-dsh-claude-style] [class*="groupSection"] + [class*="groupSection"] {
   margin-top: 6px !important;
 }
 body[data-dsh-claude-style] [class*="projectRow"] [class*="rowActions"],
 body[data-dsh-claude-style] [class*="sessionRow"] [class*="rowActions"] {
-  gap: 6px !important;
+  gap: 6px;
 }
 body[data-dsh-claude-style] :is([class*="projectRow"], [class*="sessionRow"]) [class*="iconButton"] {
-  width: 16px !important;
-  height: 16px !important;
+  width: 16px;
+  height: 16px;
 }
 
 /* Hover and active plates belong to session rows alone: a folder row is a heading,
@@ -277,39 +277,39 @@ body[data-dsh-claude-style] :is([class*="projectRow"], [class*="sessionRow"]) [c
 body[data-dsh-claude-style] [class*="sessionRow"]:hover,
 body[data-dsh-claude-style] [class*="sessionRow"][class*="_selected"],
 body[data-dsh-claude-style] [class*="sessionRow"][class*="menuOpen"] {
-  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
 }
 
 body[data-dsh-claude-style] [class*="projectRow"],
 body[data-dsh-claude-style] [class*="projectRow"]:hover,
 body[data-dsh-claude-style] [class*="projectRow"][class*="menuOpen"],
 body[data-dsh-claude-style] [class*="projectRow"][class*="_selected"] {
-  background: transparent !important;
+  background: transparent;
 }
 
 /* Folder header: muted label, no folder icon, dropdown arrow instead */
 body[data-dsh-claude-style] [class*="projectRow"] [class*="title"] {
-  color: var(--dsw-alias-label-secondary, #787672) !important;
-  font-weight: 500 !important;
+  color: var(--dsw-alias-label-secondary, #787672);
+  font-weight: 500;
 }
 body[data-dsh-claude-style] [class*="projectRow"]:hover [class*="title"] {
-  color: var(--dsw-alias-label-primary, #141413) !important;
+  color: var(--dsw-alias-label-primary, #141413);
 }
 body[data-dsh-claude-style] [class*="projectRow"] [class*="folderActive"] {
-  color: inherit !important;
+  color: inherit;
 }
 body[data-dsh-claude-style] [class*="projectRow"] [class*="_folder"] {
-  display: none !important;
+  display: none;
 }
 /* Title left, dropdown arrow beside it */
 body[data-dsh-claude-style] [class*="projectRow"] {
-  display: flex !important;
-  align-items: center !important;
+  display: flex;
+  align-items: center;
 }
 body[data-dsh-claude-style] [class*="projectRow"] [class*="projectText"] {
-  order: 1 !important;
-  flex: 0 0 auto !important;
-  margin-right: 2px !important;
+  order: 1;
+  flex: 0 0 auto;
+  margin-right: 2px;
 }
 /* The chevron is a reveal-on-hover affordance. The shipped CSS gates it on
    .projectRow:hover alone, which drops it the moment the pointer moves down into
@@ -317,24 +317,24 @@ body[data-dsh-claude-style] [class*="projectRow"] [class*="projectText"] {
    keyed on the section's own :hover rather than `:has(row:hover)`, which made
    every DOM change re-match the document. */
 body[data-dsh-claude-style] [class*="projectRow"] [class*="_chevron"] {
-  order: 2 !important;
-  display: none !important;
-  width: 14px !important;
-  height: 14px !important;
-  align-items: center !important;
-  justify-content: center !important;
-  color: var(--dsw-alias-label-secondary, #787672) !important;
+  order: 2;
+  display: none;
+  width: 14px;
+  height: 14px;
+  align-items: center;
+  justify-content: center;
+  color: var(--dsw-alias-label-secondary, #787672);
 }
 body[data-dsh-claude-style] [class*="groupSection"]:hover [class*="projectRow"] [class*="_chevron"] {
   display: inline-flex !important;
 }
 body[data-dsh-claude-style] [class*="projectRow"] [class*="rowActions"] {
-  order: 3 !important;
-  margin-left: auto !important;
+  order: 3;
+  margin-left: auto;
 }
 /* The shipped solid triangle gives way to a chevron */
 body[data-dsh-claude-style] [class*="projectRow"] [class*="_chevron"] svg {
-  display: none !important;
+  display: none;
 }
 body[data-dsh-claude-style] [class*="projectRow"] [class*="_chevron"]::after {
   content: "";
@@ -355,11 +355,11 @@ body[data-dsh-claude-style] [class*="projectRow"][aria-expanded="false"] [class*
    hangs on the empty anchor as well; a seat carrying dots or another plugin's
    content keeps its own paint. */
 body[data-dsh-claude-style] [class*="sessionRow"] [class*="_slot"] {
-  width: 14px !important;
-  height: 16px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  width: 14px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 body[data-dsh-claude-style] [class*="sessionRow"] [class*="_slot"]:empty::after,
 body[data-dsh-claude-style] [class*="sessionRow"] [class*="_slot"] > [data-slot]:empty::after {

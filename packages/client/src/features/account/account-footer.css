@@ -1,36 +1,36 @@
 /* ---------- Claude Code layout: account row & floating popover ---------- */
 /* footArea positioning with crisp hairline border spanning entire sidebar */
 body[data-dsh-claude-style] [class*="footArea"] {
-  position: relative !important;
-  overflow: visible !important;
-  margin: 0 calc(-1 * var(--dsh-sidebar-inline-padding, 12px)) -6px !important;
-  padding: 8px var(--dsh-sidebar-inline-padding, 12px) 6px !important;
-  border-top: 1px solid var(--dsw-alias-border-l1, #e8e6dc) !important;
-  background: transparent !important;
-  box-sizing: border-box !important;
+  position: relative;
+  overflow: visible;
+  margin: 0 calc(-1 * var(--dsh-sidebar-inline-padding, 12px)) -6px;
+  padding: 8px var(--dsh-sidebar-inline-padding, 12px) 6px;
+  border-top: 1px solid var(--dsw-alias-border-l1, #e8e6dc);
+  background: transparent;
+  box-sizing: border-box;
 }
 body[data-dsh-claude-style][data-ds-dark-theme] [class*="footArea"] {
-  border-top-color: var(--dsw-alias-border-l2) !important;
+  border-top-color: var(--dsw-alias-border-l2);
 }
 
 /* Account trigger button in sidebar */
 body[data-dsh-claude-style] .dsh-claude-account-btn {
-  display: flex !important;
-  align-items: center !important;
-  width: 100% !important;
-  height: 32px !important;
-  box-sizing: border-box !important;
-  padding: 0 8px !important;
-  margin: 0 !important;
-  border-radius: 6px !important;
-  cursor: pointer !important;
-  user-select: none !important;
-  background: transparent !important;
-  transition: background-color 0.12s ease !important;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 32px;
+  box-sizing: border-box;
+  padding: 0 8px;
+  margin: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+  background: transparent;
+  transition: background-color 0.12s ease;
 }
 body[data-dsh-claude-style] .dsh-claude-account-btn:hover,
 body[data-dsh-claude-style] .dsh-claude-account-btn[data-open="true"] {
-  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
 }
 body[data-dsh-claude-style] .dsh-claude-account-avatar {
   width: 18px;
@@ -90,35 +90,35 @@ body[data-dsh-claude-style] .dsh-claude-account-btn[data-open="true"] .dsh-claud
 
 /* Floating Popover Container: Adaptive Width */
 body[data-dsh-claude-style] .dsh-claude-account-popover {
-  position: absolute !important;
-  bottom: calc(100% + 4px) !important;
+  position: absolute;
+  bottom: calc(100% + 4px);
   /* The drawer's inline edges are the account row's own, measured by
      features/account/account-footer.ts: the footer's padding box is wider than the row,
      so a flat 0 would make the card overhang the row it hangs from. */
-  left: var(--dsh-claude-account-inset-left, 0px) !important;
-  right: var(--dsh-claude-account-inset-right, 0px) !important;
-  width: auto !important;
-  max-width: none !important;
-  min-width: 0 !important;
+  left: var(--dsh-claude-account-inset-left, 0px);
+  right: var(--dsh-claude-account-inset-right, 0px);
+  width: auto;
+  max-width: none;
+  min-width: 0;
   /* The shared popover card (shared/popover.css), on the card fill. */
-  background: var(--dsh-claude-card) !important;
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 6px !important;
+  background: var(--dsh-claude-card);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   /* The drawer's rows are built and reconciled while it is closed (the mirror
      sync only runs then), so the panel sits right above the account row with
      its icons in it. opacity alone leaves that content in the paint and
      hit-test tree; visibility takes it out of both, and the delayed transition
      keeps the closing fade. Layout is untouched, so the closed drawer's box is
      still measurable. */
-  visibility: hidden !important;
-  transform: translateY(6px) scale(0.98) !important;
-  transform-origin: bottom left !important;
-  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0s linear 0.15s !important;
+  visibility: hidden;
+  transform: translateY(6px) scale(0.98);
+  transform-origin: bottom left;
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0s linear 0.15s;
 }
 body[data-dsh-claude-style] .dsh-claude-account-popover[data-open="true"] {
-  visibility: visible !important;
-  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0s !important;
+  visibility: visible;
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0s;
 }
 /* Hover bridge between trigger and popover */
 body[data-dsh-claude-style] .dsh-claude-account-popover::after {
@@ -136,11 +136,11 @@ body[data-dsh-claude-style] .dsh-claude-account-popover::after {
    strip is the inner row, so the hover plate covers the name and not the divider
    that follows it. */
 body[data-dsh-claude-style] .dsh-claude-account-popover-row {
-  min-height: 32px !important;
-  padding: 2px 7px !important;
-  border-radius: 6px !important;
-  cursor: pointer !important;
-  transition: background-color 0.12s ease !important;
+  min-height: 32px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.12s ease;
 }
 body[data-dsh-claude-style] .dsh-claude-account-popover-row:hover,
 body[data-dsh-claude-style] .dsh-claude-account-popover-row:focus-visible {
@@ -152,7 +152,7 @@ body[data-dsh-claude-style] .dsh-claude-account-popover-row:focus-visible {
    spans the panel's full width (the negative inline margins cancel the popover's
    6px padding) and sits outside the hover plate above. */
 body[data-dsh-claude-style] .dsh-claude-account-popover-header .dsh-claude-account-popover-divider {
-  margin: 0 -6px !important;
+  margin: 0 -6px;
 }
 
 
@@ -434,31 +434,31 @@ body[data-dsh-claude-style] [data-dsh-claude-account-menu] .dsh-claude-account-i
    own inline padding (the row rules above), and the divider below is a
    full-bleed rule that must not be inset by this box. */
 body[data-dsh-claude-style] .dsh-claude-account-popover-header {
-  padding: 6px 0 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 2px !important;
+  padding: 6px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 body[data-dsh-claude-style] .dsh-claude-account-popover-name {
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  color: var(--dsw-alias-label-primary, #141413) !important;
-  line-height: 18px !important;
-  font-family: var(--dsw-font-family) !important;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--dsw-alias-label-primary, #141413);
+  line-height: 18px;
+  font-family: var(--dsw-font-family);
 }
 body[data-dsh-claude-style] .dsh-claude-account-popover-divider {
-  height: 1px !important;
-  background: var(--dsw-alias-border-l1, #e8e6dc) !important;
-  margin: 2px 0 !important;
-  flex: none !important;
+  height: 1px;
+  background: var(--dsw-alias-border-l1, #e8e6dc);
+  margin: 2px 0;
+  flex: none;
 }
 
 /* Popover Body & Items */
 body[data-dsh-claude-style] .dsh-claude-account-popover-body {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 2px !important;
-  max-height: 360px !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 360px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }

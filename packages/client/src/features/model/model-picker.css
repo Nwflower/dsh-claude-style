@@ -4,44 +4,44 @@
    rows open their level 2 beside this popover. The card is the shared popover
    card (shared/popover.css); what is the picker's own is below. */
 body[data-dsh-claude-style] .dsh-claude-model-popover {
-  position: fixed !important;
-  min-width: 248px !important;
-  max-width: min(360px, calc(100vw - 16px)) !important;
+  position: fixed;
+  min-width: 248px;
+  max-width: min(360px, calc(100vw - 16px));
   /* The first level is sized by its content like the second: the cap is only
      the viewport, so a short list does not leave a tall empty card. The level-1
      list scrolls inside the body instead (see the scoped rule below); this
      overflow-y stays for the sub popover, whose whole card scrolls. */
-  max-height: calc(100vh - 80px) !important;
-  overflow-y: auto !important;
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 6px !important;
-  transform-origin: bottom right !important;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transform-origin: bottom right;
 }
 /* Level 1 splits into a scrollable list and a pinned footer: the model rows
    scroll under the divider / effort / more-models rows, which never leave the
    viewport edge of the card. Only the first level does this — the sub popover
    keeps scrolling as one card, with its provider labels pinned (below). */
 body[data-dsh-claude-style] .dsh-claude-model-popover:not(.dsh-claude-model-popover-sub) {
-  overflow: hidden !important;
+  overflow: hidden;
 }
 body[data-dsh-claude-style] .dsh-claude-model-popover:not(.dsh-claude-model-popover-sub) .dsh-claude-popover-body {
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
-  overflow-y: auto !important;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 body[data-dsh-claude-style] .dsh-claude-model-footer {
-  flex: none !important;
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 2px !important;
-  min-width: 0 !important;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 /* The sub popover is taller than the first level and sized by its content: the
    cap is only the viewport, so a short provider list does not leave a tall empty
    card. Provider labels stay pinned to the top while the list scrolls. */
 body[data-dsh-claude-style] .dsh-claude-model-popover-sub {
-  padding-top: 0 !important;
+  padding-top: 0;
 }
 
 body[data-dsh-claude-style] .dsh-claude-model-group-section {
@@ -84,35 +84,35 @@ body[data-dsh-claude-style] .dsh-claude-model-group {
 
 /* Model / effort option: same row metrics and hover as the drawer items. */
 body[data-dsh-claude-style] .dsh-claude-model-option {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  width: 100% !important;
-  min-height: 32px !important;
-  padding: 2px 7px !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 32px;
+  padding: 2px 7px;
   border: none !important;
-  border-radius: 6px !important;
-  background: transparent !important;
-  color: var(--dsw-alias-label-primary, #141413) !important;
-  font-size: 13px !important;
-  text-align: left !important;
-  cursor: pointer !important;
-  box-sizing: border-box !important;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-primary, #141413);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
 }
 body[data-dsh-claude-style] .dsh-claude-model-option:hover {
   background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
 }
 body[data-dsh-claude-style] .dsh-claude-model-copy {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 2px !important;
-  flex: 1 !important;
-  min-width: 0 !important;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
 }
 body[data-dsh-claude-style] .dsh-claude-model-name {
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  line-height: 16px !important;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 16px;
 }
 /* Claude's wordmark is set in Anthropic's serif, so the rest of the label follows
    it — the row reads as one piece of lettering rather than serif art beside sans. */
@@ -135,40 +135,40 @@ body[data-dsh-claude-style] .dsh-claude-model-combine {
   vertical-align: baseline !important;
 }
 body[data-dsh-claude-style] .dsh-claude-model-combine svg {
-  display: block !important;
-  height: 100% !important;
-  width: auto !important;
-  overflow: visible !important;
+  display: block;
+  height: 100%;
+  width: auto;
+  overflow: visible;
 }
 /* Dark canvas is the base: hide a *separate* colour layer. The `:not()` matters —
    a hand-provided lockup is one layer carrying both classes so it shows on either
    canvas, and a bare `.dsh-combine-mark-color` rule would hide it on the dark one
    (which is how the ChatGPT knot went missing on warm black). */
 body[data-dsh-claude-style] .dsh-claude-model-combine .dsh-combine-mark-color:not(.dsh-combine-mark-mono) {
-  display: none !important;
+  display: none;
 }
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) .dsh-claude-model-combine .dsh-combine-mark-color {
-  display: block !important;
+  display: block;
 }
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) .dsh-claude-model-combine .dsh-combine-mark-mono:not(.dsh-combine-mark-color) {
-  display: none !important;
+  display: none;
 }
 /* The word the lockup stands in for stays in the accessibility tree. */
 body[data-dsh-claude-style] .dsh-claude-model-combine-alt {
-  position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
-  overflow: hidden !important;
-  clip-path: inset(50%) !important;
-  white-space: nowrap !important;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 /* The row carries one description line, in the shell's language: the copy
    document is localized rather than stacked, so there is no second-language
    rule to style. */
 body[data-dsh-claude-style] .dsh-claude-model-desc {
-  font-size: 11px !important;
-  line-height: 14px !important;
-  color: var(--dsw-alias-label-tertiary, #8f8d84) !important;
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--dsw-alias-label-tertiary, #8f8d84);
 }
 /* The picker's two hairlines share one declaration: the provider header's rule
    and the divider that closes the model list. Same colour, same thickness, same

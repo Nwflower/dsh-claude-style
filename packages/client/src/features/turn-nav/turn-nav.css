@@ -6,8 +6,8 @@
 /* The host's rail, while the skin's stands in for it. Hidden, not removed: a
    jump scrolls it and presses its marks, and both need its layout. */
 body[data-dsh-claude-style] [data-conversation-scroll] nav[class*="_frame"][data-dsh-claude-turn-nav-replaced] {
-  visibility: hidden !important;
-  pointer-events: none !important;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 /* The skin's rail takes the host rail's seat by the host rail's own rules
@@ -16,22 +16,22 @@ body[data-dsh-claude-style] [data-conversation-scroll] nav[class*="_frame"][data
    most the band less 64px — and at most ten turns. */
 body[data-dsh-claude-style] .dsh-claude-turn-rail {
   --dsh-claude-turn-rail-band: calc(var(--dsh-conversation-viewport-height, 100dvh) - var(--dsh-composer-height, 152px));
-  position: absolute !important;
-  top: calc(var(--dsh-claude-turn-rail-band) / 2) !important;
-  right: 12px !important;
-  width: 28px !important;
-  height: var(--dsh-claude-turn-rail-height) !important;
-  max-height: min(max(0px, calc(var(--dsh-claude-turn-rail-band) - 64px)), 240px) !important;
-  transform: translateY(-50%) !important;
-  overflow: hidden !important;
-  pointer-events: auto !important;
-  cursor: pointer !important;
+  position: absolute;
+  top: calc(var(--dsh-claude-turn-rail-band) / 2);
+  right: 12px;
+  width: 28px;
+  height: var(--dsh-claude-turn-rail-height);
+  max-height: min(max(0px, calc(var(--dsh-claude-turn-rail-band) - 64px)), 240px);
+  transform: translateY(-50%);
+  overflow: hidden;
+  pointer-events: auto;
+  cursor: pointer;
 }
 /* The host hides its rail in a narrow conversation; the slot is the container
    its rule asks, so the same rule hides this one. */
 @container (width <= 900px) {
   body[data-dsh-claude-style] .dsh-claude-turn-rail {
-    display: none !important;
+    display: none;
   }
 }
 body[data-dsh-claude-style] .dsh-claude-turn-rail[data-fade-top] {
@@ -44,18 +44,18 @@ body[data-dsh-claude-style] .dsh-claude-turn-rail[data-fade-top][data-fade-botto
   mask-image: linear-gradient(transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%) !important;
 }
 body[data-dsh-claude-style] .dsh-claude-turn-rail-track {
-  position: relative !important;
-  transition: transform 0.15s ease, opacity 0.12s ease !important;
+  position: relative;
+  transition: transform 0.15s ease, opacity 0.12s ease;
 }
 /* The card covers the rail while it is open; the marks step back under it. */
 body[data-dsh-claude-style] .dsh-claude-turn-rail[data-dsh-claude-turn-nav-open] .dsh-claude-turn-rail-track {
-  opacity: 0 !important;
+  opacity: 0;
 }
 body[data-dsh-claude-style] .dsh-claude-turn-rail-mark {
-  position: absolute !important;
-  left: 0 !important;
-  right: 0 !important;
-  height: 24px !important;
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 24px;
 }
 
 /* One dash per turn, on the rail and in the card alike, in the host's three
@@ -63,19 +63,19 @@ body[data-dsh-claude-style] .dsh-claude-turn-rail-mark {
    loaded window), 0.9 under the pointer, whole for the turn being read. */
 body[data-dsh-claude-style] .dsh-claude-turn-rail-mark::before,
 body[data-dsh-claude-style] .dsh-claude-turn-nav-dash {
-  width: 20px !important;
-  height: 2px !important;
-  border-radius: 2px !important;
-  background: var(--dsw-alias-border-l4) !important;
-  transform: scaleX(0.6) !important;
-  transform-origin: 100% 50% !important;
-  transition: transform 0.14s ease, background-color 0.14s ease !important;
+  width: 20px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--dsw-alias-border-l4);
+  transform: scaleX(0.6);
+  transform-origin: 100% 50%;
+  transition: transform 0.14s ease, background-color 0.14s ease;
 }
 body[data-dsh-claude-style] .dsh-claude-turn-rail-mark::before {
-  content: "" !important;
-  position: absolute !important;
-  right: 0 !important;
-  top: 11px !important;
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 11px;
 }
 body[data-dsh-claude-style] .dsh-claude-turn-rail-mark[data-unloaded]::before,
 body[data-dsh-claude-style] .dsh-claude-turn-nav-row[data-unloaded] .dsh-claude-turn-nav-dash {
@@ -83,15 +83,15 @@ body[data-dsh-claude-style] .dsh-claude-turn-nav-row[data-unloaded] .dsh-claude-
   transform: scaleX(0.4) !important;
 }
 body[data-dsh-claude-style] .dsh-claude-turn-nav-row:hover .dsh-claude-turn-nav-dash {
-  background: var(--dsw-alias-label-tertiary) !important;
-  opacity: 1 !important;
-  transform: scaleX(0.9) !important;
+  background: var(--dsw-alias-label-tertiary);
+  opacity: 1;
+  transform: scaleX(0.9);
 }
 body[data-dsh-claude-style] .dsh-claude-turn-rail-mark[data-current]::before,
 body[data-dsh-claude-style] .dsh-claude-turn-nav-row[data-current] .dsh-claude-turn-nav-dash {
-  background: var(--dsw-alias-label-primary) !important;
-  opacity: 1 !important;
-  transform: none !important;
+  background: var(--dsw-alias-label-primary);
+  opacity: 1;
+  transform: none;
 }
 
 /* The card: the shared shell, laid over the rail by turn-nav.ts from inside the
@@ -100,66 +100,66 @@ body[data-dsh-claude-style] .dsh-claude-turn-nav-row[data-current] .dsh-claude-t
    marks. */
 body[data-dsh-claude-style] .dsh-claude-turn-nav,
 body[data-dsh-claude-style] .dsh-claude-turn-nav[data-open="true"] {
-  position: absolute !important;
-  left: auto !important;
-  width: 288px !important;
-  max-width: calc(100vw - 16px) !important;
-  transform: none !important;
-  transition: opacity 0.12s ease !important;
+  position: absolute;
+  left: auto;
+  width: 288px;
+  max-width: calc(100vw - 16px);
+  transform: none;
+  transition: opacity 0.12s ease;
 }
 /* The rows scroll in step with the rail's track; the wheel never reaches the page. */
 body[data-dsh-claude-style] .dsh-claude-turn-nav-list {
-  display: flex !important;
-  flex-direction: column !important;
-  overflow-y: auto !important;
-  overscroll-behavior: contain !important;
-  scrollbar-width: none !important;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
 }
 body[data-dsh-claude-style] .dsh-claude-turn-nav-list::-webkit-scrollbar {
   display: none !important;
 }
 body[data-dsh-claude-style] .dsh-claude-turn-nav-row {
-  flex: none !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 12px !important;
-  width: 100% !important;
-  height: 24px !important;
-  padding: 0 0 0 10px !important;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 24px;
+  padding: 0 0 0 10px;
   border: none !important;
-  border-radius: 6px !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  color: var(--dsw-alias-label-secondary, #787672) !important;
-  font-family: var(--dsw-font-family) !important;
-  font-size: 13px !important;
-  font-weight: 400 !important;
-  line-height: 24px !important;
-  text-align: left !important;
-  cursor: pointer !important;
-  transition: background-color 0.12s ease, color 0.12s ease !important;
+  border-radius: 6px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--dsw-alias-label-secondary, #787672);
+  font-family: var(--dsw-font-family);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 24px;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
 }
 body[data-dsh-claude-style] .dsh-claude-turn-nav-row:hover {
-  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
-  color: var(--dsw-alias-label-primary, #141413) !important;
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
+  color: var(--dsw-alias-label-primary, #141413);
 }
 body[data-dsh-claude-style] .dsh-claude-turn-nav-row:focus-visible {
   outline: 1px solid var(--dsw-focus-ring-color, var(--dsw-alias-brand-primary, #D97757)) !important;
   outline-offset: -1px !important;
 }
 body[data-dsh-claude-style] .dsh-claude-turn-nav-row[data-current] {
-  color: var(--dsw-alias-label-primary, #141413) !important;
-  font-weight: 500 !important;
+  color: var(--dsw-alias-label-primary, #141413);
+  font-weight: 500;
 }
 body[data-dsh-claude-style] .dsh-claude-turn-nav-text {
-  flex: 1 !important;
-  min-width: 0 !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 body[data-dsh-claude-style] .dsh-claude-turn-nav-dash {
-  flex: none !important;
+  flex: none;
 }
 
 /* The landing line: a short accent line over the first row of the turn a

@@ -15,23 +15,23 @@ body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"]
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"]:focus-within,
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card],
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card]:focus-within {
-  background: transparent !important;
+  background: transparent;
   border: none !important;
   /* No canvas wash here: the seat behind the composer paints the opaque bar and
      its fade band (see the seat rules below), so the card needs no
      background-coloured shadow to hide the transcript scrolling past. */
-  box-shadow: none !important;
-  outline: none !important;
-  padding: 0 !important;
-  gap: 0 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  position: relative !important;
-  width: 100% !important;
-  max-width: var(--dsh-composer-card-max-width, 100%) !important;
-  box-sizing: border-box !important;
-  overflow: visible !important;
-  height: auto !important;
+  box-shadow: none;
+  outline: none;
+  padding: 0;
+  gap: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 100%;
+  max-width: var(--dsh-composer-card-max-width, 100%);
+  box-sizing: border-box;
+  overflow: visible;
+  height: auto;
 }
 /* Do NOT override the host viewArea flex contract here. In the active
    phase the host uses `flex: 1 0 auto; min-height: auto` so the viewArea
@@ -42,10 +42,10 @@ body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant
    cannot pull an element down past its normal position, so the composer
    appeared mid-scroll and never followed message growth. */
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) {
-  flex: 0 0 auto !important;
-  overflow: visible !important;
-  height: auto !important;
-  max-height: none !important;
+  flex: 0 0 auto;
+  overflow: visible;
+  height: auto;
+  max-height: none;
 }
 /* ---------- the transcript's bottom edge ---------- */
 /* The chat fades into the canvas where the composer begins. The seat paints an
@@ -63,15 +63,15 @@ body[data-dsh-claude-style] {
   --dsh-composer-fade-h: 40px;
 }
 body[data-dsh-claude-style] :is([data-phase="active"], [data-content-phase="active"]) [data-composer-seat] {
-  background: var(--dsw-alias-bg-base) !important;
+  background: var(--dsw-alias-bg-base);
 }
 body[data-dsh-claude-style] :is([data-phase="active"], [data-content-phase="active"]) [data-composer-seat]::before {
-  content: "" !important;
-  position: absolute !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 100% !important;
-  height: var(--dsh-composer-fade-h, 40px) !important;
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: var(--dsh-composer-fade-h, 40px);
   /* Four stops, matching the transcript's top band in reverse: a straight
      100% -> 0% ramp reads as a haze band, so hold near-opaque against the card
      and ease out upward. color-mix keeps it theme-aware. */
@@ -81,14 +81,14 @@ body[data-dsh-claude-style] :is([data-phase="active"], [data-content-phase="acti
     color-mix(in srgb, var(--dsw-alias-bg-base, #FCFCFB) 82%, transparent) 32%,
     color-mix(in srgb, var(--dsw-alias-bg-base, #FCFCFB) 40%, transparent) 68%,
     transparent 100%
-  ) !important;
-  pointer-events: none !important;
+  );
+  pointer-events: none;
 }
 /* Message body clearance: the transcript ends where the fade band begins (same
    token as the band's height), so the last turn's action buttons (copy, retry,
    …) rest clear of the fade instead of being washed by it. */
 body[data-dsh-claude-style] [class*="viewArea"] {
-  padding-bottom: var(--dsh-composer-fade-h, 40px) !important;
+  padding-bottom: var(--dsh-composer-fade-h, 40px);
 }
 /* The composer is a chat-view affordance. The host keeps the seat mounted on
    every conversation tab (轨迹 / 上下文 even reserve room for it), but it
@@ -104,28 +104,28 @@ body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"][data-has-attachments="true"] [class*="_rail"],
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card][data-has-attachments="true"] [class*="_rail"] {
-  background: var(--dsw-specific-input-major, #ffffff) !important;
+  background: var(--dsw-specific-input-major, #ffffff);
   border: 1px solid var(--dsw-alias-border-l1) !important;
   border-bottom: none !important;
-  border-radius: 14px 14px 0 0 !important;
-  padding: 12px 14px 10px 14px !important;
-  margin: 0 !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-  min-height: 162px !important;
-  height: auto !important;
-  overflow: visible !important;
+  border-radius: 14px 14px 0 0;
+  padding: 12px 14px 10px 14px;
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-height: 162px;
+  height: auto;
+  overflow: visible;
   /* Flat: the seat's bar is what hides the transcript behind the composer, so
      the rail needs no canvas-coloured shadow of its own to add to it. */
-  box-shadow: none !important;
-  position: relative !important;
-  transition: border-color 0.12s ease, box-shadow 0.12s ease !important;
+  box-shadow: none;
+  position: relative;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
 }
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-composer-card][data-composer-variant="inline"][data-has-attachments="true"] [class*="_rail"],
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card][data-has-attachments="true"] [class*="_rail"] {
-  background: var(--dsw-specific-input-major) !important;
-  border-color: var(--dsw-alias-border-l1) !important;
+  background: var(--dsw-specific-input-major);
+  border-color: var(--dsw-alias-border-l1);
 }
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-composer-card][data-composer-variant="inline"]:focus-within [class*="_rail"],
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card]:focus-within [class*="_rail"] {
@@ -142,95 +142,95 @@ body[data-dsh-claude-style][data-ds-dark-theme] [class*="_composerStack"]:not([d
    inner scrolling rail stays frameless. */
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"][data-has-attachments="true"] [class*="_rail"] [class*="_rail"],
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card][data-has-attachments="true"] [class*="_rail"] [class*="_rail"] {
-  background: transparent !important;
+  background: transparent;
   border: none !important;
-  box-shadow: none !important;
-  border-radius: 0 !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  min-height: 140px !important;
-  height: auto !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 10px !important;
-  overflow-x: auto !important;
-  overflow-y: hidden !important;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  min-height: 140px;
+  height: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 /* Attachment thumbnail card: enlarged by 75% (~140px), matching non-focus
    border without shadow. The composer pass finds the tiles once per pass and
    marks them data-dsh-claude-attachment (packages/client/src/features/composer/composer.ts). */
 body[data-dsh-claude-style] [data-composer-card] [class*="_rail"] [data-dsh-claude-attachment] {
-  width: 140px !important;
-  height: 140px !important;
-  min-width: 140px !important;
-  min-height: 140px !important;
-  max-width: 140px !important;
-  max-height: 140px !important;
-  border-radius: 12px !important;
-  border: 1px solid var(--dsw-alias-border-l1) !important;
-  box-shadow: none !important;
-  overflow: hidden !important;
-  position: relative !important;
-  z-index: 5 !important;
-  flex: 0 0 140px !important;
-  box-sizing: border-box !important;
+  width: 140px;
+  height: 140px;
+  min-width: 140px;
+  min-height: 140px;
+  max-width: 140px;
+  max-height: 140px;
+  border-radius: 12px;
+  border: 1px solid var(--dsw-alias-border-l1);
+  box-shadow: none;
+  overflow: hidden;
+  position: relative;
+  z-index: 5;
+  flex: 0 0 140px;
+  box-sizing: border-box;
 }
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-composer-card] [class*="_rail"] [data-dsh-claude-attachment] {
-  border-color: var(--dsw-alias-border-l1) !important;
+  border-color: var(--dsw-alias-border-l1);
 }
 body[data-dsh-claude-style] [data-composer-card] [class*="_rail"] [data-dsh-claude-attachment] :is(img, canvas, [class*="_preview"], [class*="_image"]) {
-  width: 100% !important;
-  height: 100% !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
-  object-fit: cover !important;
-  display: block !important;
-  border-radius: 11px !important;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 11px;
 }
 body[data-dsh-claude-style] [data-composer-card] [class*="_rail"] [data-dsh-claude-attachment] :is(button, [role="button"], [class*="_close"], [class*="_delete"], [class*="_remove"], [class*="badge"], [class*="_tag"]) {
-  position: absolute !important;
-  z-index: 6 !important;
+  position: absolute;
+  z-index: 6;
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-input-scroll],
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] [data-input-scroll] {
-  background: var(--dsw-specific-input-major, #ffffff) !important;
+  background: var(--dsw-specific-input-major, #ffffff);
   border: 1px solid var(--dsw-alias-border-l1) !important;
-  border-radius: 14px !important;
-  min-height: 38px !important;
-  height: auto !important;
-  max-height: var(--dsh-composer-text-max-height, 180px) !important;
-  box-sizing: border-box !important;
-  display: block !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  padding: 7px 36px 7px 14px !important;
-  margin: 0 !important;
-  position: relative !important;
-  z-index: 2 !important;
-  cursor: text !important;
-  box-shadow: 0 1px 3px rgba(20, 20, 19, 0.03) !important;
-  transition: border-color 0.12s ease, box-shadow 0.12s ease !important;
+  border-radius: 14px;
+  min-height: 38px;
+  height: auto;
+  max-height: var(--dsh-composer-text-max-height, 180px);
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 7px 36px 7px 14px;
+  margin: 0;
+  position: relative;
+  z-index: 2;
+  cursor: text;
+  box-shadow: 0 1px 3px rgba(20, 20, 19, 0.03);
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"][data-has-attachments="true"] [data-input-scroll],
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card][data-has-attachments="true"] [data-input-scroll] {
   border-top: none !important;
-  border-radius: 0 0 14px 14px !important;
+  border-radius: 0 0 14px 14px;
   /* Seamless join with attachment rail above: 1px negative margin prevents subpixel seam without clipping thumbnails */
-  margin-top: -1px !important;
-  min-height: 32px !important;
-  padding: 8px 36px 6px 14px !important;
+  margin-top: -1px;
+  min-height: 32px;
+  padding: 8px 36px 6px 14px;
 }
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-composer-card][data-composer-variant="inline"] [data-input-scroll],
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] [data-input-scroll] {
-  background: var(--dsw-specific-input-major) !important;
+  background: var(--dsw-specific-input-major);
   border-color: var(--dsw-alias-border-l1) !important;
-  box-shadow: 0 1px 3px rgba(20, 20, 19, 0.03) !important;
+  box-shadow: 0 1px 3px rgba(20, 20, 19, 0.03);
 }
 body[data-dsh-claude-style][data-ds-dark-theme] [data-composer-card][data-composer-variant="inline"] [data-input-scroll],
 body[data-dsh-claude-style][data-ds-dark-theme] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] [data-input-scroll] {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 /* No workspace picked yet: the host marks the card as a workspace picker with a
    dashed ring over its whole box. In the single-line form the card is the input
@@ -257,107 +257,107 @@ body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-composer-card][data-composer-variant="inline"]:focus-within [data-input-scroll],
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card]:focus-within [data-input-scroll] {
   border-color: rgba(20, 20, 19, 0.18) !important;
-  box-shadow: 0 0 0 1px rgba(20, 20, 19, 0.065), 0 4px 12px rgba(20, 20, 19, 0.025) !important;
+  box-shadow: 0 0 0 1px rgba(20, 20, 19, 0.065), 0 4px 12px rgba(20, 20, 19, 0.025);
 }
 body[data-dsh-claude-style][data-ds-dark-theme] [data-composer-card][data-composer-variant="inline"]:focus-within [data-input-scroll],
 body[data-dsh-claude-style][data-ds-dark-theme] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card]:focus-within [data-input-scroll] {
   border-color: rgba(250, 249, 245, 0.22) !important;
-  box-shadow: 0 0 0 1px rgba(250, 249, 245, 0.09), 0 4px 16px rgba(0, 0, 0, 0.20) !important;
+  box-shadow: 0 0 0 1px rgba(250, 249, 245, 0.09), 0 4px 16px rgba(0, 0, 0, 0.20);
 }
 /* With attachments the rail already carries the card's focus ring, so the
    input keeps only the deepened drop — its own 1px ring would paint a second
    line across the seam between the thumbnails and the text. */
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-composer-card][data-composer-variant="inline"][data-has-attachments="true"]:focus-within [data-input-scroll],
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card][data-has-attachments="true"]:focus-within [data-input-scroll] {
-  box-shadow: 0 4px 12px rgba(20, 20, 19, 0.025) !important;
+  box-shadow: 0 4px 12px rgba(20, 20, 19, 0.025);
 }
 body[data-dsh-claude-style][data-ds-dark-theme] [data-composer-card][data-composer-variant="inline"][data-has-attachments="true"]:focus-within [data-input-scroll],
 body[data-dsh-claude-style][data-ds-dark-theme] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card][data-has-attachments="true"]:focus-within [data-input-scroll] {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.20) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.20);
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-input-scroll] [class*="_grow"],
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] [data-input-scroll] [class*="_grow"] {
-  width: 100% !important;
-  max-width: 100% !important;
-  min-height: 24px !important;
-  position: relative !important;
-  display: block !important;
-  box-sizing: border-box !important;
-  overflow-x: hidden !important;
+  width: 100%;
+  max-width: 100%;
+  min-height: 24px;
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-composer-input],
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] [data-composer-input] {
-  min-height: 24px !important;
-  height: auto !important;
-  line-height: 24px !important;
-  padding: 0 !important;
-  font-size: 14px !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-  cursor: text !important;
-  outline: none !important;
-  white-space: pre-wrap !important;
-  word-break: break-word !important;
-  overflow-wrap: anywhere !important;
-  overflow-x: hidden !important;
+  min-height: 24px;
+  height: auto;
+  line-height: 24px;
+  padding: 0;
+  font-size: 14px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  cursor: text;
+  outline: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  overflow-x: hidden;
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-composer-placeholder],
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] [data-composer-placeholder] {
-  line-height: 24px !important;
-  height: 24px !important;
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-  font-size: 14px !important;
-  color: var(--dsw-alias-label-caption) !important;
-  white-space: nowrap !important;
-  text-overflow: ellipsis !important;
-  overflow: hidden !important;
-  pointer-events: none !important;
-  user-select: none !important;
+  line-height: 24px;
+  height: 24px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  font-size: 14px;
+  color: var(--dsw-alias-label-caption);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
 }
 /* Pinned send button inside input box */
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] button[data-dsh-claude-control="send"],
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] button[data-dsh-claude-control="send"] {
-  position: absolute !important;
-  bottom: 40px !important;
-  right: 8px !important;
-  top: auto !important;
-  left: auto !important;
-  width: 26px !important;
-  height: 26px !important;
-  min-width: 26px !important;
-  padding: 0 !important;
-  border-radius: 6px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 10 !important;
-  box-shadow: none !important;
-  background: transparent !important;
-  color: var(--dsw-alias-label-caption) !important;
+  position: absolute;
+  bottom: 40px;
+  right: 8px;
+  top: auto;
+  left: auto;
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  padding: 0;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  box-shadow: none;
+  background: transparent;
+  color: var(--dsw-alias-label-caption);
   border: none !important;
-  cursor: pointer !important;
-  transition: color 0.12s ease, background-color 0.12s ease !important;
+  cursor: pointer;
+  transition: color 0.12s ease, background-color 0.12s ease;
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] button[data-dsh-claude-control="send"] :is(svg, [class*="_chevron"], span) {
-  display: none !important;
+  display: none;
 }
 /* The return glyph is drawn, as Claude Code draws it: a short stub along the
    top, down the right side, and back along the bottom to a left arrowhead, in
    crisp 1.5px square-cornered strokes filled with the button's own colour. */
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] button[data-dsh-claude-control="send"]::after,
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] button[data-dsh-claude-control="send"]::after {
-  content: "" !important;
-  width: 16px !important;
-  height: 16px !important;
-  background: currentColor !important;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='miter'%3E%3Cpath d='M8 3.75h5.25v7H3M6 7.75l-3 3 3 3'/%3E%3C/svg%3E") center / contain no-repeat !important;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='miter'%3E%3Cpath d='M8 3.75h5.25v7H3M6 7.75l-3 3 3 3'/%3E%3C/svg%3E") center / contain no-repeat !important;
+  content: "";
+  width: 16px;
+  height: 16px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='miter'%3E%3Cpath d='M8 3.75h5.25v7H3M6 7.75l-3 3 3 3'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='miter'%3E%3Cpath d='M8 3.75h5.25v7H3M6 7.75l-3 3 3 3'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] button[data-dsh-claude-control="send"]:not(:disabled):hover,
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] button[data-dsh-claude-control="send"]:not(:disabled):hover {
@@ -368,7 +368,7 @@ body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"]
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"][data-has-attachments="true"] button[data-dsh-claude-control="send"],
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card]:not([data-dsh-claude-draft-empty]) button[data-dsh-claude-control="send"],
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card][data-has-attachments="true"] button[data-dsh-claude-control="send"] {
-  color: var(--dsw-alias-label-primary) !important;
+  color: var(--dsw-alias-label-primary);
 }
 /* Pinned stop button inside input box */
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] button[data-dsh-claude-control="stop"],
@@ -431,23 +431,23 @@ body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant
    display here would pin the composer field to one line forever. */
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [class*="_row"],
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] [class*="_row"] {
-  display: flex !important;
-  flex-wrap: nowrap !important;
-  justify-content: space-between !important;
-  align-items: center !important;
-  padding: 0 4px !important;
-  margin: 6px 0 0 0 !important;
-  background: transparent !important;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 4px;
+  margin: 6px 0 0 0;
+  background: transparent;
   border: none !important;
-  box-shadow: none !important;
-  min-height: 28px !important;
-  height: 28px !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-  overflow: visible !important;
-  position: relative !important;
-  z-index: 3 !important;
+  box-shadow: none;
+  min-height: 28px;
+  height: 28px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: visible;
+  position: relative;
+  z-index: 3;
 }
 /* The context-occupancy meter renders its click-open panel INSIDE the inline
    composer card, and its legend classes (`…_rows` / `…_row`) substring-match
@@ -476,41 +476,41 @@ body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [class*="_tools"],
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] [class*="_tools"] {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  flex: 0 0 auto !important;
-  overflow: visible !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  overflow: visible;
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [class*="_modes"],
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] [class*="_modes"] {
-  order: 1 !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  overflow: visible !important;
+  order: 1;
+  display: inline-flex;
+  align-items: center;
+  overflow: visible;
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] button[data-dsh-claude-control="commands"],
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] button[data-dsh-claude-control="commands"] {
-  order: 3 !important;
-  width: 24px !important;
-  height: 24px !important;
-  border-radius: 6px !important;
-  background: transparent !important;
-  color: var(--dsw-alias-label-secondary) !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  order: 3;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] button[data-dsh-claude-control="commands"]:hover:not(:disabled),
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] button[data-dsh-claude-control="commands"]:hover:not(:disabled) {
-  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
-  color: var(--dsw-alias-label-primary) !important;
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
+  color: var(--dsw-alias-label-primary);
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [class*="_trailing"],
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] [class*="_trailing"] {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  margin-left: auto !important;
-  flex: 0 0 auto !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex: 0 0 auto;
 }

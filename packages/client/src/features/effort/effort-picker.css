@@ -3,10 +3,10 @@
    corner and must read as one design — sized to the slider, which is the only
    thing it holds. The card is the shared popover card (shared/popover.css). */
 body[data-dsh-claude-style] .dsh-claude-effort-popover {
-  position: fixed !important;
-  min-width: 264px !important;
-  max-width: min(320px, calc(100vw - 16px)) !important;
-  transform-origin: bottom right !important;
+  position: fixed;
+  min-width: 264px;
+  max-width: min(320px, calc(100vw - 16px));
+  transform-origin: bottom right;
 }
 
 /* ---------- Reasoning-effort slider (its own card) ---------- */
@@ -17,29 +17,29 @@ body[data-dsh-claude-style] .dsh-claude-effort-popover {
    what makes that settle read as a settle; it is switched off while the pointer
    owns the knob, which is what `data-dragging` marks. */
 body[data-dsh-claude-style] .dsh-claude-effort {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 3px !important;
-  padding: 3px 7px 4px 7px !important;
-  min-width: 0 !important;
-  user-select: none !important;
-  -webkit-user-select: none !important;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 3px 7px 4px 7px;
+  min-width: 0;
+  user-select: none;
+  -webkit-user-select: none;
 }
 body[data-dsh-claude-style] .dsh-claude-effort-head {
-  display: flex !important;
-  align-items: baseline !important;
-  gap: 6px !important;
-  min-width: 0 !important;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
   /* The outgoing name is absolutely positioned over the incoming one. */
-  position: relative !important;
+  position: relative;
 }
 /* The label recedes and the level's name carries the weight — Claude's own
    `Effort High` pairs a grey caption with a near-black value. */
 body[data-dsh-claude-style] .dsh-claude-effort-label {
-  flex: none !important;
-  font-size: 13px !important;
-  line-height: 16px !important;
-  color: var(--dsw-alias-label-secondary, #6e6a60) !important;
+  flex: none;
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--dsw-alias-label-secondary, #6e6a60);
 }
 /* The level's name trails the label instead of sitting at the far edge: the
    control reads as one phrase, `Reasoning effort High`, the way the ends below
@@ -48,31 +48,31 @@ body[data-dsh-claude-style] .dsh-claude-effort-label {
    positioned over this one) blurs away upward. Both animations are re-armed
    from the override on every real change. */
 body[data-dsh-claude-style] .dsh-claude-effort-value {
-  flex: 0 1 auto !important;
-  min-width: 0 !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
-  font-size: 13px !important;
-  line-height: 16px !important;
-  color: var(--dsw-alias-label-primary, #141413) !important;
-  transition: color 0.18s ease !important;
-  animation: dshClaudeEffortValueIn 0.28s ease !important;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--dsw-alias-label-primary, #141413);
+  transition: color 0.18s ease;
+  animation: dshClaudeEffortValueIn 0.28s ease;
 }
 /* The outgoing name. It sits exactly where the value sat (the override writes
    its left offset), takes no layout space, and ends at opacity 0 — so it never
    needs removing, only re-arming. */
 body[data-dsh-claude-style] .dsh-claude-effort-value-ghost {
-  position: absolute !important;
-  left: 0 !important;
-  top: 0 !important;
-  white-space: nowrap !important;
-  pointer-events: none !important;
-  font-size: 13px !important;
-  line-height: 16px !important;
-  color: var(--dsw-alias-label-primary, #141413) !important;
-  opacity: 0 !important;
-  animation: dshClaudeEffortValueOut 0.28s ease forwards !important;
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+  pointer-events: none;
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--dsw-alias-label-primary, #141413);
+  opacity: 0;
+  animation: dshClaudeEffortValueOut 0.28s ease forwards;
 }
 @keyframes dshClaudeEffortValueIn {
   from { filter: blur(4px); opacity: 0; transform: translateY(5px); }
@@ -85,52 +85,52 @@ body[data-dsh-claude-style] .dsh-claude-effort-value-ghost {
 /* The ends name the axis: a scale, not a value, so they keep the caption colour
    and take their words from the copy table (更快 / 更强 in Chinese). */
 body[data-dsh-claude-style] .dsh-claude-effort-ends {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  gap: 8px !important;
-  font-size: 11px !important;
-  line-height: 14px !important;
-  color: var(--dsw-alias-label-caption, #a6a094) !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--dsw-alias-label-caption, #a6a094);
 }
 body[data-dsh-claude-style] .dsh-claude-effort-track {
-  position: relative !important;
+  position: relative;
   /* The hit area is the knob's height; the groove itself sits centred in it. */
-  height: 30px !important;
-  margin-top: 1px !important;
-  cursor: pointer !important;
-  touch-action: none !important;
+  height: 30px;
+  margin-top: 1px;
+  cursor: pointer;
+  touch-action: none;
 }
 body[data-dsh-claude-style] .dsh-claude-effort-track::before {
-  content: "" !important;
-  position: absolute !important;
-  left: 0 !important;
-  right: 0 !important;
-  top: 50% !important;
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
   /* Claude's real Effort slider reads as one chunky groove the knob rides IN:
      the groove is 26px tall, the knob 30px — it pokes 2px out top and bottom.
      (The first pass at this control was 6px, a thin rail; 14px was an
      intermediate groove. 26px matches the reference.) */
-  height: 26px !important;
-  margin-top: -13px !important;
+  height: 26px;
+  margin-top: -13px;
   /* A rounded rectangle, NOT a pill: the recorded slider's end is a ~1/3-height
      corner (the reference plugin solves the same 26px groove to 9px), so a
      999px radius rounded the ends far more than Claude's do. */
-  border-radius: 8px !important;
+  border-radius: 8px;
   /* The page inherits superellipse corners from <html>; the groove keeps true
      circular corners. */
-  corner-shape: round !important;
-  background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, 0.08)) !important;
+  corner-shape: round;
+  background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, 0.08));
 }
 /* The filled portion: from the track's left end to the knob's centre, where
    the opaque knob swallows it. Its colour IS the label ink at low alpha, so it
    darkens the light groove and lightens the dark one with a single rule. */
 body[data-dsh-claude-style] .dsh-claude-effort-fill {
-  position: absolute !important;
-  left: 0 !important;
-  top: 50% !important;
-  height: 26px !important;
-  margin-top: -13px !important;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 26px;
+  margin-top: -13px;
   /* No width here: the override drives it with an inline style, and any
      stylesheet width (even 0) would win through !important and pin the fill
      shut forever. Unset shrinks the absolute box to 0 until the first paint. */
@@ -138,31 +138,31 @@ body[data-dsh-claude-style] .dsh-claude-effort-fill {
      right cap curves away from the knob at the groove's top and bottom rows,
      which showed a sliver of bare track between them ("the fill let go of the
      knob"). The left cap still matches the groove's corner. */
-  border-radius: 8px 0 0 8px !important;
-  corner-shape: round !important;
-  background: color-mix(in srgb, var(--dsw-alias-label-primary, #141413) 26%, transparent) !important;
-  transition: width 0.18s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.18s ease !important;
-  pointer-events: none !important;
+  border-radius: 8px 0 0 8px;
+  corner-shape: round;
+  background: color-mix(in srgb, var(--dsw-alias-label-primary, #141413) 26%, transparent);
+  transition: width 0.18s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.18s ease;
+  pointer-events: none;
 }
 /* One tick per stop, centred on the stop's resting position (the override
    computes the px). Same ink as the fill: the fill swallows passed ticks, the
    knob swallows the current one, so a tick only ever shows on bare track. */
 body[data-dsh-claude-style] .dsh-claude-effort-ticks {
-  position: absolute !important;
-  inset: 0 !important;
-  transition: opacity 0.18s ease !important;
-  pointer-events: none !important;
+  position: absolute;
+  inset: 0;
+  transition: opacity 0.18s ease;
+  pointer-events: none;
 }
 body[data-dsh-claude-style] .dsh-claude-effort-tick {
-  position: absolute !important;
-  top: 50% !important;
-  width: 4px !important;
-  height: 4px !important;
-  margin-top: -2px !important;
-  transform: translateX(-50%) !important;
-  border-radius: 50% !important;
-  corner-shape: round !important;
-  background: color-mix(in srgb, var(--dsw-alias-label-primary, #141413) 26%, transparent) !important;
+  position: absolute;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  margin-top: -2px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  corner-shape: round;
+  background: color-mix(in srgb, var(--dsw-alias-label-primary, #141413) 26%, transparent);
 }
 /* The top rung's dot matrix: a grid of violet blocks floating on the bare track
    (the 1px gaps ARE the grid lines). Every block twinkles on its OWN hash-
@@ -172,20 +172,20 @@ body[data-dsh-claude-style] .dsh-claude-effort-tick {
    colour flash rides through. The grid lives only while the apex is shown, so
    the cost stays bounded to that state. */
 body[data-dsh-claude-style] .dsh-claude-effort-matrix {
-  position: absolute !important;
-  left: 0 !important;
-  right: 0 !important;
-  top: 50% !important;
-  height: 26px !important;
-  margin-top: -13px !important;
-  border-radius: 8px !important;
-  corner-shape: round !important;
-  overflow: hidden !important;
-  box-sizing: border-box !important;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 26px;
+  margin-top: -13px;
+  border-radius: 8px;
+  corner-shape: round;
+  overflow: hidden;
+  box-sizing: border-box;
   /* display: none while the apex is off — the twinkle costs nothing until the
      top rung is actually reached. */
-  display: none !important;
-  pointer-events: none !important;
+  display: none;
+  pointer-events: none;
 }
 body[data-dsh-claude-style] .dsh-claude-effort[data-apex] .dsh-claude-effort-matrix {
   display: grid !important;
@@ -270,20 +270,20 @@ body[data-dsh-claude-style] .dsh-claude-effort[data-apex] .dsh-claude-effort-val
    groove top and bottom. The width stays 16px, which the override's travel
    geometry (and the fill's +8) depends on. */
 body[data-dsh-claude-style] .dsh-claude-effort-knob {
-  position: absolute !important;
-  left: 0 !important;
-  top: 50% !important;
-  width: 16px !important;
-  height: 30px !important;
-  margin-top: -15px !important;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 16px;
+  height: 30px;
+  margin-top: -15px;
   /* A rounded rectangle with a flat run down each side, not a capsule: the
      recorded knob has a visibly straight edge between two ~1/3 corners. */
-  border-radius: 5px !important;
-  corner-shape: round !important;
+  border-radius: 5px;
+  corner-shape: round;
   /* Pinned to the host's static white in BOTH appearances: the knob is the one
      light pebble in the groove, and a dark knob drowned in the dark groove. */
-  background: var(--dsw-static-neutral-bluish-00, #ffffff) !important;
-  box-shadow: 0 1px 3px rgba(20, 20, 19, 0.28), 0 0 0 1px rgba(20, 20, 19, 0.06) !important;
+  background: var(--dsw-static-neutral-bluish-00, #ffffff);
+  box-shadow: 0 1px 3px rgba(20, 20, 19, 0.28), 0 0 0 1px rgba(20, 20, 19, 0.06);
   /* The lift is the `scale` property and the travel is the `translate`
      property — both INDIVIDUAL transform properties, which compose in the order
      translate → scale. That order is the whole point: positioning with
@@ -292,12 +292,12 @@ body[data-dsh-claude-style] .dsh-claude-effort-knob {
      put the knob 10% of the travel PAST the track's end and, mid-drag, ahead of
      the fill. The explicit 1 also gives the release a numeric target to ease
      back to (an unset value is `none`, which does not interpolate). */
-  scale: 1 !important;
-  transition: translate 0.18s cubic-bezier(0.22, 0.61, 0.36, 1), scale 0.12s ease, background-color 0.3s ease, box-shadow 0.3s ease !important;
-  will-change: translate, scale !important;
+  scale: 1;
+  transition: translate 0.18s cubic-bezier(0.22, 0.61, 0.36, 1), scale 0.12s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+  will-change: translate, scale;
 }
 body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-effort-knob {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(0, 0, 0, 0.4);
 }
 body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-effort[data-apex] .dsh-claude-effort-knob {
   box-shadow: 0 0 10px color-mix(in srgb, var(--dsh-claude-apex, #9d8ce0) 80%, transparent), 0 0 0 1px color-mix(in srgb, var(--dsh-claude-apex, #9d8ce0) 35%, transparent) !important;
@@ -333,36 +333,36 @@ body[data-dsh-claude-style] .dsh-claude-effort[data-empty] .dsh-claude-effort-va
    pinned beside the model trigger by measurement — every pass, and in the same
    frame as a resize / scroll / card-resize through the handle's reposition(). */
 body[data-dsh-claude-style] .dsh-claude-effort-btn {
-  position: fixed !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  height: 28px !important;
+  position: fixed;
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
   /* The row's rhythm: 2px here plus the model trigger's 8px right padding and
      the 2px the JS sits past its box land the two texts 12px apart — the
      trailing cluster's own flex gap. */
-  padding: 0 2px !important;
+  padding: 0 2px;
   border: none !important;
-  border-radius: 6px !important;
-  background: transparent !important;
-  color: var(--dsw-alias-label-secondary, #6e6a60) !important;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary, #6e6a60);
   /* One set of metrics with the model trigger beside it: the row reads as one
      line, so the two labels must not differ in line box or tracking. */
-  font-family: var(--dsw-font-family) !important;
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  line-height: 20px !important;
-  letter-spacing: normal !important;
-  white-space: nowrap !important;
-  cursor: pointer !important;
+  font-family: var(--dsw-font-family);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+  letter-spacing: normal;
+  white-space: nowrap;
+  cursor: pointer;
   /* Above the composer's own layers. The seat (the input area's container) is
      the host's stacking context at z-index 9, so the card and its controls all
      paint above anything lower — the trigger read as missing while it sat at 4
      under the opaque card. Page-level surfaces sit at 1000 and above, and the
      trigger goes with the seat when the composer does. */
-  z-index: 10 !important;
-  transition: background-color 0.12s ease, color 0.12s ease !important;
+  z-index: 10;
+  transition: background-color 0.12s ease, color 0.12s ease;
 }
 body[data-dsh-claude-style] .dsh-claude-effort-btn:hover {
-  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
-  color: var(--dsw-alias-label-primary, #141413) !important;
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
+  color: var(--dsw-alias-label-primary, #141413);
 }

@@ -12,58 +12,58 @@
    and a 4px bottom margin; the row's own 6px foot is what puts the box on the
    rows' rhythm, and it replaces the host's 4px rather than adding to it. */
 body[data-dsh-claude-style] [data-dsh-claude-search-row] {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) auto !important;
-  align-items: center !important;
-  height: 28px !important;
-  padding: 0 !important;
-  margin-bottom: 6px !important;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  height: 28px;
+  padding: 0;
+  margin-bottom: 6px;
 }
 body[data-dsh-claude-style] [data-dsh-claude-search-row] > :is([class*="_brand"], .dsh-claude-search-trigger) {
-  grid-area: 1 / 1 !important;
+  grid-area: 1 / 1;
 }
 body[data-dsh-claude-style] [data-dsh-claude-search-row] > [class*="_brand"] {
-  transition: opacity 0.16s ease, visibility 0.16s ease !important;
+  transition: opacity 0.16s ease, visibility 0.16s ease;
 }
 body[data-dsh-claude-style] .dsh-claude-search-trigger {
-  display: flex !important;
-  opacity: 0 !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-  transition: opacity 0.16s ease, visibility 0.16s ease !important;
-  min-width: 0 !important;
-  height: 28px !important;
-  margin: 0 !important;
-  padding: 0 10px !important;
-  align-items: center !important;
-  gap: 8px !important;
-  border: 1px solid var(--dsw-alias-border-l1, #e8e6dc) !important;
-  border-radius: 8px !important;
-  background: var(--dsh-claude-canvas, #fcfcfb) !important;
-  color: var(--dsw-alias-label-tertiary, #8f8d84) !important;
-  font-family: var(--dsw-font-family) !important;
-  font-size: 14px !important;
-  line-height: 20px !important;
-  text-align: left !important;
-  cursor: pointer !important;
-  box-shadow: none !important;
-  -webkit-app-region: no-drag !important;
+  display: flex;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.16s ease, visibility 0.16s ease;
+  min-width: 0;
+  height: 28px;
+  margin: 0;
+  padding: 0 10px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--dsw-alias-border-l1, #e8e6dc);
+  border-radius: 8px;
+  background: var(--dsh-claude-canvas, #fcfcfb);
+  color: var(--dsw-alias-label-tertiary, #8f8d84);
+  font-family: var(--dsw-font-family);
+  font-size: 14px;
+  line-height: 20px;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: none;
+  -webkit-app-region: no-drag;
 }
 body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-trigger {
-  border-color: var(--dsw-alias-border-l2) !important;
-  background: var(--dsh-claude-raised) !important;
+  border-color: var(--dsw-alias-border-l2);
+  background: var(--dsh-claude-raised);
 }
 body[data-dsh-claude-style] [data-slot="sidebar"]:hover [data-dsh-claude-search-row] > .dsh-claude-search-trigger,
 body[data-dsh-claude-style] [data-dsh-claude-search-row] > .dsh-claude-search-trigger:focus-visible {
-  opacity: 1 !important;
-  visibility: visible !important;
-  pointer-events: auto !important;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 body[data-dsh-claude-style] [data-slot="sidebar"]:hover [data-dsh-claude-search-row] > [class*="_brand"],
 body[data-dsh-claude-style] [data-dsh-claude-search-row] > [class*="_brand"]:has(~ .dsh-claude-search-trigger:focus-visible) {
-  opacity: 0 !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 /* The Windows desktop shell's sidebar column starts under its 40px titlebar,
    which left the brand a titlebar's height lower than on the web; the row rises
@@ -83,14 +83,14 @@ html[data-windows-titlebar] body[data-dsh-claude-style] [data-slot="sidebar"] [c
    row's 8px inline padding, lifts it clear. The attribute is what the collapsed
    rail lacks, so it keeps the host's 18px. */
 html:not([data-windows-titlebar]):not([data-platform="darwin"]) body[data-dsh-claude-style] [data-dsh-claude-search-row] {
-  margin-top: 8px !important;
+  margin-top: 8px;
 }
 /* The host gives its own logo row a 4px leading edge, and the brand another 4px
    under the Windows caption row; the row's zeroed padding drops both, so the
    brand takes the row's 8px and its mark's left edge lands on the new-session
    chip's. */
 html:not([data-windows-titlebar]):not([data-platform="darwin"]) body[data-dsh-claude-style] [data-dsh-claude-search-row] > [class*="_brand"] {
-  padding-left: 8px !important;
+  padding-left: 8px;
 }
 /* On both desktop shells the host's toggle takes no cell in the row: macOS
    renders it inside its own 52px `_topStrip`, Windows fixes it into the caption
@@ -106,17 +106,17 @@ html[data-platform=darwin] body[data-dsh-claude-style] [data-dsh-claude-search-r
    its children to the right and relied on that slot's flex to hold the
    heading at the left, so the heading now takes the free space itself. */
 body[data-dsh-claude-style] [data-slot="sidebar"] [class*="_sectionHeader"] > [class*="_sectionLabel"] {
-  margin-right: auto !important;
+  margin-right: auto;
 }
 body[data-dsh-claude-style] [data-slot="sidebar"] [class*="_searchSlot"] {
-  position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
-  margin: 0 !important;
-  overflow: hidden !important;
-  clip-path: inset(50%) !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  opacity: 0;
+  pointer-events: none;
 }
 /* Expanding that search would clear the header's actions (view options, add
    workspace) out of its way for the moment before the palette folds it back;
@@ -132,22 +132,22 @@ body[data-dsh-claude-style] [data-slot="sidebar"] [class*="_headerActionsHidden"
    plate, laid over the box's own opaque fill so the brand behind it never
    shows through. */
 body[data-dsh-claude-style] .dsh-claude-search-trigger:hover {
-  background-image: linear-gradient(var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)), var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08))) !important;
+  background-image: linear-gradient(var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)), var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)));
 }
 body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-trigger:hover {
   background-image: linear-gradient(rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.08)) !important;
 }
 body[data-dsh-claude-style] .dsh-claude-search-trigger-icon {
-  display: inline-flex !important;
-  flex: none !important;
-  color: var(--dsw-alias-label-secondary, #787672) !important;
+  display: inline-flex;
+  flex: none;
+  color: var(--dsw-alias-label-secondary, #787672);
 }
 body[data-dsh-claude-style] .dsh-claude-search-trigger-label {
-  flex: 1 1 auto !important;
-  min-width: 0 !important;
-  overflow: hidden !important;
-  white-space: nowrap !important;
-  text-overflow: ellipsis !important;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 /* ---------- Search palette ---------- */
 /* The card is the host's Modal (its mask, focus return and Esc); these rules
@@ -155,16 +155,16 @@ body[data-dsh-claude-style] .dsh-claude-search-trigger-label {
    skin's own rows inside. It fades and settles in; on close search.ts marks
    the overlay and keeps it mounted while card and mask fade out together. */
 body[data-dsh-claude-style] .dsh-claude-search-dialog {
-  animation: dsh-claude-search-in 0.18s cubic-bezier(0.22, 0.61, 0.36, 1) !important;
-  width: min(760px, 100%) !important;
-  max-height: 100% !important;
-  margin: 8vh 0 auto !important;
-  padding: 0 !important;
-  gap: 0 !important;
-  border: 1px solid var(--dsw-alias-border-l1, #e8e6dc) !important;
-  border-radius: 16px !important;
-  background: var(--dsh-claude-card) !important;
-  box-shadow: 0 16px 48px rgba(20, 20, 19, 0.14), 0 2px 8px rgba(20, 20, 19, 0.06) !important;
+  animation: dsh-claude-search-in 0.18s cubic-bezier(0.22, 0.61, 0.36, 1);
+  width: min(760px, 100%);
+  max-height: 100%;
+  margin: 8vh 0 auto;
+  padding: 0;
+  gap: 0;
+  border: 1px solid var(--dsw-alias-border-l1, #e8e6dc);
+  border-radius: 16px;
+  background: var(--dsh-claude-card);
+  box-shadow: 0 16px 48px rgba(20, 20, 19, 0.14), 0 2px 8px rgba(20, 20, 19, 0.06);
 }
 body[data-dsh-claude-style] [data-dsh-claude-search-closing] > .dsh-claude-search-dialog {
   animation: dsh-claude-search-out 0.14s ease forwards !important;
@@ -193,47 +193,47 @@ body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-dialog {
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
 }
 body[data-dsh-claude-style] .dsh-claude-search {
-  display: flex !important;
-  flex-direction: column !important;
-  min-height: 0 !important;
-  font-family: var(--dsw-font-family) !important;
-  color: var(--dsw-alias-label-primary, #141413) !important;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  font-family: var(--dsw-font-family);
+  color: var(--dsw-alias-label-primary, #141413);
 }
 body[data-dsh-claude-style] .dsh-claude-search-head {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  padding: 18px 16px 10px 24px !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 16px 10px 24px;
 }
 body[data-dsh-claude-style] .dsh-claude-search-input {
-  flex: 1 1 auto !important;
-  min-width: 0 !important;
-  height: 32px !important;
-  padding: 0 !important;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 32px;
+  padding: 0;
   border: none !important;
   outline: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  color: var(--dsw-alias-label-primary, #141413) !important;
-  font-family: var(--dsw-font-family) !important;
-  font-size: 17px !important;
+  background: transparent;
+  box-shadow: none;
+  color: var(--dsw-alias-label-primary, #141413);
+  font-family: var(--dsw-font-family);
+  font-size: 17px;
 }
 body[data-dsh-claude-style] .dsh-claude-search-input::placeholder {
-  color: var(--dsw-alias-label-tertiary, #8f8d84) !important;
+  color: var(--dsw-alias-label-tertiary, #8f8d84);
 }
 body[data-dsh-claude-style] .dsh-claude-search-close {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  flex: none !important;
-  width: 28px !important;
-  height: 28px !important;
-  padding: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  padding: 0;
   border: none !important;
-  border-radius: 8px !important;
-  background: transparent !important;
-  color: var(--dsw-alias-label-secondary, #787672) !important;
-  cursor: pointer !important;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary, #787672);
+  cursor: pointer;
 }
 body[data-dsh-claude-style] .dsh-claude-search-close:hover {
   background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.06)) !important;
@@ -242,42 +242,42 @@ body[data-dsh-claude-style] .dsh-claude-search-close:hover {
 
 /* Filters: a segmented control whose highlight slides (shared/sliding-pill). */
 body[data-dsh-claude-style] .dsh-claude-search-filters {
-  position: relative !important;
-  display: flex !important;
-  align-self: flex-start !important;
-  flex-wrap: nowrap !important;
-  gap: 2px !important;
-  margin: 0 16px 8px 14px !important;
+  position: relative;
+  display: flex;
+  align-self: flex-start;
+  flex-wrap: nowrap;
+  gap: 2px;
+  margin: 0 16px 8px 14px;
 }
 body[data-dsh-claude-style] .dsh-claude-search-filters[data-dsh-claude-pill]::before {
-  top: 0 !important;
-  height: 100% !important;
-  border-radius: 8px !important;
-  background: rgba(20, 20, 19, 0.06) !important;
+  top: 0;
+  height: 100%;
+  border-radius: 8px;
+  background: rgba(20, 20, 19, 0.06);
 }
 body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-filters[data-dsh-claude-pill]::before {
   background: rgba(250, 249, 245, 0.08) !important;
 }
 body[data-dsh-claude-style] .dsh-claude-search-filter {
-  height: 32px !important;
-  padding: 0 10px !important;
+  height: 32px;
+  padding: 0 10px;
   border: none !important;
-  border-radius: 8px !important;
-  background: transparent !important;
-  color: var(--dsw-alias-label-tertiary, #8f8d84) !important;
-  font-family: var(--dsw-font-family) !important;
-  font-size: 14px !important;
-  white-space: nowrap !important;
-  cursor: pointer !important;
-  transition: color 0.12s ease !important;
-  user-select: none !important;
-  -webkit-user-select: none !important;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dsw-alias-label-tertiary, #8f8d84);
+  font-family: var(--dsw-font-family);
+  font-size: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.12s ease;
+  user-select: none;
+  -webkit-user-select: none;
 }
 body[data-dsh-claude-style] .dsh-claude-search-filter:hover {
   color: var(--dsw-alias-label-secondary, #787672) !important;
 }
 body[data-dsh-claude-style] .dsh-claude-search-filter[aria-checked="true"] {
-  color: var(--dsw-alias-label-primary, #141413) !important;
+  color: var(--dsw-alias-label-primary, #141413);
 }
 body[data-dsh-claude-style] .dsh-claude-search-filters:not([data-dsh-claude-pill]) .dsh-claude-search-filter[aria-checked="true"] {
   background: rgba(20, 20, 19, 0.06) !important;
@@ -286,18 +286,18 @@ body[data-dsh-claude-style] .dsh-claude-search-filters:not([data-dsh-claude-pill
 /* Results: section captions over rows; the highlighted row carries the fill
    and the Enter glyph. */
 body[data-dsh-claude-style] .dsh-claude-search-list {
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
-  max-height: min(520px, 62vh) !important;
-  overflow-y: auto !important;
-  padding: 4px 12px 10px !important;
-  overscroll-behavior: contain !important;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: min(520px, 62vh);
+  overflow-y: auto;
+  padding: 4px 12px 10px;
+  overscroll-behavior: contain;
 }
 body[data-dsh-claude-style] .dsh-claude-search-section {
-  padding: 14px 12px 6px !important;
-  color: var(--dsw-alias-label-tertiary, #8f8d84) !important;
-  font-size: 13px !important;
-  line-height: 18px !important;
+  padding: 14px 12px 6px;
+  color: var(--dsw-alias-label-tertiary, #8f8d84);
+  font-size: 13px;
+  line-height: 18px;
 }
 body[data-dsh-claude-style] .dsh-claude-search-status {
   padding: 18px 12px !important;
@@ -305,31 +305,31 @@ body[data-dsh-claude-style] .dsh-claude-search-status {
   font-size: 14px !important;
 }
 body[data-dsh-claude-style] .dsh-claude-search-item {
-  display: flex !important;
-  align-items: center !important;
-  gap: 12px !important;
-  min-height: 40px !important;
-  padding: 6px 12px !important;
-  border-radius: 8px !important;
-  box-sizing: border-box !important;
-  cursor: pointer !important;
-  font-size: 15px !important;
-  line-height: 20px !important;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  box-sizing: border-box;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 20px;
 }
 body[data-dsh-claude-style] .dsh-claude-search-item[data-active] {
-  background: rgba(20, 20, 19, 0.05) !important;
+  background: rgba(20, 20, 19, 0.05);
 }
 body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-item[data-active] {
   background: rgba(250, 249, 245, 0.07) !important;
 }
 body[data-dsh-claude-style] .dsh-claude-search-item-icon {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  flex: none !important;
-  width: 18px !important;
-  height: 18px !important;
-  color: var(--dsw-alias-label-secondary, #787672) !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--dsw-alias-label-secondary, #787672);
 }
 body[data-dsh-claude-style] .dsh-claude-search-item-image {
   width: 18px !important;
@@ -338,35 +338,35 @@ body[data-dsh-claude-style] .dsh-claude-search-item-image {
   object-fit: contain !important;
 }
 body[data-dsh-claude-style] .dsh-claude-search-item-text {
-  display: flex !important;
-  flex-direction: column !important;
-  flex: 1 1 auto !important;
-  min-width: 0 !important;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 body[data-dsh-claude-style] .dsh-claude-search-item-line {
-  display: flex !important;
-  align-items: baseline !important;
-  gap: 10px !important;
-  min-width: 0 !important;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
 }
 body[data-dsh-claude-style] .dsh-claude-search-item-name {
-  flex: 0 1 auto !important;
-  min-width: 0 !important;
-  overflow: hidden !important;
-  white-space: nowrap !important;
-  text-overflow: ellipsis !important;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 body[data-dsh-claude-style] .dsh-claude-search-item-detail,
 body[data-dsh-claude-style] .dsh-claude-search-item-snippet {
-  min-width: 0 !important;
-  overflow: hidden !important;
-  white-space: nowrap !important;
-  text-overflow: ellipsis !important;
-  color: var(--dsw-alias-label-tertiary, #8f8d84) !important;
-  font-size: 13px !important;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--dsw-alias-label-tertiary, #8f8d84);
+  font-size: 13px;
 }
 body[data-dsh-claude-style] .dsh-claude-search-item-detail {
-  flex: 1 1 0 !important;
+  flex: 1 1 0;
 }
 body[data-dsh-claude-style] .dsh-claude-search-item-snippet {
   line-height: 18px !important;
@@ -379,55 +379,55 @@ body[data-dsh-claude-style] .dsh-claude-search-item-match {
   font-weight: 500 !important;
 }
 body[data-dsh-claude-style] .dsh-claude-search-item-enter {
-  display: inline-flex !important;
-  flex: none !important;
-  color: var(--dsw-alias-label-tertiary, #8f8d84) !important;
-  visibility: hidden !important;
+  display: inline-flex;
+  flex: none;
+  color: var(--dsw-alias-label-tertiary, #8f8d84);
+  visibility: hidden;
 }
 body[data-dsh-claude-style] .dsh-claude-search-item[data-active] .dsh-claude-search-item-enter {
-  visibility: visible !important;
+  visibility: visible;
 }
 
 /* Keycaps: the action rows' shortcuts and the footer's hints. */
 body[data-dsh-claude-style] .dsh-claude-search-keys {
-  display: inline-flex !important;
-  flex: none !important;
-  align-items: center !important;
-  gap: 3px !important;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 3px;
 }
 body[data-dsh-claude-style] .dsh-claude-search-key {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  min-width: 20px !important;
-  height: 20px !important;
-  padding: 0 5px !important;
-  box-sizing: border-box !important;
-  border: 1px solid var(--dsw-alias-border-l1, #e8e6dc) !important;
-  border-radius: 4px !important;
-  background: transparent !important;
-  color: var(--dsw-alias-label-secondary, #787672) !important;
-  font-family: var(--dsw-font-family) !important;
-  font-size: 12px !important;
-  line-height: 1 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  box-sizing: border-box;
+  border: 1px solid var(--dsw-alias-border-l1, #e8e6dc);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary, #787672);
+  font-family: var(--dsw-font-family);
+  font-size: 12px;
+  line-height: 1;
 }
 body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-key {
-  border-color: var(--dsw-alias-border-l3) !important;
+  border-color: var(--dsw-alias-border-l3);
 }
 body[data-dsh-claude-style] .dsh-claude-search-foot {
-  display: flex !important;
-  align-items: center !important;
-  gap: 24px !important;
-  padding: 12px 24px !important;
-  border-top: 1px solid var(--dsw-alias-border-l1, #e8e6dc) !important;
-  color: var(--dsw-alias-label-secondary, #787672) !important;
-  font-size: 13px !important;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 12px 24px;
+  border-top: 1px solid var(--dsw-alias-border-l1, #e8e6dc);
+  color: var(--dsw-alias-label-secondary, #787672);
+  font-size: 13px;
 }
 body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-foot {
   border-top-color: var(--dsw-alias-border-l2) !important;
 }
 body[data-dsh-claude-style] .dsh-claude-search-hint {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 8px !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }

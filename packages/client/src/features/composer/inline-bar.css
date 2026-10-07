@@ -6,58 +6,58 @@
    never matched — a display here would outrank the hide rule below. */
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] > [class*="_root"] > [class*="_trigger"],
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] > .dsh-claude-model-btn {
-  display: inline-flex !important;
-  align-items: center !important;
-  font-size: 13px !important;
-  color: var(--dsw-alias-label-secondary) !important;
-  border-radius: 7px !important;
-  cursor: pointer !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  color: var(--dsw-alias-label-secondary);
+  border-radius: 7px;
+  cursor: pointer;
+  visibility: visible;
+  opacity: 1;
 }
 /* The skin's own model trigger replaces the host's model seat (the host's
    root is marked and hidden by syncModelControl). One button, one hover
    background — the shipped seat stacks an icon + label + effort + chevron,
    each with its own surface. */
 body[data-dsh-claude-style] [data-dsh-claude-model-host] {
-  display: none !important;
+  display: none;
 }
 body[data-dsh-claude-style] [class*="_trailing"] .dsh-claude-model-btn {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 2px !important;
-  height: 28px !important;
-  max-width: 280px !important;
-  padding: 0 8px !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 28px;
+  max-width: 280px;
+  padding: 0 8px;
   border: none !important;
-  border-radius: 7px !important;
-  background: transparent !important;
-  color: var(--dsw-alias-label-secondary) !important;
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  line-height: 20px !important;
-  cursor: pointer !important;
-  box-sizing: border-box !important;
-  min-width: 0 !important;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+  cursor: pointer;
+  box-sizing: border-box;
+  min-width: 0;
 }
 body[data-dsh-claude-style] [class*="_trailing"] .dsh-claude-model-btn-label.dsh-claude-model-btn-loading {
   color: var(--dsw-alias-label-caption, #a6a094) !important;
 }
 body[data-dsh-claude-style] [class*="_trailing"] .dsh-claude-model-btn:hover {
-  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
-  color: var(--dsw-alias-label-primary) !important;
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
+  color: var(--dsw-alias-label-primary);
 }
 
 /* Only the whole trigger gets the hover plate; its label/effort spans stay
    transparent so no smaller inner background appears. */
 body[data-dsh-claude-style] [class*="_trailing"] .dsh-claude-model-btn > * {
-  background: transparent !important;
+  background: transparent;
 }
 body[data-dsh-claude-style] [class*="_trailing"] .dsh-claude-model-btn-label {
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
-  min-width: 0 !important;
-  overflow: hidden !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
 }
 /* (The effort trigger's styles live in features/effort/effort-picker.css: the
    trigger is body-mounted and JS-pinned beside the model trigger — it never
@@ -73,27 +73,27 @@ body[data-dsh-claude-style] [class*="_trailing"] .dsh-claude-model-btn-label {
    placement. The 4px is the inset the card leaves under itself inside the
    stack: the dock's 28px line is then exactly the control row's line. */
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) {
-  position: relative !important;
+  position: relative;
 }
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] + [class*="_dock"] {
-  position: absolute !important;
-  bottom: 4px !important;
-  left: var(--dsh-composer-side-clearance, 0px) !important;
-  right: var(--dsh-composer-side-clearance, 0px) !important;
-  height: 28px !important;
-  margin: 0 auto !important;
-  padding: 0 calc(160px + var(--dsh-claude-meter-room, 0px)) 0 140px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 12px !important;
-  pointer-events: none !important;
-  z-index: 3 !important;
-  max-width: var(--dsh-composer-card-max-width, 100%) !important;
-  box-sizing: border-box !important;
+  position: absolute;
+  bottom: 4px;
+  left: var(--dsh-composer-side-clearance, 0px);
+  right: var(--dsh-composer-side-clearance, 0px);
+  height: 28px;
+  margin: 0 auto;
+  padding: 0 calc(160px + var(--dsh-claude-meter-room, 0px)) 0 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  pointer-events: none;
+  z-index: 3;
+  max-width: var(--dsh-composer-card-max-width, 100%);
+  box-sizing: border-box;
 }
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] + [class*="_dock"] > * {
-  pointer-events: auto !important;
+  pointer-events: auto;
 }
 /* The meter holds the row's right end, inside the row's own 4px inset, after
    the model and effort triggers: the trailing cluster keeps that room free
@@ -101,14 +101,14 @@ body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant
    stretching over the dock's height, never by a transform — the meter's panel
    is position: fixed, and a transform here would anchor it to the meter. */
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] + [class*="_dock"] > [data-dsh-claude-context-meter] {
-  position: absolute !important;
-  top: 0 !important;
-  bottom: 0 !important;
-  right: 4px !important;
-  align-items: center !important;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 4px;
+  align-items: center;
 }
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] [class*="_row"] > [class*="_trailing"] {
-  margin-right: var(--dsh-claude-meter-room, 0px) !important;
+  margin-right: var(--dsh-claude-meter-room, 0px);
 }
 
 /* ---------- the host's stats row: hidden, its detail moved into the context popover ---------- */
@@ -122,7 +122,7 @@ body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant
    and the input row keeps only the meter at its right end. */
 body[data-dsh-claude-style] [data-composer-stats],
 body[data-dsh-claude-style] [data-composer-stat] {
-  display: none !important;
+  display: none;
 }
 
 /* ---------- one type for the composer's bottom line ---------- */
@@ -136,12 +136,12 @@ body[data-dsh-claude-style] [data-dsh-claude-context-meter],
 body[data-dsh-claude-style] [data-dsh-claude-context-meter] button,
 body[data-dsh-claude-style] [class*="_composerStack"] [data-composer-stats],
 body[data-dsh-claude-style] [data-composer-card] [class*="_row"] .dsh-claude-model-btn {
-  font-family: var(--dsw-font-family) !important;
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  line-height: 20px !important;
-  letter-spacing: normal !important;
-  color: var(--dsw-alias-label-secondary) !important;
+  font-family: var(--dsw-font-family);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+  letter-spacing: normal;
+  color: var(--dsw-alias-label-secondary);
 }
 
 /* The host renders two separate stat dialogs; hide them — their numbers are
@@ -161,7 +161,7 @@ body[data-dsh-claude-style][data-dsh-claude-session-stats] [role="dialog"]:has([
    its own. The feature stamps the panel, and it takes the cards' own short
    rise (the shared keyframe), so hovering either control opens the same way. */
 body[data-dsh-claude-style] [data-dsh-claude-context-panel] {
-  animation: dsh-claude-popover-in 0.15s ease !important;
+  animation: dsh-claude-popover-in 0.15s ease;
 }
 /* The host places the panel from the anchor's LEFT edge and only then clamps it
    into the viewport, which at the end of the composer row parks it against the
@@ -174,47 +174,47 @@ body[data-dsh-claude-style] [data-dsh-claude-context-panel][data-dsh-claude-cont
   left: var(--dsh-claude-context-panel-left) !important;
 }
 body[data-dsh-claude-style] .dsh-claude-context-stats {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 10px !important;
-  margin-top: 10px !important;
-  padding-top: 10px !important;
-  border-top: 1px solid var(--dsw-alias-border-l1) !important;
-  min-width: 0 !important;
-  font-family: var(--dsw-font-family) !important;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--dsw-alias-border-l1);
+  min-width: 0;
+  font-family: var(--dsw-font-family);
 }
 body[data-dsh-claude-style] .dsh-claude-context-stats-grid {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr !important;
-  gap: 6px 10px !important;
-  min-width: 0 !important;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 10px;
+  min-width: 0;
 }
 body[data-dsh-claude-style] .dsh-claude-context-stats-section {
-  color: var(--dsw-alias-label-tertiary) !important;
-  font-size: 11px !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.04em !important;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
 }
 body[data-dsh-claude-style] .dsh-claude-context-stats-item {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 1px !important;
-  min-width: 0 !important;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
 }
 body[data-dsh-claude-style] .dsh-claude-context-stats-label {
-  color: var(--dsw-alias-label-tertiary) !important;
-  font-size: 12px !important;
-  line-height: 16px !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  line-height: 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 body[data-dsh-claude-style] .dsh-claude-context-stats-value {
-  color: var(--dsw-alias-label-primary) !important;
-  font-size: 14px !important;
-  font-weight: 500 !important;
-  line-height: 20px !important;
-  font-variant-numeric: tabular-nums !important;
+  color: var(--dsw-alias-label-primary);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---------- the block while the numbers are still on their way ---------- */

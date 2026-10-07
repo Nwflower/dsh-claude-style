@@ -5,7 +5,7 @@
    host's button is the one packages/client/src/features/composer/composer.ts marks as the
    access control. */
 body[data-dsh-claude-style][data-dsh-claude-composer-active][data-dsh-claude-permissions] button[data-dsh-claude-control="access"] {
-  display: none !important;
+  display: none;
 }
 
 body[data-dsh-claude-style] .dsh-claude-segments {
@@ -75,33 +75,33 @@ body[data-dsh-claude-style] .dsh-claude-segments[data-dsh-claude-pill] > .dsh-cl
 
 /* ---------- Claude Code layout: in-conversation permission popover ---------- */
 body[data-dsh-claude-style] .dsh-claude-perm-container {
-  position: relative !important;
-  display: inline-flex !important;
-  z-index: 20 !important;
+  position: relative;
+  display: inline-flex;
+  z-index: 20;
 }
 body[data-dsh-claude-style] .dsh-claude-perm-btn {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 4px !important;
-  height: 24px !important;
-  padding: 0 6px 0 6px !important;
-  border-radius: 6px !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 6px 0 6px;
+  border-radius: 6px;
   border: none !important;
-  background: transparent !important;
-  color: var(--dsw-alias-label-primary, #141413) !important;
-  font-family: var(--dsw-font-family) !important;
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  cursor: pointer !important;
-  user-select: none !important;
-  transition: background-color 0.12s ease !important;
+  background: transparent;
+  color: var(--dsw-alias-label-primary, #141413);
+  font-family: var(--dsw-font-family);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.12s ease;
 }
 body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-perm-btn {
-  color: var(--dsw-alias-label-primary) !important;
+  color: var(--dsw-alias-label-primary);
 }
 body[data-dsh-claude-style] .dsh-claude-perm-btn:hover,
 body[data-dsh-claude-style] .dsh-claude-perm-btn[data-open="true"] {
-  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
 }
 body[data-dsh-claude-style] .dsh-claude-perm-chevron {
   width: 12px;
@@ -126,13 +126,13 @@ body[data-dsh-claude-style] .dsh-claude-perm-btn[data-open="true"] .dsh-claude-p
 }
 /* The preset list's card is the shared popover card (shared/popover.css). */
 body[data-dsh-claude-style] .dsh-claude-perm-popover {
-  position: fixed !important;
-  min-width: 248px !important;
-  display: flex !important;
-  flex-direction: column !important;
+  position: fixed;
+  min-width: 248px;
+  display: flex;
+  flex-direction: column;
   /* Two-line preset rows (label + description) need air between them: the
      2px gap read as one solid block, so each row is separated by 6px. */
-  gap: 6px !important;
-  transform-origin: bottom left !important;
+  gap: 6px;
+  transform-origin: bottom left;
 }
 

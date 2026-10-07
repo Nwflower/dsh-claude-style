@@ -17,7 +17,7 @@ body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [class*="footArea"]
   display: none !important;
 }
 body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [class*="footArea"] [class*="triggerRow"] :is(button, [role="button"], a):not([data-dsh-claude-account-host-row]) {
-  display: none !important;
+  display: none;
 }
 /* Both containers stay mounted at zero size so the overlays they host keep
    painting, but the collapse must stay geometric. font-size and line-height
@@ -32,12 +32,12 @@ body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [class*="footArea"]
    entries whose stray in-flow text only the zeroing keeps invisible, so the
    full collapse stays there. */
 body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [class*="footArea"] > [class*="settingsArea"] {
-  position: static !important;
-  width: 0 !important;
-  height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  overflow: visible !important;
+  position: static;
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
 }
 /* A settingsArea that holds the host's account row gets its box back: that row
    has to paint in the footer, not inside a zero-sized cell. Everything else
@@ -47,14 +47,14 @@ body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [class*="footArea"]
   height: auto !important;
 }
 body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [class*="footArea"] > [class*="footerActions"] {
-  position: static !important;
-  width: 0 !important;
-  height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  line-height: 0 !important;
-  font-size: 0 !important;
-  overflow: visible !important;
+  position: static;
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  line-height: 0;
+  font-size: 0;
+  overflow: visible;
 }
 
 /* Generic footer-action redirection. The `sidebar.footer.action` slot accepts
