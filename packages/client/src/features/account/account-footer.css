@@ -35,7 +35,7 @@ body[data-dsh-claude-style] .dsh-claude-account-btn[data-open="true"] {
 body[data-dsh-claude-style] .dsh-claude-account-avatar {
   width: 18px;
   height: 18px;
-  background: %%ANTHROPIC_MARK%% center / contain no-repeat;
+  background: var(--dsh-claude-image-anthropic-mark) center / contain no-repeat;
   flex: none;
   margin-right: 8px;
   /* The host's own avatar is a circle (32px with a 16px radius). Ours is 18px to
@@ -47,8 +47,8 @@ body[data-dsh-claude-style] .dsh-claude-account-avatar {
 }
 /* Under the DeepSeek brand the picture with no account behind it is DeepSeek's
    whale, in its brand blue. */
-body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_DEEPSEEK%%"] .dsh-claude-account-avatar {
-  background-image: %%DEEPSEEK_MARK%%;
+body[data-dsh-claude-style][data-dsh-claude-brand="deepseek"] .dsh-claude-account-avatar {
+  background-image: var(--dsh-claude-image-deepseek-mark);
 }
 body[data-dsh-claude-style] .dsh-claude-account-label {
   flex: 1;
@@ -309,7 +309,7 @@ body[data-dsh-claude-style] .dsh-claude-account-inject {
    Only appearance is touched: the host keeps its row order, copy and click
    behaviour. The marker sits on the card itself, so every selector is scoped to
    it and no other host menu is reached. */
-body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] {
+body[data-dsh-claude-style] [data-dsh-claude-account-menu] {
   width: var(--dsh-claude-account-width, 260px) !important;
   min-width: 0 !important;
   max-width: none !important;
@@ -325,7 +325,7 @@ body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] {
    under the Claude palette the surface token is rebound so that layer paints
    the same card fill, and its backdrop blur is dropped for the flat skin card.
    Under the host's colours the host's material stands. */
-body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [%%ACCOUNT_MENU_ATTR%%] {
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"] [data-dsh-claude-account-menu] {
   --dsw-menu-surface-fill: var(--dsh-claude-card);
   --dsw-menu-backdrop-filter: none;
 }
@@ -341,11 +341,11 @@ body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [%%ACCOUNT_MENU_ATTR%%] {
    that. A card revealed on the mount frame fades in low and jumps up mid-fade,
    so inside the armed window it stays unpainted until surface.ts has seen our
    rows inside it and the host's placement stand still. */
-body[data-dsh-claude-style][%%ACCOUNT_ARMED_ATTR%%] div[role="menu"][data-menu-material]:not([%%ACCOUNT_READY_ATTR%%]) {
+body[data-dsh-claude-style][data-dsh-claude-account-armed] div[role="menu"][data-menu-material]:not([data-dsh-claude-account-ready]) {
   visibility: hidden !important;
   animation: none !important;
 }
-body[data-dsh-claude-style][%%ACCOUNT_ARMED_ATTR%%] div[role="menu"][data-menu-material][%%ACCOUNT_READY_ATTR%%] {
+body[data-dsh-claude-style][data-dsh-claude-account-armed] div[role="menu"][data-menu-material][data-dsh-claude-account-ready] {
   transform-origin: bottom left !important;
   animation: dsh-claude-account-menu-in 0.15s ease !important;
 }
@@ -359,7 +359,7 @@ body[data-dsh-claude-style][%%ACCOUNT_ARMED_ATTR%%] div[role="menu"][data-menu-m
     transform: none;
   }
 }
-body[data-dsh-claude-style][data-ds-dark-theme] [%%ACCOUNT_MENU_ATTR%%] {
+body[data-dsh-claude-style][data-ds-dark-theme] [data-dsh-claude-account-menu] {
   background: var(--dsh-claude-raised) !important;
   border-color: var(--dsw-alias-border-l2) !important;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
@@ -368,7 +368,7 @@ body[data-dsh-claude-style][data-ds-dark-theme] [%%ACCOUNT_MENU_ATTR%%] {
 /* The host's rows. itemWrap is the shared Menu's row wrapper; the bare item
    fragment would reach unrelated class names, so the longest stable piece is
    used. */
-body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] [class*="itemWrap"] > [role="menuitem"] {
+body[data-dsh-claude-style] [data-dsh-claude-account-menu] [class*="itemWrap"] > [role="menuitem"] {
   min-height: 32px !important;
   padding: 2px 7px !important;
   gap: 8px !important;
@@ -379,32 +379,32 @@ body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] [class*="itemWrap"] > [role=
   color: var(--dsw-alias-label-primary, #141413) !important;
   transition: background-color 0.12s ease !important;
 }
-body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] [class*="itemWrap"] > [role="menuitem"]:hover:not(:disabled),
-body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] [class*="itemWrap"] > [role="menuitem"]:focus-visible:not(:disabled) {
+body[data-dsh-claude-style] [data-dsh-claude-account-menu] [class*="itemWrap"] > [role="menuitem"]:hover:not(:disabled),
+body[data-dsh-claude-style] [data-dsh-claude-account-menu] [class*="itemWrap"] > [role="menuitem"]:focus-visible:not(:disabled) {
   background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
 }
 /* The selected row keeps the skin's fill rather than the host's stronger
    accent: the account menu's rows are actions, not a persistent choice. */
-body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] [class*="_selected"] {
+body[data-dsh-claude-style] [data-dsh-claude-account-menu] [class*="_selected"] {
   background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
 }
-body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] [class*="itemLabel"] {
+body[data-dsh-claude-style] [data-dsh-claude-account-menu] [class*="itemLabel"] {
   font-size: 13px !important;
   line-height: 20px !important;
 }
-body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] [class*="itemIcon"] {
+body[data-dsh-claude-style] [data-dsh-claude-account-menu] [class*="itemIcon"] {
   width: 16px !important;
   height: 16px !important;
   color: var(--dsw-alias-label-secondary, #787672) !important;
 }
-body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] [class*="itemIcon"] svg {
+body[data-dsh-claude-style] [data-dsh-claude-account-menu] [class*="itemIcon"] svg {
   width: 16px !important;
   height: 16px !important;
 }
 
 /* Separators take the skin's hairline and bleed across the card's padding the
    way the drawer's own divider does. */
-body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] [role="separator"] {
+body[data-dsh-claude-style] [data-dsh-claude-account-menu] [role="separator"] {
   height: 1px !important;
   margin: 2px -6px !important;
   background: var(--dsw-alias-border-l1, #e8e6dc) !important;
@@ -412,11 +412,11 @@ body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] [role="separator"] {
 
 /* The list and its pinned footer sit inside the card's 6px padding; the footer
    keeps a hairline but takes the skin's spacing. */
-body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] [class*="_viewport"] {
+body[data-dsh-claude-style] [data-dsh-claude-account-menu] [class*="_viewport"] {
   padding: 0 !important;
   overflow-x: hidden !important;
 }
-body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] [class*="_footer"] {
+body[data-dsh-claude-style] [data-dsh-claude-account-menu] [class*="_footer"] {
   margin-top: 2px !important;
   padding-top: 2px !important;
   border-top: 1px solid var(--dsw-alias-border-l1, #e8e6dc) !important;
@@ -424,7 +424,7 @@ body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] [class*="_footer"] {
 
 /* Our injected container and header already use the shared popover rules; the
    host's viewport is a flex column, so the container only needs to fill it. */
-body[data-dsh-claude-style] [%%ACCOUNT_MENU_ATTR%%] .dsh-claude-account-inject {
+body[data-dsh-claude-style] [data-dsh-claude-account-menu] .dsh-claude-account-inject {
   width: 100% !important;
 }
 

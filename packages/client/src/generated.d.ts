@@ -3,7 +3,7 @@
  * the source imports by name instead of reading it from text placeholders.
  */
 declare module 'virtual:dsh-claude-style/generated' {
-  /** The skin's stylesheet: the src/ stylesheets in order, tokens substituted, the composer gate stamped (D4). */
+  /** The skin's stylesheet: the generated token sheet and the src/ stylesheets in order, the composer gate stamped (D4). */
   export const STYLESHEET: string
   /** Vendor lockup markup by brand id (packages/assets/src/icons/combine/). */
   export const COMBINE_SVGS: Record<string, string>

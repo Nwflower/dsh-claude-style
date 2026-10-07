@@ -67,7 +67,7 @@ body[data-dsh-claude-style] {
   color: var(--dsw-alias-label-primary);
 }
 
-body[data-dsh-claude-style]%%PALETTE_CLAUDE%% {
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"] {
   background-color: var(--dsh-claude-canvas);
 }
 

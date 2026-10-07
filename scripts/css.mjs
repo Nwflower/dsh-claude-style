@@ -1,9 +1,9 @@
 /**
  * css.mjs — the stylesheet half of the build (D51).
  *
- * Every stylesheet is parsed with PostCSS after its %%TOKEN%% placeholders are
- * substituted, and the rules the skin's CSS lives by are checked on the syntax
- * tree, selectors through postcss-selector-parser:
+ * Every stylesheet is plain CSS: it is parsed with PostCSS, and the rules the
+ * skin's CSS lives by are checked on the syntax tree, selectors through
+ * postcss-selector-parser:
  *
  *   scope        every selector holds `body[data-dsh-claude-style]` (outside :not())
  *   :has()       only in its selector's last compound, at every nesting level (D9)
@@ -12,9 +12,12 @@
  *                defines has an alias under the host's (D30)
  *   composer     the rules below a sheet's `@composer-gate` comment get the
  *                composer gate stamped onto their scope compound (D4)
+ *   attributes   every `data-dsh-*` attribute a selector reads is one the
+ *                browser half writes: its name appears in the TypeScript
  *
  * The token stylesheet is generated from packages/client/src/theme/tokens.json, and so is the
- * token table in docs/STYLE.md.
+ * token table in docs/STYLE.md; it also declares the brand marks' addresses
+ * as `--dsh-claude-image-<name>`, the one thing in the CSS only the build knows.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -35,15 +38,14 @@ const TOKEN_SCHEMA = 'theme/tokens.schema.json'
 const TABLE_BEGIN = '<!-- generated:tokens (packages/client/src/theme/tokens.json) -->'
 const TABLE_END = '<!-- /generated:tokens -->'
 
-/** Substitute %%TOKEN%% placeholders in one stylesheet; throws on leftovers. */
-export function substitute(file, text, tokens) {
-  const out = text.replace(/%%([A-Z_]+)%%/g, (match, name) => {
-    if (!(name in tokens)) throw new Error(`build: unknown token %%${name}%% in packages/client/src/${file}`)
-    return tokens[name]
-  })
-  if (out.includes('%%')) throw new Error(`build: unsubstituted token remains in packages/client/src/${file}`)
-  return out
-}
+/** The prefix of the attributes the skin writes; the host's own are read as contracts (D44). */
+const SKIN_ATTRIBUTE_PREFIX = 'data-dsh-'
+/**
+ * Attributes the browser half builds rather than spells out: the mascot
+ * player marks its stand `data-dsh-claude-<character>-anchor` from the
+ * character's name (features/mascot/mascot-player.ts).
+ */
+const BUILT_ATTRIBUTES = new Set(['data-dsh-claude-crab-anchor', 'data-dsh-claude-deepy-anchor'])
 
 /* ---------- selectors ---------- */
 
@@ -133,16 +135,17 @@ function checkTokenGates(file, rule, selectors, gates, names) {
 }
 
 /**
- * Parse one substituted stylesheet, check every rule, and stamp the composer
+ * Parse one stylesheet, check every rule, and stamp the composer
  * gate below the marker of a gated sheet (D4). The composer preference decides
  * per page which composer surface the skin repaints, so the gate is one
  * attribute on `<body>` stamped onto the scope compound of every rule below
  * the marker; a gated sheet without the marker, or with no rule below it,
  * fails the build.
  *
+ * @param read - collects the skin attributes the sheet's selectors read, each with where.
  * @returns the sheet's text, comments and formatting kept.
  */
-function processSheet(sheet, text, gates, names) {
+function processSheet(sheet, text, gates, names, read) {
   const root = postcss.parse(text, { from: `packages/client/src/${sheet.file}` })
   let markerEnd = null
   if (sheet.gate === true) {
@@ -155,6 +158,9 @@ function processSheet(sheet, text, gates, names) {
     if (rule.parent.type === 'atrule' && /keyframes$/i.test(rule.parent.name)) return
     const where = `packages/client/src/${sheet.file}:${rule.source.start.line}`
     const selectors = selectorParser().astSync(rule.selector)
+    selectors.walkAttributes((attribute) => {
+      if (attribute.attribute.startsWith(SKIN_ATTRIBUTE_PREFIX) && !read.has(attribute.attribute)) read.set(attribute.attribute, where)
+    })
     const stamp = markerEnd !== null && rule.source.start.offset > markerEnd
     for (const selector of selectors.nodes) {
       const scopes = scopeCompounds(selector)
@@ -208,7 +214,7 @@ function declarationsOf(items, pick) {
 }
 
 /**
- * The token stylesheet, placeholders still in, in cascade order.
+ * The token stylesheet, in cascade order.
  *
  * Every block that writes a host token carries the Claude gate, so under
  * "follow the host" the host's own tokens stand (D30). The palette blocks name
@@ -216,24 +222,29 @@ function declarationsOf(items, pick) {
  * the same (0,1,1) as a bare `body[data-dsh-claude-style]`, so whichever sheet
  * the loader appended last would win; naming the attribute lifts these to
  * (0,2,1). The DeepSeek blocks add the brand attribute on top and only state
- * what differs from Claude's.
+ * what differs from Claude's. The brand marks' addresses come first: every
+ * choice paints with them.
+ *
+ * @param images - brand mark name → its address (data URI or route).
  */
-function tokenSheet(doc) {
+function tokenSheet(doc, gates, images) {
   const dark = '[data-ds-dark-theme]'
   const light = ':not([data-ds-dark-theme])'
-  const claude = `${SCOPE}%%PALETTE_CLAUDE%%`
-  const deepseek = `${claude}[%%BRAND_ATTR%%="%%BRAND_DEEPSEEK%%"]`
+  const gate = ({ attribute }, value) => `[${attribute}="${value}"]`
+  const claude = `${SCOPE}${gate(gates.palette, gates.palette.claude)}`
+  const deepseek = `${claude}${gate(gates.brand, gates.brand.deepseek)}`
   return [
     `/* Generated from packages/client/src/${TOKEN_SHEET} by scripts/css.mjs; edit the JSON. */\n`,
-    tokenBlock(`${SCOPE}%%TYPEFACE_CLAUDE%%`, declarationsOf(doc.typeface, (item) => item.claude)),
-    tokenBlock(`${SCOPE}%%TYPEFACE_HOST%%`, declarationsOf(doc.typeface, (item) => item.host)),
+    tokenBlock(SCOPE, Object.entries(images).map(([name, url]) => [`--dsh-claude-image-${name}`, `url("${url}")`])),
+    tokenBlock(`${SCOPE}${gate(gates.typeface, gates.typeface.claude)}`, declarationsOf(doc.typeface, (item) => item.claude)),
+    tokenBlock(`${SCOPE}${gate(gates.typeface, gates.typeface.host)}`, declarationsOf(doc.typeface, (item) => item.host)),
     tokenBlock(`${SCOPE}${dark}`, declarationsOf(doc.apex, (item) => item.dark)),
     tokenBlock(`${SCOPE}${light}`, declarationsOf(doc.apex, (item) => item.light)),
     tokenBlock(`${claude}${dark}`, declarationsOf(doc.palette, (item) => item.claude?.dark)),
     tokenBlock(`${claude}${light}`, declarationsOf(doc.palette, (item) => item.claude?.light)),
     tokenBlock(`${deepseek}${light}`, declarationsOf(doc.palette, (item) => item.deepseek?.light)),
     tokenBlock(`${deepseek}${dark}`, declarationsOf(doc.palette, (item) => item.deepseek?.dark)),
-    tokenBlock(`${SCOPE}%%PALETTE_HOST%%`, declarationsOf(doc.palette, (item) => item.host)),
+    tokenBlock(`${SCOPE}${gate(gates.palette, gates.palette.host)}`, declarationsOf(doc.palette, (item) => item.host)),
   ].filter((block) => block !== '').join('\n')
 }
 
@@ -275,25 +286,48 @@ export function writeTokenTable(stylePath, doc) {
 /* ---------- the stylesheet ---------- */
 
 /**
- * Every sheet in cascade order, substituted, checked, gated and joined.
+ * Hold every skin attribute a selector reads to the browser half: its name has
+ * to appear in the TypeScript under `srcDir` (a constant's value or a literal),
+ * or be one the browser half builds (BUILT_ATTRIBUTES). An attribute renamed
+ * in the code, or misspelt in a sheet, leaves a rule that matches nothing.
+ *
+ * @param read - attribute name → where a selector first reads it.
+ */
+function checkAttributes(read, srcDir) {
+  const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const full = path.join(dir, entry.name)
+    if (entry.isDirectory()) return walk(full)
+    return entry.name.endsWith('.ts') && !entry.name.endsWith('.test.ts') ? [full] : []
+  })
+  const code = walk(srcDir).map((file) => fs.readFileSync(file, 'utf8')).join('\n')
+  for (const [name, where] of read) {
+    if (BUILT_ATTRIBUTES.has(name)) continue
+    if (!new RegExp(`${name}(?![a-z0-9-])`).test(code)) throw new Error(`build: ${where} reads [${name}], which nothing under packages/client/src/ writes`)
+  }
+}
+
+/**
+ * Every sheet in cascade order, checked, gated and joined.
  *
  * @param options.sheets - `{ file, rank, gate? }` in cascade order (TOKEN_SHEET generated).
  * @param options.srcDir - the source directory.
- * @param options.tokens - the placeholder values.
  * @param options.tokenDoc - packages/client/src/theme/tokens.json (loadTokens).
- * @param options.gates - `{ composer, palette: { attribute, claude, host }, typeface: { attribute, claude, host } }`.
+ * @param options.gates - `{ composer, palette: { attribute, claude, host }, typeface: { attribute, claude, host }, brand: { attribute, deepseek } }`.
+ * @param options.images - brand mark name → its address, for the token sheet.
  * @returns the stylesheet text.
  */
-export function buildStylesheet({ sheets, srcDir, tokens, tokenDoc, gates }) {
+export function buildStylesheet({ sheets, srcDir, tokenDoc, gates, images }) {
   const names = { claude: new Set(), host: new Set() }
+  const read = new Map()
   const text = sheets.map((sheet) => {
     const source = sheet.file === TOKEN_SHEET
-      ? tokenSheet(tokenDoc)
+      ? tokenSheet(tokenDoc, gates, images)
       : fs.readFileSync(path.join(srcDir, sheet.file), 'utf8').replace(/\r\n/g, '\n')
-    return processSheet(sheet, substitute(sheet.file, source, tokens), gates, names).replace(/\n+$/, '')
+    return processSheet(sheet, source, gates, names, read).replace(/\n+$/, '')
   }).join('\n\n')
   for (const name of names.claude) {
     if (!names.host.has(name)) throw new Error(`build: ${name} is defined under the Claude palette or typeface but has no alias under the host's`)
   }
+  checkAttributes(read, srcDir)
   return text
 }

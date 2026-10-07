@@ -1,7 +1,7 @@
 /* ---------- canvas + hairline structure ---------- */
 /* Under the Claude palette the skin paints the columns; under "follow the
    host" they take the host's own tokens and only the hairline stays. */
-body[data-dsh-claude-style]%%PALETTE_CLAUDE%% :is([data-pane="sidebar"], [class*="sidebarCol"], .dshDesktopSidebarSurface) {
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"] :is([data-pane="sidebar"], [class*="sidebarCol"], .dshDesktopSidebarSurface) {
   --dsw-specific-sidebar-fill: var(--dsh-claude-sidebar-canvas) !important;
   background: var(--dsh-claude-sidebar-canvas) !important;
 }
@@ -10,7 +10,7 @@ body[data-dsh-claude-style] :is([data-pane="sidebar"], [class*="sidebarCol"], .d
   border-right: 1px solid var(--dsw-alias-border-l1) !important;
 }
 
-body[data-dsh-claude-style]%%PALETTE_CLAUDE%% :is([data-pane="conversation"], [class*="centerCol"]) {
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"] :is([data-pane="conversation"], [class*="centerCol"]) {
   background: var(--dsh-claude-canvas);
 }
 
@@ -260,7 +260,7 @@ body[data-dsh-claude-style] [class*="_header"]:has([class*="_tabs"])::after {
    setting. Scoped to the skin's own class prefix so the host's transitions stay
    as the host wrote them. Two things keep moving on purpose: the segmented
    controls' sliding pill and the background-work ring (theme/sidebar.css). */
-body[data-dsh-claude-style][%%MOTION_ATTR%%="%%MOTION_REDUCED%%"] [class*="dsh-claude-"] {
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [class*="dsh-claude-"] {
   animation-duration: 0.01ms !important;
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;

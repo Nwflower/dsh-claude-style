@@ -4,7 +4,7 @@
    as long as the permission control is installed to stand in for it. The
    host's button is the one packages/client/src/features/composer/composer.ts marks as the
    access control. */
-body[data-dsh-claude-style][data-dsh-claude-composer-active][%%PERMISSIONS_ATTR%%] button[data-dsh-claude-control="access"] {
+body[data-dsh-claude-style][data-dsh-claude-composer-active][data-dsh-claude-permissions] button[data-dsh-claude-control="access"] {
   display: none !important;
 }
 

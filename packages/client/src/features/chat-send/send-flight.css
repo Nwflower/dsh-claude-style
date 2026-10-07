@@ -3,6 +3,6 @@
    display — the hidden row has to keep its layout box, because the stand-in
    measures the destination from it every frame. The attribute name is
    constants.ts's CHAT_FLYING_ATTR, spelled the same by the JS that writes it. */
-body[data-dsh-claude-style] [%%CHAT_FLYING_ATTR%%] {
+body[data-dsh-claude-style] [data-dsh-claude-send-flight] {
   visibility: hidden;
 }

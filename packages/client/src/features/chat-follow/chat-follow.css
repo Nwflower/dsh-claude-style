@@ -7,7 +7,7 @@
    and adds its thickness to that difference. Clipped rather than scrollable:
    what can scroll sideways inside a group (code blocks, tables) carries its own
    overflow-x. */
-body[data-dsh-claude-style][%%CHAT_FOLLOW_ATTR%%] [data-step-process]:not([data-group-expanded-mode]) [data-step-process-body] {
+body[data-dsh-claude-style][data-dsh-claude-chat-follow] [data-step-process]:not([data-group-expanded-mode]) [data-step-process-body] {
   overflow-x: hidden;
 }
 /* The host's own "back to the end" button while the stream glide follows
@@ -16,6 +16,6 @@ body[data-dsh-claude-style][%%CHAT_FOLLOW_ATTR%%] [data-step-process]:not([data-
    button although the glide is following. Kept out of sight rather than
    removed: the host's own state stays untouched, and the mark goes away the
    moment the glide lets go. */
-body[data-dsh-claude-style][%%CHAT_FOLLOW_ATTR%%] [%%STREAM_GLIDE_ATTR%%] {
+body[data-dsh-claude-style][data-dsh-claude-chat-follow] [data-dsh-claude-stream-glide] {
   visibility: hidden;
 }

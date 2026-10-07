@@ -3,12 +3,13 @@
    an alpha mask over currentColor so it follows the label colour. The choice is a
    document attribute, so the settings page flips one attribute and the UI follows.
    Sizing: an 18px cap height to match the shipped brandName box, the wordmark's
-   width read from that height through the artwork's aspect ratio. */
-body[data-dsh-claude-style]%%BRAND_ACTIVE%% :is([class*="brandMark"], [class*="railMark"]) > * {
+   width read from that height through the artwork's aspect ratio (its viewBox,
+   512.22 × 121.54, packages/assets/src/brand/claude-word.svg). */
+body[data-dsh-claude-style][data-dsh-claude-brand="claude"] :is([class*="brandMark"], [class*="railMark"]) > * {
   display: none !important;
 }
 
-body[data-dsh-claude-style]%%BRAND_ACTIVE%% :is([class*="brandMark"], [class*="railMark"])::before {
+body[data-dsh-claude-style][data-dsh-claude-brand="claude"] :is([class*="brandMark"], [class*="railMark"])::before {
   content: "";
   display: block;
   flex: none;
@@ -19,18 +20,18 @@ body[data-dsh-claude-style]%%BRAND_ACTIVE%% :is([class*="brandMark"], [class*="r
 }
 
 /* Claude (default): starburst mark + the Claude wordmark. */
-body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_CLAUDE%%"] :is([class*="brandMark"], [class*="railMark"])::before {
+body[data-dsh-claude-style][data-dsh-claude-brand="claude"] :is([class*="brandMark"], [class*="railMark"])::before {
   width: 18px;
   height: 18px;
-  -webkit-mask: %%CLAUDE_MARK%% center / contain no-repeat;
-  mask: %%CLAUDE_MARK%% center / contain no-repeat;
+  -webkit-mask: var(--dsh-claude-image-claude-mark) center / contain no-repeat;
+  mask: var(--dsh-claude-image-claude-mark) center / contain no-repeat;
 }
 
-body[data-dsh-claude-style]%%BRAND_ACTIVE%% [class*="brandIdentity"] > [class*="brandName"] > * {
+body[data-dsh-claude-style][data-dsh-claude-brand="claude"] [class*="brandIdentity"] > [class*="brandName"] > * {
   display: none !important;
 }
 
-body[data-dsh-claude-style]%%BRAND_ACTIVE%% [class*="brandIdentity"] > [class*="brandName"]::before {
+body[data-dsh-claude-style][data-dsh-claude-brand="claude"] [class*="brandIdentity"] > [class*="brandName"]::before {
   content: "";
   display: block;
   flex: none;
@@ -40,19 +41,19 @@ body[data-dsh-claude-style]%%BRAND_ACTIVE%% [class*="brandIdentity"] > [class*="
   background-size: contain;
 }
 
-body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_CLAUDE%%"] [class*="brandIdentity"] > [class*="brandName"]::before {
-  width: %%CLAUDE_WORD_WIDTH%%px;
+body[data-dsh-claude-style][data-dsh-claude-brand="claude"] [class*="brandIdentity"] > [class*="brandName"]::before {
+  width: calc(18px * 512.22 / 121.54);
   max-width: 100%;
   height: 18px;
-  -webkit-mask: %%CLAUDE_WORD%% center / contain no-repeat;
-  mask: %%CLAUDE_WORD%% center / contain no-repeat;
+  -webkit-mask: var(--dsh-claude-image-claude-word) center / contain no-repeat;
+  mask: var(--dsh-claude-image-claude-word) center / contain no-repeat;
 }
 
 /* DeepSeek: the host's own whale and wordmark in DeepSeek's brand blue. The
    expanded brand is a button on most platforms and a plain row on macOS, and the
    collapsed rail's whale sits in the sidebar toggle, so the art is inked where it
    sits. */
-body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_DEEPSEEK%%"] :is([class*="brandIdentity"], [class*="railMark"]) {
+body[data-dsh-claude-style][data-dsh-claude-brand="deepseek"] :is([class*="brandIdentity"], [class*="railMark"]) {
   color: var(--dsh-claude-logo-ink) !important;
 }
 

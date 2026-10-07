@@ -1,24 +1,24 @@
 /* The canvases the Claude palette paints onto the host's own structure; under
    "follow the host" none of them apply. */
-body[data-dsh-claude-style]%%PALETTE_CLAUDE%%:not([data-ds-dark-theme]) {
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-ds-dark-theme]) {
   color: var(--dsw-alias-label-primary);
   background-color: var(--dsh-claude-canvas) !important;
 }
 
 /* The document element sits above the body and cannot read its tokens, so each
    palette states its canvas here. */
-html:has(body[data-dsh-claude-style]%%PALETTE_CLAUDE%%:not([data-ds-dark-theme])) {
+html:has(body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-ds-dark-theme])) {
   background-color: #fcfcfb !important;
 }
 
-html:has(body[data-dsh-claude-style]%%PALETTE_CLAUDE%%[%%BRAND_ATTR%%="%%BRAND_DEEPSEEK%%"]:not([data-ds-dark-theme])) {
+html:has(body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-brand="deepseek"]:not([data-ds-dark-theme])) {
   background-color: #fafbff !important;
 }
-body[data-dsh-claude-style]%%PALETTE_CLAUDE%%:not([data-ds-dark-theme]) #root {
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-ds-dark-theme]) #root {
   background-color: var(--dsh-claude-canvas) !important;
 }
 
-body[data-dsh-claude-style]%%PALETTE_CLAUDE%%:not([data-ds-dark-theme]) :is([data-pane="sidebar"], [class*="sidebarCol"], .dshDesktopSidebarSurface) {
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-ds-dark-theme]) :is([data-pane="sidebar"], [class*="sidebarCol"], .dshDesktopSidebarSurface) {
   --dsw-specific-sidebar-fill: var(--dsh-claude-sidebar-canvas) !important;
   background: var(--dsh-claude-sidebar-canvas) !important;
 }
@@ -27,7 +27,7 @@ body[data-dsh-claude-style]:not([data-ds-dark-theme]) :is([data-pane="sidebar"],
   border-right: 1px solid var(--dsw-alias-border-l1) !important;
 }
 
-body[data-dsh-claude-style]%%PALETTE_CLAUDE%%:not([data-ds-dark-theme]) :is([data-pane="conversation"], [class*="centerCol"]) {
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-ds-dark-theme]) :is([data-pane="conversation"], [class*="centerCol"]) {
   background: var(--dsh-claude-canvas) !important;
 }
 

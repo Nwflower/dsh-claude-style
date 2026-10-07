@@ -7,14 +7,14 @@
    by the script's own mark. */
 
 /* 0-3-1 against the host's own caret-color rule (0-1-0). */
-body[data-dsh-claude-style] [data-composer-input][%%CARET_ATTR%%],
-body[data-dsh-claude-style] textarea[%%CARET_ATTR%%] {
+body[data-dsh-claude-style] [data-composer-input][data-dsh-claude-caret],
+body[data-dsh-claude-style] textarea[data-dsh-claude-caret] {
   caret-color: transparent;
 }
 
 /* Lent to a parent that is not a positioning context. None of these containers
    has an absolutely positioned descendant, so this changes no layout. */
-body[data-dsh-claude-style] [%%CARET_HOST_ATTR%%] {
+body[data-dsh-claude-style] [data-dsh-claude-caret-host] {
   position: relative;
 }
 
@@ -22,7 +22,7 @@ body[data-dsh-claude-style] [%%CARET_HOST_ATTR%%] {
    container writes for its children (a question card's field gives every child
    a grid area, padding and a whole font), so the box's size and place are
    written back explicitly. */
-body[data-dsh-claude-style] [%%CARET_LAYER_ATTR%%][%%CARET_LAYER_ATTR%%] {
+body[data-dsh-claude-style] [data-dsh-claude-caret-layer][data-dsh-claude-caret-layer] {
   position: absolute;
   top: 0;
   left: 0;
@@ -48,7 +48,7 @@ body[data-dsh-claude-style] [%%CARET_LAYER_ATTR%%][%%CARET_LAYER_ATTR%%] {
   animation: dsh-claude-caret-blink 1s step-end infinite;
 }
 
-body[data-dsh-claude-style] [%%CARET_LAYER_ATTR%%][%%CARET_LAYER_ATTR%%][%%CARET_VISIBLE_ATTR%%] {
+body[data-dsh-claude-style] [data-dsh-claude-caret-layer][data-dsh-claude-caret-layer][data-dsh-claude-caret-visible] {
   visibility: visible;
 }
 
@@ -61,7 +61,7 @@ body[data-dsh-claude-style] [%%CARET_LAYER_ATTR%%][%%CARET_LAYER_ATTR%%][%%CARET
    because "follow the system" resolves into this same attribute. A media query
    here would ignore the choice — and would stop the caret for a reader who
    picked "always" against a system that asks for reduced motion. */
-body[data-dsh-claude-style][%%MOTION_ATTR%%="%%MOTION_REDUCED%%"] [%%CARET_LAYER_ATTR%%][%%CARET_LAYER_ATTR%%] {
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-claude-caret-layer][data-dsh-claude-caret-layer] {
   transition: none;
   animation: none;
 }

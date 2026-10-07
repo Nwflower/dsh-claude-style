@@ -165,8 +165,8 @@ const FACTORY_CLOSE = `    return module.exports
 
 /**
  * Evaluate packages/client/src/constants.ts and the mascot sheet tables once (pure, DOM-free):
- * `tokens` are the values the stylesheets' %%TOKEN%% placeholders take, beside them the two
- * sheet tables, the asset scales and the preference defaults the browser half carries.
+ * the gate attributes the stylesheets are checked against, the two sheet
+ * tables, the asset scales and the preference defaults the browser half carries.
  */
 const CONSTANTS = (() => {
   const constantsFile = 'packages/client/src/constants.ts'
@@ -177,29 +177,16 @@ const CONSTANTS = (() => {
     if (module[name] === undefined) throw new Error(`build: ${file} exports no ${name}`)
     return [name, module[name]]
   }))
-  const { BRAND_ATTR, BRAND_CLAUDE, PALETTE_ATTR, PALETTE_CLAUDE, PALETTE_HOST, TYPEFACE_ATTR, TYPEFACE_CLAUDE, TYPEFACE_HOST } = constants
+  const { BRAND_ATTR, BRAND_DEEPSEEK, COMPOSER_ATTR, PALETTE_ATTR, PALETTE_CLAUDE, PALETTE_HOST, TYPEFACE_ATTR, TYPEFACE_CLAUDE, TYPEFACE_HOST } = pick(constants, constantsFile, ['BRAND_ATTR', 'BRAND_DEEPSEEK', 'COMPOSER_ATTR', 'PALETTE_ATTR', 'PALETTE_CLAUDE', 'PALETTE_HOST', 'TYPEFACE_ATTR', 'TYPEFACE_CLAUDE', 'TYPEFACE_HOST'])
   return {
-    tokens: {
-      ...pick(constants, constantsFile, ['SANS', 'SERIF', 'PROSE', 'MONO', 'BRAND_ATTR', 'BRAND_CLAUDE', 'BRAND_DEEPSEEK', 'MOTION_ATTR', 'MOTION_REDUCED', 'FOOTER_ATTR', 'COMPOSER_ATTR', 'PERMISSIONS_ATTR', 'SESSION_STATS_ATTR', 'CHAT_FOLLOW_ATTR', 'STREAM_GLIDE_ATTR', 'CHAT_FOLD_ATTR', 'CHAT_ROLLING_ATTR', 'CHAT_REVEAL_ATTR', 'CHAT_FLYING_ATTR', 'CARET_ATTR', 'CARET_LAYER_ATTR', 'CARET_VISIBLE_ATTR', 'CARET_HOST_ATTR', 'ACCOUNT_MENU_ATTR', 'ACCOUNT_ARMED_ATTR', 'ACCOUNT_READY_ATTR', 'HERO_MENU_ATTR', 'SETTINGS_SCROLLER_ATTR']),
-      // "this brand is drawn by the skin": of the two brands, DeepSeek keeps the
-      // host's own brand area, so the shared rules that hide the host's mark and
-      // paint the ::before are gated on the Claude brand rather than on
-      // :not(deepseek), which would have them paint over the host's whale.
-      BRAND_ACTIVE: '[' + BRAND_ATTR + '="' + BRAND_CLAUDE + '"]',
-      // Who paints the colours and who sets the type: a rule that writes a
-      // host token carries the Claude gate (scripts/css.mjs), and the host
-      // blocks alias the skin's private tokens to the host's.
-      PALETTE_CLAUDE: '[' + PALETTE_ATTR + '="' + PALETTE_CLAUDE + '"]',
-      PALETTE_HOST: '[' + PALETTE_ATTR + '="' + PALETTE_HOST + '"]',
-      TYPEFACE_CLAUDE: '[' + TYPEFACE_ATTR + '="' + TYPEFACE_CLAUDE + '"]',
-      TYPEFACE_HOST: '[' + TYPEFACE_ATTR + '="' + TYPEFACE_HOST + '"]',
-      CLAUDE_WORD_WIDTH: (18 * constants.CLAUDE_WORD_ASPECT).toFixed(1),
-    },
-    // The gate attributes scripts/css.mjs checks and stamps on the syntax tree.
+    // The gate attributes scripts/css.mjs checks, stamps and writes the token
+    // blocks under: who paints the colours and who sets the type (D30), the
+    // composer preference (D4) and the DeepSeek brand's own blocks (D50).
     gates: {
-      composer: constants.COMPOSER_ATTR,
+      composer: COMPOSER_ATTR,
       palette: { attribute: PALETTE_ATTR, claude: PALETTE_CLAUDE, host: PALETTE_HOST },
       typeface: { attribute: TYPEFACE_ATTR, claude: TYPEFACE_CLAUDE, host: TYPEFACE_HOST },
+      brand: { attribute: BRAND_ATTR, deepseek: BRAND_DEEPSEEK },
     },
     ...pick(sheets, sheetsFile, ['CRAB_SHEETS', 'DEEPY_SHEETS', 'DEEPY_SCALE', 'DEEPY_GUTTER']),
     ...pick(constants, constantsFile, ['PREF_DEFAULTS']),
@@ -211,21 +198,22 @@ const PROBE_STATES = new Set(['any', 'hero', 'sending', 'streaming', 'conversati
 const PROBE_KINDS = new Set(['selector', 'attribute', 'property', 'global', 'value', 'rail-geometry', 'none'])
 
 /**
- * The brand marks the stylesheets paint, as `%%TOKEN%%` placeholders (the skin
- * has no asset URLs: the DSH loader exposes none, so a mark is a data URI or a
- * route address, whichever the asset manifest decided).
+ * The brand marks the stylesheets paint, each as the custom property
+ * `--dsh-claude-image-<name>` the token sheet declares (the skin has no asset
+ * URLs: the DSH loader exposes none, so a mark is a data URI or a route
+ * address, whichever the asset manifest decided).
  */
-const BRAND_MARKS = {
-  CLAUDE_MARK: 'claude-mark.svg',
-  CLAUDE_WORD: 'claude-word.svg',
-  CLAUDE_MARK_CLAY: 'claude-mark-clay.svg',
+const BRAND_MARKS = [
+  'claude-mark.svg',
+  'claude-word.svg',
+  'claude-mark-clay.svg',
   // The account row's picture when no avatar is behind it, under the Claude
   // brand: Anthropic's own mark.
-  ANTHROPIC_MARK: 'anthropic-mark.svg',
+  'anthropic-mark.svg',
   // The host's own whale mark (ui-primitives FishLogo, FISH_LOGO_PATH), in
   // DeepSeek's brand blue: a picture where it is painted, a shape where it masks.
-  DEEPSEEK_MARK: 'deepseek-mark.svg',
-}
+  'deepseek-mark.svg',
+]
 
 /**
  * The vendored vendor lockups, keyed by brand id.
@@ -589,12 +577,12 @@ async function main() {
   const deepy = vectorizeDeepySheets()
   const plan = planAssets({ assetsDir: ASSETS, generated: deepy.generated, replaced: deepy.replaced })
   const claimed = new Set()
-  const tokens = { ...CONSTANTS.tokens }
-  for (const [token, file] of Object.entries(BRAND_MARKS)) {
+  const images = {}
+  for (const file of BRAND_MARKS) {
     const entry = plan.entries.get(`brand/${file}`)
-    if (entry === undefined) throw new Error(`build: each asset is claimed or fails the build; brand/${file} (%%${token}%%) is missing`)
+    if (entry === undefined) throw new Error(`build: each asset is claimed or fails the build; brand/${file} is missing`)
     claimed.add(`brand/${file}`)
-    tokens[token] = `url("${entry.url}")`
+    images[path.basename(file, '.svg')] = entry.url
   }
   const combines = loadCombines(plan, claimed)
 
@@ -622,7 +610,7 @@ async function main() {
   checkClaimed(plan, claimed)
 
   const tokenDoc = loadTokens(SRC)
-  const cssText = buildStylesheet({ sheets, srcDir: SRC, tokens, tokenDoc, gates: CONSTANTS.gates })
+  const cssText = buildStylesheet({ sheets, srcDir: SRC, tokenDoc, gates: CONSTANTS.gates, images })
   if (writeTokenTable(STYLE_GUIDE, tokenDoc)) console.log('built docs/STYLE.md token table from packages/client/src/theme/tokens.json')
 
   const result = await esbuild.build({

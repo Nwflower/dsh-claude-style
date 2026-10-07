@@ -40,7 +40,7 @@ body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-popover-card {
 /* Under the host's colours the card's fill is the host's overlay layer, which
    a theme plugin may turn translucent (a wallpaper's glass): the card blurs
    what lies behind it, so its rows stay readable over a busy picture. */
-body[data-dsh-claude-style]%%PALETTE_HOST%% .dsh-claude-popover-card {
+body[data-dsh-claude-style][data-dsh-claude-palette="host"] .dsh-claude-popover-card {
   -webkit-backdrop-filter: blur(16px) saturate(1.4) !important;
   backdrop-filter: blur(16px) saturate(1.4) !important;
 }

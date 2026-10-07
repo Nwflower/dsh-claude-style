@@ -1,10 +1,11 @@
 /**
- * The constants the build reads out of the browser half: the values the
- * stylesheets' `%%TOKEN%%` placeholders take, the gate attributes scripts/css.mjs
- * checks on the syntax tree, the values preferences hold with the attribute
- * names they resolve onto, and the preference defaults — scripts/build.mjs
- * evaluates this module and picks those names. The identity constants and the
- * host half's route re-exports live here too.
+ * The constants the build reads out of the browser half: the gate attributes
+ * scripts/css.mjs checks on the syntax tree, the values preferences hold with
+ * the attribute names they resolve onto, and the preference defaults —
+ * scripts/build.mjs evaluates this module and picks those names. The
+ * stylesheets spell the attributes out; the build holds every one they read to
+ * a name the browser half writes. The identity constants and the host half's
+ * route re-exports live here too.
  */
 import { PREFS_DEFAULT } from '@dsh-claude-style/contracts/prefs'
 
@@ -409,17 +410,3 @@ export const USERNAME_MAX = 64
 /** Most quick-provider ids kept, and the longest id accepted; core/prefs.ts clamps to both. */
 export const QUICK_PROVIDERS_MAX = 64
 export const PROVIDER_ID_MAX = 128
-
-/** Wordmark aspect ratio; scripts/build.mjs sizes the sidebar word height from it (geometry lives in packages/assets/src/claude-word.svg). */
-export const CLAUDE_WORD_ASPECT = 512.22 / 121.54
-
-export const SANS = "'Anthropic Sans Web Text','Claude Style Inter','Noto Sans SC','Source Han Sans SC',-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei','Helvetica Neue',Helvetica,Arial,sans-serif"
-export const SERIF = "'Anthropic Serif Web Text','Claude Style Noto Serif',Georgia,'Times New Roman','Noto Sans SC','Source Han Sans SC','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif"
-/**
- * Conversation prose: Claude sets Latin text in the serif face and lets
- * Chinese fall through to a sans CJK — the serif Latin faces carry no CJK
- * glyphs, so the stack leads with serif and names the sans CJK families
- * after it. UI chrome keeps SANS; only markdown prose uses this.
- */
-export const PROSE = "'Anthropic Serif Web Text','Claude Style Noto Serif',Georgia,'Times New Roman','Noto Sans SC','Source Han Sans SC','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif"
-export const MONO = "'JetBrains Mono','Noto Sans SC','Source Han Sans SC','PingFang SC','Hiragino Sans GB','Microsoft YaHei',ui-monospace,'SF Mono','Fira Code',Consolas,'Liberation Mono',Menlo,Courier,monospace"

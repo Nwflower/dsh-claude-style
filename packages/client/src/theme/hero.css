@@ -4,15 +4,15 @@
    slot wrapper, not always a bare svg — and the mark is painted on the hitbox,
    so React keeps owning its own node. The hero keeps the clay fill in both
    brands, matching the shipped accent treatment. */
-body[data-dsh-claude-style]%%BRAND_ACTIVE%% [class*="fishHitbox"] > * {
+body[data-dsh-claude-style][data-dsh-claude-brand="claude"] [class*="fishHitbox"] > * {
   display: none !important;
 }
 
-body[data-dsh-claude-style]%%BRAND_ACTIVE%% [class*="fishHitbox"] svg {
+body[data-dsh-claude-style][data-dsh-claude-brand="claude"] [class*="fishHitbox"] svg {
   display: none !important;
 }
 
-body[data-dsh-claude-style]%%BRAND_ACTIVE%% [class*="fishHitbox"]::before {
+body[data-dsh-claude-style][data-dsh-claude-brand="claude"] [class*="fishHitbox"]::before {
   content: "";
   flex: none;
   width: 42.5px;
@@ -22,13 +22,13 @@ body[data-dsh-claude-style]%%BRAND_ACTIVE%% [class*="fishHitbox"]::before {
   background-size: contain;
 }
 
-body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_CLAUDE%%"] [class*="fishHitbox"]::before {
-  background-image: %%CLAUDE_MARK_CLAY%%;
+body[data-dsh-claude-style][data-dsh-claude-brand="claude"] [class*="fishHitbox"]::before {
+  background-image: var(--dsh-claude-image-claude-mark-clay);
 }
 
 /* The DeepSeek brand keeps the host's own fish, and paints it in DeepSeek's
    brand blue (the host inks it with the headline's primary label). */
-body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_DEEPSEEK%%"] [class*="fishHitbox"] svg {
+body[data-dsh-claude-style][data-dsh-claude-brand="deepseek"] [class*="fishHitbox"] svg {
   color: var(--dsh-claude-logo-ink);
 }
 

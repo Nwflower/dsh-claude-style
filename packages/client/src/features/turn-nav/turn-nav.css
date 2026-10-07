@@ -187,6 +187,6 @@ body[data-dsh-claude-style] [data-dsh-claude-turn-nav-landed]::after {
   pointer-events: none !important;
   animation: dsh-claude-turn-nav-landed 1.4s ease-out forwards !important;
 }
-body[data-dsh-claude-style][%%MOTION_ATTR%%="%%MOTION_REDUCED%%"] [data-dsh-claude-turn-nav-landed]::after {
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-claude-turn-nav-landed]::after {
   animation: none !important;
 }

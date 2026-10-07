@@ -14,7 +14,7 @@
    so its fragments read `_itemWrap_` / `_itemLabel_`. Both are the longest
    stable piece of the class — never the bare local name. */
 
-body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] {
+body[data-dsh-claude-style] [data-dsh-claude-hero-menu] {
   min-width: 248px !important;
   max-width: min(360px, calc(100vw - 16px)) !important;
   max-height: min(440px, calc(100vh - 96px)) !important;
@@ -51,14 +51,14 @@ body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] {
     transform: none;
   }
 }
-body[data-dsh-claude-style][data-ds-dark-theme] [%%HERO_MENU_ATTR%%] {
+body[data-dsh-claude-style][data-ds-dark-theme] [data-dsh-claude-hero-menu] {
   background: var(--dsh-claude-raised) !important;
   border-color: var(--dsw-alias-border-l2) !important;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
 }
 
 /* One row height, one radius, one hover plate for both pickers. */
-body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [class*="_itemWrap_"] > [role="menuitem"] {
+body[data-dsh-claude-style] [data-dsh-claude-hero-menu] [class*="_itemWrap_"] > [role="menuitem"] {
   min-height: 32px !important;
   padding: 2px 7px !important;
   gap: 8px !important;
@@ -68,47 +68,47 @@ body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [class*="_itemWrap_"] > [role="
   color: var(--dsw-alias-label-primary, #141413) !important;
   transition: background-color 0.12s ease !important;
 }
-body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [class*="_itemWrap_"] > [role="menuitem"]:hover:not(:disabled) {
+body[data-dsh-claude-style] [data-dsh-claude-hero-menu] [class*="_itemWrap_"] > [role="menuitem"]:hover:not(:disabled) {
   background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
 }
-body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [class*="_itemWrap_"] > [role="menuitem"]:disabled {
+body[data-dsh-claude-style] [data-dsh-claude-hero-menu] [class*="_itemWrap_"] > [role="menuitem"]:disabled {
   opacity: 0.4 !important;
   cursor: not-allowed !important;
 }
-body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [class*="_itemIcon_"] {
+body[data-dsh-claude-style] [data-dsh-claude-hero-menu] [class*="_itemIcon_"] {
   width: 16px !important;
   height: 16px !important;
   color: var(--dsw-alias-label-secondary, #787672) !important;
 }
-body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [class*="_itemIcon_"] svg {
+body[data-dsh-claude-style] [data-dsh-claude-hero-menu] [class*="_itemIcon_"] svg {
   width: 16px !important;
   height: 16px !important;
 }
-body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [class*="_itemLabel_"] {
+body[data-dsh-claude-style] [data-dsh-claude-hero-menu] [class*="_itemLabel_"] {
   font-size: 13px !important;
   line-height: 20px !important;
 }
 /* The current row is marked by the accent, as in the model picker. */
-body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [class*="_check_"] {
+body[data-dsh-claude-style] [data-dsh-claude-hero-menu] [class*="_check_"] {
   flex: none !important;
   color: var(--dsw-alias-brand-primary, #d97757) !important;
 }
 
 /* The preset rows are two lines (name + description), so the height above is a
    floor rather than a cap. */
-body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [class*="_itemName"] {
+body[data-dsh-claude-style] [data-dsh-claude-hero-menu] [class*="_itemName"] {
   font-size: 13px !important;
   font-weight: 500 !important;
   line-height: 16px !important;
 }
-body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [class*="_itemDesc"] {
+body[data-dsh-claude-style] [data-dsh-claude-hero-menu] [class*="_itemDesc"] {
   font-size: 11px !important;
   line-height: 14px !important;
   color: var(--dsw-alias-label-tertiary, #8f8d84) !important;
 }
 
 /* Heading and separator rows. */
-body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] > [class*="_viewport_"] > [role="presentation"] {
+body[data-dsh-claude-style] [data-dsh-claude-hero-menu] > [class*="_viewport_"] > [role="presentation"] {
   padding: 6px 7px 2px !important;
   font-size: 11px !important;
   font-weight: 600 !important;
@@ -117,7 +117,7 @@ body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] > [class*="_viewport_"] > [role
   text-transform: uppercase !important;
   color: var(--dsw-alias-label-tertiary, #8f8d84) !important;
 }
-body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [role="separator"] {
+body[data-dsh-claude-style] [data-dsh-claude-hero-menu] [role="separator"] {
   height: 1px !important;
   margin: 2px 4px !important;
   background: var(--dsw-alias-border-l1, #e8e6dc) !important;
@@ -125,7 +125,7 @@ body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [role="separator"] {
 
 /* The pinned footer ("添加工作区…") keeps the host's spacing with the skin's
    hairline. */
-body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] > [class*="_footer_"] {
+body[data-dsh-claude-style] [data-dsh-claude-hero-menu] > [class*="_footer_"] {
   margin-top: 4px !important;
   padding-top: 4px !important;
   border-top: 1px solid var(--dsw-alias-border-l1, #e8e6dc) !important;
@@ -136,35 +136,35 @@ body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] > [class*="_footer_"] {
    one repeats what the list already says and is dropped, the add row's `＋`
    with it; the rows sit closer together than the preset card's two-line rows
    need to. The current folder keeps the accent check. */
-body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%="workspace"] {
+body[data-dsh-claude-style] [data-dsh-claude-hero-menu="workspace"] {
   min-width: 180px !important;
   max-width: min(280px, calc(100vw - 16px)) !important;
   padding: 4px !important;
   gap: 4px !important;
 }
-body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%="workspace"] [class*="_itemWrap_"] > [role="menuitem"] {
+body[data-dsh-claude-style] [data-dsh-claude-hero-menu="workspace"] [class*="_itemWrap_"] > [role="menuitem"] {
   min-height: 26px !important;
   padding: 3px 10px !important;
 }
-body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%="workspace"] [class*="_itemIcon_"] {
+body[data-dsh-claude-style] [data-dsh-claude-hero-menu="workspace"] [class*="_itemIcon_"] {
   display: none !important;
 }
-body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%="workspace"] [class*="_check_"] {
+body[data-dsh-claude-style] [data-dsh-claude-hero-menu="workspace"] [class*="_check_"] {
   width: 14px !important;
   height: 14px !important;
 }
-body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%="workspace"] > [class*="_footer_"] {
+body[data-dsh-claude-style] [data-dsh-claude-hero-menu="workspace"] > [class*="_footer_"] {
   margin-top: 0 !important;
   padding-top: 4px !important;
 }
 
 /* The card's padding is the skin's 6px rather than the host's 4px, so a side
    card moves with it: 6px pad + 6px gap. */
-body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [class*="_submenu_"] {
+body[data-dsh-claude-style] [data-dsh-claude-hero-menu] [class*="_submenu_"] {
   bottom: -6px !important;
   left: calc(100% + 12px) !important;
 }
-body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] [class*="_submenu_"]::before {
+body[data-dsh-claude-style] [data-dsh-claude-hero-menu] [class*="_submenu_"]::before {
   left: -12px !important;
   width: 12px !important;
 }

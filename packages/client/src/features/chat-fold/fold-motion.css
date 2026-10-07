@@ -39,7 +39,7 @@
                             so that subtree is excluded whole; the turn's trigger
                             notice ([data-turn-trigger]) likewise. */
 @starting-style {
-  body[data-dsh-claude-style][%%CHAT_FOLD_ATTR%%] [data-chat-flow] [data-disclosure-row] ~ *:not([data-turn-process-member] *, [data-turn-trigger] *) {
+  body[data-dsh-claude-style][data-dsh-claude-chat-fold] [data-chat-flow] [data-disclosure-row] ~ *:not([data-turn-process-member] *, [data-turn-trigger] *) {
     opacity: 0;
     translate: 0 -2px;
   }
@@ -48,14 +48,14 @@
 /* The entrance: 2px up and a fade, at the 120 ms the chat area already uses
    (MessageItem and the TurnNavigator preview match it). It rides the folding
    switch with the rest of the feature: off leaves the host's own insertion. */
-body[data-dsh-claude-style][%%CHAT_FOLD_ATTR%%] [data-chat-flow] [data-disclosure-row] ~ *:not([data-turn-process-member] *, [data-turn-trigger] *) {
+body[data-dsh-claude-style][data-dsh-claude-chat-fold] [data-chat-flow] [data-disclosure-row] ~ *:not([data-turn-process-member] *, [data-turn-trigger] *) {
   transition: opacity 120ms ease-out, translate 120ms ease-out;
 }
 
 /* The reader's animation choice, resolved onto <body> (packages/client/src/core/prefs.ts, D26):
    the system setting is folded into that attribute by "follow the system", so
    this one rule covers both it and the explicit "reduced". */
-body[data-dsh-claude-style][%%MOTION_ATTR%%="%%MOTION_REDUCED%%"] [data-chat-flow] [data-disclosure-row] ~ *:not([data-turn-process-member] *, [data-turn-trigger] *) {
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-chat-flow] [data-disclosure-row] ~ *:not([data-turn-process-member] *, [data-turn-trigger] *) {
   transition: none;
 }
 
@@ -68,6 +68,6 @@ body[data-dsh-claude-style][%%MOTION_ATTR%%="%%MOTION_REDUCED%%"] [data-chat-flo
    the layout returns to the host's own — at the end point the two arrangements
    agree to the pixel. !important because nothing may change it during those
    200 ms. */
-body[data-dsh-claude-style] [%%CHAT_ROLLING_ATTR%%] > * {
+body[data-dsh-claude-style] [data-dsh-claude-rolling] > * {
   flex: none !important;
 }

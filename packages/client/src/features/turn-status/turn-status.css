@@ -52,8 +52,8 @@ body[data-dsh-claude-style] button[data-dsh-claude-turn-status]::before {
   width: 14px;
   height: 14px;
   background: var(--dsw-alias-brand-primary, #d97757);
-  -webkit-mask: %%CLAUDE_MARK%% center / contain no-repeat;
-  mask: %%CLAUDE_MARK%% center / contain no-repeat;
+  -webkit-mask: var(--dsh-claude-image-claude-mark) center / contain no-repeat;
+  mask: var(--dsh-claude-image-claude-mark) center / contain no-repeat;
 }
 body[data-dsh-claude-style] button[data-dsh-claude-turn-status]::after {
   content: attr(data-dsh-claude-turn-status);
@@ -77,12 +77,12 @@ body[data-dsh-claude-style] button[data-dsh-claude-turn-state="live"]::before {
 }
 /* Under the DeepSeek brand the mark is DeepSeek's whale, in the accent; a
    running turn has it swim — a tilt and a bob — where the spark turns. */
-body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_DEEPSEEK%%"] button[data-dsh-claude-turn-status]::before {
+body[data-dsh-claude-style][data-dsh-claude-brand="deepseek"] button[data-dsh-claude-turn-status]::before {
   width: 16px;
-  -webkit-mask-image: %%DEEPSEEK_MARK%%;
-  mask-image: %%DEEPSEEK_MARK%%;
+  -webkit-mask-image: var(--dsh-claude-image-deepseek-mark);
+  mask-image: var(--dsh-claude-image-deepseek-mark);
 }
-body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_DEEPSEEK%%"] button[data-dsh-claude-turn-state="live"]::before {
+body[data-dsh-claude-style][data-dsh-claude-brand="deepseek"] button[data-dsh-claude-turn-state="live"]::before {
   animation: 1.6s ease-in-out infinite dsh-claude-turn-swim;
 }
 @keyframes dsh-claude-turn-swim {

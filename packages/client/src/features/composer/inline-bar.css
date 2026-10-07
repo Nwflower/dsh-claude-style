@@ -147,8 +147,8 @@ body[data-dsh-claude-style] [data-composer-card] [class*="_row"] .dsh-claude-mod
 /* The host renders two separate stat dialogs; hide them — their numbers are
    read into the context popover instead — for as long as the context
    statistics, which own that read, are installed. */
-body[data-dsh-claude-style][%%SESSION_STATS_ATTR%%] [role="dialog"]:has([data-session-stats-details]),
-body[data-dsh-claude-style][%%SESSION_STATS_ATTR%%] [role="dialog"]:has([data-session-stats-usage]) {
+body[data-dsh-claude-style][data-dsh-claude-session-stats] [role="dialog"]:has([data-session-stats-details]),
+body[data-dsh-claude-style][data-dsh-claude-session-stats] [role="dialog"]:has([data-session-stats-usage]) {
   display: none !important;
 }
 

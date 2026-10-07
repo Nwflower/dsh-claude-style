@@ -103,8 +103,8 @@ body[data-dsh-claude-style] .dsh-claude-ban-mark {
   width: 21px;
   height: 21px;
   background-color: var(--dsh-ban-mark);
-  -webkit-mask: %%CLAUDE_MARK%% center / contain no-repeat;
-  mask: %%CLAUDE_MARK%% center / contain no-repeat;
+  -webkit-mask: var(--dsh-claude-image-claude-mark) center / contain no-repeat;
+  mask: var(--dsh-claude-image-claude-mark) center / contain no-repeat;
 }
 
 body[data-dsh-claude-style] .dsh-claude-ban-word {
@@ -112,8 +112,8 @@ body[data-dsh-claude-style] .dsh-claude-ban-word {
   width: 89px;
   height: 21px;
   background-color: var(--dsh-ban-word);
-  -webkit-mask: %%CLAUDE_WORD%% center / contain no-repeat;
-  mask: %%CLAUDE_WORD%% center / contain no-repeat;
+  -webkit-mask: var(--dsh-claude-image-claude-word) center / contain no-repeat;
+  mask: var(--dsh-claude-image-claude-word) center / contain no-repeat;
 }
 
 body[data-dsh-claude-style] .dsh-claude-ban-bar-actions {

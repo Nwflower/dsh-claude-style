@@ -19,8 +19,8 @@ body[data-dsh-claude-style] button[data-dsh-section="claude-style"]::before {
   width: 16px;
   height: 16px;
   background-color: currentColor;
-  -webkit-mask: %%CLAUDE_MARK%% center / contain no-repeat;
-  mask: %%CLAUDE_MARK%% center / contain no-repeat;
+  -webkit-mask: var(--dsh-claude-image-claude-mark) center / contain no-repeat;
+  mask: var(--dsh-claude-image-claude-mark) center / contain no-repeat;
 }
 
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[data-dsh-section="claude-style"]::before {
@@ -87,7 +87,7 @@ body[data-dsh-claude-style] .dsh-claude-settings-row.dsh-claude-settings-row-sub
    the plugin page) always keeps the scrollbar's room: a tab short enough to
    need no scrollbar then lays out at the same width as one that does. The
    page marks its nearest scrolling ancestor while it is mounted (settings.ts). */
-body[data-dsh-claude-style] [%%SETTINGS_SCROLLER_ATTR%%] {
+body[data-dsh-claude-style] [data-dsh-claude-settings-scroller] {
   scrollbar-gutter: stable;
 }
 
@@ -200,11 +200,11 @@ body[data-dsh-claude-style] .dsh-claude-brand-card-logo {
 }
 
 body[data-dsh-claude-style] .dsh-claude-brand-card-logo[data-brand="claude"] {
-  background-image: %%CLAUDE_MARK_CLAY%%;
+  background-image: var(--dsh-claude-image-claude-mark-clay);
 }
 
 body[data-dsh-claude-style] .dsh-claude-brand-card-logo[data-brand="deepseek"] {
-  background-image: %%DEEPSEEK_MARK%%;
+  background-image: var(--dsh-claude-image-deepseek-mark);
 }
 
 body[data-dsh-claude-style] .dsh-claude-brand-card-name {
