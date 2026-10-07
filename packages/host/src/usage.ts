@@ -102,6 +102,8 @@ interface UsageEvent {
   type?: string
   seq?: number
   time?: number
+  turn?: number
+  step?: number
   data?: {
     usage?: UsageSample
     stream?: { type?: string, chunk?: { type?: string, usage?: UsageSample } }[]
@@ -217,10 +219,10 @@ function modelOf(event: UsageEvent): string | null {
  * @param events - the session's durable events, in sequence order.
  * @returns a map of local day key to buckets, and a 24-slot hour histogram.
  */
-function foldSession(events) {
-  const days = new Map()
-  const hours = new Array(24).fill(0)
-  const bump = (day, hour, buckets, sign, model) => {
+function foldSession(events: UsageEvent[]): FoldedSession {
+  const days = new Map<string, DayBuckets>()
+  const hours = new Array(24).fill(0) as number[]
+  const bump = (day: string, hour: number, buckets: Buckets, sign: number, model: string | null) => {
     hours[hour] += sign
     let target = days.get(day)
     if (target === undefined) {
@@ -248,7 +250,7 @@ function foldSession(events) {
     if (sign < 0 && BUCKET_KEYS.every((key) => target[key] === 0) && target.calls === 0) days.delete(day)
   }
   // The replacement slot: one settlement per turn/step, replaced on retry.
-  let last = null
+  let last: { turn?: number, step?: number, buckets: Buckets, day: string, hour: number, model: string | null } | null = null
   for (const event of events) {
     const type = event?.type
     if (type === 'llm/retry-started') {
@@ -259,6 +261,7 @@ function foldSession(events) {
     if (type !== 'assistant/message' && type !== 'assistant/attempt') continue
     const usage = usageOf(event)
     if (usage === undefined) continue
+    if (typeof event.time !== 'number') continue
     const day = dayKey(event.time)
     if (day === null) continue
     const hour = new Date(event.time).getHours()
@@ -266,9 +269,10 @@ function foldSession(events) {
     const model = modelOf(event)
     const turn = event.data?.turn
     const step = event.data?.step
-    const replacing = last !== null && last.turn === turn && last.step === step
-    if (replacing && bucketsEqual(last.buckets, buckets)) continue
-    if (replacing) bump(last.day, last.hour, last.buckets, -1, last.model)
+    const previous = last
+    const replacing = previous !== null && previous.turn === turn && previous.step === step
+    if (replacing && previous !== null && bucketsEqual(previous.buckets, buckets)) continue
+    if (replacing && previous !== null) bump(previous.day, previous.hour, previous.buckets, -1, previous.model)
     bump(day, hour, buckets, 1, model)
     last = { turn, step, buckets, day, hour, model }
   }
@@ -276,10 +280,10 @@ function foldSession(events) {
 }
 
 /** A bucket map as a plain object, for the cache document. */
-function daysToObject(days) {
-  const out = {}
+function daysToObject(days: Map<string, DayBuckets>): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
   for (const [day, buckets] of days) {
-    const entry = { ...buckets }
+    const entry: Record<string, unknown> = { ...buckets, models: undefined, sessions: undefined }
     if (buckets.models !== undefined) {
       entry.models = {}
       for (const [model, cell] of buckets.models) entry.models[model] = cell
@@ -289,7 +293,7 @@ function daysToObject(days) {
   return out
 }
 
-function daysFromObject(raw) {
+function daysFromObject(raw: unknown): Map<string, DayBuckets> {
   const days = new Map()
   if (raw === null || typeof raw !== 'object') return days
   for (const [day, buckets] of Object.entries(raw)) {
