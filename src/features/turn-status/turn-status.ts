@@ -187,7 +187,7 @@ export function install(ctx: HostContext, ui: Ui) {
     const sessionId = conversationSessionId(closestConversationSession(column))
     if (!sessionId) return
     const rows = column.children as HTMLCollectionOf<HTMLElement>
-    let snapshot: HostValue
+    let snapshot: HostChatSnapshot | null | undefined
     const after = new Map<number, HTMLElement>()
     for (let i = 0; i < rows.length; i++) {
       if (rows[i].getAttribute('data-chat-flow-kind') !== 'turn-process') continue
@@ -198,7 +198,7 @@ export function install(ctx: HostContext, ui: Ui) {
       const turnText = rows[i].getAttribute('data-chat-turn')
       const turn = snapshot.timeline.turns.get(Number(turnText))
       const state = turnState(turn)
-      if (state === null) continue
+      if (state === null || turn === undefined) continue
       const key = `${sessionId}:${turnText}`
       if (state === 'live') live.add(key)
       nextAttrs.set(button, new Map([[STATE_ATTR, state], [STATUS_ATTR, statusText(key, snapshot, turn, state, t)]]))

@@ -11,7 +11,8 @@ import { createSettingsGeneralTab } from './settings-tab-general'
 import { createSettingsSidebarTab } from './settings-tab-sidebar'
 import type { Prefs } from '../../constants'
 import type { SettingsTabId } from '../../core/feature'
-import type { HostContext, HostValue } from '../../core/host'
+import type { HostContext } from '../../core/host'
+import type { HostSlotsService } from '../../contracts/services'
 import type { Ui } from '../../core/scheduler'
 import type { SettingsTab, SettingsView } from './settings-controls'
 import type { QuickProvidersHandle } from './quick-providers'
@@ -50,7 +51,7 @@ export let quickProviderApi: QuickProvidersHandle | null = null
  * on the host's markup; the registry's entry list is the only place the
  * section's position is stated.
  */
-export let slotsApi: HostValue = null
+export let slotsApi: HostSlotsService | null = null
 
 /** The host's own id for the settings section this plugin registers. */
 export const SETTINGS_SECTION_ID = 'claude-style'

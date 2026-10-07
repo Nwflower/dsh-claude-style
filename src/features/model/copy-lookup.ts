@@ -1,4 +1,5 @@
-import type { HostContext, HostValue } from '../../core/host'
+import type { HostContext } from '../../core/host'
+import type { HostModelEntry } from '../../contracts/services'
 import { localized } from '../../core/i18n'
 import { modelCopy, normalizeModelId } from '../../core/model-copy'
 import { textOf } from '../../shared/format'
@@ -75,7 +76,7 @@ export function tierModelCopy(modelId: unknown) {
  * The description line for one catalog model, in the shell's language.
  * `ctx` is the caller's context, used only to read the shell's locale.
  */
-export function modelDescription(ctx: HostContext | null, groupId: unknown, model: HostValue): string {
+export function modelDescription(ctx: HostContext | null, groupId: unknown, model: HostModelEntry): string {
   const id = typeof model.id === 'string' ? model.id : ''
   const pair = exactModelCopy(groupId, id) || familyModelCopy(groupId, id) || tierModelCopy(id)
   const text = localized(pair, ctx)

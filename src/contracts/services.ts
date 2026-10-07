@@ -181,10 +181,12 @@ export interface HostModelGroup {
   models: HostModelEntry[]
 }
 
-/** One model: its id, its name, and the reasoning metadata the effort control reads. */
+/** One model: its id, its name, its own description text, and the reasoning metadata the effort control reads. */
 export interface HostModelEntry {
   id: string
   name: string
+  /** The host's own description line, which the plugin's copy document overrides when it has one. */
+  description?: string
   reasoning?: HostModelReasoning
 }
 
