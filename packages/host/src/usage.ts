@@ -39,6 +39,7 @@
  */
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
+import type { DshContext } from './dsh.js'
 import { harnessPath } from './harness-home.js'
 
 /** The ledger's document version this reader understands; anything else is ignored. */
@@ -106,6 +107,8 @@ interface UsageEvent {
   step?: number
   data?: {
     usage?: UsageSample
+    turn?: number
+    step?: number
     stream?: { type?: string, chunk?: { type?: string, usage?: UsageSample } }[]
     message?: { source?: { model?: unknown }, usage?: UsageSample }
   }
@@ -138,6 +141,7 @@ function emptyBuckets(): Buckets {
 }
 
 function addBuckets(target: Buckets, buckets: Partial<Buckets> | null | undefined, sign: number) {
+  if (buckets === null || buckets === undefined) return
   for (const key of BUCKET_KEYS) {
     const value = Number(buckets?.[key])
     if (Number.isFinite(value) && value !== 0) target[key] += sign * value
@@ -227,24 +231,28 @@ function foldSession(events: UsageEvent[]): FoldedSession {
     let target = days.get(day)
     if (target === undefined) {
       if (sign < 0) return
-      target = emptyBuckets()
-      target.hours = new Array(24).fill(0)
-      days.set(day, target)
+      const fresh: DayBuckets = emptyBuckets()
+      fresh.hours = new Array(24).fill(0)
+      fresh.models = new Map<string, Buckets>()
+      days.set(day, fresh)
+      target = fresh
     }
-    target.hours[hour] += sign
+    const targetHours = target.hours ?? (target.hours = new Array(24).fill(0))
+    targetHours[hour] += sign
     addBuckets(target, buckets, sign)
     // The same day, per route: what the models chart stacks. A sample whose
     // event names no route still counts toward the day, and only there.
     if (model !== null) {
-      let cell = target.models === undefined ? undefined : target.models.get(model)
+      const models = target.models ?? (target.models = new Map<string, Buckets>())
+      let cell = models.get(model)
       if (cell === undefined && sign > 0) {
         if (target.models === undefined) target.models = new Map()
         cell = emptyBuckets()
-        target.models.set(model, cell)
+        models.set(model, cell)
       }
       if (cell !== undefined) {
         addBuckets(cell, buckets, sign)
-        if (sign < 0 && BUCKET_KEYS.every((key) => cell[key] === 0) && cell.calls === 0) target.models.delete(model)
+        if (sign < 0 && BUCKET_KEYS.every((key) => cell[key] === 0) && cell.calls === 0) models.delete(model)
       }
     }
     if (sign < 0 && BUCKET_KEYS.every((key) => target[key] === 0) && target.calls === 0) days.delete(day)
@@ -316,7 +324,7 @@ function daysFromObject(raw: unknown): Map<string, DayBuckets> {
 }
 
 /** The newest generation of a session directory's log, with its fingerprint. */
-function newestLog(dir) {
+function newestLog(dir: string) {
   let best = null
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     if (!entry.isFile()) continue
@@ -339,8 +347,8 @@ function newestLog(dir) {
  * Every stored session: id, newest log, and that log's fingerprint. A harness
  * home that has never stored a session has no sessions root yet.
  */
-function listSessionLogs(root) {
-  const out = []
+function listSessionLogs(root: string): string[] {
+  const out: string[] = []
   if (!existsSync(root)) return out
   for (const project of readdirSync(root, { withFileTypes: true })) {
     if (!project.isDirectory()) continue
@@ -362,7 +370,7 @@ function listSessionLogs(root) {
  * @returns the service: `snapshot()` reads the current state, `refresh()`
  *   recomputes in the background.
  */
-export function createUsage(ctx) {
+export function createUsage(ctx: DshContext) {
   // The harness home, resolved per read through the one shared accessor.
   const home = () => harnessPath(ctx)
 
