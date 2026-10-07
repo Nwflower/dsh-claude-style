@@ -87,7 +87,7 @@ Target layout: D46. Today:
 - `skin.json` the skin manifest; `cordis.patch.yml` inserts the skin into the web roster.
 - `scripts/` build, smoke and live tools (`fetch-lobe-combines.py` is the only networked script, run by hand; `draw-crab.py` redraws the crab's sheets after a drawing change); `docs/` decisions, style guide, screenshots; `fonts/`; `showcase/gifs/`.
 
-The source is TypeScript ES modules under `strict` (D36). A module nothing imports fails the build; a new stylesheet goes into `STYLE_FILES` in `scripts/build.mjs` (concatenated until D37), a new feature into `FEATURES` in `src/entry.ts` and `FEATURE_MAINS` in `scripts/build.mjs`. React and the host packages are imported by name and stay external; build-time data (stylesheet, lockups, sheet stamps, build id) is imported from `virtual:dsh-claude-style/generated`. A host value without a type yet is `HostValue` (D44); a non-null assertion `!` only marks a value the call order guarantees.
+The source is TypeScript ES modules under `strict` (D36). A module nothing imports fails the build; a feature is a directory under `src/features/` whose main module exports `install(ctx, ui)` beside a `<main>.manifest.ts` (D42) — its order, switch, stylesheets with their ranks, settings switch row, smoke cases and description; a stylesheet that belongs to no feature goes into `THEME_SHEETS` in `scripts/build.mjs`. React and the host packages are imported by name and stay external; build-time data (stylesheet, lockups, sheet stamps, build id) is imported from `virtual:dsh-claude-style/generated`. A host value without a type yet is `HostValue` (D44); a non-null assertion `!` only marks a value the call order guarantees.
 
 ## Commands
 
@@ -97,7 +97,7 @@ npm run build                                # type-checks src/, bundles it into
 npm run smoke                                # full run: every browser case and check, plus the host half's route checks
 npm run smoke -- --quick --feature <dir>     # iteration run: quick tier, cases covering one src/features/ directory
 npm run smoke -- --case <name>[,<name>…]     # named browser cases
-npm run smoke -- --feature <dir>[,<dir>…]    # cases covering those directories (FEATURE_CASES in scripts/smoke/shared.cjs)
+npm run smoke -- --feature <dir>[,<dir>…]    # cases covering those directories (the `cases` of their manifests)
 node scripts/probe.cjs --token <launch-token>          # composer invariants against a running dsh web
 node scripts/probe-timing.cjs --token <launch-token>   # startup, catalog readiness, open latency, heap
 node scripts/shoot.cjs --token <launch-token> --brand <claude|deepseek> --scene <home|conversation>   # re-shoot one README screenshot pair

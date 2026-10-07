@@ -43,7 +43,7 @@
 | [D35](D35-selection-scope.md) | 选区样式的作用范围 | 已实施 |
 | [D40](D40-observation-bus.md) | 观察总线与帧管线 | 待实施 |
 | [D41](D41-scroll-owner.md) | 聊天区的滚动位置只有一个写入者 | 待实施 |
-| [D42](D42-feature-manifest.md) | 功能清单 | 待实施 |
+| [D42](D42-feature-manifest.md) | 功能清单 | 部分实施 |
 
 ## 功能
 
