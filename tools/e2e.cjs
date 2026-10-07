@@ -13,7 +13,7 @@
  *
  * Usage: node tools/e2e.cjs [--scenario <name>[,<name>…]] [--headed] [--out <dir>] [--delay <ms>]
  *                            [--baseline <dir>] [--accept]
- *        scenarios: conversation (default), tool, scroll, shots
+ *        scenarios: conversation, tool, send, scroll, shots (default: all but shots)
  *        --accept writes the captured screenshots as the comparison baseline.
  */
 'use strict'
@@ -44,12 +44,27 @@ const MAX_DIFFERENT_PIXELS = 0.002
  */
 const HOST = {
   composer: '[data-composer-input]', // COMPOSER_INPUT_SELECTOR
+  composerCard: '[data-composer-card]', // COMPOSER_CARD_SELECTOR
+  userRow: '[data-chat-flow-kind="user"]', // FLOW_KIND_ATTRIBUTE with the host's user kind
   flow: '[data-chat-flow]', // CHAT_FLOW_SELECTOR
   streaming: '[data-streaming]', // STREAMING_SELECTOR
   turnProcess: 'button[data-turn-process]', // TURN_PROCESS_SELECTOR
   scroller: '[data-conversation-scroll]', // CONVERSATION_SCROLL_SELECTOR
   followingTail: '[data-chat-following-tail]', // FOLLOWING_TAIL_SELECTOR
 }
+
+/**
+ * The skin's own marks (src/constants.ts): the stand-in the composer leaves
+ * behind for the send flight, and the attribute it puts on the real row while
+ * that stand-in flies, which the flight stylesheet hides.
+ */
+const SKIN = {
+  sendGhost: '[data-dsh-claude-send-ghost]', // CHAT_SEND_GHOST_ATTR
+  flyingMark: 'data-dsh-claude-send-flight', // CHAT_FLYING_ATTR
+}
+
+/** Both tables, for the sampler that runs inside the page. */
+const MARKS = { ...HOST, ...SKIN }
 
 /** A settled turn ends with the host's tail row, the one carrying usage. */
 const TURN_TAIL = '[data-chat-flow-kind="turn-tail"]'
@@ -96,31 +111,68 @@ async function waitForTurn(page, timeoutMs = 90000) {
 }
 
 /**
- * Sample the conversation's position once per frame until the turn settles.
+ * Sample the page once per frame, until the turn settles.
  *
- * The trace holds what each frame painted: the scroll offset a frame later reads
+ * The trace holds what each frame painted. The scroll offset a frame later reads
  * is the one the previous frame left, so a decrease between two samples is a
  * frame the reader saw slide backward, and the gap is what sat below the fold.
+ * The same samples carry the send flight: the stand-in the composer leaves behind
+ * (`send-snapshot.ts`), the mark on the real row while it flies, and — taken once,
+ * on the stand-in's first frame — the type and card colors it copied, so a
+ * take-off that changes the reader's own look is visible in the trace.
  */
 async function startTrace(page) {
   await page.evaluate((host) => {
     const trace = []
     window.__e2eTrace = trace
+    const visible = (element) => element !== null && getComputedStyle(element).visibility !== 'hidden' && Number(getComputedStyle(element).opacity) > 0
+    const words = (element) => element === null ? null : [...element.querySelectorAll('*')]
+      .filter((node) => node.children.length === 0 && (node.textContent ?? '').trim() !== '' && visible(node))
+      .map((node) => (node.textContent ?? '').trim().slice(0, 24))
+    const type = (element) => {
+      if (element === null) return null
+      const style = getComputedStyle(element)
+      return { family: style.fontFamily, size: style.fontSize, weight: style.fontWeight, color: style.color }
+    }
+    const cardOf = (element) => element === null ? null : element.querySelector(host.composerCard)
+    let takeOff = null
     const sample = () => {
+      const frame = { t: Math.round(performance.now()) }
       const scroller = document.querySelector(host.scroller)
       if (scroller !== null) {
-        trace.push({
-          t: Math.round(performance.now()),
-          top: Math.round(scroller.scrollTop),
-          height: Math.round(scroller.scrollHeight),
-          gap: Math.round(scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop),
-          following: document.querySelector(host.followingTail) !== null,
-        })
+        frame.top = Math.round(scroller.scrollTop)
+        frame.height = Math.round(scroller.scrollHeight)
+        frame.gap = Math.round(scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop)
+        frame.following = document.querySelector(host.followingTail) !== null
       }
+      const ghost = document.querySelector(host.sendGhost)
+      const rows = [...document.querySelectorAll(host.userRow)]
+      const last = rows.length === 0 ? null : rows[rows.length - 1]
+      frame.ghost = ghost !== null
+      frame.ghostWords = words(ghost)
+      frame.rows = rows.length
+      frame.rowFlying = last !== null && last.hasAttribute(host.flyingMark)
+      frame.rowVisible = visible(last)
+      frame.rowWords = words(last)
+      if (ghost !== null && takeOff === null) {
+        // The stand-in is a clone of the composer card appended to the page, so
+        // the real card is the first one the stand-in does not contain.
+        const real = (selector) => [...document.querySelectorAll(selector)].find((element) => !ghost.contains(element)) ?? null
+        const cloneCard = ghost.querySelector(host.composerCard)
+        const card = real(host.composerCard)
+        takeOff = {
+          clone: type(ghost.querySelector(host.composer)),
+          composer: type(real(host.composer)),
+          cloneCard: cloneCard === null ? null : getComputedStyle(cloneCard).backgroundColor,
+          composerCard: card === null ? null : getComputedStyle(card).backgroundColor,
+        }
+        frame.takeOff = takeOff
+      }
+      trace.push(frame)
       if (trace.length < 6000) requestAnimationFrame(sample)
     }
     requestAnimationFrame(sample)
-  }, HOST)
+  }, MARKS)
 }
 
 /** One assertion with the evidence behind it. */
@@ -249,26 +301,54 @@ const SCENARIOS = {
     // A short viewport, so the streamed answer outgrows it and the tail has to follow.
     viewport: { width: 1280, height: 600 },
     async assert({ session, trace }) {
-      const following = trace.filter((frame) => frame.following)
+      // Only the frames from when the conversation's scroller exists carry a position.
+      const sampled = trace.filter((frame) => frame.height !== undefined)
+      const following = sampled.filter((frame) => frame.following)
       const gaps = following.map((frame) => frame.gap)
       const worst = gaps.length === 0 ? 0 : Math.max(...gaps)
-      const first = trace[0]
-      const last = trace[trace.length - 1]
+      const first = sampled[0]
+      const last = sampled[sampled.length - 1]
       const grown = first === undefined || last === undefined ? 0 : last.height - first.height
-      const moved = trace.filter((frame, i) => i > 0 && frame.top !== trace[i - 1].top).length
+      const moved = sampled.filter((frame, i) => i > 0 && frame.top !== sampled[i - 1].top).length
       // What the reader sees: a frame that slides back has the position moving up
       // while the content it shows stays or grows; one that runs away has the gap
       // to the tail opening while nothing arrived.
-      const backward = trace.filter((frame, i) => i > 0 && frame.top < trace[i - 1].top && frame.height >= trace[i - 1].height)
-      const escaped = trace.filter((frame, i) => i > 0 && frame.gap > trace[i - 1].gap + 1 && frame.height <= trace[i - 1].height)
+      const backward = sampled.filter((frame, i) => i > 0 && frame.top < sampled[i - 1].top && frame.height >= sampled[i - 1].height)
+      const escaped = sampled.filter((frame, i) => i > 0 && frame.gap > sampled[i - 1].gap + 1 && frame.height <= sampled[i - 1].height)
       return [
-        check('逐帧采样真的在跑', trace.length > 30, `frames=${trace.length}`),
+        check('逐帧采样真的在跑', sampled.length > 30, `frames=${sampled.length}`),
         check('回答在采样期间长出来', grown > 100, `grew ${grown}px during the trace`),
-        check('位置跟着内容走', moved > 5, `moved in ${moved} of ${trace.length} frames`),
+        check('位置跟着内容走', moved > 5, `moved in ${moved} of ${sampled.length} frames`),
         check('没有倒退的一帧', backward.length === 0, `backward=${backward.length}${backward.length === 0 ? '' : ` at ${backward.slice(0, 3).map((f) => f.t).join(',')}ms`}`),
         check('尾部没有自己跑远', escaped.length === 0, `escaped=${escaped.length}${escaped.length === 0 ? '' : ` at ${escaped.slice(0, 3).map((f) => f.t).join(',')}ms`}`),
         check('跟随期间尾部留在视野里', worst <= MAX_FOLLOW_GAP_PX, `maxGap=${worst}px of ${following.length} following frames`),
         check('落定后回到末尾', last !== undefined && last.gap <= 4, `lastGap=${last === undefined ? 'n/a' : last.gap}`),
+        check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),
+      ]
+    },
+  },
+  /** The send flight: the stand-in takes off, the row lands, the words stay put. */
+  send: {
+    script: 'greeting',
+    prompt: 'hello there',
+    async assert({ session, trace }) {
+      const firstGhost = trace.findIndex((frame) => frame.ghost)
+      const takeOffFrame = trace.find((frame) => frame.takeOff !== undefined)
+      const flight = firstGhost === -1 ? [] : trace.slice(firstGhost)
+      const hidden = flight.filter((frame) => frame.rowFlying)
+      const exposedWhileFlying = hidden.filter((frame) => frame.rowVisible)
+      const last = trace[trace.length - 1]
+      const words = flight.filter((frame) => (frame.ghostWords ?? []).includes('hello there') || (frame.rowWords ?? []).includes('hello there'))
+      const takeOff = takeOffFrame?.takeOff
+      const sameType = takeOff !== undefined && takeOff.clone !== null && takeOff.composer !== null
+        && takeOff.clone.family === takeOff.composer.family && takeOff.clone.size === takeOff.composer.size
+        && takeOff.clone.weight === takeOff.composer.weight && takeOff.clone.color === takeOff.composer.color
+      return [
+        check('替身起飞后离开页面', firstGhost !== -1 && last.ghost === false, `firstGhost at ${firstGhost === -1 ? 'n/a' : `${trace[firstGhost].t}ms`}, ghost at the end=${last.ghost}`),
+        check('真行在飞行期间不可见', hidden.length > 0 && exposedWhileFlying.length === 0, `flying frames=${hidden.length}, of them visible=${exposedWhileFlying.length}`),
+        check('读者的字每一帧都看得见', words.length === flight.length, `words on ${words.length} of ${flight.length} frames after take-off`),
+        check('真行落定后可见并带着字', last.rows > 0 && last.rowVisible === true && (last.rowWords ?? []).includes('hello there'), `rows=${last.rows} visible=${last.rowVisible} words=${JSON.stringify(last.rowWords)}`),
+        check('替身带走了输入卡片的样子', sameType === true, takeOff === undefined ? 'no take-off frame in the trace' : `clone ${takeOff.clone.size}/${takeOff.clone.color} vs composer ${takeOff.composer.size}/${takeOff.composer.color}, card ${takeOff.cloneCard} vs ${takeOff.composerCard}`),
         check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),
       ]
     },
@@ -332,7 +412,7 @@ async function main() {
     const at = args.indexOf(`--${flag}`)
     return at === -1 ? undefined : args[at + 1]
   }
-  const names = (argOf('scenario') ?? 'conversation').split(',').map((name) => name.trim()).filter(Boolean)
+  const names = (argOf('scenario') ?? 'conversation,tool,send,scroll').split(',').map((name) => name.trim()).filter(Boolean)
   const out = path.resolve(argOf('out') ?? DEFAULT_OUT)
   const options = {
     headed: args.includes('--headed'),
