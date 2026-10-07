@@ -1,3 +1,4 @@
+import { requestFrame } from '../../core/frame'
 import { ACCOUNT_MENU_ATTR, ACCOUNT_READY_ATTR } from '../../constants'
 import { createStamp } from '../../shared/dom'
 
@@ -87,9 +88,9 @@ export function createAccountSurface(options: {
         return
       }
       tries += 1
-      requestAnimationFrame(look)
+      requestFrame({ write: look })
     }
-    requestAnimationFrame(look)
+    requestFrame({ write: look })
   }
 
   function syncHost() {

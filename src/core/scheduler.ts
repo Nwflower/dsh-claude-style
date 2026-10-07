@@ -1,8 +1,9 @@
-import { QUIET_ATTR } from '../constants'
 import { closestComposerCard, findComposerCard, onHdslLoaded, onUsernameLoaded } from './host'
 import { onModelCopyLoaded } from './model-copy'
 import { loadPrefs, refreshMotionAttribute, subscribePrefs } from './prefs'
 import type { HostContext } from './host'
+import { observeSize, subscribeMutations } from './bus'
+import { requestFrame } from './frame'
 import { closestFrom } from '../shared/dom'
 import type { FooterHandle } from '../features/account/account-footer'
 import type { BanHandle } from '../features/ban-screen/ban-screen'
@@ -85,8 +86,8 @@ export function installScheduler(ctx: HostContext, ui: Ui, features: string[]) {
   // schedule() before this function returns (a settings form that is already
   // served answers synchronously — a hot reload does exactly that).
   let scheduled = false
-  /** The frame the pending pass waits on, so the teardown can cancel it. */
-  let pendingFrame = 0
+  /** Cancels the frame the pending pass waits on, so the teardown can cancel it. */
+  let cancelPass: (() => void) | null = null
   /** Set by the teardown: no pass may be scheduled, or run, after it. */
   let stopped = false
 
@@ -207,11 +208,11 @@ export function installScheduler(ctx: HostContext, ui: Ui, features: string[]) {
   })
 
   let observedCard: HTMLElement | null = null
-  const composerCardObserver = new ResizeObserver(() => {
-    // The card resizing moves the anchors pinned to it with no window resize:
-    // re-pin in the same frame, or a JS-pinned control trails the reflow.
-    dispatch('reposition', 'composer')
-  })
+  /** Stops watching the observed card's size. */
+  let stopCardSize: (() => void) | null = null
+  // The card resizing moves the anchors pinned to it with no window resize:
+  // re-pin in the same frame, or a JS-pinned control trails the reflow.
+  const onCardResize = () => { dispatch('reposition', 'composer') }
 
   /** Failed passes in a row after which a feature's sync is switched off. */
   const SYNC_FAILURE_LIMIT = 3
@@ -242,58 +243,40 @@ export function installScheduler(ctx: HostContext, ui: Ui, features: string[]) {
   function schedule() {
     if (scheduled || stopped) return
     scheduled = true
-    pendingFrame = requestAnimationFrame(() => {
-      scheduled = false
-      if (stopped) return
-      for (const name of features) runSync(name)
-      const currentCard = findComposerCard()
-      if (currentCard !== observedCard) {
-        if (observedCard) composerCardObserver.unobserve(observedCard)
-        observedCard = currentCard
-        if (observedCard) composerCardObserver.observe(observedCard)
-      }
+    // The pass reads and writes feature by feature, so it runs in the write
+    // phase: the frame's reads have all happened before it (D40).
+    cancelPass = requestFrame({
+      write() {
+        scheduled = false
+        cancelPass = null
+        if (stopped) return
+        for (const name of features) runSync(name)
+        const currentCard = findComposerCard()
+        if (currentCard !== observedCard) {
+          if (stopCardSize !== null) stopCardSize()
+          stopCardSize = null
+          observedCard = currentCard
+          if (observedCard) stopCardSize = observeSize(observedCard, onCardResize)
+        }
+      },
     })
   }
   ui.schedule = schedule
 
-  /**
-   * Whether a record is one of the skin's own quiet writes (QUIET_ATTR). The
-   * caret motion measures through probes and redraws per frame; without this
-   * every keystroke would schedule a pass for work no feature reads.
-   */
-  function quietRecord(record: MutationRecord) {
-    // The target is the node the change happened on: an element for a child
-    // list or an attribute, and the text node itself for a character change —
-    // which is why the parent is asked as well.
-    const target = record.target instanceof Element ? record.target : record.target.parentElement
-    if (target !== null && target.closest('[' + QUIET_ATTR + ']') !== null) return true
-    if (record.addedNodes.length === 0 && record.removedNodes.length === 0) return false
-    for (const node of record.addedNodes) {
-      if (!(node instanceof Element) || !node.hasAttribute(QUIET_ATTR)) return false
-    }
-    for (const node of record.removedNodes) {
-      if (!(node instanceof Element) || !node.hasAttribute(QUIET_ATTR)) return false
-    }
-    return true
-  }
-
-  const observer = new MutationObserver((records) => {
-    for (const record of records) {
-      if (quietRecord(record)) continue
-      schedule()
-      return
-    }
-  })
-  observer.observe(document.body, {
+  // Every change under <body> asks for a pass, the skin's own quiet writes
+  // (QUIET_ATTR) aside: the caret motion measures through probes and redraws
+  // per frame, and without this every keystroke would schedule a pass for work
+  // no feature reads.
+  const stopMutations = subscribeMutations(document.body, {
     childList: true,
     characterData: true,
     subtree: true,
-    attributes: true,
     // Only the two attributes a paint depends on: the shipped trigger carries
     // the current preset in its aria-label, the conversation tabs the view in
     // aria-selected.
     attributeFilter: ['aria-label', 'aria-selected'],
-  })
+    skipQuiet: true,
+  }, schedule)
   schedule()
 
   // Copy that follows the clock (the hero greeting rolls over on the hour) has
@@ -306,7 +289,8 @@ export function installScheduler(ctx: HostContext, ui: Ui, features: string[]) {
     // their DOM again, so it is cancelled and every later schedule() refused —
     // a feature's pending promise may still call it.
     stopped = true
-    if (scheduled) cancelAnimationFrame(pendingFrame)
+    if (cancelPass !== null) cancelPass()
+    cancelPass = null
     scheduled = false
     clearInterval(clockTimer)
     window.removeEventListener('resize', onFixedPopoverViewportChange)
@@ -317,8 +301,9 @@ export function installScheduler(ctx: HostContext, ui: Ui, features: string[]) {
     modelCopyUnsubscribe()
     usernameUnsubscribe()
     hdslUnsubscribe()
-    observer.disconnect()
-    composerCardObserver.disconnect()
+    stopMutations()
+    if (stopCardSize !== null) stopCardSize()
+    stopCardSize = null
     observedCard = null
     document.removeEventListener('pointerdown', onGlobalPointerDown)
     document.removeEventListener('pointermove', onGlobalActivity)

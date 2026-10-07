@@ -1,3 +1,4 @@
+import { requestFrame } from '../../core/frame'
 import * as React from 'react'
 import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
 import * as reactDom from 'react-dom/client'
@@ -168,14 +169,16 @@ export function install(ctx: HostContext, ui: Ui) {
   }
 
   function foldHostSearch(tries: number) {
-    requestAnimationFrame(() => {
-      if (disposed) return
-      const clear = document.querySelector<HTMLElement>(`${HOST_SEARCH} [class*="_clearButton"]`)
-      if (clear !== null) {
-        clear.click()
-        return
-      }
-      if (tries > 1) foldHostSearch(tries - 1)
+    requestFrame({
+      write() {
+        if (disposed) return
+        const clear = document.querySelector<HTMLElement>(`${HOST_SEARCH} [class*="_clearButton"]`)
+        if (clear !== null) {
+          clear.click()
+          return
+        }
+        if (tries > 1) foldHostSearch(tries - 1)
+      },
     })
   }
 
@@ -510,9 +513,11 @@ export function install(ctx: HostContext, ui: Ui) {
     // entrance animations for the frame before the unmount. And the modal
     // hands focus back to where it came from as it unmounts, so the row's
     // own navigation (a composer, a page) takes the keyboard after that.
-    requestAnimationFrame(() => {
-      closingStamp.release()
-      if (run !== null && !disposed) run()
+    requestFrame({
+      write() {
+        closingStamp.release()
+        if (run !== null && !disposed) run()
+      },
     })
   }
 

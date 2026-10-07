@@ -1,3 +1,5 @@
+import { observeSize } from '../core/bus'
+
 /**
  * The sliding highlight of a segmented control: one pseudo-element on the
  * control (shared/sliding-pill.css) that travels to the active item,
@@ -29,9 +31,8 @@ export function createSlidingPill(activeSelector: string) {
   /** The last written offset and width, so an unchanged placement writes nothing. */
   let lastX: number | null = null
   let lastW: number | null = null
-  const observer = new ResizeObserver(() => {
-    if (control !== null) place(control)
-  })
+  /** Stops watching the current control's size. */
+  let stopSize: (() => void) | null = null
 
   function clear(el: HTMLElement) {
     el.removeAttribute(PILL_ATTR)
@@ -61,19 +62,21 @@ export function createSlidingPill(activeSelector: string) {
 
   function sync(next: HTMLElement | null) {
     if (next !== control) {
-      if (control !== null) {
-        observer.unobserve(control)
-        clear(control)
-      }
+      if (stopSize !== null) stopSize()
+      stopSize = null
+      if (control !== null) clear(control)
       control = next
       if (control === null) return
-      observer.observe(control)
+      stopSize = observeSize(control, () => {
+        if (control !== null) place(control)
+      })
     }
     if (control !== null) place(control)
   }
 
   function release() {
-    observer.disconnect()
+    if (stopSize !== null) stopSize()
+    stopSize = null
     if (control !== null) clear(control)
     control = null
   }

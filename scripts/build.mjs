@@ -594,7 +594,7 @@ function validateModelCopy(doc, lobeBrands) {
  * Refuse a source file that does not ship: a stylesheet no manifest and no
  * theme entry names, or a module nothing imports, would otherwise sit in src/
  * with nothing to say it never reaches the page. Manifests are data the build
- * reads, not modules the bundle carries.
+ * reads and unit tests run under Vitest; neither is a module the bundle carries.
  *
  * @param bundled - the src/-relative modules in the bundle (esbuild's metafile).
  * @param sheets - every stylesheet the bundle carries (styleFiles).
@@ -608,7 +608,7 @@ function checkListed(bundled, sheets) {
   })
   for (const file of walk('')) {
     if (file.endsWith('.css') && !listed.has(file)) throw new Error(`build: src/${file} is in no list; add it to its feature's manifest or to THEME_SHEETS`)
-    if (file.endsWith('.manifest.ts') || file.endsWith('.d.ts')) continue
+    if (file.endsWith('.manifest.ts') || file.endsWith('.test.ts') || file.endsWith('.d.ts')) continue
     if (file.endsWith('.ts') && !bundled.has(file)) throw new Error(`build: src/${file} is imported by no module the bundle reaches`)
   }
 }

@@ -1,3 +1,4 @@
+import { requestFrame } from '../core/frame'
 /**
  * Walk a scroll container's position to where it is going instead of
  * writing it in one frame: the one scroll motion the skin draws.
@@ -84,8 +85,8 @@ export interface ScrollEase {
 
 /** The elements easing now, each with its destination, its test, and the motion it carries. */
 export const scrollEasing = new Map<Element, ScrollEase>()
-/** The shared frame; 0 when nothing is easing. */
-export let scrollEaseFrame = 0
+/** Whether the shared frame is requested; false when nothing is easing. */
+export let scrollEaseFrameQueued = false
 /** The previous frame's timestamp, for the interval. */
 export let scrollEaseLastAt = 0
 
@@ -120,9 +121,10 @@ export function easeScroll(element: Element, destination: (element: Element) => 
     // by someone else (see scrollEasePosition).
     lastWritten: active === undefined ? null : active.lastWritten,
   })
-  if (scrollEaseFrame !== 0) return
+  if (scrollEaseFrameQueued) return
   scrollEaseLastAt = 0
-  scrollEaseFrame = requestAnimationFrame(stepScrollEase)
+  scrollEaseFrameQueued = true
+  requestFrame({ write: stepScrollEase })
 }
 
 /** Start (or keep) easing this element's position to its end, wherever the end goes. */
@@ -171,7 +173,7 @@ export function writeScrollEase(element: Element, ease: ScrollEase, value: numbe
  * @param now - this frame's timestamp.
  */
 export function stepScrollEase(now: number) {
-  scrollEaseFrame = 0
+  scrollEaseFrameQueued = false
   const interval = scrollEaseLastAt === 0
     ? SCROLL_EASE_NOMINAL_FRAME_MS
     : Math.min(SCROLL_EASE_MAX_FRAME_MS, Math.max(0, now - scrollEaseLastAt))
@@ -221,5 +223,6 @@ export function stepScrollEase(now: number) {
     if (Math.abs(written - position) > SCROLL_EASE_MOVED_PX) scrollEasing.delete(element)
   }
   if (scrollEasing.size === 0) return
-  scrollEaseFrame = requestAnimationFrame(stepScrollEase)
+  scrollEaseFrameQueued = true
+  requestFrame({ write: stepScrollEase })
 }

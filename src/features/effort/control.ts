@@ -1,3 +1,4 @@
+import { requestFrame } from '../../core/frame'
 import { MODEL_EFFORT_DEFAULT, MODEL_EFFORT_FASTER, MODEL_EFFORT_LABEL, MODEL_EFFORT_NONE, MODEL_EFFORT_SMARTER } from '../../constants'
 import { copyLabel } from '../../core/i18n'
 import { createEffortMatrix } from './matrix'
@@ -432,9 +433,9 @@ export function createEffortControl(opts: {
     if (moveQueued) {
       // Land the still-pending position first, so the release settles on
       // where the pointer actually is rather than one event behind.
-      cancelAnimationFrame(pendingFrame)
+      if (cancelPendingFrame !== null) cancelPendingFrame()
       moveQueued = false
-      pendingFrame = 0
+      cancelPendingFrame = null
       applyPending()
       if (!pressed) return
     }
@@ -499,7 +500,7 @@ export function createEffortControl(opts: {
    * writes after (one transform + the level name) — so the drag costs one
    * layout flush per frame instead of one forced reflow per event.
    */
-  let pendingFrame = 0
+  let cancelPendingFrame: (() => void) | null = null
   let moveQueued = false
   let pendingX = 0
   let pendingY = 0
@@ -531,10 +532,12 @@ export function createEffortControl(opts: {
     pendingY = e.clientY
     if (moveQueued) return
     moveQueued = true
-    pendingFrame = requestAnimationFrame(() => {
-      moveQueued = false
-      pendingFrame = 0
-      applyPending()
+    cancelPendingFrame = requestFrame({
+      write() {
+        moveQueued = false
+        cancelPendingFrame = null
+        applyPending()
+      },
     })
   }
 

@@ -1,3 +1,5 @@
+import { subscribeMutations } from '../../core/bus'
+import { requestFrame } from '../../core/frame'
 import { beginChatFoldToggle, endChatFoldToggle, isChatFoldToggle } from './fold-toggle'
 import { RUNNING_STATE, THINK_ROW_SELECTOR } from '../../shared/chat-dom'
 
@@ -91,7 +93,7 @@ export function createReasoningFold() {
 
   // Streaming changes the DOM far faster than this needs to run, so one scan
   // a frame at most.
-  const observer = new MutationObserver((records) => {
+  const onRecords = (records: MutationRecord[]) => {
     const known = touchedRows.size
     for (const record of records) {
       // Both paths matter. record.target is the node the change happened on —
@@ -115,25 +117,28 @@ export function createReasoningFold() {
     if (touchedRows.size === known) return
     if (scanQueued) return
     scanQueued = true
-    requestAnimationFrame(() => {
-      scanQueued = false
-      const rows = [...touchedRows]
-      touchedRows.clear()
-      syncRows(rows)
+    // The scan reads each one's state and folds it open or shut: write phase (D40).
+    requestFrame({
+      write() {
+        scanQueued = false
+        const rows = [...touchedRows]
+        touchedRows.clear()
+        syncRows(rows)
+      },
     })
-  })
-  observer.observe(document.body, {
+  }
+  const stopMutations = subscribeMutations(document.body, {
     subtree: true,
     childList: true,
     attributes: true,
     attributeFilter: ['data-state', 'data-expanded'],
-  })
+  }, onRecords)
   document.addEventListener('click', rememberReaderTouched, true)
   document.addEventListener('keydown', rememberReaderTouched, true)
   syncEveryRow()
 
   return () => {
-    observer.disconnect()
+    stopMutations()
     document.removeEventListener('click', rememberReaderTouched, true)
     document.removeEventListener('keydown', rememberReaderTouched, true)
   }

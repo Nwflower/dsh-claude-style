@@ -1,4 +1,5 @@
 import { SKIN_STAMP_ATTR } from '../constants'
+import { subscribeMutations } from '../core/bus'
 
 /**
  * Whether a skin owns this page right now: the skin center stamps
@@ -18,21 +19,17 @@ export function externalOwnerActive() {
  * Watch the skin stamp, and hear when a skin arrives or leaves.
  *
  * The attribute is read; nothing is written. The callback fires only on a
- * real flip: the caller reads `externalOwnerActive()` itself at boot. The
- * observer is an exception to the single-scheduler rule (D40): it waits on an
- * attribute of the document element, outside this package's own subtree.
+ * real flip: the caller reads `externalOwnerActive()` itself at boot.
  *
  * @param listener - called with the new answer.
  * @returns unsubscribe.
  */
 export function subscribeExternalOwner(listener: (active: boolean) => void) {
   let last = externalOwnerActive()
-  const observer = new MutationObserver(() => {
+  return subscribeMutations(document.documentElement, { attributeFilter: [SKIN_STAMP_ATTR] }, () => {
     const next = externalOwnerActive()
     if (next === last) return
     last = next
     listener(next)
   })
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: [SKIN_STAMP_ATTR] })
-  return () => observer.disconnect()
 }

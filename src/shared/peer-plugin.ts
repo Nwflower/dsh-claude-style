@@ -1,3 +1,4 @@
+import { subscribeMutations } from '../core/bus'
 import { notifyEnvironmentChange } from '../core/prefs'
 import { parkForeignSheets } from '../core/stylesheet'
 import { notifyAll } from './notify'
@@ -28,17 +29,11 @@ import type { PeerPlugin } from '../core/feature'
  *
  * The boot list is read once, since it does not change after load. The
  * stylesheet is asked on every call, and while anybody is subscribed its
- * arrival or departure is noticed: an observer on the head's child list (the
- * element is mounted there) re-asks the question and, when the answer
- * changed, re-runs the environment — the preferences' own listeners for the
- * features that stand down by reading a preference, and this module's
- * subscribers for the one that claims host seat keys, which no preference
- * read can hand back (features/chat-files/).
- *
- * The observer lives only while something is subscribed, and it is the third
- * exception to the single-scheduler rule (docs/decisions D40): the head
- * is outside the scheduler's `<body>` subtree, and what it waits for is one
- * element appearing or going.
+ * arrival or departure is noticed: a subscription to the head's child list
+ * (the element is mounted there; the observation bus, D40) re-asks the
+ * question and, when the answer changed, re-runs the environment — the
+ * entry installs or tears down the features whose manifests yield to that
+ * plugin (D42). The head is watched only while something is subscribed.
  */
 /** The other plugin's id, as its entry appears in the boot list. */
 export const PEER_ENTRY_ID = 'dsh-chat-ux'
@@ -52,8 +47,8 @@ export let peerEntryRead = false
 export let peerAnnounced: boolean | null = null
 /** Who hears about the answer changing. */
 export const peerListeners: ((present: boolean) => void)[] = []
-/** The head observer, while at least one listener is subscribed. */
-export let peerObserver: MutationObserver | null = null
+/** Stops the head watch; set while at least one listener is subscribed. */
+export let stopHeadWatch: (() => void) | null = null
 
 /**
  * Whether dsh-chat-ux is installed on this page right now.
@@ -113,17 +108,15 @@ export function checkPeerPresence() {
  */
 export function subscribePeerPresence(listener: (present: boolean) => void) {
   peerListeners.push(listener)
-  if (peerObserver === null) {
-    const observer = new MutationObserver(checkPeerPresence)
-    peerObserver = observer
-    observer.observe(document.head, { childList: true })
+  if (stopHeadWatch === null) {
+    stopHeadWatch = subscribeMutations(document.head, { childList: true }, checkPeerPresence)
     peerAnnounced = dshChatUxPresent()
   }
   return () => {
     const at = peerListeners.indexOf(listener)
     if (at >= 0) peerListeners.splice(at, 1)
-    if (peerListeners.length > 0 || peerObserver === null) return
-    peerObserver.disconnect()
-    peerObserver = null
+    if (peerListeners.length > 0 || stopHeadWatch === null) return
+    stopHeadWatch()
+    stopHeadWatch = null
   }
 }

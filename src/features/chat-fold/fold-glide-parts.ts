@@ -1,3 +1,4 @@
+import { requestFrame } from '../../core/frame'
 import { CHAT_ROLLING_ATTR } from '../../constants'
 import { FOLLOW_LOOK_TOTAL_MS, ensureFollowTail } from '../chat-follow/chat-tail'
 import { isReaderScrollIntent } from '../chat-follow/reader-intent'
@@ -290,9 +291,9 @@ export function foldHoldThroughStalls(roll: Animation) {
     }
     lastFrameAt = now
     lastTime = timeOf()
-    requestAnimationFrame(look)
+    requestFrame({ write: look })
   }
-  requestAnimationFrame(look)
+  requestFrame({ write: look })
 }
 
 /**
@@ -312,8 +313,10 @@ export function foldConfirmCollapsed(settled: () => boolean, done: () => void, a
     done()
     return
   }
-  requestAnimationFrame(() => {
-    foldConfirmCollapsed(settled, done, tries + 1)
+  requestFrame({
+    write() {
+      foldConfirmCollapsed(settled, done, tries + 1)
+    },
   })
 }
 

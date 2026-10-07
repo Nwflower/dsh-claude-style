@@ -1,3 +1,5 @@
+import { subscribeMutations } from '../../core/bus'
+import { requestFrame } from '../../core/frame'
 import { CHAT_FLYING_ATTR } from '../../constants'
 import { motionReduced } from '../../core/prefs'
 import { startMorph } from './send-morph'
@@ -135,7 +137,7 @@ export function install(ctx: HostContext, ui: Ui) {
    * added and removed nodes themselves, since both marks sit on the row
    * element and finding the row needs no subtree walk.
    */
-  const rowWatcher = new MutationObserver((records) => {
+  const onRowRecords = (records: MutationRecord[]) => {
     const activeFlight = flight
     if (activeFlight === null || !touchesUserRow(records)) return
     const row = currentRow(activeFlight.previous)
@@ -151,7 +153,13 @@ export function install(ctx: HostContext, ui: Ui) {
     }
     activeFlight.bubble = findBubble(row)
     followTarget(activeFlight)
-  })
+  }
+  /** Stops the row watch; set only while a flight is in the air. */
+  let stopRowWatch: (() => void) | null = null
+  const unwatchRows = () => {
+    if (stopRowWatch !== null) stopRowWatch()
+    stopRowWatch = null
+  }
 
   /**
    * Hand the stand-in over to the real bubble: show the real row under it and
@@ -192,7 +200,7 @@ export function install(ctx: HostContext, ui: Ui) {
     const activeFlight = flight
     if (activeFlight === null) return
     flight = null
-    rowWatcher.disconnect()
+    unwatchRows()
     window.clearTimeout(rescue)
     rescue = 0
     activeFlight.hidden?.removeAttribute(CHAT_FLYING_ATTR)
@@ -233,7 +241,7 @@ export function install(ctx: HostContext, ui: Ui) {
     activeFlight.morph.compact(u)
     if (u >= 1) land()
     followTarget(activeFlight)
-    requestAnimationFrame(tick)
+    requestFrame({ write: tick })
   }
 
   /** Start one flight: stand-in up, real row hidden. All of it synchronously — a frame later the reader sees the real bubble flash. */
@@ -265,9 +273,10 @@ export function install(ctx: HostContext, ui: Ui) {
       landedRow: null,
       bubble,
     }
-    rowWatcher.observe(document.body, { childList: true, subtree: true })
+    if (stopRowWatch === null) stopRowWatch = subscribeMutations(document.body, { childList: true, subtree: true }, onRowRecords)
     rescue = window.setTimeout(settle, CHAT_FLIGHT_MS + CHAT_LANDING_MS + CHAT_RESCUE_MARGIN_MS)
-    requestAnimationFrame(tick)
+    // The flight compacts the card and follows the destination's layout: write phase (D40).
+    requestFrame({ write: tick })
   }
 
   /**
@@ -277,23 +286,28 @@ export function install(ctx: HostContext, ui: Ui) {
    * rest of the time), and taken off the moment it is recognised, times out or
    * is given up on.
    */
-  const echoWatcher = new MutationObserver(() => {
+  let stopEchoWatch: (() => void) | null = null
+  const unwatchEcho = () => {
+    if (stopEchoWatch !== null) stopEchoWatch()
+    stopEchoWatch = null
+  }
+  const onEchoRecords = () => {
     const draft = origin
     if (draft === null) {
-      echoWatcher.disconnect()
+      unwatchEcho()
       return
     }
     if (performance.now() - draft.capturedAt > CHAT_ORIGIN_TTL_MS) {
       origin = null
-      echoWatcher.disconnect()
+      unwatchEcho()
       return
     }
     const echo = takeFreshEcho(handled)
     if (echo === null) return
     origin = null
-    echoWatcher.disconnect()
+    unwatchEcho()
     startFlight(echo, draft)
-  })
+  }
 
   /** Capture an origin once. Not capturing it counts as "this was not a submission", and doing nothing is always safe. */
   const captureOrigin = () => {
@@ -311,7 +325,7 @@ export function install(ctx: HostContext, ui: Ui) {
     const snapshot = snapshotComposer(input, card)
     if (snapshot === null) return
     origin = { capturedAt: performance.now(), snapshot }
-    echoWatcher.observe(document.body, { childList: true, subtree: true })
+    if (stopEchoWatch === null) stopEchoWatch = subscribeMutations(document.body, { childList: true, subtree: true }, onEchoRecords)
   }
 
   /**
@@ -337,8 +351,8 @@ export function install(ctx: HostContext, ui: Ui) {
   return () => {
     document.removeEventListener('keydown', onKeyDown, true)
     document.removeEventListener('click', onClick, true)
-    echoWatcher.disconnect()
-    rowWatcher.disconnect()
+    unwatchEcho()
+    unwatchRows()
     origin = null
     settle()
   }

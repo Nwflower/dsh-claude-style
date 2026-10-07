@@ -1,3 +1,4 @@
+import { observeSize } from '../../core/bus'
 import { motionReduced } from '../../core/prefs'
 import { isReaderScrollIntent } from './reader-intent'
 import { PROCESS_BODY_SELECTOR, PROCESS_CONTENT_SELECTOR, PROCESS_EXPANDED_MODE_ATTRIBUTE } from '../../shared/chat-dom'
@@ -53,13 +54,13 @@ export const PROCESS_INTENT_TYPES = ['wheel', 'touchstart', 'touchmove', 'pointe
  * Watch every process group's body on the page and catch up the ones that
  * fall behind.
  *
- * @returns teardown: the observer, the listeners and the timer go away.
+ * @returns teardown: the size subscriptions, the listeners and the timer go away.
  */
 export function createChatProcessFollow() {
   /** A body the reader has really scrolled in, until he comes back to its end. */
   const takenOver = new WeakSet<Element>()
-  /** The bodies handed to the observer, each with the content layer it currently has. */
-  const watched = new Map<Element, Element | null>()
+  /** The bodies watched, each with the content layer it currently has and what stops watching the two. */
+  const watched = new Map<Element, { content: Element | null, stopBody: () => void, stopContent: (() => void) | null }>()
   /** Set by the teardown, so an ease in flight stops with the feature. */
   let stopped = false
 
@@ -123,7 +124,7 @@ export function createChatProcessFollow() {
 
   // Every content change is judged once. Watching the body itself matters
   // too: a window resize changes which cap applies.
-  const observer = new ResizeObserver(entries => {
+  const onResize = (entries: ResizeObserverEntry[]) => {
     for (const entry of entries) {
       const target = entry.target
       if (!(target instanceof HTMLElement)) continue
@@ -131,7 +132,7 @@ export function createChatProcessFollow() {
       if (body === null) continue
       catchUp(body)
     }
-  })
+  }
 
   /**
    * Session switches, groups coming and going, and a content layer being
@@ -145,16 +146,19 @@ export function createChatProcessFollow() {
   const sync = () => {
     const present = new Set(document.querySelectorAll(PROCESS_BODY_SELECTOR))
     for (const body of present) {
-      const first = !watched.has(body)
-      if (first) observer.observe(body)
       const content = body.querySelector(PROCESS_CONTENT_SELECTOR)
-      const watchedContent = watched.get(body)
-      if (!first && watchedContent === content) continue
-      if (watchedContent !== undefined && watchedContent !== null) observer.unobserve(watchedContent)
-      watched.set(body, content)
-      if (content !== null) observer.observe(content)
+      let entry = watched.get(body)
+      if (entry === undefined) {
+        entry = { content: null, stopBody: observeSize(body, onResize), stopContent: null }
+        watched.set(body, entry)
+      } else if (entry.content === content) {
+        continue
+      }
+      if (entry.stopContent !== null) entry.stopContent()
+      entry.content = content
+      entry.stopContent = content === null ? null : observeSize(content, onResize)
     }
-    for (const [body, content] of [...watched]) {
+    for (const [body, entry] of [...watched]) {
       if (present.has(body)) {
         // A body that was folded and is open again should not carry the last hand-over over.
         if (body.hasAttribute('hidden')) takenOver.delete(body)
@@ -162,8 +166,8 @@ export function createChatProcessFollow() {
       }
       watched.delete(body)
       takenOver.delete(body)
-      observer.unobserve(body)
-      if (content !== null) observer.unobserve(content)
+      entry.stopBody()
+      if (entry.stopContent !== null) entry.stopContent()
       // A body leaving the page takes its ease with it; the loop would drop
       // it anyway (it is no longer connected), and this is the tidier exit.
       stopScrollEase(body)
@@ -178,10 +182,13 @@ export function createChatProcessFollow() {
   return () => {
     stopped = true
     window.clearInterval(timer)
-    observer.disconnect()
     window.removeEventListener('scroll', noteScroll, true)
     for (const type of PROCESS_INTENT_TYPES) window.removeEventListener(type, noteIntent, true)
-    for (const body of watched.keys()) stopScrollEase(body)
+    for (const [body, entry] of watched) {
+      entry.stopBody()
+      if (entry.stopContent !== null) entry.stopContent()
+      stopScrollEase(body)
+    }
     watched.clear()
   }
 }

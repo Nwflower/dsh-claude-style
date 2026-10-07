@@ -1,3 +1,6 @@
+import { subscribeMutations } from '../../core/bus'
+import { requestFrame } from '../../core/frame'
+
 /**
  * The skin's own 0.12s border/box-shadow transitions (composer card, input
  * scroll, attachment rail, hero tray) are worth keeping for hover/focus, but
@@ -21,9 +24,9 @@
  * comes down after a short window, so everyday hover/focus feel is
  * untouched.
  *
- * The host flips `data-ds-dark-theme` on <body> itself; this observer only
- * times the suppression around that flip. It deliberately does NOT live
- * in the scheduler: the scheduler's pass observer only watches
+ * The host flips `data-ds-dark-theme` on <body> itself; this subscription
+ * only times the suppression around that flip. It is a channel of its own on
+ * the observation bus (D40): the scheduler's pass only hears
  * aria-label/aria-selected (D9), and this flag must not feed it.
  */
 export const THEME_FLIP_ATTR = 'data-dsh-theme-transitioning'
@@ -53,6 +56,8 @@ export function install() {
   const body = document.body
   const root = document.documentElement
   let flipTimer: ReturnType<typeof setTimeout> | null = null
+  /** Cancels the next frame of the transition sweep. */
+  let cancelSweep: (() => void) | null = null
 
   // The flag lives on <html> AND <body> so the suppression selector can
   // out-specify the gated composer rules it can (html[flag] body[skin][flag] *).
@@ -80,9 +85,17 @@ export function install() {
     cancelThemeTransitions()
     // The host may commit more of the flip after us; sweep the next two
     // frames to catch those starts as well.
-    requestAnimationFrame(() => {
-      cancelThemeTransitions()
-      requestAnimationFrame(cancelThemeTransitions)
+    if (cancelSweep !== null) cancelSweep()
+    cancelSweep = requestFrame({
+      write() {
+        cancelThemeTransitions()
+        cancelSweep = requestFrame({
+          write() {
+            cancelSweep = null
+            cancelThemeTransitions()
+          },
+        })
+      },
     })
     if (flipTimer !== null) clearTimeout(flipTimer)
     flipTimer = setTimeout(() => {
@@ -91,11 +104,12 @@ export function install() {
     }, THEME_FLIP_MS)
   }
 
-  const themeObserver = new MutationObserver(onThemeFlip)
-  themeObserver.observe(body, { attributes: true, attributeFilter: ['data-ds-dark-theme'] })
+  // Called inside the flip's own mutation microtask, before any paint (D40).
+  const stopThemeWatch = subscribeMutations(body, { attributeFilter: ['data-ds-dark-theme'] }, onThemeFlip)
 
   return () => {
-    themeObserver.disconnect()
+    stopThemeWatch()
+    if (cancelSweep !== null) cancelSweep()
     if (flipTimer !== null) clearTimeout(flipTimer)
     setFlag(false)
   }

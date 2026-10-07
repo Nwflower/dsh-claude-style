@@ -1,3 +1,4 @@
+import { requestFrame } from '../../core/frame'
 import { QUIET_ATTR } from '../../constants'
 import { conversationSessionId, findConversationSession } from '../../core/host'
 import { motionReduced } from '../../core/prefs'
@@ -89,8 +90,8 @@ export function install(ctx: HostContext, ui: Ui) {
   let list: HTMLElement | null = null
   let rowItems: TurnItem[] | null = null
   let open = false
-  /** The frame a coalesced refresh waits on. */
-  let refreshFrame = 0
+  /** Cancels the frame a coalesced refresh waits on. */
+  let cancelRefreshFrame: (() => void) | null = null
   /** The turn the last key went to, and when. */
   let keyJump: { sessionId: string, turn: number, at: number } | null = null
   /** The turn whose first row should show the landing line once it is in the window. */
@@ -208,12 +209,14 @@ export function install(ctx: HostContext, ui: Ui) {
 
   /** Re-read the reading position once per frame while the conversation scrolls. */
   function scheduleRefresh() {
-    if (refreshFrame !== 0) return
-    refreshFrame = requestAnimationFrame(() => {
-      refreshFrame = 0
-      if (hostRail === null || drawnItems === null) return
-      markCurrent(hostRail, drawnItems)
-      if (open) placeCard()
+    if (cancelRefreshFrame !== null) return
+    cancelRefreshFrame = requestFrame({
+      write() {
+        cancelRefreshFrame = null
+        if (hostRail === null || drawnItems === null) return
+        markCurrent(hostRail, drawnItems)
+        if (open) placeCard()
+      },
     })
   }
 
@@ -489,8 +492,8 @@ export function install(ctx: HostContext, ui: Ui) {
   return () => {
     stopped = true
     host.stop()
-    if (refreshFrame !== 0) cancelAnimationFrame(refreshFrame)
-    refreshFrame = 0
+    if (cancelRefreshFrame !== null) cancelRefreshFrame()
+    cancelRefreshFrame = null
     unmountRail()
     rail = null
     track = null

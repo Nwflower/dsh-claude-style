@@ -1,3 +1,4 @@
+import { subscribeMutations } from '../../core/bus'
 import { motionReduced } from '../../core/prefs'
 import { FOLD_DISCLOSURE_SELECTOR, FOLD_INTENT_TTL_MS, FOLD_POPUP_SELECTOR, FOLD_ROLL_MS, FOLD_SKIPPED_CONTROL_SELECTOR, FOLD_TOGGLE_SELECTOR, FOLD_VISIBLE_SHARE, foldBeginHeightClip, foldConfirmCollapsed, foldControlAtBottom, foldExpandedBody, foldHoldThroughStalls, foldProcessBody, foldSettleAfter, foldVisibleReach, foldWatchReader, markChatFoldBusy } from './fold-glide-parts'
 import type { FoldWatch } from './fold-glide-parts'
@@ -310,17 +311,16 @@ export function installChatFoldGlide() {
     })
   }
 
-  const observer = new MutationObserver(flush)
   document.addEventListener('click', onClick, true)
   // hidden is watched too: a process group folds with
   // setAttribute('hidden', 'until-found'), an attribute change alone, which
-  // an observer without attributeFilter never hears. Elsewhere a hidden flip
-  // usually arrives with no intent pending and returns at once.
-  observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden'] })
+  // a child-list subscription never hears. Elsewhere a hidden flip usually
+  // arrives with no intent pending and returns at once.
+  const stopMutations = subscribeMutations(document.body, { childList: true, subtree: true, attributeFilter: ['hidden'] }, flush)
 
   return () => {
     document.removeEventListener('click', onClick, true)
-    observer.disconnect()
+    stopMutations()
     if (glideIntent !== null) glideIntent.watch.stop()
     glideIntent = null
   }

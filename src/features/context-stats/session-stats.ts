@@ -1,3 +1,4 @@
+import { observeSize } from '../../core/bus'
 import { AUTO_POPOVER_ALL } from '../../constants'
 import { conversationSessionId, findConversationSession } from '../../core/host'
 import type { HostContext, HostText, HostValue } from '../../core/host'
@@ -83,7 +84,7 @@ export function createSessionStats(ctx: HostContext) {
   /** The timer that gives the place up at the deadline, while one runs. */
   let skeletonTimer: ReturnType<typeof setTimeout> | null = null
   /** The open panel's size watcher, or null before a panel has been seen. */
-  let panelObserver: ResizeObserver | null = null
+  let stopPanelSize: (() => void) | null = null
 
   /**
    * The shown conversation's host session id.
@@ -624,24 +625,19 @@ export function createSessionStats(ctx: HostContext) {
     if (panel.__dshContextPanelToken === statsBindingToken) return
     panel.__dshContextPanelToken = statsBindingToken
     panel.addEventListener('mouseenter', () => {
-    hoverIntent.cancel()
+      hoverIntent.cancel()
     })
     panel.addEventListener('mouseleave', () => {
-    if (hoverEnabled()) hoverIntent.scheduleClose()
+      if (hoverEnabled()) hoverIntent.scheduleClose()
     })
     // The panel's own box is what the reading is taken from, so the reading
     // is re-taken whenever that box changes: the host's rows growing, or
     // the block below them arriving.
-    if (panelObserver === null && typeof ResizeObserver === 'function') {
-    panelObserver = new ResizeObserver(() => {
+    if (stopPanelSize !== null) stopPanelSize()
+    stopPanelSize = observeSize(panel, () => {
       const open = contextPanel()
       if (open !== null) alignContextPanel(open)
     })
-    }
-    if (panelObserver !== null) {
-    panelObserver.disconnect()
-    panelObserver.observe(panel)
-    }
     alignContextPanel(panel)
   }
 
@@ -687,9 +683,9 @@ export function createSessionStats(ctx: HostContext) {
     teardown() {
       hoverIntent.cancel()
       releaseWatch()
-      if (panelObserver !== null) {
-        panelObserver.disconnect()
-        panelObserver = null
+      if (stopPanelSize !== null) {
+        stopPanelSize()
+        stopPanelSize = null
       }
       const blocks = document.querySelectorAll(`[${CONTEXT_STATS_ATTR}]`)
       for (let i = 0; i < blocks.length; i++) {

@@ -1,3 +1,5 @@
+import { subscribeMutations } from '../../core/bus'
+import { requestFrame } from '../../core/frame'
 import { beginChatFoldToggle, endChatFoldToggle, isChatFoldToggle } from './fold-toggle'
 import { CONVERSATION_SCROLL_SELECTOR, FOLLOW_THRESHOLD_PX, PROCESS_BODY_SELECTOR, PROCESS_EXPANDED_MODE_ATTRIBUTE, PROCESS_GROUP_SELECTOR, RUNNING_STATE, SHIMMER_SELECTOR } from '../../shared/chat-dom'
 
@@ -170,7 +172,7 @@ export function createProcessFold() {
   // a frame at most. The header's live detail changes character by character,
   // so characterData is in range too: without watching it the label half would
   // sit on a stale value.
-  const observer = new MutationObserver((records) => {
+  const onRecords = (records: MutationRecord[]) => {
     const known = touchedGroups.size
     for (const record of records) {
       // The same shape as the thinking row's, with one extra step:
@@ -191,14 +193,17 @@ export function createProcessFold() {
     if (touchedGroups.size === known) return
     if (scanQueued) return
     scanQueued = true
-    requestAnimationFrame(() => {
-      scanQueued = false
-      const groups = [...touchedGroups]
-      touchedGroups.clear()
-      syncGroups(groups)
+    // The scan reads each one's state and folds it open or shut: write phase (D40).
+    requestFrame({
+      write() {
+        scanQueued = false
+        const groups = [...touchedGroups]
+        touchedGroups.clear()
+        syncGroups(groups)
+      },
     })
-  })
-  observer.observe(document.body, {
+  }
+  const stopMutations = subscribeMutations(document.body, {
     subtree: true,
     childList: true,
     attributes: true,
@@ -206,13 +211,13 @@ export function createProcessFold() {
     // adds or removes it, and that batch has to be scanned again.
     attributeFilter: ['data-shimmer', 'data-text-shimmer', 'hidden', PROCESS_EXPANDED_MODE_ATTRIBUTE],
     characterData: true,
-  })
+  }, onRecords)
   document.addEventListener('click', rememberReaderTouched, true)
   document.addEventListener('keydown', rememberReaderTouched, true)
   syncEveryGroup()
 
   return () => {
-    observer.disconnect()
+    stopMutations()
     document.removeEventListener('click', rememberReaderTouched, true)
     document.removeEventListener('keydown', rememberReaderTouched, true)
   }

@@ -1,3 +1,5 @@
+import { subscribeMutations } from '../../core/bus'
+import { requestFrame } from '../../core/frame'
 import { isChatFoldToggle } from '../chat-fold/fold-toggle'
 import { STREAMING_ATTRIBUTE, STREAMING_SELECTOR } from '../../shared/chat-dom'
 
@@ -121,8 +123,8 @@ export function createChatRevealEngine() {
   let liveContainers: Element[] = []
   /** Colours already written onto elements, so an unchanged one skips the style read. */
   const writtenColors = new WeakMap<Element, string>()
-  /** The queued paint frame; 0 when none. */
-  let scheduledFrame = 0
+  /** Cancels the queued paint frame; null when none. */
+  let cancelPaintFrame: (() => void) | null = null
   /** One highlight per step: registered once, its segments swapped every frame. */
   const highlights: (Highlight | null)[] = new Array(CHAT_REVEAL_STEPS).fill(null)
   /** Slow frames in a row; at CHAT_REVEAL_SLOW_FRAME_RUN the engine gives way. */
@@ -233,8 +235,10 @@ export function createChatRevealEngine() {
 
   /** Queue the next paint frame. */
   const scheduleFrame = () => {
-    scheduledFrame = requestAnimationFrame((now) => {
-      paint(now, true)
+    cancelPaintFrame = requestFrame({
+      write(now) {
+        paint(now, true)
+      },
     })
   }
 
@@ -245,7 +249,7 @@ export function createChatRevealEngine() {
    *     repaint a scan does: only these gaps say whether the main thread is busy.
    */
   const paint = (now: number, fromFrame: boolean) => {
-    scheduledFrame = 0
+    cancelPaintFrame = null
     if (liveRuns.length === 0) {
       clearHighlights()
       return
@@ -630,9 +634,9 @@ export function createChatRevealEngine() {
     // painted at full strength for one frame and pressed back to faint on the
     // next, which the eye reads as a flash. So it is painted synchronously:
     // the segment exists and has its alpha immediately.
-    if (scheduledFrame !== 0) {
-      cancelAnimationFrame(scheduledFrame)
-      scheduledFrame = 0
+    if (cancelPaintFrame !== null) {
+      cancelPaintFrame()
+      cancelPaintFrame = null
     }
     paint(performance.now(), false)
   }
@@ -642,7 +646,7 @@ export function createChatRevealEngine() {
   // composer) triggers no scan, and a change inside a container rescans only
   // that one. A full look is left to a container appearing, disappearing, or
   // gaining or losing data-streaming.
-  const observer = new MutationObserver((records) => {
+  const onRecords = (records: MutationRecord[]) => {
     let everything = false
     const touched = new Set<Element>()
     for (const record of records) {
@@ -669,24 +673,23 @@ export function createChatRevealEngine() {
     }
     if (everything) scan(null)
     else if (touched.size > 0) scan(touched)
-  })
-  observer.observe(document.body, {
+  }
+  const stopMutations = subscribeMutations(document.body, {
     subtree: true,
     childList: true,
     characterData: true,
-    attributes: true,
     attributeFilter: [STREAMING_ATTRIBUTE],
-  })
+  }, onRecords)
   document.addEventListener('click', rememberReaderFold, true)
   document.addEventListener('keydown', rememberReaderFold, true)
   scan(null)
 
   return () => {
-    observer.disconnect()
+    stopMutations()
     document.removeEventListener('click', rememberReaderFold, true)
     document.removeEventListener('keydown', rememberReaderFold, true)
-    if (scheduledFrame !== 0) cancelAnimationFrame(scheduledFrame)
-    scheduledFrame = 0
+    if (cancelPaintFrame !== null) cancelPaintFrame()
+    cancelPaintFrame = null
     liveRuns.length = 0
     clearHighlights()
   }

@@ -1,4 +1,6 @@
 import { CARET_ATTR, CARET_HOST_ATTR, CARET_LAYER_ATTR, CARET_MOTION_MOVE, CARET_MOTION_OFF, CARET_VISIBLE_ATTR, QUIET_ATTR } from '../../constants'
+import { subscribeMutations } from '../../core/bus'
+import { requestFrame } from '../../core/frame'
 import { readPrefs, subscribePrefs } from '../../core/prefs'
 import { caretClipToField, caretMeasurePlain, caretMeasureRich } from './caret-measure'
 import type { CaretBox } from './caret-measure'
@@ -76,15 +78,15 @@ export function createCaretMotion(read: () => string) {
   const layers = new Map<HTMLElement, CaretLayer>()
   /** A sync is already queued for the next frame. */
   let queued = false
-  /** The frame queued; 0 when there is none, so dispose can cancel it. */
-  let frameHandle = 0
+  /** Cancels the frame queued; null when there is none, so dispose can cancel it. */
+  let cancelFrame: (() => void) | null = null
   /**
-   * The one-off frame that gives the transition back after an instant
-   * landing; 0 when there is none, so dispose can cancel it too — an
-   * untracked frame here would outlive the teardown and write into a
+   * Cancels the one-off frame that gives the transition back after an
+   * instant landing; null when there is none, so dispose can cancel it too —
+   * an untracked frame here would outlive the teardown and write into a
    * released layer.
    */
-  let transitionFrame = 0
+  let cancelTransitionFrame: (() => void) | null = null
   /**
    * After dispose, nothing acts.
    *
@@ -117,13 +119,16 @@ export function createCaretMotion(read: () => string) {
   const queue = () => {
     if (disposed || queued) return
     queued = true
-    frameHandle = requestAnimationFrame(() => {
-      frameHandle = 0
-      queued = false
-      if (disposed) return
-      const typing = typed
-      typed = false
-      sync(typing)
+    // Measuring builds probes and reads them, then draws: write phase (D40).
+    cancelFrame = requestFrame({
+      write() {
+        cancelFrame = null
+        queued = false
+        if (disposed) return
+        const typing = typed
+        typed = false
+        sync(typing)
+      },
     })
   }
 
@@ -165,20 +170,30 @@ export function createCaretMotion(read: () => string) {
    * another event that never comes. The plain surface does not ride this:
    * its content is not in the DOM.
    */
-  const contentObserver = new MutationObserver(() => {
+  const onContentChange = () => {
     if (read() === CARET_MOTION_OFF) return
     queue()
-  })
+  }
+  /** The rich surfaces watched, each with what stops watching it. */
+  const watchedSurfaces = new Map<HTMLElement, () => void>()
 
-  /** Watch a rich surface. Watching the same one twice is idempotent; the last options win. */
+  /**
+   * Watch a rich surface. Watching the same one twice is idempotent; a
+   * surface that has left the page is let go here.
+   */
   const observeComposer = (input: HTMLElement) => {
-    contentObserver.observe(input, {
+    for (const [surface, stop] of watchedSurfaces) {
+      if (surface.isConnected) continue
+      stop()
+      watchedSurfaces.delete(surface)
+    }
+    if (watchedSurfaces.has(input)) return
+    watchedSurfaces.set(input, subscribeMutations(input, {
       childList: true,
       subtree: true,
       characterData: true,
-      attributes: true,
       attributeFilter: ['contenteditable', 'data-composer-input'],
-    })
+    }, onContentChange))
   }
 
   /** The focus is on this surface and no caret has been drawn yet: the gap a session switch leaves. */
@@ -298,11 +313,13 @@ export function createCaretMotion(read: () => string) {
     layer.caret.style.transform = 'translate(' + left + 'px, ' + top + 'px)'
     layer.caret.style.height = box.height + 'px'
     if (instant) {
-      if (transitionFrame !== 0) cancelAnimationFrame(transitionFrame)
-      transitionFrame = requestAnimationFrame(() => {
-        transitionFrame = 0
-        if (disposed) return
-        layer.caret.style.transitionProperty = ''
+      if (cancelTransitionFrame !== null) cancelTransitionFrame()
+      cancelTransitionFrame = requestFrame({
+        write() {
+          cancelTransitionFrame = null
+          if (disposed) return
+          layer.caret.style.transitionProperty = ''
+        },
       })
     }
     if (fresh) {
@@ -414,10 +431,10 @@ export function createCaretMotion(read: () => string) {
     resync: queue,
     dispose: () => {
       disposed = true
-      if (frameHandle !== 0) cancelAnimationFrame(frameHandle)
-      frameHandle = 0
-      if (transitionFrame !== 0) cancelAnimationFrame(transitionFrame)
-      transitionFrame = 0
+      if (cancelFrame !== null) cancelFrame()
+      cancelFrame = null
+      if (cancelTransitionFrame !== null) cancelTransitionFrame()
+      cancelTransitionFrame = null
       document.removeEventListener('selectionchange', queue)
       document.removeEventListener('focusin', syncAfterFocusChange)
       document.removeEventListener('focusout', syncAfterFocusChange)
@@ -427,7 +444,8 @@ export function createCaretMotion(read: () => string) {
       document.removeEventListener('scroll', followPlainScroll, true)
       window.removeEventListener('resize', queue)
       document.fonts.removeEventListener('loadingdone', queue)
-      contentObserver.disconnect()
+      for (const stop of watchedSurfaces.values()) stop()
+      watchedSurfaces.clear()
       for (const [input, layer] of layers) release(input, layer)
       layers.clear()
       probeHome.remove()

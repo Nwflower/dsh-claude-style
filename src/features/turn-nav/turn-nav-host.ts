@@ -1,3 +1,4 @@
+import { requestFrame } from '../../core/frame'
 import { closestConversationSession, conversationSessionId, findChatTarget, findConversationSession } from '../../core/host'
 import { CONVERSATION_SCROLL_SELECTOR, TURN_RAIL_CURRENT_SELECTOR, TURN_RAIL_INSET, TURN_RAIL_MARK_SELECTOR, TURN_RAIL_PITCH, TURN_RAIL_SCROLLER_SELECTOR, TURN_RAIL_SELECTOR } from '../../shared/chat-dom'
 import { closestFrom } from '../../shared/dom'
@@ -39,9 +40,9 @@ export function createTurnNavHost(ctx: HostContext) {
   /** What the turns were built from: the two sources' identities, and the result. */
   let sources: { sessionId: string, outline: HostValue, loaded: HostValue[] } | null = null
   let items: TurnItem[] = []
-  /** The jump in flight: its generation and the frame it waits on. */
+  /** The jump in flight: its generation and what cancels the frame it waits on. */
   let jumpGeneration = 0
-  let jumpFrame = 0
+  let cancelJumpFrame: (() => void) | null = null
   let stopped = false
 
   /** The shown conversation's rail, or null below two turns or away from the chat view. */
@@ -136,12 +137,12 @@ export function createTurnNavHost(ctx: HostContext) {
    */
   function jumpToTurn(turn: number, onPressed: (scroller: HTMLElement | null, before: number | null) => void) {
     const generation = ++jumpGeneration
-    if (jumpFrame !== 0) cancelAnimationFrame(jumpFrame)
-    jumpFrame = 0
+    if (cancelJumpFrame !== null) cancelJumpFrame()
+    cancelJumpFrame = null
     let frames = 0
     let scrolled = false
     const step = () => {
-      jumpFrame = 0
+      cancelJumpFrame = null
       if (stopped || generation !== jumpGeneration) return
       const found = findRail()
       const sessionId = conversationSessionId(findConversationSession())
@@ -168,7 +169,7 @@ export function createTurnNavHost(ctx: HostContext) {
       if (++frames > MARK_WAIT_FRAMES) {
         throw new Error(`dsh-claude-style: the turn rail never rendered mark ${index} of ${list.length} (it holds ${railMarkCount(found)})`)
       }
-      jumpFrame = requestAnimationFrame(step)
+      cancelJumpFrame = requestFrame({ write: step })
     }
     step()
   }
@@ -183,8 +184,8 @@ export function createTurnNavHost(ctx: HostContext) {
     /** Drop the jump in flight. */
     stop() {
       stopped = true
-      if (jumpFrame !== 0) cancelAnimationFrame(jumpFrame)
-      jumpFrame = 0
+      if (cancelJumpFrame !== null) cancelJumpFrame()
+      cancelJumpFrame = null
       rail = null
     },
   }

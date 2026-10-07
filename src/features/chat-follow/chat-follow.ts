@@ -1,4 +1,6 @@
 import { CHAT_FOLLOW_ATTR, STREAM_GLIDE_ATTR } from '../../constants'
+import { observeSize, subscribeMutations } from '../../core/bus'
+import { requestFrame } from '../../core/frame'
 import { motionReduced } from '../../core/prefs'
 import { conversationScroller, ensureFollowTail, findFollowTailButton, isAtBottom } from './chat-tail'
 import { createChatProcessFollow } from './process-follow'
@@ -130,7 +132,8 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
   /** The flow column the glide's resize observer watches. */
   let glideColumn: HTMLElement | null = null
   /** The resize observer made for glideColumn (see glideSync). */
-  let glideResize: ResizeObserver | null = null
+  /** Stops the glide's size subscription. */
+  let stopGlideSize: (() => void) | null = null
   /** The column's height as the glide last saw it; the growth a frame is measured against. */
   let glideHeight = 0
   /** The host's own button while the glide keeps it out of sight. */
@@ -204,32 +207,34 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
    * Watch the flow column the glide reads growth from; a session switch
    * replaces it.
    *
-   * The observer is made anew for every column. Resize observer callbacks
-   * run in the order the observers were made, and the host makes the one it
-   * pins the end from when it mounts the column (ChatViewport.attach): it
-   * watches the column, the scroller and the composer seat. Made after it,
-   * this one runs after the pin in the same frame and takes it back before
-   * it paints; one made at install runs first, and every pin paints. It
-   * watches the same three elements, so no resize the host pins on goes
+   * The size subscription is made anew for every column, after the host's.
+   * Resize observer callbacks run in the order the observers were made, and
+   * the host makes the one it pins the end from when it mounts the column
+   * (ChatViewport.attach): it watches the column, the scroller and the
+   * composer seat. Subscribed `afterHost` once the column is there (D40), this
+   * one runs after the pin in the same frame and takes it back before it
+   * paints; one made at install would run first, and every pin would paint.
+   * It watches the same three elements, so no resize the host pins on goes
    * unseen.
    */
   const glideSync = () => {
     const column = document.querySelector<HTMLElement>(CHAT_FLOW_SELECTOR)
     if (column === glideColumn) return
-    glideResize?.disconnect()
-    glideResize = null
+    if (stopGlideSize !== null) stopGlideSize()
+    stopGlideSize = null
     glideColumn = column
     if (column === null) return
-    glideResize = new ResizeObserver(onGlideResize)
-    // The observer's first report is the column as it is now, which is no
+    // The subscription's first report is the column as it is now, which is no
     // growth.
     glideHeight = column.offsetHeight
-    glideResize.observe(column)
+    const watched: Element[] = [column]
     const scroller = column.closest(CONVERSATION_SCROLL_SELECTOR)
-    if (scroller === null) return
-    glideResize.observe(scroller)
-    const composer = scroller.querySelector(COMPOSER_SELECTOR)
-    if (composer !== null) glideResize.observe(composer)
+    if (scroller !== null) {
+      watched.push(scroller)
+      const composer = scroller.querySelector(COMPOSER_SELECTOR)
+      if (composer !== null) watched.push(composer)
+    }
+    stopGlideSize = observeSize(watched, onGlideResize, { afterHost: true })
   }
 
   /**
@@ -362,9 +367,12 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
   const queue = () => {
     if (scanQueued) return
     scanQueued = true
-    requestAnimationFrame(() => {
-      scanQueued = false
-      settle()
+    // The hand-back reads the position and writes it in one go: write phase (D40).
+    requestFrame({
+      write() {
+        scanQueued = false
+        settle()
+      },
     })
   }
 
@@ -403,7 +411,7 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
     readerTookOver = true
   }
 
-  const observer = new MutationObserver((records) => {
+  const onRecords = (records: MutationRecord[]) => {
     for (const record of records) {
       if (record.type === 'attributes') {
         // The follow went from present to absent: the host just turned it off.
@@ -450,30 +458,29 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
       }
     }
     if (contentArrived) glideCheck()
-  })
+  }
 
   for (const type of FOLLOW_INTENT_TYPES) {
     document.addEventListener(type, noteReaderIntent, { capture: true, passive: true })
   }
-  observer.observe(document.body, {
+  const stopMutations = subscribeMutations(document.body, {
     subtree: true,
     childList: true,
     characterData: true,
-    attributes: true,
     attributeFilter: ['data-state', FOLLOWING_TAIL_ATTRIBUTE],
     attributeOldValue: true,
-  })
+  }, onRecords)
   // The reading a pin is measured against; scroll events are fired before
   // the frame's own callbacks, so this always carries the position the frame
   // started at (see noteGlideScroll).
   window.addEventListener('scroll', noteGlideScroll, { capture: true, passive: true })
 
   return () => {
-    observer.disconnect()
+    stopMutations()
     for (const type of FOLLOW_INTENT_TYPES) document.removeEventListener(type, noteReaderIntent, true)
     window.removeEventListener('scroll', noteGlideScroll, true)
-    glideResize?.disconnect()
-    glideResize = null
+    if (stopGlideSize !== null) stopGlideSize()
+    stopGlideSize = null
     unhideGlideButton()
     // The glide's own easing stops with the feature; a hand-back in flight
     // elsewhere on the page is not this teardown's business.
