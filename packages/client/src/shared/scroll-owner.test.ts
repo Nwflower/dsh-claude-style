@@ -1,6 +1,6 @@
 import { afterEach, expect, test } from 'vitest'
 import { MOTION_ATTR, MOTION_FULL, MOTION_REDUCED } from '../constants'
-import { easeScrollFor, easeScrollToEndFor, isScrollMoving, joinScrollOwner, readerHolds, readerMovedSince, stopScrollFor, submissionHolds, writeScroll } from './scroll-owner'
+import { easeScrollFor, easeScrollToEndFor, joinScrollOwner, readerHolds, readerMovedSince, stopScrollFor, submissionHolds, writeScroll } from './scroll-owner'
 
 const nextFrame = () => new Promise<number>(resolve => requestAnimationFrame(resolve))
 const wanted = () => true
@@ -43,7 +43,6 @@ test('a source ranked below the running ease is refused, an equal or higher one 
   expect(easeScrollFor(scroller, 'jump', () => 600, wanted)).toBe(true)
   expect(writeScroll(scroller, 0, 'fold')).toBe(false)
   expect(easeScrollToEndFor(scroller, 'stream', wanted)).toBe(false)
-  expect(isScrollMoving(scroller)).toBe(true)
   expect(writeScroll(scroller, 300, 'jump')).toBe(true)
   expect(scroller.scrollTop).toBe(300)
 })
@@ -52,9 +51,7 @@ test('a write ends a running ease that ranks below it', () => {
   setMotion(MOTION_FULL)
   const scroller = scrollBox('data-conversation-scroll')
   expect(easeScrollToEndFor(scroller, 'stream', wanted)).toBe(true)
-  expect(isScrollMoving(scroller)).toBe(true)
   expect(writeScroll(scroller, 200, 'composer')).toBe(true)
-  expect(isScrollMoving(scroller)).toBe(false)
   expect(scroller.scrollTop).toBe(200)
 })
 
@@ -72,17 +69,6 @@ test('the reader holds the conversation until he comes back to its end; only fol
   ;(scroller.firstElementChild as HTMLElement).style.height = '3000px'
   expect(readerHolds(scroller)).toBe(false)
   expect(easeScrollToEndFor(scroller, 'follow', wanted)).toBe(true)
-})
-
-test('a following ease ends the frame the reader takes the container over', async () => {
-  setMotion(MOTION_FULL)
-  join()
-  const scroller = scrollBox('data-conversation-scroll')
-  expect(easeScrollToEndFor(scroller, 'stream', wanted)).toBe(true)
-  scroller.dispatchEvent(new WheelEvent('wheel', { bubbles: true }))
-  await nextFrame()
-  await nextFrame()
-  expect(isScrollMoving(scroller)).toBe(false)
 })
 
 test('a process body is held by an intent on the body itself, not by a press on its content', () => {
@@ -113,7 +99,6 @@ test('under reduced motion an ease is its destination written at once', () => {
   const scroller = scrollBox('data-conversation-scroll')
   expect(easeScrollFor(scroller, 'jump', () => 400, wanted)).toBe(true)
   expect(scroller.scrollTop).toBe(400)
-  expect(isScrollMoving(scroller)).toBe(false)
 })
 
 test('only intents that move a position count as the reader moving', () => {

@@ -1,4 +1,9 @@
+import { MENU_ROLE_SELECTOR, SETTINGS_BUTTON_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { findFootArea } from '../../core/host'
+
+/** Rhythm and give-up point of the poll for the host's account menu after the trigger's own click. */
+const MENU_LOOK_INTERVAL_MS = 40
+const MENU_LOOK_TRIES = 20
 
 /**
  * The host's account trigger, its settings entry, and its open account menu.
@@ -59,7 +64,7 @@ export function createHostAccountMenu(options: { close(): void }) {
    */
   function hostSettingsTrigger() {
     const foot = findFootArea()
-    return foot === null ? null : foot.querySelector<HTMLElement>('[class*="settingsArea"] button[aria-haspopup="dialog"]')
+    return foot === null ? null : foot.querySelector<HTMLElement>(SETTINGS_BUTTON_SELECTOR)
   }
 
   /**
@@ -74,7 +79,7 @@ export function createHostAccountMenu(options: { close(): void }) {
   function findAccountMenu() {
     const trigger = hostAccountTrigger()
     if (trigger === null || trigger.getAttribute('aria-expanded') !== 'true') return null
-    const menus = document.querySelectorAll<HTMLElement>('[role="menu"]')
+    const menus = document.querySelectorAll<HTMLElement>(MENU_ROLE_SELECTOR)
     for (let i = 0; i < menus.length; i++) {
       if (!String(menus[i].className || '').includes('dsh-claude-')) return menus[i]
     }
@@ -133,10 +138,10 @@ export function createHostAccountMenu(options: { close(): void }) {
         menu.style.visibility = previous
         return
       }
-      if (tries++ > 20) return
-      setTimeout(look, 40)
+      if (tries++ > MENU_LOOK_TRIES) return
+      setTimeout(look, MENU_LOOK_INTERVAL_MS)
     }
-    setTimeout(look, 40)
+    setTimeout(look, MENU_LOOK_INTERVAL_MS)
   }
 
   /**

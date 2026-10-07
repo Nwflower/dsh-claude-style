@@ -3,7 +3,7 @@ import type { FeatureManifest } from '../../core/feature'
 export default {
   id: 'contextStats',
   order: 70,
-  contracts: ['composer.stat', 'composer.stats'],
+  contracts: ['composer.dialog-trigger', 'composer.stat', 'composer.stats'],
   pref: 'permissionsControl',
   stylesheets: [],
   cases: ['context-stats', 'stats-compact'],

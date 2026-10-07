@@ -1,5 +1,6 @@
 import * as React from 'react'
 import * as ReactDOM from 'react-dom/client'
+import { PHASE_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import { HOME_HERO_ATTR, HOME_LAYOUT_ATTR, HOME_LAYOUT_STUDIO, PREF_DEFAULTS } from '../../constants'
 import { COMPOSER_STACK } from '../../core/host'
 import { copyLabel } from '../../core/i18n'
@@ -75,7 +76,7 @@ export function install(ctx: HostContext, ui: Ui) {
    * `data-phase` of their own.
    */
   function heroPhase() {
-    return document.querySelector('[class*="_root"][data-phase="hero"]') !== null
+    return document.querySelector(`[class*="_root"][${PHASE_ATTRIBUTE}="hero"]`) !== null
   }
 
   /**

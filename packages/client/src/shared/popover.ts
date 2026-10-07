@@ -126,7 +126,7 @@ export function createHoverIntent(open: () => void, close: () => void, openDelay
  * An entry carries only the close path, and every closer is a no-op while its
  * popover is down, so the registry never holds "who is open".
  */
-export const popoverRegistry: { name: string, close: () => void }[] = []
+const popoverRegistry: { name: string, close: () => void }[] = []
 
 /**
  * Register (or replace) one popover's closer. Replacing by name is what makes

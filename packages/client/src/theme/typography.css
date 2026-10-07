@@ -1,4 +1,3 @@
-/* --- 2.2 Typography & Markdown Editorial --- */
 /* ---------- webfonts ---------- */
 /* The code font ships in the package and the host half serves it, so 'JetBrains
    Mono' resolves on systems that never installed it. When the route is missing the
@@ -20,9 +19,10 @@
 }
 
 /* The Anthropic text faces are not in the npm package, so these registrations
-   resolve only when the user dropped the files into fonts/; otherwise the stacks
-   fall back to a system-installed copy. Both are static Regular cuts, so one 400
-   declaration covers them and the browser synthesizes the heavier weights. */
+   resolve only when the user dropped the files into `$DSH_HOME/dsh-claude-style/fonts/`;
+   otherwise the stacks fall back to a system-installed copy. Both are static
+   Regular cuts, so one 400 declaration covers them and the browser synthesizes
+   the heavier weights. */
 @font-face {
   font-family: 'Anthropic Sans Web Text';
   src: url('/dsh-claude-style/fonts/AnthropicSansWebText.ttf') format('truetype');

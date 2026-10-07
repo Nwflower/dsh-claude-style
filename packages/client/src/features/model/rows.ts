@@ -1,4 +1,5 @@
-import { AUTO_POPOVER_ALL, MODEL_OFFICIAL_GROUP } from '../../constants'
+import { AUTO_POPOVER_ALL } from '../../constants'
+import { MODEL_OFFICIAL_GROUP } from './copy-fallbacks'
 import { readPrefs } from '../../core/prefs'
 import { buildModelLabel, modelBrand } from './brand'
 import { modelDescription } from './copy-lookup'

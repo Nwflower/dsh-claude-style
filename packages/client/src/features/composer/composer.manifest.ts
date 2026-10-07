@@ -3,7 +3,7 @@ import type { FeatureManifest } from '../../core/feature'
 export default {
   id: 'composer',
   order: 20,
-  contracts: ['chat.scroller', 'composer.input', 'composer.placeholder', 'composer.seat', 'composer.stack', 'composer.variant'],
+  contracts: ['chat.scroller', 'composer.dialog-trigger', 'composer.input', 'composer.placeholder', 'composer.seat', 'composer.stack', 'composer.variant', 'shell.phase'],
   pref: 'composerScope',
   stylesheets: [
     { file: 'card.css', rank: 80, gate: true },

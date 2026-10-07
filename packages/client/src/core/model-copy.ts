@@ -1,4 +1,4 @@
-import { MODEL_COPY_FALLBACK_LOCALE, MODEL_COPY_ROUTE } from '../constants'
+import { MODEL_COPY_FALLBACK_LOCALE, MODEL_COPY_ROUTE } from '../features/model/copy-fallbacks'
 import { createHostResource } from '../shared/resource'
 import type { HostAnswer } from '../shared/resource'
 
@@ -42,7 +42,7 @@ export let modelCopy: ModelCopyIndex | null = null
  * The model copy document the host half serves. A document that does not
  * index is not adopted: the bundle's English constants stay.
  */
-export const modelCopyResource = createHostResource(MODEL_COPY_ROUTE, (doc) => {
+const modelCopyResource = createHostResource(MODEL_COPY_ROUTE, (doc) => {
   const indexed = indexModelCopy(doc)
   if (indexed === null) return undefined
   modelCopy = indexed
@@ -66,7 +66,7 @@ export function loadModelCopy() {
  * @param doc - parsed document, as validated by the build.
  * @returns the index, or null when the document is unusable.
  */
-export function indexModelCopy(doc: HostAnswer): ModelCopyIndex | null {
+function indexModelCopy(doc: HostAnswer): ModelCopyIndex | null {
   if (!doc || typeof doc !== 'object') return null
   // The build validated the document's shape before it shipped (D5); a block
   // that is missing reads as empty.

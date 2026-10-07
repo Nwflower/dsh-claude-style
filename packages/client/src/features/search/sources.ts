@@ -46,7 +46,7 @@ export interface SearchSection {
  *
  * - Sessions: the session list (titles, times) minus the archived set,
  *   subagent children and blank placeholders; a typed query also asks the
- *   host half's message-content search (packages/host/src/search.js). Opening goes
+ *   host half's message-content search (packages/host/src/search.ts). Opening goes
  *   through `uiWorkspace.openSession`.
  * - Projects: the workspace list; picking one starts a session in it
  *   (`uiWorkspace.startSession`), the same as the host's group ＋.
@@ -201,7 +201,7 @@ export function createSearchSources(ctx: HostContext) {
   }
 
   /**
-   * Ask the host half's message-content search (packages/host/src/search.js): user and
+   * Ask the host half's message-content search (packages/host/src/search.ts): user and
    * assistant messages, matched as a literal case-insensitive substring,
    * so part of a Chinese sentence matches too. An empty query only brings
    * the host half's message cache up to date. Superseded requests are

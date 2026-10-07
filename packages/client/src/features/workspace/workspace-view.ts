@@ -256,6 +256,7 @@ export function install(ctx: HostContext, ui: Ui) {
   function refreshSessions() {
     const followed = sessions
     if (followed === null || typeof followed.refresh !== 'function') return
+    // Best effort against the host's sessions service: a rejection leaves the list as it stands (D12).
     followed.refresh().catch((reason: unknown) => {
       console.warn('dsh-claude-style: session baseline refresh rejected:', reason)
     })
@@ -268,6 +269,7 @@ export function install(ctx: HostContext, ui: Ui) {
   function restoreArchived(id: string) {
     const followed = workspaces
     if (followed === null) return
+    // A refused unarchive keeps the row in the archive set; the host stays the owner of the verdict (D12).
     Promise.resolve(followed.unarchiveSession(id)).catch((reason: unknown) => {
       console.warn('dsh-claude-style: session unarchive rejected:', reason)
     })

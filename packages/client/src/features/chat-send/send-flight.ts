@@ -5,7 +5,7 @@ import { motionReduced } from '../../core/prefs'
 import { startMorph } from './send-morph'
 import { CHAT_FLIGHT_MS, CHAT_LANDING_MS } from './send-shape'
 import { chatSendAlpha, snapshotComposer } from './send-snapshot'
-import { CHAT_FLOW_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, SUBMISSION_ECHO_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { CHAT_FLOW_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, FLOW_KIND_ATTRIBUTE, SUBMISSION_ECHO_SELECTOR, USER_ROW_KIND } from '@dsh-claude-style/contracts/dom'
 import type { HostContext } from '../../core/host'
 import type { Ui } from '../../core/scheduler'
 import type { ComposerSnapshot } from './send-snapshot'
@@ -35,14 +35,6 @@ export const CHAT_ORIGIN_TTL_MS = 1500
 /**
  * The floor under the displacement limit; a screen narrower than it uses the
  * floor.
- *
- * This used to be a fixed 900px ceiling, which misfires on wide screens: the
- * host caps its content column at 920px and the composer card is 16px wider
- * than the column on each side, so the two ends sit about 890 apart
- * horizontally, right on the threshold; vertically it grows with the window —
- * in a short session the messages sit at the top of the column while the
- * composer sticks to the bottom, and a thousand-odd pixels across one screen is
- * ordinary. Neither axis should be decided by how large the screen is.
  */
 export const CHAT_FLIGHT_LIMIT_FLOOR_PX = 900
 
@@ -53,7 +45,7 @@ export const CHAT_RESCUE_MARGIN_MS = 400
 export const CHAT_ECHO_SELECTOR = CHAT_FLOW_SELECTOR + ' ' + SUBMISSION_ECHO_SELECTOR
 
 /** A settled user row. It and the echo row are two faces of one component, a level apart. */
-export const CHAT_USER_ROW_SELECTOR = CHAT_FLOW_SELECTOR + ' [data-chat-flow-kind="user"]'
+export const CHAT_USER_ROW_SELECTOR = `${CHAT_FLOW_SELECTOR} [${FLOW_KIND_ATTRIBUTE}="${USER_ROW_KIND}"]`
 
 /** The two kinds of row a flight watches for, asked in one query: the real user row and the echo before it. */
 export const CHAT_ROW_SELECTOR = CHAT_USER_ROW_SELECTOR + ', ' + CHAT_ECHO_SELECTOR

@@ -1,4 +1,4 @@
-import { DEEPY_FRAME_MS, DEEPY_GUTTER, DEEPY_SHEETS } from '../../constants'
+import { DEEPY_FRAME_MS, DEEPY_GUTTER, DEEPY_SHEETS } from './sheets'
 import { createMascotPlayer } from './mascot-player'
 import { createMascotWhaleSheets } from './whale-sheets'
 import type { HostContext } from '../../core/host'

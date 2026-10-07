@@ -243,6 +243,5 @@ body[data-dsh-claude-style] .dsh-claude-home-heat[data-skeleton] .dsh-claude-hom
 
 /* The skeleton pulse stands down with the rest of the skin's motion when the
    animation choice resolves to "reduced" (theme/chrome.css): the shared rule
-   holds it on its first frame, and it covers "Always" as well — the media query
-   this used to hang on could not be talked out of the system's own setting. */
+   holds it on its first frame, and it covers "Always" as well. */
 

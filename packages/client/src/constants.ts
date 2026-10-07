@@ -1,3 +1,13 @@
+/**
+ * The constants the build reads out of the browser half: the values the
+ * stylesheets' `%%TOKEN%%` placeholders take, the gate attributes scripts/css.mjs
+ * checks on the syntax tree, the values preferences hold with the attribute
+ * names they resolve onto, and the preference defaults — scripts/build.mjs
+ * evaluates this module and picks those names. The identity constants and the
+ * host half's route re-exports live here too.
+ */
+import { PREFS_DEFAULT } from '@dsh-claude-style/contracts/prefs'
+
 export const STYLE_ID = 'dsh-claude-style-style'
 
 /**
@@ -31,170 +41,13 @@ export const FOREIGN_SHEET_TAG = `${PACKAGE_NAME}/foreign-sheet`
 export const BUNDLE_CONFIG_SLOT = 'plugins.bundle.config'
 export const SETTINGS_SECTION_SLOT = 'settings.section'
 
-export const COMPOSER_HINT = 'How can I help you today?'
-
-/**
- * Model picker copy.
- *
- * The copy itself is NOT here. It ships as `model-descriptions.json` beside
- * the bundle, and the browser half fetches it at runtime (the host half
- * serves it under MODEL_COPY_ROUTE), so the model table grows without a
- * rebuild and no copy enters the bundle. The language comes from the shell's
- * own `locale` service — one line per row, in the language the rest of the
- * UI is in — never two languages stacked.
- *
- * The constants below are the neutral fallbacks painted before that document
- * arrives, and kept if it never does. They are English because a failed
- * fetch has no locale to honour.
- */
-export const MODEL_OFFICIAL_GROUP = 'deepseek-official'
-export const MODEL_COPY_ROUTE = '/dsh-claude-style/model-descriptions.json'
-export const MODEL_COPY_FALLBACK_LOCALE = 'en'
-export const MODEL_FALLBACK_LABEL = 'Select model'
-export const MODEL_LOADING_LABEL = 'Loading models…'
-export const MODEL_EMPTY_LABEL = 'No models available.'
-export const MODEL_EFFORT_LABEL = 'Reasoning effort'
-export const MODEL_EFFORT_DEFAULT = 'Default'
-/** The effort slider's two ends. Kept in English in every locale: they name
- *  the axis, not a level, and the level's own name rides beside the label. */
-export const MODEL_EFFORT_FASTER = 'Faster'
-export const MODEL_EFFORT_SMARTER = 'Smarter'
-/** What the slider reads when the model offers no levels at all. */
-export const MODEL_EFFORT_NONE = '—'
-export const MODEL_MORE_LABEL = 'More models'
-export const MODEL_TRIGGER_LABEL = 'Select model, currently {model}'
-
-/** English weekday names, indexed by Date#getDay() (0 = Sunday). */
-export const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-
-/**
- * The classic hero's welcomes, à la Claude Code's rotating greetings. Each
- * time-of-day slot has its own pool — the night slot runs past midnight,
- * so its hours count on from 24 — and a few lines fit any hour. `{name}`
- * is the user's name, `{weekday}` today's.
- */
-export const HERO_GREETING_SLOTS = [
-  { from: 5, to: 12, lines: [
-    'Good morning, {name}!',
-    'Happy {weekday}, {name}.',
-    'What are you working on?',
-    'Morning, {name}. What’s first?',
-    'Fresh start, {name}?',
-  ] },
-  { from: 12, to: 14, lines: [
-    'What’s on the agenda today?',
-    'Good afternoon, {name}.',
-    'Midday check-in, {name}?',
-  ] },
-  { from: 14, to: 18, lines: [
-    'Coffee and Claude time?',
-    'Good afternoon, {name}.',
-    'How’s the day going, {name}?',
-    'Afternoon, {name}. What’s next?',
-  ] },
-  { from: 18, to: 22, lines: [
-    'Evening, how are things?',
-    'Good evening, {name}.',
-    'How was your day, {name}?',
-    'Winding down, or just getting started?',
-  ] },
-  { from: 22, to: 29, lines: [
-    'You are here!',
-    'Hello, night owl.',
-    'Burning the midnight oil, {name}?',
-    'Still up, {name}?',
-  ] },
-]
-export const HERO_GREETING_ANYTIME = [
-  'Back at it, {name}?',
-  'Welcome back, {name}.',
-  'Hey there, {name}.',
-  'What shall we build?',
-]
-
-/**
- * One classic hero welcome: the current slot's pool and the any-hour lines,
- * picked by `draw` in [0, 1). The caller holds the draw, so the line stays
- * put between passes and changes only when the draw or the slot does.
- */
-export function pickHeroGreeting(username: string, draw: number) {
-  const now = new Date()
-  const hour = now.getHours()
-  const clock = hour < 5 ? hour + 24 : hour
-  let lines = HERO_GREETING_ANYTIME
-  for (let s = 0; s < HERO_GREETING_SLOTS.length; s++) {
-    const slot = HERO_GREETING_SLOTS[s]
-    if (clock >= slot.from && clock < slot.to) lines = slot.lines.concat(HERO_GREETING_ANYTIME)
-  }
-  const line = lines[Math.min(lines.length - 1, Math.floor(draw * lines.length))]
-  return line.replace('{name}', username || 'User').replace('{weekday}', WEEKDAY_NAMES[now.getDay()])
-}
-
-/**
- * The studio dashboard's greeting, à la Claude Code's desktop home: one
- * fixed line naming the signed-in user, no clock. The classic hero keeps
- * the rotating welcomes.
- */
-export function pickStudioGreeting(username: string) {
-  return `What's up next, ${username || 'User'}?`
-}
-
-/**
- * Claude-flavored presentation of the permission presets, keyed by preset
- * id. The host's catalog decides WHICH presets a deployment offers — a
- * third-party plugin's ride in it, the auto mode plugin's `auto-mode` among
- * them — and this table decides how a known one reads. A preset the table
- * does not know falls back to the name the catalog carries, so nothing the
- * host offers is ever hidden and a machine id is never shown.
- */
-export const PERMISSION_PRESETS: Record<string, { label: string, desc: string }> = {
-  'read-only': { label: 'Read only', desc: '仅读取文件与分析，不修改代码' },
-  'workspace-write': { label: 'Accept edits', desc: '允许编辑工作区文件' },
-  'auto-mode': { label: 'Auto mode', desc: '规则放行常规操作，其余由分类器裁决' },
-  'auto': { label: 'Auto review', desc: '无沙箱运行，调用前由模型审查' },
-  'danger-full-access': { label: 'Full access', desc: '自动执行，无需反复确认' }
-}
-
-/**
- * The control's segments, in slot order. Each slot lists the presets it may
- * bind to, best first: the deployment's own auto tier wins the slot over the
- * host's built-in Auto review, and a slot none of whose presets the host
- * offers is not drawn at all.
- */
-export const PERMISSION_SEGMENTS = [
-  { label: 'Read', presets: ['read-only'] },
-  { label: 'Edit', presets: ['workspace-write'] },
-  { label: 'Auto', presets: ['auto-mode', 'auto'] },
-  { label: 'Yolo', presets: ['danger-full-access'] }
-]
-
-/** Popover row order; a preset the host offers but this list does not know follows in catalog order. */
-export const PERMISSION_ORDER = ['read-only', 'workspace-write', 'auto-mode', 'auto', 'danger-full-access']
-
-/**
- * What the control draws before the host's first catalog read settles: the
- * shipped built-ins, with the auto slot left out the way the shipped picker
- * renders nothing until its own catalog arrives.
- */
-export const PERMISSION_SHIPPED_PRESETS = ['read-only', 'workspace-write', 'danger-full-access']
-
-/**
- * Names for host values that are never switch targets. `custom` is the
- * host's own word for knob settings that match no preset, so the trigger
- * reads that rather than the machine value.
- */
-export const PERMISSION_CURRENT_LABELS: Record<string, string> = { custom: 'Custom' }
-
-/** Skin-owned class names, so nothing couples to hashed CSS-module classes. */
-export const SEGMENTS_CLASS = 'dsh-claude-segments'
-export const SEGMENT_CLASS = 'dsh-claude-segment'
-
 /**
  * Preferences, persisted in the profile entry's settings namespace (the
- * exported Config in packages/host/src/settings.js declares the fields; packages/client/src/core/prefs.ts
- * reads and writes them). Each value is mirrored onto the document as an
- * attribute so the stylesheet decides what a preference means, and the
- * defaults here are the shipped behaviour.
+ * exported Config in packages/host/src/settings.ts declares the fields;
+ * packages/client/src/core/prefs.ts reads and writes them). Each value is
+ * mirrored onto the document as an attribute so the stylesheet decides what a
+ * preference means, and the defaults are the shared contract
+ * (packages/contracts/src/prefs.ts, D46).
  */
 
 /** Brand marks selectable from the settings page. `claude` is the default. */
@@ -285,7 +138,7 @@ export const MASCOT_SCOPES = [MASCOT_SCOPE_HOME, MASCOT_SCOPE_ALL]
  * among the live-read preferences because two of those five cannot be
  * stopped by reading a preference: the file change rows take the host's two
  * seat keys over (D32), and a seat registration only comes back when the
- * feature is torn down whole (`fileMutationRow` is the key this replaced).
+ * feature is torn down whole.
  */
 export const FEATURE_PREF_DEFAULTS = {
   permissionsControl: true,
@@ -297,95 +150,6 @@ export const FEATURE_PREF_DEFAULTS = {
   chatAnimations: true,
 }
 
-/**
- * Deepy's animations (packages/client/src/features/mascot/whale.ts), one sheet each under
- * packages/assets/src/mascot/deepy/. The build rebuilds each sheet as the vector the
- * browser plays and the host half serves it under the assets route (D38), so
- * the browser loads a sheet the first time its animation plays and never
- * while another brand is on.
- *
- * The whale is drawn on a 52×52 grid of logical pixels, five device pixels
- * to one in the sheets. A sheet holds its animation's frames eight to a
- * row, each cropped to `box` — `[x, y, width, height]` in logical pixels,
- * the smallest box that holds every frame — and every frame lasts
- * DEEPY_FRAME_MS. `still` is the frame shown for the animation when the
- * reader asks for reduced motion.
- */
-export const DEEPY_FRAME_MS = 50
-/** Deepy's sheets' resolution: device pixels to a logical pixel (packages/assets/assets.mjs rebuilds them). */
-export const DEEPY_SCALE = 5
-/**
- * The transparent margin, in logical pixels, that every frame keeps on all
- * four sides in the vector the build produces (packages/assets/assets.mjs, D24).
- *
- * The sheets stack their frames edge to edge, and the browser draws the
- * rebuilt vector scaled down — from five pixels a logical pixel in the
- * sheet to two on the sprite. That downscale samples a little way past a
- * frame's edge, and the pixel it finds there is the bottom row of the
- * frame above: the soft tail of the whale's shadow. On the page it reads
- * as a one-device-pixel grey line across the top of the frame. A margin
- * wide enough for that reach leaves the sampling nothing but transparency,
- * and a whole logical pixel keeps every strip offset a whole CSS pixel.
- */
-export const DEEPY_GUTTER = 1
-export const DEEPY_SHEETS: Record<string, { frames: number, box: number[], still: number }> = {
-  'idle': { frames: 48, box: [12, 26, 36, 24], still: 0 },
-  'idle-look': { frames: 68, box: [11, 11, 37, 39], still: 0 },
-  'idle-spout': { frames: 64, box: [8, 17, 39, 33], still: 0 },
-  'thinking': { frames: 48, box: [0, 6, 47, 44], still: 20 },
-  'typing': { frames: 48, box: [0, 17, 52, 33], still: 16 },
-  'music': { frames: 32, box: [2, 10, 48, 40], still: 0 },
-  'conducting': { frames: 48, box: [1, 0, 51, 50], still: 6 },
-  'building': { frames: 48, box: [2, 0, 50, 50], still: 0 },
-  'error': { frames: 48, box: [4, 17, 45, 33], still: 24 },
-  'happy': { frames: 52, box: [0, 5, 52, 45], still: 44 },
-  'notification': { frames: 32, box: [3, 7, 47, 43], still: 12 },
-  'compacting': { frames: 56, box: [2, 14, 46, 36], still: 20 },
-  'sleeping': { frames: 64, box: [2, 2, 44, 48], still: 10 },
-  'waking': { frames: 30, box: [8, 4, 44, 46], still: 29 },
-  'poke-left': { frames: 40, box: [1, 16, 50, 34], still: 0 },
-  'poke-right': { frames: 40, box: [8, 16, 44, 34], still: 0 },
-  'tickle': { frames: 48, box: [9, 17, 43, 33], still: 0 },
-  'drag': { frames: 24, box: [10, 4, 41, 46], still: 0 },
-}
-
-/**
- * The composer crab's animations (packages/client/src/features/mascot/crab.ts), drawn by
- * scripts/draw-crab.py into packages/assets/src/mascot/crab/: one sheet in the crab's
- * colours and one ink mask per animation, inlined by the build as
- * CRAB_SHEET_URLS.
- *
- * The crab is drawn on a 52×36 grid of cells at 2px a cell, feet on the
- * bottom row, the right claw four cells in from the right edge. A sheet
- * holds its animation's frames eight to a row, each cropped to `box` —
- * `[x, y, width, height]` in cells — and every frame lasts CRAB_FRAME_MS,
- * the pace of Claude Code's own crab. `still` is the frame shown for the
- * animation when the reader asks for reduced motion. The keys are Deepy's,
- * so the two share one state machine; `idle-wave` and `idle-laptop` (Claude
- * Code's laptop routine, whole) are the crab's own idle extras.
- */
-export const CRAB_FRAME_MS = 80
-export const CRAB_SHEETS: Record<string, { frames: number, box: number[], still: number }> = {
-  'idle': { frames: 24, box: [24, 20, 24, 16], still: 0 },
-  'idle-look': { frames: 31, box: [24, 20, 24, 16], still: 0 },
-  'idle-wave': { frames: 12, box: [24, 15, 24, 21], still: 0 },
-  'idle-laptop': { frames: 43, box: [14, 13, 34, 23], still: 0 },
-  'thinking': { frames: 32, box: [14, 4, 34, 32], still: 18 },
-  'typing': { frames: 6, box: [15, 22, 28, 14], still: 0 },
-  'music': { frames: 16, box: [22, 1, 30, 35], still: 0 },
-  'conducting': { frames: 24, box: [24, 12, 27, 24], still: 0 },
-  'building': { frames: 6, box: [15, 19, 28, 17], still: 0 },
-  'error': { frames: 24, box: [23, 11, 26, 25], still: 4 },
-  'happy': { frames: 32, box: [18, 6, 34, 30], still: 3 },
-  'notification': { frames: 16, box: [24, 8, 24, 28], still: 0 },
-  'compacting': { frames: 20, box: [21, 20, 30, 16], still: 3 },
-  'sleeping': { frames: 32, box: [23, 3, 29, 33], still: 0 },
-  'waking': { frames: 12, box: [24, 4, 24, 32], still: 11 },
-  'poke-left': { frames: 10, box: [24, 20, 27, 16], still: 0 },
-  'poke-right': { frames: 10, box: [21, 20, 27, 16], still: 0 },
-  'tickle': { frames: 16, box: [23, 18, 26, 18], still: 0 },
-  'drag': { frames: 8, box: [23, 12, 26, 22], still: 0 },
-}
 
 /**
  * Present while the ported chat-area follow is installed
@@ -559,26 +323,20 @@ export const HOME_LAYOUT_ATTR = 'data-dsh-claude-home-layout'
  * than repeated across the stylesheet.
  */
 export const HOME_HERO_ATTR = 'data-dsh-claude-home-hero'
+
 /**
- * The host half's session-deletion route (packages/host/src/routes.js, SESSION_DELETE_PATH).
- * The harness gives the browser half no deletion API of its own, so the
- * archived row's delete button posts the session id here and the host half
- * removes the stored session directory and the id's entry in the workspace
- * registry's archive set. Keep the path in step with the host half.
+ * The host half's private routes, under this half's own names. The paths are
+ * the shared contract (packages/contracts/src/routes.ts, D46), declared once
+ * for both halves.
  */
-export const SESSION_DELETE_ROUTE = '/dsh-claude-style/session-delete'
-/**
- * The host half's cross-session usage roll-up (packages/host/src/routes.js, USAGE_PATH).
- * The browser half cannot read the session logs or the cost-meter ledger, so
- * the day buckets behind the home dashboard's panel arrive from here.
- */
-export const USAGE_ROUTE = '/dsh-claude-style/usage'
-/**
- * The host half's message-content search (packages/host/src/search.js, SESSION_SEARCH_PATH):
- * `?q=` answers the sessions whose messages hold the query; without `q` it
- * only brings its message cache up to date.
- */
-export const SESSION_SEARCH_ROUTE = '/dsh-claude-style/session-search'
+export {
+  HDSL_PATH as HDSL_ROUTE,
+  HDSL_SKIN_PATH as HDSL_SKIN_ROUTE,
+  SESSION_DELETE_PATH as SESSION_DELETE_ROUTE,
+  SESSION_SEARCH_PATH as SESSION_SEARCH_ROUTE,
+  USAGE_PATH as USAGE_ROUTE,
+  USERNAME_PATH as USERNAME_ROUTE,
+} from '@dsh-claude-style/contracts/routes'
 /**
  * Home-page layouts. `classic` is the centered hero the skin has always
  * drawn; `studio` is the dashboard form: the greeting sits at the top left,
@@ -602,10 +360,9 @@ export const AUTO_POPOVER_ALL = 'all'
 export const AUTO_POPOVER_SCOPES = [AUTO_POPOVER_OFF, AUTO_POPOVER_ACCOUNT, AUTO_POPOVER_ALL]
 
 /**
- * Every preference and its default: the shipped behaviour, and what holds
- * until the settings form answers. scripts/build.mjs holds this table to
- * packages/host/src/settings.js's PREFS_DEFAULT, key for key and value for value. A
- * boolean preference is on unless stored as an explicit `false`.
+ * The preference shape the browser half reads: one field per key of the shared
+ * defaults table, whose values hold until the settings form answers. A boolean
+ * preference is on unless stored as an explicit `false`.
  */
 export interface Prefs {
   brand: string
@@ -632,24 +389,8 @@ export interface Prefs {
   chatAnimations: boolean
 }
 
-export const PREF_DEFAULTS: Prefs = {
-  brand: BRAND_CLAUDE,
-  motion: MOTION_SYSTEM,
-  collapseFooter: true,
-  autoPopover: AUTO_POPOVER_ALL,
-  composerScope: COMPOSER_SCOPE_ALL,
-  modelPicker: true,
-  quickProviders: [],
-  username: '',
-  banLocale: BAN_LOCALE_EN,
-  homeLayout: HOME_LAYOUT_STUDIO,
-  palette: PALETTE_CLAUDE,
-  typeface: TYPEFACE_CLAUDE,
-  mascot: MASCOT_BRAND,
-  mascotScope: MASCOT_SCOPE_ALL,
-  caretMotion: CARET_MOTION_TYPING,
-  ...FEATURE_PREF_DEFAULTS,
-}
+/** Every preference's shipped default, from the table both halves share (packages/contracts/src/prefs.ts, D46). */
+export const PREF_DEFAULTS: Prefs = PREFS_DEFAULT
 
 /** The preferences whose value is one of a fixed set; any other stored value reads as the default. */
 export const PREF_CHOICES: Partial<Record<keyof Prefs, string[]>> = {
@@ -663,20 +404,9 @@ export const PREF_CHOICES: Partial<Record<keyof Prefs, string[]>> = {
   mascotScope: MASCOT_SCOPES,
   caretMotion: CARET_MOTIONS,
 }
-/** Route that resolves the name this instance runs as, once; never polled. */
-export const USERNAME_ROUTE = '/dsh-claude-style/username'
-/** Route that forwards the HDSL launcher's account contract; never polled. */
-export const HDSL_ROUTE = '/dsh-claude-style/hdsl'
-/**
- * The player's own avatar, forwarded by the host half; 404 falls back to the
- * mark. What the route serves is the launcher's normalized skin atlas, not a
- * finished avatar, so the account row crops the head out of it
- * (packages/client/src/features/account/rows.ts).
- */
-export const HDSL_SKIN_ROUTE = '/dsh-claude-style/hdsl-skin.png'
-/** Longest accepted custom username; mirrored by packages/host/src/settings.js. */
+/** Longest accepted custom username; core/prefs.ts trims the stored value to it. */
 export const USERNAME_MAX = 64
-/** Most quick-provider ids kept, and the longest id accepted; mirrored by packages/host/src/settings.js. */
+/** Most quick-provider ids kept, and the longest id accepted; core/prefs.ts clamps to both. */
 export const QUICK_PROVIDERS_MAX = 64
 export const PROVIDER_ID_MAX = 128
 

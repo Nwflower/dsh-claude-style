@@ -1,5 +1,5 @@
 import { requestFrame } from '../../core/frame'
-import { MODEL_EFFORT_DEFAULT, MODEL_EFFORT_FASTER, MODEL_EFFORT_LABEL, MODEL_EFFORT_NONE, MODEL_EFFORT_SMARTER } from '../../constants'
+import { MODEL_EFFORT_DEFAULT, MODEL_EFFORT_FASTER, MODEL_EFFORT_LABEL, MODEL_EFFORT_NONE, MODEL_EFFORT_SMARTER } from '../model/copy-fallbacks'
 import { copyLabel } from '../../core/i18n'
 import { createEffortMatrix } from './matrix'
 import { buildElement, setAttributeIfChanged } from '../../shared/dom'

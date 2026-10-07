@@ -378,7 +378,9 @@ export function install(ctx: HostContext, ui: Ui) {
       image.src = row.image
       icon.appendChild(image)
     } else {
-      icon.innerHTML = ICONS[row.icon || row.kind]
+      // The host names the icon; a name this build does not carry leaves the span empty rather than printing "undefined".
+      const svg = (row.icon === undefined ? undefined : ICONS[row.icon]) ?? ICONS[row.kind]
+      if (svg !== undefined) icon.innerHTML = svg
     }
     item.appendChild(icon)
     const text = buildElement('span', 'dsh-claude-search-item-text')

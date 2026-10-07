@@ -37,9 +37,8 @@ import type { Ui } from '../../core/scheduler'
  *
  * The strip itself is stamped `data-dsh-view-tabs`, and every strip rule in
  * view-tabs.css keys on that attribute. Finding the strip is a query this pass
- * runs once; as a stylesheet selector (`header:has(tabs) tabs`) it made the
- * browser re-match the whole document on every DOM change — measured at
- * 7–13ms of style recalculation per changed frame, for each such rule.
+ * runs once; as a stylesheet selector (`header:has(tabs) tabs`) it would make
+ * the browser re-match the whole document on every DOM change.
  *
  * The strip's active pill slides between tabs (packages/client/src/shared/sliding-pill.ts).
  *

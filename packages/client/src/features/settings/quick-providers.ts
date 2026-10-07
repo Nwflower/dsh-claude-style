@@ -1,4 +1,4 @@
-import { MODEL_OFFICIAL_GROUP } from '../../constants'
+import { MODEL_OFFICIAL_GROUP } from '../model/copy-fallbacks'
 import { settingsCopy } from '../../core/i18n'
 import { readPrefs } from '../../core/prefs'
 import { buildElement } from '../../shared/dom'

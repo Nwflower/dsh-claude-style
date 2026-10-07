@@ -7,7 +7,7 @@ import type { Ui } from './scheduler'
  * A feature's manifest (D42): every fact about the feature that something
  * outside it needs. It sits beside the feature's main module as
  * `<main>.manifest.ts` and holds data only — the build evaluates it in Node
- * (scripts/read-manifests.cjs) to order the features and their stylesheets,
+ * (scripts/shared/read-manifests.cjs) to order the features and their stylesheets,
  * to check the switches, and to hand the smoke run its coverage table; the
  * browser half receives the runtime fields through the generated registry.
  */
@@ -35,7 +35,7 @@ export interface FeatureFields {
   cases: string[]
   /**
    * The host contract's entries this feature's own modules name
-   * (src/contracts/table.ts, D44): the answer to "what breaks if the host
+   * (packages/contracts/src/table.ts, D44): the answer to "what breaks if the host
    * changes this", and the build refuses an entry no manifest claims.
    */
   contracts: string[]

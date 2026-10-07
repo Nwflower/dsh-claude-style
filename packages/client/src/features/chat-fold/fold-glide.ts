@@ -6,6 +6,9 @@ import { isChatFoldToggle } from './fold-toggle'
 import { CHAT_FLOW_SELECTOR, PROCESS_GROUP_SELECTOR, THINK_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { joinScrollOwner } from '../../shared/scroll-owner'
 
+/** Margin past the roll's own duration for the backstop that unlocks the click. */
+const FOLD_ROLL_BACKSTOP_MS = 200
+
 /**
  * When a fold closes, the content below is pushed away and the body rolls up
  * like a door.
@@ -103,10 +106,7 @@ export function installChatFoldGlide() {
    *
    * There is only the height, but it runs in two stretches: the visible one
    * gets FOLD_VISIBLE_SHARE of the duration and the height outside the
-   * viewport is finished with the rest. A clip travelling the visible stretch
-   * used to be layered on here, which was wrong — a clip only affects
-   * painting, while the height has already grown, and the two running the
-   * same progress over different distances leaves a blank band.
+   * viewport is finished with the rest.
    *
    * A rect measures border-box height while CSS height means content-box by
    * default: without switching to border-box the animation runs the padding
@@ -165,7 +165,7 @@ export function installChatFoldGlide() {
     // A backstop: if onfinish never arrives for any reason, the click must not stay locked.
     const release = window.setTimeout(() => {
       glideShutting = false
-    }, FOLD_ROLL_MS + 200)
+    }, FOLD_ROLL_MS + FOLD_ROLL_BACKSTOP_MS)
     if (height <= fold.floor) {
       window.clearTimeout(release)
       replay(fold.control)

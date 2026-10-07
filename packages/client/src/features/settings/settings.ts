@@ -1,5 +1,6 @@
 import * as React from 'react'
-import { BUNDLE_CONFIG_SLOT, PACKAGE_NAME, SEGMENT_CLASS, SETTINGS_SCROLLER_ATTR, SETTINGS_SECTION_SLOT, USERNAME_MAX } from '../../constants'
+import { BUNDLE_CONFIG_SLOT, PACKAGE_NAME, SETTINGS_SCROLLER_ATTR, SETTINGS_SECTION_SLOT, USERNAME_MAX } from '../../constants'
+import { SEGMENT_CLASS } from '../permissions/permission-copy'
 import { settingsCopy } from '../../core/i18n'
 import { loadModelCopy, onModelCopyLoaded } from '../../core/model-copy'
 import { adoptSettingsForm, readPrefs, savePrefs, subscribePrefs } from '../../core/prefs'
@@ -16,6 +17,9 @@ import type { HostSlotsService } from '@dsh-claude-style/contracts/services'
 import type { Ui } from '../../core/scheduler'
 import type { SettingsTab, SettingsView } from './settings-controls'
 import type { QuickProvidersHandle } from './quick-providers'
+
+/** Pause after the last keystroke before the username is written to the settings store. */
+const USERNAME_SAVE_DEBOUNCE_MS = 600
 
 /**
  * The skin's settings page, mounted by every seat this host declares.
@@ -163,7 +167,7 @@ export function ClaudeStyleSettingsSection(props: { embed?: boolean }) {
     usernameTimer.current = setTimeout(() => {
       usernameTimer.current = null
       saveUsernameNow(value)
-    }, 600)
+    }, USERNAME_SAVE_DEBOUNCE_MS)
   }
 
   const commitUsername = () => {

@@ -1,4 +1,4 @@
-import { CRAB_FRAME_MS, CRAB_SHEETS } from '../../constants'
+import { CRAB_FRAME_MS, CRAB_SHEETS } from './sheets'
 import { createMascotPlayer } from './mascot-player'
 import { CRAB_SHEET_URLS } from 'virtual:dsh-claude-style/generated'
 import type { HostContext } from '../../core/host'

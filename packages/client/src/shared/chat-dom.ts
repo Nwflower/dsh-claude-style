@@ -3,7 +3,7 @@ import { CHAT_FLOW_SELECTOR, CONVERSATION_SCROLL_SELECTOR, FOLLOW_THRESHOLD_PX }
 /**
  * The chat area's DOM helpers: the three reads the ported chat interactions and
  * the conversation navigator make on the column itself. The literals they use
- * are the host contract's (src/contracts/dom.ts, D44); everything the skin
+ * are the host contract's (packages/contracts/src/dom.ts, D44); everything the skin
  * writes stays with the feature that writes it.
  */
 /** The keys that scroll the viewport; the same set the host reads. */

@@ -55,8 +55,8 @@ export function findFootArea() {
  * and the placeholder its editor draws. The card's variant is the skin's own
  * marking (D9); every reader goes through these, so the selectors live once.
  */
-export const COMPOSER_CARD = COMPOSER_CARD_SELECTOR
-export const COMPOSER_PLACEHOLDER = COMPOSER_PLACEHOLDER_SELECTOR
+const COMPOSER_CARD = COMPOSER_CARD_SELECTOR
+const COMPOSER_PLACEHOLDER = COMPOSER_PLACEHOLDER_SELECTOR
 
 export function findComposerCards() {
   return document.querySelectorAll<HTMLElement>(COMPOSER_CARD)
@@ -121,8 +121,8 @@ export function findTurnProcess(row: ParentNode) {
 }
 
 /** The shown conversation: the element carrying its session id, and the id itself. */
-export const CONVERSATION_SESSION_ATTR = CONVERSATION_SESSION_ATTRIBUTE
-export const CONVERSATION_SESSION = `[${CONVERSATION_SESSION_ATTR}]`
+const CONVERSATION_SESSION_ATTR = CONVERSATION_SESSION_ATTRIBUTE
+const CONVERSATION_SESSION = `[${CONVERSATION_SESSION_ATTR}]`
 
 export function findConversationSession() {
   return document.querySelector<HTMLElement>(CONVERSATION_SESSION_SELECTOR)
@@ -233,22 +233,22 @@ export function setAccountIdentity(name: unknown, avatar: unknown) {
  * it once, caches it and mirrors the answer into local storage so a reload
  * shows the name from the first frame. No workspace parsing, no polling.
  */
-export let usernameFromHost = ''
+let usernameFromHost = ''
 
 /** Last OS-user probe this browser saw; the cache that outlives the page. */
-export const PROBED_USERNAME_KEY = 'dsh-claude-style.probed-username'
-export let probedUsername = readStoredProbeUsername()
+const PROBED_USERNAME_KEY = 'dsh-claude-style.probed-username'
+let probedUsername = readStoredProbeUsername()
 
-export function readStoredProbeUsername() {
+function readStoredProbeUsername() {
   return localStorage.getItem(PROBED_USERNAME_KEY) || ''
 }
 
-export function storeProbeUsername(value: string) {
+function storeProbeUsername(value: string) {
   if (value) localStorage.setItem(PROBED_USERNAME_KEY, value)
 }
 
 /** The host half's OS user; an answer the contract does not carry is not adopted. */
-export const usernameResource = createHostResource(USERNAME_ROUTE, (data) => {
+const usernameResource = createHostResource(USERNAME_ROUTE, (data) => {
   if (!data || data.ok !== true || typeof data.username !== 'string') return undefined
   usernameFromHost = data.username.trim().slice(0, USERNAME_MAX)
   if (usernameFromHost) {
@@ -266,16 +266,16 @@ export function loadUsername() {
   usernameResource.load()
 }
 
-export let hdslContract = false
-export let hdslName = ''
-export let hdslAvatar = false
+let hdslContract = false
+let hdslName = ''
+let hdslAvatar = false
 
 /**
  * The HDSL launcher's account contract, when this instance was launched by it.
  * An answer that is no contract is not adopted, so the chain skips the
  * launcher (D15).
  */
-export const hdslResource = createHostResource(HDSL_ROUTE, (data) => {
+const hdslResource = createHostResource(HDSL_ROUTE, (data) => {
   if (!data || data.ok !== true || data.contract !== true) return undefined
   hdslContract = true
   hdslName = typeof data.name === 'string' ? data.name.trim().slice(0, USERNAME_MAX) : ''

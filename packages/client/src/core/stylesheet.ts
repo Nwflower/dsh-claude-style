@@ -3,7 +3,7 @@ import { STYLESHEET } from 'virtual:dsh-claude-style/generated'
 import { FOREIGN_SHEET_TAG, PACKAGE_NAME, STYLE_ID, STYLE_PLUGIN_CSS } from '../constants'
 
 /** The generation whose stylesheet is mounted; 0 before the first mount. */
-export let sheetGeneration = 0
+let sheetGeneration = 0
 
 /**
  * Park a sibling's untagged stylesheet so no package's bookkeeping can take it.

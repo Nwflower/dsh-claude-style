@@ -8,7 +8,7 @@ import type { UsageAnswer, UsageDay, UsageModel, UsageReport, UsageTotals } from
 
 /**
  * The roll-up store's snapshot: the route's last answer (the host half's
- * usage fold, packages/host/src/usage.js), whether more is coming, and why not.
+ * usage fold, packages/host/src/usage-fold.ts), whether more is coming, and why not.
  */
 export interface HomeUsageState {
   value: UsageReport | null
@@ -282,6 +282,7 @@ export function createHomeUsage(ctx: HostContext) {
           loadUsage(true)
         }, HOME_POLL_MS)
       }
+    // A failed usage fetch is the panel's "unavailable" state, not an exception: the panel renders without the numbers (D12).
     }).catch(() => {
       usage.loading = false
       if (disposed) return
@@ -378,6 +379,7 @@ export function createHomeUsage(ctx: HostContext) {
       if (items === null) return
       listSummary = summarizeSessionList(items)
       emit()
+    // The roll-up is a summary the panel can do without: a failed fetch just ends the loading mark (D12).
     }).catch(() => {
       listLoading = false
     })

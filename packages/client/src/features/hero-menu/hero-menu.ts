@@ -1,4 +1,5 @@
 import { AUTO_POPOVER_ALL, HERO_MENU_ATTR } from '../../constants'
+import { MENU_ROLE_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { readPrefs } from '../../core/prefs'
 import { closestFrom, createStamp } from '../../shared/dom'
 import { POPOVER_CLOSE_DELAY, POPOVER_OPEN_DELAY, closeOtherPopovers, createHoverIntent, registerPopover, resolveAnchoredPosition, unregisterPopover } from '../../shared/popover'
@@ -205,7 +206,7 @@ export function install(ctx: HostContext, ui: Ui) {
    * is a SECOND view of the same picker state as the row's chip (both read the
    * host's `pickerOpen`), so it stands in only when the row carries no open
    * picker: pressing both views in one task toggles the picker shut and open
-   * again, which is how a "close everything" pass used to leave the card up.
+   * again.
    */
   function openTriggers() {
     const row = rowTriggers()
@@ -272,7 +273,7 @@ export function install(ctx: HostContext, ui: Ui) {
     }
     // The skin's own popovers carry their own classes, so excluding them
     // leaves the host's menus only.
-    const cards = document.querySelectorAll<HTMLElement>('body > [role="menu"]:not([class*="dsh-claude"])')
+    const cards = document.querySelectorAll<HTMLElement>(`body > ${MENU_ROLE_SELECTOR}:not([class*="dsh-claude"])`)
     if (cards.length !== 1) {
       clearStamp()
       return

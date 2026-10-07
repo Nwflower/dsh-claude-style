@@ -1,3 +1,4 @@
+import { CHAT_TURN_ATTRIBUTE, FLOW_KIND_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import { closestConversationSession, conversationSessionId, findChatFlows, findChatTarget, findTurnProcess, readTurnActivity } from '../../core/host'
 import { copyLabel } from '../../core/i18n'
 import { setAttributeIfChanged } from '../../shared/dom'
@@ -190,12 +191,12 @@ export function install(ctx: HostContext, ui: Ui) {
     let snapshot: HostChatSnapshot | null | undefined
     const after = new Map<number, HTMLElement>()
     for (let i = 0; i < rows.length; i++) {
-      if (rows[i].getAttribute('data-chat-flow-kind') !== 'turn-process') continue
+      if (rows[i].getAttribute(FLOW_KIND_ATTRIBUTE) !== 'turn-process') continue
       const button = findTurnProcess(rows[i])
       if (button === null) continue
       if (snapshot === undefined) snapshot = chatSnapshot(sessionId)
       if (snapshot === null) return
-      const turnText = rows[i].getAttribute('data-chat-turn')
+      const turnText = rows[i].getAttribute(CHAT_TURN_ATTRIBUTE)
       const turn = snapshot.timeline.turns.get(Number(turnText))
       const state = turnState(turn)
       if (state === null || turn === undefined) continue
@@ -204,7 +205,7 @@ export function install(ctx: HostContext, ui: Ui) {
       nextAttrs.set(button, new Map([[STATE_ATTR, state], [STATUS_ATTR, statusText(key, snapshot, turn, state, t)]]))
       let last = -1
       for (let j = i + 1; j < rows.length; j++) {
-        if (rows[j].getAttribute('data-chat-turn') === turnText && rows[j].getAttribute('data-chat-flow-kind') !== 'turn-tail') last = j
+        if (rows[j].getAttribute(CHAT_TURN_ATTRIBUTE) === turnText && rows[j].getAttribute(FLOW_KIND_ATTRIBUTE) !== 'turn-tail') last = j
       }
       if (last !== -1) after.set(last, rows[i])
     }

@@ -48,7 +48,7 @@ let mutationObserver: MutationObserver | null = null
  * Whether a record is one of the skin's own quiet writes: a change inside a
  * marked container, or only marked nodes added or removed.
  */
-export function isQuietRecord(record: MutationRecord) {
+function isQuietRecord(record: MutationRecord) {
   // The target is the node the change happened on: an element for a child
   // list or an attribute, and the text node itself for a character change —
   // which is why the parent is asked as well.
@@ -173,6 +173,7 @@ function makeSizeObserver(registry: SizeRegistry) {
       if (!registry.subscriptions.includes(subscription)) continue
       const own = entries.filter(entry => subscription.targets.includes(entry.target))
       if (own.length === 0) continue
+      // A failing subscription must not keep the rest of the batch from hearing it (D12); reportError still surfaces the failure.
       try { subscription.callback(own) } catch (error) { reportError(error) }
     }
   })

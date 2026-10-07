@@ -3,7 +3,7 @@ import type { FeatureManifest } from '../../core/feature'
 export default {
   id: 'permissions',
   order: 60,
-  contracts: ['composer.access-trigger'],
+  contracts: ['composer.access-trigger', 'composer.card'],
   pref: 'permissionsControl',
   stylesheets: [{ file: 'permissions.css', rank: 230 }],
   switchRow: {
@@ -12,7 +12,7 @@ export default {
     title: { key: 'permissionsTitle', fallback: 'Redraw the permission control' },
     desc: { key: 'permissionsDesc', fallback: 'Replace the composer\'s permission menu with a segmented control and move the session numbers into the context popover. Off restores the host\'s permission menu and statistics dialogs.' },
   },
-  cases: ['permissions', 'automode', 'automode-current', 'automode-hero', 'automode-roundtrip', 'no-auto-review', 'sync-fault', 'switches'],
+  cases: ['permissions', 'automode', 'automode-current', 'automode-hero', 'automode-roundtrip', 'no-auto-review', 'sync-fault', 'switches', 'switches-off'],
   description: {
     zh: {
       title: '权限控件',

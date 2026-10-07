@@ -1,4 +1,6 @@
-import { AUTO_POPOVER_ALL, PERMISSIONS_ATTR, PERMISSION_CURRENT_LABELS, PERMISSION_ORDER, PERMISSION_PRESETS, PERMISSION_SEGMENTS, PERMISSION_SHIPPED_PRESETS, SEGMENTS_CLASS, SEGMENT_CLASS } from '../../constants'
+import { COMPOSER_CARD_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { AUTO_POPOVER_ALL, PERMISSIONS_ATTR } from '../../constants'
+import { PERMISSION_CURRENT_LABELS, PERMISSION_ORDER, PERMISSION_PRESETS, PERMISSION_SEGMENTS, PERMISSION_SHIPPED_PRESETS, SEGMENTS_CLASS, SEGMENT_CLASS } from './permission-copy'
 import { currentPreset, currentSession, findAccessTrigger } from '../../core/host'
 import { readPrefs } from '../../core/prefs'
 import { buildElement, closestFrom, setAttributeIfChanged } from '../../shared/dom'
@@ -503,7 +505,7 @@ export function install(ctx: HostContext, ui: Ui) {
     // every other control on it.
     const coldStart = trigger === null && isHero && session === null
     const host = coldStart
-      ? document.querySelector('[data-composer-card][class*="_cardWorkspaceTrigger"] [class*="_modes"]')
+      ? document.querySelector(`${COMPOSER_CARD_SELECTOR}[class*="_cardWorkspaceTrigger"] [class*="_modes"]`)
       : trigger === null ? null : trigger.parentElement
     // The default can change in Settings without a catalog event, so each
     // return to the cold start screen reads it again.

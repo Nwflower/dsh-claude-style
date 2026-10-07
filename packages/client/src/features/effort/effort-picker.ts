@@ -1,4 +1,5 @@
-import { AUTO_POPOVER_ALL, MODEL_EFFORT_LABEL } from '../../constants'
+import { AUTO_POPOVER_ALL } from '../../constants'
+import { MODEL_EFFORT_LABEL } from '../model/copy-fallbacks'
 import { copyLabel } from '../../core/i18n'
 import { readPrefs } from '../../core/prefs'
 import { createEffortControl } from './control'
@@ -11,20 +12,17 @@ import { POPOVER_CLOSE_DELAY, POPOVER_OPEN_DELAY, closeOtherPopovers, createHove
 /**
  * The reasoning-effort picker: its own seat trigger and its own card.
  *
- * The model card used to carry the effort slider in its footer, so picking a
- * model and picking how hard it thinks were the same gesture. They are two
- * decisions with two different cadences — the model changes rarely, the level
- * is nudged often — so the level now owns a trigger of its own beside the
- * model's, and a card of its own. The model card keeps only the model list
- * and the More-models row.
+ * The level and the model are two decisions with two different cadences — the
+ * model changes rarely, the level is nudged often — so the level owns a trigger
+ * of its own beside the model's, and a card of its own. The model card keeps
+ * only the model list and the More-models row.
  *
  * Everything else follows the model picker's discipline: the trigger is
  * created once and reused, the card is a fixed-position sibling on <body>,
  * hover opens it under the "all" scope and click does so otherwise, and the
  * slider element is NEVER detached once built — re-inserting it restarts its
- * CSS animations (the name's blur-in, the apex matrix's entrance sweep),
- * which is exactly the flicker the model footer used to cause on every host
- * round-trip.
+ * CSS animations (the name's blur-in, the apex matrix's entrance sweep) and
+ * reads as a flicker on every host round-trip.
  *
  * @param ctx - the plugin context (unused; kept for the installer shape).
  * @param ui - the shared UI registry. `ui.model` provides the seat element
@@ -126,8 +124,7 @@ export function install(ctx: HostContext, ui: Ui) {
   /** Pin the body-mounted trigger beside the model trigger (every pass: the
    * seat moves with the window and the composer's own growth). The label is
    * read off the button so the reposition hook gets the same cache the sync
-   * pass does — a caller that cannot name the label used to force a
-   * re-measure on every viewport change. */
+   * pass does. */
   function positionEffortTrigger() {
     if (effortBtn === null) return
     const modelBtn = modelTrigger()
@@ -316,10 +313,9 @@ export function install(ctx: HostContext, ui: Ui) {
         if (effortPop !== null && effortPop.getAttribute('data-open') === 'true') closeEffortPopover()
         else openEffortPopover()
       })
-      // NOT inside the seat slot: that subtree is React-managed, and a foreign
-      // node in it crashed the host with React #130 at plugin load. The button
-      // lives on <body> like the card and is pinned beside the model trigger
-      // on every pass instead.
+      // NOT inside the seat slot: that subtree is React-managed, and no foreign
+      // node may be inserted into it. The button lives on <body> like the card
+      // and is pinned beside the model trigger on every pass instead.
       document.body.appendChild(effortBtn)
     }
     // Same-value guards: sync runs on every scheduler pass, and an identical

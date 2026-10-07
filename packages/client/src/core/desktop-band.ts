@@ -1,13 +1,13 @@
 import { FRAME_TOP_CLEARANCE_PROPERTY, FULLSCREEN_ATTRIBUTE, WINDOWS_TITLEBAR_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 
 /** macOS: the clearance the traffic lights need, read off the host's own leading seat. */
-export const MAC_TRAFFIC_LIGHTS = 88
+const MAC_TRAFFIC_LIGHTS = 88
 /** macOS: the strip height the host declares, used when the token is absent. */
-export const MAC_BAND_HEIGHT = 48
+const MAC_BAND_HEIGHT = 48
 /** Windows: the three caption buttons at their standard size, used when the overlay cannot measure them. */
-export const WIN_CAPTION_CONTROLS = 140
+const WIN_CAPTION_CONTROLS = 140
 /** Windows: the strip height the host declares, used when the token is absent. */
-export const WIN_BAND_HEIGHT = 40
+const WIN_BAND_HEIGHT = 40
 
 /**
  * The host's declared caption-strip height, or `fallback` when the host
@@ -22,7 +22,7 @@ export const WIN_BAND_HEIGHT = 40
  * @param fallback - the height to answer with when the token is absent.
  * @returns the height in CSS pixels.
  */
-export function bandHeight(fallback: number) {
+function bandHeight(fallback: number) {
   const declared = parseFloat(getComputedStyle(document.documentElement).getPropertyValue(FRAME_TOP_CLEARANCE_PROPERTY))
   return isFinite(declared) && declared > 0 ? Math.round(declared) : fallback
 }

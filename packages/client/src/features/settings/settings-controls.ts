@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { SEGMENTS_CLASS, SEGMENT_CLASS } from '../../constants'
+import { SEGMENTS_CLASS, SEGMENT_CLASS } from '../permissions/permission-copy'
 import { prefYielded, switchRowFeatures } from '../../core/feature'
 import { settingsCopy } from '../../core/i18n'
 import { createSlidingPill } from '../../shared/sliding-pill'

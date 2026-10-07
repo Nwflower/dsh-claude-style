@@ -49,11 +49,11 @@ import { requestFrame } from '../core/frame'
  * third less time hidden under the bottom edge, and with the fine steps the
  * largest change of speed between two frames is still lower than before.
  */
-export const SCROLL_EASE_OMEGA = 28
+const SCROLL_EASE_OMEGA = 28
 /** The fastest the position moves, in pixels a second; past it the motion reads as a blur. */
-export const SCROLL_EASE_MAX_SPEED_PX_S = 2400
+const SCROLL_EASE_MAX_SPEED_PX_S = 2400
 /** The hardest the position speeds up or slows down, in pixels a second squared: full speed from rest takes a tenth of a second. */
-export const SCROLL_EASE_MAX_ACCEL_PX_S2 = 24000
+const SCROLL_EASE_MAX_ACCEL_PX_S2 = 24000
 /**
  * The longest stretch that is glided. A gap past it is first closed to it
  * (see above); it is also the line the stream glide draws between a burst of
@@ -61,16 +61,16 @@ export const SCROLL_EASE_MAX_ACCEL_PX_S2 = 24000
  */
 export const SCROLL_EASE_LEAD_PX = 1200
 /** Within this of the destination, and slower than SCROLL_EASE_REST_PX_S, the position has arrived. */
-export const SCROLL_EASE_DONE_PX = 0.5
-export const SCROLL_EASE_REST_PX_S = 10
+const SCROLL_EASE_DONE_PX = 0.5
+const SCROLL_EASE_REST_PX_S = 10
 /** The integration step, in seconds. */
-export const SCROLL_EASE_STEP_S = 0.001
+const SCROLL_EASE_STEP_S = 0.001
 /** A position more than this off the ease's own last write was moved by someone else, and is taken as it is. */
-export const SCROLL_EASE_MOVED_PX = 1.5
+const SCROLL_EASE_MOVED_PX = 1.5
 /** The longest frame interval the curve counts; past it the page was hidden or held up. */
-export const SCROLL_EASE_MAX_FRAME_MS = 64
+const SCROLL_EASE_MAX_FRAME_MS = 64
 /** One frame at 60 Hz, for the first frame of a run, which has no interval yet. */
-export const SCROLL_EASE_NOMINAL_FRAME_MS = 16.7
+const SCROLL_EASE_NOMINAL_FRAME_MS = 16.7
 
 /** One element's ease: where it is going, whether it is still wanted, and the motion it carries. */
 export interface ScrollEase {
@@ -83,11 +83,11 @@ export interface ScrollEase {
 }
 
 /** The elements easing now, each with its destination, its test, and the motion it carries. */
-export const scrollEasing = new Map<Element, ScrollEase>()
+const scrollEasing = new Map<Element, ScrollEase>()
 /** Whether the shared frame is requested; false when nothing is easing. */
-export let scrollEaseFrameQueued = false
+let scrollEaseFrameQueued = false
 /** The previous frame's timestamp, for the interval. */
-export let scrollEaseLastAt = 0
+let scrollEaseLastAt = 0
 
 /** A scroll container's end: the position that shows its last pixel. */
 export function scrollEnd(element: Element) {
@@ -155,7 +155,7 @@ export function scrollEasePosition(element: Element) {
 }
 
 /** Put the position down and say what was really written (the container may round it). */
-export function writeScrollEase(element: Element, ease: ScrollEase, value: number) {
+function writeScrollEase(element: Element, ease: ScrollEase, value: number) {
   ease.position = value
   element.scrollTop = value
   ease.lastWritten = element.scrollTop
@@ -166,7 +166,7 @@ export function writeScrollEase(element: Element, ease: ScrollEase, value: numbe
  * One frame of every ease in flight.
  * @param now - this frame's timestamp.
  */
-export function stepScrollEase(now: number) {
+function stepScrollEase(now: number) {
   scrollEaseFrameQueued = false
   const interval = scrollEaseLastAt === 0
     ? SCROLL_EASE_NOMINAL_FRAME_MS

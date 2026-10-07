@@ -1,4 +1,4 @@
-import { MODEL_COPY_FALLBACK_LOCALE } from '../constants'
+import { MODEL_COPY_FALLBACK_LOCALE } from '../features/model/copy-fallbacks'
 import { hostCtx } from './host'
 import type { HostContext } from './host'
 import { modelCopy } from './model-copy'
@@ -15,7 +15,7 @@ export function activeLocale(ctx?: HostContext | null): string {
 }
 
 /** Fill a copy string's `{name}` slots from `params`; a slot with no value stays as written. */
-export function fillTemplate(text: string, params?: CopyParams) {
+function fillTemplate(text: string, params?: CopyParams) {
   if (!params) return text
   return text.replace(/\{(\w+)\}/g, (match, name: string) => Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match)
 }

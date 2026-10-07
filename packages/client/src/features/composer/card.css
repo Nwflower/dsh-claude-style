@@ -96,11 +96,8 @@ body[data-dsh-claude-style][data-ds-dark-theme] [data-composer-card]:focus-withi
   box-shadow: 0 0 0 1px rgba(250, 249, 245, 0.09), 0 6px 24px rgba(0, 0, 0, 0.22), 0 2px 8px rgba(0, 0, 0, 0.11);
 }
 
-/* The hero used to need its own four rules here, because the base rules above
-   carried the background-coloured (--dsw-alias-bg-base) halo that had to be
-   stripped from the home dialog. That halo is gone: the seat paints the bar and
-   its fade band instead (see features/composer/inline.css), so the base rules already
-   hold the pure card fill and the real drop shadow on every variant. */
+/* The seat paints the bar and its fade band (see features/composer/inline.css), so the
+   base rules above hold the pure card fill and the real drop shadow on every variant. */
 
 /* The hero's workspace row sits on the card and takes its focus ring. The row
    comes before the card in the stack, so no sibling selector reaches it from

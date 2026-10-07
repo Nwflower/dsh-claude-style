@@ -1,4 +1,5 @@
 import { COMPOSER_ATTR, COMPOSER_HIDDEN_ATTR, HOME_LAYOUT_STUDIO } from '../../constants'
+import { DIALOG_TRIGGER_SELECTOR, PHASE_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import { COMPOSER_STACK, closestComposerCard, findAccessTrigger, findComposerCards, findComposerPlaceholder, findComposerSeat, findConversationScroller } from '../../core/host'
 import { composerRestyleRetired, readPrefs } from '../../core/prefs'
 import type { HostContext } from '../../core/host'
@@ -45,7 +46,7 @@ export function install(ctx: HostContext, ui: Ui) {
    * page.
    */
   function readState() {
-    hero = document.querySelector('[data-phase="hero"]') !== null
+    hero = document.querySelector(`[${PHASE_ATTRIBUTE}="hero"]`) !== null
     const scope = readPrefs().composerScope
     active = !composerRestyleRetired && (scope === 'all' || (hero ? scope === 'hero' : scope === 'conversation'))
     studioHome = hero && readPrefs().homeLayout === HOME_LAYOUT_STUDIO
@@ -165,7 +166,7 @@ export function install(ctx: HostContext, ui: Ui) {
    */
   function dockedContextMeter(dock: Element | null) {
     if (dock === null) return null
-    for (const trigger of dock.querySelectorAll<HTMLElement>('button[aria-haspopup="dialog"]')) {
+    for (const trigger of dock.querySelectorAll<HTMLElement>(DIALOG_TRIGGER_SELECTOR)) {
       if (trigger.querySelector(':scope > svg > circle') === null) continue
       let node: HTMLElement = trigger
       while (node.parentElement !== null && node.parentElement !== dock) node = node.parentElement
@@ -256,7 +257,7 @@ export function install(ctx: HostContext, ui: Ui) {
    * single view) means the chat surface is all there is.
    */
   function syncChatTabComposer() {
-    const root = closestFrom(findComposerSeat(), '[data-phase]')
+    const root = closestFrom(findComposerSeat(), `[${PHASE_ATTRIBUTE}]`)
     const list = root === null ? null : root.querySelector('[role="tablist"]')
     const first = list === null ? null : list.querySelector('[role="tab"]')
     const chatActive = first === null || first.getAttribute('aria-selected') === 'true'

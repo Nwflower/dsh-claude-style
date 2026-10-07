@@ -1,9 +1,15 @@
-import { COMPOSER_HINT, HOME_LAYOUT_STUDIO, pickHeroGreeting, pickStudioGreeting } from '../../constants'
+import { HOME_LAYOUT_STUDIO } from '../../constants'
+import { pickHeroGreeting, pickStudioGreeting } from '../home/greetings'
 import { findComposerCards, findComposerInput, findComposerPlaceholder, findComposerPlaceholders, getUsername } from '../../core/host'
 import { readPrefs } from '../../core/prefs'
 import { removeStrayNodes } from '../../shared/popover'
 import type { HostContext } from '../../core/host'
 import type { Ui } from '../../core/scheduler'
+
+/** The hero composer's own hint, which the copy animation types back out. */
+const HERO_HINT = 'How can I help you today?'
+/** The conversation composer's hint, which the same animation settles on. */
+const DEFAULT_HINT = 'Type / for commands'
 
 export function install(ctx: HostContext, ui: Ui) {
   /** Shipped idle composer hints (zh / en, hero / default) this skin replaces. */
@@ -12,8 +18,8 @@ export function install(ctx: HostContext, ui: Ui) {
     '发消息或创建任务',
     'Describe what you want to build',
     'Message or run a task',
-    'How can I help you today?',
-    'Type / for commands',
+    HERO_HINT,
+    DEFAULT_HINT,
   ]
 
   /** Whether a placeholder's text is one of the hints this skin replaces. */
@@ -52,7 +58,7 @@ export function install(ctx: HostContext, ui: Ui) {
 
   function rewriteHint() {
     if (!ui.composer!.isActive()) return
-    const targetHint = ui.composer!.isHero() ? COMPOSER_HINT : 'Type / for commands'
+    const targetHint = ui.composer!.isHero() ? HERO_HINT : DEFAULT_HINT
     const hints = findComposerPlaceholders()
     for (let i = 0; i < hints.length; i++) {
       const node = hints[i]
@@ -66,7 +72,7 @@ export function install(ctx: HostContext, ui: Ui) {
       removeStrayNodes(document, '[data-dsh-synthetic-placeholder]', [])
       return
     }
-    const targetHint = ui.composer!.isHero() ? COMPOSER_HINT : 'Type / for commands'
+    const targetHint = ui.composer!.isHero() ? HERO_HINT : DEFAULT_HINT
     const cards = findComposerCards()
     for (let ci = 0; ci < cards.length; ci++) {
       const card = cards[ci]

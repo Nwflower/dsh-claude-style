@@ -275,10 +275,7 @@ export function startMorph(snapshot: ComposerSnapshot, bubble: HTMLElement, end:
       + dy * chatSendRiseProgress(sample.u) + 'px)',
   })))
   // The shape: the shell scales to the stretch that can really be drawn right
-  // now. This used to be `clip-path: inset(...)`, which does not composite:
-  // readers on slow machines caught the displacement running on while the clip
-  // froze on the main thread, flying a card that had not narrowed out of the
-  // column. `sample.visible` is the right-edge clamp, and `sample.m` is the
+  // now. `sample.visible` is the right-edge clamp, and `sample.m` is the
   // same one the displacement uses, so the right-edge equation holds.
   const shape = run(shell, between(0, CHAT_MORPH_END, sample => ({
     transform: 'scale(' + sample.visible / boxWidth + ', ' + sample.height / boxHeight + ')',

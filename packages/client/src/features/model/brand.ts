@@ -9,9 +9,7 @@ import { COMBINE_SVGS, COMBINE_WORDS } from 'virtual:dsh-claude-style/generated'
  *
  * Rules are ordered and anchored in the document; the first match wins. There is
  * deliberately **no fallback to the provider route**: a model no rule claims
- * draws no lockup at all. The fallback used to put the reseller's lockup on a
- * model it did not make (an OpenCode row wearing OpenCode's mark beside
- * "LongCat-2.0"), which reads as a wrong answer rather than a missing one.
+ * draws no lockup at all.
  *
  * @param modelId - catalog model id.
  * @returns the vendored lockup's id, or null when no rule claims it.

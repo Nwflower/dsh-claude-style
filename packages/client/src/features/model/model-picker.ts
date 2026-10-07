@@ -1,4 +1,5 @@
-import { AUTO_POPOVER_ALL, MODEL_EMPTY_LABEL, MODEL_FALLBACK_LABEL, MODEL_LOADING_LABEL, MODEL_MORE_LABEL, MODEL_OFFICIAL_GROUP, MODEL_TRIGGER_LABEL } from '../../constants'
+import { AUTO_POPOVER_ALL } from '../../constants'
+import { MODEL_EMPTY_LABEL, MODEL_FALLBACK_LABEL, MODEL_LOADING_LABEL, MODEL_MORE_LABEL, MODEL_OFFICIAL_GROUP, MODEL_TRIGGER_LABEL } from './copy-fallbacks'
 import { activeLocale, copyLabel } from '../../core/i18n'
 import { loadModelCopy } from '../../core/model-copy'
 import { readPrefs } from '../../core/prefs'
@@ -243,10 +244,8 @@ export function install(ctx: HostContext, ui: Ui) {
     // A seat whose data is still in flight must not blank a picker that
     // already has a list. The host marks the directory `selecting` for the
     // WHOLE selectModel round-trip, and that round-trip runs for seconds on
-    // providers whose adapters resolve over the network, so nudging the
-    // effort used to empty the card for exactly as long as the host took to
-    // answer. Only a directory with nothing to show yet falls back to the
-    // loading line.
+    // providers whose adapters resolve over the network. Only a directory with
+    // nothing to show yet falls back to the loading line.
     const seated = groups.length > 0 && current !== null
     if (!seated && (status === 'idle' || status === 'loading' || status === 'selecting')) {
       modelBody.appendChild(buildElement('div', 'dsh-claude-popover-status', copyLabel('loading', MODEL_LOADING_LABEL)))
@@ -381,9 +380,7 @@ export function install(ctx: HostContext, ui: Ui) {
       // Beside the first level; flip to its left when the viewport is tight.
       let x2 = pos.x + modelPop.offsetWidth + 2
       if (x2 + w2 > window.innerWidth - POPOVER_MARGIN) x2 = Math.max(POPOVER_MARGIN, pos.x - 4 - w2)
-      // Bottom-aligned with the first level: a short level 2 used to hang from
-      // the top, leaving dead space under it that the pointer had to cross to
-      // reach the card from the More-models row. A level 2 TALLER than level 1
+      // Bottom-aligned with the first level; a level 2 TALLER than level 1
       // keeps its top instead, so it cannot push itself off the top edge.
       let y2 = pos.y + Math.max(0, h1 - h2)
       y2 = Math.max(POPOVER_MARGIN, Math.min(y2, window.innerHeight - h2 - POPOVER_MARGIN))

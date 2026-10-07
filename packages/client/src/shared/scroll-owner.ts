@@ -1,7 +1,7 @@
 import { STREAM_GLIDE_ATTR } from '../constants'
 import { subscribeMutations } from '../core/bus'
 import { motionReduced } from '../core/prefs'
-import { CONVERSATION_SCROLL_SELECTOR, FOLLOWING_TAIL_SELECTOR, FOLLOW_THRESHOLD_PX, PROCESS_BODY_SELECTOR, SUBMISSION_ECHO_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { CONVERSATION_SCROLL_SELECTOR, FLOW_KIND_ATTRIBUTE, FOLLOWING_TAIL_SELECTOR, FOLLOW_THRESHOLD_PX, PROCESS_BODY_SELECTOR, SUBMISSION_ECHO_SELECTOR, USER_ROW_KIND } from '@dsh-claude-style/contracts/dom'
 import { conversationScroller, findFollowTailButton } from './chat-dom'
 import { isReaderScrollIntent } from './reader-intent'
 import { SCROLL_EASE_LEAD_PX, easeScroll, isScrollEasing, scrollEasePosition, scrollEnd, stopScrollEase } from './scroll-ease'
@@ -45,7 +45,7 @@ export { SCROLL_EASE_LEAD_PX }
 export type ScrollSource ='jump' | 'fold' | 'composer' | 'follow' | 'stream' | 'process'
 
 /** Each source's rank; a higher rank's claim stands over a lower one's. */
-export const SCROLL_SOURCE_RANK: Record<ScrollSource, number> = {
+const SCROLL_SOURCE_RANK: Record<ScrollSource, number> = {
   process: 1,
   stream: 2,
   follow: 2,
@@ -57,13 +57,13 @@ export const SCROLL_SOURCE_RANK: Record<ScrollSource, number> = {
 const FOLLOWING_SOURCES = new Set<ScrollSource>(['follow', 'stream', 'process'])
 
 /** How close to a process body's end the reader has to come for his hold on it to end. */
-export const PROCESS_RELEASE_THRESHOLD_PX = 4
+const PROCESS_RELEASE_THRESHOLD_PX = 4
 /**
  * The two arrivals that are the reader's own submission rather than content
  * streaming in: his own message row, and the echo the host mounts in its
  * place before the real row takes over.
  */
-export const SUBMISSION_SELECTOR = '[data-chat-flow-kind="user"], ' + SUBMISSION_ECHO_SELECTOR
+const SUBMISSION_SELECTOR = `[${FLOW_KIND_ATTRIBUTE}="${USER_ROW_KIND}"], ${SUBMISSION_ECHO_SELECTOR}`
 /**
  * How long the stream glide stands down after one of them arrives. The
  * host's own jump to a freshly sent message is deliberate — the reader has to
@@ -71,19 +71,17 @@ export const SUBMISSION_SELECTOR = '[data-chat-flow-kind="user"], ' + SUBMISSION
  * about a second later, which moves the position again. The stand-down
  * covers both.
  */
-export const SUBMISSION_HOLD_MS = 1200
+const SUBMISSION_HOLD_MS = 1200
 /**
  * How far the position has to move past the stream's own last reading before
  * it counts as the host pinning it rather than the spring taking its own
  * step (both happen inside one frame).
  */
-export const HOST_PIN_TOLERANCE_PX = 1
+const HOST_PIN_TOLERANCE_PX = 1
 /** How many times a hand-back looks again; the host may turn its follow off a beat later. */
-export const FOLLOW_LOOK_ROUNDS = 5
+const FOLLOW_LOOK_ROUNDS = 5
 /** The gap between two looks; five of them cover the host's 500 ms sampling window. */
-export const FOLLOW_LOOK_INTERVAL_MS = 100
-/** How long the looks after a hand-back take. */
-export const FOLLOW_LOOK_TOTAL_MS = FOLLOW_LOOK_ROUNDS * FOLLOW_LOOK_INTERVAL_MS
+const FOLLOW_LOOK_INTERVAL_MS = 100
 
 /**
  * The reader's intent events. The conversation reads all but touchmove (a
@@ -283,11 +281,6 @@ export function stopScrollFor(container: Element, source?: ScrollSource) {
   if (source !== undefined && running !== source) return
   stopScrollEase(container)
   easeSources.delete(container)
-}
-
-/** Whether an ease is running on a container now. */
-export function isScrollMoving(container: Element) {
-  return runningSource(container) !== undefined
 }
 
 /** The position the ease last wrote on a container, or null while none runs there. */

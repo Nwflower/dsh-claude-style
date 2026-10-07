@@ -25,18 +25,9 @@ export const FOLD_ROLL_MS = 200
 export const FOLD_VISIBLE_SHARE = 0.9
 /** An intent older than this is no longer trustworthy (no layout change followed, or it came from elsewhere). */
 export const FOLD_INTENT_TTL_MS = 500
-/** A DisclosureRow row. Its expanded body is its next sibling. */
-export const FOLD_DISCLOSURE_SELECTOR = '[data-disclosure-row]'
-/** Every other control that opens and closes something (a process group's header). */
-export const FOLD_TOGGLE_SELECTOR = '[aria-expanded]'
+export { DISCLOSURE_ROW_SELECTOR as FOLD_DISCLOSURE_SELECTOR, FOLD_SKIPPED_CONTROL_SELECTOR, FOLD_TOGGLE_SELECTOR } from '@dsh-claude-style/contracts/dom'
 /** Popup controls (menus, dialogs, lists): they open no folding body, so the whole module skips them. */
 export const FOLD_POPUP_SELECTOR = '[aria-haspopup]'
-/**
- * Controls skipped whole: the turn's own header (the button reading "took X
- * seconds") and the turn's trigger notice — what they open is a whole turn's
- * content, which must not be pressed down.
- */
-export const FOLD_SKIPPED_CONTROL_SELECTOR = '[data-turn-process], [data-turn-trigger]'
 /** How many frames to wait at most for React to take the collapse before the shutdown animation is withdrawn. */
 export const FOLD_SHUT_CONFIRM_FRAMES = 3
 /** After the door lands, "the position belongs to the animation" is counted this much longer, so the settle frame does not meet the follow guard. */

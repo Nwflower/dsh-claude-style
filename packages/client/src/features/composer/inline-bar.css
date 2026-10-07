@@ -165,7 +165,7 @@ body[data-dsh-claude-style] [data-dsh-claude-context-panel] {
 }
 /* The host places the panel from the anchor's LEFT edge and only then clamps it
    into the viewport, which at the end of the composer row parks it against the
-   window's right margin, past the ring. session-stats.ts reads the two boxes and
+   window's right margin, past the ring. stats-binding.ts reads the two boxes and
    writes the left value that lines the panel's right edge up with the meter's —
    the hand-over the hero menu makes for the menu the host places below its own
    trigger. The mark is written together with the value, so this declaration

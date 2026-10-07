@@ -1,4 +1,4 @@
-import { MODEL_EFFORT_DEFAULT } from '../../constants'
+import { MODEL_EFFORT_DEFAULT } from './copy-fallbacks'
 import { currentSessionId } from '../../core/host'
 import type { HostContext } from '../../core/host'
 import type { HostModelCatalogSnapshot, HostModelDirectory, HostModelEntry, HostModelGroup, HostModelReasoning } from '@dsh-claude-style/contracts/services'
@@ -41,7 +41,7 @@ export function createModelCatalog(options: { ctx: HostContext, schedule?: () =>
    * The current session id. The Session Controller dropped
    * `list.current` in dsh 0.2 (the main-view selection now comes from the
    * `uiSession` projection), so this MUST go through the shared
-   * currentSessionId() in context.js — reading the legacy field directly
+   * currentSessionId() in core/host.ts — reading the legacy field directly
    * resolves to null on current hosts and the picker never loads.
    */
   function currentModelSessionId() {
@@ -128,12 +128,12 @@ export function createModelCatalog(options: { ctx: HostContext, schedule?: () =>
    *
    * The catalog is one RPC per Host generation (`remote.session.modelCatalog`)
    * and nothing else fetches it: the host kicks it off from its own menu's
-   * `show()`, and this skin hides that seat — so the first open used to pay the
-   * whole round-trip, which is seconds on a cold start. Starting it here moves
-   * that wait into the startup the user is already sitting through, and the
-   * trigger's label needs the same catalog anyway: the current model's name
-   * comes out of it. The load is shared and cached host-side, so the popover's
-   * own `load()` becomes a no-op instead of a second request.
+   * `show()`, and this skin hides that seat, so leaving it to the first open
+   * pays the whole round-trip inside a popover the user is waiting on. Starting
+   * it here moves that wait into the startup the user is already sitting
+   * through, and the trigger's label needs the same catalog anyway: the current
+   * model's name comes out of it. The load is shared and cached host-side, so
+   * the popover's own `load()` becomes a no-op instead of a second request.
    *
    * Failures are the store's to report — the popover shows the error and the
    * host offers a retry — so this only has to avoid throwing into a pass.

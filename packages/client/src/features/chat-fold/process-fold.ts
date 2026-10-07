@@ -2,7 +2,7 @@ import { subscribeMutations } from '../../core/bus'
 import { requestFrame } from '../../core/frame'
 import { beginChatFoldToggle, endChatFoldToggle, isChatFoldToggle } from './fold-toggle'
 import { writeScroll } from '../../shared/scroll-owner'
-import { CONVERSATION_SCROLL_SELECTOR, FOLLOW_THRESHOLD_PX, PROCESS_BODY_SELECTOR, PROCESS_EXPANDED_MODE_ATTRIBUTE, PROCESS_GROUP_SELECTOR, RUNNING_STATE, SHIMMER_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { CONVERSATION_SCROLL_SELECTOR, FOLLOW_THRESHOLD_PX, PROCESS_BODY_SELECTOR, PROCESS_EXPANDED_MODE_ATTRIBUTE, PROCESS_GROUP_SELECTOR, RUNNING_STATE, SHIMMER_ATTRIBUTE, SHIMMER_LEGACY_ATTRIBUTE, SHIMMER_SELECTOR } from '@dsh-claude-style/contracts/dom'
 
 /**
  * A running process group opens by default and folds back once the piece of
@@ -17,8 +17,8 @@ import { CONVERSATION_SCROLL_SELECTOR, FOLLOW_THRESHOLD_PX, PROCESS_BODY_SELECTO
  * data-group-expanded-mode.
  *
  * A group's phase is read off the shimmer in its header: the host attaches
- * data-shimmer (data-text-shimmer before its 2026-09 update) only while the
- * process section is still running. Whether the body is open is its own
+ * data-shimmer (older hosts write data-text-shimmer) only while the process
+ * section is still running. Whether the body is open is its own
  * hidden attribute — the host hides searchably, setting hidden="until-found"
  * when folded and removing it entirely when open. Both are semantic
  * attributes. Command cards inside the group use the shimmer too, so the
@@ -210,7 +210,7 @@ export function createProcessFold() {
     attributes: true,
     // The group root's expand-mode attribute is in range too: switching tiers
     // adds or removes it, and that batch has to be scanned again.
-    attributeFilter: ['data-shimmer', 'data-text-shimmer', 'hidden', PROCESS_EXPANDED_MODE_ATTRIBUTE],
+    attributeFilter: [SHIMMER_ATTRIBUTE, SHIMMER_LEGACY_ATTRIBUTE, 'hidden', PROCESS_EXPANDED_MODE_ATTRIBUTE],
     characterData: true,
   }, onRecords)
   document.addEventListener('click', rememberReaderTouched, true)

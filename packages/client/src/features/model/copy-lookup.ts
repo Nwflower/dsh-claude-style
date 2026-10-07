@@ -7,7 +7,7 @@ import { textOf } from '../../shared/format'
 /**
  * Resolving a catalog model to its description line.
  *
- * The copy document (packages/client/src/model-descriptions.json) ships as data beside the
+ * The copy document (packages/client/data/model-descriptions.json) ships as data beside the
  * bundle and is fetched at runtime, so this is the only place that knows how
  * a model's id becomes a sentence. Resolution descends: exact entry (one
  * model resold by several providers folds to a single key) → family rule →

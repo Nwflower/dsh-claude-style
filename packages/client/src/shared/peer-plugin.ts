@@ -36,25 +36,25 @@ import type { PeerPlugin } from '../core/feature'
  * plugin (D42). The head is watched only while something is subscribed.
  */
 /** The other plugin's id, as its entry appears in the boot list. */
-export const PEER_ENTRY_ID = 'dsh-chat-ux'
+const PEER_ENTRY_ID = 'dsh-chat-ux'
 /** The `<style>` its browser half mounts while it is live. */
-export const PEER_STYLE_ID = 'dsh-chat-ux-style'
+const PEER_STYLE_ID = 'dsh-chat-ux-style'
 
 /** The boot list's answer, and whether it has been read. */
-export let peerEntrySeen = false
-export let peerEntryRead = false
+let peerEntrySeen = false
+let peerEntryRead = false
 /** The answer the last announcement carried; null before the first one. */
-export let peerAnnounced: boolean | null = null
+let peerAnnounced: boolean | null = null
 /** Who hears about the answer changing. */
-export const peerListeners: ((present: boolean) => void)[] = []
+const peerListeners: ((present: boolean) => void)[] = []
 /** Stops the head watch; set while at least one listener is subscribed. */
-export let stopHeadWatch: (() => void) | null = null
+let stopHeadWatch: (() => void) | null = null
 
 /**
  * Whether dsh-chat-ux is installed on this page right now.
  * @returns true while the ported chat features must stand down.
  */
-export function dshChatUxPresent() {
+function dshChatUxPresent() {
   if (document.getElementById(PEER_STYLE_ID) !== null) return true
   if (peerEntryRead) return peerEntrySeen
   peerEntryRead = true

@@ -1,7 +1,7 @@
+import { FOOTER_ACTIONS_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { findFootArea } from '../../core/host'
 import { buildPopoverItem } from '../../shared/popover'
 
-// --- Footer action redirection helpers ---
 export function createFooterMirror(options: {
   body(): HTMLElement | null
   anchor(): Element | null
@@ -333,7 +333,7 @@ export function createFooterMirror(options: {
   }
 
   function sync(footArea: Element) {
-    const footerActions = footArea.querySelector('[class*="footerActions"]')
+    const footerActions = footArea.querySelector(FOOTER_ACTIONS_SELECTOR)
     const footerEntries = syncFooterActionVisibility(footerActions)
     const body = options.body()
 
@@ -421,7 +421,7 @@ export function createFooterMirror(options: {
               // stored node was detached by a host re-render while the
               // popover was open.
               const fa = findFootArea()
-              const actions = fa ? fa.querySelector('[class*="footerActions"]') : null
+              const actions = fa ? fa.querySelector(FOOTER_ACTIONS_SELECTOR) : null
               const liveEntries = actions ? footerEntriesOf(actions) : []
               const liveEntry = liveEntries[idx] || null
               live = liveEntry ? findFooterTrigger(liveEntry) : null

@@ -1,4 +1,5 @@
-import { AUTO_POPOVER_ALL, AUTO_POPOVER_OFF, AUTO_POPOVER_SCOPES, BRAND_ATTR, BRAND_CLAUDE, BRAND_DEEPSEEK, BRAND_DEEPSEEK_LEGACY, COMPOSER_ATTR, FOOTER_ATTR, MASCOT_ATTR, MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MODEL_OFFICIAL_GROUP, MOTION_ATTR, MOTION_FULL, MOTION_REDUCED, PACKAGE_NAME, PALETTE_ATTR, PREF_CHOICES, PREF_DEFAULTS, PROVIDER_ID_MAX, QUICK_PROVIDERS_MAX, SETTINGS_ENTRY_FALLBACK, TYPEFACE_ATTR, USERNAME_MAX } from '../constants'
+import { AUTO_POPOVER_ALL, AUTO_POPOVER_OFF, AUTO_POPOVER_SCOPES, BRAND_ATTR, BRAND_CLAUDE, BRAND_DEEPSEEK, BRAND_DEEPSEEK_LEGACY, COMPOSER_ATTR, FOOTER_ATTR, MASCOT_ATTR, MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MOTION_ATTR, MOTION_FULL, MOTION_REDUCED, PACKAGE_NAME, PALETTE_ATTR, PREF_CHOICES, PREF_DEFAULTS, PROVIDER_ID_MAX, QUICK_PROVIDERS_MAX, SETTINGS_ENTRY_FALLBACK, TYPEFACE_ATTR, USERNAME_MAX } from '../constants'
+import { MODEL_OFFICIAL_GROUP } from '../features/model/copy-fallbacks'
 import type { Prefs } from '../constants'
 import type { HostContext } from './host'
 import type { HostConfigForm, HostConfigFormsService } from '@dsh-claude-style/contracts/services'
@@ -11,19 +12,19 @@ import { notifyAll } from '../shared/notify'
  * it fails — PREF_DEFAULTS holds.
  */
 export let prefs = normalizePrefs({})
-export const prefsListeners: ((prefs: Prefs) => void)[] = []
+const prefsListeners: ((prefs: Prefs) => void)[] = []
 
 /** The official settings form (the host's form controller, D10); null until the service serves the namespace. */
-export let prefsForm: HostConfigForm | null = null
+let prefsForm: HostConfigForm | null = null
 /** Disposer for the bound form's own change subscription. */
-export let prefsFormUnsubscribe: (() => void) | null = null
+let prefsFormUnsubscribe: (() => void) | null = null
 /** Disposer for the served-namespace directory watch, while one is open. */
-export let prefsWatchOff: (() => void) | null = null
+let prefsWatchOff: (() => void) | null = null
 /** Whether the served-namespace directory is already being watched. */
-export let prefsBinding = false
+let prefsBinding = false
 
 /** Namespaces to try, best first: loader entry id, package name, inserted id. */
-export function settingsNamespaceCandidates(ctx: HostContext) {
+function settingsNamespaceCandidates(ctx: HostContext) {
   // The dynamic façade can hide the fiber; the other two candidates remain.
   const id = ctx?.fiber?.entry?.id
   const entryId = typeof id === 'string' && id !== '' ? id.slice(id.lastIndexOf(':') + 1) : null
@@ -37,7 +38,7 @@ export function settingsNamespaceCandidates(ctx: HostContext) {
  * entry id hands back a controller for nobody's namespace: reads stay at the
  * defaults and every write is refused. The served list is the truth.
  */
-export function servedNamespace(forms: HostConfigFormsService, candidates: (string | null)[]) {
+function servedNamespace(forms: HostConfigFormsService, candidates: (string | null)[]) {
   const namespaces = forms.describe?.()?.getSnapshot?.()?.view?.namespaces
   if (!namespaces) return null
   for (const candidate of candidates) {
@@ -48,20 +49,20 @@ export function servedNamespace(forms: HostConfigFormsService, candidates: (stri
 }
 
 /** Whether the host serves namespaces to the browser. */
-export function hostConfigForms(ctx: HostContext | null): HostConfigFormsService | null {
+function hostConfigForms(ctx: HostContext | null): HostConfigFormsService | null {
   const forms = ctx?.get('configForms')
   return typeof forms?.get === 'function' ? forms : null
 }
 
 /** The form's current field values, or null while it is not ready. */
-export function readFormValue(): Record<string, unknown> | null {
+function readFormValue(): Record<string, unknown> | null {
   const snapshot = prefsForm?.getSnapshot()
   if (snapshot?.status !== 'ready') return null
   return snapshot.value && typeof snapshot.value === 'object' ? snapshot.value as Record<string, unknown> : null
 }
 
 /** Bind one namespace the host already serves; the controller waits for its own snapshot. */
-export function bindServedForm(forms: HostConfigFormsService, ctx: HostContext) {
+function bindServedForm(forms: HostConfigFormsService, ctx: HostContext) {
   const namespace = servedNamespace(forms, settingsNamespaceCandidates(ctx))
   if (namespace === null) return false
   const form = forms.get(namespace)
@@ -76,7 +77,7 @@ export function bindServedForm(forms: HostConfigFormsService, ctx: HostContext) 
  * Watch the served-namespace directory until this plugin's namespace lands:
  * on a cold page the directory can answer after this plugin has applied.
  */
-export function watchNamespace(forms: HostConfigFormsService, ctx: HostContext) {
+function watchNamespace(forms: HostConfigFormsService, ctx: HostContext) {
   if (prefsBinding) return
   const mirror = forms.describe?.()
   if (!mirror) return
@@ -131,7 +132,7 @@ export function disposePrefsBinding() {
  * HIDE host controls and a takeover whose replacement is gone would leave
  * nothing in their place.
  */
-export let footerTakeoverRetired = false
+let footerTakeoverRetired = false
 export let composerRestyleRetired = false
 
 /** Give the sidebar footer back to the host for the rest of this generation. */
@@ -173,7 +174,7 @@ export function adoptPrefs(next: Prefs) {
 }
 
 /** Whether the operating system asks for reduced motion right now. */
-export function systemPrefersReducedMotion() {
+function systemPrefersReducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
@@ -182,7 +183,7 @@ export function systemPrefersReducedMotion() {
  * rest of the plugin acts on reach the attribute: a stylesheet cannot rewrite
  * its own media queries, so "always play" has to be a value the rules test.
  */
-export function writeMotionAttribute(mode: string) {
+function writeMotionAttribute(mode: string) {
   const reduced = mode === MOTION_REDUCED || (mode !== MOTION_FULL && systemPrefersReducedMotion())
   document.body.setAttribute(MOTION_ATTR, reduced ? MOTION_REDUCED : MOTION_FULL)
 }
@@ -231,7 +232,7 @@ export function loadPrefs() {
 }
 
 /** Clamp the hover-open preference; the earlier boolean shape still lands. */
-export function normalizeAutoPopover(value: unknown) {
+function normalizeAutoPopover(value: unknown) {
   if (value === true) return AUTO_POPOVER_ALL
   if (value === false) return AUTO_POPOVER_OFF
   return typeof value === 'string' && AUTO_POPOVER_SCOPES.includes(value) ? value : PREF_DEFAULTS.autoPopover
@@ -242,7 +243,7 @@ export function normalizeAutoPopover(value: unknown) {
  * a catalog rename does not lose the stored selection. The official service is
  * the picker's default rather than a choice, so a stored id for it is dropped.
  */
-export function normalizeQuickProviders(value: unknown) {
+function normalizeQuickProviders(value: unknown) {
   if (!Array.isArray(value)) return []
   const out: string[] = []
   for (let i = 0; i < value.length && out.length < QUICK_PROVIDERS_MAX; i++) {
@@ -255,7 +256,7 @@ export function normalizeQuickProviders(value: unknown) {
 }
 
 /** Clamp the brand; values stored by earlier builds under older names land on their choice. */
-export function normalizeBrand(value: unknown) {
+function normalizeBrand(value: unknown) {
   if (value === BRAND_DEEPSEEK) return value
   return value === BRAND_DEEPSEEK_LEGACY ? BRAND_DEEPSEEK : BRAND_CLAUDE
 }
@@ -272,7 +273,7 @@ export function resolveMascot(current: Prefs) {
  * its set reads as its default, and the four fields with a shape of their own
  * have their own clamps.
  */
-export function normalizePrefs(value: unknown): Prefs {
+function normalizePrefs(value: unknown): Prefs {
   const section: Record<string, unknown> = value && typeof value === 'object' ? value as Record<string, unknown> : {}
   const out: Record<string, unknown> = {}
   for (const key of Object.keys(PREF_DEFAULTS) as (keyof Prefs)[]) {
@@ -295,13 +296,13 @@ export function normalizePrefs(value: unknown): Prefs {
  * the first time the form carries values, each field the form does not hold
  * yet is written through the form and the local copy dropped.
  */
-export const LOCAL_PREF_KEYS: Partial<Record<keyof Prefs, string>> = {
+const LOCAL_PREF_KEYS: Partial<Record<keyof Prefs, string>> = {
   username: 'dsh-claude-style.username',
   banLocale: 'dsh-claude-style.banLocale',
 }
-export let localPrefsMoved = false
+let localPrefsMoved = false
 
-export function moveLocalPrefs(formValue: Record<string, unknown>) {
+function moveLocalPrefs(formValue: Record<string, unknown>) {
   if (localPrefsMoved) return
   localPrefsMoved = true
   for (const [key, storageKey] of Object.entries(LOCAL_PREF_KEYS) as [keyof Prefs, string][]) {

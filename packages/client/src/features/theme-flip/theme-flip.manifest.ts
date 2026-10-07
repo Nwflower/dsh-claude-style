@@ -6,7 +6,7 @@ export default {
   contracts: ['shell.dark-theme'],
   ungated: '修主题切换瞬间的颜色跳变，不改变功能',
   stylesheets: [{ file: 'theme-flip.css', rank: 370 }],
-  cases: [],
+  cases: ['host-palette'],
   description: {
     zh: {
       title: '亮暗切换一步到位',
