@@ -150,6 +150,50 @@ export interface HostConversationInput {
   focus(): void
 }
 
+/** The `modelDirectories` service: one session's model directory, by session id. */
+export interface HostModelDirectoriesService {
+  directoryFor(sessionId: string): HostModelDirectory
+}
+
+/**
+ * One session's model directory: the instance carries the load and the pick,
+ * and its reactive state hangs off the store the host hands its own menu.
+ */
+export interface HostModelDirectory {
+  store?: HostSnapshotSource<HostModelCatalogSnapshot>
+  load?(): Promise<unknown> | undefined
+  /** Pick a provider and model; it rejects on a failed selection, which the host's toast reports. */
+  select(selection: { provider: string, model: string, reasoningEffort?: string }): Promise<unknown> | undefined
+}
+
+/** The model catalog's snapshot: the provider groups, what is picked, and how the load is doing. */
+export interface HostModelCatalogSnapshot {
+  groups: HostModelGroup[]
+  current: { provider: string, model: string, reasoningEffort?: string } | null
+  /** The store's load state: `idle` before the first load, `ready` once it answered. */
+  status?: string
+}
+
+/** One provider group: its id, its display name, and its models. */
+export interface HostModelGroup {
+  id: string
+  name?: string
+  models: HostModelEntry[]
+}
+
+/** One model: its id, its name, and the reasoning metadata the effort control reads. */
+export interface HostModelEntry {
+  id: string
+  name: string
+  reasoning?: HostModelReasoning
+}
+
+/** How a model reasons: its default effort, and the efforts it offers. */
+export interface HostModelReasoning {
+  defaultEffort?: string
+  efforts: { id: string, name: string }[]
+}
+
 /** The live status map (`uiSession.sessionStatus`): how each session is doing right now, by id. */
 export interface HostSessionStatusSnapshot extends Iterable<[string, HostSessionStatus]> {
   get(id: string): HostSessionStatus | undefined

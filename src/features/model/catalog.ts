@@ -1,6 +1,7 @@
 import { MODEL_EFFORT_DEFAULT } from '../../constants'
 import { currentSessionId } from '../../core/host'
-import type { HostContext, HostValue } from '../../core/host'
+import type { HostContext } from '../../core/host'
+import type { HostModelCatalogSnapshot, HostModelDirectory, HostModelEntry, HostModelGroup, HostModelReasoning } from '../../contracts/services'
 import { notifyAll } from '../../shared/notify'
 
 /** One provider the catalog lists, with how many models it carries. */
@@ -30,7 +31,7 @@ export function createModelCatalog(options: { ctx: HostContext, schedule?: () =>
   const ctx = options.ctx
   const schedule = options.schedule
   let modelSub: (() => void) | null = null
-  let modelDir: HostValue = null
+  let modelDir: HostModelDirectory | null = null
   let modelSessionId: string | null = null
   let modelWarmRequested = false
   /** Settings-page listeners waiting on the provider list. */
@@ -89,7 +90,7 @@ export function createModelCatalog(options: { ctx: HostContext, schedule?: () =>
     return modelDir
   }
 
-  function snapshot(): HostValue {
+  function snapshot(): HostModelCatalogSnapshot | null {
     if (modelDir === null || !modelDir.store) return null
     return modelDir.store.getSnapshot()
   }
@@ -147,7 +148,7 @@ export function createModelCatalog(options: { ctx: HostContext, schedule?: () =>
   }
 
   /** The current selection resolved to its group + model entries. */
-  function current(snap: HostValue): { group: HostValue, model: HostValue } | null {
+  function current(snap: HostModelCatalogSnapshot | null): { group: HostModelGroup, model: HostModelEntry } | null {
     if (!snap || snap.current === null) return null
     for (let g = 0; g < snap.groups.length; g++) {
       const group = snap.groups[g]
@@ -160,11 +161,12 @@ export function createModelCatalog(options: { ctx: HostContext, schedule?: () =>
   }
 
   /** Reasoning metadata + the effective effort for the current model. */
-  function effort(snap: HostValue): { reasoning: HostValue, effective: string | undefined, label: string } | null {
+  function effort(snap: HostModelCatalogSnapshot | null): { reasoning: HostModelReasoning, effective: string | undefined, label: string } | null {
     const active = current(snap)
-    if (active === null || !active.model.reasoning) return null
+    if (active === null || !active.model.reasoning || snap === null || snap.current === null) return null
     const reasoning = active.model.reasoning
-    const effective = snap.current.reasoningEffort !== undefined ? snap.current.reasoningEffort : reasoning.defaultEffort
+    const selection = snap.current
+    const effective = selection.reasoningEffort !== undefined ? selection.reasoningEffort : reasoning.defaultEffort
     let label = MODEL_EFFORT_DEFAULT
     if (effective !== undefined) {
       label = effective

@@ -5,7 +5,8 @@ import { modelDescription } from './copy-lookup'
 import { buildElement } from '../../shared/dom'
 import { POPOVER_CHECK_SVG, buildPopoverItem } from '../../shared/popover'
 import type { createHoverIntent } from '../../shared/popover'
-import type { HostContext, HostValue } from '../../core/host'
+import type { HostContext } from '../../core/host'
+import type { HostModelEntry, HostModelGroup } from '../../contracts/services'
 
 /**
  * Model picker rows: the row/cell builders and the two level-1 list
@@ -22,7 +23,7 @@ import type { HostContext, HostValue } from '../../core/host'
 export const MODEL_CHEVRON_SVG = '<svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg>'
 
 /** Catalog order is whatever the provider happened to send; id order is scannable. */
-export function byModelId(a: HostValue, b: HostValue) {
+export function byModelId(a: HostModelEntry, b: HostModelEntry) {
   const left = String(a.id)
   const right = String(b.id)
   return left < right ? -1 : left > right ? 1 : 0
@@ -56,7 +57,7 @@ export function createModelRows(options: {
   }
 
   /** One selectable model row: brand mark, name, optional description line and a check when current. */
-  function buildModelOption(group: HostValue, model: HostValue, selected: boolean, withDescription: boolean) {
+  function buildModelOption(group: HostModelGroup, model: HostModelEntry, selected: boolean, withDescription: boolean) {
     // The shared row skeleton; the copy block keeps its own class, and
     // the vendor typography rides on the label inside it.
     const built = buildPopoverItem({ className: 'dsh-claude-model-option', role: 'menuitemradio', textClass: 'dsh-claude-model-copy', check: true })
@@ -116,8 +117,8 @@ export function createModelRows(options: {
    * (non-empty) official service at all does the list fall back to the
    * picked providers, and with none picked to every provider.
    */
-  function levelOneSections(groups: HostValue[]) {
-    const sections: HostValue[] = []
+  function levelOneSections(groups: HostModelGroup[]) {
+    const sections: HostModelGroup[] = []
     const chosen = readPrefs().quickProviders
     for (let g0 = 0; g0 < groups.length; g0++) {
       if (groups[g0].id === MODEL_OFFICIAL_GROUP && groups[g0].models.length > 0) {
@@ -146,10 +147,10 @@ export function createModelRows(options: {
    * own does not: that row carries one model, not the provider, so hiding the
    * provider's remaining models behind it would strand them.
    */
-  function remainingGroups(groups: HostValue[], sections: HostValue[]) {
+  function remainingGroups(groups: HostModelGroup[], sections: HostModelGroup[]) {
     const shown: Record<string, boolean> = {}
     for (let i = 0; i < sections.length; i++) shown[sections[i].id] = true
-    const out: HostValue[] = []
+    const out: HostModelGroup[] = []
     for (let g = 0; g < groups.length; g++) {
       if (groups[g].models.length === 0 || shown[groups[g].id] === true) continue
       out.push(groups[g])
