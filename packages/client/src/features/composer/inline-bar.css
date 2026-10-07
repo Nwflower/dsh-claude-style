@@ -247,3 +247,28 @@ body[data-dsh-claude-style] .dsh-claude-context-stats-skeleton-value {
   0%, 100% { opacity: 0.55; }
   50% { opacity: 1; }
 }
+
+/* ---------- a phone-width composer ---------- */
+/* The trailing cluster's three controls share what the row has left, and the row
+   itself is narrower than the sums the desktop reserves for it. The model name
+   truncates at the phone's own width instead of the 280px it takes on a desktop;
+   the cluster may shrink with it rather than push the row past the card; the
+   context meter keeps the ring that carries the reading, the number beside it
+   being what does not fit; and the dock gives up the padding that reserved the
+   two clusters' room — on a phone it is wider than the card, and it took the
+   ring pinned to its right edge out of the card with it. */
+@media (max-width: 480px) {
+  body[data-dsh-claude-style] [class*="_trailing"] .dsh-claude-model-btn {
+    max-width: 112px;
+  }
+  body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] [class*="_row"] > [class*="_trailing"] {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+  body[data-dsh-claude-style] [data-dsh-claude-context-meter] button > span {
+    display: none;
+  }
+  body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] + [class*="_dock"] {
+    padding: 0;
+  }
+}

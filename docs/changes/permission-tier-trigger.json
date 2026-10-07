@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-07",
+  "group": "improvements",
+  "order": 7,
+  "external": false,
+  "zh": "输入框下沿的权限档位：按钮不再画下三角（任何宽度都是），档位名过长时在按钮内截断；已经打开的档位卡在布局移动时会重新贴回它的触发按钮，而不再留在原处。",
+  "en": "The permission tier control on the composer's bottom line drops its chevron at every width, not just on a phone, and a long tier name truncates inside the button. An open tier card is also placed again when the layout under it moves, instead of hanging where its trigger used to be."
+}

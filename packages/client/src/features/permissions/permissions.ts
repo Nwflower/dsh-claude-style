@@ -22,6 +22,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let permHoverIntent: ReturnType<typeof createHoverIntent> | null = null
   /** The pick path the rows call back into; the rows are rebuilt, the path is not. */
   let permPick: ((preset: string) => void) | null = null
+  /** Where the tier list hangs off its trigger: above it, left-aligned with it. */
+  const PERM_POPOVER_PLACEMENT = { side: 'above-left', gap: 6, important: true } as const
 
   /**
    * The host's permission catalog: every preset this deployment offers, in
@@ -306,6 +308,13 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   registerPopover('permission', closePermMenu)
 
+  /** Put an open tier card back over its trigger; every other place leaves it where it was. */
+  function placeOpenPermCard() {
+    if (permBtn === null || permPopover === null) return
+    if (permBtn.getAttribute('data-open') !== 'true') return
+    positionAnchoredPopover(permBtn, permPopover, PERM_POPOVER_PLACEMENT)
+  }
+
   function buildPermTriggerAndPopover(onPick: (preset: string) => void) {
     permPick = onPick
     const container = buildElement('div', 'dsh-claude-perm-container')
@@ -318,11 +327,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
     const label = buildElement('span', 'dsh-claude-perm-label', 'Accept edits')
 
-    const chevron = buildElement('span', 'dsh-claude-perm-chevron')
-    chevron.setAttribute('aria-hidden', 'true')
-
     btn.appendChild(label)
-    btn.appendChild(chevron)
 
     const popover = buildElement('div', 'dsh-claude-popover-card dsh-claude-perm-popover')
     setMenuPopoverOpen(popover, false)
@@ -330,7 +335,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     function openPerm() {
       if (permHoverIntent) permHoverIntent.cancel()
       closeOtherPopovers('permission')
-      positionAnchoredPopover(btn, popover, { side: 'above-left', gap: 6, important: true })
+      positionAnchoredPopover(btn, popover, PERM_POPOVER_PLACEMENT)
       btn.setAttribute('data-open', 'true')
       btn.setAttribute('aria-expanded', 'true')
       setMenuPopoverOpen(popover, true)
@@ -596,6 +601,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       if (autoPresetError !== null) throw autoPresetError
       if (submitError !== null) throw submitError
       syncSegments()
+      // The tier card is fixed under its trigger and nothing else places it
+      // again: a column that moved under an open card (the sidebar opening, the
+      // window narrowing) would otherwise leave it hanging where the trigger
+      // used to be.
+      placeOpenPermCard()
     },
     /**
      * Esc and composer focus close the menu. There is deliberately no
@@ -604,7 +614,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
      */
     close() {
       closePermMenu()
-    }
+    },
+    /** A viewport or composer-card change moves the anchor: place the open card in the same frame. */
+    reposition() {
+      placeOpenPermCard()
+    },
   }
 
   // The composer restyle hides the host's access button only while this
