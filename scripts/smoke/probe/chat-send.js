@@ -47,62 +47,79 @@
         visibility: getComputedStyle(sendEcho).visibility,
       }
       sendEcho.remove()
-      // The seal (send-morph.ts's compact). The two fills and the halo are
-      // animations of their own, and a main thread held by the submission's own
-      // render can leave one of them behind the shell's snap: the card's fill,
-      // still the size of the draft area, then paints over a shell that is
-      // already the bubble. Holding the fill layers where they are is that
-      // state, and the seal has to write their end state in the same task as
-      // the snap.
+      // The plate (send-morph.ts's shell). The shape carries the destination
+      // bubble's own fill from the first frame: a fill of its own that has to be
+      // grown out to meet the shape shows the page through the shape until it
+      // gets there, which reads as the bubble turning pale and then blue.
       if (sendInput !== null) sendInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
       await sleep(50)
-      var sealEcho = document.createElement('div')
-      sealEcho.setAttribute('data-submission-echo', '')
-      sealEcho.innerHTML = '<div id="sealBubble" style="width:220px;height:44px;background:rgb(240,240,240);border-radius:18px;padding:8px 12px;font-size:15px;line-height:24px">sealed</div>'
-      sendFlow.appendChild(sealEcho)
+      var plateEcho = document.createElement('div')
+      plateEcho.setAttribute('data-submission-echo', '')
+      plateEcho.innerHTML = '<div id="plateBubble" style="width:220px;height:44px;background:rgb(240,240,240);border-radius:18px;padding:8px 12px;font-size:15px;line-height:24px">plate</div>'
+      sendFlow.appendChild(plateEcho)
       await sleep(16)
-      var frozen = 0
-      var sealGhost = document.querySelector('[data-dsh-claude-send-ghost]')
-      if (sealGhost !== null) {
-        Array.prototype.forEach.call(sealGhost.querySelectorAll('div'), function (node) {
-          if (getComputedStyle(node).backgroundColor === 'rgba(0, 0, 0, 0)') return
-          node.getAnimations().forEach(function (animation) {
-            animation.pause()
-            frozen += 1
-          })
-        })
-      }
-      var sealBox = document.getElementById('sealBubble').getBoundingClientRect()
-      var sealFill = getComputedStyle(document.getElementById('sealBubble')).backgroundColor
-      var sealed = false
-      var lateLight = 0
-      var sealStarted = Date.now()
-      while (Date.now() - sealStarted < 600) {
+      var plateBox = document.getElementById('plateBubble').getBoundingClientRect()
+      var plateFill = getComputedStyle(document.getElementById('plateBubble')).backgroundColor
+      var plateFrames = 0
+      var plateWrong = 0
+      var plateLight = 0
+      var plateStarted = Date.now()
+      while (Date.now() - plateStarted < 400) {
         await sleep(16)
-        var sealNow = document.querySelector('[data-dsh-claude-send-ghost]')
-        if (sealNow === null) continue
-        var sealLayers = sealNow.querySelectorAll('div')
-        Array.prototype.forEach.call(sealLayers, function (node) {
-          if (node.style.opacity === '0') sealed = true
+        var plateGhost = document.querySelector('[data-dsh-claude-send-ghost]')
+        if (plateGhost === null) continue
+        var plateNodes = plateGhost.querySelectorAll('div')
+        var plateShell = null
+        Array.prototype.forEach.call(plateNodes, function (node) {
+          if (plateShell === null && getComputedStyle(node).overflow === 'hidden') plateShell = node
         })
-        // Past the shape's stretch nothing but the bubble's own fill may paint
-        // over the destination: a light layer there is the card's surface.
-        if (Date.now() - sealStarted < 300) continue
-        Array.prototype.forEach.call(sealLayers, function (node) {
+        if (plateShell === null) continue
+        plateFrames += 1
+        if (getComputedStyle(plateShell).backgroundColor !== plateFill) plateWrong += 1
+        // Anything light painting inside the destination is the card's surface
+        // left over the bubble.
+        Array.prototype.forEach.call(plateNodes, function (node) {
           var style = getComputedStyle(node)
-          if (style.backgroundColor === sealFill || Number(style.opacity) <= 0.05) return
+          if (style.backgroundColor === plateFill || Number(style.opacity) <= 0.05) return
           var match = /rgb\((\d+), (\d+), (\d+)\)/.exec(style.backgroundColor)
           if (match === null) return
           if (!(Number(match[1]) > 235 && Number(match[2]) > 235 && Number(match[3]) > 235)) return
           var box = node.getBoundingClientRect()
           if (box.width < 4 || box.height < 4) return
-          if (box.left >= sealBox.right || box.right <= sealBox.left || box.top >= sealBox.bottom || box.bottom <= sealBox.top) return
-          lateLight += 1
+          if (box.left >= plateBox.right || box.right <= plateBox.left || box.top >= plateBox.bottom || box.bottom <= plateBox.top) return
+          plateLight += 1
         })
       }
-      r.send.seal = { frozen: frozen, sealed: sealed, lateLight: lateLight }
-      sealEcho.remove()
+      r.send.plate = { frames: plateFrames, wrong: plateWrong, light: plateLight }
+      plateEcho.remove()
       await sleep(700)
+      // The hand-over (send-flight.ts's land). The host can take the echo away
+      // before the real row mounts; fading then carries the reader's message
+      // into the page and puts it back when the row arrives, so the stand-in
+      // holds until there is a row to land on.
+      if (sendInput !== null) sendInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
+      await sleep(50)
+      var holdEcho = document.createElement('div')
+      holdEcho.setAttribute('data-submission-echo', '')
+      holdEcho.innerHTML = '<div style="width:220px;height:44px;background:rgb(240,240,240);border-radius:18px;padding:8px 12px">held</div>'
+      sendFlow.appendChild(holdEcho)
+      await sleep(16)
+      holdEcho.remove()
+      await sleep(520)
+      var holdGhost = document.querySelector('[data-dsh-claude-send-ghost]')
+      r.send.hold = { ghost: holdGhost !== null, opacity: holdGhost === null ? 0 : Number(getComputedStyle(holdGhost).opacity) }
+      var holdRow = document.createElement('div')
+      holdRow.setAttribute('data-chat-flow-kind', 'user')
+      holdRow.innerHTML = '<div><div style="width:220px;height:44px;background:rgb(240,240,240);border-radius:18px;padding:8px 12px">held</div></div>'
+      sendFlow.appendChild(holdRow)
+      await sleep(300)
+      r.send.handed = {
+        ghost: document.querySelector('[data-dsh-claude-send-ghost]') !== null,
+        hidden: holdRow.hasAttribute('data-dsh-claude-send-flight'),
+        visibility: getComputedStyle(holdRow).visibility,
+      }
+      holdRow.remove()
+      await sleep(200)
       // The animation choice: with "reduced" in force the origin is not even
       // measured, so no stand-in goes up and the echo stays visible (D26 — the
       // resolved choice, read at each submission).

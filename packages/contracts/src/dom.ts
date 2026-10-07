@@ -158,10 +158,44 @@ export const FOOTER_ACTIONS_SELECTOR = '[class*="footerActions"]'
 /** A slot anchor; its children are the host's real entries. */
 export const SLOT_ANCHOR_SELECTOR = '[data-slot]'
 
+/* ---------- the conversation header's own row ---------- */
+
+/**
+ * The header's title row: the line the title cluster, the utilities and the
+ * corner seat share. The band placement measures against it, because the
+ * title's own box moves with the placement. Rows of the same shape sit in the
+ * sidebar's panels, so a reader takes the one carrying a title or the
+ * utilities rather than the first match.
+ */
+export const HEADER_TITLE_ROW_SELECTOR = '[class*="titleRow"]'
+/**
+ * The session title's breadcrumb nav: the words themselves, not the flex
+ * cluster that lays them out (the cluster stretches, so it says nothing about
+ * where the title ends).
+ */
+export const HEADER_TITLE_SELECTOR = '[class*="_crumbs"]'
+/** The header's utilities cluster: the workspace opener, the overflow menu, the bottom-panel toggle. */
+export const HEADER_UTILITIES_SELECTOR = '[class*="headerUtilities"]'
+/** The corner seat beside the utilities, carrying the right-sidebar toggle. */
+export const HEADER_CORNER_SELECTOR = '[class*="headerCorner"]'
+/**
+ * The conversation header itself, resolved with `closest` from the title row:
+ * the same substring names a dozen other bars (the sidebar's action row, the
+ * background-task chip), so it is never queried document-wide.
+ */
+export const CONVERSATION_HEADER_SELECTOR = '[class*="_header"]'
+/** The view-tab strip inside the header, whose box the band placement keeps clear of. */
+export const VIEW_TABS_STRIP_SELECTOR = '[class*="_tabs"]'
+
 /* ---------- the document, the shell and the browser API ---------- */
 
 /** The shell's window marks: the Windows caption row, the platform, and fullscreen. */
 export const WINDOWS_TITLEBAR_ATTRIBUTE = 'data-windows-titlebar'
+/**
+ * The desktop shell's own seat in the Windows caption row, where its native
+ * menu is drawn: the row's content starts to the right of it.
+ */
+export const WINDOWS_MENU_SELECTOR = '[data-windows-menu]'
 export const PLATFORM_ATTRIBUTE = 'data-platform'
 export const FULLSCREEN_ATTRIBUTE = 'data-fullscreen'
 /** The host's declared caption-strip height, as a custom property on the document element. */

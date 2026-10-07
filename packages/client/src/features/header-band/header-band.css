@@ -1,0 +1,57 @@
+/* The conversation header's title row in the Windows desktop caption row (D52).
+
+   The pass stamps each piece it lifted and writes one number per side; a side
+   it left in the row carries no stamp, these rules miss it, and the header the
+   host draws is the fallback — nothing has to be restored. The caption row is
+   the shell's own drag region, so every piece placed in it declares itself
+   no-drag: a control that cannot be pressed is not a control. */
+
+body[data-dsh-claude-style][data-dsh-header-band~="title"] [data-dsh-header-title] {
+  position: fixed !important;
+  top: calc(var(--dsh-windows-titlebar-height, 40px) / 2) !important;
+  left: var(--dsh-header-band-left) !important;
+  /* The room the pass measured: past it the title would run into the tab strip
+     or the controls. The title's own crumb ellipsizes inside whatever width
+     this leaves (the host's own rule, unchanged). */
+  max-width: var(--dsh-header-band-max, none) !important;
+  margin: 0 !important;
+  transform: translateY(-50%) !important;
+  z-index: 30 !important;
+  -webkit-app-region: no-drag !important;
+}
+
+/* The row the title left: what it still holds — the preset picker, the
+   background-task chips, whatever the host mounts — rides up to sit just under
+   the title instead of on the line the title used to take. It is offset, not
+   re-laid: a margin would resize the row inside the header's own grid, and an
+   offset leaves the header's height — and with it the conversation below —
+   where the host put it. The pass writes the rise it measured, so the host's
+   inset is not assumed, and the row declares itself no-drag: its top now lies
+   inside the shell's drag strip. */
+body[data-dsh-claude-style][data-dsh-header-band~="title"] [data-dsh-header-row] {
+  position: relative !important;
+  top: var(--dsh-header-band-row-lift, 0px) !important;
+  -webkit-app-region: no-drag !important;
+}
+/* The host hides a chip's label through a container query on the row's own
+   width, which protects the title when the two share it. In the caption row the
+   title takes no width, so the row has room and the control would only be
+   missing; the label stays. */
+body[data-dsh-claude-style][data-dsh-header-band~="title"] [data-dsh-header-row] [class*="_label"] {
+  display: flex !important;
+}
+
+body[data-dsh-claude-style][data-dsh-header-band~="actions"] [data-dsh-header-actions],
+body[data-dsh-claude-style][data-dsh-header-band~="actions"] [data-dsh-header-corner] {
+  position: fixed !important;
+  top: calc(var(--dsh-windows-titlebar-height, 40px) / 2) !important;
+  /* Both clusters keep their order and their air through this offset alone:
+     the corner sits off the caption buttons, the utilities off the corner. */
+  right: var(--dsh-header-band-right) !important;
+  /* The utilities carry the host's own left margin for the row's flow; a
+     fixed box has no row to keep clear of. */
+  margin: 0 !important;
+  transform: translateY(-50%) !important;
+  z-index: 30 !important;
+  -webkit-app-region: no-drag !important;
+}

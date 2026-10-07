@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-07",
+  "group": "fixes",
+  "order": 1,
+  "external": false,
+  "zh": "**发送时飞行的气泡从第一帧就是气泡的颜色**（#29）：替身此前带两层底色——输入卡片的底色压在上面、气泡的底色在下面——随形状一起互相过渡；形状早已收成气泡，上层还没退完，读者看到的气泡先发白，在 DeepSeek 档下正是 Claude 档那条灰气泡的样子，过半秒才变蓝。现在底色画在那层始终等于形状的壳上，按下那一刻起就是目标气泡自己的颜色，没有哪一层能落在形状后面。卡片的描边与阴影照旧随形状收掉，并在形状归位的那一刻写定、撤掉各自的动画，不会在收窄完成后多留一帧。",
+  "en": "**The flying bubble is the bubble's colour from the first frame** (#29): the stand-in carried two fills — the composer card's over the bubble's — cross-fading as the shape narrowed, and the shape was already a bubble while the upper fill was still there, so the reader saw a pale bubble (in the DeepSeek palette, the colour the grey bubble has under Claude) that only turned blue half a second later. The fill is now painted on the one layer that is the shape at every step, so it is the destination bubble's own colour from the moment of the press and no fill can fall behind the shape. The card's hairline and shadow still leave with the shape, written and cancelled on the frame the shape settles rather than lingering a frame past it."
+}

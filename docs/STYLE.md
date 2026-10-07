@@ -154,6 +154,31 @@ buttons sit on the page itself: no block of their own behind them, and they dim
 with a modal's mask like everything else. Their hover plate is the system's, a
 tint of the button glyph's colour.
 
+## Right sidebar · 右侧栏
+
+A panel docked in the right column is a card: 8px inside the column on every
+side, a 16px radius, the skin's 1px `--dsw-alias-border-l1` hairline and the
+host's own panel elevation (`--dsw-elevation-prominent` — a `.5px` stroke, a
+3px/8px drop and a 20px halo). The frame's canvas shows through the gap, and
+the host's `.5px` left border on the first dock column gives way to the
+hairline.
+
+The card hangs on what paints the column: a docked tab's pane
+(`[data-dockkit-host="dock"] > [data-dockkit-pane]`) or the column's own empty
+host (`[data-dockkit-empty]`), which the pane inside it leaves transparent. A
+panel pulled out of the sidebar becomes the host's own floating window
+(`[data-dockkit-host="float"]`) and keeps that window's frame; a split column
+gives each pane its own card, with the drag divider left on the seam between
+them.
+
+**The start page.** The host centers its stack of entries in a box that never
+grows, so a list taller than the pane was clipped at both ends, its first rows
+out of reach. On the card the stack scrolls: `justify-content: flex-start`,
+`margin-top: auto` on the first entry and `margin-bottom: auto` on the last.
+The two auto margins absorb the free space exactly as `center` did while the
+list fits, and fall to zero once it does not, so the stack starts at the top
+and scrolls to its end.
+
 ## Typography
 
 - **Serif display** — headings / editorial statements (`--dsh-claude-font-serif`).
@@ -537,14 +562,16 @@ Two sources, in this order: the host half's usage route, then the session list's
 own projection block (`tokenUsage`, `modelSelection`, `sessionListMetadata`).
 The second answers in a few milliseconds and carries per-model totals without the
 four buckets, which is what the list falls back to when the first cannot answer.
-The first reads the cost-meter ledger when one covers the newest activity — its
+The first reads the cost-meter ledger for the days it knows — its
 `<provider>:<model>` split becomes the per-model cells, one model across providers
-merged into one — and otherwise the accurate per-event fold; both carry each day's
-session ids, which a range window unions into one distinct session count. Only
-the fold knows the settlement hours: it keeps one hour histogram per day, which a
-range window sums into its own peak hour, and behind a cost-meter answer it still
-runs for the histograms alone — the ledger's figures land first, and the peak
-hour of the sessions whose logs remain lands a moment later. The panel names
+merged into one — takes the dates past the ledger's newest day from the accurate
+per-event fold, and keeps the two apart by date rather than adding them; the
+sessions behind the ledger's days and the logs written on the folded ones are one
+union. Both carry each day's session ids, which a range window unions into one
+distinct session count. Only the fold knows the settlement hours: it keeps one
+hour histogram per day, which a range window sums into its own peak hour, and the
+ledger's own days carry none — the ledger's figures land first, and the peak hour
+of the folded days lands a moment later. The panel names
 which one it drew from, and a figure neither can answer is a dash.
 
 The skeleton keeps the frame's geometry — six fixed-size stat cells, a heat grid

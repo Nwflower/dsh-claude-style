@@ -61,7 +61,10 @@ interface FoldedSession {
   hours: number[]
 }
 
-/** A local calendar day, the same key the cost-meter ledger uses. */
+/**
+ * A local calendar day, the same key the cost-meter ledger uses. Also how the
+ * service places a session log's last write on the calendar.
+ */
 export function dayKey(time: number): string | null {
   const date = new Date(time)
   if (!Number.isFinite(date.getTime())) return null

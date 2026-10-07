@@ -46,7 +46,12 @@ export interface UsageModel {
 
 /** What the usage route answers: the window's days, the models, and where the figures came from. */
 export interface UsageReport {
-  /** Which source answered: the fold over the session logs, or the cost ledger. */
+  /**
+   * Which source answered: the fold over the session logs (`local`), the cost
+   * ledger (`cost-meter`), or both when the fold covered dates the ledger does
+   * not reach (`cost-meter+local`). The two accounts are merged by date, never
+   * summed (D53).
+   */
   source: string
   computedAt: number
   days: UsageDay[]

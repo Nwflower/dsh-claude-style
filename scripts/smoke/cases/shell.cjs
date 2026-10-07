@@ -45,6 +45,56 @@ module.exports = {
     check('teardown takes the pill, its placement and the strip stamp off the view tabs', pill.left === false, JSON.stringify(pill.left))
     commonChecks(r)
   },
+  // The header band: the conversation's title and the header's control clusters
+  // in the desktop caption row, and the row they leave behind.
+  'header-band'(r) {
+    basicChecks(r)
+    const b = r.band || {}
+    const laid = b.laid || {}
+    const marks = laid.marks || {}
+    const right = b.viewportRight - (b.controls + b.air)
+    const top = Math.round((b.band - 28) / 2)
+    // Where the row sits with the lift taken back out: the header's own inset.
+    const naturalRow = laid.row.y - parseFloat(laid.rowLift || '0')
+    check('the caption row takes both sides: the title at the row\'s left, the two control clusters against the caption buttons',
+      marks.band === 'title actions' && marks.title === true && marks.utilities === true && marks.corner === true &&
+        laid.title.x === laid.row.x && laid.title.y === top &&
+        laid.utilities.y === top && laid.corner.right === right && laid.corner.y === top &&
+        laid.utilities.right === laid.corner.x - b.air,
+      JSON.stringify(laid))
+    check('the pieces placed there are fixed, stacked over the page and clickable inside the shell\'s drag region',
+      laid.titlePosition === 'fixed' && laid.titleZ === '30' &&
+        laid.titleRegion === 'no-drag' && laid.utilitiesRegion === 'no-drag' && laid.cornerRegion === 'no-drag',
+      JSON.stringify({ position: laid.titlePosition, z: laid.titleZ, regions: [laid.titleRegion, laid.utilitiesRegion, laid.cornerRegion] }))
+    check('the title is handed the room it was measured, and the row it left tucks under it with the preset closed up to its left',
+      laid.titleLeft === laid.row.x + 'px' && laid.titleMax === laid.strip.x - b.air - laid.title.x + 'px' &&
+        laid.row.y === laid.title.y + 28 - b.tuck && laid.rowPosition === 'relative' && laid.rowOffset === laid.rowLift &&
+        laid.row.y === laid.rowLift.replace('px', '') * 1 + laid.header.y + parseFloat(laid.headerPaddingTop) &&
+        laid.preset.x === laid.row.x,
+      JSON.stringify({ left: laid.titleLeft, max: laid.titleMax, lift: laid.rowLift, offset: laid.rowOffset, row: laid.row, header: laid.header, preset: laid.preset }))
+    const solo = b.solo || {}
+    check('with the corner seat empty — the right sidebar is open — the cluster that is there still lifts, into the corner\'s own place',
+      solo.marks.band === 'title actions' && solo.marks.corner === false && solo.utilities.right === right,
+      JSON.stringify(solo))
+    const tight = b.tight || {}
+    check('when the shell\'s own seat takes the row\'s left end, both sides stay in the header\'s row: no marker, no stamp, the row back at its own inset',
+      tight.marks.band === null && tight.marks.row === false && tight.marks.title === false &&
+        tight.marks.utilities === false && tight.marks.corner === false &&
+        tight.row.y === naturalRow && tight.title.y > b.band && tight.utilities.y > b.band,
+      JSON.stringify({ tight: tight, natural: naturalRow }))
+    const off = b.off || {}
+    const back = b.back || {}
+    check('switching the feature off hands the row back whole — the strip the other feature placed stays — and switching it on places both sides again',
+      off.marks.band === null && off.marks.title === false && off.marks.utilities === false && off.marks.corner === false &&
+        off.stripStamped === true &&
+        back.marks.band === 'title actions' && back.marks.title === true && back.marks.utilities === true,
+      JSON.stringify({ off: off, back: back }))
+    const left = b.left || {}
+    check('taking the desktop shell\'s marker away leaves no band marker and no stamps behind',
+      left.band === null && left.row === false && left.title === false && left.utilities === false && left.corner === false,
+      JSON.stringify(left))
+    commonChecks(r)
+  },
   // The composer's host controls, marked by structure, the marks their teardown
   // leaves behind, and the host's own Enter on an open menu.
   composer(r) {
@@ -297,7 +347,7 @@ module.exports = {
       appearance: ['brand', 'palette', 'typeface', 'mascot', 'mascotScope'],
       composer: ['composerScope', 'homeLayout', 'modelPicker', 'quickProviders', 'permissionsControl'],
       sidebar: ['collapseFooter', 'sidebarSearch', 'workspaceView'],
-      conversation: ['turnStatus', 'turnNav', 'chatAnimations', 'caretMotion', 'viewTabs'],
+      conversation: ['turnStatus', 'turnNav', 'chatAnimations', 'caretMotion', 'viewTabs', 'headerBand'],
     }
     const pages = settings.pages || {}
     for (const tab of Object.keys(expected)) {

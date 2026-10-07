@@ -290,6 +290,11 @@
       "zh": "重绘对话区界面的标签条。",
       "en": "Redraw the Chat / Trajectory tab strip at the top of the conversation, lifted onto the title's line when it fits. Off restores the host's tab strip."
     },
+    "headerBandTitle": { "zh": "标题进入顶栏", "en": "Header in the title bar" },
+    "headerBandDesc": {
+      "zh": "桌面端把会话标题与顶栏那一行的控件抬进窗口的标题栏，放不下的一侧留在原来的行里。",
+      "en": "On the desktop the session title and the header's controls rise into the window's caption row, and a side without room stays in the header's own row."
+    },
     "unavailable": {
       "zh": "ERROR : 设置存储服务异常，改动不会被保存。",
       "en": "The settings store is unavailable, so changes will not be saved."

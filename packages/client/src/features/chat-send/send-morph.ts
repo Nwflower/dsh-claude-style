@@ -124,6 +124,13 @@ export function startMorph(snapshot: ComposerSnapshot, bubble: HTMLElement, end:
   shell.style.cssText = 'position:absolute;left:0;top:0;overflow:hidden;transform-origin:0 0;will-change:transform'
   shell.style.width = boxWidth + 'px'
   shell.style.height = boxHeight + 'px'
+  // The shape carries the destination bubble's fill from the first frame, and it
+  // carries it on the shell itself — the one element that is the visible shape at
+  // every step. A layer inside the scaler has to be grown out to meet the shape
+  // (the fills' run this replaced), and until it arrives the shape shows the page
+  // through it, which reads as the bubble turning pale and then blue. Nothing is
+  // animated here: the plate is one declaration, so no clock can leave it behind.
+  shell.style.backgroundColor = style.backgroundColor
   for (const [name, value] of snapshot.context) shell.style.setProperty(name, value)
   // The shell does two things only: it scales (the shape) and it clips
   // (`overflow: hidden`). The `scaler` inside takes the reciprocal of every
@@ -141,36 +148,6 @@ export function startMorph(snapshot: ComposerSnapshot, bubble: HTMLElement, end:
   // machine shows a square box first. The radius compensation is below.
   shell.style.borderRadius = chatSendCornerRadius(R0, W0 / boxWidth, H0 / boxHeight)
   shell.appendChild(scaler)
-  // The fill is two solid layers cross-fading, not an animated
-  // `background-color`: written into the same keyframes as the geometry it
-  // drops the whole animation back to the main thread (measured: the shape and
-  // the colour both froze while only opacity kept going), while opacity is the
-  // compositor's oldest road and is steady on older Chromium too. Two opaque
-  // layers stacked by alpha are exactly the linear mix of the two colours.
-  //
-  // They start on the surface's box rather than the frame's — where the card
-  // paints its fill on the draft area, the toolbar row under it stands on the
-  // canvas (send-snapshot.ts's chatSendSurface) — and grow into the whole
-  // shape along the shape's own progress (the fills' run below), so the
-  // bubble the stand-in lands as is filled edge to edge.
-  const fillStyle = 'position:absolute;margin:0;padding:0;border:0;transform-origin:0 0;will-change:transform,opacity'
-  const bubbleFill = document.createElement('div')
-  bubbleFill.style.cssText = fillStyle
-  bubbleFill.style.left = surface.left + 'px'
-  bubbleFill.style.top = surface.top + 'px'
-  bubbleFill.style.width = surface.width + 'px'
-  bubbleFill.style.height = surface.height + 'px'
-  bubbleFill.style.borderRadius = surface.radius + 'px'
-  bubbleFill.style.backgroundColor = style.backgroundColor
-  const cardFill = document.createElement('div')
-  cardFill.style.cssText = fillStyle
-  cardFill.style.left = surface.left + 'px'
-  cardFill.style.top = surface.top + 'px'
-  cardFill.style.width = surface.width + 'px'
-  cardFill.style.height = surface.height + 'px'
-  cardFill.style.borderRadius = surface.radius + 'px'
-  cardFill.style.backgroundColor = snapshot.background
-  scaler.append(bubbleFill, cardFill)
   // The clone has left the card's parent chain, so descendant selectors match
   // nothing on it, and the chain is put back around it — each link
   // `display: contents`, so it makes no box, takes no part in layout and is no
@@ -324,22 +301,8 @@ export function startMorph(snapshot: ComposerSnapshot, bubble: HTMLElement, end:
   }
 
   let normalized = false
-  /** The fills' and the halo's runs: the seal in `compact` cancels exactly these. */
+  /** The halo's run: the seal in `compact` cancels exactly this. */
   const sealed: Animation[] = []
-  /**
-   * Put one of the two fill layers exactly on the shell's box, at the given
-   * opacity. The size is written rather than `100%`: the fills hang in the
-   * scaler, whose layout box is the larger of the two cards, not the shell.
-   */
-  const sealFill = (element: HTMLElement, width: number, height: number, radius: number, opacity: string) => {
-    element.style.left = '0px'
-    element.style.top = '0px'
-    element.style.width = width + 'px'
-    element.style.height = height + 'px'
-    element.style.borderRadius = radius + 'px'
-    element.style.transform = 'none'
-    element.style.opacity = opacity
-  }
   /**
    * Once the shape's stretch is over, normalise the shell: the layout size
    * becomes the visible size of that moment and both scales return to 1.
@@ -361,14 +324,10 @@ export function startMorph(snapshot: ComposerSnapshot, bubble: HTMLElement, end:
    * taller, and comparing against the very last sample would jump on the
    * normalising frame.
    *
-   * The two fills and the halo are sealed with it. They are animations of their
-   * own, and this snap is written on the main thread while they may still be
-   * behind: the submission's own render holds the main thread, the compositor
-   * keeps its own animations running, and a fill that has not moved yet paints
-   * the card's surface — a band the size of the draft area — over a shell that
-   * is already the bubble. Writing their end state here, in the same task as
-   * the snap, is what makes the stand-in's look a fact of the layout rather than
-   * of any animation's clock.
+   * The halo is sealed with it: it is an animation of its own, and this snap is
+   * written on the main thread while the halo may still be behind. Writing its
+   * end state here, in the same task as the snap, is what makes the stand-in's
+   * look a fact of the layout rather than of any animation's clock.
    * @param u - the progress right now; nothing happens before the shape's stretch is over.
    */
   const compact = (u: number) => {
@@ -384,29 +343,9 @@ export function startMorph(snapshot: ComposerSnapshot, bubble: HTMLElement, end:
     shell.style.transform = 'none'
     shell.style.borderRadius = final.radius + 'px'
     scaler.style.transform = 'none'
-    sealFill(bubbleFill, final.visible, final.height, final.radius, '1')
-    sealFill(cardFill, final.visible, final.height, final.radius, '0')
     halo.style.opacity = '0'
     for (const animation of sealed) animation.cancel()
   }
-  // The fills: from the surface's box to the shape's visible box, both edges
-  // moving on the shape's own `m`, so the box they reach at the end of the
-  // shape is exactly the one the shell clips to. The card's fades over the
-  // bubble's on the same samples.
-  const fillTransform = (sample: ShapeSample) => {
-    const left = surface.left * (1 - sample.m)
-    const top = surface.top * (1 - sample.m)
-    const width = surface.width + (sample.visible - surface.width) * sample.m
-    const height = surface.height + (sample.height - surface.height) * sample.m
-    return 'translate(' + (left - surface.left) + 'px, ' + (top - surface.top) + 'px) scale('
-      + width / Math.max(surface.width, CHAT_MIN_REVERSE_DIVISOR) + ', '
-      + height / Math.max(surface.height, CHAT_MIN_REVERSE_DIVISOR) + ')'
-  }
-  sealed.push(run(bubbleFill, between(0, CHAT_MORPH_END, sample => ({ transform: fillTransform(sample) }))))
-  sealed.push(run(cardFill, between(0, CHAT_MORPH_END, sample => ({
-    transform: fillTransform(sample),
-    opacity: String(1 - sample.m),
-  }))))
   // The halo hangs outside the shell so the shell's `overflow: hidden` cannot
   // clip it — its shadow would otherwise paint past the visible right edge
   // (measured: 24px past the column on every frame). Its scale accounts for the

@@ -11,11 +11,11 @@ export default {
   description: {
     zh: {
       title: '聊天气泡动效',
-      text: '提交消息时输入卡片原样浮起、一路收成那条气泡，草稿里的字跟着形状重新排，落地正好接上真实的消息行：真实气泡在下面先显示出来，飞行的那份淡出，文字逐渐变清晰。',
+      text: '提交消息时输入卡片浮起、一路收成那条气泡：飞行的这一份从第一帧就是气泡的颜色，草稿里的字跟着形状重新排，最后接上真实的消息行——真实气泡在下面先显示出来，飞行的那份淡出，文字逐渐变清晰。',
     },
     en: {
       title: 'Send flight',
-      text: 'On submission the composer card lifts as it is and narrows into the bubble as it travels, its words re-flowing into the shape, landing on the message row: the real bubble shows underneath and the flying copy fades out, so the words sharpen into place.',
+      text: 'On submission the composer card lifts and narrows into the bubble as it travels, the flying copy carrying the bubble\'s colour from its first frame and its words re-flowing into the shape; it meets the message row, where the real bubble shows underneath and the flying copy fades out, so the words sharpen into place.',
     },
   },
 } satisfies FeatureManifest

@@ -1,9 +1,11 @@
+import { CLIENT_VERSION } from 'virtual:dsh-claude-style/generated'
 import { setAccountIdentity } from '../../core/host'
+import { activeLocale } from '../../core/i18n'
 import type { HostContext, HostFiber } from '../../core/host'
-import type { HostAccountAnswer, HostAccountFrame, HostAccountService, HostStream, HostStreamStep } from '@dsh-claude-style/contracts/services'
+import type { HostAccountAnswer, HostAccountClient, HostAccountFrame, HostAccountService, HostStream, HostStreamStep } from '@dsh-claude-style/contracts/services'
 
 /**
- * The signed-in account, when the desktop has one: `remote.account.getProfile()`
+ * The signed-in account, when the desktop has one: `remote.account.getProfile(client)`
  * resolves to a profile whose `status` is 'ready' and whose value carries the
  * nickname and the avatar URL. Read leniently by NAME (the same way the archive
  * registry is read), so a host without the account plugin simply keeps the
@@ -27,6 +29,23 @@ export function createAccountProfile(ctx: HostContext, onChange: () => void) {
 
   function accountService(): HostAccountService | null {
     return ctx.get('remote.account') ?? null
+  }
+
+  /**
+   * The identity every account call carries. The Remote requires it as the
+   * method's own argument: the Host refuses a call whose argument fields do
+   * not match its descriptor, so a call without it never reaches the
+   * Platform. Each field is read at call time, so a language or a zone change
+   * reaches the next read. The version is this bundle's own build version —
+   * the DSH build the page runs is readable from no host service the browser
+   * half can see.
+   */
+  function accountClient(): HostAccountClient {
+    return {
+      version: CLIENT_VERSION,
+      locale: activeLocale(ctx),
+      timezoneOffsetSeconds: -new Date().getTimezoneOffset() * 60,
+    }
   }
 
   function showAccount(name: string | null, avatar: string | null) {
@@ -63,7 +82,7 @@ export function createAccountProfile(ctx: HostContext, onChange: () => void) {
     if (account === null || typeof account.getProfile !== 'function') return
     dropAccountRead()
     const read = accountRead
-    account.getProfile().then((result: HostAccountAnswer) => {
+    account.getProfile(accountClient()).then((result: HostAccountAnswer) => {
       if (read !== accountRead) return
       if (!result || result.ok !== true) { retryAccount(); return }
       if (!result.value) {

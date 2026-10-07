@@ -447,9 +447,24 @@ interface HostConfigSnapshot {
 /** A host locale namespace's translate seat (`locale.bind(namespace)`). */
 export type HostText = (key: string, params?: Record<string, string | number>) => string
 
+/**
+ * The identity one account call carries, which the Host forwards to the
+ * Platform as its client headers. The Remote takes it as the method's own
+ * argument and the Host refuses a call whose argument fields do not match its
+ * descriptor, so a call without it never reaches the Platform.
+ */
+export interface HostAccountClient {
+  /** The calling client build's version. */
+  version: string
+  /** The UI language in effect when the call was made. */
+  locale: string
+  /** Seconds east of UTC, as `-new Date().getTimezoneOffset() * 60`. */
+  timezoneOffsetSeconds: number
+}
+
 /** The account service (`remote.account`): the profile read, and the state stream. */
 export interface HostAccountService {
-  getProfile(): Promise<HostAccountAnswer>
+  getProfile(client: HostAccountClient): Promise<HostAccountAnswer>
   watch(signal: AbortSignal): AsyncIterable<HostAccountFrame>
 }
 

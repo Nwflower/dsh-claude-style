@@ -148,6 +148,7 @@ export const FEATURE_PREF_DEFAULTS = {
   turnStatus: true,
   turnNav: true,
   viewTabs: true,
+  headerBand: true,
   chatAnimations: true,
 }
 
@@ -387,6 +388,7 @@ export interface Prefs {
   turnStatus: boolean
   turnNav: boolean
   viewTabs: boolean
+  headerBand: boolean
   chatAnimations: boolean
 }
 

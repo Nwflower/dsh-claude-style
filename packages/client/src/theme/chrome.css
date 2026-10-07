@@ -51,6 +51,34 @@ html[data-windows-titlebar] body[data-dsh-claude-style] [class*="_frame"] > [dat
   pointer-events: none;
 }
 
+/* ---------- the right sidebar's panels as floating cards ---------- */
+/* A panel docked in the right column floats 8px inside the window: the skin's
+   hairline and the host's own panel elevation over the frame's canvas. It hangs on
+   what paints the column — a docked tab's pane, or the column's own empty host; a
+   panel pulled out into the host's floating window is left to that window. */
+body[data-dsh-claude-style] [class*="_rightbarCol"] :is([data-dockkit-empty], [data-dockkit-host="dock"] > [data-dockkit-pane]) {
+  margin: 8px !important;
+  overflow: hidden !important;
+  border: 1px solid var(--dsw-alias-border-l1) !important;
+  border-radius: 16px !important;
+  box-shadow: var(--dsw-elevation-prominent) !important;
+}
+
+/* The column's start page centers its stack in a box that never grows, so a list
+   taller than the pane is clipped at both ends with no way to reach it. The stack
+   scrolls instead: the two auto margins hold the centering while it fits and stay
+   at zero once it does not, and the host's trailing 10% spacer shrinks away. */
+body[data-dsh-claude-style] [class*="_rightbarCol"] [class*="_guide"] {
+  justify-content: flex-start !important;
+  overflow-y: auto !important;
+}
+body[data-dsh-claude-style] [class*="_rightbarCol"] [class*="_guide"] > :first-child {
+  margin-top: auto !important;
+}
+body[data-dsh-claude-style] [class*="_rightbarCol"] [class*="_guide"] > :last-child {
+  margin-bottom: auto !important;
+}
+
 /* ---------- clay accent: one emphasis color, disciplined ---------- */
 /* A host button anchor (`_linkButton`, e.g. the settings page's 充值) states its
    own ink; repainting it here would paint the label the same colour as its fill. */

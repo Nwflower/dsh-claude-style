@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-07",
+  "group": "improvements",
+  "order": 0,
+  "external": false,
+  "zh": "右侧栏停靠的面板改成一枚悬浮卡片：四周各留 8px、16px 圆角、1px 描边与宿主面板自己的投影，列后面的画布从缝隙里透出来；分栏后每一栏的面板各有一枚卡片，拖出来的浮动面板保持宿主自己的窗口样式。",
+  "en": "A panel docked in the right sidebar is a floating card: 8px inside the column on every side, a 16px radius, a 1px hairline and the host's own panel elevation, with the column's canvas showing through the gap. Each column of a split dock gets its own card, and a panel pulled out of the sidebar keeps the host's own floating window."
+}

@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-07",
+  "group": "fixes",
+  "order": 4,
+  "external": false,
+  "zh": "**欢迎语与账号区跟随登录的 DeepSeek 账号**：此前这两处只显示自定义用户名或本机系统用户名，登录账号的昵称从不出现；现在桌面端登录后显示账号昵称，自定义用户名仍然优先，账号资料读不到时才回退到 HDSL 昵称与本机系统用户名。",
+  "en": "**The welcome line and the account area follow the signed-in DeepSeek account**: both used to show the custom username or the local system user, never the signed-in account's nickname; on the desktop they now show the account nickname, a custom username still wins, and the HDSL name and the local system user remain the fallbacks for a profile that cannot be read."
+}

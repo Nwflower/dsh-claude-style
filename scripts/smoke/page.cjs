@@ -49,6 +49,7 @@ const PROBE_PARTS = [
   'agent-desktop.js',
   'settle.js',
   'shell-pages.js',
+  'shell-band.js',
   'shell-context.js',
   'account-reads.js',
   'shell-studio.js',

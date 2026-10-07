@@ -101,12 +101,11 @@ export function chatSendAlpha(color: string) {
 /**
  * The element inside the composer card that really paints the card's surface.
  *
- * The card element is not always the one that carries the fill, the hairline
- * and the shadow. This skin's card.css paints all three on the draft area's
- * scroll box and leaves the card itself with no background at all, so a flight
- * that read them off the card would cross-fade an empty fill and shrink an
- * empty shadow while the clone's own surface painted itself for the whole
- * flight.
+ * The card element is not always the one that carries the hairline and the
+ * shadow. This skin's card.css paints them on the draft area's scroll box and
+ * leaves the card itself with no background at all, so a flight that read them
+ * off the card would shrink an empty shadow while the clone's own surface
+ * painted itself for the whole flight.
  *
  * The walk is shallow on purpose — the first descendant that paints a fill, in
  * breadth-first order — and it costs nothing on a card that paints itself,
@@ -366,11 +365,11 @@ export function snapshotComposer(input: HTMLElement, card: HTMLElement) {
   draft.style.height = scrollBox.height + 'px'
   draft.style.minHeight = '0px'
   draft.style.maxHeight = 'none'
-  // The stand-in's surface is its own two fill layers (send-morph.ts), so the
-  // clone's copy of the surface must not paint: left as it is, it covers those
-  // layers for the whole flight and the cross-fade to the bubble's fill never
-  // shows. The card element's own copy is already stripped by the pin above;
-  // this is the descendant that really carries the surface (chatSendSurface).
+  // The shape's plate is the shell's own background (send-morph.ts), so the
+  // clone's copy of the surface must not paint: left as it is, it covers that
+  // plate for the whole flight and the bubble's fill never shows. The card
+  // element's own copy is already stripped by the pin above; this is the
+  // descendant that really carries the surface (chatSendSurface).
   const clonedSurface = chatSendElementAt(clone, surface.path)
   if (clonedSurface !== null && clonedSurface !== clone) {
     clonedSurface.style.setProperty('background-color', 'transparent', 'important')
@@ -385,7 +384,6 @@ export function snapshotComposer(input: HTMLElement, card: HTMLElement) {
   return {
     box,
     surface: surfaceRect,
-    background: surfaceStyle.backgroundColor,
     radius: chatSendPixel(cardStyle.borderTopLeftRadius),
     shadow: chatSendSurfaceShadow(surfaceStyle),
     clone,

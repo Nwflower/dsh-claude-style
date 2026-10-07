@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-07",
+  "group": "improvements",
+  "order": 5,
+  "external": false,
+  "zh": "分栏的右侧栏：两栏各自仍是独立的圆角卡片，中间那条分栏线不再画（拖动时的提示照旧），两栏之间的距离从 16px 收到 6px，每栏到列边的距离从 8px 收到 6px。",
+  "en": "In a split right sidebar each pane stays its own rounded card: the line the dock draws between them is gone (the drag highlight stays), the gap between the two comes in from 16px to 6px, and each pane now sits 6px from the column's edge instead of 8px."
+}

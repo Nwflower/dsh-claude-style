@@ -74,6 +74,7 @@ export interface Handles {
   chatSend: FeatureHandle
   caret: FeatureHandle
   viewTabs: FeatureHandle
+  headerBand: FeatureHandle
   settingsNav: FeatureHandle
 }
 

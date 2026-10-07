@@ -120,8 +120,9 @@ function styleFiles(manifests) {
   return sheets
 }
 
-/** The package name: the loader id, the stylesheet's own tag and the profile entry all carry it (D33). */
-const PACKAGE_ID = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).name
+/** The package's own manifest; the loader id, the stylesheet's tag and the profile entry carry its name (D33). */
+const PACKAGE = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'))
+const PACKAGE_ID = PACKAGE.name
 
 /** The packages the host's loader hands the factory's `require`; never bundled. */
 const HOST_PACKAGES = ['react', 'react-dom/client', '@deepseek-ai/dsh-client-ui-primitives']
@@ -333,6 +334,9 @@ async function main() {
       // without reloading the page, so the page's load time says nothing about
       // its code.
       BUILD_ID: BUILD_ID_SLOT,
+      // The version this client bundle reports wherever the host asks a client
+      // for its build: the account Remote carries it on every call.
+      CLIENT_VERSION: PACKAGE.version,
       CRAB_SHEET_URLS: crab,
       DEEPY_SHEET_URLS: deepyUrls,
     })],

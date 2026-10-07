@@ -52,7 +52,9 @@
       var switchKeys = ['permissionsControl', 'workspaceView', 'sidebarSearch', 'turnStatus', 'viewTabs']
       // The sixth switched feature, the file change rows, takes seat keys over
       // rather than drawing marks on the page, so its switch is driven and
-      // checked in its own case ('chat-files': offSeats/backSeats).
+      // checked in its own case ('chat-files': offSeats/backSeats). The header
+      // band needs the desktop caption row, which this page has not: its switch
+      // is driven in its own case too ('header-band': off/back).
       var allSwitches = function (value) {
         var patch = {}
         for (var ki = 0; ki < switchKeys.length; ki++) patch[switchKeys[ki]] = value

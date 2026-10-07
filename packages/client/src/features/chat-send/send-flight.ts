@@ -27,6 +27,8 @@ interface Flight {
   previous: HTMLElement | null
   hidden: HTMLElement | null
   landing: boolean
+  /** Whether the flight is holding for a row to land on (see land()). */
+  waiting: boolean
   landedRow: HTMLElement | null
   bubble: HTMLElement | null
 }
@@ -41,6 +43,17 @@ export const CHAT_FLIGHT_LIMIT_FLOOR_PX = 900
 
 /** The backstop keeps a little longer than the flight itself: a throttled background timer still has to release the message before the reader comes back. */
 export const CHAT_RESCUE_MARGIN_MS = 400
+
+/**
+ * How long the stand-in waits for a row to hand the message over to.
+ *
+ * The echo can be gone before the real row mounts — the echo lives about 159 ms
+ * while the real row takes over a second — so the flight can finish with nothing
+ * at the destination. This is the backstop for that window: the stand-in stays
+ * visible until a row is there, and a host that never mounts one gets the page
+ * back when the wait runs out.
+ */
+export const CHAT_HANDOVER_WAIT_MS = 2500
 
 /** Only an echo inside the chat flow counts: one waiting in the queue dock is another transition, not this one. */
 export const CHAT_ECHO_SELECTOR = CHAT_FLOW_SELECTOR + ' ' + SUBMISSION_ECHO_SELECTOR
@@ -81,7 +94,8 @@ export const CHAT_ROW_SELECTOR = CHAT_USER_ROW_SELECTOR + ', ' + CHAT_ECHO_SELEC
  *             (CHAT_LANDING_MS), then drop the stand-in — the real row is
  *             already at the destination, so the hand-over moves nothing,
  *             and the fade carries the words from the stand-in's rendering
- *             to the page's (see land()).
+ *             to the page's (see land()). The echo being gone before the real
+ *             row mounts holds the stand-in where it is until a row is there.
  *
  * Five edges:
  *
@@ -159,6 +173,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * fade the stand-in out over CHAT_LANDING_MS, still following the
    * destination, then settle.
    *
+   * Nothing is handed over while no row is on the page: the host can take the
+   * echo away before the real row mounts, and fading then would carry the
+   * reader's message into the page and put it back a second later — the bubble
+   * turning white and then blue again. The stand-in holds instead, still
+   * visible and still following, until the observer recognises a row to land on.
+   *
    * The two are the same bubble in the same place, but they are not drawn
    * alike: the stand-in flies on compositor layers, and a transparent layer
    * draws its words with greyscale antialiasing where the page draws the
@@ -170,9 +190,19 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const land = () => {
     const activeFlight = flight
     if (activeFlight === null || activeFlight.landing) return
-    activeFlight.landing = true
     const row = activeFlight.hidden
-    row?.removeAttribute(CHAT_FLYING_ATTR)
+    if (row === null || !row.isConnected) {
+      // One re-arm only: this runs every frame, and the wait is the page's
+      // last resort rather than a per-frame timer.
+      if (!activeFlight.waiting) {
+        activeFlight.waiting = true
+        window.clearTimeout(rescue)
+        rescue = window.setTimeout(settle, CHAT_HANDOVER_WAIT_MS)
+      }
+      return
+    }
+    activeFlight.landing = true
+    row.removeAttribute(CHAT_FLYING_ATTR)
     activeFlight.hidden = null
     activeFlight.landedRow = row
     const fade = activeFlight.morph.wrapper.animate([{ opacity: 1 }, { opacity: 0 }], {
@@ -263,6 +293,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       hidden: echo,
       // Whether the flight has landed and is fading across to the real row, and that row.
       landing: false,
+      waiting: false,
       landedRow: null,
       bubble,
     }

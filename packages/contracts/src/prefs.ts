@@ -25,6 +25,7 @@ export const PREFS_DEFAULT = Object.freeze({
   turnStatus: true,
   turnNav: true,
   viewTabs: true,
+  headerBand: true,
   chatAnimations: true,
   caretMotion: 'typing',
 })

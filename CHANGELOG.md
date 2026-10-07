@@ -6,21 +6,31 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 [中文](#cn-unreleased) | [English](#en-unreleased)
 
-<h3 id="cn-unreleased">体验优化</h3>
+<h3 id="cn-unreleased">新增功能</h3>
+
+- 桌面端把会话标题与标题行里的控件抬进窗口顶端的标题栏：标题靠左、控件靠右排在窗口按钮之前，标题行剩下的内容左移并上提到标题下面；放不下的一侧留在原来的行里。
+
+### 体验优化
 
 - **插件主文件缩小一半**：浏览器每次启动都要读取并解析的插件主文件此前是 1.6 MB（1,619,502 字节），现在压缩后是 0.8 MB（816,520 字节）。
+- 右侧栏停靠的面板改成一枚悬浮卡片：四周各留 8px、16px 圆角、1px 描边与宿主面板自己的投影，列后面的画布从缝隙里透出来；分栏后每一栏的面板各有一枚卡片，拖出来的浮动面板保持宿主自己的窗口样式。
 - **小鲸鱼的帧图改为矢量取用**：Deepy 的 18 张帧图此前由浏览器在某个动作第一次出现时下载 PNG、在画布上重建成矢量、再存进 Cache API；现在构建期就把它们转成矢量，按内容哈希长期缓存。第一次播放不再有重建的停顿，观感与之前一致；随包携带的帧图从 426 KB 变为 658 KB（brotli 后）。
 - **浏览器里的侧栏品牌行**：非桌面外壳（浏览器页面）下侧栏品牌行是这一列的第一行，列顶部只有 6px 内边距，logo 贴着窗口上沿；品牌左侧也比「新会话」的加号圆片靠左 8px。现在浏览器页面给这一行加 8px 顶部边距，品牌带上这一行自己的 8px 左内边距，鲸鱼/星芒的左缘与加号圆片的左缘对齐。桌面外壳（Windows 标题栏、macOS）与折叠后的窄栏不变。
 - **进行中的状态行不再随内容上下跳动**：宿主把「深度求索中」这一行画成聊天流的最后一行，答案流式追加时它跟着内容底部一起被推下去、跟随的滑动再把它拉回来，盯着末尾看时就是不停跳动。现在只要读者的跟随还开着，这一行就钉在输入框上方（输入框高度 + 上方的渐隐带 + 宿主的 16px 正文内边距），也就是跟随追上时它本来停的位置：突发的追加不再带动它，往回翻看历史时它照常留在文档位置，不会浮在读者正在读的内容上。
 - **滚轮滚动改走同一条弹簧**（Windows 与其他非 Apple 平台）：主对话里的滚轮不再由浏览器直接写位置，距离交给滚动主人那条临界阻尼弹簧走完（新增 `wheel` 来源，优先级在 `composer` 之上、`fold` 之下）。一串滚轮格不再把整段距离压在一帧里：速度从静止连续加上去、中段限速、末段收尾，落点在半像素以内；第二格接着上一段滑行延长，不重新起跑。macOS 与 iPadOS 上完全不接管，平台自己的惯性曲线与边缘回弹照旧；指针与滚动条之间还有能朝这个方向滚动的嵌套滚动条、按住 Ctrl（缩放），或读者的动效选择是「关闭」时，滚轮也照旧交给浏览器。监听挂在会话滚动条自己身上，页面其它地方的滚轮不必等主线程。
+- 分栏的右侧栏：两栏各自仍是独立的圆角卡片，中间那条分栏线不再画（拖动时的提示照旧），两栏之间的距离从 16px 收到 6px，每栏到列边的距离从 8px 收到 6px。
 
 ### 问题修复
 
 - **启动之后才选的皮肤也会接手页面**：页面载入后才在皮肤中心选中别的皮肤时，本主题不让出页面，两套视觉叠在一起。现在无论页面启动时归谁，皮肤到来就让出、离开就接回，都不需要刷新。
-- **发送时替身不再闪出卡片底色**（#29）：提交那一帧宿主的渲染会占住主线程，而替身的两层底色与光晕是各自独立的动画，可能落在壳的缩放之后——卡片那一层（输入区大小的白底）于是盖在已经缩成气泡的壳上，读者看到气泡上半先白再蓝。现在壳在形状走完归位的那一刻，两层底色与光晕一并写定（气泡那层铺满形状、卡片那层透明、光晕熄灭）并撤掉各自的动画：替身长什么样由布局决定，不再取决于哪条动画跑到了哪里。
+- 右侧栏「开始」页的项目一屏放不下时，整列被上下同时裁掉，既看不到第一项也滚不到最后一项；现在这一列自己滚动，列表短时依旧居中。
+- **发送时飞行的气泡从第一帧就是气泡的颜色**（#29）：替身此前带两层底色——输入卡片的底色压在上面、气泡的底色在下面——随形状一起互相过渡；形状早已收成气泡，上层还没退完，读者看到的气泡先发白，在 DeepSeek 档下正是 Claude 档那条灰气泡的样子，过半秒才变蓝。现在底色画在那层始终等于形状的壳上，按下那一刻起就是目标气泡自己的颜色，没有哪一层能落在形状后面。卡片的描边与阴影照旧随形状收掉，并在形状归位的那一刻写定、撤掉各自的动画，不会在收窄完成后多留一帧。
+- 成本计量插件停止写入后，用量面板把它覆盖的历史（8/24 起 26 天、11.23B Token）整份丢掉，改由会话日志现折，面板只剩日志还在的那部分（13 天、6.47B）；现在两个来源按日期合并，账本认识的天仍用账本的数，只有它没覆盖的日期由折算补上，面板恢复完整历史。
 - **与壁纸插件共存**：0.11.1 在启动时已有壁纸渲染（`body[data-we-wallpaper]`）的页面上整页让出，「与其他主题插件同时使用」里壁纸透过侧栏与玻璃弹层的效果随之失效。现在只为皮肤中心的皮肤（`html[data-dsh-skin]`）让路，壁纸在渲染时本主题照常工作。对外契约：不再读取 `body[data-we-wallpaper]`。
+- **发送的替身不再在真实消息行缺席时淡出**：宿主的回显气泡只活约 159 毫秒，真实消息行要一秒以上才挂上，而替身按自己的时间表在 400 毫秒落地淡出，那一段里目标位置空着——读者看到刚发出的气泡淡成页面背景，随后整条又冒出来。现在降落前先确认有一条行在页面上可以交接：没有就把替身停在原地（保持可见、继续跟随目标位置），真实行一到立刻交接；宿主始终没挂上行时按 2.5 秒兜底把页面交还宿主。
 - **设置页不再多出一层内边距**：皮肤自己的设置页带了 24px 横向内边距，而宿主的选项列本来就有 24px，于是整页比其余设置页（宿主自己的与别的插件的）向右缩进 24px、顶部也多 20px。现在横向不留内边距，顶部只留宿主行自己的 16px，标题与第一行文字和其余设置页在同一条竖线上。
 - **吉祥物的分段控件回到右侧**：吉祥物这一行此前固定把控件排到文字下面（与品牌卡片同一套排法）。现在控件与文字同占一行、靠右对齐，只有在放不下时才落到下一行并从左边开始——判定用文字列的最小宽度（220px），控件本身不收缩。
+- **欢迎语与账号区跟随登录的 DeepSeek 账号**：此前这两处只显示自定义用户名或本机系统用户名，登录账号的昵称从不出现；现在桌面端登录后显示账号昵称，自定义用户名仍然优先，账号资料读不到时才回退到 HDSL 昵称与本机系统用户名。
 
 ### 其他变更
 
@@ -28,21 +38,31 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **附带 source map**：npm 包里新增 `lib/client.js.map`，浏览器开发者工具里的报错位置与断点能对应到插件源码。
 - **Anthropic 字体的投放点迁到宿主目录**：把两款 Anthropic 字体复制进插件包 `fonts/` 目录后界面仍用替代字体，那个位置已不再被读取。现在的投放点是 `$DSH_HOME/dsh-claude-style/fonts/`（没有设置 `DSH_HOME` 时是 `~/.dsh/dsh-claude-style/fonts/`）：放在这里的文件优先于包内的同名文件，缺失时照旧 404 回退到系统字体与替代字体。随包分发的四款字体与它们的授权文件改由构建写入 `lib/fonts/`，仓库里的字体文件移到了 `packages/assets/src/fonts/`，两款 Anthropic 字体在其 `anthropic/` 子目录里，仍然不随 npm 包分发。
 
-<h3 id="en-unreleased">Improvements</h3>
+<h3 id="en-unreleased">New Features</h3>
+
+- On the desktop the conversation's title and the header's controls rise into the window's own caption row — the title at the left, the controls at the right before the window buttons — and what is left of the title row closes up to the left and rides up under the title. A side without room stays in the header's own row.
+
+### Improvements
 
 - **The plugin's main file is half the size**: the file the browser reads and parses on every start was 1.6 MB (1,619,502 bytes); minified it is now 0.8 MB (816,520 bytes).
+- A panel docked in the right sidebar is a floating card: 8px inside the column on every side, a 16px radius, a 1px hairline and the host's own panel elevation, with the column's canvas showing through the gap. Each column of a split dock gets its own card, and a panel pulled out of the sidebar keeps the host's own floating window.
 - **Deepy's frames are taken as vectors**: the whale's 18 sheets used to be downloaded as PNGs the first time an animation appeared, rebuilt into a vector on a canvas and kept in the Cache API; the build now produces the vectors and they are cached for good under their content hash. The first play no longer pauses to rebuild and the whale looks the same; the sheets that ship with the package go from 426 KB to 658 KB (brotli).
 - **The sidebar brand row in a browser**: without a desktop shell the brand row is the column's first row, so 6px of column padding was the whole inset and the logo sat against the window's top edge; the brand also started 8px left of the New session plus chip. A browser page now gives that row 8px of top margin and the brand the row's own 8px leading inset, so the whale or starburst's left edge lands on the chip's. The desktop shells (Windows titlebar, macOS) and the collapsed rail are unchanged.
 - **The running status line no longer rides the content**: the host draws its "deep diving" row as the chat flow's last row, so every burst of a streaming answer pushes it down and the follow's glide drags it back, which reads as continuous jumping at the tail. While the reader's follow is on, the row is now pinned above the composer — the composer's height, the fade band above it and the host's 16px transcript padding — which is where it already comes to rest once the glide has caught up: a burst no longer moves it, and scrolled back through history it keeps its document place instead of floating over what the reader went back to read.
 - **The wheel scrolls on the same spring** (Windows and other non-Apple platforms): a wheel over the main conversation no longer lets the browser write the position — the distance is handed to the scroll owner's critically damped spring (a new `wheel` source, ranked above `composer` and below `fold`). A burst of notches no longer puts the whole distance on one frame: the speed builds from rest, is capped through the middle and eases into a landing within half a pixel, and a second notch extends the glide in flight instead of restarting it. macOS and iPadOS are left alone entirely, keeping the platform's own momentum curve and edge bounce; a nested scroller that can still move that way, a held Ctrl (zoom) and the reader's "no animation" choice also leave the wheel to the browser. The listener hangs on the conversation's own scroller, so a wheel anywhere else on the page never waits on the main thread.
+- In a split right sidebar each pane stays its own rounded card: the line the dock draws between them is gone (the drag highlight stays), the gap between the two comes in from 16px to 6px, and each pane now sits 6px from the column's edge instead of 8px.
 
 ### Bug Fixes
 
 - **A skin picked after the page loaded takes the page too**: picking another skin in the Skin Center once the page had loaded left this theme on the page, two looks painted over each other. Now the theme gives the page up when a skin arrives and takes it back when the skin leaves, whichever way the page booted, without a reload.
-- **The send stand-in no longer flashes the card's fill** (#29): the submission's own render holds the main thread for a frame, and the stand-in's two fills and its halo are animations of their own, so one of them can fall behind the shell's snap — the card's fill, a white band the size of the draft area, then paints over a shell that is already the bubble, which reads as the bubble's top turning white before it turns blue. The snap that normalises the shell now writes all three end states in the same task (the bubble's fill across the shape, the card's fill out, the halo out) and cancels their animations: the stand-in's look follows the layout rather than any animation's clock.
+- The right sidebar's start page clipped its entries at both ends once the list outgrew the pane, hiding the first rows with no way to scroll; the column scrolls now, and still centers the list while it fits.
+- **The flying bubble is the bubble's colour from the first frame** (#29): the stand-in carried two fills — the composer card's over the bubble's — cross-fading as the shape narrowed, and the shape was already a bubble while the upper fill was still there, so the reader saw a pale bubble (in the DeepSeek palette, the colour the grey bubble has under Claude) that only turned blue half a second later. The fill is now painted on the one layer that is the shape at every step, so it is the destination bubble's own colour from the moment of the press and no fill can fall behind the shape. The card's hairline and shadow still leave with the shape, written and cancelled on the frame the shape settles rather than lingering a frame past it.
+- Once the cost-meter plugin stopped writing, the usage panel discarded the whole history the ledger covered (11.23B tokens over 26 days from 8/24) and fell back to folding the session logs, which left it with only the part the logs still held (6.47B over 13 days); the two accounts now merge by date, the ledger keeps the days it knows and the fold fills only the dates past its newest, so the panel shows the whole history again.
 - **Sharing the page with a wallpaper plugin**: 0.11.1 gave the whole page up when a wallpaper was already rendering at boot (`body[data-we-wallpaper]`), which lost the wallpaper showing through the sidebar and the glass popovers described under Alongside other theme plugins. Now only a Skin Center skin (`html[data-dsh-skin]`) makes the theme yield; while a wallpaper renders the theme keeps working. External contract: `body[data-we-wallpaper]` is no longer read.
+- **The stand-in no longer fades out with no message row to land on**: the host's echo bubble lives about 159 ms while the real row takes over a second to mount, and the stand-in faded out on its own 400 ms schedule — with nothing at the destination, the reader watched the bubble they had just sent fade into the page and then the whole message pop back. The hand-over now waits until there is a row on the page to take the message: the stand-in holds where it is (visible, still following the destination) and hands over the moment the row mounts, with a 2.5 s backstop that gives the page back to the host if no row ever comes.
 - **The settings page no longer adds an inset of its own**: the skin's page carried 24px of side padding while the host's options column already has 24px, which set the whole page — and its top, by another 20px — 24px inside the host's own pages and other plugins'. The page now keeps no side padding and only the host row's own 16px on top, so its heading and first row line up with every other page's.
 - **The mascot's segmented control is back on the right**: the mascot row used to stack its control under the text, the layout the brand cards use. The control now shares the row and sits at its right edge, and drops to a line of its own starting at the left only when it no longer fits — decided by the text column's minimum width (220px), since the control itself never shrinks.
+- **The welcome line and the account area follow the signed-in DeepSeek account**: both used to show the custom username or the local system user, never the signed-in account's nickname; on the desktop they now show the account nickname, a custom username still wins, and the HDSL name and the local system user remain the fallbacks for a profile that cannot be read.
 
 ### Chores
 
