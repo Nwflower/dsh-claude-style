@@ -31,7 +31,7 @@
 | [D31](D31-windows-titlebar.md) | Windows 桌面顶栏透明，各列延伸到窗口顶端 | 已实施 |
 | [D33](D33-stylesheet-ownership.md) | 皮肤样式表带上本包自己的归属标记，兄弟包的样式表不认领 | 已实施 |
 | [D43](D43-overlay-and-upstream.md) | 覆盖层定位与上游扩展点 | 待实施（向上游提交与等待） |
-| [D44](D44-contract-module.md) | 宿主契约模块与契约测试 | 待实施 |
+| [D44](D44-contract-module.md) | 宿主契约模块与契约测试 | 部分实施 |
 
 ## 运行时
 
