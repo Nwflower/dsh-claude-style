@@ -73,7 +73,7 @@
 | --- | --- | --- |
 | [D7](D7-one-package.md) | 行为层与皮肤对外是一个插件 | 已实施 |
 | [D45](D45-testing.md) | 三层测试与持续集成 | 已实施 |
-| [D48](D48-documentation.md) | 文档流程 | 部分实施 |
+| [D48](D48-documentation.md) | 文档流程 | 已实施 |
 
 ## 作废的编号
 

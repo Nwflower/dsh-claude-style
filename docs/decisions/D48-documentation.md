@@ -1,6 +1,6 @@
 # D48. 文档流程
 
-- **状态**：部分实施
+- **状态**：已实施
 - **分组**：分发与流程
 - **关联**：D42
 - **现状**：决策一文件一条，索引由 `scripts/decisions-index.mjs` 从各文件的标题、状态、分组与取代关系生成，持续集成核对它与文件一致；每个改动在 `changes/` 下放一个结构化的小文件，`scripts/changelog.mjs` 把它汇编成 CHANGELOG 的 `[Unreleased]` 一节，发版时汇编成版本一节并清空该目录，持续集成核对这一节与文件一致；`scripts/lint.mjs` 管三条不需要构建的规则（停止线、Markdown 链接、决策编号引用）；两份 README 的功能一览由 `scripts/readme.mjs` 从各功能清单的 `description` 字段汇编，持续集成核对；README 的其余部分仍手写；停止线已在 lint 里，注释规范仍只在 AGENTS.md；作用域、`:has()` 位置与令牌门已由构建检查（D51）
