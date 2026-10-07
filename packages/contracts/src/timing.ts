@@ -9,7 +9,7 @@
  * jitter no smoke case notices.
  *
  * The checks are named rather than described: a scenario of the end-to-end lane
- * (tools/e2e.cjs) or a unit test beside its module. The build refuses an entry
+ * (packages/testing/e2e.cjs) or a unit test beside its module. The build refuses an entry
  * that names neither, and the lane refuses a scenario name outside
  * E2E_SCENARIOS, so an assumption cannot enter this table without something that
  * would notice it changing.
@@ -19,7 +19,7 @@
 export const E2E_SCENARIOS = ['conversation', 'tool', 'send', 'scroll', 'contract', 'shots'] as const
 
 /** One timing assumption, and how it is held. */
-export interface HostTimingEntry {
+interface HostTimingEntry {
   /** Stable id; a check names it when it fails. */
   id: string
   /** The order the host works in, as the skin depends on it. */

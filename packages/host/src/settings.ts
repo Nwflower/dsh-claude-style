@@ -7,39 +7,12 @@
  * defensive because a `link:`-installed plugin resolves its realpath outside
  * the profile tree (see resolveSchemaFactory). A host that cannot resolve the
  * package still loads the skin — it just loses the settings form.
+ *
+ * The preference list itself is the shared contract, so both halves declare
+ * the fields from one table (`@dsh-claude-style/contracts/prefs`, D46).
  */
+import { PREFS_DEFAULT } from '@dsh-claude-style/contracts/prefs'
 import type { DshContext, DshScope } from './dsh.ts'
-
-/**
- * The preference list. This one table is every field declaration: the Config
- * below is generated from it, and scripts/build.mjs imports it to hold the
- * browser half's PREF_DEFAULTS (packages/client/src/constants.ts) and packages/client/src/entry.ts's feature
- * switches to it.
- */
-export const PREFS_DEFAULT = Object.freeze({
-  brand: 'claude',
-  motion: 'system',
-  collapseFooter: true,
-  autoPopover: 'all',
-  composerScope: 'all',
-  modelPicker: true,
-  quickProviders: [],
-  username: '',
-  banLocale: 'en',
-  homeLayout: 'studio',
-  palette: 'claude',
-  typeface: 'claude',
-  mascot: 'brand',
-  mascotScope: 'all',
-  permissionsControl: true,
-  workspaceView: true,
-  sidebarSearch: true,
-  turnStatus: true,
-  turnNav: true,
-  viewTabs: true,
-  chatAnimations: true,
-  caretMotion: 'typing',
-})
 
 /**
  * The schemastery instance the HARNESS itself resolves.

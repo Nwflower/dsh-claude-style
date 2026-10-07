@@ -1,7 +1,7 @@
 /**
- * The host contract as one table (D44): the literals in src/contracts/dom.ts,
- * each with what the skin reads it for, the host build it was verified against,
- * and how the contract test checks it on a live host (D45).
+ * The host contract as one table (D44): the literals in packages/contracts/src/dom.ts,
+ * each with what the skin reads it for and how the contract test checks it on
+ * a live host (D45).
  *
  * The table is build and test data rather than runtime data: the browser bundle
  * carries the literals alone, so the notes cost the page nothing. The build
@@ -10,10 +10,7 @@
  * a selector cannot enter the skin without a note and an owner, and a host
  * upgrade can be audited from this list alone.
  */
-import { ACCOUNT_TRIGGER_SELECTOR, CHAIN_OVERLAY_FALLBACK_ATTRIBUTE, CHAT_CALL_SELECTOR, CHAT_FLOW_SELECTOR, CHAT_TURN_ATTRIBUTE, COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_PLACEHOLDER_SELECTOR, COMPOSER_SCROLL_SELECTOR, COMPOSER_SELECTOR, COMPOSER_STACK_SELECTOR, COMPOSER_STATS_SELECTOR, COMPOSER_STAT_SELECTOR, COMPOSER_TEXTAREA_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, DARK_THEME_ATTRIBUTE, DISCLOSURE_ROW_SELECTOR, FLOW_BLOCK_SELECTOR, FLOW_KIND_ATTRIBUTE, FOLLOWING_TAIL_ATTRIBUTE, FOLLOWING_TAIL_SELECTOR, FOLLOW_THRESHOLD_PX, FOLD_SKIPPED_CONTROL_SELECTOR, FOLD_TOGGLE_SELECTOR, FOOTER_ACTIONS_SELECTOR, FOOT_AREA_SELECTOR, FOREGROUND_SELECTOR, FRAME_TOP_CLEARANCE_PROPERTY, FULLSCREEN_ATTRIBUTE, MENU_LIST_SELECTOR, MENU_ROLE_SELECTOR, PEER_SHEET_SELECTOR, PERMISSION_TRIGGER_SELECTOR, PHASE_ATTRIBUTE, PLATFORM_ATTRIBUTE, PROCESS_ACTIVITY_SELECTOR, PROCESS_BODY_SELECTOR, PROCESS_CONTENT_SELECTOR, PROCESS_EXPANDED_MODE_ATTRIBUTE, PROCESS_GROUP_SELECTOR, RUNNING_STATE, SETTINGS_BUTTON_SELECTOR, SHIMMER_SELECTOR, SKIN_CENTER_ATTRIBUTE, SLOT_ANCHOR_SELECTOR, STREAMING_ATTRIBUTE, STREAMING_SELECTOR, SUBMISSION_ECHO_SELECTOR, THINK_ROW_SELECTOR, TURN_PROCESS_SELECTOR, TURN_RAIL_CURRENT_SELECTOR, TURN_RAIL_INSET, TURN_RAIL_MARK_SELECTOR, TURN_RAIL_PITCH, TURN_RAIL_SCROLLER_SELECTOR, TURN_RAIL_SELECTOR, UNTAGGED_SHEET_SELECTOR, USER_ROW_KIND, WINDOWS_TITLEBAR_ATTRIBUTE } from './dom'
-
-/** The host build every entry below was verified against. */
-export const HOST_VERIFIED = '0.2.1-alpha.1'
+import { ACCOUNT_TRIGGER_SELECTOR, CHAIN_OVERLAY_FALLBACK_ATTRIBUTE, CHAT_CALL_SELECTOR, CHAT_FLOW_SELECTOR, CHAT_TURN_ATTRIBUTE, COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_PLACEHOLDER_SELECTOR, COMPOSER_SCROLL_SELECTOR, COMPOSER_SELECTOR, COMPOSER_STACK_SELECTOR, COMPOSER_STATS_SELECTOR, COMPOSER_STAT_SELECTOR, COMPOSER_TEXTAREA_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, DARK_THEME_ATTRIBUTE, DIALOG_TRIGGER_SELECTOR, DISCLOSURE_ROW_SELECTOR, FLOW_BLOCK_SELECTOR, FLOW_KIND_ATTRIBUTE, FOLLOWING_TAIL_ATTRIBUTE, FOLLOWING_TAIL_SELECTOR, FOLLOW_THRESHOLD_PX, FOLD_SKIPPED_CONTROL_SELECTOR, FOLD_TOGGLE_SELECTOR, FOOTER_ACTIONS_SELECTOR, FOOT_AREA_SELECTOR, FOREGROUND_SELECTOR, FRAME_TOP_CLEARANCE_PROPERTY, FULLSCREEN_ATTRIBUTE, MENU_LIST_SELECTOR, MENU_ROLE_SELECTOR, PEER_SHEET_SELECTOR, PERMISSION_TRIGGER_SELECTOR, PHASE_ATTRIBUTE, PLATFORM_ATTRIBUTE, PROCESS_ACTIVITY_SELECTOR, PROCESS_BODY_SELECTOR, PROCESS_CONTENT_SELECTOR, PROCESS_EXPANDED_MODE_ATTRIBUTE, PROCESS_GROUP_SELECTOR, RUNNING_STATE, SETTINGS_BUTTON_SELECTOR, SHIMMER_ATTRIBUTE, SHIMMER_LEGACY_ATTRIBUTE, SHIMMER_SELECTOR, SKIN_CENTER_ATTRIBUTE, SLOT_ANCHOR_SELECTOR, STREAMING_ATTRIBUTE, STREAMING_SELECTOR, SUBMISSION_ECHO_SELECTOR, THINK_ROW_SELECTOR, TURN_PROCESS_SELECTOR, TURN_RAIL_CURRENT_SELECTOR, TURN_RAIL_INSET, TURN_RAIL_MARK_SELECTOR, TURN_RAIL_PITCH, TURN_RAIL_SCROLLER_SELECTOR, TURN_RAIL_SELECTOR, UNTAGGED_SHEET_SELECTOR, USER_ROW_KIND, WINDOWS_TITLEBAR_ATTRIBUTE } from './dom'
 
 /**
  * The page state an entry is checked in (D45): the empty page, the moment a
@@ -21,7 +18,7 @@ export const HOST_VERIFIED = '0.2.1-alpha.1'
  * turns, the host's own account menu open, or the host's dark flip. `any` holds
  * everywhere the page is served.
  */
-export type HostDomProbeState = 'any' | 'hero' | 'sending' | 'streaming' | 'conversation' | 'menu' | 'dark'
+type HostDomProbeState = 'any' | 'hero' | 'sending' | 'streaming' | 'conversation' | 'menu' | 'dark'
 
 /**
  * How the literal is checked:
@@ -38,10 +35,10 @@ export type HostDomProbeState = 'any' | 'hero' | 'sending' | 'streaming' | 'conv
  *   and the unit tests hold these; the contract test reports them by id so a
  *   host upgrade still walks the whole list.
  */
-export type HostDomProbeKind = 'selector' | 'attribute' | 'property' | 'global' | 'value' | 'rail-geometry' | 'none'
+type HostDomProbeKind = 'selector' | 'attribute' | 'property' | 'global' | 'value' | 'rail-geometry' | 'none'
 
 /** How the contract test checks one entry against a live host. */
-export interface HostDomProbe {
+interface HostDomProbe {
   state: HostDomProbeState
   kind: HostDomProbeKind
   /** At least how many matches a selector needs; defaults to 1. */
@@ -54,7 +51,7 @@ export interface HostDomProbe {
  * One entry of the table: the literal the host writes, and what the skin reads
  * it for.
  */
-export interface HostDomEntry {
+interface HostDomEntry {
   /** Stable id; a feature manifest names it (D42) and the contract test reports by it. */
   id: string
   /** The literal, as the host writes it. */
@@ -80,6 +77,8 @@ export const HOST_DOM: HostDomEntry[] = [
   { id: 'chat.streaming', value: STREAMING_SELECTOR, probe: { state: 'streaming', kind: 'selector' }, use: 'the markdown container while an answer streams' },
   { id: 'chat.streaming-attribute', value: STREAMING_ATTRIBUTE, probe: { state: 'streaming', kind: 'attribute' }, use: 'the same mark as an attribute name, watched appearing and going' },
   { id: 'chat.shimmer', value: SHIMMER_SELECTOR, probe: { state: 'streaming', kind: 'selector' }, use: 'TextShimmer still sweeping: that content is still moving' },
+  { id: 'chat.shimmer-attribute', value: SHIMMER_ATTRIBUTE, probe: { state: 'streaming', kind: 'attribute' }, use: 'the shimmer mark as an attribute name, in the fold\u2019s mutation filter' },
+  { id: 'chat.shimmer-legacy-attribute', value: SHIMMER_LEGACY_ATTRIBUTE, probe: { state: 'any', kind: 'none' }, use: 'the shimmer mark an older host build writes; the current one writes data-shimmer' },
   { id: 'chat.scroller', value: CONVERSATION_SCROLL_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'the session scroller the host hangs its own follow off' },
   { id: 'chat.following-tail', value: FOLLOWING_TAIL_SELECTOR, probe: { state: 'streaming', kind: 'selector' }, use: 'present while the host follow is on; the scroll owner hands it back through it' },
   { id: 'chat.following-tail-attribute', value: FOLLOWING_TAIL_ATTRIBUTE, probe: { state: 'streaming', kind: 'attribute' }, use: 'the same mark as an attribute name' },
@@ -92,10 +91,11 @@ export const HOST_DOM: HostDomEntry[] = [
   { id: 'composer.echo', value: SUBMISSION_ECHO_SELECTOR, probe: { state: 'sending', kind: 'selector' }, use: 'the echo bubble mounted the moment a submission goes through' },
   { id: 'composer.stack', value: COMPOSER_STACK_SELECTOR, probe: { state: 'hero', kind: 'selector' }, use: 'the card with the todo, goal and queue cards stacked above it' },
   { id: 'composer.placeholder', value: COMPOSER_PLACEHOLDER_SELECTOR, probe: { state: 'hero', kind: 'selector' }, use: 'the placeholder the host\u2019s own editor draws inside the draft' },
-  { id: 'composer.stats', value: COMPOSER_STATS_SELECTOR, probe: { state: 'any', kind: 'none' }, use: 'the container the host marked around its statistics before its 2026-09 update; the current build marks each figure instead, and the skin reads whichever is there' },
+  { id: 'composer.stats', value: COMPOSER_STATS_SELECTOR, probe: { state: 'any', kind: 'none' }, use: 'the container the host marked around its statistics before it marked each figure; the skin reads whichever is there' },
   { id: 'composer.stat', value: COMPOSER_STAT_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'one figure of the host\u2019s statistics in the composer stack, which the context panel repeats (D27)' },
   { id: 'composer.variant', value: COMPOSER_VARIANT_ATTRIBUTE, probe: { state: 'hero', kind: 'attribute' }, use: 'which composer the host rendered: the hero\u2019s or the conversation\u2019s' },
   { id: 'composer.access-trigger', value: PERMISSION_TRIGGER_SELECTOR, probe: { state: 'hero', kind: 'selector' }, use: 'the host\u2019s access-mode trigger inside its permission slot' },
+  { id: 'composer.dialog-trigger', value: DIALOG_TRIGGER_SELECTOR, probe: { state: 'hero', kind: 'selector' }, use: 'a host button that opens a dialog (the model and effort pickers); the context panel tells a figure\u2019s own trigger by it' },
   { id: 'composer.fallback-panel', value: CHAIN_OVERLAY_FALLBACK_ATTRIBUTE, probe: { state: 'any', kind: 'none' }, use: 'the host\u2019s panel that replaces the composer card, which the mascot stands on' },
   { id: 'process.group', value: PROCESS_GROUP_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'every process group root: auto-fold and the fold glide work on it' },
   { id: 'process.body', value: PROCESS_BODY_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'a group\u2019s capped body, with its own scrollbar' },

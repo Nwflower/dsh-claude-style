@@ -4,10 +4,9 @@
  *
  * The host's class names carry a build-time hash and change with every release,
  * so the skin keys on these instead; interface text changes with the language,
- * so it is never matched either (D3). What each literal means, what reads it,
- * and the host build it was verified against is the table in
- * src/contracts/table.ts; the build holds the two files together, so a literal
- * cannot appear here without an entry there.
+ * so it is never matched either (D3). What each literal means and what reads it
+ * is the table in packages/contracts/src/table.ts; the build holds the two files
+ * together, so a literal cannot appear here without an entry there.
  *
  * Everything here is a promise the host makes today and the skin relies on.
  * What the skin itself writes stays with the feature that writes it.
@@ -34,10 +33,13 @@ export const STREAMING_SELECTOR = '[data-streaming]'
 export const STREAMING_ATTRIBUTE = 'data-streaming'
 /**
  * TextShimmer's swept element: while it is attached, that piece of content
- * is still moving. The host renamed the attribute (data-text-shimmer to
- * data-shimmer) in its 2026-09 update, so both names are read.
+ * is still moving. Both names are read, because an older host build writes
+ * the old one (data-text-shimmer).
  */
-export const SHIMMER_SELECTOR = '[data-shimmer], [data-text-shimmer]'
+export const SHIMMER_ATTRIBUTE = 'data-shimmer'
+export const SHIMMER_LEGACY_ATTRIBUTE = 'data-text-shimmer'
+/** The two shimmer attributes in selector form. */
+export const SHIMMER_SELECTOR = `[${SHIMMER_ATTRIBUTE}], [${SHIMMER_LEGACY_ATTRIBUTE}]`
 /** The chat column's scroller; the host hangs its own follow off it. */
 export const CONVERSATION_SCROLL_SELECTOR = '[data-conversation-scroll]'
 /** Present while the host's follow is on; its absence is how the follow reads as off. */
@@ -120,9 +122,9 @@ export const COMPOSER_STACK_SELECTOR = '[class*="_composerStack"]'
 /** The placeholder the host's own editor draws inside the draft. */
 export const COMPOSER_PLACEHOLDER_SELECTOR = '[data-composer-placeholder]'
 /**
- * The statistics in the composer stack. The host marks each figure since its
- * 2026-09 update and marked one container around them before, so both are read
- * (D3); those figures are what the context panel repeats (D27).
+ * The statistics in the composer stack. Both markers are read (D3), because an
+ * older host build writes only the container; the context panel repeats the
+ * figures (D27).
  */
 export const COMPOSER_STATS_SELECTOR = '[data-composer-stats]'
 export const COMPOSER_STAT_SELECTOR = '[data-composer-stat]'
@@ -130,6 +132,8 @@ export const COMPOSER_STAT_SELECTOR = '[data-composer-stat]'
 export const COMPOSER_VARIANT_ATTRIBUTE = 'data-composer-variant'
 /** The host's own access-mode trigger inside its permission slot, skipping the skin's buttons. */
 export const PERMISSION_TRIGGER_SELECTOR = '[data-slot="conversation.input.permission"] button:not([class*="dsh-claude"])'
+/** A host button that opens a dialog: the model and effort pickers in the composer stack. */
+export const DIALOG_TRIGGER_SELECTOR = 'button[aria-haspopup="dialog"]'
 /** The sidebar footer block; the skin's account entry lives inside it. */
 export const FOOT_AREA_SELECTOR = '[class*="footArea"]'
 /** The host's own composer is replaced by a panel of its own choice; this is that panel's seat. */

@@ -15,13 +15,13 @@
  *      fonts route hands them to the browser half's @font-face and the code face
  *      works with zero system installs. The Anthropic Sans/Serif text faces
  *      are NOT in the npm package (they remain Anthropic's property), but a
- *      user who drops them into this package's `fonts/` directory gets the
+ *      user who drops them into `$DSH_HOME/dsh-claude-style/fonts/` gets the
  *      same zero-install treatment; a missing file simply 404s and the stack
  *      falls back to a system-installed copy, then to the look-alike faces
  *      this package does ship (Inter, Noto Serif — SIL OFL).
  *   3. Resolve the OS user once for the browser half. The username route answers
  *      a single GET and the browser caches it; it runs the host's own request
- *      fence first — see refusalOf() in routes.js.
+ *      fence first — see refusalOf() in routes.ts.
  *   4. Serve Deepy's animation sheets. The DeepSeek brand's pixel whale plays
  *      about 0.4 MB of sprite sheets, too much to inline into the bundle, so
  *      they ship as files beside it and the browser fetches each one the
@@ -33,8 +33,8 @@
  * the module graph and the whole skin with it. The browser half falls back to
  * its defaults when either surface is missing.
  *
- * The routes live in routes.js, the HDSL account contract in hdsl.js, and the
- * settings surface in settings.js; this file only mounts them.
+ * The routes live in routes.ts, the HDSL account contract in hdsl.ts, and the
+ * settings surface in settings.ts; this file only mounts them.
  */
 import { registerRoutes } from './routes.js'
 import type { DshContext, DshScope } from './dsh.ts'

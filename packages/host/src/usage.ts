@@ -1,400 +1,36 @@
 /**
- * Usage aggregation for the skin's home dashboard.
+ * The usage aggregation service the `usage` route reads, and the pass that fills
+ * it.
  *
  * The dashboard needs cross-session token totals bucketed by day, which no host
  * service publishes: the `tokenUsage` projection is per session and the session
- * list carries only that session's own totals. This module produces the day
- * buckets and their per-model cells, from the cheapest source that can answer.
+ * list carries only that session's own totals. This module owns the pass and the
+ * state; the four parts below own the sources and the shapes:
  *
- * Two sources, in this order:
- *
- *   1. The cost-meter plugin's ledger (`$DSH_HOME/storages/cost-meter/ledger.json`),
- *      read ONLY. Its `days` map is already a per-day token roll-up, and each
- *      day's `byProviderModel` splits it by `<provider>:<model>` — so when it
- *      exists and covers the newest session activity there is nothing left to
- *      compute. It also outlives the logs: a deleted session's tokens stay in
- *      it. It has no hour dimension, so the fold below still runs behind a
- *      ledger answer for the hour histograms alone. The file is never written: its owner rebuilds the whole document
- *      from a fixed field list and rewrites it under a cross-process lock, so a
- *      foreign key would be dropped by their next flush, a write outside their
- *      lock could lose theirs, and a version they do not recognise makes them
- *      quarantine the file (`ledger.json.corrupt-<stamp>`) and start empty.
- *   2. Our own fold over the session logs, read through the host's own
- *      `sessionQuery` service. The logs are multi-frame zstd (one frame per
- *      appended batch: a 9 MB log holds ~4000 frames) and `node:zlib` decodes
- *      only the first frame, silently discarding the rest — so the frames are
- *      left to the engine's reader and only the aggregation is ours.
- *
- * The fold mirrors the host's own `tokenUsage` projection (see
- * `@deepseek-ai/dsh-token-meter/usage-projection`): one durable Assistant
- * settlement contributes the last usage sample embedded in its stream, a retry
- * on the same turn/step replaces that sample instead of adding to it, and the
- * four buckets are disjoint. The one addition is the day dimension: a replaced
- * sample is subtracted from the day it was recorded on.
- *
- * Our own result is cached under `$DSH_HOME/cache/dsh-claude-style/usage.json`,
- * keyed per session by the newest log's size and modification time, so a warm
- * start costs one directory walk plus one stat per session and re-reads only
- * the logs that changed.
+ *   - `usage-ledger.ts` reads the cost-meter plugin's ledger, read-only, and
+ *     declares the bucket shapes. It answers alone when it covers the newest
+ *     session activity, except for the hour histograms it has no dimension for.
+ *   - `usage-fold.ts` finds the session logs and folds the ones the ledger could
+ *     not answer for.
+ *   - `usage-cache.ts` keeps each session's fold between passes.
+ *   - `usage-summary.ts` merges the folds and shapes the payload.
  */
-import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from 'node:fs'
-import { dirname, join, resolve } from 'node:path'
+import { join, resolve } from 'node:path'
 import type { DshContext } from './dsh.js'
 import { harnessPath } from './harness-home.js'
-
-/** The ledger's document version this reader understands; anything else is ignored. */
-const LEDGER_VERSION = 1
-/** Our own cache document version; 2 added the per-session hour histogram, 3 the per-day per-model map, 4 the per-day hour histogram. */
-const CACHE_VERSION = 4
-/** Session log names: v0 is `session.jsonl`, vN is `session.vN.jsonl`, `.zstd` appended. */
-const SESSION_LOG = /^session(?:\.v([1-9][0-9]*))?\.jsonl(?:\.zstd)?$/i
-/** Buckets are disjoint; reasoning tokens ride inside output. */
-const BUCKET_KEYS: (keyof Buckets)[] = ['input', 'output', 'cacheRead', 'cacheWrite']
-
-/**
- * The shapes this module reads and writes. The ledger and the cache are this
- * plugin's own documents (the versions above), and the raw log events come from
- * the host's session reader; none of them ships types, so they are declared
- * here with the members this reader touches.
- */
-
-/** The four disjoint buckets of one day, model or window, plus its settled calls. */
-interface Buckets {
-  input: number
-  output: number
-  cacheRead: number
-  cacheWrite: number
-  calls: number
-}
-
-/** One day's buckets, with the sessions behind it and, when known, the hours and models. */
-interface DayBuckets extends Buckets {
-  sessions?: Set<string> | number
-  sessionIds?: string[]
-  hours?: number[]
-  models?: Map<string, Buckets>
-}
-
-/** The ledger document the cost meter writes. */
-interface LedgerDocument {
-  version?: number
-  days?: Record<string, Buckets>
-  models?: Record<string, Buckets>
-  computedAt?: number
-  source?: string
-}
-
-/** One stored session in the cache document. */
-interface CacheSession {
-  size: number
-  mtimeMs: number
-  days: Map<string, DayBuckets>
-  hours: number[]
-}
-
-/** The cache document: the sessions it knows and the fingerprints it read them at. */
-interface CacheDocument {
-  version?: number
-  sessions?: Record<string, { size?: number, mtimeMs?: number, days?: Record<string, Partial<Buckets> & { hours?: number[] }>, hours?: number[] }>
-}
-
-/** One raw log event, as the usage samples are read out of it. */
-interface UsageEvent {
-  type?: string
-  seq?: number
-  time?: number
-  turn?: number
-  step?: number
-  data?: {
-    usage?: UsageSample
-    turn?: number
-    step?: number
-    stream?: { type?: string, chunk?: { type?: string, usage?: UsageSample } }[]
-    message?: { source?: { model?: unknown }, usage?: UsageSample }
-  }
-}
-
-/** One usage sample, in the host's own token names. */
-interface UsageSample {
-  inputTokens?: unknown
-  outputTokens?: unknown
-  cacheReadTokens?: unknown
-  cacheWriteTokens?: unknown
-}
-
-/** What the service reads out: the summarized days, models and totals, or null before the first read. */
-interface UsageSummary {
-  source: string
-  /** Set when the figures could not be read at all this pass. */
-  unavailable?: boolean
-  /** Set when only part of the sessions could be folded. */
-  read?: boolean
-  computedAt: number
-  days: Record<string, unknown>[]
-  models: Record<string, unknown>[]
-  firstDay: string | null
-  lastDay: string | null
-  hours?: number[]
-  totals: Record<string, unknown>
-}
-
-/** One session log on disk: its id, its path and its fingerprint. */
-interface SessionLog {
-  id: string
-  path: string
-  size: number
-  mtimeMs: number
-}
+import { readCache, writeCache } from './usage-cache.js'
+import type { CacheSession } from './usage-cache.js'
+import { dayKey, foldSession, listSessionLogs, readEvents } from './usage-fold.js'
+import type { SessionLog } from './usage-fold.js'
+import { readLedger } from './usage-ledger.js'
+import { mergeSessions, summarize } from './usage-summary.js'
+import type { UsageSummary } from './usage-summary.js'
 
 /** The service's state: the last summary, whether more is coming, and why not. */
 interface UsageState {
   value: UsageSummary | null
   computing: boolean
   error?: string
-}
-
-/** What one session's fold produced: its days and its hours. */
-interface FoldedSession {
-  days: Map<string, DayBuckets>
-  hours: number[]
-}
-
-/** A local calendar day, the same key the cost-meter ledger uses. */
-function dayKey(time: number): string | null {
-  const date = new Date(time)
-  if (!Number.isFinite(date.getTime())) return null
-  const pad = (value: number) => String(value).padStart(2, '0')
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
-}
-
-function emptyBuckets(): Buckets {
-  return { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, calls: 0 }
-}
-
-function addBuckets(target: Buckets, buckets: Partial<Buckets> | null | undefined, sign: number) {
-  if (buckets === null || buckets === undefined) return
-  for (const key of BUCKET_KEYS) {
-    const value = Number(buckets?.[key])
-    if (Number.isFinite(value) && value !== 0) target[key] += sign * value
-  }
-  target.calls += sign * (Number.isFinite(Number(buckets?.calls)) ? Number(buckets.calls) : 0)
-}
-
-/**
- * The usage one durable Assistant settlement reports for its attempt.
- *
- * `assistant/message` may carry it directly; otherwise the sample is the last
- * raw `usage` chunk of the settlement's compact stream.
- */
-function usageOf(event: UsageEvent): UsageSample | undefined {
-  const data = event?.data
-  if (data === null || data === undefined || typeof data !== 'object') return undefined
-  if (event.type === 'assistant/message' && data.usage !== undefined) return data.usage
-  if (event.type !== 'assistant/message' && event.type !== 'assistant/attempt') return undefined
-  const stream = data.stream
-  if (!Array.isArray(stream)) return undefined
-  for (let index = stream.length - 1; index >= 0; index -= 1) {
-    const record = stream[index]
-    if (record !== null && typeof record === 'object' && record.type === 'chunk'
-      && record.chunk !== null && typeof record.chunk === 'object' && record.chunk.type === 'usage') {
-      return record.chunk.usage
-    }
-  }
-  return undefined
-}
-
-/** The four disjoint buckets of one usage sample. */
-function bucketsFrom(usage: UsageSample | null | undefined): Buckets {
-  const count = (value: unknown) => (Number.isFinite(Number(value)) ? Number(value) : 0)
-  return {
-    input: count(usage?.inputTokens),
-    output: count(usage?.outputTokens),
-    cacheRead: count(usage?.cacheReadTokens),
-    cacheWrite: count(usage?.cacheWriteTokens),
-    calls: 1,
-  }
-}
-
-function bucketsEqual(left: Buckets, right: Buckets) {
-  return BUCKET_KEYS.every((key) => left[key] === right[key])
-}
-
-/** A stored 24-slot hour histogram, or an empty one when the entry has none. */
-function hoursFrom(raw: unknown): number[] {
-  return Array.isArray(raw) && raw.length === 24
-    ? raw.map((value) => (Number.isFinite(Number(value)) ? Number(value) : 0))
-    : new Array(24).fill(0)
-}
-
-/** The four disjoint buckets of one day or one model, summed. */
-function bucketTotal(buckets: Partial<Buckets> | null | undefined): number {
-  let total = 0
-  for (const key of BUCKET_KEYS) total += Number(buckets?.[key]) || 0
-  return total
-}
-
-/**
- * The route a settlement's sample belongs to, or null when the event names none.
- *
- * Only `assistant/message` carries the assembled message; an `assistant/attempt`
- * that committed no surface message keeps its usage but has no route to attribute
- * it to, and its tokens then count toward the day alone.
- */
-function modelOf(event: UsageEvent): string | null {
-  const model = event?.data?.message?.source?.model
-  return typeof model === 'string' && model !== '' ? model : null
-}
-
-/**
- * Fold one session's events into per-day buckets, plus a settlement count per
- * hour of day — the dashboard's peak-hour cell — both for the whole session and
- * for each day, so a range window can sum its own days' hours. A replaced
- * sample leaves its hour the same way it leaves its day.
- *
- * @param events - the session's durable events, in sequence order.
- * @returns a map of local day key to buckets, and a 24-slot hour histogram.
- */
-function foldSession(events: UsageEvent[]): FoldedSession {
-  const days = new Map<string, DayBuckets>()
-  const hours = new Array(24).fill(0) as number[]
-  const bump = (day: string, hour: number, buckets: Buckets, sign: number, model: string | null) => {
-    hours[hour] += sign
-    let target = days.get(day)
-    if (target === undefined) {
-      if (sign < 0) return
-      const fresh: DayBuckets = emptyBuckets()
-      fresh.hours = new Array(24).fill(0)
-      fresh.models = new Map<string, Buckets>()
-      days.set(day, fresh)
-      target = fresh
-    }
-    const targetHours = target.hours ?? (target.hours = new Array(24).fill(0))
-    targetHours[hour] += sign
-    addBuckets(target, buckets, sign)
-    // The same day, per route: what the models chart stacks. A sample whose
-    // event names no route still counts toward the day, and only there.
-    if (model !== null) {
-      const models = target.models ?? (target.models = new Map<string, Buckets>())
-      let cell = models.get(model)
-      if (cell === undefined && sign > 0) {
-        if (target.models === undefined) target.models = new Map()
-        cell = emptyBuckets()
-        models.set(model, cell)
-      }
-      if (cell !== undefined) {
-        addBuckets(cell, buckets, sign)
-        if (sign < 0 && BUCKET_KEYS.every((key) => cell[key] === 0) && cell.calls === 0) models.delete(model)
-      }
-    }
-    if (sign < 0 && BUCKET_KEYS.every((key) => target[key] === 0) && target.calls === 0) days.delete(day)
-  }
-  // The replacement slot: one settlement per turn/step, replaced on retry.
-  type Settlement = { turn?: number, step?: number, buckets: Buckets, day: string, hour: number, model: string | null }
-  let last: Settlement | null = null
-  for (const event of events) {
-    const type = event?.type
-    if (type === 'llm/retry-started') {
-      const data = event.data
-      if (last !== null && last.turn === data?.turn && last.step === data?.step) last = null
-      continue
-    }
-    if (type !== 'assistant/message' && type !== 'assistant/attempt') continue
-    const usage = usageOf(event)
-    if (usage === undefined) continue
-    if (typeof event.time !== 'number') continue
-    const day = dayKey(event.time)
-    if (day === null) continue
-    const hour = new Date(event.time).getHours()
-    const buckets = bucketsFrom(usage)
-    const model = modelOf(event)
-    const turn = event.data?.turn
-    const step = event.data?.step
-    const previous = last as Settlement | null
-    const replacing = previous !== null && previous.turn === turn && previous.step === step
-    if (replacing && previous !== null && bucketsEqual(previous.buckets, buckets)) continue
-    if (replacing && previous !== null) bump(previous.day, previous.hour, previous.buckets, -1, previous.model)
-    bump(day, hour, buckets, 1, model)
-    last = { turn, step, buckets, day, hour, model }
-  }
-  return { days, hours }
-}
-
-/** A bucket map as a plain object, for the cache document. */
-function daysToObject(days: Map<string, DayBuckets>): Record<string, unknown> {
-  const out: Record<string, unknown> = {}
-  for (const [day, buckets] of days) {
-    const entry: Record<string, unknown> = { ...buckets, models: undefined, sessions: undefined }
-    const cells: Record<string, Buckets> = {}
-    if (buckets.models !== undefined) {
-      for (const [model, cell] of buckets.models) cells[model] = cell
-      entry.models = cells
-    }
-    out[day] = entry
-  }
-  return out
-}
-
-function daysFromObject(raw: unknown): Map<string, DayBuckets> {
-  const days = new Map<string, DayBuckets>()
-  if (raw === null || typeof raw !== 'object') return days
-  for (const [day, buckets] of Object.entries(raw)) {
-    if (buckets === null || typeof buckets !== 'object') continue
-    const stored = buckets as { hours?: unknown, models?: unknown } & Partial<Buckets>
-    const clean: DayBuckets = emptyBuckets()
-    addBuckets(clean, stored, 1)
-    clean.hours = hoursFrom(stored.hours)
-    if (stored.models !== null && typeof stored.models === 'object') {
-      const models = new Map<string, Buckets>()
-      for (const [model, cell] of Object.entries(stored.models as Record<string, unknown>)) {
-        if (cell === null || typeof cell !== 'object') continue
-        const into = emptyBuckets()
-        addBuckets(into, cell as Partial<Buckets>, 1)
-        models.set(model, into)
-      }
-      clean.models = models
-    }
-    days.set(day, clean)
-  }
-  return days
-}
-
-/** The newest generation of a session directory's log, with its fingerprint. */
-function newestLog(dir: string): { path: string, size: number, mtimeMs: number } | null {
-  let best: { name: string, version: number, compressed: boolean } | null = null
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    if (!entry.isFile()) continue
-    const match = SESSION_LOG.exec(entry.name)
-    if (match === null) continue
-    const version = Number(match[1] ?? 0)
-    const compressed = /\.zstd$/i.test(entry.name)
-    if (best === null || version > best.version
-      || (version === best.version && Number(compressed) > Number(best.compressed))) {
-      best = { name: entry.name, version, compressed }
-    }
-  }
-  if (best === null) return null
-  const path = join(dir, best.name)
-  const stat = statSync(path)
-  return { path, size: stat.size, mtimeMs: stat.mtimeMs }
-}
-
-/**
- * Every stored session: id, newest log, and that log's fingerprint. A harness
- * home that has never stored a session has no sessions root yet.
- */
-function listSessionLogs(root: string): SessionLog[] {
-  const out: SessionLog[] = []
-  if (!existsSync(root)) return out
-  for (const project of readdirSync(root, { withFileTypes: true })) {
-    if (!project.isDirectory()) continue
-    for (const session of readdirSync(join(root, project.name), { withFileTypes: true })) {
-      if (!session.isDirectory()) continue
-      const log = newestLog(join(root, project.name, session.name))
-      if (log === null) continue
-      out.push({ id: session.name, ...log })
-    }
-  }
-  return out
 }
 
 /**
@@ -413,246 +49,9 @@ export function createUsage(ctx: DshContext) {
   let pending: Promise<UsageSummary | null> | null = null
   let disposed = false
 
-  function readLedger(): Map<string, DayBuckets> | null {
-    // The cost meter is another plugin: no ledger means it is not installed.
-    const file = join(home(), 'storages', 'cost-meter', 'ledger.json')
-    if (!existsSync(file)) return null
-    const raw = readFileSync(file, 'utf8')
-    let parsed: unknown
-    try {
-      parsed = JSON.parse(raw)
-    } catch {
-      // Another plugin's file, read without any coordination with its writer:
-      // a write in progress reads as no ledger, and the local fold answers
-      // (docs/decisions D12).
-      return null
-    }
-    if (parsed === null || typeof parsed !== 'object') return null
-    const ledger = parsed as { version?: unknown, days?: unknown }
-    if (ledger.version !== LEDGER_VERSION) return null
-    const rawDays = ledger.days
-    if (rawDays === null || typeof rawDays !== 'object' || Array.isArray(rawDays)) return null
-    const days = new Map<string, DayBuckets>()
-    for (const [day, value] of Object.entries(rawDays as Record<string, unknown>)) {
-      if (value === null || typeof value !== 'object') continue
-      const bucket = value as Partial<Buckets> & { sessions?: unknown, byProviderModel?: unknown }
-      const clean: DayBuckets = emptyBuckets()
-      addBuckets(clean, {
-        input: bucket.input,
-        output: bucket.output,
-        cacheRead: bucket.cacheRead,
-        cacheWrite: bucket.cacheWrite,
-        calls: bucket.calls,
-      }, 1)
-      // The ledger keeps one record per session per day; the ids are what make
-      // the total session count a union rather than a sum.
-      clean.sessionIds = Array.isArray(bucket.sessions)
-        ? (bucket.sessions as unknown[])
-          .map((entry) => (entry !== null && typeof entry === 'object' && typeof (entry as { id?: unknown }).id === 'string' ? (entry as { id: string }).id : null))
-          .filter((id): id is string => id !== null)
-        : []
-      clean.sessions = clean.sessionIds.length
-      // The day's split by `<provider>:<model>`, the owner's own key (it splits
-      // at the first colon too). The dashboard ranks models, so one model served
-      // by two providers is one cell.
-      const byProviderModel = bucket.byProviderModel
-      if (byProviderModel !== null && typeof byProviderModel === 'object' && !Array.isArray(byProviderModel)) {
-        for (const [key, entry] of Object.entries(byProviderModel)) {
-          if (entry === null || typeof entry !== 'object') continue
-          const model = key.slice(key.indexOf(':') + 1)
-          if (model === '') continue
-          if (clean.models === undefined) clean.models = new Map()
-          let cell = clean.models.get(model)
-          if (cell === undefined) {
-            cell = emptyBuckets()
-            clean.models.set(model, cell)
-          }
-          addBuckets(cell, entry as Partial<Buckets>, 1)
-        }
-      }
-      days.set(day, clean)
-    }
-    if (days.size === 0) return null
-    return days
-  }
-
-  function cacheFile() {
-    return join(home(), 'cache', 'dsh-claude-style', 'usage.json')
-  }
-
-  function readCache() {
-    if (!existsSync(cacheFile())) return new Map()
-    let parsed: unknown
-    try {
-      parsed = JSON.parse(readFileSync(cacheFile(), 'utf8'))
-    } catch (error) {
-      // The cache only saves work: a file that does not parse is reported, the
-      // pass folds every session again and writes a whole new file over it
-      // (docs/decisions D12).
-      ctx.logger?.warn?.(`dsh-claude-style: usage cache unreadable, folding again: ${(error as { message?: string }).message}`)
-      return new Map()
-    }
-    if (parsed === null || typeof parsed !== 'object') return new Map()
-    const document = parsed as { version?: unknown, sessions?: unknown }
-    if (document.version !== CACHE_VERSION) return new Map()
-    const sessions = new Map<string, CacheSession>()
-    const rawSessions = document.sessions
-    if (rawSessions === null || typeof rawSessions !== 'object') return sessions
-    for (const [id, value] of Object.entries(rawSessions as Record<string, unknown>)) {
-      if (value === null || typeof value !== 'object') continue
-      const entry = value as { size?: unknown, mtimeMs?: unknown, days?: unknown, hours?: unknown }
-      if (!Number.isFinite(entry.size) || !Number.isFinite(entry.mtimeMs)) continue
-      sessions.set(id, {
-        size: Number(entry.size),
-        mtimeMs: Number(entry.mtimeMs),
-        days: daysFromObject(entry.days),
-        hours: hoursFrom(entry.hours),
-      })
-    }
-    return sessions
-  }
-
-  function writeCache(sessions: Map<string, CacheSession>) {
-    const document: { version: number, computedAt: number, sessions: Record<string, unknown> } = { version: CACHE_VERSION, computedAt: Date.now(), sessions: {} }
-    for (const [id, entry] of sessions) {
-      document.sessions[id] = { size: entry.size, mtimeMs: entry.mtimeMs, days: daysToObject(entry.days), hours: entry.hours }
-    }
-    const path = cacheFile()
-    const temp = `${path}.${process.pid}.tmp`
-    try {
-      mkdirSync(dirname(path), { recursive: true })
-      writeFileSync(temp, JSON.stringify(document), 'utf8')
-      renameSync(temp, path)
-    } catch (error) {
-      // The cache only saves work: a write that fails is reported, and the
-      // roll-up this pass computed is still served (docs/decisions D12).
-      ctx.logger?.warn?.(`dsh-claude-style: usage cache not written: ${(error as { message?: string }).message}`)
-    }
-  }
-
-  /** Sum the per-session day maps into one, tracking distinct sessions per day. */
-  function mergeSessions(sessions: Map<string, CacheSession>): { days: Map<string, DayBuckets>, sessionCount: number, hours: number[] } {
-    const days = new Map<string, DayBuckets>()
-    const hours = new Array(24).fill(0) as number[]
-    const seen = new Set<string>()
-    for (const [id, entry] of sessions) {
-      seen.add(id)
-      if (Array.isArray(entry.hours)) {
-        for (let hour = 0; hour < 24; hour += 1) hours[hour] += Number(entry.hours[hour]) || 0
-      }
-      for (const [day, buckets] of entry.days) {
-        let target = days.get(day)
-        if (target === undefined) {
-          target = emptyBuckets()
-          target.sessions = new Set()
-          target.hours = new Array(24).fill(0)
-          days.set(day, target)
-        }
-        addBuckets(target, buckets, 1)
-        if (target.sessions instanceof Set) target.sessions.add(id)
-        const dayHours = target.hours ?? (target.hours = new Array(24).fill(0))
-        for (let hour = 0; hour < 24; hour += 1) dayHours[hour] += (buckets.hours ?? [])[hour] ?? 0
-        if (buckets.models === undefined) continue
-        for (const [model, cell] of buckets.models) {
-          if (target.models === undefined) target.models = new Map()
-          let into = target.models.get(model)
-          if (into === undefined) {
-            into = emptyBuckets()
-            target.models.set(model, into)
-          }
-          addBuckets(into, cell, 1)
-        }
-      }
-    }
-    for (const day of days.values()) {
-      const behind = day.sessions instanceof Set ? [...day.sessions].sort() : []
-      day.sessionIds = behind
-      day.sessions = behind.length
-    }
-    return { days, sessionCount: seen.size, hours }
-  }
-
-  function summarize(days: Map<string, DayBuckets>, sessionCount: number, source: string, hours?: number[]): UsageSummary {
-    const list = [...days.entries()].map(([date, buckets]) => ({
-      date,
-      input: buckets.input,
-      output: buckets.output,
-      cacheRead: buckets.cacheRead,
-      cacheWrite: buckets.cacheWrite,
-      calls: buckets.calls,
-      sessions: Number.isFinite(buckets.sessions) ? buckets.sessions : 0,
-      // The ids behind the day, so the dashboard can union them over any range
-      // window instead of summing per-day counts (a two-day session is one).
-      sessionIds: buckets.sessionIds === undefined ? []
-        : [...buckets.sessionIds].filter((id) => typeof id === 'string').sort(),
-      // The day's tokens per model, for the models chart. Absent when nothing
-      // on the day is attributed to a model.
-      models: buckets.models === undefined ? undefined
-        : Object.fromEntries([...buckets.models].map(([id, cell]) => [id, bucketTotal(cell)])),
-      // The day's settlements per hour, so a range window can find its own peak
-      // hour. Only the fold knows the hour of a settlement.
-      ...(buckets.hours === undefined ? {} : { hours: buckets.hours }),
-    })).sort((left, right) => (left.date < right.date ? -1 : 1))
-    const totals = emptyBuckets()
-    const byModel = new Map<string, Buckets>()
-    for (const buckets of days.values()) {
-      addBuckets(totals, buckets, 1)
-      if (buckets.models === undefined) continue
-      for (const [id, cell] of buckets.models) {
-        let into = byModel.get(id)
-        if (into === undefined) {
-          into = emptyBuckets()
-          byModel.set(id, into)
-        }
-        addBuckets(into, cell, 1)
-      }
-    }
-    // Biggest spender first: the dashboard's ranked list and its colour ramp
-    // both read this order.
-    const models = [...byModel.entries()]
-      .map(([id, cell]) => ({ id, ...cell, tokens: bucketTotal(cell) }))
-      .sort((left, right) => right.tokens - left.tokens)
-    return {
-      source,
-      computedAt: Date.now(),
-      days: list,
-      models,
-      firstDay: list.length === 0 ? null : list[0].date,
-      lastDay: list.length === 0 ? null : list[list.length - 1].date,
-      // The fold knows the hour of every settlement; the cost-meter ledger has
-      // no hour dimension, so its histogram arrives from the fold afterwards.
-      ...(hours === undefined ? {} : { hours }),
-      totals: {
-        ...totals,
-        sessions: sessionCount,
-        activeDays: list.length,
-      },
-    }
-  }
-
-  /** Read one session's events through the host's own reader. */
-  async function readEvents(sessionId: string) {
-    const query = ctx.get('sessionQuery')
-    if (query === null || query === undefined || typeof query.readSession !== 'function') return null
-    let snapshot
-    try {
-      snapshot = await query.readSession(sessionId)
-    } catch (error) {
-      // The query service throws these two to say a stored log is unreadable
-      // or went away between the listing and the read: that session is
-      // skipped and retried on the next pass (docs/decisions D12).
-      const failure = error as { code?: string, message?: string }
-      if (failure?.code !== 'SESSION_QUERY_CORRUPT_SESSION' && failure?.code !== 'SESSION_QUERY_SESSION_NOT_FOUND') throw error
-      ctx.logger?.warn?.(`dsh-claude-style: session ${sessionId} left out of the usage roll-up: ${failure.message}`)
-      return null
-    }
-    const events = snapshot?.events
-    return Array.isArray(events) ? events as UsageEvent[] : null
-  }
-
   /** Fold every session whose log changed since the cache was written. */
   async function computeLocal(logs: SessionLog[]) {
-    const cache = readCache()
+    const cache = readCache(ctx, home())
     const sessions = new Map<string, CacheSession>()
     let read = 0
     let failed = 0
@@ -662,7 +61,7 @@ export function createUsage(ctx: DshContext) {
         sessions.set(log.id, cached)
         continue
       }
-      const events = await readEvents(log.id)
+      const events = await readEvents(ctx, log.id)
       if (events === null) {
         // The reader refused (no `sessionQuery` service, or a log it cannot
         // parse). Leave the session out of the cache so the next pass retries it
@@ -675,7 +74,7 @@ export function createUsage(ctx: DshContext) {
       sessions.set(log.id, { size: log.size, mtimeMs: log.mtimeMs, days: folded.days, hours: folded.hours })
       read += 1
     }
-    writeCache(sessions)
+    writeCache(ctx, home(), sessions)
     const merged = mergeSessions(sessions)
     const summary = summarize(merged.days, merged.sessionCount, 'local', merged.hours)
     if (sessions.size === 0 && failed > 0) {
@@ -691,7 +90,7 @@ export function createUsage(ctx: DshContext) {
   async function compute(publish: (partial: UsageSummary) => void): Promise<UsageSummary> {
     const root = resolve(join(home(), 'sessions'))
     const logs = listSessionLogs(root)
-    const ledgerDays = readLedger()
+    const ledgerDays = readLedger(home())
 
     if (ledgerDays !== null) {
       // The shared cache answers for every day it covers; our own fold runs only

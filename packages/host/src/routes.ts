@@ -6,7 +6,11 @@
  * usage and search roll-ups — each registered on the host's web server under
  * this plugin's route prefix. Every route is registered on its own: one path
  * the web server refuses is reported, and the other routes still register.
+ *
+ * The paths are the shared contract (`@dsh-claude-style/contracts/routes`,
+ * D46): the browser half addresses the same names.
  */
+import { HDSL_PATH, HDSL_SKIN_PATH, ROUTE_PREFIX, SESSION_DELETE_PATH, SESSION_SEARCH_PATH, USAGE_PATH, USERNAME_PATH } from '@dsh-claude-style/contracts/routes'
 import { existsSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs'
 import { userInfo } from 'node:os'
 import { dirname, join, resolve, sep } from 'node:path'
@@ -19,19 +23,21 @@ import { packageRoot } from './package-root.js'
 import { QUERY_MAX, createSessionSearch } from './search.js'
 import { createUsage } from './usage.js'
 
-/** Route prefix this plugin owns; the browser half reads `${ROUTE_PREFIX}/${COPY_FILE}`. */
-const ROUTE_PREFIX = '/dsh-claude-style'
-/** The copy document, built from `packages/client/src/model-descriptions.json` by scripts/build.mjs. */
+/** The copy document, built from `packages/client/data/model-descriptions.json` by scripts/build.mjs. */
 const COPY_FILE = 'model-descriptions.json'
 /**
  * Webfonts this plugin serves under `${ROUTE_PREFIX}/fonts/`, mapped to their
  * content type. The table is a whitelist: the filename is the whole request
- * contract, so nothing below the package's `fonts/` directory is reachable
- * and no path traversal is possible. The JetBrains Mono files and the two
- * look-alike faces behind the Anthropic ones (Inter, Noto Serif) ship in the
- * npm package; the Anthropic faces do not (copyright) — their entries exist so
- * a user-supplied copy in `fonts/` is served, and readFileSync's ENOENT turns
- * into a 404 the browser half's font stacks fall back from.
+ * contract, so no path outside the two directories below is reachable and no
+ * path traversal is possible.
+ *
+ * A name is looked up in the user's own drop point first — the harness home's
+ * `dsh-claude-style/fonts/` — and then in the package's `lib/fonts/` (D11). The
+ * JetBrains Mono files and the two look-alike faces behind the Anthropic ones
+ * (Inter, Noto Serif) ship in the npm package; the Anthropic faces do not
+ * (copyright), so only a copy the user dropped in answers them. A name neither
+ * directory holds is absent: sendFile's ENOENT becomes a 404, which the browser
+ * half's font stacks fall back from.
  */
 const FONT_FILES = {
   'JetBrainsMonoVariable.ttf': 'font/ttf',
@@ -56,55 +62,8 @@ const FONT_FILES = {
 const ASSETS_PATH = `${ROUTE_PREFIX}/assets/`
 /** The build's asset manifest: which names exist, their type and their storage. */
 const ASSETS_MANIFEST = 'manifest.json'
-/** One-shot host OS user route; the browser half caches the response. */
-const USERNAME_PATH = `${ROUTE_PREFIX}/username`
-
-/**
- * The HDSL launcher's account contract, as this half forwards it.
- *
- * HDSL publishes who the player is through `HDSL_`-prefixed variables (its
- * plugin guide lives in the launcher's own repository). The browser half cannot
- * read a process environment, and the player's avatar is a PNG that only exists
- * under the launcher's data directory, so both are served from here: this route
- * answers the metadata, the sibling route below answers the bytes.
- */
-const HDSL_PATH = `${ROUTE_PREFIX}/hdsl`
-/** The player's own avatar PNG, forwarded; the absolute path never leaves this half. */
-const HDSL_SKIN_PATH = `${ROUTE_PREFIX}/hdsl-skin.png`
-
-/**
- * Session deletion.
- *
- * The harness gives the browser half no deletion API of its own: the workspace
- * controller archives and unarchives, and the agent protocol's session delete is
- * the host delegating to an ACP agent that owns the storage. The archived row's
- * delete button therefore comes here, where the stored session directory under
- * the harness home is removed and the id is dropped from the workspace
- * registry's archive set — the stored-directory miss included, so an archive
- * entry whose storage is already gone leaves the set instead of pinning its
- * row to the list. The path is also spelled in
- * packages/client/src/constants.ts (SESSION_DELETE_ROUTE) for the browser half; keep the two in
- * step.
- */
-const SESSION_DELETE_PATH = `${ROUTE_PREFIX}/session-delete`
-/**
- * Cross-session usage roll-up for the home dashboard.
- *
- * The browser half cannot reach the host's `sessionQuery` service and cannot
- * read the cost-meter ledger, so the day buckets are assembled here and handed
- * over as one small JSON document. The route answers immediately with whatever
- * is already known: a cold pass reports `computing` and the browser half keeps
- * its skeleton up while it polls.
- */
-const USAGE_PATH = `${ROUTE_PREFIX}/usage`
 /** How long a computed roll-up is served before a background refresh is kicked. */
 const USAGE_TTL_MS = 5 * 60 * 1000
-/**
- * Message-content search for the search palette (host/search.js). `?q=` is
- * the query; without one the route only brings its message cache up to date,
- * which the palette asks for as it opens so the first real query is quick.
- */
-const SESSION_SEARCH_PATH = `${ROUTE_PREFIX}/session-search`
 /** Session ids are the harness's own shape; anything else is refused before it reaches a path. */
 const SESSION_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/
 /** Largest deletion request body read; a real one carries one id. */
@@ -293,11 +252,14 @@ async function deleteSession(ctx: DshContext, req: DshRequest, res: DshResponse)
  *     `ctx` itself on a host whose context injects nothing.
  */
 export function registerRoutes(ctx: DshContext, scope: DshScope) {
-  // The built output and the fonts hang off the plugin package's own directory.
+  // The built output and the bundled fonts hang off the plugin package's own
+  // directory; the fonts a user drops in live under the harness home.
   const root = packageRoot()
   // The copy document is build output beside the client bundle in lib/.
   const file = join(root, 'lib', COPY_FILE)
-  const fontsDir = join(root, 'fonts')
+  const fontsDir = join(root, 'lib', 'fonts')
+  /** Where a user's own faces live; resolved per request, so a file added while the host runs is served. */
+  const userFontsDir = () => harnessPath(ctx, 'dsh-claude-style', 'fonts')
   const assetsDir = join(root, 'lib', 'assets')
   /** The decompressed payload of each brotli-stored asset served to a client that cannot take it. */
   const unpressed = new Map()
@@ -452,9 +414,13 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
         }
         const font = sub.startsWith('/fonts/') ? (FONT_FILES as Record<string, string | undefined>)[sub.slice('/fonts/'.length)] : undefined
         if (font !== undefined) {
+          // The whitelisted name is the whole contract; the user's own copy
+          // wins over the bundled face of the same name.
+          const name = sub.slice('/fonts/'.length)
+          const dropped = join(userFontsDir(), name)
           // The filename changes with the package, so a long cache is safe
           // and keeps the code face off the network after first paint.
-          sendFile(res, req.method ?? 'GET', join(fontsDir, sub.slice('/fonts/'.length)), {
+          sendFile(res, req.method ?? 'GET', existsSync(dropped) ? dropped : join(fontsDir, name), {
             'content-type': font,
             'cache-control': 'public, max-age=86400',
           })
@@ -560,7 +526,9 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
       handler: (req: DshRequest, res: DshResponse) => {
         // Read-only and same-origin only: the answer is the plugin's own
         // aggregate over the user's session history, which is why it runs the
-        // same fence as the username route.
+        // same fence as the username route. It answers with whatever is already
+        // known: a cold pass reports `computing` and the browser half keeps its
+        // skeleton up while it polls.
         if (methodRefused(req, res, ['GET', 'HEAD'])) return
         if (fenceRefused(req, res)) return
         let snapshot = usage.snapshot()
@@ -585,7 +553,9 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
       path: SESSION_SEARCH_PATH,
       handler: (req: DshRequest, res: DshResponse) => {
         // Read-only, behind the same fence as the usage route: the answer
-        // quotes the user's own conversations.
+        // quotes the user's own conversations. Without `?q=` it only brings the
+        // message cache up to date, which the palette asks for as it opens so
+        // the first real query is quick (packages/host/src/search.ts).
         if (methodRefused(req, res, ['GET'])) return
         if (fenceRefused(req, res)) return
         const query = (new URL(req.url ?? '/', 'http://local').searchParams.get('q') ?? '').trim().slice(0, QUERY_MAX)

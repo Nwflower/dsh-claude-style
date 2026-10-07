@@ -1,7 +1,7 @@
 /**
  * The usage payload the plugin's two halves exchange (D27's panel, D38's route).
  *
- * `packages/host/src/usage.js` answers `GET /dsh-claude-style/usage` with this shape and the
+ * `packages/host/src/usage.ts` answers `GET /dsh-claude-style/usage` with this shape and the
  * browser half reads it in `packages/client/src/features/home/data.ts`; the session list's own
  * roll-up (`sessions.list`, a host service) answers a narrower version of the
  * same entries, which is why several fields below are optional. These types are
@@ -88,7 +88,7 @@ export interface UsageAnswer {
 }
 
 /**
- * The answer of the plugin's own content search (`packages/host/src/search.js`,
+ * The answer of the plugin's own content search (`packages/host/src/search.ts`,
  * `GET /dsh-claude-style/session-search`): the hits, each naming its session
  * and the match inside the excerpt.
  */

@@ -5,7 +5,7 @@
  * plugin guide lives in the launcher's own repository). The browser half cannot
  * read a process environment, and the player's avatar is a PNG that only exists
  * under the launcher's data directory, so this module reads the contract out of
- * the launch environment and the routes in routes.js serve it.
+ * the launch environment and the routes in routes.ts serve it.
  */
 import type { DshContext } from './dsh.ts'
 

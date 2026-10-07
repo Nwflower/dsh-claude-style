@@ -3,10 +3,9 @@
  *
  * Each interface declares only the members the skin actually touches, with the
  * meaning it gives them; the host's own types are wider and are not shipped
- * here, so this file is the contract a host upgrade is checked against. The
- * build's version gate is `HOST_VERIFIED` in table.ts; these shapes were read
- * off the same build (0.2.1-alpha.1) and are exercised by the end-to-end lane
- * (D45).
+ * here, so this file is the contract a host upgrade is checked against. These
+ * shapes were read off the host build (0.2.1-alpha.1) and are exercised by the
+ * end-to-end lane (D45).
  *
  * A service the host does not mount comes back `undefined` from `ctx.get`, so
  * every reader takes the value as possibly absent (D12) — that is the reason
@@ -52,7 +51,7 @@ export interface HostWorkspaceListSnapshot {
 }
 
 /** One workspace: its identity, its name, where it lives, and the sessions under it. */
-export interface HostWorkspaceRow {
+interface HostWorkspaceRow {
   workspaceId: string
   title: string
   path: string
@@ -88,7 +87,7 @@ export interface HostSlotsService {
 }
 
 /** One registered slot entry: how it was declared, and the store it hands out. */
-export interface HostSlotRegistration {
+interface HostSlotRegistration {
   options: { id?: string }
   store?: { create(): HostSlotStore }
 }
@@ -139,7 +138,7 @@ export interface HostSkillListAnswer {
  * A session binding's own context, which the conversation service keys its
  * input by; the plugin's `HostContext` satisfies it by shape.
  */
-export interface HostServiceLookup {
+interface HostServiceLookup {
   get(name: string): any
 }
 
@@ -156,7 +155,7 @@ export interface HostConversationInput {
 }
 
 /** The `modelDirectories` service: one session's model directory, by session id. */
-export interface HostModelDirectoriesService {
+interface HostModelDirectoriesService {
   directoryFor(sessionId: string): HostModelDirectory
 }
 
@@ -232,7 +231,7 @@ export interface HostSessionStatusSnapshot extends Iterable<[string, HostSession
 }
 
 /** One session's live status: whether it runs, waits on the reader, or finished unread. */
-export interface HostSessionStatus {
+interface HostSessionStatus {
   running?: boolean
   pendingInteraction?: unknown
   completionUnread?: boolean
@@ -254,7 +253,7 @@ export interface HostSessionRow {
  * whether the session is blank, when it was last prompted, what it has spent,
  * and which model it is on.
  */
-export interface HostSessionProjectionValues {
+interface HostSessionProjectionValues {
   sessionListMetadata?: { blank?: boolean, lastPromptAt?: number }
   tokenUsage?: {
     uncachedInputTokens?: number
@@ -319,7 +318,7 @@ export interface HostSession {
 }
 
 /** What a host slash command answers: whether it ran, and what it matched. */
-export interface HostCommandResult {
+interface HostCommandResult {
   ok?: boolean
   value?: { matched?: boolean, [field: string]: unknown }
 }
@@ -340,7 +339,7 @@ export interface HostUiConversationService {
  * and the host builds it only for a subscriber or while the shell shows that
  * session's chat view.
  */
-export interface HostConversationBinding {
+interface HostConversationBinding {
   target(name: string): HostChatTarget | null | undefined
 }
 
@@ -374,7 +373,7 @@ export interface HostOutlineTurn {
 }
 
 /** The timeline: its turns by number, the order they come in, and the newest turn's id. */
-export interface HostChatTimeline {
+interface HostChatTimeline {
   turns: Map<number, HostTurn>
   turnOrder: number[]
   newestTurnId?: string | null
@@ -392,7 +391,7 @@ export interface HostTurn {
 }
 
 /** One step: the blocks it carries, by kind. */
-export interface HostStep {
+interface HostStep {
   data: { get(kind: string): HostAssistantStep | undefined }
 }
 
@@ -406,12 +405,12 @@ export interface HostAssistantStep {
 }
 
 /** A tool call the host reports as running, with the turn it belongs to. */
-export interface HostRunningCall {
+interface HostRunningCall {
   turn: number
 }
 
 /** The `locale` service: a namespace's translate seat, and its raw resolver. */
-export interface HostLocaleService {
+interface HostLocaleService {
   bind(namespace: string): HostText
   resolveText?(key: string, params?: Record<string, string | number>): unknown
 }
@@ -427,7 +426,7 @@ export interface HostConfigFormsService {
 }
 
 /** What the form service says it serves: one entry per served namespace. */
-export interface HostFormsDescription {
+interface HostFormsDescription {
   view?: { namespaces?: { ns?: unknown }[] }
 }
 
@@ -440,7 +439,7 @@ export interface HostConfigForm {
 }
 
 /** One form snapshot: whether its controller is ready, and the values it holds. */
-export interface HostConfigSnapshot {
+interface HostConfigSnapshot {
   status?: string
   value?: unknown
 }
@@ -461,7 +460,7 @@ export interface HostAccountAnswer {
 }
 
 /** One account profile: `ready` once its platform answered, with the name, contact and picture. */
-export interface HostAccountProfile {
+interface HostAccountProfile {
   status?: string
   value?: { name?: string, contact?: string, avatarUrl?: string }
   avatarUrl?: string

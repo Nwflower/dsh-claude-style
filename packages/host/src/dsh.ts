@@ -33,12 +33,12 @@ export interface DshScope extends DshContext {
 }
 
 /** The host's settings domain, as the half configures it. */
-export interface DshSettings {
+interface DshSettings {
   configure(options: { auto?: boolean }, fiber?: unknown): unknown
 }
 
 /** The host's web server service, as the half registers routes on it. */
-export interface DshWebServer {
+interface DshWebServer {
   /** Register one route; a path another plugin holds is refused by throwing, and the answer disposes it. */
   register(options: DshRoute): unknown
 }
