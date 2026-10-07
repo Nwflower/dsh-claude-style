@@ -82,7 +82,7 @@ Target layout: D46. Today:
 - `packages/` the npm workspaces (D46): `packages/contracts` holds what both halves share — the host contract (`src/dom.ts` the selectors and attributes the skin reads, `src/table.ts` the same list with what each means and who reads it, `src/timing.ts` the timing assumptions, `src/services.ts` the service and value shapes, `src/usage.ts` the payloads the two halves exchange). Import it by package name (`@dsh-claude-style/contracts/services`); the type check and the bundler both resolve it through `tsconfig.json`'s `paths`, and the build loads those tables by repository path.
 - `src/constants.ts` holds build-time constants; `src/model-descriptions.json` the model copy and `brands` bindings, its shape declared in `src/model-descriptions.schema.json`; `packages/assets/src/` every image, from brand marks to mascot sheets (`packages/assets/assets.mjs` decides inline or route, D38).
 - `src/generated.d.ts` types the module the build generates; `src/globals.d.ts` the DOM additions and the element properties the skin sets; `tsconfig.json` the type check.
-- `host/` the handwritten host half (private routes, settings `Config`, HDSL, search, usage).
+- `packages/host/` the handwritten host half (private routes, settings `Config`, HDSL, search, usage); the build writes it into `lib/host/`, which the package's `main` and `exports` point at.
 - `lib/` build output only, never edited by hand and never committed (D47).
 - `locale/<language>.json` plugin metadata; `package.json`'s `exports` must cover them with `"./locale/*"`, or the host degrades the whole metadata (icon included) to `meta.error`.
 - `skin.json` the skin manifest; `cordis.patch.yml` inserts the skin into the web roster.
