@@ -6,6 +6,7 @@
  */
 'use strict'
 const path = require('path')
+const { featureCases, readManifests } = require('../read-manifests.cjs')
 
 const ROOT = path.resolve(__dirname, '..', '..')
 const CLIENT = path.join(ROOT, 'lib', 'client.js')
@@ -51,39 +52,12 @@ const tierName = () => tier
 const TIMING_CASES = ['chat-follow', 'chat-fold', 'chat-reveal', 'chat-send', 'crab-states', 'deepy', 'popovers']
 
 /**
- * Which cases cover which directory under `src/features/`. A directory with an
- * empty list has no case of its own, and `--feature` refuses it rather than
- * running something unrelated. The runner refuses a directory the table lacks
- * and a name the case table lacks, so a new feature or a renamed case cannot
- * leave this table quietly wrong.
+ * Which cases cover which directory under `src/features/`, gathered from the
+ * feature manifests (D42). A directory with an empty list has no case of its
+ * own, and `--feature` refuses it rather than running something unrelated;
+ * the runner refuses a case name the case table lacks.
  */
-const FEATURE_CASES = {
-    account: ['account', 'desktop', 'markup', 'install-fault'],
-    'ban-screen': ['desktop'],
-    caret: ['caret'],
-    'chat-files': ['chat-files', 'peer-chat-ux'],
-    'chat-fold': ['chat-fold', 'peer-chat-ux'],
-    'chat-follow': ['chat-follow'],
-    'chat-reveal': ['chat-reveal'],
-    'chat-send': ['chat-send'],
-    composer: ['composer', 'sync-fault'],
-    'context-stats': ['context-stats', 'stats-compact'],
-    copy: ['hero', 'late-forms'],
-    effort: [],
-    'hero-menu': ['popovers'],
-    home: ['hero', 'studio', 'late-forms', 'hdsl', 'hdsl-noskin', 'hdsl-broken'],
-    mascot: ['crab-states', 'deepy', 'hero', 'studio'],
-    model: ['composer', 'settings', 'sync-fault'],
-    permissions: ['permissions', 'automode', 'automode-current', 'automode-hero', 'automode-roundtrip', 'no-auto-review', 'sync-fault', 'switches'],
-    search: ['search', 'switches'],
-    selection: [],
-    settings: ['settings', 'late-forms'],
-    'theme-flip': [],
-    'turn-nav': ['turn-nav'],
-    'turn-status': ['turn-status', 'switches'],
-    'view-tabs': ['view-tabs', 'switches'],
-    workspace: ['switches', 'popovers'],
-}
+const FEATURE_CASES = featureCases(readManifests())
 
 /**
  * The browser pages, and the cases each one serves. A page is loaded once and

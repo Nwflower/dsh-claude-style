@@ -30,7 +30,7 @@ import type { Ui } from '../../core/scheduler'
  * @param ui - shared handle table.
  * @returns teardown.
  */
-export function installWorkspaceView(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: Ui) {
   /**
    * The host's own Tooltip, Toast and icons, reached through the plugin
    * loader's `require` — the same packages its UI uses, so these row actions

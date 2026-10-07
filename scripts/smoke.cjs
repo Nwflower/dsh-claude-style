@@ -111,20 +111,13 @@ function selection() {
 }
 
 /**
- * The feature table has to keep up with the tree: every directory under
- * src/features/ names one, every key is a directory, and every case it names
- * exists. A stale table ends the run instead of quietly running the wrong set.
+ * Every case a manifest names has to exist: a renamed case ends the run
+ * instead of quietly leaving its feature uncovered.
  */
 function checkFeatureTable() {
-  const dir = path.join(ROOT, 'src', 'features')
-  const dirs = fs.readdirSync(dir, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name)
-  for (const name of dirs) {
-    if (!Object.hasOwn(FEATURE_CASES, name)) bad(`src/features/${name}/ is missing from FEATURE_CASES (scripts/smoke/shared.cjs)`)
-  }
   for (const [name, covered] of Object.entries(FEATURE_CASES)) {
-    if (!dirs.includes(name)) bad(`FEATURE_CASES names "${name}", which src/features/ does not hold`)
     for (const one of covered) {
-      if (!Object.hasOwn(CASES, one)) bad(`FEATURE_CASES["${name}"] names the case "${one}", which the case table does not hold`)
+      if (!Object.hasOwn(CASES, one)) bad(`a manifest in src/features/${name}/ names the case "${one}", which the case table does not hold`)
     }
   }
 }

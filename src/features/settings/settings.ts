@@ -3,13 +3,14 @@ import { BUNDLE_CONFIG_SLOT, PACKAGE_NAME, SEGMENT_CLASS, SETTINGS_SCROLLER_ATTR
 import { settingsCopy } from '../../core/i18n'
 import { loadModelCopy, onModelCopyLoaded } from '../../core/model-copy'
 import { adoptSettingsForm, readPrefs, savePrefs, subscribePrefs } from '../../core/prefs'
-import { ClaudeStyleSegmentGroup, createSettingsControls } from './settings-controls'
+import { ClaudeStyleSegmentGroup, createSettingsControls, tabRows } from './settings-controls'
 import { createSettingsAppearanceTab } from './settings-tab-appearance'
 import { createSettingsComposerTab } from './settings-tab-composer'
 import { createSettingsConversationTab } from './settings-tab-conversation'
 import { createSettingsGeneralTab } from './settings-tab-general'
 import { createSettingsSidebarTab } from './settings-tab-sidebar'
 import type { Prefs } from '../../constants'
+import type { SettingsTabId } from '../../core/feature'
 import type { HostContext, HostValue } from '../../core/host'
 import type { Ui } from '../../core/scheduler'
 import type { SettingsTab, SettingsView } from './settings-controls'
@@ -65,7 +66,7 @@ export const SETTINGS_TABS: SettingsTab[] = [
 export const SETTINGS_CONTROLS = createSettingsControls()
 
 /** The strip that picks the open tab: a segmented control with tab semantics. */
-export function ClaudeStyleSettingsTabStrip(props: { active: string, onPick(id: string): void }) {
+export function ClaudeStyleSettingsTabStrip(props: { active: SettingsTabId, onPick(id: SettingsTabId): void }) {
   const buttons = SETTINGS_TABS.map(tab => React.createElement(
     'button',
     {
@@ -209,7 +210,7 @@ export function ClaudeStyleSettingsSection(props: { embed?: boolean }) {
     { ref: pageRef, className: embedded ? 'dsh-claude-settings dsh-claude-settings-embedded' : 'dsh-claude-settings' },
     embedded ? null : React.createElement('div', { className: 'dsh-claude-settings-title' }, settingsCopy('title', 'Claude Style')),
     React.createElement(ClaudeStyleSettingsTabStrip, { active: activeTab, onPick: setActiveTab }),
-    React.createElement('div', { className: 'dsh-claude-settings-rows', role: 'tabpanel', key: tab.id }, tab.rows(view)),
+    React.createElement('div', { className: 'dsh-claude-settings-rows', role: 'tabpanel', key: tab.id }, tabRows(tab, view)),
     error === null ? null : React.createElement('div', { className: 'dsh-claude-settings-error' }, error),
   )
 }
@@ -273,7 +274,7 @@ export function settingsSectionIndex() {
  *      which `dsh-client-ui-settings-general` publishes later. Registering
  *      eagerly instead would throw and fail the boot.
  */
-export function installSettingsSection(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: Ui) {
   loadModelCopy()
   // The settings services are up by now even when they were not at apply
   // time, so retry the official-form binding before choosing a seat. It is

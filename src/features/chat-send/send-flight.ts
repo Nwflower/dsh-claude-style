@@ -1,10 +1,9 @@
 import { CHAT_FLYING_ATTR } from '../../constants'
-import { motionReduced, readPrefs } from '../../core/prefs'
+import { motionReduced } from '../../core/prefs'
 import { startMorph } from './send-morph'
 import { CHAT_FLIGHT_MS, CHAT_LANDING_MS } from './send-shape'
 import { chatSendAlpha, snapshotComposer } from './send-snapshot'
 import { CHAT_FLOW_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, SUBMISSION_ECHO_SELECTOR } from '../../shared/chat-dom'
-import { dshChatUxPresent } from '../../shared/peer-plugin'
 import type { HostContext } from '../../core/host'
 import type { Ui } from '../../core/scheduler'
 import type { ComposerSnapshot } from './send-snapshot'
@@ -115,7 +114,7 @@ export const CHAT_ROW_SELECTOR = CHAT_USER_ROW_SELECTOR + ', ' + CHAT_ECHO_SELEC
  * @returns teardown: the listeners go, and a flight in progress — a hidden
  *     message included — is settled.
  */
-export function installChatSend(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: Ui) {
   /** The origin captured last. */
   let origin: SendOrigin | null = null
   /** The echo rows already dealt with; the ones lying on the page at install time are included (a restored session has them). */
@@ -298,10 +297,6 @@ export function installChatSend(ctx: HostContext, ui: Ui) {
 
   /** Capture an origin once. Not capturing it counts as "this was not a submission", and doing nothing is always safe. */
   const captureOrigin = () => {
-    // dsh-chat-ux flies its own stand-in from the same card, hiding the same
-    // row; two stand-ins is not one flight (src/shared/peer-plugin.ts).
-    if (dshChatUxPresent()) return
-    if (readPrefs().chatAnimations === false) return
     // The reader's animation choice, resolved and read here rather than once
     // at install (D26): a still page is a decision the reader can change
     // without a reload, and the resolved answer is what the rest of the skin

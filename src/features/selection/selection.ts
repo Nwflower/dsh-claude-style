@@ -14,7 +14,7 @@ import { WINDOW_BLUR_ATTR } from '../../constants'
  * seeds the state so a page loaded in a background tab is unfocused from
  * its first paint instead of inheriting the focused default.
  */
-export function installSelectionFocus() {
+export function install() {
   const body = document.body
 
   function sync() {

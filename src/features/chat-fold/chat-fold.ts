@@ -1,10 +1,8 @@
 import { CHAT_FOLD_ATTR } from '../../constants'
-import { readPrefs, subscribePrefs } from '../../core/prefs'
 import { isChatFoldBusy } from './fold-glide-parts'
 import { installChatFoldGlide } from './fold-glide'
 import { createProcessFold } from './process-fold'
 import { createReasoningFold } from './reasoning-fold'
-import { dshChatUxPresent } from '../../shared/peer-plugin'
 import type { HostContext } from '../../core/host'
 import type { FeatureHandle, Ui } from '../../core/scheduler'
 
@@ -22,60 +20,27 @@ export interface ChatFoldHandle extends FeatureHandle {
  * preference: it means "the skin may fold the chat area", so off leaves the
  * automatic folding and the door to the host.
  *
+ * The door takes over the reader's clicks on a folding row, a takeover of the
+ * host's interface like any other (D29): the entry installs this only while
+ * the preference is on and dsh-chat-ux is off the page (the manifest), and
+ * this teardown leaves the clicks alone again. The follow guard asks whether
+ * a door is rolling through `ui.chatFold`, which exists only while installed.
+ *
  * @param ctx - client context.
  * @param ui - shared handle table.
  * @returns teardown.
  */
-export function installChatFold(ctx: HostContext, ui: Ui) {
-  /** The mounted pair and the glide, or null while the preference is off. */
-  let stopFolds: (() => void) | null = null
-
-  /**
-   * Bring the whole feature in line with the preference: off, neither fold
-   * module is mounted, the door answers no click and the page is not scanned
-   * at all; on, all of it is. A flip needs no reload and no pass of its own.
-   *
-   * The door rides this same switch: it takes over the reader's clicks on a
-   * folding row, which is a takeover of the host's interface like any other
-   * (D29), so "off" has to leave the clicks alone as well. The follow guard
-   * asks whether a door is rolling through `ui.chatFold`, which exists only
-   * while the feature is mounted.
-   *
-   * dsh-chat-ux folds the same rows and intercepts the same clicks; while it
-   * is on the page this stands down whole (src/shared/peer-plugin.ts).
-   */
-  const syncFolds = () => {
-    const wanted = !dshChatUxPresent() && readPrefs().chatAnimations !== false
-    if (!wanted) {
-      if (stopFolds !== null) {
-        stopFolds()
-        stopFolds = null
-      }
-      document.body.removeAttribute(CHAT_FOLD_ATTR)
-      delete ui.chatFold
-      return
-    }
-    document.body.setAttribute(CHAT_FOLD_ATTR, '')
-    if (stopFolds !== null) return
-    const stopReasoning = createReasoningFold()
-    const stopProcess = createProcessFold()
-    const stopGlide = installChatFoldGlide()
-    ui.chatFold = { isBusy: isChatFoldBusy }
-    stopFolds = () => {
-      stopReasoning()
-      stopProcess()
-      stopGlide()
-    }
-  }
-  syncFolds()
-  const stopPrefs = subscribePrefs(syncFolds)
+export function install(ctx: HostContext, ui: Ui) {
+  document.body.setAttribute(CHAT_FOLD_ATTR, '')
+  const stopReasoning = createReasoningFold()
+  const stopProcess = createProcessFold()
+  const stopGlide = installChatFoldGlide()
+  ui.chatFold = { isBusy: isChatFoldBusy }
   return () => {
-    stopPrefs()
     delete ui.chatFold
-    if (stopFolds !== null) {
-      stopFolds()
-      stopFolds = null
-    }
+    stopReasoning()
+    stopProcess()
+    stopGlide()
     document.body.removeAttribute(CHAT_FOLD_ATTR)
   }
 }

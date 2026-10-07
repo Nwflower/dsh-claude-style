@@ -53,11 +53,9 @@ export const PROCESS_INTENT_TYPES = ['wheel', 'touchstart', 'touchmove', 'pointe
  * Watch every process group's body on the page and catch up the ones that
  * fall behind.
  *
- * @param readEnabled - reads the preference in force now; while it is off
- *     nothing here acts at all.
  * @returns teardown: the observer, the listeners and the timer go away.
  */
-export function createChatProcessFollow(readEnabled: () => boolean) {
+export function createChatProcessFollow() {
   /** A body the reader has really scrolled in, until he comes back to its end. */
   const takenOver = new WeakSet<Element>()
   /** The bodies handed to the observer, each with the content layer it currently has. */
@@ -80,7 +78,6 @@ export function createChatProcessFollow(readEnabled: () => boolean) {
 
   /** Past the threshold, walk the body's position to its end on a curve. */
   const catchUp = (body: Element) => {
-    if (!readEnabled()) return
     if (takenOver.has(body)) return
     if (!followable(body)) return
     if (gapOf(body) <= CATCH_UP_GAP_PX) return
@@ -93,7 +90,7 @@ export function createChatProcessFollow(readEnabled: () => boolean) {
       body.scrollTop = body.scrollHeight
       return
     }
-    easeScrollToEnd(body, () => readEnabled() && !stopped && !takenOver.has(body) && followable(body))
+    easeScrollToEnd(body, () => !stopped && !takenOver.has(body) && followable(body))
   }
 
   /**

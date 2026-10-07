@@ -3,7 +3,6 @@ import { readPrefs, subscribePrefs } from '../../core/prefs'
 import { caretClipToField, caretMeasurePlain, caretMeasureRich } from './caret-measure'
 import type { CaretBox } from './caret-measure'
 import { COMPOSER_INPUT_SELECTOR, COMPOSER_TEXTAREA_SELECTOR } from '../../shared/chat-dom'
-import { dshChatUxPresent } from '../../shared/peer-plugin'
 import type { HostContext } from '../../core/host'
 import type { Ui } from '../../core/scheduler'
 
@@ -443,12 +442,11 @@ export function createCaretMotion(read: () => string) {
  * @param ui - shared handle table.
  * @returns teardown.
  */
-export function installCaret(ctx: HostContext, ui: Ui) {
-  // dsh-chat-ux draws its own caret on the same surfaces: two drawn carets
-  // blink out of phase and both press the native one down, so this one reads
-  // as "off" while that plugin is on the page (src/shared/peer-plugin.ts).
-  const readMode = () => (dshChatUxPresent() ? CARET_MOTION_OFF : readPrefs().caretMotion)
-  const motion = createCaretMotion(readMode)
+export function install(ctx: HostContext, ui: Ui) {
+  // dsh-chat-ux draws its own caret on the same surfaces, and two drawn
+  // carets blink out of phase: the entry keeps this uninstalled while that
+  // plugin is on the page (the manifest).
+  const motion = createCaretMotion(() => readPrefs().caretMotion)
   const stopPrefs = subscribePrefs(() => motion.resync())
   return () => {
     stopPrefs()

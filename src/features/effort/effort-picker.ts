@@ -33,7 +33,7 @@ import { POPOVER_CLOSE_DELAY, POPOVER_OPEN_DELAY, closeOtherPopovers, createHove
  *   and `close()`.
  * @returns a teardown function.
  */
-export function installEffortPicker(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: Ui) {
   let effortBtn: HTMLButtonElement | null = null
   let effortPop: HTMLElement | null = null
   let effortSlider: ReturnType<typeof createEffortControl> | null = null

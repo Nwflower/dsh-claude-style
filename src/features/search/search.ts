@@ -27,7 +27,7 @@ import type { Ui } from '../../core/scheduler'
  * @param ui - shared handle table.
  * @returns teardown.
  */
-export function installSearch(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: Ui) {
   const sources = createSearchSources(ctx)
   const FILTERS: { id: SearchFilter, key: string, fallback: string }[] = [
     { id: 'all', key: 'searchFilterAll', fallback: 'All' },

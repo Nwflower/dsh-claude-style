@@ -22,7 +22,7 @@ import type { Ui } from '../../core/scheduler'
  * @param ui - shared handle table.
  * @returns teardown.
  */
-export function installMascot(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: Ui) {
   const crab = createMascotCrab(ctx, ui)
   const whale = createMascotWhale(ctx, ui)
 

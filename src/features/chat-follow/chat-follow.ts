@@ -1,10 +1,9 @@
 import { CHAT_FOLLOW_ATTR, STREAM_GLIDE_ATTR } from '../../constants'
-import { motionReduced, readPrefs, subscribePrefs } from '../../core/prefs'
+import { motionReduced } from '../../core/prefs'
 import { conversationScroller, ensureFollowTail, findFollowTailButton, isAtBottom } from './chat-tail'
 import { createChatProcessFollow } from './process-follow'
 import { isReaderScrollIntent } from './reader-intent'
 import { CHAT_CALL_SELECTOR, CHAT_FLOW_SELECTOR, COMPOSER_SELECTOR, CONVERSATION_SCROLL_SELECTOR, FLOW_BLOCK_SELECTOR, FOLLOWING_TAIL_ATTRIBUTE, FOLLOWING_TAIL_SELECTOR, RUNNING_STATE, SHIMMER_SELECTOR, STREAMING_SELECTOR, SUBMISSION_ECHO_SELECTOR, THINK_ROW_SELECTOR } from '../../shared/chat-dom'
-import { dshChatUxPresent } from '../../shared/peer-plugin'
 import { SCROLL_EASE_LEAD_PX, easeScrollToEnd, scrollEasePosition, stopScrollEase } from '../../shared/scroll-ease'
 import type { HostContext } from '../../core/host'
 import type { Ui } from '../../core/scheduler'
@@ -69,12 +68,10 @@ export const GLIDE_SUBMIT_HOLD_MS = 1200
  * Watch the whole page for the moments that lose the host's follow, and hand
  * the position back at each of them.
  *
- * @param readEnabled - reads the preference in force now; while it is off
- *     nothing here acts at all.
  * @param foldBusy - whether a fold glide is animating a height right now.
  * @returns teardown: the observer and the intent listeners go away.
  */
-export function createChatFollowGuard(readEnabled: () => boolean, foldBusy: () => boolean) {
+export function createChatFollowGuard(foldBusy: () => boolean) {
   /** Whether the reader has taken the scroll over and not come back to the end. */
   let readerTookOver = false
   /**
@@ -154,7 +151,6 @@ export function createChatFollowGuard(readEnabled: () => boolean, foldBusy: () =
    * are the hand-back's business, and the glide must not shadow them.
    */
   const glidePinning = () => {
-    if (!readEnabled()) return false
     // The reader's animation choice means "no animation": nothing to walk.
     if (motionReduced()) return false
     // The reader's own message has just arrived: the host's jump to it stands.
@@ -170,7 +166,7 @@ export function createChatFollowGuard(readEnabled: () => boolean, foldBusy: () =
    * "work in progress" one, because the trail left by the last token still
    * has to land after the stream has stopped.
    */
-  const glideWanted = () => readEnabled() && !motionReduced() && !readerAway()
+  const glideWanted = () => !motionReduced() && !readerAway()
     && performance.now() >= glideHoldUntil
     && !(typeof foldBusy === 'function' && foldBusy())
 
@@ -326,7 +322,6 @@ export function createChatFollowGuard(readEnabled: () => boolean, foldBusy: () =
    * @param attempt - how many times this round has been put off by a fold glide.
    */
   const ensure = (attempt?: number) => {
-    if (!readEnabled()) return
     if (readerAway()) return
     const scroller = conversationScroller()
     if (scroller === null) return
@@ -490,31 +485,21 @@ export function createChatFollowGuard(readEnabled: () => boolean, foldBusy: () =
 
 /**
  * Install both halves of the follow behaviour and mark the page for its
- * stylesheet (the capped body's vertical-only scroll).
+ * stylesheet (the capped body's vertical-only scroll). The entry installs this
+ * only while the preference is on and dsh-chat-ux, which drives the same
+ * moments and writes the same scroll positions, is off the page (the
+ * manifest); this teardown hands the chat area back whole.
  *
  * @param ctx - client context.
  * @param ui - shared handle table.
  * @returns teardown.
  */
-export function installChatFollow(ctx: HostContext, ui: Ui) {
-  // dsh-chat-ux drives the same moments and writes the same scroll
-  // positions; two guards clicking the host's own button at once is not a
-  // merged behaviour (src/shared/peer-plugin.ts).
-  const readEnabled = () => !dshChatUxPresent() && readPrefs().chatAnimations !== false
+export function install(ctx: HostContext, ui: Ui) {
   const foldBusy = () => ui.chatFold !== undefined && ui.chatFold !== null && ui.chatFold.isBusy()
-  const stopGuard = createChatFollowGuard(readEnabled, foldBusy)
-  const stopProcess = createChatProcessFollow(readEnabled)
-  // The stylesheet's one rule rides this mark, so the mark follows the
-  // preference rather than the install: switching the feature off hands the
-  // chat area back whole, with no reload and with no pass of its own.
-  const applyMark = () => {
-    if (readEnabled()) document.body.setAttribute(CHAT_FOLLOW_ATTR, '')
-    else document.body.removeAttribute(CHAT_FOLLOW_ATTR)
-  }
-  applyMark()
-  const stopPrefs = subscribePrefs(applyMark)
+  const stopGuard = createChatFollowGuard(foldBusy)
+  const stopProcess = createChatProcessFollow()
+  document.body.setAttribute(CHAT_FOLLOW_ATTR, '')
   return () => {
-    stopPrefs()
     document.body.removeAttribute(CHAT_FOLLOW_ATTR)
     stopGuard()
     stopProcess()

@@ -49,7 +49,7 @@ export const THEME_FLIP_PROPS: Record<string, boolean> = {
   'caret-color': true
 }
 
-export function installThemeFlip() {
+export function install() {
   const body = document.body
   const root = document.documentElement
   let flipTimer: ReturnType<typeof setTimeout> | null = null

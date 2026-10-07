@@ -46,7 +46,7 @@ import type { Ui } from '../../core/scheduler'
  * React replaces the triggers, and the close waits out the gap between the
  * trigger and the card so crossing it does not shut the menu.
  */
-export function installHeroMenu(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: Ui) {
   /** Air between the trigger and its card, as the skin's other pickers take. */
   const GAP = 6
   /** The two triggers, and the card once it is stamped. */

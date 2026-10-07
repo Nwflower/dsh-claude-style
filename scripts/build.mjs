@@ -11,7 +11,8 @@
  *   src/entry.ts                 apply(): the FEATURES table; imports everything else
  *   src/constants.ts             constants; also evaluated here for the stylesheet tokens
  *   src/core/ src/shared/ src/features/<name>/   the modules, TypeScript, strict
- *   src/theme/*.css and the feature stylesheets   concatenated in STYLE_FILES order
+ *   src/features/<dir>/<main>.manifest.ts   each feature's manifest (D42), read by scripts/read-manifests.cjs
+ *   src/theme/*.css and the feature stylesheets   concatenated by rank (THEME_SHEETS and the manifests)
  *   src/assets/brand/*.svg       brand marks, stylesheet data URIs
  *   src/assets/icons/combine/*.svg     vendor lockups (mark + wordmark in one)
  *   src/assets/mascot/crab/*.png       the crab's sheets (scripts/draw-crab.py), data URIs
@@ -39,6 +40,7 @@ import vm from 'node:vm'
 import Ajv2020 from 'ajv/dist/2020.js'
 import addFormats from 'ajv-formats'
 import esbuild from 'esbuild'
+import manifestReader from './read-manifests.cjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
 /**
@@ -90,47 +92,44 @@ const validateModelCopyShape = addFormats(new Ajv2020({ allErrors: true }), ['re
 const ICON_SOURCE = 'claude-mark-clay.svg'
 const ICON_FILE = 'claude-mark.svg'
 
-const STYLE_FILES = [
-  { file: 'theme/tokens.css' },
-  { file: 'theme/typography.css' },
+/**
+ * The stylesheets that belong to no feature, with their place in the
+ * concatenated sheet. A feature's own sheets come from its manifest (D42),
+ * each with a rank on this same scale; the build sorts the two together.
+ * The order is the cascade: where two rules meet at the same specificity,
+ * the later one wins.
+ */
+const THEME_SHEETS = [
+  { file: 'theme/tokens.css', rank: 10 },
+  { file: 'theme/typography.css', rank: 20 },
   // Shared parts before every feature: a feature's own rule comes later and
   // wins where the two meet at the same specificity.
-  { file: 'shared/popover.css' },
-  { file: 'shared/sliding-pill.css' },
-  { file: 'theme/chrome.css' },
-  { file: 'features/view-tabs/view-tabs.css' },
-  { file: 'theme/hero.css' },
-  { file: 'features/composer/card.css', gate: true },
-  { file: 'features/composer/inline.css', gate: true },
-  { file: 'features/composer/inline-bar.css', gate: true },
-  { file: 'theme/sidebar.css' },
-  { file: 'features/workspace/workspace.css' },
-  { file: 'features/search/search.css' },
-  { file: 'features/turn-status/turn-status.css' },
-  { file: 'features/turn-nav/turn-nav.css' },
-  { file: 'features/chat-follow/chat-follow.css' },
-  { file: 'features/chat-fold/fold.css' },
-  { file: 'features/chat-reveal/reveal-rules.css' },
-  { file: 'features/chat-files/chat-files.css' },
-  { file: 'features/chat-send/send-flight.css' },
-  { file: 'features/chat-fold/fold-motion.css' },
-  { file: 'features/caret/caret.css' },
-  { file: 'features/permissions/permissions.css' },
-  { file: 'features/account/account-footer.css' },
-  { file: 'features/ban-screen/ban-screen.css' },
-  { file: 'features/model/model-picker.css' },
-  { file: 'features/effort/effort-picker.css' },
-  { file: 'features/hero-menu/hero-menu.css', gate: true },
-  { file: 'features/account/footer-takeover.css' },
-  { file: 'theme/third-party.css' },
-  { file: 'features/settings/settings.css' },
-  { file: 'features/home/home-panel.css' },
-  { file: 'features/home/home-overview.css' },
-  { file: 'features/home/home-models.css' },
-  { file: 'features/mascot/crab.css' },
-  { file: 'features/mascot/whale.css' },
-  { file: 'features/theme-flip/theme-flip.css' },
+  { file: 'shared/popover.css', rank: 30 },
+  { file: 'shared/sliding-pill.css', rank: 40 },
+  { file: 'theme/chrome.css', rank: 50 },
+  { file: 'theme/hero.css', rank: 70 },
+  { file: 'theme/sidebar.css', rank: 110 },
+  { file: 'theme/third-party.css', rank: 300 },
 ]
+
+/**
+ * Every stylesheet in cascade order: the theme's and each manifest's, sorted
+ * by rank. A rank two sheets share would leave their order to chance, so it
+ * fails the build.
+ *
+ * @param manifests - the feature manifests (scripts/read-manifests.cjs).
+ * @returns `{ file, rank, gate? }` with `file` src/-relative.
+ */
+function styleFiles(manifests) {
+  const sheets = [
+    ...THEME_SHEETS,
+    ...manifests.flatMap((manifest) => manifest.stylesheets.map((sheet) => ({ ...sheet, file: `features/${manifest.dir}/${sheet.file}` }))),
+  ].sort((a, b) => a.rank - b.rank)
+  for (let i = 1; i < sheets.length; i++) {
+    if (sheets[i].rank === sheets[i - 1].rank) throw new Error(`build: src/${sheets[i - 1].file} and src/${sheets[i].file} share the stylesheet rank ${sheets[i].rank}`)
+  }
+  return sheets
+}
 
 /** The package name: the loader id, the stylesheet's own tag and the profile entry all carry it (D33). */
 const PACKAGE_ID = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).name
@@ -592,115 +591,71 @@ function validateModelCopy(doc, lobeBrands) {
 }
 
 /**
- * Refuse a source file that does not ship: a stylesheet STYLE_FILES leaves out,
- * or a module nothing imports, would otherwise sit in src/ with nothing to say
- * it never reaches the page.
+ * Refuse a source file that does not ship: a stylesheet no manifest and no
+ * theme entry names, or a module nothing imports, would otherwise sit in src/
+ * with nothing to say it never reaches the page. Manifests are data the build
+ * reads, not modules the bundle carries.
  *
  * @param bundled - the src/-relative modules in the bundle (esbuild's metafile).
+ * @param sheets - every stylesheet the bundle carries (styleFiles).
  */
-function checkListed(bundled) {
-  const listed = new Set(STYLE_FILES.map((fileDef) => fileDef.file))
+function checkListed(bundled, sheets) {
+  const listed = new Set(sheets.map((sheet) => sheet.file))
   const walk = (dir) => fs.readdirSync(path.join(SRC, dir), { withFileTypes: true }).flatMap((entry) => {
     const rel = dir === '' ? entry.name : `${dir}/${entry.name}`
     if (entry.isDirectory()) return rel === 'assets' ? [] : walk(rel)
     return [rel]
   })
   for (const file of walk('')) {
-    if (file.endsWith('.css') && !listed.has(file)) throw new Error(`build: src/${file} is in no list; add it to STYLE_FILES`)
-    if (file.endsWith('.ts') && !file.endsWith('.d.ts') && !bundled.has(file)) throw new Error(`build: src/${file} is imported by no module the bundle reaches`)
+    if (file.endsWith('.css') && !listed.has(file)) throw new Error(`build: src/${file} is in no list; add it to its feature's manifest or to THEME_SHEETS`)
+    if (file.endsWith('.manifest.ts') || file.endsWith('.d.ts')) continue
+    if (file.endsWith('.ts') && !bundled.has(file)) throw new Error(`build: src/${file} is imported by no module the bundle reaches`)
   }
 }
 
 /**
- * Which module installs each feature of src/entry.ts's FEATURES table.
+ * Hold the manifests to the rest of the repository: every feature directory
+ * carries at least one manifest, and a `pref` names a key of the host half's
+ * PREFS_DEFAULT (host/settings.js), the table the settings form serves.
  *
- * That table is runtime data inside a module the browser half evaluates, so
- * the build cannot read it by importing it; this table is the build's own copy
- * of the id → main module pairing, and checkFeatureRegistry holds the three
- * sources together. Without it, renaming a feature directory or its install id
- * would surface only at runtime, as a skin that silently never installs that
- * piece.
+ * @param manifests - the feature manifests (scripts/read-manifests.cjs).
  */
-const FEATURE_MAINS = {
-  selection: 'features/selection/selection.ts',
-  composer: 'features/composer/composer.ts',
-  homeLayout: 'features/home/home-layout.ts',
-  mascot: 'features/mascot/mascot.ts',
-  copy: 'features/copy/copy.ts',
-  permissions: 'features/permissions/permissions.ts',
-  contextStats: 'features/context-stats/context-stats.ts',
-  model: 'features/model/model-picker.ts',
-  effort: 'features/effort/effort-picker.ts',
-  heroMenu: 'features/hero-menu/hero-menu.ts',
-  quickProviders: 'features/settings/quick-providers.ts',
-  footer: 'features/account/account-footer.ts',
-  ban: 'features/ban-screen/ban-screen.ts',
-  themeFlip: 'features/theme-flip/theme-flip.ts',
-  workspace: 'features/workspace/workspace-view.ts',
-  search: 'features/search/search.ts',
-  turnStatus: 'features/turn-status/turn-status.ts',
-  turnNav: 'features/turn-nav/turn-nav.ts',
-  chatFollow: 'features/chat-follow/chat-follow.ts',
-  chatFold: 'features/chat-fold/chat-fold.ts',
-  chatReveal: 'features/chat-reveal/chat-reveal.ts',
-  chatFiles: 'features/chat-files/chat-files.ts',
-  chatSend: 'features/chat-send/send-flight.ts',
-  caret: 'features/caret/caret.ts',
-  viewTabs: 'features/view-tabs/view-tabs.ts',
-  settings: 'features/settings/settings.ts',
-}
-
-/** Installs in entry.ts's table that are not features with a source directory. */
-const NON_FEATURE_INSTALLS = ['scheduler']
-
-/**
- * Every FEATURES entry answers whether the reader can switch it off: exactly
- * one of `pref: '<preference key>'` or `ungated: '<reason>'`. The preference
- * keys are host/settings.js's PREFS_DEFAULT. An entry with neither, with both,
- * or naming a key the table lacks fails the build, so a new feature cannot
- * ship without deciding.
- */
-function checkFeatureSwitches(entry) {
-  const block = entry.match(/const FEATURES: Feature\[\] = \[([\s\S]*?)\n\s*\]\n/)
-  if (block === null) throw new Error('build: src/entry.ts has no FEATURES table')
-  for (const line of block[1].split('\n')) {
-    const name = line.match(/\bname: '([A-Za-z][A-Za-z0-9]*)'/)
-    if (name === null) continue
-    const pref = line.match(/\bpref: '([A-Za-z][A-Za-z0-9]*)'/)
-    const ungated = /\bungated: '[^']+'/.test(line)
-    if ((pref === null) === !ungated) throw new Error(`build: FEATURES entry "${name[1]}" must declare exactly one of pref or ungated`)
-    if (pref !== null && !(pref[1] in PREFS_DEFAULT)) throw new Error(`build: FEATURES entry "${name[1]}" names pref "${pref[1]}", which host/settings.js PREFS_DEFAULT does not carry`)
+function checkManifests(manifests) {
+  const covered = new Set(manifests.map((manifest) => manifest.dir))
+  for (const dir of fs.readdirSync(path.join(SRC, 'features'), { withFileTypes: true })) {
+    if (dir.isDirectory() && !covered.has(dir.name)) throw new Error(`build: src/features/${dir.name}/ has no manifest`)
+  }
+  for (const manifest of manifests) {
+    if (manifest.pref !== undefined && !(manifest.pref in PREFS_DEFAULT)) {
+      throw new Error(`build: src/${manifest.file} names pref "${manifest.pref}", which host/settings.js PREFS_DEFAULT does not carry`)
+    }
   }
 }
 
+/** The manifest fields the browser half reads (FeatureRuntime in src/core/feature.ts). */
+const RUNTIME_FIELDS = ['id', 'handle', 'order', 'pref', 'ungated', 'yieldsTo', 'switchRow']
+
 /**
- * Hold src/entry.ts's FEATURES table and the src/features/ directories to the
- * pairing above: an install this table does not name, a table entry naming a
- * module the bundle does not reach, and a feature directory no id covers all
- * fail the build.
+ * The feature registry, `virtual:dsh-claude-style/features`: each manifest's
+ * runtime fields beside its main module's `install`, in install order. The
+ * manifests themselves stay out of the bundle — their descriptions and test
+ * coverage are of no use to the page.
  *
- * @param bundled - the src/-relative modules in the bundle (esbuild's metafile).
+ * @param manifests - the feature manifests in install order.
  */
-function checkFeatureRegistry(bundled) {
-  for (const [id, file] of Object.entries(FEATURE_MAINS)) {
-    if (!bundled.has(file)) throw new Error(`build: feature "${id}" names ${file}, which the bundle does not reach`)
-  }
-  const entry = fs.readFileSync(path.join(SRC, 'entry.ts'), 'utf8')
-  const declared = new Set([...entry.matchAll(/\bname: '([A-Za-z][A-Za-z0-9]*)'/g)].map((match) => match[1]))
-  for (const id of NON_FEATURE_INSTALLS) declared.delete(id)
-  for (const id of declared) {
-    if (!(id in FEATURE_MAINS)) throw new Error(`build: src/entry.ts installs feature "${id}", which FEATURE_MAINS does not name`)
-  }
-  for (const id of Object.keys(FEATURE_MAINS)) {
-    if (!declared.has(id)) throw new Error(`build: FEATURE_MAINS names "${id}", which src/entry.ts does not install`)
-  }
-  checkFeatureSwitches(entry)
-  const covered = new Set(Object.values(FEATURE_MAINS).map((file) => file.split('/')[1]))
-  const dirs = fs.readdirSync(path.join(SRC, 'features'), { withFileTypes: true })
-    .filter((item) => item.isDirectory())
-    .map((item) => item.name)
-  for (const dir of dirs) {
-    if (!covered.has(dir)) throw new Error(`build: src/features/${dir} has no install in src/entry.ts`)
+function featuresModule(manifests) {
+  const imports = manifests.map((manifest, index) => `import { install as install${index} } from ${JSON.stringify(`./${manifest.main}`)}`)
+  const entries = manifests.map((manifest, index) => {
+    const runtime = Object.fromEntries(RUNTIME_FIELDS.filter((field) => manifest[field] !== undefined).map((field) => [field, manifest[field]]))
+    return `  { ...${JSON.stringify(runtime)}, install: install${index} },`
+  })
+  const contents = `${imports.join('\n')}\nexport const FEATURES = [\n${entries.join('\n')}\n]\n`
+  return {
+    name: 'features',
+    setup(build) {
+      build.onResolve({ filter: /^virtual:dsh-claude-style\/features$/ }, (args) => ({ path: args.path, namespace: 'features' }))
+      build.onLoad({ filter: /.*/, namespace: 'features' }, () => ({ contents, loader: 'js', resolveDir: SRC }))
+    },
   }
 }
 
@@ -779,11 +734,14 @@ function generatedModule(values) {
 async function main() {
   checkTypes()
   checkPrefDefaults()
+  const manifests = manifestReader.readManifests()
+  checkManifests(manifests)
+  const sheets = styleFiles(manifests)
   const tokens = { ...CONSTANTS.tokens, ...loadSvgAssets() }
   const combines = loadCombines()
 
   const tokenNames = { claude: new Set(), host: new Set() }
-  const cssText = STYLE_FILES
+  const cssText = sheets
     .map((fileDef) => {
       const file = fileDef.file
       const gated = fileDef.gate === true
@@ -818,7 +776,7 @@ async function main() {
     // counts its lines.
     banner: { js: FACTORY_OPEN },
     footer: { js: FACTORY_CLOSE },
-    plugins: [generatedModule({
+    plugins: [featuresModule(manifests), generatedModule({
       STYLESHEET: cssText,
       // Vendor lockups: one markup table plus the word each lockup stands in for.
       COMBINE_SVGS: Object.fromEntries(Object.entries(combines).map(([id, item]) => [id, item.svg])),
@@ -835,8 +793,7 @@ async function main() {
   })
   checkCycles(result.metafile)
   const bundled = new Set(Object.keys(result.metafile.inputs).filter((file) => file.startsWith('src/')).map((file) => file.slice('src/'.length)))
-  checkListed(bundled)
-  checkFeatureRegistry(bundled)
+  checkListed(bundled, sheets)
 
   const output = (suffix) => result.outputFiles.find((file) => file.path.endsWith(suffix)).text
   const draft = output('client.js')
@@ -868,7 +825,7 @@ async function main() {
 
   fs.writeFileSync(OUT, bundle)
   fs.writeFileSync(`${OUT}.map`, sourceMap)
-  console.log(`built lib/client.js (${Buffer.byteLength(bundle)} bytes, build ${buildId}) from src/ (${bundled.size} modules + ${STYLE_FILES.length} stylesheets + ${Object.keys(combines).length} lockups)`)
+  console.log(`built lib/client.js (${Buffer.byteLength(bundle)} bytes, build ${buildId}) from src/ (${bundled.size} modules + ${sheets.length} stylesheets + ${Object.keys(combines).length} lockups)`)
 
   fs.writeFileSync(path.join(LIB, MODEL_COPY), copyText)
   console.log(`built lib/${MODEL_COPY} (${exact} exact entries, ${copy.families.length} family rules, ${copy.tiers.length} tier rules)`)

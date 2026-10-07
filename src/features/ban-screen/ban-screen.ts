@@ -39,7 +39,7 @@ export interface BanHandle extends FeatureHandle {
  * never be clipped by the sidebar column, which the account popover itself
  * has to work around.
  */
-export function installBanScreen(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: Ui) {
   let banRoot: HTMLElement | null = null
   /** Whether the open overlay has lent its canvas colour to the Windows caption band. */
   let captionFillHeld = false

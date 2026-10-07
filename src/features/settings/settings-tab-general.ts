@@ -33,41 +33,53 @@ export function createSettingsGeneralTab(): SettingsTab {
     ]
     const username = view.username
     return [
-      controls.row(
-        'username',
-        settingsCopy('usernameTitle', 'Username'),
-        settingsCopy('usernameDesc', 'The name shown in the new-conversation greeting and the account row. Leave empty to use the signed-in account name, then the HDSL launcher name, then the local system user.'),
-        React.createElement('input', {
-          type: 'text',
-          className: 'dsh-claude-settings-input',
-          value: username.value,
-          maxLength: USERNAME_MAX,
-          placeholder: settingsCopy('usernamePlaceholder', 'Auto-detect account or host user'),
-          spellCheck: false,
-          autoComplete: 'off',
-          onChange: username.onChange,
-          onBlur: username.onBlur,
-          onKeyDown: username.onKeyDown,
-        }),
-      ),
-      controls.row(
-        'motion',
-        settingsCopy('motionTitle', 'Animation'),
-        settingsCopy('motionDesc', 'Follow the system keeps the system\'s animation setting in charge; Reduced holds animations on their still frame; Always plays them. The background-work ring turns in every setting.'),
-        controls.segment(motionOptions, prefs.motion, value => { write({ motion: value }) }),
-      ),
-      controls.row(
-        'autoPopover',
-        settingsCopy('autoPopoverTitle', 'Open popovers on hover'),
-        settingsCopy('autoPopoverDesc', 'Which popovers open on hover. "Account only" keeps it to the sidebar account popover; "All" adds the permission, model, session-stats and home-page pickers. Off leaves every popover click-to-open.'),
-        controls.segment(autoPopoverOptions, prefs.autoPopover, value => { write({ autoPopover: value }) }),
-      ),
-      controls.row(
-        'banLocale',
-        settingsCopy('banLocaleTitle', 'Account-hold easter egg language'),
-        settingsCopy('banLocaleDesc', 'The language of the account-hold easter egg page (open it from the account row at the top of the sidebar footer popover). It does not follow the interface language.'),
-        controls.segment(banLocaleOptions, prefs.banLocale, value => { write({ banLocale: value }) }),
-      ),
+      {
+        rank: 10,
+        node: controls.row(
+          'username',
+          settingsCopy('usernameTitle', 'Username'),
+          settingsCopy('usernameDesc', 'The name shown in the new-conversation greeting and the account row. Leave empty to use the signed-in account name, then the HDSL launcher name, then the local system user.'),
+          React.createElement('input', {
+            type: 'text',
+            className: 'dsh-claude-settings-input',
+            value: username.value,
+            maxLength: USERNAME_MAX,
+            placeholder: settingsCopy('usernamePlaceholder', 'Auto-detect account or host user'),
+            spellCheck: false,
+            autoComplete: 'off',
+            onChange: username.onChange,
+            onBlur: username.onBlur,
+            onKeyDown: username.onKeyDown,
+          }),
+        ),
+      },
+      {
+        rank: 20,
+        node: controls.row(
+          'motion',
+          settingsCopy('motionTitle', 'Animation'),
+          settingsCopy('motionDesc', 'Follow the system keeps the system\'s animation setting in charge; Reduced holds animations on their still frame; Always plays them. The background-work ring turns in every setting.'),
+          controls.segment(motionOptions, prefs.motion, value => { write({ motion: value }) }),
+        ),
+      },
+      {
+        rank: 30,
+        node: controls.row(
+          'autoPopover',
+          settingsCopy('autoPopoverTitle', 'Open popovers on hover'),
+          settingsCopy('autoPopoverDesc', 'Which popovers open on hover. "Account only" keeps it to the sidebar account popover; "All" adds the permission, model, session-stats and home-page pickers. Off leaves every popover click-to-open.'),
+          controls.segment(autoPopoverOptions, prefs.autoPopover, value => { write({ autoPopover: value }) }),
+        ),
+      },
+      {
+        rank: 40,
+        node: controls.row(
+          'banLocale',
+          settingsCopy('banLocaleTitle', 'Account-hold easter egg language'),
+          settingsCopy('banLocaleDesc', 'The language of the account-hold easter egg page (open it from the account row at the top of the sidebar footer popover). It does not follow the interface language.'),
+          controls.segment(banLocaleOptions, prefs.banLocale, value => { write({ banLocale: value }) }),
+        ),
+      },
     ]
   }
   return { id: 'general', label: () => settingsCopy('tabGeneral', 'General'), rows }

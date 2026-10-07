@@ -40,7 +40,7 @@ import type { Ui } from '../../core/scheduler'
  * @param ui - the shared handle table.
  * @returns teardown.
  */
-export function installTurnNav(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: Ui) {
   /** On the host's rail while the skin's rail stands in for it: the stylesheet hides it, keeping its layout. */
   const TURN_NAV_REPLACED_ATTR = 'data-dsh-claude-turn-nav-replaced'
   /** On the skin's rail while the card is open over it: its marks step back. */

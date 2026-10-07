@@ -28,7 +28,7 @@ export interface FooterHandle extends FeatureHandle {
  * hold-screen easter egg, the plugin footer entries (account/footer-mirror.ts)
  * and, on the self-built path only, the settings row — are shared.
  */
-export function installAccountFooter(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: Ui) {
   /** The marker the stylesheet hangs the host account row's Claude shape on. */
   const HOST_ROW_ATTR = 'data-dsh-claude-account-host-row'
   const profile = createAccountProfile(ctx, () => {

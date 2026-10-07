@@ -275,8 +275,8 @@ export const MASCOT_SCOPES = [MASCOT_SCOPE_HOME, MASCOT_SCOPE_ALL]
 
 /**
  * Feature switches: one boolean preference per feature that replaces or
- * moves a host control, all on by default. src/entry.ts's FEATURES table
- * names each feature's key (`pref`), and switching one off runs that
+ * moves a host control, all on by default. Each feature's manifest names
+ * its key (`pref`, D42), and switching one off runs that
  * feature's teardown, which hands its surface back to the host.
  *
  * `chatAnimations` is the one switch over the ported chat-area effects —

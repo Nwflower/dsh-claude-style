@@ -11,7 +11,7 @@ import type { CloseReason, Ui } from '../../core/scheduler'
  * projections (session-stats.ts). It switches together with the
  * permission control: both take over the composer's bottom line.
  */
-export function installContextStats(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: Ui) {
   const stats = createSessionStats(ctx)
 
   ui.contextStats = {

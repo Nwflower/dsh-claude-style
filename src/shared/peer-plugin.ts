@@ -1,6 +1,7 @@
 import { notifyEnvironmentChange } from '../core/prefs'
 import { parkForeignSheets } from '../core/stylesheet'
 import { notifyAll } from './notify'
+import type { PeerPlugin } from '../core/feature'
 
 /**
  * The other chat-behaviour plugin, when this page runs it.
@@ -66,6 +67,12 @@ export function dshChatUxPresent() {
   peerEntrySeen = Array.isArray(entries)
     && entries.some(entry => typeof entry?.id === 'string' && entry.id.includes(PEER_ENTRY_ID))
   return peerEntrySeen
+}
+
+/** Whether a plugin a manifest yields to is on the page right now. */
+export function peerPresent(plugin: PeerPlugin) {
+  if (plugin === PEER_ENTRY_ID) return dshChatUxPresent()
+  throw new Error(`peer-plugin: no presence check for ${plugin}`)
 }
 
 /**

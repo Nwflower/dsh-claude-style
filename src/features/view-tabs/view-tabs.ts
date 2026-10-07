@@ -46,7 +46,7 @@ import type { Ui } from '../../core/scheduler'
  * @param ui - shared handle table.
  * @returns teardown.
  */
-export function installViewTabs(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: Ui) {
   const HEADER = '[class*="_header"]:has([class*="_tabs"])'
   /**
    * The title's TEXT, not its row or cluster: `.titleRow` is a flex row and the

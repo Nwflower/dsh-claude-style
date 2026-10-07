@@ -1,7 +1,6 @@
 import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
 import * as React from 'react'
 import { CHAT_DIFF_MAX_LINES, CHAT_FILE_ADD_CLASS, CHAT_FILE_BODY_CLASS, CHAT_FILE_CHEVRON_CLASS, CHAT_FILE_DEL_CLASS, CHAT_FILE_DIFF_CLASS, CHAT_FILE_HIDDEN_CLASS, CHAT_FILE_INSPECT_CLASS, CHAT_FILE_IO_CLASS, CHAT_FILE_IO_DIVIDER_CLASS, CHAT_FILE_IO_LABEL_CLASS, CHAT_FILE_IO_SECTION_CLASS, CHAT_FILE_IO_TEXT_CLASS, CHAT_FILE_LEADING_CLASS, CHAT_FILE_LINK_CLASS, CHAT_FILE_ROW_CLASS, CHAT_FILE_ROW_LINE_CLASS, CHAT_FILE_SEAT, CHAT_FILE_SEP_CLASS, CHAT_FILE_STAT_CLASS, CHAT_FILE_SUFFIX_CLASS, CHAT_FILE_TITLE_CLASS, chatFileCallHead, chatFileDiffBlockLabels, chatFileDiffHunks, chatFileParseArgs, chatFileRowModel, chatFileStateLabel, chatFileSummaryClassName } from './file-row-model'
-import { dshChatUxPresent, subscribePeerPresence } from '../../shared/peer-plugin'
 import type { HostContext, HostFiber, HostText, HostValue } from '../../core/host'
 import type { Ui } from '../../core/scheduler'
 
@@ -34,15 +33,15 @@ interface ChatFileRowProps {
  * row's own sizes and rhythm are in chat-files.css.
  *
  * dsh-chat-ux claims the same two keys on the same seat at the same priority,
- * and a second registration at one priority throws, so while that plugin is
- * on the page this one leaves the keys to it — and takes them when it goes
- * (src/shared/peer-plugin.ts).
+ * and a second registration at one priority throws, so the entry keeps this
+ * feature uninstalled while that plugin is on the page and installs it when
+ * the plugin goes (the manifest).
  *
  * @param ctx - client context.
  * @param ui - shared handle table.
  * @returns teardown.
  */
-export function installChatFiles(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: Ui) {
   const h = React.createElement
 
   /**
@@ -136,16 +135,7 @@ export function installChatFiles(ctx: HostContext, ui: Ui) {
     slotsFiber = ctx.inject(['slots'], scope => {
       const slots = scope.get('slots')
       if (slots === undefined || slots === null || typeof slots.inject !== 'function') return
-      /**
-       * The two keys' registrations, or null while they are not claimed.
-       *
-       * The keys go back to the host whenever dsh-chat-ux is on the page,
-       * and are claimed again when it leaves: two registrations at one
-       * priority throw, and this feature would be the one holding the seat.
-       * A plugin hot reload can move that answer in either direction after
-       * this feature has installed, so the decision is re-taken on the
-       * presence subscription rather than once (src/shared/peer-plugin.ts).
-       */
+      /** The two keys' registrations, or null while they are not claimed. */
       let seatStops: (() => void) | null = null
       const claimSeats = () => {
         if (seatStops !== null) return
@@ -165,20 +155,13 @@ export function installChatFiles(ctx: HostContext, ui: Ui) {
         seatStops()
         seatStops = null
       }
-      const syncSeats = () => {
-        if (dshChatUxPresent()) releaseSeats()
-        else claimSeats()
-      }
       scope.effect(() => {
-        // The seat is the host's to declare, so the keys wait for it; the
-        // subscription below covers the answer moving afterwards.
+        // The seat is the host's to declare, so the keys wait for it.
         const stopSeat = slots.inject(CHAT_FILE_SEAT, () => {
-          syncSeats()
+          claimSeats()
           return releaseSeats
         })
-        const stopPeer = subscribePeerPresence(syncSeats)
         return () => {
-          stopPeer()
           releaseSeats()
           if (typeof stopSeat === 'function') stopSeat()
         }

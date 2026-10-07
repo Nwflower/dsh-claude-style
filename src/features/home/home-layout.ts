@@ -42,7 +42,7 @@ import type { Ui } from '../../core/scheduler'
  * @param ui - shared handle table.
  * @returns teardown.
  */
-export function installHomeLayout(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: Ui) {
   /** The host's list slot between the hero greeting and the composer card. */
   const DOCK_SLOT = 'conversation.input.dock'
 

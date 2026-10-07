@@ -7,7 +7,7 @@ import { createSlidingPill } from '../../shared/sliding-pill'
 import type { HostContext, HostFiber, HostValue } from '../../core/host'
 import type { Ui } from '../../core/scheduler'
 
-export function installPermissions(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: Ui) {
   let segments: HTMLElement | null = null
   /** The segment group's sliding highlight (src/shared/sliding-pill.ts). */
   const segmentPill = createSlidingPill('[data-active]')

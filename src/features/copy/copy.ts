@@ -5,7 +5,7 @@ import { removeStrayNodes } from '../../shared/popover'
 import type { HostContext } from '../../core/host'
 import type { Ui } from '../../core/scheduler'
 
-export function installCopy(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: Ui) {
   /** Shipped idle composer hints (zh / en, hero / default) this skin replaces. */
   const HINT_SOURCES = [
     '描述你想要构建的内容',

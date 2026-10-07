@@ -32,7 +32,7 @@ type OrderMarks = Map<HTMLElement, number>
  * @param ui - shared handle table.
  * @returns teardown.
  */
-export function installTurnStatus(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: Ui) {
   /** On the moved control: `live`, `stopped` or `failed`. */
   const STATE_ATTR = 'data-dsh-claude-turn-state'
   /** On the moved control: the status line's text. */

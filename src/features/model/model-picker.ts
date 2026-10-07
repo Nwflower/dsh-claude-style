@@ -28,7 +28,7 @@ export interface ModelHandle extends FeatureHandle {
   teardown(): void
 }
 
-export function installModelPicker(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: Ui) {
   /**
    * The host's model seat is a click-triggered two-pane menu (Model /
    * Effort rows drilling into their own lists). The skin replaces it with

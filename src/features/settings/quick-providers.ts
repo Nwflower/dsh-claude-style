@@ -31,7 +31,7 @@ export interface QuickProvidersHandle extends FeatureHandle {
  * a dialog clips and may transform its own subtree, so a `position: fixed`
  * card in there would be positioned against the dialog, not the viewport.
  */
-export function installQuickProviders(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: Ui) {
   let card: HTMLElement | null = null
   let cardBody: HTMLElement | null = null
   let anchor: HTMLElement | null = null

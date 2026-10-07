@@ -11,7 +11,7 @@ import type { HostContext, HostValue } from '../../core/host'
  * Model picker rows: the row/cell builders and the two level-1 list
  * selectors.
  *
- * Split out of installModelPicker (src/features/model/model-picker.ts); this
+ * Split out of the model picker's install (src/features/model/model-picker.ts); this
  * fragment is the row half of that feature. createModelRows reaches the
  * feature's closure only through its options: ctx (the copy lookup),
  * pickModel(provider, modelId) (commit a row), subHoverIntent (the

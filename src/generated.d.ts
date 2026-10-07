@@ -16,3 +16,8 @@ declare module 'virtual:dsh-claude-style/generated' {
   /** The crab's sheets as data URIs by animation name: its body and its ink mask. */
   export const CRAB_SHEET_URLS: Record<string, { body: string, ink: string }>
 }
+
+/** The feature registry scripts/build.mjs generates from the manifests (D42), in install order. */
+declare module 'virtual:dsh-claude-style/features' {
+  export const FEATURES: import('./core/feature').Feature[]
+}

@@ -65,39 +65,54 @@ export function createSettingsAppearanceTab(): SettingsTab {
     ]
     const mascotShown = resolveMascot(prefs) !== MASCOT_OFF
     return [
-      controls.row(
-        'brand',
-        settingsCopy('brandTitle', 'Brand mark'),
-        settingsCopy('brandDesc', 'The brand mark in the sidebar and on the home page, and its colour family: warm for Claude, blue for DeepSeek. While Colours is set to Follow the host, only the mark changes.'),
-        brandPicker(prefs, write),
-        true,
-      ),
-      controls.row(
-        'palette',
-        settingsCopy('paletteTitle', 'Colours'),
-        settingsCopy('paletteDesc', 'Claude uses the skin\'s own colours; Follow the host leaves the colours to DSH and to other theme plugins (a wallpaper plugin, say), and the skin keeps only its layout and controls.'),
-        controls.segment(paletteOptions, prefs.palette, value => { write({ palette: value }) }),
-      ),
-      controls.row(
-        'typeface',
-        settingsCopy('typefaceTitle', 'Typefaces'),
-        settingsCopy('typefaceDesc', 'Claude uses the Anthropic faces (or the lookalike Inter and Noto Serif when they are missing) and JetBrains Mono for code; Follow the host keeps the fonts DSH or another plugin sets.'),
-        controls.segment(typefaceOptions, prefs.typeface, value => { write({ typeface: value }) }),
-      ),
-      controls.row(
-        'mascot',
-        settingsCopy('mascotTitle', 'Mascot'),
-        settingsCopy('mascotDesc', 'The pixel companion on the input area\'s top edge, animated by what the agent is doing. Follow the brand shows the pixel crab under Claude and Deepy the whale under DeepSeek.'),
-        controls.segment(mascotOptions, prefs.mascot, value => { write({ mascot: value }) }),
-        true,
-      ),
-      controls.subRow(
-        'mascotScope',
-        settingsCopy('mascotScopeTitle', 'Where it appears'),
-        settingsCopy('mascotScopeDesc', 'The new-conversation page alone, or the new-conversation page and the conversation.'),
-        controls.segment(mascotScopeOptions, prefs.mascotScope, value => { write({ mascotScope: value }) }, !mascotShown),
-        mascotShown,
-      ),
+      {
+        rank: 10,
+        node: controls.row(
+          'brand',
+          settingsCopy('brandTitle', 'Brand mark'),
+          settingsCopy('brandDesc', 'The brand mark in the sidebar and on the home page, and its colour family: warm for Claude, blue for DeepSeek. While Colours is set to Follow the host, only the mark changes.'),
+          brandPicker(prefs, write),
+          true,
+        ),
+      },
+      {
+        rank: 20,
+        node: controls.row(
+          'palette',
+          settingsCopy('paletteTitle', 'Colours'),
+          settingsCopy('paletteDesc', 'Claude uses the skin\'s own colours; Follow the host leaves the colours to DSH and to other theme plugins (a wallpaper plugin, say), and the skin keeps only its layout and controls.'),
+          controls.segment(paletteOptions, prefs.palette, value => { write({ palette: value }) }),
+        ),
+      },
+      {
+        rank: 30,
+        node: controls.row(
+          'typeface',
+          settingsCopy('typefaceTitle', 'Typefaces'),
+          settingsCopy('typefaceDesc', 'Claude uses the Anthropic faces (or the lookalike Inter and Noto Serif when they are missing) and JetBrains Mono for code; Follow the host keeps the fonts DSH or another plugin sets.'),
+          controls.segment(typefaceOptions, prefs.typeface, value => { write({ typeface: value }) }),
+        ),
+      },
+      {
+        rank: 40,
+        node: controls.row(
+          'mascot',
+          settingsCopy('mascotTitle', 'Mascot'),
+          settingsCopy('mascotDesc', 'The pixel companion on the input area\'s top edge, animated by what the agent is doing. Follow the brand shows the pixel crab under Claude and Deepy the whale under DeepSeek.'),
+          controls.segment(mascotOptions, prefs.mascot, value => { write({ mascot: value }) }),
+          true,
+        ),
+      },
+      {
+        rank: 50,
+        node: controls.subRow(
+          'mascotScope',
+          settingsCopy('mascotScopeTitle', 'Where it appears'),
+          settingsCopy('mascotScopeDesc', 'The new-conversation page alone, or the new-conversation page and the conversation.'),
+          controls.segment(mascotScopeOptions, prefs.mascotScope, value => { write({ mascotScope: value }) }, !mascotShown),
+          mascotShown,
+        ),
+      },
     ]
   }
   return { id: 'appearance', label: () => settingsCopy('tabAppearance', 'Appearance'), rows }
