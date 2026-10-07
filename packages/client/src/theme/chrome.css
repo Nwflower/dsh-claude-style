@@ -57,11 +57,11 @@ html[data-windows-titlebar] body[data-dsh-claude-style] [class*="_frame"] > [dat
    what paints the column — a docked tab's pane, or the column's own empty host; a
    panel pulled out into the host's floating window is left to that window. */
 body[data-dsh-claude-style] [class*="_rightbarCol"] :is([data-dockkit-empty], [data-dockkit-host="dock"] > [data-dockkit-pane]) {
-  margin: 8px !important;
-  overflow: hidden !important;
-  border: 1px solid var(--dsw-alias-border-l1) !important;
-  border-radius: 16px !important;
-  box-shadow: var(--dsw-elevation-prominent) !important;
+  margin: 8px;
+  overflow: hidden;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 16px;
+  box-shadow: var(--dsw-elevation-prominent);
 }
 
 /* The column's start page centers its stack in a box that never grows, so a list
