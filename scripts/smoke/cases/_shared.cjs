@@ -1,6 +1,3 @@
-/**
- * What every smoke case opens with, and the small helpers the cases share.
- */
 'use strict'
 const { MARKUP, SKIN_FACE, SKIN_HAT, same, check } = require('../shared.cjs')
 

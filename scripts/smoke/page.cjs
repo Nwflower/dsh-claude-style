@@ -1,17 +1,79 @@
 /**
  * One page's stand-in markup: the host's footer and composer markup, then the
- * stand-in host (stand-in.js), the built bundle and the probe (probe.js).
- * Both page scripts are plain browser scripts; what they need from Node — the
- * page name, the cases this load runs, the run's tier, the markup payload, the
- * launcher's pixel — is set on `window` before them.
+ * stand-in host, the built bundle and the probe. Both page scripts are plain
+ * browser scripts, each read as the parts below in this order; what they need
+ * from Node — the page name, the cases this load runs, the run's tier, the
+ * markup payload, the launcher's pixel — is set on `window` before them.
  */
 'use strict'
 const fs = require('fs')
 const path = require('path')
 const { MARKUP, PNG_1PX } = require('./shared.cjs')
-/** The page scripts, read once: the stand-in host runs before the bundle, the probe after it. */
-const STAND_IN = fs.readFileSync(path.join(__dirname, 'stand-in.js'), 'utf8')
-const PROBE = fs.readFileSync(path.join(__dirname, 'probe.js'), 'utf8')
+/**
+ * The stand-in host's parts, in the order they run: the counters, then the host
+ * faces the bundle reads.
+ */
+const STAND_IN_PARTS = [
+  'prelude.js',
+  'host-palette.js',
+  'account-menu.js',
+  'hero-menus.js',
+  'composer-keys.js',
+  'settings-form.js',
+  'account-stream.js',
+  'host-fetch.js',
+  'account-service.js',
+  'permissions.js',
+  'turn-fixture.js',
+  'locale-fixture.js',
+  'turn-nav.js',
+  'mascot.js',
+  'stats-projections.js',
+  'workspaces.js',
+  'sessions.js',
+  'config-forms.js',
+  'slots.js',
+  'ctx.js',
+  'stats-dialogs.js',
+  'context-panel.js',
+  'react.js',
+  'sibling-sheet.js',
+]
+/**
+ * The probe's parts, in the order they run: the skin and the step registry, then
+ * each step in the order the probe takes them.
+ */
+const PROBE_PARTS = [
+  'prelude.js',
+  'shell-startup.js',
+  'agent-desktop.js',
+  'settle.js',
+  'shell-pages.js',
+  'shell-context.js',
+  'account-reads.js',
+  'shell-studio.js',
+  'agent-permissions.js',
+  'agent-turns.js',
+  'shell-switches.js',
+  'agent-turn-nav.js',
+  'shell-palette.js',
+  'mascot.js',
+  'chat-motion.js',
+  'chat-files.js',
+  'chat-send.js',
+  'peer.js',
+  'teardown.js',
+]
+/**
+ * The page scripts, read once: the stand-in host runs before the bundle, the
+ * probe after it. Every part is an IIFE and the parts are injected as one
+ * script, so each boundary carries the statement's own terminator (a part
+ * opening with `(function` would otherwise be read as a call of the one before).
+ */
+const readParts = (dir, parts) =>
+  parts.map((part) => fs.readFileSync(path.join(__dirname, dir, part), 'utf8')).join(';\n')
+const STAND_IN = readParts('stand-in', STAND_IN_PARTS)
+const PROBE = readParts('probe', PROBE_PARTS)
 
 /** The stand-in page for one load: host footer, host composer, then the bundle. */
 function page(name, tier, cases) {
@@ -36,7 +98,7 @@ function page(name, tier, cases) {
         '  ' + footerActions + '\n' +
       '</div>'
   // The host's statistics in the composer stack (ui-chat StatsPills), which the
-  // host marks per figure since its 2026-09 update. Detailed wraps each figure in
+  // host marks per figure. Detailed wraps each figure in
   // an anchor span and makes the dialog-carrying ones buttons; compact renders
   // bare reading spans with no trigger. The skin hides both marks outright and
   // reads the two dialogs into the context popover, so the row is the dock's

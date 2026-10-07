@@ -22,7 +22,7 @@
  * The launch token comes from the GUI URL (`/?token=…`) of the running DSH
  * instance; it may also be passed via the DSH_WEB_TOKEN env var.
  */
-const { findChrome, launchChrome, connectTab } = require('./chrome.cjs')
+const { findChrome, launchChrome, connectTab } = require('./shared/chrome.cjs')
 
 const args = process.argv.slice(2)
 const argOf = (name) => {

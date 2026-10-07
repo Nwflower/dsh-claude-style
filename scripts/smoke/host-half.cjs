@@ -1,5 +1,5 @@
 /**
- * The smoke's host half, in Node: packages/host/src/index.js applied to a fake cordis
+ * The smoke's host half, in Node: lib/host/index.js applied to a fake cordis
  * context, and its private routes driven with the request shapes that matter
  * (docs/decisions D11).
  */
@@ -17,7 +17,7 @@ const { ROOT, HOST, SKIN_FIXTURE, same, check } = require('./shared.cjs')
 // ---------------------------------------------------------------------------
 
 /**
- * packages/host/src/index.js applied to a fake cordis context.
+ * lib/host/index.js applied to a fake cordis context.
  *
  * @param mod - the host-half module.
  * @param options - `fenced` offers the host's own request check, `home` answers
@@ -402,16 +402,45 @@ async function hostHalf() {
     check(`nothing but a name the build wrote answers under the assets route: ${url}`, answer.status === 404, `HTTP ${answer.status}`)
   }
 
-  // The faces the package ships: each is in package.json's files and the route
-  // answers it byte for byte under its own content type.
+  // The faces the package ships: the build copies each into lib/fonts/, which
+  // package.json carries, and the route answers it byte for byte under its own
+  // content type.
+  //
+  // The user's own drop point is `$DSH_HOME/dsh-claude-style/fonts/` (D11): a
+  // copy there answers a name the package does not carry, and wins over a
+  // bundled face of the same name. Both halves run against a scratch harness
+  // home, so the answer says nothing about what the machine running this has
+  // installed.
+  console.log('\nhost half — the fonts route and the drop point')
+  const fontHome = path.join(ROOT, '.debug', 'smoke-font-home')
+  const droppedDir = path.join(fontHome, 'dsh-claude-style', 'fonts')
+  fs.rmSync(fontHome, { recursive: true, force: true })
+  const fontHost = fakeHost(mod, { home: fontHome })
   const packaged = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).files
+  const fontSource = path.join(ROOT, 'packages', 'assets', 'src', 'fonts')
   for (const [name, type] of [['JetBrainsMonoVariable.ttf', 'font/ttf'], ['InterVariable.woff2', 'font/woff2'], ['NotoSerifVariable.woff2', 'font/woff2']]) {
-    const face = await requestAsset(assets, `/dsh-claude-style/fonts/${name}`)
+    const face = await requestAsset(fontHost, `/dsh-claude-style/fonts/${name}`)
     check(`the packaged face ${name} ships in the package and is served as ${type}`,
-      packaged.includes(`fonts/${name}`) && face.status === 200 && face.headers['content-type'] === type &&
-        face.raw !== null && Buffer.compare(face.raw, fs.readFileSync(path.join(ROOT, 'fonts', name))) === 0,
+      packaged.includes('lib') && face.status === 200 && face.headers['content-type'] === type &&
+        face.raw !== null && Buffer.compare(face.raw, fs.readFileSync(path.join(fontSource, name))) === 0,
       `HTTP ${face.status} ${JSON.stringify(face.headers)}`)
   }
+  const absent = await requestAsset(fontHost, '/dsh-claude-style/fonts/AnthropicSansWebText.ttf')
+  check('a face the package does not carry is a 404 until the user drops one in',
+    absent.status === 404, `HTTP ${absent.status}`)
+  fs.mkdirSync(droppedDir, { recursive: true })
+  fs.writeFileSync(path.join(droppedDir, 'AnthropicSansWebText.ttf'), Buffer.from('dropped-anthropic'))
+  fs.writeFileSync(path.join(droppedDir, 'JetBrainsMonoVariable.ttf'), Buffer.from('dropped-mono'))
+  const dropped = await requestAsset(fontHost, '/dsh-claude-style/fonts/AnthropicSansWebText.ttf')
+  check('a face dropped under the harness home is served from there',
+    dropped.status === 200 && dropped.headers['content-type'] === 'font/ttf' &&
+      dropped.raw !== null && dropped.raw.toString('utf8') === 'dropped-anthropic',
+    `HTTP ${dropped.status} ${JSON.stringify(dropped.headers)}`)
+  const overridden = await requestAsset(fontHost, '/dsh-claude-style/fonts/JetBrainsMonoVariable.ttf')
+  check("the user's own copy wins over the bundled face of the same name",
+    overridden.status === 200 && overridden.raw !== null && overridden.raw.toString('utf8') === 'dropped-mono',
+    `HTTP ${overridden.status} ${JSON.stringify(overridden.headers)}`)
+  fs.rmSync(fontHome, { recursive: true, force: true })
 }
 
 /**

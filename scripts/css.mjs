@@ -38,10 +38,10 @@ const TABLE_END = '<!-- /generated:tokens -->'
 /** Substitute %%TOKEN%% placeholders in one stylesheet; throws on leftovers. */
 export function substitute(file, text, tokens) {
   const out = text.replace(/%%([A-Z_]+)%%/g, (match, name) => {
-    if (!(name in tokens)) throw new Error(`build: unknown token %%${name}%% in src/${file}`)
+    if (!(name in tokens)) throw new Error(`build: unknown token %%${name}%% in packages/client/src/${file}`)
     return tokens[name]
   })
-  if (out.includes('%%')) throw new Error(`build: unsubstituted token remains in src/${file}`)
+  if (out.includes('%%')) throw new Error(`build: unsubstituted token remains in packages/client/src/${file}`)
   return out
 }
 
@@ -119,7 +119,7 @@ function checkTokenGates(file, rule, selectors, gates, names) {
   for (const node of rule.nodes) {
     if (node.type !== 'decl' || !node.prop.startsWith('--')) continue
     const name = node.prop
-    const where = `src/${file}:${node.source.start.line}`
+    const where = `packages/client/src/${file}:${node.source.start.line}`
     if (name.startsWith('--dsw-font-')) {
       if (!every(gates.typeface, gates.typeface.claude)) throw new Error(`build: ${where} writes ${name} outside the Claude typeface gate`)
     } else if (name.startsWith('--dsw-')) {
@@ -143,17 +143,17 @@ function checkTokenGates(file, rule, selectors, gates, names) {
  * @returns the sheet's text, comments and formatting kept.
  */
 function processSheet(sheet, text, gates, names) {
-  const root = postcss.parse(text, { from: `src/${sheet.file}` })
+  const root = postcss.parse(text, { from: `packages/client/src/${sheet.file}` })
   let markerEnd = null
   if (sheet.gate === true) {
     const marker = root.nodes.find((node) => node.type === 'comment' && node.text === COMPOSER_GATE_MARKER)
-    if (marker === undefined) throw new Error(`build: src/${sheet.file} is missing the /* ${COMPOSER_GATE_MARKER} */ marker`)
+    if (marker === undefined) throw new Error(`build: packages/client/src/${sheet.file} is missing the /* ${COMPOSER_GATE_MARKER} */ marker`)
     markerEnd = marker.source.end.offset
   }
   let stamped = 0
   root.walkRules((rule) => {
     if (rule.parent.type === 'atrule' && /keyframes$/i.test(rule.parent.name)) return
-    const where = `src/${sheet.file}:${rule.source.start.line}`
+    const where = `packages/client/src/${sheet.file}:${rule.source.start.line}`
     const selectors = selectorParser().astSync(rule.selector)
     const stamp = markerEnd !== null && rule.source.start.offset > markerEnd
     for (const selector of selectors.nodes) {
@@ -168,7 +168,7 @@ function processSheet(sheet, text, gates, names) {
     rule.selector = selectors.toString()
     stamped += 1
   })
-  if (markerEnd !== null && stamped === 0) throw new Error(`build: src/${sheet.file} has no rules below /* ${COMPOSER_GATE_MARKER} */`)
+  if (markerEnd !== null && stamped === 0) throw new Error(`build: packages/client/src/${sheet.file} has no rules below /* ${COMPOSER_GATE_MARKER} */`)
   return root.toString()
 }
 
@@ -182,11 +182,11 @@ export function loadTokens(srcDir) {
   const schema = JSON.parse(fs.readFileSync(path.join(srcDir, TOKEN_SCHEMA), 'utf8'))
   const validate = new Ajv2020({ allErrors: true }).compile(schema)
   const doc = JSON.parse(fs.readFileSync(path.join(srcDir, TOKEN_SHEET), 'utf8'))
-  if (!validate(doc)) throw new Error(`build: src/${TOKEN_SHEET} ${validate.errors.map((error) => `${error.instancePath || '/'} ${error.message}`).join('; ')}`)
+  if (!validate(doc)) throw new Error(`build: packages/client/src/${TOKEN_SHEET} ${validate.errors.map((error) => `${error.instancePath || '/'} ${error.message}`).join('; ')}`)
   for (const group of ['typeface', 'apex', 'palette']) {
     const seen = new Set()
     for (const item of doc[group]) {
-      if (seen.has(item.token)) throw new Error(`build: src/${TOKEN_SHEET} names ${item.token} twice in ${group}`)
+      if (seen.has(item.token)) throw new Error(`build: packages/client/src/${TOKEN_SHEET} names ${item.token} twice in ${group}`)
       seen.add(item.token)
     }
   }
@@ -224,7 +224,7 @@ function tokenSheet(doc) {
   const claude = `${SCOPE}%%PALETTE_CLAUDE%%`
   const deepseek = `${claude}[%%BRAND_ATTR%%="%%BRAND_DEEPSEEK%%"]`
   return [
-    `/* Generated from src/${TOKEN_SHEET} by scripts/css.mjs; edit the JSON. */\n`,
+    `/* Generated from packages/client/src/${TOKEN_SHEET} by scripts/css.mjs; edit the JSON. */\n`,
     tokenBlock(`${SCOPE}%%TYPEFACE_CLAUDE%%`, declarationsOf(doc.typeface, (item) => item.claude)),
     tokenBlock(`${SCOPE}%%TYPEFACE_HOST%%`, declarationsOf(doc.typeface, (item) => item.host)),
     tokenBlock(`${SCOPE}${dark}`, declarationsOf(doc.apex, (item) => item.dark)),

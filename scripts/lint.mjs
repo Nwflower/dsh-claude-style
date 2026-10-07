@@ -21,9 +21,7 @@ const MAX_LINES = 750
  * Files already past the stop line, with the size they stood at when the rule
  * was written: they may not grow until the split lands.
  */
-const OVERSIZE = {
-  'packages/host/src/usage.ts': { ceiling: 764, reason: 'the usage roll-up: folding, the ledger, the cache and the summary in one module; a split by responsibility is proposed and waits for the user' },
-}
+const OVERSIZE = {}
 
 const problems = []
 
@@ -59,9 +57,8 @@ function decisionNumbers() {
 
 // 1. The stop line.
 const sources = [
-  ...filesUnder(path.join(ROOT, 'packages', 'client', 'src'), ['.ts', '.css']),
   ...filesUnder(path.join(ROOT, 'packages'), ['.ts', '.css', '.cjs', '.js']),
-  ...filesUnder(path.join(ROOT, 'scripts'), ['.mjs', '.cjs']),
+  ...filesUnder(path.join(ROOT, 'scripts'), ['.mjs', '.cjs', '.js']),
 ].filter((file) => !/\.test\.ts$/.test(file) && !/\.d\.ts$/.test(file))
 for (const file of sources) {
   const lines = fs.readFileSync(file, 'utf8').split('\n').length
@@ -112,15 +109,40 @@ for (const file of citing) {
   })
 }
 
+// 4. A backticked repository path in prose has to exist. Directory mentions and
+// placeholder segments are out of reach; the CHANGELOG is a historical record.
+// A path that starts at a feature layer names a file under packages/client/src.
+const prose = citing.filter((file) => !relative(file).startsWith('CHANGELOG'))
+const PROSE_PATHS = [
+  { pattern: /`((?:packages|scripts|docs|tests|changes|locale)\/[^`\s]+?\.[a-z0-9]+)`/g, base: ROOT },
+  { pattern: /`((?:features|core|shared|theme)\/[^`\s]+?\.[a-z0-9]+)`/g, base: path.join(ROOT, 'packages', 'client', 'src') },
+]
+let prosePaths = 0
+for (const file of prose) {
+  const text = fs.readFileSync(file, 'utf8')
+  const lines = text.split('\n')
+  lines.forEach((line, at) => {
+    for (const { pattern, base } of PROSE_PATHS) {
+      for (const match of line.matchAll(pattern)) {
+        const mention = match[1]
+        if (mention.includes('<') || mention.includes('*')) continue
+        prosePaths += 1
+        if (!fs.existsSync(path.resolve(base, mention))) problems.push(`${relative(file)}:${at + 1}: names ${mention}, which does not exist`)
+      }
+    }
+  })
+}
+
 // A rule whose pattern stopped matching anything would pass forever: each of the
-// three has to have looked at something.
+// four has to have looked at something.
 if (links === 0) problems.push('lint: no Markdown link was examined — the link pattern matches nothing')
 if (citations === 0) problems.push('lint: no decision number was examined — the citation pattern matches nothing')
+if (prosePaths === 0) problems.push('lint: no repository path in prose was examined — the path pattern matches nothing')
 
 if (problems.length > 0) {
   for (const problem of problems) console.error(`lint: ${problem}`)
   console.error(`lint: ${problems.length} problems in ${sources.length} sources and ${markdown.length} documents`)
   process.exitCode = 1
 } else {
-  console.log(`lint: ${sources.length} sources, ${markdown.length} documents, ${links} links and ${citations} decision citations clean (stop line ${MAX_LINES} lines)`)
+  console.log(`lint: ${sources.length} sources, ${markdown.length} documents, ${links} links, ${citations} decision citations and ${prosePaths} prose paths clean (stop line ${MAX_LINES} lines)`)
 }

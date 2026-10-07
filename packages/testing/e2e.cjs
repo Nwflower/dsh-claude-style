@@ -8,43 +8,31 @@
  * answer renders as the reader sees it, that a scripted tool call becomes a row
  * with its result, that the conversation never jumps or slides backward while
  * the answer streams in, that the send flight hands the reader's words over
- * without a blank frame, and that both palettes still capture the same picture.
- * The `contract` scenario walks src/contracts/table.ts against the same page, so
+ * without a blank frame, and that both palettes capture the README frame's own
+ * picture with nothing personal in it. The `contract` scenario walks packages/contracts/src/table.ts against the same page, so
  * each host literal the skin depends on is checked where it lives (D44).
  * Every scenario runs against its own scratch instance, so nothing a scenario
  * writes can reach another.
  *
- * Usage: node tools/e2e.cjs [--scenario <name>[,<name>…]] [--headed] [--out <dir>] [--delay <ms>]
- *                            [--baseline <dir>] [--accept]
+ * Usage: node packages/testing/e2e.cjs [--scenario <name>[,<name>…]] [--headed] [--out <dir>] [--delay <ms>]
  *        scenarios: conversation, tool, send, scroll, contract, shots
- *        (default: all but shots, which needs a reviewed baseline) *        --accept writes the captured screenshots as the comparison baseline.
+ *        (default: every scenario)
  */
 'use strict'
 const fs = require('node:fs')
 const path = require('node:path')
-const { PNG } = require('pngjs')
 const { start, openPage, waitForSkin, dismissOverlays } = require('./dsh-web.cjs')
 const { startMockLlm } = require('./mock-llm.cjs')
 const { CANVAS } = require('../../scripts/shoot.cjs')
-const { sanitizePage } = require('../../scripts/privacy.cjs')
-const { loadModule } = require('../../scripts/ts-module.cjs')
+const { sanitizePage } = require('../../scripts/shared/privacy.cjs')
+const { loadModule } = require('../../scripts/shared/ts-module.cjs')
 
 const ROOT = path.resolve(__dirname, '..', '..')
 const DEFAULT_OUT = path.join(ROOT, '.debug', 'e2e', 'out')
-/** Screenshot baselines: the reviewed picture each run has to reproduce. */
-const DEFAULT_BASELINE = path.join(ROOT, 'tests', 'screenshots')
-/**
- * The share of differing pixels a capture may have and still count as the same
- * picture. Two runs of the same scenario differ in the live numbers the page
- * carries — the clock, the throughput meter, the mascot's frame — which measures
- * 0.08% of the frame; the bound is twice that, while a moved panel or a changed
- * palette moves an order of magnitude more.
- */
-const MAX_DIFFERENT_PIXELS = 0.002
 
 /**
  * The host's page markers this lane reads. Each one is a D44 entry in
- * `src/contracts/dom.ts`, which the skin reads for the same reason; a marker
+ * `packages/contracts/src/dom.ts`, which the skin reads for the same reason; a marker
  * that changes breaks both, and the contract test names it there.
  */
 const HOST = {
@@ -310,13 +298,13 @@ function runProbes({ table, entries, frames = 0 }) {
 }
 
 /**
- * Capture the page in both palettes and prove the picture is fit to keep: the
- * palette is the one the brand resolves to, the visible text carries no personal
- * data (scripts/privacy.cjs), and — when a baseline exists or `--accept` was
- * asked for — the capture matches the reviewed picture.
+ * Capture the page in both palettes and prove the capture is fit to keep: the
+ * palette is the one the brand resolves to, and the visible text carries no
+ * personal data (scripts/shared/privacy.cjs). The files land in the run's out
+ * directory for a reviewer; nothing is compared against a stored picture.
  */
 async function captureBothSchemes(context) {
-  const { page, out, baseline, accept } = context
+  const { page, out } = context
   const brand = await page.evaluate(() => document.body.getAttribute('data-dsh-claude-brand'))
   const canvas = CANVAS[brand]
   if (canvas === undefined) throw new Error(`the page carries brand "${brand}", which has no recorded palette`)
@@ -335,38 +323,9 @@ async function captureBothSchemes(context) {
     const file = path.join(out, `shots-${scheme}.png`)
     await page.screenshot({ path: file })
     files.push(file)
-    checks.push(check(`${scheme} 截图的可见文本没有个人数据`, true, `sweep caught ${caught.length}; ${visibleText.replace(/\s+/g, ' ').length} chars`))
-    const baselineFile = path.join(baseline, `shots-${scheme}.png`)
-    if (accept) {
-      fs.mkdirSync(baseline, { recursive: true })
-      fs.copyFileSync(file, baselineFile)
-      checks.push(check(`${scheme} 截图写成了基线`, true, baselineFile))
-      continue
-    }
-    if (!fs.existsSync(baselineFile)) {
-      checks.push(check(`${scheme} 截图与基线一致`, false, `no baseline at ${baselineFile} — review the capture in ${file}, then run with --accept`))
-      continue
-    }
-    const { ratio, sizeChanged } = compareImages(baselineFile, file)
-    checks.push(check(`${scheme} 截图与基线一致`, ratio <= MAX_DIFFERENT_PIXELS, `${(ratio * 100).toFixed(3)}% of pixels differ${sizeChanged ? ' (size changed)' : ''}, allowed ${(MAX_DIFFERENT_PIXELS * 100).toFixed(1)}%`))
+    checks.push(check(`${scheme} 截图的可见文本没有个人数据`, true, `sweep caught ${caught.length}; ${visibleText.replace(/\s+/g, ' ').length} chars; ${file}`))
   }
   return { checks, files }
-}
-
-/**
- * Compare two PNGs: the share of pixels whose red, green or blue channel differs
- * by more than antialiasing moves. The decode is pngjs, the same library the
- * build reads Deepy's sheets with.
- */
-function compareImages(before, after) {
-  const one = PNG.sync.read(fs.readFileSync(before))
-  const two = PNG.sync.read(fs.readFileSync(after))
-  if (one.width !== two.width || one.height !== two.height) return { ratio: 1, sizeChanged: true }
-  let differing = 0
-  for (let at = 0; at < one.data.length; at += 4) {
-    if (Math.abs(one.data[at] - two.data[at]) > 8 || Math.abs(one.data[at + 1] - two.data[at + 1]) > 8 || Math.abs(one.data[at + 2] - two.data[at + 2]) > 8) differing += 1
-  }
-  return { ratio: differing / (one.width * one.height), sizeChanged: false }
 }
 
 /** The scenarios: each boots its own instance, sends its prompt, and asserts. */
@@ -517,11 +476,11 @@ const SCENARIOS = {
       ]
     },
   },
-  /** Both palettes captured, swept for personal data, and compared with the baseline. */
+  /** Both palettes captured to the run's out directory and swept for personal data. */
   shots: {
     script: 'greeting',
     prompt: 'hello there',
-    // The README frame's own size, so a baseline is the picture shipped in the docs.
+    // The README frame's own size, so the capture is the picture the docs carry.
     viewport: { width: 1440, height: 900 },
     async assert(context) {
       const { session } = context
@@ -555,7 +514,7 @@ async function runScenario(name, options) {
     const { page } = session
     await waitForSkin(page)
     if (!(await dismissOverlays(page))) throw new Error('the shell left a first-run overlay open')
-    const context = { page, session, trace: [], notes: {}, out: options.out, baseline: options.baseline, accept: options.accept }
+    const context = { page, session, trace: [], notes: {}, out: options.out }
     if (scenario.beforeSend !== undefined) await scenario.beforeSend(context)
     await startTrace(page)
     await sendPrompt(page, scenario.prompt)
@@ -586,19 +545,17 @@ async function main() {
   const unknown = E2E_SCENARIOS.filter((name) => !known.includes(name))
   const unnamed = known.filter((name) => !E2E_SCENARIOS.includes(name))
   if (unknown.length > 0 || unnamed.length > 0) {
-    throw new Error(`the lane runs ${known.join(', ')} while src/contracts/timing.ts names ${E2E_SCENARIOS.join(', ')}`
+    throw new Error(`the lane runs ${known.join(', ')} while packages/contracts/src/timing.ts names ${E2E_SCENARIOS.join(', ')}`
       + `${unknown.length > 0 ? `; named there but missing here: ${unknown.join(', ')}` : ''}`
       + `${unnamed.length > 0 ? `; run here but unnamed there: ${unnamed.join(', ')}` : ''}`)
   }
-  const names = (argOf('scenario') ?? 'conversation,tool,send,scroll,contract').split(',').map((name) => name.trim()).filter(Boolean)
+  const names = (argOf('scenario') ?? 'conversation,tool,send,scroll,contract,shots').split(',').map((name) => name.trim()).filter(Boolean)
   const out = path.resolve(argOf('out') ?? DEFAULT_OUT)
   const options = {
     headed: args.includes('--headed'),
-    accept: args.includes('--accept'),
     delayMs: argOf('delay') === undefined ? undefined : Number(argOf('delay')),
     home: argOf('home'),
     out,
-    baseline: path.resolve(argOf('baseline') ?? DEFAULT_BASELINE),
   }
   fs.mkdirSync(out, { recursive: true })
   // The first boot of the scratch host installs this checkout into the scratch

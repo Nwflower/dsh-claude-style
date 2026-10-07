@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * shoot.cjs — capture the README screenshots, light and dark, for one brand and
- * one scene: `docs/<brand>-<scene>-light.png` and `-dark.png`.
+ * one scene: `docs/screenshots/<brand>-<scene>-light.png` and `-dark.png`.
  *
  * Drives a headless Chrome over CDP against a running DSH web GUI with this
  * theme loaded, replaces personal data in the DOM (workspace / session titles,
@@ -32,15 +32,15 @@
  *
  * The launch token comes from the `dsh web` banner (GUI URL `/?token=…`) or
  * the DSH_WEB_TOKEN env var. Chrome is launched headless with a throwaway
- * profile (scripts/chrome.cjs) and stopped when the run ends.
+ * profile (scripts/shared/chrome.cjs) and stopped when the run ends.
  *
  * `shoot(options)` is exported for scripts that stage more of the page first:
  * its `prepare(conn)` hook runs after the page is up and before the sanitize.
  */
 const fs = require('fs')
 const path = require('path')
-const { findChrome, launchChrome, connectTab } = require('./chrome.cjs')
-const { SESSION_NAMES, sanitizePage } = require('./privacy.cjs')
+const { findChrome, launchChrome, connectTab } = require('./shared/chrome.cjs')
+const { SESSION_NAMES, sanitizePage } = require('./shared/privacy.cjs')
 
 const WIDTH = 1440
 /** The home page fits the classic frame; a conversation turn needs the taller one. */
@@ -158,7 +158,7 @@ async function shoot(options) {
   const browser = findChrome()
   if (!browser) throw new Error('no Chrome/Edge found; set CHROME_PATH')
   const base = (options.url || 'http://127.0.0.1:3080').replace(/\/+$/, '')
-  const out = path.resolve(options.out || path.join(__dirname, '..', 'docs'))
+  const out = path.resolve(options.out || path.join(__dirname, '..', 'docs', 'screenshots'))
   const name = options.name || `${brand}-${scene}`
   const run = {
     brand,

@@ -3,10 +3,5 @@
   "description": "The runnable tools of dsh-claude-style: a scratch host, a scripted model service, and the end-to-end lane that asserts on a real page",
   "version": "0.11.1",
   "private": true,
-  "type": "commonjs",
-  "bin": {
-    "dsh-claude-style-web": "./dsh-web.cjs",
-    "dsh-claude-style-e2e": "./e2e.cjs",
-    "dsh-claude-style-mock-llm": "./mock-llm.cjs"
-  }
+  "type": "commonjs"
 }

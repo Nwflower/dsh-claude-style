@@ -19,7 +19,7 @@
  *       baseURL: http://127.0.0.1:<port>
  *       apiKeyEnv: DSH_E2E_MOCK_KEY
  *
- * Usage: node tools/mock-llm.cjs [--port <n>] [--log <dir>] [--script <name>]
+ * Usage: node packages/testing/mock-llm.cjs [--port <n>] [--log <dir>] [--script <name>]
  *        (module use: `const mock = await startMockLlm()` → `{ url, stop, requests }`)
  */
 'use strict'

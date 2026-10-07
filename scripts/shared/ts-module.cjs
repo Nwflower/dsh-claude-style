@@ -14,8 +14,8 @@ const path = require('node:path')
 const vm = require('node:vm')
 const esbuild = require('esbuild')
 
-const ROOT = path.resolve(__dirname, '..')
-const SRC = path.join(ROOT, 'src')
+/** The repository root: this module sits one level below `scripts/`. */
+const ROOT = path.resolve(__dirname, '..', '..')
 
 /**
  * Evaluate one module of this repository and return its exports.
@@ -56,4 +56,4 @@ async function loadModuleEsm(file) {
   return import(`data:text/javascript;base64,${Buffer.from(outputFiles[0].text).toString('base64')}`)
 }
 
-module.exports = { loadModule, loadModuleEsm, ROOT, SRC }
+module.exports = { loadModule, loadModuleEsm, ROOT }

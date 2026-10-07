@@ -3,7 +3,7 @@
  * smoke.cjs — zero-dependency smoke test of the BUILT plugin (`lib/`); no running
  * DSH instance is needed.
  *
- * Host half, in Node: `host/index.js` is applied to a fake cordis context and the
+ * Host half, in Node: `lib/host/index.js` is applied to a fake cordis context and the
  * username and session-delete routes get the request shapes that matter
  * (docs/decisions D11) — a cross-site page, a LAN peer and the browser's
  * own same-origin fetch, plus the deletion route's own guards (POST only, the id
@@ -42,8 +42,8 @@
  *
  * This file is the runner. The parts live in scripts/smoke/: shared.cjs (paths,
  * fixtures, `check`), host-half.cjs (the Node half), page.cjs (one case's
- * stand-in page), stand-in.js and probe.js (the scripts that page runs before
- * and after the bundle) and cases.cjs (what each case's report must show).
+ * stand-in page), the stand-in/ and probe/ parts (the scripts that page runs
+ * before and after the bundle) and cases.cjs (what each case's report must show).
  *
  * Usage: node scripts/smoke.cjs [--case <name>[,<name>…]] [--feature <dir>[,<dir>…]] [--quick]
  *        (CHROME_PATH overrides the browser lookup)
@@ -60,7 +60,7 @@
 const fs = require('fs')
 const http = require('http')
 const path = require('path')
-const { findChrome, launchChrome, connectTab } = require('./chrome.cjs')
+const { findChrome, launchChrome, connectTab } = require('./shared/chrome.cjs')
 const { ROOT, CLIENT, SKIN_FIXTURE, SKIN_CASES, sleep, check, failures, skips, setTier, tierName, TIMING_CASES, FEATURE_CASES, pagesFor } = require('./smoke/shared.cjs')
 const { hostHalf } = require('./smoke/host-half.cjs')
 const { page } = require('./smoke/page.cjs')

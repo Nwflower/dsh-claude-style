@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * build.mjs — bundle `lib/client.js` from the TypeScript modules and stylesheets in `src/` (D36).
+ * build.mjs — bundle `lib/client.js` from the TypeScript modules and stylesheets in `packages/client/src/` (D36).
  *
  * The DSH module loader takes one file per plugin client, registered with
  * `__ModuleLoader__.load` and handed a `require` for the packages the host
@@ -11,23 +11,25 @@
  *   packages/client/src/entry.ts                 apply(): the FEATURES table; imports everything else
  *   packages/client/src/constants.ts             constants; also evaluated here for the stylesheet tokens
  *   packages/client/src/core/ packages/client/src/shared/ packages/client/src/features/<name>/   the modules, TypeScript, strict
- *   packages/client/src/features/<dir>/<main>.manifest.ts   each feature's manifest (D42), read by scripts/read-manifests.cjs
+ *   packages/client/src/features/<dir>/<main>.manifest.ts   each feature's manifest (D42), read by scripts/shared/read-manifests.cjs
  *   packages/client/src/theme/*.css and the feature stylesheets   concatenated by rank (THEME_SHEETS and the manifests),
  *                                checked and gated on the syntax tree (scripts/css.mjs)
  *   packages/client/src/theme/tokens.json        the design tokens: the token stylesheet and docs/STYLE.md's table
  *   packages/assets/src/                  every image (packages/assets/assets.mjs, D38): small ones inline, the rest
  *                                written to lib/assets/<hash>.<ext> and served by the host half
+ *   packages/assets/src/fonts/            the four faces the package ships with their licences and
+ *                                authors file, copied to lib/fonts/ (buildFonts)
  *
  * What the build produces for the browser half reaches the source as one
  * generated module, `virtual:dsh-claude-style/generated` (typed in
  * packages/client/src/generated.d.ts): the stylesheet, the asset addresses, the lockups, the
  * build id.
  *
- * Before anything is written, `tsc` type-checks src/ and the bundle's import
+ * Before anything is written, `tsc` type-checks packages/client/src/ and the bundle's import
  * graph must hold no cycle: a missing import, a cycle or a constant read before
  * it is initialized fails the build.
  *
- * `packages/client/src/model-descriptions.json` is not bundled: it is validated here and
+ * `packages/client/data/model-descriptions.json` is not bundled: it is validated here and
  * copied to `lib/`, where the host half serves it to the browser half at
  * runtime. Model copy is data, so it must not enter the bundle (D5).
  */
@@ -41,18 +43,21 @@ import addFormats from 'ajv-formats'
 import esbuild from 'esbuild'
 import { PNG } from 'pngjs'
 import { buildHostHalf } from '../packages/host/build.mjs'
-import { checkClaimed, checkSheetPixels, checkSheets, planAssets, vectorizeSheet, writeAssets } from '../packages/assets/assets.mjs'
+import { buildFonts, checkClaimed, checkSheetPixels, checkSheets, planAssets, vectorizeSheet, writeAssets } from '../packages/assets/assets.mjs'
 import { TOKEN_SHEET, buildStylesheet, loadTokens, writeTokenTable } from './css.mjs'
-import manifestReader from './read-manifests.cjs'
-import { loadModule, loadModuleEsm } from './ts-module.cjs'
+import manifestReader from './shared/read-manifests.cjs'
+import { loadModule, loadModuleEsm } from './shared/ts-module.cjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
 /**
- * The host half's preference table (packages/host/src/settings.ts): the browser half's
- * PREF_DEFAULTS and packages/client/src/entry.ts's feature switches are both held to it.
+ * The preference table both halves share (packages/contracts/src/prefs.ts, D46):
+ * the host half's Config is derived from it and every feature manifest's `pref`
+ * has to name a key of it.
  */
-const { PREFS_DEFAULT } = await loadModuleEsm('packages/host/src/settings.ts')
+const { PREFS_DEFAULT } = await loadModuleEsm('packages/contracts/src/prefs.ts')
 const SRC = path.join(ROOT, 'packages', 'client', 'src')
+/** The model copy and its schema: data beside the browser half's code, never bundled. */
+const DATA = path.join(ROOT, 'packages', 'client', 'data')
 /** Brand marks, mascot sheets and vendor lockups; packages/assets/assets.mjs plans their delivery (D38). */
 const ASSETS = path.join(ROOT, 'packages', 'assets', 'src')
 /** The plugin icon the manifest names, copied into lib/ as it is. */
@@ -72,7 +77,7 @@ const MODEL_COPY = 'model-descriptions.json'
 /** The model copy's declared shape; validateModelCopy adds the references a schema cannot see. */
 const MODEL_COPY_SCHEMA = 'model-descriptions.schema.json'
 const validateModelCopyShape = addFormats(new Ajv2020({ allErrors: true }), ['regex'])
-  .compile(JSON.parse(fs.readFileSync(path.join(SRC, MODEL_COPY_SCHEMA), 'utf8')))
+  .compile(JSON.parse(fs.readFileSync(path.join(DATA, MODEL_COPY_SCHEMA), 'utf8')))
 
 /**
  * The plugin icon the 0.1.7 plugin manifest reads.
@@ -80,7 +85,7 @@ const validateModelCopyShape = addFormats(new Ajv2020({ allErrors: true }), ['re
  * `package.json` declares it as `icon`, a path relative to the manifest
  * (SVG/PNG/JPEG/WebP, at most 256 KiB, inside the package directory); the host
  * reads the bytes and hands the client a base64 data URI for an `<img>`. It is
- * copied like the copy document so the source of truth stays in `src/` and
+ * copied like the copy document so the source of truth stays in `packages/client/src/` and
  * `lib/` remains generated output.
  *
  * The clay mark is the one that reads on both canvases: an `<img>` cannot
@@ -117,8 +122,8 @@ const THEME_SHEETS = [
  * by rank. A rank two sheets share would leave their order to chance, so it
  * fails the build.
  *
- * @param manifests - the feature manifests (scripts/read-manifests.cjs).
- * @returns `{ file, rank, gate? }` with `file` src/-relative.
+ * @param manifests - the feature manifests (scripts/shared/read-manifests.cjs).
+ * @returns `{ file, rank, gate? }` with `file` relative to packages/client/src.
  */
 function styleFiles(manifests) {
   const sheets = [
@@ -126,7 +131,7 @@ function styleFiles(manifests) {
     ...manifests.flatMap((manifest) => manifest.stylesheets.map((sheet) => ({ ...sheet, file: `features/${manifest.dir}/${sheet.file}` }))),
   ].sort((a, b) => a.rank - b.rank)
   for (let i = 1; i < sheets.length; i++) {
-    if (sheets[i].rank === sheets[i - 1].rank) throw new Error(`build: src/${sheets[i - 1].file} and src/${sheets[i].file} share the stylesheet rank ${sheets[i].rank}`)
+    if (sheets[i].rank === sheets[i - 1].rank) throw new Error(`build: packages/client/src/${sheets[i - 1].file} and packages/client/src/${sheets[i].file} share the stylesheet rank ${sheets[i].rank}`)
   }
   return sheets
 }
@@ -147,7 +152,7 @@ const BUILD_ID_SLOT = '%%BUILD_ID%%'
  */
 const FACTORY_OPEN = `/**
  * Claude Style — Claude Code Desktop theme for the DeepSeek Harness web GUI.
- * GENERATED FILE — do not edit. Source lives in src/; \`npm run build\` bundles it.
+ * GENERATED FILE — do not edit. Source lives in packages/client/src/; \`npm run build\` bundles it.
  */
 window.__ModuleLoader__.load({
   id: ${JSON.stringify(PACKAGE_ID)},
@@ -159,20 +164,23 @@ const FACTORY_CLOSE = `    return module.exports
 })`
 
 /**
- * Evaluate packages/client/src/constants.ts once (pure, DOM-free): `tokens` are the values the
- * stylesheets' %%TOKEN%% placeholders take, beside them the two sheet tables
- * and the preference defaults the build checks.
+ * Evaluate packages/client/src/constants.ts and the mascot sheet tables once (pure, DOM-free):
+ * `tokens` are the values the stylesheets' %%TOKEN%% placeholders take, beside them the two
+ * sheet tables, the asset scales and the preference defaults the browser half carries.
  */
 const CONSTANTS = (() => {
-  const constants = loadModule('packages/client/src/constants.ts')
-  const pick = (names) => Object.fromEntries(names.map((name) => {
-    if (constants[name] === undefined) throw new Error(`build: packages/client/src/constants.ts exports no ${name}`)
-    return [name, constants[name]]
+  const constantsFile = 'packages/client/src/constants.ts'
+  const sheetsFile = 'packages/client/src/features/mascot/sheets.ts'
+  const constants = loadModule(constantsFile)
+  const sheets = loadModule(sheetsFile)
+  const pick = (module, file, names) => Object.fromEntries(names.map((name) => {
+    if (module[name] === undefined) throw new Error(`build: ${file} exports no ${name}`)
+    return [name, module[name]]
   }))
   const { BRAND_ATTR, BRAND_CLAUDE, PALETTE_ATTR, PALETTE_CLAUDE, PALETTE_HOST, TYPEFACE_ATTR, TYPEFACE_CLAUDE, TYPEFACE_HOST } = constants
   return {
     tokens: {
-      ...pick(['SANS', 'SERIF', 'PROSE', 'MONO', 'BRAND_ATTR', 'BRAND_CLAUDE', 'BRAND_DEEPSEEK', 'MOTION_ATTR', 'MOTION_REDUCED', 'FOOTER_ATTR', 'COMPOSER_ATTR', 'PERMISSIONS_ATTR', 'SESSION_STATS_ATTR', 'CHAT_FOLLOW_ATTR', 'STREAM_GLIDE_ATTR', 'CHAT_FOLD_ATTR', 'CHAT_ROLLING_ATTR', 'CHAT_REVEAL_ATTR', 'CHAT_FLYING_ATTR', 'CARET_ATTR', 'CARET_LAYER_ATTR', 'CARET_VISIBLE_ATTR', 'CARET_HOST_ATTR', 'ACCOUNT_MENU_ATTR', 'ACCOUNT_ARMED_ATTR', 'ACCOUNT_READY_ATTR', 'HERO_MENU_ATTR', 'SETTINGS_SCROLLER_ATTR']),
+      ...pick(constants, constantsFile, ['SANS', 'SERIF', 'PROSE', 'MONO', 'BRAND_ATTR', 'BRAND_CLAUDE', 'BRAND_DEEPSEEK', 'MOTION_ATTR', 'MOTION_REDUCED', 'FOOTER_ATTR', 'COMPOSER_ATTR', 'PERMISSIONS_ATTR', 'SESSION_STATS_ATTR', 'CHAT_FOLLOW_ATTR', 'STREAM_GLIDE_ATTR', 'CHAT_FOLD_ATTR', 'CHAT_ROLLING_ATTR', 'CHAT_REVEAL_ATTR', 'CHAT_FLYING_ATTR', 'CARET_ATTR', 'CARET_LAYER_ATTR', 'CARET_VISIBLE_ATTR', 'CARET_HOST_ATTR', 'ACCOUNT_MENU_ATTR', 'ACCOUNT_ARMED_ATTR', 'ACCOUNT_READY_ATTR', 'HERO_MENU_ATTR', 'SETTINGS_SCROLLER_ATTR']),
       // "this brand is drawn by the skin": of the two brands, DeepSeek keeps the
       // host's own brand area, so the shared rules that hide the host's mark and
       // paint the ::before are gated on the Claude brand rather than on
@@ -193,7 +201,8 @@ const CONSTANTS = (() => {
       palette: { attribute: PALETTE_ATTR, claude: PALETTE_CLAUDE, host: PALETTE_HOST },
       typeface: { attribute: TYPEFACE_ATTR, claude: TYPEFACE_CLAUDE, host: TYPEFACE_HOST },
     },
-    ...pick(['CRAB_SHEETS', 'DEEPY_SHEETS', 'DEEPY_SCALE', 'DEEPY_GUTTER', 'PREF_DEFAULTS']),
+    ...pick(sheets, sheetsFile, ['CRAB_SHEETS', 'DEEPY_SHEETS', 'DEEPY_SCALE', 'DEEPY_GUTTER']),
+    ...pick(constants, constantsFile, ['PREF_DEFAULTS']),
   }
 })()
 
@@ -283,7 +292,7 @@ function vectorizeDeepySheets() {
  * picker could otherwise only express as a silently missing or wrong line, so
  * they all throw.
  *
- * The document's shape is declared in packages/client/src/model-descriptions.schema.json: the
+ * The document's shape is declared in packages/client/data/model-descriptions.schema.json: the
  * tables, the `{locale: text}` lines, a rule's compilable `match` and its `key`
  * or `text`. What a schema cannot see is checked after it: a `families[].key`,
  * `tiers[].key` or `aliases` target must name an `exact` entry, every brand id
@@ -291,7 +300,7 @@ function vectorizeDeepySheets() {
  * as a silently missing mark on one row), and the document must carry at least
  * two locales.
  *
- * @param doc - parsed `packages/client/src/model-descriptions.json`.
+ * @param doc - parsed `packages/client/data/model-descriptions.json`.
  * @param lobeBrands - the vendored lockups keyed by brand id (loadCombines).
  * @returns the number of exact entries, for the build log.
  */
@@ -338,12 +347,12 @@ function validateModelCopy(doc, lobeBrands) {
 
 /**
  * Refuse a source file that does not ship: a stylesheet no manifest and no
- * theme entry names, or a module nothing imports, would otherwise sit in src/
+ * theme entry names, or a module nothing imports, would otherwise sit in packages/client/src/
  * with no way to reach the page. Manifests are data the build reads, the
  * contract table is read by the build and the tests (D44), and unit tests run
  * under Vitest; none of them is a module the bundle carries.
  *
- * @param bundled - the src/-relative modules in the bundle (esbuild's metafile).
+ * @param bundled - the modules in the bundle (esbuild's metafile), relative to packages/client/src.
  * @param sheets - every stylesheet the bundle carries (styleFiles).
  */
 function checkListed(bundled, sheets) {
@@ -354,18 +363,19 @@ function checkListed(bundled, sheets) {
     return [rel]
   })
   for (const file of walk('')) {
-    if (file.endsWith('.css') && !listed.has(file)) throw new Error(`build: src/${file} is in no list; add it to its feature's manifest or to THEME_SHEETS`)
+    if (file.endsWith('.css') && !listed.has(file)) throw new Error(`build: packages/client/src/${file} is in no list; add it to its feature's manifest or to THEME_SHEETS`)
     if (file.endsWith('.manifest.ts') || file.endsWith('.test.ts') || file.endsWith('.d.ts')) continue
-    if (file.endsWith('.ts') && !bundled.has(file)) throw new Error(`build: src/${file} is imported by no module the bundle reaches`)
+    if (file.endsWith('.ts') && !bundled.has(file)) throw new Error(`build: packages/client/src/${file} is imported by no module the bundle reaches`)
   }
 }
 
 /**
  * Hold the manifests to the rest of the repository: every feature directory
- * carries at least one manifest, and a `pref` names a key of the host half's
- * PREFS_DEFAULT (packages/host/src/settings.js), the table the settings form serves.
+ * carries at least one manifest, and a `pref` names a key of the shared
+ * preference table (packages/contracts/src/prefs.ts, D46), the table the
+ * settings form serves.
  *
- * @param manifests - the feature manifests (scripts/read-manifests.cjs).
+ * @param manifests - the feature manifests (scripts/shared/read-manifests.cjs).
  */
 function checkManifests(manifests) {
   const covered = new Set(manifests.map((manifest) => manifest.dir))
@@ -374,7 +384,7 @@ function checkManifests(manifests) {
   }
   for (const manifest of manifests) {
     if (manifest.pref !== undefined && !(manifest.pref in PREFS_DEFAULT)) {
-      throw new Error(`build: src/${manifest.file} names pref "${manifest.pref}", which packages/host/src/settings.js PREFS_DEFAULT does not carry`)
+      throw new Error(`build: packages/client/src/${manifest.file} names pref "${manifest.pref}", which packages/contracts/src/prefs.ts PREFS_DEFAULT does not carry`)
     }
   }
 }
@@ -407,23 +417,7 @@ function featuresModule(manifests) {
 }
 
 /**
- * Hold the browser half's preference defaults (packages/client/src/constants.ts PREF_DEFAULTS)
- * to the host half's PREFS_DEFAULT: the same keys with the same values, so the
- * frames before the settings form answers show what the form will hold.
- */
-function checkPrefDefaults() {
-  const browser = CONSTANTS.PREF_DEFAULTS
-  for (const key of new Set([...Object.keys(browser), ...Object.keys(PREFS_DEFAULT)])) {
-    if (!(key in browser)) throw new Error(`build: packages/client/src/constants.ts PREF_DEFAULTS lacks "${key}", which packages/host/src/settings.js PREFS_DEFAULT carries`)
-    if (!(key in PREFS_DEFAULT)) throw new Error(`build: packages/host/src/settings.js PREFS_DEFAULT lacks "${key}", which packages/client/src/constants.ts PREF_DEFAULTS carries`)
-    if (JSON.stringify(browser[key]) !== JSON.stringify(PREFS_DEFAULT[key])) {
-      throw new Error(`build: preference "${key}" defaults to ${JSON.stringify(browser[key])} in packages/client/src/constants.ts but ${JSON.stringify(PREFS_DEFAULT[key])} in packages/host/src/settings.js`)
-    }
-  }
-}
-
-/**
- * Type-check src/ (tsconfig.json, strict). esbuild only strips types, so this
+ * Type-check packages/client/src/ (tsconfig.json, strict). esbuild only strips types, so this
  * is what turns a missing import, a misspelt name or a wrong argument into a
  * build failure.
  */
@@ -433,7 +427,7 @@ function checkTypes() {
     execFileSync(process.execPath, [tsc, '-p', ROOT, '--pretty'], { stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf8' })
   } catch (error) {
     process.stderr.write(error.stdout + error.stderr)
-    throw new Error('build: tsc reports type errors in src/ (listed above)')
+    throw new Error('build: tsc reports type errors in packages/client/src/ (listed above)')
   }
 }
 
@@ -466,52 +460,52 @@ function checkCycles(metafile) {
 /**
  * Hold the host contract together (D44).
  *
- * The literals the skin keys on live in src/contracts/dom.ts and the table of
- * what they mean in src/contracts/table.ts; neither may drift from the other,
+ * The literals the skin keys on live in packages/contracts/src/dom.ts and the table of
+ * what they mean in packages/contracts/src/table.ts; neither may drift from the other,
  * and every entry has to be claimed by a feature manifest (D42), so a selector
  * cannot enter the skin without a note and an owner, and a host upgrade can be
  * audited by walking one list.
  *
- * @param manifests - the feature manifests (scripts/read-manifests.cjs).
+ * @param manifests - the feature manifests (scripts/shared/read-manifests.cjs).
  * @returns the table, for the build log.
  */
 function checkContracts(manifests) {
   const literals = loadModule('packages/contracts/src/dom.ts')
   const { HOST_DOM: table } = loadModule('packages/contracts/src/table.ts')
-  if (!Array.isArray(table) || table.length === 0) throw new Error('build: src/contracts/table.ts exports no HOST_DOM')
+  if (!Array.isArray(table) || table.length === 0) throw new Error('build: packages/contracts/src/table.ts exports no HOST_DOM')
   const listed = new Set()
   for (const entry of table) {
     if (typeof entry.id !== 'string' || entry.id === '' || typeof entry.use !== 'string' || entry.use === '') {
-      throw new Error(`build: src/contracts/table.ts has an entry without an id and a use: ${JSON.stringify(entry)}`)
+      throw new Error(`build: packages/contracts/src/table.ts has an entry without an id and a use: ${JSON.stringify(entry)}`)
     }
-    if (listed.has(entry.id)) throw new Error(`build: src/contracts/table.ts lists "${entry.id}" twice`)
+    if (listed.has(entry.id)) throw new Error(`build: packages/contracts/src/table.ts lists "${entry.id}" twice`)
     listed.add(entry.id)
   }
   // Every entry says how the contract test checks it (D44), so a host upgrade
   // walks one list with no entry quietly unchecked.
   for (const entry of table) {
     const probe = entry.probe
-    if (probe === null || typeof probe !== 'object') throw new Error(`build: src/contracts/table.ts entry "${entry.id}" has no probe`)
-    if (!PROBE_STATES.has(probe.state)) throw new Error(`build: src/contracts/table.ts entry "${entry.id}" has probe state "${probe.state}"`)
-    if (!PROBE_KINDS.has(probe.kind)) throw new Error(`build: src/contracts/table.ts entry "${entry.id}" has probe kind "${probe.kind}"`)
-    if (probe.within !== undefined && !listed.has(probe.within)) throw new Error(`build: src/contracts/table.ts entry "${entry.id}" is checked within "${probe.within}", which the table does not list`)
+    if (probe === null || typeof probe !== 'object') throw new Error(`build: packages/contracts/src/table.ts entry "${entry.id}" has no probe`)
+    if (!PROBE_STATES.has(probe.state)) throw new Error(`build: packages/contracts/src/table.ts entry "${entry.id}" has probe state "${probe.state}"`)
+    if (!PROBE_KINDS.has(probe.kind)) throw new Error(`build: packages/contracts/src/table.ts entry "${entry.id}" has probe kind "${probe.kind}"`)
+    if (probe.within !== undefined && !listed.has(probe.within)) throw new Error(`build: packages/contracts/src/table.ts entry "${entry.id}" is checked within "${probe.within}", which the table does not list`)
   }
   const values = new Set(table.map((entry) => entry.value))
   for (const [name, value] of Object.entries(literals)) {
     if (!/^[A-Z][A-Z0-9_]*$/.test(name) || (typeof value !== 'string' && typeof value !== 'number')) continue
     if (!values.has(String(value))) {
-      throw new Error(`build: src/contracts/dom.ts exports ${name} (${JSON.stringify(value)}) with no entry in src/contracts/table.ts`)
+      throw new Error(`build: packages/contracts/src/dom.ts exports ${name} (${JSON.stringify(value)}) with no entry in packages/contracts/src/table.ts`)
     }
   }
   const claimed = new Set()
   for (const manifest of manifests) {
     for (const id of manifest.contracts) {
-      if (!listed.has(id)) throw new Error(`build: src/${manifest.file} names host contract "${id}", which src/contracts/table.ts does not list`)
+      if (!listed.has(id)) throw new Error(`build: packages/client/src/${manifest.file} names host contract "${id}", which packages/contracts/src/table.ts does not list`)
       claimed.add(id)
     }
   }
   const unclaimed = table.filter((entry) => entry.owner !== 'core' && !claimed.has(entry.id)).map((entry) => entry.id)
-  if (unclaimed.length > 0) throw new Error(`build: src/contracts/table.ts entries no feature manifest claims: ${unclaimed.join(', ')}`)
+  if (unclaimed.length > 0) throw new Error(`build: packages/contracts/src/table.ts entries no feature manifest claims: ${unclaimed.join(', ')}`)
   checkTiming()
   return table
 }
@@ -519,34 +513,34 @@ function checkContracts(manifests) {
 /**
  * Hold the timing table to its checks (D44).
  *
- * The timing assumptions live in src/contracts/timing.ts, each naming what holds
+ * The timing assumptions live in packages/contracts/src/timing.ts, each naming what holds
  * it: a scenario of the end-to-end lane or a unit test beside its module. Both
  * names have to exist, so an assumption cannot enter the table with nothing that
  * would notice it changing.
  */
 function checkTiming() {
   const { E2E_SCENARIOS, HOST_TIMING } = loadModule('packages/contracts/src/timing.ts')
-  if (!Array.isArray(HOST_TIMING) || HOST_TIMING.length === 0) throw new Error('build: src/contracts/timing.ts exports no HOST_TIMING')
+  if (!Array.isArray(HOST_TIMING) || HOST_TIMING.length === 0) throw new Error('build: packages/contracts/src/timing.ts exports no HOST_TIMING')
   const scenarios = new Set(E2E_SCENARIOS)
   const seen = new Set()
   for (const entry of HOST_TIMING) {
     for (const field of ['id', 'assumption', 'use']) {
-      if (typeof entry[field] !== 'string' || entry[field] === '') throw new Error(`build: src/contracts/timing.ts has an entry without ${field}: ${JSON.stringify(entry)}`)
+      if (typeof entry[field] !== 'string' || entry[field] === '') throw new Error(`build: packages/contracts/src/timing.ts has an entry without ${field}: ${JSON.stringify(entry)}`)
     }
-    if (seen.has(entry.id)) throw new Error(`build: src/contracts/timing.ts lists "${entry.id}" twice`)
+    if (seen.has(entry.id)) throw new Error(`build: packages/contracts/src/timing.ts lists "${entry.id}" twice`)
     seen.add(entry.id)
-    if (!Array.isArray(entry.checks) || entry.checks.length === 0) throw new Error(`build: src/contracts/timing.ts entry "${entry.id}" names no check`)
+    if (!Array.isArray(entry.checks) || entry.checks.length === 0) throw new Error(`build: packages/contracts/src/timing.ts entry "${entry.id}" names no check`)
     for (const check of entry.checks) {
       const [kind, name] = String(check).split(':')
       if (kind === 'scenario') {
-        if (!scenarios.has(name)) throw new Error(`build: src/contracts/timing.ts entry "${entry.id}" names the lane scenario "${name}", which packages/testing/e2e.cjs does not run`)
+        if (!scenarios.has(name)) throw new Error(`build: packages/contracts/src/timing.ts entry "${entry.id}" names the lane scenario "${name}", which packages/testing/e2e.cjs does not run`)
         continue
       }
       if (kind === 'test') {
-        if (!fs.existsSync(path.join(ROOT, name))) throw new Error(`build: src/contracts/timing.ts entry "${entry.id}" names the test "${name}", which does not exist`)
+        if (!fs.existsSync(path.join(ROOT, name))) throw new Error(`build: packages/contracts/src/timing.ts entry "${entry.id}" names the test "${name}", which does not exist`)
         continue
       }
-      throw new Error(`build: src/contracts/timing.ts entry "${entry.id}" has the check "${check}", which is neither scenario:<name> nor test:<path>`)
+      throw new Error(`build: packages/contracts/src/timing.ts entry "${entry.id}" has the check "${check}", which is neither scenario:<name> nor test:<path>`)
     }
   }
 }
@@ -584,7 +578,6 @@ function generatedModule(values) {
 
 async function main() {
   checkTypes()
-  checkPrefDefaults()
   const manifests = manifestReader.readManifests()
   checkManifests(manifests)
   checkContracts(manifests)
@@ -694,7 +687,7 @@ async function main() {
   // this build must not leave lib/ holding one half of a new build beside the
   // other half of the previous one. lib/ is not in version control (D47), so a
   // fresh clone has no directory to write into yet.
-  const copy = JSON.parse(fs.readFileSync(path.join(SRC, MODEL_COPY), 'utf8'))
+  const copy = JSON.parse(fs.readFileSync(path.join(DATA, MODEL_COPY), 'utf8'))
   const exact = validateModelCopy(copy, combines)
   const copyText = JSON.stringify(copy, null, 2) + '\n'
   const iconSource = path.join(BRAND_ASSETS, ICON_SOURCE)
@@ -704,7 +697,7 @@ async function main() {
   fs.mkdirSync(LIB, { recursive: true })
   fs.writeFileSync(OUT, bundle)
   fs.writeFileSync(`${OUT}.map`, sourceMap)
-  console.log(`built lib/client.js (${Buffer.byteLength(bundle)} bytes, build ${buildId}) from src/ (${bundled.size} modules + ${sheets.length} stylesheets + ${Object.keys(combines).length} lockups)`)
+  console.log(`built lib/client.js (${Buffer.byteLength(bundle)} bytes, build ${buildId}) from packages/client/src/ (${bundled.size} modules + ${sheets.length} stylesheets + ${Object.keys(combines).length} lockups)`)
 
   fs.writeFileSync(path.join(LIB, MODEL_COPY), copyText)
   console.log(`built lib/${MODEL_COPY} (${exact} exact entries, ${copy.families.length} family rules, ${copy.tiers.length} tier rules)`)
@@ -715,7 +708,10 @@ async function main() {
   const assets = writeAssets(LIB, plan)
   console.log(`built lib/assets/ (${assets.files} routed of ${plan.entries.size} assets, ${assets.bytes} bytes) from packages/assets/src/`)
 
-  const host = buildHostHalf({ outDir: LIB })
+  const fonts = buildFonts({ assetsDir: ASSETS, libDir: LIB })
+  console.log(`built lib/fonts/ (${fonts.files} files, ${fonts.bytes} bytes) from packages/assets/src/fonts/`)
+
+  const host = await buildHostHalf({ outDir: LIB })
   console.log(`built lib/host/ (${host.files} modules) from packages/host/src/`)
 }
 

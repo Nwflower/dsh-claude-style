@@ -1,7 +1,3 @@
-/**
- * The shell, the sidebar and the settings surfaces:
- * the pages a reader sees before any conversation exists.
- */
 'use strict'
 const { MARKUP, SKIN_FACE, SKIN_HAT, same, check, contrast, basicChecks, commonChecks } = require('./_shared.cjs')
 

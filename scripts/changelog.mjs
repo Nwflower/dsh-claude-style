@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * changelog.mjs — assemble CHANGELOG.md's [Unreleased] section from changes/ (D48).
+ * changelog.mjs — assemble CHANGELOG.md's [Unreleased] section from docs/changes/ (D48).
  *
- * A change adds one small JSON file under changes/ and never edits the
+ * A change adds one small JSON file under docs/changes/ and never edits the
  * CHANGELOG: the file carries its group, where it sits in that group, whether it
  * moves an external contract, the date it landed and the entry in both
  * languages. This script turns the pending files into the section the reader
@@ -13,13 +13,13 @@
  * Usage: node scripts/changelog.mjs [--check | --release <version> [--date <YYYY-MM-DD>]]
  *        --check writes nothing and fails when the committed section differs.
  *        --release turns the pending changes into the version's section, puts it
- *        above the older ones, and clears changes/.
+ *        above the older ones, and clears docs/changes/.
  */
 import fs from 'node:fs'
 import path from 'node:path'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
-const CHANGES = path.join(ROOT, 'changes')
+const CHANGES = path.join(ROOT, 'docs', 'changes')
 const FILE = path.join(ROOT, 'CHANGELOG.md')
 
 /** The groups in their fixed order, with the heading each language uses. */
@@ -34,19 +34,19 @@ const GROUPS = [
 
 /** Every pending change, read and validated. */
 function readFragments() {
-  if (!fs.existsSync(CHANGES)) throw new Error('changelog: changes/ does not exist')
+  if (!fs.existsSync(CHANGES)) throw new Error('changelog: docs/changes/ does not exist')
   const fragments = []
   for (const name of fs.readdirSync(CHANGES)) {
-    if (!/^[a-z0-9][a-z0-9-]*\.json$/.test(name)) throw new Error(`changelog: changes/${name} is not <slug>.json`)
+    if (!/^[a-z0-9][a-z0-9-]*\.json$/.test(name)) throw new Error(`changelog: docs/changes/${name} is not <slug>.json`)
     const fragment = JSON.parse(fs.readFileSync(path.join(CHANGES, name), 'utf8'))
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(fragment.at ?? '')) throw new Error(`changelog: changes/${name} needs an "at" date (YYYY-MM-DD)`)
-    if (!GROUPS.some((group) => group.key === fragment.group)) throw new Error(`changelog: changes/${name} has group "${fragment.group}", which is not one of ${GROUPS.map((group) => group.key).join(', ')}`)
-    if (!Number.isSafeInteger(fragment.order) || fragment.order < 0) throw new Error(`changelog: changes/${name} needs "order", an integer from 0, saying where it sits in its group`)
-    if (typeof fragment.external !== 'boolean') throw new Error(`changelog: changes/${name} needs "external" as true or false`)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fragment.at ?? '')) throw new Error(`changelog: docs/changes/${name} needs an "at" date (YYYY-MM-DD)`)
+    if (!GROUPS.some((group) => group.key === fragment.group)) throw new Error(`changelog: docs/changes/${name} has group "${fragment.group}", which is not one of ${GROUPS.map((group) => group.key).join(', ')}`)
+    if (!Number.isSafeInteger(fragment.order) || fragment.order < 0) throw new Error(`changelog: docs/changes/${name} needs "order", an integer from 0, saying where it sits in its group`)
+    if (typeof fragment.external !== 'boolean') throw new Error(`changelog: docs/changes/${name} needs "external" as true or false`)
     for (const language of ['zh', 'en']) {
       const text = fragment[language]
-      if (typeof text !== 'string' || text.trim() === '') throw new Error(`changelog: changes/${name} has no "${language}" entry`)
-      if (text.includes('\n')) throw new Error(`changelog: changes/${name}'s "${language}" entry must be one line`)
+      if (typeof text !== 'string' || text.trim() === '') throw new Error(`changelog: docs/changes/${name} has no "${language}" entry`)
+      if (text.includes('\n')) throw new Error(`changelog: docs/changes/${name}'s "${language}" entry must be one line`)
     }
     fragments.push({ name, ...fragment })
   }
@@ -101,7 +101,7 @@ const built = section(fragments)
 
 if (process.argv.includes('--check')) {
   if (currentSection !== built) {
-    throw new Error('changelog: CHANGELOG.md\'s [Unreleased] section is not what changes/ says; run `npm run changelog`')
+    throw new Error('changelog: CHANGELOG.md\'s [Unreleased] section is not what docs/changes/ says; run `npm run changelog`')
   }
   console.log(`changelog: ${fragments.length} pending changes, up to date`)
 } else if (process.argv.includes('--release')) {
@@ -110,10 +110,10 @@ if (process.argv.includes('--check')) {
   const dateAt = process.argv.indexOf('--date')
   const date = dateAt === -1 ? new Date().toISOString().slice(0, 10) : process.argv[dateAt + 1]
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('changelog: --date needs a date like 2026-10-06')
-  if (fragments.length === 0) throw new Error('changelog: changes/ holds nothing to release')
+  if (fragments.length === 0) throw new Error('changelog: docs/changes/ holds nothing to release')
   fs.writeFileSync(FILE, changelog.slice(0, start) + section([]) + releaseSection(fragments, version, date) + rest)
   for (const fragment of fragments) fs.rmSync(path.join(CHANGES, fragment.name))
-  console.log(`changelog: released ${fragments.length} changes as ${version} on ${date}; changes/ is clear`)
+  console.log(`changelog: released ${fragments.length} changes as ${version} on ${date}; docs/changes/ is clear`)
 } else {
   fs.writeFileSync(FILE, changelog.slice(0, start) + built + rest)
   console.log(`changelog: assembled ${fragments.length} pending changes into the [Unreleased] section`)

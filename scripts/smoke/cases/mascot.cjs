@@ -1,7 +1,3 @@
-/**
- * The two mascots:
- * the pixel crab’s states and the whale’s sheets.
- */
 'use strict'
 const { MARKUP, SKIN_FACE, SKIN_HAT, same, check, contrast, basicChecks, commonChecks } = require('./_shared.cjs')
 

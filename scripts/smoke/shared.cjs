@@ -6,7 +6,7 @@
  */
 'use strict'
 const path = require('path')
-const { featureCases, readManifests } = require('../read-manifests.cjs')
+const { featureCases, readManifests } = require('../shared/read-manifests.cjs')
 
 const ROOT = path.resolve(__dirname, '..', '..')
 const CLIENT = path.join(ROOT, 'lib', 'client.js')
@@ -22,7 +22,7 @@ const PNG_1PX = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8B
  * rest of the atlas is grey. What the launcher serves is this sheet, not a
  * finished avatar.
  */
-const SKIN_FIXTURE = path.join(__dirname, '..', 'fixtures', 'skin-64.png')
+const SKIN_FIXTURE = path.join(__dirname, 'fixtures', 'skin-64.png')
 const SKIN_FACE = [255, 0, 0, 255]
 const SKIN_HAT = [0, 255, 0, 255]
 /**

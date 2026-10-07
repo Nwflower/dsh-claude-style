@@ -22,9 +22,12 @@
  * color, each row's runs extended downwards into rectangles. The PNGs are
  * inputs of the build and never reach `lib/`.
  *
- * The manifest is also the gate: a file under `packages/client/src/assets/` that no table or
+ * The manifest is also the gate: a file under `packages/assets/src/` that no table or
  * token claims fails the build, so an image added for one run cannot ship
- * unused.
+ * unused. `packages/assets/src/fonts/` stands outside that gate: buildFonts copies the
+ * faces and the licences the package ships into `lib/fonts/`, where the host
+ * half's font route reads them, and Anthropic's own faces sit one directory
+ * down, in `anthropic/`, because they never enter the package.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -37,6 +40,25 @@ export const INLINE_LIMIT_BYTES = 16 * 1024
 export const ASSETS_ROUTE = '/dsh-claude-style/assets/'
 /** The manifest the host half reads to decide what it may serve. */
 export const ASSETS_MANIFEST = 'manifest.json'
+/** The fonts under packages/assets/src/, delivered by buildFonts rather than by the manifest. */
+export const FONT_DIR = 'fonts'
+/** The directory inside it for Anthropic's own faces, which the package never carries. */
+export const PRIVATE_FONT_DIR = 'anthropic'
+/**
+ * What `packages/assets/src/fonts/` ships, in the order the build log counts it: the
+ * four faces and the three licences plus the authors file, which OFL 1.1
+ * requires to travel with the fonts it covers.
+ */
+const SHIPPED_FONTS = [
+  'JetBrainsMonoVariable.ttf',
+  'JetBrainsMonoItalicVariable.ttf',
+  'InterVariable.woff2',
+  'NotoSerifVariable.woff2',
+  'OFL.txt',
+  'OFL-Inter.txt',
+  'OFL-NotoSerif.txt',
+  'AUTHORS.txt',
+]
 
 /** Content type per extension; an extension outside this table is refused. */
 const CONTENT_TYPES = {
@@ -47,7 +69,7 @@ const CONTENT_TYPES = {
 }
 
 /**
- * Files under packages/client/src/assets/ that the package does not ship: drawing material for
+ * Files under packages/assets/src/ that the package does not ship: drawing material for
  * the hand-run scripts. They are inputs, so listing them here is what says the
  * manifest is not silently missing them.
  */
@@ -260,7 +282,9 @@ export function planAssets({ assetsDir, generated = new Map(), replaced = new Se
   }
   const walk = (dir) => fs.readdirSync(path.join(root, dir), { withFileTypes: true }).flatMap((item) => {
     const file = dir === '' ? item.name : `${dir}/${item.name}`
-    if (item.isDirectory()) return walk(file)
+    // The fonts are not routed assets: buildFonts copies them, and they are
+    // not images an extension table could type.
+    if (item.isDirectory()) return file === FONT_DIR ? [] : walk(file)
     return [file]
   })
   for (const file of walk('').sort()) {
@@ -272,7 +296,7 @@ export function planAssets({ assetsDir, generated = new Map(), replaced = new Se
 }
 
 /**
- * Refuse an asset nothing names: a file under packages/client/src/assets/ that no animation
+ * Refuse an asset nothing names: a file under packages/assets/src/ that no animation
  * table, brand token or lockup reads would otherwise ship (or sit in the
  * repository) with nothing to say it is unused.
  *
@@ -281,7 +305,7 @@ export function planAssets({ assetsDir, generated = new Map(), replaced = new Se
  */
 export function checkClaimed(plan, claimed) {
   for (const file of plan.entries.keys()) {
-    if (!claimed.has(file)) throw new Error(`build: packages/client/src/assets/${file} is read by nothing; name it in an animation table, a brand token or delete it`)
+    if (!claimed.has(file)) throw new Error(`build: packages/assets/src/${file} is read by nothing; name it in an animation table, a brand token or delete it`)
   }
 }
 
@@ -310,4 +334,40 @@ export function writeAssets(libDir, plan) {
   }
   fs.writeFileSync(path.join(dir, ASSETS_MANIFEST), JSON.stringify({ version: 1, assets }, null, 2) + '\n')
   return { files: plan.routed.length, bytes }
+}
+
+/**
+ * Copy the faces the package ships, with the licences and the authors file that
+ * OFL 1.1 requires to travel with them, from `packages/assets/src/fonts/` into
+ * `<out>/fonts/`, where the host half's font route reads them.
+ *
+ * The file list is the whole contract for that directory, as the manifest is
+ * for the rest of packages/assets/src/: a name it does not carry ships nothing, and
+ * Anthropic's own faces live one directory down in `anthropic/`, out of the
+ * package.
+ *
+ * @param options.assetsDir - the directory the fonts live in.
+ * @param options.libDir - the build output directory.
+ * @returns `{ files, bytes }` of what was written, for the build log.
+ */
+export function buildFonts({ assetsDir, libDir }) {
+  const source = path.join(assetsDir, FONT_DIR)
+  for (const entry of fs.readdirSync(source, { withFileTypes: true })) {
+    if (entry.isDirectory()) {
+      if (entry.name !== PRIVATE_FONT_DIR) throw new Error(`build: packages/assets/src/${FONT_DIR}/${entry.name}/ is a directory the build does not ship; only ${PRIVATE_FONT_DIR}/ is one`)
+      continue
+    }
+    if (!SHIPPED_FONTS.includes(entry.name)) throw new Error(`build: packages/assets/src/${FONT_DIR}/${entry.name} ships nothing; add it to SHIPPED_FONTS or delete it`)
+  }
+  const target = path.join(libDir, FONT_DIR)
+  fs.rmSync(target, { recursive: true, force: true })
+  fs.mkdirSync(target, { recursive: true })
+  let bytes = 0
+  for (const name of SHIPPED_FONTS) {
+    // The file list was checked against the directory above, so a missing one
+    // is a build bug rather than a state a user can reach.
+    fs.copyFileSync(path.join(source, name), path.join(target, name))
+    bytes += fs.statSync(path.join(target, name)).size
+  }
+  return { files: SHIPPED_FONTS.length, bytes }
 }

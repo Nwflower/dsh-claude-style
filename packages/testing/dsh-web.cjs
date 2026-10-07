@@ -12,19 +12,19 @@
  *             and the URL it prints — which carries the launch token — handed
  *             back. The token must be exchanged by a browser: a bare fetch of
  *             the URL without a cookie is answered 401.
- *   openPage() a headless Chrome from scripts/chrome.cjs on that URL.
+ *   openPage() a headless Chrome from scripts/shared/chrome.cjs on that URL.
  *
  * Run it directly to keep an instance up for manual work: it prints the URL and
  * stays until interrupted.
  *
- * Usage: node tools/dsh-web.cjs [--home <dir>] [--profile <name>] [--port <n>]
+ * Usage: node packages/testing/dsh-web.cjs [--home <dir>] [--profile <name>] [--port <n>]
  */
 'use strict'
 const { spawn, spawnSync } = require('node:child_process')
 const fs = require('node:fs')
 const path = require('node:path')
 const { chromium } = require('playwright')
-const chrome = require('../../scripts/chrome.cjs')
+const chrome = require('../../scripts/shared/chrome.cjs')
 
 const ROOT = path.resolve(__dirname, '..', '..')
 /** The scratch host's home: build output, so it lives with the other debug artifacts. */
@@ -44,7 +44,7 @@ function run(command, options = {}) {
  * @param options.port - the port; 0 lets the OS pick one.
  * @param options.patch - loader patch entries (YAML text) written into a `--patch`
  *     overlay before boot: how a lane points the host's model adapter at the
- *     scripted service (tools/mock-llm.cjs, D45).
+ *     scripted service (packages/testing/mock-llm.cjs, D45).
  * @param options.env - extra environment for the host process.
  * @param options.resetState - clear the home's sessions and their sidebar cache
  *     first, so a lane that asserts on what the page shows starts from an empty
@@ -60,6 +60,16 @@ async function start(options = {}) {
   const port = options.port ?? 0
   const timeoutMs = options.timeoutMs ?? 120000
   fs.mkdirSync(home, { recursive: true })
+  // The Anthropic faces are the reader's own download and never ship in the
+  // package (D11): the lane plants this checkout's copies in the scratch home's
+  // drop point, so a capture shows the intended typography instead of falling
+  // back per face and logging a 404 for each.
+  const dropPoint = path.join(home, 'dsh-claude-style', 'fonts')
+  const faces = path.join(ROOT, 'packages', 'assets', 'src', 'fonts', 'anthropic')
+  if (fs.existsSync(faces)) {
+    fs.mkdirSync(dropPoint, { recursive: true })
+    for (const name of fs.readdirSync(faces)) fs.copyFileSync(path.join(faces, name), path.join(dropPoint, name))
+  }
   if (options.resetState === true) {
     for (const entry of ['sessions', path.join('storages', 'session_projcache'), path.join('cache', 'dsh-claude-style', 'usage.json')]) {
       fs.rmSync(path.join(home, entry), { recursive: true, force: true })
@@ -73,7 +83,7 @@ async function start(options = {}) {
   // the shell persists settings such as the answered onboarding steps, and
   // overwriting it brings those steps back on every boot.
   const overlay = path.join(home, `${profile}.lane.patch.yml`)
-  fs.writeFileSync(overlay, `# Written by tools/dsh-web.cjs for this run.\n${options.patch ?? '[]'}\n`)
+  fs.writeFileSync(overlay, `# Written by packages/testing/dsh-web.cjs for this run.\n${options.patch ?? '[]'}\n`)
 
   const env = { ...process.env, DSH_HOME: home, ...options.env }
   const command = `dsh --profile ${profile} --patch "${overlay}" --port ${port} --no-open`

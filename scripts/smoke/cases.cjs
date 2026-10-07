@@ -1,6 +1,6 @@
 /**
  * The smoke’s browser-half assertions: what each case’s report must show
- * (the report is the object scripts/smoke/probe.js builds in the page).
+ * (the report is the object the scripts under scripts/smoke/probe/ build in the page).
  *
  * The cases live in cases/, one module per subject; this file keeps the table
  * the runner reads (D45).

@@ -1,7 +1,3 @@
-/**
- * Living beside another plugin:
- * the peer chat plugin standing the chat features down, and the skin center handing the page over.
- */
 'use strict'
 const { MARKUP, SKIN_FACE, SKIN_HAT, same, check, contrast, basicChecks, commonChecks } = require('./_shared.cjs')
 

@@ -12,7 +12,8 @@ const { spawn } = require('child_process')
 const fs = require('fs')
 const path = require('path')
 
-const PROFILES = path.resolve(__dirname, '..', '.debug')
+/** The throwaway profiles go under the repository's own scratch directory. */
+const PROFILES = path.resolve(__dirname, '..', '..', '.debug')
 
 const CANDIDATES = [
   process.env.CHROME_PATH,

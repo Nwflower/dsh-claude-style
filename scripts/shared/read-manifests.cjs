@@ -14,13 +14,14 @@ const path = require('node:path')
 const vm = require('node:vm')
 const esbuild = require('esbuild')
 
-const ROOT = path.resolve(__dirname, '..')
+/** The repository root: this module sits one level below `scripts/`. */
+const ROOT = path.resolve(__dirname, '..', '..')
 // The browser half lives in its own package (D46).
 const SRC = path.join(ROOT, 'packages', 'client', 'src')
 const FEATURES = path.join(SRC, 'features')
 const SUFFIX = '.manifest.ts'
 
-/** Every manifest file, src/-relative with forward slashes. */
+/** Every manifest file, relative to packages/client/src with forward slashes. */
 function manifestFiles() {
   const found = []
   for (const dir of fs.readdirSync(FEATURES, { withFileTypes: true })) {
@@ -35,7 +36,7 @@ function manifestFiles() {
 /**
  * @returns the manifests in install order, each with `file` (the manifest),
  *     `main` (its main module) and `dir` (the feature directory's name), all
- *     src/-relative.
+ *     relative to packages/client/src.
  */
 function readManifests() {
   const files = manifestFiles()
@@ -61,20 +62,20 @@ function readManifests() {
 /** Refuse a manifest that breaks a rule the type cannot express or a fact on disk. */
 function checkManifests(manifests) {
   const fail = (manifest, message) => {
-    throw new Error(`manifest src/${manifest.file}: ${message}`)
+    throw new Error(`manifest packages/client/src/${manifest.file}: ${message}`)
   }
   const ids = new Map()
   const orders = new Map()
   const owners = new Map()
   for (const manifest of manifests) {
     if (typeof manifest.id !== 'string' || !/^[a-z][A-Za-z0-9]*$/.test(manifest.id)) fail(manifest, 'needs a camelCase "id"')
-    if (ids.has(manifest.id)) fail(manifest, `repeats the id "${manifest.id}" of src/${ids.get(manifest.id)}`)
+    if (ids.has(manifest.id)) fail(manifest, `repeats the id "${manifest.id}" of packages/client/src/${ids.get(manifest.id)}`)
     ids.set(manifest.id, manifest.file)
     if (!Number.isInteger(manifest.order)) fail(manifest, 'needs an integer "order"')
-    if (orders.has(manifest.order)) fail(manifest, `repeats the order ${manifest.order} of src/${orders.get(manifest.order)}`)
+    if (orders.has(manifest.order)) fail(manifest, `repeats the order ${manifest.order} of packages/client/src/${orders.get(manifest.order)}`)
     orders.set(manifest.order, manifest.file)
     if ((manifest.pref === undefined) === (manifest.ungated === undefined)) fail(manifest, 'must declare exactly one of "pref" and "ungated"')
-    if (!fs.existsSync(path.join(SRC, manifest.main))) fail(manifest, `has no main module src/${manifest.main}`)
+    if (!fs.existsSync(path.join(SRC, manifest.main))) fail(manifest, `has no main module packages/client/src/${manifest.main}`)
     if (!Array.isArray(manifest.contracts) || manifest.contracts.some((id) => typeof id !== 'string' || id === '')) {
       fail(manifest, 'needs "contracts": the host contract ids its own modules name (D44)')
     }
@@ -83,7 +84,7 @@ function checkManifests(manifests) {
     }
     if (manifest.switchRow !== undefined) {
       if (manifest.pref === undefined) fail(manifest, 'has a switch row but no "pref"')
-      if (owners.has(manifest.pref)) fail(manifest, `owns the switch row of "${manifest.pref}", which src/${owners.get(manifest.pref)} owns already`)
+      if (owners.has(manifest.pref)) fail(manifest, `owns the switch row of "${manifest.pref}", which packages/client/src/${owners.get(manifest.pref)} owns already`)
       owners.set(manifest.pref, manifest.file)
     }
     for (const lang of ['zh', 'en']) {

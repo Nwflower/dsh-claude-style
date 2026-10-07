@@ -1,7 +1,3 @@
-/**
- * The chat area’s interactions:
- * the follow, the caret, the fold, the reveal, the file rows and the send flight.
- */
 'use strict'
 const { MARKUP, SKIN_FACE, SKIN_HAT, same, check, contrast, basicChecks, commonChecks } = require('./_shared.cjs')
 
@@ -23,9 +19,6 @@ module.exports = {
     check('a reader who scrolled away himself is left where he is',
       follow.readerBefore === 60 && follow.readerAfter === 60,
       JSON.stringify({ before: follow.readerBefore, after: follow.readerAfter }))
-    // The catch-up is a curve, not a jump: a frame later the capped body is
-    // still well short of its end, still moving at a tenth of a second, and held
-    // at the end once the glide has run out (scroll-ease.ts).
     check('the capped body walks to its end instead of jumping: short a frame later, still moving at a tenth of a second, at the end afterwards',
       follow.catchUpEarly > 200 && follow.catchUpMid < follow.catchUpEarly && follow.catchUpMid > AT_END_PX &&
         follow.catchUpDone <= AT_END_PX && follow.catchUpLate <= AT_END_PX,

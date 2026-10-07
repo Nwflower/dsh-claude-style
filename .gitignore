@@ -7,3 +7,6 @@ lib/
 
 # Local debugging scratch (Chrome profile, CDP scripts, screenshots)
 .debug/
+
+# Editor session state (worktrees created by local tooling)
+.claude/

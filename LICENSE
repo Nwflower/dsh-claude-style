@@ -24,7 +24,8 @@ SOFTWARE.
 
 Font files notice:
 
-- `fonts/AnthropicSansWebText.ttf` and `fonts/AnthropicSerifWebText.ttf` are
+- `packages/assets/src/fonts/anthropic/AnthropicSansWebText.ttf` and
+  `packages/assets/src/fonts/anthropic/AnthropicSerifWebText.ttf` are
   proprietary typefaces of Anthropic, extracted from Anthropic's web products.
   They are included in this repository for personal use only and are **not**
   covered by the MIT license above; all rights remain with Anthropic. The npm
@@ -35,9 +36,11 @@ Provider icon notice: the files under `packages/assets/src/icons/providers/` (an
 the MIT License; brand names and logos remain trademarks of their respective
 owners.
 
-- `fonts/JetBrainsMonoVariable.ttf` and `fonts/JetBrainsMonoItalicVariable.ttf`
-  are JetBrains Mono, distributed under the SIL Open Font License
-  (`fonts/OFL.txt`). They may be redistributed with this plugin.
+- `packages/assets/src/fonts/JetBrainsMonoVariable.ttf` and
+  `packages/assets/src/fonts/JetBrainsMonoItalicVariable.ttf` are JetBrains Mono,
+  distributed under the SIL Open Font License
+  (`packages/assets/src/fonts/OFL.txt`; the package carries them under
+  `lib/fonts/`). They may be redistributed with this plugin.
 
 Crab artwork notice: the pixel crab (Clawd) is a character of Anthropic, and
 all rights in it remain with Anthropic. `packages/assets/src/mascot/crab-laptop-body.png`

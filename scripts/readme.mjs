@@ -3,7 +3,7 @@
  * readme.mjs — write the READMEs' feature list from the feature manifests (D48).
  *
  * Every feature already carries its own title and prose in both languages
- * (description.zh and description.en, which scripts/read-manifests.cjs checks
+ * (description.zh and description.en, which scripts/shared/read-manifests.cjs checks
  * for completeness), so the list of what the plugin does is assembled from the
  * manifests instead of typed a second time. The section sits between two markers
  * and everything around them is the README's own hand-written prose.
@@ -14,7 +14,7 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
-import manifestReader from './read-manifests.cjs'
+import manifestReader from './shared/read-manifests.cjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
 const START = '<!-- features:start — written by npm run readme, not by hand -->'

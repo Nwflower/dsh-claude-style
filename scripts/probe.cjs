@@ -5,11 +5,9 @@
  * Drives a headless Chrome over CDP against a running DSH web GUI and asserts:
  *   1. the skin is applied (body[data-dsh-claude-style])
  *   2. a session page reaches phase "active"
- *   3. the composer seat is pinned to the viewport bottom (sticky contract —
- *      regression guard for the viewArea flex override incident)
+ *   3. the composer seat is pinned to the viewport bottom (sticky contract)
  *   4. the composer field starts at one line (24px)
  *   5. the field grows with multiline content while the seat stays pinned
- *      (regression guard for the `[class*="row"]` → `.…_grow` substring hit)
  *   6. clearing restores the single-line height
  *
  * Usage:
@@ -17,10 +15,10 @@
  *
  * The launch token comes from the GUI URL (`/?token=…`) of the running DSH
  * instance; it may also be passed via the DSH_WEB_TOKEN env var. Chrome is
- * launched headless with a throwaway profile (scripts/chrome.cjs) and stopped
+ * launched headless with a throwaway profile (scripts/shared/chrome.cjs) and stopped
  * when the probe ends.
  */
-const { findChrome, launchChrome, connectTab } = require('./chrome.cjs')
+const { findChrome, launchChrome, connectTab } = require('./shared/chrome.cjs')
 
 const args = process.argv.slice(2)
 const argOf = (name) => {
@@ -133,9 +131,8 @@ async function probe(port) {
 
   // The model trigger and the context meter share the row's right end: the
   // trailing cluster keeps the meter's room free through the body variable the
-  // composer pass writes. While the composer is shown the two must not overlap —
-  // a pass that measured the meter with no box used to take that room away and
-  // leave the trigger's right end under the ring.
+  // composer pass writes, and while the composer is shown the two must not
+  // overlap.
   const clearance = () => evalJs(`(() => {
     const card = document.querySelector('[data-composer-card]')
     const trailing = card === null ? null : card.querySelector('[class*="_row"] > [class*="_trailing"]')

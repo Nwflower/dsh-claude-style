@@ -4,7 +4,7 @@
 import { defineConfig } from 'vitest/config'
 import { playwright } from '@vitest/browser-playwright'
 import path from 'node:path'
-import chrome from './scripts/chrome.cjs'
+import chrome from './scripts/shared/chrome.cjs'
 
 const executablePath = chrome.findChrome()
 if (executablePath === undefined) throw new Error('vitest: no Chrome or Edge found; set CHROME_PATH')

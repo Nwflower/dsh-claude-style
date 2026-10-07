@@ -1,7 +1,3 @@
-/**
- * The states the host’s own data drives:
- * sessions, activity, forms, and the responses of APIs that fail.
- */
 'use strict'
 const { MARKUP, SKIN_FACE, SKIN_HAT, same, check, contrast, basicChecks, commonChecks } = require('./_shared.cjs')
 
