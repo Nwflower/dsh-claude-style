@@ -122,6 +122,18 @@ interface UsageSample {
   cacheWriteTokens?: unknown
 }
 
+/** What the service reads out: the summarized days, models and totals, or null before the first read. */
+interface UsageSnapshot {
+  source: string
+  computedAt: number
+  days: Record<string, unknown>[]
+  models: Record<string, unknown>[]
+  firstDay: string | null
+  lastDay: string | null
+  hours?: number[]
+  totals: Record<string, unknown>
+}
+
 /** What one session's fold produced: its days and its hours. */
 interface FoldedSession {
   days: Map<string, DayBuckets>
@@ -258,7 +270,8 @@ function foldSession(events: UsageEvent[]): FoldedSession {
     if (sign < 0 && BUCKET_KEYS.every((key) => target[key] === 0) && target.calls === 0) days.delete(day)
   }
   // The replacement slot: one settlement per turn/step, replaced on retry.
-  let last: { turn?: number, step?: number, buckets: Buckets, day: string, hour: number, model: string | null } | null = null
+  type Settlement = { turn?: number, step?: number, buckets: Buckets, day: string, hour: number, model: string | null }
+  let last: Settlement | null = null
   for (const event of events) {
     const type = event?.type
     if (type === 'llm/retry-started') {
@@ -277,7 +290,7 @@ function foldSession(events: UsageEvent[]): FoldedSession {
     const model = modelOf(event)
     const turn = event.data?.turn
     const step = event.data?.step
-    const previous = last
+    const previous: Settlement | null = last
     const replacing = previous !== null && previous.turn === turn && previous.step === step
     if (replacing && previous !== null && bucketsEqual(previous.buckets, buckets)) continue
     if (replacing && previous !== null) bump(previous.day, previous.hour, previous.buckets, -1, previous.model)
@@ -377,16 +390,16 @@ export function createUsage(ctx: DshContext) {
   // The harness home, resolved per read through the one shared accessor.
   const home = () => harnessPath(ctx)
 
-  let state = null
-  let pending = null
+  let state: UsageSnapshot | null = null
+  let pending: Promise<void> | null = null
   let disposed = false
 
-  function readLedger() {
+  function readLedger(): Map<string, DayBuckets> | null {
     // The cost meter is another plugin: no ledger means it is not installed.
     const file = join(home(), 'storages', 'cost-meter', 'ledger.json')
     if (!existsSync(file)) return null
     const raw = readFileSync(file, 'utf8')
-    let parsed
+    let parsed: unknown
     try {
       parsed = JSON.parse(raw)
     } catch {
@@ -396,13 +409,15 @@ export function createUsage(ctx: DshContext) {
       return null
     }
     if (parsed === null || typeof parsed !== 'object') return null
-    if (parsed.version !== LEDGER_VERSION) return null
-    const rawDays = parsed.days
+    const ledger = parsed as { version?: unknown, days?: unknown }
+    if (ledger.version !== LEDGER_VERSION) return null
+    const rawDays = ledger.days
     if (rawDays === null || typeof rawDays !== 'object' || Array.isArray(rawDays)) return null
-    const days = new Map()
-    for (const [day, bucket] of Object.entries(rawDays)) {
-      if (bucket === null || typeof bucket !== 'object') continue
-      const clean = emptyBuckets()
+    const days = new Map<string, DayBuckets>()
+    for (const [day, value] of Object.entries(rawDays as Record<string, unknown>)) {
+      if (value === null || typeof value !== 'object') continue
+      const bucket = value as Partial<Buckets> & { sessions?: unknown, byProviderModel?: unknown }
+      const clean: DayBuckets = emptyBuckets()
       addBuckets(clean, {
         input: bucket.input,
         output: bucket.output,
@@ -413,9 +428,9 @@ export function createUsage(ctx: DshContext) {
       // The ledger keeps one record per session per day; the ids are what make
       // the total session count a union rather than a sum.
       clean.sessionIds = Array.isArray(bucket.sessions)
-        ? bucket.sessions
-          .map((entry) => (entry !== null && typeof entry === 'object' && typeof entry.id === 'string' ? entry.id : null))
-          .filter((id) => id !== null)
+        ? (bucket.sessions as unknown[])
+          .map((entry) => (entry !== null && typeof entry === 'object' && typeof (entry as { id?: unknown }).id === 'string' ? (entry as { id: string }).id : null))
+          .filter((id): id is string => id !== null)
         : []
       clean.sessions = clean.sessionIds.length
       // The day's split by `<provider>:<model>`, the owner's own key (it splits
@@ -433,7 +448,7 @@ export function createUsage(ctx: DshContext) {
             cell = emptyBuckets()
             clean.models.set(model, cell)
           }
-          addBuckets(cell, entry, 1)
+          addBuckets(cell, entry as Partial<Buckets>, 1)
         }
       }
       days.set(day, clean)
@@ -448,7 +463,7 @@ export function createUsage(ctx: DshContext) {
 
   function readCache() {
     if (!existsSync(cacheFile())) return new Map()
-    let parsed
+    let parsed: unknown
     try {
       parsed = JSON.parse(readFileSync(cacheFile(), 'utf8'))
     } catch (error) {
