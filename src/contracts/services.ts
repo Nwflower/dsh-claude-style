@@ -143,11 +143,15 @@ export interface HostChatTimeline {
   newestTurnId?: string | null
 }
 
-/** One turn: its steps in order, its own number, and whether it is still open. */
+/** One turn: its steps in order, its own number, whether it is still open, and how it ended. */
 export interface HostTurn {
   turn: number
   status?: string
   steps: HostStep[]
+  /** When the turn started, on the host's clock. */
+  start?: { time: number }
+  /** Present once the turn closed: when it did, and the host's own reason for it. */
+  end?: { time: number, data: { reason: { kind?: string } } }
 }
 
 /** One step: the blocks it carries, by kind. */
@@ -155,11 +159,13 @@ export interface HostStep {
   data: { get(kind: string): HostAssistantStep | undefined }
 }
 
-/** A running or settled assistant step: its status, its number in the turn, and its blocks. */
+/** A running or settled assistant step: its status, its number in the turn, its blocks and its usage. */
 export interface HostAssistantStep {
   status?: string
   step?: number
   blocks: { kind: string }[]
+  /** The step's own token usage, once the host reports it. */
+  usage?: { outputTokens?: number, [field: string]: unknown }
 }
 
 /** A tool call the host reports as running, with the turn it belongs to. */

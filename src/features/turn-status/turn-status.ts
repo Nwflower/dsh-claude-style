@@ -3,6 +3,7 @@ import { copyLabel } from '../../core/i18n'
 import { setAttributeIfChanged } from '../../shared/dom'
 import { formatCompactTokens, pad2 } from '../../shared/format'
 import type { HostContext, HostText, HostValue } from '../../core/host'
+import type { HostChatSnapshot, HostTurn } from '../../contracts/services'
 import type { Ui } from '../../core/scheduler'
 
 /** What the status line says about a turn. */
@@ -78,9 +79,9 @@ export function install(ctx: HostContext, ui: Ui) {
     orderMarks = nextOrders
   }
 
-  function chatSnapshot(sessionId: string): HostValue {
+  function chatSnapshot(sessionId: string): HostChatSnapshot | null {
     const target = findChatTarget(ctx, sessionId)
-    return target === null ? null : target.getSnapshot()
+    return target === null ? null : target.getSnapshot() ?? null
   }
 
   /**
@@ -98,7 +99,7 @@ export function install(ctx: HostContext, ui: Ui) {
   }
 
   /** Output tokens the turn's settled steps report; the streaming step joins when it settles. */
-  function outputTokens(turn: HostValue) {
+  function outputTokens(turn: HostTurn) {
     let total = 0
     for (let i = 0; i < turn.steps.length; i++) {
       const assistant = turn.steps[i].data.get('assistant-step')
@@ -109,7 +110,7 @@ export function install(ctx: HostContext, ui: Ui) {
   }
 
   /** `live`, `stopped`, `failed`, or null for a turn the host's control keeps. */
-  function turnState(turn: HostValue): TurnState | null {
+  function turnState(turn: HostTurn | undefined): TurnState | null {
     if (turn === undefined) return null
     if (turn.status === 'open') return 'live'
     const reason = turn.status === 'closed' && turn.end !== undefined ? turn.end.data.reason.kind : null
@@ -123,7 +124,7 @@ export function install(ctx: HostContext, ui: Ui) {
    * newest step's assistant output while it streams (its blocks grow in
    * place), else the turn's running tool calls, else a wait for the model.
    */
-  function phaseText(key: string, snapshot: HostValue, turn: HostValue, now: number, t: HostText) {
+  function phaseText(key: string, snapshot: HostChatSnapshot, turn: HostTurn, now: number, t: HostText) {
     const activity = readTurnActivity(snapshot, turn)
     if (activity !== null && activity.kind === 'assistant') {
       const assistant = activity.assistant
@@ -158,7 +159,7 @@ export function install(ctx: HostContext, ui: Ui) {
    * A running turn: elapsed · tokens · action. A stopped or failed one:
    * the host's word for it · how long it ran · tokens.
    */
-  function statusText(key: string, snapshot: HostValue, turn: HostValue, state: TurnState, t: HostText) {
+  function statusText(key: string, snapshot: HostChatSnapshot, turn: HostTurn, state: TurnState, t: HostText) {
     const parts: string[] = []
     const tokens = outputTokens(turn)
     const tokenText = tokens > 0 ? copyLabel('turnStatusTokens', '{count} tokens', { count: formatCompactTokens(tokens) }) : null
@@ -169,7 +170,7 @@ export function install(ctx: HostContext, ui: Ui) {
       parts.push(phaseText(key, snapshot, turn, now, t))
     } else {
       parts.push(t(state === 'stopped' ? 'message.stopped' : 'message.turnProcess.failed'))
-      if (turn.start !== undefined) parts.push(formatDuration(Math.max(1000, turn.end.time - turn.start.time), t, true))
+      if (turn.start !== undefined && turn.end !== undefined) parts.push(formatDuration(Math.max(1000, turn.end.time - turn.start.time), t, true))
       if (tokenText !== null) parts.push(tokenText)
     }
     return parts.join(SEPARATOR)
