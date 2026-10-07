@@ -36,6 +36,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import vm from 'node:vm'
+import Ajv2020 from 'ajv/dist/2020.js'
+import addFormats from 'ajv-formats'
 import esbuild from 'esbuild'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
@@ -67,6 +69,10 @@ const DEEPY_OUT = path.join(LIB, 'deepy')
  * build instead of the picker.
  */
 const MODEL_COPY = 'model-descriptions.json'
+/** The model copy's declared shape; validateModelCopy adds the references a schema cannot see. */
+const MODEL_COPY_SCHEMA = 'model-descriptions.schema.json'
+const validateModelCopyShape = addFormats(new Ajv2020({ allErrors: true }), ['regex'])
+  .compile(JSON.parse(fs.readFileSync(path.join(SRC, MODEL_COPY_SCHEMA), 'utf8')))
 
 /**
  * The plugin icon the 0.1.7 plugin manifest reads.
@@ -530,14 +536,15 @@ function substitute(file, text, tokens) {
 /**
  * Check the model copy document before it ships. Every failure here is one the
  * picker could otherwise only express as a silently missing or wrong line, so
- * they all throw: a `families[].key` or `aliases` target that names no entry,
- * a rule whose `match` is not a compilable regexp, a `{zh, en}` pair missing a
- * language, or a document with no `exact` table at all.
+ * they all throw.
  *
- * Brand bindings are checked too: every id named by `brands.providers` and
- * `brands.models[].brand` must be a vendored lockup under src/assets/icons/combine/,
- * and every model rule must compile — a typo there would otherwise render as a
- * silently missing mark on one row.
+ * The document's shape is declared in src/model-descriptions.schema.json: the
+ * tables, the `{locale: text}` lines, a rule's compilable `match` and its `key`
+ * or `text`. What a schema cannot see is checked after it: a `families[].key`,
+ * `tiers[].key` or `aliases` target must name an `exact` entry, every brand id
+ * must be a vendored lockup under src/assets/icons/combine/ (a typo would render
+ * as a silently missing mark on one row), and the document must carry at least
+ * two locales.
  *
  * @param doc - parsed `src/model-descriptions.json`.
  * @param lobeBrands - the vendored lockups keyed by brand id (loadCombines).
@@ -547,62 +554,39 @@ function validateModelCopy(doc, lobeBrands) {
   const fail = (message) => {
     throw new Error(`build: ${MODEL_COPY} ${message}`)
   }
-  if (typeof doc !== 'object' || doc === null) fail('is not an object')
-  if (typeof doc.fallback !== 'string' || doc.fallback === '') fail('needs a non-empty "fallback" locale id')
-  if (typeof doc.exact !== 'object' || doc.exact === null) fail('needs an "exact" table')
-
-  const requireBrand = (where, brand) => {
-    if (typeof brand !== 'string' || brand === '') fail(`${where} is not a brand id string`)
-    if (!(brand in lobeBrands)) fail(`${where} names brand "${brand}", which has no vendored lockup in src/assets/icons/combine/`)
+  if (!validateModelCopyShape(doc)) {
+    fail(validateModelCopyShape.errors.map((error) => `${error.instancePath || '/'} ${error.message}`).join('; '))
   }
 
-  const locales = new Set([doc.fallback])
-  const requirePair = (where, pair) => {
-    if (typeof pair !== 'object' || pair === null) fail(`${where} is not a {locale: string} object`)
-    for (const [locale, text] of Object.entries(pair)) {
-      locales.add(locale)
-      if (typeof text !== 'string' || text.trim() === '') fail(`${where}.${locale} is not a non-empty string`)
-    }
+  const requireEntry = (where, key) => {
+    if (!(key in doc.exact)) fail(`${where} points at unknown entry "${key}"`)
   }
-
-  for (const [id, pair] of Object.entries(doc.exact)) requirePair(`exact["${id}"]`, pair)
-  for (const group of ['ui', 'settings', 'ban']) {
-    for (const [key, pair] of Object.entries(doc[group] ?? {})) requirePair(`${group}["${key}"]`, pair)
-  }
-  for (const [from, to] of Object.entries(doc.aliases ?? {})) {
-    if (typeof to !== 'string' || !(to in doc.exact)) fail(`alias "${from}" points at unknown entry "${to}"`)
-  }
+  for (const [from, to] of Object.entries(doc.aliases ?? {})) requireEntry(`alias "${from}"`, to)
   for (const list of ['families', 'tiers']) {
     for (const [index, rule] of (doc[list] ?? []).entries()) {
-      const where = `${list}[${index}]`
-      if (typeof rule?.match !== 'string') fail(`${where} needs a string "match"`)
-      try {
-        new RegExp(rule.match)
-      } catch (error) {
-        fail(`${where} has an uncompilable "match": ${error.message}`)
-      }
-      if (rule.key !== undefined && !(rule.key in doc.exact)) fail(`${where} points at unknown entry "${rule.key}"`)
-      if (rule.key === undefined) requirePair(`${where}.text`, rule.text)
+      if (rule.key !== undefined) requireEntry(`${list}[${index}]`, rule.key)
     }
   }
 
-  const brandMap = doc.brands
-  if (typeof brandMap !== 'object' || brandMap === null) fail('needs a "brands" section')
-  for (const [provider, brand] of Object.entries(brandMap.providers ?? {})) {
-    requireBrand(`brands.providers["${provider}"]`, brand)
+  const requireBrand = (where, brand) => {
+    if (!(brand in lobeBrands)) fail(`${where} names brand "${brand}", which has no vendored lockup in src/assets/icons/combine/`)
   }
-  if (!Array.isArray(brandMap.models)) fail('needs a "brands.models" rule list')
-  for (const [index, rule] of brandMap.models.entries()) {
-    const where = `brands.models[${index}]`
-    if (typeof rule?.match !== 'string') fail(`${where} needs a string "match"`)
-    try {
-      new RegExp(rule.match)
-    } catch (error) {
-      fail(`${where} has an uncompilable "match": ${error.message}`)
-    }
-    requireBrand(`${where}.brand`, rule.brand)
-  }
+  for (const [provider, brand] of Object.entries(doc.brands.providers ?? {})) requireBrand(`brands.providers["${provider}"]`, brand)
+  for (const [index, rule] of doc.brands.models.entries()) requireBrand(`brands.models[${index}].brand`, rule.brand)
 
+  const locales = new Set([doc.fallback])
+  const addLocales = (pair) => {
+    for (const locale of Object.keys(pair)) locales.add(locale)
+  }
+  for (const pair of Object.values(doc.exact)) addLocales(pair)
+  for (const group of ['ui', 'settings', 'ban']) {
+    for (const pair of Object.values(doc[group] ?? {})) addLocales(pair)
+  }
+  for (const list of ['families', 'tiers']) {
+    for (const rule of doc[list] ?? []) {
+      if (rule.text !== undefined) addLocales(rule.text)
+    }
+  }
   if (locales.size < 2) fail('carries fewer than two locales; i18n needs at least the fallback and one translation')
   return Object.keys(doc.exact).length
 }
