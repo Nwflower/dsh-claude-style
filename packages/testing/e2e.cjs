@@ -29,6 +29,13 @@ const { loadModule } = require('../../scripts/shared/ts-module.cjs')
 
 const ROOT = path.resolve(__dirname, '..', '..')
 const DEFAULT_OUT = path.join(ROOT, '.debug', 'e2e', 'out')
+/**
+ * How long one scenario may take. A wait that never settles would otherwise hold
+ * the run until the runner's own limit: this deadline writes the failure evidence
+ * and stops the run instead. `DSH_E2E_DEADLINE_MS` shortens it, for trying the
+ * watchdog itself.
+ */
+const SCENARIO_DEADLINE_MS = Number(process.env.DSH_E2E_DEADLINE_MS ?? '') || 3 * 60 * 1000
 
 /**
  * The host's page markers this lane reads. Each one is a D44 entry in
@@ -565,30 +572,55 @@ async function runScenario(name, options) {
   ].join('\n')
   const host = await start({ patch, env: { DSH_E2E_MOCK_KEY: 'mock' }, home: options.home, resetState: true })
   process.stdout.write(`\n== ${name} ==  mock ${mock.url}  host ${host.url}\n`)
+  /** Where the scenario is, so a hang in the log says which step it never left. */
+  const step = (label) => process.stdout.write(`  · ${label}\n`)
   let session
+  let expired = false
+  const timer = setTimeout(() => { expired = true }, SCENARIO_DEADLINE_MS)
   try {
     session = await openPage(host.url, { headless: options.headed !== true, ...scenario.viewport })
     const { page } = session
-    await waitForSkin(page)
-    if (!(await dismissOverlays(page))) {
-      const left = await firstRunOverlayText(page)
-      throw new Error(`the shell left a first-run overlay open${left === '' ? '' : `: ${left}`}`)
-    }
-    const context = { page, session, trace: [], notes: {}, out: options.out }
-    if (scenario.beforeSend !== undefined) await scenario.beforeSend(context)
-    await startTrace(page)
-    await sendPrompt(page, scenario.prompt)
-    await waitForTurn(page)
-    context.trace = await page.evaluate(() => window.__e2eTrace ?? [])
-    if (scenario.afterTurn !== undefined) await scenario.afterTurn(context)
-    const checks = await scenario.assert(context)
-    for (const item of checks) process.stdout.write(`  ${item.ok ? '✓' : '✗'} ${item.name}${item.detail === '' ? '' : `  — ${item.detail}`}\n`)
-    const failed = checks.filter((item) => !item.ok).length
-    return { scenario: name, checks, failed, requested: mock.requests.length, trace: context.trace, notes: context.notes }
+    const body = (async () => {
+      step('waiting for the skin')
+      await waitForSkin(page)
+      step('answering the first-run overlays')
+      if (!(await dismissOverlays(page))) {
+        const left = await firstRunOverlayText(page)
+        throw new Error(`the shell left a first-run overlay open${left === '' ? '' : `: ${left}`}`)
+      }
+      const context = { page, session, trace: [], notes: {}, out: options.out }
+      if (scenario.beforeSend !== undefined) await scenario.beforeSend(context)
+      step('sending the prompt')
+      await startTrace(page)
+      await sendPrompt(page, scenario.prompt)
+      step('waiting for the turn to settle')
+      await waitForTurn(page)
+      context.trace = await page.evaluate(() => window.__e2eTrace ?? [])
+      if (scenario.afterTurn !== undefined) {
+        step('after the turn')
+        await scenario.afterTurn(context)
+      }
+      step('asserting')
+      const checks = await scenario.assert(context)
+      for (const item of checks) process.stdout.write(`  ${item.ok ? '✓' : '✗'} ${item.name}${item.detail === '' ? '' : `  — ${item.detail}`}\n`)
+      const failed = checks.filter((item) => !item.ok).length
+      if (expired) throw new Error(`scenario "${name}" overran its ${SCENARIO_DEADLINE_MS / 1000} s deadline`)
+      return { scenario: name, checks, failed, requested: mock.requests.length, trace: context.trace, notes: context.notes }
+    })()
+    return await body
   } catch (error) {
     if (session !== undefined) await captureFailure(session, options.out, name).catch(() => {})
+    if (expired) {
+      // The hung step is still holding the page; the run stops here with the
+      // evidence written above instead of waiting on the runner's own limit.
+      process.stdout.write(`  scenario "${name}" passed its ${SCENARIO_DEADLINE_MS / 1000} s deadline; stopping the run\n`)
+      host.stop()
+      await mock.stop().catch(() => {})
+      process.exit(1)
+    }
     throw error
   } finally {
+    clearTimeout(timer)
     if (session !== undefined) await session.close()
     host.stop()
     await mock.stop()
