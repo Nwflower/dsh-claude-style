@@ -21,6 +21,7 @@
  */
 'use strict'
 const { spawn, spawnSync } = require('node:child_process')
+const { randomUUID } = require('node:crypto')
 const fs = require('node:fs')
 const path = require('node:path')
 const { chromium } = require('playwright')
@@ -29,6 +30,43 @@ const chrome = require('../../scripts/shared/chrome.cjs')
 const ROOT = path.resolve(__dirname, '..', '..')
 /** The scratch host's home: build output, so it lives with the other debug artifacts. */
 const DEFAULT_HOME = path.join(ROOT, '.debug', 'e2e', 'home')
+
+/**
+ * Give the home a workspace of the lane's own when it has none.
+ *
+ * A fresh `$DSH_HOME` carries an empty workspace registry, and the shell then
+ * asks the reader to pick a directory instead of starting a turn — a step the
+ * lane cannot answer. The registered directory lives inside the home, so nothing
+ * on the machine running the lane is touched, and a home that already has a
+ * registry (a lane run before, a reader's own) keeps it.
+ *
+ * @param home - the scratch `$DSH_HOME`.
+ */
+function ensureWorkspace(home) {
+  const storages = path.join(home, 'storages')
+  const file = path.join(storages, 'workspace.json')
+  if (fs.existsSync(file)) return
+  const directory = path.join(home, 'workspace')
+  fs.mkdirSync(directory, { recursive: true })
+  fs.mkdirSync(storages, { recursive: true })
+  const id = randomUUID()
+  const now = new Date().toISOString()
+  fs.writeFileSync(file, `${JSON.stringify({
+    unit: { name: 'workspace', version: 2 },
+    global: {
+      initialized: true,
+      workspaceIds: [id],
+      archivedSessionIds: [],
+      pinnedSessionIds: [],
+      defaultWorkspaceId: id,
+    },
+    tables: {
+      workspaces: {
+        [id]: { path: directory, title: 'lane-workspace', sessionIds: [], createdAt: now, updatedAt: now },
+      },
+    },
+  }, null, 2)}\n`)
+}
 
 /** Run one command line to completion, inheriting its output; throws on a non-zero exit. */
 function run(command, options = {}) {
@@ -55,7 +93,9 @@ function run(command, options = {}) {
  * @returns `{ url, home, stop() }`; `stop` ends the host and everything it spawned.
  */
 async function start(options = {}) {
-  const home = options.home ?? DEFAULT_HOME
+  // Resolved: the home goes into the host's own state (the workspace registry)
+  // as a path it has to be able to read, and `--home` may be relative.
+  const home = path.resolve(options.home ?? DEFAULT_HOME)
   const profile = options.profile ?? 'web'
   const port = options.port ?? 0
   const timeoutMs = options.timeoutMs ?? 120000
@@ -75,6 +115,7 @@ async function start(options = {}) {
       fs.rmSync(path.join(home, entry), { recursive: true, force: true })
     }
   }
+  ensureWorkspace(home)
   // Idempotent: the profile is initialized and the checkout linked into it on
   // the first run, and pnpm reports "already up to date" afterwards.
   run(`dsh plugin --profile ${profile} add "${ROOT}"`, { env: { ...process.env, DSH_HOME: home } })
