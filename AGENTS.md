@@ -46,7 +46,7 @@ The repository is moving to the architecture in `docs/decisions/` (D36–D48). A
 
 Hard stops: stop the moment one triggers, without first judging whether it is worth it.
 
-- A source file approaching 750 lines: stop adding features to it and propose splitting it by responsibility inside its feature directory; wait for the user's confirmation, and until then the file gets bug fixes only.
+- A source file approaching 750 lines: stop adding features to it and propose splitting it by responsibility inside its feature directory; wait for the user's confirmation, and until then the file gets bug fixes only. `npm run lint` fails when a file crosses the line, and the one file it lets past records the size it stood at.
 - The same host query or the same pattern appearing a 3rd time: stop and move it into the shared layer (host accessors into the host access module); never write a 3rd copy.
 
 ## Conventions
@@ -94,6 +94,7 @@ The source is TypeScript ES modules under `strict` (D36). A module nothing impor
 ```sh
 npm install                                  # dev dependencies: TypeScript, esbuild, Ajv, Vitest, Playwright, React types
 npm run build                                # type-checks src/, bundles it into lib/client.js with its source map, runs the build checks, prints the build id
+npm run lint                                 # the rules that need no build: the stop line, Markdown links, decision citations (D48)
 npm run changelog                            # write the CHANGELOG's [Unreleased] section from changes/ (D48)
 npm run changelog:check                      # fail when that section differs from changes/; CI runs this
 npm run docs:index                           # write docs/decisions/README.md from the decision files (D48)

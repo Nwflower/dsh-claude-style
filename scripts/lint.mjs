@@ -1,0 +1,127 @@
+#!/usr/bin/env node
+/**
+ * lint.mjs — the rules that need no build (D48).
+ *
+ * Three promises the repository makes in prose and a tool can check without
+ * guessing: no source file crosses the stop line, every link in the committed
+ * Markdown resolves, and every decision a comment or a document cites exists —
+ * numbers are stable and a retired one stays citable (D48). Everything else a
+ * tool could enforce is already a build check (D44, D51) or a smoke case.
+ *
+ * Usage: node scripts/lint.mjs
+ */
+import fs from 'node:fs'
+import path from 'node:path'
+
+const ROOT = path.resolve(import.meta.dirname, '..')
+const DECISIONS = path.join(ROOT, 'docs', 'decisions')
+/** The stop line: a source file approaching this gets split, not extended. */
+const MAX_LINES = 750
+/**
+ * Files already past the stop line, with the size they stood at when the rule
+ * was written: they may not grow until the split lands.
+ */
+const OVERSIZE = {
+  'scripts/smoke/cases.cjs': { ceiling: 1070, reason: 'the smoke case table: one entry per case with its assertions, split by page is pending (D45)' },
+}
+
+const problems = []
+
+/** Every file under `dir`, by extension, skipping what the rule does not govern. */
+function filesUnder(dir, extensions) {
+  const found = []
+  const walk = (at) => {
+    for (const entry of fs.readdirSync(at, { withFileTypes: true })) {
+      const full = path.join(at, entry.name)
+      if (entry.isDirectory()) { walk(full); continue }
+      if (extensions.some((extension) => entry.name.endsWith(extension))) found.push(full)
+    }
+  }
+  if (fs.existsSync(dir)) walk(dir)
+  return found
+}
+
+const relative = (file) => path.relative(ROOT, file).replace(/\\/g, '/')
+
+/** The decision numbers that exist, and the ones a replacing decision retired. */
+function decisionNumbers() {
+  const live = new Set()
+  const retired = new Set()
+  for (const name of fs.readdirSync(DECISIONS)) {
+    if (!/^D\d+-.*\.md$/.test(name)) continue
+    live.add(Number(name.match(/^D(\d+)/)[1]))
+    const text = fs.readFileSync(path.join(DECISIONS, name), 'utf8')
+    const related = text.match(/^- \*\*关联\*\*：(.+)$/m)
+    const replaced = related === null ? null : related[1].match(/取代\s*([^；;]+)/)
+    if (replaced !== null) for (const number of replaced[1].matchAll(/D(\d+)/g)) retired.add(Number(number[1]))  }
+  return { live, retired }
+}
+
+// 1. The stop line.
+const sources = [
+  ...filesUnder(path.join(ROOT, 'src'), ['.ts', '.css']),
+  ...filesUnder(path.join(ROOT, 'host'), ['.js']),
+  ...filesUnder(path.join(ROOT, 'scripts'), ['.mjs', '.cjs']),
+  ...filesUnder(path.join(ROOT, 'tools'), ['.cjs']),
+].filter((file) => !/\.test\.ts$/.test(file) && !/\.d\.ts$/.test(file))
+for (const file of sources) {
+  const lines = fs.readFileSync(file, 'utf8').split('\n').length
+  const exception = OVERSIZE[relative(file)]
+  if (exception === undefined) {
+    if (lines > MAX_LINES) problems.push(`${relative(file)}: ${lines} lines, over the ${MAX_LINES}-line stop line`)
+  } else if (lines > exception.ceiling) {
+    problems.push(`${relative(file)}: ${lines} lines, past its recorded ${exception.ceiling} (${exception.reason})`)
+  }
+}
+
+// 2. Links in the committed Markdown.
+const markdown = [
+  ...filesUnder(ROOT, ['.md']).filter((file) => !relative(file).startsWith('.debug/') && !relative(file).startsWith('node_modules/')),
+]
+let links = 0
+for (const file of markdown) {
+  const text = fs.readFileSync(file, 'utf8')
+  for (const match of text.matchAll(/\]\(([^)\s]+)\)/g)) {
+    const target = match[1]
+    if (/^(?:https?:|mailto:|#)/.test(target)) continue
+    const [clean] = target.split('#')
+    if (clean === '') continue
+    links += 1
+    const resolved = path.resolve(path.dirname(file), decodeURIComponent(clean))
+    if (!fs.existsSync(resolved)) problems.push(`${relative(file)}: link to ${target} resolves to nothing`)
+  }
+}
+
+// 3. Decision numbers cited by code and documents.
+const { live, retired } = decisionNumbers()
+const citing = [
+  ...sources,
+  ...markdown,
+  path.join(ROOT, 'AGENTS.md'),
+].filter((file, at, all) => all.indexOf(file) === at && fs.existsSync(file))
+let citations = 0
+for (const file of citing) {
+  const text = fs.readFileSync(file, 'utf8')
+  const lines = text.split('\n')
+  lines.forEach((line, at) => {
+    for (const match of line.matchAll(/(?<![\w#-])D(\d{1,3})(?![\w-])/g)) {
+      const number = Number(match[1])
+      citations += 1
+      if (live.has(number) || retired.has(number)) continue
+      problems.push(`${relative(file)}:${at + 1}: cites D${number}, which is not a decision`)
+    }
+  })
+}
+
+// A rule whose pattern stopped matching anything would pass forever: each of the
+// three has to have looked at something.
+if (links === 0) problems.push('lint: no Markdown link was examined — the link pattern matches nothing')
+if (citations === 0) problems.push('lint: no decision number was examined — the citation pattern matches nothing')
+
+if (problems.length > 0) {
+  for (const problem of problems) console.error(`lint: ${problem}`)
+  console.error(`lint: ${problems.length} problems in ${sources.length} sources and ${markdown.length} documents`)
+  process.exitCode = 1
+} else {
+  console.log(`lint: ${sources.length} sources, ${markdown.length} documents, ${links} links and ${citations} decision citations clean (stop line ${MAX_LINES} lines)`)
+}
