@@ -692,7 +692,8 @@ async function main() {
 
   // Everything is validated before anything is written: a refusal anywhere in
   // this build must not leave lib/ holding one half of a new build beside the
-  // other half of the previous one.
+  // other half of the previous one. lib/ is not in version control (D47), so a
+  // fresh clone has no directory to write into yet.
   const copy = JSON.parse(fs.readFileSync(path.join(SRC, MODEL_COPY), 'utf8'))
   const exact = validateModelCopy(copy, combines)
   const copyText = JSON.stringify(copy, null, 2) + '\n'
@@ -700,6 +701,7 @@ async function main() {
   const iconTarget = path.join(LIB, ICON_FILE)
   if (!fs.existsSync(iconSource)) throw new Error(`build: src/assets/brand/${ICON_SOURCE} is missing`)
 
+  fs.mkdirSync(LIB, { recursive: true })
   fs.writeFileSync(OUT, bundle)
   fs.writeFileSync(`${OUT}.map`, sourceMap)
   console.log(`built lib/client.js (${Buffer.byteLength(bundle)} bytes, build ${buildId}) from src/ (${bundled.size} modules + ${sheets.length} stylesheets + ${Object.keys(combines).length} lockups)`)
