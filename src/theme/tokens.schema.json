@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "dsh-claude-style design tokens",
+  "description": "The skin's custom properties: the build generates the token stylesheet and the docs/STYLE.md token table from this document (D51).",
+  "type": "object",
+  "required": ["typeface", "apex", "palette"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "typeface": {
+      "description": "Font tokens: `claude` under the Claude typeface, `host` under the host's.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["token"],
+        "anyOf": [{ "required": ["claude"] }, { "required": ["host"] }],
+        "additionalProperties": false,
+        "properties": {
+          "token": { "$ref": "#/$defs/token" },
+          "claude": { "$ref": "#/$defs/value" },
+          "host": { "$ref": "#/$defs/value" },
+          "note": { "$ref": "#/$defs/note" }
+        }
+      }
+    },
+    "apex": {
+      "description": "The reasoning slider's top rung: the same violet under every palette.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["token", "dark", "light"],
+        "additionalProperties": false,
+        "properties": {
+          "token": { "$ref": "#/$defs/token" },
+          "dark": { "$ref": "#/$defs/value" },
+          "light": { "$ref": "#/$defs/value" },
+          "note": { "$ref": "#/$defs/note" }
+        }
+      }
+    },
+    "palette": {
+      "description": "Colour tokens: the Claude brand's two themes, the DeepSeek brand's overrides of them, and the alias under the host palette.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["token"],
+        "anyOf": [{ "required": ["claude"] }, { "required": ["deepseek"] }, { "required": ["host"] }],
+        "additionalProperties": false,
+        "properties": {
+          "token": { "$ref": "#/$defs/token" },
+          "claude": { "$ref": "#/$defs/themes" },
+          "deepseek": { "$ref": "#/$defs/themes" },
+          "host": { "$ref": "#/$defs/value" },
+          "use": { "description": "What the token paints, for the docs/STYLE.md table.", "type": "string", "minLength": 1 },
+          "note": { "$ref": "#/$defs/note" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "token": { "type": "string", "pattern": "^--(dsw|dsh-claude)-[a-z0-9-]+$" },
+    "value": { "type": "string", "minLength": 1, "pattern": "^[^;{}]+$" },
+    "note": { "description": "Why the value has this shape; kept for maintainers, not emitted.", "type": "string", "minLength": 1 },
+    "themes": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "dark": { "$ref": "#/$defs/value" },
+        "light": { "$ref": "#/$defs/value" }
+      }
+    }
+  }
+}

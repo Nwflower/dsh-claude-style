@@ -12,7 +12,9 @@
  *   src/constants.ts             constants; also evaluated here for the stylesheet tokens
  *   src/core/ src/shared/ src/features/<name>/   the modules, TypeScript, strict
  *   src/features/<dir>/<main>.manifest.ts   each feature's manifest (D42), read by scripts/read-manifests.cjs
- *   src/theme/*.css and the feature stylesheets   concatenated by rank (THEME_SHEETS and the manifests)
+ *   src/theme/*.css and the feature stylesheets   concatenated by rank (THEME_SHEETS and the manifests),
+ *                                checked and gated on the syntax tree (scripts/css.mjs)
+ *   src/theme/tokens.json        the design tokens: the token stylesheet and docs/STYLE.md's table
  *   src/assets/brand/*.svg       brand marks, stylesheet data URIs
  *   src/assets/icons/combine/*.svg     vendor lockups (mark + wordmark in one)
  *   src/assets/mascot/crab/*.png       the crab's sheets (scripts/draw-crab.py), data URIs
@@ -40,6 +42,7 @@ import vm from 'node:vm'
 import Ajv2020 from 'ajv/dist/2020.js'
 import addFormats from 'ajv-formats'
 import esbuild from 'esbuild'
+import { TOKEN_SHEET, buildStylesheet, loadTokens, writeTokenTable } from './css.mjs'
 import manifestReader from './read-manifests.cjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
@@ -60,6 +63,8 @@ const CRAB_ASSETS = path.join(MASCOT_ASSETS, 'crab')
 const DEEPY_ASSETS = path.join(MASCOT_ASSETS, 'deepy')
 /** Vendored vendor lockups (src/assets/icons/combine); mark + wordmark per brand id. */
 const COMBINE_ASSETS = path.join(ASSETS, 'icons', 'combine')
+/** The style guide; its token table is generated from src/theme/tokens.json. */
+const STYLE_GUIDE = path.join(ROOT, 'docs', 'STYLE.md')
 const LIB = path.join(ROOT, 'lib')
 const OUT = path.join(LIB, 'client.js')
 const DEEPY_OUT = path.join(LIB, 'deepy')
@@ -100,6 +105,8 @@ const ICON_FILE = 'claude-mark.svg'
  * the later one wins.
  */
 const THEME_SHEETS = [
+  // Generated from src/theme/tokens.json (scripts/css.mjs).
+  { file: TOKEN_SHEET, rank: 5 },
   { file: 'theme/tokens.css', rank: 10 },
   { file: 'theme/typography.css', rank: 20 },
   // Shared parts before every feature: a feature's own rule comes later and
@@ -189,7 +196,7 @@ const CONSTANTS = (() => {
       // :not(deepseek), which would have them paint over the host's whale.
       BRAND_ACTIVE: '[' + BRAND_ATTR + '="' + BRAND_CLAUDE + '"]',
       // Who paints the colours and who sets the type: a rule that writes a
-      // host token carries the Claude gate (checkTokenGates), and the host
+      // host token carries the Claude gate (scripts/css.mjs), and the host
       // blocks alias the skin's private tokens to the host's.
       PALETTE_CLAUDE: '[' + PALETTE_ATTR + '="' + PALETTE_CLAUDE + '"]',
       PALETTE_HOST: '[' + PALETTE_ATTR + '="' + PALETTE_HOST + '"]',
@@ -197,177 +204,15 @@ const CONSTANTS = (() => {
       TYPEFACE_HOST: '[' + TYPEFACE_ATTR + '="' + TYPEFACE_HOST + '"]',
       CLAUDE_WORD_WIDTH: (18 * constants.CLAUDE_WORD_ASPECT).toFixed(1),
     },
+    // The gate attributes scripts/css.mjs checks and stamps on the syntax tree.
+    gates: {
+      composer: constants.COMPOSER_ATTR,
+      palette: { attribute: PALETTE_ATTR, claude: PALETTE_CLAUDE, host: PALETTE_HOST },
+      typeface: { attribute: TYPEFACE_ATTR, claude: TYPEFACE_CLAUDE, host: TYPEFACE_HOST },
+    },
     ...pick(['CRAB_SHEETS', 'DEEPY_SHEETS', 'PREF_DEFAULTS']),
   }
 })()
-
-/** Marker delimiting the region of a stylesheet the composer preference gates. */
-const COMPOSER_GATE_MARKER = '/* @composer-gate */'
-/** The selector root every skin rule hangs off; the gate is stamped onto it. */
-const SELECTOR_ROOT = 'body[data-dsh-claude-style]'
-
-/**
- * Stamp the composer gate onto every rule below the `@composer-gate` marker.
- *
- * The "Composer restyle" preference decides which surfaces the skin may
- * repaint, and both surfaces are mutually exclusive per view — the new
- * conversation page renders the hero composer, a session renders the inline
- * one — so the decision is page-level and one attribute on `<body>` carries it.
- * That keeps this a per-rule stamp rather than a selector rewrite: every rule
- * below the marker is turned on and off together, and the skin decides whether
- * the page on screen is a surface the preference covers.
- *
- * Lines inside comments are skipped, and a rule that carries the root but no
- * gate after the pass is a hard error — a silently ungated rule would ignore
- * the preference.
- *
- * @param file - stylesheet name, for diagnostics.
- * @param text - stylesheet source (LF-normalised).
- * @returns the gated source.
- */
-function gateComposerScope(file, text) {
-  const markerAt = text.indexOf(COMPOSER_GATE_MARKER)
-  if (markerAt === -1) throw new Error(`build: src/${file} is missing the ${COMPOSER_GATE_MARKER} marker`)
-  const gate = `[%%COMPOSER_ATTR%%]`
-  const head = text.slice(0, markerAt + COMPOSER_GATE_MARKER.length)
-  const body = text.slice(markerAt + COMPOSER_GATE_MARKER.length)
-
-  let inComment = false
-  let stamped = 0
-  const out = body.split('\n').map((line) => {
-    if (inComment) {
-      if (line.includes('*/')) inComment = false
-      return line
-    }
-    const commentAt = line.indexOf('/*')
-    if (commentAt !== -1 && !line.includes('*/', commentAt)) {
-      inComment = true
-      return line
-    }
-    // A selector line starts a block (`{`) or continues a selector list (`,`).
-    if (!/[,{]\s*$/.test(line) || !line.includes(SELECTOR_ROOT)) return line
-    stamped += 1
-    return line.split(SELECTOR_ROOT).join(SELECTOR_ROOT + gate)
-  })
-
-  const gated = out.join('\n')
-  if (stamped === 0) throw new Error(`build: src/${file} has no rules below ${COMPOSER_GATE_MARKER}`)
-  const missed = gated
-    .split('\n')
-    .filter((line) => /[,{]\s*$/.test(line) && line.includes(SELECTOR_ROOT) && !line.includes(gate))
-  if (missed.length > 0) {
-    throw new Error(`build: src/${file} left ${missed.length} rule(s) ungated: ${missed[0].trim().slice(0, 80)}`)
-  }
-  return head + gated
-}
-
-/** A stylesheet with its comments blanked in place, so offsets still give the right line. */
-function blankComments(text) {
-  return text.replace(/\/\*[\s\S]*?\*\//g, (comment) => comment.replace(/[^\n]/g, ' '))
-}
-
-/** A selector list's members: split at the commas outside any `(` / `[`. */
-function splitSelectorList(list) {
-  const parts = []
-  let depth = 0
-  let from = 0
-  for (let i = 0; i < list.length; i++) {
-    const ch = list[i]
-    if (ch === '(' || ch === '[') depth++
-    else if (ch === ')' || ch === ']') depth--
-    else if (ch === ',' && depth === 0) {
-      parts.push(list.slice(from, i).trim())
-      from = i + 1
-    }
-  }
-  parts.push(list.slice(from).trim())
-  return parts
-}
-
-/**
- * Hold every write of a host token to its gate, and every private token the
- * Claude choice defines to an alias under the host choice.
- *
- * A `--dsw-font-*` declaration must sit in a rule whose every selector carries
- * %%TYPEFACE_CLAUDE%%; any other `--dsw-*` declaration in one that carries
- * %%PALETTE_CLAUDE%%. Under "follow the host" those rules drop out and the
- * host's tokens (or another theme plugin's) stand. The private tokens those
- * rules define are recorded in `names`, together with the ones the
- * %%PALETTE_HOST%% / %%TYPEFACE_HOST%% rules alias, for checkTokenAliases.
- */
-function checkTokenGates(file, text, names) {
-  const source = blankComments(text)
-  const declaration = /(?<![\w(-])(--[A-Za-z0-9-]+)\s*:/g
-  for (const match of source.matchAll(declaration)) {
-    const name = match[1]
-    const open = source.lastIndexOf('{', match.index)
-    if (open === -1) continue
-    const start = Math.max(source.lastIndexOf('}', open), source.lastIndexOf('{', open - 1)) + 1
-    const selectors = splitSelectorList(source.slice(start, open))
-    const every = (token) => selectors.every((selector) => selector.includes(token))
-    const line = source.slice(0, match.index).split('\n').length
-    if (name.startsWith('--dsw-font-')) {
-      if (!every('%%TYPEFACE_CLAUDE%%')) throw new Error(`build: src/${file}:${line} writes ${name} outside the %%TYPEFACE_CLAUDE%% gate`)
-    } else if (name.startsWith('--dsw-')) {
-      if (!every('%%PALETTE_CLAUDE%%')) throw new Error(`build: src/${file}:${line} writes ${name} outside the %%PALETTE_CLAUDE%% gate`)
-    }
-    if (!name.startsWith('--dsh-claude-')) continue
-    const typeface = name.startsWith('--dsh-claude-font-')
-    if (every(typeface ? '%%TYPEFACE_CLAUDE%%' : '%%PALETTE_CLAUDE%%')) names.claude.add(name)
-    if (every(typeface ? '%%TYPEFACE_HOST%%' : '%%PALETTE_HOST%%')) names.host.add(name)
-  }
-}
-
-/** Every private token the Claude choice defines needs its alias under the host choice. */
-function checkTokenAliases(names) {
-  for (const name of names.claude) {
-    if (!names.host.has(name)) throw new Error(`build: ${name} is defined under the Claude palette or typeface but has no alias under the host's`)
-  }
-}
-
-/**
- * Refuse a `:has()` that is not in its selector's last compound.
- *
- * `A:has(B) C` (and `body:not(:has(B)) C`) makes the browser re-match every
- * descendant of every A on each DOM change anywhere below it: measured at
- * 7–13ms of style recalculation per changed frame for a single such rule on a
- * conversation page, where the whole stylesheet without them costs 1.6ms. In
- * the last compound (`A:has(B)`, `A :has(B)`) it costs a fraction of a
- * millisecond. What such a rule needs is a mark the skin's pass writes — the
- * view tabs, the draft state — or a selector that reads the state going down.
- *
- * @param file - stylesheet name, for diagnostics.
- * @param text - stylesheet source (LF-normalised).
- */
-function checkHasPlacement(file, text) {
-  const source = blankComments(text)
-  let from = 0
-  for (;;) {
-    const at = source.indexOf(':has(', from)
-    if (at === -1) return
-    from = at + 5
-    // Past the :has() argument.
-    let i = at + 4
-    let depth = 0
-    for (; i < source.length; i++) {
-      if (source[i] === '(') depth++
-      else if (source[i] === ')' && --depth === 0) { i++; break }
-    }
-    // Past the rest of its compound; a `)` with nothing open closes an
-    // enclosing :not( / :is( and belongs to the same compound.
-    let nest = 0
-    for (; i < source.length; i++) {
-      const ch = source[i]
-      if (ch === '(' || ch === '[') nest++
-      else if (ch === ')' || ch === ']') { if (nest > 0) nest-- }
-      else if (nest === 0 && /[\s,{>~+]/.test(ch)) break
-    }
-    while (i < source.length && /\s/.test(source[i])) i++
-    if (source[i] === '{' || source[i] === ',') continue
-    const line = source.slice(0, at).split('\n').length
-    throw new Error(`build: src/${file}:${line} has a :has() followed by a combinator; mark the element from the skin's pass instead`)
-  }
-}
 
 /**
  * Brand marks ship as runtime-inlined data URIs (the DSH loader exposes no
@@ -519,16 +364,6 @@ function loadCombines() {
     out[id] = { svg, word: word[1] }
   }
   if (Object.keys(out).length === 0) throw new Error('build: src/assets/icons/combine/ holds no lockups; run scripts/fetch-lobe-combines.py')
-  return out
-}
-
-/** Substitute %%TOKEN%% placeholders in one stylesheet; throws on leftovers. */
-function substitute(file, text, tokens) {
-  const out = text.replace(/%%([A-Z_]+)%%/g, (match, name) => {
-    if (!(name in tokens)) throw new Error(`build: unknown token %%${name}%% in src/${file}`)
-    return tokens[name]
-  })
-  if (out.includes('%%')) throw new Error(`build: unsubstituted token remains in src/${file}`)
   return out
 }
 
@@ -756,19 +591,9 @@ async function main() {
   const tokens = { ...CONSTANTS.tokens, ...loadSvgAssets() }
   const combines = loadCombines()
 
-  const tokenNames = { claude: new Set(), host: new Set() }
-  const cssText = sheets
-    .map((fileDef) => {
-      const file = fileDef.file
-      const gated = fileDef.gate === true
-      let text = fs.readFileSync(path.join(SRC, file), 'utf8').replace(/\r\n/g, '\n')
-      checkHasPlacement(file, text)
-      checkTokenGates(file, text, tokenNames)
-      if (gated) text = gateComposerScope(file, text)
-      return substitute(file, text, tokens).replace(/\n+$/, '')
-    })
-    .join('\n\n')
-  checkTokenAliases(tokenNames)
+  const tokenDoc = loadTokens(SRC)
+  const cssText = buildStylesheet({ sheets, srcDir: SRC, tokens, tokenDoc, gates: CONSTANTS.gates })
+  if (writeTokenTable(STYLE_GUIDE, tokenDoc)) console.log('built docs/STYLE.md token table from src/theme/tokens.json')
 
   // Deepy sheet stamps: content hashes of the sheets, for the browser half's
   // vector cache keys (planDeepySheets).
