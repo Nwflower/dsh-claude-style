@@ -9,7 +9,10 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
-    "types": []
+    "types": [],
+    "paths": {
+      "@dsh-claude-style/contracts/*": ["./packages/contracts/src/*"]
+    }
   },
-  "include": ["src"]
+  "include": ["src", "packages/contracts/src"]
 }

@@ -1,4 +1,4 @@
-import { COMPOSER_SELECTOR } from '../contracts/dom'
+import { COMPOSER_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { SCROLL_KEYS } from './chat-dom'
 
 /**

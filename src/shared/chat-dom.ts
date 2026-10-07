@@ -1,4 +1,4 @@
-import { CHAT_FLOW_SELECTOR, CONVERSATION_SCROLL_SELECTOR, FOLLOW_THRESHOLD_PX } from '../contracts/dom'
+import { CHAT_FLOW_SELECTOR, CONVERSATION_SCROLL_SELECTOR, FOLLOW_THRESHOLD_PX } from '@dsh-claude-style/contracts/dom'
 
 /**
  * The chat area's DOM helpers: the three reads the ported chat interactions and

@@ -1,27 +1,31 @@
 /**
- * ts-module.cjs — load one of src/'s TypeScript modules into a Node process.
+ * ts-module.cjs — load one TypeScript module of this repository into a Node process.
  *
  * The build reads the host contract (D44) and the token data as data, and the
  * end-to-end lane runs the same table against a live page (D45); both need the
  * module's exports without a second compiler setup. esbuild is already the
  * bundler, so it does the transform and the relative imports are resolved here.
+ *
+ * Paths are given from the repository root, so a module that has moved into a
+ * package (D46) is loaded by its own path.
  */
 'use strict'
 const path = require('node:path')
 const vm = require('node:vm')
 const esbuild = require('esbuild')
 
-const SRC = path.resolve(__dirname, '..', 'src')
+const ROOT = path.resolve(__dirname, '..')
+const SRC = path.join(ROOT, 'src')
 
 /**
- * Evaluate one module under src/ and return its exports.
+ * Evaluate one module of this repository and return its exports.
  *
- * @param file - src/-relative module path, extension included.
+ * @param file - repository-relative module path, extension included.
  * @returns the module's exports object.
  */
 function loadModule(file) {
   const { outputFiles } = esbuild.buildSync({
-    entryPoints: [path.join(SRC, file)],
+    entryPoints: [path.join(ROOT, file)],
     bundle: true,
     format: 'cjs',
     platform: 'neutral',
@@ -33,4 +37,4 @@ function loadModule(file) {
   return module.exports
 }
 
-module.exports = { loadModule, SRC }
+module.exports = { loadModule, ROOT, SRC }

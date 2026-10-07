@@ -1,7 +1,7 @@
 import { AUTO_POPOVER_ALL, AUTO_POPOVER_OFF, AUTO_POPOVER_SCOPES, BRAND_ATTR, BRAND_CLAUDE, BRAND_DEEPSEEK, BRAND_DEEPSEEK_LEGACY, COMPOSER_ATTR, FOOTER_ATTR, MASCOT_ATTR, MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MODEL_OFFICIAL_GROUP, MOTION_ATTR, MOTION_FULL, MOTION_REDUCED, PACKAGE_NAME, PALETTE_ATTR, PREF_CHOICES, PREF_DEFAULTS, PROVIDER_ID_MAX, QUICK_PROVIDERS_MAX, SETTINGS_ENTRY_FALLBACK, TYPEFACE_ATTR, USERNAME_MAX } from '../constants'
 import type { Prefs } from '../constants'
 import type { HostContext } from './host'
-import type { HostConfigForm, HostConfigFormsService } from '../contracts/services'
+import type { HostConfigForm, HostConfigFormsService } from '@dsh-claude-style/contracts/services'
 import { notifyAll } from '../shared/notify'
 
 /**

@@ -6,7 +6,7 @@ import { buildElement } from '../../shared/dom'
 import { POPOVER_CHECK_SVG, buildPopoverItem } from '../../shared/popover'
 import type { createHoverIntent } from '../../shared/popover'
 import type { HostContext } from '../../core/host'
-import type { HostModelEntry, HostModelGroup } from '../../contracts/services'
+import type { HostModelEntry, HostModelGroup } from '@dsh-claude-style/contracts/services'
 
 /**
  * Model picker rows: the row/cell builders and the two level-1 list

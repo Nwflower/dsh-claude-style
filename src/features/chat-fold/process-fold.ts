@@ -2,7 +2,7 @@ import { subscribeMutations } from '../../core/bus'
 import { requestFrame } from '../../core/frame'
 import { beginChatFoldToggle, endChatFoldToggle, isChatFoldToggle } from './fold-toggle'
 import { writeScroll } from '../../shared/scroll-owner'
-import { CONVERSATION_SCROLL_SELECTOR, FOLLOW_THRESHOLD_PX, PROCESS_BODY_SELECTOR, PROCESS_EXPANDED_MODE_ATTRIBUTE, PROCESS_GROUP_SELECTOR, RUNNING_STATE, SHIMMER_SELECTOR } from '../../contracts/dom'
+import { CONVERSATION_SCROLL_SELECTOR, FOLLOW_THRESHOLD_PX, PROCESS_BODY_SELECTOR, PROCESS_EXPANDED_MODE_ATTRIBUTE, PROCESS_GROUP_SELECTOR, RUNNING_STATE, SHIMMER_SELECTOR } from '@dsh-claude-style/contracts/dom'
 
 /**
  * A running process group opens by default and folds back once the piece of

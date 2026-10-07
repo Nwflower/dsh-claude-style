@@ -1,6 +1,6 @@
 import { HDSL_ROUTE, HDSL_SKIN_ROUTE, USERNAME_MAX, USERNAME_ROUTE } from '../constants'
-import { CHAT_FLOW_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_PLACEHOLDER_SELECTOR, COMPOSER_SELECTOR, COMPOSER_STACK_SELECTOR, COMPOSER_STATS_SELECTOR, COMPOSER_STAT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, FOOT_AREA_SELECTOR, PERMISSION_TRIGGER_SELECTOR, TURN_PROCESS_SELECTOR } from '../contracts/dom'
-import type { HostAssistantStep, HostChatSnapshot, HostChatTarget, HostSession, HostSessionsService, HostTurn, HostUiConversationService, HostUiSessionService } from '../contracts/services'
+import { CHAT_FLOW_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_PLACEHOLDER_SELECTOR, COMPOSER_SELECTOR, COMPOSER_STACK_SELECTOR, COMPOSER_STATS_SELECTOR, COMPOSER_STAT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, FOOT_AREA_SELECTOR, PERMISSION_TRIGGER_SELECTOR, TURN_PROCESS_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import type { HostAssistantStep, HostChatSnapshot, HostChatTarget, HostSession, HostSessionsService, HostTurn, HostUiConversationService, HostUiSessionService } from '@dsh-claude-style/contracts/services'
 import { readPrefs } from './prefs'
 import { closestFrom } from '../shared/dom'
 import { createHostResource } from '../shared/resource'
@@ -29,7 +29,7 @@ export interface HostContext {
 export type HostValue = any
 
 /** A host locale namespace's translate seat (`locale.bind(namespace)`): a key and its parameters to text. */
-export type { HostText } from '../contracts/services'
+export type { HostText } from '@dsh-claude-style/contracts/services'
 
 /** The scope `inject` opened: disposing it runs the effects registered in it. */
 export interface HostFiber {

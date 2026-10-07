@@ -142,42 +142,42 @@
     "title": { "zh": "Claude Style", "en": "Claude Style" },
     "brandTitle": { "zh": "品牌标识", "en": "Brand mark" },
     "brandDesc": {
-      "zh": "侧栏与首页的品牌标识和配色色系：Claude 为暖色系，DeepSeek 为蓝色系。配色选「跟随宿主」时色系不生效，只换品牌标识。",
+      "zh": "插件提供的品牌标识和配色色系风格。",
       "en": "The brand mark in the sidebar and on the home page, and its colour family: warm for Claude, blue for DeepSeek. While Colours is set to Follow the host, only the mark changes."
     },
     "collapseTitle": { "zh": "折叠侧栏设置区", "en": "Collapse the sidebar settings area" },
     "collapseDesc": {
-      "zh": "把侧栏底部的设置入口收进账户弹层。关闭后侧栏底部恢复原样。",
+      "zh": "将侧栏底部的设置入口收进账户弹层。",
       "en": "Fold the sidebar footer's settings entry into the account popover. Off restores the host's footer."
     },
     "autoPopoverTitle": { "zh": "悬停展开弹层", "en": "Open popovers on hover" },
     "autoPopoverDesc": {
-      "zh": "哪些弹层悬停即展开。「仅账号区」只有侧栏账户弹层；「全部」再加上权限、模型、会话统计和首页的目录与预设。关闭则全部点击展开。",
+      "zh": "本插件提供的哪些弹层悬停时便展开。",
       "en": "Which popovers open on hover. \"Account only\" keeps it to the sidebar account popover; \"All\" adds the permission, model, session-stats and home-page pickers. Off leaves every popover click-to-open."
     },
     "autoPopoverOff": { "zh": "关闭", "en": "Off" },
     "autoPopoverAccount": { "zh": "仅账号区", "en": "Account only" },
     "autoPopoverAll": { "zh": "全部", "en": "All" },
-    "composerTitle": { "zh": "输入区重绘范围", "en": "Composer restyle" },
+    "composerTitle": { "zh": "重绘对话框", "en": "Composer restyle" },
     "composerDesc": {
-      "zh": "重绘输入区的范围：新会话页、对话内或两者。关闭后恢复系统输入区。",
+      "zh": "重绘对话框样式",
       "en": "Which input area the skin restyles: the new-conversation page, the conversation, or both. Off restores the host's composer."
     },
     "homeTitle": { "zh": "首页版面", "en": "Home layout" },
     "homeDesc": {
-      "zh": "新会话页的排布。「经典」为居中大标题与输入卡片；「工作台」标题居左上、输入卡片贴窗口底部，中间显示用量统计。",
+      "zh": "新会话页的排版",
       "en": "The new-conversation page layout. Classic is the centered hero with the input card; Studio moves the greeting to the top left, pins the composer to the bottom and shows usage in between."
     },
     "homeClassic": { "zh": "经典", "en": "Classic" },
     "homeStudio": { "zh": "工作台", "en": "Studio" },
     "pickerTitle": { "zh": "重绘模型选择器", "en": "Redraw the model picker" },
     "pickerDesc": {
-      "zh": "把输入框上的模型菜单换成 Claude 风格的两级弹层。关闭后恢复系统模型菜单。",
+      "zh": "重绘对话框区域的模型菜单。",
       "en": "Replace the composer's model menu with the two-level Claude-style menu. Off restores the host's model menu."
     },
     "quickTitle": { "zh": "快捷供应商", "en": "Quick providers" },
     "quickDesc": {
-      "zh": "勾选的供应商列在模型弹层一级、官方服务之后，供应商之间用横线分隔。已从目录移除的供应商带「已移除」标记留在清单里，取消勾选即可清除。",
+      "zh": "在一级列表展示勾选的供应商。",
       "en": "Picked providers follow the official service in the picker's first level, one rule between providers. A provider removed from the catalog stays in the list marked \"Removed\"; uncheck it to clear it."
     },
     "quickNone": { "zh": "未选择", "en": "None" },
@@ -186,15 +186,15 @@
     "quickRemoved": { "zh": "已移除", "en": "Removed" },
     "usernameTitle": { "zh": "用户名", "en": "Username" },
     "usernameDesc": {
-      "zh": "显示在新会话欢迎语和账号行里的名字。留空时依次使用官方账号昵称、HDSL 启动器昵称、本机系统用户名。",
+      "zh": "用户名会显示在欢迎语和账号行里。",
       "en": "The name shown in the new-conversation greeting and the account row. Leave empty to use the signed-in account name, then the HDSL launcher name, then the local system user."
     },
-    "usernamePlaceholder": { "zh": "自动解析账号或系统用户", "en": "Auto-detect account or host user" },
+    "usernamePlaceholder": { "zh": "自动获取", "en": "Auto-detect account or host user" },
     "brandDeepseek": { "zh": "DeepSeek", "en": "DeepSeek" },
     "brandClaude": { "zh": "Claude", "en": "Claude" },
     "motionTitle": { "zh": "动画效果", "en": "Animation" },
     "motionDesc": {
-      "zh": "「随系统」跟随系统的动画设置；「减弱」把动画停在代表帧；「总是」始终播放。后台任务的进度圈在任何一档都照常转动。",
+      "zh": "「随系统」跟随系统的动画设置；「减弱」把动画停在代表帧；「总是」始终播放。",
       "en": "Follow the system keeps the system's animation setting in charge; Reduced holds animations on their still frame; Always plays them. The background-work ring turns in every setting."
     },
     "motionSystem": { "zh": "随系统", "en": "Follow the system" },
@@ -206,7 +206,7 @@
     "scopeAll": { "zh": "全部", "en": "All" },
     "banLocaleTitle": { "zh": "封号彩蛋语言", "en": "Account-hold easter egg language" },
     "banLocaleDesc": {
-      "zh": "账户保留彩蛋页（点账户弹层顶部的用户名行进入）使用的语言，不跟随界面语言。",
+      "zh": "账户保留彩蛋页（点账户弹层顶部的用户名行进入）使用的语言。",
       "en": "The language of the account-hold easter egg page (open it from the account row at the top of the sidebar footer popover). It does not follow the interface language."
     },
     "banLocaleZh": { "zh": "中文", "en": "中文" },
@@ -218,80 +218,80 @@
     "tabConversation": { "zh": "对话", "en": "Conversation" },
     "paletteTitle": { "zh": "配色", "en": "Colours" },
     "paletteDesc": {
-      "zh": "「Claude」使用本插件的配色；「跟随宿主」把颜色交还给 DSH 和其他主题插件（例如壁纸插件），本插件只保留布局和控件。",
+      "zh": "允许插件修改主题配色，关闭后只保留布局和控件。",
       "en": "Claude uses the skin's own colours; Follow the host leaves the colours to DSH and to other theme plugins (a wallpaper plugin, say), and the skin keeps only its layout and controls."
     },
-    "paletteClaude": { "zh": "Claude", "en": "Claude" },
-    "paletteHost": { "zh": "跟随宿主", "en": "Follow the host" },
+    "paletteClaude": { "zh": "开启", "en": "Claude" },
+    "paletteHost": { "zh": "关闭", "en": "Follow the host" },
     "typefaceTitle": { "zh": "字体", "en": "Typefaces" },
     "typefaceDesc": {
-      "zh": "「Claude」使用 Anthropic 字体（缺少时换用外观相近的 Inter 与 Noto Serif）和 JetBrains Mono 代码字体；「跟随宿主」使用 DSH 或其他插件设定的字体。",
+      "zh": "使用插件提供的字体。",
       "en": "Claude uses the Anthropic faces (or the lookalike Inter and Noto Serif when they are missing) and JetBrains Mono for code; Follow the host keeps the fonts DSH or another plugin sets."
     },
-    "typefaceClaude": { "zh": "Claude", "en": "Claude" },
-    "typefaceHost": { "zh": "跟随宿主", "en": "Follow the host" },
+    "typefaceClaude": { "zh": "开启", "en": "Claude" },
+    "typefaceHost": { "zh": "关闭", "en": "Follow the host" },
     "mascotTitle": { "zh": "吉祥物", "en": "Mascot" },
     "mascotDesc": {
-      "zh": "站在输入框上沿的像素小伙伴，随智能体的工作状态换动画。「跟随品牌」在 Claude 品牌下是像素螃蟹，在 DeepSeek 品牌下是小鲸鱼 Deepy。",
+      "zh": "站在输入框上沿的像素小伙伴。",
       "en": "The pixel companion on the input area's top edge, animated by what the agent is doing. Follow the brand shows the pixel crab under Claude and Deepy the whale under DeepSeek."
     },
-    "mascotBrand": { "zh": "跟随品牌", "en": "Follow the brand" },
-    "mascotCrab": { "zh": "螃蟹", "en": "Crab" },
+    "mascotBrand": { "zh": "自动", "en": "Follow the brand" },
+    "mascotCrab": { "zh": "Clawd", "en": "Crab" },
     "mascotDeepy": { "zh": "Deepy", "en": "Deepy" },
     "mascotOff": { "zh": "关闭", "en": "Off" },
     "mascotScopeTitle": { "zh": "出现位置", "en": "Where it appears" },
     "mascotScopeDesc": {
-      "zh": "吉祥物只在新会话页出现，还是新会话页和对话页都出现。",
+      "zh": "吉祥物出现位置。",
       "en": "The new-conversation page alone, or the new-conversation page and the conversation."
     },
     "mascotScopeHome": { "zh": "首页", "en": "Home" },
     "mascotScopeAll": { "zh": "首页与对话", "en": "Home and conversation" },
     "permissionsTitle": { "zh": "重绘权限控件", "en": "Redraw the permission control" },
     "permissionsDesc": {
-      "zh": "把输入框上的权限菜单换成分段控件，会话统计数字收进上下文弹层。关闭后恢复系统的权限菜单和统计弹窗。",
+      "zh": "使用插件提供的权限菜单样式。",
       "en": "Replace the composer's permission menu with a segmented control and move the session numbers into the context popover. Off restores the host's permission menu and statistics dialogs."
     },
     "searchTitle": { "zh": "侧栏搜索", "en": "Sidebar search" },
     "searchDesc": {
-      "zh": "在侧栏品牌行放一个搜索框，可以搜索会话、项目、插件、Skill 和快捷键。关闭后侧栏品牌行恢复原样。",
+      "zh": "使用插件提供的搜索框功能和逻辑。",
       "en": "A search box in the sidebar's brand row that finds sessions, projects, plugins, Skills and shortcuts. Off restores the host's brand row."
     },
-    "workspaceTitle": { "zh": "进行中 / 已归档视图", "en": "In progress / Archived view" },
+    "workspaceTitle": { "zh": "工作区分栏视图", "en": "In progress / Archived view" },
     "workspaceDesc": {
-      "zh": "把侧栏工作区分成「进行中」和「已归档」两页，已归档页的会话可以恢复或删除。关闭后恢复系统的工作区列表。",
+      "zh": "把侧栏工作区分成「进行中」和「已归档」。",
       "en": "Split the sidebar's workspace section into In progress and Archived; archived conversations can be restored or deleted. Off restores the host's workspace list."
     },
     "turnStatusTitle": { "zh": "轮次状态行", "en": "Turn status line" },
     "turnStatusDesc": {
-      "zh": "把进行中、已停止和失败轮次的状态移到这一轮内容的末尾，显示用时、输出 token 数和当前动作。关闭后恢复系统的轮次状态。",
+      "zh": "把轮次状态从开头移到轮次末尾。",
       "en": "Move the status of a running, stopped or failed turn to the end of the turn's work, with the elapsed time, the output tokens and what the model is doing. Off restores the host's turn status."
     },
     "turnNavTitle": { "zh": "对话导航", "en": "Conversation navigator" },
     "turnNavDesc": {
-      "zh": "鼠标停在对话区右侧那列轮次短横线上时，它会展开成一张列表，每一轮一行，写着开启这一轮的那条消息；滚轮可以上下翻，点一行就跳到那一轮。Alt+↑ 和 Alt+↓ 跳到上一轮或下一轮，跳到的那一轮开头会闪一条短横线。关闭后恢复系统原来的轮次短横线。",
+      "zh": "重绘对话导航区域。",
       "en": "Rest the pointer on the turn marks at the conversation's right edge and they open into a list of every turn, one line each with the message that started it; the wheel scrolls the list and a click jumps to that turn. Alt+↑ and Alt+↓ jump to the previous or the next turn, and the turn you land on is marked with a short line. Off restores the host's turn marks."
     },
     "chatAnimationsTitle": { "zh": "聊天区动画效果", "en": "Chat-area animations" },
     "chatAnimationsDesc": {
-      "zh": "对话区的动画合成一个开关。回答变长时画面跟着新出现的一行往下走，思考和工具输出收在可滚动的框里时也照样跟到底，跟上去是一段平滑的滚动，不是一下跳过去；模型思考时「思考」一行自动展开、结束收起，正在进行的步骤也同样开合，你自己点开或收起一行时高度是一段一段走完的；回答是一个字一个字淡入的，新到的字先很淡，再落到本色；程序内部执行的写入和编辑，行尾标出 +n -m，展开就是改动的行；发出消息时输入框浮起来，一边飞一边收成刚发出的那条气泡。关闭后这几项一起停，恢复系统原来的行为。设置页的「动画效果」选「减弱」时这些动作一并停下。",
+      "zh": "重绘主对话区域的动态效果动画。",
       "en": "The conversation area's animations in one switch. The view follows the newest line as an answer grows — gliding there, and catching up the same way inside a scrolling work log — instead of stopping just short of the bottom; the thinking row opens while the model reasons and folds back when it stops, a running step does the same, and a press rolls a height open or shut; new text fades in as it arrives, faint first and settling to its own colour; a write or edit run from inside a program is shown as a row carrying its +n -m count that opens into the changed lines; and the composer lifts into the message bubble on send. Off stops all of them and the host's own behaviour returns. With Animation set to Reduced they all stand still."
     },
-    "caretTitle": { "zh": "输入框插入符动效", "en": "Composer caret motion" },
+    "caretTitle": { "zh": "光标动画", "en": "Composer caret motion" },
     "caretDesc": {
-      "zh": "输入框里的光标由插件绘制，移动时滑过去，而不是直接跳过去；「只在移动时」只在方向键、点击这类移动上滑，打字时光标瞬时到位。",
+      "zh": "移动光标时平滑移动。",
       "en": "The composer's caret is drawn by the plugin and glides between positions instead of jumping. Explicit moves glides only on an arrow key or a click, and lands instantly while typing."
     },
-    "caretTyping": { "zh": "每一格", "en": "Every move" },
-    "caretMove": { "zh": "只在移动时", "en": "Explicit moves" },
+    "caretTyping": { "zh": "总是", "en": "Every move" },
+    "caretMove": { "zh": "减弱", "en": "Explicit moves" },
     "caretOff": { "zh": "关闭", "en": "Off" },
-    "chatUxManaged": { "zh": "该选项由 dsh-chat-ux 管理", "en": "Managed by dsh-chat-ux" },
-    "viewTabsTitle": { "zh": "对话 / 轨迹标签条", "en": "Chat / Trajectory tabs" },
+    "chatUxManaged": { "zh": "该选项由插件 dsh-chat-ux 管理", "en": "Managed by dsh-chat-ux" },
+    "viewTabsTitle": { "zh": "重绘标签条", "en": "Chat / Trajectory tabs" },
     "viewTabsDesc": {
-      "zh": "重绘对话区顶部的「对话 / 轨迹」标签条，标题那一行放得下时移上去。关闭后恢复系统的标签条。",
+      "zh": "重绘对话区界面的标签条。",
       "en": "Redraw the Chat / Trajectory tab strip at the top of the conversation, lifted onto the title's line when it fits. Off restores the host's tab strip."
     },
     "unavailable": {
-      "zh": "设置存储不可用，改动不会被保存。",
+      "zh": "ERROR : 设置存储服务异常，改动不会被保存。",
       "en": "The settings store is unavailable, so changes will not be saved."
     }
   },
@@ -334,32 +334,20 @@
       "zh": "非对称模型结构，小成本大智能。",
       "en": "Asymmetric architecture: more intelligence, less cost."
     },
-    "claude-opus-4.8": {
-      "zh": "1M 上下文、$5/$25 每百万 token；官网已标为 Legacy。",
-      "en": "1M context at $5/$25 per MTok; now marked Legacy upstream."
-    },
-    "claude-sonnet-5": {
-      "zh": "性能接近 Opus 4.8，$2/$10 每百万 token。",
-      "en": "Performance close to Opus 4.8 at $2/$10 per MTok."
-    },
     "gpt-5.4": {
-      "zh": "面向编程与专业工作，1.05M 上下文、原生 computer use（电脑操控）。",
+      "zh": "面向编程与专业工作的长上下文模型。",
       "en": "For coding and professional work, with a 1.05M-token context and native computer use."
     },
-    "gemini-3.8-flash": {
-      "zh": "面向复杂智能体任务，限时 $0.75/$3.75 每百万 token。",
-      "en": "For complex agentic tasks at scale, with limited-time pricing of $0.75/$3.75 per MTok."
-    },
     "glm-5.3": {
-      "zh": "面向编程与长程自主任务，1M 上下文、128K 输出；仅靠后训练成为最强开放权重编程模型。",
+      "zh": "最强开放权重编程模型之一，拓展智能上界的可及边界。",
       "en": "For coding and long-horizon autonomy: 1M context, 128K output, and post-training alone makes it the most capable open-weight coding model."
     },
     "glm-5.3-flash": {
-      "zh": "原生多模态，320B/18B MoE、1M 上下文、MIT 开源，$0.045/任务。",
+      "zh": "GLM-5系列的首个原生多模态模型。",
       "en": "Natively multimodal, with 320B/18B MoE, 1M context and MIT licensing at $0.045 per task."
     },
     "glm-5.3-flashx": {
-      "zh": "高吞吐版本，推理速度 200 tokens/s。",
+      "zh": "GLM 5.3 flash的高吞吐版本。",
       "en": "A high-throughput variant running at 200 tokens/s."
     },
     "kimi-k3": {
@@ -367,11 +355,11 @@
       "en": "An open-weight 2.8T model for coding and knowledge work."
     },
     "kimi-for-coding": {
-      "zh": "面向长程编程的开放权重智能体模型，1T/32B、256K 上下文。",
+      "zh": "面向长程编程的开放权重智能体模型。",
       "en": "An open-weight agentic coding model for long-horizon work, 1T/32B with 256K context."
     },
     "kimi-for-coding-highspeed": {
-      "zh": "高速版，输出约 180 tokens/s，为常规版的 5–6 倍，单价 2 倍。",
+      "zh": "面向长程编程的开放权重智能体模型高速版。",
       "en": "A high-speed variant at about 180 tokens/s, 5–6x the regular tier, for 2x the price."
     },
     "qwen3.8-max": {
@@ -517,7 +505,7 @@
       "match": "claude.*mythos",
       "note": "Mythos is Fable's unrestricted sibling — Anthropic's own words: Fable is the same underlying model with cybersecurity and biology safeguards added. Access to Mythos is limited to vetted organizations, so its copy leads with the audience rather than the capability.",
       "text": {
-        "zh": "面向网络安全与生物学研究，仅经审核的组织可访问。",
+        "zh": "面向网络安全与生物学研究的可靠模型。",
         "en": "Built for cybersecurity and biology research, with access limited to vetted organizations."
       }
     },
@@ -525,14 +513,14 @@
       "match": "claude.*opus",
       "note": "Family copy stays version-agnostic, so it carries no superlatives: 'strongest' is only true of the current generation and would mislabel an older Opus. Superlatives belong in version-pinned exact entries. It also carries no tier prefix of ours — '旗舰档：' is our positioning, not the model's own line.",
       "text": {
-        "zh": "面向严肃编程与 AI 智能体的混合推理模型。",
+        "zh": "面向复杂编程与 AI 智能体的混合推理模型。",
         "en": "A hybrid reasoning model built for serious coding and AI agents."
       }
     },
     {
       "match": "claude.*sonnet",
       "text": {
-        "zh": "面向实时智能体与高吞吐的混合推理。",
+        "zh": "面向实时智能体与高吞吐的混合推理模型。",
         "en": "Hybrid reasoning for real-time agents and high-volume work."
       }
     },
@@ -572,14 +560,14 @@
     {
       "match": "gpt-oss|oss-\\d",
       "text": {
-        "zh": "开放权重推理模型，Apache 2.0，120B 与 20B 两档，可定制、可自托管。",
+        "zh": "OpenAI 开发的开放权重推理模型。",
         "en": "Open-weight reasoning models, Apache 2.0, in 120B and 20B sizes, customizable and self-hostable."
       }
     },
     { "match": "gpt", "text": { "zh": "支持文本与图像输入、多语言。", "en": "Text and image input, multilingual." } },
 
     {
-      "match": "gemini.*(pro|ultra)",
+      "match": "gemini.*(pro|ultra|Argon)",
       "text": {
         "zh": "面向复杂任务、深度推理与多模态理解。",
         "en": "For complex tasks, deep reasoning and multimodal understanding."

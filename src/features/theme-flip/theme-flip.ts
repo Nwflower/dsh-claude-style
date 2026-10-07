@@ -1,4 +1,4 @@
-import { DARK_THEME_ATTRIBUTE } from '../../contracts/dom'
+import { DARK_THEME_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import { subscribeMutations } from '../../core/bus'
 import { requestFrame } from '../../core/frame'
 

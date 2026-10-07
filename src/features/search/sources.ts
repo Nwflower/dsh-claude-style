@@ -2,8 +2,8 @@ import { SESSION_SEARCH_ROUTE } from '../../constants'
 import { currentSessionId } from '../../core/host'
 import { copyLabel } from '../../core/i18n'
 import type { HostContext, HostValue } from '../../core/host'
-import type { ContentHit, SearchAnswer } from '../../contracts/usage'
-import type { HostBundleListAnswer, HostConversationInput, HostConversationService, HostInventoryAnswer, HostPluginBundle, HostSessionBinding, HostSessionSummary, HostShortcutRow, HostShortcutsService, HostSkill, HostSkillListAnswer, HostSlotsService, HostSlotStore, HostWorkspaceListSnapshot } from '../../contracts/services'
+import type { ContentHit, SearchAnswer } from '@dsh-claude-style/contracts/usage'
+import type { HostBundleListAnswer, HostConversationInput, HostConversationService, HostInventoryAnswer, HostPluginBundle, HostSessionBinding, HostSessionSummary, HostShortcutRow, HostShortcutsService, HostSkill, HostSkillListAnswer, HostSlotsService, HostSlotStore, HostWorkspaceListSnapshot } from '@dsh-claude-style/contracts/services'
 
 /** The kinds of thing the palette lists, and the filter that shows them all. */
 export type SearchKind = 'session' | 'project' | 'plugin' | 'skill' | 'shortcut' | 'action'
@@ -25,7 +25,7 @@ export interface SearchRow {
 }
 
 /** One content hit from the host half's message search: the session, the excerpt, the match within it. */
-export type { ContentHit } from '../../contracts/usage'
+export type { ContentHit } from '@dsh-claude-style/contracts/usage'
 
 /** One section of the palette. */
 export interface SearchSection {

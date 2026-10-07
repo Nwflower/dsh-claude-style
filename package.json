@@ -5,6 +5,9 @@
   "type": "module",
   "main": "host/index.js",
   "icon": "lib/claude-mark.svg",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "build": "node scripts/build.mjs",
     "changelog": "node scripts/changelog.mjs",

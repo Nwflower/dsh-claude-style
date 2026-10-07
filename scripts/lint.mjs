@@ -58,6 +58,7 @@ function decisionNumbers() {
 // 1. The stop line.
 const sources = [
   ...filesUnder(path.join(ROOT, 'src'), ['.ts', '.css']),
+  ...filesUnder(path.join(ROOT, 'packages'), ['.ts', '.css']),
   ...filesUnder(path.join(ROOT, 'host'), ['.js']),
   ...filesUnder(path.join(ROOT, 'scripts'), ['.mjs', '.cjs']),
   ...filesUnder(path.join(ROOT, 'tools'), ['.cjs']),

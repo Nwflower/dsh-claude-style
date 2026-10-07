@@ -211,7 +211,7 @@ function check(name, ok, detail) {
  * @returns one result per entry: `{ id, state, ok, observed }`.
  */
 async function probeContract(page, states, windowMs = 0) {
-  const { HOST_DOM } = loadModule('contracts/table.ts')
+  const { HOST_DOM } = loadModule('packages/contracts/src/table.ts')
   const entries = HOST_DOM.filter((entry) => states.includes(entry.probe.state))
   const frames = windowMs === 0 ? 0 : Math.round(windowMs / 16)
   const deadline = Date.now() + windowMs
@@ -581,7 +581,7 @@ async function main() {
   }
   // The timing table names the scenarios that hold it (D44), so the two lists are
   // checked against each other rather than kept in step by hand.
-  const { E2E_SCENARIOS } = loadModule('contracts/timing.ts')
+  const { E2E_SCENARIOS } = loadModule('packages/contracts/src/timing.ts')
   const known = Object.keys(SCENARIOS)
   const unknown = E2E_SCENARIOS.filter((name) => !known.includes(name))
   const unnamed = known.filter((name) => !E2E_SCENARIOS.includes(name))

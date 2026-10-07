@@ -1,6 +1,6 @@
 import { findChatTarget, readTurnActivity } from '../../core/host'
 import type { HostContext } from '../../core/host'
-import type { HostChatSnapshot, HostChatTarget, HostFeedEntry, HostSessionEvent, HostSessionListSnapshot, HostSessionStatusSnapshot, HostSnapshotSource, HostSubagentEntry } from '../../contracts/services'
+import type { HostChatSnapshot, HostChatTarget, HostFeedEntry, HostSessionEvent, HostSessionListSnapshot, HostSessionStatusSnapshot, HostSnapshotSource, HostSubagentEntry } from '@dsh-claude-style/contracts/services'
 
 /** A state the mascot shows: its name, the animation that plays it, and how much it outranks. */
 export interface MascotLevel {

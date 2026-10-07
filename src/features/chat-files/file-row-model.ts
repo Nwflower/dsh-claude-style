@@ -1,5 +1,5 @@
 import type { HostText } from '../../core/host'
-import type { HostChatBlock } from '../../contracts/services'
+import type { HostChatBlock } from '@dsh-claude-style/contracts/services'
 
 /**
  * The file-change row's derivations, kept apart from its React component

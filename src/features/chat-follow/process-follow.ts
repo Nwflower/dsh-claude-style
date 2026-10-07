@@ -1,5 +1,5 @@
 import { observeSize } from '../../core/bus'
-import { PROCESS_BODY_SELECTOR, PROCESS_CONTENT_SELECTOR, PROCESS_EXPANDED_MODE_ATTRIBUTE } from '../../contracts/dom'
+import { PROCESS_BODY_SELECTOR, PROCESS_CONTENT_SELECTOR, PROCESS_EXPANDED_MODE_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import { easeScrollToEndFor, joinScrollOwner, readerHolds, releaseReader, stopScrollFor } from '../../shared/scroll-owner'
 
 /**

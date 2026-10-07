@@ -1,6 +1,6 @@
 import { requestFrame } from '../../core/frame'
 import { CHAT_ROLLING_ATTR } from '../../constants'
-import { CONVERSATION_SCROLL_SELECTOR, FOLLOW_THRESHOLD_PX, PROCESS_BODY_SELECTOR } from '../../contracts/dom'
+import { CONVERSATION_SCROLL_SELECTOR, FOLLOW_THRESHOLD_PX, PROCESS_BODY_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { handBackFollow, readerMovedSince } from '../../shared/scroll-owner'
 
 /**

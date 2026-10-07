@@ -1,7 +1,7 @@
 import { MODEL_EFFORT_DEFAULT } from '../../constants'
 import { currentSessionId } from '../../core/host'
 import type { HostContext } from '../../core/host'
-import type { HostModelCatalogSnapshot, HostModelDirectory, HostModelEntry, HostModelGroup, HostModelReasoning } from '../../contracts/services'
+import type { HostModelCatalogSnapshot, HostModelDirectory, HostModelEntry, HostModelGroup, HostModelReasoning } from '@dsh-claude-style/contracts/services'
 import { notifyAll } from '../../shared/notify'
 
 /** One provider the catalog lists, with how many models it carries. */

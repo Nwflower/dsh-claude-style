@@ -1,0 +1,10 @@
+{
+  "name": "@dsh-claude-style/contracts",
+  "description": "What both halves of dsh-claude-style share: the host contract, the timing assumptions, and the payloads the two halves exchange",
+  "version": "0.11.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  }
+}

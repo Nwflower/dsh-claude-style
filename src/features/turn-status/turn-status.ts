@@ -3,7 +3,7 @@ import { copyLabel } from '../../core/i18n'
 import { setAttributeIfChanged } from '../../shared/dom'
 import { formatCompactTokens, pad2 } from '../../shared/format'
 import type { HostContext, HostText, HostValue } from '../../core/host'
-import type { HostChatSnapshot, HostTurn } from '../../contracts/services'
+import type { HostChatSnapshot, HostTurn } from '@dsh-claude-style/contracts/services'
 import type { Ui } from '../../core/scheduler'
 
 /** What the status line says about a turn. */

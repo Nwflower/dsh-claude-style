@@ -1,5 +1,5 @@
 import type { HostContext } from '../../core/host'
-import type { HostModelEntry } from '../../contracts/services'
+import type { HostModelEntry } from '@dsh-claude-style/contracts/services'
 import { localized } from '../../core/i18n'
 import { modelCopy, normalizeModelId } from '../../core/model-copy'
 import { textOf } from '../../shared/format'

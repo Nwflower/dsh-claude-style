@@ -1,9 +1,9 @@
 import { observeSize } from '../../core/bus'
 import { AUTO_POPOVER_ALL } from '../../constants'
 import { conversationSessionId, findComposerStats, findConversationSession } from '../../core/host'
-import { COMPOSER_STAT_SELECTOR } from '../../contracts/dom'
+import { COMPOSER_STAT_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import type { HostContext, HostText } from '../../core/host'
-import type { HostSessionStatsProjection, HostSnapshotSource, HostTokenUsageProjection } from '../../contracts/services'
+import type { HostSessionStatsProjection, HostSnapshotSource, HostTokenUsageProjection } from '@dsh-claude-style/contracts/services'
 
 /** One row of the block: a label and its figure. */
 interface StatsRow {

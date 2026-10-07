@@ -1,6 +1,6 @@
 import { setAccountIdentity } from '../../core/host'
 import type { HostContext, HostFiber } from '../../core/host'
-import type { HostAccountAnswer, HostAccountFrame, HostAccountService, HostStream, HostStreamStep } from '../../contracts/services'
+import type { HostAccountAnswer, HostAccountFrame, HostAccountService, HostStream, HostStreamStep } from '@dsh-claude-style/contracts/services'
 
 /**
  * The signed-in account, when the desktop has one: `remote.account.getProfile()`

@@ -1,4 +1,4 @@
-import { COMPOSER_SCROLL_SELECTOR } from '../../contracts/dom'
+import { COMPOSER_SCROLL_SELECTOR } from '@dsh-claude-style/contracts/dom'
 
 /**
  * The send flight's capture, ported from dsh-chat-ux: everything taken off the

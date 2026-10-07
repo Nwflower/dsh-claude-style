@@ -164,7 +164,7 @@ const FACTORY_CLOSE = `    return module.exports
  * and the preference defaults the build checks.
  */
 const CONSTANTS = (() => {
-  const constants = loadModule('constants.ts')
+  const constants = loadModule('src/constants.ts')
   const pick = (names) => Object.fromEntries(names.map((name) => {
     if (constants[name] === undefined) throw new Error(`build: src/constants.ts exports no ${name}`)
     return [name, constants[name]]
@@ -197,9 +197,7 @@ const CONSTANTS = (() => {
   }
 })()
 
-/** The host contract's own modules: data and types, so they stay out of the bundle (D44). */
-const CONTRACT_FILES = ['contracts/table.ts', 'contracts/timing.ts', 'contracts/services.ts', 'contracts/usage.ts']
-/** The page states and check kinds src/contracts/table.ts records (D44, D45). */
+/** The page states and check kinds packages/contracts/src/table.ts records (D44, D45). */
 const PROBE_STATES = new Set(['any', 'hero', 'sending', 'streaming', 'conversation', 'menu', 'dark'])
 const PROBE_KINDS = new Set(['selector', 'attribute', 'property', 'global', 'value', 'rail-geometry', 'none'])
 
@@ -357,7 +355,7 @@ function checkListed(bundled, sheets) {
   })
   for (const file of walk('')) {
     if (file.endsWith('.css') && !listed.has(file)) throw new Error(`build: src/${file} is in no list; add it to its feature's manifest or to THEME_SHEETS`)
-    if (file.endsWith('.manifest.ts') || file.endsWith('.test.ts') || file.endsWith('.d.ts') || CONTRACT_FILES.includes(file)) continue
+    if (file.endsWith('.manifest.ts') || file.endsWith('.test.ts') || file.endsWith('.d.ts')) continue
     if (file.endsWith('.ts') && !bundled.has(file)) throw new Error(`build: src/${file} is imported by no module the bundle reaches`)
   }
 }
@@ -478,8 +476,8 @@ function checkCycles(metafile) {
  * @returns the table, for the build log.
  */
 function checkContracts(manifests) {
-  const literals = loadModule('contracts/dom.ts')
-  const { HOST_DOM: table } = loadModule('contracts/table.ts')
+  const literals = loadModule('packages/contracts/src/dom.ts')
+  const { HOST_DOM: table } = loadModule('packages/contracts/src/table.ts')
   if (!Array.isArray(table) || table.length === 0) throw new Error('build: src/contracts/table.ts exports no HOST_DOM')
   const listed = new Set()
   for (const entry of table) {
@@ -527,7 +525,7 @@ function checkContracts(manifests) {
  * would notice it changing.
  */
 function checkTiming() {
-  const { E2E_SCENARIOS, HOST_TIMING } = loadModule('contracts/timing.ts')
+  const { E2E_SCENARIOS, HOST_TIMING } = loadModule('packages/contracts/src/timing.ts')
   if (!Array.isArray(HOST_TIMING) || HOST_TIMING.length === 0) throw new Error('build: src/contracts/timing.ts exports no HOST_TIMING')
   const scenarios = new Set(E2E_SCENARIOS)
   const seen = new Set()

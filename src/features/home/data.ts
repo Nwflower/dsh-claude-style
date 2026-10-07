@@ -3,8 +3,8 @@ import { activeLocale, copyLabel } from '../../core/i18n'
 import { pad2 } from '../../shared/format'
 import { notifyAll } from '../../shared/notify'
 import type { HostContext } from '../../core/host'
-import type { HostRemoteListAnswer, HostSessionRow } from '../../contracts/services'
-import type { UsageAnswer, UsageDay, UsageModel, UsageReport, UsageTotals } from '../../contracts/usage'
+import type { HostRemoteListAnswer, HostSessionRow } from '@dsh-claude-style/contracts/services'
+import type { UsageAnswer, UsageDay, UsageModel, UsageReport, UsageTotals } from '@dsh-claude-style/contracts/usage'
 
 /**
  * The roll-up store's snapshot: the route's last answer (the host half's

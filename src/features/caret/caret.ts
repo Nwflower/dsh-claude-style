@@ -4,7 +4,7 @@ import { requestFrame } from '../../core/frame'
 import { readPrefs, subscribePrefs } from '../../core/prefs'
 import { caretClipToField, caretMeasurePlain, caretMeasureRich } from './caret-measure'
 import type { CaretBox } from './caret-measure'
-import { COMPOSER_INPUT_SELECTOR, COMPOSER_TEXTAREA_SELECTOR } from '../../contracts/dom'
+import { COMPOSER_INPUT_SELECTOR, COMPOSER_TEXTAREA_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import type { HostContext } from '../../core/host'
 import type { Ui } from '../../core/scheduler'
 

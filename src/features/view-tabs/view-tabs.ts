@@ -1,4 +1,4 @@
-import { WINDOWS_TITLEBAR_ATTRIBUTE } from '../../contracts/dom'
+import { WINDOWS_TITLEBAR_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import { createStamp } from '../../shared/dom'
 import { createSlidingPill } from '../../shared/sliding-pill'
 import type { HostContext } from '../../core/host'

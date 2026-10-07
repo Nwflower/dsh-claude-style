@@ -8,7 +8,7 @@ import { removeStrayNodes } from '../../shared/popover'
 import type { HostAnswer } from '../../shared/resource'
 import { createSlidingPill } from '../../shared/sliding-pill'
 import type { HostContext, HostValue } from '../../core/host'
-import type { HostSessionsService, HostWorkspacesService } from '../../contracts/services'
+import type { HostSessionsService, HostWorkspacesService } from '@dsh-claude-style/contracts/services'
 import type { Ui } from '../../core/scheduler'
 
 /**

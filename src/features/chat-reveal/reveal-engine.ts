@@ -1,7 +1,7 @@
 import { subscribeMutations } from '../../core/bus'
 import { requestFrame } from '../../core/frame'
 import { isChatFoldToggle } from '../chat-fold/fold-toggle'
-import { STREAMING_ATTRIBUTE, STREAMING_SELECTOR } from '../../contracts/dom'
+import { STREAMING_ATTRIBUTE, STREAMING_SELECTOR } from '@dsh-claude-style/contracts/dom'
 
 /**
  * The token reveal's engine, ported from dsh-chat-ux: new characters arrive

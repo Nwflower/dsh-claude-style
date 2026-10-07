@@ -5,7 +5,7 @@ import { buildElement, closestFrom, setAttributeIfChanged } from '../../shared/d
 import { POPOVER_CLOSE_DELAY, POPOVER_OPEN_DELAY, buildPopoverItem, closeOtherPopovers, createHoverIntent, positionAnchoredPopover, registerPopover, removeStrayNodes, setMenuPopoverOpen, unregisterPopover } from '../../shared/popover'
 import { createSlidingPill } from '../../shared/sliding-pill'
 import type { HostContext, HostFiber } from '../../core/host'
-import type { HostPermissionCatalogAnswer, HostPermissionOption } from '../../contracts/services'
+import type { HostPermissionCatalogAnswer, HostPermissionOption } from '@dsh-claude-style/contracts/services'
 import type { Ui } from '../../core/scheduler'
 
 export function install(ctx: HostContext, ui: Ui) {
