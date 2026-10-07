@@ -10,10 +10,12 @@
  * release the same assembly becomes the version's section and the files are
  * cleared.
  *
- * Usage: node scripts/changelog.mjs [--check | --release <version> [--date <YYYY-MM-DD>]]
+ * Usage: node scripts/changelog.mjs [--check | --release <version> [--date <YYYY-MM-DD>] | --notes <version>]
  *        --check writes nothing and fails when the committed section differs.
  *        --release turns the pending changes into the version's section, puts it
  *        above the older ones, and clears docs/changes/.
+ *        --notes prints a released version's section without its heading: the
+ *        body of that version's GitHub Release.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -99,7 +101,15 @@ const changelog = fs.readFileSync(FILE, 'utf8')
 const { start, body: currentSection, rest } = split(changelog)
 const built = section(fragments)
 
-if (process.argv.includes('--check')) {
+if (process.argv.includes('--notes')) {
+  const version = process.argv[process.argv.indexOf('--notes') + 1]
+  const heading = `## [${version}] - `
+  const at = changelog.indexOf(`\n${heading}`)
+  if (version === undefined || at === -1) throw new Error(`changelog: CHANGELOG.md has no "${heading}" section`)
+  const from = changelog.indexOf('\n', at + 1) + 1
+  const next = changelog.indexOf('\n## [', from)
+  process.stdout.write(`${changelog.slice(from, next === -1 ? changelog.length : next).trim()}\n`)
+} else if (process.argv.includes('--check')) {
   if (currentSection !== built) {
     throw new Error('changelog: CHANGELOG.md\'s [Unreleased] section is not what docs/changes/ says; run `npm run changelog`')
   }

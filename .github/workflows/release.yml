@@ -2,18 +2,29 @@ name: Release
 
 # A release starts from a tag the maintainer pushes: the version's CHANGELOG
 # section and the bumped package.json are already in that commit. The job runs
-# the gates again, publishes the package to npm, and writes the same files to
-# the `dist` branch so a git install needs no build (D47).
+# the gates again, writes the same files npm gets to the `dist` branch so a git
+# install needs no build (D47), publishes the package to npm and opens the
+# GitHub Release with the version's CHANGELOG section.
+
 on:
   push:
     tags: ['v*']
 
+# contents: the dist branch, the moved tag and the GitHub Release (D47).
+# id-token: what npm's trusted publishing exchanges for a one-time publish
+# token, so no npm secret is stored.
 permissions:
   contents: write
+  id-token: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -23,13 +34,64 @@ jobs:
           node-version: 24
           cache: npm
           registry-url: https://registry.npmjs.org
+      # Trusted publishing needs npm 11.5.1 or later.
+      - run: npm install --global npm@^11.5.1
+      - name: Check the tag names the package version
+        id: version
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "v${version}" != "${GITHUB_REF_NAME}" ]; then
+            echo "::error title=Release::tag ${GITHUB_REF_NAME} does not name package.json's version ${version}"
+            exit 1
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
       - run: npm ci
+      - run: npm run lint
+      - run: npm run features:check
       - run: npm run docs:check
       - run: npm run changelog:check
+      - run: npm run build
       - run: npm test
       - run: npm run smoke
-      # The same build npm gets: `npm pack` builds through prepublishOnly.
-      - run: node scripts/dist-branch.mjs --push
-      - run: npm publish --access public
+      # A rerun carries on from where the last run stopped: npm refuses a version
+      # twice, and a tag already on the dist head means the branch went out.
+      - name: Read what is already out
+        id: state
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if npm view "dsh-claude-style@${VERSION}" version > /dev/null 2>&1; then published=true; else published=false; fi
+          tagged="$(git rev-parse "refs/tags/v${VERSION}^{commit}")"
+          dist="$(git rev-parse --verify --quiet refs/remotes/origin/dist || true)"
+          if [ "${tagged}" = "${dist}" ]; then packaged=true; else packaged=false; fi
+          echo "published=${published}" >> "$GITHUB_OUTPUT"
+          echo "packaged=${packaged}" >> "$GITHUB_OUTPUT"
+          echo "npm has ${VERSION}: ${published}; the tag is on the dist head: ${packaged}"
+      # The same build npm gets: `npm pack` builds through prepublishOnly.
+      - name: Write the dist branch and move the tag
+        if: steps.state.outputs.packaged != 'true'
+        run: node scripts/dist-branch.mjs --push
+      - name: Publish to npm
+        if: steps.state.outputs.published != 'true'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # npm refuses a prerelease without a dist-tag; it must not become latest.
+          case "${VERSION}" in
+            *-*) npm publish --access public --provenance --tag next ;;
+            *) npm publish --access public --provenance ;;
+          esac
+      - name: Create or update the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          mkdir -p .debug
+          notes=.debug/release-notes.md
+          node scripts/changelog.mjs --notes "${VERSION}" > "${notes}"
+          if gh release view "v${VERSION}" > /dev/null 2>&1; then
+            gh release edit "v${VERSION}" --notes-file "${notes}"
+          else
+            case "${VERSION}" in *-*) prerelease=--prerelease ;; *) prerelease= ;; esac
+            gh release create "v${VERSION}" --verify-tag --title "v${VERSION}" --notes-file "${notes}" ${prerelease}
+          fi
