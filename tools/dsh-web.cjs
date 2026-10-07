@@ -42,6 +42,10 @@ function run(command, options = {}) {
  * @param options.home - the scratch `$DSH_HOME` (created when absent).
  * @param options.profile - the profile to boot.
  * @param options.port - the port; 0 lets the OS pick one.
+ * @param options.patch - loader patch entries (YAML text) written into the
+ *     profile's own patch layer before boot: how a lane points the host's model
+ *     adapter at the scripted service (tools/mock-llm.cjs, D45).
+ * @param options.env - extra environment for the host process.
  * @param options.timeoutMs - how long to wait for the printed URL.
  * @returns `{ url, home, stop() }`; `stop` ends the host and everything it spawned.
  */
@@ -54,10 +58,17 @@ async function start(options = {}) {
   // Idempotent: the profile is initialized and the checkout linked into it on
   // the first run, and pnpm reports "already up to date" afterwards.
   run(`dsh plugin --profile ${profile} add "${ROOT}"`, { env: { ...process.env, DSH_HOME: home } })
+  // The lane's own entries go into a separate overlay (`--patch`), never into
+  // the profile's `cordis.patch.yml`: that file is the host's user layer, where
+  // the shell persists settings such as the answered onboarding steps, and
+  // overwriting it brings those steps back on every boot.
+  const overlay = path.join(home, `${profile}.lane.patch.yml`)
+  fs.writeFileSync(overlay, `# Written by tools/dsh-web.cjs for this run.\n${options.patch ?? '[]'}\n`)
 
-  const command = `dsh --profile ${profile} --port ${port} --no-open`
+  const env = { ...process.env, DSH_HOME: home, ...options.env }
+  const command = `dsh --profile ${profile} --patch "${overlay}" --port ${port} --no-open`
   const child = spawn(command, {
-    env: { ...process.env, DSH_HOME: home },
+    env,
     stdio: ['ignore', 'pipe', 'pipe'],
     shell: true,
   })
@@ -123,7 +134,37 @@ async function waitForSkin(page, timeoutMs = 30000) {
   await page.waitForFunction(() => document.body.hasAttribute('data-dsh-claude-style'), undefined, { timeout: timeoutMs })
 }
 
-module.exports = { start, openPage, waitForSkin, DEFAULT_HOME }
+/**
+ * Close the shell's own first-run overlays so a lane can reach the composer: a
+ * fresh `$DSH_HOME` opens them in turn (the preview notice, then the credentials
+ * form) behind a full-page mask that takes the pointer events aimed at the page
+ * below.
+ *
+ * The shell ignores Escape, so each overlay is answered by its first button —
+ * the only one the notice has, and the one that defers the credentials form. A
+ * dialog whose text survives its own button is not going away, and the loop
+ * reports that rather than pressing it again. Clicks are forced: the mask sits
+ * over the page, so the hit test the default click performs never settles.
+ *
+ * @param options.limit - how many overlays to answer before giving up.
+ * @returns whether no dialog is left open.
+ */
+async function dismissOverlays(page, options = {}) {
+  const open = () => page.locator('[role="dialog"]:visible')
+  let answered = null
+  for (let attempt = 0; attempt < (options.limit ?? 6); attempt++) {
+    const dialogs = open()
+    if (await dialogs.count() === 0) return true
+    const text = await dialogs.last().innerText()
+    if (text === answered) return false
+    answered = text
+    await dialogs.last().locator('button:visible').first().click({ force: true })
+    await page.waitForTimeout(600)
+  }
+  return (await open().count()) === 0
+}
+
+module.exports = { start, openPage, waitForSkin, dismissOverlays, DEFAULT_HOME }
 
 if (require.main === module) {
   const args = process.argv.slice(2)
