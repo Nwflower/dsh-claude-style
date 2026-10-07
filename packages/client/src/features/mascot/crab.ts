@@ -2,7 +2,8 @@ import { CRAB_FRAME_MS, CRAB_SHEETS } from './sheets'
 import { createMascotPlayer } from './mascot-player'
 import { CRAB_SHEET_URLS } from 'virtual:dsh-claude-style/generated'
 import type { HostContext } from '../../core/host'
-import type { Ui } from '../../core/scheduler'
+import type { FeatureUi } from '../../core/feature'
+import type manifest from './mascot.manifest'
 
 /**
  * The composer crab — Claude Code's pixel crab — as a mascot character
@@ -22,7 +23,7 @@ import type { Ui } from '../../core/scheduler'
  * @param ui - shared handle table (`ui.composer`).
  * @returns `{ sync, release, onActivity, dispose }`.
  */
-export function createMascotCrab(ctx: HostContext, ui: Ui) {
+export function createMascotCrab(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   return createMascotPlayer(ctx, ui, {
     name: 'crab',
     sheets: CRAB_SHEETS,

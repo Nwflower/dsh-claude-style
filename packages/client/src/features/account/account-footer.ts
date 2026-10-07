@@ -9,7 +9,9 @@ import { createAccountSurface } from './surface'
 import type { AccountSurfaceMode } from './surface'
 import { POPOVER_CLOSE_DELAY, POPOVER_OPEN_DELAY, closeOtherPopovers, createHoverIntent, positionAnchoredPopover, registerPopover, removeStrayNodes, unregisterPopover } from '../../shared/popover'
 import type { HostContext } from '../../core/host'
-import type { CloseReason, FeatureHandle, Ui } from '../../core/scheduler'
+import type { CloseReason, FeatureHandle } from '../../core/scheduler'
+import type { FeatureUi } from '../../core/feature'
+import type manifest from './account-footer.manifest'
 
 /** The account footer's handle (ui.footer): the settings drive and whether its drawer is open. */
 export interface FooterHandle extends FeatureHandle {
@@ -28,7 +30,7 @@ export interface FooterHandle extends FeatureHandle {
  * hold-screen easter egg, the plugin footer entries (account/footer-mirror.ts)
  * and, on the self-built path only, the settings row — are shared.
  */
-export function install(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The marker the stylesheet hangs the host account row's Claude shape on. */
   const HOST_ROW_ATTR = 'data-dsh-claude-account-host-row'
   const profile = createAccountProfile(ctx, () => {

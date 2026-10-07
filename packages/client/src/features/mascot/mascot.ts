@@ -3,7 +3,8 @@ import { readPrefs, resolveMascot } from '../../core/prefs'
 import { createMascotCrab } from './crab'
 import { createMascotWhale } from './whale'
 import type { HostContext } from '../../core/host'
-import type { Ui } from '../../core/scheduler'
+import type { FeatureUi } from '../../core/feature'
+import type manifest from './mascot.manifest'
 
 /**
  * The mascot on the composer: Claude Code's pixel crab
@@ -22,7 +23,7 @@ import type { Ui } from '../../core/scheduler'
  * @param ui - shared handle table.
  * @returns teardown.
  */
-export function install(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const crab = createMascotCrab(ctx, ui)
   const whale = createMascotWhale(ctx, ui)
 

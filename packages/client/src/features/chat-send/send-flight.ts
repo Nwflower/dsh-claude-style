@@ -7,7 +7,8 @@ import { CHAT_FLIGHT_MS, CHAT_LANDING_MS } from './send-shape'
 import { chatSendAlpha, snapshotComposer } from './send-snapshot'
 import { CHAT_FLOW_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, FLOW_KIND_ATTRIBUTE, SUBMISSION_ECHO_SELECTOR, USER_ROW_KIND } from '@dsh-claude-style/contracts/dom'
 import type { HostContext } from '../../core/host'
-import type { Ui } from '../../core/scheduler'
+import type { FeatureUi } from '../../core/feature'
+import type manifest from './send-flight.manifest'
 import type { ComposerSnapshot } from './send-snapshot'
 
 /** A submission's origin: the composer card read at the press. */
@@ -108,7 +109,7 @@ export const CHAT_ROW_SELECTOR = CHAT_USER_ROW_SELECTOR + ', ' + CHAT_ECHO_SELEC
  * @returns teardown: the listeners go, and a flight in progress — a hidden
  *     message included — is settled.
  */
-export function install(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The origin captured last. */
   let origin: SendOrigin | null = null
   /** The echo rows already dealt with; the ones lying on the page at install time are included (a restored session has them). */

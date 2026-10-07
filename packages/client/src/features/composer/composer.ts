@@ -3,7 +3,9 @@ import { DIALOG_TRIGGER_SELECTOR, PHASE_ATTRIBUTE } from '@dsh-claude-style/cont
 import { COMPOSER_STACK, closestComposerCard, findAccessTrigger, findComposerCards, findComposerPlaceholder, findComposerSeat, findConversationScroller } from '../../core/host'
 import { composerRestyleRetired, readPrefs } from '../../core/prefs'
 import type { HostContext } from '../../core/host'
-import type { FeatureHandle, Ui } from '../../core/scheduler'
+import type { FeatureHandle } from '../../core/scheduler'
+import type { FeatureUi } from '../../core/feature'
+import type manifest from './composer.manifest'
 import { closestFrom, setAttributeIfChanged } from '../../shared/dom'
 import { writeScroll } from '../../shared/scroll-owner'
 
@@ -28,7 +30,7 @@ export interface ComposerHandle extends FeatureHandle {
  * press on the inline card focuses the editor, and the transcript follows
  * the card when it changes height.
  */
-export function install(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** Whether the page shows the hero composer, as of the last reading. */
   let hero = false
   /** Whether the composer restyle applies to the page shown, as of the last reading. */

@@ -2,7 +2,8 @@ import { CHAT_REVEAL_ATTR } from '../../constants'
 import { motionReduced, subscribePrefs } from '../../core/prefs'
 import { createChatRevealEngine } from './reveal-engine'
 import type { HostContext } from '../../core/host'
-import type { Ui } from '../../core/scheduler'
+import type { FeatureUi } from '../../core/feature'
+import type manifest from './chat-reveal.manifest'
 
 /**
  * The token reveal's installer, ported from dsh-chat-ux: new characters fade
@@ -20,7 +21,7 @@ import type { Ui } from '../../core/scheduler'
  * @param ui - shared handle table.
  * @returns teardown.
  */
-export function install(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The running engine, or null while the animation choice holds it still or it cannot be drawn. */
   let engine: (() => void) | null = null
 

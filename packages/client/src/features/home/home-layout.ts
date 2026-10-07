@@ -10,7 +10,8 @@ import { createHomeModels } from './models'
 import { createHomeOverview } from './overview'
 import { buildElement } from '../../shared/dom'
 import type { HostContext, HostFiber } from '../../core/host'
-import type { Ui } from '../../core/scheduler'
+import type { FeatureUi } from '../../core/feature'
+import type manifest from './home-layout.manifest'
 
 /**
  * The home page's second layout, and the usage panel that fills it.
@@ -43,7 +44,7 @@ import type { Ui } from '../../core/scheduler'
  * @param ui - shared handle table.
  * @returns teardown.
  */
-export function install(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The host's list slot between the hero greeting and the composer card. */
   const DOCK_SLOT = 'conversation.input.dock'
 

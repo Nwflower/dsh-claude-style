@@ -2,11 +2,13 @@
 /**
  * lint.mjs — the rules that need no build (D48).
  *
- * Three promises the repository makes in prose and a tool can check without
+ * The promises the repository makes in prose and a tool can check without
  * guessing: no source file crosses the stop line, every link in the committed
- * Markdown resolves, and every decision a comment or a document cites exists —
- * numbers are stable and a retired one stays citable (D48). Everything else a
- * tool could enforce is already a build check (D44, D51) or a smoke case.
+ * Markdown resolves, every decision a comment or a document cites exists
+ * (numbers are stable and a retired one stays citable, D48), every repository
+ * path prose names exists, and no feature module reaches past the handles its
+ * manifest declares (D42). Everything else a tool could enforce is already a
+ * build check (D44, D51), the type check or a smoke case.
  *
  * Usage: node scripts/lint.mjs
  */
@@ -133,8 +135,21 @@ for (const file of prose) {
   })
 }
 
+// 5. A feature sees `ui` as FeatureUi of its own manifest: its handle and the
+// handles the manifest `reads` (D42). The whole registry type is the entry's
+// and the scheduler's; a feature module importing it would read any handle
+// with nothing declared.
+const featureModules = filesUnder(path.join(ROOT, 'packages', 'client', 'src', 'features'), ['.ts']).filter((file) => !/\.(test|manifest)\.ts$/.test(file))
+let featureUiChecked = 0
+for (const file of featureModules) {
+  const text = fs.readFileSync(file, 'utf8')
+  if (/\bFeatureUi\b/.test(text)) featureUiChecked += 1
+  if (/^import type \{[^}]*\bUi\b[^}]*\} from '[./]+core\/scheduler'/m.test(text)) problems.push(`${relative(file)}: imports the whole ui registry type; type ui as FeatureUi<typeof manifest> and list the handles it reads in the manifest (D42)`)
+}
+
 // A rule whose pattern stopped matching anything would pass forever: each of the
-// four has to have looked at something.
+// rules has to have looked at something.
+if (featureUiChecked === 0) problems.push('lint: no feature module types ui as FeatureUi — the feature rule matches nothing')
 if (links === 0) problems.push('lint: no Markdown link was examined — the link pattern matches nothing')
 if (citations === 0) problems.push('lint: no decision number was examined — the citation pattern matches nothing')
 if (prosePaths === 0) problems.push('lint: no repository path in prose was examined — the path pattern matches nothing')
@@ -144,5 +159,5 @@ if (problems.length > 0) {
   console.error(`lint: ${problems.length} problems in ${sources.length} sources and ${markdown.length} documents`)
   process.exitCode = 1
 } else {
-  console.log(`lint: ${sources.length} sources, ${markdown.length} documents, ${links} links, ${citations} decision citations and ${prosePaths} prose paths clean (stop line ${MAX_LINES} lines)`)
+  console.log(`lint: ${sources.length} sources, ${markdown.length} documents, ${links} links, ${citations} decision citations, ${prosePaths} prose paths and ${featureUiChecked} feature modules' ui clean (stop line ${MAX_LINES} lines)`)
 }

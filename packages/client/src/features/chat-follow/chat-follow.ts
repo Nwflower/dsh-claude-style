@@ -7,7 +7,8 @@ import { CHAT_CALL_SELECTOR, CHAT_FLOW_SELECTOR, COMPOSER_SELECTOR, CONVERSATION
 import { conversationScroller } from '../../shared/chat-dom'
 import { SCROLL_EASE_LEAD_PX, easeScrollToEndFor, handBackFollow, holdFollowButton, joinScrollOwner, readerHolds, releaseFollowButton, stopScrollFor, submissionHolds, takeBackHostPin } from '../../shared/scroll-owner'
 import type { HostContext } from '../../core/host'
-import type { Ui } from '../../core/scheduler'
+import type { FeatureUi } from '../../core/feature'
+import type manifest from './chat-follow.manifest'
 
 /*
  * Enhanced follow and the capped process group's follow, ported from
@@ -328,7 +329,7 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
  * @param ui - shared handle table.
  * @returns teardown.
  */
-export function install(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const foldBusy = () => ui.chatFold !== undefined && ui.chatFold !== null && ui.chatFold.isBusy()
   const stopGuard = createChatFollowGuard(foldBusy)
   const stopProcess = createChatProcessFollow()

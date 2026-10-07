@@ -3,6 +3,7 @@ import type { FeatureManifest } from '../../core/feature'
 export default {
   id: 'permissions',
   order: 60,
+  reads: ['composer'],
   contracts: ['composer.access-trigger', 'composer.card'],
   pref: 'permissionsControl',
   stylesheets: [{ file: 'permissions.css', rank: 230 }],

@@ -4,6 +4,7 @@ export default {
   id: 'settings',
   handle: 'settingsNav',
   order: 260,
+  reads: ['quickProviders'],
   contracts: [],
   ungated: '设置页本身',
   stylesheets: [{ file: 'settings.css', rank: 310 }],

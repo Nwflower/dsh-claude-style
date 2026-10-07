@@ -4,14 +4,15 @@ import { findComposerCards, findComposerInput, findComposerPlaceholder, findComp
 import { readPrefs } from '../../core/prefs'
 import { removeStrayNodes } from '../../shared/popover'
 import type { HostContext } from '../../core/host'
-import type { Ui } from '../../core/scheduler'
+import type { FeatureUi } from '../../core/feature'
+import type manifest from './copy.manifest'
 
 /** The hero composer's own hint, which the copy animation types back out. */
 const HERO_HINT = 'How can I help you today?'
 /** The conversation composer's hint, which the same animation settles on. */
 const DEFAULT_HINT = 'Type / for commands'
 
-export function install(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** Shipped idle composer hints (zh / en, hero / default) this skin replaces. */
   const HINT_SOURCES = [
     '描述你想要构建的内容',

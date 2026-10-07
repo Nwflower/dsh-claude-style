@@ -7,7 +7,8 @@ import { decideStage, finishStage, freshStage, nextDecisionAt, switchSettles, ta
 import type { MascotPick, PlayMode } from './mascot-stage'
 import { buildElement, createStamp, setAttributeIfChanged } from '../../shared/dom'
 import type { HostContext } from '../../core/host'
-import type { Ui } from '../../core/scheduler'
+import type { FeatureUi } from '../../core/feature'
+import type manifest from './mascot.manifest'
 
 /** One animation's sheet: its frame count, its crop box `[x, y, width, height]` in logical pixels, and its still frame. */
 export interface MascotSheet {
@@ -83,7 +84,7 @@ export interface MascotCharacter {
  *     `createSheets(onReady)` returns `{ ready, failed, paint, dispose }`.
  * @returns `{ sync, release, onActivity, dispose }`.
  */
-export function createMascotPlayer(ctx: HostContext, ui: Ui, character: MascotCharacter) {
+export function createMascotPlayer(ctx: HostContext, ui: FeatureUi<typeof manifest>, character: MascotCharacter) {
   /** Clicks this close in a row are one tickle when four of them land. */
   const TICKLE_GAP_MS = 450
   const TICKLE_CLICKS = 4

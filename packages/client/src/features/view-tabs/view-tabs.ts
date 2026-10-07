@@ -2,7 +2,8 @@ import { WINDOWS_TITLEBAR_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import { createStamp } from '../../shared/dom'
 import { createSlidingPill } from '../../shared/sliding-pill'
 import type { HostContext } from '../../core/host'
-import type { Ui } from '../../core/scheduler'
+import type { FeatureUi } from '../../core/feature'
+import type manifest from './view-tabs.manifest'
 
 /**
  * The conversation view-tab strip's vertical placement — measured, not guessed.
@@ -46,7 +47,7 @@ import type { Ui } from '../../core/scheduler'
  * @param ui - shared handle table.
  * @returns teardown.
  */
-export function install(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const HEADER = '[class*="_header"]:has([class*="_tabs"])'
   /**
    * The title's TEXT, not its row or cluster: `.titleRow` is a flex row and the

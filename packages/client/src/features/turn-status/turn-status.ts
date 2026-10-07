@@ -5,7 +5,8 @@ import { setAttributeIfChanged } from '../../shared/dom'
 import { formatCompactTokens, pad2 } from '../../shared/format'
 import type { HostContext, HostText, HostValue } from '../../core/host'
 import type { HostChatSnapshot, HostTurn } from '@dsh-claude-style/contracts/services'
-import type { Ui } from '../../core/scheduler'
+import type { FeatureUi } from '../../core/feature'
+import type manifest from './turn-status.manifest'
 
 /** What the status line says about a turn. */
 type TurnState = 'live' | 'stopped' | 'failed'
@@ -34,7 +35,7 @@ type OrderMarks = Map<HTMLElement, number>
  * @param ui - shared handle table.
  * @returns teardown.
  */
-export function install(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** On the moved control: `live`, `stopped` or `failed`. */
   const STATE_ATTR = 'data-dsh-claude-turn-state'
   /** On the moved control: the status line's text. */

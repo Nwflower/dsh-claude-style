@@ -9,7 +9,8 @@ import { buildElement, createStamp, setAttributeIfChanged } from '../../shared/d
 import { closeOtherPopovers, registerPopover, unregisterPopover } from '../../shared/popover'
 import { createSlidingPill } from '../../shared/sliding-pill'
 import type { HostContext } from '../../core/host'
-import type { Ui } from '../../core/scheduler'
+import type { FeatureUi } from '../../core/feature'
+import type manifest from './search.manifest'
 
 /**
  * Search: a box in the sidebar's brand row that opens a palette over the
@@ -28,7 +29,7 @@ import type { Ui } from '../../core/scheduler'
  * @param ui - shared handle table.
  * @returns teardown.
  */
-export function install(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const sources = createSearchSources(ctx)
   const FILTERS: { id: SearchFilter, key: string, fallback: string }[] = [
     { id: 'all', key: 'searchFilterAll', fallback: 'All' },

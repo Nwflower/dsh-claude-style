@@ -4,7 +4,9 @@ import { getUsername } from '../../core/host'
 import { banCopy } from '../../core/i18n'
 import { readPrefs } from '../../core/prefs'
 import type { HostContext } from '../../core/host'
-import type { CloseReason, FeatureHandle, Ui } from '../../core/scheduler'
+import type { CloseReason, FeatureHandle } from '../../core/scheduler'
+import type { FeatureUi } from '../../core/feature'
+import type manifest from './ban-screen.manifest'
 import { buildElement } from '../../shared/dom'
 import { removeStrayNodes } from '../../shared/popover'
 
@@ -39,7 +41,7 @@ export interface BanHandle extends FeatureHandle {
  * never be clipped by the sidebar column, which the account popover itself
  * has to work around.
  */
-export function install(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let banRoot: HTMLElement | null = null
   /** Whether the open overlay has lent its canvas colour to the Windows caption band. */
   let captionFillHeld = false

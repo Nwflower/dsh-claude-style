@@ -44,33 +44,56 @@ export interface FeatureHandle {
 }
 
 /**
- * The shared registry: each installed feature's handle under its handle name,
- * and the two calls entry.ts and the scheduler put there.
- *
- * Cross-feature reads outside the scheduler stay direct handle reads:
- *   copy, permissions → composer.{isHero, isActive}
- *   heroMenu → composer.isActive
- *   mascot → composer.heroCard
- *   effort → model.{seat, trigger, effort, named, settled, pickEffort, close}
- *   model → effort.close, composer.isActive
- *   quickProviders → model.{providers, onProviders}
- *   settings → quickProviders.toggle
- *   footer → ban.open
- *   chatFollow → chatFold.isBusy
+ * Every feature's handle, under the name it registers on `ui` (its manifest's
+ * `handle`, or its `id`). A feature that other features read publishes a
+ * handle type of its own; the others are plain scheduler hooks.
  */
-export interface Ui {
+export interface Handles {
+  selection: FeatureHandle
+  composer: ComposerHandle
+  homeLayout: FeatureHandle
+  mascot: FeatureHandle
+  copy: FeatureHandle
+  permissions: FeatureHandle
+  contextStats: FeatureHandle
+  model: ModelHandle
+  effort: FeatureHandle
+  heroMenu: FeatureHandle
+  quickProviders: QuickProvidersHandle
+  footer: FooterHandle
+  ban: BanHandle
+  themeFlip: FeatureHandle
+  workspace: FeatureHandle
+  search: FeatureHandle
+  turnStatus: FeatureHandle
+  turnNav: FeatureHandle
+  chatFollow: FeatureHandle
+  chatFold: ChatFoldHandle
+  chatReveal: FeatureHandle
+  chatFiles: FeatureHandle
+  chatSend: FeatureHandle
+  caret: FeatureHandle
+  viewTabs: FeatureHandle
+  settingsNav: FeatureHandle
+}
+
+export type HandleName = keyof Handles
+
+/** The two calls on `ui` that are no feature's: entry.ts and the scheduler put them there. */
+export interface UiCalls {
   /** Ask for a pass on the next frame (installScheduler). */
   schedule?: () => void
   /** Switch one feature off for the rest of this generation (entry.ts). */
   retire: (name: string) => void
-  composer?: ComposerHandle
-  model?: ModelHandle
-  ban?: BanHandle
-  chatFold?: ChatFoldHandle
-  footer?: FooterHandle
-  quickProviders?: QuickProvidersHandle
-  [handle: string]: FeatureHandle | ((name: string) => void) | (() => void) | undefined
 }
+
+/**
+ * The whole registry, as entry.ts and the scheduler hold it: each installed
+ * feature's handle under its handle name. A feature sees only its own part of
+ * it (FeatureUi in core/feature.ts): its handle and the ones its manifest
+ * `reads`.
+ */
+export type Ui = UiCalls & { [K in HandleName]?: Handles[K] }
 /** Say once, loudly, that a feature was switched off: the console line is its only trace. */
 export function reportFeatureFailure(name: string, error: unknown) {
   console.error(`[dsh-claude-style] "${name}" failed and was switched off:`, error)
@@ -81,7 +104,7 @@ export function reportFeatureFailure(name: string, error: unknown) {
  *     switched feature comes and goes during the generation, so each use
  *     checks whether the handle exists.
  */
-export function installScheduler(ctx: HostContext, ui: Ui, features: string[]) {
+export function installScheduler(ctx: HostContext, ui: Ui, features: HandleName[]) {
   // The pass state comes first: subscribing to the preferences below can call
   // schedule() before this function returns (a settings form that is already
   // served answers synchronously — a hot reload does exactly that).
@@ -92,8 +115,8 @@ export function installScheduler(ctx: HostContext, ui: Ui, features: string[]) {
   let stopped = false
 
   /** The handle a feature registered under `name`, while that feature is installed. */
-  function handleOf(name: string) {
-    return ui[name] as FeatureHandle | undefined
+  function handleOf(name: HandleName): FeatureHandle | undefined {
+    return ui[name]
   }
 
   /** Call one hook on every feature that implements it, in FEATURES order. */
@@ -223,7 +246,7 @@ export function installScheduler(ctx: HostContext, ui: Ui, features: string[]) {
    * and after SYNC_FAILURE_LIMIT failures in a row the feature is reported
    * once and retired while the rest of the pass carries on (D12).
    */
-  function runSync(name: string) {
+  function runSync(name: HandleName) {
     const feature = handleOf(name)
     if (!feature || typeof feature.sync !== 'function') return
     const failures = syncFailures[name] || 0

@@ -4,11 +4,11 @@ import type { HostContext } from './core/host'
 import { loadModelCopy } from './core/model-copy'
 import { adoptPrefs, adoptSettingsForm, disposePrefsBinding, prefs, readPrefs, retireComposerRestyle, retireFooterTakeover, subscribePrefs } from './core/prefs'
 import { installScheduler, reportFeatureFailure } from './core/scheduler'
-import type { Ui } from './core/scheduler'
+import type { HandleName, Ui } from './core/scheduler'
 import { mountStylesheet, parkForeignSheets } from './core/stylesheet'
 import { peerPresent, subscribePeerPresence } from './shared/peer-plugin'
 import { externalOwnerActive, subscribeExternalOwner } from './shared/visual-owner'
-import { setFeatureRegistry } from './core/feature'
+import { handleName, setFeatureRegistry } from './core/feature'
 import type { Feature } from './core/feature'
 import { FEATURES } from 'virtual:dsh-claude-style/features'
 import { BUILD_ID } from 'virtual:dsh-claude-style/generated'
@@ -39,7 +39,7 @@ export function apply(ctx: HostContext) {
   const body = document.body
   const ui: Ui = { retire }
   /** Installed features in install order, as `{ id, handle, stop }`. */
-  let installed: { id: string, handle: string, stop: () => void }[] = []
+  let installed: { id: string, handle: HandleName | null, stop: () => void }[] = []
   /** Features retired after failing: a preference flip never brings one back this generation. */
   const failed = new Set<string>()
   /** Unsubscribes the live features from the preferences; set once the features install. */
@@ -156,10 +156,10 @@ export function apply(ctx: HostContext) {
    * Install one piece in isolation. One that throws is reported and retired,
    * and the rest of the skin carries on without it.
    * @param id - the failure report's label and the teardown's key.
-   * @param handle - the name the piece registers on `ui`.
+   * @param handle - the name the piece registers on `ui`; null for the scheduler, which registers none.
    * @returns whether the piece installed.
    */
-  function install(id: string, handle: string, run: () => (() => void) | void) {
+  function install(id: string, handle: HandleName | null, run: () => (() => void) | void) {
     try {
       const stop = run()
       if (typeof stop === 'function') installed.push({ id, handle, stop })
@@ -171,7 +171,7 @@ export function apply(ctx: HostContext) {
     }
   }
 
-  const installFeature = (feature: Feature) => install(feature.id, feature.handle ?? feature.id, () => feature.install(ctx, ui))
+  const installFeature = (feature: Feature) => install(feature.id, handleName(feature), () => feature.install(ctx, ui))
 
   /**
    * Bring a live feature in line with its switch and the plugins it yields to
@@ -182,7 +182,7 @@ export function apply(ctx: HostContext) {
    * A feature retired after failing stays retired.
    */
   function applySwitch(feature: Feature) {
-    const handle = feature.handle ?? feature.id
+    const handle = handleName(feature)
     const wanted = isWanted(feature)
     const index = installed.findIndex(entry => entry.id === feature.id)
     if (wanted && index === -1 && !failed.has(feature.id)) {
@@ -241,7 +241,7 @@ export function apply(ctx: HostContext) {
     // and a live stylesheet over overrides that never run is worse than no
     // skin at all — so if it cannot install, the whole skin rolls back.
     if (installed.some(entry => entry.id === 'scheduler')) return
-    if (!install('scheduler', 'scheduler', () => installScheduler(ctx, ui, handleNames))) teardown()
+    if (!install('scheduler', null, () => installScheduler(ctx, ui, handleNames))) teardown()
   }
 
   setHostContext(ctx)
@@ -264,7 +264,7 @@ export function apply(ctx: HostContext) {
 
   setFeatureRegistry(FEATURES)
   const live = FEATURES.filter(isLive)
-  const handleNames = FEATURES.map(feature => feature.handle ?? feature.id)
+  const handleNames = FEATURES.map(handleName)
   // Keep the presence watch alive for the page's lifetime: another plugin
   // arriving or leaving re-runs the preference stream, which brings the
   // features that yield to it in or out (packages/client/src/shared/peer-plugin.ts). The

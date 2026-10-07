@@ -8,9 +8,10 @@ import { POPOVER_CLOSE_DELAY, POPOVER_OPEN_DELAY, buildPopoverItem, closeOtherPo
 import { createSlidingPill } from '../../shared/sliding-pill'
 import type { HostContext, HostFiber } from '../../core/host'
 import type { HostPermissionCatalogAnswer, HostPermissionOption } from '@dsh-claude-style/contracts/services'
-import type { Ui } from '../../core/scheduler'
+import type { FeatureUi } from '../../core/feature'
+import type manifest from './permissions.manifest'
 
-export function install(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let segments: HTMLElement | null = null
   /** The segment group's sliding highlight (packages/client/src/shared/sliding-pill.ts). */
   const segmentPill = createSlidingPill('[data-active]')

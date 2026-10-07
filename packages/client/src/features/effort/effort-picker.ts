@@ -4,7 +4,9 @@ import { copyLabel } from '../../core/i18n'
 import { readPrefs } from '../../core/prefs'
 import { createEffortControl } from './control'
 import type { HostContext } from '../../core/host'
-import type { CloseReason, Ui } from '../../core/scheduler'
+import type { CloseReason } from '../../core/scheduler'
+import type { FeatureUi } from '../../core/feature'
+import type manifest from './effort-picker.manifest'
 import type { ModelCatalog } from '../model/catalog'
 import { setAttributeIfChanged } from '../../shared/dom'
 import { POPOVER_CLOSE_DELAY, POPOVER_OPEN_DELAY, closeOtherPopovers, createHoverIntent, positionAnchoredPopover, registerPopover, removeStrayNodes, setMenuPopoverOpen, unregisterPopover } from '../../shared/popover'
@@ -31,7 +33,7 @@ import { POPOVER_CLOSE_DELAY, POPOVER_OPEN_DELAY, closeOtherPopovers, createHove
  *   and `close()`.
  * @returns a teardown function.
  */
-export function install(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let effortBtn: HTMLButtonElement | null = null
   let effortPop: HTMLElement | null = null
   let effortSlider: ReturnType<typeof createEffortControl> | null = null

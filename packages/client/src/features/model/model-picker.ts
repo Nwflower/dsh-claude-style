@@ -10,7 +10,9 @@ import { byModelId, createModelRows } from './rows'
 import { buildElement, closestFrom, setAttributeIfChanged } from '../../shared/dom'
 import { POPOVER_CHECK_SVG, POPOVER_MARGIN, POPOVER_OPEN_DELAY, closeOtherPopovers, createHoverIntent, positionAnchoredPopover, registerPopover, removeStrayNodes, setMenuPopoverOpen, unregisterPopover } from '../../shared/popover'
 import type { HostContext } from '../../core/host'
-import type { FeatureHandle, Ui } from '../../core/scheduler'
+import type { FeatureHandle } from '../../core/scheduler'
+import type { FeatureUi } from '../../core/feature'
+import type manifest from './model-picker.manifest'
 import type { CatalogProvider, ModelCatalog } from './catalog'
 
 /** What the effort picker and the settings page read off the model picker (ui.model). */
@@ -29,7 +31,7 @@ export interface ModelHandle extends FeatureHandle {
   teardown(): void
 }
 
-export function install(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /**
    * The host's model seat is a click-triggered two-pane menu (Model /
    * Effort rows drilling into their own lists). The skin replaces it with

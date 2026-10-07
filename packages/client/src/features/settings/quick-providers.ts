@@ -4,7 +4,9 @@ import { readPrefs } from '../../core/prefs'
 import { buildElement } from '../../shared/dom'
 import { POPOVER_CHECK_SVG, buildPopoverItem, closeOtherPopovers, positionAnchoredPopover, registerPopover, setMenuPopoverOpen, unregisterPopover } from '../../shared/popover'
 import type { HostContext } from '../../core/host'
-import type { CloseReason, FeatureHandle, Ui } from '../../core/scheduler'
+import type { CloseReason, FeatureHandle } from '../../core/scheduler'
+import type { FeatureUi } from '../../core/feature'
+import type manifest from './quick-providers.manifest'
 import type { CatalogProvider } from '../model/catalog'
 
 /** Writes the chosen provider ids back to the preferences. */
@@ -31,7 +33,7 @@ export interface QuickProvidersHandle extends FeatureHandle {
  * a dialog clips and may transform its own subtree, so a `position: fixed`
  * card in there would be positioned against the dialog, not the viewport.
  */
-export function install(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let card: HTMLElement | null = null
   let cardBody: HTMLElement | null = null
   let anchor: HTMLElement | null = null

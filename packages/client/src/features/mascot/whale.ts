@@ -2,7 +2,8 @@ import { DEEPY_FRAME_MS, DEEPY_GUTTER, DEEPY_SHEETS } from './sheets'
 import { createMascotPlayer } from './mascot-player'
 import { createMascotWhaleSheets } from './whale-sheets'
 import type { HostContext } from '../../core/host'
-import type { Ui } from '../../core/scheduler'
+import type { FeatureUi } from '../../core/feature'
+import type manifest from './mascot.manifest'
 
 /**
  * Deepy, the DeepSeek brand's pixel whale, as a mascot character
@@ -18,7 +19,7 @@ import type { Ui } from '../../core/scheduler'
  * @param ui - shared handle table (`ui.composer`).
  * @returns `{ sync, release, onActivity, dispose }`.
  */
-export function createMascotWhale(ctx: HostContext, ui: Ui) {
+export function createMascotWhale(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   return createMascotPlayer(ctx, ui, {
     name: 'deepy',
     sheets: DEEPY_SHEETS,

@@ -14,7 +14,8 @@ import type { Prefs } from '../../constants'
 import type { SettingsTabId } from '../../core/feature'
 import type { HostContext } from '../../core/host'
 import type { HostSlotsService } from '@dsh-claude-style/contracts/services'
-import type { Ui } from '../../core/scheduler'
+import type { FeatureUi } from '../../core/feature'
+import type manifest from './settings.manifest'
 import type { SettingsTab, SettingsView } from './settings-controls'
 import type { QuickProvidersHandle } from './quick-providers'
 
@@ -279,7 +280,7 @@ export function settingsSectionIndex() {
  *      which `dsh-client-ui-settings-general` publishes later. Registering
  *      eagerly instead would throw and fail the boot.
  */
-export function install(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   loadModelCopy()
   // The settings services are up by now even when they were not at apply
   // time, so retry the official-form binding before choosing a seat. It is

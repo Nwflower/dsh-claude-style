@@ -9,7 +9,8 @@ import type { HostAnswer } from '../../shared/resource'
 import { createSlidingPill } from '../../shared/sliding-pill'
 import type { HostContext, HostValue } from '../../core/host'
 import type { HostSessionsService, HostWorkspacesService } from '@dsh-claude-style/contracts/services'
-import type { Ui } from '../../core/scheduler'
+import type { FeatureUi } from '../../core/feature'
+import type manifest from './workspace-view.manifest'
 
 /**
  * The sidebar's workspace section, re-cut as a two-state view.
@@ -31,7 +32,7 @@ import type { Ui } from '../../core/scheduler'
  * @param ui - shared handle table.
  * @returns teardown.
  */
-export function install(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /**
    * The host's own Tooltip, Toast and icons, reached through the plugin
    * loader's `require` — the same packages its UI uses, so these row actions

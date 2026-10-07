@@ -4,7 +4,9 @@ import { installChatFoldGlide } from './fold-glide'
 import { createProcessFold } from './process-fold'
 import { createReasoningFold } from './reasoning-fold'
 import type { HostContext } from '../../core/host'
-import type { FeatureHandle, Ui } from '../../core/scheduler'
+import type { FeatureHandle } from '../../core/scheduler'
+import type { FeatureUi } from '../../core/feature'
+import type manifest from './chat-fold.manifest'
 
 /** What the follow reads off the folding (ui.chatFold): whether a door is rolling. */
 export interface ChatFoldHandle extends FeatureHandle {
@@ -30,7 +32,7 @@ export interface ChatFoldHandle extends FeatureHandle {
  * @param ui - shared handle table.
  * @returns teardown.
  */
-export function install(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   document.body.setAttribute(CHAT_FOLD_ATTR, '')
   const stopReasoning = createReasoningFold()
   const stopProcess = createProcessFold()

@@ -4,7 +4,8 @@ import { readPrefs } from '../../core/prefs'
 import { closestFrom, createStamp } from '../../shared/dom'
 import { POPOVER_CLOSE_DELAY, POPOVER_OPEN_DELAY, closeOtherPopovers, createHoverIntent, registerPopover, resolveAnchoredPosition, unregisterPopover } from '../../shared/popover'
 import type { HostContext } from '../../core/host'
-import type { Ui } from '../../core/scheduler'
+import type { FeatureUi } from '../../core/feature'
+import type manifest from './hero-menu.manifest'
 
 /**
  * The hero row's two pickers — the workspace (directory) chip and the
@@ -47,7 +48,7 @@ import type { Ui } from '../../core/scheduler'
  * React replaces the triggers, and the close waits out the gap between the
  * trigger and the card so crossing it does not shut the menu.
  */
-export function install(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** Air between the trigger and its card, as the skin's other pickers take. */
   const GAP = 6
   /** The two triggers, and the card once it is stamped. */

@@ -9,7 +9,8 @@ import { buildElement, closestFrom } from '../../shared/dom'
 import { POPOVER_CLOSE_DELAY, closeOtherPopovers, createHoverIntent, registerPopover, unregisterPopover } from '../../shared/popover'
 import { easeScrollFor, scrollPositionFor, writeScroll } from '../../shared/scroll-owner'
 import type { HostContext } from '../../core/host'
-import type { Ui } from '../../core/scheduler'
+import type { FeatureUi } from '../../core/feature'
+import type manifest from './turn-nav.manifest'
 
 /**
  * The conversation navigator (docs/decisions D34): the turn rail at
@@ -41,7 +42,7 @@ import type { Ui } from '../../core/scheduler'
  * @param ui - the shared handle table.
  * @returns teardown.
  */
-export function install(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** On the host's rail while the skin's rail stands in for it: the stylesheet hides it, keeping its layout. */
   const TURN_NAV_REPLACED_ATTR = 'data-dsh-claude-turn-nav-replaced'
   /** On the skin's rail while the card is open over it: its marks step back. */

@@ -6,7 +6,8 @@ import { caretClipToField, caretMeasurePlain, caretMeasureRich } from './caret-m
 import type { CaretBox } from './caret-measure'
 import { COMPOSER_INPUT_SELECTOR, COMPOSER_TEXTAREA_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import type { HostContext } from '../../core/host'
-import type { Ui } from '../../core/scheduler'
+import type { FeatureUi } from '../../core/feature'
+import type manifest from './caret.manifest'
 
 /**
  * The composer caret's motion, ported from dsh-chat-ux: the browser's own
@@ -460,7 +461,7 @@ export function createCaretMotion(read: () => string) {
  * @param ui - shared handle table.
  * @returns teardown.
  */
-export function install(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   // dsh-chat-ux draws its own caret on the same surfaces, and two drawn
   // carets blink out of phase: the entry keeps this uninstalled while that
   // plugin is on the page (the manifest).

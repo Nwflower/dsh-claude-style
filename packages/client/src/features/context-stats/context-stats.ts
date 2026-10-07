@@ -1,7 +1,9 @@
 import { SESSION_STATS_ATTR } from '../../constants'
 import { createSessionStats } from './session-stats'
 import type { HostContext } from '../../core/host'
-import type { CloseReason, Ui } from '../../core/scheduler'
+import type { CloseReason } from '../../core/scheduler'
+import type { FeatureUi } from '../../core/feature'
+import type manifest from './context-stats.manifest'
 
 /**
  * The session's numbers in the context popover (docs/decisions D27).
@@ -11,7 +13,7 @@ import type { CloseReason, Ui } from '../../core/scheduler'
  * projections (session-stats.ts). It switches together with the
  * permission control: both take over the composer's bottom line.
  */
-export function install(ctx: HostContext, ui: Ui) {
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const stats = createSessionStats(ctx)
 
   ui.contextStats = {

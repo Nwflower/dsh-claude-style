@@ -1,7 +1,7 @@
 import type { Prefs } from '../constants'
 import { peerPresent } from '../shared/peer-plugin'
 import type { HostContext } from './host'
-import type { Ui } from './scheduler'
+import type { HandleName, Handles, Ui, UiCalls } from './scheduler'
 
 /**
  * A feature's manifest (D42): every fact about the feature that something
@@ -11,18 +11,30 @@ import type { Ui } from './scheduler'
  * to check the switches, and to hand the smoke run its coverage table; the
  * browser half receives the runtime fields through the generated registry.
  */
-export type FeatureManifest = FeatureFields & FeatureSwitch
+export type FeatureManifest = FeatureIdentity & FeatureFields & FeatureSwitch
 
 /** Exactly one of `pref` and `ungated` (D29). */
 export type FeatureSwitch =
   | { /** The preference that decides whether the reader gets the feature. */ pref: keyof Prefs, ungated?: never }
   | { /** Why the feature has no switch. */ ungated: string, pref?: never }
 
+/**
+ * The install name — the failure report, the teardown and `retire()` use it —
+ * and the name the feature's handle registers on `ui`. They are one name,
+ * except for the settings page, whose handle is its navigation alone
+ * (settingsNav): a failing sync stops the navigation and keeps the page.
+ */
+export type FeatureIdentity =
+  | { id: HandleName, handle?: never }
+  | { id: 'settings', handle: HandleName }
+
 export interface FeatureFields {
-  /** The install name: the failure report, the teardown and `retire()` use it. */
-  id: string
-  /** The name the feature's handle registers on `ui`, when it differs from `id` (settings → settingsNav). */
-  handle?: string
+  /**
+   * The other features' handles this feature's modules read off `ui`
+   * (D42). Its modules see `ui` as FeatureUi of this manifest, so a read
+   * the manifest does not declare fails the type check.
+   */
+  reads?: HandleName[]
   /** Install order, and with it the scheduler's pass order: ascending, unique. */
   order: number
   /** The plugin implementing the same behaviour: while it is on the page the feature stays uninstalled (D32). */
@@ -77,12 +89,30 @@ export interface FeatureCopy {
 }
 
 /** The manifest fields the browser half reads. */
-export type FeatureRuntime = Pick<FeatureManifest, 'id' | 'handle' | 'order' | 'pref' | 'ungated' | 'yieldsTo' | 'switchRow'>
+export type FeatureRuntime = FeatureIdentity & Pick<FeatureFields, 'order' | 'yieldsTo' | 'switchRow'> & { pref?: keyof Prefs, ungated?: string }
 
 /** One installable feature: its runtime manifest fields and its main module's `install`. */
-export interface Feature extends FeatureRuntime {
+export type Feature = FeatureRuntime & {
   install(ctx: HostContext, ui: Ui): (() => void) | void
 }
+
+/** The name a feature's handle registers under on `ui`. */
+export function handleName(feature: FeatureIdentity): HandleName {
+  return feature.handle === undefined ? feature.id : feature.handle
+}
+
+/** The handle a manifest's feature registers under. */
+type OwnHandle<M> = M extends { handle: infer H extends HandleName } ? H : M extends { id: infer I extends HandleName } ? I : never
+
+/** The handles a manifest says its feature reads. */
+type ReadHandles<M> = M extends { reads: readonly (infer R extends HandleName)[] } ? R : never
+
+/**
+ * What one feature's modules see of `ui`: the two calls, the feature's own
+ * handle and the handles its manifest `reads` (D42). Its install takes `ui` as
+ * `FeatureUi<typeof manifest>`, with the manifest imported as a type.
+ */
+export type FeatureUi<M> = UiCalls & { [K in OwnHandle<M> | ReadHandles<M>]?: Handles[K] }
 
 /** The registry the entry installs from, kept for readers outside the install loop (the settings page). */
 let registry: readonly Feature[] = []
