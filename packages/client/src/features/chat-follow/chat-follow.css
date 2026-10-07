@@ -19,3 +19,16 @@ body[data-dsh-claude-style][data-dsh-claude-chat-follow] [data-step-process]:not
 body[data-dsh-claude-style][data-dsh-claude-chat-follow] [data-dsh-claude-stream-glide] {
   visibility: hidden;
 }
+/* The same button at rest, back where the reader can press it: centred over the
+   composer instead of the column's right edge, which the mascot stands on. Its
+   two numbers are written per pass (chat-follow.ts): the button is fixed and the
+   column moves with the sidebars. */
+body[data-dsh-claude-style][data-dsh-claude-chat-follow] [data-dsh-claude-follow-tail] {
+  position: fixed !important;
+  left: var(--dsh-claude-follow-tail-left) !important;
+  bottom: var(--dsh-claude-follow-tail-bottom) !important;
+  right: auto !important;
+  top: auto !important;
+  transform: translateX(-50%) !important;
+  z-index: 2 !important;
+}

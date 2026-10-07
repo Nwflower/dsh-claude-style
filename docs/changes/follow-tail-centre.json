@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-07",
+  "group": "improvements",
+  "order": 8,
+  "external": false,
+  "zh": "宿主的「回到底部」按钮改到输入框上方的正中：它原先长在对话栏右缘，正好压在站在输入卡片上的吉祥物身上；按钮仍是宿主的那个，皮肤只挪位置。",
+  "en": "The host's back-to-end button now sits centred above the composer. Its shipped place is the conversation column's right edge, which is where the mascot stands on the composer card; the button stays the host's own and only its placement is the skin's."
+}

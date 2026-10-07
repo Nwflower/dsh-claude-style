@@ -3,8 +3,9 @@ import { observeSize, subscribeMutations } from '../../core/bus'
 import { requestFrame } from '../../core/frame'
 import { motionReduced } from '../../core/prefs'
 import { createChatProcessFollow } from './process-follow'
-import { CHAT_CALL_SELECTOR, CHAT_FLOW_SELECTOR, COMPOSER_SELECTOR, CONVERSATION_SCROLL_SELECTOR, FLOW_BLOCK_SELECTOR, FOLLOWING_TAIL_ATTRIBUTE, RUNNING_STATE, SHIMMER_SELECTOR, STREAMING_SELECTOR, THINK_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
-import { conversationScroller } from '../../shared/chat-dom'
+import { CHAT_CALL_SELECTOR, CHAT_FLOW_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_SELECTOR, CONVERSATION_SCROLL_SELECTOR, FLOW_BLOCK_SELECTOR, FOLLOWING_TAIL_ATTRIBUTE, RUNNING_STATE, SHIMMER_SELECTOR, STREAMING_SELECTOR, THINK_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { conversationScroller, findFollowTailButton } from '../../shared/chat-dom'
+import { createStamp } from '../../shared/dom'
 import { SCROLL_EASE_LEAD_PX, easeScrollToEndFor, handBackFollow, holdFollowButton, joinScrollOwner, readerHolds, releaseFollowButton, stopScrollFor, submissionHolds, takeBackHostPin } from '../../shared/scroll-owner'
 import type { HostContext } from '../../core/host'
 import type { FeatureUi } from '../../core/feature'
@@ -37,6 +38,59 @@ export const FOLLOW_ACTIVITY_GRACE_MS = 2000
 /** A fold glide in flight is waited out; after this many waits the round is dropped. */
 export const FOLLOW_FOLD_WAIT_MS = 150
 export const FOLLOW_FOLD_WAIT_ATTEMPTS = 4
+/** The host's own back-to-end button, marked for the stylesheet that places it. */
+export const FOLLOW_TAIL_ATTR = 'data-dsh-claude-follow-tail'
+/** How far above the composer's top edge that button floats. */
+export const FOLLOW_TAIL_AIR_PX = 12
+/** The button's fixed placement, written as numbers because the column moves under it. */
+const FOLLOW_TAIL_LEFT = '--dsh-claude-follow-tail-left'
+const FOLLOW_TAIL_BOTTOM = '--dsh-claude-follow-tail-bottom'
+
+/**
+ * The conversation's own composer card: the lowest of the cards on the page,
+ * which is the one the conversation is typed into rather than the hero's.
+ */
+function conversationComposerCard() {
+  let found: HTMLElement | null = null
+  let lowest = -Infinity
+  for (const card of document.querySelectorAll<HTMLElement>(COMPOSER_CARD_SELECTOR)) {
+    const box = card.getBoundingClientRect()
+    if (box.width === 0 && box.height === 0) continue
+    if (box.top > lowest) {
+      lowest = box.top
+      found = card
+    }
+  }
+  return found
+}
+
+/**
+ * The host's back-to-end button, centred over the composer.
+ *
+ * The button is the host's own and renders only while its follow is off; its
+ * shipped place is the conversation column's right edge, which is where the
+ * mascot stands on the card. The pass marks it and writes the two numbers its
+ * stylesheet reads — the column's centre and the composer's top edge — because
+ * the button is fixed and the column moves with the sidebars and the window.
+ *
+ * @param stamp - the mark to move onto the button, or off when it is not there.
+ */
+function placeFollowTail(stamp: ReturnType<typeof createStamp<HTMLElement>>) {
+  const button = findFollowTailButton()
+  const card = button === null ? null : conversationComposerCard()
+  const scroller = button === null ? null : conversationScroller()
+  if (button === null || card === null || scroller === null) {
+    stamp.release()
+    return
+  }
+  stamp.mark(button)
+  const cardBox = card.getBoundingClientRect()
+  const scrollBox = scroller.getBoundingClientRect()
+  const left = `${Math.round(scrollBox.left + scrollBox.width / 2)}px`
+  const bottom = `${Math.round(window.innerHeight - cardBox.top + FOLLOW_TAIL_AIR_PX)}px`
+  if (button.style.getPropertyValue(FOLLOW_TAIL_LEFT) !== left) button.style.setProperty(FOLLOW_TAIL_LEFT, left)
+  if (button.style.getPropertyValue(FOLLOW_TAIL_BOTTOM) !== bottom) button.style.setProperty(FOLLOW_TAIL_BOTTOM, bottom)
+}
 
 /**
  * Watch the whole page for the moments that lose the host's follow, and hand
@@ -333,9 +387,21 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const foldBusy = () => ui.chatFold !== undefined && ui.chatFold !== null && ui.chatFold.isBusy()
   const stopGuard = createChatFollowGuard(foldBusy)
   const stopProcess = createChatProcessFollow()
+  const tailStamp = createStamp<HTMLElement>(FOLLOW_TAIL_ATTR)
   document.body.setAttribute(CHAT_FOLLOW_ATTR, '')
+  ui.chatFollow = {
+    sync() {
+      placeFollowTail(tailStamp)
+    },
+    /** A viewport or composer-card change moves the column: the button is placed again in the same frame. */
+    reposition() {
+      placeFollowTail(tailStamp)
+    },
+  }
   return () => {
     document.body.removeAttribute(CHAT_FOLLOW_ATTR)
+    tailStamp.release()
+    delete ui.chatFollow
     stopGuard()
     stopProcess()
   }
