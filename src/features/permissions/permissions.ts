@@ -4,7 +4,8 @@ import { readPrefs } from '../../core/prefs'
 import { buildElement, closestFrom, setAttributeIfChanged } from '../../shared/dom'
 import { POPOVER_CLOSE_DELAY, POPOVER_OPEN_DELAY, buildPopoverItem, closeOtherPopovers, createHoverIntent, positionAnchoredPopover, registerPopover, removeStrayNodes, setMenuPopoverOpen, unregisterPopover } from '../../shared/popover'
 import { createSlidingPill } from '../../shared/sliding-pill'
-import type { HostContext, HostFiber, HostValue } from '../../core/host'
+import type { HostContext, HostFiber } from '../../core/host'
+import type { HostPermissionCatalogAnswer, HostPermissionOption } from '../../contracts/services'
 import type { Ui } from '../../core/scheduler'
 
 export function install(ctx: HostContext, ui: Ui) {
@@ -25,7 +26,7 @@ export function install(ctx: HostContext, ui: Ui) {
    * authority on what is switchable — a third-party plugin's preset rides
    * in it — while PERMISSION_PRESETS decides how a known one reads.
    */
-  let catalogOptions: HostValue[] | null = null
+  let catalogOptions: HostPermissionOption[] | null = null
   /**
    * The preset a new session starts in (the catalog's `defaultPreset`: the
    * configured default, or the one the host infers). The cold start screen
@@ -45,7 +46,7 @@ export function install(ctx: HostContext, ui: Ui) {
   let renderedSegments = ''
 
   /** The catalog's entry for one preset, or null. */
-  function catalogOption(preset: string): HostValue {
+  function catalogOption(preset: string): HostPermissionOption | null {
     if (catalogOptions === null) return null
     for (let i = 0; i < catalogOptions.length; i++) {
       const option = catalogOptions[i]
@@ -156,7 +157,7 @@ export function install(ctx: HostContext, ui: Ui) {
     }
     dropAutoPresetRead()
     const read = autoPresetRead
-    namespace.catalog().then((result: HostValue) => {
+    namespace.catalog().then((result: HostPermissionCatalogAnswer) => {
       if (read !== autoPresetRead) return
       if (result === null || typeof result !== 'object' || result.ok !== true ||
           result.value === null || typeof result.value !== 'object' ||

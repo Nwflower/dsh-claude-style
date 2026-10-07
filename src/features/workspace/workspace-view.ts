@@ -8,6 +8,7 @@ import { removeStrayNodes } from '../../shared/popover'
 import type { HostAnswer } from '../../shared/resource'
 import { createSlidingPill } from '../../shared/sliding-pill'
 import type { HostContext, HostValue } from '../../core/host'
+import type { HostSessionsService, HostWorkspacesService } from '../../contracts/services'
 import type { Ui } from '../../core/scheduler'
 
 /**
@@ -65,8 +66,8 @@ export function install(ctx: HostContext, ui: Ui) {
    * until then the section keeps its plain label. `unwatch` drops the two
    * list subscriptions.
    */
-  let workspaces: HostValue = null
-  let sessions: HostValue = null
+  let workspaces: HostWorkspacesService | null = null
+  let sessions: HostSessionsService | null = null
   let unwatch: (() => void) | null = null
   let disposed = false
 
@@ -137,8 +138,8 @@ export function install(ctx: HostContext, ui: Ui) {
     if (nextSessions === undefined || nextSessions === null || nextSessions.list === undefined) return false
     workspaces = nextWorkspaces
     sessions = nextSessions
-    const stopArchive = workspaces.list.subscribe(refreshItems)
-    const stopSessions = sessions.list.subscribe(refreshItems)
+    const stopArchive = nextWorkspaces.list.subscribe(refreshItems)
+    const stopSessions = nextSessions.list.subscribe(refreshItems)
     unwatch = () => {
       stopArchive()
       stopSessions()
@@ -154,8 +155,11 @@ export function install(ctx: HostContext, ui: Ui) {
    */
   function refreshItems() {
     if (disposed) return
-    const archive = workspaces.list.getSnapshot()
-    const list = sessions.list.getSnapshot()
+    const followed = workspaces
+    const followedSessions = sessions
+    if (followed === null || followedSessions === null) return
+    const archive = followed.list.getSnapshot()
+    const list = followedSessions.list.getSnapshot()
     if (archive.phase !== 'ready' || list.phase !== 'ready') {
       items = null
     } else {
@@ -231,7 +235,7 @@ export function install(ctx: HostContext, ui: Ui) {
       const refusal: Error & { status?: number } = new Error(String(result?.error || `HTTP ${status}`))
       refusal.status = status
       throw refusal
-    }).catch((reason: HostValue) => {
+    }).catch((reason: { status?: number, message?: string }) => {
       console.warn('dsh-claude-style: session delete rejected:', reason)
       notifyToast(reason?.status === 409
         ? copyLabel('archiveDeleteOpen', 'The conversation is still held open by this app; restart it, then delete again')
@@ -250,8 +254,9 @@ export function install(ctx: HostContext, ui: Ui) {
    * refresh, so a pull already under way is reused.
    */
   function refreshSessions() {
-    if (typeof sessions?.refresh !== 'function') return
-    sessions.refresh().catch((reason: unknown) => {
+    const followed = sessions
+    if (followed === null || typeof followed.refresh !== 'function') return
+    followed.refresh().catch((reason: unknown) => {
       console.warn('dsh-claude-style: session baseline refresh rejected:', reason)
     })
   }
@@ -261,7 +266,9 @@ export function install(ctx: HostContext, ui: Ui) {
    * on the archive set's next tick; a refusal leaves it in place.
    */
   function restoreArchived(id: string) {
-    workspaces.unarchiveSession(id).catch((reason: unknown) => {
+    const followed = workspaces
+    if (followed === null) return
+    Promise.resolve(followed.unarchiveSession(id)).catch((reason: unknown) => {
       console.warn('dsh-claude-style: session unarchive rejected:', reason)
     })
   }

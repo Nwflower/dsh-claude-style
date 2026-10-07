@@ -22,6 +22,8 @@ export interface HostSnapshotSource<Snapshot> {
 /** The session list's own snapshot: which session the shell shows, and every row's summary. */
 export interface HostSessionListSnapshot {
   current?: string | null
+  /** `pending` until the host's list has answered; the readers wait for `ready`. */
+  phase?: string
   ids: string[]
   byId: Record<string, HostSessionSummary>
   /** Per-session projection values the list carries, such as a session's subagent catalog. */
@@ -43,6 +45,8 @@ export interface HostSessionSummary {
 
 /** The workspace list (`workspaces.list`): the workspace rows, and which sessions are archived. */
 export interface HostWorkspaceListSnapshot {
+  /** `pending` until the host's list has answered; the readers wait for `ready`. */
+  phase?: string
   items: HostWorkspaceRow[]
   archivedSessionIds: string[]
 }
@@ -58,7 +62,8 @@ export interface HostWorkspaceRow {
 /** The `workspaces` service: the list, and taking one session back out of the archive. */
 export interface HostWorkspacesService {
   list: HostSnapshotSource<HostWorkspaceListSnapshot>
-  unarchiveSession(id: string): unknown
+  /** Take a session out of the archive; it rejects when the host refuses. */
+  unarchiveSession(id: string): Promise<unknown>
 }
 
 /** One shortcut row: its command id, its label, its keycaps and its aliases. */
@@ -287,7 +292,8 @@ export interface HostFeedEntry {
 export interface HostSessionsService {
   list: HostSnapshotSource<HostSessionListSnapshot>
   binding(id: string): HostSessionBinding | undefined | null
-  refresh(): unknown
+  /** Pull the list again; the host's own single-flight refresh, so a pull under way is reused. */
+  refresh(): Promise<unknown>
 }
 
 /**
@@ -482,4 +488,40 @@ export interface HostStream<Frame> {
 export interface HostStreamStep<Frame> {
   done?: boolean
   value: { value: Frame, accept?(): void }
+}
+
+/** The permission catalog (`permissionPresets` namespace): the options and the default. */
+export interface HostPermissionCatalogAnswer {
+  ok?: boolean
+  value?: { options?: HostPermissionOption[], defaultPreset?: string }
+}
+
+/** One permission preset the host serves, including a third-party plugin's. */
+export interface HostPermissionOption {
+  value: string
+  name?: string
+  description?: string
+}
+
+/**
+ * The session statistics projection: what the context panel's figures come
+ * from, with the milliseconds each phase took and the tokens it produced. A
+ * face that exists carries all of them; the panel reads zero as "no such row".
+ */
+export interface HostSessionStatsProjection {
+  llmMs: number
+  toolMs: number
+  ttftMs: number
+  ttftSteps: number
+  decodeMs: number
+  decodeTokens: number
+  dialog?: unknown
+}
+
+/** The token usage projection: the same session's billed tokens, by bucket. */
+export interface HostTokenUsageProjection {
+  uncachedInputTokens: number
+  cacheReadTokens: number
+  cacheWriteTokens: number
+  outputTokens: number
 }

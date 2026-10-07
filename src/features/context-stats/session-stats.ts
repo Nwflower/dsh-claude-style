@@ -2,7 +2,8 @@ import { observeSize } from '../../core/bus'
 import { AUTO_POPOVER_ALL } from '../../constants'
 import { conversationSessionId, findComposerStats, findConversationSession } from '../../core/host'
 import { COMPOSER_STAT_SELECTOR } from '../../contracts/dom'
-import type { HostContext, HostText, HostValue } from '../../core/host'
+import type { HostContext, HostText } from '../../core/host'
+import type { HostSessionStatsProjection, HostSnapshotSource, HostTokenUsageProjection } from '../../contracts/services'
 
 /** One row of the block: a label and its figure. */
 interface StatsRow {
@@ -76,7 +77,7 @@ export function createSessionStats(ctx: HostContext) {
   const HOST_STATS_DIALOGS = '[data-session-stats-details], [data-session-stats-usage], [data-turn-usage-details]'
 
   /** The projection keys this page is following, and how to stop. */
-  let watch: { sessionId: string, faces: Record<string, HostValue>, off: (() => void)[] } | null = null
+  let watch: { sessionId: string, faces: Record<string, HostSnapshotSource<unknown>>, off: (() => void)[] } | null = null
   /** The block's last written content, so an unchanged pass writes nothing. */
   let blockSignature = ''
   /** Whether the block is holding the numbers' place, and since when. */
@@ -108,15 +109,15 @@ export function createSessionStats(ctx: HostContext) {
     const binding = typeof sessions?.binding === 'function' ? sessions.binding(sessionId) : undefined
     const projections = binding?.session?.projections
     if (typeof projections?.faceOf !== 'function') return null
-    const faces: Record<string, HostValue> = {}
+    const faces: Record<string, HostSnapshotSource<unknown>> = {}
     for (let i = 0; i < STATS_KEYS.length; i++) faces[STATS_KEYS[i]] = projections.faceOf(STATS_KEYS[i])
     return faces
   }
 
   /** One projection's current whole value, or undefined while it is absent. */
-  function statsValue(key: string): HostValue {
+  function statsValue<Value>(key: string): Value | undefined {
     const face = watch === null ? undefined : watch.faces[key]
-    return typeof face?.getSnapshot === 'function' ? face.getSnapshot() : undefined
+    return typeof face?.getSnapshot === 'function' ? face.getSnapshot() as Value : undefined
   }
 
   /** Stop following the projections (a different session, or the teardown). */
@@ -264,7 +265,7 @@ export function createSessionStats(ctx: HostContext) {
    * a session has taken). The first-token average and the output speed are
    * the same two rows either way.
    */
-  function statsTimeRows(stats: HostValue, chat: HostText, compact: boolean) {
+  function statsTimeRows(stats: HostSessionStatsProjection, chat: HostText, compact: boolean) {
     const rows: StatsRow[] = []
     if (compact) {
     const totalMs = (stats.llmMs > 0 ? stats.llmMs : 0) + (stats.toolMs > 0 ? stats.toolMs : 0)
@@ -298,14 +299,14 @@ export function createSessionStats(ctx: HostContext) {
    */
   function sessionStatsSections(chat: HostText, compact: boolean) {
     const sections: { title: string, rows: StatsRow[] }[] = []
-    const stats = statsValue('sessionStats')
+    const stats = statsValue<HostSessionStatsProjection>('sessionStats')
     if (compact) {
     const rows: StatsRow[] = []
     if (stats !== undefined && stats !== null) {
       const timeRows = statsTimeRows(stats, chat, true)
       for (let i = 0; i < timeRows.length; i++) rows.push(timeRows[i])
     }
-    const usage = statsValue('tokenUsage')
+    const usage = statsValue<HostTokenUsageProjection>('tokenUsage')
     if (usage !== undefined && usage !== null) {
       const billed = usage.uncachedInputTokens + usage.cacheReadTokens + usage.cacheWriteTokens
       if (billed > 0 || usage.outputTokens > 0) {
@@ -320,7 +321,7 @@ export function createSessionStats(ctx: HostContext) {
     const rows = statsTimeRows(stats, chat, false)
     if (rows.length > 0) sections.push({ title: chat('stats.dialog.title'), rows })
     }
-    const usage = statsValue('tokenUsage')
+    const usage = statsValue<HostTokenUsageProjection>('tokenUsage')
     if (usage !== undefined && usage !== null) {
     const billed = usage.uncachedInputTokens + usage.cacheReadTokens + usage.cacheWriteTokens
     if (billed > 0 || usage.outputTokens > 0) {
