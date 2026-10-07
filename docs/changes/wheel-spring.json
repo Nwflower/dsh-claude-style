@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-07",
-  "group": "improvements",
-  "order": 3,
-  "external": false,
-  "zh": "**滚轮滚动改走同一条弹簧**（Windows 与其他非 Apple 平台）：主对话里的滚轮不再由浏览器直接写位置，距离交给滚动主人那条临界阻尼弹簧走完（新增 `wheel` 来源，优先级在 `composer` 之上、`fold` 之下）。一串滚轮格不再把整段距离压在一帧里：速度从静止连续加上去、中段限速、末段收尾，落点在半像素以内；第二格接着上一段滑行延长，不重新起跑。macOS 与 iPadOS 上完全不接管，平台自己的惯性曲线与边缘回弹照旧；指针与滚动条之间还有能朝这个方向滚动的嵌套滚动条、按住 Ctrl（缩放），或读者的动效选择是「关闭」时，滚轮也照旧交给浏览器。监听挂在会话滚动条自己身上，页面其它地方的滚轮不必等主线程。",
-  "en": "**The wheel scrolls on the same spring** (Windows and other non-Apple platforms): a wheel over the main conversation no longer lets the browser write the position — the distance is handed to the scroll owner's critically damped spring (a new `wheel` source, ranked above `composer` and below `fold`). A burst of notches no longer puts the whole distance on one frame: the speed builds from rest, is capped through the middle and eases into a landing within half a pixel, and a second notch extends the glide in flight instead of restarting it. macOS and iPadOS are left alone entirely, keeping the platform's own momentum curve and edge bounce; a nested scroller that can still move that way, a held Ctrl (zoom) and the reader's \"no animation\" choice also leave the wheel to the browser. The listener hangs on the conversation's own scroller, so a wheel anywhere else on the page never waits on the main thread."
-}

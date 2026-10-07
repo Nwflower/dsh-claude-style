@@ -7,7 +7,7 @@ import type { TurnItem } from './turn-nav-host'
 import { CHAT_TURN_ATTRIBUTE, FOREGROUND_SELECTOR, PEER_SHEET_SELECTOR, TURN_RAIL_CURRENT_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { buildElement, closestFrom } from '../../shared/dom'
 import { POPOVER_CLOSE_DELAY, closeOtherPopovers, createHoverIntent, registerPopover, unregisterPopover } from '../../shared/popover'
-import { easeScrollFor, scrollPositionFor, writeScroll } from '../../shared/scroll-owner'
+import { easeScrollFor, holdReader, scrollPositionFor, writeScroll } from '../../shared/scroll-owner'
 import type { HostContext } from '../../core/host'
 import type { FeatureUi } from '../../core/feature'
 import type manifest from './turn-nav.manifest'
@@ -370,6 +370,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** Press the host's mark for one turn, glide to where it lands, and line the landed turn. */
   function jumpTo(turn: number) {
     host.jumpToTurn(turn, (scroller, before) => {
+      // A jump is the reader choosing where to read: the follow stands down the
+      // way it does after his own wheel, or the next burst of output drags him
+      // back to the end. Landing at the end releases the hold again.
+      if (scroller !== null) holdReader(scroller)
       glideLanding(scroller, before)
       landing = { turn, since: Date.now() }
       // A loaded turn has landed by now; one outside the window lands when
