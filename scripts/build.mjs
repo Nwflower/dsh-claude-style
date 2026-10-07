@@ -197,8 +197,8 @@ const CONSTANTS = (() => {
   }
 })()
 
-/** The host contract's table: build and test data, so it stays out of the bundle (D44). */
-const CONTRACT_TABLE = 'contracts/table.ts'
+/** The host contract's tables: build and test data, so they stay out of the bundle (D44). */
+const CONTRACT_TABLES = ['contracts/table.ts', 'contracts/timing.ts']
 /** The page states and check kinds src/contracts/table.ts records (D44, D45). */
 const PROBE_STATES = new Set(['any', 'hero', 'sending', 'streaming', 'conversation', 'menu', 'dark'])
 const PROBE_KINDS = new Set(['selector', 'attribute', 'property', 'global', 'value', 'rail-geometry', 'none'])
@@ -357,7 +357,7 @@ function checkListed(bundled, sheets) {
   })
   for (const file of walk('')) {
     if (file.endsWith('.css') && !listed.has(file)) throw new Error(`build: src/${file} is in no list; add it to its feature's manifest or to THEME_SHEETS`)
-    if (file.endsWith('.manifest.ts') || file.endsWith('.test.ts') || file.endsWith('.d.ts') || file === CONTRACT_TABLE) continue
+    if (file.endsWith('.manifest.ts') || file.endsWith('.test.ts') || file.endsWith('.d.ts') || CONTRACT_TABLES.includes(file)) continue
     if (file.endsWith('.ts') && !bundled.has(file)) throw new Error(`build: src/${file} is imported by no module the bundle reaches`)
   }
 }
@@ -514,7 +514,43 @@ function checkContracts(manifests) {
   }
   const unclaimed = table.filter((entry) => entry.owner !== 'core' && !claimed.has(entry.id)).map((entry) => entry.id)
   if (unclaimed.length > 0) throw new Error(`build: src/contracts/table.ts entries no feature manifest claims: ${unclaimed.join(', ')}`)
+  checkTiming()
   return table
+}
+
+/**
+ * Hold the timing table to its checks (D44).
+ *
+ * The timing assumptions live in src/contracts/timing.ts, each naming what holds
+ * it: a scenario of the end-to-end lane or a unit test beside its module. Both
+ * names have to exist, so an assumption cannot enter the table with nothing that
+ * would notice it changing.
+ */
+function checkTiming() {
+  const { E2E_SCENARIOS, HOST_TIMING } = loadModule('contracts/timing.ts')
+  if (!Array.isArray(HOST_TIMING) || HOST_TIMING.length === 0) throw new Error('build: src/contracts/timing.ts exports no HOST_TIMING')
+  const scenarios = new Set(E2E_SCENARIOS)
+  const seen = new Set()
+  for (const entry of HOST_TIMING) {
+    for (const field of ['id', 'assumption', 'use']) {
+      if (typeof entry[field] !== 'string' || entry[field] === '') throw new Error(`build: src/contracts/timing.ts has an entry without ${field}: ${JSON.stringify(entry)}`)
+    }
+    if (seen.has(entry.id)) throw new Error(`build: src/contracts/timing.ts lists "${entry.id}" twice`)
+    seen.add(entry.id)
+    if (!Array.isArray(entry.checks) || entry.checks.length === 0) throw new Error(`build: src/contracts/timing.ts entry "${entry.id}" names no check`)
+    for (const check of entry.checks) {
+      const [kind, name] = String(check).split(':')
+      if (kind === 'scenario') {
+        if (!scenarios.has(name)) throw new Error(`build: src/contracts/timing.ts entry "${entry.id}" names the lane scenario "${name}", which tools/e2e.cjs does not run`)
+        continue
+      }
+      if (kind === 'test') {
+        if (!fs.existsSync(path.join(ROOT, name))) throw new Error(`build: src/contracts/timing.ts entry "${entry.id}" names the test "${name}", which does not exist`)
+        continue
+      }
+      throw new Error(`build: src/contracts/timing.ts entry "${entry.id}" has the check "${check}", which is neither scenario:<name> nor test:<path>`)
+    }
+  }
 }
 
 /**

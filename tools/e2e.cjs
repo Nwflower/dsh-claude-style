@@ -470,8 +470,9 @@ const SCENARIOS = {
     /** The empty page: the hero composer, the shell, the boot graph, the document. */
     async beforeSend(context) {
       context.notes.contract = []
-      await recordProbes(context, 'hero')
-      await recordProbes(context, 'any')
+      // A short window: the shell finishes mounting its slots just after the skin
+      // is up, so a single read would race the composer's own render.
+      await recordProbes(context, ['hero', 'any'], 4000)
     },
     /**
      * A second turn brings the states the first one has already left: the
@@ -577,6 +578,17 @@ async function main() {
   const argOf = (flag) => {
     const at = args.indexOf(`--${flag}`)
     return at === -1 ? undefined : args[at + 1]
+  }
+  // The timing table names the scenarios that hold it (D44), so the two lists are
+  // checked against each other rather than kept in step by hand.
+  const { E2E_SCENARIOS } = loadModule('contracts/timing.ts')
+  const known = Object.keys(SCENARIOS)
+  const unknown = E2E_SCENARIOS.filter((name) => !known.includes(name))
+  const unnamed = known.filter((name) => !E2E_SCENARIOS.includes(name))
+  if (unknown.length > 0 || unnamed.length > 0) {
+    throw new Error(`the lane runs ${known.join(', ')} while src/contracts/timing.ts names ${E2E_SCENARIOS.join(', ')}`
+      + `${unknown.length > 0 ? `; named there but missing here: ${unknown.join(', ')}` : ''}`
+      + `${unnamed.length > 0 ? `; run here but unnamed there: ${unnamed.join(', ')}` : ''}`)
   }
   const names = (argOf('scenario') ?? 'conversation,tool,send,scroll,contract').split(',').map((name) => name.trim()).filter(Boolean)
   const out = path.resolve(argOf('out') ?? DEFAULT_OUT)
