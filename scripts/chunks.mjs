@@ -17,12 +17,31 @@ import esbuild from 'esbuild'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
 const SRC = path.join(ROOT, 'packages', 'client', 'src')
+/** The path every module a build plugin generates is resolved under (D36). */
+const VIRTUAL_PREFIX = 'virtual:dsh-claude-style/'
 
 /** A module's id in the shared table: its path from the repository root, as esbuild's metafile keys it. */
 const moduleId = (file) => path.relative(ROOT, file).split(path.sep).join('/')
 
-/** The repository's own modules among a metafile's inputs (the virtual modules and stdin left out). */
-const ownInputs = (metafile) => Object.keys(metafile.inputs).filter((file) => file.startsWith('packages/'))
+/**
+ * The repository's own modules among a metafile's inputs, as the ids the shared
+ * table uses: a real module by its path from the repository root, a module a
+ * build plugin generated under its own path (esbuild keys those as
+ * `<namespace>:<path>`, and the generated data is one of them, D36).
+ *
+ * The host packages and the virtual entry left out: they are the loader's or the
+ * build's own, and the table resolves them where they stand.
+ */
+export function ownModuleIds(metafile) {
+  const ids = new Set()
+  for (const file of Object.keys(metafile.inputs)) {
+    const at = file.indexOf(':')
+    const rest = at === -1 ? '' : file.slice(at + 1)
+    const id = rest.startsWith('virtual:') ? rest : moduleId(file)
+    if (id.startsWith('packages/') || id.startsWith(VIRTUAL_PREFIX)) ids.add(id)
+  }
+  return [...ids]
+}
 
 /**
  * Keep the modules the bundle carries out of a chunk: each import that
@@ -40,7 +59,9 @@ function sharedModules(shared) {
         const result = await build.resolve(args.path, { kind: args.kind, importer: args.importer, resolveDir: args.resolveDir, pluginData: { nested: true } })
         if (result.errors.length > 0) return { errors: result.errors }
         if (result.external) return { path: result.path, external: true }
-        const id = moduleId(result.path)
+        // A generated module keeps the path its plugin resolved it under; the
+        // table and the chunk's own import are keyed by that same id.
+        const id = result.namespace === 'file' ? moduleId(result.path) : result.path
         return shared.has(id) ? { path: id, external: true } : { path: result.path }
       })
     },
@@ -87,7 +108,10 @@ function bundleChunk(manifest, shared, { external, plugins }) {
     external,
     banner: { js: chunkOpen(manifest.id) },
     footer: { js: CHUNK_CLOSE },
-    plugins: [...plugins, sharedModules(shared)],
+    // The sharing resolution runs before the generated-module plugin: that one
+    // answers for its own paths, and an answer that wins would put a second copy
+    // of a module the bundle already carries into the chunk (D39).
+    plugins: [sharedModules(shared), ...plugins],
   })
 }
 
@@ -119,7 +143,7 @@ export async function splitChunks({ deferred, mainModules, options, slot }) {
     const owner = new Map()
     const twice = new Set()
     for (const [id, chunk] of chunks) {
-      for (const file of ownInputs(chunk.result.metafile)) {
+      for (const file of ownModuleIds(chunk.result.metafile)) {
         if (owner.has(file)) twice.add(file)
         else owner.set(file, id)
       }
@@ -141,23 +165,25 @@ export async function splitChunks({ deferred, mainModules, options, slot }) {
 }
 
 /**
- * One chunk as the files the asset route serves: the script named by its
- * content hash, pointing at its source map beside it.
+ * One chunk as the files the asset route serves: the script and its source map,
+ * each named by its own content hash, so a change to either moves only the name
+ * it belongs to (the route serves these names as immutable).
  *
  * @param result - bundleChunk's result.
- * @returns `{ name, code, map }`.
+ * @returns `{ name, code, map, mapName }`.
  */
 export function chunkFiles(result) {
   const code = result.outputFiles.find((file) => file.path.endsWith('.js')).text
   const map = result.outputFiles.find((file) => file.path.endsWith('.js.map')).text
-  const name = `${createHash('sha256').update(code).digest('hex').slice(0, 12)}.js`
-  const named = `${code.endsWith('\n') ? code : `${code}\n`}//# sourceMappingURL=${name}.map\n`
+  const mapName = `${createHash('sha256').update(map).digest('hex').slice(0, 12)}.js.map`
+  const named = `${code.endsWith('\n') ? code : `${code}\n`}//# sourceMappingURL=${mapName}\n`
+  const name = `${createHash('sha256').update(named).digest('hex').slice(0, 12)}.js`
   // Syntax gate, as for the bundle: the chunk must parse before it is written.
   new vm.Script(named, { filename: `lib/assets/${name}` })
-  return { name, code: named, map }
+  return { name, code: named, map, mapName }
 }
 
 /** The repository's own modules a chunk carries, for the check that every source reaches the page. */
 export function chunkModules(result) {
-  return ownInputs(result.metafile)
+  return ownModuleIds(result.metafile)
 }

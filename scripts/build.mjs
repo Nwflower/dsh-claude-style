@@ -45,7 +45,7 @@ import { PNG } from 'pngjs'
 import { buildHostHalf } from '../packages/host/build.mjs'
 import { buildFonts, checkClaimed, checkSheetPixels, checkSheets, planAssets, routeText, vectorizeSheet, writeAssets } from '../packages/assets/assets.mjs'
 import { checkContracts, checkCycles, checkListed, checkManifests, checkScrollOwner, checkTypes } from './build-checks.mjs'
-import { chunkFiles, chunkModules, splitChunks } from './chunks.mjs'
+import { chunkFiles, chunkModules, ownModuleIds, splitChunks } from './chunks.mjs'
 import { TOKEN_SHEET, buildStylesheet, loadTokens, writeTokenTable } from './css.mjs'
 import { MODEL_COPY, validateModelCopy } from './model-copy.mjs'
 import { PEAKRATE_CATALOG, validatePeakCatalog } from './peakrate-catalog.mjs'
@@ -364,7 +364,7 @@ async function main() {
     deferred,
     mainModules: async (promoted) => {
       const graph = await esbuild.build({ ...clientOptions(standIns, promoted), minify: false, sourcemap: false })
-      return new Set(Object.keys(graph.metafile.inputs).filter((file) => file.startsWith('packages/')))
+      return new Set(ownModuleIds(graph.metafile))
     },
     options: { external: HOST_PACKAGES, plugins: [generated] },
     slot: BUILD_ID_SLOT,
@@ -377,19 +377,20 @@ async function main() {
     chunkInputs.push(...chunkModules(chunk))
     const files = chunkFiles(chunk)
     chunkUrls[id] = routeText(plan, { file: `chunks/${id}.js`, name: files.name, type: 'text/javascript; charset=utf-8', text: files.code }).url
-    routeText(plan, { file: `chunks/${id}.js.map`, name: `${files.name}.map`, type: 'application/json; charset=utf-8', text: files.map })
+    routeText(plan, { file: `chunks/${id}.js.map`, name: files.mapName, type: 'application/json; charset=utf-8', text: files.map })
   }
 
   const result = await esbuild.build(clientOptions(chunkUrls, split.shared))
   checkCycles(result.metafile)
   checkScrollOwner(result.metafile)
-  // The metafile keys paths the way esbuild saw them: repository-relative.
+  // The metafile keys paths the way esbuild saw them: repository-relative. Both
+  // sides of the comparison are the repository's own modules, generated ones
+  // included: a second copy of a generated module ships its values twice (D39).
   const prefix = `${path.relative(ROOT, SRC).split(path.sep).join('/')}/`
-  const mainInputs = Object.keys(result.metafile.inputs).filter((file) => file.startsWith(prefix))
-  // A module the bundle and a chunk both carried would run twice, with its state split in two (D39).
-  const twice = mainInputs.filter((file) => chunkInputs.includes(file))
+  const mainIds = ownModuleIds(result.metafile)
+  const twice = mainIds.filter((id) => chunkInputs.includes(id))
   if (twice.length > 0) throw new Error(`build: the bundle and a feature chunk both carry ${twice.join(', ')}`)
-  const bundled = new Set([...mainInputs, ...chunkInputs].filter((file) => file.startsWith(prefix)).map((file) => file.slice(prefix.length)))
+  const bundled = new Set([...mainIds, ...chunkInputs].filter((id) => id.startsWith(prefix)).map((id) => id.slice(prefix.length)))
   checkListed(bundled, sheets)
 
   const output = (suffix) => result.outputFiles.find((file) => file.path.endsWith(suffix)).text

@@ -43,15 +43,16 @@ export function featuresModule(manifests, chunks) {
 /**
  * The table the feature chunks resolve their shared modules from,
  * `virtual:dsh-claude-style/chunk-modules` (D39): each id a chunk imports, as
- * this bundle's own instance — a source module's namespace, or the host
- * package exactly as the loader's `require` hands it over, so the chunk's own
- * import helpers treat it as the bundle's do.
+ * this bundle's own instance — a source module's namespace or a generated
+ * module's, or the host package exactly as the loader's `require` hands it
+ * over, so the chunk's own import helpers treat it as the bundle's do.
  *
- * @param ids - module ids (paths from the repository root) and host package names.
+ * @param ids - module ids (paths from the repository root, or the `virtual:` path a generated module resolves under) and host package names.
  */
 export function chunkModulesModule(ids) {
-  const own = ids.filter((id) => id.startsWith('packages/'))
-  const imports = own.map((id, index) => `import * as shared${index} from ${JSON.stringify(path.join(ROOT, id))}`)
+  const own = ids.filter((id) => id.startsWith('packages/') || id.startsWith('virtual:'))
+  const source = (id) => (id.startsWith('virtual:') ? id : path.join(ROOT, id))
+  const imports = own.map((id, index) => `import * as shared${index} from ${JSON.stringify(source(id))}`)
   const entries = ids.map((id) => {
     const index = own.indexOf(id)
     return `  ${JSON.stringify(id)}: ${index === -1 ? `require(${JSON.stringify(id)})` : `shared${index}`},`
