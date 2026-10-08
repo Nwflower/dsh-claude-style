@@ -10,6 +10,7 @@ import type { BanHandle } from '../features/ban-screen/ban-screen'
 import type { ChatFoldHandle } from '../features/chat-fold/chat-fold'
 import type { ComposerHandle } from '../features/composer/composer'
 import type { ModelHandle } from '../features/model/model-picker'
+import type { PeakRateHandle } from '../features/peakrate/peakrate'
 import type { QuickProvidersHandle } from '../features/settings/quick-providers'
 
 /** Why the scheduler asks a feature to close. Features ignore the reasons they do not act on. */
@@ -57,6 +58,7 @@ export interface Handles {
   permissions: FeatureHandle
   contextStats: FeatureHandle
   model: ModelHandle
+  peakrate: PeakRateHandle
   effort: FeatureHandle
   heroMenu: FeatureHandle
   quickProviders: QuickProvidersHandle

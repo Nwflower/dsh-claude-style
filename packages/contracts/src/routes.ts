@@ -41,3 +41,10 @@ export const USAGE_PATH = `${ROUTE_PREFIX}/usage`
  * without one the route only brings its message cache up to date.
  */
 export const SESSION_SEARCH_PATH = `${ROUTE_PREFIX}/session-search`
+
+/**
+ * The model peak / off-peak catalog the host half keeps. `GET` answers the
+ * document it holds; `POST` makes it fetch the source first, so the browser
+ * half can ask for a fresh copy without knowing the source's address.
+ */
+export const PEAKRATE_PATH = `${ROUTE_PREFIX}/peakrate`

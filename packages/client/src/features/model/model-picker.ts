@@ -88,7 +88,17 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       subHoverIntent: modelSubHoverIntent,
       isSubOpen() { return modelSubPop !== null && modelSubPop.getAttribute('data-open') === 'true' },
       closeSub: closeModelPopovers,
-      openSub: openModelSub
+      openSub: openModelSub,
+      /**
+       * The peak rate meter is its own feature (packages/client/src/features/peakrate/):
+       * it answers with a badge for the row, and with nothing at all for a
+       * model whose provider bills on no clock.
+       */
+      rate(provider: string, modelId: string) {
+        const peakrate = ui.peakrate
+        if (peakrate === undefined) return null
+        return peakrate.badge(provider, modelId)
+      }
   })
 
   function cancelCloseModel() {
@@ -173,6 +183,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       }
     }
     if (modelSubPop) setMenuPopoverOpen(modelSubPop, false)
+    // A card opening repaints from scratch: its countdowns were drawn at
+    // whatever minute it was last on screen, and a closed card is not part of
+    // any signature (rateSignature).
+    modelBodySig = ''
     renderModelBody()
     positionModelPopovers()
     if (modelPop) setMenuPopoverOpen(modelPop, true)
@@ -180,6 +194,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   function openModelSub() {
     cancelCloseModel()
+    modelSubSig = ''
     renderModelSub()
     // Open BEFORE placing: the placement pass reads the sub card only while
     // it is marked open, so positioning first would skip it and leave the
@@ -228,6 +243,21 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     modelFooter.appendChild(modelRows.buildModelCell(copyLabel('moreLabel', MODEL_MORE_LABEL)))
   }
 
+  /**
+   * What the rows' rates depend on, in one value the render signatures carry.
+   * The catalog is the meter feature's (its generation moves when one arrives),
+   * and the minute only matters while a card is on screen — the countdown is
+   * drawn to the minute, and a card that is down is repainted by the opening
+   * pass anyway.
+   */
+  function rateSignature() {
+    const peakrate = ui.peakrate
+    if (peakrate === undefined) return ''
+    const up = (modelPop !== null && modelPop.getAttribute('data-open') === 'true') ||
+      (modelSubPop !== null && modelSubPop.getAttribute('data-open') === 'true')
+    return up ? `${peakrate.epoch()}/${Math.floor(Date.now() / 60000)}` : `${peakrate.epoch()}`
+  }
+
   /** Level 1: the provider sections, the divider, More models. */
   function renderModelBody() {
     if (!modelBody) return
@@ -235,7 +265,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const status = snap ? snap.status : 'idle'
     const groups = (snap && snap.groups) || []
     const current = modelCatalog.current(snap)
-    let sig = [status, activeLocale(), current ? `${current.group.id}/${current.model.id}` : '', readPrefs().quickProviders.join(',')].join('|')
+    let sig = [status, activeLocale(), current ? `${current.group.id}/${current.model.id}` : '', readPrefs().quickProviders.join(','), rateSignature()].join('|')
     for (let g = 0; g < groups.length; g++) sig += `;${groups[g].id}:${groups[g].models.length}`
     if (sig === modelBodySig) {
       return
@@ -338,7 +368,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const sections = modelRows.levelOneSections(groups)
     const listed = []
     for (let s0 = 0; s0 < sections.length; s0++) listed.push(sections[s0].id)
-    let sig2 = `more|${listed.join(',')}`
+    let sig2 = `more|${listed.join(',')}|${rateSignature()}`
     for (let g = 0; g < groups.length; g++) sig2 += `;${groups[g].id}:${groups[g].models.length}`
     if (current) sig2 += `#${current.group.id}/${current.model.id}`
     if (sig2 === modelSubSig) return

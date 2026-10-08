@@ -2,15 +2,16 @@
  * The plugin's host routes: everything the browser half cannot reach itself.
  *
  * These are the surfaces D11 describes — the model copy document, the webfonts,
- * the OS user, the HDSL account, the routed assets, session deletion and the
- * usage and search roll-ups — each registered on the host's web server under
- * this plugin's route prefix. Every route is registered on its own: one path
- * the web server refuses is reported, and the other routes still register.
+ * the OS user, the HDSL account, the routed assets, session deletion, the
+ * usage and search roll-ups and the peak rate catalog — each registered on the
+ * host's web server under this plugin's route prefix. Every route is
+ * registered on its own: one path the web server refuses is reported, and the
+ * other routes still register.
  *
  * The paths are the shared contract (`@dsh-claude-style/contracts/routes`,
  * D46): the browser half addresses the same names.
  */
-import { HDSL_PATH, HDSL_SKIN_PATH, ROUTE_PREFIX, SESSION_DELETE_PATH, SESSION_SEARCH_PATH, USAGE_PATH, USERNAME_PATH } from '@dsh-claude-style/contracts/routes'
+import { HDSL_PATH, HDSL_SKIN_PATH, PEAKRATE_PATH, ROUTE_PREFIX, SESSION_DELETE_PATH, SESSION_SEARCH_PATH, USAGE_PATH, USERNAME_PATH } from '@dsh-claude-style/contracts/routes'
 import { existsSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs'
 import { userInfo } from 'node:os'
 import { dirname, join, resolve, sep } from 'node:path'
@@ -20,6 +21,7 @@ import { harnessPath } from './harness-home.js'
 import { createHdslAccount } from './hdsl.js'
 import type { HdslReading } from './hdsl.js'
 import { packageRoot } from './package-root.js'
+import { createPeakRate } from './peakrate.js'
 import { QUERY_MAX, createSessionSearch } from './search.js'
 import { createUsage } from './usage.js'
 
@@ -383,6 +385,7 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
     const usage = createUsage(ctx)
     const hdsl = createHdslAccount(ctx)
     const sessionSearch = createSessionSearch(ctx)
+    const peakrate = createPeakRate(ctx)
 
     /**
      * Register one route. The web server refuses a path another plugin already
@@ -570,8 +573,30 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
       },
     })
 
+    register('peak rate', {
+      kind: 'exact',
+      path: PEAKRATE_PATH,
+      handler: (req: DshRequest, res: DshResponse) => {
+        // The catalog is public data, and the browser half is the only client:
+        // the route runs the same fence as the rest of the plugin's routes so
+        // that only this page can make the host reach the source. `POST` is the
+        // browser half asking for a fresh copy, because it cannot name the
+        // source itself.
+        if (methodRefused(req, res, ['GET', 'POST'])) return
+        if (fenceRefused(req, res)) return
+        peakrate.ensure()
+        const answer = req.method === 'POST' ? peakrate.refresh().then(() => peakrate.payload()) : Promise.resolve(peakrate.payload())
+        void answer.then((payload) => {
+          sendJson(res, 200, { ok: true, ...payload })
+        }, (error: unknown) => {
+          sendJson(res, 500, { ok: false, error: String((error as { message?: string } | null)?.message ?? String(error)) })
+        })
+      },
+    })
+
     return () => {
       usage.dispose()
+      peakrate.dispose()
       // One route's disposer failing must not keep the others registered
       // (docs/decisions D12); the failure is reported.
       for (const dispose of disposers) {

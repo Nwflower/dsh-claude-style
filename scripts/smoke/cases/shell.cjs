@@ -348,7 +348,7 @@ module.exports = {
     const expected = {
       general: ['username', 'motion', 'autoPopover', 'banLocale'],
       appearance: ['brand', 'palette', 'typeface', 'mascot', 'mascotScope'],
-      composer: ['composerScope', 'homeLayout', 'modelPicker', 'quickProviders', 'permissionsControl'],
+      composer: ['composerScope', 'homeLayout', 'modelPicker', 'quickProviders', 'peakrate', 'permissionsControl'],
       sidebar: ['collapseFooter', 'sidebarSearch', 'workspaceView'],
       conversation: ['turnStatus', 'turnNav', 'chatAnimations', 'caretMotion', 'viewTabs', 'headerBand'],
     }
@@ -361,9 +361,9 @@ module.exports = {
         JSON.stringify(page))
     }
     const off = settings.parentsOff || {}
-    check('a sub-row greys out while its parent is off: the mascot\'s place with the mascot off, the quick providers with the model picker off',
+    check('a sub-row greys out while its parent is off: the mascot\'s place with the mascot off, the quick providers and the peak rate meter with the model picker off',
       !!off.appearance && JSON.stringify(off.appearance.disabled) === '["mascotScope"]' &&
-        !!off.composer && JSON.stringify(off.composer.disabled) === '["quickProviders"]',
+        !!off.composer && JSON.stringify(off.composer.disabled) === '["quickProviders","peakrate"]',
       JSON.stringify(off))
     commonChecks(r)
   },

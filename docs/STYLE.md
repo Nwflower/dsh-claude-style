@@ -97,6 +97,8 @@ keeps where it states none of its own; `—` is a token that theme leaves unset.
 | `--dsw-specific-menu` | `#ffffff` | `#ffffff` | — | — | host's own |  |
 | `--dsw-specific-bubble` | `var(--dsh-claude-hover-bg)` | `#eaf0fe` | — | `#232a3a` | host's own | user message bubble |
 | `--dsh-claude-chip` | `#f6f6f4` | `#f2f6fd` | — | — | `var(--dsw-specific-selector)` | segmented control and switch at rest |
+| `--dsh-claude-meter-peak` | `#a4621d` | `#9a5a1a` | `#e2a45f` | `#e5ae67` | `var(--dsw-alias-state-warn-label)` | the peak rate badge: the expensive end of a provider's own billing clock |
+| `--dsh-claude-meter-valley` | `#3d7550` | `#2e7554` | `#8cbf96` | `#7cc2a0` | `var(--dsw-alias-state-success-primary)` | the off-peak rate badge, and the dated promotions priced below it |
 <!-- /generated:tokens -->
 
 **Host token bindings.** The skin supplies its palette through the host's own

@@ -5,9 +5,10 @@ import type { SettingsTab, SettingsView } from './settings-controls'
 
 /**
  * The settings page's Composer tab: the composer restyle's scope, the home
- * layout, the model picker with its quick providers, and the permission
- * control. The effort slider rides the model picker: the host keeps its
- * own effort choice inside its own model menu, so the two go together.
+ * layout, the model picker with its quick providers and the peak rate meter,
+ * and the permission control. The effort slider rides the model picker: the
+ * host keeps its own effort choice inside its own model menu, so the two go
+ * together.
  */
 export function createSettingsComposerTab(): SettingsTab {
   /** What the quick-provider trigger reads: how many, or nothing chosen. */
@@ -69,6 +70,19 @@ export function createSettingsComposerTab(): SettingsTab {
               api.toggle(quickTrigger.current, next => { write({ quickProviders: next }) })
             },
           }, quickSummary(prefs.quickProviders)),
+          prefs.modelPicker,
+        ),
+      },
+      {
+        // The meter draws into the picker's own rows, so it belongs to that
+        // row: off, the reader gets the host's menu back and there is nowhere
+        // for a badge to stand.
+        rank: 45,
+        node: controls.subRow(
+          'peakrate',
+          settingsCopy('peakrateTitle', 'Peak rate meter'),
+          settingsCopy('peakrateDesc', 'Every row of the model menu carries the rate in force right now and how long it lasts. Off leaves the rows bare.'),
+          controls.toggle(prefs.peakrate !== false, value => { write({ peakrate: value }) }, !prefs.modelPicker),
           prefs.modelPicker,
         ),
       },

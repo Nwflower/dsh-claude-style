@@ -11,6 +11,7 @@ export const PREFS_DEFAULT = Object.freeze({
   autoPopover: 'all',
   composerScope: 'all',
   modelPicker: true,
+  peakrate: true,
   quickProviders: [],
   username: '',
   banLocale: 'en',

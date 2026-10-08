@@ -37,6 +37,8 @@ export function createModelRows(options: {
   isSubOpen: () => boolean
   closeSub: () => void
   openSub: () => void
+  /** The peak rate meter's badge for one row, or null (features/peakrate). */
+  rate: (provider: string, modelId: string) => HTMLElement | null
 }) {
   const ctx = options.ctx
   const pickModel = options.pickModel
@@ -44,6 +46,7 @@ export function createModelRows(options: {
   const isSubOpen = options.isSubOpen
   const closeSub = options.closeSub
   const openSub = options.openSub
+  const rate = options.rate
 
   /**
    * The rule that separates one provider's models from the next. The provider
@@ -80,6 +83,11 @@ export function createModelRows(options: {
     // localized rather than stacked, so a row never carries two languages.
     const desc = withDescription ? modelDescription(ctx, group.id, model) : ''
     if (desc) copy.appendChild(buildElement('span', 'dsh-claude-model-desc', desc))
+    // The peak rate meter rides in front of the check: the row is compared by
+    // its rate before it is picked, and a model whose provider bills on no
+    // clock carries no badge at all (packages/client/src/features/peakrate/, D54).
+    const meter = rate(group.id, model.id)
+    if (meter !== null) item.insertBefore(meter, built.check)
     built.check!.innerHTML = selected ? POPOVER_CHECK_SVG : ''
     item.addEventListener('click', ((g: string, m: string) => (e: MouseEvent) => {
       e.stopPropagation()

@@ -163,6 +163,7 @@ export const FEATURE_PREF_DEFAULTS = {
   viewTabs: true,
   headerBand: true,
   chatAnimations: CHAT_ANIMATIONS_ENHANCED,
+  peakrate: true,
 }
 
 
@@ -347,6 +348,7 @@ export const HOME_HERO_ATTR = 'data-dsh-claude-home-hero'
 export {
   HDSL_PATH as HDSL_ROUTE,
   HDSL_SKIN_PATH as HDSL_SKIN_ROUTE,
+  PEAKRATE_PATH as PEAKRATE_ROUTE,
   SESSION_DELETE_PATH as SESSION_DELETE_ROUTE,
   SESSION_SEARCH_PATH as SESSION_SEARCH_ROUTE,
   USAGE_PATH as USAGE_ROUTE,
@@ -386,6 +388,7 @@ export interface Prefs {
   autoPopover: string
   composerScope: string
   modelPicker: boolean
+  peakrate: boolean
   quickProviders: string[]
   username: string
   banLocale: string

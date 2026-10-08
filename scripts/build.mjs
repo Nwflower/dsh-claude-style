@@ -48,6 +48,7 @@ import { checkContracts, checkCycles, checkListed, checkManifests, checkScrollOw
 import { chunkFiles, chunkModules, splitChunks } from './chunks.mjs'
 import { TOKEN_SHEET, buildStylesheet, loadTokens, writeTokenTable } from './css.mjs'
 import { MODEL_COPY, validateModelCopy } from './model-copy.mjs'
+import { PEAKRATE_CATALOG, validatePeakCatalog } from './peakrate-catalog.mjs'
 import manifestReader from './shared/read-manifests.cjs'
 import { loadModule } from './shared/ts-module.cjs'
 import { chunkModulesModule, featuresModule, generatedModule } from './virtual-modules.mjs'
@@ -56,6 +57,8 @@ const ROOT = path.resolve(import.meta.dirname, '..')
 const SRC = path.join(ROOT, 'packages', 'client', 'src')
 /** The model copy: data beside the browser half's code, never bundled. */
 const DATA = path.join(ROOT, 'packages', 'client', 'data')
+/** The peak rate catalog the host half serves: data beside the host half's code, never bundled (D54). */
+const HOST_DATA = path.join(ROOT, 'packages', 'host', 'data')
 /** Brand marks, mascot sheets and vendor lockups; packages/assets/assets.mjs plans their delivery (D38). */
 const ASSETS = path.join(ROOT, 'packages', 'assets', 'src')
 /** The plugin icon the manifest names, copied into lib/ as it is. */
@@ -414,6 +417,12 @@ async function main() {
   const copy = JSON.parse(fs.readFileSync(path.join(DATA, MODEL_COPY), 'utf8'))
   const familyRules = validateModelCopy(copy, combines)
   const copyText = JSON.stringify(copy, null, 2) + '\n'
+  // The peak rate catalog is the data source's own document, shipped as the
+  // copy a machine with no reach judges by; the host half's parser is the same
+  // one the build checks it with (D54).
+  const catalogPath = path.join(HOST_DATA, PEAKRATE_CATALOG)
+  const catalogText = fs.readFileSync(catalogPath, 'utf8')
+  const catalogProfiles = validatePeakCatalog(JSON.parse(catalogText), catalogPath)
   const iconSource = path.join(BRAND_ASSETS, ICON_SOURCE)
   const iconTarget = path.join(LIB, ICON_FILE)
   if (!fs.existsSync(iconSource)) throw new Error(`build: packages/assets/src/brand/${ICON_SOURCE} is missing`)
@@ -428,6 +437,9 @@ async function main() {
 
   fs.writeFileSync(path.join(LIB, MODEL_COPY), copyText)
   console.log(`built lib/${MODEL_COPY} (${familyRules} family rules, ${copy.tiers.length} tier rules)`)
+
+  fs.writeFileSync(path.join(LIB, PEAKRATE_CATALOG), catalogText)
+  console.log(`built lib/${PEAKRATE_CATALOG} (${catalogProfiles} profiles) from packages/host/data/${PEAKRATE_CATALOG}`)
 
   fs.copyFileSync(iconSource, iconTarget)
   console.log(`built lib/${ICON_FILE} (${fs.statSync(iconTarget).size} bytes) from packages/assets/src/brand/${ICON_SOURCE}`)

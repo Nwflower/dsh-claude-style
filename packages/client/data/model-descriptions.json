@@ -10,6 +10,11 @@
     "effortFaster": { "zh": "更快", "en": "Faster" },
     "effortSmarter": { "zh": "更强", "en": "Smarter" },
     "moreLabel": { "zh": "更多模型", "en": "More models" },
+    "ratePeak": { "zh": "峰价", "en": "Peak rate" },
+    "rateOffPeak": { "zh": "谷价", "en": "Off-peak rate" },
+    "rateCampaign": { "zh": "活动价", "en": "Promotion" },
+    "rateNow": { "zh": "此刻 {rate}", "en": "Now {rate}" },
+    "rateNext": { "zh": "{countdown} 后转为 {next}", "en": "in {countdown} → {next}" },
     "archiveActive": { "zh": "进行中", "en": "Active" },
     "archiveArchived": { "zh": "已归档", "en": "Archived" },
     "archiveDelete": { "zh": "删除会话", "en": "Delete conversation" },
@@ -174,6 +179,11 @@
     "pickerDesc": {
       "zh": "重绘对话框区域的模型菜单。",
       "en": "Replace the composer's model menu with the two-level Claude-style menu. Off restores the host's model menu."
+    },
+    "peakrateTitle": { "zh": "峰谷电表", "en": "Peak rate meter" },
+    "peakrateDesc": {
+      "zh": "给模型菜单的每一行标出此刻的峰价、谷价或限时活动，以及距离切换还有多久。关闭后各行只显示模型名。",
+      "en": "Marks every row of the model menu with the peak, off-peak or promotional rate in force right now, and how long it lasts. Off leaves the rows bare."
     },
     "quickTitle": { "zh": "快捷供应商", "en": "Quick providers" },
     "quickDesc": {

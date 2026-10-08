@@ -1,0 +1,48 @@
+/* ---------- Peak rate meter ---------- */
+/* The badge a model row carries: the rate in force right now and the countdown
+   to the switch (D54). The shape says which state it is — twin peaks, twin
+   valleys, a spark — and the colour says expensive or cheap, so the two are
+   never read from the same cue. The badge is the skin's own node inside the
+   skin's own row, so nothing here needs to outrank the host. */
+body[data-dsh-claude-style] .dsh-claude-peakrate {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 6px 1px 5px;
+  border-radius: 999px;
+  background: var(--dsh-claude-hover-bg);
+  color: var(--dsw-alias-label-secondary, #8f8d84);
+  font-size: 11px;
+  line-height: 15px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* The expensive end of the clock. */
+body[data-dsh-claude-style] .dsh-claude-peakrate[data-period='peak'] {
+  color: var(--dsh-claude-meter-peak);
+}
+
+/* The cheap end, and the dated promotions that price below it. */
+body[data-dsh-claude-style] .dsh-claude-peakrate[data-period='offPeak'],
+body[data-dsh-claude-style] .dsh-claude-peakrate[data-period='campaign'] {
+  color: var(--dsh-claude-meter-valley);
+}
+
+body[data-dsh-claude-style] .dsh-claude-peakrate-icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+body[data-dsh-claude-style] .dsh-claude-peakrate-value {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* The countdown is the softer half of the same reading: the multiplier is what
+   the row is compared by, the time is what explains it. */
+body[data-dsh-claude-style] .dsh-claude-peakrate-countdown {
+  color: var(--dsw-alias-label-tertiary, #8f8d84);
+  font-weight: 400;
+}
