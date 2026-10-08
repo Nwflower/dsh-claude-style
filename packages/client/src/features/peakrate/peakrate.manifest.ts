@@ -5,7 +5,7 @@ export default {
   order: 75,
   pref: 'peakrate',
   stylesheets: [{ file: 'peakrate.css', rank: 265 }],
-  cases: ['composer', 'settings'],
+  cases: ['composer', 'settings', 'model-meter'],
   contracts: [],
   description: {
     zh: {

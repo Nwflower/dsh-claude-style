@@ -58,6 +58,36 @@
         totals: { input: 490000, output: 10000, cacheRead: 0, cacheWrite: 0, calls: 9, sessions: 4, activeDays: 3 },
       } }))
     }
+    if (url === '/dsh-claude-style/peakrate') {
+      // The rate catalog, in the shape the host half serves it: two profiles,
+      // the second one a promotion that runs every day, so that row's badge
+      // reads the same whatever the clock says when the case runs. The DeepSeek
+      // profile keeps a plain weekday clock, which is what gives its rows a
+      // countdown. Every other case leaves the route to the real fetch, exactly
+      // as the pages before this one did.
+      if (CASE !== 'model-meter') return realFetch.apply(window, arguments)
+      return Promise.resolve(jsonResponse({
+        ok: true,
+        origin: 'remote',
+        fetchedAt: new Date().toISOString(),
+        profiles: [
+          {
+            id: 'deepseek-v4', provider: 'DeepSeek', model: 'DeepSeek V4', peakBadge: '2×', offPeakBadge: '1×',
+            schedule: { timeZone: 'UTC', peakDays: [0, 1, 2, 3, 4, 5, 6], peakWindows: [{ start: '01:00', end: '04:00' }] },
+          },
+          {
+            id: 'zai-glm-5-3', provider: 'Z.ai', model: 'GLM-5.3', peakBadge: '1×', offPeakBadge: '0.5×',
+            schedule: {
+              timeZone: 'UTC', peakDays: [0, 1, 2, 3, 4, 5, 6], peakWindows: [{ start: '01:00', end: '04:00' }],
+              overrides: [{
+                period: 'campaign', periodName: 'fixture', badge: '0.5×', name: 'Fixture campaign',
+                days: [], windows: [{ start: '00:00', end: '00:00' }],
+              }],
+            },
+          },
+        ],
+      }))
+    }
     if (url === '/dsh-claude-style/hdsl-skin.png') {
       // An <img> or a canvas source loads this outside the fetch stub, so the
       // HTTP stand-in serves the bytes; this branch only keeps a stray request

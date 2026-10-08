@@ -3,12 +3,10 @@ import { MODEL_EMPTY_LABEL, MODEL_FALLBACK_LABEL, MODEL_LOADING_LABEL, MODEL_MOR
 import { activeLocale, copyLabel } from '../../core/i18n'
 import { loadModelCopy } from '../../core/model-copy'
 import { readPrefs } from '../../core/prefs'
-import { buildModelLabel, modelBrand } from './brand'
 import { createModelCatalog } from './catalog'
-import { modelDescription } from './copy-lookup'
 import { byModelId, createModelRows } from './rows'
 import { buildElement, closestFrom, setAttributeIfChanged } from '../../shared/dom'
-import { POPOVER_CHECK_SVG, POPOVER_MARGIN, POPOVER_OPEN_DELAY, closeOtherPopovers, createHoverIntent, positionAnchoredPopover, registerPopover, removeStrayNodes, setMenuPopoverOpen, unregisterPopover } from '../../shared/popover'
+import { POPOVER_MARGIN, POPOVER_OPEN_DELAY, closeOtherPopovers, createHoverIntent, positionAnchoredPopover, registerPopover, removeStrayNodes, setMenuPopoverOpen, unregisterPopover } from '../../shared/popover'
 import type { HostContext } from '../../core/host'
 import type { FeatureHandle } from '../../core/scheduler'
 import type { FeatureUi } from '../../core/feature'
@@ -315,29 +313,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
         // naming (the official source) adds nothing here.
         const currentRuleName = current.group.id === MODEL_OFFICIAL_GROUP ? '' : (current.group.name || current.group.id)
         if (currentRuleName !== '') modelBody.appendChild(modelRows.buildProviderRule(currentRuleName))
-        const currentRow = buildElement('button', 'dsh-claude-model-option')
-        currentRow.type = 'button'
-        currentRow.setAttribute('role', 'menuitemradio')
-        currentRow.setAttribute('aria-checked', 'true')
-        const currentBrand = modelBrand(current.model.id)
-        const currentName = current.model.name || current.model.id
-        // The brand id is the row's styling hook here too, so this row wears
-        // the same vendor lockup and face as the list entry it stands for.
-        if (currentBrand) currentRow.setAttribute('data-brand', currentBrand)
-        const currentCopy = buildElement('span', 'dsh-claude-model-copy')
-        const currentLabel = buildModelLabel(currentName, currentBrand)
-        currentCopy.appendChild(currentLabel)
-        const currentDesc = modelDescription(ctx, current.group.id, current.model)
-        if (currentDesc) currentCopy.appendChild(buildElement('span', 'dsh-claude-model-desc', currentDesc))
-        currentRow.appendChild(currentCopy)
-        const currentCheck = buildElement('span', 'dsh-claude-popover-check')
-        currentCheck.innerHTML = POPOVER_CHECK_SVG
-        currentRow.appendChild(currentCheck)
-        currentRow.addEventListener('click', e => {
-          e.stopPropagation()
-          closeModelPopovers()
-        })
-        modelBody.appendChild(currentRow)
+        // Through the same row builder as every other row, so this one carries
+        // the same brand hook, description and peak rate meter.
+        modelBody.appendChild(modelRows.buildCurrentOption(current.group, current.model))
       }
       // The divider closes the model list and the More-models row follows it;
       // both live in the footer, OUTSIDE the scroll area — the list above

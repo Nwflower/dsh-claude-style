@@ -27,6 +27,7 @@
       if (name === 'remote.permissionPresets') return permissionPresets
       if (name === 'remote') return CASE === 'desktop' ? remote : undefined
       if (name === 'sessions') return sessions
+      if (name === 'modelDirectories') return host.modelDirectories
       if (name === 'workspaces') return workspacesService
       if (name === 'uiConversation') return deepy !== undefined ? deepy.conversation : turnNav !== undefined ? turnNav.conversation : turnStatusChat
       if (name === 'uiSession') return deepy !== undefined ? deepy.uiSession : undefined

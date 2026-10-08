@@ -13,7 +13,7 @@ export default {
     title: { key: 'pickerTitle', fallback: 'Redraw the model picker' },
     desc: { key: 'pickerDesc', fallback: 'Replace the composer\'s model menu with the two-level Claude-style menu. Off restores the host\'s model menu.' },
   },
-  cases: ['brand', 'composer', 'settings', 'sync-fault'],
+  cases: ['brand', 'composer', 'settings', 'sync-fault', 'model-meter'],
   description: {
     zh: {
       title: '模型选择器',

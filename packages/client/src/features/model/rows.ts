@@ -60,8 +60,16 @@ export function createModelRows(options: {
     return rule
   }
 
-  /** One selectable model row: brand mark, name, optional description line and a check when current. */
-  function buildModelOption(group: HostModelGroup, model: HostModelEntry, selected: boolean, withDescription: boolean) {
+  /**
+   * One model row, the skeleton every level builds from: brand mark, name, an
+   * optional description line, the peak rate meter and a check when the model is
+   * in force. `onPick` is the whole difference between the rows — a list row
+   * puts its model in force, the current seat's own row only folds the picker.
+   *
+   * Every row goes through here, the current seat's included: a row built
+   * anywhere else is a row that can quietly lose whatever the others carry.
+   */
+  function buildModelRow(group: HostModelGroup, model: HostModelEntry, selected: boolean, withDescription: boolean, onPick: () => void) {
     // The shared row skeleton; the copy block keeps its own class, and
     // the vendor typography rides on the label inside it.
     const built = buildPopoverItem({ className: 'dsh-claude-model-option', role: 'menuitemradio', textClass: 'dsh-claude-model-copy', check: true })
@@ -75,7 +83,9 @@ export function createModelRows(options: {
     // does not watch data-*, so this write cannot re-trigger a pass.
     if (brand) item.setAttribute('data-brand', brand)
     const copy = built.text
-    copy.appendChild(buildModelLabel(model.name, brand))
+    // A model the host names with an empty string still reads as itself: the
+    // row is picked by that id, so the label falls back to it.
+    copy.appendChild(buildModelLabel(model.name || model.id, brand))
     // The description belongs to level 1 only: that list is the official
     // catalog, short enough that the line is what tells the models apart,
     // while "More models" is every provider's full catalog and reads better
@@ -89,11 +99,25 @@ export function createModelRows(options: {
     const meter = rate(group.id, model.id)
     if (meter !== null) item.insertBefore(meter, built.check)
     built.check!.innerHTML = selected ? POPOVER_CHECK_SVG : ''
-    item.addEventListener('click', ((g: string, m: string) => (e: MouseEvent) => {
+    item.addEventListener('click', (e: MouseEvent) => {
       e.stopPropagation()
-      pickModel(g, m)
-    })(group.id, model.id))
+      onPick()
+    })
     return item
+  }
+
+  /** One selectable model row: picking it puts that model in force. */
+  function buildModelOption(group: HostModelGroup, model: HostModelEntry, selected: boolean, withDescription: boolean) {
+    return buildModelRow(group, model, selected, withDescription, () => { pickModel(group.id, model.id) })
+  }
+
+  /**
+   * The model in force, as a row of its own for the case where level 1 lists no
+   * group carrying it: the same row with its check on, and picking it only folds
+   * the picker, because that model is already in force.
+   */
+  function buildCurrentOption(group: HostModelGroup, model: HostModelEntry) {
+    return buildModelRow(group, model, true, true, () => { closeSub() })
   }
 
   /** The More-models row: label + chevron, hover opens the second level. */
@@ -170,6 +194,7 @@ export function createModelRows(options: {
   return {
     buildProviderRule,
     buildModelOption,
+    buildCurrentOption,
     buildModelCell,
     levelOneSections,
     remainingGroups

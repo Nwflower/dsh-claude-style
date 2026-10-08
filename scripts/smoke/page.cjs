@@ -31,6 +31,7 @@ const STAND_IN_PARTS = [
   'stats-projections.js',
   'workspaces.js',
   'sessions.js',
+  'model-directory.js',
   'config-forms.js',
   'slots.js',
   'ctx.js',
@@ -62,6 +63,7 @@ const PROBE_PARTS = [
   'chat-motion.js',
   'chat-files.js',
   'chat-send.js',
+  'model-meter.js',
   'peer.js',
   'teardown.js',
 ]

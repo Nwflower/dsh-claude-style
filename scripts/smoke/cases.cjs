@@ -10,8 +10,9 @@ const shell = require('./cases/shell.cjs')
 const agent = require('./cases/agent.cjs')
 const chat = require('./cases/chat.cjs')
 const mascot = require('./cases/mascot.cjs')
+const model = require('./cases/model.cjs')
 const peer = require('./cases/peer.cjs')
 
-const CASES = { ...shell, ...agent, ...chat, ...mascot, ...peer }
+const CASES = { ...shell, ...agent, ...chat, ...mascot, ...model, ...peer }
 
 module.exports = { CASES }
