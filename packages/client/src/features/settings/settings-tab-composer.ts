@@ -81,7 +81,7 @@ export function createSettingsComposerTab(): SettingsTab {
         node: controls.subRow(
           'peakrate',
           settingsCopy('peakrateTitle', 'Peak rate meter'),
-          settingsCopy('peakrateDesc', 'Every row of the model menu carries the rate in force right now and how long it lasts. Off leaves the rows bare.'),
+          settingsCopy('peakrateDesc', 'Marks every row of the model menu with the peak, off-peak or promotional rate in force right now, and how long it lasts. Off leaves the rows bare.'),
           controls.toggle(prefs.peakrate !== false, value => { write({ peakrate: value }) }, !prefs.modelPicker),
           prefs.modelPicker,
         ),

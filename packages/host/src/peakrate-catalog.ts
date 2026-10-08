@@ -8,7 +8,7 @@
  * than approximated. A malformed entry must never reach the browser, because
  * every judgement there is made from these fields.
  */
-import { isClockValue, isIsoDate } from '@dsh-claude-style/contracts/peakrate'
+import { isClockValue, isIsoDate, isIsoInstant } from '@dsh-claude-style/contracts/peakrate'
 import type { PeakCatalog, RateOverride, RateProfile, RateSchedule, RateWindow } from '@dsh-claude-style/contracts/peakrate'
 
 /** The document version this reader understands. */
@@ -54,11 +54,11 @@ function asDays(value: unknown): number[] {
 /**
  * The windows of one list, in the order the document states them.
  *
- * A zero-length window means "all day" only where the document says so
- * (`allDay`); on the regular cycle it is discarded, because in the
- * cross-midnight reading it would silently become a whole day of peak.
+ * A zero-length window is the whole day exactly where the document marks it
+ * (`allDay`): providers whose standard rate runs around the clock write their
+ * cycle that way, and the flag is what tells it apart from a malformed entry.
  */
-function asWindows(value: unknown, allDayIsWholeDay: boolean): RateWindow[] {
+function asWindows(value: unknown): RateWindow[] {
   if (!Array.isArray(value)) return []
   const windows: RateWindow[] = []
   for (const entry of value) {
@@ -67,7 +67,7 @@ function asWindows(value: unknown, allDayIsWholeDay: boolean): RateWindow[] {
     const start = window.start
     const end = window.end
     if (!isClockValue(start) || !isClockValue(end)) continue
-    if (start === end && !(allDayIsWholeDay && window.allDay === true)) continue
+    if (start === end && window.allDay !== true) continue
     windows.push({ start, end })
   }
   return windows
@@ -78,9 +78,9 @@ function asWindows(value: unknown, allDayIsWholeDay: boolean): RateWindow[] {
  *
  * An override that restates the regular peak / off-peak cycle is not a
  * campaign and is dropped: the regular cycle is what applies when no override
- * does. An override given as an instant pair rather than a day range and a
- * window is dropped too — its windows could not be read without inventing the
- * missing half, and a wrong campaign rate is worse than none.
+ * does. A stated instant bound the document cannot be read as an instant drops
+ * the whole override, because a campaign placed wrongly in time either never
+ * applies or never expires.
  */
 function asOverrides(schedule: Record<string, unknown>, periods: Record<string, unknown>): RateOverride[] {
   const out: RateOverride[] = []
@@ -92,8 +92,9 @@ function asOverrides(schedule: Record<string, unknown>, periods: Record<string, 
     if (periodName === undefined || periodName === 'peak' || periodName === 'offPeak') continue
     const fields = asRecord(periods[periodName])
     if (fields === null) continue
-    if (raw.startAt !== undefined || raw.endAt !== undefined) continue
-    const windows = asWindows(raw.windows, true)
+    if (raw.startAt !== undefined && !isIsoInstant(raw.startAt)) continue
+    if (raw.endAt !== undefined && !isIsoInstant(raw.endAt)) continue
+    const windows = asWindows(raw.windows)
     if (windows.length === 0) continue
     const override: RateOverride = { period: 'campaign', periodName, days: asDays(raw.days), windows }
     const badge = asText(fields.badge)
@@ -106,6 +107,8 @@ function asOverrides(schedule: Record<string, unknown>, periods: Record<string, 
     // fatal: the window keeps its other bounds.
     if (isIsoDate(raw.startDate)) override.startDate = raw.startDate
     if (isIsoDate(raw.endDate)) override.endDate = raw.endDate
+    if (isIsoInstant(raw.startAt)) override.startAt = raw.startAt
+    if (isIsoInstant(raw.endAt)) override.endAt = raw.endAt
     out.push(override)
   }
   return out
@@ -145,7 +148,7 @@ function asProfile(value: unknown): RateProfile | null {
   // profile is rejected here instead of being judged in the wrong zone.
   if (!zoneResolves(timeZone)) return null
   const peakDays = asDays(schedule.peakDays)
-  const peakWindows = asWindows(schedule.peakWindows, false)
+  const peakWindows = asWindows(schedule.peakWindows)
   if (peakDays.length === 0 || peakWindows.length === 0) return null
   const periods = asRecord(raw.periods)
   const peak = periods === null ? null : asRecord(periods.peak)

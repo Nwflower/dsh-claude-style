@@ -22,6 +22,8 @@ const SEARCH_DAYS = 9
 
 const MINUTES_PER_DAY = 1440
 
+const MILLIS_PER_DAY = 24 * 60 * 60 * 1000
+
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 /** One instant read in a schedule's zone. */
@@ -32,6 +34,8 @@ interface Moment {
   minutes: number
   /** `YYYY-MM-DD` in that zone. */
   date: string
+  /** The real instant, which a bound stated as an instant is compared with. */
+  instant: number
 }
 
 /** One peak window, in minutes from its own day's midnight; an end above 1440 crosses midnight. */
@@ -95,7 +99,14 @@ function momentAt(schedule: RateSchedule, at: Date): Moment {
     // Some engines render midnight as "24" under hour12: false.
     minutes: (Number(parts.hour) % 24) * 60 + Number(parts.minute),
     date: `${parts.year}-${parts.month}-${parts.day}`,
+    instant: at.getTime(),
   }
+}
+
+/** The zone's wall clock at one instant, as its own calendar day and minutes. */
+function wallClockAt(timeZone: string, instant: number): { date: string, minutes: number } {
+  const parts = partMap(timeZone, new Date(instant), false)
+  return { date: `${parts.year}-${parts.month}-${parts.day}`, minutes: (Number(parts.hour) % 24) * 60 + Number(parts.minute) }
 }
 
 /** One `"HH:mm"` window as minutes from its day's midnight; an end at or before the start crosses midnight. */
@@ -137,6 +148,12 @@ function zoneOffsetMs(timeZone: string, at: Date): number {
  * afterwards, so a 23- or 25-hour day cannot shift the answer by a day; one
  * correction step settles the offset the new instant actually has.
  *
+ * A wall-clock time the zone skips (the hour a spring-forward transition jumps
+ * over) has no instant of its own: the correction lands on either side of the
+ * transition, and the answer is the transition itself, found by search. That is
+ * what keeps a window edge written inside the skipped hour from being read as a
+ * moment in the past and pushing the next switch a day out.
+ *
  * @param timeZone - the schedule's zone.
  * @param baseDate - `YYYY-MM-DD` in that zone, the day the offset counts from.
  * @param dayOffset - whole days from `baseDate`.
@@ -152,7 +169,22 @@ function instantOf(timeZone: string, baseDate: string, dayOffset: number, minute
   let instant = guess - first
   const second = zoneOffsetMs(timeZone, new Date(instant))
   if (second !== first) instant = guess - second
-  return instant
+  const settled = wallClockAt(timeZone, instant)
+  if (settled.date === date && settled.minutes === minuteOfDay) return instant
+  const target = `${date} ${String(minuteOfDay).padStart(4, '0')}`
+  const key = (at: number) => {
+    const wall = wallClockAt(timeZone, at)
+    return `${wall.date} ${String(wall.minutes).padStart(4, '0')}`
+  }
+  let low = guess - MILLIS_PER_DAY - 2 * 3600 * 1000
+  let high = guess + MILLIS_PER_DAY + 2 * 3600 * 1000
+  if (key(low) >= target || key(high) < target) return instant
+  while (high - low > 1) {
+    const middle = Math.floor((low + high) / 2)
+    if (key(middle) >= target) high = middle
+    else low = middle
+  }
+  return high
 }
 
 /**
@@ -170,8 +202,12 @@ function isHoliday(schedule: RateSchedule, date: string): boolean {
   return schedule.publicHolidayDates?.includes(date) ?? false
 }
 
-/** Whether a dated window covers one day and weekday. */
-function covers(override: RateOverride, date: string, weekday: number): boolean {
+/** Whether a dated window covers one day and weekday, within the bounds it states. */
+function covers(override: RateOverride, date: string, weekday: number, instant: number): boolean {
+  if (override.startAt !== undefined && instant < Date.parse(override.startAt)) return false
+  // The closing instant is the first moment the campaign is over, so the switch
+  // reads at that instant rather than a candidate later in the day.
+  if (override.endAt !== undefined && instant >= Date.parse(override.endAt)) return false
   if (override.startDate !== undefined && date < override.startDate) return false
   if (override.endDate !== undefined && date > override.endDate) return false
   return override.days.length === 0 || override.days.includes(weekday)
@@ -187,7 +223,7 @@ function covers(override: RateOverride, date: string, weekday: number): boolean 
 function overrideInForce(override: RateOverride, moment: Moment): boolean {
   const previousDate = addDays(moment.date, -1)
   const previousWeekday = (moment.weekday + 6) % 7
-  if (covers(override, moment.date, moment.weekday)) {
+  if (covers(override, moment.date, moment.weekday, moment.instant)) {
     for (const window of override.windows) {
       const start = parseMinutes(window.start)
       const end = parseMinutes(window.end)
@@ -200,7 +236,7 @@ function overrideInForce(override: RateOverride, moment: Moment): boolean {
       }
     }
   }
-  if (!covers(override, previousDate, previousWeekday)) return false
+  if (!covers(override, previousDate, previousWeekday, moment.instant)) return false
   for (const window of override.windows) {
     const start = parseMinutes(window.start)
     const end = parseMinutes(window.end)
@@ -275,10 +311,11 @@ interface Flip {
  * When the state next changes, and into what.
  *
  * A window boundary is not a switch: two peak windows meeting at noon change
- * nothing. So candidates are every midnight and every window edge for the next
- * days (both of a crossing window's legs), each resolved to a real instant and
- * judged with the same predicate as now — the first candidate whose judgement
- * differs is the switch.
+ * nothing. So candidates are every midnight, every window edge for the next
+ * days (both of a crossing window's legs), and every instant a campaign states
+ * as its bound — a campaign can open or close at a moment that is none of the
+ * clock's own edges. Each candidate is judged with the same predicate as now,
+ * and the first whose judgement differs is the switch.
  */
 function nextFlip(schedule: RateSchedule, spans: readonly Span[], now: Date, moment: Moment, current: Judgement): Flip | undefined {
   const points: number[] = []
@@ -300,21 +337,30 @@ function nextFlip(schedule: RateSchedule, spans: readonly Span[], now: Date, mom
     edges(spans, base)
     for (const override of schedule.overrides ?? []) edges(spansOf(override.windows), base)
   }
-  const candidates = points.filter(value => value > moment.minutes).sort((left, right) => left - right)
-  let previous = -1
-  for (const point of candidates) {
-    // The same edge is reached by two spellings; one judgement settles both.
-    if (point === previous) continue
-    previous = point
-    const dayOffset = Math.floor(point / MINUTES_PER_DAY)
-    const minuteOfDay = point % MINUTES_PER_DAY
-    const instant = instantOf(schedule.timeZone, moment.date, dayOffset, minuteOfDay)
-    if (Number.isNaN(instant) || instant <= now.getTime()) continue
+  const instants: number[] = []
+  for (const point of points) {
+    const instant = instantOf(schedule.timeZone, moment.date, Math.floor(point / MINUTES_PER_DAY), point % MINUTES_PER_DAY)
+    if (!Number.isNaN(instant)) instants.push(instant)
+  }
+  for (const override of schedule.overrides ?? []) {
+    for (const bound of [override.startAt, override.endAt]) {
+      if (bound === undefined) continue
+      const at = Date.parse(bound)
+      if (!Number.isNaN(at)) instants.push(at)
+    }
+  }
+  instants.sort((left, right) => left - right)
+  const nowMs = now.getTime()
+  let previous = Number.NaN
+  for (const instant of instants) {
+    // The same edge is reached by several spellings; one judgement settles them.
+    if (instant <= nowMs || instant === previous) continue
+    previous = instant
     const at = new Date(instant)
     const wallAt = momentAt(schedule, at)
     const judgement = judgeAt(schedule, spans, wallAt, holidayDateAt(schedule, at, wallAt.date))
     if (judgement.period === current.period && (judgement.override?.periodName ?? '') === (current.override?.periodName ?? '')) continue
-    return { minutes: Math.round((instant - now.getTime()) / 60000), judgement }
+    return { minutes: Math.round((instant - nowMs) / 60000), judgement }
   }
   return undefined
 }
@@ -359,10 +405,13 @@ export function forgetRates(): void {
   judged.clear()
 }
 
-/** Whole minutes as the badge's own short form (`2d 7h`, `1h 20m`, `45m`); no countdown has no text. */
+/** Whole minutes as the badge's own short form (`2d 7h`, `1h 20m`, `45m`, `<1m`); no countdown has no text. */
 export function formatCountdown(minutes: number): string {
   if (!Number.isFinite(minutes)) return ''
   const total = Math.max(0, Math.round(minutes))
+  // Under a minute the clock still moves; "0m" would read as a switch that
+  // already happened.
+  if (total < 1) return '<1m'
   if (total < 60) return `${total}m`
   if (total < MINUTES_PER_DAY) {
     const hours = Math.floor(total / 60)

@@ -17,6 +17,11 @@ export const PEAKRATE_CATALOG = 'peakrate-catalog.json'
 /**
  * Check one catalog document with the parser the host half loads it with.
  *
+ * The shipped document is also the only fallback a machine with no reach ever
+ * judges by, so every row of the meter's own mapping table is held to it: a row
+ * naming a profile the parser drops, or one that belongs to another vendor,
+ * shows no badge on the page and no error anywhere else.
+ *
  * @param doc - the parsed JSON.
  * @param file - the path the document was read from, for the refusal.
  * @returns how many profiles the document yields (the source carries entries
@@ -26,5 +31,16 @@ export function validatePeakCatalog(doc, file) {
   const { parseCatalog } = loadModule('packages/host/src/peakrate-catalog.ts')
   const parsed = parseCatalog(doc)
   if (parsed === null) throw new Error(`build: ${file} is not a peak rate catalog this build understands`)
+  const { MODEL_MAPPINGS } = loadModule('packages/client/src/features/peakrate/match.ts')
+  const profiles = new Map(parsed.profiles.map((profile) => [profile.id, profile]))
+  for (const row of MODEL_MAPPINGS) {
+    const profile = profiles.get(row.profile)
+    if (profile === undefined) {
+      throw new Error(`build: the peak rate mapping ${row.provider}/${row.match} names the profile "${row.profile}", which the shipped catalog does not yield`)
+    }
+    if (profile.provider !== row.provider) {
+      throw new Error(`build: the peak rate mapping ${row.provider}/${row.match} names the profile "${row.profile}", which belongs to "${profile.provider}"`)
+    }
+  }
   return parsed.profiles.length
 }

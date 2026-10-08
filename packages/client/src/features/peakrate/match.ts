@@ -53,7 +53,6 @@ export const MODEL_MAPPINGS: { provider: string, match: string, profile: string 
   { provider: 'Ollama', match: 'deepseek', profile: 'ollama-deepseek-v4' },
   { provider: 'Z.ai', match: 'glm-5.3-flash', profile: 'zai-glm-5-3-flash' },
   { provider: 'Z.ai', match: 'glm-5.3', profile: 'zai-glm-5-3' },
-  { provider: 'Qoder', match: 'qwen3.8-flash', profile: 'qoder-qwen3-8-flash' },
   { provider: 'Qoder', match: 'qwen3.8-max', profile: 'qoder-qwen3-8-max' },
   { provider: 'Qoder', match: 'qwen3.7-max', profile: 'qoder-qwen3-7-max' },
   { provider: 'Qoder', match: 'qwen3.7-plus', profile: 'qoder-qwen3-7-plus' },

@@ -154,7 +154,66 @@ test('a window edge that changes no state is not a switch', () => {
   expect(state.minutesUntilSwitch).toBe(3 * 60)
 })
 
+test('a whole-day window bills the same state around the clock', () => {
+  // Providers whose standard rate runs around the clock publish one all-day
+  // window; nothing switches, because nothing else ever applies.
+  const allDay: RateSchedule = {
+    timeZone: 'Asia/Shanghai',
+    peakDays: [0, 1, 2, 3, 4, 5, 6],
+    peakWindows: [{ start: '00:00', end: '00:00' }],
+  }
+  const state = currentRate(profile(allDay), new Date('2026-10-07T02:00:00Z'))
+  expect(state.period).toBe('peak')
+  expect(state.badge).toBe('2×')
+  expect(state.minutesUntilSwitch).toBe(Number.POSITIVE_INFINITY)
+})
+
+test('a campaign bounded by instants applies inside them and not outside', () => {
+  const campaign: RateSchedule = {
+    ...WEEKDAY_WINDOW,
+    overrides: [{
+      period: 'campaign',
+      periodName: 'campaign',
+      badge: '0.9× base',
+      startAt: '2026-08-13T09:00:00-07:00',
+      endAt: '2026-08-20T09:00:00-07:00',
+      days: [],
+      windows: [{ start: '00:00', end: '00:00' }],
+    }],
+  }
+  // 2026-08-13T09:00:00-07:00 is 16:00Z; 15:00Z is past that day's window.
+  const before = currentRate(profile(campaign, 'beforeInstant'), new Date('2026-08-13T15:00:00Z'))
+  expect(before.period).toBe('offPeak')
+  expect(before.nextPeriod).toBe('campaign')
+  expect(before.minutesUntilSwitch).toBe(60)
+  const inside = currentRate(profile(campaign, 'insideInstant'), new Date('2026-08-14T02:00:00Z'))
+  expect(inside.period).toBe('campaign')
+  expect(inside.badge).toBe('0.9× base')
+  expect(inside.minutesUntilSwitch).toBe(6 * 24 * 60 + 14 * 60)
+  // An expired campaign never applies again, even though its window covers
+  // every day.
+  const after = currentRate(profile(campaign, 'afterInstant'), new Date('2026-10-07T02:00:00Z'))
+  expect(after.period).toBe('peak')
+  expect(after.badge).toBe('2×')
+})
+
+test('a window edge inside a skipped hour switches at the transition', () => {
+  // 2026-03-08 in New York jumps from 02:00 to 03:00; a window ending at 02:30
+  // has no such wall time, so it ends when the clock crosses 02:00.
+  const schedule: RateSchedule = {
+    timeZone: 'America/New_York',
+    peakDays: [0, 1, 2, 3, 4, 5, 6],
+    peakWindows: [{ start: '01:00', end: '02:30' }],
+  }
+  const state = currentRate(profile(schedule), new Date('2026-03-08T06:30:00Z'))
+  expect(state.period).toBe('peak')
+  expect(state.minutesUntilSwitch).toBe(30)
+  expect(state.nextPeriod).toBe('offPeak')
+})
+
 test('the countdown reads in whole minutes, hours and days', () => {
+  expect(formatCountdown(0)).toBe('<1m')
+  expect(formatCountdown(0.4)).toBe('<1m')
   expect(formatCountdown(45)).toBe('45m')
   expect(formatCountdown(60)).toBe('1h')
   expect(formatCountdown(80)).toBe('1h 20m')
