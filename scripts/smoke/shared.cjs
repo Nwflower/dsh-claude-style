@@ -61,6 +61,20 @@ const TIMING_CASES = ['chat-follow', 'chat-fold', 'chat-reveal', 'chat-send', 'c
 const MANIFESTS = readManifests()
 const FEATURE_CASES = featureCases(MANIFESTS)
 
+/**
+ * The cases that cover arriving in a chunk (D39): they exercise the loader and
+ * the entries it takes, not one feature's own behaviour, so a deferred
+ * feature's manifest names none of them itself. Every deferred directory is
+ * credited with them here, or `--feature` cannot reach the run that covers how
+ * its feature arrives.
+ */
+const DEFERRED_CASES = ['chunk-fault', 'chunk-late']
+for (const manifest of MANIFESTS) {
+    if (manifest.load !== 'deferred') continue
+    const covered = FEATURE_CASES[manifest.dir]
+    for (const name of DEFERRED_CASES) if (!covered.includes(name)) covered.push(name)
+}
+
 /** The features that arrive in chunks of their own (D39), by id. */
 const DEFERRED_FEATURES = MANIFESTS.filter((manifest) => manifest.load === 'deferred').map((manifest) => manifest.id)
 

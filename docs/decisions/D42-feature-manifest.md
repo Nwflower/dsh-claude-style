@@ -10,7 +10,7 @@
 - 功能之间的依赖由类型检查把关：`core/scheduler.ts` 的 `Handles` 列出每个句柄名及其类型；功能模块把 `ui` 写成 `FeatureUi<typeof manifest>`（清单以类型导入，不进产物），只看得见自己的句柄和 `reads` 列出的那些，没声明的读取在类型检查时报错；完整的 `Ui` 只给入口与调度器用，lint 拒绝功能模块引入它。
 - 向观察总线（D40）与滚动主人（D41）的登记留在功能里，不进清单：两者都要在安装时定下目标元素、选项与回调，而清单只放数据；把它们写成清单字段等于把同一件事记两份，正是这份清单要消掉的东西。总线上「谁订了什么」要看时按订阅建立处查。
 - 构建在 Node 里读取全部清单（`scripts/shared/read-manifests.cjs`），生成虚拟模块 `virtual:dsh-claude-style/features`：按 `order` 排好的运行时字段加各自的 `install`，延后的功能带的是它的块的地址（D39）。清单本身不进产物。
-- 从清单汇总、不再各写一份的：安装与刷新顺序、样式表的拼接顺序（与主题样式表共用一套序号）、设置页的布尔开关行、冒烟测试的功能覆盖表、对上游的让位（入口按 `yieldsTo` 安装与卸下）、README 的功能介绍（D48）。
+- 从清单汇总、不再各写一份的：安装与刷新顺序、样式表的拼接顺序（与主题样式表共用一套序号）、设置页的布尔开关行、冒烟测试的功能覆盖表、对上游的让位（入口按 `yieldsTo` 安装与卸下）、README 的功能介绍（D48）。声明 `load: 'deferred'` 的功能，覆盖表里补上加载通道自己的用例（`chunk-fault`、`chunk-late`，D39）：它们考的是块怎么到达，不是某个功能自己的行为，所以不必由清单逐个列，`--feature` 也仍然选得到。
 - 功能句柄可实现的钩子：`sync`、`owns` + `close('outside')`、`onPointerDown`、`close('escape')`、`close('composer')`、`onInput`、`onFocusIn`、`reposition('viewport' | 'composer')`、`onCopyChange`、`onKey`、`onActivity`；没实现的跳过。`onKey` 收到读者的每一次按键，接手的功能自己调用 `preventDefault()`；功能退役后这个键交还宿主。
 - 退役按 `id` 或句柄匹配：只匹配到句柄时只停止 `sync`、不拆安装（设置页的导航）。
 - 功能内部的拆分就是普通的模块拆分，状态留在模块自己的闭包里，跨功能不伸手进别的模块的状态。
