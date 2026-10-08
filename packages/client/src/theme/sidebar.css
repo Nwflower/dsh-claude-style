@@ -373,29 +373,31 @@ body[data-dsh-claude-style] [class*="sessionRow"] [class*="_slot"] > [data-slot]
   box-sizing: border-box;
 }
 
-/* Session status ongoing indicator: a circular progress ring */
+/* Session status ongoing indicator: a circular progress ring. The ring's
+   geometry needs no weight of its own: these selectors already outrank the
+   host's class rules, and only the border has to beat a host `!important`. */
 body[data-dsh-claude-style] svg[data-state="ongoing"] {
-  width: 10px !important;
-  height: 10px !important;
-  box-sizing: border-box !important;
-  border-radius: 50% !important;
-  corner-shape: round !important;
+  width: 10px;
+  height: 10px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  corner-shape: round;
   border: 1.5px solid rgba(255, 255, 255, 0.18) !important;
   border-top-color: var(--dsw-alias-label-primary) !important;
-  animation: 0.85s linear infinite dsh-claude-win11-spin !important;
-  transform-origin: center center !important;
-  display: inline-block !important;
-  flex: none !important;
-  color: transparent !important;
-  fill: none !important;
-  background: transparent !important;
+  animation: 0.85s linear infinite dsh-claude-win11-spin;
+  transform-origin: center center;
+  display: inline-block;
+  flex: none;
+  color: transparent;
+  fill: none;
+  background: transparent;
 }
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) svg[data-state="ongoing"] {
   border-color: rgba(20, 20, 19, 0.12) !important;
   border-top-color: var(--dsw-alias-label-secondary) !important;
 }
 body[data-dsh-claude-style] svg[data-state="ongoing"] * {
-  display: none !important;
+  display: none;
 }
 @keyframes dsh-claude-win11-spin {
   0% { transform: rotate(0deg); }

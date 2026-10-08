@@ -28,8 +28,10 @@
  *
  * A declaration that never matched an element is kept: no state showed what it
  * holds. So is one in theme/third-party.css, which answers other plugins' styles
- * the scratch host does not install, and one whose property the rule declares
- * twice.
+ * the scratch host does not install, one whose property the rule declares
+ * twice, and one whose rule stands under a conditional at-rule the page is not
+ * in — dropping its importance cannot change a value the condition already
+ * keeps out of the cascade.
  *
  * Run as the lane's scenario: `node packages/testing/e2e.cjs --scenario importance`.
  * With `DSH_IMPORTANCE_REFERENCE=<stylesheet>` every state is also compared, element
@@ -82,6 +84,13 @@ function planImportance(text) {
   root.walkRules((rule) => {
     if (rule.parent.type === 'atrule' && /keyframes$/i.test(rule.parent.name)) return
     const id = next++
+    // What the rule waits on besides its selector: a rule under a conditional
+    // at-rule the page is not in changes no computed value when its importance
+    // is dropped, so the page decides the condition before the rule is tried.
+    const conditions = []
+    for (let node = rule.parent; node !== undefined && node.type === 'atrule'; node = node.parent) {
+      if (!/keyframes$/i.test(node.name)) conditions.unshift({ name: node.name.toLowerCase(), params: node.params })
+    }
     const important = rule.nodes.filter((node) => node.type === 'decl' && node.important).map((node) => node.prop.toLowerCase())
     const key = ruleKey(rule)
     rule.prepend({ prop: MARK, value: String(id) })
@@ -107,7 +116,7 @@ function planImportance(text) {
     else if (rule.parent.type === 'rule') keep = 'nested'
     else if (props.length !== important.length) keep = 'declared twice'
     else if (parts.every((part) => part.pseudo !== null && !READABLE_PSEUDO.has(part.pseudo))) keep = 'unreadable pseudo-element'
-    rules.push({ id, selector: rule.selector, parts: parts.filter((part) => part.pseudo === null || READABLE_PSEUDO.has(part.pseudo)), props, keep })
+    rules.push({ id, selector: rule.selector, parts: parts.filter((part) => part.pseudo === null || READABLE_PSEUDO.has(part.pseudo)), props, keep, conditions })
   })
   return { annotated: root.toString(), rules }
 }
@@ -237,7 +246,14 @@ function tryInPage({ sheet, mark, rules, skip }) {
   const removable = []
   const needed = []
   const matched = []
+  /** Whether the conditions a rule stands under hold right now; a rule whose condition does not is left for another state. */
+  const conditionHolds = (conditions) => conditions.every((condition) => {
+    if (condition.name === 'media') return matchMedia(condition.params).matches
+    if (condition.name === 'supports') return CSS.supports(condition.params)
+    return false
+  })
   for (const plan of rules) {
+    if (!conditionHolds(plan.conditions)) continue
     const rule = byId.get(plan.id)
     if (rule === undefined) continue
     const props = plan.props.filter((prop) => !skip.includes(`${plan.id}:${prop}`))

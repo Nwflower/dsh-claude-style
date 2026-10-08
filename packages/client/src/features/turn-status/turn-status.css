@@ -10,14 +10,14 @@
    pin land on the same spot — and scrolled away from the tail the row keeps its
    document place, so it never floats over what the reader went back to read. */
 body[data-dsh-claude-style] [data-chat-following-tail] [data-chat-running] {
-  position: sticky !important;
-  bottom: calc(var(--dsh-composer-height, 0px) + var(--dsh-composer-fade-h, 40px) + 16px) !important;
-  z-index: 1 !important;
+  position: sticky;
+  bottom: calc(var(--dsh-composer-height, 0px) + var(--dsh-composer-fade-h, 40px) + 16px);
+  z-index: 1;
   /* Pinned, the row floats over the tail of the transcript, and the words there
      would show through it. The canvas it already stands on paints the band, the
      way the composer seat paints its own: at rest the two are the same colour
      and nothing changes. */
-  background: var(--dsh-claude-canvas, var(--dsw-alias-bg-base, #FCFCFB)) !important;
+  background: var(--dsh-claude-canvas, var(--dsw-alias-bg-base, #FCFCFB));
 }
 /* packages/client/src/features/turn-status/turn-status.ts writes a flex order onto the chat
    column's rows from the first running, stopped or failed turn on: that turn's
