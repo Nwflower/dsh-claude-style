@@ -3,6 +3,7 @@ import type { FeatureManifest } from '../../core/feature'
 export default {
   id: 'mascot',
   order: 40,
+  load: 'deferred',
   reads: ['composer'],
   contracts: ['chat.think-running', 'composer.fallback-panel', 'composer.seat', 'composer.stack', 'conversation.session', 'conversation.session-attribute'],
   pref: 'mascot',

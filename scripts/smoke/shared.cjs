@@ -58,7 +58,11 @@ const TIMING_CASES = ['chat-follow', 'chat-fold', 'chat-reveal', 'chat-send', 'c
  * own, and `--feature` refuses it rather than running something unrelated;
  * the runner refuses a case name the case table lacks.
  */
-const FEATURE_CASES = featureCases(readManifests())
+const MANIFESTS = readManifests()
+const FEATURE_CASES = featureCases(MANIFESTS)
+
+/** The features that arrive in chunks of their own (D39), by id. */
+const DEFERRED_FEATURES = MANIFESTS.filter((manifest) => manifest.load === 'deferred').map((manifest) => manifest.id)
 
 /**
  * The browser pages, and the cases each one serves. A page is loaded once and
@@ -114,5 +118,5 @@ const skips = () => skipped
 
 module.exports = {
     ROOT, CLIENT, HOST, MARKUP, PNG_1PX, SKIN_FIXTURE, SKIN_FACE, SKIN_HAT, SKIN_CASES,
-    sleep, same, check, failures, skips, setTier, tierName, TIMING_CASES, FEATURE_CASES, PAGES, pagesFor,
+    sleep, same, check, failures, skips, setTier, tierName, TIMING_CASES, FEATURE_CASES, DEFERRED_FEATURES, PAGES, pagesFor,
 }

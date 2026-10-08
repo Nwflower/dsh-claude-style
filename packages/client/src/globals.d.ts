@@ -39,6 +39,15 @@ interface Element {
   __dshAccountStream?: unknown
 }
 
+interface HTMLScriptElement {
+  /**
+   * What a feature chunk's script hands back (D39): the chunk's factory, set
+   * on its own script element while it runs. It is called with the `require`
+   * that resolves the modules the chunk shares with the bundle.
+   */
+  __dshChunk?: (require: (id: string) => unknown) => { install?: unknown }
+}
+
 interface KeyboardEvent {
   /** Set on the Escape the skin dispatches to the host's own menu (D14); the skin's key route skips it. */
   __dshHostMenuEscape?: boolean

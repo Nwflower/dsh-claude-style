@@ -143,6 +143,11 @@ async function runCase(port, base, name) {
     // runs with no reduced-motion request, and a probe that needs one asks
     // for it itself.
     await tab.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] })
+    // Each case asks the server for everything it loads: the routed assets are
+    // cached for good, and a case that refuses one (chunk-fault) must not be
+    // answered from what an earlier case fetched.
+    await tab.send('Network.enable')
+    await tab.send('Network.setCacheDisabled', { cacheDisabled: true })
     await tab.send('Page.navigate', { url: `${base}/${name}` })
     for (let i = 0; i < 100; i++) {
       const out = await tab.send('Runtime.evaluate', { expression: 'window.__smoke', awaitPromise: true, returnByValue: true })
@@ -210,7 +215,10 @@ async function browserHalf(planned) {
       // produce answers 404.
       const file = name.slice('dsh-claude-style/assets/'.length)
       const asset = ASSETS[file]
-      if (asset === undefined) {
+      // The chunk-fault case's route carries none of the feature chunks, the
+      // way a host still serving the bundle it read before an update answers (D39).
+      const chunkRefused = current === 'chunk-fault' && file.endsWith('.js')
+      if (asset === undefined || chunkRefused) {
         res.writeHead(404)
         res.end()
         return

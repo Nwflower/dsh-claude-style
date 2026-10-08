@@ -1,6 +1,7 @@
 /**
- * The page's first two collections: the served-namespace read the late-forms
- * case makes before the host's directory has answered, and the popovers case's
+ * The page's first collections: a generation disposed while its feature
+ * chunks are on their way, the served-namespace read the late-forms case makes
+ * before the host's directory has answered, and the popovers case's
  * arbitration between the permission card, the account drawer and the hero
  * row's own host menus.
  */
@@ -10,6 +11,15 @@
   var r = probe.report
 
   probe.step(async function () {
+    await probe.onlyFor(['chunk-late'], async function () {
+      // The way a hot reload ends a generation (D39): the chunks apply()
+      // sent for still arrive, and must install nothing. The settings section
+      // is the one a slot registration would show.
+      window.__dispose()
+      await sleep(600)
+      r.lateSlots = (window.__slots || []).map(function (entry) { return entry.key })
+      r.lateNodes = document.querySelectorAll('[class*="dsh-claude-"]').length
+    })
     await probe.onlyFor(['late-forms'], async function () {
       // The directory has not answered yet: the skin holds the defaults.
       r.lateBefore = document.body.getAttribute('data-dsh-claude-home-layout')

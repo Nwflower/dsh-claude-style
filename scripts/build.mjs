@@ -8,8 +8,9 @@
  * packages/client/src/entry.ts into one minified CommonJS body with React and the host packages
  * external, and that body is wrapped in the loader's factory:
  *
- *   packages/client/src/entry.ts                 apply(): the FEATURES table; imports everything else
+ *   packages/client/src/entry.ts                 apply(): the FEATURES table, the deferred features installed from their chunks (D39)
  *   packages/client/src/constants.ts             constants; also evaluated here for the stylesheet gates
+ *   scripts/chunks.mjs                           the deferred features' chunks (D39), routed like the assets
  *   packages/client/src/core/ packages/client/src/shared/ packages/client/src/features/<name>/   the modules, TypeScript, strict
  *   packages/client/src/features/<dir>/<main>.manifest.ts   each feature's manifest (D42), read by scripts/shared/read-manifests.cjs
  *   packages/client/src/theme/*.css and the feature stylesheets   concatenated by rank (THEME_SHEETS and the manifests),
@@ -28,7 +29,7 @@
  * Before anything is written, `tsc` type-checks packages/client/src/ and the bundle's import
  * graph must hold no cycle: a missing import, a cycle or a constant read before
  * it is initialized fails the build. Those refusals and the contract tables'
- * are in scripts/build-checks.mjs, the stylesheets' in scripts/css.mjs; the two
+ * are in scripts/build-checks.mjs, the stylesheets' in scripts/css.mjs; the three
  * generated modules are scripts/virtual-modules.mjs.
  *
  * `packages/client/data/model-descriptions.json` is not bundled: it is validated
@@ -42,13 +43,14 @@ import vm from 'node:vm'
 import esbuild from 'esbuild'
 import { PNG } from 'pngjs'
 import { buildHostHalf } from '../packages/host/build.mjs'
-import { buildFonts, checkClaimed, checkSheetPixels, checkSheets, planAssets, vectorizeSheet, writeAssets } from '../packages/assets/assets.mjs'
+import { buildFonts, checkClaimed, checkSheetPixels, checkSheets, planAssets, routeText, vectorizeSheet, writeAssets } from '../packages/assets/assets.mjs'
 import { checkContracts, checkCycles, checkListed, checkManifests, checkScrollOwner, checkTypes } from './build-checks.mjs'
+import { chunkFiles, chunkModules, splitChunks } from './chunks.mjs'
 import { TOKEN_SHEET, buildStylesheet, loadTokens, writeTokenTable } from './css.mjs'
 import { MODEL_COPY, validateModelCopy } from './model-copy.mjs'
 import manifestReader from './shared/read-manifests.cjs'
 import { loadModule } from './shared/ts-module.cjs'
-import { featuresModule, generatedModule } from './virtual-modules.mjs'
+import { chunkModulesModule, featuresModule, generatedModule } from './virtual-modules.mjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
 const SRC = path.join(ROOT, 'packages', 'client', 'src')
@@ -305,7 +307,32 @@ async function main() {
   const cssText = buildStylesheet({ sheets, srcDir: SRC, tokenDoc, gates: CONSTANTS.gates, images })
   if (writeTokenTable(STYLE_GUIDE, tokenDoc)) console.log('built docs/STYLE.md token table from packages/client/src/theme/tokens.json')
 
-  const result = await esbuild.build({
+  // The build-time values, for the bundle and for the chunks alike: each
+  // carries the ones its own modules read.
+  const generated = generatedModule({
+    STYLESHEET: cssText,
+    // Vendor lockups: one markup table plus the word each lockup stands in for.
+    COMBINE_SVGS: Object.fromEntries(Object.entries(combines).map(([id, item]) => [id, item.svg])),
+    COMBINE_WORDS: Object.fromEntries(Object.entries(combines).map(([id, item]) => [id, item.word])),
+    // The build id: a hash of the bundle itself, written into it below. The
+    // skin puts it on <body data-dsh-claude-style>, so a live page can be
+    // matched to the lib/client.js it runs — a hot reload swaps the bundle
+    // without reloading the page, so the page's load time says nothing about
+    // its code.
+    BUILD_ID: BUILD_ID_SLOT,
+    // The version this client bundle reports wherever the host asks a client
+    // for its build: the account Remote carries it on every call.
+    CLIENT_VERSION: PACKAGE.version,
+    CRAB_SHEET_URLS: crab,
+    DEEPY_SHEET_URLS: deepyUrls,
+  })
+
+  /**
+   * The bundle's esbuild options around a feature registry and a chunk-module
+   * table. The graph passes below take them as they are: the modules a pass
+   * reaches do not depend on minifying or on the chunks' addresses.
+   */
+  const clientOptions = (chunkUrls, shared) => ({
     entryPoints: [path.join(SRC, 'entry.ts')],
     bundle: true,
     format: 'cjs',
@@ -323,29 +350,43 @@ async function main() {
     // counts its lines.
     banner: { js: FACTORY_OPEN },
     footer: { js: FACTORY_CLOSE },
-    plugins: [featuresModule(manifests), generatedModule({
-      STYLESHEET: cssText,
-      // Vendor lockups: one markup table plus the word each lockup stands in for.
-      COMBINE_SVGS: Object.fromEntries(Object.entries(combines).map(([id, item]) => [id, item.svg])),
-      COMBINE_WORDS: Object.fromEntries(Object.entries(combines).map(([id, item]) => [id, item.word])),
-      // The build id: a hash of the bundle itself, written into it below. The
-      // skin puts it on <body data-dsh-claude-style>, so a live page can be
-      // matched to the lib/client.js it runs — a hot reload swaps the bundle
-      // without reloading the page, so the page's load time says nothing about
-      // its code.
-      BUILD_ID: BUILD_ID_SLOT,
-      // The version this client bundle reports wherever the host asks a client
-      // for its build: the account Remote carries it on every call.
-      CLIENT_VERSION: PACKAGE.version,
-      CRAB_SHEET_URLS: crab,
-      DEEPY_SHEET_URLS: deepyUrls,
-    })],
+    plugins: [featuresModule(manifests, chunkUrls), chunkModulesModule(shared), generated],
   })
+
+  // The deferred features leave the bundle for chunks of their own (D39). A
+  // graph pass stands every chunk's address in with its feature id.
+  const deferred = manifests.filter((manifest) => manifest.load === 'deferred')
+  const standIns = Object.fromEntries(deferred.map((manifest) => [manifest.id, manifest.id]))
+  const split = await splitChunks({
+    deferred,
+    mainModules: async (promoted) => {
+      const graph = await esbuild.build({ ...clientOptions(standIns, promoted), minify: false, sourcemap: false })
+      return new Set(Object.keys(graph.metafile.inputs).filter((file) => file.startsWith('packages/')))
+    },
+    options: { external: HOST_PACKAGES, plugins: [generated] },
+    slot: BUILD_ID_SLOT,
+  })
+  const chunkUrls = {}
+  const chunkInputs = []
+  for (const [id, { result: chunk }] of split.chunks) {
+    checkCycles(chunk.metafile)
+    checkScrollOwner(chunk.metafile)
+    chunkInputs.push(...chunkModules(chunk))
+    const files = chunkFiles(chunk)
+    chunkUrls[id] = routeText(plan, { file: `chunks/${id}.js`, name: files.name, type: 'text/javascript; charset=utf-8', text: files.code }).url
+    routeText(plan, { file: `chunks/${id}.js.map`, name: `${files.name}.map`, type: 'application/json; charset=utf-8', text: files.map })
+  }
+
+  const result = await esbuild.build(clientOptions(chunkUrls, split.shared))
   checkCycles(result.metafile)
   checkScrollOwner(result.metafile)
   // The metafile keys paths the way esbuild saw them: repository-relative.
   const prefix = `${path.relative(ROOT, SRC).split(path.sep).join('/')}/`
-  const bundled = new Set(Object.keys(result.metafile.inputs).filter((file) => file.startsWith(prefix)).map((file) => file.slice(prefix.length)))
+  const mainInputs = Object.keys(result.metafile.inputs).filter((file) => file.startsWith(prefix))
+  // A module the bundle and a chunk both carried would run twice, with its state split in two (D39).
+  const twice = mainInputs.filter((file) => chunkInputs.includes(file))
+  if (twice.length > 0) throw new Error(`build: the bundle and a feature chunk both carry ${twice.join(', ')}`)
+  const bundled = new Set([...mainInputs, ...chunkInputs].filter((file) => file.startsWith(prefix)).map((file) => file.slice(prefix.length)))
   checkListed(bundled, sheets)
 
   const output = (suffix) => result.outputFiles.find((file) => file.path.endsWith(suffix)).text
@@ -381,6 +422,9 @@ async function main() {
   fs.writeFileSync(OUT, bundle)
   fs.writeFileSync(`${OUT}.map`, sourceMap)
   console.log(`built lib/client.js (${Buffer.byteLength(bundle)} bytes, build ${buildId}) from packages/client/src/ (${bundled.size} modules + ${sheets.length} stylesheets + ${Object.keys(combines).length} lockups)`)
+  for (const [id, url] of Object.entries(chunkUrls)) {
+    console.log(`built the deferred feature "${id}" as ${url} (${Buffer.byteLength(plan.entries.get(`chunks/${id}.js`).text)} bytes)`)
+  }
 
   fs.writeFileSync(path.join(LIB, MODEL_COPY), copyText)
   console.log(`built lib/${MODEL_COPY} (${exact} exact entries, ${copy.families.length} family rules, ${copy.tiers.length} tier rules)`)

@@ -38,10 +38,11 @@
   }
   // The desktop account service mounts after this plugin does, so the skin waits
   // for it through ctx.inject; the studio case waits for the slot registry the
-  // same way. The other cases keep no inject, which is what makes them read
+  // same way, and the chunk-late case for the settings section's seats. The
+  // other cases keep no inject, which is what makes them read
   // synchronously at install (the install-fault case depends on that read
   // throwing).
-  if (CASE === 'desktop' || CASE === 'studio' || CASE === 'settings' || CASE === 'chat-files' || CASE === 'peer-chat-ux' || CASE === 'skin-center-handoff' || CASE === 'skin-center-arrival') {
+  if (CASE === 'desktop' || CASE === 'studio' || CASE === 'settings' || CASE === 'chunk-late' || CASE === 'chat-files' || CASE === 'peer-chat-ux' || CASE === 'skin-center-handoff' || CASE === 'skin-center-arrival') {
     window.__ctx.inject = function (deps, cb) {
       var disposers = []
       cb({

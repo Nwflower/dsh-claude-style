@@ -8,8 +8,9 @@ import type { HandleName, Ui } from './core/scheduler'
 import { mountStylesheet, parkForeignSheets } from './core/stylesheet'
 import { peerPresent, subscribePeerPresence } from './shared/peer-plugin'
 import { externalOwnerActive, subscribeExternalOwner } from './shared/visual-owner'
+import { loadFeatureChunk } from './core/chunks'
 import { handleName, setFeatureRegistry } from './core/feature'
-import type { Feature } from './core/feature'
+import type { Feature, FeatureInstall } from './core/feature'
 import { FEATURES } from 'virtual:dsh-claude-style/features'
 import { BUILD_ID } from 'virtual:dsh-claude-style/generated'
 
@@ -174,7 +175,62 @@ export function apply(ctx: HostContext) {
     }
   }
 
-  const installFeature = (feature: Feature) => install(feature.id, handleName(feature), () => feature.install(ctx, ui))
+  /** The deferred features' installs that have arrived this generation, by id (D39). */
+  const arrived = new Map<string, FeatureInstall>()
+  /** The deferred features whose chunk is on its way. */
+  const awaited = new Set<string>()
+
+  /**
+   * Install one feature, or, for a deferred one whose chunk has not arrived
+   * yet, send for the chunk: the arrival installs it (D39).
+   */
+  function installFeature(feature: Feature) {
+    if (feature.chunk === undefined) {
+      const run = feature.install
+      install(feature.id, handleName(feature), () => run(ctx, ui))
+      return
+    }
+    const run = arrived.get(feature.id)
+    if (run === undefined) awaitFeature(feature, feature.chunk)
+    else install(feature.id, handleName(feature), () => run(ctx, ui))
+  }
+
+  /**
+   * Whether a feature whose chunk just arrived still belongs on the page: the
+   * page may have been given to a skin (only the settings section stays,
+   * D49), the feature switched off, or the generation ended while the chunk
+   * was on its way.
+   */
+  function belongs(feature: Feature) {
+    if (disposed || failed.has(feature.id) || installed.some(entry => entry.id === feature.id)) return false
+    if (yielded && feature.id !== 'settings') return false
+    return !isLive(feature) || isWanted(feature)
+  }
+
+  /**
+   * Fetch a deferred feature's chunk once and install the feature on arrival
+   * if it still belongs. A chunk that cannot load is the feature failing to
+   * install: reported once, and the feature retires (D12).
+   */
+  function awaitFeature(feature: Feature, chunk: string) {
+    if (awaited.has(feature.id)) return
+    awaited.add(feature.id)
+    loadFeatureChunk(chunk).then((run) => {
+      awaited.delete(feature.id)
+      arrived.set(feature.id, run)
+      if (!belongs(feature)) return
+      install(feature.id, handleName(feature), () => run(ctx, ui))
+      // The feature's handle joins the next pass, which nothing else asks for.
+      if (typeof ui.schedule === 'function') ui.schedule()
+    }, (error: unknown) => {
+      awaited.delete(feature.id)
+      // This generation is gone (a hot reload replaced it): reporting names a
+      // feature nobody is left to install, and retiring has nothing to retire.
+      if (disposed) return
+      reportFeatureFailure(feature.id, error)
+      retire(feature.id)
+    })
+  }
 
   /**
    * Bring a live feature in line with its switch and the plugins it yields to
@@ -215,8 +271,9 @@ export function apply(ctx: HostContext) {
    * FEATURES is the registry the build generates from the manifests (D42),
    * in install order; the scheduler's pass order is the same order. A live
    * feature follows its switch and the plugins it yields to; the rest
-   * install once. A `pref` outside FEATURE_PREF_DEFAULTS is read by the
-   * feature itself.
+   * install once. A deferred feature installs when its chunk arrives, after
+   * this pass and the scheduler (D39). A `pref` outside FEATURE_PREF_DEFAULTS
+   * is read by the feature itself.
    */
   function own() {
     // The value is the build id (scripts/build.mjs): the stylesheet keys on
@@ -285,9 +342,8 @@ export function apply(ctx: HostContext) {
   if (yielded) {
     // A skin already has this page (D49). The settings section is the
     // one feature that stays: the reader still has to reach this theme's own
-    // page. adoptPrefs above stamped this theme's own body attributes; a
-    // yielded page carries none of them, so the release strips exactly what
-    // it stamped and leaves the section alone.
+    // page. adoptPrefs mirrors nothing onto a yielded page, and the release
+    // leaves the section alone, installed now or on its chunk's arrival (D39).
     installFeature(FEATURES.find(feature => feature.id === 'settings')!)
     release(['settings'])
     return

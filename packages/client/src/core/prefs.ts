@@ -4,6 +4,7 @@ import type { Prefs } from '../constants'
 import type { HostContext } from './host'
 import type { HostConfigForm, HostConfigFormsService } from '@dsh-claude-style/contracts/services'
 import { notifyAll } from '../shared/notify'
+import { externalOwnerActive } from '../shared/visual-owner'
 
 /**
  * Skin preferences: the host settings namespace is the store, and every
@@ -161,15 +162,23 @@ export function subscribePrefs(listener: (prefs: Prefs) => void) {
   }
 }
 
-/** Adopt a preference set: mirror it onto the document, then notify. */
+/**
+ * Adopt a preference set: mirror it onto the document, then notify. A page a
+ * skin owns carries none of this theme's attributes (D49): the set is kept, and
+ * taking the page back mirrors it (entry.ts). The form answers whenever it
+ * answers, and the settings section installs whenever its chunk arrives (D39),
+ * so a yielded page hears adoptions too.
+ */
 export function adoptPrefs(next: Prefs) {
   prefs = next
-  document.body.setAttribute(BRAND_ATTR, next.brand)
-  document.body.setAttribute(PALETTE_ATTR, next.palette)
-  document.body.setAttribute(TYPEFACE_ATTR, next.typeface)
-  document.body.setAttribute(MASCOT_ATTR, resolveMascot(next))
-  writeMotionAttribute(next.motion)
-  document.body.toggleAttribute(FOOTER_ATTR, next.collapseFooter && !footerTakeoverRetired)
+  if (!externalOwnerActive()) {
+    document.body.setAttribute(BRAND_ATTR, next.brand)
+    document.body.setAttribute(PALETTE_ATTR, next.palette)
+    document.body.setAttribute(TYPEFACE_ATTR, next.typeface)
+    document.body.setAttribute(MASCOT_ATTR, resolveMascot(next))
+    writeMotionAttribute(next.motion)
+    document.body.toggleAttribute(FOOTER_ATTR, next.collapseFooter && !footerTakeoverRetired)
+  }
   notifyAll(prefsListeners, next)
 }
 

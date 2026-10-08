@@ -3,6 +3,7 @@ import type { FeatureManifest } from '../../core/feature'
 export default {
   id: 'search',
   order: 160,
+  load: 'deferred',
   contracts: [],
   pref: 'sidebarSearch',
   stylesheets: [{ file: 'search.css', rank: 130 }],

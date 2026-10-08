@@ -1,5 +1,6 @@
 'use strict'
 const { MARKUP, SKIN_FACE, SKIN_HAT, same, check, contrast, basicChecks, commonChecks } = require('./_shared.cjs')
+const { DEFERRED_FEATURES } = require('../shared.cjs')
 
 module.exports = {
   // The auto mode cases: the ladder follows the host catalog, so a third-party
@@ -112,6 +113,22 @@ module.exports = {
     check("the host's own footer is handed back", !r.footerTakeover && r.accountUser === null, JSON.stringify({ takeover: r.footerTakeover, row: r.accountUser }))
     check('the rest of the skin keeps running', r.composerRestyle && same(r.keys, ['host picked the menu item']))
     commonChecks(r)
+  },
+  'chunk-fault'(r) {
+    const switchedOff = r.errors.map((line) => (/"([A-Za-z]+)" failed and was switched off/.exec(line) || [])[1]).sort()
+    check('apply() completes although no feature chunk loads', r.applyError === null, r.applyError)
+    check('each deferred feature was switched off once, and nothing else', same(switchedOff, [...DEFERRED_FEATURES].sort()), r.errors.join(' | '))
+    check('each report names the chunk that did not load', r.errors.every((line) => line.includes('/dsh-claude-style/assets/') && line.includes('failed to load')), r.errors.join(' | '))
+    check('the features in the bundle keep running', r.composerRestyle === true && r.accountUser === 'Tester', JSON.stringify({ restyle: r.composerRestyle, account: r.accountUser }))
+    commonChecks(r)
+  },
+  'chunk-late'(r) {
+    check('apply() completes', r.applyError === null, r.applyError)
+    check('a chunk arriving after its generation ended installs nothing', same(r.lateSlots, []) && r.lateNodes === 0,
+      JSON.stringify({ slots: r.lateSlots, nodes: r.lateNodes }))
+    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    check('nothing the skin runs leaves an uncaught error or an unhandled rejection',
+      Array.isArray(r.uncaught) && r.uncaught.length === 0, (r.uncaught || []).join(' | ').slice(0, 600))
   },
   'sync-fault'(r) {
     check('apply() completes', r.applyError === null, r.applyError)

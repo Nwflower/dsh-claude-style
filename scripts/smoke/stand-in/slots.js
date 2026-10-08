@@ -6,13 +6,15 @@
  * the settings dialog's section slot and the plugin page's config slot instead,
  * so the probe can render the page. The peer case declares those two plus the
  * tool seat, so the probe can see both the page it greys out and the seat keys
- * the file rows must leave alone.
+ * the file rows must leave alone. The chunk-late case declares the settings
+ * seats too: a settings section installed after its generation ended would
+ * register there.
  */
 (function () {
   var host = window.__dshSmokeHost
   var CASE = host.CASE
 
-  var slotRegistry = CASE === 'studio' || CASE === 'settings' || CASE === 'chat-files' || CASE === 'peer-chat-ux' || CASE === 'skin-center-handoff' || CASE === 'skin-center-arrival' ? {
+  var slotRegistry = CASE === 'studio' || CASE === 'settings' || CASE === 'chunk-late' || CASE === 'chat-files' || CASE === 'peer-chat-ux' || CASE === 'skin-center-handoff' || CASE === 'skin-center-arrival' ? {
     inject: function (key, callback) {
       var declared = CASE === 'studio'
         ? key === 'conversation.input.dock'

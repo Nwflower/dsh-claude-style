@@ -8,7 +8,7 @@
 
 - 源码全部是 TypeScript 与 ES 模块，用显式的 `import` / `export` 表达依赖；`tsconfig.json` 打开 `strict`。构建先跑 `tsc`，再查打包后的导入图：漏引、循环依赖、使用尚未初始化的常量都在构建时报错，一个没有任何模块导入的源文件也报错。
 - 宿主服务与快照里的值在契约模块（D44）给出类型之前统一写成 `HostValue`；其余类型照常写全。
-- esbuild 打包，`react` 与宿主包标为 external，产物是满足 DSH 加载器的单文件：CommonJS 主体包进 `__ModuleLoader__.load` 的工厂，id 与包名一致（D33），压缩，并附 `lib/client.js.map`。零运行时依赖由 external 设定保证。
+- esbuild 打包，`react` 与宿主包标为 external，产物是满足 DSH 加载器的单文件：CommonJS 主体包进 `__ModuleLoader__.load` 的工厂，id 与包名一致（D33），压缩，并附 `lib/client.js.map`。零运行时依赖由 external 设定保证。清单写 `load: 'deferred'` 的功能不在这个单文件里，各自成块（D39）。
 - 构建时才有的数据（样式表文本、厂商组合标、帧图的内容戳与内联地址、构建编号）经一个生成模块 `virtual:dsh-claude-style/generated` 进入源码，类型写在 `packages/client/src/generated.d.ts`。构建编号是产物内容哈希的前 12 位（D19），打包后写进等长的占位，source map 因此不受影响。
 - 原有构建检查各有去处：
   - 「每个源文件都在清单里」由模块导入图保证。

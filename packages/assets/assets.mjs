@@ -10,8 +10,11 @@
  *            host half under ASSETS_ROUTE; the name carries the content hash,
  *            so the address may be cached for good.
  *
- * A file whose bytes are text (SVG) is stored brotli-compressed beside its
- * name; the host half sends it as-is to a client that takes brotli and
+ * The deferred features' chunks and their source maps (D39) ride the same route:
+ * the build hands their text in (routeText), always routed.
+ *
+ * A file whose bytes are text (SVG, a chunk) is stored brotli-compressed beside
+ * its name; the host half sends it as-is to a client that takes brotli and
  * decompresses it for one that does not, so the package carries the sheets
  * once, small.
  *
@@ -310,6 +313,26 @@ export function checkClaimed(plan, claimed) {
 }
 
 /**
+ * Route a text file the build produced rather than read from packages/assets/src/: a
+ * feature chunk or its source map (D39). It is never inlined — a chunk inlined
+ * into the bundle would put its feature back — and the build names it.
+ *
+ * @param plan - the plan (planAssets); the entry joins its routed files.
+ * @param file - the key the plan holds it under.
+ * @param name - its file name under lib/assets/, which its address carries.
+ * @param type - its content type.
+ * @param text - its contents.
+ * @returns the entry, whose `url` is the route's address for it.
+ */
+export function routeText(plan, { file, name, type, text }) {
+  const bytes = Buffer.from(text, 'utf8')
+  const entry = { file, bytes, text, type, hash: name.split('.')[0], name, url: ASSETS_ROUTE + name, inline: false }
+  plan.entries.set(file, entry)
+  plan.routed.push(entry)
+  return entry
+}
+
+/**
  * Write the routed assets and the manifest the host half serves them from.
  *
  * Text assets are stored brotli-compressed beside their name (the payload the
@@ -326,7 +349,7 @@ export function writeAssets(libDir, plan) {
   const assets = {}
   let bytes = 0
   for (const entry of plan.routed) {
-    const compressed = entry.type.startsWith('image/svg')
+    const compressed = entry.text !== undefined
     const payload = compressed ? brotliCompressSync(entry.bytes) : entry.bytes
     fs.writeFileSync(path.join(dir, entry.name + (compressed ? '.br' : '')), payload)
     assets[entry.name] = { type: entry.type, encoding: compressed ? 'br' : null, bytes: entry.bytes.byteLength }

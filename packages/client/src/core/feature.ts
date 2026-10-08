@@ -49,6 +49,12 @@ export interface FeatureFields {
   order: number
   /** The plugin implementing the same behaviour: while it is on the page the feature stays uninstalled (D32). */
   yieldsTo?: PeerPlugin
+  /**
+   * `'deferred'`: the feature's own modules leave the bundle for a chunk of
+   * their own, fetched once the page is taken and installed when it arrives
+   * (D39). Only for a feature the first frames can do without.
+   */
+  load?: 'deferred'
   /** The feature's stylesheets, relative to its directory; `rank` places each one in the concatenated sheet. */
   stylesheets: FeatureStylesheet[]
   /** The settings row of the switch this feature owns; a preference shared by several features is owned by one. */
@@ -109,10 +115,14 @@ export interface FeatureCopy {
 /** The manifest fields the browser half reads. */
 export type FeatureRuntime = FeatureIdentity & Pick<FeatureFields, 'order' | 'yieldsTo' | 'switchRow'> & { pref?: keyof Prefs, prefValues?: string[], ungated?: string }
 
-/** One installable feature: its runtime manifest fields and its main module's `install`. */
-export type Feature = FeatureRuntime & {
-  install(ctx: HostContext, ui: Ui): (() => void) | void
-}
+/** A feature main module's `install`. */
+export type FeatureInstall = (ctx: HostContext, ui: Ui) => (() => void) | void
+
+/**
+ * One installable feature: its runtime manifest fields beside its main
+ * module's `install`, or beside the address of the chunk that carries it (D39).
+ */
+export type Feature = FeatureRuntime & ({ install: FeatureInstall, chunk?: never } | { chunk: string, install?: never })
 
 /** The name a feature's handle registers under on `ui`. */
 export function handleName(feature: FeatureIdentity): HandleName {

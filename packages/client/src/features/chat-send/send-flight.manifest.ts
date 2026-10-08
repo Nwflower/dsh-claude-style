@@ -4,6 +4,7 @@ import type { FeatureManifest } from '../../core/feature'
 export default {
   id: 'chatSend',
   order: 230,
+  load: 'deferred',
   contracts: ['chat.flow', 'chat.user-kind', 'chat.user-row', 'composer.card', 'composer.echo', 'composer.input', 'composer.scroll', 'shell.slot-anchor'],
   pref: 'chatAnimations',
   prefValues: [CHAT_ANIMATIONS_ENHANCED, CHAT_ANIMATIONS_REDRAW],
