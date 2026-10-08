@@ -22,6 +22,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 - 长会话里流式输出期间的卡顿减少：跟随在每一批文字到达时都要问的几个问题不再落到整个文档上——会话的滚动容器与消息列读一次后保留（换会话、切「轨迹」页签时旧节点会从文档里移除，届时重新读取），流式标记改在消息列里查找，宿主「回到底部」按钮的存在本身就是「跟随已关闭」的判据，而同一帧里读到的高度只读一次，交给收回宿主写下的末尾、判断是否继续滑行这两处共用。在 120 轮、4286 个节点的临时会话上实测：插件发出的文档级查询从 3263 次降到 2762 次（−15%），整页最长的一次停顿从 270ms 降到 234ms；文档越大，省下的每次全页样式重算越多。
 - 模型选择器里当前在用的模型、当它所属的供应商不在第一级列表里时，会单独占一级列表最下面一行——这一行过去绕过了其余各行共用的行构造，因此没有峰谷徽章，也没有厂商标志与说明；现在它与列表里的每一行走同一个构造，徽章、标志、说明和行高内边距都一致。
+- 进行中的状态行不再随流式内容上下跳动。此前该行只在宿主自己的「跟随还开着」标记下钉住，而流式期间跟随的滑动会把滚动位置停在末尾之前，宿主把这次写入读成读者离开了末尾并摘掉标记，于是每一片内容到达时该行退回文档流、被内容底部推下去，滑动追上来再把它拉回：视口 1280×600 下实测，标记缺席的 115 帧里该行顶边在 447px 与 573px 之间移动，而钉住位是 426px。现在滑动持有位置期间在聊天列上写下自己的标记，该行按宿主标记或滑动标记任一钉住，内容突发的追加不再带动它：同一场景里标记缺席的 112 帧内顶边恒为 426px。往回翻看历史时两个标记都不在，该行照常留在文档位置，不会浮在读者正在读的内容上。
 
 <h3 id="en-unreleased">New Features</h3>
 
@@ -39,6 +40,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 - Less jank while an answer streams in a long session: the questions the follow asks on every batch of arriving text no longer go to the document — the conversation's scroller and its message column are read once and kept (a session switch or the Trajectory tab removes the old node, and the reading is taken again), the streaming mark is looked for inside the message column, and the presence of the host's back-to-end button is itself the reading that its follow is off. What a frame does read it reads once and shares between taking back the end the host wrote and deciding whether to keep walking. Measured on a 120-turn, 4286-node scratch conversation: the plugin's document-level queries fall from 3263 to 2762 (−15%) and the page's longest single stall from 270ms to 234ms; the larger the document, the more each avoided whole-page style recalculation is worth.
 - In the model picker, the model in force gets a row of its own at the bottom of level 1 when its provider is not listed there. That row was built apart from every other row, so it carried no peak rate badge, no vendor mark and no description line; it now goes through the same row builder as the rest of the list, with the same badge, mark, description and row metrics.
+- The live turn's status line no longer moves with the streaming answer. It was pinned only under the host's own following mark, and while an answer streams the follow's glide holds the scroll position short of the end; the host reads that write as the reader leaving the tail, takes the mark away, and the row falls back into the flow, where each burst pushes it down and the glide pulls it back (measured at 1280×600: with the mark off, the row's top travelled between 447px and 573px in 115 frames, while the pin sits at 426px). The glide now writes its own mark on the chat column while it holds a position, and the row is pinned under either mark, so a burst costs it nothing: in the same scenario the row's top stayed at 426px in all 112 frames the host's mark was off. Scrolled away from the tail neither mark is present, so the row keeps its document place instead of floating over what the reader went back to read.
 
 ## [0.12.0] - 2026-10-07
 

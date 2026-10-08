@@ -1,4 +1,4 @@
-import { CHAT_FOLLOW_ATTR } from '../../constants'
+import { CHAT_FOLLOW_ATTR, FOLLOW_HOLD_ATTR } from '../../constants'
 import { observeSize, subscribeMutations } from '../../core/bus'
 import { requestFrame } from '../../core/frame'
 import { motionReduced } from '../../core/prefs'
@@ -144,6 +144,8 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
   let glideHeight = 0
   /** Whether the glide is holding the position right now. */
   let glideHeld = false
+  /** The column the hold mark (FOLLOW_HOLD_ATTR) is on, or null while the glide holds nothing. */
+  let heldColumn: HTMLElement | null = null
 
   /**
    * Whether content is arriving right now: the mark the host writes while it
@@ -181,6 +183,27 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
    * message are the owner's to ask.
    */
   const glideWanted = () => !motionReduced() && !foldBusy()
+
+  /** Take the hold mark off the column carrying it. */
+  const releaseHold = () => {
+    if (heldColumn === null) return
+    heldColumn.removeAttribute(FOLLOW_HOLD_ATTR)
+    heldColumn = null
+  }
+
+  /**
+   * Put the hold mark on the column the glide holds. Held short of the end,
+   * the position reads to the host as a reader who left the tail, so the host
+   * takes data-chat-following-tail away; the live status line's pin waits for
+   * that attribute (features/turn-status/turn-status.css), and this mark keeps
+   * the pin standing while the glide is the one moving the position.
+   */
+  const markHold = (column: HTMLElement) => {
+    if (heldColumn === column) return
+    releaseHold()
+    column.setAttribute(FOLLOW_HOLD_ATTR, '')
+    heldColumn = column
+  }
 
   /**
    * Watch the flow column the glide reads growth from; a session switch
@@ -231,6 +254,7 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
       if (glideHeld) {
         glideHeld = false
         releaseFollowButton()
+        releaseHold()
       }
       return
     }
@@ -240,6 +264,7 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
     glideHeld = true
     glideScroller = scroller
     holdFollowButton()
+    if (glideColumn !== null) markHold(glideColumn)
     // One reading of the end serves the pin and the question after it: reading
     // it again in the same frame paid another layout pass (D9).
     const end = scroller.scrollHeight - scroller.clientHeight
@@ -376,6 +401,7 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
     if (stopGlideSize !== null) stopGlideSize()
     stopGlideSize = null
     releaseFollowButton()
+    releaseHold()
     // The glide's own easing stops with the feature; a hand-back in flight
     // is the owner's to finish.
     if (glideScroller !== null) stopScrollFor(glideScroller, 'stream')
