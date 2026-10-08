@@ -185,6 +185,16 @@ export const CHAT_FOLLOW_ATTR = 'data-dsh-claude-chat-follow'
  */
 export const STREAM_GLIDE_ATTR = 'data-dsh-claude-stream-glide'
 /**
+ * On the flow column while the stream glide
+ * (packages/client/src/features/chat-follow/chat-follow.ts) holds the position
+ * for the reader. A position held short of the end reads to the host as a
+ * reader who left the tail, and it takes its own data-chat-following-tail away
+ * (D44) — the gate the live status line's pin waits for
+ * (packages/client/src/features/turn-status/turn-status.css). This mark stands
+ * for that gate while the glide is the one moving the position.
+ */
+export const FOLLOW_HOLD_ATTR = 'data-dsh-claude-follow-hold'
+/**
  * Present while the ported token reveal is installed
  * (packages/client/src/features/chat-reveal/): its step rules (reveal-rules.css) hang off it,
  * and switching the feature off leaves the page with no trace of it.

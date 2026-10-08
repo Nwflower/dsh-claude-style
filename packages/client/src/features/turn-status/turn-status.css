@@ -3,13 +3,18 @@
    with its ticking clock — as the chat flow's LAST row, so it rides the bottom
    of the content: while an answer streams in, every burst pushes it down and the
    follow's glide pulls it back, and the reader watching the tail sees it jump.
-   While the host's follow is on it is pinned instead, at the place it already
-   comes to rest when the glide has caught up: the composer's own height, the
+   The line is pinned instead at the place it already comes to rest when the
+   glide has caught up: the composer's own height, the
    fade band above it, and the host's 16px transcript padding (`.scroll`'s
    `padding: 16px 32px`). A burst then costs the line nothing — the glide and the
    pin land on the same spot — and scrolled away from the tail the row keeps its
-   document place, so it never floats over what the reader went back to read. */
-body[data-dsh-claude-style] [data-chat-following-tail] [data-chat-running] {
+   document place, so it never floats over what the reader went back to read.
+   Two gates stand for "the reader is at the tail": the host's own attribute,
+   and the stream glide's hold mark (FOLLOW_HOLD_ATTR, features/chat-follow/
+   chat-follow.ts), because a position the glide holds short of the end is what
+   makes the host take its attribute away mid-stream. */
+body[data-dsh-claude-style] [data-chat-following-tail] [data-chat-running],
+body[data-dsh-claude-style] [data-dsh-claude-follow-hold] [data-chat-running] {
   position: sticky;
   bottom: calc(var(--dsh-composer-height, 0px) + var(--dsh-composer-fade-h, 40px) + 16px);
   z-index: 1;

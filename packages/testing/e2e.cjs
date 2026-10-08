@@ -68,6 +68,8 @@ const SKIN = {
   sendGhost: '[data-dsh-claude-send-ghost]', // CHAT_SEND_GHOST_ATTR
   flyingMark: 'data-dsh-claude-send-flight', // CHAT_FLYING_ATTR
   echoAttribute: 'data-submission-echo', // SUBMISSION_ECHO_SELECTOR without its brackets
+  // The other mark the pin reads while the glide holds a position (FOLLOW_HOLD_ATTR).
+  hold: '[data-dsh-claude-follow-hold]', // FOLLOW_HOLD_ATTR
 }
 
 /** Both tables, for the sampler that runs inside the page. */
@@ -192,6 +194,7 @@ async function startTrace(page) {
         frame.height = Math.round(scroller.scrollHeight)
         frame.gap = Math.round(scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop)
         frame.following = document.querySelector(host.followingTail) !== null
+        frame.hold = document.querySelector(host.hold) !== null
       }
       const ghost = document.querySelector(host.sendGhost)
       const rows = [...document.querySelectorAll(host.userRow)]
@@ -500,11 +503,15 @@ const SCENARIOS = {
       // (`clientHeight = height - gap - top`): with less than a screenful the row
       // legitimately rides the content's end, and with the follow off the pin is
       // not on the page.
-      const live = sampled.filter((frame) => frame.running !== null && frame.running !== undefined
-        && frame.following
-        && frame.height - frame.gap - frame.top < frame.height)
+      const overflowing = (frame) => frame.height - frame.gap - frame.top < frame.height
+      const live = sampled.filter((frame) => frame.running !== null && frame.running !== undefined && frame.following && overflowing(frame))
       const tops = live.map((frame) => frame.running)
       const spread = tops.length === 0 ? 0 : Math.max(...tops) - Math.min(...tops)
+      // The host's own mark is off in these frames: its attribution read the glide's writes as a
+      // reader leaving the tail, so the pin comes from the hold mark alone.
+      const held = sampled.filter((frame) => frame.running !== null && frame.running !== undefined && frame.hold === true && frame.following === false && overflowing(frame))
+      const heldTops = held.map((frame) => frame.running)
+      const heldSpread = heldTops.length === 0 ? 0 : Math.max(...heldTops) - Math.min(...heldTops)
       return [
         check('逐帧采样真的在跑', sampled.length > 30, `frames=${sampled.length}`),
         check('回答在采样期间长出来', grown > 100, `grew ${grown}px during the trace`),
@@ -513,6 +520,7 @@ const SCENARIOS = {
         check('尾部没有自己跑远', escaped.length === 0, `escaped=${escaped.length}${escaped.length === 0 ? '' : ` at ${escaped.slice(0, 3).map((f) => f.t).join(',')}ms`}`),
         check('跟随期间尾部留在视野里', worst <= MAX_FOLLOW_GAP_PX, `maxGap=${worst}px of ${following.length} following frames`),
         check('落定后回到末尾', last !== undefined && last.gap <= 4, `lastGap=${last === undefined ? 'n/a' : last.gap}`),
+        check('宿主关掉跟随时状态行仍停在同一处', held.length > 3 && heldSpread <= 2, `frames the host mark was off in=${held.length}, top ${heldTops.length === 0 ? 'n/a' : `${Math.min(...heldTops)}..${Math.max(...heldTops)}`}`),
         check('满屏之后宿主的状态行不再随内容移动', live.length > 10 && spread <= 2, `overflowing frames with the row=${live.length}, top ${tops.length === 0 ? 'n/a' : `${Math.min(...tops)}..${Math.max(...tops)}`}`),
         check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),
       ]
