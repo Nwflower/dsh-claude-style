@@ -1,3 +1,4 @@
+import { CHAT_ANIMATIONS_ENHANCED } from '../../constants'
 import type { FeatureManifest } from '../../core/feature'
 
 export default {
@@ -5,6 +6,7 @@ export default {
   order: 200,
   contracts: ['chat.flow', 'chat.follow-threshold', 'chat.scroller', 'chat.shimmer', 'chat.shimmer-attribute', 'chat.shimmer-legacy-attribute', 'chat.think-row', 'chat.think-running', 'fold.disclosure', 'fold.skipped', 'fold.toggle', 'process.activity', 'process.body', 'process.expanded-mode', 'process.group'],
   pref: 'chatAnimations',
+  prefValues: [CHAT_ANIMATIONS_ENHANCED],
   yieldsTo: 'dsh-chat-ux',
   stylesheets: [
     { file: 'fold.css', rank: 170 },

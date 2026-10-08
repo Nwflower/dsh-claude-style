@@ -107,6 +107,8 @@ module.exports = {
         animationsOff.immediateClicks === 1 && animationsOff.rolling === false, JSON.stringify(animationsOff))
     check('switching it back brings the fold mark back',
       (fold.animationsBack || {}).mark === true, JSON.stringify(fold.animationsBack))
+    check('the Redraw choice takes the fold mark down with it',
+      (fold.animationsRedraw || {}).mark === false, JSON.stringify(fold.animationsRedraw))
   },
   'chat-reveal'(r) {
     basicChecks(r)
@@ -179,6 +181,7 @@ module.exports = {
     check('it keeps the input row', escalated.texts.includes('t:row.input'), JSON.stringify(escalated.texts))
     check('switching the file rows off hands both seat keys back', files.offSeats === 0, JSON.stringify(files.offSeats))
     check('switching them back takes both again, without a reload', files.backSeats === 2, JSON.stringify(files.backSeats))
+    check('the Redraw choice hands both seat keys back as well', files.redrawSeats === 0, JSON.stringify(files.redrawSeats))
     // The other plugin coming and going mid-session (packages/client/src/shared/peer-plugin.ts):
     // the decision is re-taken, not frozen at install.
     const peerOn = files.peerOn || {}
@@ -222,5 +225,11 @@ module.exports = {
     check('the animation choice reaches it too: Reduced flies nothing and leaves the row visible (D26)',
       sendReduced.ghost === false && sendReduced.hidden === false && sendReduced.visibility === 'visible',
       JSON.stringify(sendReduced))
+    // The chat-area animation choice is three-way: the send flight is the one
+    // member of the Redraw set wired so far.
+    const sendRedraw = send.redraw || {}
+    check('the Redraw choice still lifts the stand-in and hides the echo while it flies',
+      sendRedraw.ghost === true && sendRedraw.hidden === true && sendRedraw.visibility === 'hidden',
+      JSON.stringify(sendRedraw))
   },
 }

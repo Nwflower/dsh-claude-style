@@ -1,4 +1,4 @@
-import { AUTO_POPOVER_ALL, AUTO_POPOVER_OFF, AUTO_POPOVER_SCOPES, BRAND_ATTR, BRAND_CLAUDE, BRAND_DEEPSEEK, BRAND_DEEPSEEK_LEGACY, COMPOSER_ATTR, FOOTER_ATTR, MASCOT_ATTR, MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MOTION_ATTR, MOTION_FULL, MOTION_REDUCED, PACKAGE_NAME, PALETTE_ATTR, PREF_CHOICES, PREF_DEFAULTS, PROVIDER_ID_MAX, QUICK_PROVIDERS_MAX, SETTINGS_ENTRY_FALLBACK, TYPEFACE_ATTR, USERNAME_MAX } from '../constants'
+import { AUTO_POPOVER_ALL, AUTO_POPOVER_OFF, AUTO_POPOVER_SCOPES, BRAND_ATTR, BRAND_CLAUDE, BRAND_DEEPSEEK, BRAND_DEEPSEEK_LEGACY, CHAT_ANIMATIONS_ENHANCED, CHAT_ANIMATIONS_MODES, CHAT_ANIMATIONS_OFF, COMPOSER_ATTR, FOOTER_ATTR, MASCOT_ATTR, MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MOTION_ATTR, MOTION_FULL, MOTION_REDUCED, PACKAGE_NAME, PALETTE_ATTR, PREF_CHOICES, PREF_DEFAULTS, PROVIDER_ID_MAX, QUICK_PROVIDERS_MAX, SETTINGS_ENTRY_FALLBACK, TYPEFACE_ATTR, USERNAME_MAX } from '../constants'
 import { MODEL_OFFICIAL_GROUP } from '../features/model/copy-fallbacks'
 import type { Prefs } from '../constants'
 import type { HostContext } from './host'
@@ -272,10 +272,17 @@ export function resolveMascot(current: Prefs) {
   return current.brand === BRAND_DEEPSEEK ? MASCOT_DEEPY : MASCOT_CRAB
 }
 
+/** Clamp the chat-area animation choice; the earlier boolean switch still lands. */
+function normalizeChatAnimations(value: unknown) {
+  if (value === true) return CHAT_ANIMATIONS_ENHANCED
+  if (value === false) return CHAT_ANIMATIONS_OFF
+  return typeof value === 'string' && CHAT_ANIMATIONS_MODES.includes(value) ? value : PREF_DEFAULTS.chatAnimations
+}
+
 /**
  * Clamp one host value into the preference shape, field by field off
  * PREF_DEFAULTS: a boolean stays on unless stored as `false`, a choice outside
- * its set reads as its default, and the four fields with a shape of their own
+ * its set reads as its default, and the five fields with a shape of their own
  * have their own clamps.
  */
 export function normalizePrefs(value: unknown): Prefs {
@@ -289,10 +296,11 @@ export function normalizePrefs(value: unknown): Prefs {
   }
   out.brand = normalizeBrand(section.brand)
   out.autoPopover = normalizeAutoPopover(section.autoPopover)
+  out.chatAnimations = normalizeChatAnimations(section.chatAnimations)
   out.quickProviders = normalizeQuickProviders(section.quickProviders)
   out.username = typeof section.username === 'string' ? section.username.trim().slice(0, USERNAME_MAX) : ''
   // Every key of PREF_DEFAULTS is set above: the booleans and the choices in
-  // the loop, the four shaped fields after it.
+  // the loop, the five shaped fields after it.
   return out as unknown as Prefs
 }
 

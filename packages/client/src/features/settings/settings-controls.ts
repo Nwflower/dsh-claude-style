@@ -65,9 +65,10 @@ export function tabRows(tab: SettingsTab, view: SettingsView) {
 }
 
 /**
- * The on/off rows the manifests declare for a tab. A preference a feature
- * yields for (dsh-chat-ux on the page) keeps the reader's value on show and
- * refuses input, saying who manages it (managedDesc).
+ * The on/off and choice rows the manifests declare for a tab: without
+ * `choices` the row carries a switch, with them a segmented control. A
+ * preference a feature yields for (dsh-chat-ux on the page) keeps the reader's
+ * value on show and refuses input, saying who manages it (managedDesc).
  */
 function switchRows(tab: SettingsTabId, view: SettingsView): SettingsRow[] {
   const controls = view.controls
@@ -75,13 +76,23 @@ function switchRows(tab: SettingsTabId, view: SettingsView): SettingsRow[] {
     const pref = feature.pref
     const row = feature.switchRow
     const yielded = prefYielded(pref)
+    const stored = view.prefs[pref]
+    const write = (value: string | boolean) => { view.write({ [pref]: value }) }
+    const control = row.choices === undefined
+      ? controls.toggle(stored !== false, write, yielded)
+      : controls.segment(
+        row.choices.map(choice => ({ value: choice.value, label: settingsCopy(choice.label.key, choice.label.fallback) })),
+        String(stored),
+        write,
+        yielded,
+      )
     return {
       rank: row.rank,
       node: controls.row(
         pref,
         settingsCopy(row.title.key, row.title.fallback),
         managedDesc(settingsCopy(row.desc.key, row.desc.fallback), yielded),
-        controls.toggle(view.prefs[pref] !== false, value => { view.write({ [pref]: value }) }, yielded),
+        control,
       ),
     }
   })

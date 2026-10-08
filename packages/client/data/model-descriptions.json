@@ -273,9 +273,12 @@
     },
     "chatAnimationsTitle": { "zh": "聊天区动画效果", "en": "Chat-area animations" },
     "chatAnimationsDesc": {
-      "zh": "重绘主对话区域的动态效果动画。",
-      "en": "The conversation area's animations in one switch. The view follows the newest line as an answer grows — gliding there, and catching up the same way inside a scrolling work log — instead of stopping just short of the bottom; the thinking row opens while the model reasons and folds back when it stops, a running step does the same, and a press rolls a height open or shut; new text fades in as it arrives, faint first and settling to its own colour; a write or edit run from inside a program is shown as a row carrying its +n -m count that opens into the changed lines; and the composer lifts into the message bubble on send. Off stops all of them and the host's own behaviour returns. With Animation set to Reduced they all stand still."
+      "zh": "聊天区的动效在这里选择：跟随、自动开合与卷帘门、新文字淡入、文件变更行、发送时的气泡动效。「关闭」不动聊天区，一切照宿主原来的样子；「增强」播放插件现有的这一套；「重绘」交给另一套动效，目前接上的是发送时的气泡动效。「动画」设为「减弱」时三档都停在原处。",
+      "en": "The conversation area's motion, chosen here: the follow, the automatic folding with its rolling door, the text fade, the file change rows and the send flight. Off leaves the conversation to the host's own behaviour; Enhanced plays this plugin's set; Redraw hands the area to a second set, which the send flight belongs to so far. With Animation set to Reduced every set stands still."
     },
+    "chatAnimationsOff": { "zh": "关闭", "en": "Off" },
+    "chatAnimationsEnhanced": { "zh": "增强", "en": "Enhanced" },
+    "chatAnimationsRedraw": { "zh": "重绘", "en": "Redraw" },
     "caretTitle": { "zh": "光标动画", "en": "Composer caret motion" },
     "caretDesc": {
       "zh": "移动光标时平滑移动。",

@@ -6,11 +6,19 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 [中文](#cn-unreleased) | [English](#en-unreleased)
 
-<h3 id="cn-unreleased">问题修复</h3>
+<h3 id="cn-unreleased">体验优化</h3>
+
+- 设置页「对话」页的「聊天区动画效果」从开关改成三档分段控件：关闭、增强、重绘。「关闭」把聊天区交回宿主；「增强」是原来的全套动效（跟随、自动开合与卷帘门、新文字淡入、文件变更行、聊天气泡动效）；「重绘」交给另一套动效，目前接上的是聊天气泡动效。旧版本存下的开关取值照旧生效（开 = 增强，关 = 关闭），不需要重新设置。
+
+### 问题修复
 
 - 长会话里流式输出期间的卡顿减少：跟随在每一批文字到达时都要问的几个问题不再落到整个文档上——会话的滚动容器与消息列读一次后保留（换会话、切「轨迹」页签时旧节点会从文档里移除，届时重新读取），流式标记改在消息列里查找，宿主「回到底部」按钮的存在本身就是「跟随已关闭」的判据，而同一帧里读到的高度只读一次，交给收回宿主写下的末尾、判断是否继续滑行这两处共用。在 120 轮、4286 个节点的临时会话上实测：插件发出的文档级查询从 3263 次降到 2762 次（−15%），整页最长的一次停顿从 270ms 降到 234ms；文档越大，省下的每次全页样式重算越多。
 
-<h3 id="en-unreleased">Bug Fixes</h3>
+<h3 id="en-unreleased">Improvements</h3>
+
+- The Conversation tab's Chat-area animations row is a three-way segmented control now — Off, Enhanced and Redraw — in place of its switch. Off hands the conversation back to the host; Enhanced is the set that was there before (the follow, the automatic folding with its rolling door, the text fade, the file change rows and the send flight); Redraw hands the area to a second set, whose member wired so far is the send flight. A switch value stored by an earlier build keeps its meaning (on reads as Enhanced, off as Off), so nothing has to be set again.
+
+### Bug Fixes
 
 - Less jank while an answer streams in a long session: the questions the follow asks on every batch of arriving text no longer go to the document — the conversation's scroller and its message column are read once and kept (a session switch or the Trajectory tab removes the old node, and the reading is taken again), the streaming mark is looked for inside the message column, and the presence of the host's back-to-end button is itself the reading that its follow is off. What a frame does read it reads once and shares between taking back the end the host wrote and deciding whether to keep walking. Measured on a 120-turn, 4286-node scratch conversation: the plugin's document-level queries fall from 3263 to 2762 (−15%) and the page's longest single stall from 270ms to 234ms; the larger the document, the more each avoided whole-page style recalculation is worth.
 

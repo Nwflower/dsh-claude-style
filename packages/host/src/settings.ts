@@ -56,6 +56,7 @@ interface SchemaFactory {
   object(fields: Record<string, unknown>): unknown
   string(): SchemaField
   boolean(): SchemaField
+  union(items: unknown[]): SchemaField
   array(item: unknown): SchemaField
 }
 
@@ -73,15 +74,27 @@ function volatileField(field: SchemaField | null | undefined) {
 }
 
 /**
+ * The preferences an earlier build stored as a boolean before they grew their
+ * choices. Their field accepts either shape: the host answers a value of
+ * another type with the field's default, which would silently re-open a switch
+ * the reader had turned off. The browser half reads a stored boolean as the
+ * choice it stood for (packages/client/src/core/prefs.ts).
+ */
+const EARLIER_BOOLEAN_PREFS: readonly string[] = ['autoPopover', 'chatAnimations']
+
+/**
  * One typed Config field for one preference. The default's own type picks the
- * field type (an array is an array of strings), so PREFS_DEFAULT stays the
+ * field type (an array is an array of strings), and the two preferences an
+ * earlier build stored as a boolean take a union, so PREFS_DEFAULT stays the
  * only field list.
  */
 function prefsField(Schema: SchemaFactory, key: keyof typeof PREFS_DEFAULT) {
   const value = PREFS_DEFAULT[key]
   const field = Array.isArray(value)
     ? Schema.array(Schema.string())
-    : typeof value === 'boolean' ? Schema.boolean() : Schema.string()
+    : typeof value === 'boolean'
+      ? Schema.boolean()
+      : EARLIER_BOOLEAN_PREFS.includes(key) ? Schema.union([Schema.boolean(), Schema.string()]) : Schema.string()
   return field.default(value)
 }
 
@@ -98,11 +111,13 @@ function prefsField(Schema: SchemaFactory, key: keyof typeof PREFS_DEFAULT) {
  * host that cannot resolve schemastery must still load the skin — it just
  * loses the settings form.
  *
- * Field types stay permissive (plain string / boolean / array) on purpose: a
- * union resolves by rejection, so one stale value left in the profile patch by
- * an older build would fail resolution for the whole entry. The accepted sets
- * are enforced where they are consumed — the browser half clamps everything it
- * reads.
+ * Field types stay permissive (plain string / boolean / array) on purpose: the
+ * accepted sets are enforced where they are consumed — the browser half clamps
+ * everything it reads — so a set declared here would only narrow what a stored
+ * value may keep. The two preferences an earlier build stored as a boolean
+ * carry a boolean member beside the string (EARLIER_BOOLEAN_PREFS above): the
+ * other type would fall to the field's default, silently re-opening a switch
+ * the reader had turned off.
  */
 export const Config = SchemaFactory === null
   ? undefined

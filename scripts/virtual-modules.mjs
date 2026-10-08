@@ -8,7 +8,7 @@ import path from 'node:path'
 const SRC = path.join(path.resolve(import.meta.dirname, '..'), 'packages', 'client', 'src')
 
 /** The manifest fields the browser half reads (FeatureRuntime in packages/client/src/core/feature.ts). */
-const RUNTIME_FIELDS = ['id', 'handle', 'order', 'pref', 'ungated', 'yieldsTo', 'switchRow']
+const RUNTIME_FIELDS = ['id', 'handle', 'order', 'pref', 'prefValues', 'ungated', 'yieldsTo', 'switchRow']
 
 /**
  * The feature registry, `virtual:dsh-claude-style/features`: each manifest's

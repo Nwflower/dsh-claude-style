@@ -128,18 +128,31 @@ export const MASCOT_SCOPE_ALL = 'all'
 export const MASCOT_SCOPES = [MASCOT_SCOPE_HOME, MASCOT_SCOPE_ALL]
 
 /**
- * Feature switches: one boolean preference per feature that replaces or
- * moves a host control, all on by default. Each feature's manifest names
- * its key (`pref`, D42), and switching one off runs that
- * feature's teardown, which hands its surface back to the host.
+ * The chat area's animation choice: `off` leaves the area to the host,
+ * `enhanced` plays the ported set (packages/client/src/features/chat-*), and
+ * `redraw` hands the area to a second set, which the send flight is the only
+ * member of so far. Each of the five features names the values it runs under
+ * (`prefValues`, D42).
+ */
+export const CHAT_ANIMATIONS_OFF = 'off'
+export const CHAT_ANIMATIONS_ENHANCED = 'enhanced'
+export const CHAT_ANIMATIONS_REDRAW = 'redraw'
+export const CHAT_ANIMATIONS_MODES = [CHAT_ANIMATIONS_OFF, CHAT_ANIMATIONS_ENHANCED, CHAT_ANIMATIONS_REDRAW]
+
+/**
+ * Feature switches: one preference per feature that replaces or moves a host
+ * control, on by default. Each feature's manifest names its key (`pref`, D42)
+ * and, for a choice preference, the values it runs under (`prefValues`); a
+ * value outside that set runs the feature's teardown, which hands its surface
+ * back to the host.
  *
- * `chatAnimations` is the one switch over the ported chat-area effects —
- * the follow, the automatic folding with its rolling door, the text fade,
- * the file change rows and the send flight. It belongs here rather than
- * among the live-read preferences because two of those five cannot be
- * stopped by reading a preference: the file change rows take the host's two
- * seat keys over (D32), and a seat registration only comes back when the
- * feature is torn down whole.
+ * `chatAnimations` is the one choice among them: it covers the five ported
+ * chat-area effects — the follow, the automatic folding with its rolling
+ * door, the text fade, the file change rows and the send flight. It belongs
+ * here rather than among the live-read preferences because two of those five
+ * cannot be stopped by reading a preference: the file change rows take the
+ * host's two seat keys over (D32), and a seat registration only comes back
+ * when the feature is torn down whole.
  */
 export const FEATURE_PREF_DEFAULTS = {
   permissionsControl: true,
@@ -149,7 +162,7 @@ export const FEATURE_PREF_DEFAULTS = {
   turnNav: true,
   viewTabs: true,
   headerBand: true,
-  chatAnimations: true,
+  chatAnimations: CHAT_ANIMATIONS_ENHANCED,
 }
 
 
@@ -389,7 +402,7 @@ export interface Prefs {
   turnNav: boolean
   viewTabs: boolean
   headerBand: boolean
-  chatAnimations: boolean
+  chatAnimations: string
 }
 
 /** Every preference's shipped default, from the table both halves share (packages/contracts/src/prefs.ts, D46). */
@@ -406,6 +419,7 @@ export const PREF_CHOICES: Partial<Record<keyof Prefs, string[]>> = {
   mascot: MASCOTS,
   mascotScope: MASCOT_SCOPES,
   caretMotion: CARET_MOTIONS,
+  chatAnimations: CHAT_ANIMATIONS_MODES,
 }
 /** Longest accepted custom username; core/prefs.ts trims the stored value to it. */
 export const USERNAME_MAX = 64

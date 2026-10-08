@@ -80,10 +80,11 @@
       // What the row's control shows: a switch's state, or the pressed option of
       // a segmented control. The reader's own stored answer, not a forced off.
       var peerAnswer = function (node) {
-        var answer = { on: false, option: null }
+        var answer = { on: false, option: null, options: [] }
         peerWalk(node, function (child) {
           var props = child.props || {}
           if (props['data-on'] === '') answer.on = true
+          if (typeof props.className === 'string' && props.className.split(' ').indexOf('dsh-claude-segment') !== -1) answer.options.push(props.key)
           if (props['aria-pressed'] === 'true') answer.option = props.key
         })
         return answer

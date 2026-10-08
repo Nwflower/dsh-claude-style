@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { BRAND_CLAUDE, BRAND_DEEPSEEK, BRAND_DEEPSEEK_LEGACY, MASCOT_CRAB, MASCOT_DEEPY, MASCOT_OFF, PREF_DEFAULTS, PROVIDER_ID_MAX, QUICK_PROVIDERS_MAX, USERNAME_MAX } from '../constants'
+import { BRAND_CLAUDE, BRAND_DEEPSEEK, BRAND_DEEPSEEK_LEGACY, CHAT_ANIMATIONS_ENHANCED, CHAT_ANIMATIONS_OFF, CHAT_ANIMATIONS_REDRAW, MASCOT_CRAB, MASCOT_DEEPY, MASCOT_OFF, PREF_DEFAULTS, PROVIDER_ID_MAX, QUICK_PROVIDERS_MAX, USERNAME_MAX } from '../constants'
 import { MODEL_OFFICIAL_GROUP } from '../features/model/copy-fallbacks'
 import { normalizePrefs, resolveMascot } from './prefs'
 
@@ -32,6 +32,13 @@ test('the hover-open preference takes its earlier boolean shape', () => {
   expect(normalizePrefs({ autoPopover: false }).autoPopover).toBe('off')
   expect(normalizePrefs({ autoPopover: 'account' }).autoPopover).toBe('account')
   expect(normalizePrefs({ autoPopover: 'often' }).autoPopover).toBe(PREF_DEFAULTS.autoPopover)
+})
+
+test('the chat-area animation choice takes its earlier boolean switch, and any other value outside its set reads as Enhanced', () => {
+  expect(normalizePrefs({ chatAnimations: true }).chatAnimations).toBe(CHAT_ANIMATIONS_ENHANCED)
+  expect(normalizePrefs({ chatAnimations: false }).chatAnimations).toBe(CHAT_ANIMATIONS_OFF)
+  expect(normalizePrefs({ chatAnimations: CHAT_ANIMATIONS_REDRAW }).chatAnimations).toBe(CHAT_ANIMATIONS_REDRAW)
+  expect(normalizePrefs({ chatAnimations: 'always' }).chatAnimations).toBe(PREF_DEFAULTS.chatAnimations)
 })
 
 test('quick providers keep distinct ids in order, without the official group, within both limits', () => {

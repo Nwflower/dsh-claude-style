@@ -308,6 +308,13 @@
       window.__pushForm({ chatAnimations: true })
       await sleep(200)
       r.fold.animationsBack = { mark: document.body.hasAttribute('data-dsh-claude-chat-fold') }
+      // The Redraw choice runs the other effect set, which the fold is not part
+      // of: its mark goes the same way Off takes it.
+      window.__pushForm({ chatAnimations: 'redraw' })
+      await sleep(200)
+      r.fold.animationsRedraw = { mark: document.body.hasAttribute('data-dsh-claude-chat-fold') }
+      window.__pushForm({ chatAnimations: 'enhanced' })
+      await sleep(200)
     })
     // The ported token reveal (packages/client/src/features/chat-reveal/): characters arriving in
     // a streaming container are registered as named highlights from the faintest

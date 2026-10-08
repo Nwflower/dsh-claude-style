@@ -11,6 +11,7 @@
 - 宿主半边导出 `Config` 作为 schema，只有 `.volatile()` 字段进表单。schemastery 以顶层 await 加守卫导入，解析不到时 `Config` 为 `undefined`、皮肤照常加载——这是「导入不包 try/catch」规定的唯一例外。
 - 设置席位注册为 `plugins.bundle.config`（键为包名）；宿主没有 `configForms` 时才注册整页的 `settings.section`。
 - 偏好字段只有一份声明：`packages/contracts/src/prefs.ts` 的 `PREFS_DEFAULT`。宿主半边 `packages/host/src/settings.ts` 用它生成 `Config`（宿主构建把 contracts 的值内联进产物，contracts 不进 npm 包）；浏览器半边的默认值与取值集合给出表单答复之前的初值与读到值时的规整。
+- 字段类型按默认值的类型取纯 `string` / `boolean` / 字符串数组：取值集合在消费处判定，浏览器半边读到什么都做规整。两个早先存成布尔值的偏好（`autoPopover`、`chatAnimations`，后来各自长成多档）额外保留一个 `boolean` 成员：宿主对类型不符的字段回落到默认值，只用纯 `string` 会把读者当时关掉的那一档重新打开；浏览器半边把布尔值读成它当时代表的那一档。
 - 偏好只存在宿主的表单里：早先存进浏览器本地存储的昵称与封号页语言，在表单第一次带值时写进表单，表单持有自己的值后删掉本地那份。
 
 ## 理由

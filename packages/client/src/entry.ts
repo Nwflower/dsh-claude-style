@@ -29,9 +29,19 @@ const isSwitched = (feature: Feature): feature is SwitchedFeature => Object.hasO
  */
 const isLive = (feature: Feature) => isSwitched(feature) || feature.yieldsTo !== undefined
 
-/** Whether a live feature is wanted now: its switch is on and no plugin it yields to is on the page. */
+/**
+ * Whether a live feature is wanted now: a boolean switch is on unless stored
+ * as `false`, a choice switch runs under the values its manifest names
+ * (`prefValues`), and no plugin it yields to is on the page.
+ */
 function isWanted(feature: Feature) {
-  if (isSwitched(feature) && readPrefs()[feature.pref] === false) return false
+  if (isSwitched(feature)) {
+    const value = readPrefs()[feature.pref]
+    const on = feature.prefValues === undefined
+      ? value !== false
+      : typeof value === 'string' && feature.prefValues.includes(value)
+    if (!on) return false
+  }
   return feature.yieldsTo === undefined || !peerPresent(feature.yieldsTo)
 }
 

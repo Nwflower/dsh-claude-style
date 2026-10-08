@@ -82,10 +82,21 @@ function checkManifests(manifests) {
     for (const sheet of manifest.stylesheets) {
       if (!fs.existsSync(path.join(FEATURES, manifest.dir, sheet.file))) fail(manifest, `names the stylesheet ${sheet.file}, which packages/client/src/features/${manifest.dir}/ does not hold`)
     }
+    if (manifest.prefValues !== undefined) {
+      if (manifest.pref === undefined) fail(manifest, 'names "prefValues" without a "pref"')
+      if (!Array.isArray(manifest.prefValues) || manifest.prefValues.length === 0 || manifest.prefValues.some((value) => typeof value !== 'string' || value === '')) {
+        fail(manifest, 'needs "prefValues": a non-empty list of the preference values the feature runs under')
+      }
+    }
     if (manifest.switchRow !== undefined) {
       if (manifest.pref === undefined) fail(manifest, 'has a switch row but no "pref"')
       if (owners.has(manifest.pref)) fail(manifest, `owns the switch row of "${manifest.pref}", which packages/client/src/${owners.get(manifest.pref)} owns already`)
       owners.set(manifest.pref, manifest.file)
+      for (const choice of manifest.switchRow.choices ?? []) {
+        if (typeof choice?.value !== 'string' || choice.value === '' || typeof choice.label?.key !== 'string' || typeof choice.label?.fallback !== 'string') {
+          fail(manifest, 'has a switch row choice without a "value" and a "label" key and fallback')
+        }
+      }
     }
     for (const lang of ['zh', 'en']) {
       const copy = manifest.description?.[lang]

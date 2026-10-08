@@ -1,3 +1,4 @@
+import { CHAT_ANIMATIONS_ENHANCED, CHAT_ANIMATIONS_OFF, CHAT_ANIMATIONS_REDRAW } from '../../constants'
 import type { FeatureManifest } from '../../core/feature'
 
 export default {
@@ -6,13 +7,19 @@ export default {
   reads: ['chatFold'],
   contracts: ['chat.call', 'chat.flow', 'chat.flow-block', 'chat.following-tail', 'chat.following-tail-attribute', 'chat.scroller', 'chat.shimmer', 'chat.streaming', 'chat.think-row', 'chat.think-running', 'composer.seat', 'process.body', 'process.content', 'process.expanded-mode'],
   pref: 'chatAnimations',
+  prefValues: [CHAT_ANIMATIONS_ENHANCED],
   yieldsTo: 'dsh-chat-ux',
   stylesheets: [{ file: 'chat-follow.css', rank: 160 }],
   switchRow: {
     tab: 'conversation',
     rank: 30,
     title: { key: 'chatAnimationsTitle', fallback: 'Chat-area animations' },
-    desc: { key: 'chatAnimationsDesc', fallback: 'The conversation area\'s animations in one switch: the view follows the newest line as an answer grows, gliding there and catching up the same way inside a scrolling work log; the thinking row and a running step open and fold back by themselves, and a press rolls a height open or shut; new text fades in as it arrives; a write or edit run from inside a program is shown as a row carrying its +n -m count; and the composer lifts into the message bubble on send. Off stops all of them and the host\'s own behaviour returns.' },
+    desc: { key: 'chatAnimationsDesc', fallback: 'The conversation area\'s motion, chosen here: the follow, the automatic folding with its rolling door, the text fade, the file change rows and the send flight. Off leaves the conversation to the host\'s own behaviour; Enhanced plays this plugin\'s set; Redraw hands the area to a second set, which the send flight belongs to so far. With Animation set to Reduced every set stands still.' },
+    choices: [
+      { value: CHAT_ANIMATIONS_OFF, label: { key: 'chatAnimationsOff', fallback: 'Off' } },
+      { value: CHAT_ANIMATIONS_ENHANCED, label: { key: 'chatAnimationsEnhanced', fallback: 'Enhanced' } },
+      { value: CHAT_ANIMATIONS_REDRAW, label: { key: 'chatAnimationsRedraw', fallback: 'Redraw' } },
+    ],
   },
   cases: ['chat-follow'],
   description: {

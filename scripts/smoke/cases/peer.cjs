@@ -20,16 +20,17 @@ module.exports = {
     const settings = peer.settings || {}
     const taken = ['chatAnimations', 'caretMotion']
     const answers = settings.answers || {}
-    // The reader's own answer stays on show (these defaults are on, the caret
-    // sits on Every move) while the control refuses input and the accent line
-    // names the plugin that owns the behaviour.
-    const showsOwnAnswer = (key) => {
-      const answer = answers[key]
-      return !!answer && (answer.on === true || answer.option === 'typing')
-    }
+    // The reader's own answer stays on show (the chat animations on Enhanced,
+    // the caret on Every move) while the control refuses input and the accent
+    // line names the plugin that owns the behaviour.
+    const ownAnswer = { chatAnimations: 'enhanced', caretMotion: 'typing' }
+    const showsOwnAnswer = (key) => ((answers[key] || {}).option) === ownAnswer[key]
     check('the Conversation tab carries both ported controls',
       settings.registered === true && taken.every(key => (settings.rows || []).includes(key)),
       JSON.stringify(settings.rows))
+    check('the chat-area animation row is the three-way control, in order',
+      JSON.stringify((answers.chatAnimations || {}).options) === JSON.stringify(['off', 'enhanced', 'redraw']),
+      JSON.stringify((answers.chatAnimations || {}).options))
     check('both controls are greyed out and marked as managed by the other plugin',
       taken.every(key => (settings.refusing || []).includes(key)) &&
         taken.every(key => (settings.managed || []).includes(key)),

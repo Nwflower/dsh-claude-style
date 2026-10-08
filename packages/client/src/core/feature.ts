@@ -15,7 +15,17 @@ export type FeatureManifest = FeatureIdentity & FeatureFields & FeatureSwitch
 
 /** Exactly one of `pref` and `ungated` (D29). */
 export type FeatureSwitch =
-  | { /** The preference that decides whether the reader gets the feature. */ pref: keyof Prefs, ungated?: never }
+  | {
+      /** The preference that decides whether the reader gets the feature. */
+      pref: keyof Prefs
+      /**
+       * The preference values the feature runs under, for a choice switch
+       * (`chatAnimations`): a value outside the list runs its teardown. A
+       * boolean switch leaves this out and is on unless stored as `false`.
+       */
+      prefValues?: string[]
+      ungated?: never
+    }
   | { /** Why the feature has no switch. */ ungated: string, pref?: never }
 
 /**
@@ -81,6 +91,14 @@ export interface FeatureSwitchRow {
   rank: number
   title: SettingsCopyLine
   desc: SettingsCopyLine
+  /** The choices of a segmented control; without them the row is an on/off switch. */
+  choices?: FeatureSwitchChoice[]
+}
+
+/** One choice of a switch row's segmented control: the stored value and its line of copy. */
+export interface FeatureSwitchChoice {
+  value: string
+  label: SettingsCopyLine
 }
 
 export interface FeatureCopy {
@@ -89,7 +107,7 @@ export interface FeatureCopy {
 }
 
 /** The manifest fields the browser half reads. */
-export type FeatureRuntime = FeatureIdentity & Pick<FeatureFields, 'order' | 'yieldsTo' | 'switchRow'> & { pref?: keyof Prefs, ungated?: string }
+export type FeatureRuntime = FeatureIdentity & Pick<FeatureFields, 'order' | 'yieldsTo' | 'switchRow'> & { pref?: keyof Prefs, prefValues?: string[], ungated?: string }
 
 /** One installable feature: its runtime manifest fields and its main module's `install`. */
 export type Feature = FeatureRuntime & {
