@@ -1,7 +1,7 @@
 import type { HostContext } from '../../core/host'
 import type { HostModelEntry } from '@dsh-claude-style/contracts/services'
 import { localized } from '../../core/i18n'
-import { modelCopy, normalizeModelId } from '../../core/model-copy'
+import { modelCopy } from '../../core/model-copy'
 import { textOf } from '../../shared/format'
 
 /**
@@ -9,39 +9,19 @@ import { textOf } from '../../shared/format'
  *
  * The copy document (packages/client/data/model-descriptions.json) ships as data beside the
  * bundle and is fetched at runtime, so this is the only place that knows how
- * a model's id becomes a sentence. Resolution descends: exact entry (one
- * model resold by several providers folds to a single key) → family rule →
- * tier rule → the catalog's own text. Family rules are ordered and anchored
- * so another vendor's flash tier never borrows DeepSeek's copy; the tier
- * rules are the last resort, read out of the id itself. A model this table
- * has never seen and the catalog does not describe resolves to an empty
- * string on purpose: a name-only row beats an invented line.
+ * a model's id becomes a sentence. Resolution descends: family rule → tier
+ * rule → the catalog's own text. Family rules are ordered and anchored, so
+ * `deepseek-v4.1-flash` and a future Flash read one line while another
+ * vendor's flash tier never borrows DeepSeek's copy; a rule anchored to a
+ * version keeps that version's numbers to itself. The tier rules are the last
+ * resort, read out of the id itself. A model this table has never seen and the
+ * catalog does not describe resolves to an empty string on purpose: a
+ * name-only row beats an invented line.
  *
  * Split out of model-picker.ts when the effort slider pushed that fragment
  * past the repository's size stop line; nothing here touches the picker's
  * closure, only the shared copy document.
  */
-/** Exact entry: `provider/model`, bare id, folded id, then the alias table. */
-export function exactModelCopy(groupId: unknown, modelId: unknown) {
-  if (modelCopy === null) return null
-  const gid = textOf(groupId).toLowerCase()
-  const mid = textOf(modelId)
-  const midLower = mid.toLowerCase()
-  const byProvider = modelCopy.exact[`${groupId}/${mid}`] || modelCopy.exact[`${gid}/${midLower}`]
-  if (byProvider) return byProvider
-  if (modelCopy.exact[mid]) return modelCopy.exact[mid]
-  if (modelCopy.exact[midLower]) return modelCopy.exact[midLower]
-  const folded = normalizeModelId(mid)
-  if (modelCopy.folded[folded]) return modelCopy.folded[folded]
-  const alias = modelCopy.aliases[mid] || modelCopy.aliases[midLower] || modelCopy.aliases[folded] || (modelCopy.foldedAliases && modelCopy.foldedAliases[folded])
-  if (alias) {
-    if (modelCopy.exact[alias]) return modelCopy.exact[alias]
-    const foldedAlias = normalizeModelId(alias)
-    if (modelCopy.folded[foldedAlias]) return modelCopy.folded[foldedAlias]
-  }
-  return null
-}
-
 /**
  * Family entry. The model id is tried alone first because it is the stronger
  * signal, then `provider/id` for ids that carry no brand of their own
@@ -55,7 +35,6 @@ export function familyModelCopy(groupId: unknown, modelId: unknown) {
     for (let i = 0; i < modelCopy.families.length; i++) {
       const rule = modelCopy.families[i]
       if (!rule.re.test(haystacks[h])) continue
-      if (rule.key) return modelCopy.exact[rule.key] || null
       return rule.text
     }
   }
@@ -78,7 +57,7 @@ export function tierModelCopy(modelId: unknown) {
  */
 export function modelDescription(ctx: HostContext | null, groupId: unknown, model: HostModelEntry): string {
   const id = typeof model.id === 'string' ? model.id : ''
-  const pair = exactModelCopy(groupId, id) || familyModelCopy(groupId, id) || tierModelCopy(id)
+  const pair = familyModelCopy(groupId, id) || tierModelCopy(id)
   const text = localized(pair, ctx)
   if (text) return text
   return typeof model.description === 'string' ? model.description : ''

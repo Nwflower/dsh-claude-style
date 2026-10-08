@@ -337,86 +337,6 @@
       "en": "You can permanently delete your account and data. This can\u2019t be undone."
     }
   },
-  "exact": {
-    "deepseek-flash": {
-      "zh": "非对称模型结构，小成本大智能。",
-      "en": "Asymmetric architecture: more intelligence, less cost."
-    },
-    "gpt-5.4": {
-      "zh": "面向编程与专业工作的长上下文模型。",
-      "en": "For coding and professional work, with a 1.05M-token context and native computer use."
-    },
-    "glm-5.3": {
-      "zh": "最强开放权重编程模型之一，拓展智能上界的可及边界。",
-      "en": "For coding and long-horizon autonomy: 1M context, 128K output, and post-training alone makes it the most capable open-weight coding model."
-    },
-    "glm-5.3-flash": {
-      "zh": "GLM-5系列的首个原生多模态模型。",
-      "en": "Natively multimodal, with 320B/18B MoE, 1M context and MIT licensing at $0.045 per task."
-    },
-    "glm-5.3-flashx": {
-      "zh": "GLM 5.3 flash的高吞吐版本。",
-      "en": "A high-throughput variant running at 200 tokens/s."
-    },
-    "kimi-k3": {
-      "zh": "面向编程与知识工作的 2.8T 开放权重模型。",
-      "en": "An open-weight 2.8T model for coding and knowledge work."
-    },
-    "kimi-for-coding": {
-      "zh": "面向长程编程的开放权重智能体模型。",
-      "en": "An open-weight agentic coding model for long-horizon work, 1T/32B with 256K context."
-    },
-    "kimi-for-coding-highspeed": {
-      "zh": "面向长程编程的开放权重智能体模型高速版。",
-      "en": "A high-speed variant at about 180 tokens/s, 5–6x the regular tier, for 2x the price."
-    },
-    "qwen3.8-max": {
-      "zh": "面向编程与办公，2.4 万亿参数 MoE，1M 上下文、思考模式与内置工具。",
-      "en": "A 2.4T-parameter MoE for coding and office work, with 1M context, thinking mode and built-in tools."
-    },
-    "step-5-preview": {
-      "zh": "面向编程与专业知识工作，原生图文视频输入，1M 上下文。",
-      "en": "For programming and professional knowledge work, with native text, image and video input and a 1M-token context."
-    },
-    "step-3.7-flash": {
-      "zh": "面向智能体与代码任务，198B/11B 稀疏 MoE，图像与视频理解，256K 上下文，最高 400 tokens/s。",
-      "en": "For agentic and coding tasks: 198B/11B sparse MoE with image and video understanding, 256K context, up to 400 tokens/s."
-    },
-    "minimax-m3": {
-      "zh": "首个集前沿编程、1M 上下文与原生多模态于一身的开放权重模型。",
-      "en": "The first open-weight model combining frontier coding, 1M context and native multimodality."
-    },
-    "grok-4.5": {
-      "zh": "面向编程、智能体与知识工作，80 tokens/s，$2/$6 每百万 token；官网已有更新的 4.6。",
-      "en": "Built for coding, agentic and knowledge work at 80 tokens/s for $2/$6 per MTok; a newer Grok 4.6 is out."
-    },
-    "doubao-seed-2.1": {
-      "zh": "分 Pro 与 Turbo 两档的新一代生产力智能体，以通用任务与代码见长。",
-      "en": "Pro and Turbo tiers of a next-generation productivity agent, strong at general agentic and coding tasks."
-    },
-    "ernie-5.0": {
-      "zh": "2.4 万亿参数原生全模态，超稀疏 MoE 每 token 仅激活约 3%，上下文扩至 128K。",
-      "en": "2.4T-parameter native omni-modal, ultra-sparse MoE activating under 3% of parameters per token, 128K context."
-    },
-    "mistral-large-3": {
-      "zh": "Apache 2.0 开放权重多模态模型，细粒度 MoE，675B 总参 / 41B 激活，256K 上下文。",
-      "en": "Apache-2.0 open-weight multimodal MoE with 675B total / 41B active parameters and 256K context."
-    },
-    "celeris-1": {
-      "zh": "生成速度 1,664 tokens/s，超过 Mercury 2 的 5 倍，MMLU-Pro 75.9%。",
-      "en": "Generates 1,664 tokens/s, over 5x Mercury 2, at 75.9% MMLU-Pro."
-    }
-  },
-  "aliases": {
-    "deepseek-v4.1-flash": "deepseek-flash",
-    "deepseek-v41-flash": "deepseek-flash",
-    "k3": "kimi-k3",
-    "k3-256k": "kimi-k3",
-    "kimi-k2.7-code": "kimi-for-coding",
-    "kimi-for-coding-highspeed-256k": "kimi-for-coding-highspeed",
-    "ernie-5": "ernie-5.0",
-    "minimax-m3-1m": "minimax-m3"
-  },
   "brands": {
     "note": "Which brand mark a row shows. Every id names a vendored lockup in packages/assets/src/icons/combine/; scripts/build.mjs fails the build on an id that is not there. This is presentation data, kept out of the bundle like the rest of this document, and it is separate from the copy rules above: a vendor's mark and a vendor's description line change for different reasons. `providers` is deliberately empty: a model no rule claims draws **no** lockup rather than its provider's, because the reseller's own lockup on a model it did not make reads as a wrong answer rather than a missing one. `models` is an ordered, anchored rule list resolved against the model id, exactly like `families` and with the same discipline: first match wins, so a broad rule must sit below the narrow ones and every rule must name its vendor (`step` cannot match `step-3.7-flash` by accident only if no earlier rule already claimed it). A brand with no lockup renders the label without a mark.",
     "providers": {},
@@ -481,12 +401,15 @@
   "families": [
     {
       "match": "deepseek.*flash",
-      "key": "deepseek-flash",
+      "text": {
+        "zh": "非对称模型结构，小成本大智能。",
+        "en": "Asymmetric architecture: more intelligence, less cost."
+      },
       "note": "Every DeepSeek Flash reads the same line: the copy describes the line, not a version, so a retired Flash and a future one say the same thing. Anchored on `deepseek` on purpose: an unanchored /flash$/ would hand this copy to glm-5.3-flash, step-3.7-flash and every other vendor's flash tier."
     },
     {
       "match": "deepseek.*pro",
-      "note": "The Pro line's own official heading on the V4 preview page. No exact entry pins it: a Pro is a Pro whatever its version.",
+      "note": "The Pro line's own official heading on the V4 preview page. No rule pins it to a version: a Pro is a Pro whatever its version.",
       "text": {
         "zh": "性能比肩顶级闭源模型。",
         "en": "Performance rivaling the world's top closed-source models."
@@ -519,7 +442,7 @@
     },
     {
       "match": "claude.*opus",
-      "note": "Family copy stays version-agnostic, so it carries no superlatives: 'strongest' is only true of the current generation and would mislabel an older Opus. Superlatives belong in version-pinned exact entries. It also carries no tier prefix of ours — '旗舰档：' is our positioning, not the model's own line.",
+      "note": "Family copy stays version-agnostic, so it carries no superlatives: 'strongest' is only true of the current generation and would mislabel an older Opus. Superlatives belong in a rule anchored to the version. It also carries no tier prefix of ours — '旗舰档：' is our positioning, not the model's own line.",
       "text": {
         "zh": "面向复杂编程与 AI 智能体的混合推理模型。",
         "en": "A hybrid reasoning model built for serious coding and AI agents."
@@ -549,6 +472,14 @@
       "text": {
         "zh": "为 Codex 智能体编程优化，可并行处理多项软件工程任务。",
         "en": "Optimized for agentic coding in Codex, handling several software tasks in parallel."
+      }
+    },
+    {
+      "match": "gpt[._-]?5[._-]?4(?!\\d)",
+      "note": "Anchored to the 5.4 generation: the context size and the computer use are that model's, so a later GPT-5 reads the rule below.",
+      "text": {
+        "zh": "面向编程与专业工作的长上下文模型。",
+        "en": "For coding and professional work, with a 1.05M-token context and native computer use."
       }
     },
     {
@@ -606,7 +537,30 @@
       }
     },
 
-    { "match": "glm.*flashx", "key": "glm-5.3-flashx" },
+    {
+      "match": "glm[._-]?5[._-]?3.*flashx",
+      "note": "Anchored to the 5.3 generation: the throughput figure is that tier's, so a later GLM Flash X reads the generic Flash rule below.",
+      "text": {
+        "zh": "GLM 5.3 flash的高吞吐版本。",
+        "en": "A high-throughput variant running at 200 tokens/s."
+      }
+    },
+    {
+      "match": "glm[._-]?5[._-]?3.*flash",
+      "note": "Anchored to the 5.3 generation's Flash tier; a later GLM Flash reads the generic Flash rule below.",
+      "text": {
+        "zh": "GLM-5系列的首个原生多模态模型。",
+        "en": "Natively multimodal, with 320B/18B MoE, 1M context and MIT licensing at $0.045 per task."
+      }
+    },
+    {
+      "match": "glm[._-]?5[._-]?3(?!\\d)",
+      "note": "Anchored to the 5.3 generation: the superlative is true of it alone, and the line's own rule below carries none.",
+      "text": {
+        "zh": "最强开放权重编程模型之一，拓展智能上界的可及边界。",
+        "en": "For coding and long-horizon autonomy: 1M context, 128K output, and post-training alone makes it the most capable open-weight coding model."
+      }
+    },
     {
       "match": "glm.*flash",
       "text": {
@@ -622,8 +576,30 @@
       }
     },
 
-    { "match": "kimi.*(k3|k-?3)|^k3", "key": "kimi-k3" },
-    { "match": "kimi.*(code|k2[-.]?7)", "key": "kimi-for-coding" },
+    {
+      "match": "kimi.*(k3|k-?3)|^k3",
+      "note": "Anchored to the K3 line: the 2.8T size belongs to it, and the catalog's `k3` and `k3-256k` spellings are the same line.",
+      "text": {
+        "zh": "面向编程与知识工作的 2.8T 开放权重模型。",
+        "en": "An open-weight 2.8T model for coding and knowledge work."
+      }
+    },
+    {
+      "match": "kimi.*(cod(e|ing)|k2[._-]?7).*highspeed",
+      "note": "The coding line's high-speed tier, above the coding rule because its own id contains `coding`.",
+      "text": {
+        "zh": "面向长程编程的开放权重智能体模型高速版。",
+        "en": "A high-speed variant at about 180 tokens/s, 5–6x the regular tier, for 2x the price."
+      }
+    },
+    {
+      "match": "kimi.*(cod(e|ing)|k2[._-]?7)",
+      "note": "The coding line whatever the suffix spells: `kimi-for-coding` and `kimi-k2.7-code` both read it, and the high-speed tier above is claimed first.",
+      "text": {
+        "zh": "面向长程编程的开放权重智能体模型。",
+        "en": "An open-weight agentic coding model for long-horizon work, 1T/32B with 256K context."
+      }
+    },
     {
       "match": "kimi",
       "text": {
@@ -632,7 +608,14 @@
       }
     },
 
-    { "match": "qwen.*max", "key": "qwen3.8-max" },
+    {
+      "match": "qwen[._-]?3[._-]?8.*max",
+      "note": "Anchored to the 3.8 generation: the parameter count and the context are that model's, so a later Qwen Max falls to the line rule below.",
+      "text": {
+        "zh": "面向编程与办公，2.4 万亿参数 MoE，1M 上下文、思考模式与内置工具。",
+        "en": "A 2.4T-parameter MoE for coding and office work, with 1M context, thinking mode and built-in tools."
+      }
+    },
     {
       "match": "qwen.*(coder|code)",
       "text": {
@@ -675,11 +658,32 @@
       "text": { "zh": "开放权重与云端 API 并行，覆盖文本、图像、音频与视频。", "en": "Open weights and cloud APIs across text, image, audio and video." }
     },
 
-    { "match": "step.*5", "key": "step-5-preview" },
-    { "match": "step.*flash", "key": "step-3.7-flash" },
+    {
+      "match": "step[._-]?5(?!\\d)",
+      "note": "Anchored to the 5 line: the input modes and the context are its own, and the trailing-digit guard keeps a size suffix (`95b`) from reading it.",
+      "text": {
+        "zh": "面向编程与专业知识工作，原生图文视频输入，1M 上下文。",
+        "en": "For programming and professional knowledge work, with native text, image and video input and a 1M-token context."
+      }
+    },
+    {
+      "match": "step[._-]?3[._-]?7.*flash",
+      "note": "Anchored to 3.7: the parameter counts and the token rate are that tier's, so another Step Flash falls to the line rule below.",
+      "text": {
+        "zh": "面向智能体与代码任务，198B/11B 稀疏 MoE，图像与视频理解，256K 上下文，最高 400 tokens/s。",
+        "en": "For agentic and coding tasks: 198B/11B sparse MoE with image and video understanding, 256K context, up to 400 tokens/s."
+      }
+    },
     { "match": "step", "text": { "zh": "覆盖文本推理、多模态与语音，经官方开放平台提供。", "en": "Reasoning, multimodal understanding and voice, served through the official open platform." } },
 
-    { "match": "minimax.*m3|(^|-)m3($|-)", "key": "minimax-m3" },
+    {
+      "match": "minimax.*m3|(^|-)m3($|-)",
+      "note": "The M3 line's own claims; the catalog's `minimax-m3-1m` is the same line at a longer context.",
+      "text": {
+        "zh": "首个集前沿编程、1M 上下文与原生多模态于一身的开放权重模型。",
+        "en": "The first open-weight model combining frontier coding, 1M context and native multimodality."
+      }
+    },
     {
       "match": "minimax|(^|-)m2[-.]?\\d",
       "text": {
@@ -697,8 +701,16 @@
       }
     },
     {
+      "match": "celeris[._-]?1(-|$)",
+      "note": "Anchored to Celeris-1: the numbers are that model's, so a future Celeris reads the line rule below.",
+      "text": {
+        "zh": "生成速度 1,664 tokens/s，超过 Mercury 2 的 5 倍，MMLU-Pro 75.9%。",
+        "en": "Generates 1,664 tokens/s, over 5x Mercury 2, at 75.9% MMLU-Pro."
+      }
+    },
+    {
       "match": "celeris",
-      "note": "Diffusion LLM, so the copy leads with latency rather than the usual capability framing. The Celeris-1 numbers live in the pinned exact entry so a future Celeris does not inherit them.",
+      "note": "Diffusion LLM, so the copy leads with latency rather than the usual capability framing.",
       "text": {
         "zh": "扩散架构大语言模型，主打超低延迟生成。",
         "en": "Diffusion-architecture LLMs built for ultra-low-latency generation."
@@ -726,6 +738,14 @@
       }
     },
     {
+      "match": "grok[._-]?4(?!\\d)",
+      "note": "Anchored to the Grok 4 line, so every 4.x build reads the same sentence and another line falls to the rule below.",
+      "text": {
+        "zh": "全球最智能的模型之一，支持原生工具使用以及实时搜索功能。",
+        "en": "One of the most intelligent models in the world, with native tool use and real-time search."
+      }
+    },
+    {
       "match": "grok",
       "text": {
         "zh": "覆盖编程、智能体与知识工作，API 支持多模态输入。",
@@ -733,10 +753,26 @@
       }
     },
     {
+      "match": "doubao.*2[._-]?1(?!\\d)|seed[._-]?2[._-]?1(?!\\d)",
+      "note": "Anchored to Seed 2.1: the tiers it names are that generation's, so another Seed reads the vendor rule below.",
+      "text": {
+        "zh": "分 Pro 与 Turbo 两档的新一代生产力智能体，以通用任务与代码见长。",
+        "en": "Pro and Turbo tiers of a next-generation productivity agent, strong at general agentic and coding tasks."
+      }
+    },
+    {
       "match": "doubao|seed-?\\d|volc",
       "text": {
         "zh": "经 50+ 内部业务场景验证，每日千亿级 token 用量打磨，支持多模态。",
         "en": "Validated across 50+ internal scenarios and hundreds of billions of daily tokens, with multimodal support."
+      }
+    },
+    {
+      "match": "ernie[._-]?5([._-]?0)?(-|$)",
+      "note": "Anchored to the 5.0 generation: the parameter count is its own, and the catalog's `ernie-5` is the same line.",
+      "text": {
+        "zh": "2.4 万亿参数的原生全模态大模型。",
+        "en": "A native omni-modal model with 2.4 trillion parameters."
       }
     },
     {
@@ -756,6 +792,14 @@
     {
       "match": "codestral",
       "text": { "zh": "面向补全、FIM 与生成，128K 上下文。", "en": "Built for completion, FIM and generation, with 128K context." }
+    },
+    {
+      "match": "mistral.*large[._-]?3(?!\\d)",
+      "note": "Anchored to Large 3: the licence and the parameter counts are that model's, so another Mistral reads the line rule below.",
+      "text": {
+        "zh": "Apache 2.0 开放权重多模态模型，细粒度 MoE，675B 总参 / 41B 激活，256K 上下文。",
+        "en": "Apache-2.0 open-weight multimodal MoE with 675B total / 41B active parameters and 256K context."
+      }
     },
     {
       "match": "mistral|magistral",

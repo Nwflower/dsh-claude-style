@@ -5,10 +5,9 @@ import type { HostAnswer } from '../shared/resource'
 /** One `{ locale: text }` pair of the copy document. */
 export type CopyPair = Record<string, string>
 
-/** A family or tier rule: a model-id pattern naming an exact entry (`key`) or carrying its own text. */
+/** A family or tier rule: a model-id pattern and the line every id it claims reads. */
 export interface CopyRule {
   re: RegExp
-  key?: string
   text?: CopyPair
 }
 
@@ -17,11 +16,7 @@ export interface ModelCopyIndex {
   ui: Record<string, CopyPair>
   settings: Record<string, CopyPair>
   ban: Record<string, CopyPair>
-  exact: Record<string, CopyPair>
-  aliases: Record<string, string>
   fallback: string
-  folded: Record<string, CopyPair>
-  foldedAliases: Record<string, string>
   families: CopyRule[]
   tiers: CopyRule[]
   providerBrands: Record<string, string>
@@ -61,8 +56,8 @@ export function loadModelCopy() {
 }
 
 /**
- * Compile a copy document into the shape lookups want: a folded id index,
- * the alias table, and the rule lists with their regexps built once.
+ * Compile a copy document into the shape lookups want: the rule lists with
+ * their regexps built once.
  * @param doc - parsed document, as validated by the build.
  * @returns the index, or null when the document is unusable.
  */
@@ -71,7 +66,6 @@ function indexModelCopy(doc: HostAnswer): ModelCopyIndex | null {
   // The build validated the document's shape before it shipped (D5); a block
   // that is missing reads as empty.
   const table = <T>(value: unknown) => (value && typeof value === 'object' ? value : {}) as Record<string, T>
-  const exact = table<CopyPair>(doc.exact)
   const brands = table<any>(doc.brands)
   const index: ModelCopyIndex = {
     ui: table(doc.ui),
@@ -81,20 +75,11 @@ function indexModelCopy(doc: HostAnswer): ModelCopyIndex | null {
     // be listed here: this index IS what lookups read, so an unlisted block
     // would silently fall back to the bundle's English constants.
     ban: table(doc.ban),
-    exact,
-    aliases: table(doc.aliases),
     fallback: typeof doc.fallback === 'string' && doc.fallback ? doc.fallback : MODEL_COPY_FALLBACK_LOCALE,
-    folded: {},
-    foldedAliases: {},
     families: [],
     tiers: [],
     providerBrands: table(brands.providers),
     brandRules: [],
-  }
-  for (const id in exact) index.folded[normalizeModelId(id)] = exact[id]
-  for (const a in index.aliases) {
-    index.foldedAliases[normalizeModelId(a)] = index.aliases[a]
-    index.foldedAliases[a.toLowerCase()] = index.aliases[a]
   }
   const compile = (rules: any) => {
     const out: CopyRule[] = []
@@ -102,7 +87,7 @@ function indexModelCopy(doc: HostAnswer): ModelCopyIndex | null {
       const rule = rules[i]
       if (!rule || typeof rule.match !== 'string') continue
       // The build compiles every rule before it ships the document.
-      out.push({ re: new RegExp(rule.match, 'i'), key: rule.key, text: rule.text })
+      out.push({ re: new RegExp(rule.match, 'i'), text: rule.text })
     }
     return out
   }

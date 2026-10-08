@@ -412,7 +412,7 @@ async function main() {
   // other half of the previous one. lib/ is not in version control (D47), so a
   // fresh clone has no directory to write into yet.
   const copy = JSON.parse(fs.readFileSync(path.join(DATA, MODEL_COPY), 'utf8'))
-  const exact = validateModelCopy(copy, combines)
+  const familyRules = validateModelCopy(copy, combines)
   const copyText = JSON.stringify(copy, null, 2) + '\n'
   const iconSource = path.join(BRAND_ASSETS, ICON_SOURCE)
   const iconTarget = path.join(LIB, ICON_FILE)
@@ -427,7 +427,7 @@ async function main() {
   }
 
   fs.writeFileSync(path.join(LIB, MODEL_COPY), copyText)
-  console.log(`built lib/${MODEL_COPY} (${exact} exact entries, ${copy.families.length} family rules, ${copy.tiers.length} tier rules)`)
+  console.log(`built lib/${MODEL_COPY} (${familyRules} family rules, ${copy.tiers.length} tier rules)`)
 
   fs.copyFileSync(iconSource, iconTarget)
   console.log(`built lib/${ICON_FILE} (${fs.statSync(iconTarget).size} bytes) from packages/assets/src/brand/${ICON_SOURCE}`)
