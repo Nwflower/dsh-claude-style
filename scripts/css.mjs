@@ -18,12 +18,16 @@
  * The token stylesheet is generated from packages/client/src/theme/tokens.json, and so is the
  * token table in docs/STYLE.md; it also declares the brand marks' addresses
  * as `--dsh-claude-image-<name>`, the one thing in the CSS only the build knows.
+ *
+ * The joined sheet ships minified (scripts/shared/minify-css.cjs): comments and
+ * formatting are for the source, and the checks above read the source.
  */
 import fs from 'node:fs'
 import path from 'node:path'
 import Ajv2020 from 'ajv/dist/2020.js'
 import postcss from 'postcss'
 import selectorParser from 'postcss-selector-parser'
+import { minifyCss } from './shared/minify-css.cjs'
 
 /** The selector root every skin rule hangs off. */
 const SCOPE_TAG = 'body'
@@ -314,7 +318,7 @@ function checkAttributes(read, srcDir) {
  * @param options.tokenDoc - packages/client/src/theme/tokens.json (loadTokens).
  * @param options.gates - `{ composer, palette: { attribute, claude, host }, typeface: { attribute, claude, host }, brand: { attribute, deepseek } }`.
  * @param options.images - brand mark name → its address, for the token sheet.
- * @returns the stylesheet text.
+ * @returns the stylesheet text, minified once every check has read the sheets.
  */
 export function buildStylesheet({ sheets, srcDir, tokenDoc, gates, images }) {
   const names = { claude: new Set(), host: new Set() }
@@ -329,5 +333,5 @@ export function buildStylesheet({ sheets, srcDir, tokenDoc, gates, images }) {
     if (!names.host.has(name)) throw new Error(`build: ${name} is defined under the Claude palette or typeface but has no alias under the host's`)
   }
   checkAttributes(read, srcDir)
-  return text
+  return minifyCss(text)
 }

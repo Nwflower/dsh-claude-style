@@ -40,6 +40,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 const postcss = require('postcss')
 const selectorParser = require('postcss-selector-parser')
+const { minifyCss } = require('../../scripts/shared/minify-css.cjs')
 
 const ROOT = path.resolve(__dirname, '..', '..')
 /** The marker declaration carrying each rule's index into the page's CSSOM. */
@@ -49,10 +50,14 @@ const SHEET = 'style[data-plugin-css="dsh-claude-style/client.css"]'
 /** Pseudo-elements the page can read a computed style for. */
 const READABLE_PSEUDO = new Set(['::before', '::after', '::marker', '::placeholder'])
 
-/** The rules of a stylesheet file, as `selector{declarations}` keys. */
+/**
+ * The rules of a stylesheet file, as `selector{declarations}` keys. The file
+ * goes through the build's minifier first, so its keys spell the way the
+ * page's rules do.
+ */
 function ruleKeys(file) {
   const keys = new Set()
-  postcss.parse(fs.readFileSync(file, 'utf8')).walkRules((rule) => { keys.add(ruleKey(rule)) })
+  postcss.parse(minifyCss(fs.readFileSync(file, 'utf8'))).walkRules((rule) => { keys.add(ruleKey(rule)) })
   return keys
 }
 

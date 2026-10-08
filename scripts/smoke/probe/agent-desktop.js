@@ -69,10 +69,15 @@
       if (hostRow) hostRow.dispatchEvent(new MouseEvent('mouseleave'))
       await sleep(350)
       r.hoverClosedMenu = !accountMenuOpen()
+      // Read through the CSSOM: the sheet's text is minified, and the parsed
+      // rules are what the page applies.
       var styleEl = document.getElementById('dsh-claude-style-style')
-      var cssText = styleEl ? styleEl.textContent : ''
-      r.menuEntryKeyframes = cssText.indexOf('@keyframes dsh-claude-account-menu-in') !== -1
-      r.menuEntryAnimation = cssText.indexOf('animation: dsh-claude-account-menu-in 0.15s ease') !== -1
+      var sheetRules = styleEl && styleEl.sheet ? Array.prototype.slice.call(styleEl.sheet.cssRules) : []
+      r.menuEntryKeyframes = sheetRules.some(function (rule) { return rule instanceof CSSKeyframesRule && rule.name === 'dsh-claude-account-menu-in' })
+      r.menuEntryAnimation = sheetRules.some(function (rule) {
+        return rule instanceof CSSStyleRule && rule.style.animationName === 'dsh-claude-account-menu-in' &&
+          rule.style.animationDuration === '0.15s' && rule.style.animationTimingFunction === 'ease'
+      })
       // Open the host's own menu: the card mounts with the host's rows, the skin
       // injects ours a frame later, and the host re-places the card a frame after
       // that. The card must stay unpainted until both have happened.
