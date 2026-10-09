@@ -210,40 +210,64 @@ async function waitForSkin(page, timeoutMs = 30000) {
  * pressing them again. Clicks are forced: the mask sits over the page, so the hit
  * test the default click performs never settles.
  *
+ * The pass keeps going until nothing has been open for `quietMs`, because the
+ * overlay that follows the one just closed mounts a moment later: a check made
+ * in that gap read an empty page, the lane declared the shell dismissed, and the
+ * scenario walked into a form whose mask swallows its clicks.
+ *
  * @param options.limit - how many overlays to answer before giving up.
+ * @param options.quietMs - how long nothing may appear for the page to count as settled.
+ * @param options.settleMs - the whole wait, at most.
  * @returns whether no dialog is left open.
  */
 async function dismissOverlays(page, options = {}) {
   const limit = options.limit ?? 6
-  const open = () => page.locator('[role="dialog"]:visible')
+  const quietMs = options.quietMs ?? 1000
+  const settleMs = options.settleMs ?? 8000
+  const byText = () => page.locator('[role="dialog"]:visible')
+  const roots = () => page.locator('[role="presentation"]:visible')
   /** How many buttons of each dialog were already pressed, keyed by its text. */
   const pressed = new Map()
-  for (let attempt = 0; attempt < limit * 2; attempt++) {
-    const dialogs = open()
-    if (await dialogs.count() === 0) break
-    const dialog = dialogs.last()
-    const text = await dialog.innerText()
-    const buttons = dialog.locator('button:visible')
-    const count = await buttons.count()
-    const tried = pressed.get(text) ?? 0
-    if (count === 0 || tried >= count) break
-    pressed.set(text, tried + 1)
-    await buttons.nth(tried).click({ force: true })
-    await page.waitForTimeout(600)
+  const overlayOpen = () => page.evaluate(() => document.querySelector('[role="dialog"], [role="presentation"]') !== null)
+  const started = Date.now()
+  let quietSince = null
+  let answered = 0
+  while (Date.now() - started < settleMs) {
+    if (answered < limit * 3) {
+      const dialogs = byText()
+      if (await dialogs.count() > 0) {
+        const dialog = dialogs.last()
+        const text = await dialog.innerText()
+        const buttons = dialog.locator('button:visible')
+        const count = await buttons.count()
+        const tried = pressed.get(text) ?? 0
+        if (count > 0 && tried < count) {
+          pressed.set(text, tried + 1)
+          answered += 1
+          await buttons.nth(tried).click({ force: true })
+          await page.waitForTimeout(500)
+          continue
+        }
+      }
+      const layer = roots()
+      if (await layer.count() > 0) {
+        const button = layer.last().locator('button:visible').first()
+        answered += 1
+        if (await button.count() > 0) await button.click({ force: true })
+        else await page.keyboard.press('Escape')
+        await page.waitForTimeout(500)
+        continue
+      }
+    }
+    const now = Date.now()
+    if (await overlayOpen()) quietSince = null
+    else {
+      quietSince = quietSince ?? now
+      if (now - quietSince >= quietMs) break
+    }
+    await page.waitForTimeout(150)
   }
-  // A first-run overlay is not always a dialog: the shell also draws its
-  // onboarding as a presentation root over a mask, and that mask swallows the
-  // clicks a scenario makes. Answer the root's own button, and fall back to
-  // Escape for a step that carries none.
-  for (let attempt = 0; attempt < limit; attempt++) {
-    const roots = page.locator('[role="presentation"]:visible')
-    if (await roots.count() === 0) break
-    const button = roots.last().locator('button:visible').first()
-    if (await button.count() > 0) await button.click({ force: true })
-    else await page.keyboard.press('Escape')
-    await page.waitForTimeout(600)
-  }
-  return (await open().count()) === 0 && (await page.locator('[role="presentation"]:visible').count()) === 0
+  return (await byText().count()) === 0 && (await roots().count()) === 0
 }
 
 /**
