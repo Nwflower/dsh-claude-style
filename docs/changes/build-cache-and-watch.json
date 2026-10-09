@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-09",
+  "group": "chores",
+  "order": 1,
+  "external": false,
+  "zh": "构建把 Deepy 帧图的矢量化结果与资产的 brotli 压缩结果按输入哈希缓存在 `.debug/build-cache/`，只改 TypeScript 后的重建从约 14 秒降到约 1.7 秒，`lib/` 与不带缓存时逐字节相同；新增 `npm run dev`，监听构建读取的目录，每次保存后重新构建（带 `DSH_CLAUDE_STYLE_DEBUG=1`），构建失败时保留上一次的 `lib/` 并继续监听。",
+  "en": "The build caches the Deepy sheets' vectors and the assets' brotli payloads in `.debug/build-cache/` under the hash of their inputs, so a rebuild after a TypeScript-only change drops from about 14 s to about 1.7 s while `lib/` stays byte-identical to an uncached build; the new `npm run dev` watches what the build reads and rebuilds on every save (with `DSH_CLAUDE_STYLE_DEBUG=1`), keeping the previous `lib/` and watching on when a build fails."
+}
