@@ -187,13 +187,14 @@ async function streamReply(res, reply, delayMs) {
 
 /**
  * The reply one request gets: conversation replies in order, the auxiliary
- * answer for the shell's own calls — those carry no tool catalog — and the last
- * conversation reply once the script runs out.
+ * answer for the shell's own calls — those carry no tool catalog — and the
+ * script from its first reply again once it runs out, so every turn of a
+ * scenario carries the same work.
  */
 function replyFor(script, request, state) {
   if (request.tools === undefined || request.tools.length === 0) return script.auxiliary
   const replies = script.conversation
-  const reply = replies[Math.min(state.conversation, replies.length - 1)]
+  const reply = replies[state.conversation % replies.length]
   state.conversation += 1
   return reply
 }
