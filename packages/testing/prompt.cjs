@@ -20,18 +20,47 @@ const HOST = {
 /** Type a prompt into the composer and send it, the way a reader does. */
 async function sendPrompt(page, text) {
   await page.waitForSelector(HOST.composer, { timeout: 60000 })
-  await page.click(HOST.composer)
+  // Focused by the element, not by a press at a point: on a fresh page the
+  // sidebar is still settling, and a press aimed at the composer's centre
+  // landed on the workspace control in a narrow window (the CI lane's `narrow`
+  // scenario), which opened its menu instead and left the prompt unsent.
+  await page.evaluate((selector) => document.querySelector(selector)?.focus(), HOST.composer)
   await page.keyboard.type(text)
+  // Typing needs the host's own editable surface to hold the caret; a press at
+  // it is the fallback, and what landed there is read back.
+  if (!await composed(page, text)) {
+    await page.click(HOST.composer).catch(() => {})
+    await page.waitForTimeout(150)
+    await page.keyboard.type(text)
+  }
   await page.waitForTimeout(200)
   await page.keyboard.press('Enter')
   // The host echoes the submission as its own row; the row is attached even
-  // while the send flight hides it, so this waits for attachment alone. Without
-  // it the turn never started, and the timeout further on would say nothing
-  // about why.
+  // while the send flight hides it, so this waits for attachment alone.
   try {
     await page.waitForSelector(HOST.userRow, { state: 'attached', timeout: 20000 })
   } catch {
-    throw new Error('the composer did not hand the prompt to a turn (no user row appeared)')
+    const state = await page.evaluate((selector) => {
+      const composer = document.querySelector(selector)
+      return {
+        value: composer === null ? null : composer.value ?? composer.textContent ?? '',
+        focused: composer === document.activeElement,
+        dialogs: [...document.querySelectorAll('[role="dialog"], [role="menu"]')].filter(node => node.getBoundingClientRect().height > 0).length,
+        rows: document.querySelectorAll('[data-chat-flow-kind]').length,
+      }
+    }, HOST.composer).catch(() => null)
+    throw new Error(`the composer did not hand the prompt to a turn: ${JSON.stringify({ typed: text, ...state })}`)
+  }
+}
+
+/** Whether the composer holds the text just typed into it, one retry's wait included. */
+async function composed(page, text, timeoutMs = 3000) {
+  const deadline = Date.now() + timeoutMs
+  for (;;) {
+    const held = await page.evaluate((selector) => (document.querySelector(selector)?.textContent ?? '').trim(), HOST.composer)
+    if (held === text.trim()) return true
+    if (Date.now() > deadline) return false
+    await page.waitForTimeout(100)
   }
 }
 
