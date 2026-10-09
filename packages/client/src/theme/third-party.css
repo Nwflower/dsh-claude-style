@@ -44,17 +44,19 @@ body[data-dsh-claude-style] .agy-tv-pre {
    column's edges, which leaves the same 6px seam between them as at the sides.
    The columns are numbered by position and the wrapper exists only while the
    dock is split, so column 0 is the left pane and column 1 the right one
-   whichever way round they were opened. */
-body[data-dsh-claude-style] [class*="_rightbarCol"] [data-dockkit-split] > [data-dockkit-column] > [data-dockkit-pane] {
+   whichever way round they were opened. Gated on the dock-look attribute like
+   the card itself: flush panes need no seam taken in, and the dock's own
+   resting line is the only thing left between them. */
+body[data-dsh-claude-style][data-dsh-claude-dock-look="card"] [class*="_rightbarCol"] [data-dockkit-split] > [data-dockkit-column] > [data-dockkit-pane] {
   margin: 6px !important;
 }
-body[data-dsh-claude-style] [class*="_rightbarCol"] [data-dockkit-split] > [data-dockkit-column="0"] > [data-dockkit-pane] {
+body[data-dsh-claude-style][data-dsh-claude-dock-look="card"] [class*="_rightbarCol"] [data-dockkit-split] > [data-dockkit-column="0"] > [data-dockkit-pane] {
   margin-right: 3px !important;
 }
-body[data-dsh-claude-style] [class*="_rightbarCol"] [data-dockkit-split] > [data-dockkit-column="1"] > [data-dockkit-pane] {
+body[data-dsh-claude-style][data-dsh-claude-dock-look="card"] [class*="_rightbarCol"] [data-dockkit-split] > [data-dockkit-column="1"] > [data-dockkit-pane] {
   margin-left: 3px !important;
 }
-body[data-dsh-claude-style] [class*="_rightbarCol"] [data-dockkit-split] > [class*="_divider_"]::before {
+body[data-dsh-claude-style][data-dsh-claude-dock-look="card"] [class*="_rightbarCol"] [data-dockkit-split] > [class*="_divider_"]::before {
   background: transparent !important;
 }
 

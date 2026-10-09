@@ -173,6 +173,13 @@ panel pulled out of the sidebar becomes the host's own floating window
 gives each pane its own card, with the drag divider left on the seam between
 them.
 
+**Float docked panels** (the Sidebar tab) chooses it: on is the card above;
+off drops every rule that draws one, so the pane stands in the host's own fill,
+flush with the column on all four sides, and a split's two panes meet at the
+dock's own resting line. Every card rule is gated on
+`<body data-dsh-claude-dock-look="card">`, so off is the host's own panel look
+with nothing added.
+
 **The start page.** The host centers its stack of entries in a box that never
 grows, so a list taller than the pane was clipped at both ends, its first rows
 out of reach. On the card the stack scrolls: `justify-content: flex-start`,

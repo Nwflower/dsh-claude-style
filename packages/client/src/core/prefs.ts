@@ -1,4 +1,4 @@
-import { AUTO_POPOVER_ALL, AUTO_POPOVER_OFF, AUTO_POPOVER_SCOPES, BRAND_ATTR, BRAND_CLAUDE, BRAND_DEEPSEEK, BRAND_DEEPSEEK_LEGACY, CHAT_ANIMATIONS_ENHANCED, CHAT_ANIMATIONS_MODES, CHAT_ANIMATIONS_OFF, COMPOSER_ATTR, FOOTER_ATTR, MASCOT_ATTR, MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MOTION_ATTR, MOTION_FULL, MOTION_REDUCED, PACKAGE_NAME, PALETTE_ATTR, PREF_CHOICES, PREF_DEFAULTS, PROVIDER_ID_MAX, QUICK_PROVIDERS_MAX, SETTINGS_ENTRY_FALLBACK, TYPEFACE_ATTR, USERNAME_MAX } from '../constants'
+import { AUTO_POPOVER_ALL, AUTO_POPOVER_OFF, AUTO_POPOVER_SCOPES, BRAND_ATTR, BRAND_CLAUDE, BRAND_DEEPSEEK, BRAND_DEEPSEEK_LEGACY, CHAT_ANIMATIONS_ENHANCED, CHAT_ANIMATIONS_MODES, CHAT_ANIMATIONS_OFF, COMPOSER_ATTR, DOCK_LOOK_ATTR, DOCK_LOOK_CARD, DOCK_LOOK_FLUSH, FOOTER_ATTR, MASCOT_ATTR, MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MOTION_ATTR, MOTION_FULL, MOTION_REDUCED, PACKAGE_NAME, PALETTE_ATTR, PREF_CHOICES, PREF_DEFAULTS, PROVIDER_ID_MAX, QUICK_PROVIDERS_MAX, SETTINGS_ENTRY_FALLBACK, TYPEFACE_ATTR, USERNAME_MAX } from '../constants'
 import { MODEL_OFFICIAL_GROUP } from '../features/model/copy-fallbacks'
 import type { Prefs } from '../constants'
 import type { HostContext } from './host'
@@ -176,6 +176,7 @@ export function adoptPrefs(next: Prefs) {
     document.body.setAttribute(PALETTE_ATTR, next.palette)
     document.body.setAttribute(TYPEFACE_ATTR, next.typeface)
     document.body.setAttribute(MASCOT_ATTR, resolveMascot(next))
+    document.body.setAttribute(DOCK_LOOK_ATTR, next.dockCards ? DOCK_LOOK_CARD : DOCK_LOOK_FLUSH)
     writeMotionAttribute(next.motion)
     document.body.toggleAttribute(FOOTER_ATTR, next.collapseFooter && !footerTakeoverRetired)
   }
@@ -184,7 +185,7 @@ export function adoptPrefs(next: Prefs) {
 
 /** Take back every attribute adoptPrefs mirrors onto the document: the page goes back to the host (entry.ts). */
 export function clearPrefsAttributes() {
-  for (const name of [BRAND_ATTR, PALETTE_ATTR, TYPEFACE_ATTR, MASCOT_ATTR, MOTION_ATTR, FOOTER_ATTR]) document.body.removeAttribute(name)
+  for (const name of [BRAND_ATTR, PALETTE_ATTR, TYPEFACE_ATTR, MASCOT_ATTR, DOCK_LOOK_ATTR, MOTION_ATTR, FOOTER_ATTR]) document.body.removeAttribute(name)
 }
 
 /** Whether the operating system asks for reduced motion right now. */

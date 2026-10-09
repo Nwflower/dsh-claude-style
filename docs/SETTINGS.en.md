@@ -11,7 +11,7 @@ The settings page appears both in the settings dialog (the "Claude Style" tab) a
 | General | Username, Animation, Open popovers on hover, Account-hold easter egg language |
 | Appearance | Brand mark, Colours, Typefaces, Mascot, Where it appears |
 | Composer | Composer restyle, Home layout, Redraw the model picker (with Quick providers under it), Peak rate meter, Redraw the permission control |
-| Sidebar | Collapse the sidebar settings area, Sidebar search, In progress / Archived view |
+| Sidebar | Collapse the sidebar settings area, Sidebar search, In progress / Archived view, Float docked panels |
 | Conversation | Turn status line, Conversation navigator, Chat-area animations (Off / Enhanced / Redraw), Composer caret motion, Chat / Trajectory tabs |
 
 Every feature that takes over part of the host's interface has its own switch; turning it off brings the host's original back at once, without a reload. The conversation area's animations — the follow, the automatic folding with its rolling door, the text fade, the file change rows and the send flight — make one three-way choice: Off hands the conversation back to the host, Enhanced plays this plugin's set, and Redraw hands the area to a second set, whose members are the send flight and the plugin's own reading view (the Reading tab at the top of the session: a new thought folds the steps before it into one row carrying their figures, a completed turn keeps only its final answer, thinking glides inside its card after its own text, and each new word fades in); the caret keeps its own three-way choice.

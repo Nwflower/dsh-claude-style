@@ -55,8 +55,11 @@ html[data-windows-titlebar] body[data-dsh-claude-style] [class*="_frame"] > [dat
 /* A panel docked in the right column floats 8px inside the window: the skin's
    hairline and the host's own panel elevation over the frame's canvas. It hangs on
    what paints the column — a docked tab's pane, or the column's own empty host; a
-   panel pulled out into the host's floating window is left to that window. */
-body[data-dsh-claude-style] [class*="_rightbarCol"] :is([data-dockkit-empty], [data-dockkit-host="dock"] > [data-dockkit-pane]) {
+   panel pulled out into the host's floating window is left to that window. Every
+   card rule is gated on the dock-look attribute: with the settings page's
+   "Float docked panels" off, no rule of the skin touches the pane and it stands
+   in the host's own fill, flush with the column. */
+body[data-dsh-claude-style][data-dsh-claude-dock-look="card"] [class*="_rightbarCol"] :is([data-dockkit-empty], [data-dockkit-host="dock"] > [data-dockkit-pane]) {
   margin: 8px;
   overflow: hidden;
   border: 1px solid var(--dsw-alias-border-l1);

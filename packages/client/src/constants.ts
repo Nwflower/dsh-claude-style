@@ -349,6 +349,17 @@ export const HOME_LAYOUT_ATTR = 'data-dsh-claude-home-layout'
  * than repeated across the stylesheet.
  */
 export const HOME_HERO_ATTR = 'data-dsh-claude-home-hero'
+/**
+ * How the right sidebar's docked panels are drawn: `card` floats each one 8px
+ * inside the column with a hairline, a 16px radius and the host's elevation
+ * (packages/client/src/theme/chrome.css), while `flush` fills the column and
+ * hugs its edges. The choice rides <body> as DOCK_LOOK_ATTR, and every rule
+ * that draws a card is gated on the `card` value, so the flush state is the
+ * host's own panel look.
+ */
+export const DOCK_LOOK_CARD = 'card'
+export const DOCK_LOOK_FLUSH = 'flush'
+export const DOCK_LOOK_ATTR = 'data-dsh-claude-dock-look'
 
 /**
  * The host half's private routes, under this half's own names. The paths are
@@ -410,6 +421,7 @@ export interface Prefs {
   caretMotion: string
   permissionsControl: boolean
   workspaceView: boolean
+  dockCards: boolean
   sidebarSearch: boolean
   turnStatus: boolean
   turnNav: boolean

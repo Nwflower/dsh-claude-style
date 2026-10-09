@@ -271,6 +271,11 @@
       "zh": "把侧栏工作区分成「进行中」和「已归档」。",
       "en": "Split the sidebar's workspace section into In progress and Archived; archived conversations can be restored or deleted. Off restores the host's workspace list."
     },
+    "dockCardsTitle": { "zh": "面板悬浮卡片", "en": "Float docked panels" },
+    "dockCardsDesc": {
+      "zh": "右侧栏停靠的面板画成悬浮卡片：四周留 8px、16px 圆角、1px 描边与投影；关闭后铺满整列、贴住四边，分栏时每栏铺满各自那一栏。",
+      "en": "Draw the right sidebar's docked panels as floating cards: 8px inside the column, a 16px radius, a hairline and an elevation. Off fills the column and hugs its edges; a split gives each pane its own column."
+    },
     "turnStatusTitle": { "zh": "轮次状态行", "en": "Turn status line" },
     "turnStatusDesc": {
       "zh": "把轮次状态从开头移到轮次末尾。",

@@ -22,6 +22,7 @@ export const PREFS_DEFAULT = Object.freeze({
   mascotScope: 'all',
   permissionsControl: true,
   workspaceView: true,
+  dockCards: true,
   sidebarSearch: true,
   turnStatus: true,
   turnNav: true,
