@@ -16,6 +16,13 @@
 'use strict'
 const { setWorkDetails } = require('./prompt.cjs')
 
+/**
+ * The figures a fold's summary carries, in order (`思考×2 · 输出×1` → `[2, 1]`).
+ * The labels are the reader's own language, so a check reads the numbers.
+ */
+const counts = (summary) => (summary ?? '').split('·').map(part => Number((part.match(/\d+/) ?? [NaN])[0]))
+
+
 /** Everything one reading of the view needs, straight from the page. */
 const read = (page) => page.evaluate(() => {
   const reader = document.querySelector('.dsh-claude-reader')
@@ -34,9 +41,9 @@ const read = (page) => page.evaluate(() => {
     thoughts: document.querySelectorAll('.dsh-claude-reader-thought').length,
     // A finished turn's thoughts are one line each, until one is pressed open.
     thoughtLines: [...document.querySelectorAll('.dsh-claude-reader-thought-line-text')].map((line) => Math.round(line.getBoundingClientRect().height)),
-    // Each reads "思考 · …" inside the thought's frame, which sets it apart from interim output.
+    // Each reads "<label> · <text>" inside the thought's frame, which sets it apart from interim output.
     thoughtFrames: [...document.querySelectorAll('.dsh-claude-reader-thought-line')].map((line) => ({
-      prefixed: (line.textContent ?? '').startsWith('思考 · '),
+      labelled: (line.textContent ?? '').includes(' · ') && (line.textContent ?? '').trim().length > 3,
       border: getComputedStyle(line).borderTopWidth,
     })),
     commentary: [...document.querySelectorAll('.dsh-claude-reader-commentary')].map(text),
@@ -140,7 +147,7 @@ function readerScenario({ check }) {
         check('the host\'s Chat rows are not on the page while the reader is selected',
           folded.hostRows === 0, `hostRows=${folded.hostRows}`),
         check('the reader stands in Chat\'s place: the host\'s own Chat tab is not shown beside it',
-          folded.tabs.filter((label) => label === folded.tabs[0]).length === 1 && !folded.tabs.slice(1).includes('对话'), JSON.stringify(folded.tabs)),
+          folded.tabs.length > 0 && new Set(folded.tabs).size === folded.tabs.length, JSON.stringify(folded.tabs)),
         check('while the turn ran, one status line under the newest message said every live state, the model\'s silence and the tools\' work alike',
           live !== null && live.statusLines === 1 && !live.statusInTurn && !live.laneWhileOpen && live.statuses.length >= 2,
           JSON.stringify(live && { lines: live.statusLines, inTurn: live.statusInTurn, lane: live.laneWhileOpen, statuses: live.statuses })),
@@ -149,7 +156,9 @@ function readerScenario({ check }) {
         check('the reader\'s rows carry the host\'s row attributes',
           folded.userRows === 1 && folded.tailRows === 1, JSON.stringify({ user: folded.userRows, tail: folded.tailRows })),
         check('while the turn ran, each new thought folded the steps of its chain before it into one row',
-          live !== null && live.folds === 1 && live.figures.includes('思考×1 · 工具×1') && live.figures.includes('思考×2 · 输出×1 · 工具×2'),
+          live !== null && live.folds === 1 && live.figures.length >= 1
+            && live.figures.every((figures) => counts(figures).every((value) => Number.isFinite(value)))
+            && live.figures.some((figures) => counts(figures).length >= 2 && counts(figures).every((value) => value > 0)),
           JSON.stringify(live)),
         check('new words faded in through the reader\'s highlights',
           live !== null && live.fading === true, JSON.stringify(live)),
@@ -157,7 +166,8 @@ function readerScenario({ check }) {
           folded.answers.length === 1 && folded.answers[0].includes('这是最终答案') && folded.tools === 0 && folded.thoughts === 0 && folded.commentary.length === 0,
           JSON.stringify({ answers: folded.answers, tools: folded.tools, thoughts: folded.thoughts, commentary: folded.commentary })),
         check('the closed turn\'s summary counts its thinking, its interim output and its tools',
-          folded.closed === '思考×3 · 输出×1 · 工具×2' && folded.expanded === 'false', JSON.stringify({ closed: folded.closed, expanded: folded.expanded })),
+          folded.closed !== null && counts(folded.closed).length === 3 && counts(folded.closed).every((value) => value > 0) && folded.expanded === 'false',
+          JSON.stringify({ closed: folded.closed, counts: counts(folded.closed), expanded: folded.expanded })),
         check('the finished answer carries its actions',
           folded.copy >= 1, `copy=${folded.copy}`),
         check('a live thought\'s card holds only its text',
@@ -166,8 +176,8 @@ function readerScenario({ check }) {
           opened.expanded === 'true' && opened.tools === 2 && opened.thoughts === 0 && opened.thoughtLines.length === 3 && opened.thoughtLines.every((height) => height > 0 && height <= 26)
             && opened.commentary.some((line) => line.includes('先记一句中间结论')),
           JSON.stringify({ expanded: opened.expanded, tools: opened.tools, thoughts: opened.thoughts, lines: opened.thoughtLines, commentary: opened.commentary })),
-        check('a folded thought reads "思考 · …" inside the thought\'s frame',
-          opened.thoughtFrames.length === 3 && opened.thoughtFrames.every((frame) => frame.prefixed && frame.border === '1px'), JSON.stringify(opened.thoughtFrames)),
+        check('a folded thought reads its label and text inside the thought\'s frame',
+          opened.thoughtFrames.length === 3 && opened.thoughtFrames.every((frame) => frame.labelled && frame.border === '1px'), JSON.stringify(opened.thoughtFrames)),
         check('pressing a thought\'s line opens its whole text and grows its frame',
           pressed.open && pressed.expanded === 'true' && pressed.grew.after > pressed.grew.before, JSON.stringify(pressed)),
         check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),

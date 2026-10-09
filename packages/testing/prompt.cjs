@@ -76,23 +76,24 @@ async function waitForTurn(page, timeoutMs = 90000) {
  * The write goes through the host's settings service and the page re-reads the
  * answer, so a scenario that sends a turn right after a write could race the
  * attribute the reading view reads. A host already holding the wanted value
- * answers the write with no change at all, so the page is first moved to a mode
- * that differs, then to the wanted one.
+ * answers the write with no change at all, in which case the page is moved to a
+ * mode that differs and back.
  */
 async function setWorkDetails(page, mode, timeoutMs = 10000) {
-  const adopted = () => page.evaluate((wanted) => document.body.getAttribute('data-dsh-claude-step-display') === wanted, mode)
+  const current = () => page.evaluate(() => document.body.getAttribute('data-dsh-claude-step-display'))
   const wait = async () => {
     const deadline = Date.now() + timeoutMs
     while (Date.now() < deadline) {
-      if (await adopted()) return true
+      if (await current() === mode) return true
       await page.waitForTimeout(150)
     }
     return false
   }
+  if (await current() === mode) return true
   await page.evaluate((wanted) => window.__dshStepDisplay?.set(wanted), mode)
   if (await wait()) return true
   const bridge = await page.evaluate(() => window.__dshStepDisplay !== undefined)
-  if (!bridge) throw new Error('the work-details bridge is not on the page (skill/core/step-display.ts)')
+  if (!bridge) throw new Error('the work-details bridge is not on the page (core/step-display.ts)')
   await page.evaluate((wanted) => window.__dshStepDisplay.set(wanted === 'compact' ? 'standard' : 'compact'), mode)
   await page.waitForTimeout(300)
   await page.evaluate((wanted) => window.__dshStepDisplay.set(wanted), mode)

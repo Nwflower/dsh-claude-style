@@ -717,7 +717,10 @@ async function main() {
   }
   const failed = results.reduce((sum, result) => sum + result.failed, 0)
   process.stdout.write(`\n${failed === 0 ? 'E2E PASS' : 'E2E FAIL'} — ${results.length} scenarios, ${failed} failed checks; traces in ${out}\n`)
-  if (failed > 0) process.exitCode = 1
+  // A scenario leaves a handle behind on a slow runner — the CI job walked every
+  // scenario in minutes and then sat until its own cap, because the process had
+  // finished and its event loop had not. The exit code is the result.
+  process.exit(failed > 0 ? 1 : 0)
 }
 
 main().catch((error) => {

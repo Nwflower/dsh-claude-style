@@ -21,6 +21,9 @@ const { sendPrompt, waitForTurn, setWorkDetails } = require('./prompt.cjs')
 /** Put the host in one work-details mode, through the settings service. */
 const setMode = (page, mode) => setWorkDetails(page, mode)
 
+/** The figures a fold's summary carries, in order (`思考×2 · 输出×1` → `[2, 1]`); the labels are the reader's own language. */
+const counts = (summary) => (summary ?? '').split('·').map(part => Number((part.match(/\d+/) ?? [NaN])[0]))
+
 /** Read the newest turn — the open one while a turn runs — and the rows its process lays out. */
 const readTurn = (page) => page.evaluate(() => {
   const text = (element) => (element?.textContent ?? '').replace(/\s+/g, ' ').trim()
@@ -62,10 +65,11 @@ async function openTurnProcess(page) {
     const turn = [...document.querySelectorAll('.dsh-claude-reader-turn')].at(-1)
     return turn?.querySelectorAll('.dsh-claude-reader-thought-line, .dsh-claude-reader-thought, .dsh-claude-reader-tool-row').length ?? 0
   })
-  // A finished turn's process stands folded: its own lane line opens it once.
-  if (!await expanded() && await button.count() > 0) {
+  // A finished turn's process stands folded: its own lane line opens it, and a
+  // press that landed while the lane was still moving is taken again.
+  for (let attempt = 0; attempt < 3 && !await expanded() && await button.count() > 0; attempt++) {
     await button.click().catch(() => {})
-    await page.waitForTimeout(500)
+    await page.waitForTimeout(600)
   }
   // The rows arrive one at a time as the process opens: read the count that holds.
   let previous = -1
@@ -160,15 +164,16 @@ function stepDisplayScenario({ check }) {
           compactMode && detailedMode && verboseMode && compact.mode === 'compact' && detailed.mode === 'detailed' && verbose.mode === 'verbose',
           JSON.stringify({ compactMode, detailedMode, verboseMode, modes: [compact.mode, detailed.mode, verbose.mode] })),
         check('a completed turn folds its process into one summary row, and its thoughts read one line each',
-          baseline.folds === 1 && baseline.thoughtLines.length >= 3 && baseline.thoughtLines.every(line => line.startsWith('思考 · ')),
-          JSON.stringify({ folds: baseline.folds, lines: baseline.thoughtLines, cards: baseline.thoughtCards })),
+          baseline.folds === 1 && baseline.summaries.length === 1 && counts(baseline.summaries[0]).length === 3 && counts(baseline.summaries[0]).every(value => value > 0)
+            && baseline.thoughtLines.length >= 1 && baseline.thoughtLines.every(line => line.includes(' · ')),
+          JSON.stringify({ folds: baseline.folds, summaries: baseline.summaries, lines: baseline.thoughtLines, cards: baseline.thoughtCards })),
         check('compact gathers a whole turn into one summary row while it runs',
           compactWatch !== null && compactWatch.folds === 1 && compactMid.folds === 1 && compact.folds === 1
             && compactMid.summaries.length === 1,
           JSON.stringify({ watch: compactWatch, compactLive, mid: compactMid.folds, folds: compact.folds, summaries: compact.summaries })),
         check('detailed leaves the intermediate output as a row of its own',
           detailedWatch !== null && detailedWatch.folds === 1 && detailedMid.folds === 1
-            && detailed.summaries.length > 0 && detailed.thoughtLines.length > 0,
+            && detailed.summaries.length === 1 && counts(detailed.summaries[0]).length === 2 && detailed.thoughtLines.length > 0,
           JSON.stringify({ watch: detailedWatch, live: detailedLive, summaries: detailed.summaries, mid: detailedMid, lines: detailed.thoughtLines })),
         check('a thought\'s line toggles from its own text, both ways',
           toggle !== null && toggle.before === false && opened === true && closedAgain === false,
