@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-08",
+  "group": "fixes",
+  "order": 1,
+  "external": false,
+  "zh": "修复 **重新编译后设置页等延后功能从设置里消失、要重新开关插件才回来**：构建原先先写 `lib/client.js`、几秒之后才重写 `lib/assets/`，而客户端热重载只认主产物，页面在新块落盘之前就换代，按当时那份清单请求新块得到 404，延后的功能各报告一次并退役。现在资产按「先写新文件、再写清单、最后删清单里没有的文件」落盘，`lib/client.js` 写在最后：换代的那一代要的块已经在磁盘上、也已经在清单里。",
+  "en": "Fix **the settings page and the other deferred features vanishing from a rebuild until the plugin was switched off and on**: the build wrote `lib/client.js` first and replaced `lib/assets/` seconds later, and since the client half of hot reload watches only the bundle, a page swapped to the new bundle before its chunks were on disk, asked for them under the previous manifest, got a 404, and each deferred feature reported once and retired. New asset files now land first, the manifest after them, the files it does not name last, and `lib/client.js` is written after all of them: the generation a page swaps to finds its chunks already on disk and already in the manifest."
+}

@@ -338,16 +338,33 @@ export function routeText(plan, { file, name, type, text }) {
  * Text assets are stored brotli-compressed beside their name (the payload the
  * route prefers); everything else is stored as it is.
  *
+ * The order is the point: the new files go down first and the manifest after
+ * them, so every name the manifest carries is already on disk when a client
+ * asks for it; files the new manifest does not name are removed last, so a page
+ * still running the previous build keeps finding its own.
+ *
+ * `retain` carries the previous manifest's entries over, for the linked
+ * checkout that rebuilds against a live page (D39): the page that booted the
+ * previous bundle asks for that build's chunk names, and this keeps them
+ * addressable. An entry whose file is gone is dropped, because the manifest is
+ * the gate the route answers from.
+ *
  * @param libDir - the build output directory.
  * @param plan - the plan (planAssets).
+ * @param options.retain - whether the previous manifest's entries carry over.
  * @param options.compress - bytes → their brotli form; the build passes one that
  *     reads its cache (scripts/build-cache.mjs).
- * @returns `{ files, bytes }` of what was written, for the build log.
+ * @returns `{ files, bytes, kept }` of what was written and what carried over, for the build log.
  */
-export function writeAssets(libDir, plan, { compress = brotliCompressSync } = {}) {
+export function writeAssets(libDir, plan, { retain = false, compress = brotliCompressSync } = {}) {
   const dir = path.join(libDir, 'assets')
-  fs.rmSync(dir, { recursive: true, force: true })
   fs.mkdirSync(dir, { recursive: true })
+  const manifestPath = path.join(dir, ASSETS_MANIFEST)
+  // This manifest is the build's own output: one that does not parse is a build
+  // that was killed, and it fails here instead of quietly dropping the set.
+  const previous = retain && fs.existsSync(manifestPath)
+    ? JSON.parse(fs.readFileSync(manifestPath, 'utf8')).assets ?? {}
+    : {}
   const assets = {}
   let bytes = 0
   for (const entry of plan.routed) {
@@ -357,8 +374,23 @@ export function writeAssets(libDir, plan, { compress = brotliCompressSync } = {}
     assets[entry.name] = { type: entry.type, encoding: compressed ? 'br' : null, bytes: entry.bytes.byteLength }
     bytes += payload.byteLength
   }
-  fs.writeFileSync(path.join(dir, ASSETS_MANIFEST), JSON.stringify({ version: 1, assets }, null, 2) + '\n')
-  return { files: plan.routed.length, bytes }
+  let kept = 0
+  for (const [name, asset] of Object.entries(previous)) {
+    if (assets[name] !== undefined) continue
+    const stored = asset.encoding === 'br' ? `${name}.br` : name
+    if (!fs.existsSync(path.join(dir, stored))) continue
+    assets[name] = asset
+    kept += 1
+  }
+  fs.writeFileSync(manifestPath, JSON.stringify({ version: 1, assets }, null, 2) + '\n')
+  for (const file of fs.readdirSync(dir)) {
+    if (file === ASSETS_MANIFEST) continue
+    // A stored asset is its own name, or that name plus `.br`; no asset name
+    // ends in `.br`, so the suffix is unambiguous.
+    if (assets[file.endsWith('.br') ? file.slice(0, -3) : file] !== undefined) continue
+    fs.rmSync(path.join(dir, file))
+  }
+  return { files: plan.routed.length, bytes, kept }
 }
 
 /**

@@ -412,6 +412,13 @@ async function hostHalf() {
   const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'lib', 'assets', 'manifest.json'), 'utf8')).assets
   const [assetName, asset] = Object.entries(manifest)[0] ?? []
   if (assetName === undefined) throw new Error('no routed assets in lib/assets/manifest.json; run npm run build')
+  // Every name the manifest carries has its file: the manifest is what the
+  // route answers from, so an entry an earlier build's cleanup removed (D39)
+  // would have the route refuse a name the manifest promises.
+  const dangling = Object.entries(manifest)
+    .filter(([name, entry]) => !fs.existsSync(path.join(ROOT, 'lib', 'assets', entry.encoding === 'br' ? `${name}.br` : name)))
+    .map(([name]) => name)
+  check('every asset the manifest names is on disk', dangling.length === 0, dangling.join(', '))
   const storedPath = path.join(ROOT, 'lib', 'assets', asset.encoding === 'br' ? `${assetName}.br` : assetName)
   const assets = fakeHost(mod, {})
   const compressed = await requestAsset(assets, `/dsh-claude-style/assets/${assetName}`, { 'accept-encoding': 'gzip, br' })
@@ -430,6 +437,33 @@ async function hostHalf() {
     const answer = await requestAsset(assets, url)
     check(`nothing but a name the build wrote answers under the assets route: ${url}`, answer.status === 404, `HTTP ${answer.status}`)
   }
+
+  // The debug retention (D39): a linked checkout rebuilds while a page runs the
+  // previous bundle, which asks for that build's chunk names. The flag keeps
+  // those names and their files in the manifest; a build without it ships
+  // exactly its own set.
+  console.log('\nbuild — the debug asset retention')
+  const { writeAssets } = await import(pathToFileURL(path.join(ROOT, 'packages', 'assets', 'assets.mjs')).href)
+  const retainDir = path.join(ROOT, '.debug', 'smoke-assets-retention')
+  fs.rmSync(retainDir, { recursive: true, force: true })
+  const assetPlan = (...names) => ({
+    routed: names.map((name) => ({
+      file: name, bytes: Buffer.from(name), text: name, type: 'text/javascript; charset=utf-8',
+      hash: name.split('.')[0], name, url: `/dsh-claude-style/assets/${name}`, inline: false,
+    })),
+  })
+  const readRetained = () => JSON.parse(fs.readFileSync(path.join(retainDir, 'assets', 'manifest.json'), 'utf8')).assets
+  writeAssets(retainDir, assetPlan('aaaa1111.js'))
+  const retained = writeAssets(retainDir, assetPlan('bbbb2222.js'), { retain: true })
+  check('the debug build keeps what the earlier build shipped, so a page running it still finds its chunks',
+    retained.kept === 1 && readRetained()['aaaa1111.js'] !== undefined &&
+      fs.existsSync(path.join(retainDir, 'assets', 'aaaa1111.js.br')),
+    `kept ${retained.kept} ${JSON.stringify(Object.keys(readRetained()))}`)
+  const exact = writeAssets(retainDir, assetPlan('bbbb2222.js'))
+  check('a build without the debug flag ships only its own assets',
+    exact.kept === 0 && readRetained()['aaaa1111.js'] === undefined &&
+      !fs.existsSync(path.join(retainDir, 'assets', 'aaaa1111.js.br')),
+    `kept ${exact.kept} ${JSON.stringify(Object.keys(readRetained()))}`)
 
   // The faces the package ships: the build copies each into lib/fonts/, which
   // package.json carries, and the route answers it byte for byte under its own

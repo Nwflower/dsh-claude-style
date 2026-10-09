@@ -33,12 +33,18 @@
  * are in scripts/build-checks.mjs, the stylesheets' in scripts/css.mjs; the three
  * generated modules are scripts/virtual-modules.mjs.
  *
+ * The order of the writes is part of the contract: every asset and the host
+ * half land before `lib/client.js`, because the client half of the hot reload
+ * watches that one file — a page that swaps to it must find this build's chunks
+ * already on disk and already in the manifest (D39).
+ *
  * `packages/client/data/model-descriptions.json` is not bundled: it is validated
  * (scripts/model-copy.mjs) and copied to `lib/`, where the host half serves it to
  * the browser half at runtime. Model copy is data, so it must not enter the bundle (D5).
  */
 import { createHash } from 'node:crypto'
 import fs from 'node:fs'
+import { homedir } from 'node:os'
 import path from 'node:path'
 import vm from 'node:vm'
 import { brotliCompressSync } from 'node:zlib'
@@ -138,6 +144,40 @@ const PACKAGE_ID = PACKAGE.name
 
 /** The packages the host's loader hands the factory's `require`; never bundled. */
 const HOST_PACKAGES = ['react', 'react/jsx-runtime', 'react-dom/client', '@deepseek-ai/dsh-client-ui-primitives', '@deepseek-ai/dsh-client-store']
+
+/**
+ * Whether this build keeps the assets the build before it shipped (D39).
+ *
+ * A linked checkout is what the flag is for: its live page boots the bundle
+ * that was on disk when the host composed the graph, and after a rebuild that
+ * page asks for the chunk names of the previous build. Explicit rather than
+ * automatic — a published package must carry exactly its own assets — and inert
+ * in CI for the same reason.
+ */
+const RETAIN_ASSETS = process.env.DSH_CLAUDE_STYLE_DEBUG === '1' && process.env.CI === undefined
+
+/**
+ * The DSH profiles that run this checkout as the plugin, by profile name.
+ *
+ * A profile's `node_modules/<package>` resolving to this directory is what the
+ * loader runs — a `link:` install points there, a registry install does not.
+ * The build log names the profiles, so why a kept or replaced asset set matters
+ * is never a guess.
+ *
+ * @returns the profile directory names, empty when this checkout is linked nowhere.
+ */
+function linkedProfiles() {
+  const profiles = path.join(process.env.DSH_HOME ?? path.join(homedir(), '.dsh'), 'profiles')
+  if (!fs.existsSync(profiles)) return []
+  const self = fs.realpathSync(ROOT)
+  const linked = []
+  for (const entry of fs.readdirSync(profiles, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue
+    const installed = path.join(profiles, entry.name, 'node_modules', PACKAGE_ID)
+    if (fs.existsSync(installed) && fs.realpathSync(installed) === self) linked.push(entry.name)
+  }
+  return linked
+}
 
 /** Stands where the build id goes until the bundle's own hash is known. */
 const BUILD_ID_SLOT = '%%BUILD_ID%%'
@@ -449,12 +489,6 @@ async function main() {
   if (!fs.existsSync(iconSource)) throw new Error(`build: packages/assets/src/brand/${ICON_SOURCE} is missing`)
 
   fs.mkdirSync(LIB, { recursive: true })
-  fs.writeFileSync(OUT, bundle)
-  fs.writeFileSync(`${OUT}.map`, sourceMap)
-  console.log(`built lib/client.js (${Buffer.byteLength(bundle)} bytes, build ${buildId}) from packages/client/src/ (${bundled.size} modules + ${sheets.length} stylesheets + ${Object.keys(combines).length} lockups)`)
-  for (const [id, url] of Object.entries(chunkUrls)) {
-    console.log(`built the deferred feature "${id}" as ${url} (${Buffer.byteLength(plan.entries.get(`chunks/${id}.js`).text)} bytes)`)
-  }
 
   fs.writeFileSync(path.join(LIB, MODEL_COPY), copyText)
   console.log(`built lib/${MODEL_COPY} (${familyRules} family rules, ${copy.tiers.length} tier rules)`)
@@ -467,17 +501,37 @@ async function main() {
 
   // Brotli's output is fixed by its input and the library's version, so both key it.
   const compress = (bytes) => cache.get('brotli', [process.versions.brotli, bytes], () => brotliCompressSync(bytes))
-  const assets = writeAssets(LIB, plan, { compress })
+  const assets = writeAssets(LIB, plan, { retain: RETAIN_ASSETS, compress })
   console.log(`built lib/assets/ (${assets.files} routed of ${plan.entries.size} assets, ${assets.bytes} bytes) from packages/assets/src/`)
+  if (assets.kept > 0) {
+    console.log(`kept ${assets.kept} asset(s) an earlier build shipped (DSH_CLAUDE_STYLE_DEBUG=1): a page running that build still asks for them`)
+  }
 
   const fonts = buildFonts({ assetsDir: ASSETS, libDir: LIB })
   console.log(`built lib/fonts/ (${fonts.files} files, ${fonts.bytes} bytes) from packages/assets/src/fonts/`)
 
   const host = await buildHostHalf({ outDir: LIB })
   console.log(`built lib/host/ (${host.files} modules) from packages/host/src/`)
+
+  // Last, always: this is the file a running page's client hot reload watches,
+  // and the generation it swaps to reads its chunks from this build. Writing it
+  // after every asset means those chunks are already on disk and already in the
+  // manifest when the page asks for them (D39).
+  fs.writeFileSync(OUT, bundle)
+  fs.writeFileSync(`${OUT}.map`, sourceMap)
+  console.log(`built lib/client.js (${Buffer.byteLength(bundle)} bytes, build ${buildId}) from packages/client/src/ (${bundled.size} modules + ${sheets.length} stylesheets + ${Object.keys(combines).length} lockups)`)
+  for (const [id, url] of Object.entries(chunkUrls)) {
+    console.log(`built the deferred feature "${id}" as ${url} (${Buffer.byteLength(plan.entries.get(`chunks/${id}.js`).text)} bytes)`)
+  }
   const pruned = cache.prune()
   const { hits, misses } = cache.counts()
   console.log(`build cache .debug/build-cache/: ${hits} reused, ${misses} computed${pruned > 0 ? `, ${pruned} unused for a day removed` : ''}`)
+  if (!RETAIN_ASSETS) {
+    const linked = linkedProfiles()
+    if (linked.length > 0) {
+      console.log(`linked into ${linked.join(', ')}: a rebuild replaces lib/assets, and a page still running the previous bundle asks for chunks this build replaced — build with DSH_CLAUDE_STYLE_DEBUG=1 to keep them`)
+    }
+  }
 }
 
 await main()
