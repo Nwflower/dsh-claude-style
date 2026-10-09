@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-09",
-  "group": "improvements",
-  "order": 0,
-  "external": true,
-  "zh": "「重绘」档的一轮过程现在按宿主「工作步骤展示」的当前档位成形，两侧设置不再各行其是：插件不新增自己的档位控件，只读宿主 `ui-chat` 命名空间的档位并在每次有轮次开始时重读，读不到时按网页端缺省档「详细」。「简洁」把整条链收成一行，中间输出的正文也进这一行的计数；「标准」收拢最后一段思考之前的全部步骤，中间输出随最后一段思考留在行外；「详细」把结尾的中间输出留成自己的一行、收拢它之前的全部步骤；「完全展开」与「详细」同形，另外把收进折叠的思考画成整张推理卡片（全文，而不是「思考 · 内容」一行），工具仍由读者自己按开。宿主自己的设置行仍是唯一控件，插件不代写。",
-  "en": "In the Redraw tier a turn's process now takes the shape of the host's Work details setting, so the two settings stop disagreeing: the plugin adds no tier control of its own — it reads the host's `ui-chat` value, re-reads it whenever a turn opens, and falls back to the Web client's default, Detailed, when the host serves none. Compact gathers a whole chain into one row, the intermediate output's own text included in that row's figures; Standard gathers everything before the last thought and leaves the intermediate output outside it, beside that thought; Detailed keeps the trailing intermediate output as its own row and gathers what came before; Verbose matches Detailed and draws a thought inside a fold as its whole reasoning card instead of the one-line \"Thinking · …\", with tools still opened by the reader alone. The host's own settings row stays the only control: the plugin never writes the value."
-}

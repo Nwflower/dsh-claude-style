@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-07",
-  "group": "improvements",
-  "order": 1,
-  "external": false,
-  "zh": "模型选择器里 Grok 与 ERNIE 两行的说明改写：Grok 的规则从匹配 4.5 改成匹配 Grok 4 整条产品线，`grok-4`、`grok-4.5`、`grok-4-2026` 这些拼法读到同一句「全球最智能的模型之一，支持原生工具使用以及实时搜索功能。」；ERNIE 5 一行改成「2.4 万亿参数的原生全模态大模型。」，不再列激活比例与上下文长度。",
-  "en": "Two lines of the model picker's copy are rewritten: Grok's rule now claims the whole Grok 4 line rather than the 4.5 build, so `grok-4`, `grok-4.5`, `grok-4-2026` and the rest read one sentence — one of the most intelligent models in the world, with native tool use and real-time search — and the ERNIE 5 row now reads a native omni-modal model with 2.4 trillion parameters, without the activation share or the context length."
-}

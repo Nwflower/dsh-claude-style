@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-09",
-  "group": "fixes",
-  "order": 0,
-  "external": false,
-  "zh": "「重绘」档里轮次状态行的文字在长短之间切换时，被替换下去的那一段会暂时折成两行、溢出状态行的高度（视口 1280×900 实测：状态行高始终 32px，而退出中的文字片段为 84×48px）。原因是两层文字在替换的同一帧里用新文字的宽度排布了旧文字：状态行按隐藏的丈量层取宽，绝对定位的文字层虽然被同一层撑开，浏览器在这一帧仍把旧文字按它原来的窄宽度断行。现在丈量层与被替换的两层都不换行，文字生长期间各行始终单行，状态行高度不再跳变。",
-  "en": "In the Redraw tier a turn's status label briefly broke onto two lines while the text changed — the leftover half hung out of the row (measured at a 1280×900 viewport: the status row stayed 32px tall while the outgoing segment measured 84×48px). Two layers of text replace each other, and in the same frame the old text was laid out at the new text's width: the row takes its width from a hidden sizer, and the absolutely positioned copies are widened by it, yet the browser still broke the old text at its earlier, narrower width in that frame. The sizer and both copies now keep to one line, so a growing label stays on one line and the row keeps its height."
-}

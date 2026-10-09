@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-07",
-  "group": "fixes",
-  "order": 0,
-  "external": false,
-  "zh": "模型选择器里当前在用的模型、当它所属的供应商不在第一级列表里时，会单独占一级列表最下面一行——这一行过去绕过了其余各行共用的行构造，因此没有峰谷徽章，也没有厂商标志与说明；现在它与列表里的每一行走同一个构造，徽章、标志、说明和行高内边距都一致。",
-  "en": "In the model picker, the model in force gets a row of its own at the bottom of level 1 when its provider is not listed there. That row was built apart from every other row, so it carried no peak rate badge, no vendor mark and no description line; it now goes through the same row builder as the rest of the list, with the same badge, mark, description and row metrics."
-}

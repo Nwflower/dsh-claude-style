@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-08",
-  "group": "chores",
-  "order": 0,
-  "external": false,
-  "zh": "开发机上新增构建标记 `DSH_CLAUDE_STYLE_DEBUG=1`：链接安装的检出重建时，资产清单继续带着上一代仍然存在的条目并保留它们的文件，宿主在启动时读到旧主产物的页面不会因为一次重建丢掉延后的功能。发布构建与持续集成里这个标记不生效，清单就是这一次构建自己的资产；构建日志会说明当前处于哪一档。",
-  "en": "New build flag for a linked checkout, `DSH_CLAUDE_STYLE_DEBUG=1`: a rebuild keeps the entries an earlier build shipped and their files, so a page that booted the previous bundle does not lose the deferred features to a rebuild. The flag is inert in a release build and in CI, where the manifest carries exactly this build's assets; the build log says which mode ran."
-}

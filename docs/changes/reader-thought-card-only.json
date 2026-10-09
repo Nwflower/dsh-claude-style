@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-09",
-  "group": "improvements",
-  "order": 0,
-  "external": false,
-  "zh": "「重绘」档的思考卡片只留思考本身：参考实现搬来的「思考 · 第 N 步」抬头、「暂停跟随 / 跟随最新」与「完整阅读 / 收起」两个按钮，以及为展开态在会话里量出的阅读高度都不再出现，卡片的边框里就是思考的文字，高度由预览高度与内容决定。跟随仍按阅读节奏走，滚回卡片末尾就重新跟随，而上一版要靠按钮点回来的那一步现在由滚动自己完成；展开一段思考仍是从折叠里那行文字点开，于是每段思考在折叠里保持一行，读全文按一下即可。",
-  "en": "A thinking card in the Redraw tier now holds the thought and nothing else: the \"Thinking · Step N\" heading, the Pause following / Follow latest and Read in full / Collapse controls that came with the ported implementation, and the reading height it measured against the conversation while expanded are gone, so the card's frame is the thought's text with its height set by the preview and the text itself. The follow still runs at reading pace, and scrolling the card back to its end resumes it — the step the buttons used to do is now the scroll's own. Opening a thought still starts from its line inside a fold, so each thought keeps one line there and a press reads it in full."
-}

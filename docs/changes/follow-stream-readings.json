@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-07",
-  "group": "fixes",
-  "order": 0,
-  "external": false,
-  "zh": "长会话里流式输出期间的卡顿减少：跟随在每一批文字到达时都要问的几个问题不再落到整个文档上——会话的滚动容器与消息列读一次后保留（换会话、切「轨迹」页签时旧节点会从文档里移除，届时重新读取），流式标记改在消息列里查找，宿主「回到底部」按钮的存在本身就是「跟随已关闭」的判据，而同一帧里读到的高度只读一次，交给收回宿主写下的末尾、判断是否继续滑行这两处共用。在 120 轮、4286 个节点的临时会话上实测：插件发出的文档级查询从 3263 次降到 2762 次（−15%），整页最长的一次停顿从 270ms 降到 234ms；文档越大，省下的每次全页样式重算越多。",
-  "en": "Less jank while an answer streams in a long session: the questions the follow asks on every batch of arriving text no longer go to the document — the conversation's scroller and its message column are read once and kept (a session switch or the Trajectory tab removes the old node, and the reading is taken again), the streaming mark is looked for inside the message column, and the presence of the host's back-to-end button is itself the reading that its follow is off. What a frame does read it reads once and shares between taking back the end the host wrote and deciding whether to keep walking. Measured on a 120-turn, 4286-node scratch conversation: the plugin's document-level queries fall from 3263 to 2762 (−15%) and the page's longest single stall from 270ms to 234ms; the larger the document, the more each avoided whole-page style recalculation is worth."
-}

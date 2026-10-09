@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-09",
-  "group": "improvements",
-  "order": 0,
-  "external": true,
-  "zh": "设置页「侧栏」页新增「面板悬浮卡片」开关：开启（默认）时右侧栏停靠的面板仍是悬浮卡片——四周留 8px、16px 圆角、1px 描边与投影；关闭后停靠的面板铺满整列、贴住四边，分栏时每栏铺满各自那一栏，两栏之间只留宿主的接缝线。切换不需要刷新页面。",
-  "en": "The Sidebar tab gains a Float docked panels switch: on (the default) keeps the right sidebar's docked panels as floating cards — 8px inside the column, a 16px radius, a hairline and an elevation; off fills the column and hugs its edges, each pane filling its own column when the dock is split, with only the dock's own resting line left on the seam. Switching needs no reload."
-}

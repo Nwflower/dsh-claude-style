@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-07",
-  "group": "improvements",
-  "order": 1,
-  "external": false,
-  "zh": "插件的样式表以压缩后的文本随包发出：注释与排版只留在源文件里，整张样式表从 349 KB 降到 208 KB，`lib/client.js` 从 712 KB 降到 570 KB。页面画出的样子不变：端到端通道把压缩前后的两份样式表放到同一个页面上，22 个页面状态逐元素比对计算值，全部一致。压缩还把 `!important` 审计过去豁免的一部分规则变成可以逐条判定的（同一个属性写两遍的规则，压缩后只剩一条声明）：判定之后，输入区停止按钮、侧栏进行中指示与聊天区跟随尾部上页面并不需要的 46 处 `!important` 从源样式表里去掉了。审计也随之收紧：处在条件不成立的 `@media` / `@supports` 里的规则不再参与判定，它们的 `!important` 不会因为页面当时不在那个条件里就被判成多余。在本地临时宿主上实测（两种产物各载入 20 次、做两轮，取中位数）：插件包的求值时间从约 9.0 ms 降到约 8.3 ms；启动阶段的其余计时差别落在两轮之间的波动以内。",
-  "en": "The plugin's stylesheet ships minified: comments and formatting stay in the source files, the sheet falls from 349 KB to 208 KB and `lib/client.js` from 712 KB to 570 KB. Nothing it paints changes: the end-to-end lane puts the sheet before and after minifying on the same page and compares computed values element by element across 22 page states, all identical. Minifying also brings rules the `!important` audit used to exempt within reach of it (a rule declaring one property twice keeps a single declaration once minified): judged one by one, the 46 `!important`s the page never needed — on the composer's stop button, the sidebar's ongoing indicator and the chat area's follow tail — leave the source sheets. The audit tightens with it: a rule inside a `@media` or `@supports` condition the page is not in is no longer judged, so its `!important` cannot be called redundant for a condition that keeps it out of the cascade. Measured on a local scratch host (two rounds of 20 page loads of each build, medians): evaluating the plugin's bundle takes about 8.3 ms instead of about 9.0 ms; the other startup timings move by less than they vary between rounds."
-}

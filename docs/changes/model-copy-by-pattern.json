@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-07",
-  "group": "improvements",
-  "order": 0,
-  "external": false,
-  "zh": "模型选择器每一行的说明改由一张按名字模式认领的有序规则表得出：带上日期后缀、把官方点号写成连字符或下划线（`glm-5-3-flashx`）或换一个售卖方前缀，仍然读到同一句；`k3-256k`、`ernie-5`、`minimax-m3-1m`、`deepseek-v41-flash` 这类目录拼法各自落到所在产品线的规则上，不必再逐条登记。带版本数字或最高级的说明写成锚定该版本的规则（`glm-5.3`、`gpt-5.4`、`qwen3.8-max`、`step-3.7-flash`、`celeris-1` 等），同产品线的其他版本读到线级文案；目录里现有的 25 个模型 id 里，除 Grok 与 ERNIE 两行按另一条记录改写外，其余解析出的句子与改动前逐条相同。",
-  "en": "Every model row's description now comes from one ordered table of name-pattern rules: a dated suffix, a separator spelled differently (`glm-5-3-flashx`) or another reseller's prefix still reads the line's own sentence, and catalog spellings such as `k3-256k`, `ernie-5`, `minimax-m3-1m` and `deepseek-v41-flash` land on their product line's rule without an entry of their own. Copy carrying a version's numbers or a superlative sits on a rule anchored to that version (`glm-5.3`, `gpt-5.4`, `qwen3.8-max`, `step-3.7-flash`, `celeris-1` and the rest), while another version of the same line reads the line-level copy; of the 25 model ids the catalog names, every one but the Grok and ERNIE rows another record rewrites resolves to the same sentence as before."
-}

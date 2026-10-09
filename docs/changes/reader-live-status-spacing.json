@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-09",
-  "group": "improvements",
-  "order": 0,
-  "external": false,
-  "zh": "「重绘」档里轮次进行中的那条状态行（「正在思考」「正在使用工具」这些）上下各收进 30px，贴着最新一条消息读，不再像独占一行。实测：该行与上方轮次之间原有的 26px 空隙收掉，行内文字与它的下一条内容之间的距离也少 30px；这一行仍按内容居中，高度不变。为了让它在压上去时不露出旧内容的接缝，这一行补了一圈底色投影，并抬到上方内容之上。",
-  "en": "In the Redraw tier the live status line (\"Thinking\", \"Using a tool\" and the rest) comes in by 30px above and below, so it reads with the newest message instead of as a row of its own. Measured: the 26px gap it used to leave to the turn above is gone, and the distance from its text to whatever follows it drops by 30px as well; the line stays centred in its own height, which is unchanged. A base-coloured shadow now runs under and over the line where it draws over the content above, so the older content never shows at its edge."
-}
