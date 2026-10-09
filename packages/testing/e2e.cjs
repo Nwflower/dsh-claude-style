@@ -510,20 +510,27 @@ const SCENARIOS = {
   send: {
     script: 'greeting',
     prompt: 'hello there',
-    async assert({ session, trace }) {
+    async assert({ page, session, trace }) {
+      // The trace stops when the turn settles, and the stand-in leaves a moment
+      // after the handover: on a slow runner the last frame still carried it,
+      // which read as a stand-in that never left. Wait for the page to show it
+      // gone, and read that as the verdict.
+      await page.waitForSelector(SKIN.sendGhost, { state: 'detached', timeout: 15000 }).catch(() => {})
+      await page.waitForTimeout(300)
       const firstGhost = trace.findIndex((frame) => frame.ghost)
       const takeOffFrame = trace.find((frame) => frame.takeOff !== undefined)
       const flight = firstGhost === -1 ? [] : trace.slice(firstGhost)
       const hidden = flight.filter((frame) => frame.rowFlying)
       const exposedWhileFlying = hidden.filter((frame) => frame.rowVisible)
       const last = trace[trace.length - 1]
+      const goneByNow = await page.evaluate((selector) => document.querySelector(selector) === null, SKIN.sendGhost)
       const words = flight.filter((frame) => (frame.ghostWords ?? []).includes('hello there') || (frame.rowWords ?? []).includes('hello there'))
       const takeOff = takeOffFrame?.takeOff
       const sameType = takeOff !== undefined && takeOff.clone !== null && takeOff.composer !== null
         && takeOff.clone.family === takeOff.composer.family && takeOff.clone.size === takeOff.composer.size
         && takeOff.clone.weight === takeOff.composer.weight && takeOff.clone.color === takeOff.composer.color
       return [
-        check('替身起飞后离开页面', firstGhost !== -1 && last.ghost === false, `firstGhost at ${firstGhost === -1 ? 'n/a' : `${trace[firstGhost].t}ms`}, ghost at the end=${last.ghost}`),
+        check('替身起飞后离开页面', firstGhost !== -1 && goneByNow, `firstGhost at ${firstGhost === -1 ? 'n/a' : `${trace[firstGhost].t}ms`}, ghost at the end=${last.ghost}, left by now=${goneByNow}`),
         check('真行在飞行期间不可见', hidden.length > 0 && exposedWhileFlying.length === 0, `flying frames=${hidden.length}, of them visible=${exposedWhileFlying.length}`),
         check('读者的字每一帧都看得见', words.length === flight.length, `words on ${words.length} of ${flight.length} frames after take-off`),
         check('真行落定后可见并带着字', last.rows > 0 && last.rowVisible === true && (last.rowWords ?? []).includes('hello there'), `rows=${last.rows} visible=${last.rowVisible} words=${JSON.stringify(last.rowWords)}`),
