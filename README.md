@@ -80,6 +80,7 @@ dsh plugin --profile web add dsh-claude-style                  # npm 包（推�
 ```
 
 3. 通过[插件市场](https://github.com/dsh-market/dsh-market)安装
+4. 通过dsh-web-all插件的皮肤中心安装
 
 同一时刻建议只启用一个主题。安装后推荐重启 `DeepSeek Harness`以获得完整能力。
 
@@ -89,40 +90,18 @@ dsh plugin --profile web add dsh-claude-style                  # npm 包（推�
 
 ## 字体
 
-> 本插件使用的字体如下。
->
-> Anthropic Sans/Serif 字体版权归 Anthropic 所有，仅供个人使用，不适用 MIT 许可。
->
-> **重要：Anthropic 字体不随 npm 包分发，仅在仓库 [`packages/assets/src/fonts/anthropic/`](packages/assets/src/fonts/anthropic/) 供下载**。
+> **重要：Anthropic 字体不随 npm 包分发，仅在仓库供下载学习研究**。
 
 | 字体 | 用途 | 文件 |
 |---|---|---|
 | Anthropic Sans Web Text | 界面 / UI | [`packages/assets/src/fonts/anthropic/AnthropicSansWebText.ttf`](https://github.com/Nwflower/dsh-claude-style/raw/main/packages/assets/src/fonts/anthropic/AnthropicSansWebText.ttf) |
 | Anthropic Serif Web Text | 对话正文 / Markdown | [`packages/assets/src/fonts/anthropic/AnthropicSerifWebText.ttf`](https://github.com/Nwflower/dsh-claude-style/raw/main/packages/assets/src/fonts/anthropic/AnthropicSerifWebText.ttf) |
-| JetBrains Mono Variable | 代码 / 代码块 | [`packages/assets/src/fonts/JetBrainsMonoVariable.ttf`](https://github.com/Nwflower/dsh-claude-style/raw/main/packages/assets/src/fonts/JetBrainsMonoVariable.ttf)、[`packages/assets/src/fonts/JetBrainsMonoItalicVariable.ttf`](https://github.com/Nwflower/dsh-claude-style/raw/main/packages/assets/src/fonts/JetBrainsMonoItalicVariable.ttf) |
-| Inter | 没有 Anthropic Sans 时的界面字体 | [`packages/assets/src/fonts/InterVariable.woff2`](https://github.com/Nwflower/dsh-claude-style/raw/main/packages/assets/src/fonts/InterVariable.woff2) |
-| Noto Serif | 没有 Anthropic Serif 时的正文字体 | [`packages/assets/src/fonts/NotoSerifVariable.woff2`](https://github.com/Nwflower/dsh-claude-style/raw/main/packages/assets/src/fonts/NotoSerifVariable.woff2) |
-
-JetBrains Mono、Inter 与 Noto Serif 采用 SIL Open Font License 1.1，随 npm 包分发，无需任何操作。Inter 与 Noto Serif 的字高、字宽与两款 Anthropic 字体几乎一致，没有启用 Anthropic 字体时由它们代替，界面与正文的排版不会因此变样；两者只含 Anthropic 字体覆盖的拉丁字符，中文照旧使用系统中文字体。
 
 Anthropic 字体启用（二选一）：
 
 ① 安装到系统——Windows 双击 `.ttf` → 「安装」，macOS 用「字体册」导入；
 
-② 免安装——把 `.ttf` 复制到 `$DSH_HOME/dsh-claude-style/fonts/`（没有设置 `DSH_HOME` 时是 `~/.dsh/dsh-claude-style/fonts/`）。完成后刷新页面生效。
-
-## 皮肤中心交接
-
-在 DSH 皮肤中心里，这套主题同时以**皮肤**的身份出现。选它即把整页交给本插件；换选别的皮肤或官方默认时，
-页面在不需要刷新的情况下交还回来。
-
-- 判定从第一帧就成立：皮肤中心把 `html[data-dsh-skin]` 注入服务端 HTML，因此带着皮肤启动的页面不会先闪过
-  一帧本主题。
-- 别的皮肤在画时，本主题不挂样式表、不安装任何功能、不占用任何文档属性；皮肤离开时立刻接管，皮肤回来
-  时再次让出，页面启动之后才选的皮肤也一样。
-- 壁纸插件不算另一个属主：壁纸在渲染时本主题照常工作，见[设置说明](docs/SETTINGS.md)里的「与其他主题插件同时使用」。
-- 交接期间设置页与所有偏好都还在：别的皮肤占屏不等于卸载，关掉皮肤中心也不丢这里配过的东西。
-- `body` 上的 `data-dsh-claude-style-handoff` 标记支持交接的构建；皮肤中心只在这一属性存在时才提供该选项。
+② 免安装——把 `.ttf` 复制到 `$DSH_HOME/dsh-claude-style/fonts/`。
 
 ## 文档
 
@@ -138,6 +117,8 @@ Anthropic 字体启用（二选一）：
 对话导航的展开列表、快捷键跳转与落点横线参考了 SherUnlocked-4869 的 [dsh-plugin-msg-nav](https://github.com/SherUnlocked-4869/dsh-plugin-msg-nav)（MIT）。
 
 像素小鲸鱼 Deepy 的动画帧图来自 calmly-eating-bugs（[@wp3171216237](https://github.com/wp3171216237)）绘制的 Deepy 小鲸鱼主题包。
+
+聊天区域内的增强动效修改自 [dsh-chat-ux](https://github.com/alm-allen/dsh-chat-ux)（MIT），重绘动效修改自 [dsh-better-display](https://github.com/aa2246740/dsh-better-display)（MIT）。
 
 像素螃蟹（Clawd）是 Anthropic 的角色形象，相关权利归 Anthropic 所有。螃蟹掏出电脑敲代码的动画取自 Claude Code，其余各个状态的动画由本项目按这一形象绘制。螃蟹的帧图不适用 MIT 许可（见 [LICENSE](LICENSE)）。本插件是非官方的爱好者作品，与 Anthropic 没有关联，也未获其认可。
 
