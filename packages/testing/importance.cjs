@@ -28,7 +28,8 @@
  *
  * A declaration that never matched an element is kept: no state showed what it
  * holds. So is one in theme/third-party.css, which answers other plugins' styles
- * the scratch host does not install, one whose property the rule declares
+ * the scratch host does not install, one under a transient mark the walk cannot
+ * hold (TRANSIENT_SELECTORS), one whose property the rule declares
  * twice, and one whose rule stands under a conditional at-rule the page is not
  * in — dropping its importance cannot change a value the condition already
  * keeps out of the cascade.
@@ -51,6 +52,16 @@ const MARK = '--dsh-audit-rule'
 const SHEET = 'style[data-plugin-css="dsh-claude-style/client.css"]'
 /** Pseudo-elements the page can read a computed style for. */
 const READABLE_PSEUDO = new Set(['::before', '::after', '::marker', '::placeholder'])
+/**
+ * Selectors whose rule only applies while the skin's own transient mark is on
+ * the page, or under a pointer state the walk cannot hold: no audited state
+ * carries them reliably, so a run that happened to catch the element called the
+ * weight removable and the next run, which did not, called it unmatched. Each
+ * entry is a contract, not a convenience (`fold-motion.css`'s rolling door,
+ * `inline.css`'s active-composer controls). The hover walk still covers the
+ * rules whose own trigger it can point at.
+ */
+const TRANSIENT_SELECTORS = ['[data-dsh-claude-rolling]', '[data-dsh-claude-composer-active]']
 
 /**
  * The rules of a stylesheet file, as `selector{declarations}` keys. The file
@@ -113,6 +124,12 @@ function planImportance(text) {
     const props = [...new Set(important)]
     let keep = null
     if (thirdParty.has(key)) keep = 'third-party'
+    // A rule that only holds while a transient, self-inflicted mark is on the
+    // page (the fold's rolling door) is judged by nothing the scenario can walk:
+    // no state carries the mark, the declarations match no element there, and
+    // whether the weight is needed is what the rule's own contract says. It
+    // stays untried, like a third-party answer.
+    else if (TRANSIENT_SELECTORS.some((needle) => rule.selector.includes(needle))) keep = 'transient state'
     else if (rule.parent.type === 'rule') keep = 'nested'
     else if (props.length !== important.length) keep = 'declared twice'
     else if (parts.every((part) => part.pseudo !== null && !READABLE_PSEUDO.has(part.pseudo))) keep = 'unreadable pseudo-element'
@@ -640,7 +657,7 @@ function importanceScenario(lane) {
         // never matched an element is not: the host element it dresses (a docked
         // panel, a scrollable table, the settings area) is outside the surfaces
         // this scenario walks, and no state could decide it.
-        lane.check('没有多余的 !important', idle.length === 0, `${declarations.length} 处：需要 ${count('needed')}，多余 ${idle.length}${idle.length === 0 ? '' : `（${idle.slice(0, 3).map((item) => `${item.selector.replace(/\s+/g, ' ').slice(0, 70)} { ${item.prop} }`).join('；')}…）`}；另有 ${count('unmatched')} 处从未匹配到元素（本次页面形态未覆盖），${count('declared twice')} 处重复声明，${count('third-party')} 处属于第三方应答，${count('unreadable pseudo-element')} 处伪元素读不到计算值`),
+        lane.check('没有多余的 !important', idle.length === 0, `${declarations.length} 处：需要 ${count('needed')}，多余 ${idle.length}${idle.length === 0 ? '' : `（${idle.slice(0, 3).map((item) => `${item.selector.replace(/\s+/g, ' ').slice(0, 70)} { ${item.prop} }`).join('；')}…）`}；另有 ${count('unmatched')} 处从未匹配到元素（本次页面形态未覆盖），${count('declared twice')} 处重复声明，${count('third-party')} 处属于第三方应答，${count('transient state')} 处只在短暂标记下生效，${count('unreadable pseudo-element')} 处伪元素读不到计算值`),
         lane.check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),
       ]
       if (process.env.DSH_IMPORTANCE_REFERENCE !== undefined) {
