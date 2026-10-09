@@ -12,7 +12,7 @@ import type { Official } from './official-content'
 import { PROCESS_RECORDS, assistantSegments, hasVisibleBody, isEarlierNarration } from './projection'
 import type { TurnBoundary } from './projection'
 import { useCopyRevision } from './reader-state'
-import { ReasoningCard } from './reasoning-card'
+import { ReasoningCard, ThoughtLine } from './reasoning-card'
 import { ToolMedia } from './tool-row'
 
 /**
@@ -150,11 +150,13 @@ export const ProcessNode = memo(function ProcessNode({ useChat, nodeKey, officia
 })
 
 /** One part of an assistant step: a thought, process commentary, or the answer. */
-export const AssistantNode = memo(function AssistantNode({ useChat, nodeKey, context, boundary, partStart, processOpen, folded, pinned, motion, onRead, returnFocusTo }: NodeProps & {
+export const AssistantNode = memo(function AssistantNode({ useChat, nodeKey, context, boundary, partStart, processOpen, folded, verbose, pinned, motion, onRead, returnFocusTo }: NodeProps & {
   boundary: TurnBoundary
   partStart: number
   processOpen: boolean
   folded: boolean
+  /** The host's work-details mode is `verbose`: a thought in a fold shows its whole text. */
+  verbose: boolean
   pinned: boolean
   motion: boolean
   onRead: () => void
@@ -174,8 +176,16 @@ export const AssistantNode = memo(function AssistantNode({ useChat, nodeKey, con
   const processStep = earlier || folded || data.blocks.some(block => block.kind === 'tool-call') || (boundary.latestStep > 0 && data.step < boundary.latestStep)
   const presentation = { startedAt: data.time, interrupted: data.status === 'interrupted', selected: pinned }
   if (part.kind === 'reasoning') {
+    // Inside a fold — a live one or a finished turn's summary — a thought is one line,
+    // unless the host's work-details mode asks for the whole text.
+    if ((folded || boundary.status === 'closed') && !verbose) {
+      const text = part.blocks.flatMap(block => block.kind === 'reasoning' ? [block.text] : []).join('\n\n')
+      return <ProcessFragment open={processOpen} motion={motion} onRead={onRead} returnFocusTo={returnFocusTo} nodeKey={nodeKey}>
+        <ThoughtLine text={text} motion={motion} onRead={onRead} />
+      </ProcessFragment>
+    }
     return <ProcessFragment open={processOpen} motion={motion} onRead={onRead} returnFocusTo={returnFocusTo} nodeKey={nodeKey} framed>
-      <ReasoningCard step={data.step} active={processOpen && boundary.status === 'open' && data.step === boundary.latestStep} motion={motion} selected={pinned} onRead={onRead}>
+      <ReasoningCard active={processOpen && boundary.status === 'open' && data.step === boundary.latestStep} motion={motion} selected={pinned} onRead={onRead}>
         <Blocks blocks={part.blocks} streaming={data.status === 'running' && last && data.blocks.at(-1)?.kind === 'reasoning'} {...presentation} context={context} />
       </ReasoningCard>
     </ProcessFragment>
