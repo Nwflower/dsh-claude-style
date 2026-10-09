@@ -232,4 +232,105 @@ module.exports = {
       sendRedraw.ghost === true && sendRedraw.hidden === true && sendRedraw.visibility === 'hidden',
       JSON.stringify(sendRedraw))
   },
+  'chat-process'(r) {
+    basicChecks(r)
+    const process = r.process || {}
+    const glide = { start: process.glideStart || {}, moved: process.glideMoved || {}, handed: process.glideHanded || {} }
+    const reopened = process.reopened || {}
+    const readerClosed = process.readerClosed || {}
+    check('the redraw tier installs the lane and its mark',
+      process.marked === true, JSON.stringify(process.marked))
+    check('the whole-turn control carries the turn\'s figures after the host\'s own label',
+      process.counts === ' · 思考×3 · 工具×2 · 记录×1' && process.label.indexOf('已完成，用时') === 0,
+      JSON.stringify({ counts: process.counts, label: process.label }))
+    check('the work before the intermediate output folds into one summary with its own figures',
+      process.summaries === 1 && process.figures === '思考×1 · 工具×1' && process.rolls === 2,
+      JSON.stringify({ summaries: process.summaries, figures: process.figures, rolls: process.rolls }))
+    check('the folded work is off the page while the output and the work after it stand',
+      process.foldedWork === true && process.noteShown === true && process.laterShown === true && process.laterHidden === true,
+      JSON.stringify(process))
+    check('the running thinking row is driven through a track of the lane\'s own',
+      glide.start.wrapped === true, JSON.stringify(glide.start))
+    check('the track walks after the text at a reading pace',
+      typeof glide.moved.top === 'number' && glide.moved.top < -40, JSON.stringify(glide.moved))
+    check('the thinking row runs in the reference\'s transform mode, and its edges follow what is left',
+      glide.start.mode === 'transform' && glide.start.edges === 'bottom' && glide.moved.edges === 'top'
+        && glide.moved.preview === 56,
+      JSON.stringify({ start: glide.start, moved: glide.moved }))
+    check('the reader\'s own wheel hands the row back to native scrolling',
+      glide.handed.wrapped === false && glide.handed.mode === 'manual' && glide.handed.overflow === 'auto'
+        && glide.handed.scrollTop > 0,
+      JSON.stringify(glide.handed))
+    check('a block arriving in the answer fades in on the reference\'s clock',
+      (process.reveal || {}).marked === true && (process.reveal || {}).duration === 350
+        && String((process.reveal || {}).easing).indexOf('0.22, 1, 0.36, 1') >= 0,
+      JSON.stringify(process.reveal))
+    check('the entrance is over when its animation ends, and the block stands opaque',
+      (process.revealDone || {}).marked === false && (process.revealDone || {}).opacity === '1',
+      JSON.stringify(process.revealDone))
+    check('a status line whose copy changed leaves before the next one rises',
+      (process.statusOut || {}).phase === 'out' && (process.statusOut || {}).transform !== 'none',
+      JSON.stringify(process.statusOut))
+    check('the swap settles with no phase left and the line back at rest',
+      (process.statusSettled || {}).phase === null && (process.statusSettled || {}).transform === 'none',
+      JSON.stringify(process.statusSettled))
+    check('the tier walks to new content instead of jumping to it',
+      (process.follow || {}).midWalk > 1 && (process.follow || {}).endGap <= 6,
+      JSON.stringify(process.follow))
+    const live = process.live || {}
+    const readerFolded = process.readerFolded || {}
+    check('a running thinking row is opened by the lane, so the reasoning stands instead of one folded line',
+      live.opened === true && live.bodyShown === true && live.clicks === 1,
+      JSON.stringify(live))
+    check('the running line carries the turn\'s figures while the turn is still on',
+      live.counts === ' · 思考×3 · 工具×2 · 记录×1' && live.after === '" · 思考×3 · 工具×2 · 记录×1"',
+      JSON.stringify(live))
+    check('the running line stands in the reference\'s status language, all on one line',
+      (live.style || {}).direction === 'row' && (live.style || {}).wrap === 'wrap' && (live.style || {}).sameLine === true
+        && (live.style || {}).size === '14px' && (live.style || {}).lineHeight === '24px'
+        && (live.style || {}).dividerFull === '100%',
+      JSON.stringify(live.style))
+    check('the label carries the reference\'s own sweep, and its icon is left as the host drew it',
+      (live.style || {}).labelClip === 'text' && (live.style || {}).labelAnimation === 'dsh-claude-status-shimmer'
+        && (live.style || {}).labelFill === 'rgba(0, 0, 0, 0)' && (live.style || {}).iconFill !== 'rgba(0, 0, 0, 0)',
+      JSON.stringify(live.style))
+    check('a thinking row the reader folded himself stays folded while that phase lasts',
+      readerFolded.opened === false && readerFolded.bodyShown === false
+        && readerFolded.clicks === readerFolded.clicksBefore + 1,
+      JSON.stringify(readerFolded))
+    const rows = process.rows || {}
+    check('a running call gets the reference\'s living edge: a 6 px dot breathing on a 1.4 s halo',
+      (rows.running || {}).animation === 'dsh-claude-running-glow' && (rows.running || {}).duration === '1.4s'
+        && (rows.running || {}).dot === '6px/6px',
+      JSON.stringify(rows.running))
+    check('a compaction divider sweeps in, and its dial turns once after a beat',
+      (rows.compaction || {}).animation === 'dsh-claude-compaction-line' && (rows.compaction || {}).duration === '0.52s'
+        && (rows.dial || {}).animation === 'dsh-claude-compaction-dial' && (rows.dial || {}).delay === '0.2s',
+      JSON.stringify({ line: rows.compaction, dial: rows.dial }))
+    check('the running status line carries the two-second highlight sweep',
+      (rows.status || {}).animation === 'dsh-claude-status-shimmer' && (rows.status || {}).duration === '2s',
+      JSON.stringify(rows.status))
+    check('a figure opens its own line from nothing when it first appears',
+      (rows.partStart || {}).rows === '0fr' && (rows.partStart || {}).opacity === '0'
+        && (rows.partOpen || {}).marked === true && (rows.partOpen || {}).opacity === '1',
+      JSON.stringify({ start: rows.partStart, open: rows.partOpen }))
+    check('a press on a summary opens that segment alone, and its figures stay',
+      reopened.folds === 0 && reopened.expanded === 'true' && reopened.workShown === true,
+      JSON.stringify(reopened))
+    check('a group the reader closed himself stays closed and keeps its header',
+      readerClosed.bodyAOpen === false && readerClosed.headA === false
+        && readerClosed.clicks === readerClosed.clicksBefore + 1,
+      JSON.stringify(readerClosed))
+    const closing = process.closing || {}
+    const closed = process.closed || {}
+    check('the closing turn holds its boxes while the segments come off',
+      closing.held > 0 && closing.summaries === 0, JSON.stringify(closing))
+    check('once closed the lane holds nothing and leaves no fold behind',
+      closed.held === 0 && closed.summaries === 0 && closed.folds === 0 && closed.counts === process.counts,
+      JSON.stringify(closed))
+    const again = process.openedAgain || {}
+    check('opening it again brings the segment and its figures back',
+      again.summaries === 1 && again.figures === '思考×1 · 工具×1' && again.folds === 2 && again.held === 0,
+      JSON.stringify(again))
+  },
 }

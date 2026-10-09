@@ -80,6 +80,19 @@ const SCRIPTS = {
     ],
     auxiliary: { text: ['Scripted inspection'] },
   },
+  /**
+   * Several rounds in one turn: a thought and a tool, a thought and a note with
+   * another tool, then the answer. The reader gets an intermediate output with
+   * process on both sides of it, which is the shape the process lane folds.
+   */
+  process: {
+    conversation: [
+      { thinking: ['先看清工作区再动手。'], tool: { name: 'glob', input: { pattern: '*.json' } } },
+      { thinking: ['列举结果回来了，先记一句中间结论。'], text: ['先记一句中间结论。\n\n'], tool: { name: 'glob', input: { pattern: '*.md' } } },
+      { thinking: ['信息够了，可以收尾。'], text: ['这是最终答案。\n\n', '- 第一点\n', '- 第二点\n'] },
+    ],
+    auxiliary: { text: ['Scripted process'] },
+  },
   /** Enough streamed lines to push the column past the viewport edge. */
   long: {
     conversation: [

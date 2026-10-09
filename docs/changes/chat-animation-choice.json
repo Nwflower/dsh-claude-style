@@ -3,6 +3,6 @@
   "group": "improvements",
   "order": 0,
   "external": true,
-  "zh": "设置页「对话」页的「聊天区动画效果」从开关改成三档分段控件：关闭、增强、重绘。「关闭」把聊天区交回宿主；「增强」是原来的全套动效（跟随、自动开合与卷帘门、新文字淡入、文件变更行、聊天气泡动效）；「重绘」交给另一套动效，目前接上的是聊天气泡动效。旧版本存下的开关取值照旧生效（开 = 增强，关 = 关闭），不需要重新设置。",
-  "en": "The Conversation tab's Chat-area animations row is a three-way segmented control now — Off, Enhanced and Redraw — in place of its switch. Off hands the conversation back to the host; Enhanced is the set that was there before (the follow, the automatic folding with its rolling door, the text fade, the file change rows and the send flight); Redraw hands the area to a second set, whose member wired so far is the send flight. A switch value stored by an earlier build keeps its meaning (on reads as Enhanced, off as Off), so nothing has to be set again."
+  "zh": "设置页「对话」页的「聊天区动画效果」从开关改成三档分段控件：关闭、增强、重绘。「关闭」把聊天区交回宿主；「增强」是原来的全套动效（跟随、自动开合与卷帘门、新文字淡入、文件变更行、聊天气泡动效）；「重绘」交给另一套动效，接上的是聊天气泡动效与过程单列列表。旧版本存下的开关取值照旧生效（开 = 增强，关 = 关闭），不需要重新设置。",
+  "en": "The Conversation tab's Chat-area animations row is a three-way segmented control now — Off, Enhanced and Redraw — in place of its switch. Off hands the conversation back to the host; Enhanced is the set that was there before (the follow, the automatic folding with its rolling door, the text fade, the file change rows and the send flight); Redraw hands the area to a second set, whose members are the send flight and the process lane. A switch value stored by an earlier build keeps its meaning (on reads as Enhanced, off as Off), so nothing has to be set again."
 }

@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-08",
+  "group": "new",
+  "order": 0,
+  "external": true,
+  "zh": "「聊天区动画效果」的「重绘」档新增过程分段折叠：一轮里的思考、工具调用与过程记录按正式输出分段——模型每写完一段正式输出，这段输出之前的过程就收进它自己的摘要行，行上带着这一段的数量（思考×N · 工具×M · 记录×K），数字随内容增长跳变；摘要行停在对话顶部，读者滚动时它自己让位。模型还在思考时，思考行由插件自己展开，推理正文按预览高裁切并随文字自动滑动跟随，上下还有文字时两端渐隐，读者一滚轮就把这一行交还给他，他自己收起的那一行在那一阶段不再被打开。轮次进行中，底部那行「深度求索中」按参考的状态行重画：次级标签色、主级标签色的扫光、14/24 的字号行高，这一轮的数字贴在标签后面同一行上（以前会掉到第二行）；轮次结束后数字回到「已完成，用时 …」那一行的末尾。「动画」设为「减弱」时数字与收放都直接落位。",
+  "en": "The Redraw tier of Chat-area animations gains process folding by segment: a turn's thinking, tool calls and process records fold at each formal output — once a formal output is written, the process before it folds into its own summary row carrying that segment's figures (N thoughts · M tools · K records), jumping as the work grows, and that row rides the top of the conversation so the way back in stays in view. While the model is still thinking, the plugin opens the thinking row itself and the reasoning stands at a preview height with the text gliding after it as it streams, the edges fading whenever text waits on either side; the reader's own wheel hands the row straight back to him, and a row he folded himself is left alone for that phase. While the turn runs, the \"deep diving\" line at the end is drawn as the reference's status line — the secondary label colour swept by the primary one, at 14/24 — and the turn's figures sit after the label on that same line instead of wrapping onto a second one; once the turn ends the figures return to the end of the \"worked for …\" row. With Animation set to Reduced both the figures and the fold land at once."
+}

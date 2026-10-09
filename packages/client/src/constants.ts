@@ -233,6 +233,73 @@ export const CARET_HOST_ATTR = 'data-dsh-claude-caret-host'
  * and switching the feature off hands the chat area back whole.
  */
 export const CHAT_FOLD_ATTR = 'data-dsh-claude-chat-fold'
+/**
+ * Present while the redraw process lane is installed
+ * (packages/client/src/features/chat-process/): the stylesheet's lane rules hang off it,
+ * and switching the feature off hands the process area back to the host.
+ */
+export const CHAT_PROCESS_ATTR = 'data-dsh-claude-chat-process'
+/**
+ * On one of a turn's process elements while the lane keeps it laid out. The
+ * host hides a folded turn's process by writing `hidden="until-found"`; the
+ * lane holds those boxes through its animations and drops the mark when they
+ * are over, which is what hands them back.
+ */
+export const PROCESS_LANE_ATTR = 'data-dsh-claude-process-lane'
+/**
+ * On a process group's header row while its body stands open in the lane. The
+ * flat list shows the group's rows alone, so the stylesheet keeps the header
+ * out of it — a group the reader closed himself keeps its header, which is the
+ * only way back in for that group.
+ */
+export const PROCESS_HEAD_ATTR = 'data-dsh-claude-process-head'
+/**
+ * On a process group's root while its body stands open in the lane. The host
+ * caps an open body's height into a scroll box of its own in its grouped tiers,
+ * and a column of rows cannot be one: the stylesheet lifts the cap, its
+ * scrollbar gutter and its edge masks under this mark.
+ */
+export const PROCESS_FLAT_ATTR = 'data-dsh-claude-process-flat'
+/**
+ * On a turn's whole-turn control: the counts line the stylesheet appends to the
+ * host's own label (`思考×N · 工具×M · 记录×K`). The host's label stays where it
+ * is, so the control keeps its name and its elapsed clock.
+ */
+export const PROCESS_COUNTS_ATTR = 'data-dsh-claude-process-counts'
+/**
+ * On one segment's summary row: the lane's own disclosure standing where that
+ * segment's process folded, carrying the segment's figures. The row is the
+ * lane's own node (marked quiet, D40); the rows it stands for are the host's.
+ */
+export const PROCESS_SEGMENT_ATTR = 'data-dsh-claude-process-segment'
+/**
+ * On a conversation column while the lane is animating a layout inside it.
+ * Every nested animation stands still for the length of the shrink, and the
+ * follow stands down; the reference's reader pauses its flow the same way (D56).
+ */
+export const PROCESS_COLLAPSE_ATTR = 'data-dsh-claude-process-collapse'
+/**
+ * On the skin's own status control for the length of a swap, with the phase it
+ * is in (`out`, `in`, `run`). The visible copy is the skin's, rendered from the
+ * control's own attribute, so one element carries the whole move (D56).
+ */
+export const STATUS_SWAP_ATTR = 'data-dsh-claude-status-swap'
+/**
+ * On a thinking row's viewport while the lane drives its scroll, with the mode
+ * it is in (`transform` while following, `manual` once the reader took it) and
+ * how much text is left on each side (`none` / `top` / `bottom` / `both`).
+ */
+export const THINK_MODE_ATTR = 'data-dsh-claude-think-mode'
+export const THINK_EDGES_ATTR = 'data-dsh-claude-think-edges'
+/** On the track the thinking row's text is moved by while the lane follows it. */
+export const THINK_TRACK_ATTR = 'data-dsh-claude-think-track'
+/** On a block the lane is fading in as it arrives. */
+export const STREAM_REVEAL_ATTR = 'data-dsh-claude-stream-reveal'
+/**
+ * On a summary's figure once its own line has opened: the stylesheet grows the
+ * row from zero height, and this is the pose the next frame releases (D56).
+ */
+export const PART_IN_ATTR = 'data-dsh-claude-part-in'
 /** Present while the skin takes over the sidebar footer (settings area + account row). */
 export const FOOTER_ATTR = 'data-dsh-claude-footer-takeover'
 /**

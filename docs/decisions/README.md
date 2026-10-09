@@ -69,6 +69,8 @@
 | [D50](D50-brand.md) | 品牌两档：配色切换只靠令牌 | 已实施 |
 | [D52](D52-header-band.md) | 会话标题与顶栏控件抬进桌面端标题栏，放不下就留在原行 | 已实施 |
 | [D54](D54-peakrate-meter.md) | 峰谷电表：作息表是数据源的快照，判定在浏览器按真实时刻做 | 已实施 |
+| [D55](D55-chat-process-redraw.md) | 重绘动效：过程按正式输出分段折叠 | 已实施 |
+| [D56](D56-redraw-motion-set.md) | 重绘档的动效集：照搬 dsh-better-display 的动效设计 | 已实施 |
 
 ## 分发与流程
 

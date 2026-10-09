@@ -25,6 +25,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 const { start, openPage, waitForSkin, dismissOverlays, firstRunOverlayText } = require('./dsh-web.cjs')
 const { importanceScenario } = require('./importance.cjs')
+const { processScenario } = require('./process-lane.cjs')
 const { startMockLlm } = require('./mock-llm.cjs')
 const { CANVAS } = require('../../scripts/shoot.cjs')
 const { sanitizePage } = require('../../scripts/shared/privacy.cjs')
@@ -608,6 +609,8 @@ const SCENARIOS = {
       ]
     },
   },
+  /** The redraw tier's process lane: segments at the formal outputs (packages/testing/process-lane.cjs, D55). */
+  process: processScenario({ check }),
   /** Every `!important` the skin writes is needed on the real page (packages/testing/importance.cjs, D51). */
   importance: importanceScenario({ check, sendPrompt, waitForTurn, host: HOST }),
   /** Both palettes captured to the run's out directory and swept for personal data. */
@@ -634,12 +637,7 @@ async function runScenario(name, options) {
   const scenario = SCENARIOS[name]
   if (scenario === undefined) throw new Error(`no scenario named "${name}" (${Object.keys(SCENARIOS).join(', ')})`)
   const mock = await startMockLlm({ script: scenario.script, delayMs: scenario.delayMs ?? options.delayMs })
-  const patch = [
-    '- id: llm-deepseek',
-    '  config:',
-    `    baseURL: ${mock.url}`,
-    '    apiKeyEnv: DSH_E2E_MOCK_KEY',
-  ].join('\n')
+  const patch = ['- id: llm-deepseek', '  config:', `    baseURL: ${mock.url}`, '    apiKeyEnv: DSH_E2E_MOCK_KEY', ...scenario.patch ?? []].join('\n')
   const host = await start({ patch, env: { DSH_E2E_MOCK_KEY: 'mock' }, home: options.home, resetState: true })
   process.stdout.write(`\n== ${name} ==  mock ${mock.url}  host ${host.url}\n`)
   /** Where the scenario is, so a hang in the log says which step it never left. */

@@ -63,6 +63,7 @@ const PROBE_PARTS = [
   'chat-motion.js',
   'chat-files.js',
   'chat-send.js',
+  'chat-process.js',
   'model-meter.js',
   'peer.js',
   'teardown.js',
@@ -237,6 +238,125 @@ function page(name, tier, cases) {
       '})();' +
       '</script>'
     : ''
+  // The process case drives the redraw tier's lane: a turn whose column holds two
+  // process groups, one intermediate output between them and a running thinking
+  // row with a capped viewport. The host's own behaviour is modelled in the
+  // script: the whole-turn control folds and unfolds every group body and member
+  // row, and a group's header flips its own body.
+  var processArea = name === 'chat-process'
+    ? '<style>' +
+        '[data-step-process-body][hidden], [data-turn-process-member][hidden] { display: none; }' +
+      '</style>' +
+      '<div data-chat-flow id="processFlow">' +
+        '<div data-chat-turn="1" data-chat-flow-kind="user">问题</div>' +
+        '<div data-chat-turn="1" data-chat-flow-kind="turn-process">' +
+          '<button type="button" data-turn-process id="processControl">已完成，用时 1秒</button>' +
+        '</div>' +
+        '<div data-chat-turn="1" data-step-process id="processGroupA">' +
+          '<button type="button" data-process-activity id="processHeaderA">分析</button>' +
+          '<div data-step-process-body id="processBodyA"><div data-step-process-content>' +
+            '<div data-turn-process-member data-chat-flow-kind="assistant-step" data-chat-flow-key="think1" data-chat-group-part="reasoning" id="processThink1"><div data-variant="think" data-state="ok">想一下</div></div>' +
+            '<div data-turn-process-member data-chat-flow-kind="tool-call" data-chat-flow-key="tool1" id="processTool1"><div data-chat-call-id="call1">glob</div></div>' +
+          '</div></div>' +
+        '</div>' +
+        '<div data-chat-turn="1" data-turn-process-member data-chat-flow-kind="assistant-step" data-chat-flow-key="note1" data-chat-group-part="response" id="processNote">先记一句中间结论。</div>' +
+        '<div data-chat-turn="1" data-turn-process-member data-chat-flow-kind="assistant-step" data-chat-flow-key="live1" data-chat-group-part="reasoning" id="processLiveRow">' +
+          // A thinking row arrives folded, as the host renders it: the lane has
+          // to press its own disclosure before the reasoning stands and the
+          // glide has a viewport at all.
+          '<div data-variant="think" data-state="running" id="processLiveThink">' +
+            '<div role="button" data-disclosure-row id="processLiveControl" aria-expanded="false">思考中</div>' +
+            '<div id="processLiveBody" hidden style="max-height:56px;overflow-y:auto">' +
+              '<div id="processLiveText" style="height:600px">还在写的思考</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        // The host's running line: a hidden status copy, its own hairline, and
+        // the line itself holding the icon and the label.
+        '<div id="processLiveStatus" data-chat-running="true">' +
+          '<span role="status" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden">深度求索中</span>' +
+          '<span aria-hidden="true" style="width:100%;height:.5px"></span>' +
+          '<span id="processLiveStatusText">' +
+            '<span aria-hidden="true" id="processLiveStatusIcon">鲸</span>' +
+            '<span id="processLiveStatusLabel">深度求索中，用时 1秒</span>' +
+          '</span>' +
+        '</div>' +
+        '<div data-chat-turn="1" data-step-process id="processGroupB">' +
+          '<button type="button" data-process-activity id="processHeaderB">继续</button>' +
+          '<div data-step-process-body id="processBodyB"><div data-step-process-content>' +
+            '<div data-turn-process-member data-chat-flow-kind="tool-call" data-chat-flow-key="tool2" id="processTool2"><div data-chat-call-id="call2">read</div></div>' +
+            '<div data-turn-process-member data-chat-flow-kind="assistant-step" data-chat-flow-key="think2" data-chat-group-part="reasoning" id="processThink2"><div data-variant="think" data-state="ok">再想一下</div></div>' +
+          '</div></div>' +
+        '</div>' +
+      '</div>' +
+      // The ported motions need three more pieces the host owns: the skin's own
+      // status line (its copy lives in an attribute), a streaming answer the
+      // reveal can walk, and a scroller the follow can walk to the end.
+      '<div id="processScroller" data-conversation-scroll style="height:180px;overflow-y:auto">' +
+        '<div id="processAnswer" data-streaming><p id="processPara1">第一段。</p></div>' +
+        '<div style="height:400px">长内容</div>' +
+      '</div>' +
+      '<button type="button" data-dsh-claude-turn-status="深度求索中" data-dsh-claude-turn-state="live" id="processStatus">状态</button>' +
+      // The host's own shapes for the two rows the lane animates: a call whose
+      // view is still running, and a compaction divider with a dial.
+      '<div data-chat-flow-kind="tool-call" data-chat-turn="1" id="processRunningCall">' +
+        '<div data-chat-call-id="running1"><div data-state="running" data-tool="glob"><span id="processRunningLabel" data-shimmer="true">查找文件</span></div></div>' +
+      '</div>' +
+      '<div data-chat-flow-kind="compaction" data-chat-turn="1" id="processCompaction">' +
+        '<div class="_compactionRow_1"><svg id="processCompactionDial" viewBox="0 0 16 16" width="12" height="12"></svg><span>已压缩上下文</span></div>' +
+      '</div>' +
+      '<script>' +
+      '(function () {' +
+      '  window.__processClicks = { control: 0, headerA: 0, headerB: 0 };' +
+      '  window.__processAppendParagraph = function (text) {' +
+      '    var block = document.createElement("p");' +
+      '    block.textContent = text;' +
+      '    document.getElementById("processAnswer").appendChild(block);' +
+      '    return block;' +
+      '  };' +
+      '  var liveThink = document.getElementById("processLiveThink");' +
+      '  var liveBody = document.getElementById("processLiveBody");' +
+      '  window.__processClicks.think = 0;' +
+      '  document.getElementById("processLiveControl").addEventListener("click", function () {' +
+      '    window.__processClicks.think += 1;' +
+      '    var open = !liveThink.hasAttribute("data-expanded");' +
+      '    if (open) liveThink.setAttribute("data-expanded", "");' +
+      '    else liveThink.removeAttribute("data-expanded");' +
+      '    if (open) liveBody.removeAttribute("hidden");' +
+      '    else liveBody.setAttribute("hidden", "until-found");' +
+      '    document.getElementById("processLiveControl").setAttribute("aria-expanded", String(open));' +
+      '  });' +
+      '  window.__processGrowScroller = function () {' +
+      '    var spacer = document.createElement("div");' +
+      '    spacer.style.height = "240px";' +
+      '    spacer.textContent = "更多";' +
+      '    document.getElementById("processScroller").appendChild(spacer);' +
+      '  };' +
+      '  var groups = [document.getElementById("processGroupA"), document.getElementById("processGroupB")];' +
+      '  var bodies = [document.getElementById("processBodyA"), document.getElementById("processBodyB")];' +
+      '  var rows = [].slice.call(document.querySelectorAll("#processFlow [data-turn-process-member]"));' +
+      '  var fold = function (element, hide) {' +
+      '    if (hide) element.setAttribute("hidden", "until-found");' +
+      '    else element.removeAttribute("hidden");' +
+      '  };' +
+      '  document.getElementById("processControl").addEventListener("click", function () {' +
+      '    window.__processClicks.control += 1;' +
+      '    var hide = !groups[0].hasAttribute("hidden") || !rows[0].hasAttribute("hidden");' +
+      '    for (var g = 0; g < groups.length; g++) fold(groups[g], hide);' +
+      '    for (var i = 0; i < bodies.length; i++) fold(bodies[i], hide);' +
+      '    for (var j = 0; j < rows.length; j++) fold(rows[j], hide);' +
+      '  });' +
+      '  document.getElementById("processHeaderA").addEventListener("click", function () {' +
+      '    window.__processClicks.headerA += 1;' +
+      '    fold(bodies[0], !bodies[0].hasAttribute("hidden"));' +
+      '  });' +
+      '  document.getElementById("processHeaderB").addEventListener("click", function () {' +
+      '    window.__processClicks.headerB += 1;' +
+      '    fold(bodies[1], !bodies[1].hasAttribute("hidden"));' +
+      '  });' +
+      '})();' +
+      '</script>'
+    : ''
   // The other chat-behaviour plugin, installed: the host's own startup picture
   // names every client entry before any of them runs, which is the signal
   // packages/client/src/shared/peer-plugin.ts reads first (the style element is the other one).
@@ -304,6 +424,7 @@ ${hostControls}
 ${chatArea}
 ${caretArea}
 ${foldArea}
+${processArea}
 <script>window.SMOKE_CASE = ${JSON.stringify(name)}; window.SMOKE_GROUPS = ${JSON.stringify(cases)}; window.SMOKE_TIER = ${JSON.stringify(tier)}; window.SMOKE_MARKUP = ${JSON.stringify(MARKUP)}; window.SMOKE_PNG = ${JSON.stringify(PNG_1PX)}</script>
 <script>${STAND_IN}</script>
 <script src="/client.js"></script>

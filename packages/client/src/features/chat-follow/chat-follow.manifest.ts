@@ -14,7 +14,7 @@ export default {
     tab: 'conversation',
     rank: 30,
     title: { key: 'chatAnimationsTitle', fallback: 'Chat-area animations' },
-    desc: { key: 'chatAnimationsDesc', fallback: 'The conversation area\'s motion, chosen here: the follow, the automatic folding with its rolling door, the text fade, the file change rows and the send flight. Off leaves the conversation to the host\'s own behaviour; Enhanced plays this plugin\'s set; Redraw hands the area to a second set, which the send flight belongs to so far. With Animation set to Reduced every set stands still.' },
+    desc: { key: 'chatAnimationsDesc', fallback: 'The conversation area\'s motion, chosen here: the follow, the automatic folding with its rolling door, the text fade, the file change rows and the send flight. Off leaves the conversation to the host\'s own behaviour; Enhanced plays this plugin\'s set; Redraw hands the area to a second set — the send flight and the process fold, which gathers a turn\'s thinking, tool calls and process records into one summary row per formal output, each row carrying that segment\'s figures and jumping as the work grows. With Animation set to Reduced every set stands still.' },
     choices: [
       { value: CHAT_ANIMATIONS_OFF, label: { key: 'chatAnimationsOff', fallback: 'Off' } },
       { value: CHAT_ANIMATIONS_ENHANCED, label: { key: 'chatAnimationsEnhanced', fallback: 'Enhanced' } },

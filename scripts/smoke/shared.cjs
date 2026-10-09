@@ -50,7 +50,7 @@ const tierName = () => tier
  * follow an animation, a glide or a dwell over time. The quick tier skips them
  * whole, and says so in its log.
  */
-const TIMING_CASES = ['chat-follow', 'chat-fold', 'chat-reveal', 'chat-send', 'crab-states', 'deepy', 'popovers']
+const TIMING_CASES = ['chat-follow', 'chat-fold', 'chat-reveal', 'chat-send', 'chat-process', 'crab-states', 'deepy', 'popovers']
 
 /**
  * Which cases cover which directory under `packages/client/src/features/`, gathered from the
@@ -77,6 +77,18 @@ for (const manifest of MANIFESTS) {
 
 /** The features that arrive in chunks of their own (D39), by id. */
 const DEFERRED_FEATURES = MANIFESTS.filter((manifest) => manifest.load === 'deferred').map((manifest) => manifest.id)
+
+/**
+ * The deferred features a page wants, by id: a feature gated on a preference
+ * installs only under the values its manifest names, so a page sitting on
+ * another value never sends for that feature's chunk and never reports it.
+ * @param values - the page's preference values, by preference name.
+ */
+function deferredWanted(values) {
+    return MANIFESTS.filter((manifest) => manifest.load === 'deferred')
+        .filter((manifest) => manifest.pref === undefined || manifest.prefValues === undefined || manifest.prefValues.includes(values[manifest.pref]))
+        .map((manifest) => manifest.id)
+}
 
 /**
  * The browser pages, and the cases each one serves. A page is loaded once and
@@ -132,5 +144,5 @@ const skips = () => skipped
 
 module.exports = {
     ROOT, CLIENT, HOST, MARKUP, PNG_1PX, SKIN_FIXTURE, SKIN_FACE, SKIN_HAT, SKIN_CASES,
-    sleep, same, check, failures, skips, setTier, tierName, TIMING_CASES, FEATURE_CASES, DEFERRED_FEATURES, PAGES, pagesFor,
+    sleep, same, check, failures, skips, setTier, tierName, TIMING_CASES, FEATURE_CASES, DEFERRED_FEATURES, deferredWanted, PAGES, pagesFor,
 }

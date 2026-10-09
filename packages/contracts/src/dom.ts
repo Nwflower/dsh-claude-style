@@ -25,8 +25,20 @@ export const CHAT_FLOW_SELECTOR = '[data-chat-flow]'
 export const CHAT_CALL_SELECTOR = '[data-chat-call-id]'
 /** One thinking row; its phase is its data-state attribute. */
 export const THINK_ROW_SELECTOR = '[data-variant="think"]'
-/** The phase value while the model is still thinking. */
+/**
+ * The phase of a row that has one: a thinking row, and a tool call's own view
+ * (the page's own phase is `data-phase`, D44). The values are the host's —
+ * `running` while that piece of work is under way.
+ */
+export const ROW_PHASE_ATTRIBUTE = 'data-state'
+/** The phase value while the model is still thinking, or a call is still running. */
 export const RUNNING_STATE = 'running'
+/**
+ * One compaction record: the divider the host mounts when a session compacts,
+ * and the one the reader triggers himself. Both are flow rows of their own.
+ */
+export const MANUAL_COMPACTION_KIND = 'manual-compaction'
+export const COMPACTION_KIND = 'compaction'
 /** The markdown layer marks the container with this while an assistant message streams. */
 export const STREAMING_SELECTOR = '[data-streaming]'
 /** The same contract as an attribute name: the reveal watches it appearing and going. */
@@ -79,6 +91,21 @@ export const PROCESS_BODY_SELECTOR = '[data-step-process-body]'
 export const PROCESS_CONTENT_SELECTOR = '[data-step-process-content]'
 /** On a process group's root while this tier does not cap the body (detailed, fully expanded). */
 export const PROCESS_EXPANDED_MODE_ATTRIBUTE = 'data-group-expanded-mode'
+/**
+ * On every row the host counts as part of a turn's process: its reasoning, its
+ * tool calls, its intermediate commentary and its other process records. The
+ * turn's final answer is not a member.
+ */
+export const TURN_PROCESS_MEMBER_ATTRIBUTE = 'data-turn-process-member'
+/**
+ * One part of an assistant step: the host splits the step's row in two —
+ * `reasoning` for its thinking, `response` for its formal output — and writes
+ * the part on the row. A row with no part is the whole step, and the part of a
+ * response row is also what its flow key is keyed by.
+ */
+export const CHAT_GROUP_PART_ATTRIBUTE = 'data-chat-group-part'
+/** The part value the host writes on a step's formal-output row. */
+export const CHAT_GROUP_PART_RESPONSE = 'response'
 /** On every chat row: the turn the row belongs to. */
 export const CHAT_TURN_ATTRIBUTE = 'data-chat-turn'
 /** On a settled user row; the submission hold keys on its arrival. */
@@ -112,6 +139,12 @@ export const PROCESS_ACTIVITY_SELECTOR = 'button[data-process-activity]'
 export const TURN_PROCESS_SELECTOR = 'button[data-turn-process]'
 /** A fold: the host's DisclosureRow, and every other control that opens and closes something. */
 export const DISCLOSURE_ROW_SELECTOR = '[data-disclosure-row]'
+/**
+ * On a row the host lets the reader open and fold: present while it stands
+ * open. A thinking row is folded when this is absent, which is how the lane
+ * tells its own press from a row the reader already opened.
+ */
+export const EXPANDED_ATTRIBUTE = 'data-expanded'
 export const FOLD_TOGGLE_SELECTOR = '[aria-expanded]'
 /** Controls whose opening is skipped whole: a turn's header and its trigger notice. */
 export const FOLD_SKIPPED_CONTROL_SELECTOR = '[data-turn-process], [data-turn-trigger]'
