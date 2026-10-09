@@ -301,7 +301,7 @@ function checkAttributes(read, srcDir) {
   const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const full = path.join(dir, entry.name)
     if (entry.isDirectory()) return walk(full)
-    return entry.name.endsWith('.ts') && !entry.name.endsWith('.test.ts') ? [full] : []
+    return /\.tsx?$/.test(entry.name) && !/\.test\.tsx?$/.test(entry.name) ? [full] : []
   })
   const code = walk(srcDir).map((file) => fs.readFileSync(file, 'utf8')).join('\n')
   for (const [name, where] of read) {

@@ -1,7 +1,7 @@
 import { subscribeMutations } from '../../core/bus'
 import { requestFrame } from '../../core/frame'
 import { beginChatFoldToggle, endChatFoldToggle, isChatFoldToggle } from './fold-toggle'
-import { RUNNING_STATE, THINK_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { EXPANDED_ATTRIBUTE, ROW_PHASE_ATTRIBUTE, RUNNING_STATE, THINK_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
 
 /**
  * Keep a thinking row open while the model is still reasoning, and fold it
@@ -53,11 +53,11 @@ export function createReasoningFold() {
       // A frame sits between collecting and settling, and the row may be
       // gone by then — clicking an element outside the document does nothing.
       if (!row.isConnected) continue
-      const phase = row.getAttribute('data-state') ?? ''
+      const phase = row.getAttribute(ROW_PHASE_ATTRIBUTE) ?? ''
       if (phase === '') continue
       // The reader has decided this row's state in this phase: leave it.
       if (touchedIn.get(row) === phase) continue
-      if (row.hasAttribute('data-expanded') === (phase === RUNNING_STATE)) continue
+      if (row.hasAttribute(EXPANDED_ATTRIBUTE) === (phase === RUNNING_STATE)) continue
       // A press that changed nothing will not change anything next time either.
       if (attemptedIn.get(row) === phase) continue
       attemptedIn.set(row, phase)
@@ -88,7 +88,7 @@ export function createReasoningFold() {
     if (!(target instanceof Element)) return
     const row = target.closest(THINK_ROW_SELECTOR)
     if (row === null) return
-    touchedIn.set(row, row.getAttribute('data-state') ?? '')
+    touchedIn.set(row, row.getAttribute(ROW_PHASE_ATTRIBUTE) ?? '')
   }
 
   // Streaming changes the DOM far faster than this needs to run, so one scan
@@ -131,7 +131,7 @@ export function createReasoningFold() {
     subtree: true,
     childList: true,
     attributes: true,
-    attributeFilter: ['data-state', 'data-expanded'],
+    attributeFilter: [ROW_PHASE_ATTRIBUTE, EXPANDED_ATTRIBUTE],
   }, onRecords)
   document.addEventListener('click', rememberReaderTouched, true)
   document.addEventListener('keydown', rememberReaderTouched, true)

@@ -33,12 +33,6 @@ export const THINK_ROW_SELECTOR = '[data-variant="think"]'
 export const ROW_PHASE_ATTRIBUTE = 'data-state'
 /** The phase value while the model is still thinking, or a call is still running. */
 export const RUNNING_STATE = 'running'
-/**
- * One compaction record: the divider the host mounts when a session compacts,
- * and the one the reader triggers himself. Both are flow rows of their own.
- */
-export const MANUAL_COMPACTION_KIND = 'manual-compaction'
-export const COMPACTION_KIND = 'compaction'
 /** The markdown layer marks the container with this while an assistant message streams. */
 export const STREAMING_SELECTOR = '[data-streaming]'
 /** The same contract as an attribute name: the reveal watches it appearing and going. */
@@ -91,21 +85,6 @@ export const PROCESS_BODY_SELECTOR = '[data-step-process-body]'
 export const PROCESS_CONTENT_SELECTOR = '[data-step-process-content]'
 /** On a process group's root while this tier does not cap the body (detailed, fully expanded). */
 export const PROCESS_EXPANDED_MODE_ATTRIBUTE = 'data-group-expanded-mode'
-/**
- * On every row the host counts as part of a turn's process: its reasoning, its
- * tool calls, its intermediate commentary and its other process records. The
- * turn's final answer is not a member.
- */
-export const TURN_PROCESS_MEMBER_ATTRIBUTE = 'data-turn-process-member'
-/**
- * One part of an assistant step: the host splits the step's row in two —
- * `reasoning` for its thinking, `response` for its formal output — and writes
- * the part on the row. A row with no part is the whole step, and the part of a
- * response row is also what its flow key is keyed by.
- */
-export const CHAT_GROUP_PART_ATTRIBUTE = 'data-chat-group-part'
-/** The part value the host writes on a step's formal-output row. */
-export const CHAT_GROUP_PART_RESPONSE = 'response'
 /** On every chat row: the turn the row belongs to. */
 export const CHAT_TURN_ATTRIBUTE = 'data-chat-turn'
 /** On a settled user row; the submission hold keys on its arrival. */
@@ -141,8 +120,7 @@ export const TURN_PROCESS_SELECTOR = 'button[data-turn-process]'
 export const DISCLOSURE_ROW_SELECTOR = '[data-disclosure-row]'
 /**
  * On a row the host lets the reader open and fold: present while it stands
- * open. A thinking row is folded when this is absent, which is how the lane
- * tells its own press from a row the reader already opened.
+ * open. A thinking row is folded when this is absent.
  */
 export const EXPANDED_ATTRIBUTE = 'data-expanded'
 export const FOLD_TOGGLE_SELECTOR = '[aria-expanded]'
@@ -219,6 +197,8 @@ export const HEADER_CORNER_SELECTOR = '[class*="headerCorner"]'
 export const CONVERSATION_HEADER_SELECTOR = '[class*="_header"]'
 /** The view-tab strip inside the header, whose box the band placement keeps clear of. */
 export const VIEW_TABS_STRIP_SELECTOR = '[class*="_tabs"]'
+/** The same strip by the host's own mark; its `role="tab"` children list the registered views in order. */
+export const VIEW_TABLIST_SELECTOR = '[data-conversation-tabs]'
 
 /* ---------- the document, the shell and the browser API ---------- */
 

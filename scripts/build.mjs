@@ -137,7 +137,7 @@ const PACKAGE = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf
 const PACKAGE_ID = PACKAGE.name
 
 /** The packages the host's loader hands the factory's `require`; never bundled. */
-const HOST_PACKAGES = ['react', 'react/jsx-runtime', 'react-dom/client', '@deepseek-ai/dsh-client-ui-primitives']
+const HOST_PACKAGES = ['react', 'react/jsx-runtime', 'react-dom/client', '@deepseek-ai/dsh-client-ui-primitives', '@deepseek-ai/dsh-client-store']
 
 /** Stands where the build id goes until the bundle's own hash is known. */
 const BUILD_ID_SLOT = '%%BUILD_ID%%'
@@ -366,6 +366,8 @@ async function main() {
     write: false,
     metafile: true,
     logLevel: 'silent',
+    // TSX compiles to the automatic runtime the host's loader provides (D57), as tsconfig.json declares.
+    jsx: 'automatic',
     external: HOST_PACKAGES,
     // The factory around the body is part of the output, so the source map
     // counts its lines.

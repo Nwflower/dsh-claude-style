@@ -10,6 +10,7 @@
     "ui": { "$ref": "#/$defs/localizedTable" },
     "settings": { "$ref": "#/$defs/localizedTable" },
     "ban": { "$ref": "#/$defs/localizedTable" },
+    "reader": { "$ref": "#/$defs/localizedTable" },
     "families": { "type": "array", "items": { "$ref": "#/$defs/copyRule" } },
     "tiers": { "type": "array", "items": { "$ref": "#/$defs/copyRule" } },
     "brands": {

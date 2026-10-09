@@ -50,7 +50,7 @@ const tierName = () => tier
  * follow an animation, a glide or a dwell over time. The quick tier skips them
  * whole, and says so in its log.
  */
-const TIMING_CASES = ['chat-follow', 'chat-fold', 'chat-reveal', 'chat-send', 'chat-process', 'crab-states', 'deepy', 'popovers']
+const TIMING_CASES = ['chat-follow', 'chat-fold', 'chat-reveal', 'chat-send', 'crab-states', 'deepy', 'popovers']
 
 /**
  * Which cases cover which directory under `packages/client/src/features/`, gathered from the

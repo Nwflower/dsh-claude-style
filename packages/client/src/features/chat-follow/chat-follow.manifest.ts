@@ -5,7 +5,7 @@ export default {
   id: 'chatFollow',
   order: 190,
   reads: ['chatFold'],
-  contracts: ['chat.call', 'chat.flow', 'chat.flow-block', 'chat.following-tail', 'chat.following-tail-attribute', 'chat.scroller', 'chat.shimmer', 'chat.streaming', 'chat.think-row', 'chat.think-running', 'composer.seat', 'process.body', 'process.content', 'process.expanded-mode'],
+  contracts: ['chat.call', 'chat.flow', 'chat.flow-block', 'chat.following-tail', 'chat.following-tail-attribute', 'chat.phase', 'chat.scroller', 'chat.shimmer', 'chat.streaming', 'chat.think-row', 'chat.think-running', 'composer.seat', 'process.body', 'process.content', 'process.expanded-mode'],
   pref: 'chatAnimations',
   prefValues: [CHAT_ANIMATIONS_ENHANCED],
   yieldsTo: 'dsh-chat-ux',

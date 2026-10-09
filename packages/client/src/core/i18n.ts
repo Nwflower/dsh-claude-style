@@ -59,6 +59,15 @@ export function settingsCopy(key: string, fallback: string, params?: CopyParams)
 }
 
 /**
+ * One reading-view string (D57): the view follows the shell language like the
+ * settings page, with the English constant as the fallback for a failed fetch.
+ */
+export function readerCopy(key: string, fallback: string, params?: CopyParams) {
+  const text = modelCopy === null ? '' : localized(modelCopy.reader[key])
+  return fillTemplate(text || fallback, params)
+}
+
+/**
  * One account-hold easter-egg string, in the language the `banLocale`
  * preference names — NOT the shell's language. The page reproduces a real
  * Claude screen, so it is read in the language Claude wrote it in whatever

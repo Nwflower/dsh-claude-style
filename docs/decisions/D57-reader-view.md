@@ -1,36 +1,40 @@
 # D57. 重绘档是插件自己的会话视图
 
-- **状态**：待实施
+- **状态**：部分实施
 - **分组**：功能
 - **关联**：取代 D55、D56；D12、D26、D29、D32、D36、D39、D41、D42、D43、D44、D45、D51
-- **现状**：「重绘」档仍是 `packages/client/src/features/chat-process/` 的覆盖层，按被取代的两条写法在宿主写出的 DOM 上改属性；阅读视图落地的同一提交里移除这个目录、它的冒烟探针、端到端场景 `process` 与契约表里只为它而设的条目
+- **现状**：视图依赖的投影字段还没有写进契约模块，契约场景也只在 Chat 视图下核对；阅读视图下的核对由端到端场景 `reader` 与冒烟用例 `chat-reader` 承担
 
 ## 决定
 
-- 「重绘」档改由新功能 `chat-reader` 承担（`packages/client/src/features/chat-reader/`，清单 id `chatReader`，`load: 'deferred'`，挂在 `chatAnimations` 的 `redraw` 档）：它向宿主公开的 `conversation.view` 列表槽位注册一项视图（id `dsh-claude-reader`），从会话投影直接渲染这一会话——`useChat` 的 `order` 与 `nodes`、`useSession` 的运行与加载状态、`useProjection('inbox')` 的待发消息。「关闭」与「增强」两档照旧覆盖宿主的 Chat 视图，增强档的 chat-* 功能在阅读视图里不安装。
-- 视图的选中：注册之后经宿主会话外壳的原生 store（`conversation.session` 槽位上的那份，`setView`）选中阅读视图，宿主 store 的 `view` 为 `null` 时也选它；读者自己点到别的标签，本页内不再抢回。宿主的 Chat 标签留着：宿主按 `openView` 把请求（搜索跳转、查看工具调用）发给 Chat 时，读者能看到自己落在哪个视图。档位离开「重绘」时注销视图，`view` 还停在阅读视图上就写回 `null`，宿主据此回到 Chat。
+- 「重绘」档改由新功能 `chat-reader` 承担（`packages/client/src/features/chat-reader/`，清单 id `chatReader`，`load: 'deferred'`，挂在 `chatAnimations` 的 `redraw` 档）：它在宿主公开的 `conversation.view` 列表槽位里以 Chat 视图自己的 id `chat`、名字与顺序注册一项视图，优先级 `-1` 低于宿主的默认值 0，槽位注册表的遮蔽规则（同一格里优先级最低的那项渲染）让它代替宿主的 Chat 渲染；它从会话投影直接渲染这一会话——`useChat` 的 `order` 与 `nodes`、`useSession` 的运行与加载状态、`useProjection('inbox')` 的待发消息。「关闭」与「增强」两档照旧覆盖宿主的 Chat 视图，增强档的 chat-* 功能在阅读视图里不安装。
+- 视图的位置：宿主的 Chat 登记留在下面不动，视图注销或崩溃（错误边界让出那一格）时它自己回来；宿主转给 Chat 的一切（`openView` 的请求、视图偏好回落到 Chat）都落到阅读视图，会话外壳的 store 不需要改写。宿主的标签条按列表里的全部登记画标签，被遮蔽的那项也画，会出现两个都选中 `chat` 的标签：视图在宿主自己那份标签上写 `data-dsh-claude-reader-shadowed-tab` 隐藏它，只剩一个标签时整条写 `data-dsh-claude-reader-lone-tab` 隐藏，与宿主只有一个视图时不画标签条一致。标签与登记按注册表的顺序一一对应，开发者工具关闭时宿主不列 `trajectory`；标签条落后于注册表的那一次重绘里两者对不上，这一遍不改标记。
+- 视图的登记：文件、技能、分叉、历史与图片的回调借用宿主 Chat 视图登记时的注入，所以阅读视图只在 Chat 已经登记时登记——启动时插件分批加载，Chat 可能晚到，早到的视图会在渲染时找不到它而让槽位的错误边界停在出错状态。视图里先于复制文档算出的文字（折叠的计数行）随调度器的文案变化重算。
+- 状态的位置：轮次进行中的每一种状态（等待模型、思考、输出、准备工具输入、使用工具、等你操作）由同一条状态行说出，固定在最新一条消息下面，即宿主 Chat「深度求索中」的位置；等待模型时它带计时，过 10 秒标出「暂未响应」，进行中轮次的过程也从这一行开合。已结束的轮次在自己顶部留一条状态行，写用时并开合过程。
 - 渲染照搬 dsh-better-display 0.3.6 的阅读视图（MIT），逐模块移植并按本仓库的约定重写：
   - 折叠规则取它的两条：轮次进行中，新出现的一段思考把同一条链上此前的思考、正文与工具收成一行（`思考×N · 输出×M · 工具×K · 记录×J`），用户插话重置这条链；轮次以 `completed` 关闭时，过程与中间叙述收起、只留最终回答，失败、中断、未知终态与等待批准保持展开；读者选中文字期间推迟折叠，历史轮次随时可以重新展开。
   - 推理卡片、逐词出现、数字跳变、折叠时序（收缩、计数、停顿、展开）与工具行（目标、diff 行数、计时）都是视图自己的组件，时长与曲线沿用它的数值；「动画」为「减弱」时一律直接落位（D26）。
-  - 正文的逐词出现需要在 Markdown 渲染之前分配每个词的出现时刻，所以正文走它的 Markdown 管线分叉（它自己由宿主 `dsh-client-ui-primitives` 的 Markdown 改出）；micromark、mdast 与 KaTeX 作为开发依赖打进 `chat-reader` 的块里，包的运行时依赖仍为零（D36）。KaTeX 的样式与字体用宿主页面随 `MarkdownText` 已经加载的那一份。
-  - 宿主的官方控件经槽位渲染，不复制官方渲染器：工具详情走 `tool.call.toolview`，回答操作走 `conversation.chat.assistant-actions`，产物卡片走轮次尾部的槽位；子槽位只能有一个声明者，所以按它的 `official-slots` 映射在本插件的名字空间里重新登记。
+  - 正文由宿主 `dsh-client-ui-primitives` 的 `MarkdownText` 渲染，代码高亮、文件链接、本地图片与公式都与宿主一致，不分叉 Markdown 管线。逐词出现落在渲染出的文字上：视图按到达顺序给新出现的每个词分配出现时刻（节奏同参考），用 CSS 自定义高亮（`CSS.highlights`）把还在出现的词分成 8 档，`::highlight(dsh-claude-reader-fade-<档>)` 以 `color-mix(in srgb, var(--dsh-claude-reader-ink) <比例>, transparent)` 着色，350 ms 内由透明走到原色，不改宿主的 DOM 结构。高亮伪元素里的 `currentColor` 解析不到元素自己的颜色，所以视图读出词所在元素的计算颜色，以内联自定义属性 `--dsh-claude-reader-ink` 写在那个元素上（宿主的 Markdown 元素不带 `style`，React 不会改写它）。参考的 1 px 模糊没有对应：高亮只能改颜色。
+  - 宿主的官方控件经槽位渲染，不复制官方渲染器：工具详情走 `tool.call.toolview`，回答操作走 `conversation.chat.assistant-actions`，产物卡片走轮次尾部的槽位；子槽位只能有一个声明者，所以按它的 `official-slots` 映射在本插件的名字空间里重新登记。复制、分叉、其它插件加的回答操作与完成时刻放在轮次尾部那一行上，与宿主 Chat 的轮次尾部同位，分叉锚点取轮次的收束消息。
+  - 视图自己不画的节点种类（上下文注入、命令、压缩、重试、轮次错误与以后新增的种类）交给宿主自己的节点渲染器；过程记录随轮次的过程开合。一处渲染失败只换下那一块或那一个轮次（D12）。
   - 样式改写成普通 CSS（D51），类名 `dsh-claude-reader-*`，色值、字号与圆角取 `tokens.json`；它 918 行的 `Reader.tsx` 按职责拆开（停止线 750 行）；它吞掉错误的 `catch` 按 D12 去掉。
   - 组件写成 TSX：`tsconfig.json` 打开 `jsx: react-jsx`，esbuild 按同一设置以自动运行时编译，`react/jsx-runtime` 与 `react` 一样由宿主的加载器提供、不进产物（D36）；构建的「每个源文件都被导入」检查、lint 的停止线与功能模块检查、单元测试都把 `.tsx` 当作源文件。功能的主模块仍是 `<main>.ts`（D42）。
-- 与其它功能和插件的接口：视图在自己的行上写出宿主 ChatView 的同名属性（`data-chat-flow`、`data-chat-flow-kind`、`data-chat-flow-key`、`data-chat-anchor-key`、`data-chat-node-key` 与 `data-pending-steering`），三档都运行的功能（turn-nav、turn-status、mascot、composer、chat-send）与第三方插件（rewind 读回退锚点）按原契约读到它；契约表里这些条目注明阅读视图同样写出，契约场景在阅读视图下再核对一遍（D44、D45）。滚动位置仍经滚动主人写（D41）。
+- 与其它功能和插件的接口：视图在自己的行上写出宿主 ChatView 的同名属性（栏上的 `data-chat-flow`，每个轮次的 `data-chat-turn`，用户行、回答与轮次尾部行上的 `data-chat-flow-kind`、`data-chat-flow-key`、`data-chat-anchor-key`、`data-chat-node-key`，模型或轮次工作期间状态行上的 `data-chat-running`，待发消息上的 `data-submission-echo` 与 `data-pending-steering`），三档都运行的功能（turn-nav、turn-status、mascot、composer、chat-send）与第三方插件（rewind 读回退锚点）按原契约读到它；契约表里这些条目注明阅读视图同样写出（D44）。滚动位置仍经滚动主人写（D41）。
 - 让位：对 dsh-chat-ux 让位（D32）；页面上 `conversation.view` 已有 dsh-better-display 的视图（id `reader`）时不注册，两份阅读视图不并存。
-- 宿主版本：视图读的投影类型来自宿主内部包（`dsh-client-ui-chat`、`dsh-client-ui-conversation`、`dsh-session`、`dsh-client-store`），以开发依赖固定到已验证的宿主版本（现为 `0.2.1-alpha.1`），`engines.dsh` 收窄到同一范围；视图依赖的投影字段——节点种类、块种类、回合的状态与终态、轮次尾部的收束步——写进契约模块（D44），契约场景在真实宿主上核对。
-- 不移植：MCP Apps 内嵌框架、在文件夹中显示文件的私有路由、它自己的设置页与产物打开方式偏好。移植的源文件头注明出处，它的 MIT 许可全文随包放在 `THIRD_PARTY_NOTICES.md`（加入 `package.json` 的 `files`）。
+- 宿主版本：视图读的投影类型来自宿主内部包（`dsh-client-ui-chat`、`dsh-client-ui-conversation`、`dsh-session`、`dsh-client-store`、`dsh-agent`、`dsh-client-locale` 等），以开发依赖固定到 `0.2.1-alpha.1`。桌面端随带的宿主是 0.2.0 一线（`0.2.0-rc.2`），它的工具块没有 `args` 与 `name`、只留 `call.argsRaw`：视图经宿主 `dsh-util-values` 的 `PartialArguments` 从原始参数文本读出同样的全量读取器（打进 `chatReader` 的块里，包的运行时依赖仍为零），两条线都能读。`engines.dsh` 不收窄：收窄会让整个插件在桌面端停用。运行时由宿主加载器提供的包是 `react`、`react/jsx-runtime`、`react-dom/client`、`dsh-client-ui-primitives` 与 `dsh-client-store`。视图依赖的投影字段——节点种类、块种类、回合的状态与终态、轮次尾部的收束步、工具块的参数——写进契约模块（D44），契约场景在真实宿主上核对。
+- 不移植：MCP Apps 内嵌框架、在文件夹中显示文件的私有路由、它自己的设置页、自动折叠开关、产物打开方式偏好与它自己的轮次导航条（三档共用的 turn-nav 承担）。移植的源文件头注明出处，它与 `dsh-util-values` 的 MIT 许可全文随包放在 `THIRD_PARTY_NOTICES.md`（加入 `package.json` 的 `files`）。
 
 ## 理由
 
-- 覆盖层改写不了宿主的文本节点与 Markdown 解析，也拿不到工具块里的数据：逐词出现、按回合终态判断的折叠、带 diff 行数的工具行都做不到，被取代的两条决策已经自认这些缺口。视图自己渲染才能全部做到。
-- `conversation.view` 是宿主公开的扩展点（D43 认可的正式入口）：宿主的 Chat 视图原样保留，「关闭」「增强」两档完全不受影响，「重绘」随时可以退回。
+- 覆盖层拿不到会话投影：回合的终态、轮次的收束步与工具块里的数据都不在宿主的 DOM 上，按回合终态判断的折叠、带 diff 行数的工具行与推理卡片都做不到，被取代的两条决策已经自认这些缺口。视图自己渲染才能全部做到。
+- `conversation.view` 是宿主公开的扩展点，优先级遮蔽是注册表公开的规则（D43 认可的正式入口）：宿主的 Chat 视图原样登记在下面，「关闭」「增强」两档完全不受影响，「重绘」随时可以退回。读者要的是换掉对话界面，与 Chat 并列的标签会让宿主的请求与视图偏好落到读者不想要的那一边。
 - 照搬一份读者已经在用的实现，比按数值在宿主的 DOM 上仿写更接近它的手感，也省去重新推导每条时序。
 
 ## 代价
 
-- 投影类型来自宿主的内部包，宿主升级可能改结构；固定版本与契约场景只能提前报出失配，修复仍要人工跟进。
+- 投影类型来自宿主的内部包，宿主升级可能改结构，桌面端与 npm 上的宿主也不在同一版本线上；固定版本与契约场景只能提前报出失配，修复仍要人工跟进。
 - 一份数千行的渲染器归本仓库维护，dsh-better-display 之后的修复需要逐条判断是否搬过来。
+- 宿主的标签条读全部登记而不是每格渲染的那一项，隐藏宿主自己的 Chat 标签靠按顺序对应标签与登记；宿主改动标签条的来源或顺序，两个 Chat 标签会重新出现，由端到端场景 `reader` 报出。
 - 阅读视图里没有增强档的跟随、自动开合与文件变更行，由视图自己的跟随与折叠代替；三档共用的功能要靠视图写出同名属性维持，漏写一条就表现为那项功能在「重绘」档失效。
 
 ## 重审条件

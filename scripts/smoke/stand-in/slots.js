@@ -56,5 +56,105 @@
       return out
     },
   } : undefined
-  host.slotRegistry = slotRegistry
+  host.slotRegistry = CASE === 'chat-reader' ? readerRegistry() : slotRegistry
+
+  /**
+   * The reader case's registry: the conversation view list with the host's own
+   * Chat entry (its injected callbacks are markers the probe compares), the
+   * official families with an entry each the mirror must copy or leave out,
+   * and the public faces the view composes with — a slot's spec, its entries in
+   * priority order, the entry that renders in each cell and a subscription.
+   * As in ui-slots, the lowest priority in a cell renders and shadows the rest.
+   */
+  function readerRegistry() {
+    var entries = []
+    var listeners = {}
+    var specs = {
+      'conversation.view': { kind: 'list', scope: 'session' },
+      'conversation.chat.assistant-actions': { kind: 'list', scope: 'session' },
+      'tool.call.toolview': { kind: 'keyed', scope: 'session' },
+      'conversation.chat.turnTail': { kind: 'list', scope: 'session' },
+      'conversation.chat.node': { kind: 'keyed', scope: 'session' },
+      'conversation.message.images': { kind: 'single', scope: 'session' },
+    }
+    var notify = function (key) {
+      var list = (listeners[key] || []).slice()
+      for (var i = 0; i < list.length; i++) list[i]()
+    }
+    var chatInjected = {
+      openFile: function () {},
+      openSkill: function () {},
+      loadOlder: function () {},
+      loadImage: function () {},
+      forkAt: function () {},
+      fileMentions: function () {},
+    }
+    window.__readerChatInjected = chatInjected
+    var priorityOf = function (entry) { return entry.options.priority === undefined ? 0 : entry.options.priority }
+    var orderOf = function (entry) { return entry.options.order === undefined ? 0 : entry.options.order }
+    var registry = {
+      spec: function (key) {
+        if (specs[key] !== undefined) return specs[key]
+        // A child seat is declared by the entry that lists it in its children.
+        for (var i = 0; i < entries.length; i++) {
+          var children = entries[i].children
+          if (children !== undefined && children[key] !== undefined) return children[key]
+        }
+        return undefined
+      },
+      entries: function (key) {
+        return entries.filter(function (entry) { return entry.name === key }).sort(function (a, b) {
+          return priorityOf(a) - priorityOf(b) || orderOf(a) - orderOf(b)
+        })
+      },
+      entriesOfSlot: function (key) {
+        var kind = registry.spec(key) === undefined ? undefined : registry.spec(key).kind
+        var seen = []
+        return registry.entries(key).filter(function (entry) {
+          var cell = kind === 'keyed' ? entry.options.key : kind === 'list' ? entry.options.id : ''
+          if (seen.indexOf(cell) >= 0) return false
+          seen.push(cell)
+          return true
+        })
+      },
+      subscribe: function (key, listener) {
+        listeners[key] = (listeners[key] || []).concat([listener])
+        return function () { listeners[key] = (listeners[key] || []).filter(function (other) { return other !== listener }) }
+      },
+      inject: function (key, callback) {
+        return registry.spec(key) === undefined ? function () {} : callback()
+      },
+      register: function (spec, component) {
+        var entry = {
+          name: spec.name,
+          options: { key: spec.key, id: spec.id, order: spec.order, label: spec.label, priority: spec.priority },
+          inject: spec.inject,
+          children: spec.children,
+          store: spec.store,
+          locale: spec.locale,
+          registrant: spec.registrant,
+          component: component,
+        }
+        entries.push(entry)
+        notify(spec.name)
+        var live = true
+        return function () {
+          if (!live) return
+          live = false
+          var at = entries.indexOf(entry)
+          if (at >= 0) entries.splice(at, 1)
+          notify(spec.name)
+        }
+      },
+    }
+    window.__readerRegisterChat = function () {
+      return registry.register({ name: 'conversation.view', id: 'chat', order: 0, label: 'Chat', inject: function () { return chatInjected } }, function ChatView() {})
+    }
+    window.__readerStopChat = window.__readerRegisterChat()
+    registry.register({ name: 'tool.call.toolview', key: 'bash' }, function BashView() {})
+    registry.register({ name: 'conversation.chat.node', key: 'user' }, function UserRow() {})
+    registry.register({ name: 'conversation.chat.node', key: 'context' }, function ContextRow() {})
+    window.__readerSlots = registry
+    return registry
+  }
 })()

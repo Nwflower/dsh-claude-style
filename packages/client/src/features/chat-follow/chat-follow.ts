@@ -3,7 +3,7 @@ import { observeSize, subscribeMutations } from '../../core/bus'
 import { requestFrame } from '../../core/frame'
 import { motionReduced } from '../../core/prefs'
 import { createChatProcessFollow } from './process-follow'
-import { CHAT_CALL_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_SELECTOR, CONVERSATION_SCROLL_SELECTOR, FLOW_BLOCK_SELECTOR, FOLLOWING_TAIL_ATTRIBUTE, RUNNING_STATE, SHIMMER_SELECTOR, STREAMING_SELECTOR, THINK_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { CHAT_CALL_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_SELECTOR, CONVERSATION_SCROLL_SELECTOR, FLOW_BLOCK_SELECTOR, FOLLOWING_TAIL_ATTRIBUTE, ROW_PHASE_ATTRIBUTE, RUNNING_STATE, SHIMMER_SELECTOR, STREAMING_SELECTOR, THINK_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { conversationColumn, conversationScroller, findFollowTailButton } from '../../shared/chat-dom'
 import { createStamp } from '../../shared/dom'
 import { SCROLL_EASE_LEAD_PX, easeScrollToEndFor, handBackFollow, holdFollowButton, joinScrollOwner, readerHolds, releaseFollowButton, stopScrollFor, submissionHolds, takeBackHostPin } from '../../shared/scroll-owner'
@@ -365,7 +365,7 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
         if (record.oldValue === RUNNING_STATE
           && record.target instanceof Element
           && record.target.matches(THINK_ROW_SELECTOR)
-          && record.target.getAttribute('data-state') !== RUNNING_STATE) {
+          && record.target.getAttribute(ROW_PHASE_ATTRIBUTE) !== RUNNING_STATE) {
           lastActivityAt = performance.now()
           structureSeen = true
         }
@@ -392,7 +392,7 @@ export function createChatFollowGuard(foldBusy: () => boolean) {
     subtree: true,
     childList: true,
     characterData: true,
-    attributeFilter: ['data-state', FOLLOWING_TAIL_ATTRIBUTE],
+    attributeFilter: [ROW_PHASE_ATTRIBUTE, FOLLOWING_TAIL_ATTRIBUTE],
     attributeOldValue: true,
   }, onRecords)
 

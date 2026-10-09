@@ -16,7 +16,7 @@
  */
 
 /** The end-to-end lane's scenarios; the lane checks its own names against these. */
-export const E2E_SCENARIOS = ['conversation', 'narrow', 'tool', 'process', 'send', 'scroll', 'contract', 'importance', 'shots'] as const
+export const E2E_SCENARIOS = ['conversation', 'narrow', 'tool', 'reader', 'send', 'scroll', 'contract', 'importance', 'shots'] as const
 
 /** One timing assumption, and how it is held. */
 interface HostTimingEntry {
@@ -60,12 +60,6 @@ export const HOST_TIMING: HostTimingEntry[] = [
     assumption: 'A thinking row carries `data-state="running"` while the model is thinking, and another value once that piece of work has settled.',
     use: 'The fold and the reveal read the phase to know whether the row is still moving.',
     checks: ['scenario:contract'],
-  },
-  {
-    id: 'host.turn-process-fold',
-    assumption: 'A completed turn folds its process by writing hidden="until-found" on each process group, on its body and on every member row, and it re-keys its rows as the turn settles: a row that stops being part of the process loses data-turn-process-member.',
-    use: 'The redraw lane keeps those boxes laid out through its collapse animation and hands them back afterwards, and it clears a segment\u2019s fold mark through the rows it marked rather than through a fresh reading, which no longer holds a re-keyed row (D55).',
-    checks: ['scenario:process'],
   },
   {
     id: 'host.rail-window',

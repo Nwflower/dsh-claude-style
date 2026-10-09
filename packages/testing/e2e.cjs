@@ -17,7 +17,7 @@
  * writes can reach another.
  *
  * Usage: node packages/testing/e2e.cjs [--scenario <name>[,<name>…]] [--headed] [--out <dir>] [--delay <ms>]
- *        scenarios: conversation, tool, send, scroll, contract, importance, shots
+ *        scenarios: conversation, narrow, tool, scroll, send, contract, reader, importance, shots
  *        (default: every scenario)
  */
 'use strict'
@@ -25,7 +25,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 const { start, openPage, waitForSkin, dismissOverlays, firstRunOverlayText } = require('./dsh-web.cjs')
 const { importanceScenario } = require('./importance.cjs')
-const { processScenario } = require('./process-lane.cjs')
+const { readerScenario } = require('./reader-view.cjs')
 const { startMockLlm } = require('./mock-llm.cjs')
 const { CANVAS } = require('../../scripts/shoot.cjs')
 const { sanitizePage } = require('../../scripts/shared/privacy.cjs')
@@ -609,8 +609,8 @@ const SCENARIOS = {
       ]
     },
   },
-  /** The redraw tier's process lane: segments at the formal outputs (packages/testing/process-lane.cjs, D55). */
-  process: processScenario({ check }),
+  /** The redraw tier's reading view: the live fold, the word fade, the completed turn (packages/testing/reader-view.cjs, D57). */
+  reader: readerScenario({ check }),
   /** Every `!important` the skin writes is needed on the real page (packages/testing/importance.cjs, D51). */
   importance: importanceScenario({ check, sendPrompt, waitForTurn, host: HOST }),
   /** Both palettes captured to the run's out directory and swept for personal data. */
@@ -712,7 +712,7 @@ async function main() {
       + `${unknown.length > 0 ? `; named there but missing here: ${unknown.join(', ')}` : ''}`
       + `${unnamed.length > 0 ? `; run here but unnamed there: ${unnamed.join(', ')}` : ''}`)
   }
-  const names = (argOf('scenario') ?? 'conversation,narrow,tool,send,scroll,contract,importance,shots').split(',').map((name) => name.trim()).filter(Boolean)
+  const names = (argOf('scenario') ?? 'conversation,narrow,tool,send,scroll,contract,reader,importance,shots').split(',').map((name) => name.trim()).filter(Boolean)
   const out = path.resolve(argOf('out') ?? DEFAULT_OUT)
   const options = {
     headed: args.includes('--headed'),

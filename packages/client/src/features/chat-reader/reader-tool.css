@@ -1,0 +1,186 @@
+/* ---------- chat reader: tool rows (D57) ---------- */
+/* Ported from dsh-better-display's Reader.module.css (MIT). The row itself is
+   the host's DisclosureRow and the opened result is the host's own tool view;
+   these are the parts neither draws: the summary, the clock, the state and the
+   detail panel's tabs. */
+
+body[data-dsh-claude-style] .dsh-claude-reader-tool {
+  min-width: 0;
+  color: var(--dsw-alias-label-secondary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-reader-tool-separator {
+  flex: none;
+  width: 2px;
+  height: 2px;
+  margin: 0 8px;
+  border-radius: 1px;
+  background: var(--dsw-alias-label-caption);
+}
+
+body[data-dsh-claude-style] .dsh-claude-reader-tool-summary {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: var(--dsh-content-font-size-secondary, 13px);
+  line-height: 24px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-reader-tool-row:hover .dsh-claude-reader-tool-summary {
+  color: var(--dsw-alias-label-primary);
+}
+
+/* A slow call keeps its number after it returns; a fast one shows nothing once done. */
+body[data-dsh-claude-style] .dsh-claude-reader-tool-elapsed {
+  flex: none;
+  margin-left: 8px;
+  font-size: 11px;
+  line-height: 18px;
+  opacity: .72;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+body[data-dsh-claude-style] .dsh-claude-reader-tool-elapsed[data-dsh-claude-reader-slow] {
+  opacity: 1;
+  font-weight: 500;
+  color: var(--dsw-alias-state-warn-label);
+}
+
+body[data-dsh-claude-style] .dsh-claude-reader-tool-state {
+  flex: none;
+  margin-left: 8px;
+  font-size: 11px;
+  line-height: 18px;
+  white-space: nowrap;
+}
+
+body[data-dsh-claude-style] .dsh-claude-reader-tool-state[data-dsh-claude-reader-tool-phase="preparing"],
+body[data-dsh-claude-style] .dsh-claude-reader-tool-state[data-dsh-claude-reader-tool-phase="running"] {
+  color: var(--dsw-alias-brand-primary);
+}
+
+/* A running call breathes: a dot whose halo expands and fades. */
+body[data-dsh-claude-style] .dsh-claude-reader-tool-state[data-dsh-claude-reader-tool-phase="preparing"]::before,
+body[data-dsh-claude-style] .dsh-claude-reader-tool-state[data-dsh-claude-reader-tool-phase="running"]::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  border-radius: 50%;
+  vertical-align: middle;
+  background: currentColor;
+  animation: dsh-claude-reader-glow 1.4s ease-in-out infinite;
+}
+
+@keyframes dsh-claude-reader-glow {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 60%, transparent); opacity: 1; }
+  70% { box-shadow: 0 0 0 7px transparent; opacity: .7; }
+  100% { box-shadow: 0 0 0 0 transparent; opacity: 1; }
+}
+
+body[data-dsh-claude-style] .dsh-claude-reader-tool-state[data-dsh-claude-reader-tool-phase="failed"] {
+  color: var(--dsw-alias-state-error-primary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-reader-tool-state[data-dsh-claude-reader-tool-phase="interrupted"] {
+  opacity: .7;
+}
+
+body[data-dsh-claude-style] .dsh-claude-reader-tool-details {
+  min-width: 0;
+  margin: 6px 0 0 22px;
+  overflow: hidden;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 8px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-reader-tool-ledger {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 10px 14px 0;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 11px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+body[data-dsh-claude-style] .dsh-claude-reader-tool-tabs {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 0 14px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-reader-tool-tabs > button {
+  padding: 10px 1px 8px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  line-height: 20px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-reader-tool-tabs > button[aria-selected="true"] {
+  border-bottom-color: var(--dsw-alias-brand-primary);
+  color: var(--dsw-alias-label-primary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-reader-tool-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px 14px 14px;
+  font-size: 13px;
+  line-height: 22px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-reader-tool-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 20px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-reader-tool-raw-label {
+  margin: 0;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+body[data-dsh-claude-style] .dsh-claude-reader-tool-raw {
+  max-height: 400px;
+  margin: 0;
+  padding: 12px;
+  overflow: auto;
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-layer-2);
+  color: var(--dsw-alias-label-primary);
+  font: 12px/20px var(--ds-font-family-code);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+body[data-dsh-claude-style] .dsh-claude-reader-tool-children {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin: 8px 0 4px 6px;
+  padding-left: 16px;
+  border-left: 1px solid var(--dsw-alias-border-l2);
+}
+
+body[data-dsh-claude-style] .dsh-claude-reader-official-tool,
+body[data-dsh-claude-style] .dsh-claude-reader-official-node,
+body[data-dsh-claude-style] .dsh-claude-reader-official-tail {
+  min-width: 0;
+}

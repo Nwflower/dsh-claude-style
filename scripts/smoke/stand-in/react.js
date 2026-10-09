@@ -2,7 +2,7 @@
  * The host's React, as far as the skin uses it: elements are inert unless the
  * probe renders a registered component, ui-primitives are inert element
  * stand-ins, each react-dom root records what it was asked to do, and the module
- * loader hands the bundle all of them, the JSX runtime included.
+ * loader hands the bundle all of them, the JSX runtime and the client store included.
  */
 (function () {
   // Elements are inert unless the probe renders a registered component: then
@@ -33,6 +33,15 @@
     useCallback: function (fn) { return fn },
     useRef: function (v) { return { current: v } },
     useLayoutEffect: function () {},
+    // The reading view's share: contexts, memo and class components exist at
+    // module load; rendering them is the real host's (the end-to-end lane).
+    createContext: function (value) { return { Provider: function () { return null }, defaultValue: value } },
+    useContext: function (context) { return context.defaultValue },
+    useId: function () { return 'id' },
+    useSyncExternalStore: function (subscribe, getSnapshot) { return getSnapshot() },
+    memo: function (component) { return component },
+    Component: function Component() {},
+    Fragment: 'Fragment',
   }
   window.__react = react
   // The automatic JSX runtime the TSX modules compile to: the same inert
@@ -89,6 +98,24 @@
       return root
     },
   }
+  // The host's client store, as far as the reading view uses it: one observable value.
+  var clientStore = {
+    createSnapshotStore: function (value) {
+      var current = value
+      var listeners = []
+      return {
+        getSnapshot: function () { return current },
+        subscribe: function (listener) {
+          listeners.push(listener)
+          return function () { listeners = listeners.filter(function (other) { return other !== listener }) }
+        },
+        set: function (next) {
+          current = next
+          listeners.slice().forEach(function (listener) { listener() })
+        },
+      }
+    },
+  }
   window.__ModuleLoader__ = {
     load: function (def) {
       window.__skin = def.factory(function (name) {
@@ -96,6 +123,7 @@
         if (name === 'react/jsx-runtime') return jsxRuntime
         if (name === 'react-dom/client') return reactDom
         if (name === '@deepseek-ai/dsh-client-ui-primitives') return primitives
+        if (name === '@deepseek-ai/dsh-client-store') return clientStore
         throw new Error('no module ' + name)
       })
     },
