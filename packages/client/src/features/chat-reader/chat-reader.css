@@ -339,7 +339,13 @@ body[data-dsh-claude-style] .dsh-claude-reader-live-status {
   align-items: center;
   min-width: 0;
   min-height: 32px;
-  margin: 0 0 12px;
+  /* The line reads with the newest message, not as a row of its own: both gaps
+     around it come in by 30px, drawn over the turn above rather than through
+     it, so the turn's own rows and the follow keep their positions. */
+  margin: -30px 0 -30px;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 -10px 0 var(--dsw-alias-bg-base), 0 10px 0 var(--dsw-alias-bg-base);
   font-size: 14px;
   line-height: 24px;
 }
@@ -438,7 +444,7 @@ body[data-dsh-claude-style] .dsh-claude-reader[data-dsh-claude-reader-motion="of
 @media (pointer: coarse) {
   body[data-dsh-claude-style] .dsh-claude-reader-disclosure-button,
   body[data-dsh-claude-style] .dsh-claude-reader-tool-tabs > button,
-  body[data-dsh-claude-style] .dsh-claude-reader-thought-action {
+  body[data-dsh-claude-style] .dsh-claude-reader-thought-line-toggle {
     min-height: 44px;
   }
 }

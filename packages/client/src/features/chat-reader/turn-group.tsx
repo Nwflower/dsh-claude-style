@@ -17,7 +17,7 @@ import type { Official } from './official-content'
 import { boundaryOf, forkAnchorSeq, hasProcessContent, isEarlierNarration, processChoiceKey, processExpanded, terminalLabel } from './projection'
 import type { ReaderGroup, TurnBoundary } from './projection'
 import { AnswerActions, AssistantNode, MainNode, ProcessNode, chatRowProps } from './reader-nodes'
-import { useChoice, useCopyRevision } from './reader-state'
+import { useChoice, useCopyRevision, useStepDisplay } from './reader-state'
 import { preparingLabel } from './tool-activity'
 import { ToolMedia, ToolRow } from './tool-row'
 
@@ -121,7 +121,7 @@ function StatusLane({ children }: { children: ReactNode }) {
 }
 
 /** The steps a closed turn's summary counts: everything but the reader's messages and the final answer. */
-function closedProcessSteps(steps: readonly LiveStep[], get: (key: string) => ChatConversationViewNode | undefined, boundary: TurnBoundary): LiveStep[] {
+function closedProcessSteps(steps: readonly LiveStep[], get: (key: string) => ChatConversationViewNode | undefined, boundary: TurnBoundary): readonly LiveStep[] {
   return steps.filter(step => {
     if (step.kind === 'user') return false
     if (step.kind !== 'body') return true
@@ -148,6 +148,9 @@ export const TurnGroup = memo(function TurnGroup({ group, sessionId, useChat, us
 }) {
   // The fold figures are text: a copy change computes them again.
   const copy = useCopyRevision()
+  // The host's work-details mode shapes this turn's process (core/step-display.ts).
+  const mode = useStepDisplay()
+  const verbose = mode === 'verbose'
   const snapshot = useChat(value => value)
   const nodes = snapshot.nodes
   const get = useCallback((key: string) => nodes.get(key), [nodes])
@@ -164,7 +167,7 @@ export const TurnGroup = memo(function TurnGroup({ group, sessionId, useChat, us
   const mainGroup = useMemo(() => startsWithUser ? { ...group, keys: group.keys.slice(1) } : group, [group, startsWithUser])
   const flow = useMemo(() => readerFlow(mainGroup, get), [mainGroup, get])
   const steps = useMemo(() => segmentLiveTurn(flow, get), [flow, get])
-  const liveItems = useMemo(() => presentLiveTurn(steps, boundary), [steps, boundary, copy])
+  const liveItems = useMemo(() => presentLiveTurn(steps, boundary, false, mode), [steps, boundary, mode, copy])
   const hasProcess = flowHasProcess(flow, get, boundary)
   // Only a live text selection holds the fold; a click, a focus or a scroll does not.
   const holdingSelection = selectedProcessKeys.some(key => flow.some(entry => entry.key === key)
@@ -194,10 +197,10 @@ export const TurnGroup = memo(function TurnGroup({ group, sessionId, useChat, us
       return node === undefined ? [] : [[key, node] as const]
     }))
     return {
-      items: holdingSelection ? presentLiveTurn(steps, boundary, true) : liveItems,
+      items: holdingSelection ? presentLiveTurn(steps, boundary, true, mode) : liveItems,
       snapshot: { ...snapshot, nodes: { ...nodes, get: (key: string) => captured.get(key), values: () => [...captured.values()] } },
     }
-  }, [snapshot, nodes, group, steps, boundary, liveItems, holdingSelection, copy])
+  }, [snapshot, nodes, group, steps, boundary, liveItems, holdingSelection, mode, copy])
   const hasTurnError = flow.some(entry => entry.kind === 'node' && get(entry.nodeKey)?.kind === 'turn-error')
   const terminal = terminalLabel(boundary.reason)
   const stopped = boundary.reason === 'interrupted' || boundary.reason === 'aborted'
@@ -211,7 +214,7 @@ export const TurnGroup = memo(function TurnGroup({ group, sessionId, useChat, us
       case 'reasoning':
       case 'body':
         return <BlockBoundary>
-          <AssistantNode {...node} nodeKey={step.nodeKey} boundary={boundary} partStart={step.start} processOpen={processOpen} folded={folded}
+          <AssistantNode {...node} nodeKey={step.nodeKey} boundary={boundary} partStart={step.start} processOpen={processOpen} folded={folded} verbose={verbose}
             pinned={pinnedKeys.includes(step.nodeKey)} motion={motion} onRead={pinProcess} returnFocusTo={processButton} />
         </BlockBoundary>
       case 'tool':

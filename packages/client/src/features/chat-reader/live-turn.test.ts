@@ -29,18 +29,18 @@ function chatNode(key: string, kind: string, data: unknown, anchorSeq: number, s
 }
 
 test('body or tool alone never folds, even after the first thought', () => {
-  expect(splitChain([reasoning('1')]).fold).toBeNull()
-  expect(splitChain([reasoning('1'), body('2'), tool('3')]).fold).toBeNull()
-  expect(splitChain([body('2'), tool('3')]).fold).toBeNull()
-  expect(splitChain([other('ctx'), reasoning('1'), body('2')]).fold).toBeNull()
+  expect(splitChain([reasoning('1')], 'standard').fold).toBeNull()
+  expect(splitChain([reasoning('1'), body('2'), tool('3')], 'standard').fold).toBeNull()
+  expect(splitChain([body('2'), tool('3')], 'standard').fold).toBeNull()
+  expect(splitChain([other('ctx'), reasoning('1'), body('2')], 'standard').fold).toBeNull()
 })
 
 test('a new thought folds every earlier step of its chain into one box', () => {
-  const second = splitChain([reasoning('1'), body('2'), tool('3'), reasoning('4'), tool('5')])
+  const second = splitChain([reasoning('1'), body('2'), tool('3'), reasoning('4'), tool('5')], 'standard')
   expect(second.fold?.map(step => step.key)).toEqual(['1', '2', '3'])
   expect(second.open.map(step => step.key)).toEqual(['4', '5'])
   expect(foldSummary(second.fold!)).toBe('Thinking×1 · Output×1 · Tools×1')
-  const third = splitChain([reasoning('1'), body('2'), tool('3'), reasoning('4'), tool('5'), reasoning('6'), body('7')])
+  const third = splitChain([reasoning('1'), body('2'), tool('3'), reasoning('4'), tool('5'), reasoning('6'), body('7')], 'standard')
   expect(third.fold?.map(step => step.key)).toEqual(['1', '2', '3', '4', '5'])
   expect(third.open.map(step => step.key)).toEqual(['6', '7'])
 })
@@ -52,6 +52,27 @@ test('the fold keeps its key and its steps\' keys as it grows, and a chain has o
   expect(grown.filter(item => item.kind === 'fold')).toHaveLength(1)
   expect(grown[0]).toMatchObject({ kind: 'fold', key: 'live-fold:1' })
   expect(grown[0]!.kind === 'fold' && grown[0]!.steps.map(step => step.key)).toEqual(['1', '2', '3', '4', '5'])
+})
+
+test('the work-details mode shapes the chain: one box, everything, or a box per intermediate output', () => {
+  const chain = [reasoning('1'), tool('2'), body('3'), reasoning('4'), tool('5')]
+  // Compact gathers the whole chain into one summary row.
+  expect(presentLiveTurn(chain, open, false, 'compact')).toMatchObject([{ kind: 'fold', summary: 'Thinking×2 · Output×1 · Tools×2' }])
+  // Standard gathers everything before the last thought.
+  expect(kinds(presentLiveTurn(chain, open, false, 'standard'))).toEqual([
+    ['fold', 'Thinking×1 · Output×1 · Tools×1', ['1', '2', '3']],
+    ['open', '4'], ['open', '5'],
+  ])
+  // Detailed leaves the trailing intermediate output as a row and gathers everything before it.
+  expect(kinds(presentLiveTurn(chain, open, false, 'detailed'))).toEqual([
+    ['fold', 'Thinking×1 · Output×1 · Tools×1', ['1', '2', '3']],
+    ['open', '4'], ['open', '5'],
+  ])
+  const after = presentLiveTurn([...chain, body('6')], open, false, 'detailed')
+  expect(kinds(after)).toEqual([
+    ['fold', 'Thinking×2 · Output×1 · Tools×2', ['1', '2', '3', '4', '5']],
+    ['open', '6'],
+  ])
 })
 
 test('a message from the reader mid-turn starts a new chain', () => {
@@ -114,8 +135,7 @@ test('a call no visible step names keeps its own place', () => {
   expect(segmentLiveTurn(flow, key => nodes.get(key)).map(step => step.key)).toEqual(['reader-tool:c1'])
 })
 
-test('steering in the flow starts a new chain, as a reader message does', () => {
-  const first: AssistantChatData = { status: 'settled', turn: 1, step: 0, blocks: [{ kind: 'reasoning', text: '先想' }, { kind: 'text', text: '先说' }], time: 1 }
+test('steering in the flow starts a new chain, as a reader message does', () => {  const first: AssistantChatData = { status: 'settled', turn: 1, step: 0, blocks: [{ kind: 'reasoning', text: '先想' }, { kind: 'text', text: '先说' }], time: 1 }
   const second: AssistantChatData = { status: 'running', turn: 1, step: 1, blocks: [{ kind: 'reasoning', text: '插入后再想' }], time: 2 }
   const nodes = new Map([
     ['a', chatNode('a', 'assistant-step', first, 10)],
@@ -123,7 +143,7 @@ test('steering in the flow starts a new chain, as a reader message does', () => 
     ['b', chatNode('b', 'assistant-step', second, 20, 1)],
   ])
   const flow = readerFlow({ key: 'turn:1', turn: 1, keys: ['a', 'steer', 'b'] }, key => nodes.get(key))
-  expect(kinds(presentLiveTurn(segmentLiveTurn(flow, key => nodes.get(key)), open))).toEqual([
+  expect(kinds(presentLiveTurn(segmentLiveTurn(flow, key => nodes.get(key)), open, false, 'standard'))).toEqual([
     ['open', 'a:reasoning:0'], ['open', 'a:body:1'],
     ['user', 'steer'],
     ['open', 'b:reasoning:0'],

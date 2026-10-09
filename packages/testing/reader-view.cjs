@@ -14,6 +14,7 @@
  * one press away.
  */
 'use strict'
+const { setWorkDetails } = require('./prompt.cjs')
 
 /** Everything one reading of the view needs, straight from the page. */
 const read = (page) => page.evaluate(() => {
@@ -31,6 +32,13 @@ const read = (page) => page.evaluate(() => {
     expanded: document.querySelector('.dsh-claude-reader-status-lane button')?.getAttribute('aria-expanded') ?? null,
     tools: document.querySelectorAll('.dsh-claude-reader-tool').length,
     thoughts: document.querySelectorAll('.dsh-claude-reader-thought').length,
+    // A finished turn's thoughts are one line each, until one is pressed open.
+    thoughtLines: [...document.querySelectorAll('.dsh-claude-reader-thought-line-text')].map((line) => Math.round(line.getBoundingClientRect().height)),
+    // Each reads "思考 · …" inside the thought's frame, which sets it apart from interim output.
+    thoughtFrames: [...document.querySelectorAll('.dsh-claude-reader-thought-line')].map((line) => ({
+      prefixed: (line.textContent ?? '').startsWith('思考 · '),
+      border: getComputedStyle(line).borderTopWidth,
+    })),
     commentary: [...document.querySelectorAll('.dsh-claude-reader-commentary')].map(text),
     copy: document.querySelectorAll('.dsh-claude-reader-answer-actions button').length,
     hostRows: document.querySelectorAll('[data-chat-flow] > [data-chat-flow-kind]:not(.dsh-claude-reader *)').length,
@@ -57,8 +65,11 @@ function readerScenario({ check }) {
      * the session the prompt opens, so the watch starts on the empty page.
      */
     async beforeSend({ page }) {
+      // The scratch home keeps whatever the host's work-details setting held
+      // last: this scenario reads `detailed`, the Web client's own default.
+      await setWorkDetails(page, 'detailed')
       await page.evaluate(() => {
-        const seen = { folds: 0, figures: [], fading: false, waiting: false, statuses: [], statusLines: 0, statusInTurn: false, laneWhileOpen: false }
+        const seen = { folds: 0, figures: [], fading: false, waiting: false, statuses: [], statusLines: 0, statusInTurn: false, laneWhileOpen: false, wrappedStatus: false, thoughtCards: 0, cardChrome: false }
         window.__liveReader = seen
         const sample = () => {
           const folds = [...document.querySelectorAll('[data-dsh-claude-reader-fold="live"]')]
@@ -74,10 +85,24 @@ function readerScenario({ check }) {
           seen.statusLines = Math.max(seen.statusLines, lines.length)
           for (const line of lines) {
             if (line.closest('.dsh-claude-reader-turn') !== null) seen.statusInTurn = true
-            const status = line.querySelector('.dsh-claude-reader-status-sizer')?.textContent ?? ''
-            if (status !== '' && !seen.statuses.includes(status)) seen.statuses.push(status)
+            const sizer = line.querySelector('.dsh-claude-reader-status-sizer')
+            const status = line.querySelector('.dsh-claude-reader-status')
+            const statusText = sizer?.textContent ?? ''
+            if (statusText !== '' && !seen.statuses.includes(statusText)) seen.statuses.push(statusText)
+            // A label that grows mid-swap must stay one line: the row is as tall as
+            // the sizer and the copies hang outside it.
+            const height = status === null ? 0 : parseFloat(getComputedStyle(status).lineHeight) || 24
+            if ((sizer?.getBoundingClientRect().height ?? 0) > height + 2) seen.wrappedStatus = true
+            for (const copy of line.querySelectorAll('.dsh-claude-reader-status-copy')) {
+              if (copy.getBoundingClientRect().height > height + 2) seen.wrappedStatus = true
+            }
           }
           if (document.querySelector('.dsh-claude-reader-turn[data-dsh-claude-reader-turn="open"] .dsh-claude-reader-status-lane') !== null) seen.laneWhileOpen = true
+          // A live thought's card holds its text and nothing else: no label, step count or controls.
+          for (const card of document.querySelectorAll('.dsh-claude-reader-thought')) {
+            seen.thoughtCards += 1
+            if (card.children.length !== 1 || card.querySelector('button') !== null) seen.cardChrome = true
+          }
         }
         new MutationObserver(sample).observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true })
         const tick = () => {
@@ -100,6 +125,15 @@ function readerScenario({ check }) {
       await page.click('.dsh-claude-reader-status-lane button')
       await page.waitForTimeout(1200)
       const opened = await read(page)
+      const lineHeight = () => page.evaluate(() => Math.round(document.querySelector('.dsh-claude-reader-thought-line')?.getBoundingClientRect().height ?? 0))
+      const before = await lineHeight()
+      await page.click('.dsh-claude-reader-thought-line-text')
+      await page.waitForTimeout(500)
+      const pressed = await page.evaluate(() => {
+        const line = document.querySelector('.dsh-claude-reader-thought-line')
+        return { open: line?.hasAttribute('data-dsh-claude-reader-open') ?? false, expanded: line?.querySelector('button')?.getAttribute('aria-expanded') ?? null }
+      })
+      pressed.grew = { before, after: await lineHeight() }
       return [
         check('the redraw tier puts the plugin\'s reading view in the session\'s scroller',
           folded.present && folded.inScroller && folded.column, JSON.stringify({ present: folded.present, inScroller: folded.inScroller, column: folded.column })),
@@ -110,6 +144,8 @@ function readerScenario({ check }) {
         check('while the turn ran, one status line under the newest message said every live state, the model\'s silence and the tools\' work alike',
           live !== null && live.statusLines === 1 && !live.statusInTurn && !live.laneWhileOpen && live.statuses.length >= 2,
           JSON.stringify(live && { lines: live.statusLines, inTurn: live.statusInTurn, lane: live.laneWhileOpen, statuses: live.statuses })),
+        check('a label that grew mid-swap stayed one line, and the status line never wrapped',
+          live !== null && live.wrappedStatus === false, JSON.stringify(live && { wrapped: live.wrappedStatus, statuses: live.statuses })),
         check('the reader\'s rows carry the host\'s row attributes',
           folded.userRows === 1 && folded.tailRows === 1, JSON.stringify({ user: folded.userRows, tail: folded.tailRows })),
         check('while the turn ran, each new thought folded the steps of its chain before it into one row',
@@ -124,9 +160,16 @@ function readerScenario({ check }) {
           folded.closed === '思考×3 · 输出×1 · 工具×2' && folded.expanded === 'false', JSON.stringify({ closed: folded.closed, expanded: folded.expanded })),
         check('the finished answer carries its actions',
           folded.copy >= 1, `copy=${folded.copy}`),
-        check('opening the status line lays the process out again',
-          opened.expanded === 'true' && opened.tools === 2 && opened.thoughts === 3 && opened.commentary.some((line) => line.includes('先记一句中间结论')),
-          JSON.stringify({ expanded: opened.expanded, tools: opened.tools, thoughts: opened.thoughts, commentary: opened.commentary })),
+        check('a live thought\'s card holds only its text',
+          live !== null && live.thoughtCards > 0 && !live.cardChrome, JSON.stringify(live && { cards: live.thoughtCards, chrome: live.cardChrome })),
+        check('opening the status line lays the process out again, each thought on one line',
+          opened.expanded === 'true' && opened.tools === 2 && opened.thoughts === 0 && opened.thoughtLines.length === 3 && opened.thoughtLines.every((height) => height > 0 && height <= 26)
+            && opened.commentary.some((line) => line.includes('先记一句中间结论')),
+          JSON.stringify({ expanded: opened.expanded, tools: opened.tools, thoughts: opened.thoughts, lines: opened.thoughtLines, commentary: opened.commentary })),
+        check('a folded thought reads "思考 · …" inside the thought\'s frame',
+          opened.thoughtFrames.length === 3 && opened.thoughtFrames.every((frame) => frame.prefixed && frame.border === '1px'), JSON.stringify(opened.thoughtFrames)),
+        check('pressing a thought\'s line opens its whole text and grows its frame',
+          pressed.open && pressed.expanded === 'true' && pressed.grew.after > pressed.grew.before, JSON.stringify(pressed)),
         check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),
       ]
     },

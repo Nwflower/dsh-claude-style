@@ -1,6 +1,8 @@
 import type { AssistantBlock, ToolCallBlock } from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type { AssistantChatData, ChatConversationViewNode, ToolChatData } from '@deepseek-ai/dsh-client-ui-chat/client'
 import { readerCopy } from '../../core/i18n'
+import { STEP_DISPLAY_DEFAULT } from '../../core/step-display'
+import type { StepDisplayMode } from '../../core/step-display'
 import { assistantSegments, hasVisibleBody } from './projection'
 import type { ReaderGroup, TurnBoundary } from './projection'
 import { activitySummary, argText, baseName, callArgs } from './tool-activity'
@@ -45,12 +47,20 @@ export function readerFlow(group: ReaderGroup, get: (key: string) => ChatConvers
   return flow.sort((left, right) => left.order - right.order)
 }
 
+/** One chain's folding, under the host's work-details mode. */
+export interface ChainFold {
+  fold: readonly LiveStep[] | null
+  open: readonly LiveStep[]
+}
+
+export type LiveStepList = readonly LiveStep[]
+
 export function liveFoldEnabled(boundary: TurnBoundary): boolean {
   return boundary.status === 'open'
 }
 
 /** The figures of a fold: `思考×N · 输出×M · 工具×K · 记录×J` in the reader's language. */
-export function foldSummary(steps: readonly LiveStep[]): string {
+export function foldSummary(steps: LiveStepList): string {
   let reasoning = 0
   let body = 0
   let tool = 0
@@ -69,13 +79,33 @@ export function foldSummary(steps: readonly LiveStep[]): string {
   return parts.length > 0 ? parts.join(' · ') : readerCopy('foldEarlier', 'Earlier steps')
 }
 
-/** One chain splits only when a new thought follows earlier thinking, body or tool work. */
-export function splitChain(chain: readonly LiveStep[]): { fold: readonly LiveStep[] | null, open: readonly LiveStep[] } {
+/** Whether any of these steps is work a fold may gather; a body step alone is the answer, not process. */
+function foldable(steps: LiveStepList): boolean {
+  return steps.some(step => step.kind === 'reasoning' || step.kind === 'body' || step.kind === 'tool')
+}
+
+/**
+ * One chain's fold and the steps left open, by mode: `compact` gathers the
+ * whole chain into one summary, `standard` gathers everything before the last
+ * thought, and `detailed` leaves the trailing intermediate output as a row and
+ * gathers what came before it. A chain whose open steps are its whole content
+ * is never folded.
+ */
+export function splitChain(chain: LiveStepList, mode: StepDisplayMode = STEP_DISPLAY_DEFAULT): ChainFold {
+  if (!foldable(chain)) return { fold: null, open: chain }
+  if (mode === 'compact') return { fold: chain, open: [] }
   const lastReasoning = chain.findLastIndex(step => step.kind === 'reasoning')
-  if (lastReasoning <= 0) return { fold: null, open: chain }
-  const prior = chain.slice(0, lastReasoning)
-  if (!prior.some(step => step.kind === 'reasoning' || step.kind === 'body' || step.kind === 'tool')) return { fold: null, open: chain }
-  return { fold: prior, open: chain.slice(lastReasoning) }
+  const boundary = mode === 'detailed' ? firstTrailingBody(chain, lastReasoning) : lastReasoning
+  if (boundary <= 0) return { fold: null, open: chain }
+  const prior = chain.slice(0, boundary)
+  return foldable(prior) ? { fold: prior, open: chain.slice(boundary) } : { fold: null, open: chain }
+}
+
+/** Where a chain's trailing run of body steps starts, falling back to its last thought. */
+function firstTrailingBody(chain: LiveStepList, lastReasoning: number): number {
+  let index = chain.length
+  while (index > 0 && chain[index - 1]!.kind === 'body') index -= 1
+  return index === chain.length ? lastReasoning : index
 }
 
 /** An assistant step as thinking runs, body runs and the root calls it made, in block order. */
@@ -181,14 +211,14 @@ export function toolSummary(entry: ToolActivityEntry): string {
 }
 
 /** The turn's steps as the reader sees them: user rows, folds and open steps. `held` keeps every step open (a live selection). */
-export function presentLiveTurn(steps: readonly LiveStep[], boundary: TurnBoundary, held = false): LiveTurnItem[] {
+export function presentLiveTurn(steps: LiveStepList, boundary: TurnBoundary, held = false, mode: StepDisplayMode = STEP_DISPLAY_DEFAULT): LiveTurnItem[] {
   const live = liveFoldEnabled(boundary) && !held
   const items: LiveTurnItem[] = []
   let chain: LiveStep[] = []
   const flush = () => {
     if (chain.length === 0) return
-    const { fold, open } = live ? splitChain(chain) : { fold: null, open: chain }
-    if (fold !== null && fold.length > 0) items.push({ kind: 'fold', key: `live-fold:${chain[0]!.key}`, steps: fold, summary: foldSummary(fold) })
+    const { fold, open } = live ? splitChain(chain, mode) : { fold: null, open: chain as readonly LiveStep[] }
+    if (fold !== null && fold.length > 0) items.push({ kind: 'fold', key: `live-fold:${fold[0]!.key}`, steps: fold, summary: foldSummary(fold) })
     for (const step of open) items.push({ kind: 'open', key: step.key, step })
     chain = []
   }

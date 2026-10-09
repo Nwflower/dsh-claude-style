@@ -17,6 +17,9 @@ interface Window {
   readonly __DSH_BOOT__?: { entries?: unknown }
 }
 
+/** Additions this skin puts on the global scope. */
+declare var __dshStepDisplay: { set: (mode: 'compact' | 'standard' | 'detailed' | 'verbose') => Promise<boolean>, read: () => string } | undefined
+
 /**
  * Marks the skin keeps on nodes it binds, so a later pass or a later
  * generation can tell its own binding apart from one it must redo.

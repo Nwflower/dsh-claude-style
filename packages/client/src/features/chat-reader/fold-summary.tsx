@@ -4,7 +4,7 @@ import { DiffBlock, diffTotals } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { DiffBlockLabels } from '@deepseek-ai/dsh-client-ui-primitives'
 import { readerCopy } from '../../core/i18n'
 import { FOLD_TIMING } from './fold-choreography'
-import type { LiveStep } from './live-turn'
+import type { LiveStep, LiveStepList } from './live-turn'
 import { Disclosure } from './motion'
 import { layoutEnd, layoutStart } from './reader-follow'
 import { callDiffHunks } from './tool-activity'
@@ -112,7 +112,7 @@ function MorphPanel({ open, children, onClosed }: { open: boolean, children: Rea
 }
 
 /** Every file a fold's calls changed, as counts that open the diff; nothing when no file changed. */
-function FoldDiff({ steps, label }: { steps: readonly LiveStep[], label: string }) {
+function FoldDiff({ steps, label }: { steps: LiveStepList, label: string }) {
   const hunks = useMemo(() => steps.flatMap(step => step.kind === 'tool' ? callDiffHunks(step.entry.block) : []), [steps])
   const [open, setOpen] = useState(false)
   const [visible, setVisible] = useState(false)
@@ -157,7 +157,7 @@ function FoldDiff({ steps, label }: { steps: readonly LiveStep[], label: string 
 export function FoldSummary({ kind, summary, steps, open, onChange, motion, controls }: {
   kind: 'live' | 'closed'
   summary: string
-  steps: readonly LiveStep[]
+  steps: LiveStepList
   open: boolean
   onChange: (open: boolean) => void
   motion: boolean

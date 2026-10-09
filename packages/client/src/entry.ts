@@ -3,6 +3,7 @@ import { loadHdsl, loadUsername, setHostContext } from './core/host'
 import type { HostContext } from './core/host'
 import { loadModelCopy } from './core/model-copy'
 import { adoptPrefs, adoptSettingsForm, clearPrefsAttributes, disposePrefsBinding, prefs, readPrefs, retireComposerRestyle, retireFooterTakeover, subscribePrefs } from './core/prefs'
+import { bindStepDisplay, clearStepDisplayAttribute, disposeStepDisplay } from './core/step-display'
 import { installScheduler, reportFeatureFailure } from './core/scheduler'
 import type { HandleName, Ui } from './core/scheduler'
 import { mountStylesheet, parkForeignSheets } from './core/stylesheet'
@@ -91,6 +92,7 @@ export function apply(ctx: HostContext) {
     // Each body attribute goes with whoever writes it: a feature's own with
     // its teardown above, the preference mirror's here, the stamps last.
     clearPrefsAttributes()
+  clearStepDisplayAttribute()
     body.removeAttribute('data-dsh-claude-style')
     body.removeAttribute(HANDOFF_ATTR)
     // This generation's own sheet, handed over rather than taken away when a
@@ -120,6 +122,7 @@ export function apply(ctx: HostContext) {
     }
     setHostContext(null)
     disposePrefsBinding()
+    disposeStepDisplay()
   }
 
   // Registered before anything is installed: registered last, a feature that
@@ -312,6 +315,9 @@ export function apply(ctx: HostContext) {
   // The service can mount after this plugin: wait for it declaratively and
   // bind then, so the first settings change never meets an unbound store.
   if (typeof ctx.inject === 'function') ctx.inject(['configForms'], () => { adoptSettingsForm(ctx) })
+  // The host's work-details mode is read from the settings service, from the
+  // namespace the host's own Chat target owns (core/step-display.ts, D57).
+  bindStepDisplay(ctx)
   loadModelCopy()
   loadUsername()
   loadHdsl()

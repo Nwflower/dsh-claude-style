@@ -85,17 +85,22 @@ body[data-dsh-claude-style] .dsh-claude-reader-status-stage {
   max-width: 100%;
 }
 
+/* A label never wraps: the row is as tall as the sizer, and the copies take the
+   stage's width, which the sizer grows only in the frame after a text change.
+   Without `nowrap` the outgoing copy broke at that earlier width and hung out
+   of the row. The sizer keeps to one line as well, so its width is the label's
+   single-line width. */
 body[data-dsh-claude-style] .dsh-claude-reader-status-sizer {
   display: block;
   visibility: hidden;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
 }
 
 body[data-dsh-claude-style] .dsh-claude-reader-status-copy {
   position: absolute;
   inset: 0 0 auto 0;
   display: block;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
   transform: translateY(0);
   filter: blur(0);
   opacity: 1;

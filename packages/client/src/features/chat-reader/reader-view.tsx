@@ -16,6 +16,7 @@ import { usePinnedSelection } from './motion'
 import { groupNodes } from './projection'
 import { useReaderFollow } from './reader-follow'
 import { UserBubble } from './reader-nodes'
+import { refreshStepDisplay } from '../../core/step-display'
 import { useCopyRevision, useMotion } from './reader-state'
 import { StreamMotionContext } from './streaming'
 import { TurnGroup } from './turn-group'
@@ -147,6 +148,12 @@ export function ReaderView(props: ReaderViewProps) {
   const pinnedKeys = usePinnedSelection(root, '[data-dsh-claude-reader-key]')
   const selectedProcessKeys = usePinnedSelection(root, '[data-dsh-claude-reader-process]')
   const follow = useReaderFollow(root, motion)
+  // A turn opening is the outside edge of the reader's turns: the host's
+  // work-details setting is read again there, the moment a change would show.
+  const turnCount = groups.length
+  useLayoutEffect(() => {
+    refreshStepDisplay()
+  }, [turnCount, running])
   const streamMotion = useMemo(() => ({ enabled: motion, activatedAt }), [motion, activatedAt])
   const labels = useMemo((): MarkdownLabels => ({
     code: {

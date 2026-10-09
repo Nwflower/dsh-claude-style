@@ -16,7 +16,7 @@
  */
 
 /** The end-to-end lane's scenarios; the lane checks its own names against these. */
-export const E2E_SCENARIOS = ['conversation', 'narrow', 'tool', 'reader', 'send', 'scroll', 'contract', 'importance', 'shots'] as const
+export const E2E_SCENARIOS = ['conversation', 'narrow', 'tool', 'reader', 'stepDisplay', 'send', 'scroll', 'contract', 'importance', 'shots'] as const
 
 /** One timing assumption, and how it is held. */
 interface HostTimingEntry {
@@ -66,5 +66,11 @@ export const HOST_TIMING: HostTimingEntry[] = [
     assumption: 'The turn rail renders only the marks near its scroll position, and its scroller\u2019s content is `count \u00d7 pitch + 2 \u00d7 (inset \u2212 pitch / 2)` pixels tall.',
     use: 'The skin\u2019s navigator replaces the rail in place and matches its pitch; the geometry is the one number the DOM contract borrows from the host.',
     checks: ['scenario:contract'],
+  },
+  {
+    id: 'host.work-details',
+    assumption: 'The settings service answers `describe()` with an `{ ok, value: { namespaces } }` payload, the `ui-chat` namespace carries `transcriptView` once the reader picked a mode, and a write bumps that namespace\u2019s revision.',
+    use: 'The reading view shapes a turn\u2019s process by that value and re-reads it when a turn opens; the lane puts the host in each mode through the same service (D57).',
+    checks: ['scenario:stepDisplay', 'test:packages/client/src/core/step-display.test.ts'],
   },
 ]

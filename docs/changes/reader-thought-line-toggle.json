@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-09",
+  "group": "fixes",
+  "order": 0,
+  "external": false,
+  "zh": "「重绘」档里收进折叠的一段思考，展开后再点它的文字没有反应，只能点右侧的折角按钮才能收起。文字上的点击此前只在收起时挂着，展开后整行文字只剩选择文字的作用。现在文字两态都可点：收起时点它展开，展开时点它收起；一次以选中文字收尾的落点不改开合，选中文字期间推迟折叠的行为照旧。",
+  "en": "In the Redraw tier a thought inside a fold could only be closed from the chevron button: once its line was open, a press on the text itself did nothing, because the text carried a click only while closed and left the whole line to text selection afterwards. The text now toggles in both states — closed, a press opens it, open, a press closes it again — while a press that ended as a selection changes nothing, and a selection still holds the fold off as before."
+}

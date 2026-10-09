@@ -114,6 +114,8 @@ export const ToolRow = memo(function ToolRow({ entry, turnClosed, motion, onRead
 }) {
   // A memoized row: copy changes re-render it (reader-state.ts).
   useCopyRevision()
+  // The host's work-details mode never opens a call on its own: a tool's details
+  // stand shut until the reader presses its row.
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<'result' | 'input' | 'raw'>('result')
   const control = useRef<HTMLElement | null>(null)

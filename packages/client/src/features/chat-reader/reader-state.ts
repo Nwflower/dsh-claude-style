@@ -1,15 +1,23 @@
 import { useCallback, useSyncExternalStore } from 'react'
 import { motionReduced, subscribePrefs } from '../../core/prefs'
+import { readStepDisplayMode, subscribeStepDisplay } from '../../core/step-display'
+import type { StepDisplayMode } from '../../core/step-display'
 
 /**
  * State the reading view keeps beside the host's (D57): whether it may move,
- * and the reader's own open or closed choices, per session so that switching
- * tabs and back keeps them.
+ * how much of a turn's work the host's work-details row asks for, and the
+ * reader's own open or closed choices, per session so that switching tabs and
+ * back keeps them.
  */
 
 /** Whether the view animates: the plugin's Animation setting resolved against the system's (D26). */
 export function useMotion(): boolean {
   return useSyncExternalStore(subscribePrefs, () => !motionReduced())
+}
+
+/** The host's work-details mode (core/step-display.ts): the shape every turn's process is drawn in. */
+export function useStepDisplay(): StepDisplayMode {
+  return useSyncExternalStore(subscribeStepDisplay, readStepDisplayMode)
 }
 
 /** session id → choice key → open. */
