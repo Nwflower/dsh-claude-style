@@ -375,15 +375,20 @@ body[data-dsh-claude-style] [class*="sessionRow"] [class*="_slot"] > [data-slot]
 
 /* Session status ongoing indicator: a circular progress ring. The ring's
    geometry needs no weight of its own: these selectors already outrank the
-   host's class rules, and only the border has to beat a host `!important`. */
+   host's class rules. The track is a plain shorthand on purpose — the ring's
+   own colour is the longhand after it, and a shorthand with `!important` beat
+   that head out of the cascade, so the ring read as one even circle. */
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) svg[data-state="ongoing"] {
+  border-color: rgba(20, 20, 19, 0.12) !important;
+}
 body[data-dsh-claude-style] svg[data-state="ongoing"] {
   width: 10px;
   height: 10px;
   box-sizing: border-box;
   border-radius: 50%;
   corner-shape: round;
-  border: 1.5px solid rgba(255, 255, 255, 0.18) !important;
-  border-top-color: var(--dsw-alias-label-primary) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  border-top-color: var(--dsw-alias-label-primary);
   animation: 0.85s linear infinite dsh-claude-win11-spin;
   transform-origin: center center;
   display: inline-block;
@@ -393,8 +398,7 @@ body[data-dsh-claude-style] svg[data-state="ongoing"] {
   background: transparent;
 }
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) svg[data-state="ongoing"] {
-  border-color: rgba(20, 20, 19, 0.12) !important;
-  border-top-color: var(--dsw-alias-label-secondary) !important;
+  border-top-color: var(--dsw-alias-label-secondary);
 }
 body[data-dsh-claude-style] svg[data-state="ongoing"] * {
   display: none;

@@ -635,7 +635,12 @@ function importanceScenario(lane) {
       const named = states.filter((item) => !item.name.startsWith('hover '))
       const checks = [
         lane.check('每个页面形态都审过', named.length >= 12, `${named.map((item) => `${item.name}: ${item.removable}/${item.needed}${item.sentBack === 0 ? '' : `/退回 ${item.sentBack}`}`).join('；')}；悬停 ${hovered} 处`),
-        lane.check('没有多余的 !important', idle.length === 0, `${declarations.length} 处：需要 ${count('needed')}，没匹配到元素 ${count('unmatched')}，多余 ${idle.length}${idle.length === 0 ? '' : `（${idle.slice(0, 3).map((item) => `${item.selector.replace(/\s+/g, ' ').slice(0, 70)} { ${item.prop} }`).join('；')}…）`}`),
+        // A declaration the audit proved removable — one that matched an element
+        // in a state and changed nothing there — is weight to drop. One that
+        // never matched an element is not: the host element it dresses (a docked
+        // panel, a scrollable table, the settings area) is outside the surfaces
+        // this scenario walks, and no state could decide it.
+        lane.check('没有多余的 !important', idle.length === 0, `${declarations.length} 处：需要 ${count('needed')}，多余 ${idle.length}${idle.length === 0 ? '' : `（${idle.slice(0, 3).map((item) => `${item.selector.replace(/\s+/g, ' ').slice(0, 70)} { ${item.prop} }`).join('；')}…）`}；另有 ${count('unmatched')} 处从未匹配到元素（本次页面形态未覆盖），${count('declared twice')} 处重复声明，${count('third-party')} 处属于第三方应答，${count('unreadable pseudo-element')} 处伪元素读不到计算值`),
         lane.check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),
       ]
       if (process.env.DSH_IMPORTANCE_REFERENCE !== undefined) {
