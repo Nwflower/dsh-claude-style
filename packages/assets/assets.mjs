@@ -340,9 +340,11 @@ export function routeText(plan, { file, name, type, text }) {
  *
  * @param libDir - the build output directory.
  * @param plan - the plan (planAssets).
+ * @param options.compress - bytes → their brotli form; the build passes one that
+ *     reads its cache (scripts/build-cache.mjs).
  * @returns `{ files, bytes }` of what was written, for the build log.
  */
-export function writeAssets(libDir, plan) {
+export function writeAssets(libDir, plan, { compress = brotliCompressSync } = {}) {
   const dir = path.join(libDir, 'assets')
   fs.rmSync(dir, { recursive: true, force: true })
   fs.mkdirSync(dir, { recursive: true })
@@ -350,7 +352,7 @@ export function writeAssets(libDir, plan) {
   let bytes = 0
   for (const entry of plan.routed) {
     const compressed = entry.text !== undefined
-    const payload = compressed ? brotliCompressSync(entry.bytes) : entry.bytes
+    const payload = compressed ? compress(entry.bytes) : entry.bytes
     fs.writeFileSync(path.join(dir, entry.name + (compressed ? '.br' : '')), payload)
     assets[entry.name] = { type: entry.type, encoding: compressed ? 'br' : null, bytes: entry.bytes.byteLength }
     bytes += payload.byteLength

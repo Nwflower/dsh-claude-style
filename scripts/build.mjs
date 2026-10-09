@@ -11,6 +11,7 @@
  *   packages/client/src/entry.ts                 apply(): the FEATURES table, the deferred features installed from their chunks (D39)
  *   packages/client/src/constants.ts             constants; also evaluated here for the stylesheet gates
  *   scripts/chunks.mjs                           the deferred features' chunks (D39), routed like the assets
+ *   scripts/build-cache.mjs                      the vectors and brotli payloads kept between runs in .debug/build-cache/
  *   packages/client/src/core/ packages/client/src/shared/ packages/client/src/features/<name>/   the modules, TypeScript, strict
  *   packages/client/src/features/<dir>/<main>.manifest.ts   each feature's manifest (D42), read by scripts/shared/read-manifests.cjs
  *   packages/client/src/theme/*.css and the feature stylesheets   concatenated by rank (THEME_SHEETS and the manifests),
@@ -40,10 +41,12 @@ import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 import vm from 'node:vm'
+import { brotliCompressSync } from 'node:zlib'
 import esbuild from 'esbuild'
 import { PNG } from 'pngjs'
 import { buildHostHalf } from '../packages/host/build.mjs'
 import { buildFonts, checkClaimed, checkSheetPixels, checkSheets, planAssets, routeText, vectorizeSheet, writeAssets } from '../packages/assets/assets.mjs'
+import { openBuildCache } from './build-cache.mjs'
 import { checkContracts, checkCycles, checkListed, checkManifests, checkScrollOwner, checkTypes } from './build-checks.mjs'
 import { chunkFiles, chunkModules, ownModuleIds, splitChunks } from './chunks.mjs'
 import { TOKEN_SHEET, buildStylesheet, loadTokens, writeTokenTable } from './css.mjs'
@@ -67,6 +70,10 @@ const BRAND_ASSETS = path.join(ASSETS, 'brand')
 const STYLE_GUIDE = path.join(ROOT, 'docs', 'STYLE.md')
 const LIB = path.join(ROOT, 'lib')
 const OUT = path.join(LIB, 'client.js')
+/** The slow steps' results between runs (scripts/build-cache.mjs). */
+const CACHE_DIR = path.join(ROOT, '.debug', 'build-cache')
+/** The code that checks and vectorizes a sheet: part of every vector's cache key. */
+const ASSETS_MODULE = path.join(ROOT, 'packages', 'assets', 'assets.mjs')
 
 /**
  * The plugin icon the 0.1.7 plugin manifest reads.
@@ -242,19 +249,29 @@ function loadCombines(plan, claimed) {
  * and rebuilt as SVG over the sprite's own cell layout. The vector is what the
  * asset plan ships under the sheet's name; the PNG is an input of the build.
  *
+ * A vector is cached under the PNG's bytes, its table entry, the scale, the
+ * gutter and the code of packages/assets/assets.mjs: a hit stands for a sheet
+ * that already passed checkSheetPixels with exactly these inputs.
+ *
+ * @param cache - the build cache (scripts/build-cache.mjs).
  * @returns the vectors to ship, keyed by their path under packages/assets/src/, and the
  *     PNGs they take the place of.
  */
-function vectorizeDeepySheets() {
+function vectorizeDeepySheets(cache) {
   const dir = path.join(ASSETS, 'mascot', 'deepy')
   const sheets = CONSTANTS.DEEPY_SHEETS
   checkSheets('DEEPY_SHEETS', sheets, [52, 52], dir, (name) => [`${name}.png`])
+  const code = fs.readFileSync(ASSETS_MODULE)
   const generated = new Map()
   const replaced = new Set()
   for (const [name, sheet] of Object.entries(sheets)) {
-    const image = PNG.sync.read(fs.readFileSync(path.join(dir, `${name}.png`)))
-    checkSheetPixels('DEEPY_SHEETS', name, image, sheet, CONSTANTS.DEEPY_SCALE)
-    const { svg } = vectorizeSheet(image, sheet.box, CONSTANTS.DEEPY_SCALE, CONSTANTS.DEEPY_GUTTER)
+    const png = fs.readFileSync(path.join(dir, `${name}.png`))
+    const shape = JSON.stringify({ sheet, scale: CONSTANTS.DEEPY_SCALE, gutter: CONSTANTS.DEEPY_GUTTER })
+    const svg = cache.get('deepy-vector', [code, png, shape], () => {
+      const image = PNG.sync.read(png)
+      checkSheetPixels('DEEPY_SHEETS', name, image, sheet, CONSTANTS.DEEPY_SCALE)
+      return Buffer.from(vectorizeSheet(image, sheet.box, CONSTANTS.DEEPY_SCALE, CONSTANTS.DEEPY_GUTTER).svg, 'utf8')
+    }).toString('utf8')
     generated.set(`mascot/deepy/${name}.svg`, svg)
     replaced.add(`mascot/deepy/${name}.png`)
   }
@@ -271,7 +288,8 @@ async function main() {
   // Every image, its content hash and its address (D38). Nothing is written
   // yet: the plan is read by everything below, and a refusal anywhere in this
   // build must leave lib/ as it was.
-  const deepy = vectorizeDeepySheets()
+  const cache = openBuildCache(CACHE_DIR)
+  const deepy = vectorizeDeepySheets(cache)
   const plan = planAssets({ assetsDir: ASSETS, generated: deepy.generated, replaced: deepy.replaced })
   const claimed = new Set()
   const images = {}
@@ -445,7 +463,9 @@ async function main() {
   fs.copyFileSync(iconSource, iconTarget)
   console.log(`built lib/${ICON_FILE} (${fs.statSync(iconTarget).size} bytes) from packages/assets/src/brand/${ICON_SOURCE}`)
 
-  const assets = writeAssets(LIB, plan)
+  // Brotli's output is fixed by its input and the library's version, so both key it.
+  const compress = (bytes) => cache.get('brotli', [process.versions.brotli, bytes], () => brotliCompressSync(bytes))
+  const assets = writeAssets(LIB, plan, { compress })
   console.log(`built lib/assets/ (${assets.files} routed of ${plan.entries.size} assets, ${assets.bytes} bytes) from packages/assets/src/`)
 
   const fonts = buildFonts({ assetsDir: ASSETS, libDir: LIB })
@@ -453,6 +473,9 @@ async function main() {
 
   const host = await buildHostHalf({ outDir: LIB })
   console.log(`built lib/host/ (${host.files} modules) from packages/host/src/`)
+  const pruned = cache.prune()
+  const { hits, misses } = cache.counts()
+  console.log(`build cache .debug/build-cache/: ${hits} reused, ${misses} computed${pruned > 0 ? `, ${pruned} unused for a day removed` : ''}`)
 }
 
 await main()
