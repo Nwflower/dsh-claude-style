@@ -59,9 +59,9 @@ function decisionNumbers() {
 
 // 1. The stop line.
 const sources = [
-  ...filesUnder(path.join(ROOT, 'packages'), ['.ts', '.css', '.cjs', '.js']),
+  ...filesUnder(path.join(ROOT, 'packages'), ['.ts', '.tsx', '.css', '.cjs', '.js']),
   ...filesUnder(path.join(ROOT, 'scripts'), ['.mjs', '.cjs', '.js']),
-].filter((file) => !/\.test\.ts$/.test(file) && !/\.d\.ts$/.test(file))
+].filter((file) => !/\.test\.tsx?$/.test(file) && !/\.d\.ts$/.test(file))
 for (const file of sources) {
   const lines = fs.readFileSync(file, 'utf8').split('\n').length
   const exception = OVERSIZE[relative(file)]
@@ -139,7 +139,7 @@ for (const file of prose) {
 // handles the manifest `reads` (D42). The whole registry type is the entry's
 // and the scheduler's; a feature module importing it would read any handle
 // with nothing declared.
-const featureModules = filesUnder(path.join(ROOT, 'packages', 'client', 'src', 'features'), ['.ts']).filter((file) => !/\.(test|manifest)\.ts$/.test(file))
+const featureModules = filesUnder(path.join(ROOT, 'packages', 'client', 'src', 'features'), ['.ts', '.tsx']).filter((file) => !/\.(test\.tsx?|manifest\.ts)$/.test(file))
 let featureUiChecked = 0
 for (const file of featureModules) {
   const text = fs.readFileSync(file, 'utf8')

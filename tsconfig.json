@@ -8,6 +8,7 @@
     "noEmit": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
+    "jsx": "react-jsx",
     "skipLibCheck": true,
     "types": [],
     "paths": {

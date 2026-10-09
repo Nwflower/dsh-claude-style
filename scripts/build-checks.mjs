@@ -42,8 +42,8 @@ export function checkListed(bundled, sheets) {
   })
   for (const file of walk('')) {
     if (file.endsWith('.css') && !listed.has(file)) throw new Error(`build: packages/client/src/${file} is in no list; add it to its feature's manifest or to THEME_SHEETS`)
-    if (file.endsWith('.manifest.ts') || file.endsWith('.test.ts') || file.endsWith('.d.ts')) continue
-    if (file.endsWith('.ts') && !bundled.has(file)) throw new Error(`build: packages/client/src/${file} is imported by no module the bundle reaches`)
+    if (/\.(manifest\.ts|test\.tsx?|d\.ts)$/.test(file)) continue
+    if (/\.tsx?$/.test(file) && !bundled.has(file)) throw new Error(`build: packages/client/src/${file} is imported by no module the bundle reaches`)
   }
 }
 

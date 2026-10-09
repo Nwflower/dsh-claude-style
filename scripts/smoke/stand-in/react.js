@@ -2,7 +2,7 @@
  * The host's React, as far as the skin uses it: elements are inert unless the
  * probe renders a registered component, ui-primitives are inert element
  * stand-ins, each react-dom root records what it was asked to do, and the module
- * loader hands the bundle all three.
+ * loader hands the bundle all of them, the JSX runtime included.
  */
 (function () {
   // Elements are inert unless the probe renders a registered component: then
@@ -35,6 +35,13 @@
     useLayoutEffect: function () {},
   }
   window.__react = react
+  // The automatic JSX runtime the TSX modules compile to: the same inert
+  // elements, with the children already inside props.
+  var jsxRuntime = {
+    jsx: function (type, props) { return react.createElement(type, props) },
+    jsxs: function (type, props) { return react.createElement(type, props) },
+    Fragment: 'Fragment',
+  }
   // The host's ui-primitives, as far as the skin uses them: the components its
   // own rows and notices render (inert here, like every element above).
   var primitive = function (type) { return function (props) { return { type: type, props: props } } }
@@ -86,6 +93,7 @@
     load: function (def) {
       window.__skin = def.factory(function (name) {
         if (name === 'react') return react
+        if (name === 'react/jsx-runtime') return jsxRuntime
         if (name === 'react-dom/client') return reactDom
         if (name === '@deepseek-ai/dsh-client-ui-primitives') return primitives
         throw new Error('no module ' + name)

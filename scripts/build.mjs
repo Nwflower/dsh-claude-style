@@ -137,7 +137,7 @@ const PACKAGE = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf
 const PACKAGE_ID = PACKAGE.name
 
 /** The packages the host's loader hands the factory's `require`; never bundled. */
-const HOST_PACKAGES = ['react', 'react-dom/client', '@deepseek-ai/dsh-client-ui-primitives']
+const HOST_PACKAGES = ['react', 'react/jsx-runtime', 'react-dom/client', '@deepseek-ai/dsh-client-ui-primitives']
 
 /** Stands where the build id goes until the bundle's own hash is known. */
 const BUILD_ID_SLOT = '%%BUILD_ID%%'
