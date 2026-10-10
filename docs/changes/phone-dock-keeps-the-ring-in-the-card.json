@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-10",
+  "group": "fixes",
+  "order": 2,
+  "external": false,
+  "zh": "手机宽度下，统计数字收进上下文弹层时那枚圆环不再跑出输入卡片：铺在工具栏行上的那条 dock 一直带着桌面端那份左右留白（给权限档位与模型、推理等级两块让出位置），它比这一宽度下的卡片还宽，把贴着它右缘的圆环一起顶出卡片、顶到窗口外；这一宽度下那份留白让位，圆环回到卡片右端、落在推理等级按钮之后。",
+  "en": "At a phone's width the context ring no longer leaves the input card when the numbers live in the context popover: the dock laid over the toolbar row kept the desktop reserve that clears the permission preset and the model and reasoning-level controls, which is wider than the card at that width, and it carried the ring pinned to its right edge out of the card and past the window. The reserve now stands down at this width, and the ring returns to the card's right end, after the reasoning-level control."
+}

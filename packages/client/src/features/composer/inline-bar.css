@@ -468,9 +468,13 @@ body[data-dsh-claude-style] .dsh-claude-context-stats-skeleton-value {
    the cluster may shrink with it rather than push the row past the card; the
    context meter keeps the ring that carries the reading, the number beside it
    being what does not fit — the numbers stand on their own line under the card,
-   so the ring repeats none of them in either position; and the dock gives up the
-   padding that reserved the two clusters' room — on a phone it is wider than the
-   card, and it took the ring pinned to its right edge out of the card with it. */
+   so the ring repeats none of them in either position. The dock gives up the
+   padding the overlay reserved the two clusters' room with — on a phone the card
+   is narrower than that reserve, and the padding carried the dock's right edge
+   past the card, taking the ring pinned to it out of the card with it. That last
+   rule stands only in the overlay's own position, and its selector repeats the
+   position attribute the overlay carries, or the rule it has to beat would
+   outrank it and the reserve would stand at this width after all. */
 @media (max-width: 480px) {
   body[data-dsh-claude-style] [class*="_trailing"] .dsh-claude-model-btn {
     max-width: 112px;
@@ -485,7 +489,7 @@ body[data-dsh-claude-style] .dsh-claude-context-stats-skeleton-value {
   body[data-dsh-claude-style] [data-dsh-claude-context-meter] button > span {
     display: none;
   }
-  body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] + [class*="_dock"] {
+  body[data-dsh-claude-style][data-dsh-claude-stats-position="context"] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] + [class*="_dock"] {
     padding: 0;
   }
 }
