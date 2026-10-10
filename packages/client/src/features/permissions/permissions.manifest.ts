@@ -13,7 +13,7 @@ export default {
     title: { key: 'permissionsTitle', fallback: 'Redraw the permission control' },
     desc: { key: 'permissionsDesc', fallback: 'Replace the composer\'s permission menu with a segmented control and move the session numbers into the context popover. Off restores the host\'s permission menu and statistics dialogs.' },
   },
-  cases: ['permissions', 'automode', 'automode-current', 'automode-hero', 'automode-roundtrip', 'no-auto-review', 'sync-fault', 'switches', 'switches-off'],
+  cases: ['permissions', 'permissions-locale', 'automode', 'automode-current', 'automode-hero', 'automode-roundtrip', 'no-auto-review', 'sync-fault', 'switches', 'switches-off'],
   description: {
     zh: {
       title: '权限控件',

@@ -36,6 +36,18 @@
     r.permSegments = Array.prototype.map.call(document.querySelectorAll('.dsh-claude-segment'), function (it) {
       return { preset: it.getAttribute('data-preset'), text: it.textContent, active: it.hasAttribute('data-active') }
     })
+    // The names alone, out of the two-line rows: what the interface language
+    // decides, as opposed to the line under each name.
+    var presetNames = function () {
+      return Array.prototype.map.call(document.querySelectorAll('.dsh-claude-perm-popover [data-preset]'), function (it) {
+        var name = it.querySelector('.dsh-claude-popover-item-text')
+        return name === null ? null : name.textContent
+      })
+    }
+    var triggerName = function () {
+      var el = document.querySelector('.dsh-claude-perm-label')
+      return el === null ? null : el.textContent
+    }
     // The pick path, end to end: switch to the auto mode tier and read what the
     // control sent the session (the host permission command line).
     var autoModeRow = document.querySelector('.dsh-claude-perm-popover [data-preset="auto-mode"]')
@@ -44,6 +56,16 @@
       await sleep(80)
     }
     r.permissionCommands = window.__permissionCommands.slice()
+    // The interface language decides the tier names: the Chinese page reads the
+    // host's own dictionary, and a switch repaints the rows and the trigger.
+    await probe.onlyFor(['permissions-locale'], async function () {
+      r.permNamesZh = presetNames()
+      r.permTriggerZh = triggerName()
+      window.__dshSmokeHost.setSmokeLocale('en')
+      await sleep(250)
+      r.permNamesEn = presetNames()
+      r.permTriggerEn = triggerName()
+    })
     // A round trip through the home view: the hero layout takes the trigger and
     // its popover out of the tree, and coming back builds a fresh, empty one
     // that has to be filled again.

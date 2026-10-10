@@ -1,7 +1,8 @@
 import { COMPOSER_CARD_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { AUTO_POPOVER_ALL, PERMISSIONS_ATTR } from '../../constants'
-import { PERMISSION_CURRENT_LABELS, PERMISSION_ORDER, PERMISSION_PRESETS, PERMISSION_SEGMENTS, PERMISSION_SHIPPED_PRESETS, SEGMENTS_CLASS, SEGMENT_CLASS } from './permission-copy'
+import { PERMISSION_ACCESS_NAMESPACE, PERMISSION_CURRENT_LABELS, PERMISSION_HOST_LABEL_KEYS, PERMISSION_HOST_LABEL_LOCALE, PERMISSION_ORDER, PERMISSION_PRESETS, PERMISSION_SEGMENTS, PERMISSION_SHIPPED_PRESETS, SEGMENTS_CLASS, SEGMENT_CLASS } from './permission-copy'
 import { currentPreset, currentSession, findAccessTrigger } from '../../core/host'
+import { activeLocale } from '../../core/i18n'
 import { readPrefs } from '../../core/prefs'
 import { buildElement, closestFrom, setAttributeIfChanged } from '../../shared/dom'
 import { POPOVER_CLOSE_DELAY, POPOVER_OPEN_DELAY, buildPopoverItem, closeOtherPopovers, createHoverIntent, positionAnchoredPopover, registerPopover, removeStrayNodes, setMenuPopoverOpen, unregisterPopover } from '../../shared/popover'
@@ -72,14 +73,37 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     return catalogOption(preset) !== null
   }
 
-  /** The name a preset reads as: the skin's table first, then the host's own name. */
+  /**
+   * The host's own name for a tier, or '' when the skin's table answers. Claude
+   * names the tiers in English and a Chinese interface shows the host's original
+   * Chinese names instead. A host that mounts no locale service, and one that
+   * never registers the namespace — whose translate seat then answers with the
+   * key itself — both leave the skin's table in charge.
+   */
+  function hostPresetLabel(preset: string): string {
+    const key = PERMISSION_HOST_LABEL_KEYS[preset]
+    if (key === undefined || !activeLocale(ctx).startsWith(PERMISSION_HOST_LABEL_LOCALE)) return ''
+    const locale = ctx.get('locale')
+    if (typeof locale?.bind !== 'function') return ''
+    const text: string = locale.bind(PERMISSION_ACCESS_NAMESPACE)(key)
+    return typeof text === 'string' && text !== '' && text !== key ? text : ''
+  }
+
+  /** The name a preset reads as: the host's own Chinese name first, then the skin's table, then the host's catalog. */
   function presetLabel(preset: string): string {
+    const hostName = hostPresetLabel(preset)
+    if (hostName !== '') return hostName
     const known = PERMISSION_PRESETS[preset]
     if (known !== undefined) return known.label
     const option = catalogOption(preset)
     if (option !== null && typeof option.name === 'string' && option.name !== '') return option.name
     const current = PERMISSION_CURRENT_LABELS[preset]
     return current === undefined ? preset : current
+  }
+
+  /** The name the control reads before a session's preset is known: the tier the host starts a session in. */
+  function restingLabel(): string {
+    return presetLabel('workspace-write')
   }
 
   /** The one line under that name, from the same two sources. */
@@ -258,11 +282,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   }
 
   /**
-   * One popover row for one preset: the name and the line under it from the
-   * skin's table (the host's own copy for a preset the table does not know),
-   * and the active check. No glyph: the tiers read as one list, and a
-   * preset's own `icon` — which the host ignores natively — is left out so
-   * the rows stay consistent with each other.
+   * One popover row for one preset: its name and the line under it from the
+   * sources the trigger reads as well, and the active check. No glyph: the
+   * tiers read as one list, and a preset's own `icon` — which the host ignores
+   * natively — is left out so the rows stay consistent with each other.
    */
   function buildPermRow(preset: string) {
     const built = buildPopoverItem({ role: 'menuitem', lines: 2, check: true })
@@ -284,11 +307,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   }
 
   /**
-   * Rebuild the popover's rows when the set of offered presets changes.
-   * Rows come from the host's catalog, so a preset a plugin registers while
-   * the page stays open appears without a reload, and one it withdraws
-   * disappears; an unchanged set leaves the DOM alone (the pass runs on
-   * every mutation).
+   * Rebuild the popover's rows when the set of offered presets or any row's
+   * name changes. Rows come from the host's catalog, so a preset a plugin
+   * registers while the page stays open appears without a reload, and one it
+   * withdraws disappears; the names carry the interface language, so a
+   * language switch repaints the rows here. An unchanged signature leaves the
+   * DOM alone (the pass runs on every mutation).
    *
    * The rendered signature is kept WITH the element it was rendered into: a
    * new popover starts empty (the hero view takes the old one out of the
@@ -298,7 +322,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   function syncPermRows() {
     if (permPopover === null) return
     const wanted = offeredPresets()
-    const signature = wanted.join('|')
+    const signature = wanted.map(preset => `${preset}=${presetLabel(preset)}`).join('|')
     if (signature === renderedRows && renderedRowsFor === permPopover) return
     renderedRows = signature
     renderedRowsFor = permPopover
@@ -325,7 +349,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     btn.setAttribute('aria-haspopup', 'menu')
     btn.setAttribute('aria-expanded', 'false')
 
-    const label = buildElement('span', 'dsh-claude-perm-label', 'Accept edits')
+    const label = buildElement('span', 'dsh-claude-perm-label', restingLabel())
 
     btn.appendChild(label)
 
@@ -404,10 +428,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     // The rows follow the host's catalog: one it does not serve is not
     // drawn at all, and one it starts serving appears.
     syncPermRows()
-    // The running preset reads as its Claude-flavored name; a value no
-    // preset carries (the host's `custom`) reads as the host's own word for
-    // it rather than as the machine value.
-    const matchedLabel = preset === null ? 'Accept edits' : presetLabel(preset)
+    // The running preset reads under the name the interface language gives
+    // it; a value no preset carries (the host's `custom`) reads as the host's
+    // own word for it rather than as the machine value.
+    const matchedLabel = preset === null ? restingLabel() : presetLabel(preset)
     // Same-value guard: this runs on every pass, and an identical
     // textContent write still replaces the text node — a mutation that
     // schedules the next pass, so the page never went idle.

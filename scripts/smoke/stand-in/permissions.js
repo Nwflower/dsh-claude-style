@@ -33,6 +33,9 @@
       extras: [{ value: 'auto-mode', name: 'Auto mode', description: 'classified' }],
       current: 'workspace-write',
     },
+    // The language case runs the full-access tier, so its trigger carries a
+    // name of its own to repaint when the interface language switches.
+    'permissions-locale': { extras: [], current: 'danger-full-access' },
   }
   var permissionFixture = PERMISSION_FIXTURES[CASE]
   var catalogExtras = permissionFixture === undefined ? [{ value: 'auto', name: 'Auto review' }] : permissionFixture.extras

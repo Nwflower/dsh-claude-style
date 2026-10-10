@@ -1,8 +1,8 @@
 /**
- * The host's `chat` locale namespace, the one its own pills read: the skin's
- * context-popover block takes its labels and its duration / token templates from
- * here, so the fixture carries the same keys the host registers. Served only to
- * the cases whose wording is asserted.
+ * The host's locale namespaces, the ones the skin's own controls read: `chat`
+ * for the pills, the session numbers and the turn navigation, and
+ * `permission.access` for the tier names a Chinese interface shows. Served only
+ * to the cases whose wording is asserted.
  */
 (function () {
   var host = window.__dshSmokeHost
@@ -29,12 +29,40 @@
     'chat.turnNavigation.jump': 'Jump to turn {turn}',
     'chat.turnNavigation.turn': 'Turn {turn}',
   }
+  /** The host's permission tier names, as its own dictionary carries them. */
+  var permissionAccess = {
+    'preset.readOnly': '仅可查看',
+    'preset.workspaceWrite': '工作区内修改',
+    'preset.fullAccess': '完全权限',
+    'auto.label': 'Auto review',
+  }
   /** The two cases that drive the skin's session-statistics block (detailed and compact rows). */
   var statsFixtureCase = CASE === 'context-stats' || CASE === 'stats-compact'
-  var localeFixture = turnFixtureCase || statsFixtureCase || CASE === 'turn-nav' ? {
-    getSnapshot: function () { return { active: 'en' } },
-    subscribe: function () { return function () {} },
-    bind: function () {
+  /** The case that switches the interface language while the page runs. */
+  var localeSwitchCase = CASE === 'permissions-locale'
+  var localeServed = turnFixtureCase || statsFixtureCase || CASE === 'turn-nav' || localeSwitchCase
+  /** The active locale id; the language cases start in the language they assert. */
+  var active = localeSwitchCase ? 'zh' : 'en'
+  var listeners = []
+  // The switch a probe drives: the host emits on an active-locale change, which
+  // is what the skin's scheduler rebuilds its copy-carrying rows from.
+  host.setSmokeLocale = function (id) {
+    active = id
+    for (var i = 0; i < listeners.length; i++) listeners[i]()
+  }
+  var localeService = localeServed ? {
+    getSnapshot: function () { return { active: active } },
+    subscribe: function (listener) {
+      listeners.push(listener)
+      return function () {
+        var at = listeners.indexOf(listener)
+        if (at >= 0) listeners.splice(at, 1)
+      }
+    },
+    bind: function (namespace) {
+      if (namespace === 'permission.access') {
+        return function (key) { return permissionAccess[key] === undefined ? key : permissionAccess[key] }
+      }
       var templates = Object.assign({
         'duration.seconds': '{seconds}s',
         'duration.minutes': '{minutes}m {seconds}s',
@@ -49,7 +77,6 @@
       }
     },
   } : undefined
-  var turnStatusLocale = localeFixture
   host.statsFixtureCase = statsFixtureCase
-  host.turnStatusLocale = turnStatusLocale
+  host.localeService = localeService
 })()

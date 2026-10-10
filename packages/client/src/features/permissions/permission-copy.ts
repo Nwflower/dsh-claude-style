@@ -27,6 +27,21 @@ export const PERMISSION_SEGMENTS = [
   { label: 'Yolo', presets: ['danger-full-access'] }
 ]
 
+/**
+ * The host's own tier names, keyed by preset id: its `permission.access`
+ * dictionary (D23) holds the original Chinese names a Chinese interface shows
+ * instead of a translation of Claude's own (D17).
+ */
+export const PERMISSION_ACCESS_NAMESPACE = 'permission.access'
+export const PERMISSION_HOST_LABEL_KEYS: Record<string, string> = {
+  'read-only': 'preset.readOnly',
+  'workspace-write': 'preset.workspaceWrite',
+  'auto': 'auto.label',
+  'danger-full-access': 'preset.fullAccess'
+}
+/** The interface languages whose tier names come from that dictionary. */
+export const PERMISSION_HOST_LABEL_LOCALE = 'zh'
+
 /** Popover row order; a preset the host offers but this list does not know follows in catalog order. */
 export const PERMISSION_ORDER = ['read-only', 'workspace-write', 'auto-mode', 'auto', 'danger-full-access']
 

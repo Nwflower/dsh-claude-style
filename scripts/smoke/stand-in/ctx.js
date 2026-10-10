@@ -15,7 +15,7 @@
   var deepy = host.deepy
   var turnNav = host.turnNav
   var turnStatusChat = host.turnStatusChat
-  var turnStatusLocale = host.turnStatusLocale
+  var localeService = host.localeService
   var slotRegistry = host.slotRegistry
 
   window.__permissionCommands = host.permissionCommands
@@ -31,7 +31,7 @@
       if (name === 'workspaces') return workspacesService
       if (name === 'uiConversation') return deepy !== undefined ? deepy.conversation : turnNav !== undefined ? turnNav.conversation : turnStatusChat
       if (name === 'uiSession') return deepy !== undefined ? deepy.uiSession : undefined
-      if (name === 'locale') return turnStatusLocale
+      if (name === 'locale') return localeService
       if (name === 'slots') return slotRegistry
       return undefined
     },

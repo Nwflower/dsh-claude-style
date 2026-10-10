@@ -4,6 +4,16 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 ## [Unreleased]
 
+[中文](#cn-unreleased) | [English](#en-unreleased)
+
+<h3 id="cn-unreleased">体验优化</h3>
+
+- 中文界面下权限选择器的档位名改用宿主自己的中文名：分段控件上的当前档位与弹层里的每一行此前写死为皮肤的 Claude 英文名（Read only / Accept edits / Full access），中文界面里只有名字下面那行说明是中文；现在界面语言是中文时这几处读宿主 `permission.access` 文案表里的原文——「仅可查看」「工作区内修改」「完全权限」，宿主调整自己的用词时皮肤跟着变；切成别的界面语言仍是皮肤的名称。
+
+<h3 id="en-unreleased">Improvements</h3>
+
+- On a Chinese interface the permission selector names its tiers in the host's own Chinese words: the trigger's current tier and every popover row used to read the skin's fixed Claude names (Read only / Accept edits / Full access) with only the description line under each name in Chinese; with the interface in Chinese those names now come from the host's `permission.access` dictionary — 仅可查看 / 工作区内修改 / 完全权限 — so the skin follows the host when it rewords them, while any other interface language still reads the skin's names.
+
 ## [0.12.1] - 2026-10-09
 
 [中文](#cn-0.12.1) | [English](#en-0.12.1)
