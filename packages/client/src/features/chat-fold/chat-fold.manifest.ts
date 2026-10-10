@@ -3,7 +3,7 @@ import type { FeatureManifest } from '../../core/feature'
 export default {
   id: 'chatFold',
   order: 200,
-  contracts: ['chat.assistant-step-kind', 'chat.flow', 'chat.follow-threshold', 'chat.group-part', 'chat.group-part-reasoning', 'chat.phase', 'chat.reasoning-body', 'chat.reasoning-text', 'chat.scroller', 'chat.shimmer', 'chat.shimmer-attribute', 'chat.shimmer-legacy-attribute', 'chat.think-row', 'chat.think-running', 'chat.tool-call-kind', 'fold.disclosure', 'fold.expanded', 'fold.skipped', 'fold.toggle', 'process.activity', 'process.body', 'process.expanded-mode', 'process.group', 'process.header-label'],
+  contracts: ['chat.assistant-step-kind', 'chat.flow', 'chat.follow-threshold', 'chat.group-part', 'chat.group-part-reasoning', 'chat.phase', 'chat.reasoning-text', 'chat.scroller', 'chat.shimmer', 'chat.shimmer-attribute', 'chat.shimmer-legacy-attribute', 'chat.think-row', 'chat.think-running', 'chat.tool-call-kind', 'fold.disclosure', 'fold.expanded', 'fold.skipped', 'fold.toggle', 'process.activity', 'process.body', 'process.expanded-mode', 'process.group', 'process.header-label'],
   pref: 'chatAnimations',
   yieldsTo: 'dsh-chat-ux',
   stylesheets: [

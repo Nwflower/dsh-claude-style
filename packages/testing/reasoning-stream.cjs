@@ -15,28 +15,31 @@
  */
 'use strict'
 
-/** The thinking row and the reasoning body it holds. */
+/** The thinking row, the window the module puts on it and the text it slides. */
 const HOST = {
   row: '[data-variant="think"]',
-  slot: '[data-slot="conversation.chat.reasoning.body"]',
+  windowed: '[data-variant="think"] [data-dsh-claude-reason-window]',
   text: '[data-markdown-variant]',
 }
 
 /** What the window looks like right now, in one reading. */
 const read = (page) => page.evaluate((host) => {
   const row = document.querySelector(host.row)
-  const slot = row === null ? null : row.querySelector(host.slot)
-  const text = slot === null ? null : slot.querySelector(host.text)
-  if (slot === null || text === null) return { row: row !== null, windowed: false }
-  const style = getComputedStyle(slot)
+  const window = document.querySelector(host.windowed)
+  // With the window off, the reading is of the host's own body, so the same
+  // numbers answer the state after the reasoning: the whole text, no mask.
+  const scope = window ?? row
+  const text = scope === null ? null : scope.querySelector(host.text)
+  if (text === null || scope === null) return { row: row !== null, windowed: false }
+  const style = getComputedStyle(scope)
   const mask = style.maskImage === 'none' ? style.webkitMaskImage : style.maskImage
   const matrix = /matrix\(1, 0, 0, 1, 0, (-?[\d.]+)\)/.exec(getComputedStyle(text).transform)
   return {
     row: true,
     phase: row.getAttribute('data-state'),
     expanded: row.hasAttribute('data-expanded'),
-    windowed: slot.hasAttribute('data-dsh-claude-reason-window'),
-    slotHeight: Math.round(slot.getBoundingClientRect().height),
+    windowed: window !== null,
+    slotHeight: Math.round(scope.getBoundingClientRect().height),
     maxHeight: style.maxHeight,
     masked: mask.startsWith('linear-gradient'),
     textHeight: Math.round(text.getBoundingClientRect().height),
@@ -71,10 +74,7 @@ function reasoningStreamScenario({ check }) {
     /** Sample the window every 250 ms while the model reasons. */
     async duringTurn(context) {
       const { page } = context
-      await page.waitForFunction((host) => {
-        const slot = document.querySelector(host.slot)
-        return slot !== null && slot.hasAttribute('data-dsh-claude-reason-window')
-      }, HOST, { timeout: 40000 })
+      await page.waitForFunction((host) => document.querySelector(host.windowed) !== null, HOST, { timeout: 40000 })
       const samples = []
       for (let round = 0; round < 26; round += 1) {
         samples.push(await read(page))
@@ -111,11 +111,15 @@ function reasoningStreamScenario({ check }) {
       // The text keeps growing while the window steps, so what the window can
       // reach is measured against the tallest the text stood while it was read.
       const tallest = samples.reduce((most, sample) => Math.max(most, sample.textHeight ?? 0), 0)
-      const reachable = Math.max(0, tallest - (first.slotHeight ?? 0))
+      // The clamp is the window's own measure; the box around the text can carry
+      // the host's padding on top of it.
+      const clamp = Number.parseFloat(first.maxHeight ?? '')
+      const reachable = Number.isFinite(clamp) ? Math.max(0, tallest - clamp) : 0
       return [
         check('正在推理时，文本站在一个几行高的窗口里，上下边缘带遮罩',
           samples.length > 2 && samples.every((sample) => sample.windowed === true && sample.masked === true) &&
-            first.slotHeight === (first.lineHeight ?? 0) * 4 && first.maxHeight === `${first.slotHeight}px`,
+            Number.isFinite(clamp) && Math.round(clamp) === (first.lineHeight ?? 0) * 4 &&
+            (first.slotHeight ?? 0) >= clamp && (first.slotHeight ?? 0) <= clamp + 24,
           JSON.stringify({ samples: samples.length, first })),
         check('窗口里的文本按两行一步往上走，从不停在整步上（过渡真的在跑）',
           offsets.length > 2 && Math.max(...offsets) > 0 &&
