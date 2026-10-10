@@ -34,27 +34,6 @@ export const THINK_ROW_SELECTOR = '[data-variant="think"]'
 export const REASONING_BODY_SLOT_SELECTOR = '[data-slot="conversation.chat.reasoning.body"]'
 /** The rendered text inside that slot, whatever the host's Markdown wrapper is called. */
 export const REASONING_TEXT_SELECTOR = '[data-markdown-variant]'
-/** The kind of an assistant step's row: its thinking or its output. */
-export const ASSISTANT_STEP_KIND = 'assistant-step'
-/** The kind of a tool call's row. */
-export const TOOL_CALL_KIND = 'tool-call'
-/**
- * Which part of an assistant step a row holds: the host splits a step into its
- * thinking and its output and writes the part on the row.
- */
-export const CHAT_GROUP_PART_ATTRIBUTE = 'data-chat-group-part'
-/** The part value of a step's thinking row. */
-export const CHAT_GROUP_PART_REASONING = 'reasoning'
-/**
- * The words of a process group's header: the one child of the control the host
- * does not mark decorative (its icon and chevron sit in an aria-hidden span).
- */
-export const PROCESS_HEADER_LABEL_SELECTOR = ':scope > :not([aria-hidden="true"])'
-/**
- * The words of the live turn's running row: the child of its content span that
- * is not the decorative whale; the row's other spans hold no elements.
- */
-export const CHAT_RUNNING_TEXT_SELECTOR = ':scope > span > :not([aria-hidden="true"])'
 /**
  * The phase of a row that has one: a thinking row, and a tool call's own view
  * (the page's own phase is `data-phase`, D44). The values are the host's —
@@ -121,6 +100,27 @@ export const CHAT_TURN_ATTRIBUTE = 'data-chat-turn'
 export const USER_ROW_KIND = 'user'
 /** The kind attribute itself, whose values say what a flow row is. */
 export const FLOW_KIND_ATTRIBUTE = 'data-chat-flow-kind'
+/** The kind of an assistant step's row: its thinking or its output. */
+export const ASSISTANT_STEP_KIND = 'assistant-step'
+/** The kind of a tool call's row. */
+export const TOOL_CALL_KIND = 'tool-call'
+/**
+ * Which part of an assistant step a row holds: the host splits a step into its
+ * thinking and its output and writes the part on the row.
+ */
+export const CHAT_GROUP_PART_ATTRIBUTE = 'data-chat-group-part'
+/** The part value of a step's thinking row. */
+export const CHAT_GROUP_PART_REASONING = 'reasoning'
+/**
+ * The words of a process group's header: the one child of the control the host
+ * does not mark decorative (its icon and chevron sit in an aria-hidden span).
+ */
+export const PROCESS_HEADER_LABEL_SELECTOR = ':scope > :not([aria-hidden="true"])'
+/**
+ * The words of the live turn's running row: the child of its content span that
+ * is not the decorative whale; the row's other spans hold no elements.
+ */
+export const CHAT_RUNNING_TEXT_SELECTOR = ':scope > span > :not([aria-hidden="true"])'
 /**
  * The turn rail (ui-chat's TurnNavigator): a nav at the conversation's
  * right edge with one mark per turn, absent below two turns and hidden
@@ -175,6 +175,12 @@ export const COMPOSER_PLACEHOLDER_SELECTOR = '[data-composer-placeholder]'
  */
 export const COMPOSER_STATS_SELECTOR = '[data-composer-stats]'
 export const COMPOSER_STAT_SELECTOR = '[data-composer-stat]'
+/**
+ * The filled arc of the context meter: the circle the host gives a dash array
+ * (its track circle carries none). The skin paints it with the colour the
+ * occupancy fell on (D27).
+ */
+export const CONTEXT_METER_FILL_SELECTOR = '[data-dsh-claude-context-meter] circle[stroke-dasharray]'
 /** The composer variant the host puts on the card (`hero` / `default`). */
 export const COMPOSER_VARIANT_ATTRIBUTE = 'data-composer-variant'
 /** The host's own access-mode trigger inside its permission slot, skipping the skin's buttons. */
@@ -183,6 +189,13 @@ export const PERMISSION_TRIGGER_SELECTOR = '[data-slot="conversation.input.permi
 export const DIALOG_TRIGGER_SELECTOR = 'button[aria-haspopup="dialog"]'
 /** The sidebar footer block; the skin's account entry lives inside it. */
 export const FOOT_AREA_SELECTOR = '[class*="footArea"]'
+/**
+ * The host's own sidebar search: a button and an input in the workspace
+ * section's header. The skin's box stands in for it, and the `icon` style
+ * leaves the host's button in place with its click taken over, so both read
+ * this slot.
+ */
+export const SIDEBAR_SEARCH_SLOT_SELECTOR = '[data-slot="sidebar"] [class*="_searchSlot"]'
 /** The host's own composer is replaced by a panel of its own choice; this is that panel's seat. */
 export const CHAIN_OVERLAY_FALLBACK_ATTRIBUTE = 'data-chain-overlay-fallback'
 /** The host's own open menus and modal dialogs: the foreground the skin must not walk over. */
@@ -227,6 +240,9 @@ export const HEADER_CORNER_SELECTOR = '[class*="headerCorner"]'
 export const CONVERSATION_HEADER_SELECTOR = '[class*="_header"]'
 /** The view-tab strip inside the header, whose box the band placement keeps clear of. */
 export const VIEW_TABS_STRIP_SELECTOR = '[class*="_tabs"]'
+
+/* ---------- the document, the shell and the browser API ---------- */
+
 /** The shell's window marks: the Windows caption row, the platform, and fullscreen. */
 export const WINDOWS_TITLEBAR_ATTRIBUTE = 'data-windows-titlebar'
 /**
