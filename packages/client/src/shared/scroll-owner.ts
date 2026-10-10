@@ -102,8 +102,8 @@ const MOVING_INTENT_TYPES = new Set(['wheel', 'touchstart', 'pointerdown', 'keyd
 
 /** The source of the ease running on each container; stale once the spring has let go of it. */
 const easeSources = new Map<Element, ScrollSource>()
-/** The containers the reader holds: an intent was seen there and he has not come back to the end. */
-const held = new WeakSet<Element>()
+/** The containers the reader holds: an intent was seen there and he has not come back to the end. A Set, so leaving the owner can take every mark off again. */
+const held = new Set<Element>()
 /** The held containers the reader has since moved toward the end of: his own way back to it. */
 const heldTowardEnd = new WeakSet<Element>()
 /** How many containers the reader holds; the page's root carries the mark while any is held. */
@@ -337,6 +337,13 @@ export function joinScrollOwner() {
     window.removeEventListener('scroll', noteScroll, true)
     if (stopSubmissionWatch !== null) stopSubmissionWatch()
     stopSubmissionWatch = null
+    for (const container of held) {
+      container.removeAttribute(READER_HOLD_ATTR)
+      heldTowardEnd.delete(container)
+    }
+    held.clear()
+    heldCount = 0
+    document.body.removeAttribute(READER_HOLD_ATTR)
     releaseFollowButton()
     seen = null
   }
