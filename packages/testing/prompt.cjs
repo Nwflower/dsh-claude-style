@@ -3,9 +3,8 @@
  * prompt.cjs — sending a prompt on the scratch page, for the lane's scenarios
  * (D45).
  *
- * Their own module rather than blocks inside packages/testing/e2e.cjs, which is
- * at its stop line (AGENTS.md): every scenario module sends and waits the same
- * way, and importing them from `e2e.cjs` would close a cycle.
+ * The runner (packages/testing/e2e.cjs) and every scenario module send and wait
+ * the same way, so both import them from here.
  */
 'use strict'
 

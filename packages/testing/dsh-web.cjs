@@ -87,6 +87,8 @@ function run(command, options = {}) {
  * @param options.patch - loader patch entries (YAML text) written into a `--patch`
  *     overlay before boot: how a lane points the host's model adapter at the
  *     scripted service (packages/testing/mock-llm.cjs, D45).
+ * @param options.args - extra arguments for the web app's own command line
+ *     (`--trusted-host <name>`, which a page under a non-loopback name needs).
  * @param options.env - extra environment for the host process.
  * @param options.resetState - clear the home's sessions and their sidebar cache
  *     first, so a lane that asserts on what the page shows starts from an empty
@@ -137,7 +139,7 @@ async function start(options = {}) {
   // as an escape.
   env.DSH_WEB_LIFELINE = '1'
   env.NODE_OPTIONS = [env.NODE_OPTIONS, `--require "${LIFELINE.replaceAll('\\', '/')}"`].filter(Boolean).join(' ')
-  const command = `dsh --profile ${profile} --patch "${overlay}" --port ${port} --no-open`
+  const command = [`dsh --profile ${profile} --patch "${overlay}" --port ${port} --no-open`, ...options.args ?? []].join(' ')
   const child = spawn(command, {
     env,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -182,13 +184,14 @@ async function start(options = {}) {
  *
  * @param url - the URL `start()` printed, token included.
  * @param options.headless - run without a window (default true).
+ * @param options.args - extra Chrome switches.
  * @param options.width/height - the viewport.
  * @returns `{ page, context, browser, close() }`.
  */
 async function openPage(url, options = {}) {
   const executablePath = chrome.findChrome()
   if (!executablePath) throw new Error('no local Chrome or Edge found; set CHROME_PATH')
-  const browser = await chromium.launch({ executablePath, headless: options.headless ?? true })
+  const browser = await chromium.launch({ executablePath, headless: options.headless ?? true, args: options.args ?? [] })
   const context = await browser.newContext({ viewport: { width: options.width ?? 1280, height: options.height ?? 900 } })
   const page = await context.newPage()
   const problems = []

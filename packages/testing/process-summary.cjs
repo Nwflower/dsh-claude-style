@@ -3,8 +3,7 @@
  * process-summary.cjs — the enhanced tier's waiting line and counted process
  * headers on the real host (D32, D45).
  *
- * Its own module rather than a block inside packages/testing/e2e.cjs, which is
- * at its stop line (AGENTS.md).
+ * Registered in the lane's scenario table (packages/testing/scenarios.cjs).
  *
  * The `process` script keeps the model silent past the overtime mark before its
  * first event, then runs two rounds of a thought and a tool call around an

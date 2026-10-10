@@ -2,8 +2,7 @@
 /**
  * stats-position.cjs — the session's numbers on a line of their own (D27, D45).
  *
- * Its own module rather than a block inside packages/testing/e2e.cjs, which is
- * at its stop line (AGENTS.md).
+ * Registered in the lane's scenario table (packages/testing/scenarios.cjs).
  *
  * The stored value has to travel the whole host path: the preference is written
  * into the profile's patch layer, the host's settings schema has to carry the
@@ -236,8 +235,7 @@ function statsPositionScenario({ check }) {
 /**
  * The session statistics' scenarios, one per surface they can take: the line of
  * their own (stats-position.cjs) and the meter's dock laid over the toolbar row
- * (stats-overlay.cjs). Grouped behind one factory so the lane's own roster stays
- * at the size its stop line records (packages/testing/e2e.cjs, AGENTS.md).
+ * (stats-overlay.cjs), registered together under one factory.
  */
 function statsScenarios({ check }) {
   return {

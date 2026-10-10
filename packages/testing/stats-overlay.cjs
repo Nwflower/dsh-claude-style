@@ -2,8 +2,7 @@
 /**
  * stats-overlay.cjs — the meter's dock laid over the toolbar row (D27, D45).
  *
- * Its own module rather than a block inside packages/testing/e2e.cjs, which is
- * at its stop line (AGENTS.md).
+ * Registered in the lane's scenario table through packages/testing/stats-position.cjs.
  *
  * The dock is the card's next sibling and the stylesheet lays it over the
  * toolbar row from the row's own box: its distance above the containing block

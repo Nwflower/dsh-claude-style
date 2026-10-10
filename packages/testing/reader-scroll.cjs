@@ -3,10 +3,9 @@
  * reader-scroll.cjs — the reader's own scrolling during a live turn, end to end
  * (D41, D45).
  *
- * Its own module rather than a block inside packages/testing/e2e.cjs, which is
- * at its stop line (AGENTS.md), and it samples the page itself: the frames the
- * shared trace carries are the scroll behaviour's, and this scenario's reading
- * is the status line's own pin.
+ * Registered in the lane's scenario table (packages/testing/scenarios.cjs). It
+ * samples the page itself: the frames the shared trace carries are the scroll
+ * behaviour's, and this scenario's reading is the status line's own pin.
  *
  * The status line of a running turn is pinned above the composer. The pin stands
  * only while the skin's own follow is the one moving the position: the reader
@@ -16,7 +15,7 @@
  */
 'use strict'
 
-/** The host's page markers this scenario reads, as packages/testing/e2e.cjs names them. */
+/** The host's page markers this scenario reads, as packages/testing/lane.cjs names them. */
 const HOST = {
   scroller: '[data-conversation-scroll]', // CONVERSATION_SCROLL_SELECTOR
   running: '[data-chat-running]', // CHAT_RUNNING_SELECTOR
