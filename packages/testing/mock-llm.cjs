@@ -96,21 +96,22 @@ const SCRIPTS = {
     auxiliary: { text: ['Scripted process'] },
   },
   /**
-   * A long reasoning, delivered a couple of lines at a time: the thinking row's
+   * A long reasoning, delivered a couple of steps at a time: the thinking row's
    * window steps it up while it arrives (packages/client/src/features/chat-fold/
-   * reasoning-stream.ts), and the reader never loses its last line.
+   * reasoning-stream.ts), and the reader never loses its last line. Each step is
+   * long enough to fill more than the window's own lines even where the host's
+   * body renders the whole reasoning as one wrapped paragraph.
    */
   think: {
     conversation: [
       {
         thinking: [
-          '先想清楚这个问题分成几步。\n\n',
-          '第一步，看清工作区里有什么。\n\n第二步，挑出与问题相关的几个文件。\n\n',
-          '第三步，确认它们的依赖关系。\n\n第四步，找出改动会波及的入口。\n\n',
-          '第五步，检查测试覆盖到哪里。\n\n第六步，估计改动的规模。\n\n',
-          '第七步，记下需要向读者确认的地方。\n\n第八步，把结论整理成一句话。\n\n',
-          '第九步，回头看一遍有没有漏掉的约束。\n\n第十步，确认没有更好的做法。\n\n',
-          '第十一步，把要改的文件按顺序排好。\n\n第十二步，想清楚先改哪一处最小。\n\n',
+          '先把这个问题拆成几步：这一步要先看清工作区里到底有什么文件，再把与问题相关的几个挑出来，顺序上先宽后窄，避免一上来就钻进细节里出不来。\n\n',
+          '接下来确认这些文件彼此的依赖关系，谁引用了谁、谁的改动会波及到入口，这一步要顺着引用链看两跳，只看到一跳容易漏掉间接的调用方。\n\n',
+          '然后检查测试覆盖到哪里，哪些行为有测试守着、哪些只能靠手工核对，手工核对的部分要记下来留给读者判断。\n\n',
+          '再估计改动的规模，把文件按大小和风险排一下，先动那些改起来最小、验证最快的地方，把大的留到后面。\n\n',
+          '中间要记下需要向读者确认的地方，比如名称怎么取、默认值取哪一个、要不要同时改文档，这些都不该自己拍板。\n\n',
+          '最后回头看一遍有没有漏掉的约束，把要改的文件按顺序排好，把结论整理成一句话，再开始动手。\n\n',
         ],
         text: ['理清楚了，可以回答。\n'],
       },

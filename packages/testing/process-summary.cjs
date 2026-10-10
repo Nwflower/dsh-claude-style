@@ -15,6 +15,16 @@
  */
 'use strict'
 
+/**
+ * The shipped copy, so the assertions read the words the page is in rather than
+ * one language: the lane runs under whatever locale the machine has, and the
+ * host's own word for the fallback is read off the page itself.
+ */
+const COPY = require('../client/data/model-descriptions.json').ui
+
+/** One template with its count filled in. */
+const fill = (template, count) => template.replace('{count}', String(count))
+
 /** What the reader sees of the running row: the skin's line, its parts, and the host's words. */
 const readWait = (page) => page.evaluate(() => {
   const row = document.querySelector('[data-chat-running]')
@@ -28,6 +38,7 @@ const readWait = (page) => page.evaluate(() => {
     label: label.textContent,
     clock: clock.checkVisibility() ? clock.textContent : null,
     badge: badge.checkVisibility() ? badge.textContent : null,
+    words: words === null ? null : words.textContent,
     wordsShown: words !== null && words.checkVisibility(),
   }
 })
@@ -94,23 +105,32 @@ function processSummaryScenario({ check }) {
       const overtime = notes.waitOvertime ?? {}
       const working = notes.waitWorking ?? {}
       const headers = notes.headers ?? []
+      // The page's own language, read off the line the skin wrote: the same two
+      // languages the copy document carries.
+      const lang = working.label === COPY.turnStatusThinking.zh ? 'zh' : 'en'
+      const sentence = (parts) => parts.join(COPY.processSummaryFullSeparator[lang])
+      const expected = [
+        sentence([fill(COPY.processSummaryFullThoughtOther[lang], 2), fill(COPY.processSummaryFullToolOne[lang], 1)]),
+        sentence([fill(COPY.processSummaryFullThoughtOne[lang], 1), fill(COPY.processSummaryFullToolOne[lang], 1)]),
+      ]
       return [
         check('the running row carries the skin\'s line in place of the host\'s words',
           early.line === true && early.wordsShown === false, JSON.stringify(early)),
         check('a turn whose state cannot be read falls back to the host\'s own word',
-          early.label === '深度求索中', JSON.stringify(early.label)),
-        check('the line keeps the turn\'s clock in the host\'s units', /^\d+秒$/.test(early.clock ?? ''), JSON.stringify(early.clock)),
-        check('past ten seconds of silence the line says the model has not answered', overtime.badge === '暂未响应', JSON.stringify(overtime)),
+          (early.label ?? '') !== '' && (early.words ?? '').startsWith(early.label), JSON.stringify({ label: early.label, words: early.words })),
+        check('the line keeps the turn\'s clock in the host\'s units', /^\d+\s*(s|sec|secs|second|seconds|秒)$/i.test(early.clock ?? ''), JSON.stringify(early.clock)),
+        check('past ten seconds of silence the line says the model has not answered', overtime.badge === COPY.chatWaitOvertime[lang], JSON.stringify(overtime)),
         check('the badge leaves once the model writes', working.line === true && working.badge === null, JSON.stringify(working)),
         check('the line says what the model is doing once it writes',
-          ['正在思考', '正在写回答', '正在准备工具调用', '正在调用工具'].includes(working.label ?? ''), JSON.stringify(working.label)),
+          [COPY.turnStatusThinking[lang], COPY.turnStatusWriting[lang], COPY.turnStatusToolCall[lang], COPY.turnStatusTools[lang]].includes(working.label ?? ''),
+          JSON.stringify({ label: working.label, lang })),
         check('every process group\'s header says what it holds, the host\'s words out of sight',
           headers.length === 2 && headers.every((header) => header.summaryDisplay !== 'none' && header.wordsDisplay === 'none'),
           JSON.stringify(headers)),
         check('the sentence stands in a header with room for it, naming the thoughts and the tool calls',
-          JSON.stringify(headers.map((header) => header.name)) === JSON.stringify(['执行 2 次思考，调用 1 次工具', '执行 1 次思考，调用 1 次工具']) &&
-            headers.every((header) => header.form === 'full') && headers[0]?.text === '执行 2 次思考，调用 1 次工具',
-          JSON.stringify(headers.map((header) => ({ form: header.form, text: header.text, name: header.name })))),
+          JSON.stringify(headers.map((header) => header.name)) === JSON.stringify(expected) &&
+            headers.every((header) => header.form === 'full') && headers[0]?.text === expected[0],
+          JSON.stringify({ expected, got: headers.map((header) => ({ form: header.form, text: header.text, name: header.name })) })),
         check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),
       ]
     },
