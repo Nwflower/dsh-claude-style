@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-10",
+  "group": "improvements",
+  "order": 0,
+  "external": false,
+  "zh": "推理回放窗口在宿主两版之间都能用：此前它按较新宿主才写的推理正文槽位找要裁剪的盒子，装在钉住那一版宿主上时找不到，推理期间读者看到的还是整段长文。现在窗口从宿主渲染出来的 Markdown 本身认起，往上取第一个真有盒子的祖先来裁剪，滑动的仍是这段 Markdown。",
+  "en": "The reasoning's streamed window works across both host versions: it used to look for the reasoning body through a slot only the newer host writes, so on the pinned host it found no box to clip and the reader saw the whole reasoning grow. It now reads the host's rendered Markdown itself and clips the nearest ancestor that has a box, sliding that Markdown inside it."
+}

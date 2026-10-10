@@ -478,6 +478,9 @@ body[data-dsh-claude-style] .dsh-claude-context-stats-skeleton-value {
   body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] [class*="_row"] > [class*="_trailing"] {
     flex: 0 1 auto;
     min-width: 0;
+    /* The meter stands over the row's right end; the room it takes is reserved
+       here, so the reasoning-level button lands before it instead of under it. */
+    padding-right: 34px;
   }
   body[data-dsh-claude-style] [data-dsh-claude-context-meter] button > span {
     display: none;

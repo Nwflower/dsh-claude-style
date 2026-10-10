@@ -48,6 +48,10 @@
           frames.push(lineOf())
           await sleep(30)
         }
+        // One settled frame after the window: the swap can land late in it, and
+        // the last reading is what "at rest" is judged on.
+        await sleep(250)
+        frames.push(lineOf())
         return frames
       }
       await sleep(400)

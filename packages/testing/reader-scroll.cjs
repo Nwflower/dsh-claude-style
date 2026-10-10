@@ -81,6 +81,9 @@ function readerScrollScenario({ check }) {
         const row = document.querySelector(marks.running)
         const scroller = document.querySelector(marks.scroller)
         if (row === null || scroller === null) return false
+        // The sampler has to have a phase of its own before the wheel: the
+        // pinned spot is read off the frames it recorded.
+        if ((window.__readerScrollTrace ?? []).length < 40) return false
         if (scroller.scrollHeight <= scroller.clientHeight) return false
         if (scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop > marks.atTail) return false
         return getComputedStyle(row).position === 'sticky'

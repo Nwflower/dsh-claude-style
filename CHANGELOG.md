@@ -4,6 +4,24 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 ## [Unreleased]
 
+[中文](#cn-unreleased) | [English](#en-unreleased)
+
+<h3 id="cn-unreleased">体验优化</h3>
+
+- 推理回放窗口在宿主两版之间都能用：此前它按较新宿主才写的推理正文槽位找要裁剪的盒子，装在钉住那一版宿主上时找不到，推理期间读者看到的还是整段长文。现在窗口从宿主渲染出来的 Markdown 本身认起，往上取第一个真有盒子的祖先来裁剪，滑动的仍是这段 Markdown。
+
+### 问题修复
+
+- 手机宽度（390px 及以下）的输入区不再让上下文计量环压住右边的推理等级按钮：此前环按右端定位、等级按钮也按右端排，两者叠在一起，环还常常被挤出卡片；现在这一档为环留出它占的宽度，等级按钮落在它左边，卡片上的三个控件都不再越界。
+
+<h3 id="en-unreleased">Improvements</h3>
+
+- The reasoning's streamed window works across both host versions: it used to look for the reasoning body through a slot only the newer host writes, so on the pinned host it found no box to clip and the reader saw the whole reasoning grow. It now reads the host's rendered Markdown itself and clips the nearest ancestor that has a box, sliding that Markdown inside it.
+
+### Bug Fixes
+
+- On a phone-width composer (390px and under) the context meter no longer sits over the reasoning-level button at the row's right end: the meter is positioned from that end and so was the button, so the two overlapped and the meter was often pushed out of the card; the row now reserves the width the meter takes, the button lands before it, and all three controls stay inside the card.
+
 ## [0.12.2] - 2026-10-10
 
 [中文](#cn-0.12.2) | [English](#en-0.12.2)

@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-10",
+  "group": "fixes",
+  "order": 0,
+  "external": false,
+  "zh": "手机宽度（390px 及以下）的输入区不再让上下文计量环压住右边的推理等级按钮：此前环按右端定位、等级按钮也按右端排，两者叠在一起，环还常常被挤出卡片；现在这一档为环留出它占的宽度，等级按钮落在它左边，卡片上的三个控件都不再越界。",
+  "en": "On a phone-width composer (390px and under) the context meter no longer sits over the reasoning-level button at the row's right end: the meter is positioned from that end and so was the button, so the two overlapped and the meter was often pushed out of the card; the row now reserves the width the meter takes, the button lands before it, and all three controls stay inside the card."
+}
