@@ -37,6 +37,10 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 - 「聊天区动画效果」不再是三档，也不再是两档分段控件，而是一个开关：开启时播放本插件的这一套，关闭时把聊天区交回宿主。上一版接在「重绘」档上的会话视图（插件自己渲染的对话区：链路折叠与计数行、推理卡片、逐词淡入、按宿主「工作步骤展示」分档的收拢、子会话的第二份视图）整体移除，那套实现来自 dsh-better-display 的整份移植，读者装上那个插件就能得到同样的界面，本插件再维护一份的代价大于收益。此前存下「重绘」或「增强」的读者照旧开着这一项，存下「关闭」的照旧关着，不需要重新设置。同时移除的还有：插件自己的「工作步骤展示」桥接、只为阅读视图装上的宿主内部开发依赖与 TSX 工具链、端到端场景 reader / readerOpen / readerTurnNav / stepDisplay 与冒烟用例 chat-reader。搬到开关下的两处视觉仍出自那个实现，它的许可说明留在第三方声明里。搜索面板点开内容命中仍在会话里落到那一轮，改经宿主的刻度跳转。
 
+### 其他变更
+
+- 端到端通道与 `packages/testing/dsh-web.cjs` 起的临时宿主随启动它的进程一起结束：此前启动进程被强制终止或抛出未捕获的错误时，`dsh web` 实例留在后台继续占用端口与 `$DSH_HOME`，它的目录随后被删掉时还会持续占满一个以上的 CPU 核心；现在启动进程无论以哪种方式结束，宿主都在随后一秒内退出。
+
 <h3 id="en-unreleased">New Features</h3>
 
 - The Sidebar tab gains a Search box style choice under Sidebar search: Cover the brand (the default) keeps the box in the brand row, standing over the brand while the pointer is over the sidebar; Standalone gives it a row of its own under the brand row, shown always; Icon draws no box of the plugin's and keeps DSH's own search button in place with only its click taken over, so pressing it opens this plugin's palette. Switching needs no reload.
@@ -67,6 +71,10 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 ### Removals
 
 - Chat-area animations is no longer three-way, nor a two-way segmented control, but a switch: on plays this plugin's set, off hands the conversation back to the host. The conversation view the Redraw tier used to hand the area to (the plugin's own rendering of the conversation — folded chains with their counted rows, reasoning cards, the per-word fade, the fold ranges that followed the host's Work details setting, a second view for a sidebar child session) is removed whole: that implementation was a full port of dsh-better-display, and a reader who installs that plugin gets the same interface, so a second copy kept here cost more than it returned. A reader who had stored Redraw or Enhanced keeps the setting on, and one who had stored Off keeps it off, with nothing to reconfigure. Also removed: the plugin's own Work details bridge, the host-internal development dependencies and the TSX toolchain that only the reading view needed, the end-to-end scenarios reader / readerOpen / readerTurnNav / stepDisplay and the smoke case chat-reader. The two pieces of that look which moved under the switch are still derived from that implementation, so its notice stays in the third-party notices. Picking a content hit in the search palette still lands on the turn holding that message, through the host's own marks.
+
+### Chores
+
+- The scratch hosts that the end-to-end lane and `packages/testing/dsh-web.cjs` start now end with the process that started them: a launcher that was killed or died on an uncaught error used to leave its `dsh web` instance running in the background, holding its port and `$DSH_HOME`, and spinning more than one CPU core once that directory was deleted; now the host exits within a second however the launcher ends.
 
 ## [0.12.1] - 2026-10-09
 
