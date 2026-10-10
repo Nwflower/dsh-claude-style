@@ -60,9 +60,11 @@ export interface SearchSection {
  * - Actions: new session, settings, plugins and the shortcut reference.
  *
  * @param ctx - client context.
+ * @param reveal - lands the conversation on one message's turn after a content
+ *     hit is picked; the palette owns the waiting, the navigator the jump (D34).
  * @returns the source table the palette reads.
  */
-export function createSearchSources(ctx: HostContext) {
+export function createSearchSources(ctx: HostContext, reveal: (sessionId: string, seq: number) => void) {
   /** Rows per section when the palette shows every kind at once, and the cap for one kind. */
   const SECTION_LIMIT: Record<string, number> = { session: 6, project: 3, plugin: 3, skill: 3, shortcut: 3 }
   const KIND_LIMIT = 60
@@ -160,7 +162,13 @@ export function createSearchSources(ctx: HostContext) {
       detail: entry.workspace,
       snippet: hit === undefined ? '' : hit.snippet,
       snippetMatch: hit === undefined ? null : hit.match,
-      run() { service('uiWorkspace').openSession(id) },
+      run() {
+        service('uiWorkspace').openSession(id)
+        // A content hit names the message it matched, so the conversation does
+        // not stop at the session: the turn holding that message is revealed
+        // once the session is the shown one.
+        if (hit !== undefined) reveal(id, hit.seq)
+      },
     }
   }
 
@@ -201,11 +209,11 @@ export function createSearchSources(ctx: HostContext) {
   }
 
   /**
-   * Ask the host half's message-content search (packages/host/src/search.ts): user and
-   * assistant messages, matched as a literal case-insensitive substring,
-   * so part of a Chinese sentence matches too. An empty query only brings
-   * the host half's message cache up to date. Superseded requests are
-   * aborted by the caller; a failure answers no hits, and the title
+   * Ask the host half's message-content search (packages/host/src/search.ts): the
+   * reader's own messages and the model's answers, matched as a literal
+   * case-insensitive substring, so part of a Chinese sentence matches too. An
+   * empty query only brings the host half's corpus up to date. Superseded
+   * requests are aborted by the caller; a failure answers no hits, and the title
    * matches stand.
    * @returns the hits, newest first, `[{ sessionId, snippet, match }]`.
    */

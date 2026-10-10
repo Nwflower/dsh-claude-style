@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-09",
+  "group": "improvements",
+  "order": 1,
+  "external": false,
+  "zh": "搜索面板里点开一条内容命中，现在落到那条消息所在的一轮，不再只停在这个会话的开头：面板按命中消息的事件序号，从会话的整篇轮次大纲里找出它属于哪一轮，等这一轮进了已加载窗口再经宿主的刻度定位。会话历史很长时，定位前会先把这一轮的记录翻页读进来；找不到对应轮次时停在会话本身，与从前一样。",
+  "en": "Picking a content hit in the search palette now lands on the turn holding that message instead of stopping at the top of the session: the palette reads the message's event sequence, finds the turn it belongs to in the session's whole-log outline, and positions there through the host's marks once that turn is in the loaded window. On a long history the turn's records are paged in first; when no turn can be found the reader stops at the session itself, as before."
+}

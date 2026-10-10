@@ -1,5 +1,5 @@
 import { requestFrame } from '../../core/frame'
-import { closestConversationSession, conversationSessionId, findChatTarget, findConversationSession } from '../../core/host'
+import { closestConversationSession, conversationSessionId, findChatTarget, findConversationSession, sessionOutline } from '../../core/host'
 import { CONVERSATION_SCROLL_SELECTOR, TURN_RAIL_CURRENT_SELECTOR, TURN_RAIL_INSET, TURN_RAIL_MARK_SELECTOR, TURN_RAIL_PITCH, TURN_RAIL_SCROLLER_SELECTOR, TURN_RAIL_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { closestFrom } from '../../shared/dom'
 import type { HostContext, HostText } from '../../core/host'
@@ -77,9 +77,8 @@ export function createTurnNavHost(ctx: HostContext) {
   }
 
   /** The whole-log outline's current value (the `turnOutline` projection), or undefined. */
-  function outlineValue(sessionId: string): HostOutlineTurn[] | undefined {
-    const face = ctx.get('sessions')?.binding(sessionId)?.session?.projections?.faceOf('turnOutline')
-    return typeof face?.getSnapshot === 'function' ? face.getSnapshot() : undefined
+  function outlineValue(sessionId: string) {
+    return sessionOutline(ctx, sessionId)
   }
 
   /** The loaded window's turns, as the chat snapshot's turn navigation lists them. */

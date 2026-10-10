@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-09",
+  "group": "fixes",
+  "order": 0,
+  "external": false,
+  "zh": "侧栏搜索的内容匹配不再搜进注入上下文与推理过程：`user/message` 里由宿主注入的环境快照、Skill 目录、AGENTS.md 与压缩检查点此前一并进了语料，于是搜到的「会话」里出现读者从没打过、模型也没答过的字；现在只收人类发出的消息（按事件自带的 `source.kind === 'user'`）与助手回答里的文本块，推理块、工具调用与工具结果都不进。实测同一条会话里，只出现在 Skill 目录里的字符串与只出现在推理块里的字符串都从命中列表里消失，读者自己发的原文仍照常命中。",
+  "en": "The sidebar search's content match no longer reaches into injected context and reasoning: the environment snapshots, Skill catalog, AGENTS.md and compaction checkpoints the host injects as `user/message` used to enter the corpus, so \"session\" hits carried text the reader never sent and the model never answered. Only the reader's own messages (by the event's own `source.kind === 'user'`) and the text blocks of assistant answers are collected now; reasoning blocks, tool calls and tool results stay out. On a real session, a string that exists only in the Skill catalog and one that exists only in a reasoning block both left the hit list, while the reader's own words still match."
+}

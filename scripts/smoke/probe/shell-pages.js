@@ -114,12 +114,19 @@
     await probe.onlyFor(['search'], async function () {
       // The sidebar's brand row (ui-sidebar SidebarRoot): the search box goes in
       // beside the wide brand, and pressing it renders the host's Modal through
-      // a root of the skin's own.
+      // a root of the skin's own. The three box styles are driven through the
+      // form the settings page writes to: `overlay` (the default) sits in that
+      // row and rests hidden, `standalone` takes a row of its own under it and
+      // shows without a hover, `icon` draws no box of the skin's and puts the
+      // host's own search button back with the click taken over.
       var sidebarSlot = document.createElement('div')
       sidebarSlot.setAttribute('data-slot', 'sidebar')
       sidebarSlot.innerHTML = '<div class="_n_root_1"><div class="_n_logoRow_1" data-window-drag="true">' +
         '<button type="button" class="_n_brand_1 _n_wide_1" aria-label="New session">brand</button>' +
-        '<button type="button" class="_n_iconButton_1 _n_toggle_1" aria-label="Collapse sidebar">toggle</button></div></div>'
+        '<button type="button" class="_n_iconButton_1 _n_toggle_1" aria-label="Collapse sidebar">toggle</button></div>' +
+        '<div class="_n_sectionHeader_1"><span class="_n_sectionLabel_1">Workspaces</span>' +
+        '<div class="_n_searchSlot_1"><button type="button" class="_n_searchButton_1" aria-label="Search sessions">search</button>' +
+        '<input class="_n_searchInput_1" type="text" tabindex="-1"></div></div></div>'
       document.body.appendChild(sidebarSlot)
       await sleep(150)
       var logoRow = sidebarSlot.querySelector('[class*="_logoRow"]')
@@ -128,12 +135,45 @@
       if (searchTrigger) searchTrigger.click()
       await sleep(60)
       probe.searchRoot = window.__roots[rootsBefore]
+      // One style at a time, through the form; the box and its rows are read
+      // back from the page the same way a reader would see them.
+      var styleOf = async function (style) {
+        window.__pushForm({ searchStyle: style })
+        sidebarSlot.appendChild(document.createElement('i'))
+        await sleep(200)
+        var box = document.querySelector('.dsh-claude-search-trigger')
+        var ownRow = document.querySelector('.dsh-claude-search-bar')
+        var slot = sidebarSlot.querySelector('[class*="_searchSlot"]')
+        return {
+          triggerInRow: !!logoRow.querySelector('.dsh-claude-search-trigger'),
+          rowMarked: logoRow.hasAttribute('data-dsh-claude-search-row'),
+          barAfterRow: !!ownRow && ownRow.parentElement === logoRow.parentElement && ownRow.previousElementSibling === logoRow,
+          triggerInBar: !!ownRow && !!box && box.parentElement === ownRow,
+          triggerVisibility: box ? getComputedStyle(box).visibility : null,
+          hostSlotPosition: getComputedStyle(slot).position,
+          hostSlotWidth: Math.round(slot.getBoundingClientRect().width),
+        }
+      }
       r.search = {
         placed: !!searchTrigger && searchTrigger.previousElementSibling === logoRow.firstElementChild,
         rowMarked: logoRow.hasAttribute('data-dsh-claude-search-row'),
         resting: searchTrigger ? getComputedStyle(searchTrigger).visibility : null,
         modalRendered: !!probe.searchRoot && probe.searchRoot.renders > 0,
       }
+      r.search.standalone = await styleOf('standalone')
+      r.search.icon = await styleOf('icon')
+      // The host's own button is live again in the icon style; a listener on an
+      // ancestor stands in for the host's own click handling, which the skin's
+      // takeover must keep from running.
+      var hostButton = sidebarSlot.querySelector('[class*="_searchButton"]')
+      var reachedHost = 0
+      var countHost = function () { reachedHost++ }
+      sidebarSlot.addEventListener('click', countHost)
+      if (hostButton) hostButton.click()
+      await sleep(60)
+      sidebarSlot.removeEventListener('click', countHost)
+      r.search.icon.hostClicksReachingHost = reachedHost
+      r.search.back = await styleOf('overlay')
     })
   })
 })()

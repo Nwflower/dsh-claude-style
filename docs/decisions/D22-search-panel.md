@@ -6,23 +6,24 @@
 
 ## 决定
 
-- 放置：侧栏搜索框插在宿主品牌行（`[data-slot="sidebar"]` 里的 `_logoRow`）的品牌旁边，只在这一行带宽版品牌时放置。这一行改成网格，品牌与搜索框同占第一格，两者的淡入淡出交给样式表的 `[data-slot="sidebar"]:hover`。
-- 快捷键：宿主的 `session.search` 没有可替换的公开入口，它的效果是展开宿主自己的侧栏搜索并聚焦输入框。宿主的这块搜索因此保持挂载、只从视觉与布局里拿掉；焦点落进它的输入框时搜索面板打开，并经宿主自己的清除按钮把它收回，快捷键改绑后也跟着走。
+- 放置：搜索框的位置由偏好 `searchStyle` 决定，三档，选择随属性 `data-dsh-claude-search-style` 落到文档，样式表按它分流。`overlay`（默认）把搜索框插在宿主品牌行（`[data-slot="sidebar"]` 里的 `_logoRow`）的品牌旁边，这一行改成网格，品牌与搜索框同占第一格，两者的淡入淡出交给样式表的 `[data-slot="sidebar"]:hover`；`standalone` 在品牌行下方插入皮肤自己的一行，一直显示；`icon` 不画皮肤的搜索框，让宿主自己的搜索按钮留在原处，只接管它的单击。三档都只在这一行带宽版品牌时放置。
+- 快捷键：宿主的 `session.search` 没有可替换的公开入口，它的效果是展开宿主自己的侧栏搜索并聚焦输入框。宿主的这块搜索因此保持挂载，`overlay` 与 `standalone` 下只从视觉与布局里拿掉，`icon` 下就留在原处；焦点落进它的输入框时搜索面板打开，并经宿主自己的清除按钮把它收回，快捷键改绑后也跟着走。
 - 面板是宿主 ui-primitives 的 `Modal`：遮罩、焦点归还、Esc 与模态层都用宿主的；卡片里的行由皮肤搭。它不套 D16 的弹层外壳，但登记进弹层互斥表。`Modal` 关闭即卸载，所以关闭时先给遮罩层打标记、保持挂载淡出，淡出结束后再卸载，标记在卸载之后才撤（否则重播一帧入场动画）。
 - 数据读宿主的客户端服务：`sessions.list` 与 `workspaces.list`（去掉已归档、子代理与空白占位）、`remote.pluginInventory` 与 `remote.pluginManager`、当前会话的 `remote.skills`、`shortcuts.catalog`。远程命名空间在面板打开时用 `ctx.get('remote.<名字>')` 读（在根上下文直接读 `remote` 的子属性会被 cordis 以「没有 inject」拒绝）。
-- 导航用宿主自己的：`uiWorkspace.openSession` / `startSession`、`pluginNavigation.openBundle`、`layout.selectPanel`；Skill 经会话输入的 `setDraft` 与 `focus`；设置页与快捷键列表经它们在插槽登记里声明的 store（`slots.entries(key)` 条目上的 `store.create()`）打开。快捷键行打开快捷键列表，不代为执行命令（宿主的快捷键命令没有公开的执行入口）。
+- 导航用宿主自己的：`uiWorkspace.openSession` / `startSession`、`pluginNavigation.openBundle`、`layout.selectPanel`；Skill 经会话输入的 `setDraft` 与 `focus`；设置页与快捷键列表经它们在插槽登记里声明的 store（`slots.entries(key)` 条目上的 `store.create()`）打开。快捷键行打开快捷键列表，不代为执行命令（宿主的快捷键命令没有公开的执行入口）。内容命中还要落到那条消息所在的一轮：面板开完会话，等这一轮进了窗口再按命中消息的事件序号定位（按 `turnOutline` 找轮次，跳转本身走 D34 那一套，按宿主的刻度跳）。
 - 匹配沿用宿主侧栏搜索的子串规则，排序为：标题开头、标题中的词开头、标题其他位置、第二个键（路径、包名、描述、别名）。
-- 消息内容由宿主半边的 `/session-search` 路由搜（`packages/host/src/search.ts`）：经 `sessionQuery.readSession` 读原始日志，只取用户与助手消息里的文本块，匹配照搬 `sessionQuery` 的 `text` 过滤（字面、不分大小写、空白可伸缩）。每个会话的消息文本连同变化标记留在内存里——存档用持久化后端 `list()` 的修订号，开着的会话用日志长度 `seq`——只重读标记变了的会话，子代理会话不读。面板打开时先发一次不带查询的请求预热；每个会话只回最新的一处命中，附摘录与命中位置。
+- 消息内容由宿主半边的 `/session-search` 路由搜（`packages/host/src/search.ts`）：日志经共享的 `session-events.ts` 读，只收人类发出的 `user/message`（按 `data.source.kind === 'user'` 排除注入的环境快照、Skill 目录、AGENTS.md 与压缩检查点）与助手消息里的 text 块，`reasoning`、`tool-call`、`tool/result` 都不进语料；匹配照搬 `sessionQuery` 的 `text` 过滤（字面、不分大小写、空白可伸缩）。每个会话的语料落一份 `$DSH_HOME/cache/dsh-claude-style/search/<会话 id>.json`（走共享的 `cache-file.ts`，与峰谷目录、用量缓存同目录）：热启动读这些文件，只重读修订号变了的存档会话；宿主开着的会话按 `seq` 只读新增的那一段。存档会话的清单每 3 秒列一次（列一次要开每个日志的头部帧，是这条路上最贵的一步）；面板打开时先发一次不带查询的请求预热；每个会话只回最新的一处命中，附摘录与命中位置。
 
 ## 理由
 
 - 面板要做的每件事宿主都已有一条路，借用这些路，行为与宿主各处一致。
+- 位置属于读者的口味，三档的行为一致：品牌行里的搜索框会盖住品牌，有人要宿主自己的图标、有人要一个一直看得见的框，所以做成三档偏好，三档共用同一个面板。
 - 内容搜索是唯一的例外：宿主的索引 `sessions.search`（SQLite FTS5）在出厂 Web 组合里关闭，它的 `unicode61` 分词搜不到中文句中的字；读日志与匹配规则仍用宿主的。
 
 ## 代价
 
 - 依赖上面这些服务、store 与品牌行结构的现状；数据与导航要在真实页面核对。
-- 内容搜索在进程启动后第一次要读完全部会话（本机 128 个会话约 16 秒），之后每次查询约 0.1 秒；消息文本常驻宿主进程内存，大小约等于全部对话的文字量。
+- 内容搜索在一台还没有语料缓存的机器上，第一次搜索要读完全部会话日志（本机 260 个会话一次约 1 分钟）；此后每次宿主进程启动读一遍语料文件约 1.4 秒，单次查询约 5–20 毫秒。语料按会话落盘（本机约 6 MB），内存里另有一份小写副本。存档会话的清单每 2 秒最多列一次，列一次约 1.3 秒（要逐个打开日志的头部帧），由面板打开时的预热承担，打字查询不列。
 
 ## 重审条件
 

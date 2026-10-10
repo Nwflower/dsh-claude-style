@@ -2,27 +2,36 @@ import { requestFrame } from '../../core/frame'
 import * as React from 'react'
 import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
 import * as reactDom from 'react-dom/client'
+import { SIDEBAR_SEARCH_SLOT_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { SEARCH_STYLE_ICON, SEARCH_STYLE_STANDALONE } from '../../constants'
+import { conversationSessionId, findConversationSession, sessionOutline, turnForSeq } from '../../core/host'
 import { copyLabel } from '../../core/i18n'
+import { readPrefs } from '../../core/prefs'
 import { createSearchSources } from './sources'
 import type { ContentHit, SearchFilter, SearchRow } from './sources'
 import { buildElement, createStamp, setAttributeIfChanged } from '../../shared/dom'
 import { closeOtherPopovers, registerPopover, unregisterPopover } from '../../shared/popover'
 import { createSlidingPill } from '../../shared/sliding-pill'
+import { createTurnNavHost } from '../turn-nav/turn-nav-host'
 import type { HostContext } from '../../core/host'
 import type { FeatureUi } from '../../core/feature'
 import type manifest from './search.manifest'
 
 /**
- * Search: a box in the sidebar's brand row that opens a palette over the
- * window, the way Claude's sidebar search does.
+ * Search: a box in the sidebar that opens a palette over the window, the way
+ * Claude's sidebar search does.
  *
- * The box sits in the host's logo row beside the brand and replaces it only
- * while the pointer is over the sidebar (search.css); it is placed only
- * where the row carries the wide brand, so the collapsed rail keeps its
- * expand toggle. The palette is the host's own `Modal` (ui-primitives):
- * the host's mask, focus return and modal layer, so while it is open the
- * host's shortcuts treat it as the foreground dialog, and Esc closes it.
- * The skin fills the modal's card with its own rows (sources.ts).
+ * Where the box stands is the `searchStyle` preference, read on every pass:
+ * `overlay` (the default) keeps it in the host's logo row beside the brand and
+ * replaces the brand only while the pointer is over the sidebar (search.css);
+ * `standalone` gives it a row of its own under the brand row, shown always;
+ * `icon` draws no box of the skin's at all and takes the click of the host's
+ * own search button instead, which is left where the host draws it. It is
+ * placed only where the row carries the wide brand, so the collapsed rail
+ * keeps its expand toggle. The palette is the host's own `Modal`
+ * (ui-primitives): the host's mask, focus return and modal layer, so while it
+ * is open the host's shortcuts treat it as the foreground dialog, and Esc
+ * closes it. The skin fills the modal's card with its own rows (sources.ts).
  * docs/decisions D22.
  *
  * @param ctx - client context.
@@ -30,7 +39,9 @@ import type manifest from './search.manifest'
  * @returns teardown.
  */
 export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
-  const sources = createSearchSources(ctx)
+  const sources = createSearchSources(ctx, revealHit)
+  /** The host-side navigator, which lands a picked hit on its turn (D34). */
+  const hostTurns = createTurnNavHost(ctx)
   const FILTERS: { id: SearchFilter, key: string, fallback: string }[] = [
     { id: 'all', key: 'searchFilterAll', fallback: 'All' },
     { id: 'session', key: 'searchFilterSessions', fallback: 'Sessions' },
@@ -41,6 +52,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   ]
   /** Pause between the latest keystroke and a content-index request, as the host's sidebar search waits. */
   const CONTENT_DEBOUNCE_MS = 250
+  /**
+   * How long a picked content hit waits for its session to be the shown one and
+   * for the outline that names its turn. Both arrive within a few frames; a
+   * session that never shows leaves the reader where its row put him.
+   */
+  const REVEAL_WAIT_MS = 5000
   const SVG_OPEN = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
   const ICONS: Record<string, string> = {
     search: `${SVG_OPEN}<circle cx="7" cy="7" r="4.5"/><path d="M10.4 10.4 13.5 13.5"/></svg>`,
@@ -58,6 +75,14 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The sidebar box, and the logo row it was placed in. */
   let trigger: HTMLButtonElement | null = null
   const rowStamp = createStamp('data-dsh-claude-search-row')
+  /** The box's own row in the `standalone` style, under the brand row. */
+  let bar: HTMLElement | null = null
+  /**
+   * The host's own search button, and the listener on it: the `icon` style
+   * leaves that button where the host draws it and opens the palette from its
+   * click, so the listener follows the element React mounts this time.
+   */
+  let hostButton: HTMLElement | null = null
   /** The React root the host's Modal renders from, and its container. */
   let modalRoot: reactDom.Root | null = null
   /**
@@ -75,7 +100,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The modal's overlay root, marked while it fades out. */
   const closingStamp = createStamp('data-dsh-claude-search-closing')
   /** The host's own sidebar search, which the palette stands in for. */
-  const HOST_SEARCH = '[data-slot="sidebar"] [class*="_searchSlot"]'
+  const HOST_SEARCH = SIDEBAR_SEARCH_SLOT_SELECTOR
   /** The palette's own nodes while it is open; `card` is the div the modal hands over. */
   let card: HTMLElement | null = null
   let input: HTMLInputElement | null = null
@@ -110,17 +135,64 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     return button
   }
 
+  /**
+   * The host's own search button, whose click opens the palette in the `icon`
+   * style: the listener follows the element React mounts this time, because a
+   * re-render can replace it.
+   */
+  function syncHostButton() {
+    const found = document.querySelector<HTMLElement>(`${HOST_SEARCH} button`)
+    if (found === hostButton) return
+    if (hostButton !== null) hostButton.removeEventListener('click', onHostSearchClick)
+    hostButton = found
+    if (hostButton !== null) hostButton.addEventListener('click', onHostSearchClick)
+  }
+
+  /**
+   * The host's own click, taken over: the palette opens in its place. The
+   * press never reaches the host's own handler, so its search input never
+   * expands and the header keeps its actions.
+   */
+  function onHostSearchClick(event: MouseEvent) {
+    event.preventDefault()
+    event.stopPropagation()
+    openPalette()
+  }
+
+  /** Take the box and its own row off the page, giving the host's brand row back. */
+  function dropTrigger() {
+    if (trigger !== null && trigger.parentElement !== null) trigger.parentElement.removeChild(trigger)
+    if (bar !== null && bar.parentElement !== null) bar.parentElement.removeChild(bar)
+    rowStamp.release()
+  }
+
+  /**
+   * Place the box for the style in force. The `icon` style places nothing of
+   * the skin's; `overlay` and `standalone` share the box and differ in what
+   * holds it — the host's logo row, or the skin's own row under it.
+   */
   function syncTrigger() {
     const brand = document.querySelector('[data-slot="sidebar"] [class*="_logoRow"] > [class*="_brand"]')
     const row = brand === null ? null : brand.parentElement
-    if (brand === null || row === null) {
-      if (trigger !== null && trigger.parentElement !== null) trigger.parentElement.removeChild(trigger)
-      rowStamp.release()
+    const style = readPrefs().searchStyle
+    // The brand is absent in the collapsed rail: no wide brand, no box.
+    if (brand === null || row === null || style === SEARCH_STYLE_ICON) {
+      dropTrigger()
       return
     }
     if (trigger === null) trigger = buildTrigger()
-    if (trigger.parentElement !== row) row.insertBefore(trigger, brand.nextSibling)
-    rowStamp.mark(row)
+    if (style === SEARCH_STYLE_STANDALONE) {
+      if (bar === null) bar = buildElement('div', 'dsh-claude-search-bar')
+      // The box's row stands under the brand row, in the sidebar's own list;
+      // the host may re-render around it, so the pass re-seats it.
+      if (bar.parentElement !== row.parentElement || bar.previousElementSibling !== row) row.after(bar)
+      if (trigger.parentElement !== bar) bar.appendChild(trigger)
+      rowStamp.release()
+    } else {
+      if (bar !== null && bar.parentElement !== null) bar.parentElement.removeChild(bar)
+      if (trigger.parentElement !== row) row.insertBefore(trigger, brand.nextSibling)
+      rowStamp.mark(row)
+    }
     const label = copyLabel('searchPlaceholder', 'Search')
     const text = trigger.children[1]
     if (text.textContent !== label) text.textContent = label
@@ -151,6 +223,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   }
 
   function sync() {
+    syncHostButton()
     syncTrigger()
   }
 
@@ -456,6 +529,33 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     closePalette(row.run)
   }
 
+  /**
+   * Land on the turn holding one picked content hit, after that row's own
+   * navigation opened its session. The conversation shows the session a frame
+   * or two later and the whole-log outline lands with its binding, so both are
+   * waited for; the host's own rail takes the jump (D34).
+   */
+  function revealHit(sessionId: string, seq: number) {
+    const until = Date.now() + REVEAL_WAIT_MS
+    const retry = () => {
+      if (!disposed && Date.now() < until) requestFrame({ write: step })
+    }
+    function step() {
+      if (disposed) return
+      if (conversationSessionId(findConversationSession()) !== sessionId) {
+        retry()
+        return
+      }
+      const turn = turnForSeq(sessionOutline(ctx, sessionId), seq)
+      if (turn === null) {
+        retry()
+        return
+      }
+      hostTurns.jumpToTurn(turn, () => {})
+    }
+    step()
+  }
+
   function openPalette() {
     if (isOpen) return
     closeOtherPopovers('search')
@@ -536,13 +636,20 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     window.clearTimeout(contentTimer)
     if (contentAbort !== null) contentAbort.abort()
     sources.close()
+    hostTurns.stop()
     filterPill.release()
     if (modalRoot !== null) {
       modalRoot.unmount()
       modalRoot = null
     }
     if (trigger !== null && trigger.parentElement !== null) trigger.parentElement.removeChild(trigger)
+    if (bar !== null && bar.parentElement !== null) bar.parentElement.removeChild(bar)
     trigger = null
+    bar = null
+    if (hostButton !== null) {
+      hostButton.removeEventListener('click', onHostSearchClick)
+      hostButton = null
+    }
     rowStamp.release()
     delete ui.search
   }

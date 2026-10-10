@@ -1,6 +1,6 @@
 import { HDSL_ROUTE, HDSL_SKIN_ROUTE, USERNAME_MAX, USERNAME_ROUTE } from '../constants'
 import { CHAT_FLOW_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_PLACEHOLDER_SELECTOR, COMPOSER_SELECTOR, COMPOSER_STACK_SELECTOR, COMPOSER_STATS_SELECTOR, COMPOSER_STAT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, FOOT_AREA_SELECTOR, PERMISSION_TRIGGER_SELECTOR, TURN_PROCESS_SELECTOR } from '@dsh-claude-style/contracts/dom'
-import type { HostAssistantStep, HostChatSnapshot, HostChatTarget, HostSession, HostSessionsService, HostTurn, HostUiConversationService, HostUiSessionService } from '@dsh-claude-style/contracts/services'
+import type { HostAssistantStep, HostChatSnapshot, HostChatTarget, HostOutlineTurn, HostSession, HostSessionsService, HostTurn, HostUiConversationService, HostUiSessionService } from '@dsh-claude-style/contracts/services'
 import { readPrefs } from './prefs'
 import { closestFrom } from '../shared/dom'
 import { createHostResource } from '../shared/resource'
@@ -211,6 +211,49 @@ export function currentPreset(session: HostSession): string | null {
   // dsh 0.2+ projection faces hand back the bare value; older hosts wrapped it.
   if (typeof snapshot === 'object' && 'currentValue' in snapshot) return (snapshot as { currentValue: string }).currentValue
   return typeof snapshot === 'string' ? snapshot : null
+}
+
+/**
+ * One session's whole-log turn outline (the host's `turnOutline` projection):
+ * `{ turn, seq, prompt, response }` per started turn, or undefined where the
+ * assembly does not mount that projection. `seq` is the turn's `turn/start`
+ * event, which is what the host's own jump pages history through (D34).
+ */
+export function sessionOutline(ctx: HostContext, sessionId: string): HostOutlineTurn[] | undefined {
+  const face = ctx.get('sessions')?.binding(sessionId)?.session?.projections?.faceOf('turnOutline')
+  return typeof face?.getSnapshot === 'function' ? face.getSnapshot() : undefined
+}
+
+/**
+ * The turn holding one event seq: the latest outline entry at or before it. An
+ * outline that does not reach that far answers null, and the caller leaves the
+ * reading position where it is.
+ */
+export function turnForSeq(outline: HostOutlineTurn[] | undefined, seq: number): number | null {
+  if (!Array.isArray(outline)) return null
+  let found: number | null = null
+  for (const entry of outline) {
+    if (entry === null || typeof entry !== 'object') continue
+    if (!Number.isSafeInteger(entry.turn) || !Number.isSafeInteger(entry.seq)) continue
+    if (entry.seq > seq) continue
+    if (found === null || entry.turn > found) found = entry.turn
+  }
+  return found
+}
+
+/**
+ * The event seq a turn started at, off the same whole-log outline: what the
+ * host's own jump pages history through when that turn is outside the loaded
+ * window. An outline that does not hold the turn answers null.
+ */
+export function outlineSeq(outline: HostOutlineTurn[] | undefined, turn: number): number | null {
+  if (!Array.isArray(outline)) return null
+  for (const entry of outline) {
+    if (entry === null || typeof entry !== 'object') continue
+    if (entry.turn !== turn || !Number.isSafeInteger(entry.seq)) continue
+    return entry.seq
+  }
+  return null
 }
 
 /**

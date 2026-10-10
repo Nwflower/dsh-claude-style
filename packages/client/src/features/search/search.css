@@ -1,11 +1,17 @@
 /* ---------- Sidebar search box ---------- */
-/* packages/client/src/features/search/search.ts puts the box in the host's logo row, beside
-   the brand, and marks the row. The row becomes a two-column grid whose first
-   cell holds the brand and the box on top of each other (the web shell's
-   collapse toggle keeps the second; the desktop's is fixed in the titlebar).
-   At rest the brand shows; while the pointer is anywhere over the sidebar the
-   two cross-fade, on the same 0.16s the workspace heading and its segmented
-   control trade places with. A box that holds the keyboard stays.
+/* packages/client/src/features/search/search.ts places the box by the `searchStyle`
+   preference, which rides <body> as data-dsh-claude-search-style: `overlay`
+   (the default, everything below) puts it in the host's logo row, `standalone`
+   gives it a row of its own under that row, and `icon` draws no box of the
+   skin's at all — the host's own search button stands, and search.ts takes its
+   click (so the rules that put the host's slot out of sight skip that style).
+
+   The overlay row becomes a two-column grid whose first cell holds the brand
+   and the box on top of each other (the web shell's collapse toggle keeps the
+   second; the desktop's is fixed in the titlebar). At rest the brand shows;
+   while the pointer is anywhere over the sidebar the two cross-fade, on the
+   same 0.16s the workspace heading and its segmented control trade places
+   with. A box that holds the keyboard stays.
    The box is the first row of the sidebar's list: it takes the same 28px and
    the same 6px step down to the row below, so the host's logo row carries it
    at 28px with no padding of its own. The host gives that row no top margin
@@ -65,6 +71,21 @@ body[data-dsh-claude-style] [data-dsh-claude-search-row] > [class*="_brand"]:has
   visibility: hidden;
   pointer-events: none;
 }
+/* Standalone: the box keeps a row of its own under the brand row and shows
+   whether or not the pointer is over the sidebar. The row takes the same 28px
+   and the same 6px foot as the rows below it, so the box lands on the sidebar
+   list's rhythm rather than on the brand row's own 4px. */
+body[data-dsh-claude-style][data-dsh-claude-search-style="standalone"] .dsh-claude-search-bar {
+  display: flex;
+  padding: 0 8px;
+  margin: 0 0 6px 0;
+}
+body[data-dsh-claude-style][data-dsh-claude-search-style="standalone"] .dsh-claude-search-trigger {
+  flex: 1 1 auto;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
 /* The Windows desktop shell's sidebar column starts under its 40px titlebar,
    which left the brand a titlebar's height lower than on the web; the row rises
    to that edge. It rises 6px and not the 10px this rule carried while the box
@@ -100,15 +121,18 @@ html[data-windows-titlebar] body[data-dsh-claude-style] [data-dsh-claude-search-
 html[data-platform=darwin] body[data-dsh-claude-style] [data-dsh-claude-search-row] {
   grid-template-columns: minmax(0, 1fr) !important;
 }
-/* The host's own sidebar search stays mounted, since its shortcut (Ctrl+K)
-   ends by focusing its input and that focus is what opens the palette; it is
-   only taken out of sight and out of the header's layout. The header packs
-   its children to the right and relied on that slot's flex to hold the
-   heading at the left, so the heading now takes the free space itself. */
+/* The host's own sidebar search stays mounted while the box stands in for it:
+   its shortcut (Ctrl+K) ends by focusing its input and that focus is what opens
+   the palette, so it is only taken out of sight and out of the header's layout.
+   The `icon` style is the exception — there the host's own button is the
+   reader's way in, and the slot keeps everything the host gives it.
+   The header packs its children to the right and relied on that slot's flex to
+   hold the heading at the left, so the heading now takes the free space
+   itself. */
 body[data-dsh-claude-style] [data-slot="sidebar"] [class*="_sectionHeader"] > [class*="_sectionLabel"] {
   margin-right: auto;
 }
-body[data-dsh-claude-style] [data-slot="sidebar"] [class*="_searchSlot"] {
+body[data-dsh-claude-style]:not([data-dsh-claude-search-style="icon"]) [data-slot="sidebar"] [class*="_searchSlot"] {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -121,7 +145,7 @@ body[data-dsh-claude-style] [data-slot="sidebar"] [class*="_searchSlot"] {
 /* Expanding that search would clear the header's actions (view options, add
    workspace) out of its way for the moment before the palette folds it back;
    with the search out of sight they have nothing to make room for. */
-body[data-dsh-claude-style] [data-slot="sidebar"] [class*="_headerActionsHidden"] {
+body[data-dsh-claude-style]:not([data-dsh-claude-search-style="icon"]) [data-slot="sidebar"] [class*="_headerActionsHidden"] {
   opacity: 1 !important;
   visibility: visible !important;
   max-width: 60px !important;
