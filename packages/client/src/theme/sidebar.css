@@ -103,6 +103,14 @@ body[data-dsh-claude-style][data-ds-dark-theme] [class*="_frame"]:not([data-side
 body[data-dsh-claude-style] [data-sidebar-collapsed] button[class*="newSession"]:hover {
   background: transparent !important;
 }
+/* Collapsed, that control is the host's 36px icon button with the chip as its
+   icon, and the host's own icon seat holds nothing there (the svg below is
+   hidden, the label is 0 wide). The seat still takes its share of the flex row,
+   which pushes the chip that far left of the rail's centre line; the seat goes,
+   and the button's own centring puts the chip where every other icon stands. */
+body[data-dsh-claude-style] [data-sidebar-collapsed] button[class*="newSession"] [class*="newSessionLabelMask"] {
+  display: none;
+}
 body[data-dsh-claude-style] button[class*="newSession"] svg {
   display: none;
 }

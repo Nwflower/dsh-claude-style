@@ -20,6 +20,7 @@ const { readerScrollScenario } = require('./reader-scroll.cjs')
 const { processSummaryScenario } = require('./process-summary.cjs')
 const { reasoningStreamScenario } = require('./reasoning-stream.cjs')
 const { statsScenarios } = require('./stats-position.cjs')
+const { sidebarRailScenario } = require('./sidebar-rail.cjs')
 const { remoteSettingsScenario } = require('./remote-settings.cjs')
 const { CANVAS } = require('../../scripts/shoot.cjs')
 const { sanitizePage } = require('../../scripts/shared/privacy.cjs')
@@ -298,6 +299,8 @@ const SCENARIOS = {
     },
   },
   ...statsScenarios({ check }),
+  /** The collapsed rail as one icon column, its chip centred on it (sidebar-rail.cjs). */
+  sidebarRail: sidebarRailScenario({ check }),
   /** The waiting line and the counted process headers (process-summary.cjs, D32). */
   processSummary: processSummaryScenario({ check }),
   /** The reasoning's streamed window while the model thinks (reasoning-stream.cjs, D32). */

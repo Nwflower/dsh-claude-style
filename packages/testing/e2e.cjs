@@ -21,7 +21,7 @@
  * writes can reach another.
  *
  * Usage: node packages/testing/e2e.cjs [--scenario <name>[,<name>…]] [--headed] [--out <dir>] [--delay <ms>]
- *        scenarios: conversation, narrow, tool, scroll, readerScroll, send, processSummary, reasoningStream, contract, statsPosition, statsOverlay, importance, remoteSettings, shots
+ *        scenarios: conversation, narrow, tool, scroll, readerScroll, send, processSummary, reasoningStream, contract, statsPosition, statsOverlay, sidebarRail, importance, remoteSettings, shots
  *        (default: every scenario but statsPosition and statsOverlay)
  */
 'use strict'
@@ -230,7 +230,7 @@ async function main() {
       + `${unknown.length > 0 ? `; named there but missing here: ${unknown.join(', ')}` : ''}`
       + `${unnamed.length > 0 ? `; run here but unnamed there: ${unnamed.join(', ')}` : ''}`)
   }
-  const names = (argOf('scenario') ?? 'conversation,narrow,tool,send,scroll,readerScroll,processSummary,reasoningStream,contract,importance,remoteSettings,shots').split(',').map((name) => name.trim()).filter(Boolean)
+  const names = (argOf('scenario') ?? 'conversation,narrow,tool,send,scroll,readerScroll,processSummary,reasoningStream,sidebarRail,contract,importance,remoteSettings,shots').split(',').map((name) => name.trim()).filter(Boolean)
   const out = path.resolve(argOf('out') ?? DEFAULT_OUT)
   const options = {
     headed: args.includes('--headed'),

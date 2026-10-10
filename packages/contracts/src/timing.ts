@@ -16,7 +16,7 @@
  */
 
 /** The end-to-end lane's scenarios; the lane checks its own names against these. */
-export const E2E_SCENARIOS = ['conversation', 'narrow', 'tool', 'send', 'scroll', 'readerScroll', 'processSummary', 'reasoningStream', 'statsPosition', 'statsOverlay', 'contract', 'importance', 'remoteSettings', 'shots'] as const
+export const E2E_SCENARIOS = ['conversation', 'narrow', 'tool', 'send', 'scroll', 'readerScroll', 'processSummary', 'reasoningStream', 'statsPosition', 'statsOverlay', 'sidebarRail', 'contract', 'importance', 'remoteSettings', 'shots'] as const
 
 /** One timing assumption, and how it is held. */
 interface HostTimingEntry {
