@@ -1,5 +1,6 @@
-import { COMPOSER_ATTR, COMPOSER_HIDDEN_ATTR, HOME_LAYOUT_STUDIO } from '../../constants'
+import { COMPOSER_ATTR, COMPOSER_HIDDEN_ATTR, HOME_LAYOUT_STUDIO, STATS_POSITION_CONTEXT } from '../../constants'
 import { DIALOG_TRIGGER_SELECTOR, PHASE_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
+import { observeSize } from '../../core/bus'
 import { COMPOSER_STACK, closestComposerCard, findAccessTrigger, findComposerCards, findComposerPlaceholder, findComposerSeat, findConversationScroller } from '../../core/host'
 import { composerRestyleRetired, readPrefs } from '../../core/prefs'
 import type { HostContext } from '../../core/host'
@@ -177,6 +178,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     return null
   }
 
+  /** The custom properties the dock overlay reads to copy the toolbar row's own box. */
+  const METER_ROW_OFFSET = '--dsh-claude-meter-row-offset'
+  const METER_ROW_HEIGHT = '--dsh-claude-meter-row-height'
   /** The room the meter takes at the toolbar row's right end, as the row carries it. */
   let meterRoom = ''
   /** The meter node the room was measured from, and the reading and scope it had then. */
@@ -184,6 +188,80 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let meterReading = ''
   let meterMeasuredActive = false
   let meterWidth = 0
+  /** The toolbar row's own box as <body> carries it (`"offset height"`), and the box it was read from. */
+  let meterRow = ''
+  let meterRowBox: Element | null = null
+  let meterRowStack: Element | null = null
+  let stopMeterRow: (() => void) | null = null
+
+  /**
+   * Copy the toolbar row's own box onto <body> for the window overlay: the row's
+   * height, and how far its bottom stands above the box the dock is placed in
+   * (that box is the composer stack, which the stylesheet makes the containing
+   * block — inline-bar.css). Both belong to the host, and a host whose card
+   * leaves a different gap under the row, or a taller row, puts the meter off
+   * that row's line: the overlay reads these two numbers instead of assuming the
+   * 28px and the 4px this host leaves.
+   *
+   * The reading is taken when the row or the stack changes size, never on every
+   * pass: the same caching the room below keeps, and for the same reason.
+   */
+  function stampMeterRow(card: HTMLElement | undefined, meter: HTMLElement | null) {
+    const row = card === undefined || !active || readPrefs().statsPosition !== STATS_POSITION_CONTEXT || meter === null
+      ? null
+      : card.querySelector('[class*="_trailing"]')?.parentElement ?? null
+    const stack = row === null ? null : closestFrom(row, COMPOSER_STACK)
+    if (row === null || stack === null) {
+      if (meterRow === '' && meterRowBox === null) return
+      meterRow = ''
+      meterRowBox = null
+      meterRowStack = null
+      if (stopMeterRow !== null) {
+        stopMeterRow()
+        stopMeterRow = null
+      }
+      document.body.style.removeProperty(METER_ROW_OFFSET)
+      document.body.style.removeProperty(METER_ROW_HEIGHT)
+      return
+    }
+    if (meterRowBox !== row || meterRowStack !== stack) {
+      // A rebuilt row or stack: the watcher follows the new boxes.
+      if (stopMeterRow !== null) stopMeterRow()
+      stopMeterRow = observeSize([row, stack], () => {
+        meterRow = ''
+        stampContextMeter(findComposerCards()[0])
+      })
+      meterRowBox = row
+      meterRowStack = stack
+      meterRow = ''
+    }
+    if (meterRow !== '') return
+    const rowBox = row.getBoundingClientRect()
+    if (rowBox.height <= 0) return
+    const stackBox = stack.getBoundingClientRect()
+    const round = (value: number) => Math.round(value * 100) / 100
+    meterRow = `${round(stackBox.bottom - rowBox.bottom)} ${round(rowBox.height)}`
+    const [offset, height] = meterRow.split(' ')
+    document.body.style.setProperty(METER_ROW_OFFSET, `${offset}px`)
+    document.body.style.setProperty(METER_ROW_HEIGHT, `${height}px`)
+  }
+
+  /**
+   * The width the meter's pill takes: the node the host parks in the dock, and
+   * the trigger inside it — the button whose hover face is the pill the reader
+   * sees. A host whose trigger reaches outside its wrapper (the button wider
+   * than the span around it, or shifted inside it) would otherwise leave the
+   * row's own text under that face, so the room covers the two boxes' union.
+   */
+  function meterPillWidth(meter: HTMLElement) {
+    const trigger = meter.querySelector('button')
+    if (trigger === null) return meter.offsetWidth
+    const wrapper = meter.getBoundingClientRect()
+    const face = trigger.getBoundingClientRect()
+    // Rounded up: the room is a whole number of pixels, and one pixel more than
+    // the pill takes never leaves the row's text under its face.
+    return Math.ceil(Math.max(wrapper.right, face.right) - Math.min(wrapper.left, face.left))
+  }
 
   /**
    * Stamp the context-occupancy meter and keep its room on the toolbar row.
@@ -192,8 +270,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * it out crashed React's unmount (Node.removeChild). The stylesheet lays
    * the dock over the toolbar row and puts the meter at the row's right end,
    * after the model and effort triggers; the trailing cluster keeps that
-   * room free through --dsh-claude-meter-room — the meter's width plus the
-   * cluster's own 8px gap.
+   * room free through --dsh-claude-meter-room — the pill the reader sees,
+   * trigger and wrapper together, plus the cluster's own 8px gap. With the
+   * session's numbers asked onto a line of their own the dock keeps the
+   * host's placement, nothing overlays the row, and no room is measured.
    *
    * The meter is re-resolved only when the cached node left the tree, and
    * its width is re-read only when its reading moved (the trigger IS the
@@ -223,7 +303,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       // Re-measure when the reading moved or the restyle scope flipped:
       // either can change what the room should be.
       if (reading !== meterReading || active !== meterMeasuredActive) {
-        const width = active ? meter.offsetWidth : 0
+        const width = active ? meterPillWidth(meter) : 0
         // A zero width with the restyle on is the composer having no box
         // right now, never a meter that takes no room.
         if (!active || width > 0) {
@@ -232,9 +312,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
           meterWidth = width
         }
       }
-      if (active) room = meterWidth > 0 ? `${meterWidth + 8}px` : meterRoom
+      if (active && readPrefs().statsPosition === STATS_POSITION_CONTEXT) room = meterWidth > 0 ? `${meterWidth + 8}px` : meterRoom
     }
     meterNode = meter
+    stampMeterRow(card, meter)
     const written = document.body.style.getPropertyValue('--dsh-claude-meter-room')
     if (room === written) {
       meterRoom = room
@@ -338,6 +419,15 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       meterRoom = ''
       document.body.style.removeProperty('--dsh-claude-meter-room')
     }
+    if (stopMeterRow !== null) {
+      stopMeterRow()
+      stopMeterRow = null
+    }
+    meterRow = ''
+    meterRowBox = null
+    meterRowStack = null
+    document.body.style.removeProperty(METER_ROW_OFFSET)
+    document.body.style.removeProperty(METER_ROW_HEIGHT)
     meterNode = null
     meterReading = ''
     meterMeasuredActive = false

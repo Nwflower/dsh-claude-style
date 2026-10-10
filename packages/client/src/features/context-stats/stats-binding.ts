@@ -71,6 +71,54 @@ export function createContextStatsBinding() {
   }
 
   /**
+   * Bind the line of numbers as the panel's second trigger: the figures are what
+   * the panel's rows expand on, so the line opens it and closes it again. Only
+   * the press does that — the pointer path stays the meter's alone, so resting a
+   * pointer on the figures never unfolds the panel (D27). A rebuilt line is bound
+   * once per generation, like the meter.
+   */
+  function bindContextLine(line: Element) {
+    if (line.__dshContextLineToken === statsBindingToken) return
+    line.__dshContextLineToken = statsBindingToken
+    line.setAttribute('role', 'button')
+    line.setAttribute('tabindex', '0')
+    line.setAttribute('aria-haspopup', 'dialog')
+    line.setAttribute('aria-expanded', 'false')
+    line.addEventListener('click', (event) => {
+      // The host reads presses outside its panel as a dismissal; the press that
+      // opens it must not reach that reader in the same event.
+      event.stopPropagation()
+      toggleContextPanel()
+    })
+    line.addEventListener('keydown', (event) => {
+      if (!(event instanceof KeyboardEvent)) return
+      if (event.key === 'Escape') {
+        event.stopPropagation()
+        closeContextPanel()
+        return
+      }
+      if (event.key !== 'Enter' && event.key !== ' ') return
+      event.preventDefault()
+      event.stopPropagation()
+      toggleContextPanel()
+    })
+  }
+
+  /** Open the panel from either trigger, or close it when it is already open. */
+  function toggleContextPanel() {
+    const trigger = contextTrigger()
+    if (trigger !== null && trigger.getAttribute('aria-expanded') === 'true') closeContextPanel()
+    else openContextPanel()
+  }
+
+  /** Say on the line what the host's trigger says, so the button follows the panel it drives. */
+  function syncContextLineState(line: Element) {
+    const trigger = contextTrigger()
+    const expanded = trigger !== null && trigger.getAttribute('aria-expanded') === 'true' ? 'true' : 'false'
+    if (line.getAttribute('aria-expanded') !== expanded) line.setAttribute('aria-expanded', expanded)
+  }
+
+  /**
    * Line the panel's right edge up with the meter's.
    *
    * The panel is the host's and its coordinates are inline: ui-chat places
@@ -135,6 +183,10 @@ export function createContextStatsBinding() {
     bindMeter: bindContextMeter,
     /** Bind the panel once per generation, and take the alignment reading. */
     bindPanel: bindContextPanel,
+    /** Bind the line of numbers as the panel's second trigger, once per generation. */
+    bindLine: bindContextLine,
+    /** Write the host panel's open state onto the line. */
+    syncLine: syncContextLineState,
     /** Re-take the alignment reading (the viewport moved). */
     align: alignContextPanel,
     /** Close the panel the host's trigger opened. */

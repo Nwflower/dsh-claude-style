@@ -122,6 +122,8 @@ function page(name, tier, cases) {
   var dock = '<div class="_x_dock_1">' + stats +
       '<span class="_m_meter_1"><button type="button" id="context-meter" class="_m_trigger_1" aria-haspopup="dialog" aria-expanded="false" aria-label="Context used 42%">' +
         // The host gives the filled arc a dash array and leaves its track bare
+        // (packages/contracts/src/dom.ts, composer.meter-fill), which is how the skin
+        // tells the two apart when it paints the reading's colour onto it.
         '<svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="5.5"></circle><circle cx="7" cy="7" r="5.5" stroke-dasharray="15.5 34.5"></circle></svg><span>42%</span></button></span>' +
     '</div>'
   // The hero row's two pickers, only where the popovers case drives them: each is

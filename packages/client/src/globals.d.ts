@@ -25,9 +25,10 @@ declare var __dshStepDisplay: { set: (mode: 'compact' | 'standard' | 'detailed' 
  * generation can tell its own binding apart from one it must redo.
  */
 interface Element {
-  /** The context meter and panel bound by this generation (features/context-stats). */
+  /** The context meter, panel and line of numbers bound by this generation (features/context-stats). */
   __dshContextMeterToken?: object
   __dshContextPanelToken?: object
+  __dshContextLineToken?: object
   /** The host's account row and menu bound by this generation (features/account). */
   __dshHostRowToken?: object
   __dshHostHoverBound?: boolean

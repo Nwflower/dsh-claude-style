@@ -64,23 +64,31 @@ body[data-dsh-claude-style] [class*="_trailing"] .dsh-claude-model-btn-label {
    sits under [class*="_trailing"], so the rules drafted for that seat were dead
    and have been removed.) */
 
-/* The host's dock line — the context meter and (hidden, see below) the stats
-   pills — laid over the toolbar row. Both stay in their native React parent
-   (moving them out crashed React's unmount with Node.removeChild), so the dock
-   itself leaves the flow for the row's line, with the meter at the row's right
-   end. The dock is the card's next sibling; the queue, todo and goal overlays
-   above the card name their roots `dock` too and keep the host's own
-   placement. The 4px is the inset the card leaves under itself inside the
-   stack: the dock's 28px line is then exactly the control row's line. */
-body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) {
+/* The host's dock line — the context meter and the stats pills — laid over the
+   toolbar row while the numbers live in the context popover. Both stay in their
+   native React parent (moving them out crashed React's unmount with
+   Node.removeChild), so the dock itself leaves the flow for the row's line,
+   with the meter at the row's right end. The dock is the card's next sibling;
+   the queue, todo and goal overlays above the card name their roots `dock` too
+   and keep the host's own placement.
+
+   The overlay copies the row's own box: its distance above the containing block
+   and its height come from --dsh-claude-meter-row-offset / -height, which the
+   composer pass measures off the row (features/composer/composer.ts) because
+   both are the host's — a host whose card leaves a different gap under that row
+   would otherwise put the meter several pixels off the row's line. The values
+   here are this window's own fallbacks, for the frames before the first
+   reading. With the numbers asked onto a line of their own the dock keeps the
+   host's own placement instead, and every rule here stands aside. */
+body[data-dsh-claude-style][data-dsh-claude-stats-position="context"] [class*="_composerStack"]:not([data-composer-variant="hero"]) {
   position: relative;
 }
-body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] + [class*="_dock"] {
+body[data-dsh-claude-style][data-dsh-claude-stats-position="context"] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] + [class*="_dock"] {
   position: absolute;
-  bottom: 4px;
+  bottom: var(--dsh-claude-meter-row-offset, 4px);
   left: var(--dsh-composer-side-clearance, 0px);
   right: var(--dsh-composer-side-clearance, 0px);
-  height: 28px;
+  height: var(--dsh-claude-meter-row-height, 28px);
   margin: 0 auto;
   padding: 0 calc(160px + var(--dsh-claude-meter-room, 0px)) 0 140px;
   display: flex;
@@ -92,7 +100,7 @@ body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant
   max-width: var(--dsh-composer-card-max-width, 100%);
   box-sizing: border-box;
 }
-body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] + [class*="_dock"] > * {
+body[data-dsh-claude-style][data-dsh-claude-stats-position="context"] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] + [class*="_dock"] > * {
   pointer-events: auto;
 }
 /* The meter holds the row's right end, inside the row's own 4px inset, after
@@ -100,26 +108,25 @@ body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant
    (--dsh-claude-meter-room, measured by the permissions pass). Centred by
    stretching over the dock's height, never by a transform — the meter's panel
    is position: fixed, and a transform here would anchor it to the meter. */
-body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] + [class*="_dock"] > [data-dsh-claude-context-meter] {
+body[data-dsh-claude-style][data-dsh-claude-stats-position="context"] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] + [class*="_dock"] > [data-dsh-claude-context-meter] {
   position: absolute;
   top: 0;
   bottom: 0;
   right: 4px;
   align-items: center;
 }
-body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] [class*="_row"] > [class*="_trailing"] {
+body[data-dsh-claude-style][data-dsh-claude-stats-position="context"] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] [class*="_row"] > [class*="_trailing"] {
   margin-right: var(--dsh-claude-meter-room, 0px);
 }
 
-/* ---------- the host's stats row: hidden, its detail moved into the context popover ---------- */
+/* ---------- the host's stats row: hidden, its numbers moved elsewhere ---------- */
 /* The host ships two figures here (turns and steps · tok/s, total tokens · cache
    hits) with its own icons and spacing; it marks each figure since its 2026-09
    update and marked the container around them before, so both marks are hidden.
    The row STAYS in the document: its structure still tells the detailed form
    from the compact one, and the session's numbers are read from the host's
-   projections (features/context-stats/session-stats.ts) into the popover the
-   context meter opens. One popover for everything about the session's numbers,
-   and the input row keeps only the meter at its right end. */
+   projections (features/context-stats/session-stats.ts) into whichever surface
+   the position names — the context popover, or the line of their own below. */
 body[data-dsh-claude-style] [data-composer-stats],
 body[data-dsh-claude-style] [data-composer-stat] {
   display: none;
@@ -217,6 +224,212 @@ body[data-dsh-claude-style] .dsh-claude-context-stats-value {
   font-variant-numeric: tabular-nums;
 }
 
+/* ---------- the numbers on a line of their own under the card ---------- */
+/* The `inline` position: the host's row stays hidden and this line takes its
+   place beside the meter the host draws at that line's end, which is where the
+   host's own row sat. The figures are the host's words and the host's numbers
+   (features/context-stats/inline-stats.ts), with none of the host's glyphs.
+
+   Nothing here squeezes: a figure keeps the width its characters need
+   (`flex: none`), so a line with more figures than the card holds is shortened
+   by that writer's own ladder instead of drawing its figures over one another
+   and over the meter's reading. */
+/* The line and the conversation share one scroller, so the digits' entrance —
+   each new character sliding up from 8px below its place
+   (--dsh-claude-digit-distance, features/context-stats/stats-digits.ts) — reaches
+   past the composer's bottom edge and grows that scroller's scrollable height by
+   a few pixels on every rewritten figure. The tail pinning answers by moving the
+   whole column, once per entrance. Clipping to the row keeps the entrance and
+   the column both.
+
+   The figures stand apart by this gap alone: no separator glyph sits between
+   them, so the gap carries what the glyph used to. The line is the button that
+   opens the panel holding the same session's rows
+   (features/context-stats/stats-binding.ts), and the shared focus ring marks it
+   where the reader tabs to it. */
+body[data-dsh-claude-style] .dsh-claude-inline-stats {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  overflow: clip;
+  color: var(--dsw-alias-label-secondary);
+  font-family: var(--dsw-font-family);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: pointer;
+}
+body[data-dsh-claude-style] .dsh-claude-inline-seg,
+body[data-dsh-claude-style] .dsh-claude-inline-figure {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex: none;
+}
+/* A segment the session has no figure for yet, or one the ladder has given up:
+   hidden rather than drawn empty. Named with the line in front of it so it
+   outranks the display above. */
+body[data-dsh-claude-style] .dsh-claude-inline-stats .dsh-claude-inline-seg[hidden] {
+  display: none;
+}
+/* The line's measuring twin: laid out beside the line for one reading and taken
+   off before anything paints. Out of flow, so the dock keeps its layout. */
+body[data-dsh-claude-style] .dsh-claude-inline-stats[data-dsh-claude-inline-probe] {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+}
+body[data-dsh-claude-style] .dsh-claude-inline-arrow {
+  color: var(--dsw-alias-label-tertiary);
+}
+/* The ladder's third step: the meter keeps its ring and gives up the number
+   beside it (features/context-stats/inline-stats.ts). That number is the
+   trigger's height — the bare ring is shorter — and the trigger is the tallest
+   thing on the composer's bottom line, which the conversation above pins its
+   tail to: a trigger that loses its line here moves every message, so the step
+   gives up the number's width alone and the trigger keeps the one 20px line the
+   type above sets inside the host's own 1px padding. */
+body[data-dsh-claude-style] [data-dsh-claude-context-meter][data-dsh-claude-meter-tight] button {
+  min-height: 22px;
+}
+body[data-dsh-claude-style] [data-dsh-claude-context-meter][data-dsh-claude-meter-tight] button > span {
+  display: none;
+}
+
+/* ---------- Number pop-in (transitions.dev) ---------- */
+/* A number that moved re-enters one character at a time, from below with a
+   short blur, the last two characters riding in behind the rest
+   (features/context-stats/stats-digits.ts rewrites a figure's characters and the
+   new spans play this). The reader asked for it on every step and while an
+   answer streams; the skin's own motion choice governs it — theme/chrome.css
+   stills every dsh-claude-* animation when the reader chose reduced motion, and
+   following the system is that choice's default (D26). */
+@keyframes dsh-claude-digit-pop-in {
+  0% {
+    transform: translate(calc(var(--dsh-claude-digit-distance) * var(--dsh-claude-digit-dir-x)), calc(var(--dsh-claude-digit-distance) * var(--dsh-claude-digit-dir-y)));
+    opacity: 0;
+    filter: blur(var(--dsh-claude-digit-blur));
+  }
+  100% { transform: translate(0, 0); opacity: 1; filter: blur(0); }
+}
+body[data-dsh-claude-style] {
+  --dsh-claude-digit-dur: 500ms;
+  --dsh-claude-digit-distance: 8px;
+  --dsh-claude-digit-stagger: 70ms;
+  --dsh-claude-digit-blur: 2px;
+  --dsh-claude-digit-ease: cubic-bezier(0.34, 1.45, 0.64, 1);
+  --dsh-claude-digit-dir-x: 0;
+  --dsh-claude-digit-dir-y: 1;
+}
+body[data-dsh-claude-style] .dsh-claude-digit-group {
+  display: inline-flex;
+  align-items: baseline;
+}
+body[data-dsh-claude-style] .dsh-claude-digit {
+  display: inline-block;
+  animation: dsh-claude-digit-pop-in var(--dsh-claude-digit-dur) var(--dsh-claude-digit-ease) both;
+}
+body[data-dsh-claude-style] .dsh-claude-digit[data-stagger="1"] {
+  animation-delay: var(--dsh-claude-digit-stagger);
+}
+body[data-dsh-claude-style] .dsh-claude-digit[data-stagger="2"] {
+  animation-delay: calc(var(--dsh-claude-digit-stagger) * 2);
+}
+
+/* ---------- the colour band a reading takes ---------- */
+/* After dsh-chat-ux's design: one band of seven tones, a reading placed between
+   two of them and the browser mixing the two in OKLCH (features/context-stats/
+   stats-ramp.ts names the segment and where inside it the reading sits). The
+   band is semantic — a low cache share is red wherever the reader's palette
+   comes from — so its values are the skin's own and not the host's tokens. */
+body[data-dsh-claude-style] {
+  --dsh-claude-tone-red: #f85149;
+  --dsh-claude-tone-red-orange: #f26e3d;
+  --dsh-claude-tone-orange: #e3873c;
+  --dsh-claude-tone-yellow: #d29922;
+  --dsh-claude-tone-lime: #a7cf5a;
+  --dsh-claude-tone-green-light: #7ee787;
+  --dsh-claude-tone-green: #3fb950;
+}
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) {
+  --dsh-claude-tone-red: #cf222e;
+  --dsh-claude-tone-red-orange: #cd4400;
+  --dsh-claude-tone-orange: #c76a00;
+  --dsh-claude-tone-yellow: #9a6700;
+  --dsh-claude-tone-lime: #699d1a;
+  --dsh-claude-tone-green-light: #4ba95b;
+  --dsh-claude-tone-green: #1a7f37;
+}
+/* The cache share: red below 90%, orange, yellow and lime through the nineties,
+   dark green from 99% on. */
+body[data-dsh-claude-style] [data-dsh-claude-ramp="cache"][data-dsh-claude-ramp-span="low"] {
+  --dsh-claude-ramp-from: var(--dsh-claude-tone-red);
+}
+body[data-dsh-claude-style] [data-dsh-claude-ramp="cache"][data-dsh-claude-ramp-span="0"] {
+  --dsh-claude-ramp-from: var(--dsh-claude-tone-red);
+  --dsh-claude-ramp-to: var(--dsh-claude-tone-orange);
+}
+body[data-dsh-claude-style] [data-dsh-claude-ramp="cache"][data-dsh-claude-ramp-span="1"] {
+  --dsh-claude-ramp-from: var(--dsh-claude-tone-orange);
+  --dsh-claude-ramp-to: var(--dsh-claude-tone-yellow);
+}
+body[data-dsh-claude-style] [data-dsh-claude-ramp="cache"][data-dsh-claude-ramp-span="2"] {
+  --dsh-claude-ramp-from: var(--dsh-claude-tone-yellow);
+  --dsh-claude-ramp-to: var(--dsh-claude-tone-lime);
+}
+body[data-dsh-claude-style] [data-dsh-claude-ramp="cache"][data-dsh-claude-ramp-span="3"] {
+  --dsh-claude-ramp-from: var(--dsh-claude-tone-lime);
+  --dsh-claude-ramp-to: var(--dsh-claude-tone-green-light);
+}
+body[data-dsh-claude-style] [data-dsh-claude-ramp="cache"][data-dsh-claude-ramp-span="4"] {
+  --dsh-claude-ramp-from: var(--dsh-claude-tone-green-light);
+  --dsh-claude-ramp-to: var(--dsh-claude-tone-green);
+}
+body[data-dsh-claude-style] [data-dsh-claude-ramp="cache"][data-dsh-claude-ramp-span="high"] {
+  --dsh-claude-ramp-from: var(--dsh-claude-tone-green);
+}
+/* The context occupancy: green below 20%, through light green, yellow and
+   orange, to red from 40% on. */
+body[data-dsh-claude-style] [data-dsh-claude-ramp="context"][data-dsh-claude-ramp-span="low"] {
+  --dsh-claude-ramp-from: var(--dsh-claude-tone-green);
+}
+body[data-dsh-claude-style] [data-dsh-claude-ramp="context"][data-dsh-claude-ramp-span="0"] {
+  --dsh-claude-ramp-from: var(--dsh-claude-tone-green);
+  --dsh-claude-ramp-to: var(--dsh-claude-tone-green-light);
+}
+body[data-dsh-claude-style] [data-dsh-claude-ramp="context"][data-dsh-claude-ramp-span="1"] {
+  --dsh-claude-ramp-from: var(--dsh-claude-tone-green-light);
+  --dsh-claude-ramp-to: var(--dsh-claude-tone-yellow);
+}
+body[data-dsh-claude-style] [data-dsh-claude-ramp="context"][data-dsh-claude-ramp-span="2"] {
+  --dsh-claude-ramp-from: var(--dsh-claude-tone-yellow);
+  --dsh-claude-ramp-to: var(--dsh-claude-tone-orange);
+}
+body[data-dsh-claude-style] [data-dsh-claude-ramp="context"][data-dsh-claude-ramp-span="3"] {
+  --dsh-claude-ramp-from: var(--dsh-claude-tone-orange);
+  --dsh-claude-ramp-to: var(--dsh-claude-tone-red-orange);
+}
+body[data-dsh-claude-style] [data-dsh-claude-ramp="context"][data-dsh-claude-ramp-span="4"] {
+  --dsh-claude-ramp-from: var(--dsh-claude-tone-red-orange);
+  --dsh-claude-ramp-to: var(--dsh-claude-tone-red);
+}
+body[data-dsh-claude-style] [data-dsh-claude-ramp="context"][data-dsh-claude-ramp-span="high"] {
+  --dsh-claude-ramp-from: var(--dsh-claude-tone-red);
+}
+/* The reading takes the mixed colour, and the meter's ring is painted with the
+   same two ends, so the two can never disagree. */
+body[data-dsh-claude-style] .dsh-claude-inline-stats [data-dsh-claude-ramp="cache"] {
+  color: color-mix(in oklch, var(--dsh-claude-ramp-from), var(--dsh-claude-ramp-to, var(--dsh-claude-ramp-from)) var(--dsh-claude-ramp-position, 0%));
+}
+body[data-dsh-claude-style] [data-dsh-claude-context-meter][data-dsh-claude-ramp="context"] button > span {
+  color: color-mix(in oklch, var(--dsh-claude-ramp-from), var(--dsh-claude-ramp-to, var(--dsh-claude-ramp-from)) var(--dsh-claude-ramp-position, 0%));
+}
+body[data-dsh-claude-style] [data-dsh-claude-context-meter][data-dsh-claude-ramp="context"] circle[stroke-dasharray] {
+  stroke: color-mix(in oklch, var(--dsh-claude-ramp-from), var(--dsh-claude-ramp-to, var(--dsh-claude-ramp-from)) var(--dsh-claude-ramp-position, 0%));
+}
+
 /* ---------- the block while the numbers are still on their way ---------- */
 /* The two sections at the size the numbers will take, drawn as bars under the
    real headings: a row keeps a real row's 37px (16 + 1 + 20), so the panel
@@ -265,10 +478,10 @@ body[data-dsh-claude-style] .dsh-claude-context-stats-skeleton-value {
     flex: 0 1 auto;
     min-width: 0;
   }
-  body[data-dsh-claude-style] [data-dsh-claude-context-meter] button > span {
+  body[data-dsh-claude-style][data-dsh-claude-stats-position="context"] [data-dsh-claude-context-meter] button > span {
     display: none;
   }
-  body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] + [class*="_dock"] {
+  body[data-dsh-claude-style][data-dsh-claude-stats-position="context"] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] + [class*="_dock"] {
     padding: 0;
   }
 }

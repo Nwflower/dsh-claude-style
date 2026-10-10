@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-10",
+  "group": "new",
+  "order": 0,
+  "external": false,
+  "zh": "写在输入卡片下面那一行数字重新有了自己的弹层：这一行此前只显示六个读数，宿主统计行上那些明细（模型用时、工具调用用时、首 token 平均、输出速度，以及缓存命中、未缓存输入、缓存读取、写回、输出这些用量行）在「写在单独一行」这一档下无处可看。现在这一行本身就是宿主那张上下文弹层的第二个触发口——按一下这些数字，弹层就在这一行上方打开，内容仍是同一份：宿主自己的上下文行加上这一段会话的数字明细，两种位置下都由同一份数据填充；按一下再收起，回车与空格同样开合、Esc 收起，弹层开着时这一行自己也报出展开状态。悬停开合仍只归计量环那条路径：指针停在数字上不展开弹层。窗口尺寸或输入区变化时弹层照旧重新量位置。",
+  "en": "The line of numbers under the input card has its own popover again: that line showed six readings, while the detail the host's statistics row carries — model time, tool time, first-token average, output speed, and the usage rows for cache hits, uncached input, cache reads, cache writes and output — had nowhere to be read with the statistics asked onto a line of their own. The line is now the second trigger of the host's context panel: pressing the figures opens that panel above the line, holding the same session's data — the host's own context rows followed by the numbers' own detail rows, filled from one source in either position; pressing again puts it away, Enter or Space does the same from the keyboard, Escape closes it, and the line reports its own expanded state while the panel stands. Opening and closing on hover stays the ring's own path: resting a pointer on the figures never unfolds the panel. The panel re-takes its placement when the window or the composer changes."
+}

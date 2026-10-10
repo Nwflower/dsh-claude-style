@@ -10,8 +10,10 @@ import type manifest from './context-stats.manifest'
  *
  * The host's stats row and its two stat dialogs give way to the context
  * meter's own panel, which this feature fills from the host's session
- * projections (session-stats.ts). It switches together with the
- * permission control: both take over the composer's bottom line.
+ * projections (session-stats.ts). It runs under the `context` position alone:
+ * with the numbers asked onto a line of their own, the host's statistics row
+ * and its dialogs stand as the host draws them and this feature is not
+ * installed at all.
  */
 export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const stats = createSessionStats(ctx)

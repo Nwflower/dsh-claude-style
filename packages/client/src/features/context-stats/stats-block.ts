@@ -1,5 +1,6 @@
 import { buildElement } from '../../shared/dom'
 import { findComposerStats } from '../../core/host'
+import { buildDigitGroup, writeDigits } from './stats-digits'
 import { sessionStatsSections } from './stats-model'
 import { CONTEXT_STATS_ATTR, contextPanel, hostStatsDetailed } from './stats-panel'
 import type { HostText } from '../../core/host'
@@ -40,8 +41,10 @@ const COMPACT_SKELETON_ITEMS = 4
  * @returns { render, stopSkeleton, resetContent }.
  */
 export function createStatsBlock(read: StatsValueReader, chatText: () => HostText | null) {
-  /** The block's last written content, so an unchanged pass writes nothing. */
+  /** The block's last written rows, so an unchanged pass writes nothing. */
   let blockSignature = ''
+  /** The value cells of the block as built, in section order. */
+  let blockCells: HTMLElement[] = []
   /** Whether the block is holding the numbers' place, and since when. */
   let skeleton = false
   let skeletonSince = 0
@@ -75,6 +78,7 @@ export function createStatsBlock(read: StatsValueReader, chatText: () => HostTex
     const block = panel.querySelector(`[${CONTEXT_STATS_ATTR}]`)
     if (block !== null && block.parentElement !== null) block.parentElement.removeChild(block)
     blockSignature = ''
+    blockCells = []
   }
 
   /**
@@ -154,27 +158,45 @@ export function createStatsBlock(read: StatsValueReader, chatText: () => HostTex
       return
     }
     stopSkeleton()
-    let signature = compact ? 'compact' : ''
+    // The structure is the sections and their labels; the figures are written
+    // into the cells that structure built, so a frame that only moved a number
+    // re-enters that one figure instead of rebuilding the panel (stats-digits.ts).
+    let structure = compact ? 'compact' : ''
     for (const section of sections) {
-      if (section.title) signature += `\u0001${section.title}`
-      for (const row of section.rows) signature += `\u0001${row.label}\u0002${row.value}`
+      if (section.title) structure += `\u0001${section.title}`
+      for (const row of section.rows) structure += `\u0001${row.label}`
     }
     const block = ensureContextBlock(panel)
     block.removeAttribute(CONTEXT_SKELETON_ATTR)
-    if (signature === blockSignature && block.childElementCount > 0) return
-    blockSignature = signature
-    const parts: HTMLElement[] = []
-    for (const section of sections) {
-      if (section.title) parts.push(buildElement('div', 'dsh-claude-context-stats-section', section.title))
-      const grid = buildElement('div', 'dsh-claude-context-stats-grid')
-      for (const row of section.rows) {
-        const item = buildElement('div', 'dsh-claude-context-stats-item')
-        item.append(buildElement('div', 'dsh-claude-context-stats-label', row.label), buildElement('div', 'dsh-claude-context-stats-value', row.value))
-        grid.appendChild(item)
+    if (structure !== blockSignature || block.childElementCount === 0) {
+      blockSignature = structure
+      const parts: HTMLElement[] = []
+      const cells: HTMLElement[] = []
+      for (const section of sections) {
+        if (section.title) parts.push(buildElement('div', 'dsh-claude-context-stats-section', section.title))
+        const grid = buildElement('div', 'dsh-claude-context-stats-grid')
+        for (const row of section.rows) {
+          const item = buildElement('div', 'dsh-claude-context-stats-item')
+          const value = buildElement('div', 'dsh-claude-context-stats-value')
+          const group = buildDigitGroup('')
+          value.appendChild(group)
+          cells.push(group)
+          item.append(buildElement('div', 'dsh-claude-context-stats-label', row.label), value)
+          grid.appendChild(item)
+        }
+        parts.push(grid)
       }
-      parts.push(grid)
+      block.replaceChildren(...parts)
+      blockCells = cells
     }
-    block.replaceChildren(...parts)
+    let cell = 0
+    for (const section of sections) {
+      for (const row of section.rows) {
+        const group = blockCells[cell]
+        if (group !== undefined) writeDigits(group, row.value)
+        cell += 1
+      }
+    }
   }
 
   return {

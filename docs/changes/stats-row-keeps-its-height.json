@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-10",
+  "group": "fixes",
+  "order": 0,
+  "external": false,
+  "zh": "会话数字那一行不再把上方的对话推来推去：窗口窄到这一行放不下时，它按台阶让位，第三个台阶让出的是计量环旁的数字，而那个数字正是宿主触发按钮的高度——按钮一矮，输入区底部这一行就跟着矮，上方的对话按这一行排、并把末尾钉在它上面，于是数字每跨过这一档，整屏内容就上下跳一次，来回两下。现在让位只让出宽度：触发按钮保持一行的高度（20px 行高加宿主自己的上下各 1px），圆环留在原位，行高不随台阶起落变化，对话也不再移动。端到端通道的 `statsPosition` 场景新增一条读数：在同一帧里量「让出读数」与「读数在位」两种情况下这一行的高度，两者必须相同。",
+  "en": "The line of session numbers no longer shoves the conversation above it around: when a window is too narrow for the whole line, the line gives way one step at a time, and the third step gives up the number beside the context ring — the very number that makes the host's trigger as tall as it is. A shorter trigger made the composer's bottom row shorter, and since the conversation above is laid out from that row and pins its tail to it, every crossing of that step moved the whole column, once each way. The step now gives up width alone: the trigger keeps its one-line height (a 20px line inside the host's own 1px padding), the ring stays where it was, the row's height no longer follows the ladder, and the conversation stays put. The end-to-end lane's `statsPosition` scenario gains a reading: within one frame it measures that row with the reading given up and with the reading back, and the two must match."
+}

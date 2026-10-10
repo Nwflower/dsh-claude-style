@@ -108,4 +108,147 @@
       r.context.roomAfter = document.body.style.getPropertyValue('--dsh-claude-meter-room')
     })
   })
+
+  // The numbers asked onto a line of their own: the host's words around the
+  // host's figures, no glyph of the host's row, the cache share and the meter
+  // each taking their colour band, and the line giving way to the popover the
+  // moment the choice moves back.
+  probe.step(async function () {
+    await probe.onlyFor(['stats-inline'], async function () {
+      var card = document.querySelector('[data-composer-card]')
+      var dock = card.nextElementSibling
+      var phase = document.createElement('div')
+      phase.setAttribute('data-phase', 'active')
+      var column = document.createElement('div')
+      column.setAttribute('data-conversation-session', 'smoke-stats')
+      card.parentElement.insertBefore(phase, card)
+      phase.appendChild(column)
+      column.appendChild(card)
+      column.appendChild(dock)
+      // The figures the reader asked for: 2 turns and 374 steps, 279 tok/s, a
+      // prompt of 777,345,457 tokens read 99% from cache, and 7,345,457 written back.
+      window.__pushStats('sessionStats', { turns: 2, steps: 374, decodeMs: 2000, decodeTokens: 558 })
+      window.__pushStats('tokenUsage', { uncachedInputTokens: 6345457, cacheReadTokens: 771000000, cacheWriteTokens: 0, outputTokens: 7345457 })
+      await sleep(400)
+      var line = document.querySelector('[data-dsh-claude-inline-stats]')
+      var meter = document.querySelector('[data-dsh-claude-context-meter]')
+      var row = document.querySelector('[data-composer-stat]')
+      var cache = line === null ? null : line.querySelector('[data-dsh-claude-ramp="cache"]')
+      var stroke = function (selector) {
+        var circle = meter === null ? null : meter.querySelector(selector)
+        return circle === null || circle === undefined ? null : getComputedStyle(circle).stroke
+      }
+      // The line keeps the figures the ladder has taken away in the document
+      // (they are hidden rather than removed, so they can come back), so every
+      // reading below counts what the reader can see.
+      var visible = '.dsh-claude-inline-seg:not([hidden])'
+      var segments = function () {
+        return line === null ? [] : Array.prototype.slice.call(line.querySelectorAll(visible))
+      }
+      r.statsInline = {
+        attr: document.body.getAttribute('data-dsh-claude-stats-position'),
+        text: segments().map(function (segment) { return (segment.textContent || '').trim() }).join(' · '),
+        figures: line === null ? null : Array.prototype.map.call(line.querySelectorAll(visible + ' .dsh-claude-digit-group'), function (group) {
+          return (group.textContent || '').trim()
+        }),
+        digits: line === null ? 0 : line.querySelectorAll(visible + ' .dsh-claude-digit').length,
+        staggered: line === null ? 0 : line.querySelectorAll(visible + ' .dsh-claude-digit[data-stagger]').length,
+        glyphs: line === null ? 0 : line.querySelectorAll('svg, img').length,
+        rowDisplay: row === null ? null : getComputedStyle(row).display,
+        dockPosition: dock === null ? null : getComputedStyle(dock).position,
+        meterPosition: meter === null ? null : getComputedStyle(meter).position,
+        cacheRamp: cache === null ? null : {
+          span: cache.getAttribute('data-dsh-claude-ramp-span'),
+          color: getComputedStyle(cache).color,
+        },
+        meterRamp: meter === null ? null : {
+          kind: meter.getAttribute('data-dsh-claude-ramp'),
+          span: meter.getAttribute('data-dsh-claude-ramp-span'),
+        },
+        ringStroke: stroke('circle[stroke-dasharray]'),
+        trackStroke: stroke('circle:not([stroke-dasharray])'),
+        // The figures stand apart by the line's own gap: the host's separators
+        // are gone, and the line's text is what a reader would copy out of it.
+        separators: line === null ? null : (line.textContent || '').split('·').length - 1,
+        role: line === null ? null : line.getAttribute('role'),
+      }
+      // The line is the panel's second trigger: pressing it opens the panel the
+      // meter owns and fills with the session's rows (stats-binding.ts).
+      var panelBlock = function () { return document.querySelector('.dsh-claude-context-stats') }
+      var linePanel = function () { return document.querySelector('[data-dsh-claude-context-panel]') }
+      if (line !== null) {
+        // The pointer path is the meter's alone; a press is what the line answers.
+        line.dispatchEvent(new MouseEvent('mouseenter', { bubbles: false }))
+        await sleep(300)
+        r.statsInline.hoverOpened = linePanel() !== null
+        line.dispatchEvent(new MouseEvent('mouseleave', { bubbles: false }))
+        line.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+        await sleep(300)
+        r.statsInline.panelOpened = linePanel() !== null
+        r.statsInline.panelRows = panelBlock() === null ? 0 : panelBlock().querySelectorAll('.dsh-claude-context-stats-item').length
+        r.statsInline.expanded = line.getAttribute('aria-expanded')
+        line.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+        await sleep(300)
+        r.statsInline.panelClosed = linePanel() === null
+      }
+      // A card too narrow for the whole line: the figures give way one step at
+      // a time, in the reader's own order — the cache share's words, the turns
+      // and steps, the meter's number, the two token figures in favour of one
+      // total, and at the last step the counts folded into k / M / B. A card
+      // with room again gets them all back.
+      var fitCard = document.querySelector('[data-composer-card]')
+      var wakePass = function () {
+        var node = document.createElement('span')
+        document.body.appendChild(node)
+        document.body.removeChild(node)
+      }
+      var shows = function (selector) {
+        var element = line === null ? null : line.querySelector(selector)
+        return element === null ? null : element.getClientRects().length > 0
+      }
+      var readFit = function () {
+        var total = line === null ? null : line.querySelector('.dsh-claude-inline-total .dsh-claude-digit-group')
+        var number = meter === null ? null : meter.querySelector('button > span')
+        return {
+          counts: shows('.dsh-claude-inline-seg'),
+          cacheLabel: shows('.dsh-claude-inline-label'),
+          input: shows('.dsh-claude-inline-input'),
+          output: shows('.dsh-claude-inline-output'),
+          total: shows('.dsh-claude-inline-total'),
+          totalText: total === null ? null : (total.textContent || '').trim(),
+          meterTight: meter !== null && meter.hasAttribute('data-dsh-claude-meter-tight'),
+          meterNumber: number === null ? null : number.getClientRects().length > 0,
+          cardWidth: fitCard === null ? null : fitCard.clientWidth,
+          needed: line === null || meter === null ? null
+            : Math.round(meter.getBoundingClientRect().right - line.getBoundingClientRect().left),
+          boxes: line === null || meter === null ? null : {
+            line: [Math.round(line.getBoundingClientRect().left), Math.round(line.getBoundingClientRect().width)],
+            meter: [Math.round(meter.getBoundingClientRect().left), Math.round(meter.getBoundingClientRect().width)],
+            dock: [Math.round(fitCard.nextElementSibling.getBoundingClientRect().left), Math.round(fitCard.nextElementSibling.getBoundingClientRect().width)],
+          },
+        }
+      }
+      r.statsInline.roomy = readFit()
+      var widths = ['260px', '130px']
+      var fitted = []
+      for (var w = 0; w < widths.length; w++) {
+        fitCard.style.width = widths[w]
+        wakePass()
+        await sleep(350)
+        fitted.push(readFit())
+      }
+      r.statsInline.tight = fitted[0]
+      r.statsInline.tightest = fitted[1]
+      fitCard.style.width = ''
+      wakePass()
+      await sleep(350)
+      r.statsInline.backToRoom = readFit()
+      // The choice the other way, live: the popover's own surface takes the
+      // numbers back and the line goes.
+      window.__pushForm({ statsPosition: 'context' })
+      await sleep(600)
+      r.statsInline.backAttr = document.body.getAttribute('data-dsh-claude-stats-position')
+      r.statsInline.backLine = document.querySelectorAll('[data-dsh-claude-inline-stats]').length
+    })
+  })
 })()

@@ -32,6 +32,17 @@ export function findContextMeter() {
 }
 
 /**
+ * The occupancy the meter reads, as a percentage, or null when the reading
+ * cannot be taken. The host draws it as the trigger's own text, which the
+ * composer pass reads the same way (it re-measures the room when that text
+ * moves), so the number is taken from where the host shows it.
+ */
+export function meterOccupancy(meter: HTMLElement) {
+  const match = /(\d+(?:[.,]\d+)?)\s*%/.exec(meter.textContent ?? '')
+  return match === null ? null : Number(match[1].replace(',', '.'))
+}
+
+/**
  * The meter's trigger: the host's own button, whose click opens and
  * closes the context panel.
  */

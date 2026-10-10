@@ -28,7 +28,7 @@ export function sessionStatsSpeed(tps: number) {
 }
 
 /** Exact token count with the locale's group separator, mirroring ui-chat's `formatExactTokens`. */
-function sessionStatsGrouped(value: number, chat: HostText) {
+export function sessionStatsGrouped(value: number, chat: HostText) {
   const digits = String(value)
   const groups = []
   for (let end = digits.length; end > 0; end -= 3) groups.unshift(digits.slice(Math.max(0, end - 3), end))

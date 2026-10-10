@@ -26,6 +26,10 @@
   var formValue = { username: username, collapseFooter: true, homeLayout: CASE === 'studio' ? 'studio' : 'classic', brand: CASE === 'deepy' ? 'off' : undefined }
   // The crab-states case picks the crab, whose states it walks through.
   if (CASE === 'crab-states') formValue.mascot = 'crab'
+  // The stats-inline case drives the line of their own, which is the shipped
+  // default; the two popover cases ask the numbers back into the panel.
+  if (CASE === 'stats-inline') formValue.statsPosition = 'inline'
+  if (CASE === 'context-stats' || CASE === 'stats-compact') formValue.statsPosition = 'context'
   // The switches-off case starts with every feature switch off.
   if (CASE === 'switches-off') {
     Object.assign(formValue, { permissionsControl: false, workspaceView: false, sidebarSearch: false, turnStatus: false, viewTabs: false, chatAnimations: false })
