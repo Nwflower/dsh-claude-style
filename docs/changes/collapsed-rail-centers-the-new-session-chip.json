@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-10",
-  "group": "fixes",
-  "order": 1,
-  "external": false,
-  "zh": "收起侧栏后，「新会话」那枚加号圆片不再比同一栏的其它图标靠左：宿主把这一格换成一枚 36 像素的图标按钮并让它里面的东西居中，而它自己那个图标座位在收起状态下是空的（图标已隐藏、文字宽度为 0），却仍占着这一行的一份宽度，把圆片顶到栏内中线左边 7 像素；现在这一格交出座位，圆片与上面的收起按钮、下面的插件与搜索图标落在同一条中线上。",
-  "en": "With the sidebar collapsed, the New session chip no longer stands left of the column's other icons: the host turns that cell into a 36px icon button and centres what is inside it, while its own icon seat is empty in that state (the icon is hidden, the label is 0 wide) and still took a share of the flex row, pushing the chip 7px left of the column's centre line. The seat now gives up its share, and the chip lines up with the collapse toggle above it and the plugin and search icons below."
-}

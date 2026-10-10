@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-10",
-  "group": "improvements",
-  "order": 1,
-  "external": true,
-  "zh": "会话的统计与 Token 用量现在默认「收进上下文」：这些数字就在输入区上下文圆环那张弹层里，输入卡片下面只留那个圆环，不再多出一行；想一眼看到全部读数的人仍可在设置页「对话」页把「对话统计信息位置」改回「独立成行」。已有安装的设置不会被改写，这一项没设过的人升级后看到的是新默认。",
-  "en": "The session statistics and the token usage now live Inside the context popover by default: the figures are in the panel the composer's context ring opens, and the input card keeps only the ring below it rather than a line of its own. A reader who wants every reading at a glance can still set Conversation statistics position back to On its own line on the settings page's Conversation tab. Settings already stored are not rewritten: an installation that never set this preference shows the new default after the upgrade."
-}

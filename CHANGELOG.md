@@ -4,6 +4,28 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-10-10
+
+[中文](#cn-0.13.0) | [English](#en-0.13.0)
+
+<h3 id="cn-0.13.0">体验优化</h3>
+
+- 会话的统计与 Token 用量现在默认「收进上下文」：这些数字就在输入区上下文圆环那张弹层里，输入卡片下面只留那个圆环，不再多出一行；想一眼看到全部读数的人仍可在设置页「对话」页把「对话统计信息位置」改回「独立成行」。已有安装的设置不会被改写，这一项没设过的人升级后看到的是新默认。
+
+### 问题修复
+
+- 收起侧栏后，「新会话」那枚加号圆片不再比同一栏的其它图标靠左：宿主把这一格换成一枚 36 像素的图标按钮并让它里面的东西居中，而它自己那个图标座位在收起状态下是空的（图标已隐藏、文字宽度为 0），却仍占着这一行的一份宽度，把圆片顶到栏内中线左边 7 像素；现在这一格交出座位，圆片与上面的收起按钮、下面的插件与搜索图标落在同一条中线上。
+- 手机宽度下，统计数字收进上下文弹层时那枚圆环不再跑出输入卡片：铺在工具栏行上的那条 dock 一直带着桌面端那份左右留白（给权限档位与模型、推理等级两块让出位置），它比这一宽度下的卡片还宽，把贴着它右缘的圆环一起顶出卡片、顶到窗口外；这一宽度下那份留白让位，圆环回到卡片右端、落在推理等级按钮之后。
+
+<h3 id="en-0.13.0">Improvements</h3>
+
+- The session statistics and the token usage now live Inside the context popover by default: the figures are in the panel the composer's context ring opens, and the input card keeps only the ring below it rather than a line of its own. A reader who wants every reading at a glance can still set Conversation statistics position back to On its own line on the settings page's Conversation tab. Settings already stored are not rewritten: an installation that never set this preference shows the new default after the upgrade.
+
+### Bug Fixes
+
+- With the sidebar collapsed, the New session chip no longer stands left of the column's other icons: the host turns that cell into a 36px icon button and centres what is inside it, while its own icon seat is empty in that state (the icon is hidden, the label is 0 wide) and still took a share of the flex row, pushing the chip 7px left of the column's centre line. The seat now gives up its share, and the chip lines up with the collapse toggle above it and the plugin and search icons below.
+- At a phone's width the context ring no longer leaves the input card when the numbers live in the context popover: the dock laid over the toolbar row kept the desktop reserve that clears the permission preset and the model and reasoning-level controls, which is wider than the card at that width, and it carried the ring pinned to its right edge out of the card and past the window. The reserve now stands down at this width, and the ring returns to the card's right end, after the reasoning-level control.
+
 ## [0.12.3] - 2026-10-10
 
 [中文](#cn-0.12.3) | [English](#en-0.12.3)
