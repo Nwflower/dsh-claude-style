@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-10",
+  "group": "new",
+  "order": 1,
+  "external": false,
+  "zh": "设置对话框「Claude Style」页的标题行右端新增一枚 GitHub 标识，按一下在新的标签页里打开插件仓库（https://github.com/Nwflower/dsh-claude-style）。标识的颜色取次一级的文字色，深浅两套配色各自跟随；指针移上去底部铺一层悬停底色、图形加深，键盘焦点落到它上面时出现一圈强调色描边，读屏念出「在 GitHub 上打开本插件」。插件页上那一份沿用宿主自己的标题行，不加这枚标识。",
+  "en": "The Claude Style page in the settings dialog now ends its heading row with a GitHub mark; pressing it opens the plugin's repository (https://github.com/Nwflower/dsh-claude-style) in a new tab. The mark takes the secondary label ink, following each palette; the pointer gets the skin's hover plate with a darker mark, the keyboard gets an accent focus ring, and the accessible name reads \"Open the plugin on GitHub\". The copy on the plugin's own page keeps the host's heading and carries no mark."
+}

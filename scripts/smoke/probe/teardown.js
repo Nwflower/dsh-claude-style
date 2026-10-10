@@ -62,7 +62,7 @@
       r.leftStylesheet = !!document.getElementById('dsh-claude-style-style')
       if (probe.viewStrip) r.viewPill.left = probe.viewStrip.hasAttribute('data-dsh-claude-pill') || probe.viewStrip.hasAttribute('data-dsh-view-tabs') || probe.viewStrip.style.length > 0
       if (r.search) {
-        r.search.left = document.querySelectorAll('[data-dsh-claude-search-row], .dsh-claude-search-trigger').length
+        r.search.left = document.querySelectorAll('[data-dsh-claude-search-row], .dsh-claude-search-trigger, .dsh-claude-search-bar').length
         r.search.rootUnmounted = !!probe.searchRoot && probe.searchRoot.unmounted
       }
       r.leftDraftMarks = document.querySelectorAll('[data-dsh-claude-draft-empty]').length

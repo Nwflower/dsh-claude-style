@@ -48,9 +48,52 @@ body[data-dsh-claude-style] .dsh-claude-settings {
 }
 
 body[data-dsh-claude-style] .dsh-claude-settings-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   font-size: 15px;
   font-weight: 600;
   color: var(--dsw-alias-label-primary);
+}
+
+/* The heading's link to the plugin's own repository, at the row's right end.
+   The mark is a mask over the link's ::before box, which carries the ink; that
+   ink is stated there rather than inherited, because the sheet paints every
+   anchor in the link colour through a more specific selector. */
+body[data-dsh-claude-style] .dsh-claude-settings-repo {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  transition: background-color .12s ease;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-repo::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  background-color: var(--dsw-alias-label-secondary);
+  -webkit-mask: var(--dsh-claude-image-github-mark) center / contain no-repeat;
+  mask: var(--dsh-claude-image-github-mark) center / contain no-repeat;
+  transition: background-color .12s ease;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-repo:hover {
+  background-color: var(--dsh-claude-hover-bg);
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-repo:hover::before,
+body[data-dsh-claude-style] .dsh-claude-settings-repo:focus-visible::before {
+  background-color: var(--dsw-alias-label-primary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-repo:focus-visible {
+  outline: 2px solid var(--dsw-alias-brand-primary, #d97757);
+  outline-offset: 1px;
 }
 
 /* The tab strip is the segmented control itself, stretched across the page so
@@ -153,7 +196,7 @@ body[data-dsh-claude-style] .dsh-claude-settings-row-block > .dsh-claude-brand-p
    marks are the same assets the sidebar and hero paint — Claude's clay
    starburst, DeepSeek's whale in brand blue — inlined as CSS data URIs, so
    they read in full colour on either theme. A new brand adds one option in
-   settings.ts and one [data-brand] rule here. */
+   settings-tab-general.ts and one [data-brand] rule here. */
 body[data-dsh-claude-style] .dsh-claude-brand-picker {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));

@@ -2,7 +2,8 @@
  * The host-palette case: the host's own colours and type, the tokens and frames
  * the skin must leave alone, and what a wallpaper plugin's cleared canvas
  * reaches. Then the settings case: the section rendered through the stand-in
- * React, tab by tab, with the sub-rows that grey out behind a parent.
+ * React, tab by tab, with the sub-rows that grey out behind a parent, and the
+ * heading's link to the plugin's repository.
  */
 (function () {
   var probe = window.__dshSmokeProbe
@@ -82,7 +83,7 @@
         var tree = Section({})
         react.rendering = false
         react.states = null
-        var out = { tabs: [], selected: null, rows: [], disabled: [] }
+        var out = { tabs: [], selected: null, rows: [], disabled: [], link: null }
         walk(tree, function (node) {
           var props = node.props || {}
           if (props.role === 'tab') {
@@ -93,6 +94,9 @@
             out.rows.push(props.key)
             if (props['data-disabled'] === '') out.disabled.push(props.key)
           }
+          if (props.className === 'dsh-claude-settings-repo') {
+            out.link = { href: props.href, target: props.target, rel: props.rel, label: props['aria-label'] }
+          }
         })
         return out
       }
@@ -100,9 +104,23 @@
       if (r.settings.registered) {
         var tabIds = ['general', 'appearance', 'composer', 'sidebar', 'conversation']
         for (var ti = 0; ti < tabIds.length; ti++) r.settings.pages[tabIds[ti]] = renderTab(tabIds[ti])
-        window.__pushForm({ modelPicker: false, mascot: 'off' })
-        r.settings.parentsOff = { appearance: renderTab('appearance'), composer: renderTab('composer') }
-        window.__pushForm({ modelPicker: true, mascot: 'brand' })
+        r.settings.link = r.settings.pages.general.link
+        // The heading's mark: the build inlines the asset into the token sheet
+        // and the rule paints it as a mask over the link's own box, so the
+        // address and the size are read off the rendered pseudo-element.
+        var linkNode = document.createElement('a')
+        linkNode.className = 'dsh-claude-settings-repo'
+        document.body.appendChild(linkNode)
+        var markStyle = getComputedStyle(linkNode, '::before')
+        r.settings.mark = {
+          mask: (markStyle.maskImage === 'none' ? markStyle.webkitMaskImage : markStyle.maskImage).slice(0, 48),
+          size: markStyle.width + '×' + markStyle.height,
+          ink: markStyle.backgroundColor,
+        }
+        linkNode.remove()
+        window.__pushForm({ modelPicker: false, mascot: 'off', sidebarSearch: false })
+        r.settings.parentsOff = { appearance: renderTab('appearance'), composer: renderTab('composer'), sidebar: renderTab('sidebar') }
+        window.__pushForm({ modelPicker: true, mascot: 'brand', sidebarSearch: true })
       }
     })
   })

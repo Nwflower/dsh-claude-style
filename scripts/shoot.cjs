@@ -23,7 +23,7 @@
  *                 must be a stand-in: send DEMO_PROMPT in a scratch instance
  *                 to make one.
  *
- * The brand is the instance's own (the settings page's Brand mark); `--brand`
+ * The brand is the instance's own (the settings page's Theme style); `--brand`
  * names the one expected, and a page carrying another fails the run.
  *
  * Usage:
@@ -100,7 +100,7 @@ async function captureOnce(conn, options, scheme, outFile) {
     throw new Error('theme not applied — is the plugin active in this profile?')
   }
   const pageBrand = await evalJs(`document.body.getAttribute('data-dsh-claude-brand')`)
-  if (pageBrand !== brand) throw new Error(`the page carries brand "${pageBrand}", expected "${brand}" — switch the Brand mark in settings`)
+  if (pageBrand !== brand) throw new Error(`the page carries brand "${pageBrand}", expected "${brand}" — switch the Theme style in settings`)
 
   if (scene === 'conversation') {
     await openDemoConversation(conn, options.session)

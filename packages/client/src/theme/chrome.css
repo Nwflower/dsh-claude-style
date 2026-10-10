@@ -97,13 +97,6 @@ body[data-dsh-claude-style] button[class*="brand"]:not([class*="dsh-claude"]) {
   color: var(--dsw-alias-brand-primary);
 }
 
-/* The baked-in wordmark badge (pill rect + letter paths) crowds the whale and
-   the wordmark; hide it so the brand reads as mark + word. */
-body[data-dsh-claude-style] button[class*="brand"]:not([class*="dsh-claude"]) rect[fill="currentColor"],
-body[data-dsh-claude-style] button[class*="brand"]:not([class*="dsh-claude"]) path[fill*="label-primary-inverted"] {
-  display: none;
-}
-
 /* pill CTAs: send + settings sidebar actions */
 body[data-dsh-claude-style] button[class*="_brand"],
 body[data-dsh-claude-style] button[class*="_primary"],

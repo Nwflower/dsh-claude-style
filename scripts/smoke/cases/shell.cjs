@@ -112,14 +112,30 @@ module.exports = {
     check('Enter on an open composer menu reaches the host', same(r.keys, ['host picked the menu item']), JSON.stringify(r.keys))
     commonChecks(r)
   },
-  // The sidebar's search box: placed in the brand row, resting hidden, opening
-  // the host's modal through a root of the skin's own.
+  // The sidebar's search box: placed by the style preference — in the brand
+  // row resting hidden, in a row of its own below it, or not drawn at all
+  // while the host's own button stands — and opening the host's modal through
+  // a root of the skin's own.
   search(r) {
     basicChecks(r)
     const search = r.search || {}
     check('the search box goes in the brand row beside the brand, and rests hidden until the sidebar is hovered',
       search.placed === true && search.rowMarked === true && search.resting === 'hidden', JSON.stringify(search))
     check('pressing the search box renders the host modal through a root of the skin\'s own', search.modalRendered === true, JSON.stringify(search))
+    const standalone = search.standalone || {}
+    check('the Standalone style gives the box a row of its own under the brand row, shown without a hover, and the brand row keeps the host\'s layout',
+      standalone.barAfterRow === true && standalone.triggerInBar === true && standalone.triggerVisibility === 'visible' &&
+        standalone.rowMarked === false && standalone.hostSlotPosition === 'absolute',
+      JSON.stringify(standalone))
+    const icon = search.icon || {}
+    check('the Icon style draws no box of the skin\'s, puts the host\'s own search slot back in the header, and takes its click over',
+      icon.triggerInRow === false && icon.rowMarked === false && icon.barAfterRow === false &&
+        icon.hostSlotPosition !== 'absolute' && icon.hostSlotWidth > 10 && icon.hostClicksReachingHost === 0,
+      JSON.stringify(icon))
+    const back = search.back || {}
+    check('switching the style back to Cover the brand seats the box in the brand row again, live',
+      back.triggerInRow === true && back.rowMarked === true && back.triggerVisibility === 'hidden' && back.hostSlotPosition === 'absolute',
+      JSON.stringify(back))
     check('teardown takes the search box, its row mark and its root away',
       search.left === 0 && search.rootUnmounted === true, JSON.stringify(search))
     commonChecks(r)
@@ -219,6 +235,65 @@ module.exports = {
     check('the skin hands the stylesheet the left edge that lines the panel up with the meter',
       r.context.aligned === true && r.context.edgeAligned === true,
       JSON.stringify({ aligned: r.context.aligned, edgeAligned: r.context.edgeAligned }))
+    commonChecks(r)
+  },
+  // The numbers asked onto a line of their own: the host's statistics row and
+  // its detail dialog stand, the skin's block is never built, and the
+  // composer's dock keeps the host's own placement instead of the overlay.
+  // The numbers asked onto a line of their own: the host's words around the
+  // host's figures, none of the host's row's glyphs, the cache share and the
+  // meter each in their colour band, and the popover taking them back live.
+  'stats-inline'(r) {
+    basicChecks(r)
+    check('the line stands under the card, in the host\'s own placement, with the meter at its end',
+      r.statsInline.attr === 'inline' && r.statsInline.dockPosition === 'static' &&
+        r.statsInline.rowDisplay === 'none' && r.statsInline.meterPosition === 'static' &&
+        r.statsInline.text !== null && r.statsInline.glyphs === 0,
+      JSON.stringify({ attr: r.statsInline.attr, dock: r.statsInline.dockPosition, row: r.statsInline.rowDisplay, meter: r.statsInline.meterPosition, glyphs: r.statsInline.glyphs }))
+    check('the figures are the host\'s own words around the host\'s own numbers',
+      same(r.statsInline.figures, ['2', '374', '279', '777,345,457', '7,345,457', '99']) &&
+        r.statsInline.text.indexOf('2 轮 374 步') === 0 &&
+        r.statsInline.text.indexOf('缓存命中') !== -1,
+      JSON.stringify({ figures: r.statsInline.figures, text: r.statsInline.text }))
+    check('every figure is written one character per span so a number that moved re-enters, the last two staggered',
+      r.statsInline.digits === 29 && r.statsInline.staggered === 11,
+      JSON.stringify({ digits: r.statsInline.digits, staggered: r.statsInline.staggered }))
+    check('the cache share and the meter\'s occupancy take their colour bands, and the ring is painted with the reading\'s own',
+      r.statsInline.cacheRamp !== null && r.statsInline.cacheRamp.span === 'high' &&
+        r.statsInline.meterRamp !== null && r.statsInline.meterRamp.kind === 'context' && r.statsInline.meterRamp.span === 'high' &&
+        r.statsInline.ringStroke !== null && r.statsInline.ringStroke !== r.statsInline.trackStroke,
+      JSON.stringify({ cache: r.statsInline.cacheRamp, meter: r.statsInline.meterRamp, ring: r.statsInline.ringStroke, track: r.statsInline.trackStroke }))
+    check('asking the numbers back into the popover takes the line away, live',
+      r.statsInline.backAttr === 'context' && r.statsInline.backLine === 0,
+      JSON.stringify({ attr: r.statsInline.backAttr, line: r.statsInline.backLine }))
+    check('the figures stand apart by the line\'s own gap: no separator glyph between them',
+      r.statsInline.separators === 0, JSON.stringify(r.statsInline.separators))
+    check('the line is the panel\'s second trigger: pressing it opens the host\'s panel with the session\'s rows, and pressing it again closes it',
+      r.statsInline.role === 'button' && r.statsInline.panelOpened === true &&
+        r.statsInline.expanded === 'true' && r.statsInline.panelRows > 0 && r.statsInline.panelClosed === true,
+      JSON.stringify({ role: r.statsInline.role, opened: r.statsInline.panelOpened, expanded: r.statsInline.expanded, rows: r.statsInline.panelRows, closed: r.statsInline.panelClosed }))
+    check('opening and closing on hover stays the meter\'s path: a pointer resting on the figures leaves the panel down',
+      r.statsInline.hoverOpened === false, JSON.stringify(r.statsInline.hoverOpened))
+    check('a card with room shows every figure',
+      r.statsInline.roomy.counts === true && r.statsInline.roomy.cacheLabel === true &&
+        r.statsInline.roomy.input === true && r.statsInline.roomy.output === true &&
+        r.statsInline.roomy.total === false && r.statsInline.roomy.meterTight === false &&
+        r.statsInline.roomy.meterNumber === true,
+      JSON.stringify(r.statsInline.roomy))
+    check('a card too narrow drops the cache words, the turns and steps and the meter\'s number, and merges the two token figures into one',
+      r.statsInline.tight.cacheLabel === false && r.statsInline.tight.counts === false &&
+        r.statsInline.tight.meterTight === true && r.statsInline.tight.meterNumber === false &&
+        r.statsInline.tight.input === false && r.statsInline.tight.output === false &&
+        r.statsInline.tight.total === true && /^[\d,]+$/.test(r.statsInline.tight.totalText || ''),
+      JSON.stringify(r.statsInline.tight))
+    check('one step tighter folds the figures into k, M and B',
+      r.statsInline.tightest.total === true && /^[\d.]+[kMB]$/.test(r.statsInline.tightest.totalText || ''),
+      JSON.stringify(r.statsInline.tightest))
+    check('a card with room again gets every figure back',
+      r.statsInline.backToRoom.counts === true && r.statsInline.backToRoom.cacheLabel === true &&
+        r.statsInline.backToRoom.input === true && r.statsInline.backToRoom.output === true &&
+        r.statsInline.backToRoom.total === false && r.statsInline.backToRoom.meterNumber === true,
+      JSON.stringify(r.statsInline.backToRoom))
     commonChecks(r)
   },
   studio(r) {
@@ -346,11 +421,11 @@ module.exports = {
     const settings = r.settings || {}
     check('the settings section registers with the settings dialog', settings.registered === true, JSON.stringify(settings.registered))
     const expected = {
-      general: ['username', 'motion', 'autoPopover', 'banLocale'],
-      appearance: ['brand', 'palette', 'typeface', 'mascot', 'mascotScope'],
+      general: ['brand', 'username', 'motion', 'autoPopover', 'banLocale'],
+      appearance: ['palette', 'typeface', 'mascot', 'mascotScope'],
       composer: ['composerScope', 'homeLayout', 'modelPicker', 'quickProviders', 'peakrate', 'permissionsControl'],
-      sidebar: ['collapseFooter', 'sidebarSearch', 'workspaceView', 'dockCards'],
-      conversation: ['turnStatus', 'turnNav', 'chatAnimations', 'caretMotion', 'viewTabs', 'headerBand'],
+      sidebar: ['collapseFooter', 'sidebarSearch', 'searchStyle', 'workspaceView', 'dockCards'],
+      conversation: ['turnStatus', 'turnNav', 'chatAnimations', 'statsPosition', 'caretMotion', 'viewTabs', 'headerBand'],
     }
     const pages = settings.pages || {}
     for (const tab of Object.keys(expected)) {
@@ -361,10 +436,20 @@ module.exports = {
         JSON.stringify(page))
     }
     const off = settings.parentsOff || {}
-    check('a sub-row greys out while its parent is off: the mascot\'s place with the mascot off, the quick providers and the peak rate meter with the model picker off',
+    check('a sub-row greys out while its parent is off: the mascot\'s place with the mascot off, the quick providers and the peak rate meter with the model picker off, the search box\'s style with the sidebar search off',
       !!off.appearance && JSON.stringify(off.appearance.disabled) === '["mascotScope"]' &&
-        !!off.composer && JSON.stringify(off.composer.disabled) === '["quickProviders","peakrate"]',
+        !!off.composer && JSON.stringify(off.composer.disabled) === '["quickProviders","peakrate"]' &&
+        !!off.sidebar && JSON.stringify(off.sidebar.disabled) === '["searchStyle"]',
       JSON.stringify(off))
+    const link = settings.link || {}
+    const mark = settings.mark || {}
+    check('the heading carries the plugin\'s repository link, opening in a new tab with an accessible name',
+      link.href === 'https://github.com/Nwflower/dsh-claude-style' && link.target === '_blank' &&
+        (link.rel || '').includes('noopener') && typeof link.label === 'string' && link.label.length > 0,
+      JSON.stringify(link))
+    check('the link\'s mark is the inlined asset, painted as a mask in the quiet ink',
+      mark.mask.includes('data:image/svg+xml') && mark.size === '16px×16px',
+      JSON.stringify(mark))
     commonChecks(r)
   },
   'dock-cards'(r) {

@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { BUNDLE_CONFIG_SLOT, PACKAGE_NAME, SETTINGS_SCROLLER_ATTR, SETTINGS_SECTION_SLOT, USERNAME_MAX } from '../../constants'
+import { BUNDLE_CONFIG_SLOT, PACKAGE_NAME, REPOSITORY_URL, SETTINGS_SCROLLER_ATTR, SETTINGS_SECTION_SLOT, USERNAME_MAX } from '../../constants'
 import { SEGMENT_CLASS } from '../permissions/permission-copy'
 import { settingsCopy } from '../../core/i18n'
 import { loadModelCopy, onModelCopyLoaded } from '../../core/model-copy'
@@ -87,6 +87,31 @@ export function ClaudeStyleSettingsTabStrip(props: { active: SettingsTabId, onPi
     tab.label(),
   ))
   return React.createElement(ClaudeStyleSegmentGroup, { role: 'tablist', className: 'dsh-claude-settings-tabs' }, buttons)
+}
+
+/**
+ * The page's heading: the skin's name, and the link to the plugin's own
+ * repository at the row's right end.
+ *
+ * The link opens in a new tab: the desktop window hands an http(s) popup to
+ * the system's browser, so the GUI page keeps its state. The mark's own
+ * address and paint are the stylesheet's business (settings.css).
+ */
+function ClaudeStyleSettingsHeading() {
+  const label = settingsCopy('repository', 'Open the plugin on GitHub')
+  return React.createElement(
+    'div',
+    { className: 'dsh-claude-settings-title' },
+    React.createElement('span', null, settingsCopy('title', 'Claude Style')),
+    React.createElement('a', {
+      className: 'dsh-claude-settings-repo',
+      href: REPOSITORY_URL,
+      target: '_blank',
+      rel: 'noopener noreferrer',
+      title: label,
+      'aria-label': label,
+    }),
+  )
 }
 
 export function ClaudeStyleSettingsSection(props: { embed?: boolean }) {
@@ -214,7 +239,7 @@ export function ClaudeStyleSettingsSection(props: { embed?: boolean }) {
   return React.createElement(
     'div',
     { ref: pageRef, className: embedded ? 'dsh-claude-settings dsh-claude-settings-embedded' : 'dsh-claude-settings' },
-    embedded ? null : React.createElement('div', { className: 'dsh-claude-settings-title' }, settingsCopy('title', 'Claude Style')),
+    embedded ? null : React.createElement(ClaudeStyleSettingsHeading),
     React.createElement(ClaudeStyleSettingsTabStrip, { active: activeTab, onPick: setActiveTab }),
     React.createElement('div', { className: 'dsh-claude-settings-rows', role: 'tabpanel', key: tab.id }, tabRows(tab, view)),
     error === null ? null : React.createElement('div', { className: 'dsh-claude-settings-error' }, error),
