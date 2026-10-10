@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-10",
-  "group": "improvements",
-  "order": 1,
-  "external": false,
-  "zh": "推理回放窗口不再先按固定高度裁剪再换回整段：此前的窗口一直是四行高，推理写满四行之后文字在窗口里往上滚，推理一停窗口撤下，整段文字接管这一行——窗口的高度与推理最终占的高度不是一回事，切换的那一下整块内容会跳一次。现在窗口跟着推理长高，长到它最终能占的高度（宿主给过程组正文的那个上限，标准档 400px）就停在那个高度上，文字这时才每 0.84 秒往上走两行，走到最新一行停住，上下边缘也在这时才渐隐；推理没长满之前，文字照平时那样一行行往下读，不再被渐隐遮住。",
-  "en": "The reasoning's replay window no longer clips to a fixed height and then hands the row back to the whole text: the window stood four lines tall, the text scrolled up inside it once it filled those lines, and the whole reasoning took the row over the moment the reasoning stopped — the window's height and the height the reasoning ended at were two different things, and that switch moved the block. The window now grows with the reasoning and stops at the height it will end up occupying (the host's own cap on a process group's body, 400px in the Standard tier), and only there does the text step up two lines every 0.84 s behind the softened edges, stopping at the newest line. Below that cap the reasoning is read line by line as it is written, with nothing faded."
-}

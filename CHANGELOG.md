@@ -4,9 +4,11 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 ## [Unreleased]
 
-[中文](#cn-unreleased) | [English](#en-unreleased)
+## [0.12.3] - 2026-10-10
 
-<h3 id="cn-unreleased">体验优化</h3>
+[中文](#cn-0.12.3) | [English](#en-0.12.3)
+
+<h3 id="cn-0.12.3">体验优化</h3>
 
 - 推理回放窗口在宿主两版之间都能用：此前它按较新宿主才写的推理正文槽位找要裁剪的盒子，装在钉住那一版宿主上时找不到，推理期间读者看到的还是整段长文。现在窗口从宿主渲染出来的 Markdown 本身认起，往上取第一个真有盒子的祖先来裁剪，滑动的仍是这段 Markdown。
 - 推理回放窗口不再先按固定高度裁剪再换回整段：此前的窗口一直是四行高，推理写满四行之后文字在窗口里往上滚，推理一停窗口撤下，整段文字接管这一行——窗口的高度与推理最终占的高度不是一回事，切换的那一下整块内容会跳一次。现在窗口跟着推理长高，长到它最终能占的高度（宿主给过程组正文的那个上限，标准档 400px）就停在那个高度上，文字这时才每 0.84 秒往上走两行，走到最新一行停住，上下边缘也在这时才渐隐；推理没长满之前，文字照平时那样一行行往下读，不再被渐隐遮住。
@@ -18,7 +20,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - 装了壁纸插件（dsh-plugin-wallpaper-engine）时，配色留在 Claude 也能看到壁纸，文字照样清楚：此前皮肤把不透明画布直接画在窗口、侧栏与对话列上，壁纸被整片盖住；只让开外壳之后，会话正文、表格、侧栏条目与标题栏又直接压在花壁纸上读不清，设置窗口也变成透明。现在壁纸在播时外壳让开，整个窗口铺一层画布色遮罩——浅色是 86% 的象牙白，深色是 82% 的暖黑——侧栏、标题区、会话与底部读数落在同一块底子上；输入卡下面垫一块同宽的画布色托盘，滚过去的正文不会从统计行底下透出来；设置窗口、弹层、卡片与引导层照旧不透明。壁纸关掉后画布原样回来；配色选「跟随宿主」时的共存不变。
 - 经局域网地址或隧道打开的页面（例如手机经 dsh-pocket 访问）不再回到出厂外观：此前这种页面上的主题风格、配色、吉祥物等全部按默认值显示，设置页一改动就报「设置存储服务异常」；现在页面显示 DSH 当前的设置，在运行 DSH 的电脑上改动后不需要刷新就跟上，设置页开头说明改动要在那台电脑上做，控件全部禁用。
 
-<h3 id="en-unreleased">Improvements</h3>
+<h3 id="en-0.12.3">Improvements</h3>
 
 - The reasoning's streamed window works across both host versions: it used to look for the reasoning body through a slot only the newer host writes, so on the pinned host it found no box to clip and the reader saw the whole reasoning grow. It now reads the host's rendered Markdown itself and clips the nearest ancestor that has a box, sliding that Markdown inside it.
 - The reasoning's replay window no longer clips to a fixed height and then hands the row back to the whole text: the window stood four lines tall, the text scrolled up inside it once it filled those lines, and the whole reasoning took the row over the moment the reasoning stopped — the window's height and the height the reasoning ended at were two different things, and that switch moved the block. The window now grows with the reasoning and stops at the height it will end up occupying (the host's own cap on a process group's body, 400px in the Standard tier), and only there does the text step up two lines every 0.84 s behind the softened edges, stopping at the newest line. Below that cap the reasoning is read line by line as it is written, with nothing faded.

@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-10",
-  "group": "fixes",
-  "order": 0,
-  "external": false,
-  "zh": "装了壁纸插件（dsh-plugin-wallpaper-engine）时，配色留在 Claude 也能看到壁纸，文字照样清楚：此前皮肤把不透明画布直接画在窗口、侧栏与对话列上，壁纸被整片盖住；只让开外壳之后，会话正文、表格、侧栏条目与标题栏又直接压在花壁纸上读不清，设置窗口也变成透明。现在壁纸在播时外壳让开，整个窗口铺一层画布色遮罩——浅色是 86% 的象牙白，深色是 82% 的暖黑——侧栏、标题区、会话与底部读数落在同一块底子上；输入卡下面垫一块同宽的画布色托盘，滚过去的正文不会从统计行底下透出来；设置窗口、弹层、卡片与引导层照旧不透明。壁纸关掉后画布原样回来；配色选「跟随宿主」时的共存不变。",
-  "en": "With the wallpaper plugin (dsh-plugin-wallpaper-engine) installed, the wallpaper now shows under the Claude palette and the text stays legible: the skin used to paint opaque canvases over the window, the sidebar and the conversation column and covered the wallpaper whole, and once the shell gave way the transcript, tables, sidebar entries and the title bar sat straight on a busy wallpaper while the settings window went transparent. While a wallpaper is up the shell now gives way and one mask in the canvas colour covers the window — ivory at 86% in light, warm black at 82% in dark — so the sidebar, the header, the transcript and the figures at the bottom read on the same ground; a canvas-coloured tray the width of the composer card keeps the transcript scrolling under the dock row from showing through; the settings window, popovers, cards and overlays keep their fill. The canvases return once the wallpaper goes; coexisting under \"follow the host\" is unchanged."
-}
