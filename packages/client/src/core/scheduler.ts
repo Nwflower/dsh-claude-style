@@ -71,6 +71,7 @@ export interface Handles {
   turnNav: FeatureHandle
   chatFollow: FeatureHandle
   chatFold: ChatFoldHandle
+  chatWait: FeatureHandle
   chatReveal: FeatureHandle
   chatFiles: FeatureHandle
   chatSend: FeatureHandle

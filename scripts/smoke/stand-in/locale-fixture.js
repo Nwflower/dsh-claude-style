@@ -28,6 +28,11 @@
     'stats.dialog.speed': 'Tokens per second (TPS)',
     'chat.turnNavigation.jump': 'Jump to turn {turn}',
     'chat.turnNavigation.turn': 'Turn {turn}',
+    'chat.deepDiving': 'Deep diving',
+    // The two templates the host's own statistics row is written from, which the
+    // numbers read as well wherever they stand (features/context-stats/inline-stats.ts).
+    'stats.counts': '{turns} 轮 {steps} 步',
+    'stats.cacheHit': '缓存命中 {percent}%',
   }
   /** The host's permission tier names, as its own dictionary carries them. */
   var permissionAccess = {
@@ -36,8 +41,8 @@
     'preset.fullAccess': '完全权限',
     'auto.label': 'Auto review',
   }
-  /** The two cases that drive the skin's session-statistics block (detailed and compact rows). */
-  var statsFixtureCase = CASE === 'context-stats' || CASE === 'stats-compact'
+  /** The cases whose session-statistics surface is driven: the two popover widths and the line of their own. */
+  var statsFixtureCase = CASE === 'context-stats' || CASE === 'stats-compact' || CASE === 'stats-inline'
   /** The case that switches the interface language while the page runs. */
   var localeSwitchCase = CASE === 'permissions-locale'
   var localeServed = turnFixtureCase || statsFixtureCase || CASE === 'turn-nav' || localeSwitchCase
@@ -64,9 +69,9 @@
         return function (key) { return permissionAccess[key] === undefined ? key : permissionAccess[key] }
       }
       var templates = Object.assign({
-        'duration.seconds': '{seconds}s',
-        'duration.minutes': '{minutes}m {seconds}s',
-        'duration.hours': '{hours}h {minutes}m {seconds}s',
+        'duration.secondUnit': 's',
+        'duration.minuteUnit': 'm ',
+        'duration.hourUnit': 'h ',
         'message.stopped': 'Stopped',
         'message.turnProcess.failed': 'Failed',
       }, chatTemplates)

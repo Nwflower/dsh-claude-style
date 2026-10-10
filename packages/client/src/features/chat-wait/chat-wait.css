@@ -1,0 +1,113 @@
+/* ---------- chat wait: the live turn's running row ---------- */
+/* The host's running row keeps its whale and its live region; its words — the
+   one child of the content span it does not mark decorative — step aside for
+   the skin's line (chat-wait.ts): what the turn is doing right now, the turn's
+   elapsed time as a quiet clock beside it, and the overtime badge. The look
+   follows dsh-better-display's status line, and the wording's own change runs
+   transitions.dev's "Text states swap" (MIT). */
+
+body[data-dsh-claude-style] [data-chat-running][data-dsh-claude-wait] > span > :not([aria-hidden="true"]) {
+  display: none;
+}
+
+body[data-dsh-claude-style] .dsh-claude-chat-wait {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 24px;
+  white-space: nowrap;
+}
+
+/* The words sweep under a highlight band: a copy of them laid over the words
+   and clipped to their glyphs, so the words themselves keep their own colour.
+
+   The wording swaps in place when the turn moves on, and the swap is
+   transitions.dev's "Text states swap": the old wording leaves upward with a
+   blur, the new one enters from below. Its tokens keep the snippet's names as
+   this skin's own custom properties, and the states are the attribute
+   chat-wait.ts writes. The reader's animation choice (D26) is the gate —
+   core/prefs.ts resolves the setting and the system preference into that
+   attribute, so the snippet's own media query would answer the same question
+   a second time. */
+body[data-dsh-claude-style] .dsh-claude-chat-wait-label {
+  --dsh-claude-wait-swap-duration: 150ms;
+  --dsh-claude-wait-swap-shift: 4px;
+  --dsh-claude-wait-swap-blur: 2px;
+  --dsh-claude-wait-swap-ease: ease-in-out;
+  position: relative;
+  display: inline-block;
+  color: var(--dsw-alias-label-secondary);
+  transform: translateY(0);
+  filter: blur(0);
+  opacity: 1;
+  transition:
+    transform var(--dsh-claude-wait-swap-duration) var(--dsh-claude-wait-swap-ease),
+    filter var(--dsh-claude-wait-swap-duration) var(--dsh-claude-wait-swap-ease),
+    opacity var(--dsh-claude-wait-swap-duration) var(--dsh-claude-wait-swap-ease);
+  will-change: transform, filter, opacity;
+}
+
+body[data-dsh-claude-style] .dsh-claude-chat-wait-label[data-dsh-claude-wait-swap="exit"] {
+  transform: translateY(calc(var(--dsh-claude-wait-swap-shift) * -1));
+  filter: blur(var(--dsh-claude-wait-swap-blur));
+  opacity: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-chat-wait-label[data-dsh-claude-wait-swap="enter"] {
+  transform: translateY(var(--dsh-claude-wait-swap-shift));
+  filter: blur(var(--dsh-claude-wait-swap-blur));
+  opacity: 0;
+  transition: none;
+}
+
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-chat-wait-label {
+  transition: none;
+}
+
+body[data-dsh-claude-style] .dsh-claude-chat-wait-label::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(90deg, transparent 0%, transparent 40%, var(--dsw-alias-label-primary) 50%, transparent 60%, transparent 100%);
+  background-size: 400% 100%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: dsh-claude-wait-shimmer 2000ms linear infinite;
+}
+
+@keyframes dsh-claude-wait-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: 0% 0; }
+}
+
+/* The reader's animation choice, resolved onto <body> by core/prefs.ts (D26):
+   reduced leaves the words without the band. */
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-chat-wait-label::before {
+  content: none;
+}
+
+body[data-dsh-claude-style] .dsh-claude-chat-wait-clock {
+  margin-left: 8px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--dsw-alias-label-caption);
+}
+
+body[data-dsh-claude-style] .dsh-claude-chat-wait-badge {
+  margin-left: 8px;
+  padding: 0 6px;
+  border-radius: 5px;
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--dsw-alias-state-warn-label);
+  background: color-mix(in srgb, var(--dsw-alias-state-warn-label) 16%, transparent);
+}
+
+body[data-dsh-claude-style] .dsh-claude-chat-wait [hidden] {
+  display: none;
+}

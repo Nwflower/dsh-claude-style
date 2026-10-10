@@ -25,6 +25,27 @@ export const CHAT_FLOW_SELECTOR = '[data-chat-flow]'
 export const CHAT_CALL_SELECTOR = '[data-chat-call-id]'
 /** One thinking row; its phase is its data-state attribute. */
 export const THINK_ROW_SELECTOR = '[data-variant="think"]'
+/** The kind of an assistant step's row: its thinking or its output. */
+export const ASSISTANT_STEP_KIND = 'assistant-step'
+/** The kind of a tool call's row. */
+export const TOOL_CALL_KIND = 'tool-call'
+/**
+ * Which part of an assistant step a row holds: the host splits a step into its
+ * thinking and its output and writes the part on the row.
+ */
+export const CHAT_GROUP_PART_ATTRIBUTE = 'data-chat-group-part'
+/** The part value of a step's thinking row. */
+export const CHAT_GROUP_PART_REASONING = 'reasoning'
+/**
+ * The words of a process group's header: the one child of the control the host
+ * does not mark decorative (its icon and chevron sit in an aria-hidden span).
+ */
+export const PROCESS_HEADER_LABEL_SELECTOR = ':scope > :not([aria-hidden="true"])'
+/**
+ * The words of the live turn's running row: the child of its content span that
+ * is not the decorative whale; the row's other spans hold no elements.
+ */
+export const CHAT_RUNNING_TEXT_SELECTOR = ':scope > span > :not([aria-hidden="true"])'
 /**
  * The phase of a row that has one: a thinking row, and a tool call's own view
  * (the page's own phase is `data-phase`, D44). The values are the host's —

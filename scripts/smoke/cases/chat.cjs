@@ -73,16 +73,28 @@ module.exports = {
     const fold = r.fold || {}
     check('a running thinking row and a running process group are opened',
       fold.thinkOpen === true && fold.groupOpen === true, JSON.stringify(fold))
-    check('the opened group carries its mark, its live detail and the label half\'s width',
-      fold.openMark === true && fold.liveDetail === true && fold.spread === '56px', JSON.stringify(fold))
-    check('the opened group reads Working on its label and on its name',
-      fold.label === 'Working' && fold.labelName === 'Working', JSON.stringify(fold))
+    const summary = fold.summary || {}
+    check('the group\'s header says what it holds in place of the host\'s words, and names itself with the sentence',
+      summary.marked === true && summary.text === '1 thought, 1 tool call' && summary.form === 'full' &&
+        summary.name === '1 thought, 1 tool call' && summary.wordsShown === false && summary.summaryShown === true,
+      JSON.stringify(summary))
+    check('the summary sweeps while the section runs', summary.running === true, JSON.stringify(summary))
+    const grown = fold.grown || {}
+    check('a call arriving rolls its figure to the new count',
+      grown.text === '1 thought, 2 tool calls' && grown.name === '1 thought, 2 tool calls' && grown.rolling === true,
+      JSON.stringify(grown))
+    const narrow = fold.narrow || {}
+    const wide = fold.wide || {}
+    check('a header without the room for the sentence falls back to the compact figures, and takes it back when the room returns',
+      narrow.form === 'compact' && narrow.text === 'Thinking×1 · Tools×2' && narrow.name === '1 thought, 2 tool calls' &&
+        wide.form === 'full' && wide.text === '1 thought, 2 tool calls',
+      JSON.stringify({ narrow, wide }))
     check('a tier that does not cap its body is never pressed',
       fold.expandedUntouched === true && (fold.clicks || {}).expanded === 0, JSON.stringify(fold.clicks))
     const after = fold.after || {}
     check('the thinking row folds back when the reasoning stops', after.thinkOpen === false, JSON.stringify(after))
-    check('the process group folds back when the section ends, its mark and live detail with it',
-      after.groupOpen === false && after.openMark === false && after.liveDetail === false, JSON.stringify(after))
+    check('the process group folds back when the section ends, and its summary stops sweeping',
+      after.groupOpen === false && (after.summary || {}).running === false, JSON.stringify(after))
     check('a group the reader opened himself in that phase stays open', fold.readerOpen === true, JSON.stringify(fold.readerOpen))
     const glide = fold.glide || {}
     const glideAfter = glide.after || {}
@@ -107,8 +119,6 @@ module.exports = {
         animationsOff.immediateClicks === 1 && animationsOff.rolling === false, JSON.stringify(animationsOff))
     check('switching it back brings the fold mark back',
       (fold.animationsBack || {}).mark === true, JSON.stringify(fold.animationsBack))
-    check('the Redraw choice takes the fold mark down with it',
-      (fold.animationsRedraw || {}).mark === false, JSON.stringify(fold.animationsRedraw))
   },
   'chat-reveal'(r) {
     basicChecks(r)
@@ -181,7 +191,6 @@ module.exports = {
     check('it keeps the input row', escalated.texts.includes('t:row.input'), JSON.stringify(escalated.texts))
     check('switching the file rows off hands both seat keys back', files.offSeats === 0, JSON.stringify(files.offSeats))
     check('switching them back takes both again, without a reload', files.backSeats === 2, JSON.stringify(files.backSeats))
-    check('the Redraw choice hands both seat keys back as well', files.redrawSeats === 0, JSON.stringify(files.redrawSeats))
     // The other plugin coming and going mid-session (packages/client/src/shared/peer-plugin.ts):
     // the decision is re-taken, not frozen at install.
     const peerOn = files.peerOn || {}
@@ -192,6 +201,42 @@ module.exports = {
       peerOn.foldMark === false && peerOn.revealMark === false, JSON.stringify(peerOn))
     check('the other plugin leaving hands the seat keys back', peerOff.seats === 2, JSON.stringify(peerOff))
     check('leaving brings the fold mark back', peerOff.foldMark === true, JSON.stringify(peerOff))
+  },
+  'chat-wait'(r) {
+    basicChecks(r)
+    const wait = r.wait || {}
+    const working = wait.working || {}
+    check('the running row takes the skin\'s line beside the host\'s words, which step aside',
+      working.marked === true && working.besideWords === true && working.wordsShown === false, JSON.stringify(working))
+    check('the line says what the turn is doing, sweeping, with the turn\'s clock in the host\'s units',
+      working.label === 'Thinking…' && working.sweep === 'dsh-claude-wait-shimmer' && /^1m [5-9]s$/.test(working.clock || ''),
+      JSON.stringify(working))
+    check('a model at work shows no overtime badge', working.badge === null, JSON.stringify(working))
+    const silent = wait.silent || []
+    const blurOf = (frame) => Number((/blur\(([\d.]+)px\)/.exec(frame.filter || '') || [])[1] || 0)
+    const leaving = silent.filter((frame) => frame.swap === 'exit')
+    const arrived = silent.filter((frame) => frame.swap === null && frame.label === 'Deep diving')
+    const last = silent[silent.length - 1] || {}
+    check('the old wording leaves upward with a blur: the leave pose is set, its opacity falls and its glyphs blur',
+      leaving.length > 2 && leaving.every((frame) => frame.label === 'Thinking…') &&
+        Number(leaving[0].opacity) > 0.5 && Number(leaving[leaving.length - 1].opacity) < 0.1 &&
+        leaving.some((frame) => blurOf(frame) > 0.5),
+      JSON.stringify({ frames: silent.length, leaving: leaving.map((frame) => [frame.opacity, frame.filter]) }))
+    check('the new wording takes over once the old one has gone and enters from below',
+      arrived.length > 0 && silent[0].label === 'Thinking…' &&
+        Number(arrived[0].opacity) < 1 && Number(last.opacity) === 1 &&
+        arrived.every((frame, at) => at === 0 || Number(frame.opacity) >= Number(arrived[at - 1].opacity) - 0.01),
+      JSON.stringify({ arrived: arrived.map((frame) => frame.opacity), rest: [last.opacity, last.filter] }))
+    check('a model silent past ten seconds shows the overtime badge', last.badge === 'No response yet', JSON.stringify(last))
+    const tools = wait.tools || {}
+    check('a tool call in flight is named as such',
+      tools.label === 'Running tools…' && tools.badge === null, JSON.stringify(tools))
+    const reduced = wait.reduced || {}
+    check('with the animation choice set to Reduced the new wording is written at once, with no swap',
+      reduced.label === 'Deep diving' && reduced.swap === null, JSON.stringify(reduced))
+    const off = wait.off || {}
+    check('switching the chat-area animations off takes the line down and gives the host\'s words back',
+      off.line === false && off.marked === false && off.wordsShown === true, JSON.stringify(off))
   },
   'chat-send'(r) {
     basicChecks(r)
@@ -225,40 +270,5 @@ module.exports = {
     check('the animation choice reaches it too: Reduced flies nothing and leaves the row visible (D26)',
       sendReduced.ghost === false && sendReduced.hidden === false && sendReduced.visibility === 'visible',
       JSON.stringify(sendReduced))
-    // The chat-area animation choice is three-way: the send flight is the one
-    // member of the Redraw set wired so far.
-    const sendRedraw = send.redraw || {}
-    check('the Redraw choice still lifts the stand-in and hides the echo while it flies',
-      sendRedraw.ghost === true && sendRedraw.hidden === true && sendRedraw.visibility === 'hidden',
-      JSON.stringify(sendRedraw))
-  },
-  'chat-reader'(r) {
-    basicChecks(r)
-    const reader = r.reader || {}
-    const view = reader.view || {}
-    check('the redraw tier registers the reading view under Chat\'s id, name and place, with the official seats it lends',
-      view.order === 0 && view.locale === 'chat' && view.label === 'Chat'
-        && JSON.stringify(view.children) === JSON.stringify(reader.expectedSeats),
-      JSON.stringify(view))
-    check('the reading view is the registration that renders for Chat',
-      reader.renders === true, JSON.stringify(reader.renders))
-    check('the view reuses the host\'s own Chat callbacks for files, forks, history and images',
-      reader.reused === true, JSON.stringify(reader.reused))
-    check('the host\'s official entries are mirrored into the view\'s seats, the kinds the view draws itself left out',
-      JSON.stringify(reader.mirrored) === JSON.stringify({ tools: ['bash'], nodes: ['context'] }),
-      JSON.stringify(reader.mirrored))
-    const tabs = reader.tabs || {}
-    check('the host\'s own Chat tab is hidden, and a strip left with one tab with it',
-      JSON.stringify(tabs.chatOnly) === JSON.stringify({ hidden: [1], lone: true })
-        && JSON.stringify(tabs.developer) === JSON.stringify({ hidden: [1], lone: false })
-        && JSON.stringify(tabs.developerOff) === JSON.stringify({ hidden: [1], lone: true })
-        && JSON.stringify(tabs.withoutChat) === JSON.stringify({ hidden: [], lone: false }),
-      JSON.stringify(tabs))
-    check('the view stands only over the host\'s Chat view, whose callbacks it borrows',
-      reader.withoutChat === 0 && reader.withChat === 1, JSON.stringify({ without: reader.withoutChat, with: reader.withChat }))
-    check('dsh-better-display\'s reading view takes precedence, and the reader comes back once it leaves',
-      reader.peerYield === 0 && reader.peerBack === 1, JSON.stringify({ yield: reader.peerYield, back: reader.peerBack }))
-    check('leaving the redraw tier takes the view, its seats and the tab marks down',
-      reader.offEntries === 0 && reader.offMarks === 0, JSON.stringify({ entries: reader.offEntries, marks: reader.offMarks }))
   },
 }

@@ -1,4 +1,3 @@
-import { CHAT_ANIMATIONS_ENHANCED, CHAT_ANIMATIONS_REDRAW } from '../../constants'
 import type { FeatureManifest } from '../../core/feature'
 
 export default {
@@ -7,7 +6,6 @@ export default {
   load: 'deferred',
   contracts: ['chat.flow', 'chat.user-kind', 'chat.user-row', 'composer.card', 'composer.echo', 'composer.input', 'composer.scroll', 'shell.slot-anchor'],
   pref: 'chatAnimations',
-  prefValues: [CHAT_ANIMATIONS_ENHANCED, CHAT_ANIMATIONS_REDRAW],
   yieldsTo: 'dsh-chat-ux',
   stylesheets: [{ file: 'send-flight.css', rank: 200 }],
   cases: ['chat-send'],

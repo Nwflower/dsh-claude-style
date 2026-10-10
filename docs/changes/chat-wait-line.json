@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-09",
+  "group": "improvements",
+  "order": 3,
+  "external": false,
+  "zh": "轮次进行中，对话末尾那一行不再固定写「深度求索中，用时 N 秒 ···」，而是说出这一轮此刻在做的事：「正在思考」「正在准备工具调用」「正在调用工具」「正在写回答」，后面跟着这一轮已用的时间（用宿主自己的时间单位）。读不出状态时（模型还没写出任何内容、也没有工具在跑）回到宿主自己的「深度求索中」——这正是读者那一刻在宿主界面上看到的同一句话；模型连续 10 秒没有开口时，计时后面再挂出「暂未响应」。说法换掉时走一段三段式交替（transitions.dev 的「Text states swap」）：旧的那句一边模糊一边向上淡出，淡出之后才换成新的，新的一句从下方升上来；「动画」设为「减弱」时直接换掉，不做这三段。这一行带扫光，宿主的小鲸鱼与读屏播报照旧，关闭「聊天区动画效果」后宿主原来的写法原样回来。轮次状态行里的同一句说法与这一行共用一处（`shared/turn-activity.ts`）：正在思考、正在准备工具调用、正在调用工具、正在写回答现在读的是同一份文案。",
+  "en": "While a turn runs, the line at the end of the conversation no longer reads a fixed \"Deep diving for N s ···\": it says what that turn is doing now — \"Thinking…\", \"Preparing a tool call…\", \"Running tools…\", \"Writing…\" — with the time the turn has taken beside it in the host's own units. Where no state can be read (the model has written nothing and no tool is running) it falls back to the host's own \"Deep diving\", which is the very line the reader sees in the host's interface at that moment; once the model has been silent for ten seconds \"No response yet\" appears beside the clock. A wording that changes runs transitions.dev's \"Text states swap\": the old one blurs and fades upward, the text changes once it has gone, and the new one rises from below — with Animation set to Reduced the wording is written at once and none of the three phases runs. The line sweeps, the host's whale and its screen-reader announcement stay, and switching Chat-area animations off brings the host's own wording back as it was. The turn status line reads the same four states from one place (`shared/turn-activity.ts`)."
+}

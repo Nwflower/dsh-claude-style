@@ -41,6 +41,11 @@ export const STYLE_PLUGIN_CSS = `${PACKAGE_NAME}/client.css`
 export const FOREIGN_SHEET_TAG = `${PACKAGE_NAME}/foreign-sheet`
 export const BUNDLE_CONFIG_SLOT = 'plugins.bundle.config'
 export const SETTINGS_SECTION_SLOT = 'settings.section'
+/**
+ * The plugin's own repository. The settings page's heading links to it, and
+ * the address is read from here rather than written into the component.
+ */
+export const REPOSITORY_URL = 'https://github.com/Nwflower/dsh-claude-style'
 
 /**
  * Preferences, persisted in the profile entry's settings namespace (the
@@ -128,16 +133,41 @@ export const MASCOT_SCOPE_ALL = 'all'
 export const MASCOT_SCOPES = [MASCOT_SCOPE_HOME, MASCOT_SCOPE_ALL]
 
 /**
- * The chat area's animation choice: `off` leaves the area to the host,
- * `enhanced` plays the ported set (packages/client/src/features/chat-*), and
- * `redraw` hands the area to a second set, which the send flight is the only
- * member of so far. Each of the five features names the values it runs under
- * (`prefValues`, D42).
+ * Where the skin's search box stands, and how much of the host's own sidebar
+ * search it leaves in place (packages/client/src/features/search/search.css).
+ * `icon` takes the click of the host's own search button and leaves that button
+ * where the host draws it; `overlay` keeps the box in the brand row, standing
+ * over the brand while the pointer is over the sidebar; `standalone` gives the
+ * box a row of its own under the brand row, shown always. The choice rides
+ * <body> as SEARCH_STYLE_ATTR, so every rule that places the box is gated on it.
+ */
+export const SEARCH_STYLE_ICON = 'icon'
+export const SEARCH_STYLE_OVERLAY = 'overlay'
+export const SEARCH_STYLE_STANDALONE = 'standalone'
+export const SEARCH_STYLES = [SEARCH_STYLE_ICON, SEARCH_STYLE_OVERLAY, SEARCH_STYLE_STANDALONE]
+export const SEARCH_STYLE_ATTR = 'data-dsh-claude-search-style'
+
+/**
+ * The chat area's animation switch: on plays the ported set
+ * (packages/client/src/features/chat-*), off leaves the area to the host. The
+ * features share the one switch, each naming it as its `pref` (D42); a value an
+ * earlier build stored under the retired Redraw choice reads as on
+ * (packages/client/src/core/prefs.ts).
  */
 export const CHAT_ANIMATIONS_OFF = 'off'
-export const CHAT_ANIMATIONS_ENHANCED = 'enhanced'
-export const CHAT_ANIMATIONS_REDRAW = 'redraw'
-export const CHAT_ANIMATIONS_MODES = [CHAT_ANIMATIONS_OFF, CHAT_ANIMATIONS_ENHANCED, CHAT_ANIMATIONS_REDRAW]
+
+/**
+ * Where the session's numbers show (D27): `inline` (the default) writes them on
+ * a line of their own under the input card, with the host's meter at that line's
+ * end, and `context` moves them into the popover the meter opens and leaves the
+ * card's bottom line to the meter alone. The choice rides <body> as
+ * STATS_POSITION_ATTR, so the composer rules that hide or overlay the host's
+ * statistics row are gated on it.
+ */
+export const STATS_POSITION_INLINE = 'inline'
+export const STATS_POSITION_CONTEXT = 'context'
+export const STATS_POSITIONS = [STATS_POSITION_INLINE, STATS_POSITION_CONTEXT]
+export const STATS_POSITION_ATTR = 'data-dsh-claude-stats-position'
 
 /**
  * Feature switches: one preference per feature that replaces or moves a host
@@ -146,23 +176,27 @@ export const CHAT_ANIMATIONS_MODES = [CHAT_ANIMATIONS_OFF, CHAT_ANIMATIONS_ENHAN
  * value outside that set runs the feature's teardown, which hands its surface
  * back to the host.
  *
- * `chatAnimations` is the one choice among them: it covers the five ported
- * chat-area effects — the follow, the automatic folding with its rolling
- * door, the text fade, the file change rows and the send flight. It belongs
- * here rather than among the live-read preferences because two of those five
- * cannot be stopped by reading a preference: the file change rows take the
- * host's two seat keys over (D32), and a seat registration only comes back
- * when the feature is torn down whole.
+ * `statsPosition` is the one choice among them; `chatAnimations` is the switch
+ * covering the ported chat-area effects — the follow, the automatic folding with
+ * its rolling door, the text fade, the file change rows, the send flight, the
+ * counted process headers and the waiting line — and belongs here rather than
+ * among the live-read preferences because two of those cannot be stopped by
+ * reading a preference: the file change rows take the host's two seat keys over
+ * (D32), and a seat registration only comes back when the feature is torn down
+ * whole. `statsPosition` answers where the session's numbers show: one value
+ * writes them on a line of their own under the card, the other fills the context
+ * popover with them and leaves that line to the host's meter.
  */
 export const FEATURE_PREF_DEFAULTS = {
   permissionsControl: true,
+  statsPosition: STATS_POSITION_INLINE,
   workspaceView: true,
   sidebarSearch: true,
   turnStatus: true,
   turnNav: true,
   viewTabs: true,
   headerBand: true,
-  chatAnimations: CHAT_ANIMATIONS_ENHANCED,
+  chatAnimations: true,
   peakrate: true,
 }
 
@@ -194,6 +228,14 @@ export const STREAM_GLIDE_ATTR = 'data-dsh-claude-stream-glide'
  * for that gate while the glide is the one moving the position.
  */
 export const FOLLOW_HOLD_ATTR = 'data-dsh-claude-follow-hold'
+/**
+ * On a container the reader has taken over with his own scrolling
+ * (packages/client/src/shared/scroll-owner.ts), until he comes back to its end. The live
+ * status line's pin (packages/client/src/features/turn-status/turn-status.css) reads it: a
+ * pin stands only while the skin's own follow is the one moving the position,
+ * never over content the reader scrolled back to.
+ */
+export const READER_HOLD_ATTR = 'data-dsh-claude-reader-hold'
 /**
  * Present while the ported token reveal is installed
  * (packages/client/src/features/chat-reveal/): its step rules (reveal-rules.css) hang off it,
@@ -229,7 +271,7 @@ export const CARET_VISIBLE_ATTR = 'data-dsh-claude-caret-visible'
 export const CARET_HOST_ATTR = 'data-dsh-claude-caret-host'
 /**
  * Present while the ported automatic folding is installed
- * (packages/client/src/features/chat-fold/): the stylesheet's live-detail rules hang off it,
+ * (packages/client/src/features/chat-fold/): the stylesheet's header-summary rules hang off it,
  * and switching the feature off hands the chat area back whole.
  */
 export const CHAT_FOLD_ATTR = 'data-dsh-claude-chat-fold'
@@ -420,14 +462,16 @@ export interface Prefs {
   mascotScope: string
   caretMotion: string
   permissionsControl: boolean
+  statsPosition: string
   workspaceView: boolean
   dockCards: boolean
   sidebarSearch: boolean
+  searchStyle: string
   turnStatus: boolean
   turnNav: boolean
   viewTabs: boolean
   headerBand: boolean
-  chatAnimations: string
+  chatAnimations: boolean
 }
 
 /** Every preference's shipped default, from the table both halves share (packages/contracts/src/prefs.ts, D46). */
@@ -443,8 +487,9 @@ export const PREF_CHOICES: Partial<Record<keyof Prefs, string[]>> = {
   typeface: TYPEFACES,
   mascot: MASCOTS,
   mascotScope: MASCOT_SCOPES,
+  searchStyle: SEARCH_STYLES,
   caretMotion: CARET_MOTIONS,
-  chatAnimations: CHAT_ANIMATIONS_MODES,
+  statsPosition: STATS_POSITIONS,
 }
 /** Longest accepted custom username; core/prefs.ts trims the stored value to it. */
 export const USERNAME_MAX = 64

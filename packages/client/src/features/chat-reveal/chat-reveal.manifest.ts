@@ -1,4 +1,3 @@
-import { CHAT_ANIMATIONS_ENHANCED } from '../../constants'
 import type { FeatureManifest } from '../../core/feature'
 
 export default {
@@ -6,7 +5,6 @@ export default {
   order: 210,
   contracts: ['api.highlight', 'api.highlight-constructor', 'chat.streaming', 'chat.streaming-attribute'],
   pref: 'chatAnimations',
-  prefValues: [CHAT_ANIMATIONS_ENHANCED],
   yieldsTo: 'dsh-chat-ux',
   stylesheets: [{ file: 'reveal-rules.css', rank: 180 }],
   cases: ['chat-reveal'],

@@ -63,7 +63,7 @@ const PROBE_PARTS = [
   'chat-motion.js',
   'chat-files.js',
   'chat-send.js',
-  'chat-reader.js',
+  'chat-wait.js',
   'dock-cards.js',
   'model-meter.js',
   'peer.js',
@@ -121,7 +121,8 @@ function page(name, tier, cases) {
   // (features/composer/composer.ts); the stats pills draw none.
   var dock = '<div class="_x_dock_1">' + stats +
       '<span class="_m_meter_1"><button type="button" id="context-meter" class="_m_trigger_1" aria-haspopup="dialog" aria-expanded="false" aria-label="Context used 42%">' +
-        '<svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="5.5"></circle><circle cx="7" cy="7" r="5.5"></circle></svg><span>42%</span></button></span>' +
+        // The host gives the filled arc a dash array and leaves its track bare
+        '<svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="5.5"></circle><circle cx="7" cy="7" r="5.5" stroke-dasharray="15.5 34.5"></circle></svg><span>42%</span></button></span>' +
     '</div>'
   // The hero row's two pickers, only where the popovers case drives them: each is
   // its own host menu, opened and closed by pressing its own trigger.
@@ -205,15 +206,19 @@ function page(name, tier, cases) {
     : ''
   // The fold case drives the two surfaces the ported folding acts on: a thinking
   // row (opened and folded back by its own control) and process groups — one
-  // running and capped, one in a tier that does not cap its body. The host's own
-  // behaviour is modelled in the script: the row's control flips data-expanded,
-  // a group's header flips its body's hidden.
+  // running and capped, holding a thought and a tool call, and one in a tier
+  // that does not cap its body. The host's own behaviour is modelled in the
+  // script: the row's control flips data-expanded, a group's header flips its
+  // body's hidden. A header is the host's: a decorative icon span, then its words.
   var foldArea = name === 'chat-fold'
-    ? '<style>[data-step-process-body][hidden] { display: none; }</style>' +
-      '<div data-variant="think" data-state="running" id="debugThink"><button type="button">Thinking</button></div>' +
+    ? '<style>[data-step-process-body][hidden] { display: none; } #debugGroupHeader { display: flex; gap: 6px; padding: 0; max-width: 100%; }</style>' +
+      '<div data-variant="think" data-state="running" id="debugThink"><button type="button" id="debugThinkRow">Thinking</button></div>' +
       '<div data-step-process id="debugGroup">' +
-        '<button type="button" data-process-activity id="debugGroupHeader"><span data-shimmer>Working</span> · building</button>' +
-        '<div data-step-process-body hidden="until-found" id="debugGroupBody"><div data-step-process-content>body</div></div>' +
+        '<button type="button" data-process-activity id="debugGroupHeader"><span aria-hidden="true">icon</span><span data-shimmer id="debugGroupWords">Working · building</span></button>' +
+        '<div data-step-process-body hidden="until-found" id="debugGroupBody"><div data-step-process-content id="debugGroupContent">' +
+          '<div data-chat-flow-kind="assistant-step" data-chat-group-part="reasoning">thought</div>' +
+          '<div data-chat-flow-kind="tool-call">call</div>' +
+        '</div></div>' +
       '</div>' +
       '<div data-chat-flow id="debugFlow">' +
         '<button type="button" data-disclosure-row id="debugDisclosure">Row</button>' +

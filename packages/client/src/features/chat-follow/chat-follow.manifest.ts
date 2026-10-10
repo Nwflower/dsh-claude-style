@@ -1,4 +1,3 @@
-import { CHAT_ANIMATIONS_ENHANCED, CHAT_ANIMATIONS_OFF, CHAT_ANIMATIONS_REDRAW } from '../../constants'
 import type { FeatureManifest } from '../../core/feature'
 
 export default {
@@ -7,19 +6,13 @@ export default {
   reads: ['chatFold'],
   contracts: ['chat.call', 'chat.flow', 'chat.flow-block', 'chat.following-tail', 'chat.following-tail-attribute', 'chat.phase', 'chat.scroller', 'chat.shimmer', 'chat.streaming', 'chat.think-row', 'chat.think-running', 'composer.seat', 'process.body', 'process.content', 'process.expanded-mode'],
   pref: 'chatAnimations',
-  prefValues: [CHAT_ANIMATIONS_ENHANCED],
   yieldsTo: 'dsh-chat-ux',
   stylesheets: [{ file: 'chat-follow.css', rank: 160 }],
   switchRow: {
     tab: 'conversation',
     rank: 30,
     title: { key: 'chatAnimationsTitle', fallback: 'Chat-area animations' },
-    desc: { key: 'chatAnimationsDesc', fallback: 'The conversation area\'s motion, chosen here: the follow, the automatic folding with its rolling door, the text fade, the file change rows and the send flight. Off leaves the conversation to the host\'s own behaviour; Enhanced plays this plugin\'s set; Redraw hands the area to a second set — the send flight and the process fold, which gathers a turn\'s thinking, tool calls and process records into one summary row per formal output, each row carrying that segment\'s figures and jumping as the work grows. With Animation set to Reduced every set stands still.' },
-    choices: [
-      { value: CHAT_ANIMATIONS_OFF, label: { key: 'chatAnimationsOff', fallback: 'Off' } },
-      { value: CHAT_ANIMATIONS_ENHANCED, label: { key: 'chatAnimationsEnhanced', fallback: 'Enhanced' } },
-      { value: CHAT_ANIMATIONS_REDRAW, label: { key: 'chatAnimationsRedraw', fallback: 'Redraw' } },
-    ],
+    desc: { key: 'chatAnimationsDesc', fallback: 'The conversation area\'s motion: the follow, the automatic folding with its rolling door, the text fade, the file change rows, the send flight, the counted figures on each process group\'s header and the line saying what the model is doing. Off hands the conversation back to the host\'s own behaviour, the host\'s own words included. With Animation set to Reduced it all stands still.' },
   },
   cases: ['chat-follow'],
   description: {

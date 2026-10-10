@@ -1,4 +1,3 @@
-import { CHAT_ANIMATIONS_ENHANCED } from '../../constants'
 import type { FeatureManifest } from '../../core/feature'
 
 export default {
@@ -6,7 +5,6 @@ export default {
   order: 220,
   contracts: ['chat.think-running'],
   pref: 'chatAnimations',
-  prefValues: [CHAT_ANIMATIONS_ENHANCED],
   yieldsTo: 'dsh-chat-ux',
   stylesheets: [{ file: 'chat-files.css', rank: 190 }],
   cases: ['chat-files', 'peer-chat-ux'],

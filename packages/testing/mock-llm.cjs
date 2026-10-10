@@ -38,8 +38,9 @@ const MESSAGES_PATH = '/v1/messages'
  *
  * A reply's pieces become streamed deltas: `thinking` first, then `text`, then
  * the one `tool` call when it has one — a reply with a call settles as
- * `tool_use`, and the host then runs that tool and asks again. The last
- * conversation reply repeats, so a turn that keeps asking still gets an answer.
+ * `tool_use`, and the host then runs that tool and asks again. `holdMs` keeps
+ * the reply silent that long before its first event. The script starts over
+ * once it runs out, so a turn that keeps asking still gets an answer.
  */
 
 /** A long answer, in a few pieces: enough lines that the column outgrows the viewport. */
@@ -81,17 +82,40 @@ const SCRIPTS = {
     auxiliary: { text: ['Scripted inspection'] },
   },
   /**
-   * Several rounds in one turn: a thought and a tool, a thought and a note with
-   * another tool, then the answer. The reader gets an intermediate output with
-   * process on both sides of it, which is the shape the process lane folds.
+   * Several rounds in one turn, after the model keeps the reader waiting past
+   * the point the waiting line calls overtime: a thought and a tool, a thought
+   * and a note with another tool, then the answer. The process groups on both
+   * sides of the intermediate note carry thinking and a tool call each.
    */
   process: {
     conversation: [
-      { thinking: ['先看清工作区再动手。'], tool: { name: 'glob', input: { pattern: '*.json' } } },
+      { holdMs: 11500, thinking: ['先看清工作区再动手。'], tool: { name: 'glob', input: { pattern: '*.json' } } },
       { thinking: ['列举结果回来了，先记一句中间结论。'], text: ['先记一句中间结论。\n\n'], tool: { name: 'glob', input: { pattern: '*.md' } } },
       { thinking: ['信息够了，可以收尾。'], text: ['这是最终答案。\n\n', '- 第一点\n', '- 第二点\n'] },
     ],
     auxiliary: { text: ['Scripted process'] },
+  },
+  /**
+   * A long reasoning, delivered a couple of lines at a time: the thinking row's
+   * window steps it up while it arrives (packages/client/src/features/chat-fold/
+   * reasoning-stream.ts), and the reader never loses its last line.
+   */
+  think: {
+    conversation: [
+      {
+        thinking: [
+          '先想清楚这个问题分成几步。\n\n',
+          '第一步，看清工作区里有什么。\n\n第二步，挑出与问题相关的几个文件。\n\n',
+          '第三步，确认它们的依赖关系。\n\n第四步，找出改动会波及的入口。\n\n',
+          '第五步，检查测试覆盖到哪里。\n\n第六步，估计改动的规模。\n\n',
+          '第七步，记下需要向读者确认的地方。\n\n第八步，把结论整理成一句话。\n\n',
+          '第九步，回头看一遍有没有漏掉的约束。\n\n第十步，确认没有更好的做法。\n\n',
+          '第十一步，把要改的文件按顺序排好。\n\n第十二步，想清楚先改哪一处最小。\n\n',
+        ],
+        text: ['理清楚了，可以回答。\n'],
+      },
+    ],
+    auxiliary: { text: ['Scripted reasoning'] },
   },
   /** Enough streamed lines to push the column past the viewport edge. */
   long: {
@@ -124,6 +148,9 @@ const tokensOf = (text) => Math.max(1, Math.round(text.length / 4))
  * @param delayMs - the pause between pieces.
  */
 async function streamReply(res, reply, delayMs) {
+  // A reply that hesitates keeps the model silent before its first event, the
+  // stretch the host shows as waiting for the model.
+  if (reply.holdMs !== undefined) await pause(reply.holdMs)
   res.writeHead(200, {
     'content-type': 'text/event-stream; charset=utf-8',
     'cache-control': 'no-cache',

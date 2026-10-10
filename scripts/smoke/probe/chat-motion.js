@@ -206,33 +206,87 @@
       var foldHeader = document.getElementById('debugGroupHeader')
       var foldBody = document.getElementById('debugGroupBody')
       var foldExpandedBody = document.getElementById('debugExpandedBody')
-      await sleep(350)
+      // The header's counted summary: the skin's span after the host's words,
+      // which step aside, the wording the header has room for, and the sentence
+      // as the header's name. The width check's own numbers come along, so a
+      // failing case carries them.
+      var foldWords = document.getElementById('debugGroupWords')
+      var summaryOf = function () {
+        var summary = foldHeader.querySelector('.dsh-claude-process-summary')
+        if (summary === null) return null
+        var fit = summary.querySelector('.dsh-claude-process-summary-fit')
+        var style = getComputedStyle(foldHeader)
+        var parentStyle = getComputedStyle(foldGroup)
+        var gap = parseFloat(style.columnGap) || 0
+        // The room the control may spend, measured the way the module measures it.
+        var room = foldGroup.clientWidth - (parseFloat(parentStyle.paddingLeft) || 0) - (parseFloat(parentStyle.paddingRight) || 0)
+          - (parseFloat(style.paddingLeft) || 0) - (parseFloat(style.paddingRight) || 0)
+          - (parseFloat(style.borderLeftWidth) || 0) - (parseFloat(style.borderRightWidth) || 0)
+        for (var i = 0; i < foldHeader.children.length; i++) {
+          var child = foldHeader.children[i]
+          if (child === summary) continue
+          var width = child.getBoundingClientRect().width
+          if (width > 0) room -= width + gap
+        }
+        return {
+          marked: foldGroup.hasAttribute('data-dsh-claude-summary'),
+          name: foldHeader.getAttribute('aria-label'),
+          form: summary.getAttribute('data-dsh-claude-summary-form'),
+          text: Array.prototype.map.call(summary.querySelectorAll('.dsh-claude-process-summary-part'), function (part) {
+            var words = part.querySelectorAll('.dsh-claude-process-summary-words')
+            var digit = part.querySelector('.dsh-claude-process-summary-roll [data-dsh-claude-roll]:not([data-dsh-claude-roll="exit"])')
+            return words[0].textContent + (digit === null ? '' : digit.textContent) + words[1].textContent
+          }).join(''),
+          sentence: fit === null ? null : Math.round(fit.getBoundingClientRect().width),
+          room: Math.round(room),
+          headerWidth: foldHeader.clientWidth,
+          running: summary.hasAttribute('data-dsh-claude-summary-running'),
+          rolling: summary.querySelector('[data-dsh-claude-roll="enter"]') !== null,
+          wordsShown: getComputedStyle(foldWords).display !== 'none',
+          summaryShown: getComputedStyle(summary).display !== 'none',
+        }
+      }
+      // The wording answers the room the header has, a frame or two behind a
+      // change: a reading is taken once it has stopped moving.
+      var settledSummary = async function () {
+        var last = null
+        for (var round = 0; round < 20; round += 1) {
+          await sleep(50)
+          var now = summaryOf()
+          if (last !== null && last.form === now.form && last.text === now.text) return now
+          last = now
+        }
+        return last
+      }
       r.fold = {
         thinkOpen: foldThink.hasAttribute('data-expanded'),
         groupOpen: !foldBody.hasAttribute('hidden'),
-        openMark: foldGroup.hasAttribute('data-dsh-claude-open'),
-        liveDetail: foldGroup.hasAttribute('data-dsh-claude-live-detail'),
-        label: foldHeader.getAttribute('data-dsh-claude-label'),
-        labelName: foldHeader.getAttribute('aria-label'),
-        spread: foldHeader.style.getPropertyValue('--dsh-claude-label-spread'),
+        summary: await settledSummary(),
         expandedUntouched: !foldExpandedBody.hasAttribute('hidden'),
         clicks: Object.assign({}, window.__foldClicks),
       }
-      // The reasoning stops and the process section ends: both fold back.
+      // Another call arrives in the group: its figure rolls to the new count.
+      var moreCall = document.createElement('div')
+      moreCall.setAttribute('data-chat-flow-kind', 'tool-call')
+      moreCall.textContent = 'another call'
+      document.getElementById('debugGroupContent').appendChild(moreCall)
+      r.fold.grown = await settledSummary()
+      // A header too narrow for the sentence falls back to the compact figures,
+      // and takes the sentence back when the room returns.
+      foldGroup.style.width = '120px'
+      r.fold.narrow = await settledSummary()
+      foldGroup.style.width = ''
+      r.fold.wide = await settledSummary()
+      // The reasoning stops and the process section ends: both fold back, and
+      // the host's words stop sweeping.
       foldThink.setAttribute('data-state', 'ok')
-      var foldShimmer = foldHeader.querySelector('[data-shimmer]')
-      if (foldShimmer !== null) foldShimmer.parentNode.removeChild(foldShimmer)
-      // The host drops the live detail with the shimmer: what is left is the label
-      // alone, with no separator in it.
-      var foldText = foldHeader.textContent
-      var foldCut = foldText.indexOf(' · ')
-      if (foldCut >= 0) foldHeader.textContent = foldText.slice(0, foldCut)
+      foldWords.removeAttribute('data-shimmer')
+      foldWords.textContent = 'Worked'
       await sleep(450)
       r.fold.after = {
         thinkOpen: foldThink.hasAttribute('data-expanded'),
         groupOpen: !foldBody.hasAttribute('hidden'),
-        openMark: foldGroup.hasAttribute('data-dsh-claude-open'),
-        liveDetail: foldGroup.hasAttribute('data-dsh-claude-live-detail'),
+        summary: summaryOf(),
         clicks: Object.assign({}, window.__foldClicks),
       }
       // The fold glide on the reader's own press: the click is intercepted, the
@@ -308,13 +362,6 @@
       window.__pushForm({ chatAnimations: true })
       await sleep(200)
       r.fold.animationsBack = { mark: document.body.hasAttribute('data-dsh-claude-chat-fold') }
-      // The Redraw choice runs the other effect set, which the fold is not part
-      // of: its mark goes the same way Off takes it.
-      window.__pushForm({ chatAnimations: 'redraw' })
-      await sleep(200)
-      r.fold.animationsRedraw = { mark: document.body.hasAttribute('data-dsh-claude-chat-fold') }
-      window.__pushForm({ chatAnimations: 'enhanced' })
-      await sleep(200)
     })
     // The ported token reveal (packages/client/src/features/chat-reveal/): characters arriving in
     // a streaming container are registered as named highlights from the faintest

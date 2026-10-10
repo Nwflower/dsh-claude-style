@@ -7,6 +7,7 @@
 'use strict'
 const path = require('path')
 const { featureCases, readManifests } = require('../shared/read-manifests.cjs')
+const { loadModule } = require('../shared/ts-module.cjs')
 
 const ROOT = path.resolve(__dirname, '..', '..')
 const CLIENT = path.join(ROOT, 'lib', 'client.js')
@@ -78,15 +79,22 @@ for (const manifest of MANIFESTS) {
 /** The features that arrive in chunks of their own (D39), by id. */
 const DEFERRED_FEATURES = MANIFESTS.filter((manifest) => manifest.load === 'deferred').map((manifest) => manifest.id)
 
+/** The preferences a page carries before a reader touches anything (packages/contracts/src/prefs.ts). */
+const SHIPPED_PREFS = loadModule('packages/contracts/src/prefs.ts').PREFS_DEFAULT
+
 /**
- * The deferred features a page wants, by id: a feature gated on a preference
- * installs only under the values its manifest names, so a page sitting on
- * another value never sends for that feature's chunk and never reports it.
+ * The deferred features a page wants, by id: a feature gated on a choice
+ * preference installs only under the values its manifest names, so a page
+ * sitting on another value never sends for that feature's chunk and never
+ * reports it. A feature on a boolean switch is wanted unless that switch is off.
  * @param values - the page's preference values, by preference name.
  */
 function deferredWanted(values) {
     return MANIFESTS.filter((manifest) => manifest.load === 'deferred')
-        .filter((manifest) => manifest.pref === undefined || manifest.prefValues === undefined || manifest.prefValues.includes(values[manifest.pref]))
+        .filter((manifest) => manifest.pref === undefined
+            || (manifest.prefValues === undefined
+                ? values[manifest.pref] !== false
+                : manifest.prefValues.includes(values[manifest.pref])))
         .map((manifest) => manifest.id)
 }
 
@@ -144,5 +152,5 @@ const skips = () => skipped
 
 module.exports = {
     ROOT, CLIENT, HOST, MARKUP, PNG_1PX, SKIN_FIXTURE, SKIN_FACE, SKIN_HAT, SKIN_CASES,
-    sleep, same, check, failures, skips, setTier, tierName, TIMING_CASES, FEATURE_CASES, DEFERRED_FEATURES, deferredWanted, PAGES, pagesFor,
+    sleep, same, check, failures, skips, setTier, tierName, TIMING_CASES, FEATURE_CASES, DEFERRED_FEATURES, SHIPPED_PREFS, deferredWanted, PAGES, pagesFor,
 }

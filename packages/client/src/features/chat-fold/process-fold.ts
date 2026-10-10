@@ -2,7 +2,7 @@ import { subscribeMutations } from '../../core/bus'
 import { requestFrame } from '../../core/frame'
 import { beginChatFoldToggle, endChatFoldToggle, isChatFoldToggle } from './fold-toggle'
 import { writeScroll } from '../../shared/scroll-owner'
-import { CONVERSATION_SCROLL_SELECTOR, FOLLOW_THRESHOLD_PX, PROCESS_BODY_SELECTOR, PROCESS_EXPANDED_MODE_ATTRIBUTE, PROCESS_GROUP_SELECTOR, RUNNING_STATE, SHIMMER_ATTRIBUTE, SHIMMER_LEGACY_ATTRIBUTE, SHIMMER_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { CONVERSATION_SCROLL_SELECTOR, FOLLOW_THRESHOLD_PX, PROCESS_ACTIVITY_SELECTOR, PROCESS_BODY_SELECTOR, PROCESS_EXPANDED_MODE_ATTRIBUTE, PROCESS_GROUP_SELECTOR, RUNNING_STATE, SHIMMER_ATTRIBUTE, SHIMMER_LEGACY_ATTRIBUTE, SHIMMER_SELECTOR } from '@dsh-claude-style/contracts/dom'
 
 /**
  * A running process group opens by default and folds back once the piece of
@@ -29,28 +29,8 @@ import { CONVERSATION_SCROLL_SELECTOR, FOLLOW_THRESHOLD_PX, PROCESS_BODY_SELECTO
  * while its process still runs means he does not want to watch it right now,
  * and folding it back when the section ends would mean nothing.
  */
-/** The header's open/close control. */
-export const PROCESS_HEADER_SELECTOR = 'button[data-process-activity]'
-/** The separator the host joins the header label and the live detail with (message.turnProcess.separator). */
-export const PROCESS_DETAIL_SEPARATOR = ' · '
-/** On a group root: this group's header carries a live detail right now (standard or detailed tier, process still running). */
-export const PROCESS_LIVE_DETAIL_ATTR = 'data-dsh-claude-live-detail'
-/** On a group root: this group's body is open right now. */
-export const PROCESS_OPEN_ATTR = 'data-dsh-claude-open'
-/** On the header control: the label half of its title, for the stylesheet to stand in with while the body is open. */
-export const PROCESS_LABEL_ATTR = 'data-dsh-claude-label'
-/**
- * On the header control: the stand-in label's gradient half width. The
- * host's TextShimmer inlines the same measure as characters times 8px, and
- * the stylesheet spreads the stand-in text's sweep to match.
- */
-export const PROCESS_LABEL_SPREAD_PROPERTY = '--dsh-claude-label-spread'
-/** The header control's accessible name. The stand-in text is pseudo-element content and never reaches the accessibility tree, and the original text gave way whole, so the name has to come from here. */
-export const PROCESS_LABEL_NAME_ATTRIBUTE = 'aria-label'
-/** The gradient half width the host's TextShimmer leaves per character. */
-export const PROCESS_SHIMMER_PIXELS_PER_CHARACTER = 8
 /** The piece of work is over and the final answer is due. */
-export const PROCESS_CLOSED = 'closed'
+const PROCESS_CLOSED = 'closed'
 
 /**
  * Watch every process group on the page and bring each to what its phase
@@ -81,33 +61,10 @@ export function createProcessFold() {
       // pressing it would only flip the host's own open state with nothing for
       // the reader to see.
       if (group.hasAttribute(PROCESS_EXPANDED_MODE_ATTRIBUTE)) continue
-      const header = group.querySelector(PROCESS_HEADER_SELECTOR)
+      const header = group.querySelector(PROCESS_ACTIVITY_SELECTOR)
       const body = group.querySelector(PROCESS_BODY_SELECTOR)
       if (!(header instanceof HTMLElement) || body === null) continue
       const phase = header.querySelector(SHIMMER_SELECTOR) === null ? PROCESS_CLOSED : RUNNING_STATE
-      // The tiers with a live detail attach this section's detail after the
-      // header label, and that detail is the same text the group's thinking row
-      // is streaming — both grow at once while the body is open. CSS cannot
-      // split one text node, so the label half goes onto an attribute and the
-      // stylesheet stands it in for the whole text while the body is open.
-      const headerText = header.textContent ?? ''
-      const separatorAt = headerText.indexOf(PROCESS_DETAIL_SEPARATOR)
-      const detailed = separatorAt >= 0
-      group.toggleAttribute(PROCESS_LIVE_DETAIL_ATTR, detailed)
-      group.toggleAttribute(PROCESS_OPEN_ATTR, !body.hasAttribute('hidden'))
-      if (detailed) {
-        const label = headerText.slice(0, separatorAt)
-        // This path runs on every scan, so a value that has not changed is not
-        // written: an identical write still makes ::after resolve its content
-        // again. The two attributes are guarded apart, since the other branch
-        // only takes the name away.
-        if (header.getAttribute(PROCESS_LABEL_ATTR) !== label) header.setAttribute(PROCESS_LABEL_ATTR, label)
-        if (header.getAttribute(PROCESS_LABEL_NAME_ATTRIBUTE) !== label) header.setAttribute(PROCESS_LABEL_NAME_ATTRIBUTE, label)
-        const spread = label.length * PROCESS_SHIMMER_PIXELS_PER_CHARACTER + 'px'
-        if (header.style.getPropertyValue(PROCESS_LABEL_SPREAD_PROPERTY) !== spread) {
-          header.style.setProperty(PROCESS_LABEL_SPREAD_PROPERTY, spread)
-        }
-      } else header.removeAttribute(PROCESS_LABEL_NAME_ATTRIBUTE)
       // The reader has decided this group's state in this phase: leave it.
       if (touchedIn.get(group) === phase) continue
       if (body.hasAttribute('hidden') === (phase === PROCESS_CLOSED)) continue
@@ -165,20 +122,15 @@ export function createProcessFold() {
     if (!(target instanceof Element)) return
     const group = target.closest(PROCESS_GROUP_SELECTOR)
     if (group === null) return
-    const header = group.querySelector(PROCESS_HEADER_SELECTOR)
+    const header = group.querySelector(PROCESS_ACTIVITY_SELECTOR)
     touchedIn.set(group, header !== null && header.querySelector(SHIMMER_SELECTOR) !== null ? RUNNING_STATE : PROCESS_CLOSED)
   }
 
   // Streaming changes the DOM far faster than this needs to run, so one scan
-  // a frame at most. The header's live detail changes character by character,
-  // so characterData is in range too: without watching it the label half would
-  // sit on a stale value.
+  // a frame at most.
   const onRecords = (records: MutationRecord[]) => {
     const known = touchedGroups.size
     for (const record of records) {
-      // The same shape as the thinking row's, with one extra step:
-      // characterData's target is a text node, so it steps out to its parent
-      // element first.
       const target = record.target
       const element = target instanceof Element ? target : target.parentElement
       const group = element?.closest(PROCESS_GROUP_SELECTOR) ?? null
@@ -211,7 +163,6 @@ export function createProcessFold() {
     // The group root's expand-mode attribute is in range too: switching tiers
     // adds or removes it, and that batch has to be scanned again.
     attributeFilter: [SHIMMER_ATTRIBUTE, SHIMMER_LEGACY_ATTRIBUTE, 'hidden', PROCESS_EXPANDED_MODE_ATTRIBUTE],
-    characterData: true,
   }, onRecords)
   document.addEventListener('click', rememberReaderTouched, true)
   document.addEventListener('keydown', rememberReaderTouched, true)

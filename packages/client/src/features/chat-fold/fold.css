@@ -1,66 +1,118 @@
-/* ---------- chat fold: the process group's live label ---------- */
-/* While a group is open and its header carries a live detail, that header's text
-   is the label and the detail joined in one text node (the host's separator is
-   " · "), and the detail is the same text the group's thinking row is streaming
-   — two places growing at once. CSS cannot split a text node, so the label half
-   is written onto the header as an attribute and stands in for the whole text
-   while the body is open: the header, its icon and its control stay where they
-   are. Closing the body brings the original text straight back, and a tier
-   without live detail never matches.
+/* ---------- chat fold: the process group's counted summary ---------- */
+/* A group's header names what the group holds — 「执行 2 次思考，调用 1 次工具」 —
+   instead of the host's list of activities (process-summary.ts). The summary is
+   the skin's own span at the end of the header control; the host's words — the
+   control's one child it does not mark decorative — step aside while it stands,
+   and the icon, the chevron and the control itself stay the host's.
 
-   The stand-in text needs its own sweep: the animation lived on the element that
-   was hidden along with it. The gradient, its half width and its period follow
-   the host's TextShimmer; only the keyframes name is ours, because the host's
-   own animation names live in CSS Modules and change with every build. */
+   The span takes all the room the header has left, which is what the width
+   check reads: the hidden span inside it holds the sentence, and while that
+   sentence is wider than this room the summary stands in the compact figures. */
 
-body[data-dsh-claude-style][data-dsh-claude-chat-fold] [data-step-process][data-dsh-claude-live-detail][data-dsh-claude-open] button[data-process-activity] > :is([data-shimmer], [data-text-shimmer]) {
+body[data-dsh-claude-style][data-dsh-claude-chat-fold] [data-step-process][data-dsh-claude-summary] button[data-process-activity] > :not([aria-hidden="true"]) {
   display: none;
 }
 
-body[data-dsh-claude-style][data-dsh-claude-chat-fold] [data-step-process][data-dsh-claude-live-detail][data-dsh-claude-open] button[data-process-activity]::after {
-  content: attr(data-dsh-claude-label);
+body[data-dsh-claude-style] .dsh-claude-process-summary {
+  position: relative;
+  display: inline-flex;
+  flex: 1 1 auto;
+  align-items: baseline;
   min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-@keyframes dsh-claude-label-shimmer {
-  66.6667%, 100% { background-position: 0% center; }
+/* The hidden measurement: the sentence laid out where it takes no room and no
+   width from the summary's own box, so the header's room can be compared with
+   the sentence as it would be written. */
+body[data-dsh-claude-style] .dsh-claude-process-summary-fit {
+  position: absolute;
+  width: max-content;
+  visibility: hidden;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
-/* Only a browser that can draw the gradient hands its text over to a background;
-   one that cannot keeps a plain static label instead of a background it cannot
-   paint and the text lost with it.
+body[data-dsh-claude-style] .dsh-claude-process-summary-part {
+  display: inline-flex;
+  flex: none;
+  align-items: baseline;
+}
 
-   The parenthesised test has to be a property and value. A bare function call
-   (color-mix(...)) is an unknown function form and always false, which would
-   skip the whole block silently: the text stays, the sweep is gone, and nothing
-   says so. */
-@supports (color: color-mix(in oklab, currentColor 50%, transparent)) and ((-webkit-background-clip: text) or (background-clip: text)) {
-  body[data-dsh-claude-style][data-dsh-claude-chat-fold] [data-step-process][data-dsh-claude-live-detail][data-dsh-claude-open] button[data-process-activity]::after {
-    background-image: linear-gradient(
-      90deg,
-      currentColor calc(50% - var(--dsh-claude-label-spread, 0px)),
-      color-mix(in oklab, currentColor 50%, transparent),
-      currentColor calc(50% + var(--dsh-claude-label-spread, 0px))
-    );
-    background-position: 100% center;
-    background-repeat: no-repeat;
-    background-size: 250% 100%;
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: dsh-claude-label-shimmer 1.5s cubic-bezier(0.33, 0, 0.67, 1) infinite;
-  }
+/* The figure's words keep their spaces: the separator in front of a later
+   figure would collapse at the start of its own box. */
+body[data-dsh-claude-style] .dsh-claude-process-summary-words {
+  white-space: pre;
+}
 
-  /* The reader's animation choice, resolved onto <body> by packages/client/src/core/prefs.ts
-     (D26): reduced leaves a plain static label rather than a standing gradient.
-     The attribute already folds in the system setting, so no media query here —
-     and one would stop the sweep for a reader who picked "always". */
-  body[data-dsh-claude-style][data-dsh-claude-chat-fold][data-dsh-claude-motion="reduced"] [data-step-process][data-dsh-claude-live-detail][data-dsh-claude-open] button[data-process-activity]::after {
-    background-image: none;
-    -webkit-text-fill-color: currentColor;
-    animation: none;
-  }
+/* A count rolls in place: the sizer holds the width, the old digit leaves
+   upward as the new one rises (160 ms, dsh-better-display's fold figures). */
+body[data-dsh-claude-style] .dsh-claude-process-summary-roll {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  justify-content: center;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+}
+
+body[data-dsh-claude-style] .dsh-claude-process-summary-sizer {
+  visibility: hidden;
+}
+
+body[data-dsh-claude-style] .dsh-claude-process-summary-digit {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body[data-dsh-claude-style] .dsh-claude-process-summary-digit[data-dsh-claude-roll="exit"] {
+  animation: dsh-claude-summary-roll-out 160ms cubic-bezier(.16, 1, .3, 1) forwards;
+}
+
+body[data-dsh-claude-style] .dsh-claude-process-summary-digit[data-dsh-claude-roll="enter"] {
+  animation: dsh-claude-summary-roll-in 160ms cubic-bezier(.16, 1, .3, 1) forwards;
+}
+
+@keyframes dsh-claude-summary-roll-out {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(-100%); opacity: 0; }
+}
+
+@keyframes dsh-claude-summary-roll-in {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* While the section runs, the summary sweeps the way the host's words did: a
+   band at half strength crosses the text, with the host's TextShimmer period
+   and curve; only the keyframes name is ours, because the host's own animation
+   names live in CSS Modules and change with every build. The band is a mask,
+   which takes the rolling digits along — they are positioned boxes, and a
+   text-clipped background stops at the box that owns it. */
+@keyframes dsh-claude-summary-shimmer {
+  66.6667%, 100% { mask-position: 0% center; }
+}
+
+body[data-dsh-claude-style] .dsh-claude-process-summary[data-dsh-claude-summary-running] {
+  mask-image: linear-gradient(90deg, #000 calc(50% - 48px), rgb(0 0 0 / 50%), #000 calc(50% + 48px));
+  mask-position: 100% center;
+  mask-repeat: no-repeat;
+  mask-size: 250% 100%;
+  animation: dsh-claude-summary-shimmer 1.5s cubic-bezier(0.33, 0, 0.67, 1) infinite;
+}
+
+/* The reader's animation choice, resolved onto <body> by core/prefs.ts (D26):
+   reduced sets every count down at once and leaves the figures unswept. The
+   attribute already folds in the system setting, so no media query here. */
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-process-summary[data-dsh-claude-summary-running] {
+  mask-image: none;
+  animation: none;
+}
+
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-process-summary-digit {
+  animation: none;
 }

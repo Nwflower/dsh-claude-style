@@ -21,13 +21,16 @@ export const PREFS_DEFAULT = Object.freeze({
   mascot: 'brand',
   mascotScope: 'all',
   permissionsControl: true,
+  statsPosition: 'inline',
   workspaceView: true,
   dockCards: true,
   sidebarSearch: true,
+  searchStyle: 'overlay',
   turnStatus: true,
   turnNav: true,
   viewTabs: true,
   headerBand: true,
-  chatAnimations: 'enhanced',
+  chatAnimations: true,
   caretMotion: 'typing',
 })
+

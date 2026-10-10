@@ -1,3 +1,5 @@
+import type { HostText } from '@dsh-claude-style/contracts/services'
+
 /**
  * A two-digit number for a clock or a date part: "09", "23". Every caller
  * hands it a value in [0, 60); the padding is what keeps a time string the
@@ -5,6 +7,23 @@
  */
 export function pad2(value: number) {
   return value < 10 ? `0${value}` : String(value)
+}
+
+/**
+ * A duration the way the host's own chat clocks write it (ui-chat's
+ * formatRunDuration): each figure followed by its unit word from the `chat`
+ * namespace, minutes from the first minute on and hours from the first hour,
+ * joined with no separator of its own — the unit words carry their spacing.
+ */
+export function formatHostDuration(ms: number, t: HostText) {
+  const total = Math.max(0, Math.floor(ms / 1000))
+  const hours = Math.floor(total / 3600)
+  const minutes = Math.floor(total / 60) % 60
+  const seconds = total % 60
+  let text = ''
+  if (hours > 0) text += `${hours}${t('duration.hourUnit')}`
+  if (total >= 60) text += `${minutes}${t('duration.minuteUnit')}`
+  return `${text}${seconds}${t('duration.secondUnit')}`
 }
 
 /**

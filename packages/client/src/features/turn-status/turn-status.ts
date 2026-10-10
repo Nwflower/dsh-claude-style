@@ -2,7 +2,8 @@ import { CHAT_TURN_ATTRIBUTE, FLOW_KIND_ATTRIBUTE } from '@dsh-claude-style/cont
 import { closestConversationSession, conversationSessionId, findChatFlows, findChatTarget, findTurnProcess, readTurnActivity } from '../../core/host'
 import { copyLabel } from '../../core/i18n'
 import { setAttributeIfChanged } from '../../shared/dom'
-import { formatCompactTokens, pad2 } from '../../shared/format'
+import { formatCompactTokens, formatHostDuration } from '../../shared/format'
+import { ACTIVITY_THINKING, ACTIVITY_TOOLS, activityWords } from '../../shared/turn-activity'
 import type { HostContext, HostText, HostValue } from '../../core/host'
 import type { HostChatSnapshot, HostTurn } from '@dsh-claude-style/contracts/services'
 import type { FeatureUi } from '../../core/feature'
@@ -86,20 +87,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     return target === null ? null : target.getSnapshot() ?? null
   }
 
-  /**
-   * The host's clock formats: a running turn counts seconds unpadded, a
-   * finished one pads seconds (and minutes under an hour mark) to two digits.
-   */
-  function formatDuration(ms: number, t: HostText, padded: boolean) {
-    const total = Math.max(0, Math.floor(ms / 1000))
-    const hours = Math.floor(total / 3600)
-    const minutes = Math.floor(total / 60) % 60
-    const seconds = total % 60
-    if (hours > 0) return t('duration.hours', { hours, minutes: pad2(minutes), seconds: padded ? pad2(seconds) : String(seconds) })
-    if (minutes > 0) return t('duration.minutes', { minutes, seconds: padded ? pad2(seconds) : String(seconds) })
-    return t('duration.seconds', { seconds })
-  }
-
   /** Output tokens the turn's settled steps report; the streaming step joins when it settles. */
   function outputTokens(turn: HostTurn) {
     let total = 0
@@ -125,6 +112,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * What the model is doing now, in the words of the status line: the
    * newest step's assistant output while it streams (its blocks grow in
    * place), else the turn's running tool calls, else a wait for the model.
+   * The words for the states both this line and the waiting line say come
+   * from one place (shared/turn-activity.ts).
    */
   function phaseText(key: string, snapshot: HostChatSnapshot, turn: HostTurn, now: number, t: HostText) {
     const activity = readTurnActivity(snapshot, turn)
@@ -139,21 +128,20 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       if (newest === 'reasoning') {
         if (seen.from === null) seen.from = now
         seen.until = null
-        return copyLabel('turnStatusThinking', 'Thinking…')
+        return copyLabel(ACTIVITY_THINKING.key, ACTIVITY_THINKING.fallback)
       }
       if (seen.from !== null && seen.until === null) seen.until = now
       if (newest === null) return copyLabel('turnStatusWaiting', 'Waiting for the model…')
       if (seen.from !== null) {
         return copyLabel('turnStatusThought', 'Thought for {duration}', {
           // The reasoning has ended by now (`until` set just above).
-          duration: formatDuration(Math.max(1000, seen.until! - seen.from), t, false),
+          duration: formatHostDuration(Math.max(1000, seen.until! - seen.from), t),
         })
       }
-      return newest === 'tool-call'
-        ? copyLabel('turnStatusToolCall', 'Preparing a tool call…')
-        : copyLabel('turnStatusWriting', 'Writing…')
+      const words = activityWords(snapshot, turn)
+      return words === null ? copyLabel('turnStatusWaiting', 'Waiting for the model…') : copyLabel(words.key, words.fallback)
     }
-    if (activity !== null && activity.kind === 'tools') return copyLabel('turnStatusTools', 'Running tools…')
+    if (activity !== null && activity.kind === 'tools') return copyLabel(ACTIVITY_TOOLS.key, ACTIVITY_TOOLS.fallback)
     return copyLabel('turnStatusWaiting', 'Waiting for the model…')
   }
 
@@ -167,12 +155,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const tokenText = tokens > 0 ? copyLabel('turnStatusTokens', '{count} tokens', { count: formatCompactTokens(tokens) }) : null
     if (state === 'live') {
       const now = Date.now()
-      if (turn.start !== undefined) parts.push(formatDuration(Math.max(1000, now - turn.start.time), t, false))
+      if (turn.start !== undefined) parts.push(formatHostDuration(Math.max(1000, now - turn.start.time), t))
       if (tokenText !== null) parts.push(tokenText)
       parts.push(phaseText(key, snapshot, turn, now, t))
     } else {
       parts.push(t(state === 'stopped' ? 'message.stopped' : 'message.turnProcess.failed'))
-      if (turn.start !== undefined && turn.end !== undefined) parts.push(formatDuration(Math.max(1000, turn.end.time - turn.start.time), t, true))
+      if (turn.start !== undefined && turn.end !== undefined) parts.push(formatHostDuration(Math.max(1000, turn.end.time - turn.start.time), t))
       if (tokenText !== null) parts.push(tokenText)
     }
     return parts.join(SEPARATOR)
