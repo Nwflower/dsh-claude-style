@@ -12,11 +12,13 @@
  * picture with nothing personal in it. The `contract` scenario walks packages/contracts/src/table.ts against the same page, so
  * each host literal the skin depends on is checked where it lives (D44), and the
  * `importance` scenario holds every `!important` the skin writes to one the page
+ * needs (packages/testing/importance.cjs, D51). A scenario carrying its own reader is a module
+ * beside this one (a `*Scenario` export), registered in the table below.
  * Every scenario runs against its own scratch instance, so nothing a scenario
  * writes can reach another.
  *
  * Usage: node packages/testing/e2e.cjs [--scenario <name>[,<name>…]] [--headed] [--out <dir>] [--delay <ms>]
- *        scenarios: conversation, narrow, tool, send, scroll, processSummary, reasoningStream, contract, importance, shots
+ *        scenarios: conversation, narrow, tool, scroll, readerScroll, send, processSummary, reasoningStream, contract, statsPosition, statsOverlay, importance, shots
  *        (default: every scenario)
  */
 'use strict'
@@ -24,8 +26,10 @@ const fs = require('node:fs')
 const path = require('node:path')
 const { start, openPage, waitForSkin, dismissOverlays, firstRunOverlayText } = require('./dsh-web.cjs')
 const { importanceScenario } = require('./importance.cjs')
+const { readerScrollScenario } = require('./reader-scroll.cjs')
 const { processSummaryScenario } = require('./process-summary.cjs')
 const { reasoningStreamScenario } = require('./reasoning-stream.cjs')
+const { statsScenarios } = require('./stats-position.cjs')
 const { sendPrompt, waitForTurn } = require('./prompt.cjs')
 const { startMockLlm } = require('./mock-llm.cjs')
 const { CANVAS } = require('../../scripts/shoot.cjs')
@@ -505,6 +509,11 @@ const SCENARIOS = {
       ]
     },
   },
+  /**
+   * The reader's own scrolling during a live turn: the status line's pin stands
+   * only while the skin's follow moves the position (D41, D32).
+   */
+  readerScroll: readerScrollScenario({ check }),
   /** The send flight: the stand-in takes off, the row lands, the words stay put. */
   send: {
     script: 'greeting',
@@ -594,6 +603,7 @@ const SCENARIOS = {
       ]
     },
   },
+  ...statsScenarios({ check }),
   /** The waiting line and the counted process headers (process-summary.cjs, D32). */
   processSummary: processSummaryScenario({ check }),
   /** The reasoning's streamed window while the model thinks (reasoning-stream.cjs, D32). */
@@ -702,7 +712,7 @@ async function main() {
       + `${unknown.length > 0 ? `; named there but missing here: ${unknown.join(', ')}` : ''}`
       + `${unnamed.length > 0 ? `; run here but unnamed there: ${unnamed.join(', ')}` : ''}`)
   }
-  const names = (argOf('scenario') ?? 'conversation,narrow,tool,send,scroll,processSummary,reasoningStream,contract,importance,shots')).split(',').map((name) => name.trim()).filter(Boolean)
+  const names = (argOf('scenario') ?? 'conversation,narrow,tool,send,scroll,readerScroll,processSummary,reasoningStream,contract,importance,shots').split(',').map((name) => name.trim()).filter(Boolean)
   const out = path.resolve(argOf('out') ?? DEFAULT_OUT)
   const options = {
     headed: args.includes('--headed'),

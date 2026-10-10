@@ -16,7 +16,7 @@
  */
 
 /** The end-to-end lane's scenarios; the lane checks its own names against these. */
-export const E2E_SCENARIOS = ['conversation', 'narrow', 'tool', 'send', 'scroll', 'processSummary', 'reasoningStream', 'contract', 'importance', 'shots'] as const
+export const E2E_SCENARIOS = ['conversation', 'narrow', 'tool', 'send', 'scroll', 'readerScroll', 'processSummary', 'reasoningStream', 'statsPosition', 'statsOverlay', 'contract', 'importance', 'shots'] as const
 
 /** One timing assumption, and how it is held. */
 interface HostTimingEntry {
@@ -40,8 +40,8 @@ export const HOST_TIMING: HostTimingEntry[] = [
   {
     id: 'host.follow-mark',
     assumption: 'The host marks the scroller while its own follow is on and drops the mark when the reader scrolls away, with a 25px threshold for "at the tail".',
-    use: 'The scroll owner reads the mark to know whose turn it is and hands the follow back through it; the threshold is copied into the DOM contract.',
-    checks: ['scenario:scroll'],
+    use: 'The scroll owner reads the mark to know whose turn it is and hands the follow back through it; the threshold is copied into the DOM contract, and the status line\u2019s pin reads the same mark as \u201cthe tail is being followed\u201d.',
+    checks: ['scenario:scroll', 'scenario:readerScroll'],
   },
   {
     id: 'host.streaming-marks',
