@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-10",
+  "group": "fixes",
+  "order": 1,
+  "external": false,
+  "zh": "经局域网地址或隧道打开的页面（例如手机经 dsh-pocket 访问）不再回到出厂外观：此前这种页面上的主题风格、配色、吉祥物等全部按默认值显示，设置页一改动就报「设置存储服务异常」；现在页面显示 DSH 当前的设置，在运行 DSH 的电脑上改动后不需要刷新就跟上，设置页开头说明改动要在那台电脑上做，控件全部禁用。",
+  "en": "A page opened through a LAN address or a tunnel (a phone reaching DSH through dsh-pocket, for example) no longer falls back to the default look: such a page showed the theme style, colours, mascot and every other setting at their defaults, and any change on the settings page reported that the settings store was unavailable. The page now shows the settings DSH holds and follows changes made on the computer running DSH without a reload, and its settings page opens with a line saying changes are made on that computer, its controls disabled."
+}
