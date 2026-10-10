@@ -1,12 +1,17 @@
 /* The canvases the Claude palette paints onto the host's own structure; under
-   "follow the host" none of them apply. */
-body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-ds-dark-theme]) {
+   "follow the host" none of them apply. A wallpaper plugin showing one gives way
+   the same as the host's palette does: while `data-we-wallpaper` is on the page
+   these canvases are not painted, so the layer it put under the shell shows
+   (D59); the wallpaper plugin's own clearing of the two host tokens is restored
+   in theme/third-party.css. */
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-ds-dark-theme]):not([data-we-wallpaper]) {
   color: var(--dsw-alias-label-primary);
   background-color: var(--dsh-claude-canvas);
 }
 
 /* The document element sits above the body and cannot read its tokens, so each
-   palette states its canvas here. */
+   palette states its canvas here. It stays painted under a wallpaper: the
+   layer sits above this canvas and below the shell. */
 html:has(body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-ds-dark-theme])) {
   background-color: #fcfcfb;
 }
@@ -14,11 +19,11 @@ html:has(body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data
 html:has(body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-brand="deepseek"]:not([data-ds-dark-theme])) {
   background-color: #fafbff;
 }
-body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-ds-dark-theme]) #root {
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-ds-dark-theme]):not([data-we-wallpaper]) #root {
   background-color: var(--dsh-claude-canvas);
 }
 
-body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-ds-dark-theme]) :is([data-pane="sidebar"], [class*="sidebarCol"], .dshDesktopSidebarSurface) {
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-ds-dark-theme]):not([data-we-wallpaper]) :is([data-pane="sidebar"], [class*="sidebarCol"], .dshDesktopSidebarSurface) {
   --dsw-specific-sidebar-fill: var(--dsh-claude-sidebar-canvas);
   background: var(--dsh-claude-sidebar-canvas);
 }
@@ -27,7 +32,7 @@ body[data-dsh-claude-style]:not([data-ds-dark-theme]) :is([data-pane="sidebar"],
   border-right: 1px solid var(--dsw-alias-border-l1);
 }
 
-body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-ds-dark-theme]) :is([data-pane="conversation"], [class*="centerCol"]) {
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-ds-dark-theme]):not([data-we-wallpaper]) :is([data-pane="conversation"], [class*="centerCol"]) {
   background: var(--dsh-claude-canvas);
 }
 

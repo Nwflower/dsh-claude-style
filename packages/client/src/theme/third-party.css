@@ -60,3 +60,20 @@ body[data-dsh-claude-style][data-dsh-claude-dock-look="card"] [class*="_rightbar
   background: transparent !important;
 }
 
+/* ---------- Third-party repair: dsh-plugin-wallpaper-engine's cleared canvas ---------- */
+/* The wallpaper plugin hangs its wallpaper on the body as a `position: fixed;
+   z-index: -2` layer and gives way by clearing the shell's own tokens. Two of
+   those tokens are the skin's under the Claude palette (they are stated in
+   theme/tokens.json, D30), and the skin's blocks sit later in the cascade than
+   the plugin's, so the plugin's clearing loses and the host's own shell comes
+   back opaque over the wallpaper. Clear the two again here — the last sheet in
+   the cascade — under the same palette gate, and under the DeepSeek brand's own
+   block so that one is matched too. The skin's shell canvases are left unpainted
+   while the marker is on (D59), so this pair is all the shell needs. The skin's
+   own faces (popovers, the account drawer, the search panel) keep their fill. */
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper],
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-brand="deepseek"][data-we-wallpaper] {
+  --dsw-alias-bg-base: transparent;
+  --dsw-specific-sidebar-fill: transparent;
+}
+

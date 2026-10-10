@@ -34,6 +34,7 @@
 | [D33](D33-stylesheet-ownership.md) | 皮肤样式表带上本包自己的归属标记，兄弟包的样式表不认领 | 已实施 |
 | [D43](D43-overlay-and-upstream.md) | 覆盖层定位与等待扩展点 | 已实施 |
 | [D44](D44-contract-module.md) | 宿主契约模块与契约测试 | 已实施 |
+| [D59](D59-wallpaper-lets-the-shell-through.md) | 壁纸插件在外壳下作画时，本插件不画那几处外壳 | 已实施 |
 
 ## 运行时
 

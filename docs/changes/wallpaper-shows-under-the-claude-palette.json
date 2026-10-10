@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-10",
+  "group": "fixes",
+  "order": 0,
+  "external": false,
+  "zh": "装了壁纸插件（dsh-plugin-wallpaper-engine）时壁纸被皮肤的实色画布整片盖住：壁纸挂成 `body` 上一个 `z-index:-2` 的图层，靠清空外壳的两个宿主令牌让路，而皮肤把不透明画布直接画在 `body`、`#root`、侧栏、对话列与窗口外框上，并在 Claude 一档重设那两个令牌——皮肤的表位置更后，把壁纸的清底反超了。现在壁纸在播时（`body` 带 `data-we-wallpaper`）这几处外壳画布不画，那两个令牌在最后一张表里按同一档配色门重新清成透明；皮肤自己的面（弹层、账号抽屉、搜索面板）照旧不透明，壁纸关掉后画布原样回来。配色选「跟随宿主」时的共存不变。",
+  "en": "With the wallpaper plugin (dsh-plugin-wallpaper-engine) installed the wallpaper was covered whole by the skin's opaque canvas: the wallpaper hangs on the body as a `z-index:-2` layer and gives way by clearing two host tokens, while the skin paints opaque canvases straight onto the body, `#root`, the sidebar, the conversation column and the window frame, and re-sets those two tokens under the Claude palette — the skin's sheet sits later, so it out-ran the wallpaper's clearing. While a wallpaper is up (`data-we-wallpaper` on the body) those shell canvases are now left unpainted and the two tokens are cleared again in the last sheet under the same palette gate; the skin's own faces (popovers, the account drawer, the search panel) keep their fill, and the canvases return once the wallpaper goes. Coexisting under \"follow the host\" is unchanged."
+}

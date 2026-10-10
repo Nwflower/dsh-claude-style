@@ -44,6 +44,9 @@
           body: bodyStyle.backgroundColor,
           html: getComputedStyle(document.documentElement).backgroundColor,
           sidebar: getComputedStyle(hostNodes.sidebar).backgroundColor,
+          // The sidebar element carries this token itself while the Claude
+          // palette paints it; with a wallpaper up it inherits the cleared one.
+          sidebarFill: getComputedStyle(hostNodes.sidebar).getPropertyValue('--dsw-specific-sidebar-fill').trim(),
           conversation: getComputedStyle(hostNodes.conversation).backgroundColor,
           popover: getComputedStyle(hostNodes.popover).backgroundColor,
           popoverBlur: getComputedStyle(hostNodes.popover).backdropFilter,
@@ -61,7 +64,13 @@
         host: await readHost({ palette: 'host', typeface: 'host' }, false),
         wallpaper: await readHost(null, true),
         claude: await readHost({ palette: 'claude', typeface: 'claude' }, false),
+        // The wallpaper plugin showing one under the Claude palette (D59): the
+        // shell canvases stand down and the two host tokens are cleared, while
+        // the skin's own faces keep their fill.
+        claudeWallpaper: await readHost(null, true),
       }
+      document.body.removeAttribute('data-we-wallpaper')
+      await sleep(120)
       for (var hostKey in hostNodes) hostNodes[hostKey].remove()
     })
     // The settings page, rendered through the stand-in React into a plain tree:

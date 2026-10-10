@@ -1,7 +1,9 @@
 /* ---------- canvas + hairline structure ---------- */
 /* Under the Claude palette the skin paints the columns; under "follow the
-   host" they take the host's own tokens and only the hairline stays. */
-body[data-dsh-claude-style][data-dsh-claude-palette="claude"] :is([data-pane="sidebar"], [class*="sidebarCol"], .dshDesktopSidebarSurface) {
+   host" they take the host's own tokens and only the hairline stays. A wallpaper
+   plugin showing one gets the same treatment as the host's palette: the columns
+   are left unpainted so its layer shows, and only the hairline stays (D59). */
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-we-wallpaper]) :is([data-pane="sidebar"], [class*="sidebarCol"], .dshDesktopSidebarSurface) {
   --dsw-specific-sidebar-fill: var(--dsh-claude-sidebar-canvas);
   background: var(--dsh-claude-sidebar-canvas);
 }
@@ -10,15 +12,17 @@ body[data-dsh-claude-style] :is([data-pane="sidebar"], [class*="sidebarCol"], .d
   border-right: 1px solid var(--dsw-alias-border-l1);
 }
 
-body[data-dsh-claude-style][data-dsh-claude-palette="claude"] :is([data-pane="conversation"], [class*="centerCol"]) {
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-we-wallpaper]) :is([data-pane="conversation"], [class*="centerCol"]) {
   background: var(--dsh-claude-canvas);
 }
 
 /* ---------- Windows titlebar: the columns run to the window's top ---------- */
 /* The shell keeps a caption row above every column and paints the three window
    buttons over it; the skin clears the row and each column paints its own fill
-   up through it (D31). */
-html[data-windows-titlebar] body[data-dsh-claude-style] [class*="_frame"]:has(> [class*="_sidebarCol"]) {
+   up through it (D31). Under a wallpaper the frame and those two fills stand
+   down whole, so the caption row shows the wallpaper like the rest of the shell
+   (D59); the row's own background is cleared either way. */
+html[data-windows-titlebar] body[data-dsh-claude-style]:not([data-we-wallpaper]) [class*="_frame"]:has(> [class*="_sidebarCol"]) {
   --dsh-windows-content-radius: 0px;
   background: var(--dsh-claude-canvas) !important;
 }
@@ -31,11 +35,11 @@ html[data-windows-titlebar] body[data-dsh-claude-style] > span[style*="--dsw-spe
   background-color: transparent !important;
 }
 
-html[data-windows-titlebar] body[data-dsh-claude-style] [class*="_frame"] > [class*="_sidebarCol"] {
+html[data-windows-titlebar] body[data-dsh-claude-style]:not([data-we-wallpaper]) [class*="_frame"] > [class*="_sidebarCol"] {
   box-shadow: 0 calc(-1 * var(--dsh-windows-titlebar-height)) 0 0 var(--dsh-claude-sidebar-canvas);
 }
 
-html[data-windows-titlebar] body[data-dsh-claude-style] [class*="_frame"] > [class*="_centerCol"] {
+html[data-windows-titlebar] body[data-dsh-claude-style]:not([data-we-wallpaper]) [class*="_frame"] > [class*="_centerCol"] {
   box-shadow: 0 calc(-1 * var(--dsh-windows-titlebar-height)) 0 0 var(--dsh-claude-canvas);
 }
 

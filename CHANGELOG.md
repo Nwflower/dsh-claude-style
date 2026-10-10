@@ -13,6 +13,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 ### 问题修复
 
 - 手机宽度（390px 及以下）的输入区不再让上下文计量环压住右边的推理等级按钮：此前环按右端定位、等级按钮也按右端排，两者叠在一起，环还常常被挤出卡片；现在这一档为环留出它占的宽度，等级按钮落在它左边，卡片上的三个控件都不再越界。
+- 装了壁纸插件（dsh-plugin-wallpaper-engine）时壁纸被皮肤的实色画布整片盖住：壁纸挂成 `body` 上一个 `z-index:-2` 的图层，靠清空外壳的两个宿主令牌让路，而皮肤把不透明画布直接画在 `body`、`#root`、侧栏、对话列与窗口外框上，并在 Claude 一档重设那两个令牌——皮肤的表位置更后，把壁纸的清底反超了。现在壁纸在播时（`body` 带 `data-we-wallpaper`）这几处外壳画布不画，那两个令牌在最后一张表里按同一档配色门重新清成透明；皮肤自己的面（弹层、账号抽屉、搜索面板）照旧不透明，壁纸关掉后画布原样回来。配色选「跟随宿主」时的共存不变。
 
 <h3 id="en-unreleased">Improvements</h3>
 
@@ -21,6 +22,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 ### Bug Fixes
 
 - On a phone-width composer (390px and under) the context meter no longer sits over the reasoning-level button at the row's right end: the meter is positioned from that end and so was the button, so the two overlapped and the meter was often pushed out of the card; the row now reserves the width the meter takes, the button lands before it, and all three controls stay inside the card.
+- With the wallpaper plugin (dsh-plugin-wallpaper-engine) installed the wallpaper was covered whole by the skin's opaque canvas: the wallpaper hangs on the body as a `z-index:-2` layer and gives way by clearing two host tokens, while the skin paints opaque canvases straight onto the body, `#root`, the sidebar, the conversation column and the window frame, and re-sets those two tokens under the Claude palette — the skin's sheet sits later, so it out-ran the wallpaper's clearing. While a wallpaper is up (`data-we-wallpaper` on the body) those shell canvases are now left unpainted and the two tokens are cleared again in the last sheet under the same palette gate; the skin's own faces (popovers, the account drawer, the search panel) keep their fill, and the canvases return once the wallpaper goes. Coexisting under "follow the host" is unchanged.
 
 ## [0.12.2] - 2026-10-10
 
