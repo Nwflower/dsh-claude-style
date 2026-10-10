@@ -1,0 +1,1756 @@
+{
+  "version": 1,
+  "fallback": "en",
+  "ui": {
+    "fallbackLabel": {
+      "zh": "选择模型",
+      "en": "Select model"
+    },
+    "triggerLabel": {
+      "zh": "选择模型，当前 {model}",
+      "en": "Select model, currently {model}"
+    },
+    "loading": {
+      "zh": "正在加载模型…",
+      "en": "Loading models…"
+    },
+    "empty": {
+      "zh": "没有可用的模型。",
+      "en": "No models available."
+    },
+    "effortLabel": {
+      "zh": "推理等级",
+      "en": "Reasoning effort"
+    },
+    "effortFaster": {
+      "zh": "更快",
+      "en": "Faster"
+    },
+    "effortSmarter": {
+      "zh": "更强",
+      "en": "Smarter"
+    },
+    "moreLabel": {
+      "zh": "更多模型",
+      "en": "More models"
+    },
+    "ratePeak": {
+      "zh": "峰价",
+      "en": "Peak rate"
+    },
+    "rateOffPeak": {
+      "zh": "谷价",
+      "en": "Off-peak rate"
+    },
+    "rateCampaign": {
+      "zh": "活动价",
+      "en": "Promotion"
+    },
+    "rateNow": {
+      "zh": "此刻 {rate}",
+      "en": "Now {rate}"
+    },
+    "rateNext": {
+      "zh": "{countdown} 后转为 {next}",
+      "en": "in {countdown} → {next}"
+    },
+    "archiveActive": {
+      "zh": "进行中",
+      "en": "Active"
+    },
+    "archiveArchived": {
+      "zh": "已归档",
+      "en": "Archived"
+    },
+    "archiveDelete": {
+      "zh": "删除会话",
+      "en": "Delete conversation"
+    },
+    "archiveRestore": {
+      "zh": "取消归档",
+      "en": "Unarchive conversation"
+    },
+    "archiveEmpty": {
+      "zh": "没有已归档的会话",
+      "en": "No archived conversations"
+    },
+    "archiveLoading": {
+      "zh": "正在加载…",
+      "en": "Loading…"
+    },
+    "archiveJustNow": {
+      "zh": "刚刚",
+      "en": "Just now"
+    },
+    "archiveMinutes": {
+      "zh": "{count} 分钟",
+      "en": "{count} min"
+    },
+    "archiveHours": {
+      "zh": "{count} 小时",
+      "en": "{count} h"
+    },
+    "archiveDays": {
+      "zh": "{count} 天",
+      "en": "{count} d"
+    },
+    "archiveDeleteFailed": {
+      "zh": "删除失败：{detail}",
+      "en": "Delete failed: {detail}"
+    },
+    "archiveDeleteOpen": {
+      "zh": "会话仍被本应用占用，重启后再删除",
+      "en": "The conversation is still held open by this app; restart it, then delete again"
+    },
+    "searchPlaceholder": {
+      "zh": "搜索",
+      "en": "Search"
+    },
+    "searchClose": {
+      "zh": "关闭",
+      "en": "Close"
+    },
+    "searchFilterHint": {
+      "zh": "切换分类",
+      "en": "Filters"
+    },
+    "searchOpenHint": {
+      "zh": "打开",
+      "en": "Open"
+    },
+    "searchFilterAll": {
+      "zh": "全部",
+      "en": "All"
+    },
+    "searchFilterSessions": {
+      "zh": "会话",
+      "en": "Sessions"
+    },
+    "searchFilterProjects": {
+      "zh": "项目",
+      "en": "Projects"
+    },
+    "searchFilterPlugins": {
+      "zh": "插件",
+      "en": "Plugins"
+    },
+    "searchFilterSkills": {
+      "zh": "Skill",
+      "en": "Skills"
+    },
+    "searchFilterShortcuts": {
+      "zh": "快捷键",
+      "en": "Shortcuts"
+    },
+    "searchRecents": {
+      "zh": "最近",
+      "en": "Recents"
+    },
+    "searchActions": {
+      "zh": "操作",
+      "en": "Actions"
+    },
+    "searchSessions": {
+      "zh": "会话",
+      "en": "Sessions"
+    },
+    "searchProjects": {
+      "zh": "项目",
+      "en": "Projects"
+    },
+    "searchPlugins": {
+      "zh": "插件",
+      "en": "Plugins"
+    },
+    "searchSkills": {
+      "zh": "Skill",
+      "en": "Skills"
+    },
+    "searchShortcuts": {
+      "zh": "快捷键",
+      "en": "Shortcuts"
+    },
+    "searchActionNewSession": {
+      "zh": "新会话",
+      "en": "New session"
+    },
+    "searchActionPlugins": {
+      "zh": "插件",
+      "en": "Plugins"
+    },
+    "searchActionSettings": {
+      "zh": "设置",
+      "en": "Settings"
+    },
+    "searchActionShortcuts": {
+      "zh": "键盘快捷键",
+      "en": "Keyboard shortcuts"
+    },
+    "searchLoading": {
+      "zh": "正在搜索…",
+      "en": "Searching…"
+    },
+    "searchEmpty": {
+      "zh": "没有匹配的结果",
+      "en": "No results"
+    },
+    "turnStatusTokens": {
+      "zh": "{count} tokens",
+      "en": "{count} tokens"
+    },
+    "turnStatusWaiting": {
+      "zh": "等待模型…",
+      "en": "Waiting for the model…"
+    },
+    "turnStatusThinking": {
+      "zh": "正在思考",
+      "en": "Thinking…"
+    },
+    "turnStatusThought": {
+      "zh": "思考了 {duration}",
+      "en": "Thought for {duration}"
+    },
+    "turnStatusWriting": {
+      "zh": "正在写回答",
+      "en": "Writing…"
+    },
+    "turnStatusToolCall": {
+      "zh": "正在准备工具调用",
+      "en": "Preparing a tool call…"
+    },
+    "turnStatusTools": {
+      "zh": "正在调用工具",
+      "en": "Running tools…"
+    },
+    "homeTabOverview": {
+      "zh": "概览",
+      "en": "Overview"
+    },
+    "homeTabModels": {
+      "zh": "模型",
+      "en": "Models"
+    },
+    "homeRangeAll": {
+      "zh": "全部",
+      "en": "All"
+    },
+    "homeRange30d": {
+      "zh": "30 天",
+      "en": "30d"
+    },
+    "homeRange7d": {
+      "zh": "7 天",
+      "en": "7d"
+    },
+    "homePeakHour": {
+      "zh": "高峰时段",
+      "en": "Peak hour"
+    },
+    "homeHourAm": {
+      "zh": "上午 {hour} 点",
+      "en": "{hour} AM"
+    },
+    "homeHourPm": {
+      "zh": "下午 {hour} 点",
+      "en": "{hour} PM"
+    },
+    "homeFunBook": {
+      "zh": "你的Token用量相当于{count}本{book}。",
+      "en": "You've used ~{count}× the tokens in {book}."
+    },
+    "homeBookAnimalFarm": {
+      "zh": "《动物农场》",
+      "en": "Animal Farm"
+    },
+    "homeBookGatsby": {
+      "zh": "《了不起的盖茨比》",
+      "en": "The Great Gatsby"
+    },
+    "homeBookPhilosophersStone": {
+      "zh": "《哈利·波特与魔法石》",
+      "en": "Harry Potter and the Philosopher's Stone"
+    },
+    "homeBook1984": {
+      "zh": "《一九八四》",
+      "en": "Nineteen Eighty-Four"
+    },
+    "homeBookHobbit": {
+      "zh": "《霍比特人》",
+      "en": "The Hobbit"
+    },
+    "homeBookPride": {
+      "zh": "《傲慢与偏见》",
+      "en": "Pride and Prejudice"
+    },
+    "homeBookMobyDick": {
+      "zh": "《白鲸》",
+      "en": "Moby-Dick"
+    },
+    "homeBookLordOfTheRings": {
+      "zh": "《魔戒》",
+      "en": "The Lord of the Rings"
+    },
+    "homeBookWarAndPeace": {
+      "zh": "《战争与和平》",
+      "en": "War and Peace"
+    },
+    "homeBookHarryPotter": {
+      "zh": "《哈利·波特》全集",
+      "en": "the whole Harry Potter series"
+    },
+    "homeBookLostTime": {
+      "zh": "《追忆似水年华》",
+      "en": "In Search of Lost Time"
+    },
+    "homeBookTaoTeChing": {
+      "zh": "《道德经》",
+      "en": "Tao Te Ching"
+    },
+    "homeBookAlice": {
+      "zh": "《爱丽丝漫游奇境》",
+      "en": "Alice's Adventures in Wonderland"
+    },
+    "homeBookChristmasCarol": {
+      "zh": "《圣诞颂歌》",
+      "en": "A Christmas Carol"
+    },
+    "homeBookFrankenstein": {
+      "zh": "《弗兰肯斯坦》",
+      "en": "Frankenstein"
+    },
+    "homeBookDorianGray": {
+      "zh": "《道林·格雷的画像》",
+      "en": "The Picture of Dorian Gray"
+    },
+    "homeBookToLive": {
+      "zh": "《活着》",
+      "en": "To Live"
+    },
+    "homeBookSherlockHolmes": {
+      "zh": "《福尔摩斯冒险史》",
+      "en": "The Adventures of Sherlock Holmes"
+    },
+    "homeBookHuckleberryFinn": {
+      "zh": "《哈克贝利·费恩历险记》",
+      "en": "Adventures of Huckleberry Finn"
+    },
+    "homeBookThreeBody": {
+      "zh": "《三体》",
+      "en": "The Three-Body Problem"
+    },
+    "homeBookDracula": {
+      "zh": "《德古拉》",
+      "en": "Dracula"
+    },
+    "homeBookJaneEyre": {
+      "zh": "《简·爱》",
+      "en": "Jane Eyre"
+    },
+    "homeBookDarkForest": {
+      "zh": "《三体Ⅱ·黑暗森林》",
+      "en": "The Dark Forest"
+    },
+    "homeBookDeathsEnd": {
+      "zh": "《三体Ⅲ·死神永生》",
+      "en": "Death's End"
+    },
+    "homeBookThreeKingdoms": {
+      "zh": "《三国演义》",
+      "en": "Romance of the Three Kingdoms"
+    },
+    "homeBookJourneyWest": {
+      "zh": "《西游记》",
+      "en": "Journey to the West"
+    },
+    "homeBookRedChamber": {
+      "zh": "《红楼梦》",
+      "en": "Dream of the Red Chamber"
+    },
+    "homeBookWaterMargin": {
+      "zh": "《水浒传》",
+      "en": "Water Margin"
+    },
+    "homeBookOrdinaryWorld": {
+      "zh": "《平凡的世界》",
+      "en": "Ordinary World"
+    },
+    "homeBookYellowWallpaper": {
+      "zh": "《黄色壁纸》",
+      "en": "The Yellow Wallpaper"
+    },
+    "homeBookMetamorphosis": {
+      "zh": "《变形记》",
+      "en": "Metamorphosis"
+    },
+    "homeBookJekyllAndHyde": {
+      "zh": "《化身博士》",
+      "en": "The Strange Case of Dr Jekyll and Mr Hyde"
+    },
+    "homeBookCallOfTheWild": {
+      "zh": "《野性的呼唤》",
+      "en": "The Call of the Wild"
+    },
+    "homeBookTimeMachine": {
+      "zh": "《时间机器》",
+      "en": "The Time Machine"
+    },
+    "homeBookWizardOfOz": {
+      "zh": "《绿野仙踪》",
+      "en": "The Wonderful Wizard of Oz"
+    },
+    "homeBookHeartOfDarkness": {
+      "zh": "《黑暗之心》",
+      "en": "Heart of Darkness"
+    },
+    "homeBookFaust": {
+      "zh": "《浮士德》",
+      "en": "Faust"
+    },
+    "homeBookTurnOfTheScrew": {
+      "zh": "《螺丝在拧紧》",
+      "en": "The Turn of the Screw"
+    },
+    "homeBookAesopsFables": {
+      "zh": "《伊索寓言》",
+      "en": "Aesop's Fables"
+    },
+    "homeBookPeterPan": {
+      "zh": "《彼得·潘》",
+      "en": "Peter Pan"
+    },
+    "homeBookPrince": {
+      "zh": "《君主论》",
+      "en": "The Prince"
+    },
+    "homeBookInvisibleMan": {
+      "zh": "《隐形人》",
+      "en": "The Invisible Man"
+    },
+    "homeBookAndersensFairyTales": {
+      "zh": "《安徒生童话》",
+      "en": "Andersen's Fairy Tales"
+    },
+    "homeBookWarOfTheWorlds": {
+      "zh": "《世界大战》",
+      "en": "The War of the Worlds"
+    },
+    "homeBookBeyondGoodAndEvil": {
+      "zh": "《善恶的彼岸》",
+      "en": "Beyond Good and Evil"
+    },
+    "homeBookWhiteFang": {
+      "zh": "《白牙》",
+      "en": "White Fang"
+    },
+    "homeBookMeditations": {
+      "zh": "《沉思录》",
+      "en": "Meditations"
+    },
+    "homeBookGrimmsFairyTales": {
+      "zh": "《格林童话》",
+      "en": "Grimms' Fairy Tales"
+    },
+    "homeBookGulliversTravels": {
+      "zh": "《格列佛游记》",
+      "en": "Gulliver's Travels"
+    },
+    "homeBookWalden": {
+      "zh": "《瓦尔登湖》",
+      "en": "Walden"
+    },
+    "homeBookRobinsonCrusoe": {
+      "zh": "《鲁滨逊漂流记》",
+      "en": "Robinson Crusoe"
+    },
+    "homeBookDivineComedy": {
+      "zh": "《神曲》",
+      "en": "The Divine Comedy"
+    },
+    "homeBookMadameBovary": {
+      "zh": "《包法利夫人》",
+      "en": "Madame Bovary"
+    },
+    "homeBookZarathustra": {
+      "zh": "《查拉图斯特拉如是说》",
+      "en": "Thus Spoke Zarathustra"
+    },
+    "homeBookOdyssey": {
+      "zh": "《奥德赛》",
+      "en": "The Odyssey"
+    },
+    "homeBookTaleOfTwoCities": {
+      "zh": "《双城记》",
+      "en": "A Tale of Two Cities"
+    },
+    "homeBookGreatExpectations": {
+      "zh": "《远大前程》",
+      "en": "Great Expectations"
+    },
+    "homeBookRepublic": {
+      "zh": "《理想国》",
+      "en": "The Republic"
+    },
+    "homeBookCrimeAndPunishment": {
+      "zh": "《罪与罚》",
+      "en": "Crime and Punishment"
+    },
+    "homeBookLeviathan": {
+      "zh": "《利维坦》",
+      "en": "Leviathan"
+    },
+    "homeBookAnnaKarenina": {
+      "zh": "《安娜·卡列尼娜》",
+      "en": "Anna Karenina"
+    },
+    "homeBookBrothersKaramazov": {
+      "zh": "《卡拉马佐夫兄弟》",
+      "en": "The Brothers Karamazov"
+    },
+    "homeBookDonQuixote": {
+      "zh": "《堂吉诃德》",
+      "en": "Don Quixote"
+    },
+    "homeBookCountOfMonteCristo": {
+      "zh": "《基督山伯爵》",
+      "en": "The Count of Monte Cristo"
+    },
+    "homeBookLesMiserables": {
+      "zh": "《悲惨世界》",
+      "en": "Les Misérables"
+    },
+    "homeModelSessions": {
+      "zh": "{count} 个会话",
+      "en": "{count} sessions"
+    },
+    "homeModelsEmpty": {
+      "zh": "暂无模型数据",
+      "en": "No model data yet"
+    },
+    "homeModelsMore": {
+      "zh": "再显示 {count} 个",
+      "en": "Show {count} more"
+    },
+    "homeModelsLess": {
+      "zh": "收起",
+      "en": "Show less"
+    },
+    "homeTokens": {
+      "zh": "Token 总量",
+      "en": "Total tokens"
+    },
+    "homeCalls": {
+      "zh": "消息数",
+      "en": "Messages"
+    },
+    "homeSessions": {
+      "zh": "会话数",
+      "en": "Sessions"
+    },
+    "homeActiveDays": {
+      "zh": "活跃天数",
+      "en": "Active days"
+    },
+    "homeTopModel": {
+      "zh": "最常用模型",
+      "en": "Favorite model"
+    },
+    "homeHeatTipTokens": {
+      "zh": "{date} — {tokens} Token",
+      "en": "{date} — {tokens} tokens"
+    },
+    "contextTotalTime": {
+      "zh": "总用时",
+      "en": "Total time"
+    },
+    "processSummaryThinking": {
+      "zh": "思考×{count}",
+      "en": "Thinking×{count}"
+    },
+    "processSummaryOutput": {
+      "zh": "输出×{count}",
+      "en": "Output×{count}"
+    },
+    "processSummaryTool": {
+      "zh": "工具×{count}",
+      "en": "Tools×{count}"
+    },
+    "processSummaryRecord": {
+      "zh": "记录×{count}",
+      "en": "Records×{count}"
+    },
+    "processSummaryFullThoughtOne": {
+      "zh": "执行 {count} 次思考",
+      "en": "{count} thought"
+    },
+    "processSummaryFullThoughtOther": {
+      "zh": "执行 {count} 次思考",
+      "en": "{count} thoughts"
+    },
+    "processSummaryFullOutputOne": {
+      "zh": "输出 {count} 段文字",
+      "en": "{count} output"
+    },
+    "processSummaryFullOutputOther": {
+      "zh": "输出 {count} 段文字",
+      "en": "{count} outputs"
+    },
+    "processSummaryFullToolOne": {
+      "zh": "调用 {count} 次工具",
+      "en": "{count} tool call"
+    },
+    "processSummaryFullToolOther": {
+      "zh": "调用 {count} 次工具",
+      "en": "{count} tool calls"
+    },
+    "processSummaryFullRecordOne": {
+      "zh": "记录 {count} 条",
+      "en": "{count} record"
+    },
+    "processSummaryFullRecordOther": {
+      "zh": "记录 {count} 条",
+      "en": "{count} records"
+    },
+    "processSummaryFullSeparator": {
+      "zh": "，",
+      "en": ", "
+    },
+    "chatWaitOvertime": {
+      "zh": "暂未响应",
+      "en": "No response yet"
+    }
+  },
+  "settings": {
+    "title": {
+      "zh": "Claude Style",
+      "en": "Claude Style"
+    },
+    "repository": {
+      "zh": "在 GitHub 上打开本插件",
+      "en": "Open the plugin on GitHub"
+    },
+    "brandTitle": {
+      "zh": "主题风格",
+      "en": "Theme style"
+    },
+    "brandDesc": {
+      "zh": "插件提供的品牌标识和配色色系风格。",
+      "en": "The brand mark in the sidebar and on the home page, and its colour family: warm for Claude, blue for DeepSeek. While Colours is set to Follow the host, only the mark changes."
+    },
+    "collapseTitle": {
+      "zh": "折叠侧栏设置区",
+      "en": "Collapse the sidebar settings area"
+    },
+    "collapseDesc": {
+      "zh": "将侧栏底部的设置入口收进账户弹层。",
+      "en": "Fold the sidebar footer's settings entry into the account popover. Off restores the host's footer."
+    },
+    "autoPopoverTitle": {
+      "zh": "悬停展开弹层",
+      "en": "Open popovers on hover"
+    },
+    "autoPopoverDesc": {
+      "zh": "本插件提供的哪些弹层悬停时便展开。",
+      "en": "Which popovers open on hover. \"Account only\" keeps it to the sidebar account popover; \"All\" adds the permission, model, session-stats and home-page pickers. Off leaves every popover click-to-open."
+    },
+    "autoPopoverOff": {
+      "zh": "关闭",
+      "en": "Off"
+    },
+    "autoPopoverAccount": {
+      "zh": "仅账号区",
+      "en": "Account only"
+    },
+    "autoPopoverAll": {
+      "zh": "全部",
+      "en": "All"
+    },
+    "composerTitle": {
+      "zh": "重绘对话框",
+      "en": "Composer restyle"
+    },
+    "composerDesc": {
+      "zh": "重绘对话框样式",
+      "en": "Which input area the skin restyles: the new-conversation page, the conversation, or both. Off restores the host's composer."
+    },
+    "homeTitle": {
+      "zh": "首页版面",
+      "en": "Home layout"
+    },
+    "homeDesc": {
+      "zh": "新会话页的排版",
+      "en": "The new-conversation page layout. Classic is the centered hero with the input card; Studio moves the greeting to the top left, pins the composer to the bottom and shows usage in between."
+    },
+    "homeClassic": {
+      "zh": "经典",
+      "en": "Classic"
+    },
+    "homeStudio": {
+      "zh": "工作台",
+      "en": "Studio"
+    },
+    "pickerTitle": {
+      "zh": "重绘模型选择器",
+      "en": "Redraw the model picker"
+    },
+    "pickerDesc": {
+      "zh": "重绘对话框区域的模型菜单。",
+      "en": "Replace the composer's model menu with the two-level Claude-style menu. Off restores the host's model menu."
+    },
+    "peakrateTitle": {
+      "zh": "峰谷电表",
+      "en": "Peak rate meter"
+    },
+    "peakrateDesc": {
+      "zh": "给模型菜单的每一行标出此刻的峰价、谷价或限时活动，以及距离切换还有多久。关闭后各行只显示模型名。",
+      "en": "Marks every row of the model menu with the peak, off-peak or promotional rate in force right now, and how long it lasts. Off leaves the rows bare."
+    },
+    "quickTitle": {
+      "zh": "快捷供应商",
+      "en": "Quick providers"
+    },
+    "quickDesc": {
+      "zh": "在一级列表展示勾选的供应商。",
+      "en": "Picked providers follow the official service in the picker's first level, one rule between providers. A provider removed from the catalog stays in the list marked \"Removed\"; uncheck it to clear it."
+    },
+    "quickNone": {
+      "zh": "未选择",
+      "en": "None"
+    },
+    "quickCount": {
+      "zh": "{count} 个供应商",
+      "en": "{count} providers"
+    },
+    "quickLoading": {
+      "zh": "正在加载模型目录…",
+      "en": "Loading providers…"
+    },
+    "quickRemoved": {
+      "zh": "已移除",
+      "en": "Removed"
+    },
+    "usernameTitle": {
+      "zh": "用户名",
+      "en": "Username"
+    },
+    "usernameDesc": {
+      "zh": "用户名会显示在欢迎语和账号行里。",
+      "en": "The name shown in the new-conversation greeting and the account row. Leave empty to use the signed-in account name, then the HDSL launcher name, then the local system user."
+    },
+    "usernamePlaceholder": {
+      "zh": "自动获取",
+      "en": "Auto-detect account or host user"
+    },
+    "brandDeepseek": {
+      "zh": "DeepSeek",
+      "en": "DeepSeek"
+    },
+    "brandClaude": {
+      "zh": "Claude",
+      "en": "Claude"
+    },
+    "motionTitle": {
+      "zh": "动画效果",
+      "en": "Animation"
+    },
+    "motionDesc": {
+      "zh": "「随系统」跟随系统的动画设置；「减弱」把动画停在代表帧；「总是」始终播放。",
+      "en": "Follow the system keeps the system's animation setting in charge; Reduced holds animations on their still frame; Always plays them. The background-work ring turns in every setting."
+    },
+    "motionSystem": {
+      "zh": "随系统",
+      "en": "Follow the system"
+    },
+    "motionReduced": {
+      "zh": "减弱",
+      "en": "Reduced"
+    },
+    "motionFull": {
+      "zh": "总是",
+      "en": "Always"
+    },
+    "scopeOff": {
+      "zh": "关闭",
+      "en": "Off"
+    },
+    "scopeHero": {
+      "zh": "仅首页",
+      "en": "Home only"
+    },
+    "scopeConversation": {
+      "zh": "仅对话",
+      "en": "Conversation only"
+    },
+    "scopeAll": {
+      "zh": "全部",
+      "en": "All"
+    },
+    "banLocaleTitle": {
+      "zh": "封号彩蛋语言",
+      "en": "Account-hold easter egg language"
+    },
+    "banLocaleDesc": {
+      "zh": "账户保留彩蛋页（点账户弹层顶部的用户名行进入）使用的语言。",
+      "en": "The language of the account-hold easter egg page (open it from the account row at the top of the sidebar footer popover). It does not follow the interface language."
+    },
+    "banLocaleZh": {
+      "zh": "中文",
+      "en": "中文"
+    },
+    "banLocaleEn": {
+      "zh": "English",
+      "en": "English"
+    },
+    "tabGeneral": {
+      "zh": "通用",
+      "en": "General"
+    },
+    "tabAppearance": {
+      "zh": "外观",
+      "en": "Appearance"
+    },
+    "tabComposer": {
+      "zh": "输入区",
+      "en": "Composer"
+    },
+    "tabSidebar": {
+      "zh": "侧栏",
+      "en": "Sidebar"
+    },
+    "tabConversation": {
+      "zh": "对话",
+      "en": "Conversation"
+    },
+    "paletteTitle": {
+      "zh": "配色",
+      "en": "Colours"
+    },
+    "paletteDesc": {
+      "zh": "允许插件修改主题配色，关闭后只保留布局和控件。",
+      "en": "Claude uses the skin's own colours; Follow the host leaves the colours to DSH and to other theme plugins (a wallpaper plugin, say), and the skin keeps only its layout and controls."
+    },
+    "paletteClaude": {
+      "zh": "开启",
+      "en": "Claude"
+    },
+    "paletteHost": {
+      "zh": "关闭",
+      "en": "Follow the host"
+    },
+    "typefaceTitle": {
+      "zh": "字体",
+      "en": "Typefaces"
+    },
+    "typefaceDesc": {
+      "zh": "使用插件提供的字体。",
+      "en": "Claude uses the Anthropic faces (or the lookalike Inter and Noto Serif when they are missing) and JetBrains Mono for code; Follow the host keeps the fonts DSH or another plugin sets."
+    },
+    "typefaceClaude": {
+      "zh": "开启",
+      "en": "Claude"
+    },
+    "typefaceHost": {
+      "zh": "关闭",
+      "en": "Follow the host"
+    },
+    "mascotTitle": {
+      "zh": "吉祥物",
+      "en": "Mascot"
+    },
+    "mascotDesc": {
+      "zh": "站在输入框上沿的像素小伙伴。",
+      "en": "The pixel companion on the input area's top edge, animated by what the agent is doing. Follow the brand shows the pixel crab under Claude and Deepy the whale under DeepSeek."
+    },
+    "mascotBrand": {
+      "zh": "自动",
+      "en": "Follow the brand"
+    },
+    "mascotCrab": {
+      "zh": "Clawd",
+      "en": "Crab"
+    },
+    "mascotDeepy": {
+      "zh": "Deepy",
+      "en": "Deepy"
+    },
+    "mascotOff": {
+      "zh": "关闭",
+      "en": "Off"
+    },
+    "mascotScopeTitle": {
+      "zh": "出现位置",
+      "en": "Where it appears"
+    },
+    "mascotScopeDesc": {
+      "zh": "吉祥物出现位置。",
+      "en": "The new-conversation page alone, or the new-conversation page and the conversation."
+    },
+    "mascotScopeHome": {
+      "zh": "首页",
+      "en": "Home"
+    },
+    "mascotScopeAll": {
+      "zh": "首页与对话",
+      "en": "Home and conversation"
+    },
+    "permissionsTitle": {
+      "zh": "重绘权限控件",
+      "en": "Redraw the permission control"
+    },
+    "permissionsDesc": {
+      "zh": "使用插件提供的权限菜单样式。",
+      "en": "Replace the composer's permission menu with a segmented control. Off restores the host's permission menu."
+    },
+    "searchTitle": {
+      "zh": "侧栏搜索",
+      "en": "Sidebar search"
+    },
+    "searchDesc": {
+      "zh": "使用插件提供的搜索框功能和逻辑。",
+      "en": "A search box in the sidebar that finds sessions, projects, plugins, Skills and shortcuts. Off restores the host's brand row."
+    },
+    "searchStyleTitle": {
+      "zh": "搜索框样式",
+      "en": "Search box style"
+    },
+    "searchStyleDesc": {
+      "zh": "选择搜索框样式",
+      "en": "Choose the search box style"
+    },
+    "searchStyleIcon": {
+      "zh": "图标",
+      "en": "Icon"
+    },
+    "searchStyleOverlay": {
+      "zh": "覆盖品牌",
+      "en": "Cover the brand"
+    },
+    "searchStyleStandalone": {
+      "zh": "独立",
+      "en": "Standalone"
+    },
+    "workspaceTitle": {
+      "zh": "工作区分栏视图",
+      "en": "In progress / Archived view"
+    },
+    "workspaceDesc": {
+      "zh": "把侧栏工作区分成「进行中」和「已归档」。",
+      "en": "Split the sidebar's workspace section into In progress and Archived; archived conversations can be restored or deleted. Off restores the host's workspace list."
+    },
+    "dockCardsTitle": {
+      "zh": "面板悬浮卡片",
+      "en": "Float docked panels"
+    },
+    "dockCardsDesc": {
+      "zh": "右侧栏停靠的面板画成悬浮卡片：四周留 8px、16px 圆角、1px 描边与投影；关闭后铺满整列、贴住四边，分栏时每栏铺满各自那一栏。",
+      "en": "Draw the right sidebar's docked panels as floating cards: 8px inside the column, a 16px radius, a hairline and an elevation. Off fills the column and hugs its edges; a split gives each pane its own column."
+    },
+    "turnStatusTitle": {
+      "zh": "轮次状态行",
+      "en": "Turn status line"
+    },
+    "turnStatusDesc": {
+      "zh": "把轮次状态从开头移到轮次末尾。",
+      "en": "Move the status of a running, stopped or failed turn to the end of the turn's work, with the elapsed time, the output tokens and what the model is doing. Off restores the host's turn status."
+    },
+    "turnNavTitle": {
+      "zh": "对话导航",
+      "en": "Conversation navigator"
+    },
+    "turnNavDesc": {
+      "zh": "重绘对话导航区域。",
+      "en": "Rest the pointer on the turn marks at the conversation's right edge and they open into a list of every turn, one line each with the message that started it; the wheel scrolls the list and a click jumps to that turn. Alt+↑ and Alt+↓ jump to the previous or the next turn, and the turn you land on is marked with a short line. Off restores the host's turn marks."
+    },
+    "chatAnimationsTitle": {
+      "zh": "聊天区动画效果",
+      "en": "Chat-area animations"
+    },
+    "chatAnimationsDesc": {
+      "zh": "聊天区的动效：跟随、自动开合与卷帘门、新文字淡入、文件变更行、发送时的气泡动效、过程组标题上的计数，以及说明模型正在做什么的那一行。开启时播放本插件的这一套，关闭后聊天区交回宿主——宿主自己的说法也一并回来。「动画」设为「减弱」时一律停在原处。",
+      "en": "The conversation area's motion: the follow, the automatic folding with its rolling door, the text fade, the file change rows, the send flight, the counted figures on each process group's header and the line saying what the model is doing. On plays this plugin's set; off hands the conversation back to the host, its own words included. With Animation set to Reduced it all stands still."
+    },
+    "statsPositionTitle": {
+      "zh": "对话统计信息位置",
+      "en": "Conversation statistics position"
+    },
+    "statsPositionDesc": {
+      "zh": "选择对话统计信息的展示位置。",
+      "en": "Choose where the conversation statistics show."
+    },
+    "statsPositionContext": {
+      "zh": "收进上下文",
+      "en": "Inside the context popover"
+    },
+    "statsPositionInline": {
+      "zh": "独立成行",
+      "en": "On its own line"
+    },
+    "caretTitle": {
+      "zh": "光标动画",
+      "en": "Composer caret motion"
+    },
+    "caretDesc": {
+      "zh": "移动光标时平滑移动。",
+      "en": "The composer's caret is drawn by the plugin and glides between positions instead of jumping. Explicit moves glides only on an arrow key or a click, and lands instantly while typing."
+    },
+    "caretTyping": {
+      "zh": "总是",
+      "en": "Every move"
+    },
+    "caretMove": {
+      "zh": "减弱",
+      "en": "Explicit moves"
+    },
+    "caretOff": {
+      "zh": "关闭",
+      "en": "Off"
+    },
+    "chatUxManaged": {
+      "zh": "该选项由插件 dsh-chat-ux 管理",
+      "en": "Managed by dsh-chat-ux"
+    },
+    "viewTabsTitle": {
+      "zh": "重绘标签条",
+      "en": "Chat / Trajectory tabs"
+    },
+    "viewTabsDesc": {
+      "zh": "重绘对话区界面的标签条。",
+      "en": "Redraw the Chat / Trajectory tab strip at the top of the conversation, lifted onto the title's line when it fits. Off restores the host's tab strip."
+    },
+    "headerBandTitle": {
+      "zh": "标题进入顶栏",
+      "en": "Header in the title bar"
+    },
+    "headerBandDesc": {
+      "zh": "桌面端把会话标题与顶栏那一行的控件抬进窗口的标题栏，放不下的一侧留在原来的行里。",
+      "en": "On the desktop the session title and the header's controls rise into the window's caption row, and a side without room stays in the header's own row."
+    },
+    "unavailable": {
+      "zh": "ERROR : 设置存储服务异常，改动不会被保存。",
+      "en": "The settings store is unavailable, so changes will not be saved."
+    },
+    "remoteReadOnly": {
+      "zh": "此页面经远程地址连接 DSH，DSH 只保存从 localhost 等本机地址打开的页面所做的改动。这里显示的是 DSH 当前的设置，请在运行 DSH 的电脑上修改。",
+      "en": "This page reaches DSH through a remote address, and DSH saves settings only from a page opened at a local address such as localhost. The values shown are the ones DSH holds; change them on the computer running DSH."
+    }
+  },
+  "ban": {
+    "signOut": {
+      "zh": "退出登录",
+      "en": "Sign out"
+    },
+    "title": {
+      "zh": "你的账户已被暂停",
+      "en": "Your account is on hold"
+    },
+    "lead": {
+      "zh": "由于活动异常，我们已于 <strong>{time}</strong> 暂停你的账户。你的对话与数据都还在。",
+      "en": "We put your account on hold on <strong>{time}</strong> because of unusual activity. Your chats and data are safe."
+    },
+    "leadError": {
+      "zh": "如果你认为这次暂停是误判，可以申请账户复核。",
+      "en": "If you think this hold is an error, you can request an account review."
+    },
+    "nextLabel": {
+      "zh": "接下来会发生什么：",
+      "en": "What happens next:"
+    },
+    "step1Title": {
+      "zh": "提交复核申请",
+      "en": "Request a review"
+    },
+    "step1Desc": {
+      "zh": "告诉我们当时发生了什么。",
+      "en": "Tell us more about what happened."
+    },
+    "step2Title": {
+      "zh": "我们会复核你的账户",
+      "en": "We’ll review your account"
+    },
+    "step2Desc": {
+      "zh": "团队成员会把你的申请与账户活动放在一起复核。",
+      "en": "A team member will review your request and account activity together."
+    },
+    "step3Title": {
+      "zh": "我们会把结果邮件给你",
+      "en": "We’ll email you the outcome"
+    },
+    "step3Desc": {
+      "zh": "复核大约需要 10 天。",
+      "en": "Reviews take about 10 days."
+    },
+    "review": {
+      "zh": "申请复核",
+      "en": "Request a review"
+    },
+    "whatYouCanDo": {
+      "zh": "你可以做的事",
+      "en": "What you can do"
+    },
+    "exportTitle": {
+      "zh": "导出你的数据",
+      "en": "Export your data"
+    },
+    "exportDesc": {
+      "zh": "我们会把你的对话、项目和设置打包供你下载。这可能需要一些时间。",
+      "en": "We’ll package up your conversations, projects, and settings for download. This might take some time to complete."
+    },
+    "deleteTitle": {
+      "zh": "删除你的账户",
+      "en": "Delete your account"
+    },
+    "deleteDesc": {
+      "zh": "你可以永久删除账户与数据。此操作不可撤销。",
+      "en": "You can permanently delete your account and data. This can’t be undone."
+    }
+  },
+  "brands": {
+    "note": "Which brand mark a row shows. Every id names a vendored lockup in packages/assets/src/icons/combine/; scripts/build.mjs fails the build on an id that is not there. This is presentation data, kept out of the bundle like the rest of this document, and it is separate from the copy rules above: a vendor's mark and a vendor's description line change for different reasons. `providers` is deliberately empty: a model no rule claims draws **no** lockup rather than its provider's, because the reseller's own lockup on a model it did not make reads as a wrong answer rather than a missing one. `models` is an ordered, anchored rule list resolved against the model id, exactly like `families` and with the same discipline: first match wins, so a broad rule must sit below the narrow ones and every rule must name its vendor (`step` cannot match `step-3.7-flash` by accident only if no earlier rule already claimed it). A brand with no lockup renders the label without a mark.",
+    "providers": {},
+    "models": [
+      {
+        "match": "deepseek",
+        "brand": "deepseek"
+      },
+      {
+        "match": "claude",
+        "brand": "claude",
+        "note": "Claude rows draw Claude's own lockup, not the parent Anthropic one: the label names the model line, and a wordmark has to match the word it stands in for — the same reason Grok rows draw Grok's rather than xAI's. Anthropic stays the fallback for the `anthropic` route."
+      },
+      {
+        "match": "gpt|(^|[/-])o[1-9](-|$)",
+        "brand": "openai"
+      },
+      {
+        "match": "nano-?banana",
+        "brand": "nanobanana",
+        "note": "Nano Banana is a Gemini image model with its own identity in the catalog, so it draws its own lockup rather than the Gemini one."
+      },
+      {
+        "match": "gemma",
+        "brand": "gemma",
+        "note": "Gemma is Google's open model line, so it draws its own lockup rather than the parent Google one — the same reason Claude and Grok do."
+      },
+      {
+        "match": "gemini",
+        "brand": "gemini",
+        "note": "A Gemini row shows the model line's mark; the provider group header above it shows Google's, because providers resolve from `providers` and never from here."
+      },
+      {
+        "match": "glm",
+        "brand": "zai"
+      },
+      {
+        "match": "kimi|(^|-)k3($|-)",
+        "brand": "kimi"
+      },
+      {
+        "match": "qwen",
+        "brand": "qwen"
+      },
+      {
+        "match": "step",
+        "brand": "stepfun"
+      },
+      {
+        "match": "minimax|(^|-)m[23]($|-)",
+        "brand": "minimax"
+      },
+      {
+        "match": "muse-spark|llama",
+        "brand": "meta"
+      },
+      {
+        "match": "celeris",
+        "brand": "celestoai"
+      },
+      {
+        "match": "mercury|inception",
+        "brand": "inception"
+      },
+      {
+        "match": "grok",
+        "brand": "grok",
+        "note": "Grok is the model line, xAI the company: a Grok row shows Grok's own mark, while the provider group header above it still shows xAI's, because providers resolve from `providers` and never from here."
+      },
+      {
+        "match": "doubao|seed|volc",
+        "brand": "bytedance"
+      },
+      {
+        "match": "ernie",
+        "brand": "baidu"
+      },
+      {
+        "match": "hunyuan|(^|-)hy(\\d|-?mt)",
+        "brand": "tencent"
+      },
+      {
+        "match": "mistral|magistral|codestral",
+        "brand": "mistral"
+      },
+      {
+        "match": "north|command-?[ar]|cohere",
+        "brand": "cohere"
+      },
+      {
+        "match": "phi-?\\d",
+        "brand": "microsoft"
+      },
+      {
+        "match": "nova",
+        "brand": "nova"
+      },
+      {
+        "match": "mimo",
+        "brand": "xiaomimimo"
+      },
+      {
+        "match": "longcat",
+        "brand": "longcat"
+      },
+      {
+        "match": "sonar|perplexity",
+        "brand": "perplexity"
+      }
+    ],
+    "lockups": {
+      "note": "Per-brand overrides for the vendored lockup, applied by scripts/fetch-lobe-combines.py. `word` is the word the lockup stands in for inside a model name (it must match how the catalog spells it, which is not always Lobe's TITLE), `mark` and `text` name the Lobe icons the two halves are taken from (so a model line can wear its own mark with its parent's wordmark), and `keep` crops a wordmark to a fraction of its ink width (GLM-V's \"-V\" is not part of the name).",
+      "meta": {
+        "word": "Meta",
+        "lockup": true
+      },
+      "openai": {
+        "word": "GPT",
+        "local": "openai.svg",
+        "textFrom": 0.529
+      },
+      "tencent": {
+        "word": "Hunyuan",
+        "mark": "hunyuan",
+        "text": "tencent"
+      },
+      "stepfun": {
+        "word": "Step",
+        "mark": "stepfun",
+        "text": "stepfun"
+      },
+      "xiaomimimo": {
+        "word": "MiMo",
+        "mark": "xiaomimimo",
+        "text": "xiaomimimo"
+      },
+      "nanobanana": {
+        "word": "Nano Banana"
+      },
+      "zai": {
+        "word": "GLM",
+        "mark": "zai",
+        "text": "glmv",
+        "keep": 0.62
+      }
+    }
+  },
+  "families": [
+    {
+      "match": "deepseek.*flash",
+      "text": {
+        "zh": "非对称模型结构，小成本大智能。",
+        "en": "Asymmetric architecture: more intelligence, less cost."
+      },
+      "note": "Every DeepSeek Flash reads the same line: the copy describes the line, not a version, so a retired Flash and a future one say the same thing. Anchored on `deepseek` on purpose: an unanchored /flash$/ would hand this copy to glm-5.3-flash, step-3.7-flash and every other vendor's flash tier."
+    },
+    {
+      "match": "deepseek.*pro",
+      "note": "The Pro line's own official heading on the V4 preview page. No rule pins it to a version: a Pro is a Pro whatever its version.",
+      "text": {
+        "zh": "性能比肩顶级闭源模型。",
+        "en": "Performance rivaling the world's top closed-source models."
+      }
+    },
+    {
+      "match": "deepseek",
+      "note": "Everything else in the line — V3.2, R1, and whatever comes next — shares the V4.1 release title.",
+      "text": {
+        "zh": "更强、更快、更普惠。",
+        "en": "Smarter, faster, more affordable."
+      }
+    },
+    {
+      "match": "claude.*fable",
+      "note": "Fable is a model line of its own (Mythos / Fable / Opus / Sonnet / Haiku), so it must not fall through to the generic Claude rule. Its copy is the line tagline from anthropic.com/claude/fable, and it carries no tier prefix of ours.",
+      "text": {
+        "zh": "新一代智能，专为解决最艰深的知识工作和编程难题。",
+        "en": "Next generation of intelligence for the hardest knowledge work and coding problems."
+      }
+    },
+    {
+      "match": "claude.*mythos",
+      "note": "Mythos is Fable's unrestricted sibling — Anthropic's own words: Fable is the same underlying model with cybersecurity and biology safeguards added. Access to Mythos is limited to vetted organizations, so its copy leads with the audience rather than the capability.",
+      "text": {
+        "zh": "面向网络安全与生物学研究的可靠模型。",
+        "en": "Built for cybersecurity and biology research, with access limited to vetted organizations."
+      }
+    },
+    {
+      "match": "claude.*opus",
+      "note": "Family copy stays version-agnostic, so it carries no superlatives: 'strongest' is only true of the current generation and would mislabel an older Opus. Superlatives belong in a rule anchored to the version. It also carries no tier prefix of ours — '旗舰档：' is our positioning, not the model's own line.",
+      "text": {
+        "zh": "面向复杂编程与 AI 智能体的混合推理模型。",
+        "en": "A hybrid reasoning model built for serious coding and AI agents."
+      }
+    },
+    {
+      "match": "claude.*sonnet",
+      "text": {
+        "zh": "面向实时智能体与高吞吐的混合推理模型。",
+        "en": "Hybrid reasoning for real-time agents and high-volume work."
+      }
+    },
+    {
+      "match": "claude.*haiku",
+      "text": {
+        "zh": "面向速度敏感的高吞吐场景，响应快、成本低。",
+        "en": "For speed-sensitive, high-volume workloads at low cost."
+      }
+    },
+    {
+      "match": "claude",
+      "text": {
+        "zh": "Anthropic Claude 模型。",
+        "en": "Anthropic Claude model."
+      }
+    },
+    {
+      "match": "codex",
+      "text": {
+        "zh": "为 Codex 智能体编程优化，可并行处理多项软件工程任务。",
+        "en": "Optimized for agentic coding in Codex, handling several software tasks in parallel."
+      }
+    },
+    {
+      "match": "gpt[._-]?5[._-]?4(?!\\d)",
+      "note": "Anchored to the 5.4 generation: the context size and the computer use are that model's, so a later GPT-5 reads the rule below.",
+      "text": {
+        "zh": "面向编程与专业工作的长上下文模型。",
+        "en": "For coding and professional work, with a 1.05M-token context and native computer use."
+      }
+    },
+    {
+      "match": "gpt-?5",
+      "text": {
+        "zh": "内置思考、可配置推理强度，面向编程与智能体任务。",
+        "en": "Thinking built in with configurable reasoning effort, for coding and agentic tasks."
+      }
+    },
+    {
+      "match": "(^|[/-])o[1-9](-|$)",
+      "text": {
+        "zh": "作答前深入思考，从 o1 到 o3 与 o4-mini。",
+        "en": "Trained to think more deeply before responding, from o1 through o3 and o4-mini."
+      }
+    },
+    {
+      "match": "gpt-oss|oss-\\d",
+      "text": {
+        "zh": "OpenAI 开发的开放权重推理模型。",
+        "en": "Open-weight reasoning models, Apache 2.0, in 120B and 20B sizes, customizable and self-hostable."
+      }
+    },
+    {
+      "match": "gpt",
+      "text": {
+        "zh": "支持文本与图像输入、多语言。",
+        "en": "Text and image input, multilingual."
+      }
+    },
+    {
+      "match": "gemini.*(pro|ultra|Argon)",
+      "text": {
+        "zh": "面向复杂任务、深度推理与多模态理解。",
+        "en": "For complex tasks, deep reasoning and multimodal understanding."
+      }
+    },
+    {
+      "match": "gemini.*flash",
+      "text": {
+        "zh": "速度与成本优先，面向规模化智能体任务与高频低延迟场景。",
+        "en": "Speed and cost first, for high-volume low-latency work and agentic tasks at scale."
+      }
+    },
+    {
+      "match": "gemini",
+      "text": {
+        "zh": "原生理解文本、图像、视频与音频。",
+        "en": "Native text, image, video and audio understanding."
+      }
+    },
+    {
+      "match": "gemma",
+      "note": "Gemma is Google's open line, not a Gemini tier, so it must not inherit the Gemini rule's copy. Its place below the generic Gemini rule is only for readability: the two patterns cannot overlap.",
+      "text": {
+        "zh": "源自 Gemini 研究，从云端服务器到手机都能运行。",
+        "en": "Built from the same research as Gemini, running from cloud servers to phones."
+      }
+    },
+    {
+      "match": "nano-?banana",
+      "note": "Nano Banana is Gemini's image model with its own catalog identity, so it gets image copy instead of the Gemini text-model line.",
+      "text": {
+        "zh": "Gemini 图像生成与编辑模型，支持自然语言对话式创建与修改。",
+        "en": "Gemini's image generation and editing model, with conversational creation and refinement."
+      }
+    },
+    {
+      "match": "glm[._-]?5[._-]?3.*flashx",
+      "note": "Anchored to the 5.3 generation: the throughput figure is that tier's, so a later GLM Flash X reads the generic Flash rule below.",
+      "text": {
+        "zh": "GLM 5.3 flash的高吞吐版本。",
+        "en": "A high-throughput variant running at 200 tokens/s."
+      }
+    },
+    {
+      "match": "glm[._-]?5[._-]?3.*flash",
+      "note": "Anchored to the 5.3 generation's Flash tier; a later GLM Flash reads the generic Flash rule below.",
+      "text": {
+        "zh": "GLM-5系列的首个原生多模态模型。",
+        "en": "Natively multimodal, with 320B/18B MoE, 1M context and MIT licensing at $0.045 per task."
+      }
+    },
+    {
+      "match": "glm[._-]?5[._-]?3(?!\\d)",
+      "note": "Anchored to the 5.3 generation: the superlative is true of it alone, and the line's own rule below carries none.",
+      "text": {
+        "zh": "最强开放权重编程模型之一，拓展智能上界的可及边界。",
+        "en": "For coding and long-horizon autonomy: 1M context, 128K output, and post-training alone makes it the most capable open-weight coding model."
+      }
+    },
+    {
+      "match": "glm.*flash",
+      "text": {
+        "zh": "更快更省的多模态推理，兼顾长上下文与日常编程。",
+        "en": "Fast, low-cost multimodal inference with long context and everyday coding."
+      }
+    },
+    {
+      "match": "glm",
+      "text": {
+        "zh": "覆盖对话、编程与智能体，支持思考模式与函数调用。",
+        "en": "Covers chat, coding and agents, with thinking mode and function calling."
+      }
+    },
+    {
+      "match": "kimi.*(k3|k-?3)|^k3",
+      "note": "Anchored to the K3 line: the 2.8T size belongs to it, and the catalog's `k3` and `k3-256k` spellings are the same line.",
+      "text": {
+        "zh": "面向编程与知识工作的 2.8T 开放权重模型。",
+        "en": "An open-weight 2.8T model for coding and knowledge work."
+      }
+    },
+    {
+      "match": "kimi.*(cod(e|ing)|k2[._-]?7).*highspeed",
+      "note": "The coding line's high-speed tier, above the coding rule because its own id contains `coding`.",
+      "text": {
+        "zh": "面向长程编程的开放权重智能体模型高速版。",
+        "en": "A high-speed variant at about 180 tokens/s, 5–6x the regular tier, for 2x the price."
+      }
+    },
+    {
+      "match": "kimi.*(cod(e|ing)|k2[._-]?7)",
+      "note": "The coding line whatever the suffix spells: `kimi-for-coding` and `kimi-k2.7-code` both read it, and the high-speed tier above is claimed first.",
+      "text": {
+        "zh": "面向长程编程的开放权重智能体模型。",
+        "en": "An open-weight agentic coding model for long-horizon work, 1T/32B with 256K context."
+      }
+    },
+    {
+      "match": "kimi",
+      "text": {
+        "zh": "原生支持文本、图像与视频输入，含思考模式与工具调用。",
+        "en": "Native text, image and video input, with thinking mode and tool calling."
+      }
+    },
+    {
+      "match": "qwen[._-]?3[._-]?8.*max",
+      "note": "Anchored to the 3.8 generation: the parameter count and the context are that model's, so a later Qwen Max falls to the line rule below.",
+      "text": {
+        "zh": "面向编程与办公，2.4 万亿参数 MoE，1M 上下文、思考模式与内置工具。",
+        "en": "A 2.4T-parameter MoE for coding and office work, with 1M context, thinking mode and built-in tools."
+      }
+    },
+    {
+      "match": "qwen.*(coder|code)",
+      "text": {
+        "zh": "开放权重 MoE，面向补全、生成与仓库级修改。",
+        "en": "Open-weight MoE for completion, generation and repo-level edits."
+      }
+    },
+    {
+      "match": "qwen.*(flash|turbo)",
+      "text": {
+        "zh": "响应快、成本低，工具调用与长上下文支持完整。",
+        "en": "Fast and cheap, with full tool calling and long-context support."
+      }
+    },
+    {
+      "match": "qwen.*plus",
+      "text": {
+        "zh": "能力与成本均衡，完整工具调用支持。",
+        "en": "Balanced cost and capability with full tool calling."
+      }
+    },
+    {
+      "match": "qwen.*a\\d+b",
+      "note": "MoE ids spell out total and active parameters (`2.4t-a95b`, `235b-a22b`); the active count must win over the size rule below, which would otherwise read the trailing `95b` as a small dense model.",
+      "text": {
+        "zh": "总参大、激活参数少，单位成本低于同规模稠密模型。",
+        "en": "Many total parameters but few active, so it costs less than a dense model of the same size."
+      }
+    },
+    {
+      "match": "qwen.*[-_]\\d+b($|[^a-z])",
+      "note": "Anchored to a separator so the digits start a segment: an unanchored \\d+b matches the `95b` inside `a95b` and calls a 2.4T MoE a small dense model.",
+      "text": {
+        "zh": "可本地或低成本部署。",
+        "en": "Cheap to serve, or run locally."
+      }
+    },
+    {
+      "match": "qwen",
+      "text": {
+        "zh": "开放权重与云端 API 并行，覆盖文本、图像、音频与视频。",
+        "en": "Open weights and cloud APIs across text, image, audio and video."
+      }
+    },
+    {
+      "match": "step[._-]?5(?!\\d)",
+      "note": "Anchored to the 5 line: the input modes and the context are its own, and the trailing-digit guard keeps a size suffix (`95b`) from reading it.",
+      "text": {
+        "zh": "面向编程与专业知识工作，原生图文视频输入，1M 上下文。",
+        "en": "For programming and professional knowledge work, with native text, image and video input and a 1M-token context."
+      }
+    },
+    {
+      "match": "step[._-]?3[._-]?7.*flash",
+      "note": "Anchored to 3.7: the parameter counts and the token rate are that tier's, so another Step Flash falls to the line rule below.",
+      "text": {
+        "zh": "面向智能体与代码任务，198B/11B 稀疏 MoE，图像与视频理解，256K 上下文，最高 400 tokens/s。",
+        "en": "For agentic and coding tasks: 198B/11B sparse MoE with image and video understanding, 256K context, up to 400 tokens/s."
+      }
+    },
+    {
+      "match": "step",
+      "text": {
+        "zh": "覆盖文本推理、多模态与语音，经官方开放平台提供。",
+        "en": "Reasoning, multimodal understanding and voice, served through the official open platform."
+      }
+    },
+    {
+      "match": "minimax.*m3|(^|-)m3($|-)",
+      "note": "The M3 line's own claims; the catalog's `minimax-m3-1m` is the same line at a longer context.",
+      "text": {
+        "zh": "首个集前沿编程、1M 上下文与原生多模态于一身的开放权重模型。",
+        "en": "The first open-weight model combining frontier coding, 1M context and native multimodality."
+      }
+    },
+    {
+      "match": "minimax|(^|-)m2[-.]?\\d",
+      "text": {
+        "zh": "主打智能体推理、工具调用、编程与多模态输入，面向长上下文任务。",
+        "en": "Agentic reasoning, tool use, coding and multimodal input for long-context work."
+      }
+    },
+    {
+      "match": "muse-spark",
+      "note": "Meta Superintelligence Labs' Muse line, separate from the Llama open-weight line — it must not inherit the Llama rule's copy.",
+      "text": {
+        "zh": "小而快、原生多模态推理，驱动 Meta AI。",
+        "en": "Small and fast by design, natively multimodal, powering Meta AI."
+      }
+    },
+    {
+      "match": "celeris[._-]?1(-|$)",
+      "note": "Anchored to Celeris-1: the numbers are that model's, so a future Celeris reads the line rule below.",
+      "text": {
+        "zh": "生成速度 1,664 tokens/s，超过 Mercury 2 的 5 倍，MMLU-Pro 75.9%。",
+        "en": "Generates 1,664 tokens/s, over 5x Mercury 2, at 75.9% MMLU-Pro."
+      }
+    },
+    {
+      "match": "celeris",
+      "note": "Diffusion LLM, so the copy leads with latency rather than the usual capability framing.",
+      "text": {
+        "zh": "扩散架构大语言模型，主打超低延迟生成。",
+        "en": "Diffusion-architecture LLMs built for ultra-low-latency generation."
+      }
+    },
+    {
+      "match": "mercury-?\\d|inception",
+      "text": {
+        "zh": "面向代码生成，H100 上超 1,000 tokens/s，速度最高为同类模型的 10 倍。",
+        "en": "Built for code, over 1,000 tokens/s on H100, up to 10x faster than speed-optimized LLMs."
+      }
+    },
+    {
+      "match": "apodex",
+      "text": {
+        "zh": "面向复杂专业工作、金融与科研，1.1 mini 为 35B、可本地部署。",
+        "en": "For complex professional work, finance and science; the 35B 1.1 mini runs locally."
+      }
+    },
+    {
+      "match": "motif",
+      "text": {
+        "zh": "MIT 许可，314B 总参 / 13.2B 激活，256K 上下文。",
+        "en": "MIT-licensed, 314B total / 13.2B active, 256K context."
+      }
+    },
+    {
+      "match": "grok[._-]?4(?!\\d)",
+      "note": "Anchored to the Grok 4 line, so every 4.x build reads the same sentence and another line falls to the rule below.",
+      "text": {
+        "zh": "全球最智能的模型之一，支持原生工具使用以及实时搜索功能。",
+        "en": "One of the most intelligent models in the world, with native tool use and real-time search."
+      }
+    },
+    {
+      "match": "grok",
+      "text": {
+        "zh": "覆盖编程、智能体与知识工作，API 支持多模态输入。",
+        "en": "Coding, agentic tasks and knowledge work, with multimodal API input."
+      }
+    },
+    {
+      "match": "doubao.*2[._-]?1(?!\\d)|seed[._-]?2[._-]?1(?!\\d)",
+      "note": "Anchored to Seed 2.1: the tiers it names are that generation's, so another Seed reads the vendor rule below.",
+      "text": {
+        "zh": "分 Pro 与 Turbo 两档的新一代生产力智能体，以通用任务与代码见长。",
+        "en": "Pro and Turbo tiers of a next-generation productivity agent, strong at general agentic and coding tasks."
+      }
+    },
+    {
+      "match": "doubao|seed-?\\d|volc",
+      "text": {
+        "zh": "经 50+ 内部业务场景验证，每日千亿级 token 用量打磨，支持多模态。",
+        "en": "Validated across 50+ internal scenarios and hundreds of billions of daily tokens, with multimodal support."
+      }
+    },
+    {
+      "match": "ernie[._-]?5([._-]?0)?(-|$)",
+      "note": "Anchored to the 5.0 generation: the parameter count is its own, and the catalog's `ernie-5` is the same line.",
+      "text": {
+        "zh": "2.4 万亿参数的原生全模态大模型。",
+        "en": "A native omni-modal model with 2.4 trillion parameters."
+      }
+    },
+    {
+      "match": "ernie",
+      "text": {
+        "zh": "产业级知识增强，支持中文理解与多模态生成。",
+        "en": "Industry-grade knowledge enhancement, with Chinese understanding and multimodal generation."
+      }
+    },
+    {
+      "match": "hunyuan|(^|-)hy\\d",
+      "text": {
+        "zh": "中文理解与智能体场景表现均衡。",
+        "en": "Balanced for Chinese language and agentic scenarios."
+      }
+    },
+    {
+      "match": "codestral",
+      "text": {
+        "zh": "面向补全、FIM 与生成，128K 上下文。",
+        "en": "Built for completion, FIM and generation, with 128K context."
+      }
+    },
+    {
+      "match": "mistral.*large[._-]?3(?!\\d)",
+      "note": "Anchored to Large 3: the licence and the parameter counts are that model's, so another Mistral reads the line rule below.",
+      "text": {
+        "zh": "Apache 2.0 开放权重多模态模型，细粒度 MoE，675B 总参 / 41B 激活，256K 上下文。",
+        "en": "Apache-2.0 open-weight multimodal MoE with 675B total / 41B active parameters and 256K context."
+      }
+    },
+    {
+      "match": "mistral|magistral",
+      "text": {
+        "zh": "从云端到边缘的前沿模型，开放权重与商用并行，可 API 调用或自托管。",
+        "en": "Frontier models from cloud to edge, open-weight and commercial, via API or self-hosting."
+      }
+    },
+    {
+      "match": "llama",
+      "text": {
+        "zh": "可自由微调、蒸馏并部署到任何环境。",
+        "en": "Fine-tune, distill and deploy it anywhere."
+      }
+    },
+    {
+      "match": "north",
+      "text": {
+        "zh": "整合大模型、搜索与自动化成一个企业级安全工作空间。",
+        "en": "LLMs, search and automation combined into one secure enterprise workspace."
+      }
+    },
+    {
+      "match": "command-?[ar]|cohere",
+      "text": {
+        "zh": "面向工具调用、RAG 与多语言，Command A 为 111B/256K。",
+        "en": "For tool use, RAG and multilingual work; Command A is 111B with 256K context."
+      }
+    },
+    {
+      "match": "phi-?\\d",
+      "text": {
+        "zh": "面向边缘与本地部署，Phi-4 以 14B 专注推理、数学与代码。",
+        "en": "For edge and local use; Phi-4 (14B) targets reasoning, math and code."
+      }
+    },
+    {
+      "match": "nova",
+      "text": {
+        "zh": "Micro/Lite/Pro/Premier 四档，支持文本、图像与视频输入。",
+        "en": "Micro, Lite, Pro and Premier tiers taking text, image and video."
+      }
+    },
+    {
+      "match": "sonar|perplexity",
+      "text": {
+        "zh": "结合实时网络信息与引用的搜索 API，从轻量 Sonar 到多步深研 Sonar Pro。",
+        "en": "Search APIs answering with fresh web data and citations, from light Sonar to deep-research Sonar Pro."
+      }
+    }
+  ],
+  "tiers": [
+    {
+      "match": "flash|mini|lite|nano|turbo|air|small|swift|highspeed|fast|instant",
+      "text": {
+        "zh": "响应快、成本低，适合简单或高频任务。",
+        "en": "Fast and cheap, for simple or high-frequency tasks."
+      }
+    },
+    {
+      "match": "pro|max|ultra|opus|thinking|reasoner|plus|large|advanced|heavy|frontier",
+      "text": {
+        "zh": "适合复杂或质量优先的任务，成本更高。",
+        "en": "For complex, quality-first work at higher cost."
+      }
+    },
+    {
+      "match": "a\\d+b",
+      "note": "MoE active-parameter suffix (`a95b`, `a23b`); tried before the dense rule so the active count is not mistaken for a total.",
+      "text": {
+        "zh": "总参大、激活参数少，单位成本低于同规模稠密模型。",
+        "en": "Many total parameters but few active, so it costs less than a dense model of the same size."
+      }
+    },
+    {
+      "match": "(^|[-_])\\d+b($|[^a-z])",
+      "note": "Anchored so the digits start a segment: unanchored, `a95b` and `a23b` read as small dense models.",
+      "text": {
+        "zh": "可本地或低成本部署。",
+        "en": "Cheap to serve, or run locally."
+      }
+    }
+  ]
+}
