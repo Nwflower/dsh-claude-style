@@ -1,0 +1,100 @@
+{
+  "name": "dsh-claude-style",
+  "description": "Claude Code Desktop theme for DeepSeek Harness (dsh) web GUI — visual & interaction overhaul",
+  "version": "0.12.2",
+  "type": "module",
+  "main": "lib/host/index.js",
+  "icon": "lib/claude-mark.svg",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/dev.mjs",
+    "changelog": "node scripts/changelog.mjs",
+    "changelog:check": "node scripts/changelog.mjs --check",
+    "docs:index": "node scripts/decisions-index.mjs",
+    "docs:check": "node scripts/decisions-index.mjs --check",
+    "lint": "node scripts/lint.mjs",
+    "features": "node scripts/features.mjs",
+    "features:check": "node scripts/features.mjs --check",
+    "probe": "node scripts/probe.cjs",
+    "smoke": "node scripts/smoke.cjs",
+    "test": "vitest run",
+    "prepublishOnly": "npm run build"
+  },
+  "exports": {
+    ".": "./lib/host/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json",
+    "./locale/*": "./locale/*"
+  },
+  "dsh": {
+    "engines": {
+      "dsh": ">=0.1.7"
+    },
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [],
+      "platform": "web"
+    }
+  },
+  "files": [
+    "lib",
+    "locale",
+    "skin.json",
+    "cordis.patch.yml",
+    "docs/STYLE.md",
+    "docs/FEATURES.md",
+    "docs/FEATURES.en.md",
+    "docs/SETTINGS.md",
+    "docs/SETTINGS.en.md",
+    "docs/decisions",
+    "CHANGELOG.md",
+    "README.md",
+    "README.en.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "dsh-plugin",
+    "cordis",
+    "web-ui",
+    "theme",
+    "claude",
+    "claude-code",
+    "desktop-theme",
+    "anthropic",
+    "editorial"
+  ],
+  "license": "MIT",
+  "author": "Nwflower",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nwflower/dsh-claude-style.git"
+  },
+  "homepage": "https://github.com/Nwflower/dsh-claude-style#readme",
+  "bugs": {
+    "url": "https://github.com/Nwflower/dsh-claude-style/issues"
+  },
+  "devDependencies": {
+    "@deepseek-ai/dsh-client-ui-primitives": "0.2.1-alpha.1",
+    "@types/node": "^26.6.4",
+    "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.7",
+    "@vitest/browser-playwright": "5.0.3",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "esbuild": "0.28.2",
+    "playwright": "1.63.0",
+    "pngjs": "^7.0.0",
+    "postcss": "8.5.29",
+    "postcss-selector-parser": "7.1.6",
+    "typescript": "7.0.2",
+    "vitest": "5.0.3"
+  }
+}
