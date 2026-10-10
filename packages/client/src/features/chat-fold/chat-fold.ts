@@ -4,6 +4,7 @@ import { installChatFoldGlide } from './fold-glide'
 import { createProcessFold } from './process-fold'
 import { createProcessSummary } from './process-summary'
 import { createReasoningFold } from './reasoning-fold'
+import { createReasoningStream } from './reasoning-stream'
 import type { HostContext } from '../../core/host'
 import type { FeatureHandle } from '../../core/scheduler'
 import type { FeatureUi } from '../../core/feature'
@@ -19,10 +20,12 @@ export interface ChatFoldHandle extends FeatureHandle {
  * while the model reasons and folds back once it stops (reasoning-fold.ts), a
  * process group opens while its section runs and folds back when it ends
  * (process-fold.ts), a reader's own press on a row rolls the body down or up
- * instead of snapping it (fold-glide.ts), and a process group's header counts what
- * the group holds (process-summary.ts). All three ride the one preference: it
- * means "the skin may fold the chat area", so off leaves the automatic folding,
- * the door and the header's words to the host.
+ * instead of snapping it (fold-glide.ts), a process group's header counts what
+ * the group holds (process-summary.ts), and a running reasoning plays back
+ * inside a window that steps up as it streams (reasoning-stream.ts). All of them
+ * ride the one preference: it means "the skin may fold the chat area", so off
+ * leaves the automatic folding, the door, the header's words and the reasoning's
+ * window to the host.
  *
  * The door takes over the reader's clicks on a folding row, a takeover of the
  * host's interface like any other (D29): the entry installs this only while
@@ -36,16 +39,26 @@ export interface ChatFoldHandle extends FeatureHandle {
  */
 export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   document.body.setAttribute(CHAT_FOLD_ATTR, '')
-  const stopReasoning = createReasoningFold()
+  const stream = createReasoningStream()
+  const stopReasoning = createReasoningFold(rows => {
+    for (const row of rows) stream.queueRow(row)
+  })
   const stopProcess = createProcessFold()
   const summary = createProcessSummary()
   const stopGlide = installChatFoldGlide()
   ui.chatFold = {
     isBusy: isChatFoldBusy,
-    onCopyChange: summary.rewrite,
+    onCopyChange: () => {
+      summary.rewrite()
+      stream.sync()
+    },
+    // A resize can change the text's line height (the content font delta), which
+    // the window's own height is measured from.
+    reposition: () => stream.sync(),
   }
   return () => {
     delete ui.chatFold
+    stream.stop()
     stopReasoning()
     stopProcess()
     summary.stop()

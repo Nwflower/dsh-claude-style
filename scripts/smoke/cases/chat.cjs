@@ -96,6 +96,32 @@ module.exports = {
     check('the process group folds back when the section ends, and its summary stops sweeping',
       after.groupOpen === false && (after.summary || {}).running === false, JSON.stringify(after))
     check('a group the reader opened himself in that phase stays open', fold.readerOpen === true, JSON.stringify(fold.readerOpen))
+    // The reasoning's streamed window: transitions.dev's "Reasoning stream",
+    // adapted to live text — a mask on the clipped body, and a step on its clock.
+    const run = fold.reasonWindow || []
+    const offsetsOf = (frame) => {
+      const match = /matrix\(1, 0, 0, 1, 0, (-?[\d.]+)\)/.exec((frame || {}).transform || '')
+      return match === null ? 0 : -Number(match[1])
+    }
+    const step = 24 * 2
+    const offsets = run.map(offsetsOf)
+    const reachable = run.length > 0 ? (run[0].textHeight - run[0].slotHeight) : 0
+    check('a running reasoning stands in a window a few lines tall, masked at both edges',
+      run.length === 3 && run.every((frame) => frame.on === true) &&
+        run[0].slotHeight === 24 * 4 && run[0].maxHeight === '96px' && run[0].mask.startsWith('linear-gradient'),
+      JSON.stringify(run[0]))
+    check('the window holds a transition for its step, on the snippet\'s own clock',
+      run.every((frame) => frame.transition === 'transform 0.5s'),
+      JSON.stringify(run.map((frame) => frame.transition)))
+    check('the text steps up two lines at a time and stops at the newest line',
+      offsets.length === 3 && offsets[2] > offsets[0] && offsets[1] > 0 &&
+        offsets.every((offset) => offset <= reachable) && offsets[2] === reachable,
+      JSON.stringify({ offsets, reachable }))
+    const reopened = fold.reasonOpen || {}
+    check('once the reasoning stops the window is off and the whole text stands again',
+      reopened.on === false && offsetsOf(reopened) === 0 && reopened.maxHeight === 'none' &&
+        reopened.mask === 'none' && reopened.textHeight === 24 * 12,
+      JSON.stringify(reopened))
     const glide = fold.glide || {}
     const glideAfter = glide.after || {}
     check('a press on a folding row is intercepted and handed to the real element when the door lands',

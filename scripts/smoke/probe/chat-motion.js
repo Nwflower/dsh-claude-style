@@ -289,6 +289,41 @@
         summary: summaryOf(),
         clicks: Object.assign({}, window.__foldClicks),
       }
+      // The reasoning's streamed window (reasoning-stream.ts, transitions.dev's
+      // "Reasoning stream"): the host's reasoning slot is clipped to a few lines
+      // with a mask, and the text it holds steps up on the snippet's clock. Read
+      // across two waits, so a step and the tween it runs are both seen.
+      var reasonBody = document.getElementById('debugThinkBody')
+      var reasonText = document.getElementById('debugThinkText')
+      var windowOf = function () {
+        var style = getComputedStyle(reasonBody)
+        var text = getComputedStyle(reasonText)
+        return {
+          on: reasonBody.hasAttribute('data-dsh-claude-reason-window'),
+          slotHeight: Math.round(reasonBody.getBoundingClientRect().height),
+          maxHeight: style.maxHeight,
+          mask: (style.maskImage === 'none' ? style.webkitMaskImage : style.maskImage).slice(0, 44),
+          textHeight: Math.round(reasonText.getBoundingClientRect().height),
+          transform: text.transform,
+          transition: text.transitionProperty + ' ' + text.transitionDuration,
+        }
+      }
+      // The row reopens for the reasoning: the fold closes it when the phase
+      // turns ok, and the window's own reading is of a running, open row.
+      foldThink.setAttribute('data-state', 'running')
+      await sleep(300)
+      r.fold.reasonWindow = [windowOf()]
+      await sleep(1100)
+      r.fold.reasonWindow.push(windowOf())
+      await sleep(1100)
+      r.fold.reasonWindow.push(windowOf())
+      // The reasoning stops and the reader opens the row: the window is off and
+      // the whole text stands in the host's own body again.
+      foldThink.setAttribute('data-state', 'ok')
+      await sleep(400)
+      document.getElementById('debugThinkRow').click()
+      await sleep(200)
+      r.fold.reasonOpen = windowOf()
       // The fold glide on the reader's own press: the click is intercepted, the
       // real element is pressed with the door marked, and the click is handed back
       // afterwards so the host collapses it.

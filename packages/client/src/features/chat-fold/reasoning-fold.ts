@@ -25,9 +25,12 @@ import { EXPANDED_ATTRIBUTE, ROW_PHASE_ATTRIBUTE, RUNNING_STATE, THINK_ROW_SELEC
  * Watch every thinking row on the page and bring each to what its phase asks
  * for.
  *
+ * @param onRows - hears the rows this scan touched, for the feature's other
+ *     reading of a thinking row (its reasoning's streamed window). One observer
+ *     answers both, so the two cannot see different batches.
  * @returns teardown: the observer and the two listeners go away.
  */
-export function createReasoningFold() {
+export function createReasoningFold(onRows?: (rows: readonly Element[]) => void) {
   /** The phase a row was in when the reader last touched it. */
   const touchedIn = new WeakMap<Element, string>()
   /** The phase a row was in when it was last toggled, so a press that changed nothing is not retried. */
@@ -78,7 +81,9 @@ export function createReasoningFold() {
 
   /** Settle every row already on the page once, right after install. */
   const syncEveryRow = () => {
-    syncRows(document.querySelectorAll(THINK_ROW_SELECTOR))
+    const rows = [...document.querySelectorAll(THINK_ROW_SELECTOR)]
+    onRows?.(rows)
+    syncRows(rows)
   }
 
   /** Record that the reader, and not this module, just decided a row's state. */
@@ -123,6 +128,7 @@ export function createReasoningFold() {
         scanQueued = false
         const rows = [...touchedRows]
         touchedRows.clear()
+        onRows?.(rows)
         syncRows(rows)
       },
     })

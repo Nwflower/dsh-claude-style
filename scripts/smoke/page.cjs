@@ -210,9 +210,18 @@ function page(name, tier, cases) {
   // that does not cap its body. The host's own behaviour is modelled in the
   // script: the row's control flips data-expanded, a group's header flips its
   // body's hidden. A header is the host's: a decorative icon span, then its words.
+  // A thinking row carries the host's own slot for its reasoning body — the slot
+  // generates no box of its own — with the rendered text inside it, long enough
+  // that the streamed window has something to step.
+  var foldReasoning = ''
+  for (var line = 1; line <= 12; line += 1) foldReasoning += '思考第 ' + line + ' 行。' + (line < 12 ? '<br>' : '')
   var foldArea = name === 'chat-fold'
-    ? '<style>[data-step-process-body][hidden] { display: none; } #debugGroupHeader { display: flex; gap: 6px; padding: 0; max-width: 100%; }</style>' +
-      '<div data-variant="think" data-state="running" id="debugThink"><button type="button" id="debugThinkRow">Thinking</button></div>' +
+    ? '<style>[data-step-process-body][hidden] { display: none; } #debugGroupHeader { display: flex; gap: 6px; padding: 0; max-width: 100%; } #debugThinkText { line-height: 24px; }</style>' +
+      '<div data-variant="think" data-state="running" id="debugThink"><button type="button" id="debugThinkRow">Thinking</button>' +
+        '<div data-slot="conversation.chat.reasoning.body" id="debugThinkBody" style="display: contents">' +
+          '<div data-markdown-variant="compact" id="debugThinkText">' + foldReasoning + '</div>' +
+        '</div>' +
+      '</div>' +
       '<div data-step-process id="debugGroup">' +
         '<button type="button" data-process-activity id="debugGroupHeader"><span aria-hidden="true">icon</span><span data-shimmer id="debugGroupWords">Working · building</span></button>' +
         '<div data-step-process-body hidden="until-found" id="debugGroupBody"><div data-step-process-content id="debugGroupContent">' +

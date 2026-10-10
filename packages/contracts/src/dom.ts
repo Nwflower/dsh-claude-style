@@ -25,6 +25,15 @@ export const CHAT_FLOW_SELECTOR = '[data-chat-flow]'
 export const CHAT_CALL_SELECTOR = '[data-chat-call-id]'
 /** One thinking row; its phase is its data-state attribute. */
 export const THINK_ROW_SELECTOR = '[data-variant="think"]'
+/**
+ * A thinking row's reasoning text: the host's own slot for that body. The slot
+ * generates no box of its own (`display: contents`), so a reader of it asks
+ * first for an element child — the rendered text — before giving the slot a box
+ * to clip.
+ */
+export const REASONING_BODY_SLOT_SELECTOR = '[data-slot="conversation.chat.reasoning.body"]'
+/** The rendered text inside that slot, whatever the host's Markdown wrapper is called. */
+export const REASONING_TEXT_SELECTOR = '[data-markdown-variant]'
 /** The kind of an assistant step's row: its thinking or its output. */
 export const ASSISTANT_STEP_KIND = 'assistant-step'
 /** The kind of a tool call's row. */

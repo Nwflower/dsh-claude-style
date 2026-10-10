@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-09",
+  "group": "improvements",
+  "order": 4,
+  "external": false,
+  "zh": "模型推理期间，思考行里的推理文字不再一行行把整列对话往下推着长：它停在四行高的窗口里，上下边缘渐隐，文字每 0.84 秒往上走两行（0.5 秒滑过去、曲线 cubic-bezier(0.22, 1, 0.36, 1)），走到最新一行就停住，读者始终看得见推理的结尾。这一套来自 transitions.dev 的「Reasoning stream」，按实时文字改写：不克隆、不循环。推理一停（或读者把这一行收起），窗口撤下、位移归零，读者打开这一行读到的是完整文本；「动画」设为「减弱」时不设窗口。端到端通道新增 `reasoningStream` 场景：在真实宿主上核对窗口高度与遮罩、每一步的位移与过渡、位移从不越过内容末尾（实测走到 211px 正好等于文本 303px 减窗口 92px），以及推理结束后窗口撤下、完整文本 303px 铺开。",
+  "en": "While the model reasons, the reasoning text in its thinking row no longer grows line by line and pushes the whole conversation down: it stands in a window four lines tall with a softened edge at each side, and the text steps up two lines every 0.84 s (half a second of travel on cubic-bezier(0.22, 1, 0.36, 1)), stopping at the newest line so the reader always sees how the reasoning ends. This comes from transitions.dev's \"Reasoning stream\", read as live text: no copy and no wrap. Once the reasoning stops — or the reader folds the row — the window comes off and the offset returns to zero, leaving the whole text for the reader who opens the row; with Animation set to Reduced the window is never set. The lane gains a `reasoningStream` scenario: on the real host it checks the window's height and mask, the offset and the transition of each step, that the offset never passes the content's end (measured 211px, exactly the text's 303px less the window's 92px), and that the window comes off afterwards leaving the whole 303px of text."
+}

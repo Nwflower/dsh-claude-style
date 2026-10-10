@@ -71,3 +71,50 @@ body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-chat-flow] [
 body[data-dsh-claude-style] [data-dsh-claude-rolling] > * {
   flex: none !important;
 }
+
+/* ---------- chat fold: the reasoning's streamed window ---------- */
+/* While the model reasons, the thinking row's text stands in a window a few
+   lines tall and steps up on the snippet's clock (reasoning-stream.ts,
+   transitions.dev's "Reasoning stream", MIT): the edges are a mask rather than
+   gradients painted over the text, so the card behind them can be anything. The
+   host's slot for the reasoning body generates no box of its own, so it is given
+   one here — over the host's own inline `display: contents`, hence the
+   !important — and its rendered Markdown is what the module slides.
+
+   The tokens are the snippet's, under this skin's names; the window's own height
+   arrives as a pixel measure the module writes, since it is the text's line
+   height times the window's line count. */
+
+body[data-dsh-claude-style] [data-slot="conversation.chat.reasoning.body"][data-dsh-claude-reason-window] {
+  --dsh-claude-reason-hold: 840ms;
+  --dsh-claude-reason-lines: 2;
+  --dsh-claude-reason-window: 4;
+  --dsh-claude-reason-fade: 28px;
+  --dsh-claude-reason-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  display: block !important;
+  overflow: hidden;
+  max-height: var(--dsh-claude-reason-window-height, 80px);
+  -webkit-mask-image: linear-gradient(transparent 0, black var(--dsh-claude-reason-fade), black calc(100% - var(--dsh-claude-reason-fade)), transparent 100%);
+  mask-image: linear-gradient(transparent 0, black var(--dsh-claude-reason-fade), black calc(100% - var(--dsh-claude-reason-fade)), transparent 100%);
+}
+
+body[data-dsh-claude-style] [data-slot="conversation.chat.reasoning.body"][data-dsh-claude-reason-window] > [data-markdown-variant] {
+  transform: translateY(0);
+  transition: transform var(--dsh-claude-reason-step, 500ms) var(--dsh-claude-reason-ease);
+  will-change: transform;
+}
+
+/* The reader's animation choice (D26), resolved onto <body>: reduced takes the
+   window and its stepping off whole — reasoning-stream.ts asks the same question
+   before it starts one, so no half state is left behind. */
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-slot="conversation.chat.reasoning.body"][data-dsh-claude-reason-window] {
+  display: contents !important;
+  max-height: none;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-slot="conversation.chat.reasoning.body"][data-dsh-claude-reason-window] > [data-markdown-variant] {
+  transform: none !important;
+  transition: none;
+}
