@@ -24,7 +24,7 @@ import type { Buckets, DayBuckets } from './usage-ledger.js'
 const SESSION_LOG = /^session(?:\.v([1-9][0-9]*))?\.jsonl(?:\.zstd)?$/i
 
 /** One raw log event, as the usage samples are read out of it. */
-interface UsageEvent {
+export interface UsageEvent {
   type?: string
   seq?: number
   time?: number
@@ -236,28 +236,3 @@ export function listSessionLogs(root: string): SessionLog[] {
   return out
 }
 
-/**
- * Read one session's events through the host's own reader; null when there is no
- * reader or the log cannot be read.
- *
- * @param ctx - host plugin context, for the `sessionQuery` service.
- * @param sessionId - the session whose log is read.
- */
-export async function readEvents(ctx: DshContext, sessionId: string) {
-  const query = ctx.get('sessionQuery')
-  if (query === null || query === undefined || typeof query.readSession !== 'function') return null
-  let snapshot
-  try {
-    snapshot = await query.readSession(sessionId)
-  } catch (error) {
-    // The query service throws these two to say a stored log is unreadable
-    // or went away between the listing and the read: that session is
-    // skipped and retried on the next pass (docs/decisions D12).
-    const failure = error as { code?: string, message?: string }
-    if (failure?.code !== 'SESSION_QUERY_CORRUPT_SESSION' && failure?.code !== 'SESSION_QUERY_SESSION_NOT_FOUND') throw error
-    ctx.logger?.warn?.(`dsh-claude-style: session ${sessionId} left out of the usage roll-up: ${failure.message}`)
-    return null
-  }
-  const events = snapshot?.events
-  return Array.isArray(events) ? events as UsageEvent[] : null
-}

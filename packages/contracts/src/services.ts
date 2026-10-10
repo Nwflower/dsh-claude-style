@@ -523,6 +523,9 @@ export interface HostPermissionOption {
  * face that exists carries all of them; the panel reads zero as "no such row".
  */
 export interface HostSessionStatsProjection {
+  /** Distinct turns with a closed step, and closed steps: the host row's two counts. */
+  turns: number
+  steps: number
   llmMs: number
   toolMs: number
   ttftMs: number

@@ -103,9 +103,11 @@ export interface SearchAnswer {
   sessions?: ContentHit[]
 }
 
-/** One content hit: the session it belongs to, the excerpt, and the match's range inside it. */
+/** One content hit: the session it belongs to, the message that matched, and the excerpt with its range. */
 export interface ContentHit {
   sessionId: string
+  /** The event sequence of the message that matched: what the jump lands on (D34). */
+  seq: number
   snippet: string
   /** The matched span of `snippet`, as `[start, end]`. */
   match: [number, number]

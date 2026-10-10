@@ -15,11 +15,11 @@
  * work on a machine that has never reached the source, and a copy newer than
  * the cache (a plugin upgrade) wins over a stale download.
  */
-import { existsSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { statSync } from 'node:fs'
+import { join } from 'node:path'
 import type { PeakCatalog, RateProfile } from '@dsh-claude-style/contracts/peakrate'
 import type { DshContext } from './dsh.js'
-import { harnessPath } from './harness-home.js'
+import { cachePath, readJsonDocument, writeJsonDocument } from './cache-file.js'
 import { packageRoot } from './package-root.js'
 import { parseCatalog } from './peakrate-catalog.js'
 
@@ -63,34 +63,15 @@ interface CacheDocument {
 }
 
 /**
- * One stored document, or undefined when there is none or it does not parse.
- *
- * The store's two files only ever save a fetch: a copy that cannot be read is
- * reported and the other one stands (docs/decisions D54).
- *
- * @param path - the file to read.
- * @param label - what the file is, for the warning.
- * @param log - the host half's warning channel.
- */
-function readDocument(path: string, label: string, log: (message: string) => void): unknown {
-  if (!existsSync(path)) return undefined
-  try {
-    return JSON.parse(readFileSync(path, 'utf8'))
-  } catch (error) {
-    log(`dsh-claude-style: ${label} unreadable (${(error as { message?: string }).message})`)
-    return undefined
-  }
-}
-
-/**
  * The catalog store behind the plugin's route.
  *
- * @param ctx - host plugin context, for the warning a failed fetch leaves.
+ * @param ctx - host plugin context, for the cache path and the warning a failed
+ *              fetch leaves.
  * @returns the store; `ensure()` is the only entry point that touches the disk.
  */
 export function createPeakRate(ctx: DshContext): PeakRateStore {
   const snapshotFile = join(packageRoot(), 'lib', PEAKRATE_CATALOG_FILE)
-  const cacheFile = join(harnessPath(ctx, 'cache', 'dsh-claude-style'), 'peakrate.json')
+  const cacheFile = cachePath(ctx, 'peakrate.json')
 
   let catalog: PeakCatalog | undefined
   let origin: 'remote' | 'bundled' = 'bundled'
@@ -101,7 +82,7 @@ export function createPeakRate(ctx: DshContext): PeakRateStore {
 
   /** The copy shipped in the package, which is what a machine with no reach has to judge by. */
   function shippedCatalog(): PeakCatalog | undefined {
-    const parsed = parseCatalog(readDocument(snapshotFile, `lib/${PEAKRATE_CATALOG_FILE}`, warn))
+    const parsed = parseCatalog(readJsonDocument(ctx, snapshotFile, `lib/${PEAKRATE_CATALOG_FILE}`))
     if (parsed === null) {
       // The shipped copy is produced from the source at release time; one that
       // no longer parses means the build shipped the wrong document.
@@ -115,7 +96,7 @@ export function createPeakRate(ctx: DshContext): PeakRateStore {
    * The disk cache, when it is at least as new as the shipped copy.
    */
   function cachedCatalog(shipped: PeakCatalog | undefined): { catalog: PeakCatalog, fetchedAt: number } | undefined {
-    const value = readDocument(cacheFile, 'peak rate cache', warn)
+    const value = readJsonDocument(ctx, cacheFile, 'peak rate cache')
     if (value === null || typeof value !== 'object') return undefined
     const stored = value as CacheDocument
     const parsed = parseCatalog(stored.document)
@@ -186,16 +167,7 @@ export function createPeakRate(ctx: DshContext): PeakRateStore {
   /** Store the fetched document, so a restart does not have to reach the source again. */
   function writeCache(): void {
     const stored: CacheDocument = { fetchedAt, document: catalog }
-    const temporary = `${cacheFile}.${process.pid}.tmp`
-    try {
-      mkdirSync(dirname(cacheFile), { recursive: true })
-      writeFileSync(temporary, JSON.stringify(stored), 'utf8')
-      renameSync(temporary, cacheFile)
-    } catch (error) {
-      // The cache only saves a fetch: a write that fails is reported and the
-      // catalog this run holds is still served (docs/decisions D54).
-      warn(`dsh-claude-style: peak rate cache not written: ${(error as { message?: string }).message}`)
-    }
+    writeJsonDocument(ctx, cacheFile, 'peak rate cache', stored)
   }
 
   /** Keep a long-running host current: the timer starts with the first request. */

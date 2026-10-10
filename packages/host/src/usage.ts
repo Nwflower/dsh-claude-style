@@ -23,8 +23,9 @@ import type { DshContext } from './dsh.js'
 import { harnessPath } from './harness-home.js'
 import { readCache, writeCache } from './usage-cache.js'
 import type { CacheSession } from './usage-cache.js'
-import { foldSession, listSessionLogs, readEvents } from './usage-fold.js'
-import type { SessionLog } from './usage-fold.js'
+import { readEvents } from './session-events.js'
+import { foldSession, listSessionLogs } from './usage-fold.js'
+import type { SessionLog, UsageEvent } from './usage-fold.js'
 import { readLedger } from './usage-ledger.js'
 import type { DayBuckets } from './usage-ledger.js'
 import { mergeLedgerFold, summarize } from './usage-summary.js'
@@ -72,7 +73,7 @@ export function createUsage(ctx: DshContext) {
 
   /** Fold every session whose log changed since the cache was written. */
   async function computeLocal(logs: SessionLog[], ledgerDays: ReadonlyMap<string, DayBuckets>) {
-    const cache = readCache(ctx, home())
+    const cache = readCache(ctx)
     const sessions = new Map<string, CacheSession>()
     let read = 0
     let failed = 0
@@ -82,7 +83,7 @@ export function createUsage(ctx: DshContext) {
         sessions.set(log.id, cached)
         continue
       }
-      const events = await readEvents(ctx, log.id)
+      const events = await readEvents<UsageEvent>(ctx, log.id, 'the usage roll-up')
       if (events === null) {
         // The reader refused (no `sessionQuery` service, or a log it cannot
         // parse). Leave the session out of the cache so the next pass retries it
@@ -95,7 +96,7 @@ export function createUsage(ctx: DshContext) {
       sessions.set(log.id, { size: log.size, mtimeMs: log.mtimeMs, days: folded.days, hours: folded.hours })
       read += 1
     }
-    writeCache(ctx, home(), sessions)
+    writeCache(ctx, sessions)
     const merge = mergeLedgerFold(ledgerDays, sessions, logs)
     const summary = summarize(
       merge.days,

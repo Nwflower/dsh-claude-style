@@ -11,9 +11,8 @@
  * so a file that does not parse and a write that fails are reported and the pass
  * still answers (docs/decisions D12).
  */
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
 import type { DshContext } from './dsh.js'
+import { cachePath, readJsonDocument, writeJsonDocument } from './cache-file.js'
 import { addBuckets, emptyBuckets } from './usage-ledger.js'
 import type { Buckets, DayBuckets } from './usage-ledger.js'
 
@@ -32,11 +31,6 @@ export interface CacheSession {
 interface CacheDocument {
   version?: number
   sessions?: Record<string, { size?: number, mtimeMs?: number, days?: Record<string, Partial<Buckets> & { hours?: number[] }>, hours?: number[] }>
-}
-
-/** The cache document's path under the harness home. */
-function cacheFile(home: string) {
-  return join(home, 'cache', 'dsh-claude-style', 'usage.json')
 }
 
 /** A stored 24-slot hour histogram, or an empty one when the entry has none. */
@@ -89,22 +83,11 @@ function daysFromObject(raw: unknown): Map<string, DayBuckets> {
  * The cached sessions by session id: empty when there is no cache, when the
  * document is not the version read here, or when it does not parse at all.
  *
- * @param ctx - host plugin context, for the warning an unreadable file leaves.
- * @param home - the harness home.
+ * @param ctx - host plugin context, for the cache path and the warning an
+ *              unreadable file leaves.
  */
-export function readCache(ctx: DshContext, home: string): Map<string, CacheSession> {
-  const file = cacheFile(home)
-  if (!existsSync(file)) return new Map()
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(readFileSync(file, 'utf8'))
-  } catch (error) {
-    // The cache only saves work: a file that does not parse is reported, the
-    // pass folds every session again and writes a whole new file over it
-    // (docs/decisions D12).
-    ctx.logger?.warn?.(`dsh-claude-style: usage cache unreadable, folding again: ${(error as { message?: string }).message}`)
-    return new Map()
-  }
+export function readCache(ctx: DshContext): Map<string, CacheSession> {
+  const parsed = readJsonDocument(ctx, cachePath(ctx, 'usage.json'), 'usage cache')
   if (parsed === null || typeof parsed !== 'object') return new Map()
   const document = parsed as { version?: unknown, sessions?: unknown }
   if (document.version !== CACHE_VERSION) return new Map()
@@ -126,27 +109,17 @@ export function readCache(ctx: DshContext, home: string): Map<string, CacheSessi
 }
 
 /**
- * Replace the whole cache document through a temporary file, so a reader never
- * sees half of it.
+ * Replace the whole cache document, so the next pass reads only the sessions
+ * whose logs changed.
  *
- * @param ctx - host plugin context, for the warning a failed write leaves.
- * @param home - the harness home.
+ * @param ctx - host plugin context, for the cache path and the warning a failed
+ *              write leaves.
  * @param sessions - the sessions this pass ended up with.
  */
-export function writeCache(ctx: DshContext, home: string, sessions: Map<string, CacheSession>) {
+export function writeCache(ctx: DshContext, sessions: Map<string, CacheSession>) {
   const document: { version: number, computedAt: number, sessions: Record<string, unknown> } = { version: CACHE_VERSION, computedAt: Date.now(), sessions: {} }
   for (const [id, entry] of sessions) {
     document.sessions[id] = { size: entry.size, mtimeMs: entry.mtimeMs, days: daysToObject(entry.days), hours: entry.hours }
   }
-  const path = cacheFile(home)
-  const temp = `${path}.${process.pid}.tmp`
-  try {
-    mkdirSync(dirname(path), { recursive: true })
-    writeFileSync(temp, JSON.stringify(document), 'utf8')
-    renameSync(temp, path)
-  } catch (error) {
-    // The cache only saves work: a write that fails is reported, and the
-    // roll-up this pass computed is still served (docs/decisions D12).
-    ctx.logger?.warn?.(`dsh-claude-style: usage cache not written: ${(error as { message?: string }).message}`)
-  }
+  writeJsonDocument(ctx, cachePath(ctx, 'usage.json'), 'usage cache', document)
 }
