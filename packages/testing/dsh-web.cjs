@@ -11,7 +11,9 @@
  *             web profile once, `dsh --profile web --port 0 --no-open` booted,
  *             and the URL it prints — which carries the launch token — handed
  *             back. The token must be exchanged by a browser: a bare fetch of
- *             the URL without a cookie is answered 401.
+ *             the URL without a cookie is answered 401. The host ends with
+ *             the process that called start(), however that process ends
+ *             (packages/testing/lifeline.cjs).
  *   openPage() a headless Chrome from scripts/shared/chrome.cjs on that URL.
  *
  * Run it directly to keep an instance up for manual work: it prints the URL and
@@ -30,6 +32,8 @@ const chrome = require('../../scripts/shared/chrome.cjs')
 const ROOT = path.resolve(__dirname, '..', '..')
 /** The scratch host's home: build output, so it lives with the other debug artifacts. */
 const DEFAULT_HOME = path.join(ROOT, '.debug', 'e2e', 'home')
+/** Preloaded into the host so it ends with the process that started it. */
+const LIFELINE = path.join(__dirname, 'lifeline.cjs')
 
 /**
  * Give the home a workspace of the lane's own when it has none.
@@ -127,10 +131,16 @@ async function start(options = {}) {
   fs.writeFileSync(overlay, `# Written by packages/testing/dsh-web.cjs for this run.\n${options.patch ?? '[]'}\n`)
 
   const env = { ...process.env, DSH_HOME: home, ...options.env }
+  // The host's stdin is its lifeline (packages/testing/lifeline.cjs): this
+  // process never writes to it, and its end closes with this process. The path
+  // goes in with forward slashes: NODE_OPTIONS reads a backslash inside quotes
+  // as an escape.
+  env.DSH_WEB_LIFELINE = '1'
+  env.NODE_OPTIONS = [env.NODE_OPTIONS, `--require "${LIFELINE.replaceAll('\\', '/')}"`].filter(Boolean).join(' ')
   const command = `dsh --profile ${profile} --patch "${overlay}" --port ${port} --no-open`
   const child = spawn(command, {
     env,
-    stdio: ['ignore', 'pipe', 'pipe'],
+    stdio: ['pipe', 'pipe', 'pipe'],
     shell: true,
   })
   const stop = () => {

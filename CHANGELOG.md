@@ -10,9 +10,17 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 - 中文界面下权限选择器的档位名改用宿主自己的中文名：分段控件上的当前档位与弹层里的每一行此前写死为皮肤的 Claude 英文名（Read only / Accept edits / Full access），中文界面里只有名字下面那行说明是中文；现在界面语言是中文时这几处读宿主 `permission.access` 文案表里的原文——「仅可查看」「工作区内修改」「完全权限」，宿主调整自己的用词时皮肤跟着变；切成别的界面语言仍是皮肤的名称。
 
+### 其他变更
+
+- 端到端通道与 `packages/testing/dsh-web.cjs` 起的临时宿主随启动它的进程一起结束：此前启动进程被强制终止或抛出未捕获的错误时，`dsh web` 实例留在后台继续占用端口与 `$DSH_HOME`，它的目录随后被删掉时还会持续占满一个以上的 CPU 核心；现在启动进程无论以哪种方式结束，宿主都在随后一秒内退出。
+
 <h3 id="en-unreleased">Improvements</h3>
 
 - On a Chinese interface the permission selector names its tiers in the host's own Chinese words: the trigger's current tier and every popover row used to read the skin's fixed Claude names (Read only / Accept edits / Full access) with only the description line under each name in Chinese; with the interface in Chinese those names now come from the host's `permission.access` dictionary — 仅可查看 / 工作区内修改 / 完全权限 — so the skin follows the host when it rewords them, while any other interface language still reads the skin's names.
+
+### Chores
+
+- The scratch hosts that the end-to-end lane and `packages/testing/dsh-web.cjs` start now end with the process that started them: a launcher that was killed or died on an uncaught error used to leave its `dsh web` instance running in the background, holding its port and `$DSH_HOME`, and spinning more than one CPU core once that directory was deleted; now the host exits within a second however the launcher ends.
 
 ## [0.12.1] - 2026-10-09
 
