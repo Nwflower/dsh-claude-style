@@ -116,9 +116,12 @@ export function createReasoningStream() {
     const stepPx = Math.round(lineHeight * tokenNumber(style.getPropertyValue('--dsh-claude-reason-lines'), FALLBACKS.lines))
     const holdMs = tokenNumber(style.getPropertyValue('--dsh-claude-reason-hold'), FALLBACKS.hold)
     const windowed = state.text.offsetHeight > windowPx
-    viewport.toggleAttribute(REASON_WINDOW_ATTR, windowed)
+    // Only what changes is written: the fold watches the row's attributes, and a
+    // redundant write each wait would keep the frame scheduler awake.
+    if (windowed !== viewport.hasAttribute(REASON_WINDOW_ATTR)) viewport.toggleAttribute(REASON_WINDOW_ATTR, windowed)
     if (windowed) {
-      viewport.style.setProperty(REASON_WINDOW_HEIGHT_PROPERTY, `${windowPx}px`)
+      const height = `${windowPx}px`
+      if (viewport.style.getPropertyValue(REASON_WINDOW_HEIGHT_PROPERTY) !== height) viewport.style.setProperty(REASON_WINDOW_HEIGHT_PROPERTY, height)
       const reachable = Math.max(0, state.text.offsetHeight - windowPx)
       const next = Math.min(state.offset + stepPx, reachable)
       if (next !== state.offset) {

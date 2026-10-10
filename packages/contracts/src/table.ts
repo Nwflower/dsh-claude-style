@@ -73,7 +73,7 @@ export const HOST_DOM: HostDomEntry[] = [
   { id: 'chat.flow', value: CHAT_FLOW_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'the chat column: the root every chat-area behaviour scopes to' },
   { id: 'chat.call', value: CHAT_CALL_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'one tool call row: structure the follow watches for' },
   { id: 'chat.think-row', value: THINK_ROW_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'one thinking row, folded and quoted by its phase' },
-  { id: 'chat.reasoning-text', value: REASONING_TEXT_SELECTOR, probe: { state: 'streaming', kind: 'selector', within: 'chat.think-row' }, use: 'the rendered reasoning text inside a thinking row, the element the window steps up' },
+  { id: 'chat.reasoning-text', value: REASONING_TEXT_SELECTOR, probe: { state: 'streaming', kind: 'selector' }, use: 'the Markdown the host renders, which a thinking row\'s reasoning body wraps and the window slides' },
   { id: 'chat.think-running', value: RUNNING_STATE, probe: { state: 'streaming', kind: 'value' }, use: 'the phase value while the model is still thinking' },
   { id: 'chat.phase', value: ROW_PHASE_ATTRIBUTE, probe: { state: 'conversation', kind: 'attribute' }, use: 'the phase of a thinking row or a tool call\u2019s own view; the fold opens a thinking row while it reads `running`, and the follow notices one leaving it' },
   { id: 'chat.streaming', value: STREAMING_SELECTOR, probe: { state: 'streaming', kind: 'selector' }, use: 'the markdown container while an answer streams' },
