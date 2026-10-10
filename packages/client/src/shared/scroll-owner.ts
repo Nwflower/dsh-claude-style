@@ -1,8 +1,8 @@
-import { STREAM_GLIDE_ATTR } from '../constants'
+import { READER_HOLD_ATTR, STREAM_GLIDE_ATTR } from '../constants'
 import { subscribeMutations } from '../core/bus'
 import { motionReduced } from '../core/prefs'
-import { CONVERSATION_SCROLL_SELECTOR, FLOW_KIND_ATTRIBUTE, FOLLOW_THRESHOLD_PX, PROCESS_BODY_SELECTOR, SUBMISSION_ECHO_SELECTOR, USER_ROW_KIND } from '@dsh-claude-style/contracts/dom'
-import { conversationScroller, findFollowTailButton } from './chat-dom'
+import { CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, FLOW_KIND_ATTRIBUTE, FOLLOW_THRESHOLD_PX, PROCESS_BODY_SELECTOR, SUBMISSION_ECHO_SELECTOR, USER_ROW_KIND } from '@dsh-claude-style/contracts/dom'
+import { conversationScroller, findFollowTailButton, isScrollbarStrip } from './chat-dom'
 import { isReaderScrollIntent } from './reader-intent'
 import { SCROLL_EASE_LEAD_PX, easeScroll, isScrollEasing, scrollEasePosition, scrollEnd, stopScrollEase } from './scroll-ease'
 
@@ -30,11 +30,17 @@ import { SCROLL_EASE_LEAD_PX, easeScroll, isScrollEasing, scrollEasePosition, sc
  *   - follow, stream and process requests are refused while the reader holds
  *     the container (readerHolds), and their eases end the moment he does;
  *   - stream requests are refused, and their eases end, for a while after
- *     the reader's own message arrives: the host's jump to it stands;
+ *     the reader's own message arrives: the host's jump to it stands; the
+ *     hold is dropped when the scroller is replaced, because a conversation
+ *     opening mounts its own user rows and its jump is not the one being
+ *     protected (claimConversation);
  *   - while the reader's animation choice means "no animation", an ease is
  *     its destination written at once.
  * The reader's own wheel is the browser's: this module only records that he
- * moved (noteIntent), so the following sources stand down.
+ * moved (noteIntent), so the following sources stand down. The container he
+ * holds carries READER_HOLD_ATTR while he does, and the live status line's pin
+ * hangs on that mark: it stands only while the follow is the one moving the
+ * position, never over content the reader scrolled back to.
  *
  * The host's side of the follow is handed over here too: the pin a frame of
  * streaming writes is taken back (takeBackHostPin), the host's follow is lit
@@ -102,6 +108,8 @@ const held = new WeakSet<Element>()
 let lastMovingIntentAt = 0
 /** Until this moment the stream glide stands down: the reader's own message just arrived. */
 let submissionHoldUntil = 0
+/** The conversation the owner last worked in, for the hold above; null before the first is claimed. */
+let claimedSession: string | null = null
 /** The conversation's position as the frame started, from its scroll events; the reading a host pin is measured against. */
 let seen: { element: Element, top: number } | null = null
 /** The host's back-to-end button while it is kept out of sight. */
@@ -109,6 +117,22 @@ let heldButton: HTMLElement | null = null
 /** How many features use the owner; its listeners live while one does. */
 let members = 0
 let stopSubmissionWatch: (() => void) | null = null
+
+/**
+ * Put a container's hold down or take it up, with the mark the page can read:
+ * the live status line's pin hangs on it (turn-status.css). Every change of
+ * `held` goes through here, so the two cannot say different things.
+ */
+function setHeld(container: Element, holding: boolean) {
+  if (holding === held.has(container)) return
+  if (holding) {
+    held.add(container)
+    container.setAttribute(READER_HOLD_ATTR, '')
+    return
+  }
+  held.delete(container)
+  container.removeAttribute(READER_HOLD_ATTR)
+}
 
 /** The ease running on a container now, and the source it serves. */
 function runningSource(container: Element) {
@@ -121,6 +145,7 @@ function runningSource(container: Element) {
 
 /** Whether `source` may move `container` now. */
 function claim(container: Element, source: ScrollSource) {
+  claimConversation()
   const running = runningSource(container)
   if (running !== undefined && SCROLL_SOURCE_RANK[source] < SCROLL_SOURCE_RANK[running]) return false
   if (FOLLOWING_SOURCES.has(source) && readerHolds(container)) return false
@@ -138,13 +163,13 @@ export function readerHolds(container: Element) {
   if (!held.has(container)) return false
   const threshold = container.matches(PROCESS_BODY_SELECTOR) ? PROCESS_RELEASE_THRESHOLD_PX : FOLLOW_THRESHOLD_PX
   if (container.scrollHeight - container.clientHeight - container.scrollTop > threshold) return true
-  held.delete(container)
+  setHeld(container, false)
   return false
 }
 
 /** End the reader's hold on a container that no longer shows its own position (a folded body). */
 export function releaseReader(container: Element) {
-  held.delete(container)
+  setHeld(container, false)
 }
 
 /**
@@ -158,7 +183,7 @@ export function releaseReader(container: Element) {
  * @param container - the container the reader is now reading.
  */
 export function holdReader(container: Element) {
-  held.add(container)
+  setHeld(container, true)
 }
 
 /** Whether the reader made a moving intent anywhere after `since` (a performance.now() reading). */
@@ -171,6 +196,36 @@ export function submissionHolds() {
   return performance.now() < submissionHoldUntil
 }
 
+/**
+ * The conversation's element as it was last seen, and the session it belonged
+ * to; the element is read again once a session switch replaces it.
+ */
+let sessionElement: Element | null = null
+let sessionId: string | null = null
+
+/**
+ * Note which conversation the owner is working in, and drop what belonged to the
+ * previous one. Every claim asks, so past the first it is one attribute read:
+ * the conversation's element is kept the way the scroller is, and a session
+ * switch replaces the content inside it.
+ *
+ * The submission hold is armed by the nodes a conversation renders — opening a
+ * session mounts its user rows, which look exactly like a message just sent —
+ * and it protects the host's jump to a message the reader has just sent, which
+ * belongs to the conversation he left. Left standing, it refuses the stream
+ * source for its whole window over the history the new conversation just opened.
+ */
+function claimConversation() {
+  if (sessionElement === null || !sessionElement.isConnected) {
+    sessionElement = conversationScroller()?.closest(CONVERSATION_SESSION_SELECTOR) ?? null
+  }
+  const next = sessionElement?.getAttribute(CONVERSATION_SESSION_ATTRIBUTE) ?? null
+  if (next === sessionId) return
+  sessionId = next
+  submissionHoldUntil = 0
+  seen = null
+}
+
 function noteIntent(event: Event) {
   if (!isReaderScrollIntent(event)) return
   if (MOVING_INTENT_TYPES.has(event.type)) lastMovingIntentAt = performance.now()
@@ -178,19 +233,24 @@ function noteIntent(event: Event) {
     // The container is kept by shared/chat-dom.ts: a trackpad sends hundreds of
     // these a second.
     const scroller = conversationScroller()
+    claimConversation()
     // Only once the content has grown a scrollbar: before that there is nothing to hold.
-    if (scroller !== null && scroller.scrollHeight - scroller.clientHeight > 0) held.add(scroller)
+    if (scroller !== null && scroller.scrollHeight - scroller.clientHeight > 0) setHeld(scroller, true)
   }
   if (event.type === 'beforematch') return
   const target = event.target
   if (!(target instanceof Element)) return
   const body = target.closest(PROCESS_BODY_SELECTOR)
   if (body === null) return
-  // A pointer on the body's content is opening a row; the scrollbar is the body's own strip.
-  if (event.type === 'pointerdown' && target !== body) return
+  // A press anywhere on the body is kept for the scrollbar's own strip alone;
+  // content reached through a body (a row, a link) is opening something rather
+  // than scrolling it. The pointer is on the bar itself exactly when the event
+  // was addressed to the body, which is what the predicate is handed; the
+  // conversation's own strip is read by the same predicate, one level up.
+  if (event.type === 'pointerdown' && !(event instanceof PointerEvent && isScrollbarStrip(body, event, target))) return
   // A scroll key the host has already handled knows where it is going.
   if (event.type === 'keydown' && event.defaultPrevented) return
-  held.add(body)
+  setHeld(body, true)
 }
 
 /**

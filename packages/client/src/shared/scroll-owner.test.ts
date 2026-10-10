@@ -1,6 +1,6 @@
 import { afterEach, expect, test } from 'vitest'
-import { MOTION_ATTR, MOTION_FULL, MOTION_REDUCED } from '../constants'
-import { easeScrollFor, easeScrollToEndFor, holdReader, joinScrollOwner, readerHolds, readerMovedSince, stopScrollFor, submissionHolds, writeScroll } from './scroll-owner'
+import { MOTION_ATTR, MOTION_FULL, MOTION_REDUCED, READER_HOLD_ATTR } from '../constants'
+import { easeScrollFor, easeScrollToEndFor, holdReader, joinScrollOwner, readerHolds, readerMovedSince, releaseReader, stopScrollFor, submissionHolds, writeScroll } from './scroll-owner'
 
 const nextFrame = () => new Promise<number>(resolve => requestAnimationFrame(resolve))
 const wanted = () => true
@@ -14,7 +14,9 @@ afterEach(() => {
 function scrollBox(attribute: string) {
   const box = document.createElement('div')
   box.setAttribute(attribute, '')
-  box.style.cssText = 'height:100px;overflow:auto'
+  // `scrollbar-gutter: stable` keeps the strip in the layout: the drag tests read
+  // the container's own bar, and an overlay scrollbar leaves no geometry to read.
+  box.style.cssText = 'height:100px;overflow:auto;scrollbar-gutter:stable'
   const content = document.createElement('div')
   content.style.height = '2000px'
   box.append(content)
@@ -61,6 +63,7 @@ test('the reader holds the conversation until he comes back to its end; only fol
   const scroller = scrollBox('data-conversation-scroll')
   scroller.dispatchEvent(new WheelEvent('wheel', { bubbles: true }))
   expect(readerHolds(scroller)).toBe(true)
+  expect(scroller.hasAttribute(READER_HOLD_ATTR)).toBe(true)
   expect(easeScrollToEndFor(scroller, 'follow', wanted)).toBe(false)
   expect(writeScroll(scroller, 50, 'composer')).toBe(true)
   // Back at the end: the scroll event releases the hold before content grows again.
@@ -68,6 +71,7 @@ test('the reader holds the conversation until he comes back to its end; only fol
   await new Promise(resolve => scroller.addEventListener('scroll', resolve, { once: true }))
   ;(scroller.firstElementChild as HTMLElement).style.height = '3000px'
   expect(readerHolds(scroller)).toBe(false)
+  expect(scroller.hasAttribute(READER_HOLD_ATTR)).toBe(false)
   expect(easeScrollToEndFor(scroller, 'follow', wanted)).toBe(true)
 })
 
@@ -86,12 +90,41 @@ test('a jump to a turn holds the follow and the stream off until the reader come
   expect(readerHolds(scroller)).toBe(false)
 })
 
-test('a process body is held by an intent on the body itself, not by a press on its content', () => {  join()
+test('a process body is held by a drag of its scrollbar, not by a press on its content', () => {
+  join()
   const body = scrollBox('data-step-process-body')
+  const box = body.getBoundingClientRect()
   body.firstElementChild!.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))
   expect(readerHolds(body)).toBe(false)
-  body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))
+  // The strip the browser leaves beside clientWidth: a press there is the reader scrolling.
+  const strip = { clientX: box.left + body.clientWidth + 2, clientY: box.top + 10, bubbles: true }
+  body.dispatchEvent(new PointerEvent('pointerdown', strip))
   expect(readerHolds(body)).toBe(true)
+  releaseReader(body)
+  expect(body.hasAttribute(READER_HOLD_ATTR)).toBe(false)
+  // Inside the content at the same height: the reader is opening something.
+  const inside = { clientX: box.left + 2, clientY: box.top + 10, bubbles: true }
+  body.dispatchEvent(new PointerEvent('pointerdown', inside))
+  expect(readerHolds(body)).toBe(false)
+})
+
+test('the reader\'s hold is marked on the container for the page, and taken off when he comes back', async () => {
+  join()
+  const scroller = scrollBox('data-conversation-scroll')
+  expect(scroller.hasAttribute(READER_HOLD_ATTR)).toBe(false)
+  scroller.dispatchEvent(new WheelEvent('wheel', { bubbles: true }))
+  expect(scroller.hasAttribute(READER_HOLD_ATTR)).toBe(true)
+  scroller.scrollTop = scroller.scrollHeight
+  await new Promise(resolve => scroller.addEventListener('scroll', resolve, { once: true }))
+  expect(readerHolds(scroller)).toBe(false)
+  expect(scroller.hasAttribute(READER_HOLD_ATTR)).toBe(false)
+})
+
+test('a jump to a turn marks the hold on the container it lands in', () => {
+  join()
+  const scroller = scrollBox('data-conversation-scroll')
+  holdReader(scroller)
+  expect(scroller.hasAttribute(READER_HOLD_ATTR)).toBe(true)
 })
 
 test('the reader\'s own message holds the stream back and leaves the follow alone', async () => {
@@ -106,6 +139,35 @@ test('the reader\'s own message holds the stream back and leaves the follow alon
   expect(submissionHolds()).toBe(true)
   expect(easeScrollToEndFor(scroller, 'stream', wanted)).toBe(false)
   expect(easeScrollToEndFor(scroller, 'follow', wanted)).toBe(true)
+})
+
+test('a hold armed by one conversation does not follow the reader into the next', async () => {
+  setMotion(MOTION_FULL)
+  join()
+  // The conversation's own element, in the shape the host draws it: the phase
+  // attribute is part of the contract's selector.
+  const phase = document.createElement('div')
+  phase.setAttribute('data-phase', 'active')
+  const wrapper = document.createElement('div')
+  wrapper.setAttribute('data-conversation-session', 'session-one')
+  const scroller = scrollBox('data-conversation-scroll')
+  wrapper.append(scroller)
+  phase.append(wrapper)
+  document.body.append(phase)
+  cleanups.push(() => phase.remove())
+  const message = document.createElement('div')
+  message.setAttribute('data-chat-flow-kind', 'user')
+  scroller.append(message)
+  await nextFrame()
+  await nextFrame()
+  expect(submissionHolds()).toBe(true)
+  // A session switch keeps the scroller (the reading view reuses it) and the new
+  // conversation mounts its own user rows: the hold the last one armed must not
+  // stand here, or the follow that brings the open session to its end is refused.
+  wrapper.setAttribute('data-conversation-session', 'session-two')
+  writeScroll(scroller, 100, 'composer')
+  expect(submissionHolds()).toBe(false)
+  expect(easeScrollToEndFor(scroller, 'stream', wanted)).toBe(true)
 })
 
 test('under reduced motion an ease is its destination written at once', () => {

@@ -47,6 +47,26 @@ export function isAtBottom(scroller: Element) {
 }
 
 /**
+ * Whether a pointer event landed on a container's own scrollbar strip.
+ *
+ * The one intent with no event of its own: a drag of the bar is a pointer
+ * event, so the scroll owner (shared/scroll-owner.ts) tells the strip from the
+ * content by the node the event was addressed to and the geometry the browser
+ * leaves beside `clientWidth`. False on an overlay scrollbar, which takes no
+ * room: there the pointer is over the content, and the content is not the bar.
+ *
+ * @param container - the scrolling element whose strip is asked about.
+ * @param event - the pointer event.
+ * @param target - the node the event was addressed to (`event.target`).
+ * @returns true when the pointer sits in the strip and not on the content.
+ */
+export function isScrollbarStrip(container: Element, event: PointerEvent, target: EventTarget | null) {
+  if (target !== container) return false
+  const box = container.getBoundingClientRect()
+  return event.clientX >= box.left + container.clientWidth
+}
+
+/**
  * The host's own "back to the end" button, the one it renders only while its
  * follow is off.
  *

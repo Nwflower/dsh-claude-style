@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from 'vitest'
-import { conversationColumn, conversationScroller } from './chat-dom'
+import { conversationColumn, conversationScroller, isScrollbarStrip } from './chat-dom'
 
 /**
  * The two readings the chat area asks for on every frame of a stream are kept
@@ -38,4 +38,20 @@ test('the message column is kept the same way', () => {
   first.remove()
   const second = attach('data-chat-flow')
   expect(conversationColumn()).toBe(second)
+})
+
+test('a press is on the scrollbar strip by the room the browser leaves beside clientWidth', () => {
+  const box = document.createElement('div')
+  box.style.cssText = 'height:100px;overflow:auto;width:200px'
+  const content = document.createElement('div')
+  content.style.height = '400px'
+  box.append(content)
+  document.body.append(box)
+  cleanups.push(() => box.remove())
+  const rect = box.getBoundingClientRect()
+  const at = (clientX: number) => new PointerEvent('pointerdown', { clientX })
+  // The strip beside clientWidth, the content beside it, and a press inside content.
+  expect(isScrollbarStrip(box, at(rect.left + box.clientWidth + 2), box)).toBe(true)
+  expect(isScrollbarStrip(box, at(rect.left + 2), box)).toBe(false)
+  expect(isScrollbarStrip(content, at(rect.left + 2), box)).toBe(false)
 })
