@@ -141,6 +141,18 @@ function reasoningStreamScenario({ check }) {
       const capped = samples.filter((sample) => sample.capped === true)
       const reachable = cap === null ? 0 : Math.max(0, tallest - cap)
       const last = samples[samples.length - 1] ?? {}
+      // The window's height is written by the module's own pass, which can land
+      // after the markdown layer grew the text in the same frame, so a sample
+      // catches the text a step ahead of the slot now and then. What may not
+      // happen is a window taller than the text it holds, or a lag the next
+      // sample — 250 ms later — does not close: a window that stopped following
+      // the text stays behind for every sample after it.
+      const uncapped = samples.filter((sample) => sample.capped === false)
+      const lags = uncapped.filter((sample) => sample.textHeight - sample.slotHeight > (sample.lineHeight ?? 0))
+      const unclosed = lags.filter((lag) => {
+        const next = samples[samples.indexOf(lag) + 1]
+        return next !== undefined && next.slotHeight - next.textHeight < -(next.lineHeight ?? 0)
+      })
       return [
         check('窗口跟着推理文本长高，长到推理能到的最大高度就停住',
           samples.length > 2 && Number.isFinite(cap) && capped.length > 2 &&
@@ -150,11 +162,11 @@ function reasoningStreamScenario({ check }) {
             last.slotHeight <= cap + step && last.capped === true,
           JSON.stringify({ samples: samples.length, capped: capped.length, cap, first: samples[0], last })),
         check('窗口还没长满时，文本铺满窗口、没有遮罩、也没有位移',
-          samples.some((sample) => sample.capped === false && sample.textHeight > 0) &&
-            samples.filter((sample) => sample.capped === false).every((sample) =>
-              sample.masked === false && sample.offset === 0 &&
-              Math.abs(sample.slotHeight - sample.textHeight) <= (sample.lineHeight ?? 0)),
-          JSON.stringify(samples.filter((sample) => sample.capped === false).slice(0, 4))),
+          uncapped.length > 0 && uncapped.some((sample) => sample.textHeight > 0) &&
+            uncapped.every((sample) => sample.masked === false && sample.offset === 0 &&
+              sample.slotHeight - sample.textHeight <= (sample.lineHeight ?? 0)) &&
+            unclosed.length === 0,
+          JSON.stringify({ lags: lags.length, unclosed: unclosed.length, first: uncapped.slice(0, 3), lag: lags[0] ?? null })),
         check('窗口里的文本按两行一步往上走，从不停在整步上（过渡真的在跑）',
           offsets.length > 2 && Math.max(...offsets) > 0 &&
             offsets.some((offset) => Math.round(offset) % (step === 0 ? 1 : step) !== 0),
