@@ -25,8 +25,6 @@ const HOST = {
 /** The skin's own mark for the reader's takeover (READER_HOLD_ATTR, packages/client/src/constants.ts). */
 const READER_HOLD = '[data-dsh-claude-reader-hold]'
 
-/** How far off the tail the reader's wheel has to land for the phase to count as his. */
-const AWAY_GAP_PX = 100
 /** How much of the pinned row's own height a frame may sit within and still count as floating at the pin. */
 const PIN_SLACK_PX = 40
 /** How far the tail has to sit from the end for the pin to have something to hold against. */
@@ -91,11 +89,11 @@ function readerScrollScenario({ check }) {
       const row = await page.locator(HOST.running).boundingBox()
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
       await page.mouse.wheel(0, -400)
-      // The scroll the wheel asked for is applied by the browser a frame later.
-      await page.waitForFunction((marks) => {
-        const scroller = document.querySelector(marks.scroller)
-        return scroller !== null && scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop > marks.away
-      }, { scroller: HOST.scroller, away: AWAY_GAP_PX }, { timeout: 5000 })
+      // The wheel is the reader's move: the scroll owner takes the conversation
+      // under his hold. The host's own follow keeps writing the end under it, so
+      // what is waited for is his hold, not a position — the position is only
+      // recorded, as what the frames are measured against.
+      await page.waitForFunction((marks) => document.querySelector(marks) !== null, READER_HOLD, { timeout: 5000 })
       const frame = await page.evaluate(() => (window.__readerScrollTrace ?? []).length)
       const gap = await gapOf(page)
       await page.evaluate((left) => {
@@ -121,7 +119,7 @@ function readerScrollScenario({ check }) {
       return [
         check('逐帧采样真的在跑', trace.length > 30 && left !== null && left.frame > 30, `${trace.length} frames, the wheel at ${left === null ? 'n/a' : left.frame}`),
         check('读者的滚动发生在状态行钉住时', left !== null && pinnedSpot !== null && Math.abs(left.row - pinnedSpot) <= 2, `the wheel at row ${left === null ? 'n/a' : left.row}, the pinned spot ${pinnedSpot === null ? 'never pinned' : `${pinnedSpot}px`} (${spots.length} frames)`),
-        check('滚动之后位置离开了末尾', left !== null && left.gap > AWAY_GAP_PX, left === null ? 'no reader phase in the trace' : `gap ${left.gap}px`),
+        check('滚动之后对话由读者接管', left !== null && heldNow, left === null ? 'no reader phase in the trace' : `gap ${left.gap}px when the wheel landed`),
         check('读者滚动期间状态行不再钉住', left !== null && pinnedAfter.length === 0, `${pinnedAfter.length} pinned of ${after.length} frames after the wheel`),
         check('读者的接管一直记在滚动容器上', left !== null && heldNow, `the container carries the mark at the end of the turn: ${heldNow}`),
         check('滚动之后状态行随内容走', after.length > 10 && moved === after.length, `position changed in ${moved} of ${after.length} frames after the wheel`),

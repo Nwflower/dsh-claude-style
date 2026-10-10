@@ -61,15 +61,19 @@ test('the reader holds the conversation until he comes back to its end; only fol
   setMotion(MOTION_FULL)
   join()
   const scroller = scrollBox('data-conversation-scroll')
-  scroller.dispatchEvent(new WheelEvent('wheel', { bubbles: true }))
+  scroller.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: -120 }))
   expect(readerHolds(scroller)).toBe(true)
   expect(scroller.hasAttribute(READER_HOLD_ATTR)).toBe(true)
   expect(easeScrollToEndFor(scroller, 'follow', wanted)).toBe(false)
   expect(writeScroll(scroller, 50, 'composer')).toBe(true)
-  // Back at the end: the scroll event releases the hold before content grows again.
+  // Away from the end, then written back by the host's own follow with no move
+  // of his: the hold stands, so content growing under it cannot drag him back.
+  ;(scroller.firstElementChild as HTMLElement).style.height = '3000px'
   scroller.scrollTop = scroller.scrollHeight
   await new Promise(resolve => scroller.addEventListener('scroll', resolve, { once: true }))
-  ;(scroller.firstElementChild as HTMLElement).style.height = '3000px'
+  expect(readerHolds(scroller)).toBe(true)
+  // His own move back to the end ends it.
+  scroller.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: 120 }))
   expect(readerHolds(scroller)).toBe(false)
   expect(scroller.hasAttribute(READER_HOLD_ATTR)).toBe(false)
   expect(easeScrollToEndFor(scroller, 'follow', wanted)).toBe(true)
@@ -83,10 +87,24 @@ test('a jump to a turn holds the follow and the stream off until the reader come
   expect(readerHolds(scroller)).toBe(true)
   expect(easeScrollToEndFor(scroller, 'stream', wanted)).toBe(false)
   expect(easeScrollToEndFor(scroller, 'follow', wanted)).toBe(false)
-  // A jump that landed at the end leaves nothing held: the release is the holds' own.
+  // Written to the end with no move of his (the host's own follow): the hold stands.
   scroller.scrollTop = scroller.scrollHeight
   await new Promise(resolve => scroller.addEventListener('scroll', resolve, { once: true }))
-  ;(scroller.firstElementChild as HTMLElement).style.height = '3000px'
+  expect(readerHolds(scroller)).toBe(true)
+  // His own move back to the end ends it.
+  scroller.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: 120 }))
+  expect(readerHolds(scroller)).toBe(false)
+})
+
+test('a hold whose position lands at the end stands until he moves toward it', async () => {
+  join()
+  const scroller = scrollBox('data-conversation-scroll')
+  holdReader(scroller)
+  // The jump's landing is the end: a position written there is not his move back.
+  scroller.scrollTop = scroller.scrollHeight
+  await new Promise(resolve => scroller.addEventListener('scroll', resolve, { once: true }))
+  expect(readerHolds(scroller)).toBe(true)
+  scroller.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: 120 }))
   expect(readerHolds(scroller)).toBe(false)
 })
 
@@ -112,10 +130,17 @@ test('the reader\'s hold is marked on the container for the page, and taken off 
   join()
   const scroller = scrollBox('data-conversation-scroll')
   expect(scroller.hasAttribute(READER_HOLD_ATTR)).toBe(false)
-  scroller.dispatchEvent(new WheelEvent('wheel', { bubbles: true }))
+  scroller.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: -120 }))
   expect(scroller.hasAttribute(READER_HOLD_ATTR)).toBe(true)
+  // Away from the end: still his.
+  expect(readerHolds(scroller)).toBe(true)
+  // Written back to the end with no move of his: still his.
   scroller.scrollTop = scroller.scrollHeight
   await new Promise(resolve => scroller.addEventListener('scroll', resolve, { once: true }))
+  expect(readerHolds(scroller)).toBe(true)
+  expect(scroller.hasAttribute(READER_HOLD_ATTR)).toBe(true)
+  // His own move back to the end is what ends it.
+  scroller.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: 120 }))
   expect(readerHolds(scroller)).toBe(false)
   expect(scroller.hasAttribute(READER_HOLD_ATTR)).toBe(false)
 })

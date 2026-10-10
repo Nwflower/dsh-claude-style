@@ -104,6 +104,10 @@ const MOVING_INTENT_TYPES = new Set(['wheel', 'touchstart', 'pointerdown', 'keyd
 const easeSources = new Map<Element, ScrollSource>()
 /** The containers the reader holds: an intent was seen there and he has not come back to the end. */
 const held = new WeakSet<Element>()
+/** The held containers the reader has since moved toward the end of: his own way back to it. */
+const heldTowardEnd = new WeakSet<Element>()
+/** How many containers the reader holds; the page's root carries the mark while any is held. */
+let heldCount = 0
 /** When the reader last made a moving intent, for movedSince. */
 let lastMovingIntentAt = 0
 /** Until this moment the stream glide stands down: the reader's own message just arrived. */
@@ -127,11 +131,19 @@ function setHeld(container: Element, holding: boolean) {
   if (holding === held.has(container)) return
   if (holding) {
     held.add(container)
+    heldCount += 1
     container.setAttribute(READER_HOLD_ATTR, '')
+    // The stylesheet that stands the status line's pin down reads the mark on the
+    // page's own root: the container is not an ancestor of the line, and a reader
+    // holding anything on the page is enough for it to stand down.
+    document.body.setAttribute(READER_HOLD_ATTR, '')
     return
   }
   held.delete(container)
+  heldCount -= 1
+  heldTowardEnd.delete(container)
   container.removeAttribute(READER_HOLD_ATTR)
+  if (heldCount <= 0) document.body.removeAttribute(READER_HOLD_ATTR)
 }
 
 /** The ease running on a container now, and the source it serves. */
@@ -155,16 +167,24 @@ function claim(container: Element, source: ScrollSource) {
 
 /**
  * Whether the reader holds this container: he made an intent there and has
- * not come back within its end's threshold since. Coming back ends the hold
- * here, without a "no movement for this long" timer that would drag a slow
- * reader back.
+ * not come back within its end's threshold since.
+ *
+ * The end is not always his doing: the host's own follow keeps writing the
+ * position there while a turn runs, and between those writes the gap leaves
+ * the threshold for a single frame. So a position at the end is not what ends
+ * the hold — his own move toward the end is (heldTowardEnd), and a hold taken
+ * without one stands even with the container sitting at its end. `holdReader`
+ * takes a hold that way, for a jump the reader picked himself.
  */
 export function readerHolds(container: Element) {
   if (!held.has(container)) return false
   const threshold = container.matches(PROCESS_BODY_SELECTOR) ? PROCESS_RELEASE_THRESHOLD_PX : FOLLOW_THRESHOLD_PX
   if (container.scrollHeight - container.clientHeight - container.scrollTop > threshold) return true
-  setHeld(container, false)
-  return false
+  if (heldTowardEnd.has(container)) {
+    setHeld(container, false)
+    return false
+  }
+  return true
 }
 
 /** End the reader's hold on a container that no longer shows its own position (a folded body). */
@@ -178,11 +198,13 @@ export function releaseReader(container: Element) {
  * A jump to a turn he picked is the reader choosing where to read, so the
  * following sources have to stand down the way they do after his own wheel —
  * otherwise the next burst of output drags him back to the end. The release is
- * the holds' own: coming back within the end's threshold of it.
+ * the holds' own: his move toward the end of it, or a position that never left
+ * the end when his move is the one that took the hold.
  *
  * @param container - the container the reader is now reading.
  */
 export function holdReader(container: Element) {
+  heldTowardEnd.delete(container)
   setHeld(container, true)
 }
 
@@ -228,14 +250,21 @@ function claimConversation() {
 
 function noteIntent(event: Event) {
   if (!isReaderScrollIntent(event)) return
-  if (MOVING_INTENT_TYPES.has(event.type)) lastMovingIntentAt = performance.now()
+  const moving = MOVING_INTENT_TYPES.has(event.type)
+  if (moving) lastMovingIntentAt = performance.now()
+  // A wheel carries where the reader is going; the others are read as his move
+  // toward the end, since none of them can be sent by a follower.
+  const towardEnd = !(event instanceof WheelEvent) || event.deltaY >= 0
   if (event.type !== 'touchmove') {
     // The container is kept by shared/chat-dom.ts: a trackpad sends hundreds of
     // these a second.
     const scroller = conversationScroller()
     claimConversation()
     // Only once the content has grown a scrollbar: before that there is nothing to hold.
-    if (scroller !== null && scroller.scrollHeight - scroller.clientHeight > 0) setHeld(scroller, true)
+    if (scroller !== null && scroller.scrollHeight - scroller.clientHeight > 0) {
+      if (moving && towardEnd) heldTowardEnd.add(scroller)
+      setHeld(scroller, true)
+    }
   }
   if (event.type === 'beforematch') return
   const target = event.target
@@ -250,6 +279,7 @@ function noteIntent(event: Event) {
   if (event.type === 'pointerdown' && !(event instanceof PointerEvent && isScrollbarStrip(body, event, target))) return
   // A scroll key the host has already handled knows where it is going.
   if (event.type === 'keydown' && event.defaultPrevented) return
+  if (moving && towardEnd) heldTowardEnd.add(body)
   setHeld(body, true)
 }
 

@@ -16,7 +16,7 @@
    away mid-stream — and the reader's takeover (READER_HOLD_ATTR,
    shared/scroll-owner.ts) for "the reader is the one scrolling", which drops the
    pin even where the host still reports its follow. */
-body[data-dsh-claude-style] [data-chat-following-tail]:not([data-dsh-claude-reader-hold]) [data-chat-running],
+body[data-dsh-claude-style]:not([data-dsh-claude-reader-hold]) [data-chat-following-tail] [data-chat-running],
 body[data-dsh-claude-style]:not([data-dsh-claude-reader-hold]) [data-dsh-claude-follow-hold] [data-chat-running] {
   position: sticky;
   bottom: calc(var(--dsh-composer-height, 0px) + var(--dsh-composer-fade-h, 40px) + 16px);
