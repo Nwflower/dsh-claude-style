@@ -25,11 +25,11 @@ export default {
   description: {
     zh: {
       title: '会话数字',
-      text: '会话统计与 Token 用量随宿主的数据实时更新，在输入卡片下面单独占一行：轮数与步数、输出速度、读入与写回的 tokens、缓存命中率，末尾就是上下文圆环自己；这一行不只是读数——按一下它，圆环那张弹层就打开，里面照旧是宿主自己的上下文行加上这一段会话的数字明细，再按一下收起（悬停开合只归那个圆环）；也可以选「收进上下文」，把数字只留在那张弹层里。数字一有变化就逐个字符重新入场（末两位稍慢），各段之间没有分隔符号、只靠间距分开，缓存命中率与圆环占用按各自的无极色阶取色。',
+      text: '会话统计与 Token 用量随宿主的数据实时更新，默认收进上下文圆环那张弹层：里面是宿主自己的上下文行，后面接上这一段会话的数字明细——轮数与步数、输出速度、读入与写回的 tokens、缓存命中率。也可以选「独立成行」，把这些数字写在输入卡片下面单独一行、末尾就是那个圆环，按一下那一行同样开合这张弹层（悬停开合只归那个圆环）。数字一有变化就逐个字符重新入场（末两位稍慢），各段之间没有分隔符号、只靠间距分开，缓存命中率与圆环占用按各自的无极色阶取色。',
     },
     en: {
       title: 'Session numbers',
-      text: 'The session statistics and the token usage follow the host\'s data live, on a line of their own below the input card — turns and steps, the output speed, the tokens read in and written back, the cache-hit share, with the context ring itself at the end. The line is not only a reading: pressing it opens that ring\'s popover, which still holds the host\'s own context rows followed by this session\'s detail rows, and pressing it again puts them away (opening and closing on hover stays the ring\'s own path); Inside the context popover keeps the numbers there alone. A number that moves re-enters character by character (the last two a beat behind), no separator glyph stands between the groups — the line\'s own gap is what sets them apart — and the cache share and the ring\'s occupancy each take their own colour band.',
+      text: 'The session statistics and the token usage follow the host\'s data live and stand in the context ring\'s popover by default: the host\'s own context rows, followed by this session\'s detail rows — turns and steps, the output speed, the tokens read in and written back, the cache-hit share. On its own line writes them on a line of their own below the input card with the ring at its end, and pressing that line opens and closes the same popover (opening and closing on hover stays the ring\'s own path). A number that moves re-enters character by character (the last two a beat behind), no separator glyph stands between the groups — the line\'s own gap is what sets them apart — and the cache share and the ring\'s occupancy each take their own colour band.',
     },
   },
 } satisfies FeatureManifest

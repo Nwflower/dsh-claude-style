@@ -157,10 +157,10 @@ export const SEARCH_STYLE_ATTR = 'data-dsh-claude-search-style'
 export const CHAT_ANIMATIONS_OFF = 'off'
 
 /**
- * Where the session's numbers show (D27): `inline` (the default) writes them on
- * a line of their own under the input card, with the host's meter at that line's
- * end, and `context` moves them into the popover the meter opens and leaves the
- * card's bottom line to the meter alone. The choice rides <body> as
+ * Where the session's numbers show (D27): `context` (the default) keeps them in
+ * the popover the meter opens and leaves the card's bottom line to the meter
+ * alone, and `inline` writes them on a line of their own under the input card,
+ * with the host's meter at that line's end. The choice rides <body> as
  * STATS_POSITION_ATTR, so the composer rules that hide or overlay the host's
  * statistics row are gated on it.
  */
@@ -189,7 +189,7 @@ export const STATS_POSITION_ATTR = 'data-dsh-claude-stats-position'
  */
 export const FEATURE_PREF_DEFAULTS = {
   permissionsControl: true,
-  statsPosition: STATS_POSITION_INLINE,
+  statsPosition: STATS_POSITION_CONTEXT,
   workspaceView: true,
   sidebarSearch: true,
   turnStatus: true,
