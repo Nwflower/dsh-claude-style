@@ -1,6 +1,6 @@
 /**
  * The preference defaults, shared by both halves (D46): the host half's Config
- * is generated from this table (packages/host/src/settings.ts, D10) and the
+ * is generated from this table (packages/host/src/settings.ts, D60) and the
  * browser half reads it as the value each preference holds until the settings
  * form answers.
  */

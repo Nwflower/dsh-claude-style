@@ -2,20 +2,20 @@ import { AUTO_POPOVER_ALL, AUTO_POPOVER_OFF, AUTO_POPOVER_SCOPES, BRAND_ATTR, BR
 import { MODEL_OFFICIAL_GROUP } from '../features/model/copy-fallbacks'
 import type { Prefs } from '../constants'
 import type { HostContext } from './host'
-import type { HostConfigForm, HostConfigFormsService } from '@dsh-claude-style/contracts/services'
+import type { HostConfigForm, HostConfigFormsService, HostRemoteSettings, HostSettingsDescribeAnswer } from '@dsh-claude-style/contracts/services'
 import { notifyAll } from '../shared/notify'
 import { externalOwnerActive } from '../shared/visual-owner'
 
 /**
  * Skin preferences: the host settings namespace is the store, and every
  * value is mirrored onto the document as an attribute so the stylesheet
- * decides what it means (D10, D11). Until the first read settles — and if
+ * decides what it means (D60, D11). Until the first read settles — and if
  * it fails — PREF_DEFAULTS holds.
  */
 export let prefs = normalizePrefs({})
 const prefsListeners: ((prefs: Prefs) => void)[] = []
 
-/** The official settings form (the host's form controller, D10); null until the service serves the namespace. */
+/** The official settings form (the host's form controller, D60); null until the service serves the namespace. */
 let prefsForm: HostConfigForm | null = null
 /** Disposer for the bound form's own change subscription. */
 let prefsFormUnsubscribe: (() => void) | null = null
@@ -23,6 +23,10 @@ let prefsFormUnsubscribe: (() => void) | null = null
 let prefsWatchOff: (() => void) | null = null
 /** Whether the served-namespace directory is already being watched. */
 let prefsBinding = false
+/** Disposers for the document reads a non-loopback page follows (D60); empty on a loopback page. */
+let remoteReadOffs: (() => void)[] = []
+/** Whether this page reads the host's settings document without a form to write through (D60). */
+let prefsReadOnly = false
 
 /** Namespaces to try, best first: loader entry id, package name, inserted id. */
 function settingsNamespaceCandidates(ctx: HostContext) {
@@ -39,12 +43,12 @@ function settingsNamespaceCandidates(ctx: HostContext) {
  * entry id hands back a controller for nobody's namespace: reads stay at the
  * defaults and every write is refused. The served list is the truth.
  */
-function servedNamespace(forms: HostConfigFormsService, candidates: (string | null)[]) {
-  const namespaces = forms.describe?.()?.getSnapshot?.()?.view?.namespaces
+function servedNamespace<Served extends { ns?: unknown }>(namespaces: Served[] | undefined, candidates: (string | null)[]) {
   if (!namespaces) return null
   for (const candidate of candidates) {
     if (typeof candidate !== 'string' || candidate === '') continue
-    if (namespaces.some((served) => served?.ns === candidate)) return candidate
+    const served = namespaces.find((entry) => entry?.ns === candidate)
+    if (served !== undefined) return { namespace: candidate, served }
   }
   return null
 }
@@ -64,9 +68,9 @@ function readFormValue(): Record<string, unknown> | null {
 
 /** Bind one namespace the host already serves; the controller waits for its own snapshot. */
 function bindServedForm(forms: HostConfigFormsService, ctx: HostContext) {
-  const namespace = servedNamespace(forms, settingsNamespaceCandidates(ctx))
-  if (namespace === null) return false
-  const form = forms.get(namespace)
+  const match = servedNamespace(forms.describe?.()?.getSnapshot?.()?.view?.namespaces, settingsNamespaceCandidates(ctx))
+  if (match === null) return false
+  const form = forms.get(match.namespace)
   if (typeof form?.getSnapshot !== 'function') return false
   prefsForm = form
   // A form without a subscribe face leaves the reads on demand.
@@ -97,15 +101,52 @@ function watchNamespace(forms: HostConfigFormsService, ctx: HostContext) {
 }
 
 /**
+ * Follow the settings document on a page whose form service never reads it
+ * (D60): the host keeps a non-loopback page's settings in memory, but its own
+ * remote still answers the read the form service is built on. Read again when
+ * the document changes and after a reconnect, which can miss that event.
+ */
+function followHostDocument(ctx: HostContext) {
+  if (typeof ctx.inject !== 'function') return
+  prefsReadOnly = true
+  const candidates = settingsNamespaceCandidates(ctx)
+  // The remote's namespaces are reachable only from a scope that injected them.
+  const fiber = ctx.inject(['remote.settings'], scope => {
+    const settings: HostRemoteSettings = scope.get('remote.settings')
+    const read = () => {
+      settings.describe().then((answer: HostSettingsDescribeAnswer) => {
+        if (!prefsReadOnly) return
+        if (answer.ok !== true) throw new Error(`dsh-claude-style: the settings document refused the read: ${answer.error?.message}`)
+        const match = servedNamespace(answer.value?.namespaces, candidates)
+        if (match === null) return
+        adoptPrefs(normalizePrefs(match.served.value))
+      })
+    }
+    scope.effect(() => {
+      const offs = [scope.get('remote').$on('settings/document-updated', read)]
+      if (typeof scope.on === 'function') offs.push(scope.on('connection/reset', read))
+      read()
+      return () => { for (const off of offs) off() }
+    }, 'dsh-claude-style: settings document')
+  })
+  remoteReadOffs.push(() => fiber.dispose())
+}
+
+/**
  * Bind the official form. Called once per install, before the first read, and
  * again when the settings page installs — the service may mount after this
  * plugin. A namespace the host does not serve yet leaves `prefsForm` null and
- * the defaults in place, so this never blocks or fails the skin.
+ * the defaults in place, so this never blocks or fails the skin. A page the
+ * host keeps its settings away from reads the document instead (D60).
  */
 export function adoptSettingsForm(ctx: HostContext) {
-  if (prefsForm === null) {
+  if (prefsForm === null && !prefsReadOnly) {
     const forms = hostConfigForms(ctx)
     if (forms === null) return false
+    if (forms.describe?.()?.getSnapshot?.()?.status === 'unavailable') {
+      followHostDocument(ctx)
+      return false
+    }
     if (!bindServedForm(forms, ctx)) watchNamespace(forms, ctx)
   }
   if (prefsForm === null) return false
@@ -113,7 +154,15 @@ export function adoptSettingsForm(ctx: HostContext) {
   return true
 }
 
-/** Release the form and directory subscriptions this module opened. */
+/**
+ * Whether the preferences on show are the host's but this page cannot save
+ * them: the host keeps a non-loopback page's settings to itself (D60).
+ */
+export function prefsAreReadOnly() {
+  return prefsReadOnly
+}
+
+/** Release the form, directory and document subscriptions this module opened. */
 export function disposePrefsBinding() {
   if (prefsFormUnsubscribe !== null) {
     prefsFormUnsubscribe()
@@ -123,6 +172,9 @@ export function disposePrefsBinding() {
     prefsWatchOff()
     prefsWatchOff = null
   }
+  for (const off of remoteReadOffs) off()
+  remoteReadOffs = []
+  prefsReadOnly = false
   prefsBinding = false
   prefsForm = null
 }

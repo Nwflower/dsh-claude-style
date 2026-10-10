@@ -3,7 +3,7 @@ import { BUNDLE_CONFIG_SLOT, PACKAGE_NAME, REPOSITORY_URL, SETTINGS_SCROLLER_ATT
 import { SEGMENT_CLASS } from '../permissions/permission-copy'
 import { settingsCopy } from '../../core/i18n'
 import { loadModelCopy, onModelCopyLoaded } from '../../core/model-copy'
-import { adoptSettingsForm, readPrefs, savePrefs, subscribePrefs } from '../../core/prefs'
+import { adoptSettingsForm, prefsAreReadOnly, readPrefs, savePrefs, subscribePrefs } from '../../core/prefs'
 import { ClaudeStyleSegmentGroup, createSettingsControls, tabRows } from './settings-controls'
 import { createSettingsAppearanceTab } from './settings-tab-appearance'
 import { createSettingsComposerTab } from './settings-tab-composer'
@@ -236,12 +236,17 @@ export function ClaudeStyleSettingsSection(props: { embed?: boolean }) {
   // description, so the embedded rendering drops the skin's title rather
   // than printing it twice.
   const embedded = !!(props && props.embed)
+  // A page the host keeps its settings away from shows the host's values and
+  // takes no input (D60): the disabled fieldset disables every control in
+  // every tab, and the tabs themselves stay open to browse.
+  const readOnly = prefsAreReadOnly()
   return React.createElement(
     'div',
     { ref: pageRef, className: embedded ? 'dsh-claude-settings dsh-claude-settings-embedded' : 'dsh-claude-settings' },
     embedded ? null : React.createElement(ClaudeStyleSettingsHeading),
+    readOnly ? React.createElement('div', { className: 'dsh-claude-settings-notice', role: 'note' }, settingsCopy('remoteReadOnly', 'This page reaches DSH through a remote address, and DSH saves settings only from a page opened at a local address such as localhost. The values shown are the ones DSH holds; change them on the computer running DSH.')) : null,
     React.createElement(ClaudeStyleSettingsTabStrip, { active: activeTab, onPick: setActiveTab }),
-    React.createElement('div', { className: 'dsh-claude-settings-rows', role: 'tabpanel', key: tab.id }, tabRows(tab, view)),
+    React.createElement('fieldset', { className: 'dsh-claude-settings-rows', role: 'tabpanel', key: tab.id, disabled: readOnly }, tabRows(tab, view)),
     error === null ? null : React.createElement('div', { className: 'dsh-claude-settings-error' }, error),
   )
 }

@@ -337,6 +337,10 @@
     "unavailable": {
       "zh": "ERROR : 设置存储服务异常，改动不会被保存。",
       "en": "The settings store is unavailable, so changes will not be saved."
+    },
+    "remoteReadOnly": {
+      "zh": "此页面经远程地址连接 DSH，DSH 只保存从 localhost 等本机地址打开的页面所做的改动。这里显示的是 DSH 当前的设置，请在运行 DSH 的电脑上修改。",
+      "en": "This page reaches DSH through a remote address, and DSH saves settings only from a page opened at a local address such as localhost. The values shown are the ones DSH holds; change them on the computer running DSH."
     }
   },
   "ban": {

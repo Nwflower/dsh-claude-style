@@ -11,10 +11,12 @@ import { createHostResource } from '../shared/resource'
  * here until the contract module types them (D44).
  */
 export interface HostContext {
-  /** The loader's fiber; its boot entry id names this plugin's settings namespace (D10). */
+  /** The loader's fiber; its boot entry id names this plugin's settings namespace (D60). */
   readonly fiber?: { entry?: { id?: unknown } }
   /** A service by name, or undefined when the host carries none (D12). */
   get(name: string): HostValue
+  /** Listen to a context event (`connection/reset`); the function it returns stops listening. */
+  on?(name: string, listener: () => void): () => void
   /** Run `effect` now; the function it returns runs when the context is disposed. */
   effect(effect: () => () => void, label?: string): void
   /** Run `callback` in a scope once every named service exists; a host without it has no late services. */
