@@ -73,26 +73,34 @@ body[data-dsh-claude-style] [data-dsh-claude-rolling] > * {
 }
 
 /* ---------- chat fold: the reasoning's streamed window ---------- */
-/* While the model reasons, the thinking row's text stands in a window a few
-   lines tall and steps up on the snippet's clock (reasoning-stream.ts,
-   transitions.dev's "Reasoning stream", MIT): the edges are a mask rather than
-   gradients painted over the text, so the card behind them can be anything. The
-   module puts the mark on the nearest box around the host's rendered Markdown —
-   one host version wraps that in a slot generating no box of its own — and the
-   Markdown inside is what it slides.
+/* While the model reasons, the thinking row's text stands in a window that grows
+   with it and steps up on the snippet's clock once it can grow no further
+   (reasoning-stream.ts, transitions.dev's "Reasoning stream", MIT): the edges
+   are a mask rather than gradients painted over the text, so the card behind
+   them can be anything. The module puts the mark on the nearest box around the
+   host's rendered Markdown — one host version wraps that in a slot generating no
+   box of its own — and the Markdown inside is what it slides.
 
    The tokens are the snippet's, under this skin's names; the window's own height
-   arrives as a pixel measure the module writes, since it is the text's line
-   height times the window's line count. */
+   arrives as a pixel measure the module writes, since it is the text's height
+   held under the cap. --dsh-claude-reason-window-cap is the height reasoning is
+   allowed to reach — the host's own max-height on a process group's body, which
+   is the tallest the open row gets once the window comes off — and the mask
+   belongs to the capped state alone: while the text still fits under the cap the
+   window is exactly as tall as the text and nothing is faded. */
 
 body[data-dsh-claude-style] [data-dsh-claude-reason-window] {
   --dsh-claude-reason-hold: 840ms;
   --dsh-claude-reason-lines: 2;
-  --dsh-claude-reason-window: 4;
+  --dsh-claude-reason-window-lines: 4;
+  --dsh-claude-reason-window-cap: 400px;
   --dsh-claude-reason-fade: 28px;
   --dsh-claude-reason-ease: cubic-bezier(0.22, 1, 0.36, 1);
   overflow: hidden;
-  max-height: var(--dsh-claude-reason-window-height, 80px);
+  height: var(--dsh-claude-reason-window-height, auto);
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-reason-window][data-dsh-claude-reason-capped] {
   -webkit-mask-image: linear-gradient(transparent 0, black var(--dsh-claude-reason-fade), black calc(100% - var(--dsh-claude-reason-fade)), transparent 100%);
   mask-image: linear-gradient(transparent 0, black var(--dsh-claude-reason-fade), black calc(100% - var(--dsh-claude-reason-fade)), transparent 100%);
 }
@@ -105,9 +113,10 @@ body[data-dsh-claude-style] [data-dsh-claude-reason-window] > [data-markdown-var
 
 /* The reader's animation choice (D26), resolved onto <body>: reduced takes the
    window and its stepping off whole — reasoning-stream.ts asks the same question
-   before it starts one, so no half state is left behind. */
+   before it starts one, so no half state is left behind. The mask is named here
+   as well, since a window the module left standing carries it on the capped
+   attribute. */
 body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-claude-reason-window] {
-  max-height: none;
   -webkit-mask-image: none;
   mask-image: none;
 }

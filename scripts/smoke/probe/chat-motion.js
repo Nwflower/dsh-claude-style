@@ -290,40 +290,72 @@
         clicks: Object.assign({}, window.__foldClicks),
       }
       // The reasoning's streamed window (reasoning-stream.ts, transitions.dev's
-      // "Reasoning stream"): the host's reasoning slot is clipped to a few lines
-      // with a mask, and the text it holds steps up on the snippet's clock. Read
-      // across two waits, so a step and the tween it runs are both seen.
-      var reasonBody = document.getElementById('debugThinkBody')
-      var reasonText = document.getElementById('debugThinkText')
-      var windowOf = function () {
-        var style = getComputedStyle(reasonBody)
-        var text = getComputedStyle(reasonText)
+      // "Reasoning stream"): the window takes the text's own height up to the cap
+      // reasoning may reach, and only at that cap does the text step up on the
+      // snippet's clock behind a mask. The first row is grown three lines between
+      // waits, so the window is read while it grows and again once it is held at
+      // the cap; the second stands over the cap from the start.
+      var growBody = document.getElementById('debugThinkBody')
+      var growText = document.getElementById('debugThinkText')
+      var reasonBody = document.getElementById('debugGrowBody')
+      var reasonText = document.getElementById('debugGrowText')
+      var windowOf = function (body, text) {
+        var style = getComputedStyle(body)
+        var textStyle = getComputedStyle(text)
+        var matrix = /matrix\(1, 0, 0, 1, 0, (-?[\d.]+)\)/.exec(textStyle.transform)
         return {
-          on: reasonBody.hasAttribute('data-dsh-claude-reason-window'),
-          slotHeight: Math.round(reasonBody.getBoundingClientRect().height),
+          on: body.hasAttribute('data-dsh-claude-reason-window'),
+          capped: body.hasAttribute('data-dsh-claude-reason-capped'),
+          slotHeight: Math.round(body.getBoundingClientRect().height),
+          bodyHeight: Math.round(body.closest('[data-variant="think"]').getBoundingClientRect().height),
           maxHeight: style.maxHeight,
           mask: (style.maskImage === 'none' ? style.webkitMaskImage : style.maskImage).slice(0, 44),
-          textHeight: Math.round(reasonText.getBoundingClientRect().height),
-          transform: text.transform,
-          transition: text.transitionProperty + ' ' + text.transitionDuration,
+          textHeight: Math.round(text.getBoundingClientRect().height),
+          offset: matrix === null ? 0 : -Number(matrix[1]),
+          transform: textStyle.transform,
+          transition: textStyle.getPropertyValue('transition-property') + ' ' + textStyle.getPropertyValue('transition-duration'),
         }
       }
       // The row reopens for the reasoning: the fold closes it when the phase
       // turns ok, and the window's own reading is of a running, open row.
       foldThink.setAttribute('data-state', 'running')
       await sleep(300)
-      r.fold.reasonWindow = [windowOf()]
-      await sleep(1100)
-      r.fold.reasonWindow.push(windowOf())
-      await sleep(1100)
-      r.fold.reasonWindow.push(windowOf())
+      r.fold.reasonWindow = [windowOf(growBody, growText)]
+      r.fold.reasonGrow = [windowOf(reasonBody, reasonText)]
+      var growLine = 3
+      var growMore = async function () {
+        for (var added = 0; added < 3; added += 1) {
+          growLine += 1
+          growText.appendChild(document.createElement('br'))
+          growText.appendChild(document.createTextNode('接着想第 ' + growLine + ' 行。'))
+        }
+        // The fold's observer queues a row for an attribute change, which is how
+        // a live stream reaches the window between steps.
+        document.getElementById('debugThink').setAttribute('data-state', 'ok')
+        document.getElementById('debugThink').setAttribute('data-state', 'running')
+        await sleep(1100)
+      }
+      for (var growRound = 0; growRound < 3; growRound += 1) {
+        await growMore()
+        r.fold.reasonWindow.push(windowOf(growBody, growText))
+      }
+      for (var wait = 0; wait < 3; wait += 1) {
+        await sleep(1100)
+        r.fold.reasonGrow.push(windowOf(reasonBody, reasonText))
+      }
       // The reasoning stops and the reader opens the row: the window is off and
-      // the whole text stands in the host's own body again.
-      foldThink.setAttribute('data-state', 'ok')
-      await sleep(400)
+      // the whole text stands in the host's own body again. The capped row's own
+      // phase end goes with it, so the window's exit is read as well.
+      r.fold.reasonStopped = windowOf(reasonBody, reasonText)
+      document.getElementById('debugGrow').setAttribute('data-state', 'ok')
+      document.getElementById('debugThink').setAttribute('data-state', 'ok')
+      await sleep(1400)
+      r.fold.reasonClosed = windowOf(reasonBody, reasonText)
+      r.fold.reasonGrewClosed = windowOf(growBody, growText)
+      await sleep(200)
       document.getElementById('debugThinkRow').click()
       await sleep(200)
-      r.fold.reasonOpen = windowOf()
+      r.fold.reasonOpen = windowOf(growBody, growText)
       // The fold glide on the reader's own press: the click is intercepted, the
       // real element is pressed with the door marked, and the click is handed back
       // afterwards so the host collapses it.

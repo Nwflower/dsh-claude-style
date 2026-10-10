@@ -216,11 +216,22 @@ function page(name, tier, cases) {
   // a wrapper with the Markdown inside, no slot of its own.
   var foldReasoning = ''
   for (var line = 1; line <= 12; line += 1) foldReasoning += '思考第 ' + line + ' 行。' + (line < 12 ? '<br>' : '')
+  // The reasoning's window takes the text's height up to the cap reasoning may
+  // reach (reasoning-stream.ts). Both rows mirror the host's own capped body in
+  // the Standard tier — the same 400px the window stops at — and the probe grows
+  // the first past that cap so the window is read on both sides of it.
+  var longReasoning = ''
+  for (var long = 1; long <= 36; long += 1) longReasoning += '想得久一点第 ' + long + ' 行。' + (long < 36 ? '<br>' : '')
   var foldArea = name === 'chat-fold'
-    ? '<style>[data-step-process-body][hidden] { display: none; } #debugGroupHeader { display: flex; gap: 6px; padding: 0; max-width: 100%; } #debugThinkText { line-height: 24px; }</style>' +
+    ? '<style>[data-step-process-body][hidden] { display: none; } #debugGroupHeader { display: flex; gap: 6px; padding: 0; max-width: 100%; } #debugThinkText, #debugGrowText { line-height: 24px; } #debugThinkBody, #debugGrowBody { max-height: 400px; overflow: hidden; }</style>' +
       '<div data-variant="think" data-state="running" id="debugThink"><button type="button" id="debugThinkRow">Thinking</button>' +
         '<div id="debugThinkBody">' +
           '<div data-markdown-variant="compact" id="debugThinkText">' + foldReasoning + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div data-variant="think" data-state="running" data-expanded id="debugGrow"><button type="button" id="debugGrowRow">Thinking</button>' +
+        '<div id="debugGrowBody">' +
+          '<div data-markdown-variant="compact" id="debugGrowText">' + longReasoning + '</div>' +
         '</div>' +
       '</div>' +
       '<div data-step-process id="debugGroup">' +

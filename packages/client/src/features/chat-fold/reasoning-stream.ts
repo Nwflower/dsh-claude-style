@@ -4,35 +4,46 @@ import { EXPANDED_ATTRIBUTE, REASONING_TEXT_SELECTOR, ROW_PHASE_ATTRIBUTE, RUNNI
 
 /**
  * While the model reasons, its thinking row plays the reasoning back the way
- * transitions.dev's "Reasoning stream" does: the text stands in a window a few
- * lines tall with a soft mask at each edge, and it steps up two lines at a time
- * on the snippet's own clock instead of pushing the conversation down line by
- * line (MIT; the tokens and the mask are that snippet's, under this skin's
- * names).
+ * transitions.dev's "Reasoning stream" does: the text steps up two lines at a
+ * time on the snippet's own clock instead of pushing the conversation down line
+ * by line, with a soft mask at each edge once it can step.
  *
  * What the snippet loops over a fixed transcript, this reads as live text: no
  * copy, no wrap, and the stepping stops at the newest line, so the reader never
  * loses the end of the reasoning. The host keeps its row, its header and its own
  * collapsing: the window is the nearest ancestor of the host's rendered Markdown
  * that has a box of its own — one host version wraps it in a slot that generates
- * none — and what slides inside that is the Markdown itself. Once the reasoning
- * stops, or the row leaves the running phase, the window comes off and the whole
- * text stands there again.
+ * none — and what slides inside that is the Markdown itself.
+ *
+ * The window grows with the reasoning and stops at the height reasoning is
+ * allowed to reach — the host's own cap on a process group's body, the tallest
+ * the open row gets — so the text is never cut off to a height the row will not
+ * keep: below the cap the window is exactly as tall as the text, and at the cap
+ * it stays there and the text steps. That is also what makes the end of the
+ * reasoning quiet: the window comes off a text box that already stands at its
+ * own height. The mask belongs to the capped state alone, so a reasoning shorter
+ * than the cap is never faded.
  *
  * The window's clock is also its watch: a step re-measures the text, so a
  * reasoning that grew past the window since the last step is windowed then,
  * without a second observer on the streaming subtree.
  */
 
-/** On the reasoning's window while it stands: the stylesheet clips it and masks its edges. */
+/** On the reasoning's window while it stands: the stylesheet clips it and hangs the step on the text. */
 export const REASON_WINDOW_ATTR = 'data-dsh-claude-reason-window'
-/** The window's height in pixels, measured from the text's own line height. */
+/** On the window once the text has filled the cap: the stylesheet masks its edges. */
+export const REASON_CAPPED_ATTR = 'data-dsh-claude-reason-capped'
+/** The window's height in pixels: the text's own height, held under the cap. */
 export const REASON_WINDOW_HEIGHT_PROPERTY = '--dsh-claude-reason-window-height'
 
-/** What each of the snippet's tokens falls back to when the stylesheet's own value cannot be read. */
-const FALLBACKS = { hold: 840, window: 4, lines: 2 }
+/**
+ * What each of the snippet's tokens falls back to when the stylesheet's own
+ * value cannot be read. `cap` mirrors the host's max-height on a process group's
+ * body, which the stylesheet's --dsh-claude-reason-window-cap carries.
+ */
+const FALLBACKS = { hold: 840, lines: 2, cap: 400 }
 
-/** A duration or a count written in a CSS token. */
+/** A duration, a count or a length written in a CSS token. */
 function tokenNumber(value: string, fallback: number) {
   const amount = Number.parseFloat(value)
   return Number.isFinite(amount) ? amount : fallback
@@ -86,15 +97,17 @@ export function createReasoningStream() {
     window.clearTimeout(state.timer)
     windows.delete(row)
     state.window.removeAttribute(REASON_WINDOW_ATTR)
+    state.window.removeAttribute(REASON_CAPPED_ATTR)
     state.window.style.removeProperty(REASON_WINDOW_HEIGHT_PROPERTY)
     state.text.style.removeProperty('transform')
   }
 
   /**
-   * One wait of the window: the text rises by the snippet's step, never past the
-   * newest line, and the next wait is booked for when this one has landed. The
-   * wait is also where the text is re-measured, so a reasoning that has grown
-   * past the window since the last step is windowed on this one.
+   * One wait of the window: the window takes the text's own height up to the cap,
+   * the text rises by the snippet's step once it stands at the cap, never past
+   * the newest line, and the next wait is booked for when this one has landed.
+   * The wait is also where the text is re-measured, so a reasoning that has
+   * grown since the last step is met at its new height on this one.
    */
   function tick(row: Element, state: WindowState) {
     const live = row.isConnected && state.window.isConnected && state.text.isConnected
@@ -112,17 +125,18 @@ export function createReasoningStream() {
     }
     const style = getComputedStyle(viewport)
     const lineHeight = lineHeightOf(state.text)
-    const windowPx = Math.round(lineHeight * tokenNumber(style.getPropertyValue('--dsh-claude-reason-window'), FALLBACKS.window))
+    const capPx = Math.round(tokenNumber(style.getPropertyValue('--dsh-claude-reason-window-cap'), FALLBACKS.cap))
     const stepPx = Math.round(lineHeight * tokenNumber(style.getPropertyValue('--dsh-claude-reason-lines'), FALLBACKS.lines))
     const holdMs = tokenNumber(style.getPropertyValue('--dsh-claude-reason-hold'), FALLBACKS.hold)
-    const windowed = state.text.offsetHeight > windowPx
+    const height = Math.min(state.text.offsetHeight, capPx)
+    const capped = height >= capPx
     // Only what changes is written: the fold watches the row's attributes, and a
     // redundant write each wait would keep the frame scheduler awake.
-    if (windowed !== viewport.hasAttribute(REASON_WINDOW_ATTR)) viewport.toggleAttribute(REASON_WINDOW_ATTR, windowed)
-    if (windowed) {
-      const height = `${windowPx}px`
-      if (viewport.style.getPropertyValue(REASON_WINDOW_HEIGHT_PROPERTY) !== height) viewport.style.setProperty(REASON_WINDOW_HEIGHT_PROPERTY, height)
-      const reachable = Math.max(0, state.text.offsetHeight - windowPx)
+    const heightPx = `${Math.max(0, height)}px`
+    if (viewport.style.getPropertyValue(REASON_WINDOW_HEIGHT_PROPERTY) !== heightPx) viewport.style.setProperty(REASON_WINDOW_HEIGHT_PROPERTY, heightPx)
+    if (capped !== viewport.hasAttribute(REASON_CAPPED_ATTR)) viewport.toggleAttribute(REASON_CAPPED_ATTR, capped)
+    if (capped) {
+      const reachable = Math.max(0, state.text.offsetHeight - height)
       const next = Math.min(state.offset + stepPx, reachable)
       if (next !== state.offset) {
         state.offset = next
@@ -149,6 +163,9 @@ export function createReasoningStream() {
     if (held !== undefined) clearWindow(row)
     const state: WindowState = { window: viewport, text, timer: 0, offset: 0 }
     windows.set(row, state)
+    // The mark is what the stylesheet clips and what the fold's own readers
+    // look for; the capped mark joins it from the first wait that reaches the cap.
+    viewport.setAttribute(REASON_WINDOW_ATTR, '')
     tick(row, state)
   }
 
