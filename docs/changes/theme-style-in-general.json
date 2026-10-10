@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-09",
-  "group": "improvements",
-  "order": 4,
-  "external": false,
-  "zh": "设置页的「品牌标识」改名为「主题风格」，并从「外观」页移到「通用」页最前面：这一项选的是整套品牌标识与配色色系，此前排在「外观」页首位，而同页的配色、字体与吉祥物都只改一样东西；现在它与用户名、动画效果这些通用项排在一起，「外观」页只剩配色、字体、吉祥物与出现位置。可选的品牌、存下的设置值与切换后的效果都不变。",
-  "en": "The settings page's Brand mark is renamed Theme style and moves from the top of the Appearance tab to the top of the General tab: the row picks the whole brand mark and colour family, and it used to lead a tab whose other rows — Colours, Typefaces, Mascot — each change one thing; it now stands with the general choices, while the Appearance tab keeps Colours, Typefaces, Mascot and Where it appears. The brands on offer, the stored values and what a switch does are unchanged."
-}

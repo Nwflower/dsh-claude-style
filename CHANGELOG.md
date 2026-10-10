@@ -4,9 +4,11 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 ## [Unreleased]
 
-[中文](#cn-unreleased) | [English](#en-unreleased)
+## [0.12.2] - 2026-10-10
 
-<h3 id="cn-unreleased">新增功能</h3>
+[中文](#cn-0.12.2) | [English](#en-0.12.2)
+
+<h3 id="cn-0.12.2">新增功能</h3>
 
 - 设置页「侧栏」页新增「侧栏搜索」下的「搜索框样式」三档：「覆盖品牌」（默认）把搜索框放进品牌行、指针移到侧栏上时盖过品牌；「独立」在品牌行下方给它自己一行并一直显示；「图标」不画插件自己的搜索框，保留 DSH 自己的搜索按钮，只把单击接管过来，点它打开本插件的面板。切换不需要刷新页面。
 - 写在输入卡片下面那一行数字重新有了自己的弹层：这一行此前只显示六个读数，宿主统计行上那些明细（模型用时、工具调用用时、首 token 平均、输出速度，以及缓存命中、未缓存输入、缓存读取、写回、输出这些用量行）在「写在单独一行」这一档下无处可看。现在这一行本身就是宿主那张上下文弹层的第二个触发口——按一下这些数字，弹层就在这一行上方打开，内容仍是同一份：宿主自己的上下文行加上这一段会话的数字明细，两种位置下都由同一份数据填充；按一下再收起，回车与空格同样开合、Esc 收起，弹层开着时这一行自己也报出展开状态。悬停开合仍只归计量环那条路径：指针停在数字上不展开弹层。窗口尺寸或输入区变化时弹层照旧重新量位置。
@@ -41,7 +43,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 - 端到端通道与 `packages/testing/dsh-web.cjs` 起的临时宿主随启动它的进程一起结束：此前启动进程被强制终止或抛出未捕获的错误时，`dsh web` 实例留在后台继续占用端口与 `$DSH_HOME`，它的目录随后被删掉时还会持续占满一个以上的 CPU 核心；现在启动进程无论以哪种方式结束，宿主都在随后一秒内退出。
 
-<h3 id="en-unreleased">New Features</h3>
+<h3 id="en-0.12.2">New Features</h3>
 
 - The Sidebar tab gains a Search box style choice under Sidebar search: Cover the brand (the default) keeps the box in the brand row, standing over the brand while the pointer is over the sidebar; Standalone gives it a row of its own under the brand row, shown always; Icon draws no box of the plugin's and keeps DSH's own search button in place with only its click taken over, so pressing it opens this plugin's palette. Switching needs no reload.
 - The line of numbers under the input card has its own popover again: that line showed six readings, while the detail the host's statistics row carries — model time, tool time, first-token average, output speed, and the usage rows for cache hits, uncached input, cache reads, cache writes and output — had nowhere to be read with the statistics asked onto a line of their own. The line is now the second trigger of the host's context panel: pressing the figures opens that panel above the line, holding the same session's data — the host's own context rows followed by the numbers' own detail rows, filled from one source in either position; pressing again puts it away, Enter or Space does the same from the keyboard, Escape closes it, and the line reports its own expanded state while the panel stands. Opening and closing on hover stays the ring's own path: resting a pointer on the figures never unfolds the panel. The panel re-takes its placement when the window or the composer changes.

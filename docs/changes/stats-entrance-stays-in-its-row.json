@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-10",
-  "group": "fixes",
-  "order": 0,
-  "external": false,
-  "zh": "会话数字的入场动画不再把整屏内容顶来顶去：数字一变化，新字符就从自己位置下方 8px 滑入，而这一行与对话共用宿主同一个滚动容器——滑入的那几像素越过输入区底边，把容器的可滚动高度顶大 3px（实机测得 1649 → 1652），末尾跟随随即补偿，输入卡片与上方对话跟着上下跳一次，动画落回时再跳一次；流式输出期间每个数字都在动，这一跳就一直重复。现在这一行把自己裁掉（`overflow: clip`），入场留在行内，容器的可滚动高度不再跟着数字变化。端到端通道的 `statsPosition` 场景新增一条读数：在同一帧里写一次数字、量容器可滚动高度的增量，必须是 0（改前为 3）。",
-  "en": "The session numbers' entrance no longer shoves the whole column around: every time a figure moves, its new characters slide up from 8px below their place, and the line shares the host's one scroll container with the conversation — those few pixels reach past the composer's bottom edge and grow that container's scrollable height by 3px (1649 to 1652, measured on a live host), which the tail pinning answers by moving the input card and the conversation above it once, and once more when the entrance settles. With figures moving all through an answer, that movement repeated for as long as the answer streamed. The line now clips itself (`overflow: clip`), so the entrance stays inside the row and the container's scrollable height no longer follows the numbers. The end-to-end lane's `statsPosition` scenario gains a reading: within one frame it writes a figure once and measures how much the container's scrollable height grew, which must be 0 (it was 3)."
-}

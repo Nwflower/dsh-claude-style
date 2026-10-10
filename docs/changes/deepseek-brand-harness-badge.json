@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-09",
-  "group": "fixes",
-  "order": 0,
-  "external": false,
-  "zh": "DeepSeek 品牌下侧栏品牌区的 HARNESS 徽标重新显示：皮肤此前把宿主标志里的胶囊徽标与徽标上的字形一并隐藏，品牌区只剩下鲸鱼与 deepseek 字样；现在宿主的整幅标志（鲸鱼、deepseek 字样与 HARNESS 徽标）原样保留，徽标沿用 DeepSeek 蓝的胶囊底与反白字形。Claude 品牌下品牌区照旧画皮肤自己的标。",
-  "en": "The sidebar's brand area shows the HARNESS badge again under the DeepSeek brand: the skin used to hide the host mark's pill badge together with the letterforms inside it, leaving the whale and the deepseek wordmark alone; the host's whole lockup — whale, deepseek wordmark and HARNESS badge — now stands as it is drawn, the badge keeping its blue pill and reversed-out letters. The Claude brand still draws the skin's own mark."
-}

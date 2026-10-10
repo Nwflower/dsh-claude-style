@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-09",
-  "group": "fixes",
-  "order": 0,
-  "external": false,
-  "zh": "进行中的状态行只在插件自己跟随末尾时停在输入框上方：此前只要宿主还报着「跟随在开」，读者往上翻看历史时这一行仍按固定位置浮在输入框上方、压住正在读的内容，直到宿主自己发现读者离开末尾。现在读者接管滚动（滚轮、触摸、拖动滚动条、滚动键、页内查找，以及对话导航跳到某一轮）期间，这一行的固定整个让开，随内容一起走；读者自己回到底部后跟随继续，这一行也回到输入框上方。端到端通道新增 `readerScroll` 场景：轮次进行中滚一次滚轮，读者滚动之前该行 158 帧停在 426px，之后 382 帧无一处停在固定位置、全部随内容移动。",
-  "en": "A running turn's status line rests above the composer only while the plugin's own follow is the one moving the position: as long as the host still reported its follow as on, scrolling back through the history left the line floating at the pinned place over the content being read until the host noticed the reader had left the tail. The line's pin now stands down for the whole time the reader owns the scroll — wheel, touch, a drag of the scrollbar, the scroll keys, in-page find, and a jump to a turn — and travels with the content instead; once the reader comes back to the bottom the follow resumes and the line rests above the composer again. The end-to-end lane's new `readerScroll` scenario scrolls the wheel once during a live turn: 158 frames at 426px before the reader's wheel, and 382 frames after it with no frame at the pinned place and every frame moving with the content."
-}

@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-09",
-  "group": "improvements",
-  "order": 2,
-  "external": false,
-  "zh": "过程组的标题不再只写「执行了命令，已读取文件，已调用工具等」，改写这一组装了什么：「执行 2 次思考，调用 1 次工具」。没有的项不写，数字随内容增加逐位滚动（160 ms，减弱动效时直接落位），这一段还在进行时整行带着与宿主同样的扫光；控件的可访问名字始终是这句完整的话，读屏念到的与看到的一致。标题放不下整句时（窗口窄，或这一行本身不长）改用简洁写法「思考×2 · 工具×1」，位置宽回来再换回整句——两种写法都不会被省略号截断。能否放下按标题所在容器给它的宽度判断，不按它当前有多宽。计数按过程组内部每一行的种类算：带 `data-chat-group-part=\"reasoning\"` 的助手步算思考、其余助手步算输出、工具调用算工具、命令与其它记录算记录，工具行内部的调用不重复计入。",
-  "en": "A process group's header no longer reads as the host's list of activities (\"ran a command, read a file, called a tool, …\"): it says what the group holds — \"2 thoughts, 1 tool call\". Empty figures are left out, each number rolls as the work grows (160 ms, set at once under reduced motion), the whole line sweeps the way the host's words do while that piece of work runs, and the control's accessible name is that sentence, so what a screen reader announces matches what is on screen. A header without the room for the sentence (a narrow window, a short row) falls back to the compact figures, `Thinking×2 · Tools×1`, and takes the sentence back when the room returns — neither wording is cut off with an ellipsis. The room is read from what the header's own container gives it rather than from how wide it happens to be. The counts come from each row the group holds: an assistant step carrying `data-chat-group-part=\"reasoning\"` counts as a thought, any other assistant step as an output, a tool call as a tool, and commands and other records as records; a tool row's own inner calls are not counted twice."
-}

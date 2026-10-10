@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-09",
-  "group": "new",
-  "order": 0,
-  "external": true,
-  "zh": "设置页「侧栏」页新增「侧栏搜索」下的「搜索框样式」三档：「覆盖品牌」（默认）把搜索框放进品牌行、指针移到侧栏上时盖过品牌；「独立」在品牌行下方给它自己一行并一直显示；「图标」不画插件自己的搜索框，保留 DSH 自己的搜索按钮，只把单击接管过来，点它打开本插件的面板。切换不需要刷新页面。",
-  "en": "The Sidebar tab gains a Search box style choice under Sidebar search: Cover the brand (the default) keeps the box in the brand row, standing over the brand while the pointer is over the sidebar; Standalone gives it a row of its own under the brand row, shown always; Icon draws no box of the plugin's and keeps DSH's own search button in place with only its click taken over, so pressing it opens this plugin's palette. Switching needs no reload."
-}

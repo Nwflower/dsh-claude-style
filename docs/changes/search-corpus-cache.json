@@ -1,8 +1,0 @@
-{
-  "at": "2026-10-09",
-  "group": "improvements",
-  "order": 0,
-  "external": false,
-  "zh": "侧栏搜索的会话内容搜索从秒级等待变成即答：每个会话的语料（读者的消息与助手的回答）此前只留在宿主进程内存里，宿主每次重启后的第一次搜索都要把全部会话日志重读一遍——本机 260 个会话约 30 秒；现在它落一份 `$DSH_HOME/cache/dsh-claude-style/search/<会话 id>.json`，重启后只读这些文件，约 1.4 秒，存档会话里只有修订号变过的才重读，宿主开着的会话按事件序号只读新增的那一段。查询本身也从整篇正则扫描改成小写子串查找，本机 260 个会话、8252 条消息的语料上单次查询 5–20 毫秒（此前约 0.5 秒）。语料缓存按需构建：只有读者真的搜索时才会读日志、才会落盘。在一台还没有缓存的机器上，第一次搜索仍要读完全部会话日志一次。",
-  "en": "The sidebar search's session-content search answers at once instead of after a wait: each session's corpus (the reader's messages and the model's answers) used to live in the host process's memory alone, so the first search after every host restart re-read every session log — about 30 seconds for 260 sessions on this machine. It now keeps one `$DSH_HOME/cache/dsh-claude-style/search/<sessionId>.json`, which a restart reads back in about 1.4 seconds; a stored session is re-read only when its revision moved, and a session the host holds open contributes only the events appended since the last fold. The query itself reads lowercased text instead of scanning with a regular expression: 5–20 ms per query over 260 sessions and 8252 messages on this machine, against about 0.5 s before. The cache is built on demand — logs are read, and files written, only when the reader actually searches, and the first search on a machine with no cache still reads every session log once."
-}
