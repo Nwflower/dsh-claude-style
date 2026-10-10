@@ -25,7 +25,6 @@
 | 编号 | 决策 | 状态 |
 | --- | --- | --- |
 | [D3](D3-host-selectors.md) | 宿主选择器纪律 | 已实施 |
-| [D10](D10-settings-transport.md) | 设置传输只走官方 Config 表单 | 已实施 |
 | [D11](D11-private-routes.md) | 私有路由借宿主的请求栅栏；外来字符串只以文本上屏 | 已实施 |
 | [D19](D19-host-contracts.md) | 宿主契约与构建编号 | 已实施 |
 | [D28](D28-desktop-band.md) | 桌面标题带只在一处读取 | 已实施 |
@@ -34,7 +33,8 @@
 | [D33](D33-stylesheet-ownership.md) | 皮肤样式表带上本包自己的归属标记，兄弟包的样式表不认领 | 已实施 |
 | [D43](D43-overlay-and-upstream.md) | 覆盖层定位与等待扩展点 | 已实施 |
 | [D44](D44-contract-module.md) | 宿主契约模块与契约测试 | 已实施 |
-| [D59](D59-wallpaper-lets-the-shell-through.md) | 壁纸插件在外壳下作画时，本插件不画那几处外壳 | 已实施 |
+| [D60](D60-settings-transport.md) | 设置读写走官方 Config 表单，非 loopback 页面只读设置文档 | 已实施 |
+| [D61](D61-wallpaper-under-one-mask.md) | 壁纸插件在播壁纸时，Claude 配色在整个窗口铺一层底色遮罩 | 已实施 |
 
 ## 运行时
 
@@ -82,4 +82,4 @@
 
 ## 作废的编号
 
-D1（由 D36 取代）、D2（由 D43 取代）、D6（由 D40 取代）、D8（由 D46 取代）、D13（由 D42 取代）、D18（由 D46 取代）、D37（由 D51 取代）、D55（由 D58 取代）、D56（由 D58 取代）、D57（由 D58 取代）。
+D1（由 D36 取代）、D2（由 D43 取代）、D6（由 D40 取代）、D8（由 D46 取代）、D10（由 D60 取代）、D13（由 D42 取代）、D18（由 D46 取代）、D37（由 D51 取代）、D55（由 D58 取代）、D56（由 D58 取代）、D57（由 D58 取代）、D59（由 D61 取代）。

@@ -49,7 +49,7 @@ async function resolveSchemaFactory(): Promise<SchemaFactory | null> {
 
 /**
  * The schema factory the host provides (`@deepseek-ai/schemastery`), as far as
- * this half uses it: it is resolved at runtime and may be absent (D10), so the
+ * this half uses it: it is resolved at runtime and may be absent (D60), so the
  * shape is declared here rather than imported.
  */
 interface SchemaFactory {
@@ -74,27 +74,30 @@ function volatileField(field: SchemaField | null | undefined) {
 }
 
 /**
- * The preferences an earlier build stored as a boolean before they grew their
- * choices. Their field accepts either shape: the host answers a value of
- * another type with the field's default, which would silently re-open a switch
- * the reader had turned off. The browser half reads a stored boolean as the
- * choice it stood for (packages/client/src/core/prefs.ts).
+ * The preferences whose stored value may still carry the type an earlier build
+ * gave them: `autoPopover` was a boolean before it grew its choices, and
+ * `chatAnimations` held a choice before it became a switch again. Their field
+ * accepts both shapes. The host checks a profile entry's config against this
+ * Config before it starts the plugin, and a value of another type fails that
+ * check: the host then starts nothing of this package — no route, no settings
+ * form, no client bundle. The browser half reads either shape
+ * (packages/client/src/core/prefs.ts).
  */
-const EARLIER_BOOLEAN_PREFS: readonly string[] = ['autoPopover', 'chatAnimations']
+const PREFS_WITH_EARLIER_TYPE: readonly string[] = ['autoPopover', 'chatAnimations']
 
 /**
  * One typed Config field for one preference. The default's own type picks the
- * field type (an array is an array of strings), and the two preferences an
- * earlier build stored as a boolean take a union, so PREFS_DEFAULT stays the
+ * field type (an array is an array of strings), and a preference whose stored
+ * value may carry an earlier type takes a union, so PREFS_DEFAULT stays the
  * only field list.
  */
 function prefsField(Schema: SchemaFactory, key: keyof typeof PREFS_DEFAULT) {
   const value = PREFS_DEFAULT[key]
-  const field = Array.isArray(value)
-    ? Schema.array(Schema.string())
-    : typeof value === 'boolean'
-      ? Schema.boolean()
-      : EARLIER_BOOLEAN_PREFS.includes(key) ? Schema.union([Schema.boolean(), Schema.string()]) : Schema.string()
+  const field = PREFS_WITH_EARLIER_TYPE.includes(key)
+    ? Schema.union([Schema.boolean(), Schema.string()])
+    : Array.isArray(value)
+      ? Schema.array(Schema.string())
+      : typeof value === 'boolean' ? Schema.boolean() : Schema.string()
   return field.default(value)
 }
 
@@ -107,17 +110,16 @@ function prefsField(Schema: SchemaFactory, key: keyof typeof PREFS_DEFAULT) {
  * bundle ships 3.18.2, so the marker is applied only when the installed
  * factory provides it.
  *
- * The import is guarded and top-level-awaited (docs/decisions D10): a
+ * The import is guarded and top-level-awaited (docs/decisions D60): a
  * host that cannot resolve schemastery must still load the skin — it just
  * loses the settings form.
  *
  * Field types stay permissive (plain string / boolean / array) on purpose: the
  * accepted sets are enforced where they are consumed — the browser half clamps
  * everything it reads — so a set declared here would only narrow what a stored
- * value may keep. The two preferences an earlier build stored as a boolean
- * carry a boolean member beside the string (EARLIER_BOOLEAN_PREFS above): the
- * other type would fall to the field's default, silently re-opening a switch
- * the reader had turned off.
+ * value may keep. The preferences an earlier build stored under another type
+ * take both shapes (PREFS_WITH_EARLIER_TYPE above): a stored value the Config
+ * refuses keeps the host from starting this package at all.
  */
 export const Config = SchemaFactory === null
   ? undefined

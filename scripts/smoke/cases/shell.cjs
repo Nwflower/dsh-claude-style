@@ -1,7 +1,7 @@
 'use strict'
 const { MARKUP, SKIN_FACE, SKIN_HAT, same, check, contrast, basicChecks, commonChecks } = require('./_shared.cjs')
 
-/** The shell surfaces a wallpaper plugin shows through, and what the Claude palette paints them (D59). */
+/** The shell surfaces a wallpaper plugin shows through, and what the Claude palette paints them (D61). */
 const CLAUDE_SHELL = ['body', 'sidebar', 'conversation']
 const CLAUDE_FILLS = [['body', 'rgb(252, 252, 251)'], ['sidebar', 'rgb(251, 251, 249)'], ['conversation', 'rgb(252, 252, 251)']]
 
@@ -538,21 +538,24 @@ module.exports = {
       claude.base === '#fcfcfb' && claude.body === 'rgb(252, 252, 251)' && claude.account === 'rgb(252, 252, 251)' &&
         claude.popover === 'rgb(255, 255, 255)' && /Anthropic Serif Web Text/.test(claude.heading || ''),
       JSON.stringify(claude))
-    // D59: a wallpaper under the Claude palette. The shell canvases the skin
-    // paints on the host's own structure stand down and the two host tokens the
-    // wallpaper plugin cleared are cleared again here; the skin's own faces stay
-    // opaque, and taking the marker away brings the skin's fills back. The
-    // document element's own canvas stays: it sits behind the wallpaper's layer.
+    // D61: a wallpaper under the Claude palette. The shell canvases stand down
+    // and one fixed mask in the canvas colour lies over the wallpaper; the base
+    // canvas the host paints its dialogs and cards with stays opaque, and so do
+    // the skin's own faces. Taking the marker away brings the fills back and
+    // lifts the mask. The document element's canvas stays behind the layer.
     const wallClaude = hp.claudeWallpaper || {}
-    check('with the Claude palette and a wallpaper up the shell stands down whole',
-      CLAUDE_SHELL.every((key) => wallClaude[key] === 'rgba(0, 0, 0, 0)') && wallClaude.base === 'transparent' &&
-        wallClaude.sidebarFill === 'transparent' && wallClaude.html === 'rgb(252, 252, 251)',
+    check('with the Claude palette and a wallpaper up the shell stands down under one mask',
+      CLAUDE_SHELL.every((key) => wallClaude[key] === 'rgba(0, 0, 0, 0)') && wallClaude.sidebarFill === 'transparent' &&
+        wallClaude.maskPosition === 'fixed' && /^color\(srgb 0\.98\d* 0\.98\d* 0\.98\d* \/ 0\.86\)$/.test(wallClaude.mask || '') &&
+        wallClaude.html === 'rgb(252, 252, 251)',
       JSON.stringify(wallClaude))
-    check('and the skin\'s own faces keep their fill',
-      wallClaude.popover === claude.popover && wallClaude.account === claude.account && wallClaude.search === claude.search,
+    check('and the base canvas and the skin\'s own faces keep their fill',
+      wallClaude.base === '#fcfcfb' && wallClaude.popover === claude.popover && wallClaude.account === claude.account &&
+        wallClaude.search === claude.search,
       JSON.stringify({ wallpaper: wallClaude, claude }))
-    check('with the wallpaper gone the skin\'s own fills are back',
-      CLAUDE_FILLS.every(([key, value]) => claude[key] === value) && claude.sidebarFill === '#fbfbf9',
+    check('with the wallpaper gone the skin\'s own fills are back and the mask is lifted',
+      CLAUDE_FILLS.every(([key, value]) => claude[key] === value) && claude.sidebarFill === '#fbfbf9' &&
+        claude.mask === 'rgba(0, 0, 0, 0)',
       JSON.stringify(claude))
     commonChecks(r)
   },

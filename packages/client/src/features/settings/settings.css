@@ -109,9 +109,31 @@ body[data-dsh-claude-style] .dsh-claude-settings-tabs > [role="tab"] {
   min-width: 0;
 }
 
+/* The rows sit in a fieldset so a read-only page disables every control at
+   once (settings.ts); the fieldset's own frame and its min-content floor,
+   which would widen a phone's page, are taken off. */
 body[data-dsh-claude-style] .dsh-claude-settings-rows {
   display: flex;
   flex-direction: column;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-rows:disabled :is(button, input) {
+  cursor: not-allowed;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-rows:disabled input {
+  opacity: .45;
+}
+
+/* The line a read-only page opens with: why its controls take no input. */
+body[data-dsh-claude-style] .dsh-claude-settings-notice {
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-secondary);
 }
 
 body[data-dsh-claude-style] .dsh-claude-settings-rows > :first-child {

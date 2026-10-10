@@ -1,0 +1,65 @@
+/* ---------- Claude palette over a wallpaper: one mask over the whole window ---------- */
+/* While the wallpaper plugin shows one (`data-we-wallpaper`), the shell stands
+   down element by element and a single mask in the canvas colour lies over the
+   wallpaper — near-opaque ivory in light, warm black in dark — so the sidebar,
+   the header and the transcript all read on the same ground. The host token
+   `--dsw-alias-bg-base` keeps the Claude canvas, so every surface the host paints
+   with it (dialogs, overlays, cards) stays opaque (D61). */
+
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper] {
+  background-color: transparent;
+}
+
+/* The plugin's wallpaper, scrim and effect layers are the body's own children at
+   z-index -2 and -1; the body's last pseudo-element at -1 comes after all of
+   them in document order, so the mask lies over them and under the shell. */
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper]::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--dsh-claude-canvas) 86%, transparent);
+}
+
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-ds-dark-theme][data-we-wallpaper]::after {
+  background: color-mix(in srgb, var(--dsh-claude-canvas) 82%, transparent);
+}
+
+/* ---------- the shell stands down ---------- */
+/* Each of these paints the canvas over the whole window or a whole column. */
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper] :is([class*="_frame"]:has(> [class*="_sidebarCol"]), [class*="centerCol"], [class*="_rightbarCol"], [data-phase]:has([data-conversation-scroll])) {
+  background: transparent;
+}
+
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper] :is([data-pane="sidebar"], [class*="sidebarCol"]) {
+  --dsw-specific-sidebar-fill: transparent;
+  background: transparent;
+}
+
+/* The composer's seat and the two fades at the transcript's ends paint the full
+   canvas across the column, which over the mask shows as brighter bands. They
+   stand down, and the transcript passing under the dock row is covered by a
+   tray in the canvas colour: the composer card's own width, from under the
+   card's top edge to the window's bottom, so the dock row and the figures under
+   the card sit on the card's ground. The seat is sticky, so the tray goes with it. */
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper] :is([data-phase="active"], [data-content-phase="active"]) [data-composer-seat] {
+  background: transparent;
+}
+
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper] :is([data-phase="active"], [data-content-phase="active"]) [data-composer-seat]::before,
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper] [class*="_header"]:has([class*="_tabs"])::after {
+  display: none;
+}
+
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper] :is([data-phase="active"], [data-content-phase="active"]) [data-composer-seat]::after {
+  content: "";
+  position: absolute;
+  top: 16px;
+  bottom: 0;
+  left: calc(50% - var(--dsh-composer-card-max-width, 100%) / 2);
+  right: calc(50% - var(--dsh-composer-card-max-width, 100%) / 2);
+  z-index: -1;
+  pointer-events: none;
+  background: var(--dsh-claude-canvas);
+}

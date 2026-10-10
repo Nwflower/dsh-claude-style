@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-10",
+  "group": "fixes",
+  "order": 0,
+  "external": false,
+  "zh": "0.12.2 起，设置里存着早先「聊天区动画效果」档位（「增强」「重绘」「关闭」）的读者，宿主不再拒绝启动本插件：0.12.2 把这一项改回开关，宿主按开关核对配置，读到早先存下的档位名即判定配置无效，整个插件不启动——插件列表里显示「启动失败」，用量面板、消息搜索、模型说明、随包字体与按需加载的各项功能全部失效，设置里也没有 Claude Style 页。现在这一项同时接受开关值与早先的档位名，存着「增强」「重绘」的照旧开着，存着「关闭」的照旧关着；已经处在「启动失败」的桌面端重启一次即恢复。",
+  "en": "Since 0.12.2 the host no longer refuses to start the plugin for a reader whose settings still hold an earlier \"Chat-area animations\" choice (\"enhanced\", \"redraw\" or \"off\"): 0.12.2 turned that preference back into a switch, the host checked the stored config against a switch, judged the earlier choice name invalid and started nothing of the plugin — the plugin list showed it as failed to start, and the usage dashboard, message search, model copy, bundled fonts and every on-demand feature stopped working, with no Claude Style page in Settings. The preference now takes both the switch value and the earlier choice names: \"enhanced\" and \"redraw\" stay on, \"off\" stays off; a desktop already showing the failure recovers after one restart."
+}

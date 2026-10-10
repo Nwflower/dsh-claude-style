@@ -1,8 +1,8 @@
 /* ---------- canvas + hairline structure ---------- */
 /* Under the Claude palette the skin paints the columns; under "follow the
-   host" they take the host's own tokens and only the hairline stays. A wallpaper
-   plugin showing one gets the same treatment as the host's palette: the columns
-   are left unpainted so its layer shows, and only the hairline stays (D59). */
+   host" they take the host's own tokens and only the hairline stays. While a
+   wallpaper plugin shows one the columns are left unpainted, under the mask
+   theme/wallpaper.css lays over it, and only the hairline stays (D61). */
 body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-we-wallpaper]) :is([data-pane="sidebar"], [class*="sidebarCol"], .dshDesktopSidebarSurface) {
   --dsw-specific-sidebar-fill: var(--dsh-claude-sidebar-canvas);
   background: var(--dsh-claude-sidebar-canvas);
@@ -20,8 +20,8 @@ body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-we-wallp
 /* The shell keeps a caption row above every column and paints the three window
    buttons over it; the skin clears the row and each column paints its own fill
    up through it (D31). Under a wallpaper the frame and those two fills stand
-   down whole, so the caption row shows the wallpaper like the rest of the shell
-   (D59); the row's own background is cleared either way. */
+   down whole, so the caption row lies under the same mask as the rest of the
+   window (D61); the row's own background is cleared either way. */
 html[data-windows-titlebar] body[data-dsh-claude-style]:not([data-we-wallpaper]) [class*="_frame"]:has(> [class*="_sidebarCol"]) {
   --dsh-windows-content-radius: 0px;
   background: var(--dsh-claude-canvas) !important;

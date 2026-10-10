@@ -1,9 +1,7 @@
 /* The canvases the Claude palette paints onto the host's own structure; under
-   "follow the host" none of them apply. A wallpaper plugin showing one gives way
-   the same as the host's palette does: while `data-we-wallpaper` is on the page
-   these canvases are not painted, so the layer it put under the shell shows
-   (D59); the wallpaper plugin's own clearing of the two host tokens is restored
-   in theme/third-party.css. */
+   "follow the host" none of them apply. While a wallpaper plugin shows one
+   (`data-we-wallpaper`) these canvases are not painted, and theme/wallpaper.css
+   lays its mask over the layer the plugin put under the shell (D61). */
 body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-ds-dark-theme]):not([data-we-wallpaper]) {
   color: var(--dsw-alias-label-primary);
   background-color: var(--dsh-claude-canvas);

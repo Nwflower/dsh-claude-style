@@ -136,6 +136,25 @@ async function hostHalf() {
   for (const fenced of [true, false]) {
     console.log(`\nhost half — ${fenced ? "through the host's connection.requestRejection()" : 'through the local stand-in (no connection service)'}`)
     const host = fakeHost(mod, { fenced, home: scratchHome })
+    if (fenced) {
+      // A profile entry the Config refuses keeps the host from starting the
+      // whole package (D60): the values earlier builds stored still pass. A
+      // `.volatile()` field resolves to an accessor, read through its `get()`.
+      const resolved = (config) => {
+        const [[key, stored]] = Object.entries(config)
+        try {
+          const field = mod.Config(config)[key]
+          const value = typeof field?.get === 'function' ? field.get() : field
+          return { ok: value === stored, detail: `resolved to ${JSON.stringify(value)}` }
+        } catch (error) {
+          return { ok: false, detail: `refused: ${error.message}` }
+        }
+      }
+      for (const config of [{ chatAnimations: 'enhanced' }, { chatAnimations: 'redraw' }, { chatAnimations: 'off' }, { chatAnimations: false }, { autoPopover: false }, { autoPopover: 'all' }]) {
+        const { ok, detail } = resolved(config)
+        check(`the Config takes a stored ${JSON.stringify(config)}`, typeof mod.Config === 'function' && ok, detail)
+      }
+    }
     check('the preferences route is gone', host.routes[PREFS] === undefined)
     check('the session delete route is registered', host.routes[DELETE] !== undefined)
     for (const [label, headers] of [['cross-site page', crossSite], ['LAN peer', lanPeer], ['DNS-rebound page', rebound]]) {

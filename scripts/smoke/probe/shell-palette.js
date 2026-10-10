@@ -42,10 +42,13 @@
           base: bodyStyle.getPropertyValue('--dsw-alias-bg-base').trim(),
           family: bodyStyle.getPropertyValue('--dsw-font-family').trim(),
           body: bodyStyle.backgroundColor,
+          // The mask the Claude palette lays over a wallpaper (D61).
+          mask: getComputedStyle(document.body, '::after').backgroundColor,
+          maskPosition: getComputedStyle(document.body, '::after').position,
           html: getComputedStyle(document.documentElement).backgroundColor,
           sidebar: getComputedStyle(hostNodes.sidebar).backgroundColor,
-          // The sidebar element carries this token itself while the Claude
-          // palette paints it; with a wallpaper up it inherits the cleared one.
+          // The sidebar element carries this token itself: the Claude canvas
+          // while the palette paints it, cleared while a wallpaper is up.
           sidebarFill: getComputedStyle(hostNodes.sidebar).getPropertyValue('--dsw-specific-sidebar-fill').trim(),
           conversation: getComputedStyle(hostNodes.conversation).backgroundColor,
           popover: getComputedStyle(hostNodes.popover).backgroundColor,
@@ -64,9 +67,9 @@
         host: await readHost({ palette: 'host', typeface: 'host' }, false),
         wallpaper: await readHost(null, true),
         claude: await readHost({ palette: 'claude', typeface: 'claude' }, false),
-        // The wallpaper plugin showing one under the Claude palette (D59): the
-        // shell canvases stand down and the two host tokens are cleared, while
-        // the skin's own faces keep their fill.
+        // The wallpaper plugin showing one under the Claude palette (D61): the
+        // shell stands down, one mask lies over the wallpaper, and the base
+        // canvas and the skin's own faces keep their fill.
         claudeWallpaper: await readHost(null, true),
       }
       document.body.removeAttribute('data-we-wallpaper')
