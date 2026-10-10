@@ -57,8 +57,6 @@ export interface Handles {
   copy: FeatureHandle
   permissions: FeatureHandle
   contextStats: FeatureHandle
-  chatProcess: FeatureHandle
-  chatReader: FeatureHandle
   model: ModelHandle
   peakrate: PeakRateHandle
   effort: FeatureHandle

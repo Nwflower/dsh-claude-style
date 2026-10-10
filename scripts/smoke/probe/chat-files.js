@@ -109,13 +109,6 @@
       window.__pushForm({ chatAnimations: true })
       await sleep(150)
       r.files.backSeats = (window.__slots || []).filter(function (entry) { return entry.key === 'tool.call.toolview' }).length
-      // The Redraw choice runs the other effect set, which these rows are not
-      // part of: the seat keys go back the same way Off takes them.
-      window.__pushForm({ chatAnimations: 'redraw' })
-      await sleep(150)
-      r.files.redrawSeats = (window.__slots || []).filter(function (entry) { return entry.key === 'tool.call.toolview' }).length
-      window.__pushForm({ chatAnimations: 'enhanced' })
-      await sleep(150)
       // The other chat-behaviour plugin arriving and leaving while the page
       // runs: the presence watch re-takes the decision, so the chat-area features
       // stand down (here: the seat keys and the install-time marks) and come

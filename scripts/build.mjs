@@ -143,7 +143,7 @@ const PACKAGE = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf
 const PACKAGE_ID = PACKAGE.name
 
 /** The packages the host's loader hands the factory's `require`; never bundled. */
-const HOST_PACKAGES = ['react', 'react/jsx-runtime', 'react-dom/client', '@deepseek-ai/dsh-client-ui-primitives', '@deepseek-ai/dsh-client-store']
+const HOST_PACKAGES = ['react', 'react-dom/client', '@deepseek-ai/dsh-client-ui-primitives']
 
 /**
  * Whether this build keeps the assets the build before it shipped (D39).
@@ -246,6 +246,8 @@ const BRAND_MARKS = [
   // The host's own whale mark (ui-primitives FishLogo, FISH_LOGO_PATH), in
   // DeepSeek's brand blue: a picture where it is painted, a shape where it masks.
   'deepseek-mark.svg',
+  // GitHub's own mark, for the settings page's link to the repository.
+  'github-mark.svg',
 ]
 
 /**
@@ -406,8 +408,6 @@ async function main() {
     write: false,
     metafile: true,
     logLevel: 'silent',
-    // TSX compiles to the automatic runtime the host's loader provides (D57), as tsconfig.json declares.
-    jsx: 'automatic',
     external: HOST_PACKAGES,
     // The factory around the body is part of the output, so the source map
     // counts its lines.

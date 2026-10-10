@@ -197,11 +197,6 @@ export const HEADER_CORNER_SELECTOR = '[class*="headerCorner"]'
 export const CONVERSATION_HEADER_SELECTOR = '[class*="_header"]'
 /** The view-tab strip inside the header, whose box the band placement keeps clear of. */
 export const VIEW_TABS_STRIP_SELECTOR = '[class*="_tabs"]'
-/** The same strip by the host's own mark; its `role="tab"` children list the registered views in order. */
-export const VIEW_TABLIST_SELECTOR = '[data-conversation-tabs]'
-
-/* ---------- the document, the shell and the browser API ---------- */
-
 /** The shell's window marks: the Windows caption row, the platform, and fullscreen. */
 export const WINDOWS_TITLEBAR_ATTRIBUTE = 'data-windows-titlebar'
 /**

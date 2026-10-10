@@ -140,26 +140,6 @@
       reducedEcho.remove()
       window.__pushForm({ motion: 'system' })
       await sleep(150)
-      // The Redraw choice runs the other effect set, whose one member so far is
-      // this flight: the stand-in goes up and the echo hides exactly as it does
-      // under Enhanced.
-      window.__pushForm({ chatAnimations: 'redraw' })
-      await sleep(250)
-      if (sendInput !== null) sendInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
-      await sleep(60)
-      var redrawEcho = document.createElement('div')
-      redrawEcho.setAttribute('data-submission-echo', '')
-      redrawEcho.innerHTML = '<div style="width:220px;height:44px;background:rgb(240,240,240);border-radius:18px;padding:8px 12px">redraw</div>'
-      sendFlow.appendChild(redrawEcho)
-      await sleep(120)
-      r.send.redraw = {
-        ghost: document.querySelector('[data-dsh-claude-send-ghost]') !== null,
-        hidden: redrawEcho.hasAttribute('data-dsh-claude-send-flight'),
-        visibility: getComputedStyle(redrawEcho).visibility,
-      }
-      redrawEcho.remove()
-      window.__pushForm({ chatAnimations: 'enhanced' })
-      await sleep(250)
       sendFlow.remove()
     })
   })

@@ -105,8 +105,6 @@ function bundleChunk(manifest, shared, { external, plugins }) {
     write: false,
     metafile: true,
     logLevel: 'silent',
-    // The same automatic JSX runtime as the bundle (D57).
-    jsx: 'automatic',
     external,
     banner: { js: chunkOpen(manifest.id) },
     footer: { js: CHUNK_CLOSE },

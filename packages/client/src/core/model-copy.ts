@@ -16,7 +16,6 @@ export interface ModelCopyIndex {
   ui: Record<string, CopyPair>
   settings: Record<string, CopyPair>
   ban: Record<string, CopyPair>
-  reader: Record<string, CopyPair>
   fallback: string
   families: CopyRule[]
   tiers: CopyRule[]
@@ -76,8 +75,6 @@ function indexModelCopy(doc: HostAnswer): ModelCopyIndex | null {
     // be listed here: this index IS what lookups read, so an unlisted block
     // would silently fall back to the bundle's English constants.
     ban: table(doc.ban),
-    // The reading view's copy (packages/client/src/features/chat-reader/, D57).
-    reader: table(doc.reader),
     fallback: typeof doc.fallback === 'string' && doc.fallback ? doc.fallback : MODEL_COPY_FALLBACK_LOCALE,
     families: [],
     tiers: [],

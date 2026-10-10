@@ -118,7 +118,7 @@ Anthropic 字体启用（二选一）：
 
 像素小鲸鱼 Deepy 的动画帧图来自 calmly-eating-bugs（[@wp3171216237](https://github.com/wp3171216237)）绘制的 Deepy 小鲸鱼主题包。
 
-聊天区域内的增强动效修改自 [dsh-chat-ux](https://github.com/alm-allen/dsh-chat-ux)（MIT），重绘动效修改自 [dsh-better-display](https://github.com/aa2246740/dsh-better-display)（MIT）。
+聊天区域内的增强动效修改自 [dsh-chat-ux](https://github.com/alm-allen/dsh-chat-ux)（MIT）。
 
 像素螃蟹（Clawd）是 Anthropic 的角色形象，相关权利归 Anthropic 所有。螃蟹掏出电脑敲代码的动画取自 Claude Code，其余各个状态的动画由本项目按这一形象绘制。螃蟹的帧图不适用 MIT 许可（见 [LICENSE](LICENSE)）。本插件是非官方的爱好者作品，与 Anthropic 没有关联，也未获其认可。
 

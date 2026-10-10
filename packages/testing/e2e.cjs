@@ -12,12 +12,11 @@
  * picture with nothing personal in it. The `contract` scenario walks packages/contracts/src/table.ts against the same page, so
  * each host literal the skin depends on is checked where it lives (D44), and the
  * `importance` scenario holds every `!important` the skin writes to one the page
- * needs (packages/testing/importance.cjs, D51).
  * Every scenario runs against its own scratch instance, so nothing a scenario
  * writes can reach another.
  *
  * Usage: node packages/testing/e2e.cjs [--scenario <name>[,<name>…]] [--headed] [--out <dir>] [--delay <ms>]
- *        scenarios: conversation, narrow, tool, scroll, send, contract, reader, stepDisplay, importance, shots
+ *        scenarios: conversation, narrow, tool, send, scroll, contract, importance, shots
  *        (default: every scenario)
  */
 'use strict'
@@ -25,8 +24,6 @@ const fs = require('node:fs')
 const path = require('node:path')
 const { start, openPage, waitForSkin, dismissOverlays, firstRunOverlayText } = require('./dsh-web.cjs')
 const { importanceScenario } = require('./importance.cjs')
-const { readerScenario } = require('./reader-view.cjs')
-const { stepDisplayScenario } = require('./step-display.cjs')
 const { sendPrompt, waitForTurn } = require('./prompt.cjs')
 const { startMockLlm } = require('./mock-llm.cjs')
 const { CANVAS } = require('../../scripts/shoot.cjs')
@@ -595,10 +592,6 @@ const SCENARIOS = {
       ]
     },
   },
-  /** The redraw tier's reading view: the live fold, the word fade, the completed turn (packages/testing/reader-view.cjs, D57). */
-  reader: readerScenario({ check }),
-  /** The reading view under the host's work-details modes (packages/testing/step-display.cjs, D57). */
-  stepDisplay: stepDisplayScenario({ check }),
   /** Every `!important` the skin writes is needed on the real page (packages/testing/importance.cjs, D51). */
   importance: importanceScenario({ check, sendPrompt, waitForTurn, host: HOST }),
   /** Both palettes captured to the run's out directory and swept for personal data. */
@@ -651,6 +644,7 @@ async function runScenario(name, options) {
       await sendPrompt(page, scenario.prompt)
       step('waiting for the turn to settle')
       await waitForTurn(page)
+      if (during !== null) await during
       context.trace = await page.evaluate(() => window.__e2eTrace ?? [])
       if (scenario.afterTurn !== undefined) {
         step('after the turn')
@@ -700,7 +694,7 @@ async function main() {
       + `${unknown.length > 0 ? `; named there but missing here: ${unknown.join(', ')}` : ''}`
       + `${unnamed.length > 0 ? `; run here but unnamed there: ${unnamed.join(', ')}` : ''}`)
   }
-  const names = (argOf('scenario') ?? 'conversation,narrow,tool,send,scroll,contract,reader,stepDisplay,importance,shots').split(',').map((name) => name.trim()).filter(Boolean)
+  const names = (argOf('scenario') ?? 'conversation,narrow,tool,send,scroll,contract,importance,shots')).split(',').map((name) => name.trim()).filter(Boolean)
   const out = path.resolve(argOf('out') ?? DEFAULT_OUT)
   const options = {
     headed: args.includes('--headed'),

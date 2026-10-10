@@ -70,35 +70,4 @@ async function waitForTurn(page, timeoutMs = 90000) {
   await page.waitForFunction((selector) => document.querySelectorAll(selector).length === 0, HOST.streaming, { timeout: timeoutMs })
 }
 
-/**
- * Put the host in one work-details mode and wait until the page has adopted it.
- *
- * The write goes through the host's settings service and the page re-reads the
- * answer, so a scenario that sends a turn right after a write could race the
- * attribute the reading view reads. A host already holding the wanted value
- * answers the write with no change at all, in which case the page is moved to a
- * mode that differs and back.
- */
-async function setWorkDetails(page, mode, timeoutMs = 10000) {
-  const current = () => page.evaluate(() => document.body.getAttribute('data-dsh-claude-step-display'))
-  const wait = async () => {
-    const deadline = Date.now() + timeoutMs
-    while (Date.now() < deadline) {
-      if (await current() === mode) return true
-      await page.waitForTimeout(150)
-    }
-    return false
-  }
-  if (await current() === mode) return true
-  await page.evaluate((wanted) => window.__dshStepDisplay?.set(wanted), mode)
-  if (await wait()) return true
-  const bridge = await page.evaluate(() => window.__dshStepDisplay !== undefined)
-  if (!bridge) throw new Error('the work-details bridge is not on the page (core/step-display.ts)')
-  await page.evaluate((wanted) => window.__dshStepDisplay.set(wanted === 'compact' ? 'standard' : 'compact'), mode)
-  await page.waitForTimeout(300)
-  await page.evaluate((wanted) => window.__dshStepDisplay.set(wanted), mode)
-  if (!await wait()) throw new Error(`the page never adopted the work-details mode "${mode}"`)
-  return true
-}
-
-module.exports = { sendPrompt, waitForTurn, setWorkDetails, PROMPT_HOST: HOST }
+module.exports = { sendPrompt, waitForTurn, PROMPT_HOST: HOST }
