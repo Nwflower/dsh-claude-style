@@ -86,7 +86,7 @@ dsh plugin --profile web add dsh-claude-style                  # npm 包（推�
 
 ## 字体
 
-> **重要：Anthropic 没有对其字体进行公开发行，[`点击此处可以查看`](https://github.com/Nwflower/dsh-claude-style/raw/main/packages/assets/src/fonts)，请自行下载，仅供学习或研究用途**。
+> **重要：Anthropic 没有对其字体进行公开发行，[`点击此处可以查看`](https://github.com/Nwflower/dsh-claude-style/tree/master/packages/assets/src/fonts/anthropic)，请自行下载，仅供学习或研究用途**。
 
 Anthropic 字体启用（二选一）：
 
