@@ -1781,6 +1781,11 @@
       "prop": "letter-spacing",
       "verdict": "unmatched"
     },
+    "body[data-dsh-claude-style]:not([data-ds-dark-theme]) .dsh-claude-model-rule-name{color:var(--dsw-alias-label-secondary, #6f6a62)!}|color": {
+      "selector": "body[data-dsh-claude-style]:not([data-ds-dark-theme]) .dsh-claude-model-rule-name",
+      "prop": "color",
+      "verdict": "unmatched"
+    },
     "body[data-dsh-claude-style] .dsh-claude-effort[data-apex] .dsh-claude-effort-matrix{display:grid!;grid-auto-flow:row!}|display": {
       "selector": "body[data-dsh-claude-style] .dsh-claude-effort[data-apex] .dsh-claude-effort-matrix",
       "prop": "display",

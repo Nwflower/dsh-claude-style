@@ -222,6 +222,13 @@ body[data-dsh-claude-style] .dsh-claude-model-rule-name {
   color: var(--dsw-alias-label-caption, #a6a094) !important;
   letter-spacing: 0.02em !important;
 }
+/* The provider is this menu's only grouping label, and caption is the host's
+   decoration tier: on a light card it reads 2.45:1 (#a6a094 on #f8f8f8), under
+   the 4.5:1 an 11px label needs. Secondary is the tier that carries a name; the
+   fallback is the value that clears the threshold when the token is absent. */
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) .dsh-claude-model-rule-name {
+  color: var(--dsw-alias-label-secondary, #6f6a62) !important;
+}
 body[data-dsh-claude-style] .dsh-claude-model-cell-label {
   flex: 1;
   min-width: 0;
