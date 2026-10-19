@@ -74,8 +74,8 @@
       "reason": "The waiting line's own marks, swept at teardown."
     },
     "packages/client/src/features/effort/effort-picker.ts": {
-      "count": 1,
-      "reason": "The effort popover's own node, swept when the control is switched off or torn down."
+      "count": 2,
+      "reason": "The effort popover's own node, swept when the control is switched off or torn down; and the context meter, read while the trigger is placed because the meter stands absolutely in the dock and never enters the row this trigger is clamped to."
     },
     "packages/client/src/features/home/greeting-copy.ts": {
       "count": 1,

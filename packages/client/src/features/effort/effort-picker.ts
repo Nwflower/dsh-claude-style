@@ -192,6 +192,21 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   }
 
   /**
+   * The wall this trigger may not pass on the row's line: the context meter's
+   * left edge while the meter is on it. The meter is placed absolutely in the
+   * dock (features/composer/inline-bar.css) and the row never sees it, so the
+   * row's own right edge is not that wall — clamping to it pinned the level's
+   * name into the reading's band on a narrow card.
+   */
+  function meterWall(): number | null {
+    const meter = document.querySelector<HTMLElement>('[data-dsh-claude-context-meter]')
+    if (meter === null) return null
+    const box = meter.getBoundingClientRect()
+    if (box.width === 0 || box.height === 0) return null
+    return Math.round(box.left)
+  }
+
+  /**
    * Pin the body-mounted trigger beside the model trigger from that reading.
    *
    * The row's own rhythm is the 12px flex gap (8px in narrow cards) the host
@@ -232,9 +247,20 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     // A row too narrow for its controls leaves the model trigger's box outside
     // the card, and this trigger is not clipped by the card: pinned from that
     // box it would paint over whatever stands beside the composer, the sidebar
-    // included. The row's own edges are the last word on where it may stand.
+    // included. The row's own edges are the last word on where it may stand —
+    // except at the right, where the meter stands in the row's way without
+    // being in the row: it is placed absolutely in the dock
+    // (features/composer/inline-bar.css), so the row never grows around it and
+    // clamping to the row's right edge pinned the level's name into the
+    // reading's band on a narrow card. Stop at the meter's left edge while the
+    // meter is on this line; a meter that is hidden or lives elsewhere (the
+    // hero, the reading moved under the row) leaves the row's own edge in
+    // charge, which is the behaviour this trigger shipped with.
+    const wall = meterWall() ?? (row === null ? null : Math.round(row.right))
     const wanted = Math.round(shifted.right + 2)
-    const left = row === null ? wanted : Math.min(Math.max(wanted, Math.round(row.left)), Math.round(row.right - width))
+    const left = wall === null
+      ? wanted
+      : Math.min(Math.max(wanted, row === null ? wanted : Math.round(row.left)), Math.round(wall - width))
     const top = Math.round(shifted.top + (shifted.height - height) / 2)
     if (left !== effortPlace.left) {
       effortPlace.left = left
