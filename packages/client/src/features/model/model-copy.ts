@@ -6,13 +6,13 @@ import type { HostAnswer } from '@dsh-claude-style/engine/resource'
 /** One `{ locale: text }` pair of the copy document. */
 export type CopyPair = Record<string, string>
 
-/** A family or tier rule: a model-id pattern and the line every id it claims reads. */
+/** A family or tier rule: a pattern tried against a model's id and then its display name (D79), and the line every row it claims reads. */
 export interface CopyRule {
   re: RegExp
   text?: CopyPair
 }
 
-/** A brand rule: a model-id pattern and the vendored lockup it claims. */
+/** A brand rule: a pattern tried against a model's id and then its display name (D79), and the vendored lockup it claims. */
 export interface BrandRule {
   re: RegExp
   brand: string

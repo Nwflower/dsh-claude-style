@@ -48,7 +48,7 @@
     "pattern": { "type": "string", "format": "regex" },
     "brandId": { "type": "string", "minLength": 1 },
     "copyRule": {
-      "description": "A model-id pattern and the line every id it claims reads. A rule is tried against the model's id, then the display name beside it (D79).",
+      "description": "A pattern tried against a model's id and then the display name beside it (D79), and the line every row it claims reads.",
       "type": "object",
       "required": ["match", "text"],
       "properties": {
