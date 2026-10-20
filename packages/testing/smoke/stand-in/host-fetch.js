@@ -42,7 +42,10 @@
       // A folded answer with the model dimension, so both tabs draw their data.
       // The all-time figures reach past the one listed day (history older than
       // any range window): all time peaks at 3 AM over 500k tokens, today alone
-      // peaks at 3 PM over 250k.
+      // peaks at 3 PM over 250k. Every read is counted and answered with the
+      // tokens of the day it is asked on, so a panel that reads again draws a
+      // different figure rather than the one it opened on.
+      window.__usageReads = (window.__usageReads || 0) + 1
       var today = new Date()
       var pad = function (value) { return value < 10 ? '0' + value : String(value) }
       var date = today.getFullYear() + '-' + pad(today.getMonth() + 1) + '-' + pad(today.getDate())

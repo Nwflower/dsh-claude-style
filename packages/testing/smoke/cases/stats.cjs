@@ -224,6 +224,10 @@ module.exports = {
     check('the studio hero mark is on the document on the hero page and off it elsewhere, and the studio rules reach the stack',
       r.homeHero !== undefined && r.homeHero.onHero === true && r.homeHero.offHero === false && r.homeHero.stackMaxWidth === '720px',
       JSON.stringify(r.homeHero))
+    check('the panel reads the roll-up again rather than standing on the figures it opened with: a reader coming back to the window past the floor, and a panel standing on the hero past the period',
+      r.homeRefresh !== undefined && r.homeRefresh.afterWake > r.homeRefresh.atStart &&
+        r.homeRefresh.afterTick > r.homeRefresh.afterWake,
+      JSON.stringify(r.homeRefresh))
     check('the studio hero draws the conversation\'s permission trigger in the card\'s mode strip, with no segment group',
       r.heroPerm !== undefined && r.heroPerm.trigger === true && r.heroPerm.segments === 0 &&
         r.heroPerm.label === 'Accept edits' && r.heroPerm.disabled === false,

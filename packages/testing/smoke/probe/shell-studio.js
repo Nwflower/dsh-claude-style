@@ -160,6 +160,40 @@
       accessParent.appendChild(access)
       await sleep(200)
       r.homeHero = { onHero: heroRoot.hasAttribute('data-dsh-claude-home-hero') }
+      // The panel reads the roll-up again rather than standing on the figures it
+      // opened with, and the two asks are told apart by the page's own clock: the
+      // window's focus reads once the numbers have aged past the floor, and the
+      // page's periodic pass reads once they age past the period. The clock is
+      // moved forward instead of waiting out the stretches, which is the input
+      // the policy names; both are restored before the rest of the case runs.
+      var realNow = Date.now
+      var skew = 0
+      Date.now = function () { return realNow.call(Date) + skew }
+      var readsAtStart = window.__usageReads || 0
+      var waitForRead = async function (before) {
+        for (var readWait = 0; readWait < 40 && (window.__usageReads || 0) === before; readWait++) await sleep(50)
+        return window.__usageReads || 0
+      }
+      // A window taking the focus back inside the floor keeps the figures it has.
+      window.dispatchEvent(new Event('focus'))
+      await sleep(300)
+      var readsAtWake = window.__usageReads || 0
+      // Past the floor the returning reader's numbers are read again.
+      skew = 12000
+      window.dispatchEvent(new Event('focus'))
+      readsAtWake = await waitForRead(readsAtWake)
+      // The answer stamps itself on the page's clock, so the next stretch is
+      // measured from the moment it landed rather than from the ask.
+      await sleep(300)
+      // A panel standing on the hero reads on the page's periodic pass, which is
+      // the one that reaches a window nobody touches; a node appended to the page
+      // is what asks the scheduler for one.
+      var readsBeforeTick = window.__usageReads || 0
+      skew = 60000
+      document.body.appendChild(document.createElement('i'))
+      var readsAfterTick = await waitForRead(readsBeforeTick)
+      Date.now = realNow
+      r.homeRefresh = { atStart: readsAtStart, afterWake: readsAtWake, afterTick: readsAfterTick }
       // The studio rules reach the hero stack through that mark: the stack
       // takes the studio column's 720px cap.
       var studioStack = document.createElement('div')

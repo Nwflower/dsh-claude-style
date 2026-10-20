@@ -143,6 +143,13 @@ async function hostUsage({ mod, fakeHost, request, browser, scratchHome, scratch
   check('a warm start re-reads and re-lists nothing: the fingerprint cache still skips unchanged logs',
     warm.value?.read === 0 && warm.value?.sessions === 1 && warmReads.length === 0 && warmListings.length === 0,
     JSON.stringify({ value: warm.value && { read: warm.value.read, sessions: warm.value.sessions }, warmReads, warmListings }))
+  // The cache window is what the panel's own period works around: a read inside
+  // it is served the finished roll-up as it stands, so the panel drawing a number
+  // the reader has just earned waits for both this window and its next ask.
+  const repeat = JSON.parse((await request(warmHost, USAGE, 'GET', '', browser)).body)
+  check('a read right after another is served the same finished roll-up rather than folded again',
+    repeat.computing === false && repeat.value?.computedAt === warm.value?.computedAt && warmReads.length === 0,
+    JSON.stringify({ first: warm.value?.computedAt, repeat: repeat.value?.computedAt, reads: warmReads }))
   // A session whose log is gone keeps the days the record holds for it: they are
   // the only account of them left, so deleting the conversation no longer takes
   // its tokens off the panel Nothing is folded again, and the entry loses
