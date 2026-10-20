@@ -36,8 +36,9 @@
       // runs on a frame.) One entry writes its own box inline, so this read is
       // where the takeover's weight over an inline style is judged.
       await sleep(500)
+      var footerEntries = document.querySelectorAll('[data-dsh-claude-part~="foot-area"] [data-dsh-claude-footer-entry]')
       r.footerEntriesBeforeOpen = Array.prototype.map.call(
-        document.querySelectorAll('[data-dsh-claude-part~="foot-area"] [data-dsh-claude-footer-entry]'),
+        footerEntries,
         function (entry) {
           return {
             kind: entry.getAttribute('data-dsh-usage-foot-card') === null ? 'slot' : 'card',
@@ -45,6 +46,27 @@
             display: getComputedStyle(entry).display,
           }
         })
+      // The plugin's own `<dialog>`, mounted into the same footer, is no unit to
+      // collapse: the takeover takes no box from it. Opened the way cost-meter
+      // opens its notice, it must paint and the pointer must land inside it
+      // rather than on the page it holds inert (issue #97).
+      var footDialog = document.getElementById('plugin-foot-dialog')
+      if (footDialog !== null) {
+        footDialog.showModal()
+        await sleep(200)
+        var dialogBox = footDialog.getBoundingClientRect()
+        var dialogHit = document.elementFromPoint(dialogBox.left + dialogBox.width / 2, dialogBox.top + dialogBox.height / 2)
+        r.footerDialogOpen = {
+          entry: Array.prototype.indexOf.call(footerEntries, footDialog) !== -1,
+          modal: footDialog.matches(':modal'),
+          display: getComputedStyle(footDialog).display,
+          hitInside: dialogHit !== null && footDialog.contains(dialogHit),
+        }
+        footDialog.close()
+        await sleep(150)
+      } else {
+        r.footerDialogOpen = null
+      }
       // The first login frame makes the skin read the profile once.
       window.__pushAccountFrame({ status: 'credential-stored', attempt: { phase: 'succeeded', id: 'smoke-1' } })
       await sleep(500)

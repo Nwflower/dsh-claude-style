@@ -281,3 +281,29 @@ test('a match added inside a quiet container is registered too', async () => {
   await settle()
   expect(matches.all()).toEqual([added])
 })
+
+test('a registry listener hears the change in the batch that made it, before the next frame', async () => {
+  const root = host()
+  let heard = 0
+  const matches = observeMatches<HTMLElement>(`[${PROBE}]`, () => { heard += 1 })
+  cleanups.push(() => matches.release())
+  root.append(probed('i'))
+  // The observer's own callback is a microtask of the task that changed the page.
+  await Promise.resolve()
+  expect(heard).toBe(1)
+})
+
+test('a registry listener hears every change of the set and nothing after its release', async () => {
+  const root = host()
+  const heard: number[] = []
+  const matches = observeMatches<HTMLElement>(`[${PROBE}]`, () => heard.push(matches.all().length))
+  root.append(probed('i'))
+  await settle()
+  root.append(probed('b'))
+  await settle()
+  expect(heard).toEqual([1, 2])
+  matches.release()
+  root.append(probed('u'))
+  await settle()
+  expect(heard).toEqual([1, 2])
+})

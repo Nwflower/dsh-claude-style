@@ -183,6 +183,8 @@ interface MatchRegistry {
   items: Set<Element>
   /** The document-ordered array handed out, or null while the set has changed since the last read. */
   ordered: Element[] | null
+  /** Readers told of a change in the batch's own callback, before the browser computes style. */
+  listeners: Set<() => void>
   readers: number
   stop: () => void
 }
@@ -203,6 +205,7 @@ function registryFor(selector: string): MatchRegistry {
   const registry: MatchRegistry = {
     items: new Set(document.querySelectorAll(selector)),
     ordered: null,
+    listeners: new Set(),
     readers: 1,
     // Only added nodes are examined, and an element that left the document is
     // dropped by the next read: a removal needs no walk of the whole set. The
@@ -241,7 +244,11 @@ function registryFor(selector: string): MatchRegistry {
         changed = true
       }
     }
-    if (changed) registry.ordered = null
+    if (changed) {
+      registry.ordered = null
+      // A listener that leaves or joins here changes the set for the next batch only.
+      for (const listener of [...registry.listeners]) listener()
+    }
   })
   matchRegistries.set(selector, registry)
   return registry
@@ -251,9 +258,14 @@ function registryFor(selector: string): MatchRegistry {
  * Read one selector's matches through a shared registry (D40). The list is
  * resolved once and kept current by the bus's child list records, so a pass
  * reads it without walking the document.
+ *
+ * @param onChange - told of every batch that changed the set, in that batch's
+ *        own callback: the task the host changed the page in still reads the
+ *        page as it was, and the next frame reads it with the change.
  */
-export function observeMatches<T extends Element>(selector: string): MatchList<T> {
+export function observeMatches<T extends Element>(selector: string, onChange?: () => void): MatchList<T> {
   const registry = registryFor(selector)
+  if (onChange !== undefined) registry.listeners.add(onChange)
   let released = false
   return {
     all() {
@@ -267,6 +279,7 @@ export function observeMatches<T extends Element>(selector: string): MatchList<T
     release() {
       if (released) return
       released = true
+      if (onChange !== undefined) registry.listeners.delete(onChange)
       registry.readers -= 1
       if (registry.readers > 0) return
       registry.stop()

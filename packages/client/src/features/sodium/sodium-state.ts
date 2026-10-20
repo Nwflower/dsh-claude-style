@@ -35,3 +35,29 @@ export function subscribeRules(listener: () => void) {
     if (at !== -1) listeners.splice(at, 1)
   }
 }
+
+let lost: readonly string[] = []
+const lostListeners: (() => void)[] = []
+
+/**
+ * The sheets the table held a moment ago and holds no rules on now: its owner
+ * changed the rules the table recognizes, so the saving it stood for is gone.
+ */
+export function sheetsLost() {
+  return lost
+}
+
+export function publishLost(next: readonly string[]) {
+  if (next.length === lost.length && next.every((name, at) => name === lost[at])) return
+  lost = next
+  notifyAll(lostListeners)
+}
+
+/** Hear the lost sheets change; returns the unsubscriber. */
+export function subscribeLost(listener: () => void) {
+  lostListeners.push(listener)
+  return () => {
+    const at = lostListeners.indexOf(listener)
+    if (at !== -1) lostListeners.splice(at, 1)
+  }
+}

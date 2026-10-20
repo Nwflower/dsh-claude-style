@@ -1,11 +1,12 @@
 /**
  * The sodium rewrite's mechanism (D78): a rule is rewritten where it stands and
- * written back exactly; a selector the sheet refuses is an error; the flow-child
- * mark stands on every child of the flow's containers through every change; and
- * the table's rewrite of the host's flow rules selects the same elements as the
- * rules themselves, at the same specificity, as the browser's own cascade
- * judges it — an item filled or emptied included, in the very task that
- * changed it.
+ * written back exactly; a selector the sheet refuses is an error that leaves the
+ * sheet as its owner wrote it; a rule another writer changed since is left to
+ * that writer and handed back; the flow-child mark stands on every child of the
+ * flow's containers through every change; and the table's rewrite of the host's
+ * flow rules selects the same elements as the rules themselves, at the same
+ * specificity, as the browser's own cascade judges it — an item filled or
+ * emptied included, in the very task that changed it.
  *
  * @capability style-rewrite
  * @features engine, sodium
@@ -124,9 +125,23 @@ test('a rewritten rule keeps its place, and writing it back restores the sheet a
   expect([...sheet.cssRules].map(rule => rule.cssText)).toEqual(before)
 })
 
-test('a selector the sheet refuses is an error', () => {
+test('a selector the sheet refuses is an error, and the rules written before it go back', () => {
+  const sheet = sheetOf('.a { color: red } .b { color: blue }')
+  const before = [...sheet.cssRules].map(rule => rule.cssText)
+  const shape = {
+    rewrite: (selector: string) => selector === '.b' ? { selector: '.b[[', captured: {} } : { selector: '.a.x', captured: {} },
+  }
+  expect(() => applyRewrite(planRewrite(sheet, shape))).toThrow()
+  expect([...sheet.cssRules].map(rule => rule.cssText)).toEqual(before)
+})
+
+test('a rule another writer changed since the rewrite stays theirs, and is handed back', () => {
   const sheet = sheetOf('.a { color: red }')
-  expect(() => applyRewrite(planRewrite(sheet, { rewrite: () => ({ selector: '.a[[', captured: {} }) }))).toThrow()
+  const rewritten = applyRewrite(planRewrite(sheet, { rewrite: () => ({ selector: '.a.x', captured: {} }) }))
+  const rule = sheet.cssRules[0] as CSSStyleRule
+  rule.selectorText = '.a.y'
+  expect(restoreRewrite(rewritten)).toEqual([expect.objectContaining({ rewritten: '.a.x' })])
+  expect(rule.selectorText).toBe('.a.y')
 })
 
 test('the flow-child mark stands on every child of the flow\'s containers through every change', async () => {

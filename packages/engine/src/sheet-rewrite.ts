@@ -58,22 +58,34 @@ export function planRewrite(sheet: CSSStyleSheet, rewrite: SelectorRewrite, take
  * @returns the rules as rewritten, with the selector the sheet serializes, for
  *          `restoreRewrite`.
  * @throws when the sheet refuses a selector: the CSSOM ignores an invalid one
- *         silently and the rule would keep its costly form unnoticed.
+ *         silently and the rule would keep its costly form unnoticed. Every rule
+ *         this call wrote is written back first, so a refused selector leaves
+ *         the sheet as its owner wrote it.
  */
 export function applyRewrite(planned: readonly RewrittenRule[]): RewrittenRule[] {
-  return planned.map((entry) => {
+  const written: RewrittenRule[] = []
+  for (const entry of planned) {
+    const original = entry.rule.selectorText
     entry.rule.selectorText = entry.rewritten
-    if (entry.rule.selectorText === entry.original) throw new Error(`sheet-rewrite: the sheet refused the selector ${entry.rewritten}`)
-    return { ...entry, rewritten: entry.rule.selectorText }
-  })
+    if (entry.rule.selectorText === original) {
+      restoreRewrite(written)
+      throw new Error(`sheet-rewrite: the sheet refused the selector ${entry.rewritten}`)
+    }
+    written.push({ ...entry, original, rewritten: entry.rule.selectorText })
+  }
+  return written
 }
 
 /**
- * Write each rule's own selector back. A rule whose selector no longer reads
- * as this rewrite left it was changed since by someone else, and stays theirs.
+ * Write each rule's own selector back. A rule whose selector no longer reads as
+ * this rewrite left it was changed since by someone else, and stays theirs.
+ * @returns the rules left as they are, which the caller no longer holds.
  */
-export function restoreRewrite(rewritten: readonly RewrittenRule[]) {
+export function restoreRewrite(rewritten: readonly RewrittenRule[]): RewrittenRule[] {
+  const left: RewrittenRule[] = []
   for (const entry of rewritten) {
     if (entry.rule.selectorText === entry.rewritten) entry.rule.selectorText = entry.original
+    else left.push(entry)
   }
+  return left
 }

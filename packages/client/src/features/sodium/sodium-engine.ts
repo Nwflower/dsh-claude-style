@@ -5,7 +5,7 @@ import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { RewrittenRule } from '@dsh-claude-style/engine/sheet-rewrite'
 import { SODIUM_MEMBERS } from './members'
 import type { SodiumAdapter, SodiumMember } from './members'
-import { publishRules } from './sodium-state'
+import { publishLost, publishRules } from './sodium-state'
 import { versionAtLeast } from './version'
 
 /** One sheet the rewrite holds, under the adapter that rewrote it. */
@@ -56,6 +56,9 @@ export function createSodiumEngine(ctx: HostContext) {
   const releases = readReleases(ctx)
   let on = false
   let held: HeldSheet[] = []
+  /** The sheets the table held on the last report, and whether their loss has been reported since. */
+  let lastSheets: readonly string[] = []
+  let reportedLoss = false
   /** Each adapter's attribute keeper, with the captured classes it keeps them for. */
   const keepers = new Map<SodiumAdapter, { key: string, stop: () => void }>()
 
@@ -65,13 +68,34 @@ export function createSodiumEngine(ctx: HostContext) {
     return release !== null && release !== undefined && versionAtLeast(release, member.since)
   }))
 
+  /**
+   * Report what the rewrite holds. A table that held rules on a sheet and holds
+   * none of them now was overtaken by its owner's change, which the page shows
+   * nowhere else: the loss is named once.
+   */
   function publish() {
-    publishRules(held.flatMap(({ member, adapter, rules }) => rules.map((entry) => ({
+    const rules = held.flatMap(({ member, adapter, rules }) => rules.map((entry) => ({
       member: member.id,
       since: member.since,
       sheet: adapter.sheet,
       declarations: entry.rule.style.cssText,
-    }))))
+    })))
+    publishRules(rules)
+    const lost = on && rules.length === 0 && lastSheets.length > 0
+    if (lost && !reportedLoss) reportError(new Error(`sodium: ${lastSheets.join(', ')} no longer carry the rules the table rewrites`))
+    reportedLoss = lost
+    publishLost(lost ? lastSheets : [])
+    lastSheets = [...new Set(held.map(({ adapter }) => adapter.sheet))]
+  }
+
+  /**
+   * A sheet that refuses a rewritten selector: `applyRewrite` has written that
+   * sheet's own rules back, so it stays its owner's while the sheets taken
+   * before it stay restorable and reported (D12).
+   */
+  function reportWrite(error: unknown) {
+    reportError(error)
+    publish()
   }
 
   /** Start, restart or stop each adapter's keeper for the classes its rules captured, by role. */
@@ -123,7 +147,9 @@ export function createSodiumEngine(ctx: HostContext) {
       }
     }
     keep([...held, ...fresh])
-    held = [...held, ...fresh.map((entry) => ({ ...entry, rules: applyRewrite(entry.rules) }))]
+    // Each sheet is held as it is written: a sheet the browser refuses takes its
+    // own rules back, and the sheets taken before it stay restorable.
+    for (const entry of fresh) held.push({ ...entry, rules: applyRewrite(entry.rules) })
     publish()
   }
 
@@ -131,19 +157,22 @@ export function createSodiumEngine(ctx: HostContext) {
     start() {
       if (on) return
       on = true
-      coveredMembers().then(sync)
+      coveredMembers().then(sync).catch(reportWrite)
     },
     /** Follow the sheets in `<head>` while on. */
     refresh() {
-      if (on) coveredMembers().then(sync)
+      if (on) coveredMembers().then(sync).catch(reportWrite)
     },
     stop() {
       if (!on) return
       on = false
-      for (const { rules } of held) restoreRewrite(rules)
+      // A rule another writer changed since keeps its rewritten selector, and the
+      // marks come off below: from here on it matches nothing, so it is named.
+      const stranded = held.flatMap(({ adapter, rules }) => restoreRewrite(rules).map((entry) => `${adapter.sheet} · ${entry.rewritten}`))
       held = []
       keep([])
       publish()
+      if (stranded.length > 0) reportError(new Error(`sodium: ${stranded.join('; ')} no longer read as the rewrite left them and stay written`))
     },
     /** How many rules the rewrite would take on the page as it stands. */
     survey() {

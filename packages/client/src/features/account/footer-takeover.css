@@ -64,9 +64,11 @@ body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [data-dsh-claude-pa
    the account popover. An entry that hosts a floating overlay (a fixed panel or
    a dialog) keeps its subtree visible — the overlay must stay reachable after
    the mirrored popover item opens it — while the entry's own box goes, so only
-   the overlay surfaces. A plugin writes its entry's box inline, which no plain
-   rule beats, so the box is taken away by weight: `display: contents` drops the
-   box and leaves the overlay laying out as if the entry were not there. */
+   the overlay surfaces. An entry that IS an overlay carries no entry mark at
+   all: the takeover has no unit to collapse there. A plugin writes its entry's
+   box inline, which no plain rule beats, so the box is taken away by weight:
+   `display: contents` drops the box and leaves the overlay laying out as if the
+   entry were not there. */
 body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [data-dsh-claude-part~="foot-area"] [data-dsh-claude-footer-entry]:not([data-dsh-claude-footer-hidden]) {
   display: contents !important;
 }

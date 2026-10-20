@@ -2,5 +2,6 @@
   "sodiumTitle": { "zh": "钠(Sodium)渲染引擎", "en": "Sodium rendering engine" },
   "sodiumDesc": { "zh": "改写dsh及插件的样式表，在牺牲兼容性的前提下优化渲染性能。", "en": "Rewrites dsh's and plugins' stylesheets, trading compatibility for rendering performance." },
   "sodiumRules": { "zh": "{count} 条规则生效中", "en": "{count} rules in effect" },
+  "sodiumLost": { "zh": "宿主已改动这些规则，改写未生效。", "en": "The host changed these rules, so the rewrite no longer applies." },
   "sodiumMember": { "zh": "{member} {since} 及以后", "en": "{member} {since} and later" }
 }

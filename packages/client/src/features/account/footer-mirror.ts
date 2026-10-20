@@ -38,7 +38,11 @@ export function createFooterMirror(options: {
    *   - entries hosting an overlay — a fixed-position panel (the cordis
    *     inventory panel) or a dialog/menu/listbox — stay visible, but
    *     every branch of their subtree that does not lead to the overlay
-   *     is hidden, so only the overlay itself can surface.
+   *     is hidden, so only the overlay itself can surface;
+   *   - an entry that IS an overlay (a plugin's own dialog mounted into
+   *     the footer, the cost-meter update notice) is no unit at all: it
+   *     is left whole, marked `data-dsh-claude-footer-overlay` and
+   *     nothing else, so the takeover writes no display rule onto it.
    * Returns the live entry list for popover mirroring.
    */
   function syncFooterVisibility(footArea: Element) {
@@ -47,14 +51,27 @@ export function createFooterMirror(options: {
     const entries = footerEntriesIn(footArea)
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i]
+      // A sync outside a pass (the popover opening) has no read phase, and
+      // reads the panels while it writes.
+      const entryOverlay = isOverlay(entry) || (fixed === null ? isFixedPanel(entry) : fixed.has(entry))
+      if (entryOverlay) {
+        // An entry that is itself an overlay — a plugin's own dialog mounted
+        // into the footer (the cost-meter update notice), or a fixed panel — is
+        // no unit to collapse: it keeps its whole box, and the takeover puts no
+        // entry or hidden mark on it. An open modal dialog left visible stays
+        // modal; hidden, the browser would hold the whole page inert behind an
+        // overlay that nothing paints (issue #97).
+        entry.removeAttribute('data-dsh-claude-footer-entry')
+        entry.removeAttribute('data-dsh-claude-footer-hidden')
+        entry.setAttribute('data-dsh-claude-footer-overlay', '')
+        continue
+      }
       entry.setAttribute('data-dsh-claude-footer-entry', '')
       const all = entry.querySelectorAll('*')
       for (let j = 0; j < all.length; j++) {
         const el = all[j]
         if (el.hasAttribute('data-dsh-claude-footer-overlay')) continue
-        // A sync outside a pass (the popover opening) has no read phase, and
-        // reads the panels while it writes.
-        const overlay = roleOverlay(el) || (fixed === null ? isFixedPanel(el) : fixed.has(el))
+        const overlay = isOverlay(el) || (fixed === null ? isFixedPanel(el) : fixed.has(el))
         if (overlay) el.setAttribute('data-dsh-claude-footer-overlay', '')
       }
       markFooterHiddenBranches(entry)
@@ -62,7 +79,24 @@ export function createFooterMirror(options: {
     return entries
   }
 
-  function roleOverlay(el: Element) {
+  /** The nodes one entry is read through: the entry itself and its whole subtree. */
+  function entryNodes(entry: Element) {
+    const nodes: Element[] = [entry]
+    const all = entry.querySelectorAll('*')
+    for (let i = 0; i < all.length; i++) nodes.push(all[i])
+    return nodes
+  }
+
+  /**
+   * Whether one node is a floating overlay the footer must leave in the page: a
+   * menu, listbox or ARIA dialog, or a native `<dialog>`. A native dialog's role
+   * is implicit and, closed, its box is `position: absolute`, so neither the
+   * role nor the fixed test sees it before it opens; hidden, an open one stays
+   * modal, and the browser holds the whole page inert behind an overlay that
+   * nothing paints.
+   */
+  function isOverlay(el: Element) {
+    if (el.tagName === 'DIALOG') return true
     const role = el.getAttribute('role') || ''
     return role === 'dialog' || role === 'menu' || role === 'listbox'
   }
@@ -81,8 +115,10 @@ export function createFooterMirror(options: {
   function measure(footArea: Element) {
     const fixed = new Set<Element>()
     for (const entry of footerEntriesIn(footArea)) {
-      for (const el of entry.querySelectorAll('*')) {
-        if (!el.hasAttribute('data-dsh-claude-footer-overlay') && !roleOverlay(el) && isFixedPanel(el)) fixed.add(el)
+      const nodes = entryNodes(entry)
+      for (let i = 0; i < nodes.length; i++) {
+        const el = nodes[i]
+        if (!el.hasAttribute('data-dsh-claude-footer-overlay') && !isOverlay(el) && isFixedPanel(el)) fixed.add(el)
       }
     }
     fixedRead = { footArea, fixed }
@@ -435,6 +471,10 @@ export function createFooterMirror(options: {
         if (entry.getAttribute('aria-haspopup') === 'menu') return
         if (entry.querySelector('[aria-haspopup="menu"]') !== null) return
         if (entry.querySelector('svg[viewBox="0 0 13.664 13.571"]') !== null) return
+        // An entry that is itself an overlay is no footer control: it gets no
+        // row, and a clone of it would carry the dialog's own `open` into the
+        // popover as a second, non-modal copy.
+        if (entry.hasAttribute('data-dsh-claude-footer-overlay')) return
         const trigger = findFooterTrigger(entry)
         const hasContent = (entry.textContent || '').trim() !== '' ||
                          entry.querySelector('svg, img, canvas') !== null

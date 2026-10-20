@@ -109,14 +109,19 @@ function page(name, tier, cases, probe = PROBE) {
   // settings area (the usage plugin's `data-dsh-usage-foot-card`), outside the
   // slot: the takeover collects whatever the footer holds.
   //
+  // A third shape is the one a plugin's own dialog makes: cost-meter mounts its
+  // update notice — a native `<dialog>` it opens with `showModal` — into the
+  // same foot area, and the takeover must leave it whole (issue #97).
+  //
   // The sidebar is the column the host builds: the session tree scrolls in the
   // room above and the footer stands at the column's bottom end. Its two sizes
   // are pinned here, because a host's footer sits at the window's bottom and the
   // account menu cases read where the host's portal lands against it.
   var footerActions = '<div class="_footerActions_x_1"><div data-slot="sidebar.footer.action"><button id="plugin-action" aria-label="Cost meter" data-cordis-badge="3" style="box-sizing:border-box;display:flex;align-items:center;width:100%;height:42px;padding:0 10px;background:transparent;border:none"><svg viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"></circle></svg></button><div class="_balance_p_1" role="group"><span>Balance 10.07</span><div role="progressbar" aria-valuenow="40"></div></div></div></div>'
   var footCard = '<div data-dsh-usage-foot-card=""><div class="_usageCard_u_1"><button type="button" aria-label="Open usage settings"><svg viewBox="0 0 16 16"><path d="M2.5 12.5h11"></path></svg><span>Today 3.49M tokens</span></button></div></div>'
+  var footDialog = '<dialog id="plugin-foot-dialog" class="_notice_n_1" aria-label="New version notice"><header class="_noticeHead_n_1"><strong>New version</strong><button type="button" aria-label="Close">×</button></header><div class="_noticeBody_n_1"><p>Combined sidebar card</p></div></dialog>'
   var footer = name === 'desktop'
-    ? '<div class="_footArea_x_1">' + footerActions + footCard +
+    ? '<div class="_footArea_x_1">' + footerActions + footCard + footDialog +
         '<div class="_settingsArea_x_1"><div data-slot="sidebar.settings"><div class="_triggerRow_s_1">' +
           '<div data-slot="settings.launcher"><div class="_root_a_1"><span>' +
             // data-signed-out is the host's own mark on the account trigger (ui-shell's

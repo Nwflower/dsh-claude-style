@@ -11,6 +11,10 @@ import type { MatchList } from './bus'
  * kind. A child that leaves keeps its mark, which every rule reading it ignores
  * outside the flow.
  *
+ * Each container is watched on its own child list, so no other part of the page
+ * reaches this keeper, and a batch marks the children it added: a container's
+ * whole list is walked once, when the container is found.
+ *
  * The bus hands the records over in the mutation observer's callback, after the
  * host's change and before the browser computes style for a frame: a child only
  * the mark catches has no gap in a layout the host reads in the task that
@@ -21,33 +25,48 @@ import type { MatchList } from './bus'
  * @returns stop: the watch ends, and the mark comes off every container's children.
  */
 export function keepFlowChildMark(columns: readonly string[], childMark: string) {
-  const containers: MatchList<Element>[] = [CHAT_FLOW_SLOT_SELECTOR, ...columns.map((name) => `.${name}`)].map((selector) => observeMatches(selector))
-  const isContainer = (element: Element) => columns.some((name) => element.classList.contains(name)) || element.matches(CHAT_FLOW_SLOT_SELECTOR)
+  /** Each container the columns and the flow slot matched, with the watch on its own children. */
+  const watched = new Map<Element, () => void>()
+  /** The registries behind `watched`: a container arriving or leaving is told here, so the keeper never watches the page itself. */
+  const lists: MatchList<Element>[] = []
 
-  const markChildren = (container: Element) => {
-    for (const child of container.children) if (!child.hasAttribute(childMark)) child.setAttribute(childMark, '')
+  const mark = (child: Element) => {
+    if (!child.hasAttribute(childMark)) child.setAttribute(childMark, '')
   }
 
-  /** The containers a subtree that arrived brings, the subtree itself among them. */
-  const settleWithin = (root: Element) => {
-    if (isContainer(root)) markChildren(root)
-    if (root.firstElementChild === null) return
-    for (const name of columns) for (const column of root.getElementsByClassName(name)) markChildren(column)
-    for (const slot of root.querySelectorAll(CHAT_FLOW_SLOT_SELECTOR)) markChildren(slot)
-  }
-
-  // A container's new child arrives as a child list change on the container.
-  const stop = subscribeMutations(document.body, { childList: true, subtree: true }, (records) => {
+  /** The children this batch added to `container`: the children of it that are not marked yet. */
+  const markAdded = (container: Element, records: readonly MutationRecord[]) => {
     for (const record of records) {
-      if (record.target instanceof Element && isContainer(record.target)) markChildren(record.target)
-      for (const node of record.addedNodes) if (node instanceof Element) settleWithin(node)
+      for (const node of record.addedNodes) {
+        if (node instanceof Element && node.parentNode === container) mark(node)
+      }
     }
-  })
-  for (const list of containers) for (const container of list.all()) markChildren(container)
+  }
+
+  const watch = (container: Element) => {
+    for (const child of container.children) mark(child)
+    watched.set(container, subscribeMutations(container, { childList: true }, records => markAdded(container, records)))
+  }
+
+  /** Follow the containers the lists hold, on each change of either list. */
+  function sync() {
+    const live = new Set<Element>()
+    for (const list of lists) for (const container of list.all()) live.add(container)
+    for (const [container, stop] of watched) {
+      if (live.has(container)) continue
+      stop()
+      watched.delete(container)
+    }
+    for (const container of live) if (!watched.has(container)) watch(container)
+  }
+
+  for (const selector of [CHAT_FLOW_SLOT_SELECTOR, ...columns.map((name) => `.${name}`)]) lists.push(observeMatches<Element>(selector, sync))
+  sync()
 
   return () => {
-    stop()
-    for (const list of containers) {
+    for (const stop of watched.values()) stop()
+    watched.clear()
+    for (const list of lists) {
       for (const container of list.all()) for (const child of container.children) child.removeAttribute(childMark)
       list.release()
     }

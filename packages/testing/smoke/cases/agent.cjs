@@ -175,6 +175,13 @@ module.exports = {
         same(r.footerEntriesBeforeOpen.map(function (entry) { return entry.kind }), ['slot', 'slot', 'card']) &&
         r.footerEntriesBeforeOpen.every(function (entry) { return entry.hidden === true && entry.display === 'none' }),
       JSON.stringify(r.footerEntriesBeforeOpen))
+    check('a plugin\'s own dialog is no unit to collapse: the takeover takes no box from it',
+      !!r.footerDialogOpen && r.footerDialogOpen.entry === false,
+      JSON.stringify(r.footerDialogOpen))
+    check('the modal that dialog opens paints, and the pointer lands inside it rather than on the page it holds inert',
+      !!r.footerDialogOpen && r.footerDialogOpen.modal === true &&
+        r.footerDialogOpen.display !== 'none' && r.footerDialogOpen.hitInside === true,
+      JSON.stringify(r.footerDialogOpen))
     check("the host's own account row stays visible; the skin builds no trigger",
       r.hostRowVisible === true && r.hostRowDisplay !== 'none' && r.syntheticBtn === false,
       JSON.stringify({ visible: r.hostRowVisible, display: r.hostRowDisplay, synthetic: r.syntheticBtn }))
