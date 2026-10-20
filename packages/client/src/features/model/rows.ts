@@ -72,7 +72,7 @@ export function createModelRows(options: {
     const built = buildPopoverItem({ className: 'dsh-claude-model-option', role: 'menuitemradio', textClass: 'dsh-claude-model-copy', check: true })
     const item = built.row
     item.setAttribute('aria-checked', selected ? 'true' : 'false')
-    const brand = modelBrand(model.id)
+    const brand = modelBrand(model.id, model.name)
     // The brand id is the row's styling hook — it is what gives a vendor's rows
     // their own typography (see .dsh-claude-model-name in
     // features/model/model-picker.css). The vendor's mark rides inside the

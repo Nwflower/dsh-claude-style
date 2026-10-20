@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 0,
+  "at": "2026-10-20",
+  "external": false,
+  "zh": "修复自定义模型的标识是服务商内部别名时（如 kmodel 显示为 kimi-k2.6）模型选择器里没有说明行、也画不出厂商标的问题：文案规则与厂商规则改为同时读标识与显示名称。",
+  "en": "Fix a custom model whose id is the provider's own alias (`kmodel` shown as `kimi-k2.6`) losing its description line and its vendor mark in the model picker: the copy and brand rules now read the display name as well as the id."
+}

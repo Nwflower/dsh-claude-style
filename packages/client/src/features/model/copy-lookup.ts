@@ -1,54 +1,24 @@
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { HostModelEntry } from '@dsh-claude-style/contracts/services'
 import { localized } from '../../core/i18n'
-import { modelCopy } from './model-copy'
-import { textOf } from '../../shared/format'
+import { modelCopy, resolveModelCopy } from './model-copy'
 
 /**
- * Resolving a catalog model to its description line (D5): the copy document
- * ships as data and is fetched at runtime, so this is the only place that knows
- * how a model's id becomes a sentence. Resolution descends family rule → tier
- * rule → the catalog's own text; family rules are ordered and anchored, so one
- * product line's rule never claims another's model. A model the table has never
- * seen resolves to an empty string on purpose: a name-only row beats an invented
- * line.
- */
-/**
- * Family entry. The model id is tried alone first because it is the stronger
- * signal, then `provider/id` for ids that carry no brand of their own
- * (`abab6.5s-chat` under a provider called `minimax`).
- */
-export function familyModelCopy(groupId: unknown, modelId: unknown) {
-  if (modelCopy === null) return null
-  const id = textOf(modelId).toLowerCase()
-  const haystacks = [id, `${textOf(groupId).toLowerCase()}/${id}`]
-  for (let h = 0; h < haystacks.length; h++) {
-    for (let i = 0; i < modelCopy.families.length; i++) {
-      const rule = modelCopy.families[i]
-      if (!rule.re.test(haystacks[h])) continue
-      return rule.text
-    }
-  }
-  return null
-}
-
-/** Last-resort tier rule, read out of the id itself. */
-export function tierModelCopy(modelId: unknown) {
-  if (modelCopy === null) return null
-  const id = textOf(modelId).toLowerCase()
-  for (let i = 0; i < modelCopy.tiers.length; i++) {
-    if (modelCopy.tiers[i].re.test(id)) return modelCopy.tiers[i].text
-  }
-  return null
-}
-
-/**
- * The description line for one catalog model, in the shell's language.
+ * The description line for one catalog model, in the shell's language, out of
+ * the copy document the host half serves (D5). Resolution descends family rule →
+ * tier rule → the catalog's own text; family rules are ordered and anchored, so
+ * one product line's rule never claims another's model, and a model the table
+ * has never seen answers with the catalog's own line: a name-only row beats an
+ * invented one.
+ *
+ * The identity a rule reads is the model's id and then the display name beside
+ * it (D79): a gateway's id is often an opaque alias while the name is the
+ * model's own. model-copy.ts::resolveModelCopy owns that order.
+ *
  * `ctx` is the caller's context, used only to read the shell's locale.
  */
 export function modelDescription(ctx: HostContext | null, groupId: unknown, model: HostModelEntry): string {
-  const id = typeof model.id === 'string' ? model.id : ''
-  const pair = familyModelCopy(groupId, id) || tierModelCopy(id)
+  const pair = resolveModelCopy(modelCopy, groupId, model.id, model.name)
   const text = localized(pair, ctx, modelCopy === null ? undefined : modelCopy.fallback)
   if (text) return text
   return typeof model.description === 'string' ? model.description : ''

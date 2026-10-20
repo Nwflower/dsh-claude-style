@@ -1,4 +1,4 @@
-import { modelCopy } from './model-copy'
+import { modelCopy, resolveModelBrand } from './model-copy'
 import { buildElement } from '@dsh-claude-style/engine/dom'
 import { COMBINE_SVGS, COMBINE_WORDS } from 'virtual:dsh-claude-style/generated'
 
@@ -7,21 +7,17 @@ import { COMBINE_SVGS, COMBINE_WORDS } from 'virtual:dsh-claude-style/generated'
  * resold through — an OpenRouter group listing Claude models shows Anthropic
  * marks on the rows, never OpenRouter's own.
  *
- * Rules are ordered and anchored in the document; the first match wins. There is
- * deliberately **no fallback to the provider route**: a model no rule claims
- * draws no lockup at all.
+ * Rules are ordered and anchored in the document; the first match wins over the
+ * model's id and then over its display name (D79). There is deliberately **no
+ * fallback to the provider route**: a model no rule claims draws no lockup at
+ * all.
  *
  * @param modelId - catalog model id.
+ * @param modelName - catalog display name, the second string a rule reads.
  * @returns the vendored lockup's id, or null when no rule claims it.
  */
-export function modelBrand(modelId: unknown) {
-  if (modelCopy !== null) {
-    const id = String(modelId === undefined || modelId === null ? '' : modelId).toLowerCase()
-    for (let i = 0; i < modelCopy.brandRules.length; i++) {
-      if (modelCopy.brandRules[i].re.test(id)) return modelCopy.brandRules[i].brand
-    }
-  }
-  return null
+export function modelBrand(modelId: unknown, modelName: unknown) {
+  return resolveModelBrand(modelCopy, modelId, modelName)
 }
 
 /**

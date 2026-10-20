@@ -20,6 +20,7 @@
           "additionalProperties": { "$ref": "#/$defs/brandId" }
         },
         "models": {
+          "description": "An ordered, anchored rule list; each rule is tried against the model's id, then the display name beside it (D79).",
           "type": "array",
           "items": {
             "type": "object",
@@ -47,7 +48,7 @@
     "pattern": { "type": "string", "format": "regex" },
     "brandId": { "type": "string", "minLength": 1 },
     "copyRule": {
-      "description": "A model-id pattern and the line every id it claims reads.",
+      "description": "A model-id pattern and the line every id it claims reads. A rule is tried against the model's id, then the display name beside it (D79).",
       "type": "object",
       "required": ["match", "text"],
       "properties": {

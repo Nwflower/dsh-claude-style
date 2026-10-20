@@ -10,6 +10,7 @@ import { buildElement, closestFrom, setAttributeIfChanged } from '@dsh-claude-st
 import { POPOVER_MARGIN, POPOVER_OPEN_DELAY, closeOtherPopovers, createHoverIntent, positionAnchoredPopover, pressKeepsPopoverOpen, registerPopover, removeStrayNodes, setMenuPopoverOpen, unregisterPopover } from '../../shared/popover'
 import { pageViewport } from '../../shared/page-zoom'
 import type { HostContext } from '@dsh-claude-style/engine/host'
+import type { HostModelGroup } from '@dsh-claude-style/contracts/services'
 import type { FeatureHandle } from '@dsh-claude-style/engine/scheduler'
 import type { FeatureUi } from '../../core/feature'
 import type manifest from './model-picker.manifest'
@@ -282,6 +283,20 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     return up ? `${peakrate.epoch()}/${Math.floor(Date.now() / 60000)}` : `${peakrate.epoch()}`
   }
 
+  /**
+   * What a group's rows read as, in one string the render signatures carry: a
+   * row's name is what its label draws, so a rename in the settings page has to
+   * reach the card (D79), and a vendor's rule reads it too.
+   */
+  function rowsSignature(groups: HostModelGroup[]) {
+    let sig = ''
+    for (let g = 0; g < groups.length; g++) {
+      sig += `;${groups[g].id}:`
+      for (let m = 0; m < groups[g].models.length; m++) sig += `${m === 0 ? '' : ','}${groups[g].models[m].id}=${groups[g].models[m].name}`
+    }
+    return sig
+  }
+
   /** Level 1: the provider sections, the divider, More models. */
   function renderModelBody() {
     if (!modelBody) return
@@ -290,7 +305,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const groups = (snap && snap.groups) || []
     const current = modelCatalog.current(snap)
     let sig = [status, activeLocale(), current ? `${current.group.id}/${current.model.id}` : '', readPrefs().quickProviders.join(','), readPrefs().modelDescriptions !== false, rateSignature()].join('|')
-    for (let g = 0; g < groups.length; g++) sig += `;${groups[g].id}:${groups[g].models.length}`
+    sig += rowsSignature(groups)
     if (sig === modelBodySig) {
       return
     }
@@ -373,7 +388,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const listed = []
     for (let s0 = 0; s0 < sections.length; s0++) listed.push(sections[s0].id)
     let sig2 = `more|${listed.join(',')}|${rateSignature()}`
-    for (let g = 0; g < groups.length; g++) sig2 += `;${groups[g].id}:${groups[g].models.length}`
+    sig2 += rowsSignature(groups)
     if (current) sig2 += `#${current.group.id}/${current.model.id}`
     if (sig2 === modelSubSig) return
     modelSubSig = sig2

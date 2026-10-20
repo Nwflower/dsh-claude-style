@@ -24,6 +24,7 @@
 | [D76](D76-manifest-holds-facts.md) | 清单登记界面与构建要用的事实 | D42、D13、D29、D39、D72 |
 | [D77](D77-testing-layers-and-touchpoints.md) | 测试分层与触点 | D66 |
 | [D78](D78-sodium-rule-rewrite.md) | 改写宿主与插件的昂贵样式规则 |  |
+| [D79](D79-model-rules-read-name.md) | 模型规则同时读标识与显示名 |  |
 
 ## 作废的编号
 

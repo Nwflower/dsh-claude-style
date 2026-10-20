@@ -13,6 +13,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 ### 问题修复
 
 - 修复按下输入卡片或过程分组自行展开时输入框的光标跳回草稿开头的问题：焦点交还之前先记下选区，连同焦点一起放回。
+- 修复自定义模型的标识是服务商内部别名时（如 kmodel 显示为 kimi-k2.6）模型选择器里没有说明行、也画不出厂商标的问题：文案规则与厂商规则改为同时读标识与显示名称。
 
 ### 其他变更
 
@@ -25,6 +26,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 ### Bug Fixes
 
 - Fix the composer's caret jumping back to the start of the draft when a press on the input card or a process group's own toggle moves the focus: the selection is captured before the move and restored with the focus.
+- Fix a custom model whose id is the provider's own alias (`kmodel` shown as `kimi-k2.6`) losing its description line and its vendor mark in the model picker: the copy and brand rules now read the display name as well as the id.
 
 ### Chores
 
