@@ -7,6 +7,8 @@ import type { HostRemoteListAnswer, HostSessionRow } from '@dsh-claude-style/con
 import type { UsageAnswer, UsageDay, UsageModel, UsageReport, UsageTotals } from '@dsh-claude-style/contracts/usage'
 import { copy } from './copy'
 import type { CopyKey } from './copy'
+import { homeRefreshDue } from './usage-refresh'
+import type { HomeRefreshReason } from './usage-refresh'
 import { hostRemoteSession } from '@dsh-claude-style/engine/host'
 
 /**
@@ -18,7 +20,8 @@ export interface HomeUsageState {
   computing: boolean
   error: string | null
   loading: boolean
-  polls: number
+  /** When this page last heard from the route, on the page's clock; null before the first answer. */
+  answeredAt: number | null
 }
 
 /** One model's share in the session list's roll-up. */
@@ -70,8 +73,13 @@ export interface HeatCell {
  */
 /** Where the roll-up lands while the host half is still folding. */
 export const HOME_POLL_MS = 800
-/** Polls per load; a cold fold over a large history takes a few seconds. */
-export const HOME_POLL_MAX = 15
+/**
+ * Polls in a row a cold fold may go unanswered before the panel settles on what
+ * it has: the fold reads every changed session log, and a large history on a
+ * slow disk takes minutes, so the panel stops waiting long after the first
+ * numbers could have arrived. The next read starts over once they do.
+ */
+export const HOME_POLL_MAX = 180
 /** Heat-grid columns: twenty-six weeks of days, Sunday first — Claude Code's span. */
 export const HOME_HEAT_WEEKS = 26
 /** A day's heat is bucketed against the busiest day shown, one level per step of the ramp. */
@@ -216,18 +224,26 @@ export function homeModelTokens(entry: UsageModel): number {
 }
 
 /**
- * The roll-up store: the route's answer, the list's answer, and the polling
- * that fills the first one in.
+ * The roll-up store: the route's answer, the list's answer, and the reads that
+ * keep the first one current.
  *
- * @returns accessors, the loads, and a stop that ends polling and listeners.
+ * The route answers with the host half's last finished fold, so what the panel
+ * draws is a snapshot. The store reads it when the page has no numbers yet, when
+ * the panel asks again after the numbers aged on show, and while the host half
+ * reports that it is still folding — a cold fold over a large history takes
+ * minutes, and the panel fills in as soon as it lands.
+ *
+ * @returns accessors, the loads, and a stop that ends the reads and listeners.
  */
 export function createHomeUsage(ctx: HostContext) {
   /** What the panel draws: the last answer, whether more is coming, and why not. */
-  const usage: HomeUsageState = { value: null, computing: false, error: null, loading: false, polls: 0 }
+  const usage: HomeUsageState = { value: null, computing: false, error: null, loading: false, answeredAt: null }
   let listSummary: ListSummary | null = null
   let listLoading = false
   const listeners: (() => void)[] = []
   let pollTimer: ReturnType<typeof setTimeout> | null = null
+  /** Polls this read has made; reset by each ask (loadUsage). */
+  let polls = 0
   let disposed = false
 
   function emit() {
@@ -250,17 +266,32 @@ export function createHomeUsage(ctx: HostContext) {
   }
 
   /**
-   * One read of the roll-up. `computing` schedules the next poll, so the
-   * panel fills in as soon as the host half has the numbers.
+   * One read of the roll-up. The answer's `computing` schedules the next poll,
+   * so the panel fills in as soon as the host half has the numbers; a read whose
+   * polls run out leaves the panel on what it has, and the next ask starts the
+   * count over.
+   *
+   * @param force - read even though numbers are on show and nothing is folding.
    */
   function loadUsage(force?: boolean) {
     if (disposed || usage.loading) return
     if (!force && usage.value !== null && !usage.computing) return
+    // Each ask is its own count: a fold behind a cold start may take minutes,
+    // and a limit carried across asks would spend the whole budget on the first.
+    polls = 0
+    read()
+  }
+
+  /** One request to the route, and the poll its answer asks for while the host half is folding. */
+  function read() {
     usage.loading = true
     const request = fetch(USAGE_ROUTE, { credentials: 'same-origin', headers: { accept: 'application/json' } })
     request.then(response => response !== null && response.ok === true ? response.json() : null).then((body: UsageAnswer | null) => {
       usage.loading = false
       if (disposed) return
+      // A route that refused still answered: the next ask waits out the same
+      // period instead of retrying on every pass.
+      usage.answeredAt = Date.now()
       if (body === null || body.ok !== true) {
         usage.error = 'unavailable'
         emit()
@@ -271,21 +302,41 @@ export function createHomeUsage(ctx: HostContext) {
       usage.error = body.error === undefined ? null : body.error
       emit()
       if (usage.computing) {
-        if (usage.polls >= HOME_POLL_MAX) return
-        usage.polls += 1
+        if (polls >= HOME_POLL_MAX) return
+        polls += 1
         stopPolling()
         pollTimer = setTimeout(() => {
           pollTimer = null
-          loadUsage(true)
+          read()
         }, HOME_POLL_MS)
       }
     // A failed usage fetch is the panel's "unavailable" state, not an exception: the panel renders without the numbers (D12).
     }).catch(() => {
       usage.loading = false
       if (disposed) return
+      usage.answeredAt = Date.now()
       usage.error = 'unavailable'
       emit()
     })
+  }
+
+  /**
+   * Read the roll-up again if the numbers on show have aged past the wake or
+   * the period (usage-refresh.ts), and answer whether this page asked.
+   *
+   * A read of this page's own counts as in flight while it crosses or while it
+   * has a poll pending: that poll is what carries the numbers in. A read whose
+   * polls have run out leaves nothing pending, so the next period asks again
+   * rather than the panel going quiet for good.
+   *
+   * @param reason - `'tick'` for a panel standing on the page, `'wake'` for one the reader came back to.
+   */
+  function refreshUsage(reason: HomeRefreshReason) {
+    if (disposed) return false
+    const due = homeRefreshDue(Date.now(), { answeredAt: usage.answeredAt, busy: usage.loading || pollTimer !== null }, reason)
+    if (!due) return false
+    loadUsage(true)
+    return true
   }
 
   /**
@@ -390,6 +441,7 @@ export function createHomeUsage(ctx: HostContext) {
     /** Ask every view to re-render; a state change outside the store uses it. */
     notify: emit,
     load: loadUsage,
+    refresh: refreshUsage,
     loadList: loadSessionSummary,
     stop() {
       disposed = true

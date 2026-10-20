@@ -67,8 +67,16 @@ const FONT_FILES = {
  * gets it decompressed, so the package carries the sheets once, small.
  */
 const ASSETS_PATH = `${ROUTE_PREFIX}/assets/`
-/** How long a computed roll-up is served before a background refresh is kicked. */
-const USAGE_TTL_MS = 5 * 60 * 1000
+/**
+ * How long a computed roll-up is served before a background refresh is kicked.
+ *
+ * The pass reads only the logs whose size or modification time changed
+ * (usage.ts), so a refresh on an idle home walks the session root and stats each
+ * log while folding nothing. The window is short because the panel draws the
+ * numbers it reads here: a reader who has just sent a message should not wait
+ * out a cache window to see it.
+ */
+const USAGE_TTL_MS = 30 * 1000
 /** Largest deletion request body read; a real one carries one id. */
 const DELETE_BODY_MAX = 4096
 

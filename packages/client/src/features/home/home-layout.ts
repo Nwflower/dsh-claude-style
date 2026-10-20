@@ -259,7 +259,15 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     coldSeat = { stack, element, root }
   }
 
-  /** Each pass reads the preference and the phase; only a change re-renders. */
+  /**
+   * Each pass reads the preference and the phase; only a change re-renders.
+   *
+   * The pass is also the panel's clock: the scheduler runs one about a minute
+   * apart even on a page nothing touches (engine/scheduler.ts), so a panel
+   * standing on the hero reads the roll-up again once its numbers age past the
+   * period. Without it a window left open would show the figures of the moment
+   * it opened until it was reloaded.
+   */
   function sync() {
     const next = readPrefs().homeLayout
     if (next !== layout) {
@@ -284,8 +292,29 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (next === HOME_LAYOUT_STUDIO) {
       usage.load(false)
       usage.loadList()
+      // A panel the reader is looking at keeps itself current; one on a page
+      // the switch turned away from the hero has nothing to keep current.
+      if (hero) usage.refresh('tick')
     }
   }
+
+  /**
+   * The reader came back to the page: a window that had the focus and lost it,
+   * or a browser tab that was hidden. The panel reads again if what it shows
+   * went stale while the reader was away — a window left open overnight comes
+   * back on the morning's numbers otherwise.
+   */
+  function onWindowWake() {
+    // Leaving is not coming back: a tab being hidden asks for no read, and a
+    // hidden tab's timers are throttled anyway.
+    if (document.hidden) return
+    if (layout !== HOME_LAYOUT_STUDIO || !heroPhase()) return
+    usage.refresh('wake')
+  }
+  // The window's own focus covers the desktop shell's window and the browser
+  // tab alike; `visibilitychange` covers a tab the reader left the window on.
+  window.addEventListener('focus', onWindowWake)
+  document.addEventListener('visibilitychange', onWindowWake)
 
   ui.homeLayout = { sync }
 
@@ -293,6 +322,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   setLayout(readPrefs().homeLayout)
 
   return () => {
+    window.removeEventListener('focus', onWindowWake)
+    document.removeEventListener('visibilitychange', onWindowWake)
     unmountColdSeat()
     usage.stop()
     document.body.removeAttribute(HOME_LAYOUT_ATTR)
