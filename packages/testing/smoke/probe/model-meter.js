@@ -14,13 +14,6 @@
 
   probe.step(async function () {
     await probe.onlyFor(['model-meter'], async function () {
-      // The host's own model seat, the way ui-conversation renders it. It lands
-      // after boot, so the skin's next pass is what builds its trigger in it.
-      var card = document.createElement('div')
-      card.setAttribute('data-composer-card', '')
-      card.innerHTML = '<div data-slot="conversation.input.model" style="display:contents">' +
-        '<div class="_root_m_1"><button type="button" class="_trigger_m_1">GLM-5.3</button></div></div>'
-      document.body.appendChild(card)
       await sleep(400)
 
       /** Every row one card holds, with the meter's own place in it. */
@@ -164,7 +157,6 @@
         tagBg: seatTag === null ? null : getComputedStyle(seatTag).backgroundColor,
         tagColor: seatTag === null ? null : getComputedStyle(seatTag).color,
       }
-      card.remove()
     })
   })
 })()

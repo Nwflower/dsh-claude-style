@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 1,
+  "external": false,
+  "at": "2026-10-26",
+  "zh": "修复模型选择器的峰谷徽章在分钟刷新后仍使用旧的悬停提示与读屏文字，使两级菜单的倍率、倒计时与完整说明同步更新，跨分钟打开二级菜单时也会刷新已有行。",
+  "en": "Fix model picker rate badges retaining stale tooltips and accessible names after a minute refresh, keeping the rate, countdown and full judgement together in both menu levels and refreshing existing rows when the second level opens in a new minute."
+}

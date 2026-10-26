@@ -5,7 +5,7 @@ import { localized } from '../../core/i18n'
 import { buildModelLabel, modelBrand } from './brand'
 import { modelCopy, resolveModelCopy } from './model-copy'
 import { releaseTag } from './release-tag'
-import { buildElement } from '@dsh-claude-style/engine/dom'
+import { buildElement, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
 import { POPOVER_CHECK_SVG, buildPopoverItem } from '../../shared/popover'
 import type { createHoverIntent } from '../../shared/popover'
 import type { HostContext } from '@dsh-claude-style/engine/host'
@@ -114,7 +114,6 @@ export function createModelRows(options: {
     // minute rollover swap the meters in place rather than rebuilding every
     // row (model-picker.ts).
     painted.push({ item, provider: group.id, modelId: model.id })
-    paintedMinute = Math.floor(Date.now() / 60000)
     const copy = built.text
     // A model the host names with an empty string still reads as itself: the
     // row is picked by that id, so the label falls back to it.
@@ -258,6 +257,8 @@ export function createModelRows(options: {
         row.item.insertBefore(next, row.item.lastElementChild)
         continue
       }
+      setAttributeIfChanged(meter, 'title', next.title)
+      setAttributeIfChanged(meter, 'aria-label', next.getAttribute('aria-label') ?? '')
       if (meter.getAttribute('data-period') !== next.getAttribute('data-period')) {
         meter.setAttribute('data-period', next.getAttribute('data-period') ?? '')
         const icon = meter.querySelector('.dsh-claude-peakrate-icon')

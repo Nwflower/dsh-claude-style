@@ -60,6 +60,9 @@
     },
     { id: 'zai', name: 'Z.ai', models: [{ id: 'glm-5.3', name: 'GLM-5.3', description: 'The flagship one.' }] },
   ]
+  if (host.CASE === 'model-meter') {
+    groups.push({ id: 'ocg', name: 'Gateway', models: [{ id: 'deepseek-flash', name: 'Gateway Flash' }] })
+  }
   var current = host.CASE === 'effort'
     ? { provider: 'deepseek-official', model: 'deepseek-reasoner', reasoningEffort: 'max' }
     : { provider: 'zai', model: 'glm-5.3' }
