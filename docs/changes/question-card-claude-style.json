@@ -1,0 +1,8 @@
+{
+  "group": "improvements",
+  "order": 30,
+  "at": "2026-10-30",
+  "external": false,
+  "zh": "改绘提问卡片与已作答的回复气泡，采用与输入框一致的卡片外观",
+  "en": "Draw the question card and the settled reply in the same card look the composer keeps"
+}

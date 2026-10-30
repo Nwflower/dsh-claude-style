@@ -1,5 +1,6 @@
 import { COMPOSER_ATTR, COMPOSER_HIDDEN_ATTR, HOME_LAYOUT_STUDIO, MOBILE_PORTRAIT_ATTR, TRANSCRIPT_ATTR } from '../../constants'
-import { COMPOSER_ATTACHMENT_RAIL_SELECTOR, COMPOSER_INPUT_SELECTOR, CONVERSATION_TABS_SELECTOR, MOBILE_PORTRAIT_SELECTOR, PHASE_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
+import { COMPOSER_ATTACHMENT_RAIL_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_TABS_SELECTOR, MOBILE_PORTRAIT_SELECTOR, PHASE_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
+import { subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { conversationColumn } from '@dsh-claude-style/engine/chat-dom'
 import { COMPOSER_STACK, closestComposerCard, findAccessTrigger, findComposerPlaceholder, findComposerSeat, findConversationScroller, findHeroRoot, observeComposerCards, observeComposerPlaceholders } from '@dsh-claude-style/engine/host'
@@ -102,11 +103,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const value = hero && !studioHome ? 'hero' : 'inline'
     const stacks = new Set<Element>()
     for (const card of cards) {
-      setAttributeIfChanged(card, 'data-composer-variant', value)
+      setAttributeIfChanged(card, COMPOSER_VARIANT_ATTRIBUTE, value)
       const stack = card.closest(COMPOSER_STACK)
       if (stack !== null) stacks.add(stack)
     }
-    for (const stack of stacks) setAttributeIfChanged(stack, 'data-composer-variant', value)
+    for (const stack of stacks) setAttributeIfChanged(stack, COMPOSER_VARIANT_ATTRIBUTE, value)
   }
 
   /**
@@ -200,6 +201,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   }
 
   const CONTROL_ATTR = 'data-dsh-claude-control'
+  /**
+   * The card's primary button, as the host draws it: the trailing row's button
+   * the parts walk marked as the composer's primary one.
+   */
+  const PRIMARY_SELECTOR = '[data-dsh-claude-part~="trailing"] button[data-dsh-claude-part~="composer-primary"]'
 
   /**
    * Mark each host control on the composer with what it is, so the
@@ -216,7 +222,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     for (const card of cards) {
       const commands = card.querySelector('[data-dsh-claude-part~="tools"] button[aria-haspopup="listbox"]')
       if (commands !== null) setAttributeIfChanged(commands, CONTROL_ATTR, 'commands')
-      for (const button of card.querySelectorAll('[data-dsh-claude-part~="trailing"] button[data-dsh-claude-part~="composer-primary"]')) {
+      for (const button of card.querySelectorAll(PRIMARY_SELECTOR)) {
         setAttributeIfChanged(button, CONTROL_ATTR, button.querySelector('svg rect') !== null ? 'stop' : 'send')
       }
     }
@@ -325,6 +331,60 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   }
 
   /**
+   * Whether a card already carries the marks the frame that paints it reads:
+   * the variant the stylesheet keys on, and the control mark on the primary
+   * button. A card with no primary button has nothing left to mark.
+   */
+  function markedForPaint(card: HTMLElement) {
+    if (!card.hasAttribute(COMPOSER_VARIANT_ATTRIBUTE)) return false
+    const primary = card.querySelector(PRIMARY_SELECTOR)
+    return primary === null || primary.hasAttribute(CONTROL_ATTR)
+  }
+
+  /**
+   * The cards a batch brought in: the card an added node stands in, and the
+   * cards inside an added node. The batch's own records name them, so the
+   * document is never walked for them (D9).
+   */
+  function addedCards(records: readonly MutationRecord[]) {
+    const cards = new Set<HTMLElement>()
+    for (const record of records) {
+      for (const node of record.addedNodes) {
+        if (!(node instanceof Element)) continue
+        const owner = node.closest<HTMLElement>(COMPOSER_CARD_SELECTOR)
+        if (owner !== null) cards.add(owner)
+        for (const card of node.querySelectorAll<HTMLElement>(COMPOSER_CARD_SELECTOR)) cards.add(card)
+      }
+    }
+    return [...cards]
+  }
+
+  /**
+   * Put the marks a mounted card needs on it before the browser paints (#188).
+   *
+   * The scheduler's pass lands on the frame after the one a batch paints in,
+   * and a batch the size of a session switch is dispatched after that frame's
+   * paint (engine/bus.ts): a card left for the pass draws one frame in the
+   * host's own look — a filled send button and its own edge — and the skin's
+   * transition into its own look takes a few hundred milliseconds more.
+   *
+   * This subscription asks for `beforePaint`, so it runs inside every batch's
+   * own callback and writes what that frame paints (#189). The cards are taken
+   * off the batch's own records and not off `cards`: the registry behind
+   * `observeMatches` listens without `beforePaint`, so on a large batch it
+   * is a task late and the card this batch mounted is not in its list yet.
+   */
+  const stopMutations = subscribeMutations(document.body, { childList: true, subtree: true, beforePaint: true }, (records) => {
+    const pending = addedCards(records).filter(card => !markedForPaint(card))
+    if (pending.length === 0) return
+    readState()
+    document.body.toggleAttribute(COMPOSER_ATTR, active)
+    syncVariant(pending)
+    syncDraftState(pending)
+    syncControls(pending)
+  })
+
+  /**
    * A press on the inline card lands in its editor: the card's padding and
    * toolbar row surround a one-line field, and a press on the card that is
    * not one of its controls means the field.
@@ -386,6 +446,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   readState()
 
   return () => {
+    stopMutations()
     active = false
     heroCard = null
     stopWindowBlur()

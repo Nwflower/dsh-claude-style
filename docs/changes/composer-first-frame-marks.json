@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 60,
+  "at": "2026-10-30",
+  "external": false,
+  "zh": "修复切换会话时输入框先画在宿主自己的样式上、随后跳回皮肤样式的一帧闪动",
+  "en": "Fix the composer drawing at the host's own style for a frame after a session switch, then jumping to where the skin keeps it"
+}

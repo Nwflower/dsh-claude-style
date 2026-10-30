@@ -1,3 +1,73 @@
+/* ---------- Claude Code layout: the question card and its settled reply ---------- */
+/* The host asks the reader a question and mounts a card of its own for it: the
+   question, the options it offers and the box the answer is written in. The
+   card is drawn in the skin's own card look — the composer card's radius, edge
+   and shadow — so it reads as part of the same surface. The card's box is the
+   section the host puts the question and its options in; the option rows and
+   the marks on them are the host's own elements. */
+body[data-dsh-claude-style] [data-question-key] > section {
+  border-radius: 18px;
+  border: 1px solid var(--dsw-alias-border-l1);
+  background: var(--dsw-specific-input-major);
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-question-key] > section {
+  box-shadow: 0 4px 12px rgba(20, 20, 19, 0.04), 0 1px 3px rgba(20, 20, 19, 0.02);
+}
+
+body[data-dsh-claude-style][data-ds-dark-theme] [data-question-key] > section {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+/* An option row: a plate the reader picks from, with a hairline of its own and
+   a warm fill under the pointer. */
+body[data-dsh-claude-style] [data-question-key] [data-option-row] {
+  border-radius: 8px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  transition: background-color var(--dsh-claude-timing-feedback), border-color var(--dsh-claude-timing-feedback);
+}
+
+body[data-dsh-claude-style] [data-question-key] [data-option-row]:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+/* The option's own mark: the small plate the host draws in the button, with
+   the option's number on it. The option taken fills it with the accent. */
+body[data-dsh-claude-style] [data-question-key] [data-option-row] > button > :first-child {
+  border-radius: 6px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  transition: background-color var(--dsh-claude-timing-feedback), border-color var(--dsh-claude-timing-feedback), color var(--dsh-claude-timing-feedback);
+}
+
+body[data-dsh-claude-style] [data-question-key] [data-option-row] > button[aria-checked="true"] > :first-child {
+  background: var(--dsw-alias-brand-primary);
+  color: var(--dsw-alias-label-primary-foreground, #faf9f5);
+  border-color: transparent;
+}
+
+/* The settled reply: the bubble the host mounts for the answer the reader
+   gave, with the question it answers above it. The question reads as the
+   caption of the pair, the answer as the line that carries the weight. */
+body[data-dsh-claude-style] [data-question-reply] dl {
+  margin: 0;
+}
+
+body[data-dsh-claude-style] [data-question-reply] dt {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 400;
+  color: var(--dsw-alias-label-caption);
+}
+
+body[data-dsh-claude-style] [data-question-reply] dd {
+  margin: 2px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 500;
+  color: var(--dsw-alias-label-primary);
+}
+
 /* ---------- Claude Code layout: composer input + buttons ---------- */
 /* @composer-gate */
 /* Everything from here down is the "Composer restyle" preference's territory:

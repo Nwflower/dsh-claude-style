@@ -135,6 +135,21 @@ export const PENDING_STEERING_SELECTOR = '[data-pending-steering]'
  * sidebar's subagent sessions alike.
  */
 export const COMPOSER_TEXTAREA_SELECTOR = '[data-composer-seat] textarea'
+/**
+ * The question card the host mounts for a question it asks the reader: the
+ * question, the options it offers and the box the answer is written in.
+ */
+export const QUESTION_CARD_SELECTOR = '[data-question-key]'
+/**
+ * One option row of a question card: the row the reader picks from, and the
+ * button in it that carries the mark of the option taken.
+ */
+export const QUESTION_OPTION_ROW_SELECTOR = '[data-option-row]'
+/**
+ * The settled reply: the bubble the host mounts for the answer the reader
+ * chose, with the question it answers and the answer itself.
+ */
+export const QUESTION_REPLY_SELECTOR = '[data-question-reply]'
 /** The host puts this on every process group. */
 export const PROCESS_GROUP_SELECTOR = '[data-step-process]'
 /** The host puts this on every process group's body. */
