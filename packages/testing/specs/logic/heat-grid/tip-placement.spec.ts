@@ -7,7 +7,7 @@
  *
  * @capability heat-grid
  * @features home
- * @risk Hovering a day near the panel's edge grows a horizontal scrollbar under the grid, or a tip in the top rows covers the stat cells above it.
+ * @risk Hovering a day near the panel's edge grows a horizontal scrollbar under the grid, a tip in the top rows covers the stat cells above it, or the panel's own height moves as the pointer crosses the grid.
  */
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
@@ -21,6 +21,7 @@ const ROOT = surfaceAttribute('skin.root')
 const TIP = surfaceAttribute('home.heat-tip')
 const ZOOM = surfaceAttribute('skin.page-zoom')
 const COLUMNS = 26
+const ROWS = 7
 const cleanups: (() => void)[] = []
 afterEach(async () => {
   await userEvent.unhover(document.body)
@@ -36,7 +37,7 @@ function mount(options: { short?: boolean } = {}) {
   const grid = document.createElement('div')
   grid.className = surfaceClass('home.heat-grid')
   if (options.short === true) grid.style.height = '24px'
-  for (let i = 0; i < COLUMNS * 7; i += 1) {
+  for (let i = 0; i < COLUMNS * ROWS; i += 1) {
     const cell = document.createElement('span')
     cell.className = surfaceClass('home.heat-cell')
     cell.setAttribute(TIP, '9月29日 — 4.1B Token')
@@ -57,7 +58,7 @@ function mount(options: { short?: boolean } = {}) {
 }
 
 /** The cell in one row of a column, rows counted from the grid's top. */
-const cellAt = (cells: HTMLElement[], column: number, row: number) => cells[column * 7 + row]!
+const cellAt = (cells: HTMLElement[], column: number, row: number) => cells[column * ROWS + row]!
 const overflows = (panel: HTMLElement) => panel.scrollWidth > panel.clientWidth
 /** The pill's box in the grid's own coordinates. */
 function pillBox(grid: HTMLElement, pill: HTMLElement) {
@@ -146,6 +147,39 @@ test('hovering any day leaves the panel without a horizontal scrollbar', async (
   }
   // A row whose middle columns are named by the centred pill alone.
   expect(centred).toBeGreaterThan(0)
+})
+
+test('hovering every day leaves the panel\'s own height where it was', async () => {
+  const { panel, grid, cells } = mount()
+  const height = panel.clientHeight
+  const scroll = panel.scrollHeight
+  for (let column = 0; column < COLUMNS; column += 1) {
+    for (let row = 0; row < ROWS; row += 1) {
+      const cell = cellAt(cells, column, row)
+      await userEvent.hover(cell)
+      showHeatTip(cell, grid)
+      // The tip travels over the grid; the panel keeps its own box, so nothing
+      // under the pointer moves the edge of the card the reader looks at.
+      expect(panel.clientHeight).toBe(height)
+      expect(panel.scrollHeight).toBe(scroll)
+    }
+  }
+})
+
+test('the pill\'s box is its own, whatever scale it is drawn at', () => {
+  const plain = mount()
+  showHeatTip(cellAt(plain.cells, 12, 3), plain.grid)
+  const scaled = mount()
+  // The scale stands in for the rule home-overview.css gives the pill, whose
+  // token this spec's sheet cannot resolve.
+  scaled.pill.style.scale = '0.5'
+  showHeatTip(cellAt(scaled.cells, 12, 3), scaled.grid)
+  // The pill shows at its own size, so a box measured inside it while it is
+  // drawn smaller is brought back to that size before it is written.
+  expect(scaled.pill.style.width).toBe(plain.pill.style.width)
+  // Its own height too: the pill hangs from the same edge of the grid in both.
+  const lowerEdge = (box: { grid: HTMLElement; pill: HTMLElement }) => box.pill.getBoundingClientRect().bottom - box.grid.getBoundingClientRect().top
+  expect(Math.abs(lowerEdge(scaled) - lowerEdge(plain))).toBeLessThan(0.5)
 })
 
 test('the pill of a cell in the grid\'s upper rows hangs under it, inside the grid', () => {

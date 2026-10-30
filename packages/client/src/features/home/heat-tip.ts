@@ -103,6 +103,18 @@ function pillOf(grid: HTMLElement) {
 const WORDS = new Range()
 
 /**
+ * The factor the pill's box is drawn at, read from the style the sheet gives it:
+ * the pill grows from a scale below one into the size it shows at, so a box
+ * measured inside it carries the factor of the moment.
+ */
+function pillScale(style: CSSStyleDeclaration): number {
+  const scale = style.getPropertyValue('scale')
+  if (scale === 'none') return 1
+  const factor = Number.parseFloat(scale)
+  return Number.isFinite(factor) && factor > 0 ? factor : 1
+}
+
+/**
  * Name the day under the pointer in the grid's pill, and stand it over that cell.
  *
  * The width comes from the words themselves: the pill travels between two days on
@@ -111,6 +123,10 @@ const WORDS = new Range()
  * the first sighting writes its place with the transitions held back — a pill
  * arriving at its day is seen appearing there, never sliding out of the corner it
  * rested in (home-overview.css).
+ *
+ * The size read is the pill's own: the scale it is drawn at is taken out of the
+ * measure, so a box read while the pill is growing is the box it shows at, and
+ * the panel's own box does not follow the transition.
  *
  * @param cell - the day under the pointer.
  * @param grid - the grid the cell stands in.
@@ -124,13 +140,15 @@ export function showHeatTip(cell: HTMLElement, grid: HTMLElement) {
   text.textContent = label
   WORDS.selectNodeContents(text)
   const style = getComputedStyle(element)
-  // The words are measured in the viewport's pixels while the width written below
-  // and the padding the style reports are the page's own, so the measure is
-  // brought over before the two are added (shared/page-zoom.ts). The height comes
-  // from `offsetHeight`, which is already a length of that space.
-  const words = inPagePixels(WORDS.getBoundingClientRect().width)
+  // The pill grows from a scale below one into the size it shows at, so a box
+  // measured inside it carries the factor of the moment. Both measures are
+  // brought back to the pill's own size and to the page's own pixels, so the box
+  // written below is the same on every day and follows no transition
+  // (shared/page-zoom.ts).
+  const scale = pillScale(style)
+  const words = inPagePixels(WORDS.getBoundingClientRect().width / scale)
   const width = Math.ceil(words) + Math.ceil(Number.parseFloat(style.paddingLeft) + Number.parseFloat(style.paddingRight))
-  const height = Math.ceil(element.offsetHeight)
+  const height = Math.ceil(inPagePixels(element.getBoundingClientRect().height / scale))
   const placement = placeHeatTip(cell, grid, width, height)
   const write = () => {
     element.style.width = `${width}px`

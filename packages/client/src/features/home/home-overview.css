@@ -66,6 +66,10 @@ body[data-dsh-claude-style] .dsh-claude-home-heat {
      lengths in this box (heat-tip.ts), so the grid is the element the pill is
      positioned against. */
   position: relative;
+  /* The grid holds its own layout and paint: the tip is an absolutely placed box
+     that travels over the grid, and the panel's own box must not follow it as
+     the pointer crosses a day. */
+  contain: layout style;
 }
 
 /* Claude Code's heat grid is a blue data ramp, not the brand ember: the empty

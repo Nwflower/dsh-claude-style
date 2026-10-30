@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 61,
+  "at": "2026-10-30",
+  "external": false,
+  "zh": "修复鼠标滑过首页用量面板热力图时面板高度抽动的问题",
+  "en": "Fix the usage panel's height jittering as the pointer crosses the heat grid on the home page"
+}
