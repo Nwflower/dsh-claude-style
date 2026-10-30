@@ -234,11 +234,12 @@ body[data-dsh-claude-style][data-ds-dark-theme] button[data-dsh-claude-part~="br
   border-radius: 0;
 }
 
-body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[data-dsh-claude-part~="brand-button"] {
+/* macOS desktop renders the non-interactive brand as a span (D3). */
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-dsh-claude-part~="brand-button"] {
   color: var(--dsh-claude-logo-ink);
 }
 
-body[data-dsh-claude-style][data-ds-dark-theme] button[data-dsh-claude-part~="brand-button"] {
+body[data-dsh-claude-style][data-ds-dark-theme] [data-dsh-claude-part~="brand-button"] {
   color: var(--dsh-claude-logo-ink);
 }
 
