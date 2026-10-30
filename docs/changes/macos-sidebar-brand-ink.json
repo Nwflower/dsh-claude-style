@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 42,
+  "at": "2026-10-30",
+  "external": false,
+  "zh": "修复 macOS 桌面端侧栏的 Claude 图标与名称无法跟随标志颜色设置的问题",
+  "en": "Fix the Claude mark and wordmark in the macOS desktop sidebar ignoring the mark colour setting"
+}
