@@ -1,0 +1,8 @@
+{
+  "group": "improvements",
+  "order": 20,
+  "at": "2026-10-30",
+  "external": false,
+  "zh": "新增模型选择器第一层的输入即搜索，并在分组多于一个时保留“更多模型”一栏",
+  "en": "Add type-to-search on the model picker's first level, and keep the More models row with more than one provider"
+}

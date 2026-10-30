@@ -11,10 +11,11 @@ import { createModelCatalog } from './catalog'
 import { createModelSubMenu } from './sub-menu'
 import { byModelId, createModelRows } from './rows'
 import { releaseTag } from './release-tag'
-import { buildElement, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
+import { buildElement, closestFrom, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
 import { removeStrayNodes, pressKeepsPopoverOpen } from '../../shared/popover'
 import { releaseSwappingText, setSwappingText } from '../../shared/swapping-text'
 import type { HostContext } from '@dsh-claude-style/engine/host'
+import { COMPOSER_INPUT_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import type { HostModelGroup } from '@dsh-claude-style/contracts/services'
 import type { CloseReason, FeatureHandle } from '@dsh-claude-style/engine/scheduler'
 import type { FeatureUi } from '../../core/feature'
@@ -300,10 +301,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       // scrolls under them while the row stays reachable. The effort slider
       // is not here any more: it has its own trigger and card.
       if (cards.footer()) {
-        // "More models" carries what level 1 does not. With every provider
-        // already on screen the row would only open an empty card, so it goes
-        // away with the last remaining provider.
-        const showMore = modelRows.remainingGroups(groups, sections).length > 0
+        // "More models" carries what level 1 does not. A catalog with more than
+        // one provider carries the whole of it and the search field above it: a
+        // first level that lists every provider would otherwise leave the reader
+        // no way to look a model up.
+        const showMore = modelRows.remainingGroups(groups, sections).length > 0 || groups.length > 1
         // The divider exists to close the list off from what follows it. With
         // no More-models row there is nothing left to close off, and a bare
         // line under the list reads as a stray rule. layoutModelFooter owns
@@ -504,6 +506,25 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
         return
       }
       cards.closeAll()
+    },
+    /**
+     * A printable key while the first level is up opens the second one and
+     * starts the query: the reader looks a model up by typing, and the search
+     * field needs no detour through the More-models row to be reached.
+     */
+    onKey(event: KeyboardEvent) {
+      if (!cards.mainOpen()) return
+      if (event.key.length !== 1 || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return
+      // The field the reader is typing in keeps every key: the composer's own
+      // field holds the message under the picker, and the search field holds
+      // the query the reader is typing.
+      if (closestFrom(event.target, COMPOSER_INPUT_SELECTOR) !== null) return
+      const modelSub = cards.sub()
+      if (modelSub !== null && modelSub.focused()) return
+      event.preventDefault()
+      cards.openSub(true)
+      const open = cards.sub()
+      if (open !== null) open.type(event.key)
     },
     /**
      * What the effort picker (a separate fragment that owns the level's

@@ -147,7 +147,11 @@ export function createModelSubMenu(options: ModelSubMenuOptions) {
     // With no query the card carries what level 1 does not, the way it always
     // had. A query searches the whole catalog: the field is how a reader looks a
     // model up by name, and one level 1 already lists is still a model.
-    const sections = query === '' ? rows.remainingGroups(groups, rows.levelOneSections(groups)) : groups
+    const remaining = rows.remainingGroups(groups, rows.levelOneSections(groups))
+    // A catalog whose every provider is already on level 1 leaves this card
+    // nothing to carry, and the card would open on an empty list. It carries
+    // the whole catalog then, and the search field above it stays a way in.
+    const sections = query === '' ? (remaining.length > 0 ? remaining : groups) : groups
     let listed = 0
     for (let g = 0; g < sections.length; g++) {
       const group = sections[g]
@@ -358,6 +362,18 @@ export function createModelSubMenu(options: ModelSubMenuOptions) {
     return true
   }
 
+  /**
+   * Take a key the reader pressed into the field, as their own typing does.
+   *
+   * The write announces itself as an input, which is what the caret measures
+   * again on (see emptyField), and the list under the field follows the words.
+   */
+  function type(text: string) {
+    field.value += text
+    field.setSelectionRange(field.value.length, field.value.length)
+    field.dispatchEvent(new Event('input', { bubbles: true }))
+  }
+
   field.addEventListener('input', () => {
     // A clear owns the mirror while its flight runs: the words leaving are still
     // on it, and syncing the field's own (now empty) words would wipe them.
@@ -396,6 +412,8 @@ export function createModelSubMenu(options: ModelSubMenuOptions) {
     focused() { return document.activeElement === field },
     /** Hand the field the reader's focus: a press on the More-models cell asks for it. */
     focus() { field.focus({ preventScroll: true }) },
+    /** Take a key the reader pressed into the field, as their own typing does. */
+    type,
     clearQuery,
     /** Fold the card's own state away: a query does not outlive the card that held it. */
     forget() {
