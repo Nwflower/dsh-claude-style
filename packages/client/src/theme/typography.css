@@ -108,6 +108,13 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="markdown"] p {
   margin: 12px 0;
 }
 
+/* A thinking row reads as the host's compact markdown, whose paragraphs sit 4px
+   apart; the 12px above belongs to the conversation's prose. */
+body[data-dsh-claude-style] [data-variant="think"] [data-dsh-claude-part~="markdown"] p,
+body[data-dsh-claude-style] [data-dsh-claude-part~="markdown"][data-markdown-variant="compact"] p {
+  margin: 4px 0;
+}
+
 /* The host gives its markdown elements their own `font:` shorthand, so the family
    has to be re-stated wherever those shorthands land; the heading shorthand is
    re-asserted so the host's weight, size and line-height survive the display rule. */
