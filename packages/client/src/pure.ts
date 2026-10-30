@@ -17,6 +17,7 @@
 
 export { resolveMascot } from './core/prefs'
 export { accentInk, cssString } from './features/brand/brand'
+export { createFooterMirror } from './features/account/footer-mirror'
 export { chatFileOperationTitle, chatFileReadCard, chatFileReadEnvelope, chatFileReadMeta } from './features/chat-files/file-row-model'
 export type { FileHunk, FileReadCard, FileRowState } from './features/chat-files/file-row-model'
 export { byDocumentOrder, createFileMerge, mergeViews, rowCarrier } from './features/chat-files/file-row-merge'

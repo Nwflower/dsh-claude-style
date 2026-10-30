@@ -50,14 +50,14 @@ export function createFooterMirror(options: {
    * Returns the live entry list for popover mirroring.
    */
   function syncFooterVisibility(footArea: Element) {
-    const fixed = fixedRead !== null && fixedRead.footArea === footArea ? fixedRead.fixed : null
+    const read = fixedRead !== null && fixedRead.footArea === footArea ? fixedRead : null
     fixedRead = null
     const entries = footerEntriesIn(footArea)
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i]
       // A sync outside a pass (the popover opening) has no read phase, and
       // reads the panels while it writes.
-      const entryOverlay = isOverlay(entry) || (fixed === null ? isFixedPanel(entry) : fixed.has(entry))
+      const entryOverlay = isOverlay(entry) || isFixedPanelForSync(entry, read)
       if (entryOverlay) {
         // An entry that is itself an overlay — a plugin's own dialog mounted
         // into the footer (the cost-meter update notice), or a fixed panel — is
@@ -87,7 +87,7 @@ export function createFooterMirror(options: {
       for (let j = 0; j < all.length; j++) {
         const el = all[j]
         if (el.hasAttribute('data-dsh-claude-footer-overlay')) continue
-        const overlay = isOverlay(el) || (fixed === null ? isFixedPanel(el) : fixed.has(el))
+        const overlay = isOverlay(el) || isFixedPanelForSync(el, read)
         if (overlay) el.setAttribute('data-dsh-claude-footer-overlay', '')
       }
       markFooterHiddenBranches(entry)
@@ -134,19 +134,30 @@ export function createFooterMirror(options: {
     return window.getComputedStyle(el).position === 'fixed'
   }
 
+  /** A node mounted after the read phase still needs its own fixed-position answer. */
+  function isFixedPanelForSync(el: Element, read: { fixed: Set<Element>, measured: Set<Element> } | null) {
+    if (read !== null && read.measured.has(el)) return read.fixed.has(el)
+    return isFixedPanel(el)
+  }
+
   /**
    * The footer elements laid out as fixed panels, read in the pass's read phase
    * and taken by the same pass's sync (D40): a computed style read while the
-   * pass writes forces the page's whole style recalc under it.
+   * pass writes forces the page's whole style recalc under it. `measured` tells
+   * a later sync which nodes already have an answer; a panel mounted between
+   * that read and the sync is measured on its own rather than collapsed as an
+   * ordinary entry (the Remote page's backdrop).
    */
-  let fixedRead: { footArea: Element, fixed: Set<Element> } | null = null
+  let fixedRead: { footArea: Element, fixed: Set<Element>, measured: Set<Element> } | null = null
 
   function measure(footArea: Element) {
     const fixed = new Set<Element>()
+    const measured = new Set<Element>()
     for (const entry of footerEntriesIn(footArea)) {
       const nodes = entryNodes(entry)
       for (let i = 0; i < nodes.length; i++) {
         const el = nodes[i]
+        measured.add(el)
         // A node already carrying the overlay mark is read like any other: the
         // mark is this function's own earlier answer, and skipping it leaves
         // `sync` with no reading for a panel it had marked. The node then falls
@@ -155,7 +166,7 @@ export function createFooterMirror(options: {
         if (!isOverlay(el) && isFixedPanel(el)) fixed.add(el)
       }
     }
-    fixedRead = { footArea, fixed }
+    fixedRead = { footArea, fixed, measured }
   }
 
   /**
