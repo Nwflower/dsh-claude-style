@@ -202,6 +202,36 @@ body[data-dsh-claude-style] button[data-dsh-claude-part~="panel-row"][aria-haspo
   background-repeat: repeat-x;
 }
 
+/* ---------- the collapsed rail: the host's 36px icon buttons ---------- */
+/* Collapsed, the host re-seats every panel row as a 36px icon button with a 12px
+   plate and asks its glyph for 18px; the workspace's own add-folder and search
+   controls beside it carry the same pair, and the frame's marker scopes this
+   past the compact block. */
+body[data-dsh-claude-style] [data-dsh-claude-part~="layout-frame"][data-sidebar-collapsed] nav[data-dsh-claude-part~="panel-list"] {
+  gap: 12px;
+}
+body[data-dsh-claude-style] [data-dsh-claude-part~="layout-frame"][data-sidebar-collapsed] button[data-dsh-claude-part~="panel-row"] {
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  margin: 0;
+  padding: 0;
+  justify-content: center;
+  border-radius: 12px;
+}
+body[data-dsh-claude-style] [data-dsh-claude-part~="layout-frame"][data-sidebar-collapsed] button[data-dsh-claude-part~="panel-row"] svg {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+body[data-dsh-claude-style] [data-dsh-claude-part~="layout-frame"][data-sidebar-collapsed] button[data-dsh-claude-part~="panel-row"][aria-haspopup="menu"] [data-dsh-claude-part~="panel-glyph"]::before {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  background-image: radial-gradient(circle, currentColor 1.5px, transparent 2px);
+  background-size: calc(18px / 3) 100%;
+}
+
 /* ---------- sidebar rows: the icon turns a quarter on hover ---------- */
 /* Both glyphs are four-fold symmetric, so the turn ends where it started and the
    transition turns it back when the pointer leaves. */
