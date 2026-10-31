@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 42,
+  "at": "2026-10-30",
+  "external": false,
+  "zh": "修复页脚里的插件卡片在按下瞬间被重建而丢掉这次点击的问题",
+  "en": "Fix a plugin's footer card losing the press when the takeover rebuilt it mid-click"
+}
