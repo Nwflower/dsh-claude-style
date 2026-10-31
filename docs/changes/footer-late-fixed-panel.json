@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 42,
+  "at": "2026-10-31",
+  "external": false,
+  "zh": "修复侧栏插件浮层被页脚收拢隐藏及浮层文字行高塌缩的问题",
+  "en": "Fix sidebar plugin overlays being collapsed by the footer takeover and their text line height collapsing"
+}
