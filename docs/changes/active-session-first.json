@@ -1,0 +1,8 @@
+{
+  "group": "improvements",
+  "order": 62,
+  "at": "2026-11-01",
+  "external": false,
+  "zh": "侧栏里正在运行的会话排到所属列表的最前面，运行标记消失后行回到宿主排定的位置",
+  "en": "Stand a session that is running at the head of the list it belongs to, and let the row return to the host's own order once the running mark goes away"
+}
