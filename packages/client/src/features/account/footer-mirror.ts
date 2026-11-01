@@ -74,7 +74,9 @@ export function createFooterMirror(options: {
    */
   function syncFooterVisibility(footArea: Element) {
     const read = fixedRead !== null && fixedRead.footArea === footArea ? fixedRead : null
-    fixedRead = null
+    // The pass measures one footer, and only that footer's sync may take the
+    // reading: a sync for another element leaves it to the reader it belongs to.
+    if (read !== null) fixedRead = null
     const entries = footerEntriesIn(footArea)
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i]
