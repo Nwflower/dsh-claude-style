@@ -344,8 +344,15 @@ export const SIDEBAR_BRAND_SELECTOR = '[data-slot="sidebar"] [data-dsh-claude-pa
 export const SIDEBAR_TOGGLE_SELECTOR = '[data-slot="sidebar"] [data-dsh-claude-part~="logo-row"] > [data-dsh-claude-part~="sidebar-toggle"]'
 /** The host's own composer is replaced by a panel of its own choice; this is that panel's seat. */
 export const CHAIN_OVERLAY_FALLBACK_ATTRIBUTE = 'data-chain-overlay-fallback'
+/**
+ * The host's modal dialog. Its Modal portals a `role="presentation"` wrapper
+ * onto `<body>` and the dialog inside it is this element, so a reader-visible
+ * surface opened from a menu (the settings panel among them) stands nowhere
+ * near the row that opened it.
+ */
+export const MODAL_DIALOG_SELECTOR = '[role="dialog"][aria-modal="true"]'
 /** The host's own open menus and modal dialogs: the foreground the skin must not walk over. */
-export const FOREGROUND_SELECTOR = '[role="dialog"][aria-modal="true"], [role="menu"]'
+export const FOREGROUND_SELECTOR = `${MODAL_DIALOG_SELECTOR}, [role="menu"]`
 /** The host's menu card and its list, which the skin injects a row into. */
 export const MENU_ROLE_SELECTOR = '[role="menu"]'
 export const MENU_LIST_SELECTOR = '[role="presentation"]'
