@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 43,
+  "at": "2026-10-30",
+  "external": false,
+  "zh": "修复从账号菜单打开的设置面板在鼠标离开后自行关闭的问题",
+  "en": "Fix the settings panel opened from the account menu closing itself once the pointer leaves"
+}

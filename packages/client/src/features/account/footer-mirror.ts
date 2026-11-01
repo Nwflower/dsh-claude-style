@@ -26,6 +26,25 @@ export function createFooterMirror(options: {
   }
 
   /**
+   * Whether a press this skin must not interrupt is in flight: the browser is
+   * between a pointerdown and its pointerup.
+   */
+  let pressDepth = 0
+
+  function pressInFlight() {
+    return pressDepth > 0
+  }
+
+  // Every press inside the card is tracked, in the capture phase so the depth is
+  // already up before any row's own handler runs. The count is taken off on the
+  // document, because a press that ends outside the card is still this press.
+  const onPressStart = () => { pressDepth += 1 }
+  const onPressEnd = () => { if (pressDepth > 0) pressDepth -= 1 }
+  document.addEventListener('pointerdown', onPressStart, true)
+  document.addEventListener('pointerup', onPressEnd, true)
+  document.addEventListener('pointercancel', onPressEnd, true)
+
+  /**
    * Hide the footer's own controls in place and return the units the drawer
    * mirrors. The `sidebar.footer.action` list slot accepts arbitrary plugin
    * controls, not just buttons: a plugin may render a composite widget
@@ -366,7 +385,14 @@ export function createFooterMirror(options: {
       stripped[s].removeAttribute('data-dsh-claude-footer-hidden')
     }
     const html = clone.outerHTML
-    if (embed.getAttribute('data-embed-html') !== html) {
+    // A replacement between pointerdown and pointerup takes the node the reader
+    // is pressing away from under them: the browser cancels the press and the
+    // click never lands. A plugin that repaints its own card while the reader is
+    // pressing it does this on every poll, so the rewrite waits for the press to
+    // finish and the next pass carries the change in. Outside a press the card
+    // stays live, which is what keeps a figure that updates while the card is
+    // open from freezing at the value it had when the card opened.
+    if (embed.getAttribute('data-embed-html') !== html && !pressInFlight()) {
       embed.setAttribute('data-embed-html', html)
       while (embed.firstChild) embed.removeChild(embed.firstChild)
       embed.appendChild(clone)
@@ -475,13 +501,15 @@ export function createFooterMirror(options: {
     // drawer is opened once.
     if (body === null) return
 
-    // While the popover is open, its mirrors must stay completely static:
-    // a content rewrite, reorder, or embedded-clone replacement under the
-    // pointer cancels the browser's :hover state and can swallow the click
-    // between pointerdown and pointerup. Sync runs only while closed;
-    // openPopover runs one final pass right before the reveal — and the
-    // sidebar-side redirection above stays live, so a newly mounted entry
-    // keeps being hidden even with the popover open.
+    // The self-built drawer builds its rows before it is revealed and must stay
+    // completely static afterwards: a rewrite under the pointer cancels the
+    // browser's :hover and can swallow the click between pointerdown and
+    // pointerup. The host's own menu is the other case — it mounts empty and
+    // these rows are what fills it, so a sync that stopped while it stands would
+    // leave the card with no rows at all. There the same rule is applied per
+    // row instead (see `pointerInside`), which is what keeps a plugin that
+    // repaints its own card while the reader hovers it from tearing the row
+    // out from under them.
     if (options.isOpen()) return
 
     const existingActionItems = body.querySelectorAll('[data-action-index], [data-embed-index]')
@@ -637,5 +665,12 @@ export function createFooterMirror(options: {
     }
   }
 
-  return { measure, sync, clear }
+  /** Take the press tracker off: the listeners outlive no generation. */
+  function stop() {
+    document.removeEventListener('pointerdown', onPressStart, true)
+    document.removeEventListener('pointerup', onPressEnd, true)
+    document.removeEventListener('pointercancel', onPressEnd, true)
+  }
+
+  return { measure, sync, clear, stop }
 }

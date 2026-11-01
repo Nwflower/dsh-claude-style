@@ -1,5 +1,5 @@
 import { ACCOUNT_ARMED_ATTR, AUTO_POPOVER_OFF } from '../../constants'
-import { findFootArea } from '@dsh-claude-style/engine/host'
+import { findFootArea, findHostModal } from '@dsh-claude-style/engine/host'
 import { readPrefs } from '../../core/prefs'
 import { createFooterMirror } from './footer-mirror'
 import { createHostAccountMenu } from './host-menu'
@@ -214,11 +214,32 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    */
   function closeHostMenuForHover() {
     if (ui.ban?.isOpen() === true) return
+    // A surface the reader opened from the menu is theirs to keep: the menu's
+    // dismissal is an Escape addressed to the host's Menu, and the host's Menu
+    // is one listener among several that answer that key, so closing the menu
+    // from behind a dialog the reader is now using takes the dialog with it.
+    // The settings panel is why this stands down, and it renders inside the
+    // settings area (the host keeps its overlays in place, not in a portal).
+    if (hostOverlayOpen()) return
     const row = hostMenu.trigger()
     if (row !== null && row.matches(':hover')) return
     const menu = hostMenu.findMenu()
     if (menu !== null && menu.matches(':hover')) return
     closeSurface()
+  }
+
+  /**
+   * Whether the host has one of its own overlays up — the settings panel the
+   * menu's rows open, or a plugin's dialog. The menu itself is not one: it is
+   * the surface being closed, and it is read by `findMenu` instead.
+   *
+   * The lookup goes through the engine's host accessors (engine/src/host.ts),
+   * which is where a document-wide query belongs: the host portals its overlays
+   * onto <body>, so the settings panel a row opens stands nowhere near the
+   * footer it was opened from.
+   */
+  function hostOverlayOpen() {
+    return findHostModal() !== null
   }
 
   /**
@@ -587,6 +608,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   return () => {
     profile.stop()
     unregisterPopover('account')
+    mirror.stop()
     dropAccountFooter(findFootArea())
   }
 }

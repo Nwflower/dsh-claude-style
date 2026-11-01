@@ -134,6 +134,15 @@ export const findHeroRoot = cacheFirst<HTMLElement>(`[${PHASE_ATTRIBUTE}="hero"]
 export const findFootArea = cacheFirst<HTMLElement>(FOOT_AREA_SELECTOR)
 
 /**
+ * The modal dialog the host has up, or null. The host portals its overlays onto
+ * <body> — the settings panel a reader opens from the account menu among them —
+ * so no scope narrower than the document reaches one. The wrapper that carries
+ * such a panel is `role="presentation"`; the dialog inside it is what says a
+ * surface of the reader's own is up.
+ */
+export const findHostModal = cacheFirst<HTMLElement>('[role="dialog"][aria-modal="true"]')
+
+/**
  * The sidebar's own column. The skin's sidebar-side nodes live inside it, so a
  * sweep for its own strays is scoped here instead of the whole document; the
  * host mounts this column once and replaces it whole.
