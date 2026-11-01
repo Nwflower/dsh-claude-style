@@ -18,6 +18,8 @@ import { host, spec, surface } from '../../fixtures/behaviour.mjs'
 const PART = surface.attribute('skin.part')
 /** A slot anchor: its children are the host's real entries. */
 const SLOT_ANCHOR = host('shell.slot-anchor')
+/** The index linking an account-menu action to its live footer entry. */
+const ACTION_INDEX = surface.attribute('account.action-index')
 
 /**
  * The plugin's action as its own module renders it: a trigger in the action
@@ -51,7 +53,11 @@ const mountPanelAction = (t) => t.page.evaluate(({ part, anchor }) => {
     panel.setAttribute('role', 'dialog')
     panel.setAttribute('aria-label', 'Remote workspace')
     panel.style.cssText = 'width:320px;height:200px'
-    panel.textContent = 'Remote workspace'
+    const heading = document.createElement('p')
+    heading.className = 'plugin-panel-heading'
+    heading.style.fontSize = '14px'
+    heading.textContent = 'Remote workspace'
+    panel.appendChild(heading)
     backdrop.appendChild(panel)
     trigger.after(backdrop)
   })
@@ -74,6 +80,8 @@ const readPanel = (t) => t.page.evaluate(() => {
     mounted: backdrop !== null,
     backdrop: box(backdrop),
     panel: box(document.querySelector('.plugin-panel')),
+    heading: box(document.querySelector('.plugin-panel-heading')),
+    headingLineHeight: document.querySelector('.plugin-panel-heading') === null ? null : getComputedStyle(document.querySelector('.plugin-panel-heading')).lineHeight,
     triggerDisplay: trigger === null ? null : getComputedStyle(trigger).display,
   }
 })
@@ -103,6 +111,8 @@ export default spec({ page: 'desktop' }, ({ test }) => {
     t.expectThat.equal(opened.mounted, true, 'the press mounts the plugin\'s panel')
     t.expectThat.visible(opened.backdrop, 'the fixed backdrop keeps its box once the panel is up')
     t.expectThat.visible(opened.panel, 'the panel keeps its box once the panel is up')
+    t.expectThat.visible(opened.heading, 'the panel text keeps a nonzero line box')
+    t.expectThat.equal(opened.headingLineHeight, 'normal', 'the overlay restores normal inherited line height')
 
     // The defect lands on a later pass: the backdrop is classified again, this
     // time with the overlay mark it already carries.
@@ -112,5 +122,21 @@ export default spec({ page: 'desktop' }, ({ test }) => {
     t.expectThat.equal(settled.mounted, true, 'the panel is still mounted after a further pass')
     t.expectThat.visible(settled.backdrop, 'the backdrop still keeps its box after a further pass')
     t.expectThat.visible(settled.panel, 'the panel still keeps its box after a further pass')
+  })
+
+  test('a fixed-position panel opened from the account menu keeps its box', async (t) => {
+    await mountPanelAction(t)
+    await t.settle()
+    await t.page.locator('#host-account').click()
+    const mirror = t.page.locator(`[${ACTION_INDEX}]`).filter({ hasText: 'Remote workspace' }).first()
+    await mirror.waitFor({ state: 'visible' })
+    await mirror.click()
+    await t.settle()
+    const opened = await readPanel(t)
+    t.expectThat.equal(opened.mounted, true, 'the mirrored row opens the plugin panel')
+    t.expectThat.visible(opened.backdrop, 'the account-menu path keeps the fixed backdrop visible')
+    t.expectThat.visible(opened.panel, 'the account-menu path keeps the panel visible')
+    t.expectThat.visible(opened.heading, 'the account-menu path keeps the panel text readable')
+    t.expectThat.equal(opened.headingLineHeight, 'normal', 'the account-menu path restores normal inherited line height')
   })
 })

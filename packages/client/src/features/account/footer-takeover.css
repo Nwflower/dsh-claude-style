@@ -83,6 +83,14 @@ body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [data-dsh-claude-pa
   display: none !important;
 }
 
+/* The footer collapse uses zero text metrics to suppress stray in-flow content.
+   Restore neutral metrics at an overlay boundary so dialog text can lay out
+   with the plugin's own font rules (the Remote login heading and QR caption). */
+body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [data-dsh-claude-part~="foot-area"] [data-dsh-claude-footer-overlay] {
+  font-size: initial;
+  line-height: normal;
+}
+
 /* A seated entry keeps the sidebar: its plugin's node stays hidden in the slot
    it was mounted into, and a copy of it stands at the right end of the account
    row (features/account/footer-seats.ts) so the reader reaches it without
