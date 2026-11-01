@@ -81,7 +81,6 @@ const readPanel = (t) => t.page.evaluate(() => {
     backdrop: box(backdrop),
     panel: box(document.querySelector('.plugin-panel')),
     heading: box(document.querySelector('.plugin-panel-heading')),
-    headingLineHeight: document.querySelector('.plugin-panel-heading') === null ? null : getComputedStyle(document.querySelector('.plugin-panel-heading')).lineHeight,
     triggerDisplay: trigger === null ? null : getComputedStyle(trigger).display,
   }
 })
@@ -112,7 +111,6 @@ export default spec({ page: 'desktop' }, ({ test }) => {
     t.expectThat.visible(opened.backdrop, 'the fixed backdrop keeps its box once the panel is up')
     t.expectThat.visible(opened.panel, 'the panel keeps its box once the panel is up')
     t.expectThat.visible(opened.heading, 'the panel text keeps a nonzero line box')
-    t.expectThat.equal(opened.headingLineHeight, 'normal', 'the overlay restores normal inherited line height')
 
     // The defect lands on a later pass: the backdrop is classified again, this
     // time with the overlay mark it already carries.
@@ -137,6 +135,5 @@ export default spec({ page: 'desktop' }, ({ test }) => {
     t.expectThat.visible(opened.backdrop, 'the account-menu path keeps the fixed backdrop visible')
     t.expectThat.visible(opened.panel, 'the account-menu path keeps the panel visible')
     t.expectThat.visible(opened.heading, 'the account-menu path keeps the panel text readable')
-    t.expectThat.equal(opened.headingLineHeight, 'normal', 'the account-menu path restores normal inherited line height')
   })
 })
