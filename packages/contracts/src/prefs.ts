@@ -202,11 +202,11 @@ export const AUTO_POPOVER_SCOPES = [AUTO_POPOVER_OFF, AUTO_POPOVER_ACCOUNT, AUTO
  * control, line and picture grows with it).
  */
 export const PAGE_ZOOM_SYSTEM = 'system'
-export const PAGE_ZOOM_08 = '0.8'
-export const PAGE_ZOOM_1 = '1'
-export const PAGE_ZOOM_125 = '1.25'
-export const PAGE_ZOOM_15 = '1.5'
-export const PAGE_ZOOMS = [PAGE_ZOOM_SYSTEM, PAGE_ZOOM_08, PAGE_ZOOM_1, PAGE_ZOOM_125, PAGE_ZOOM_15] as const
+/* 缩放现在是任意百分比：100 就是不动，60–200 是滑条的范围，中间每一格都算。
+   早先的固定档位（system / 0.8 / 1 / 1.25 / 1.5）在 legacy 里照样读得回来。 */
+export const PAGE_ZOOM_DEFAULT = '100'
+export const PAGE_ZOOM_MIN = 60
+export const PAGE_ZOOM_MAX = 200
 
 /**
  * The sodium rewrite (D78): `undecided` until the reader or the first probe that
@@ -305,7 +305,12 @@ export const PREFS = {
    */
   quickProviders: { type: 'list', default: [], max: QUICK_PROVIDERS_MAX, entryMax: PROVIDER_ID_MAX, drop: [OFFICIAL_MODEL_GROUP] },
   username: { type: 'text', default: '', max: USERNAME_MAX },
-  pageZoom: { type: 'choice', values: PAGE_ZOOMS, default: PAGE_ZOOM_SYSTEM },
+  pageZoom: {
+    type: 'text',
+    default: PAGE_ZOOM_DEFAULT,
+    max: 8,
+    legacy: { '0.8': '80', '1': '100', '1.25': '125', '1.5': '150' },
+  },
   sodium: { type: 'choice', values: SODIUM_MODES, default: SODIUM_UNDECIDED },
   banLocale: { type: 'choice', values: BAN_LOCALES, default: BAN_LOCALE_EN },
   homeLayout: { type: 'choice', values: HOME_LAYOUTS, default: HOME_LAYOUT_STUDIO },
@@ -333,6 +338,15 @@ export const PREFS = {
    */
   billingTable: { type: 'list', default: [], max: PRICE_ROWS_MAX, entryMax: 256, drop: [] },
   workspaceView: { type: 'boolean', default: true },
+  /** Whether the sidebar lists its sessions by date instead of by workspace (features/date-groups). */
+  dateGroups: { type: 'boolean', default: true },
+  /**
+   * The workspaces that stay out of the date layout: the reader's scratch space
+   * (「闲聊」 to begin with) is a pile of loose notes, and sorting it by day says
+   * nothing. Titles, not ids, because a workspace's id is not what the settings
+   * page shows. The date layout hides those rows while it sorts the rest.
+   */
+  dateSkipWorkspaces: { type: 'list', default: ['闲聊'], max: 32, entryMax: 200, drop: [] },
   dockCards: { type: 'boolean', default: true },
   sidebarSearch: { type: 'boolean', default: true },
   searchStyle: { type: 'choice', values: SEARCH_STYLES, default: SEARCH_STYLE_OVERLAY },

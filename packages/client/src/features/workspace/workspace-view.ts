@@ -21,11 +21,21 @@ import type { CopyKey } from './copy'
 const SESSION_ROW_ACTION_SLOT = 'sidebar.workspaces.session.row.action'
 /** The reader's 进行中 grouping, outliving a reload spent in 已归档. */
 const GROUP_BY_STORAGE = 'dsh-claude-style.workspaceGroupBy'
+/** 宿主的视图记录（分组和它一起存），形如 `dsh.workspace.view.v5`。 */
+const VIEW_RECORD_KEY = /^dsh\.workspace\.view\./
+/** 已经为重载修分组跑过一次的标记：一个标签页只重载一次，免得转圈。 */
+const HEAL_MARK = 'dsh-claude-group-healed'
 
-/** The grouping the reader last had in 进行中: the store's default until this browser records one. */
+/**
+ * The grouping the reader last had in 进行中: the store's default until this browser records one.
+ *
+ * 扁平不算读者选过的分组：宿主的界面上没有这一档，只有日期视图写进来过。读到它
+ * 就当没有记录 —— 否则早先那次「日期视图把扁平留在存储里」会被当成读者的选择，
+ * 从此每次打开都是一条没有工作区分组的列表。
+ */
 function storedGroupBy(): HostSessionGroupBy {
   const stored = localStorage.getItem(GROUP_BY_STORAGE)
-  return stored === 'workspace-tree' || stored === 'flat' ? stored : 'workspace'
+  return stored === 'workspace-tree' ? stored : 'workspace'
 }
 
 function storeGroupBy(group: HostSessionGroupBy) {
@@ -179,6 +189,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   function reconcile() {
     const followed = store
     if (followed === null || disposed) return
+    // 日期视图开着的时候，分组由 date-groups 那一半管（它把宿主切成扁平再按日期排）；
+    // 这里若照常跟随，就会把那个扁平当成读者「进行中」的分组记下来 —— 铃铛一按，
+    // 读者原本的工作区分组就被抹掉了，关掉应用也回不来。
+    if (document.body.hasAttribute('data-dsh-claude-date-groups')) return
     const snapshot = followed.getSnapshot()
     const filter = filterOf(snapshot)
     const group = groupOf(snapshot)
@@ -187,6 +201,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (filter === 'default') {
       setView('active')
       if (previous === 'only' || previous === 'show') {
+        if (group !== activeGroupBy) followed.actions.setGroupBy(activeGroupBy)
+      } else if (group === 'flat') {
+        // 扁平不是读者能选的分组（宿主的界面上没有这一档），只可能是日期视图写的：
+        // 还回读者原来的分组，不要把它记成读者的选择。
         if (group !== activeGroupBy) followed.actions.setGroupBy(activeGroupBy)
       } else if (group !== activeGroupBy) {
         rememberGroup(group)
@@ -337,12 +355,70 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * section keeps its plain label until then, since a segment that cannot drive
    * the host would lie about the list.
    */
+  /**
+   * 把宿主记着的「扁平」还成工作区。
+   *
+   * 宿主会把这一档写进它自己的存储，所以早先那一版在日期视图里留下的扁平，读者
+   * 重启之后仍然看得见 —— 看到的是一条没有工作区分组的列表。只在宿主确实是扁平、
+   * 而读者的分组记忆不是扁平时动手，读者自己选的「工作区树」不会被改掉。
+   */
+  function healGrouping() {
+    const followed = store
+    if (followed === null) return
+    if (typeof followed.getSnapshot !== 'function' || typeof followed.actions?.setGroupBy !== 'function') return
+    // 日期视图开着时分组归 date-groups 管，这里不插手。
+    if (document.body.hasAttribute('data-dsh-claude-date-groups')) return
+    if (groupOf(followed.getSnapshot()) !== 'flat') return
+    const want = storedGroupBy()
+    activeGroupBy = want
+    followed.actions.setGroupBy(want)
+    // 宿主是照着存储里那条视图记录搭列表的：只改 store，这一趟已经搭成扁平了。
+    // 所以存储一并改掉，再重载一次 —— 读者下一次看到的才是工作区分组。
+    if (!patchStoredGroup(want)) return
+    try {
+      if (sessionStorage.getItem(HEAL_MARK) === '1') return
+      sessionStorage.setItem(HEAL_MARK, '1')
+      location.reload()
+    } catch {
+      // 存储不可用：不冒重载转圈的风险，这一趟先这样。
+    }
+  }
+
+  /**
+   * 把宿主存储里那条视图记录的分组改成 want。
+   *
+   * 宿主自己的写入是这条记录，改它等于替读者把「扁平」还回去；返回有没有真的改动，
+   * 没改动就不值得为它重载页面。
+   */
+  function patchStoredGroup(want: HostSessionGroupBy): boolean {
+    let changed = false
+    try {
+      for (let at = 0; at < localStorage.length; at += 1) {
+        const key = localStorage.key(at)
+        if (key === null || !VIEW_RECORD_KEY.test(key)) continue
+        const raw = localStorage.getItem(key)
+        if (raw === null) continue
+        const parsed: unknown = JSON.parse(raw)
+        if (parsed === null || typeof parsed !== 'object') continue
+        const record = parsed as { groupBy?: string }
+        if (record.groupBy !== 'flat') continue
+        record.groupBy = want
+        localStorage.setItem(key, JSON.stringify(record))
+        changed = true
+      }
+    } catch {
+      // 存储不可用或记录不是这个形状：当作没改，交给下一次开门。
+    }
+    return changed
+  }
+
   function watch() {
     if (store !== null) return true
     const next = hostWorkspaceView(ctx)
     if (next === null) return false
     store = next
     sessions = hostSessions(ctx)
+    healGrouping()
     reconcile()
     return true
   }

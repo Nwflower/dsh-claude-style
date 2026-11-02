@@ -55,8 +55,16 @@ export function install() {
    * One pass over every list the sidebar draws, each list moved on its own.
    * A list is the parent of the rows' seats, not the rows' direct parent: the
    * seats are the boxes, and the boxes share the list.
+   *
+   * The date grouping stands down here: it arranges the same seats by the day
+   * they belong to, and a running row lifted to the very head of the list would
+   * be put back under its own day section on the next pass — two features
+   * rewriting one order, which the reader sees as the list twitching. What runs
+   * right now is already said twice over: the bell's badge and its card, and the
+   * 「优先级」block above the list.
    */
   const reorder = () => {
+    if (document.body.hasAttribute('data-dsh-claude-date-groups')) return
     const lists = new Map<Element, HTMLElement[]>()
     for (const row of rows.all()) {
       const box = row.parentElement

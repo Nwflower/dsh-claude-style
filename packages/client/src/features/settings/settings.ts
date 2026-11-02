@@ -8,6 +8,7 @@ import { cacheFirstMatch, hostSlots } from '@dsh-claude-style/engine/host'
 import { motionMs } from '../../shared/motion'
 import { ClaudeStyleSegmentGroup, createSettingsControls, tabRows } from './settings-controls'
 import { createSettingsAppearanceTab } from './settings-tab-appearance'
+import { createSettingsDateLayoutTab } from './settings-tab-date-layout'
 import { createSettingsGeneralTab } from './settings-tab-general'
 import { createSettingsMainWindowTab } from './settings-tab-main-window'
 import { createSettingsMotionTab } from './settings-tab-motion'
@@ -83,6 +84,7 @@ export const SETTINGS_TABS: SettingsTab[] = [
   createSettingsAppearanceTab(),
   createSettingsMainWindowTab(),
   createSettingsSidebarTab(),
+  createSettingsDateLayoutTab(),
   createSettingsMotionTab(),
 ]
 export const SETTINGS_CONTROLS = createSettingsControls()

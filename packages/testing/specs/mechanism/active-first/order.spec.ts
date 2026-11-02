@@ -7,26 +7,15 @@
  * @features active-first
  * @risk A session works quietly in the middle of the list while the reader reads an older conversation, and the row he wants is the one he has to hunt for.
  */
-import { afterEach, expect, test } from 'vitest'
+import { expect, test } from 'vitest'
 import { SESSION_ONGOING_STATE, SESSION_ONGOING_SELECTOR, SESSION_PHASE_ATTRIBUTE, SESSION_ROW_KEY_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import { installActiveFirst } from '@dsh-claude-style/client/pure'
+import { cleanupWith, frames } from '../../fixtures/teardown'
 
-/** Every teardown a case registered. */
-const cleanups: (() => void)[] = []
-
-afterEach(() => {
-  for (const cleanup of cleanups.splice(0)) cleanup()
-  document.body.replaceChildren()
-})
-
-/** Wait for the browser to run `count` frames. */
-async function frames(count: number) {
-  for (let at = 0; at < count; at += 1) await new Promise(resolve => requestAnimationFrame(resolve))
-}
 
 function installed() {
   const stop = installActiveFirst()
-  cleanups.push(stop)
+  cleanupWith(stop)
   return stop
 }
 
@@ -44,7 +33,6 @@ function sessionList(seats: Seat[]) {
   for (const seat of seats) {
     const row = document.createElement('div')
     row.setAttribute(SESSION_ROW_KEY_ATTRIBUTE, `session:${seat.id}`)
-    row.dataset.seat = seat.id
     if (seat.running === true) row.append(phaseDot())
     // The host draws a row inside a box of its own, one child per box: the box
     // is the row's seat in the list, and the seats are what the list reorders.
@@ -65,7 +53,11 @@ function phaseDot() {
 
 /** The seats a reader sees, in order. */
 function order(list: Element) {
-  return [...list.querySelectorAll<HTMLElement>('[data-seat]')].map(row => row.dataset.seat ?? '')
+  // 座位的名字从行自己的 data-row-key 里读（合同里的常量），不另写一个宿主属性。
+  return [...list.querySelectorAll<HTMLElement>(`[${SESSION_ROW_KEY_ATTRIBUTE}]`)].map(row => {
+    const key = row.getAttribute(SESSION_ROW_KEY_ATTRIBUTE) ?? ''
+    return key.startsWith('session:') ? key.slice('session:'.length) : key
+  })
 }
 
 test('a running session stands at the head of its list', async () => {

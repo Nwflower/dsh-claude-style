@@ -1,0 +1,77 @@
+/* ---------- 顶行那一对：铃铛 + 放大镜 ---------- */
+/* packages/client/src/features/active-shelf/active-shelf.ts 把这一对挂进宿主
+   的顶行、收起按钮之前。这里只管它们的形状：
+   - 两枚同一套尺寸的安静按钮（28px 盒、16px 图标）；
+   - 铃铛右上角的小圆点由它自己的 data-active-shelf-running 点亮，不写条数；
+   - 日期视图开着时铃铛是按下态（读者按它换的是整个列表的排法）。 */
+
+/* 这一对的盒子：宿主的顶行是两列网格，两个直接子节点会被挤到第二行去，
+   装进一个盒子里正好占一格。 */
+body[data-dsh-claude-style] .dsh-claude-active-shelf-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* 铃铛与放大镜共用一套尺寸。 */
+body[data-dsh-claude-style] .dsh-claude-active-shelf-trigger,
+body[data-dsh-claude-style] .dsh-claude-active-shelf-search {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  cursor: pointer;
+  transition:
+    background-color var(--dsh-claude-duration-feedback) var(--dsh-claude-ease-standard),
+    color var(--dsh-claude-duration-feedback) var(--dsh-claude-ease-standard);
+}
+
+body[data-dsh-claude-style] .dsh-claude-active-shelf-trigger:hover,
+body[data-dsh-claude-style] .dsh-claude-active-shelf-search:hover {
+  background: var(--dsw-alias-bg-base);
+  color: var(--dsw-alias-label-primary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-active-shelf-trigger:focus-visible,
+body[data-dsh-claude-style] .dsh-claude-active-shelf-search:focus-visible {
+  outline: 2px solid var(--dsw-alias-brand-primary);
+  outline-offset: 1px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-active-shelf-trigger-icon,
+body[data-dsh-claude-style] .dsh-claude-active-shelf-search-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+}
+
+/* 日期视图开着时铃铛带背光：读者按它换的是整个列表的排法，这一枚就该一直亮着，
+   只是亮法是一层淡淡的品牌色底、不是换了颜色 —— 圆点仍然只代表「有会话在跑」。 */
+body[data-dsh-claude-style][data-dsh-claude-date-groups] .dsh-claude-active-shelf-trigger {
+  background: color-mix(in srgb, var(--dsw-alias-brand-primary) 16%, transparent);
+  color: var(--dsw-alias-brand-primary);
+}
+
+/* 圆点是一盏灯，不是计数器：有会话在跑就亮，跑完了灭。 */
+body[data-dsh-claude-style] .dsh-claude-active-shelf-count {
+  position: absolute;
+  top: 4px;
+  right: 3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--dsw-alias-brand-primary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-active-shelf-trigger[data-active-shelf-running="false"] .dsh-claude-active-shelf-count {
+  display: none;
+}

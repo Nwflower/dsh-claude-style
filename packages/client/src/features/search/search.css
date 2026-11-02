@@ -59,17 +59,13 @@ body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-trigger {
   border-color: var(--dsw-alias-border-l2);
   background: var(--dsh-claude-card);
 }
-body[data-dsh-claude-style] [data-slot="sidebar"]:hover [data-dsh-claude-search-row] > .dsh-claude-search-trigger,
-body[data-dsh-claude-style] [data-dsh-claude-search-row] > .dsh-claude-search-trigger:focus-visible {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-}
-body[data-dsh-claude-style] [data-slot="sidebar"]:hover [data-dsh-claude-search-row] > [data-dsh-claude-part~="brand-button"],
-body[data-dsh-claude-style] [data-dsh-claude-search-row] > [data-dsh-claude-part~="brand-button"]:has(~ .dsh-claude-search-trigger:focus-visible) {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
+/* Codex 的顶行：这枚宽框让位给铃铛右手的放大镜
+   (features/active-shelf 的 .dsh-claude-active-shelf-search)，它按的仍是
+   这个框自己的 press，所以搜索的路由没变，只是入口不再藏在悬停里。宽框
+   在顶行里就此收起，brand 也不再被它顶掉；standalone 的自有行与折叠栏的
+   座位不在这张网格里，照旧用下面那套宽框样式。 */
+body[data-dsh-claude-style] [data-dsh-claude-search-row] > .dsh-claude-search-trigger {
+  display: none;
 }
 /* A box too narrow for its word and its key hints together keeps the word:
    the web's Chat / Code switch (features/surface) takes a cell of the brand
