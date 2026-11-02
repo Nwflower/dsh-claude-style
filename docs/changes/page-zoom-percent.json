@@ -1,0 +1,8 @@
+{
+  "group": "new",
+  "order": 80,
+  "at": "2026-11-02",
+  "external": false,
+  "zh": "页面缩放支持任意百分比，60 到 200 之间输入即生效，旧档位自动迁移",
+  "en": "Scale the page by any percentage between 60 and 200, applied as it is entered, with the old presets migrating"
+}

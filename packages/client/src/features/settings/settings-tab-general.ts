@@ -1,7 +1,8 @@
 import * as React from 'react'
-import { AUTO_POPOVER_ACCOUNT, AUTO_POPOVER_ALL, AUTO_POPOVER_OFF, BRAND_CLAUDE, BRAND_DEEPSEEK, PAGE_ZOOM_08, PAGE_ZOOM_1, PAGE_ZOOM_125, PAGE_ZOOM_15, PAGE_ZOOM_SYSTEM, PALETTE_COLORING_BRAND, PALETTE_COLORING_CUSTOM, USERNAME_MAX } from '../../constants'
+import { AUTO_POPOVER_ACCOUNT, AUTO_POPOVER_ALL, AUTO_POPOVER_OFF, BRAND_CLAUDE, BRAND_DEEPSEEK, PAGE_ZOOM_MAX, PAGE_ZOOM_MIN, PAGE_ZOOM_SYSTEM, PALETTE_COLORING_BRAND, PALETTE_COLORING_CUSTOM, USERNAME_MAX } from '../../constants'
 import { COMBINE_SVGS } from 'virtual:dsh-claude-style/generated'
 import { createHostToast } from '../../shared/host-toast'
+import { pageZoomPercent } from '../../shared/page-zoom'
 import { PreviewCards } from '../../shared/preview-cards'
 import type { Prefs } from '../../constants'
 import type { PreviewOption } from '../../shared/preview-cards'
@@ -18,6 +19,57 @@ import { copy } from './copy'
  * view — the preferences, the write path, the controls and the username
  * field's state.
  */
+/**
+ * 缩放这一行的控制：左边五个固定档位，右边一个数字框。
+ *
+ * 档位是读者熟悉的那五档（跟系统 / 0.8x / 1x / 1.25x / 1.5x），按一下就是那一档；
+ * 数字框给「我就想要 112%」这种，输入后回车或失焦生效，范围夹在 60–200。
+ * 数字框自己拿着输入到一半的文本（受控组件），所以 `percent` 变了才回填，
+ * 不会在打字途中被偏好覆盖。
+ */
+function ZoomControl(props: {
+  presets: React.ReactNode
+  percent: number
+  onPick: (percent: number) => void
+}) {
+  const [text, setText] = React.useState(String(props.percent))
+  React.useEffect(() => { setText(String(props.percent)) }, [props.percent])
+  /** 把数字框里的输入变成一次写入；写不出来的就退回当前值。 */
+  function commit() {
+    const parsed = Number.parseInt(text, 10)
+    if (!Number.isFinite(parsed)) {
+      setText(String(props.percent))
+      return
+    }
+    props.onPick(Math.min(PAGE_ZOOM_MAX, Math.max(PAGE_ZOOM_MIN, parsed)))
+  }
+  return React.createElement(
+    'div',
+    { className: 'dsh-claude-settings-zoom' },
+    props.presets,
+    React.createElement(
+      'label',
+      { className: 'dsh-claude-settings-zoom-field' },
+      React.createElement('input', {
+        className: 'dsh-claude-settings-zoom-input',
+        type: 'number',
+        min: PAGE_ZOOM_MIN,
+        max: PAGE_ZOOM_MAX,
+        step: 1,
+        value: text,
+        'aria-label': copy('pageZoomCustomLabel'),
+        onChange: (event: React.ChangeEvent<HTMLInputElement>) => { setText(event.target.value) },
+        onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => {
+          if (event.key === 'Enter') commit()
+          if (event.key === 'Escape') setText(String(props.percent))
+        },
+        onBlur: commit,
+      }),
+      React.createElement('span', { className: 'dsh-claude-settings-zoom-unit' }, '%'),
+    ),
+  )
+}
+
 export function createSettingsGeneralTab(): SettingsTab {
   const toast = createHostToast()
 
@@ -91,13 +143,6 @@ export function createSettingsGeneralTab(): SettingsTab {
       { value: AUTO_POPOVER_ACCOUNT, label: copy('autoPopoverAccount') },
       { value: AUTO_POPOVER_ALL, label: copy('autoPopoverAll') },
     ]
-    const pageZoomOptions: SegmentOption<Prefs['pageZoom']>[] = [
-      { value: PAGE_ZOOM_SYSTEM, label: copy('pageZoomSystem') },
-      { value: PAGE_ZOOM_08, label: copy('pageZoom08') },
-      { value: PAGE_ZOOM_1, label: copy('pageZoom1') },
-      { value: PAGE_ZOOM_125, label: copy('pageZoom125') },
-      { value: PAGE_ZOOM_15, label: copy('pageZoom15') },
-    ]
     const username = view.username
     return [
       {
@@ -136,8 +181,21 @@ export function createSettingsGeneralTab(): SettingsTab {
           'pageZoom',
           copy('pageZoomTitle'),
           copy('pageZoomDesc'),
-          controls.segment(pageZoomOptions, prefs.pageZoom, value => { write({ pageZoom: value }) }),
-          { experimental: true },
+          React.createElement(ZoomControl, {
+            presets: controls.segment(
+              [
+                { value: PAGE_ZOOM_SYSTEM, label: copy('pageZoomSystem') },
+                { value: '80', label: copy('pageZoom08') },
+                { value: '100', label: copy('pageZoom1') },
+                { value: '125', label: copy('pageZoom125') },
+                { value: '150', label: copy('pageZoom15') },
+              ],
+              prefs.pageZoom,
+              value => { write({ pageZoom: value }) },
+            ),
+            percent: pageZoomPercent(prefs.pageZoom),
+            onPick: percent => { write({ pageZoom: String(percent) }) },
+          }),
         ),
       },
       {

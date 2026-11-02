@@ -191,6 +191,9 @@ export const EFFORT_ACCENT_ATTR = 'data-dsh-claude-effort-accent'
  * reads it back (shared/page-zoom.ts).
  */
 export const PAGE_ZOOM_ATTR = 'data-dsh-claude-page-zoom'
+
+/** 缩放倍率走的自定义属性：任何数字都成立，chrome.css 的 `zoom` 读它。 */
+export const PAGE_ZOOM_VAR = '--dsh-claude-page-zoom-factor'
 /**
  * Present while the page's own width — the window's over the page zoom — is at
  * or under the width each one names (shared/page-scale.ts). A stylesheet reads
