@@ -109,7 +109,7 @@ export interface FeatureStylesheetGenerated {
 /**
  * The settings tabs, by id (packages/client/src/features/settings/settings-tab-*.ts).
  */
-export type SettingsTabId = 'general' | 'appearance' | 'main-window' | 'sidebar' | 'date-layout' | 'motion'
+export type SettingsTabId = 'general' | 'appearance' | 'main-window' | 'sidebar' | 'motion'
 
 /**
  * The groups the main-window tab draws, by id: the conversation side, the

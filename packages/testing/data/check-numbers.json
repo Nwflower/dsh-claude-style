@@ -861,6 +861,13 @@
       "the reader's own card presses itself, keeps the brand's tokens under it, and carries the same reset": [
         0
       ],
+      "the zoom row takes any percentage in one field, resets from the label beside it and opens a seekbar over the same range, closed until the field is asked for": [
+        0,
+        1,
+        60,
+        112,
+        200
+      ],
       "the heading carries the plugin's repository link, opening in a new tab with an accessible name": [
         0
       ],

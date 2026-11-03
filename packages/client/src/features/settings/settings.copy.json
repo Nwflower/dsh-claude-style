@@ -85,9 +85,5 @@
   "experimental": { "zh": "实验性", "en": "Experimental" },
   "unavailable": { "zh": "ERROR : 设置存储服务异常，改动不会被保存。", "en": "The settings store is unavailable, so changes will not be saved." },
   "title": { "zh": "Claude Style", "en": "Claude Style" },
-  "composerRequired": { "zh": "「重绘对话框」为「关闭」时不生效。", "en": "No effect while Composer restyle is Off." },
-  "tabDateLayout": { "zh": "日期布局", "en": "Date layout" },
-  "dateSkipRowDesc": { "zh": "进入日期排列", "en": "Include in the date layout" },
-  "dateSkipEmptyTitle": { "zh": "还没有工作区", "en": "No workspaces yet" },
-  "dateSkipEmptyDesc": { "zh": "建一个工作区之后，这一页会列出它，供你决定要不要按日期排列。", "en": "Once a workspace exists it is listed here, for you to decide whether it joins the date layout." }
+  "composerRequired": { "zh": "「重绘对话框」为「关闭」时不生效。", "en": "No effect while Composer restyle is Off." }
 }

@@ -34,11 +34,6 @@ const GLYPHS: Record<SettingsTabId, React.ReactElement[]> = {
     shape('rect', { x: 3.2, y: 4.8, width: 17.6, height: 14.4, rx: 3 }),
     shape('path', { d: 'M9.8 4.8v14.4' }),
   ],
-  // 日期布局: a calendar page — days stack under a header.
-  'date-layout': [
-    shape('rect', { x: 3.6, y: 5.2, width: 16.8, height: 13.8, rx: 2.6 }),
-    shape('path', { d: 'M3.6 9.6h16.8M8 3.4v3.4M16 3.4v3.4M7.4 13.4h1.6M11.2 13.4h1.6M15 13.4h1.6M7.4 16.6h1.6M11.2 16.6h1.6' }),
-  ],
   // 动效: one wave, the strip's own motion mark.
   motion: [
     shape('path', { d: 'M3.4 13.4c2.1-5 3.5-5 5.7 0s3.6 5 5.7 0 3.6-5 5.8 0' }),

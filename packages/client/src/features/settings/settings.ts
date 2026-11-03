@@ -8,7 +8,6 @@ import { cacheFirstMatch, hostSlots } from '@dsh-claude-style/engine/host'
 import { motionMs } from '../../shared/motion'
 import { ClaudeStyleSegmentGroup, createSettingsControls, tabRows } from './settings-controls'
 import { createSettingsAppearanceTab } from './settings-tab-appearance'
-import { attachWorkspaces, createSettingsDateLayoutTab, onKnownWorkspaces } from './settings-tab-date-layout'
 import { createSettingsGeneralTab } from './settings-tab-general'
 import { createSettingsMainWindowTab } from './settings-tab-main-window'
 import { createSettingsMotionTab } from './settings-tab-motion'
@@ -84,7 +83,6 @@ export const SETTINGS_TABS: SettingsTab[] = [
   createSettingsAppearanceTab(),
   createSettingsMainWindowTab(),
   createSettingsSidebarTab(),
-  createSettingsDateLayoutTab(),
   createSettingsMotionTab(),
 ]
 export const SETTINGS_CONTROLS = createSettingsControls()
@@ -153,8 +151,6 @@ export function ClaudeStyleSettingsSection(props: { embed?: boolean }) {
   const setActiveTab = tabState[1]
   /** Which way the open tab arrived, or null for the tab the page opened on. */
   const enterState = React.useState<PageDirection | null>(null)
-  /** The host's workspace list changed under the date layout tab: redraw the rows. */
-  const [, setWorkspaceRevision] = React.useState(0)
   const usernameTimer = React.useRef<number | null>(null)
   const quickTrigger = React.useRef<HTMLButtonElement>(null)
   const pageRef = React.useRef<HTMLDivElement>(null)
@@ -211,15 +207,12 @@ export function ClaudeStyleSettingsSection(props: { embed?: boolean }) {
         setUsername(next.username)
       }
     })
-    // 宿主的工作区清单变了（新建、改名、删掉）：日期布局那一页跟着重画。
-    const unsubscribeWorkspaces = onKnownWorkspaces(() => { if (alive) setWorkspaceRevision(at => at + 1) })
     const unsubscribeCopy = onModelCopyLoaded(() => {
       if (alive) setPrefs(p => Object.assign({}, p))
     })
     return () => {
       alive = false
       unsubscribe()
-      unsubscribeWorkspaces()
       if (unsubscribeCopy) unsubscribeCopy()
       if (usernameTimer.current) clearTimeout(usernameTimer.current)
     }
@@ -382,8 +375,6 @@ export function settingsSectionIndex() {
  */
 export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   loadModelCopy()
-  // 日期布局那一页自己读宿主的 workspaces 服务：它不跟着日期视图的开关一起消失。
-  const stopWorkspaces = attachWorkspaces(ctx)
   // The flip's transition suppression rides this page: both exist exactly
   // while this theme paints the page (D74).
   const stopThemeFlip = installThemeFlip()
@@ -447,7 +438,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   })
   return () => {
     stopThemeFlip()
-    stopWorkspaces()
     hostSettings.stopSettingsDrive()
     if (ui && ui.settingsNav) {
       delete ui.settingsNav

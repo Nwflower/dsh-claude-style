@@ -346,14 +346,6 @@ export const PREFS = {
   workspaceView: { type: 'boolean', default: true },
   /** Whether the sidebar lists its sessions by date instead of by workspace (features/date-groups). */
   dateGroups: { type: 'boolean', default: true },
-  /**
-   * The workspaces that stay out of the date layout, by `workspaceId`: the
-   * reader's scratch space is a pile of loose notes, and sorting it by day says
-   * nothing. Ids rather than titles, so renaming a workspace keeps the choice
-   * and two workspaces sharing a title stay apart. The date layout hides those
-   * rows while it sorts the rest; empty means every workspace joins.
-   */
-  dateSkipWorkspaces: { type: 'list', default: [], max: 32, entryMax: 200, drop: [] },
   dockCards: { type: 'boolean', default: true },
   sidebarSearch: { type: 'boolean', default: true },
   searchStyle: { type: 'choice', values: SEARCH_STYLES, default: SEARCH_STYLE_OVERLAY },

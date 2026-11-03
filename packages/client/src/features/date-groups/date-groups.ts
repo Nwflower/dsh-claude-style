@@ -1,5 +1,4 @@
 import { SESSION_ROW_KEY_ATTRIBUTE, SESSION_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
-import { readPrefs, subscribePrefs } from '../../core/prefs'
 import { observeMatches, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { buildElement } from '@dsh-claude-style/engine/dom'
 import { QUIET_ATTR } from '../../constants'
@@ -154,14 +153,14 @@ export function install(ctx: HostContext) {
    * 答案，页面不能据此判定「这条会话不属于任何工作区」而把它藏起来。
    */
   function workspacesById() {
-    const titles = new Map<string, { workspaceId: string, title: string }>()
+    const titles = new Map<string, string>()
     const list = workspaces?.list
     const snapshot = typeof list?.getSnapshot === 'function' ? list.getSnapshot() : undefined
     if (snapshot === undefined || snapshot === null || snapshot.phase === 'pending') return { titles, ready: false }
     // 页面没有工作区列表时 `items` 可能整个不在：那一档同样算还没有答案。
     if (!Array.isArray(snapshot.items)) return { titles, ready: false }
     for (const row of snapshot.items) {
-      for (const id of row.sessionIds) if (!titles.has(id)) titles.set(id, { workspaceId: row.workspaceId, title: row.title })
+      for (const id of row.sessionIds) if (!titles.has(id)) titles.set(id, row.title)
     }
     return { titles, ready: true }
   }
@@ -300,8 +299,6 @@ export function install(ctx: HostContext) {
     document.body.removeAttribute(ARCHIVED_ATTRIBUTE)
     flatten()
     const { titles, ready } = workspacesById()
-    // 读者在设置页里关掉的工作区不进日期排列：记的是工作区标识，改名不影响。
-    const skip = new Set(readPrefs().dateSkipWorkspaces)
     const times = timesById()
     const today = startOfDay(Date.now())
     // 座位按它们所在的列表归堆：一条列表一次排完，段落不会跨列表。
@@ -313,12 +310,11 @@ export function install(ctx: HostContext) {
       const list = box === null ? null : box.parentElement
       if (box === null || list === null) continue
       const id = key.slice('session:'.length)
-      // 被关掉的工作区不走日期排列：它的会话在日期视图里让开，留在工作区视图里
-      // 由宿主自己那份分组去说。归属答全之后仍不属于任何工作区的会话同样让开：
-      // 日期段落说的是哪天聊过哪件事，一条没有归属的会话落进来只是噪音。
-      // 归属还没答出来的时候一行都不藏 —— 拿不到答案不等于没有归属。
+      // 归属答全之后仍不属于任何工作区的会话让开：日期段落说的是哪天聊过哪件事，
+      // 一条没有归属的会话落进来只是噪音。归属还没答出来的时候一行都不藏 ——
+      // 拿不到答案不等于没有归属。
       const workspace = titles.get(id)
-      if (ready && (workspace === undefined || skip.has(workspace.workspaceId))) {
+      if (ready && workspace === undefined) {
         if (box.style.display !== 'none') box.style.display = 'none'
         continue
       }
@@ -329,7 +325,7 @@ export function install(ctx: HostContext) {
       const seats = lists.get(list)
       if (seats === undefined) lists.set(list, [seat])
       else if (!seats.some(other => other.box === box)) seats.push(seat)
-      dress(seat, workspace === undefined ? '' : workspace.title)
+      dress(seat, workspace === undefined ? '' : workspace)
     }
     for (const [list, seats] of lists) place(list, seats)
   }
@@ -426,8 +422,6 @@ export function install(ctx: HostContext) {
   /** 工作区列表变了（会话换了归属、工作区改名）：行右手的标签跟着换。 */
   let unsubscribeWorkspaces: (() => void) | null = null
   if (typeof workspaces?.list?.subscribe === 'function') unsubscribeWorkspaces = workspaces.list.subscribe(() => schedule())
-  /** 读者在设置页里改了「不进入日期布局的工作区」：立刻重排。 */
-  const stopPrefs = subscribePrefs(() => schedule())
 
   // 自愈：上次若是在日期视图里关掉应用的，宿主记下的是扁平，这里还成读者原来的分组，
   // 否则「默认还是工作区 + 会话」在重启之后就不成立。
@@ -458,7 +452,6 @@ export function install(ctx: HostContext) {
     rows.release()
     if (unsubscribe !== null) unsubscribe()
     if (unsubscribeWorkspaces !== null) unsubscribeWorkspaces()
-    if (typeof stopPrefs === 'function') stopPrefs()
     document.body.removeAttribute(MODE_ATTRIBUTE)
     for (const node of mine) if (node.isConnected) node.remove()
     mine.clear()
