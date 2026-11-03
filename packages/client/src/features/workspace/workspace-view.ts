@@ -21,10 +21,6 @@ import type { CopyKey } from './copy'
 const SESSION_ROW_ACTION_SLOT = 'sidebar.workspaces.session.row.action'
 /** The reader's 进行中 grouping, outliving a reload spent in 已归档. */
 const GROUP_BY_STORAGE = 'dsh-claude-style.workspaceGroupBy'
-/** 宿主的视图记录（分组和它一起存），形如 `dsh.workspace.view.v5`。 */
-const VIEW_RECORD_KEY = /^dsh\.workspace\.view\./
-/** 已经为重载修分组跑过一次的标记：一个标签页只重载一次，免得转圈。 */
-const HEAL_MARK = 'dsh-claude-group-healed'
 
 /**
  * The grouping the reader last had in 进行中: the store's default until this browser records one.
@@ -355,70 +351,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * section keeps its plain label until then, since a segment that cannot drive
    * the host would lie about the list.
    */
-  /**
-   * 把宿主记着的「扁平」还成工作区。
-   *
-   * 宿主会把这一档写进它自己的存储，所以早先那一版在日期视图里留下的扁平，读者
-   * 重启之后仍然看得见 —— 看到的是一条没有工作区分组的列表。只在宿主确实是扁平、
-   * 而读者的分组记忆不是扁平时动手，读者自己选的「工作区树」不会被改掉。
-   */
-  function healGrouping() {
-    const followed = store
-    if (followed === null) return
-    if (typeof followed.getSnapshot !== 'function' || typeof followed.actions?.setGroupBy !== 'function') return
-    // 日期视图开着时分组归 date-groups 管，这里不插手。
-    if (document.body.hasAttribute('data-dsh-claude-date-groups')) return
-    if (groupOf(followed.getSnapshot()) !== 'flat') return
-    const want = storedGroupBy()
-    activeGroupBy = want
-    followed.actions.setGroupBy(want)
-    // 宿主是照着存储里那条视图记录搭列表的：只改 store，这一趟已经搭成扁平了。
-    // 所以存储一并改掉，再重载一次 —— 读者下一次看到的才是工作区分组。
-    if (!patchStoredGroup(want)) return
-    try {
-      if (sessionStorage.getItem(HEAL_MARK) === '1') return
-      sessionStorage.setItem(HEAL_MARK, '1')
-      location.reload()
-    } catch {
-      // 存储不可用：不冒重载转圈的风险，这一趟先这样。
-    }
-  }
-
-  /**
-   * 把宿主存储里那条视图记录的分组改成 want。
-   *
-   * 宿主自己的写入是这条记录，改它等于替读者把「扁平」还回去；返回有没有真的改动，
-   * 没改动就不值得为它重载页面。
-   */
-  function patchStoredGroup(want: HostSessionGroupBy): boolean {
-    let changed = false
-    try {
-      for (let at = 0; at < localStorage.length; at += 1) {
-        const key = localStorage.key(at)
-        if (key === null || !VIEW_RECORD_KEY.test(key)) continue
-        const raw = localStorage.getItem(key)
-        if (raw === null) continue
-        const parsed: unknown = JSON.parse(raw)
-        if (parsed === null || typeof parsed !== 'object') continue
-        const record = parsed as { groupBy?: string }
-        if (record.groupBy !== 'flat') continue
-        record.groupBy = want
-        localStorage.setItem(key, JSON.stringify(record))
-        changed = true
-      }
-    } catch {
-      // 存储不可用或记录不是这个形状：当作没改，交给下一次开门。
-    }
-    return changed
-  }
-
   function watch() {
     if (store !== null) return true
     const next = hostWorkspaceView(ctx)
     if (next === null) return false
     store = next
     sessions = hostSessions(ctx)
-    healGrouping()
     reconcile()
     return true
   }

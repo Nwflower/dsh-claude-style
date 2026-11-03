@@ -1,0 +1,8 @@
+{
+  "group": "improvements",
+  "order": 25,
+  "at": "2026-11-02",
+  "external": false,
+  "zh": "侧栏顶行换成铃铛与放大镜两枚按钮，放大镜按的仍是皮肤自己的搜索，铃铛只在有会话运行时亮起一个小圆点",
+  "en": "Draw the sidebar's top row as a bell and a magnifier, the magnifier pressing the skin's own search and the bell lighting a single dot while a session runs"
+}

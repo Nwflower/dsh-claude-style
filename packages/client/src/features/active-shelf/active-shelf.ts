@@ -1,9 +1,11 @@
 import { SIDEBAR_TOGGLE_SELECTOR } from '@dsh-claude-style/contracts/dom'
 
 import { DATE_VIEW_TOGGLE_EVENT } from '../date-groups/date-groups'
+import { readPrefs, subscribePrefs } from '../../core/prefs'
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { buildElement } from '@dsh-claude-style/engine/dom'
 import { QUIET_ATTR } from '../../constants'
+import { copy } from './copy'
 import { watchSidebar } from '../../shared/sidebar-watch'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { cacheFirstMatch, findSidebarLogoRow, hostSessions } from '@dsh-claude-style/engine/host'
@@ -72,7 +74,7 @@ export function install(ctx: HostContext) {
   function buildTrigger() {
     const button = buildElement('button', 'dsh-claude-active-shelf-trigger')
     button.type = 'button'
-    button.setAttribute('aria-label', '切换日期视图')
+    button.setAttribute('aria-label', copy('toggleDateView'))
     quiet(button)
     const icon = buildElement('span', 'dsh-claude-active-shelf-trigger-icon')
     icon.innerHTML = BELL_SVG
@@ -92,7 +94,7 @@ export function install(ctx: HostContext) {
   function buildSearchTrigger() {
     const button = buildElement('button', 'dsh-claude-active-shelf-search')
     button.type = 'button'
-    button.setAttribute('aria-label', '搜索')
+    button.setAttribute('aria-label', copy('search'))
     quiet(button)
     const icon = buildElement('span', 'dsh-claude-active-shelf-search-icon')
     icon.innerHTML = MAGNIFIER_SVG
@@ -124,6 +126,14 @@ export function install(ctx: HostContext) {
       trigger = buildTrigger()
       actions.appendChild(trigger)
       actions.appendChild(buildSearchTrigger())
+    }
+    // 铃铛跟着日期视图的开关：那边关掉之后页面里没有会接它的人，这里也就不挂出来；
+    // 放大镜留下，搜索照旧从这个顶行进得去。
+    const wanted = readPrefs().dateGroups !== false
+    if (trigger !== null) {
+      const bellStands = trigger.parentElement === actions
+      if (wanted && !bellStands) actions.insertBefore(trigger, actions.firstChild)
+      if (!wanted && bellStands) actions.removeChild(trigger)
     }
     // 收起按钮就在刚读到的这一行里：从行上读，不再从文档上找（整文件的
     // document 查询只剩搜索按钮那两处 cacheFirstMatch）。
@@ -162,11 +172,14 @@ export function install(ctx: HostContext) {
   // 运行状态在会话快照里，页面本身可能一动不动。
   let unsubscribe: (() => void) | null = null
   if (sessions !== null && typeof sessions.list.subscribe === 'function') unsubscribe = sessions.list.subscribe(() => schedule())
+  // 日期视图那个开关变了：铃铛跟着挂上或摘下。
+  const stopPrefs = subscribePrefs(() => schedule())
 
   pass()
 
   return () => {
     if (unsubscribe !== null) unsubscribe()
+    stopPrefs()
     stopWatch()
     if (cancelFrame !== null) cancelFrame()
     if (actions !== null && actions.parentElement !== null) actions.parentElement.removeChild(actions)

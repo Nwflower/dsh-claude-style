@@ -129,31 +129,6 @@ function labelOf(seat: Seat) {
   return copy('earlier')
 }
 
-/* ---------- 工作区名字：给设置页那一栏用 ---------- */
-/* date-groups 手上有宿主的 workspaces 句柄，设置页没有：这里把标题收成一个小
-   仓库，谁要知道「有哪些工作区可以被排除」就问它，变了会收到通知。 */
-let publishedNames: string[] = []
-const nameListeners = new Set<() => void>()
-
-/** 现在的工作区标题，按宿主给的顺序。 */
-export function workspaceNames(): string[] {
-  return publishedNames
-}
-
-/** 名字变了就叫一声；返回退订。 */
-export function subscribeWorkspaceNames(listener: () => void) {
-  nameListeners.add(listener)
-  return () => { nameListeners.delete(listener) }
-}
-
-/** 换一批名字；一样就不叫。 */
-function publishWorkspaceNames(next: string[]) {
-  const same = next.length === publishedNames.length && next.every((name, at) => name === publishedNames[at])
-  if (same) return
-  publishedNames = next
-  for (const listener of nameListeners) listener()
-}
-
 export function install(ctx: HostContext) {
   /** 宿主的会话列表：每行的更新时间从这儿来（行上只有标题与时间文字）。 */
   const sessions = hostSessions(ctx)
@@ -172,18 +147,23 @@ export function install(ctx: HostContext) {
   let cancelFrame: (() => void) | null = null
   let disposed = false
 
-  /** 会话 id → 工作区标题。 */
+  /**
+   * 会话 id → 它所在的工作区，以及这份归属是否已经答全。
+   *
+   * `ready` 只在宿主的工作区列表答出来之后才是真：在那之前谁属于哪个工作区还没有
+   * 答案，页面不能据此判定「这条会话不属于任何工作区」而把它藏起来。
+   */
   function workspacesById() {
-    const titles = new Map<string, string>()
+    const titles = new Map<string, { workspaceId: string, title: string }>()
     const list = workspaces?.list
     const snapshot = typeof list?.getSnapshot === 'function' ? list.getSnapshot() : undefined
-    if (snapshot === undefined || snapshot === null || snapshot.phase === 'pending') return titles
-    // 页面没有工作区列表时 `items` 可能整个不在：那一档当作「谁也认不出来」。
-    if (!Array.isArray(snapshot.items)) return titles
+    if (snapshot === undefined || snapshot === null || snapshot.phase === 'pending') return { titles, ready: false }
+    // 页面没有工作区列表时 `items` 可能整个不在：那一档同样算还没有答案。
+    if (!Array.isArray(snapshot.items)) return { titles, ready: false }
     for (const row of snapshot.items) {
-      for (const id of row.sessionIds) if (!titles.has(id)) titles.set(id, row.title)
+      for (const id of row.sessionIds) if (!titles.has(id)) titles.set(id, { workspaceId: row.workspaceId, title: row.title })
     }
-    return titles
+    return { titles, ready: true }
   }
 
   /** 会话 id → 最后更新时间。 */
@@ -319,8 +299,8 @@ export function install(ctx: HostContext) {
     }
     document.body.removeAttribute(ARCHIVED_ATTRIBUTE)
     flatten()
-    const titles = workspacesById()
-    // 读者在设置页挑过的工作区不参与日期排列（默认「闲聊」）。
+    const { titles, ready } = workspacesById()
+    // 读者在设置页里关掉的工作区不进日期排列：记的是工作区标识，改名不影响。
     const skip = new Set(readPrefs().dateSkipWorkspaces)
     const times = timesById()
     const today = startOfDay(Date.now())
@@ -333,12 +313,12 @@ export function install(ctx: HostContext) {
       const list = box === null ? null : box.parentElement
       if (box === null || list === null) continue
       const id = key.slice('session:'.length)
-      // 被屏蔽的工作区（「闲聊」）不走日期排列：它的会话在日期视图里让开，
-      // 留在工作区视图里由宿主自己那份分组去说。不属于任何工作区的会话
-      // （工作区视图里的「未分组」）同样让开：日期段落说的是哪天聊过哪件事，
-      // 一条没有归属的会话落进来只是噪音。
-      const workspace = titles.get(id) ?? ''
-      if (workspace === '' || skip.has(workspace)) {
+      // 被关掉的工作区不走日期排列：它的会话在日期视图里让开，留在工作区视图里
+      // 由宿主自己那份分组去说。归属答全之后仍不属于任何工作区的会话同样让开：
+      // 日期段落说的是哪天聊过哪件事，一条没有归属的会话落进来只是噪音。
+      // 归属还没答出来的时候一行都不藏 —— 拿不到答案不等于没有归属。
+      const workspace = titles.get(id)
+      if (ready && (workspace === undefined || skip.has(workspace.workspaceId))) {
         if (box.style.display !== 'none') box.style.display = 'none'
         continue
       }
@@ -349,7 +329,7 @@ export function install(ctx: HostContext) {
       const seats = lists.get(list)
       if (seats === undefined) lists.set(list, [seat])
       else if (!seats.some(other => other.box === box)) seats.push(seat)
-      dress(seat, workspace)
+      dress(seat, workspace === undefined ? '' : workspace.title)
     }
     for (const [list, seats] of lists) place(list, seats)
   }
@@ -426,23 +406,11 @@ export function install(ctx: HostContext) {
     else enable()
   }
 
-  /** 把工作区标题收给设置页：那一栏要列出「哪些工作区不进日期排列」。 */
-  function shareNames() {
-    const list = workspaces?.list
-    const snapshot = typeof list?.getSnapshot === 'function' ? list.getSnapshot() : undefined
-    if (snapshot === undefined || snapshot === null || snapshot.phase === 'pending') return
-    if (!Array.isArray(snapshot.items)) return
-    const names: string[] = []
-    for (const row of snapshot.items) if (!names.includes(row.title)) names.push(row.title)
-    publishWorkspaceNames(names)
-  }
-
   function schedule() {
     if (cancelFrame !== null || disposed) return
     cancelFrame = requestFrame({
       write() {
         cancelFrame = null
-        shareNames()
         arrange()
       },
     })
@@ -455,7 +423,7 @@ export function install(ctx: HostContext) {
   /** 会话的更新时间变了，段落边界可能跟着变（跨零点的那一帧）。 */
   let unsubscribe: (() => void) | null = null
   if (typeof sessions?.list?.subscribe === 'function') unsubscribe = sessions.list.subscribe(() => schedule())
-  /** 工作区列表变了（新建、改名）：设置页那一栏跟着换。 */
+  /** 工作区列表变了（会话换了归属、工作区改名）：行右手的标签跟着换。 */
   let unsubscribeWorkspaces: (() => void) | null = null
   if (typeof workspaces?.list?.subscribe === 'function') unsubscribeWorkspaces = workspaces.list.subscribe(() => schedule())
   /** 读者在设置页里改了「不进入日期布局的工作区」：立刻重排。 */
@@ -470,8 +438,6 @@ export function install(ctx: HostContext) {
     if (group === 'flat' && typeof store?.actions?.setGroupBy === 'function') store.actions.setGroupBy(leftover)
     forgetGroup()
   }
-
-  shareNames()
 
   // 默认什么都不做：读者看到的就是宿主原来那张「工作区 + 会话」。
   document.addEventListener(DATE_VIEW_TOGGLE_EVENT, onToggle)

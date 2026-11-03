@@ -1,0 +1,8 @@
+{
+  "group": "new",
+  "order": 40,
+  "at": "2026-11-02",
+  "external": false,
+  "zh": "新增侧栏的日期视图，会话按今天、昨天、星期几与更早分段，每行右手标出所属工作区，按顶行的铃铛在两种排法之间切换",
+  "en": "Add a date view to the sidebar that groups sessions under Today, Yesterday, each weekday and Earlier, tags every row with the workspace it belongs to, and switches between the two orders from the top row's bell"
+}

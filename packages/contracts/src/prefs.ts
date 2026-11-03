@@ -196,12 +196,14 @@ export const AUTO_POPOVER_ALL = 'all'
 export const AUTO_POPOVER_SCOPES = [AUTO_POPOVER_OFF, AUTO_POPOVER_ACCOUNT, AUTO_POPOVER_ALL] as const
 
 /**
- * How large the page is drawn: `system` leaves it at the size the system gives
- * it, and every other value scales the whole page by that factor (the stylesheet
- * writes it as a `zoom`, so the page lays out in a smaller space and every
- * control, line and picture grows with it).
+ * How large the page is drawn: the empty value leaves it at the size the system
+ * gives it, and every other value is the percentage the whole page is scaled by
+ * (the stylesheet reads it as a `zoom`, so the page lays out in a smaller space
+ * and every control, line and picture grows with it).
+ *
+ * 空串是「跟系统」：页面一个属性都不写，尺寸就还是系统和宿主给的那个。
  */
-export const PAGE_ZOOM_SYSTEM = 'system'
+export const PAGE_ZOOM_SYSTEM = ''
 /* 缩放现在是任意百分比：100 就是不动，60–200 是滑条的范围，中间每一格都算。
    早先的固定档位（system / 0.8 / 1 / 1.25 / 1.5）在 legacy 里照样读得回来。 */
 export const PAGE_ZOOM_DEFAULT = '100'
@@ -309,7 +311,8 @@ export const PREFS = {
     type: 'text',
     default: PAGE_ZOOM_DEFAULT,
     max: 8,
-    legacy: { '0.8': '80', '1': '100', '1.25': '125', '1.5': '150' },
+    /* 旧的固定档位：'system' 现在就是空串（页面不写属性），其余四档换成百分比。 */
+    legacy: { system: '', '0.8': '80', '1': '100', '1.25': '125', '1.5': '150' },
   },
   sodium: { type: 'choice', values: SODIUM_MODES, default: SODIUM_UNDECIDED },
   banLocale: { type: 'choice', values: BAN_LOCALES, default: BAN_LOCALE_EN },
@@ -341,12 +344,13 @@ export const PREFS = {
   /** Whether the sidebar lists its sessions by date instead of by workspace (features/date-groups). */
   dateGroups: { type: 'boolean', default: true },
   /**
-   * The workspaces that stay out of the date layout: the reader's scratch space
-   * (「闲聊」 to begin with) is a pile of loose notes, and sorting it by day says
-   * nothing. Titles, not ids, because a workspace's id is not what the settings
-   * page shows. The date layout hides those rows while it sorts the rest.
+   * The workspaces that stay out of the date layout, by `workspaceId`: the
+   * reader's scratch space is a pile of loose notes, and sorting it by day says
+   * nothing. Ids rather than titles, so renaming a workspace keeps the choice
+   * and two workspaces sharing a title stay apart. The date layout hides those
+   * rows while it sorts the rest; empty means every workspace joins.
    */
-  dateSkipWorkspaces: { type: 'list', default: ['闲聊'], max: 32, entryMax: 200, drop: [] },
+  dateSkipWorkspaces: { type: 'list', default: [], max: 32, entryMax: 200, drop: [] },
   dockCards: { type: 'boolean', default: true },
   sidebarSearch: { type: 'boolean', default: true },
   searchStyle: { type: 'choice', values: SEARCH_STYLES, default: SEARCH_STYLE_OVERLAY },

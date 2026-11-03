@@ -1,378 +1,96 @@
 {
-  "chatWaitThinking": {
-    "zh": "正在思考",
-    "en": "Thinking…"
-  },
-  "chatWaitTools": {
-    "zh": "正在调用工具",
-    "en": "Running tools…"
-  },
-  "repository": {
-    "zh": "在 GitHub 上打开本插件",
-    "en": "Open the plugin on GitHub"
-  },
-  "repositoryButton": {
-    "zh": "GitHub",
-    "en": "GitHub"
-  },
-  "brandTitle": {
-    "zh": "主题风格",
-    "en": "Theme style"
-  },
-  "brandDesc": {
-    "zh": "品牌标识与默认配色色系。",
-    "en": "The brand mark and its default colour family."
-  },
-  "autoPopoverTitle": {
-    "zh": "悬停展开弹层",
-    "en": "Open popovers on hover"
-  },
-  "autoPopoverDesc": {
-    "zh": "鼠标停在按钮上就展开插件的弹层，不必点击；「仅账号区」只对账号弹层生效。",
-    "en": "Opens the skin's popovers when the pointer rests on their button, without a click; Account only keeps this to the account popover."
-  },
-  "autoPopoverOff": {
-    "zh": "关闭",
-    "en": "Off"
-  },
-  "autoPopoverAccount": {
-    "zh": "仅账号区",
-    "en": "Account only"
-  },
-  "autoPopoverAll": {
-    "zh": "全部",
-    "en": "All"
-  },
-  "quickTitle": {
-    "zh": "快捷供应商",
-    "en": "Quick providers"
-  },
-  "quickDesc": {
-    "zh": "在一级列表展示勾选的供应商。",
-    "en": "Picked providers follow the official service in the picker's first level."
-  },
-  "quickNone": {
-    "zh": "未选择",
-    "en": "None"
-  },
-  "quickCount": {
-    "zh": "{count} 个供应商",
-    "en": "{count} providers"
-  },
-  "quickLoading": {
-    "zh": "正在加载模型目录…",
-    "en": "Loading providers…"
-  },
-  "quickRemoved": {
-    "zh": "已移除",
-    "en": "Removed"
-  },
-  "usernameTitle": {
-    "zh": "用户名",
-    "en": "Username"
-  },
-  "usernameDesc": {
-    "zh": "用户名显示在欢迎语与账号行里。",
-    "en": "The name shown in the greeting and the account row."
-  },
-  "usernamePlaceholder": {
-    "zh": "自动获取",
-    "en": "Auto-detect account or host user"
-  },
-  "pageZoomTitle": {
-    "zh": "页面缩放",
-    "en": "Page zoom"
-  },
-  "pageZoomDesc": {
-    "zh": "按档位，或在右边直接输入百分比（60–200）。",
-    "en": "Pick a preset, or type a percentage on the right (60–200)."
-  },
-  "brandDeepseek": {
-    "zh": "DeepSeek",
-    "en": "DeepSeek"
-  },
-  "brandClaude": {
-    "zh": "Claude",
-    "en": "Claude"
-  },
-  "brandNameTitle": {
-    "zh": "品牌名称",
-    "en": "Brand name"
-  },
-  "brandNameEdit": {
-    "zh": "编辑品牌名称",
-    "en": "Edit the brand name"
-  },
-  "brandNamePlaceholder": {
-    "zh": "所选品牌",
-    "en": "The chosen brand"
-  },
-  "brandLockupTitle": {
-    "zh": "品牌标志",
-    "en": "Brand"
-  },
-  "brandLockupDesc": {
-    "zh": "侧栏顶部与新会话页的品牌区。支持 PNG、SVG 或 WebP，不超过 2 MB。",
-    "en": "The brand area at the top of the sidebar and on the new-session page. PNG, SVG or WebP, up to 2 MB."
-  },
-  "brandMarkUpload": {
-    "zh": "上传标志图片",
-    "en": "Upload the brand mark"
-  },
-  "brandMarkReplace": {
-    "zh": "更换标志图片",
-    "en": "Replace the brand mark"
-  },
-  "brandWordmarkReplace": {
-    "zh": "更换文字标志图片",
-    "en": "Replace the wordmark"
-  },
-  "brandWordmarkPick": {
-    "zh": "换成图片",
-    "en": "Use an image instead"
-  },
-  "brandImageRemove": {
-    "zh": "移除",
-    "en": "Remove"
-  },
-  "brandImageType": {
-    "zh": "只接受 PNG、SVG 或 WebP 图片。",
-    "en": "Only PNG, SVG or WebP images are accepted."
-  },
-  "brandImageSize": {
-    "zh": "图片超过 2 MB。",
-    "en": "The image is larger than 2 MB."
-  },
-  "brandImageFailed": {
-    "zh": "保存失败：{detail}",
-    "en": "Saving failed: {detail}"
-  },
-  "brandInkTitle": {
-    "zh": "标志颜色",
-    "en": "Mark colours"
-  },
-  "brandInkDesc": {
-    "zh": "「强调色」与「文字色」把品牌标志与上传的图片当作形状，按所在位置的颜色上色。",
-    "en": "Accent and text colour fill the brand's own mark and your images as shapes, in the colour of the place they stand."
-  },
-  "brandInkOriginal": {
-    "zh": "标志原色",
-    "en": "Original"
-  },
-  "brandInkAccent": {
-    "zh": "强调色",
-    "en": "Accent"
-  },
-  "brandInkText": {
-    "zh": "文字色",
-    "en": "Text colour"
-  },
-  "paletteCardsTitle": {
-    "zh": "颜色卡",
-    "en": "Colour cards"
-  },
-  "paletteCustom": {
-    "zh": "自定义",
-    "en": "Custom"
-  },
-  "paletteFixed": {
-    "zh": "配色已被固定为{name}。",
-    "en": "The colours are fixed to {name}."
-  },
-  "paletteFollowBrand": {
-    "zh": "改为跟随品牌",
-    "en": "Follow the brand"
-  },
-  "paletteSwatchAccent": {
-    "zh": "强调色",
-    "en": "Accent"
-  },
-  "paletteSwatchLight": {
-    "zh": "浅色背景",
-    "en": "Light background"
-  },
-  "paletteSwatchDark": {
-    "zh": "深色背景",
-    "en": "Dark background"
-  },
-  "paletteSwatchCode": {
-    "zh": "行内代码色",
-    "en": "Inline code"
-  },
-  "paletteUseBrand": {
-    "zh": "恢复跟随品牌",
-    "en": "Follow the brand again"
-  },
-  "motionTitle": {
-    "zh": "动画效果",
-    "en": "Animation"
-  },
-  "motionSystem": {
-    "zh": "随系统",
-    "en": "Follow the system"
-  },
-  "motionReduced": {
-    "zh": "减弱",
-    "en": "Reduced"
-  },
-  "motionFull": {
-    "zh": "总是",
-    "en": "Always"
-  },
-  "ongoingTitle": {
-    "zh": "进行中对话的标记",
-    "en": "Ongoing conversation mark"
-  },
-  "ongoingBreathe": {
-    "zh": "呼吸灯",
-    "en": "Breathing light"
-  },
-  "ongoingRing": {
-    "zh": "滚动圆环",
-    "en": "Turning ring"
-  },
-  "ongoingSample": {
-    "zh": "新的对话",
-    "en": "New chat"
-  },
-  "tabGeneral": {
-    "zh": "通用",
-    "en": "General"
-  },
-  "tabAppearance": {
-    "zh": "外观",
-    "en": "Appearance"
-  },
-  "tabMainWindow": {
-    "zh": "主窗口",
-    "en": "Main window"
-  },
-  "groupConversation": {
-    "zh": "对话区",
-    "en": "Conversation"
-  },
-  "groupComposer": {
-    "zh": "输入区",
-    "en": "Composer"
-  },
-  "groupStatistics": {
-    "zh": "上下文与费用",
-    "en": "Context and cost"
-  },
-  "tabSidebar": {
-    "zh": "侧栏",
-    "en": "Sidebar"
-  },
-  "tabMotion": {
-    "zh": "动效",
-    "en": "Motion"
-  },
-  "paletteTitle": {
-    "zh": "配色",
-    "en": "Colours"
-  },
-  "paletteDesc": {
-    "zh": "开启后界面用插件的配色。",
-    "en": "The skin's own colours while on."
-  },
-  "typefaceTitle": {
-    "zh": "字体",
-    "en": "Typefaces"
-  },
-  "typefaceDesc": {
-    "zh": "开启后用 Anthropic 的字体。",
-    "en": "The Anthropic faces while on."
-  },
-  "dockCardsTitle": {
-    "zh": "右侧栏卡片布局",
-    "en": "Right sidebar card layout"
-  },
-  "dockCardsDesc": {
-    "zh": "右侧栏的各个面板画成带圆角的卡片；关闭后面板贴着栏边，用宿主自己的底色。",
-    "en": "Draws the right sidebar's panels as rounded cards; off leaves them flush with the column in the host's own fill."
-  },
-  "sidebarLayoutTitle": {
-    "zh": "左侧栏布局",
-    "en": "Left sidebar layout"
-  },
-  "sidebarLayoutRelaxed": {
-    "zh": "宽松",
-    "en": "Relaxed"
-  },
-  "sidebarLayoutCompact": {
-    "zh": "紧凑",
-    "en": "Compact"
-  },
-  "chatUxManaged": {
-    "zh": "该选项由插件 dsh-chat-ux 管理",
-    "en": "Managed by dsh-chat-ux"
-  },
-  "windowsOnlyNote": {
-    "zh": "只在 Windows 桌面端的窗口里生效。",
-    "en": "Takes effect in the Windows desktop window only."
-  },
-  "motionStillNote": {
-    "zh": "动画设为「减弱」时这一项不生效，卡片只显示定格画面。",
-    "en": "No effect while Animation is Reduced; the cards show stills."
-  },
-  "conversationComposerNote": {
-    "zh": "只在「重绘对话框」覆盖对话页时生效。",
-    "en": "Takes effect only while Composer restyle covers the conversation."
-  },
-  "experimental": {
-    "zh": "实验性",
-    "en": "Experimental"
-  },
-  "unavailable": {
-    "zh": "ERROR : 设置存储服务异常，改动不会被保存。",
-    "en": "The settings store is unavailable, so changes will not be saved."
-  },
-  "title": {
-    "zh": "Claude Style",
-    "en": "Claude Style"
-  },
-  "composerRequired": {
-    "zh": "「重绘对话框」为「关闭」时不生效。",
-    "en": "No effect while Composer restyle is Off."
-  },
-  "tabDateLayout": {
-    "zh": "日期布局",
-    "en": "Date layout"
-  },
-  "dateSkipRowDesc": {
-    "zh": "进入日期排列",
-    "en": "Include in the date layout"
-  },
-  "dateSkipEmptyTitle": {
-    "zh": "还没有工作区",
-    "en": "No workspaces yet"
-  },
-  "dateSkipEmptyDesc": {
-    "zh": "建一个工作区之后，这一页会列出它，供你决定要不要按日期排列。",
-    "en": "Once a workspace exists it is listed here, for you to decide whether it joins the date layout."
-  },
-  "pageZoomSystem": {
-    "zh": "跟系统",
-    "en": "System"
-  },
-  "pageZoom08": {
-    "zh": "0.8x",
-    "en": "0.8x"
-  },
-  "pageZoom1": {
-    "zh": "1x",
-    "en": "1x"
-  },
-  "pageZoom125": {
-    "zh": "1.25x",
-    "en": "1.25x"
-  },
-  "pageZoom15": {
-    "zh": "1.5x",
-    "en": "1.5x"
-  },
-  "pageZoomCustomLabel": {
-    "zh": "自定义缩放百分比",
-    "en": "Custom zoom percentage"
-  }
+  "chatWaitThinking": { "zh": "正在思考", "en": "Thinking…" },
+  "chatWaitTools": { "zh": "正在调用工具", "en": "Running tools…" },
+  "repository": { "zh": "在 GitHub 上打开本插件", "en": "Open the plugin on GitHub" },
+  "repositoryButton": { "zh": "GitHub", "en": "GitHub" },
+  "brandTitle": { "zh": "主题风格", "en": "Theme style" },
+  "brandDesc": { "zh": "品牌标识与默认配色色系。", "en": "The brand mark and its default colour family." },
+  "autoPopoverTitle": { "zh": "悬停展开弹层", "en": "Open popovers on hover" },
+  "autoPopoverDesc": { "zh": "鼠标停在按钮上就展开插件的弹层，不必点击；「仅账号区」只对账号弹层生效。", "en": "Opens the skin's popovers when the pointer rests on their button, without a click; Account only keeps this to the account popover." },
+  "autoPopoverOff": { "zh": "关闭", "en": "Off" },
+  "autoPopoverAccount": { "zh": "仅账号区", "en": "Account only" },
+  "autoPopoverAll": { "zh": "全部", "en": "All" },
+  "quickTitle": { "zh": "快捷供应商", "en": "Quick providers" },
+  "quickDesc": { "zh": "在一级列表展示勾选的供应商。", "en": "Picked providers follow the official service in the picker's first level." },
+  "quickNone": { "zh": "未选择", "en": "None" },
+  "quickCount": { "zh": "{count} 个供应商", "en": "{count} providers" },
+  "quickLoading": { "zh": "正在加载模型目录…", "en": "Loading providers…" },
+  "quickRemoved": { "zh": "已移除", "en": "Removed" },
+  "usernameTitle": { "zh": "用户名", "en": "Username" },
+  "usernameDesc": { "zh": "用户名显示在欢迎语与账号行里。", "en": "The name shown in the greeting and the account row." },
+  "usernamePlaceholder": { "zh": "自动获取", "en": "Auto-detect account or host user" },
+  "pageZoomTitle": { "zh": "页面缩放", "en": "Page zoom" },
+  "pageZoomDesc": { "zh": "按档位，或在右边直接输入百分比（60–200）。", "en": "Pick a preset, or type a percentage on the right (60–200)." },
+  "brandDeepseek": { "zh": "DeepSeek", "en": "DeepSeek" },
+  "brandClaude": { "zh": "Claude", "en": "Claude" },
+  "brandNameTitle": { "zh": "品牌名称", "en": "Brand name" },
+  "brandNameEdit": { "zh": "编辑品牌名称", "en": "Edit the brand name" },
+  "brandNamePlaceholder": { "zh": "所选品牌", "en": "The chosen brand" },
+  "brandLockupTitle": { "zh": "品牌标志", "en": "Brand" },
+  "brandLockupDesc": { "zh": "侧栏顶部与新会话页的品牌区。支持 PNG、SVG 或 WebP，不超过 2 MB。", "en": "The brand area at the top of the sidebar and on the new-session page. PNG, SVG or WebP, up to 2 MB." },
+  "brandMarkUpload": { "zh": "上传标志图片", "en": "Upload the brand mark" },
+  "brandMarkReplace": { "zh": "更换标志图片", "en": "Replace the brand mark" },
+  "brandWordmarkReplace": { "zh": "更换文字标志图片", "en": "Replace the wordmark" },
+  "brandWordmarkPick": { "zh": "换成图片", "en": "Use an image instead" },
+  "brandImageRemove": { "zh": "移除", "en": "Remove" },
+  "brandImageType": { "zh": "只接受 PNG、SVG 或 WebP 图片。", "en": "Only PNG, SVG or WebP images are accepted." },
+  "brandImageSize": { "zh": "图片超过 2 MB。", "en": "The image is larger than 2 MB." },
+  "brandImageFailed": { "zh": "保存失败：{detail}", "en": "Saving failed: {detail}" },
+  "brandInkTitle": { "zh": "标志颜色", "en": "Mark colours" },
+  "brandInkDesc": { "zh": "「强调色」与「文字色」把品牌标志与上传的图片当作形状，按所在位置的颜色上色。", "en": "Accent and text colour fill the brand's own mark and your images as shapes, in the colour of the place they stand." },
+  "brandInkOriginal": { "zh": "标志原色", "en": "Original" },
+  "brandInkAccent": { "zh": "强调色", "en": "Accent" },
+  "brandInkText": { "zh": "文字色", "en": "Text colour" },
+  "paletteCardsTitle": { "zh": "颜色卡", "en": "Colour cards" },
+  "paletteCustom": { "zh": "自定义", "en": "Custom" },
+  "paletteFixed": { "zh": "配色已被固定为{name}。", "en": "The colours are fixed to {name}." },
+  "paletteFollowBrand": { "zh": "改为跟随品牌", "en": "Follow the brand" },
+  "paletteSwatchAccent": { "zh": "强调色", "en": "Accent" },
+  "paletteSwatchLight": { "zh": "浅色背景", "en": "Light background" },
+  "paletteSwatchDark": { "zh": "深色背景", "en": "Dark background" },
+  "paletteSwatchCode": { "zh": "行内代码色", "en": "Inline code" },
+  "paletteUseBrand": { "zh": "恢复跟随品牌", "en": "Follow the brand again" },
+  "motionTitle": { "zh": "动画效果", "en": "Animation" },
+  "motionSystem": { "zh": "随系统", "en": "Follow the system" },
+  "motionReduced": { "zh": "减弱", "en": "Reduced" },
+  "motionFull": { "zh": "总是", "en": "Always" },
+  "ongoingTitle": { "zh": "进行中对话的标记", "en": "Ongoing conversation mark" },
+  "ongoingBreathe": { "zh": "呼吸灯", "en": "Breathing light" },
+  "ongoingRing": { "zh": "滚动圆环", "en": "Turning ring" },
+  "ongoingSample": { "zh": "新的对话", "en": "New chat" },
+  "tabGeneral": { "zh": "通用", "en": "General" },
+  "tabAppearance": { "zh": "外观", "en": "Appearance" },
+  "tabMainWindow": { "zh": "主窗口", "en": "Main window" },
+  "groupConversation": { "zh": "对话区", "en": "Conversation" },
+  "groupComposer": { "zh": "输入区", "en": "Composer" },
+  "groupStatistics": { "zh": "上下文与费用", "en": "Context and cost" },
+  "tabSidebar": { "zh": "侧栏", "en": "Sidebar" },
+  "tabMotion": { "zh": "动效", "en": "Motion" },
+  "paletteTitle": { "zh": "配色", "en": "Colours" },
+  "paletteDesc": { "zh": "开启后界面用插件的配色。", "en": "The skin's own colours while on." },
+  "typefaceTitle": { "zh": "字体", "en": "Typefaces" },
+  "typefaceDesc": { "zh": "开启后用 Anthropic 的字体。", "en": "The Anthropic faces while on." },
+  "dockCardsTitle": { "zh": "右侧栏卡片布局", "en": "Right sidebar card layout" },
+  "dockCardsDesc": { "zh": "右侧栏的各个面板画成带圆角的卡片；关闭后面板贴着栏边，用宿主自己的底色。", "en": "Draws the right sidebar's panels as rounded cards; off leaves them flush with the column in the host's own fill." },
+  "sidebarLayoutTitle": { "zh": "左侧栏布局", "en": "Left sidebar layout" },
+  "sidebarLayoutRelaxed": { "zh": "宽松", "en": "Relaxed" },
+  "sidebarLayoutCompact": { "zh": "紧凑", "en": "Compact" },
+  "chatUxManaged": { "zh": "该选项由插件 dsh-chat-ux 管理", "en": "Managed by dsh-chat-ux" },
+  "windowsOnlyNote": { "zh": "只在 Windows 桌面端的窗口里生效。", "en": "Takes effect in the Windows desktop window only." },
+  "motionStillNote": { "zh": "动画设为「减弱」时这一项不生效，卡片只显示定格画面。", "en": "No effect while Animation is Reduced; the cards show stills." },
+  "conversationComposerNote": { "zh": "只在「重绘对话框」覆盖对话页时生效。", "en": "Takes effect only while Composer restyle covers the conversation." },
+  "experimental": { "zh": "实验性", "en": "Experimental" },
+  "unavailable": { "zh": "ERROR : 设置存储服务异常，改动不会被保存。", "en": "The settings store is unavailable, so changes will not be saved." },
+  "title": { "zh": "Claude Style", "en": "Claude Style" },
+  "composerRequired": { "zh": "「重绘对话框」为「关闭」时不生效。", "en": "No effect while Composer restyle is Off." },
+  "tabDateLayout": { "zh": "日期布局", "en": "Date layout" },
+  "dateSkipRowDesc": { "zh": "进入日期排列", "en": "Include in the date layout" },
+  "dateSkipEmptyTitle": { "zh": "还没有工作区", "en": "No workspaces yet" },
+  "dateSkipEmptyDesc": { "zh": "建一个工作区之后，这一页会列出它，供你决定要不要按日期排列。", "en": "Once a workspace exists it is listed here, for you to decide whether it joins the date layout." },
+  "pageZoomSystem": { "zh": "跟系统", "en": "System" },
+  "pageZoom08": { "zh": "0.8x", "en": "0.8x" },
+  "pageZoom1": { "zh": "1x", "en": "1x" },
+  "pageZoom125": { "zh": "1.25x", "en": "1.25x" },
+  "pageZoom15": { "zh": "1.5x", "en": "1.5x" },
+  "pageZoomCustomLabel": { "zh": "自定义缩放百分比", "en": "Custom zoom percentage" }
 }
