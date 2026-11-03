@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 50,
-  "at": "2026-10-30",
-  "external": false,
-  "zh": "修复安装 dsh-cost-meter 后首页概览的会话数与 Token 总量偏低的问题",
-  "en": "Fix the home overview undercounting sessions and tokens whenever dsh-cost-meter is installed"
-}

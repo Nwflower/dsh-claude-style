@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 70,
-  "at": "2026-11-01",
-  "external": false,
-  "zh": "修复侧栏收起成图标栏后各面板图标偏小、与下方添加文件夹和搜索图标大小不一的问题",
-  "en": "Fix the sidebar rail's panel icons standing smaller than the add-folder and search icons below them"
-}

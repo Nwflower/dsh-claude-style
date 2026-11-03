@@ -2,6 +2,78 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [0.19.7] - 2026-11-03
+
+[中文](#cn-0.19.7) | [English](#en-0.19.7)
+
+<h3 id="cn-0.19.7">新增功能</h3>
+
+- 新增侧栏的日期视图，会话按今天、昨天、星期几与更早分段，每行右手标出所属工作区，按顶行的铃铛在两种排法之间切换
+
+### 体验优化
+
+- 新增模型选择器第一层的输入即搜索，并在分组多于一个时保留“更多模型”一栏
+- 新增按控件标识注册的外部挂载接口，允许其他插件在独立区域引用模型选择器等控件
+- 侧栏「工作区」标题行右端多出一枚铃铛，按下去在宿主的工作区分组与按日期排列之间切换
+- 页面缩放改成一个输入框，可输入 60 到 200 的任意百分比，悬停输入框可按滑条拖动，旁边的「恢复默认」回到默认值，旧设置里的固定档位自动换算过来
+- 改绘提问卡片与已作答的回复气泡，采用与输入框一致的卡片外观
+- 读者自己发出的消息气泡改用宿主写下的标记来认，不再靠背景色猜是哪一块
+- 侧栏里正在运行的会话排到所属列表的最前面，运行标记消失后行回到宿主排定的位置
+- 新建工作树控件改放在模式座位旁边，不再停在输入框上方那一行的右端
+
+### 问题修复
+
+- 修复宿主改写间距规则后对话流不再按宿主原有的间距排布的问题
+- 修复过程组收起后它的答案行被跳过排版、展开时页面跳位的问题
+- 修复侧栏收起成图标栏时面板行比新建会话按钮窄一像素的问题
+- 修复侧栏页脚里插件以固定定位挂载的面板打开后立刻消失的问题
+- 修复页脚里的插件卡片在按下瞬间被重建而丢掉这次点击的问题
+- 修复侧栏插件浮层被页脚收拢隐藏及浮层文字行高塌缩的问题
+- 修复 macOS 桌面端侧栏的 Claude 图标与名称无法跟随标志颜色设置的问题
+- 修复从账号菜单打开的设置面板在鼠标离开后自行关闭的问题
+- 修复安装 dsh-cost-meter 后首页概览的会话数与 Token 总量偏低的问题
+- 修复切换会话时输入框先画在宿主自己的样式上、随后跳回皮肤样式的一帧闪动
+- 修复思考块内的段落间距被正文 Markdown 规则放大的问题
+- 修复鼠标滑过首页用量面板热力图时面板高度抽动的问题
+- 修复侧栏收起成图标栏后各面板图标偏小、与下方添加文件夹和搜索图标大小不一的问题
+- 修复页面残留隐藏的模态框或菜单时，悬停展开的侧栏移开鼠标后不收起的问题
+- 修复 Windows 桌面端会话标题在系统标题栏不显示的问题
+- 修复流式输出时状态行随每段新内容落位上下跳动的问题
+
+<h3 id="en-0.19.7">New Features</h3>
+
+- Add a date view to the sidebar that groups sessions under Today, Yesterday, each weekday and Earlier, tags every row with the workspace it belongs to, and switches between the two orders from the top row's bell
+
+### Improvements
+
+- Add type-to-search on the model picker's first level, and keep the More models row with more than one provider
+- Add a control-id registry for external mounts so other plugins can reference controls such as the model picker in independent regions
+- Draw a bell at the right end of the sidebar's workspace heading that switches the list between the host's workspace grouping and the date view
+- Page zoom is one field that takes any percentage from 60 to 200, dragged on the seekbar its hover opens and reset by the label beside it, with the fixed steps stored by an earlier version converted as they are read
+- Draw the question card and the settled reply in the same card look the composer keeps
+- Read the reader's own message bubble from the mark the host writes on it, instead of guessing which block it is by its background colour
+- Stand a session that is running at the head of the list it belongs to, and let the row return to the host's own order once the running mark goes away
+- Place the new-worktree control beside the mode seat instead of the far end of the row above the composer
+
+### Bug Fixes
+
+- Fix the conversation flow no longer spacing itself by the host's own gap rules after the host rewrote them
+- Fix a process group's answer row being skipped for layout, so opening a folded group no longer shifts the page
+- Fix the sidebar's panel rows being one pixel narrower than the new-session button while the sidebar stands as an icon rail
+- Fix a plugin's fixed-position panel mounted in the sidebar footer vanishing as soon as it opens
+- Fix a plugin's footer card losing the press when the takeover rebuilt it mid-click
+- Fix sidebar plugin overlays being collapsed by the footer takeover and their text line height collapsing
+- Fix the Claude mark and wordmark in the macOS desktop sidebar ignoring the mark colour setting
+- Fix the settings panel opened from the account menu closing itself once the pointer leaves
+- Fix the home overview undercounting sessions and tokens whenever dsh-cost-meter is installed
+- Fix the composer drawing at the host's own style for a frame after a session switch, then jumping to where the skin keeps it
+- Fix the paragraph spacing inside a thinking block being widened by the prose Markdown rule
+- Fix the usage panel's height jittering as the pointer crosses the heat grid on the home page
+- Fix the sidebar rail's panel icons standing smaller than the add-folder and search icons below them
+- Fix the hover-opened sidebar staying up after the pointer leaves when a hidden modal or menu stands in the page
+- Fix the session title missing from the window caption row on the Windows desktop
+- Fix the status row bouncing as each burst of streamed content lands
+
 ## [0.19.6] - 2026-10-30
 
 [中文](#cn-0.19.6) | [English](#en-0.19.6)

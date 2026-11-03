@@ -1,8 +1,0 @@
-{
-  "group": "improvements",
-  "order": 26,
-  "at": "2026-11-02",
-  "external": false,
-  "zh": "页面缩放改成一个输入框，可输入 60 到 200 的任意百分比，悬停输入框可按滑条拖动，旁边的「恢复默认」回到默认值，旧设置里的固定档位自动换算过来",
-  "en": "Page zoom is one field that takes any percentage from 60 to 200, dragged on the seekbar its hover opens and reset by the label beside it, with the fixed steps stored by an earlier version converted as they are read"
-}

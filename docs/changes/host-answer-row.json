@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 20,
-  "at": "2026-11-03",
-  "external": false,
-  "zh": "修复过程组收起后它的答案行被跳过排版、展开时页面跳位的问题",
-  "en": "Fix a process group's answer row being skipped for layout, so opening a folded group no longer shifts the page"
-}

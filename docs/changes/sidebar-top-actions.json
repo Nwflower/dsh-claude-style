@@ -1,8 +1,0 @@
-{
-  "group": "improvements",
-  "order": 25,
-  "at": "2026-11-02",
-  "external": false,
-  "zh": "侧栏「工作区」标题行右端多出一枚铃铛，按下去在宿主的工作区分组与按日期排列之间切换",
-  "en": "Draw a bell at the right end of the sidebar's workspace heading that switches the list between the host's workspace grouping and the date view"
-}

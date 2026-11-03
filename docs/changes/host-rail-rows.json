@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 30,
-  "at": "2026-11-03",
-  "external": false,
-  "zh": "修复侧栏收起成图标栏时面板行比新建会话按钮窄一像素的问题",
-  "en": "Fix the sidebar's panel rows being one pixel narrower than the new-session button while the sidebar stands as an icon rail"
-}

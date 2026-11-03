@@ -1,8 +1,0 @@
-{
-  "group": "improvements",
-  "order": 73,
-  "at": "2026-11-03",
-  "external": false,
-  "zh": "新建工作树控件改放在模式座位旁边，不再停在输入框上方那一行的右端",
-  "en": "Place the new-worktree control beside the mode seat instead of the far end of the row above the composer"
-}

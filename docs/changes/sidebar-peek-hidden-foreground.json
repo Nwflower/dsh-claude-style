@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 71,
-  "at": "2026-11-03",
-  "external": false,
-  "zh": "修复页面残留隐藏的模态框或菜单时，悬停展开的侧栏移开鼠标后不收起的问题",
-  "en": "Fix the hover-opened sidebar staying up after the pointer leaves when a hidden modal or menu stands in the page"
-}

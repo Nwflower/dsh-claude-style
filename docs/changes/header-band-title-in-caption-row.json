@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 72,
-  "at": "2026-11-03",
-  "external": false,
-  "zh": "修复 Windows 桌面端会话标题在系统标题栏不显示的问题",
-  "en": "Fix the session title missing from the window caption row on the Windows desktop"
-}

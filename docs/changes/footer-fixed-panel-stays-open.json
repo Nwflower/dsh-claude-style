@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 41,
-  "at": "2026-10-30",
-  "external": false,
-  "zh": "修复侧栏页脚里插件以固定定位挂载的面板打开后立刻消失的问题",
-  "en": "Fix a plugin's fixed-position panel mounted in the sidebar footer vanishing as soon as it opens"
-}

@@ -1,8 +1,0 @@
-{
-  "group": "improvements",
-  "order": 21,
-  "at": "2026-11-02",
-  "external": false,
-  "zh": "新增按控件标识注册的外部挂载接口，允许其他插件在独立区域引用模型选择器等控件",
-  "en": "Add a control-id registry for external mounts so other plugins can reference controls such as the model picker in independent regions"
-}
