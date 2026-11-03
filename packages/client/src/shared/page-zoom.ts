@@ -1,4 +1,4 @@
-import { PAGE_ZOOM_ATTR } from '../constants'
+import { PAGE_ZOOM_ATTR, PAGE_ZOOM_MAX, PAGE_ZOOM_MIN, PAGE_ZOOM_VAR } from '../constants'
 
 /**
  * The page's own scale (settings › General): the factor the stylesheet draws
@@ -9,14 +9,30 @@ import { PAGE_ZOOM_ATTR } from '../constants'
  * answering in the viewport's own pixels. A feature that turns a measured box
  * into a position or a size therefore divides by this factor, and one that
  * hands the page a number to compare against the viewport converts the
- * window's size the other way. The attribute is the one the preference mirror
- * writes (core/prefs.ts), so a page handed to another skin reads 1 again.
+ * window's size the other way. The factor is one mark on the body — this
+ * attribute, which the scripts read — and the sheet's `zoom` reads it through
+ * the custom property `projectPageZoomFactor` writes from it. A page handed to
+ * another skin carries neither, so it reads 1 again.
  */
 export function pageZoomFactor() {
   const stored = document.body.getAttribute(PAGE_ZOOM_ATTR)
   if (stored === null) return 1
   const factor = Number.parseFloat(stored)
   return Number.isFinite(factor) && factor > 0 ? factor : 1
+}
+
+/**
+ * Project the attribute into the property the sheet's one `zoom` rule reads.
+ *
+ * The mirror calls this after writing the attribute (core/prefs.ts), and the
+ * page's scale watcher calls it whenever the attribute moves (shared/page-scale.ts):
+ * the mark is a page surface, and whatever sets it — a stylesheet, a script,
+ * another session — must draw at the factor it names.
+ */
+export function projectPageZoomFactor() {
+  const factor = pageZoomFactor()
+  if (factor === 1) document.body.style.removeProperty(PAGE_ZOOM_VAR)
+  else document.body.style.setProperty(PAGE_ZOOM_VAR, pageZoomText(factor))
 }
 
 /** A measured length or coordinate, in the pixels the page's own styles read. */
@@ -40,21 +56,25 @@ export function pageViewport() {
   return { width: window.innerWidth / factor, height: window.innerHeight / factor }
 }
 
-/** 设置里存的百分比 → 页面倍率；认不出来就 1（跟系统一样大）。 */
+/**
+ * The factor a stored percentage draws the page at. A percentage the row offers
+ * or one just past either end draws at the nearer end, so a hand-edited settings
+ * file lands on the size the row can show and change again — the same number the
+ * box reads back. A value that is no percentage at all, the empty one among
+ * them, is 1.
+ */
 export function pageZoomOf(stored: string) {
-  const percent = Number.parseFloat(stored)
+  const percent = Math.round(Number.parseFloat(stored))
   if (!Number.isFinite(percent) || percent <= 0) return 1
-  const factor = Math.round(percent) / 100
-  return factor >= 0.3 && factor <= 3 ? factor : 1
+  return Math.min(PAGE_ZOOM_MAX, Math.max(PAGE_ZOOM_MIN, percent)) / 100
 }
 
-/** 倍率写成两处共用的字符串：1.1 这样，不留 0.30000000000000004 的尾巴。 */
+/** The factor as the mirror writes it, two decimals at most: 1.1 does not land as 1.1000000000000001. */
 export function pageZoomText(factor: number) {
   return String(Math.round(factor * 100) / 100)
 }
 
-/** 设置里存的百分比，落在滑条的范围内。 */
+/** The stored percentage as the row's box shows it: a whole number inside the row's range. */
 export function pageZoomPercent(stored: string) {
-  const percent = Math.round(pageZoomOf(stored) * 100)
-  return Math.min(200, Math.max(60, Number.isFinite(percent) ? percent : 100))
+  return Math.round(pageZoomOf(stored) * 100)
 }

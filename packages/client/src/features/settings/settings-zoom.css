@@ -1,10 +1,14 @@
 /* 缩放行（设置 › 通用）：五个档位和数字框合成一个胶囊，读成「一组」而不是
    六个各管各的按钮——一个淡底加一圈细描边圈住整条，档位贴在一起，一条分隔线，
-   右边是百分比输入。颜色都从 token 推出来，深浅两套主题都不用另写规则。 */
+   右边是百分比输入。悬停或聚焦数字框时，胶囊下面张开一条可拖动的 seekbar，
+   落在共享的浮动卡片壳里（shared/popover.css）。颜色都从 token 推出来，深浅
+   两套主题都不用另写规则。 */
 
 /* 容器：淡底 + 内描边。浅色主题下页面是白的，白底胶囊看不出层级，
-   所以底和描边都压在 label-primary 的低透明度上。 */
+   所以底和描边都压在 label-primary 的低透明度上。它同时是 seekbar 卡片的
+   定位基准。 */
 body[data-dsh-claude-style] .dsh-claude-settings-zoom {
+  position: relative;
   display: inline-flex;
   align-items: center;
   padding: 2px;
@@ -57,6 +61,10 @@ body[data-dsh-claude-style] .dsh-claude-settings-zoom-field:focus-within {
   background: color-mix(in srgb, var(--dsw-alias-brand-primary) 12%, transparent);
 }
 
+body[data-dsh-claude-style] .dsh-claude-settings-zoom-field:hover {
+  background: color-mix(in srgb, var(--dsw-alias-brand-primary) 10%, transparent);
+}
+
 body[data-dsh-claude-style] .dsh-claude-settings-zoom-input {
   width: 30px;
   padding: 0;
@@ -84,4 +92,60 @@ body[data-dsh-claude-style] .dsh-claude-settings-zoom-unit {
   padding-left: 1px;
   color: var(--dsw-alias-label-tertiary);
   font-size: 12px;
+}
+
+/* seekbar：挂在胶囊下沿的浮动卡片，右端对齐数字框、宽度取整个胶囊。卡片的
+   命中区从胶囊下沿就开始（顶部的内边距放在卡片里），从数字框移到滑块上的
+   指针因此一路都在胶囊内，不会因为走过一段空处把卡片关掉。 */
+body[data-dsh-claude-style] .dsh-claude-settings-zoom-track {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  padding: 10px 10px 8px;
+  transform-origin: 100% 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-zoom-range {
+  display: block;
+  width: 100%;
+  height: 16px;
+  margin: 0;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* 轨道：已走过的一段是品牌色，剩下的一段是极淡的 label-primary，深浅两套主题
+   用的是同一份半透明。 */
+body[data-dsh-claude-style] .dsh-claude-settings-zoom-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--dsw-alias-brand-primary) 0 var(--dsh-claude-zoom-share, 50%),
+    color-mix(in srgb, var(--dsw-alias-label-primary) 14%, transparent) var(--dsh-claude-zoom-share, 50%) 100%
+  );
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-zoom-range::-webkit-slider-thumb {
+  width: 12px;
+  height: 12px;
+  margin-top: -4px;
+  appearance: none;
+  border: none;
+  border-radius: 50%;
+  background: var(--dsw-alias-brand-primary);
+  box-shadow: 0 1px 3px rgba(20, 20, 19, 0.3);
+  transition: box-shadow var(--dsh-claude-timing-feedback);
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-zoom-range:focus {
+  outline: none;
+}
+
+/* 键盘落在这条滑块上时，光环长在滑块自己身上：整条轨道外面再套一圈框会跟
+   胶囊的描边撞在一起。 */
+body[data-dsh-claude-style] .dsh-claude-settings-zoom-range:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dsw-alias-brand-primary) 28%, transparent);
 }

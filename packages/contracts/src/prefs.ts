@@ -199,7 +199,9 @@ export const AUTO_POPOVER_SCOPES = [AUTO_POPOVER_OFF, AUTO_POPOVER_ACCOUNT, AUTO
  * How large the page is drawn: the empty value leaves it at the size the system
  * gives it, and every other value is the percentage the whole page is scaled by
  * (the stylesheet reads it as a `zoom`, so the page lays out in a smaller space
- * and every control, line and picture grows with it).
+ * and every control, line and picture grows with it). Any percentage from
+ * PAGE_ZOOM_MIN through PAGE_ZOOM_MAX is a value the row draws; one outside it
+ * reads as the nearer end.
  *
  * 空串是「跟系统」：页面一个属性都不写，尺寸就还是系统和宿主给的那个。
  */
@@ -307,6 +309,7 @@ export const PREFS = {
    */
   quickProviders: { type: 'list', default: [], max: QUICK_PROVIDERS_MAX, entryMax: PROVIDER_ID_MAX, drop: [OFFICIAL_MODEL_GROUP] },
   username: { type: 'text', default: '', max: USERNAME_MAX },
+  /** The page's scale as a percentage of its own size, between PAGE_ZOOM_MIN and PAGE_ZOOM_MAX; the empty string is "follow the system". */
   pageZoom: {
     type: 'text',
     default: PAGE_ZOOM_DEFAULT,

@@ -3,7 +3,7 @@ import { installFrameColumns } from './page-scale-columns'
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { PAGE_UNDER_1000_ATTR, PAGE_UNDER_480_ATTR, PAGE_UNDER_760_ATTR, PAGE_ZOOM_ATTR } from '../constants'
 import { subscribePrefs } from '../core/prefs'
-import { pageViewport, pageZoomFactor } from './page-zoom'
+import { pageViewport, pageZoomFactor, projectPageZoomFactor } from './page-zoom'
 
 /**
  * Whether a node is one the skin places itself: it carries one of the skin's own
@@ -60,6 +60,10 @@ export function installPageScale() {
    * in for the media queries the stylesheets no longer carry.
    */
   const measure = () => {
+    // The attribute is a page surface: whatever sets it — the mirror, another
+    // session — draws through the property the sheet reads, so it is projected
+    // here before anything is measured against it.
+    projectPageZoomFactor()
     const width = pageViewport().width
     for (const mark of WIDTH_MARKS) body.toggleAttribute(mark.attr, width <= mark.width)
     if (pageZoomFactor() === 1) {
@@ -94,7 +98,8 @@ export function installPageScale() {
   // The scale itself is the reading that moves every one of these numbers, and
   // the mirror that writes it is not the only writer: it is an attribute on the
   // body, so a page that sets it from a stylesheet, a script or another session
-  // must wake the rule the same way a preference change does.
+  // must wake the rule the same way a preference change does — `measure` then
+  // projects it into the property the sheet's `zoom` reads.
   const stopScaleWatch = subscribeMutations(body, { attributes: true, attributeFilter: [PAGE_ZOOM_ATTR] }, settle)
   // The window's own size moves the readings too. A resize is dispatched ahead
   // of the frame's style and layout, so the marks hold in the frame it lands in.

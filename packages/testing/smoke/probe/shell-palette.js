@@ -520,6 +520,38 @@
         window.__pushForm({ pageZoom: 'system' })
         await sleep(120)
         r.settings.pageZoom = { zoomed: zoomed, shrunk: shrunk, following: readZoom() }
+        // The row's own control: a box that takes any percentage and the seekbar
+        // it opens, both covering the same range. Read off the rendered tree with
+        // a percentage no preset carries, so a preset would not answer for it; the
+        // two inputs are found by their type, inside the zoom row alone.
+        window.__pushForm({ pageZoom: '112' })
+        await sleep(120)
+        r.settings.pageZoomControl = (function () {
+          // The element tree itself, not the report `renderTab` walks into: the
+          // general tab stands on its own, so no state is stood in.
+          var react = window.__react
+          react.rendering = true
+          react.states = null
+          var tree = Section({})
+          react.rendering = false
+          var out = {}
+          var zoomRow = null
+          walk(tree, function (node) {
+            var props = node.props || {}
+            if (props.key === 'pageZoom') zoomRow = props
+          })
+          if (zoomRow !== null) {
+            walk(zoomRow.children, function (node) {
+              var props = node.props || {}
+              if (props.type === 'number') out.box = { type: props.type, min: props.min, max: props.max, step: props.step, value: props.value, label: props['aria-label'] }
+              if (props.type === 'range') out.track = { type: props.type, min: props.min, max: props.max, step: props.step, value: props.value, label: props['aria-label'] }
+              if (props['data-open'] !== undefined) out.card = { open: props['data-open'] }
+            })
+          }
+          return out
+        })()
+        window.__pushForm({ pageZoom: 'system' })
+        await sleep(120)
         // On the Windows window the title-bar row takes input; everywhere else
         // it stays greyed with its note.
         document.documentElement.setAttribute('data-windows-titlebar', '')
