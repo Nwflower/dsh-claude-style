@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 10,
+  "at": "2026-11-03",
+  "external": false,
+  "zh": "修复宿主改写间距规则后对话流不再按宿主原有的间距排布的问题",
+  "en": "Fix the conversation flow no longer spacing itself by the host's own gap rules after the host rewrote them"
+}

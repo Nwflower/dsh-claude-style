@@ -47,6 +47,26 @@ const readFrame = (page) => page.evaluate((peek) => {
   }
 }, PEEK)
 
+/**
+ * Read the frame once its boxes have stopped moving.
+ *
+ * The host eases the column's width and the frame's track back to the
+ * collapsed width, and the collapse marker arrives with the first frame of
+ * that move: a read taken then reads the column at its open width and the
+ * centre pushed aside, which is the move and not the state. So the frame is
+ * read again until two readings agree.
+ */
+async function settledFrame(page) {
+  let previous = await readFrame(page)
+  for (let tries = 0; tries < 40; tries += 1) {
+    await page.waitForTimeout(100)
+    const now = await readFrame(page)
+    if (JSON.stringify(now) === JSON.stringify(previous)) return now
+    previous = now
+  }
+  return previous
+}
+
 /** Wait until the host has the sidebar collapsed, or open with the column at its open width. */
 const waitForSidebar = (page, collapsed) => page.waitForFunction(([peek, folded, wide]) => {
   const frame = document.querySelector(peek.frame)
@@ -80,20 +100,20 @@ function sidebarPeekScenario({ check }) {
     async assert({ page, session }) {
       await leave(page)
       await waitForSidebar(page, true)
-      const before = await readFrame(page)
+      const before = await settledFrame(page)
 
       const opened = await openPeek(page)
-      const open = await readFrame(page)
+      const open = await settledFrame(page)
 
       await leave(page)
       const closed = await waitForSidebar(page, true)
-      const after = await readFrame(page)
+      const after = await settledFrame(page)
 
       await openPeek(page)
       await page.locator(PEEK.toggle).first().click()
       await leave(page)
       await page.waitForTimeout(800)
-      const pinned = await readFrame(page)
+      const pinned = await settledFrame(page)
       await collapseRail(page)
 
       await openPeek(page)

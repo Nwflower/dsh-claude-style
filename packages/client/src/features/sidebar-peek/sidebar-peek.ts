@@ -1,4 +1,4 @@
-import { RIGHTBAR_COLLAPSED_ATTRIBUTE, SIDEBAR_BESIDE_RIGHTBAR_MIN_PX, SIDEBAR_COLLAPSED_ATTRIBUTE, WINDOWS_MENU_START_PROPERTY } from '@dsh-claude-style/contracts/dom'
+import { RIGHTBAR_COLLAPSED_ATTRIBUTE, SIDEBAR_BESIDE_RIGHTBAR_MIN_PX, SIDEBAR_COLLAPSED_ATTRIBUTE, SIDEBAR_DRAWER_ATTRIBUTE, WINDOWS_MENU_START_PROPERTY } from '@dsh-claude-style/contracts/dom'
 import { observeMatches, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { findForeground, findSidebarRoot, findSidebarToggle, hostLayout } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
@@ -73,8 +73,14 @@ export function install(ctx: HostContext) {
   const collapsed = (box: HTMLElement) => box.hasAttribute(SIDEBAR_COLLAPSED_ATTRIBUTE)
   const column = () => frame?.querySelector<HTMLElement>(COLUMN_SELECTOR) ?? null
 
-  /** Whether the frame's own flow still holds the collapsed column: a drawer stands out of it. */
+  /**
+   * Whether the frame's own flow still holds the collapsed column: a drawer
+   * stands out of it. The host states the drawer in a mark of its own, so the
+   * mark answers first; a host build that writes none is read by the column's
+   * own placement, which costs a layout to read.
+   */
   function inFlow(box: HTMLElement) {
+    if (box.hasAttribute(SIDEBAR_DRAWER_ATTRIBUTE)) return false
     const col = box.querySelector<HTMLElement>(COLUMN_SELECTOR)
     if (col === null) return true
     const position = getComputedStyle(col).position

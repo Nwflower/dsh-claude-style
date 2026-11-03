@@ -21,6 +21,8 @@
                                  has skipped answers that question with no layout at all.
      the answer of a process     the answer is what the reader came for, and it keeps its
      group                       own layout while the group above it is a door away.
+                                  The host writes no mark of its own for that row: it is
+                                  the assistant step the turn's process does not hold.
      a row hiding something      the host folds a turn's process members with
                                  hidden="until-found", and draws them no box: a skipped
                                  row would stand at its remembered size, so a folded group
@@ -28,10 +30,10 @@
                                  hidden cell or a hidden mark carries the hold
                                  (parts-table.ts). */
 
-body[data-dsh-claude-style] [data-chat-flow-kind]:not([data-chat-flow-kind='user']):not([data-turn-process-answer], [data-turn-process-hidden], [data-disclosure-row] [hidden], [hidden], [data-dsh-claude-holds~='hidden-row']) {
+body[data-dsh-claude-style] [data-chat-flow-kind]:not([data-chat-flow-kind='user']):not([data-chat-flow-kind='assistant-step']:not([data-turn-process-member]), [data-turn-process-hidden], [data-disclosure-row] [hidden], [hidden], [data-dsh-claude-holds~='hidden-row']) {
   contain-intrinsic-size: auto 240px;
 }
 
-body[data-dsh-claude-style] [data-chat-flow-kind][data-dsh-claude-laid-out]:not([data-chat-flow-kind='user']):not([data-turn-process-answer], [data-turn-process-hidden], [data-disclosure-row] [hidden], [hidden], [data-dsh-claude-holds~='hidden-row']) {
+body[data-dsh-claude-style] [data-chat-flow-kind][data-dsh-claude-laid-out]:not([data-chat-flow-kind='user']):not([data-chat-flow-kind='assistant-step']:not([data-turn-process-member]), [data-turn-process-hidden], [data-disclosure-row] [hidden], [hidden], [data-dsh-claude-holds~='hidden-row']) {
   content-visibility: auto;
 }

@@ -307,6 +307,12 @@ async function waitForSkin(page, timeoutMs = 30000) {
  * inside one `evaluate`, so nothing can be taken away between the two, and the
  * press needs no hit test, which the shell's mask would never let settle.
  *
+ * The host draws the sidebar as a drawer of its own in a narrow frame, and it
+ * mounts that drawer as a dialog — closed, off the page's edge, it is still
+ * there. It is not one of the shell's first-run overlays, so it is not pressed:
+ * a press would land on the sidebar's own controls, and the search button in it
+ * opens the skin's palette, which no press closes.
+ *
  * @param page - the page to press in.
  * @param tried - how many buttons of each dialog, keyed by its text, are spent.
  * @returns which overlay was answered — a dialog with the button's place in it,
@@ -318,7 +324,7 @@ const pressOverlay = (page, tried) => page.evaluate((spent) => {
     const found = Array.from(document.querySelectorAll(selector)).filter(shown)
     return found[found.length - 1]
   }
-  const dialog = top('[role="dialog"]')
+  const dialog = top('[role="dialog"]:not([data-shortcut-modal="sidebar"])')
   if (dialog !== undefined) {
     const text = dialog.innerText
     const buttons = Array.from(dialog.querySelectorAll('button')).filter(shown)
@@ -365,11 +371,13 @@ async function dismissOverlays(page, options = {}) {
   const limit = options.limit ?? 6
   const quietMs = options.quietMs ?? 1000
   const settleMs = options.settleMs ?? 8000
-  const byText = () => page.locator('[role="dialog"]:visible')
+  // The host's own drawer sidebar is a dialog it mounts whether it stands open
+  // or not, so it is left out of both the read and the verdict.
+  const byText = () => page.locator('[role="dialog"]:not([data-shortcut-modal="sidebar"]):visible')
   const roots = () => page.locator('[role="presentation"]:visible')
   /** How many buttons of each dialog were already pressed, keyed by its text. */
   const pressed = new Map()
-  const overlayOpen = () => page.evaluate(() => document.querySelector('[role="dialog"], [role="presentation"]') !== null)
+  const overlayOpen = () => page.evaluate(() => document.querySelector('[role="dialog"]:not([data-shortcut-modal="sidebar"]), [role="presentation"]') !== null)
   const started = Date.now()
   let quietSince = null
   let answered = 0
@@ -401,7 +409,7 @@ async function dismissOverlays(page, options = {}) {
  * @returns one line of its text, or an empty string when nothing is open.
  */
 async function firstRunOverlayText(page) {
-  const open = page.locator('[role="dialog"]:visible, [role="presentation"]:visible')
+  const open = page.locator('[role="dialog"]:not([data-shortcut-modal="sidebar"]):visible, [role="presentation"]:visible')
   if (await open.count() === 0) return ''
   const text = await open.last().innerText().catch(() => '')
   return text.replace(/\s+/g, ' ').trim().slice(0, 200)

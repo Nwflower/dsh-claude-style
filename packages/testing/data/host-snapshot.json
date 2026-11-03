@@ -1,18 +1,18 @@
 {
   "note": "The host's own conversation and composer markup, captured by packages/testing/host-snapshot.mjs on a scratch host and read by the stand-in page (packages/testing/specs/fixtures/host-frame.mjs, D3, D77). Regenerate with node packages/testing/host-snapshot.mjs.",
   "host": {
-    "version": "0.2.1-rc.3",
+    "version": "0.2.2-alpha.3",
     "viewport": {
       "width": 1440,
       "height": 900
     },
-    "captured": "2026-10-23"
+    "captured": "2026-11-03"
   },
   "conversation": {
     "phase": {
       "tag": "div",
       "classes": [
-        "wSkVaW_root"
+        "-l6A3q_root"
       ],
       "attributes": {
         "data-phase": "active"
@@ -21,7 +21,7 @@
     "content": {
       "tag": "div",
       "classes": [
-        "wSkVaW_body"
+        "-l6A3q_body"
       ],
       "attributes": {
         "data-conversation-content": "",
@@ -37,7 +37,7 @@
       {
         "tag": "div",
         "classes": [
-          "wSkVaW_widthHandle"
+          "-l6A3q_widthHandle"
         ],
         "attributes": {
           "data-side": "left",
@@ -47,7 +47,7 @@
       {
         "tag": "div",
         "classes": [
-          "wSkVaW_widthHandle"
+          "-l6A3q_widthHandle"
         ],
         "attributes": {
           "data-side": "right",
@@ -60,7 +60,7 @@
     "bar": {
       "tag": "div",
       "classes": [
-        "uV2eYG_root"
+        "CmQxdG_root"
       ],
       "attributes": {},
       "paddingBottom": "4px"
@@ -80,7 +80,7 @@
     "stack": {
       "tag": "div",
       "classes": [
-        "wSkVaW_composerStack"
+        "-l6A3q_composerStack"
       ],
       "attributes": {}
     }

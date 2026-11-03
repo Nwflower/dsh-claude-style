@@ -1,4 +1,4 @@
-import { CHAT_FLOW_SELECTOR, CONVERSATION_SCROLL_SELECTOR, FLOW_KIND_ATTRIBUTE, SUBMISSION_ECHO_SELECTOR, USER_ROW_KIND } from '@dsh-claude-style/contracts/dom'
+import { CHAT_FLOW_SELECTOR, CONVERSATION_SCROLL_SELECTOR, FLOW_KIND_ATTRIBUTE, MESSAGE_BUBBLE_SELECTOR, SUBMISSION_ECHO_SELECTOR, USER_ROW_KIND } from '@dsh-claude-style/contracts/dom'
 import { resolveColour } from './colour'
 
 /**
@@ -124,16 +124,21 @@ export function colorAlpha(color: string) {
 /**
  * The element inside a user row that really paints a fill, which is the bubble.
  *
- * The depth cannot be assumed: the echo row is the bubble's own row (the echo
- * mark sits on it) while the real row has a flow-block wrapper around it, so the
- * two differ by a level. So the walk goes down level by level and takes the
- * first element that paints a fill; attachment rows and quote summaries paint
- * none and are skipped.
+ * The host marks the bubble itself, so the mark is what the walk starts from:
+ * the host writes it on the bubble of a message the reader sent, and on no
+ * other part of the row. A host build that writes no mark is read the way it
+ * was read before: the depth cannot be assumed, since the echo row is the
+ * bubble's own row (the echo mark sits on it) while the real row has a
+ * flow-block wrapper around it, so the two differ by a level. The walk goes
+ * down level by level and takes the first element that paints a fill;
+ * attachment rows and quote summaries paint none and are skipped.
  *
  * @param row - a settled user row, or the echo row standing in for one.
  * @returns the bubble, or null where the row paints no fill of its own.
  */
 export function userBubble(row: Element) {
+  const marked = row.querySelector<HTMLElement>(MESSAGE_BUBBLE_SELECTOR)
+  if (marked !== null) return marked
   const queue = Array.from(row.children)
   while (queue.length > 0) {
     const node = queue.shift()

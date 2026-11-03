@@ -1,0 +1,8 @@
+{
+  "group": "improvements",
+  "order": 40,
+  "at": "2026-11-03",
+  "external": false,
+  "zh": "读者自己发出的消息气泡改用宿主写下的标记来认，不再靠背景色猜是哪一块",
+  "en": "Read the reader's own message bubble from the mark the host writes on it, instead of guessing which block it is by its background colour"
+}

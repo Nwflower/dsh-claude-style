@@ -209,7 +209,10 @@ body[data-dsh-claude-style] button[data-dsh-claude-part~="panel-row"][aria-haspo
 /* Collapsed, the host re-seats every panel row as a 36px icon button with a 12px
    plate and asks its glyph for 18px; the workspace's own add-folder and search
    controls beside it carry the same pair, and the frame's marker scopes this
-   past the compact block. */
+   past the compact block. The host wraps each row in a box of its own, and that
+   box is one pixel narrower than the row the rail asks for, so a row that may
+   shrink is shrunk: the rail's rows would then be a pixel narrower than the
+   new-session button above them, and the column would read as ragged. */
 body[data-dsh-claude-style] [data-dsh-claude-part~="layout-frame"][data-sidebar-collapsed] nav[data-dsh-claude-part~="panel-list"] {
   gap: 12px;
 }
@@ -219,6 +222,7 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="layout-frame"][data-sidebar-
   min-height: 36px;
   margin: 0;
   padding: 0;
+  flex: none;
   justify-content: center;
   border-radius: 12px;
 }

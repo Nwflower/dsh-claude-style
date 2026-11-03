@@ -26,8 +26,6 @@ export const CHAT_FLOW_SELECTOR = '[data-chat-flow]'
 export const CHAT_NODE_SELECTOR = '[data-slot="conversation.chat.node"]'
 /** The slot the chat column renders its flow into; its children and the column's are what the host's flow rules space (D78). */
 export const CHAT_FLOW_SLOT_SELECTOR = '[data-slot="conversation.chat.flow"]'
-/** The answer a turn's process group closes on. */
-export const TURN_PROCESS_ANSWER_ATTRIBUTE = 'data-turn-process-answer'
 /**
  * On every row of a turn's process: all of a running turn's rows, and once the
  * turn ends, every row but its answer, whether or not the turn stands folded.
@@ -129,6 +127,12 @@ export const SUBMISSION_ECHO_SELECTOR = '[data-submission-echo]'
 /** The bubble the host mounts for a steering message until the turn takes it in. */
 export const PENDING_STEERING_SELECTOR = '[data-pending-steering]'
 /**
+ * The bubble the host draws around a message the reader sent. The host marks it
+ * on the bubble itself, so a reader's own message is told from the answer's
+ * bubble without reading the text.
+ */
+export const MESSAGE_BUBBLE_SELECTOR = '[data-message-bubble]'
+/**
  * A plain text box inside the composer seat: a question card's answer box
  * (under [data-question-key]) and a queued message's inline editor (under
  * [data-queue-dock]). Both are textareas, in the main session and in the
@@ -176,6 +180,26 @@ export const ASSISTANT_STEP_KIND = 'assistant-step'
 export const TOOL_CALL_KIND = 'tool-call'
 /** The kind of a turn's process group, which the host's widest flow gap follows (D78). */
 export const TURN_PROCESS_ROW_KIND = 'turn-process'
+/**
+ * The answer a turn's process group closes on.
+ *
+ * The host used to write a mark of its own on that row, and it wrote it only
+ * while the group stood folded. The host no longer writes it: the answer is
+ * the assistant step the turn's process does not hold, which the host's own
+ * rows say by their kind and by what the process marks.
+ */
+export const TURN_PROCESS_ANSWER_SELECTOR = `[${FLOW_KIND_ATTRIBUTE}="${ASSISTANT_STEP_KIND}"]:not([${TURN_PROCESS_MEMBER_ATTRIBUTE}])`
+/**
+ * The mark the host wrote on that row until 0.2.1-rc.5. The host's own gap
+ * rule named it, and the sodium table's shape for that release names it too.
+ */
+export const TURN_PROCESS_ANSWER_ATTRIBUTE = 'data-turn-process-answer'
+/**
+ * The batch of steering messages the host admits under one claim: the rows a
+ * turn's steering group holds, which the host's flow rules space apart from the
+ * rest of the flow.
+ */
+export const CHAT_STEERING_BATCH_SELECTOR = '[data-chat-steering-batch]'
 /**
  * Which part of an assistant step a row holds: the host splits a step into its
  * thinking and its output and writes the part on the row.
@@ -400,6 +424,12 @@ export const SIDEBAR_HANDLE_SELECTOR = '[data-side="sidebar"]'
  * opened it (the toggle, its shortcut, a search that asks for the wide list).
  */
 export const SIDEBAR_COLLAPSED_ATTRIBUTE = 'data-sidebar-collapsed'
+/**
+ * The frame's mark while the sidebar stands as a drawer over the page: the
+ * host draws it in a narrow frame instead of a column of the grid, and the
+ * column it would have taken is gone.
+ */
+export const SIDEBAR_DRAWER_ATTRIBUTE = 'data-sidebar-drawer'
 /** The frame's mark while it gives the right panel no track at all. */
 export const RIGHTBAR_COLLAPSED_ATTRIBUTE = 'data-rightbar-collapsed'
 /**
