@@ -107,6 +107,19 @@ export function hasSkinClass(element: Element): boolean {
   return false
 }
 
+/** What a reader can see: no `display: none`, no `visibility: hidden`, no zero opacity. */
+const SHOWN = { checkOpacity: true, checkVisibilityCSS: true }
+
+/**
+ * Whether the reader can see `element` at all. An overlay root a plugin keeps
+ * mounted while hidden, and a dialog between its exit frames, answer no.
+ *
+ * @param element - the element to test.
+ */
+export function shown(element: Element): boolean {
+  return element.checkVisibility(SHOWN)
+}
+
 /**
  * One host element the skin marks for its stylesheet, followed across
  * re-renders. React replaces host nodes freely, so the mark has to move

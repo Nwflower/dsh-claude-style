@@ -1,7 +1,7 @@
 import { COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_PLACEHOLDER_SELECTOR, COMPOSER_SELECTOR, COMPOSER_STACK_SELECTOR, COMPOSER_STATS_SELECTOR, COMPOSER_STAT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, DIALOG_TRIGGER_SELECTOR, FOOT_AREA_SELECTOR, FOREGROUND_SELECTOR, MENU_ROLE_SELECTOR, MODAL_DIALOG_SELECTOR, PERMISSION_TRIGGER_SELECTOR, PHASE_ATTRIBUTE, RIGHTBAR_TOGGLE_SELECTOR, SIDEBAR_BRAND_SELECTOR, SIDEBAR_LOGO_ROW_SELECTOR, SIDEBAR_ROOT_SELECTOR, SIDEBAR_TOGGLE_SELECTOR, WINDOWS_MENU_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import type { HostAccountService, HostAssistantStep, HostBundleListAnswer, HostChatSnapshot, HostChatTarget, HostConfigFormsService, HostConversationService, HostInventoryAnswer, HostLocaleService, HostModelDirectoriesService, HostPluginBundle, HostServiceLookup, HostOutlineTurn, HostRunningCall, HostSession, HostSessionsService, HostSessionRenameAnswer, HostShortcutsService, HostSlotOptions, HostSlotsService, HostTurn, HostUiConversationService, HostUiSessionService, HostWorkspacesService, HostWorkspaceViewStore } from '@dsh-claude-style/contracts/services'
 import { observeMatches, subscribeMutations } from './bus'
-import { closestFrom } from './dom'
+import { closestFrom, shown } from './dom'
 
 /**
  * The host's client context (cordis), handed to `apply` and to every feature.
@@ -178,8 +178,25 @@ export const findRightbarToggle = cacheFirst<HTMLElement>(RIGHTBAR_TOGGLE_SELECT
  */
 export const findHostMenu = cacheFirst<HTMLElement>(`${MENU_ROLE_SELECTOR}:not([class*="dsh-claude-"])`)
 
-/** The first open menu or modal dialog on the page, the host's or the skin's: the foreground a key or a pointer must not act behind. */
-export const findForeground = cacheFirst<HTMLElement>(FOREGROUND_SELECTOR)
+/** The page's first menu or modal dialog, shown or not, kept per batch (D40). */
+const findForegroundNode = cacheFirst<HTMLElement>(FOREGROUND_SELECTOR)
+
+/**
+ * The first menu or modal dialog the reader is facing, the host's or the skin's:
+ * the foreground a key or a pointer must not act behind. A node kept mounted
+ * while hidden — an overlay root another plugin leaves in the document, a dialog
+ * between its exit frames — holds nothing, and the next shown one counts.
+ */
+export function findForeground(): HTMLElement | null {
+  const first = findForegroundNode()
+  if (first === null) return null
+  if (shown(first)) return first
+  const all = document.querySelectorAll<HTMLElement>(FOREGROUND_SELECTOR)
+  for (let i = 0; i < all.length; i += 1) {
+    if (shown(all[i])) return all[i]
+  }
+  return null
+}
 
 /**
  * The host's composer card — the element the skin's composer rules hang on —
