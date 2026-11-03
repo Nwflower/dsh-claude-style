@@ -445,6 +445,13 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-c
   border-radius: 1.2px;
   background: currentColor;
 }
+/* One place holds one of the two primary buttons a running continuable subagent
+   carries, the other kept off the page by the pass (composer.ts, HIDDEN_ATTR);
+   the selectors repeat the placement's own so this later rule ties it. */
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] button[data-dsh-claude-control-hidden],
+body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card] button[data-dsh-claude-control-hidden] {
+  display: none;
+}
 /* Toolbar row below input card. The part names the host's own `row`: the shipped
    input growth wrapper is `grow`, a different local name, so the fixed 28px
    height and flex display here cannot pin the composer field to one line (D3). */
