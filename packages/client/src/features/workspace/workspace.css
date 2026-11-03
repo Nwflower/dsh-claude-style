@@ -69,13 +69,64 @@ body[data-dsh-claude-style] .dsh-claude-ws-segment {
 body[data-dsh-claude-style] .dsh-claude-ws-segment:hover {
   color: var(--dsw-alias-label-primary, #161616);
 }
-/* ---------- 已归档: the delete action on the host's own rows ---------- */
-/* The host's session rows render their hover actions in a 16px box with the
-   host's own 归档 / 取消归档 button beside the skin's entry; this button takes
-   that box so the two sit on one line (the archived list is the host's, D43).
-   The icon is the host's Trash, and the hover ink is the skin's destructive
-   one rather than the host's primary ink. */
-body[data-dsh-claude-style] .dsh-claude-ws-delete {
+/* ---------- 已归档: the skin's own page of the archive ---------- */
+/* The 已归档 segment is the skin's own list (archived-list.ts), not the host's
+   tree: the host would mount every archived conversation at once, which is what
+   slows the section down once the archive holds hundreds. While the segment
+   stands the host's own list area stays hidden and the section's rows are the
+   skin's, one page of thirty with the next appending at the foot. */
+body[data-dsh-claude-style] [data-dsh-claude-ws-view="archived"] [data-dsh-claude-part~="list-area"] {
+  display: none;
+}
+body[data-dsh-claude-style] .dsh-claude-ws-archived {
+  /* The list takes the section's own room the way the host's tree did: the
+     same row rhythm, the same sides. */
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 0 6px;
+}
+body[data-dsh-claude-style] .dsh-claude-ws-archived-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--dsw-alias-label-secondary, #6f6a6b);
+}
+body[data-dsh-claude-style] .dsh-claude-ws-archived-row:hover,
+body[data-dsh-claude-style] .dsh-claude-ws-archived-row:focus-visible {
+  background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, 0.05));
+  color: var(--dsw-alias-label-primary, #161616);
+}
+body[data-dsh-claude-style] .dsh-claude-ws-archived-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+}
+body[data-dsh-claude-style] .dsh-claude-ws-archived-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  opacity: 0;
+  transition: opacity var(--dsh-claude-timing-feedback);
+}
+body[data-dsh-claude-style] .dsh-claude-ws-archived-row:hover .dsh-claude-ws-archived-actions,
+body[data-dsh-claude-style] .dsh-claude-ws-archived-row:focus-within .dsh-claude-ws-archived-actions {
+  opacity: 1;
+}
+/* The open/unarchive/delete entries stand in the host's own 16px row-action
+   box; the destructive hover ink is the skin's, as on the host's rows. */
+body[data-dsh-claude-style] :is(.dsh-claude-ws-archived-unarchive, .dsh-claude-ws-archived-delete) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -90,8 +141,19 @@ body[data-dsh-claude-style] .dsh-claude-ws-delete {
   flex: none;
   transition: background-color var(--dsh-claude-timing-feedback), color var(--dsh-claude-timing-feedback);
 }
-body[data-dsh-claude-style] .dsh-claude-ws-delete:hover,
-body[data-dsh-claude-style] .dsh-claude-ws-delete:focus-visible {
+body[data-dsh-claude-style] .dsh-claude-ws-archived-unarchive:hover,
+body[data-dsh-claude-style] .dsh-claude-ws-archived-unarchive:focus-visible {
+  background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, 0.05));
+  color: var(--dsw-alias-label-primary, #161616);
+}
+body[data-dsh-claude-style] .dsh-claude-ws-archived-delete:hover,
+body[data-dsh-claude-style] .dsh-claude-ws-archived-delete:focus-visible {
   background: rgba(192, 57, 43, 0.12);
   color: var(--dsw-alias-state-error-primary, #c0392b);
+}
+body[data-dsh-claude-style] .dsh-claude-ws-archived-empty {
+  padding: 12px 6px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--dsw-alias-label-tertiary, #b2acad);
 }

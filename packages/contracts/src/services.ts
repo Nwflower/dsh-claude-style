@@ -434,6 +434,11 @@ export interface HostUiSessionService {
   sessionStatus?: HostSnapshotSource<HostSessionStatusSnapshot>
 }
 
+/** The shell's `uiWorkspace`: open one session as a single UI navigation action. */
+export interface HostUiWorkspaceService {
+  openSession(id: string): void
+}
+
 /** The shell's `uiConversation`: one session's conversation binding. */
 export interface HostUiConversationService {
   binding(id: string): HostConversationBinding

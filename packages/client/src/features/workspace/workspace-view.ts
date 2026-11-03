@@ -1,6 +1,4 @@
-import * as React from 'react'
-import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
-import { hostSessions, hostWorkspaceView, registerSlotEntries } from '@dsh-claude-style/engine/host'
+import { hostSessions, hostUiWorkspace, hostWorkspaces, hostWorkspaceView } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import { observeMatches, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import type { MatchList } from '@dsh-claude-style/engine/bus'
@@ -10,13 +8,10 @@ import { createHostToast } from '../../shared/host-toast'
 import { createViewStoreFollower } from './view-store'
 import { createSegmentControl } from './segments'
 import { createArchivedActions } from './archived-actions'
-import type { HostSessionsService } from '@dsh-claude-style/contracts/services'
+import { createArchivedList } from './archived-list'
+import type { HostSessionsService, HostUiWorkspaceService, HostWorkspacesService } from '@dsh-claude-style/contracts/services'
 import type { FeatureUi } from '../../core/feature'
 import type manifest from './workspace-view.manifest'
-import { copy } from './copy'
-
-/** The host session row's action slot, used by the archived delete button. */
-const SESSION_ROW_ACTION_SLOT = 'sidebar.workspaces.session.row.action'
 
 /**
  * The sidebar's workspace section, re-cut as a two-state view of the host's own
@@ -32,8 +27,17 @@ const SESSION_ROW_ACTION_SLOT = 'sidebar.workspaces.session.row.action'
  * back on the way out, and kept in this browser for a reload spent inside
  * 已归档.
  *
- * Both segments show the host's own tree; the archived row's delete action
- * lives in archived-actions.ts and is registered in the host's row-action seat.
+ * What 已归档 shows, though, is the skin's own list (archived-list.ts): the
+ * host's tree would mount every archived conversation at once, which is what
+ * slows the section down once the archive holds hundreds (#210). The skin's
+ * list takes the archive set and the session baseline off the host's own
+ * snapshots, shows one page of thirty, and appends the next as the reader
+ * reaches the foot. While the segment stands, the host's own list area stays
+ * hidden and the section's rows are the skin's; every row's open, unarchive and
+ * delete is the host's own action (uiWorkspace.openSession,
+ * workspaces.unarchiveSession, the host half's session-delete route followed by
+ * the sessions service's refresh), so the list behaves like the host's, page
+ * by page.
  */
 export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The host's Toast and icons, reached through the plugin loader's `require` — the same packages its UI uses. */
@@ -48,8 +52,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   })
   /** The session list, pulled after a delete so the removed summary leaves. */
   let sessions: HostSessionsService | null = null
-  /** The slot service's injected scope, released with this install. */
-  let slotsFiber: { dispose?: () => void } | null = null
+  /** The workspace list: the archive set the 已归档 page reads. */
+  let workspaces: HostWorkspacesService | null = null
+  /** The shell's workspace actions (uiWorkspace); null on a host without the seat. */
+  let uiWorkspace: unknown = null
   /**
    * The section label, kept while it still stands; the section is a seat the
    * host mounts once and replaces whole, and this runs on every pass.
@@ -61,6 +67,35 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let stopAdditions: (() => void) | null = null
   let additionsRoot: Element | null = null
   const actions = createArchivedActions({ toast, sessions: () => sessions })
+
+  const list = createArchivedList({
+    host: {
+      workspaces: () => workspaces,
+      sessions: () => sessions,
+    },
+    actions: {
+      /** Open through the host's own navigation; an unavailable action fails at the press (D12). */
+      open(id) {
+        const seat = uiWorkspace as HostUiWorkspaceService | null
+        if (seat === null || typeof seat.openSession !== 'function') throw new Error('workspace: host uiWorkspace.openSession is unavailable')
+        seat.openSession(id)
+      },
+      /** Take the conversation back to 进行中 through the host's workspace service; the archive set's own subscription drops the row. */
+      unarchive(id) {
+        const service = workspaces
+        if (service === null || typeof service.unarchiveSession !== 'function') throw new Error('workspace: host unarchiveSession is unavailable')
+        service.unarchiveSession(id).then(() => {
+          list.sync()
+        }).catch((reason: unknown) => {
+          console.warn('dsh-claude-style: session unarchive rejected:', reason)
+        })
+      },
+      remove: (id) => actions.removeArchived(id),
+    },
+    schedule: () => {
+      if (typeof ui.schedule === 'function') ui.schedule()
+    },
+  })
 
   /** The section root a label sits in: the label's header, and that header's parent. */
   function sectionRoot(label: Element) {
@@ -104,6 +139,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (next === null) return false
     follower.attach(next)
     sessions = hostSessions(ctx)
+    workspaces = hostWorkspaces(ctx)
+    uiWorkspace = hostUiWorkspace(ctx)
     follower.reconcile()
     return true
   }
@@ -140,6 +177,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * absolutely placed control would paint on the rail's own section buttons.
    */
   function dropSection() {
+    list.unmount()
     segments.release()
     labelStamp.release()
     viewStamp.release()
@@ -169,6 +207,16 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const view = follower.view()
     segments.sync(header, view)
     viewStamp.mark(root, view)
+    // The archived segment's list stands in the section's own room; 进行中
+    // hands the room back to the host's tree. sync re-reads the host's
+    // snapshots each pass (the list itself writes nothing when they are
+    // unchanged).
+    if (view === 'archived') {
+      list.mount(root)
+      list.sync()
+    } else {
+      list.unmount()
+    }
   }
 
   /**
@@ -180,43 +228,18 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     segments.measure()
   }
 
-  /** The host renders this action only while the archived segment stands. */
-  function DeleteArchivedSession({ sessionId }: { sessionId: string }) {
-    const archived = React.useSyncExternalStore(follower.subscribe, () => follower.view() === 'archived')
-    if (!archived) return null
-    const label = copy('archiveDelete')
-    return React.createElement('button', {
-      type: 'button',
-      className: 'dsh-claude-ws-delete',
-      'aria-label': label,
-      title: label,
-      onClick: (event: React.MouseEvent) => {
-        event.stopPropagation()
-        actions.removeArchived(sessionId)
-      },
-    }, React.createElement(primitives.IconTrashOutlineRegular, { size: 14 }))
-  }
-
-  /** Register the moved delete action once its host declaration is available. */
-  function registerDeleteAction() {
-    slotsFiber = registerSlotEntries(ctx, [{
-      options: { name: SESSION_ROW_ACTION_SLOT, id: 'claude-style-delete', order: 300 },
-      component: DeleteArchivedSession,
-    }], 'dsh-claude-style: archived delete')
-  }
-
-  registerDeleteAction()
   ui.workspace = {
     measure,
     sync,
-    onCopyChange() { follower.refresh() },
+    // The archived list reads its labels from the skin's copy; a locale change
+    // has to reach the rows the page already holds.
+    onCopyChange() { list.copyChanged() },
   }
 
   return () => {
     toast.dispose()
     follower.dispose()
-    if (slotsFiber !== null && typeof slotsFiber.dispose === 'function') slotsFiber.dispose()
-    slotsFiber = null
+    list.dispose()
     stopAdditions?.()
     stopAdditions = null
     additionsRoot = null

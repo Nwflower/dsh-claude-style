@@ -1,6 +1,8 @@
 {
   "archiveActive": { "zh": "进行中", "en": "Active" },
   "archiveArchived": { "zh": "已归档", "en": "Archived" },
+  "archiveEmpty": { "zh": "没有已归档的会话", "en": "No archived conversations" },
+  "archiveUnarchive": { "zh": "取消归档", "en": "Unarchive" },
   "archiveDelete": { "zh": "删除会话", "en": "Delete conversation" },
   "archiveDeleteFailed": { "zh": "删除失败：{detail}", "en": "Delete failed: {detail}" },
   "archiveDeleteOpen": { "zh": "会话仍被本应用占用，重启后再删除", "en": "The conversation is still held open by this app; restart it, then delete again" },
