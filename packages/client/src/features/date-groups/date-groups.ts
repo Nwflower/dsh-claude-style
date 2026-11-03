@@ -195,21 +195,9 @@ export function install(ctx: HostContext) {
     store.actions.setGroupBy('flat')
   }
 
-  /**
-   * 行内按钮区：宿主悬停时才让它参与布局，一出现就把标题和标签向左挤 60px。
-   * 宽度由样式表钉死，这里只把它的布局写成行内样式 —— 宿主的 display 是它自己
-   * 的样式表给的，我们不带 !important 也能改过它（行内样式永远排在样式表前面）。
-   */
-  function reserveActions(row: HTMLElement) {
-    const actions = row.querySelector<HTMLElement>(`:scope > ${ROW_ACTIONS_SELECTOR}`)
-    if (actions === null) return
-    if (actions.style.display !== 'flex') actions.style.display = 'flex'
-  }
-
   /** 工作区标签：插在行内按钮前面，太长由样式表省略。 */
   function dress(seat: Seat, title: string) {
     const row = seat.row
-    reserveActions(row)
     let chip = row.querySelector<HTMLElement>(`:scope > .${CHIP_CLASS}`)
     if (title === '') {
       if (chip !== null) {
@@ -359,8 +347,6 @@ export function install(ctx: HostContext) {
       if (box !== null && box.style.display === 'none') box.style.display = ''
       const chip = row.querySelector('.dsh-claude-date-chip')
       if (chip !== null) chip.remove()
-      const actions = row.querySelector<HTMLElement>(`:scope > ${ROW_ACTIONS_SELECTOR}`)
-      if (actions !== null && actions.style.display === 'flex') actions.style.display = ''
     }
   }
 

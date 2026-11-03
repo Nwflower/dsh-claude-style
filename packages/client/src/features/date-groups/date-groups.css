@@ -30,13 +30,13 @@ body[data-dsh-claude-style][data-dsh-claude-date-groups]:not([data-dsh-claude-da
   display: none;
 }
 
-/* 行右手的工作区标签：一行小字，太长就省略，别把标题挤没。 */
+/* 行右手的工作区标签：占的仍是宿主自己那行时间文字的位置，字号与行高跟它一致，
+   太长就省略，别把标题挤没。 */
 body[data-dsh-claude-style][data-dsh-claude-date-groups] .dsh-claude-date-chip {
   flex: none;
-  margin-left: auto;
   max-width: 40%;
   overflow: hidden;
-  font-size: 12px;
+  font-size: 11px;
   line-height: 16px;
   color: var(--dsw-alias-label-tertiary);
   text-overflow: ellipsis;
@@ -47,22 +47,4 @@ body[data-dsh-claude-style][data-dsh-claude-date-groups] .dsh-claude-date-chip {
 body[data-dsh-claude-style][data-dsh-claude-date-groups] [data-dsh-claude-part~="session-row"]:hover .dsh-claude-date-chip,
 body[data-dsh-claude-style][data-dsh-claude-date-groups] [data-dsh-claude-part~="row-selected"] .dsh-claude-date-chip {
   color: var(--dsw-alias-label-secondary);
-}
-
-/*
- * 悬停时行内动作区从 display:none 变成参与布局，会把标题和右手的工作区标签
- * 一起向左挤 60px：鼠标扫过列表，每一行都跳一下，看上去像整条列表在抖。
- * 布局上的 flex 由脚本写成行内样式（见 date-groups.ts 的 reserveActions），
- * 这里只负责它占多宽、以及不悬停时看不见。
- */
-body[data-dsh-claude-style][data-dsh-claude-date-groups] [data-dsh-claude-part~="session-row"] [data-dsh-claude-part~="row-actions"] {
-  flex: none;
-  justify-content: flex-end;
-  width: 60px;
-  visibility: hidden;
-}
-
-/* 指针停上去、或这一行正选中/开着菜单时，动作区才露出来。 */
-body[data-dsh-claude-style][data-dsh-claude-date-groups] [data-dsh-claude-part~="session-row"]:is(:hover, [data-dsh-claude-part~="row-selected"], [data-dsh-claude-part~="row-active"], [data-dsh-claude-part~="row-menu-open"], [aria-selected="true"], [data-selected="true"]) [data-dsh-claude-part~="row-actions"] {
-  visibility: visible;
 }
