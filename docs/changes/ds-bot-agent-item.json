@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 66,
+  "at": "2026-11-03",
+  "external": false,
+  "zh": "修复 ds-bot 已登录时“代码”切换会误选中登出菜单项的问题",
+  "en": "Fix the Code switch selecting ds-bot’s sign-out item when its account menu is signed in"
+}

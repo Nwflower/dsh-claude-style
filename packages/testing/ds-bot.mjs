@@ -132,7 +132,7 @@ function dsBotScenario({ check }) {
       await settle(page, 'chat')
       notes.ownChat = await read(page)
       await page.locator('.bt-account').click()
-      await page.locator('.bt-account-menu > .bt-menu-sep:last-of-type ~ [role="menuitem"]').click()
+      await page.locator('.bt-account-menu > .bt-menu-sep:first-of-type + [role="menuitem"]').click()
       await settle(page, 'code')
       notes.ownCode = await read(page)
 

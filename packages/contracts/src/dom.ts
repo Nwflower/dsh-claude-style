@@ -544,8 +544,8 @@ export const DS_BOT_RETURN_SELECTOR = '.bt-return'
 export const DS_BOT_ACCOUNT_SELECTOR = '.bt-account'
 /** That menu, portalled into `<body>` while open. */
 export const DS_BOT_ACCOUNT_MENU_SELECTOR = '.bt-account-menu'
-/** The menu's last group, after its last separator: the one item that switches to Agent mode. */
-export const DS_BOT_AGENT_ITEM_SELECTOR = '.bt-account-menu > .bt-menu-sep:last-of-type ~ [role="menuitem"]'
+/** The Agent group follows the menu's first separator; signing in appends the sign-out group after it. */
+export const DS_BOT_AGENT_ITEM_SELECTOR = '.bt-account-menu > .bt-menu-sep:first-of-type + [role="menuitem"]'
 /** The top row of ds-bot's own sidebar: its brand, search and new buttons. */
 export const DS_BOT_SIDEBAR_TOP_SELECTOR = '.bt-side-top'
 
