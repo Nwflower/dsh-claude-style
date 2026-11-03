@@ -94,9 +94,9 @@ const MARKS = [
   ['custom brand word image', 'data-dsh-claude-custom-word', 'image'],
   ['custom brand tint', 'data-dsh-claude-custom-tint', ''],
   ['custom brand accent', 'data-dsh-claude-accent', '#d97757'],
-  // The zoom the reader picks: the sheet keys rules on each of its values, and
-  // the walk had no state that reached them (D9). The colour card under the
-  // Claude palette waits for a spec that reads its mark (surface.json).
+  // The zoom the reader picks: the sheet keys its one `zoom` rule on a factor the
+  // skin projects from this attribute (shared/page-zoom.ts), so the mark is the
+  // whole state and the rule it reaches is the page drawn at that factor.
   ['page zoom 80', surfaceAttribute('skin.page-zoom'), '0.8'],
   ['page zoom 125', surfaceAttribute('skin.page-zoom'), '1.25'],
   ['page zoom 150', surfaceAttribute('skin.page-zoom'), '1.5'],

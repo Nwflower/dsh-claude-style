@@ -101,6 +101,15 @@ export default {
         shrunk.attr === '0.8' && shrunk.zoom === '0.8' &&
         following.attr === null && following.zoom === '1',
       JSON.stringify(pageZoom))
+    const control = settings.pageZoomControl || {}
+    const box = control.box || {}
+    const track = control.track || {}
+    const card = control.card || {}
+    check('the zoom row takes any percentage in a number box and carries a seekbar over the same range, closed until the box is asked for',
+      box.type === 'number' && box.min === 60 && box.max === 200 && box.step === 1 && box.value === '112' && typeof box.label === 'string' && box.label.length > 0 &&
+        track.type === 'range' && track.min === 60 && track.max === 200 && track.step === 1 && track.value === 112 && typeof track.label === 'string' && track.label.length > 0 &&
+        card.open === 'false',
+      JSON.stringify(control))
     const link = settings.link || {}
     const mark = settings.mark || {}
     check('the heading carries the plugin\'s repository link, opening in a new tab with an accessible name',

@@ -1,5 +1,5 @@
 import { BRAND_ATTR, BRAND_DEEPSEEK, COMPOSER_ATTR, COMPOSER_GAP_ATTR, COMPOSER_GAP_THEME, CONTEXT_DISPLAY_ATTR, CONTEXT_NUMBERS_ATTR, DOCK_LOOK_ATTR, DOCK_LOOK_CARD, DOCK_LOOK_FLUSH, EFFORT_ACCENT_ATTR, FOOTER_ATTR, MASCOT_ATTR, MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MOTION_ATTR, MOTION_FULL, MOTION_REDUCED, ONGOING_INDICATOR_ATTR, PAGE_ZOOM_ATTR, PAGE_ZOOM_VAR, PACKAGE_NAME, PALETTE_ATTR, PALETTE_CARD_ATTR, PALETTE_COLORING_BRAND, PALETTE_COLORING_CUSTOM, PREF_DEFAULTS, SEARCH_STYLE_ATTR, SETTINGS_ENTRY_FALLBACK, SIDEBAR_LAYOUT_ATTR, STATS_POSITION_ATTR, STATUS_MOTION_ATTR, TYPEFACE_ATTR } from '../constants'
-import { pageZoomOf, pageZoomText } from '../shared/page-zoom'
+import { pageZoomOf, pageZoomText, projectPageZoomFactor } from '../shared/page-zoom'
 import type { PrefKey, Prefs } from '../constants'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import { clampPrefs, PREFS } from '@dsh-claude-style/contracts/prefs'
@@ -127,10 +127,10 @@ const MIRRORS = [
   { key: 'composerBottomGap', attr: COMPOSER_GAP_ATTR, value: (prefs: Prefs) => prefs.composerBottomGap === COMPOSER_GAP_THEME ? false : prefs.composerBottomGap },
   { key: 'effortAccent', attr: EFFORT_ACCENT_ATTR, value: (prefs: Prefs) => prefs.effortAccent },
   { key: 'statusMotion', attr: STATUS_MOTION_ATTR, value: (prefs: Prefs) => prefs.statusMotion },
-  // Following the system writes no attribute at all: every zoom rule hangs off
-  // a factor, so the page keeps the size the system and the host give it.
-  // 缩放：属性上写的是倍率（`zoom: var(--dsh-claude-page-zoom-factor)` 读另一边），
-  // 倍率为 1 时不写属性，页面就保持系统和宿主给的尺寸。
+  // The page's scale is this attribute alone; the sheet's `zoom` reads it
+  // through the property `projectPageZoomFactor` projects from it, written
+  // right after the mirrors below. At 100% the attribute is taken off, and the
+  // page keeps the size the system and the host give it.
   {
     key: 'pageZoom',
     attr: PAGE_ZOOM_ATTR,
@@ -155,15 +155,14 @@ const MIRROR_ATTRS: readonly string[] = [...MIRRORS.map(mirror => mirror.attr), 
 export function adoptPrefs(next: Prefs) {
   prefs = next
   if (pageOwner() === null) {
-    // 缩放倍率：一条自定义属性就够，样式表那边 `zoom` 直接读它。
-    const factor = pageZoomOf(next.pageZoom)
-    if (factor === 1) document.body.style.removeProperty(PAGE_ZOOM_VAR)
-    else document.body.style.setProperty(PAGE_ZOOM_VAR, pageZoomText(factor))
     for (const mirror of MIRRORS) {
       const value = mirror.value(next)
       if (value === false) document.body.removeAttribute(mirror.attr)
       else document.body.setAttribute(mirror.attr, String(value))
     }
+    // After the attribute, which is what it reads: the sheet's half of the page's
+    // scale, written here rather than a frame later by the scale watcher.
+    projectPageZoomFactor()
     writeMotionAttribute(next.motion)
   }
   notifyAll(prefsListeners, next)

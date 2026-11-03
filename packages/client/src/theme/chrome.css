@@ -143,17 +143,16 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="rightbar-column"] [data-dsh-
    window with an empty band under the shell; the body at the window's size
    keeps the shell at the window's edge, and every part of it scrolls inside
    its own box. */
+/* The attribute stands for every factor but 100%, which the mirror writes as no
+   mark at all, so no rule here tests the attribute's value. */
 body[data-dsh-claude-style][data-dsh-claude-page-zoom] {
   zoom: var(--dsh-claude-page-zoom-factor, 1);
-}
-
-body[data-dsh-claude-style][data-dsh-claude-page-zoom]:not([data-dsh-claude-page-zoom="1"]) {
-  width: var(--dsh-claude-page-width, 100%);
-  height: var(--dsh-claude-page-height, 100%);
-  overflow: hidden;
   /* Read before `zoom` and drawn through it: the 8px of the body's default
      margin came out a factor wider and stood outside the box the body's own
      `overflow` clips, so the page scrolled sideways past the window. */
+  width: var(--dsh-claude-page-width, 100%);
+  height: var(--dsh-claude-page-height, 100%);
+  overflow: hidden;
   margin: 0;
 }
 
@@ -161,7 +160,7 @@ body[data-dsh-claude-style][data-dsh-claude-page-zoom]:not([data-dsh-claude-page
    body states, so it goes too; the page drawn at a factor is the window's size,
    and the document then has no scroll of its own to give the reader. The body's
    mark is what this reads, the way the token layer reads the palette card. */
-html:has(body[data-dsh-claude-style][data-dsh-claude-page-zoom]:not([data-dsh-claude-page-zoom="1"])) {
+html:has(body[data-dsh-claude-style][data-dsh-claude-page-zoom]) {
   padding: 0;
   overflow: hidden;
 }

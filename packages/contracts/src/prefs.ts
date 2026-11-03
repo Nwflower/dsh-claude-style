@@ -196,14 +196,16 @@ export const AUTO_POPOVER_ALL = 'all'
 export const AUTO_POPOVER_SCOPES = [AUTO_POPOVER_OFF, AUTO_POPOVER_ACCOUNT, AUTO_POPOVER_ALL] as const
 
 /**
- * How large the page is drawn: `system` leaves it at the size the system gives
- * it, and every other value scales the whole page by that factor (the stylesheet
+ * How large the page is drawn, stored as a percentage: `100` leaves it at the
+ * size the host and the system give it, and any other value from PAGE_ZOOM_MIN
+ * through PAGE_ZOOM_MAX scales the whole page by that percentage (the stylesheet
  * writes it as a `zoom`, so the page lays out in a smaller space and every
- * control, line and picture grows with it).
+ * control, line and picture grows with it). `system` is the value the row offers
+ * for leaving the size alone and the one earlier builds stored by default; it
+ * reads as `100`, and the earlier fixed factors come back through the table's
+ * legacy entry.
  */
 export const PAGE_ZOOM_SYSTEM = 'system'
-/* 缩放走任意百分比：100 就是不动，60–200 是可选的整个范围，中间每一格都算。
-   早先的固定档位（system / 0.8 / 1 / 1.25 / 1.5）由下方 legacy 表照样读得回来。 */
 export const PAGE_ZOOM_DEFAULT = '100'
 export const PAGE_ZOOM_MIN = 60
 export const PAGE_ZOOM_MAX = 200
@@ -305,6 +307,7 @@ export const PREFS = {
    */
   quickProviders: { type: 'list', default: [], max: QUICK_PROVIDERS_MAX, entryMax: PROVIDER_ID_MAX, drop: [OFFICIAL_MODEL_GROUP] },
   username: { type: 'text', default: '', max: USERNAME_MAX },
+  /** The page's scale as a percentage of its own size, between PAGE_ZOOM_MIN and PAGE_ZOOM_MAX. */
   pageZoom: {
     type: 'text',
     default: PAGE_ZOOM_DEFAULT,

@@ -3,6 +3,6 @@
   "order": 80,
   "at": "2026-11-02",
   "external": false,
-  "zh": "页面缩放支持任意百分比，60 到 200 之间输入即生效，旧档位自动迁移",
-  "en": "Scale the page by any percentage between 60 and 200, applied as it is entered, with the old presets migrating"
+  "zh": "新增页面缩放可输入 60 到 200 之间的任意百分比，悬停数字框出现可拖动的滑条，旧档位自动迁移",
+  "en": "Add any page zoom percentage from 60 to 200, typed into the row or dragged on the seekbar its number opens, with the old presets migrating"
 }
