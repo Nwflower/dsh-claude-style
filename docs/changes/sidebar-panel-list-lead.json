@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 65,
+  "at": "2026-11-03",
+  "external": false,
+  "zh": "修复新建会话与插件列表之间多出一段间距、侧栏第一行比其后的行距更疏的问题",
+  "en": "Fix the extra space between New session and the panel list that left the sidebar's first row further from the plate than the rows below stand from each other"
+}

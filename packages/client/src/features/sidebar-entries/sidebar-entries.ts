@@ -29,8 +29,13 @@ import { copy } from './copy'
 const PANEL_SLOT = 'sidebar.panellist'
 /** The More menu's rows; the sidebar shows More while this list has any. */
 const ACTIONS_SLOT = 'sidebar.panellist.actions'
-/** The list's own rows: the More launcher stands in a wrapper of its own and is no direct child. */
-const PANEL_ROW_SELECTOR = 'nav[data-dsh-claude-part~="panel-list"] > button[data-dsh-claude-part~="panel-row"]'
+/**
+ * The list's own rows. The host wraps each row in a box of its own (0.2.2-alpha.3),
+ * and the More launcher in another, so a row is read wherever it stands inside
+ * the list; the launcher is the one row that opens a menu, and it is no entry.
+ */
+const PANEL_LIST_SELECTOR = 'nav[data-dsh-claude-part~="panel-list"]'
+const PANEL_ROW_SELECTOR = `${PANEL_LIST_SELECTOR} button[data-dsh-claude-part~="panel-row"]:not([aria-haspopup="menu"])`
 const GLYPH_SELECTOR = '[data-dsh-claude-part~="panel-glyph"]'
 
 const ICON_CLASS = 'dsh-claude-sidebar-entries-icon'
@@ -54,6 +59,12 @@ function panelLabel(label: string | (() => string) | undefined, id: string) {
 export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const rows = observeMatches<HTMLElement>(PANEL_ROW_SELECTOR)
   const hiddenRows = new Set<HTMLElement>()
+  /**
+   * The boxes the hidden rows stand in. The host paints the row from its box and
+   * lays that box out in the list, so an emptied box would leave the list's own
+   * gap behind; the set is what the last pass hid, re-read every pass.
+   */
+  const hiddenBoxes = new Set<HTMLElement>()
   let dialogRoot: reactDom.Root | null = null
   /** The slot registry, once the host has served it to the injected scope. */
   let slots: HostSlotsService | null = null
@@ -70,12 +81,27 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     return labels
   }
 
+  /** The box the list lays a row out in: the row itself where the host draws it as the list's own child. */
+  function boxOf(row: HTMLElement) {
+    let node = row
+    let parent = node.parentElement
+    while (parent !== null && !parent.matches(PANEL_LIST_SELECTOR)) {
+      node = parent
+      parent = node.parentElement
+    }
+    return node
+  }
+
   function sync() {
     const labels = hiddenLabels()
+    const wanted = new Set<HTMLElement>()
     for (const row of rows.all()) {
+      const box = boxOf(row)
       if (labels.has(row.getAttribute('aria-label') ?? '')) {
         setAttributeIfChanged(row, PANEL_HIDDEN_ATTR, '')
+        setAttributeIfChanged(box, PANEL_HIDDEN_ATTR, '')
         hiddenRows.add(row)
+        wanted.add(box)
       } else if (hiddenRows.delete(row)) {
         row.removeAttribute(PANEL_HIDDEN_ATTR)
       }
@@ -83,6 +109,14 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     for (const row of hiddenRows) {
       if (!row.isConnected) hiddenRows.delete(row)
     }
+    // A box whose entry stands on the list again hands its place back, and a box
+    // that lost its row with it: the mark outlives the row it was set for.
+    for (const box of hiddenBoxes) {
+      if (wanted.has(box) && box.isConnected) continue
+      box.removeAttribute(PANEL_HIDDEN_ATTR)
+      hiddenBoxes.delete(box)
+    }
+    for (const box of wanted) hiddenBoxes.add(box)
   }
 
   /** The icon the host drew on a panel's row, hidden rows included: the menu and the dialog draw a copy of it. */
@@ -249,6 +283,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     }
     for (const row of hiddenRows) row.removeAttribute(PANEL_HIDDEN_ATTR)
     hiddenRows.clear()
+    for (const box of hiddenBoxes) box.removeAttribute(PANEL_HIDDEN_ATTR)
+    hiddenBoxes.clear()
     rows.release()
     delete ui.sidebarEntries
   }

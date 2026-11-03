@@ -136,6 +136,15 @@ body[data-dsh-claude-style] [data-composer-stats],
 body[data-dsh-claude-style] [data-composer-stat] {
   display: none;
 }
+/* The dock keeps the host's floor for the readings it expects even while the skin
+   has taken them out of it: ui-conversation's InputBar reserves one 22px row plus
+   a 4px pad under the card, so the projections landing never move the composer.
+   In the context position the numbers live in the popover and nothing stands in
+   the dock, which left that floor as a blank line under the card. */
+body[data-dsh-claude-style][data-dsh-claude-stats-position="context"] [data-dsh-claude-part~="composer-dock"] {
+  min-height: 0;
+  padding-top: 0;
+}
 
 /* ---------- one type for the composer's bottom line ---------- */
 /* The ring, the model trigger and the hidden stats row are three host widgets

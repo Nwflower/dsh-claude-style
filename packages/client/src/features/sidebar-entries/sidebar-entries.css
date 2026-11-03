@@ -1,7 +1,10 @@
 /* ---------- Sidebar entries: rows taken off the list ---------- */
 /* The host still renders the row, so More and the dialog can copy its icon
-   (sidebar-entries.ts); the list only stops showing it. */
-body[data-dsh-claude-style] button[data-dsh-claude-part~="panel-row"][data-dsh-claude-panel-hidden] {
+   (sidebar-entries.ts); the list only stops showing it. The row and the box the
+   list lays it out in both carry the mark: the host paints the row from that box,
+   and an emptied box still takes the list's own gap. */
+body[data-dsh-claude-style] button[data-dsh-claude-part~="panel-row"][data-dsh-claude-panel-hidden],
+body[data-dsh-claude-style] nav[data-dsh-claude-part~="panel-list"] > [data-dsh-claude-panel-hidden] {
   display: none;
 }
 
