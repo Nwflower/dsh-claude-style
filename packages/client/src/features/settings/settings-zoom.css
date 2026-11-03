@@ -78,14 +78,14 @@ body[data-dsh-claude-style] .dsh-claude-settings-zoom-reset:focus-visible {
   border-radius: 4px;
 }
 
-/* seekbar：挂在整条控件下沿的浮动卡片，宽度跟着控件走。卡片的命中区从下沿就开始
-   （顶部的内边距放在卡片里），从输入框移到滑块上的指针因此一路都在控件内，不会因为
-   走过一段空处把卡片关掉。 */
+/* seekbar：挂在控件下沿的浮动卡片，右缘对齐输入框，长度自己定——140 个百分点放在
+   三个数字那么宽的格子里没法拖。卡片的命中区从下沿就开始（顶部的内边距放在卡片里），
+   从输入框移到滑块上的指针因此一路都在控件内，不会因为走过一段空处把卡片关掉。 */
 body[data-dsh-claude-style] .dsh-claude-settings-zoom-track {
   position: absolute;
   top: 100%;
   right: 0;
-  left: 0;
+  width: 240px;
   padding: 10px 10px 8px;
   transform-origin: 100% 0;
 }
