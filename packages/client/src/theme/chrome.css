@@ -172,8 +172,11 @@ html:has(body[data-dsh-claude-style][data-dsh-claude-page-zoom]) {
    one the two are the same length. A dialog opened by the host or by a plugin
    carries `role="dialog"` alone as often as it carries `aria-modal`, and a
    native `<dialog>` need carry neither, so the cap is matched by what the card
-   is rather than by the attribute beside the role. */
-body[data-dsh-claude-style] :is(dialog, [role="dialog"]) {
+   is rather than by the attribute beside the role. A full-window layer is not a
+   dialog card: dsh-video-skin's boot animation measures the window itself and
+   must keep the whole window at any scale (packages/contracts/src/table.ts,
+   issue #205), so the cap steps aside for it. */
+body[data-dsh-claude-style] :is(dialog, [role="dialog"]):not(.dsvs-boot) {
   max-width: calc(var(--dsh-claude-page-width, 100vw) - 48px);
   max-height: calc(var(--dsh-claude-page-height, 100vh) - 48px);
 }

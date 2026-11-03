@@ -554,6 +554,10 @@ export const DS_BOT_AGENT_ITEM_SELECTOR = '.bt-account-menu > .bt-menu-sep:first
 /** The top row of ds-bot's own sidebar: its brand, search and new buttons. */
 export const DS_BOT_SIDEBAR_TOP_SELECTOR = '.bt-side-top'
 
+/* ---------- dsh-video-skin ---------- */
+/** The boot animation is a full-window layer, not a dialog card capped against the scaled page (D81). */
+export const DSVS_BOOT_SELECTOR = '.dsvs-boot'
+
 /* ---------- the sidebar's session rows ---------- */
 /**
  * One session row of any list the sidebar draws: the host keys a row

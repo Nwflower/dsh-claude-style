@@ -5,7 +5,7 @@ export default {
   id: 'ban',
   order: 130,
   load: 'deferred',
-  contracts: ['api.window-controls', 'shell.fullscreen', 'shell.platform', 'shell.top-clearance', 'shell.windows-titlebar'],
+  contracts: ['dsh-video-skin.boot', 'api.window-controls', 'shell.fullscreen', 'shell.platform', 'shell.top-clearance', 'shell.windows-titlebar'],
   // The page's language is the switch: `off` is the third value of that row,
   // which stands under the footer takeover whose popover holds the account row.
   pref: 'banLocale',

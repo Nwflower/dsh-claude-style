@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 71,
+  "at": "2026-11-03",
+  "external": false,
+  "zh": "修复全屏启动动画被弹窗尺寸上限裁切的问题",
+  "en": "Fix the dialog size cap clipping a full-window boot animation"
+}
