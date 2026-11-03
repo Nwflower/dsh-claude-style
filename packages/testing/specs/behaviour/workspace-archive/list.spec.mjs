@@ -57,7 +57,7 @@ async function setup(t, count) {
     const sidebar = document.createElement('div')
     sidebar.setAttribute('data-' + 'slot', 'sidebar')
     sidebar.innerHTML = '<div class="' + classes.root + '">' +
-      '<div class="' + classes.section + '"><span class="' + classes.label + ' ' + classes.wide + '">Workspaces</span></div>' +
+      '<div class="' + classes.section + '" style="display:flex;align-items:center;justify-content:space-between;width:100%"><span class="' + classes.label + ' ' + classes.wide + '">Workspaces</span></div>' +
       '<div role="tree" class="' + classes.area + '"><div ' + 'data-' + 'row-key="w1" class="' + classes.project + '">project</div></div></div>'
     document.body.appendChild(sidebar)
   }, { classes: HOST_CLASS, count })
