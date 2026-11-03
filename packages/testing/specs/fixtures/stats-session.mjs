@@ -21,4 +21,19 @@ async function seatStatsSession(t, stats, usage) {
   await t.settle()
 }
 
-export { seatStatsSession }
+/** The standard streaming session: reduced motion and 100 settled output tokens. */
+async function seatStreamingStatsSession(t) {
+  await t.prefs({ motion: 'reduced' })
+  await seatStatsSession(t,
+    { turns: 1, steps: 1, llmMs: 0, toolMs: 0, ttftMs: 0, ttftSteps: 0, decodeMs: 1000, decodeTokens: 100 },
+    { uncachedInputTokens: 1000, cacheReadTokens: 9000, cacheWriteTokens: 0, outputTokens: 100 })
+}
+
+/** Read the settled output figure after the down arrow in the inline statistics. */
+async function readWrittenBackTokens(t) {
+  const text = await t.read.text(t.surface('stats.inline-line'))
+  const figure = /↓\s*([\d,]+)/.exec(text ?? '')
+  return figure === null ? null : Number(figure[1].replace(/,/g, ''))
+}
+
+export { seatStatsSession, seatStreamingStatsSession, readWrittenBackTokens }

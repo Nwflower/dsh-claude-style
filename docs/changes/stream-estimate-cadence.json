@@ -1,0 +1,8 @@
+{
+  "group": "improvements",
+  "order": 69,
+  "at": "2026-11-03",
+  "external": false,
+  "zh": "降低流式输出期间上下文估算的扫描频率，并延后加载账户头像",
+  "en": "Reduce context-estimate scanning during streaming and defer account avatar loading"
+}

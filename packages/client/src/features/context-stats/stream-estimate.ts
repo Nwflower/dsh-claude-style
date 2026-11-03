@@ -30,8 +30,16 @@ import { textTokens } from './text-tokens'
  * unscaled, which is what lets a settlement compare the fitted estimate with
  * the host's number rather than with a corrected one.
  */
-/** How old the last reading may be before the streamed text is read again, in milliseconds. */
-const SCAN_MS = 100
+/**
+ * How old the last reading may be before the streamed text is read again, in
+ * milliseconds. The readings between a stream's first and its settlement ride
+ * on this window (#211): each full reading walks every streaming container's
+ * text, and the written-back figure is a meter, not a ticker. What stays
+ * immediate is everything around them: the first reading (readAt starts at
+ * zero), a settlement's correction (settle makes the next reading due), and a
+ * session switch (reset puts the clock back to zero).
+ */
+const SCAN_MS = 800
 
 /**
  * The estimate's reader.

@@ -162,6 +162,9 @@ export function createAccountRows(options: { hostMenu: HostAccountMenu, openBan(
       const image = document.createElement('img')
       image.className = 'dsh-claude-account-photo'
       image.alt = ''
+      // The browser schedules the picture's fetch by visibility and keeps its
+      // decode off the opening path (#211).
+      image.loading = 'lazy'
       image.decoding = 'async'
       image.draggable = false
       image.referrerPolicy = 'no-referrer'
