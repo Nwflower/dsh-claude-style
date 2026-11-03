@@ -27,22 +27,26 @@ export function createFooterMirror(options: {
 
   /**
    * Whether a press this skin must not interrupt is in flight: the browser is
-   * between a pointerdown and its pointerup.
+   * between a pointerdown and its pointerup, anywhere on the page.
    */
-  let pressDepth = 0
+  const pressing = new Set<number>()
 
   function pressInFlight() {
-    return pressDepth > 0
+    return pressing.size > 0
   }
 
-  // Every press inside the card is tracked, in the capture phase so the depth is
-  // already up before any row's own handler runs. The count is taken off on the
-  // document, because a press that ends outside the card is still this press.
-  const onPressStart = () => { pressDepth += 1 }
-  const onPressEnd = () => { if (pressDepth > 0) pressDepth -= 1 }
+  // Every press on the document is tracked, in the capture phase so the set is
+  // already filled before any row's own handler runs. A press that never
+  // reports its pointerup — the window lost focus while the button was down —
+  // is cleared by the blur handler, or the card would never take a rewrite
+  // again.
+  const onPressStart = (event: PointerEvent) => { pressing.add(event.pointerId) }
+  const onPressEnd = (event: PointerEvent) => { pressing.delete(event.pointerId) }
+  const onPressCleared = () => { pressing.clear() }
   document.addEventListener('pointerdown', onPressStart, true)
   document.addEventListener('pointerup', onPressEnd, true)
-  document.addEventListener('pointercancel', onPressEnd, true)
+  document.addEventListener('pointercancel', onPressCleared, true)
+  window.addEventListener('blur', onPressCleared)
 
   /**
    * Hide the footer's own controls in place and return the units the drawer
@@ -70,7 +74,9 @@ export function createFooterMirror(options: {
    */
   function syncFooterVisibility(footArea: Element) {
     const read = fixedRead !== null && fixedRead.footArea === footArea ? fixedRead : null
-    fixedRead = null
+    // The pass measures one footer, and only that footer's sync may take the
+    // reading: a sync for another element leaves it to the reader it belongs to.
+    if (read !== null) fixedRead = null
     const entries = footerEntriesIn(footArea)
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i]
@@ -517,10 +523,8 @@ export function createFooterMirror(options: {
     // browser's :hover and can swallow the click between pointerdown and
     // pointerup. The host's own menu is the other case — it mounts empty and
     // these rows are what fills it, so a sync that stopped while it stands would
-    // leave the card with no rows at all. There the same rule is applied per
-    // row instead (see `pointerInside`), which is what keeps a plugin that
-    // repaints its own card while the reader hovers it from tearing the row
-    // out from under them.
+    // leave the card with no rows at all. There only the embed's rewrite waits
+    // for a press (see `pressInFlight`); the rows themselves stay live.
     if (options.isOpen()) return
 
     const existingActionItems = body.querySelectorAll('[data-action-index], [data-embed-index]')
@@ -680,7 +684,9 @@ export function createFooterMirror(options: {
   function stop() {
     document.removeEventListener('pointerdown', onPressStart, true)
     document.removeEventListener('pointerup', onPressEnd, true)
-    document.removeEventListener('pointercancel', onPressEnd, true)
+    document.removeEventListener('pointercancel', onPressCleared, true)
+    window.removeEventListener('blur', onPressCleared)
+    pressing.clear()
   }
 
   return { measure, sync, clear, stop }

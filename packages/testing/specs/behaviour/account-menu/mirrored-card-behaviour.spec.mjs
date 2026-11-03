@@ -42,6 +42,10 @@ const mountCard = (t) => t.page.evaluate(({ part, stamp }) => {
   button.textContent = `Usage card body ${stamp}`
   button.addEventListener('click', () => {
     if (document.getElementById('debug-host-dialog') !== null) return
+    // The host's shape (engine/src/host.ts::findHostModal): its Modal portals a
+    // `role="presentation"` wrapper onto <body> and the dialog stands inside it.
+    const wrapper = document.createElement('div')
+    wrapper.setAttribute('role', 'presentation')
     const dialog = document.createElement('div')
     dialog.id = 'debug-host-dialog'
     dialog.setAttribute('role', 'dialog')
@@ -50,11 +54,12 @@ const mountCard = (t) => t.page.evaluate(({ part, stamp }) => {
     // The host's own dismissal is a key handler: its overlay closes on Escape.
     const onKey = (event) => {
       if (event.key !== 'Escape') return
-      dialog.remove()
+      wrapper.remove()
       document.removeEventListener('keydown', onKey, true)
     }
     document.addEventListener('keydown', onKey, true)
-    document.body.appendChild(dialog)
+    wrapper.appendChild(dialog)
+    document.body.appendChild(wrapper)
   })
   card.appendChild(button)
   foot.insertBefore(card, settings ?? null)
@@ -134,6 +139,37 @@ export default spec({ page: 'desktop' }, ({ test }) => {
     await t.page.waitForTimeout(900)
     await t.settle()
     t.expectThat.equal(await overlayOpen(t), true,
-      'the overlay stays up once the pointer leaves the menu it was opened from')
+      'the overlay stays up once the pointer leaves the menu that opened it')
+  })
+
+  test('a press the window never sees the end of releases the copy again', async (t) => {
+    await mountCard(t)
+    await t.settle()
+    await openMenu(t)
+    const before = await copyOf(t, EMBED)
+    t.expectThat.equal(before !== null, true, 'the card is gathered into the account surface')
+
+    // A pointerdown with no pointerup: the copy must stay the node under it. The
+    // press lands on the copy itself, because a press anywhere else in the page
+    // is the outside press that dismisses the menu.
+    await t.page.evaluate((embedSelector) => {
+      const card = document.querySelector(embedSelector)
+      if (card === null) throw new Error('the gathered card is missing')
+      card.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 7, bubbles: true }))
+    }, EMBED)
+    await repaint(t, `Usage card body ${STAMP} held`)
+    await t.settle()
+    const held = await copyOf(t, EMBED)
+    t.expectThat.equal(held !== null && held === before, true,
+      `a repaint under a held press leaves the copy as it stands (${held})`)
+
+    // The window loses focus before the button comes up; the press is over, and
+    // the next repaint must reach the copy rather than wait forever.
+    await t.page.evaluate(() => { window.dispatchEvent(new Event('blur')) })
+    await repaint(t, `Usage card body ${STAMP} released`)
+    await t.settle()
+    const released = await copyOf(t, EMBED)
+    t.expectThat.equal(released !== null && released.includes('released'), true,
+      `a press lost to the window is released, and the next repaint lands (${released})`)
   })
 })

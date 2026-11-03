@@ -19,12 +19,18 @@
  * leaves nothing to guard.
  */
 import { bound } from './bounds.mjs'
+import surfaceTable from './data/surface.json' with { type: 'json' }
+
+/** The skin's part mark, read off the surface table rather than spelled here (D77). */
+const PART = surfaceTable.surface.find((entry) => entry.id === 'skin.part').attribute
+const part = (name) => `[${PART}~="${name}"]`
 
 /** The host's own classes this scenario reads, the seat the skin keeps out of the row, and the skin's own control, which the rail has no heading to lay over. */
 const RAIL = {
   frame: '[data-dsh-claude-part~="layout-frame"]',
   column: '[data-dsh-claude-part~="sidebar-column"]',
   toggle: 'button[data-dsh-claude-part~="sidebar-toggle"]',
+  panelList: `nav${part('panel-list')}`,
   panelRow: '[data-dsh-claude-part~="panel-row"]',
   glyph: '[data-dsh-claude-part~="panel-glyph"]',
   newSession: 'button[data-dsh-claude-part~="new-session"]',
@@ -108,6 +114,31 @@ const readRail = (page) => page.evaluate((rail) => {
     seatInRow,
     toggle: box(column === null ? null : column.querySelector(rail.toggle)),
     glyphs: [...document.querySelectorAll(`${rail.panelRow} ${rail.glyph}`)].map(box).filter((entry) => entry !== null),
+    // The panel rows as the collapsed host lays them out: its 36px plate, its
+    // 12px radius, the 18px glyph it asks for (an svg, or the skin's three-dot
+    // box on the more row), and the step between rows.
+    panelRows: [...document.querySelectorAll(rail.panelRow)].map((row) => {
+      const rect = row.getBoundingClientRect()
+      if (!(rect.width > 0 && rect.height > 0)) return null
+      const rowStyle = getComputedStyle(row)
+      const svg = row.querySelector('svg')
+      const svgRect = svg === null ? null : svg.getBoundingClientRect()
+      // The more row hides the host's tiles-and-plus glyph and draws the skin's
+      // three dots in its place, inside the glyph seat: that box is its glyph.
+      const seat = row.querySelector(rail.glyph)
+      const dots = seat === null ? null : getComputedStyle(seat, '::before').width
+      const glyph = svgRect !== null && svgRect.width > 0 ? Math.round(svgRect.width) : Math.round(Number.parseFloat(dots))
+      return {
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
+        radius: Number.parseFloat(rowStyle.borderTopLeftRadius),
+        glyph,
+      }
+    }).filter((row) => row !== null),
+    panelGap: (() => {
+      const list = document.querySelector(rail.panelList)
+      return list === null ? null : Number.parseFloat(getComputedStyle(list).rowGap)
+    })(),
     column: box(column),
     segments: box(document.querySelector(rail.segments)),
   }
@@ -140,6 +171,7 @@ function sidebarRailScenario({ check }) {
       const rail = await readRail(page)
       const line = rail === null ? null : onTheLine(rail)
       const centred = rail !== null && rail.justify === 'center' && rail.chipGrow === '0'
+      const rows = rail === null ? [] : rail.panelRows
       return [
         check('侧栏已收起，新会话那一格是宿主自己的 36 像素图标按钮',
           rail !== null && rail.collapsed &&
@@ -161,6 +193,15 @@ function sidebarRailScenario({ check }) {
           JSON.stringify(rail === null ? null : { column: rail.column, chipCentre: rail.chipCentre, chipWidth: rail.chipWidth })),
         check('展开时侧栏里有一件皮肤自己的两档控件',
           wideSegments > 0, JSON.stringify({ wide: wideSegments })),
+        check('面板行随宿主收成 36 像素的图标按钮，圆角是 12 像素',
+          rows.length > 0 && rows.every((row) => row.width === 36 && row.height === 36 && row.radius === 12),
+          JSON.stringify({ rows })),
+        check('面板行里的图标是 18 像素，与下方的添加文件夹和搜索图标同大',
+          rows.length > 0 && rows.every((row) => row.glyph === 18),
+          JSON.stringify({ glyphs: rows.map((row) => row.glyph) })),
+        check('面板行之间隔开 12 像素，宿主自己的步长没有被皮肤的零间距盖住',
+          rail !== null && rail.panelGap === 12,
+          JSON.stringify(rail === null ? null : { panelGap: rail.panelGap })),
         check('收起成图标栏后这件控件整件离开页面，宿主自己的分区按钮不再被它压住',
           rail !== null && rail.segments === null,
           JSON.stringify(rail === null ? null : { segments: rail.segments })),

@@ -218,8 +218,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     // dismissal is an Escape addressed to the host's Menu, and the host's Menu
     // is one listener among several that answer that key, so closing the menu
     // from behind a dialog the reader is now using takes the dialog with it.
-    // The settings panel is why this stands down, and it renders inside the
-    // settings area (the host keeps its overlays in place, not in a portal).
+    // The settings panel a row opens is why this stands down.
     if (hostOverlayOpen()) return
     const row = hostMenu.trigger()
     if (row !== null && row.matches(':hover')) return

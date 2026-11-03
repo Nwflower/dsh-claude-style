@@ -186,19 +186,22 @@ body[data-dsh-claude-style] button[data-dsh-claude-part~="panel-row"] svg {
 }
 
 /* More is three dots in Claude's sidebar: the host's tiles-and-plus glyph gives
-   way to three round dots in the same 13px box, one per third of its width. */
+   way to three round dots in the same box, one per third of its width. The box
+   scales: the wide row asks for 13px and the collapsed rail's icon button for
+   18px (below), so the dots and their step are stated once, off the box. */
 body[data-dsh-claude-style] button[data-dsh-claude-part~="panel-row"][aria-haspopup="menu"] [data-dsh-claude-part~="panel-glyph"] > svg {
   display: none;
 }
 body[data-dsh-claude-style] button[data-dsh-claude-part~="panel-row"][aria-haspopup="menu"] [data-dsh-claude-part~="panel-glyph"]::before {
+  --dsh-claude-dot-box: 13px;
   content: "";
   display: block;
   flex: none;
-  width: 13px;
-  height: 13px;
+  width: var(--dsh-claude-dot-box);
+  height: var(--dsh-claude-dot-box);
   margin: 0 3.5px;
-  background-image: radial-gradient(circle, currentColor 1.1px, transparent 1.5px);
-  background-size: calc(13px / 3) 100%;
+  background-image: radial-gradient(circle, currentColor calc(var(--dsh-claude-dot-box) * 0.085), transparent calc(var(--dsh-claude-dot-box) * 0.115));
+  background-size: calc(var(--dsh-claude-dot-box) / 3) 100%;
   background-repeat: repeat-x;
 }
 
@@ -225,11 +228,8 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="layout-frame"][data-sidebar-
   margin: 0;
 }
 body[data-dsh-claude-style] [data-dsh-claude-part~="layout-frame"][data-sidebar-collapsed] button[data-dsh-claude-part~="panel-row"][aria-haspopup="menu"] [data-dsh-claude-part~="panel-glyph"]::before {
-  width: 18px;
-  height: 18px;
+  --dsh-claude-dot-box: 18px;
   margin: 0;
-  background-image: radial-gradient(circle, currentColor 1.5px, transparent 2px);
-  background-size: calc(18px / 3) 100%;
 }
 
 /* ---------- sidebar rows: the icon turns a quarter on hover ---------- */
