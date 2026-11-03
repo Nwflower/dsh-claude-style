@@ -11,10 +11,10 @@
  */
 import { afterEach, expect, test } from 'vitest'
 import { adoptSkin } from '@dsh-claude-style/engine/skin'
-import { easeScrollFor, easeScrollToEndFor, holdReader, joinScrollOwner, readerHolds, readerMovedSince, releaseReader, stopScrollFor, submissionHolds, writeScroll } from '@dsh-claude-style/engine/scroll-owner'
+import { easeScrollFor, easeScrollToEndFor, holdReader, readerHolds, readerMovedSince, releaseReader, submissionHolds, writeScroll } from '@dsh-claude-style/engine/scroll-owner'
 import { CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, FLOW_KIND_ATTRIBUTE, PHASE_ATTRIBUTE, PROCESS_BODY_SELECTOR, USER_ROW_KIND } from '@dsh-claude-style/contracts/dom'
-import { hostElement } from '../../fixtures/host-markup'
-import { MOTION_ATTR, MOTION_FULL, MOTION_REDUCED, READER_HOLD_ATTR, TEST_SKIN } from '../../fixtures/vocabulary'
+import { MOTION_FULL, MOTION_REDUCED, READER_HOLD_ATTR, TEST_SKIN } from '../../fixtures/vocabulary'
+import { createScrollOwnerFixture } from '../../fixtures/scroll-owner'
 
 adoptSkin(TEST_SKIN)
 
@@ -25,23 +25,6 @@ const cleanups: (() => void)[] = []
 afterEach(() => {
   while (cleanups.length > 0) cleanups.pop()!()
 })
-
-/** A scroll container of the host's, with a tall content block, attached to the page. */
-function scrollBox(selector: string) {
-  const box = hostElement(selector)
-  // `scrollbar-gutter: stable` keeps the strip in the layout: the drag tests read
-  // the container's own bar, and an overlay scrollbar leaves no geometry to read.
-  box.style.cssText = 'height:100px;overflow:auto;scrollbar-gutter:stable'
-  const content = document.createElement('div')
-  content.style.height = '2000px'
-  box.append(content)
-  document.body.append(box)
-  cleanups.push(() => {
-    stopScrollFor(box)
-    box.remove()
-  })
-  return box
-}
 
 /** Another scroller beside the conversation, which the owner does not govern. */
 function besideBox() {
@@ -55,16 +38,7 @@ function besideBox() {
   return box
 }
 
-function join() {
-  const leave = joinScrollOwner()
-  cleanups.push(leave)
-  return leave
-}
-
-function setMotion(mode: string) {
-  document.body.setAttribute(MOTION_ATTR, mode)
-  cleanups.push(() => document.body.removeAttribute(MOTION_ATTR))
-}
+const { scrollBox, join, setMotion } = createScrollOwnerFixture(cleanups)
 
 /** The reader's own user row, as the host mounts it into the conversation. */
 function userRow() {

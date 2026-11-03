@@ -77,10 +77,11 @@ const FOLLOW_LOOK_ROUNDS = 5
 const FOLLOW_LOOK_INTERVAL_MS = 100
 
 /**
- * The reader's intent events. The conversation reads all but touchmove (a
- * touch drag starts with touchstart); a process body reads all but
- * beforematch (in-page find has nothing to do with a body); "moved since"
- * reads the four that really move a position.
+ * The reader's intent events. The conversation reads all of them: a touch
+ * drag takes its hold on touchstart and the touchmoves that follow aim it
+ * (touchAim below); a process body reads all but beforematch (in-page find
+ * has nothing to do with a body); "moved since" reads the four that really
+ * move a position.
  */
 const INTENT_TYPES = ['wheel', 'touchstart', 'touchmove', 'pointerdown', 'keydown', 'beforematch']
 const MOVING_INTENT_TYPES = new Set(['wheel', 'touchstart', 'pointerdown', 'keydown'])
@@ -114,6 +115,19 @@ const heldTowardEnd = new WeakSet<Element>()
 const markedScrollers = new Set<Element>()
 /** When the reader last made a moving intent, for movedSince. */
 let lastMovingIntentAt = 0
+/**
+ * The vertical reading of the contact the current touch drag last reported.
+ * A touchmove's direction is the travel between two readings, so the
+ * touchstart's reading is the drag's origin and every touchmove after it
+ * aims the hold: up toward the end, down away from it.
+ */
+let touchContactY: number | null = null
+
+/** The contact's vertical reading, or null when the event carries none. */
+function contactY(event: TouchEvent): number | null {
+  const contact = event.changedTouches[0]
+  return contact === undefined ? null : contact.clientY
+}
 /** Until this moment the stream slide stands down: the reader's own message just arrived. */
 let submissionHoldUntil = 0
 /** The conversation the owner last worked in, for the hold above; null before the first is claimed. */
@@ -287,8 +301,25 @@ function noteIntent(event: Event) {
   const moving = MOVING_INTENT_TYPES.has(event.type)
   if (moving) lastMovingIntentAt = performance.now()
   // A wheel carries where the reader is going; the others are read as his move
-  // toward the end, since none of them can be sent by a follower.
-  const towardEnd = !(event instanceof WheelEvent) || event.deltaY >= 0
+  // toward the end, since none of them can be sent by a follower. A touch drag
+  // is the exception. Its touchstart takes the hold with NO direction of its
+  // own: aimed at the end from the start, the hold would end the moment the
+  // stream's own pin left the position at the end — the iPhone's
+  // cannot-stop-the-stream (#206). Each touchmove after it aims the hold by
+  // the contact's travel alone: only the vertical displacement counts, so a
+  // horizontal flick aims nothing.
+  let towardEnd = !(event instanceof WheelEvent) || event.deltaY >= 0
+  let touchAim: boolean | null = null
+  if (event instanceof TouchEvent) {
+    const y = contactY(event)
+    if (event.type === 'touchstart') {
+      touchContactY = y
+      towardEnd = false
+    } else if (y !== null) {
+      if (touchContactY !== null && y !== touchContactY) touchAim = y < touchContactY
+      touchContactY = y
+    }
+  }
   if (event.type !== 'touchmove') {
     // The container is kept by packages/engine/src/chat-dom.ts: a trackpad sends
     // hundreds of these a second.
@@ -298,6 +329,16 @@ function noteIntent(event: Event) {
     if (scroller !== null && intentReaches(scroller, event) && scroller.scrollHeight - scroller.clientHeight > 0) {
       if (moving && towardEnd) heldTowardEnd.add(scroller)
       setHeld(scroller, true)
+    }
+  } else if (touchAim !== null) {
+    // The drag's travel aims the hold its touchstart took: up toward the end,
+    // down away from it. A touchmove without a hold aims nothing, and a drag
+    // that left the conversation aims no hold it does not own.
+    const scroller = conversationScroller()
+    claimConversation()
+    if (scroller !== null && held.has(scroller)) {
+      if (touchAim) heldTowardEnd.add(scroller)
+      else heldTowardEnd.delete(scroller)
     }
   }
   if (event.type === 'beforematch') return
@@ -314,6 +355,10 @@ function noteIntent(event: Event) {
   // A scroll key the host has already handled knows where it is going.
   if (event.type === 'keydown' && event.defaultPrevented) return
   if (moving && towardEnd) heldTowardEnd.add(body)
+  else if (touchAim !== null && held.has(body)) {
+    if (touchAim) heldTowardEnd.add(body)
+    else heldTowardEnd.delete(body)
+  }
   setHeld(body, true)
 }
 
