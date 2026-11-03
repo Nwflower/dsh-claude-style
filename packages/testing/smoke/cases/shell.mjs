@@ -172,6 +172,9 @@ export default {
       laid.titlePosition === 'fixed' && laid.titleZ === '30' &&
         laid.titleRegion === 'no-drag' && laid.utilitiesRegion === 'no-drag' && laid.cornerRegion === 'no-drag',
       JSON.stringify({ position: laid.titlePosition, z: laid.titleZ, regions: [laid.titleRegion, laid.utilitiesRegion, laid.cornerRegion] }))
+    check('the lifted title is drawn in the caption row, where a press on its own place reaches it: the cluster\'s own fade is dropped while the title stands outside that cluster',
+      laid.titleHit === true && laid.clusterMask === 'none',
+      JSON.stringify({ hit: laid.titleHit, mask: laid.clusterMask }))
     check('the words the row carries are the window\'s own: a press on the title starts no selection',
       laid.titleSelect === 'none' && laid.headerSelect === 'none',
       JSON.stringify({ title: laid.titleSelect, header: laid.headerSelect }))
@@ -199,10 +202,11 @@ export default {
       JSON.stringify({ tight: tight, natural: naturalRow }))
     const off = b.off || {}
     const back = b.back || {}
-    check('switching the feature off hands the row back whole — the strip the other feature placed stays — and switching it on places both sides again',
+    check('switching the feature off hands the row back whole — the strip the other feature placed stays, and the cluster\'s own fade with it — and switching it on places both sides again',
       off.marks.band === null && off.marks.title === false && off.marks.utilities === false && off.marks.corner === false &&
-        off.stripStamped === true &&
-        back.marks.band === 'title actions' && back.marks.title === true && back.marks.utilities === true,
+        off.stripStamped === true && off.clusterMask !== 'none' &&
+        back.marks.band === 'title actions' && back.marks.title === true && back.marks.utilities === true &&
+        back.titleHit === true && back.clusterMask === 'none',
       JSON.stringify({ off: off, back: back }))
     const left = b.left || {}
     check('taking the desktop shell\'s marker away leaves no band marker and no stamps behind',

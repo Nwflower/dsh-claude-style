@@ -10,7 +10,9 @@
  * Four states are read: both sides lifted, the corner seat gone (the right
  * sidebar's own chrome carries those controls while it is open), neither side
  * fitting once the strip takes their room, and the preference switched off and
- * back on.
+ * back on. The title cluster carries the host's own fade, so what is read of
+ * the lifted title is what stands in the caption row rather than the box the
+ * host would have drawn in its row.
  */
 (function () {
   var probe = window.__dshSmokeProbe
@@ -33,6 +35,17 @@
       var HEADER_INSET = 10
       var ROW_LEFT = 200
       var TITLE_HEIGHT = 28
+      // The host's own rule on the title cluster — the breadcrumb's truncation
+      // fade — as a live instance writes it: its class rule, so a stop of the
+      // skin's can write over it the way it does on the real page. The fade's
+      // clip is the cluster's own box, and a box lifted out of the cluster is
+      // clipped with it.
+      var hostCluster = document.createElement('style')
+      hostCluster.textContent = '._titleCluster_b_1 { --title-cluster-fade: 20px;' +
+        'margin: -4px -20px -4px -4px; padding: 4px 20px 4px 4px;' +
+        'mask-image: linear-gradient(to left, transparent calc(.3 * var(--title-cluster-fade)), #000 var(--title-cluster-fade));' +
+        'overflow: clip; }'
+      document.head.append(hostCluster)
       // The desktop shell's two answers: the caption row is on the page, and
       // the Window Controls Overlay API reports the three caption buttons.
       document.documentElement.setAttribute('data-windows-titlebar', '')
@@ -83,12 +96,23 @@
       }
       var title = header.querySelector('[data-dsh-claude-part~="header-title"]')
       var actions = header.querySelector('[data-dsh-claude-part~="header-actions"]')
+      // The cluster the title stands in: its own parent in the host's markup,
+      // the seat the host writes its truncation fade on.
+      var cluster = title.parentElement
       var utilities = header.querySelector('[data-dsh-claude-part~="header-utilities"]')
       var corner = header.querySelector('[data-dsh-claude-part~="header-corner"]')
       var strip = header.querySelector('[data-dsh-claude-part~="view-tabs"]')
       var box = function (el) {
         var b = el.getBoundingClientRect()
         return { x: Math.round(b.x), y: Math.round(b.y), right: Math.round(b.right) }
+      }
+      // What a press at the element's own place reaches: the element itself or a
+      // node inside it. A mask on an ancestor clips the paint and the hit alike,
+      // so this answers what the reader sees standing there.
+      var hitAt = function (el) {
+        var b = el.getBoundingClientRect()
+        var at = document.elementFromPoint(Math.round(b.x + b.width / 2), Math.round(b.y + b.height / 2))
+        return at !== null && (at === el || el.contains(at))
       }
       // The viewport the fixed pieces are placed in, measured rather than
       // assumed: a page scrollbar comes off it, and the caption buttons hang
@@ -150,6 +174,8 @@
         closeInline: closeButton.style.display,
         closeShown: getComputedStyle(closeButton).display,
         hostToggleDisplay: getComputedStyle(hostToggle).display,
+        titleHit: hitAt(title),
+        clusterMask: getComputedStyle(cluster).maskImage,
       }
       // The corner seat is empty while the right sidebar is open, and the
       // cluster that is there still lifts — into the corner's own place. The
@@ -173,10 +199,10 @@
       // and the placement comes back when it is switched on again.
       window.__pushForm({ headerBand: false })
       await sleep(250)
-      r.band.off = { marks: marks(), stripStamped: strip.hasAttribute('data-dsh-view-tabs') }
+      r.band.off = { marks: marks(), stripStamped: strip.hasAttribute('data-dsh-view-tabs'), clusterMask: getComputedStyle(cluster).maskImage }
       window.__pushForm({ headerBand: true })
       await sleep(250)
-      r.band.back = { marks: marks(), title: box(title), utilities: box(utilities) }
+      r.band.back = { marks: marks(), title: box(title), utilities: box(utilities), titleHit: hitAt(title), clusterMask: getComputedStyle(cluster).maskImage }
       // The panel closes: its own collapse control leaves the page with it, and
       // the skin's control goes back to hidden.
       panel.remove()
@@ -185,6 +211,7 @@
       // The teardown of the stand-in: the row goes away, and neither the band
       // marker nor the element stamps may stay behind.
       header.remove()
+      hostCluster.remove()
       document.documentElement.removeAttribute('data-windows-titlebar')
       delete navigator.windowControlsOverlay
       await sleep(250)

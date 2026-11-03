@@ -48,6 +48,17 @@ body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-header-tit
   -webkit-app-region: no-drag !important;
 }
 
+/* The host's title cluster carries its truncation fade as a mask clipped to
+   the cluster's own box. A fixed box lifted out of the cluster is clipped with
+   it, and the lifted title stands in the caption row, outside that box: the
+   mask would erase it whole. The fade belongs to the cluster's own overflowing
+   text, which the lifted title no longer is; what the row still holds keeps
+   the host's clip and loses only the fade. */
+body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-claude-part~="title-cluster"] {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
 /* The view-tab strip: view-tabs places it at the window's centre, and with the
    title and the controls standing on either side of it that no longer reads as
    the middle of the row. The pass hands it the middle of what is left between
