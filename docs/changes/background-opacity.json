@@ -1,0 +1,8 @@
+{
+  "group": "new",
+  "order": 70,
+  "at": "2026-11-03",
+  "external": false,
+  "zh": "新增全局背景不透明度调节，以便与壁纸插件组合使用",
+  "en": "Add global background opacity control for use with wallpaper plugins"
+}

@@ -16,7 +16,7 @@ export default {
     check('the settings section registers with the settings dialog', settings.registered === true, JSON.stringify(settings.registered))
     const expected = {
       general: ['brand', 'username', 'pageZoom', 'autoPopover', 'sodium'],
-      appearance: ['brandLockup', 'brandInk', 'palette', 'paletteCards', 'typeface', 'homeLayout', 'homeRipple', 'mascot', 'mascotScope'],
+      appearance: ['brandLockup', 'brandInk', 'palette', 'paletteCards', 'backgroundOpacity', 'typeface', 'homeLayout', 'homeRipple', 'mascot', 'mascotScope'],
       'main-window': ['turnNav', 'conversationWidth', 'viewTabs', 'headerBand', 'processRows', 'composerScope', 'composerBottomGap', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent', 'contextDisplay', 'contextNumbers', 'statsPosition', 'statsFooterAlign', 'billingCurrency', 'billingTable'],
       sidebar: ['collapseFooter', 'banLocale', 'sidebarSearch', 'searchStyle', 'sidebarEntries', 'workspaceView', 'dateGroups', 'sidebarPeek', 'sidebarLayout', 'dockCards'],
       motion: ['motion', 'chatAnimations', 'chatWait', 'statusDetail', 'statusMotion', 'chatReveal', 'chatSend', 'messageEnter', 'caretMotion', 'ongoingIndicator'],
@@ -82,6 +82,10 @@ export default {
         !!off.mainWindow && JSON.stringify(off.mainWindow.disabled) === '["headerBand","effortSlider","modelDescriptions","quickProviders","peakrate","effortAccent","statsFooterAlign","billingTable"]' &&
         !!off.sidebar && JSON.stringify(off.sidebar.disabled) === '["searchStyle"]',
       JSON.stringify(off))
+    const offAppearance = (off.appearance || {}).rows || []
+    check('the colour cards and the background opacity stand only under the skin\'s own palette: following the host leaves neither on the tab',
+      offAppearance.indexOf('paletteCards') === -1 && offAppearance.indexOf('backgroundOpacity') === -1,
+      JSON.stringify(offAppearance))
     const unmet = settings.requirementsOff || {}
     check('with the composer restyle off, the model picker with its sub-rows, the permission control and the statistics\' figures grey out, the two switches and the statistics rows saying what they wait for; with the footer takeover off, so does the easter egg under it',
       !!unmet.mainWindow && JSON.stringify(unmet.mainWindow.disabled) === '["headerBand","composerBottomGap","permissionsControl","modelPicker","effortSlider","modelDescriptions","quickProviders","peakrate","effortAccent","contextDisplay","contextNumbers","statsPosition","statsFooterAlign","billingCurrency","billingTable"]' &&

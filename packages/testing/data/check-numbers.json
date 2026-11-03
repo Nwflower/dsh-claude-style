@@ -865,6 +865,9 @@
       "the reader's own card presses itself, keeps the brand's tokens under it, and carries the same reset": [
         0
       ],
+      "the colour cards and the background opacity stand only under the skin's own palette: following the host leaves neither on the tab": [
+        1
+      ],
       "the zoom row takes any percentage in one field, resets from the label beside it and opens a seekbar over the same range, closed until the field is asked for": [
         0,
         1,

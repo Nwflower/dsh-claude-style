@@ -71,7 +71,9 @@
         // shell stands down, one mask lies over the wallpaper, and the base
         // canvas and the skin's own faces keep their fill.
         claudeWallpaper: await readHost(null, true),
+        halfWallpaper: await readHost({ backgroundOpacity: '50' }, true),
       }
+      await readHost({ backgroundOpacity: '100' }, false)
       document.body.removeAttribute('data-we-wallpaper')
       await sleep(120)
       for (var hostKey in hostNodes) hostNodes[hostKey].remove()

@@ -212,6 +212,11 @@ export const PAGE_ZOOM_DEFAULT = '100'
 export const PAGE_ZOOM_MIN = 60
 export const PAGE_ZOOM_MAX = 200
 
+/** Background fill opacity as a percentage; 100 keeps the existing canvas opaque. */
+export const BACKGROUND_OPACITY_DEFAULT = '100'
+export const BACKGROUND_OPACITY_MIN = 0
+export const BACKGROUND_OPACITY_MAX = 100
+
 /**
  * The sodium rewrite (D78): `undecided` until the reader or the first probe that
  * finds a listed rule decides it, and drawn as off until then. The settings
@@ -322,6 +327,8 @@ export const PREFS = {
   homeLayout: { type: 'choice', values: HOME_LAYOUTS, default: HOME_LAYOUT_STUDIO },
   homeRipple: { type: 'boolean', default: false },
   palette: { type: 'choice', values: PALETTES, default: PALETTE_CLAUDE },
+  /** The background fill's opacity as a percentage, between BACKGROUND_OPACITY_MIN and BACKGROUND_OPACITY_MAX. */
+  backgroundOpacity: { type: 'text', default: BACKGROUND_OPACITY_DEFAULT, max: 3 },
   typeface: { type: 'choice', values: TYPEFACES, default: TYPEFACE_CLAUDE },
   conversationWidth: { type: 'choice', values: CONVERSATION_WIDTHS, default: CONVERSATION_WIDTH_FULL },
   composerBottomGap: { type: 'choice', values: COMPOSER_GAPS, default: COMPOSER_GAP_THEME },

@@ -1,15 +1,48 @@
-import { PALETTE_CLAUDE, PALETTE_HOST, TYPEFACE_CLAUDE, TYPEFACE_HOST } from '../../constants'
+import * as React from 'react'
+import { BACKGROUND_OPACITY_DEFAULT, BACKGROUND_OPACITY_MAX, BACKGROUND_OPACITY_MIN, PALETTE_CLAUDE, PALETTE_HOST, TYPEFACE_CLAUDE, TYPEFACE_HOST } from '../../constants'
+import { backgroundOpacityPercent } from '../../shared/background-opacity'
 import { brandRows, paletteCardsRow } from './settings-brand'
+import { PercentControl } from './settings-percent-control'
 import { copy } from './copy'
-import type { SettingsTab, SettingsView } from './settings-controls'
+import type { SettingsRow, SettingsTab, SettingsView } from './settings-controls'
 
 /**
  * The settings page's Appearance tab: the custom brand rows that open it
  * (settings-brand.ts), whether the skin paints the colours — with the colour
- * cards as that row's sub-row — and whether it sets the type. The home layout,
- * the mascot and where it stands are the features' own rows, placed here by
- * their manifests (D76).
+ * cards as that row's sub-rows, the background fill's opacity, and whether it
+ * sets the type. The home layout, the mascot and where it stands are the
+ * features' own rows, placed here by their manifests (D76).
  */
+/**
+ * The background fill's opacity row: the percentage field and the seekbar the
+ * page's own scale row shares its control with (settings-percent-control.ts),
+ * writing the preference the canvas fills read as a colour mix toward
+ * transparent (shared/background-opacity.ts). The row stands only under the
+ * skin's own palette, like the colour cards above it.
+ */
+function backgroundOpacityRow(view: SettingsView): SettingsRow {
+  return {
+    rank: 16,
+    node: view.controls.row(
+      'backgroundOpacity',
+      copy('backgroundOpacityTitle'),
+      copy('backgroundOpacityDesc'),
+      React.createElement(PercentControl, {
+        percent: backgroundOpacityPercent(view.prefs.backgroundOpacity),
+        min: BACKGROUND_OPACITY_MIN,
+        max: BACKGROUND_OPACITY_MAX,
+        defaultPercent: Number(BACKGROUND_OPACITY_DEFAULT),
+        fieldLabel: copy('backgroundOpacityPercentLabel'),
+        trackLabel: copy('backgroundOpacityTrackLabel'),
+        resetLabel: copy('backgroundOpacityReset'),
+        onPick: percent => { view.write({ backgroundOpacity: String(percent) }) },
+        onReset: () => { view.write({ backgroundOpacity: BACKGROUND_OPACITY_DEFAULT }) },
+      }),
+      { experimental: true },
+    ),
+  }
+}
+
 export function createSettingsAppearanceTab(): SettingsTab {
   function rows(view: SettingsView) {
     const prefs = view.prefs
@@ -29,6 +62,8 @@ export function createSettingsAppearanceTab(): SettingsTab {
       },
       // The cards belong to the skin's own colours: following the host leaves nothing to pick.
       ...(prefs.palette === PALETTE_HOST ? [] : [paletteCardsRow(view)]),
+      // The opacity paints the skin's own canvas: following the host leaves nothing to see through.
+      ...(prefs.palette === PALETTE_HOST ? [] : [backgroundOpacityRow(view)]),
       {
         rank: 20,
         node: controls.row(

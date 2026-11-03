@@ -33,6 +33,19 @@ body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-ds-dark-theme
   background: color-mix(in srgb, var(--dsh-claude-canvas) 82%, transparent);
 }
 
+/* A background opacity below 100 reaches the window through the mask alone:
+   the shell's fills stand down under a wallpaper as they always do, so the
+   mask's own share is multiplied by the opacity and the one layer carries
+   both (theme/chrome.css restates the unpainted-surfaces rule for the window
+   itself). */
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper][data-dsh-claude-background-opacity]::after {
+  background: color-mix(in srgb, var(--dsh-claude-canvas) calc(86% * var(--dsh-claude-background-opacity)), transparent);
+}
+
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-ds-dark-theme][data-we-wallpaper][data-dsh-claude-background-opacity]::after {
+  background: color-mix(in srgb, var(--dsh-claude-canvas) calc(82% * var(--dsh-claude-background-opacity)), transparent);
+}
+
 /* ---------- the shell stands down ---------- */
 /* Each of these paints the canvas over the whole window or a whole column. */
 body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper] :is([data-dsh-claude-part~="layout-frame"][data-dsh-claude-holds~="sidebar-column"], [data-dsh-claude-part~="center-column"], [data-dsh-claude-part~="rightbar-column"], [data-dsh-claude-holds~="conversation-scroll"]) {
@@ -72,4 +85,12 @@ body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper]
   z-index: -1;
   pointer-events: none;
   background: var(--dsh-claude-canvas);
+}
+
+/* The opacity spares this tray: it keeps the canvas fill it has always
+   painted, read through the alias while the frame's token redefinition
+   (theme/chrome.css) carries the mixed share past it. */
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper][data-dsh-claude-background-opacity] :is([data-phase="active"], [data-content-phase="active"]) [data-composer-seat]::after,
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper][data-dsh-claude-background-opacity] [data-dsh-claude-transcript] [data-composer-seat]::after {
+  background: var(--dsw-alias-bg-base);
 }

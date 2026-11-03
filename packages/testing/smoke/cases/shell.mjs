@@ -428,6 +428,10 @@ export default {
       wallClaude.base === '#ffffff' && wallClaude.popover === claude.popover && wallClaude.account === claude.account &&
         wallClaude.search === claude.search,
       JSON.stringify({ wallpaper: wallClaude, claude }))
+    const half = hp.halfWallpaper || {}
+    check('the background opacity multiplies the wallpaper mask while the cards keep their paint',
+      /^color\(srgb 1 1 1 \/ 0\.43\)$/.test(half.mask || '') && half.popover === claude.popover && half.search === claude.search,
+      JSON.stringify(half))
     check('with the wallpaper gone the skin\'s own fills are back and the mask is lifted',
       CLAUDE_FILLS.every(([key, value]) => claude[key] === value) && claude.sidebarFill === '#fafafa' &&
         claude.mask === 'rgba(0, 0, 0, 0)',

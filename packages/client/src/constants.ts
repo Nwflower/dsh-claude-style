@@ -204,6 +204,18 @@ export const PAGE_UNDER_1000_ATTR = 'data-dsh-claude-page-under-1000'
 export const PAGE_UNDER_760_ATTR = 'data-dsh-claude-page-under-760'
 export const PAGE_UNDER_480_ATTR = 'data-dsh-claude-page-under-480'
 
+/**
+ * The background fill's opacity as a percentage, present only below 100
+ * (shared/background-opacity.ts): the canvas fills read the property
+ * `projectBackgroundOpacity` writes from it through color-mix, and at the
+ * default the attribute and the property are both absent, so the page keeps
+ * the fills it has always painted.
+ */
+export const BACKGROUND_OPACITY_ATTR = 'data-dsh-claude-background-opacity'
+
+/** 背景不透明度走的自定义属性：0 到 1 的系数，画布填充的 color-mix 读它。 */
+export const BACKGROUND_OPACITY_VAR = '--dsh-claude-background-opacity'
+
 
 /**
  * Present while the ported chat-area follow is installed

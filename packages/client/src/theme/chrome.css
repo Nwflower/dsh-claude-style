@@ -422,3 +422,56 @@ body[data-dsh-claude-style][data-dsh-claude-asleep][data-dsh-claude-asleep] *::b
 body[data-dsh-claude-style][data-dsh-claude-asleep][data-dsh-claude-asleep] *::after {
   animation-play-state: paused !important;
 }
+
+/* ---------- the background fill's opacity ---------- */
+/* Below 100 (settings › Appearance, Claude palette) the canvas paints mix
+   toward transparent and the window shows through (shared/background-opacity.ts
+   writes --dsh-claude-background-opacity from the body's mark; at 100 neither
+   the mark nor the property stands, so everything on this page is the pixel
+   it has always been). Only the fills the opacity names are restated — the
+   body and the root window, the sidebar, the conversation column and the
+   Windows titlebar fills; the text, the controls, the popovers and the
+   composer's tray keep their paint, and under a wallpaper the shell stands
+   down as it always does while the mask (theme/wallpaper.css) carries the
+   share instead. The mixes read the canvas through the host's alias, which
+   holds the same colour untinted. */
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-we-wallpaper])[data-dsh-claude-background-opacity] {
+  background-color: color-mix(in srgb, var(--dsw-alias-bg-base) calc(var(--dsh-claude-background-opacity) * 100%), transparent);
+}
+
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-we-wallpaper]):not([data-ds-dark-theme])[data-dsh-claude-background-opacity] #root {
+  background-color: color-mix(in srgb, var(--dsw-alias-bg-base) calc(var(--dsh-claude-background-opacity) * 100%), transparent);
+}
+
+/* The document element's own canvas is the one opaque wall between the page
+   and the window behind it: under an opacity it steps aside, the way a card's
+   own background does, so the share the reader asked for is the share that
+   reaches the window. */
+html:has(body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-background-opacity]):not([data-ds-dark-theme]) {
+  background-color: transparent;
+}
+
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-we-wallpaper])[data-dsh-claude-background-opacity] :is([data-pane="sidebar"], [data-dsh-claude-part~="sidebar-column"], .dshDesktopSidebarSurface) {
+  background: color-mix(in srgb, var(--dsh-claude-sidebar-canvas) calc(var(--dsh-claude-background-opacity) * 100%), transparent);
+}
+
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-we-wallpaper])[data-dsh-claude-background-opacity] :is([data-pane="conversation"], [data-dsh-claude-part~="center-column"]) {
+  background: color-mix(in srgb, var(--dsw-alias-bg-base) calc(var(--dsh-claude-background-opacity) * 100%), transparent);
+}
+
+/* The frame's own fill carries an !important the importance ledger decided
+   (the host paints its own plate under it), so an opacity reaches it through
+   the token it reads, redefined for the frame's subtree from the untinted
+   alias. The columns' restated fills above read the same alias and meet it
+   at the same share. */
+html[data-windows-titlebar] body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-we-wallpaper])[data-dsh-claude-background-opacity] [data-dsh-claude-part~="layout-frame"][data-dsh-claude-holds~="sidebar-column"] {
+  --dsh-claude-canvas: color-mix(in srgb, var(--dsw-alias-bg-base) calc(var(--dsh-claude-background-opacity) * 100%), transparent);
+}
+
+html[data-windows-titlebar] body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-we-wallpaper])[data-dsh-claude-background-opacity] [data-dsh-claude-part~="layout-frame"] > [data-dsh-claude-part~="sidebar-column"] {
+  box-shadow: 0 calc(-1 * var(--dsh-windows-titlebar-height)) 0 0 color-mix(in srgb, var(--dsw-specific-sidebar-fill, var(--dsh-claude-sidebar-canvas)) calc(var(--dsh-claude-background-opacity) * 100%), transparent);
+}
+
+html[data-windows-titlebar] body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-we-wallpaper])[data-dsh-claude-background-opacity] [data-dsh-claude-part~="layout-frame"] > [data-dsh-claude-part~="center-column"] {
+  box-shadow: 0 calc(-1 * var(--dsh-windows-titlebar-height)) 0 0 color-mix(in srgb, var(--dsw-alias-bg-base) calc(var(--dsh-claude-background-opacity) * 100%), transparent);
+}

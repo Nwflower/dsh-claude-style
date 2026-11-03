@@ -36,6 +36,13 @@ surface.attribute = (id) => {
   return attribute
 }
 
+/** A CSS custom property the skin writes, by its surface id. */
+surface.property = (id) => {
+  const { property } = surfaceEntry(id)
+  if (property === undefined) throw new Error(`surface: "${id}" names no custom property`)
+  return property
+}
+
 /** The literal the host writes, by its contract id. */
 function host(id) {
   const entry = HOST_DOM.find((candidate) => candidate.id === id)
