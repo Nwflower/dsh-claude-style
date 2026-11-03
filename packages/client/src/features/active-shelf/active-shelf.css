@@ -1,8 +1,7 @@
-/* ---------- 「工作区」标题行右端那一对：铃铛 + 放大镜 ---------- */
-/* packages/client/src/features/active-shelf/active-shelf.ts 把这一对插在宿主的
-   「工作区」标题行右端、它自己的两枚分区动作之前。这里只管它们的形状：
-   - 两枚同一套尺寸的安静按钮（28px 盒、16px 图标）；
-   - 铃铛右上角的小圆点由它自己的 data-active-shelf-running 点亮，不写条数；
+/* ---------- 「工作区」标题行右端的铃铛 ---------- */
+/* packages/client/src/features/active-shelf/active-shelf.ts 把它插在宿主的
+   「工作区」标题行右端、它自己的两枚分区动作之前。这里只管形状：
+   - 一枚与旁边宿主按钮同尺寸的安静按钮（28px 盒、16px 图标、1px 描边）；
    - 日期视图开着时铃铛是按下态（读者按它换的是整个列表的排法）。 */
 
 /* 这一对的盒子：一行横排，和旁边宿主的按钮在同一条中线上。 */
@@ -54,19 +53,4 @@ body[data-dsh-claude-style] .dsh-claude-active-shelf-trigger-icon {
 body[data-dsh-claude-style][data-dsh-claude-date-groups] .dsh-claude-active-shelf-trigger {
   background: color-mix(in srgb, var(--dsw-alias-brand-primary) 16%, transparent);
   color: var(--dsw-alias-brand-primary);
-}
-
-/* 圆点是一盏灯，不是计数器：有会话在跑就亮，跑完了灭。 */
-body[data-dsh-claude-style] .dsh-claude-active-shelf-count {
-  position: absolute;
-  top: 4px;
-  right: 3px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--dsw-alias-brand-primary);
-}
-
-body[data-dsh-claude-style] .dsh-claude-active-shelf-trigger[data-active-shelf-running="false"] .dsh-claude-active-shelf-count {
-  display: none;
 }
