@@ -68,6 +68,7 @@ export const SIDEBAR_PARTS: PartTable = {
   sectionHeader: 'section-header',
   sectionLabel: 'section-label',
   sectionActions: 'section-actions',
+  headerActions: 'section-actions',
   headerActionsHidden: 'section-actions-hidden',
   treeBody: 'tree-body',
   groupSection: 'group-section',

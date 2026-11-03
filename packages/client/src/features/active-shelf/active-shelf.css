@@ -1,21 +1,19 @@
-/* ---------- 顶行那一对：铃铛 + 放大镜 ---------- */
-/* packages/client/src/features/active-shelf/active-shelf.ts 把这一对挂进宿主
-   的顶行、收起按钮之前。这里只管它们的形状：
+/* ---------- 「工作区」标题行右端那一对：铃铛 + 放大镜 ---------- */
+/* packages/client/src/features/active-shelf/active-shelf.ts 把这一对插在宿主的
+   「工作区」标题行右端、它自己的两枚分区动作之前。这里只管它们的形状：
    - 两枚同一套尺寸的安静按钮（28px 盒、16px 图标）；
    - 铃铛右上角的小圆点由它自己的 data-active-shelf-running 点亮，不写条数；
    - 日期视图开着时铃铛是按下态（读者按它换的是整个列表的排法）。 */
 
-/* 这一对的盒子：宿主的顶行是两列网格，两个直接子节点会被挤到第二行去，
-   装进一个盒子里正好占一格。 */
+/* 这一对的盒子：一行横排，和旁边宿主的按钮在同一条中线上。 */
 body[data-dsh-claude-style] .dsh-claude-active-shelf-actions {
   display: flex;
   align-items: center;
   gap: 2px;
 }
 
-/* 铃铛与放大镜共用一套尺寸。 */
-body[data-dsh-claude-style] .dsh-claude-active-shelf-trigger,
-body[data-dsh-claude-style] .dsh-claude-active-shelf-search {
+/* 铃铛的尺寸。 */
+body[data-dsh-claude-style] .dsh-claude-active-shelf-trigger {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -33,20 +31,17 @@ body[data-dsh-claude-style] .dsh-claude-active-shelf-search {
     color var(--dsh-claude-duration-feedback) var(--dsh-claude-ease-standard);
 }
 
-body[data-dsh-claude-style] .dsh-claude-active-shelf-trigger:hover,
-body[data-dsh-claude-style] .dsh-claude-active-shelf-search:hover {
+body[data-dsh-claude-style] .dsh-claude-active-shelf-trigger:hover {
   background: var(--dsw-alias-bg-base);
   color: var(--dsw-alias-label-primary);
 }
 
-body[data-dsh-claude-style] .dsh-claude-active-shelf-trigger:focus-visible,
-body[data-dsh-claude-style] .dsh-claude-active-shelf-search:focus-visible {
+body[data-dsh-claude-style] .dsh-claude-active-shelf-trigger:focus-visible {
   outline: 2px solid var(--dsw-alias-brand-primary);
   outline-offset: 1px;
 }
 
-body[data-dsh-claude-style] .dsh-claude-active-shelf-trigger-icon,
-body[data-dsh-claude-style] .dsh-claude-active-shelf-search-icon {
+body[data-dsh-claude-style] .dsh-claude-active-shelf-trigger-icon {
   display: flex;
   align-items: center;
   justify-content: center;
