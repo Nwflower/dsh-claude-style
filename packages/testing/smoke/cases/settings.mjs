@@ -113,6 +113,11 @@ export default {
         track.type === 'range' && track.min === 60 && track.max === 200 && track.step === 1 && track.value === 112 && typeof track.label === 'string' && track.label.length > 0 &&
         card.open === 'false',
       JSON.stringify(control))
+    const atDefault = settings.pageZoomAtDefault || {}
+    const defaultBox = atDefault.box || {}
+    check('the reset label stands only while the page is drawn away from the default size',
+      defaultBox.value === '100' && atDefault.reset === undefined,
+      JSON.stringify(atDefault))
     const link = settings.link || {}
     const mark = settings.mark || {}
     check('the heading carries the plugin\'s repository link, opening in a new tab with an accessible name',

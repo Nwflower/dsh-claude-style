@@ -76,6 +76,9 @@ function ZoomControl(props: {
 
   /** Where the seekbar's filled part ends, as the share of the range it covers. */
   const share = (Math.min(PAGE_ZOOM_MAX, Math.max(PAGE_ZOOM_MIN, typedPercent())) - PAGE_ZOOM_MIN) / (PAGE_ZOOM_MAX - PAGE_ZOOM_MIN)
+  // The label stands only while there is something to restore; at the default
+  // size it would write the value already stored.
+  const atDefault = props.percent === Number(PAGE_ZOOM_DEFAULT)
   return React.createElement(
     'div',
     {
@@ -86,6 +89,11 @@ function ZoomControl(props: {
         if (!control.current?.contains(event.relatedTarget as Node | null)) setOpen(false)
       },
     },
+    atDefault ? null : React.createElement('button', {
+      type: 'button',
+      className: 'dsh-claude-settings-zoom-reset',
+      onClick: props.onReset,
+    }, copy('pageZoomReset')),
     React.createElement(
       'label',
       {
@@ -117,11 +125,6 @@ function ZoomControl(props: {
       }),
       React.createElement('span', { className: 'dsh-claude-settings-zoom-unit' }, '%'),
     ),
-    React.createElement('button', {
-      type: 'button',
-      className: 'dsh-claude-settings-zoom-reset',
-      onClick: props.onReset,
-    }, copy('pageZoomReset')),
     React.createElement(
       'div',
       { className: 'dsh-claude-settings-zoom-track dsh-claude-popover-card', 'data-open': open ? 'true' : 'false' },

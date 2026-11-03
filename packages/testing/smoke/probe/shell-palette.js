@@ -520,15 +520,12 @@
         window.__pushForm({ pageZoom: 'system' })
         await sleep(120)
         r.settings.pageZoom = { zoomed: zoomed, shrunk: shrunk, following: readZoom() }
-        // The row's own control: a box that takes any percentage and the seekbar
-        // it opens, both covering the same range. Read off the rendered tree with
-        // a percentage no preset carries, so a preset would not answer for it; the
-        // two inputs are found by their type, inside the zoom row alone.
-        window.__pushForm({ pageZoom: '112' })
-        await sleep(120)
-        r.settings.pageZoomControl = (function () {
-          // The element tree itself, not the report `renderTab` walks into: the
-          // general tab stands on its own, so no state is stood in.
+        // The row's own control: one field that takes any percentage, the reset
+        // label beside it and the seekbar the field opens, both covering the same
+        // range. Read off the element tree — not the report `renderTab` walks into
+        // — with a percentage the default does not carry, so the reset label is the
+        // state under test; the same walk at the default reports no label at all.
+        var readZoomRow = function () {
           var react = window.__react
           react.rendering = true
           react.states = null
@@ -550,7 +547,13 @@
             })
           }
           return out
-        })()
+        }
+        window.__pushForm({ pageZoom: '112' })
+        await sleep(120)
+        r.settings.pageZoomControl = readZoomRow()
+        window.__pushForm({ pageZoom: '100' })
+        await sleep(120)
+        r.settings.pageZoomAtDefault = readZoomRow()
         window.__pushForm({ pageZoom: 'system' })
         await sleep(120)
         // On the Windows window the title-bar row takes input; everywhere else

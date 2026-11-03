@@ -4,21 +4,26 @@
    这里只管它窄一些、里面带一个 %，以及滑条和重置这两个控件。颜色都从 token 推出来，
    深浅两套主题都不用另写规则。 */
 
-/* 容器：输入框、重置与滑条卡片排成一行，卡片以它为定位基准。 */
+/* 容器：重置、输入框与滑条卡片排成一行，卡片以它为定位基准。整体靠行尾站，输入框
+   因此始终贴着这一行的右缘；重置在输入框左边，只在页面的缩放不是默认值时出现。 */
 body[data-dsh-claude-style] .dsh-claude-settings-zoom {
   position: relative;
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  margin-left: auto;
 }
 
-/* 输入框：借输入框的外壳，收窄到三个数字加一个 %。聚焦时外壳换成品牌色，
-   与别的输入框一致。 */
+/* 输入框：借输入框的外壳，收窄到三个数字加一个 %。外壳自带的 width/max-width 是给
+   用户名那种长输入用的，这里换成自己的宽度，免得百分比在行内被压扁。聚焦时外壳换成
+   品牌色，与别的输入框一致。 */
 body[data-dsh-claude-style] .dsh-claude-settings-zoom-field {
   display: inline-flex;
   align-items: center;
   gap: 2px;
+  flex: none;
   width: 92px;
+  max-width: none;
   padding: 6px 8px;
 }
 
@@ -46,8 +51,8 @@ body[data-dsh-claude-style] .dsh-claude-settings-zoom-unit {
   font-size: 12px;
 }
 
-/* 「恢复默认」：一个文字按钮，安静地站在输入框右边，悬停时换成品牌色。
-   按下它把缩放写回设置表里的默认值。 */
+/* 「恢复默认」：一个文字按钮，站在输入框左边，悬停时换成品牌色；页面的缩放已经是
+   默认值时它不出现。按下它把缩放写回设置表里的默认值。 */
 body[data-dsh-claude-style] .dsh-claude-settings-zoom-reset {
   flex: none;
   padding: 0;
