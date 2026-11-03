@@ -1,0 +1,87 @@
+/* 缩放行（设置 › 通用）：五个档位和数字框合成一个胶囊，读成「一组」而不是
+   六个各管各的按钮——一个淡底加一圈细描边圈住整条，档位贴在一起，一条分隔线，
+   右边是百分比输入。颜色都从 token 推出来，深浅两套主题都不用另写规则。 */
+
+/* 容器：淡底 + 内描边。浅色主题下页面是白的，白底胶囊看不出层级，
+   所以底和描边都压在 label-primary 的低透明度上。 */
+body[data-dsh-claude-style] .dsh-claude-settings-zoom {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--dsw-alias-label-primary) 5%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--dsw-alias-label-primary) 10%, transparent);
+}
+
+/* 档位：把宿主的轨道退成透明、间距归零，按钮自己收成 22px 高的胶囊。 */
+body[data-dsh-claude-style] .dsh-claude-settings-zoom .dsh-claude-segments {
+  gap: 0;
+  padding: 0;
+  background: transparent;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-zoom .dsh-claude-segment {
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 7px;
+  font-size: 12px;
+  line-height: 22px;
+}
+
+/* 选中态：换成品牌色淡底 + 品牌色字。原来的滑块是给深色轨道准备的，
+   落在白底上几乎是白的，层级读不出来。 */
+body[data-dsh-claude-style] .dsh-claude-settings-zoom .dsh-claude-segments[data-dsh-claude-pill]::before {
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--dsw-alias-brand-primary) 14%, transparent);
+  box-shadow: none;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-zoom .dsh-claude-segment[data-active] {
+  color: var(--dsw-alias-brand-primary);
+  font-weight: 600;
+}
+
+/* 数字框这一格：左边一条分隔线认在整条上，右端跟着胶囊收圆角；
+   聚焦时给这一格品牌色淡底，读完就知道这里能打字。 */
+body[data-dsh-claude-style] .dsh-claude-settings-zoom-field {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+  padding: 0 5px 0 8px;
+  border-left: 1px solid color-mix(in srgb, var(--dsw-alias-label-primary) 16%, transparent);
+  border-radius: 0 7px 7px 0;
+  background: color-mix(in srgb, var(--dsw-alias-label-primary) 4%, transparent);
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-zoom-field:focus-within {
+  background: color-mix(in srgb, var(--dsw-alias-brand-primary) 12%, transparent);
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-zoom-input {
+  width: 30px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-zoom-input:focus {
+  outline: none;
+}
+
+/* 数字框自带的上下箭头去掉：这里只按数字用。 */
+body[data-dsh-claude-style] .dsh-claude-settings-zoom-input::-webkit-outer-spin-button,
+body[data-dsh-claude-style] .dsh-claude-settings-zoom-input::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-zoom-unit {
+  padding-left: 1px;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+}

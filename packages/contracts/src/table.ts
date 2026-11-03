@@ -243,4 +243,9 @@ export const HOST_DOM: HostDomEntry[] = [
   { id: 'api.highlight', value: 'CSS.highlights', probe: { state: 'any', kind: 'global' }, use: 'the swept-text registry the token reveal needs; a browser without it gets no engine' },
   { id: 'api.highlight-constructor', value: 'Highlight', probe: { state: 'any', kind: 'global' }, use: 'the constructor that registry is built from' },
   { id: 'api.window-controls', value: 'navigator.windowControlsOverlay', probe: { state: 'any', kind: 'none' }, use: 'the desktop caption-button overlay, read to place the title bar band; a web page never has it' },
+  { id: 'session.row-key', value: dom.SESSION_ROW_KEY_ATTRIBUTE, probe: { state: 'any', kind: 'attribute' }, use: 'the key a session row carries, `session:` and the id; the order feature reads it as the row whose place in its list follows the session\u2019s phase' },
+  { id: 'session.row', value: dom.SESSION_ROW_SELECTOR, probe: { state: 'any', kind: 'selector' }, use: 'a session row of the sidebar’s lists; the feature that keeps running sessions first groups the rows by their parent element and moves them inside that one list' },
+  { id: 'session.phase', value: dom.SESSION_PHASE_ATTRIBUTE, probe: { state: 'any', kind: 'attribute' }, use: 'the phase a session row\u2019s dot carries, written inside the row rather than on it' },
+  { id: 'session.ongoing-state', value: dom.SESSION_ONGOING_STATE, probe: { state: 'any', kind: 'value' }, use: 'the phase value of a running session, the one word that stands a row at its list\u2019s head' },
+  { id: 'session.ongoing', value: dom.SESSION_ONGOING_SELECTOR, probe: { state: 'any', kind: 'selector' }, use: 'the phase dot of a running session inside its row; it is the row’s only word that the session works, and the order feature reads it to know which rows to lift' },
 ]

@@ -58,6 +58,9 @@ export interface Handles {
   settingsNav: FeatureHandle
   sodium: FeatureHandle
   surface: FeatureHandle
+  activeFirst: FeatureHandle
+  activeShelf: FeatureHandle
+  dateGroups: FeatureHandle
 }
 
 export type HandleName = keyof Handles

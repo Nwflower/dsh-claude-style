@@ -127,9 +127,11 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="rightbar-column"] [data-dsh-
    chosen factor, below 1 included. It sits on the body because that is the box
    the host's layout fills — the viewport's size in the scaled space, the host's
    own dialogs and menus and the skin's popovers still coming out at the
-   window's edges. A factor is one rule each: `zoom` cannot read the number out
-   of the attribute. "Follow the system" writes no attribute, so the page keeps
-   the size the system and the host give it. The skin's geometry reads the
+   window's edges. The factor itself rides a custom property
+   (--dsh-claude-page-zoom-factor, written by core/prefs.ts), so any percentage
+   the settings slider lands on is one rule. At 100% the mirror writes no
+   attribute and no property, so the page keeps the size the system and the host
+   give it. The skin's geometry reads the
    factor back through shared/page-zoom.ts: it measures the viewport's pixels
    while these rules scale the space a `left` or a `top` is read in.
 
@@ -141,20 +143,8 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="rightbar-column"] [data-dsh-
    window with an empty band under the shell; the body at the window's size
    keeps the shell at the window's edge, and every part of it scrolls inside
    its own box. */
-body[data-dsh-claude-style][data-dsh-claude-page-zoom="0.8"] {
-  zoom: 0.8;
-}
-
-body[data-dsh-claude-style][data-dsh-claude-page-zoom="1"] {
-  zoom: 1;
-}
-
-body[data-dsh-claude-style][data-dsh-claude-page-zoom="1.25"] {
-  zoom: 1.25;
-}
-
-body[data-dsh-claude-style][data-dsh-claude-page-zoom="1.5"] {
-  zoom: 1.5;
+body[data-dsh-claude-style][data-dsh-claude-page-zoom] {
+  zoom: var(--dsh-claude-page-zoom-factor, 1);
 }
 
 body[data-dsh-claude-style][data-dsh-claude-page-zoom]:not([data-dsh-claude-page-zoom="1"]) {

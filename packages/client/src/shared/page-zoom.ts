@@ -39,3 +39,22 @@ export function pageViewport() {
   const factor = pageZoomFactor()
   return { width: window.innerWidth / factor, height: window.innerHeight / factor }
 }
+
+/** 设置里存的百分比 → 页面倍率；认不出来就 1（跟系统一样大）。 */
+export function pageZoomOf(stored: string) {
+  const percent = Number.parseFloat(stored)
+  if (!Number.isFinite(percent) || percent <= 0) return 1
+  const factor = Math.round(percent) / 100
+  return factor >= 0.3 && factor <= 3 ? factor : 1
+}
+
+/** 倍率写成两处共用的字符串：1.1 这样，不留 0.30000000000000004 的尾巴。 */
+export function pageZoomText(factor: number) {
+  return String(Math.round(factor * 100) / 100)
+}
+
+/** 设置里存的百分比，落在滑条的范围内。 */
+export function pageZoomPercent(stored: string) {
+  const percent = Math.round(pageZoomOf(stored) * 100)
+  return Math.min(200, Math.max(60, Number.isFinite(percent) ? percent : 100))
+}

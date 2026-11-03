@@ -22,10 +22,16 @@ const SESSION_ROW_ACTION_SLOT = 'sidebar.workspaces.session.row.action'
 /** The reader's 进行中 grouping, outliving a reload spent in 已归档. */
 const GROUP_BY_STORAGE = 'dsh-claude-style.workspaceGroupBy'
 
-/** The grouping the reader last had in 进行中: the store's default until this browser records one. */
+/**
+ * The grouping the reader last had in 进行中: the store's default until this browser records one.
+ *
+ * 扁平不算读者选过的分组：宿主的界面上没有这一档，只有日期视图写进来过。读到它
+ * 就当没有记录 —— 否则早先那次「日期视图把扁平留在存储里」会被当成读者的选择，
+ * 从此每次打开都是一条没有工作区分组的列表。
+ */
 function storedGroupBy(): HostSessionGroupBy {
   const stored = localStorage.getItem(GROUP_BY_STORAGE)
-  return stored === 'workspace-tree' || stored === 'flat' ? stored : 'workspace'
+  return stored === 'workspace-tree' ? stored : 'workspace'
 }
 
 function storeGroupBy(group: HostSessionGroupBy) {
@@ -179,6 +185,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   function reconcile() {
     const followed = store
     if (followed === null || disposed) return
+    // 日期视图开着的时候，分组由 date-groups 那一半管（它把宿主切成扁平再按日期排）；
+    // 这里若照常跟随，就会把那个扁平当成读者「进行中」的分组记下来 —— 铃铛一按，
+    // 读者原本的工作区分组就被抹掉了，关掉应用也回不来。
+    if (document.body.hasAttribute('data-dsh-claude-date-groups')) return
     const snapshot = followed.getSnapshot()
     const filter = filterOf(snapshot)
     const group = groupOf(snapshot)
@@ -187,6 +197,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (filter === 'default') {
       setView('active')
       if (previous === 'only' || previous === 'show') {
+        if (group !== activeGroupBy) followed.actions.setGroupBy(activeGroupBy)
+      } else if (group === 'flat') {
+        // 扁平不是读者能选的分组（宿主的界面上没有这一档），只可能是日期视图写的：
+        // 还回读者原来的分组，不要把它记成读者的选择。
         if (group !== activeGroupBy) followed.actions.setGroupBy(activeGroupBy)
       } else if (group !== activeGroupBy) {
         rememberGroup(group)

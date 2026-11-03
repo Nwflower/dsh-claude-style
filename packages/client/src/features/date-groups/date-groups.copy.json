@@ -1,0 +1,14 @@
+{
+  "groupsTitle": { "zh": "会话按日期排列", "en": "Group sessions by date" },
+  "groupsDesc": { "zh": "侧栏的会话按日期分成今天、昨天、星期几，最近的排在最上面，每行右手标出它属于哪个工作区；行里不再重复显示时间。关掉后回到按工作区分组。", "en": "Sorts the sidebar's sessions into Today, Yesterday and weekday groups, newest first, each row tagged with its workspace; the row's own time goes away. Turning this off returns to grouping by workspace." },
+  "today": { "zh": "今天", "en": "Today" },
+  "yesterday": { "zh": "昨天", "en": "Yesterday" },
+  "earlier": { "zh": "更早", "en": "Earlier" },
+  "weekday0": { "zh": "星期日", "en": "Sunday" },
+  "weekday1": { "zh": "星期一", "en": "Monday" },
+  "weekday2": { "zh": "星期二", "en": "Tuesday" },
+  "weekday3": { "zh": "星期三", "en": "Wednesday" },
+  "weekday4": { "zh": "星期四", "en": "Thursday" },
+  "weekday5": { "zh": "星期五", "en": "Friday" },
+  "weekday6": { "zh": "星期六", "en": "Saturday" }
+}

@@ -1,0 +1,8 @@
+{
+  "group": "improvements",
+  "order": 26,
+  "at": "2026-11-02",
+  "external": false,
+  "zh": "页面缩放可以在固定档位之外直接输入 60 到 200 的任意百分比，旧设置里的固定档位自动换算过来",
+  "en": "Page zoom accepts any percentage from 60 to 200 beside the preset steps, and the fixed steps stored by an earlier version are converted as they are read"
+}

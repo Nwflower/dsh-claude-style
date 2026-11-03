@@ -9,26 +9,15 @@
  * @features row-skip
  * @risk A row the reader scrolls toward stands at an estimated height and takes its real one under him, and the conversation jumps by the difference while he scrolls.
  */
-import { afterEach, expect, test } from 'vitest'
+import { expect, test } from 'vitest'
 import { CONVERSATION_SCROLL_SELECTOR, FLOW_KIND_ATTRIBUTE, ASSISTANT_STEP_KIND } from '@dsh-claude-style/contracts/dom'
 import { installRowSkip } from '@dsh-claude-style/client/pure'
+import { cleanupWith, frames } from '../../fixtures/teardown'
 import { attach } from '../../fixtures/host-markup'
 import { surfaceAttribute } from '../../fixtures/surface'
 
 const LAID_OUT = surfaceAttribute('row-skip.laid-out')
 
-/** Every teardown a case registered. */
-const cleanups: (() => void)[] = []
-
-afterEach(() => {
-  for (const cleanup of cleanups.splice(0)) cleanup()
-  document.body.replaceChildren()
-})
-
-/** Wait for the browser to run `count` frames. */
-async function frames(count: number) {
-  for (let at = 0; at < count; at += 1) await new Promise(resolve => requestAnimationFrame(resolve))
-}
 
 /** The host's conversation scroller, at a width, holding `count` rows. */
 function conversation(count: number, width = 600) {
@@ -46,7 +35,7 @@ function conversation(count: number, width = 600) {
 
 function installed() {
   const stop = installRowSkip()
-  cleanups.push(stop)
+  cleanupWith(stop)
   return stop
 }
 

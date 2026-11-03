@@ -518,3 +518,23 @@ export const DS_BOT_ACCOUNT_MENU_SELECTOR = '.bt-account-menu'
 export const DS_BOT_AGENT_ITEM_SELECTOR = '.bt-account-menu > .bt-menu-sep:last-of-type ~ [role="menuitem"]'
 /** The top row of ds-bot's own sidebar: its brand, search and new buttons. */
 export const DS_BOT_SIDEBAR_TOP_SELECTOR = '.bt-side-top'
+
+/* ---------- the sidebar's session rows ---------- */
+/**
+ * One session row of any list the sidebar draws: the host keys a row
+ * `session:<id>`, and the key is what tells a session row from the New Session
+ * placeholder, from a workspace's own row and from a search result. The list a
+ * row stands in is its parent element, whichever group the reader folded it
+ * into.
+ */
+export const SESSION_ROW_KEY_ATTRIBUTE = 'data-row-key'
+export const SESSION_ROW_SELECTOR = '[data-row-key^="session:"]'
+/**
+ * The phase dot a row draws for its session: the host marks the running phase
+ * `ongoing` and uses the same attribute for every other phase it names, so this
+ * is the row's only word that its session is working. The dot is drawn inside
+ * the row, which is why the row's own attributes cannot answer for it.
+ */
+export const SESSION_PHASE_ATTRIBUTE = 'data-state'
+export const SESSION_ONGOING_STATE = 'ongoing'
+export const SESSION_ONGOING_SELECTOR = '[data-state="ongoing"]'

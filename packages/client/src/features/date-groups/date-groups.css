@@ -1,0 +1,68 @@
+/*
+ * 按日期排列的会话列表（features/date-groups/date-groups.ts）。
+ *
+ * 段落标题是我们自己插的节点，样式也归我们：Codex 用灰色小字，上面留一段
+ * 距离把上一段断开，下面紧贴当天的第一行。行里的时间由宿主画，日期已经在
+ * 段落标题上，这一条把它收起来，右侧换成工作区标签。
+ *
+ * 每条规则都压在这一页的皮肤标记之下（body[data-dsh-claude-style]）：
+ * 主题的样式表是整份拼进 bundle 的，没有标记的一页不该看见这些形状。
+ */
+
+/* 段落标题：灰色小字，和宿主的 section-label 同一档字号。 */
+body[data-dsh-claude-style][data-dsh-claude-date-groups] .dsh-claude-date-header {
+  padding: 14px 10px 4px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  color: var(--dsw-alias-label-tertiary);
+  user-select: none;
+}
+
+/* 第一段的标题不需要上面的距离：列表自己已经和 header 拉开了。 */
+body[data-dsh-claude-style][data-dsh-claude-date-groups] .dsh-claude-date-header:first-child {
+  padding-top: 2px;
+}
+
+/* 行里的时间：日期已经在段落标题上，行内再说一遍是重复。 */
+/* 已归档那一档不按日期分，时间照旧显示（见 date-groups.ts 的 calm()）。 */
+body[data-dsh-claude-style][data-dsh-claude-date-groups]:not([data-dsh-claude-date-archived]) [data-dsh-claude-part~="session-row"] [data-dsh-claude-part~="row-time"] {
+  display: none;
+}
+
+/* 行右手的工作区标签：一行小字，太长就省略，别把标题挤没。 */
+body[data-dsh-claude-style][data-dsh-claude-date-groups] .dsh-claude-date-chip {
+  flex: none;
+  margin-left: auto;
+  max-width: 40%;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--dsw-alias-label-tertiary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 行被选中或指针停上去时，标签跟着行一起提亮一点。 */
+body[data-dsh-claude-style][data-dsh-claude-date-groups] [data-dsh-claude-part~="session-row"]:hover .dsh-claude-date-chip,
+body[data-dsh-claude-style][data-dsh-claude-date-groups] [data-dsh-claude-part~="row-selected"] .dsh-claude-date-chip {
+  color: var(--dsw-alias-label-secondary);
+}
+
+/*
+ * 悬停时行内动作区从 display:none 变成参与布局，会把标题和右手的工作区标签
+ * 一起向左挤 60px：鼠标扫过列表，每一行都跳一下，看上去像整条列表在抖。
+ * 布局上的 flex 由脚本写成行内样式（见 date-groups.ts 的 reserveActions），
+ * 这里只负责它占多宽、以及不悬停时看不见。
+ */
+body[data-dsh-claude-style][data-dsh-claude-date-groups] [data-dsh-claude-part~="session-row"] [data-dsh-claude-part~="row-actions"] {
+  flex: none;
+  justify-content: flex-end;
+  width: 60px;
+  visibility: hidden;
+}
+
+/* 指针停上去、或这一行正选中/开着菜单时，动作区才露出来。 */
+body[data-dsh-claude-style][data-dsh-claude-date-groups] [data-dsh-claude-part~="session-row"]:is(:hover, [data-dsh-claude-part~="row-selected"], [data-dsh-claude-part~="row-active"], [data-dsh-claude-part~="row-menu-open"], [aria-selected="true"], [data-selected="true"]) [data-dsh-claude-part~="row-actions"] {
+  visibility: visible;
+}
