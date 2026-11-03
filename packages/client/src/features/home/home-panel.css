@@ -90,6 +90,14 @@ body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-clau
   gap: 8px;
 }
 
+/* The host's hero options cluster — the worktree picker, and whatever else a
+   plugin hangs in `conversation.hero.options` — carries `margin-left: auto` and
+   lands on the row's far end. The context row reads left to right, so the
+   cluster takes its place beside the mode seat instead. */
+body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"] > [data-dsh-claude-part~="hero-workspace-row"] [data-dsh-claude-part~="hero-options"] {
+  margin-left: 0;
+}
+
 /* The context row's triggers wear Claude's chip: a hairline box on the canvas
    rather than a bare label. The target list is the composer card's own for these
    triggers, so the chip carries the same weight and, coming later, wins. */

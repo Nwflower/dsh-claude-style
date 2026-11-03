@@ -166,6 +166,7 @@ export const CONVERSATION_PARTS: PartTable = {
   cardWorkspaceTrigger: 'card-workspace-trigger',
   composerHero: 'composer-hero',
   heroWorkspaceRow: 'hero-workspace-row',
+  heroOptions: 'hero-options',
   headline: 'hero-headline',
   titleGroup: 'hero-title-group',
   fishHitbox: 'hero-mark',
