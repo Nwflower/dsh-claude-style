@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 73,
+  "at": "2026-11-03",
+  "external": false,
+  "zh": "修复流式输出时状态行随每段新内容落位上下跳动的问题",
+  "en": "Fix the status row bouncing as each burst of streamed content lands"
+}

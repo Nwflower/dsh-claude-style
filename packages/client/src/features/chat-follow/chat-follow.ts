@@ -1,5 +1,5 @@
 import { CHAT_FOLLOW_ATTR, FOLLOW_HOLD_ATTR, READER_HOLD_ATTR } from '../../constants'
-import { observeSize, subscribeMutations } from '@dsh-claude-style/engine/bus'
+import { observeMatches, observeSize, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { motionReduced } from '../../core/prefs'
 import { createChatProcessFollow } from './process-follow'
@@ -167,6 +167,14 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
   let heldColumn: HTMLElement | null = null
   /** Whether the size subscription's first report for the current column has been taken as its baseline. */
   let slideArmed = false
+  /**
+   * The live turn's own row, kept current by the bus (D40): the stream slide
+   * counter-slides it so it stands while the column glides. The host draws the
+   * row at the flow's end and appends a hidden interaction surface after it
+   * (0.2.2-alpha.3), so the column's last child is no longer the row itself and
+   * the bus's list is where the row is read from.
+   */
+  const runningRows = observeMatches<HTMLElement>(CHAT_RUNNING_SELECTOR)
 
   /**
    * Whether content is arriving right now: the mark the host writes while it
@@ -242,9 +250,10 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
     const duration = motionMs('--dsh-claude-duration-slide')
     const timing = { duration, easing: motionEase(GLIDE_TOKEN) }
     const columnSlide = column.animate([{ transform: `translateY(${from}px)` }, { transform: 'translateY(0px)' }], timing)
-    // The host draws the live turn's row as the flow's last row.
-    const last = column.lastElementChild
-    const pinned = last === null ? null : last.matches(CHAT_RUNNING_SELECTOR) ? last : last.querySelector(CHAT_RUNNING_SELECTOR)
+    // The live turn's row, from the bus's list and this column's own: the host's
+    // trailing interaction surface stands after the row, so the column's last
+    // child is not it.
+    const pinned = runningRows.all().find((row) => column.contains(row)) ?? null
     const rowSlide = pinned === null ? null : pinned.animate([{ transform: `translateY(${-from}px)` }, { transform: 'translateY(0px)' }], timing)
     const running = { column: columnSlide, row: rowSlide, from, duration }
     columnSlide.onfinish = () => {
@@ -494,6 +503,7 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
     stopSlideSize = null
     stopSlide()
     releaseHold()
+    runningRows.release()
     slideColumn = null
     leaveOwner()
   }
