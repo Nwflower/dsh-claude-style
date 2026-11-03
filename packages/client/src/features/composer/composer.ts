@@ -137,6 +137,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    */
   const ATTACHMENT_TILES = `${ATTACHMENT_RAIL} :is([data-dsh-claude-part~="attachment-image-item"], [data-dsh-claude-part~="attachment-thumbnail"], [data-dsh-claude-part~="attachment-item"]:has(img), [data-dsh-claude-part~="composer-card-box"]:has(img))`
   const ATTACHMENT_TILE_ATTR = 'data-dsh-claude-attachment'
+  /** The pass's mark on a card holding attachments, which the host submits without any text. */
+  const ATTACHED_ATTR = 'data-has-attachments'
   /**
    * The card's attachment nodes, as the restyle looks for them. A card the host
    * has rebuilt holds them where neither the parts walk nor a class name says
@@ -168,10 +170,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       const held = [...heldNodes.keys()].some(node => lastHolder.get(node) === card)
       const carries = active && (card.querySelector(ATTACHMENT_PRESENT) !== null || held)
       if (carries) {
-        setAttributeIfChanged(card, 'data-has-attachments', 'true')
+        setAttributeIfChanged(card, ATTACHED_ATTR, 'true')
         for (const tile of card.querySelectorAll(ATTACHMENT_TILES)) tiles.add(tile)
       } else {
-        card.removeAttribute('data-has-attachments')
+        card.removeAttribute(ATTACHED_ATTR)
       }
     }
     // The skin wrote every mark, so the sweep reads its own registry (D40)
@@ -201,6 +203,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   }
 
   const CONTROL_ATTR = 'data-dsh-claude-control'
+  /** Set on a primary button the card keeps off the page, so the one left standing takes the press (inline.css). */
+  const HIDDEN_ATTR = 'data-dsh-claude-control-hidden'
+  /** Whether the card's draft is empty, which the send button's ghost and the one standing primary button read. */
+  const DRAFT_EMPTY_ATTR = 'data-dsh-claude-draft-empty'
   /**
    * The card's primary button, as the host draws it: the trailing row's button
    * the parts walk marked as the composer's primary one.
@@ -215,22 +221,39 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    *   commands — the tools row's `+`, the one button that opens a listbox;
    *   stop / send — the trailing row's primary buttons, told apart by their
    *     glyph: stop draws a rect, the submit arrow a path (queue and steer
-   *     are the same submit button under another label);
+   *     are the same submit button under another label). A running
+   *     continuable subagent makes the row carry two of them, the host's
+   *     stop button beside the submit;
    *   access — the button the permission slot renders (host.ts).
    */
   function syncControls(cards: readonly HTMLElement[]) {
     for (const card of cards) {
       const commands = card.querySelector('[data-dsh-claude-part~="tools"] button[aria-haspopup="listbox"]')
       if (commands !== null) setAttributeIfChanged(commands, CONTROL_ATTR, 'commands')
-      for (const button of card.querySelectorAll(PRIMARY_SELECTOR)) {
-        setAttributeIfChanged(button, CONTROL_ATTR, button.querySelector('svg rect') !== null ? 'stop' : 'send')
+      const primaries = card.querySelectorAll<HTMLElement>(PRIMARY_SELECTOR)
+      let stop: HTMLElement | null = null
+      let send: HTMLElement | null = null
+      for (const button of primaries) {
+        const control = button.querySelector('svg rect') !== null ? 'stop' : 'send'
+        setAttributeIfChanged(button, CONTROL_ATTR, control)
+        if (control === 'stop') stop ??= button
+        else send ??= button
+      }
+      // Two buttons stand in one place, so the draft decides which of them the
+      // page keeps: an empty card leaves the stop, one with text or attachments
+      // the submit, which the host enables on the same condition.
+      const submitLive = !card.hasAttribute(DRAFT_EMPTY_ATTR) || card.hasAttribute(ATTACHED_ATTR)
+      const standing = stop === null || send === null
+        ? stop ?? send
+        : submitLive ? send : stop
+      for (const button of primaries) {
+        const hidden = button !== standing
+        if (hidden !== button.hasAttribute(HIDDEN_ATTR)) button.toggleAttribute(HIDDEN_ATTR, hidden)
       }
     }
     const access = findAccessTrigger()
     if (access !== null) setAttributeIfChanged(access, CONTROL_ATTR, 'access')
   }
-
-  const DRAFT_EMPTY_ATTR = 'data-dsh-claude-draft-empty'
 
   /**
    * Mark the cards whose draft is empty. The host's editor shows its
@@ -332,13 +355,16 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   /**
    * Whether a card already carries the marks the frame that paints it reads:
-   * the variant the stylesheet keys on, and the control mark on the primary
-   * button. A card with no primary button has nothing left to mark.
+   * the variant the stylesheet keys on, the control mark on each primary
+   * button, and one of those buttons left on the page. A card with no primary
+   * button has nothing left to mark.
    */
   function markedForPaint(card: HTMLElement) {
     if (!card.hasAttribute(COMPOSER_VARIANT_ATTRIBUTE)) return false
-    const primary = card.querySelector(PRIMARY_SELECTOR)
-    return primary === null || primary.hasAttribute(CONTROL_ATTR)
+    const primaries = [...card.querySelectorAll<HTMLElement>(PRIMARY_SELECTOR)]
+    if (primaries.length === 0) return true
+    if (!primaries.every(button => button.hasAttribute(CONTROL_ATTR))) return false
+    return primaries.filter(button => !button.hasAttribute(HIDDEN_ATTR)).length === 1
   }
 
   /**
@@ -462,7 +488,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     chatHidden = false
     for (const card of portraitCards) card.removeAttribute(MOBILE_PORTRAIT_ATTR)
     portraitCards.clear()
-    const marks = ['data-composer-variant', 'data-has-attachments', ATTACHMENT_TILE_ATTR, DRAFT_EMPTY_ATTR, CONTROL_ATTR]
+    const marks = ['data-composer-variant', ATTACHED_ATTR, ATTACHMENT_TILE_ATTR, DRAFT_EMPTY_ATTR, CONTROL_ATTR, HIDDEN_ATTR]
     for (const mark of marks) {
       for (const marked of document.querySelectorAll(`[${mark}]`)) marked.removeAttribute(mark)
     }
