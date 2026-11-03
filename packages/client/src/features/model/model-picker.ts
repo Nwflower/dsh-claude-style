@@ -6,8 +6,9 @@ import { ensureSeatBox, ensureSeatPart } from './seat-box'
 import type { SeatPart } from './seat-box'
 import { loadModelCopy } from './model-copy'
 import { readPrefs } from '../../core/prefs'
-import { findModelSlot } from '@dsh-claude-style/engine/host'
+import { findModelSlot, withSlots } from '@dsh-claude-style/engine/host'
 import { createModelCatalog } from './catalog'
+import { MODEL_SLOT_KEY, thirdPartyHoldsSeat } from './seat-ledger'
 import { createModelSubMenu } from './sub-menu'
 import { byModelId, createModelRows } from './rows'
 import { releaseTag } from './release-tag'
@@ -16,7 +17,7 @@ import { removeStrayNodes, pressKeepsPopoverOpen } from '../../shared/popover'
 import { releaseSwappingText, setSwappingText } from '../../shared/swapping-text'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import { COMPOSER_INPUT_SELECTOR } from '@dsh-claude-style/contracts/dom'
-import type { HostModelDirectory, HostModelGroup } from '@dsh-claude-style/contracts/services'
+import type { HostModelDirectory, HostModelGroup, HostSlotsService } from '@dsh-claude-style/contracts/services'
 import type { CloseReason, FeatureHandle } from '@dsh-claude-style/engine/scheduler'
 import type { FeatureUi } from '../../core/feature'
 import type manifest from './model-picker.manifest'
@@ -72,6 +73,20 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
   let seatBox: HTMLElement | null = null
   /** The host slot the seat lives in; the effort picker anchors there too. */
   let modelSlot: HTMLElement | null = null
+  /**
+   * The slot registry the yield decision reads, from the scope that injected
+   * it: the plugin's own context hands no registry out (D75), so the seat's
+   * ledger is read from the injected scope alone. Null while the host serves
+   * no registry — the seat then keeps the skin self-drawn.
+   */
+  let slots: HostSlotsService | null = null
+  const slotsFiber = withSlots(ctx, (served, scope) => {
+    slots = served
+    scope.effect(() => () => { slots = null }, 'dsh-claude-style: model seat registry')
+    // Rows already hidden by a winner that arrived before this scope did wait
+    // on the pass this arrival asks for.
+    ui.schedule?.()
+  })
   let modelBodySig = ''
   /**
    * The catalog half of the picker (packages/client/src/features/model/catalog.ts):
@@ -386,6 +401,16 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
       return
     }
 
+    // A third-party winner holding the model seat takes the whole seat: the
+    // skin's trigger and cards come down and the node the host renders for
+    // the winner stands unmarked and reachable (issue #218). The reasoning
+    // level's button lives in the same box, so it goes with this drop and
+    // returns on the pass the seat comes back (features/effort/effort-picker.ts).
+    if (thirdPartyHoldsSeat(slots)) {
+      dropModelControl()
+      return
+    }
+
     // The copy document is fetched on first paint of the picker rather than
     // at install, so a session that never opens it never pays for it.
     loadModelCopy()
@@ -499,6 +524,19 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     }
   }
 
+  /**
+   * The ledger's own change signal (the host's slots/changed event): a plugin
+   * registering or handing back re-renders the seat inside the conversation
+   * column, whose mutation batches skip this feature (skipOnContentOnly), so
+   * the pass that re-reads the winner rides this event. It names no key filter:
+   * slot changes are rare, and the pass the wake buys is the same one the
+   * ledger's read needs. A host without the event answers the swap's other
+   * wakes (a seat resize) a frame later instead.
+   */
+  if (typeof ctx.on === 'function') {
+    ctx.effect(() => ctx.on!('slots/changed', () => { ui.schedule?.() }), 'dsh-claude-style: model seat ledger')
+  }
+
   ui.model = {
     sync: syncModelControl,
     // The seat sits on the composer, outside the column a streaming batch
@@ -594,6 +632,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
       modelSlot = null
       seatBox = null
       cards.dispose()
+      if (slotsFiber !== null) slotsFiber.dispose()
     }
   }
 

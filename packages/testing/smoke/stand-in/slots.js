@@ -10,6 +10,11 @@
  * seats too: a settings section installed after its generation ended would
  * register there.
  *
+ * The effort case declares the composer's model seat (a single seat, so its
+ * entries carry no id): the model seat yield spec registers a third-party
+ * winner there and hands it back, the way a plugin shadows the host's own
+ * seat and later leaves it.
+ *
  * The switch cases carry the registry as well: the workspace feature reads the
  * host's view store from the `sidebar.workspaces` declaration and registers the
  * archived row's delete action in `sidebar.workspaces.session.row.action`.
@@ -33,13 +38,15 @@
     },
   } : undefined
 
-  var slotRegistry = CASE === 'studio' || CASE === 'settings' || CASE === 'chunk-late' || CASE === 'chat-files' || CASE === 'peer-chat-ux' || CASE === 'skin-center-handoff' || CASE === 'skin-center-arrival' || switchCase ? {
+  var slotRegistry = CASE === 'studio' || CASE === 'effort' || CASE === 'settings' || CASE === 'chunk-late' || CASE === 'chat-files' || CASE === 'peer-chat-ux' || CASE === 'skin-center-handoff' || CASE === 'skin-center-arrival' || switchCase ? {
     inject: function (key, callback) {
       var declared = switchCase
         ? key === 'sidebar.workspaces' || key === 'sidebar.workspaces.session.row.action'
         : CASE === 'studio'
           ? key === 'conversation.input.dock'
-          : CASE === 'chat-files'
+          : CASE === 'effort'
+            ? key === 'conversation.input.model'
+            : CASE === 'chat-files'
             ? key === 'tool.call.toolview'
             : CASE === 'skin-center-handoff' || CASE === 'skin-center-arrival'
               ? key === 'settings.section' || key === 'plugins.bundle.config'
@@ -49,6 +56,17 @@
       return declared ? callback() : function () {}
     },
     register: function (spec, component) {
+      // The host's slots/changed wake (packages/extensions/cordis-client-runner's
+      // event catalog), for the model seat alone: a registration change asks
+      // listeners for a page-wide pass, which the stand-in has no event channel
+      // for — a probe node under <body> asks the same pass, the way any read
+      // outside the conversation column does. Other keys keep the stand-in's
+      // silent answer, the way every case that never read a wake expects.
+      if (spec.name === 'conversation.input.model') {
+        var probe = document.createElement('i')
+        document.body.appendChild(probe)
+        probe.remove()
+      }
       window.__slots = window.__slots || []
       var entry = { key: spec.name, id: spec.id, seat: spec.key, priority: spec.priority, order: spec.order, component: typeof component }
       window.__slots.push(entry)
@@ -63,6 +81,11 @@
         live = false
         var at = window.__slots.indexOf(entry)
         if (at >= 0) window.__slots.splice(at, 1)
+        if (entry.key === 'conversation.input.model') {
+          var wake = document.createElement('i')
+          document.body.appendChild(wake)
+          wake.remove()
+        }
       }
     },
     // The host lists a slot's entries in render order (ui-slots' registry),
@@ -76,7 +99,30 @@
       var all = window.__slots || []
       for (var i = 0; i < all.length; i++) {
         if (all[i].key !== key) continue
-        out.push({ options: { id: all[i].id, order: all[i].order } })
+        out.push({ options: { id: all[i].id, order: all[i].order, priority: all[i].priority } })
+      }
+      return out
+    },
+    // The winners a slot renders (ui-slots' entriesOfSlot): one per occupied
+    // cell — a single seat's whole ledger is one cell, a list seat's is one
+    // per id — the lowest-priority live entry of each cell, ties keeping
+    // registration order.
+    entriesOfSlot: function (key) {
+      var all = window.__slots || []
+      var names = []
+      var byCell = {}
+      for (var i = 0; i < all.length; i++) {
+        if (all[i].key !== key) continue
+        var cell = all[i].seat !== undefined ? all[i].seat : all[i].id
+        var name = cell === undefined ? '' : String(cell)
+        if (byCell[name] === undefined) { byCell[name] = []; names.push(name) }
+        byCell[name].push(all[i])
+      }
+      var out = []
+      for (var c = 0; c < names.length; c++) {
+        var cellEntries = byCell[names[c]].slice().sort(function (a, b) { return (a.priority || 0) - (b.priority || 0) })
+        var winner = cellEntries[0]
+        out.push({ options: { id: winner.id, order: winner.order, priority: winner.priority } })
       }
       return out
     },

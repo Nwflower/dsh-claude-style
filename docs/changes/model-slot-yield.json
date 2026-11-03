@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 72,
+  "at": "2026-11-03",
+  "external": false,
+  "zh": "修复第三方模型选择器被皮肤隐藏而无法使用 Codex 速度档位的问题",
+  "en": "Fix the skin hiding third-party model selectors and their Codex speed controls"
+}

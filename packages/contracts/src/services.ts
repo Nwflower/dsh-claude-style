@@ -135,7 +135,7 @@ export interface HostSlotOptions {
 /** One registered slot entry: how it was declared, and the store it hands out. */
 interface HostSlotRegistration {
   /** A label is a string or a thunk the owner re-reads on every projection, so it follows the locale. */
-  options: { id?: string, label?: string | (() => string) }
+  options: { id?: string, label?: string | (() => string), priority?: number }
   store?: { create(): HostSlotStore }
 }
 
