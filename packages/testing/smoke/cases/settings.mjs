@@ -105,9 +105,11 @@ export default {
     const control = settings.pageZoomControl || {}
     const box = control.box || {}
     const track = control.track || {}
+    const reset = control.reset || {}
     const card = control.card || {}
-    check('the zoom row takes any percentage in a number box and carries a seekbar over the same range, closed until the box is asked for',
-      box.type === 'number' && box.min === 60 && box.max === 200 && box.step === 1 && box.value === '112' && typeof box.label === 'string' && box.label.length > 0 &&
+    check('the zoom row takes any percentage in one field, resets from the label beside it and opens a seekbar over the same range, closed until the field is asked for',
+      box.type === 'text' && box.value === '112' && box.placeholder === '100' && typeof box.label === 'string' && box.label.length > 0 &&
+        typeof reset.text === 'string' && reset.text.length > 0 &&
         track.type === 'range' && track.min === 60 && track.max === 200 && track.step === 1 && track.value === 112 && typeof track.label === 'string' && track.label.length > 0 &&
         card.open === 'false',
       JSON.stringify(control))

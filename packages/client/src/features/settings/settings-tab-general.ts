@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { AUTO_POPOVER_ACCOUNT, AUTO_POPOVER_ALL, AUTO_POPOVER_OFF, BRAND_CLAUDE, BRAND_DEEPSEEK, PAGE_ZOOM_MAX, PAGE_ZOOM_MIN, PAGE_ZOOM_SYSTEM, PALETTE_COLORING_BRAND, PALETTE_COLORING_CUSTOM, USERNAME_MAX } from '../../constants'
+import { AUTO_POPOVER_ACCOUNT, AUTO_POPOVER_ALL, AUTO_POPOVER_OFF, BRAND_CLAUDE, BRAND_DEEPSEEK, PAGE_ZOOM_DEFAULT, PAGE_ZOOM_MAX, PAGE_ZOOM_MIN, PALETTE_COLORING_BRAND, PALETTE_COLORING_CUSTOM, USERNAME_MAX } from '../../constants'
 import { COMBINE_SVGS } from 'virtual:dsh-claude-style/generated'
 import { createHostToast } from '../../shared/host-toast'
 import { pageZoomPercent } from '../../shared/page-zoom'
@@ -10,35 +10,35 @@ import type { SegmentOption, SettingsTab, SettingsView } from './settings-contro
 import { copy } from './copy'
 
 /**
- * The zoom row's control: the five presets, the percentage box and the seekbar
- * the box opens on hover or focus.
+ * The zoom row's control: a percentage field, the reset label beside it, and the
+ * seekbar the field opens on hover or focus.
  *
- * The box keeps the text typed so far, so a half-typed number survives the
- * preference echoing back; a commit writes a whole percentage and leaves the box
- * on what the row now holds, which also covers a number the range closes onto
- * one end. The seekbar writes once per gesture — the native `change`, which
+ * The field keeps the text typed so far, so a half-typed number survives the
+ * preference echoing back; a commit writes a whole percentage and leaves the
+ * field on what the row now holds, which also covers a number the range closes
+ * onto one end. The seekbar writes once per gesture — the native `change`, which
  * lands on release and after each key step — because every write is a host
  * settings save and a page-wide preference pass.
  */
 function ZoomControl(props: {
-  presets: React.ReactNode
   percent: number
   onPick: (percent: number) => void
+  onReset: () => void
 }) {
   const [text, setText] = React.useState(String(props.percent))
   const [open, setOpen] = React.useState(false)
-  const capsule = React.useRef<HTMLDivElement>(null)
+  const control = React.useRef<HTMLDivElement>(null)
   const range = React.useRef<HTMLInputElement>(null)
   React.useEffect(() => { setText(String(props.percent)) }, [props.percent])
 
-  /** Write one percentage, held to the row's range, and leave the box on what it lands on. */
+  /** Write one percentage, held to the row's range, and leave the field on what it lands on. */
   function write(percent: number) {
     const clamped = Math.min(PAGE_ZOOM_MAX, Math.max(PAGE_ZOOM_MIN, percent))
     setText(String(clamped))
     if (clamped !== props.percent) props.onPick(clamped)
   }
 
-  /** The box's text as a whole percentage; unreadable text is the preference on hand. */
+  /** The field's text as a whole percentage; unreadable text is the preference on hand. */
   function typedPercent() {
     const parsed = Number.parseInt(text, 10)
     return Number.isFinite(parsed) ? parsed : props.percent
@@ -68,9 +68,9 @@ function ZoomControl(props: {
     return () => { element.removeEventListener('change', commit) }
   }, [])
 
-  /** Close the seekbar unless the focus it serves is still inside the capsule. */
+  /** Close the seekbar unless the focus it serves is still inside the control. */
   function release() {
-    if (capsule.current?.contains(document.activeElement)) return
+    if (control.current?.contains(document.activeElement)) return
     setOpen(false)
   }
 
@@ -79,29 +79,28 @@ function ZoomControl(props: {
   return React.createElement(
     'div',
     {
-      ref: capsule,
+      ref: control,
       className: 'dsh-claude-settings-zoom',
       onPointerLeave: release,
       onBlurCapture: (event: React.FocusEvent<HTMLDivElement>) => {
-        if (!capsule.current?.contains(event.relatedTarget as Node | null)) setOpen(false)
+        if (!control.current?.contains(event.relatedTarget as Node | null)) setOpen(false)
       },
     },
-    props.presets,
     React.createElement(
       'label',
       {
-        className: 'dsh-claude-settings-zoom-field',
+        className: 'dsh-claude-settings-input dsh-claude-settings-zoom-field',
         onPointerEnter: () => setOpen(true),
         onFocus: () => setOpen(true),
       },
       React.createElement('input', {
         className: 'dsh-claude-settings-zoom-input',
-        type: 'number',
-        min: PAGE_ZOOM_MIN,
-        max: PAGE_ZOOM_MAX,
-        step: 1,
+        type: 'text',
+        inputMode: 'numeric',
+        maxLength: 4,
         value: text,
-        'aria-label': copy('pageZoomCustomLabel'),
+        placeholder: PAGE_ZOOM_DEFAULT,
+        'aria-label': copy('pageZoomPercentLabel'),
         onChange: (event: React.ChangeEvent<HTMLInputElement>) => { setText(event.target.value) },
         onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => {
           if (event.key === 'Enter') {
@@ -118,6 +117,11 @@ function ZoomControl(props: {
       }),
       React.createElement('span', { className: 'dsh-claude-settings-zoom-unit' }, '%'),
     ),
+    React.createElement('button', {
+      type: 'button',
+      className: 'dsh-claude-settings-zoom-reset',
+      onClick: props.onReset,
+    }, copy('pageZoomReset')),
     React.createElement(
       'div',
       { className: 'dsh-claude-settings-zoom-track dsh-claude-popover-card', 'data-open': open ? 'true' : 'false' },
@@ -259,19 +263,9 @@ export function createSettingsGeneralTab(): SettingsTab {
           copy('pageZoomTitle'),
           copy('pageZoomDesc'),
           React.createElement(ZoomControl, {
-            presets: controls.segment(
-              [
-                { value: PAGE_ZOOM_SYSTEM, label: copy('pageZoomSystem') },
-                { value: '80', label: copy('pageZoom08') },
-                { value: '100', label: copy('pageZoom1') },
-                { value: '125', label: copy('pageZoom125') },
-                { value: '150', label: copy('pageZoom15') },
-              ],
-              prefs.pageZoom,
-              value => { write({ pageZoom: value }) },
-            ),
             percent: pageZoomPercent(prefs.pageZoom),
             onPick: percent => { write({ pageZoom: String(percent) }) },
+            onReset: () => { write({ pageZoom: PAGE_ZOOM_DEFAULT }) },
           }),
           { experimental: true },
         ),

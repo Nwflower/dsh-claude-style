@@ -543,8 +543,9 @@
           if (zoomRow !== null) {
             walk(zoomRow.children, function (node) {
               var props = node.props || {}
-              if (props.type === 'number') out.box = { type: props.type, min: props.min, max: props.max, step: props.step, value: props.value, label: props['aria-label'] }
+              if (props.inputMode === 'numeric') out.box = { type: props.type, value: props.value, placeholder: props.placeholder, label: props['aria-label'] }
               if (props.type === 'range') out.track = { type: props.type, min: props.min, max: props.max, step: props.step, value: props.value, label: props['aria-label'] }
+              if (props.type === 'button') out.reset = { text: [].concat(props.children).join('') }
               if (props['data-open'] !== undefined) out.card = { open: props['data-open'] }
             })
           }

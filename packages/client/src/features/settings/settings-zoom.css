@@ -1,102 +1,81 @@
-/* 缩放行（设置 › 通用）：五个档位和数字框合成一个胶囊，读成「一组」而不是
-   六个各管各的按钮——一个淡底加一圈细描边圈住整条，档位贴在一起，一条分隔线，
-   右边是百分比输入。悬停或聚焦数字框时，胶囊下面张开一条可拖动的 seekbar，
-   落在共享的浮动卡片壳里（shared/popover.css）。颜色都从 token 推出来，深浅
-   两套主题都不用另写规则。 */
+/* 缩放行（设置 › 通用）：一个百分比输入框，右边一个「恢复默认」，悬停或聚焦输入框
+   时下面张开一条可拖动的 seekbar，落在共享的浮动卡片壳里（shared/popover.css）。
+   输入框与设置页其他输入用同一套外壳（settings.css 的 .dsh-claude-settings-input），
+   这里只管它窄一些、里面带一个 %，以及滑条和重置这两个控件。颜色都从 token 推出来，
+   深浅两套主题都不用另写规则。 */
 
-/* 容器：淡底 + 内描边。浅色主题下页面是白的，白底胶囊看不出层级，
-   所以底和描边都压在 label-primary 的低透明度上。它同时是 seekbar 卡片的
-   定位基准。 */
+/* 容器：输入框、重置与滑条卡片排成一行，卡片以它为定位基准。 */
 body[data-dsh-claude-style] .dsh-claude-settings-zoom {
   position: relative;
   display: inline-flex;
   align-items: center;
-  padding: 2px;
-  border-radius: 9px;
-  background: color-mix(in srgb, var(--dsw-alias-label-primary) 5%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--dsw-alias-label-primary) 10%, transparent);
+  gap: 8px;
 }
 
-/* 档位：把宿主的轨道退成透明、间距归零，按钮自己收成 22px 高的胶囊。 */
-body[data-dsh-claude-style] .dsh-claude-settings-zoom .dsh-claude-segments {
-  gap: 0;
-  padding: 0;
-  background: transparent;
-}
-
-body[data-dsh-claude-style] .dsh-claude-settings-zoom .dsh-claude-segment {
-  height: 22px;
-  padding: 0 8px;
-  border-radius: 7px;
-  font-size: 12px;
-  line-height: 22px;
-}
-
-/* 选中态：换成品牌色淡底 + 品牌色字。原来的滑块是给深色轨道准备的，
-   落在白底上几乎是白的，层级读不出来。 */
-body[data-dsh-claude-style] .dsh-claude-settings-zoom .dsh-claude-segments[data-dsh-claude-pill]::before {
-  border-radius: 7px;
-  background: color-mix(in srgb, var(--dsw-alias-brand-primary) 14%, transparent);
-  box-shadow: none;
-}
-
-body[data-dsh-claude-style] .dsh-claude-settings-zoom .dsh-claude-segment[data-active] {
-  color: var(--dsw-alias-brand-primary);
-  font-weight: 600;
-}
-
-/* 数字框这一格：左边一条分隔线认在整条上，右端跟着胶囊收圆角；
-   聚焦时给这一格品牌色淡底，读完就知道这里能打字。 */
+/* 输入框：借输入框的外壳，收窄到三个数字加一个 %。聚焦时外壳换成品牌色，
+   与别的输入框一致。 */
 body[data-dsh-claude-style] .dsh-claude-settings-zoom-field {
   display: inline-flex;
   align-items: center;
-  margin-left: 4px;
-  padding: 0 5px 0 8px;
-  border-left: 1px solid color-mix(in srgb, var(--dsw-alias-label-primary) 16%, transparent);
-  border-radius: 0 7px 7px 0;
-  background: color-mix(in srgb, var(--dsw-alias-label-primary) 4%, transparent);
+  gap: 2px;
+  width: 92px;
+  padding: 6px 8px;
 }
 
 body[data-dsh-claude-style] .dsh-claude-settings-zoom-field:focus-within {
-  background: color-mix(in srgb, var(--dsw-alias-brand-primary) 12%, transparent);
-}
-
-body[data-dsh-claude-style] .dsh-claude-settings-zoom-field:hover {
-  background: color-mix(in srgb, var(--dsw-alias-brand-primary) 10%, transparent);
+  border-color: var(--dsw-alias-brand-primary, #d97757);
 }
 
 body[data-dsh-claude-style] .dsh-claude-settings-zoom-input {
-  width: 30px;
-  padding: 0;
+  width: 100%;
+  min-width: 0;
   border: none;
   background: transparent;
-  color: var(--dsw-alias-label-primary);
+  padding: 0;
+  color: inherit;
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
+  line-height: 18px;
   font-variant-numeric: tabular-nums;
   text-align: right;
-}
-
-body[data-dsh-claude-style] .dsh-claude-settings-zoom-input:focus {
   outline: none;
 }
 
-/* 数字框自带的上下箭头去掉：这里只按数字用。 */
-body[data-dsh-claude-style] .dsh-claude-settings-zoom-input::-webkit-outer-spin-button,
-body[data-dsh-claude-style] .dsh-claude-settings-zoom-input::-webkit-inner-spin-button {
-  appearance: none;
-  margin: 0;
-}
-
 body[data-dsh-claude-style] .dsh-claude-settings-zoom-unit {
-  padding-left: 1px;
   color: var(--dsw-alias-label-tertiary);
   font-size: 12px;
 }
 
-/* seekbar：挂在胶囊下沿的浮动卡片，右端对齐数字框、宽度取整个胶囊。卡片的
-   命中区从胶囊下沿就开始（顶部的内边距放在卡片里），从数字框移到滑块上的
-   指针因此一路都在胶囊内，不会因为走过一段空处把卡片关掉。 */
+/* 「恢复默认」：一个文字按钮，安静地站在输入框右边，悬停时换成品牌色。
+   按下它把缩放写回设置表里的默认值。 */
+body[data-dsh-claude-style] .dsh-claude-settings-zoom-reset {
+  flex: none;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font: inherit;
+  font-size: 12px;
+  line-height: 18px;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-zoom-reset:hover {
+  color: var(--dsw-alias-brand-primary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-zoom-reset:focus-visible {
+  outline: 2px solid var(--dsw-alias-brand-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* seekbar：挂在整条控件下沿的浮动卡片，宽度跟着控件走。卡片的命中区从下沿就开始
+   （顶部的内边距放在卡片里），从输入框移到滑块上的指针因此一路都在控件内，不会因为
+   走过一段空处把卡片关掉。 */
 body[data-dsh-claude-style] .dsh-claude-settings-zoom-track {
   position: absolute;
   top: 100%;
@@ -145,7 +124,7 @@ body[data-dsh-claude-style] .dsh-claude-settings-zoom-range:focus {
 }
 
 /* 键盘落在这条滑块上时，光环长在滑块自己身上：整条轨道外面再套一圈框会跟
-   胶囊的描边撞在一起。 */
+   其他控件的描边撞在一起。 */
 body[data-dsh-claude-style] .dsh-claude-settings-zoom-range:focus-visible::-webkit-slider-thumb {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--dsw-alias-brand-primary) 28%, transparent);
 }
