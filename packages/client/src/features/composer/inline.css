@@ -102,11 +102,9 @@ body[data-dsh-claude-style] [data-dsh-claude-transcript] [data-composer-seat] {
 body[data-dsh-claude-style] [data-dsh-claude-part~="view-area"] {
   padding-bottom: var(--dsh-composer-fade-h, 40px);
 }
-/* The composer is a chat-view affordance. The host keeps the seat mounted on
-   every conversation tab (轨迹 / 上下文 even reserve room for it), but it
-   should only show on the chat tab — drop the whole bottom area otherwise.
-   Hiding the seat also zeroes the host's --dsh-composer-height, so the
-   trajectory ledger's bottom clearance collapses with it. */
+/* Inspection views drop the whole bottom area; chat, reader and plugin content
+   views keep it. Hiding the seat also zeroes the host's --dsh-composer-height,
+   so the trajectory ledger's bottom clearance collapses with it. */
 body[data-dsh-claude-style] [data-dsh-claude-composer-hidden] [data-composer-seat] {
   display: none !important;
 }

@@ -1,9 +1,9 @@
 import { COMPOSER_ATTR, COMPOSER_HIDDEN_ATTR, HOME_LAYOUT_STUDIO, MOBILE_PORTRAIT_ATTR, TRANSCRIPT_ATTR } from '../../constants'
-import { COMPOSER_ATTACHMENT_RAIL_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_TABS_SELECTOR, MOBILE_PORTRAIT_SELECTOR, PHASE_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
+import { COMPOSER_ATTACHMENT_RAIL_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_VIEW_CONTEXT, CONVERSATION_VIEW_STATS, CONVERSATION_VIEW_TRAJECTORY, MOBILE_PORTRAIT_SELECTOR, PHASE_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { conversationColumn } from '@dsh-claude-style/engine/chat-dom'
-import { COMPOSER_STACK, closestComposerCard, findAccessTrigger, findComposerPlaceholder, findComposerSeat, findConversationScroller, findHeroRoot, observeComposerCards, observeComposerPlaceholders } from '@dsh-claude-style/engine/host'
+import { COMPOSER_STACK, closestComposerCard, conversationSessionId, conversationViewPreference, findAccessTrigger, findComposerPlaceholder, findComposerSeat, findConversationScroller, findConversationSession, findHeroRoot, observeComposerCards, observeComposerPlaceholders } from '@dsh-claude-style/engine/host'
 import { composerRestyleRetired, readPrefs } from '../../core/prefs'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { FeatureHandle } from '@dsh-claude-style/engine/scheduler'
@@ -14,6 +14,9 @@ import { writeScroll } from '@dsh-claude-style/engine/scroll-owner'
 import { captureComposerCaret, composerComposing, focusKeepingComposerCaret } from '../../shared/composer-caret'
 import { createPlaceholderCopy } from './placeholder-copy'
 import { installWindowBlurMirror } from './selection-mirror'
+
+/** Inspection views where the host's composer seat stands down; content and plugin views keep it. */
+const COMPOSER_HIDDEN_VIEWS: ReadonlySet<string> = new Set([CONVERSATION_VIEW_TRAJECTORY, CONVERSATION_VIEW_CONTEXT, CONVERSATION_VIEW_STATS])
 
 /** What other features read off the composer's reading (ui.composer). */
 export interface ComposerHandle extends FeatureHandle {
@@ -279,20 +282,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /**
    * The two marks the conversation root carries for the composer's place.
    *
-   * The composer is chat-view-only. The host mounts the seat inside the
-   * conversation root on every tab (轨迹 / 上下文 even reserve room for
-   * it), so the skin reflects the active view on that root and CSS drops the
-   * whole bottom area unless the chat tab is selected. The mark rides the
-   * root rather than <body>, so a tab switch invalidates the conversation's
-   * subtree alone (D9).
-   *
-   * Scope: the conversation's view tablist is the one the host marks. Any
-   * other tablist in the root — the trajectory detail panel, a plugin's
-   * popover in the composer's toolbar — switches no view, and on the hero
-   * page it would be the only tablist there is. The chat view registers at
-   * order 0, so it is always the tablist's FIRST tab; reading that tab's
-   * aria-selected is locale-independent. No tab bar at all (hero / single
-   * view) means the chat surface is all there is.
+   * The host mounts the seat on every view. The saved view id is its stable
+   * identity, written before React commits the selection (D3): inspection
+   * views hide the composer, while chat, reader and other content views keep
+   * it. No usable saved value means chat. The mark rides the conversation
+   * root rather than <body>, so a view switch invalidates that subtree alone
+   * (D9).
    *
    * The second mark says the transcript is mounted. The host grants the
    * seat's pin, the bar behind the card and the view area's content-sized
@@ -305,10 +300,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    */
   function syncRootMarks() {
     const root = closestFrom(findComposerSeat(), `[${PHASE_ATTRIBUTE}]`)
-    const list = root === null ? null : root.querySelector(CONVERSATION_TABS_SELECTOR)
-    const first = list === null ? null : list.querySelector('[role="tab"]')
-    const chatActive = first === null || first.getAttribute('aria-selected') === 'true'
-    chatHidden = active && !chatActive
+    const view = conversationViewPreference(conversationSessionId(findConversationSession()))
+    chatHidden = active && view !== null && COMPOSER_HIDDEN_VIEWS.has(view)
     if (root !== hiddenRoot) {
       hiddenRoot?.removeAttribute(COMPOSER_HIDDEN_ATTR)
       hiddenRoot = root

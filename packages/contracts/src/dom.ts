@@ -288,6 +288,11 @@ export const FOLD_SKIPPED_CONTROL_SELECTOR = '[data-turn-process], [data-turn-tr
 /** The shown conversation column, and the session id it carries. */
 export const CONVERSATION_SESSION_SELECTOR = '[data-phase="active"] [data-conversation-session]'
 export const CONVERSATION_SESSION_ATTRIBUTE = 'data-conversation-session'
+/** The host's per-session store key prefix; its `view` field names the active view before React commits it. */
+export const CONVERSATION_VIEW_STORAGE_PREFIX = 'dsh.conversation.'
+export const CONVERSATION_VIEW_TRAJECTORY = 'trajectory'
+export const CONVERSATION_VIEW_CONTEXT = 'context'
+export const CONVERSATION_VIEW_STATS = 'stats'
 /** The page's own phase: `hero` before a session is chosen, `active` once one is shown. */
 export const PHASE_ATTRIBUTE = 'data-phase'
 /** The composer card and the stack of cards above it. */

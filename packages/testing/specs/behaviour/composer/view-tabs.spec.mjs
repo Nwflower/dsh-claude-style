@@ -1,30 +1,29 @@
 /**
- * The composer stands down only while the conversation shows a view other than
- * the chat, as the conversation's own view tabs say. A tablist another plugin
- * draws inside the composer — a popover in its toolbar, say — switches no view:
- * on the home page it is the only tablist there is, and selecting its second
- * tab leaves the composer where it was.
+ * The conversation's saved view id decides whether the inspection view stands
+ * the composer down. Chat, reader and other content views keep it; a tablist in
+ * an unrelated plugin still switches nothing.
  *
  * @capability composer
  * @features composer
- * @risk Picking a tab in another plugin's menu inside the composer on the home page makes the whole input area vanish, leaving only the sidebar.
+ * @risk A reader-view session loses its whole input area because the skin infers the active view from the first tab's position.
  */
 import { spec, host, surface } from '../../fixtures/behaviour.mjs'
 
 const SEAT = host('composer.seat')
 const PHASE = host('shell.phase')
-const VIEW_TABS = host('header.conversation-tabs')
+const SESSION = host('conversation.session-attribute')
+const VIEW_STORAGE = host('conversation.view-storage')
 const HIDDEN = surface.attribute('composer.chat-hidden')
+const INSPECTION_VIEWS = [
+  host('conversation.view-trajectory'),
+  host('conversation.view-context'),
+  host('conversation.view-stats'),
+]
 
-/** A tablist of two tabs, the second selected, as markup. */
 const tablist = (attribute) => `<div role="tablist"${attribute === null ? '' : ` ${attribute}=""`}>` +
   '<button type="button" role="tab" aria-selected="false">first</button>' +
   '<button type="button" role="tab" aria-selected="true">second</button></div>'
 
-/**
- * The home page's root: a phase root holding the composer's seat, with another
- * plugin's menu in it whose tablist has its second tab selected.
- */
 function mountHome(t) {
   return t.page.evaluate(([seat, phase, menu]) => {
     const root = document.createElement('div')
@@ -39,7 +38,6 @@ function mountHome(t) {
   }, [SEAT, PHASE, tablist(null)])
 }
 
-/** Whether the root is marked as showing another view, and whether the seat is drawn. */
 function readHome(t) {
   return t.page.evaluate((hidden) => {
     const { root, seat } = window.__debugHome
@@ -47,24 +45,74 @@ function readHome(t) {
   }, HIDDEN)
 }
 
+function mountConversation(t, view) {
+  return t.page.evaluate(([seat, phase, session, prefix, initial]) => {
+    const id = 'composer-view-spec'
+    localStorage.setItem(prefix + id, JSON.stringify({ view: initial }))
+    const root = document.createElement('div')
+    root.setAttribute(phase, 'active')
+    const conversation = document.createElement('div')
+    conversation.setAttribute(session, id)
+    const seatBox = document.createElement('div')
+    seatBox.setAttribute(seat.slice(1, -1), '')
+    seatBox.style.height = '40px'
+    conversation.append(seatBox)
+    root.append(conversation)
+    document.body.append(root)
+    window.__debugConversation = { root, seat: seatBox, id }
+  }, [SEAT, PHASE, SESSION, VIEW_STORAGE, view])
+}
+
+async function setView(t, view) {
+  await t.page.evaluate(([prefix, next]) => {
+    const { root, id } = window.__debugConversation
+    localStorage.setItem(prefix + id, JSON.stringify({ view: next }))
+    const marker = document.createElement('span')
+    root.append(marker)
+    marker.remove()
+  }, [VIEW_STORAGE, view])
+  await t.page.waitForTimeout(150)
+}
+
+function readConversation(t) {
+  return t.page.evaluate((hidden) => {
+    const { root, seat } = window.__debugConversation
+    return { marked: root.hasAttribute(hidden), drawn: getComputedStyle(seat).display !== 'none' }
+  }, HIDDEN)
+}
+
+function dropConversation(t) {
+  return t.page.evaluate((prefix) => {
+    const { root, id } = window.__debugConversation
+    localStorage.removeItem(prefix + id)
+    root.remove()
+    delete window.__debugConversation
+  }, VIEW_STORAGE)
+}
+
 export default spec({ page: 'composer' }, ({ test }) => {
   test('another plugin\'s tablist in the composer on the home page leaves the composer up', async (t) => {
     await mountHome(t)
-    // The composer's pass runs on the page's next change: give it a frame or two.
     await t.page.waitForTimeout(150)
     t.expectThat.equal(await readHome(t), { marked: false, drawn: true }, 'the composer stays up with the plugin\'s second tab selected')
     await t.page.evaluate(() => { window.__debugHome.root.remove(); delete window.__debugHome })
   })
 
-  test('the conversation\'s own view tabs on another view stand the composer down', async (t) => {
-    await mountHome(t)
-    await t.page.evaluate((tabs) => {
-      const header = document.createElement('header')
-      header.innerHTML = tabs
-      window.__debugHome.root.prepend(header)
-    }, tablist(VIEW_TABS.slice(1, -1)))
-    await t.page.waitForFunction((hidden) => window.__debugHome.root.hasAttribute(hidden), HIDDEN, { timeout: 8000 })
-    t.expectThat.equal(await readHome(t), { marked: true, drawn: false }, 'the composer stands down while the view tabs show another view')
-    await t.page.evaluate(() => { window.__debugHome.root.remove(); delete window.__debugHome })
+  test('chat, reader and an unknown content view keep the composer', async (t) => {
+    await mountConversation(t, 'chat')
+    for (const view of ['chat', 'reader', 'third-party']) {
+      await setView(t, view)
+      t.expectThat.equal(await readConversation(t), { marked: false, drawn: true }, `${view} keeps the composer`)
+    }
+    await dropConversation(t)
+  })
+
+  test('trajectory, context and stats stand the composer down', async (t) => {
+    await mountConversation(t, 'chat')
+    for (const view of INSPECTION_VIEWS) {
+      await setView(t, view)
+      t.expectThat.equal(await readConversation(t), { marked: true, drawn: false }, `${view} hides the composer`)
+    }
+    await dropConversation(t)
   })
 })

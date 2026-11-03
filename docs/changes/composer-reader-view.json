@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 67,
+  "at": "2026-11-03",
+  "external": false,
+  "zh": "修复阅读视图下输入区被隐藏的问题",
+  "en": "Fix the composer disappearing in the reader view"
+}
