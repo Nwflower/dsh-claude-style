@@ -16,7 +16,7 @@ import { removeStrayNodes, pressKeepsPopoverOpen } from '../../shared/popover'
 import { releaseSwappingText, setSwappingText } from '../../shared/swapping-text'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import { COMPOSER_INPUT_SELECTOR } from '@dsh-claude-style/contracts/dom'
-import type { HostModelGroup } from '@dsh-claude-style/contracts/services'
+import type { HostModelDirectory, HostModelGroup } from '@dsh-claude-style/contracts/services'
 import type { CloseReason, FeatureHandle } from '@dsh-claude-style/engine/scheduler'
 import type { FeatureUi } from '../../core/feature'
 import type manifest from './model-picker.manifest'
@@ -42,7 +42,15 @@ export interface ModelHandle extends FeatureHandle {
   teardown(): void
 }
 
-export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
+export interface ModelPickerMount {
+  slot?: HTMLElement
+  directory?: HostModelDirectory
+  popoverKey?: string
+  owner?: string
+  disabled?: boolean
+}
+
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount: ModelPickerMount = {}) {
   /**
    * The host's model seat is a click-triggered two-pane menu (Model /
    * Effort rows drilling into their own lists). The skin replaces it with
@@ -72,6 +80,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    */
   const modelCatalog = createModelCatalog({
       ctx,
+      directory: mount.directory,
       schedule() { if (ui.schedule) ui.schedule() }
   })
 
@@ -105,6 +114,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * when its card is first built.
    */
   const cards = createModelCards({
+    popoverKey: mount.popoverKey,
+    owner: mount.owner,
     onOpen() {
       const dir = modelCatalog.directory()
       // load() is async — the host itself guards with .catch(() => {}); a bare
@@ -351,14 +362,14 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * skin's trigger and popovers, drop the catalog subscription.
    */
   function dropModelControl() {
-    const allHosts = document.querySelectorAll('[data-dsh-claude-model-host]')
+    const allHosts = (modelSlot ?? document).querySelectorAll('[data-dsh-claude-model-host]')
     for (let h = 0; h < allHosts.length; h++) {
       allHosts[h].removeAttribute('data-dsh-claude-model-host')
     }
     releaseModelLabels()
-    removeStrayNodes(document, '.dsh-claude-model-seat', [])
+    removeStrayNodes(modelSlot ?? document, '.dsh-claude-model-seat', [])
     seatBox = null
-    removeStrayNodes(document, '.dsh-claude-model-btn', [])
+    removeStrayNodes(modelSlot ?? document, '.dsh-claude-model-btn', [])
     modelBtn = null
     cards.dropNodes()
     modelBodySig = ''
@@ -370,7 +381,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     // The picker's own switch tears this feature down, so the composer restyle
     // is the one way left to be off the page: it hands the host's own model
     // seat and menu back through the same sweep.
-    if (ui.composer?.isActive() !== true) {
+    if (mount.slot === undefined && ui.composer?.isActive() !== true) {
       dropModelControl()
       return
     }
@@ -380,7 +391,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     loadModelCopy()
     modelCatalog.directory()
     modelCatalog.warm()
-    const slot = findModelSlot()
+    const slot = mount.slot ?? findModelSlot()
     modelSlot = slot
     if (slot === null) return
     // Hide the host's own seat (React owns the node; re-mark on swap).
@@ -390,7 +401,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     // from null. Sweep the strays, or the seat renders twice.
     removeStrayNodes(slot, '.dsh-claude-model-seat', [seatBox])
     removeStrayNodes(slot, '.dsh-claude-model-btn', [modelBtn])
-    removeStrayNodes(document, 'body > .dsh-claude-model-popover', [cards.popover(), cards.subPopover()])
+    cards.sweep()
     // The host's own seat root, not the nodes the skin appended beside it: a
     // swap can put React's node after ours, and the effort level and the
     // context meter's ring stand in the same slot. It is hidden only while the
@@ -476,7 +487,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     // host's own label reads the badge beside the words.
     const triggerAria = copy('triggerLabel', { model: label }) + (seatTag === null ? '' : ` ${seatTag}`)
     setAttributeIfChanged(modelBtn, 'aria-label', triggerAria)
-    modelBtn.disabled = false
+    modelBtn.disabled = mount.disabled === true
 
     renderModelBody()
     if (cards.subOpen()) {

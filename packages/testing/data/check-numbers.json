@@ -813,6 +813,10 @@
         0,
         3
       ],
+      "the control registry mounts an independent model picker, rejects an unknown id and preserves the composer on teardown": [
+        1,
+        2
+      ],
       "with no API key, the signed-in account leads the first level beside the chosen provider": [
         0,
         1

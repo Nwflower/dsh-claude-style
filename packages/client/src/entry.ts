@@ -7,6 +7,8 @@ import { setHostContext } from './core/host-context'
 import { loadHdsl, loadUsername } from './shared/identity'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import { loadModelCopy } from './features/model/model-copy'
+import { installExternalControls } from './core/external-controls'
+import { mountModelPicker } from './features/model/external'
 import { adoptPrefs, adoptSettingsForm, clearPrefsAttributes, disposePrefsBinding, prefs, readPrefs, retireComposerRestyle, retireFooterTakeover, subscribePrefs } from './core/prefs'
 import { reportFeatureFailure } from '@dsh-claude-style/engine/scheduler'
 import { installScheduler } from './core/scheduler'
@@ -92,6 +94,7 @@ export function apply(ctx: HostContext) {
   let stopScale: (() => void) | null = null
   /** Stops the part-marking pass; set once the page is taken (D3). */
   let stopParts: (() => void) | null = null
+  let stopExternalControls: (() => void) | null = null
   let disposed = false
   /** Who has the page while this theme stands down; null while the theme has it (D74). */
   let owner = pageOwner()
@@ -164,6 +167,10 @@ export function apply(ctx: HostContext) {
     if (offPeerWatch !== null) {
       offPeerWatch()
       offPeerWatch = null
+    }
+    if (stopExternalControls !== null) {
+      stopExternalControls()
+      stopExternalControls = null
     }
     setHostContext(null)
     disposePrefsBinding()
@@ -390,6 +397,7 @@ export function apply(ctx: HostContext) {
   }
 
   setHostContext(ctx)
+  stopExternalControls = installExternalControls({ 'model-picker': options => mountModelPicker(ctx, options) })
   // Bind the official settings form before anything reads a preference:
   // the host serves namespaces through `ctx.configForms`. Bound once here,
   // and retried when the settings page installs.

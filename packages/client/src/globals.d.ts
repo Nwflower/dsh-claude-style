@@ -20,6 +20,7 @@ interface Window {
   readonly __DSH_BOOT__?: { entries?: unknown, release?: { version?: unknown } }
   /** ds-bot's registry, present while its browser half runs (D74 reads only its presence). */
   readonly dshBot?: unknown
+  __DSH_CLAUDE_STYLE_CONTROLS__?: import('./core/external-controls').ClaudeControlsApi
 }
 
 /** Additions this skin puts on the global scope. */

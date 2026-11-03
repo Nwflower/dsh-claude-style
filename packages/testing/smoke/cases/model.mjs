@@ -88,6 +88,13 @@ export default {
       seat.text !== null && seat.text.includes('V4.1 Flash') && seat.text.includes('1017') &&
         seat.tagBg !== null && seat.tagBg !== 'rgba(0, 0, 0, 0)' && neutral(seat.tagBg) && neutral(seat.tagColor),
       JSON.stringify(seat))
+    const external = r.externalControls || {}
+    check('the control registry mounts an independent model picker, rejects an unknown id and preserves the composer on teardown',
+      external.available === true && external.mountedCount === 2 && external.externalPopover === true &&
+        external.unknownRejected === true && external.remainingCount === 1 && external.slotClean === true &&
+        external.externalStyle != null && external.externalStyle.display === 'flex' && external.externalStyle.height === '28px' &&
+        external.externalStyle.border === '0px' && external.externalStyle.background === 'rgba(0, 0, 0, 0)',
+      JSON.stringify(external))
   },
   'model-account'(r) {
     basicChecks(r)

@@ -17,13 +17,9 @@
       "count": 1,
       "reason": "The tier card's popover is swept when one is built."
     },
-    "packages/client/src/features/model/model-picker.ts": {
-      "count": 4,
-      "reason": "Sweeps of the picker's seat and trigger when the feature is switched off, takes the page and tears down, and the level-1 sweep the pass runs on the slot."
-    },
     "packages/client/src/features/model/model-cards.ts": {
-      "count": 1,
-      "reason": "The two cards' own sweep when they are dropped or torn down."
+      "count": 2,
+      "reason": "The two cards' instance-scoped sweep during refresh and when they are dropped or torn down."
     },
     "packages/client/src/features/account/account-footer.ts": {
       "count": 2,
@@ -90,8 +86,8 @@
       "reason": "The waiting line's own marks, swept at teardown."
     },
     "packages/client/src/features/effort/effort-picker.ts": {
-      "count": 1,
-      "reason": "The effort popover's own node, swept when the control is switched off or torn down."
+      "count": 2,
+      "reason": "The effort popover's instance-scoped node, swept when its card is built and when the control is switched off or torn down."
     },
     "packages/client/src/features/home/greeting-copy.ts": {
       "count": 1,

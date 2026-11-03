@@ -32,7 +32,7 @@ export type ModelCatalog = ReturnType<typeof createModelCatalog>
  *
  * @param options - { ctx, schedule }.
  */
-export function createModelCatalog(options: { ctx: HostContext, schedule?: () => void }) {
+export function createModelCatalog(options: { ctx: HostContext, schedule?: () => void, directory?: HostModelDirectory }) {
   const ctx = options.ctx
   const schedule = options.schedule
   let modelSub: (() => void) | null = null
@@ -65,6 +65,17 @@ export function createModelCatalog(options: { ctx: HostContext, schedule?: () =>
 
   /** Resolve the session's directory (and observe it) once per session. */
   function directory() {
+    if (options.directory !== undefined) {
+      if (modelDir === options.directory) return modelDir
+      dropSubscription()
+      modelDir = options.directory
+      modelSessionId = 'external'
+      lastGood = null
+      if (typeof modelDir.store?.subscribe === 'function') {
+        modelSub = modelDir.store.subscribe(() => { notifyProviders(); if (schedule) schedule() })
+      }
+      return modelDir
+    }
     const id = currentModelSessionId()
     if (id === null) {
       dropSubscription()

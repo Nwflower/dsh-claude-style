@@ -157,6 +157,36 @@
         tagBg: seatTag === null ? null : getComputedStyle(seatTag).backgroundColor,
         tagColor: seatTag === null ? null : getComputedStyle(seatTag).color,
       }
+
+      var controls = window['__DSH_CLAUDE_' + 'STYLE_CONTROLS__']
+      var externalSlot = document.createElement('div')
+      document.body.appendChild(externalSlot)
+      var externalStop = controls.mount('model-picker', {
+        slot: externalSlot,
+        directory: window.__dshSmokeHost.modelDirectories.directoryFor('smoke-session'),
+      })
+      await sleep(250)
+      var externalTrigger = externalSlot.querySelector('.dsh-claude-' + 'model-btn')
+      if (externalTrigger !== null) externalTrigger.click()
+      await sleep(200)
+      var mountedCount = document.querySelectorAll('.dsh-claude-' + 'model-btn').length
+      var externalPopover = document.querySelector('[data-dsh-claude-' + 'model-owner^="external-"][data-open="true"]') !== null
+      var externalStyle = externalTrigger === null ? null : getComputedStyle(externalTrigger)
+      var externalStyleValues = externalStyle === null ? null : { display: externalStyle.getPropertyValue('display'), height: externalStyle.getPropertyValue('height'), border: externalStyle.getPropertyValue('border-top-width'), background: externalStyle.getPropertyValue('background-color') }
+      var unknownRejected = false
+      try { controls.mount('not-a-control', {}) } catch (error) { unknownRejected = true }
+      externalStop()
+      externalSlot.remove()
+      await sleep(200)
+      r.externalControls = {
+        available: controls.has('model-picker'),
+        mountedCount: mountedCount,
+        externalPopover: externalPopover,
+        externalStyle: externalStyleValues,
+        unknownRejected: unknownRejected,
+        remainingCount: document.querySelectorAll('.dsh-claude-' + 'model-btn').length,
+        slotClean: externalSlot.querySelector('.dsh-claude-' + 'model-btn') === null,
+      }
     })
   })
 })()

@@ -22,7 +22,13 @@ export function createModelCards(options: {
   anchor(): HTMLElement | null
   /** The trigger the open card hands the focus back to on close. */
   trigger(): HTMLButtonElement | null
+  /** Independent registry identity for a picker mounted outside the composer. */
+  popoverKey?: string
+  owner?: string
 }) {
+  const popoverKey = options.popoverKey ?? 'model'
+  const owner = options.owner ?? 'composer'
+  const popoverSelector = `.dsh-claude-model-popover[data-dsh-claude-model-owner="${owner}"]`
   let modelPop: HTMLElement | null = null
   let modelSubPop: HTMLElement | null = null
   let modelBody: HTMLElement | null = null
@@ -124,7 +130,7 @@ export function createModelCards(options: {
   // entry for BOTH levels, so opening the More-models card never folds the
   // card that carries it.
   const modelHoverIntent = createHoverIntent(openModelPopover, closeModelIfAway, POPOVER_OPEN_DELAY, MODEL_CLOSE_DELAY)
-  registerPopover('model', closeModelPopovers)
+  registerPopover(popoverKey, closeModelPopovers)
 
   function closeModelPopovers() {
     cancelCloseModel()
@@ -138,7 +144,7 @@ export function createModelCards(options: {
     // One card at a time: the second level is this same choice and stays,
     // every other popover folds (the level's card hangs from the same box, so
     // leaving it up would stack two panels over one corner).
-    closeOtherPopovers('model')
+    closeOtherPopovers(popoverKey)
     if (modelSubPop) setMenuPopoverOpen(modelSubPop, false)
     // A card opening repaints from scratch: its countdowns were drawn at
     // whatever minute it was last on screen, and a closed card is not part of
@@ -208,6 +214,7 @@ export function createModelCards(options: {
       rebuilt = true
       modelPop = document.createElement('div')
       modelPop.className = 'dsh-claude-popover-card dsh-claude-model-popover'
+      modelPop.setAttribute('data-dsh-claude-model-owner', owner)
       setMenuPopoverOpen(modelPop, false)
       modelBody = document.createElement('div')
       modelBody.className = 'dsh-claude-popover-body'
@@ -246,6 +253,7 @@ export function createModelCards(options: {
       rebuilt = true
       modelSubPop = document.createElement('div')
       modelSubPop.className = 'dsh-claude-popover-card dsh-claude-model-popover dsh-claude-model-popover-sub'
+      modelSubPop.setAttribute('data-dsh-claude-model-owner', owner)
       setMenuPopoverOpen(modelSubPop, false)
       modelSub = options.createSub()
       // The field is pinned above the list: the reader sees what they typed
@@ -292,9 +300,10 @@ export function createModelCards(options: {
     closeAll: closeModelPopovers,
     position: positionModelPopovers,
     ensureChrome: ensureModelChrome,
+    sweep() { removeStrayNodes(document, popoverSelector, [modelPop, modelSubPop]) },
     /** Take both cards out of the document and forget their nodes; the seat is the pass's to sweep. */
     dropNodes() {
-      removeStrayNodes(document, '.dsh-claude-model-popover', [])
+      removeStrayNodes(document, popoverSelector, [])
       modelPop = null
       modelSubPop = null
       modelBody = null
@@ -306,7 +315,7 @@ export function createModelCards(options: {
     /** Leave the shared popover registry, with no dwell left waiting to open a card. */
     dispose() {
       subIntent.cancel()
-      unregisterPopover('model')
+      unregisterPopover(popoverKey)
     },
   }
 }

@@ -37,7 +37,16 @@ import { copy } from './copy'
  *   commit call (`pickEffort()`) and `close()`.
  * @returns a teardown function.
  */
-export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
+export interface EffortPickerMount {
+  popoverKey?: string
+  owner?: string
+  disabled?: boolean
+}
+
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount: EffortPickerMount = {}) {
+  const popoverKey = mount.popoverKey ?? 'effort'
+  const owner = mount.owner ?? 'composer'
+  const popoverSelector = `.dsh-claude-effort-popover[data-dsh-claude-model-owner="${owner}"]`
   let effortBtn: HTMLButtonElement | null = null
   let effortPop: HTMLElement | null = null
   let effortSlider: ReturnType<typeof createEffortControl> | null = null
@@ -92,7 +101,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     ensureEffortChrome()
     // One card at a time: the model's text sits in the same box, so leaving its
     // card up would stack two panels over the same corner.
-    closeOtherPopovers('effort')
+    closeOtherPopovers(popoverKey)
     if (effortSlider !== null) effortSlider.update()
     // Open BEFORE placing: the placement reads the card only while it is
     // marked open, so positioning first would skip it and leave the card
@@ -142,10 +151,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * own strays the same way.
    */
   function ensureEffortChrome() {
-    removeStrayNodes(document, 'body > .dsh-claude-effort-popover', [effortPop])
+    removeStrayNodes(document, popoverSelector, [effortPop])
     if (effortPop === null || effortPop.parentElement === null) {
       effortPop = document.createElement('div')
       effortPop.className = 'dsh-claude-popover-card dsh-claude-effort-popover'
+      effortPop.setAttribute('data-dsh-claude-model-owner', owner)
       setMenuPopoverOpen(effortPop, false)
       effortPop.addEventListener('mouseenter', () => effortHoverIntent.cancel())
       effortPop.addEventListener('mouseleave', () => {
@@ -181,6 +191,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     effortBtn.type = 'button'
     effortBtn.className = 'dsh-claude-effort-btn'
     effortBtn.setAttribute('aria-haspopup', 'menu')
+    effortBtn.disabled = mount.disabled === true
     effortBtn.innerHTML = '<span class="dsh-claude-effort-btn-label"></span>'
     // Same contract as the model trigger: hover under the "All" scope,
     // click-only otherwise.
@@ -258,15 +269,15 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     // wait for the host's echo — go before the card it lives in is dropped.
     if (effortSlider !== null) effortSlider.dispose()
     if (effortBtn !== null && effortBtn.parentElement !== null) effortBtn.parentElement.removeChild(effortBtn)
-    if (effortPop !== null && effortPop.parentElement !== null) effortPop.parentElement.removeChild(effortPop)
+    removeStrayNodes(document, popoverSelector, [])
     effortBtn = null
     effortPop = null
     effortSlider = null
     sliderBox = null
-    unregisterPopover('effort')
+    unregisterPopover(popoverKey)
   }
 
-  registerPopover('effort', closeEffortPopover)
+  registerPopover(popoverKey, closeEffortPopover)
 
   ui.effort = {
     measure() {

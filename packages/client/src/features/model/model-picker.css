@@ -450,3 +450,73 @@ body[data-dsh-claude-style] .dsh-claude-model-cell-chevron {
   align-items: center;
   color: var(--dsw-alias-label-caption, #b2acad);
 }
+
+/* External seats use the same two-part control outside the composer's trailing region. */
+body[data-dsh-claude-style] [data-dsh-claude-external-control="model-picker"] {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
+  color: var(--dsw-alias-label-primary);
+  font-size: 13px;
+  font-weight: 500;
+}
+body[data-dsh-claude-style] [data-dsh-claude-external-control="model-picker"] .dsh-claude-model-seat {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 28px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0;
+  border-radius: 7px;
+  box-sizing: border-box;
+}
+body[data-dsh-claude-style] [data-dsh-claude-external-control="model-picker"] .dsh-claude-model-seat-model,
+body[data-dsh-claude-style] [data-dsh-claude-external-control="model-picker"] .dsh-claude-model-seat-effort {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  min-width: 0;
+  padding: 0;
+  border-radius: 6px;
+  box-sizing: border-box;
+  transition: background var(--dsh-claude-timing-feedback);
+}
+body[data-dsh-claude-style] [data-dsh-claude-external-control="model-picker"] .dsh-claude-model-seat-model {
+  flex: 0 1 auto;
+}
+body[data-dsh-claude-style] [data-dsh-claude-external-control="model-picker"] .dsh-claude-model-seat-effort {
+  flex: none;
+}
+body[data-dsh-claude-style] [data-dsh-claude-external-control="model-picker"] .dsh-claude-model-seat-model:hover,
+body[data-dsh-claude-style] [data-dsh-claude-external-control="model-picker"] .dsh-claude-model-seat-effort:hover {
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
+}
+body[data-dsh-claude-style] [data-dsh-claude-external-control="model-picker"] .dsh-claude-model-btn,
+body[data-dsh-claude-style] [data-dsh-claude-external-control="model-picker"] .dsh-claude-effort-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0 4px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+body[data-dsh-claude-style] [data-dsh-claude-external-control="model-picker"] .dsh-claude-model-btn-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+body[data-dsh-claude-style] [data-dsh-claude-external-control="model-picker"] .dsh-claude-model-btn > .dsh-claude-model-tag {
+  margin-left: 6px;
+}
+body[data-dsh-claude-style] [data-dsh-claude-external-control="model-picker"] button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
