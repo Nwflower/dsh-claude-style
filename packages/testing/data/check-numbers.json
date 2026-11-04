@@ -806,6 +806,9 @@
       ],
       "its frames change on its own node without waking a pass (line 67)": [
         0
+      ],
+      "her frames change on her own node without waking a pass": [
+        0
       ]
     },
     "packages/testing/smoke/cases/model.mjs": {

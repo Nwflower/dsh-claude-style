@@ -959,6 +959,27 @@ would drop rows on a downscale. Only the resting body takes the pointer. With th
 animation choice resolved to "reduced" each state holds its still frame; a click
 or a pull still plays its reaction.
 
+## Whalegirl · 鲸娘
+
+Picked in the Mascot row, the third character is Whalegirl, the pixel whale girl
+of the emoji set that came with issue #224. Her sheets, crop boxes, still frames
+and — unlike the other two — each frame's own duration are in
+`features/mascot/sheets.ts`, and she shares their state machine, so a state added
+for one is a state for her too; the four hers alone (carrying, swim, smile-hearts,
+thumbs-up) ride along without a state of their own. She is drawn on a 69×66 grid
+of logical pixels at 2px (138×132px), her shadow on logical row 60 five rows above
+the box, so the box is lifted by those 10 device pixels and two more for the shadow
+to rest on the card's top edge rather than hover above it as the body bounces up a
+row. The art is whole pixels,
+so `image-rendering: pixelated` keeps every cell square at the doubled scale, and
+her strips are one long row of frames rather than the eight-to-a-row grids the
+other two use. The strips are served from the host half and fetched the first time
+an animation plays, so the deferred mascot chunk carries none of her art. The
+anchor, the sprite's window and the strip mechanics she shares with the crab and
+Deepy are in `features/mascot/mascot-frame.css`; only the resting girl takes the
+pointer, and with the animation choice resolved to "reduced" each state holds its
+still frame.
+
 ## Implementation notes
 
 - Every rule is scoped under `body[data-dsh-claude-style]`.

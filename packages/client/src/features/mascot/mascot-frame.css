@@ -1,0 +1,63 @@
+/* ── The mascots' shared frame mechanics ─────────────────────────────────────
+   The three characters (the crab, Deepy and Whalegirl) stand in the same
+   window-over-a-strip machine. When an animation starts the player
+   (packages/client/src/features/mascot/mascot-player.ts) writes the crop box, the
+   cell size, the frames per row and the sheet address as shared
+   `--dsh-claude-mascot-*` custom properties; each character's own stylesheet
+   sets only its size, placement, pointer window and the inks it paints. A host
+   placement slot or activity service retires the reads there. */
+
+/* Hidden until the first sheet has drawn a frame: a host half that predates the
+   sheets leaves no empty box to click on. */
+body[data-dsh-claude-style] :is(.dsh-claude-crab, .dsh-claude-deepy, .dsh-claude-whalegirl):not([data-ready]) {
+  visibility: hidden;
+}
+
+/* The anchor the mascot is placed in is its containing block. */
+body[data-dsh-claude-style] :is(
+  [data-dsh-claude-crab-anchor="stack"], [data-dsh-claude-crab-anchor="panel"],
+  [data-dsh-claude-deepy-anchor="stack"], [data-dsh-claude-deepy-anchor="panel"],
+  [data-dsh-claude-whalegirl-anchor="stack"], [data-dsh-claude-whalegirl-anchor="panel"]
+) {
+  position: relative;
+}
+
+/* Deepy and Whalegirl are set in from the composer card's edge the same way:
+   their cards share the composer's side clearance, and their painted cards the
+   shared content width, 16px further in. */
+body[data-dsh-claude-style] :is(
+  [data-dsh-claude-deepy-anchor="stack"] > .dsh-claude-deepy,
+  [data-dsh-claude-whalegirl-anchor="stack"] > .dsh-claude-whalegirl
+) {
+  right: calc(max(var(--dsh-composer-side-clearance, 16px), (100% - var(--dsh-composer-card-max-width, 100%)) / 2) + 8px);
+}
+
+body[data-dsh-claude-style] :is(
+  [data-dsh-claude-deepy-anchor="panel"] > .dsh-claude-deepy,
+  [data-dsh-claude-whalegirl-anchor="panel"] > .dsh-claude-whalegirl
+) {
+  right: calc(max(var(--dsh-composer-side-clearance, 16px) + 16px, (100% - var(--dsh-chat-content-width, 100%)) / 2) + 8px);
+}
+
+/* The sprite's window: the crop box, clipping the rest of the sheet. */
+body[data-dsh-claude-style] :is(.dsh-claude-crab-sprite, .dsh-claude-deepy-sprite, .dsh-claude-whalegirl-sprite) {
+  position: absolute;
+  left: calc(var(--dsh-claude-mascot-x, 0) * 2px);
+  top: calc(var(--dsh-claude-mascot-y, 0) * 2px);
+  width: calc(var(--dsh-claude-mascot-w, 0) * 2px);
+  height: calc(var(--dsh-claude-mascot-h, 0) * 2px);
+  overflow: hidden;
+}
+
+/* The whole sheet lies on the strip and a frame is shown by translating it —
+   a transform composites, where a background-position would repaint. One cell
+   is `--dsh-claude-mascot-cell-w` wide; the strip and the background are
+   `--dsh-claude-mascot-columns` of them across. */
+body[data-dsh-claude-style] :is(.dsh-claude-crab-strip, .dsh-claude-deepy-strip, .dsh-claude-whalegirl-strip) {
+  display: block;
+  width: calc(var(--dsh-claude-mascot-cell-w, 0) * var(--dsh-claude-mascot-columns, 8) * 2px);
+  height: calc(var(--dsh-claude-mascot-strip-h, 0) * 2px);
+  background-image: var(--dsh-claude-mascot-sheet, none);
+  background-repeat: no-repeat;
+  background-size: calc(var(--dsh-claude-mascot-cell-w, 0) * var(--dsh-claude-mascot-columns, 8) * 2px) auto;
+}

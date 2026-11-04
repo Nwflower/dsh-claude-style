@@ -98,12 +98,13 @@ export const TYPEFACE_CLAUDE = 'claude'
 export const TYPEFACE_HOST = 'host'
 export const TYPEFACES = [TYPEFACE_CLAUDE, TYPEFACE_HOST] as const
 
-/** The mascot on the composer, chosen apart from the brand: follow the brand, pick one, or show none. */
+/** The mascot on the composer, chosen apart from the brand: follow the brand, pick one of the three, or show none. */
 export const MASCOT_BRAND = 'brand'
 export const MASCOT_CRAB = 'crab'
 export const MASCOT_DEEPY = 'deepy'
+export const MASCOT_WHALEGIRL = 'whalegirl'
 export const MASCOT_OFF = 'off'
-export const MASCOTS = [MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MASCOT_OFF] as const
+export const MASCOTS = [MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MASCOT_WHALEGIRL, MASCOT_OFF] as const
 /** Where the mascot stands: the home page alone, or the home page and the conversation. */
 export const MASCOT_SCOPE_HOME = 'home'
 export const MASCOT_SCOPE_ALL = 'all'

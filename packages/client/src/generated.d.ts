@@ -17,6 +17,8 @@ declare module 'virtual:dsh-claude-style/generated' {
   export const CLIENT_VERSION: string
   /** The address each of Deepy's sheets plays from, by animation name */
   export const DEEPY_SHEET_URLS: Record<string, string>
+  /** Whalegirl's sheets' addresses by animation name, served from the assets route. */
+  export const WHALE_GIRL_SHEET_URLS: Record<string, string>
   /** The crab's sheets as data URIs by animation name: its body and its ink mask. */
   export const CRAB_SHEET_URLS: Record<string, { body: string, ink: string }>
   /** The motion tokens, by token name (packages/client/src/theme/tokens.json, D9); read through shared/motion.ts. */

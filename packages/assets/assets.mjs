@@ -29,6 +29,11 @@
  * transparency around every frame: drawn at a fractional device scale, the
  * window around a frame takes in a sliver of the cell beside it.
  *
+ * Whalegirl's strips ship as the PNG the emoji set gives, routed rather than
+ * inlined even though each is small: the build forces the route (planAssets'
+ * `route` set) so the deferred mascot chunk carries none of her art and a page
+ * fetches an animation's strip the first time it plays.
+ *
  * The manifest is also the gate: a file under `packages/assets/src/` that no table or
  * token claims fails the build, so an image added for one run cannot ship
  * unused. `packages/assets/src/fonts/` stands outside that gate: buildFonts copies the
@@ -264,9 +269,10 @@ export function vectorizeSheet(image, box, scale, gutter) {
  *     their place: the file is an input of the build and does not ship.
  * @param options.sourceOnly - paths under assets/ that do not ship.
  * @param options.limit - the largest file inlined.
+ * @param options.route - paths under assets/ that are served from the route even when small.
  * @returns `{ entries, routed }`; `entries` is keyed by the path under assets/.
  */
-export function planAssets({ assetsDir, generated = new Map(), replaced = new Set(), sourceOnly = SOURCE_ONLY, limit = INLINE_LIMIT_BYTES }) {
+export function planAssets({ assetsDir, generated = new Map(), replaced = new Set(), sourceOnly = SOURCE_ONLY, limit = INLINE_LIMIT_BYTES, route = new Set() }) {
   const root = assetsDir
   const entries = new Map()
   const add = (file, bytes, text) => {
@@ -274,7 +280,7 @@ export function planAssets({ assetsDir, generated = new Map(), replaced = new Se
     const type = CONTENT_TYPES[extension]
     if (type === undefined) throw new Error(`build: packages/assets/src/${file} has no content type; add its extension to packages/assets/assets.mjs`)
     const hash = createHash('sha256').update(bytes).digest('hex').slice(0, 12)
-    const inline = bytes.byteLength <= limit
+    const inline = bytes.byteLength <= limit && !route.has(file)
     const name = hash + extension
     // An SVG is text either way: it is read as one so a lockup can be stamped
     // into the DOM, and a mark is inlined as its own text rather than base64.

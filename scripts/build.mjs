@@ -242,7 +242,7 @@ const CONSTANTS = (() => {
       brand: { attribute: BRAND_ATTR, deepseek: BRAND_DEEPSEEK },
     },
     brands: BRANDS,
-    ...pick(sheets, sheetsFile, ['CRAB_SHEETS', 'CRAB_GUTTER', 'DEEPY_SHEETS', 'DEEPY_SCALE', 'DEEPY_GUTTER']),
+    ...pick(sheets, sheetsFile, ['CRAB_SHEETS', 'CRAB_GUTTER', 'DEEPY_SHEETS', 'DEEPY_SCALE', 'DEEPY_GUTTER', 'WHALE_GIRL_SHEETS']),
     featureSheets: pick(constants, constantsFile, FEATURE_SHEET_CONSTANTS),
   }
 })()
@@ -390,7 +390,14 @@ async function main() {
   const cache = openBuildCache(CACHE_DIR)
   const deepy = vectorizeDeepySheets(cache)
   const builtSheets = new Map([...deepy.generated, ...gutterCrabSheets(cache)])
-  const plan = planAssets({ assetsDir: ASSETS, generated: builtSheets, replaced: deepy.replaced })
+  const plan = planAssets({
+    assetsDir: ASSETS,
+    generated: builtSheets,
+    replaced: deepy.replaced,
+    // Whalegirl's strips keep the deferred mascot chunk small: her art is
+    // fetched from the route when an animation is first wanted, as Deepy's is.
+    route: new Set(Object.keys(CONSTANTS.WHALE_GIRL_SHEETS).map((name) => `mascot/whalegirl/${name}.png`)),
+  })
   const claimed = new Set()
   const images = {}
   for (const file of BRAND_MARKS) {
@@ -421,6 +428,15 @@ async function main() {
     if (entry === undefined) throw new Error(`build: DEEPY_SHEETS["${name}"] has no vector; the sheets and the table disagree`)
     claimed.add(entry.file)
     deepyUrls[name] = entry.url
+  }
+  // Whalegirl's strips are small PNGs, so each rides the deferred mascot chunk
+  // as a data URI: ready the moment her animation is wanted.
+  const whaleGirlUrls = {}
+  for (const name of Object.keys(CONSTANTS.WHALE_GIRL_SHEETS)) {
+    const entry = plan.entries.get(`mascot/whalegirl/${name}.png`)
+    if (entry === undefined) throw new Error(`build: WHALE_GIRL_SHEETS["${name}"] has no sheet under packages/assets/src/mascot/whalegirl/`)
+    claimed.add(entry.file)
+    whaleGirlUrls[name] = entry.url
   }
   checkClaimed(plan, claimed)
 
@@ -457,6 +473,7 @@ async function main() {
     CLIENT_VERSION: PACKAGE.version,
     CRAB_SHEET_URLS: crab,
     DEEPY_SHEET_URLS: deepyUrls,
+    WHALE_GIRL_SHEET_URLS: whaleGirlUrls,
     // The motion tokens, by name: the browser half reads the same table the
     // generated token stylesheet carries, so a duration cannot be 200 ms in the
     // CSS and 250 ms in a Web Animations call (D9).
