@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 78,
+  "at": "2026-11-04",
+  "external": false,
+  "zh": "修复手指在对话区底部抬起后自动跟随不再恢复的问题",
+  "en": "Fix automatic following not resuming after a finger is lifted at the bottom of the conversation"
+}
