@@ -210,7 +210,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     let ancestor: HTMLElement = row
     while (ancestor !== column) {
       for (let sibling = ancestor.nextElementSibling; sibling !== null; sibling = sibling.nextElementSibling) {
-        if (sibling instanceof HTMLElement && sibling.getBoundingClientRect().height > 0) return true
+        // Visibility, rather than a layout box, answers this without forcing a
+        // layout after the host's stream write.
+        if (sibling instanceof HTMLElement && sibling.checkVisibility()) return true
       }
       const parent = ancestor.parentElement
       if (parent === null) return false
