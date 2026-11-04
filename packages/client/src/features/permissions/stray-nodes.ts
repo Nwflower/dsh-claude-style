@@ -13,18 +13,12 @@ export function createStrayScan() {
      * The containers and segment groups to adopt or sweep, and the popover a
      * previous generation left (null once the scan has settled).
      */
-    existing(container: HTMLElement | null, segments: HTMLElement | null) {
-      if (!due) {
-        return {
-          containers: container !== null && container.isConnected ? [container] : [],
-          segments: segments !== null && segments.isConnected ? [segments] : [],
-          popover: null,
-        }
-      }
+    existing() {
+      if (!due) return { containers: [], segments: [], popovers: [] }
       return {
         containers: [...document.querySelectorAll<HTMLElement>('.dsh-claude-perm-container')],
         segments: [...document.querySelectorAll<HTMLElement>(`.${SEGMENTS_CLASS}[data-composer-segments]`)],
-        popover: document.querySelector<HTMLElement>('.dsh-claude-perm-popover'),
+        popovers: [...document.querySelectorAll<HTMLElement>('.dsh-claude-perm-popover')],
       }
     },
     /** A pass adopted or swept what `existing` read: the scan is done for this install. */

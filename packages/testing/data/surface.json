@@ -90,6 +90,11 @@
     { "id": "caret.mark", "attribute": "data-dsh-claude-caret", "feature": "caret", "sees": "the field whose native caret the skin presses down while its own caret stands for it" },
     { "id": "model.sub-label", "selector": ".dsh-claude-model-group", "feature": "model", "sees": "the provider's name above its models in the second level" },
     { "id": "sessionTitle.field", "selector": ".dsh-claude-session-title", "feature": "session-title", "sees": "the field a press on the header's session title opens, standing over the words it renames with the name the session list carries" },
-    { "id": "sessionTitle.tip", "selector": ".dsh-claude-session-title-tip", "feature": "session-title", "sees": "the tip the pointer over the session title raises under the words, naming what a press on the name does" }
+    { "id": "sessionTitle.tip", "selector": ".dsh-claude-session-title-tip", "feature": "session-title", "sees": "the tip the pointer over the session title raises under the words, naming what a press on the name does" },
+    { "id": "permissions.container", "selector": ".dsh-claude-perm-container", "feature": "permissions", "sees": "one composer's Claude permission control in its host slot, holding the trigger and the tier card" },
+    { "id": "permissions.trigger", "selector": ".dsh-claude-perm-btn", "feature": "permissions", "sees": "the Claude permission trigger: the words of the tier the composer's session runs, with an icon of the same tier" },
+    { "id": "permissions.popover", "selector": ".dsh-claude-perm-popover", "feature": "permissions", "sees": "one permission control's tier card, which stays in the page and opens under its own trigger" },
+    { "id": "permissions.auto-mode", "selector": "[data-preset=\"auto-mode\"]", "feature": "permissions", "sees": "the Auto mode row inside a tier card, which writes the preset to the session that card's composer shows" },
+    { "id": "permissions.control", "attribute": "data-dsh-claude-control", "feature": "permissions", "sees": "the host control a skin feature replaces, named by that feature: the access trigger carries `access` while the permission control stands" }
   ]
 }

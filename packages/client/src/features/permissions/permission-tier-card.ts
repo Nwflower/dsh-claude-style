@@ -1,8 +1,11 @@
 import { AUTO_POPOVER_ALL } from '../../constants'
 import { readPrefs } from '../../core/prefs'
 import { buildElement, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
-import { POPOVER_CLOSE_DELAY, POPOVER_OPEN_DELAY, buildPopoverItem, closeOtherPopovers, createHoverIntent, positionAnchoredPopover, pressKeepsPopoverOpen, registerPopover, removeStrayNodes, setMenuPopoverOpen, unregisterPopover } from '../../shared/popover'
+import { POPOVER_CLOSE_DELAY, POPOVER_OPEN_DELAY, buildPopoverItem, closeOtherPopovers, createHoverIntent, positionAnchoredPopover, pressKeepsPopoverOpen, registerPopover, setMenuPopoverOpen, unregisterPopover } from '../../shared/popover'
 import type { PermissionCatalog } from './permission-catalog'
+
+/** Names one card's trigger and popover across a client reload's orphaned nodes. */
+export const PERMISSION_OWNER_ATTR = 'data-dsh-claude-perm-owner'
 
 /**
  * The permission tier card: the trigger with the running preset's name, the
@@ -11,7 +14,7 @@ import type { PermissionCatalog } from './permission-catalog'
  * (stray-nodes.ts); the words and rows come from the catalog
  * (permission-catalog.ts), and a pick is handed to the caller's path.
  */
-export function createPermissionCard(catalog: Pick<PermissionCatalog, 'restingLabel' | 'presetLabel' | 'presetDesc' | 'offeredPresets'>) {
+export function createPermissionCard(catalog: Pick<PermissionCatalog, 'restingLabel' | 'presetLabel' | 'presetDesc' | 'offeredPresets'>, popoverKey: string) {
   let permContainer: HTMLElement | null = null
   let permBtn: HTMLButtonElement | null = null
   let permLabel: HTMLElement | null = null
@@ -99,7 +102,7 @@ export function createPermissionCard(catalog: Pick<PermissionCatalog, 'restingLa
     for (let i = 0; i < wanted.length; i++) permPopover.appendChild(buildPermRow(wanted[i]))
   }
 
-  registerPopover('permission', closePermMenu)
+  registerPopover(popoverKey, closePermMenu)
 
   /** Put an open tier card back over its trigger; every other place leaves it where it was. */
   function placeOpenPermCard() {
@@ -111,6 +114,7 @@ export function createPermissionCard(catalog: Pick<PermissionCatalog, 'restingLa
   function buildPermTriggerAndPopover(onPick: (preset: string) => void) {
     permPick = onPick
     const container = buildElement('div', 'dsh-claude-perm-container')
+    container.setAttribute(PERMISSION_OWNER_ATTR, popoverKey)
 
     const btn = document.createElement('button')
     btn.type = 'button'
@@ -123,6 +127,7 @@ export function createPermissionCard(catalog: Pick<PermissionCatalog, 'restingLa
     btn.appendChild(label)
 
     const popover = buildElement('div', 'dsh-claude-popover-card dsh-claude-perm-popover')
+    popover.setAttribute(PERMISSION_OWNER_ATTR, popoverKey)
     setMenuPopoverOpen(popover, false)
 
     function openPerm() {
@@ -130,7 +135,7 @@ export function createPermissionCard(catalog: Pick<PermissionCatalog, 'restingLa
       // opens its card: the press belongs to the workspace pick under it.
       if (btn.disabled) return
       if (permHoverIntent) permHoverIntent.cancel()
-      closeOtherPopovers('permission')
+      closeOtherPopovers(popoverKey)
       positionAnchoredPopover(btn, popover, PERM_POPOVER_PLACEMENT)
       btn.setAttribute('data-open', 'true')
       btn.setAttribute('aria-expanded', 'true')
@@ -189,10 +194,6 @@ export function createPermissionCard(catalog: Pick<PermissionCatalog, 'restingLa
     }
 
     container.appendChild(btn)
-    // One popover per generation: a rebuild whose container a host
-    // re-render dropped strands the previous popover in the document, so
-    // installing this one sweeps every popover already there.
-    removeStrayNodes(document, '.dsh-claude-perm-popover', [])
     document.body.appendChild(popover)
     // The nodes are the card's own from here on: the pass reaches them through
     // container(), update() writes them, and the next pass reuses them instead
@@ -248,10 +249,14 @@ export function createPermissionCard(catalog: Pick<PermissionCatalog, 'restingLa
   return {
     /** The container the pass last built or adopted, for the stray scan. */
     container: () => permContainer,
+    /** The popover this card owns, or null before its first build or adoption. */
+    popover: () => permPopover,
     /** Build a fresh trigger and card; the caller mounts the container. */
     build: buildPermTriggerAndPopover,
     /** Adopt nodes a re-render left standing; `strayPopover` stands in while none is held. */
     adopt(adopted: HTMLElement, btn: HTMLButtonElement | null, label: HTMLElement | null, strayPopover: HTMLElement | null) {
+      adopted.setAttribute(PERMISSION_OWNER_ATTR, popoverKey)
+      if (strayPopover !== null) strayPopover.setAttribute(PERMISSION_OWNER_ATTR, popoverKey)
       permContainer = adopted
       permBtn = btn
       permLabel = label
@@ -278,7 +283,7 @@ export function createPermissionCard(catalog: Pick<PermissionCatalog, 'restingLa
     placeOpen: placeOpenPermCard,
     /** Take the listeners and the registry entry down; the node sweep is the feature's teardown's (permissions.ts). */
     dispose() {
-      unregisterPopover('permission')
+      unregisterPopover(popoverKey)
       if (permHoverIntent) permHoverIntent.cancel()
       if (permDocPointerListener) {
         document.removeEventListener('pointerdown', permDocPointerListener)

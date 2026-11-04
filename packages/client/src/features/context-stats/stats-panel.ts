@@ -1,6 +1,6 @@
-import { COMPOSER_STAT_SELECTOR, DIALOG_TRIGGER_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { COMPOSER_CARD_SELECTOR, COMPOSER_STAT_SELECTOR, DIALOG_TRIGGER_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { observeMatches } from '@dsh-claude-style/engine/bus'
-import { cacheFirstMatch, findComposerCard, findDockedContextMeter } from '@dsh-claude-style/engine/host'
+import { cacheFirstMatch, findComposerCard, findDockedContextMeter, observeComposerCards } from '@dsh-claude-style/engine/host'
 import { removeStrayNodes } from '../../shared/popover'
 import type { MatchList } from '@dsh-claude-style/engine/bus'
 
@@ -30,6 +30,9 @@ const DIALOG_ROLE_SELECTOR = '[role="dialog"]'
 
 /** The dialog registry, taken on the first read of the panel and released with the feature. */
 let dialogs: MatchList<HTMLElement> | null = null
+
+/** The composer card registry, taken on the first card read and released with the feature (D40). */
+let cards: MatchList<HTMLElement> | null = null
 
 /** The mark on the host's context meter, which every reader of it goes through. */
 export const CONTEXT_METER_ATTR = 'data-dsh-claude-context-meter'
@@ -69,6 +72,69 @@ export function meterOccupancy(meter: HTMLElement) {
 export function contextTrigger() {
   const meter = findContextMeter()
   return meter === null ? null : meter.querySelector('button')
+}
+
+/**
+ * The composer card `node` belongs to: the card holding it, or the dock line
+ * the card's own render puts after it — a meter and the line of figures stand
+ * there, outside the card, while they are still that card's own.
+ */
+export function composerCardOf(node: Element | null | undefined) {
+  if (node === null || node === undefined) return null
+  const inside = node.closest(COMPOSER_CARD_SELECTOR)
+  if (inside !== null) return inside
+  const all = cardList().all()
+  for (let i = 0; i < all.length; i += 1) {
+    const dock = all[i].nextElementSibling
+    if (dock !== null && dock.contains(node)) return all[i]
+  }
+  return null
+}
+
+/**
+ * The meter belonging to `node`'s own composer card. A page can carry more
+ * than one card — a sub-agent's docked conversation beside the main one — and
+ * the host draws a meter for each, so a node in a card (or in the dock line
+ * that card's render keeps) is answered by that card's meter rather than the
+ * document's first.
+ */
+export function contextMeterOf(node: Element | null | undefined) {
+  const card = composerCardOf(node)
+  if (card === null) return findContextMeter()
+  return findDockedContextMeter(card) ?? card.querySelector<HTMLElement>(`[${CONTEXT_METER_ATTR}]`)
+}
+
+/** The trigger inside the meter that belongs to `node`'s own card. */
+export function contextTriggerOf(node: Element | null | undefined) {
+  const meter = contextMeterOf(node)
+  return meter === null ? null : meter.querySelector('button')
+}
+
+/**
+ * Every meter on the page: one per composer card, the first match the
+ * document holds included. The statistics pass binds each of them, so a card's
+ * own meter opens its own panel.
+ */
+export function contextMeters() {
+  const meters: HTMLElement[] = []
+  const all = cardList().all()
+  for (let i = 0; i < all.length; i += 1) {
+    const meter = contextMeterOf(all[i])
+    if (meter !== null && !meters.includes(meter)) meters.push(meter)
+  }
+  const first = findContextMeter()
+  if (first !== null && !meters.includes(first)) meters.push(first)
+  return meters
+}
+
+/** The trigger of the meter whose panel is up: the anchor a panel is placed against. */
+export function expandedContextTrigger() {
+  const meters = contextMeters()
+  for (let i = 0; i < meters.length; i += 1) {
+    const trigger = meters[i].querySelector('button')
+    if (trigger !== null && trigger.getAttribute('aria-expanded') === 'true') return trigger
+  }
+  return null
 }
 
 /**
@@ -118,6 +184,18 @@ function dialogList() {
 export function releaseDialogWatch() {
   dialogs?.release()
   dialogs = null
+}
+
+/** The composer cards on the page, the list every card read goes through. */
+function cardList() {
+  cards ??= observeComposerCards()
+  return cards
+}
+
+/** Drop the composer card registry; the feature's teardown calls this. */
+export function releaseCardWatch() {
+  cards?.release()
+  cards = null
 }
 
 /**

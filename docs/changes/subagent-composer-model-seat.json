@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "at": "2026-11-04",
+  "external": false,
+  "order": 126,
+  "zh": "修复子智能体侧栏输入卡片抢走主对话模型座位的问题",
+  "en": "Fix a docked subagent composer taking the model seat from the main conversation"
+}

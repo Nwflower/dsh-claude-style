@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "at": "2026-11-04",
+  "external": false,
+  "order": 125,
+  "zh": "修复子智能体侧栏的上下文面板在主对话圆环上方打开的问题",
+  "en": "Fix a subagent sidebar's context panel opening over the main conversation's ring"
+}
