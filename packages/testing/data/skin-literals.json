@@ -41,7 +41,7 @@
     "packages/testing/smoke/probe/settle.js": 2,
     "packages/testing/smoke/probe/shell-band.js": 7,
     "packages/testing/smoke/probe/shell-context.js": 31,
-    "packages/testing/smoke/probe/shell-pages.js": 16,
+    "packages/testing/smoke/probe/shell-pages.js": 17,
     "packages/testing/smoke/probe/shell-palette.js": 30,
     "packages/testing/smoke/probe/shell-startup.js": 7,
     "packages/testing/smoke/probe/shell-studio.js": 8,

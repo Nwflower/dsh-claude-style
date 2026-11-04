@@ -254,12 +254,10 @@
       r.controls.back = controlOf('send')
     })
     await probe.onlyFor(['search'], async function () {
-      // The sidebar's brand row (ui-sidebar SidebarRoot): the standalone search
-      // button follows New session, and pressing it renders the host's
-      // Modal through a root of the skin's own. The two styles are driven through
-      // the form the settings page writes to: `standalone` (the default) draws
-      // the skin's button, and `icon` puts the host's own search button back
-      // with the click taken over.
+      // The standalone style registers a host panel-list entry and its main
+      // target; `icon` hands the entry back and leaves the host's workspace
+      // search in place. Pressing that workspace control opens the host Modal
+      // through a root of the skin's own in either style.
       var sidebarSlot = document.createElement('div')
       sidebarSlot.setAttribute('data-slot', 'sidebar')
       sidebarSlot.innerHTML = '<div class="_root_n_1"><div class="_logoRow_n_1" data-window-drag="true">' +
@@ -279,9 +277,9 @@
       document.body.appendChild(sidebarSlot)
       await sleep(150)
       var logoRow = sidebarSlot.querySelector('[data-dsh-claude-part~="logo-row"]')
-      var searchTrigger = document.querySelector('.dsh-claude-search-trigger')
+      var hostSearchButton = sidebarSlot.querySelector('[data-dsh-claude-part~="search-button"]')
       var rootsBefore = window.__roots.length
-      if (searchTrigger) searchTrigger.click()
+      if (hostSearchButton) hostSearchButton.click()
       await sleep(60)
       probe.searchRoot = window.__roots[rootsBefore]
       // One style at a time, through the form; the button and its rows are read
