@@ -290,7 +290,13 @@ body[data-dsh-claude-style] :is(code:not(pre code) > [data-dsh-claude-part~="fil
   text-decoration-color: var(--dsh-claude-link);
 }
 
-body[data-dsh-claude-style] [data-dsh-claude-part~="markdown"] :is(a:hover, a:focus-visible) {
+/* A markdown link keeps the blue it states at rest under the pointer. The generic
+   anchor hover in theme/chrome.css repaints a link with the accent ink, and that
+   stylesheet ranks after this one, so the `link-button` guard gives this selector
+   the edge over it. */
+body[data-dsh-claude-style] [data-dsh-claude-part~="markdown"] a:not([data-dsh-claude-part~="link-button"]):hover,
+body[data-dsh-claude-style] [data-dsh-claude-part~="markdown"] a:not([data-dsh-claude-part~="link-button"]):focus-visible {
+  color: var(--dsh-claude-link);
   text-decoration-color: var(--dsh-claude-link);
 }
 

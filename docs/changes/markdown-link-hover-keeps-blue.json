@@ -1,0 +1,8 @@
+{
+  "group": "improvements",
+  "order": 80,
+  "at": "2026-11-04",
+  "external": false,
+  "zh": "将 Markdown 正文链接在悬停与聚焦时保持链接蓝，不再变为强调色",
+  "en": "Keep Markdown links in the link blue under hover and focus instead of the accent ink"
+}
