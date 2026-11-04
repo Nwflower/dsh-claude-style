@@ -256,28 +256,17 @@ glyph's colour.
 
 ## Right sidebar · 右侧栏
 
-A panel docked in the right column is a card: inset from the column on every
-side, its radius from the shape scale, the skin's hairline and the host's own
-panel elevation. The frame's canvas shows through the gap, and the host's left
-border on the first dock column gives way to the hairline.
-
-The card hangs on what paints the column: a docked tab's pane or the column's own
-empty host, which the pane inside it leaves transparent. A panel pulled out of
-the sidebar becomes the host's own floating window and keeps that window's frame;
-a split column gives each pane its own card, with the drag divider left on the
-seam between them.
-
-**Right sidebar card layout** (the Sidebar tab) chooses it: on is the card above;
-off drops every rule that draws one, so the pane stands in the host's own fill,
-flush with the column on all four sides, and a split's two panes meet at the
-dock's own resting line. Every card rule is gated on
-`<body data-dsh-claude-dock-look="card">`, so off is the host's own panel look
-with nothing added.
+A panel docked in the right column keeps the host's own fill: it stands flush
+with the column on every side, the host's own border between the column and the
+page, and no skin hairline, radius or elevation. A panel pulled out of the
+sidebar becomes the host's own floating window and keeps that window's frame; a
+split column gives each pane the same flush fill, with the dock's own resting
+line on the seam between them.
 
 **The start page.** The host centers its stack of entries in a box that never
 grows, so a list taller than the pane was clipped at both ends, its first rows
-out of reach. On the card the stack scrolls: the first entry's top margin and the
-last entry's bottom margin take the free space while the stack fits, and fall to
+out of reach. The stack scrolls: the first entry's top margin and the last
+entry's bottom margin take the free space while the stack fits, and fall to
 zero once it does not, so the list starts at the top and scrolls to its end.
 
 ## Typography

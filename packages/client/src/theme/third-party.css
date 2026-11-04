@@ -33,33 +33,6 @@ body[data-dsh-claude-style] .agy-tv-pre {
   overflow-x: auto;
 }
 
-/* ---------- Third-party repair: dsh-better-sidebar's split dock ---------- */
-/* A split dock puts two panes side by side, each carried as the skin's own card
-   (theme/chrome.css). Between them the dock draws a hairline of its own — the
-   strip it also uses as the drag target — and with the two cards around it the
-   middle reads as one divider through the split. The cards stay two: each keeps
-   its own hairline, radius and elevation, and only the dock's resting line goes
-   (its hover and drag glow is a separate layer and stays, so the seam is still
-   where the split is resized). The two come in toward each other and toward the
-   column's edges, which leaves the same 6px seam between them as at the sides.
-   The columns are numbered by position and the wrapper exists only while the
-   dock is split, so column 0 is the left pane and column 1 the right one
-   whichever way round they were opened. Gated on the dock-look attribute like
-   the card itself: flush panes need no seam taken in, and the dock's own
-   resting line is the only thing left between them. */
-body[data-dsh-claude-style][data-dsh-claude-dock-look="card"] [data-dsh-claude-part~="rightbar-column"] [data-dockkit-split] > [data-dockkit-column] > [data-dockkit-pane] {
-  margin: 6px !important;
-}
-body[data-dsh-claude-style][data-dsh-claude-dock-look="card"] [data-dsh-claude-part~="rightbar-column"] [data-dockkit-split] > [data-dockkit-column="0"] > [data-dockkit-pane] {
-  margin-right: 3px !important;
-}
-body[data-dsh-claude-style][data-dsh-claude-dock-look="card"] [data-dsh-claude-part~="rightbar-column"] [data-dockkit-split] > [data-dockkit-column="1"] > [data-dockkit-pane] {
-  margin-left: 3px !important;
-}
-body[data-dsh-claude-style][data-dsh-claude-dock-look="card"] [data-dsh-claude-part~="rightbar-column"] [data-dockkit-split] > [data-dsh-claude-part~="dock-divider"]::before {
-  background: transparent !important;
-}
-
 /* ---------- Third-party repair: the cost meter's fee cards ---------- */
 /* The fee window (`dialog.cm-stat-dialog`) and the step fee popup
    (`dialog.cm-fee-dialog`) state their size in viewport units, and

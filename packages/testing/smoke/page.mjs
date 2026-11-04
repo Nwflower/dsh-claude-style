@@ -80,7 +80,6 @@ const PROBE_PARTS = [
   'chat-files.js',
   'chat-send.js',
   'chat-wait.js',
-  'dock-cards.js',
   'sidebar-layout.js',
   'model-meter.js',
   'model-account.js',
@@ -273,28 +272,6 @@ function page(name, tier, cases, probe = PROBE) {
   // question card's answer box has.
   var caretArea = name === 'caret'
     ? '<div data-composer-seat><textarea id="debugAnswer" rows="3">hello world</textarea></div>'
-    : ''
-  // The right sidebar the dock-cards case drives: the column's own empty host,
-  // one docked pane and a split of two columns, each with the host's own
-  // divider line under it. The panes carry no styling of their own, so what the
-  // case reads is what the skin's card rules add and what the flush choice
-  // leaves; the elevation token is the host's, as it is on the real page.
-  var dockArea = name === 'dock-cards'
-    ? '<style>' +
-        '._rightbarCol_r_1 { width: 320px; }' +
-        'body { --dsw-elevation-prominent: 0 0 0 .5px rgba(0, 0, 0, .16), 0 3px 8px rgba(0, 0, 0, .06); }' +
-        '._divider_r_1 { position: relative; height: 8px; }' +
-        '._divider_r_1::before { content: ""; position: absolute; inset: 0; background: rgb(0, 0, 255); }' +
-      '</style>' +
-      '<div class="_rightbarCol_r_1" data-rightbar-col>' +
-        '<div data-dockkit-empty id="debugDockEmpty">empty host</div>' +
-        '<div data-dockkit-host="dock"><div data-dockkit-pane id="debugDockPane">docked pane</div></div>' +
-        '<div data-dockkit-split>' +
-          '<div data-dockkit-column="0" data-dockkit-host="dock"><div data-dockkit-pane id="debugSplitLeft">left pane</div></div>' +
-          '<div data-dockkit-column="1" data-dockkit-host="dock"><div data-dockkit-pane id="debugSplitRight">right pane</div></div>' +
-          '<div class="_divider_r_1"></div>' +
-        '</div>' +
-      '</div>'
     : ''
   // The fold case drives the two surfaces the ported folding acts on: a thinking
   // row (opened and folded back by its own control) and process groups — one
@@ -563,7 +540,6 @@ ${hostControls}
 ${caretArea}
 ${sessionTitleArea}
 ${chatSubmit}
-${dockArea}
 ${foldArea}
 </div>
 <script>window.SMOKE_CASE = ${JSON.stringify(name)}; window.SMOKE_GROUPS = ${JSON.stringify(cases)}; window.SMOKE_TIER = ${JSON.stringify(tier)}; window.SMOKE_MARKUP = ${JSON.stringify(MARKUP)}; window.SMOKE_PNG = ${JSON.stringify(PNG_1PX)}</script>

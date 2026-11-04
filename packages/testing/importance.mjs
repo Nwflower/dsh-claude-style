@@ -85,8 +85,6 @@ const MARKS = [
   ['stats inline', 'data-dsh-claude-stats-position', 'inline'],
   ['stats context', 'data-dsh-claude-stats-position', 'context'],
   ['footer takeover', 'data-dsh-claude-footer-takeover', ''],
-  ['dock look card', 'data-dsh-claude-dock-look', 'card'],
-  ['dock look flush', 'data-dsh-claude-dock-look', 'flush'],
   ['mascot crab', 'data-dsh-claude-mascot', 'crab'],
   ['mascot deepy', 'data-dsh-claude-mascot', 'deepy'],
   ['custom brand mark', 'data-dsh-claude-custom-mark', ''],

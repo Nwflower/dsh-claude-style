@@ -1,4 +1,4 @@
-import { BAND_ANIMATION, same, check, basicChecks, commonChecks } from './_shared.mjs'
+import { BAND_ANIMATION, check, basicChecks, commonChecks } from './_shared.mjs'
 
 export default {
   'late-forms'(r) {
@@ -18,7 +18,7 @@ export default {
       general: ['brand', 'username', 'pageZoom', 'autoPopover', 'sodium'],
       appearance: ['brandLockup', 'brandInk', 'palette', 'paletteCards', 'backgroundOpacity', 'typeface', 'homeLayout', 'homeRipple', 'mascot', 'mascotScope'],
       'main-window': ['turnNav', 'conversationWidth', 'viewTabs', 'headerBand', 'processRows', 'composerScope', 'composerBottomGap', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent', 'contextDisplay', 'contextNumbers', 'statsPosition', 'statsFooterAlign', 'billingCurrency', 'billingTable'],
-      sidebar: ['collapseFooter', 'banLocale', 'sidebarSearch', 'searchStyle', 'sidebarEntries', 'workspaceView', 'dateGroups', 'sidebarPeek', 'sidebarLayout', 'dockCards'],
+      sidebar: ['collapseFooter', 'banLocale', 'sidebarSearch', 'searchStyle', 'sidebarEntries', 'workspaceView', 'dateGroups', 'sidebarPeek', 'sidebarLayout'],
       motion: ['motion', 'chatAnimations', 'chatWait', 'statusDetail', 'statusMotion', 'chatReveal', 'chatSend', 'messageEnter', 'caretMotion', 'ongoingIndicator'],
     }
     // The main window's three groups, each under its label and carrying its own
@@ -196,32 +196,6 @@ export default {
       stored.ring?.attribute === 'ring' && stored.ring?.width === '10px' && stored.ring?.animation === 'dsh-claude-ongoing-spin' &&
         stored.breathe?.attribute === 'breathe' && stored.breathe?.width === '6px' && stored.breathe?.animation === 'dsh-claude-pulse',
       JSON.stringify(stored))
-    commonChecks(r)
-  },
-  'dock-cards'(r) {
-    basicChecks(r)
-    const dock = r.dock || {}
-    const card = dock.card || {}
-    const flush = dock.flush || {}
-    const back = dock.back || {}
-    const carded = (one) => one.radius === '16px' && parseFloat(one.border) > 0 &&
-      one.overflow === 'hidden' && one.shadow !== 'none'
-    const flat = (one) => one.margin === '0px' && one.radius === '0px' &&
-      parseFloat(one.border) === 0 && one.overflow === 'visible' && one.shadow === 'none'
-    check('every docked pane floats as the skin\'s card: 8px inside the column, a hairline, a 16px radius and the host\'s elevation',
-      card.look === 'card' && card.empty.margin === '8px' && card.pane.margin === '8px' &&
-        carded(card.empty) && carded(card.pane) && carded(card.left) && carded(card.right),
-      JSON.stringify(card))
-    check('a split comes in toward the seam, and the dock\'s own resting line goes',
-      card.left.margin === '6px 3px 6px 6px' && card.right.margin === '6px 6px 6px 3px' && card.divider === 'rgba(0, 0, 0, 0)',
-      JSON.stringify({ left: card.left, right: card.right, divider: card.divider }))
-    check('switching the cards off leaves every pane in the host\'s own fill, flush with the column, split panes included',
-      flush.look === 'flush' && flat(flush.empty) && flat(flush.pane) && flat(flush.left) && flat(flush.right),
-      JSON.stringify(flush))
-    check('and the dock\'s own resting line is back between the flush panes',
-      flush.divider === 'rgb(0, 0, 255)', JSON.stringify(flush.divider))
-    check('switching them back on brings the cards back without a reload',
-      back.look === 'card' && same(back, card), JSON.stringify(back))
     commonChecks(r)
   },
   switches(r) {

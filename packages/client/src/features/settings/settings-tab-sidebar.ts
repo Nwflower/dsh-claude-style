@@ -31,15 +31,6 @@ export function createSettingsSidebarTab(): SettingsTab {
           controls.segment(layoutOptions, prefs.sidebarLayout, value => { write({ sidebarLayout: value }) }),
         ),
       },
-      {
-        rank: 60,
-        node: controls.row(
-          'dockCards',
-          copy('dockCardsTitle'),
-          copy('dockCardsDesc'),
-          controls.toggle(prefs.dockCards !== false, value => { write({ dockCards: value }) }),
-        ),
-      },
     ]
   }
   return { id: 'sidebar', label: () => copy('tabSidebar'), rows }

@@ -1546,26 +1546,6 @@
       "prop": "display",
       "verdict": "unmatched"
     },
-    "body[data-dsh-claude-style][data-dsh-claude-dock-look=card] [data-dsh-claude-part~=rightbar-column] [data-dockkit-split]>[data-dockkit-column]>[data-dockkit-pane]{margin:6px!}|margin": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-dock-look=card] [data-dsh-claude-part~=rightbar-column] [data-dockkit-split]>[data-dockkit-column]>[data-dockkit-pane]",
-      "prop": "margin",
-      "verdict": "third-party"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-dock-look=card] [data-dsh-claude-part~=rightbar-column] [data-dockkit-split]>[data-dockkit-column=\"0\"]>[data-dockkit-pane]{margin-right:3px!}|margin-right": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-dock-look=card] [data-dsh-claude-part~=rightbar-column] [data-dockkit-split]>[data-dockkit-column=\"0\"]>[data-dockkit-pane]",
-      "prop": "margin-right",
-      "verdict": "third-party"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-dock-look=card] [data-dsh-claude-part~=rightbar-column] [data-dockkit-split]>[data-dockkit-column=\"1\"]>[data-dockkit-pane]{margin-left:3px!}|margin-left": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-dock-look=card] [data-dsh-claude-part~=rightbar-column] [data-dockkit-split]>[data-dockkit-column=\"1\"]>[data-dockkit-pane]",
-      "prop": "margin-left",
-      "verdict": "third-party"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-dock-look=card] [data-dsh-claude-part~=rightbar-column] [data-dockkit-split]>[data-dsh-claude-part~=dock-divider]:before{background:transparent!}|background": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-dock-look=card] [data-dsh-claude-part~=rightbar-column] [data-dockkit-split]>[data-dsh-claude-part~=dock-divider]:before",
-      "prop": "background",
-      "verdict": "third-party"
-    },
     "body[data-dsh-claude-style] .dsh-claude-quick-popover{position:fixed!;min-width:248px!;display:flex!;flex-direction:column!;gap:6px!;transform-origin:bottom right!}|position": {
       "selector": "body[data-dsh-claude-style] .dsh-claude-quick-popover",
       "prop": "position",

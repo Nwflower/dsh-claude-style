@@ -78,8 +78,6 @@
   "paletteDesc": { "zh": "开启后界面用插件的配色。", "en": "The skin's own colours while on." },
   "typefaceTitle": { "zh": "字体", "en": "Typefaces" },
   "typefaceDesc": { "zh": "开启后用 Anthropic 的字体。", "en": "The Anthropic faces while on." },
-  "dockCardsTitle": { "zh": "右侧栏卡片布局", "en": "Right sidebar card layout" },
-  "dockCardsDesc": { "zh": "右侧栏的各个面板画成带圆角的卡片；关闭后面板贴着栏边，用宿主自己的底色。", "en": "Draws the right sidebar's panels as rounded cards; off leaves them flush with the column in the host's own fill." },
   "sidebarLayoutTitle": { "zh": "左侧栏布局", "en": "Left sidebar layout" },
   "sidebarLayoutRelaxed": { "zh": "宽松", "en": "Relaxed" },
   "sidebarLayoutCompact": { "zh": "紧凑", "en": "Compact" },

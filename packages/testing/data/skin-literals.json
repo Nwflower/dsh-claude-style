@@ -34,7 +34,6 @@
     "packages/testing/smoke/probe/chat-reveal.js": 2,
     "packages/testing/smoke/probe/chat-send.js": 13,
     "packages/testing/smoke/probe/chat-wait.js": 13,
-    "packages/testing/smoke/probe/dock-cards.js": 2,
     "packages/testing/smoke/probe/mascot.js": 7,
     "packages/testing/smoke/probe/model-meter.js": 2,
     "packages/testing/smoke/probe/peer.js": 9,

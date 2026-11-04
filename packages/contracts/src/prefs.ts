@@ -353,7 +353,6 @@ export const PREFS = {
   workspaceView: { type: 'boolean', default: true },
   /** Whether the sidebar lists its sessions by date instead of by workspace (features/date-groups). */
   dateGroups: { type: 'boolean', default: true },
-  dockCards: { type: 'boolean', default: true },
   sidebarSearch: { type: 'boolean', default: true },
   searchStyle: { type: 'choice', values: SEARCH_STYLES, default: SEARCH_STYLE_OVERLAY },
   /** Whether resting the pointer on the collapsed sidebar's toggle opens the sidebar over the page. */
