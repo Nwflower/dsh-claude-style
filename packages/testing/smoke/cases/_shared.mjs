@@ -45,11 +45,11 @@ function commonChecks(r) {
     r.topUpInk !== null && r.topUpFill !== null && r.topUpInk !== r.topUpFill &&
       contrast(r.topUpInk, r.topUpFill) >= 3,
     JSON.stringify({ ink: r.topUpInk, fill: r.topUpFill }))
-  check('the idle session seat draws the status circle through the slot outlet',
-    r.seatIdle !== null && r.seatIdle.content !== 'none' && r.seatIdle.width === '6px',
+  check('an idle session has no visible indicator or decorative circle',
+    r.seatIdle !== null && r.seatIdle.content === 'none' && r.seatIdle.visibility === 'hidden' && r.seatIdle.svgs === 0,
     JSON.stringify(r.seatIdle))
   check('a seat carrying the running status dot draws no circle',
-    r.seatRunning !== null && r.seatRunning.content === 'none' && r.seatRunning.svgs > 0,
+    r.seatRunning !== null && r.seatRunning.content === 'none' && r.seatRunning.visibility === 'visible' && r.seatRunning.svgs > 0,
     JSON.stringify(r.seatRunning))
   check('scheduler idle once settled (0 passes in 1 s)', r.idlePasses === 0,
     `${r.idlePasses} passes${(r.idlePassTimes ?? []).length === 0 ? '' : ` at ${r.idlePassTimes.join('ms, ')}ms`}`, 'timing')

@@ -423,6 +423,9 @@
       "a filled host anchor keeps its own ink instead of the link colour": [
         3
       ],
+      "an idle session has no visible indicator or decorative circle": [
+        0
+      ],
       "a seat carrying the running status dot draws no circle": [
         0
       ],

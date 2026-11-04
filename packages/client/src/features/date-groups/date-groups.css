@@ -43,8 +43,12 @@ body[data-dsh-claude-style][data-dsh-claude-date-groups] .dsh-claude-date-chip {
   white-space: nowrap;
 }
 
-/* 行被选中或指针停上去时，标签跟着行一起提亮一点。 */
-body[data-dsh-claude-style][data-dsh-claude-date-groups] [data-dsh-claude-part~="session-row"]:hover .dsh-claude-date-chip,
+/* 行被选中时标签跟着提亮；指针停在行上或行菜单打开时，标签让位给行内按钮，
+   和状态、时间一起收起。 */
 body[data-dsh-claude-style][data-dsh-claude-date-groups] [data-dsh-claude-part~="row-selected"] .dsh-claude-date-chip {
   color: var(--dsw-alias-label-secondary);
+}
+body[data-dsh-claude-style][data-dsh-claude-date-groups] [data-dsh-claude-part~="session-row"]:hover .dsh-claude-date-chip,
+body[data-dsh-claude-style][data-dsh-claude-date-groups] [data-dsh-claude-part~="session-row"][data-dsh-claude-part~="row-menu-open"] .dsh-claude-date-chip {
+  display: none;
 }

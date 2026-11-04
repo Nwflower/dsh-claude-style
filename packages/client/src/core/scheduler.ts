@@ -38,6 +38,8 @@ export interface Handles {
   workspace: FeatureHandle
   search: FeatureHandle
   sidebarPeek: FeatureHandle
+  sidebarStatus: FeatureHandle
+  sessionActions: FeatureHandle
   sidebarEntries: FeatureHandle
   turnNav: FeatureHandle
   chatFollow: FeatureHandle

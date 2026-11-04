@@ -496,3 +496,6 @@ export {
   USAGE_PATH as USAGE_ROUTE,
   USERNAME_PATH as USERNAME_ROUTE,
 } from '@dsh-claude-style/contracts/routes'
+
+/** Placement state for the sidebar's native status cell; the host remains its state owner. */
+export const SIDEBAR_STATUS_ATTR = 'data-dsh-claude-row-status'

@@ -1,0 +1,8 @@
+{
+  "group": "improvements",
+  "order": 1,
+  "at": "2026-11-04",
+  "external": false,
+  "zh": "会话状态指示移到行右侧，支持右键和菜单键打开原生会话菜单，悬停时状态与时间让位给行内归档、置顶按钮",
+  "en": "Place native session status at the trailing edge, open native menus with right-click or menu keys, and let the status and time step aside for the inline archive and pin buttons on hover"
+}
