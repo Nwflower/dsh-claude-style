@@ -1,8 +1,0 @@
-{
-  "group": "improvements",
-  "order": 73,
-  "at": "2026-11-03",
-  "external": false,
-  "zh": "改善归档会话列表的分页加载与大量历史会话下的渲染性能",
-  "en": "Improve archived-session pagination and rendering with large conversation histories"
-}

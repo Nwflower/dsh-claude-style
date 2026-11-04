@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 77,
-  "at": "2026-11-04",
-  "external": false,
-  "zh": "修复触屏上按住对话区时流式输出仍把阅读位置推走的问题",
-  "en": "Fix streaming output still pushing the reading position away while a touchscreen reader holds the conversation"
-}

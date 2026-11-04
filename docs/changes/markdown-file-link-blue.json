@@ -1,8 +1,0 @@
-{
-  "group": "improvements",
-  "order": 81,
-  "at": "2026-11-04",
-  "external": false,
-  "zh": "将 Markdown 中的文件链接改为与网页链接一致的蓝色、正文字体与下划线",
-  "en": "Style Markdown file links like web links, in the link blue with the prose face and underline"
-}

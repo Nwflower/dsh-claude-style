@@ -1,8 +1,0 @@
-{
-  "group": "new",
-  "order": 84,
-  "at": "2026-11-04",
-  "external": false,
-  "zh": "新增可选的回答首行定位开关，正式回答开始时把第一行带到对话区顶部并停下",
-  "en": "Add an optional switch that brings the formal answer's first line to the top of the conversation as it starts and stays there"
-}

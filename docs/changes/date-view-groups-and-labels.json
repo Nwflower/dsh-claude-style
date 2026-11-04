@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 75,
-  "at": "2026-11-04",
-  "external": false,
-  "zh": "修复日期视图把所有会话都归入「更早」、行上也不标出所属工作区的问题",
-  "en": "Fix the date view filing every conversation under Earlier and leaving the workspace label off its rows"
-}

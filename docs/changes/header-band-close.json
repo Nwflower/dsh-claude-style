@@ -1,8 +1,0 @@
-{
-  "group": "improvements",
-  "order": 83,
-  "at": "2026-11-04",
-  "external": false,
-  "zh": "改善会话头部在标题抬入标题栏后留下的空白，会话内容紧接控件行",
-  "en": "Improve the blank the conversation header kept once the title moved into the window title bar, the conversation now starting right under its controls"
-}

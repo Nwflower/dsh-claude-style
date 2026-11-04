@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "at": "2026-11-04",
-  "external": false,
-  "order": 122,
-  "zh": "修复子智能体侧栏输入框缺少皮肤权限控件的问题",
-  "en": "Fix the missing skin permission control in a subagent sidebar's composer"
-}

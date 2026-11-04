@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 68,
-  "at": "2026-11-04",
-  "external": false,
-  "zh": "修复新会话与插件列表因负边距而相互重叠的问题",
-  "en": "Fix New session and the panel list overlapping because of a negative margin"
-}

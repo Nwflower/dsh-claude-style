@@ -2,6 +2,120 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [0.19.8] - 2026-11-04
+
+[中文](#cn-0.19.8) | [English](#en-0.19.8)
+
+<h3 id="cn-0.19.8">新增功能</h3>
+
+- 新增全局背景不透明度调节，以便与壁纸插件组合使用
+- 新增侧栏品牌标志的显示开关
+- 新增鲸娘像素吉祥物
+- 新增可选的回答首行定位开关，正式回答开始时把第一行带到对话区顶部并停下
+
+### 体验优化
+
+- 会话状态指示移到行右侧，支持右键和菜单键打开原生会话菜单，悬停时状态与时间让位给行内归档、置顶按钮
+- 日期视图的会话行在悬停或打开行菜单时隐藏行上的工作区标签，让位给行内操作
+- 改善螃蟹的思考动画，改为举着泡泡棒吹泡泡
+- 改善提问卡布局与选项样式，将卡片移到对话末尾并采用蓝色圆形单选标记
+- 改善螃蟹吹泡泡、指挥、听音乐、睡觉与被挠痒时的动画，改为侧身朝向
+- 将侧栏搜索框改为通过宿主面板列表注册的按钮，点击时保持当前页面并打开搜索面板，搜索样式保留图标与独立两项，已有的覆盖品牌设置迁移到独立
+- 降低流式输出期间上下文估算的扫描频率，并延后加载账户头像
+- 改善归档会话列表的分页加载与大量历史会话下的渲染性能
+- 将 Markdown 正文链接在悬停与聚焦时保持链接蓝，不再变为强调色
+- 将 Markdown 中的文件链接改为与网页链接一致的蓝色、正文字体与下划线
+- 将 Claude 配色的行内代码字色改为中性黑，与正文墨色一致
+- 改善会话头部在标题抬入标题栏后留下的空白，会话内容紧接控件行
+
+### 问题修复
+
+- 修复螃蟹指挥时指挥棒悬空、被挠痒时抬起的腿与壳分开
+- 修复宿主给每个面板行加了一层包装后，编辑侧栏里勾掉的入口不再从侧栏消失的问题
+- 修复新建会话与插件列表之间多出一段间距、侧栏第一行比其后的行距更疏的问题
+- 修复统计信息收进上下文时输入卡片下方仍留着一条空白的问题
+- 修复 ds-bot 已登录时“代码”切换会误选中登出菜单项的问题
+- 修复阅读视图下输入区被隐藏的问题
+- 修复已归档列表无法滚动、无法加载下一页的问题
+- 修复新会话与插件列表因负边距而相互重叠的问题
+- 修复触屏设备上流式输出时无法通过触摸停止自动跟随的问题
+- 修复已归档列表行的取消归档与删除图标与宿主行内图标不一致的问题
+- 修复全屏启动动画被弹窗尺寸上限裁切的问题
+- 修复第三方模型选择器被皮肤隐藏而无法使用 Codex 速度档位的问题
+- 修复侧栏视图菜单里选择「单列表」后立即被改回工作区、单列表模式无法使用的问题
+- 修复日期视图把所有会话都归入「更早」、行上也不标出所属工作区的问题
+- 修复输入卡片同时显示宿主与主题模型选择器的问题
+- 修复触屏上按住对话区时流式输出仍把阅读位置推走的问题
+- 修复手指在对话区底部抬起后自动跟随不再恢复的问题
+- 修复子代理运行时停止键被发送键盖住的问题
+- 修复子智能体侧栏输入框缺少皮肤权限控件的问题
+- 修复子智能体侧栏的权限选择写入主对话会话的问题
+- 修复子智能体侧栏的上下文圆环掉到卡片下方单独一行的问题
+- 修复子智能体侧栏的上下文面板在主对话圆环上方打开的问题
+- 修复子智能体侧栏输入卡片抢走主对话模型座位的问题
+- 修复子智能体侧栏输入区工具行在宽度足够时仍换成两行的问题
+- 修复状态行遮挡后排入的提问卡与用户消息的问题
+- 修复插件拆卸后异步回调仍申请页面刷新的问题
+
+### 移除
+
+- 移除右侧栏的卡片布局与其设置项，面板改回宿主自己的底色并贴着栏边
+
+<h3 id="en-0.19.8">New Features</h3>
+
+- Add global background opacity control for use with wallpaper plugins
+- Add a switch for showing the sidebar brand mark
+- Add the whale girl pixel mascot
+- Add an optional switch that brings the formal answer's first line to the top of the conversation as it starts and stays there
+
+### Improvements
+
+- Place native session status at the trailing edge, open native menus with right-click or menu keys, and let the status and time step aside for the inline archive and pin buttons on hover
+- Hide the workspace label on a date-view session row while it is hovered or its menu is open, leaving the room to the inline actions
+- Improve the crab's thinking animation so it blows bubbles from a bubble wand
+- Improve the question card by moving it to the end of the conversation and drawing circular blue radio marks
+- Improve the crab's bubble-blowing, conducting, music, sleeping and tickle animations so it turns to one side
+- Register the sidebar search button through the host panel list, keep the current page when opening the search palette, retain Icon and Standalone as the two styles, and migrate a stored Cover the brand choice to Standalone
+- Reduce context-estimate scanning during streaming and defer account avatar loading
+- Improve archived-session pagination and rendering with large conversation histories
+- Keep Markdown links in the link blue under hover and focus instead of the accent ink
+- Style Markdown file links like web links, in the link blue with the prose face and underline
+- Paint inline code in the Claude palette with the neutral ink instead of the warm red
+- Improve the blank the conversation header kept once the title moved into the window title bar, the conversation now starting right under its controls
+
+### Bug Fixes
+
+- Fix the crab's baton floating clear of its claw while conducting and its lifted legs parting from the shell while tickled
+- Fix the entries unchecked in the edit-sidebar dialog staying on the sidebar list after the host began wrapping every panel row in a box of its own
+- Fix the extra space between New session and the panel list that left the sidebar's first row further from the plate than the rows below stand from each other
+- Fix the blank row left under the composer card while the statistics position keeps the numbers in the context popover
+- Fix the Code switch selecting ds-bot’s sign-out item when its account menu is signed in
+- Fix the composer disappearing in the reader view
+- Fix the archived list not scrolling or loading its next page
+- Fix New session and the panel list overlapping because of a negative margin
+- Fix streaming output ignoring a touch gesture meant to stop automatic following on touchscreens
+- Fix the archived rows' unarchive and delete icons differing from the host's own row icons
+- Fix the dialog size cap clipping a full-window boot animation
+- Fix the skin hiding third-party model selectors and their Codex speed controls
+- Fix the sidebar's Single list grouping snapping back to Workspace right after it is picked, which made the single-list mode unusable
+- Fix the date view filing every conversation under Earlier and leaving the workspace label off its rows
+- Fix the composer showing both the host and skin model selectors
+- Fix streaming output still pushing the reading position away while a touchscreen reader holds the conversation
+- Fix automatic following not resuming after a finger is lifted at the bottom of the conversation
+- Fix the stop button over a running subagent being covered by the send one
+- Fix the missing skin permission control in a subagent sidebar's composer
+- Fix a subagent sidebar's permission pick being written to the main conversation's session
+- Fix a subagent sidebar's context ring dropping onto a line below its card
+- Fix a subagent sidebar's context panel opening over the main conversation's ring
+- Fix a docked subagent composer taking the model seat from the main conversation
+- Fix a subagent sidebar's composer toolbar wrapping onto a second line with room to spare
+- Fix the status line covering question cards and reader messages mounted after it
+- Fix asynchronous callbacks scheduling page passes after teardown
+
+### Removals
+
+- Remove the right sidebar's card layout and its setting, leaving panels in the host's own fill flush with the column
+
 ## [0.19.7] - 2026-11-03
 
 [中文](#cn-0.19.7) | [English](#en-0.19.7)
