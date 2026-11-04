@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 205,
+  "at": "2026-11-04",
+  "external": false,
+  "zh": "修复状态行遮挡后排入的提问卡与用户消息的问题",
+  "en": "Fix the status line covering question cards and reader messages mounted after it"
+}

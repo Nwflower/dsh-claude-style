@@ -660,6 +660,10 @@ export default {
         pin.off?.follow === false && pin.off?.pinned === false &&
         pin.back?.follow === true && pin.back?.pinned === true,
       JSON.stringify(pin))
+    check('后排入的用户消息或提问卡让状态行回到文档流，行下遮罩同时退场',
+      pin.afterMessage?.pinned === false && pin.afterMessage?.mask === null &&
+        pin.afterQuestion?.pinned === false && pin.afterQuestion?.mask === null,
+      JSON.stringify(pin))
     // 钉住的行把脚下的画布一直铺到输入框顶，宿主在行下沿留出的那条缝里
     // 就不会露出滑动中的正文（chat-wait.css）。
     check('状态行钉住时行下的画布铺到输入框顶，跟随关掉后这块画布随之退场',

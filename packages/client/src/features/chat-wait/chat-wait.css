@@ -8,7 +8,10 @@
    host's 16px transcript padding (`.scroll`'s `padding: 16px 32px`). A burst
    then costs the row nothing — the glide and the pin land on the same spot — and
    scrolled away from the tail the row keeps its document place, so it never
-   floats over what the reader went back to read.
+   floats over what the reader went back to read. The pin and its canvas wait for
+   the row's own tail mark too: a question card or a reader's message mounted
+   after the row takes that mark away, leaving both the row and what follows it
+   in ordinary flow (D9).
 
    The line stands 1px above that sum. The content's height can be fractional
    while the scroll offset lands on whole pixels, so at the end the content
@@ -33,8 +36,8 @@
    the pin's whole context sits under, for "the reader is
    the one scrolling", which drops the pin even where the host still reports its
    follow. */
-body[data-dsh-claude-style][data-dsh-claude-chat-follow] [data-conversation-scroll]:not([data-dsh-claude-reader-hold]) [data-chat-following-tail] [data-chat-running],
-body[data-dsh-claude-style][data-dsh-claude-chat-follow] [data-conversation-scroll]:not([data-dsh-claude-reader-hold]) [data-dsh-claude-follow-hold] [data-chat-running] {
+body[data-dsh-claude-style][data-dsh-claude-chat-follow] [data-conversation-scroll]:not([data-dsh-claude-reader-hold]) [data-chat-following-tail] [data-chat-running][data-dsh-claude-wait-tail],
+body[data-dsh-claude-style][data-dsh-claude-chat-follow] [data-conversation-scroll]:not([data-dsh-claude-reader-hold]) [data-dsh-claude-follow-hold] [data-chat-running][data-dsh-claude-wait-tail] {
   position: sticky;
   bottom: calc(var(--dsh-composer-height, 0px) + var(--dsh-composer-fade-h, 40px) + 16px + 1px);
   z-index: 1;
@@ -46,14 +49,15 @@ body[data-dsh-claude-style][data-dsh-claude-chat-follow] [data-conversation-scro
 }
 
 /* The host clips the transcript 16px below the flow's last row, and the pin
-   stands 1px above that row's resting place: the 17px strip between the pinned
+   stands 1px above that row's resting place. The same tail mark keeps this band
+   off a row with content after it. The 17px strip between the pinned
    row's bottom and that clip is the one place a slid line can show under the
    line. The row's canvas is carried on down to the composer's own top, so the
    strip is the same canvas at rest and covers the line the stream slide is
    bringing up while it runs; the fade band under the strip lies outside the
    host's clip, so the mask only reaches it if that clip ever goes away. */
-body[data-dsh-claude-style][data-dsh-claude-chat-follow] [data-conversation-scroll]:not([data-dsh-claude-reader-hold]) [data-chat-following-tail] [data-chat-running]::after,
-body[data-dsh-claude-style][data-dsh-claude-chat-follow] [data-conversation-scroll]:not([data-dsh-claude-reader-hold]) [data-dsh-claude-follow-hold] [data-chat-running]::after {
+body[data-dsh-claude-style][data-dsh-claude-chat-follow] [data-conversation-scroll]:not([data-dsh-claude-reader-hold]) [data-chat-following-tail] [data-chat-running][data-dsh-claude-wait-tail]::after,
+body[data-dsh-claude-style][data-dsh-claude-chat-follow] [data-conversation-scroll]:not([data-dsh-claude-reader-hold]) [data-dsh-claude-follow-hold] [data-chat-running][data-dsh-claude-wait-tail]::after {
   content: "";
   position: absolute;
   top: 100%;
