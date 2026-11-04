@@ -1,4 +1,4 @@
-import { COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_PLACEHOLDER_SELECTOR, COMPOSER_SELECTOR, COMPOSER_STACK_SELECTOR, COMPOSER_STATS_SELECTOR, COMPOSER_STAT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, CONVERSATION_VIEW_STORAGE_PREFIX, DIALOG_TRIGGER_SELECTOR, FOOT_AREA_SELECTOR, FOREGROUND_SELECTOR, MENU_ROLE_SELECTOR, MODAL_DIALOG_SELECTOR, PERMISSION_TRIGGER_SELECTOR, PHASE_ATTRIBUTE, RIGHTBAR_TOGGLE_SELECTOR, SIDEBAR_BRAND_SELECTOR, SIDEBAR_NEW_SESSION_SELECTOR, SIDEBAR_ROOT_SELECTOR, SIDEBAR_TOGGLE_SELECTOR, WINDOWS_MENU_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_PLACEHOLDER_SELECTOR, COMPOSER_SELECTOR, COMPOSER_STACK_SELECTOR, COMPOSER_STATS_SELECTOR, COMPOSER_STAT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, CONVERSATION_VIEW_STORAGE_PREFIX, DIALOG_TRIGGER_SELECTOR, FOOT_AREA_SELECTOR, FOREGROUND_SELECTOR, MENU_ROLE_SELECTOR, MODAL_DIALOG_SELECTOR, MODEL_SLOT_SELECTOR, PERMISSION_TRIGGER_SELECTOR, PHASE_ATTRIBUTE, RIGHTBAR_TOGGLE_SELECTOR, SIDEBAR_BRAND_SELECTOR, SIDEBAR_CHAT_SELECTOR, SIDEBAR_NEW_SESSION_SELECTOR, SIDEBAR_ROOT_SELECTOR, SIDEBAR_TOGGLE_SELECTOR, WINDOWS_MENU_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import type { HostAccountService, HostAssistantStep, HostBundleListAnswer, HostChatSnapshot, HostChatTarget, HostConfigFormsService, HostConversationService, HostInventoryAnswer, HostLocaleService, HostModelDirectoriesService, HostPluginBundle, HostServiceLookup, HostOutlineTurn, HostRunningCall, HostSession, HostSessionsService, HostSessionRenameAnswer, HostShortcutsService, HostSlotOptions, HostSlotsService, HostTurn, HostUiConversationService, HostUiSessionService, HostWorkspacesService, HostWorkspaceViewStore } from '@dsh-claude-style/contracts/services'
 import { observeMatches, subscribeMutations } from './bus'
 import { closestFrom, shown } from './dom'
@@ -123,12 +123,36 @@ function cacheFirst<T extends Element>(selector: string) {
  */
 export const findAccessTrigger = cacheFirst<HTMLButtonElement>(PERMISSION_TRIGGER_SELECTOR)
 
+/** The answer findHeroRoot keeps, and the batch it was taken in. */
+let heroRoot: HTMLElement | null = null
+let heroRootEpoch = -1
+let heroRootAnswered = false
+
 /**
  * The host's hero-phase conversation root: the page before a session is chosen.
- * The composer reads it once per pass, and the home page's own features mount
- * against the same element.
+ * A sub-agent's docked conversation renders the same composer, so a blank one
+ * carries the marker too; it is not the page's start screen, and the home page's
+ * own features (the ripple and the mascot among them) must not mount against it.
+ * Kept per mutation batch, as the other host seats are (D9, D40).
  */
-export const findHeroRoot = cacheFirst<HTMLElement>(`[${PHASE_ATTRIBUTE}="hero"]`)
+export function findHeroRoot() {
+  openMatchEpochWatch()
+  if (heroRootEpoch !== matchEpoch) {
+    heroRoot = null
+    heroRootAnswered = false
+    heroRootEpoch = matchEpoch
+  }
+  if (heroRootAnswered) return heroRoot
+  heroRootAnswered = true
+  const roots = document.querySelectorAll<HTMLElement>(`[${PHASE_ATTRIBUTE}="hero"]`)
+  for (let i = 0; i < roots.length; i += 1) {
+    if (roots[i].closest(SIDEBAR_CHAT_SELECTOR) === null) {
+      heroRoot = roots[i]
+      break
+    }
+  }
+  return heroRoot
+}
 
 /** The sidebar footer, where the account row and the plugin footer entries live. */
 export const findFootArea = cacheFirst<HTMLElement>(FOOT_AREA_SELECTOR)
@@ -224,9 +248,59 @@ export const findComposerCard = cacheFirst<HTMLElement>(COMPOSER_CARD)
  * beside the host's root (features/model/seat-box.ts,
  * features/context-stats/meter-ring.ts), so both features read it here.
  */
-const MODEL_SLOT = '[data-slot="conversation.input.model"]'
+const MODEL_SLOT = MODEL_SLOT_SELECTOR
 
+/**
+ * The document-wide model-slot answer kept from before the per-card reads: the
+ * features that have not moved to findModelSlotIn yet still ask for it, and the
+ * commit that moves the last of them drops this export.
+ */
 export const findModelSlot = cacheFirst<HTMLElement>(MODEL_SLOT)
+
+/** The model slot inside `scope`: the row a card's own composer render draws. */
+export function findModelSlotIn(scope: ParentNode) {
+  return scope.querySelector<HTMLElement>(MODEL_SLOT)
+}
+
+/** The answer findPrimaryModelSlot keeps, and the batch it was taken in. */
+let primaryModelSlot: HTMLElement | null = null
+let primaryModelSlotEpoch = -1
+let primaryModelSlotAnswered = false
+
+/**
+ * The model slot of the page's MAIN composer: the first card that is not a
+ * sub-agent's docked conversation. A docked conversation draws a card of its
+ * own — the same composer render, its own model slot — and the skin's model seat
+ * stands in one card only: the main one. Reading the document's first slot
+ * instead would put the seat in whichever card the host mounted first, and the
+ * shell the reader types into would lose it (issue #189).
+ *
+ * Kept per mutation batch, as the other seats are (D40): cards mount and unmount
+ * with the sidebar, and the kept slot is dropped in the batch that changed them.
+ */
+export function findPrimaryModelSlot() {
+  openMatchEpochWatch()
+  if (primaryModelSlotEpoch !== matchEpoch) {
+    primaryModelSlot = null
+    primaryModelSlotAnswered = false
+    primaryModelSlotEpoch = matchEpoch
+  }
+  if (primaryModelSlotAnswered) return primaryModelSlot
+  primaryModelSlotAnswered = true
+  primaryModelSlot = mainModelSlot()
+  return primaryModelSlot
+}
+
+function mainModelSlot() {
+  const cards = document.querySelectorAll<HTMLElement>(COMPOSER_CARD)
+  for (let i = 0; i < cards.length; i += 1) {
+    const card = cards[i]
+    if (card.closest(SIDEBAR_CHAT_SELECTOR) !== null) continue
+    const slot = card.querySelector<HTMLElement>(MODEL_SLOT)
+    if (slot !== null) return slot
+  }
+  return document.querySelector<HTMLElement>(MODEL_SLOT)
+}
 
 /** The composer card `node` sits in, or null; `variant` narrows it to one variant. */
 export function closestComposerCard(node: EventTarget | null | undefined, variant?: string) {
@@ -345,12 +419,38 @@ export function currentSessionId(ctx: HostContext, sessions: HostSessionsService
   return sessions.list.getSnapshot().current
 }
 
+/**
+ * A card's toolbar row: the flex line the host draws under the input field,
+ * carrying the leading tools and the trailing model slot. The host gives the
+ * row no stable hook, and the skin's sheet only reaches rows the part walk
+ * named (sidebar chat sits outside the walk's regions), so docked cards keep
+ * the host's own wrapping row unless its wrapper is matched here. The row is
+ * the card's own child that holds the model slot: a structural read, not the
+ * host's generated class names (D3).
+ */
+export function findComposerRowIn(card: Element): HTMLElement | null {
+  const slot = findModelSlotIn(card)
+  if (slot === null) return null
+  for (let i = 0; i < card.children.length; i += 1) {
+    const child = card.children[i]
+    if (child.contains(slot)) return child as HTMLElement
+  }
+  return null
+}
+
 export function currentSession(ctx: HostContext): HostSession | null {
   const sessions = ctx.get('sessions') as HostSessionsService | undefined
   if (sessions === undefined || sessions === null) return null
   const id = currentSessionId(ctx, sessions)
   if (id === undefined || id === null) return null
-  const binding = sessions.binding(id)
+  return sessionById(ctx, id)
+}
+
+/** The session the host binds to one id, or null while it binds none. */
+export function sessionById(ctx: HostContext, sessionId: string): HostSession | null {
+  const sessions = ctx.get('sessions') as HostSessionsService | undefined
+  if (sessions === undefined || sessions === null) return null
+  const binding = sessions.binding(sessionId)
   if (binding === undefined || binding === null) return null
   return binding.session === undefined ? null : binding.session
 }

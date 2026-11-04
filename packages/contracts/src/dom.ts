@@ -335,18 +335,27 @@ export const MOBILE_PORTRAIT_SELECTOR = 'body.dsh-remote-portrait'
 export const CONTEXT_METER_FILL_SELECTOR = '[data-dsh-claude-context-meter] circle[stroke-dasharray]'
 /** The composer variant the host puts on the card (`hero` / `default`). */
 export const COMPOSER_VARIANT_ATTRIBUTE = 'data-composer-variant'
+/** The permission slot the host mounts in a composer card's toolbar. */
+export const PERMISSION_SLOT_SELECTOR = '[data-slot="conversation.input.permission"]'
 /**
  * The host's own access-mode trigger inside its permission slot, skipping the
  * skin's own control: the skin's elements carry the `dsh-claude-` namespace as
  * whole class tokens, so no substring match is involved (D3).
  */
-export const PERMISSION_TRIGGER_SELECTOR = '[data-slot="conversation.input.permission"] button:not([class^="dsh-claude-"], [class*=" dsh-claude-"])'
+export const PERMISSION_TRIGGER_SELECTOR = `${PERMISSION_SLOT_SELECTOR} button:not([class^="dsh-claude-"], [class*=" dsh-claude-"])`
 /**
  * The slot the host mounts a plugin's own entry in beside the model seat: the
  * built-in voice input puts its microphone there, and the host expands the seat
  * around the slot while that plugin is live.
  */
 export const CONVERSATION_ACTIVITY_SLOT_SELECTOR = '[data-slot="conversation.input.activity"]'
+/**
+ * The host's model slot in a composer card's toolbar: where the host renders its
+ * own model seat, and where the skin appends its seat beside it. Every composer
+ * card the host draws carries one — a docked conversation's included — so the
+ * seat and the context ring resolve the card's own slot (engine/host.ts).
+ */
+export const MODEL_SLOT_SELECTOR = '[data-slot="conversation.input.model"]'
 /** A host button that opens a dialog: the model and effort pickers in the composer stack. */
 export const DIALOG_TRIGGER_SELECTOR = 'button[aria-haspopup="dialog"]'
 /** The sidebar footer block; the skin's account entry lives inside it. */
@@ -396,6 +405,11 @@ export const SETTINGS_BUTTON_SELECTOR = '[data-dsh-claude-part~="settings-area"]
 export const FOOTER_ACTIONS_SELECTOR = '[data-dsh-claude-part~="footer-actions"]'
 /** A slot anchor; its children are the host's real entries. */
 export const SLOT_ANCHOR_SELECTOR = '[data-slot]'
+/**
+ * The subagent sidebar's chat tab (`dsh-client-ui-subagent`): the column that
+ * mounts an embedded conversation, composer and all.
+ */
+export const SIDEBAR_CHAT_SELECTOR = '[data-sidebar-chat]'
 /**
  * The three slot anchors the skin's part walk reads as regions (D3): each names
  * a host subtree the skin restyles, and the walk enters a region where its
