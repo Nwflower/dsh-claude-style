@@ -362,13 +362,14 @@ export default spec({ page: 'composer' }, ({ test }) => {
     })
     t.expectThat.equal(narrowWidth, '360px', 'the card fills a narrower conversation column')
     await t.page.locator(`[${OPTION_ATTR}]`).hover()
+    await t.page.evaluate(() => Promise.all(window.__debugQuestion.row.getAnimations().map(animation => animation.finished)))
     const ordinaryHover = await t.page.evaluate(() => getComputedStyle(window.__debugQuestion.row).backgroundColor)
     await t.page.locator(CUSTOM_LABEL).hover()
     await t.page.waitForFunction(({ expected, selector }) => {
       const label = document.querySelector(selector)
       return getComputedStyle(label.parentElement).backgroundColor === expected
     }, { expected: ordinaryHover, selector: CUSTOM_LABEL })
-    await t.page.evaluate((selector) => document.querySelector(selector).click(), CUSTOM_LABEL)
+    await t.page.locator(CUSTOM_LABEL).click()
     await t.page.waitForFunction((attribute) => {
       const field = window.__debugQuestion.section.querySelector(`[${attribute}] > div`)
       return field !== null && getComputedStyle(field).display === 'grid' && document.activeElement === field.querySelector('textarea')
