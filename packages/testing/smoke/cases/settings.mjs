@@ -251,6 +251,11 @@ export default {
       activeView.snapshot?.archivedFilter === 'default' && activeView.snapshot?.groupBy === 'workspace' &&
         activeView.checked === 'true',
       JSON.stringify(activeView))
+    const flatView = sw.flat || {}
+    check('a 单列表 pick in the host\'s own view menu stands, and 已归档 brings it back instead of dropping it',
+      flatView.picked?.snapshot?.groupBy === 'flat' && flatView.archived?.snapshot?.groupBy === 'flat' &&
+        flatView.active?.snapshot?.groupBy === 'flat',
+      JSON.stringify(flatView))
     const reinstall = sw.reinstall || {}
     check('a store left on 已归档 comes back on that segment when the feature installs again',
       reinstall.snapshot?.archivedFilter === 'only' && reinstall.snapshot?.groupBy === 'flat' &&

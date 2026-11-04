@@ -6,7 +6,7 @@ import { watchSidebar } from '../../shared/sidebar-watch'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { hostSessions, hostWorkspaces, hostWorkspaceView } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
-import type { HostSessionGroupBy } from '@dsh-claude-style/contracts/services'
+import type { HostSessionGroupBy, HostSessionsService, HostWorkspacesService } from '@dsh-claude-style/contracts/services'
 import { copy } from './copy'
 import type { CopyKey } from './copy'
 
@@ -129,12 +129,14 @@ function labelOf(seat: Seat) {
 }
 
 export function install(ctx: HostContext) {
-  /** 宿主的会话列表：每行的更新时间从这儿来（行上只有标题与时间文字）。 */
-  const sessions = hostSessions(ctx)
-  /** 工作区列表：行右手标签读它 — 归属在工作区那一行上，会话行自己不带着。 */
-  const workspaces = hostWorkspaces(ctx)
-  /** 宿主的视图 store：切成扁平列表，日期段落才有同一张列表可站。 */
-  const view = hostWorkspaceView(ctx)
+  /**
+   * 宿主的服务按每一遍现取，不在安装时取一次：本特性随插件一起装上，而宿主是在那之后
+   * 才注册 `sessions`、`workspaces` 和视图 store 的。安装时抓下来的值会整个世代都是
+   * null —— 日期视图于是把每一段都画成「更早」、行上也没有工作区标签（#222）。
+   */
+  const sessionsNow = () => hostSessions(ctx)
+  const workspacesNow = () => hostWorkspaces(ctx)
+  const viewNow = () => hostWorkspaceView(ctx)
 
   /** 我们自己插进页面的节点，卸载时按这份清单收走（不去 document 里回查）。 */
   const mine = new Set<HTMLElement>()
@@ -154,7 +156,7 @@ export function install(ctx: HostContext) {
    */
   function workspacesById() {
     const titles = new Map<string, string>()
-    const list = workspaces?.list
+    const list = workspacesNow()?.list
     const snapshot = typeof list?.getSnapshot === 'function' ? list.getSnapshot() : undefined
     if (snapshot === undefined || snapshot === null || snapshot.phase === 'pending') return { titles, ready: false }
     // 页面没有工作区列表时 `items` 可能整个不在：那一档同样算还没有答案。
@@ -168,7 +170,7 @@ export function install(ctx: HostContext) {
   /** 会话 id → 最后更新时间。 */
   function timesById() {
     const times = new Map<string, number>()
-    const list = sessions?.list
+    const list = sessionsNow()?.list
     const snapshot = typeof list?.getSnapshot === 'function' ? list.getSnapshot() : undefined
     if (snapshot === undefined || snapshot === null || snapshot.phase === 'pending') return times
     for (const id of snapshot.ids) {
@@ -185,7 +187,7 @@ export function install(ctx: HostContext) {
    * 写入是读者的首选项换来的（关掉本功能就还回原来的分组），不是偷偷改他的视图。
    */
   function flatten() {
-    const store = view
+    const store = viewNow()
     if (store === null || store === undefined) return
     if (typeof store.getSnapshot !== 'function' || typeof store.actions?.setGroupBy !== 'function') return
     const group = store.getSnapshot().groupBy
@@ -320,7 +322,7 @@ export function install(ctx: HostContext) {
 
   /** 读者现在翻的是已归档吗：宿主的筛选是「只看已归档」或「混着显示」都算。 */
   function archivedView() {
-    const store = view
+    const store = viewNow()
     if (store === null || store === undefined || typeof store.getSnapshot !== 'function') return false
     const snapshot = store.getSnapshot()
     return snapshot.archivedFilter === 'only' || snapshot.archivedFilter === 'show'
@@ -355,6 +357,8 @@ export function install(ctx: HostContext) {
     if (dateMode || disposed) return
     dateMode = true
     document.body.setAttribute(MODE_ATTRIBUTE, '')
+    followLists()
+    healLeftover()
     flatten()
     arrange()
   }
@@ -370,7 +374,7 @@ export function install(ctx: HostContext) {
     mine.clear()
     restoreSeats()
     // 分组还成读者原来的那一档（工作区 / 工作区树 / 扁平都照原样）。
-    const store = view
+    const store = viewNow()
     const restore = previousGroup ?? rememberedGroup()
     if (restore !== null && typeof store?.actions?.setGroupBy === 'function') store.actions.setGroupBy(restore)
     previousGroup = null
@@ -390,34 +394,65 @@ export function install(ctx: HostContext) {
 
   function schedule() {
     if (cancelFrame !== null || disposed) return
+    followLists()
     cancelFrame = requestFrame({
       write() {
         cancelFrame = null
+        healLeftover()
         arrange()
       },
     })
+  }
+
+  /**
+   * 会话与工作区两张列表的出现晚于本特性的安装：第一遍读到它们时接上订阅。
+   * 更新时间变了，段落边界可能跟着变（跨零点的那一帧）；会话换了归属、工作区改名，
+   * 行右手的标签也要跟着换。
+   */
+  let sessionList: HostSessionsService['list'] | null = null
+  let workspaceList: HostWorkspacesService['list'] | null = null
+  let unsubscribe: (() => void) | null = null
+  let unsubscribeWorkspaces: (() => void) | null = null
+  function followLists() {
+    const listing = sessionsNow()?.list
+    if (listing !== undefined && listing !== sessionList) {
+      unsubscribe?.()
+      sessionList = listing
+      unsubscribe = typeof listing.subscribe === 'function' ? listing.subscribe(() => schedule()) : null
+    }
+    const shelf = workspacesNow()?.list
+    if (shelf !== undefined && shelf !== workspaceList) {
+      unsubscribeWorkspaces?.()
+      workspaceList = shelf
+      unsubscribeWorkspaces = typeof shelf.subscribe === 'function' ? shelf.subscribe(() => schedule()) : null
+    }
   }
 
   /** 侧栏里的每一行会话，宿主随时可能整批重画。 */
   const rows = observeMatches<HTMLElement>(SESSION_ROW_SELECTOR, schedule)
   /** 行被换掉、列表被重画、段落被宿主挤掉：都只算侧栏里的变化，跟着重排一遍。 */
   const stopWatch = watchSidebar(schedule)
-  /** 会话的更新时间变了，段落边界可能跟着变（跨零点的那一帧）。 */
-  let unsubscribe: (() => void) | null = null
-  if (typeof sessions?.list?.subscribe === 'function') unsubscribe = sessions.list.subscribe(() => schedule())
-  /** 工作区列表变了（会话换了归属、工作区改名）：行右手的标签跟着换。 */
-  let unsubscribeWorkspaces: (() => void) | null = null
-  if (typeof workspaces?.list?.subscribe === 'function') unsubscribeWorkspaces = workspaces.list.subscribe(() => schedule())
 
-  // 自愈：上次若是在日期视图里关掉应用的，宿主记下的是扁平，这里还成读者原来的分组，
-  // 否则「默认还是工作区 + 会话」在重启之后就不成立。
-  const leftover = rememberedGroup()
-  if (leftover !== null) {
-    const store = view
-    const group = typeof store?.getSnapshot === 'function' ? store.getSnapshot().groupBy : null
-    if (group === 'flat' && typeof store?.actions?.setGroupBy === 'function') store.actions.setGroupBy(leftover)
+  /**
+   * 自愈：上次若是在日期视图里关掉应用的，宿主记下的是扁平，这里还成读者原来的分组，
+   * 否则「默认还是工作区 + 会话」在重启之后就不成立。视图 store 晚于安装出现，所以在
+   * 每一遍里等它出现后做一次。
+   */
+  let healed = false
+  function healLeftover() {
+    if (healed) return
+    const store = viewNow()
+    if (store === null) return
+    healed = true
+    const leftover = rememberedGroup()
+    if (leftover === null) return
+    const group = typeof store.getSnapshot === 'function' ? store.getSnapshot().groupBy : null
+    if (group === 'flat' && typeof store.actions?.setGroupBy === 'function') store.actions.setGroupBy(leftover)
     forgetGroup()
   }
+
+  followLists()
+  healLeftover()
 
   // 默认什么都不做：读者看到的就是宿主原来那张「工作区 + 会话」。
   document.addEventListener(DATE_VIEW_TOGGLE_EVENT, onToggle)
@@ -441,7 +476,7 @@ export function install(ctx: HostContext) {
     document.body.removeAttribute(MODE_ATTRIBUTE)
     for (const node of mine) if (node.isConnected) node.remove()
     mine.clear()
-    const store = view
+    const store = viewNow()
     if (previousGroup !== null && store !== null && store !== undefined && typeof store.actions?.setGroupBy === 'function') {
       store.actions.setGroupBy(previousGroup)
     }

@@ -114,6 +114,20 @@
           archived: await clickSegment('archived'),
           active: await clickSegment('active'),
         }
+        // 宿主自己的视图菜单也提供「单列表」（扁平）：读者在那里选的一档是他的分组，
+        // 不是日期视图留下的痕迹，跟着走一遍已归档再回来也还是它。
+        var hostStore = window.__dshSmokeHost.workspaceViewStore
+        hostStore.actions.setGroupBy('flat')
+        document.body.appendChild(document.createElement('i'))
+        await sleep(300)
+        r.switches.flat = {
+          picked: readView(null),
+          archived: await clickSegment('archived'),
+          active: await clickSegment('active'),
+        }
+        hostStore.actions.setGroupBy('workspace')
+        document.body.appendChild(document.createElement('i'))
+        await sleep(200)
         r.switches.allOff = await settleSwitch(allSwitches(false))
       })
       r.switches.allOn = await settleSwitch(allSwitches(true))

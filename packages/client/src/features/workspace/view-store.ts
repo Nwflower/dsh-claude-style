@@ -9,13 +9,13 @@ const GROUP_BY_STORAGE = 'dsh-claude-style.workspaceGroupBy'
 /**
  * The grouping the reader last had in 进行中: the store's default until this browser records one.
  *
- * 扁平不算读者选过的分组：宿主的界面上没有这一档，只有日期视图写进来过。读到它
- * 就当没有记录 —— 否则早先那次「日期视图把扁平留在存储里」会被当成读者的选择，
- * 从此每次打开都是一条没有工作区分组的列表。
+ * 三档都记：宿主的视图菜单本来就提供「单列表」（扁平），读者选过它之后，下一次打开
+ * 还是这张单列表。
  */
 export function storedGroupBy(): HostSessionGroupBy {
   const stored = localStorage.getItem(GROUP_BY_STORAGE)
-  return stored === 'workspace-tree' ? stored : 'workspace'
+  if (stored === 'workspace-tree' || stored === 'flat') return stored
+  return 'workspace'
 }
 
 function storeGroupBy(group: HostSessionGroupBy) {
@@ -122,11 +122,9 @@ export function createViewStoreFollower() {
       setView('active')
       if (previous === 'only' || previous === 'show') {
         if (group !== activeGroupBy) followed.actions.setGroupBy(activeGroupBy)
-      } else if (group === 'flat') {
-        // 扁平不是读者能选的分组（宿主的界面上没有这一档），只可能是日期视图写的：
-        // 还回读者原来的分组，不要把它记成读者的选择。
-        if (group !== activeGroupBy) followed.actions.setGroupBy(activeGroupBy)
       } else if (group !== activeGroupBy) {
+        // 读者在宿主视图菜单里选的任意一档（按工作区、按工作区树、单列表）都是他的分组：
+        // 日期视图开着的时候这里根本走不到（上面已经让开），所以读到的扁平就是读者的选择。
         rememberGroup(group)
       }
       return
