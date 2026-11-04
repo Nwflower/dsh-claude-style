@@ -38,6 +38,16 @@ const VARIANT = host('composer.variant')
 const QUESTION_ATTR = host.attribute('composer.question-card')
 const OPTION_ATTR = host.attribute('composer.question-option')
 const REPLY_ATTR = host.attribute('chat.question-reply')
+const CONTENT = host('chat.content')
+const FLOW_SLOT_ATTR = host.attribute('chat.flow-slot')
+const FALLBACK_ATTR = host('composer.fallback-panel')
+const QUESTION_BODY_ATTR = host.attribute('composer.question-body')
+const CUSTOM_LABEL = surface('composer.question-label')
+const FLOW_ITEM = surface('composer.question-flow-item')
+const QUESTION_SURFACE_ATTR = surface.attribute('composer.question-surface')
+const CUSTOM_ACTIVE_ATTR = surface.attribute('composer.question-custom-active')
+const SELECTION_PROPERTY = surface.property('composer.question-selection')
+const SUBMIT_SHORTCUT = surface('composer.question-submit-shortcut')
 
 /** The canvas the seat paints its bar with, in the Claude palette. */
 const CANVAS = 'rgb(255, 255, 255)'
@@ -188,20 +198,70 @@ function mountLargeBatch(t) {
  * the answer.
  */
 function mountQuestion(t) {
-  return t.page.evaluate(([questionAttr, optionAttr, replyAttr]) => {
+  return t.page.evaluate(([questionAttr, optionAttr, replyAttr, contentSelector, flowAttr, fallbackAttr, seatSelector, scrollerAttr, columnSelector, questionBodyAttr, selectionProperty]) => {
+    const name = (selector) => selector.slice(1, -1)
+    const content = document.createElement('div')
+    content.setAttribute(name(contentSelector), '')
+    const scroller = document.createElement('div')
+    scroller.setAttribute(scrollerAttr, '')
+    const column = document.createElement('div')
+    column.setAttribute(name(columnSelector), '')
+    const flow = document.createElement('div')
+    flow.setAttribute(flowAttr, 'conversation.chat.flow')
+    column.append(flow)
+    const seat = document.createElement('div')
+    seat.setAttribute(name(seatSelector), '')
+    const chain = document.createElement('div')
+    const fallback = document.createElement('div')
+    fallback.setAttribute(fallbackAttr, 'conversation.composer')
+    fallback.style.display = 'none'
     const card = document.createElement('div')
     card.setAttribute(questionAttr, '')
     const section = document.createElement('section')
+    const body = document.createElement('div')
+    body.setAttribute(questionBodyAttr, '')
+    const titleBox = document.createElement('div')
+    const title = document.createElement('h2')
+    title.textContent = 'Which one?'
+    titleBox.append(title)
+    const options = document.createElement('div')
+    options.setAttribute('role', 'radiogroup')
     const row = document.createElement('div')
     row.setAttribute(optionAttr, '')
     const button = document.createElement('button')
+    button.setAttribute('role', 'radio')
     button.setAttribute('aria-checked', 'true')
     const mark = document.createElement('span')
     mark.textContent = '1'
-    button.append(mark)
+    const copy = document.createElement('span')
+    const line = document.createElement('span')
+    const label = document.createElement('span')
+    label.textContent = 'The first'
+    const badge = document.createElement('span')
+    badge.textContent = 'Recommended'
+    line.append(label, badge)
+    copy.append(line)
+    button.append(mark, copy)
     row.append(button)
-    section.append(row)
+    const custom = document.createElement('div')
+    const customMark = document.createElement('span')
+    const field = document.createElement('div')
+    const textarea = document.createElement('textarea')
+    textarea.placeholder = 'Type your answer'
+    field.append(textarea)
+    custom.append(customMark, field)
+    options.append(row, custom)
+    body.append(titleBox, options)
+    const footer = document.createElement('footer')
+    const footerActions = document.createElement('div')
+    footerActions.append(document.createElement('button'), document.createElement('button'))
+    footer.append(footerActions)
+    section.append(body, footer)
     card.append(section)
+    chain.append(fallback, card)
+    seat.append(chain)
+    scroller.append(column, seat)
+    content.append(scroller)
     const reply = document.createElement('div')
     reply.setAttribute(replyAttr, '')
     const list = document.createElement('dl')
@@ -211,23 +271,12 @@ function mountQuestion(t) {
     answer.textContent = 'The first'
     list.append(term, answer)
     reply.append(list)
-    // The accent the skin paints the taken option with, read off a probe that
-    // asks the token for it: the two are compared as paints of it.
+    // The selection blue is read off a probe painted by the same token.
     const probe = document.createElement('span')
-    probe.style.background = 'var(--dsw-alias-brand-primary)'
-    document.body.append(card, reply, probe)
-    window.__debugQuestion = { card, reply, probe }
-    const paint = getComputedStyle
-    return {
-      cardRadius: paint(section).borderRadius,
-      rowRadius: paint(row).borderRadius,
-      markRadius: paint(mark).borderRadius,
-      markBackground: paint(mark).backgroundColor,
-      accent: paint(probe).backgroundColor,
-      termSize: paint(term).fontSize,
-      answerWeight: paint(answer).fontWeight,
-    }
-  }, [QUESTION_ATTR, OPTION_ATTR, REPLY_ATTR])
+    probe.style.background = `var(${selectionProperty})`
+    document.body.append(content, reply, probe)
+    window.__debugQuestion = { card, section, row, mark, badge, term, answer, content, reply, probe, fallbackAttr }
+  }, [QUESTION_ATTR, OPTION_ATTR, REPLY_ATTR, CONTENT, FLOW_SLOT_ATTR, FALLBACK_ATTR, SEAT, SCROLLER_ATTR, COLUMN, QUESTION_BODY_ATTR, SELECTION_PROPERTY])
 }
 
 export default spec({ page: 'composer' }, ({ test }) => {
@@ -262,15 +311,100 @@ export default spec({ page: 'composer' }, ({ test }) => {
   })
 
   test('the question card and its settled reply are drawn in the skin\'s own look', async (t) => {
-    const reading = await mountQuestion(t)
-    t.expectThat.equal(reading.cardRadius, '18px', 'the question card is drawn in the skin\'s own radius')
-    t.expectThat.equal(reading.rowRadius, '8px', 'an option row is a small plate')
-    t.expectThat.equal(reading.markRadius, '6px', 'the option\'s own mark has the skin\'s corners')
-    t.expectThat.equal(reading.markBackground, reading.accent, 'the option taken is filled with the accent')
+    await mountQuestion(t)
+    await t.page.waitForFunction((selector) => document.querySelector(selector)?.textContent === 'Other', CUSTOM_LABEL)
+    const reading = await t.page.evaluate((flowItem) => {
+      const { card, section, row, mark, badge, term, answer, content, probe, fallbackAttr } = window.__debugQuestion
+      const paint = getComputedStyle
+      return {
+        cardRadius: paint(section).borderRadius,
+        cardWidth: paint(section.parentElement).width,
+        rowRadius: paint(row).borderRadius,
+        markRadius: paint(mark).borderRadius,
+        markWidth: paint(mark).width,
+        markHeight: paint(mark).height,
+        markBackground: paint(mark).backgroundColor,
+        markCentre: paint(mark).backgroundImage,
+        badgeColor: paint(badge).color,
+        selectionBlue: paint(probe).backgroundColor,
+        termSize: paint(term).fontSize,
+        answerWeight: paint(answer).fontWeight,
+        frameDisplay: paint(card).display,
+        flowParent: section.parentElement.matches(flowItem),
+        composerDisplay: content.querySelector(`[${fallbackAttr}]`).style.display,
+      }
+    }, FLOW_ITEM)
+    t.expectThat.equal(reading.cardRadius, '14px', 'the question card is drawn in the skin\'s own radius')
+    t.expectThat.equal(reading.cardWidth, '480px', 'the card keeps the home dashboard\'s width on a wide screen')
+    t.expectThat.equal(reading.rowRadius, '0px', 'option rows join one continuous list')
+    t.expectThat.equal(reading.markRadius, '50%', 'a single-choice option carries a circular radio')
+    t.expectThat.equal(reading.markWidth, reading.markHeight, 'the radio keeps equal width and height')
+    t.expectThat.equal(reading.markWidth, '20px', 'the radio uses the compact reference size')
+    t.expectThat.equal(reading.markBackground, reading.selectionBlue, 'the option taken is filled with the selection blue')
+    t.expectThat.equal(reading.markCentre.includes('radial-gradient'), true, 'the radio\'s light centre is drawn as a true circle')
+    t.expectThat.equal(reading.badgeColor, reading.selectionBlue, 'the recommendation badge uses the same blue')
     t.expectThat.equal(reading.termSize, '12px', 'the question reads as the caption of the pair')
     t.expectThat.equal(reading.answerWeight, '500', 'the answer carries the weight')
+    t.expectThat.equal(reading.frameDisplay, 'none', 'the empty composer root leaves the layout')
+    t.expectThat.equal(reading.flowParent, true, 'the card stands at the conversation flow\'s end')
+    t.expectThat.equal(reading.composerDisplay, 'contents', 'the composer remains on screen beside the question')
+    const customLabelSize = await t.page.evaluate((selector) => getComputedStyle(document.querySelector(selector)).fontSize, CUSTOM_LABEL)
+    t.expectThat.equal(customLabelSize, '14px', 'the custom option keeps the host\'s option type size')
+    const shortcut = await t.page.evaluate((selector) => ({
+      text: document.querySelector(selector).textContent,
+      icons: document.querySelector(selector).querySelectorAll('svg').length,
+    }), SUBMIT_SHORTCUT)
+    t.expectThat.equal(shortcut, { text: 'Ctrl', icons: 1 }, 'the submit button carries Ctrl and the return icon')
+    const narrowWidth = await t.page.evaluate(() => {
+      const mount = window.__debugQuestion.section.parentElement
+      mount.parentElement.style.width = '360px'
+      return getComputedStyle(mount).width
+    })
+    t.expectThat.equal(narrowWidth, '360px', 'the card fills a narrower conversation column')
+    await t.page.locator(`[${OPTION_ATTR}]`).hover()
+    const ordinaryHover = await t.page.evaluate(() => getComputedStyle(window.__debugQuestion.row).backgroundColor)
+    await t.page.locator(CUSTOM_LABEL).hover()
+    await t.page.waitForFunction(({ expected, selector }) => {
+      const label = document.querySelector(selector)
+      return getComputedStyle(label.parentElement).backgroundColor === expected
+    }, { expected: ordinaryHover, selector: CUSTOM_LABEL })
+    await t.page.evaluate((selector) => document.querySelector(selector).click(), CUSTOM_LABEL)
+    await t.page.waitForFunction((attribute) => {
+      const field = window.__debugQuestion.section.querySelector(`[${attribute}] > div`)
+      return field !== null && getComputedStyle(field).display === 'grid' && document.activeElement === field.querySelector('textarea')
+    }, CUSTOM_ACTIVE_ATTR)
+    const customFieldBorder = await t.page.evaluate(() => getComputedStyle(window.__debugQuestion.section.querySelector('textarea').parentElement).borderColor)
+    t.expectThat.equal(customFieldBorder, reading.selectionBlue, 'the focused custom answer field uses the selection blue')
     await t.page.evaluate(() => {
-      window.__debugQuestion.card.remove()
+      const textarea = window.__debugQuestion.section.querySelector('textarea')
+      textarea.value = 'A custom answer'
+      textarea.dispatchEvent(new Event('input', { bubbles: true }))
+    })
+    await t.page.waitForFunction(({ attribute, expected }) => {
+      const row = window.__debugQuestion.section.querySelector(`[${attribute}]`)
+      return row !== null && getComputedStyle(row.querySelector(':scope > :first-child')).backgroundColor === expected
+    }, { attribute: CUSTOM_ACTIVE_ATTR, expected: reading.selectionBlue })
+    const customBackground = await t.page.evaluate((attribute) => getComputedStyle(window.__debugQuestion.section.querySelector(`[${attribute}] > :first-child`)).backgroundColor, CUSTOM_ACTIVE_ATTR)
+    t.expectThat.equal(customBackground, reading.selectionBlue, 'writing a custom answer selects its radio with the same blue')
+    await t.page.evaluate(() => {
+      const { section, row } = window.__debugQuestion
+      section.querySelector('textarea').value = ''
+      const option = row.querySelector('button')
+      option.setAttribute('aria-checked', 'true')
+      option.click()
+    })
+    await t.page.waitForFunction((attribute) => window.__debugQuestion.section.querySelector(`[${attribute}]`) === null, CUSTOM_ACTIVE_ATTR)
+    const customFieldDisplay = await t.page.evaluate(() => getComputedStyle(window.__debugQuestion.section.querySelector('textarea').parentElement).display)
+    t.expectThat.equal(customFieldDisplay, 'none', 'choosing an ordinary option closes the custom answer field')
+    await t.page.evaluate(() => { window.__debugQuestion.card.remove() })
+    await t.page.waitForFunction((attribute) => document.querySelector(`[${attribute}]`) === null, QUESTION_SURFACE_ATTR)
+    const cleaned = await t.page.evaluate((flowItem) => ({
+      mounts: document.querySelectorAll(flowItem).length,
+      composerDisplay: window.__debugQuestion.content.querySelector(`[${window.__debugQuestion.fallbackAttr}]`).style.display,
+    }), FLOW_ITEM)
+    t.expectThat.equal(cleaned, { mounts: 0, composerDisplay: 'contents' }, 'the host root\'s departure removes the card and leaves the composer visible')
+    await t.page.evaluate(() => {
+      window.__debugQuestion.content.remove()
       window.__debugQuestion.reply.remove()
       window.__debugQuestion.probe.remove()
       delete window.__debugQuestion

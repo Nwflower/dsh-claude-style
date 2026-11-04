@@ -14,6 +14,7 @@ import { writeScroll } from '@dsh-claude-style/engine/scroll-owner'
 import { captureComposerCaret, composerComposing, focusKeepingComposerCaret } from '../../shared/composer-caret'
 import { createPlaceholderCopy } from './placeholder-copy'
 import { installWindowBlurMirror } from './selection-mirror'
+import { createQuestionCards } from './question-card'
 
 /** Inspection views where the host's composer seat stands down; content and plugin views keep it. */
 const COMPOSER_HIDDEN_VIEWS: ReadonlySet<string> = new Set([CONVERSATION_VIEW_TRAJECTORY, CONVERSATION_VIEW_CONTEXT, CONVERSATION_VIEW_STATS])
@@ -56,6 +57,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const cards = observeComposerCards()
   const placeholders = observeComposerPlaceholders()
   const placeholderCopy = createPlaceholderCopy(cards, placeholders, composerComposing)
+  const questionCards = createQuestionCards()
   /**
    * The attachment tiles the skin marked, read once at install so a generation
    * whose teardown a hot reload dropped still has its marks swept.
@@ -343,6 +345,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     placeholderCopy.sync(hero, active)
     syncDraftState(found)
     syncControls(found)
+    questionCards.sync()
     syncRootMarks()
   }
 
@@ -453,9 +456,15 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     /** Whether the composer is restyled but the chat tab is not up, as of this pass. */
     isChatHidden() { return chatHidden },
     /** A copy source changed, the composer-scope preference among them: read again now. */
-    onCopyChange: readState,
-    /** A composer input: the hint's synthetic placeholder may have changed, unless a composition holds it. */
-    onInput() { placeholderCopy.onInput(hero, active) },
+    onCopyChange() {
+      readState()
+      questionCards.sync()
+    },
+    /** A composer input: refresh the hint and the custom answer's selected mark. */
+    onInput() {
+      placeholderCopy.onInput(hero, active)
+      questionCards.sync()
+    },
     onPointerDown: focusEditorOnPress,
     /** The composer card changed size: the transcript follows it. */
     reposition(reason: 'viewport' | 'composer') {
@@ -471,6 +480,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     stopWindowBlur()
     document.removeEventListener('compositionend', onCompositionEnd, true)
     placeholderCopy.dispose()
+    questionCards.release()
     cards.release()
     placeholders.release()
     document.body.removeAttribute(COMPOSER_ATTR)

@@ -1,48 +1,276 @@
 /* ---------- Claude Code layout: the question card and its settled reply ---------- */
-/* The host asks the reader a question and mounts a card of its own for it: the
-   question, the options it offers and the box the answer is written in. The
-   card is drawn in the skin's own card look — the composer card's radius, edge
-   and shadow — so it reads as part of the same surface. The card's box is the
-   section the host puts the question and its options in; the option rows and
-   the marks on them are the host's own elements. */
-body[data-dsh-claude-style] [data-question-key] > section {
-  border-radius: 18px;
-  border: 1px solid var(--dsw-alias-border-l1);
-  background: var(--dsw-specific-input-major);
+body[data-dsh-claude-style] [data-dsh-claude-question-relocated] {
+  display: none;
 }
 
-body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-question-key] > section {
+body[data-dsh-claude-style] .dsh-claude-question-flow-item {
+  box-sizing: border-box;
+  width: 480px;
+  min-width: 0;
+  max-width: 100%;
+  margin-right: auto;
+  padding: 8px 0;
+}
+
+/* The question owns the grey heading band. The host's expanded header carries
+   only the window controls in the common case, so it leaves the layout; a
+   minimized card keeps its header because the question then lives there. */
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] {
+  border-radius: 14px;
+  border: 1px solid var(--dsw-alias-border-l1);
+  background: var(--dsw-specific-input-major);
+  padding-bottom: 0;
+}
+
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-dsh-claude-question-surface] {
   box-shadow: 0 4px 12px rgba(20, 20, 19, 0.04), 0 1px 3px rgba(20, 20, 19, 0.02);
 }
 
-body[data-dsh-claude-style][data-ds-dark-theme] [data-question-key] > section {
+body[data-dsh-claude-style][data-ds-dark-theme] [data-dsh-claude-question-surface] {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
-/* An option row: a plate the reader picks from, with a hairline of its own and
-   a warm fill under the pointer. */
-body[data-dsh-claude-style] [data-question-key] [data-option-row] {
-  border-radius: 8px;
-  border: 1px solid var(--dsw-alias-border-l2);
-  transition: background-color var(--dsh-claude-timing-feedback), border-color var(--dsh-claude-timing-feedback);
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] > header {
+  display: none;
 }
 
-body[data-dsh-claude-style] [data-question-key] [data-option-row]:hover {
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] > header:has(h2) {
+  display: flex;
+  padding: 16px 48px 16px 20px;
+  background: var(--dsh-claude-table-head);
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-question-scroll] > div:first-child {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 16px 48px 16px 20px;
+  border-bottom: 1px solid var(--dsw-alias-border-l1);
+  background: var(--dsh-claude-table-head);
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-question-scroll] > div:first-child > h2,
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] > header > div > h2 {
+  margin: 0;
+  color: var(--dsw-alias-label-primary);
+  font-size: var(--dsh-content-font-size, 14px);
+  font-weight: 500;
+  line-height: 22px;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-question-scroll] > div:first-child > button {
+  right: 16px;
+  bottom: 18px;
+}
+
+/* Options read as rows of one list: a rule between adjacent rows, with the
+   radio or checkbox and both lines of copy aligned to the same left grid. */
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-question-scroll] > div:is([role="radiogroup"], [role="group"]) {
+  gap: 0;
+  margin: 0;
+  padding: 0;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] {
+  min-height: 0;
+  border: 0;
+  border-bottom: 1px solid var(--dsh-claude-divider);
+  border-radius: 0;
+  background: transparent;
+  transition: background-color var(--dsh-claude-timing-feedback);
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row]:hover {
   background: var(--dsw-alias-interactive-bg-hover);
 }
 
-/* The option's own mark: the small plate the host draws in the button, with
-   the option's number on it. The option taken fills it with the accent. */
-body[data-dsh-claude-style] [data-question-key] [data-option-row] > button > :first-child {
-  border-radius: 6px;
-  border: 1px solid var(--dsw-alias-border-l2);
-  transition: background-color var(--dsh-claude-timing-feedback), border-color var(--dsh-claude-timing-feedback), color var(--dsh-claude-timing-feedback);
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role] {
+  min-height: 0;
+  gap: 12px;
+  padding: 14px 20px;
+  font-size: var(--dsh-content-font-size, 14px);
+  line-height: 22px;
 }
 
-body[data-dsh-claude-style] [data-question-key] [data-option-row] > button[aria-checked="true"] > :first-child {
-  background: var(--dsw-alias-brand-primary);
-  color: var(--dsw-alias-label-primary-foreground, #faf9f5);
-  border-color: transparent;
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role] > :last-child {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 2px;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role] > :last-child > :first-child > :first-child {
+  font-size: inherit;
+  font-weight: 500;
+  line-height: inherit;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role] > :last-child > :last-child:not(:first-child) {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role] > :last-child > :first-child > :last-child:not(:first-child) {
+  background: color-mix(in srgb, var(--dsh-claude-field-ring) 10%, transparent);
+  color: var(--dsh-claude-field-ring);
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[aria-expanded] {
+  right: 16px;
+  bottom: 16px;
+}
+
+/* Single-choice marks are radios. Their number yields to a hollow ring; the
+   chosen ring carries the selection blue and a light centre. */
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role="radio"] > :first-child,
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role="radiogroup"] > [data-dsh-claude-question-custom] > :first-child {
+  box-sizing: border-box;
+  position: relative;
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
+  min-height: 20px;
+  aspect-ratio: 1;
+  flex: 0 0 20px;
+  margin-top: 0;
+  padding: 0;
+  corner-shape: initial;
+  border: 1px solid var(--dsw-alias-border-l3);
+  border-radius: 50%;
+  background: transparent;
+  color: transparent;
+  font-size: 0;
+  transition: background-color var(--dsh-claude-timing-feedback), border-color var(--dsh-claude-timing-feedback);
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role="radio"][aria-checked="true"] > :first-child,
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role="radiogroup"] > [data-dsh-claude-question-custom-active] > :first-child {
+  border-color: var(--dsh-claude-field-ring);
+  background-color: var(--dsh-claude-field-ring);
+  background-image: radial-gradient(circle, var(--dsw-alias-brand-text) 0 5px, transparent 5px);
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role="checkbox"] > :first-child,
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role="group"] > [data-dsh-claude-question-custom] > :first-child {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  margin-top: 0;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role="checkbox"][aria-checked="true"] > :first-child,
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role="group"] > [data-dsh-claude-question-custom-active] > :first-child {
+  color: var(--dsw-alias-brand-text);
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role="checkbox"][aria-checked="true"] > :first-child::before,
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role="group"] > [data-dsh-claude-question-custom-active] > :first-child::before {
+  border-color: var(--dsh-claude-field-ring);
+  background: var(--dsh-claude-field-ring);
+}
+
+/* The custom answer keeps its own option label above the host's growing field.
+   question-card.ts owns the two state attributes and the localized label. */
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-question-custom] {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 6px 12px;
+  min-height: 0;
+  padding: 14px 20px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color var(--dsh-claude-timing-feedback);
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-question-custom]:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-question-custom] > :first-child {
+  grid-row: 1;
+  grid-column: 1;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] .dsh-claude-question-custom-label {
+  grid-column: 2;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+  font-size: var(--dsh-content-font-size, 14px);
+  font-weight: 500;
+  line-height: 22px;
+  text-align: left;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-question-custom] > div {
+  --dsh-answer-field-padding: 8px 12px;
+  display: none;
+  grid-row: 2;
+  grid-column: 2;
+  border: 1px solid var(--dsw-alias-border-l3);
+  border-radius: 10px;
+  background: var(--dsw-specific-input-major);
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-question-custom-active] > div {
+  display: grid;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-question-custom] > div:focus-within {
+  border-color: var(--dsh-claude-field-ring);
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] > footer {
+  justify-content: flex-end;
+  gap: 12px;
+  margin: 0;
+  padding: 12px 20px 16px;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] > footer > div:first-child:has(> button:first-child:disabled):has(> button:last-child:disabled) {
+  display: none;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] > footer > div:last-child {
+  gap: 12px;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] > footer > div:last-child > button:not([aria-label]) {
+  min-height: 36px;
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] > footer > div:last-child > button:not([aria-label]):first-child {
+  background: var(--dsh-claude-chip);
+  color: var(--dsw-alias-label-primary);
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] > footer > div:last-child > button:not([aria-label]):last-child {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--dsh-claude-inverse-fill);
+  color: var(--dsh-claude-inverse-ink);
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] .dsh-claude-question-submit-shortcut {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+  font-size: 12px;
+  line-height: 14px;
 }
 
 /* The settled reply: the bubble the host mounts for the answer the reader

@@ -18,11 +18,10 @@ import type manifest from './caret.manifest'
  *
  * The browser's caret has no animatable property beyond its colour and its
  * blink, so a transition has only one road: make it transparent and draw
- * one. Two surfaces under the composer seat are taken over — the
- * contenteditable input (measured through the collapsed Range the browser
- * keeps, caret-measure.ts) and a textarea inside the seat, such as a
- * question card's answer box or a queued message's inline editor (measured
- * through a hidden mirror, caret-measure.ts).
+ * one. The contenteditable input is measured through the collapsed Range the
+ * browser keeps; a textarea in the seat or the relocated question card, such
+ * as a question's answer box or a queued message's inline editor, is measured
+ * through a hidden mirror (caret-measure.ts).
  *
  * What the switch means (the settings page's on/off choice):
  *
@@ -63,7 +62,7 @@ export function caretSurfaceOf(element: Element) {
   if (element instanceof HTMLInputElement && element.hasAttribute(CARET_FIELD_ATTR)) {
     return element.disabled || element.readOnly ? null : 'plain'
   }
-  if (element instanceof HTMLTextAreaElement && element.matches(COMPOSER_TEXTAREA_SELECTOR)) {
+  if (element instanceof HTMLTextAreaElement && (element.matches(COMPOSER_TEXTAREA_SELECTOR) || element.closest('[data-dsh-claude-question-surface]') !== null)) {
     return element.disabled || element.readOnly ? null : 'plain'
   }
   return null

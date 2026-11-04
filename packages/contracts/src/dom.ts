@@ -144,6 +144,8 @@ export const COMPOSER_TEXTAREA_SELECTOR = '[data-composer-seat] textarea'
  * question, the options it offers and the box the answer is written in.
  */
 export const QUESTION_CARD_SELECTOR = '[data-question-key]'
+/** The scrolling body of a question card: its question heading and answer choices. */
+export const QUESTION_BODY_SELECTOR = '[data-question-scroll]'
 /**
  * One option row of a question card: the row the reader picks from, and the
  * button in it that carries the mark of the option taken.
