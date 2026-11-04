@@ -1,9 +1,9 @@
-import { COMPOSER_ATTR, COMPOSER_HIDDEN_ATTR, HOME_LAYOUT_STUDIO, MOBILE_PORTRAIT_ATTR, TRANSCRIPT_ATTR } from '../../constants'
-import { COMPOSER_ATTACHMENT_RAIL_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_VIEW_CONTEXT, CONVERSATION_VIEW_STATS, CONVERSATION_VIEW_TRAJECTORY, MOBILE_PORTRAIT_SELECTOR, PHASE_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
+import { COMPOSER_ATTR, COMPOSER_HIDDEN_ATTR, HOME_LAYOUT_STUDIO, MOBILE_PORTRAIT_ATTR, PART_ATTR, TRANSCRIPT_ATTR } from '../../constants'
+import { COMPOSER_ATTACHMENT_RAIL_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_VIEW_CONTEXT, CONVERSATION_VIEW_STATS, CONVERSATION_VIEW_TRAJECTORY, MOBILE_PORTRAIT_SELECTOR, PERMISSION_TRIGGER_SELECTOR, PHASE_ATTRIBUTE, SIDEBAR_CHAT_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { conversationColumn } from '@dsh-claude-style/engine/chat-dom'
-import { COMPOSER_STACK, closestComposerCard, conversationSessionId, conversationViewPreference, findAccessTrigger, findComposerPlaceholder, findComposerSeat, findConversationScroller, findConversationSession, findHeroRoot, observeComposerCards, observeComposerPlaceholders } from '@dsh-claude-style/engine/host'
+import { COMPOSER_STACK, closestComposerCard, conversationSessionId, conversationViewPreference, findAccessTrigger, findComposerPlaceholder, findComposerRowIn, findComposerSeat, findConversationScroller, findConversationSession, findHeroRoot, observeComposerCards, observeComposerPlaceholders } from '@dsh-claude-style/engine/host'
 import { composerRestyleRetired, readPrefs } from '../../core/prefs'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { FeatureHandle } from '@dsh-claude-style/engine/scheduler'
@@ -23,6 +23,8 @@ const COMPOSER_HIDDEN_VIEWS: ReadonlySet<string> = new Set([CONVERSATION_VIEW_TR
 export interface ComposerHandle extends FeatureHandle {
   isHero(): boolean
   heroCard(): HTMLElement | null
+  /** Every composer card on the page, the sidebar's own included. */
+  cards(): readonly HTMLElement[]
   isActive(): boolean
   isStudioHome(): boolean
   isChatHidden(): boolean
@@ -84,10 +86,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * page.
    */
   function readState() {
-    // Read through the kept match: this runs on every pass, and on the
-    // conversation page the hero marker is absent, so a bare query re-walked
-    // the document every frame for an answer that only the host's own
-    // re-render can change (D9).
+    // The engine's hero root skips the sidebar's docked conversation: a blank
+    // sub-agent session carries the same marker but is not this page's start
+    // screen.
     hero = findHeroRoot() !== null
     const scope = readPrefs().composerScope
     active = !composerRestyleRetired && (scope === 'all' || (hero ? scope === 'hero' : scope === 'conversation'))
@@ -105,14 +106,17 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * single-line form, so a studio hero page stamps `inline`, not `hero`.
    */
   function syncVariant(cards: readonly HTMLElement[]) {
-    const value = hero && !studioHome ? 'hero' : 'inline'
-    const stacks = new Set<Element>()
+    const stacks = new Map<Element, string>()
     for (const card of cards) {
+      // A docked conversation keeps the inline form even on a hero page: it is
+      // never the page's own start screen.
+      const docked = card.closest(SIDEBAR_CHAT_SELECTOR) !== null
+      const value = hero && !studioHome && !docked ? 'hero' : 'inline'
       setAttributeIfChanged(card, COMPOSER_VARIANT_ATTRIBUTE, value)
       const stack = card.closest(COMPOSER_STACK)
-      if (stack !== null) stacks.add(stack)
+      if (stack !== null && stacks.get(stack) !== 'hero') stacks.set(stack, value)
     }
-    for (const stack of stacks) setAttributeIfChanged(stack, COMPOSER_VARIANT_ATTRIBUTE, value)
+    for (const [stack, value] of stacks) setAttributeIfChanged(stack, COMPOSER_VARIANT_ATTRIBUTE, value)
   }
 
   /**
@@ -233,6 +237,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    */
   function syncControls(cards: readonly HTMLElement[]) {
     for (const card of cards) {
+      // A docked card's row is outside the part walk, so the sheet's toolbar
+      // rules never reach it: the host's own row wraps, and the trailing model
+      // cluster falls onto a second line with room to spare. Name the row so
+      // inline.css lays it out exactly like the primary card's.
+      const row = findComposerRowIn(card)
+      if (row !== null) setAttributeIfChanged(row, PART_ATTR, 'row')
       const commands = card.querySelector('[data-dsh-claude-part~="tools"] button[aria-haspopup="listbox"]')
       if (commands !== null) setAttributeIfChanged(commands, CONTROL_ATTR, 'commands')
       const primaries = card.querySelectorAll<HTMLElement>(PRIMARY_SELECTOR)
@@ -256,8 +266,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
         if (hidden !== button.hasAttribute(HIDDEN_ATTR)) button.toggleAttribute(HIDDEN_ATTR, hidden)
       }
     }
-    const access = findAccessTrigger()
-    if (access !== null) setAttributeIfChanged(access, CONTROL_ATTR, 'access')
+    for (const card of cards) {
+      // The fallback keeps a host that renders the slot outside a card marked.
+      const access = card.querySelector<HTMLElement>(PERMISSION_TRIGGER_SELECTOR) ?? (cards.length === 1 ? findAccessTrigger() : null)
+      if (access !== null) setAttributeIfChanged(access, CONTROL_ATTR, 'access')
+    }
   }
 
   /**
@@ -335,7 +348,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   function syncComposer() {
     readState()
     const found = cards.all()
-    heroCard = hero && found.length > 0 ? found[0] : null
+    heroCard = hero ? found.find(card => card.closest(SIDEBAR_CHAT_SELECTOR) === null) ?? null : null
     syncVariant(found)
     document.body.toggleAttribute(COMPOSER_ATTR, active)
     syncMobilePortrait(found)
@@ -449,6 +462,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     isHero() { return hero },
     /** The hero page's composer card as of this pass, or null off the hero page. */
     heroCard() { return heroCard },
+    /** Every composer card on the page, the sidebar's own included. */
+    cards() { return cards.all() },
     /** Whether the composer restyle applies to the page shown, as of this pass. */
     isActive() { return active },
     /** Whether the studio home layout owns the hero page, as of this pass. */
