@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 68,
+  "at": "2026-11-04",
+  "external": false,
+  "zh": "修复已归档列表无法滚动、无法加载下一页的问题",
+  "en": "Fix the archived list not scrolling or loading its next page"
+}
