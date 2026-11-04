@@ -56,6 +56,22 @@ body[data-dsh-claude-style][data-dsh-claude-brand="deepseek"] :is([data-dsh-clau
   color: var(--dsh-claude-logo-ink);
 }
 
+/* ---------- Claude Code layout: the brand area's switch ---------- */
+/* The Appearance tab's Brand row hides the sidebar's brand area. The host gives
+   its logo row a height of its own — 60px on the web, 40px in the desktop
+   window's titlebar — and the sidebar toggle stands in that row beside the brand
+   (in the flow on the web, fixed in the titlebar), so the row keeps drawing the
+   toggle and takes the height its remaining content asks for. The collapsed
+   rail already draws its mark in the toggle, so the switch reaches the expanded
+   column alone. */
+body[data-dsh-claude-style][data-dsh-claude-sidebar-brand="off"] [data-dsh-claude-part~="brand-button"] {
+  display: none;
+}
+
+body[data-dsh-claude-style][data-dsh-claude-sidebar-brand="off"] [data-dsh-claude-part~="layout-frame"]:not([data-sidebar-collapsed]) [data-dsh-claude-part~="logo-row"] {
+  height: auto;
+}
+
 /* ---------- Claude Code layout: new session button ---------- */
 /* A narrow, left-aligned row with a leading 20px chip, flat until the pointer is
    on it. The row treatment holds while the column is expanded: collapsed, the host

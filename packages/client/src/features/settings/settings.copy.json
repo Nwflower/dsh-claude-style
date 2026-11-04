@@ -35,7 +35,7 @@
   "brandNameEdit": { "zh": "编辑品牌名称", "en": "Edit the brand name" },
   "brandNamePlaceholder": { "zh": "所选品牌", "en": "The chosen brand" },
   "brandLockupTitle": { "zh": "品牌标志", "en": "Brand" },
-  "brandLockupDesc": { "zh": "侧栏顶部与新会话页的品牌区。支持 PNG、SVG 或 WebP，不超过 2 MB。", "en": "The brand area at the top of the sidebar and on the new-session page. PNG, SVG or WebP, up to 2 MB." },
+  "brandLockupDesc": { "zh": "侧栏顶部与新会话页的品牌区；关闭后侧栏顶部不再显示，收起按钮保留。支持 PNG、SVG 或 WebP，不超过 2 MB。", "en": "The brand area at the top of the sidebar and on the new-session page; off hides the one at the top of the sidebar and keeps its toggle. PNG, SVG or WebP, up to 2 MB." },
   "brandMarkUpload": { "zh": "上传标志图片", "en": "Upload the brand mark" },
   "brandMarkReplace": { "zh": "更换标志图片", "en": "Replace the brand mark" },
   "brandWordmarkReplace": { "zh": "更换文字标志图片", "en": "Replace the wordmark" },

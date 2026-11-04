@@ -278,6 +278,8 @@ export const PREFS = {
   brand: { type: 'choice', values: BRANDS, default: BRAND_CLAUDE, legacy: { [BRAND_DEEPSEEK_LEGACY]: BRAND_DEEPSEEK } },
   brandName: { type: 'text', default: '', max: BRAND_NAME_MAX },
   brandInk: { type: 'choice', values: BRAND_INKS, default: BRAND_INK_ORIGINAL },
+  /** Whether the sidebar draws its brand area; off collapses that area and leaves the sidebar toggle in place. */
+  sidebarBrand: { type: 'boolean', default: true },
   brandAccent: { type: 'color', default: '' },
   /** One brand's card, `brand` to follow the theme style, or the reader's four. */
   paletteColors: { type: 'choice', values: PALETTE_COLORINGS, default: PALETTE_COLORING_BRAND },

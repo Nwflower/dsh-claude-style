@@ -141,6 +141,8 @@ export const TYPEFACE_ATTR = 'data-dsh-claude-typeface'
 export const MASCOT_ATTR = 'data-dsh-claude-mascot'
 export const SEARCH_STYLE_ATTR = 'data-dsh-claude-search-style'
 export const SIDEBAR_LAYOUT_ATTR = 'data-dsh-claude-sidebar-layout'
+/** Present as `off` while the sidebar's brand area is hidden (theme/sidebar.css); the Brand row's switch writes it. */
+export const SIDEBAR_BRAND_ATTR = 'data-dsh-claude-sidebar-brand'
 /**
  * The mark a running conversation carries in the sidebar (theme/sidebar.css):
  * its presence and value pick the breathing light or the turning ring.
