@@ -23,7 +23,7 @@
  * the events appended since the last fold, because its log is in memory. The
  * first search on a machine with no cache reads every top-level session once.
  *
- * Everything here runs only while the reader has the search box switched on:
+ * Everything here runs only while the reader has the search panel switched on:
  * the route is called by the palette alone, so a corpus is never built for a
  * reader who does not search.
  *

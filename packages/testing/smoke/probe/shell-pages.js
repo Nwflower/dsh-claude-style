@@ -254,13 +254,12 @@
       r.controls.back = controlOf('send')
     })
     await probe.onlyFor(['search'], async function () {
-      // The sidebar's brand row (ui-sidebar SidebarRoot): the search box goes in
-      // beside the wide brand, and pressing it renders the host's Modal through
-      // a root of the skin's own. The three box styles are driven through the
-      // form the settings page writes to: `overlay` (the default) sits in that
-      // row and rests hidden, `standalone` takes a row of its own under it and
-      // shows without a hover, `icon` draws no box of the skin's and puts the
-      // host's own search button back with the click taken over.
+      // The sidebar's brand row (ui-sidebar SidebarRoot): the standalone search
+      // button follows New session, and pressing it renders the host's
+      // Modal through a root of the skin's own. The two styles are driven through
+      // the form the settings page writes to: `standalone` (the default) draws
+      // the skin's button, and `icon` puts the host's own search button back
+      // with the click taken over.
       var sidebarSlot = document.createElement('div')
       sidebarSlot.setAttribute('data-slot', 'sidebar')
       sidebarSlot.innerHTML = '<div class="_root_n_1"><div class="_logoRow_n_1" data-window-drag="true">' +
@@ -280,12 +279,12 @@
       document.body.appendChild(sidebarSlot)
       await sleep(150)
       var logoRow = sidebarSlot.querySelector('[data-dsh-claude-part~="logo-row"]')
-      var searchTrigger = logoRow.querySelector('.dsh-claude-search-trigger')
+      var searchTrigger = document.querySelector('.dsh-claude-search-trigger')
       var rootsBefore = window.__roots.length
       if (searchTrigger) searchTrigger.click()
       await sleep(60)
       probe.searchRoot = window.__roots[rootsBefore]
-      // One style at a time, through the form; the box and its rows are read
+      // One style at a time, through the form; the button and its rows are read
       // back from the page the same way a reader would see them.
       var styleOf = async function (style) {
         window.__pushForm({ searchStyle: style })
@@ -297,7 +296,7 @@
         return {
           triggerInRow: !!logoRow.querySelector('.dsh-claude-search-trigger'),
           rowMarked: logoRow.hasAttribute('data-dsh-claude-search-row'),
-          barAfterRow: !!ownRow && ownRow.parentElement === logoRow.parentElement && ownRow.previousElementSibling === logoRow,
+          barAfterNewSession: !!ownRow && ownRow.parentElement === logoRow.parentElement && ownRow.previousElementSibling === logoRow.nextElementSibling,
           triggerInBar: !!ownRow && !!box && box.parentElement === ownRow,
           triggerVisibility: box ? getComputedStyle(box).visibility : null,
           hostSlotPosition: getComputedStyle(slot).position,
@@ -307,7 +306,7 @@
         }
       }
       r.search = {
-        placed: !!searchTrigger && searchTrigger.previousElementSibling === logoRow.firstElementChild,
+        placed: !!searchTrigger && searchTrigger.parentElement?.previousElementSibling === logoRow.nextElementSibling,
         rowMarked: logoRow.hasAttribute('data-dsh-claude-search-row'),
         resting: searchTrigger ? getComputedStyle(searchTrigger).visibility : null,
         modalRendered: !!probe.searchRoot && probe.searchRoot.renders > 0,
@@ -325,9 +324,9 @@
       await sleep(60)
       sidebarSlot.removeEventListener('click', countHost)
       r.search.icon.hostClicksReachingHost = reachedHost
-      r.search.back = await styleOf('overlay')
-      // The New session row's shortcut hint and the search box's own caps are
-      // the same host markup. The box's caps are built from the host's shortcut
+      r.search.back = await styleOf('standalone')
+      // The New session row's shortcut hint and the search button's own caps are
+      // the same host markup. The button's caps are built from the host's shortcut
       // catalog, which this stand-in does not carry, so the comparison reads a
       // sample of the search sheet's own cap class instead, and takes both
       // field by field — the two looks cannot then drift apart.

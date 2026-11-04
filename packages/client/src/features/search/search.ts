@@ -19,11 +19,11 @@ import { copy } from './copy'
 import type { CopyKey } from './copy'
 
 /**
- * Search: a box in the sidebar that opens a palette over the window, the way
- * Claude's sidebar search does.
+ * Search: a host-owned sidebar entry that opens a palette over the window, the
+ * way Claude's sidebar search does.
  *
- * The box's seats under each style are the trigger module's
- * (features/search/search-trigger.ts), and the host's own search control —
+ * The sidebar entry and its main-panel target are registered by the trigger
+ * module (features/search/search-trigger.ts), and the host's own search control —
  * kept mounted under every `searchStyle`, because the host's shortcut has no
  * public replacement and only expands that control — is taken over by the
  * host-takeover module (features/search/search-host-takeover.ts). The palette
@@ -41,8 +41,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const sources = createSearchSources(ctx, revealHit)
   /** The host-side navigator, which lands a picked hit on its turn */
   const hostTurns = createTurnNavHost(ctx)
-  /** The sidebar box, placed for the style in force (search-trigger.ts). */
-  const triggerCtl = createSearchTrigger(ctx, openPalette)
+  /** The host-owned sidebar entry and its panel target (search-trigger.ts). */
+  const triggerCtl = createSearchTrigger(ctx, { open: openPalette, close: closePalette })
   /** The host's own sidebar search, taken over (search-host-takeover.ts). */
   const takeover = createHostSearchTakeover({
     ctx,
@@ -478,8 +478,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * @param then - a picked row's navigation, run once the modal is gone.
    */
   function closePalette(then?: unknown) {
-    if (!isOpen) return
+    if (disposed || !isOpen) return
     isOpen = false
+    triggerCtl.leave()
     closing = true
     pendingRun = typeof then === 'function' ? then as () => void : null
     window.clearTimeout(contentTimer)

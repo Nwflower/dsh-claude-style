@@ -74,6 +74,12 @@ test('a choice outside its set reads as its default', () => {
   expect(clampPrefs({ ongoingIndicator: 'pulse' }).ongoingIndicator).toBe(PREF_DEFAULTS.ongoingIndicator)
 })
 
+test('the retired overlay search style reads as the standalone button', () => {
+  expect(clampPrefs({}).searchStyle).toBe('standalone')
+  expect(clampPrefs({ searchStyle: 'overlay' }).searchStyle).toBe('standalone')
+  expect(clampPrefs({ searchStyle: 'icon' }).searchStyle).toBe('icon')
+})
+
 test('the caret switch reads the retired explicit-moves tier as on', () => {
   expect(clampPrefs({ caretMotion: 'typing' }).caretMotion).toBe('typing')
   expect(clampPrefs({ caretMotion: 'off' }).caretMotion).toBe('off')

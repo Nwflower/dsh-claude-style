@@ -18,6 +18,7 @@
  * The switch cases carry the registry as well: the workspace feature reads the
  * host's view store from the `sidebar.workspaces` declaration and registers the
  * archived row's delete action in `sidebar.workspaces.session.row.action`.
+ * The search case declares the host's panel list and main-panel seats.
  */
 (function () {
   var host = window.__dshSmokeHost
@@ -38,21 +39,23 @@
     },
   } : undefined
 
-  var slotRegistry = CASE === 'studio' || CASE === 'effort' || CASE === 'settings' || CASE === 'chunk-late' || CASE === 'chat-files' || CASE === 'peer-chat-ux' || CASE === 'skin-center-handoff' || CASE === 'skin-center-arrival' || switchCase ? {
+  var slotRegistry = CASE === 'search' || CASE === 'studio' || CASE === 'effort' || CASE === 'settings' || CASE === 'chunk-late' || CASE === 'chat-files' || CASE === 'peer-chat-ux' || CASE === 'skin-center-handoff' || CASE === 'skin-center-arrival' || switchCase ? {
     inject: function (key, callback) {
-      var declared = switchCase
-        ? key === 'sidebar.workspaces' || key === 'sidebar.workspaces.session.row.action'
-        : CASE === 'studio'
-          ? key === 'conversation.input.dock'
-          : CASE === 'effort'
-            ? key === 'conversation.input.model'
-            : CASE === 'chat-files'
-            ? key === 'tool.call.toolview'
-            : CASE === 'skin-center-handoff' || CASE === 'skin-center-arrival'
-              ? key === 'settings.section' || key === 'plugins.bundle.config'
-            : CASE === 'peer-chat-ux'
-              ? key === 'tool.call.toolview' || key === 'settings.section' || key === 'plugins.bundle.config'
-              : key === 'settings.section' || key === 'plugins.bundle.config'
+      var declared = CASE === 'search'
+        ? key === 'sidebar.panellist' || key === 'main'
+        : switchCase
+          ? key === 'sidebar.workspaces' || key === 'sidebar.workspaces.session.row.action'
+          : CASE === 'studio'
+            ? key === 'conversation.input.dock'
+            : CASE === 'effort'
+              ? key === 'conversation.input.model'
+              : CASE === 'chat-files'
+                ? key === 'tool.call.toolview'
+                : CASE === 'skin-center-handoff' || CASE === 'skin-center-arrival'
+                  ? key === 'settings.section' || key === 'plugins.bundle.config'
+                  : CASE === 'peer-chat-ux'
+                    ? key === 'tool.call.toolview' || key === 'settings.section' || key === 'plugins.bundle.config'
+                    : key === 'settings.section' || key === 'plugins.bundle.config'
       return declared ? callback() : function () {}
     },
     register: function (spec, component) {
@@ -68,7 +71,7 @@
         probe.remove()
       }
       window.__slots = window.__slots || []
-      var entry = { key: spec.name, id: spec.id, seat: spec.key, priority: spec.priority, order: spec.order, component: typeof component }
+      var entry = { key: spec.name, id: spec.id, seat: spec.key, priority: spec.priority, order: spec.order, label: typeof spec.label === 'function' ? spec.label() : spec.label, component: typeof component }
       window.__slots.push(entry)
       window.__slotComponents = window.__slotComponents || {}
       window.__slotComponents[spec.id === undefined ? spec.key : spec.id] = component

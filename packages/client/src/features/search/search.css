@@ -1,148 +1,17 @@
-/* ---------- Sidebar search box ---------- */
-/* packages/client/src/features/search/search.ts places the box by the `searchStyle`
-   preference, which rides <body> as data-dsh-claude-search-style: `overlay`
-   (the default, everything below) puts it in the host's logo row, `standalone`
-   gives it a row of its own under that row, and `icon` draws no box of the
-   skin's at all — the host's own search button stands, and search.ts takes its
-   click (so the rules that put the host's slot out of sight skip that style).
-
-   The overlay row becomes a two-column grid whose first cell holds the brand
-   and the box on top of each other (the web shell's collapse toggle keeps the
-   second; the desktop's is fixed in the titlebar). At rest the brand shows;
-   while the pointer is anywhere over the sidebar the two cross-fade, on the
-   same 0.16s the workspace heading and its segmented control trade places
-   with. A box that holds the keyboard stays.
-   The box is the first row of the sidebar's list: it takes the same 28px and
-   the same 6px step down to the row below, so the host's logo row carries it
-   at 28px with no padding of its own. The host gives that row no top margin
-   and a 4px bottom margin; the row's own 6px foot is what puts the box on the
-   rows' rhythm, and it replaces the host's 4px rather than adding to it. */
-body[data-dsh-claude-style] [data-dsh-claude-search-row] {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  height: 28px;
-  padding: 0;
-  margin-bottom: 6px;
-}
-body[data-dsh-claude-style] [data-dsh-claude-search-row] > :is([data-dsh-claude-part~="brand-button"], .dsh-claude-search-trigger) {
-  grid-area: 1 / 1;
-}
-body[data-dsh-claude-style] [data-dsh-claude-search-row] > [data-dsh-claude-part~="brand-button"] {
-  transition: opacity var(--dsh-claude-duration-surface) var(--dsh-claude-ease-standard), visibility var(--dsh-claude-duration-surface) var(--dsh-claude-ease-standard);
-}
-body[data-dsh-claude-style] .dsh-claude-search-trigger {
-  display: flex;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: opacity var(--dsh-claude-duration-surface) var(--dsh-claude-ease-standard), visibility var(--dsh-claude-duration-surface) var(--dsh-claude-ease-standard);
-  min-width: 0;
-  height: 28px;
-  margin: 0;
-  padding: 0 10px;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid var(--dsw-alias-border-l1, #e9e9e9);
-  border-radius: 8px;
-  background: var(--dsh-claude-canvas, #ffffff);
-  color: var(--dsw-alias-label-tertiary, #91888a);
-  font-family: var(--dsw-font-family);
-  font-size: 14px;
-  line-height: 20px;
-  text-align: left;
-  cursor: pointer;
-  box-shadow: none;
-  -webkit-app-region: no-drag;
-}
-body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-trigger {
-  border-color: var(--dsw-alias-border-l2);
-  background: var(--dsh-claude-card);
-}
-body[data-dsh-claude-style] [data-slot="sidebar"]:hover [data-dsh-claude-search-row] > .dsh-claude-search-trigger,
-body[data-dsh-claude-style] [data-dsh-claude-search-row] > .dsh-claude-search-trigger:focus-visible {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-}
-body[data-dsh-claude-style] [data-slot="sidebar"]:hover [data-dsh-claude-search-row] > [data-dsh-claude-part~="brand-button"],
-body[data-dsh-claude-style] [data-dsh-claude-search-row] > [data-dsh-claude-part~="brand-button"]:has(~ .dsh-claude-search-trigger:focus-visible) {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-/* A box too narrow for its word and its key hints together keeps the word:
-   the web's Chat / Code switch (features/surface) takes a cell of the brand
-   row, and the reader can drag the sidebar narrow. */
-body[data-dsh-claude-style] .dsh-claude-search-trigger {
-  container-type: inline-size;
-}
-@container (width < 200px) {
-  body[data-dsh-claude-style] .dsh-claude-search-trigger > .dsh-claude-search-keys {
-    display: none;
-  }
-}
-/* Standalone: the box keeps a row of its own under the brand row and shows
-   whether or not the pointer is over the sidebar. The row takes the same 28px
-   and the same 6px foot as the rows below it, so the box lands on the sidebar
-   list's rhythm rather than on the brand row's own 4px. The row carries no
-   inline padding of its own: the column's own inset is what the New session
-   plate under it starts from, so the box's border stands on that plate's two
-   edges and the box is exactly as wide as the rows it sits among. */
-body[data-dsh-claude-style][data-dsh-claude-search-style="standalone"] .dsh-claude-search-bar {
-  display: flex;
-  padding: 0;
-  margin: 0 0 6px 0;
-}
-body[data-dsh-claude-style][data-dsh-claude-search-style="standalone"] .dsh-claude-search-trigger {
-  flex: 1 1 auto;
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-}
-/* The sidebar's own layout choice takes that foot down with the rows below it
-   (theme/sidebar.css), so the search row keeps the same rhythm as them. */
-body[data-dsh-claude-style][data-dsh-claude-search-style="standalone"][data-dsh-claude-sidebar-layout="compact"] .dsh-claude-search-bar {
-  margin-bottom: 2px;
-}
-/* The Windows desktop shell's sidebar column starts under its 40px titlebar,
-   which left the brand a titlebar's height lower than on the web; the row rises
-   to that edge. It rises 6px and not the 10px this rule carried while the box
-   was 32px: the box is 28px now, and the 4px it gives back are what keep its
-   top clear of the host's clip at the column's edge. The row's own 6px foot is
-   untouched, so the box still steps down to New session by 6px. macOS takes no
-   offset: the host pads nothing around the traffic lights, and its own
-   `_topStrip + _logoRow` margin (-12px) already seats the row's content where
-   the 48px it declares for --dsh-frame-top-clearance wants it. */
+/* ---------- Sidebar search entry ---------- */
+/* The `standalone` style registers the entry in the host's panel list; `icon`
+   leaves the host's own workspace search in place. The host owns the entry's
+   row, label, collapsed state and click action (search-trigger.ts). */
+/* The Windows desktop shell's sidebar column starts under its 40px titlebar;
+   the brand row and the rows below it rise 6px toward that edge. macOS takes
+   no offset: its own `_topStrip + _logoRow` margin already seats the row where
+   the frame's top clearance wants it. */
 html[data-windows-titlebar] body[data-dsh-claude-style] [data-slot="sidebar"] [data-dsh-claude-part~="logo-row"] {
   margin-top: -6px !important;
 }
-/* Where no desktop shell owns the column's top — a browser page — the row is the
-   column's first row, and the root's own 6px was the whole inset: the brand sat
-   against the window's top edge. A step of the rows' own 6px, rounded to the
-   row's 8px inline padding, lifts it clear. The attribute is what the collapsed
-   rail lacks, so it keeps the host's 18px. */
-html:not([data-windows-titlebar]):not([data-platform="darwin"]) body[data-dsh-claude-style] [data-dsh-claude-search-row] {
-  margin-top: 8px;
-}
-/* The host gives its own logo row a 4px leading edge, and the brand another 4px
-   under the Windows caption row; the row's zeroed padding drops both, so the
-   brand takes the row's 8px and its mark's left edge lands on the new-session
-   chip's. */
-html:not([data-windows-titlebar]):not([data-platform="darwin"]) body[data-dsh-claude-style] [data-dsh-claude-search-row] > [data-dsh-claude-part~="brand-button"] {
-  padding-left: 8px;
-}
-/* On both desktop shells the host's toggle takes no cell in the row: macOS
-   renders it inside its own 52px `_topStrip`, Windows fixes it into the caption
-   overlay. The row keeps a single column there — a second, empty one would
-   still cost the brand and the box the host logo row's 8px gap. */
-html[data-windows-titlebar] body[data-dsh-claude-style] [data-dsh-claude-search-row],
-html[data-platform=darwin] body[data-dsh-claude-style] [data-dsh-claude-search-row] {
-  grid-template-columns: minmax(0, 1fr) !important;
-}
-/* The host's own sidebar search stays mounted while the box stands in for it:
-   its shortcut (Ctrl+K) ends by focusing its input and that focus is what opens
-   the palette, so it is only taken out of sight and out of the header's layout.
+/* The host's own sidebar search stays mounted while the skin's button stands
+   in for it: its shortcut (Ctrl+K) ends by focusing its input and that focus is
+   what opens the palette, so it is only taken out of sight and out of the header's layout.
    The `icon` style is the exception — there the host's own button is the
    reader's way in, and the slot keeps everything the host gives it.
    The header packs its children to the right and relied on that slot's flex to
@@ -171,20 +40,11 @@ body[data-dsh-claude-style]:not([data-dsh-claude-search-style="icon"]) [data-slo
   transform: none !important;
   pointer-events: auto !important;
 }
-/* The collapsed rail: the wide brand is gone, so there is no row for the box to
-   stand on, and the column is a 36px icon column. The box takes a row of its own
-   under the rail's mark — the wide order of mark, box, New session kept — and
-   turns into the rail's icon button: one 36px row on the host's 12px step, no
-   fill, no border, the icon alone. Both `overlay` and `standalone` land here:
-   neither has a brand row in the rail.
-   The host's workspace rail keeps a search icon of its own further down the
-   column; with the skin's box standing in for it, that control leaves the
-   column, so one search icon stands under the mark where the reader expects it.
-   It leaves the column's *layout* and not the page, the way the host's wide
-   search does above: the host's own shortcut still expands that control and
-   focuses its field, and that focus is what opens the palette. The `icon`
-   style is the exception — there the host's own button is the reader's way in,
-   and it keeps its place. */
+/* The host's workspace rail keeps a second search icon further down the
+   column. It stays mounted for the host shortcut, whose focus opens the
+   palette, but leaves the layout while the panel-list entry is registered.
+   The `icon` style leaves that workspace control visible as the reader's way
+   in, just as in the expanded sidebar. */
 body[data-dsh-claude-style]:not([data-dsh-claude-search-style="icon"]) [data-sidebar-collapsed] [data-dsh-claude-holds~="rail-search"] {
   position: absolute;
   width: 1px;
@@ -194,62 +54,6 @@ body[data-dsh-claude-style]:not([data-dsh-claude-search-style="icon"]) [data-sid
   clip-path: inset(50%);
   opacity: 0;
   pointer-events: none;
-}
-body[data-dsh-claude-style] [data-sidebar-collapsed] [data-dsh-claude-part~="logo-row"] + .dsh-claude-search-trigger {
-  display: flex;
-  flex: none;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  margin: 0 0 12px;
-  padding: 0;
-  border: 0;
-  border-radius: 12px;
-  background: transparent;
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-  /* The host slides every row of the rail in from the right as the column
-     settles (its own 150 ms step over 49 px); the box is the skin's own
-     element standing in that column, so it enters the same way instead of
-     standing still while its neighbours travel. */
-  animation: dsh-claude-rail-in var(--dsh-claude-duration-surface) var(--dsh-claude-ease-in-out) backwards;
-}
-@keyframes dsh-claude-rail-in {
-  from {
-    opacity: 0;
-    transform: translate(49px);
-  }
-}
-body[data-dsh-claude-style] [data-sidebar-collapsed] [data-dsh-claude-part~="logo-row"] + .dsh-claude-search-trigger > :is(.dsh-claude-search-trigger-label, .dsh-claude-search-keys) {
-  display: none;
-}
-/* A button, like the New session and Plugins rows under it: the same hover
-   plate, laid over the box's own opaque fill so the brand behind it never
-   shows through. */
-body[data-dsh-claude-style] .dsh-claude-search-trigger:hover {
-  background-image: linear-gradient(var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)), var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)));
-}
-body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-trigger:hover {
-  background-image: linear-gradient(rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.08)) !important;
-}
-body[data-dsh-claude-style] .dsh-claude-search-trigger-icon {
-  display: inline-flex;
-  flex: none;
-  color: var(--dsw-alias-label-secondary, #70686a);
-}
-/* In the rail the box stands as the host's own 36px icon button, whose glyph is
-   18px, and the panel rows under it take that size (theme/sidebar.css). */
-body[data-dsh-claude-style] [data-sidebar-collapsed] .dsh-claude-search-trigger-icon > svg {
-  width: 18px;
-  height: 18px;
-}
-body[data-dsh-claude-style] .dsh-claude-search-trigger-label {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
 }
 /* ---------- Search palette ---------- */
 /* The card is the host's Modal (its mask, focus return and Esc); these rules

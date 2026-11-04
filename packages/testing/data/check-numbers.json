@@ -964,18 +964,18 @@
       "teardown takes the control marks off the host controls": [
         0
       ],
-      "the Standalone box is exactly as wide as the rows under it": [
+      "the Standalone button is exactly as wide as the rows under it": [
         0
       ],
-      "the Icon style draws no box of the skin's, puts the host's own search slot back in the header, and takes its click over": [
+      "the Icon style draws no button of the skin's, puts the host's own search slot back in the header, and takes its click over": [
         0,
         10
       ],
-      "the New session row wears the search box's own key caps, and the `+` between them is gone": [
+      "the New session row wears the search button's own key caps, and the `+` between them is gone": [
         1,
         2
       ],
-      "teardown takes the search box, its row mark and its root away": [
+      "teardown takes the search button, its row and its root away": [
         0
       ],
       "synthetic path injects nothing into a host menu": [

@@ -4,13 +4,12 @@ import type { Prefs } from '../../constants'
 import { copy } from './copy'
 
 /**
- * The settings page's Sidebar tab: the left sidebar's spacing and the right
- * sidebar's docked panels, whose looks belong to no feature
- * (packages/client/src/theme/sidebar.css, theme/chrome.css), so the tab writes
- * those two rows itself. The footer takeover, the account-hold language, the
- * search box with its style, the entry editor, the Active / Archived view
+ * The settings page's Sidebar tab: the left sidebar's spacing, whose look
+ * belongs to no feature (packages/client/src/theme/sidebar.css), so the tab
+ * writes that row itself. The footer takeover, the account-hold language, the
+ * search button with its style, the entry editor, the Active / Archived view
  * and the hover peek are the features' own rows, placed here by their manifests
- * (D76); the right sidebar's row closes the tab, after every left sidebar row.
+ * (D76).
  */
 export function createSettingsSidebarTab(): SettingsTab {
   const rows = (view: SettingsView): SettingsRow[] => {

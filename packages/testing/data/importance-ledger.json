@@ -917,11 +917,6 @@
       "prop": "margin-top",
       "verdict": "unmatched"
     },
-    "html[data-windows-titlebar] body[data-dsh-claude-style] [data-dsh-claude-search-row],html[data-platform=darwin] body[data-dsh-claude-style] [data-dsh-claude-search-row]{grid-template-columns:minmax(0,1fr)!}|grid-template-columns": {
-      "selector": "html[data-windows-titlebar] body[data-dsh-claude-style] [data-dsh-claude-search-row],html[data-platform=darwin] body[data-dsh-claude-style] [data-dsh-claude-search-row]",
-      "prop": "grid-template-columns",
-      "verdict": "unmatched"
-    },
     "body[data-dsh-claude-style]:not([data-dsh-claude-search-style=icon]) [data-slot=sidebar] [data-dsh-claude-part~=section-actions-hidden]{opacity:1!;visibility:visible!;max-width:60px!;transform:none!;pointer-events:auto!}|opacity": {
       "selector": "body[data-dsh-claude-style]:not([data-dsh-claude-search-style=icon]) [data-slot=sidebar] [data-dsh-claude-part~=section-actions-hidden]",
       "prop": "opacity",
@@ -945,11 +940,6 @@
     "body[data-dsh-claude-style]:not([data-dsh-claude-search-style=icon]) [data-slot=sidebar] [data-dsh-claude-part~=section-actions-hidden]{opacity:1!;visibility:visible!;max-width:60px!;transform:none!;pointer-events:auto!}|pointer-events": {
       "selector": "body[data-dsh-claude-style]:not([data-dsh-claude-search-style=icon]) [data-slot=sidebar] [data-dsh-claude-part~=section-actions-hidden]",
       "prop": "pointer-events",
-      "verdict": "unmatched"
-    },
-    "body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-trigger:hover{background-image:linear-gradient(#ffffff14,#ffffff14)!}|background-image": {
-      "selector": "body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-trigger:hover",
-      "prop": "background-image",
       "verdict": "unmatched"
     },
     "body[data-dsh-claude-style] [data-dsh-claude-search-closing]>.dsh-claude-search-dialog{animation:dsh-claude-surface-out var(--dsh-claude-duration-exit) var(--dsh-claude-ease-standard) forwards!}|animation": {

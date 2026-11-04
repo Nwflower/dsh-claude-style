@@ -47,7 +47,7 @@
     "packages/testing/smoke/probe/shell-studio.js": 8,
     "packages/testing/smoke/probe/shell-switches.js": 3,
     "packages/testing/smoke/probe/sidebar-layout.js": 3,
-    "packages/testing/smoke/probe/teardown.js": 17,
+    "packages/testing/smoke/probe/teardown.js": 16,
     "packages/testing/smoke/stand-in/account-menu.js": 1,
     "packages/testing/smoke/stand-in/context-panel.js": 4,
     "packages/testing/stats-overlay.mjs": 1,

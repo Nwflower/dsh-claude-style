@@ -233,45 +233,45 @@ export default {
     check('Enter on an open composer menu reaches the host', same(r.keys, ['host picked the menu item']), JSON.stringify(r.keys))
     commonChecks(r)
   },
-  // The sidebar's search box: placed by the style preference — in the brand
-  // row resting hidden, in a row of its own below it, or not drawn at all
-  // while the host's own button stands — and opening the host's modal through
-  // a root of the skin's own.
+  // The sidebar's search button: in a row of its own after New session, or not
+  // drawn at all while the host's own button stands, and opening the host's
+  // modal through a root of the skin's own.
   search(r) {
     basicChecks(r)
     const search = r.search || {}
-    check('the search box goes in the brand row beside the brand, and rests hidden until the sidebar is hovered',
-      search.placed === true && search.rowMarked === true && search.resting === 'hidden', JSON.stringify(search))
-    check('pressing the search box renders the host modal through a root of the skin\'s own', search.modalRendered === true, JSON.stringify(search))
+    check('the Standalone search button starts in its own row, shown without a hover',
+      search.placed === true && search.rowMarked === false && search.resting === 'visible', JSON.stringify(search))
+    check('pressing the search button renders the host modal through a root of the skin\'s own', search.modalRendered === true, JSON.stringify(search))
     const standalone = search.standalone || {}
-    check('the Standalone style gives the box a row of its own under the brand row, shown without a hover, and the brand row keeps the host\'s layout',
-      standalone.barAfterRow === true && standalone.triggerInBar === true && standalone.triggerVisibility === 'visible' &&
+    check('the Standalone style gives the button a row of its own after New session, shown without a hover, and the brand row keeps the host\'s layout',
+      standalone.barAfterNewSession === true && standalone.triggerInBar === true && standalone.triggerVisibility === 'visible' &&
         standalone.rowMarked === false && standalone.hostSlotPosition === 'absolute',
       JSON.stringify(standalone))
-    // The rows under it span the column's own padding, so the box's border has
-    // to stand on those two edges: its row may add no inline padding of its own.
-    check('the Standalone box is exactly as wide as the rows under it',
+    // The button spans the same content box as the rows under it; its own row
+    // adds no inline padding.
+    check('the Standalone button is exactly as wide as the rows under it',
       standalone.boxWidth !== null && standalone.boxWidth === standalone.barWidth && standalone.boxWidth > 0,
       JSON.stringify({ boxWidth: standalone.boxWidth, barWidth: standalone.barWidth }))
     const icon = search.icon || {}
-    check('the Icon style draws no box of the skin\'s, puts the host\'s own search slot back in the header, and takes its click over',
-      icon.triggerInRow === false && icon.rowMarked === false && icon.barAfterRow === false &&
+    check('the Icon style draws no button of the skin\'s, puts the host\'s own search slot back in the header, and takes its click over',
+      icon.triggerInRow === false && icon.rowMarked === false && icon.barAfterNewSession === false &&
         icon.hostSlotPosition !== 'absolute' && icon.hostSlotWidth > 10 && icon.hostClicksReachingHost === 0,
       JSON.stringify(icon))
     const back = search.back || {}
-    check('switching the style back to Cover the brand seats the box in the brand row again, live',
-      back.triggerInRow === true && back.rowMarked === true && back.triggerVisibility === 'hidden' && back.hostSlotPosition === 'absolute',
+    check('switching the style back to Standalone seats the button after New session again, live',
+      back.triggerInRow === false && back.rowMarked === false && back.barAfterNewSession === true &&
+        back.triggerInBar === true && back.triggerVisibility === 'visible' && back.hostSlotPosition === 'absolute',
       JSON.stringify(back))
-    // The New session row carries the same host markup the box's own caps are
+    // The New session row carries the same host markup the button's own caps are
     // cut for; both are read field by field, so the hints cannot drift apart.
     const caps = search.keycaps || {}
     const cap = Array.isArray(caps.search) && caps.search.length === 1 ? caps.search[0] : null
-    check('the New session row wears the search box\'s own key caps, and the `+` between them is gone',
+    check('the New session row wears the search button\'s own key caps, and the `+` between them is gone',
       cap !== null && Array.isArray(caps.shortcut) && caps.shortcut.length === 2 &&
         caps.shortcut.every((entry) => same(entry, cap)) &&
         caps.separators.length === 1 && caps.separators.every((display) => display === 'none'),
       JSON.stringify(caps))
-    check('teardown takes the search box, its row mark and its root away',
+    check('teardown takes the search button, its row and its root away',
       search.left === 0 && search.rootUnmounted === true, JSON.stringify(search))
     commonChecks(r)
   },

@@ -24,8 +24,7 @@
   "searchEmpty": { "zh": "没有匹配的结果", "en": "No results" },
   "searchTitle": { "zh": "重绘搜索面板", "en": "Redraw the search panel" },
   "searchDesc": { "zh": "会话、项目、插件、Skill 与快捷键都找得到。", "en": "Finds sessions, projects, plugins, Skills and shortcuts." },
-  "searchStyleTitle": { "zh": "搜索框样式", "en": "Search box style" },
+  "searchStyleTitle": { "zh": "搜索样式", "en": "Search style" },
   "searchStyleIcon": { "zh": "图标", "en": "Icon" },
-  "searchStyleOverlay": { "zh": "覆盖品牌", "en": "Cover the brand" },
   "searchStyleStandalone": { "zh": "独立", "en": "Standalone" }
 }

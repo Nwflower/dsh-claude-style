@@ -1,0 +1,8 @@
+{
+  "group": "improvements",
+  "order": 67,
+  "at": "2026-11-04",
+  "external": false,
+  "zh": "将侧栏搜索框改为与新会话、插件一致的按钮，放在新会话之后，搜索样式保留图标与独立两项，已有的覆盖品牌设置迁移到独立",
+  "en": "Turn the sidebar search box into a button after New session and matching the panel rows, keep Icon and Standalone as the two styles, and migrate a stored Cover the brand choice to Standalone"
+}

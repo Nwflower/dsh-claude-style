@@ -351,21 +351,17 @@ export const DIALOG_TRIGGER_SELECTOR = 'button[aria-haspopup="dialog"]'
 export const FOOT_AREA_SELECTOR = '[data-dsh-claude-part~="foot-area"]'
 /**
  * The host's own sidebar search: a button and an input in the workspace
- * section's header. The skin's box stands in for it, and the `icon` style
+ * section's header. The skin's button stands in for it, and the `icon` style
  * leaves the host's button in place with its click taken over, so both read
  * this slot.
  */
 export const SIDEBAR_SEARCH_SLOT_SELECTOR = '[data-slot="sidebar"] [data-dsh-claude-part~="search-slot"]'
 /** The sidebar's own column box, whose width follows the collapse and the reader's drag. */
 export const SIDEBAR_ROOT_SELECTOR = '[data-slot="sidebar"] > [data-dsh-claude-part~="sidebar-root"]'
-/**
- * The sidebar's top row: the wide brand and the collapse toggle, and the row
- * the collapsed rail keeps as its own mark's seat. The search feature reads it
- * to give the rail a row of its own under the mark.
- */
-export const SIDEBAR_LOGO_ROW_SELECTOR = '[data-slot="sidebar"] [data-dsh-claude-part~="logo-row"]'
 /** The wide brand in the sidebar's top row; the collapsed rail has none. */
 export const SIDEBAR_BRAND_SELECTOR = '[data-slot="sidebar"] [data-dsh-claude-part~="logo-row"] > [data-dsh-claude-part~="brand-button"]'
+/** The New session button; the skin's standalone search button takes the next row. */
+export const SIDEBAR_NEW_SESSION_SELECTOR = '[data-slot="sidebar"] [data-dsh-claude-part~="new-session"]'
 /**
  * The sidebar's collapse toggle, inside the top row. The desktop shells fix it
  * into the caption strip; the web leaves it the row's last cell.

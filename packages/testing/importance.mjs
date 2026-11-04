@@ -78,7 +78,6 @@ const MARKS = [
   ['status motion sweep', 'data-dsh-claude-status-motion', 'sweep'],
   ['status motion wash', 'data-dsh-claude-status-motion', 'wash'],
   ['search style icon', 'data-dsh-claude-search-style', 'icon'],
-  ['search style overlay', 'data-dsh-claude-search-style', 'overlay'],
   ['search style standalone', 'data-dsh-claude-search-style', 'standalone'],
   ['sidebar relaxed', 'data-dsh-claude-sidebar-layout', 'relaxed'],
   ['sidebar compact', 'data-dsh-claude-sidebar-layout', 'compact'],

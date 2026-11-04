@@ -77,7 +77,7 @@ export default {
         typeof paletteCard(customCards, 'custom').reset === 'string' && paletteCard(customCards, 'custom').reset.length > 0,
       JSON.stringify(customCards))
     const off = settings.parentsOff || {}
-    check('a sub-row greys out while its parent is off: the accent colour with the colours following the host, the mascot\'s place with the mascot off, the model descriptions, the effort accent colour, the quick providers and the peak rate meter with the model picker off, the custom price table with the billing off, the search box\'s style with the sidebar search off, and the title-bar band for the window on every page',
+    check('a sub-row greys out while its parent is off: the accent colour with the colours following the host, the mascot\'s place with the mascot off, the model descriptions, the effort accent colour, the quick providers and the peak rate meter with the model picker off, the custom price table with the billing off, the search button\'s style with the sidebar search off, and the title-bar band for the window on every page',
       !!off.appearance && JSON.stringify(off.appearance.disabled) === '["mascotScope"]' &&
         !!off.mainWindow && JSON.stringify(off.mainWindow.disabled) === '["headerBand","effortSlider","modelDescriptions","quickProviders","peakrate","effortAccent","statsFooterAlign","billingTable"]' &&
         !!off.sidebar && JSON.stringify(off.sidebar.disabled) === '["searchStyle"]',

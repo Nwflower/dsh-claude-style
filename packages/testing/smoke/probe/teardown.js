@@ -72,7 +72,7 @@
           listStyle.borderTopLeftRadius === '7px' || listStyle.paddingLeft === '2px' || listStyle.backgroundColor !== 'rgba(0, 0, 0, 0)'
       }
       if (r.search) {
-        r.search.left = document.querySelectorAll('[data-dsh-claude-search-row], .dsh-claude-search-trigger, .dsh-claude-search-bar').length
+        r.search.left = document.querySelectorAll('.dsh-claude-search-trigger, .dsh-claude-search-bar').length
         r.search.rootUnmounted = !!probe.searchRoot && probe.searchRoot.unmounted
       }
       r.leftDraftMarks = document.querySelectorAll('[data-dsh-claude-draft-empty]').length

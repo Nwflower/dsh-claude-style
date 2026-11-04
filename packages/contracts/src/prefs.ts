@@ -109,11 +109,10 @@ export const MASCOT_SCOPE_HOME = 'home'
 export const MASCOT_SCOPE_ALL = 'all'
 export const MASCOT_SCOPES = [MASCOT_SCOPE_HOME, MASCOT_SCOPE_ALL] as const
 
-/** Where the skin's search box stands, and how much of the host's own sidebar search it leaves in place. */
+/** Whether the skin draws its own sidebar search button or leaves the host's own button in place. */
 export const SEARCH_STYLE_ICON = 'icon'
-export const SEARCH_STYLE_OVERLAY = 'overlay'
 export const SEARCH_STYLE_STANDALONE = 'standalone'
-export const SEARCH_STYLES = [SEARCH_STYLE_ICON, SEARCH_STYLE_OVERLAY, SEARCH_STYLE_STANDALONE] as const
+export const SEARCH_STYLES = [SEARCH_STYLE_ICON, SEARCH_STYLE_STANDALONE] as const
 
 /** How much air the sidebar keeps around its own rows. */
 export const SIDEBAR_LAYOUT_RELAXED = 'relaxed'
@@ -354,7 +353,7 @@ export const PREFS = {
   /** Whether the sidebar lists its sessions by date instead of by workspace (features/date-groups). */
   dateGroups: { type: 'boolean', default: true },
   sidebarSearch: { type: 'boolean', default: true },
-  searchStyle: { type: 'choice', values: SEARCH_STYLES, default: SEARCH_STYLE_OVERLAY },
+  searchStyle: { type: 'choice', values: SEARCH_STYLES, default: SEARCH_STYLE_STANDALONE, legacy: { overlay: SEARCH_STYLE_STANDALONE } },
   /** Whether resting the pointer on the collapsed sidebar's toggle opens the sidebar over the page. */
   sidebarPeek: { type: 'boolean', default: true },
   /** Whether the panel list carries the More menu's hidden entries and its Edit sidebar dialog. */

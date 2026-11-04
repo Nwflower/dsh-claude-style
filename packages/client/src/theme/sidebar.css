@@ -83,8 +83,8 @@ body[data-dsh-claude-style] button[data-dsh-claude-part~="panel-row"] {
   font-family: var(--dsw-font-family);
   font-size: 13px;
   font-weight: 500;
-  /* Explicit, so the label's x does not depend on the host's gap: both sidebar
-     rows place their text at padding + 20px icon box + 6px. */
+  /* Explicit, so the label's x does not depend on the host's gap: every sidebar
+     row places its text at padding + 20px icon box + 6px. */
   gap: 6px;
   cursor: pointer;
   box-shadow: none;
@@ -121,9 +121,9 @@ body[data-dsh-claude-style] button[data-dsh-claude-part~="new-session"] [data-ds
   justify-content: flex-start;
 }
 /* The row's shortcut hint is the host's own key caps: one `kbd` per key with a
-   `+` between them. The caps take the search box's keycap look, which lives
+   `+` between them. The caps take the search button's keycap look, which lives
    with the search palette (features/search/search.css); the `+` goes, the way
-   the box leaves it out. */
+   the button leaves it out. */
 body[data-dsh-claude-style] button[data-dsh-claude-part~="new-session"] [data-dsh-claude-part~="new-session-shortcut"] kbd[data-dsh-claude-part~="key-separator"] {
   display: none;
 }

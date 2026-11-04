@@ -169,7 +169,7 @@ card leaves unset.
 | `--dsw-specific-selector` | `selector` | `#fefefe` | `#323232` | `#fafbfe` | `#2b2f37` | host's own |  |
 | `--dsw-specific-sidebar-fill` | card `sidebar` | `#fafafa` | `#1f1f1f` | `#f7f9ff` | `#13161d` | host's own |  |
 | `--dsw-alias-brand-primary-new-colorprimary-new-color` | `accent` | `#d97757` | `#d97757` | `#4d6bfe` | `#4d6bfe` | host's own |  |
-| `--dsh-claude-canvas` | `canvas` | `#ffffff` | `#191919` | `#fbfcff` | `#13161d` | `var(--dsw-alias-bg-base)` | the page canvas, the search box |
+| `--dsh-claude-canvas` | `canvas` | `#ffffff` | `#191919` | `#fbfcff` | `#13161d` | `var(--dsw-alias-bg-base)` | the page canvas |
 | `--dsh-claude-sidebar-canvas` | card `sidebar` | `#fafafa` | `#1f1f1f` | `#f7f9ff` | `#13161d` | `var(--dsw-specific-sidebar-fill)` | the sidebar |
 | `--dsh-claude-card` | `card` | `#ffffff` | `#232323` | `#fbfcff` | `#1d2028` | `var(--dsw-alias-bg-overlay)` | cards on the canvas in light and raised in dark: the account popover, the search palette |
 | `--dsh-claude-inverse-fill` | `ink` | `#161616` | `#fdfdfd` | `#131416` | `#f4f9ff` | `var(--dsw-alias-interactive-bg-hover)` | the model picker's group label fill: an inverted chip under Claude, a hover-plate chip under the host |
