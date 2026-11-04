@@ -90,6 +90,7 @@ interface HostDomEntry {
 }
 
 export const HOST_DOM: HostDomEntry[] = [
+  { id: 'workspace.leading-outlet', value: dom.SESSION_STATUS_OUTLET_SELECTOR, probe: { state: 'conversation', kind: 'selector', min: 0 }, use: 'native idle leading outlet; third-party decoration in this outlet stays leading rather than treated as a status' },
   { id: 'chat.flow-block', value: dom.FLOW_BLOCK_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'a flow block: a new one is this piece of the stream moving on, and a direct call\u2019s own block is the box its row takes in the list; the flow children the sodium rewrite buckets its gap rules on (D78)' },
   { id: 'chat.flow', value: dom.CHAT_FLOW_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'the chat column: the root every chat-area behaviour scopes to' },
   { id: 'chat.flow-slot', value: dom.CHAT_FLOW_SLOT_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'the slot the chat column renders its flow into; its children and the column’s are the ones the host’s flow rules space, and the slot itself is one of the column’s children the sodium rewrite buckets its gap rules on (D78)' },

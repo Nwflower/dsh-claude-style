@@ -80,3 +80,8 @@ export { install as installActiveFirst } from './features/active-first/active-fi
 export { install as installRowSkip } from './features/row-skip/row-skip'
 export { ARCHIVED_PAGE_SIZE, archivedOrder, createArchivedList } from './features/workspace/archived-list'
 export type { ArchivedList, ArchivedListActions, ArchivedListDeps, ArchivedListHost } from './features/workspace/archived-list'
+
+export { RightSessionStatus } from './features/sidebar-status/row-status'
+export { default as SIDEBAR_STATUS_SHEET } from './features/sidebar-status/sidebar-status.css?raw'
+export { default as SIDEBAR_BASE_SHEET } from './theme/sidebar.css?raw'
+export { installSessionContextMenu } from './features/session-actions/context-menu'

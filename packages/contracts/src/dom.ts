@@ -577,3 +577,6 @@ export const SESSION_ROW_SELECTOR = '[data-row-key^="session:"]'
 export const SESSION_PHASE_ATTRIBUTE = 'data-state'
 export const SESSION_ONGOING_STATE = 'ongoing'
 export const SESSION_ONGOING_SELECTOR = '[data-state="ongoing"]'
+
+/** Idle rows render this optional third-party leading decoration outlet. */
+export const SESSION_STATUS_OUTLET_SELECTOR = '[data-slot="sidebar.session.row.leading"]'

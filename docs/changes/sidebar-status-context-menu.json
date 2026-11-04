@@ -1,0 +1,8 @@
+{
+  "group": "improvements",
+  "order": 1,
+  "at": "2026-11-03",
+  "external": false,
+  "zh": "会话状态指示移到行右侧，支持右键和菜单键打开原生会话菜单，并将行内归档、置顶操作收进菜单",
+  "en": "Place native session status at the trailing edge, open native menus with right-click or menu keys, and keep archive and pin in menus without inline shortcuts"
+}
