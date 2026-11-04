@@ -2,7 +2,9 @@
 
 Run by hand after changing a drawing; the build never runs it:
 
-    python scripts/draw-crab.py
+    python scripts/draw-crab.py                                  # every sheet
+    python scripts/draw-crab.py thinking happy                   # only the named animations
+    python scripts/draw-crab.py thinking --preview .debug/crab   # and an enlarged GIF of each to look at
 
 Needs Pillow. The crab is drawn on a 52x36 grid of cells, one pixel a cell,
 feet on the bottom row and the right claw four columns in from the right
@@ -13,21 +15,30 @@ pulls out a laptop, types, and puts it away) is laid onto the same grid for the
 typing animations. Every animation is written as two sheets: `<key>.png`
 carries the shell, its shaded side and the eyes in their colours;
 `<key>-ink.png` is a mask the stylesheet fills with the theme's quiet ink
-(the laptop, thought dots, letters, notes, the hat). A sheet holds eight
-frames to a row, each cropped to the smallest box that holds every frame of
-that animation. The script prints the CRAB_SHEETS table packages/client/src/constants.js
-carries.
+(the laptop, the bubble wand and its bubbles, letters, notes, the hat). A
+sheet holds eight frames to a row, each cropped to the smallest box that
+holds every frame of that animation. The script prints the rows of the
+CRAB_SHEETS table in packages/client/src/features/mascot/sheets.ts for the
+animations it drew; a changed frame count or box is copied there by hand.
 """
+import argparse
 import os
 from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, 'src', 'assets', 'mascot', 'crab')
-LEGACY_BODY = os.path.join(ROOT, 'src', 'assets', 'mascot', 'crab', 'crab-laptop-body.png')
-LEGACY_INK = os.path.join(ROOT, 'src', 'assets', 'mascot', 'crab', 'crab-laptop-ink.png')
+OUT = os.path.join(ROOT, 'packages', 'assets', 'src', 'mascot', 'crab')
+LEGACY_BODY = os.path.join(OUT, 'crab-laptop-body.png')
+LEGACY_INK = os.path.join(OUT, 'crab-laptop-ink.png')
 
 W, H = 52, 36
 COLOURS = {'A': (0xd9, 0x77, 0x57, 255), 'B': (0x14, 0x14, 0x13, 255), 'C': (0xb9, 0x60, 0x3f, 255)}
+# The preview's stand-ins for the page: CRAB_FRAME_MS, the light canvas, the
+# tertiary label ink the stylesheet fills the ink mask with, and the
+# enlargement.
+FRAME_MS = 80
+PREVIEW_CANVAS = (0xfa, 0xf9, 0xf5, 255)
+PREVIEW_INK = (0x91, 0x88, 0x8a, 255)
+PREVIEW_SCALE = 8
 
 # The resting crab: the shell's top-left cell. Shell 16x12, claws 4x4 on each
 # side four rows down, eyes 2x2 two rows down, four legs 2x4 under the shell.
@@ -75,21 +86,38 @@ GLYPHS = {
     'dot': ['##', '##'],
     'small': ['#'],
     'x': ['#.#', '.#.', '#.#'],
-    'bubble': ['.#########.', '#.........#', '#.........#', '#.........#', '.#########.'],
+    'wand': ['####', '#..#', '#..#', '####'],
+    'bubble3': ['.#.', '#.#', '.#.'],
+    'bubble4': ['.##.', '#..#', '#..#', '.##.'],
+    'bubble5': ['.###.', '#...#', '#...#', '#...#', '.###.'],
+    'bubble7': ['..###..', '.#...#.', '#.#...#', '#.....#', '#.....#', '.#...#.', '..###..'],
+    'bubble7-wide': ['..####..', '.#....#.', '#.#....#', '#......#', '.#....#.', '..####..'],
+    'bubble7-tall': ['..##..', '.#..#.', '#.#..#', '#....#', '#....#', '#....#', '.#..#.', '..##..'],
+    'pop': ['....#....', '.#.....#.', '.........', '.........', '#.......#', '.........', '.........', '.#.....#.', '....#....'],
+    'pop-wide': ['.....#.....', '...........', '#.........#', '...........', '.....#.....'],
 }
 
 
-def crab(f, dx=0, dy=0, eyes='open', left='rest', right='rest', legs='stand', squish=0, shade=False):
+def glyph_at(f, name, cx, cy):
+    """Draw glyph `name` centred on cell (cx, cy), the odd cell rounding up-left."""
+    rows = GLYPHS[name]
+    f.glyph(cx - (len(rows[0]) - 1) // 2, cy - (len(rows) - 1) // 2, rows)
+
+
+def crab(f, dx=0, dy=0, eyes='open', left='rest', right='rest', legs='stand', squish=0, puff=0, shade=False):
     """The front-facing crab, moved by (dx, dy). `squish` presses the shell
-    down by that many rows and widens it by as many columns on each side."""
+    down by that many rows and widens it by as many columns on each side;
+    `puff` fills it with a breath, raising its top by that many rows and
+    widening it the same way."""
     c, r = C0 + dx, R0 + dy
-    top = r + squish
-    f.rect(c - squish, top, 16 + 2 * squish, 12 - squish)
+    top = r + squish - puff
+    spread = squish + puff
+    f.rect(c - spread, top, 16 + 2 * spread, 12 - squish + puff)
     if shade:
-        f.rect(c + 14 + squish, top, 2, 12 - squish, 'C')
+        f.rect(c + 14 + spread, top, 2, 12 - squish + puff, 'C')
     arm_row = r + 4 + squish // 2
     for side, pose in (('left', left), ('right', right)):
-        x = c - 4 - squish if side == 'left' else c + 16 + squish
+        x = c - 4 - spread if side == 'left' else c + 16 + spread
         if pose == 'rest':
             f.rect(x, arm_row, 4, 4)
         elif pose == 'up':
@@ -113,6 +141,8 @@ def crab(f, dx=0, dy=0, eyes='open', left='rest', right='rest', legs='stand', sq
             f.rect(ex, ey - 1, 2, 2, 'B')
         elif eyes == 'upleft':
             f.rect(ex - 1, ey - 1, 2, 2, 'B')
+        elif eyes == 'upright':
+            f.rect(ex + 1, ey - 1, 2, 2, 'B')
         elif eyes == 'left':
             f.rect(ex - 1, ey, 2, 2, 'B')
         elif eyes == 'right':
@@ -218,24 +248,78 @@ def idle_laptop():
     return [legacy(i) for i in ROUTINE], 0
 
 
+def bubble_wand(f, dx=0, dy=0, spread=0):
+    """The wand the raised right claw ('up') holds: a stick from the claw's
+    top and a square loop above it, apart from the round bubbles. It follows
+    the crab moved by (dx, dy) and the claw pushed out by `spread` (a squish
+    or a puff). Returns the loop's top row and centre column."""
+    c, r = C0 + dx + spread, R0 + dy
+    f.glyph(c + 17, r - 4, ['#', '#'])
+    f.glyph(c + 16, r - 8, GLYPHS['wand'])
+    return r - 8, c + 17
+
+
 def thinking():
-    """Eyes up toward a thought bubble that rises dot by dot over the left
-    claw, then holds, its three inner dots filling one by one."""
+    """Blowing bubbles, a round of 48 frames that ends where it starts: the
+    crab holds a bubble wand up in its right claw and looks at it, breathes
+    in until its shell swells, blows the breath out into a bubble that grows
+    out of the loop with a small one trailing, leans after the big one as it
+    wobbles up and drifts over its head, hops twice for joy with its free
+    claw up, flinches when it pops and hops once more."""
     frames = []
-    bx, by = C0 - 14, R0 - 16
-    for step in range(32):
-        f = new(eyes='upleft')
-        if step >= 2:
-            f.glyph(C0 - 2, R0 - 3, GLYPHS['small'])
-        if step >= 5:
-            f.glyph(C0 - 6, R0 - 7, GLYPHS['dot'])
-        if step >= 8:
-            f.glyph(bx, by, GLYPHS['bubble'])
-            filled = (step - 8) // 4 % 4
-            for i in range(filled):
-                f.glyph(bx + 3 + i * 2, by + 2, GLYPHS['small'])
+    eyes = (['upright'] * 4 + ['shut'] * 12 + ['up'] * 6 + ['happy'] * 8 + ['upleft'] * 6
+            + ['wide'] * 2 + ['happy'] * 6 + ['upright'] * 4)
+    # The breath: in over frames 4–7, out into the bubble over 8–13, and the
+    # last push (a squish) at 14; the flinch at the pop is a squish too.
+    puff = {4: 1, 5: 1, 6: 2, 7: 2, 8: 2, 9: 1, 10: 1, 11: 1}
+    squish = {14: 1, 36: 1}
+    # Leaning after the bubble from frame 19 until the round's last hop is done.
+    lean = {step: -1 for step in range(19, 44)}
+    hops = dict(zip(range(22, 30), [0, -1, -2, -1, 0, -1, -2, -1]))
+    hops.update(zip(range(38, 44), [0, -1, -2, -1, 0, 0]))
+    # The big bubble swells over the loop (frames 8–15), floats from there up
+    # and left over the head (16–35) wobbling round, wide, round, tall, and
+    # pops (36–38).
+    swell = {8: 'bubble3', 9: 'bubble3', 10: 'bubble5', 11: 'bubble5', 12: 'bubble7', 13: 'bubble7', 14: 'bubble7', 15: 'bubble7'}
+    wobble = ['bubble7', 'bubble7', 'bubble7-wide', 'bubble7-wide', 'bubble7', 'bubble7', 'bubble7-tall', 'bubble7-tall']
+    float_path = [(44, 7), (43, 7), (42, 6), (42, 6), (41, 6), (40, 5), (39, 5), (39, 5), (38, 5), (37, 4),
+                  (36, 4), (36, 4), (35, 4), (34, 4), (33, 3), (33, 3), (32, 4), (31, 4), (30, 4), (30, 4)]
+    # The small bubble leaves the loop at frame 17, rises up the right edge
+    # and pops at 28.
+    small_path = [(49, 9), (49, 8), (48, 7), (48, 6), (48, 5), (49, 4), (49, 3), (49, 2), (48, 2), (48, 1), (48, 1)]
+    for step, e in enumerate(eyes):
+        dx, dy = lean.get(step, 0), hops.get(step, 0)
+        p, s = puff.get(step, 0), squish.get(step, 0)
+        if step in hops:
+            left = 'up' if dy < 0 else 'mid'
+        elif step == 37:
+            left = 'up'
+        else:
+            left = 'rest'
+        f = new(dx=dx, dy=dy, eyes=e, left=left, right='up', legs='dangle' if dy <= -2 else 'stand', puff=p, squish=s)
+        loop_top, loop_x = bubble_wand(f, dx, dy, p + s)
+        if step in swell:
+            # Sitting on the loop, and one row clear of it as it lets go.
+            name = swell[step]
+            lift = 1 if step == 15 else 0
+            glyph_at(f, name, loop_x, loop_top - 1 - len(GLYPHS[name]) // 2 - lift)
+        elif 16 <= step < 36:
+            cx, cy = float_path[step - 16]
+            glyph_at(f, wobble[(step - 16) % len(wobble)], cx, cy)
+        elif step == 36:
+            glyph_at(f, 'pop', 30, 4)
+        elif step == 37:
+            glyph_at(f, 'pop-wide', 30, 4)
+        elif step == 38:
+            f.glyph(25, 4, GLYPHS['small'])
+            f.glyph(35, 4, GLYPHS['small'])
+        if 17 <= step < 28:
+            cx, cy = small_path[step - 17]
+            glyph_at(f, 'bubble4', cx, cy)
+        elif step == 28:
+            glyph_at(f, 'spark', 48, 1)
         frames.append(f)
-    return frames, 18
+    return frames, 24
 
 
 def typing():
@@ -410,14 +494,19 @@ ANIMATIONS = {
 }
 
 
-def write(key, frames, still):
+def crop_box(frames):
+    """The smallest box `[x, y, width, height]` that holds every frame."""
     cells = set()
     for f in frames:
         cells.update(f.body.keys())
         cells.update(f.ink)
     xs = [x for x, _ in cells]
     ys = [y for _, y in cells]
-    box = [min(xs), min(ys), max(xs) - min(xs) + 1, max(ys) - min(ys) + 1]
+    return [min(xs), min(ys), max(xs) - min(xs) + 1, max(ys) - min(ys) + 1]
+
+
+def write(key, frames):
+    box = crop_box(frames)
     rows = (len(frames) + 7) // 8
     body = Image.new('RGBA', (box[2] * 8, box[3] * rows), (0, 0, 0, 0))
     ink = Image.new('RGBA', (box[2] * 8, box[3] * rows), (0, 0, 0, 0))
@@ -433,14 +522,49 @@ def write(key, frames, still):
     return box
 
 
+def preview(key, frames, directory):
+    """An enlarged GIF of the whole grid at the page's pace, the ink in the
+    light theme's grey, and every frame laid out eight to a row in
+    `<key>-frames.png`, for looking at a drawing without a build."""
+    shots = []
+    for f in frames:
+        shot = Image.new('RGBA', (W, H), PREVIEW_CANVAS)
+        for (x, y), colour in f.body.items():
+            shot.putpixel((x, y), COLOURS[colour])
+        # The ink mask is drawn over the sheet (crab.css's ::after).
+        for (x, y) in f.ink:
+            shot.putpixel((x, y), PREVIEW_INK)
+        shots.append(shot)
+    big = [shot.resize((W * PREVIEW_SCALE, H * PREVIEW_SCALE), Image.NEAREST).convert('P') for shot in shots]
+    big[0].save(os.path.join(directory, f'{key}.gif'), save_all=True, append_images=big[1:],
+                duration=FRAME_MS, loop=0, disposal=2)
+    # One cell of the ink between frames keeps them apart.
+    scale = PREVIEW_SCALE // 2
+    rows = (len(shots) + 7) // 8
+    sheet = Image.new('RGBA', ((W + 1) * 8 * scale, (H + 1) * rows * scale), PREVIEW_INK)
+    for i, shot in enumerate(shots):
+        sheet.paste(shot.resize((W * scale, H * scale), Image.NEAREST), ((i % 8) * (W + 1) * scale, (i // 8) * (H + 1) * scale))
+    sheet.save(os.path.join(directory, f'{key}-frames.png'))
+
+
 def main():
+    parser = argparse.ArgumentParser(description='Draw the composer crab\'s animation sheets.')
+    parser.add_argument('keys', nargs='*', metavar='key', help='the animations to draw (default: all of them)')
+    parser.add_argument('--preview', metavar='DIR', help='also write an enlarged GIF of each animation into DIR')
+    args = parser.parse_args()
+    unknown = [key for key in args.keys if key not in ANIMATIONS]
+    if unknown:
+        parser.error(f'no animation named {", ".join(unknown)}; the animations are {", ".join(ANIMATIONS)}')
+    keys = args.keys or list(ANIMATIONS)
     os.makedirs(OUT, exist_ok=True)
-    print('    const CRAB_SHEETS = {')
-    for key, draw in ANIMATIONS.items():
-        frames, still = draw()
-        box = write(key, frames, still)
-        print(f"      '{key}': {{ frames: {len(frames)}, box: [{box[0]}, {box[1]}, {box[2]}, {box[3]}], still: {still} }},")
-    print('    }')
+    if args.preview:
+        os.makedirs(args.preview, exist_ok=True)
+    for key in keys:
+        frames, still = ANIMATIONS[key]()
+        box = write(key, frames)
+        if args.preview:
+            preview(key, frames, args.preview)
+        print(f"  '{key}': {{ frames: {len(frames)}, box: [{box[0]}, {box[1]}, {box[2]}, {box[3]}], still: {still} }},")
 
 
 if __name__ == '__main__':

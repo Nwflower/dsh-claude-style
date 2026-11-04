@@ -85,7 +85,7 @@ export const CRAB_SHEETS: Record<string, { frames: number, box: number[], still:
   'idle-look': { frames: 31, box: [24, 20, 24, 16], still: 0 },
   'idle-wave': { frames: 12, box: [24, 15, 24, 21], still: 0 },
   'idle-laptop': { frames: 43, box: [14, 13, 34, 23], still: 0 },
-  'thinking': { frames: 32, box: [14, 4, 34, 32], still: 18 },
+  'thinking': { frames: 48, box: [22, 0, 30, 36], still: 24 },
   'typing': { frames: 6, box: [15, 22, 28, 14], still: 0 },
   'music': { frames: 16, box: [22, 1, 30, 35], still: 0 },
   'conducting': { frames: 24, box: [24, 12, 27, 24], still: 0 },

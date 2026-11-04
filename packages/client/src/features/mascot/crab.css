@@ -7,8 +7,8 @@
    frame is a translation of the strip inside the sprite's window, played by
    the browser's animation engine (packages/client/src/features/mascot/mascot-player.ts), eight
    frames to a sheet row. The strip carries the shell, its shaded side and the
-   eyes; its ::after carries the ink mask (the laptop, the thought bubble,
-   letters, notes, the hat), filled with the tertiary label ink so it stays a
+   eyes; its ::after carries the ink mask (the laptop, the bubble wand and its
+   bubbles, letters, notes, the hat), filled with the tertiary label ink so it stays a
    quiet grey on either canvas. Only the crab itself takes the pointer. */
 
 /* Claude Code's spacing on the home page's single-line card: the right claw

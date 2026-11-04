@@ -16,8 +16,8 @@ import type manifest from './mascot.manifest'
  * while — Claude Code's own routine, whole. The sheets ride the bundle
  * as data URIs (CRAB_SHEET_URLS): each animation is a sheet in the crab's
  * colours and an ink mask the stylesheet fills with the theme's quiet ink
- * (the laptop, the thought bubble, letters, notes, the hat), so every
- * sheet is ready the moment it is wanted.
+ * (the laptop, the bubble wand and its bubbles, letters, notes, the hat),
+ * so every sheet is ready the moment it is wanted.
  *
  * @param ui - shared handle table (`ui.composer`).
  * @returns `{ sync, release, onActivity, dispose }`.
