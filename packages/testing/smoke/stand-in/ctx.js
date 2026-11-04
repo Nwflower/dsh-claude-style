@@ -43,7 +43,7 @@
   // for it through ctx.inject; the studio case waits for the slot
   // registry the same way, the effort case too — its own context hands no
   // registry out, the way the documented boundary reads (D75), the chunk-late case for the settings section's seats,
-  // the search case for its sidebar and main-panel seats, and the switch cases
+  // the search case for its sidebar seat, and the switch cases
   // for the row-action seat their workspace delete action registers into.
   // The other cases keep no inject, which is what makes them
   // read synchronously at install (the install-fault case depends on that read

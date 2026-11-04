@@ -18,7 +18,7 @@
  * The switch cases carry the registry as well: the workspace feature reads the
  * host's view store from the `sidebar.workspaces` declaration and registers the
  * archived row's delete action in `sidebar.workspaces.session.row.action`.
- * The search case declares the host's panel list and main-panel seats.
+ * The search case declares the host's panel-list seat.
  */
 (function () {
   var host = window.__dshSmokeHost
@@ -42,9 +42,9 @@
   var slotRegistry = CASE === 'search' || CASE === 'studio' || CASE === 'effort' || CASE === 'settings' || CASE === 'chunk-late' || CASE === 'chat-files' || CASE === 'peer-chat-ux' || CASE === 'skin-center-handoff' || CASE === 'skin-center-arrival' || switchCase ? {
     inject: function (key, callback) {
       var declared = CASE === 'search'
-        ? key === 'sidebar.panellist' || key === 'main'
+        ? key === 'sidebar.panellist'
         : switchCase
-          ? key === 'sidebar.workspaces' || key === 'sidebar.workspaces.session.row.action' || key === 'sidebar.panellist' || key === 'main'
+          ? key === 'sidebar.workspaces' || key === 'sidebar.workspaces.session.row.action' || key === 'sidebar.panellist'
           : CASE === 'studio'
             ? key === 'conversation.input.dock'
             : CASE === 'effort'
