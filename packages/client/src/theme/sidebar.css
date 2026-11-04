@@ -163,15 +163,6 @@ body[data-dsh-claude-style][data-ds-dark-theme] button[data-dsh-claude-part~="ne
 body[data-dsh-claude-style] nav[data-dsh-claude-part~="panel-list"] {
   gap: 0;
 }
-/* The host's own air sits between the New session plate and this list: a 4px
-   margin on its scrolling region and an 8px spacer row inside it. The rows below
-   stand 6px apart (2px, compact), and the plate's margin joins the same edge, so
-   that air alone made the list's first row read further from the plate than any
-   row that follows reads from its neighbour. The list gives those 12px back;
-   collapsed, the host keeps neither margin nor spacer, so the rail is untouched. */
-body[data-dsh-claude-style] [data-dsh-claude-part~="layout-frame"]:not([data-sidebar-collapsed]) > [data-dsh-claude-part~="sidebar-column"] nav[data-dsh-claude-part~="panel-list"] {
-  margin-top: -12px;
-}
 body[data-dsh-claude-style] button[data-dsh-claude-part~="panel-row"] {
   /* The host floors this row at 36px with a min-height, which the `height` in
      the shared row rule above cannot beat. */
