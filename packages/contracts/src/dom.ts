@@ -574,5 +574,16 @@ export const SESSION_PHASE_ATTRIBUTE = 'data-state'
 export const SESSION_ONGOING_STATE = 'ongoing'
 export const SESSION_ONGOING_SELECTOR = '[data-state="ongoing"]'
 
+/* ---------- the host's own icon sprite ---------- */
+/**
+ * The sprite every host icon draws from: one hidden `<svg>` on the page holds a
+ * `<symbol>` per icon, and each icon is a 14px `<svg>` whose `<use>` names the
+ * symbol's id. The host's row actions draw an archived row's unarchive and
+ * delete glyphs from it, so the skin's own rows borrow the same two rather than
+ * carrying hand-drawn copies beside the host's icons.
+ */
+export const UNARCHIVE_ICON_SYMBOL = 'dsw-icon-unarchive-outline-regular'
+export const TRASH_ICON_SYMBOL = 'dsw-icon-trash-outline-regular'
+
 /** Idle rows render this optional third-party leading decoration outlet. */
 export const SESSION_STATUS_OUTLET_SELECTOR = '[data-slot="sidebar.session.row.leading"]'

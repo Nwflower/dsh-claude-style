@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 69,
+  "at": "2026-11-04",
+  "external": false,
+  "zh": "修复已归档列表行的取消归档与删除图标与宿主行内图标不一致的问题",
+  "en": "Fix the archived rows' unarchive and delete icons differing from the host's own row icons"
+}

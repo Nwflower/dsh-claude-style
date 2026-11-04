@@ -169,6 +169,25 @@ export default spec({ page: 'switches' }, ({ test }) => {
     t.expectThat.equal(newest.top < next.top, true, 'the newest conversation stands above the next')
   })
 
+  test('both row actions draw the host\'s own icons', async (t) => {
+    await setup(t, 3)
+    await pickArchived(t)
+    const drawn = await t.page.evaluate((rowAttribute) => {
+      const row = document.querySelector('[' + rowAttribute + ']')
+      return [...row.querySelectorAll('button')].map((button) => {
+        const svg = button.querySelector('svg')
+        const use = svg === null ? null : svg.querySelector('use')
+        return {
+          href: use === null ? null : use.getAttribute('href'),
+          width: svg === null ? null : svg.getAttribute('width'),
+          height: svg === null ? null : svg.getAttribute('height'),
+        }
+      })
+    }, t.surface.attribute('workspace.archived-row'))
+    const hostIcon = (id) => ({ href: '#' + t.host(id), width: '14', height: '14' })
+    t.expectThat.equal(drawn, [hostIcon('session.unarchive-icon'), hostIcon('session.trash-icon')], 'both row actions draw the host\'s own symbols at the host\'s own size')
+  })
+
   test('unarchive hands the conversation back to the host and its row leaves', async (t) => {
     await setup(t, 420)
     await pickArchived(t)
