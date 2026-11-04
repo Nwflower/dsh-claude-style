@@ -7,7 +7,7 @@
     "packages/testing/ds-bot.mjs": 6,
     "packages/testing/file-merge.mjs": 6,
     "packages/testing/importance-audit.mjs": 21,
-    "packages/testing/importance.mjs": 28,
+    "packages/testing/importance.mjs": 25,
     "packages/testing/lane.mjs": 4,
     "packages/testing/motion.mjs": 15,
     "packages/testing/probe.mjs": 6,

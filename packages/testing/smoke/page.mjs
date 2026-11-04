@@ -479,7 +479,7 @@ function page(name, tier, cases, probe = PROBE) {
   // (features/context-stats/meter-ring.ts), so the cases that read that row
   // carry the slot too.
   var modelSeat = name === 'model-meter' || name === 'model-account' || name === 'effort' || name === 'context-stats' || name === 'stats-compact' || name === 'stats-inline'
-    ? '<div data-slot="conversation.input.model" style="display:contents"><div class="_root_m_1"><button type="button" class="_trigger_m_1">' + MODEL_SEAT_NAME + '</button></div></div>'
+    ? '<div data-slot="conversation.input.model" style="display:contents"><div class="_root_m_1" style="position:relative;display:inline-flex"><button type="button" class="_trigger_m_1">' + MODEL_SEAT_NAME + '</button></div></div>'
     : ''
   // The hint the host's editor draws on an empty draft, inside the grow wrapper
   // beside the field, which is where the host renders it; and the rail

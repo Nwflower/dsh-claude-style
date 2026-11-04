@@ -761,6 +761,11 @@
       "prop": "margin",
       "verdict": "transient state"
     },
+    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-model-host]{display:none!}|display": {
+      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-model-host]",
+      "prop": "display",
+      "verdict": "transient state"
+    },
     "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=trailing] .dsh-claude-model-seat-model>.dsh-claude-model-btn,body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=trailing] .dsh-claude-model-seat-effort>.dsh-claude-effort-btn{display:inline-flex;align-items:center;height:var(--dsh-claude-footer-control-height);min-width:0;padding:0 4px;border:none!;background:transparent;white-space:nowrap;cursor:pointer}|border": {
       "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=trailing] .dsh-claude-model-seat-model>.dsh-claude-model-btn,body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=trailing] .dsh-claude-model-seat-effort>.dsh-claude-effort-btn",
       "prop": "border",

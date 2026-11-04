@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 76,
+  "at": "2026-11-04",
+  "external": false,
+  "zh": "修复输入卡片同时显示宿主与主题模型选择器的问题",
+  "en": "Fix the composer showing both the host and skin model selectors"
+}

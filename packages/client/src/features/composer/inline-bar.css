@@ -23,8 +23,9 @@ body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"]
    The host's own seat is one button carrying the same two texts; two hit areas
    cannot nest in one button, so the box is the container and each text is its
    own button. */
+/* The host writes an inline display on its root (D9). */
 body[data-dsh-claude-style] [data-dsh-claude-model-host] {
-  display: none;
+  display: none !important;
 }
 body[data-dsh-claude-style] [data-dsh-claude-part~="trailing"] .dsh-claude-model-seat {
   display: inline-flex;
