@@ -250,13 +250,6 @@ export const findComposerCard = cacheFirst<HTMLElement>(COMPOSER_CARD)
  */
 const MODEL_SLOT = MODEL_SLOT_SELECTOR
 
-/**
- * The document-wide model-slot answer kept from before the per-card reads: the
- * features that have not moved to findModelSlotIn yet still ask for it, and the
- * commit that moves the last of them drops this export.
- */
-export const findModelSlot = cacheFirst<HTMLElement>(MODEL_SLOT)
-
 /** The model slot inside `scope`: the row a card's own composer render draws. */
 export function findModelSlotIn(scope: ParentNode) {
   return scope.querySelector<HTMLElement>(MODEL_SLOT)
