@@ -119,14 +119,11 @@ export const SIDEBAR_LAYOUT_RELAXED = 'relaxed'
 export const SIDEBAR_LAYOUT_COMPACT = 'compact'
 export const SIDEBAR_LAYOUTS = [SIDEBAR_LAYOUT_RELAXED, SIDEBAR_LAYOUT_COMPACT] as const
 
-/**
- * The mark a conversation still running carries in the sidebar: a light
- * breathing in place over the idle seat's hollow circle, or the ring turning
- * that the skin drew before the light.
- */
+/** Independent running styles: breathing marker, turning ring, or title shimmer. */
 export const ONGOING_INDICATOR_BREATHE = 'breathe'
 export const ONGOING_INDICATOR_RING = 'ring'
-export const ONGOING_INDICATORS = [ONGOING_INDICATOR_BREATHE, ONGOING_INDICATOR_RING] as const
+export const ONGOING_INDICATOR_SHIMMER = 'shimmer'
+export const ONGOING_INDICATORS = [ONGOING_INDICATOR_BREATHE, ONGOING_INDICATOR_RING, ONGOING_INDICATOR_SHIMMER] as const
 
 /** The chat area's animation switch: on plays the ported set (features/chat-*), off leaves the area to the host. */
 export const CHAT_ANIMATIONS_OFF = 'off'

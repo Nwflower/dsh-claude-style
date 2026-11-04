@@ -2,6 +2,8 @@
   "about": "The skin's own page surface as the specs reach it (D77): every name a spec reads off an element the skin draws — a class, an attribute — stands here once, under a stable id, with what the reader sees there. A rename in the skin is one line of this file; lint holds every name to a literal the browser half writes and every entry to a spec that reads it.",
   "surface": [
     { "id": "sidebar-status.row", "attribute": "data-dsh-claude-row-status", "feature": "sidebar-status", "sees": "native status ownership: active or empty indicators share a trailing position; foreign leading decorations keep their place" },
+    { "id": "sidebar-status.running-title", "attribute": "data-dsh-claude-running-title", "feature": "sidebar-status", "sees": "a running native session with a visible plain title eligible for animation; motion, contrast and indicator preferences choose its visual fallback" },
+    { "id": "skin.ongoing-indicator", "attribute": "data-dsh-claude-ongoing-indicator", "feature": "core", "sees": "the reader's independent running style: breathe, ring or shimmer" },
     { "id": "skin.root", "attribute": "data-dsh-claude-style", "feature": "core", "sees": "the page the skin is applied to: every stylesheet the skin ships is scoped under this mark on <body>" },
     { "id": "skin.motion", "attribute": "data-dsh-claude-motion", "feature": "core", "sees": "the motion the reader asked for, resolved: the stylesheets still every animation under its reduced value" },
     { "id": "skin.asleep", "attribute": "data-dsh-claude-asleep", "feature": "core", "sees": "the page off screen: the stylesheets hold every animation on it where it stands until the mark comes off" },

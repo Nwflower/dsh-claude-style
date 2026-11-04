@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { MOTION_FULL, MOTION_REDUCED, MOTION_SYSTEM, ONGOING_INDICATOR_BREATHE, ONGOING_INDICATOR_RING } from '../../constants'
+import { MOTION_FULL, MOTION_REDUCED, MOTION_SYSTEM, ONGOING_INDICATOR_BREATHE, ONGOING_INDICATOR_RING, ONGOING_INDICATOR_SHIMMER } from '../../constants'
 import { PreviewCards } from '../../shared/preview-cards'
 import type { PreviewOption } from '../../shared/preview-cards'
 import type { Prefs } from '../../constants'
@@ -7,39 +7,36 @@ import type { SegmentOption, SettingsTab, SettingsView } from './settings-contro
 import { copy } from './copy'
 
 /**
- * The settings page's Motion tab: the animation choice every motion reads, the
- * mark a running conversation carries in the sidebar, and the rows the features
- * themselves place here (D76). The chat area's rows come first — its scrolling,
- * the waiting line's switch with its detail choice and its two paints, the fade
- * of the characters arriving in a streaming answer and the entrance a sent
- * message makes — then the composer caret's glide, and the sidebar's mark
- * last. Those features draw their own controls (`<功能>.settings.ts`), each
- * card carrying a sample wearing the effect it picks rather than a name, so a
- * row whose control already shows what it does carries no description; the
- * card's accessible name is its only text.
+ * The Motion tab owns the global animation choice and sidebar ongoing effects;
+ * features contribute their own rows through the settings contract (D76).
  */
 export function createSettingsMotionTab(): SettingsTab {
-  /**
-   * The sidebar's running mark as two preview cards: each card is the pair a
-   * sidebar row leads with — the mark its choice gives it, then a title — so the
-   * two cards differ in the mark alone. The mark's paint is the sidebar's own
-   * (theme/sidebar.css), so a card wears the mark rather than a picture of it.
-   */
   function ongoingPicker(prefs: Prefs, write: SettingsView['write']) {
-    // The look is fixed to the card's own choice, so both cards show their
-    // mark whatever the page is set to.
-    const sample = (indicator: Prefs['ongoingIndicator']) => React.createElement(
-      'span',
-      { className: 'dsh-claude-ongoing-sample', 'aria-hidden': 'true' },
-      React.createElement('span', { className: 'dsh-claude-ongoing-mark', 'data-look': indicator }),
-      React.createElement('span', { className: 'dsh-claude-ongoing-sample-title' }, copy('ongoingSample')),
-    )
+    // Each sample previews an unselected conversation using its own look;
+    // choosing a card changes only the control's pressed state.
+    const option = (indicator: Prefs['ongoingIndicator'], label: string): PreviewOption<Prefs['ongoingIndicator']> => ({
+      value: indicator,
+      label,
+      content: React.createElement(
+        React.Fragment,
+        null,
+        React.createElement('span', { className: 'dsh-claude-settings-ongoing-label' }, label),
+        React.createElement(
+          'span',
+          { className: 'dsh-claude-ongoing-sample dsh-claude-ongoing-preview', 'data-look': indicator, 'aria-hidden': 'true' },
+          React.createElement('span', { className: 'dsh-claude-ongoing-sample-title dsh-claude-ongoing-title', 'data-look': indicator }, copy('ongoingSample')),
+          React.createElement('span', { className: 'dsh-claude-ongoing-mark', 'data-look': indicator }),
+        ),
+      ),
+    })
     const options: PreviewOption<Prefs['ongoingIndicator']>[] = [
-      { value: ONGOING_INDICATOR_BREATHE, label: copy('ongoingBreathe'), content: sample(ONGOING_INDICATOR_BREATHE) },
-      { value: ONGOING_INDICATOR_RING, label: copy('ongoingRing'), content: sample(ONGOING_INDICATOR_RING) },
+      option(ONGOING_INDICATOR_BREATHE, copy('ongoingBreathe')),
+      option(ONGOING_INDICATOR_RING, copy('ongoingRing')),
+      option(ONGOING_INDICATOR_SHIMMER, copy('ongoingShimmer')),
     ]
     return React.createElement(PreviewCards<Prefs['ongoingIndicator']>, {
       cardClass: 'dsh-claude-ongoing-card',
+      label: copy('ongoingTitle'),
       options,
       value: prefs.ongoingIndicator,
       write: (value: Prefs['ongoingIndicator']) => write({ ongoingIndicator: value }),
@@ -69,7 +66,7 @@ export function createSettingsMotionTab(): SettingsTab {
         node: view.controls.row(
           'ongoingIndicator',
           copy('ongoingTitle'),
-          null,
+          copy('ongoingDesc'),
           ongoingPicker(prefs, write),
           { block: true },
         ),
