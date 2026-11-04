@@ -12,6 +12,7 @@ import { readPrefs, savePrefs, subscribePrefs } from '../../core/prefs'
 import type { FeatureUi } from '../../core/feature'
 import type manifest from './sidebar-entries.manifest'
 import { copy } from './copy'
+import { openPanelFromAction } from '../../shared/panel-actions'
 
 /**
  * The sidebar's panel list as Claude's app keeps it: the reader picks which
@@ -158,7 +159,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
         icon: React.createElement(PanelIcon, { label: entry.label }),
         onSelect: () => {
           onDismiss()
-          onOpen(entry.id)
+          if (!openPanelFromAction(entry.id)) onOpen(entry.id)
         },
         children: React.createElement('span', { className: NAME_CLASS },
           entry.label,

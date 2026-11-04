@@ -4,6 +4,7 @@ import { registerSlotEntries } from '@dsh-claude-style/engine/host'
 import { readPrefs } from '../../core/prefs'
 import type { HostContext, HostFiber } from '@dsh-claude-style/engine/host'
 import { copy } from './copy'
+import { registerPanelOpenAction } from '../../shared/panel-actions'
 
 const SEARCH_PANEL_ID = 'dsh-claude-style.search'
 
@@ -13,6 +14,7 @@ const SEARCH_PANEL_ID = 'dsh-claude-style.search'
  */
 export function createSearchTrigger(ctx: HostContext, options: { open(): void }) {
   let slotFiber: HostFiber | null = null
+  let dropAction: (() => void) | null = null
 
   function SearchIcon(props: { size?: number }) {
     const icon = React.useRef<SVGSVGElement | null>(null)
@@ -47,9 +49,14 @@ export function createSearchTrigger(ctx: HostContext, options: { open(): void })
   }
 
   function dropSlots() {
-    if (slotFiber === null) return
-    slotFiber.dispose()
-    slotFiber = null
+    if (slotFiber !== null) {
+      slotFiber.dispose()
+      slotFiber = null
+    }
+    if (dropAction !== null) {
+      dropAction()
+      dropAction = null
+    }
   }
 
   function sync() {
@@ -57,7 +64,8 @@ export function createSearchTrigger(ctx: HostContext, options: { open(): void })
       dropSlots()
       return
     }
-    if (slotFiber !== null) return
+    if (slotFiber !== null || dropAction !== null) return
+    dropAction = registerPanelOpenAction(SEARCH_PANEL_ID, options.open)
     slotFiber = registerSlotEntries(ctx, [{
       options: {
         name: 'sidebar.panellist',
