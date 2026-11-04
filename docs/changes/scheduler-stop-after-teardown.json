@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 206,
+  "at": "2026-11-04",
+  "external": false,
+  "zh": "修复插件拆卸后异步回调仍申请页面刷新的问题",
+  "en": "Fix asynchronous callbacks scheduling page passes after teardown"
+}

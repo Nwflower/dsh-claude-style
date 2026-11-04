@@ -330,6 +330,7 @@ export function installScheduler<Name extends string>(ctx: HostContext, ui: Sche
 
   /** Chat streaming mutates the tree constantly; coalesce to one pass a frame. */
   function schedule(options?: { contentOnly?: boolean }) {
+    if (stopped) return
     if (scheduled) {
       // A reason that reads the whole page joins the pass already queued.
       if (options?.contentOnly !== true) passContentOnly = false
