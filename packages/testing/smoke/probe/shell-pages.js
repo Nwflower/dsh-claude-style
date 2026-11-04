@@ -297,15 +297,12 @@
           return entry.id === 'dsh-claude-style.search' || entry.seat === 'dsh-claude-style.search'
         })
         var panel = entries.filter(function (entry) { return entry.key === 'sidebar.panellist' })[0]
-        var main = entries.filter(function (entry) { return entry.key === 'main' })[0]
         var slot = sidebarSlot.querySelector('[data-dsh-claude-part~="search-slot"]')
         return {
           panelRegistered: !!panel,
-          mainRegistered: !!main,
           panelOrder: panel ? panel.order : null,
           panelLabel: panel ? panel.label : null,
           iconComponent: panel ? panel.component : null,
-          mainComponent: main ? main.component : null,
           rowMarked: logoRow.hasAttribute('data-dsh-claude-search-row'),
           hostSlotPosition: getComputedStyle(slot).position,
           hostSlotWidth: Math.round(slot.getBoundingClientRect().width),

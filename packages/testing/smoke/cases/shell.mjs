@@ -234,7 +234,7 @@ export default {
     commonChecks(r)
   },
   // The sidebar's search entry: the Standalone style registers a host panel-list
-  // row and its main-panel seat; the Icon style hands both back and leaves the
+  // row without a main-panel seat; the Icon style hands it back and leaves the
   // host's own search control in place. Either way the host's modal opens through
   // a root of the skin's own.
   search(r) {
@@ -244,20 +244,17 @@ export default {
       search.registered === true && search.rowMarked === false, JSON.stringify(search))
     check('pressing the host\'s search control renders the host modal through a root of the skin\'s own', search.modalRendered === true, JSON.stringify(search))
     const standalone = search.standalone || {}
-    check('the Standalone style keeps the panel entry and its main-panel seat, and hides the host\'s own search slot',
-      standalone.panelRegistered === true && standalone.mainRegistered === true &&
-        standalone.rowMarked === false && standalone.hostSlotPosition === 'absolute',
+    check('the Standalone style keeps the panel entry and hides the host\'s own search slot',
+      standalone.panelRegistered === true && standalone.rowMarked === false && standalone.hostSlotPosition === 'absolute',
       JSON.stringify(standalone))
     const icon = search.icon || {}
-    check('the Icon style hands the panel entry and its main seat back, leaves the host\'s search slot in the header, and takes its click over',
-      icon.panelRegistered === false && icon.mainRegistered === false &&
-        icon.rowMarked === false && icon.hostSlotPosition !== 'absolute' && icon.hostSlotWidth > 10 &&
-        icon.hostClicksReachingHost === 0,
+    check('the Icon style hands the panel entry back, leaves the host\'s search slot in the header, and takes its click over',
+      icon.panelRegistered === false && icon.rowMarked === false &&
+        icon.hostSlotPosition !== 'absolute' && icon.hostSlotWidth > 10 && icon.hostClicksReachingHost === 0,
       JSON.stringify(icon))
     const back = search.back || {}
-    check('switching the style back to Standalone registers the entry and its main seat again, live',
-      back.panelRegistered === true && back.mainRegistered === true &&
-        back.rowMarked === false && back.hostSlotPosition === 'absolute',
+    check('switching the style back to Standalone registers the entry again, live',
+      back.panelRegistered === true && back.rowMarked === false && back.hostSlotPosition === 'absolute',
       JSON.stringify(back))
     // The New session row carries the same host markup the palette's caps are
     // cut for; both are read field by field, so the hints cannot drift apart.

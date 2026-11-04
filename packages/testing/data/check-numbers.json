@@ -967,7 +967,7 @@
       "teardown takes the control marks off the host controls": [
         0
       ],
-      "the Icon style hands the panel entry and its main seat back, leaves the host's search slot in the header, and takes its click over": [
+      "the Icon style hands the panel entry back, leaves the host's search slot in the header, and takes its click over": [
         0,
         10
       ],

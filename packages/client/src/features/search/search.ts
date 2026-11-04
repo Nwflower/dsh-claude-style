@@ -22,8 +22,8 @@ import type { CopyKey } from './copy'
  * Search: a host-owned sidebar entry that opens a palette over the window, the
  * way Claude's sidebar search does.
  *
- * The sidebar entry and its main-panel target are registered by the trigger
- * module (features/search/search-trigger.ts), and the host's own search control —
+ * The sidebar entry is registered by the trigger module
+ * (features/search/search-trigger.ts), and the host's own search control —
  * kept mounted under every `searchStyle`, because the host's shortcut has no
  * public replacement and only expands that control — is taken over by the
  * host-takeover module (features/search/search-host-takeover.ts). The palette
