@@ -43,7 +43,7 @@
     },
     "packages/client/src/features/context-stats/stats-panel.ts": {
       "count": 2,
-      "reason": "The context block and panel marks, swept once when the statistics are installed."
+      "reason": "The stray context block and panel marks swept once when the statistics are installed; composer cards come from the engine's card registry."
     },
     "packages/client/src/features/context-stats/session-stats.ts": {
       "count": 2,

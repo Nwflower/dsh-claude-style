@@ -10,7 +10,7 @@ import { createStreamEstimate } from './stream-estimate'
 import { adoptBillingRows, billingRows, createSessionCost, loadPrices, priceDocument, priceGeneration } from './session-cost'
 import { noteUnpricedModel } from './billing-editor'
 import { paintContextPie, readPieColours, releaseContextPie } from './context-meter-pie'
-import { CONTEXT_STATS_ATTR, CONTEXT_PANEL_ATTR, clearStrayContextNodes, contextPanel, findContextMeter, markContextMeter, meterOccupancy, releaseDialogWatch } from './stats-panel'
+import { CONTEXT_STATS_ATTR, CONTEXT_PANEL_ATTR, clearStrayContextNodes, contextMeters, contextPanel, findContextMeter, markContextMeter, meterOccupancy, releaseCardWatch, releaseDialogWatch } from './stats-panel'
 import { CONTEXT_STOPS, rampPosition, writeRamp } from './stats-ramp'
 import { writeContextBand } from './context-meter-face'
 import { priceFor, priceTierAt } from '@dsh-claude-style/contracts/prices'
@@ -24,6 +24,7 @@ import type { PieColours } from './context-meter-pie'
 /** The ring the composer row carries, as the statistics read it (meter-ring.ts). */
 export interface MeterRingFace {
   root(): HTMLElement | null
+  roots(): HTMLElement[]
   setReading(percent: number | null): void
 }
 
@@ -352,16 +353,23 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
       })
       cost.ask(Date.now())
     }
-    const meter = findContextMeter()
-    if (meter !== null) markContextMeter(meter)
-    // The meter's own face: the ring the composer row carries while it is
-    // drawn, else the host's meter wherever the host keeps it (the numbers on a
-    // line of their own leave it in the row). The panel hangs from the face the
-    // reader pressed, and the panel is the same one in either position.
+    // Every composer card draws its own meter: a sub-agent's docked
+    // conversation stands beside the main one, and each card's meter opens its
+    // own panel. The first meter keeps the reading this pass paints.
+    const meters = contextMeters()
+    const meter = meters[0] ?? null
+    for (let i = 0; i < meters.length; i += 1) markContextMeter(meters[i])
+    // Every ring the skin drew is a face of its own: the press it takes is
+    // delivered to its own card's trigger, and the panel it opens hangs from it
+    // (stats-binding.ts::faceFor reads the ring off the trigger's card).
     const skinRing = ring()
     const ringRoot = skinRing === null ? null : skinRing.root()
-    const face = ringRoot ?? meter
-    if (face !== null) binding.bindMeter(face, ringRoot !== null)
+    const rings = skinRing === null ? [] : skinRing.roots()
+    for (let i = 0; i < rings.length; i += 1) binding.bindMeter(rings[i], true)
+    // A card with no ring yet keeps its own meter, which drives that card's own
+    // panel: the meter wherever the host keeps it (the numbers on a line of
+    // their own leave it in the row).
+    for (let i = 0; i < meters.length; i += 1) binding.bindMeter(meters[i], false)
     // The ring draws its own reading from the session's context-pressure
     // projection: the host's meter keeps the host's place and stops painting,
     // so its text is only the fallback of a host serving no such projection.
@@ -453,6 +461,7 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
       offCost()
       // The structure bus behind the estimate's call rows goes with the rest.
       estimate.stop()
+      releaseCardWatch()
       releaseDialogWatch()
       // Everything this generation bound on the host's own meter, line and
       // panel comes off with it (stats-binding.ts's release).
