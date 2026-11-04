@@ -72,7 +72,9 @@
           listStyle.borderTopLeftRadius === '7px' || listStyle.paddingLeft === '2px' || listStyle.backgroundColor !== 'rgba(0, 0, 0, 0)'
       }
       if (r.search) {
-        r.search.left = document.querySelectorAll('.dsh-claude-search-trigger, .dsh-claude-search-bar').length
+        r.search.left = (window.__slots || []).filter(function (entry) {
+          return entry.id === 'dsh-claude-style.search' || entry.seat === 'dsh-claude-style.search'
+        }).length
         r.search.rootUnmounted = !!probe.searchRoot && probe.searchRoot.unmounted
       }
       r.leftDraftMarks = document.querySelectorAll('[data-dsh-claude-draft-empty]').length

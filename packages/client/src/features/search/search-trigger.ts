@@ -9,10 +9,10 @@ const SEARCH_PANEL_ID = 'dsh-claude-style.search'
 
 /**
  * The host-owned sidebar entry and its main-panel target. Selecting the row
- * opens the palette; closing it restores the panel selected before the row.
+ * opens the palette and restores the previous panel before the browser paints.
  * The `icon` style leaves the host's own workspace search in place instead.
  */
-export function createSearchTrigger(ctx: HostContext, options: { open(): void, close(): void }) {
+export function createSearchTrigger(ctx: HostContext, options: { open(): void }) {
   const layout = hostLayout(ctx)
   let slotFiber: HostFiber | null = null
   let selectedPanel = layout?.panelInfo.getSnapshot().activePanelId ?? null
@@ -37,9 +37,9 @@ export function createSearchTrigger(ctx: HostContext, options: { open(): void, c
   }
 
   function SearchPanel() {
-    React.useEffect(() => {
+    React.useLayoutEffect(() => {
       options.open()
-      return options.close
+      leavePanel()
     }, [])
     return null
   }

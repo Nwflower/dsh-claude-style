@@ -276,37 +276,44 @@
         '<input class="_searchInput_n_1" type="text" tabindex="-1"></div></div></div>'
       document.body.appendChild(sidebarSlot)
       await sleep(150)
+      // The search feature arrives in its own chunk; its registrations are read
+      // once they land rather than on the first frame after the page boots.
+      for (var waited = 0; waited < 3000 && !(window.__slots || []).some(function (entry) {
+        return entry.id === 'dsh-claude-style.search'
+      }); waited += 50) await sleep(50)
       var logoRow = sidebarSlot.querySelector('[data-dsh-claude-part~="logo-row"]')
       var hostSearchButton = sidebarSlot.querySelector('[data-dsh-claude-part~="search-button"]')
       var rootsBefore = window.__roots.length
       if (hostSearchButton) hostSearchButton.click()
       await sleep(60)
       probe.searchRoot = window.__roots[rootsBefore]
-      // One style at a time, through the form; the button and its rows are read
-      // back from the page the same way a reader would see them.
+      // One style at a time, through the form; the host registrations are read
+      // back after each change.
       var styleOf = async function (style) {
         window.__pushForm({ searchStyle: style })
         sidebarSlot.appendChild(document.createElement('i'))
         await sleep(200)
-        var box = document.querySelector('.dsh-claude-search-trigger')
-        var ownRow = document.querySelector('.dsh-claude-search-bar')
+        var entries = (window.__slots || []).filter(function (entry) {
+          return entry.id === 'dsh-claude-style.search' || entry.seat === 'dsh-claude-style.search'
+        })
+        var panel = entries.filter(function (entry) { return entry.key === 'sidebar.panellist' })[0]
+        var main = entries.filter(function (entry) { return entry.key === 'main' })[0]
         var slot = sidebarSlot.querySelector('[data-dsh-claude-part~="search-slot"]')
         return {
-          triggerInRow: !!logoRow.querySelector('.dsh-claude-search-trigger'),
+          panelRegistered: !!panel,
+          mainRegistered: !!main,
+          panelOrder: panel ? panel.order : null,
+          panelLabel: panel ? panel.label : null,
+          iconComponent: panel ? panel.component : null,
+          mainComponent: main ? main.component : null,
           rowMarked: logoRow.hasAttribute('data-dsh-claude-search-row'),
-          barAfterNewSession: !!ownRow && ownRow.parentElement === logoRow.parentElement && ownRow.previousElementSibling === logoRow.nextElementSibling,
-          triggerInBar: !!ownRow && !!box && box.parentElement === ownRow,
-          triggerVisibility: box ? getComputedStyle(box).visibility : null,
           hostSlotPosition: getComputedStyle(slot).position,
           hostSlotWidth: Math.round(slot.getBoundingClientRect().width),
-          barWidth: ownRow === null ? null : Math.round(ownRow.getBoundingClientRect().width),
-          boxWidth: box === null ? null : Math.round(box.getBoundingClientRect().width),
         }
       }
       r.search = {
-        placed: !!searchTrigger && searchTrigger.parentElement?.previousElementSibling === logoRow.nextElementSibling,
+        registered: (window.__slots || []).some(function (entry) { return entry.key === 'sidebar.panellist' && entry.id === 'dsh-claude-style.search' }),
         rowMarked: logoRow.hasAttribute('data-dsh-claude-search-row'),
-        resting: searchTrigger ? getComputedStyle(searchTrigger).visibility : null,
         modalRendered: !!probe.searchRoot && probe.searchRoot.renders > 0,
       }
       r.search.standalone = await styleOf('standalone')
@@ -323,7 +330,7 @@
       sidebarSlot.removeEventListener('click', countHost)
       r.search.icon.hostClicksReachingHost = reachedHost
       r.search.back = await styleOf('standalone')
-      // The New session row's shortcut hint and the search button's own caps are
+      // The New session row's shortcut hint and the search entry's own caps are
       // the same host markup. The button's caps are built from the host's shortcut
       // catalog, which this stand-in does not carry, so the comparison reads a
       // sample of the search sheet's own cap class instead, and takes both

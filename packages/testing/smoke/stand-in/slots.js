@@ -44,7 +44,7 @@
       var declared = CASE === 'search'
         ? key === 'sidebar.panellist' || key === 'main'
         : switchCase
-          ? key === 'sidebar.workspaces' || key === 'sidebar.workspaces.session.row.action'
+          ? key === 'sidebar.workspaces' || key === 'sidebar.workspaces.session.row.action' || key === 'sidebar.panellist' || key === 'main'
           : CASE === 'studio'
             ? key === 'conversation.input.dock'
             : CASE === 'effort'

@@ -967,10 +967,7 @@
       "teardown takes the control marks off the host controls": [
         0
       ],
-      "the Standalone button is exactly as wide as the rows under it": [
-        0
-      ],
-      "the Icon style draws no button of the skin's, puts the host's own search slot back in the header, and takes its click over": [
+      "the Icon style hands the panel entry and its main seat back, leaves the host's search slot in the header, and takes its click over": [
         0,
         10
       ],
@@ -978,7 +975,7 @@
         1,
         2
       ],
-      "teardown takes the search button, its row and its root away": [
+      "teardown takes the search entry and its root away": [
         0
       ],
       "synthetic path injects nothing into a host menu": [

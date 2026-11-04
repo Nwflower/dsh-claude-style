@@ -62,7 +62,7 @@ const SURFACES = [
   ['effort picker', '.dsh-claude-effort-btn'],
   ['permission picker', '.dsh-claude-perm-btn'],
   ['account card', '.dsh-claude-account-btn'],
-  ['search panel', '.dsh-claude-search-trigger'],
+  ['search panel', '.dsh-claude-search-trigger-icon'],
 ]
 
 /**

@@ -109,7 +109,7 @@ function deferredWanted(values) {
  * the two contest the same seat.
  */
 const PAGES = {
-    shell: ['brand', 'hero', 'view-tabs', 'composer', 'search', 'account', 'permissions', 'sidebar-layout'],
+    shell: ['brand', 'hero', 'view-tabs', 'composer', 'account', 'permissions', 'sidebar-layout'],
 }
 
 /**

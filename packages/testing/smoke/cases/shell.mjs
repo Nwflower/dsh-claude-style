@@ -233,36 +233,33 @@ export default {
     check('Enter on an open composer menu reaches the host', same(r.keys, ['host picked the menu item']), JSON.stringify(r.keys))
     commonChecks(r)
   },
-  // The sidebar's search button: in a row of its own after New session, or not
-  // drawn at all while the host's own button stands, and opening the host's
-  // modal through a root of the skin's own.
+  // The sidebar's search entry: the Standalone style registers a host panel-list
+  // row and its main-panel seat; the Icon style hands both back and leaves the
+  // host's own search control in place. Either way the host's modal opens through
+  // a root of the skin's own.
   search(r) {
     basicChecks(r)
     const search = r.search || {}
-    check('the Standalone search button starts in its own row, shown without a hover',
-      search.placed === true && search.rowMarked === false && search.resting === 'visible', JSON.stringify(search))
-    check('pressing the search button renders the host modal through a root of the skin\'s own', search.modalRendered === true, JSON.stringify(search))
+    check('the Standalone style registers the search entry in the sidebar panel list when the case starts',
+      search.registered === true && search.rowMarked === false, JSON.stringify(search))
+    check('pressing the host\'s search control renders the host modal through a root of the skin\'s own', search.modalRendered === true, JSON.stringify(search))
     const standalone = search.standalone || {}
-    check('the Standalone style gives the button a row of its own after New session, shown without a hover, and the brand row keeps the host\'s layout',
-      standalone.barAfterNewSession === true && standalone.triggerInBar === true && standalone.triggerVisibility === 'visible' &&
+    check('the Standalone style keeps the panel entry and its main-panel seat, and hides the host\'s own search slot',
+      standalone.panelRegistered === true && standalone.mainRegistered === true &&
         standalone.rowMarked === false && standalone.hostSlotPosition === 'absolute',
       JSON.stringify(standalone))
-    // The button spans the same content box as the rows under it; its own row
-    // adds no inline padding.
-    check('the Standalone button is exactly as wide as the rows under it',
-      standalone.boxWidth !== null && standalone.boxWidth === standalone.barWidth && standalone.boxWidth > 0,
-      JSON.stringify({ boxWidth: standalone.boxWidth, barWidth: standalone.barWidth }))
     const icon = search.icon || {}
-    check('the Icon style draws no button of the skin\'s, puts the host\'s own search slot back in the header, and takes its click over',
-      icon.triggerInRow === false && icon.rowMarked === false && icon.barAfterNewSession === false &&
-        icon.hostSlotPosition !== 'absolute' && icon.hostSlotWidth > 10 && icon.hostClicksReachingHost === 0,
+    check('the Icon style hands the panel entry and its main seat back, leaves the host\'s search slot in the header, and takes its click over',
+      icon.panelRegistered === false && icon.mainRegistered === false &&
+        icon.rowMarked === false && icon.hostSlotPosition !== 'absolute' && icon.hostSlotWidth > 10 &&
+        icon.hostClicksReachingHost === 0,
       JSON.stringify(icon))
     const back = search.back || {}
-    check('switching the style back to Standalone seats the button after New session again, live',
-      back.triggerInRow === false && back.rowMarked === false && back.barAfterNewSession === true &&
-        back.triggerInBar === true && back.triggerVisibility === 'visible' && back.hostSlotPosition === 'absolute',
+    check('switching the style back to Standalone registers the entry and its main seat again, live',
+      back.panelRegistered === true && back.mainRegistered === true &&
+        back.rowMarked === false && back.hostSlotPosition === 'absolute',
       JSON.stringify(back))
-    // The New session row carries the same host markup the button's own caps are
+    // The New session row carries the same host markup the palette's caps are
     // cut for; both are read field by field, so the hints cannot drift apart.
     const caps = search.keycaps || {}
     const cap = Array.isArray(caps.search) && caps.search.length === 1 ? caps.search[0] : null
@@ -271,7 +268,7 @@ export default {
         caps.shortcut.every((entry) => same(entry, cap)) &&
         caps.separators.length === 1 && caps.separators.every((display) => display === 'none'),
       JSON.stringify(caps))
-    check('teardown takes the search button, its row and its root away',
+    check('teardown takes the search entry and its root away',
       search.left === 0 && search.rootUnmounted === true, JSON.stringify(search))
     commonChecks(r)
   },

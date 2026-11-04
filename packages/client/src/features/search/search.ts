@@ -42,7 +42,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The host-side navigator, which lands a picked hit on its turn */
   const hostTurns = createTurnNavHost(ctx)
   /** The host-owned sidebar entry and its panel target (search-trigger.ts). */
-  const triggerCtl = createSearchTrigger(ctx, { open: openPalette, close: closePalette })
+  const triggerCtl = createSearchTrigger(ctx, { open: openPalette })
   /** The host's own sidebar search, taken over (search-host-takeover.ts). */
   const takeover = createHostSearchTakeover({
     ctx,
@@ -480,7 +480,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   function closePalette(then?: unknown) {
     if (disposed || !isOpen) return
     isOpen = false
-    triggerCtl.leave()
     closing = true
     pendingRun = typeof then === 'function' ? then as () => void : null
     window.clearTimeout(contentTimer)
