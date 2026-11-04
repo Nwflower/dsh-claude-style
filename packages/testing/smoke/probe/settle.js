@@ -36,17 +36,15 @@
     var statsFigures = Array.prototype.slice.call(document.querySelectorAll('[data-composer-stat], [data-composer-stats]'))
     r.statsHidden = statsFigures.length > 0 && statsFigures.every(function (el) { return getComputedStyle(el).display === 'none' })
     r.statsStrayCards = document.querySelectorAll('.dsh-claude-stats-popover').length
-    // The session list's leading seat. The host's newer rows render it through a
-    // slot outlet, so an idle row's seat is not :empty — the circle has to hang
-    // on the empty outlet anchor. A seat carrying the running status dot keeps
-    // its own paint and gets no circle.
+    // The host's idle outlet stays mounted without painting a decorative circle;
+    // a native running indicator remains visible in its trailing cell.
     var seats = document.querySelectorAll('[data-dsh-claude-part~="session-row"] [data-dsh-claude-part~="row-slot"]')
     function seatState(seat) {
       if (!seat) return null
       var outlet = seat.querySelector(':scope > [data-slot]')
       var target = outlet !== null ? outlet : seat
       var after = getComputedStyle(target, '::after')
-      return { content: after.content, width: after.width, border: after.borderTopWidth, svgs: seat.querySelectorAll('svg').length }
+      return { visibility: getComputedStyle(seat).visibility, content: after.content, width: after.width, border: after.borderTopWidth, svgs: seat.querySelectorAll('svg').length }
     }
     r.seatIdle = seatState(seats[0])
     r.seatRunning = seatState(seats[1])
