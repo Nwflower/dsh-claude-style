@@ -210,7 +210,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     let ancestor: HTMLElement = row
     while (ancestor !== column) {
       for (let sibling = ancestor.nextElementSibling; sibling !== null; sibling = sibling.nextElementSibling) {
-        if (sibling instanceof HTMLElement && sibling.getBoundingClientRect().height > 0) return true
+        // The host's trailing interaction surface uses visibility:hidden; reading CSS visibility avoids a layout flush on each publish.
+        if (sibling instanceof HTMLElement && sibling.checkVisibility({ checkVisibilityCSS: true })) return true
       }
       const parent = ancestor.parentElement
       if (parent === null) return false
