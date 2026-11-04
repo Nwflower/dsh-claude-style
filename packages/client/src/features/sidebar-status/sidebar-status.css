@@ -18,3 +18,15 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"][data-dsh-claud
 body[data-dsh-claude-style] [data-dsh-claude-row-status="idle"] > [data-dsh-claude-part~="row-slot"] { visibility: hidden; }
 body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"][data-dsh-claude-row-status] > [data-dsh-claude-part~="row-slot"]::after,
 body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"][data-dsh-claude-row-status] > [data-dsh-claude-part~="row-slot"] > [data-slot]:empty::after { content: none; }
+/* The row's actions stand in the resting line's place on hover: the status seat
+   steps aside with it, and the trailing room it reserved goes back to the inline
+   buttons. The time label is inside the host's resting box, which the host hides
+   on the same hover. */
+@media (hover: hover) {
+  body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"][data-dsh-claude-row-status]:is(:hover, [data-dsh-claude-part~="row-menu-open"]) {
+    padding-inline-end: 6px;
+  }
+  body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"][data-dsh-claude-row-status]:is(:hover, [data-dsh-claude-part~="row-menu-open"]) > [data-dsh-claude-part~="row-slot"] {
+    visibility: hidden;
+  }
+}

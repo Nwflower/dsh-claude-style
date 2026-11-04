@@ -1,13 +1,10 @@
-import { registerSlotEntries } from '@dsh-claude-style/engine/host'
-import type { HostContext } from '@dsh-claude-style/engine/host'
 import { installSessionContextMenu } from './context-menu'
 
-/** Shadow only native shortcut cells; menu commands and unrelated row actions remain owned by their plugins. */
-export function install(ctx: HostContext) {
-  const shortcuts = registerSlotEntries(ctx, ['archive', 'pin'].map(id => ({
-    options: { name: 'sidebar.workspaces.session.row.action', id, priority: -1 },
-    component: () => null,
-  })), 'dsh-claude-style: menu-only session actions')
-  const stop = installSessionContextMenu()
-  return () => { stop(); shortcuts?.dispose?.() }
+/**
+ * The row's own menu, opened by a right click or a menu key. The host's native
+ * commands, popup placement and keyboard handling stay, and the inline archive
+ * and pin buttons keep the place the host gives them.
+ */
+export function install() {
+  return installSessionContextMenu()
 }
