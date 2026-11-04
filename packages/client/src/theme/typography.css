@@ -266,14 +266,15 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="link-icon"] {
   display: none;
 }
 
-/* Inline file mentions are links, not code: the host resolves a path inside an
-   inline code span to a button, and the generic chip above is more specific than
-   the host's class, so the text would otherwise keep the chip's warm red while real
-   links are blue (the class is hashed, hence the longest stable fragment). The chip
-   keeps its own wash and hairline. The hover rule touches the colour only: the
+/* File references are links, not code: the host resolves a path to a button — a
+   markdown link outside code, or a mention inside an inline code span. The
+   generic chip is more specific than the host's class, so the text would
+   otherwise keep the chip's warm red while real links are blue. The chip keeps
+   its own wash and hairline. The hover rule touches the colour only: the
    `text-decoration` shorthand would reset the thickness to `auto` mid-hover. */
 body[data-dsh-claude-style] :is(code:not(pre code) > [data-dsh-claude-part~="file-mention"], code:not(pre code) > a),
-body[data-dsh-claude-style] [data-dsh-claude-part~="markdown"] :is(a, a:focus) {
+body[data-dsh-claude-style] [data-dsh-claude-part~="markdown"] :is(a, a:focus),
+body[data-dsh-claude-style] [data-dsh-claude-part~="markdown"] [data-dsh-claude-part~="file-link"] {
   color: var(--dsh-claude-link);
   text-decoration: underline;
   text-decoration-color: var(--dsh-claude-link-underline);
@@ -293,9 +294,12 @@ body[data-dsh-claude-style] :is(code:not(pre code) > [data-dsh-claude-part~="fil
 /* A markdown link keeps the blue it states at rest under the pointer. The generic
    anchor hover in theme/chrome.css repaints a link with the accent ink, and that
    stylesheet ranks after this one, so the `link-button` guard gives this selector
-   the edge over it. */
+   the edge over it. A file link is the renderer's button, which that rule never
+   reaches, so it joins the group and keeps the same blue. */
 body[data-dsh-claude-style] [data-dsh-claude-part~="markdown"] a:not([data-dsh-claude-part~="link-button"]):hover,
-body[data-dsh-claude-style] [data-dsh-claude-part~="markdown"] a:not([data-dsh-claude-part~="link-button"]):focus-visible {
+body[data-dsh-claude-style] [data-dsh-claude-part~="markdown"] a:not([data-dsh-claude-part~="link-button"]):focus-visible,
+body[data-dsh-claude-style] [data-dsh-claude-part~="markdown"] [data-dsh-claude-part~="file-link"]:hover,
+body[data-dsh-claude-style] [data-dsh-claude-part~="markdown"] [data-dsh-claude-part~="file-link"]:focus-visible {
   color: var(--dsh-claude-link);
   text-decoration-color: var(--dsh-claude-link);
 }
