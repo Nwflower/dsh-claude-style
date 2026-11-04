@@ -554,6 +554,17 @@
         4
       ]
     },
+    "packages/testing/smoke/cases/anchor.mjs": {
+      "with the switch off an answer starting moves the position not at all": [
+        0
+      ],
+      "the answer's first line comes to the top of the conversation and the position leaves the end": [
+        0
+      ],
+      "a reader reading higher up is not moved by an answer starting": [
+        0
+      ]
+    },
     "packages/testing/smoke/cases/chat.mjs": {
       "a structural moment hands the scroll back: the position was 60px off the end and lands at it": [
         60
