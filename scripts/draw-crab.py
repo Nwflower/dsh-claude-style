@@ -82,6 +82,7 @@ GLYPHS = {
     '!': ['##', '##', '##', '##', '..', '##'],
     '?': ['.###.', '#...#', '...#.', '..#..', '.....', '..#..'],
     'note': ['.###', '.#.#', '.#..', '.#..', '##..', '##..'],
+    'note-small': ['.#', '.#', '##'],
     'spark': ['.#.', '###', '.#.'],
     'dot': ['##', '##'],
     'small': ['#'],
@@ -104,35 +105,54 @@ def glyph_at(f, name, cx, cy):
     f.glyph(cx - (len(rows[0]) - 1) // 2, cy - (len(rows) - 1) // 2, rows)
 
 
-def crab(f, dx=0, dy=0, eyes='open', left='rest', right='rest', legs='stand', squish=0, puff=0, shade=False):
-    """The front-facing crab, moved by (dx, dy). `squish` presses the shell
-    down by that many rows and widens it by as many columns on each side;
-    `puff` fills it with a breath, raising its top by that many rows and
-    widening it the same way."""
+# Where a claw's 4x4 block sits for each pose, in rows from the arm row, and
+# the joint, two columns wide on the claw's inner half, that ties a raised
+# claw to the shell: (its top row from the arm row, its height).
+CLAW_ROWS = {'rest': 0, 'up': -6, 'high': -9, 'down': 3, 'mid': -3}
+CLAW_JOINTS = {'up': (-2, 2), 'high': (-5, 5), 'mid': (1, 1)}
+
+
+def claw_at(side, pose, dx=0, dy=0, squish=0, puff=0):
+    """The top-left cell of one claw's 4x4 block, for the crab drawn with
+    the same arguments: where a held prop is fixed to it."""
+    c, r = C0 + dx, R0 + dy
+    spread = squish + puff
+    x = c - 4 - spread if side == 'left' else c + 16 + spread
+    return x, r + 4 + squish // 2 + CLAW_ROWS[pose]
+
+
+def crab(f, dx=0, dy=0, eyes='open', left='rest', right='rest', legs='stand', squish=0, puff=0, turn=None):
+    """The crab, moved by (dx, dy). `squish` presses the shell down by that
+    many rows and widens it by as many columns on each side; `puff` fills it
+    with a breath, raising its top by that many rows and widening it the
+    same way. `turn` ('left' or 'right') turns it a little toward that side,
+    the turn of Claude Code's own crab as it puts its laptop away: the far
+    side of the shell becomes a shaded face two columns wide, the eyes move
+    toward the near side, and the far leg and the far claw's inner column
+    fall into the shade."""
     c, r = C0 + dx, R0 + dy
     top = r + squish - puff
     spread = squish + puff
-    f.rect(c - spread, top, 16 + 2 * spread, 12 - squish + puff)
-    if shade:
-        f.rect(c + 14 + spread, top, 2, 12 - squish + puff, 'C')
+    height = 12 - squish + puff
+    f.rect(c - spread, top, 16 + 2 * spread, height)
+    if turn == 'left':
+        f.rect(c + 14 + spread, top, 2, height, 'C')
+    elif turn == 'right':
+        f.rect(c - spread, top, 2, height, 'C')
     arm_row = r + 4 + squish // 2
     for side, pose in (('left', left), ('right', right)):
-        x = c - 4 - spread if side == 'left' else c + 16 + spread
-        if pose == 'rest':
-            f.rect(x, arm_row, 4, 4)
-        elif pose == 'up':
-            f.rect(x, arm_row - 6, 4, 4)
-            f.rect(x + (2 if side == 'left' else 0), arm_row - 2, 2, 2)
-        elif pose == 'high':
-            f.rect(x, arm_row - 9, 4, 4)
-            f.rect(x + (2 if side == 'left' else 0), arm_row - 5, 2, 5)
-        elif pose == 'down':
-            f.rect(x, arm_row + 3, 4, 4)
-        elif pose == 'mid':
-            f.rect(x, arm_row - 3, 4, 4)
-            f.rect(x + (2 if side == 'left' else 0), arm_row + 1, 2, 1)
+        x, y = claw_at(side, pose, dx, dy, squish, puff)
+        f.rect(x, y, 4, 4)
+        bottom = y + 4
+        if pose in CLAW_JOINTS:
+            joint_top, joint_height = CLAW_JOINTS[pose]
+            f.rect(x + 2 if side == 'left' else x, arm_row + joint_top, 2, joint_height)
+            bottom = max(bottom, arm_row + joint_top + joint_height)
+        if turn is not None and (side == 'right') == (turn == 'left'):
+            f.rect(x + 3 if side == 'left' else x, y, 1, bottom - y, 'C')
     ey = r + 2 + squish
-    for ex in (c + 2, c + 12):
+    shift = {'left': -1, 'right': 1}.get(turn, 0)
+    for ex in (c + 2 + shift, c + 12 + shift):
         if eyes == 'open':
             f.rect(ex, ey, 2, 2, 'B')
         elif eyes == 'shut':
@@ -157,22 +177,24 @@ def crab(f, dx=0, dy=0, eyes='open', left='rest', right='rest', legs='stand', sq
         elif eyes == 'x':
             for (px, py) in ((0, 0), (2, 0), (1, 1), (0, 2), (2, 2)):
                 f.put(ex - 1 + px + (1 if ex > c + 6 else 0), ey - 1 + py, 'B')
+    # Four legs, left to right: their columns and lengths. A step lifts every
+    # other foot a row off the ground, the leg still joined to the shell.
     leg_top = r + 12
+    columns = (c, c + 4, c + 10, c + 14)
     if legs == 'stand':
-        for lx in (c, c + 4, c + 10, c + 14):
-            f.rect(lx, leg_top, 2, 4)
+        lengths = (4, 4, 4, 4)
     elif legs == 'tuck':
-        for lx in (c, c + 4, c + 10, c + 14):
-            f.rect(lx, leg_top, 2, 2)
+        lengths = (2, 2, 2, 2)
     elif legs == 'dangle':
-        for i, lx in enumerate((c - 1, c + 4, c + 10, c + 15)):
-            f.rect(lx, leg_top, 2, 5 if i in (1, 2) else 4)
+        columns = (c - 1, c + 4, c + 10, c + 15)
+        lengths = (4, 5, 5, 4)
     elif legs == 'stepA':
-        for i, lx in enumerate((c, c + 4, c + 10, c + 14)):
-            f.rect(lx, leg_top + (1 if i % 2 else 0), 2, 4 - (1 if i % 2 else 0))
+        lengths = (4, 3, 4, 3)
     elif legs == 'stepB':
-        for i, lx in enumerate((c, c + 4, c + 10, c + 14)):
-            f.rect(lx, leg_top + (0 if i % 2 else 1), 2, 4 - (0 if i % 2 else 1))
+        lengths = (3, 4, 3, 4)
+    for i, (lx, length) in enumerate(zip(columns, lengths)):
+        far = (turn == 'left' and i == 3) or (turn == 'right' and i == 0)
+        f.rect(lx, leg_top, 2, length, 'C' if far else 'A')
 
 
 def headphones(f, dx=0, dy=0):
@@ -248,56 +270,56 @@ def idle_laptop():
     return [legacy(i) for i in ROUTINE], 0
 
 
-def bubble_wand(f, dx=0, dy=0, spread=0):
-    """The wand the raised right claw ('up') holds: a stick from the claw's
-    top and a square loop above it, apart from the round bubbles. It follows
-    the crab moved by (dx, dy) and the claw pushed out by `spread` (a squish
-    or a puff). Returns the loop's top row and centre column."""
-    c, r = C0 + dx + spread, R0 + dy
-    f.glyph(c + 17, r - 4, ['#', '#'])
-    f.glyph(c + 16, r - 8, GLYPHS['wand'])
-    return r - 8, c + 17
+def bubble_wand(f, claw):
+    """The wand the raised left claw holds, its block's top-left cell at
+    `claw`: a stick from the claw's top and a square loop above it, apart
+    from the round bubbles. Returns the loop's top row and centre column."""
+    x, y = claw
+    f.glyph(x + 2, y - 2, ['#', '#'])
+    f.glyph(x, y - 6, GLYPHS['wand'])
+    return y - 6, x + 2
 
 
 def thinking():
     """Blowing bubbles, a round of 48 frames that ends where it starts: the
-    crab holds a bubble wand up in its right claw and looks at it, breathes
-    in until its shell swells, blows the breath out into a bubble that grows
-    out of the loop with a small one trailing, leans after the big one as it
-    wobbles up and drifts over its head, hops twice for joy with its free
-    claw up, flinches when it pops and hops once more."""
+    crab, turned toward the wand it holds up in its near claw, looks at it,
+    breathes in until its shell swells, blows the breath out into a bubble
+    that grows out of the loop with a small one trailing, leans after the
+    big one as it wobbles up and drifts over its head, hops twice for joy
+    with its far claw up, flinches when it pops and hops once more."""
     frames = []
-    eyes = (['upright'] * 4 + ['shut'] * 12 + ['up'] * 6 + ['happy'] * 8 + ['upleft'] * 6
-            + ['wide'] * 2 + ['happy'] * 6 + ['upright'] * 4)
+    eyes = (['upleft'] * 4 + ['shut'] * 12 + ['up'] * 6 + ['happy'] * 8 + ['upright'] * 6
+            + ['wide'] * 2 + ['happy'] * 6 + ['upleft'] * 4)
     # The breath: in over frames 4–7, out into the bubble over 8–13, and the
     # last push (a squish) at 14; the flinch at the pop is a squish too.
     puff = {4: 1, 5: 1, 6: 2, 7: 2, 8: 2, 9: 1, 10: 1, 11: 1}
     squish = {14: 1, 36: 1}
     # Leaning after the bubble from frame 19 until the round's last hop is done.
-    lean = {step: -1 for step in range(19, 44)}
+    lean = {step: 1 for step in range(19, 44)}
     hops = dict(zip(range(22, 30), [0, -1, -2, -1, 0, -1, -2, -1]))
     hops.update(zip(range(38, 44), [0, -1, -2, -1, 0, 0]))
     # The big bubble swells over the loop (frames 8–15), floats from there up
-    # and left over the head (16–35) wobbling round, wide, round, tall, and
+    # and right over the head (16–35) wobbling round, wide, round, tall, and
     # pops (36–38).
     swell = {8: 'bubble3', 9: 'bubble3', 10: 'bubble5', 11: 'bubble5', 12: 'bubble7', 13: 'bubble7', 14: 'bubble7', 15: 'bubble7'}
     wobble = ['bubble7', 'bubble7', 'bubble7-wide', 'bubble7-wide', 'bubble7', 'bubble7', 'bubble7-tall', 'bubble7-tall']
-    float_path = [(44, 7), (43, 7), (42, 6), (42, 6), (41, 6), (40, 5), (39, 5), (39, 5), (38, 5), (37, 4),
-                  (36, 4), (36, 4), (35, 4), (34, 4), (33, 3), (33, 3), (32, 4), (31, 4), (30, 4), (30, 4)]
-    # The small bubble leaves the loop at frame 17, rises up the right edge
-    # and pops at 28.
-    small_path = [(49, 9), (49, 8), (48, 7), (48, 6), (48, 5), (49, 4), (49, 3), (49, 2), (48, 2), (48, 1), (48, 1)]
+    float_path = [(27, 7), (28, 7), (29, 6), (29, 6), (30, 6), (31, 5), (32, 5), (32, 5), (33, 5), (34, 4),
+                  (35, 4), (35, 4), (36, 4), (37, 4), (38, 3), (38, 3), (39, 4), (40, 4), (41, 4), (41, 4)]
+    # The small bubble leaves the loop at frame 17, rises on the open side
+    # away from the big one and pops at 28.
+    small_path = [(21, 9), (21, 8), (22, 7), (22, 6), (22, 5), (21, 4), (21, 3), (21, 2), (22, 2), (22, 1), (22, 1)]
     for step, e in enumerate(eyes):
         dx, dy = lean.get(step, 0), hops.get(step, 0)
         p, s = puff.get(step, 0), squish.get(step, 0)
         if step in hops:
-            left = 'up' if dy < 0 else 'mid'
+            far = 'up' if dy < 0 else 'mid'
         elif step == 37:
-            left = 'up'
+            far = 'up'
         else:
-            left = 'rest'
-        f = new(dx=dx, dy=dy, eyes=e, left=left, right='up', legs='dangle' if dy <= -2 else 'stand', puff=p, squish=s)
-        loop_top, loop_x = bubble_wand(f, dx, dy, p + s)
+            far = 'rest'
+        pose = dict(dx=dx, dy=dy, squish=s, puff=p)
+        f = new(eyes=e, left='up', right=far, legs='dangle' if dy <= -2 else 'stand', turn='left', **pose)
+        loop_top, loop_x = bubble_wand(f, claw_at('left', 'up', **pose))
         if step in swell:
             # Sitting on the loop, and one row clear of it as it lets go.
             name = swell[step]
@@ -307,17 +329,17 @@ def thinking():
             cx, cy = float_path[step - 16]
             glyph_at(f, wobble[(step - 16) % len(wobble)], cx, cy)
         elif step == 36:
-            glyph_at(f, 'pop', 30, 4)
+            glyph_at(f, 'pop', 41, 4)
         elif step == 37:
-            glyph_at(f, 'pop-wide', 30, 4)
+            glyph_at(f, 'pop-wide', 41, 4)
         elif step == 38:
-            f.glyph(25, 4, GLYPHS['small'])
-            f.glyph(35, 4, GLYPHS['small'])
+            f.glyph(36, 4, GLYPHS['small'])
+            f.glyph(46, 4, GLYPHS['small'])
         if 17 <= step < 28:
             cx, cy = small_path[step - 17]
             glyph_at(f, 'bubble4', cx, cy)
         elif step == 28:
-            glyph_at(f, 'spark', 48, 1)
+            glyph_at(f, 'spark', 23, 1)
         frames.append(f)
     return frames, 24
 
@@ -336,29 +358,54 @@ def building():
 
 
 def music():
+    """Dancing to the headphones: the crab bobs on every other frame and
+    turns its head from side to side on the beat, its claws swinging in
+    turn. Two notes take turns leaving the ear cups: each grows in, rises
+    and sways for most of the round, and shrinks away before it starts again."""
     frames = []
-    notes = [(C0 - 6, R0 - 9), (C0 + 20, R0 - 12)]
+    # Where each note starts (its top-left cell) and which way it sways.
+    notes = [(C0 - 7, R0 - 6, -1), (C0 + 16, R0 - 7, 1)]
     for step in range(16):
         bob = 1 if (step // 2) % 2 else 0
         f = new(dy=bob, eyes='shut' if step % 8 < 4 else 'happy', left='mid' if step % 4 < 2 else 'rest',
-                right='rest' if step % 4 < 2 else 'mid')
+                right='rest' if step % 4 < 2 else 'mid', turn='left' if step % 8 < 4 else 'right')
         headphones(f, dy=bob)
-        for i, (x, y) in enumerate(notes):
-            rise = (step + i * 8) % 16 // 2
-            f.glyph(x, y - rise, GLYPHS['note'])
+        for i, (x, y, sway) in enumerate(notes):
+            phase = (step + i * 8) % 16
+            if phase >= 12:
+                continue
+            x += sway * (phase // 4)
+            y -= phase // 2
+            if phase < 2 or phase >= 10:
+                f.glyph(x + 1, y + 3, GLYPHS['note-small'])
+            else:
+                f.glyph(x, y, GLYPHS['note'])
         frames.append(f)
     return frames, 0
 
 
+def baton(f, claw, pose):
+    """The baton the left claw holds, its block's top-left cell at `claw`:
+    out of the claw's outer top corner, raised up and out, or held level
+    while the claw rests."""
+    x, y = claw
+    if pose == 'rest':
+        f.glyph(x - 3, y + 1, ['###'])
+    else:
+        f.glyph(x - 3, y - 3, ['#..', '.#.', '..#'])
+
+
 def conducting():
+    """Conducting the band on the near side: the crab turns to it and beats
+    time with the baton in its near claw, stretching up on the high beat and
+    pressing down on the low one while the far claw marks the off beats."""
     frames = []
-    seq = [('up', 'mid'), ('high', 'rest'), ('up', 'mid'), ('mid', 'up'), ('rest', 'high'), ('mid', 'up')]
+    beats = [('high', 'rest'), ('up', 'mid'), ('mid', 'rest'), ('up', 'mid'), ('high', 'rest'), ('mid', 'mid')]
     for step in range(24):
-        left, right = seq[step // 4 % len(seq)]
-        f = new(eyes='happy' if step % 12 < 6 else 'open', left=left, right=right)
-        baton_x = C0 + 20 if right in ('high', 'up') else C0 + 21
-        baton_y = R0 - 8 if right == 'high' else R0 - 5 if right == 'up' else R0 + 1
-        f.glyph(baton_x, baton_y, ['#.', '.#', '.#'] if right != 'rest' else ['##'])
+        near, far = beats[step // 4 % len(beats)]
+        pose = dict(puff=1 if near == 'high' and step % 4 < 2 else 0, squish=1 if near == 'mid' and step % 4 < 2 else 0)
+        f = new(eyes='happy' if step % 12 < 6 else 'open', left=near, right=far, turn='left', **pose)
+        baton(f, claw_at('left', near, **pose), near)
         frames.append(f)
     return frames, 0
 
@@ -417,15 +464,23 @@ def compacting():
 
 
 def sleeping():
+    """Asleep, turned a little to one side and crouched on tucked legs, the
+    shell swelling with each slow breath. Three letters at a time leave the
+    head eight frames apart: each starts as a dot, grows to a small z and
+    then a large one as it rises and drifts toward the open side, and
+    shrinks back to a dot before it goes."""
     frames = []
-    letters = [('z', C0 + 18, R0 - 2), ('z', C0 + 22, R0 - 8), ('Z', C0 + 26 - 8, R0 - 15)]
     for step in range(32):
         breathe = 1 if step % 16 >= 8 else 0
-        f = new(dy=2, eyes='shut', legs='tuck', left='down', right='down', squish=breathe)
-        for i, (g, x, y) in enumerate(letters):
+        f = new(dy=2, eyes='shut', legs='tuck', left='down', right='down', puff=breathe, turn='left')
+        for i in range(3):
             phase = (step - i * 8) % 32
-            if 0 <= phase < 24:
-                f.glyph(x - 2, y - phase // 8, GLYPHS[g])
+            if phase >= 24:
+                continue
+            x = C0 + 4 - phase * 2 // 3 + [0, 1, 0, -1][phase // 4 % 4]
+            y = R0 - 2 - phase * 3 // 4
+            glyph = 'dot' if phase < 2 or phase >= 22 else 'z' if phase < 12 else 'Z'
+            f.glyph(x, y, GLYPHS[glyph])
         frames.append(f)
     return frames, 0
 
@@ -434,8 +489,11 @@ def waking():
     frames = []
     lifts = [2, 2, 0, -3, -5, -6, -5, -3, 0, 0, 0, 0]
     for step, lift in enumerate(lifts):
-        f = new(dy=lift, eyes='shut' if step < 2 else 'wide', left='high' if lift < 0 else 'rest',
-                right='high' if lift < 0 else 'rest', legs='tuck' if step < 2 else 'dangle' if lift <= -5 else 'stand')
+        # Its first two frames are the sleeping crab's; it faces front as it starts up.
+        asleep = step < 2
+        claws = 'down' if asleep else 'high' if lift < 0 else 'rest'
+        f = new(dy=lift, eyes='shut' if asleep else 'wide', left=claws, right=claws,
+                legs='tuck' if asleep else 'dangle' if lift <= -5 else 'stand', turn='left' if asleep else None)
         if 2 <= step < 9:
             f.glyph(C0 + 7, R0 - 10 + lift, GLYPHS['!'])
         frames.append(f)
@@ -453,11 +511,14 @@ def poke(direction):
 
 
 def tickle():
+    """Squirming under the reader's clicks: the crab twists from one side to
+    the other every two frames, shuffles, and waves its claws in turn while
+    every other foot leaves the ground."""
     frames = []
     for step in range(16):
         dx = [0, -1, 0, 1][step % 4]
         f = new(dx=dx, eyes='happy', left='up' if step % 2 else 'mid', right='mid' if step % 2 else 'up',
-                legs='stepA' if step % 2 else 'stepB')
+                legs='stepA' if step % 2 else 'stepB', turn='left' if step % 4 < 2 else 'right')
         frames.append(f)
     return frames, 0
 

@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 20,
+  "at": "2026-11-04",
+  "external": false,
+  "zh": "修复螃蟹指挥时指挥棒悬空、被挠痒时抬起的腿与壳分开",
+  "en": "Fix the crab's baton floating clear of its claw while conducting and its lifted legs parting from the shell while tickled"
+}

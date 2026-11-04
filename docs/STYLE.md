@@ -937,6 +937,14 @@ character. The shell keeps the clay accent in both themes and the props (the
 laptop, the bubble wand and its bubbles, letters, notes, the hard hat) are an ink mask filled
 with the tertiary label ink, so the mascot reads as part of the card it stands on.
 
+The crab faces the reader at rest and turns a little to one side when a state
+has somewhere to look — the wand it blows bubbles from, the band it conducts,
+the beat in its headphones, a tickle it squirms under, its sleep — the turn of
+Claude Code's own crab putting its laptop away: the far side of the shell is a
+face two columns wide in the shell's darker clay, the eyes move toward the near
+side, and the far leg and the far claw's inner column fall into that shade.
+Typing and building keep Claude Code's laptop routine, turned further.
+
 Only the resting crab takes the pointer. With the animation choice resolved to
 "reduced" each state holds its still frame; a click or a pull still plays its
 reaction.
