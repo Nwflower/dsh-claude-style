@@ -47,6 +47,7 @@ export interface Handles {
   processColumn: FeatureHandle
   chatWait: FeatureHandle
   chatReveal: FeatureHandle
+  chatAnchor: FeatureHandle
   chatFiles: FeatureHandle
   chatSend: ChatSendHandle
   caret: FeatureHandle

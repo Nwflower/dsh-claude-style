@@ -10,10 +10,11 @@ import stats from './cases/stats.mjs'
 import settings from './cases/settings.mjs'
 import agent from './cases/agent.mjs'
 import chat from './cases/chat.mjs'
+import anchor from './cases/anchor.mjs'
 import mascot from './cases/mascot.mjs'
 import model from './cases/model.mjs'
 import peer from './cases/peer.mjs'
 
-const CASES = { ...shell, ...stats, ...settings, ...agent, ...chat, ...mascot, ...model, ...peer }
+const CASES = { ...shell, ...stats, ...settings, ...agent, ...chat, ...anchor, ...mascot, ...model, ...peer }
 
 export { CASES }

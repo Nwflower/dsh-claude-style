@@ -1,0 +1,4 @@
+{
+  "answerAnchorTitle": { "zh": "回答首行定位", "en": "Anchor at the answer's first line" },
+  "answerAnchorDesc": { "zh": "正式回答开始时把它的第一行带到对话区顶部并停下，思考与工具过程照常跟随", "en": "Bring the formal answer's first line to the top of the conversation as it starts and stay there; thinking and tool steps keep following" }
+}

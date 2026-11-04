@@ -373,6 +373,13 @@ export const PREFS = {
   chatWait: { type: 'boolean', default: true },
   chatSend: { type: 'boolean', default: true },
   chatReveal: { type: 'choice', values: CHAT_REVEAL_MODES, default: CHAT_REVEAL_OFF },
+  /**
+   * Whether the formal answer takes the reading position as it starts
+   * (features/chat-anchor/): its first line comes to the top of the conversation
+   * and the follow is handed over there. Off unless the reader asks for it: it
+   * moves the page at a moment he did not ask anything of it.
+   */
+  answerAnchor: { type: 'boolean', default: false },
   caretMotion: { type: 'choice', values: CARET_MOTIONS, default: CARET_MOTION_TYPING },
   messageEnter: { type: 'choice', values: MESSAGE_ENTER_MODES, default: MESSAGE_ENTER_FLIGHT },
   processRows: { type: 'choice', values: PROCESS_ROWS_LAYOUTS, default: PROCESS_ROWS_FLAT },
