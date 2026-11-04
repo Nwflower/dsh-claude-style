@@ -29,10 +29,11 @@ import { copy } from './copy'
  * side whose measured room is too small writes nothing and stays in the row,
  * which is the stylesheet's base rule, so a failed placement needs no undoing.
  *
- * The row the title leaves rises by a relative offset: a margin would change its
- * height inside the header's grid and move the conversation, and a relative
- * offset creates no containing block for the fixed pieces. The host's container
- * query hides chip labels to protect the title, so this mode shows them again.
+ * The row the title leaves rises by a relative offset, which creates no
+ * containing block for the fixed pieces; the header then closes to that row, so
+ * the height the title held is not left standing empty above the conversation.
+ * The host's container query hides chip labels to protect the title, so this
+ * mode shows them again.
  * The marks ride the header, since a body write here would invalidate the whole
  * document on every page change (D9). The sidebar collapse animates width with
  * no DOM change, which is why the title row's size is subscribed.
@@ -65,6 +66,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    */
   const ROW_ATTR = 'data-dsh-header-row'
   const ROW_LIFT = '--dsh-header-band-row-lift'
+  /**
+   * The header's top inset once it has closed around that row: the air the row
+   * keeps under the title's box. Written here because the caption strip is the
+   * shell's, so the gap is measured rather than taken as the host's inset.
+   */
+  const ROW_TOP = '--dsh-header-band-top'
   /** The two control clusters' stamps, and the right offset both rules read. */
   const ACTIONS_ATTR = 'data-dsh-header-actions'
   const CORNER_ATTR = 'data-dsh-header-corner'
@@ -109,7 +116,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const titleRows = observeMatches<HTMLElement>(HEADER_TITLE_ROW_SELECTOR)
   let keptRow: HTMLElement | null = null
   /** The header carrying BAND_ATTR right now, or null. */
-  let bandHost: Element | null = null
+  let bandHost: HTMLElement | null = null
   /** Every control the skin registered for the right panel, kept current by the bus (D40). */
   const closeButtons = observeMatches<HTMLElement>(`.${CLOSE_CLASS}`)
 
@@ -223,8 +230,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     actionsStamp.release()
     cornerStamp.release()
     tabsStamp.release()
-    bandHost?.removeAttribute(BAND_ATTR)
-    bandHost = null
+    if (bandHost !== null) {
+      bandHost.removeAttribute(BAND_ATTR)
+      bandHost.style.removeProperty(ROW_TOP)
+      bandHost = null
+    }
   }
 
   /**
@@ -251,12 +261,13 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     /** The window's width (pageWidth), read with the boxes. */
     width: number
     row: HTMLElement
-    header: Element | null
+    header: HTMLElement | null
     title: HTMLElement | null
     utilities: HTMLElement | null
     corner: HTMLElement | null
     stripEl: HTMLElement | null
     rowBox: DOMRect | null
+    headerBox: DOMRect | null
     stripBox: DOMRect | null
     menuBox: DOMRect | null
     utilitiesBox: DOMRect | null
@@ -284,7 +295,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       reading = null
       return
     }
-    const header = row.closest(CONVERSATION_HEADER_SELECTOR)
+    const header = row.closest<HTMLElement>(CONVERSATION_HEADER_SELECTOR)
     const title = row.querySelector<HTMLElement>(HEADER_TITLE_SELECTOR)
     const utilities = row.querySelector<HTMLElement>(HEADER_UTILITIES_SELECTOR)
     const corner = row.querySelector<HTMLElement>(HEADER_CORNER_SELECTOR)
@@ -300,6 +311,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       corner,
       stripEl,
       rowBox: rect(row),
+      headerBox: rect(header),
       // The strip's own box when the host draws the tablist as the strip itself,
       // and the plate and overflow button standing in its row when it draws them
       // inside one (shared/content-box.ts): the row spans the header, so its own
@@ -387,10 +399,21 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const titleHeight = titleBox === null ? 0 : titleBox.height
     const titleCentre = band.height / 2 + TITLE_NUDGE
     const applied = parseFloat(row.style.getPropertyValue(ROW_LIFT))
-    const rise = !liftTitle ? 0 : Math.max(0, Math.round(rowBox.top - (isFinite(applied) ? applied : 0) - (titleCentre + titleHeight / 2 + ROW_GAP)))
+    /** Where the row's top belongs: its own gap under the title's box, which the stylesheet centres in the caption row. */
+    const rowTop = titleCentre + titleHeight / 2 + ROW_GAP
+    const rise = !liftTitle ? 0 : Math.max(0, Math.round(rowBox.top - (isFinite(applied) ? applied : 0) - rowTop))
 
     rowStamp.mark(liftTitle ? row : null)
     if (liftTitle) setVar(row, ROW_LIFT, `${-rise}px`)
+    // The header closes to the row it no longer shares with the title: its top
+    // inset becomes the air between its own edge and that row, so the height the
+    // title held is not left standing empty above the conversation. A header
+    // whose box was not read keeps the host's inset, the stylesheet's fallback.
+    if (liftTitle && current.header !== null && current.headerBox !== null) {
+      setVar(current.header, ROW_TOP, `${Math.max(0, Math.round(rowTop - current.headerBox.top))}px`)
+    } else if (current.header !== null) {
+      current.header.style.removeProperty(ROW_TOP)
+    }
     titleStamp.mark(liftTitle ? title : null)
     if (liftTitle && title !== null) {
       setVar(title, TITLE_LEFT, `${Math.round(left)}px`)
@@ -421,10 +444,16 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const tokens = `${liftTitle ? TITLE_TOKEN : ''} ${liftActions ? ACTIONS_TOKEN : ''}`.trim()
     const header = current.header
     if (tokens === '' || header === null) {
-      bandHost?.removeAttribute(BAND_ATTR)
-      bandHost = null
+      if (bandHost !== null) {
+        bandHost.removeAttribute(BAND_ATTR)
+        bandHost.style.removeProperty(ROW_TOP)
+        bandHost = null
+      }
     } else {
-      if (bandHost !== null && bandHost !== header) bandHost.removeAttribute(BAND_ATTR)
+      if (bandHost !== null && bandHost !== header) {
+        bandHost.removeAttribute(BAND_ATTR)
+        bandHost.style.removeProperty(ROW_TOP)
+      }
       bandHost = header
       setAttributeIfChanged(header, BAND_ATTR, tokens)
     }
