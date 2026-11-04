@@ -101,6 +101,13 @@ export default {
       paceFrames.length > 4 && paceFrames.every((gap) => Number.isFinite(gap) && gap <= pace.growth + bound('followSlideRowDriftPx')) &&
         (pace.settled ?? 1) <= AT_END_PX,
       JSON.stringify(pace))
+    // A reader holding the conversation keeps the position the host's own pin
+    // would take from him: the growth is given back and nothing slides
+    // (chat-follow.ts's holdGrowth).
+    const hold = follow.hold || {}
+    check('a reader holding the conversation keeps the growth the host\'s pin pushed up, and nothing slides',
+      Number.isFinite(hold.gap) && hold.gap >= bound('followHoldGrowthPx') && hold.slides === 0,
+      JSON.stringify(hold))
   },
   caret(r) {
     basicChecks(r)
