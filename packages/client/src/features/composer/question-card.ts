@@ -8,6 +8,9 @@ import COPY from './composer.copy.json'
 
 const copy = createCopy(COPY)
 const CUSTOM_ROW_SELECTOR = ':is([role="radiogroup"], [role="group"]) > div:has(textarea)'
+// A question without options asks for one typed answer: the host draws that field
+// boxed inside the group instead of as a row, and the label goes above it.
+const FREE_TEXT_SELECTOR = ':is([role="radiogroup"], [role="group"]) > div:has(> textarea)'
 const CUSTOM_ATTR = 'data-dsh-claude-question-custom'
 const CUSTOM_ACTIVE_ATTR = 'data-dsh-claude-question-custom-active'
 const LABEL_CLASS = 'dsh-claude-question-custom-label'
@@ -108,8 +111,10 @@ export function createQuestionCards() {
         labels.set(row, label)
       }
       // The radio and the answer field are the host's; the label stands
-      // between them in the stylesheet's two-column grid.
-      if (row.children[1] !== label) row.insertBefore(label, row.children[1] ?? null)
+      // between them in the stylesheet's two-column grid, or above a field that
+      // spans the row.
+      const labelAt = row.matches(FREE_TEXT_SELECTOR) ? 0 : 1
+      if (row.children[labelAt] !== label) row.insertBefore(label, row.children[labelAt] ?? null)
       writeTextInPlace(label, copy('questionCustom'))
       setAttributeIfChanged(row, CUSTOM_ATTR, '')
       const active = customSelected.has(row) || row.querySelector('textarea')!.value.trim() !== ''

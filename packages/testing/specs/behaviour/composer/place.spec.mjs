@@ -312,7 +312,10 @@ export default spec({ page: 'composer' }, ({ test }) => {
 
   test('the question card and its settled reply are drawn in the skin\'s own look', async (t) => {
     await mountQuestion(t)
-    await t.page.waitForFunction((selector) => document.querySelector(selector)?.textContent === 'Other', CUSTOM_LABEL)
+    await t.page.waitForFunction((selector) => {
+      const label = document.querySelector(selector)
+      return label !== null && label.textContent === 'Other'
+    }, CUSTOM_LABEL)
     const reading = await t.page.evaluate((flowItem) => {
       const { card, section, row, mark, badge, term, answer, content, probe, fallbackAttr } = window.__debugQuestion
       const paint = getComputedStyle
