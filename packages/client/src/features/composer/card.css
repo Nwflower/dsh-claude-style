@@ -126,7 +126,7 @@ body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row]
 /* Single-choice marks are radios. Their number yields to a hollow ring; the
    chosen ring carries the selection blue and a light centre. */
 body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role="radio"] > :first-child,
-body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role="radiogroup"] > [data-dsh-claude-question-custom] > :first-child {
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role="radiogroup"] > [data-dsh-claude-question-custom]:not([data-dsh-claude-question-custom="free"]) > :first-child {
   box-sizing: border-box;
   position: relative;
   width: 20px;
@@ -147,14 +147,14 @@ body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role="radiogroup
 }
 
 body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role="radio"][aria-checked="true"] > :first-child,
-body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role="radiogroup"] > [data-dsh-claude-question-custom-active] > :first-child {
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role="radiogroup"] > [data-dsh-claude-question-custom-active]:not([data-dsh-claude-question-custom="free"]) > :first-child {
   border-color: var(--dsh-claude-field-ring);
   background-color: var(--dsh-claude-field-ring);
   background-image: radial-gradient(circle, var(--dsw-alias-brand-text) 0 5px, transparent 5px);
 }
 
 body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role="checkbox"] > :first-child,
-body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role="group"] > [data-dsh-claude-question-custom] > :first-child {
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role="group"] > [data-dsh-claude-question-custom]:not([data-dsh-claude-question-custom="free"]) > :first-child {
   width: 20px;
   height: 20px;
   flex: 0 0 20px;
@@ -162,12 +162,12 @@ body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role="group"] > 
 }
 
 body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role="checkbox"][aria-checked="true"] > :first-child,
-body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role="group"] > [data-dsh-claude-question-custom-active] > :first-child {
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role="group"] > [data-dsh-claude-question-custom-active]:not([data-dsh-claude-question-custom="free"]) > :first-child {
   color: var(--dsw-alias-brand-text);
 }
 
 body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role="checkbox"][aria-checked="true"] > :first-child::before,
-body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role="group"] > [data-dsh-claude-question-custom-active] > :first-child::before {
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role="group"] > [data-dsh-claude-question-custom-active]:not([data-dsh-claude-question-custom="free"]) > :first-child::before {
   border-color: var(--dsh-claude-field-ring);
   background: var(--dsh-claude-field-ring);
 }
@@ -228,6 +228,23 @@ body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-
 
 body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-question-custom]:not([data-dsh-claude-question-custom="free"]) > div:focus-within {
   border-color: var(--dsh-claude-field-ring);
+}
+
+/* A question with no options asks for one typed answer, and the host's own box is
+   that field: it takes the composer card's face instead of the host's — the
+   same free height above a one-line floor, the same hairline that deepens under
+   focus rather than taking the accent, and the room the option list would have
+   given it under the heading band. */
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] :is([role="radiogroup"], [role="group"]) > [data-dsh-claude-question-custom="free"] {
+  margin: 12px 16px;
+  min-height: 36px;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 12px;
+  background: var(--dsw-specific-input-major);
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] :is([role="radiogroup"], [role="group"]) > [data-dsh-claude-question-custom="free"]:focus-within {
+  border-color: var(--dsw-alias-border-l2);
 }
 
 body[data-dsh-claude-style] [data-dsh-claude-question-surface] > footer {
