@@ -77,8 +77,11 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
     t.expectThat.equal(midFigure === null ? null : Number(midFigure[1].replace(/,/g, '')), 100,
       'inside the window the figure stands on the settled total')
     // A batch past the window is the next due reading: it counts the text.
+    // The tick only queues that pass, so the figure is read once the page has
+    // settled on it rather than right after the batch that asked for it.
     await t.page.evaluate((wait) => new Promise((resolve) => setTimeout(resolve, wait)), 700)
     await tick(t)
+    await t.settle()
     const grown = await readWrittenBackTokens(t)
     t.expectThat.equal(grown !== null && grown > 100, true, 'the due reading counts the text the window held')
   })
