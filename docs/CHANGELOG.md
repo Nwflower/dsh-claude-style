@@ -2,6 +2,42 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [0.19.9] - 2026-11-05
+
+[中文](#cn-0.19.9) | [English](#en-0.19.9)
+
+<h3 id="cn-0.19.9">体验优化</h3>
+
+- 降低会话较多时侧栏状态同步的观察开销
+- 新增独立的会话标题扫光选项与同步预览，统一未读和待操作状态颜色并保留无障碍回退
+- 改善设置页选项描述文案与代码注释，清理无关交互机制与内部实现细节
+- 减少流式输出与输入过程中的整页查询
+- 将等待尾部判定和会话导航索引测量合并到共享帧读阶段，减少流式输出中的重复样式计算
+
+### 问题修复
+
+- 修复多插件同时占用输入区工具栏时模型名称被压缩消失的问题，并保留现有 Claude 输入框布局
+- 修复侧栏首行与新建会话之间的间距比其余行距更宽、面板行图标不再落在新建会话圆片那一列的问题
+- 修复已归档会话的取消归档与删除按钮在部分宿主版本上只显出悬停底色、图标不显示的问题
+- 修复文本输入框的自绘光标接管与位置测量
+- 卸载时取消提问卡待执行的帧任务，避免卸载后继续刷新或移动焦点
+
+<h3 id="en-0.19.9">Improvements</h3>
+
+- Reduce sidebar status observation overhead with many conversations
+- Add an independent running-title shimmer with matching previews, semantic unread and pending colors, and accessible fallbacks
+- Improve settings descriptions and code comments by removing irrelevant interaction mechanisms and internal implementation details
+- Reduce whole-document queries during streaming and typing
+- Batch waiting-tail and conversation-navigation measurements in the shared frame read phase to reduce repeated style calculation while streaming
+
+### Bug Fixes
+
+- Keep the model selector readable when plugins crowd the composer toolbar while preserving the existing Claude composer layout
+- Fix the sidebar's first row standing further from the New session plate than the rows under it and the panel rows' glyphs leaving the New session chip's column
+- Fix the archived conversations' unarchive and delete buttons showing only their hover wash on some host versions, with no glyph
+- Restore drawn-caret takeover and geometry for plain-text inputs
+- Cancel pending question-card frames on teardown so released cards cannot refresh or move focus
+
 ## [0.19.8] - 2026-11-04
 
 [中文](#cn-0.19.8) | [English](#en-0.19.8)

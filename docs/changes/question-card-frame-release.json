@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 73,
-  "at": "2026-11-05",
-  "external": false,
-  "zh": "卸载时取消提问卡待执行的帧任务，避免卸载后继续刷新或移动焦点",
-  "en": "Cancel pending question-card frames on teardown so released cards cannot refresh or move focus"
-}

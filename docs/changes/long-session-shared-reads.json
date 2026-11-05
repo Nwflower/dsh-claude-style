@@ -1,8 +1,0 @@
-{
-  "group": "improvements",
-  "order": 71,
-  "at": "2026-11-05",
-  "external": false,
-  "zh": "将等待尾部判定和会话导航索引测量合并到共享帧读阶段，减少流式输出中的重复样式计算",
-  "en": "Batch waiting-tail and conversation-navigation measurements in the shared frame read phase to reduce repeated style calculation while streaming"
-}

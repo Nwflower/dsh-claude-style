@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 72,
-  "at": "2026-11-05",
-  "external": false,
-  "zh": "修复文本输入框的自绘光标接管与位置测量",
-  "en": "Restore drawn-caret takeover and geometry for plain-text inputs"
-}

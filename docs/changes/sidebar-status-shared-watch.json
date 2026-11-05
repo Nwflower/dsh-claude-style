@@ -1,8 +1,0 @@
-{
-  "group": "improvements",
-  "order": 1,
-  "at": "2026-11-04",
-  "external": false,
-  "zh": "降低会话较多时侧栏状态同步的观察开销",
-  "en": "Reduce sidebar status observation overhead with many conversations"
-}
