@@ -249,9 +249,8 @@ export function caretMeasureRich(input: Element, range: Range, probeHome: Elemen
  */
 export function caretMeasurePlain(input: PlainSurface, endKeyed: boolean, probeHome: Element | null): CaretReading | null {
   if (probeHome === null) return null
-  // The box is a value rather than the DOMRect: a live rect follows the field
-  // while the caret it placed goes stale.
-  const field = { ...input.getBoundingClientRect() }
+  // Snapshot the field geometry for clipping and drawing in this frame.
+  const field = DOMRect.fromRect(input.getBoundingClientRect())
   const style = getComputedStyle(input)
   const paddingX = Number.parseFloat(style.paddingLeft) + Number.parseFloat(style.paddingRight)
   const width = Math.max(0, input.clientWidth - (Number.isFinite(paddingX) ? paddingX : 0))
