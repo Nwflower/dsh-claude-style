@@ -1,11 +1,6 @@
 /* ---------- The settings page's pickers: one card per choice ---------- */
-/* The rows whose control is the effect itself (D74): a grid of cards spanning
-   the row, each card carrying a sample that wears the choice it stands for, so
-   the control needs no label and the row needs no description. They stand
-   apart from settings.css because they are a responsibility of their own — a
-   new choice is one card here plus one option in a settings-tab-*.ts — while
-   the row shell, the switches, the brand editor and the tab strip are the
-   other. */
+/* Cards own their sample layout; settings.css owns the row shell. Named
+   choices can carry a visible label beside their preview. */
 
 body[data-dsh-claude-style] .dsh-claude-settings-row-block > .dsh-claude-preview-picker {
   align-self: stretch;
@@ -17,7 +12,7 @@ body[data-dsh-claude-style] .dsh-claude-settings-row-block > .dsh-claude-preview
    the paint itself, which is why both read shared/motion.css; the caret's cards
    carry a sample line with the caret doing what the choice says; the reveal's
    carry a sample line whose characters arrive one after another; the ongoing
-   mark's carry one sidebar row led by the mark the choice gives it. The brand
+   effect's carry a title followed by its status marker. The brand
    marks are the same assets the sidebar and hero paint — Claude's clay
    starburst, DeepSeek's whale in brand blue — inlined as CSS data URIs, so they
    read in full colour on either theme: a new brand is one option in
@@ -432,14 +427,20 @@ body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-enter-
   transition: none;
 }
 
-/* An ongoing-mark card holds the pair a sidebar row leads with: the mark the
-   choice gives it, then a title in the quiet ink. The mark's own paint is the
-   sidebar's (theme/sidebar.css), so the card wears the mark rather than a
-   picture of it, and the two cards are the same pair with the mark swapped. */
+/* The label stays outside the preview paint. Shared ongoing classes own the
+   effect and its motion/color fallbacks; settings owns only the layout. */
 body[data-dsh-claude-style] .dsh-claude-ongoing-card {
+  min-width: 0;
   min-height: 64px;
   padding: 14px 12px;
   color: var(--dsw-alias-label-secondary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-ongoing-label {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+  color: var(--dsw-alias-label-primary);
 }
 
 body[data-dsh-claude-style] .dsh-claude-ongoing-sample {
@@ -447,16 +448,24 @@ body[data-dsh-claude-style] .dsh-claude-ongoing-sample {
   align-items: center;
   gap: 8px;
   min-width: 0;
+  width: 100%;
   max-width: 100%;
   font-size: 12px;
   line-height: 20px;
 }
 
 body[data-dsh-claude-style] .dsh-claude-ongoing-sample-title {
+  color: var(--dsw-alias-label-secondary);
+  flex: 1;
   min-width: 0;
   overflow: hidden;
+  text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-ongoing-sample-title {
+  color: var(--dsw-alias-label-tertiary);
 }
 
 /* A context-display card holds a row of readings drawn the way the composer

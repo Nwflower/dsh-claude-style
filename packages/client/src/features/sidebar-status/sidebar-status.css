@@ -14,6 +14,85 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"][data-dsh-claud
   align-items: center;
   justify-content: center;
 }
+/* Completion here means an unread background response, not a generic successful task. */
+body[data-dsh-claude-style] [data-dsh-claude-row-status="active"] > [data-dsh-claude-part~="row-slot"] > [data-state="done"] {
+  color: var(--dsh-claude-status-unread);
+}
+body[data-dsh-claude-style] [data-dsh-claude-row-status="active"] > [data-dsh-claude-part~="row-slot"] > [data-state="warning"] {
+  color: var(--dsh-claude-status-awaiting);
+}
+/* Keep the reader's ring choice; the default dot uses Claude's opacity-only cadence. */
+body[data-dsh-claude-style]:not([data-dsh-claude-ongoing-indicator="ring"]) [data-dsh-claude-row-status="active"] > [data-dsh-claude-part~="row-slot"] > svg[data-state="ongoing"],
+body[data-dsh-claude-style] .dsh-claude-ongoing-preview:not([data-look="ring"]) .dsh-claude-ongoing-mark {
+  background: var(--dsh-claude-status-running);
+  animation: dsh-claude-status-breathe var(--dsh-claude-period-status-breathe) var(--dsh-claude-ease-in-out) infinite;
+}
+@keyframes dsh-claude-status-breathe {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-claude-row-status="active"] > [data-dsh-claude-part~="row-slot"] > svg[data-state="ongoing"],
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-ongoing-preview .dsh-claude-ongoing-mark {
+  animation: none;
+}
+/* Working titles and their native marker are mutually exclusive. The selected
+   session keeps a static title and no working marker, as Claude's selected context does.
+   The original title and the slot's screen-reader labels stay untouched. */
+@supports (background-clip: text) {
+  @media (prefers-reduced-motion: no-preference) and (forced-colors: none) {
+    body[data-dsh-claude-style]:not([data-dsh-claude-motion="reduced"])[data-dsh-claude-ongoing-indicator="shimmer"] [data-dsh-claude-running-title]:not([aria-selected="true"]) > [data-dsh-claude-part~="row-title"],
+    body[data-dsh-claude-style]:not([data-dsh-claude-motion="reduced"]) .dsh-claude-ongoing-title[data-look="shimmer"] {
+      color: var(--dsw-alias-label-primary);
+      background-image: linear-gradient(var(--dsh-claude-title-angle, 120deg),
+        var(--dsw-alias-label-primary) 37.5%,
+        color-mix(in srgb, var(--dsh-claude-status-title-peak) 16%, var(--dsw-alias-label-primary)) 41%,
+        color-mix(in srgb, var(--dsh-claude-status-title-peak) 46%, var(--dsw-alias-label-primary)) 44%,
+        color-mix(in srgb, var(--dsh-claude-status-title-peak) 83%, var(--dsw-alias-label-primary)) 47%,
+        var(--dsh-claude-status-title-peak) 50%,
+        color-mix(in srgb, var(--dsh-claude-status-title-peak) 83%, var(--dsw-alias-label-primary)) 53%,
+        color-mix(in srgb, var(--dsh-claude-status-title-peak) 46%, var(--dsw-alias-label-primary)) 56%,
+        color-mix(in srgb, var(--dsh-claude-status-title-peak) 16%, var(--dsw-alias-label-primary)) 59%,
+        var(--dsw-alias-label-primary) 62.5%);
+      background-size: 400% 100%;
+      background-repeat: no-repeat;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: dsh-claude-title-shine var(--dsh-claude-period-status-title) var(--dsh-claude-ease-status-title) infinite;
+    }
+    body[data-dsh-claude-style]:not([data-dsh-claude-motion="reduced"])[data-dsh-claude-ongoing-indicator="shimmer"] [data-dsh-claude-running-title]:dir(rtl):not([aria-selected="true"]) > [data-dsh-claude-part~="row-title"],
+    body[data-dsh-claude-style]:not([data-dsh-claude-motion="reduced"]) .dsh-claude-ongoing-title[data-look="shimmer"]:dir(rtl) {
+      --dsh-claude-title-angle: 240deg;
+      animation-name: dsh-claude-title-shine-rtl;
+    }
+    body[data-dsh-claude-style]:not([data-dsh-claude-motion="reduced"])[data-dsh-claude-ongoing-indicator="shimmer"] [data-dsh-claude-running-title] > [data-dsh-claude-part~="row-slot"] > svg[data-state="ongoing"],
+    body[data-dsh-claude-style]:not([data-dsh-claude-motion="reduced"]) .dsh-claude-ongoing-preview[data-look="shimmer"] .dsh-claude-ongoing-mark {
+      visibility: hidden;
+      animation: none;
+    }
+  }
+}
+@keyframes dsh-claude-title-shine {
+  0%, 15% { background-position: 83.333% 0; }
+  85%, 100% { background-position: 16.667% 0; }
+}
+@keyframes dsh-claude-title-shine-rtl {
+  0%, 15% { background-position: 16.667% 0; }
+  85%, 100% { background-position: 83.333% 0; }
+}
+@media (prefers-reduced-motion: reduce), (forced-colors: active) {
+  body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"][data-dsh-claude-row-status="active"] > [data-dsh-claude-part~="row-slot"] > svg[data-state="ongoing"],
+  body[data-dsh-claude-style] .dsh-claude-ongoing-preview .dsh-claude-ongoing-mark[data-look] { animation: none; }
+}
+@media (forced-colors: active) {
+  body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"][data-dsh-claude-row-status="active"] > [data-dsh-claude-part~="row-slot"] > svg[data-state="ongoing"],
+  body[data-dsh-claude-style] .dsh-claude-ongoing-preview .dsh-claude-ongoing-mark[data-look] {
+    forced-color-adjust: none;
+    background: CanvasText;
+    border-color: CanvasText;
+  }
+  body[data-dsh-claude-style][data-dsh-claude-ongoing-indicator="ring"] [data-dsh-claude-row-status="active"] > [data-dsh-claude-part~="row-slot"] > svg[data-state="ongoing"],
+  body[data-dsh-claude-style] .dsh-claude-ongoing-preview[data-look="ring"] .dsh-claude-ongoing-mark { background: transparent; }
+}
 /* Idle/read sessions have no decorative circle. Native screen-reader labels stay mounted. */
 body[data-dsh-claude-style] [data-dsh-claude-row-status="idle"] > [data-dsh-claude-part~="row-slot"] { visibility: hidden; }
 body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"][data-dsh-claude-row-status] > [data-dsh-claude-part~="row-slot"]::after,

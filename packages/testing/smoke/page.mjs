@@ -9,6 +9,8 @@ import fs from 'fs'
 import path from 'path'
 import { MARKUP, PNG_1PX } from './shared.mjs'
 import { MODEL_SEAT_NAME } from '../specs/fixtures/model-seat.mjs'
+
+const SURFACE = JSON.parse(fs.readFileSync(new URL('../data/surface.json', import.meta.url), 'utf8')).surface
 /**
  * The rail ui-attachment draws a draft's files into, and its scrolling row: the
  * local names the host's stylesheet gives them. No part of the host's tables
@@ -71,6 +73,7 @@ const PROBE_PARTS = [
   'shell-switches.js',
   'agent-turn-nav.js',
   'shell-palette.js',
+  'settings-ongoing.js',
   'brand.js',
   'mascot.js',
   'chat-follow.js',
@@ -555,7 +558,7 @@ ${sessionTitleArea}
 ${chatSubmit}
 ${foldArea}
 </div>
-<script>window.SMOKE_CASE = ${JSON.stringify(name)}; window.SMOKE_GROUPS = ${JSON.stringify(cases)}; window.SMOKE_TIER = ${JSON.stringify(tier)}; window.SMOKE_MARKUP = ${JSON.stringify(MARKUP)}; window.SMOKE_PNG = ${JSON.stringify(PNG_1PX)}</script>
+<script>window.SMOKE_CASE = ${JSON.stringify(name)}; window.SMOKE_GROUPS = ${JSON.stringify(cases)}; window.SMOKE_TIER = ${JSON.stringify(tier)}; window.SMOKE_MARKUP = ${JSON.stringify(MARKUP)}; window.SMOKE_PNG = ${JSON.stringify(PNG_1PX)}; window.SMOKE_SURFACE = ${JSON.stringify(SURFACE)}</script>
 <script>${STAND_IN}</script>
 <script src="/client.js"></script>
 <script>${probe}</script>

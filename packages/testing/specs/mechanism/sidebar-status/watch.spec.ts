@@ -11,6 +11,7 @@ import { surfaceAttribute } from '../../fixtures/surface'
 
 const PART = surfaceAttribute('skin.part')
 const STATUS = surfaceAttribute('sidebar-status.row')
+const RUNNING_TITLE = surfaceAttribute('sidebar-status.running-title')
 const cleanups: (() => void)[] = []
 const settle = () => new Promise(resolve => setTimeout(resolve, 0))
 
@@ -23,6 +24,7 @@ afterEach(() => {
 interface SessionRow {
   row: HTMLElement
   dot: HTMLElement
+  title: HTMLElement
 }
 
 /** A sidebar root and its native session rows, using the host contract's naming. */
@@ -40,16 +42,19 @@ function sidebar(states: string[]) {
     const dot = document.createElement('span')
     dot.setAttribute(SESSION_PHASE_ATTRIBUTE, state)
     seat.append(dot)
-    row.append(seat)
+    const title = document.createElement('span')
+    title.setAttribute(PART, 'row-title')
+    title.textContent = 'Native running session'
+    row.append(seat, title)
     root.append(row)
-    return { row, dot }
+    return { row, dot, title }
   })
   return { slot, root, rows }
 }
 
 interface TestUi {
   schedule(): void
-  sidebarStatus?: { sync(): void }
+  sidebarStatus?: { measure(): void; sync(): void }
 }
 
 function installed() {
@@ -57,9 +62,11 @@ function installed() {
   const ui: TestUi = { schedule() { calls += 1 } }
   const stop = installSidebarStatus(undefined as never, ui as never)
   cleanups.push(stop)
-  const sync = () => ui.sidebarStatus?.sync()
+  const measure = () => ui.sidebarStatus?.measure()
+  const write = () => ui.sidebarStatus?.sync()
+  const sync = () => { measure(); write() }
   sync()
-  return { sync, calls: () => calls }
+  return { sync, measure, write, calls: () => calls }
 }
 
 test('one root watch covers every row without observing each session row', async () => {
@@ -96,6 +103,15 @@ test('the shared watch follows a host replacement of the sidebar root', async ()
   await settle()
   feature.sync()
   expect(next.rows[0].row.getAttribute(STATUS)).toBe('active')
+  expect(next.rows[0].row.hasAttribute(RUNNING_TITLE)).toBe(true)
+  expect(current.rows[0].row.hasAttribute(STATUS)).toBe(false)
+  expect(current.rows[0].row.hasAttribute(RUNNING_TITLE)).toBe(false)
+
+  const beforeOldRoot = feature.calls()
+  current.rows[0].title.textContent = ''
+  current.rows[0].dot.setAttribute(SESSION_PHASE_ATTRIBUTE, 'idle')
+  await settle()
+  expect(feature.calls()).toBe(beforeOldRoot)
 
   const before = feature.calls()
   next.rows[0].dot.setAttribute(SESSION_PHASE_ATTRIBUTE, 'idle')
@@ -110,10 +126,57 @@ test('teardown stops the shared watch', async () => {
   const feature = installed()
   const stop = cleanups.pop()
   stop?.()
+  expect(current.rows[0].row.hasAttribute(STATUS)).toBe(false)
+  expect(current.rows[0].row.hasAttribute(RUNNING_TITLE)).toBe(false)
 
   const before = feature.calls()
   current.rows[0].dot.setAttribute(SESSION_PHASE_ATTRIBUTE, 'idle')
   current.rows[0].dot.remove()
+  current.rows[0].title.style.opacity = '0'
   await settle()
   expect(feature.calls()).toBe(before)
+})
+
+test('the shared watch invalidates title reads while the write phase never measures geometry', async () => {
+  const current = sidebar(['ongoing'])
+  // cost: D40 — the root subscription must cover title invalidation without per-row observers.
+  const observe = vi.spyOn(MutationObserver.prototype, 'observe')
+  const feature = installed()
+  const { row, title } = current.rows[0]
+  expect(row.hasAttribute(RUNNING_TITLE)).toBe(true)
+  const options = observe.mock.calls.find(([target]) => target === current.root)?.[1]
+  expect(options?.characterData).toBe(true)
+  expect(options?.attributeFilter).toEqual(expect.arrayContaining([
+    SESSION_PHASE_ATTRIBUTE, PART, 'hidden', 'aria-hidden', 'contenteditable', 'style', 'class',
+  ]))
+
+  // cost: D40 — geometry belongs to the measure phase, never the DOM-writing phase.
+  const bounds = vi.spyOn(title, 'getBoundingClientRect')
+  feature.measure()
+  expect(bounds).toHaveBeenCalled()
+  const reads = bounds.mock.calls.length
+  feature.write()
+  expect(bounds.mock.calls).toHaveLength(reads)
+
+  const text = title.firstChild as Text
+  const beforeText = feature.calls()
+  text.data = ''
+  await settle()
+  expect(feature.calls()).toBeGreaterThan(beforeText)
+  feature.measure()
+  expect(row.hasAttribute(RUNNING_TITLE)).toBe(true)
+  feature.write()
+  expect(row.hasAttribute(RUNNING_TITLE)).toBe(false)
+
+  text.data = 'Native running session'
+  await settle()
+  feature.sync()
+  expect(row.hasAttribute(RUNNING_TITLE)).toBe(true)
+
+  const beforeStyle = feature.calls()
+  title.style.opacity = '0'
+  await settle()
+  expect(feature.calls()).toBeGreaterThan(beforeStyle)
+  feature.sync()
+  expect(row.hasAttribute(RUNNING_TITLE)).toBe(false)
 })

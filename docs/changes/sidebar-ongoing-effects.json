@@ -1,0 +1,8 @@
+{
+  "group": "improvements",
+  "order": 2,
+  "at": "2026-11-04",
+  "external": false,
+  "zh": "新增独立的会话标题扫光选项与同步预览，统一未读和待操作状态颜色并保留无障碍回退",
+  "en": "Add an independent running-title shimmer with matching previews, semantic unread and pending colors, and accessible fallbacks"
+}
