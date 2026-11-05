@@ -3,6 +3,12 @@
   "surface": [
     { "id": "sidebar-status.row", "attribute": "data-dsh-claude-row-status", "feature": "sidebar-status", "sees": "native status ownership: active or empty indicators share a trailing position; foreign leading decorations keep their place" },
     { "id": "sidebar-status.running-title", "attribute": "data-dsh-claude-running-title", "feature": "sidebar-status", "sees": "a running native session with a visible plain title eligible for animation; motion, contrast and indicator preferences choose its visual fallback" },
+    { "id": "settings.ongoing-look", "attribute": "data-look", "feature": "settings", "sees": "the independent effect each running preview paints regardless of the stored choice" },
+    { "id": "settings.ongoing-card", "selector": ".dsh-claude-ongoing-card", "feature": "settings", "sees": "one independently named and pressed running-effect option in the Motion settings" },
+    { "id": "settings.ongoing-preview", "selector": ".dsh-claude-ongoing-preview", "feature": "settings", "sees": "the shared preview parent that scopes the running marker's paint and fallback" },
+    { "id": "settings.ongoing-sample", "selector": ".dsh-claude-ongoing-sample", "feature": "settings", "sees": "the decorative sidebar-row preview carried by a running-effect option" },
+    { "id": "settings.ongoing-title", "selector": ".dsh-claude-ongoing-title", "feature": "settings", "sees": "the preview title before its status marker, animated only by the shimmer option" },
+    { "id": "settings.ongoing-mark", "selector": ".dsh-claude-ongoing-mark", "feature": "settings", "sees": "the preview's own breathing dot, rotating ring or hidden shimmer fallback marker" },
     { "id": "skin.ongoing-indicator", "attribute": "data-dsh-claude-ongoing-indicator", "feature": "core", "sees": "the reader's independent running style: breathe, ring or shimmer" },
     { "id": "skin.root", "attribute": "data-dsh-claude-style", "feature": "core", "sees": "the page the skin is applied to: every stylesheet the skin ships is scoped under this mark on <body>" },
     { "id": "skin.motion", "attribute": "data-dsh-claude-motion", "feature": "core", "sees": "the motion the reader asked for, resolved: the stylesheets still every animation under its reduced value" },

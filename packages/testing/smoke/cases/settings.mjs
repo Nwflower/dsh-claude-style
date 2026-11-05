@@ -176,26 +176,50 @@ export default {
       JSON.stringify(revealPreview))
     const ongoing = settings.ongoingCards || {}
     const ongoingCards = ongoing.cards || []
-    check('the ongoing-mark row is two cards carrying the pair a sidebar row leads with, the mark first and a title beside it: each card names its own mark, the stored choice alone is drawn as picked, and the sample takes no reading',
-      ongoingCards.length === 2 &&
-        ongoingCards.map((card) => card.look).join() === 'breathe,ring' &&
-        ongoingCards.every((card) => typeof card.label === 'string' && card.label.length > 0 &&
-          card.sample === true && typeof card.title === 'string' && card.title.length > 0) &&
-        ongoingCards[0].active === true && ongoingCards[0].pressed === 'true' &&
-        ongoingCards[1].active === false && ongoingCards[1].pressed === 'false',
+    const looks = ['breathe', 'ring', 'shimmer']
+    check('the ongoing-effect row names three independent cards, each carrying a decorative title before its marker, with only the default breathing choice pressed',
+      ongoingCards.length === 3 && ongoingCards.map(card => card.look).join() === looks.join() &&
+        new Set(ongoingCards.map(card => card.label)).size === 3 &&
+        ongoingCards.every(card => typeof card.label === 'string' && card.label.length > 0 &&
+          card.sample === true && card.titleFirst === true && typeof card.title === 'string' && card.title.length > 0 &&
+          card.active === (card.look === 'breathe') && card.pressed === String(card.look === 'breathe')),
       JSON.stringify(ongoingCards))
-    const marks = settings.ongoingMarks || {}
-    check('each card wears its own mark: the breathing dot is the idle seat\'s filled 6px circle pulsing on the shared breath, the ring a wider ring with a drawn track whose lit head turns on its own period',
-      marks.breathe?.width === '6px' && marks.breathe?.border === '0px' &&
-        marks.breathe?.animation === 'dsh-claude-pulse' && Number.parseFloat(marks.breathe?.duration) === 2.4 &&
-        marks.ring?.width === '10px' && parseFloat(marks.ring?.border) >= 1 &&
-        marks.ring?.animation === 'dsh-claude-ongoing-spin' && Number.parseFloat(marks.ring?.duration) === 0.85,
-      JSON.stringify(marks))
+    const [breathe, ring, shimmer] = ongoingCards
+    check('the carried preview parents give the breathing dot its opacity cadence, the ring its rotation and the shimmer title its sweep with no visible marker',
+      breathe?.markPaint?.animation === 'dsh-claude-status-breathe' && Number.parseFloat(breathe.markPaint.duration) === 1.2 &&
+        breathe.markPaint.visibility === 'visible' && breathe.titlePaint?.animation === 'none' &&
+        ring?.markPaint?.animation === 'dsh-claude-ongoing-spin' && Number.parseFloat(ring.markPaint.duration) === 0.85 &&
+        Number.parseFloat(ring.markPaint.width) > Number.parseFloat(breathe.markPaint.width) && Number.parseFloat(ring.markPaint.border) > 0 &&
+        ring.markPaint.visibility === 'visible' && ring.titlePaint?.animation === 'none' &&
+        shimmer?.titlePaint?.animation === 'dsh-claude-title-shine' && Number.parseFloat(shimmer.titlePaint.duration) === 3 &&
+        shimmer.markPaint?.visibility === 'hidden' && shimmer.markPaint.animation === 'none',
+      JSON.stringify(ongoingCards))
+    for (const look of looks) {
+      const cards = ongoing.choices?.[look] || []
+      check(`storing ${look} selects only that card and leaves every option's own preview independent`,
+        cards.length === 3 && cards.every((card, index) => card.look === looks[index] &&
+          card.active === (card.look === look) && card.pressed === String(card.look === look) &&
+          card.titlePaint?.animation === ongoingCards[index]?.titlePaint?.animation &&
+          card.markPaint?.animation === ongoingCards[index]?.markPaint?.animation &&
+          card.markPaint?.visibility === ongoingCards[index]?.markPaint?.visibility),
+        JSON.stringify(cards))
+    }
     const stored = settings.ongoingStored || {}
-    check('the reader\'s stored mark reaches the page and repaints the running row\'s own mark, live',
-      stored.ring?.attribute === 'ring' && stored.ring?.width === '10px' && stored.ring?.animation === 'dsh-claude-ongoing-spin' &&
-        stored.breathe?.attribute === 'breathe' && stored.breathe?.width === '6px' && stored.breathe?.animation === 'dsh-claude-pulse',
+    check('all three stored effects reach the native running row live, with the shimmer title and native marker mutually exclusive',
+      stored.ring?.attribute === 'ring' && stored.ring.mark?.animation === ring?.markPaint?.animation &&
+        stored.ring.mark?.visibility === 'visible' && stored.ring.title?.animation === 'none' &&
+        stored.breathe?.attribute === 'breathe' && stored.breathe.mark?.animation === breathe?.markPaint?.animation &&
+        stored.breathe.mark?.visibility === 'visible' && stored.breathe.title?.animation === 'none' &&
+        stored.shimmer?.attribute === 'shimmer' && stored.shimmer.applicable === true &&
+        stored.shimmer.mark?.visibility === 'hidden' && stored.shimmer.title?.animation === shimmer?.titlePaint?.animation,
       JSON.stringify(stored))
+    const reduced = settings.ongoingReduced || {}
+    check('reduced motion keeps all three previews static and restores the visible native marker for the stored shimmer choice',
+      reduced.cards?.length === 3 && reduced.cards.every(card => card.titlePaint?.animation === 'none' &&
+        card.markPaint?.animation === 'none' && card.markPaint.visibility === 'visible') &&
+        reduced.running?.attribute === 'shimmer' && reduced.running.title?.animation === 'none' &&
+        reduced.running.mark?.animation === 'none' && reduced.running.mark.visibility === 'visible',
+      JSON.stringify(reduced))
     commonChecks(r)
   },
   switches(r) {
