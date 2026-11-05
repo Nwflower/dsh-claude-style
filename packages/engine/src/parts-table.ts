@@ -57,6 +57,7 @@ export const SIDEBAR_PARTS: PartTable = {
   newSessionContent: 'new-session-content',
   newSessionShortcut: 'new-session-shortcut',
   separator: 'key-separator',
+  scrollRegion: 'sidebar-scroll-region',
   scrollArea: 'sidebar-scroll-area',
   panelList: 'panel-list',
   panelEntry: 'panel-entry',
