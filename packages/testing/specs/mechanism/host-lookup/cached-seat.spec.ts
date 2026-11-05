@@ -61,6 +61,21 @@ test('a seat the page carries is queried once and then kept', () => {
   expect(stop().length).toBe(1)
 })
 
+test('a kept seat is reused across unrelated mutation batches', async () => {
+  const card = seat('data-test-stable')
+  document.body.append(card)
+  const stop = countQueries()
+  const find = cacheFirstMatch<HTMLElement>('[data-test-stable]')
+  expect(find()).toBe(card)
+  document.body.append(document.createElement('span'))
+  await settle()
+  expect(find()).toBe(card)
+  document.body.append(document.createElement('span'))
+  await settle()
+  expect(find()).toBe(card)
+  expect(stop()).toEqual(['[data-test-stable]'])
+})
+
 test('a kept match is re-queried once an earlier match arrives', () => {
   const later = seat('data-test-early')
   document.body.append(later)

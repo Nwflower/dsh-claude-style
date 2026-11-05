@@ -179,18 +179,19 @@ body[data-dsh-claude-style][data-ds-dark-theme] button[data-dsh-claude-part~="ne
 body[data-dsh-claude-style] nav[data-dsh-claude-part~="panel-list"] {
   gap: 0;
 }
-/* The host leaves 12px above this list: the 4px its scroll region stands under
-   the New session plate, and the 8px first row its viewport keeps before the
-   list. The list takes that row back and the plate's foot carries the other 4
-   (the rule below), so the first row stands 6px under the plate like every row
-   under it. That row is the viewport's own and cannot be collapsed from here,
-   and the viewport clips what stands above it, so 8px is all the list can take. */
-body[data-dsh-claude-style] [data-dsh-claude-part~="layout-frame"]:not([data-sidebar-collapsed]) nav[data-dsh-claude-part~="panel-list"] {
-  margin-top: -8px;
+/* The host's scroll viewport keeps an empty 8px grid row above the panel list.
+   Collapse that row on the viewport itself and take the scroll region's own 4px
+   top margin out, so the plate's 6px foot alone sets the first row's distance.
+   Moving the list with a negative margin leaves the grid's own track in place. */
+body[data-dsh-claude-style] [data-dsh-claude-part~="layout-frame"]:not([data-sidebar-collapsed]) [data-dsh-claude-part~="sidebar-scroll-region"] {
+  margin-top: 0;
 }
-/* The plate's foot, 6px less the scroll region's own 4px margin. */
+body[data-dsh-claude-style] [data-dsh-claude-part~="layout-frame"]:not([data-sidebar-collapsed]) [data-dsh-claude-part~="sidebar-scroll-area"] {
+  grid-template-rows: 0 max-content 2px max-content;
+}
+/* The expanded list's first row stands 6px under the New session plate. */
 body[data-dsh-claude-style] [data-dsh-claude-part~="layout-frame"]:not([data-sidebar-collapsed]) > [data-dsh-claude-part~="sidebar-column"] button[data-dsh-claude-part~="new-session"] {
-  margin-bottom: 2px;
+  margin-bottom: 6px;
 }
 body[data-dsh-claude-style] button[data-dsh-claude-part~="panel-row"] {
   /* The host floors this row at 36px with a min-height, which the `height` in
@@ -202,7 +203,7 @@ body[data-dsh-claude-style] button[data-dsh-claude-part~="panel-row"] {
    give back: the glyph box and the label then start on the line the New session
    plate above and the More launcher below keep. More is no entry — the host
    wraps it in a bare box of its own — so it keeps the row's own padding. */
-body[data-dsh-claude-style] button[data-dsh-claude-part~="panel-row"]:not([aria-haspopup="menu"]) {
+body[data-dsh-claude-style] [data-dsh-claude-part~="panel-entry"] button[data-dsh-claude-part~="panel-row"] {
   padding-inline: calc(8px - var(--dsh-sidebar-paint-inset, 3px));
 }
 body[data-dsh-claude-style] button[data-dsh-claude-part~="panel-row"]:hover {
@@ -376,10 +377,10 @@ body[data-dsh-claude-style] :is([data-dsh-claude-part~="project-row"], [data-dsh
    own padding. The relaxed value is the stylesheet as written. */
 /* The New session plate states its foot in the frame-scoped selector above, so
    the tightening restates that whole selector; the panel rows are matched
-   directly. The host's own 4px under the plate does not move with this choice,
-   so the foot this choice cuts is the plate's: 0 here against 2px relaxed. */
+   directly. The scroll region's margin is already taken out above, leaving 4px
+   here against 6px relaxed. */
 body[data-dsh-claude-style][data-dsh-claude-sidebar-layout="compact"] [data-dsh-claude-part~="layout-frame"]:not([data-sidebar-collapsed]) > [data-dsh-claude-part~="sidebar-column"] button[data-dsh-claude-part~="new-session"] {
-  margin-bottom: 0;
+  margin-bottom: 4px;
 }
 body[data-dsh-claude-style][data-dsh-claude-sidebar-layout="compact"] button[data-dsh-claude-part~="panel-row"] {
   margin-bottom: 2px;
