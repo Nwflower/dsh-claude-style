@@ -172,11 +172,12 @@ body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role="group"] > 
   background: var(--dsh-claude-field-ring);
 }
 
-/* The custom answer takes one of two host shapes: an option row with its mark and
-   a growing field beside it, or, for a question with no options, a boxed field
-   over the whole row. question-card.ts owns the two state attributes and the
-   localized label the boxed field puts above itself. */
-body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-question-custom] {
+/* The custom answer takes one of two host shapes. An option row carries its mark
+   and a growing field beside it, drawn here as a continuous list. A question with
+   no options instead draws its field boxed in the answer group, and that box is
+   the host's whole answer: it keeps the host's own grid, outline and type, and
+   question-card.ts only marks it. */
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-question-custom]:not([data-dsh-claude-question-custom="free"]) {
   display: grid;
   grid-template-columns: 20px minmax(0, 1fr);
   gap: 6px 12px;
@@ -189,33 +190,16 @@ body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-
   transition: background-color var(--dsh-claude-timing-feedback);
 }
 
-body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-question-custom]:hover {
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-question-custom]:not([data-dsh-claude-question-custom="free"]):hover {
   background: var(--dsw-alias-interactive-bg-hover);
 }
 
-body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-question-custom] > :first-child {
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-question-custom]:not([data-dsh-claude-question-custom="free"]) > :first-child {
   grid-row: 1;
   grid-column: 1;
 }
 
-/* The boxed field a question with no options draws needs no outline of its own:
-   the host's box already carries one, and the selection blue marks it on focus.
-   The label names it above. */
-body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-question-custom] > textarea {
-  grid-row: 2;
-  grid-column: 2;
-  min-height: 44px;
-  box-sizing: border-box;
-  margin: 0;
-}
-
-body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-question-custom] > textarea:focus {
-  border-color: var(--dsh-claude-field-ring);
-}
-
 body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-question-custom] .dsh-claude-question-custom-label {
-  display: block;
-  align-self: start;
   grid-column: 2;
   padding: 0;
   border: 0;
@@ -228,7 +212,7 @@ body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-
   cursor: pointer;
 }
 
-body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-question-custom] > div {
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-question-custom]:not([data-dsh-claude-question-custom="free"]) > div {
   --dsh-answer-field-padding: 8px 12px;
   display: none;
   grid-row: 2;
@@ -238,42 +222,11 @@ body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-
   background: var(--dsw-specific-input-major);
 }
 
-body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-question-custom-active] > div {
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-question-custom-active]:not([data-dsh-claude-question-custom="free"]) > div {
   display: grid;
 }
 
-body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-question-custom] > div:focus-within {
-  border-color: var(--dsh-claude-field-ring);
-}
-
-/* A question with no options has no mark to put beside its answer: its host
-   field stands in the group on its own, and the skin's label above it names the
-   field. question-card.ts marks that field the way it marks an option row. */
-body[data-dsh-claude-style] [data-dsh-claude-question-surface] :is([role="radiogroup"], [role="group"]) > [data-dsh-claude-question-custom] .dsh-claude-question-custom-label {
-  width: auto;
-  height: auto;
-  font-size: var(--dsh-content-font-size, 14px);
-  line-height: 22px;
-}
-
-/* The boxed answer has no mark beside it: the host's own box keeps its place and
-   the label names it above. */
-body[data-dsh-claude-style] [data-dsh-claude-question-surface] :is([role="radiogroup"], [role="group"]) > div:has(> textarea) {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin: 0;
-  padding: 4px 16px 0;
-  border: 0;
-  background: transparent;
-  min-height: 0;
-}
-
-body[data-dsh-claude-style] [data-dsh-claude-question-surface] :is([role="radiogroup"], [role="group"]) > [data-dsh-claude-question-custom]:hover {
-  background: transparent;
-}
-
-body[data-dsh-claude-style] [data-dsh-claude-question-surface] :is([role="radiogroup"], [role="group"]) > [data-dsh-claude-question-custom] > div:focus-within {
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-question-custom]:not([data-dsh-claude-question-custom="free"]) > div:focus-within {
   border-color: var(--dsh-claude-field-ring);
 }
 
