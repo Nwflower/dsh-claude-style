@@ -206,6 +206,7 @@ body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-
   grid-column: 2;
   min-height: 44px;
   box-sizing: border-box;
+  margin: 0;
 }
 
 body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-question-custom] > textarea:focus {
@@ -243,6 +244,16 @@ body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-
 
 body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-question-custom] > div:focus-within {
   border-color: var(--dsh-claude-field-ring);
+}
+
+/* A question with no options has no mark to put beside its answer: its host
+   field stands in the group on its own, and the skin's label above it names the
+   field. question-card.ts marks that field the way it marks an option row. */
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] :is([role="radiogroup"], [role="group"]) > [data-dsh-claude-question-custom] .dsh-claude-question-custom-label {
+  width: auto;
+  height: auto;
+  font-size: var(--dsh-content-font-size, 14px);
+  line-height: 22px;
 }
 
 /* The boxed answer has no mark beside it: the host's own box keeps its place and
