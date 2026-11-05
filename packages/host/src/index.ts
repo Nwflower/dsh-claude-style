@@ -23,10 +23,10 @@
  *   3. Resolve the OS user once for the browser half. The username route answers
  *      a single GET and the browser caches it; it runs the host's own request
  *      fence first — see refusalOf() in routes.ts.
- *   4. Serve Deepy's animation sheets. The DeepSeek brand's pixel whale plays
- *      more sprite sheets than are worth inlining into the bundle, so they ship
- *      as files beside it and the browser fetches each one the first time its
- *      animation plays.
+ *   4. Serve Deepy's and Whalegirl's animation sheets. The DeepSeek brand's
+ *      pixel whale and the whale girl play more sprite sheets than are worth
+ *      inlining into the bundle, so they ship as files beside it and the browser
+ *      fetches each one the first time its animation plays.
  *
  * The registrations are defensive. A host without a web server, or with the
  * route prefix already taken, or with the settings service absent, must still

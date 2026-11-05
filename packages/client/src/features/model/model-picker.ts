@@ -6,7 +6,7 @@ import { ensureSeatBox, ensureSeatPart } from './seat-box'
 import type { SeatPart } from './seat-box'
 import { loadModelCopy } from './model-copy'
 import { readPrefs } from '../../core/prefs'
-import { findModelSlot, withSlots } from '@dsh-claude-style/engine/host'
+import { findPrimaryModelSlot, withSlots } from '@dsh-claude-style/engine/host'
 import { createModelCatalog } from './catalog'
 import { MODEL_SLOT_KEY, thirdPartyHoldsSeat } from './seat-ledger'
 import { createModelSubMenu } from './sub-menu'
@@ -416,7 +416,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     loadModelCopy()
     modelCatalog.directory()
     modelCatalog.warm()
-    const slot = mount.slot ?? findModelSlot()
+    // The seat stands in the page's main composer: a sub-agent's docked
+    // conversation draws a card of its own, and the shell the reader types in
+    // must not lose its model seat to one (engine/host.ts::findPrimaryModelSlot).
+    const slot = mount.slot ?? findPrimaryModelSlot()
     modelSlot = slot
     if (slot === null) return
     // Hide the host's own seat (React owns the node; re-mark on swap).

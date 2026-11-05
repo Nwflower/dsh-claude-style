@@ -3,7 +3,7 @@ import type { FeatureManifest } from '../../core/feature'
 export default {
   id: 'chatWait',
   order: 205,
-  contracts: ['chat.following-tail-attribute', 'chat.running', 'chat.running-holding', 'chat.running-icon', 'chat.running-text', 'conversation.session', 'conversation.session-attribute'],
+  contracts: ['chat.flow', 'chat.following-tail-attribute', 'chat.running', 'chat.running-holding', 'chat.running-icon', 'chat.running-text', 'conversation.session', 'conversation.session-attribute'],
   pref: 'chatWait',
   yieldsTo: 'dsh-chat-ux',
   stylesheets: [{ file: 'chat-wait.css', rank: 175 }],

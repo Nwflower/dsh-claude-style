@@ -1,5 +1,6 @@
 import { buildElement } from '@dsh-claude-style/engine/dom'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
+import { TRASH_ICON_SYMBOL, UNARCHIVE_ICON_SYMBOL } from '@dsh-claude-style/contracts/dom'
 import type { HostSessionSummary, HostSessionsService, HostWorkspacesService } from '@dsh-claude-style/contracts/services'
 import { copy } from './copy'
 
@@ -49,10 +50,18 @@ export interface ArchivedListDeps {
   schedule(): void
 }
 
-/** The delete entry's glyph, drawn by the skin itself the way shared/popover.ts draws its check. */
-const DELETE_SVG = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5h10M6.2 4.5V3h3.6v1.5M4.8 4.5l.5 8.5h5.4l.5-8.5M6.7 7v4M9.3 7v4"/></svg>'
-/** The unarchive entry's glyph: the conversation leaves the box. */
-const UNARCHIVE_SVG = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6.8V13h10V6.8M3 6.8L4.8 3.5h6.4L13 6.8M8 9.6V5.2M6.1 7.1L8 5.2l1.9 1.9"/></svg>'
+/**
+ * One row action's glyph, borrowed from the host's own icon sprite: the host's
+ * row actions draw these symbols at 14px, so the archived page's buttons keep
+ * the weight of the icons beside them (contracts/dom.ts names the two).
+ */
+function iconSvg(symbol: string) {
+  return `<svg width="14" height="14" aria-hidden="true"><use href="#${symbol}"></use></svg>`
+}
+/** The delete entry's glyph: the host's own trash icon. */
+const DELETE_SVG = iconSvg(TRASH_ICON_SYMBOL)
+/** The unarchive entry's glyph: the host's own unarchive icon. */
+const UNARCHIVE_SVG = iconSvg(UNARCHIVE_ICON_SYMBOL)
 
 /** One row's own classes, read by workspace.css. */
 const ROW_CLASS = 'dsh-claude-ws-archived-row'

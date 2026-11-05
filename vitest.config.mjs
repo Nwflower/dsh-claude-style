@@ -51,8 +51,9 @@ export default defineConfig({
     // Browser mode binds a control port, and its own default (63315) falls inside
     // a Windows dynamic port exclusion on some machines: the bind fails with
     // EACCES before a single test runs. 51204 is Vitest's other default and sits
-    // below the dynamic range's start, outside every exclusion seen so far.
-    api: { port: 51204 },
+    // below the dynamic range's start, outside every exclusion seen so far. Bind
+    // IPv4 explicitly so a localhost lookup that prefers ::1 cannot miss it.
+    api: { host: '127.0.0.1', port: 51204 },
     browser: {
       enabled: true,
       headless: true,

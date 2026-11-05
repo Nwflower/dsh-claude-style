@@ -13,10 +13,6 @@
       "count": 2,
       "reason": "The cold start screen finds its mode strip inside the composer card, and the teardown sweeps the segment groups and the tier card's nodes in one call."
     },
-    "packages/client/src/features/permissions/permission-tier-card.ts": {
-      "count": 1,
-      "reason": "The tier card's popover is swept when one is built."
-    },
     "packages/client/src/features/model/model-cards.ts": {
       "count": 2,
       "reason": "The two cards' instance-scoped sweep during refresh and when they are dropped or torn down."
@@ -47,7 +43,7 @@
     },
     "packages/client/src/features/context-stats/stats-panel.ts": {
       "count": 2,
-      "reason": "The context block and panel marks, swept once when the statistics are installed."
+      "reason": "The stray context block and panel marks swept once when the statistics are installed; composer cards come from the engine's card registry."
     },
     "packages/client/src/features/context-stats/session-stats.ts": {
       "count": 2,

@@ -258,6 +258,37 @@
       r.chatFollow.pace = { frames: paceFrames, growth: 20, settled: endGap(), animations: followColumn.getAnimations().length }
       paced.remove()
       await probe.settle()
+      // A reader holding the conversation himself (#230). The host's own follow
+      // pins the end on every growth while its mark stands, and a finger that is
+      // pressed on the screen sends no scroll of its own for the host to stand
+      // down on: the growth the pin pushes up is given back to him where he
+      // holds it, and nothing slides. The shape is the case's: the finger
+      // arrives, the content grows, the host pins.
+      var touchAt = function (type, y) {
+        var contact = new Touch({ identifier: 5, target: followColumn, clientX: 5, clientY: y })
+        followColumn.dispatchEvent(new TouchEvent(type, {
+          bubbles: true, cancelable: true, composed: true,
+          touches: type === 'touchend' ? [] : [contact],
+          targetTouches: type === 'touchend' ? [] : [contact],
+          changedTouches: [contact],
+        }))
+      }
+      var holdBlock = document.createElement('div')
+      holdBlock.style.height = '120px'
+      touchAt('touchstart', 300)
+      followColumn.insertBefore(holdBlock, runningRow)
+      followScroller.scrollTop = followScroller.scrollHeight
+      await probe.frame()
+      await probe.frame()
+      r.chatFollow.hold = { gap: endGap(), slides: followColumn.getAnimations().length }
+      // His own way back: a drag toward the end, lifted there, hands the follow
+      // back without another gesture (scroll-owner.ts, releaseAtTail).
+      touchAt('touchmove', 260)
+      followScroller.scrollTop = followScroller.scrollHeight
+      touchAt('touchend', 260)
+      await probe.settle()
+      holdBlock.remove()
+      await probe.settle()
       streamingMark.remove()
       slideBlock.remove()
       runningRow.remove()

@@ -1,8 +1,0 @@
-{
-  "group": "improvements",
-  "order": 67,
-  "at": "2026-11-04",
-  "external": false,
-  "zh": "将侧栏搜索框改为通过宿主面板列表注册的按钮，点击时保持当前页面并打开搜索面板，搜索样式保留图标与独立两项，已有的覆盖品牌设置迁移到独立",
-  "en": "Register the sidebar search button through the host panel list, keep the current page when opening the search palette, retain Icon and Standalone as the two styles, and migrate a stored Cover the brand choice to Standalone"
-}

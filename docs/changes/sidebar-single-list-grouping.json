@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 74,
-  "at": "2026-11-04",
-  "external": false,
-  "zh": "修复侧栏视图菜单里选择「单列表」后立即被改回工作区、单列表模式无法使用的问题",
-  "en": "Fix the sidebar's Single list grouping snapping back to Workspace right after it is picked, which made the single-list mode unusable"
-}

@@ -2,14 +2,14 @@
    Claude Code's pixel crab, drawn on a 52×36 grid of cells at 2px a cell
    (104×72px): feet on the bottom row, on the top edge of what it stands on;
    the right claw four cells in from the grid's right edge, which is the room a
-   lean, a note or a sparkle takes on that side. The crab writes the sheet and
-   the sprite's crop box as custom properties when an animation starts; each
-   frame is a translation of the strip inside the sprite's window, played by
-   the browser's animation engine (packages/client/src/features/mascot/mascot-player.ts), eight
-   frames to a sheet row. The strip carries the shell, its shaded side and the
-   eyes; its ::after carries the ink mask (the laptop, the bubble wand and its
-   bubbles, letters, notes, the hat), filled with the tertiary label ink so it stays a
-   quiet grey on either canvas. Only the crab itself takes the pointer. */
+   lean, a note or a sparkle takes on that side. The shared frame mechanics —
+   the anchor, the sprite's window and the strip — are in
+   packages/client/src/features/mascot/mascot-frame.css; this file gives the crab its
+   size and placement, its ink mask and its pointer window. The strip carries
+   the shell, its shaded side and the eyes; its ::after carries the ink mask
+   (the laptop, the bubble wand and its bubbles, letters, notes, the hat),
+   filled with the tertiary label ink so it stays a quiet grey on either
+   canvas. Only the crab itself takes the pointer. */
 
 /* Claude Code's spacing on the home page's single-line card: the right claw
    8px inside the card's right edge (the grid's four spare cells), so the feet
@@ -25,20 +25,10 @@ body[data-dsh-claude-style] .dsh-claude-crab {
   pointer-events: none;
 }
 
-/* Hidden until the first sheet has drawn a frame: a host half that predates
-   the sheets leaves no empty box to click on. Shared with Deepy. */
-body[data-dsh-claude-style] :is(.dsh-claude-crab, .dsh-claude-deepy):not([data-ready]) {
-  visibility: hidden;
-}
-
 /* A conversation's input area and the panels that take its card's place span
    the whole column, so the crab is set in from the edge of the card they
    centre, as Deepy is (features/mascot/whale.css); those panels start 6–8px
    above their card. */
-body[data-dsh-claude-style] :is([data-dsh-claude-crab-anchor="stack"], [data-dsh-claude-crab-anchor="panel"]) {
-  position: relative;
-}
-
 body[data-dsh-claude-style] [data-dsh-claude-crab-anchor="stack"] > .dsh-claude-crab {
   right: max(var(--dsh-composer-side-clearance, 16px), (100% - var(--dsh-composer-card-max-width, 100%)) / 2);
 }
@@ -48,34 +38,10 @@ body[data-dsh-claude-style] [data-dsh-claude-crab-anchor="panel"] > .dsh-claude-
   bottom: calc(100% - 7px);
 }
 
-/* The sprite's window: the crop box's height, under one custom property both
-   characters share (mascot-player.ts writes it). */
-body[data-dsh-claude-style] :is(.dsh-claude-crab-sprite, .dsh-claude-deepy-sprite) {
-  height: calc(var(--dsh-claude-mascot-h, 0) * 2px);
-  overflow: hidden;
-}
-
-body[data-dsh-claude-style] .dsh-claude-crab-sprite {
-  position: absolute;
-  left: calc(var(--dsh-claude-crab-x, 0) * 2px);
-  top: calc(var(--dsh-claude-crab-y, 0) * 2px);
-  width: calc(var(--dsh-claude-crab-w, 0) * 2px);
-}
-
-/* The strip carries the whole sheet and is translated frame to frame: a
-   transform composites, where a background-position would repaint. Its box is
-   the sheet's own box — `--dsh-claude-crab-cell-w` is one frame cell, the
-   crop box with the transparent margin the build lays around it (CRAB_GUTTER,
-   features/mascot/sheets.ts). The art is one pixel a cell, scaled to 2px:
-   whole multiples, so `pixelated` keeps every cell square. */
+/* The strip is the mask's containing block; the art is one pixel a cell,
+   scaled to 2px — whole multiples, so `pixelated` keeps every cell square. */
 body[data-dsh-claude-style] .dsh-claude-crab-strip {
   position: relative;
-  display: block;
-  width: calc(var(--dsh-claude-crab-cell-w, 0) * 16px);
-  height: calc(var(--dsh-claude-crab-strip-h, 0) * 2px);
-  background-image: var(--dsh-claude-crab-sheet, none);
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
   image-rendering: pixelated;
 }
 

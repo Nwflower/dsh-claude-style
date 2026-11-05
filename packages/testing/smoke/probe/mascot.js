@@ -15,8 +15,8 @@
     // stands on the card; on the conversation page it follows the session's
     // work from the top of the input area, and stands on the panel that takes
     // the card's place while the reader is asked for something.
-    await probe.onlyFor(['deepy', 'crab-states'], async function () {
-      var mascotName = window.SMOKE_CASE === 'deepy' ? 'deepy' : 'crab'
+    await probe.onlyFor(['deepy', 'crab-states', 'whalegirl'], async function () {
+      var mascotName = window.SMOKE_CASE === 'crab-states' ? 'crab' : window.SMOKE_CASE
       var driver = window.__deepy
       var whaleNow = function () {
         var node = document.querySelector('.dsh-claude-' + mascotName)
@@ -74,7 +74,7 @@
       await sleep(600)
       var nowFrame = function () { var state = whaleNow(); return state === null ? null : state.frame }
       r.states.idle = { before: r.states.home && r.states.home.frame, after: nowFrame(), passes: window.__passes - deepyPasses }
-      if (mascotName === 'deepy') {
+      if (mascotName !== 'crab') {
         // The motion choice holds the playing sheet's still frame: a looping
         // animation stops advancing, while a one-shot (the poke below) plays out.
         window.__pushForm({ motion: 'reduced' })
@@ -95,12 +95,12 @@
       hit.dispatchEvent(new PointerEvent('pointerup', Object.assign({ buttons: 0 }, press)))
       await sleep(250)
       r.states.poke = whaleNow()
-      if (mascotName === 'deepy') {
+      if (mascotName !== 'crab') {
         // Two sheets are all this case asks for: the one it plays above, and the
         // one this state change switches to. It leaves with the page.
         deepyHero.remove()
         await sleep(200)
-        r.states.gone = whaleNow() === null && document.querySelectorAll('[data-dsh-claude-deepy-anchor]').length === 0
+        r.states.gone = whaleNow() === null && document.querySelectorAll('[data-dsh-claude-' + mascotName + '-anchor]').length === 0
         return
       }
       // The crab plays every state on the conversation page, and stands where

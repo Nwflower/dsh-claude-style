@@ -116,17 +116,28 @@ test('a caret the editor has replaced is dropped, and the focus still lands', ()
   expect(document.activeElement).toBe(input)
 })
 
-test('the draft reports no composition until the host raises the flag, and reports one while it stands', () => {
-  composer()
-  expect(composerComposing(document)).toBe(false)
+test('the active draft reads its composition flag without querying the document', () => {
+  const editor = composer()
+  editor.focus()
+  const query = Document.prototype.querySelector
+  let reads = 0
+  // cost: D40 — an input event must not walk the page to read the active editor's own state.
+  Document.prototype.querySelector = function patched(selector: string) {
+    reads += 1
+    return query.call(this, selector)
+  }
+  try {
+    expect(composerComposing(document)).toBe(false)
 
-  // The host's keymap sets it on the editor for the span of a composition.
-  const [editor] = document.querySelectorAll(COMPOSER_INPUT_SELECTOR)
-  editor.setAttribute(COMPOSER_COMPOSING_ATTRIBUTE, '')
+    // The host's keymap sets it on the editor for the span of a composition.
+    editor.setAttribute(COMPOSER_COMPOSING_ATTRIBUTE, '')
+    expect(composerComposing(document)).toBe(true)
 
-  expect(composerComposing(document)).toBe(true)
-
-  editor.removeAttribute(COMPOSER_COMPOSING_ATTRIBUTE)
-
-  expect(composerComposing(document)).toBe(false)
+    editor.removeAttribute(COMPOSER_COMPOSING_ATTRIBUTE)
+    expect(composerComposing(document)).toBe(false)
+    expect(reads).toBe(0)
+  } finally {
+    // cost: D40 — the browser's own method back once the count is read.
+    Document.prototype.querySelector = query
+  }
 })

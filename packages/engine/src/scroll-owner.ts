@@ -15,6 +15,9 @@ import { SCROLL_EASE_LEAD_PX, easeScroll, isScrollEasing, scrollEasePosition, sc
  *   fold      a fold's own position work: putting the position back after
  *             the skin's press on a group header, and handing the follow
  *             back once a door has rolled
+ *   reader    the growth of a stream put back under a reader who holds the
+ *             conversation: the host's own follow still pins the end while it
+ *             stands, and his position is the one that has to stay
  *   composer  keeping a reader at the end while the composer card changes height
  *   follow    the follow's hand-back at a structural moment
  *   process   a capped process body's catch-up
@@ -46,13 +49,14 @@ import { SCROLL_EASE_LEAD_PX, easeScroll, isScrollEasing, scrollEasePosition, sc
 
 export { SCROLL_EASE_LEAD_PX }
 
-export type ScrollSource ='jump' | 'fold' | 'composer' | 'follow' | 'process'
+export type ScrollSource ='jump' | 'fold' | 'reader' | 'composer' | 'follow' | 'process'
 
 /** Each source's rank; a higher rank's claim stands over a lower one's. */
 const SCROLL_SOURCE_RANK: Record<ScrollSource, number> = {
   process: 1,
   follow: 2,
   composer: 3,
+  reader: 4,
   fold: 5,
   jump: 6,
 }
@@ -83,8 +87,10 @@ const FOLLOW_LOOK_INTERVAL_MS = 100
  * has nothing to do with a body); "moved since" reads the four that really
  * move a position.
  */
-const INTENT_TYPES = ['wheel', 'touchstart', 'touchmove', 'pointerdown', 'keydown', 'beforematch']
+const INTENT_TYPES = ['wheel', 'touchstart', 'touchmove', 'touchend', 'touchcancel', 'pointerdown', 'keydown', 'beforematch']
 const MOVING_INTENT_TYPES = new Set(['wheel', 'touchstart', 'pointerdown', 'keydown'])
+/** The two ends of a touch drag: the finger leaves the screen, and the drag's aim decides the hold. */
+const TOUCH_END_TYPES = new Set(['touchend', 'touchcancel'])
 
 /**
  * Whether an event is the reader taking the scroll over, asked for every intent
@@ -134,6 +140,8 @@ let submissionHoldUntil = 0
 let claimedSession: string | null = null
 /** How many features use the owner; its listeners live while one does. */
 let members = 0
+/** Bumped when the owner's listeners go: work begun by one installation ends with it. */
+let ownerGeneration = 0
 let stopSubmissionWatch: (() => void) | null = null
 
 /**
@@ -227,6 +235,27 @@ export function releaseReader(container: Element) {
 }
 
 /**
+ * Settle a hold the reader's own drag has carried back to the end of its
+ * container, and hand the conversation's follow back with it.
+ *
+ * The end of a drag sends no scroll of its own — a finger that reaches the
+ * bottom and stops there moves nothing — so a release that waited for the next
+ * scroll event arrived only with the reader's next gesture. The host's follow is
+ * off by then and nothing lights it again on its own: it comes back either from
+ * a scroll that lands within a pixel of the end, which the drag may never
+ * send, or from its own back-to-end button. Both belong here, at the moment the
+ * hold ends.
+ */
+function releaseAtTail(container: Element) {
+  if (readerHolds(container)) return
+  if (!container.matches(CONVERSATION_SCROLL_SELECTOR)) return
+  // The walk in flight gives up where the reader takes the container again, and
+  // where the owner has been left: a hand-back outlives the frame it began in.
+  const generation = ownerGeneration
+  handBackFollow('follow', { stillWanted: () => generation === ownerGeneration && !held.has(container) })
+}
+
+/**
  * Take the reader's hold on a container without an intent event.
  *
  * A jump to a turn he picked is the reader choosing where to read, so the
@@ -300,6 +329,15 @@ function noteIntent(event: Event) {
   if (!isReaderScrollIntent(event)) return
   const moving = MOVING_INTENT_TYPES.has(event.type)
   if (moving) lastMovingIntentAt = performance.now()
+  // The finger left the screen: the drag it ends is aimed already, so this
+  // settles the hold and takes no new one. Before every other reading below,
+  // because a drag's end moves nothing and would otherwise fall through to the
+  // "take a hold" branch and hold a reader who is leaving.
+  if (TOUCH_END_TYPES.has(event.type)) {
+    touchContactY = null
+    for (const container of [...held]) releaseAtTail(container)
+    return
+  }
   // A wheel carries where the reader is going; the others are read as his move
   // toward the end, since none of them can be sent by a follower. A touch drag
   // is the exception. Its touchstart takes the hold with NO direction of its
@@ -364,11 +402,12 @@ function noteIntent(event: Event) {
 
 /**
  * A held container that has come back to its end is released as it scrolls,
- * before content growing under it can move the end away again.
+ * before content growing under it can move the end away again, and a released
+ * conversation is handed back to the host's follow in the same breath.
  */
 function noteScroll(event: Event) {
   const target = event.target
-  if (target instanceof Element && held.has(target)) readerHolds(target)
+  if (target instanceof Element && held.has(target)) releaseAtTail(target)
 }
 
 function noteSubmission(records: MutationRecord[]) {
@@ -405,6 +444,7 @@ export function joinScrollOwner() {
     left = true
     members -= 1
     if (members > 0) return
+    ownerGeneration += 1
     for (const type of INTENT_TYPES) document.removeEventListener(type, noteIntent, true)
     window.removeEventListener('scroll', noteScroll, true)
     if (stopSubmissionWatch !== null) stopSubmissionWatch()

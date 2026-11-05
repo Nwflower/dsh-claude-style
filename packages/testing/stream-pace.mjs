@@ -71,6 +71,12 @@ function streamPaceScenario({ check }) {
     script: 'burst',
     prompt: 'answer all at once',
     viewport: { width: 1280, height: 700 },
+    async afterTurn(context) {
+      // The turn can settle inside a short frame burst. Keep two settled frames
+      // in the trace so the slide and the composer's resting place are covered.
+      await context.page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))))
+      context.trace = await context.page.evaluate(() => window.__e2eTrace ?? [])
+    },
     async assert({ trace, page, session }) {
       // The frames from the answer's first growth: before it the column stands
       // shorter than the scroller and nothing has been pinned.

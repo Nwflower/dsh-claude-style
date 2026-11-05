@@ -1,8 +1,0 @@
-{
-  "group": "improvements",
-  "order": 82,
-  "at": "2026-11-04",
-  "external": false,
-  "zh": "将 Claude 配色的行内代码字色改为中性黑，与正文墨色一致",
-  "en": "Paint inline code in the Claude palette with the neutral ink instead of the warm red"
-}

@@ -5,7 +5,7 @@ export default {
   id: 'permissions',
   order: 60,
   reads: ['composer'],
-  contracts: ['composer.access-trigger', 'composer.card'],
+  contracts: ['composer.access-slot', 'composer.access-trigger', 'composer.card', 'sidebar.chat'],
   pref: 'permissionsControl',
   stylesheets: [{ file: 'permissions.css', rank: 230 }],
   settingsRows: [{

@@ -77,6 +77,7 @@ const PROBE_PARTS = [
   'brand.js',
   'mascot.js',
   'chat-follow.js',
+  'chat-anchor.js',
   'chat-caret.js',
   'chat-fold.js',
   'chat-reveal.js',
@@ -243,6 +244,17 @@ function page(name, tier, cases, probe = PROBE) {
       '<div id="debugTail"><button type="button">Back to the end</button></div></div>' +
       '<div data-step-process><div data-step-process-body><div data-step-process-content style="height:400px">capped</div></div></div>' +
       '<div data-step-process data-group-expanded-mode="detailed"><div data-step-process-body><div data-step-process-content style="height:400px">expanded</div></div></div>'
+    : ''
+  // The chat area the chat-anchor case drives: one conversation with a turn's
+  // process, the answer its process closes on, and the live turn's row, in the
+  // host's own scroller and column shapes.
+  var anchorArea = name === 'chat-anchor'
+    ? '<style>#anchorScroller { height: 240px; overflow-y: auto; }</style>' +
+      '<div id="anchorFrame"><div id="anchorScroller" data-conversation-scroll><div id="anchorFollowing"><div id="anchorColumn" data-chat-flow>' +
+        '<div data-chat-flow-key="process" data-chat-flow-kind="turn-process" style="height:600px">process</div>' +
+        '<div id="anchorAnswer" data-chat-flow-key="answer" data-chat-flow-kind="assistant-step" data-chat-group-part="response" style="height:600px">answer</div>' +
+        '<div data-chat-running style="height:40px">running</div>' +
+      '</div></div></div></div>'
     : ''
   // The host's window on an open process group: the min(400px, 50vh) cap, the
   // group's own scrollbar and the gutter kept for that scrollbar where the host
@@ -515,6 +527,7 @@ ${footer}
   </div>
 </div>
 ${chatArea}
+${anchorArea}
 <!-- The host keeps the composer inside its conversation scroller (the conversation's parts are marked within it, packages/engine/src/parts-table.ts), and the scroller's box reaches above the card: the transcript stands there. The stand-in has no transcript, so the padding stands for the room it takes. Without it the scroller's overflow clips the crab perched on the card's top edge, and a real press cannot reach it. -->
 <div data-conversation-scroll style="padding-top: 80px">
 <div class="_composerStack_h_1">

@@ -9,7 +9,7 @@ import { createStamp } from '@dsh-claude-style/engine/dom'
 import { motionEase, motionEaseAt, motionMs } from '../../shared/motion'
 import { inPageBox, pageViewport } from '../../shared/page-zoom'
 import { observeComposerCards } from '@dsh-claude-style/engine/host'
-import { SCROLL_EASE_LEAD_PX, handBackFollow, joinScrollOwner, readerHolds, submissionHolds } from '@dsh-claude-style/engine/scroll-owner'
+import { SCROLL_EASE_LEAD_PX, handBackFollow, joinScrollOwner, readerHolds, submissionHolds, writeScroll } from '@dsh-claude-style/engine/scroll-owner'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { FeatureUi } from '../../core/feature'
 import type manifest from './chat-follow.manifest'
@@ -339,9 +339,27 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
   }
 
   /**
+   * Put this frame's growth back under a reader who holds the conversation.
+   *
+   * The host's own follow pins the end on every growth while its mark stands,
+   * and a finger pressed on the screen sends no scroll of its own: nothing puts
+   * the host into its sampling window, so nothing stands its pin down, and the
+   * position the reader held moves one growth per burst (#230). The slide is
+   * refused while he holds, so this is the one writer left for it. A position
+   * away from the end is the reader's own and stays where he put it.
+   */
+  const holdGrowth = (column: HTMLElement, grew: number) => {
+    const scroller = column.closest(CONVERSATION_SCROLL_SELECTOR)
+    if (scroller === null || column.closest(FOLLOWING_TAIL_SELECTOR) === null) return
+    if (scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop > 0.5) return
+    if (foldBusy()) return
+    writeScroll(scroller, scroller.scrollTop - grew, 'reader')
+  }
+
+  /**
    * The column's own box is what grows while text streams, and a resize is the
    * moment the host has just pinned the end: read the growth this frame
-   * brought and slide it.
+   * brought and slide it, or give it back to a reader holding it.
    */
   const onSlideResize = (entries: ResizeObserverEntry[]) => {
     const column = slideColumn
@@ -373,6 +391,10 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
     // Only a column that already overflowed had its end pinned by the whole
     // growth; a first screen filling up moves nothing above it.
     if (column === null || grew === 0 || before < scrollerHeight) return
+    if (readerAway()) {
+      holdGrowth(column, grew)
+      return
+    }
     if (slideWanted(column)) startSlide(column, grew)
   }
 

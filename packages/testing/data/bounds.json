@@ -82,6 +82,31 @@
       "reason": "How many frames at the end of a recorded walk have to read the same position, within followAtEndPx, for the walk to count as finished rather than interrupted: the recorder stops on this many quiet frames, so the check asserts the stop it made was the walk arriving."
     },
     {
+      "name": "followHoldGrowthPx",
+      "value": 100,
+      "reason": "The growth a reader holding the conversation keeps. The probe presses on the column, grows it by a 120px block and pins the end the way the host's own follow does, so the position put back under him reads most of that block; a hold the pin won reads the end, where the pin left it."
+    },
+    {
+      "name": "answerAnchorTopPx",
+      "value": 2,
+      "reason": "How far the answer's own top may stand from the scroller's top and still read as brought to the top. The anchor writes the distance between the two boxes it measured in one frame, so the only movement left is the rounding of that write; a page that never moved reads the row far below."
+    },
+    {
+      "name": "answerAnchorGapPx",
+      "value": 100,
+      "reason": "How far the anchored position has to sit from the end. The answer the probe starts is 600px tall in a 240px scroller, so a position at its first line is hundreds of pixels above the end; a page that stayed at the tail reads nothing."
+    },
+    {
+      "name": "answerAnchorAwayPx",
+      "value": 200,
+      "reason": "How far from the end the reader reads in the case that must not be moved: more than the scroller's own 240px, which is also past the distance the follow's own guard takes for a reader reading higher up."
+    },
+    {
+      "name": "answerAnchorSlackPx",
+      "value": 1,
+      "reason": "How far a position may move and still read as standing where it was. Nothing writes it in that case, so the one pixel covers the rounding of a scroll position the page never touched."
+    },
+    {
       "name": "laneFollowMaxGapPx",
       "value": 220,
       "reason": "How far behind the tail the scroller may lag while the reader follows it. The host's own follow pins the end on every growth and the skin's slide writes no position, so the gap is at most the growth of the frame being sampled; the bound is a third of that scenario's 600px viewport: a follow that stopped working leaves hundreds of pixels more."

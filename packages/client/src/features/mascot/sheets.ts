@@ -1,9 +1,10 @@
 /**
  * The mascot sheet tables: which frames each animation holds, the box each
- * frame is cropped to and the frame shown under reduced motion. `scripts/build.mjs`
- * reads them to rebuild every sheet as the vector the browser plays and the
- * host half serves under the assets route, so a face and its animation
- * cannot drift apart.
+ * frame is cropped to, the frame shown under reduced motion, and — for a set
+ * that paces itself — each frame's duration and the frames per sheet row.
+ * `scripts/build.mjs` reads them to cut and serve each character's sheets (the
+ * crab's inlined, Deepy's rebuilt as vectors, Whalegirl's routed as PNG), so a
+ * face and its animation cannot drift apart.
  */
 
 /**
@@ -100,4 +101,41 @@ export const CRAB_SHEETS: Record<string, { frames: number, box: number[], still:
   'poke-right': { frames: 10, box: [21, 20, 27, 16], still: 0 },
   'tickle': { frames: 16, box: [23, 18, 26, 18], still: 0 },
   'drag': { frames: 8, box: [23, 12, 26, 22], still: 0 },
+}
+
+/**
+ * Whalegirl's animations (features/mascot/whale-girl.ts): 22 pixel-art strips,
+ * one per animation, each a single row of 69×66 frames under
+ * packages/assets/src/mascot/whalegirl/. Every frame carries its own duration
+ * (the set's own pacing: a held breath lasts longer than a blink), played frame
+ * by frame instead of the uniform `frameMs` the other two characters use;
+ * `columns` is the sheet's frames per row, which is one here because the strips
+ * are already a single row. The keys are Deepy's and the crab's, so the same
+ * state machine drives all three; the four only this set draws (carrying, swim,
+ * smile-hearts, thumbs-up) ride along for the art's sake.
+ */
+export const WHALE_GIRL_FRAME_MS = 100
+export const WHALE_GIRL_SHEETS: Record<string, { frames: number, box: number[], still: number, columns: number, durs: number[] }> = {
+  'idle': { frames: 21, box: [0, 0, 69, 66], still: 0, columns: 21, durs: [700, 280, 280, 240, 360, 60, 90, 60, 650, 280, 280, 240, 420, 60, 80, 60, 140, 60, 80, 60, 800] },
+  'idle-look': { frames: 13, box: [0, 0, 69, 66], still: 0, columns: 13, durs: [500, 420, 70, 80, 70, 380, 420, 110, 420, 140, 140, 140, 400] },
+  'idle-spout': { frames: 11, box: [0, 0, 69, 66], still: 0, columns: 11, durs: [450, 260, 110, 110, 130, 150, 170, 170, 170, 350, 400] },
+  'thinking': { frames: 17, box: [0, 0, 69, 66], still: 0, columns: 17, durs: [220, 220, 260, 260, 260, 300, 170, 170, 170, 170, 170, 170, 90, 110, 200, 200, 260] },
+  'typing': { frames: 14, box: [0, 0, 69, 66], still: 0, columns: 14, durs: [150, 170, 150, 170, 150, 170, 210, 150, 170, 150, 170, 150, 170, 210] },
+  'music': { frames: 8, box: [0, 0, 69, 66], still: 0, columns: 8, durs: [150, 150, 150, 150, 150, 150, 150, 150] },
+  'conducting': { frames: 12, box: [0, 0, 69, 66], still: 0, columns: 12, durs: [150, 150, 150, 150, 150, 150, 150, 150, 150, 150, 150, 150] },
+  'building': { frames: 24, box: [0, 0, 69, 66], still: 0, columns: 24, durs: [130, 100, 80, 90, 100, 120, 90, 130, 130, 100, 80, 90, 100, 120, 90, 130, 130, 100, 80, 90, 100, 120, 90, 130] },
+  'error': { frames: 10, box: [0, 0, 69, 66], still: 0, columns: 10, durs: [90, 80, 80, 80, 90, 200, 200, 160, 200, 300] },
+  'happy': { frames: 11, box: [0, 0, 69, 66], still: 0, columns: 11, durs: [200, 90, 90, 100, 100, 100, 100, 110, 110, 120, 400] },
+  'notification': { frames: 8, box: [0, 0, 69, 66], still: 0, columns: 8, durs: [110, 110, 110, 110, 110, 110, 110, 110] },
+  'compacting': { frames: 10, box: [0, 0, 69, 66], still: 0, columns: 10, durs: [300, 130, 130, 130, 130, 200, 100, 160, 220, 240] },
+  'carrying': { frames: 8, box: [0, 0, 69, 66], still: 0, columns: 8, durs: [140, 140, 140, 140, 140, 140, 140, 140] },
+  'sleeping': { frames: 6, box: [0, 0, 69, 66], still: 0, columns: 6, durs: [330, 330, 330, 330, 330, 330] },
+  'waking': { frames: 11, box: [0, 0, 69, 66], still: 0, columns: 11, durs: [420, 110, 120, 100, 100, 110, 200, 70, 80, 70, 500] },
+  'poke-left': { frames: 11, box: [0, 0, 69, 66], still: 0, columns: 11, durs: [300, 110, 90, 90, 200, 140, 140, 240, 200, 200, 400] },
+  'poke-right': { frames: 11, box: [0, 0, 69, 66], still: 0, columns: 11, durs: [300, 110, 90, 90, 200, 140, 140, 240, 200, 200, 400] },
+  'tickle': { frames: 14, box: [0, 0, 69, 66], still: 0, columns: 14, durs: [90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 200, 400] },
+  'drag': { frames: 10, box: [0, 0, 69, 66], still: 0, columns: 10, durs: [90, 90, 90, 90, 90, 90, 90, 90, 90, 90] },
+  'swim': { frames: 8, box: [0, 0, 69, 66], still: 0, columns: 8, durs: [150, 150, 150, 150, 150, 150, 150, 150] },
+  'smile-hearts': { frames: 16, box: [0, 0, 69, 66], still: 0, columns: 16, durs: [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100] },
+  'thumbs-up': { frames: 14, box: [0, 0, 69, 66], still: 0, columns: 14, durs: [160, 120, 90, 80, 80, 100, 110, 110, 90, 110, 320, 100, 100, 400] },
 }

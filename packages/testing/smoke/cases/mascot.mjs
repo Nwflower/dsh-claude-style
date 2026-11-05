@@ -77,4 +77,28 @@ export default {
     check('it leaves with the page, and takes its anchor mark along', deepy.gone === true, JSON.stringify(deepy.gone))
     commonChecks(r)
   },
+  // Whalegirl, the pixel whale girl of the shipped emoji set: picked on the
+  // home card, her frames played at the set's own per-frame durations, and the
+  // sheet served from the assets route. The states she shares with the crab and
+  // the whale are the crab case's walk.
+  whalegirl(r) {
+    basicChecks(r)
+    const girl = r.states || {}
+    const is = (state, animation, place) => !!state && state.animation === animation && state.place === place && state.ready === true
+    const served = (value) => /^url\("https?:\/\/[^"]*\/dsh-claude-style\/assets\/[0-9a-f]{12}\.png"\)$/.test(value || '')
+    check('picked as Whalegirl, she stands on the home card idling, playing the PNG the host half serves',
+      is(girl.home, 'idle', 'card') && girl.crab === false && served(girl.home.sheet),
+      JSON.stringify({ home: girl.home, crab: girl.crab }))
+    check('her frames change on her own node without waking a pass',
+      !!girl.idle && girl.idle.before !== girl.idle.after && girl.idle.passes === 0, JSON.stringify(girl.idle))
+    check('a click on her face pokes her', is(girl.poke, 'poke-left', 'card'), JSON.stringify(girl.poke))
+    check('the state change switches the node to another served sheet',
+      !!girl.home && !!girl.poke && girl.poke.sheet !== girl.home.sheet && served(girl.poke.sheet),
+      JSON.stringify({ home: girl.home.sheet, poke: girl.poke.sheet }))
+    check('the animation choice holds her still frame while the frame time keeps to the set\'s pacing',
+      girl.stillAttr === 'reduced' && girl.alwaysAttr === 'full' && !!girl.still && girl.still.before === girl.still.after,
+      JSON.stringify({ stillAttr: girl.stillAttr, alwaysAttr: girl.alwaysAttr, frames: girl.still }))
+    check('she leaves with the page, and takes her anchor mark along', girl.gone === true, JSON.stringify(girl.gone))
+    commonChecks(r)
+  },
 }

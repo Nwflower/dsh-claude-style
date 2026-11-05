@@ -10,7 +10,7 @@ import { motionMs } from '../../shared/motion'
 import { releaseSwappingText, setSwappingText } from '../../shared/swapping-text'
 import { activityWords, waitingWord, THINKING_KEY } from '../../shared/turn-activity'
 import { startWaitLoader, releaseWaitLoader } from './wait-loader'
-import { CHAT_RUNNING_SELECTOR, CHAT_RUNNING_HOLDING_ATTRIBUTE, CHAT_RUNNING_TEXT_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { CHAT_FLOW_SELECTOR, CHAT_RUNNING_SELECTOR, CHAT_RUNNING_HOLDING_ATTRIBUTE, CHAT_RUNNING_TEXT_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { WAIT_OVERTIME_MS, openTurn, waitStart, wordForPass } from './wait-state'
 import { foreignRunningLineOwns } from './running-owner'
 import type { RowWords } from './wait-state'
@@ -58,6 +58,8 @@ interface WaitLine {
 export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** On the host's running row while the line stands in for its words. */
   const WAIT_ATTR = 'data-dsh-claude-wait'
+  /** On a running row with no visible flow content after it (chat-wait.css). */
+  const TAIL_ATTR = 'data-dsh-claude-wait-tail'
   /** On the host's words alone, leaving sibling plugin lines visible. */
   const WORDS_ATTR = 'data-dsh-claude-wait-words'
   /** On the overtime badge while it plays its way out (syncBadge). */
@@ -201,8 +203,26 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     return parts
   }
 
+  /** Whether any visible flow content follows the row, including outside a display-contents slot. */
+  function followedByContent(row: HTMLElement) {
+    const column = row.closest(CHAT_FLOW_SELECTOR)
+    if (column === null) return false
+    let ancestor: HTMLElement = row
+    while (ancestor !== column) {
+      for (let sibling = ancestor.nextElementSibling; sibling !== null; sibling = sibling.nextElementSibling) {
+        // The host's trailing interaction surface uses visibility:hidden; reading CSS visibility avoids a layout flush on each publish.
+        if (sibling instanceof HTMLElement && sibling.checkVisibility({ checkVisibilityCSS: true })) return true
+      }
+      const parent = ancestor.parentElement
+      if (parent === null) return false
+      ancestor = parent
+    }
+    return false
+  }
+
   /** Bring one row's line to what the host's snapshot says now. */
   function syncRow(row: HTMLElement, t: HostText, now: number, seen: Set<string>, live: Set<string>) {
+    row.toggleAttribute(TAIL_ATTR, !followedByContent(row))
     // The host keeps the running row's slot after the turn stops, marked with
     // `data-holding` and `aria-hidden`, until the turn's actions row replaces it
     // (RunningStatus). That node still answers `[data-chat-running]` and still
@@ -369,7 +389,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (cancelTick !== null) cancelTick()
     cancelTick = null
     for (const row of [...lines.keys()]) release(row)
-    for (const row of document.querySelectorAll(`[${WAIT_ATTR}]`)) row.removeAttribute(WAIT_ATTR)
+    for (const row of document.querySelectorAll(`[${WAIT_ATTR}], [${TAIL_ATTR}]`)) {
+      row.removeAttribute(WAIT_ATTR)
+      row.removeAttribute(TAIL_ATTR)
+    }
     waits.clear()
     wording.clear()
     // A follow whose row left the page without a pass: release() is what stops

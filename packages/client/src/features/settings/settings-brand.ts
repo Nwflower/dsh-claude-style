@@ -8,13 +8,13 @@ import type { Prefs } from '../../constants'
 import { copy } from './copy'
 
 /**
- * The Appearance tab's custom brand row (D30), which opens the tab: the brand
- * area drawn as the lockup the reader edits in place
- * (settings-brand-lockup.ts), with how the images are inked as its sub-row.
- * The name and the two images are the reader's own data, written through the
- * page's write path and the host half's brand routes, so the lockup edits the
- * same values the sidebar paints. The colour cards stand apart from them as
- * Colours' sub-row (paletteCardsRow).
+ * The Appearance tab's custom brand rows (D30), which open the tab: the switch
+ * that keeps the sidebar's brand area on the page, then the brand area drawn as
+ * the lockup the reader edits in place (settings-brand-lockup.ts), with how the
+ * images are inked as its sub-row. The name and the two images are the reader's
+ * own data, written through the page's write path and the host half's brand
+ * routes, so the lockup edits the same values the sidebar paints. The colour
+ * cards stand apart from them as Colours' sub-row (paletteCardsRow).
  */
 
 /** One colour of a card: the preference it writes on the reader's card, and its name. */
@@ -220,7 +220,12 @@ export function paletteCardsRow(view: SettingsView): SettingsRow {
   }
 }
 
-/** The custom brand row, ranked ahead of every other row on the tab: the lockup the reader edits in place, with how images are inked as its sub-row. */
+/**
+ * The custom brand rows, ranked ahead of every other row on the tab: the switch
+ * that keeps the sidebar's brand area on the page, the lockup the reader edits in
+ * place under it (titleless, the way the colour cards follow Colours), and how
+ * the images are inked as that block's sub-row.
+ */
 export function brandRows(view: SettingsView): SettingsRow[] {
   const { prefs, write } = view
   const inkOptions: SegmentOption<Prefs['brandInk']>[] = [
@@ -232,15 +237,24 @@ export function brandRows(view: SettingsView): SettingsRow[] {
     {
       rank: 5,
       node: view.controls.row(
-        'brandLockup',
+        'sidebarBrand',
         copy('brandLockupTitle'),
         copy('brandLockupDesc'),
+        view.controls.toggle(prefs.sidebarBrand, on => { write({ sidebarBrand: on }) }),
+      ),
+    },
+    {
+      rank: 6,
+      node: view.controls.row(
+        'brandLockup',
+        null,
+        null,
         React.createElement(BrandLockup, { prefs, write }),
         { block: true },
       ),
     },
     {
-      rank: 6,
+      rank: 7,
       node: view.controls.subRow(
         'brandInk',
         copy('brandInkTitle'),

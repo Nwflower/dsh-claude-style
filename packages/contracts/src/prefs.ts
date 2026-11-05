@@ -98,12 +98,13 @@ export const TYPEFACE_CLAUDE = 'claude'
 export const TYPEFACE_HOST = 'host'
 export const TYPEFACES = [TYPEFACE_CLAUDE, TYPEFACE_HOST] as const
 
-/** The mascot on the composer, chosen apart from the brand: follow the brand, pick one, or show none. */
+/** The mascot on the composer, chosen apart from the brand: follow the brand, pick one of the three, or show none. */
 export const MASCOT_BRAND = 'brand'
 export const MASCOT_CRAB = 'crab'
 export const MASCOT_DEEPY = 'deepy'
+export const MASCOT_WHALEGIRL = 'whalegirl'
 export const MASCOT_OFF = 'off'
-export const MASCOTS = [MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MASCOT_OFF] as const
+export const MASCOTS = [MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MASCOT_WHALEGIRL, MASCOT_OFF] as const
 /** Where the mascot stands: the home page alone, or the home page and the conversation. */
 export const MASCOT_SCOPE_HOME = 'home'
 export const MASCOT_SCOPE_ALL = 'all'
@@ -275,6 +276,8 @@ export const PREFS = {
   brand: { type: 'choice', values: BRANDS, default: BRAND_CLAUDE, legacy: { [BRAND_DEEPSEEK_LEGACY]: BRAND_DEEPSEEK } },
   brandName: { type: 'text', default: '', max: BRAND_NAME_MAX },
   brandInk: { type: 'choice', values: BRAND_INKS, default: BRAND_INK_ORIGINAL },
+  /** Whether the sidebar draws its brand area; off collapses that area and leaves the sidebar toggle in place. */
+  sidebarBrand: { type: 'boolean', default: true },
   brandAccent: { type: 'color', default: '' },
   /** One brand's card, `brand` to follow the theme style, or the reader's four. */
   paletteColors: { type: 'choice', values: PALETTE_COLORINGS, default: PALETTE_COLORING_BRAND },
@@ -367,6 +370,13 @@ export const PREFS = {
   chatWait: { type: 'boolean', default: true },
   chatSend: { type: 'boolean', default: true },
   chatReveal: { type: 'choice', values: CHAT_REVEAL_MODES, default: CHAT_REVEAL_OFF },
+  /**
+   * Whether the formal answer takes the reading position as it starts
+   * (features/chat-anchor/): its first line comes to the top of the conversation
+   * and the follow is handed over there. Off unless the reader asks for it: it
+   * moves the page at a moment he did not ask anything of it.
+   */
+  answerAnchor: { type: 'boolean', default: false },
   caretMotion: { type: 'choice', values: CARET_MOTIONS, default: CARET_MOTION_TYPING },
   messageEnter: { type: 'choice', values: MESSAGE_ENTER_MODES, default: MESSAGE_ENTER_FLIGHT },
   processRows: { type: 'choice', values: PROCESS_ROWS_LAYOUTS, default: PROCESS_ROWS_FLAT },

@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 121,
-  "at": "2026-11-03",
-  "external": false,
-  "zh": "修复子代理运行时停止键被发送键盖住的问题",
-  "en": "Fix the stop button over a running subagent being covered by the send one"
-}

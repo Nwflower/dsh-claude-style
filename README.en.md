@@ -65,6 +65,8 @@ The settings page switches between the two palettes; light and dark follow the s
   </tr>
 </table>
 
+> In Settings the mascot can also be switched to the pixel crab Clawd or the whale girl.
+
 > The workspaces, sessions, usage figures and nickname in the screenshots are sample data.
 
 ## Installation
@@ -108,6 +110,7 @@ The Sodium rendering engine is licensed under the [PolyForm Shield License 1.0.0
 - "Sodium" (钠) is named after Minecraft's [Sodium](https://github.com/CaffeineMC/sodium) rendering mod; this plugin is not affiliated with it.
 - The message navigator follows SherUnlocked-4869's [dsh-plugin-msg-nav](https://github.com/SherUnlocked-4869/dsh-plugin-msg-nav) (MIT).
 - The animation frames of Deepy the pixel whale come from the Deepy whale theme pack drawn by calmly-eating-bugs ([@wp3171216237](https://github.com/wp3171216237)), and ship with the plugin by the author's permission; GIFs of all 20 animations are in [docs/gifs/](docs/gifs/).
+- The whale girl pixel emoji set came with issue #224.
 - The enhanced animations in the chat area are modified from [dsh-chat-ux](https://github.com/alm-allen/dsh-chat-ux) (MIT).
 - Clawd is a character of Anthropic. Its frames are not covered by the MIT license (see [LICENSE](LICENSE)). This plugin is an unofficial fan work, not affiliated with or endorsed by Anthropic.
 

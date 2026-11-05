@@ -8,7 +8,7 @@
   var host = window.__dshSmokeHost
   var CASE = host.CASE
 
-  var deepy = CASE === 'deepy' || CASE === 'crab-states' ? (function () {
+  var deepy = CASE === 'deepy' || CASE === 'crab-states' || CASE === 'whalegirl' ? (function () {
     var statusListeners = []
     var feedListeners = []
     var status = new Map()

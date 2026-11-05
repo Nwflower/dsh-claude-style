@@ -28,6 +28,7 @@
 | [D80](D80-cost-snapshot-and-channel.md) | 价格与时段快照走仓库，会话费用由宿主半计价 |  |
 | [D81](D81-page-scale-carries-host-cards.md) | 页面缩放留在样式表，宿主的浮层拿回一像素对一像素的空间 |  |
 | [D83](D83-task-continuity-and-temporary-files.md) | 工单用于延续任务，临时文件独立退役 | D82 |
+| [D84](D84-answer-first-line.md) | 正式回答的第一行是阅读位置的起点 |  |
 
 ## 作废的编号
 

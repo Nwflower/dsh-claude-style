@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 64,
-  "at": "2026-11-03",
-  "external": false,
-  "zh": "修复宿主给每个面板行加了一层包装后，编辑侧栏里勾掉的入口不再从侧栏消失的问题",
-  "en": "Fix the entries unchecked in the edit-sidebar dialog staying on the sidebar list after the host began wrapping every panel row in a box of its own"
-}

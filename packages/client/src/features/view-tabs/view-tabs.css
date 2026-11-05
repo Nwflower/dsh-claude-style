@@ -173,8 +173,9 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="center-column"]:hover [data-
 }
 /* The strip's row is gone from the flow, so the header takes the shape it has
    when it owns no tab strip: no min-height, and the bottom padding the host
-   gives that shape. */
+   gives that shape — which the header band closes further once it has taken the
+   title out of the header (--dsh-header-band-bottom). */
 body[data-dsh-claude-style] [data-dsh-claude-part~="conversation-header"][data-dsh-titlebar-tabs][data-dsh-claude-holds~="view-tabs"] {
   min-height: 0 !important;
-  padding-bottom: 10px !important;
+  padding-bottom: var(--dsh-header-band-bottom, 10px) !important;
 }

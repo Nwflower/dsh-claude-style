@@ -578,7 +578,11 @@ async function hostHalf() {
   // and nothing else answers however the name is spelled.
   console.log('\nhost half — public assets')
   const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'lib', 'assets', 'manifest.json'), 'utf8')).assets
-  const [assetName, asset] = Object.entries(manifest)[0] ?? []
+  const entries = Object.entries(manifest)
+  // A text asset is the one stored brotli-compressed; a mascot sheet is stored
+  // as its own bytes. The compression checks below read a text asset, and the
+  // binary one is read beside them.
+  const [assetName, asset] = entries.find(([, entry]) => entry.encoding === 'br') ?? entries[0] ?? []
   if (assetName === undefined) throw new Error('no routed assets in lib/assets/manifest.json; run npm run build')
   // Every name the manifest carries has its file: the manifest is what the
   // route answers from, so an entry an earlier build's cleanup removed (D72)
@@ -600,6 +604,17 @@ async function hostHalf() {
     plain.status === 200 && plain.headers['content-encoding'] === undefined &&
       plain.raw !== null && plain.raw.toString('utf8') === brotliDecompressSync(fs.readFileSync(storedPath)).toString('utf8'),
     `HTTP ${plain.status} ${JSON.stringify(plain.headers)}`)
+  // A mascot sheet is routed as the PNG the build wrote: binary, so it is stored
+  // as its bytes and served with no content encoding.
+  const binary = entries.find(([, entry]) => entry.encoding === null && entry.type === 'image/png')
+  if (binary !== undefined) {
+    const [binaryName] = binary
+    const raw = await requestAsset(assets, `/dsh-claude-style/assets/${binaryName}`, { 'accept-encoding': 'gzip, br' })
+    check('a binary routed asset (a mascot sheet) is served as it is stored, with no content encoding',
+      raw.status === 200 && raw.headers['content-encoding'] === undefined && raw.raw !== null &&
+        Buffer.compare(raw.raw, fs.readFileSync(path.join(ROOT, 'lib', 'assets', binaryName))) === 0,
+      `HTTP ${raw.status} ${JSON.stringify(raw.headers)}`)
+  }
   for (const url of ['/dsh-claude-style/assets/missing.svg', '/dsh-claude-style/assets/..%2fclient.js',
     '/dsh-claude-style/assets/../../package.json', '/dsh-claude-style/assets/', `/dsh-claude-style/assets/${assetName}/x`]) {
     const answer = await requestAsset(assets, url)

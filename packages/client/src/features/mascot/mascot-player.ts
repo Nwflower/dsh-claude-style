@@ -14,6 +14,10 @@ export interface MascotSheet {
   frames: number
   box: number[]
   still: number
+  /** Each frame's own duration in milliseconds; absent means `frames` equal `frameMs` frames. */
+  durs?: number[]
+  /** Frames per sheet row (eight when absent); a strip that holds one long row says so here. */
+  columns?: number
 }
 
 /** A character's sheet pipeline: whether a sheet plays, whether it never will, how it is painted. */
@@ -29,7 +33,7 @@ export interface MascotSheets {
  * built from the name, and the build reads the marks the stylesheets key on
  * off this type (scripts/source-tree.mjs).
  */
-export type MascotName = 'crab' | 'deepy'
+export type MascotName = 'crab' | 'deepy' | 'whalegirl'
 
 /** What one character hands the player (see createMascotPlayer). */
 export interface MascotCharacter {
@@ -59,12 +63,12 @@ export interface MascotCharacter {
  *
  * @param ui - shared handle table (`ui.composer`).
  * @param character - `{ name, sheets, frameMs, gutter, extras, createSheets }`:
- *     `name` prefixes the class names, the custom properties and the anchor
- *     mark (`dsh-claude-<name>`); `sheets` is the animation table
- *     (`{ frames, box, still }` per key, every key the signals, moments,
- *     sleep, extras and reactions name); `gutter` the transparent margin
- *     each frame cell carries in the character's sheets, in logical pixels
- *     (absent when they carry none); `extras` the idle extras;
+ *     `name` prefixes its class names and its anchor mark
+ *     (`dsh-claude-<name>`, `data-dsh-claude-<name>-anchor`); `sheets` is the
+ *     animation table (`{ frames, box, still, durs?, columns? }` per key, every
+ *     key the signals, moments, sleep, extras and reactions name); `gutter` the
+ *     transparent margin each frame cell carries in the character's sheets, in
+ *     logical pixels (absent when they carry none); `extras` the idle extras;
  *     `createSheets(onReady)` returns `{ ready, failed, paint, dispose }`.
  * @returns `{ sync, release, onActivity, dispose }`.
  */
@@ -103,8 +107,11 @@ export function createMascotPlayer(ctx: HostContext, ui: FeatureUi<typeof manife
   /** What the stage's decisions read off the page: an idle extra starts only in motion, on a visible page. */
   const surroundings = () => ({ extras: character.extras, extrasAllowed: !motionReduced() && !document.hidden, random: Math.random })
 
-  /** How long one round of an animation lasts. */
-  const playMs = (key: string) => SHEETS[key].frames * FRAME_MS
+  /** How long one round of an animation lasts: its own per-frame durations, or its frame count at the character's pace. */
+  const playMs = (key: string) => {
+    const sheet = SHEETS[key]
+    return sheet.durs === undefined ? sheet.frames * FRAME_MS : sheet.durs.reduce((sum, ms) => sum + ms, 0)
+  }
 
   /** The character's sheet pipeline. */
   const sheets = character.createSheets(onSheetReady)
@@ -223,17 +230,18 @@ export function createMascotPlayer(ctx: HostContext, ui: FeatureUi<typeof manife
   /** The strip translation that puts one frame of a sheet in the window. */
   function frameOffset(sheet: MascotSheet, frame: number) {
     const [cellWidth, cellHeight] = cellSize(sheet)
-    return `translate(${-((frame % 8) * cellWidth + GUTTER) * 2}px, ${-(Math.floor(frame / 8) * cellHeight + GUTTER) * 2}px)`
+    const columns = sheet.columns ?? 8
+    return `translate(${-((frame % columns) * cellWidth + GUTTER) * 2}px, ${-(Math.floor(frame / columns) * cellHeight + GUTTER) * 2}px)`
   }
 
   /**
    * Put an animation on the strip: a WAAPI animation whose keyframes hold
-   * each frame for the character's frame time (steps(1) jumps at the
-   * slot's end), so a loop runs entirely on the browser's animation engine
-   * with no tick of the mascot's own; or the state's still frame, pinned
-   * while the motion choice says so. A once animation's end is reported by
-   * its `finished`; the deadline schedule() arms is the backstop for a
-   * throttled tab.
+   * each frame for its own duration — the character's frame time when the
+   * sheet carries none (steps(1) jumps at the slot's end), so a loop runs
+   * entirely on the browser's animation engine with no tick of the mascot's
+   * own; or the state's still frame, pinned while the motion choice says so. A
+   * once animation's end is reported by its `finished`; the deadline
+   * schedule() arms is the backstop for a throttled tab.
    */
   function play(strip: HTMLElement, key: string, mode: PlayMode) {
     if (stage.animation !== null) {
@@ -247,12 +255,23 @@ export function createMascotPlayer(ctx: HostContext, ui: FeatureUi<typeof manife
     }
     strip.style.transform = ''
     const keyframes: Keyframe[] = []
-    for (let frame = 0; frame < sheet.frames; frame++) {
-      keyframes.push({ offset: frame / sheet.frames, transform: frameOffset(sheet, frame), easing: 'steps(1)' })
+    let duration: number
+    if (sheet.durs === undefined) {
+      duration = sheet.frames * FRAME_MS
+      for (let frame = 0; frame < sheet.frames; frame++) {
+        keyframes.push({ offset: frame / sheet.frames, transform: frameOffset(sheet, frame), easing: 'steps(1)' })
+      }
+    } else {
+      duration = sheet.durs.reduce((sum, ms) => sum + ms, 0)
+      let at = 0
+      for (let frame = 0; frame < sheet.frames; frame++) {
+        keyframes.push({ offset: at / duration, transform: frameOffset(sheet, frame), easing: 'steps(1)' })
+        at += sheet.durs[frame]
+      }
     }
     keyframes.push({ offset: 1, transform: frameOffset(sheet, mode === 'loop' ? 0 : sheet.frames - 1) })
     const playing = strip.animate(keyframes, {
-      duration: sheet.frames * FRAME_MS,
+      duration,
       iterations: mode === 'loop' ? Infinity : 1,
       fill: 'forwards',
     })
@@ -318,14 +337,15 @@ export function createMascotPlayer(ctx: HostContext, ui: FeatureUi<typeof manife
     if (stage.reaction !== null && stage.reaction.key === next.key) stage.reaction.fresh = false
     const style = root.style
     sheets.paint(style, next.key)
-    style.setProperty(`--${PREFIX}-x`, String(sheet.box[0]))
-    style.setProperty(`--${PREFIX}-y`, String(sheet.box[1]))
-    style.setProperty(`--${PREFIX}-w`, String(sheet.box[2]))
-    // The sprite's height is the one custom property both characters share:
-    // crab.css reads it in the merged sprite rule.
+    style.setProperty('--dsh-claude-mascot-x', String(sheet.box[0]))
+    style.setProperty('--dsh-claude-mascot-y', String(sheet.box[1]))
+    style.setProperty('--dsh-claude-mascot-w', String(sheet.box[2]))
+    // The sprite's height is one custom property every character shares, and
+    // its stylesheet reads it beside the window it clips.
     style.setProperty('--dsh-claude-mascot-h', String(sheet.box[3]))
-    style.setProperty(`--${PREFIX}-cell-w`, String(cellWidth))
-    style.setProperty(`--${PREFIX}-strip-h`, String(cellHeight * Math.ceil(sheet.frames / 8)))
+    style.setProperty('--dsh-claude-mascot-cell-w', String(cellWidth))
+    style.setProperty('--dsh-claude-mascot-columns', String(sheet.columns ?? 8))
+    style.setProperty('--dsh-claude-mascot-strip-h', String(cellHeight * Math.ceil(sheet.frames / (sheet.columns ?? 8))))
     setAttributeIfChanged(root, 'data-animation', next.key)
     play(strip, next.key, next.mode)
     if (!root.hasAttribute('data-ready')) root.setAttribute('data-ready', '')

@@ -1,8 +1,0 @@
-{
-  "group": "removals",
-  "order": 78,
-  "at": "2026-11-04",
-  "external": false,
-  "zh": "移除右侧栏的卡片布局与其设置项，面板改回宿主自己的底色并贴着栏边",
-  "en": "Remove the right sidebar's card layout and its setting, leaving panels in the host's own fill flush with the column"
-}

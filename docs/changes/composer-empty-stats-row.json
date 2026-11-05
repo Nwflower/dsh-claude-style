@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 66,
-  "at": "2026-11-03",
-  "external": false,
-  "zh": "修复统计信息收进上下文时输入卡片下方仍留着一条空白的问题",
-  "en": "Fix the blank row left under the composer card while the statistics position keeps the numbers in the context popover"
-}

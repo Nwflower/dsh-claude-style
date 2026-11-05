@@ -21,6 +21,7 @@
  *   - dressed as the Windows desktop, the switch takes the caption strip and
  *     leaves the screen while the sidebar is collapsed.
  */
+import { dismissOverlays } from './dsh-web.mjs'
 
 /** The ds-bot release the lane checks against. */
 const DS_BOT = 'ds-bot@0.1.5'
@@ -104,6 +105,11 @@ function dsBotScenario({ check }) {
     prompt: 'hello there',
     plugins: [DS_BOT],
     initScript: { content: INIT },
+    async beforeSend({ page }) {
+      // The plugin's first boot can delay the shell's preview notice past the
+      // runner's first quiet window; answer it again before using the composer.
+      if (!await dismissOverlays(page)) throw new Error('ds-bot left a first-run overlay over the composer')
+    },
     async afterTurn(context) {
       const { page, notes } = context
       await settle(page, 'code')

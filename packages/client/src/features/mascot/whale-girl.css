@@ -1,0 +1,43 @@
+/* ── Whalegirl, the pixel whale girl of the shipped emoji set ────────────────
+   She is drawn on a 69×66 grid of logical pixels at 2px a pixel (138×132px),
+   her shadow on the top edge of what she stands on. Each sheet is one long row
+   of frames. The shared frame mechanics — the anchor, the sprite's window and
+   the strip — are in packages/client/src/features/mascot/mascot-frame.css; this
+   file gives her size, placement, pointer window, and the `pixelated` kernel
+   that keeps every cell square at the doubled scale. Only the resting girl
+   takes the pointer. */
+
+/* Feet on the top edge of what is stood on: the frame's last ink row is the
+   shadow at logical row 60, five rows above the 66-row box (10 device pixels),
+   and the box is lifted two pixels further so that shadow rests on the card top
+   instead of hovering above it in the frames that bounce the body up one row. */
+body[data-dsh-claude-style] .dsh-claude-whalegirl {
+  position: absolute;
+  right: 8px;
+  bottom: calc(100% - 12px);
+  z-index: 1;
+  width: 138px;
+  height: 132px;
+  pointer-events: none;
+}
+
+/* On the panel that takes the composer card's place, she rests a little higher,
+   as that panel starts above its card. */
+body[data-dsh-claude-style] [data-dsh-claude-whalegirl-anchor="panel"] > .dsh-claude-whalegirl {
+  bottom: calc(100% - 19px);
+}
+
+body[data-dsh-claude-style] .dsh-claude-whalegirl-strip {
+  image-rendering: pixelated;
+}
+
+/* The resting girl's body, head to tail: columns 13–55, rows 12–60. */
+body[data-dsh-claude-style] .dsh-claude-whalegirl-hit {
+  position: absolute;
+  left: 24px;
+  top: 20px;
+  width: 104px;
+  height: 104px;
+  pointer-events: auto;
+  touch-action: none;
+}

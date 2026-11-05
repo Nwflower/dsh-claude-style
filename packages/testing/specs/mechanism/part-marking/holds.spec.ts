@@ -135,6 +135,18 @@ test('the settings dialog marks its section rail outside the conversation box', 
   expect(marked(page.part('navList'))?.getAttribute(PART_ATTR)).toBe(page.part('navList'))
 })
 
+test('the sidebar scroll viewport and panel entry wrapper carry their own parts', () => {
+  const sidebar = region(SIDEBAR_SLOT_SELECTOR)
+  const entry = sidebar.box('panelEntry', sidebar.box('panelRow'))
+  const area = sidebar.box('scrollArea', sidebar.box('panelList', entry))
+  mount(slot(SIDEBAR_SLOT_SELECTOR, sidebar.box('root', sidebar.box('scrollRegion', area))))
+  install()
+  expect(marked(sidebar.part('scrollRegion'))).not.toBeNull()
+  expect(marked(sidebar.part('scrollArea'))).toBe(area)
+  expect(marked(sidebar.part('panelEntry'))).toBe(entry)
+  expect(marked(sidebar.part('panelRow'))).toBe(entry.firstChild)
+})
+
 test('the teardown takes every hold mark off with the parts', () => {
   const header = region(CONVERSATION_HEADER_SLOT_SELECTOR)
   mount(slot(CONVERSATION_HEADER_SLOT_SELECTOR, header.box('header', header.box('tabs'))))
