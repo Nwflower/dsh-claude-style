@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 69,
+  "at": "2026-11-05",
+  "external": false,
+  "zh": "修复侧栏首行与新建会话之间的间距比其余行距更宽、面板行图标不再落在新建会话圆片那一列的问题",
+  "en": "Fix the sidebar's first row standing further from the New session plate than the rows under it and the panel rows' glyphs leaving the New session chip's column"
+}
