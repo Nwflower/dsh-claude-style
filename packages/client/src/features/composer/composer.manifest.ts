@@ -4,7 +4,7 @@ import type { FeatureManifest } from '../../core/feature'
 export default {
   id: 'composer',
   order: 20,
-  contracts: ['chat.flow-slot', 'chat.question-reply', 'chat.scroller', 'composer.access-trigger', 'composer.activity-slot', 'composer.attachment-rail', 'composer.bar', 'composer.composing', 'composer.dialog-trigger', 'composer.fallback-panel', 'composer.input', 'composer.mobile-portrait', 'composer.placeholder', 'composer.placeholder-attribute', 'composer.question-body', 'composer.question-card', 'composer.question-option', 'composer.seat', 'composer.stack', 'composer.variant', 'conversation.view-context', 'conversation.view-stats', 'conversation.view-storage', 'conversation.view-trajectory', 'shell.phase'],
+  contracts: ['chat.content', 'chat.flow-slot', 'chat.main-slot', 'chat.question-reply', 'chat.scroller', 'composer.access-trigger', 'composer.activity-slot', 'composer.attachment-rail', 'composer.bar', 'composer.composing', 'composer.dialog-trigger', 'composer.fallback-panel', 'composer.input', 'composer.mobile-portrait', 'composer.placeholder', 'composer.placeholder-attribute', 'composer.question-body', 'composer.question-card', 'composer.question-option', 'composer.right-slot', 'composer.seat', 'composer.standard-controls', 'composer.stack', 'composer.variant', 'conversation.view-context', 'conversation.view-stats', 'conversation.view-storage', 'conversation.view-trajectory', 'shell.phase'],
   pref: 'composerScope',
   prefValues: [COMPOSER_SCOPE_HERO, COMPOSER_SCOPE_CONVERSATION, COMPOSER_SCOPE_ALL],
   stylesheets: [
@@ -13,6 +13,7 @@ export default {
     { file: 'inline.css', rank: 90, gate: true },
     { file: 'inline-bar.css', rank: 100, gate: true },
     { file: 'bottom-gap.css', rank: 101, gate: true },
+    { file: 'responsive.css', rank: 102, gate: true },
   ],
   settingsRows: [{
     tab: 'composer',

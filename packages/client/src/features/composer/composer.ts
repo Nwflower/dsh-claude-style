@@ -15,6 +15,7 @@ import { captureComposerCaret, composerComposing, focusKeepingComposerCaret } fr
 import { createPlaceholderCopy } from './placeholder-copy'
 import { installWindowBlurMirror } from './selection-mirror'
 import { createQuestionCards } from './question-card'
+import { createComposerResponsive } from './responsive'
 
 /** Inspection views where the host's composer seat stands down; content and plugin views keep it. */
 const COMPOSER_HIDDEN_VIEWS: ReadonlySet<string> = new Set([CONVERSATION_VIEW_TRAJECTORY, CONVERSATION_VIEW_CONTEXT, CONVERSATION_VIEW_STATS])
@@ -60,6 +61,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const placeholders = observeComposerPlaceholders()
   const placeholderCopy = createPlaceholderCopy(cards, placeholders, composerComposing)
   const questionCards = createQuestionCards()
+  const responsive = createComposerResponsive()
   /**
    * The attachment tiles the skin marked, read once at install so a generation
    * whose teardown a hot reload dropped still has its marks swept.
@@ -359,6 +361,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     syncDraftState(found)
     syncControls(found)
     questionCards.sync()
+    responsive.sync(found, active)
     syncRootMarks()
   }
 
@@ -483,6 +486,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     onPointerDown: focusEditorOnPress,
     /** The composer card changed size: the transcript follows it. */
     reposition(reason: 'viewport' | 'composer') {
+      responsive.measure()
       if (reason === 'composer') followTranscript()
     }
   }
@@ -495,6 +499,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     stopWindowBlur()
     document.removeEventListener('compositionend', onCompositionEnd, true)
     placeholderCopy.dispose()
+    responsive.dispose()
     questionCards.release()
     cards.release()
     placeholders.release()

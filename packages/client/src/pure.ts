@@ -86,3 +86,12 @@ export { install as installSidebarStatus } from './features/sidebar-status/sideb
 export { default as SIDEBAR_STATUS_SHEET } from './features/sidebar-status/sidebar-status.css?raw'
 export { default as SIDEBAR_BASE_SHEET } from './theme/sidebar.css?raw'
 export { installSessionContextMenu } from './features/session-actions/context-menu'
+
+export { createComposerResponsive } from './features/composer/responsive'
+export { default as composerInlineCss } from './features/composer/inline.css?raw'
+export { default as composerInlineBarCss } from './features/composer/inline-bar.css?raw'
+export { default as composerResponsiveCss } from './features/composer/responsive.css?raw'
+export { default as composerModelCss } from './features/model/model-picker.css?raw'
+export { default as composerVarsCss } from './features/composer/vars.css?raw'
+export { default as composerSwappingCss } from './shared/swapping-text.css?raw'
+export { setSwappingText, releaseSwappingText } from './shared/swapping-text'

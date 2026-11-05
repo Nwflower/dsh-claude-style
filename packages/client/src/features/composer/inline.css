@@ -336,7 +336,7 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-c
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] button[data-dsh-claude-control="stop"],
 body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card] button[data-dsh-claude-control="stop"] {
   position: absolute;
-  bottom: 40px;
+  bottom: calc(var(--dsh-claude-composer-toolbar-height, 28px) + 12px);
   right: 8px;
   top: auto;
   left: auto;
