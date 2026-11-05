@@ -120,14 +120,11 @@ export const SIDEBAR_LAYOUT_RELAXED = 'relaxed'
 export const SIDEBAR_LAYOUT_COMPACT = 'compact'
 export const SIDEBAR_LAYOUTS = [SIDEBAR_LAYOUT_RELAXED, SIDEBAR_LAYOUT_COMPACT] as const
 
-/**
- * The mark a conversation still running carries in the sidebar: a light
- * breathing in place over the idle seat's hollow circle, or the ring turning
- * that the skin drew before the light.
- */
+/** Independent running styles: breathing marker, turning ring, or title shimmer. */
 export const ONGOING_INDICATOR_BREATHE = 'breathe'
 export const ONGOING_INDICATOR_RING = 'ring'
-export const ONGOING_INDICATORS = [ONGOING_INDICATOR_BREATHE, ONGOING_INDICATOR_RING] as const
+export const ONGOING_INDICATOR_SHIMMER = 'shimmer'
+export const ONGOING_INDICATORS = [ONGOING_INDICATOR_BREATHE, ONGOING_INDICATOR_RING, ONGOING_INDICATOR_SHIMMER] as const
 
 /** The chat area's animation switch: on plays the ported set (features/chat-*), off leaves the area to the host. */
 export const CHAT_ANIMATIONS_OFF = 'off'
@@ -202,12 +199,8 @@ export const AUTO_POPOVER_SCOPES = [AUTO_POPOVER_OFF, AUTO_POPOVER_ACCOUNT, AUTO
  * and every control, line and picture grows with it). Any percentage from
  * PAGE_ZOOM_MIN through PAGE_ZOOM_MAX is a value the row draws; one outside it
  * reads as the nearer end.
- *
- * 空串是「跟系统」：页面一个属性都不写，尺寸就还是系统和宿主给的那个。
  */
 export const PAGE_ZOOM_SYSTEM = ''
-/* 缩放现在是任意百分比：100 就是不动，60–200 是滑条的范围，中间每一格都算。
-   早先的固定档位（system / 0.8 / 1 / 1.25 / 1.5）在 legacy 里照样读得回来。 */
 export const PAGE_ZOOM_DEFAULT = '100'
 export const PAGE_ZOOM_MIN = 60
 export const PAGE_ZOOM_MAX = 200
@@ -321,7 +314,6 @@ export const PREFS = {
     type: 'text',
     default: PAGE_ZOOM_DEFAULT,
     max: 8,
-    /* 旧的固定档位：'system' 现在就是空串（页面不写属性），其余四档换成百分比。 */
     legacy: { system: '', '0.8': '80', '1': '100', '1.25': '125', '1.5': '150' },
   },
   sodium: { type: 'choice', values: SODIUM_MODES, default: SODIUM_UNDECIDED },

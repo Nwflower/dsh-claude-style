@@ -312,7 +312,10 @@ export default spec({ page: 'composer' }, ({ test }) => {
 
   test('the question card and its settled reply are drawn in the skin\'s own look', async (t) => {
     await mountQuestion(t)
-    await t.page.waitForFunction((selector) => document.querySelector(selector)?.textContent === 'Other', CUSTOM_LABEL)
+    await t.page.waitForFunction((selector) => {
+      const label = document.querySelector(selector)
+      return label !== null && label.textContent === 'Other'
+    }, CUSTOM_LABEL)
     const reading = await t.page.evaluate((flowItem) => {
       const { card, section, row, mark, badge, term, answer, content, probe, fallbackAttr } = window.__debugQuestion
       const paint = getComputedStyle
@@ -335,7 +338,7 @@ export default spec({ page: 'composer' }, ({ test }) => {
       }
     }, FLOW_ITEM)
     t.expectThat.equal(reading.cardRadius, '14px', 'the question card is drawn in the skin\'s own radius')
-    t.expectThat.equal(reading.cardWidth, '480px', 'the card keeps the home dashboard\'s width on a wide screen')
+    t.expectThat.equal(reading.cardWidth, '576px', 'the card is wide enough for the question\'s option list on a wide screen')
     t.expectThat.equal(reading.rowRadius, '0px', 'option rows join one continuous list')
     t.expectThat.equal(reading.markRadius, '50%', 'a single-choice option carries a circular radio')
     t.expectThat.equal(reading.markWidth, reading.markHeight, 'the radio keeps equal width and height')

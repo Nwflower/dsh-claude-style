@@ -8,7 +8,12 @@ import COPY from './composer.copy.json'
 
 const copy = createCopy(COPY)
 const CUSTOM_ROW_SELECTOR = ':is([role="radiogroup"], [role="group"]) > div:has(textarea)'
+// A question without options asks for one typed answer: the host draws that field
+// boxed inside the group instead of as an option row, and it names itself.
+const FREE_TEXT_SELECTOR = ':is([role="radiogroup"], [role="group"]) > div:has(> textarea)'
 const CUSTOM_ATTR = 'data-dsh-claude-question-custom'
+/** The mark's value on the field a question with no options draws, which carries no mark of its own. */
+const FREE_TEXT_VALUE = 'free'
 const CUSTOM_ACTIVE_ATTR = 'data-dsh-claude-question-custom-active'
 const LABEL_CLASS = 'dsh-claude-question-custom-label'
 const SHORTCUT_CLASS = 'dsh-claude-question-submit-shortcut'
@@ -100,6 +105,7 @@ export function createQuestionCards() {
   function syncCustomAnswers(surface: HTMLElement, seen: Set<HTMLElement>) {
     for (const row of surface.querySelectorAll<HTMLElement>(CUSTOM_ROW_SELECTOR)) {
       seen.add(row)
+      const freeText = row.matches(FREE_TEXT_SELECTOR)
       let label = labels.get(row)
       if (label === undefined) {
         label = buildElement('button', LABEL_CLASS)
@@ -107,11 +113,16 @@ export function createQuestionCards() {
         label.setAttribute('role', row.parentElement?.getAttribute('role') === 'group' ? 'checkbox' : 'radio')
         labels.set(row, label)
       }
-      // The radio and the answer field are the host's; the label stands
-      // between them in the stylesheet's two-column grid.
-      if (row.children[1] !== label) row.insertBefore(label, row.children[1] ?? null)
-      writeTextInPlace(label, copy('questionCustom'))
-      setAttributeIfChanged(row, CUSTOM_ATTR, '')
+      // The radio and the answer field are the host's; an option row's label
+      // stands between them in the stylesheet's two-column grid, while the field
+      // of a question with no options names itself the way its placeholder does.
+      if (freeText) {
+        if (label.isConnected) label.remove()
+      } else {
+        if (row.children[1] !== label) row.insertBefore(label, row.children[1] ?? null)
+        writeTextInPlace(label, copy('questionCustom'))
+      }
+      setAttributeIfChanged(row, CUSTOM_ATTR, freeText ? FREE_TEXT_VALUE : '')
       const active = customSelected.has(row) || row.querySelector('textarea')!.value.trim() !== ''
       row.toggleAttribute(CUSTOM_ACTIVE_ATTR, active)
       label.setAttribute('aria-checked', String(active))

@@ -249,7 +249,9 @@ export function caretMeasureRich(input: Element, range: Range, probeHome: Elemen
  */
 export function caretMeasurePlain(input: PlainSurface, endKeyed: boolean, probeHome: Element | null): CaretReading | null {
   if (probeHome === null) return null
-  const field = input.getBoundingClientRect()
+  // The box is a value rather than the DOMRect: a live rect follows the field
+  // while the caret it placed goes stale.
+  const field = { ...input.getBoundingClientRect() }
   const style = getComputedStyle(input)
   const paddingX = Number.parseFloat(style.paddingLeft) + Number.parseFloat(style.paddingRight)
   const width = Math.max(0, input.clientWidth - (Number.isFinite(paddingX) ? paddingX : 0))
@@ -330,7 +332,16 @@ function takePlainSpot(
     const contentHeight = input.clientHeight - (Number.parseFloat(getComputedStyle(input).paddingTop) || 0) - (Number.parseFloat(getComputedStyle(input).paddingBottom) || 0)
     dy += Math.max(0, (contentHeight - spot.height) / 2)
   }
-  return { dx: edge - mirrorRect.left, dy, height: spot.height }
+  // A caret with no height is no caret at all: a mirror that collapsed to an
+  // empty line would draw a hairline nothing can see, so the field's own line
+  // height stands in for it.
+  let height = spot.height
+  if (!(height > 0)) {
+    const style = getComputedStyle(input)
+    const line = Number.parseFloat(style.lineHeight)
+    height = Number.isFinite(line) ? line : Number.parseFloat(style.fontSize) * 1.4
+  }
+  return { dx: edge - mirrorRect.left, dy, height }
 }
 
 /**

@@ -918,15 +918,21 @@
       "the new-text fade row previews its two answers: the fade card's character lands faint and settles over the reveal's own duration, the other stands solid as it arrives, and a character waiting for its turn is unseen": [
         0.12
       ],
-      "the ongoing-mark row is two cards carrying the pair a sidebar row leads with, the mark first and a title beside it: each card names its own mark, the stored choice alone is drawn as picked, and the sample takes no reading": [
+      "the ongoing-effect row names three independent cards, each carrying a decorative title before its marker, with only the default breathing choice pressed": [
         0,
-        1,
-        2
+        3
       ],
-      "each card wears its own mark: the breathing dot is the idle seat's filled 6px circle pulsing on the shared breath, the ring a wider ring with a drawn track whose lit head turns on its own period": [
+      "the carried preview parents give the breathing dot its opacity cadence, the ring its rotation and the shimmer title its sweep with no visible marker": [
+        0,
         0.85,
-        1,
-        2.4
+        1.2,
+        3
+      ],
+      "storing": [
+        3
+      ],
+      "reduced motion keeps all three previews static and restores the visible native marker for the stored shimmer choice": [
+        3
       ],
       "every switched feature is on by default": [
         5

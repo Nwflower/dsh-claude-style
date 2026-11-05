@@ -144,6 +144,9 @@ card leaves unset.
 | `--dsw-alias-button-info-hover` | `accent-hover` | `#c46343` | `#eb9170` | `#3d56e9` | `#6a84ff` | host's own |  |
 | `--dsw-alias-interactive-bg-active` | `accent-active` | `rgba(246, 136, 98, 0.26)` | `rgba(217, 119, 87, 0.3)` | `rgba(95, 124, 255, 0.26)` | `rgba(77, 107, 254, 0.3)` | host's own |  |
 | `--dsh-claude-hover-bg` | `hover-wash` | `rgba(6, 6, 6, 0.08)` | `rgba(255, 255, 255, 0.08)` | `rgba(4, 4, 6, 0.08)` | `rgba(251, 255, 255, 0.08)` | `var(--dsw-alias-interactive-bg-hover)` | hover wash |
+| `--dsh-claude-status-unread` | literal | `#2a78d6` | `#2a78d6` | `#2a78d6` | `#2a78d6` | `#2a78d6` | the native unread background-completion reminder, independent of the brand accent |
+| `--dsh-claude-status-awaiting` | literal | `#fab219` | `#fab219` | `#fab219` | `#fab219` | `#fab219` | the sidebar's waiting-for-input yellow: approvals, plan reviews and questions |
+| `--dsh-claude-status-running` | literal | `#898781` | `#898781` | `#898781` | `#898781` | `#898781` | the sidebar's muted neutral running dot |
 | `--dsh-claude-field-ring` | literal | `#2a78d6` | `#2a78d6` | `#2a78d6` | `#2a78d6` | `var(--dsw-alias-brand-primary)` | the ring around a field the reader is renaming in: the session title's own editor, drawn from the selection blue |
 | `--dsw-focus-ring-color` | literal | `rgba(20, 20, 19, 0.45)` | `rgba(250, 249, 245, 0.60)` | `rgba(20, 20, 19, 0.45)` | `rgba(250, 249, 245, 0.60)` | host's own | the keyboard focus ring: the host's own `:focus-visible` rules paint it, and the skin's fallback ring reads it |
 | `--dsh-claude-inline-code-bg` | `code-wash` | `rgba(6, 6, 6, 0.05)` | `rgba(255, 255, 255, 0.05)` | `rgba(4, 4, 6, 0.05)` | `rgba(251, 255, 255, 0.05)` | `var(--dsw-alias-markdown-inline-code)` | inline code fill |
@@ -375,6 +378,8 @@ edit the JSON, not the table.
 | `--dsh-claude-period-dot-rotate` | `10s` | how long one of the waiting line's loader motions stands before another takes its place, the next one picked so a motion never follows itself |
 | `--dsh-claude-duration-dot-morph` | `480ms` | how long a loader dot takes, once the motion it leaves has it standing still, to travel from that pose into the path of the motion taking over |
 | `--dsh-claude-duration-reduced` | `0.01ms` | every skin animation and transition under the Reduced animation choice (D40) |
+| `--dsh-claude-period-status-title` | `3000ms` | the running title's strong shimmer: 15 percent rest, 70 percent travel, 15 percent rest |
+| `--dsh-claude-period-status-breathe` | `1200ms` | one opacity cycle of the sidebar's running dot, matching Claude Desktop's status-dot cadence |
 | `--dsh-claude-period-host-sweep` | `1500ms` | one pass of the highlight band across the waiting line's words and a running process group's header |
 | `--dsh-claude-duration-host-sweep-delay` | `300ms` | how long the highlight band waits after its words appear before its first pass |
 | `--dsh-claude-period-preview-swap` | `4000ms` | one turn of the settings page's waiting-line preview: one wording standing, leaving, and standing again |
@@ -396,6 +401,7 @@ edit the JSON, not the table.
 | `--dsh-claude-ease-standard` | `ease` | feedback and surfaces: the default curve |
 | `--dsh-claude-ease-out` | `ease-out` | something arriving and settling: a fold's door, content entering the chat area, the landing mark, a hint appearing and leaving |
 | `--dsh-claude-ease-enter` | `cubic-bezier(0.34, 1.3, 0.64, 1)` | a message the reader sends growing into its row: the slight overshoot as it takes its full size |
+| `--dsh-claude-ease-status-title` | `cubic-bezier(0.45, 0, 0.55, 1)` | the middle travel segment of the strong running-title shimmer |
 | `--dsh-claude-ease-in-out` | `ease-in-out` | something that leaves and returns, or swaps in place: wording swaps, pulses, flashes |
 | `--dsh-claude-ease-glide` | `cubic-bezier(0.22, 0.61, 0.36, 1)` | travel along a track: the sliding highlight, the reasoning slider, the search dialog's entrance, the reasoning window's step, the wording box's width, the stream's slide |
 | `--dsh-claude-ease-roll` | `cubic-bezier(0.4, 0, 0.2, 1)` | digits rolling over: the file rows' tail and the process group header's counts |

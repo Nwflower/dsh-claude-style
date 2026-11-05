@@ -138,6 +138,8 @@
         react.states = null
         return tree
       }
+      probe.settingsTree = renderSettingsTab
+      probe.walkSettingsTree = walk
       r.settings = { registered: typeof Section === 'function', pages: {} }
       if (r.settings.registered) {
         var tabIds = ['general', 'appearance', 'main-window', 'sidebar', 'motion']
@@ -349,67 +351,6 @@
         }
         r.settings.revealPreview = { fade: readPiece(fadePiece), waiting: readPiece(waitingPiece), plain: readPiece(plainPiece) }
         revealHost.remove()
-        // The ongoing-mark row's cards: one sidebar row per card, led by the
-        // mark its choice gives it, and the reader's stored choice repainting
-        // the running row's own mark on the page. The mark's paint is the
-        // sidebar's (theme/sidebar.css), so the cards are read through their own
-        // boxes and the session row's box is read under each stored value.
-        r.settings.ongoingCards = (function () {
-          var out = { cards: [] }
-          var tree = renderSettingsTab('motion')
-          walk(tree, function (node) {
-            var props = node.props || {}
-            if (typeof props.className !== 'string' || !/(^| )dsh-claude-ongoing-card( |$)/.test(props.className)) return
-            var sample = [].concat(props.children || [])[0] || {}
-            var sampleProps = sample.props || {}
-            var parts = [].concat(sampleProps.children || [])
-            var mark = parts[0] || {}
-            var title = parts[1] || {}
-            out.cards.push({
-              label: props['aria-label'],
-              active: props['data-active'] === '',
-              pressed: props['aria-pressed'],
-              sample: sampleProps['aria-hidden'] === 'true' && /(^| )dsh-claude-ongoing-sample( |$)/.test(sampleProps.className || ''),
-              look: (mark.props || {})['data-look'],
-              title: [].concat((title.props || {}).children || []).join(''),
-            })
-          })
-          return out
-        })()
-        var marksHost = document.createElement('div')
-        marksHost.style.cssText = 'position:absolute;left:-10000px;top:-10000px'
-        var markOf = function (look) {
-          var mark = document.createElement('span')
-          mark.className = 'dsh-claude-ongoing-mark'
-          mark.setAttribute('data-look', look)
-          marksHost.appendChild(mark)
-          return mark
-        }
-        var breatheMark = markOf('breathe')
-        var ringMark = markOf('ring')
-        document.body.appendChild(marksHost)
-        var readMark = function (mark) {
-          var style = getComputedStyle(mark)
-          return { width: style.width, border: style.borderTopWidth, animation: style.animationName, duration: style.animationDuration }
-        }
-        r.settings.ongoingMarks = { breathe: readMark(breatheMark), ring: readMark(ringMark) }
-        marksHost.remove()
-        var runningMark = document.querySelector('[data-dsh-claude-part~="session-row"] svg[data-state="ongoing"]')
-        var readRunning = function () {
-          var style = getComputedStyle(runningMark)
-          return {
-            attribute: document.body.getAttribute('data-dsh-claude-ongoing-indicator'),
-            width: style.width,
-            border: style.borderTopWidth,
-            animation: style.animationName,
-          }
-        }
-        window.__pushForm({ ongoingIndicator: 'ring' })
-        await sleep(120)
-        var ringRunning = readRunning()
-        window.__pushForm({ ongoingIndicator: 'breathe' })
-        await sleep(120)
-        r.settings.ongoingStored = { ring: ringRunning, breathe: readRunning() }
         // The colour cards: all three are buttons, the card the page paints is
         // pressed, and a picked card hands the colours back through its reset.
         // The brand mark is read beside the card, because a picked card paints

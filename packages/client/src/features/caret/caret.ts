@@ -472,8 +472,15 @@ export function createCaretMotion(read: () => string) {
     const box = reading.field === null ? reading.box : caretClipToField(target, reading.field, reading.box)
     // The layer may have been rebuilt onto another host since the read, in
     // which case its box was not read and is read here.
-    if (box === null) hide(layer)
-    else drawCaret(layer, box, layer.host === pending.host ? pending.hostRect : null)
+    if (box === null || !(box.height > 0)) {
+      // A box with no height draws a caret nothing can see, and the native one
+      // is already pressed down by then: the field goes back to the browser's
+      // caret rather than standing with no caret at all.
+      target.removeAttribute(CARET_ATTR)
+      hide(layer)
+      return
+    }
+    drawCaret(layer, box, layer.host === pending.host ? pending.hostRect : null)
     target.setAttribute(CARET_ATTR, '')
   }
 

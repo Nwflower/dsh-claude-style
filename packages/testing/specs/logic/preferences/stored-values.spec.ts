@@ -12,7 +12,7 @@ import fc from 'fast-check'
 import { resolveMascot } from '@dsh-claude-style/client/pure'
 import {
   BRAND_CLAUDE, BRAND_DEEPSEEK, BRAND_DEEPSEEK_LEGACY, BRAND_INK_ORIGINAL, BRAND_INK_TEXT, BRAND_NAME_MAX,
-  CHAT_ANIMATIONS_OFF, MASCOT_CRAB, MASCOT_DEEPY, MASCOT_OFF, ONGOING_INDICATOR_RING, PREFS, PREF_DEFAULTS,
+  CHAT_ANIMATIONS_OFF, MASCOT_CRAB, MASCOT_DEEPY, MASCOT_OFF, ONGOING_INDICATOR_BREATHE, ONGOING_INDICATOR_RING, ONGOING_INDICATOR_SHIMMER, PREFS, PREF_DEFAULTS,
   PROVIDER_ID_MAX, QUICK_PROVIDERS_MAX, STATUS_MOTION_WASH, USERNAME_MAX, clampPrefs,
 } from '@dsh-claude-style/contracts/prefs'
 import { OFFICIAL_MODEL_GROUP } from '@dsh-claude-style/contracts/services'
@@ -72,6 +72,14 @@ test('a choice outside its set reads as its default', () => {
   expect(clampPrefs({ statusDetail: 'verbose' }).statusDetail).toBe(PREF_DEFAULTS.statusDetail)
   expect(clampPrefs({ ongoingIndicator: ONGOING_INDICATOR_RING }).ongoingIndicator).toBe(ONGOING_INDICATOR_RING)
   expect(clampPrefs({ ongoingIndicator: 'pulse' }).ongoingIndicator).toBe(PREF_DEFAULTS.ongoingIndicator)
+})
+
+test('ongoing styles preserve breathe and ring and accept shimmer without changing the default', () => {
+  expect(PREF_DEFAULTS.ongoingIndicator).toBe(ONGOING_INDICATOR_BREATHE)
+  for (const choice of [ONGOING_INDICATOR_BREATHE, ONGOING_INDICATOR_RING, ONGOING_INDICATOR_SHIMMER]) {
+    expect(clampPrefs({ ongoingIndicator: choice }).ongoingIndicator).toBe(choice)
+  }
+  expect(clampPrefs({}).ongoingIndicator).toBe(ONGOING_INDICATOR_BREATHE)
 })
 
 test('the retired overlay search style reads as the standalone button', () => {

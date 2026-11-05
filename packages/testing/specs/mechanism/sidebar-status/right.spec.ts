@@ -3,90 +3,13 @@
  * @features sidebar-status
  * @risk Repositioning native status loses controls or accessible labels, covers the session menu, or moves third-party leading content away from its own layout.
  */
-import { afterEach, beforeEach, expect, test } from 'vitest'
-import { RightSessionStatus, SIDEBAR_BASE_SHEET, SIDEBAR_STATUS_SHEET } from '@dsh-claude-style/client/pure'
-import { SESSION_PHASE_ATTRIBUTE, SESSION_STATUS_OUTLET_SELECTOR } from '@dsh-claude-style/contracts/dom'
-import { hostElement } from '../../fixtures/host-markup'
+import { expect, test } from 'vitest'
+import { userEvent } from 'vitest/browser'
+import { SESSION_PHASE_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
+import { mount, nativeDot, PART } from './fixture'
 import { surfaceAttribute } from '../../fixtures/surface'
 
-const PART = surfaceAttribute('skin.part')
-const ENABLED = surfaceAttribute('skin.root')
 const STATUS = surfaceAttribute('sidebar-status.row')
-const SVG_NS = 'http://www.w3.org/2000/svg'
-const teardown: (() => void)[] = []
-let previousRoot: string | null
-
-beforeEach(() => {
-  previousRoot = document.body.getAttribute(ENABLED)
-  document.body.setAttribute(ENABLED, '')
-  for (const css of [SIDEBAR_BASE_SHEET, SIDEBAR_STATUS_SHEET]) {
-    const element = document.createElement('style')
-    element.append(document.createTextNode(css))
-    document.head.appendChild(element)
-    teardown.push(() => element.remove())
-  }
-})
-
-afterEach(() => {
-  while (teardown.length > 0) teardown.pop()?.()
-  if (previousRoot === null) document.body.removeAttribute(ENABLED)
-  else document.body.setAttribute(ENABLED, previousRoot)
-})
-
-/** Native StateDot and its outlet retain their original seat and event targets. */
-function mount(state: string | null = 'ongoing', direction: 'ltr' | 'rtl' = 'ltr') {
-  const container = document.createElement('div')
-  container.setAttribute(PART, 'session-row')
-  container.dir = direction
-  container.style.cssText = 'display:flex;align-items:center;box-sizing:border-box;width:320px'
-  const seat = document.createElement('div')
-  seat.setAttribute(PART, 'row-slot')
-  const outlet = hostElement(SESSION_STATUS_OUTLET_SELECTOR)
-  outlet.style.display = 'contents'
-  seat.append(outlet)
-  const title = document.createElement('span')
-  title.setAttribute(PART, 'row-title')
-  title.style.flex = '1'
-  title.style.minWidth = '0'
-  title.textContent = 'Native session title'
-  const actions = document.createElement('div')
-  actions.setAttribute(PART, 'row-actions')
-  actions.style.display = 'flex'
-  const menu = document.createElement('button')
-  menu.type = 'button'
-  menu.setAttribute('aria-label', 'Native session menu')
-  menu.textContent = '⋯'
-  menu.style.cssText = 'width:24px;height:24px;padding:0'
-  actions.append(menu)
-  container.append(seat, title, actions)
-  document.body.appendChild(container)
-  const right = new RightSessionStatus(container)
-  const dot = state === null ? null : nativeDot(state)
-  if (dot) seat.prepend(dot)
-  teardown.push(() => { right.dispose(); container.remove() })
-  return { row: container, seat, outlet, title, actions, menu, right, dot }
-}
-
-function nativeDot(state: string): Element {
-  const dot = state === 'ongoing' ? document.createElementNS(SVG_NS, 'svg') : document.createElement('span')
-  dot.setAttribute(SESSION_PHASE_ATTRIBUTE, state)
-  dot.setAttribute('role', 'status')
-  dot.setAttribute('aria-label', `Native ${state}`)
-  if (dot instanceof SVGElement) {
-    dot.setAttribute('width', '10')
-    dot.setAttribute('height', '10')
-    const label = document.createElementNS(SVG_NS, 'title')
-    label.textContent = `Native ${state} explanation`
-    dot.append(label)
-  } else {
-    dot.style.cssText = 'display:inline-flex;width:10px;height:10px'
-    const label = document.createElement('span')
-    label.textContent = `Native ${state} explanation`
-    label.style.cssText = 'position:absolute;clip-path:inset(50%)'
-    dot.append(label)
-  }
-  return dot
-}
 
 function center(element: Element) {
   const rect = element.getBoundingClientRect()
@@ -108,7 +31,7 @@ test.each(['ongoing', 'warning', 'done', 'error'])('%s native status moves visua
   const originalStyle = dot.getAttribute('style')
   let clicks = 0
   dot.addEventListener('click', () => { clicks += 1 })
-  view.right.sync()
+  view.sync()
   expect(view.row.getAttribute(STATUS)).toBe('active')
   originalNodes.forEach((node, index) => expect(view.seat.childNodes[index]).toBe(node))
   expect(dot.parentElement).toBe(view.seat)
@@ -126,7 +49,7 @@ test('idle state, an empty seat and an empty native outlet paint no hollow indic
   for (const state of [null, 'idle']) for (const emptyOutlet of [true, false]) {
     const view = mount(state)
     if (emptyOutlet === false) view.outlet.remove()
-    view.right.sync()
+    view.sync()
     expect(view.row.getAttribute(STATUS)).toBe('idle')
     expect(getComputedStyle(view.seat).visibility).toBe('hidden')
     expect(getComputedStyle(view.seat, '::after').content).toBe('none')
@@ -143,7 +66,7 @@ test('foreign leading content keeps its layout and nested state labels do not cl
   const before = foreign.getBoundingClientRect().left
   let clicks = 0
   foreign.addEventListener('click', () => { clicks += 1 })
-  view.right.sync()
+  view.sync()
   expect(view.row.getAttribute(STATUS)).toBe('foreign')
   expect(getComputedStyle(view.seat).position).toBe('static')
   expect(foreign.getBoundingClientRect().left).toBe(before)
@@ -156,11 +79,11 @@ test('repeated sync observes active, idle and foreign state without additional D
   for (const state of ['ongoing', 'idle', null]) {
     const view = mount(state)
     if (state === null) view.outlet.append(document.createElement('button'))
-    view.right.sync()
+    view.sync()
     const watch = new MutationObserver(() => {})
     watch.observe(view.row, { attributes: true, childList: true, subtree: true })
-    view.right.sync()
-    view.right.sync()
+    view.sync()
+    view.sync()
     expect(watch.takeRecords()).toEqual([])
     watch.disconnect()
   }
@@ -173,7 +96,7 @@ test('dispose removes only its own ownership marker and preserves native content
   const dot = view.dot as Element
   let clicks = 0
   dot.addEventListener('click', () => { clicks += 1 })
-  view.right.sync()
+  view.sync()
   view.right.dispose()
   view.right.dispose()
   expect(view.row.getAttribute(STATUS)).toBeNull()
@@ -189,7 +112,7 @@ test('dispose removes only its own ownership marker and preserves native content
 
 test.each(['ltr', 'rtl'] as const)('%s native status occupies trailing padding outside the native menu', direction => {
   const view = mount('ongoing', direction)
-  view.right.sync()
+  view.sync()
   const dot = view.dot as Element
   const dotBox = dot.getBoundingClientRect()
   const rowBox = view.row.getBoundingClientRect()
@@ -209,25 +132,48 @@ test.each(['ltr', 'rtl'] as const)('%s native status occupies trailing padding o
 
 test('host replacement, removal and attribute changes are read from the current native seat', () => {
   const view = mount(null)
-  view.right.sync()
+  view.sync()
   expect(view.row.getAttribute(STATUS)).toBe('idle')
   const next = nativeDot('error')
   view.seat.prepend(next)
-  view.right.sync()
+  view.sync()
   expect(view.row.getAttribute(STATUS)).toBe('active')
   next.setAttribute(SESSION_PHASE_ATTRIBUTE, 'idle')
-  view.right.sync()
+  view.sync()
   expect(view.row.getAttribute(STATUS)).toBe('idle')
   expect(getComputedStyle(view.seat).visibility).toBe('hidden')
   next.remove()
-  view.right.sync()
+  view.sync()
   expect(view.row.getAttribute(STATUS)).toBe('idle')
   const replacement = nativeDot('done')
   view.seat.prepend(replacement)
-  view.right.sync()
+  view.sync()
   expect(view.row.getAttribute(STATUS)).toBe('active')
   expect(getComputedStyle(view.seat).visibility).toBe('visible')
   expect(replacement.parentElement).toBe(view.seat)
+})
+
+test.each(['ltr', 'rtl'] as const)('%s hover and open menus hide the status seat and release its trailing padding', async direction => {
+  const view = mount('ongoing', direction)
+  view.sync()
+  expect(getComputedStyle(view.seat).visibility).toBe('visible')
+  expect(getComputedStyle(view.row).paddingInlineEnd).toBe('26px')
+  try {
+    await userEvent.hover(view.row)
+    expect(getComputedStyle(view.seat).visibility).toBe('hidden')
+    expect(getComputedStyle(view.row).paddingInlineEnd).toBe('6px')
+    await userEvent.unhover(view.row)
+    expect(getComputedStyle(view.seat).visibility).toBe('visible')
+    view.row.setAttribute(PART, 'session-row row-menu-open')
+    expect(getComputedStyle(view.seat).visibility).toBe('hidden')
+    expect(getComputedStyle(view.row).paddingInlineEnd).toBe('6px')
+    view.row.setAttribute(PART, 'session-row')
+    expect(getComputedStyle(view.seat).visibility).toBe('visible')
+    expect(getComputedStyle(view.row).paddingInlineEnd).toBe('26px')
+    expect(view.dot?.parentElement).toBe(view.seat)
+  } finally {
+    await userEvent.unhover(document.body)
+  }
 })
 
 test('a populated third-party outlet keeps a mixed native seat leading', () => {
@@ -237,7 +183,7 @@ test('a populated third-party outlet keeps a mixed native seat leading', () => {
   view.outlet.append(extension)
   const leadingCenter = center(view.dot as Element)
   const nativeNodes = [...view.seat.childNodes]
-  view.right.sync()
+  view.sync()
   expect(view.row.getAttribute(STATUS)).toBe('foreign')
   expect(center(view.dot as Element)).toEqual(leadingCenter)
   nativeNodes.forEach((node, index) => expect(view.seat.childNodes[index]).toBe(node))

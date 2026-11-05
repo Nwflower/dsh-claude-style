@@ -9,7 +9,7 @@
   "searchClear": { "zh": "清除搜索", "en": "Clear search" },
   "searchEmpty": { "zh": "没有匹配的模型。", "en": "No matching models." },
   "pickerTitle": { "zh": "重绘模型选择器", "en": "Redraw the model picker" },
-  "pickerDesc": { "zh": "用 Claude 风格的模型菜单替换宿主的菜单。默认也会接管推理等级滑块，第三方推理强度插件的滑块将不生效；关掉下面的「推理等级滑块」可把座位交还宿主。", "en": "Replaces the host's model menu with a Claude-style one. It also takes over the reasoning-effort slider by default, so a third-party effort plugin's slider will not show; turn off \"Reasoning effort slider\" below to hand the seat back to the host." },
+  "pickerDesc": { "zh": "使用 Claude 风格重绘模型选择器菜单。", "en": "Redraw the model picker menu in Claude style." },
   "modelDescriptionsTitle": { "zh": "模型描述", "en": "Model descriptions" },
-  "modelDescriptionsDesc": { "zh": "一级列表里每个模型名下面写一行说明。", "en": "A line under each model in the picker's first level." }
+  "modelDescriptionsDesc": { "zh": "在模型一级列表中显示模型功能说明。", "en": "Show description lines for models in the primary picker list." }
 }

@@ -1,4 +1,4 @@
 {
   "peekTitle": { "zh": "悬停展开侧栏", "en": "Open the sidebar on hover" },
-  "peekDesc": { "zh": "侧栏收起时，鼠标停在侧栏按钮上，侧栏就浮在页面上方展开，主窗口宽度不变；移开鼠标或选中会话后自动收起，点击按钮仍是固定展开。", "en": "While the sidebar is collapsed, resting the pointer on its toggle opens it over the page and the main window keeps its width; it closes when the pointer leaves or a session is picked, and a click on the toggle still keeps it open." }
+  "peekDesc": { "zh": "侧栏收起时，悬停于切换按钮即可临时展开。", "en": "Hover over the toggle button to temporarily expand the collapsed sidebar." }
 }
