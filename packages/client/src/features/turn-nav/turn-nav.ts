@@ -3,8 +3,8 @@ import { QUIET_ATTR } from '../../constants'
 import { conversationSessionId, findConversationSession, findForeground } from '@dsh-claude-style/engine/host'
 import { motionReduced } from '../../core/prefs'
 import { createTurnNavHost } from './turn-nav-host'
-import type { TurnItem } from './turn-nav-host'
-import { CHAT_TURN_ATTRIBUTE, PEER_SHEET_SELECTOR, TURN_RAIL_CURRENT_SELECTOR, TURN_RAIL_MARK_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import type { TurnCurrentReading, TurnItem } from './turn-nav-host'
+import { CHAT_TURN_ATTRIBUTE, PEER_SHEET_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { buildElement, closestFrom } from '@dsh-claude-style/engine/dom'
 import { POPOVER_CLOSE_DELAY, closeOtherPopovers, createHoverIntent, registerPopover, unregisterPopover } from '../../shared/popover'
 import { inPageBox } from '../../shared/page-zoom'
@@ -87,12 +87,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The turns the rail's marks show, mark for mark, and how far the track is scrolled. */
   let drawnItems: TurnItem[] | null = null
   let offset = 0
-  /** The host's current mark last read, what it was read from, and the place it gave; -1 when there is none. */
-  let currentMark: HTMLElement | null = null
-  let currentItems: TurnItem[] | null = null
-  let currentStated: string | null = null
-  /** How many marks the rail showed when the place could not be read off one mark's own number; -1 otherwise. */
-  let currentMarks = -1
+  /** The last applied logical position; native identities decide when its index needs reading again. */
+  let currentReading: TurnCurrentReading | null = null
   let current = -1
   /** The card, its scrolling list, and the turns its rows show (null when the rows must be rebuilt). */
   let card: HTMLElement | null = null
@@ -105,6 +101,18 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let keyJump: { sessionId: string, turn: number, at: number } | null = null
   /** The rail's height limit as the stylesheet resolves it, read in the pass's read phase; -1 until then. */
   let railMaxHeight = -1
+  interface NavigationReading {
+    session: Element
+    sessionId: string
+    found: HTMLElement
+    slot: Element | null
+    items: TurnItem[]
+    current: TurnCurrentReading
+    ownRail: HTMLElement | null
+    maxHeight: number
+  }
+  /** Consumed by the matching write only; it never supplies a later frame's geometry. */
+  let passReading: NavigationReading | null = null
   /** The turn whose first row should show the landing line once it is in the window. */
   let landing: { turn: number, since: number } | null = null
   let landedRow: Element | null = null
@@ -135,10 +143,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       if (hostRail !== null) hostRail.removeAttribute(TURN_NAV_REPLACED_ATTR)
       hostRail = found
       found.setAttribute(TURN_NAV_REPLACED_ATTR, '')
-      currentMark = null
-      currentItems = null
-      currentStated = null
-      currentMarks = -1
+      currentReading = null
+      railMaxHeight = -1
       current = -1
     }
     // The host's rail sits in its slot.
@@ -152,10 +158,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     hostRail = null
     if (rail !== null && rail.parentElement !== null) rail.remove()
     drawnItems = null
-    currentMark = null
-    currentItems = null
-    currentStated = null
-    currentMarks = -1
+    currentReading = null
+    railMaxHeight = -1
+    passReading = null
     current = -1
   }
 
@@ -175,10 +180,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     track!.style.height = `${items.length * TURN_NAV_PITCH}px`
     rail!.style.setProperty('--dsh-claude-turn-rail-height', `${items.length * TURN_NAV_PITCH}px`)
     current = -1
-    currentMark = null
-    currentItems = null
-    currentStated = null
-    currentMarks = -1
+    currentReading = null
   }
 
   /**
@@ -188,7 +190,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * after this frame's writes and lay the page out a second time (D40).
    */
   function railHeight() {
-    if (railMaxHeight < 0) return rail!.clientHeight
+    if (railMaxHeight < 0) return null
     const marks = (drawnItems?.length ?? 0) * TURN_NAV_PITCH
     return Math.min(marks, railMaxHeight)
   }
@@ -199,6 +201,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    */
   function setOffset(value: number) {
     const height = railHeight()
+    if (height === null) return
     const most = Math.max(0, drawnItems!.length * TURN_NAV_PITCH - height)
     offset = Math.round(Math.min(Math.max(value, 0), most))
     track!.style.transform = `translateY(${-offset}px)`
@@ -210,33 +213,34 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   function follow() {
     if (current < 0 || open || rail === null) return
     const height = railHeight()
+    if (height === null) return
     const top = current * TURN_NAV_PITCH
     if (top >= offset + TURN_NAV_PITCH && top + 2 * TURN_NAV_PITCH <= offset + height) return
     setOffset(top - (height - TURN_NAV_PITCH) / 2)
   }
 
   /**
-   * Read the reading position off the host's current mark and mark it on
-   * the rail and the open card. What the place was read from — the mark, the
-   * turns, the place it states, and how many marks the rail shows where it
-   * states none — is compared first, so a pass that finds them as they were
-   * reads no layout.
+   * Apply a native position read before this frame's DOM writes. Rebuilding
+   * the skin's marks clears their state without requiring another native read.
    */
-  function markCurrent(found: HTMLElement, items: TurnItem[]) {
-    const mark = found.querySelector<HTMLElement>(TURN_RAIL_CURRENT_SELECTOR)
-    const stated = mark === null ? null : mark.dataset.index ?? null
-    const marks = stated === null ? found.querySelectorAll(TURN_RAIL_MARK_SELECTOR).length : -1
-    if (mark === currentMark && items === currentItems && stated === currentStated && marks === currentMarks) return
-    currentMark = mark
-    currentItems = items
-    currentStated = stated
-    currentMarks = marks
-    const next = host.currentIndex(found, items)
-    if (next === current) return
+  function markCurrent(reading: TurnCurrentReading) {
+    currentReading = reading
+    const next = reading.index
+    if (next === current) return false
     setCurrentRow(track!, current, next)
     if (open) setCurrentRow(list!, current, next)
     current = next
-    follow()
+    return true
+  }
+
+  function applyReading(reading: NavigationReading, redrawn = false) {
+    const maxHeight = reading.ownRail === rail && rail !== null && rail.parentElement === reading.slot ? reading.maxHeight : -1
+    const resized = railMaxHeight !== maxHeight
+    railMaxHeight = maxHeight
+    if (redrawn || resized) setOffset(offset)
+    const moved = markCurrent(reading.current)
+    if (moved || redrawn || resized) follow()
+    if (maxHeight < 0) scheduleRefresh()
   }
 
   function setCurrentRow(parent: Element, from: number, to: number) {
@@ -249,11 +253,21 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** Re-read the reading position once per frame while the conversation scrolls. */
   function scheduleRefresh() {
     if (cancelRefreshFrame !== null) return
+    let reading: NavigationReading | null = null
     cancelRefreshFrame = requestFrame({
+      read() {
+        reading = readNavigation()
+      },
       write() {
         cancelRefreshFrame = null
-        if (hostRail === null || drawnItems === null) return
-        markCurrent(hostRail, drawnItems)
+        const measured = reading
+        reading = null
+        if (stopped || measured === null) return
+        if (hostRail !== measured.found || drawnItems !== measured.items || !matchesNavigation(measured)) {
+          ui.schedule?.()
+          return
+        }
+        applyReading(measured)
         if (open) placeCard()
       },
     })
@@ -494,24 +508,40 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   registerPopover(TURN_NAV_POPOVER, closeCard)
 
   /**
-   * The pass's read phase (D40): the limit the stylesheet puts on the rail's
-   * height, read while the frame's style is still the one the pass started
-   * with. The redraw in `sync` writes the marks and their height, so a height
-   * read after it, in the same frame, lays the page out a second time.
+   * Both pass and scroll-refresh read the native position before skin writes.
+   * A newly mounted rail gets its own resolved height on the next refresh.
    */
-  function measure() {
-    if (rail === null) {
-      railMaxHeight = -1
-      return
+  function readNavigation(): NavigationReading | null {
+    const session = findConversationSession()
+    const sessionId = conversationSessionId(session)
+    const found = host.findRail()
+    if (session === null || sessionId === null || found === null) return null
+    const items = host.turnItems(sessionId)
+    const current = host.readCurrent(found, items, currentReading)
+    let maxHeight = -1
+    if (rail !== null && rail.isConnected && hostRail === found && rail.parentElement === found.parentElement) {
+      const limit = Number.parseFloat(getComputedStyle(rail).maxHeight)
+      maxHeight = Number.isFinite(limit) ? limit : Infinity
     }
-    const limit = Number.parseFloat(getComputedStyle(rail).maxHeight)
-    // No max-height leaves the rail as tall as its marks.
-    railMaxHeight = Number.isFinite(limit) ? limit : Infinity
+    return { session, sessionId, found, slot: found.parentElement, items, current, ownRail: rail, maxHeight }
+  }
+
+  function matchesNavigation(reading: NavigationReading) {
+    return reading.found.isConnected && findConversationSession() === reading.session
+      && conversationSessionId(reading.session) === reading.sessionId && host.findRail() === reading.found
+      && reading.found.parentElement === reading.slot && host.turnItems(reading.sessionId) === reading.items
+      && host.matchesCurrent(reading.current)
+  }
+
+  function measure() {
+    passReading = readNavigation()
   }
 
   ui.turnNav = {
     measure,
     sync() {
+      const measured = passReading
+      passReading = null
       const found = host.findRail()
       const sessionId = conversationSessionId(findConversationSession())
       const chat = host.chatText()
@@ -519,13 +549,16 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
         unmountRail()
       } else {
         const items = host.turnItems(sessionId)
+        const ready = measured !== null && measured.found === found && measured.items === items && matchesNavigation(measured)
         mountRail(found)
         const redrawn = drawnItems !== items
         drawMarks(items)
-        if (redrawn) setOffset(offset)
-        markCurrent(found, items)
+        if (ready) applyReading(measured, redrawn)
+        else {
+          railMaxHeight = -1
+          scheduleRefresh()
+        }
         if (open && redrawn) {
-          // A turn arrived under the open card: its rows, and its seat with the rail's new height.
           renderRows(list!, items, chat)
           scheduleRefresh()
         }
