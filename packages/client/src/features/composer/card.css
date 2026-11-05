@@ -5,7 +5,7 @@ body[data-dsh-claude-style] [data-dsh-claude-question-relocated] {
 
 body[data-dsh-claude-style] .dsh-claude-question-flow-item {
   box-sizing: border-box;
-  width: 480px;
+  width: 576px;
   min-width: 0;
   max-width: 100%;
   margin-right: auto;
@@ -36,14 +36,14 @@ body[data-dsh-claude-style] [data-dsh-claude-question-surface] > header {
 
 body[data-dsh-claude-style] [data-dsh-claude-question-surface] > header:has(h2) {
   display: flex;
-  padding: 16px 48px 16px 20px;
+  padding: 12px 48px 12px 16px;
   background: var(--dsh-claude-table-head);
 }
 
 body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-question-scroll] > div:first-child {
   flex-shrink: 0;
   margin: 0;
-  padding: 16px 48px 16px 20px;
+  padding: 12px 48px 12px 16px;
   border-bottom: 1px solid var(--dsw-alias-border-l1);
   background: var(--dsh-claude-table-head);
 }
@@ -59,7 +59,7 @@ body[data-dsh-claude-style] [data-dsh-claude-question-surface] > header > div > 
 
 body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-question-scroll] > div:first-child > button {
   right: 16px;
-  bottom: 18px;
+  bottom: 14px;
 }
 
 /* Options read as rows of one list: a rule between adjacent rows, with the
@@ -86,7 +86,7 @@ body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row]
 body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role] {
   min-height: 0;
   gap: 12px;
-  padding: 14px 20px;
+  padding: 10px 16px;
   font-size: var(--dsh-content-font-size, 14px);
   line-height: 22px;
 }
@@ -120,7 +120,7 @@ body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row]
 
 body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[aria-expanded] {
   right: 16px;
-  bottom: 16px;
+  bottom: 12px;
 }
 
 /* Single-choice marks are radios. Their number yields to a hollow ring; the
@@ -179,7 +179,7 @@ body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-
   grid-template-columns: 20px minmax(0, 1fr);
   gap: 6px 12px;
   min-height: 0;
-  padding: 14px 20px;
+  padding: 10px 16px;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -230,7 +230,7 @@ body[data-dsh-claude-style] [data-dsh-claude-question-surface] > footer {
   justify-content: flex-end;
   gap: 12px;
   margin: 0;
-  padding: 12px 20px 16px;
+  padding: 8px 16px 12px;
 }
 
 body[data-dsh-claude-style] [data-dsh-claude-question-surface] > footer > div:first-child:has(> button:first-child:disabled):has(> button:last-child:disabled) {

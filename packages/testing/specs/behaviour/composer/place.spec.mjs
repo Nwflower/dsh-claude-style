@@ -335,7 +335,7 @@ export default spec({ page: 'composer' }, ({ test }) => {
       }
     }, FLOW_ITEM)
     t.expectThat.equal(reading.cardRadius, '14px', 'the question card is drawn in the skin\'s own radius')
-    t.expectThat.equal(reading.cardWidth, '480px', 'the card keeps the home dashboard\'s width on a wide screen')
+    t.expectThat.equal(reading.cardWidth, '576px', 'the card is wide enough for the question\'s option list on a wide screen')
     t.expectThat.equal(reading.rowRadius, '0px', 'option rows join one continuous list')
     t.expectThat.equal(reading.markRadius, '50%', 'a single-choice option carries a circular radio')
     t.expectThat.equal(reading.markWidth, reading.markHeight, 'the radio keeps equal width and height')
