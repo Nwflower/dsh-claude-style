@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 70,
+  "at": "2026-11-05",
+  "external": false,
+  "zh": "修复已归档会话的取消归档与删除按钮在部分宿主版本上只显出悬停底色、图标不显示的问题",
+  "en": "Fix the archived conversations' unarchive and delete buttons showing only their hover wash on some host versions, with no glyph"
+}
