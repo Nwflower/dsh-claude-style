@@ -40,7 +40,8 @@ export function captureComposerCaret(doc: Document = document): Range | null {
  * @param doc - the document to read; the page's own by default.
  */
 export function composerComposing(doc: Document = document): boolean {
-  return doc.querySelector('[' + COMPOSER_COMPOSING_ATTRIBUTE + ']') !== null
+  const input = doc.activeElement?.closest(COMPOSER_INPUT_SELECTOR)
+  return input?.hasAttribute(COMPOSER_COMPOSING_ATTRIBUTE) ?? false
 }
 
 /**

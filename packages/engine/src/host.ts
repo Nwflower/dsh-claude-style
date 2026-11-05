@@ -52,7 +52,7 @@ function stillFirstMatch(element: Element, selector: string) {
   return true
 }
 
-/** The batch count the one shared body watch has seen: every cached seat forgets its answer when this moves. */
+/** The batch count the one shared body watch has seen: an absent seat is retried once per batch. */
 let matchEpoch = 0
 /** Whether the shared body watch is open. One is enough for every seat, and it is never closed. */
 let matchEpochWatched = false
@@ -72,23 +72,23 @@ function openMatchEpochWatch() {
 
 /**
  * The first match of `selector`, resolved once and kept while it stays the
- * first match (D40): a pass re-reads it, and the document is queried again only
- * when the host replaced the element or mounted one before it. The answer is
- * the one a query gives — an earlier match invalidates the kept element.
+ * first match (D40): unrelated mutation batches keep reusing the element, and
+ * the document is queried again only when the host replaced the element or
+ * mounted one before it. The answer is the one a query gives — an earlier match
+ * invalidates the kept element.
  *
- * An answer of "nothing matched" is kept for the rest of the batch too. The
- * query walks the whole document, and the seats asked for here are absent on
- * most of the pages a pass runs over — the hero root on a conversation page,
- * the settings nav list away from the dialog — so a query re-issued per pass
- * paid a document walk for an answer that only the host's own mounting can
- * change.
+ * An answer of "nothing matched" is kept for the rest of the batch, then retried
+ * once after a later batch. The query walks the whole document, and the seats
+ * asked for here are absent on most of the pages a pass runs over — the hero
+ * root on a conversation page, the settings nav list away from the dialog — so
+ * a query re-issued per pass paid a document walk for an answer that only the
+ * host's own mounting can change.
  *
  * One body watch serves every cached seat, opened by the first reader and never
  * closed: a seat created inside `install()` would otherwise add a subscription
- * per enable, and the batch the watch hears is the only thing that can change a
- * kept answer. The watch moves an epoch rather than clearing each reader by
- * hand, so a reader that has not asked since the last batch drops its answer on
- * the next call.
+ * per enable. The watch moves an epoch rather than clearing each reader by hand;
+ * an absent reader retries after a later batch, while a kept element validates
+ * its own place without querying the document again.
  *
  * Exported for the seats one feature alone reads (a header, a slot, a meter):
  * the mechanism lives once, the selector stays with its reader.
@@ -100,8 +100,7 @@ export function cacheFirstMatch<T extends Element>(selector: string) {
   let seenEpoch = matchEpoch
   return () => {
     if (seenEpoch !== matchEpoch) {
-      kept = null
-      answered = false
+      if (kept === null) answered = false
       seenEpoch = matchEpoch
     }
     if (kept !== null && stillFirstMatch(kept, selector)) return kept

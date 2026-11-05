@@ -1,0 +1,8 @@
+{
+  "group": "improvements",
+  "order": 70,
+  "at": "2026-11-05",
+  "external": false,
+  "zh": "减少流式输出与输入过程中的整页查询",
+  "en": "Reduce whole-document queries during streaming and typing"
+}
