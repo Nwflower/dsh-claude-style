@@ -17,7 +17,7 @@ body[data-dsh-claude-style] [data-composer-card][data-composer-variant] [data-ds
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] > [data-dsh-claude-part~="trailing"] {
   margin-inline-start: auto;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   max-width: 100%;
 }
 body[data-dsh-claude-style] [data-composer-card][data-dsh-claude-composer-layout="compact"] .dsh-claude-model-btn > .dsh-claude-model-tag,
@@ -32,18 +32,6 @@ body[data-dsh-claude-style] [data-composer-card][data-dsh-claude-composer-layout
 body[data-dsh-claude-style] [data-dsh-claude-composer-toolbar] > [data-dsh-claude-part~="trailing"] > [data-slot="conversation.input.model"] {
   min-width: 0;
 }
-body[data-dsh-claude-style] [data-composer-card][data-dsh-claude-composer-layout="stacked"] [data-slot="conversation.input.model"] {
-  flex: 1 1 auto;
-}
-body[data-dsh-claude-style] [data-composer-card][data-dsh-claude-composer-layout="stacked"] .dsh-claude-model-seat {
-  width: 100%;
-}
-body[data-dsh-claude-style] [data-composer-card][data-dsh-claude-composer-layout="stacked"] .dsh-claude-model-seat > .dsh-claude-model-seat-model {
-  flex: 1 1 auto;
-}
-body[data-dsh-claude-style] [data-composer-card][data-dsh-claude-composer-layout="stacked"] .dsh-claude-model-seat-model > .dsh-claude-model-btn {
-  width: 100%;
-}
 /* SlotOutlet anchors use display:contents. Wrap their effective children in
    the real controls box, not the zero-width anchor. Do not set display here:
    the host hides this group while an expanded activity owns the toolbar. */
@@ -52,11 +40,12 @@ body[data-dsh-claude-style] [data-composer-card][data-composer-variant] [data-ds
   min-width: 0;
   max-width: 100%;
 }
-/* Keep the model decision intact before distributing negative free space.
-   If its model and effort no longer fit together, their original parts wrap
-   inside the same seat; foreign badges remain siblings with their own boxes. */
+/* The seat takes its intrinsic width, then shares any shortage with its
+   fixed-width siblings. Its original model and effort parts can still wrap
+   inside the same seat; the real controls group wraps foreign siblings. */
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat {
-  flex-shrink: 0;
+  width: auto;
+  flex-shrink: 1;
   flex-wrap: wrap;
   max-width: 100%;
   height: auto;
@@ -70,9 +59,6 @@ body[data-dsh-claude-style] [data-composer-card][data-composer-variant] [data-ds
    their intrinsic width, so a short name keeps the original compact face. */
 body[data-dsh-claude-style] [data-composer-card]:is([data-dsh-claude-composer-layout="compact"], [data-dsh-claude-composer-layout="stacked"]) [data-dsh-claude-composer-toolbar] [data-dsh-claude-part~="trailing"] .dsh-claude-model-seat > .dsh-claude-model-seat-model {
   min-width: calc(10ch + 8px);
-}
-body[data-dsh-claude-style] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat-model > .dsh-claude-model-btn {
-  max-width: min(280px, 100%);
 }
 body[data-dsh-claude-style] [data-composer-card]:is([data-dsh-claude-composer-layout="compact"], [data-dsh-claude-composer-layout="stacked"]) [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn-label {
   min-width: 10ch;
