@@ -1,0 +1,8 @@
+{
+  "group": "improvements",
+  "order": 25,
+  "at": "2026-11-05",
+  "external": false,
+  "zh": "改善设置页选项描述文案与代码注释，清理无关交互机制与内部实现细节",
+  "en": "Improve settings descriptions and code comments by removing irrelevant interaction mechanisms and internal implementation details"
+}

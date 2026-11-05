@@ -199,12 +199,8 @@ export const AUTO_POPOVER_SCOPES = [AUTO_POPOVER_OFF, AUTO_POPOVER_ACCOUNT, AUTO
  * and every control, line and picture grows with it). Any percentage from
  * PAGE_ZOOM_MIN through PAGE_ZOOM_MAX is a value the row draws; one outside it
  * reads as the nearer end.
- *
- * 空串是「跟系统」：页面一个属性都不写，尺寸就还是系统和宿主给的那个。
  */
 export const PAGE_ZOOM_SYSTEM = ''
-/* 缩放现在是任意百分比：100 就是不动，60–200 是滑条的范围，中间每一格都算。
-   早先的固定档位（system / 0.8 / 1 / 1.25 / 1.5）在 legacy 里照样读得回来。 */
 export const PAGE_ZOOM_DEFAULT = '100'
 export const PAGE_ZOOM_MIN = 60
 export const PAGE_ZOOM_MAX = 200
@@ -318,7 +314,6 @@ export const PREFS = {
     type: 'text',
     default: PAGE_ZOOM_DEFAULT,
     max: 8,
-    /* 旧的固定档位：'system' 现在就是空串（页面不写属性），其余四档换成百分比。 */
     legacy: { system: '', '0.8': '80', '1': '100', '1.25': '125', '1.5': '150' },
   },
   sodium: { type: 'choice', values: SODIUM_MODES, default: SODIUM_UNDECIDED },

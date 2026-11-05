@@ -1,6 +1,6 @@
 {
   "entriesTitle": { "zh": "编辑侧栏入口", "en": "Edit sidebar entries" },
-  "entriesDesc": { "zh": "侧栏「更多」菜单里多出「编辑侧栏…」，可以勾选哪些入口显示在侧栏；取消勾选的入口收进「更多」菜单，点开照样能用。关掉后所有入口回到侧栏。", "en": "Adds Edit sidebar… to the sidebar's More menu, where you choose which entries the sidebar shows; an unchecked entry moves into More and still opens from there. Turning this off puts every entry back." },
+  "entriesDesc": { "zh": "自定义侧栏中显示的面板入口。", "en": "Customize which panel entries appear in the sidebar." },
   "editRow": { "zh": "编辑侧栏…", "en": "Edit sidebar…" },
   "editTitle": { "zh": "编辑侧栏", "en": "Edit sidebar" },
   "editDesc": { "zh": "选择要在侧栏中显示的项目。", "en": "Choose which items appear in your sidebar." },

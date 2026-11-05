@@ -16,8 +16,8 @@
     "en": "Context meter"
   },
   "contextDisplayDesc": {
-    "zh": "输入区的上下文占用怎么画：饼图、圆环配绿到红，或圆环配蓝、黄、红三色。",
-    "en": "How the composer draws the context share: the pie, dsh's ring on the green-to-red band, or the measured ring on three bands."
+    "zh": "控制输入区上下文占用指标的展示形态。",
+    "en": "Control the display style of the context meter in the composer."
   },
   "contextDisplayPie": {
     "zh": "饼图",
@@ -36,8 +36,8 @@
     "en": "Context percentage"
   },
   "contextNumbersDesc": {
-    "zh": "在上下文环或饼图旁显示占用百分比；关闭后只留下图形。",
-    "en": "Shows the share beside the ring or pie; off leaves the shape alone."
+    "zh": "在上下文占用图示旁显示百分比数值。",
+    "en": "Show the percentage value next to the context meter."
   },
   "statsPositionTitle": {
     "zh": "对话统计信息位置",
@@ -80,8 +80,8 @@
     "en": "Billing currency"
   },
   "billingCurrencyDesc": {
-    "zh": "会话费用按哪一种官方价表计算；关闭则不显示费用。",
-    "en": "Which official price table the session's cost follows; off hides the cost."
+    "zh": "计算会话费用所使用的官方价格表币种。",
+    "en": "Select the official currency for session cost calculations."
   },
   "billingCurrencyOff": {
     "zh": "关闭",
@@ -100,8 +100,8 @@
     "en": "Custom price table"
   },
   "billingTableDesc": {
-    "zh": "为价格表里没有的模型填单价，覆盖基础价格；单位是每百万 token。",
-    "en": "Prices for models the tables do not carry, laid over the base prices; rates are per million tokens."
+    "zh": "自定义模型单价以覆盖默认价格表。",
+    "en": "Custom model prices to override default rate tables."
   },
   "billingTableEdit": {
     "zh": "编辑",

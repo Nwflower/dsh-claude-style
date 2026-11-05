@@ -3,7 +3,7 @@
   "effortFaster": { "zh": "更快", "en": "Faster" },
   "effortSmarter": { "zh": "更强", "en": "Smarter" },
   "effortAccentTitle": { "zh": "思考强度重点色", "en": "Effort accent colour" },
-  "effortAccentDesc": { "zh": "推理等级按钮按当前档位着色，档位越高颜色越接近强调色；关闭与默认档位保持灰色。", "en": "Colours the reasoning-effort button by the level in force, deeper toward the accent as the level climbs; off and the model's default stay grey." },
+  "effortAccentDesc": { "zh": "推理等级按钮根据当前档位应用强调色。", "en": "Apply accent colour to the reasoning effort button based on the current level." },
   "effortSliderTitle": { "zh": "推理等级滑块", "en": "Reasoning effort slider" },
-  "effortSliderDesc": { "zh": "在模型选择器里绘制推理等级滑块。关闭后把座位交还宿主，第三方推理强度插件注入到此处的滑块可以重新显示。", "en": "Draws the reasoning-effort slider inside the model picker. Off hands the seat back to the host, so a third-party effort slider injected here shows again." }
+  "effortSliderDesc": { "zh": "在模型选择器中显示推理等级调节滑块。", "en": "Show the reasoning effort slider in the model picker." }
 }

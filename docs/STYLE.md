@@ -14,28 +14,6 @@ on one value quotes its token name; everything else is read from the file the
 rule names (D48). The three tables marked generated are written from
 `tokens.json` by `npm run build`; edit the JSON, not the tables.
 
-## Session indicators
-
-The native sidebar's unread background-completion reminder uses
-`--dsh-claude-status-unread`; pending approvals, plan reviews and questions use
-`--dsh-claude-status-awaiting`. These colors stay independent of the brand.
-Other successful tools and task indicators keep their original colors.
-
-The ongoing setting offers `breathe` (the unchanged default), `ring` and
-`shimmer`. Existing values are preserved. Each settings card previews its own
-style independently of the selected value, sharing the sidebar paint rules.
-Only shimmer animates a visible plain title and hides its native running glyph;
-selected sessions keep a static title with that glyph still hidden. The native
-title, event targets and screen-reader status labels remain mounted.
-
-The strong title sweep reads `--dsh-claude-period-status-title`,
-`--dsh-claude-ease-status-title` and `--dsh-claude-status-title-peak`, with rests
-at 0–15% and 85–100% and reversed travel in RTL. Missing, empty, rich, hidden,
-editable or zero-size titles keep the marker. Reduced motion, forced colors
-and unsupported text clipping also retain the marker; contrast mode uses
-system ink and stills both marker styles. The fallback breathing dot reads
-`--dsh-claude-status-running` and `--dsh-claude-period-status-breathe`.
-
 ## Palette
 
 Every look is a **colour card**: an accent, a canvas, a sidebar and the reader's

@@ -17,7 +17,7 @@
   "deleteDesc": { "zh": "你可以永久删除账户与数据。此操作不可撤销。", "en": "You can permanently delete your account and data. This can’t be undone." },
   "title": { "zh": "你的账户已被暂停", "en": "Your account is on hold" },
   "banLocaleTitle": { "zh": "封号彩蛋", "en": "Account-hold easter egg" },
-  "banLocaleDesc": { "zh": "账号行打开的那张彩蛋页，按这里选的语言显示。", "en": "The account-hold page the account row opens, in the language chosen here." },
+  "banLocaleDesc": { "zh": "设置封号彩蛋页面的显示语言。", "en": "Set the display language for the account-hold easter egg page." },
   "banLocaleOff": { "zh": "关闭", "en": "Off" },
   "banLocaleZh": { "zh": "中文", "en": "中文" },
   "banLocaleEn": { "zh": "English", "en": "English" }
