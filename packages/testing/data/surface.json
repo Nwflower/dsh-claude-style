@@ -1,6 +1,12 @@
 {
   "about": "The skin's own page surface as the specs reach it (D77): every name a spec reads off an element the skin draws — a class, an attribute — stands here once, under a stable id, with what the reader sees there. A rename in the skin is one line of this file; lint holds every name to a literal the browser half writes and every entry to a spec that reads it.",
   "surface": [
+    { "id": "model.release-tag", "selector": ".dsh-claude-model-tag", "feature": "model", "sees": "the secondary model release tag, which yields before the model identity in tight toolbars" },
+    { "id": "composer.frame", "attribute": "data-dsh-claude-composer-frame", "feature": "composer", "sees": "the structurally verified main native phase frame owned by the active composer; only its active phase clips accidental outer scrolling while the inner transcript keeps its native scroll" },
+    { "id": "composer.responsive-toolbar", "attribute": "data-dsh-claude-composer-toolbar", "feature": "composer", "sees": "the actual composer toolbar whose measured height anchors send and stop controls" },
+    { "id": "composer.responsive-layout", "attribute": "data-dsh-claude-composer-layout", "feature": "composer", "sees": "the input card choosing a wide, compact or stacked toolbar from its own width" },
+    { "id": "composer.control", "attribute": "data-dsh-claude-control", "feature": "composer", "sees": "the native composer control identified by the skin without replacing its action" },
+    { "id": "skin.holds", "attribute": "data-dsh-claude-holds", "feature": "core", "sees": "the structural hold relationships written by the real parts walk; mechanism fixtures read its vocabulary here rather than inventing the attribute" },
     { "id": "sidebar-status.row", "attribute": "data-dsh-claude-row-status", "feature": "sidebar-status", "sees": "native status ownership: active or empty indicators share a trailing position; foreign leading decorations keep their place" },
     { "id": "sidebar-status.running-title", "attribute": "data-dsh-claude-running-title", "feature": "sidebar-status", "sees": "a running native session with a visible plain title eligible for animation; motion, contrast and indicator preferences choose its visual fallback" },
     { "id": "settings.ongoing-look", "attribute": "data-look", "feature": "settings", "sees": "the independent effect each running preview paints regardless of the stored choice" },

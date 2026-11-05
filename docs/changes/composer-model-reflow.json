@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 45,
+  "at": "2026-11-04",
+  "external": false,
+  "zh": "修复多插件同时占用输入区工具栏时模型名称被压缩消失的问题，并保留现有 Claude 输入框布局",
+  "en": "Keep the model selector readable when plugins crowd the composer toolbar while preserving the existing Claude composer layout"
+}

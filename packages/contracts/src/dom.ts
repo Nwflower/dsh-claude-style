@@ -593,3 +593,9 @@ export const SESSION_ONGOING_SELECTOR = '[data-state="ongoing"]'
 /* ---------- the sidebar's session rows ---------- */
 /** Idle rows render this optional third-party leading decoration outlet. */
 export const SESSION_STATUS_OUTLET_SELECTOR = '[data-slot="sidebar.session.row.leading"]'
+
+export const CONVERSATION_MAIN_SLOT_SELECTOR = '[data-slot="main.conversation"]'
+
+export const COMPOSER_CONTROLS_SELECTOR = '[data-dsh-claude-part~="composer-controls"]'
+
+export const CONVERSATION_INPUT_RIGHT_SLOT_SELECTOR = '[data-slot="conversation.input.right"]'

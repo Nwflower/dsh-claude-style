@@ -13,6 +13,16 @@ export interface TurnItem {
   loaded: boolean
 }
 
+/** A native reading position, tied to the rail, turn source and current-mark identities. */
+export interface TurnCurrentReading {
+  found: Element
+  items: TurnItem[]
+  mark: HTMLElement | null
+  stated: string | null
+  marks: number
+  index: number
+}
+
 /**
  * The host side of the conversation navigator:
  * ui-chat's turn rail, the turns it lists, and the jump that presses its
@@ -101,13 +111,43 @@ export function createTurnNavHost(ctx: HostContext) {
    * mark and holds a different number of them than the list has turns.
    */
   function currentIndex(found: Element, list: TurnItem[]) {
+    return indexOfCurrent(found, list, readCurrentMark(found))
+  }
+
+  function readCurrentMark(found: Element) {
     const mark = found.querySelector<HTMLElement>(TURN_RAIL_CURRENT_SELECTOR)
-    if (mark === null) return -1
-    const stated = mark.dataset.index
-    if (stated !== undefined && /^\d+$/.test(stated)) return railMarkCount(found) === list.length ? Number(stated) : -1
-    const marks = railMarks(found)
+    const stated = mark === null ? null : mark.dataset.index ?? null
+    const marks = stated === null ? railMarks(found) : null
+    return { mark, stated, marks }
+  }
+
+  function indexOfCurrent(found: Element, list: TurnItem[], state: ReturnType<typeof readCurrentMark>) {
+    if (state.mark === null) return -1
+    if (state.stated !== null && /^\d+$/.test(state.stated)) {
+      return railMarkCount(found) === list.length ? Number(state.stated) : -1
+    }
+    const marks = state.marks ?? railMarks(found)
     if (marks.length !== list.length) return -1
-    return marks.indexOf(mark)
+    return marks.indexOf(state.mark)
+  }
+
+  function sameCurrent(reading: TurnCurrentReading, state: ReturnType<typeof readCurrentMark>) {
+    return reading.mark === state.mark && reading.stated === state.stated && reading.marks === (state.marks?.length ?? -1)
+  }
+
+  /** Stable mark and item identities keep their logical index; geometry is read only when they change. */
+  function readCurrent(found: Element, list: TurnItem[], previous: TurnCurrentReading | null) {
+    const state = readCurrentMark(found)
+    const stable = previous !== null && previous.found === found && previous.items === list && sameCurrent(previous, state)
+    return {
+      found, items: list, mark: state.mark, stated: state.stated, marks: state.marks?.length ?? -1,
+      index: stable ? previous.index : indexOfCurrent(found, list, state),
+    }
+  }
+
+  /** The writer validates identities without repeating the native scroll-height measurement. */
+  function matchesCurrent(reading: TurnCurrentReading) {
+    return sameCurrent(reading, readCurrentMark(reading.found))
   }
 
   /** The whole-log outline's current value (the `turnOutline` projection), or undefined. */
@@ -212,6 +252,8 @@ export function createTurnNavHost(ctx: HostContext) {
     railShown,
     turnItems,
     currentIndex,
+    readCurrent,
+    matchesCurrent,
     jumpToTurn,
     chatText,
     /** Drop the jump in flight. */

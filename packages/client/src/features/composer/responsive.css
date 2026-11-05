@@ -1,0 +1,71 @@
+/* @composer-gate */
+/* The actual toolbar, including the hero, owns its natural height. A wide
+   card can still have little space after plugin controls; the card-width
+   breakpoint alone must not decide whether its controls may wrap. */
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant][data-dsh-claude-composer-layout] [data-dsh-claude-composer-toolbar] {
+  flex-wrap: wrap;
+  height: auto;
+  min-height: 28px;
+  max-height: none;
+  row-gap: 4px;
+}
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] > [data-dsh-claude-part~="tools"] {
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  height: auto;
+  max-width: 100%;
+}
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] > [data-dsh-claude-part~="trailing"] {
+  margin-inline-start: auto;
+  flex-wrap: nowrap;
+  max-width: 100%;
+}
+body[data-dsh-claude-style] [data-composer-card][data-dsh-claude-composer-layout="compact"] .dsh-claude-model-btn > .dsh-claude-model-tag,
+body[data-dsh-claude-style] [data-composer-card][data-dsh-claude-composer-layout="stacked"] .dsh-claude-model-btn > .dsh-claude-model-tag {
+  display: none;
+}
+body[data-dsh-claude-style] [data-composer-card][data-dsh-claude-composer-layout="stacked"] [data-dsh-claude-composer-toolbar] > [data-dsh-claude-part~="trailing"] {
+  flex: 1 0 100%;
+  width: 100%;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-composer-toolbar] > [data-dsh-claude-part~="trailing"] > [data-slot="conversation.input.model"] {
+  min-width: 0;
+}
+/* SlotOutlet anchors use display:contents. Wrap their effective children in
+   the real controls box, not the zero-width anchor. Do not set display here:
+   the host hides this group while an expanded activity owns the toolbar. */
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] [data-dsh-claude-part~="composer-controls"] {
+  flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
+}
+/* The seat takes its intrinsic width, then shares any shortage with its
+   fixed-width siblings. Its original model and effort parts can still wrap
+   inside the same seat; the real controls group wraps foreign siblings. */
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat {
+  width: auto;
+  flex-shrink: 1;
+  flex-wrap: wrap;
+  max-width: 100%;
+  height: auto;
+  min-height: var(--dsh-claude-footer-control-height);
+  row-gap: 4px;
+}
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat > .dsh-claude-model-seat-model {
+  max-width: 100%;
+}
+/* The narrow layout retains its recognition floor. Wide and hero names use
+   their intrinsic width, so a short name keeps the original compact face. */
+body[data-dsh-claude-style] [data-composer-card]:is([data-dsh-claude-composer-layout="compact"], [data-dsh-claude-composer-layout="stacked"]) [data-dsh-claude-composer-toolbar] [data-dsh-claude-part~="trailing"] .dsh-claude-model-seat > .dsh-claude-model-seat-model {
+  min-width: calc(10ch + 8px);
+}
+body[data-dsh-claude-style] [data-composer-card]:is([data-dsh-claude-composer-layout="compact"], [data-dsh-claude-composer-layout="stacked"]) [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn-label {
+  min-width: 10ch;
+}
+/* The native width handle can overflow the outer phase frame without adding
+   visible content. Keep that frame from becoming a second scroll container;
+   the inner transcript retains its own native scrolling and sticky seat. */
+body[data-dsh-claude-style] [data-dsh-claude-composer-frame][data-phase="active"] {
+  overflow: clip;
+}

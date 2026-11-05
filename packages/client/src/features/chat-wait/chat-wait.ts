@@ -90,6 +90,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let timer: number | null = null
   let cancelTick: (() => void) | null = null
   let queued: Promise<void> | null = null
+  let cancelTailPass: (() => void) | null = null
+  /** A single frame's tail readings, consumed once by its first write. */
+  let tailReadings: Map<HTMLElement, boolean> | null = null
+  let stopped = false
   /** The badge exits still playing; the teardown cancels every one of them. */
   const badgeTimers = new Set<number>()
 
@@ -210,7 +214,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     let ancestor: HTMLElement = row
     while (ancestor !== column) {
       for (let sibling = ancestor.nextElementSibling; sibling !== null; sibling = sibling.nextElementSibling) {
-        // The host's trailing interaction surface uses visibility:hidden; reading CSS visibility avoids a layout flush on each publish.
+        // The host's trailing interaction surface uses visibility:hidden.
+        // checkVisibility can flush pending styles, so this classification
+        // belongs in the shared read phase, away from publish-time writes.
         if (sibling instanceof HTMLElement && sibling.checkVisibility({ checkVisibilityCSS: true })) return true
       }
       const parent = ancestor.parentElement
@@ -220,9 +226,40 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     return false
   }
 
+  /** Read the pin's classification before any frame task writes its words. */
+  function readTails() {
+    if (stopped || tailReadings !== null) return
+    const readings = new Map<HTMLElement, boolean>()
+    if (hostChatSeat(ctx) !== null) {
+      for (const row of runningRows.all()) readings.set(row, !followedByContent(row))
+    }
+    tailReadings = readings
+  }
+
+  /** The first writer consumes the readings; later writers have none to reuse. */
+  function writeTails() {
+    const readings = tailReadings
+    tailReadings = null
+    if (stopped || readings === null) return
+    for (const [row, tail] of readings) {
+      if (row.isConnected && row.matches(CHAT_RUNNING_SELECTOR)) row.toggleAttribute(TAIL_ATTR, tail)
+    }
+  }
+
+  /** Publishes keep their business pass; only the pin waits for the shared frame. */
+  function requestTailPass() {
+    if (stopped || cancelTailPass !== null) return
+    cancelTailPass = requestFrame({
+      read: readTails,
+      write() {
+        cancelTailPass = null
+        writeTails()
+      },
+    })
+  }
+
   /** Bring one row's line to what the host's snapshot says now. */
   function syncRow(row: HTMLElement, t: HostText, now: number, seen: Set<string>, live: Set<string>) {
-    row.toggleAttribute(TAIL_ATTR, !followedByContent(row))
     // The host keeps the running row's slot after the turn stops, marked with
     // `data-holding` and `aria-hidden`, until the turn's actions row replaces it
     // (RunningStatus). That node still answers `[data-chat-running]` and still
@@ -343,7 +380,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     row.removeAttribute(WAIT_ATTR)
   }
 
-  function sync() {
+  function syncLines() {
     const t = hostChatSeat(ctx)
     const rows = t === null ? [] : runningRows.all()
     const now = Date.now()
@@ -369,7 +406,13 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (rows.length > 0 && timer === null) {
       timer = window.setInterval(() => {
         if (cancelTick !== null) return
-        cancelTick = requestFrame({ write() { cancelTick = null; sync() } })
+        cancelTick = requestFrame({
+          read: readTails,
+          write() {
+            cancelTick = null
+            syncInFrame()
+          },
+        })
       }, TICK_MS)
     } else if (rows.length === 0 && timer !== null) {
       window.clearInterval(timer)
@@ -377,9 +420,28 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     }
   }
 
-  ui.chatWait = { sync, onCopyChange: sync }
+  function sync() {
+    if (stopped) return
+    syncLines()
+    requestTailPass()
+  }
+
+  function syncInFrame() {
+    if (stopped) return
+    try {
+      syncLines()
+    } finally {
+      writeTails()
+    }
+  }
+
+  ui.chatWait = { measure: readTails, sync: syncInFrame, onCopyChange: sync }
 
   return () => {
+    stopped = true
+    if (cancelTailPass !== null) cancelTailPass()
+    cancelTailPass = null
+    tailReadings = null
     offDetailChoice()
     runningRows.release()
     for (const exit of badgeTimers) window.clearTimeout(exit)

@@ -48,7 +48,21 @@ function buildSubmitShortcut() {
 
 /** The host keeps the component's root in the composer chain; only its section travels. */
 export function createQuestionCards() {
-  const cards = observeMatches<HTMLElement>(QUESTION_CARD_SELECTOR, () => requestFrame({ write: sync }))
+  let released = false
+  const pendingFrames = new Set<() => void>()
+  /** A queued write belongs to this installation until it runs or is released. */
+  function queue(write: () => void) {
+    if (released) return
+    const cancel = requestFrame({
+      write() {
+        pendingFrames.delete(cancel)
+        if (released) return
+        write()
+      },
+    })
+    pendingFrames.add(cancel)
+  }
+  const cards = observeMatches<HTMLElement>(QUESTION_CARD_SELECTOR, () => queue(sync))
   const labels = new Map<HTMLElement, HTMLButtonElement>()
   const customSelected = new Set<HTMLElement>()
   const placements = new Map<HTMLElement, Placement>()
@@ -146,22 +160,21 @@ export function createQuestionCards() {
     const custom = event.target.closest<HTMLElement>(CUSTOM_ROW_SELECTOR)
     if (custom !== null && surface.contains(custom)) {
       customSelected.add(custom)
-      requestFrame({
-        write() {
-          if (!custom.isConnected) return
-          sync()
-          custom.querySelector('textarea')!.focus()
-        },
+      queue(() => {
+        if (!custom.isConnected) return
+        sync()
+        custom.querySelector('textarea')!.focus()
       })
       return
     }
     if (event.target.closest('[data-option-row] > button[role]') === null) return
     for (const row of surface.querySelectorAll<HTMLElement>(CUSTOM_ROW_SELECTOR)) customSelected.delete(row)
-    requestFrame({ write: sync })
+    queue(sync)
   }
   document.addEventListener('click', onChoice)
 
   function sync() {
+    if (released) return
     const seenRows = new Set<HTMLElement>()
     const seenFrames = new Set<HTMLElement>()
     for (const frame of cards.all()) {
@@ -190,6 +203,9 @@ export function createQuestionCards() {
   return {
     sync,
     release() {
+      released = true
+      for (const cancel of pendingFrames) cancel()
+      pendingFrames.clear()
       document.removeEventListener('click', onChoice)
       for (const [frame, placement] of placements) {
         frame.append(placement.surface)
