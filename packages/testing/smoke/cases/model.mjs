@@ -54,8 +54,8 @@ export default {
       one['Kimi K3'] !== undefined && one['Kimi K3'].meter === null,
       JSON.stringify(one['Kimi K3']))
     check('every meter stands immediately in front of its row\'s check, and names its judgement',
-      levelOne.every((row) => row.meter === null || (row.meter.beforeCheck === true && row.meter.title !== null && row.meter.title !== '')),
-      JSON.stringify(levelOne.map((row) => row.meter === null ? null : { beforeCheck: row.meter.beforeCheck, title: row.meter.title })))
+      levelOne.every((row) => row.meter === null || (row.meter.beforeCheck === true && row.meter.name !== null && row.meter.name !== '')),
+      JSON.stringify(levelOne.map((row) => row.meter === null ? null : { beforeCheck: row.meter.beforeCheck, name: row.meter.name })))
     const listed = one['V4.1 Flash']
     check('the seat\'s row is drawn as the list rows are: same height, padding, radius and layout',
       meter.currentRow !== null && meter.currentRow !== undefined && listed !== undefined &&

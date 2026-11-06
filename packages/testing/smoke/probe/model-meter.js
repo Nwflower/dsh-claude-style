@@ -29,6 +29,17 @@
           var desc = option.querySelector('.dsh-claude-model-desc')
           var value = meter === null ? null : meter.querySelector('.dsh-claude-peakrate-value')
           var countdown = meter === null ? null : meter.querySelector('.dsh-claude-peakrate-countdown')
+          // The badge rides in the tooltip anchor the skin wraps it in
+          // (shared/host-tooltip.ts): the anchor is the row's own child that
+          // holds the badge, and it stands where the badge stood, immediately
+          // in front of the check.
+          var anchor = null
+          if (meter !== null) {
+            for (var child = option.firstElementChild; child !== null; child = child.nextElementSibling) {
+              if (child.contains(meter)) { anchor = child; break }
+            }
+          }
+          var standing = anchor === null ? meter : anchor
           var box = option.getBoundingClientRect()
           var style = getComputedStyle(option)
           rows.push({
@@ -48,8 +59,10 @@
               period: meter.getAttribute('data-period'),
               value: value === null ? '' : value.textContent,
               countdown: countdown === null ? '' : countdown.textContent,
-              beforeCheck: meter.nextElementSibling === check,
-              title: meter.getAttribute('title'),
+              beforeCheck: standing !== null && standing.nextElementSibling === check,
+              // The judgement the badge announces: the host's own bubble shows
+              // the same words, the way the page's other controls do.
+              name: meter.getAttribute('aria-label'),
               icon: meter.querySelector('svg') !== null,
             },
           })
