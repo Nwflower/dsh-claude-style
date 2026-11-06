@@ -21,6 +21,7 @@ import { importanceScenario } from './importance.mjs'
 import { readerScrollScenario } from './reader-scroll.mjs'
 import { doorPinScenario } from './door-pin.mjs'
 import { streamPaceScenario } from './stream-pace.mjs'
+import { streamJitterScenario } from './stream-jitter.mjs'
 import { motionScenario } from './motion.mjs'
 import { processSummaryScenario } from './process-summary.mjs'
 import { fileMergeScenario } from './file-merge.mjs'
@@ -493,7 +494,7 @@ const SCENARIOS = {
       const live = sampled.filter((frame) => frame.running !== null && frame.running !== undefined && frame.following && overflowing(frame))
       const tops = live.map((frame) => frame.running)
       const spread = tops.length === 0 ? 0 : Math.max(...tops) - Math.min(...tops)
-      // The skin writes no position while the answer streams (D71), so nothing reads to the host as a
+      // The skin writes no position while the answer streams (D85), so nothing reads to the host as a
       // reader leaving the tail: its own mark stays on in every frame the live turn's row is pinned in.
       const dropped = sampled.filter((frame) => frame.running !== null && frame.running !== undefined && frame.following === false && overflowing(frame))
       return [
@@ -517,8 +518,10 @@ const SCENARIOS = {
   readerScroll: readerScrollScenario({ check }),
   /** A door rolling at the tail mid-stream leaves the status line pinned where it stood (door-pin.mjs, D40). */
   doorPin: doorPinScenario({ check }),
-  /** An answer arriving faster than a slide carries it: the composer stands still and the column stays on the pin (stream-pace.mjs, D71). */
+  /** An answer arriving faster than a slide carries it: the composer stands still and the column stays on the pin (stream-pace.mjs, D85). */
   streamPace: streamPaceScenario({ check }),
+  /** A provider's own pace: the column the reader watches never moves down between two frames (stream-jitter.mjs, D85). */
+  streamJitter: streamJitterScenario({ check }),
   /** The transitions.dev surfaces where they move: greeting, panel, switch, tab, badge, menu (motion.mjs, D9). */
   motion: motionScenario({ check }),
   /** The send flight: the stand-in takes off, the row lands, the words stay put. */

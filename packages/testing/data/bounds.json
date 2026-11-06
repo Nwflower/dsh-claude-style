@@ -180,6 +180,16 @@
       "name": "streamColumnFootPx",
       "value": 16,
       "reason": "The foot the message column keeps under its last row, counting the wrapper the host puts around it: room for the composer that a scroller overflows into. The scenario's lag is read from that last row, so this foot comes off the longest stretch a slide carries before it is compared."
+    },
+    {
+      "name": "streamJitterGrowthPx",
+      "value": 1000,
+      "reason": "How far the answer has to grow during the paced stream before its frames count as a reading. The scripted answer is 640 short lines, taller than any viewport the lane uses; a stream that grew less than this never outgrew the scroller, and the column's top then stands still for a reason that has nothing to do with the slide."
+    },
+    {
+      "name": "streamJitterMovePx",
+      "value": 1,
+      "reason": "How far the message column's screen top may move down between two sampled frames while the host follows it. Every growth the host pins is put back down in the same frame, so the recording's own moves are still or upward; the pixel covers the rounding of two transform readings and nothing a reader could see."
     }
   ]
 }

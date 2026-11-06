@@ -241,6 +241,13 @@ async function startTrace(page) {
       const cardRect = card === null ? null : card.getBoundingClientRect()
       const scrollerRect = scroller === null ? null : scroller.getBoundingClientRect()
       const rowRect = lastRow === null ? null : lastRow.getBoundingClientRect()
+      const columnRect = column === null ? null : column.getBoundingClientRect()
+      // What the reader sees of everything already streamed: the column's layout
+      // top, the scroller's offset and the stream slide's transform in one
+      // number. A slide that keeps up with the growth holds this steady; one
+      // that cancels the host's pin and then re-carries more than arrived shows
+      // up here as the column moving down between two frames (stream-jitter.mjs).
+      frame.flowTop = columnRect === null ? null : Math.round(columnRect.top * 10) / 10
       frame.card = cardRect === null ? null : Math.round(cardRect.top * 10) / 10
       frame.cardBottom = cardRect === null ? null : Math.round(cardRect.bottom * 10) / 10
       frame.lag = rowRect === null || scrollerRect === null ? null : Math.round((rowRect.bottom - scrollerRect.bottom) * 10) / 10

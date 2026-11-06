@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 40,
+  "at": "2026-11-06",
+  "external": false,
+  "zh": "修复快速流式输出时消息列在末尾下方越积越远、最新一行落到可视区之外，滑动时长改为跟着输出到达的节奏",
+  "en": "Fix the message column piling up below the tail during a fast stream until the newest line sat off screen, with the slide now timed to the pace the answer arrives"
+}

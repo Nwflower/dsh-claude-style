@@ -52,7 +52,7 @@ export default {
     check('the capped body is left at its end: the frames the recording ended on all read it',
       walkHeldAtEnd(catchUp, AT_END_PX, bound('followQuietFrames')), JSON.stringify(catchUp.slice(-bound('followQuietFrames'))))
     // While the host's streaming mark is on the page, the end its own follow
-    // writes stands, and the column slides the growth to rest (chat-follow.ts, D71).
+    // writes stands, and the column slides the growth to rest (chat-follow.ts, D85).
     const slide = follow.slide || []
     const slideSteps = walkedSteps(slide, AT_END_PX)
     check('the stream slide puts the growth the host\'s pin pushed up back down and slides it to rest: the recording starts well above rest, every frame closes on it, and the last one is at rest',
@@ -91,16 +91,20 @@ export default {
         burst.every((offset, at) => at === 0 || offset <= burst[at - 1]) && burst[burst.length - 1] <= AT_END_PX &&
         burstSteps.length >= bound('followWalkDistinctValues'),
       JSON.stringify({ readings: burst.length, start: burst[0], end: burst[burst.length - 1], steps: burstSteps.map((step) => step.gap) }))
-    // The slide restarts from where the frame before it stood: a run of small
-    // growths, each arriving before the slide has landed, may not leave the
-    // offset standing further from the pin than the growth it just took, and the
-    // run is never left standing once it stops (chat-follow.ts's slideCarried).
+    // The slide restarts from where the frame before it stood, and one growth is
+    // all the distance it may be left carrying: a run of small growths, each
+    // arriving before the slide has landed, stays inside the growth it just took
+    // — the offset the column is drawn at, not the scroller's own gap, which the
+    // host's pin keeps at zero either way — and the run is never left standing
+    // once it stops (chat-follow.ts's slideDuration, D85).
     const pace = follow.pace || {}
     const paceFrames = pace.frames || []
+    const carried = paceFrames.map((frame) => frame.offset)
     check('a run of small growths leaves the sliding column no further off the pin than the growth just taken',
-      paceFrames.length > 4 && paceFrames.every((gap) => Number.isFinite(gap) && gap <= pace.growth + bound('followSlideRowDriftPx')) &&
+      paceFrames.length > 4 && paceFrames.every((frame) => Number.isFinite(frame.gap) && frame.gap <= pace.growth + bound('followSlideRowDriftPx')
+        && Number.isFinite(frame.offset) && frame.offset <= pace.growth + bound('followSlideRowDriftPx')) &&
         (pace.settled ?? 1) <= AT_END_PX,
-      JSON.stringify(pace))
+      JSON.stringify({ ...pace, offsets: carried }))
     // A reader holding the conversation keeps the position the host's own pin
     // would take from him: the growth is given back and nothing slides
     // (chat-follow.ts's holdGrowth).

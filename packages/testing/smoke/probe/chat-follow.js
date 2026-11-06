@@ -2,7 +2,7 @@
  * The follow hand-back and the stream glide (packages/client/src/features/chat-follow/):
  * a structural moment hands the host’s follow back, a reader who took the scroll
  * over himself is left where he is, and the growth a fast answer brings is slid to
- * rest instead of jumping a frame (D71).
+ * rest instead of jumping a frame (D85).
  */
 (function () {
   var probe = window.__dshSmokeProbe
@@ -175,7 +175,7 @@
         if (cappedContent !== null) cappedContent.style.height = '900px'
         r.chatFollow.catchUp = await recordWalk(bodyGap, bodyWalking)
       }
-      // The stream slide (chat-follow.ts, D71): with the host's own streaming mark
+      // The stream slide (chat-follow.ts, D85): with the host's own streaming mark
       // on the page and its follow on, the growth the host's pin pushed up is put
       // back down by the column's own offset and slid to rest, while the position
       // stays at the end. The live turn's row, the flow's last, stands still.
@@ -235,12 +235,11 @@
       burstBlock.remove()
       await probe.settle()
       // The slide restarts from where the frame before it stood, not from the
-      // linear share of its clock: a growth thirty milliseconds apart each time
-      // keeps the lag rising only while the growth outruns the slide, which it
-      // does not at this pace. What the run leaves standing is measured on the
-      // gap the scroller shows on the frame after each growth, and again once
-      // the slide has had its time to land: a recorder that captured no slide
-      // at all leaves the whole growth standing, and reads it in both.
+      // linear share of its clock, and one growth is all the distance it may be
+      // left carrying: a run at thirty milliseconds a growth measures the offset
+      // the slide is drawn at on the frame after each landing, and the position
+      // the scroller shows there. A slide left running past the next growth
+      // reads a distance that grows with every step (D85).
       var paceFrames = []
       var paced = document.createElement('div')
       paced.style.height = '20px'
@@ -252,7 +251,10 @@
         paced.style.height = (24 + step * 20) + 'px'
         followScroller.scrollTop = followScroller.scrollHeight
         await nextFrame()
-        paceFrames.push(endGap())
+        paceFrames.push({
+          gap: endGap(),
+          offset: Math.round(new DOMMatrix(getComputedStyle(followColumn).transform).m42 * 10) / 10,
+        })
       }
       await probe.sleep(600)
       r.chatFollow.pace = { frames: paceFrames, growth: 20, settled: endGap(), animations: followColumn.getAnimations().length }

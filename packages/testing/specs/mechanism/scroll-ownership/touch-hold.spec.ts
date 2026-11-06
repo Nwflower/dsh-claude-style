@@ -1,5 +1,5 @@
 /**
- * Touch intent holds a streaming conversation (D40, D71): touchstart carries no
+ * Touch intent holds a streaming conversation (D40, D85): touchstart carries no
  * direction, vertical travel aims the drag, and an upward aim releases at the end.
  *
  * @capability scroll-ownership

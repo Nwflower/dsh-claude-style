@@ -31,7 +31,7 @@ import { SCROLL_EASE_LEAD_PX, easeScroll, isScrollEasing, scrollEasePosition, sc
  *   - while the reader's animation choice means "no animation", an ease is
  *     its destination written at once.
  * While content streams, nothing here writes: the host's own follow pins the
- * end, and the follow feature slides what the pin pushed up (D71). It asks the
+ * end, and the follow feature slides what the pin pushed up (D85). It asks the
  * owner whether the reader's own message has just arrived (submissionHolds);
  * that hold is dropped when the scroller is replaced, because a conversation
  * opening mounts its own user rows and its jump is not the one being

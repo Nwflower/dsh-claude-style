@@ -21,7 +21,7 @@ import type manifest from './chat-anchor.manifest'
  *
  * The move is the owner's: a jump, the way the turn navigator's walk to a turn
  * the reader picked is, and a hold after it, so the following sources and the
- * stream slide leave the position where the answer begins (D40, D71). A reader
+ * stream slide leave the position where the answer begins (D40, D85). A reader
  * away from the tail is not moved at all. One anchor per answer row.
  */
 export function install(_ctx: HostContext, _ui: FeatureUi<typeof manifest>) {

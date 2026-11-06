@@ -47,6 +47,10 @@ const MESSAGES_PATH = '/v1/messages'
 const LONG_LINES = Array.from({ length: 40 }, (_, index) => `- line ${index + 1}: the tail stays in view\n`)
 const LONG_PIECES = []
 for (let at = 0; at < LONG_LINES.length; at += 5) LONG_PIECES.push(LONG_LINES.slice(at, at + 5).join(''))
+/** A long answer wide enough to outgrow any viewport, in 160 pieces of four short lines. */
+const PACED_LINES = Array.from({ length: 640 }, (_, index) => `- line ${index + 1}: the tail stays in view\n`)
+const PACED_PIECES = []
+for (let at = 0; at < PACED_LINES.length; at += 4) PACED_PIECES.push(PACED_LINES.slice(at, at + 4).join(''))
 
 const SCRIPTS = {
   /** The lane's default: a thought, then markdown in a few pieces. */
@@ -142,6 +146,22 @@ const SCRIPTS = {
       },
     ],
     auxiliary: { text: ['Scripted long answer'] },
+  },
+  /**
+   * A long answer a line at a time: the pace a provider keeps when it sends a
+   * few words per event, fast enough that a 240ms slide never runs out before
+   * the next piece lands. Four short lines a piece put the growth of one frame
+   * well above what a slide carries in the same time, which is the pace the
+   * stream slide was measured to fall behind at (stream-jitter.mjs).
+   */
+  paced: {
+    conversation: [
+      {
+        thinking: ['A long answer arrives a line at a time.'],
+        text: ['# Paced answer\n\n', ...PACED_PIECES, '\nLast line.'],
+      },
+    ],
+    auxiliary: { text: ['Scripted paced answer'] },
   },
   /**
    * One burst: the whole answer in a single flush, longer than the stretch a
