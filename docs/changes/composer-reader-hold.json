@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 30,
-  "at": "2026-11-05",
-  "external": false,
-  "zh": "修复浏览历史消息时输入框尺寸变化或提问卡片出现将会话拉回底部",
-  "en": "Fix composer resizing or question cards pulling the conversation to the bottom while reading earlier messages"
-}

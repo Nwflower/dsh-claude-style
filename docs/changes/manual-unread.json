@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-05",
-  "group": "new",
-  "order": 30,
-  "external": false,
-  "zh": "新增会话菜单的持久化手动未读标记与再次访问清除",
-  "en": "Add persistent manual unread marks in session menus with clearing on a later visit."
-}

@@ -1,8 +1,0 @@
-{
-  "group": "improvements",
-  "order": 20,
-  "at": "2026-11-06",
-  "external": false,
-  "zh": "读者消息下面的时间与复制按钮改为指针落上去才显现，与 Claude Code 一致",
-  "en": "Show the clock and copy buttons under a message the reader sent only while the pointer is on it, as Claude Code does"
-}

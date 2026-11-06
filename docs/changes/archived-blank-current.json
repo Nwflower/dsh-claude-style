@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 30,
-  "at": "2026-11-05",
-  "external": false,
-  "zh": "修复已归档列表隐藏当前打开的空白会话",
-  "en": "Fix the archived list hiding the blank conversation that is open"
-}

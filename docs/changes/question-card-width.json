@@ -1,8 +1,0 @@
-{
-  "group": "improvements",
-  "order": 20,
-  "at": "2026-11-05",
-  "external": false,
-  "zh": "改善提问卡片宽度，与对话输入框上下对齐，问题标题换行更均衡",
-  "en": "Improve the question card to match the composer's width and balance its title lines"
-}

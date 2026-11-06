@@ -2,6 +2,64 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [0.19.10] - 2026-11-06
+
+[中文](#cn-0.19.10) | [English](#en-0.19.10)
+
+<h3 id="cn-0.19.10">新增功能</h3>
+
+- 新增读者消息的撤回与编辑，两者都从消息前分岔，撤回把原文放回新会话的输入框，编辑把改过的文字直接发出
+- 新增「重绘提问卡片」开关，关闭后提问卡片保留宿主原样
+- 新增会话菜单的持久化手动未读标记与再次访问清除
+- 新增进行中标记的左右位置选择，默认在行尾，左侧一档让标记回到行首插槽并保留真前导占位，第三方行首星标不再压住标题首字
+
+### 体验优化
+
+- 减少一批页面变化里主题自身写入的重复判定
+- 读者消息下面的时间与复制按钮改为指针落上去才显现，与 Claude Code 一致
+- 改善提问卡片宽度，与对话输入框上下对齐，问题标题换行更均衡
+- 皮肤自己绘制的按钮与标题改用宿主的提示气泡，不再使用浏览器原生提示
+- 背景不透明度一行只在壁纸插件生效时出现
+
+### 问题修复
+
+- 修复回答首行定位在流式输出期间不生效
+- 修复已归档列表隐藏当前打开的空白会话
+- 修复浏览历史消息时输入框尺寸变化或提问卡片出现将会话拉回底部
+- 修复快速流式输出时消息列在末尾下方越积越远、最新一行落到可视区之外，滑动时长改为跟着输出到达的节奏
+
+### 移除
+
+- 移除对 dsh 0.2.2-rc.1 之前版本的支持，升级本插件前请先把 DeepSeek Harness 升级到 0.2.2-rc.1 或更新版本
+- 移除侧栏的「会话按日期排列」开关，日期分段成为默认排法，顶行的铃铛随手换回宿主的按工作区分组
+
+<h3 id="en-0.19.10">New Features</h3>
+
+- Add retract and edit to a message the reader sent, each forking ahead of the message, retract putting its text back in the new session's composer and edit sending the amended text
+- Add a Question card restyle switch that keeps the host's own question card when off
+- Add persistent manual unread marks in session menus with clearing on a later visit
+- Add a side choice for the running marker, at the trailing end by default, with the left side returning it to the host's leading slot and keeping that band reserved so a third-party leading star no longer covers the title's first glyph
+
+### Improvements
+
+- Judge a batch of page changes once for all of its subscribers
+- Show the clock and copy buttons under a message the reader sent only while the pointer is on it, as Claude Code does
+- Improve the question card to match the composer's width and balance its title lines
+- Show the skin's own buttons and titles with the host's tooltip bubble instead of the browser's native one
+- Show the background opacity row only while a wallpaper plugin is active
+
+### Bug Fixes
+
+- Fix the answer first-line anchor doing nothing while an answer streams
+- Fix the archived list hiding the blank conversation that is open
+- Fix composer resizing or question cards pulling the conversation to the bottom while reading earlier messages
+- Fix the message column piling up below the tail during a fast stream until the newest line sat off screen, with the slide now timed to the pace the answer arrives
+
+### Removals
+
+- Remove support for dsh before 0.2.2-rc.1; upgrade DeepSeek Harness to 0.2.2-rc.1 or later before updating this plugin
+- Remove the Group sessions by date switch; the date grouping is the default order and the top row's bell still returns to the host's workspace grouping
+
 ## [0.19.9] - 2026-11-05
 
 [中文](#cn-0.19.9) | [English](#en-0.19.9)

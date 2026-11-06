@@ -1,8 +1,0 @@
-{
-  "group": "improvements",
-  "order": 22,
-  "at": "2026-11-06",
-  "external": false,
-  "zh": "背景不透明度一行只在壁纸插件生效时出现",
-  "en": "Show the background opacity row only while a wallpaper plugin is active"
-}

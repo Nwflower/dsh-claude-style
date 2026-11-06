@@ -1,8 +1,0 @@
-{
-  "group": "removals",
-  "order": 20,
-  "at": "2026-11-06",
-  "external": false,
-  "zh": "移除侧栏的「会话按日期排列」开关，日期分段成为默认排法，顶行的铃铛随手换回宿主的按工作区分组",
-  "en": "Remove the Group sessions by date switch; the date grouping is the default order and the top row's bell still returns to the host's workspace grouping"
-}

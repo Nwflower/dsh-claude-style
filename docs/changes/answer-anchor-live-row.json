@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 20,
-  "at": "2026-11-06",
-  "external": false,
-  "zh": "修复回答首行定位在流式输出期间不生效",
-  "en": "Fix the answer first-line anchor doing nothing while an answer streams"
-}
