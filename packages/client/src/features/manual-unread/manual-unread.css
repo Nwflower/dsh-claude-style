@@ -1,0 +1,42 @@
+body[data-dsh-claude-style] [data-dsh-claude-manual-unread] {
+  position: relative;
+  padding-inline-end: 18px;
+}
+body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"][data-dsh-claude-manual-unread] [data-dsh-claude-part~="row-title"] {
+  color: var(--dsw-alias-label-primary);
+  font-weight: 600;
+}
+body[data-dsh-claude-style] .dsh-claude-manual-unread-marker {
+  position: absolute;
+  inset-inline-end: 6px;
+  top: calc(50% - 3px);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  corner-shape: round;
+  background: var(--dsh-claude-status-unread);
+  pointer-events: none;
+}
+body[data-dsh-claude-style] .dsh-claude-manual-unread-icon {
+  display: inline-block;
+  box-sizing: border-box;
+  width: 10px;
+  height: 10px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+body[data-dsh-claude-style] .dsh-claude-manual-unread-description {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Native warning/running/completion retains priority over a persisted reminder. */
+body[data-dsh-claude-style] [data-dsh-claude-row-status] .dsh-claude-manual-unread-marker { inset-inline-end: 10px; }
+body[data-dsh-claude-style] [data-dsh-claude-row-status="active"] .dsh-claude-manual-unread-marker { display: none; }
+@media (hover: hover) {
+  body[data-dsh-claude-style] [data-dsh-claude-manual-unread]:is(:hover, [data-dsh-claude-part~="row-menu-open"]) .dsh-claude-manual-unread-marker { visibility: hidden; }
+}

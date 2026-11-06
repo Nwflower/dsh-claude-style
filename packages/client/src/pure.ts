@@ -86,6 +86,9 @@ export { install as installSidebarStatus } from './features/sidebar-status/sideb
 export { default as SIDEBAR_STATUS_SHEET } from './features/sidebar-status/sidebar-status.css?raw'
 export { default as SIDEBAR_BASE_SHEET } from './theme/sidebar.css?raw'
 export { installSessionContextMenu } from './features/session-actions/context-menu'
+export { createUnreadVisitTracker, createUnreadWriter, setUnreadMark } from './features/manual-unread/state'
+export { UnreadRowMark, unreadRowSessionId } from './features/manual-unread/row-mark'
+export { default as MANUAL_UNREAD_SHEET } from './features/manual-unread/manual-unread.css?raw'
 
 export { createComposerResponsive } from './features/composer/responsive'
 export { default as composerInlineCss } from './features/composer/inline.css?raw'

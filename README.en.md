@@ -84,6 +84,10 @@ dsh plugin --profile web add Nwflower/dsh-claude-style#dist      # GitHub releas
 
 Also from the [plugin market](https://github.com/dsh-market/dsh-market) or the Skin Center of the dsh-web-all plugin. Keep one theme enabled at a time; dsh ≥ 0.1.7 is required, and a restart of DeepSeek Harness brings the full feature set.
 
+## Manual unread marks
+
+Choose **Mark as unread** or **Clear unread mark** from a session's ellipsis menu. Marks are saved in the current profile, survive reloads, and clear when you leave and later open that session. The host's automatic completion reminders stay independent. Disable the feature under **Sidebar** in the plugin settings to hide its menu item and markers while retaining saved marks.
+
 ## Fonts
 
 > The Anthropic fonts have no public release; this repository only offers [copies](https://github.com/Nwflower/dsh-claude-style/tree/master/packages/assets/src/fonts/anthropic) for download and study.
