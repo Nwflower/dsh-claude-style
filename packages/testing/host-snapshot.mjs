@@ -2,7 +2,7 @@
 /**
  * host-snapshot.mjs — the host's own conversation and composer markup, captured
  * from a scratch instance of the installed host for the behaviour lane's
- * stand-in page (D3, D77).
+ * stand-in page (D3, D86).
  *
  * The two behaviour specs of the conversation's width and the composer's bottom
  * gap used to hand-build the host's phase root, conversation body, width handles
@@ -206,7 +206,7 @@ async function capture(options) {
     if (frame.content.classes.length === 0) throw new Error('host snapshot: the conversation body carries no host class name')
     if (frame.composer.bar.classes.length === 0) throw new Error('host snapshot: the bar around the card carries no host class name')
     const snapshot = {
-      note: 'The host\'s own conversation and composer markup, captured by packages/testing/host-snapshot.mjs on a scratch host and read by the stand-in page (packages/testing/specs/fixtures/host-frame.mjs, D3, D77). Regenerate with node packages/testing/host-snapshot.mjs.',
+      note: 'The host\'s own conversation and composer markup, captured by packages/testing/host-snapshot.mjs on a scratch host and read by the stand-in page (packages/testing/specs/fixtures/host-frame.mjs, D3, D86). Regenerate with node packages/testing/host-snapshot.mjs.',
       host: { version: installedHostVersion(), viewport, captured: today() },
       conversation: { phase: frame.phase, content: frame.content, siblings: frame.siblings },
       composer: frame.composer,

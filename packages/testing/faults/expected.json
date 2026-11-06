@@ -1,4 +1,4 @@
 {
-  "about": "How many faults each suite turns red through an assertion (D77): a run that catches fewer fails, and a run that catches more asks for the number to be written up. The corpus is the measuring stick the specs are held to, and this record is what keeps the corpus from rotting silently; it only rises.",
+  "about": "How many faults each suite turns red through an assertion (D86): a run that catches fewer fails, and a run that catches more asks for the number to be written up. The corpus is the measuring stick the specs are held to, and this record is what keeps the corpus from rotting silently; it only rises.",
   "new": 14
 }

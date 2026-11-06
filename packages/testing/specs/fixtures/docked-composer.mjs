@@ -1,5 +1,5 @@
 /**
- * A docked conversation as the host mounts it (D77): a sidebar chat column
+ * A docked conversation as the host mounts it (D86): a sidebar chat column
  * holding an embedded conversation, its composer card, and the host's dock line
  * after the card. A spec adds what its own feature reads — the model slot, the
  * access slot, the meter's trigger — through the host contracts it already

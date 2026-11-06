@@ -1,5 +1,5 @@
 {
-  "note": "The appearance layer's snapshot: what each page state's parts compute to on the real host, read by the importance walk through packages/testing/appearance.mjs (D77). Regenerate with DSH_APPEARANCE=write node packages/testing/e2e.mjs --scenario importance; a change here without a change under packages/client/src fails scripts/ci-scope.mjs.",
+  "note": "The appearance layer's snapshot: what each page state's parts compute to on the real host, read by the importance walk through packages/testing/appearance.mjs (D86). Regenerate with DSH_APPEARANCE=write node packages/testing/e2e.mjs --scenario importance; a change here without a change under packages/client/src fails scripts/ci-scope.mjs.",
   "states": {
     "attachment": {
       "brand-mark": {

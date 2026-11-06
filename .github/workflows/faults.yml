@@ -1,6 +1,6 @@
 name: Faults
 
-# Whether the specs catch known defects (D77). The corpus in
+# Whether the specs catch known defects (D86). The corpus in
 # packages/testing/faults/ is applied one fault at a time to a scratch copy of
 # the tree, built and run there, and every fault has to turn an assertion red.
 #

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * ds-bot.mjs — the Chat / Code switch beside ds-bot's real browser half (D74, D77).
+ * ds-bot.mjs — the Chat / Code switch beside ds-bot's real browser half (D74, D86).
  *
  * Registered in the lane's scenario table (packages/testing/scenarios.mjs).
  *

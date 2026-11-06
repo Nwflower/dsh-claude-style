@@ -9,5 +9,5 @@ adoptSkin(TEST_SKIN)
 // A property draws its inputs from one fixed seed, so a red run reads the same
 // on every machine and a counterexample is reproduced by running it again.
 // Searching wider is a deliberate act — another seed, more runs — and whatever
-// it finds joins the property's own examples (D77).
+// it finds joins the property's own examples (D86).
 fc.configureGlobal({ seed: 20261019 })

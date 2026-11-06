@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * host-version.mjs — which host a run was judged against (D77).
+ * host-version.mjs — which host a run was judged against (D86).
  *
  * The end-to-end lane reads what the host draws, so a verdict only means
  * something when the host is the newest one published, whichever dist-tag it

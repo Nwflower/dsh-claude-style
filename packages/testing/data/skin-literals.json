@@ -1,5 +1,5 @@
 {
-  "about": "The skin marks the smoke's and the end-to-end lane's own code spells out, by file (D77). That code predates the surface table (packages/testing/data/surface.json): the counts here only shrink, and new code reads the table. Lint holds each count to its file; scripts/ci-scope.mjs --ledgers holds the total to the base.",
+  "about": "The skin marks the smoke's and the end-to-end lane's own code spells out, by file (D86). That code predates the surface table (packages/testing/data/surface.json): the counts here only shrink, and new code reads the table. Lint holds each count to its file; scripts/ci-scope.mjs --ledgers holds the total to the base.",
   "files": {
     "packages/testing/appearance.mjs": 1,
     "packages/testing/custom-brand.mjs": 5,

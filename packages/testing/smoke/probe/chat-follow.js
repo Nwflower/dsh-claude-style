@@ -87,7 +87,7 @@
       var AT_END_PX = 6
       // One walk, as the browser draws it: the first reading is taken where the
       // walk starts, the rest on the frames that follow, and the recording stops
-      // on a run of frames that read the same position. D77's 动效的断言 reads
+      // on a run of frames that read the same position. D86's 动效的断言 reads
       // this sequence — monotone, at least two different values between the two
       // ends, the end equal to the target — so that the shape of the curve is
       // settled in the unit lane and this lane only asks whether it was walked.

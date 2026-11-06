@@ -13,7 +13,7 @@ import { loadModule } from './shared/ts-module.mjs'
 const ROOT = path.resolve(import.meta.dirname, '..')
 const SRC = path.join(ROOT, 'packages', 'client', 'src')
 
-/** The page states and check kinds packages/contracts/src/table.ts records (D3, D77). */
+/** The page states and check kinds packages/contracts/src/table.ts records (D3, D86). */
 const PROBE_STATES = new Set(['any', 'hero', 'sending', 'streaming', 'conversation', 'menu', 'dark'])
 const PROBE_KINDS = new Set(['selector', 'attribute', 'property', 'computed', 'global', 'value', 'rail-geometry', 'none'])
 
@@ -22,7 +22,7 @@ const PROBE_KINDS = new Set(['selector', 'attribute', 'property', 'computed', 'g
  * theme entry names, or a module nothing imports, would otherwise sit in packages/client/src/
  * with no way to reach the page. Manifests are data the build reads, the
  * contract table is read by the build and the tests (D3), and pure.ts is the
- * logic surface the specs call (D77); none of them is a module the bundle carries.
+ * logic surface the specs call (D86); none of them is a module the bundle carries.
  *
  * @param bundled - the modules in the bundle (esbuild's metafile), relative to packages/client/src.
  * @param sheets - every stylesheet the bundle carries (styleFiles).
@@ -188,7 +188,7 @@ export function checkContracts(manifests) {
 
 /**
  * Whether a spec answers to a stable id `<layer>/<capability>/<test name>`: a
- * spec file of that capability declares a test of that name (D77).
+ * spec file of that capability declares a test of that name (D86).
  */
 function specIdExists(id) {
   const [layer, capability, ...rest] = id.split('/')
@@ -204,7 +204,7 @@ function specIdExists(id) {
  * Hold the timing table to its checks (D3).
  *
  * The timing assumptions live in packages/contracts/src/timing.ts, each naming what holds
- * it: a scenario of the end-to-end lane or a spec by its stable id (D77). Both
+ * it: a scenario of the end-to-end lane or a spec by its stable id (D86). Both
  * names have to exist, so an assumption cannot enter the table with nothing that
  * would notice it changing.
  */

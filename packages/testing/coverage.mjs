@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * coverage.mjs — which layer guards which feature (D77), as an observation.
+ * coverage.mjs — which layer guards which feature (D86), as an observation.
  *
  * Every feature directory, with the specs whose @features name it in each
  * layer and the smoke cases its manifest names. A feature with nothing in any

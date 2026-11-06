@@ -62,7 +62,7 @@ const READABLE_PSEUDO = new Set(['::before', '::after', '::marker', '::placehold
 /**
  * A skin mark as a selector reads it, taken from the surface table: the marks
  * the list below already spells stay as they are, and one added now is read
- * rather than written down a second time (D77).
+ * rather than written down a second time (D86).
  */
 function mark(id) {
   const entry = surfaceTable.surface.find((candidate) => candidate.id === id)

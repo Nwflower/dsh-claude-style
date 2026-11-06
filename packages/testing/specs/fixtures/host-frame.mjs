@@ -1,6 +1,6 @@
 /**
  * The host's own conversation frame, mounted from the snapshot the capture tool
- * writes (packages/testing/data/host-snapshot.json, D3, D77).
+ * writes (packages/testing/data/host-snapshot.json, D3, D86).
  *
  * A behaviour spec on the stand-in page used to hand-build the host's phase
  * root, conversation body, width handles and input bar, and to write the host's

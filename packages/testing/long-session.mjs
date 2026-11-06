@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * long-session.mjs — what a frame costs once the conversation is long (D77).
+ * long-session.mjs — what a frame costs once the conversation is long (D86).
  *
  * Registered in the lane's scenario table (packages/testing/scenarios.mjs).
  *

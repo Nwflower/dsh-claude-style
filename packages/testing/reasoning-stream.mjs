@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * reasoning-stream.mjs — the reasoning's streamed window, end to end (D77).
+ * reasoning-stream.mjs — the reasoning's streamed window, end to end (D86).
  *
  * Registered in the lane's scenario table (packages/testing/scenarios.mjs).
  *

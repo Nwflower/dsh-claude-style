@@ -5,7 +5,7 @@
  * meaning it gives them; the host's own types are wider and are not shipped
  * here, so this file is the contract a host upgrade is checked against. These
  * shapes were read off the host build (0.2.1-alpha.1) and are exercised by the
- * end-to-end lane (D77).
+ * end-to-end lane (D86).
  *
  * A service the host does not mount comes back `undefined` from `ctx.get`, so
  * every reader takes the value as possibly absent (D12) — that is the reason

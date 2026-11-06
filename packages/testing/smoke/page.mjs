@@ -103,7 +103,7 @@ const PROBE = readParts('probe', PROBE_PARTS)
 /**
  * The probe's own prelude alone: the skin applied and the readers a step uses,
  * with no step of the smoke's. The behaviour layer drives such a page from
- * outside, through Playwright (packages/testing/behaviour.mjs, D77).
+ * outside, through Playwright (packages/testing/behaviour.mjs, D86).
  */
 const PRELUDE = readParts('probe', ['prelude.js'])
 

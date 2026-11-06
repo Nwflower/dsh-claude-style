@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * dsh-web.mjs — a scratch DSH web instance with this checkout's plugin installed,
- * and a browser page on it (D77).
+ * and a browser page on it (D86).
  *
  * The end-to-end lane needs a real host: the smoke's stand-in page reproduces
  * the structure its author knows, while the timing and ordering the skin leans
@@ -122,7 +122,7 @@ function provisionHome(home) {
  * @param options.port - the port; 0 lets the OS pick one.
  * @param options.patch - loader patch entries (YAML text) written into a `--patch`
  *     overlay before boot: how a lane points the host's model adapter at the
- *     scripted service (packages/testing/mock-llm.mjs, D77).
+ *     scripted service (packages/testing/mock-llm.mjs, D86).
  * @param options.args - extra arguments for the web app's own command line
  *     (`--trusted-host <name>`, which a page under a non-loopback name needs).
  * @param options.plugins - other plugins' package specs (`name@version`) added

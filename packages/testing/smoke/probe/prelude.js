@@ -23,7 +23,7 @@
   }
   /**
    * Record `read()` on every frame from now until the page has settled, and
-   * answer the readings with the settled one last (D77: the settle rule). The
+   * answer the readings with the settled one last (D86: the settle rule). The
    * page has settled when its finite animations have landed and the skin has
    * asked for no pass for eight frames' worth of a 60 Hz display (134 ms, over
    * at least two frames, so a slower display waits the same wall clock). A clock

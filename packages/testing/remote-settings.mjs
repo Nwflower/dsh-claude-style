@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * remote-settings.mjs — a page under a non-loopback name on the real host
- * (D75, D77).
+ * (D75, D86).
  *
  * The host serves a page whose hostname it was told to trust the same settings
  * document it serves the loopback page: one instance, two names, one store. The

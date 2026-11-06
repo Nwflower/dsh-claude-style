@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * stats-position.mjs — the session's numbers on a line of their own (D77).
+ * stats-position.mjs — the session's numbers on a line of their own (D86).
  *
  * Registered in the lane's scenario table (packages/testing/scenarios.mjs).
  *

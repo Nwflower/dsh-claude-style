@@ -1,5 +1,5 @@
 /**
- * What a behaviour spec is written with (D77): `spec()` to declare its page and
+ * What a behaviour spec is written with (D86): `spec()` to declare its page and
  * its tests, the readers that take user-observable results off the built page,
  * and the predicates that judge them.
  *

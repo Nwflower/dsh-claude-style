@@ -8,7 +8,7 @@ name: Release
 # `<version>` as `latest` from the same tarball, writes the same files npm gets
 # to the `dist` branch so a git install needs no build (D47), and opens the
 # GitHub Release with the version's CHANGELOG section. The promotion is the last
-# step: the gates above it are the ones CI's own jobs run (D77).
+# step: the gates above it are the ones CI's own jobs run (D86).
 
 on:
   push:
@@ -104,11 +104,11 @@ jobs:
       - run: npm test
       - run: npm run smoke
       # The behaviour specs read the same build on the same stand-in host; a
-      # release is judged by the layers CI runs, this one included (D77).
+      # release is judged by the layers CI runs, this one included (D86).
       - run: npm run behaviour
       # The assembled host on the newest published version, walked over the scenario
       # table's own default walk: what a pull request runs is what the promotion
-      # waits on (D77). One scenario at a time, the way a pull request's shard
+      # waits on (D86). One scenario at a time, the way a pull request's shard
       # drives its own slice: the scenarios that read the page frame by frame —
       # the long session's frame cost among them — do not survive sharing this
       # runner with a second page, and the table walked several at once put the

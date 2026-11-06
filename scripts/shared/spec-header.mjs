@@ -1,5 +1,5 @@
 /**
- * The specs as data (D77): where they live, the header every one opens with,
+ * The specs as data (D86): where they live, the header every one opens with,
  * and the stable id each test answers under. Lint, the behaviour runner and the
  * fault runner read the specs through this module alone, so the three agree on
  * what a spec is.
