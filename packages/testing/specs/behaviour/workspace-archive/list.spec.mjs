@@ -86,12 +86,13 @@ async function pickActive(t) {
 
 /** How many archived rows the page carries (a fixture title names one row). */
 function rowCount(t) {
-  return t.page.locator('[title^="归档会话 "]').count()
+  return t.page.locator(`[${t.surface.attribute('workspace.archived-row')}]`).count()
 }
 
-/** One archived row, named by its fixture title. */
+/** One archived row, named by its fixture title: the row carries the title's own words in its tooltip anchor. */
 function row(t, title) {
-  return t.page.locator('[title="' + title + '"]')
+  return t.page.locator(`[${t.surface.attribute('workspace.archived-row')}]`)
+    .filter({ has: t.page.getByText(title, { exact: true }) })
 }
 
 /** The archived page's own list: the box the section's room seats, and its scroll port. */

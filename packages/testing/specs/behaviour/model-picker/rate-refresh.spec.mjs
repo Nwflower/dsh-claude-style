@@ -1,10 +1,10 @@
 /**
- * The standing rows keep the meter's visible words, tooltip and accessible name
+ * The standing rows keep the meter's visible words and accessible name
  * together as the billing clock advances, in both levels of the model picker.
  *
  * @capability model-picker
  * @features model, peakrate
- * @risk A refreshed rate or countdown disagrees with the tooltip and the screen reader while the model rows remain on the page.
+ * @risk A refreshed rate or countdown disagrees with the screen reader while the model rows remain on the page.
  */
 import { spec } from '../../fixtures/behaviour.mjs'
 
@@ -24,11 +24,10 @@ async function refresh(t) {
   await t.settle()
 }
 
-/** Read one retained meter's visible and accessible judgement. */
+/** Read one retained meter's visible and accessible judgement: the words carry the rate, the name the whole judgement the host's bubble shows. */
 function readJudgement(meter) {
   return meter.evaluate((element) => ({
     connected: element.isConnected,
-    title: element.getAttribute('title'),
     name: element.getAttribute('aria-label'),
     text: element.textContent,
   }))
@@ -49,7 +48,7 @@ export default spec({ page: 'model-meter' }, ({ test }) => {
     const judgement = async (expected, visible) => {
       for (const meter of meters) {
         const reading = await readJudgement(meter)
-        t.expectThat.equal(reading, { connected: true, title: expected, name: expected, text: visible }, 'the standing meter shows and announces the current judgement')
+        t.expectThat.equal(reading, { connected: true, name: expected, text: visible }, 'the standing meter shows and announces the current judgement')
       }
     }
 
@@ -68,7 +67,7 @@ export default spec({ page: 'model-meter' }, ({ test }) => {
       await meter.evaluate((element) => {
         element.__nameWrites = []
         element.__nameObserver = new MutationObserver((records) => element.__nameWrites.push(...records.map((record) => record.attributeName)))
-        element.__nameObserver.observe(element, { attributes: true, attributeFilter: ['title', 'aria-label'] })
+        element.__nameObserver.observe(element, { attributes: true, attributeFilter: ['aria-label'] })
       })
     }
     await t.page.clock.fastForward(60000)
@@ -79,8 +78,8 @@ export default spec({ page: 'model-meter' }, ({ test }) => {
         element.__nameObserver.disconnect()
         return element.__nameWrites
       })
-      t.expectThat.equal(writes, [], 'a settled judgement does not rewrite its tooltip or accessible name')
-      t.expectThat.equal(await readJudgement(meter), { connected: true, title: 'Now Promotion 0.5×', name: 'Now Promotion 0.5×', text: '0.5×' }, 'the unchanged promotion stays on the page')
+      t.expectThat.equal(writes, [], 'a settled judgement does not rewrite its accessible name')
+      t.expectThat.equal(await readJudgement(meter), { connected: true, name: 'Now Promotion 0.5×', text: '0.5×' }, 'the unchanged promotion stays on the page')
     }
   })
 
@@ -94,7 +93,6 @@ export default spec({ page: 'model-meter' }, ({ test }) => {
     const reading = await readJudgement(first)
     t.expectThat.equal(reading, {
       connected: true,
-      title: 'Now Peak rate 2× · in 1m → Off-peak rate 1×',
       name: 'Now Peak rate 2× · in 1m → Off-peak rate 1×',
       text: '2×· 1m',
     }, 'new rows do not mark the older rows as already refreshed')
