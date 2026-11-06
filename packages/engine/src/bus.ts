@@ -60,6 +60,20 @@ const mutationSubscriptionSet = new Set<MutationSubscription>()
 let mutationObserver: MutationObserver | null = null
 
 /**
+ * Whether a record's target sits inside one observed target, per record and
+ * target: a session switch hands one batch to a dozen subscriptions, and each
+ * used to walk the record's own ancestors up to the target again.
+ */
+const containment = new WeakMap<MutationRecord, Map<Node, boolean>>()
+
+/**
+ * The quiet verdict is a property of the record, not of the subscription asking:
+ * a session switch hands one batch to a dozen subscriptions, and each used to
+ * walk the ancestors of the same record again.
+ */
+const quietVerdicts = new WeakMap<MutationRecord, boolean>()
+
+/**
  * Whether a record is one of the skin's own quiet writes: a change inside a
  * marked container, or only marked nodes added or removed.
  */
@@ -84,6 +98,20 @@ function pageWide(target: Node) {
   return target === document || target === document.documentElement || target === document.body
 }
 
+/** Whether `record.target` sits inside `target`, answered once per record and target. */
+function sitsInside(target: Node, record: MutationRecord) {
+  let perTarget = containment.get(record)
+  if (perTarget === undefined) {
+    perTarget = new Map()
+    containment.set(record, perTarget)
+  }
+  const known = perTarget.get(target)
+  if (known !== undefined) return known
+  const inside = target.contains(record.target)
+  perTarget.set(target, inside)
+  return inside
+}
+
 /** Whether a subscription's own options select this record. */
 function selects(subscription: MutationSubscription, record: MutationRecord) {
   const options = subscription.options
@@ -97,9 +125,14 @@ function selects(subscription: MutationSubscription, record: MutationRecord) {
   const target = subscription.target
   if (record.target !== target) {
     if (options.subtree !== true) return false
-    if (!target.contains(record.target) && !(pageWide(target) && !record.target.isConnected)) return false
+    if (!sitsInside(target, record) && !(pageWide(target) && !record.target.isConnected)) return false
   }
-  return options.skipQuiet !== true || !isQuietRecord(record)
+  if (options.skipQuiet !== true) return true
+  const known = quietVerdicts.get(record)
+  if (known !== undefined) return !known
+  const quiet = isQuietRecord(record)
+  quietVerdicts.set(record, quiet)
+  return !quiet
 }
 
 /**

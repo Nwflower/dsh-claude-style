@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-06",
+  "group": "improvements",
+  "order": 12,
+  "external": false,
+  "zh": "减少一批页面变化里主题自身写入的重复判定",
+  "en": "Judge a batch of page changes once for all of its subscribers"
+}
