@@ -113,7 +113,34 @@ function dsBotScenario({ check }) {
     async afterTurn(context) {
       const { page, notes } = context
       await settle(page, 'code')
+      await page.locator('.dsh-claude-surface-option').nth(1).waitFor({ state: 'visible' })
       notes.boot = await read(page)
+      // A host control can disappear during boot or a sidebar remount. Keep the
+      // actual buttons and their tooltip anchors through repeated detachments.
+      notes.reattach = []
+      for (const turn of ['first', 'again']) {
+        await page.evaluate(() => {
+          const control = document.querySelector('.bt-return')
+          const buttons = [...document.querySelectorAll('.dsh-claude-surface-option')]
+          window.__surfaceRemount = { control, parent: control.parentElement, next: control.nextSibling,
+            buttons, anchors: buttons.map(button => button.parentElement) }
+          control.remove()
+        })
+        await page.waitForFunction(() => document.querySelector('.dsh-claude-surface-switch') === null)
+        await page.evaluate(() => {
+          const { control, parent, next } = window.__surfaceRemount
+          if (!parent.isConnected) throw new Error('ds-bot: the control row left during the remount check')
+          parent.insertBefore(control, next?.parentNode === parent ? next : null)
+        })
+        await settle(page, 'code')
+        notes.reattach.push(await page.evaluate((turn) => {
+          const { buttons, anchors } = window.__surfaceRemount
+          const same = buttons.length > 0 && buttons.every((button, index) =>
+            button.isConnected && button.parentElement === anchors[index])
+          delete window.__surfaceRemount
+          return { turn, same }
+        }, turn))
+      }
 
       await press(page, 'chat')
       await settle(page, 'chat')
@@ -197,6 +224,7 @@ function dsBotScenario({ check }) {
       const band = desktop.box ?? {}
       return [
         check('以代码一侧启动时本主题拥有页面、切换选中「代码」', themed(boot) && boot.switchShown && onCode(boot), JSON.stringify(boot)),
+        check('宿主控件反复暂离后，切换保留原按钮和提示锚点', notes.reattach.every(entry => entry.same), JSON.stringify(notes.reattach)),
         check('切到聊天后 ds-bot 画出它的界面、记下的模式是 bot', chat.bot && chat.saved === 'bot' && chat.mode === 'chat', JSON.stringify(chat)),
         check('聊天一侧本主题的样式表、body 标记与界面元素全部离开', !chat.theme && !chat.themeSheet && chat.themeMarks.length === 0 && chat.themeNodes === 0, JSON.stringify(chat)),
         check('聊天一侧切换与它自己的样式表留在页面上并选中「聊天」', chat.surfaceSheet && chat.switchShown && onChat(chat), JSON.stringify(chat)),
