@@ -1,19 +1,23 @@
 name: Observe
 
-# A push to master is judged by the checks, the build and the spec lane in
-# `.github/workflows/ci.yml`; the page lanes that file leaves out of a push — the
-# smoke and the behaviour specs — are observed here, on the same push, without
-# joining the branch rule (D77). Nothing about a pull request, a merge-queue
-# entry or the release matrix changes: this workflow answers a push or a manual
-# run, it is not the `required` check, and the whole matrix still runs before a
-# version is cut.
+# A push to master is judged in `.github/workflows/ci.yml` by the checks, the
+# build, the spec lane and the part of the smoke and the behaviour lane its
+# change reaches (D86). A push held inside feature directories walks only those
+# directories there, so what it did to the rest of the page is observed here, on
+# the same push, through the smoke's quick tier and every behaviour spec, without
+# joining the branch rule. A push whose change reached the shared layer already
+# walked those two in CI's own verdict, and this workflow leaves it alone.
+# Nothing about a pull request, a merge-queue entry or the release matrix
+# changes: this workflow answers a push or a manual run, it is not the
+# `required` check, and the whole matrix still runs before a version is cut.
 #
-# `scripts/ci-scope.mjs` answers the two questions the job needs, the way it does
-# for CI: `code` is false for a push holding only documents, locale files or this
-# workflow, so the page lane is skipped; `tree` keys the build cache, so a run
-# over a tree another lane already built restores its slow pure steps
-# (`scripts/build-cache.mjs`). A manual run judges the whole tree and observes
-# whatever its diff against master would say.
+# `scripts/ci-scope.mjs` answers the three questions the job needs, the way it
+# does for CI: `code` is false for a push holding only documents, locale files
+# or this workflow, so the page lane is skipped; `selection` is empty for a push
+# CI already walked whole; `tree` keys the build cache, so a run over a tree
+# another lane already built restores its slow pure steps
+# (`scripts/build-cache.mjs`). A manual run judges the whole tree whatever its
+# diff against master would say.
 #
 # The build, the smoke and the behaviour lane are separate steps: the smoke and
 # the behaviour lane each wait on the build through `!cancelled()`, so both run
@@ -49,6 +53,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       code: ${{ steps.scope.outputs.code }}
+      selection: ${{ steps.scope.outputs.selection }}
       tree: ${{ steps.scope.outputs.tree }}
     steps:
       - uses: actions/checkout@v7
@@ -68,9 +73,9 @@ jobs:
   observe:
     needs: changed
     # A manual run is asked for on purpose and observes even when its commit
-    # differs from master in nothing the page reads; a push still skips the page
-    # lanes when the diff holds no code.
-    if: github.event_name == 'workflow_dispatch' || needs.changed.outputs.code == 'true'
+    # differs from master in nothing the page reads; a push observes only when
+    # its diff holds code and CI walked a feature selection.
+    if: github.event_name == 'workflow_dispatch' || (needs.changed.outputs.code == 'true' && needs.changed.outputs.selection != '')
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:

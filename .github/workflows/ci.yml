@@ -1,9 +1,15 @@
 name: CI
 
-# A push to master is judged by the checks, the build and the spec lane alone:
-# development carries no page gate (D77), so a push answers in minutes and waits
-# on nothing. The page lanes that a push leaves out run beside it in
-# `.github/workflows/observe.yml`, which joins no branch rule. The whole matrix —
+# A push to master is judged by the checks, the build, the spec lane and the
+# part of the smoke and the behaviour lane its change reaches (D86): a change
+# held inside feature directories walks those directories' smoke cases and
+# behaviour specs, and any other change walks the smoke's quick tier and every
+# behaviour spec. A regression a push brings is red on that push, so it is not
+# left on master for every later pull request to inherit. Master names no
+# required check, so a red push verdict does not keep the commit out; the pusher
+# fixes it in the next push. What a feature-only push's selection leaves out is
+# observed beside it in `.github/workflows/observe.yml`, which joins no branch
+# rule. The whole matrix —
 # the smoke, the behaviour specs on three systems and the end-to-end lane — is
 # judged on a pull request, a merge-queue entry and a manual run, and the manual
 # run is the one a release takes before its tag; the release workflow runs the
@@ -21,11 +27,13 @@ name: CI
 # `scripts/ci-scope.mjs` reads the change before any lane starts and prints the
 # three outputs the jobs below read. A push holding only documents, locale files
 # or the workflow itself reaches no page a lane reads, so `code` is false and the
-# page lanes are skipped while the checks still run. A change inside one feature
-# directory names that directory, so the smoke walks its cases alone; a change to
-# the shared layer, and any path the map cannot place, earns the whole walk. The
-# directory names are checked against the feature table the manifests produce
-# (D42), so a printed selection is one the smoke accepts. `tree` is the hash of
+# page lanes are skipped while the checks still run. A change inside feature
+# directories names them in `selection`, one `--feature` flag the smoke and the
+# behaviour lane both read; a change to the shared layer, and any path the map
+# cannot place, selects nothing, which earns the whole walk on a pull request and
+# the quick tier with every behaviour spec on a push. The directory names are
+# checked against the feature table the manifests produce (D76), so a printed
+# selection is one the smoke accepts. `tree` is the hash of
 # the tree (`scripts/shared/tree-hash.mjs`), which keys the build cache: the
 # build's slow pure steps are stored under the hash of their inputs, so a run
 # over the same tree restores them instead of computing them
@@ -40,7 +48,7 @@ name: CI
 # `e2e` drives a scratch `dsh web` on the newest host version published, under
 # whichever dist-tag (`packages/testing/host-version.mjs` reads the registry; the
 # lane gives no verdict on a machine whose host differs) with the scripted
-# model service (D77), so a selector or entry the host stopped honouring shows
+# model service (D86), so a selector or entry the host stopped honouring shows
 # up in the run that meets the new host. Every job carries a deadline, and
 # every step that waits on the network carries its own: the job's is the
 # backstop, the step's ends a stuck wait in minutes.
@@ -98,7 +106,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       code: ${{ steps.scope.outputs.code }}
-      smoke: ${{ steps.scope.outputs.smoke }}
+      selection: ${{ steps.scope.outputs.selection }}
       tree: ${{ steps.scope.outputs.tree }}
     steps:
       - uses: actions/checkout@v7
@@ -118,7 +126,7 @@ jobs:
         run: node scripts/ci-scope.mjs --base "${{ github.event.pull_request.base.sha || github.event.before || 'origin/master' }}"
       # The pushes the scope refuses against the same base: an appearance
       # snapshot moved without the sheets that draw it, and a record that only
-      # shrinks grown (D77, D9).
+      # shrinks grown (D86, D9).
       - run: node scripts/ci-scope.mjs --appearance --ledgers --base "${{ github.event.pull_request.base.sha || github.event.before || 'origin/master' }}"
 
   # The gates that need no build: the lint rules, the decisions index against
@@ -166,15 +174,20 @@ jobs:
         timeout-minutes: 15
       - run: npm test
         timeout-minutes: 15
-      # The entry is called directly: the selection `changed` printed carries a
-      # flag, and npm would read a flag of its own rather than pass it on.
-      - run: node packages/testing/smoke.mjs ${{ needs.changed.outputs.smoke }}
+      # The entries are called directly: the selection `changed` printed carries
+      # a flag, and npm would read a flag of its own rather than pass it on. An
+      # empty selection is the whole walk on every other event and the quick tier
+      # on a push, which judges the push without the motion cases' minutes.
+      - run: node packages/testing/smoke.mjs ${{ needs.changed.outputs.selection }}
         if: github.event_name != 'push'
         timeout-minutes: 30
-      # The behaviour specs read the same build on the same stand-in host (D77);
-      # a failure leaves its trace, screenshot and evidence for the artifact.
-      - run: npm run behaviour
-        if: github.event_name != 'push'
+      - run: node packages/testing/smoke.mjs ${{ needs.changed.outputs.selection || '--quick' }}
+        if: github.event_name == 'push'
+        timeout-minutes: 30
+      # The behaviour specs read the same build on the same stand-in host (D86);
+      # a push walks the directories its change reaches, every other event all of
+      # them. A failure leaves its trace, screenshot and evidence for the artifact.
+      - run: node packages/testing/behaviour.mjs ${{ github.event_name == 'push' && needs.changed.outputs.selection || '' }}
         timeout-minutes: 15
       - uses: actions/upload-artifact@v7
         if: failure()
@@ -219,7 +232,7 @@ jobs:
           if-no-files-found: ignore
 
   # The third platform of the release matrix (packages/testing/data/matrix.json,
-  # D77): the behaviour specs over macOS's own fonts and Chrome, where a layout
+  # D86): the behaviour specs over macOS's own fonts and Chrome, where a layout
   # that fits on the other two can still overflow.
   behaviour-macos:
     needs: [changed, checks]
@@ -251,7 +264,7 @@ jobs:
           if-no-files-found: ignore
 
   # The assembled host: a scratch `dsh web` with this checkout's plugin and the
-  # scripted model service, driven through a real conversation (D77).
+  # scripted model service, driven through a real conversation (D86).
   e2e:
     needs: [changed, checks]
     if: needs.changed.outputs.code == 'true' && github.event_name != 'push'

@@ -4,12 +4,13 @@
  *
  * A push that touched no file the build or a browser reads does not need those
  * lanes, and one that touched a single feature directory does not need the
- * smoke's whole walk. This reads the changed paths once and answers for the
- * jobs: whether any code changed, which smoke selection the change earns, and
- * the tree hash the build cache is keyed on. The directory names it prints are
- * checked against the feature table the manifests produce (D72), so a printed
- * selection is one the smoke accepts, and a change it cannot place falls back to
- * the whole walk.
+ * smoke's whole walk or every behaviour spec. This reads the changed paths once
+ * and answers for the jobs: whether any code changed, which feature selection
+ * the change earns, and the tree hash the build cache is keyed on. The selection
+ * is one `--feature` flag that the smoke and the behaviour lane both read. The
+ * directory names it prints are checked against the feature table the manifests
+ * produce (D76), so a printed selection is one the smoke accepts, and a change
+ * it cannot place selects nothing, which each lane reads as its whole walk.
  *
  * The answers are the job outputs the workflow's page lanes test before they
  * start, so a lane the answer leaves out is skipped rather than run and reported
@@ -18,7 +19,7 @@
  *
  * It also holds the one push this cannot accept: a change to the appearance
  * snapshot (`packages/testing/data/appearance.json`) with no change under
- * `packages/client/src` and none to the files that read it (D77). The
+ * `packages/client/src` and none to the files that read it (D86). The
  * snapshot is what the pages look like, so it only moves when what draws them
  * or what reads them moved; a push that carries it alone is a snapshot
  * recorded by hand, and `--appearance` fails it. A snapshot the base
@@ -28,8 +29,8 @@
  * selectors the importance walk cannot reach (`importance-unreachable.json`,
  * D9), the whole-document lookups left outside the host access module
  * (`document-lookups.json`), the behaviour tests held over a known defect
- * (`quarantine.json`, D77) and the skin marks the older test code spells out
- * (`skin-literals.json`, D77). Each is compared with itself at the base and its
+ * (`quarantine.json`, D86) and the skin marks the older test code spells out
+ * (`skin-literals.json`, D86). Each is compared with itself at the base and its
  * total may not rise however the reasons read; the total is what is compared,
  * so a selector rewritten or a module moved carries its entry along. Lint only
  * holds each record to the tree.
@@ -161,8 +162,8 @@ function scope(files) {
   }
   // A change to the shared layer reaches every feature, and a selection is only
   // the narrow answer when every changed file sits inside a covered directory.
-  const smoke = !code || shared || features.size === 0 ? '' : `--feature ${[...features].sort().join(',')}`
-  return { code, smoke, tree: treeHash(ROOT).hash }
+  const selection = !code || shared || features.size === 0 ? '' : `--feature ${[...features].sort().join(',')}`
+  return { code, selection, tree: treeHash(ROOT).hash }
 }
 
 /**
