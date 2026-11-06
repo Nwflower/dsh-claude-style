@@ -10,6 +10,5 @@
   "composerBottomGapDesc": { "zh": "对话页输入区与窗口底边的距离。", "en": "Room between the conversation's composer and the bottom of the window." },
   "gapCompact": { "zh": "紧凑", "en": "Compact" },
   "gapTheme": { "zh": "默认", "en": "Default" },
-  "gapRoomy": { "zh": "宽松", "en": "Roomy" },
-  "questionCustom": { "zh": "其他", "en": "Other" }
+  "gapRoomy": { "zh": "宽松", "en": "Roomy" }
 }

@@ -22,6 +22,7 @@ import type { QuickProvidersHandle } from '../features/settings/quick-providers'
 export interface Handles {
   brand: FeatureHandle
   composer: ComposerHandle
+  questionCard: FeatureHandle
   homeLayout: FeatureHandle
   homeRipple: FeatureHandle
   mascot: FeatureHandle

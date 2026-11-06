@@ -14,7 +14,7 @@
  * settles it, is judged as the reader sees it.
  *
  * @capability composer
- * @features composer
+ * @features composer, question-card
  * @risk Once a conversation is showing, the composer stops following the window's bottom edge and stands in the middle of the transcript, with the rows running past it; a session switch paints the composer in the host's own look for a frame, and a question card is drawn in the host's own box instead of the skin's.
  */
 import { spec, host, surface } from '../../fixtures/behaviour.mjs'
@@ -42,12 +42,12 @@ const CONTENT = host('chat.content')
 const FLOW_SLOT_ATTR = host.attribute('chat.flow-slot')
 const FALLBACK_ATTR = host('composer.fallback-panel')
 const QUESTION_BODY_ATTR = host.attribute('composer.question-body')
-const CUSTOM_LABEL = surface('composer.question-label')
-const FLOW_ITEM = surface('composer.question-flow-item')
-const QUESTION_SURFACE_ATTR = surface.attribute('composer.question-surface')
-const CUSTOM_ACTIVE_ATTR = surface.attribute('composer.question-custom-active')
-const SELECTION_PROPERTY = surface.property('composer.question-selection')
-const SUBMIT_SHORTCUT = surface('composer.question-submit-shortcut')
+const CUSTOM_LABEL = surface('question-card.label')
+const FLOW_ITEM = surface('question-card.flow-item')
+const QUESTION_SURFACE_ATTR = surface.attribute('question-card.surface')
+const CUSTOM_ACTIVE_ATTR = surface.attribute('question-card.custom-active')
+const SELECTION_PROPERTY = surface.property('question-card.selection')
+const SUBMIT_SHORTCUT = surface('question-card.submit-shortcut')
 
 /** The canvas the seat paints its bar with, in the Claude palette. */
 const CANVAS = 'rgb(255, 255, 255)'
@@ -279,6 +279,16 @@ function mountQuestion(t) {
   }, [QUESTION_ATTR, OPTION_ATTR, REPLY_ATTR, CONTENT, FLOW_SLOT_ATTR, FALLBACK_ATTR, SEAT, SCROLLER_ATTR, COLUMN, QUESTION_BODY_ATTR, SELECTION_PROPERTY])
 }
 
+/** Take the question fixture off the page. */
+function unmountQuestion(t) {
+  return t.page.evaluate(() => {
+    window.__debugQuestion.content.remove()
+    window.__debugQuestion.reply.remove()
+    window.__debugQuestion.probe.remove()
+    delete window.__debugQuestion
+  })
+}
+
 export default spec({ page: 'composer' }, ({ test }) => {
   test('a mounted transcript holds the composer on the scrollport\'s bottom under every phase mark', async (t) => {
     await mount(t, 'active')
@@ -407,12 +417,29 @@ export default spec({ page: 'composer' }, ({ test }) => {
       composerDisplay: window.__debugQuestion.content.querySelector(`[${window.__debugQuestion.fallbackAttr}]`).style.display,
     }), FLOW_ITEM)
     t.expectThat.equal(cleaned, { mounts: 0, composerDisplay: 'contents' }, 'the host root\'s departure removes the card and leaves the composer visible')
-    await t.page.evaluate(() => {
-      window.__debugQuestion.content.remove()
-      window.__debugQuestion.reply.remove()
-      window.__debugQuestion.probe.remove()
-      delete window.__debugQuestion
-    })
+    await unmountQuestion(t)
+  })
+
+  test('turning the question card restyle off hands a pending card back to the composer as the host drew it', async (t) => {
+    await mountQuestion(t)
+    await t.page.waitForFunction((attribute) => document.querySelector(`[${attribute}]`) !== null, QUESTION_SURFACE_ATTR)
+    await t.prefs({ questionCard: false })
+    await t.page.waitForFunction((attribute) => document.querySelector(`[${attribute}]`) === null, QUESTION_SURFACE_ATTR)
+    const handed = await t.page.evaluate(({ flowItem, label }) => {
+      const { card, section, content, fallbackAttr } = window.__debugQuestion
+      return {
+        inCard: section.parentElement === card,
+        frameDisplay: getComputedStyle(card).display,
+        mounts: document.querySelectorAll(flowItem).length,
+        labels: document.querySelectorAll(label).length,
+        composerDisplay: content.querySelector(`[${fallbackAttr}]`).style.display,
+      }
+    }, { flowItem: FLOW_ITEM, label: CUSTOM_LABEL })
+    t.expectThat.equal(handed, { inCard: true, frameDisplay: 'block', mounts: 0, labels: 0, composerDisplay: 'none' }, 'the card stands in the composer seat again, with nothing of the skin left in it')
+    await t.prefs({ questionCard: true })
+    await t.page.waitForFunction((attribute) => document.querySelector(`[${attribute}]`) !== null, QUESTION_SURFACE_ATTR)
+    t.expectThat.equal(await t.page.evaluate((flowItem) => window.__debugQuestion.section.parentElement.matches(flowItem), FLOW_ITEM), true, 'turning it back on moves the card to the flow\'s end again')
+    await unmountQuestion(t)
   })
 
   test('the mark leaves with the transcript, and the place is the host\'s again', async (t) => {

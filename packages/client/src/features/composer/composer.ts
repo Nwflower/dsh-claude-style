@@ -14,7 +14,6 @@ import { writeScroll } from '@dsh-claude-style/engine/scroll-owner'
 import { captureComposerCaret, composerComposing, focusKeepingComposerCaret } from '../../shared/composer-caret'
 import { createPlaceholderCopy } from './placeholder-copy'
 import { installWindowBlurMirror } from './selection-mirror'
-import { createQuestionCards } from '../question-card/question-card'
 import { createComposerResponsive } from './responsive'
 
 /** Inspection views where the host's composer seat stands down; content and plugin views keep it. */
@@ -60,7 +59,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const cards = observeComposerCards()
   const placeholders = observeComposerPlaceholders()
   const placeholderCopy = createPlaceholderCopy(cards, placeholders, composerComposing)
-  const questionCards = createQuestionCards()
   const responsive = createComposerResponsive()
   /**
    * The attachment tiles the skin marked, read once at install so a generation
@@ -360,7 +358,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     placeholderCopy.sync(hero, active)
     syncDraftState(found)
     syncControls(found)
-    questionCards.sync()
     responsive.sync(found, active)
     syncRootMarks()
   }
@@ -476,12 +473,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     /** A copy source changed, the composer-scope preference among them: read again now. */
     onCopyChange() {
       readState()
-      questionCards.sync()
     },
-    /** A composer input: refresh the hint and the custom answer's selected mark. */
+    /** A composer input: refresh the hint. */
     onInput() {
       placeholderCopy.onInput(hero, active)
-      questionCards.sync()
     },
     onPointerDown: focusEditorOnPress,
     /** The composer card changed size: the transcript follows it. */
@@ -500,7 +495,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     document.removeEventListener('compositionend', onCompositionEnd, true)
     placeholderCopy.dispose()
     responsive.dispose()
-    questionCards.release()
     cards.release()
     placeholders.release()
     document.body.removeAttribute(COMPOSER_ATTR)

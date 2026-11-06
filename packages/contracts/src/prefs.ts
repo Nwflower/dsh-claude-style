@@ -290,6 +290,8 @@ export const PREFS = {
   /** It was a boolean before it grew its choices. */
   autoPopover: { type: 'choice', values: AUTO_POPOVER_SCOPES, default: AUTO_POPOVER_ALL, legacy: { true: AUTO_POPOVER_ALL, false: AUTO_POPOVER_OFF } },
   composerScope: { type: 'choice', values: COMPOSER_SCOPES, default: COMPOSER_SCOPE_ALL },
+  /** Whether the host's question card is redrawn and moved to the end of the conversation; off leaves it in the composer as the host draws it. */
+  questionCard: { type: 'boolean', default: true },
   modelPicker: { type: 'boolean', default: true },
   /**
    * Whether the skin draws the reasoning-effort slider. Off hands the composer's

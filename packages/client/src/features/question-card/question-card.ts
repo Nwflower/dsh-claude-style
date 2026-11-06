@@ -4,7 +4,10 @@ import { buildElement, setAttributeIfChanged, writeTextInPlace } from '@dsh-clau
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { writeScroll } from '@dsh-claude-style/engine/scroll-owner'
 import { createCopy } from '../../core/i18n'
-import COPY from '../composer/composer.copy.json'
+import type { FeatureUi } from '../../core/feature'
+import type { HostContext } from '@dsh-claude-style/engine/host'
+import type manifest from './question-card.manifest'
+import COPY from './question-card.copy.json'
 
 const copy = createCopy(COPY)
 const CUSTOM_ROW_SELECTOR = ':is([role="radiogroup"], [role="group"]) > div:has(textarea)'
@@ -227,4 +230,20 @@ export function createQuestionCards() {
       cards.release()
     },
   }
+}
+
+/**
+ * The switch's teardown hands a pending card back to the composer seat, so
+ * turning it off mid-question leaves the host's own card where the host put it.
+ */
+export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
+  const questionCards = createQuestionCards()
+  ui.questionCard = {
+    sync: questionCards.sync,
+    /** A typed custom answer marks its row selected. */
+    onInput: questionCards.sync,
+    /** The custom option's label follows the locale. */
+    onCopyChange: questionCards.sync,
+  }
+  return () => questionCards.release()
 }
