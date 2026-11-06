@@ -108,9 +108,13 @@ jobs:
       - run: npm run behaviour
       # The assembled host on the newest published version, walked over the scenario
       # table's own default walk: what a pull request runs is what the promotion
-      # waits on (D77).
+      # waits on (D77). One scenario at a time, the way a pull request's shard
+      # drives its own slice: the scenarios that read the page frame by frame —
+      # the long session's frame cost among them — do not survive sharing this
+      # runner with a second page, and the table walked several at once put the
+      # worst frame past its bound on two runs of the same commit.
       - run: npm install --global pnpm@11 @deepseek-ai/dsh@$(node packages/testing/host-version.mjs)
-      - run: node packages/testing/e2e.mjs
+      - run: node packages/testing/e2e.mjs --jobs 1
       - uses: actions/upload-artifact@v7
         if: always()
         with:
