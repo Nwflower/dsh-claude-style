@@ -5,14 +5,18 @@
    otherwise cover the title's first glyph. */
 body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"][data-dsh-claude-row-status] {
   position: relative;
-}
-body[data-dsh-claude-style]:not([data-dsh-claude-ongoing-side="left"]) [data-dsh-claude-part~="session-row"][data-dsh-claude-row-status] {
-  padding-inline-start: calc(20px + var(--dsh-workspace-indent, 0px));
   padding-inline-end: 26px;
+}
+/* A row whose leading seat carries another plugin's own content keeps its
+   padding as it was: that content still stands in the host's slot. */
+body[data-dsh-claude-style]:not([data-dsh-claude-ongoing-side="left"]) [data-dsh-claude-part~="session-row"][data-dsh-claude-row-status="active"],
+body[data-dsh-claude-style]:not([data-dsh-claude-ongoing-side="left"]) [data-dsh-claude-part~="session-row"][data-dsh-claude-row-status="idle"] {
+  padding-inline-start: calc(20px + var(--dsh-workspace-indent, 0px));
 }
 /* The leading side keeps the mark where the host puts it, in the row's flow
    inside that band; the trailing column then belongs to the actions alone. */
-body[data-dsh-claude-style][data-dsh-claude-ongoing-side="left"] [data-dsh-claude-part~="session-row"][data-dsh-claude-row-status] {
+body[data-dsh-claude-style][data-dsh-claude-ongoing-side="left"] [data-dsh-claude-part~="session-row"][data-dsh-claude-row-status="active"],
+body[data-dsh-claude-style][data-dsh-claude-ongoing-side="left"] [data-dsh-claude-part~="session-row"][data-dsh-claude-row-status="idle"] {
   padding-inline-end: 6px;
 }
 body[data-dsh-claude-style]:not([data-dsh-claude-ongoing-side="left"]) [data-dsh-claude-part~="session-row"][data-dsh-claude-row-status="active"] > [data-dsh-claude-part~="row-slot"],
