@@ -13,6 +13,7 @@ export default {
     const off = anchor.off || {}
     const anchored = anchor.anchored || {}
     const away = anchor.away || {}
+    const growing = anchor.growing || {}
     check('with the switch off an answer starting moves the position not at all',
       off.before?.top === off.after?.top && off.before?.gap === 0, JSON.stringify(off))
     // The answer's first line comes to the top and the position leaves the end:
@@ -28,5 +29,12 @@ export default {
       away.before?.gap >= bound('answerAnchorAwayPx') &&
         Math.abs((away.after?.top ?? 0) - (away.before?.top ?? 0)) <= bound('answerAnchorSlackPx'),
       JSON.stringify(away))
+    // An answer shorter than the window has nowhere to put its first line: the
+    // write stays at the end, and the anchor asks again on every growth, so the
+    // line reaches the top once the row outgrows the window (chat-anchor.ts, grow).
+    check('an answer that starts shorter than the window takes the top as it grows',
+      growing.before?.gap === 0 && Math.abs(growing.after?.top ?? 999) <= bound('answerAnchorTopPx') &&
+        (growing.after?.gap ?? 0) >= bound('answerAnchorGapPx'),
+      JSON.stringify(growing))
   },
 }

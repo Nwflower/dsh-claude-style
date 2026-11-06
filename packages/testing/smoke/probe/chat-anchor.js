@@ -31,6 +31,11 @@
         scroller.scrollTop = scroller.scrollHeight
         await probe.settle()
       }
+      // The host counts every row of a running turn into its process group, the
+      // answer row included, and drops the mark when the turn closes: the anchor
+      // has to find the answer by its own part while the mark stands.
+      answer.setAttribute('data-turn-process-member', '')
+      await probe.settle()
       // The switch ships off: an answer starting moves the page not at all.
       window.__pushForm({ answerAnchor: false })
       await probe.settle()
@@ -60,6 +65,7 @@
       second.setAttribute('data-chat-flow-key', 'second-answer')
       second.setAttribute('data-chat-flow-kind', 'assistant-step')
       second.setAttribute('data-chat-group-part', 'response')
+      second.setAttribute('data-turn-process-member', '')
       second.style.height = '300px'
       column.appendChild(second)
       streamIn(second, 'anchorAwayMark')
@@ -67,7 +73,33 @@
       var awayAfter = { top: scroller.scrollTop, gap: gap() }
       second.remove()
       await probe.settle()
-      r.chatAnchor = { off: { before: offBefore, after: offAfter }, anchored: anchored, away: { before: awayBefore, after: awayAfter } }
+      // An answer that starts shorter than the window: the write lands at the end
+      // and the reader keeps following the tail, and the first line takes the top
+      // only once the row outgrows the window.
+      var growing = document.createElement('div')
+      growing.setAttribute('data-chat-flow-key', 'growing-answer')
+      growing.setAttribute('data-chat-flow-kind', 'assistant-step')
+      growing.setAttribute('data-chat-group-part', 'response')
+      growing.setAttribute('data-turn-process-member', '')
+      growing.style.height = '60px'
+      column.appendChild(growing)
+      await atTail()
+      streamIn(growing, 'anchorGrowMark')
+      await probe.settle()
+      var growBefore = { top: Math.round(growing.getBoundingClientRect().top - scroller.getBoundingClientRect().top), gap: gap() }
+      growing.style.height = '600px'
+      await probe.settle()
+      await probe.settle()
+      var grown = { top: Math.round(growing.getBoundingClientRect().top - scroller.getBoundingClientRect().top), gap: gap() }
+      growing.remove()
+      answer.removeAttribute('data-turn-process-member')
+      await probe.settle()
+      r.chatAnchor = {
+        off: { before: offBefore, after: offAfter },
+        anchored: anchored,
+        away: { before: awayBefore, after: awayAfter },
+        growing: { before: growBefore, after: grown },
+      }
     })
   })
 })()

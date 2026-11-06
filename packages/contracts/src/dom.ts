@@ -201,7 +201,9 @@ export const TURN_PROCESS_ROW_KIND = 'turn-process'
  * The host used to write a mark of its own on that row, and it wrote it only
  * while the group stood folded. The host no longer writes it: the answer is
  * the assistant step the turn's process does not hold, which the host's own
- * rows say by their kind and by what the process marks.
+ * rows say by their kind and by what the process marks. A running turn counts
+ * that row into its process as well, so this selector names the answer once the
+ * turn has closed; CHAT_ANSWER_ROW_SELECTOR is the row's name while it streams.
  */
 export const TURN_PROCESS_ANSWER_SELECTOR = `[${FLOW_KIND_ATTRIBUTE}="${ASSISTANT_STEP_KIND}"]:not([${TURN_PROCESS_MEMBER_ATTRIBUTE}])`
 /**
@@ -219,6 +221,13 @@ export const CHAT_GROUP_PART_ATTRIBUTE = 'data-chat-group-part'
 export const CHAT_GROUP_PART_REASONING = 'reasoning'
 /** The part value of a step's output row. */
 export const CHAT_GROUP_PART_RESPONSE = 'response'
+/**
+ * The answer's own row of an assistant step: the part that is not the step's
+ * thinking. A turn's process holds that row too while the turn runs — the host
+ * marks every row of a live turn, the answer's included, and drops the mark when
+ * the turn closes — so the member mark names the answer only after it has ended.
+ */
+export const CHAT_ANSWER_ROW_SELECTOR = `[${FLOW_KIND_ATTRIBUTE}="${ASSISTANT_STEP_KIND}"]:not([${CHAT_GROUP_PART_ATTRIBUTE}="${CHAT_GROUP_PART_REASONING}"])`
 /**
  * The words of a process group's header: the one child of the control the host
  * does not mark decorative (its icon and chevron sit in an aria-hidden span).
