@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * e2e.mjs — the end-to-end lane: a real `dsh web` with this checkout's plugin,
- * a scripted model service, and a browser on the page (D86).
+ * a scripted model service, and a browser on the page (D87).
  *
  * The smoke's stand-in page reproduces the structure its author knows; this lane
  * runs the assembled client and asserts what only it shows — that a scripted
@@ -26,13 +26,14 @@
  *        --scenario names what to run; without it the walk is every scenario in
  *        the table (packages/testing/scenarios.mjs) but the parked pair below.
  *        --shard takes one slice of that walk, so several runs hold the whole
- *        of it between them (D86); a slice runs one scenario at a time, since
+ *        of it between them (D87); a slice runs one scenario at a time, since
  *        the cloud's own parallelism is the shards.
  */
 import fs from 'node:fs'
 import { availableParallelism } from 'node:os'
 import path from 'node:path'
 import { launchBrowser } from './browser.mjs'
+import { argOf } from '../../scripts/shared/args.mjs'
 import { start, openPage, waitForSkin, dismissOverlays, firstRunOverlayText, DEFAULT_HOME } from './dsh-web.mjs'
 import { MARKS, measureFrameMs } from './lane.mjs'
 import { requireNewestHost } from './host-version.mjs'
@@ -367,7 +368,7 @@ async function runScenario(name, options) {
       }
       step('asserting')
       const checks = await scenario.assert(context)
-      // An observation that differs is printed as a difference and fails nothing (D86).
+      // An observation that differs is printed as a difference and fails nothing (D87).
       for (const item of checks) say(`  ${item.ok ? '✓' : item.observation === true ? '△' : '✗'} ${item.name}${item.detail === '' ? '' : `  — ${item.detail}`}\n`)
       const failed = checks.filter((item) => !item.ok && item.observation !== true).length
       const observed = checks.filter((item) => !item.ok && item.observation === true)
@@ -402,7 +403,7 @@ async function runScenario(name, options) {
 /**
  * One slice of a walk: every `<total>`th name from `<index>`. The scenarios of a
  * walk are independent of one another, so slices taken this way cover the walk
- * exactly once between them however many runners hold it (D86).
+ * exactly once between them however many runners hold it (D87).
  */
 function shardOf(names, spec) {
   const at = spec.indexOf(':')
@@ -416,11 +417,7 @@ function shardOf(names, spec) {
 
 async function main() {
   const args = process.argv.slice(2)
-  const argOf = (flag) => {
-    const at = args.indexOf(`--${flag}`)
-    return at === -1 ? undefined : args[at + 1]
-  }
-  // The lane reads what the host draws; a host other than the pinned one gets no verdict (D86).
+  // The lane reads what the host draws; a host other than the pinned one gets no verdict (D87).
   requireNewestHost()
   // The timing table names the scenarios that hold it (D3), so the two lists are
   // checked against each other rather than kept in step by hand.
@@ -516,3 +513,4 @@ withLock('e2e', 'e2e', main).catch((error) => {
   console.error(error)
   process.exit(1)
 })
+

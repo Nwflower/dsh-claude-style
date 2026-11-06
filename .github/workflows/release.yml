@@ -1,24 +1,32 @@
 name: Release
 
 # A release starts from a tag the maintainer pushes: the version's CHANGELOG
-# section and the bumped package.json are already in that commit. The job packs
-# the package once and publishes it as `<version>-dev.<run number>` under npm's
-# `dev` tag so the version can be tried before the gates finish, runs the gates
-# the fast tier holds, then the end-to-end lane, and only then publishes
-# `<version>` as `latest` from the same tarball, writes the same files npm gets
-# to the `dist` branch so a git install needs no build (D47), and opens the
-# GitHub Release with the version's CHANGELOG section. The promotion is the last
-# step: the gates above it are the ones CI's own jobs run (D86).
+# section and the bumped package.json are already in that commit. What it stands
+# on is the matrix already run against that commit — the manual CI run the
+# release stretch starts before the version is cut (D87) — so this workflow reads
+# that verdict rather than walking the same lanes a second time on the same tree.
+# A tag whose commit carries no green matrix stops here, before anything is
+# packed or published, and names the command that produces one.
+#
+# The rest is the packing and the two publications: the package is packed once
+# and published as `<version>-dev.<run number>` under npm's `dev` tag so the
+# version can be tried immediately, then the checks that read no page confirm the
+# tree, and `<version>` goes out as `latest` from the same tarball. The same files
+# npm gets are written to the `dist` branch so a git install needs no build
+# (D47), and the GitHub Release opens with the version's CHANGELOG section. The
+# promotion is the last step.
 
 on:
   push:
     tags: ['v*']
 
 # contents: the dist branch, the moved tag and the GitHub Release (D47).
+# actions: the matrix verdict, read from this repository's own runs (D87).
 # id-token: what npm's trusted publishing exchanges for a one-time publish
 # token, so no npm secret is stored.
 permissions:
   contents: write
+  actions: read
   id-token: write
 
 concurrency:
@@ -26,26 +34,27 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # The readers' desktop runs on Windows, and the release carries the same
-  # package to it: the smoke there is a gate the promotion waits on, as it is in
-  # CI.
-  smoke-windows:
-    runs-on: windows-latest
-    timeout-minutes: 20
+  # The gate the promotion stands on, read before the pack: `release-verdict.mjs`
+  # finds the manual CI run on this commit and holds it to every lane the matrix
+  # has. A release that fails here has published nothing.
+  verdict:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v7
         with:
           node-version: 24
-          cache: npm
-      - run: npm ci
-      - run: npm run build
-      - run: npm run smoke
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/release-verdict.mjs
 
   release:
-    needs: smoke-windows
+    needs: verdict
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
         with:
@@ -81,7 +90,9 @@ jobs:
         id: state
         run: node scripts/release-state.mjs >> "$GITHUB_OUTPUT"
       # One build, two tarballs: the release the promotion publishes, and the
-      # same files with the dev version in them that the `dev` tag gets now.
+      # same files with the dev version in them that the `dev` tag gets now. The
+      # tarballs carry the bundle this commit builds, which is the one the matrix
+      # judged.
       - name: Pack the release and its dev version
         id: pack
         env:
@@ -90,37 +101,20 @@ jobs:
           paths="$(node scripts/release-pack.mjs --out .debug/release --dev "${VERSION}-dev.${GITHUB_RUN_NUMBER}")"
           echo "release=$(printf '%s\n' "${paths}" | sed -n 1p)" >> "$GITHUB_OUTPUT"
           echo "dev=$(printf '%s\n' "${paths}" | sed -n 2p)" >> "$GITHUB_OUTPUT"
-      # Out before the gates, so the version can be installed while they run; a
-      # gate that fails leaves the dev build where it is and promotes nothing.
+      # Out at once, so the version can be installed and tried while the checks
+      # below run; a check that fails leaves the dev build where it is and
+      # promotes nothing.
       - name: Publish the dev version
         if: steps.state.outputs.published != 'true' && steps.state.outputs.dev == ''
         run: npm publish "${{ steps.pack.outputs.dev }}" --access public --provenance --tag dev
+      # The checks that read no page, on the tree npm is about to receive: seconds
+      # each, and the matrix that judged the pages is what the verdict job read.
       - run: npm run lint
       - run: npm run docs:check
       - run: npm run changelog:check
       - run: npm run agents:check
       - run: npm run checks:numbers -- --check
       - run: npm run build
-      - run: npm test
-      - run: npm run smoke
-      # The behaviour specs read the same build on the same stand-in host; a
-      # release is judged by the layers CI runs, this one included (D86).
-      - run: npm run behaviour
-      # The assembled host on the newest published version, walked over the scenario
-      # table's own default walk: what a pull request runs is what the promotion
-      # waits on (D86). One scenario at a time, the way a pull request's shard
-      # drives its own slice: the scenarios that read the page frame by frame —
-      # the long session's frame cost among them — do not survive sharing this
-      # runner with a second page, and the table walked several at once put the
-      # worst frame past its bound on two runs of the same commit.
-      - run: npm install --global pnpm@11 @deepseek-ai/dsh@$(node packages/testing/host-version.mjs)
-      - run: node packages/testing/e2e.mjs --jobs 1
-      - uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: release-e2e-traces
-          path: .debug/e2e/out
-          if-no-files-found: ignore
       # The dist branch carries the npm package's own contents, and the step
       # builds first: `lib/` is not in version control, so a fresh checkout has
       # none and packing alone would ship a `main` that is not in the package.
