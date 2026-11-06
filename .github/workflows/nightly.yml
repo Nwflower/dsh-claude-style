@@ -1,0 +1,91 @@
+name: Nightly
+
+# The lanes whose answer changes with something outside a pull request. The
+# end-to-end lane judges the newest published host (packages/testing/host-version.mjs
+# reads the registry), and it walks the host contract table and the appearance
+# snapshot's computed records against that host's own page (D86). A host release
+# that drops a selector or renames a service member would otherwise wait for the
+# next pull request to say so; this run says it within a day. The macOS lane
+# reads the behaviour specs over that system's fonts and Chrome
+# (packages/testing/data/matrix.json), where a layout that fits on the other two
+# platforms can still overflow, and a pull request leaves it to the release
+# matrix and to this run.
+#
+# Neither job joins a branch rule and neither blocks anything: a red verdict
+# here is read against the commit it ran on, and the release matrix on master is
+# still what a version waits for. A manual run judges the same two lanes on the
+# commit it is asked for, which is how a host release is met before the next
+# night.
+#
+# The jobs build the tree they read: `lib/` is not in version control (D47), and
+# neither lane has a cache to restore from a nightly that ran on another commit.
+on:
+  schedule:
+    - cron: '41 16 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: Nightly-${{ github.event_name }}-${{ github.sha }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  # The behaviour specs over macOS's own fonts and Chrome.
+  behaviour-macos:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        timeout-minutes: 15
+      - run: npm run behaviour
+        timeout-minutes: 15
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: nightly-behaviour-macos
+          path: .debug/behaviour
+          if-no-files-found: ignore
+
+  # The assembled host: a scratch `dsh web` on the newest published host with
+  # this checkout's plugin and the scripted model service, walked through the
+  # lane's default table — the `contract` scenario among them (D86).
+  e2e-host:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        timeout-minutes: 15
+      # The lane boots the host's own CLI, which needs pnpm to install a
+      # profile's plugins.
+      - run: npm install --global pnpm@11 @deepseek-ai/dsh@$(node packages/testing/host-version.mjs)
+        timeout-minutes: 10
+      # The whole default table in one job, the scenarios running several at a
+      # time — the cloud's four shards are what a pull request buys, and a
+      # nightly has the minutes to walk the table in one run whose traces sit
+      # together.
+      - run: node packages/testing/e2e.mjs
+        timeout-minutes: 35
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: nightly-e2e-traces
+          path: .debug/e2e/out
+          if-no-files-found: ignore
