@@ -87,7 +87,7 @@ const CACHE_DIR = path.join(ROOT, '.debug', 'build-cache')
 const ASSETS_MODULE = path.join(ROOT, 'packages', 'assets', 'assets.mjs')
 
 /**
- * The plugin icon the 0.1.7 plugin manifest reads.
+ * The plugin icon the host's plugin manifest reads.
  *
  * `package.json` declares it as `icon`, a path relative to the manifest
  * (SVG/PNG/JPEG/WebP, at most 256 KiB, inside the package directory); the host

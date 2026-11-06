@@ -38,7 +38,7 @@
   },
   "dsh": {
     "engines": {
-      "dsh": ">=0.1.7"
+      "dsh": ">=0.2.2-rc.1"
     },
     "bundle": {
       "patch": "./cordis.patch.yml"
@@ -88,7 +88,7 @@
     "url": "https://github.com/Nwflower/dsh-claude-style/issues"
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh-client-ui-primitives": ">=0.1.5-rc.1",
+    "@deepseek-ai/dsh-client-ui-primitives": ">=0.2.2-rc.1",
     "@deepseek-ai/schemastery": ">=3.18.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

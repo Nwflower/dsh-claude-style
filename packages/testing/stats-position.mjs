@@ -21,7 +21,7 @@ import { statsOverlayScenario } from './stats-overlay.mjs'
 const readPosition = (page) => page.evaluate(() => {
   const card = document.querySelector('[data-composer-card]')
   const dock = card?.nextElementSibling ?? null
-  const row = document.querySelector('[data-composer-stats], [data-composer-stat]')
+  const row = document.querySelector('[data-composer-stat]')
   const meter = document.querySelector('[data-dsh-claude-context-meter]')
   const line = document.querySelector('[data-dsh-claude-inline-stats]')
   const cache = line?.querySelector('[data-dsh-claude-ramp="cache"]') ?? null

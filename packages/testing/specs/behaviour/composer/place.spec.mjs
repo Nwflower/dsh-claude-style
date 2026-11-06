@@ -14,7 +14,7 @@
  * settles it, is judged as the reader sees it.
  *
  * @capability composer
- * @features composer
+ * @features composer, question-card
  * @risk Once a conversation is showing, the composer stops following the window's bottom edge and stands in the middle of the transcript, with the rows running past it; a session switch paints the composer in the host's own look for a frame, and a question card is drawn in the host's own box instead of the skin's.
  */
 import { spec, host, surface } from '../../fixtures/behaviour.mjs'
@@ -42,12 +42,12 @@ const CONTENT = host('chat.content')
 const FLOW_SLOT_ATTR = host.attribute('chat.flow-slot')
 const FALLBACK_ATTR = host('composer.fallback-panel')
 const QUESTION_BODY_ATTR = host.attribute('composer.question-body')
-const CUSTOM_LABEL = surface('composer.question-label')
-const FLOW_ITEM = surface('composer.question-flow-item')
-const QUESTION_SURFACE_ATTR = surface.attribute('composer.question-surface')
-const CUSTOM_ACTIVE_ATTR = surface.attribute('composer.question-custom-active')
-const SELECTION_PROPERTY = surface.property('composer.question-selection')
-const SUBMIT_SHORTCUT = surface('composer.question-submit-shortcut')
+const CUSTOM_LABEL = surface('question-card.label')
+const FLOW_ITEM = surface('question-card.flow-item')
+const QUESTION_SURFACE_ATTR = surface.attribute('question-card.surface')
+const CUSTOM_ACTIVE_ATTR = surface.attribute('question-card.custom-active')
+const SELECTION_PROPERTY = surface.property('question-card.selection')
+const SUBMIT_SHORTCUT = surface('question-card.submit-shortcut')
 
 /** The canvas the seat paints its bar with, in the Claude palette. */
 const CANVAS = 'rgb(255, 255, 255)'
@@ -206,6 +206,9 @@ function mountQuestion(t) {
     scroller.setAttribute(scrollerAttr, '')
     const column = document.createElement('div')
     column.setAttribute(name(columnSelector), '')
+    // The host's column: a flex column narrower than the composer card, which
+    // stands its side clearance wider on either side.
+    column.style.cssText = 'display:flex;flex-direction:column;width:600px;margin-left:40px;--dsh-composer-card-max-width:632px;--dsh-composer-side-clearance:16px'
     const flow = document.createElement('div')
     flow.setAttribute(flowAttr, 'conversation.chat.flow')
     column.append(flow)
@@ -275,8 +278,18 @@ function mountQuestion(t) {
     const probe = document.createElement('span')
     probe.style.background = `var(${selectionProperty})`
     document.body.append(content, reply, probe)
-    window.__debugQuestion = { card, section, row, mark, badge, term, answer, content, reply, probe, fallbackAttr }
+    window.__debugQuestion = { card, section, title, column, row, mark, badge, term, answer, content, reply, probe, fallbackAttr }
   }, [QUESTION_ATTR, OPTION_ATTR, REPLY_ATTR, CONTENT, FLOW_SLOT_ATTR, FALLBACK_ATTR, SEAT, SCROLLER_ATTR, COLUMN, QUESTION_BODY_ATTR, SELECTION_PROPERTY])
+}
+
+/** Take the question fixture off the page. */
+function unmountQuestion(t) {
+  return t.page.evaluate(() => {
+    window.__debugQuestion.content.remove()
+    window.__debugQuestion.reply.remove()
+    window.__debugQuestion.probe.remove()
+    delete window.__debugQuestion
+  })
 }
 
 export default spec({ page: 'composer' }, ({ test }) => {
@@ -317,11 +330,15 @@ export default spec({ page: 'composer' }, ({ test }) => {
       return label !== null && label.textContent === 'Other'
     }, CUSTOM_LABEL)
     const reading = await t.page.evaluate((flowItem) => {
-      const { card, section, row, mark, badge, term, answer, content, probe, fallbackAttr } = window.__debugQuestion
+      const { card, section, title, column, row, mark, badge, term, answer, content, probe, fallbackAttr } = window.__debugQuestion
       const paint = getComputedStyle
+      const box = section.getBoundingClientRect()
+      const columnBox = column.getBoundingClientRect()
       return {
         cardRadius: paint(section).borderRadius,
         cardWidth: paint(section.parentElement).width,
+        cardOverhang: [columnBox.left - box.left, box.right - columnBox.right],
+        titleWrap: paint(title).textWrapStyle,
         rowRadius: paint(row).borderRadius,
         markRadius: paint(mark).borderRadius,
         markWidth: paint(mark).width,
@@ -338,7 +355,9 @@ export default spec({ page: 'composer' }, ({ test }) => {
       }
     }, FLOW_ITEM)
     t.expectThat.equal(reading.cardRadius, '14px', 'the question card is drawn in the skin\'s own radius')
-    t.expectThat.equal(reading.cardWidth, '576px', 'the card is wide enough for the question\'s option list on a wide screen')
+    t.expectThat.equal(reading.cardWidth, '632px', 'the card takes the composer card\'s width')
+    t.expectThat.equal(reading.cardOverhang, [16, 16], 'the card overhangs the column by the composer\'s side clearance on either side, in line with the composer')
+    t.expectThat.equal(reading.titleWrap, 'pretty', 'the question\'s lines are evened out so the last one never carries a lone character')
     t.expectThat.equal(reading.rowRadius, '0px', 'option rows join one continuous list')
     t.expectThat.equal(reading.markRadius, '50%', 'a single-choice option carries a circular radio')
     t.expectThat.equal(reading.markWidth, reading.markHeight, 'the radio keeps equal width and height')
@@ -360,10 +379,10 @@ export default spec({ page: 'composer' }, ({ test }) => {
     t.expectThat.equal(shortcut, { text: 'Ctrl', icons: 1 }, 'the submit button carries Ctrl and the return icon')
     const narrowWidth = await t.page.evaluate(() => {
       const mount = window.__debugQuestion.section.parentElement
-      mount.parentElement.style.width = '360px'
+      window.__debugQuestion.column.style.width = '360px'
       return getComputedStyle(mount).width
     })
-    t.expectThat.equal(narrowWidth, '360px', 'the card fills a narrower conversation column')
+    t.expectThat.equal(narrowWidth, '392px', 'on a column narrower than the composer card the card keeps the same side clearance')
     await t.page.locator(`[${OPTION_ATTR}]`).hover()
     await t.page.evaluate(() => Promise.all(window.__debugQuestion.row.getAnimations().map(animation => animation.finished)))
     const ordinaryHover = await t.page.evaluate(() => getComputedStyle(window.__debugQuestion.row).backgroundColor)
@@ -407,12 +426,29 @@ export default spec({ page: 'composer' }, ({ test }) => {
       composerDisplay: window.__debugQuestion.content.querySelector(`[${window.__debugQuestion.fallbackAttr}]`).style.display,
     }), FLOW_ITEM)
     t.expectThat.equal(cleaned, { mounts: 0, composerDisplay: 'contents' }, 'the host root\'s departure removes the card and leaves the composer visible')
-    await t.page.evaluate(() => {
-      window.__debugQuestion.content.remove()
-      window.__debugQuestion.reply.remove()
-      window.__debugQuestion.probe.remove()
-      delete window.__debugQuestion
-    })
+    await unmountQuestion(t)
+  })
+
+  test('turning the question card restyle off hands a pending card back to the composer as the host drew it', async (t) => {
+    await mountQuestion(t)
+    await t.page.waitForFunction((attribute) => document.querySelector(`[${attribute}]`) !== null, QUESTION_SURFACE_ATTR)
+    await t.prefs({ questionCard: false })
+    await t.page.waitForFunction((attribute) => document.querySelector(`[${attribute}]`) === null, QUESTION_SURFACE_ATTR)
+    const handed = await t.page.evaluate(({ flowItem, label }) => {
+      const { card, section, content, fallbackAttr } = window.__debugQuestion
+      return {
+        inCard: section.parentElement === card,
+        frameDisplay: getComputedStyle(card).display,
+        mounts: document.querySelectorAll(flowItem).length,
+        labels: document.querySelectorAll(label).length,
+        composerDisplay: content.querySelector(`[${fallbackAttr}]`).style.display,
+      }
+    }, { flowItem: FLOW_ITEM, label: CUSTOM_LABEL })
+    t.expectThat.equal(handed, { inCard: true, frameDisplay: 'block', mounts: 0, labels: 0, composerDisplay: 'none' }, 'the card stands in the composer seat again, with nothing of the skin left in it')
+    await t.prefs({ questionCard: true })
+    await t.page.waitForFunction((attribute) => document.querySelector(`[${attribute}]`) !== null, QUESTION_SURFACE_ATTR)
+    t.expectThat.equal(await t.page.evaluate((flowItem) => window.__debugQuestion.section.parentElement.matches(flowItem), FLOW_ITEM), true, 'turning it back on moves the card to the flow\'s end again')
+    await unmountQuestion(t)
   })
 
   test('the mark leaves with the transcript, and the place is the host\'s again', async (t) => {

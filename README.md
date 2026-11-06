@@ -80,7 +80,15 @@ dsh plugin --profile web add dsh-claude-style                    # npm 包（推
 dsh plugin --profile web add Nwflower/dsh-claude-style#dist      # GitHub 发布分支
 ```
 
-也可从[插件市场](https://github.com/dsh-market/dsh-market)或 dsh-web-all 的皮肤中心安装。同一时刻只启用一个主题，装好后重启 DeepSeek Harness。
+也可从[插件市场](https://github.com/dsh-market/dsh-market)或 dsh-web-all 的皮肤中心安装。同一时刻只启用一个主题；需要 dsh ≥ 0.2.2-rc.1，装好后重启 DeepSeek Harness。
+
+## 手动未读标记
+
+在会话的省略号菜单中选择「标记为未读」或「清除未读标记」。标记保存在当前配置中，刷新页面后保留，切走后再次打开该会话时清除；宿主的自动完成提醒保持独立。可在插件设置的「侧栏」标签页关闭此功能，关闭期间保留已保存的标记。
+
+## 撤回与编辑消息
+
+指针移到你自己发出的消息上，时间与复制按钮旁边会多出「撤回」与「编辑」。两者都打开一个新会话，原会话原样保留：撤回把这条消息和它之后的对话切掉，把原文放回输入框等你重新发送；编辑先在气泡的位置改好文字，确认后直接在新会话里发出。带图片或文件附件的消息不给这两个按钮，附件没法随文字搬进新会话。这一轮还在进行时，两个按钮会先等它停下。可在插件设置的「对话」标签页关闭此功能。
 
 ## 字体
 
@@ -108,8 +116,7 @@ dsh plugin --profile web add Nwflower/dsh-claude-style#dist      # GitHub 发布
 
 - 「钠 / Sodium」取名自 Minecraft 的 [Sodium](https://github.com/CaffeineMC/sodium) 渲染优化模组，本插件与它没有关联。
 - 消息导航参考 SherUnlocked-4869 的 [dsh-plugin-msg-nav](https://github.com/SherUnlocked-4869/dsh-plugin-msg-nav)（MIT）。
-- Deepy 的动画帧图来自 calmly-eating-bugs（[@wp3171216237](https://github.com/wp3171216237)）绘制的 Deepy 小鲸鱼主题包。
-- 鲸娘的像素表情集随 issue #224 提供。
+- Deepy 和鲸鱼娘的动画帧图来自 calmly-eating-bugs（[@wp3171216237](https://github.com/wp3171216237)）绘制的主题包。
 - 聊天区的增强动效改自 [dsh-chat-ux](https://github.com/alm-allen/dsh-chat-ux)（MIT）。
 - Clawd是 Anthropic 的角色形象。帧图不适用 MIT 许可（见 [LICENSE](LICENSE)）。本插件是非官方爱好者作品，与 Anthropic 没有关联。
 

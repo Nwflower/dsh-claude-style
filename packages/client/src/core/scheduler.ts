@@ -22,6 +22,7 @@ import type { QuickProvidersHandle } from '../features/settings/quick-providers'
 export interface Handles {
   brand: FeatureHandle
   composer: ComposerHandle
+  questionCard: FeatureHandle
   homeLayout: FeatureHandle
   homeRipple: FeatureHandle
   mascot: FeatureHandle
@@ -40,6 +41,7 @@ export interface Handles {
   sidebarPeek: FeatureHandle
   sidebarStatus: FeatureHandle
   sessionActions: FeatureHandle
+  manualUnread: FeatureHandle
   sidebarEntries: FeatureHandle
   turnNav: FeatureHandle
   chatFollow: FeatureHandle
@@ -49,6 +51,7 @@ export interface Handles {
   chatReveal: FeatureHandle
   chatAnchor: FeatureHandle
   chatFiles: FeatureHandle
+  messageActions: FeatureHandle
   chatSend: ChatSendHandle
   caret: FeatureHandle
   viewTabs: FeatureHandle

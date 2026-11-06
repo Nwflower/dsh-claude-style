@@ -1,0 +1,8 @@
+{
+  "group": "new",
+  "order": 20,
+  "at": "2026-11-05",
+  "external": false,
+  "zh": "新增「重绘提问卡片」开关，关闭后提问卡片保留宿主原样",
+  "en": "Add a Question card restyle switch that keeps the host's own question card when off"
+}

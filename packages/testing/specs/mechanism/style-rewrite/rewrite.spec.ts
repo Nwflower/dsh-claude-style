@@ -13,7 +13,7 @@
  * @risk With the switch on, a flow item that should collapse keeps its height or its gap, a filled one stays collapsed while the host reads the layout and the conversation's position slides back, the running line's divider shows at the wrong moment, or a rule loses to one it used to beat.
  */
 import { afterEach, expect, test } from 'vitest'
-import { CHAT_FLOW_SLOT_SELECTOR, CHAT_GROUP_PART_ATTRIBUTE, CHAT_GROUP_PART_RESPONSE, CHAT_NODE_SELECTOR, CHAT_RUNNING_SELECTOR, CHAT_STEERING_BATCH_SELECTOR, FLOW_BLOCK_SELECTOR, FLOW_KIND_ATTRIBUTE, PENDING_STEERING_SELECTOR, SUBMISSION_ECHO_SELECTOR, TURN_PROCESS_ANSWER_ATTRIBUTE, TURN_PROCESS_ROW_KIND } from '@dsh-claude-style/contracts/dom'
+import { CHAT_FLOW_SLOT_SELECTOR, CHAT_GROUP_PART_ATTRIBUTE, CHAT_GROUP_PART_RESPONSE, CHAT_NODE_SELECTOR, CHAT_RUNNING_SELECTOR, CHAT_STEERING_BATCH_SELECTOR, FLOW_BLOCK_SELECTOR, FLOW_KIND_ATTRIBUTE, PENDING_STEERING_SELECTOR, SUBMISSION_ECHO_SELECTOR, TURN_PROCESS_ROW_KIND } from '@dsh-claude-style/contracts/dom'
 import { applyRewrite, planRewrite, restoreRewrite } from '@dsh-claude-style/engine/sheet-rewrite'
 import { SODIUM_MEMBERS, keepFlowChildMark } from '@dsh-claude-style/client/pure'
 import { hostElement } from '../../fixtures/host-markup'
@@ -107,7 +107,7 @@ function conversation() {
     item('text', { [CHAT_GROUP_PART_ATTRIBUTE]: CHAT_GROUP_PART_RESPONSE }),
     item('node'),
     item('node', { [FLOW_KIND_ATTRIBUTE]: TURN_PROCESS_ROW_KIND }),
-    item('node', { [FLOW_KIND_ATTRIBUTE]: 'assistant-step', [TURN_PROCESS_ANSWER_ATTRIBUTE]: '' }),
+    item('node', { [FLOW_KIND_ATTRIBUTE]: 'assistant-step' }),
     steeringItem(),
     item('node', { hidden: '' }),
     bubble(SUBMISSION_ECHO_SELECTOR),
@@ -189,11 +189,7 @@ test('stopping the keeper takes the mark off', () => {
 
 /**
  * The host chat module's flow rules as its sheet writes them, with the stand-in
- * classes. The host has shipped them in two shapes: the older one names the
- * older turn's seat with `:has(> .older)`, leaves the text-interaction surface
- * and the steering batches out of nothing, and names the process group's answer
- * by a mark of the host's own; the newer one is the shape the host writes
- * today.
+ * classes.
  */
 const VISIBLE = `:not([hidden]):not(${EMPTY})`
 /** The visible item as the column's rule names it: the surface stands out of it. */
@@ -202,18 +198,11 @@ const NOT_RUNNING = `:not(.${RUNNING})`
 const NOT_BATCH = `:not(:has(> ${CHAT_NODE_SELECTOR} > ${CHAT_STEERING_BATCH_SELECTOR}))`
 const NOT_OPENING = `:not(${SUBMISSION_ECHO_SELECTOR}, ${PENDING_STEERING_SELECTOR})`
 const SCOPE = `:is(.${COLUMN}, ${CHAT_FLOW_SLOT_SELECTOR})`
-/** The rules as the host writes them today, from 0.2.2-alpha.3 on. */
+/** The rules as the host writes them. */
 const HOST_RULES = [
   `${SCOPE} > ${SURFACE_VISIBLE} ~ ${SURFACE_VISIBLE}, .${COLUMN} > .${OLDER} + ${CHAT_FLOW_SLOT_SELECTOR} > ${SURFACE_VISIBLE} { margin-top: var(--gap, 6px) }`,
   `.${ITEM}[${CHAT_GROUP_PART_ATTRIBUTE}="${CHAT_GROUP_PART_RESPONSE}"], ${SCOPE} > [${CHAT_GROUP_PART_ATTRIBUTE}="${CHAT_GROUP_PART_RESPONSE}"]:not([hidden]):not(:empty) + ${VISIBLE}${NOT_RUNNING}${NOT_BATCH} { --gap: 12px }`,
   `.${ITEM}[${FLOW_KIND_ATTRIBUTE}="${TURN_PROCESS_ROW_KIND}"], ${SCOPE} > [${FLOW_KIND_ATTRIBUTE}="${TURN_PROCESS_ROW_KIND}"]:not(:empty, :has(> ${CHAT_NODE_SELECTOR}:empty)) + ${VISIBLE}${NOT_RUNNING}${NOT_BATCH}, ${SCOPE} > [${FLOW_KIND_ATTRIBUTE}="${TURN_PROCESS_ROW_KIND}"] + ${VISIBLE}${NOT_RUNNING}${NOT_OPENING}${NOT_BATCH} { --gap: 16px }`,
-  `${EMPTY} { height: 0px }`,
-]
-/** The rules as the host wrote them up to 0.2.1-rc.5. */
-const HOST_RULES_OLD = [
-  `${SCOPE} > ${VISIBLE} ~ ${VISIBLE}, .${COLUMN}:has(> .${OLDER}) > ${CHAT_FLOW_SLOT_SELECTOR} > ${VISIBLE} { margin-top: var(--gap, 6px) }`,
-  `.${ITEM}[${CHAT_GROUP_PART_ATTRIBUTE}="${CHAT_GROUP_PART_RESPONSE}"], ${SCOPE} > [${CHAT_GROUP_PART_ATTRIBUTE}="${CHAT_GROUP_PART_RESPONSE}"]:not([hidden]):not(:empty) + ${VISIBLE}${NOT_RUNNING} { --gap: 12px }`,
-  `.${ITEM}[${FLOW_KIND_ATTRIBUTE}="${TURN_PROCESS_ROW_KIND}"], .${ITEM}[${TURN_PROCESS_ANSWER_ATTRIBUTE}], ${SCOPE} > [${FLOW_KIND_ATTRIBUTE}="${TURN_PROCESS_ROW_KIND}"] + ${VISIBLE}${NOT_RUNNING} { --gap: 16px }`,
   `${EMPTY} { height: 0px }`,
 ]
 /** The host rules whose subject is the visible item, the compound the browser cannot bucket: the ones the table spreads. */
@@ -245,16 +234,6 @@ test('the table rewrites every host gap rule to select the same elements, and le
   const rewritten = rewriteHostRules()
   expect(rewritten.length).toBe(SPREAD.length)
   expect(rewritten.map(entry => entry.original)).not.toContain(EMPTY)
-  for (const { original, rewritten: now } of selections(rewritten)) {
-    expect(original.length).toBeGreaterThan(0)
-    expect(now).toEqual(original)
-  }
-})
-
-test('the shape the host shipped its rules in before 0.2.2-alpha.3 is rewritten as well', () => {
-  conversation()
-  const rewritten = rewriteHostRules(HOST_RULES_OLD)
-  expect(rewritten.length).toBe(HOST_RULES_OLD.filter(rule => rule.includes(VISIBLE)).length)
   for (const { original, rewritten: now } of selections(rewritten)) {
     expect(original.length).toBeGreaterThan(0)
     expect(now).toEqual(original)

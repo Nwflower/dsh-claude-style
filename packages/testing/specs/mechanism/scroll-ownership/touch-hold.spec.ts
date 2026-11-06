@@ -8,9 +8,9 @@
  */
 import { afterEach, expect, test } from 'vitest'
 import { adoptSkin } from '@dsh-claude-style/engine/skin'
-import { easeScrollToEndFor, readerHolds } from '@dsh-claude-style/engine/scroll-owner'
+import { easeScrollToEndFor, readerHolds, writeScroll } from '@dsh-claude-style/engine/scroll-owner'
 import { CHAT_FLOW_SELECTOR } from '@dsh-claude-style/contracts/dom'
-import { MOTION_FULL, READER_HOLD_ATTR, TEST_SKIN } from '../../fixtures/vocabulary'
+import { MOTION_FULL, MOTION_REDUCED, READER_HOLD_ATTR, TEST_SKIN } from '../../fixtures/vocabulary'
 import { attach } from '../../fixtures/host-markup'
 import { createScrollOwnerFixture } from '../../fixtures/scroll-owner'
 
@@ -98,6 +98,22 @@ test('a downward drag holds away from the end; turning up and reaching it resume
   touch(content, 'touchmove', 380)
   await moveTo(scroller, scroller.scrollHeight)
   expectHold(scroller, false)
+})
+
+test.each([MOTION_FULL, MOTION_REDUCED])('composer growth respects a touch-held position and resumes at the tail with %s motion', async mode => {
+  const { scroller, content } = dragAtEnd()
+  setMotion(mode)
+  touch(content, 'touchmove', 460)
+  await moveTo(scroller, scroller.scrollHeight - scroller.clientHeight - 100)
+  const top = scroller.scrollTop
+  expect(writeScroll(scroller, scroller.scrollHeight, 'composer')).toBe(false)
+  expect(easeScrollToEndFor(scroller, 'composer', wanted)).toBe(false)
+  expect(scroller.scrollTop).toBe(top)
+  expectHold(scroller, true)
+  touch(content, 'touchmove', 380)
+  await moveTo(scroller, scroller.scrollHeight)
+  expectHold(scroller, false)
+  expect(writeScroll(scroller, scroller.scrollHeight, 'composer')).toBe(true)
 })
 
 test('a hold aimed away stands under the pin and an upward aim releases at the end', async () => {

@@ -82,7 +82,15 @@ dsh plugin --profile web add dsh-claude-style                    # npm package (
 dsh plugin --profile web add Nwflower/dsh-claude-style#dist      # GitHub release branch
 ```
 
-Also from the [plugin market](https://github.com/dsh-market/dsh-market) or the Skin Center of the dsh-web-all plugin. Keep one theme enabled at a time; dsh ≥ 0.1.7 is required, and a restart of DeepSeek Harness brings the full feature set.
+Also from the [plugin market](https://github.com/dsh-market/dsh-market) or the Skin Center of the dsh-web-all plugin. Keep one theme enabled at a time; dsh ≥ 0.2.2-rc.1 is required, and a restart of DeepSeek Harness brings the full feature set.
+
+## Manual unread marks
+
+Choose **Mark as unread** or **Clear unread mark** from a session's ellipsis menu. Marks are saved in the current profile, survive reloads, and clear when you leave and later open that session. The host's automatic completion reminders stay independent. Disable the feature under **Sidebar** in the plugin settings to hide its menu item and markers while retaining saved marks.
+
+## Retract and edit a message
+
+Hover a message you sent and **Retract** and **Edit** join the clock and copy buttons. Both open a new session and leave the original as it was: retracting drops that message and everything after it and puts the text back in the composer for you to send again, while editing amends the text in place first and sends it in the new session as soon as you confirm. A message carrying images or files gets neither button, since attachments cannot travel with the text into a new session. Both wait while the turn is still running. Disable the feature under **Conversation** in the plugin settings.
 
 ## Fonts
 

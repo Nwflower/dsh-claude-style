@@ -1,6 +1,7 @@
 import { buildElement } from '@dsh-claude-style/engine/dom'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import type { HostSessionSummary, HostSessionsService, HostWorkspacesService } from '@dsh-claude-style/contracts/services'
+import type { HostTooltip, HostTooltipOptions } from '../../shared/host-tooltip'
 import { copy } from './copy'
 
 /** How many archived conversations one page carries; the next page appends when the reader reaches the foot. */
@@ -30,6 +31,8 @@ export function archivedOrder(archivedIds: readonly string[], byId: Record<strin
 export interface ArchivedListHost {
   workspaces(): HostWorkspacesService | null
   sessions(): HostSessionsService | null
+  /** The session the shell shows, which keeps its row even while it is blank. */
+  currentSession(): string | null
 }
 
 /** The host actions one row takes; each is the host's own, checked at the call. */
@@ -45,6 +48,12 @@ export interface ArchivedListActions {
 export interface ArchivedListDeps {
   host: ArchivedListHost
   actions: ArchivedListActions
+  /**
+   * 宿主自己的提示气泡（shared/host-tooltip.ts）：列表的控件由皮肤拼出来，
+   * 提示仍然用宿主那一份。不交时行上不挂提示 —— 逻辑规范在 React 之外读这个
+   * 模块，行照常画出来。
+   */
+  tooltip?(control: HTMLElement, label: string, options?: HostTooltipOptions): HostTooltip
   /** Ask for a pass (the scheduler's), so a snapshot change re-renders in the write phase (D40). */
   schedule(): void
 }
@@ -87,6 +96,9 @@ const DELETE_SVG = iconSvg('0 0 16 16', [
 const ROW_CLASS = 'dsh-claude-ws-archived-row'
 const UNARCHIVE_CLASS = 'dsh-claude-ws-archived-unarchive'
 const DELETE_CLASS = 'dsh-claude-ws-archived-delete'
+const TITLE_CLASS = 'dsh-claude-ws-archived-title'
+/** The title's tooltip anchor: the flex item the elided words now stand in. */
+const TITLE_ANCHOR_CLASS = 'dsh-claude-ws-archived-title-anchor'
 
 export interface ArchivedList {
   /** Seat the list in the section root at the first page; re-entering 已归档 starts over at the top. */
@@ -132,6 +144,10 @@ export function createArchivedList(deps: ArchivedListDeps): ArchivedList {
   let container: HTMLElement | null = null
   /** The rows the container holds, by session id; re-used across renders, moved into order. */
   const rows = new Map<string, HTMLElement>()
+  /** Each control's own host tooltip, by the control it belongs to. */
+  const tips = new Map<Element, HostTooltip>()
+  /** Each row's tooltips, taken down with the row. */
+  const rowTips = new Map<HTMLElement, HostTooltip[]>()
   /** The empty archive's own line, mounted only while the archive answers nothing. */
   let emptyLine: HTMLElement | null = null
   /** How many rows the page currently carries; the first page is ARCHIVED_PAGE_SIZE. */
@@ -151,7 +167,7 @@ export function createArchivedList(deps: ArchivedListDeps): ArchivedList {
     const archived = workspaces?.list.getSnapshot().archivedSessionIds ?? []
     const snapshot = sessions?.list.getSnapshot()
     const byId = snapshot?.byId ?? {}
-    const current = snapshot?.current
+    const current = deps.host.currentSession()
     const order = archivedOrder(archived, byId, current)
     const sig = JSON.stringify([current, order.map((id) => [id, byId[id].updatedAt, byId[id].displayTitle])])
     return { order, byId, sig }
@@ -161,32 +177,70 @@ export function createArchivedList(deps: ArchivedListDeps): ArchivedList {
   function syncActionCopy(row: HTMLElement) {
     const unarchive = row.querySelector(`.${UNARCHIVE_CLASS}`)
     unarchive?.setAttribute('aria-label', copy('archiveUnarchive'))
-    unarchive?.setAttribute('title', copy('archiveUnarchive'))
+    relabel(unarchive, copy('archiveUnarchive'))
     const remove = row.querySelector(`.${DELETE_CLASS}`)
     remove?.setAttribute('aria-label', copy('archiveDelete'))
-    remove?.setAttribute('title', copy('archiveDelete'))
+    relabel(remove, copy('archiveDelete'))
   }
 
-  /** One row's own box: the title and the two host actions, open by pressing the row itself. */
+  /** A control's own tooltip, when it has one: the skin's rows draw the host's bubble, not the browser's. */
+  function relabel(control: Element | null, label: string) {
+    if (control === null) return
+    tips.get(control)?.setLabel(label)
+  }
+
+  /** One row's tooltips, taken down with the row. */
+  function releaseRow(row: HTMLElement) {
+    const taken = rowTips.get(row)
+    if (taken === undefined) return
+    for (const tip of taken) tip.release()
+    rowTips.delete(row)
+    for (const control of [row.querySelector(`.${TITLE_CLASS}`), row.querySelector(`.${UNARCHIVE_CLASS}`), row.querySelector(`.${DELETE_CLASS}`)]) {
+      if (control !== null) tips.delete(control)
+    }
+  }
+
+  /**
+   * One row's own box: the title and the two host actions, open by pressing the
+   * row itself. Each control wears the host's own tooltip when the caller hands
+   * one in (workspace-view.ts does); the logic specs read this module without
+   * React, and their rows stand without bubbles.
+   */
   function buildRow(id: string, summary: HostSessionSummary) {
     const row = buildElement('div', ROW_CLASS)
     row.setAttribute('role', 'button')
     row.setAttribute('tabindex', '0')
     row.setAttribute('data-session-id', id)
     const title = summary.displayTitle === '' ? id : summary.displayTitle
-    row.setAttribute('title', title)
-    const titleNode = buildElement('span', 'dsh-claude-ws-archived-title', title)
+    const made: HostTooltip[] = []
+    /** The node to insert for one control: its tooltip's anchor, or the control itself. */
+    function wear<T extends HTMLElement>(control: T, label: string, options?: HostTooltipOptions): HTMLElement {
+      if (deps.tooltip === undefined) return control
+      const tip = deps.tooltip(control, label, options)
+      made.push(tip)
+      tips.set(control, tip)
+      return tip.node
+    }
+    const titleNode = buildElement('span', TITLE_CLASS, title)
+    // The elided title carries the full words in the host's own bubble: the skin's
+    // rows draw the same tooltip the page's controls do.
+    const titleAnchor = wear(titleNode, title, { side: 'bottom', className: TITLE_ANCHOR_CLASS })
     const actions = buildElement('span', 'dsh-claude-ws-archived-actions')
     const unarchive = buildElement('button', UNARCHIVE_CLASS)
     unarchive.type = 'button'
     unarchive.innerHTML = UNARCHIVE_SVG
+    // The name is written here as well: the button stands in the tooltip's anchor,
+    // which React mounts a beat after this row is built.
+    unarchive.setAttribute('aria-label', copy('archiveUnarchive'))
     const remove = buildElement('button', DELETE_CLASS)
     remove.type = 'button'
     remove.innerHTML = DELETE_SVG
-    actions.appendChild(unarchive)
-    actions.appendChild(remove)
-    row.appendChild(titleNode)
+    remove.setAttribute('aria-label', copy('archiveDelete'))
+    actions.appendChild(wear(unarchive, copy('archiveUnarchive'), { side: 'bottom' }))
+    actions.appendChild(wear(remove, copy('archiveDelete'), { side: 'bottom' }))
+    row.appendChild(titleAnchor)
     row.appendChild(actions)
+    if (made.length > 0) rowTips.set(row, made)
     syncActionCopy(row)
     return row
   }
@@ -203,7 +257,10 @@ export function createArchivedList(deps: ArchivedListDeps): ArchivedList {
     const order = latest.order
     const shown = order.slice(0, cursor)
     if (shown.length === 0) {
-      for (const row of rows.values()) row.remove()
+      for (const row of rows.values()) {
+        releaseRow(row)
+        row.remove()
+      }
       rows.clear()
       if (emptyLine === null) emptyLine = buildElement('div', 'dsh-claude-ws-archived-empty', copy('archiveEmpty'))
       if (emptyLine.parentElement !== container) container.appendChild(emptyLine)
@@ -219,15 +276,16 @@ export function createArchivedList(deps: ArchivedListDeps): ArchivedList {
         rows.set(id, row)
       } else {
         const title = summary.displayTitle === '' ? id : summary.displayTitle
-        const titleNode = row.firstElementChild
+        const titleNode = row.querySelector(`.${TITLE_CLASS}`)
         if (titleNode !== null && titleNode.textContent !== title) titleNode.textContent = title
-        if (row.getAttribute('title') !== title) row.setAttribute('title', title)
+        relabel(titleNode, title)
+        syncActionCopy(row)
       }
-      syncActionCopy(row)
       container.appendChild(row)
     }
     for (const [id, row] of rows) {
       if (wanted.has(id)) continue
+      releaseRow(row)
       row.remove()
       rows.delete(id)
     }
@@ -338,6 +396,9 @@ export function createArchivedList(deps: ArchivedListDeps): ArchivedList {
     if (container === null) return
     window.removeEventListener('scroll', onScroll, { capture: true })
     container.parentElement?.removeChild(container)
+    for (const row of rows.values()) releaseRow(row)
+    rows.clear()
+    tips.clear()
     cancelAppend?.()
     cancelAppend = null
     container = null

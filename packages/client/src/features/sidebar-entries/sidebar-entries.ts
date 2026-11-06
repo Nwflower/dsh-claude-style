@@ -31,8 +31,8 @@ const PANEL_SLOT = 'sidebar.panellist'
 /** The More menu's rows; the sidebar shows More while this list has any. */
 const ACTIONS_SLOT = 'sidebar.panellist.actions'
 /**
- * The list's own rows. The host wraps each row in a box of its own (0.2.2-alpha.3),
- * and the More launcher in another, so a row is read wherever it stands inside
+ * The list's own rows. The host wraps each row in a box of its own, and the
+ * More launcher in another, so a row is read wherever it stands inside
  * the list; the launcher is the one row that opens a menu, and it is no entry.
  */
 const PANEL_LIST_SELECTOR = 'nav[data-dsh-claude-part~="panel-list"]'

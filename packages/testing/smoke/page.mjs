@@ -112,7 +112,7 @@ const PRELUDE = readParts('probe', ['prelude.js'])
  * then `probe` — the smoke's steps unless the caller drives the page itself.
  */
 function page(name, tier, cases, probe = PROBE) {
-  // The desktop footer mirrors 0.1.7's: the account menu lives in the
+  // The desktop footer mirrors the host's: the account menu lives in the
   // `settings.launcher` slot inside the host's `triggerRow`, and the settings
   // button the web-style footer has is gone. Every other case keeps the
   // web-style footer unchanged.

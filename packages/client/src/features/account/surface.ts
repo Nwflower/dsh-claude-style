@@ -8,7 +8,7 @@ export type AccountSurfaceMode = 'host' | 'synthetic'
 /**
  * The account surface: one row model, two mount points.
  *
- * A host with an account area (Desktop 0.1.7+) owns the entry — its own
+ * A host with an account area (Desktop) owns the entry — its own
  * account row, restyled by the stylesheet, opens its own account menu. The
  * host renders that menu's list itself and unmounts it on close, so this
  * surface re-identifies the list every pass and injects our container at its

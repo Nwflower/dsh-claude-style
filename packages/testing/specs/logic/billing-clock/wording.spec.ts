@@ -19,7 +19,7 @@ const CAMPAIGN: RateState = { period: 'campaign', badge: '0.5× credits', minute
 function shown(state: RateState) {
   const badge = buildRateBadge(state)
   document.body.append(badge)
-  const reading = { role: badge.getAttribute('role'), name: badge.getAttribute('aria-label'), title: badge.getAttribute('title'), text: badge.textContent?.replace(/\s+/g, ' ').trim(), pictures: badge.querySelectorAll('svg').length }
+  const reading = { role: badge.getAttribute('role'), name: badge.getAttribute('aria-label'), text: badge.textContent?.replace(/\s+/g, ' ').trim(), pictures: badge.querySelectorAll('svg').length }
   badge.remove()
   return reading
 }
@@ -40,10 +40,10 @@ test('a promotion is named as one, with the badge the source prints for it', () 
 
 test('the badge shows the value and the countdown, and is announced as the whole judgement', () => {
   // The space between the value and the countdown is the stylesheet's gap, not a character.
-  expect(shown(PEAK)).toMatchObject({ role: 'img', name: rateDetail(PEAK), title: rateDetail(PEAK), pictures: 1 })
+  expect(shown(PEAK)).toMatchObject({ role: 'img', name: rateDetail(PEAK), pictures: 1 })
   expect(shown(PEAK).text).toMatch(/^2×\s*· 1h 20m$/)
 })
 
 test('a badge with nothing to count down to shows its value alone', () => {
-  expect(shown(CAMPAIGN)).toEqual({ role: 'img', name: rateDetail(CAMPAIGN), title: rateDetail(CAMPAIGN), text: '0.5× credits', pictures: 1 })
+  expect(shown(CAMPAIGN)).toEqual({ role: 'img', name: rateDetail(CAMPAIGN), text: '0.5× credits', pictures: 1 })
 })

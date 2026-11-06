@@ -154,8 +154,10 @@
     directoryFor: function (id) { return id === 'smoke-session' ? directory : undefined },
   }
   host.sessions = {
+    selected: 'smoke-session',
     list: {
-      getSnapshot: function () { return { current: 'smoke-session', phase: 'ready', ids: [], byId: {}, projectionsBySession: {} } },
+      getSnapshot: function () { return { phase: 'ready', ids: [], byId: {}, projectionsBySession: {} } },
+      subscribe: function () { return function () {} },
     },
     binding: function () { return undefined },
   }

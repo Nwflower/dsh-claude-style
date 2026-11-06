@@ -28,12 +28,10 @@
         .filter(function (t) { return t >= mark })
         .map(function (t) { return Math.round(t - mark) })
     }
-    // The host's statistics are hidden outright, in both of its shapes: the
-    // figures stay in the document as the read's own click targets, and their
-    // dialogs are read into the context popover instead (the 'default' case
-    // below). The host marks each figure since its 2026-09 update and marked the
-    // container around them before, so both marks are checked.
-    var statsFigures = Array.prototype.slice.call(document.querySelectorAll('[data-composer-stat], [data-composer-stats]'))
+    // The host's statistics are hidden outright: the figures stay in the
+    // document as the read's own click targets, and their dialogs are read into
+    // the context popover instead (the 'default' case below).
+    var statsFigures = Array.prototype.slice.call(document.querySelectorAll('[data-composer-stat]'))
     r.statsHidden = statsFigures.length > 0 && statsFigures.every(function (el) { return getComputedStyle(el).display === 'none' })
     r.statsStrayCards = document.querySelectorAll('.dsh-claude-stats-popover').length
     // The host's idle outlet stays mounted without painting a decorative circle;

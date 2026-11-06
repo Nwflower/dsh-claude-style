@@ -3,7 +3,7 @@ import { cacheFirstMatch } from '@dsh-claude-style/engine/host'
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { createStamp } from '@dsh-claude-style/engine/dom'
-import { CONVERSATION_HEADER_SELECTOR, CONVERSATION_HEADER_SLOT_SELECTOR, CONVERSATION_TABS_SELECTOR, VIEW_TABS_LIST_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { CONVERSATION_HEADER_SELECTOR, CONVERSATION_HEADER_SLOT_SELECTOR, CONVERSATION_TABS_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { contentBox } from '../../shared/content-box'
 import { VIEW_SWITCH_CLASS } from '../../shared/segment-control'
 import { createSlidingPill } from '../../shared/sliding-pill'
@@ -15,12 +15,12 @@ import type manifest from './view-tabs.manifest'
 /**
  * The conversation view-tab strip's placement — measured, not guessed.
  *
- * The host draws the strip in one of two shapes. Up to 0.2.1-rc.2 the tablist is
- * the strip itself; from 0.2.1-rc.3 a row holds the tablist beside the "more
- * views" button, and the host reads that row's width to decide how many tabs stay
- * visible. The row therefore keeps the header's full width while the plate inside
- * it hugs the tabs (view-tabs.css), and every box this pass places from is the
- * strip's content box (shared/content-box.ts), not the row's.
+ * The host draws the strip as a row holding the tablist and, when it has views
+ * to offer beyond the pinned ones, the "more views" button; it reads that row's
+ * width to decide how many tabs stay visible. The row therefore keeps the
+ * header's full width while the plate inside it hugs the tabs (view-tabs.css),
+ * and every box this pass places from is the row's content box
+ * (shared/content-box.ts).
  *
  * The strip's own row sits below the header's title row, and that title row ALSO
  * carries the header actions (the background-task chip, the workspace / preset
@@ -49,9 +49,8 @@ import type manifest from './view-tabs.manifest'
  * would land on the title and the header actions; the measured shift already
  * seats it on the row beneath the strip.
  *
- * The strip itself is stamped `data-dsh-view-tabs`, and the row shape adds
- * `data-dsh-view-tabs-row`; every strip rule in view-tabs.css keys on those
- * attributes. The marks and the Windows titlebar marker are written in the
+ * The row is stamped `data-dsh-view-tabs`, and every strip rule in
+ * view-tabs.css keys on that attribute. The marks and the Windows titlebar marker are written in the
  * batch that mounts the strip, before the browser paints; the measured shift is
  * taken and written in that same frame's read and write phases, so the first
  * frame already draws the skin's placement (#189) without forcing the rest of
@@ -94,13 +93,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let titlebarHost: HTMLElement | null = null
   /** The strip mark every strip rule in view-tabs.css keys on. */
   const stripStamp = createStamp<HTMLElement>('data-dsh-view-tabs')
-  /**
-   * The row shape's mark: the host's row spanning the header for its own
-   * measurement, which the stylesheet keeps wide while the plate inside it hugs
-   * the tabs. A strip that is its own tablist wears no such mark and keeps the
-   * placement rules of that shape.
-   */
-  const rowStamp = createStamp<HTMLElement>('data-dsh-view-tabs-row')
   /** The control wearing the shared small segment look (shared/segment-control.css): a class, since the look is the control's own, not the mark's. */
   let classedControl: HTMLElement | null = null
   function classStamp(control: HTMLElement | null) {
@@ -175,32 +167,27 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * The strip and the header holding it.
    *
    * A strip the skin has stamped is taken as it is. One it has not is read off
-   * the host's own tablist mark: in the shape where the tablist is the strip,
-   * that mark sits on the strip itself; in the row shape it sits on the plate,
-   * whose parent is the row the host keeps for its own tab count. Answering
-   * this before the pass has stamped anything is what the mutation route below
-   * needs to mark a strip in the batch that mounted it (#189).
+   * the host's own tablist mark, which sits on the plate: its parent is the row
+   * the host keeps for its own tab count. Answering this before the pass has
+   * stamped anything is what the mutation route below needs to mark a strip in
+   * the batch that mounted it (#189).
    *
    * `header` is the conversation header above the strip — its part mark once the
-   * walk has run, the slot it is mounted in before that; `list` is the tablist
-   * the row shape holds, null in the shape where the strip is that tablist.
+   * walk has run, the slot it is mounted in before that; `list` is the tablist.
    */
   function findStrip() {
     const header = (el: Element) => el.closest<HTMLElement>(CONVERSATION_HEADER_SELECTOR) ?? el.closest<HTMLElement>(CONVERSATION_HEADER_SLOT_SELECTOR)
     const stamped = firstStamped()
     if (stamped !== null) {
       const marked = header(stamped)
-      return marked === null ? null : { header: marked, strip: stamped, list: stamped.querySelector<HTMLElement>(VIEW_TABS_LIST_SELECTOR) }
+      const list = stamped.querySelector<HTMLElement>(CONVERSATION_TABS_SELECTOR)
+      return marked === null || list === null ? null : { header: marked, strip: stamped, list }
     }
-    const tabs = firstTabs()
-    if (tabs === null) return null
-    const parent = tabs.parentElement
-    // The row shape's plate has the row beside the "more views" button; the
-    // strip of the flat shape is the tablist itself.
-    const row = parent !== null && parent.children.length > 1 ? parent : null
-    const strip = row ?? tabs
+    const list = firstTabs()
+    const strip = list?.parentElement ?? null
+    if (list === null || strip === null) return null
     const marked = header(strip)
-    return marked === null ? null : { header: marked, strip, list: row === null ? null : tabs }
+    return marked === null ? null : { header: marked, strip, list }
   }
 
   /**
@@ -212,7 +199,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   interface StripReading {
     header: HTMLElement
     strip: HTMLElement
-    /** What the strip draws: the plate and the overflow button in the row shape, the tablist's own surface in the older one. */
+    /** What the strip draws: the plate and the overflow button. */
     stripBox: DOMRect | null
     headerBox: DOMRect | null
     titleBox: DOMRect | null
@@ -223,20 +210,20 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let reading: StripReading | null = null
   let measuredStrip: HTMLElement | null = null
   /** The strip a batch mounted, waiting for the frame's read phase to be measured. */
-  let pendingShift: { header: HTMLElement, strip: HTMLElement, list: HTMLElement | null } | null = null
+  let pendingShift: { header: HTMLElement, strip: HTMLElement } | null = null
   /** The reading the last frame took for `pendingShift`, written in its write phase. */
   let shiftReading: StripReading | null = null
   /** Cancels the frame a batch's placement waits on. */
   let cancelShift: (() => void) | null = null
 
   /** Read the four boxes for one strip. */
-  function takeReading(header: HTMLElement, strip: HTMLElement, list: HTMLElement | null): StripReading {
+  function takeReading(header: HTMLElement, strip: HTMLElement): StripReading {
     return {
       header,
       strip,
-      // The flat strip draws its own box; the row shape draws the plate and the
-      // overflow button inside a row the host keeps wide for its own count.
-      stripBox: list === null ? rect(strip) : contentBox(strip),
+      // The plate and the overflow button, inside a row the host keeps wide for
+      // its own count.
+      stripBox: contentBox(strip),
       headerBox: rect(header),
       titleBox: titleBoxOf(header),
       actionsBox: rect(header.querySelector(ACTIONS)),
@@ -254,13 +241,13 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * pipeline takes one read after the frame's writes, and a later batch before
    * the frame joins the same read (#196).
    */
-  function placeForPaint(header: HTMLElement, strip: HTMLElement, list: HTMLElement | null) {
-    pendingShift = { header, strip, list }
+  function placeForPaint(header: HTMLElement, strip: HTMLElement) {
+    pendingShift = { header, strip }
     if (cancelShift !== null) return
     cancelShift = requestFrame({
       read() {
         const target = pendingShift
-        shiftReading = target === null ? null : takeReading(target.header, target.strip, target.list)
+        shiftReading = target === null ? null : takeReading(target.header, target.strip)
       },
       write() {
         cancelShift = null
@@ -275,17 +262,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     })
   }
 
-  /** The control the pill travels in: the tablist of the row shape, the strip itself in the older one. */
-  function controlOf(found: { strip: HTMLElement, list: HTMLElement | null }) {
-    return found.list ?? found.strip
-  }
-
-  /** The pass's read phase: the strip is resolved and its boxes read before anyone writes. */
+  /** The pass's read phase: the strip is resolved and its boxes read before anyone writes; the pill travels in the tablist. */
   function measure() {
     const found = findStrip()
     measuredStrip = found === null ? null : found.strip
-    reading = found === null ? null : takeReading(found.header, found.strip, found.list)
-    pill.measure(found === null ? null : controlOf(found))
+    reading = found === null ? null : takeReading(found.header, found.strip)
+    pill.measure(found === null ? null : found.list)
   }
 
   function sync() {
@@ -294,22 +276,19 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (found === null) {
       markTitlebar(null)
       stripStamp.mark(null)
-      rowStamp.mark(null)
       classStamp(null)
       pill.sync(null)
       return
     }
     const { header, strip, list } = found
-    const control = controlOf(found)
     markTitlebar(header)
     stripStamp.mark(strip)
-    rowStamp.mark(list === null ? null : strip)
-    classStamp(control)
-    pill.sync(control)
+    classStamp(list)
+    pill.sync(list)
     // Windows titlebar mode places the strip itself (view-tabs.css): it is
     // fixed there, so neither the measured shift nor the fallback applies.
     if (titlebar) return
-    const boxes = reading !== null && measuredStrip === strip ? reading : takeReading(header, strip, list)
+    const boxes = reading !== null && measuredStrip === strip ? reading : takeReading(header, strip)
     writeShift(strip, shiftIn(boxes))
   }
 
@@ -360,7 +339,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   /**
    * Whether a strip already draws the way the frame's paint reads it: its own
-   * mark and the row mark on it, the titlebar mode on its header, and the shift
+   * mark on it, the titlebar mode on its header, and the shift
    * this window needs — Windows titlebar mode places the strip itself, so it
    * writes none.
    */
@@ -377,8 +356,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * is dispatched after that frame's paint (engine/bus.ts): a strip left for
    * either draws in the host's own layout and jumps when the pass reaches it.
    * This subscription asks for `beforePaint`, so it runs inside every batch's
-   * callback whatever the batch weighs, and writes what that frame reads: both
-   * marks, the control's class and the header's titlebar mark. A strip already
+   * callback whatever the batch weighs, and writes what that frame reads: the
+   * strip's mark, the control's class and the header's titlebar mark. A strip already
    * placed costs one kept lookup and a style read; the pass keeps everything in
    * step afterwards. The shift the boxes ask for is measured and written in the
    * same frame's read and write phases (placeForPaint), not here.
@@ -391,10 +370,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (placedForPaint(strip, header)) return
     markTitlebar(header)
     stripStamp.mark(strip)
-    rowStamp.mark(list === null ? null : strip)
-    classStamp(controlOf(found))
+    classStamp(list)
     if (titlebar) return
-    placeForPaint(header, strip, list)
+    placeForPaint(header, strip)
   })
 
   return () => {
@@ -411,7 +389,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (strip !== null) strip.style.removeProperty(SHIFT)
     pill.release()
     stripStamp.release()
-    rowStamp.release()
     classStamp(null)
     last = null
     lastEl = null

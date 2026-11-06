@@ -51,8 +51,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   function target() {
     const sessions = hostSessions(ctx)
     if (sessions === null) return null
-    const sessionId = currentSessionId(ctx, sessions)
-    if (sessionId === undefined || sessionId === null) return null
+    const sessionId = currentSessionId(ctx)
+    if (sessionId === null) return null
     const summary = sessions.list.getSnapshot().byId[sessionId]
     if (summary === undefined) return null
     return { sessionId, title: summary.displayTitle }

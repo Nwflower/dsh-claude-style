@@ -1,0 +1,8 @@
+{
+  "group": "new",
+  "order": 20,
+  "at": "2026-11-06",
+  "external": false,
+  "zh": "新增读者消息的撤回与编辑，两者都从消息前分岔，撤回把原文放回新会话的输入框，编辑把改过的文字直接发出",
+  "en": "Add retract and edit to a message the reader sent, each forking ahead of the message, retract putting its text back in the new session's composer and edit sending the amended text"
+}

@@ -246,6 +246,12 @@
       "真行显形期间替身一直落在它身上": [
         0
       ],
+      "控件行末尾长出撤回与编辑两个按钮": [
+        3
+      ],
+      "控制台没有异常": [
+        0
+      ],
       "读者的消息成为一行": [
         1
       ],
@@ -255,7 +261,7 @@
       "流式标记已经收起": [
         0
       ],
-      "控制台没有异常": [
+      "控制台没有异常 (line 298)": [
         0
       ],
       "页面是手机的宽度": [
@@ -264,7 +270,7 @@
       "再窄一些时控件仍留在卡片里，输入区也不再横向滚动": [
         0
       ],
-      "控制台没有异常 (line 266)": [
+      "控制台没有异常 (line 394)": [
         0
       ],
       "收起时那枚按钮不占位置，宿主自己的打开按钮在": [
@@ -277,7 +283,7 @@
       "按下它面板收起，宿主的打开按钮回到原处": [
         0
       ],
-      "控制台没有异常 (line 319)": [
+      "控制台没有异常 (line 447)": [
         0
       ],
       "工具调用单独成行": [
@@ -289,7 +295,7 @@
       "过程组收住了整轮": [
         1
       ],
-      "控制台没有异常 (line 334)": [
+      "控制台没有异常 (line 462)": [
         0
       ],
       "逐帧采样真的在跑": [
@@ -317,7 +323,7 @@
         0,
         10
       ],
-      "控制台没有异常 (line 381)": [
+      "控制台没有异常 (line 509)": [
         0
       ],
       "替身起飞后离开页面": [
@@ -338,32 +344,32 @@
       "Windows 标题栏标记下，替身里的祖先链不画伪元素": [
         0
       ],
-      "控制台没有异常 (line 453)": [
+      "控制台没有异常 (line 581)": [
         0
       ],
       "满屏的对话里也读到了飞行": [
         1,
         5
       ],
-      "替身落地时不低于它替换的那一行 (line 487)": [
+      "替身落地时不低于它替换的那一行 (line 615)": [
         0
       ],
       "落定后那一行带着字": [
         0
       ],
-      "控制台没有异常 (line 489)": [
+      "控制台没有异常 (line 617)": [
         0
       ],
       "没有页面形态的条目已逐条列出": [
         0
       ],
-      "控制台没有异常 (line 547)": [
+      "控制台没有异常 (line 675)": [
         0
       ],
       "脚本回答已渲染": [
         0
       ],
-      "控制台没有异常 (line 591)": [
+      "控制台没有异常 (line 719)": [
         0
       ]
     },
@@ -490,8 +496,8 @@
       "nothing the skin runs leaves an uncaught error or an unhandled rejection": [
         0
       ],
-      "only the two features that read the session list were switched off: the permission control and the model picker": [
-        2
+      "only the three features that read the session list were switched off: the permission control, the model picker and the manual unread marks": [
+        3
       ],
       "every unit the footer holds is hidden in place before the drawer is ever opened, the plugin's inline box included": [
         3
@@ -533,7 +539,7 @@
       "a repeated same-state frame reads nothing more": [
         1
       ],
-      "no feature reported a failure (line 270)": [
+      "no feature reported a failure (line 271)": [
         0
       ],
       "the skin's rail stands in the host rail's slot, one mark per turn, the host's rail hidden but laid out": [

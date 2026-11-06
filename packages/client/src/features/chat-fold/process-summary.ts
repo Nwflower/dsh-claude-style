@@ -8,7 +8,7 @@ import { buildElement } from '@dsh-claude-style/engine/dom'
 import { motionMs } from '../../shared/motion'
 import { inPagePixels } from '../../shared/page-zoom'
 import { SWEEP_BAND_CLASS, buildSweepBand } from '../../shared/sweep-band'
-import { ASSISTANT_STEP_KIND, CHAT_GROUP_PART_ATTRIBUTE, CHAT_GROUP_PART_REASONING, FLOW_KIND_ATTRIBUTE, PROCESS_ACTIVITY_SELECTOR, PROCESS_CONTENT_SELECTOR, PROCESS_GROUP_SELECTOR, SHIMMER_ATTRIBUTE, SHIMMER_LEGACY_ATTRIBUTE, SHIMMER_SELECTOR, TOOL_CALL_KIND } from '@dsh-claude-style/contracts/dom'
+import { ASSISTANT_STEP_KIND, CHAT_GROUP_PART_ATTRIBUTE, CHAT_GROUP_PART_REASONING, FLOW_KIND_ATTRIBUTE, PROCESS_ACTIVITY_SELECTOR, PROCESS_CONTENT_SELECTOR, PROCESS_GROUP_SELECTOR, SHIMMER_ATTRIBUTE, SHIMMER_SELECTOR, TOOL_CALL_KIND } from '@dsh-claude-style/contracts/dom'
 
 /**
  * A process group's header names what the group holds — 「执行 2 次思考，调用 1 次
@@ -532,7 +532,7 @@ export function createProcessSummary() {
   const stopMutations = subscribeMutations(document.body, {
     subtree: true,
     childList: true,
-    attributeFilter: [SHIMMER_ATTRIBUTE, SHIMMER_LEGACY_ATTRIBUTE],
+    attributeFilter: [SHIMMER_ATTRIBUTE],
     skipQuiet: true,
   }, records => {
     for (const record of records) {

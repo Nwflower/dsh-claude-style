@@ -38,11 +38,9 @@ type PageDirection = 'forward' | 'back'
  * The skin's settings page, mounted by every seat this host declares.
  *
  * Two seats render it: the `plugins.bundle.config` entry on the plugin
- * page (0.1.7+, keyed by the package name) and the full-page
- * `settings.section` tab in the settings dialog. An older host declares
- * only the latter; a newer one gets both, and since both render the same
- * component against the same prefs store, two live instances stay in
- * step. Neither seat hands the component a store: it reads and writes the
+ * page (keyed by the package name) and the full-page `settings.section`
+ * tab in the settings dialog. Both render the same component against the
+ * same prefs store, so two live instances stay in step. Neither seat hands the component a store: it reads and writes the
  * skin preferences through packages/client/src/core/prefs.ts, which owns the host round
  * trip, and follows changes the same way the rest of the skin does.
  *
@@ -306,7 +304,7 @@ export function ClaudeStyleSettingsSection(props: { embed?: boolean }) {
 }
 
 /**
- * The plugin page's configuration entry (0.1.7+).
+ * The plugin page's configuration entry.
  *
  * A `plugins.bundle.config` entry is asked for two views: `summary` is the
  * one-liner on the bundle's card, `page` is the form itself. The host does
@@ -406,11 +404,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const slots = hostSlots(scope)
     if (slots === undefined || slots === null || typeof slots.inject !== 'function') return
     slotsApi = slots
-    // 0.1.7 keeps a bundle's own configuration on the plugin's page: the
+    // The host keeps a bundle's own configuration on the plugin's page: the
     // entry is keyed by the bundle's package name and rendered there —
     // `view: 'page'` for the form, `view: 'summary'` for the card's
-    // one-liner. The slot is declared by that host's plugin manager, so this
-    // registration is a no-op on an older host.
+    // one-liner.
     scope.effect(() => slots.inject(BUNDLE_CONFIG_SLOT, () => slots.register(
       {
         name: BUNDLE_CONFIG_SLOT,
@@ -419,11 +416,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       },
       ClaudeStyleBundleConfig,
     )), 'dsh-claude-style: plugin page')
-    // The full-page section registers on every host that declares the
-    // slot. On an older host it is the only seat; on 0.1.7+ the same page
-    // also renders on the plugin page, and this tab keeps a route to it
-    // inside the settings dialog. Two live instances share the prefs
-    // store, so a change in one shows in the other.
+    // The same page also renders as a tab of the settings dialog, which keeps
+    // a route to it there. Two live instances share the prefs store, so a
+    // change in one shows in the other.
     scope.effect(() => slots.inject(SETTINGS_SECTION_SLOT, () => slots.register(
       {
         name: SETTINGS_SECTION_SLOT,

@@ -1,0 +1,5 @@
+{
+  "questionCardTitle": { "zh": "重绘提问卡片", "en": "Question card restyle" },
+  "questionCardDesc": { "zh": "模型提问时，把提问卡片重绘为 Claude 风格并移到对话末尾；关闭后保留宿主原样。", "en": "Redraw the card the model asks with in Claude's style and move it to the end of the conversation; off keeps the host's own card." },
+  "questionCustom": { "zh": "其他", "en": "Other" }
+}
