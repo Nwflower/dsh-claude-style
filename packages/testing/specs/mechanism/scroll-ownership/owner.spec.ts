@@ -87,12 +87,15 @@ test('the reader holds the conversation until they come back to its end; only fo
   expect(readerHolds(scroller)).toBe(true)
   expect(scroller.hasAttribute(READER_HOLD_ATTR)).toBe(true)
   expect(easeScrollToEndFor(scroller, 'follow', wanted)).toBe(false)
-  expect(writeScroll(scroller, 50, 'composer')).toBe(true)
+  expect(writeScroll(scroller, scroller.scrollHeight, 'composer')).toBe(false)
+  expect(scroller.scrollTop).toBe(0)
+  expect(writeScroll(scroller, 50, 'reader')).toBe(true)
   // Content growing under the hold cannot drag them back to the end.
   ;(scroller.firstElementChild as HTMLElement).style.height = '3000px'
   await holdOutlastsHostWrite(scroller)
   expect(scroller.hasAttribute(READER_HOLD_ATTR)).toBe(false)
   expect(easeScrollToEndFor(scroller, 'follow', wanted)).toBe(true)
+  expect(writeScroll(scroller, scroller.scrollHeight, 'composer')).toBe(true)
 })
 
 test('a press or a wheel outside the conversation is no hold on it: the follow keeps going', () => {

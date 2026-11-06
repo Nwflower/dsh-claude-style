@@ -26,7 +26,7 @@ import { SCROLL_EASE_LEAD_PX, easeScroll, isScrollEasing, scrollEasePosition, sc
  *   - a request whose source ranks below the ease running there is refused;
  *     an equal or higher one is carried out, and a write ends a running ease
  *     that ranks below it;
- *   - follow and process requests are refused while the reader holds the
+ *   - composer, follow and process requests are refused while the reader holds the
  *     container (readerHolds), and their eases end the moment he does;
  *   - while the reader's animation choice means "no animation", an ease is
  *     its destination written at once.
@@ -61,7 +61,7 @@ const SCROLL_SOURCE_RANK: Record<ScrollSource, number> = {
   jump: 6,
 }
 /** The sources that only follow the end: the reader holding a container stops them. */
-const FOLLOWING_SOURCES = new Set<ScrollSource>(['follow', 'process'])
+const FOLLOWING_SOURCES = new Set<ScrollSource>(['composer', 'follow', 'process'])
 
 /** How close to a process body's end the reader has to come for his hold on it to end. */
 const PROCESS_RELEASE_THRESHOLD_PX = 4
