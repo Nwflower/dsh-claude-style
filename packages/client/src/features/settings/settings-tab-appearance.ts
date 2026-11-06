@@ -18,7 +18,9 @@ import type { SettingsRow, SettingsTab, SettingsView } from './settings-controls
  * page's own scale row shares its control with (settings-percent-control.ts),
  * writing the preference the canvas fills read as a colour mix toward
  * transparent (shared/background-opacity.ts). The row stands only under the
- * skin's own palette, like the colour cards above it.
+ * skin's own palette, like the colour cards above it, and only while a
+ * wallpaper plugin holds a layer behind the canvas for it to show through
+ * (theme/third-party.css reads that plugin's mark on the body).
  */
 function backgroundOpacityRow(view: SettingsView): SettingsRow {
   return {
@@ -38,7 +40,7 @@ function backgroundOpacityRow(view: SettingsView): SettingsRow {
         onPick: percent => { view.write({ backgroundOpacity: String(percent) }) },
         onReset: () => { view.write({ backgroundOpacity: BACKGROUND_OPACITY_DEFAULT }) },
       }),
-      { experimental: true },
+      { experimental: true, mark: 'backgroundOpacity' },
     ),
   }
 }

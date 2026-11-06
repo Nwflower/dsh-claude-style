@@ -45,3 +45,13 @@ body[data-dsh-claude-style] :is(dialog.cm-stat-dialog, dialog.cm-fee-dialog) :is
   overflow-x: auto;
 }
 
+/* ---------- Third-party repair: the opacity row without a wallpaper ---------- */
+/* The background fill's opacity paints the skin's own canvas, so it has
+   something to show only while a wallpaper plugin holds a layer behind the
+   shell. The wallpaper plugin marks the body with `data-we-wallpaper` while one
+   shows (theme/wallpaper.css); without that mark the control changes nothing a
+   reader can see, so the settings row stands down (issue #252). The mark belongs
+   to another plugin, so it stays out of the host contract table (D3). */
+body[data-dsh-claude-style]:not([data-we-wallpaper]) [data-dsh-claude-settings-row="backgroundOpacity"] {
+  display: none;
+}
