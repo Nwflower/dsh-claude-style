@@ -92,7 +92,8 @@ export default {
         burstSteps.length >= bound('followWalkDistinctValues'),
       JSON.stringify({ readings: burst.length, start: burst[0], end: burst[burst.length - 1], steps: burstSteps.map((step) => step.gap) }))
     // The slide restarts from where the frame before it stood, and one growth is
-    // all the distance it may be left carrying: a run of small growths, each
+    // all the distance it may be left carrying, the tail of the slide still
+    // running when the next piece lands aside: a run of small growths, each
     // arriving before the slide has landed, stays inside the growth it just took
     // — the offset the column is drawn at, not the scroller's own gap, which the
     // host's pin keeps at zero either way — and the run is never left standing
@@ -102,7 +103,7 @@ export default {
     const carried = paceFrames.map((frame) => frame.offset)
     check('a run of small growths leaves the sliding column no further off the pin than the growth just taken',
       paceFrames.length > 4 && paceFrames.every((frame) => Number.isFinite(frame.gap) && frame.gap <= pace.growth + bound('followSlideRowDriftPx')
-        && Number.isFinite(frame.offset) && frame.offset <= pace.growth + bound('followSlideRowDriftPx')) &&
+        && Number.isFinite(frame.offset) && frame.offset <= pace.growth + bound('streamSlideCarryTailPx')) &&
         (pace.settled ?? 1) <= AT_END_PX,
       JSON.stringify({ ...pace, offsets: carried }))
     // A reader holding the conversation keeps the position the host's own pin

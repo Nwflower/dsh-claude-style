@@ -77,6 +77,11 @@
       "reason": "How far the live turn's row may move on screen while the column slides under it: the row carries the same slide reversed, started in the same frame, so the two cancel exactly; half a pixel leaves room for the rounding of two offsets and nothing a reader could see."
     },
     {
+      "name": "streamSlideCarryTailPx",
+      "value": 4,
+      "reason": "How far past one growth the sliding column may be read at the frame after a growth: the slide restarts from the distance it had not paid back, which is the tail of the previous one still running when the next piece lands. The two runners measured under 2px; a distance that accumulates with the pieces instead of settling runs to tens of pixels within a few steps."
+    },
+    {
       "name": "followQuietFrames",
       "value": 8,
       "reason": "How many frames at the end of a recorded walk have to read the same position, within followAtEndPx, for the walk to count as finished rather than interrupted: the recorder stops on this many quiet frames, so the check asserts the stop it made was the walk arriving."
