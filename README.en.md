@@ -86,7 +86,7 @@ Also from the [plugin market](https://github.com/dsh-market/dsh-market) or the S
 
 ## Manual unread marks
 
-Choose **Mark as unread** or **Clear unread mark** from a session's ellipsis menu. Marks are saved in the current profile, survive reloads, and clear when you leave and later open that session. The host's automatic completion reminders stay independent. Disable the feature under **Sidebar** in the plugin settings to hide its menu item and markers while retaining saved marks.
+Choose **Mark as unread** or **Clear unread mark** from a session's ellipsis menu. Marks are saved in the current profile, survive reloads, and clear when you leave and later open that session. The host's automatic completion reminders stay independent.
 
 ## Retract and edit a message
 

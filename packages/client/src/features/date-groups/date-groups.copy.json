@@ -1,6 +1,4 @@
 {
-  "groupsTitle": { "zh": "会话按日期排列", "en": "Group sessions by date" },
-  "groupsDesc": { "zh": "在侧栏按日期分组排列会话。", "en": "Group sidebar conversations by date." },
   "today": { "zh": "今天", "en": "Today" },
   "yesterday": { "zh": "昨天", "en": "Yesterday" },
   "earlier": { "zh": "更早", "en": "Earlier" },

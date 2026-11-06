@@ -109,20 +109,21 @@ export function createViewStoreFollower() {
   function reconcile() {
     const followed = store
     if (followed === null || disposed) return
-    // 日期视图开着的时候，分组由 date-groups 那一半管（它把宿主切成扁平再按日期排）；
-    // 这里若照常跟随，就会把那个扁平当成读者「进行中」的分组记下来 —— 铃铛一按，
-    // 读者原本的工作区分组就被抹掉了，关掉应用也回不来。
-    if (document.body.hasAttribute('data-dsh-claude-date-groups')) return
     const snapshot = followed.getSnapshot()
     const filter = filterOf(snapshot)
     const group = groupOf(snapshot)
+    // 日期视图开着的时候，分组由 date-groups 那一半管（它把宿主切成扁平再按日期排）；
+    // 这里若照常跟随，就会把那个扁平当成读者「进行中」的分组记下来 —— 铃铛一按，
+    // 读者原本的工作区分组就被抹掉了。过滤档仍要跟随：已归档那一页与它的分段由这里
+    // 说，重新装上也得以宿主的过滤为准。
+    const dated = document.body.hasAttribute('data-dsh-claude-date-groups')
     const previous = seenFilter
     seenFilter = filter
     if (filter === 'default') {
       setView('active')
       if (previous === 'only' || previous === 'show') {
-        if (group !== activeGroupBy) followed.actions.setGroupBy(activeGroupBy)
-      } else if (group !== activeGroupBy) {
+        if (dated === false && group !== activeGroupBy) followed.actions.setGroupBy(activeGroupBy)
+      } else if (dated === false && group !== activeGroupBy) {
         // 读者在宿主视图菜单里选的任意一档（按工作区、按工作区树、单列表）都是他的分组：
         // 日期视图开着的时候这里根本走不到（上面已经让开），所以读到的扁平就是读者的选择。
         rememberGroup(group)
@@ -133,8 +134,10 @@ export function createViewStoreFollower() {
     // The flat list 已归档 runs in is the skin's arrangement, not the reader's
     // grouping: only a filter that was not already the archived one tells the
     // two apart.
-    if (previous === 'default') rememberGroup(group)
-    else if (previous === null && group !== 'flat') rememberGroup(group)
+    if (dated === false) {
+      if (previous === 'default') rememberGroup(group)
+      else if (previous === null && group !== 'flat') rememberGroup(group)
+    }
     if (filter !== 'only') followed.actions.setArchivedFilter('only')
     if (group !== 'flat') followed.actions.setGroupBy('flat')
   }

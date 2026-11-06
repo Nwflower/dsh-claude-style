@@ -3,9 +3,8 @@ import type { FeatureManifest } from '../../core/feature'
 export default {
   id: 'manualUnread',
   order: 154,
-  pref: 'manualUnread',
+  ungated: '未读标记是会话菜单里的一项操作，标记跟着配置保存，页面上不另设开关',
   contracts: ['shell.sidebar-slot', 'session.row-key'],
   stylesheets: [{ file: 'manual-unread.css', rank: 116 }],
-  settingsRows: [{ tab: 'sidebar', rank: 34, pref: 'manualUnread', title: 'unreadTitle', desc: 'unreadDesc' }],
   cases: [],
 } satisfies FeatureManifest

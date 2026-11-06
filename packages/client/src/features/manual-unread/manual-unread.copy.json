@@ -1,6 +1,4 @@
 {
-  "unreadTitle": { "zh": "手动未读标记", "en": "Manual unread marks" },
-  "unreadDesc": { "zh": "在会话菜单标记未读，切走后再次打开时清除；标记保存到当前配置，自动完成提醒保持独立。", "en": "Mark sessions unread from their menu. Marks survive reloads and clear on a later visit; automatic completion reminders stay independent." },
   "markUnread": { "zh": "标记为未读", "en": "Mark as unread" },
   "clearUnread": { "zh": "清除未读标记", "en": "Clear unread mark" },
   "description": { "zh": "手动标记为未读", "en": "Manually marked unread" },

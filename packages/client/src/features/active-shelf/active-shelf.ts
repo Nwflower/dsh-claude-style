@@ -1,5 +1,4 @@
 import { DATE_VIEW_TOGGLE_EVENT } from '../date-groups/date-groups'
-import { readPrefs, subscribePrefs } from '../../core/prefs'
 import { observeMatches } from '@dsh-claude-style/engine/bus'
 import { buildElement } from '@dsh-claude-style/engine/dom'
 import { QUIET_ATTR } from '../../constants'
@@ -59,7 +58,7 @@ export function install(ctx: HostContext) {
     button.addEventListener('click', event => {
       event.preventDefault()
       event.stopPropagation()
-      // 默认还是宿主的「工作区 + 会话」，按它才把整个列表换成按日期排列，再按一次换回去。
+      // 日期段落是默认那一档，按它换成宿主的「工作区 + 会话」，再按一次换回来。
       document.dispatchEvent(new CustomEvent(DATE_VIEW_TOGGLE_EVENT))
     })
     return button
@@ -93,13 +92,6 @@ export function install(ctx: HostContext) {
       trigger = buildTrigger()
       actions.appendChild(trigger)
     }
-    // 铃铛跟着日期视图的开关：那边关掉之后页面里没有会接它的人，这里也就不挂出来。
-    const wanted = readPrefs().dateGroups !== false
-    if (trigger !== null) {
-      const bellStands = trigger.parentElement === actions
-      if (wanted && !bellStands) actions.appendChild(trigger)
-      if (!wanted && bellStands) actions.removeChild(trigger)
-    }
     const hostActions = header.querySelector<HTMLElement>(SECTION_ACTIONS_SELECTOR)
     const stands = actions.parentElement === header &&
       (hostActions !== null ? actions.nextElementSibling === hostActions : actions === header.lastElementChild)
@@ -131,13 +123,10 @@ export function install(ctx: HostContext) {
   const stopWatch = watchSidebar(schedule)
   /** 侧栏里的分区标题行，由总线按选择器维护（D40）：标题行重建时铃铛跟着重挂。 */
   const headerWatch = observeMatches<HTMLElement>(SECTION_HEADER_SELECTOR, schedule)
-  // 日期视图那个开关变了：铃铛跟着挂上或摘下。
-  const stopPrefs = subscribePrefs(() => schedule())
 
   pass()
 
   return () => {
-    stopPrefs()
     stopWatch()
     headerWatch.release()
     if (cancelFrame !== null) cancelFrame()

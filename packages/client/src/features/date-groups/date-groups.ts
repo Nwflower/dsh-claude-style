@@ -1,14 +1,15 @@
 import { SESSION_ROW_KEY_ATTRIBUTE, SESSION_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
-import { observeMatches, subscribeMutations } from '@dsh-claude-style/engine/bus'
+import { observeMatches } from '@dsh-claude-style/engine/bus'
 import { buildElement } from '@dsh-claude-style/engine/dom'
 import { QUIET_ATTR } from '../../constants'
 import { watchSidebar } from '../../shared/sidebar-watch'
-import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { hostSessions, hostWorkspaces, hostWorkspaceView } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
+import type { FeatureUi } from '../../core/feature'
 import type { HostSessionGroupBy, HostSessionsService, HostWorkspacesService } from '@dsh-claude-style/contracts/services'
 import { copy } from './copy'
 import type { CopyKey } from './copy'
+import type manifest from './date-groups.manifest'
 
 /**
  * 侧栏的会话列表按日期排列：今天、昨天、星期几，一周以前收进「更早」，
@@ -47,7 +48,7 @@ const GROUP_BACKUP_KEY = 'dsh-claude-group-before-date-view'
 const WEEKDAY_LIMIT = 7
 /**
  * 切换视图的事件名：铃铛按下时派发，本特性接住它，在「宿主的按工作区」与
- * 「我们的按日期」之间来回切。默认是前者 —— 读者不按铃铛，列表就是他原来的样子。
+ * 「我们的按日期」之间来回切。日期视图是默认的那一档，铃铛只是临时换回去。
  */
 export const DATE_VIEW_TOGGLE_EVENT = 'dsh-claude-toggle-date-view'
 
@@ -128,7 +129,7 @@ function labelOf(seat: Seat) {
   return copy('earlier')
 }
 
-export function install(ctx: HostContext) {
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /**
    * 宿主的服务按每一遍现取，不在安装时取一次：本特性随插件一起装上，而宿主是在那之后
    * 才注册 `sessions`、`workspaces` 和视图 store 的。安装时抓下来的值会整个世代都是
@@ -142,10 +143,8 @@ export function install(ctx: HostContext) {
   const mine = new Set<HTMLElement>()
   /** 我们把宿主的视图 store 切成扁平之前的分组，卸载时还回去。 */
   let previousGroup: HostSessionGroupBy | null = null
-  /** 日期视图开着吗：默认关着，读者按下铃铛才打开。 */
+  /** 日期视图开着吗：默认开着，读者按下铃铛才换回宿主的分组。 */
   let dateMode = false
-  /** 等这一帧写。 */
-  let cancelFrame: (() => void) | null = null
   let disposed = false
 
   /**
@@ -183,8 +182,9 @@ export function install(ctx: HostContext) {
   /**
    * 把宿主的列表切成扁平一条。
    *
-   * 工作区分组里每一段各是一张列表，日期要跨工作区，只能落在一张列表上；这个
-   * 写入是读者的首选项换来的（关掉本功能就还回原来的分组），不是偷偷改他的视图。
+   * 工作区分组里每一段各是一张列表，日期要跨工作区，只能落在一张列表上；铃铛
+   * 换回宿主视图时把这档还回去。分组记在 previousGroup 里，应用被意外关掉时由
+   * localStorage 里那份接着记。
    */
   function flatten() {
     const store = viewNow()
@@ -280,7 +280,11 @@ export function install(ctx: HostContext) {
 
   /** 一遍写入：先把宿主的列表压平，再按日期重排每条列表、给行加标签。 */
   function arrange() {
-    if (disposed || !dateMode) return
+    if (disposed) return
+    // 还原必须排在压平之前：应用上次在日期视图里被关掉时，宿主记下的是扁平，
+    // 读者自己的分组只剩这份备份。反过来做会把刚压平的列表又展开。
+    healLeftover()
+    if (!dateMode) return
     // 已归档的会话不按日期分：那是读者回头翻旧账的地方，日期段落只属于进行中。
     if (archivedView()) {
       calm()
@@ -352,15 +356,17 @@ export function install(ctx: HostContext) {
     }
   }
 
-  /** 打开日期视图：切扁平、重排、加标签，标记落到 body 上供样式表和铃铛读。 */
+  /**
+   * 打开日期视图：切扁平、重排、加标签，标记落到 body 上供样式表和铃铛读。
+   * 排版的活留给下一帧：安装时同步读宿主的会话列表，一旦那份服务有问题，安装
+   * 会整个抛出去，收尾函数都没能交回来，body 上的标记就留在页面上了。
+   */
   function enable() {
     if (dateMode || disposed) return
     dateMode = true
     document.body.setAttribute(MODE_ATTRIBUTE, '')
     followLists()
-    healLeftover()
-    flatten()
-    arrange()
+    schedule()
   }
 
   /** 关掉日期视图：还回宿主的分组，收走我们写过的每一个像素。 */
@@ -392,16 +398,13 @@ export function install(ctx: HostContext) {
     else enable()
   }
 
+  /**
+   * 请调度器在下一帧跑一遍。排版读宿主的会话与工作区列表，那份服务出问题时应当
+   * 算作本特性的一次失败：调度器把它的 sync 单独包住，重试到上限后把本特性摘掉、
+   * 交回收尾，页面上的标记不会留在一个已经停下来的特性后面。
+   */
   function schedule() {
-    if (cancelFrame !== null || disposed) return
-    followLists()
-    cancelFrame = requestFrame({
-      write() {
-        cancelFrame = null
-        healLeftover()
-        arrange()
-      },
-    })
+    ui.schedule?.()
   }
 
   /**
@@ -435,8 +438,8 @@ export function install(ctx: HostContext) {
 
   /**
    * 自愈：上次若是在日期视图里关掉应用的，宿主记下的是扁平，这里还成读者原来的分组，
-   * 否则「默认还是工作区 + 会话」在重启之后就不成立。视图 store 晚于安装出现，所以在
-   * 每一遍里等它出现后做一次。
+   * 铃铛换回宿主视图时才有正确的目标可还。视图 store 晚于安装出现，所以在每一遍里等
+   * 它出现后做一次，并且排在压平之前。
    */
   let healed = false
   function healLeftover() {
@@ -454,21 +457,13 @@ export function install(ctx: HostContext) {
   followLists()
   healLeftover()
 
-  // 默认什么都不做：读者看到的就是宿主原来那张「工作区 + 会话」。
-  document.addEventListener(DATE_VIEW_TOGGLE_EVENT, onToggle)
-  // 页面关掉时还在日期视图里：先把分组还回去，别把扁平留在宿主的存储里。
-  globalThis.addEventListener('pagehide', onPageHide)
-
-  return () => {
-    // 关掉视图再拆：分组还回去，我们插的节点收走。
+  /** 关掉视图再拆：分组还回去，我们插的节点收走。两处调用（调度器摘掉本特性、页面卸载）共用这一份。 */
+  function teardown() {
+    if (disposed) return
     disable()
     document.removeEventListener(DATE_VIEW_TOGGLE_EVENT, onToggle)
     globalThis.removeEventListener('pagehide', onPageHide)
     disposed = true
-    if (cancelFrame !== null) {
-      cancelFrame()
-      cancelFrame = null
-    }
     stopWatch()
     rows.release()
     if (unsubscribe !== null) unsubscribe()
@@ -481,4 +476,14 @@ export function install(ctx: HostContext) {
       store.actions.setGroupBy(previousGroup)
     }
   }
+
+  ui.dateGroups = { sync: arrange, skipOnContentOnly: true, teardown }
+
+  // 日期视图是默认的那一档：装上就排成日期段落，读者按下铃铛才换回宿主的视图。
+  enable()
+  document.addEventListener(DATE_VIEW_TOGGLE_EVENT, onToggle)
+  // 页面关掉时还在日期视图里：先把分组还回去，别把扁平留在宿主的存储里。
+  globalThis.addEventListener('pagehide', onPageHide)
+
+  return teardown
 }

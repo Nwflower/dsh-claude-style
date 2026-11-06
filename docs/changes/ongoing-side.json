@@ -1,0 +1,8 @@
+{
+  "group": "new",
+  "order": 30,
+  "at": "2026-11-06",
+  "external": false,
+  "zh": "新增进行中标记的左右位置选择，默认在行尾，左侧一档让标记回到行首插槽并保留真前导占位，第三方行首星标不再压住标题首字",
+  "en": "Add a side choice for the running marker, at the trailing end by default, with the left side returning it to the host's leading slot and keeping that band reserved so a third-party leading star no longer covers the title's first glyph"
+}

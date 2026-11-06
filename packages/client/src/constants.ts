@@ -148,6 +148,12 @@ export const SIDEBAR_BRAND_ATTR = 'data-dsh-claude-sidebar-brand'
  * its presence and value pick the breathing light or the turning ring.
  */
 export const ONGOING_INDICATOR_ATTR = 'data-dsh-claude-ongoing-indicator'
+/**
+ * Which end of its row that mark takes (features/sidebar-status/
+ * sidebar-status.css): `left` keeps the host's leading slot in the row's flow,
+ * `right` moves the mark to the trailing column.
+ */
+export const ONGOING_SIDE_ATTR = 'data-dsh-claude-ongoing-side'
 export const STATS_POSITION_ATTR = 'data-dsh-claude-stats-position'
 /**
  * The face the context meter is drawn with (features/context-stats/

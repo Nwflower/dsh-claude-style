@@ -17,15 +17,15 @@ export default {
     const expected = {
       general: ['brand', 'username', 'pageZoom', 'autoPopover', 'sodium'],
       appearance: ['sidebarBrand', 'brandLockup', 'brandInk', 'palette', 'paletteCards', 'backgroundOpacity', 'typeface', 'homeLayout', 'homeRipple', 'mascot', 'mascotScope'],
-      'main-window': ['turnNav', 'conversationWidth', 'viewTabs', 'headerBand', 'processRows', 'answerAnchor', 'composerScope', 'composerBottomGap', 'questionCard', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent', 'contextDisplay', 'contextNumbers', 'statsPosition', 'statsFooterAlign', 'billingCurrency', 'billingTable'],
-      sidebar: ['collapseFooter', 'banLocale', 'sidebarSearch', 'searchStyle', 'sidebarEntries', 'workspaceView', 'manualUnread', 'dateGroups', 'sidebarPeek', 'sidebarLayout'],
-      motion: ['motion', 'chatAnimations', 'chatWait', 'statusDetail', 'statusMotion', 'chatReveal', 'chatSend', 'messageEnter', 'caretMotion', 'ongoingIndicator'],
+      'main-window': ['turnNav', 'messageActions', 'conversationWidth', 'viewTabs', 'headerBand', 'processRows', 'answerAnchor', 'composerScope', 'composerBottomGap', 'questionCard', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent', 'contextDisplay', 'contextNumbers', 'statsPosition', 'statsFooterAlign', 'billingCurrency', 'billingTable'],
+      sidebar: ['collapseFooter', 'banLocale', 'sidebarSearch', 'searchStyle', 'sidebarEntries', 'workspaceView', 'sidebarPeek', 'sidebarLayout'],
+      motion: ['motion', 'chatAnimations', 'chatWait', 'statusDetail', 'statusMotion', 'chatReveal', 'chatSend', 'messageEnter', 'caretMotion', 'ongoingIndicator', 'ongoingIndicatorSide'],
     }
     // The main window's three groups, each under its label and carrying its own
     // rows: the conversation side, the composer's controls with the model
     // picker's rows, and the context meter with the statistics and the billing.
     const mainWindowGroups = [
-      { label: 'Conversation', rows: ['turnNav', 'conversationWidth', 'viewTabs', 'headerBand', 'processRows', 'answerAnchor'] },
+      { label: 'Conversation', rows: ['turnNav', 'messageActions', 'conversationWidth', 'viewTabs', 'headerBand', 'processRows', 'answerAnchor'] },
       { label: 'Composer', rows: ['composerScope', 'composerBottomGap', 'questionCard', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent'] },
       { label: 'Context and cost', rows: ['contextDisplay', 'contextNumbers', 'statsPosition', 'statsFooterAlign', 'billingCurrency', 'billingTable'] },
     ]
@@ -245,8 +245,8 @@ export default {
       archivedView.snapshot?.archivedFilter === 'only' && archivedView.snapshot?.groupBy === 'flat' &&
         archivedView.checked === 'true',
       JSON.stringify(archivedView))
-    check('the 进行中 segment puts the filter back with the grouping that stood before the visit, and stands checked again',
-      activeView.snapshot?.archivedFilter === 'default' && activeView.snapshot?.groupBy === 'workspace' &&
+    check('the 进行中 segment puts the filter back with the date view\'s own flat list standing before the visit, and stands checked again',
+      activeView.snapshot?.archivedFilter === 'default' && activeView.snapshot?.groupBy === 'flat' &&
         activeView.checked === 'true',
       JSON.stringify(activeView))
     const flatView = sw.flat || {}

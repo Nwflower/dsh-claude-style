@@ -126,6 +126,15 @@ export const ONGOING_INDICATOR_RING = 'ring'
 export const ONGOING_INDICATOR_SHIMMER = 'shimmer'
 export const ONGOING_INDICATORS = [ONGOING_INDICATOR_BREATHE, ONGOING_INDICATOR_RING, ONGOING_INDICATOR_SHIMMER] as const
 
+/**
+ * Which end of a session row carries the running marker: the host's leading
+ * slot, where a third-party mark painted over that slot also stands, or the
+ * trailing column the skin keeps for the status.
+ */
+export const ONGOING_SIDE_LEFT = 'left'
+export const ONGOING_SIDE_RIGHT = 'right'
+export const ONGOING_SIDES = [ONGOING_SIDE_LEFT, ONGOING_SIDE_RIGHT] as const
+
 /** The chat area's animation switch: on plays the ported set (features/chat-*), off leaves the area to the host. */
 export const CHAT_ANIMATIONS_OFF = 'off'
 
@@ -350,8 +359,6 @@ export const PREFS = {
    */
   billingTable: { type: 'list', default: [], max: PRICE_ROWS_MAX, entryMax: 256, drop: [] },
   workspaceView: { type: 'boolean', default: true },
-  /** Whether the sidebar lists its sessions by date instead of by workspace (features/date-groups). */
-  dateGroups: { type: 'boolean', default: true },
   sidebarSearch: { type: 'boolean', default: true },
   searchStyle: { type: 'choice', values: SEARCH_STYLES, default: SEARCH_STYLE_STANDALONE, legacy: { overlay: SEARCH_STYLE_STANDALONE } },
   /** Whether resting the pointer on the collapsed sidebar's toggle opens the sidebar over the page. */
@@ -362,8 +369,13 @@ export const PREFS = {
   sidebarHidden: { type: 'list', default: [], max: SIDEBAR_HIDDEN_MAX, entryMax: PANEL_ID_MAX, drop: [PLUGINS_PANEL_ID] },
   sidebarLayout: { type: 'choice', values: SIDEBAR_LAYOUTS, default: SIDEBAR_LAYOUT_RELAXED },
   ongoingIndicator: { type: 'choice', values: ONGOING_INDICATORS, default: ONGOING_INDICATOR_BREATHE },
+  /**
+   * Which end of the row carries that marker. The trailing end (the default)
+   * leaves the host's leading slot empty, and the row keeps that band reserved
+   * so a third-party mark painted over the slot cannot cover the title.
+   */
+  ongoingIndicatorSide: { type: 'choice', values: ONGOING_SIDES, default: ONGOING_SIDE_RIGHT },
   /** Explicit reminders stay separate from the host's completion-unread state. */
-  manualUnread: { type: 'boolean', default: true },
   manualUnreadIds: { type: 'list', default: [], max: MANUAL_UNREAD_LIMIT, entryMax: MANUAL_UNREAD_ID_LIMIT, drop: [] },
   turnNav: { type: 'boolean', default: true },
   /** Whether a message the reader sent carries edit and retract beside its copy button (features/message-actions). */
