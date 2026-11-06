@@ -3,6 +3,6 @@
   "group": "improvements",
   "order": 12,
   "external": false,
-  "zh": "一批页面变化只判断一次是不是主题自己写的",
-  "en": "Judge a batch of page changes once rather than once per subscriber"
+  "zh": "减少一批页面变化里主题自身写入的重复判定",
+  "en": "Judge a batch of page changes once for all of its subscribers"
 }
