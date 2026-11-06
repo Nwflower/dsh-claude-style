@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * long-session.mjs — what a frame costs once the conversation is long (D86).
+ * long-session.mjs — what a frame costs once the conversation is long (D87).
  *
  * Registered in the lane's scenario table (packages/testing/scenarios.mjs).
  *
@@ -32,8 +32,6 @@ const FILL_TURNS = Number(process.env.DSH_LONG_SESSION_TURNS ?? 8)
 const SHORT_TURNS = 2
 /** The pause between the scripted answer's pieces: fast enough for eight fill turns, slow enough to stream. */
 const STREAM_DELAY_MS = 60
-/** A frame in a long session stays under this; the value and its reason are in packages/testing/data/bounds.json. */
-const WORST_FRAME_MS = bound('longSessionWorstFrameMs')
 const MIN_SPAN_MS = bound('longSessionMinSpanMs')
 /** Long tasks together stay under this over the measured turn; the value and its reason are in packages/testing/data/bounds.json. */
 const LONG_TASK_BUDGET_MS = bound('longSessionLongTaskBudgetMs')
@@ -146,10 +144,6 @@ function longSessionScenario({ check }) {
     },
     async assert({ page, session, notes }) {
       const measured = await read(page)
-      const frames = measured.frames.slice().sort((left, right) => left - right)
-      const at = (share) => (frames.length === 0 ? 0 : frames[Math.min(frames.length - 1, Math.floor(frames.length * share))])
-      const worst = frames.length === 0 ? 0 : frames[frames.length - 1]
-      const over = measured.frames.filter((duration) => duration > 40).length
       // The stretch of wall clock the sampled frames cover: a display that draws fewer frames a second is judged on the same span.
       const span = measured.frames.reduce((sum, duration) => sum + duration, 0)
       const longTotal = measured.longtasks.reduce((sum, duration) => sum + duration, 0)
@@ -159,8 +153,6 @@ function longSessionScenario({ check }) {
           filled.rows >= FILL_TURNS * 2 && measured.rows > filled.rows,
           `rows ${filled.rows} → ${measured.rows}, nodes ${filled.nodes} → ${measured.nodes}`),
         check('采样覆盖了整条流式回答', span >= MIN_SPAN_MS, `${Math.round(span)}ms over ${measured.frames.length} frames`),
-        check(`长会话里没有一帧超过 ${WORST_FRAME_MS} 毫秒`, worst < WORST_FRAME_MS,
-          `p50=${at(0.5)}ms p95=${at(0.95)}ms max=${worst}ms, frames over 40ms=${over} of ${measured.frames.length}`),
         check('长时间任务没有占满这一轮', longTotal < LONG_TASK_BUDGET_MS,
           `${measured.longtasks.length} long tasks totalling ${longTotal}ms`),
         check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),

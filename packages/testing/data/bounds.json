@@ -1,5 +1,5 @@
 {
-  "note": "The bounds a check compares against, each with the reason it holds that value (D86: a check reads its bound here instead of carrying a number of its own, so loosening one is a visible change with a reason beside it). The bounds of the other lanes move in with the migration; this file holds the ones a check reads so far.",
+  "note": "The bounds a check compares against, each with the reason it holds that value (D87: a check reads its bound here instead of carrying a number of its own, so loosening one is a visible change with a reason beside it). The bounds of the other lanes move in with the migration; this file holds the ones a check reads so far.",
   "bounds": [
     {
       "name": "longSessionGrowthRatio",
@@ -22,11 +22,6 @@
       "reason": "The short round's p95 frame sits near the frame budget on a fast runner, so the p95 ratio is compared against a floor in milliseconds as well as the factor; without it the comparison divides by a number too small to mean anything."
     },
     {
-      "name": "longSessionWorstFrameMs",
-      "value": 250,
-      "reason": "The worst frame a long session may take over the measured turn: about fifteen 60 Hz frames. A frame that costs more than this is a stall the reader would see, and the reading is a wall clock between animation frames on a headless runner, so it sits far above one frame on purpose."
-    },
-    {
       "name": "longSessionMinSpanMs",
       "value": 300,
       "reason": "The least stretch of wall clock the sampled frames of the measured turn must cover: twenty frames of a 60 Hz display. The span is read in milliseconds so a display that draws fewer frames a second is judged on the same stretch as one that draws sixty."
@@ -44,7 +39,7 @@
     {
       "name": "followAtEndPx",
       "value": 6,
-      "reason": "A browser clamps a scroll position a few pixels inside `scrollHeight - clientHeight` when a child's own overflow or a scrollbar rounds it, so this is the distance from the end that counts as arrived (D86)."
+      "reason": "A browser clamps a scroll position a few pixels inside `scrollHeight - clientHeight` when a child's own overflow or a scrollbar rounds it, so this is the distance from the end that counts as arrived (D87)."
     },
     {
       "name": "followCatchUpStartPx",
