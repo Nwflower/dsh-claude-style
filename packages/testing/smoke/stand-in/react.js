@@ -12,11 +12,14 @@
     rendering: false,
     states: null,
     createElement: function (type, props) {
-      if (!react.rendering) return null
       // As React does, children passed as arguments replace props.children; with none passed, props.children stands.
       var children = arguments.length > 2 ? Array.prototype.slice.call(arguments, 2)
         : props && props.children !== undefined ? props.children : []
       var merged = Object.assign({}, props, { children: children })
+      // A component runs while the probe renders one; outside that the element
+      // stands as the tree a root is asked to mount (the skin's tooltip
+      // anchors), which render lays out without running the component.
+      if (typeof type === 'function' && react.rendering === false) return { type: type, props: merged }
       return typeof type === 'function' ? type(merged) : { type: type, props: merged }
     },
     // The elements above are what this page hands the skin, so this is the shape
@@ -74,15 +77,58 @@
   }
   // The host's react-dom/client. Each root records the element it was created
   // on, how many times it was asked to render and whether it was unmounted, so
-  // the probe can follow a root the skin mounts on a seat of its own.
+  // the probe can follow a root the skin mounts on a seat of its own. A tree
+  // the skin hands a root that stands in the page — a tooltip's anchor, the
+  // way shared/host-tooltip.ts wears one — is laid into the mount the way the
+  // host's own React lays it: the host components of the tree stand as
+  // elements and take their refs, and the components the stand-in does not run
+  // stand as the wrappers they are, their children laid where the host puts
+  // them. The lay waits for the task to end, because the skin seats the mount
+  // in the page after handing the root its first tree; a mount the skin keeps
+  // to itself (a portal's own box) is left as it stands.
   window.__roots = []
+  /** One piece of a tree the skin handed a root, laid into `into`. */
+  function lay(into, tree) {
+    if (tree === null || tree === undefined) return
+    if (typeof tree === 'string' || typeof tree === 'number') {
+      into.appendChild(document.createTextNode(String(tree)))
+      return
+    }
+    if (typeof tree !== 'object') return
+    if (Array.isArray(tree)) {
+      for (var at = 0; at < tree.length; at += 1) lay(into, tree[at])
+      return
+    }
+    var props = tree.props || {}
+    if (typeof tree.type !== 'string') {
+      // A host primitive: the stand-in does not run it, and its own children
+      // are what the page shows.
+      lay(into, props.children)
+      return
+    }
+    var node = document.createElement(tree.type)
+    if (typeof props.className === 'string') node.className = props.className
+    if (props.style !== null && typeof props.style === 'object') Object.assign(node.style, props.style)
+    into.appendChild(node)
+    lay(node, props.children)
+    if (typeof props.ref === 'function') props.ref(node)
+  }
   var reactDom = {
     createRoot: function (element) {
       var root = {
         element: element,
         renders: 0,
         unmounted: false,
-        render: function () { root.renders++ },
+        tree: null,
+        render: function (tree) {
+          root.renders += 1
+          root.tree = tree
+          queueMicrotask(function () {
+            if (root.element.isConnected === false) return
+            while (root.element.firstChild !== null) root.element.removeChild(root.element.firstChild)
+            lay(root.element, root.tree)
+          })
+        },
         unmount: function () { root.unmounted = true },
       }
       window.__roots.push(root)
