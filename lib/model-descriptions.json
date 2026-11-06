@@ -1,0 +1,699 @@
+{
+  "version": 1,
+  "fallback": "en",
+  "brands": {
+    "note": "Which brand mark a row shows. Every id names a vendored lockup in packages/assets/src/icons/combine/; scripts/build.mjs fails the build on an id that is not there. This is presentation data, kept out of the bundle like the rest of this document, and it is separate from the copy rules above: a vendor's mark and a vendor's description line change for different reasons. `providers` is deliberately empty: a model no rule claims draws **no** lockup rather than its provider's, because the reseller's own lockup on a model it did not make reads as a wrong answer rather than a missing one. `models` is an ordered, anchored rule list resolved against the model's id and then its display name (D79), exactly like `families` and with the same discipline: first match wins, so a broad rule must sit below the narrow ones and every rule must name its vendor (`step` cannot match `step-3.7-flash` by accident only if no earlier rule already claimed it). A brand with no lockup renders the label without a mark.",
+    "providers": {},
+    "models": [
+      {
+        "match": "deepseek",
+        "brand": "deepseek"
+      },
+      {
+        "match": "claude",
+        "brand": "claude",
+        "note": "Claude rows draw Claude's own lockup, not the parent Anthropic one: the label names the model line, and a wordmark has to match the word it stands in for — the same reason Grok rows draw Grok's rather than xAI's. Anthropic stays the fallback for the `anthropic` route."
+      },
+      {
+        "match": "gpt|(^|[^a-z0-9])o[1-9](-|$)",
+        "brand": "openai"
+      },
+      {
+        "match": "nano-?banana",
+        "brand": "nanobanana",
+        "note": "Nano Banana is a Gemini image model with its own identity in the catalog, so it draws its own lockup rather than the Gemini one."
+      },
+      {
+        "match": "gemma",
+        "brand": "gemma",
+        "note": "Gemma is Google's open model line, so it draws its own lockup rather than the parent Google one — the same reason Claude and Grok do."
+      },
+      {
+        "match": "gemini",
+        "brand": "gemini",
+        "note": "A Gemini row shows the model line's mark; the provider group header above it shows Google's, because providers resolve from `providers` and never from here."
+      },
+      {
+        "match": "glm",
+        "brand": "zai"
+      },
+      {
+        "match": "kimi|(^|[^a-z0-9])k3([._-]?\\d)?($|-)",
+        "brand": "kimi",
+        "note": "The id can carry the serving provider's namespace (`cn:k3`, `moonshot/k3`), so the segment start accepts any character outside a letter or a digit. Requiring `k3` to start a segment is what leaves `mk3` unclaimed. A version number belongs to the name (`k3.1`), so it may follow `k3` before the segment ends, and `k3-256k` still ends on its hyphen."
+      },
+      {
+        "match": "qwen",
+        "brand": "qwen"
+      },
+      {
+        "match": "step",
+        "brand": "stepfun"
+      },
+      {
+        "match": "minimax|(^|[^a-z0-9])m[23]($|-)",
+        "brand": "minimax",
+        "note": "The id can carry the serving provider's namespace (`cn:m3`), so the segment start accepts any character outside a letter or a digit. Requiring `m2` or `m3` to start a segment is what leaves `pm2` unclaimed."
+      },
+      {
+        "match": "muse-spark|llama",
+        "brand": "meta"
+      },
+      {
+        "match": "celeris",
+        "brand": "celestoai"
+      },
+      {
+        "match": "mercury|inception",
+        "brand": "inception"
+      },
+      {
+        "match": "grok",
+        "brand": "grok",
+        "note": "Grok is the model line, xAI the company: a Grok row shows Grok's own mark, while the provider group header above it still shows xAI's, because providers resolve from `providers` and never from here."
+      },
+      {
+        "match": "doubao|seed|volc",
+        "brand": "bytedance"
+      },
+      {
+        "match": "ernie",
+        "brand": "baidu"
+      },
+      {
+        "match": "hunyuan|(^|[^a-z0-9])hy(\\d|-?mt)",
+        "brand": "tencent",
+        "note": "The id can carry the serving provider's namespace (`cn:hy3`, `openrouter/hy3`), so the segment start accepts any character outside a letter or a digit. Requiring `hy` to start a segment is what leaves `shy-mt2` unclaimed."
+      },
+      {
+        "match": "mistral|magistral|codestral",
+        "brand": "mistral"
+      },
+      {
+        "match": "north|command-?[ar]|cohere",
+        "brand": "cohere"
+      },
+      {
+        "match": "phi-?\\d",
+        "brand": "microsoft"
+      },
+      {
+        "match": "(^|[^a-z0-9])nova(-|$)",
+        "brand": "nova",
+        "note": "The vendor name has to start a segment and end one: unanchored, this rule claims `sensenova-6.8-flash-lite` for Amazon and lands that lockup in the middle of the name."
+      },
+      {
+        "match": "mimo",
+        "brand": "xiaomimimo"
+      },
+      {
+        "match": "longcat",
+        "brand": "longcat"
+      },
+      {
+        "match": "sonar|perplexity",
+        "brand": "perplexity"
+      },
+      {
+        "match": "beam",
+        "brand": "reflection",
+        "note": "Beam is Reflection's own line, so its rows draw the vendor's lockup — whose word is the vendor's, and the catalog's own name never spells it (`Beam Free · OpenCode Go`), so the label leads with the lockup instead of replacing a word in it."
+      }
+    ],
+    "lockups": {
+      "note": "Per-brand overrides for the vendored lockup, applied by scripts/fetch-lobe-combines.py. `word` is the word the lockup stands in for inside a model name (it must match how the catalog spells it, which is not always Lobe's TITLE), `mark` and `text` name the Lobe icons the two halves are taken from (so a model line can wear its own mark with its parent's wordmark), `keep` crops a wordmark to a fraction of its ink width (GLM-V's \"-V\" is not part of the name), and `tint` is the brand colour a hand-provided mark wears on the ivory canvas, where a fetched mark carries Lobe's own.",
+      "meta": {
+        "word": "Meta",
+        "lockup": true
+      },
+      "openai": {
+        "word": "GPT",
+        "local": "openai.svg",
+        "textFrom": 0.529
+      },
+      "tencent": {
+        "word": "Hunyuan",
+        "mark": "hunyuan",
+        "text": "tencent"
+      },
+      "stepfun": {
+        "word": "Step",
+        "mark": "stepfun",
+        "text": "stepfun"
+      },
+      "xiaomimimo": {
+        "word": "MiMo",
+        "mark": "xiaomimimo",
+        "text": "xiaomimimo"
+      },
+      "nanobanana": {
+        "word": "Nano Banana"
+      },
+      "zai": {
+        "word": "GLM",
+        "mark": "zai",
+        "text": "glmv",
+        "keep": 0.62
+      },
+      "reflection": {
+        "word": "Reflection",
+        "tint": "#1e3207"
+      }
+    }
+  },
+  "families": [
+    {
+      "match": "deepseek.*flash",
+      "text": {
+        "zh": "非对称模型结构，小成本大智能。",
+        "en": "Asymmetric architecture: more intelligence, less cost."
+      },
+      "note": "Every DeepSeek Flash reads the same line: the copy describes the line, not a version, so a retired Flash and a future one say the same thing. Anchored on `deepseek` on purpose: an unanchored /flash$/ would hand this copy to glm-5.3-flash, step-3.7-flash and every other vendor's flash tier."
+    },
+    {
+      "match": "deepseek.*pro",
+      "note": "The Pro line's own official heading on the V4 preview page. No rule pins it to a version: a Pro is a Pro whatever its version.",
+      "text": {
+        "zh": "性能比肩顶级闭源模型。",
+        "en": "Performance rivaling the world's top closed-source models."
+      }
+    },
+    {
+      "match": "deepseek",
+      "note": "Everything else in the line — V3.2, R1, and whatever comes next — shares the V4.1 release title.",
+      "text": {
+        "zh": "更强、更快、更普惠。",
+        "en": "Smarter, faster, more affordable."
+      }
+    },
+    {
+      "match": "claude.*fable",
+      "note": "Fable is a model line of its own (Mythos / Fable / Opus / Sonnet / Haiku), so it must not fall through to the generic Claude rule. Its copy is the line tagline from anthropic.com/claude/fable, and it carries no tier prefix of ours.",
+      "text": {
+        "zh": "新一代智能，专为解决最艰深的知识工作和编程难题。",
+        "en": "Next generation of intelligence for the hardest knowledge work and coding problems."
+      }
+    },
+    {
+      "match": "claude.*mythos",
+      "note": "Mythos is Fable's unrestricted sibling — Anthropic's own words: Fable is the same underlying model with cybersecurity and biology safeguards added. Access to Mythos is limited to vetted organizations, so its copy leads with the audience rather than the capability.",
+      "text": {
+        "zh": "面向网络安全与生物学研究，仅向经过审核的机构开放。",
+        "en": "Built for cybersecurity and biology research, with access limited to vetted organizations."
+      }
+    },
+    {
+      "match": "claude.*opus",
+      "note": "Family copy stays version-agnostic, so it carries no superlatives: 'strongest' is only true of the current generation and would mislabel an older Opus. Superlatives belong in a rule anchored to the version. It also carries no tier prefix of ours — '旗舰档：' is our positioning, not the model's own line.",
+      "text": {
+        "zh": "面向复杂编程与 AI 智能体的混合推理模型。",
+        "en": "A hybrid reasoning model built for complex coding and AI agents."
+      }
+    },
+    {
+      "match": "claude.*sonnet",
+      "text": {
+        "zh": "面向实时智能体与高吞吐场景的混合推理模型。",
+        "en": "A hybrid reasoning model for real-time agents and high-volume work."
+      }
+    },
+    {
+      "match": "claude.*haiku",
+      "text": {
+        "zh": "面向速度敏感的高吞吐场景，响应快、成本低。",
+        "en": "For speed-sensitive, high-volume workloads at low cost."
+      }
+    },
+    {
+      "match": "claude",
+      "text": {
+        "zh": "擅长编程、写作与复杂分析。",
+        "en": "Strong at coding, writing and complex analysis."
+      }
+    },
+    {
+      "match": "codex",
+      "text": {
+        "zh": "为 Codex 智能体编程优化，可并行处理多项软件工程任务。",
+        "en": "Optimized for agentic coding in Codex, handling several software tasks in parallel."
+      }
+    },
+    {
+      "match": "gpt.*astra",
+      "note": "Astra, Sol and Luna are GPT-6's model lines, so each reads its own line copy whatever the version (`gpt-6.1-sol`, `gpt-astra-latest`) and whatever the suffix (`-pro`, `-fast`, `:batch`). OpenAI calls Astra its most intelligent model; that superlative is only true of the current generation, so the copy names the work it is built for.",
+      "text": {
+        "zh": "面向计算机操作、编程、网络安全与科学研究中最艰深的问题。",
+        "en": "For the hardest problems in computer use, coding, cybersecurity and science."
+      }
+    },
+    {
+      "match": "gpt.*sol",
+      "text": {
+        "zh": "面向日常工作，擅长写作、编程与分析。",
+        "en": "For everyday work: writing, coding and analysis."
+      }
+    },
+    {
+      "match": "gpt.*luna",
+      "text": {
+        "zh": "响应快、成本低，适合高频与可重复的任务。",
+        "en": "Optimized for fast responses and high-volume, repeatable work."
+      }
+    },
+    {
+      "match": "gpt[._-]?5[._-]?4(?!\\d)",
+      "note": "Anchored to the 5.4 generation: native computer use is that model's claim, so a later GPT-5 reads the rule below.",
+      "text": {
+        "zh": "面向编程与专业工作，原生支持计算机操作。",
+        "en": "For coding and professional work, with native computer use."
+      }
+    },
+    {
+      "match": "gpt-?5",
+      "text": {
+        "zh": "内置思考、可配置推理强度，面向编程与智能体任务。",
+        "en": "Thinking built in with configurable reasoning effort, for coding and agentic tasks."
+      }
+    },
+    {
+      "match": "(^|[/-])o[1-9](-|$)",
+      "text": {
+        "zh": "作答前先深入思考，擅长多步推理。",
+        "en": "Trained to think before answering, strong at multi-step reasoning."
+      }
+    },
+    {
+      "match": "gpt-oss|oss-\\d",
+      "text": {
+        "zh": "OpenAI 的开放权重推理模型，Apache 2.0 许可，分 120B 与 20B 两种规模，可自托管。",
+        "en": "OpenAI's open-weight reasoning models under Apache 2.0, in 120B and 20B sizes, self-hostable."
+      }
+    },
+    {
+      "match": "gpt",
+      "text": {
+        "zh": "支持文本与图像输入，覆盖多种语言。",
+        "en": "Text and image input across many languages."
+      }
+    },
+    {
+      "match": "gemini.*argon",
+      "note": "Argon is a Gemini model line of its own, outside the Pro and Ultra tiers, so it sits above the Pro rule. The copy is the line's official positioning and carries no version.",
+      "text": {
+        "zh": "面向真实软件工程、企业知识工作与网络安全防御的前沿模型，擅长长程复杂任务。",
+        "en": "A frontier model for real-world software engineering, enterprise knowledge work and cyber defense, built for long-horizon workflows."
+      }
+    },
+    {
+      "match": "gemini.*(pro|ultra)",
+      "text": {
+        "zh": "面向复杂任务、深度推理与多模态理解。",
+        "en": "For complex tasks, deep reasoning and multimodal understanding."
+      }
+    },
+    {
+      "match": "gemini.*flash",
+      "text": {
+        "zh": "速度与成本优先，面向规模化智能体任务与高频低延迟场景。",
+        "en": "Speed and cost first, for high-volume low-latency work and agentic tasks at scale."
+      }
+    },
+    {
+      "match": "gemini",
+      "text": {
+        "zh": "原生理解文本、图像、视频与音频。",
+        "en": "Native text, image, video and audio understanding."
+      }
+    },
+    {
+      "match": "gemma",
+      "note": "Gemma is Google's open line, not a Gemini tier, so it must not inherit the Gemini rule's copy. Its place below the generic Gemini rule is only for readability: the two patterns cannot overlap.",
+      "text": {
+        "zh": "源自 Gemini 研究，从云端服务器到手机都能运行。",
+        "en": "Built from the same research as Gemini, running from cloud servers to phones."
+      }
+    },
+    {
+      "match": "nano-?banana",
+      "note": "Nano Banana is Gemini's image model with its own catalog identity, so it gets image copy instead of the Gemini text-model line.",
+      "text": {
+        "zh": "Gemini 图像生成与编辑模型，支持自然语言对话式创建与修改。",
+        "en": "Gemini's image generation and editing model, with conversational creation and refinement."
+      }
+    },
+    {
+      "match": "glm.*flashx",
+      "note": "The Flash X tier of every generation, above the Flash rules because its id contains `flash`.",
+      "text": {
+        "zh": "Flash 档的高吞吐版本，适合高频任务。",
+        "en": "The high-throughput variant of the Flash tier, for high-frequency work."
+      }
+    },
+    {
+      "match": "glm[._-]?5[._-]?3.*flash",
+      "note": "Anchored to the 5.3 generation's Flash tier: 'first' and the parameter count are its own, so a later GLM Flash reads the generic Flash rule below.",
+      "text": {
+        "zh": "该系列首个原生多模态模型，320B 总参数，MIT 许可开放权重。",
+        "en": "The series' first natively multimodal model: 320B parameters, open weights under MIT."
+      }
+    },
+    {
+      "match": "glm[._-]?5[._-]?3(?!\\d)",
+      "note": "Anchored to the 5.3 generation: the superlative is true of it alone, and the line's own rule below carries none.",
+      "text": {
+        "zh": "最强的开放权重编程模型之一，擅长长时间自主任务。",
+        "en": "One of the most capable open-weight coding models, built for long-horizon autonomy."
+      }
+    },
+    {
+      "match": "glm.*flash",
+      "text": {
+        "zh": "更快更省的多模态推理，兼顾日常编程。",
+        "en": "Fast, low-cost multimodal inference that handles everyday coding."
+      }
+    },
+    {
+      "match": "glm",
+      "text": {
+        "zh": "覆盖对话、编程与智能体，支持思考模式与函数调用。",
+        "en": "Covers chat, coding and agents, with thinking mode and function calling."
+      }
+    },
+    {
+      "match": "kimi.*k3[._-]?1(?!\\d)|(^|[^a-z0-9])k3[._-]?1(?!\\d)",
+      "note": "Anchored to the K3.1 generation and read before the K3 rule below, which would otherwise hand `kimi-k3.1-pro` the 2.8T line. No tier in the pattern: Highspeed is the same model at a faster output, so it reads this sentence too. The mention carries the same segment start as the lockup rule, so `cn:k3.1` reads this line.",
+      "text": {
+        "zh": "开放权重模型，以代码、金融研究与长程 Agent 任务见长。",
+        "en": "An open-weight model, strong at coding, financial research and long-horizon agent work."
+      }
+    },
+    {
+      "match": "kimi.*(k3|k-?3)|(^|[^a-z0-9])k-?3",
+      "note": "Anchored to the K3 line: the 2.8T size belongs to it, and the catalog's `k3` and `k3-256k` spellings are the same line. The K3 mentions carry the same segment start as the lockup rule, so an id spelled `cn:k3` reads this line.",
+      "text": {
+        "zh": "面向编程与知识工作的 2.8T 开放权重模型。",
+        "en": "An open-weight 2.8T model for coding and knowledge work."
+      }
+    },
+    {
+      "match": "kimi.*(cod(e|ing)|k2[._-]?7).*highspeed",
+      "note": "The coding line's high-speed tier, above the coding rule because its own id contains `coding`.",
+      "text": {
+        "zh": "长程编程智能体模型的高速版本，开放权重。",
+        "en": "The high-speed tier of the open-weight agentic coding model, for long-horizon work."
+      }
+    },
+    {
+      "match": "kimi.*(cod(e|ing)|k2[._-]?7)",
+      "note": "The coding line whatever the suffix spells: `kimi-for-coding` and `kimi-k2.7-code` both read it, and the high-speed tier above is claimed first.",
+      "text": {
+        "zh": "面向长程编程的开放权重智能体模型，1T 总参数。",
+        "en": "An open-weight agentic coding model for long-horizon work, with 1T parameters."
+      }
+    },
+    {
+      "match": "kimi",
+      "text": {
+        "zh": "原生支持文本、图像与视频输入，含思考模式与工具调用。",
+        "en": "Native text, image and video input, with thinking mode and tool calling."
+      }
+    },
+    {
+      "match": "qwen[._-]?3[._-]?8.*max",
+      "note": "Anchored to the 3.8 generation: the parameter count is that model's, so a later Qwen Max falls to the line rule below.",
+      "text": {
+        "zh": "面向编程与办公的 2.4 万亿参数 MoE，支持思考模式与内置工具。",
+        "en": "A 2.4T-parameter MoE for coding and office work, with thinking mode and built-in tools."
+      }
+    },
+    {
+      "match": "qwen.*(coder|code)",
+      "text": {
+        "zh": "开放权重 MoE，面向补全、生成与仓库级修改。",
+        "en": "Open-weight MoE for completion, generation and repo-level edits."
+      }
+    },
+    {
+      "match": "qwen.*(flash|turbo)",
+      "text": {
+        "zh": "响应快、成本低，工具调用支持完整。",
+        "en": "Fast and cheap, with full tool calling."
+      }
+    },
+    {
+      "match": "qwen.*plus",
+      "text": {
+        "zh": "能力与成本均衡，完整工具调用支持。",
+        "en": "Balanced cost and capability with full tool calling."
+      }
+    },
+    {
+      "match": "qwen.*a\\d+b",
+      "note": "MoE ids spell out total and active parameters (`2.4t-a95b`, `235b-a22b`); the active count must win over the size rule below, which would otherwise read the trailing `95b` as a small dense model.",
+      "text": {
+        "zh": "MoE 架构，单位成本低于同规模稠密模型。",
+        "en": "A mixture-of-experts model that costs less to serve than a dense model of its size."
+      }
+    },
+    {
+      "match": "qwen.*[-_]\\d+b($|[^a-z])",
+      "note": "Anchored to a separator so the digits start a segment: an unanchored \\d+b matches the `95b` inside `a95b` and calls a 2.4T MoE a small dense model.",
+      "text": {
+        "zh": "可本地或低成本部署。",
+        "en": "Cheap to serve, or run locally."
+      }
+    },
+    {
+      "match": "qwen",
+      "text": {
+        "zh": "开放权重与云端 API 并行，覆盖文本、图像、音频与视频。",
+        "en": "Open weights and cloud APIs across text, image, audio and video."
+      }
+    },
+    {
+      "match": "step[._-]?5(?!\\d)",
+      "note": "Anchored to the 5 line: the input modes are its own, and the trailing-digit guard keeps a size suffix (`95b`) from reading it.",
+      "text": {
+        "zh": "面向编程与专业知识工作，原生支持文本、图像与视频输入。",
+        "en": "For coding and professional knowledge work, with native text, image and video input."
+      }
+    },
+    {
+      "match": "step[._-]?3[._-]?7.*flash",
+      "note": "Anchored to 3.7: the parameter count is that tier's, so another Step Flash falls to the line rule below.",
+      "text": {
+        "zh": "面向智能体与代码任务的 198B 稀疏 MoE，支持图像与视频理解。",
+        "en": "A 198B sparse MoE for agentic and coding tasks, with image and video understanding."
+      }
+    },
+    {
+      "match": "step",
+      "text": {
+        "zh": "覆盖文本推理、多模态与语音，经官方开放平台提供。",
+        "en": "Reasoning, multimodal understanding and voice, served through the official open platform."
+      }
+    },
+    {
+      "match": "minimax.*m3|(^|[^a-z0-9])m3($|-)",
+      "note": "The M3 line's own claims; the catalog's `minimax-m3-1m` is the same line at a longer context.",
+      "text": {
+        "zh": "兼具前沿编程能力与原生多模态的开放权重模型。",
+        "en": "An open-weight model combining frontier coding with native multimodality."
+      }
+    },
+    {
+      "match": "minimax|(^|[^a-z0-9])m2[-.]?\\d",
+      "text": {
+        "zh": "主打智能体推理、工具调用、编程与多模态输入。",
+        "en": "Agentic reasoning, tool use, coding and multimodal input."
+      }
+    },
+    {
+      "match": "muse-spark",
+      "note": "Meta Superintelligence Labs' Muse line, separate from the Llama open-weight line — it must not inherit the Llama rule's copy.",
+      "text": {
+        "zh": "小而快、原生多模态推理，驱动 Meta AI。",
+        "en": "Small and fast by design, natively multimodal, powering Meta AI."
+      }
+    },
+    {
+      "match": "celeris",
+      "note": "Diffusion LLM, so the copy leads with latency rather than the usual capability framing.",
+      "text": {
+        "zh": "扩散架构大语言模型，主打超低延迟生成。",
+        "en": "Diffusion-architecture LLMs built for ultra-low-latency generation."
+      }
+    },
+    {
+      "match": "mercury-?\\d|inception",
+      "text": {
+        "zh": "扩散架构，面向代码生成，以极快的生成速度见长。",
+        "en": "Diffusion-based and built for code, with very fast generation."
+      }
+    },
+    {
+      "match": "apodex",
+      "text": {
+        "zh": "面向复杂专业工作、金融与科研。",
+        "en": "For complex professional work, finance and science."
+      }
+    },
+    {
+      "match": "motif",
+      "text": {
+        "zh": "MIT 许可的开放权重 MoE 模型。",
+        "en": "An MIT-licensed open-weight MoE model."
+      }
+    },
+    {
+      "match": "grok[._-]?4(?!\\d)",
+      "note": "Anchored to the Grok 4 line, so every 4.x build reads the same sentence and another line falls to the rule below.",
+      "text": {
+        "zh": "全球最智能的模型之一，原生支持工具调用与实时搜索。",
+        "en": "One of the most intelligent models in the world, with native tool use and real-time search."
+      }
+    },
+    {
+      "match": "grok",
+      "text": {
+        "zh": "覆盖编程、智能体与知识工作，API 支持多模态输入。",
+        "en": "Coding, agentic tasks and knowledge work, with multimodal API input."
+      }
+    },
+    {
+      "match": "doubao.*2[._-]?1(?!\\d)|seed[._-]?2[._-]?1(?!\\d)",
+      "note": "Anchored to Seed 2.1: the tiers it names are that generation's, so another Seed reads the vendor rule below.",
+      "text": {
+        "zh": "分 Pro 与 Turbo 两档的生产力智能体模型，擅长通用任务与代码。",
+        "en": "A productivity agent model in Pro and Turbo tiers, strong at general agentic and coding tasks."
+      }
+    },
+    {
+      "match": "doubao|seed-?\\d|volc",
+      "text": {
+        "zh": "覆盖对话、编程与多模态，经大规模线上业务验证。",
+        "en": "Chat, coding and multimodal work, proven across large-scale production use."
+      }
+    },
+    {
+      "match": "ernie[._-]?5([._-]?0)?(-|$)",
+      "note": "Anchored to the 5.0 generation: the parameter count is its own, and the catalog's `ernie-5` is the same line.",
+      "text": {
+        "zh": "2.4 万亿参数的原生全模态大模型。",
+        "en": "A native omni-modal model with 2.4 trillion parameters."
+      }
+    },
+    {
+      "match": "ernie",
+      "text": {
+        "zh": "产业级知识增强，支持中文理解与多模态生成。",
+        "en": "Industry-grade knowledge enhancement, with Chinese understanding and multimodal generation."
+      }
+    },
+    {
+      "match": "hunyuan|(^|[^a-z0-9])hy\\d",
+      "text": {
+        "zh": "中文理解与智能体场景表现均衡。",
+        "en": "Balanced for Chinese language and agentic scenarios."
+      },
+      "note": "The brand rule for this line reads the same segment start: `cn:hy3` is the same line as `hy3`."
+    },
+    {
+      "match": "codestral",
+      "text": {
+        "zh": "面向代码补全、FIM 与生成。",
+        "en": "Built for code completion, FIM and generation."
+      }
+    },
+    {
+      "match": "mistral.*large[._-]?3(?!\\d)",
+      "note": "Anchored to Large 3: the licence and the parameter count are that model's, so another Mistral reads the line rule below.",
+      "text": {
+        "zh": "Apache 2.0 许可的开放权重多模态 MoE，675B 总参数。",
+        "en": "An Apache 2.0 open-weight multimodal MoE with 675B parameters."
+      }
+    },
+    {
+      "match": "mistral|magistral",
+      "text": {
+        "zh": "从云端到边缘的前沿模型，开放权重与商用并行，可 API 调用或自托管。",
+        "en": "Frontier models from cloud to edge, open-weight and commercial, via API or self-hosting."
+      }
+    },
+    {
+      "match": "llama",
+      "text": {
+        "zh": "可自由微调、蒸馏并部署到任何环境。",
+        "en": "Fine-tune, distill and deploy it anywhere."
+      }
+    },
+    {
+      "match": "north",
+      "text": {
+        "zh": "把大模型、搜索与自动化整合进同一个企业级安全工作空间。",
+        "en": "LLMs, search and automation combined into one secure enterprise workspace."
+      }
+    },
+    {
+      "match": "command-?[ar]|cohere",
+      "text": {
+        "zh": "面向工具调用、RAG 与多语言任务。",
+        "en": "For tool use, RAG and multilingual work."
+      }
+    },
+    {
+      "match": "phi-?\\d",
+      "text": {
+        "zh": "面向边缘与本地部署的小模型，擅长推理、数学与代码。",
+        "en": "Small models for edge and local use, strong at reasoning, math and code."
+      }
+    },
+    {
+      "match": "(^|[^a-z0-9])nova(-|$)",
+      "note": "Every mention of the line reads the same boundary as the lockup rule: unanchored, this rule gives `sensenova-6.8-flash-lite` Amazon Nova's description.",
+      "text": {
+        "zh": "亚马逊的多模态模型，支持文本、图像与视频输入。",
+        "en": "Amazon's multimodal models, taking text, image and video input."
+      }
+    },
+    {
+      "match": "sonar|perplexity",
+      "text": {
+        "zh": "结合实时网络信息作答并附上引用来源，覆盖轻量问答到多步深度研究。",
+        "en": "Search APIs answering with fresh web data and citations, from quick answers to multi-step deep research."
+      }
+    }
+  ],
+  "tiers": [
+    {
+      "match": "flash|mini|lite|nano|turbo|air|small|swift|highspeed|fast|instant",
+      "text": {
+        "zh": "响应快、成本低，适合简单或高频任务。",
+        "en": "Fast and cheap, for simple or high-frequency tasks."
+      }
+    },
+    {
+      "match": "pro|max|ultra|opus|thinking|reasoner|plus|large|advanced|heavy|frontier",
+      "text": {
+        "zh": "适合复杂或质量优先的任务，成本更高。",
+        "en": "For complex, quality-first work at higher cost."
+      }
+    },
+    {
+      "match": "a\\d+b",
+      "note": "MoE active-parameter suffix (`a95b`, `a23b`); tried before the dense rule so the active count is not mistaken for a total.",
+      "text": {
+        "zh": "MoE 架构，单位成本低于同规模稠密模型。",
+        "en": "A mixture-of-experts model that costs less to serve than a dense model of its size."
+      }
+    },
+    {
+      "match": "(^|[-_])\\d+b($|[^a-z])",
+      "note": "Anchored so the digits start a segment: unanchored, `a95b` and `a23b` read as small dense models.",
+      "text": {
+        "zh": "可本地或低成本部署。",
+        "en": "Cheap to serve, or run locally."
+      }
+    }
+  ]
+}
