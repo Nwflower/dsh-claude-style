@@ -26,7 +26,7 @@ interface HostTimingEntry {
   assumption: string
   /** What the skin does with that order, and what breaks without it. */
   use: string
-  /** Where it is held: `scenario:<name>` of the lane, or `spec:<id>` of a spec (D86). */
+  /** Where it is held: `scenario:<name>` of the lane, or `spec:<id>` of a spec (D87). */
   checks: string[]
 }
 

@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * verify.mjs — the one entry a test run goes through (D86).
+ * verify.mjs — the one entry a test run goes through (D87).
  *
  * Parallel sessions share this working tree, and each of them reaching for a
  * runner of its own is what made the machine run the same build and the same
  * browser several times over. This file is the only place the gates are
  * started; a session asks it and reads its answer. Development asks it for
  * nothing: a change is carried by the build, and the gates are run together
- * before a release (D86).
+ * before a release (D87).
  *
  *   one entry  the checks, the build, the logic and mechanism specs, the
  *              smoke, the behaviour specs and the end-to-end lane, from one
@@ -33,7 +33,7 @@
  *   unjudged   a gate that gave no verdict answers UNJUDGED: a deadline this
  *              file enforced, a process the system ended, a browser that would
  *              not start, a spec suite that did not load. Such a run files no
- *              verdict, so the next request runs it again (D86); a failed
+ *              verdict, so the next request runs it again (D87); a failed
  *              assertion is a verdict and is filed like a pass.
  *
  * A verdict in the cache is one a run produced. A request whose gates were
@@ -119,7 +119,7 @@ const UNIT_SOURCES = ['packages/client/src', 'packages/contracts/src', 'packages
 const UNIT_REPORT_ARGS = ['--reporter=default', '--reporter=json', `--outputFile.json=${path.relative(ROOT, UNIT_REPORT).replace(/\\/g, '/')}`]
 
 /**
- * The spec gate of a request (the logic and mechanism layers, D86): the whole
+ * The spec gate of a request (the logic and mechanism layers, D87): the whole
  * lane, or — for the iteration tier — the specs the working tree's change reaches, which is what makes that tier answer
  * in seconds while a session is editing. A tree with no change under the
  * sources runs the lane whole: a bare request on a still tree still answers for
@@ -263,7 +263,7 @@ function gatesFor(request) {
     { id: 'agents', minutes: 5, script: 'scripts/agents-commands.mjs', args: ['--check'] },
     { id: 'numbers', minutes: 5, script: 'packages/testing/check-numbers.mjs', args: ['--check'] },
     // The rule that the appearance snapshot only moves with what draws or reads
-    // the pages (D86), and the records that only shrink, against HEAD.
+    // the pages (D87), and the records that only shrink, against HEAD.
     { id: 'scope', minutes: 5, script: 'scripts/ci-scope.mjs', args: ['--appearance', '--ledgers', '--tree'] },
     { id: 'build', minutes: 15, script: 'scripts/build.mjs', args: [] },
     unitGate(request.iteration),

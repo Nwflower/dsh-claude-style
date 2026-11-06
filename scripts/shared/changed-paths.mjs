@@ -1,5 +1,5 @@
 /**
- * changed-paths.mjs — the working tree's changed paths, read once (D86).
+ * changed-paths.mjs — the working tree's changed paths, read once (D87).
  *
  * Two callers ask this question and both need the same answer: the run that
  * picks the unit tests a session's edits reach (`scripts/verify.mjs`) and the

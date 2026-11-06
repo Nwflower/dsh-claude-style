@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * faults.mjs — whether the specs catch known defects (D86).
+ * faults.mjs — whether the specs catch known defects (D87).
  *
  * The corpus (packages/testing/faults/corpus.json) holds defects as patches on
  * the product's sources: a fix from history that still reverses on the current

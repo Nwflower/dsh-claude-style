@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * stats-overlay.mjs — the context meter's ring in the composer row (D86).
+ * stats-overlay.mjs — the context meter's ring in the composer row (D87).
  *
  * Registered in the lane's scenario table through packages/testing/stats-position.mjs.
  *
@@ -17,7 +17,7 @@
 
 /**
  * The skin's own marks, read off the surface table rather than spelled here
- * (D86): the table is what a lane names a skin mark through.
+ * (D87): the table is what a lane names a skin mark through.
  */
 import surfaceTable from './data/surface.json' with { type: 'json' }
 

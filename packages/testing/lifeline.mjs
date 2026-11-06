@@ -1,7 +1,7 @@
 /**
  * lifeline.mjs — preloaded into the scratch host by packages/testing/dsh-web.mjs
  * (`NODE_OPTIONS=--require`), so the host never outlives the process that
- * started it (D86).
+ * started it (D87).
  *
  * The launcher gives the host a stdin pipe and never writes to it. However the
  * launcher ends — a normal exit, an uncaught error, Ctrl+C, taskkill /F — the OS

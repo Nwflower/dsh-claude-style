@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * sidebar-rail.mjs — the sidebar's rows as one column: the wide column before the
- * collapse, and the collapsed rail as one icon column (D86).
+ * collapse, and the collapsed rail as one icon column (D87).
  *
  * Registered in the lane's scenario table (packages/testing/scenarios.mjs).
  *
@@ -28,7 +28,7 @@
 import { bound } from './bounds.mjs'
 import surfaceTable from './data/surface.json' with { type: 'json' }
 
-/** The skin's part mark, read off the surface table rather than spelled here (D86). */
+/** The skin's part mark, read off the surface table rather than spelled here (D87). */
 const PART = surfaceTable.surface.find((entry) => entry.id === 'skin.part').attribute
 const part = (name) => `[${PART}~="${name}"]`
 

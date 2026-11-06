@@ -3,7 +3,7 @@
  *
  * `scripts/verify.mjs` files its verdicts under this hash and the continuous
  * integration workflow keys the build cache with it, so a run here and a run in
- * the cloud name the same tree the same way (D86).
+ * the cloud name the same tree the same way (D87).
  */
 import crypto from 'node:crypto'
 import fs from 'node:fs'

@@ -1,4 +1,4 @@
 {
-  "about": "Behaviour tests that fail over a product defect someone has taken up (D86). A test here still runs on every walk and its failure is still printed; it stops blocking the run, and the run fails once it passes, so the entry leaves with the fix. An entry is written by hand, names the defect in the reader's terms, and this record only shrinks (scripts/ci-scope.mjs --ledgers).",
+  "about": "Behaviour tests that fail over a product defect someone has taken up (D87). A test here still runs on every walk and its failure is still printed; it stops blocking the run, and the run fails once it passes, so the entry leaves with the fix. An entry is written by hand, names the defect in the reader's terms, and this record only shrinks (scripts/ci-scope.mjs --ledgers).",
   "tests": []
 }

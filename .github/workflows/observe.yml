@@ -2,7 +2,7 @@ name: Observe
 
 # A push to master is judged in `.github/workflows/ci.yml` by the checks, the
 # build, the spec lane and the part of the smoke and the behaviour lane its
-# change reaches (D86). A push held inside feature directories walks only those
+# change reaches (D87). A push held inside feature directories walks only those
 # directories there, so what it did to the rest of the page is observed here, on
 # the same push, through the smoke's quick tier and every behaviour spec, without
 # joining the branch rule. A push whose change reached the shared layer already

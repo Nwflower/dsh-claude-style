@@ -1,5 +1,5 @@
 {
-  "about": "The release matrix's axes (D86): the viewport bands the behaviour specs fan out over, the pixel densities a spec may ask for, and the runners the release pipeline drives them on. A band stands on each side of every viewport breakpoint the skin's stylesheets declare, and lint holds the bands to those breakpoints, so a new breakpoint is a new band before it is a new layout nobody walks. The host is the newest published version and no other: the behaviour layers judge that one alone.",
+  "about": "The release matrix's axes (D87): the viewport bands the behaviour specs fan out over, the pixel densities a spec may ask for, and the runners the release pipeline drives them on. A band stands on each side of every viewport breakpoint the skin's stylesheets declare, and lint holds the bands to those breakpoints, so a new breakpoint is a new band before it is a new layout nobody walks. The host is the newest published version and no other: the behaviour layers judge that one alone.",
   "bands": [
     { "name": "phone", "width": 420, "height": 844, "why": "under the 480px breakpoint: the composer's phone layout" },
     { "name": "compact", "width": 720, "height": 900, "why": "between 480px and 760px: the narrow window the composer row has to share between the model name and its controls" },

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * mock-platform.mjs — the scripted DeepSeek account platform for the
- * end-to-end lane (D86).
+ * end-to-end lane (D87).
  *
  * The host's own account provider (`@deepseek-ai/dsh-deepseek-account-platform`)
  * reads a signed-in reader's profile and wallets from the platform origin its

@@ -1,6 +1,6 @@
 /**
  * browser.mjs — the headless Chrome/Edge every tool here drives through
- * Playwright, and the browser lookup they share (D86).
+ * Playwright, and the browser lookup they share (D87).
  *
  * The machine's own Chrome or Edge is what runs; Playwright's bundled browsers
  * are never downloaded. CHROME_PATH overrides the lookup.

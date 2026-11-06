@@ -1,4 +1,4 @@
-// The logic and mechanism layers of the specs (D86): Vitest in browser mode,
+// The logic and mechanism layers of the specs (D87): Vitest in browser mode,
 // driving a local Chrome/Edge through Playwright, so the DOM, MutationObserver,
 // ResizeObserver, layout and frames a spec reads are the browser's own.
 // CHROME_PATH chooses the browser, as for the smoke. The behaviour layer drives

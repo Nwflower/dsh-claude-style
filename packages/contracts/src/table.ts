@@ -1,7 +1,7 @@
 /**
  * The host contract as one table (D3): the literals in packages/contracts/src/dom.ts,
  * each with what the skin reads it for and how the contract test checks it on
- * a live host (D86).
+ * a live host (D87).
  *
  * The table is build and test data rather than runtime data: the browser bundle
  * carries the literals alone, so the notes cost the page nothing. The build
@@ -12,12 +12,12 @@
  *
  * The host build these entries were checked on is the one the service shapes
  * name (packages/contracts/src/services.ts, 0.2.1-alpha.1), and the lane's
- * `contract` scenario walks every `probe` below against a live host (D3, D86).
+ * `contract` scenario walks every `probe` below against a live host (D3, D87).
  */
 import * as dom from './dom'
 
 /**
- * The page state an entry is checked in (D86): the empty page, the moment a
+ * The page state an entry is checked in (D87): the empty page, the moment a
  * submission goes through, an answer streaming in, a settled conversation of two
  * turns, the host's own account menu open, or the host's dark flip. `any` holds
  * everywhere the page is served.
@@ -34,7 +34,7 @@ type HostDomProbeState = 'any' | 'hero' | 'sending' | 'streaming' | 'conversatio
  * - `computed` — the element `within` names, or that element's parent under
  *   `parent`, resolves `property`; the value the host snapshot holds under
  *   `record` is compared as the host's own output, so a difference is reported
- *   as an observation (D86).
+ *   as an observation (D87).
  * - `global` — the dotted path resolves on the page.
  * - `value` — the string appears as the value of some attribute.
  * - `rail-geometry` — the rail's marks and its scroller's content height agree
@@ -71,7 +71,7 @@ interface HostDomEntry {
   id: string
   /** The literal, as the host writes it. */
   value: string
-  /** How the contract test checks it (D86). */
+  /** How the contract test checks it (D87). */
   probe: HostDomProbe
   /**
    * A bare attribute name (`data-placeholder`) rather than a selector: what the

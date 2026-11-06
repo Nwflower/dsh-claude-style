@@ -635,6 +635,6 @@ async function main() {
   }
 }
 
-// A build never waits on the test lock (D86): a run that a build swaps the page
+// A build never waits on the test lock (D87): a run that a build swaps the page
 // under says so itself (scripts/verify.mjs, "honest") and files no verdict.
 await main()

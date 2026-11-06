@@ -2,7 +2,7 @@
 /**
  * stream-jitter.mjs — whether the message column a reader looks at moves down
  * between two frames while an answer arrives faster than one slide runs
- * (D85, D86).
+ * (D85, D87).
  *
  * The slide's own `translateY` saws by design: it puts the column back down by
  * each piece's growth and glides it up, and a piece that lands before that glide

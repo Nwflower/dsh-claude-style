@@ -19,7 +19,7 @@
  *
  * It also holds the one push this cannot accept: a change to the appearance
  * snapshot (`packages/testing/data/appearance.json`) with no change under
- * `packages/client/src` and none to the files that read it (D86). The
+ * `packages/client/src` and none to the files that read it (D87). The
  * snapshot is what the pages look like, so it only moves when what draws them
  * or what reads them moved; a push that carries it alone is a snapshot
  * recorded by hand, and `--appearance` fails it. A snapshot the base
@@ -29,8 +29,8 @@
  * selectors the importance walk cannot reach (`importance-unreachable.json`,
  * D9), the whole-document lookups left outside the host access module
  * (`document-lookups.json`), the behaviour tests held over a known defect
- * (`quarantine.json`, D86) and the skin marks the older test code spells out
- * (`skin-literals.json`, D86). Each is compared with itself at the base and its
+ * (`quarantine.json`, D87) and the skin marks the older test code spells out
+ * (`skin-literals.json`, D87). Each is compared with itself at the base and its
  * total may not rise however the reasons read; the total is what is compared,
  * so a selector rewritten or a module moved carries its entry along. Lint only
  * holds each record to the tree.

@@ -2,7 +2,7 @@ import registry from '../../data/surface.json'
 
 /**
  * The skin's own names, read from the surface table by id (packages/testing/data/surface.json,
- * D86). A spec never spells one, so a rename in the skin moves the table alone.
+ * D87). A spec never spells one, so a rename in the skin moves the table alone.
  */
 interface SurfaceEntry {
   id: string

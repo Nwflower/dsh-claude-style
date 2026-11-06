@@ -10,7 +10,7 @@
  * sections in order, every repository path prose names exists, no feature
  * module reaches past the handles its manifest
  * declares (D72), no pair of files holds a copied stretch (jscpd), and every
- * spec keeps to the channels and the header D86 sets.
+ * spec keeps to the channels and the header D87 sets.
  * Everything else a tool could enforce is already a build check, the type check
  * or a smoke case.
  *
@@ -76,7 +76,7 @@ function decisionNumbers() {
 
 // 1. The stop line. A unit test file counts like any other: a test that grew
 // past the line is one file holding several subjects, which is the shape the
-// line exists to catch (D86). Declaration files are generated and stand aside.
+// line exists to catch (D87). Declaration files are generated and stand aside.
 const sources = [
   ...filesUnder(path.join(ROOT, 'packages'), ['.ts', '.css', '.mjs', '.js'], SKIPPED_DIRS),
   ...filesUnder(path.join(ROOT, 'scripts'), ['.mjs', '.mjs', '.js'], SKIPPED_DIRS),
@@ -288,7 +288,7 @@ for (const file of Object.keys(recordedLookups)) {
 // 9. The bounds a check compares against, and every name a check asks for.
 // packages/testing/data/bounds.json is where a limit on a reading lives, each with
 // the reason it holds its value, so loosening one is a line in a diff rather
-// than a number buried in an assertion (D86). A name nothing reads
+// than a number buried in an assertion (D87). A name nothing reads
 // means the rule it guards is gone; a name something reads and the table does
 // not hold fails where it is read, which is why the pass over the sources is
 // part of the rule rather than a comment on the table.
@@ -335,7 +335,7 @@ for (const name of boundNames) {
 }
 if (boundReads === 0) problems.push('lint: no bound was read — the bounds pattern matches nothing')
 
-// 10. The specs (D86). A spec reaches the product through three channels only —
+// 10. The specs (D87). A spec reaches the product through three channels only —
 // the declared logic surface, the contract and engine packages, and what the
 // reader sees on the built page — and it names the skin's and the host's own
 // marks through the surface table and the host contract, never by spelling
@@ -379,9 +379,9 @@ const standInPage = (file) => file.startsWith('packages/testing/smoke/')
 /** Where a spec stands: `<layer>/<capability>/<name>.spec.(ts|mjs)`, and nowhere else. */
 const SPEC_PLACE = /^packages\/testing\/specs\/(logic|mechanism|behaviour)\/[^/]+\/[^/]+\.spec\.(ts|mjs)$/
 for (const file of specs) {
-  if (!SPEC_PLACE.test(file)) problems.push(`${file}: a spec stands at packages/testing/specs/<layer>/<capability>/<name>.spec.(ts|mjs) (D86)`)
+  if (!SPEC_PLACE.test(file)) problems.push(`${file}: a spec stands at packages/testing/specs/<layer>/<capability>/<name>.spec.(ts|mjs) (D87)`)
   const header = readHeader(file)
-  if (!header.hasHeader) { problems.push(`${file}: opens with no header comment carrying @capability, @features and @risk (D86)`); continue }
+  if (!header.hasHeader) { problems.push(`${file}: opens with no header comment carrying @capability, @features and @risk (D87)`); continue }
   if (header.capability !== header.directory) problems.push(`${file}: @capability "${header.capability}" is not the directory it sits in (${header.directory})`)
   if (header.features.length === 0) problems.push(`${file}: @features names nothing`)
   for (const feature of header.features) {
@@ -398,15 +398,15 @@ for (const file of specs) {
   for (const specifier of specifiers) {
     if (specifier.startsWith('.')) {
       const resolved = path.resolve(path.dirname(path.join(ROOT, file)), specifier)
-      if (!relative(resolved).startsWith('packages/testing/specs/')) problems.push(`${file}: reaches ${specifier} outside packages/testing/specs/; reach the product through its declared surface (D86)`)
+      if (!relative(resolved).startsWith('packages/testing/specs/')) problems.push(`${file}: reaches ${specifier} outside packages/testing/specs/; reach the product through its declared surface (D87)`)
       continue
     }
     if (file.endsWith('.mjs') && specifier.startsWith('node:')) continue
-    if (!SPEC_IMPORTS.some((allowed) => allowed.test(specifier))) problems.push(`${file}: imports ${specifier}; a spec reaches the product through @dsh-claude-style/client/pure, the contracts and the engine's public modules (D86)`)
+    if (!SPEC_IMPORTS.some((allowed) => allowed.test(specifier))) problems.push(`${file}: imports ${specifier}; a spec reaches the product through @dsh-claude-style/client/pure, the contracts and the engine's public modules (D87)`)
   }
   lines.forEach((line, at) => {
     if (/^\s*(\*|\/\/|\/\*)/.test(line)) return
-    for (const refused of SPEC_REFUSED) if (refused.test(line)) problems.push(`${file}:${at + 1}: puts a stand-in where the product runs, or freezes an output instead of judging it (D86)`)
+    for (const refused of SPEC_REFUSED) if (refused.test(line)) problems.push(`${file}:${at + 1}: puts a stand-in where the product runs, or freezes an output instead of judging it (D87)`)
     if (SPEC_WATCHES.test(line) && !lines.slice(Math.max(0, at - 2), at + 1).some((near) => /\/\/\s*cost: D\d+/.test(near))) {
       problems.push(`${file}:${at + 1}: watches a method; say the cost a decision names beside it (// cost: D<n> — …)`)
     }
@@ -415,7 +415,7 @@ for (const file of specs) {
       if (!pattern.test(line)) continue
       // A class name built from its own prefix at run time spells no name.
       if (what.startsWith('a host class') && CONCATENATED_CLASS.test(line)) continue
-      problems.push(`${file}:${at + 1}: spells ${what} (D86)`)
+      problems.push(`${file}:${at + 1}: spells ${what} (D87)`)
     }
   })
 }

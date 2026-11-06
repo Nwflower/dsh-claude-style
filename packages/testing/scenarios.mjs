@@ -1,5 +1,5 @@
 /**
- * scenarios.mjs — the end-to-end lane's scenario table (D86). The runner
+ * scenarios.mjs — the end-to-end lane's scenario table (D87). The runner
  * (packages/testing/e2e.mjs) boots an instance per scenario, sends its prompt
  * and calls its hooks; a scenario carrying its own reader is a module beside
  * this one (a `*Scenario` export), registered in the table below.
@@ -663,7 +663,7 @@ const SCENARIOS = {
       const results = notes.contract
       const byState = (state) => results.filter((result) => result.state === state)
       // A computed reading is the host's own exact output; a difference from the
-      // snapshot is printed as an observation and blocks nothing (D86).
+      // snapshot is printed as an observation and blocks nothing (D87).
       const failed = results.filter((result) => !result.ok && result.observation !== true)
       const differing = results.filter((result) => !result.ok && result.observation === true)
       const unchecked = results.filter((result) => result.observed === 'reported, not checked here')

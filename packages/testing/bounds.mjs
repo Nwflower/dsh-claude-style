@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * bounds.mjs — the bounds a check compares against, read from one table
- * (D86).
+ * (D87).
  *
  * A bound is a limit on a reading rather than a fixture the walk sets up: how
  * far behind the tail the scroller may lag, how long a frame may take, how much

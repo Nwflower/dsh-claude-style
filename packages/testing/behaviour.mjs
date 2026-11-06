@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * behaviour.mjs — the behaviour layer (D86): what a reader can see on the BUILT
+ * behaviour.mjs — the behaviour layer (D87): what a reader can see on the BUILT
  * plugin (`lib/`), loaded into the smoke's stand-in host page and driven from
  * outside through Playwright; no running DSH instance is needed.
  *

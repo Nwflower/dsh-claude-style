@@ -1,12 +1,12 @@
 /**
- * verify-lock.mjs — the one run at a time a shared working tree allows (D86).
+ * verify-lock.mjs — the one run at a time a shared working tree allows (D87).
  *
  * Two sessions on one tree otherwise drive browsers on top of each other's
  * runs. Every entry that drives a browser through `lib/` takes this lock — the
  * smoke, the end-to-end lane and the live probes — and `npm run verify` owns
  * the run that starts the gates, so a gate it starts inherits
  * `DSH_CLAUDE_STYLE_LOCK_HELD` and takes nothing. A build takes nothing: it is
- * the loop development runs on and never waits minutes for a test run (D86),
+ * the loop development runs on and never waits minutes for a test run (D87),
  * and a run whose page a build swapped files no verdict (scripts/verify.mjs).
  *
  * The lock is a directory and `owner.json` names the process holding it, so a

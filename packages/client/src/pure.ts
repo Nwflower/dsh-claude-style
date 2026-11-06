@@ -1,5 +1,5 @@
 /**
- * The browser half's declared logic surface (D86): the functions the logic layer
+ * The browser half's declared logic surface (D87): the functions the logic layer
  * of the specs (packages/testing/specs/logic/) may call below the page, and the
  * one stylesheet a placement function measures against.
  *

@@ -1,5 +1,5 @@
 {
-  "about": "Known defects as patches on the product sources (D86): fixes from history that still reverse on the current tree, and defects written down from a spec's intent. packages/testing/faults.mjs applies each in a scratch copy and reports which specs turn red.",
+  "about": "Known defects as patches on the product sources (D87): fixes from history that still reverse on the current tree, and defects written down from a spec's intent. packages/testing/faults.mjs applies each in a scratch copy and reports which specs turn red.",
   "faults": [
     {
       "id": "host-44607d72",
