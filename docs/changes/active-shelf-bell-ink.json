@@ -2,7 +2,7 @@
   "group": "improvements",
   "order": 10,
   "at": "2026-11-06",
-  "external": true,
+  "external": false,
   "zh": "改善侧栏「工作区」标题行铃铛的墨色，工作区视图改读正文墨色，深色主题下与宿主的图标分得开",
   "en": "Improve the sidebar workspace header bell's ink so the workspace view reads the body ink and stands apart from the host's icons in the dark scheme"
 }
