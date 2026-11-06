@@ -386,8 +386,8 @@ export const PERMISSIONS_ATTR = 'data-dsh-claude-permissions'
  */
 export const SESSION_STATS_ATTR = 'data-dsh-claude-session-stats'
 /**
- * Stamped on the host's own account menu card while it is open (Desktop
- * 0.1.7+). That card is the host's shared Menu portal and its class names
+ * Stamped on the host's own account menu card while it is open (Desktop).
+ * That card is the host's shared Menu portal and its class names
  * are hashed, so packages/client/src/features/account/surface.ts stamps this attribute and
  * features/account/account-footer.css repaints the card, its rows and its
  * separators with the skin's popover language.

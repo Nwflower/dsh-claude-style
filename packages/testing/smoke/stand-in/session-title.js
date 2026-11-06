@@ -9,13 +9,13 @@
   if (host.CASE !== 'session-title') return
   window.__renamed = []
   var snapshot = {
-    current: 'smoke-session',
     phase: 'ready',
     ids: ['smoke-session'],
     byId: { 'smoke-session': { id: 'smoke-session', displayTitle: 'smoke session', updatedAt: 0 } },
     projectionsBySession: {},
   }
   host.sessions = {
+    selected: 'smoke-session',
     list: {
       getSnapshot: function () { return snapshot },
       subscribe: function () { return function () {} },

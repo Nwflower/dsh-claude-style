@@ -108,7 +108,7 @@ export default {
     check('teardown takes the pill, its placement and the strip stamp off the view tabs', pill.left === false, JSON.stringify(pill.left))
     commonChecks(r)
   },
-  // The strip's row shape (0.2.1-rc.3): the host draws the tablist and the
+  // The strip's row with the overflow button: the host draws the tablist and the
   // overflow button in a row of its own and counts the tabs it keeps from that
   // row's width, so the row keeps the header's width while the plate inside it
   // hugs the tabs and the pill travels inside the plate.

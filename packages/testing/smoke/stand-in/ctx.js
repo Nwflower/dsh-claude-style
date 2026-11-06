@@ -31,7 +31,13 @@
       if (name === 'modelDirectories') return host.modelDirectories
       if (name === 'workspaces') return workspacesService
       if (name === 'uiConversation') return deepy !== undefined ? deepy.conversation : turnNav !== undefined ? turnNav.conversation : waitChat
-      if (name === 'uiSession') return deepy !== undefined ? deepy.uiSession : CASE === 'session-title' ? { current: { value: { key: 'smoke-session' } } } : undefined
+      // The session the shell shows, as the host's uiSession publishes it; a fixture names it as `selected`.
+      // The sync-fault case's selection throws the way its session list does.
+      if (name === 'uiSession') {
+        if (deepy !== undefined) return deepy.uiSession
+        if (CASE === 'sync-fault') return { current: { get value() { throw new Error('session selection unavailable') } } }
+        return { current: { value: { key: sessions !== undefined ? sessions.selected : undefined } } }
+      }
       if (name === 'locale') return localeService
       // The effort case models the documented boundary (D75): the plugin's own context hands no registry out; only the injected scope serves it.
     if (name === 'slots') return CASE === 'effort' ? undefined : slotRegistry

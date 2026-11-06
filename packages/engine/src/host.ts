@@ -1,4 +1,4 @@
-import { COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_PLACEHOLDER_SELECTOR, COMPOSER_SELECTOR, COMPOSER_STACK_SELECTOR, COMPOSER_STATS_SELECTOR, COMPOSER_STAT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, CONVERSATION_VIEW_STORAGE_PREFIX, DIALOG_TRIGGER_SELECTOR, FOOT_AREA_SELECTOR, FOREGROUND_SELECTOR, MENU_ROLE_SELECTOR, MODAL_DIALOG_SELECTOR, MODEL_SLOT_SELECTOR, PERMISSION_TRIGGER_SELECTOR, PHASE_ATTRIBUTE, RIGHTBAR_TOGGLE_SELECTOR, SIDEBAR_BRAND_SELECTOR, SIDEBAR_CHAT_SELECTOR, SIDEBAR_NEW_SESSION_SELECTOR, SIDEBAR_ROOT_SELECTOR, SIDEBAR_TOGGLE_SELECTOR, WINDOWS_MENU_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_PLACEHOLDER_SELECTOR, COMPOSER_SELECTOR, COMPOSER_STACK_SELECTOR, COMPOSER_STAT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, CONVERSATION_VIEW_STORAGE_PREFIX, DIALOG_TRIGGER_SELECTOR, FOOT_AREA_SELECTOR, FOREGROUND_SELECTOR, MENU_ROLE_SELECTOR, MODAL_DIALOG_SELECTOR, MODEL_SLOT_SELECTOR, PERMISSION_TRIGGER_SELECTOR, PHASE_ATTRIBUTE, RIGHTBAR_TOGGLE_SELECTOR, SIDEBAR_BRAND_SELECTOR, SIDEBAR_CHAT_SELECTOR, SIDEBAR_NEW_SESSION_SELECTOR, SIDEBAR_ROOT_SELECTOR, SIDEBAR_TOGGLE_SELECTOR, WINDOWS_MENU_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import type { HostAccountService, HostAssistantStep, HostBundleListAnswer, HostChatSnapshot, HostChatTarget, HostConfigFormsService, HostConversationService, HostInventoryAnswer, HostLocaleService, HostModelDirectoriesService, HostPluginBundle, HostServiceLookup, HostOutlineTurn, HostRunningCall, HostSession, HostSessionsService, HostSessionRenameAnswer, HostShortcutsService, HostSlotOptions, HostSlotsService, HostTurn, HostUiConversationService, HostUiSessionService, HostWorkspacesService, HostWorkspaceViewStore } from '@dsh-claude-style/contracts/services'
 import { observeMatches, subscribeMutations } from './bus'
 import { closestFrom, shown } from './dom'
@@ -305,13 +305,10 @@ export function findComposerPlaceholder(card: Element) {
 }
 
 /**
- * The host's statistics in the composer stack: the container an older client
- * marked around them, else the element the marked figures share. Null when the
- * host draws none, which every reader tolerates.
+ * The host's statistics in the composer stack: the element the marked figures
+ * share. Null when the host draws none, which every reader tolerates.
  */
 export function findComposerStats() {
-  const bar = document.querySelector<HTMLElement>(COMPOSER_STATS_SELECTOR)
-  if (bar !== null) return bar
   const figure = document.querySelector<HTMLElement>(COMPOSER_STAT_SELECTOR)
   return figure === null ? null : figure.parentElement
 }
@@ -399,16 +396,11 @@ export function conversationViewPreference(sessionId: string | null | undefined)
  */
 export const COMPOSER_STACK = COMPOSER_STACK_SELECTOR
 
-/**
- * The selected session id. dsh 0.2 moved it off the list snapshot onto the
- * `uiSession` service; the legacy `list.current` is read as a fallback so
- * older hosts keep working.
- */
-export function currentSessionId(ctx: HostContext, sessions: HostSessionsService): string | null | undefined {
+/** The selected session id, as the host's `uiSession` service publishes it; null while the shell shows none. */
+export function currentSessionId(ctx: HostContext): string | null {
   const uiSession = ctx.get('uiSession') as HostUiSessionService | undefined
-  const value = uiSession?.current?.value
-  if (typeof value?.key === 'string') return value.key
-  return sessions.list.getSnapshot().current
+  const key = uiSession?.current?.value?.key
+  return typeof key === 'string' ? key : null
 }
 
 /**
@@ -431,10 +423,8 @@ export function findComposerRowIn(card: Element): HTMLElement | null {
 }
 
 export function currentSession(ctx: HostContext): HostSession | null {
-  const sessions = ctx.get('sessions') as HostSessionsService | undefined
-  if (sessions === undefined || sessions === null) return null
-  const id = currentSessionId(ctx, sessions)
-  if (id === undefined || id === null) return null
+  const id = currentSessionId(ctx)
+  if (id === null) return null
   return sessionById(ctx, id)
 }
 
@@ -491,9 +481,9 @@ export type TurnActivity = { kind: 'assistant', assistant: HostAssistantStep, ne
 export function currentPreset(session: HostSession): string | null {
   const snapshot = session.projections?.faceOf('permissions').getSnapshot()
   if (snapshot === undefined || snapshot === null) return null
-  // dsh 0.2+ projection faces hand back the bare value; older hosts wrapped it.
-  if (typeof snapshot === 'object' && 'currentValue' in snapshot) return (snapshot as { currentValue: string }).currentValue
-  return typeof snapshot === 'string' ? snapshot : null
+  // The face hands back `{ currentValue }`, the shape the host's own picker reads.
+  const value = (snapshot as { currentValue?: unknown }).currentValue
+  return typeof value === 'string' ? value : null
 }
 
 /**

@@ -1,6 +1,6 @@
 /**
  * The host-API cases: the sync-fault case drives a session list that throws, and
- * the desktop case walks the 0.1.7 footer — the host's own account row, the menu
+ * the desktop case walks the desktop footer — the host's own account row, the menu
  * it portals, the container the skin injects into that menu, and the settings
  * dialog the host's shortcut opens.
  */

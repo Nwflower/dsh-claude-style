@@ -64,13 +64,11 @@ export const STREAMING_SELECTOR = '[data-streaming]'
 export const STREAMING_ATTRIBUTE = 'data-streaming'
 /**
  * TextShimmer's swept element: while it is attached, that piece of content
- * is still moving. Both names are read, because an older host build writes
- * the old one (data-text-shimmer).
+ * is still moving.
  */
 export const SHIMMER_ATTRIBUTE = 'data-shimmer'
-export const SHIMMER_LEGACY_ATTRIBUTE = 'data-text-shimmer'
-/** The two shimmer attributes in selector form. */
-export const SHIMMER_SELECTOR = `[${SHIMMER_ATTRIBUTE}], [${SHIMMER_LEGACY_ATTRIBUTE}]`
+/** The shimmer attribute in selector form. */
+export const SHIMMER_SELECTOR = `[${SHIMMER_ATTRIBUTE}]`
 /** The chat column's scroller; the host hangs its own follow off it. */
 export const CONVERSATION_SCROLL_SELECTOR = '[data-conversation-scroll]'
 /** The conversation body: the scroller and the width handles stand under it, and the two widths below are declared on it. */
@@ -192,11 +190,6 @@ export const TURN_PROCESS_ROW_KIND = 'turn-process'
  */
 export const TURN_PROCESS_ANSWER_SELECTOR = `[${FLOW_KIND_ATTRIBUTE}="${ASSISTANT_STEP_KIND}"]:not([${TURN_PROCESS_MEMBER_ATTRIBUTE}])`
 /**
- * The mark the host wrote on that row until 0.2.1-rc.5. The host's own gap
- * rule named it, and the sodium table's shape for that release names it too.
- */
-export const TURN_PROCESS_ANSWER_ATTRIBUTE = 'data-turn-process-answer'
-/**
  * The batch of steering messages the host admits under one claim: the rows a
  * turn's steering group holds, which the host's flow rules space apart from the
  * rest of the flow.
@@ -222,7 +215,7 @@ export const PROCESS_HEADER_LABEL_SELECTOR = ':scope > :not([aria-hidden="true"]
  * the span's children comes first, and the skin's waiting line and the lines
  * third-party plugins insert stand in that same span beside the host's whale.
  */
-export const CHAT_RUNNING_TEXT_SELECTOR = `:scope > span > [${SHIMMER_ATTRIBUTE}], :scope > span > [${SHIMMER_LEGACY_ATTRIBUTE}]`
+export const CHAT_RUNNING_TEXT_SELECTOR = `:scope > span > [${SHIMMER_ATTRIBUTE}]`
 /**
  * The host's own running indicator — the whale tail it leads the row with —
  * beside the skin's waiting line. It carries no attribute of its own, so the
@@ -311,12 +304,7 @@ export const COMPOSER_ATTACHMENT_RAIL_SELECTOR = '[class*="_rail"]'
 export const COMPOSER_PLACEHOLDER_SELECTOR = '[data-composer-placeholder]'
 /** The host's own sentence for the composer card's field, which the skin reads beside whether the card carries it. */
 export const COMPOSER_PLACEHOLDER_ATTRIBUTE = 'data-placeholder'
-/**
- * The statistics in the composer stack. Both markers are read (D3), because an
- * older host build writes only the container; the context panel repeats the
- * figures
- */
-export const COMPOSER_STATS_SELECTOR = '[data-composer-stats]'
+/** One figure of the statistics in the composer stack; the context panel repeats the figures. */
 export const COMPOSER_STAT_SELECTOR = '[data-composer-stat]'
 /**
  * The portrait adaptation a mobile remote plugin applies to the desktop GUI
@@ -486,9 +474,8 @@ export const CONVERSATION_HEADER_SELECTOR = '[data-dsh-claude-part~="conversatio
 /** The view-tab strip inside the header, whose box the band placement keeps clear of. */
 export const VIEW_TABS_STRIP_SELECTOR = '[data-dsh-claude-part~="view-tabs"]'
 /**
- * The tablist the strip holds when the host wraps it in a row of its own
- * (0.2.1-rc.3): the plate the stylesheet draws, and the box a placement reads
- * where the strip's own box is kept wide for the host's count of the tabs.
+ * The tablist the strip's row holds: the plate the stylesheet draws, inside a
+ * row the host keeps wide for its own count of the tabs.
  */
 export const VIEW_TABS_LIST_SELECTOR = '[data-dsh-claude-part~="view-tabs-list"]'
 /**

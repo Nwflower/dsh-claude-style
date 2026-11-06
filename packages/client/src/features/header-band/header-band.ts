@@ -6,7 +6,6 @@ import {
   HEADER_TITLE_ROW_SELECTOR,
   HEADER_TITLE_SELECTOR,
   HEADER_UTILITIES_SELECTOR,
-  VIEW_TABS_LIST_SELECTOR,
   VIEW_TABS_STRIP_SELECTOR,
 } from '@dsh-claude-style/contracts/dom'
 import { observeMatches, observeSize } from '@dsh-claude-style/engine/bus'
@@ -300,7 +299,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const utilities = row.querySelector<HTMLElement>(HEADER_UTILITIES_SELECTOR)
     const corner = row.querySelector<HTMLElement>(HEADER_CORNER_SELECTOR)
     const stripEl = header === null ? null : header.querySelector<HTMLElement>(VIEW_TABS_STRIP_SELECTOR)
-    const stripList = stripEl === null ? null : stripEl.querySelector<HTMLElement>(VIEW_TABS_LIST_SELECTOR)
     reading = {
       band: pageBand(band),
       width: pageWidth(),
@@ -312,11 +310,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       stripEl,
       rowBox: rect(row),
       headerBox: rect(header),
-      // The strip's own box when the host draws the tablist as the strip itself,
-      // and the plate and overflow button standing in its row when it draws them
-      // inside one (shared/content-box.ts): the row spans the header, so its own
-      // box would reserve the window for the tabs.
-      stripBox: stripEl === null ? null : stripList === null ? rect(stripEl) : contentBox(stripEl),
+      // The plate and overflow button standing in the strip's row
+      // (shared/content-box.ts): the row spans the header, so its own box would
+      // reserve the window for the tabs.
+      stripBox: stripEl === null ? null : contentBox(stripEl),
       menuBox: rect(findWindowsMenu()),
       utilitiesBox: rect(utilities),
       cornerBox: rect(corner),

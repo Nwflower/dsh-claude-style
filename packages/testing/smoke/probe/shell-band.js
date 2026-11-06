@@ -76,7 +76,7 @@
         '<div class="_headerUtilities_b_1" style="display:flex;width:114px;height:28px">' +
         '<button type="button" class="dsh-claude-rightbar-close" style="width:28px;height:28px">close</button></div>' +
         '<div class="_headerCorner_b_1" style="width:28px;height:28px"></div></div>' +
-        '<div class="_tabs_b_1" role="tablist" style="width:152px;height:26px"></div>'
+        '<div class="_tabs_b_1"><div class="_viewTabs_b_1" role="tablist" data-conversation-tabs="" style="width:152px;height:26px"></div></div>'
       document.body.insertBefore(header, document.body.firstChild)
       // The right panel's own collapse control, inside the panel it belongs to:
       // the pass leaves it alone while the skin's control shows in the header's row.
@@ -152,7 +152,8 @@
         utilities: box(utilities),
         corner: box(corner),
         preset: box(actions),
-        strip: box(strip),
+        // The plate the strip's row holds: the row itself spans the window.
+        strip: box(strip.querySelector('[data-conversation-tabs]')),
         row: box(row),
         header: box(header),
         headerDisplay: getComputedStyle(header).display,

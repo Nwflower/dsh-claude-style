@@ -1,0 +1,8 @@
+{
+  "group": "removals",
+  "order": 10,
+  "at": "2026-11-05",
+  "external": true,
+  "zh": "移除对 dsh 0.2.2-rc.1 之前版本的支持，升级本插件前请先把 DeepSeek Harness 升级到 0.2.2-rc.1 或更新版本",
+  "en": "Remove support for dsh before 0.2.2-rc.1; upgrade DeepSeek Harness to 0.2.2-rc.1 or later before updating this plugin"
+}

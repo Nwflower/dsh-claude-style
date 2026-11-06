@@ -7,7 +7,7 @@
   window.__dshSmokeHost.emptySessions = function (binding) {
     return {
       list: {
-        getSnapshot: function () { return { current: undefined, phase: 'ready', ids: [], byId: {}, projectionsBySession: {} } },
+        getSnapshot: function () { return { phase: 'ready', ids: [], byId: {}, projectionsBySession: {} } },
         subscribe: function () { return function () {} },
       },
       binding: binding,

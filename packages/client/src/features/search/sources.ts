@@ -278,8 +278,8 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
   function currentOpenSession() {
     const sessions = hostSessions(ctx)
     if (!sessions) return null
-    const id = currentSessionId(ctx, sessions)
-    if (typeof id !== 'string') return null
+    const id = currentSessionId(ctx)
+    if (id === null) return null
     const binding = sessions.binding(id)
     if (!binding || !binding.session || binding.session.getSnapshot?.().openState !== 'open') return null
     return { id, binding }

@@ -72,7 +72,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     host: {
       workspaces: () => workspaces,
       sessions: () => sessions,
-      currentSession: () => currentSessionId(ctx, sessions) ?? null,
+      currentSession: () => currentSessionId(ctx),
     },
     actions: {
       /** Open through the host's own navigation; an unavailable action fails at the press (D12). */

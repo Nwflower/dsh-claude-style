@@ -108,30 +108,33 @@
       await sleep(150)
     })
     await probe.onlyFor(['view-tabs'], async function () {
-      // The conversation view tabs (ConversationSession's strip): the pill is
-      // drawn under the active tab without sliding in, then slides to the tab a
-      // switch selects. The strip stays until the teardown, which must take the
-      // pill back off it.
+      // The conversation view tabs (ConversationSession's strip), in the row the
+      // host draws when it has no views beyond the pinned ones, so the row holds
+      // the tablist alone: the pill is drawn under the active tab without sliding
+      // in, then slides to the tab a switch selects. The strip stays until the
+      // teardown, which must take the pill and the row's stamp back off.
       var viewHeader = document.createElement('div')
       viewHeader.className = '_header_c_1'
       // The host's own header anchor: the skin reads the tab strip's parts
       // inside it (D3).
       viewHeader.setAttribute('data-slot', 'conversation.header')
-      viewHeader.innerHTML = '<div class="_tabs_c_1" role="tablist" data-conversation-tabs="">' +
+      viewHeader.innerHTML = '<div class="_tabs_c_1">' +
+        '<div class="_viewTabs_c_1" role="tablist" data-conversation-tabs="">' +
         '<button type="button" role="tab" aria-selected="true" class="_tab_c_1 _tabActive_c_1">Chat</button>' +
         '<button type="button" role="tab" aria-selected="false" class="_tab_c_1">Trajectory</button>' +
-        '<button type="button" role="tab" aria-selected="false" class="_tab_c_1">Context</button></div>'
+        '<button type="button" role="tab" aria-selected="false" class="_tab_c_1">Context</button></div></div>'
       document.body.appendChild(viewHeader)
       await sleep(150)
-      probe.viewStrip = viewHeader.firstChild
-      var viewTabs = probe.viewStrip.children
-      r.viewPill = { stamped: probe.viewStrip.hasAttribute('data-dsh-view-tabs'), first: pillState(probe.viewStrip, viewTabs[0]) }
+      var viewRow = viewHeader.firstElementChild
+      probe.viewStrip = { row: viewRow, list: viewRow.firstElementChild }
+      var viewTabs = probe.viewStrip.list.children
+      r.viewPill = { stamped: viewRow.hasAttribute('data-dsh-view-tabs'), first: pillState(probe.viewStrip.list, viewTabs[0]) }
       viewTabs[0].setAttribute('aria-selected', 'false')
       viewTabs[0].className = '_tab_c_1'
       viewTabs[2].setAttribute('aria-selected', 'true')
       viewTabs[2].className = '_tab_c_1 _tabActive_c_1'
       await sleep(60)
-      r.viewPill.switched = pillState(probe.viewStrip, viewTabs[2])
+      r.viewPill.switched = pillState(probe.viewStrip.list, viewTabs[2])
       // The slide plays whatever the system's motion setting: no reduced-motion
       // block in the shipped stylesheets may reach the pill.
       r.viewPill.reducedMotionRules = 0
@@ -145,7 +148,7 @@
       }
     })
     await probe.onlyFor(['view-tabs-row'], async function () {
-      // The row shape 0.2.1-rc.3 draws: the host's row holds the tablist and the
+      // The row with the overflow button: the host's row holds the tablist and the
       // overflow button, and counts the tabs it keeps from the row's own width.
       // The row must span the header for that count while the plate inside it
       // hugs the tabs, and the pill travels inside the plate.

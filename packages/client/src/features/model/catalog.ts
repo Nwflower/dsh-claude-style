@@ -1,5 +1,5 @@
 import { MODEL_EFFORT_DEFAULT } from './model-labels'
-import { currentSessionId, hostModelDirectories, hostSessions } from '@dsh-claude-style/engine/host'
+import { currentSessionId, hostModelDirectories } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { HostModelCatalogSnapshot, HostModelDirectory, HostModelEntry, HostModelGroup, HostModelReasoning } from '@dsh-claude-style/contracts/services'
 import { notifyAll } from '@dsh-claude-style/engine/notify'
@@ -44,18 +44,9 @@ export function createModelCatalog(options: { ctx: HostContext, schedule?: () =>
   /** Settings-page listeners waiting on the provider list. */
   const providerListeners: ((providers: CatalogProvider[]) => void)[] = []
 
-  /**
-   * The current session id. The Session Controller dropped
-   * `list.current` in dsh 0.2 (the main-view selection now comes from the
-   * `uiSession` projection), so this MUST go through the shared
-   * currentSessionId() in packages/engine/src/host.ts — reading the legacy
-   * field directly resolves to null on current hosts and the picker never
-   * loads.
-   */
+  /** The current session id, read through the shared currentSessionId() in packages/engine/src/host.ts. */
   function currentModelSessionId() {
-    const sessions = hostSessions(ctx)
-    if (sessions === undefined || sessions === null) return null
-    return currentSessionId(ctx, sessions) ?? null
+    return currentSessionId(ctx)
   }
 
   function dropSubscription() {

@@ -28,7 +28,7 @@ export interface FooterHandle extends FeatureHandle {
  * The account area of the sidebar footer.
  *
  * One row model, two mount points (account/surface.ts): on a host that has
- * an account row (Desktop 0.1.7+) that row is the entry and our container is
+ * an account row (Desktop) that row is the entry and our container is
  * injected into the host's own account menu; on a host without one (Web)
  * the skin self-builds the trigger and the popover (account/account-drawer.ts)
  * and the popover's body is the container. The rows themselves — the account

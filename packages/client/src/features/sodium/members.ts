@@ -1,4 +1,4 @@
-import { CHAT_FLOW_SLOT_SELECTOR, CHAT_GROUP_PART_ATTRIBUTE, CHAT_GROUP_PART_RESPONSE, CHAT_NODE_SELECTOR, CHAT_RUNNING_SELECTOR, CHAT_STEERING_BATCH_SELECTOR, FLOW_BLOCK_SELECTOR, FLOW_KIND_ATTRIBUTE, PENDING_STEERING_SELECTOR, SUBMISSION_ECHO_SELECTOR, TURN_PROCESS_ANSWER_ATTRIBUTE, TURN_PROCESS_ROW_KIND } from '@dsh-claude-style/contracts/dom'
+import { CHAT_FLOW_SLOT_SELECTOR, CHAT_GROUP_PART_ATTRIBUTE, CHAT_GROUP_PART_RESPONSE, CHAT_NODE_SELECTOR, CHAT_RUNNING_SELECTOR, CHAT_STEERING_BATCH_SELECTOR, FLOW_BLOCK_SELECTOR, FLOW_KIND_ATTRIBUTE, PENDING_STEERING_SELECTOR, SUBMISSION_ECHO_SELECTOR, TURN_PROCESS_ROW_KIND } from '@dsh-claude-style/contracts/dom'
 import { keepFlowChildMark } from './flow-items'
 import type { SelectorRewrite } from '@dsh-claude-style/engine/sheet-rewrite'
 import { firstShape, selectorShape } from './selector-shape'
@@ -56,17 +56,8 @@ const FLOW_CHILD_ATTR = 'data-dsh-claude-flow-child'
  * the place that frees. Every key stands on a child of the column or the flow
  * slot, so the branches together select what the subject selected there.
  *
- * The host has shipped these rules in two shapes, and the table holds both: a
- * rule is rewritten by the shape that matches the sheet on the page, and a
- * sheet that matches neither keeps its own rules.
- *
- * Up to 0.2.1-rc.5 the column's rule named the older turn's seat with
- * `:has(> .older)`, the visible item left out neither the host's
- * text-interaction surface nor a steering batch, and the turn's process group
- * named its answer by a mark of the host's own. From 0.2.2-alpha.3 the older
- * seat is a sibling of the flow slot, the column's rule leaves the
- * text-interaction surface out, the flow's rules leave a steering batch out,
- * and the process group gained a second branch.
+ * A rule is rewritten by the shape that matches the sheet on the page, and a
+ * sheet that matches none keeps its own rules.
  */
 const FLOW = CHAT_FLOW_SLOT_SELECTOR
 const EMPTY = `.{item}:is(:empty, :has(> ${CHAT_NODE_SELECTOR}:empty))`
@@ -131,13 +122,10 @@ function gapRule(complexes: readonly string[]) {
 }
 
 /** The gap above every visible item after the first, and above the first one after older turns. */
-const GAP_OLD = gapRule([`${SCOPE} > ${VISIBLE} ~ ${VISIBLE}`, `.{column}:has(> .{older}) > ${FLOW} > ${VISIBLE}`])
 const GAP = gapRule([`${SCOPE} > ${SURFACE_VISIBLE} ~ ${SURFACE_VISIBLE}`, `.{column} > .{older} + ${FLOW} > ${SURFACE_VISIBLE}`])
 /** The wider gap after a step's output. */
-const GAP_AFTER_RESPONSE_OLD = gapRule([`.{item}[${CHAT_GROUP_PART_ATTRIBUTE}="${CHAT_GROUP_PART_RESPONSE}"]`, `${SCOPE} > [${CHAT_GROUP_PART_ATTRIBUTE}="${CHAT_GROUP_PART_RESPONSE}"]:not([hidden]):not(:empty) + ${VISIBLE}${NOT_RUNNING}`])
 const GAP_AFTER_RESPONSE = gapRule([`.{item}[${CHAT_GROUP_PART_ATTRIBUTE}="${CHAT_GROUP_PART_RESPONSE}"]`, `${SCOPE} > [${CHAT_GROUP_PART_ATTRIBUTE}="${CHAT_GROUP_PART_RESPONSE}"]:not([hidden]):not(:empty) + ${VISIBLE}${NOT_RUNNING}${NOT_BATCH}`])
 /** The widest gap, after a turn's process group. */
-const GAP_AFTER_PROCESS_OLD = gapRule([`.{item}[${FLOW_KIND_ATTRIBUTE}="${TURN_PROCESS_ROW_KIND}"]`, `.{item}[${TURN_PROCESS_ANSWER_ATTRIBUTE}]`, `${SCOPE} > [${FLOW_KIND_ATTRIBUTE}="${TURN_PROCESS_ROW_KIND}"] + ${VISIBLE}${NOT_RUNNING}`])
 const GAP_AFTER_PROCESS = gapRule([
   `.{item}[${FLOW_KIND_ATTRIBUTE}="${TURN_PROCESS_ROW_KIND}"]`,
   `${SCOPE} > [${FLOW_KIND_ATTRIBUTE}="${TURN_PROCESS_ROW_KIND}"]:not(:empty, :has(> ${CHAT_NODE_SELECTOR}:empty)) + ${VISIBLE}${NOT_RUNNING}${NOT_BATCH}`,
@@ -148,13 +136,10 @@ const CHAT_FLOW: SodiumAdapter = {
   id: 'chat-flow',
   owner: '@deepseek-ai/dsh-client-ui-chat',
   sheet: '@deepseek-ai/dsh-client-ui-chat/ChatView.module.css',
-  rewrite: firstShape([
-    GAP, GAP_AFTER_RESPONSE, GAP_AFTER_PROCESS,
-    GAP_OLD, GAP_AFTER_RESPONSE_OLD, GAP_AFTER_PROCESS_OLD,
-  ]),
+  rewrite: firstShape([GAP, GAP_AFTER_RESPONSE, GAP_AFTER_PROCESS]),
   maintain: (captured) => keepFlowChildMark(captured.get('column') ?? [], FLOW_CHILD_ATTR),
 }
 
 export const SODIUM_MEMBERS: readonly SodiumMember[] = [
-  { id: 'DeepSeek Harness', release: 'host', since: '0.2.1-rc.2', adapters: [CHAT_FLOW] },
+  { id: 'DeepSeek Harness', release: 'host', since: '0.2.2-alpha.3', adapters: [CHAT_FLOW] },
 ]

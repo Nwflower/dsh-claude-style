@@ -3,7 +3,7 @@ import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { beginChatFoldToggle, endChatFoldToggle, isChatFoldToggle } from './fold-toggle'
 import { writeScroll } from '@dsh-claude-style/engine/scroll-owner'
 import { captureComposerCaret, composerComposing, focusKeepingComposerCaret } from '../../shared/composer-caret'
-import { CHAT_FLOW_SELECTOR, CHAT_TURN_ATTRIBUTE, CONVERSATION_SCROLL_SELECTOR, FOLLOW_THRESHOLD_PX, PROCESS_ACTIVITY_SELECTOR, PROCESS_BODY_SELECTOR, PROCESS_EXPANDED_MODE_ATTRIBUTE, PROCESS_GROUP_SELECTOR, RUNNING_STATE, SHIMMER_ATTRIBUTE, SHIMMER_LEGACY_ATTRIBUTE, SHIMMER_SELECTOR, STREAMING_ATTRIBUTE, ASSISTANT_STEP_KIND, FLOW_KIND_ATTRIBUTE, TURN_PROCESS_MEMBER_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
+import { CHAT_FLOW_SELECTOR, CHAT_TURN_ATTRIBUTE, CONVERSATION_SCROLL_SELECTOR, FOLLOW_THRESHOLD_PX, PROCESS_ACTIVITY_SELECTOR, PROCESS_BODY_SELECTOR, PROCESS_EXPANDED_MODE_ATTRIBUTE, PROCESS_GROUP_SELECTOR, RUNNING_STATE, SHIMMER_ATTRIBUTE, SHIMMER_SELECTOR, STREAMING_ATTRIBUTE, ASSISTANT_STEP_KIND, FLOW_KIND_ATTRIBUTE, TURN_PROCESS_MEMBER_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 
 /**
  * A running process group opens by default and folds back once the piece of
@@ -18,8 +18,7 @@ import { CHAT_FLOW_SELECTOR, CHAT_TURN_ATTRIBUTE, CONVERSATION_SCROLL_SELECTOR, 
  * data-group-expanded-mode.
  *
  * A group's phase is read off the shimmer in its header: the host attaches
- * data-shimmer (older hosts write data-text-shimmer) only while the process
- * section is still running. Whether the body is open is its own
+ * data-shimmer only while the process section is still running. Whether the body is open is its own
  * hidden attribute — the host hides searchably, setting hidden="until-found"
  * when folded and removing it entirely when open. Both are semantic
  * attributes. Command cards inside the group use the shimmer too, so the
@@ -285,7 +284,7 @@ export function createProcessFold() {
     attributes: true,
     // The group root's expand-mode attribute is in range too: switching tiers
     // adds or removes it, and that batch has to be scanned again.
-    attributeFilter: [SHIMMER_ATTRIBUTE, SHIMMER_LEGACY_ATTRIBUTE, 'hidden', PROCESS_EXPANDED_MODE_ATTRIBUTE, STREAMING_ATTRIBUTE, TURN_PROCESS_MEMBER_ATTRIBUTE],
+    attributeFilter: [SHIMMER_ATTRIBUTE, 'hidden', PROCESS_EXPANDED_MODE_ATTRIBUTE, STREAMING_ATTRIBUTE, TURN_PROCESS_MEMBER_ATTRIBUTE],
   }, onRecords)
   document.addEventListener('click', rememberReaderTouched, true)
   document.addEventListener('keydown', rememberReaderTouched, true)

@@ -170,9 +170,9 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
   /**
    * The live turn's own row, kept current by the bus (D40): the stream slide
    * counter-slides it so it stands while the column glides. The host draws the
-   * row at the flow's end and appends a hidden interaction surface after it
-   * (0.2.2-alpha.3), so the column's last child is no longer the row itself and
-   * the bus's list is where the row is read from.
+   * row at the flow's end and appends a hidden interaction surface after it, so
+   * the column's last child is not the row itself and the bus's list is where
+   * the row is read from.
    */
   const runningRows = observeMatches<HTMLElement>(CHAT_RUNNING_SELECTOR)
 

@@ -244,8 +244,8 @@ body[data-dsh-claude-style] .dsh-claude-account-popover .dsh-claude-popover-item
 }
 
 /* ---------- Host account area ---------- */
-/* The host's own account row is the entry on a host that has one (Desktop
-   0.1.7+): it stays in the host's DOM and flow and is repainted here as a
+/* The host's own account row is the entry on a host that has one (Desktop):
+   it stays in the host's DOM and flow and is repainted here as a
    Claude row. features/account/account-footer.ts marks it with
    [data-dsh-claude-account-host-row]. */
 body[data-dsh-claude-style] [data-dsh-claude-account-host-row] {
@@ -320,7 +320,7 @@ body[data-dsh-claude-style] .dsh-claude-account-inject {
 }
 
 /* ---------- Host account menu: the skin's popover language ---------- */
-/* On a host with an account area (Desktop 0.1.7+) the host renders its own
+/* On a host with an account area (Desktop) the host renders its own
    account menu and the skin injects only its header and plugin rows into the
    list. features/account/surface.ts marks that menu while it is open, and the
    rules below repaint the host's card, rows and separators with the same card /

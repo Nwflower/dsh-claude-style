@@ -127,13 +127,11 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="trailing"] > [data-dsh-claud
 
 /* ---------- the host's stats row: hidden, its numbers moved elsewhere ---------- */
 /* The host ships two figures here (turns and steps · tok/s, total tokens · cache
-   hits) with its own icons and spacing; it marks each figure since its 2026-09
-   update and marked the container around them before, so both marks are hidden.
-   The row STAYS in the document: its structure still tells the detailed form
+   hits) with its own icons and spacing, and marks each figure, so the figures
+   are hidden. The row STAYS in the document: its structure still tells the detailed form
    from the compact one, and the session's numbers are read from the host's
    projections (features/context-stats/session-stats.ts) into whichever surface
    the position names — the context popover, or the line of their own below. */
-body[data-dsh-claude-style] [data-composer-stats],
 body[data-dsh-claude-style] [data-composer-stat] {
   display: none;
 }
@@ -159,7 +157,6 @@ body[data-dsh-claude-style][data-dsh-claude-stats-position="context"] [data-dsh-
 body[data-dsh-claude-style] [data-dsh-claude-context-meter],
 body[data-dsh-claude-style] [data-dsh-claude-context-meter] button,
 body[data-dsh-claude-style] [data-dsh-claude-meter-ring] > button,
-body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"] [data-composer-stats],
 body[data-dsh-claude-style] [data-composer-card] [data-dsh-claude-part~="row"] .dsh-claude-model-btn,
 body[data-dsh-claude-style] [data-composer-card] [data-dsh-claude-part~="row"] .dsh-claude-effort-btn {
   font-family: var(--dsw-font-family);

@@ -28,9 +28,9 @@
       switchHeader.className = '_header_c_1'
       // The host's own header anchor: the strip's parts are read inside it (D3).
       switchHeader.setAttribute('data-slot', 'conversation.header')
-      switchHeader.innerHTML = '<div class="_tabs_c_1" role="tablist" data-conversation-tabs="">' +
+      switchHeader.innerHTML = '<div class="_tabs_c_1"><div class="_viewTabs_c_1" role="tablist" data-conversation-tabs="">' +
         '<button type="button" role="tab" aria-selected="true" class="_tab_c_1 _tabActive_c_1">Chat</button>' +
-        '<button type="button" role="tab" aria-selected="false" class="_tab_c_1">Trajectory</button></div>'
+        '<button type="button" role="tab" aria-selected="false" class="_tab_c_1">Trajectory</button></div></div>'
       document.body.appendChild(switchHeader)
       var switchMarks = function () {
         return {

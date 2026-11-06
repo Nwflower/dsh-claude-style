@@ -28,7 +28,7 @@
  *                nothing before the dwell elapses, and whichever card opens last
  *                folds the one before it — the skin's own cards and the host's
  *                hero menu alike;
- *   - desktop    the 0.1.7 desktop footer: the host's own account row is the
+ *   - desktop    the desktop footer: the host's own account row is the
  *                entry, and our container is injected into its account menu —
  *                first child, self-healing across a host re-render, reachable
  *                by the host's keyboard walk, and gone when the menu closes;

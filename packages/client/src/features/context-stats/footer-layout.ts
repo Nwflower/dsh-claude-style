@@ -7,7 +7,7 @@ import { inPageBox } from '../../shared/page-zoom'
 
 export const FOOTER_LINE_ATTR = 'data-dsh-claude-footer-line'
 
-/** Older hosts mark a stats container; newer ones mark each figure in the dock. */
+/** The dock holding the host's statistics figures. */
 export function findStatsDock() {
   return findComposerStats()?.closest<HTMLElement>('[data-dsh-claude-part~="composer-dock"]') ?? null
 }

@@ -18,9 +18,8 @@ export interface HostSnapshotSource<Snapshot> {
   subscribe(listener: () => void): () => void
 }
 
-/** The session list's own snapshot: which session the shell shows, and every row's summary. */
+/** The session list's own snapshot: every row's summary. */
 export interface HostSessionListSnapshot {
-  current?: string | null
   /** `pending` until the host's list has answered; the readers wait for `ready`. */
   phase?: string
   ids: string[]

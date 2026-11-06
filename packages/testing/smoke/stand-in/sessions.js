@@ -18,7 +18,8 @@
   var sessions = deepy !== undefined ? deepy.sessions : turnNav !== undefined ? turnNav.sessions : statsFixtureCase ? statsCase.sessions : waitFixtureCase ? host.emptySessions(function (id) { return id === 'smoke-session' ? {} : undefined }) : CASE === 'sync-fault'
     ? { list: { getSnapshot: function () { throw new Error('session list unavailable') } }, binding: function () { return null } }
     : (permissionFixture !== undefined && permissionFixture.current !== null ? {
-        list: { getSnapshot: function () { return { current: 'smoke-session', ids: [], byId: {}, projectionsBySession: {} } } },
+        selected: 'smoke-session',
+        list: { getSnapshot: function () { return { ids: [], byId: {}, projectionsBySession: {} } } },
         binding: function () {
           return {
             session: {
