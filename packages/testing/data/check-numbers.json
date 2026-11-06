@@ -490,8 +490,8 @@
       "nothing the skin runs leaves an uncaught error or an unhandled rejection": [
         0
       ],
-      "only the two features that read the session list were switched off: the permission control and the model picker": [
-        2
+      "only the three features that read the session list were switched off: the permission control, the model picker and the manual unread marks": [
+        3
       ],
       "every unit the footer holds is hidden in place before the drawer is ever opened, the plugin's inline box included": [
         3
@@ -533,7 +533,7 @@
       "a repeated same-state frame reads nothing more": [
         1
       ],
-      "no feature reported a failure (line 270)": [
+      "no feature reported a failure (line 271)": [
         0
       ],
       "the skin's rail stands in the host rail's slot, one mark per turn, the host's rail hidden but laid out": [
