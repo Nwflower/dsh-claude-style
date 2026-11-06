@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-06",
+  "group": "new",
+  "order": 10,
+  "external": false,
+  "zh": "日期视图里的会话行显示该会话最近一段回复",
+  "en": "Show a session's latest reply under its row in the date view"
+}

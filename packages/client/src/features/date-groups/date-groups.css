@@ -43,6 +43,37 @@ body[data-dsh-claude-style][data-dsh-claude-date-groups] .dsh-claude-date-chip {
   white-space: nowrap;
 }
 
+/* 行里的会话详情：标题下面那一排，占满整行宽，太长就省略。
+   宿主把行写成固定高度（装不下一排），所以只在日期视图里把高度解开，让行自己跟着
+   内容长高；换行只在我们这一页生效，工作区那一档仍是宿主原来的单行。 */
+body[data-dsh-claude-style][data-dsh-claude-date-groups] [data-dsh-claude-part~="session-row"] {
+  height: auto;
+  min-height: 28px;
+  flex-wrap: wrap;
+  row-gap: 1px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  align-content: center;
+}
+
+/* 详情自己占一排：flex-basis 满宽，顺序排在标题、标签、行内按钮之后。 */
+body[data-dsh-claude-style][data-dsh-claude-date-groups] .dsh-claude-date-preview {
+  flex: 0 0 100%;
+  order: 1;
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--dsw-alias-label-tertiary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 行被选中、指针停在行上时详情跟着提亮一点，和标签同一档。 */
+body[data-dsh-claude-style][data-dsh-claude-date-groups] [data-dsh-claude-part~="row-selected"] .dsh-claude-date-preview,
+body[data-dsh-claude-style][data-dsh-claude-date-groups] [data-dsh-claude-part~="session-row"]:hover .dsh-claude-date-preview {
+  color: var(--dsw-alias-label-secondary);
+}
+
 /* 行被选中时标签跟着提亮；指针停在行上或行菜单打开时，标签让位给行内按钮，
    和状态、时间一起收起。 */
 body[data-dsh-claude-style][data-dsh-claude-date-groups] [data-dsh-claude-part~="row-selected"] .dsh-claude-date-chip {

@@ -25,8 +25,11 @@ export interface HostSessionListSnapshot {
   phase?: string
   ids: string[]
   byId: Record<string, HostSessionSummary>
-  /** Per-session projection values the list carries, such as a session's subagent catalog. */
-  projectionsBySession: Record<string, { values?: { subagentCatalog?: unknown[] } }>
+  /**
+   * Per-session projection values the list carries, such as a session's subagent
+   * catalog and the whole-log outline the row preview reads.
+   */
+  projectionsBySession: Record<string, { values?: { subagentCatalog?: unknown[], turnOutline?: HostOutlineTurn[] } }>
 }
 
 /** One row of the session list: what the search palette and the home figures read of it. */
@@ -480,6 +483,8 @@ export interface HostOutlineTurn {
   turn: number
   seq: number
   prompt?: string
+  /** The assistant's answer, once the turn has one: the row preview reads it, and falls back to the prompt while it is empty. */
+  response?: string
 }
 
 /** The timeline: its turns by number, the order they come in, and the newest turn's id. */

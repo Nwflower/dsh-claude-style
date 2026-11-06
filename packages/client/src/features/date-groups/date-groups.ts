@@ -9,6 +9,7 @@ import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { HostSessionGroupBy, HostSessionsService, HostWorkspacesService } from '@dsh-claude-style/contracts/services'
 import { copy } from './copy'
 import type { CopyKey } from './copy'
+import { plainPreview } from './preview-text'
 
 /**
  * 侧栏的会话列表按日期排列：今天、昨天、星期几，一周以前收进「更早」，
@@ -30,6 +31,8 @@ const ROW_ACTIONS_SELECTOR = '[data-dsh-claude-part~="row-actions"]'
 const HEADER_ATTRIBUTE = 'data-dsh-claude-date-header'
 /** 我们自己插在行里的工作区标签。 */
 const CHIP_CLASS = 'dsh-claude-date-chip'
+/** 我们自己插在行里的会话详情：标题下面那行预览。 */
+const PREVIEW_CLASS = 'dsh-claude-date-preview'
 /** 我们自己的写入打上静音标记：宽观测听见它们时不再算一次页面变化，免得自激。 */
 function quiet(node: HTMLElement) {
   node.setAttribute(QUIET_ATTR, '')
@@ -167,6 +170,31 @@ export function install(ctx: HostContext) {
     return { titles, ready: true }
   }
 
+  /**
+   * 会话 id → 详情那一行的文本。
+   *
+   * 数据取自宿主已经同步到客户端的 `turnOutline` 投影：最后一轮的回复正文
+   * （回复还在跑、或那一轮被中断时回复是空的，退回这一轮的提问），压成单行纯文本。
+   * 没有投影、或者这一轮两边都没字的会话不进这张表 —— 详情行只显示有内容的。
+   */
+  function previewsById() {
+    const previews = new Map<string, string>()
+    const list = sessionsNow()?.list
+    const snapshot = typeof list?.getSnapshot === 'function' ? list.getSnapshot() : undefined
+    if (snapshot === undefined || snapshot === null || snapshot.phase === 'pending') return previews
+    const projections = snapshot.projectionsBySession ?? {}
+    for (const id of snapshot.ids) {
+      const outline = projections[id]?.values?.turnOutline
+      if (!Array.isArray(outline) || outline.length === 0) continue
+      const last = outline[outline.length - 1]
+      const response = typeof last?.response === 'string' ? last.response.trim() : ''
+      const prompt = typeof last?.prompt === 'string' ? last.prompt.trim() : ''
+      const text = plainPreview(response !== '' ? response : prompt)
+      if (text !== '') previews.set(id, text)
+    }
+    return previews
+  }
+
   /** 会话 id → 最后更新时间。 */
   function timesById() {
     const times = new Map<string, number>()
@@ -197,8 +225,14 @@ export function install(ctx: HostContext) {
     store.actions.setGroupBy('flat')
   }
 
-  /** 工作区标签：插在行内按钮前面，太长由样式表省略。 */
-  function dress(seat: Seat, title: string) {
+  /**
+   * 行上的两样装饰：右手的工作区标签，和标题下面那一行会话详情。
+   *
+   * 两个都只写一次就很便宜：节点在就不再建，文本没变就不再写（我们自己的写入
+   * 也会让观测回调再跑一遍，不比对会自激）。详情为空的时候（没有投影、或者这一轮
+   * 还没打字）把节点摘掉，行就退回宿主原来的单行高度。
+   */
+  function dress(seat: Seat, title: string, preview: string) {
     const row = seat.row
     let chip = row.querySelector<HTMLElement>(`:scope > .${CHIP_CLASS}`)
     if (title === '') {
@@ -206,17 +240,33 @@ export function install(ctx: HostContext) {
         chip.remove()
         mine.delete(chip)
       }
+    } else {
+      if (chip === null) {
+        chip = buildElement('span', CHIP_CLASS)
+        quiet(chip)
+        const actions = row.querySelector(ROW_ACTIONS_SELECTOR)
+        if (actions !== null && actions.parentElement === row) row.insertBefore(chip, actions)
+        else row.appendChild(chip)
+        mine.add(chip)
+      }
+      if (chip.textContent !== title) chip.textContent = title
+    }
+    let line = row.querySelector<HTMLElement>(`:scope > .${PREVIEW_CLASS}`)
+    if (preview === '') {
+      if (line !== null) {
+        line.remove()
+        mine.delete(line)
+      }
       return
     }
-    if (chip === null) {
-      chip = buildElement('span', CHIP_CLASS)
-      quiet(chip)
-      const actions = row.querySelector(ROW_ACTIONS_SELECTOR)
-      if (actions !== null && actions.parentElement === row) row.insertBefore(chip, actions)
-      else row.appendChild(chip)
-      mine.add(chip)
+    if (line === null) {
+      line = buildElement('span', PREVIEW_CLASS)
+      quiet(line)
+      // 追加在最后：样式表把它排成整行的第二排，行内按钮与标签仍在第一排。
+      row.appendChild(line)
+      mine.add(line)
     }
-    if (chip.textContent !== title) chip.textContent = title
+    if (line.textContent !== preview) line.textContent = preview
   }
 
   /**
@@ -290,6 +340,7 @@ export function install(ctx: HostContext) {
     flatten()
     const { titles, ready } = workspacesById()
     const times = timesById()
+    const previews = previewsById()
     const today = startOfDay(Date.now())
     // 座位按它们所在的列表归堆：一条列表一次排完，段落不会跨列表。
     const lists = new Map<Element, Seat[]>()
@@ -315,7 +366,7 @@ export function install(ctx: HostContext) {
       const seats = lists.get(list)
       if (seats === undefined) lists.set(list, [seat])
       else if (!seats.some(other => other.box === box)) seats.push(seat)
-      dress(seat, workspace === undefined ? '' : workspace)
+      dress(seat, workspace === undefined ? '' : workspace, previews.get(id) ?? '')
     }
     for (const [list, seats] of lists) place(list, seats)
   }
@@ -347,8 +398,7 @@ export function install(ctx: HostContext) {
     for (const row of rows.all()) {
       const box = row.parentElement
       if (box !== null && box.style.display === 'none') box.style.display = ''
-      const chip = row.querySelector('.dsh-claude-date-chip')
-      if (chip !== null) chip.remove()
+      for (const node of row.querySelectorAll(`.${CHIP_CLASS}, .${PREVIEW_CLASS}`)) node.remove()
     }
   }
 
