@@ -46,8 +46,6 @@ export interface MutationOptions {
 
 interface MutationSubscription {
   target: Node
-  /** Whether the target is the document, an element or the body: it holds every node the page has. */
-  wide: boolean
   options: MutationOptions
   callback: (records: MutationRecord[]) => void
 }
@@ -60,6 +58,13 @@ const mutationSubscriptions: MutationSubscription[] = []
  */
 const mutationSubscriptionSet = new Set<MutationSubscription>()
 let mutationObserver: MutationObserver | null = null
+
+/**
+ * Whether a record's target sits inside one observed target, per record and
+ * target: a session switch hands one batch to a dozen subscriptions, and each
+ * used to walk the record's own ancestors up to the target again.
+ */
+const containment = new WeakMap<MutationRecord, Map<Node, boolean>>()
 
 /**
  * The quiet verdict is a property of the record, not of the subscription asking:
@@ -93,6 +98,20 @@ function pageWide(target: Node) {
   return target === document || target === document.documentElement || target === document.body
 }
 
+/** Whether `record.target` sits inside `target`, answered once per record and target. */
+function sitsInside(target: Node, record: MutationRecord) {
+  let perTarget = containment.get(record)
+  if (perTarget === undefined) {
+    perTarget = new Map()
+    containment.set(record, perTarget)
+  }
+  const known = perTarget.get(target)
+  if (known !== undefined) return known
+  const inside = target.contains(record.target)
+  perTarget.set(target, inside)
+  return inside
+}
+
 /** Whether a subscription's own options select this record. */
 function selects(subscription: MutationSubscription, record: MutationRecord) {
   const options = subscription.options
@@ -106,10 +125,7 @@ function selects(subscription: MutationSubscription, record: MutationRecord) {
   const target = subscription.target
   if (record.target !== target) {
     if (options.subtree !== true) return false
-    // A page-wide target holds every node the page has, connected or not, so
-    // the walk up from the record's own target answers nothing there; the
-    // subtree targets are the ones that need it.
-    if (!subscription.wide && !target.contains(record.target)) return false
+    if (!sitsInside(target, record) && !(pageWide(target) && !record.target.isConnected)) return false
   }
   if (options.skipQuiet !== true) return true
   const known = quietVerdicts.get(record)
@@ -265,7 +281,7 @@ function refreshMutationObserver(joining?: MutationSubscription) {
  * @returns unsubscribe.
  */
 export function subscribeMutations(target: Node, options: MutationOptions, callback: (records: MutationRecord[]) => void) {
-  const subscription = { target, wide: pageWide(target), options, callback }
+  const subscription = { target, options, callback }
   mutationSubscriptions.push(subscription)
   mutationSubscriptionSet.add(subscription)
   refreshMutationObserver(subscription)

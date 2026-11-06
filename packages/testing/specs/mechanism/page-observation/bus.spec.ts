@@ -125,6 +125,20 @@ test('a page-wide subscription hears a change made inside a node removed in the 
   expect(seen).toContain('BODY')
 })
 
+test('a page-wide subscription hears nothing that changed outside its own subtree', async () => {
+  const seen: string[] = []
+  // The head watch the peer-plugin and sodium features keep: its records share
+  // the one observer's callback with the body's, and head is outside body.
+  cleanups.push(subscribeMutations(document.head, { childList: true, subtree: true }, () => {}))
+  cleanups.push(subscribeMutations(document.body, { childList: true, subtree: true }, records => seen.push(...records.map(record => `${record.type} on ${(record.target as Element).nodeName}`))))
+  const meta = document.createElement('meta')
+  document.head.append(meta)
+  await settle()
+  document.head.removeChild(meta)
+  await settle()
+  expect(seen).toEqual([])
+})
+
 test('a subscription hears nothing that changed before it was made', async () => {
   const root = host()
   const seen: MutationRecord[] = []
