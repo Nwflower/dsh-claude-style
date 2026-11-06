@@ -156,6 +156,7 @@
   host.sessions = {
     list: {
       getSnapshot: function () { return { current: 'smoke-session', phase: 'ready', ids: [], byId: {}, projectionsBySession: {} } },
+      subscribe: function () { return function () {} },
     },
     binding: function () { return undefined },
   }
