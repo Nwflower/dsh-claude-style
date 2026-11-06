@@ -131,6 +131,21 @@ export const PENDING_STEERING_SELECTOR = '[data-pending-steering]'
  */
 export const MESSAGE_BUBBLE_SELECTOR = '[data-message-bubble]'
 /**
+ * The row of controls under a message: the host's own clock and its copy
+ * button. The value says which side the clock stands on — `start` on a message
+ * the reader sent, `end` under an answer — so the row a message's own controls
+ * belong in is told without a class name.
+ */
+export const MESSAGE_ACTION_ROW_ATTRIBUTE = 'data-clock'
+/** The same contract in selector form. */
+export const MESSAGE_ACTION_ROW_SELECTOR = '[data-clock]'
+/**
+ * The key of the chat node a flow row renders, which is the key the loaded
+ * timeline's own node carries. It is how a row in the page is matched to its
+ * node in the chat snapshot, whose `seq` is the event the message arrived in.
+ */
+export const CHAT_NODE_KEY_ATTRIBUTE = 'data-chat-node-key'
+/**
  * A plain text box inside the composer seat: a question card's answer box
  * (under [data-question-key]) and a queued message's inline editor (under
  * [data-queue-dock]). Both are textareas, in the main session and in the

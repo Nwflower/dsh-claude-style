@@ -1,0 +1,11 @@
+{
+  "retract": { "zh": "撤回这条消息", "en": "Retract this message" },
+  "edit": { "zh": "编辑这条消息", "en": "Edit this message" },
+  "save": { "zh": "保存并发送", "en": "Save and send" },
+  "cancel": { "zh": "取消", "en": "Cancel" },
+  "running": { "zh": "这一轮还在进行，等它停下再改", "en": "The turn is still running; wait for it to stop" },
+  "rewound": { "zh": "原文已回到输入框", "en": "The message is back in the composer" },
+  "sent": { "zh": "已在新会话里重新发出", "en": "Sent again in the new session" },
+  "failed": { "zh": "这条消息没能处理完", "en": "The message could not be handled" },
+  "actionsTitle": { "zh": "消息操作行", "en": "Message actions" }
+}

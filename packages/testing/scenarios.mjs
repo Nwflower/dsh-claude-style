@@ -127,6 +127,24 @@ function onRowCheck(shown) {
     `frames with the row shown=${shown.length}, of them apart=${apart.length}${apart.length === 0 ? '' : `：${apart.slice(0, 3).map((frame) => `${flightGap(frame).toFixed(2)}px`).join(' | ')}`}`)
 }
 
+/** The visible host Tooltip, read off the page: its words and the look the host gives it. */
+function readTooltip(page) {
+  return page.evaluate(() => {
+    const shown = [...document.querySelectorAll('[role="tooltip"]')].filter((tip) => tip.getBoundingClientRect().height > 0 && getComputedStyle(tip).opacity === '1')
+    const tip = shown[shown.length - 1]
+    if (tip === undefined) return null
+    const style = getComputedStyle(tip)
+    return { text: (tip.textContent ?? '').trim(), background: style.backgroundColor, color: style.color, radius: style.borderRadius, size: style.fontSize }
+  })
+}
+
+/** Hover one control and read the Tooltip it raises, once the page has painted it. */
+async function hoverTooltip(page, locator) {
+  await locator.hover()
+  await page.waitForFunction(() => [...document.querySelectorAll('[role="tooltip"]')].some((tip) => tip.getBoundingClientRect().height > 0 && getComputedStyle(tip).opacity === '1'), { timeout: 6000 }).catch(() => {})
+  return readTooltip(page)
+}
+
 /**
  * The frames and the row once the handover has finished.
  *
@@ -156,6 +174,100 @@ async function handoverFrames(context) {
 
 /** The scenarios: each boots its own instance, sends its prompt, and asserts. */
 const SCENARIOS = {
+  /**
+   * 读者消息下面那行控件（features/message-actions）：撤回与编辑插在宿主自己的
+   * 控件行里，整行只在悬停时显现；撤回从消息前一个事件分岔并把原文放回新会话的
+   * 输入框，编辑把改过的文字在新会话里直接发出，原会话原样留着。
+   *
+   * 这一场按读者看见的样子选：控件行是宿主的 `[data-clock]`，皮肤的两个按钮就
+   * 是它末尾的两个按钮（宿主先画时间与复制），编辑框是那一行里唯一的文本域。
+   */
+  messageActions: {
+    script: 'greeting',
+    prompt: 'hello there',
+    async assert({ page, session }) {
+      const ROW = '[data-chat-flow-kind="user"]'
+      const LINE = `${ROW} [data-clock]`
+      const EDITOR = `${ROW} textarea`
+      // 宿主那一行里三个按钮按顺序排：时间之后是复制，然后是皮肤的两个。
+      const buttons = page.locator(`${LINE} button`)
+      const copyButton = buttons.nth(0)
+      const retractButton = buttons.nth(1)
+      const editButton = buttons.nth(2)
+      await buttons.nth(2).waitFor({ timeout: 20000 })
+      const read = () => page.evaluate((row) => {
+        const line = document.querySelector(row)
+        const clock = line?.querySelector('[data-clock]') ?? null
+        const bubble = line?.querySelector('[data-message-bubble]') ?? null
+        return {
+          buttons: clock === null ? 0 : clock.querySelectorAll('button').length,
+          opacity: clock === null ? null : getComputedStyle(clock).opacity,
+          sessionId: document.querySelector('[data-conversation-session]')?.getAttribute('data-conversation-session') ?? null,
+          draft: (document.querySelector('[data-composer-input]')?.innerText ?? '').trim(),
+          bubbleText: (bubble?.textContent ?? '').trim(),
+          bubbleShown: bubble === null ? false : getComputedStyle(bubble).display !== 'none',
+        }
+      }, ROW)
+      const resting = await read()
+      await page.hover(ROW)
+      await page.waitForFunction((row) => {
+        const clock = document.querySelector(row)?.querySelector('[data-clock]')
+        return clock !== null && clock !== undefined && getComputedStyle(clock).opacity === '1'
+      }, ROW, { timeout: 5000 }).catch(() => {})
+      const hovered = await read()
+      const ourTip = await hoverTooltip(page, retractButton)
+      const retractLabel = await retractButton.getAttribute('aria-label')
+      await page.mouse.move(5, 5)
+      await page.waitForTimeout(400)
+      const hostTip = await hoverTooltip(page, copyButton)
+      await editButton.click()
+      await page.waitForSelector(EDITOR, { timeout: 5000 })
+      const edited = await page.inputValue(EDITOR)
+      const whileEditing = await read()
+      await page.keyboard.press('Escape')
+      await page.waitForSelector(EDITOR, { state: 'detached', timeout: 5000 }).catch(() => {})
+      const cancelled = await read()
+      await page.hover(ROW)
+      await retractButton.click()
+      await page.waitForFunction((before) => document.querySelector('[data-conversation-session]')?.getAttribute('data-conversation-session') !== before, resting.sessionId, { timeout: 30000 }).catch(() => {})
+      await page.waitForFunction(() => (document.querySelector('[data-composer-input]')?.innerText ?? '').trim() === 'hello there', { timeout: 30000 }).catch(() => {})
+      const rewound = await read()
+      // 放回输入框的原文再发一次，再点编辑改过之后按 Enter：改过的文字在新会话里直接发出。
+      await page.evaluate((selector) => document.querySelector(selector)?.focus(), '[data-composer-input]')
+      await page.keyboard.press('Enter')
+      // 分岔出来的会话自己带着一个合成的收尾行，所以这里等的是新消息那一轮的收尾
+      // （下一轮），而不是「有收尾行就算结束」。
+      await page.waitForSelector('[data-chat-turn="2"][data-chat-flow-kind="turn-tail"]', { timeout: 90000 })
+      await page.hover(ROW)
+      await editButton.click()
+      await page.waitForSelector(EDITOR, { timeout: 5000 })
+      // 文字清空时没有可发的消息：保存按钮先站起来。
+      await page.fill(EDITOR, '')
+      const emptySaveOff = await page.isDisabled(`${EDITOR} ~ div > button:last-child`)
+      await page.fill(EDITOR, 'hello there, edited')
+      await page.keyboard.press('Enter')
+      await page.waitForFunction((before) => document.querySelector('[data-conversation-session]')?.getAttribute('data-conversation-session') !== before, rewound.sessionId, { timeout: 30000 }).catch(() => {})
+      await page.waitForFunction(() => {
+        const bubble = document.querySelector('[data-chat-flow-kind="user"] [data-message-bubble]')
+        return (bubble?.textContent ?? '').trim() === 'hello there, edited'
+      }, { timeout: 30000 }).catch(() => {})
+      await page.waitForFunction(() => (document.querySelector('[data-composer-input]')?.innerText ?? '').trim() === '', { timeout: 10000 }).catch(() => {})
+      const committed = await read()
+      return [
+        check('控件行末尾长出撤回与编辑两个按钮', resting.buttons === 3, `${resting.buttons} 个按钮（宿主的时间与复制之外）`),
+        check('控件行在指针离开时隐去、落上去显现', resting.opacity === '0' && hovered.opacity === '1', `resting=${resting.opacity} hovered=${hovered.opacity}`),
+        check('撤回按钮的提示是宿主那份 Tooltip', ourTip !== null && ourTip.text === retractLabel && hostTip !== null && ourTip.background === hostTip.background && ourTip.color === hostTip.color && ourTip.radius === hostTip.radius && ourTip.size === hostTip.size, `ours=${JSON.stringify(ourTip)} host=${JSON.stringify(hostTip)}`),
+        check('编辑框打开时带着那条消息的原文', edited.trim() === 'hello there', edited.slice(0, 80)),
+        check('编辑期间原来的气泡让位', whileEditing.bubbleShown === false, `bubbleShown=${whileEditing.bubbleShown}`),
+        check('编辑框按 Esc 收起，气泡回来', cancelled.bubbleShown === true && cancelled.bubbleText.includes('hello there'), `bubbleShown=${cancelled.bubbleShown} bubble=${cancelled.bubbleText.slice(0, 60)}`),
+        check('撤回后打开新会话', rewound.sessionId !== resting.sessionId && rewound.sessionId !== null, `before=${resting.sessionId} after=${rewound.sessionId}`),
+        check('原文回到新会话的输入框', rewound.draft === 'hello there', rewound.draft.slice(0, 80)),
+        check('文字清空时保存按钮不可按', emptySaveOff === true, `disabled=${emptySaveOff}`),
+        check('编辑保存后改过的文字在新会话里直接发出', committed.sessionId !== rewound.sessionId && committed.bubbleText === 'hello there, edited' && committed.draft === '', `session=${committed.sessionId} draft=${committed.draft.slice(0, 40)} bubble=${committed.bubbleText.slice(0, 60)}`),
+        check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),
+      ]
+    },
+  },
   /** A scripted answer: the reader's message, the thought, the markdown. */
   conversation: {
     script: 'greeting',

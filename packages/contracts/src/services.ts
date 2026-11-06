@@ -213,11 +213,19 @@ export interface HostConversationService {
   input: { for(ctx: HostServiceLookup): HostConversationInput }
 }
 
-/** One session's composer input: its draft, and writing it back. */
+/** One session's composer input: its draft, writing it back, and the actions a composer control presses. */
 export interface HostConversationInput {
   state: HostSnapshotSource<{ draft: string }>
   setDraft(draft: string): void
   focus(): void
+  /**
+   * The composer's own action face (read on 0.2.2-rc.1): `submit` is the press
+   * the composer's own send button makes, over whatever draft the input holds.
+   */
+  actions?: {
+    submit?(): void
+    addAttachments?(ids: string[]): void
+  }
 }
 
 /** The `modelDirectories` service: one session's model directory, by session id. */
@@ -385,10 +393,28 @@ export interface HostFeedEntry {
   event: HostSessionEvent
 }
 
+/**
+ * What a fork takes (read on 0.2.2-rc.1, the host's own branch button): the
+ * source session, the inclusive event boundary the child keeps — the latest
+ * completed turn when omitted — and whether its title carries the source's.
+ */
+export interface HostSessionForkRequest {
+  sessionId: string
+  atSeq?: number
+  increaseTitle?: boolean
+  onCreated?(childId: string): void
+}
+
 /** The `sessions` service: the list, one session's binding, and a refresh. */
 export interface HostSessionsService {
   list: HostSnapshotSource<HostSessionListSnapshot>
   binding(id: string): HostSessionBinding | undefined | null
+  /**
+   * Copy the source's prefix into a new session and answer its id. It refuses
+   * a boundary that is not an event of the source, so the cut a feature takes
+   * has to be one the log holds.
+   */
+  fork?(request: HostSessionForkRequest): Promise<string>
   /** Pull the list again; the host's own single-flight refresh, so a pull under way is reused. */
   refresh(): Promise<unknown>
 }
@@ -476,6 +502,21 @@ export interface HostChatSnapshot {
   legacy?: { runningCalls?: HostRunningCall[] }
   /** The turn navigator's own list of the loaded window's turns. */
   navigation?: { items?(): HostLoadedTurn[] }
+  /**
+   * The loaded window's own nodes, which the host's rows render from (read on
+   * 0.2.2-rc.1). A node's key is the flow row's `data-chat-node-key`, and a
+   * reader's message node carries the event `seq` in its data.
+   */
+  nodes?: { values?(): HostChatNode[] }
+}
+
+/** One loaded node of the chat timeline: its key, its kind, and the data its renderer reads. */
+export interface HostChatNode {
+  key: string
+  kind: string
+  anchorSeq?: number
+  /** A reader's message carries `seq`; every renderer's own payload rides the rest. */
+  data?: { seq?: unknown, messageId?: unknown, content?: unknown, [field: string]: unknown }
 }
 
 /** One turn of the loaded window, as the chat snapshot's turn navigation lists them. */

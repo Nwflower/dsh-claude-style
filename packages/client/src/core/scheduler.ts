@@ -51,6 +51,7 @@ export interface Handles {
   chatReveal: FeatureHandle
   chatAnchor: FeatureHandle
   chatFiles: FeatureHandle
+  messageActions: FeatureHandle
   chatSend: ChatSendHandle
   caret: FeatureHandle
   viewTabs: FeatureHandle

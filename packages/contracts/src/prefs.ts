@@ -366,6 +366,8 @@ export const PREFS = {
   manualUnread: { type: 'boolean', default: true },
   manualUnreadIds: { type: 'list', default: [], max: MANUAL_UNREAD_LIMIT, entryMax: MANUAL_UNREAD_ID_LIMIT, drop: [] },
   turnNav: { type: 'boolean', default: true },
+  /** Whether a message the reader sent carries edit and retract beside its copy button (features/message-actions). */
+  messageActions: { type: 'boolean', default: true },
   viewTabs: { type: 'boolean', default: true },
   headerBand: { type: 'boolean', default: true },
   /** It held a choice before it became a switch again; every retired choice meant on bar `off`. */

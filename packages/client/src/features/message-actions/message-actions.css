@@ -1,0 +1,124 @@
+/* ---------- Message actions (features/message-actions) ---------- */
+/* Claude Code keeps the row under a message — its clock, copy, retract and edit
+   — out of the way until the message is pointed at. The host draws that row
+   itself and already hides it on a reader's message that has another one after
+   it; here every message the reader sent follows the same rule, and the skin's
+   own buttons inherit it because they stand in the same row. */
+@media (hover: hover) {
+  body[data-dsh-claude-style] [data-chat-flow-kind="user"] [data-clock] {
+    opacity: 0;
+    transition: opacity var(--dsh-claude-timing-feedback);
+  }
+  body[data-dsh-claude-style] [data-chat-flow-kind="user"]:hover [data-clock],
+  body[data-dsh-claude-style] [data-chat-flow-kind="user"]:focus-within [data-clock],
+  body[data-dsh-claude-style] [data-dsh-claude-message-editing] [data-clock] {
+    opacity: 1;
+  }
+}
+
+/* The two buttons stand in the host's own row: the box that carries them takes
+   no room of its own, so the host's time and copy button keep their places. */
+body[data-dsh-claude-style] .dsh-claude-message-actions {
+  display: contents;
+}
+
+/* The two buttons the skin draws into that row. Sizes and colours are the
+   host's own action button (ui-chat's MessageIconActions), so the row reads as
+   one set of controls. */
+body[data-dsh-claude-style] .dsh-claude-message-action {
+  width: 28px;
+  height: 28px;
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--dsw-radius-sm);
+  background: none;
+  color: var(--dsw-alias-label-tertiary);
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  body[data-dsh-claude-style] .dsh-claude-message-action:hover {
+    background: var(--dsw-alias-interactive-bg-hover);
+    color: var(--dsw-alias-label-secondary);
+  }
+}
+
+body[data-dsh-claude-style] .dsh-claude-message-action svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* While the editor stands, the bubble it replaces steps out of the row. */
+body[data-dsh-claude-style] [data-dsh-claude-message-editing] [data-message-bubble] {
+  display: none;
+}
+
+/* The editor takes the bubble's seat in the reader's row: the row is a
+   right-aligned column, and the box is as wide as a message bubble is. */
+body[data-dsh-claude-style] .dsh-claude-message-editor {
+  width: 100%;
+  max-width: min(calc(var(--dsh-chat-content-width, 748px) * 0.702), 82%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-message-editor-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 14px;
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  line-height: 1.55;
+  resize: none;
+}
+
+body[data-dsh-claude-style] .dsh-claude-message-editor-input:focus {
+  outline: none;
+  border-color: var(--dsw-alias-brand-primary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-message-editor-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+body[data-dsh-claude-style] :is(.dsh-claude-message-editor-cancel, .dsh-claude-message-editor-save) {
+  height: 28px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: none;
+  color: var(--dsw-alias-label-secondary);
+  font: inherit;
+  font-size: var(--dsh-content-font-size-secondary, 13px);
+  cursor: pointer;
+}
+
+body[data-dsh-claude-style] .dsh-claude-message-editor-save {
+  border-color: transparent;
+  background: var(--dsw-alias-button-primary-fill);
+  color: var(--dsw-alias-label-primary-foreground);
+}
+
+/* 文字清空时没有可发的消息：保存按钮先站着不动。 */
+body[data-dsh-claude-style] .dsh-claude-message-editor-save:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@media (hover: hover) {
+  body[data-dsh-claude-style] .dsh-claude-message-editor-cancel:hover {
+    background: var(--dsw-alias-interactive-bg-hover);
+  }
+  body[data-dsh-claude-style] .dsh-claude-message-editor-save:not(:disabled):hover {
+    background: var(--dsw-alias-button-primary-hover);
+  }
+}
