@@ -1,4 +1,4 @@
-import { hostSessions, hostUiWorkspace, hostWorkspaces, hostWorkspaceView } from '@dsh-claude-style/engine/host'
+import { currentSessionId, hostSessions, hostUiWorkspace, hostWorkspaces, hostWorkspaceView } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import { observeMatches, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import type { MatchList } from '@dsh-claude-style/engine/bus'
@@ -72,6 +72,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     host: {
       workspaces: () => workspaces,
       sessions: () => sessions,
+      currentSession: () => currentSessionId(ctx, sessions) ?? null,
     },
     actions: {
       /** Open through the host's own navigation; an unavailable action fails at the press (D12). */

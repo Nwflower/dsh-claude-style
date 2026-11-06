@@ -30,6 +30,8 @@ export function archivedOrder(archivedIds: readonly string[], byId: Record<strin
 export interface ArchivedListHost {
   workspaces(): HostWorkspacesService | null
   sessions(): HostSessionsService | null
+  /** The session the shell shows, which keeps its row even while it is blank. */
+  currentSession(): string | null
 }
 
 /** The host actions one row takes; each is the host's own, checked at the call. */
@@ -151,7 +153,7 @@ export function createArchivedList(deps: ArchivedListDeps): ArchivedList {
     const archived = workspaces?.list.getSnapshot().archivedSessionIds ?? []
     const snapshot = sessions?.list.getSnapshot()
     const byId = snapshot?.byId ?? {}
-    const current = snapshot?.current
+    const current = deps.host.currentSession()
     const order = archivedOrder(archived, byId, current)
     const sig = JSON.stringify([current, order.map((id) => [id, byId[id].updatedAt, byId[id].displayTitle])])
     return { order, byId, sig }

@@ -48,6 +48,7 @@ function fixture(count: number) {
   const host = {
     workspaces: () => ({ list: { getSnapshot: () => ({ items: [], archivedSessionIds: archived }), subscribe: () => () => {} }, unarchiveSession: async () => {} }),
     sessions: () => ({ list: { getSnapshot: () => ({ ids: archived, byId, projectionsBySession: {} }), subscribe: () => () => {} }, binding: () => undefined, refresh: async () => {} }),
+    currentSession: () => null,
   }
   list = createArchivedList({
     host,
