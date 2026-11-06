@@ -1,7 +1,7 @@
 name: CI
 
 # A push to master is judged by the checks, the build, the spec lane and the
-# part of the smoke and the behaviour lane its change reaches (D86): a change
+# part of the smoke and the behaviour lane its change reaches (D87): a change
 # held inside feature directories walks those directories' smoke cases and
 # behaviour specs, and any other change walks the smoke's quick tier and every
 # behaviour spec. A regression a push brings is red on that push, so it is not
@@ -9,11 +9,11 @@ name: CI
 # required check, so a red push verdict does not keep the commit out; the pusher
 # fixes it in the next push. What a feature-only push's selection leaves out is
 # observed beside it in `.github/workflows/observe.yml`, which joins no branch
-# rule. The whole matrix —
-# the smoke, the behaviour specs on three systems and the end-to-end lane — is
-# judged on a pull request, a merge-queue entry and a manual run, and the manual
-# run is the one a release takes before its tag; the release workflow runs the
-# gates once more before it publishes. A branch is judged through its pull
+# rule. The whole matrix — the smoke, the behaviour specs on three systems and
+# the end-to-end lane — is judged on a manual run, which is the one a release
+# takes before its tag; a pull request and a merge-queue entry walk the smoke,
+# the behaviour specs on Linux and the end-to-end lane, and the macOS lane meets
+# them in `.github/workflows/nightly.yml`. A branch is judged through its pull
 # request or the queue, so a branch push of its own is not read here, and
 # `branches` keeps every other push out, tag pushes with them: the release
 # workflow owns tags.
@@ -41,15 +41,19 @@ name: CI
 #
 # The jobs are split by what they need. `checks` reads no built page, so it runs
 # on every event and starts while the scope job is still reading the diff; the
-# lanes that read a page wait on the checks and on the scope. `build-unit-smoke`
-# carries the build, the spec lane in a real browser, the smoke and the behaviour
-# specs over the built plugin; `smoke-windows` carries the same over the readers'
-# own system; `behaviour-macos` walks the behaviour specs on the third platform;
-# `e2e` drives a scratch `dsh web` on the newest host version published, under
-# whichever dist-tag (`packages/testing/host-version.mjs` reads the registry; the
-# lane gives no verdict on a machine whose host differs) with the scripted
-# model service (D86), so a selector or entry the host stopped honouring shows
-# up in the run that meets the new host. Every job carries a deadline, and
+# lanes that read a page wait on the checks and on the scope. `build` writes the
+# one `lib/` every lane below downloads, so one tree is bundled once and no two
+# lanes judge different bundles of it. `unit-smoke` carries the spec lane in a
+# real browser, the smoke and the behaviour specs over that bundle;
+# `smoke-windows` reads the host half on the readers' own system, which is what
+# that system judges (its directories, drive letters and file times) — the pages
+# themselves are Linux's and macOS's; `behaviour-macos` walks the behaviour specs
+# on the third platform, on the manual run a release takes and in the nightly
+# matrix; `e2e` drives a scratch `dsh web` on the newest host version published,
+# under whichever dist-tag (`packages/testing/host-version.mjs` reads the
+# registry; the lane gives no verdict on a machine whose host differs) with the
+# scripted model service (D87), so a selector or entry the host stopped honouring
+# shows up in the run that meets the new host. Every job carries a deadline, and
 # every step that waits on the network carries its own: the job's is the
 # backstop, the step's ends a stuck wait in minutes.
 #
@@ -126,7 +130,7 @@ jobs:
         run: node scripts/ci-scope.mjs --base "${{ github.event.pull_request.base.sha || github.event.before || 'origin/master' }}"
       # The pushes the scope refuses against the same base: an appearance
       # snapshot moved without the sheets that draw it, and a record that only
-      # shrinks grown (D86, D9).
+      # shrinks grown (D87, D9).
       - run: node scripts/ci-scope.mjs --appearance --ledgers --base "${{ github.event.pull_request.base.sha || github.event.before || 'origin/master' }}"
 
   # The gates that need no build: the lint rules, the decisions index against
@@ -150,11 +154,17 @@ jobs:
       - run: npm run agents:check
       - run: npm run checks:numbers -- --check
 
-  build-unit-smoke:
+  # The build every lane below reads, made once. `lib/` is not in version
+  # control (D47), and four lanes read it: bundling it four times bought nothing
+  # and let two of them judge two different bundles of one tree. The artifact is
+  # the whole `lib/` directory — the bundle, its deferred chunks, its sheets and
+  # the host half — and it is text, so the Windows and macOS lanes read the same
+  # one Linux wrote.
+  build:
     needs: [changed, checks]
     if: needs.changed.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
         with:
@@ -172,6 +182,30 @@ jobs:
           key: build-cache-${{ runner.os }}-${{ needs.changed.outputs.tree }}
       - run: npm run build
         timeout-minutes: 15
+      - uses: actions/upload-artifact@v7
+        with:
+          name: lib
+          path: lib
+          if-no-files-found: error
+
+  unit-smoke:
+    needs: [changed, checks, build]
+    if: needs.changed.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v7
+        with:
+          name: lib
+          path: lib
       - run: npm test
         timeout-minutes: 15
       # The entries are called directly: the selection `changed` printed carries
@@ -184,7 +218,7 @@ jobs:
       - run: node packages/testing/smoke.mjs ${{ needs.changed.outputs.selection || '--quick' }}
         if: github.event_name == 'push'
         timeout-minutes: 30
-      # The behaviour specs read the same build on the same stand-in host (D86);
+      # The behaviour specs read the same build on the same stand-in host (D87);
       # a push walks the directories its change reaches, every other event all of
       # them. A failure leaves its trace, screenshot and evidence for the artifact.
       - run: node packages/testing/behaviour.mjs ${{ github.event_name == 'push' && needs.changed.outputs.selection || '' }}
@@ -197,12 +231,14 @@ jobs:
           if-no-files-found: ignore
 
   # The readers' desktop runs on Windows, and the host half reads session
-  # directories, drive-letter paths and file times there.
+  # directories, drive-letter paths and file times there. What the same tree's
+  # pages do on that system is judged on Linux and macOS, so this job opens none:
+  # `--host` runs the Node half alone.
   smoke-windows:
-    needs: [changed, checks]
+    needs: [changed, checks, build]
     if: needs.changed.outputs.code == 'true' && github.event_name != 'push'
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
         with:
@@ -212,31 +248,21 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      # A cache entry is per platform, so this one is the Windows half of the
-      # same tree hash.
-      - uses: actions/cache@v6
+      - uses: actions/download-artifact@v7
         with:
-          path: .debug/build-cache
-          key: build-cache-${{ runner.os }}-${{ needs.changed.outputs.tree }}
-      - run: npm run build
-        timeout-minutes: 15
-      - run: npm run smoke
-        timeout-minutes: 30
-      - run: npm run behaviour
-        timeout-minutes: 15
-      - uses: actions/upload-artifact@v7
-        if: failure()
-        with:
-          name: behaviour-evidence-windows
-          path: .debug/behaviour
-          if-no-files-found: ignore
+          name: lib
+          path: lib
+      - run: node packages/testing/smoke.mjs --host
+        timeout-minutes: 10
 
   # The third platform of the release matrix (packages/testing/data/matrix.json,
-  # D86): the behaviour specs over macOS's own fonts and Chrome, where a layout
-  # that fits on the other two can still overflow.
+  # D87): the behaviour specs over macOS's own fonts and Chrome, where a layout
+  # that fits on the other two can still overflow. It runs on the manual run a
+  # release takes and in the nightly matrix, which reaches it between releases;
+  # a pull request pays Linux alone, whose queue it would otherwise wait out.
   behaviour-macos:
-    needs: [changed, checks]
-    if: needs.changed.outputs.code == 'true' && github.event_name != 'push'
+    needs: [changed, checks, build]
+    if: needs.changed.outputs.code == 'true' && github.event_name == 'workflow_dispatch'
     runs-on: macos-latest
     timeout-minutes: 30
     steps:
@@ -248,12 +274,10 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - uses: actions/cache@v6
+      - uses: actions/download-artifact@v7
         with:
-          path: .debug/build-cache
-          key: build-cache-${{ runner.os }}-${{ needs.changed.outputs.tree }}
-      - run: npm run build
-        timeout-minutes: 15
+          name: lib
+          path: lib
       - run: npm run behaviour
         timeout-minutes: 15
       - uses: actions/upload-artifact@v7
@@ -264,9 +288,9 @@ jobs:
           if-no-files-found: ignore
 
   # The assembled host: a scratch `dsh web` with this checkout's plugin and the
-  # scripted model service, driven through a real conversation (D86).
+  # scripted model service, driven through a real conversation (D87).
   e2e:
-    needs: [changed, checks]
+    needs: [changed, checks, build]
     if: needs.changed.outputs.code == 'true' && github.event_name != 'push'
     strategy:
       # One shard's failure is evidence about that shard; the others finish and
@@ -285,12 +309,10 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - uses: actions/cache@v6
+      - uses: actions/download-artifact@v7
         with:
-          path: .debug/build-cache
-          key: build-cache-${{ runner.os }}-${{ needs.changed.outputs.tree }}
-      - run: npm run build
-        timeout-minutes: 15
+          name: lib
+          path: lib
       # The lane boots the host's own CLI, which needs pnpm to install a
       # profile's plugins.
       - run: npm install --global pnpm@11 @deepseek-ai/dsh@$(node packages/testing/host-version.mjs)
@@ -307,7 +329,7 @@ jobs:
 
   required:
     if: always()
-    needs: [changed, checks, build-unit-smoke, smoke-windows, behaviour-macos, e2e]
+    needs: [changed, checks, build, unit-smoke, smoke-windows, behaviour-macos, e2e]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
