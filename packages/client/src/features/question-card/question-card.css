@@ -3,12 +3,16 @@ body[data-dsh-claude-style] [data-dsh-claude-question-relocated] {
   display: none;
 }
 
+/* The card takes the composer card's width and lines up with it: the composer
+   stands its side clearance wider than the conversation column on either side,
+   so the card is centred on the column and overhangs it by the same amount.
+   Every question then draws at one width, whatever its title's length. */
 body[data-dsh-claude-style] .dsh-claude-question-flow-item {
+  --dsh-claude-question-width: min(var(--dsh-composer-card-max-width, 100%), 100% + var(--dsh-composer-side-clearance, 0px) * 2);
   box-sizing: border-box;
-  width: 576px;
+  width: var(--dsh-claude-question-width);
   min-width: 0;
-  max-width: 100%;
-  margin-right: auto;
+  margin-left: calc((100% - var(--dsh-claude-question-width)) / 2);
   padding: 8px 0;
 }
 
@@ -55,6 +59,10 @@ body[data-dsh-claude-style] [data-dsh-claude-question-surface] > header > div > 
   font-size: var(--dsh-content-font-size, 14px);
   font-weight: 500;
   line-height: 22px;
+  /* The lines are evened out so the last one never carries a lone character;
+     the edge stays ragged, since a question's paths and identifiers cannot
+     break and justified lines would open wide gaps before them. */
+  text-wrap: pretty;
 }
 
 body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-question-scroll] > div:first-child > button {

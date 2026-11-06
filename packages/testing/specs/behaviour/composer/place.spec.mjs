@@ -206,6 +206,9 @@ function mountQuestion(t) {
     scroller.setAttribute(scrollerAttr, '')
     const column = document.createElement('div')
     column.setAttribute(name(columnSelector), '')
+    // The host's column: a flex column narrower than the composer card, which
+    // stands its side clearance wider on either side.
+    column.style.cssText = 'display:flex;flex-direction:column;width:600px;margin-left:40px;--dsh-composer-card-max-width:632px;--dsh-composer-side-clearance:16px'
     const flow = document.createElement('div')
     flow.setAttribute(flowAttr, 'conversation.chat.flow')
     column.append(flow)
@@ -275,7 +278,7 @@ function mountQuestion(t) {
     const probe = document.createElement('span')
     probe.style.background = `var(${selectionProperty})`
     document.body.append(content, reply, probe)
-    window.__debugQuestion = { card, section, row, mark, badge, term, answer, content, reply, probe, fallbackAttr }
+    window.__debugQuestion = { card, section, title, column, row, mark, badge, term, answer, content, reply, probe, fallbackAttr }
   }, [QUESTION_ATTR, OPTION_ATTR, REPLY_ATTR, CONTENT, FLOW_SLOT_ATTR, FALLBACK_ATTR, SEAT, SCROLLER_ATTR, COLUMN, QUESTION_BODY_ATTR, SELECTION_PROPERTY])
 }
 
@@ -327,11 +330,15 @@ export default spec({ page: 'composer' }, ({ test }) => {
       return label !== null && label.textContent === 'Other'
     }, CUSTOM_LABEL)
     const reading = await t.page.evaluate((flowItem) => {
-      const { card, section, row, mark, badge, term, answer, content, probe, fallbackAttr } = window.__debugQuestion
+      const { card, section, title, column, row, mark, badge, term, answer, content, probe, fallbackAttr } = window.__debugQuestion
       const paint = getComputedStyle
+      const box = section.getBoundingClientRect()
+      const columnBox = column.getBoundingClientRect()
       return {
         cardRadius: paint(section).borderRadius,
         cardWidth: paint(section.parentElement).width,
+        cardOverhang: [columnBox.left - box.left, box.right - columnBox.right],
+        titleWrap: paint(title).textWrapStyle,
         rowRadius: paint(row).borderRadius,
         markRadius: paint(mark).borderRadius,
         markWidth: paint(mark).width,
@@ -348,7 +355,9 @@ export default spec({ page: 'composer' }, ({ test }) => {
       }
     }, FLOW_ITEM)
     t.expectThat.equal(reading.cardRadius, '14px', 'the question card is drawn in the skin\'s own radius')
-    t.expectThat.equal(reading.cardWidth, '576px', 'the card is wide enough for the question\'s option list on a wide screen')
+    t.expectThat.equal(reading.cardWidth, '632px', 'the card takes the composer card\'s width')
+    t.expectThat.equal(reading.cardOverhang, [16, 16], 'the card overhangs the column by the composer\'s side clearance on either side, in line with the composer')
+    t.expectThat.equal(reading.titleWrap, 'pretty', 'the question\'s lines are evened out so the last one never carries a lone character')
     t.expectThat.equal(reading.rowRadius, '0px', 'option rows join one continuous list')
     t.expectThat.equal(reading.markRadius, '50%', 'a single-choice option carries a circular radio')
     t.expectThat.equal(reading.markWidth, reading.markHeight, 'the radio keeps equal width and height')
@@ -370,10 +379,10 @@ export default spec({ page: 'composer' }, ({ test }) => {
     t.expectThat.equal(shortcut, { text: 'Ctrl', icons: 1 }, 'the submit button carries Ctrl and the return icon')
     const narrowWidth = await t.page.evaluate(() => {
       const mount = window.__debugQuestion.section.parentElement
-      mount.parentElement.style.width = '360px'
+      window.__debugQuestion.column.style.width = '360px'
       return getComputedStyle(mount).width
     })
-    t.expectThat.equal(narrowWidth, '360px', 'the card fills a narrower conversation column')
+    t.expectThat.equal(narrowWidth, '392px', 'on a column narrower than the composer card the card keeps the same side clearance')
     await t.page.locator(`[${OPTION_ATTR}]`).hover()
     await t.page.evaluate(() => Promise.all(window.__debugQuestion.row.getAnimations().map(animation => animation.finished)))
     const ordinaryHover = await t.page.evaluate(() => getComputedStyle(window.__debugQuestion.row).backgroundColor)
