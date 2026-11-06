@@ -12,7 +12,8 @@
  * The paths are the shared contract (`@dsh-claude-style/contracts/routes`, * D73): the browser half addresses the same names.
  */
 import { PACKAGE_NAME } from '@dsh-claude-style/contracts/package'
-import { HDSL_PATH, HDSL_SKIN_PATH, PEAKRATE_PATH, PRICES_PATH, ROUTE_PREFIX, SESSION_COST_PATH, SESSION_DELETE_PATH, SESSION_SEARCH_PATH, USAGE_PATH, USERNAME_PATH } from '@dsh-claude-style/contracts/routes'
+import { HDSL_PATH, HDSL_SKIN_PATH, PEAKRATE_PATH, PRICES_PATH, ROUTE_PREFIX, SESSION_COST_PATH, SESSION_DELETE_PATH, SESSION_SEARCH_PATH, USAGE_PATH, USERNAME_PATH, WEBFONTS_PATH } from '@dsh-claude-style/contracts/routes'
+import { OPTIONAL_WEBFONTS } from '@dsh-claude-style/contracts/webfonts'
 import { existsSync, readFileSync, readdirSync, realpathSync, rmSync, statSync } from 'node:fs'
 import { userInfo } from 'node:os'
 import { dirname, join, resolve, sep } from 'node:path'
@@ -56,17 +57,18 @@ function readBillingRows(query: URLSearchParams) {
  * (Inter, Noto Serif) ship in the npm package; the Anthropic faces do not
  * (copyright), so only a copy the user dropped in answers them. A name neither
  * directory holds is absent: sendFile's ENOENT becomes a 404, which the browser
- * half's font stacks fall back from.
+ * half's font stacks fall back from — that side registers no `@font-face` for a
+ * name the webfonts route does not report (packages/client/src/shared/webfonts.ts).
  */
 const FONT_FILES = {
   'JetBrainsMonoVariable.ttf': 'font/ttf',
   'JetBrainsMonoItalicVariable.ttf': 'font/ttf',
-  'AnthropicSansWebText.ttf': 'font/ttf',
-  'AnthropicSerifWebText.ttf': 'font/ttf',
-  'AnthropicMonoWeb.ttf': 'font/ttf',
+  ...Object.fromEntries(OPTIONAL_WEBFONTS.map(face => [face.file, 'font/ttf'])),
   'InterVariable.woff2': 'font/woff2',
   'NotoSerifVariable.woff2': 'font/woff2',
 }
+/** The webfonts status route as the prefix handler sees it: its path without the registered prefix. */
+const WEBFONTS_SUB = WEBFONTS_PATH.slice(ROUTE_PREFIX.length)
 /**
  * The assets the build routed rather than inlined, served under
  * `${ROUTE_PREFIX}/assets/` from the build output in `lib/assets/`
@@ -305,6 +307,15 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
             'content-type': 'application/json; charset=utf-8',
             'cache-control': 'no-cache',
           })
+          return
+        }
+        if (sub === WEBFONTS_SUB) {
+          // The optional faces in place: the browser half declares a @font-face
+          // for these alone, so an install without the files sends no font
+          // request at all. Read per request, so a file dropped in while the
+          // host runs is reported on the page's next load.
+          const faces = OPTIONAL_WEBFONTS.filter(face => existsSync(join(userFontsDir(), face.file))).map(face => face.file)
+          sendJson(res, 200, { ok: true, faces })
           return
         }
         const font = sub.startsWith('/fonts/') ? (FONT_FILES as Record<string, string | undefined>)[sub.slice('/fonts/'.length)] : undefined

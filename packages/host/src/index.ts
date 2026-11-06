@@ -8,18 +8,20 @@
  *      beside the bundle as `model-descriptions.json` and the browser half
  *      fetches it at runtime, so the table grows without a rebuild and the
  *      bundle stays free of copy.
- *   2. Serve the bundled code font (and user-supplied text faces) as webfonts.
- *      The skin's code font stack names 'Anthropic Mono Web' first and
- *      'JetBrains Mono' behind it, and a face renders only when its family
+ *   2. Serve the bundled code font and the user-supplied text faces as
+ *      webfonts. The skin's code font stack names 'Anthropic Mono Web' first
+ *      and 'JetBrains Mono' behind it, and a face renders only when its family
  *      resolves — most systems have never installed either. The JetBrains
  *      files ship in this package (SIL OFL), so the fonts route hands them to
  *      the browser half's @font-face and the code face works with zero system
  *      installs. The Anthropic Sans/Serif/Mono faces are NOT in the npm
- *      package (they remain Anthropic's property), but a user who drops them
- *      into `$DSH_HOME/dsh-claude-style/fonts/` gets the same zero-install
- *      treatment; a missing file simply 404s and the stack falls back to a
- *      system-installed copy, then to the look-alike faces this package does
- *      ship (Inter, Noto Serif, JetBrains Mono — SIL OFL).
+ *      package (they remain Anthropic's property): the webfonts route reports
+ *      which of them the user dropped into
+ *      `$DSH_HOME/dsh-claude-style/fonts/`, and the browser half declares a
+ *      @font-face for those alone, so an install without them sends no font
+ *      request at all. A copy installed on the system resolves through the
+ *      stacks, and the look-alike faces this package ships (Inter, Noto Serif,
+ *      JetBrains Mono — SIL OFL) stand behind both.
  *   3. Resolve the OS user once for the browser half. The username route answers
  *      a single GET and the browser caches it; it runs the host's own request
  *      fence first — see refusalOf() in routes.ts.

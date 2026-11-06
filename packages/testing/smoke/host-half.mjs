@@ -674,6 +674,12 @@ async function hostHalf() {
   const absent = await requestAsset(fontHost, '/dsh-claude-style/fonts/AnthropicSansWebText.ttf')
   check('a face the package does not carry is a 404 until the user drops one in',
     absent.status === 404, `HTTP ${absent.status}`)
+  // The browser half declares a @font-face only for a face this route names, so
+  // an install without the files sends no font request at all (issue #259).
+  const none = await requestAsset(fontHost, '/dsh-claude-style/webfonts')
+  check('an empty drop point reports no optional face, so the page registers none and asks for no font',
+    none.status === 200 && none.raw !== null && JSON.parse(none.raw.toString('utf8')).faces.length === 0,
+    `HTTP ${none.status} ${none.raw === null ? '' : none.raw.toString('utf8')}`)
   fs.mkdirSync(droppedDir, { recursive: true })
   fs.writeFileSync(path.join(droppedDir, 'JetBrainsMonoVariable.ttf'), Buffer.from('dropped-mono'))
   // The three faces the package does not carry: the drop point answers each of
@@ -691,6 +697,13 @@ async function hostHalf() {
   check("the user's own copy wins over the bundled face of the same name",
     overridden.status === 200 && overridden.raw !== null && overridden.raw.toString('utf8') === 'dropped-mono',
     `HTTP ${overridden.status} ${JSON.stringify(overridden.headers)}`)
+  const dropped = await requestAsset(fontHost, '/dsh-claude-style/webfonts')
+  const droppedFaces = dropped.raw === null ? [] : JSON.parse(dropped.raw.toString('utf8')).faces
+  check('the faces dropped in are the ones the page registers, so each of them answers and no other is asked for',
+    dropped.status === 200 &&
+      ['AnthropicSansWebText.ttf', 'AnthropicSerifWebText.ttf', 'AnthropicMonoWeb.ttf'].every((name) => droppedFaces.includes(name)) &&
+      droppedFaces.length === 3,
+    `HTTP ${dropped.status} ${JSON.stringify(droppedFaces)}`)
   fs.rmSync(fontHome, { recursive: true, force: true })
 }
 

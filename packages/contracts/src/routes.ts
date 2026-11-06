@@ -74,3 +74,19 @@ export const PRICES_PATH = `${ROUTE_PREFIX}/prices`
  * another plugin being installed.
  */
 export const SESSION_COST_PATH = `${ROUTE_PREFIX}/session-cost`
+
+/**
+ * Where the webfont files are served, one whitelisted name under it. The
+ * optional Anthropic faces are the ones no page may point at blind: the
+ * stylesheet declares no `@font-face` for one, and the browser half registers it
+ * from WEBFONTS_PATH's answer.
+ */
+export const FONT_FILES_PATH = `${ROUTE_PREFIX}/fonts/`
+
+/**
+ * `GET` answers which of the optional faces the drop point holds, as their file
+ * names. The package does not carry the Anthropic faces, so a `@font-face` for
+ * one of them is fetched on every load and answers 404 on an install without the
+ * file; the browser half declares only the names this route reports (D75).
+ */
+export const WEBFONTS_PATH = `${ROUTE_PREFIX}/webfonts`

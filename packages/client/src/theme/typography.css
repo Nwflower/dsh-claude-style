@@ -18,34 +18,13 @@
   font-display: swap;
 }
 
-/* The Anthropic faces are not in the npm package, so these registrations resolve
-   only when the user dropped the files into `$DSH_HOME/dsh-claude-style/fonts/`;
-   otherwise the stacks fall back to a system-installed copy. All three are static
-   Regular cuts, so one 400 declaration covers them and the browser synthesizes
-   the heavier weights. */
-@font-face {
-  font-family: 'Anthropic Sans Web Text';
-  src: url('/dsh-claude-style/fonts/AnthropicSansWebText.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Anthropic Serif Web Text';
-  src: url('/dsh-claude-style/fonts/AnthropicSerifWebText.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Anthropic Mono Web';
-  src: url('/dsh-claude-style/fonts/AnthropicMonoWeb.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
+/* The three Anthropic faces are not in the npm package, so none is declared here:
+   a @font-face whose file is absent is fetched on every load and answers 404. The
+   browser half registers the ones the reader's drop point holds at runtime
+   (packages/client/src/shared/webfonts.ts), and a copy installed on the system
+   resolves through the stacks below, no @font-face shadowing its name. All three
+   are static Regular cuts, so one 400 declaration covers each and the browser
+   synthesizes the heavier weights. */
 
 /* The look-alikes the stacks name after the Anthropic faces, for an install with
    neither the files nor a system copy. They ship in the package (SIL OFL 1.1), cut
