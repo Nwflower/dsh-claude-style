@@ -155,8 +155,14 @@ export function install() {
     }
   }
 
+  /**
+   * Take the switch off the page. Its tooltips stay mounted: sync seats the
+   * switch again whenever the page's shape allows, and a released root answers
+   * the setLabel that follows with React's "cannot update an unmounted root",
+   * leaving its anchor — and the option inside it — undrawn for good. They are
+   * released with the feature, in the teardown below.
+   */
   function detach() {
-    for (const { tip } of options) tip.release()
     root.remove()
     rowStamp.release()
   }
@@ -300,6 +306,7 @@ export function install() {
     overlay?.removeEventListener('geometrychange', schedule)
     if (stopColumnSize !== null) stopColumnSize()
     detach()
+    for (const { tip } of options) tip.release()
     body.removeAttribute(SURFACE_ATTR)
     body.removeAttribute(SWITCHING_ATTR)
     stopSheet()
