@@ -9,7 +9,11 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "@dsh-claude-style/contracts/*": ["../contracts/src/*"],
+      "@dsh-claude-style/engine/node/*": ["../engine/node/*"]
+    }
   },
   "include": ["src"]
 }

@@ -13,13 +13,7 @@
  */
 import { CONVERSATION_PARTS, PAGE_PARTS } from '@dsh-claude-style/engine/parts-table'
 import { spec, host } from '../../fixtures/behaviour.mjs'
-
-/** The class the part walk reads for one part name, with the fixture's own hash. */
-function partClass(table, part) {
-  const stem = Object.keys(table).find((candidate) => table[candidate] === part)
-  if (stem === undefined) throw new Error(`no class stem marks the part "${part}"`)
-  return `_${stem}_x_1`
-}
+import { partClass } from '../../fixtures/parts.mjs'
 
 /**
  * One process group in the conversation's scroller: a thought with its

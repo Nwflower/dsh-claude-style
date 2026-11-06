@@ -411,13 +411,13 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
       // watched here (slideSync re-subscribes when it changes).
       if (delta > 0) {
         grew = delta
-        // The pace the pieces arrive at, smoothed so one pause between two of
-        // them does not time the next slide for the pause (D85). The first gap
-        // of a stream is a reading of its own.
+        // A faster arrival bounds this slide at once; smoothing a shorter gap
+        // would carry the old pause into the new stream and let offsets build
+        // up. Slower arrivals still ease toward their own pace (D85).
         const now = performance.now()
         if (grewAt > 0) {
           const gap = now - grewAt
-          grewEvery = grewEvery === 0 ? gap : grewEvery * 0.6 + gap * 0.4
+          grewEvery = grewEvery === 0 ? gap : Math.min(gap, grewEvery * 0.6 + gap * 0.4)
         }
         grewAt = now
       }

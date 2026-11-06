@@ -215,6 +215,7 @@ export default spec({ page: 'context-stats' }, ({ test }) => {
       return card !== null && card.getAttribute(variant) === 'inline' &&
         document.querySelector('[' + phase + '="hero"]') !== null
     }, [docked, VARIANT, PHASE], { timeout: 5000 })
+    await t.settle()
 
     const read = await readDockedState(t)
 
