@@ -46,6 +46,8 @@ export interface MutationOptions {
 
 interface MutationSubscription {
   target: Node
+  /** Whether the target is the document, an element or the body: it holds every node the page has. */
+  wide: boolean
   options: MutationOptions
   callback: (records: MutationRecord[]) => void
 }
@@ -58,6 +60,13 @@ const mutationSubscriptions: MutationSubscription[] = []
  */
 const mutationSubscriptionSet = new Set<MutationSubscription>()
 let mutationObserver: MutationObserver | null = null
+
+/**
+ * The quiet verdict is a property of the record, not of the subscription asking:
+ * a session switch hands one batch to a dozen subscriptions, and each used to
+ * walk the ancestors of the same record again.
+ */
+const quietVerdicts = new WeakMap<MutationRecord, boolean>()
 
 /**
  * Whether a record is one of the skin's own quiet writes: a change inside a
@@ -97,9 +106,17 @@ function selects(subscription: MutationSubscription, record: MutationRecord) {
   const target = subscription.target
   if (record.target !== target) {
     if (options.subtree !== true) return false
-    if (!target.contains(record.target) && !(pageWide(target) && !record.target.isConnected)) return false
+    // A page-wide target holds every node the page has, connected or not, so
+    // the walk up from the record's own target answers nothing there; the
+    // subtree targets are the ones that need it.
+    if (!subscription.wide && !target.contains(record.target)) return false
   }
-  return options.skipQuiet !== true || !isQuietRecord(record)
+  if (options.skipQuiet !== true) return true
+  const known = quietVerdicts.get(record)
+  if (known !== undefined) return !known
+  const quiet = isQuietRecord(record)
+  quietVerdicts.set(record, quiet)
+  return !quiet
 }
 
 /**
@@ -248,7 +265,7 @@ function refreshMutationObserver(joining?: MutationSubscription) {
  * @returns unsubscribe.
  */
 export function subscribeMutations(target: Node, options: MutationOptions, callback: (records: MutationRecord[]) => void) {
-  const subscription = { target, options, callback }
+  const subscription = { target, wide: pageWide(target), options, callback }
   mutationSubscriptions.push(subscription)
   mutationSubscriptionSet.add(subscription)
   refreshMutationObserver(subscription)
