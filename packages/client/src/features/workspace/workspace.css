@@ -108,6 +108,14 @@ body[data-dsh-claude-style] .dsh-claude-ws-archived-row:focus-visible {
   background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, 0.05));
   color: var(--dsw-alias-label-primary, #161616);
 }
+/* The title's tooltip anchor stands where the elided words stood: the flex item
+   the words ride in, so the row's layout and its ellipsis do not move. */
+body[data-dsh-claude-style] .dsh-claude-ws-archived-title-anchor {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+}
+
 body[data-dsh-claude-style] .dsh-claude-ws-archived-title {
   flex: 1 1 auto;
   min-width: 0;

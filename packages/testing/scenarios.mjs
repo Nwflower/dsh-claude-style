@@ -181,11 +181,26 @@ const SCENARIOS = {
    *
    * 这一场按读者看见的样子选：控件行是宿主的 `[data-clock]`，皮肤的两个按钮就
    * 是它末尾的两个按钮（宿主先画时间与复制），编辑框是那一行里唯一的文本域。
+   * 首屏那一步顺带核对首页统计数值的提示：那也是宿主自己的 Tooltip，没有浏览器
+   * 原生的 `title`。
    */
   messageActions: {
     script: 'greeting',
     prompt: 'hello there',
-    async assert({ page, session }) {
+    async beforeSend(context) {
+      const { page, notes } = context
+      const value = page.locator('.dsh-claude-home-stat-value').first()
+      await value.waitFor({ timeout: 20000 }).catch(() => {})
+      if (await value.count() === 0) {
+        notes.homeTip = null
+        return
+      }
+      notes.homeTitle = await value.getAttribute('title')
+      notes.homeText = (await value.textContent() ?? '').trim()
+      notes.homeTip = await hoverTooltip(page, value)
+      await page.mouse.move(5, 5)
+    },
+    async assert({ page, session, notes }) {
       const ROW = '[data-chat-flow-kind="user"]'
       const LINE = `${ROW} [data-clock]`
       const EDITOR = `${ROW} textarea`
@@ -257,6 +272,7 @@ const SCENARIOS = {
         check('控件行末尾长出撤回与编辑两个按钮', resting.buttons === 3, `${resting.buttons} 个按钮（宿主的时间与复制之外）`),
         check('控件行在指针离开时隐去、落上去显现', resting.opacity === '0' && hovered.opacity === '1', `resting=${resting.opacity} hovered=${hovered.opacity}`),
         check('撤回按钮的提示是宿主那份 Tooltip', ourTip !== null && ourTip.text === retractLabel && hostTip !== null && ourTip.background === hostTip.background && ourTip.color === hostTip.color && ourTip.radius === hostTip.radius && ourTip.size === hostTip.size, `ours=${JSON.stringify(ourTip)} host=${JSON.stringify(hostTip)}`),
+        check('首页统计数值的提示也是宿主那份 Tooltip', notes.homeTip !== null && notes.homeTitle === null && notes.homeTip.text === notes.homeText && hostTip !== null && notes.homeTip.background === hostTip.background && notes.homeTip.radius === hostTip.radius, `title=${notes.homeTitle} home=${JSON.stringify(notes.homeTip)} host=${JSON.stringify(hostTip)}`),
         check('编辑框打开时带着那条消息的原文', edited.trim() === 'hello there', edited.slice(0, 80)),
         check('编辑期间原来的气泡让位', whileEditing.bubbleShown === false, `bubbleShown=${whileEditing.bubbleShown}`),
         check('编辑框按 Esc 收起，气泡回来', cancelled.bubbleShown === true && cancelled.bubbleText.includes('hello there'), `bubbleShown=${cancelled.bubbleShown} bubble=${cancelled.bubbleText.slice(0, 60)}`),

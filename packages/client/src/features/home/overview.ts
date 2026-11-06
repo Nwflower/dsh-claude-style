@@ -1,7 +1,9 @@
 import * as React from 'react'
+import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
 import { formatHomeCount, homeShortDate, homeShortDateFormat } from './data'
 import type { HeatCell, HomePanel } from './data'
 import { formatCompactTokens } from '../../shared/format'
+import { tooltipAnchor } from '../../shared/host-tooltip'
 import { HEAT_CELL_SELECTOR, HEAT_HINT_CLASS, HEAT_HINT_TEXT_CLASS, hideHeatTip, showHeatTip } from './heat-tip'
 import { copy } from './copy'
 
@@ -23,11 +25,14 @@ import { copy } from './copy'
  */
 export function createHomeOverview() {
   function statCell(key: string, label: string, text: string, skeleton: boolean) {
+    const value = React.createElement('span', { className: 'dsh-claude-home-stat-value' }, skeleton ? '' : text)
     return React.createElement(
       'div',
       { key, className: 'dsh-claude-home-stat', 'data-stat': key, 'data-skeleton': skeleton ? '' : undefined },
       React.createElement('span', { className: 'dsh-claude-home-stat-label' }, label),
-      React.createElement('span', { className: 'dsh-claude-home-stat-value', title: skeleton ? undefined : text }, skeleton ? '' : text),
+      // 缩短过的数字（12.3k）在悬停时给出原值：提示是宿主自己的那一份，
+      // 与页面上其他控件同一个样式。
+      skeleton ? value : React.createElement(primitives.Tooltip, { label: text, side: 'bottom', portal: true, children: tooltipAnchor(value) }),
     )
   }
 

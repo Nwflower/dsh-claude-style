@@ -9,6 +9,7 @@ import { createViewStoreFollower } from './view-store'
 import { createSegmentControl } from './segments'
 import { createArchivedActions } from './archived-actions'
 import { createArchivedList } from './archived-list'
+import { hostTooltip } from '../../shared/host-tooltip'
 import type { HostSessionsService, HostUiWorkspaceService, HostWorkspacesService } from '@dsh-claude-style/contracts/services'
 import type { FeatureUi } from '../../core/feature'
 import type manifest from './workspace-view.manifest'
@@ -69,6 +70,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const actions = createArchivedActions({ toast, sessions: () => sessions })
 
   const list = createArchivedList({
+    tooltip: hostTooltip,
     host: {
       workspaces: () => workspaces,
       sessions: () => sessions,

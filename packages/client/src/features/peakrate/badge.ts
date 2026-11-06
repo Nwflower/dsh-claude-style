@@ -57,7 +57,8 @@ export function rateDetail(state: RateState) {
 
 /**
  * The badge as it stands in a model row: the state's mark, the multiplier and
- * the countdown, with the whole judgement as its own title.
+ * the countdown. Its accessible name is the whole judgement; the row that puts
+ * it in also gives it the host's own tooltip with those words.
  *
  * @param state - the judgement for one row.
  * @returns the badge element.
@@ -68,7 +69,6 @@ export function buildRateBadge(state: RateState): HTMLElement {
   badge.setAttribute('data-period', state.period)
   badge.setAttribute('role', 'img')
   badge.setAttribute('aria-label', detail)
-  badge.setAttribute('title', detail)
   const icon = buildElement('span', 'dsh-claude-peakrate-icon')
   icon.innerHTML = ICONS[state.period]
   badge.appendChild(icon)

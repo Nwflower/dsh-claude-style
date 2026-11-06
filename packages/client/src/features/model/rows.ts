@@ -7,6 +7,8 @@ import { modelCopy, resolveModelCopy } from './model-copy'
 import { releaseTag } from './release-tag'
 import { buildElement, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
 import { POPOVER_CHECK_SVG, buildPopoverItem } from '../../shared/popover'
+import { hostTooltip } from '../../shared/host-tooltip'
+import type { HostTooltip } from '../../shared/host-tooltip'
 import type { createHoverIntent } from '../../shared/popover'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { HostModelEntry, HostModelGroup } from '@dsh-claude-style/contracts/services'
@@ -74,6 +76,37 @@ export function createModelRows(options: {
   const painted: { item: HTMLElement, provider: string, modelId: string }[] = []
   /** The wall-clock minute the standing rows' meters were drawn at, or -1 before a paint. */
   let paintedMinute = -1
+  /** The rate badge's tooltip anchor in a row: the badge rides inside the host's bubble anchor. */
+  const RATE_ANCHOR_ATTRIBUTE = 'data-dsh-claude-rate-badge'
+  /** The standing badges' tooltips, by the anchor that carries them. */
+  const rateTips = new Map<HTMLElement, HostTooltip>()
+
+  /**
+   * Put one row's rate badge in, wearing the host's own tooltip: the row's words
+   * are the whole judgement, which a browser tooltip would draw in its own style.
+   */
+  function placeRateBadge(item: HTMLElement, badge: HTMLElement, before: Element | null) {
+    const tip = hostTooltip(badge, badge.getAttribute('aria-label') ?? '', { side: 'bottom' })
+    tip.node.setAttribute(RATE_ANCHOR_ATTRIBUTE, '')
+    rateTips.set(tip.node, tip)
+    item.insertBefore(tip.node, before)
+  }
+
+  /** Take one row's badge out, tooltip and all. */
+  function dropRateBadge(anchor: HTMLElement) {
+    rateTips.get(anchor)?.release()
+    rateTips.delete(anchor)
+    anchor.remove()
+  }
+
+  /** Release the tooltips of badges whose card has left the page (a rebuild elsewhere). */
+  function pruneRateBadges() {
+    for (const [anchor, tip] of rateTips) {
+      if (anchor.isConnected) continue
+      tip.release()
+      rateTips.delete(anchor)
+    }
+  }
 
   /**
    * The rule that separates one provider's models from the next. The provider
@@ -135,7 +168,7 @@ export function createModelRows(options: {
     // its rate before it is picked, and a model whose provider bills on no
     // clock carries no badge at all (packages/client/src/features/peakrate/).
     const meter = rate(group.id, model.id)
-    if (meter !== null) item.insertBefore(meter, built.check)
+    if (meter !== null) placeRateBadge(item, meter, built.check)
     built.check!.innerHTML = selected ? POPOVER_CHECK_SVG : ''
     item.addEventListener('click', (e: MouseEvent) => {
       e.stopPropagation()
@@ -218,6 +251,7 @@ export function createModelRows(options: {
    * while the minute a paint drew at stands.
    */
   function refreshRates() {
+    pruneRateBadges()
     const minute = Math.floor(Date.now() / 60000)
     if (minute === paintedMinute || painted.length === 0) return
     let standing = 0
@@ -225,18 +259,22 @@ export function createModelRows(options: {
       const row = painted[i]!
       if (!row.item.isConnected) continue
       painted[standing++] = row
-      const meter = row.item.querySelector<HTMLElement>(':scope > .dsh-claude-peakrate')
+      const anchor = row.item.querySelector<HTMLElement>(`:scope > [${RATE_ANCHOR_ATTRIBUTE}]`)
+      const meter = anchor?.firstElementChild instanceof HTMLElement ? anchor.firstElementChild : null
       const next = rate(row.provider, row.modelId)
       if (next === null) {
-        meter?.remove()
+        if (anchor !== null) dropRateBadge(anchor)
         continue
       }
-      if (meter === null) {
-        row.item.insertBefore(next, row.item.lastElementChild)
+      if (anchor === null || meter === null) {
+        placeRateBadge(row.item, next, row.item.lastElementChild)
         continue
       }
-      setAttributeIfChanged(meter, 'title', next.title)
-      setAttributeIfChanged(meter, 'aria-label', next.getAttribute('aria-label') ?? '')
+      const detail = next.getAttribute('aria-label') ?? ''
+      if (meter.getAttribute('aria-label') !== detail) {
+        meter.setAttribute('aria-label', detail)
+        rateTips.get(anchor)?.setLabel(detail)
+      }
       if (meter.getAttribute('data-period') !== next.getAttribute('data-period')) {
         meter.setAttribute('data-period', next.getAttribute('data-period') ?? '')
         const icon = meter.querySelector('.dsh-claude-peakrate-icon')

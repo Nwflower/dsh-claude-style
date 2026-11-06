@@ -1,0 +1,8 @@
+{
+  "group": "improvements",
+  "order": 21,
+  "at": "2026-11-06",
+  "external": false,
+  "zh": "皮肤自己绘制的按钮与标题改用宿主的提示气泡，不再使用浏览器原生提示",
+  "en": "Show the skin's own buttons and titles with the host's tooltip bubble instead of the browser's native one"
+}
