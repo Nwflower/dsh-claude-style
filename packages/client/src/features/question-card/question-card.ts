@@ -4,7 +4,7 @@ import { buildElement, setAttributeIfChanged, writeTextInPlace } from '@dsh-clau
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { writeScroll } from '@dsh-claude-style/engine/scroll-owner'
 import { createCopy } from '../../core/i18n'
-import COPY from './composer.copy.json'
+import COPY from '../composer/composer.copy.json'
 
 const copy = createCopy(COPY)
 const CUSTOM_ROW_SELECTOR = ':is([role="radiogroup"], [role="group"]) > div:has(textarea)'

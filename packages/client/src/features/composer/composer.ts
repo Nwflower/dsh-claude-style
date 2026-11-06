@@ -14,7 +14,7 @@ import { writeScroll } from '@dsh-claude-style/engine/scroll-owner'
 import { captureComposerCaret, composerComposing, focusKeepingComposerCaret } from '../../shared/composer-caret'
 import { createPlaceholderCopy } from './placeholder-copy'
 import { installWindowBlurMirror } from './selection-mirror'
-import { createQuestionCards } from './question-card'
+import { createQuestionCards } from '../question-card/question-card'
 import { createComposerResponsive } from './responsive'
 
 /** Inspection views where the host's composer seat stands down; content and plugin views keep it. */
