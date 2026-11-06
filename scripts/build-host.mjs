@@ -38,10 +38,14 @@ const INLINED = [
 const externalButShared = {
   name: 'external-but-shared',
   setup(build) {
-    const inlined = (args) => args.kind === 'entry-point'
-      || INLINED.some(({ prefix }) => args.path.startsWith(prefix))
-      || (args.path.startsWith('.') && INLINED.some(({ dir }) => args.importer.startsWith(dir)))
-    build.onResolve({ filter: /.*/ }, (args) => (inlined(args) ? undefined : { path: args.path, external: true }))
+    build.onResolve({ filter: /.*/ }, (args) => {
+      const shared = INLINED.find(({ prefix }) => args.path.startsWith(prefix))
+      // A linked worktree borrows node_modules; shared source belongs to this checkout.
+      if (shared !== undefined) return { path: path.join(shared.dir, `${args.path.slice(shared.prefix.length)}.ts`) }
+      if (args.kind === 'entry-point'
+        || (args.path.startsWith('.') && INLINED.some(({ dir }) => args.importer.startsWith(`${dir}${path.sep}`)))) return undefined
+      return { path: args.path, external: true }
+    })
   },
 }
 
