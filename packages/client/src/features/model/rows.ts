@@ -260,7 +260,10 @@ export function createModelRows(options: {
       if (!row.item.isConnected) continue
       painted[standing++] = row
       const anchor = row.item.querySelector<HTMLElement>(`:scope > [${RATE_ANCHOR_ATTRIBUTE}]`)
-      const meter = anchor?.firstElementChild instanceof HTMLElement ? anchor.firstElementChild : null
+      // The badge rides inside the anchor's own box, the way placeRateBadge
+      // seats it: the anchor's first child is that box, not the badge, and the
+      // name, the period and the words all belong to the badge itself.
+      const meter = anchor?.querySelector<HTMLElement>('.dsh-claude-peakrate') ?? null
       const next = rate(row.provider, row.modelId)
       if (next === null) {
         if (anchor !== null) dropRateBadge(anchor)
