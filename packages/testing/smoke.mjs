@@ -48,7 +48,7 @@
  * stand-in page), the stand-in/ and probe/ parts (the scripts that page runs
  * before and after the bundle) and cases.mjs (what each case's report must show).
  *
- * Usage: node packages/testing/smoke.mjs [--case <name>[,<name>…]] [--feature <dir>[,<dir>…]] [--quick] [--jobs <n>]
+ * Usage: node packages/testing/smoke.mjs [--case <name>[,<name>…]] [--feature <dir>[,<dir>…]] [--quick] [--jobs <n>] [--host]
  *        (CHROME_PATH overrides the browser lookup, DSH_SMOKE_JOBS the page count)
  *        --case runs the named browser cases alone, --feature the cases that
  *        cover the named directories under packages/client/src/features/; both may be repeated,
@@ -60,7 +60,10 @@
  *        own context, markup and probe — so they are driven several at a time
  *        (JOBS below, `--jobs` or DSH_SMOKE_JOBS to change it) and the pages
  *        that watch motion run two at a time at the end, over a quiet browser.
- *        The Node host half runs either way.
+ *        The Node host half runs either way; --host runs it alone and opens no
+ *        page, which is what a system the browser lanes do not run on judges
+ *        with (the host half reads that system's directories, drive letters and
+ *        file times). --host takes no case, directory or tier.
  * Exit:  0 every check passed · 1 a check failed · 2 the command line names
  *        nothing it can run · 3 the browser half gave no verdict (no browser, or
  *        it could not start)
@@ -110,11 +113,16 @@ function selection() {
   const cases = []
   const args = process.argv.slice(2)
   let quick = false
+  let host = false
   let jobs = DEFAULT_JOBS
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]
     if (arg === '--quick') {
       quick = true
+      continue
+    }
+    if (arg === '--host') {
+      host = true
       continue
     }
     if (arg === '--jobs' || arg.startsWith('--jobs=')) {
@@ -142,7 +150,10 @@ function selection() {
       cases.push(...FEATURE_CASES[name])
     }
   }
-  return { cases: [...new Set(cases)], quick, jobs }
+  // --host opens no page, so a case, a directory or a tier named beside it would
+  // name work this run cannot do; the run refuses rather than leaving it out.
+  if (host && (cases.length > 0 || quick)) bad('--host runs the Node host half alone, so it takes no --case, --feature or --quick')
+  return { cases: [...new Set(cases)], quick, jobs, host }
 }
 
 /**
@@ -261,8 +272,17 @@ async function browserHalf(planned, jobs) {
 }
 
 async function main() {
-  const { cases, quick, jobs } = selection()
+  const { cases, quick, jobs, host } = selection()
   checkFeatureTable()
+  if (host) {
+    await hostHalf()
+    if (failures() > 0) {
+      console.log(`\nsmoke: ${failures()} check(s) failed`)
+      process.exit(1)
+    }
+    console.log('\nsmoke: the host half passed; no page was opened')
+    process.exit(0)
+  }
   const planned = plan(cases, quick)
   setTier(quick ? 'quick' : 'full')
   await hostHalf()
