@@ -8,6 +8,7 @@ import { installSidebarStatus } from '@dsh-claude-style/client/pure'
 import { SESSION_PHASE_ATTRIBUTE, SIDEBAR_SLOT_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { hostElement } from '../../fixtures/host-markup'
 import { surfaceAttribute } from '../../fixtures/surface'
+import { frames } from '../../fixtures/frames'
 
 const PART = surfaceAttribute('skin.part')
 const STATUS = surfaceAttribute('sidebar-status.row')
@@ -107,10 +108,13 @@ test('the shared watch follows a host replacement of the sidebar root', async ()
   expect(current.rows[0].row.hasAttribute(STATUS)).toBe(false)
   expect(current.rows[0].row.hasAttribute(RUNNING_TITLE)).toBe(false)
 
+  // The new title reports its initial size after rendering; finish that delivery
+  // before counting whether mutations of the detached root schedule anything.
+  await frames(2)
   const beforeOldRoot = feature.calls()
   current.rows[0].title.textContent = ''
   current.rows[0].dot.setAttribute(SESSION_PHASE_ATTRIBUTE, 'idle')
-  await settle()
+  await frames(2)
   expect(feature.calls()).toBe(beforeOldRoot)
 
   const before = feature.calls()
