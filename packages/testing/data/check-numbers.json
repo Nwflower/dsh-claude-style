@@ -569,6 +569,10 @@
       ],
       "a reader reading higher up is not moved by an answer starting": [
         0
+      ],
+      "an answer that starts shorter than the window takes the top as it grows": [
+        0,
+        999
       ]
     },
     "packages/testing/smoke/cases/chat.mjs": {
