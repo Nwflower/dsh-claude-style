@@ -496,8 +496,8 @@
       "nothing the skin runs leaves an uncaught error or an unhandled rejection": [
         0
       ],
-      "only the three features that read the session list were switched off: the permission control, the model picker and the manual unread marks": [
-        3
+      "only the four features that read the session list were switched off: the permission control, the model picker, the manual unread marks and the date groups": [
+        4
       ],
       "every unit the footer holds is hidden in place before the drawer is ever opened, the plugin's inline box included": [
         3
