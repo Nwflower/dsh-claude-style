@@ -23,8 +23,8 @@ body[data-dsh-claude-style] .dsh-claude-active-shelf-trigger {
   border: 0;
   border-radius: 6px;
   background: transparent;
-  /* 铃铛的墨色说明「现在按的是哪种排法」：工作区视图读宿主正文墨色（深色下即白），
-     日期视图换成品牌蓝，连同背光一起换色，两种排法一眼分得清。 */
+  /* 墨色说明现在按的是哪种排法：工作区视图读配色卡的正文墨色（深色下即白），
+     日期视图取同一张卡的强调色，两种排法在墨色上就分得开。 */
   color: var(--dsw-alias-label-primary);
   cursor: pointer;
   transition:
@@ -34,7 +34,6 @@ body[data-dsh-claude-style] .dsh-claude-active-shelf-trigger {
 
 body[data-dsh-claude-style] .dsh-claude-active-shelf-trigger:hover {
   background: var(--dsw-alias-bg-base);
-  color: var(--dsw-alias-label-primary);
 }
 
 body[data-dsh-claude-style] .dsh-claude-active-shelf-trigger:focus-visible {
@@ -50,9 +49,9 @@ body[data-dsh-claude-style] .dsh-claude-active-shelf-trigger-icon {
   height: 16px;
 }
 
-/* 日期视图开着：铃铛换成品牌蓝，背光取同一支蓝的淡底。
-   工作区视图下它是正文墨色（深色主题里就是白），所以「白＝工作区、蓝＝日期/消息」。 */
+/* 日期视图开着时铃铛是按下态：墨色与背光都取配色卡自己的强调色，读者按它换的是
+   整个列表的排法，这一枚就一直亮着。 */
 body[data-dsh-claude-style][data-dsh-claude-date-groups] .dsh-claude-active-shelf-trigger {
-  background: color-mix(in srgb, var(--dsh-claude-status-unread, #2a78d6) 18%, transparent);
-  color: var(--dsh-claude-status-unread, #2a78d6);
+  background: color-mix(in srgb, var(--dsw-alias-brand-primary) 16%, transparent);
+  color: var(--dsw-alias-brand-primary);
 }
