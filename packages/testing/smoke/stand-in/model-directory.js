@@ -157,6 +157,7 @@
     selected: 'smoke-session',
     list: {
       getSnapshot: function () { return { phase: 'ready', ids: [], byId: {}, projectionsBySession: {} } },
+      subscribe: function () { return function () {} },
     },
     binding: function () { return undefined },
   }

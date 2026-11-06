@@ -429,8 +429,18 @@ interface HostCommandResult {
 
 /** The shell's `uiSession`: which session is selected, and how it is doing. */
 export interface HostUiSessionService {
-  current?: { value?: { key?: unknown } }
+  current?: {
+    value?: { key?: unknown }
+    /** Main-view identity changes, exposed by Desktop 0.2.1-rc.5. */
+    subscribe?(listener: () => void): () => void
+  }
   sessionStatus?: HostSnapshotSource<HostSessionStatusSnapshot>
+}
+
+/** ui-workspace's session menu slot props on Desktop 0.2.1-rc.5. */
+export interface HostSessionMenuProps {
+  sessionId: string
+  useMenuOpenState?(): readonly [boolean, (open: boolean) => void]
 }
 
 /** The shell's `uiWorkspace`: open one session as a single UI navigation action. */

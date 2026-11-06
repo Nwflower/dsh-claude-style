@@ -82,6 +82,10 @@ dsh plugin --profile web add Nwflower/dsh-claude-style#dist      # GitHub 发布
 
 也可从[插件市场](https://github.com/dsh-market/dsh-market)或 dsh-web-all 的皮肤中心安装。同一时刻只启用一个主题；需要 dsh ≥ 0.2.2-rc.1，装好后重启 DeepSeek Harness。
 
+## 手动未读标记
+
+在会话的省略号菜单中选择「标记为未读」或「清除未读标记」。标记保存在当前配置中，刷新页面后保留，切走后再次打开该会话时清除；宿主的自动完成提醒保持独立。可在插件设置的「侧栏」标签页关闭此功能，关闭期间保留已保存的标记。
+
 ## 字体
 
 > Anthropic 没有公开发行这三款字体；本仓库只提供下载与研究的[副本](https://github.com/Nwflower/dsh-claude-style/tree/master/packages/assets/src/fonts/anthropic)。

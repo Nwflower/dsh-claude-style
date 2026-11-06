@@ -156,8 +156,9 @@ export default {
   },
   'sync-fault'(r) {
     check('apply() completes', r.applyError === null, r.applyError)
-    check('only the two features that read the session list were switched off: the permission control and the model picker',
-      r.errors.length === 2 && r.errors.some((e) => e.includes('"permissions"')) && r.errors.some((e) => e.includes('"model"')), r.errors.join(' | '))
+    check('only the three features that read the session list were switched off: the permission control, the model picker and the manual unread marks',
+      r.errors.length === 3 && r.errors.some((e) => e.includes('"permissions"')) && r.errors.some((e) => e.includes('"model"')) &&
+        r.errors.some((e) => e.includes('"manualUnread"')), r.errors.join(' | '))
     check("the host's own access button is handed back", r.hostAccessVisible === true, JSON.stringify(r.hostAccessVisible))
     check('the composer restyle keeps running', r.composerRestyle === true, JSON.stringify(r.composerRestyle))
     check('the rest of the skin keeps running', r.accountUser === 'Tester', JSON.stringify(r.accountUser))

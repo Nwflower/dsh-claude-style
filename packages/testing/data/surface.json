@@ -1,6 +1,9 @@
 {
   "about": "The skin's own page surface as the specs reach it (D77): every name a spec reads off an element the skin draws — a class, an attribute — stands here once, under a stable id, with what the reader sees there. A rename in the skin is one line of this file; lint holds every name to a literal the browser half writes and every entry to a spec that reads it.",
   "surface": [
+    { "id": "manual-unread.row", "attribute": "data-dsh-claude-manual-unread", "feature": "manual-unread", "sees": "a profile-persisted manual reminder independent of native session status" },
+    { "id": "manual-unread.marker", "selector": ".dsh-claude-manual-unread-marker", "feature": "manual-unread", "sees": "the decorative trailing manual reminder dot, yielding to active native status" },
+    { "id": "manual-unread.description", "selector": ".dsh-claude-manual-unread-description", "feature": "manual-unread", "sees": "the localized accessible description referenced by manually unread session rows" },
     { "id": "model.release-tag", "selector": ".dsh-claude-model-tag", "feature": "model", "sees": "the secondary model release tag, which yields before the model identity in tight toolbars" },
     { "id": "composer.frame", "attribute": "data-dsh-claude-composer-frame", "feature": "composer", "sees": "the structurally verified main native phase frame owned by the active composer; only its active phase clips accidental outer scrolling while the inner transcript keeps its native scroll" },
     { "id": "composer.responsive-toolbar", "attribute": "data-dsh-claude-composer-toolbar", "feature": "composer", "sees": "the actual composer toolbar whose measured height anchors send and stop controls" },

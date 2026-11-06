@@ -41,7 +41,10 @@
     return {
       sessions: {
         selected: 'smoke-stats',
-        list: { getSnapshot: function () { return { ids: [], byId: {}, projectionsBySession: {} } } },
+        list: {
+          getSnapshot: function () { return { ids: [], byId: {}, projectionsBySession: {} } },
+          subscribe: function () { return function () {} },
+        },
         binding: function (id) {
           if (id !== 'smoke-stats') return undefined
           return { sessionId: id, session: { projections: { faceOf: faceOf } } }

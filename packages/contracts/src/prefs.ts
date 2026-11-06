@@ -233,6 +233,9 @@ export const PROVIDER_ID_MAX = 128
 export const SIDEBAR_HIDDEN_MAX = 32
 export const PANEL_ID_MAX = 128
 export const PLUGINS_PANEL_ID = 'plugins'
+/** Bounds for profile-persisted manual reminders; session ids remain opaque. */
+export const MANUAL_UNREAD_LIMIT = 2048
+export const MANUAL_UNREAD_ID_LIMIT = 1024
 /**
  * The custom price table (billing-table.ts): most rows kept, the longest model
  * name accepted, and the longest rate written as text — rates are decimal text
@@ -359,6 +362,9 @@ export const PREFS = {
   sidebarHidden: { type: 'list', default: [], max: SIDEBAR_HIDDEN_MAX, entryMax: PANEL_ID_MAX, drop: [PLUGINS_PANEL_ID] },
   sidebarLayout: { type: 'choice', values: SIDEBAR_LAYOUTS, default: SIDEBAR_LAYOUT_RELAXED },
   ongoingIndicator: { type: 'choice', values: ONGOING_INDICATORS, default: ONGOING_INDICATOR_BREATHE },
+  /** Explicit reminders stay separate from the host's completion-unread state. */
+  manualUnread: { type: 'boolean', default: true },
+  manualUnreadIds: { type: 'list', default: [], max: MANUAL_UNREAD_LIMIT, entryMax: MANUAL_UNREAD_ID_LIMIT, drop: [] },
   turnNav: { type: 'boolean', default: true },
   viewTabs: { type: 'boolean', default: true },
   headerBand: { type: 'boolean', default: true },
