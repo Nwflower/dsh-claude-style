@@ -25,20 +25,6 @@ body[data-dsh-claude-style] .dsh-claude-model-popover {
 body[data-dsh-claude-style] .dsh-claude-model-popover:not(.dsh-claude-model-popover-sub) {
   overflow: hidden;
 }
-/* Both cards take a new height over transitions.dev's "Card resize" (MIT, see
-   docs/THIRD_PARTY_NOTICES.md): a fold on the first level, and a narrowed list
-   on the second. The edge follows the reader's action instead of jumping, and
-   the rows stay clipped to the card while it travels. */
-body[data-dsh-claude-style] :is(.dsh-claude-model-popover, .dsh-claude-model-popover-sub) {
-  transition:
-    height var(--dsh-claude-timing-resize);
-  will-change: height;
-}
-/* The reader's animation choice, resolved onto <body> (D40): reduced takes the
-   travel away and the card lands on its new height at once. */
-body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] :is(.dsh-claude-model-popover, .dsh-claude-model-popover-sub) {
-  transition: none;
-}
 body[data-dsh-claude-style] .dsh-claude-model-popover:not(.dsh-claude-model-popover-sub) .dsh-claude-popover-body {
   flex: 1 1 auto;
   min-height: 0;

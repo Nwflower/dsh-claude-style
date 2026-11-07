@@ -1,5 +1,5 @@
 import { requestFrame } from '@dsh-claude-style/engine/frame'
-import { motionMs } from './motion'
+import { motionEase, motionMs } from './motion'
 import { motionReduced } from '../core/prefs'
 
 /**
@@ -9,26 +9,26 @@ import { motionReduced } from '../core/prefs'
  * the other surface transitions read.
  *
  * A height cannot be interpolated into `auto`, so the caller measures the card
- * before its content changes and hands that figure here: the new height is read
- * with the height released, the old one is written back as the travel's start,
- * and the new one lands on the next frame. The height returns to the content
- * once the travel is over. The reader's animation choice (D40) takes the travel
- * away entirely.
+ * before its content changes: the new height is read with the height released,
+ * and the travel runs between the two as its own animation. The card's own
+ * `transition` stays untouched — the popover's open and close ride that one,
+ * and a height written into it would replace them.
  *
- * A card anchored above its trigger has to be placed again on every frame of
- * the travel: its top is read off its own height, so following keeps the bottom
- * edge where the reader has it while the top edge moves.
+ * A card anchored above its trigger is laid out from its height, so the caller
+ * also hands over the placement it wants followed: it runs on every frame, and
+ * once more when the height returns to the content.
  */
 
-/** The card mid-travel, the timer that hands its height back, and the follow. */
+/** The card mid-travel, its animation, and the placement to follow. */
 let travelling: HTMLElement | null = null
-let settleTimer: number | null = null
+let running: Animation | null = null
 let followCard: (() => void) | null = null
 
+/** End the travel (if one runs) and hand the card's height back to its content. */
 export function releaseCardHeight() {
-  if (settleTimer !== null) {
-    clearTimeout(settleTimer)
-    settleTimer = null
+  if (running !== null) {
+    running.cancel()
+    running = null
   }
   if (travelling === null) return
   const card = travelling
@@ -36,7 +36,6 @@ export function releaseCardHeight() {
   card.style.height = ''
   const follow = followCard
   followCard = null
-  // The last placement reads the height the content now gives the card.
   follow?.()
 }
 
@@ -46,24 +45,19 @@ export function travelCardHeight(card: HTMLElement, from: number, follow?: () =>
   const to = card.getBoundingClientRect().height
   // A card that keeps the size it already had needs no travel.
   if (Math.abs(to - from) < 1 || motionReduced()) return
-  card.style.height = `${from}px`
-  // Read once, so the browser holds the old height as the travel's start.
-  void card.getBoundingClientRect().height
-  const duration = motionMs('--dsh-claude-duration-resize')
   travelling = card
   followCard = follow ?? null
-  settleTimer = window.setTimeout(releaseCardHeight, duration + 40)
-  const started = performance.now()
+  const duration = motionMs('--dsh-claude-duration-resize')
+  const animation = card.animate(
+    [{ height: `${from}px` }, { height: `${to}px` }],
+    { duration, easing: motionEase('--dsh-claude-ease-settle'), fill: 'none' },
+  )
+  running = animation
+  animation.onfinish = () => releaseCardHeight()
   const keep = () => {
-    if (travelling !== card) return
+    if (travelling !== card || running !== animation) return
     follow?.()
-    if (performance.now() - started < duration + 40) requestFrame({ write: keep })
+    if (animation.playState === 'running') requestFrame({ write: keep })
   }
-  requestFrame({
-    write() {
-      if (travelling !== card) return
-      card.style.height = `${to}px`
-      keep()
-    },
-  })
+  requestFrame({ write: keep })
 }
