@@ -7,7 +7,8 @@
 import surfaceTable from './data/surface.json' with { type: 'json' }
 
 const STATS_LINE = surfaceTable.surface.find((entry) => entry.id === 'stats.inline-line')
-if (STATS_LINE?.selector === undefined) throw new Error('lane: stats.inline-line names no element')
+const STATS_FOOTER_LINE = surfaceTable.surface.find((entry) => entry.id === 'stats.footer-line')
+if (STATS_LINE?.selector === undefined || STATS_FOOTER_LINE?.attribute === undefined) throw new Error('lane: the statistics surfaces are incomplete')
 
 /**
  * The host's page markers this lane reads. Each one is a D3 entry in
@@ -42,6 +43,7 @@ const SKIN = {
   // The other mark the pin reads while a door rolls (FOLLOW_HOLD_ATTR).
   hold: '[data-dsh-claude-follow-hold]', // FOLLOW_HOLD_ATTR
   statsLine: STATS_LINE.selector,
+  statsFooterLine: STATS_FOOTER_LINE.attribute,
 }
 
 /** Both tables, for the sampler that runs inside the page. */

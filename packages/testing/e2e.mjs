@@ -256,7 +256,7 @@ async function startTrace(page) {
       frame.cardBottom = cardRect === null ? null : Math.round(cardRect.bottom * 10) / 10
       frame.seat = seatRect === null ? null : [Math.round(seatRect.top * 10) / 10, Math.round(seatRect.bottom * 10) / 10]
       frame.stats = statsRect === null ? null : [Math.round(statsRect.top * 10) / 10, Math.round(statsRect.bottom * 10) / 10]
-      frame.statsMode = statsLine?.getAttribute('data-dsh-claude-footer-line') ?? null
+      frame.statsMode = statsLine?.getAttribute(host.statsFooterLine) ?? null
       frame.lag = rowRect === null || scrollerRect === null ? null : Math.round((rowRect.bottom - scrollerRect.bottom) * 10) / 10
       if (ghost !== null && takeOff === null) {
         // The stand-in is a clone of the composer card appended to the page, so
