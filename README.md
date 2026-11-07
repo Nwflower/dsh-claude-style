@@ -81,6 +81,10 @@ dsh plugin --profile web add Nwflower/dsh-claude-style#dist      # GitHub 发布
 
 需要 dsh ≥ 0.2.2-rc.1，装好后重启 DeepSeek Harness。
 
+## 声音提示
+
+会话开始等你确认时播放 Pop，顶层会话结束运行时播放 Tink；那个会话不在当前页面时也能听见。两声都是 macOS 的系统提示音，由插件宿主半边用 `afplay` 播放，安装包不携带音频，窗口切到别的应用之后仍然会响。总开关、两声提示和音量（轻、适中、清晰）在插件设置的「通用」页；提示默认开启，音量为「适中」。Windows、Linux 与远程 `dsh web` 页面上改为浏览器合成的近似音。
+
 ## 字体
 
 > Anthropic 没有公开发行这三款字体；本仓库只提供下载与研究的[副本](https://github.com/Nwflower/dsh-claude-style/tree/master/packages/assets/src/fonts/anthropic)。

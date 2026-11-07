@@ -83,6 +83,8 @@ export { install as installRowSkip } from './features/row-skip/row-skip'
 export { ARCHIVED_PAGE_SIZE, archivedOrder, createArchivedList } from './features/workspace/archived-list'
 export type { ArchivedList, ArchivedListActions, ArchivedListDeps, ArchivedListHost } from './features/workspace/archived-list'
 
+export { attentionEvents, attentionReading } from './features/sound-cues/attention'
+export type { AttentionEvent, AttentionReading } from './features/sound-cues/attention'
 export { RightSessionStatus } from './features/sidebar-status/row-status'
 export { install as installSidebarStatus } from './features/sidebar-status/sidebar-status'
 export { default as SIDEBAR_STATUS_SHEET } from './features/sidebar-status/sidebar-status.css?raw'

@@ -63,6 +63,7 @@ export interface Handles {
   rowSkip: FeatureHandle
   sessionTitle: FeatureHandle
   settingsNav: FeatureHandle
+  soundCues: FeatureHandle
   sodium: FeatureHandle
   surface: FeatureHandle
   activeFirst: FeatureHandle

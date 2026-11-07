@@ -92,6 +92,10 @@ Choose **Mark as unread** or **Clear unread mark** from a session's ellipsis men
 
 Hover a message you sent and **Retract** and **Edit** join the clock and copy buttons. Both open a new session and leave the original as it was: retracting drops that message and everything after it and puts the text back in the composer for you to send again, while editing amends the text in place first and sends it in the new session as soon as you confirm. A message carrying images or files gets neither button, since attachments cannot travel with the text into a new session. Both wait while the turn is still running. Disable the feature under **Conversation** in the plugin settings.
 
+## Sound cues
+
+A session that starts waiting on you plays Pop; a top-level session that stops running plays Tink, even when it is not the session on screen. Both are macOS system sounds, played by the plugin's host half with `afplay`, so the package ships no audio and the cue still sounds while the window is behind another app. The master switch, each cue and the volume (Quiet, Subtle, Clear) are under **General** in the plugin settings; the cues are on by default at Subtle. Windows, Linux and a remote `dsh web` page get a Web Audio approximation of the same two voices.
+
 ## Fonts
 
 > The Anthropic fonts have no public release; this repository only offers [copies](https://github.com/Nwflower/dsh-claude-style/tree/master/packages/assets/src/fonts/anthropic) for download and study.

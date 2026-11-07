@@ -90,3 +90,10 @@ export const FONT_FILES_PATH = `${ROUTE_PREFIX}/fonts/`
  * file; the browser half declares only the names this route reports (D75).
  */
 export const WEBFONTS_PATH = `${ROUTE_PREFIX}/webfonts`
+
+/**
+ * The two system cues: `GET` answers whether the host can play them and which;
+ * `POST` plays one. The files are the operating system's own, so this route
+ * carries no audio and the package ships none (D88).
+ */
+export const SOUND_PATH = `${ROUTE_PREFIX}/sound`
