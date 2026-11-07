@@ -48,6 +48,18 @@ export default spec({ page: 'desktop' }, ({ test }) => {
       t.expectThat.equal(state.title === state.label, false, `${scheme}: the two tiers are visibly distinct`)
     }
     await t.page.locator(t.surface('sidebar.session-title')).first().hover()
+    // The promotion is a colour transition: read it once it has landed, or a
+    // slower frame leaves the intermediate shade for the comparison.
+    await t.page.waitForFunction((selector) => {
+      const element = document.querySelector(selector)
+      if (element === null) return false
+      const probe = document.createElement('span')
+      probe.style.color = getComputedStyle(document.body).getPropertyValue('--dsw-alias-label-primary')
+      document.body.append(probe)
+      const primary = getComputedStyle(probe).color
+      probe.remove()
+      return getComputedStyle(element).color === primary
+    }, t.surface('sidebar.session-title'), { timeout: 3000 })
     const hovered = await t.page.locator(t.surface('sidebar.session-title')).first().evaluate((element) => {
       const probe = document.createElement('span')
       probe.style.color = getComputedStyle(document.body).getPropertyValue('--dsw-alias-label-primary')
