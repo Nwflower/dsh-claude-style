@@ -359,6 +359,15 @@ export const PREFS = {
    */
   billingTable: { type: 'list', default: [], max: PRICE_ROWS_MAX, entryMax: 256, drop: [] },
   workspaceView: { type: 'boolean', default: true },
+  /**
+   * Whether the sidebar stacks sessions under date headings (Today / Yesterday /
+   * weekday / Earlier) with the host's view store flattened. On by default, as the
+   * date headings are this skin's own arrangement of the list (features/date-groups/);
+   * turn it off to keep the host's own grouping (by workspace, workspace tree or flat)
+   * and the header's bell then does nothing. A boolean switch: the feature installs
+   * while this is not stored as false, and is torn down the moment it is.
+   */
+  dateGroups: { type: 'boolean', default: true },
   sidebarSearch: { type: 'boolean', default: true },
   searchStyle: { type: 'choice', values: SEARCH_STYLES, default: SEARCH_STYLE_STANDALONE, legacy: { overlay: SEARCH_STYLE_STANDALONE } },
   /** Whether resting the pointer on the collapsed sidebar's toggle opens the sidebar over the page. */

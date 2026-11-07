@@ -1,0 +1,8 @@
+{
+  "group": "new",
+  "order": 10,
+  "at": "2026-11-07",
+  "external": false,
+  "zh": "新增侧栏「会话按日期分段」开关，关闭后回到宿主自己的分组方式（按工作区、工作区树或扁平）",
+  "en": "Add a sidebar switch for grouping sessions by date; off keeps the host own grouping (by workspace, workspace tree or flat)"
+}
