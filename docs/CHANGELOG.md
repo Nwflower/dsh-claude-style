@@ -10,7 +10,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 - 新增吉祥物悬停气泡，以像素字体显示含赠金、随会话花费实时扣减的账号余额与当前会话的花费
 - 新增思考内容显示选择，默认两行步进并可改为逐字跟随
-- 新增模型选择器提供方分组的独立折叠与状态保存，并增强标题层级
+- 新增模型选择器的供应商分组折叠，悬停时才出现两段线箭头，展开状态不跨会话保留；分组之间拉开间距，供应商分隔线画得更清楚
 - 新增模型回复所在轮次的重跑与删除，通过新分岔保留原会话
 - 新增 System sans 字体选择，统一界面与 Markdown 的系统无衬线回退
 - 新增独立界面字号调节，覆盖侧栏、输入区与设置等普通文字
@@ -18,6 +18,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 ### 体验优化
 
 - 调整「思考内容显示」在设置页的位置，排到「动效」页末尾
+- 改善模型弹层改换尺寸时的观感，折叠供应商分组走 Card resize 过渡，展开时底边始终贴在触发区上方
 - 改善侧栏「工作区」标题行铃铛的墨色，与同一行里宿主的图标共用同一级墨色令牌
 - 改善侧栏「工作区」标题行铃铛的操作反馈，悬停底色与宿主的图标一致，指针停稳后给出进入或离开日期视图的提示
 
@@ -41,7 +42,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 - Add a hover bubble over the mascot that shows, in a pixel font, the account balance with gifted credit drawn down live by the conversation's cost, and that cost
 - Add a reasoning display choice that steps the text two lines at a time by default, with continuous text as the option
-- Add independently collapsible provider groups with preserved state in the model picker
+- Add collapsible provider groups to the model picker, with the two-stroke caret shown on hover and the fold never kept across sessions; provider groups sit further apart and their rule is drawn clearer
 - Add rerun and delete-turn actions for model answers, preserving the source session through a new branch
 - Add a System sans choice with one system fallback stack across the interface and Markdown
 - Add an independent font-size control for ordinary text in the sidebar, composer and settings
@@ -49,6 +50,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 ### Improvements
 
 - Move the reasoning display row to the end of the Motion tab in settings
+- Improve the model picker's card when it changes size: a folded provider group travels over Card resize, and the card keeps its bottom edge above the trigger while a group opens
 - Improve the sidebar workspace header bell's ink to share the level the host's own icons in that row use
 - Improve the sidebar workspace header bell's feedback with the host's own hover wash and a tooltip naming the date view it switches to or from
 

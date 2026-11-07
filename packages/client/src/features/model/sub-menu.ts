@@ -3,6 +3,7 @@ import { copy } from './copy'
 import { modelGroupName } from './provider-name'
 import { byModelId } from './rows'
 import { motionEaseAt, motionMs, motionValue } from '../../shared/motion'
+import { releaseCardHeight, travelCardHeight } from '../../shared/card-resize'
 import { motionReduced } from '../../core/prefs'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { CARET_FIELD_ATTR } from '../../constants'
@@ -139,7 +140,6 @@ export function createModelSubMenu(options: ModelSubMenuOptions) {
     lastQuery = query
     painted = at
     relabel()
-    const restoreFocus = rows.keepProviderFocus(body)
     // The card the list sits in, which is the box whose height changes.
     const card = head.parentElement
     const before = searched && card !== null && card.isConnected ? card.getBoundingClientRect().height : 0
@@ -158,57 +158,22 @@ export function createModelSubMenu(options: ModelSubMenuOptions) {
       const group = sections[g]
       const found = group.models.slice().sort(byModelId).filter(model => admits(group, model, query))
       if (found.length === 0) continue
-      body.appendChild(rows.buildProviderGroup(group, found, modelGroupName(group.id, group.name), current, false, query !== ''))
+      body.appendChild(rows.buildProviderGroup(group, found, modelGroupName(group.id, group.name), current, false))
       listed += found.length
     }
     if (listed === 0) {
       body.appendChild(buildElement('div', 'dsh-claude-popover-status', query === '' ? copy('empty') : copy('searchEmpty')))
     }
-    restoreFocus()
     if (card !== null && before > 0) resizeThrough(card, before)
   }
 
   /**
-   * Take the card from the height it had to the height its new list gives it.
-   *
-   * A height cannot be interpolated into `auto`, so the travel needs both ends
-   * as lengths: the old height is written first (the number the box already
-   * had, so nothing moves), the new list is measured while the height is
-   * released, and that measured height is written on the next frame for the
-   * sheet's transition to carry. The height returns to the content once the
-   * travel lands, so a later list is never held at this one's size.
+   * Take the card from the height it had to the height its new list gives it
+   * (shared/card-resize.ts carries transitions.dev's "Card resize" both levels
+   * travel on).
    */
   function resizeThrough(card: HTMLElement, before: number) {
-    releaseHeight()
-    card.style.height = ''
-    const after = card.getBoundingClientRect().height
-    // A list that leaves the card the size it already was needs no travel.
-    if (Math.abs(after - before) < 1) return
-    card.style.height = `${before}px`
-    // Read once, so the browser holds the old height as the travel's start.
-    void card.getBoundingClientRect().height
-    resized = card
-    settleTimer = window.setTimeout(releaseHeight, motionMs('--dsh-claude-duration-resize') + 40)
-    requestFrame({
-      write() {
-        if (resized === card) card.style.height = `${after}px`
-      },
-    })
-  }
-
-  /** The card mid-travel, and the timer that hands its height back to the content. */
-  let resized: HTMLElement | null = null
-  let settleTimer: number | null = null
-
-  /** Hand the card's height back to its content: the state it rests in. */
-  function releaseHeight() {
-    if (settleTimer !== null) {
-      clearTimeout(settleTimer)
-      settleTimer = null
-    }
-    if (resized === null) return
-    resized.style.height = ''
-    resized = null
+    travelCardHeight(card, before)
   }
 
   /** Write the field's own state onto its box, and keep the mirror in step with the field's scroll. */
@@ -409,7 +374,7 @@ export function createModelSubMenu(options: ModelSubMenuOptions) {
     forget() {
       emptyField()
       settle()
-      releaseHeight()
+      releaseCardHeight()
       // The field's words went with the fold, so the next paint is not a search.
       lastQuery = ''
       painted = ''
@@ -418,7 +383,7 @@ export function createModelSubMenu(options: ModelSubMenuOptions) {
     release() {
       emptyField()
       settle()
-      releaseHeight()
+      releaseCardHeight()
       lastQuery = ''
       painted = ''
     },

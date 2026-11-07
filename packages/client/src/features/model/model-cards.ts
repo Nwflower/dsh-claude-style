@@ -59,8 +59,6 @@ export function createModelCards(options: {
   }
 
   function scheduleCloseModel() {
-    // A click-opened card stays open when a group folds under the pointer.
-    if (!hoverOn()) return
     modelHoverIntent.scheduleClose()
   }
 

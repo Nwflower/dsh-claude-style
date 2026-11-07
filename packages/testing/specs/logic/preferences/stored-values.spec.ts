@@ -124,21 +124,18 @@ test('quick providers keep distinct ids in order, without the official group, wi
   expect(clampPrefs({ quickProviders: many }).quickProviders).toHaveLength(QUICK_PROVIDERS_MAX)
 })
 
-test('the typeface, reasoning, interface font and collapsed provider choices survive storage', () => {
+test('the typeface, reasoning and interface font choices survive storage', () => {
   const stored = clampPrefs({
     typeface: 'system',
     reasoningDisplay: 'stepped',
     interfaceFontSize: ' 125 ',
-    collapsedProviders: ['zai', 'zai', '', 3, OFFICIAL_MODEL_GROUP],
   })
   expect(stored.typeface).toBe('system')
   expect(stored.reasoningDisplay).toBe('stepped')
   expect(stored.interfaceFontSize).toBe('125')
-  expect(stored.collapsedProviders).toEqual(['zai', OFFICIAL_MODEL_GROUP])
   expect(clampPrefs({ typeface: 'other' }).typeface).toBe(PREF_DEFAULTS.typeface)
   expect(clampPrefs({ reasoningDisplay: 'other' }).reasoningDisplay).toBe(PREF_DEFAULTS.reasoningDisplay)
   expect(clampPrefs({}).interfaceFontSize).toBe('100')
-  expect(clampPrefs({}).collapsedProviders).toEqual([])
 })
 
 test('the username is trimmed and cut to its limit', () => {

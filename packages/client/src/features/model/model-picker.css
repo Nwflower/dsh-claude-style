@@ -25,6 +25,20 @@ body[data-dsh-claude-style] .dsh-claude-model-popover {
 body[data-dsh-claude-style] .dsh-claude-model-popover:not(.dsh-claude-model-popover-sub) {
   overflow: hidden;
 }
+/* Both cards take a new height over transitions.dev's "Card resize" (MIT, see
+   docs/THIRD_PARTY_NOTICES.md): a fold on the first level, and a narrowed list
+   on the second. The edge follows the reader's action instead of jumping, and
+   the rows stay clipped to the card while it travels. */
+body[data-dsh-claude-style] :is(.dsh-claude-model-popover, .dsh-claude-model-popover-sub) {
+  transition:
+    height var(--dsh-claude-timing-resize);
+  will-change: height;
+}
+/* The reader's animation choice, resolved onto <body> (D40): reduced takes the
+   travel away and the card lands on its new height at once. */
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] :is(.dsh-claude-model-popover, .dsh-claude-model-popover-sub) {
+  transition: none;
+}
 body[data-dsh-claude-style] .dsh-claude-model-popover:not(.dsh-claude-model-popover-sub) .dsh-claude-popover-body {
   flex: 1 1 auto;
   min-height: 0;
@@ -44,17 +58,6 @@ body[data-dsh-claude-style] .dsh-claude-model-footer {
    field stands off the card's edge the way its rows do. */
 body[data-dsh-claude-style] .dsh-claude-model-popover-sub {
   overflow: hidden;
-  /* A query leaves a shorter list than the whole catalog: the card takes the
-     new height over transitions.dev's "Card resize" (MIT), so the edge follows
-     the reader's typing instead of jumping under it. */
-  transition:
-    height var(--dsh-claude-timing-resize);
-  will-change: height;
-}
-/* The reader's animation choice, resolved onto <body> (D40): reduced takes the
-   tween away and the card lands on its new height at once. */
-body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-model-popover-sub {
-  transition: none;
 }
 body[data-dsh-claude-style] .dsh-claude-model-popover-sub .dsh-claude-model-sub-body {
   flex: 1 1 auto;
@@ -223,6 +226,8 @@ body[data-dsh-claude-style] .dsh-claude-model-group-section {
   position: relative;
   display: flex;
   flex-direction: column;
+  /* Level 2 rows sit close together: the 3px the body uses between sections
+     read as a gap between models of the same provider. */
   gap: 1px;
   min-width: 0;
 }
@@ -247,30 +252,12 @@ body[data-dsh-claude-style] .dsh-claude-model-group {
   gap: 5px;
   margin: 0;
   padding: 1px 7px;
-  border: none;
-  border-radius: 6px;
   background: var(--dsh-claude-inverse-fill);
   color: var(--dsh-claude-inverse-ink);
+  border-radius: 6px;
   font-size: 11px;
   font-weight: 600;
   line-height: 16px;
-  cursor: pointer;
-}
-body[data-dsh-claude-style] .dsh-claude-model-group-chevron {
-  display: inline-flex;
-  align-items: center;
-  transition: transform var(--dsh-claude-timing-feedback);
-}
-body[data-dsh-claude-style] .dsh-claude-model-group[aria-expanded="true"] .dsh-claude-model-group-chevron {
-  transform: rotate(90deg);
-}
-body[data-dsh-claude-style] .dsh-claude-model-group-models {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-body[data-dsh-claude-style] .dsh-claude-model-group-models[hidden] {
-  display: none;
 }
 
 /* Model / effort option and the level-2 row (label + chevron, whose hover opens
@@ -416,11 +403,11 @@ body[data-dsh-claude-style] .dsh-claude-model-desc {
 /* The divider that closes the model list carries the shared separator's role, so
    its line comes from shared/popover.css with every other separator in a card;
    what stays here is its margin. The provider header's own rule is the one line
-   this sheet states, in the same language: a 0.5px border of the divider token.
-   It is a border on a zero-height box so the line belongs to the layout. */
+   this sheet states: a full pixel of the standard edge token, so a provider
+   boundary reads at the weight the card's other separators have. */
 body[data-dsh-claude-style] .dsh-claude-model-rule::after {
   height: 0;
-  border-top: 0.5px solid var(--dsh-claude-divider, var(--dsw-alias-border-l2, #dedede));
+  border-top: 1px solid var(--dsw-alias-border-l1, #dedede);
 }
 body[data-dsh-claude-style] .dsh-claude-model-divider {
   margin: 2px 4px;
@@ -432,29 +419,75 @@ body[data-dsh-claude-style] .dsh-claude-model-divider {
    bare rule, which is how a provider that needs no naming (the official source)
    is separated. */
 body[data-dsh-claude-style] .dsh-claude-model-rule {
-  display: flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  margin: 2px 4px !important;
-  flex: none !important;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 4px;
+  flex: none;
 }
 body[data-dsh-claude-style] .dsh-claude-model-rule::after {
-  content: "" !important;
-  flex: 1 !important;
+  content: "";
+  flex: 1;
 }
 body[data-dsh-claude-style] .dsh-claude-model-rule-name {
-  flex: none !important;
-  font-size: 11px !important;
-  line-height: 14px !important;
-  color: var(--dsw-alias-label-caption, #b2acad) !important;
-  letter-spacing: 0.02em !important;
+  flex: none;
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--dsw-alias-label-caption, #b2acad);
+  letter-spacing: 0.02em;
 }
 /* The provider is this menu's only grouping label, and caption is the host's
    decoration tier: on a light card it reads 2.45:1 (#a6a094 on #f8f8f8), under
    the 4.5:1 an 11px label needs. Secondary is the tier that carries a name; the
    fallback is the value that clears the threshold when the token is absent. */
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) .dsh-claude-model-rule-name {
-  color: var(--dsw-alias-label-secondary, #70686a) !important;
+  color: var(--dsw-alias-label-secondary, #70686a);
+}
+/* Provider groups stand a clear gap apart: the rule of the next one is what tells
+   the reader a new provider's models start, and the air around it says so first. */
+body[data-dsh-claude-style] .dsh-claude-model-group-section + .dsh-claude-model-group-section {
+  margin-top: 12px;
+}
+/* The fold control rides the name itself: no box, the caret in the name's own
+   ink, so the heading still reads as one plain line above its models. */
+body[data-dsh-claude-style] .dsh-claude-model-group-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--dsw-alias-label-caption, #b2acad);
+  font: inherit;
+  cursor: pointer;
+}
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) .dsh-claude-model-group-toggle {
+  color: var(--dsw-alias-label-secondary, #70686a);
+}
+body[data-dsh-claude-style] .dsh-claude-model-group-caret {
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+  /* The fold is offered by the group's own hover: the heading stays a plain
+     line until the pointer is over this provider's models. */
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform var(--dsh-claude-timing-feedback),
+    opacity var(--dsh-claude-duration-feedback) var(--dsh-claude-ease-standard);
+}
+body[data-dsh-claude-style] .dsh-claude-model-group-section:hover .dsh-claude-model-group-caret,
+body[data-dsh-claude-style] .dsh-claude-model-group-section:focus-within .dsh-claude-model-group-caret {
+  opacity: 1;
+  pointer-events: auto;
+}
+body[data-dsh-claude-style] .dsh-claude-model-group-toggle[aria-expanded="false"] .dsh-claude-model-group-caret {
+  transform: rotate(-90deg);
+}
+body[data-dsh-claude-style] .dsh-claude-model-group-models[hidden] {
+  display: none;
 }
 body[data-dsh-claude-style] .dsh-claude-model-cell-label {
   flex: 1;

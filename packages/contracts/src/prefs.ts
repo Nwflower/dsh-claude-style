@@ -333,8 +333,6 @@ export const PREFS = {
    * is dropped.
    */
   quickProviders: { type: 'list', default: [], max: QUICK_PROVIDERS_MAX, entryMax: PROVIDER_ID_MAX, drop: [OFFICIAL_MODEL_GROUP] },
-  /** Provider groups the reader folded; the official group may be folded too. */
-  collapsedProviders: { type: 'list', default: [], max: QUICK_PROVIDERS_MAX, entryMax: PROVIDER_ID_MAX, drop: [] },
   username: { type: 'text', default: '', max: USERNAME_MAX },
   /** The page's scale as a percentage of its own size, between PAGE_ZOOM_MIN and PAGE_ZOOM_MAX; the empty string is "follow the system". */
   pageZoom: {

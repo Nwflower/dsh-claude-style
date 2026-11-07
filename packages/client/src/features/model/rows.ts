@@ -1,6 +1,6 @@
 import { AUTO_POPOVER_ALL } from '../../constants'
 import { levelOneSections as selectLevelOneSections } from './level-one'
-import { readPrefs, savePrefs } from '../../core/prefs'
+import { readPrefs } from '../../core/prefs'
 import { localized } from '../../core/i18n'
 import { buildModelLabel, modelBrand } from './brand'
 import { modelCopy, resolveModelCopy } from './model-copy'
@@ -8,6 +8,7 @@ import { releaseTag } from './release-tag'
 import { buildElement, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
 import { POPOVER_CHECK_SVG, buildPopoverItem } from '../../shared/popover'
 import { hostTooltip } from '../../shared/host-tooltip'
+import { travelCardHeight } from '../../shared/card-resize'
 import type { HostTooltip } from '../../shared/host-tooltip'
 import type { createHoverIntent } from '../../shared/popover'
 import type { HostContext } from '@dsh-claude-style/engine/host'
@@ -23,7 +24,6 @@ import type { HostModelEntry, HostModelGroup } from '@dsh-claude-style/contracts
  * stay at the fragment's top level.
  */
 export const MODEL_CHEVRON_SVG = '<svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg>'
-const PROVIDER_TOGGLE_ATTRIBUTE = 'data-dsh-claude-model-provider-toggle'
 
 /** Catalog order is whatever the provider happened to send; id order is scannable. */
 export function byModelId(a: HostModelEntry, b: HostModelEntry) {
@@ -65,6 +65,12 @@ export function createModelRows(options: {
   openSub: (focusField?: boolean) => void
   /** The peak rate meter's badge for one row, or null (features/peakrate). */
   rate: (provider: string, modelId: string) => HTMLElement | null
+  /**
+   * Place the open cards again from their own size. A card anchored above its
+   * trigger is laid out from its height, so the travel a fold starts has to be
+   * followed frame by frame or the card grows down from a stale top.
+   */
+  reposition?: () => void
 }) {
   const ctx = options.ctx
   const pickModel = options.pickModel
@@ -77,8 +83,6 @@ export function createModelRows(options: {
   const painted: { item: HTMLElement, provider: string, modelId: string }[] = []
   /** The wall-clock minute the standing rows' meters were drawn at, or -1 before a paint. */
   let paintedMinute = -1
-  /** Each group's controlled content gets a unique id within this picker's rows. */
-  let providerGroupSerial = 0
   /** The rate badge's tooltip anchor in a row: the badge rides inside the host's bubble anchor. */
   const RATE_ANCHOR_ATTRIBUTE = 'data-dsh-claude-rate-badge'
   /** The standing badges' tooltips, by the anchor that carries them. */
@@ -111,51 +115,6 @@ export function createModelRows(options: {
     }
   }
 
-  /** Preserve the keyboard stop when a preference write repaints the group. */
-  function keepProviderFocus(scope: HTMLElement) {
-    const active = document.activeElement
-    const toggle = active instanceof Element ? active.closest<HTMLElement>(`[${PROVIDER_TOGGLE_ATTRIBUTE}]`) : null
-    const id = toggle !== null && scope.contains(toggle) ? toggle.getAttribute(PROVIDER_TOGGLE_ATTRIBUTE) : null
-    return () => {
-      if (id === null) return
-      scope.querySelector<HTMLElement>(`[${PROVIDER_TOGGLE_ATTRIBUTE}="${CSS.escape(id)}"]`)?.focus()
-    }
-  }
-
-  /** One provider's disclosure, its model rows and the persisted folded state. */
-  function buildProviderGroup(group: HostModelGroup, models: HostModelEntry[], name: string, current: { group: HostModelGroup, model: HostModelEntry } | null, withDescription: boolean, forceExpanded = false) {
-    const section = buildElement('div', 'dsh-claude-model-group-section')
-    const heading = buildElement('div', 'dsh-claude-model-group-row')
-    const content = buildElement('div', 'dsh-claude-model-group-models')
-    content.id = `dsh-claude-model-provider-${providerGroupSerial++}`
-    const collapsed = readPrefs().collapsedProviders.includes(group.id)
-    const expanded = forceExpanded || !collapsed
-    const button = buildElement('button', 'dsh-claude-model-group')
-    button.type = 'button'
-    button.setAttribute(PROVIDER_TOGGLE_ATTRIBUTE, group.id)
-    button.setAttribute('aria-expanded', String(expanded))
-    button.setAttribute('aria-controls', content.id)
-    const chevron = buildElement('span', 'dsh-claude-model-group-chevron')
-    chevron.setAttribute('aria-hidden', 'true')
-    chevron.innerHTML = MODEL_CHEVRON_SVG
-    button.append(chevron, buildElement('span', 'dsh-claude-model-group-name', name))
-    button.addEventListener('click', (event) => {
-      event.stopPropagation()
-      const stored = readPrefs().collapsedProviders
-      const next = collapsed ? stored.filter((id) => id !== group.id) : [...stored, group.id]
-      void savePrefs({ collapsedProviders: next })
-    })
-    heading.appendChild(button)
-    section.appendChild(heading)
-    content.hidden = !expanded
-    for (const model of models) {
-      const selected = current !== null && current.group.id === group.id && current.model.id === model.id
-      content.appendChild(buildModelOption(group, model, selected, withDescription))
-    }
-    section.appendChild(content)
-    return section
-  }
-
   /**
    * The rule that separates one provider's models from the next. The provider
    * name rides the rule itself rather than trailing the model in parentheses:
@@ -166,6 +125,58 @@ export function createModelRows(options: {
     const rule = buildElement('div', 'dsh-claude-model-rule')
     if (name) rule.appendChild(buildElement('span', 'dsh-claude-model-rule-name', name))
     return rule
+  }
+
+  /** Each group's controlled content gets an id unique within this picker's rows. */
+  let providerGroupSerial = 0
+
+  /** The caret after a provider's name: two strokes, down while open and right once folded. */
+  const PROVIDER_CARET_SVG = '<svg viewBox="0 0 8 8" width="8" height="8" aria-hidden="true" focusable="false"><path d="M2 3l2 2 2-2" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+
+  /**
+   * One provider's heading, its fold control and its models. The heading is the
+   * rule the list already had — the name first, the divider running to the
+   * right edge — with the caret after the name in the name's own ink. The fold
+   * is the open card's own state: nothing is stored, so reopening the picker or
+   * reloading the page finds every group open again.
+   */
+  function buildProviderGroup(group: HostModelGroup, models: HostModelEntry[], name: string, current: { group: HostModelGroup, model: HostModelEntry } | null, withDescription: boolean) {
+    const section = buildElement('div', 'dsh-claude-model-group-section')
+    const rule = buildElement('div', 'dsh-claude-model-rule')
+    const content = buildElement('div', 'dsh-claude-model-group-models')
+    content.id = `dsh-claude-model-provider-${providerGroupSerial++}`
+    // A provider that needs no naming (the official source) keeps the bare
+    // rule: there is no word for the reader to press.
+    if (name !== '') {
+      const toggle = buildElement('button', 'dsh-claude-model-group-toggle')
+      toggle.type = 'button'
+      toggle.setAttribute('aria-expanded', 'true')
+      toggle.setAttribute('aria-controls', content.id)
+      toggle.appendChild(buildElement('span', 'dsh-claude-model-rule-name', name))
+      const caret = buildElement('span', 'dsh-claude-model-group-caret')
+      caret.innerHTML = PROVIDER_CARET_SVG
+      toggle.appendChild(caret)
+      toggle.addEventListener('click', (event) => {
+        event.stopPropagation()
+        // Folding is this list's own state: the rows below hide under the
+        // heading without the picker repainting, and nothing is stored. The
+        // card takes the new height over transitions.dev's "Card resize".
+        const card = section.closest<HTMLElement>('.dsh-claude-model-popover')
+        const before = card === null ? 0 : card.getBoundingClientRect().height
+        const shown = toggle.getAttribute('aria-expanded') !== 'true'
+        toggle.setAttribute('aria-expanded', String(shown))
+        content.hidden = !shown
+        if (card !== null) travelCardHeight(card, before, options.reposition)
+      })
+      rule.appendChild(toggle)
+    }
+    section.appendChild(rule)
+    for (const model of models) {
+      const selected = current !== null && current.group.id === group.id && current.model.id === model.id
+      content.appendChild(buildModelOption(group, model, selected, withDescription))
+    }
+    section.appendChild(content)
+    return section
   }
 
   /**
@@ -301,7 +312,12 @@ export function createModelRows(options: {
   function refreshRates() {
     pruneRateBadges()
     const minute = Math.floor(Date.now() / 60000)
-    if (minute === paintedMinute || painted.length === 0) return
+    // A badge that is still missing is placed whatever the minute: a catalog
+    // arriving after the rows were painted is what fills an empty seat, and
+    // waiting for the clock would leave it empty until the next minute.
+    const missing = painted.some((row) => row.item.isConnected &&
+      row.item.querySelector(`:scope > [${RATE_ANCHOR_ATTRIBUTE}]`) === null)
+    if (painted.length === 0 || (minute === paintedMinute && !missing)) return
     let standing = 0
     for (let i = 0; i < painted.length; i++) {
       const row = painted[i]!
@@ -348,7 +364,6 @@ export function createModelRows(options: {
   return {
     buildProviderRule,
     buildProviderGroup,
-    keepProviderFocus,
     buildModelOption,
     buildCurrentOption,
     buildModelCell,
