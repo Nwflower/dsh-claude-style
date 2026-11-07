@@ -73,6 +73,7 @@
         // canvas and the skin's own faces keep their fill.
         claudeWallpaper: await readHost(null, true),
         halfWallpaper: await readHost({ backgroundOpacity: '50' }, true),
+        deepseekWallpaper: await readHost({ paletteColors: 'deepseek' }, true),
       }
       await readHost({ backgroundOpacity: '100' }, false)
       document.body.removeAttribute('data-we-wallpaper')

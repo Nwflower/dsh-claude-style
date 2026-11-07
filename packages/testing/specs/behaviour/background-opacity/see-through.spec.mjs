@@ -126,6 +126,37 @@ export default spec({ page: 'desktop', bands: ['wide'] }, ({ test }) => {
     t.expectThat.equal(page.body, 'rgb(255, 255, 255)', 'the page stays opaque')
   })
 
+  test('the DeepSeek card mixes both schemes and restores its opaque fills', async (t) => {
+    await t.prefs({ paletteColors: 'deepseek' })
+    await buildShell(t)
+    for (const dark of [false, true]) {
+      await setDark(t, dark)
+      await t.prefs({ backgroundOpacity: '100' })
+      const before = await read(t)
+      const expected = await t.page.evaluate((colors) => {
+        const resolve = (color) => {
+          const probe = document.createElement('div')
+          probe.style.background = `color-mix(in srgb, ${color} 50%, transparent)`
+          document.body.append(probe)
+          const resolved = getComputedStyle(probe).backgroundColor
+          probe.remove()
+          return resolved
+        }
+        return colors.map(resolve)
+      }, [before.body, before.sidebar, before.conversation])
+      await t.prefs({ backgroundOpacity: '50' })
+      const half = await read(t)
+      t.expectThat.equal([half.body, half.sidebar, half.conversation], expected, `${dark ? 'dark' : 'light'} DeepSeek fills mix by 50%`)
+      t.expectThat.equal(half.property, '0.5', 'the DeepSeek percentage reaches the shared property')
+      t.expectThat.equal(half.popover, before.popover, 'the popover keeps its paint')
+      await t.prefs({ backgroundOpacity: '0' })
+      t.expectThat.equal(/^color\(srgb [0-9.]+ [0-9.]+ [0-9.]+ \/ 0\)$/.test((await read(t)).body), true, 'zero clears the DeepSeek canvas')
+      await t.prefs({ backgroundOpacity: '100' })
+      const restored = await read(t)
+      t.expectThat.equal([restored.body, restored.sidebar, restored.conversation], [before.body, before.sidebar, before.conversation], '100 restores the DeepSeek fills')
+    }
+  })
+
   test('the dark canvas and sidebar mix at the same share', async (t) => {
     await buildShell(t)
     await setDark(t, true)

@@ -431,6 +431,10 @@ export default {
     check('the background opacity multiplies the wallpaper mask while the cards keep their paint',
       /^color\(srgb 1 1 1 \/ 0\.43\)$/.test(half.mask || '') && half.popover === claude.popover && half.search === claude.search,
       JSON.stringify(half))
+    const deepseek = hp.deepseekWallpaper || {}
+    check('the DeepSeek card uses the same opacity on its wallpaper mask',
+      /^color\(srgb 0\.984314 0\.988235 1 \/ 0\.43\)$/.test(deepseek.mask || '') && deepseek.popover === half.popover,
+      JSON.stringify(deepseek))
     check('with the wallpaper gone the skin\'s own fills are back and the mask is lifted',
       CLAUDE_FILLS.every(([key, value]) => claude[key] === value) && claude.sidebarFill === '#fafafa' &&
         claude.mask === 'rgba(0, 0, 0, 0)',
