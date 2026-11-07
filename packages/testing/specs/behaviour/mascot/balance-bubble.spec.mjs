@@ -1,8 +1,9 @@
 /**
- * Resting the mouse on the mascot opens a pixel bubble: the account balance
- * on top, and under it, quieter, what the conversation on screen has cost —
- * the same figure the statistics line prints. A press on the mascot closes
- * it, the switch keeps it shut, and with nothing to show there is no bubble.
+ * Resting the mouse on the mascot opens a pixel bubble: the account balance,
+ * gifted wallets included, on top, and under it, quieter, what the
+ * conversation on screen has cost — the same figure the statistics line
+ * prints, with the balance carrying as many places. A press on the mascot
+ * closes it, and with nothing to show there is no bubble.
  *
  * @capability mascot
  * @features mascot, context-stats
@@ -18,9 +19,9 @@ const STACK_PART = Object.keys(CONVERSATION_PARTS).find((stem) => CONVERSATION_P
 /** 12340 micro units of a yuan, which the statistics line writes as ¥0.0123. */
 const TOTAL = { cny: 12340, usd: 1720, partial: false, model: COST_ROUTE }
 
-/** The crab on a priced conversation, with the bubble's switch as given. */
-async function pricedCrab(t, balanceOn) {
-  await t.prefs({ motion: 'reduced', mascot: 'crab', mascotScope: 'all', mascotBalance: balanceOn })
+/** The crab on a priced conversation. */
+async function pricedCrab(t) {
+  await t.prefs({ motion: 'reduced', mascot: 'crab', mascotScope: 'all' })
   await t.page.evaluate(([prices, value]) => {
     window.__costFixture = { prices, value }
   }, [COST_PRICES, TOTAL])
@@ -69,12 +70,17 @@ async function restOnCrab(t) {
 
 export default spec({ page: 'stats-inline' }, ({ test }) => {
   test('resting on the crab shows the balance above the conversation\'s cost, the cost quieter and equal to the statistics line', async (t) => {
-    await pricedCrab(t, true)
+    await pricedCrab(t)
+    // The platform's own long decimals, and a gifted wallet beside the topped-up one.
+    await t.page.evaluate(() => {
+      window.__balanceFixture = { ok: true, value: { status: 'ready', value: [{ currency: 'CNY', balance: '1.6062994000000000' }], bonusWallets: [{ currency: 'CNY', balance: '10.00' }] } }
+    })
     await restOnCrab(t)
     const bubble = await readBubble(t)
     t.expectThat.equal(bubble?.open, true, 'the bubble opens')
     t.expectThat.equal(bubble.rows.map((line) => line.kind), ['balance', 'session'], 'the balance stands above the cost')
-    t.expectThat.equal(bubble.rows[0].text.endsWith('¥12.34'), true, `the balance line carries the account's wallet (${bubble.rows[0].text})`)
+    t.expectThat.equal(bubble.rows[0].text.endsWith('¥11.6063'), true,
+      `the balance counts the gifted wallet in and carries the cost's four places (${bubble.rows[0].text})`)
     const line = await t.read.text(t.surface('stats.inline-cost'))
     t.expectThat.equal(bubble.rows[1].text.endsWith(line.trim()), true, `the cost is the statistics line's own figure (${bubble.rows[1].text} against ${line})`)
     t.expectThat.equal(bubble.rows[0].colour !== bubble.rows[1].colour, true, 'the cost takes a quieter ink than the balance')
@@ -85,14 +91,8 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
     await t.page.mouse.up()
   })
 
-  test('with the switch off, resting on the crab opens nothing', async (t) => {
-    await pricedCrab(t, false)
-    await restOnCrab(t)
-    t.expectThat.equal((await readBubble(t))?.open ?? false, false, 'no bubble opens')
-  })
-
   test('with no account and billing off, there is nothing to show and no bubble', async (t) => {
-    await pricedCrab(t, true)
+    await pricedCrab(t)
     await t.prefs({ billingCurrency: 'off' })
     await t.page.evaluate(() => { window.__balanceFixture = { ok: true, value: null } })
     await restOnCrab(t)

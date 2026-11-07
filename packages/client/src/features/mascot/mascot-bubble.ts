@@ -1,6 +1,5 @@
 import { CURRENCY_SYMBOL, formatMoneyMicro } from '@dsh-claude-style/contracts/prices'
-import { buildElement, writeTextInPlace } from '@dsh-claude-style/engine/dom'
-import { readPrefs } from '../../core/prefs'
+import { buildElement } from '@dsh-claude-style/engine/dom'
 import { readAccountBalance } from '../../shared/account-balance'
 import { copy } from './copy'
 import type { AccountBalance } from '../../shared/account-balance'
@@ -18,14 +17,14 @@ const HOVER_DELAY_MS = 250
  * The pixel bubble over the mascot: the account balance on top, and the
  * shown conversation's cost under it, quieter.
  *
- * The balance is the host's account read (shared/account-balance.ts); a
- * reader with no signed-in account gets no balance row. The cost is the
- * figure the statistics print (`ui.contextStats.sessionCost`), so the two
- * never disagree, and it is rewritten each time the statistics are; the home
- * page and billing turned off leave the row out. With neither row there is no
- * bubble. It opens only for a resting mouse or pen and only under the
- * `mascotBalance` preference; a press on the mascot closes it, since the press
- * plays a reaction there.
+ * The balance is the host's account read, gifted wallets included
+ * (shared/account-balance.ts); a reader with no signed-in account gets no
+ * balance row. The cost is the figure the statistics print
+ * (`ui.contextStats.sessionCost`), so the two never disagree, and it is
+ * rewritten each time the statistics are; the home page and billing turned
+ * off leave the row out. With neither row there is no bubble. It opens only
+ * for a resting mouse or pen; a press on the mascot closes it, since the
+ * press plays a reaction there.
  *
  * @returns `{ element, enter, leave, dispose }`: `element` is put inside the
  *     mascot's pointer window, the rest are the player's pointer hooks.
@@ -46,11 +45,17 @@ export function createMascotBubble(ctx: HostContext, ui: FeatureUi<typeof manife
     return line
   }
 
-  /** The balance row's figures: one per wallet, a dash for a miss, none without an account. */
-  function balanceFigures(): string[] {
+  /**
+   * The balance row's figures: one per currency, a dash for a miss, none
+   * without an account. They carry as many places as the cost under them, so
+   * the two figures line up on the point; four with no cost to follow.
+   */
+  function balanceFigures(session: string | null): string[] {
     if (balance === null || balance.status === 'none') return []
     if (balance.status === 'failed') return [DASH]
-    return balance.wallets.map(wallet => `${CURRENCY_SYMBOL[wallet.currency]}${wallet.balance}`)
+    const point = session?.indexOf('.') ?? -1
+    const places = session === null || point === -1 ? 4 : session.length - point - 1
+    return balance.totals.map(total => `${CURRENCY_SYMBOL[total.currency]}${(total.micro / 1_000_000).toFixed(places)}`)
   }
 
   /** The session row's figure, or null when it has none to print. */
@@ -64,14 +69,10 @@ export function createMascotBubble(ctx: HostContext, ui: FeatureUi<typeof manife
   /** Write the rows the bubble owes now; it shows only while it has one. */
   function render() {
     if (!open) return
-    if (!readPrefs().mascotBalance) {
-      leave()
-      return
-    }
     const rows: HTMLElement[] = []
-    const balances = balanceFigures()
-    if (balances.length > 0) rows.push(row('balance', copy('mascotBalanceLabel'), balances))
     const session = sessionFigure()
+    const balances = balanceFigures(session)
+    if (balances.length > 0) rows.push(row('balance', copy('mascotBalanceLabel'), balances))
     if (session !== null) rows.push(row('session', copy('mascotSessionLabel'), [session]))
     const same = rows.length === root.children.length &&
       rows.every((line, i) => line.isEqualNode(root.children[i]))
@@ -80,18 +81,11 @@ export function createMascotBubble(ctx: HostContext, ui: FeatureUi<typeof manife
     else root.removeAttribute('data-open')
   }
 
-  /** Writes only the figures in place while the statistics count, so the rows keep their nodes. */
-  function renderSession() {
-    const figure = sessionFigure()
-    const cell = root.querySelector('[data-row="session"] .dsh-claude-mascot-bubble-figure')
-    if (cell !== null && figure !== null) writeTextInPlace(cell, figure)
-    else render()
-  }
-
   function show() {
     timer = null
     open = true
-    offCost = ui.contextStats?.onSessionCost(renderSession) ?? null
+    // The cost moves the balance's places with it, so a new cost redraws both rows.
+    offCost = ui.contextStats?.onSessionCost(render) ?? null
     render()
     void readAccountBalance(ctx).then(answer => {
       balance = answer
@@ -102,7 +96,7 @@ export function createMascotBubble(ctx: HostContext, ui: FeatureUi<typeof manife
   /** The pointer came to rest on the mascot. */
   function enter(event: PointerEvent) {
     if (event.pointerType !== 'mouse' && event.pointerType !== 'pen') return
-    if (!readPrefs().mascotBalance || open || timer !== null) return
+    if (open || timer !== null) return
     timer = setTimeout(show, HOVER_DELAY_MS)
   }
 

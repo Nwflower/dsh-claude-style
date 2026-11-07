@@ -21,15 +21,36 @@ export function accountClient(ctx: HostContext): HostAccountClient {
   }
 }
 
+/** One currency's whole balance, topped-up and gifted together, in micro units as the price figures are. */
+export interface BalanceTotal {
+  currency: HostWallet['currency']
+  micro: number
+}
+
 /**
- * What the balance read came to: the wallets, `none` when no credential is
- * stored (or the host serves no account), `failed` when the platform or the
- * call missed.
+ * What the balance read came to: one total per currency, `none` when no
+ * credential is stored (or the host serves no account), `failed` when the
+ * platform or the call missed.
  */
 export type AccountBalance =
-  | { status: 'ready', wallets: readonly HostWallet[] }
+  | { status: 'ready', totals: readonly BalanceTotal[] }
   | { status: 'none' }
   | { status: 'failed' }
+
+/**
+ * The wallets summed per currency, in the order their currencies first
+ * appear. The platform writes each amount as a decimal string with up to
+ * sixteen places; micro units are where formatMoneyMicro reads amounts.
+ */
+function totalsOf(wallets: readonly HostWallet[]): BalanceTotal[] {
+  const totals = new Map<HostWallet['currency'], number>()
+  for (const wallet of wallets) {
+    const micro = Math.round(Number(wallet.balance) * 1_000_000)
+    if (!Number.isFinite(micro)) throw new Error(`dsh-claude-style: the account balance "${wallet.balance}" is not a number`)
+    totals.set(wallet.currency, (totals.get(wallet.currency) ?? 0) + micro)
+  }
+  return [...totals].map(([currency, micro]) => ({ currency, micro }))
+}
 
 /** How long one answer stands before the next ask reads the platform again. */
 const BALANCE_TTL_MS = 60 * 1000
@@ -38,8 +59,8 @@ let held: { at: number, balance: AccountBalance } | null = null
 let asking: Promise<AccountBalance> | null = null
 
 /**
- * The account's balance, read from `remote.account.getBalance` — the wallets
- * the host's own account settings show, the gifted ones apart. One answer is
+ * The account's balance, read from `remote.account.getBalance`: the wallets
+ * the host's own account settings show, with the gifted ones added in. One answer is
  * kept for BALANCE_TTL_MS and an ask in flight is shared, so a reader passing
  * the pointer back and forth costs one platform request a minute.
  */
@@ -52,7 +73,7 @@ export function readAccountBalance(ctx: HostContext): Promise<AccountBalance> {
     if (!result || result.ok !== true || result.value === undefined) return { status: 'failed' }
     if (result.value === null) return { status: 'none' }
     if (result.value.status !== 'ready') return { status: 'failed' }
-    return { status: 'ready', wallets: result.value.value }
+    return { status: 'ready', totals: totalsOf([...result.value.value, ...result.value.bonusWallets]) }
   }, (): AccountBalance => {
     // A rejected Remote call is a miss like a failed status: the bubble says
     // so, and the next ask reads again.

@@ -9,8 +9,6 @@
   "mascotScopeTitle": { "zh": "出现位置", "en": "Where it appears" },
   "mascotScopeHome": { "zh": "首页", "en": "Home" },
   "mascotScopeAll": { "zh": "首页与对话", "en": "Home and conversation" },
-  "mascotBalanceTitle": { "zh": "悬停显示余额", "en": "Balance on hover" },
-  "mascotBalanceDesc": { "zh": "指针停在吉祥物上时，显示账号余额与当前会话的花费。", "en": "Resting the pointer on the mascot shows the account balance and what this conversation has cost." },
   "mascotBalanceLabel": { "zh": "余额", "en": "Balance" },
   "mascotSessionLabel": { "zh": "会话", "en": "Session" }
 }

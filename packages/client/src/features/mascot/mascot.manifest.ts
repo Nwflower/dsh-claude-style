@@ -31,13 +31,6 @@ export default {
     parent: 'mascot',
     title: 'mascotScopeTitle',
     choiceLabels: { home: 'mascotScopeHome', all: 'mascotScopeAll' },
-  }, {
-    tab: 'appearance',
-    rank: 41,
-    pref: 'mascotBalance',
-    parent: 'mascot',
-    title: 'mascotBalanceTitle',
-    desc: 'mascotBalanceDesc',
   }],
   cases: ['crab-states', 'deepy', 'whalegirl', 'hero', 'studio']
 } satisfies FeatureManifest

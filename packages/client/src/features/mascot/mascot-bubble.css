@@ -1,7 +1,9 @@
 /* ── The balance bubble over the mascot ─────────────────────────────────────
    A speech bubble drawn the way the characters are: square 2px cells, its
    outline four offset shadows that leave the corners open, and a stepped tail
-   pointing down at the character. It lives inside the character's pointer
+   pointing down at the character, both in the theme's accent on the palette's
+   card, so the bubble follows the colour card the way the characters' art
+   follows the brand. It lives inside the character's pointer
    window (packages/client/src/features/mascot/mascot-bubble.ts), right-aligned
    on it, so it never reaches past the composer's right edge. The text is the
    PoxiaoPixel subset at its 12px design size, where each of its pixels is one
@@ -17,12 +19,12 @@ body[data-dsh-claude-style] .dsh-claude-mascot-bubble {
   column-gap: 6px;
   row-gap: 4px;
   padding: 6px 8px;
-  background: var(--dsw-alias-bg-overlay, #ffffff);
+  background: var(--dsh-claude-card);
   box-shadow:
-    0 -2px 0 0 var(--dsw-alias-label-tertiary, #91888a),
-    0 2px 0 0 var(--dsw-alias-label-tertiary, #91888a),
-    -2px 0 0 0 var(--dsw-alias-label-tertiary, #91888a),
-    2px 0 0 0 var(--dsw-alias-label-tertiary, #91888a);
+    0 -2px 0 0 var(--dsw-alias-brand-primary, #d97757),
+    0 2px 0 0 var(--dsw-alias-brand-primary, #d97757),
+    -2px 0 0 0 var(--dsw-alias-brand-primary, #d97757),
+    2px 0 0 0 var(--dsw-alias-brand-primary, #d97757);
   color: var(--dsw-alias-label-primary, #141413);
   font-family: 'Claude Style Pixel', var(--dsh-claude-font-code);
   font-size: 12px;
@@ -46,15 +48,15 @@ body[data-dsh-claude-style] .dsh-claude-mascot-bubble::after {
   right: 14px;
   width: 2px;
   height: 2px;
-  background: var(--dsw-alias-label-tertiary, #91888a);
+  background: var(--dsw-alias-brand-primary, #d97757);
   box-shadow:
-    -2px 0 0 0 var(--dsw-alias-label-tertiary, #91888a),
-    -4px 0 0 0 var(--dsw-alias-label-tertiary, #91888a),
-    -2px 2px 0 0 var(--dsw-alias-label-tertiary, #91888a);
+    -2px 0 0 0 var(--dsw-alias-brand-primary, #d97757),
+    -4px 0 0 0 var(--dsw-alias-brand-primary, #d97757),
+    -2px 2px 0 0 var(--dsw-alias-brand-primary, #d97757);
 }
 
 /* A row is its label and its figures on one grid, so the figures of the two
-   rows line up; a second wallet's figure takes the next line under the first. */
+   rows line up; a second currency's figure takes the next line under the first. */
 body[data-dsh-claude-style] .dsh-claude-mascot-bubble-row {
   display: contents;
 }
