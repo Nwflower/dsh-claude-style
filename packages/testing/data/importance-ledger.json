@@ -461,42 +461,47 @@
       "prop": "-webkit-app-region",
       "verdict": "unmatched"
     },
+    "body[data-dsh-claude-style] [data-dsh-header-band~=title]{--dsh-header-band-bottom:0px;padding-top:var(--dsh-header-band-top, 10px)!;grid-template-rows:auto}|padding-top": {
+      "selector": "body[data-dsh-claude-style] [data-dsh-header-band~=title]",
+      "prop": "padding-top",
+      "verdict": "needed"
+    },
     "body[data-dsh-claude-style] [data-dsh-header-band~=title] [data-dsh-header-row] [data-dsh-claude-part~=header-label]{display:flex!}|display": {
       "selector": "body[data-dsh-claude-style] [data-dsh-header-band~=title] [data-dsh-header-row] [data-dsh-claude-part~=header-label]",
       "prop": "display",
       "verdict": "unmatched"
     },
-    "body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-actions],body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-corner]{position:fixed!;top:calc(var(--dsh-windows-titlebar-height, 40px) / 2)!;right:var(--dsh-header-band-right)!;margin:0!;transform:translateY(-50%)!;z-index:var(--dsh-claude-layer-chrome)!;-webkit-app-region:no-drag!}|position": {
+    "body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-actions],body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-corner]{position:fixed!;top:calc(var(--dsh-header-band-height, var(--dsh-windows-titlebar-height, 40px)) / 2)!;right:var(--dsh-header-band-right)!;margin:0!;transform:translateY(-50%)!;z-index:var(--dsh-claude-layer-chrome)!;-webkit-app-region:no-drag!}|position": {
       "selector": "body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-actions],body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-corner]",
       "prop": "position",
       "verdict": "unmatched"
     },
-    "body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-actions],body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-corner]{position:fixed!;top:calc(var(--dsh-windows-titlebar-height, 40px) / 2)!;right:var(--dsh-header-band-right)!;margin:0!;transform:translateY(-50%)!;z-index:var(--dsh-claude-layer-chrome)!;-webkit-app-region:no-drag!}|top": {
+    "body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-actions],body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-corner]{position:fixed!;top:calc(var(--dsh-header-band-height, var(--dsh-windows-titlebar-height, 40px)) / 2)!;right:var(--dsh-header-band-right)!;margin:0!;transform:translateY(-50%)!;z-index:var(--dsh-claude-layer-chrome)!;-webkit-app-region:no-drag!}|top": {
       "selector": "body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-actions],body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-corner]",
       "prop": "top",
       "verdict": "unmatched"
     },
-    "body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-actions],body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-corner]{position:fixed!;top:calc(var(--dsh-windows-titlebar-height, 40px) / 2)!;right:var(--dsh-header-band-right)!;margin:0!;transform:translateY(-50%)!;z-index:var(--dsh-claude-layer-chrome)!;-webkit-app-region:no-drag!}|right": {
+    "body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-actions],body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-corner]{position:fixed!;top:calc(var(--dsh-header-band-height, var(--dsh-windows-titlebar-height, 40px)) / 2)!;right:var(--dsh-header-band-right)!;margin:0!;transform:translateY(-50%)!;z-index:var(--dsh-claude-layer-chrome)!;-webkit-app-region:no-drag!}|right": {
       "selector": "body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-actions],body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-corner]",
       "prop": "right",
       "verdict": "unmatched"
     },
-    "body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-actions],body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-corner]{position:fixed!;top:calc(var(--dsh-windows-titlebar-height, 40px) / 2)!;right:var(--dsh-header-band-right)!;margin:0!;transform:translateY(-50%)!;z-index:var(--dsh-claude-layer-chrome)!;-webkit-app-region:no-drag!}|margin": {
+    "body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-actions],body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-corner]{position:fixed!;top:calc(var(--dsh-header-band-height, var(--dsh-windows-titlebar-height, 40px)) / 2)!;right:var(--dsh-header-band-right)!;margin:0!;transform:translateY(-50%)!;z-index:var(--dsh-claude-layer-chrome)!;-webkit-app-region:no-drag!}|margin": {
       "selector": "body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-actions],body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-corner]",
       "prop": "margin",
       "verdict": "unmatched"
     },
-    "body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-actions],body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-corner]{position:fixed!;top:calc(var(--dsh-windows-titlebar-height, 40px) / 2)!;right:var(--dsh-header-band-right)!;margin:0!;transform:translateY(-50%)!;z-index:var(--dsh-claude-layer-chrome)!;-webkit-app-region:no-drag!}|transform": {
+    "body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-actions],body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-corner]{position:fixed!;top:calc(var(--dsh-header-band-height, var(--dsh-windows-titlebar-height, 40px)) / 2)!;right:var(--dsh-header-band-right)!;margin:0!;transform:translateY(-50%)!;z-index:var(--dsh-claude-layer-chrome)!;-webkit-app-region:no-drag!}|transform": {
       "selector": "body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-actions],body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-corner]",
       "prop": "transform",
       "verdict": "unmatched"
     },
-    "body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-actions],body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-corner]{position:fixed!;top:calc(var(--dsh-windows-titlebar-height, 40px) / 2)!;right:var(--dsh-header-band-right)!;margin:0!;transform:translateY(-50%)!;z-index:var(--dsh-claude-layer-chrome)!;-webkit-app-region:no-drag!}|z-index": {
+    "body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-actions],body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-corner]{position:fixed!;top:calc(var(--dsh-header-band-height, var(--dsh-windows-titlebar-height, 40px)) / 2)!;right:var(--dsh-header-band-right)!;margin:0!;transform:translateY(-50%)!;z-index:var(--dsh-claude-layer-chrome)!;-webkit-app-region:no-drag!}|z-index": {
       "selector": "body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-actions],body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-corner]",
       "prop": "z-index",
       "verdict": "unmatched"
     },
-    "body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-actions],body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-corner]{position:fixed!;top:calc(var(--dsh-windows-titlebar-height, 40px) / 2)!;right:var(--dsh-header-band-right)!;margin:0!;transform:translateY(-50%)!;z-index:var(--dsh-claude-layer-chrome)!;-webkit-app-region:no-drag!}|-webkit-app-region": {
+    "body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-actions],body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-corner]{position:fixed!;top:calc(var(--dsh-header-band-height, var(--dsh-windows-titlebar-height, 40px)) / 2)!;right:var(--dsh-header-band-right)!;margin:0!;transform:translateY(-50%)!;z-index:var(--dsh-claude-layer-chrome)!;-webkit-app-region:no-drag!}|-webkit-app-region": {
       "selector": "body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-actions],body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-corner]",
       "prop": "-webkit-app-region",
       "verdict": "unmatched"

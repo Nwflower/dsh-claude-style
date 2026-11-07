@@ -53,12 +53,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const TITLE_MAX = '--dsh-header-band-max'
   const TITLE_TOP = '--dsh-header-band-title-top'
   /**
-   * How far below the caption row's middle the title sits: its text draws 20px
-   * in a 28px box, so a box centred on the row leaves the line reading high
-   * against the controls beside it.
-   */
-  const TITLE_NUDGE = 2
-  /**
    * The row's own stamp and the negative top margin its rule reads: with the
    * title gone the row holds only the controls, and the host's top inset for a
    * row that also carried a title leaves it too low.
@@ -66,11 +60,13 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const ROW_ATTR = 'data-dsh-header-row'
   const ROW_LIFT = '--dsh-header-band-row-lift'
   /**
-   * The header's top inset once it has closed around that row: the air the row
-   * keeps under the title's box. Written here because the caption strip is the
-   * shell's, so the gap is measured rather than taken as the host's inset.
+   * The header's top inset once it has closed around that row, measured from
+   * the row's target and the header's own edge. The host's inline inset predates
+   * the title's move, so the stylesheet has to stand over it.
    */
   const ROW_TOP = '--dsh-header-band-top'
+  /** The measured caption height shared by the title and the fixed controls. */
+  const BAND_HEIGHT = '--dsh-header-band-height'
   /** The two control clusters' stamps, and the right offset both rules read. */
   const ACTIONS_ATTR = 'data-dsh-header-actions'
   const CORNER_ATTR = 'data-dsh-header-corner'
@@ -87,12 +83,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const ACTIONS_TOKEN = 'actions'
   /** The air between anything placed here and its neighbour. */
   const GAP = 8
-  /**
-   * The air the row the title left keeps under the title's own box. The caption
-   * row is the window's strip, and a row crossing into it paints under the
-   * shell's chrome: its top is placed this far below the title's box instead.
-   */
-  const ROW_GAP = 8
   /** What the row keeps clear at its left end when the shell mounts no menu seat: the sidebar's control. */
   const FURNITURE = 48
   /** Below this a lifted title would be a stub: it stays in the row instead. */
@@ -232,6 +222,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (bandHost !== null) {
       bandHost.removeAttribute(BAND_ATTR)
       bandHost.style.removeProperty(ROW_TOP)
+      bandHost.style.removeProperty(BAND_HEIGHT)
       bandHost = null
     }
   }
@@ -388,16 +379,15 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const liftTitle = title !== null && room >= MIN_TITLE
     // The row the title leaves holds only controls, and the host's inset for a
     // row that still carried a title would leave them floating below the caption
-    // row. It rides up to stand its top ROW_GAP below the title's box, which the
-    // stylesheet centres in the caption row — the target is computed rather than
-    // read, because the title's box is not there yet on the pass that lifts it
-    // and nothing would wake a second pass. Where the offset already applied is
-    // taken back out, or the pass would read the raised row as needing no rise.
+    // row. It starts at the title box's lower edge; the target is computed rather
+    // than read because the title has not been lifted on this pass. Where the
+    // offset already applied is taken back out, or the pass would read the raised
+    // row as needing no rise.
     const titleHeight = titleBox === null ? 0 : titleBox.height
-    const titleCentre = band.height / 2 + TITLE_NUDGE
+    const titleCentre = band.height / 2
     const applied = parseFloat(row.style.getPropertyValue(ROW_LIFT))
-    /** Where the row's top belongs: its own gap under the title's box, which the stylesheet centres in the caption row. */
-    const rowTop = titleCentre + titleHeight / 2 + ROW_GAP
+    /** Where the row's top belongs: the lower edge of the title's centred box. */
+    const rowTop = titleCentre + titleHeight / 2
     const rise = !liftTitle ? 0 : Math.max(0, Math.round(rowBox.top - (isFinite(applied) ? applied : 0) - rowTop))
 
     rowStamp.mark(liftTitle ? row : null)
@@ -444,14 +434,17 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       if (bandHost !== null) {
         bandHost.removeAttribute(BAND_ATTR)
         bandHost.style.removeProperty(ROW_TOP)
+        bandHost.style.removeProperty(BAND_HEIGHT)
         bandHost = null
       }
     } else {
       if (bandHost !== null && bandHost !== header) {
         bandHost.removeAttribute(BAND_ATTR)
         bandHost.style.removeProperty(ROW_TOP)
+        bandHost.style.removeProperty(BAND_HEIGHT)
       }
       bandHost = header
+      setVar(header, BAND_HEIGHT, `${band.height}px`)
       setAttributeIfChanged(header, BAND_ATTR, tokens)
     }
   }

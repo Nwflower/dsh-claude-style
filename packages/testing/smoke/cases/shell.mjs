@@ -157,11 +157,9 @@ export default {
     const laid = b.laid || {}
     const marks = laid.marks || {}
     const right = b.viewportRight - (b.controls + b.air)
-    /** The caption row's own middle for a 28px box; the title sits the skin's optical drop below it. */
+    /** The caption row's own middle for a 28px box, shared by the title and the controls. */
     const middle = Math.round((b.band - 28) / 2)
     const top = middle + b.titleDrop
-    // Where the row sits with the lift taken back out: the header's own inset.
-    const naturalRow = laid.row.y - parseFloat(laid.rowLift || '0')
     check('the caption row takes both sides: the title at the row\'s left, the two control clusters against the caption buttons',
       marks.band === 'title actions' && marks.title === true && marks.utilities === true && marks.corner === true &&
         laid.title.x === laid.row.x && laid.title.y === top &&
@@ -178,12 +176,12 @@ export default {
     check('the words the row carries are the window\'s own: a press on the title starts no selection',
       laid.titleSelect === 'none' && laid.headerSelect === 'none',
       JSON.stringify({ title: laid.titleSelect, header: laid.headerSelect }))
-    check('the title is handed the room left between its own edge and the controls once the strip\'s width is reserved, and the row it left keeps its gap under it',
+    check('the title is handed the room left between its own edge and the controls once the strip\'s width is reserved, and the row it left starts at the title box without the host\'s old inset',
       laid.titleLeft === laid.row.x + 'px' &&
         laid.titleMax === laid.utilities.x - b.air - ((laid.strip.right - laid.strip.x) + b.air) - laid.title.x + 'px' &&
-        laid.row.y === laid.title.y + 28 + b.gap && laid.rowPosition === 'relative' && laid.rowOffset === laid.rowLift &&
+        laid.row.y === laid.title.y + 28 + b.rowGap && laid.rowPosition === 'relative' && laid.rowOffset === laid.rowLift &&
         laid.row.y === laid.rowLift.replace('px', '') * 1 + laid.header.y + parseFloat(laid.headerPaddingTop) &&
-        laid.preset.x === laid.row.x,
+        laid.headerPaddingTop === '0px' && laid.preset.x === laid.row.x,
       JSON.stringify({ left: laid.titleLeft, max: laid.titleMax, lift: laid.rowLift, offset: laid.rowOffset, row: laid.row, header: laid.header, preset: laid.preset, utilities: laid.utilities, strip: laid.strip }))
     const panelClosed = b.panelClosed || {}
     check('the right panel\'s collapse control is the skin\'s own, drawn in the header\'s row: it shows while the panel is open and hides with the panel, and the panel\'s own copy stays where the host drew it',
@@ -195,12 +193,12 @@ export default {
       solo.marks.band === 'title actions' && solo.marks.corner === false && solo.utilities.right === right,
       JSON.stringify(solo))
     const tight = b.tight || {}
+    const off = b.off || {}
     check('when the shell\'s own seat takes the row\'s left end, both sides stay in the header\'s row: no marker, no stamp, the row back at its own inset',
       tight.marks.band === null && tight.marks.row === false && tight.marks.title === false &&
         tight.marks.utilities === false && tight.marks.corner === false &&
-        tight.row.y === naturalRow && tight.title.y > b.band && tight.utilities.y > b.band,
-      JSON.stringify({ tight: tight, natural: naturalRow }))
-    const off = b.off || {}
+        tight.row.y === (off.row || {}).y && tight.title.y > b.band && tight.utilities.y > b.band,
+      JSON.stringify({ tight: tight, off: off.row }))
     const back = b.back || {}
     check('switching the feature off hands the row back whole — the strip the other feature placed stays, and the cluster\'s own fade with it — and switching it on places both sides again',
       off.marks.band === null && off.marks.title === false && off.marks.utilities === false && off.marks.corner === false &&

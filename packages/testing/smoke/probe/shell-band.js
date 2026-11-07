@@ -28,9 +28,9 @@
       var AIR = 8
       var BAND = 40
       var GAP = 8
-      // The skin's own optical drop below the caption row's middle: the title's
-      // text draws 20px in a 28px box, so the box sits 2px low to read centred.
-      var TITLE_DROP = 2
+      // The title and both control clusters share the caption row's middle.
+      var TITLE_DROP = 0
+      var ROW_GAP = 0
       var HEADER_TOP = 60
       var HEADER_INSET = 10
       var ROW_LEFT = 200
@@ -49,6 +49,8 @@
       // The desktop shell's two answers: the caption row is on the page, and
       // the Window Controls Overlay API reports the three caption buttons.
       document.documentElement.setAttribute('data-windows-titlebar', '')
+      // The overlay's measurement is authoritative when the host's alias differs.
+      document.documentElement.style.setProperty('--dsh-windows-titlebar-height', '56px')
       Object.defineProperty(navigator, 'windowControlsOverlay', {
         configurable: true,
         value: {
@@ -136,6 +138,7 @@
         air: AIR,
         band: BAND,
         gap: GAP,
+        rowGap: ROW_GAP,
         titleDrop: TITLE_DROP,
         headerTop: HEADER_TOP,
         headerInset: HEADER_INSET,
@@ -200,7 +203,7 @@
       // and the placement comes back when it is switched on again.
       window.__pushForm({ headerBand: false })
       await sleep(250)
-      r.band.off = { marks: marks(), stripStamped: strip.hasAttribute('data-dsh-view-tabs'), clusterMask: getComputedStyle(cluster).maskImage }
+      r.band.off = { marks: marks(), row: box(row), headerPaddingTop: getComputedStyle(header).paddingTop, stripStamped: strip.hasAttribute('data-dsh-view-tabs'), clusterMask: getComputedStyle(cluster).maskImage }
       window.__pushForm({ headerBand: true })
       await sleep(250)
       r.band.back = { marks: marks(), title: box(title), utilities: box(utilities), titleHit: hitAt(title), clusterMask: getComputedStyle(cluster).maskImage }
@@ -214,6 +217,7 @@
       header.remove()
       hostCluster.remove()
       document.documentElement.removeAttribute('data-windows-titlebar')
+      document.documentElement.style.removeProperty('--dsh-windows-titlebar-height')
       delete navigator.windowControlsOverlay
       await sleep(250)
       r.band.left = marks()
