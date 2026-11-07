@@ -289,6 +289,11 @@ function reasoningContinuousScenario({ check }) {
   return {
     script: 'think',
     prompt: 'think it through',
+    patch: [
+      '- id: ui-skin-claude-style',
+      '  config:',
+      '    reasoningDisplay: continuous',
+    ],
     delayMs: 700,
     async duringTurn(context) {
       const { page } = context

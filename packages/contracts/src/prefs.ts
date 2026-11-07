@@ -401,7 +401,7 @@ export const PREFS = {
   chatWait: { type: 'boolean', default: true },
   chatSend: { type: 'boolean', default: true },
   chatReveal: { type: 'choice', values: CHAT_REVEAL_MODES, default: CHAT_REVEAL_OFF },
-  reasoningDisplay: { type: 'choice', values: REASONING_DISPLAYS, default: REASONING_DISPLAY_CONTINUOUS },
+  reasoningDisplay: { type: 'choice', values: REASONING_DISPLAYS, default: REASONING_DISPLAY_STEPPED },
   /**
    * Whether the formal answer takes the reading position as it starts
    * (features/chat-anchor/): its first line comes to the top of the conversation
