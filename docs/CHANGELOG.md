@@ -2,6 +2,66 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [0.20.0] - 2026-11-07
+
+[中文](#cn-0.20.0) | [English](#en-0.20.0)
+
+<h3 id="cn-0.20.0">新增功能</h3>
+
+- 新增吉祥物悬停气泡，以像素字体显示含赠金、随会话花费实时扣减的账号余额与当前会话的花费
+- 新增思考内容显示选择，默认逐字跟随并保留两行步进
+- 新增模型选择器提供方分组的独立折叠与状态保存，并增强标题层级
+- 新增模型回复所在轮次的重跑与删除，通过新分岔保留原会话
+- 新增 System sans 字体选择，统一界面与 Markdown 的系统无衬线回退
+- 新增独立界面字号调节，覆盖侧栏、输入区与设置等普通文字
+
+### 体验优化
+
+- 改善侧栏「工作区」标题行铃铛的墨色，与同一行里宿主的图标共用同一级墨色令牌
+- 改善侧栏「工作区」标题行铃铛的操作反馈，悬停底色与宿主的图标一致，指针停稳后给出进入或离开日期视图的提示
+
+### 问题修复
+
+- 修复未安装 Anthropic 字体时页面向这三个字体文件发出的 404 请求
+- 修复充值页的全窗口遮罩被对话框尺寸上限缩小、在窗口右侧和底部露出主界面的问题
+- 修复英文界面下权限档位的说明仍显示中文
+- 修复长间隔之后输出加快时聊天滚动位移逐渐累积、最新一行被推出可视区的问题
+- 修复读者上滑浏览时流式增长仍改变其滚动位置的问题
+- 修复流式输出收尾时消息列回弹与底部统计行跳动的问题
+- 修复侧栏工作区分组标题与会话标题在暗色下层级相近的问题
+- 修复移动端软键盘改变可视视口时输入区的跟随与底距
+- 修复移动端首页用量面板与热力图左右不居中的问题
+- 修复 Windows 顶栏高度与标题控件的垂直位置
+- 修复日期视图默认开启的问题，侧栏默认按宿主自己的分组排列，按下铃铛才排成日期段落，刷新后回到宿主分组
+
+<h3 id="en-0.20.0">New Features</h3>
+
+- Add a hover bubble over the mascot that shows, in a pixel font, the account balance with gifted credit drawn down live by the conversation's cost, and that cost
+- Add a reasoning display choice with continuous text by default and the two-line stepping window as an option
+- Add independently collapsible provider groups with preserved state and clearer headings in the model picker
+- Add rerun and delete-turn actions for model answers, preserving the source session through a new branch
+- Add a System sans choice with one system fallback stack across the interface and Markdown
+- Add an independent font-size control for ordinary text in the sidebar, composer and settings
+
+### Improvements
+
+- Improve the sidebar workspace header bell's ink to share the level the host's own icons in that row use
+- Improve the sidebar workspace header bell's feedback with the host's own hover wash and a tooltip naming the date view it switches to or from
+
+### Bug Fixes
+
+- Fix the 404 requests the page sent for the three Anthropic font files when they are not installed
+- Fix the recharge page's full-window overlay shrinking under the dialog size cap and leaving the main window showing at its right and bottom edges
+- Fix the permission tiers' descriptions staying Chinese on an English interface
+- Fix the chat scroll offset building up after a long pause in a faster stream and pushing the newest line out of view
+- Keep the reader's chosen scroll position steady while a streamed answer grows
+- Fix the message column rebound and footer statistics jump as a streamed answer settles
+- Separate sidebar workspace labels from session titles in the dark scheme
+- Keep the composer following the visible viewport as the mobile keyboard opens, moves and closes
+- Center the home usage panel and heat grid within the available column on mobile
+- Fix Windows caption height and vertical alignment of the title and header controls
+- Fix the date view opening by default; the sidebar follows the host's own grouping until the bell is pressed, and a reload returns to the host grouping
+
 ## [0.19.10] - 2026-11-06
 
 [中文](#cn-0.19.10) | [English](#en-0.19.10)

@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 24,
-  "at": "2026-11-07",
-  "external": false,
-  "zh": "修复侧栏工作区分组标题与会话标题在暗色下层级相近的问题",
-  "en": "Separate sidebar workspace labels from session titles in the dark scheme"
-}

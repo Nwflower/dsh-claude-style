@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 27,
-  "at": "2026-11-07",
-  "external": false,
-  "zh": "修复 Windows 顶栏高度与标题控件的垂直位置",
-  "en": "Fix Windows caption height and vertical alignment of the title and header controls"
-}

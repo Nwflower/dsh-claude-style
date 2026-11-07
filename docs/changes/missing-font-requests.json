@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 10,
-  "at": "2026-11-06",
-  "external": false,
-  "zh": "修复未安装 Anthropic 字体时页面向这三个字体文件发出的 404 请求",
-  "en": "Fix the 404 requests the page sent for the three Anthropic font files when they are not installed"
-}

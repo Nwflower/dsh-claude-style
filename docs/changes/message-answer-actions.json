@@ -1,8 +1,0 @@
-{
-  "group": "new",
-  "order": 32,
-  "at": "2026-11-07",
-  "external": false,
-  "zh": "新增模型回复所在轮次的重跑与删除，通过新分岔保留原会话",
-  "en": "Add rerun and delete-turn actions for model answers, preserving the source session through a new branch"
-}

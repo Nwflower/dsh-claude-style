@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 20,
-  "at": "2026-11-06",
-  "external": false,
-  "zh": "修复长间隔之后输出加快时聊天滚动位移逐渐累积、最新一行被推出可视区的问题",
-  "en": "Fix the chat scroll offset building up after a long pause in a faster stream and pushing the newest line out of view"
-}

@@ -1,8 +1,0 @@
-{
-  "group": "new",
-  "order": 10,
-  "at": "2026-11-07",
-  "external": false,
-  "zh": "新增吉祥物悬停气泡，以像素字体显示含赠金、随会话花费实时扣减的账号余额与当前会话的花费",
-  "en": "Add a hover bubble over the mascot that shows, in a pixel font, the account balance with gifted credit drawn down live by the conversation's cost, and that cost"
-}

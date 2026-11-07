@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 20,
-  "at": "2026-11-06",
-  "external": false,
-  "zh": "修复英文界面下权限档位的说明仍显示中文",
-  "en": "Fix the permission tiers' descriptions staying Chinese on an English interface"
-}

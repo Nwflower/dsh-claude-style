@@ -1,8 +1,0 @@
-{
-  "group": "improvements",
-  "order": 10,
-  "at": "2026-11-06",
-  "external": false,
-  "zh": "改善侧栏「工作区」标题行铃铛的墨色，与同一行里宿主的图标共用同一级墨色令牌",
-  "en": "Improve the sidebar workspace header bell's ink to share the level the host's own icons in that row use"
-}

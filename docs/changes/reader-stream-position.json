@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 21,
-  "at": "2026-11-07",
-  "external": false,
-  "zh": "修复读者上滑浏览时流式增长仍改变其滚动位置的问题",
-  "en": "Keep the reader's chosen scroll position steady while a streamed answer grows"
-}

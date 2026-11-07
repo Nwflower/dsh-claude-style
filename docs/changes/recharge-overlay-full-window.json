@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 10,
-  "at": "2026-11-06",
-  "external": false,
-  "zh": "修复充值页的全窗口遮罩被对话框尺寸上限缩小、在窗口右侧和底部露出主界面的问题",
-  "en": "Fix the recharge page's full-window overlay shrinking under the dialog size cap and leaving the main window showing at its right and bottom edges"
-}

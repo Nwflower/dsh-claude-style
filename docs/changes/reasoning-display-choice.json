@@ -1,8 +1,0 @@
-{
-  "group": "new",
-  "order": 30,
-  "at": "2026-11-07",
-  "external": false,
-  "zh": "新增思考内容显示选择，默认逐字跟随并保留两行步进",
-  "en": "Add a reasoning display choice with continuous text by default and the two-line stepping window as an option"
-}

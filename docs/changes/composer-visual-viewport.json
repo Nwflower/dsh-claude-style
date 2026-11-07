@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 25,
-  "at": "2026-11-07",
-  "external": false,
-  "zh": "修复移动端软键盘改变可视视口时输入区的跟随与底距",
-  "en": "Keep the composer following the visible viewport as the mobile keyboard opens, moves and closes"
-}

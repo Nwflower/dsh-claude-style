@@ -1,8 +1,0 @@
-{
-  "group": "new",
-  "order": 31,
-  "at": "2026-11-07",
-  "external": false,
-  "zh": "新增模型选择器提供方分组的独立折叠与状态保存，并增强标题层级",
-  "en": "Add independently collapsible provider groups with preserved state and clearer headings in the model picker"
-}

@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 22,
-  "at": "2026-11-07",
-  "external": false,
-  "zh": "修复流式输出收尾时消息列回弹与底部统计行跳动的问题",
-  "en": "Fix the message column rebound and footer statistics jump as a streamed answer settles"
-}
