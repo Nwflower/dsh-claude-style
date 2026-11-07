@@ -1,12 +1,50 @@
 {
-  "today": { "zh": "今天", "en": "Today" },
-  "yesterday": { "zh": "昨天", "en": "Yesterday" },
-  "earlier": { "zh": "更早", "en": "Earlier" },
-  "weekday0": { "zh": "星期日", "en": "Sunday" },
-  "weekday1": { "zh": "星期一", "en": "Monday" },
-  "weekday2": { "zh": "星期二", "en": "Tuesday" },
-  "weekday3": { "zh": "星期三", "en": "Wednesday" },
-  "weekday4": { "zh": "星期四", "en": "Thursday" },
-  "weekday5": { "zh": "星期五", "en": "Friday" },
-  "weekday6": { "zh": "星期六", "en": "Saturday" }
+  "today": {
+    "zh": "今天",
+    "en": "Today"
+  },
+  "yesterday": {
+    "zh": "昨天",
+    "en": "Yesterday"
+  },
+  "earlier": {
+    "zh": "更早",
+    "en": "Earlier"
+  },
+  "weekday0": {
+    "zh": "星期日",
+    "en": "Sunday"
+  },
+  "weekday1": {
+    "zh": "星期一",
+    "en": "Monday"
+  },
+  "weekday2": {
+    "zh": "星期二",
+    "en": "Tuesday"
+  },
+  "weekday3": {
+    "zh": "星期三",
+    "en": "Wednesday"
+  },
+  "weekday4": {
+    "zh": "星期四",
+    "en": "Thursday"
+  },
+  "weekday5": {
+    "zh": "星期五",
+    "en": "Friday"
+  },
+  "weekday6": {
+    "zh": "星期六",
+    "en": "Saturday"
+  },
+  "dateGroupsTitle": {
+    "zh": "会话按日期分段",
+    "en": "Group sessions by date"
+  },
+  "dateGroupsDesc": {
+    "zh": "侧栏按今天、昨天、星期几给会话分段；关闭后回到宿主自己的分组方式（按工作区、工作区树或扁平），顶行的铃铛也不再切换日期视图。",
+    "en": "Stack sessions under Today / Yesterday / weekday headings; off keeps the host’s own grouping (by workspace, workspace tree or flat) and the bell no longer toggles the date view."
+  }
 }
