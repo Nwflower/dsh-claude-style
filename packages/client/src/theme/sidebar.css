@@ -97,7 +97,7 @@ body[data-dsh-claude-style] button[data-dsh-claude-part~="panel-row"] {
   background: transparent;
   color: var(--dsw-alias-label-primary, #161616);
   font-family: var(--dsw-font-family);
-  font-size: 13px;
+  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
   font-weight: 500;
   /* Explicit, so the label's x does not depend on the host's gap: every sidebar
      row places its text at padding + 20px icon box + 6px. */
@@ -293,12 +293,12 @@ body[data-dsh-claude-style] :is([data-pane="sidebar"], [data-dsh-claude-part~="s
   font-family: var(--dsw-font-family);
 }
 body[data-dsh-claude-style] [data-dsh-claude-part~="project-row"] [data-dsh-claude-part~="row-title"] {
-  font-size: 13px;
+  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 18px;
   letter-spacing: normal;
 }
 body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"] [data-dsh-claude-part~="row-title"] {
-  font-size: 13px;
+  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 18px;
   letter-spacing: normal;
   color: var(--dsw-alias-label-secondary, #70686a);
@@ -311,11 +311,11 @@ body[data-dsh-claude-style][data-ds-dark-theme] [data-dsh-claude-part~="session-
   color: var(--dsw-alias-label-primary);
 }
 body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"] [data-dsh-claude-part~="row-time"] {
-  font-size: 11px;
+  font-size: calc(11px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 16px;
 }
 body[data-dsh-claude-style] [data-dsh-claude-part~="section-label"] {
-  font-size: 12px;
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 16px;
   color: var(--dsw-alias-label-tertiary, #91888a);
 }

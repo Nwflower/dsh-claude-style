@@ -301,7 +301,7 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-c
   height: auto;
   line-height: 24px;
   padding: 0;
-  font-size: 14px;
+  font-size: calc(14px * var(--dsh-claude-interface-font-scale, 1));
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -322,7 +322,7 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-c
   right: 0;
   max-width: 100%;
   box-sizing: border-box;
-  font-size: 14px;
+  font-size: calc(14px * var(--dsh-claude-interface-font-scale, 1));
   color: var(--dsw-alias-label-caption);
   white-space: nowrap;
   text-overflow: ellipsis;

@@ -8,7 +8,7 @@ body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"]
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] > .dsh-claude-model-seat {
   display: inline-flex;
   align-items: center;
-  font-size: 13px;
+  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
   color: var(--dsw-alias-label-secondary);
   border-radius: 7px;
   cursor: pointer;
@@ -160,7 +160,7 @@ body[data-dsh-claude-style] [data-dsh-claude-meter-ring] > button,
 body[data-dsh-claude-style] [data-composer-card] [data-dsh-claude-part~="row"] .dsh-claude-model-btn,
 body[data-dsh-claude-style] [data-composer-card] [data-dsh-claude-part~="row"] .dsh-claude-effort-btn {
   font-family: var(--dsw-font-family);
-  font-size: 13px;
+  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
   font-weight: 500;
   line-height: 20px;
   letter-spacing: normal;
@@ -242,7 +242,7 @@ body[data-dsh-claude-style] .dsh-claude-context-stats-grid {
 }
 body[data-dsh-claude-style] .dsh-claude-context-stats-section {
   color: var(--dsw-alias-label-tertiary);
-  font-size: 11px;
+  font-size: calc(11px * var(--dsh-claude-interface-font-scale, 1));
   font-weight: 600;
   letter-spacing: 0.04em;
 }
@@ -254,7 +254,7 @@ body[data-dsh-claude-style] .dsh-claude-context-stats-item {
 }
 body[data-dsh-claude-style] .dsh-claude-context-stats-label {
   color: var(--dsw-alias-label-tertiary);
-  font-size: 12px;
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 16px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -262,7 +262,7 @@ body[data-dsh-claude-style] .dsh-claude-context-stats-label {
 }
 body[data-dsh-claude-style] .dsh-claude-context-stats-value {
   color: var(--dsw-alias-label-primary);
-  font-size: 14px;
+  font-size: calc(14px * var(--dsh-claude-interface-font-scale, 1));
   font-weight: 500;
   line-height: 20px;
   font-variant-numeric: tabular-nums;
@@ -300,7 +300,7 @@ body[data-dsh-claude-style] .dsh-claude-inline-stats {
   overflow: clip;
   color: var(--dsw-alias-label-primary);
   font-family: var(--dsw-font-family);
-  font-size: 13px;
+  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
   font-weight: 500;
   line-height: 20px;
   font-variant-numeric: tabular-nums;

@@ -39,7 +39,7 @@ body[data-dsh-claude-style] .dsh-claude-settings-zoom-input {
   padding: 0;
   color: inherit;
   font: inherit;
-  font-size: 13px;
+  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 18px;
   font-variant-numeric: tabular-nums;
   text-align: right;
@@ -48,7 +48,7 @@ body[data-dsh-claude-style] .dsh-claude-settings-zoom-input {
 
 body[data-dsh-claude-style] .dsh-claude-settings-zoom-unit {
   color: var(--dsw-alias-label-tertiary);
-  font-size: 12px;
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
 }
 
 /* 「恢复默认」：一个文字按钮，站在输入框左边，悬停时换成品牌色；页面的缩放已经是
@@ -60,7 +60,7 @@ body[data-dsh-claude-style] .dsh-claude-settings-zoom-reset {
   background: transparent;
   color: var(--dsw-alias-label-secondary);
   font: inherit;
-  font-size: 12px;
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 18px;
   text-decoration: underline;
   text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);

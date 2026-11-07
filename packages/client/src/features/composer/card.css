@@ -8,7 +8,7 @@
    so it separates from the canvas, and an outline 4px tighter than the
    shipped 22px. */
 body[data-dsh-claude-style] [data-composer-card] {
-  font-size: 15px;
+  font-size: calc(15px * var(--dsh-claude-interface-font-scale, 1));
   border-radius: 18px;
   border: 1px solid var(--dsw-alias-border-l1);
   position: relative;
@@ -154,7 +154,7 @@ body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[data-dsh-claude-con
    menu it opens stay exactly as shipped. Its shipped hover token is only a
    ~6% tint, so the hover plate matches the composer tool buttons. */
 body[data-dsh-claude-style] [data-composer-card] [data-dsh-claude-part~="trigger"] {
-  font-size: 14px;
+  font-size: calc(14px * var(--dsh-claude-interface-font-scale, 1));
   border-radius: 7px;
 }
 
@@ -217,7 +217,7 @@ body[data-dsh-claude-style]:not([data-dsh-claude-home-layout="studio"]) [data-ds
 
 /* Muted typography and 7px corners for footer controls */
 body[data-dsh-claude-style] [data-dsh-claude-part~="hero-workspace-row"] :is(button, [role="button"]) {
-  font-size: 13px;
+  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
   color: var(--dsw-alias-label-secondary);
   border-radius: 7px;
 }

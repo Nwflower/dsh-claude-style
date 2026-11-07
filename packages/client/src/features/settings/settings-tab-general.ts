@@ -1,7 +1,8 @@
 import * as React from 'react'
-import { AUTO_POPOVER_ACCOUNT, AUTO_POPOVER_ALL, AUTO_POPOVER_OFF, BRAND_CLAUDE, BRAND_DEEPSEEK, PAGE_ZOOM_DEFAULT, PAGE_ZOOM_MAX, PAGE_ZOOM_MIN, PALETTE_COLORING_BRAND, PALETTE_COLORING_CUSTOM, USERNAME_MAX } from '../../constants'
+import { AUTO_POPOVER_ACCOUNT, AUTO_POPOVER_ALL, AUTO_POPOVER_OFF, BRAND_CLAUDE, BRAND_DEEPSEEK, INTERFACE_FONT_SIZE_DEFAULT, INTERFACE_FONT_SIZE_MAX, INTERFACE_FONT_SIZE_MIN, PAGE_ZOOM_DEFAULT, PAGE_ZOOM_MAX, PAGE_ZOOM_MIN, PALETTE_COLORING_BRAND, PALETTE_COLORING_CUSTOM, USERNAME_MAX } from '../../constants'
 import { COMBINE_SVGS } from 'virtual:dsh-claude-style/generated'
 import { createHostToast } from '../../shared/host-toast'
+import { interfaceFontSizePercent } from '../../shared/interface-font-size'
 import { pageZoomPercent } from '../../shared/page-zoom'
 import { PercentControl } from './settings-percent-control'
 import { PreviewCards } from '../../shared/preview-cards'
@@ -143,6 +144,25 @@ export function createSettingsGeneralTab(): SettingsTab {
             onReset: () => { write({ pageZoom: PAGE_ZOOM_DEFAULT }) },
           }),
           { experimental: true },
+        ),
+      },
+      {
+        rank: 35,
+        node: controls.row(
+          'interfaceFontSize',
+          copy('interfaceFontSizeTitle'),
+          copy('interfaceFontSizeDesc'),
+          React.createElement(PercentControl, {
+            percent: interfaceFontSizePercent(prefs.interfaceFontSize),
+            min: INTERFACE_FONT_SIZE_MIN,
+            max: INTERFACE_FONT_SIZE_MAX,
+            defaultPercent: Number(INTERFACE_FONT_SIZE_DEFAULT),
+            fieldLabel: copy('interfaceFontSizePercentLabel'),
+            trackLabel: copy('interfaceFontSizeTrackLabel'),
+            resetLabel: copy('interfaceFontSizeReset'),
+            onPick: percent => { write({ interfaceFontSize: String(percent) }) },
+            onReset: () => { write({ interfaceFontSize: INTERFACE_FONT_SIZE_DEFAULT }) },
+          }),
         ),
       },
       {

@@ -52,7 +52,7 @@ body[data-dsh-claude-style] .dsh-claude-settings-title {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  font-size: 15px;
+  font-size: calc(15px * var(--dsh-claude-interface-font-scale, 1));
   font-weight: 600;
   color: var(--dsw-alias-label-primary);
 }
@@ -97,7 +97,7 @@ body[data-dsh-claude-style] .dsh-claude-settings-repo-label {
   opacity: 0;
   white-space: nowrap;
   text-decoration: none;
-  font-size: 13px;
+  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
   font-weight: 500;
   color: var(--dsw-alias-brand-text, #ffffff);
   transition:
@@ -213,7 +213,7 @@ body[data-dsh-claude-style] .dsh-claude-settings-rows[data-dsh-claude-page-leave
 
 /* A tab's opening line, above its first row, which keeps no hairline under it. */
 body[data-dsh-claude-style] .dsh-claude-settings-notice {
-  font-size: 12px;
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 18px;
   color: var(--dsw-alias-label-secondary);
 }
@@ -237,7 +237,7 @@ body[data-dsh-claude-style] .dsh-claude-settings-tab-notice + .dsh-claude-settin
 body[data-dsh-claude-style] .dsh-claude-settings-group {
   padding: 24px 0 4px;
   border-top: 0.5px solid var(--dsh-claude-divider, var(--dsw-alias-border-l2));
-  font-size: 12px;
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
   font-weight: 600;
   line-height: 18px;
   letter-spacing: .04em;
@@ -329,7 +329,7 @@ body[data-dsh-claude-style] .dsh-claude-settings-row-block > .dsh-claude-setting
    serif display face theme/typography.css gives every class naming a title. */
 body[data-dsh-claude-style] .dsh-claude-settings-row-title {
   font-family: var(--dsw-font-family);
-  font-size: 14px;
+  font-size: calc(14px * var(--dsh-claude-interface-font-scale, 1));
   font-weight: 400;
   letter-spacing: normal;
   line-height: 22px;
@@ -337,7 +337,7 @@ body[data-dsh-claude-style] .dsh-claude-settings-row-title {
 }
 
 body[data-dsh-claude-style] .dsh-claude-settings-row-desc {
-  font-size: 12px;
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 18px;
   color: var(--dsw-alias-label-tertiary);
 }
@@ -372,7 +372,7 @@ body[data-dsh-claude-style] .dsh-claude-settings-row-note {
 }
 
 body[data-dsh-claude-style] .dsh-claude-settings-error {
-  font-size: 12px;
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 1.5;
   color: var(--dsw-alias-state-error-primary, #c0392b);
 }
@@ -461,7 +461,7 @@ body[data-dsh-claude-style] .dsh-claude-settings-button {
   color: var(--dsw-alias-label-primary);
   padding: 6px 10px;
   font: inherit;
-  font-size: 13px;
+  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 18px;
 }
 
@@ -556,7 +556,7 @@ body[data-dsh-claude-style] .dsh-claude-brand-image-preview > img {
   object-fit: contain;
 }
 body[data-dsh-claude-style] .dsh-claude-brand-image-error {
-  font-size: 12px;
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 18px;
   color: var(--dsw-alias-state-error-primary, #c0392b);
   text-align: right;
@@ -664,7 +664,7 @@ body[data-dsh-claude-style] .dsh-claude-palette-hint {
   border-radius: 8px;
   background: var(--dsw-alias-bg-overlay);
   color: var(--dsw-alias-label-primary);
-  font-size: 12px;
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 16px;
   white-space: nowrap;
   box-shadow:
@@ -707,7 +707,7 @@ body[data-dsh-claude-style] .dsh-claude-palette-swatch-input {
 }
 
 body[data-dsh-claude-style] .dsh-claude-palette-card-name {
-  font-size: 14px;
+  font-size: calc(14px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 20px;
   color: var(--dsw-alias-label-secondary);
 }
@@ -719,7 +719,7 @@ body[data-dsh-claude-style] .dsh-claude-palette-reset {
   background: none;
   color: var(--dsw-alias-label-tertiary);
   font: inherit;
-  font-size: 12px;
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 16px;
   cursor: pointer;
 }

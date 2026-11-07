@@ -283,7 +283,7 @@ body[data-dsh-claude-style] .dsh-claude-brand-clear {
   background: var(--dsw-alias-label-secondary);
   color: var(--dsw-alias-bg-layer-3, #ffffff);
   font: inherit;
-  font-size: 12px;
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 1;
   cursor: pointer;
 }
@@ -298,7 +298,7 @@ body[data-dsh-claude-style] .dsh-claude-brand-clear:focus-visible {
 body[data-dsh-claude-style] .dsh-claude-brand-error {
   flex-basis: 100%;
   padding-left: 2px;
-  font-size: 12px;
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 18px;
   color: var(--dsw-alias-state-error-primary, #c0392b);
 }

@@ -1,0 +1,8 @@
+{
+  "group": "new",
+  "order": 34,
+  "at": "2026-11-07",
+  "external": false,
+  "zh": "新增独立界面字号调节，覆盖侧栏、输入区与设置等普通文字",
+  "en": "Add an independent font-size control for ordinary text in the sidebar, composer and settings"
+}
