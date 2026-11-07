@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 26,
+  "at": "2026-11-07",
+  "external": false,
+  "zh": "修复移动端首页用量面板与热力图左右不居中的问题",
+  "en": "Center the home usage panel and heat grid within the available column on mobile"
+}
