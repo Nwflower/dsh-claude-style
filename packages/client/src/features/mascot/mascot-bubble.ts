@@ -47,6 +47,9 @@ export function createMascotBubble(ctx: HostContext, ui: FeatureUi<typeof manife
   /** Take one cost reading into the spending since the balance was read. */
   function observe(reading: SessionCostReading | null) {
     if (reading === null || reading.cost === null) return
+    // 平台余额只对官方供应商的会话扣减：第三方供应商的花费在它自己的账单里结，
+    // 不从这里走账，余额行就停在平台读到的数字上。
+    if (!reading.official) return
     const seen = spent.get(reading.sessionId)
     if (seen === undefined || seen.currency !== reading.currency) {
       spent.set(reading.sessionId, { currency: reading.currency, first: reading.cost, last: reading.cost })
