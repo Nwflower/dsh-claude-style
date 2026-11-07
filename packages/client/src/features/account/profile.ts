@@ -3,7 +3,8 @@ import { hostRemote, hostRemoteAccount } from '@dsh-claude-style/engine/host'
 import { setAccountIdentity } from '../../shared/identity'
 import { activeLocale } from '../../core/i18n'
 import type { HostContext, HostFiber } from '@dsh-claude-style/engine/host'
-import type { HostAccountAnswer, HostAccountClient, HostAccountFrame, HostAccountService, HostStream, HostStreamStep } from '@dsh-claude-style/contracts/services'
+import type { HostAccountAnswer, HostAccountClient, HostAccountFrame, HostAccountService } from '@dsh-claude-style/contracts/account'
+import type { HostStream, HostStreamStep } from '@dsh-claude-style/contracts/services'
 
 /**
  * The signed-in account, when the desktop has one: `remote.account.getProfile(client)`
