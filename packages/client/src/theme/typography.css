@@ -112,6 +112,7 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="markdown"] h1 { font: var(--
 body[data-dsh-claude-style] [data-dsh-claude-part~="markdown"] h2 { font: var(--dsw-font-markdown-h2); font-family: var(--dsh-claude-font-prose); }
 body[data-dsh-claude-style] [data-dsh-claude-part~="markdown"] h3 { font: var(--dsw-font-markdown-h3); font-family: var(--dsh-claude-font-prose); }
 body[data-dsh-claude-style] [data-dsh-claude-part~="markdown"] h4 { font: var(--dsw-font-markdown-h4); font-family: var(--dsh-claude-font-prose); }
+body[data-dsh-claude-style] [data-dsh-claude-part~="markdown"] :is(h5, h6) { font-family: var(--dsh-claude-font-prose); }
 
 body[data-dsh-claude-style] [data-dsh-claude-part~="markdown"] :is(th, td) {
   font-family: var(--dsh-claude-font-prose);

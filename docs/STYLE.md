@@ -216,6 +216,9 @@ blurs what lies behind it so its rows stay readable over a picture.
 Under the host typeface the skin's own faces fall back to the host's:
 `--dsh-claude-font-serif`, `-prose` and `-brand` to `--dsw-font-family` (the
 host carries no serif), `--dsh-claude-font-code` to `--ds-font-family-code`.
+System sans shares `ui-sans-serif, system-ui, sans-serif` across those
+proportional faces and the Markdown shorthands, while code keeps its own
+monospace stack and language fallback stays with the browser.
 
 The account-hold page keeps its own colours, reproducing a Claude screen. The
 reasoning slider and its trigger take the theme accent: the dot matrix and knob

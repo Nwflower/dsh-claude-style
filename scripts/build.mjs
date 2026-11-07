@@ -228,7 +228,7 @@ const CONSTANTS = (() => {
     if (module[name] === undefined) throw new Error(`build: ${file} exports no ${name}`)
     return [name, module[name]]
   }))
-  const { BRAND_ATTR, BRAND_DEEPSEEK, BRANDS, COMPOSER_ATTR, PALETTE_ATTR, PALETTE_CARD_ATTR, PALETTE_CLAUDE, PALETTE_HOST, TYPEFACE_ATTR, TYPEFACE_CLAUDE, TYPEFACE_HOST } = pick(constants, constantsFile, ['BRAND_ATTR', 'BRAND_DEEPSEEK', 'BRANDS', 'COMPOSER_ATTR', 'PALETTE_ATTR', 'PALETTE_CARD_ATTR', 'PALETTE_CLAUDE', 'PALETTE_HOST', 'TYPEFACE_ATTR', 'TYPEFACE_CLAUDE', 'TYPEFACE_HOST'])
+  const { BRAND_ATTR, BRAND_DEEPSEEK, BRANDS, COMPOSER_ATTR, PALETTE_ATTR, PALETTE_CARD_ATTR, PALETTE_CLAUDE, PALETTE_HOST, TYPEFACE_ATTR, TYPEFACE_CLAUDE, TYPEFACE_HOST, TYPEFACE_SYSTEM } = pick(constants, constantsFile, ['BRAND_ATTR', 'BRAND_DEEPSEEK', 'BRANDS', 'COMPOSER_ATTR', 'PALETTE_ATTR', 'PALETTE_CARD_ATTR', 'PALETTE_CLAUDE', 'PALETTE_HOST', 'TYPEFACE_ATTR', 'TYPEFACE_CLAUDE', 'TYPEFACE_HOST', 'TYPEFACE_SYSTEM'])
   return {
     // The gate attributes scripts/css.mjs checks, stamps and writes the token
     // blocks under: who paints the colours and who sets the type (D30), the
@@ -238,7 +238,7 @@ const CONSTANTS = (() => {
       composer: COMPOSER_ATTR,
       palette: { attribute: PALETTE_ATTR, claude: PALETTE_CLAUDE, host: PALETTE_HOST },
       paletteCard: { attribute: PALETTE_CARD_ATTR },
-      typeface: { attribute: TYPEFACE_ATTR, claude: TYPEFACE_CLAUDE, host: TYPEFACE_HOST },
+      typeface: { attribute: TYPEFACE_ATTR, claude: TYPEFACE_CLAUDE, system: TYPEFACE_SYSTEM, host: TYPEFACE_HOST },
       brand: { attribute: BRAND_ATTR, deepseek: BRAND_DEEPSEEK },
     },
     brands: BRANDS,

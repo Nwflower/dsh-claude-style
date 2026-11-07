@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { BACKGROUND_OPACITY_DEFAULT, BACKGROUND_OPACITY_MAX, BACKGROUND_OPACITY_MIN, PALETTE_CLAUDE, PALETTE_HOST, TYPEFACE_CLAUDE, TYPEFACE_HOST } from '../../constants'
+import { BACKGROUND_OPACITY_DEFAULT, BACKGROUND_OPACITY_MAX, BACKGROUND_OPACITY_MIN, PALETTE_CLAUDE, PALETTE_HOST, TYPEFACE_CLAUDE, TYPEFACE_HOST, TYPEFACE_SYSTEM } from '../../constants'
 import { backgroundOpacityPercent } from '../../shared/background-opacity'
 import { brandRows, paletteCardsRow } from './settings-brand'
 import { PercentControl } from './settings-percent-control'
@@ -72,7 +72,11 @@ export function createSettingsAppearanceTab(): SettingsTab {
           'typeface',
           copy('typefaceTitle'),
           copy('typefaceDesc'),
-          controls.toggle(prefs.typeface !== TYPEFACE_HOST, on => { write({ typeface: on ? TYPEFACE_CLAUDE : TYPEFACE_HOST }) }),
+          controls.segment([
+            { value: TYPEFACE_CLAUDE, label: copy('typefaceClaude') },
+            { value: TYPEFACE_SYSTEM, label: copy('typefaceSystem') },
+            { value: TYPEFACE_HOST, label: copy('typefaceHost') },
+          ], prefs.typeface, value => { write({ typeface: value }) }),
         ),
       },
     ]

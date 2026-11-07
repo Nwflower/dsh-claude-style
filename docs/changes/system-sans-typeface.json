@@ -1,0 +1,8 @@
+{
+  "group": "new",
+  "order": 33,
+  "at": "2026-11-07",
+  "external": false,
+  "zh": "新增 System sans 字体选择，统一界面与 Markdown 的系统无衬线回退",
+  "en": "Add a System sans choice with one system fallback stack across the interface and Markdown"
+}

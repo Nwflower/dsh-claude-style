@@ -67,6 +67,7 @@
         host: await readHost({ palette: 'host', typeface: 'host' }, false),
         wallpaper: await readHost(null, true),
         claude: await readHost({ palette: 'claude', typeface: 'claude' }, false),
+        system: await readHost({ typeface: 'system' }, false),
         // The wallpaper plugin showing one under the Claude palette: the
         // shell stands down, one mask lies over the wallpaper, and the base
         // canvas and the skin's own faces keep their fill.

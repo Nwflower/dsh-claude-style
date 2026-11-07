@@ -303,6 +303,7 @@ export function tokenSheet(doc, gates, images) {
     tokenBlock(SCOPE, doc.motion.map((item) => [item.token, item.value])),
     tokenBlock(SCOPE, doc.layer.map((item) => [item.token, item.value])),
     tokenBlock(`${typeface(gates.typeface.claude)}`, doc.typeface.flatMap((item) => (item.claude === undefined ? [] : [[item.token, item.claude]]))),
+    tokenBlock(`${typeface(gates.typeface.system)}`, doc.typeface.flatMap((item) => (item.system === undefined ? [] : [[item.token, item.system]]))),
     tokenBlock(`${typeface(gates.typeface.host)}`, doc.typeface.flatMap((item) => (item.host === undefined ? [] : [[item.token, item.host]]))),
     tokenBlock(`${SCOPE}${dark}`, doc.apex.map((item) => [item.token, item.dark])),
     tokenBlock(`${SCOPE}${light}`, doc.apex.map((item) => [item.token, item.light])),

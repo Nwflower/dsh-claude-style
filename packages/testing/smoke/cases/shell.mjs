@@ -407,6 +407,11 @@ export default {
       claude.base === '#ffffff' && claude.body === 'rgb(255, 255, 255)' && claude.account === 'rgb(255, 255, 255)' &&
         claude.popover === 'rgb(255, 255, 255)' && /Anthropic Serif Web Text/.test(claude.heading || ''),
       JSON.stringify(claude))
+    const system = hp.system || {}
+    check('System sans shares one proportional stack and leaves code monospace',
+      system.family === 'ui-sans-serif,system-ui,sans-serif' && String(system.heading).replace(/\s+/g, '') === system.family &&
+        /JetBrains Mono/.test(system.code || '') && /ui-monospace/.test(system.code || ''),
+      JSON.stringify(system))
     // A wallpaper under the Claude palette. The shell canvases stand down
     // and one fixed mask in the canvas colour lies over the wallpaper; the base
     // canvas the host paints its dialogs and cards with stays opaque, and so do

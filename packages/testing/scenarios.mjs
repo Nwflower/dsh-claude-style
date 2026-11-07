@@ -28,6 +28,7 @@ import { fileMergeScenario } from './file-merge.mjs'
 import { reasoningContinuousScenario, reasoningStreamScenario } from './reasoning-stream.mjs'
 import { messageAnswerActionsScenario } from './message-answer-actions.mjs'
 import { messageActionsScenario } from './message-actions.mjs'
+import { systemTypographyScenario } from './system-typography.mjs'
 import { waitLineScenario } from './wait-line.mjs'
 import { washLineScenario } from './wash-line.mjs'
 import { longSessionScenario } from './long-session.mjs'
@@ -171,6 +172,7 @@ const SCENARIOS = {
    */
   messageAnswerActions: messageAnswerActionsScenario({ check }),
   messageActions: messageActionsScenario({ check }),
+  systemTypography: systemTypographyScenario(),
   /** A scripted answer: the reader's message, the thought, the markdown. */
   conversation: {
     script: 'greeting',

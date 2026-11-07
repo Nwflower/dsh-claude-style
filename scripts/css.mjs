@@ -166,9 +166,9 @@ function checkHasMarks(where, selector) {
  * Hold every write of a host token to its gate (D30), and record the private
  * tokens the Claude choice defines and the host choice aliases.
  *
- * A `--dsw-font-*` declaration must sit in a rule whose every selector carries
- * the Claude typeface gate; any other `--dsw-*` one in a rule carrying the
- * Claude palette gate. Under "follow the host" those rules drop out and the
+ * A `--dsw-font-*` declaration sits in a rule whose every selector carries one
+ * of the skin-owned typeface gates; any other `--dsw-*` one in a rule carrying
+ * the Claude palette gate. Under "follow the host" those rules drop out and the
  * host's tokens (or another theme plugin's) stand.
  */
 function checkTokenGates(label, rule, selectors, gates, names) {
@@ -178,7 +178,7 @@ function checkTokenGates(label, rule, selectors, gates, names) {
     const name = node.prop
     const where = `${label}:${node.source.start.line}`
     if (name.startsWith('--dsw-font-')) {
-      if (!every(gates.typeface, gates.typeface.claude)) throw new Error(`build: ${where} writes ${name} outside the Claude typeface gate`)
+      if (!every(gates.typeface, gates.typeface.claude) && !every(gates.typeface, gates.typeface.system)) throw new Error(`build: ${where} writes ${name} outside the skin-owned typeface gates`)
     } else if (name.startsWith('--dsw-')) {
       if (!every(gates.palette, gates.palette.claude)) throw new Error(`build: ${where} writes ${name} outside the Claude palette gate`)
     }
@@ -501,7 +501,7 @@ function checkHolds(relations) {
  * @param options.srcDir - the source directory.
  * @param options.sources - the browser half on its syntax tree (scripts/source-tree.mjs).
  * @param options.tokenDoc - packages/client/src/theme/tokens.json (loadTokens).
- * @param options.gates - `{ composer, palette: { attribute, claude, host }, paletteCard: { attribute }, typeface: { attribute, claude, host }, brand: { attribute, deepseek } }`.
+ * @param options.gates - `{ composer, palette: { attribute, claude, host }, paletteCard: { attribute }, typeface: { attribute, claude, system, host }, brand: { attribute, deepseek } }`.
  * @param options.images - brand mark name → its address, for the token sheet.
  * @param options.featureConstants - what the generated feature sheets are written from (scripts/feature-sheets.mjs).
  * @returns `{ main, surface }`: the theme's sheet and the surface sheets (D74),

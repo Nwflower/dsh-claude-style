@@ -71,6 +71,22 @@ const SCRIPTS = {
     ],
     auxiliary: { text: ['Scripted greeting'] },
   },
+  /** Multilingual proportional text beside the materials that keep their own fonts. */
+  typography: {
+    conversation: [
+      {
+        thinking: ['Check every text surface before answering.'],
+        tool: { name: 'glob', input: { pattern: '*.json' } },
+      },
+      {
+        thinking: ['The materials are ready.'],
+        text: [
+          `# Привет 你好\n\n## مرحبا\n\n### こんにちは\n\n#### שלום\n\n##### नमस्ते\n\n###### System sans\n\nRussian Привет and English **bold** beside 中文、日本語、한국어.\n\nArabic مرحبا, Hebrew שלום, and Indic नमस्ते keep their language metadata. Real *italic emphasis* stays italic.\n\n| Русский | 中文 | English |\n| --- | --- | --- |\n| Привет | 你好 | Hello |\n\nInline code \`const family = "mono"\` stays monospace.\n\n\`\`\`ts\nconst family = "mono"\n\`\`\`\n\n$$E = mc^2$$\n`,
+        ],
+      },
+    ],
+    auxiliary: { text: ['Scripted typography'] },
+  },
   /** A read-only call whose result the lane can watch arrive. */
   inspect: {
     conversation: [
