@@ -9,7 +9,7 @@ import { createStamp } from '@dsh-claude-style/engine/dom'
 import { motionEase, motionEaseAt, motionMs } from '../../shared/motion'
 import { inPageBox, pageViewport } from '../../shared/page-zoom'
 import { observeComposerCards } from '@dsh-claude-style/engine/host'
-import { SCROLL_EASE_LEAD_PX, handBackFollow, joinScrollOwner, readerHolds, submissionHolds, writeScroll } from '@dsh-claude-style/engine/scroll-owner'
+import { SCROLL_EASE_LEAD_PX, handBackFollow, joinScrollOwner, readerHolds, readerScrollPosition, submissionHolds, writeScroll } from '@dsh-claude-style/engine/scroll-owner'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { FeatureUi } from '../../core/feature'
 import type manifest from './chat-follow.manifest'
@@ -372,12 +372,14 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
    * refused while he holds, so this is the one writer left for it. A position
    * away from the end is the reader's own and stays where he put it.
    */
-  const holdGrowth = (column: HTMLElement, grew: number) => {
+  const holdGrowth = (column: HTMLElement) => {
     const scroller = column.closest(CONVERSATION_SCROLL_SELECTOR)
     if (scroller === null || column.closest(FOLLOWING_TAIL_SELECTOR) === null) return
     if (scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop > 0.5) return
     if (foldBusy()) return
-    writeScroll(scroller, scroller.scrollTop - grew, 'reader')
+    // The host has already written the new tail. Restore the position the
+    // reader chose, which is the old tail only for a touch held there (#230).
+    writeScroll(scroller, readerScrollPosition(scroller)!, 'reader')
   }
 
   /**
@@ -406,6 +408,9 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
       before = slideHeight
       const delta = box - slideHeight
       slideHeight = box
+      // A structural shrink moves the host's pin by the height that left. An
+      // offset from growth before it would add a second, downward move.
+      if (delta < 0) stopSlide()
       // Any growth is slid, a burst included: startSlide's clamp bounds what a
       // glide carries, and a column the host replaced is no longer the one
       // watched here (slideSync re-subscribes when it changes).
@@ -427,7 +432,7 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
     // growth; a first screen filling up moves nothing above it.
     if (column === null || grew === 0 || before < scrollerHeight) return
     if (readerAway()) {
-      holdGrowth(column, grew)
+      holdGrowth(column)
       return
     }
     if (slideWanted(column)) startSlide(column, grew)
@@ -516,6 +521,9 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
           && record.target.getAttribute(ROW_PHASE_ATTRIBUTE) !== RUNNING_STATE) {
           lastActivityAt = performance.now()
           structureSeen = true
+          // The row may shrink in this same batch. End its growth offset before
+          // that structural change paints; the resize subscription is the backup.
+          stopSlide()
         }
         continue
       }
@@ -523,6 +531,15 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
         if (!marksStructure(node)) continue
         lastActivityAt = performance.now()
         structureSeen = true
+      }
+      for (const node of record.removedNodes) {
+        if (!(node instanceof Element)) continue
+        if (node.matches(CHAT_RUNNING_SELECTOR) || node.querySelector(CHAT_RUNNING_SELECTOR) !== null) {
+          // The live row leaving is the stream's structural boundary. Its last
+          // growth offset ends in this mutation batch, ahead of the next paint.
+          stopSlide()
+          break
+        }
       }
     }
     if (structureSeen || guardSeen) queue()

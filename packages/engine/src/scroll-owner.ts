@@ -115,6 +115,8 @@ function isReaderScrollIntent(event: Event) {
 const easeSources = new WeakMap<Element, ScrollSource>()
 /** The containers the reader holds: an intent was seen there and he has not come back to the end. A Set, so leaving the owner can take every mark off again. */
 const held = new Set<Element>()
+/** The position the reader chose on each held container; host writes to the tail never replace it. */
+const readerPositions = new WeakMap<Element, number>()
 /** The held containers the reader has since moved toward the end of: his own way back to it. */
 const heldTowardEnd = new WeakSet<Element>()
 /** The conversation scrollers carrying the hold mark, so leaving the owner can take every one off again. */
@@ -179,9 +181,12 @@ function syncHoldMark(container: Element) {
  */
 function setHeld(container: Element, holding: boolean) {
   if (holding === held.has(container)) return
-  if (holding) held.add(container)
-  else {
+  if (holding) {
+    held.add(container)
+    readerPositions.set(container, container.scrollTop)
+  } else {
     held.delete(container)
+    readerPositions.delete(container)
     heldTowardEnd.delete(container)
   }
   syncHoldMark(container)
@@ -216,6 +221,11 @@ function claim(container: Element, source: ScrollSource) {
  * without one stands even with the container sitting at its end. `holdReader`
  * takes a hold that way, for a jump the reader picked himself.
  */
+/** The reader's chosen position, or null while that container is not held. */
+export function readerScrollPosition(container: Element): number | null {
+  return readerPositions.get(container) ?? null
+}
+
 export function readerHolds(container: Element) {
   if (!held.has(container)) return false
   // Only a move toward the end can end a hold, so a hold without one is
@@ -407,7 +417,11 @@ function noteIntent(event: Event) {
  */
 function noteScroll(event: Event) {
   const target = event.target
-  if (target instanceof Element && held.has(target)) releaseAtTail(target)
+  if (!(target instanceof Element) || !held.has(target)) return
+  // The host's follow writes the tail after growth. That position belongs to
+  // the host; any other position is the reader's own latest reading place.
+  if (target.scrollHeight - target.clientHeight - target.scrollTop > 0.5) readerPositions.set(target, target.scrollTop)
+  releaseAtTail(target)
 }
 
 function noteSubmission(records: MutationRecord[]) {
@@ -451,7 +465,10 @@ export function joinScrollOwner() {
     stopSubmissionWatch = null
     for (const scroller of markedScrollers) scroller.removeAttribute(skin().readerHold)
     markedScrollers.clear()
-    for (const container of held) heldTowardEnd.delete(container)
+    for (const container of held) {
+      heldTowardEnd.delete(container)
+      readerPositions.delete(container)
+    }
     held.clear()
   }
 }

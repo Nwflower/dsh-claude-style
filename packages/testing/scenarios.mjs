@@ -522,6 +522,8 @@ const SCENARIOS = {
   streamPace: streamPaceScenario({ check }),
   /** A provider's own pace: the column the reader watches never moves down between two frames (stream-jitter.mjs, D85). */
   streamJitter: streamJitterScenario({ check }),
+  streamJitterFooter: streamJitterScenario({ check }, 'footer'),
+  streamJitterInline: streamJitterScenario({ check }, 'inline'),
   /** The transitions.dev surfaces where they move: greeting, panel, switch, tab, badge, menu (motion.mjs, D9). */
   motion: motionScenario({ check }),
   /** The send flight: the stand-in takes off, the row lands, the words stay put. */

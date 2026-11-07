@@ -95,12 +95,20 @@ function readerScrollScenario({ check }) {
       // under his hold. The host's own follow keeps writing the end under it, so
       // what is waited for is his hold, not a position — the position is only
       // recorded, as what the frames are measured against.
-      await page.waitForFunction((marks) => document.querySelector(marks) !== null, READER_HOLD, { timeout: 5000 })
+      await page.waitForFunction((marks) => {
+        if (document.querySelector(marks.hold) === null) return false
+        const scroller = document.querySelector(marks.scroller)
+        return scroller !== null && scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop > 0
+      }, { hold: READER_HOLD, ...HOST }, { timeout: 5000 })
       const frame = await page.evaluate(() => (window.__readerScrollTrace ?? []).length)
+      const position = await page.evaluate((selector) => {
+        const scroller = document.querySelector(selector)
+        return scroller === null ? null : Math.round(scroller.scrollTop)
+      }, HOST.scroller)
       const gap = await gapOf(page)
       await page.evaluate((left) => {
         window.__readerScrollLeft = left
-      }, { frame, row: Math.round(row.y), gap })
+      }, { frame, row: Math.round(row.y), gap, top: position })
     },
     async assert({ page, session }) {
       const trace = await page.evaluate(() => window.__readerScrollTrace ?? [])
@@ -117,14 +125,13 @@ function readerScrollScenario({ check }) {
       // hundreds of pixels away from the tail it belongs to.
       const floated = after.filter((frame) => frame.pinned && frame.row !== null
         && !(frame.row > left.row && frame.row < left.row + PIN_SLACK_PX))
-      const moved = after.filter((frame) => frame.top !== null && frame.top !== left.top).length
       return [
         check('逐帧采样真的在跑', trace.length > 30 && left !== null && left.frame > 30, `${trace.length} frames, the wheel at ${left === null ? 'n/a' : left.frame}`),
         check('读者的滚动发生在状态行钉住时', left !== null && pinnedSpot !== null && Math.abs(left.row - pinnedSpot) <= 2, `the wheel at row ${left === null ? 'n/a' : left.row}, the pinned spot ${pinnedSpot === null ? 'never pinned' : `${pinnedSpot}px`} (${spots.length} frames)`),
         check('滚动之后对话由读者接管', left !== null && heldNow, left === null ? 'no reader phase in the trace' : `gap ${left.gap}px when the wheel landed`),
         check('读者滚动期间状态行不再钉住', left !== null && pinnedAfter.length === 0, `${pinnedAfter.length} pinned of ${after.length} frames after the wheel`),
         check('读者的接管一直记在滚动容器上', left !== null && heldNow, `the container carries the mark at the end of the turn: ${heldNow}`),
-        check('滚动之后状态行随内容走', after.length > 10 && moved === after.length, `position changed in ${moved} of ${after.length} frames after the wheel`),
+        check('后续增长不改变读者选择的滚动位置', left !== null && left.top !== null && after.length > 10 && after.every((frame) => frame.top === left.top), left === null ? 'no reader position' : `wanted ${left.top}px, readings ${[...new Set(after.map((frame) => frame.top))].join('/')}px`),
         check('状态行不再浮在内容上', floated.length === 0, floated.length === 0 ? 'held its document place' : `${floated.length} frames at the pinned spot`),
         check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),
       ]

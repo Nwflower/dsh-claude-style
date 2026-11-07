@@ -184,7 +184,7 @@
       "读者滚动期间状态行不再钉住": [
         0
       ],
-      "滚动之后状态行随内容走": [
+      "后续增长不改变读者选择的滚动位置": [
         10
       ],
       "状态行不再浮在内容上": [
@@ -344,32 +344,32 @@
       "Windows 标题栏标记下，替身里的祖先链不画伪元素": [
         0
       ],
-      "控制台没有异常 (line 584)": [
+      "控制台没有异常 (line 586)": [
         0
       ],
       "满屏的对话里也读到了飞行": [
         1,
         5
       ],
-      "替身落地时不低于它替换的那一行 (line 618)": [
+      "替身落地时不低于它替换的那一行 (line 620)": [
         0
       ],
       "落定后那一行带着字": [
         0
       ],
-      "控制台没有异常 (line 620)": [
+      "控制台没有异常 (line 622)": [
         0
       ],
       "没有页面形态的条目已逐条列出": [
         0
       ],
-      "控制台没有异常 (line 678)": [
+      "控制台没有异常 (line 680)": [
         0
       ],
       "脚本回答已渲染": [
         0
       ],
-      "控制台没有异常 (line 722)": [
+      "控制台没有异常 (line 724)": [
         0
       ]
     },
@@ -606,6 +606,9 @@
       "a run of small growths leaves the sliding column no further off the pin than the growth just taken": [
         1,
         4
+      ],
+      "a structural shrink ends the running offset instead of pushing the column down once": [
+        0
       ],
       "a reader holding the conversation keeps the growth the host's pin pushed up, and nothing slides": [
         0

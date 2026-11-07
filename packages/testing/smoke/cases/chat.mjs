@@ -106,6 +106,11 @@ export default {
         && Number.isFinite(frame.offset) && frame.offset <= pace.growth + bound('streamSlideCarryTailPx')) &&
         (pace.settled ?? 1) <= AT_END_PX,
       JSON.stringify({ ...pace, offsets: carried }))
+    const shrink = follow.shrink || {}
+    check('a structural shrink ends the running offset instead of pushing the column down once',
+      Number.isFinite(shrink.before) && Number.isFinite(shrink.after) && shrink.animations === 0 &&
+        shrink.after <= shrink.before + bound('followSlideRowDriftPx'),
+      JSON.stringify(shrink))
     // A reader holding the conversation keeps the position the host's own pin
     // would take from him: the growth is given back and nothing slides
     // (chat-follow.ts's holdGrowth).

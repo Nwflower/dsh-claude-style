@@ -260,6 +260,25 @@
       r.chatFollow.pace = { frames: paceFrames, growth: 20, settled: endGap(), animations: followColumn.getAnimations().length }
       paced.remove()
       await probe.settle()
+      // A structural shrink (a reasoning row leaving at the stream's end) takes
+      // the running offset off with it. The host's own pin moves with the new
+      // height; keeping the old offset would push the whole column down once.
+      var shrinking = document.createElement('div')
+      shrinking.style.height = '120px'
+      followColumn.insertBefore(shrinking, runningRow)
+      followScroller.scrollTop = followScroller.scrollHeight
+      await probe.frame()
+      var shrinkBefore = followColumn.getBoundingClientRect().top
+      shrinking.style.height = '20px'
+      followScroller.scrollTop = followScroller.scrollHeight
+      await probe.frame()
+      r.chatFollow.shrink = {
+        before: shrinkBefore,
+        after: followColumn.getBoundingClientRect().top,
+        animations: followColumn.getAnimations().length,
+      }
+      shrinking.remove()
+      await probe.settle()
       // A reader holding the conversation himself (#230). The host's own follow
       // pins the end on every growth while its mark stands, and a finger that is
       // pressed on the screen sends no scroll of its own for the host to stand

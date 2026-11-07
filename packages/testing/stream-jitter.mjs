@@ -24,6 +24,8 @@ import { bound } from './bounds.mjs'
 const JITTER_PX = bound('streamJitterMovePx')
 /** The growth the sampled answer has to show, in pixels: a viewport's worth and then some. */
 const GROWTH_PX = bound('streamJitterGrowthPx')
+/** The composer and its bottom lines may move only by the scrollbar's own rounding. */
+const COMPOSER_DRIFT_PX = bound('streamComposerDriftPx')
 
 /**
  * The frames the transcript is scrolled and the host still follows it: the ones
@@ -42,9 +44,21 @@ function moves(frames) {
   return out
 }
 
-function streamJitterScenario({ check }) {
+function boxDrift(frames, key) {
+  const boxes = frames.map((frame) => frame[key]).filter((value) => typeof value === 'number' || Array.isArray(value))
+  if (boxes.length === 0) return null
+  const edges = typeof boxes[0] === 'number' ? [boxes] : [boxes.map((box) => box[0]), boxes.map((box) => box[1])]
+  return Math.max(...edges.map((values) => Math.max(...values) - Math.min(...values)))
+}
+
+function streamJitterScenario({ check }, statsPosition = 'context') {
   return {
     script: 'paced',
+    ...(statsPosition === 'context' ? {} : { patch: [
+      '- id: ui-skin-claude-style',
+      '  config:',
+      `    statsPosition: ${statsPosition}`,
+    ] }),
     prompt: 'write a long answer, a line at a time',
     // A provider's own pace, well under the 240ms a slide runs.
     delayMs: 30,
@@ -60,6 +74,9 @@ function streamJitterScenario({ check }) {
       const worst = walked.reduce((high, move) => Math.max(high, move.by), -Infinity)
       const grew = frames.length < 2 ? 0 : frames[frames.length - 1].height - frames[0].height
       const rising = walked.filter((move) => move.by < 0)
+      const cardDrift = boxDrift(frames, 'card')
+      const seatDrift = boxDrift(frames, 'seat')
+      const statsDrift = boxDrift(frames, 'stats')
       return [
         check('逐帧采样真的在跑', trace.length > 60 && frames.length > 40, `${trace.length} frames, ${frames.length} scrolled while following`),
         check('回答在采样期间长出来', grew > GROWTH_PX, `grew ${grew}px`),
@@ -69,6 +86,10 @@ function streamJitterScenario({ check }) {
         // faster than frames, so many frames stand still; a third is the floor
         // under a stream that is visibly walking upward on this recording.
         check('跟随期间消息列在向上走', rising.length > walked.length / 3, `${rising.length} of ${walked.length} moves are upward`),
+        check('连续输出期间输入卡片不上下移动', cardDrift !== null && cardDrift <= COMPOSER_DRIFT_PX, `${statsPosition}: card drift ${cardDrift}px`),
+        check('连续输出期间输入区与底栏不上下移动', seatDrift !== null && seatDrift <= COMPOSER_DRIFT_PX &&
+          (statsPosition === 'context' || (statsDrift !== null && statsDrift <= COMPOSER_DRIFT_PX)),
+        `${statsPosition}: seat drift ${seatDrift}px, stats drift ${statsDrift}px`),
         check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),
       ]
     },

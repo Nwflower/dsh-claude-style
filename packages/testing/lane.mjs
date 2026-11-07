@@ -4,6 +4,11 @@
  * the shape of one assertion (D87).
  */
 
+import surfaceTable from './data/surface.json' with { type: 'json' }
+
+const STATS_LINE = surfaceTable.surface.find((entry) => entry.id === 'stats.inline-line')
+if (STATS_LINE?.selector === undefined) throw new Error('lane: stats.inline-line names no element')
+
 /**
  * The host's page markers this lane reads. Each one is a D3 entry in
  * `packages/contracts/src/dom.ts`, which the skin reads for the same reason; a marker
@@ -12,6 +17,7 @@
 const HOST = {
   composer: '[data-composer-input]', // COMPOSER_INPUT_SELECTOR
   composerCard: '[data-composer-card]', // COMPOSER_CARD_SELECTOR
+  composerSeat: '[data-composer-seat]', // COMPOSER_SELECTOR
   userRow: '[data-chat-flow-kind="user"]', // FLOW_KIND_ATTRIBUTE with the host's user kind
   flow: '[data-chat-flow]', // CHAT_FLOW_SELECTOR
   streaming: '[data-streaming]', // STREAMING_SELECTOR
@@ -35,6 +41,7 @@ const SKIN = {
   echoAttribute: 'data-submission-echo', // SUBMISSION_ECHO_SELECTOR without its brackets
   // The other mark the pin reads while a door rolls (FOLLOW_HOLD_ATTR).
   hold: '[data-dsh-claude-follow-hold]', // FOLLOW_HOLD_ATTR
+  statsLine: STATS_LINE.selector,
 }
 
 /** Both tables, for the sampler that runs inside the page. */

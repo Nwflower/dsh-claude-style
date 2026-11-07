@@ -11,7 +11,7 @@
  */
 import { afterEach, expect, test } from 'vitest'
 import { adoptSkin } from '@dsh-claude-style/engine/skin'
-import { easeScrollFor, easeScrollToEndFor, holdReader, readerHolds, readerMovedSince, releaseReader, submissionHolds, writeScroll } from '@dsh-claude-style/engine/scroll-owner'
+import { easeScrollFor, easeScrollToEndFor, holdReader, readerHolds, readerMovedSince, readerScrollPosition, releaseReader, submissionHolds, writeScroll } from '@dsh-claude-style/engine/scroll-owner'
 import { CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, FLOW_KIND_ATTRIBUTE, PHASE_ATTRIBUTE, PROCESS_BODY_SELECTOR, USER_ROW_KIND } from '@dsh-claude-style/contracts/dom'
 import { MOTION_FULL, MOTION_REDUCED, READER_HOLD_ATTR, TEST_SKIN } from '../../fixtures/vocabulary'
 import { createScrollOwnerFixture } from '../../fixtures/scroll-owner'
@@ -130,6 +130,25 @@ test('a hold whose position lands at the end stands until the reader moves towar
   holdReader(scroller)
   // The jump's landing is the end: a position written there is not their move back.
   await holdOutlastsHostWrite(scroller)
+})
+
+test('the reader position survives the host pinning a growing stream to its end', async () => {
+  join()
+  const scroller = scrollBox(CONVERSATION_SCROLL_SELECTOR)
+  scroller.scrollTop = scroller.scrollHeight
+  await settledScroll(scroller)
+  scroller.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: -120 }))
+  scroller.scrollTop = 400
+  await settledScroll(scroller)
+  expect(readerScrollPosition(scroller)).toBe(400)
+  ;(scroller.firstElementChild as HTMLElement).style.height = '3000px'
+  scroller.scrollTop = scroller.scrollHeight
+  await settledScroll(scroller)
+  expect(readerHolds(scroller)).toBe(true)
+  expect(readerScrollPosition(scroller)).toBe(400)
+  expect(writeScroll(scroller, readerScrollPosition(scroller)!, 'reader')).toBe(true)
+  await settledScroll(scroller)
+  expect(scroller.scrollTop).toBe(400)
 })
 
 test('a process body is held by a drag of its scrollbar, not by a press on its content', () => {
