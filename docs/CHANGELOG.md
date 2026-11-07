@@ -9,7 +9,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 <h3 id="cn-0.20.0">新增功能</h3>
 
 - 新增吉祥物悬停气泡，以像素字体显示含赠金、随会话花费实时扣减的账号余额与当前会话的花费
-- 新增思考内容显示选择，默认逐字跟随并保留两行步进
+- 新增思考内容显示选择，默认两行步进并可改为逐字跟随
 - 新增模型选择器提供方分组的独立折叠与状态保存，并增强标题层级
 - 新增模型回复所在轮次的重跑与删除，通过新分岔保留原会话
 - 新增 System sans 字体选择，统一界面与 Markdown 的系统无衬线回退
@@ -17,6 +17,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 ### 体验优化
 
+- 调整「思考内容显示」在设置页的位置，排到「动效」页末尾
 - 改善侧栏「工作区」标题行铃铛的墨色，与同一行里宿主的图标共用同一级墨色令牌
 - 改善侧栏「工作区」标题行铃铛的操作反馈，悬停底色与宿主的图标一致，指针停稳后给出进入或离开日期视图的提示
 
@@ -33,18 +34,21 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - 修复移动端首页用量面板与热力图左右不居中的问题
 - 修复 Windows 顶栏高度与标题控件的垂直位置
 - 修复日期视图默认开启的问题，侧栏默认按宿主自己的分组排列，按下铃铛才排成日期段落，刷新后回到宿主分组
+- 修复账号余额对第三方供应商的会话也实时扣减的问题，平台余额只为官方供应商的会话变化
+- 修复界面重载后价格目录晚到导致模型行整张重画、费率徽标闪烁的问题
 
 <h3 id="en-0.20.0">New Features</h3>
 
 - Add a hover bubble over the mascot that shows, in a pixel font, the account balance with gifted credit drawn down live by the conversation's cost, and that cost
-- Add a reasoning display choice with continuous text by default and the two-line stepping window as an option
-- Add independently collapsible provider groups with preserved state and clearer headings in the model picker
+- Add a reasoning display choice that steps the text two lines at a time by default, with continuous text as the option
+- Add independently collapsible provider groups with preserved state in the model picker
 - Add rerun and delete-turn actions for model answers, preserving the source session through a new branch
 - Add a System sans choice with one system fallback stack across the interface and Markdown
 - Add an independent font-size control for ordinary text in the sidebar, composer and settings
 
 ### Improvements
 
+- Move the reasoning display row to the end of the Motion tab in settings
 - Improve the sidebar workspace header bell's ink to share the level the host's own icons in that row use
 - Improve the sidebar workspace header bell's feedback with the host's own hover wash and a tooltip naming the date view it switches to or from
 
@@ -61,6 +65,8 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - Center the home usage panel and heat grid within the available column on mobile
 - Fix Windows caption height and vertical alignment of the title and header controls
 - Fix the date view opening by default; the sidebar follows the host's own grouping until the bell is pressed, and a reload returns to the host grouping
+- Stop the account balance deducting third-party provider sessions; the platform figure now moves only with the official providers' sessions
+- Stop the rate badges flashing when a reload's price catalog arrives after the model rows are painted
 
 ## [0.19.10] - 2026-11-06
 
