@@ -1,5 +1,6 @@
 import { COMPOSER_STACK, conversationSessionId, findComposerCard, findComposerSeat, findConversationSession, findHeroRoot } from '@dsh-claude-style/engine/host'
 import { motionReduced } from '../../core/prefs'
+import { createMascotBubble } from './mascot-bubble'
 import { createMascotSignals } from './mascot-signals'
 import type { MascotMoment } from './mascot-signals'
 import { decideStage, finishStage, freshStage, nextDecisionAt, switchSettles, takeMoment } from './mascot-stage'
@@ -115,6 +116,8 @@ export function createMascotPlayer(ctx: HostContext, ui: FeatureUi<typeof manife
 
   /** The character's sheet pipeline. */
   const sheets = character.createSheets(onSheetReady)
+  /** The balance bubble, carried inside the pointer window it answers to. */
+  const bubble = createMascotBubble(ctx, ui)
 
   /** A sheet became playable: read the state again and play what it asks for. */
   function onSheetReady() {
@@ -137,6 +140,9 @@ export function createMascotPlayer(ctx: HostContext, ui: FeatureUi<typeof manife
     // The card a mascot stands on can be a button of its own (the home
     // page's "choose a workspace" card): a click on the mascot stays here.
     hit.addEventListener('click', event => { event.stopPropagation() })
+    hit.addEventListener('pointerenter', bubble.enter)
+    hit.addEventListener('pointerleave', bubble.leave)
+    hit.appendChild(bubble.element)
     built.appendChild(hit)
     return built
   }
@@ -379,6 +385,7 @@ export function createMascotPlayer(ctx: HostContext, ui: FeatureUi<typeof manife
 
   function onPressStart(event: PointerEvent) {
     if (event.button !== 0) return
+    bubble.leave()
     stage.press = { id: event.pointerId, x: event.clientX, y: event.clientY, lifted: false }
     ;(event.currentTarget as Element).setPointerCapture(event.pointerId)
   }
@@ -445,6 +452,7 @@ export function createMascotPlayer(ctx: HostContext, ui: FeatureUi<typeof manife
   function release() {
     if (stage.timer !== null) clearTimeout(stage.timer)
     if (stage.animation !== null) stage.animation.cancel()
+    bubble.leave()
     if (root !== null && root.parentNode !== null) root.parentNode.removeChild(root)
     anchorStamp.release()
     if (signals !== null) signals.dispose()
@@ -456,6 +464,7 @@ export function createMascotPlayer(ctx: HostContext, ui: FeatureUi<typeof manife
   function dispose() {
     release()
     sheets.dispose()
+    bubble.dispose()
     root = null
     sprite = null
     strip = null

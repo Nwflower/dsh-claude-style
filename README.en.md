@@ -65,7 +65,7 @@ The settings page switches between the two palettes; light and dark follow the s
   </tr>
 </table>
 
-> In Settings the mascot can also be switched to the pixel crab Clawd or the whale girl.
+> In Settings the mascot can also be switched to the pixel crab Clawd or the whale girl. With **Balance on hover** turned on under **Appearance**, resting the pointer on the mascot opens a pixel bubble: the DeepSeek account balance on top, and under it what the current conversation has cost, the same figure the statistics line shows.
 
 > The workspaces, sessions, usage figures and nickname in the screenshots are sample data.
 
@@ -97,6 +97,8 @@ Hover a message you sent and **Retract** and **Edit** join the clock and copy bu
 > The Anthropic fonts have no public release; this repository only offers [copies](https://github.com/Nwflower/dsh-claude-style/tree/master/packages/assets/src/fonts/anthropic) for download and study.
 
 To enable them, install the `.ttf` files on your system, or copy them into `$DSH_HOME/dsh-claude-style/fonts/`.
+
+The mascot bubble's pixel text is set in [PoxiaoPixel](https://diaowinner.itch.io/poxiaopixel) by DWNfonts (SIL OFL 1.1); the package carries only the characters the bubble uses.
 
 ## Documentation
 

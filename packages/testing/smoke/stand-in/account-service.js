@@ -19,6 +19,14 @@
             if (CASE === 'desktop') window.__profileReads++
             return Promise.resolve({ ok: true, value: { profile: { status: 'ready', value: profile } } })
           },
+    // The wallets a signed-in account answers with; a spec sets
+    // `window.__balanceFixture` to the whole answer it wants instead.
+    getBalance: launcherCase
+      ? function () { return Promise.resolve({ ok: true, value: null }) }
+      : function () {
+          if (window.__balanceFixture !== undefined) return Promise.resolve(window.__balanceFixture)
+          return Promise.resolve({ ok: true, value: { status: 'ready', value: [{ currency: 'CNY', balance: '12.34' }], bonusWallets: [] } })
+        },
     watch: CASE === 'desktop'
       ? function () { return { [Symbol.asyncIterator]: accountFrames } }
       : undefined,

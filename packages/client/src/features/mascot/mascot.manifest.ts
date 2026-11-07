@@ -5,7 +5,7 @@ export default {
   id: 'mascot',
   order: 40,
   load: 'deferred',
-  reads: ['composer'],
+  reads: ['composer', 'contextStats'],
   contracts: ['chat.think-running', 'composer.fallback-panel', 'composer.seat', 'composer.stack', 'conversation.session', 'conversation.session-attribute'],
   pref: 'mascot',
   prefValues: [MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MASCOT_WHALEGIRL],
@@ -14,6 +14,7 @@ export default {
     { file: 'crab.css', rank: 350 },
     { file: 'whale.css', rank: 360 },
     { file: 'whale-girl.css', rank: 365 },
+    { file: 'mascot-bubble.css', rank: 367 },
   ],
   settingsRows: [{
     tab: 'appearance',
@@ -30,6 +31,13 @@ export default {
     parent: 'mascot',
     title: 'mascotScopeTitle',
     choiceLabels: { home: 'mascotScopeHome', all: 'mascotScopeAll' },
+  }, {
+    tab: 'appearance',
+    rank: 41,
+    pref: 'mascotBalance',
+    parent: 'mascot',
+    title: 'mascotBalanceTitle',
+    desc: 'mascotBalanceDesc',
   }],
   cases: ['crab-states', 'deepy', 'whalegirl', 'hero', 'studio']
 } satisfies FeatureManifest

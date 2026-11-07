@@ -16,7 +16,7 @@ export default {
     check('the settings section registers with the settings dialog', settings.registered === true, JSON.stringify(settings.registered))
     const expected = {
       general: ['brand', 'username', 'pageZoom', 'autoPopover', 'sodium'],
-      appearance: ['sidebarBrand', 'brandLockup', 'brandInk', 'palette', 'paletteCards', 'backgroundOpacity', 'typeface', 'homeLayout', 'homeRipple', 'mascot', 'mascotScope'],
+      appearance: ['sidebarBrand', 'brandLockup', 'brandInk', 'palette', 'paletteCards', 'backgroundOpacity', 'typeface', 'homeLayout', 'homeRipple', 'mascot', 'mascotScope', 'mascotBalance'],
       'main-window': ['turnNav', 'messageActions', 'conversationWidth', 'viewTabs', 'headerBand', 'processRows', 'answerAnchor', 'composerScope', 'composerBottomGap', 'questionCard', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent', 'contextDisplay', 'contextNumbers', 'statsPosition', 'statsFooterAlign', 'billingCurrency', 'billingTable'],
       sidebar: ['collapseFooter', 'banLocale', 'sidebarSearch', 'searchStyle', 'sidebarEntries', 'workspaceView', 'sidebarPeek', 'sidebarLayout'],
       motion: ['motion', 'chatAnimations', 'chatWait', 'statusDetail', 'statusMotion', 'chatReveal', 'chatSend', 'messageEnter', 'caretMotion', 'ongoingIndicator', 'ongoingIndicatorSide'],
@@ -77,8 +77,8 @@ export default {
         typeof paletteCard(customCards, 'custom').reset === 'string' && paletteCard(customCards, 'custom').reset.length > 0,
       JSON.stringify(customCards))
     const off = settings.parentsOff || {}
-    check('a sub-row greys out while its parent is off: the accent colour with the colours following the host, the mascot\'s place with the mascot off, the model descriptions, the effort accent colour, the quick providers and the peak rate meter with the model picker off, the custom price table with the billing off, the search button\'s style with the sidebar search off, and the title-bar band for the window on every page',
-      !!off.appearance && JSON.stringify(off.appearance.disabled) === '["mascotScope"]' &&
+    check('a sub-row greys out while its parent is off: the accent colour with the colours following the host, the mascot\'s place and its balance bubble with the mascot off, the model descriptions, the effort accent colour, the quick providers and the peak rate meter with the model picker off, the custom price table with the billing off, the search button\'s style with the sidebar search off, and the title-bar band for the window on every page',
+      !!off.appearance && JSON.stringify(off.appearance.disabled) === '["mascotScope","mascotBalance"]' &&
         !!off.mainWindow && JSON.stringify(off.mainWindow.disabled) === '["headerBand","effortSlider","modelDescriptions","quickProviders","peakrate","effortAccent","statsFooterAlign","billingTable"]' &&
         !!off.sidebar && JSON.stringify(off.sidebar.disabled) === '["searchStyle"]',
       JSON.stringify(off))

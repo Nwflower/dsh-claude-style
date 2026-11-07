@@ -343,6 +343,8 @@ export const PREFS = {
   /** The mascot on the composer; the resolved one rides the document. */
   mascot: { type: 'choice', values: MASCOTS, default: MASCOT_BRAND },
   mascotScope: { type: 'choice', values: MASCOT_SCOPES, default: MASCOT_SCOPE_ALL },
+  /** Whether resting the pointer on the mascot shows the account balance and the session's cost (features/mascot/mascot-bubble.ts). */
+  mascotBalance: { type: 'boolean', default: false },
   permissionsControl: { type: 'boolean', default: true },
   statsPosition: { type: 'choice', values: STATS_POSITIONS, default: STATS_POSITION_CONTEXT },
   /** The face the context meter is drawn with (CONTEXT_DISPLAYS). */

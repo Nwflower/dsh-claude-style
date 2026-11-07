@@ -1,9 +1,16 @@
 import { SESSION_STATS_ATTR } from '../../constants'
 import { createSessionStats } from './session-stats'
+import type { SessionCostReading } from './session-stats'
 import type { HostContext } from '@dsh-claude-style/engine/host'
-import type { CloseReason } from '@dsh-claude-style/engine/scheduler'
+import type { CloseReason, FeatureHandle } from '@dsh-claude-style/engine/scheduler'
 import type { FeatureUi } from '../../core/feature'
 import type manifest from './context-stats.manifest'
+
+/** The statistics as another feature reads them: the shown session's cost, and word of each rewrite. */
+export interface ContextStatsHandle extends FeatureHandle {
+  sessionCost(): SessionCostReading | null
+  onSessionCost(listener: () => void): () => void
+}
 
 /**
  * The session's numbers in the context popover
@@ -35,6 +42,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     close(reason?: CloseReason) {
       if (reason === 'composer') stats.close()
     },
+    sessionCost: stats.sessionCost,
+    onSessionCost: stats.onSessionCost,
   }
 
   // The composer restyle hides the host's stat dialogs only while this

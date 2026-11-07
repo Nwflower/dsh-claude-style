@@ -58,14 +58,15 @@ export const FONT_DIR = 'fonts'
 export const PRIVATE_FONT_DIR = 'anthropic'
 /**
  * What `packages/assets/src/fonts/` ships, in the order the build log counts it: the
- * four faces and the one licence file that covers them, which OFL 1.1 requires
- * to travel with them.
+ * five faces and the one licence file that covers them, which OFL 1.1 requires
+ * to travel with them. The pixel face is cut by scripts/pixel-font.py.
  */
 const SHIPPED_FONTS = [
   'JetBrainsMonoVariable.ttf',
   'JetBrainsMonoItalicVariable.ttf',
   'InterVariable.woff2',
   'NotoSerifVariable.woff2',
+  'ClaudeStylePixel.woff2',
   'OFL.txt',
 ]
 

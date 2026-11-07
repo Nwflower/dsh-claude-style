@@ -65,7 +65,7 @@
   </tr>
 </table>
 
-> 吉祥物也可在设置里切换成像素螃蟹 Clawd 或像素鲸娘。
+> 吉祥物也可在设置里切换成像素螃蟹 Clawd 或像素鲸娘。打开设置「外观」里的「悬停显示余额」后，指针停在吉祥物上会弹出像素气泡：上面一行是 DeepSeek 账号余额，下面一行是当前会话的花费（与统计行一致）。
 
 ## 安装
 
@@ -96,6 +96,8 @@ dsh plugin --profile web add Nwflower/dsh-claude-style#dist      # GitHub 发布
 
 
 启用时二选一：装进系统，或把 `.ttf` 复制到 `$DSH_HOME/dsh-claude-style/fonts/`。
+
+吉祥物气泡的像素字取自 DWNfonts 的[破晓像素](https://diaowinner.itch.io/poxiaopixel)（SIL OFL 1.1），包内只带气泡用到的几个字。
 
 ## 文档
 

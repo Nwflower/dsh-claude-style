@@ -664,7 +664,7 @@ async function hostHalf() {
   const fontHost = fakeHost(mod, { home: fontHome })
   const packaged = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).files
   const fontSource = path.join(ROOT, 'packages', 'assets', 'src', 'fonts')
-  for (const [name, type] of [['JetBrainsMonoVariable.ttf', 'font/ttf'], ['InterVariable.woff2', 'font/woff2'], ['NotoSerifVariable.woff2', 'font/woff2']]) {
+  for (const [name, type] of [['JetBrainsMonoVariable.ttf', 'font/ttf'], ['InterVariable.woff2', 'font/woff2'], ['NotoSerifVariable.woff2', 'font/woff2'], ['ClaudeStylePixel.woff2', 'font/woff2']]) {
     const face = await requestAsset(fontHost, `/dsh-claude-style/fonts/${name}`)
     check(`the packaged face ${name} ships in the package and is served as ${type}`,
       packaged.includes('lib') && face.status === 200 && face.headers['content-type'] === type &&

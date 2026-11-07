@@ -1,6 +1,7 @@
 /**
  * The host's account service as the skin reads it (`remote.account`): the
- * identity each call carries, the profile read and the state stream. Read off the host build the way packages/contracts/src/services.ts is (D3).
+ * identity each call carries, the profile and balance reads and the state
+ * stream. Read off the host build the way packages/contracts/src/services.ts is (D3).
  */
 
 /**
@@ -18,10 +19,27 @@ export interface HostAccountClient {
   timezoneOffsetSeconds: number
 }
 
-/** The account service (`remote.account`): the profile read, and the state stream. */
+/** The account service (`remote.account`): the profile and balance reads, and the state stream. */
 export interface HostAccountService {
   getProfile(client: HostAccountClient): Promise<HostAccountAnswer>
+  getBalance(client: HostAccountClient): Promise<HostBalanceAnswer>
   watch(signal: AbortSignal): AsyncIterable<HostAccountFrame>
+}
+
+/**
+ * The balance read's answer: `value` is null when no credential is stored, a
+ * `failed` status a platform miss, and a `ready` one carries one wallet per
+ * currency with the gifted wallets apart.
+ */
+export interface HostBalanceAnswer {
+  ok?: boolean
+  value?: { status: 'ready', value: HostWallet[], bonusWallets: HostWallet[] } | { status: 'failed' } | null
+}
+
+/** One wallet: its currency and its amount as the platform's decimal string. */
+export interface HostWallet {
+  currency: 'CNY' | 'USD'
+  balance: string
 }
 
 /** The profile read's answer: the profile, or nothing when no credential is stored. */

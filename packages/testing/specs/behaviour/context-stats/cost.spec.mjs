@@ -8,31 +8,12 @@
  * @risk A switch during the first cost ask strands the total: the line keeps the currency's dash for the rest of the page's life.
  */
 import { spec } from '../../fixtures/behaviour.mjs'
-import { seatStatsSession } from '../../fixtures/stats-session.mjs'
+import { COST_PRICES as prices, COST_ROUTE as ROUTE, PRICED_STATS as stats, PRICED_USAGE as usage, seatStatsSession } from '../../fixtures/stats-session.mjs'
 
-/** The one route the stand-in's cost fixture prices. */
-const ROUTE = 'smoke-model'
 /** 12340 micro units of a yuan, as the line writes it. */
 const TOTAL = { cny: 12340, usd: 1720, partial: false, model: ROUTE }
 /** What the old conversation's answer carries; it must never reach the line. */
 const STALE = { cny: 999000000, usd: 1, partial: false, model: ROUTE }
-
-const prices = {
-  schemaVersion: 1,
-  updatedAt: '2026-10-22',
-  schedule: { timeZone: 'UTC', peakDays: [], peakWindows: [], holidays: [] },
-  models: {
-    [ROUTE]: {
-      CNY: { offPeak: { cacheHit: 1, cacheMiss: 2, output: 4 }, peak: { cacheHit: 1, cacheMiss: 2, output: 4 } },
-      USD: { offPeak: { cacheHit: 0.1, cacheMiss: 0.2, output: 0.4 }, peak: { cacheHit: 0.1, cacheMiss: 0.2, output: 0.4 } },
-    },
-  },
-  aliases: {},
-  catalog: {},
-}
-
-const stats = { turns: 2, steps: 20, llmMs: 0, toolMs: 0, ttftMs: 0, ttftSteps: 0, decodeMs: 10000, decodeTokens: 1000 }
-const usage = { uncachedInputTokens: 1000, cacheReadTokens: 9000, cacheWriteTokens: 0, outputTokens: 100 }
 
 /**
  * Show one conversation id, then nudge a pass: the scheduler follows childList

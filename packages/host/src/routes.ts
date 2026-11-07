@@ -66,6 +66,7 @@ const FONT_FILES = {
   ...Object.fromEntries(OPTIONAL_WEBFONTS.map(face => [face.file, 'font/ttf'])),
   'InterVariable.woff2': 'font/woff2',
   'NotoSerifVariable.woff2': 'font/woff2',
+  'ClaudeStylePixel.woff2': 'font/woff2',
 }
 /** The webfonts status route as the prefix handler sees it: its path without the registered prefix. */
 const WEBFONTS_SUB = WEBFONTS_PATH.slice(ROUTE_PREFIX.length)

@@ -1,9 +1,8 @@
-import { CLIENT_VERSION } from 'virtual:dsh-claude-style/generated'
 import { hostRemote, hostRemoteAccount } from '@dsh-claude-style/engine/host'
 import { setAccountIdentity } from '../../shared/identity'
-import { activeLocale } from '../../core/i18n'
+import { accountClient, forgetAccountBalance } from '../../shared/account-balance'
 import type { HostContext, HostFiber } from '@dsh-claude-style/engine/host'
-import type { HostAccountAnswer, HostAccountClient, HostAccountFrame, HostAccountService } from '@dsh-claude-style/contracts/account'
+import type { HostAccountAnswer, HostAccountFrame, HostAccountService } from '@dsh-claude-style/contracts/account'
 import type { HostStream, HostStreamStep } from '@dsh-claude-style/contracts/services'
 
 /**
@@ -31,23 +30,6 @@ export function createAccountProfile(ctx: HostContext, onChange: () => void) {
 
   function accountService(): HostAccountService | null {
     return hostRemoteAccount(ctx)
-  }
-
-  /**
-   * The identity every account call carries. The Remote requires it as the
-   * method's own argument: the Host refuses a call whose argument fields do
-   * not match its descriptor, so a call without it never reaches the
-   * Platform. Each field is read at call time, so a language or a zone change
-   * reaches the next read. The version is this bundle's own build version —
-   * the DSH build the page runs is readable from no host service the browser
-   * half can see.
-   */
-  function accountClient(): HostAccountClient {
-    return {
-      version: CLIENT_VERSION,
-      locale: activeLocale(ctx),
-      timezoneOffsetSeconds: -new Date().getTimezoneOffset() * 60,
-    }
   }
 
   function showAccount(name: string | null, avatar: string | null) {
@@ -84,7 +66,7 @@ export function createAccountProfile(ctx: HostContext, onChange: () => void) {
     if (account === null || typeof account.getProfile !== 'function') return
     dropAccountRead()
     const read = accountRead
-    account.getProfile(accountClient()).then((result: HostAccountAnswer) => {
+    account.getProfile(accountClient(ctx)).then((result: HostAccountAnswer) => {
       if (read !== accountRead) return
       if (!result || result.ok !== true) { retryAccount(); return }
       if (!result.value) {
@@ -124,6 +106,8 @@ export function createAccountProfile(ctx: HostContext, onChange: () => void) {
     if (state === accountState) return
     accountState = state
     accountRetries = 0
+    // The balance kept for the mascot's bubble was the previous account's.
+    forgetAccountBalance()
     if (signedIn) {
       loadAccount()
     } else {

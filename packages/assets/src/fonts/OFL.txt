@@ -1,6 +1,7 @@
 Copyright 2020 The JetBrains Mono Project Authors (https://github.com/JetBrains/JetBrainsMono)
 Copyright 2020 The Inter Project Authors (https://github.com/rsms/inter)
 Copyright 2022 The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic)
+Copyright DWNfonts (diaowinner), PoxiaoPixel (https://diaowinner.itch.io/poxiaopixel); ClaudeStylePixel.woff2 is a subset of it
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
 This license is copied below, and is also available with a FAQ at:

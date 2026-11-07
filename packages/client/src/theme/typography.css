@@ -48,6 +48,17 @@
   font-display: swap;
 }
 
+/* The mascot bubble's pixel face: PoxiaoPixel (SIL OFL 1.1) cut to the bubble's
+   figures and labels by scripts/pixel-font.py, so a glyph outside that set falls
+   through to the next face in the bubble's stack. */
+@font-face {
+  font-family: 'Claude Style Pixel';
+  src: url('/dsh-claude-style/fonts/ClaudeStylePixel.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ---------- typography: serif display + sans UI + mono code ---------- */
 body[data-dsh-claude-style] {
   font-family: var(--dsw-font-family);

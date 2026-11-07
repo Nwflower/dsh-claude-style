@@ -1,0 +1,73 @@
+/* ── The balance bubble over the mascot ─────────────────────────────────────
+   A speech bubble drawn the way the characters are: square 2px cells, its
+   outline four offset shadows that leave the corners open, and a stepped tail
+   pointing down at the character. It lives inside the character's pointer
+   window (packages/client/src/features/mascot/mascot-bubble.ts), right-aligned
+   on it, so it never reaches past the composer's right edge. The text is the
+   PoxiaoPixel subset at its 12px design size, where each of its pixels is one
+   CSS pixel. The balance is the figure that matters; the session's cost under
+   it takes the quiet ink. */
+
+body[data-dsh-claude-style] .dsh-claude-mascot-bubble {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  display: none;
+  grid-template-columns: auto auto;
+  column-gap: 6px;
+  row-gap: 4px;
+  padding: 6px 8px;
+  background: var(--dsw-alias-bg-overlay, #ffffff);
+  box-shadow:
+    0 -2px 0 0 var(--dsw-alias-label-tertiary, #91888a),
+    0 2px 0 0 var(--dsw-alias-label-tertiary, #91888a),
+    -2px 0 0 0 var(--dsw-alias-label-tertiary, #91888a),
+    2px 0 0 0 var(--dsw-alias-label-tertiary, #91888a);
+  color: var(--dsw-alias-label-primary, #141413);
+  font-family: 'Claude Style Pixel', var(--dsh-claude-font-code);
+  font-size: 12px;
+  line-height: 12px;
+  font-weight: 400;
+  font-synthesis: none;
+  -webkit-font-smoothing: none;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+body[data-dsh-claude-style] .dsh-claude-mascot-bubble[data-open] {
+  display: grid;
+}
+
+/* Three cells over one: the tail stands under the outline's bottom row. */
+body[data-dsh-claude-style] .dsh-claude-mascot-bubble::after {
+  content: "";
+  position: absolute;
+  top: calc(100% + 2px);
+  right: 14px;
+  width: 2px;
+  height: 2px;
+  background: var(--dsw-alias-label-tertiary, #91888a);
+  box-shadow:
+    -2px 0 0 0 var(--dsw-alias-label-tertiary, #91888a),
+    -4px 0 0 0 var(--dsw-alias-label-tertiary, #91888a),
+    -2px 2px 0 0 var(--dsw-alias-label-tertiary, #91888a);
+}
+
+/* A row is its label and its figures on one grid, so the figures of the two
+   rows line up; a second wallet's figure takes the next line under the first. */
+body[data-dsh-claude-style] .dsh-claude-mascot-bubble-row {
+  display: contents;
+}
+
+body[data-dsh-claude-style] .dsh-claude-mascot-bubble-label {
+  grid-column: 1;
+}
+
+body[data-dsh-claude-style] .dsh-claude-mascot-bubble-figure {
+  grid-column: 2;
+  text-align: right;
+}
+
+body[data-dsh-claude-style] .dsh-claude-mascot-bubble-row[data-row="session"] > * {
+  color: var(--dsw-alias-label-tertiary, #91888a);
+}
