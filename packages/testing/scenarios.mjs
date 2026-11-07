@@ -29,6 +29,8 @@ import { reasoningContinuousScenario, reasoningStreamScenario } from './reasonin
 import { messageAnswerActionsScenario } from './message-answer-actions.mjs'
 import { messageActionsScenario } from './message-actions.mjs'
 import { systemTypographyScenario } from './system-typography.mjs'
+import { mobileHomeScenario } from './mobile-home.mjs'
+import { composerViewportScenario } from './composer-viewport.mjs'
 import { waitLineScenario } from './wait-line.mjs'
 import { washLineScenario } from './wash-line.mjs'
 import { longSessionScenario } from './long-session.mjs'
@@ -198,6 +200,8 @@ const SCENARIOS = {
    * model name instead of out of the card: nothing leaves the card and the row
    * does not scroll sideways.
    */
+  mobileHome: mobileHomeScenario(),
+  composerViewport: composerViewportScenario(),
   narrow: {
     script: 'greeting',
     prompt: 'hello there',
