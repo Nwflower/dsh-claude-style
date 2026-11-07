@@ -44,6 +44,13 @@
         return name === null ? null : name.textContent
       })
     }
+    // The line under each name, which the same switch decides.
+    var presetDescs = function () {
+      return Array.prototype.map.call(document.querySelectorAll('.dsh-claude-perm-popover [data-preset]'), function (it) {
+        var desc = it.querySelector('.dsh-claude-popover-item-desc')
+        return desc === null ? null : desc.textContent
+      })
+    }
     var triggerName = function () {
       var el = document.querySelector('.dsh-claude-perm-label')
       return el === null ? null : el.textContent
@@ -104,6 +111,7 @@
         card.appendChild(document.createElement('i'))
       }
       r.permNamesZh = presetNames()
+      r.permDescsZh = presetDescs()
       r.permTriggerZh = triggerName()
       r.hintsZh = hints()
       attachmentForm()
@@ -123,6 +131,7 @@
       window.__dshSmokeHost.setSmokeLocale('en')
       await sleep(250)
       r.permNamesEn = presetNames()
+      r.permDescsEn = presetDescs()
       r.permTriggerEn = triggerName()
       r.hintsEn = hintOf(document.querySelector('[data-dsh-synthetic-placeholder]'))
     })

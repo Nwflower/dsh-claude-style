@@ -1,6 +1,6 @@
 import { PERMISSION_ACCESS_NAMESPACE, PERMISSION_CHINESE_LABELS, PERMISSION_CURRENT_LABELS, PERMISSION_HOST_LABEL_KEYS, PERMISSION_HOST_LABEL_LOCALE, PERMISSION_ORDER, PERMISSION_PRESETS, PERMISSION_SEGMENTS, PERMISSION_SHIPPED_PRESETS } from './permission-copy'
 import { hostLocale, hostRemote, hostRemotePermissionPresets } from '@dsh-claude-style/engine/host'
-import { activeLocale } from '../../core/i18n'
+import { activeLocale, localized } from '../../core/i18n'
 import type { HostContext, HostFiber } from '@dsh-claude-style/engine/host'
 import type { HostPermissionCatalogAnswer, HostPermissionOption } from '@dsh-claude-style/contracts/services'
 
@@ -132,10 +132,15 @@ export function createPermissionCatalog(ctx: HostContext, schedule: () => void):
     return presetLabel('workspace-write')
   }
 
-  /** The one line under that name, from the same two sources. */
+  /**
+   * The one line under that name, in the shell's language, from the same two
+   * sources: the skin's own line for a preset it knows, the catalog's
+   * description for one it does not. A language the skin ships no line for
+   * reads the English one (core/i18n.ts, COPY_FALLBACK_LOCALE).
+   */
   function presetDesc(preset: string): string {
     const known = PERMISSION_PRESETS[preset]
-    if (known !== undefined) return known.desc
+    if (known !== undefined) return localized(known.desc, ctx)
     const option = catalogOption(preset)
     return option !== null && typeof option.description === 'string' ? option.description : ''
   }

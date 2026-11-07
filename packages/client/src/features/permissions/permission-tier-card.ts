@@ -80,11 +80,11 @@ export function createPermissionCard(catalog: Pick<PermissionCatalog, 'restingLa
 
   /**
    * Rebuild the popover's rows when the set of offered presets or any row's
-   * name changes. Rows come from the host's catalog, so a preset a plugin
+   * words change. Rows come from the host's catalog, so a preset a plugin
    * registers while the page stays open appears without a reload, and one it
-   * withdraws disappears; the names carry the interface language, so a
-   * language switch repaints the rows here. An unchanged signature leaves the
-   * DOM alone (the pass runs on every mutation).
+   * withdraws disappears; the name and the line under it carry the interface
+   * language, so a language switch repaints the rows here. An unchanged
+   * signature leaves the DOM alone (the pass runs on every mutation).
    *
    * The rendered signature is kept WITH the element it was rendered into: a
    * new popover starts empty (the hero view takes the old one out of the
@@ -94,7 +94,7 @@ export function createPermissionCard(catalog: Pick<PermissionCatalog, 'restingLa
   function syncPermRows() {
     if (permPopover === null) return
     const wanted = catalog.offeredPresets()
-    const signature = wanted.map(preset => `${preset}=${catalog.presetLabel(preset)}`).join('|')
+    const signature = wanted.map(preset => `${preset}=${catalog.presetLabel(preset)}=${catalog.presetDesc(preset)}`).join('|')
     if (signature === renderedRows && renderedRowsFor === permPopover) return
     renderedRows = signature
     renderedRowsFor = permPopover
