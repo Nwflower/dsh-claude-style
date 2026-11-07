@@ -123,9 +123,10 @@ export function createViewStoreFollower() {
       setView('active')
       if (previous === 'only' || previous === 'show') {
         if (dated === false && group !== activeGroupBy) followed.actions.setGroupBy(activeGroupBy)
-      } else if (dated === false && group !== activeGroupBy) {
-        // 读者在宿主视图菜单里选的任意一档（按工作区、按工作区树、单列表）都是他的分组：
-        // 日期视图开着的时候这里根本走不到（上面已经让开），所以读到的扁平就是读者的选择。
+      } else if (group !== activeGroupBy && (dated === false || group !== 'flat')) {
+        // 读者在宿主视图菜单里选的任意一档（按工作区、按工作区树、单列表）都是他的分组。
+        // 日期视图开着时扁平是 date-groups 那一半写进去的，不记；别的一档照记 —— 那正是
+        // 日期视图让开之后留在宿主 store 里的那一个（#267）。
         rememberGroup(group)
       }
       return

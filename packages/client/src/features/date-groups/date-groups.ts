@@ -143,6 +143,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const mine = new Set<HTMLElement>()
   /** 我们把宿主的视图 store 切成扁平之前的分组，卸载时还回去。 */
   let previousGroup: HostSessionGroupBy | null = null
+  /** 扁平这一档是我们写进去的：store 里再读到别的值，就是读者的选择。 */
+  let flattening = false
   /** 日期视图开着吗：默认开着，读者按下铃铛才换回宿主的分组。 */
   let dateMode = false
   let disposed = false
@@ -185,15 +187,27 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * 工作区分组里每一段各是一张列表，日期要跨工作区，只能落在一张列表上；铃铛
    * 换回宿主视图时把这档还回去。分组记在 previousGroup 里，应用被意外关掉时由
    * localStorage 里那份接着记。
+   *
+   * 扁平是我们的写入。压平之后再读到的分组只要是别人的，就说明读者在宿主的视图
+   * 菜单里改了分组：日期视图让开，把他选的这一档留在 store 里（#267）。
    */
   function flatten() {
     const store = viewNow()
     if (store === null || store === undefined) return
     if (typeof store.getSnapshot !== 'function' || typeof store.actions?.setGroupBy !== 'function') return
     const group = store.getSnapshot().groupBy
-    if (group === 'flat') return
+    if (group === 'flat') {
+      flattening = true
+      return
+    }
+    if (flattening) {
+      // disable 拿到这一档：让开的时候不能拿 previousGroup 那份盖掉读者刚选的。
+      disable(group)
+      return
+    }
     previousGroup = group
     rememberGroup(group)
+    flattening = true
     store.actions.setGroupBy('flat')
   }
 
@@ -363,13 +377,17 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   function enable() {
     if (dateMode || disposed) return
     dateMode = true
+    flattening = false
     document.body.setAttribute(MODE_ATTRIBUTE, '')
     followLists()
     schedule()
   }
 
-  /** 关掉日期视图：还回宿主的分组，收走我们写过的每一个像素。 */
-  function disable() {
+  /**
+   * 关掉日期视图：还回宿主的分组，收走我们写过的每一个像素。
+   * 读出 keep 时它已经在 store 里：还的是读者刚选的那一档，不是压平之前记下的（#267）。
+   */
+  function disable(keep?: HostSessionGroupBy) {
     if (!dateMode) return
     document.body.removeAttribute(ARCHIVED_ATTRIBUTE)
     dateMode = false
@@ -380,9 +398,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     restoreSeats()
     // 分组还成读者原来的那一档（工作区 / 工作区树 / 扁平都照原样）。
     const store = viewNow()
-    const restore = previousGroup ?? rememberedGroup()
+    const restore = keep ?? previousGroup ?? rememberedGroup()
     if (restore !== null && typeof store?.actions?.setGroupBy === 'function') store.actions.setGroupBy(restore)
     previousGroup = null
+    flattening = false
     forgetGroup()
   }
 

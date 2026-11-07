@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-08",
+  "group": "fixes",
+  "order": 0,
+  "external": false,
+  "zh": "修复日期视图开着时从视图菜单改的分组被按回单列表",
+  "en": "Fix a grouping picked from the view menu being forced back to one list while the date view is on"
+}
