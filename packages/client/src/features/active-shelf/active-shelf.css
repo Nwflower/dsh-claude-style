@@ -23,17 +23,19 @@ body[data-dsh-claude-style] .dsh-claude-active-shelf-trigger {
   border: 0;
   border-radius: 6px;
   background: transparent;
-  /* 墨色说明现在按的是哪种排法：工作区视图读配色卡的正文墨色（深色下即白），
+  /* 与标题行里宿主那两枚分区图标共用同一个令牌（二级墨色）：工作区视图与它们同色，
      日期视图取同一张卡的强调色，两种排法在墨色上就分得开。 */
-  color: var(--dsw-alias-label-primary);
+  color: var(--dsw-alias-label-secondary);
   cursor: pointer;
   transition:
     background-color var(--dsh-claude-duration-feedback) var(--dsh-claude-ease-standard),
     color var(--dsh-claude-duration-feedback) var(--dsh-claude-ease-standard);
 }
 
+/* 与宿主标题行里的图标按钮同一个悬停底色，墨色同时提到正文墨色。 */
 body[data-dsh-claude-style] .dsh-claude-active-shelf-trigger:hover {
-  background: var(--dsw-alias-bg-base);
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
 }
 
 body[data-dsh-claude-style] .dsh-claude-active-shelf-trigger:focus-visible {

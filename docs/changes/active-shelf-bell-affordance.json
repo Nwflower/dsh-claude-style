@@ -1,0 +1,8 @@
+{
+  "group": "improvements",
+  "order": 11,
+  "at": "2026-11-07",
+  "external": false,
+  "zh": "改善侧栏「工作区」标题行铃铛的操作反馈，悬停底色与宿主的图标一致，指针停稳后给出进入或离开日期视图的提示",
+  "en": "Improve the sidebar workspace header bell's feedback with the host's own hover wash and a tooltip naming the date view it switches to or from"
+}
