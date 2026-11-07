@@ -1,0 +1,8 @@
+{
+  "group": "new",
+  "order": 35,
+  "at": "2026-11-07",
+  "external": false,
+  "zh": "新增折叠工作区的运行标记，标记样式与位置跟随进行中动效设置",
+  "en": "Add the running mark to a collapsed workspace row, following the ongoing animation and side settings"
+}

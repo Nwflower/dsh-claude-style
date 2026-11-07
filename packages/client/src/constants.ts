@@ -248,3 +248,5 @@ export {
 /** Placement state for the sidebar's native status cell; the host remains its state owner. */
 export const SIDEBAR_STATUS_ATTR = 'data-dsh-claude-row-status'
 export const SIDEBAR_RUNNING_TITLE_ATTR = 'data-dsh-claude-running-title'
+/** A closed workspace row whose sessions include a running one: the stylesheet draws the mark there. */
+export const WORKSPACE_RUNNING_ATTR = 'data-dsh-claude-workspace-running'

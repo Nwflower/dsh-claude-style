@@ -408,6 +408,14 @@ export const SESSION_ROW_SELECTOR = '[data-row-key^="session:"]'
 export const SESSION_PHASE_ATTRIBUTE = 'data-state'
 export const SESSION_ONGOING_STATE = 'ongoing'
 export const SESSION_ONGOING_SELECTOR = '[data-state="ongoing"]'
+/**
+ * One workspace row of the grouped session list: the host keys it
+ * `workspace:<workspaceId>`, and this is the row whose title stands in for the
+ * session rows a closed workspace does not draw.
+ */
+export const WORKSPACE_ROW_SELECTOR = `[${SESSION_ROW_KEY_ATTRIBUTE}^="workspace:"]`
+/** Whether a workspace row's workspace stands open; the host writes it beside the row's role. */
+export const WORKSPACE_ROW_EXPANDED_ATTRIBUTE = 'aria-expanded'
 
 /* ---------- the sidebar's session rows ---------- */
 /** Idle rows render this optional third-party leading decoration outlet. */
