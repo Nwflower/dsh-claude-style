@@ -19,15 +19,23 @@ export const BUTTONS_SEAT_CLASS = 'dsh-claude-message-actions'
 const RETRACT_PATH = 'M4.5 6.5H10a4 4 0 0 1 0 8H7M4.5 6.5 7 4M4.5 6.5 7 9'
 /** 编辑：一支笔。 */
 const EDIT_PATH = 'M10.8 2.7 13.3 5.2 5.8 12.7 2.9 13.4 3.6 10.5ZM9.6 3.9 12.1 6.4'
+/** 重跑：沿原方向再走一次的环形箭头。 */
+const RERUN_PATH = 'M13.5 5.5V2.8m0 2.7h-2.7M13.2 5.2a5.5 5.5 0 1 0 1 5.2'
+/** 删除此轮：一个叉。 */
+const DELETE_PATH = 'M4 4l8 8M12 4l-8 8'
 
 export interface MessageActionLabels {
   retract: string
   edit: string
+  rerun: string
+  delete: string
 }
 
 export interface MessageActionHandlers {
-  retract(): void
-  edit(): void
+  retract?(): void
+  edit?(): void
+  rerun?(): void
+  delete?(): void
 }
 
 function icon(path: string) {
@@ -47,7 +55,7 @@ function icon(path: string) {
   }))
 }
 
-function action(kind: 'retract' | 'edit', label: string, path: string, press: () => void) {
+function action(kind: 'retract' | 'edit' | 'rerun' | 'delete', label: string, path: string, press: () => void) {
   return React.createElement(primitives.Tooltip, {
     label,
     side: 'bottom',
@@ -64,9 +72,11 @@ function action(kind: 'retract' | 'edit', label: string, path: string, press: ()
   })
 }
 
-/** 两个按钮，按 Claude Code 的顺序：先撤回，后编辑。 */
+/** 每一行只画它支持的动作；回答行是重跑与删除，用户行是撤回与编辑。 */
 export function MessageActionButtons({ labels, handlers }: { labels: MessageActionLabels, handlers: MessageActionHandlers }) {
   return React.createElement(React.Fragment, null,
-    action('retract', labels.retract, RETRACT_PATH, handlers.retract),
-    action('edit', labels.edit, EDIT_PATH, handlers.edit))
+    handlers.rerun === undefined ? null : action('rerun', labels.rerun, RERUN_PATH, handlers.rerun),
+    handlers.retract === undefined ? null : action('retract', labels.retract, RETRACT_PATH, handlers.retract),
+    handlers.edit === undefined ? null : action('edit', labels.edit, EDIT_PATH, handlers.edit),
+    handlers.delete === undefined ? null : action('delete', labels.delete, DELETE_PATH, handlers.delete))
 }

@@ -20,6 +20,7 @@ const HOST = {
   composerCard: '[data-composer-card]', // COMPOSER_CARD_SELECTOR
   composerSeat: '[data-composer-seat]', // COMPOSER_SELECTOR
   userRow: '[data-chat-flow-kind="user"]', // FLOW_KIND_ATTRIBUTE with the host's user kind
+  answerRow: '[data-chat-flow-kind="assistant-step"]:not([data-turn-process-member])', // TURN_PROCESS_ANSWER_SELECTOR
   flow: '[data-chat-flow]', // CHAT_FLOW_SELECTOR
   streaming: '[data-streaming]', // STREAMING_SELECTOR
   turnProcess: 'button[data-turn-process]', // the host's own process control, which the skin leaves alone

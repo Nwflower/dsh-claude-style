@@ -195,6 +195,9 @@ export const ASSISTANT_STEP_KIND = 'assistant-step'
 export const TOOL_CALL_KIND = 'tool-call'
 /** The kind of a turn's process group, which the host's widest flow gap follows (D78). */
 export const TURN_PROCESS_ROW_KIND = 'turn-process'
+/** A settled turn's tail row, which carries the answer's own action controls. */
+const TURN_TAIL_KIND = 'turn-tail'
+export const TURN_TAIL_SELECTOR = `[${FLOW_KIND_ATTRIBUTE}="${TURN_TAIL_KIND}"]`
 /**
  * The answer a turn's process group closes on.
  *

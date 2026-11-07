@@ -1,6 +1,10 @@
 {
   "retract": { "zh": "撤回这条消息", "en": "Retract this message" },
   "edit": { "zh": "编辑这条消息", "en": "Edit this message" },
+  "rerun": { "zh": "重跑这一轮", "en": "Run this turn again" },
+  "delete": { "zh": "删除此轮", "en": "Delete this turn" },
+  "reran": { "zh": "已在新会话里重跑这一轮", "en": "The turn is running again in a new session" },
+  "deleted": { "zh": "已在新会话里删除此轮", "en": "The turn is absent from the new session" },
   "save": { "zh": "保存并发送", "en": "Save and send" },
   "cancel": { "zh": "取消", "en": "Cancel" },
   "running": { "zh": "这一轮还在进行，等它停下再改", "en": "The turn is still running; wait for it to stop" },

@@ -1,6 +1,6 @@
 import * as React from 'react'
 import * as reactDom from 'react-dom/client'
-import { FLOW_KIND_ATTRIBUTE, MESSAGE_ACTION_ROW_ATTRIBUTE, USER_ROW_KIND } from '@dsh-claude-style/contracts/dom'
+import { CHAT_ANSWER_ROW_SELECTOR, FLOW_KIND_ATTRIBUTE, MESSAGE_ACTION_ROW_ATTRIBUTE, ROW_PHASE_ATTRIBUTE, TURN_TAIL_SELECTOR, USER_ROW_KIND } from '@dsh-claude-style/contracts/dom'
 import { observeMatches, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { buildElement } from '@dsh-claude-style/engine/dom'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
@@ -11,7 +11,7 @@ import { createHostToast } from '../../shared/host-toast'
 import { ACTION_BUTTON_ATTRIBUTE, BUTTONS_SEAT_ATTRIBUTE, BUTTONS_SEAT_CLASS, MessageActionButtons } from './message-action-buttons'
 import COPY from './message-actions.copy.json'
 import type manifest from './message-actions.manifest'
-import { readerMessageOf, rewindTo } from './message-cut'
+import { answerPromptOf, answerRowOf, readerMessageOf, rewindTo } from './message-cut'
 
 const copy = createCopy(COPY)
 
@@ -31,13 +31,16 @@ const copy = createCopy(COPY)
  * 两个动作都走分岔（message-cut.ts）：宿主没有原地截断会话的接口，所以消息
  * 前一个事件处复制成新会话。撤回把原文放回新会话的输入框，等读者自己再发；
  * 编辑把改过的文字直接在里面发出去。原会话一个事件都不动，读者想回去看随时
- * 能回去。
+ * 能回去。正式回答行的「重跑」与「删除此轮」也从那一轮的用户提问前分岔：
+ * 重跑在新会话里提交原提问，删除只留下该轮之前的会话前缀。
  */
 
 /** 读者消息的那一行（宿主标出的 kind）。 */
 const USER_ROW_SELECTOR = `[${FLOW_KIND_ATTRIBUTE}="${USER_ROW_KIND}"]`
 /** 控件行：宿主画在这一行里的时钟与复制按钮。 */
 const ACTION_SEAT_SELECTOR = `${USER_ROW_SELECTOR} [${MESSAGE_ACTION_ROW_ATTRIBUTE}]`
+const ANSWER_SEAT_SELECTOR = `${TURN_TAIL_SELECTOR} [${MESSAGE_ACTION_ROW_ATTRIBUTE}]`
+const MESSAGE_SEATS_SELECTOR = `${ACTION_SEAT_SELECTOR}, ${ANSWER_SEAT_SELECTOR}`
 /** 打开编辑框的那一行：样式表靠它藏起原来的气泡。 */
 const EDITING_ATTRIBUTE = 'data-dsh-claude-message-editing'
 const EDITOR_CLASS = 'dsh-claude-message-editor'
@@ -67,6 +70,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let editing: Editing | null = null
   let cancelFrame: (() => void) | null = null
   let released = false
+  let pendingAction = false
 
   /** 一次写入等下一帧：宿主一批挂进来的是一整棵子树，逐条写会把那批拆碎。 */
   function queue(write: () => void) {
@@ -102,13 +106,17 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * 提示只带走一句通用的话，具体原因留在控制台。
    */
   function run(action: () => unknown) {
+    if (pendingAction) return
     const report = (error: unknown) => {
       console.error('[dsh-claude-style] message-actions failed:', error)
       toast.show({ text: copy('failed') })
     }
     try {
       const answer = action()
-      if (answer instanceof Promise) answer.catch(report)
+      if (answer instanceof Promise) {
+        pendingAction = true
+        answer.catch(report).finally(() => { pendingAction = false })
+      }
     } catch (error) {
       report(error)
     }
@@ -196,8 +204,41 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     toast.show({ text: copy('rewound') })
   }
 
+  /** An answer's prompt must still resolve to a settled turn when the press lands. */
+  function actionableAnswer(row: HTMLElement) {
+    const message = answerPromptOf(ctx, row)
+    if (message === null) throw new Error('message-actions: the answer no longer resolves to its prompt')
+    if (message.open) {
+      toast.show({ text: copy('running') })
+      return null
+    }
+    closeEditor()
+    return message
+  }
+
+  async function rerunAnswer(row: HTMLElement) {
+    const message = actionableAnswer(row)
+    if (message === null || message.attachments) return
+    await rewindTo(ctx, message, message.text, true)
+    toast.show({ text: copy('reran') })
+  }
+
+  async function deleteAnswer(row: HTMLElement) {
+    const message = actionableAnswer(row)
+    if (message === null) return
+    await rewindTo(ctx, message, '', false)
+    toast.show({ text: copy('deleted') })
+  }
+
   /** 两个按钮的动作：宿主重画一行时按钮跟着重画，动作本身读的是当时那一行。 */
   function handlersFor(row: HTMLElement, line: HTMLElement) {
+    if (row.matches(CHAT_ANSWER_ROW_SELECTOR)) {
+      const attachments = answerPromptOf(ctx, row)?.attachments === true
+      return {
+        ...(attachments ? {} : { rerun() { run(() => rerunAnswer(row)) } }),
+        delete() { run(() => deleteAnswer(row)) },
+      }
+    }
     return {
       retract() {
         run(() => retractMessage(row))
@@ -211,7 +252,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   function draw(seat: Seat, row: HTMLElement, line: HTMLElement) {
     const handlers = handlersFor(row, line)
     seat.root.render(React.createElement(MessageActionButtons, {
-      labels: { retract: copy('retract'), edit: copy('edit') },
+      labels: { retract: copy('retract'), edit: copy('edit'), rerun: copy('rerun'), delete: copy('delete') },
       handlers,
     }))
   }
@@ -219,12 +260,17 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** 给一个控件行补上两个按钮；已经有就不再写第二遍。 */
   function decorate(line: HTMLElement) {
     if (line.querySelector(`[${BUTTONS_SEAT_ATTRIBUTE}]`) !== null) return
-    const row = line.closest<HTMLElement>(USER_ROW_SELECTOR)
+    const answer = answerRowOf(line)
+    const row = line.closest<HTMLElement>(USER_ROW_SELECTOR) ?? answer
     if (row === null) return
-    // 只有正文的消息才补两个按钮：图片与文件附件是浏览器为一次发送上传的草稿，
-    // 放进输入框或重新发出都会丢掉它们，那种消息保持宿主原来的控件行。
-    const message = readerMessageOf(ctx, row)
-    if (message !== null && (message.text === '' || message.attachments)) return
+    if (answer !== null) {
+      const message = answerPromptOf(ctx, answer)
+      if (message === null || message.open) return
+    } else {
+      // 附件是浏览器为一次发送上传的草稿，撤回或编辑会丢掉它们。
+      const message = readerMessageOf(ctx, row)
+      if (message !== null && (message.text === '' || message.attachments)) return
+    }
     const box = buildElement('span', BUTTONS_SEAT_CLASS)
     box.setAttribute(BUTTONS_SEAT_ATTRIBUTE, '')
     // 宿主在这一行里先画时间与复制，两个按钮跟在后面，与 Claude Code 的顺序一致。
@@ -249,7 +295,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     }
   }
 
-  const seatsOnPage = observeMatches<HTMLElement>(ACTION_SEAT_SELECTOR, () => queue(sync))
+  const seatsOnPage = observeMatches<HTMLElement>(MESSAGE_SEATS_SELECTOR, () => queue(sync))
 
   function sync() {
     for (const line of seats.keys()) if (!line.isConnected) dropSeat(line)
@@ -267,8 +313,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * 宿主重画一行时可能只换掉我们的按钮而留下控件行，那种批次不会给匹配表带来
    * 新节点，所以另外看一层：收走的批次里出现我们的按钮，就再对齐一次。
    */
-  const stopRemovals = subscribeMutations(document.body, { childList: true, subtree: true }, (records) => {
+  const stopRemovals = subscribeMutations(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: [ROW_PHASE_ATTRIBUTE] }, (records) => {
     for (const record of records) {
+      if (record.type === 'attributes') {
+        queue(sync)
+        continue
+      }
       for (const node of record.removedNodes) {
         if (!(node instanceof Element)) continue
         if (node.matches(`[${BUTTONS_SEAT_ATTRIBUTE}]`) || node.querySelector(`[${ACTION_BUTTON_ATTRIBUTE}]`) !== null) {

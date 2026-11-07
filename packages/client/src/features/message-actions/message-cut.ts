@@ -1,9 +1,14 @@
 import {
+  CHAT_ANSWER_ROW_SELECTOR,
+  CHAT_FLOW_SELECTOR,
   CHAT_NODE_KEY_ATTRIBUTE,
   CHAT_TURN_ATTRIBUTE,
+  FLOW_KIND_ATTRIBUTE,
+  TURN_TAIL_SELECTOR,
   USER_ROW_KIND,
 } from '@dsh-claude-style/contracts/dom'
 import type { HostUiWorkspaceService } from '@dsh-claude-style/contracts/services'
+import { conversationColumn } from '@dsh-claude-style/engine/chat-dom'
 import {
   closestConversationSession,
   conversationSessionId,
@@ -91,6 +96,28 @@ export function readerMessageOf(ctx: HostContext, row: Element): ReaderMessage |
     attachments: carriesAttachments(node?.data?.content),
     open: exchange !== undefined && exchange.end === undefined,
   }
+}
+
+/** The answer row itself, or the answer named by a turn-tail's turn. */
+export function answerRowOf(row: Element): HTMLElement | null {
+  const direct = row.closest<HTMLElement>(CHAT_ANSWER_ROW_SELECTOR)
+  if (direct !== null) return direct
+  const tail = row.closest<HTMLElement>(TURN_TAIL_SELECTOR)
+  const turn = tail?.getAttribute(CHAT_TURN_ATTRIBUTE)
+  const flow = tail?.closest(CHAT_FLOW_SELECTOR) ?? conversationColumn()
+  if (!turn || !flow) return null
+  return flow.querySelector<HTMLElement>(`${CHAT_ANSWER_ROW_SELECTOR}[${CHAT_TURN_ATTRIBUTE}="${CSS.escape(turn)}"]`)
+}
+
+/** The user prompt that opened the turn an answer row belongs to. */
+export function answerPromptOf(ctx: HostContext, row: Element): ReaderMessage | null {
+  const answer = answerRowOf(row)
+  if (answer === null) return null
+  const turn = answer.getAttribute(CHAT_TURN_ATTRIBUTE)
+  const flow = answer.closest(CHAT_FLOW_SELECTOR) ?? conversationColumn()
+  if (turn === null || flow === null) return null
+  const prompt = flow.querySelector(`[${FLOW_KIND_ATTRIBUTE}="${USER_ROW_KIND}"][${CHAT_TURN_ATTRIBUTE}="${CSS.escape(turn)}"]`)
+  return prompt === null ? null : readerMessageOf(ctx, prompt)
 }
 
 /**
