@@ -2,7 +2,9 @@ import { CURRENCY_SYMBOL, formatMoneyMicro } from '@dsh-claude-style/contracts/p
 import { buildElement } from '@dsh-claude-style/engine/dom'
 import { readAccountBalance } from '../../shared/account-balance'
 import { copy } from './copy'
+import type { Currency } from '@dsh-claude-style/contracts/prices'
 import type { AccountBalance } from '../../shared/account-balance'
+import type { SessionCostReading } from '../context-stats/session-stats'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { FeatureUi } from '../../core/feature'
 import type manifest from './mascot.manifest'
@@ -35,6 +37,28 @@ export function createMascotBubble(ctx: HostContext, ui: FeatureUi<typeof manife
   let open = false
   let balance: AccountBalance | null = null
   let offCost: (() => void) | null = null
+  /**
+   * What each session has cost since the balance was read: its cost when the
+   * bubble first saw it after that read, and its latest. A session left and
+   * come back to keeps its entry, so its spending is counted once.
+   */
+  let spent = new Map<string, { currency: Currency, first: number, last: number }>()
+
+  /** Take one cost reading into the spending since the balance was read. */
+  function observe(reading: SessionCostReading | null) {
+    if (reading === null || reading.cost === null) return
+    const seen = spent.get(reading.sessionId)
+    if (seen === undefined || seen.currency !== reading.currency) {
+      spent.set(reading.sessionId, { currency: reading.currency, first: reading.cost, last: reading.cost })
+    } else seen.last = reading.cost
+  }
+
+  /** What the sessions have cost in one currency since the balance was read, in micro units. */
+  function spentIn(currency: Currency) {
+    let micro = 0
+    for (const seen of spent.values()) if (seen.currency === currency) micro += seen.last - seen.first
+    return micro
+  }
 
   /** One row: its label, then one figure per amount. */
   function row(kind: 'balance' | 'session', label: string, figures: string[]) {
@@ -47,7 +71,10 @@ export function createMascotBubble(ctx: HostContext, ui: FeatureUi<typeof manife
 
   /**
    * The balance row's figures: one per currency, a dash for a miss, none
-   * without an account. They carry as many places as the cost under them, so
+   * without an account. Each is the platform's figure less what the sessions
+   * have cost in that currency since it was read, so it falls as the cost
+   * grows until the next read replaces it; a currency billing does not price
+   * in stays as read. They carry as many places as the cost under them, so
    * the two figures line up on the point; four with no cost to follow.
    */
   function balanceFigures(session: string | null): string[] {
@@ -55,12 +82,11 @@ export function createMascotBubble(ctx: HostContext, ui: FeatureUi<typeof manife
     if (balance.status === 'failed') return [DASH]
     const point = session?.indexOf('.') ?? -1
     const places = session === null || point === -1 ? 4 : session.length - point - 1
-    return balance.totals.map(total => `${CURRENCY_SYMBOL[total.currency]}${(total.micro / 1_000_000).toFixed(places)}`)
+    return balance.totals.map(total => `${CURRENCY_SYMBOL[total.currency]}${((total.micro - spentIn(total.currency)) / 1_000_000).toFixed(places)}`)
   }
 
   /** The session row's figure, or null when it has none to print. */
-  function sessionFigure(): string | null {
-    const reading = ui.contextStats?.sessionCost() ?? null
+  function sessionFigure(reading: SessionCostReading | null): string | null {
     if (reading === null) return null
     if (reading.cost !== null) return formatMoneyMicro(reading.cost, reading.currency)
     return reading.pending ? `${CURRENCY_SYMBOL[reading.currency]}${DASH}` : null
@@ -69,8 +95,10 @@ export function createMascotBubble(ctx: HostContext, ui: FeatureUi<typeof manife
   /** Write the rows the bubble owes now; it shows only while it has one. */
   function render() {
     if (!open) return
+    const reading = ui.contextStats?.sessionCost() ?? null
+    observe(reading)
     const rows: HTMLElement[] = []
-    const session = sessionFigure()
+    const session = sessionFigure(reading)
     const balances = balanceFigures(session)
     if (balances.length > 0) rows.push(row('balance', copy('mascotBalanceLabel'), balances))
     if (session !== null) rows.push(row('session', copy('mascotSessionLabel'), [session]))
@@ -88,6 +116,9 @@ export function createMascotBubble(ctx: HostContext, ui: FeatureUi<typeof manife
     offCost = ui.contextStats?.onSessionCost(render) ?? null
     render()
     void readAccountBalance(ctx).then(answer => {
+      // A kept answer comes back as the same object; a new one is a fresh
+      // platform figure, which already holds what was spent before it.
+      if (answer !== balance) spent = new Map()
       balance = answer
       render()
     })

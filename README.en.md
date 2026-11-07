@@ -65,7 +65,7 @@ The settings page switches between the two palettes; light and dark follow the s
   </tr>
 </table>
 
-> In Settings the mascot can also be switched to the pixel crab Clawd or the whale girl. Resting the pointer on the mascot opens a pixel bubble: the DeepSeek account balance, gifted credit included, on top, and under it what the current conversation has cost, the same figure the statistics line shows.
+> In Settings the mascot can also be switched to the pixel crab Clawd or the whale girl. Resting the pointer on the mascot opens a pixel bubble: the DeepSeek account balance, gifted credit included and drawn down live as the conversation spends (checked against the platform at most once a minute), on top, and under it what the current conversation has cost, the same figure the statistics line shows.
 
 > The workspaces, sessions, usage figures and nickname in the screenshots are sample data.
 

@@ -23,6 +23,8 @@ import type { PieColours } from './context-meter-pie'
 
 /** The shown session's cost in micro units, in the currency billing follows. */
 export interface SessionCostReading {
+  /** The host session the figure belongs to. */
+  sessionId: string
   cost: number | null
   currency: Currency
   pending: boolean
@@ -301,7 +303,7 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
     const billing = currency()
     if (watch === null || billing === null) return null
     const read = reading()
-    return { cost: read.cost, currency: billing, pending: read.costPending }
+    return { sessionId: watch.sessionId, cost: read.cost, currency: billing, pending: read.costPending }
   }
 
   /**
