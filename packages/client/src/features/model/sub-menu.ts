@@ -139,6 +139,7 @@ export function createModelSubMenu(options: ModelSubMenuOptions) {
     lastQuery = query
     painted = at
     relabel()
+    const restoreFocus = rows.keepProviderFocus(body)
     // The card the list sits in, which is the box whose height changes.
     const card = head.parentElement
     const before = searched && card !== null && card.isConnected ? card.getBoundingClientRect().height : 0
@@ -157,24 +158,13 @@ export function createModelSubMenu(options: ModelSubMenuOptions) {
       const group = sections[g]
       const found = group.models.slice().sort(byModelId).filter(model => admits(group, model, query))
       if (found.length === 0) continue
-      const section = buildElement('div', 'dsh-claude-model-group-section')
-      const groupRow = buildElement('div', 'dsh-claude-model-group-row')
-      const groupLabel = buildElement('div', 'dsh-claude-model-group')
-      // The group label is the provider's name alone: a mark there would repeat
-      // what the rows below already carry inside their lockups.
-      groupLabel.appendChild(buildElement('span', 'dsh-claude-model-group-name', modelGroupName(group.id, group.name)))
-      groupRow.appendChild(groupLabel)
-      section.appendChild(groupRow)
-      for (let m = 0; m < found.length; m++) {
-        const selected = current !== null && current.group.id === group.id && current.model.id === found[m].id
-        section.appendChild(rows.buildModelOption(group, found[m], selected, false))
-        listed += 1
-      }
-      body.appendChild(section)
+      body.appendChild(rows.buildProviderGroup(group, found, modelGroupName(group.id, group.name), current, false, query !== ''))
+      listed += found.length
     }
     if (listed === 0) {
       body.appendChild(buildElement('div', 'dsh-claude-popover-status', query === '' ? copy('empty') : copy('searchEmpty')))
     }
+    restoreFocus()
     if (card !== null && before > 0) resizeThrough(card, before)
   }
 

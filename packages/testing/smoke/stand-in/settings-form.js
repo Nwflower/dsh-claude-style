@@ -39,6 +39,9 @@
   // The model-account case has a quick provider chosen, the state in which the
   // account used to fall behind More models.
   if (CASE === 'model-account') formValue.quickProviders = ['zai']
+  var notifyForm = function () {
+    for (var i = 0; i < formListeners.length; i++) formListeners[i]()
+  }
   var form = {
     // The deepy case stores the DeepSeek brand under the value earlier builds
     // wrote for it ("off"), which has to read as the DeepSeek brand.
@@ -47,13 +50,17 @@
       formListeners.push(listener)
       return function () {}
     },
-    set: function () { return Promise.resolve(true) },
+    set: function (name, value) {
+      formValue[name] = value
+      notifyForm()
+      return Promise.resolve(true)
+    },
   }
   // The settings store, driven by hand: __pushForm writes a value and notifies
   // the skin's subscription, which is what the settings page's own writes do.
   window.__pushForm = function (patch) {
     Object.assign(formValue, patch)
-    for (var i = 0; i < formListeners.length; i++) formListeners[i]()
+    notifyForm()
   }
   host.LAUNCHER = LAUNCHER
   host.launcherCase = launcherCase

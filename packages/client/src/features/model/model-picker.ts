@@ -266,13 +266,14 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     const status = snap ? snap.status : 'idle'
     const groups = (snap && snap.groups) || []
     const current = modelCatalog.current(snap)
-    let sig = [status, activeLocale(), current ? `${current.group.id}/${current.model.id}` : '', readPrefs().quickProviders.join(','), readPrefs().modelDescriptions !== false, rateSignature()].join('|')
+    let sig = [status, activeLocale(), current ? `${current.group.id}/${current.model.id}` : '', readPrefs().quickProviders.join(','), readPrefs().modelDescriptions !== false, readPrefs().collapsedProviders.join(','), rateSignature()].join('|')
     sig += rowsSignature(groups)
     if (sig === modelBodySig) {
       modelRows.refreshRates()
       return false
     }
     modelBodySig = sig
+    const restoreFocus = modelRows.keepProviderFocus(modelBody)
     while (modelBody.firstChild) modelBody.removeChild(modelBody.firstChild)
 
     // A seat whose data is still in flight must not blank a picker that
@@ -292,15 +293,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
       } else {
         for (let s = 0; s < sections.length; s++) {
           const section = sections[s]
-          // The official source needs no naming, and the first section needs
-          // no rule: a bare line above the list would be one line too many.
-          const sectionLabel = section.id === MODEL_OFFICIAL_GROUP ? '' : modelGroupName(section.id, section.name)
-          if (sectionLabel !== '' || s > 0) modelBody.appendChild(modelRows.buildProviderRule(sectionLabel))
+          const sectionLabel = modelGroupName(section.id, section.name)
           const sectionModels = section.models.slice().sort(byModelId)
-          for (let m = 0; m < sectionModels.length; m++) {
-            const selected = current !== null && current.group.id === section.id && current.model.id === sectionModels[m].id
-            modelBody.appendChild(modelRows.buildModelOption(section, sectionModels[m], selected, true))
-          }
+          modelBody.appendChild(modelRows.buildProviderGroup(section, sectionModels, sectionLabel, current, true))
         }
       }
       // The current seat is surfaced under the list when none of the sections
@@ -339,6 +334,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
         layoutModelFooter(showMore)
       }
     }
+    restoreFocus()
     return true
   }
 
@@ -354,7 +350,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     const sections = modelRows.levelOneSections(groups)
     const listed: string[] = []
     for (let s = 0; s < sections.length; s++) listed.push(sections[s].id)
-    let sig = `more|${listed.join(',')}|${rateSignature()}`
+    let sig = `more|${listed.join(',')}|${readPrefs().collapsedProviders.join(',')}|${rateSignature()}`
     sig += rowsSignature(groups)
     if (current) sig += `#${current.group.id}/${current.model.id}`
     return sig
@@ -567,6 +563,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     onKey(event: KeyboardEvent) {
       if (!cards.mainOpen()) return
       if (event.key.length !== 1 || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return
+      // Space on a button inside either card activates that button. Type-ahead
+      // belongs to the trigger and the list's non-interactive reading surface.
+      const button = closestFrom(event.target, 'button')
+      if (button !== null && (cards.popover()?.contains(button) === true || cards.subPopover()?.contains(button) === true)) return
       // The field the reader is typing in keeps every key: the composer's own
       // field holds the message under the picker, and the search field holds
       // the query the reader is typing.

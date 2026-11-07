@@ -29,7 +29,7 @@
       if (trigger !== null) trigger.click()
       await sleep(300)
       var main = document.querySelector('.dsh-claude-model-popover:not(.dsh-claude-model-popover-sub)')
-      var rule = main === null ? null : main.querySelector('.dsh-claude-model-rule-name')
+      var rule = main === null ? null : main.querySelector('.dsh-claude-model-group-name')
       var cell = main === null ? null : main.querySelector('.dsh-claude-model-cell')
       if (cell !== null) cell.click()
       await sleep(300)

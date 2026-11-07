@@ -223,20 +223,29 @@ body[data-dsh-claude-style] .dsh-claude-model-group-section {
   position: relative;
   display: flex;
   flex-direction: column;
-  /* Level 2 rows sit close together: the 3px the body uses between sections
-     read as a gap between models of the same provider. */
   gap: 1px;
   min-width: 0;
+}
+body[data-dsh-claude-style] .dsh-claude-model-group-section + .dsh-claude-model-group-section {
+  margin-top: 6px;
 }
 
 body[data-dsh-claude-style] .dsh-claude-model-group-row {
   position: sticky;
   top: 0;
   z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   align-self: stretch;
   margin: 0;
-  padding: 3px 7px 0 7px;
+  padding: 3px 7px;
   background: var(--dsw-alias-bg-overlay, #ffffff);
+}
+body[data-dsh-claude-style] .dsh-claude-model-group-row::after {
+  content: "";
+  flex: 1;
+  border-top: 0.5px solid var(--dsh-claude-divider);
 }
 
 body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-model-group-row {
@@ -248,13 +257,33 @@ body[data-dsh-claude-style] .dsh-claude-model-group {
   align-items: center;
   gap: 5px;
   margin: 0;
-  padding: 1px 7px;
+  padding: 2px 7px;
+  border: none;
+  border-radius: 6px;
   background: var(--dsh-claude-inverse-fill);
   color: var(--dsh-claude-inverse-ink);
-  border-radius: 6px;
-  font-size: 11px;
+  font-family: var(--dsw-font-family);
+  font-size: 12px;
   font-weight: 600;
-  line-height: 16px;
+  line-height: 18px;
+  text-align: left;
+  cursor: pointer;
+}
+body[data-dsh-claude-style] .dsh-claude-model-group-chevron {
+  display: inline-flex;
+  align-items: center;
+  transition: transform var(--dsh-claude-timing-feedback);
+}
+body[data-dsh-claude-style] .dsh-claude-model-group[aria-expanded="true"] .dsh-claude-model-group-chevron {
+  transform: rotate(90deg);
+}
+body[data-dsh-claude-style] .dsh-claude-model-group-models {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+body[data-dsh-claude-style] .dsh-claude-model-group-models[hidden] {
+  display: none;
 }
 
 /* Model / effort option and the level-2 row (label + chevron, whose hover opens
