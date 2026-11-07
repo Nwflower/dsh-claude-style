@@ -43,6 +43,8 @@ function messageAnswerActionsScenario({ check }) {
   return {
     script: 'greeting',
     prompt: 'hello there',
+    /** Slow enough that the second turn is still running when its row is read. */
+    delayMs: 700,
     async assert({ page, session, notes, out }) {
       await sendPrompt(page, 'second turn')
       await page.waitForFunction((selector) => document.querySelectorAll(selector).length > 1, HOST.answerRow, { timeout: 20000 })
