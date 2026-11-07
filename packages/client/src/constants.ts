@@ -210,6 +210,9 @@ export const PAGE_ZOOM_ATTR = 'data-dsh-claude-page-zoom'
 
 /** 缩放倍率走的自定义属性：任何数字都成立，chrome.css 的 `zoom` 读它。 */
 export const PAGE_ZOOM_VAR = '--dsh-claude-page-zoom-factor'
+/** Ordinary interface text's percentage and its scale, independent of the page's scale. */
+export const INTERFACE_FONT_SIZE_ATTR = 'data-dsh-claude-interface-font-size'
+export const INTERFACE_FONT_SIZE_VAR = '--dsh-claude-interface-font-scale'
 /**
  * Present while the page's own width — the window's over the page zoom — is at
  * or under the width each one names (shared/page-scale.ts). A stylesheet reads

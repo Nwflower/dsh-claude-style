@@ -79,6 +79,11 @@ export const CHAT_REVEAL_OFF = 'off'
 export const CHAT_REVEAL_ON = 'on'
 export const CHAT_REVEAL_MODES = [CHAT_REVEAL_ON, CHAT_REVEAL_OFF] as const
 
+/** How live reasoning reaches the reader: as it arrives, or through the two-line stepping window. */
+export const REASONING_DISPLAY_CONTINUOUS = 'continuous'
+export const REASONING_DISPLAY_STEPPED = 'stepped'
+export const REASONING_DISPLAYS = [REASONING_DISPLAY_CONTINUOUS, REASONING_DISPLAY_STEPPED] as const
+
 /** How a message the reader sends arrives: a stand-in flying up from the composer, or the row growing in place. */
 export const MESSAGE_ENTER_FLIGHT = 'flight'
 export const MESSAGE_ENTER_GROW = 'grow'
@@ -93,10 +98,11 @@ export const PROCESS_ROWS_LAYOUTS = [PROCESS_ROWS_FLAT, PROCESS_ROWS_COLUMN] as 
 export const PALETTE_CLAUDE = 'claude'
 export const PALETTE_HOST = 'host'
 export const PALETTES = [PALETTE_CLAUDE, PALETTE_HOST] as const
-/** Who sets the type, under the same two answers. */
+/** Who sets the type: the skin's Claude faces, one system sans stack, or the host's own tokens. */
 export const TYPEFACE_CLAUDE = 'claude'
+export const TYPEFACE_SYSTEM = 'system'
 export const TYPEFACE_HOST = 'host'
-export const TYPEFACES = [TYPEFACE_CLAUDE, TYPEFACE_HOST] as const
+export const TYPEFACES = [TYPEFACE_CLAUDE, TYPEFACE_SYSTEM, TYPEFACE_HOST] as const
 
 /** The mascot on the composer, chosen apart from the brand: follow the brand, pick one of the three, or show none. */
 export const MASCOT_BRAND = 'brand'
@@ -214,6 +220,11 @@ export const PAGE_ZOOM_DEFAULT = '100'
 export const PAGE_ZOOM_MIN = 60
 export const PAGE_ZOOM_MAX = 200
 
+/** Ordinary interface text as a percentage of its own size, independent of page zoom. */
+export const INTERFACE_FONT_SIZE_DEFAULT = '100'
+export const INTERFACE_FONT_SIZE_MIN = 80
+export const INTERFACE_FONT_SIZE_MAX = 160
+
 /** Background fill opacity as a percentage; 100 keeps the existing canvas opaque. */
 export const BACKGROUND_OPACITY_DEFAULT = '100'
 export const BACKGROUND_OPACITY_MIN = 0
@@ -322,6 +333,8 @@ export const PREFS = {
    * is dropped.
    */
   quickProviders: { type: 'list', default: [], max: QUICK_PROVIDERS_MAX, entryMax: PROVIDER_ID_MAX, drop: [OFFICIAL_MODEL_GROUP] },
+  /** Provider groups the reader folded; the official group may be folded too. */
+  collapsedProviders: { type: 'list', default: [], max: QUICK_PROVIDERS_MAX, entryMax: PROVIDER_ID_MAX, drop: [] },
   username: { type: 'text', default: '', max: USERNAME_MAX },
   /** The page's scale as a percentage of its own size, between PAGE_ZOOM_MIN and PAGE_ZOOM_MAX; the empty string is "follow the system". */
   pageZoom: {
@@ -330,6 +343,7 @@ export const PREFS = {
     max: 8,
     legacy: { system: '', '0.8': '80', '1': '100', '1.25': '125', '1.5': '150' },
   },
+  interfaceFontSize: { type: 'text', default: INTERFACE_FONT_SIZE_DEFAULT, max: 8 },
   sodium: { type: 'choice', values: SODIUM_MODES, default: SODIUM_UNDECIDED },
   banLocale: { type: 'choice', values: BAN_LOCALES, default: BAN_LOCALE_EN },
   homeLayout: { type: 'choice', values: HOME_LAYOUTS, default: HOME_LAYOUT_STUDIO },
@@ -387,6 +401,7 @@ export const PREFS = {
   chatWait: { type: 'boolean', default: true },
   chatSend: { type: 'boolean', default: true },
   chatReveal: { type: 'choice', values: CHAT_REVEAL_MODES, default: CHAT_REVEAL_OFF },
+  reasoningDisplay: { type: 'choice', values: REASONING_DISPLAYS, default: REASONING_DISPLAY_CONTINUOUS },
   /**
    * Whether the formal answer takes the reading position as it starts
    * (features/chat-anchor/): its first line comes to the top of the conversation

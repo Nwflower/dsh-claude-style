@@ -1,5 +1,6 @@
-import { BACKGROUND_OPACITY_ATTR, BACKGROUND_OPACITY_MAX, BACKGROUND_OPACITY_VAR, BRAND_ATTR, BRAND_DEEPSEEK, COMPOSER_ATTR, COMPOSER_GAP_ATTR, COMPOSER_GAP_THEME, CONTEXT_DISPLAY_ATTR, CONTEXT_NUMBERS_ATTR, EFFORT_ACCENT_ATTR, FOOTER_ATTR, MASCOT_ATTR, MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MOTION_ATTR, MOTION_FULL, MOTION_REDUCED, ONGOING_INDICATOR_ATTR, ONGOING_SIDE_ATTR, PAGE_ZOOM_ATTR, PAGE_ZOOM_VAR, PACKAGE_NAME, PALETTE_ATTR, PALETTE_CARD_ATTR, PALETTE_COLORING_BRAND, PALETTE_COLORING_CUSTOM, PREF_DEFAULTS, SEARCH_STYLE_ATTR, SETTINGS_ENTRY_FALLBACK, SIDEBAR_BRAND_ATTR, SIDEBAR_LAYOUT_ATTR, STATS_POSITION_ATTR, STATUS_MOTION_ATTR, TYPEFACE_ATTR } from '../constants'
+import { BACKGROUND_OPACITY_ATTR, BACKGROUND_OPACITY_MAX, BACKGROUND_OPACITY_VAR, BRAND_ATTR, BRAND_DEEPSEEK, COMPOSER_ATTR, COMPOSER_GAP_ATTR, COMPOSER_GAP_THEME, CONTEXT_DISPLAY_ATTR, CONTEXT_NUMBERS_ATTR, EFFORT_ACCENT_ATTR, FOOTER_ATTR, INTERFACE_FONT_SIZE_ATTR, INTERFACE_FONT_SIZE_VAR, MASCOT_ATTR, MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MOTION_ATTR, MOTION_FULL, MOTION_REDUCED, ONGOING_INDICATOR_ATTR, ONGOING_SIDE_ATTR, PAGE_ZOOM_ATTR, PAGE_ZOOM_VAR, PACKAGE_NAME, PALETTE_ATTR, PALETTE_CARD_ATTR, PALETTE_COLORING_BRAND, PALETTE_COLORING_CUSTOM, PREF_DEFAULTS, SEARCH_STYLE_ATTR, SETTINGS_ENTRY_FALLBACK, SIDEBAR_BRAND_ATTR, SIDEBAR_LAYOUT_ATTR, STATS_POSITION_ATTR, STATUS_MOTION_ATTR, TYPEFACE_ATTR } from '../constants'
 import { backgroundOpacityOf, projectBackgroundOpacity } from '../shared/background-opacity'
+import { interfaceFontSizeOf, projectInterfaceFontSize } from '../shared/interface-font-size'
 import { pageZoomOf, pageZoomText, projectPageZoomFactor } from '../shared/page-zoom'
 import type { PrefKey, Prefs } from '../constants'
 import type { HostContext } from '@dsh-claude-style/engine/host'
@@ -143,6 +144,14 @@ const MIRRORS = [
       return factor === 1 ? false : pageZoomText(factor)
     },
   },
+  {
+    key: 'interfaceFontSize',
+    attr: INTERFACE_FONT_SIZE_ATTR,
+    value: (prefs: Prefs) => {
+      const percent = interfaceFontSizeOf(prefs.interfaceFontSize) * 100
+      return percent === 100 ? false : String(percent)
+    },
+  },
   // The background's opacity is this attribute alone; the canvas fills read it
   // through the property `projectBackgroundOpacity` projects from it, written
   // right after the mirrors below. At 100 the attribute is taken off, and the
@@ -179,6 +188,7 @@ export function adoptPrefs(next: Prefs) {
     // After the attribute, which is what it reads: the sheet's half of the page's
     // scale, written here rather than a frame later by the scale watcher.
     projectPageZoomFactor()
+    projectInterfaceFontSize()
     // The canvas fills' opacity rides the same channel: the property is written
     // from the attribute here, like the scale above.
     projectBackgroundOpacity()
@@ -191,6 +201,7 @@ export function adoptPrefs(next: Prefs) {
 export function clearPrefsAttributes() {
   for (const name of MIRROR_ATTRS) document.body.removeAttribute(name)
   document.body.style.removeProperty(PAGE_ZOOM_VAR)
+  document.body.style.removeProperty(INTERFACE_FONT_SIZE_VAR)
   document.body.style.removeProperty(BACKGROUND_OPACITY_VAR)
 }
 
