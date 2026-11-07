@@ -294,12 +294,17 @@ function reasoningContinuousScenario({ check }) {
       '  config:',
       '    reasoningDisplay: continuous',
     ],
-    delayMs: 700,
+    delayMs: 1200,
     async duringTurn(context) {
       const { page } = context
+      // The row has to be running with text already in it: a first sample taken
+      // before the mock's reasoning starts would read as the turn being over,
+      // and the recording would stop with nothing in it.
       await page.waitForFunction((host) => {
         const row = document.querySelector(host.row)
-        return row !== null && row.getAttribute('data-state') === 'running'
+        const text = row?.querySelector(host.text)
+        return row !== null && row.getAttribute('data-state') === 'running' &&
+          text !== null && text !== undefined && text.getBoundingClientRect().height > 100
       }, HOST, { timeout: 40000 })
       const recording = recordUntil(page, readInPage, (seen) => seen[seen.length - 1].phase !== 'running', HOST, 60000, 'the continuous reasoning ending')
       await page.waitForFunction((host) => {
