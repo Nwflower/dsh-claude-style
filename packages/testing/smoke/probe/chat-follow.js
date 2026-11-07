@@ -269,8 +269,15 @@
       followScroller.scrollTop = followScroller.scrollHeight
       await probe.frame()
       var shrinkBefore = followColumn.getBoundingClientRect().top
-      shrinking.style.height = '20px'
+      // The block leaves by the height a reasoning row does, not by enough to
+      // end the scroll itself: with the column still overflowing, the host's
+      // pin keeps the end standing and the reading position is comparable.
+      shrinking.style.height = '100px'
       followScroller.scrollTop = followScroller.scrollHeight
+      // The running offset is taken off on the resize callback, which lands
+      // after the frame that painted the new height: read the column once the
+      // slide is gone, or the figure still carries it.
+      for (var shrinkFrames = 0; shrinkFrames < 12 && followColumn.getAnimations().length > 0; shrinkFrames++) await probe.frame()
       await probe.frame()
       r.chatFollow.shrink = {
         before: shrinkBefore,
