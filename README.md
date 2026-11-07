@@ -64,9 +64,6 @@
     <td align="center" width="25%"><img src="./docs/gifs/sleeping.gif" width="120" alt="睡着" /><br />睡着</td>
   </tr>
 </table>
-
-> 吉祥物也可在设置里切换成像素螃蟹 Clawd 或像素鲸娘。指针停在吉祥物上会弹出像素气泡：上面一行是 DeepSeek 账号余额（含赠金，随会话花费实时扣减，每分钟最多向平台核对一次），下面一行是当前会话的花费（与统计行一致）。
-
 ## 安装
 
 官方插件页添加这个包名，或从终端安装：
@@ -80,15 +77,9 @@ dsh plugin --profile web add dsh-claude-style                    # npm 包（推
 dsh plugin --profile web add Nwflower/dsh-claude-style#dist      # GitHub 发布分支
 ```
 
-也可从[插件市场](https://github.com/dsh-market/dsh-market)或 dsh-web-all 的皮肤中心安装。同一时刻只启用一个主题；需要 dsh ≥ 0.2.2-rc.1，装好后重启 DeepSeek Harness。
+也可从[插件市场](https://github.com/dsh-market/dsh-market)或 dsh-web-all 的皮肤中心安装。同一时刻只启用一个主题；
 
-## 手动未读标记
-
-在会话的省略号菜单中选择「标记为未读」或「清除未读标记」。标记保存在当前配置中，刷新页面后保留，切走后再次打开该会话时清除；宿主的自动完成提醒保持独立。
-
-## 撤回与编辑消息
-
-指针移到你自己发出的消息上，时间与复制按钮旁边会多出「撤回」与「编辑」。两者都打开一个新会话，原会话原样保留：撤回把这条消息和它之后的对话切掉，把原文放回输入框等你重新发送；编辑先在气泡的位置改好文字，确认后直接在新会话里发出。带图片或文件附件的消息不给这两个按钮，附件没法随文字搬进新会话。这一轮还在进行时，两个按钮会先等它停下。可在插件设置的「对话」标签页关闭此功能。
+需要 dsh ≥ 0.2.2-rc.1，装好后重启 DeepSeek Harness。
 
 ## 字体
 
@@ -96,8 +87,6 @@ dsh plugin --profile web add Nwflower/dsh-claude-style#dist      # GitHub 发布
 
 
 启用时二选一：装进系统，或把 `.ttf` 复制到 `$DSH_HOME/dsh-claude-style/fonts/`。
-
-吉祥物气泡的像素字取自 DWNfonts 的[破晓像素](https://diaowinner.itch.io/poxiaopixel)（SIL OFL 1.1），包内只带气泡用到的几个字。
 
 ## 文档
 
@@ -116,11 +105,11 @@ dsh plugin --profile web add Nwflower/dsh-claude-style#dist      # GitHub 发布
 
 ## 鸣谢
 
-- 「钠 / Sodium」取名自 Minecraft 的 [Sodium](https://github.com/CaffeineMC/sodium) 渲染优化模组，本插件与它没有关联。
+- 「钠 / Sodium」取名致敬 Minecraft 的 [Sodium](https://github.com/CaffeineMC/sodium) 渲染优化模组，本插件与它无关。
 - 消息导航参考 SherUnlocked-4869 的 [dsh-plugin-msg-nav](https://github.com/SherUnlocked-4869/dsh-plugin-msg-nav)（MIT）。
 - Deepy 和鲸鱼娘的动画帧图来自 calmly-eating-bugs（[@wp3171216237](https://github.com/wp3171216237)）绘制的主题包。
 - 聊天区的增强动效改自 [dsh-chat-ux](https://github.com/alm-allen/dsh-chat-ux)（MIT）。
-- Clawd是 Anthropic 的角色形象。帧图不适用 MIT 许可（见 [LICENSE](LICENSE)）。本插件是非官方爱好者作品，与 Anthropic 没有关联。
+- Clawd是 Anthropic 的角色形象。本插件是非官方爱好者作品，与 Anthropic 没有关联。
 
 ## 友链
 
