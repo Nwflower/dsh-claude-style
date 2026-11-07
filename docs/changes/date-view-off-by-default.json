@@ -1,0 +1,8 @@
+{
+  "group": "fixes",
+  "order": 28,
+  "at": "2026-11-07",
+  "external": false,
+  "zh": "修复日期视图默认开启的问题，侧栏默认按宿主自己的分组排列，按下铃铛才排成日期段落，刷新后回到宿主分组",
+  "en": "Fix the date view opening by default; the sidebar follows the host's own grouping until the bell is pressed, and a reload returns to the host grouping"
+}

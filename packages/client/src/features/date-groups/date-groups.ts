@@ -48,7 +48,7 @@ const GROUP_BACKUP_KEY = 'dsh-claude-group-before-date-view'
 const WEEKDAY_LIMIT = 7
 /**
  * 切换视图的事件名：铃铛按下时派发，本特性接住它，在「宿主的按工作区」与
- * 「我们的按日期」之间来回切。日期视图是默认的那一档，铃铛只是临时换回去。
+ * 「我们的按日期」之间来回切。日期视图默认关着，而且这次选择不跨刷新保留。
  */
 export const DATE_VIEW_TOGGLE_EVENT = 'dsh-claude-toggle-date-view'
 
@@ -358,8 +358,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   /**
    * 打开日期视图：切扁平、重排、加标签，标记落到 body 上供样式表和铃铛读。
-   * 排版的活留给下一帧：安装时同步读宿主的会话列表，一旦那份服务有问题，安装
-   * 会整个抛出去，收尾函数都没能交回来，body 上的标记就留在页面上了。
+   * 排版的活留给下一帧：按下铃铛的那一刻宿主可能正在重画列表，等这一帧画完再读。
    */
   function enable() {
     if (dateMode || disposed) return
@@ -479,8 +478,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   ui.dateGroups = { sync: arrange, skipOnContentOnly: true, teardown }
 
-  // 日期视图是默认的那一档：装上就排成日期段落，读者按下铃铛才换回宿主的视图。
-  enable()
+  // 日期视图默认关着：装上只把上一次留下的扁平还回读者原来的分组，按下铃铛才排成日期段落。
+  schedule()
   document.addEventListener(DATE_VIEW_TOGGLE_EVENT, onToggle)
   // 页面关掉时还在日期视图里：先把分组还回去，别把扁平留在宿主的存储里。
   globalThis.addEventListener('pagehide', onPageHide)

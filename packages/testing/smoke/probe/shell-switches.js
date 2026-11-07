@@ -78,7 +78,17 @@
         return patch
       }
       await sleep(300)
-      r.switches = { start: switchMarks(), steps: [] }
+      /** The host's own grouping, straight off the stand-in's store. */
+      var groupOfHost = function () {
+        var store = window.__dshSmokeHost.workspaceViewStore
+        return store === undefined ? null : store.getSnapshot().groupBy
+      }
+      r.switches = {
+        start: switchMarks(),
+        steps: [],
+        // 日期视图默认关着：装上时宿主的分组是读者自己的那一档（按工作区）。
+        dateView: { start: groupOfHost() },
+      }
       await probe.onlyFor(['switches'], async function () {
         for (var si = 0; si < switchKeys.length; si++) {
           var offPatch = {}
@@ -112,10 +122,21 @@
           await sleep(300)
           return readView(item)
         }
+        // 日期视图不再随安装打开：按下标题行的铃铛让它站着，再验证回到进行中时
+        // 还的是这一档（扁平），而不是把读者自己的分组换掉。
+        var bell = document.querySelector('.dsh-claude-active-shelf-trigger')
+        if (bell !== null) bell.click()
+        document.body.appendChild(document.createElement('i'))
+        await sleep(300)
+        r.switches.dateView.on = groupOfHost()
         r.switches.view = {
           archived: await clickSegment('archived'),
           active: await clickSegment('active'),
         }
+        if (bell !== null) bell.click()
+        document.body.appendChild(document.createElement('i'))
+        await sleep(300)
+        r.switches.dateView.off = groupOfHost()
         // 宿主自己的视图菜单也提供「单列表」（扁平）：读者在那里选的一档是他的分组，
         // 不是日期视图留下的痕迹，跟着走一遍已归档再回来也还是它。
         var hostStore = window.__dshSmokeHost.workspaceViewStore

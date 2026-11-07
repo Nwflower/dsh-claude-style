@@ -239,6 +239,10 @@ export default {
       !!sw.allOff && keys.every((key) => !present(sw.allOff, key)), JSON.stringify(sw.allOff))
     check('all switches back on bring every feature back', !!sw.allOn && keys.every((key) => present(sw.allOn, key)), JSON.stringify(sw.allOn))
     const view = sw.view || {}
+    const dateView = sw.dateView || {}
+    check('the date view stays off until the bell is pressed, and the bell gives the reader\'s grouping back',
+      dateView.start === 'workspace' && dateView.on === 'flat' && dateView.off === 'workspace',
+      JSON.stringify(dateView))
     const archivedView = view.archived || {}
     const activeView = view.active || {}
     check('the 已归档 segment drives the host\'s own view: archived rows alone in one flat list, and the segment checked',
