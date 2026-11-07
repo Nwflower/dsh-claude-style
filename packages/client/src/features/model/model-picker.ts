@@ -206,23 +206,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
   }
 
   /**
-   * What the rows' rates depend on, in one value the render signatures carry.
-   * The catalog is the meter feature's (its generation moves when one arrives).
-   * The minute is not part of it: a closed card is not repainted by the clock,
-   * and the minute reaches the rows through refreshRateBadges instead.
-   */
-  function rateSignature() {
-    const peakrate = ui.peakrate
-    if (peakrate === undefined) return ''
-    return `${peakrate.epoch()}`
-  }
-
-  /**
    * Swap both cards' rate meters for the current ones (rows.ts owns the rows
    * and their identity). The badge is the one minute-sensitive part of a row
-   * (the countdown to the rate switch), and the card open and the minute
-   * rollover call this instead of the full paint: with a four-digit catalog
-   * the full paint is the open lag the feature cannot afford on every open.
+   * (the countdown to the rate switch), and the card open, the minute
+   * rollover and an arriving catalog call this instead of the full paint: a
+   * page that reloads paints its rows before the catalog lands, and rebuilding
+   * them for the badges would flash the whole list.
    */
   function refreshRateBadges() {
     modelRows.refreshRates()
@@ -266,7 +255,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     const status = snap ? snap.status : 'idle'
     const groups = (snap && snap.groups) || []
     const current = modelCatalog.current(snap)
-    let sig = [status, activeLocale(), current ? `${current.group.id}/${current.model.id}` : '', readPrefs().quickProviders.join(','), readPrefs().modelDescriptions !== false, readPrefs().collapsedProviders.join(','), rateSignature()].join('|')
+    let sig = [status, activeLocale(), current ? `${current.group.id}/${current.model.id}` : '', readPrefs().quickProviders.join(','), readPrefs().modelDescriptions !== false, readPrefs().collapsedProviders.join(',')].join('|')
     sig += rowsSignature(groups)
     if (sig === modelBodySig) {
       modelRows.refreshRates()
@@ -350,7 +339,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     const sections = modelRows.levelOneSections(groups)
     const listed: string[] = []
     for (let s = 0; s < sections.length; s++) listed.push(sections[s].id)
-    let sig = `more|${listed.join(',')}|${readPrefs().collapsedProviders.join(',')}|${rateSignature()}`
+    let sig = `more|${listed.join(',')}|${readPrefs().collapsedProviders.join(',')}`
     sig += rowsSignature(groups)
     if (current) sig += `#${current.group.id}/${current.model.id}`
     return sig
