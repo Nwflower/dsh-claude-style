@@ -304,9 +304,6 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"] [data-dsh-clau
   color: var(--dsw-alias-label-secondary, #70686a);
   transition: color var(--dsh-claude-timing-feedback);
 }
-body[data-dsh-claude-style][data-ds-dark-theme] [data-dsh-claude-part~="session-row"] [data-dsh-claude-part~="row-title"] {
-  color: var(--dsw-alias-label-tertiary);
-}
 body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"]:is(:hover, [data-dsh-claude-part~="row-selected"], [data-dsh-claude-part~="row-active"], [data-dsh-claude-part~="row-menu-open"], [aria-selected="true"], [data-selected="true"]) [data-dsh-claude-part~="row-title"] {
   color: var(--dsw-alias-label-primary, #161616);
 }
@@ -320,6 +317,7 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"] [data-dsh-clau
 body[data-dsh-claude-style] [data-dsh-claude-part~="section-label"] {
   font-size: 12px;
   line-height: 16px;
+  color: var(--dsw-alias-label-tertiary, #91888a);
 }
 
 /* Compact scale: shrunken heights, margins and paddings */
