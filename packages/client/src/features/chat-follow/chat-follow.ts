@@ -3,7 +3,7 @@ import { observeMatches, observeSize, subscribeMutations } from '@dsh-claude-sty
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { motionReduced } from '../../core/prefs'
 import { createChatProcessFollow } from './process-follow'
-import { CHAT_CALL_SELECTOR, CHAT_RUNNING_SELECTOR, CONVERSATION_SCROLL_SELECTOR, FLOW_BLOCK_SELECTOR, FOLLOWING_TAIL_ATTRIBUTE, FOLLOWING_TAIL_SELECTOR, ROW_PHASE_ATTRIBUTE, RUNNING_STATE, SHIMMER_SELECTOR, STREAMING_SELECTOR, THINK_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { CHAT_CALL_SELECTOR, CHAT_RUNNING_SELECTOR, CONVERSATION_SCROLL_SELECTOR, FLOW_BLOCK_SELECTOR, FOLLOWING_TAIL_ATTRIBUTE, FOLLOWING_TAIL_SELECTOR, FOLLOW_THRESHOLD_PX, ROW_PHASE_ATTRIBUTE, RUNNING_STATE, SHIMMER_SELECTOR, STREAMING_SELECTOR, THINK_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { conversationColumn, conversationScroller, findFollowTailButton } from '@dsh-claude-style/engine/chat-dom'
 import { createStamp } from '@dsh-claude-style/engine/dom'
 import { motionEase, motionEaseAt, motionMs } from '../../shared/motion'
@@ -372,14 +372,19 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
    * refused while he holds, so this is the one writer left for it. A position
    * away from the end is the reader's own and stays where he put it.
    */
-  const holdGrowth = (column: HTMLElement) => {
+  const holdGrowth = (column: HTMLElement, grew: number) => {
     const scroller = column.closest(CONVERSATION_SCROLL_SELECTOR)
     if (scroller === null || column.closest(FOLLOWING_TAIL_SELECTOR) === null) return
-    if (scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop > 0.5) return
+    // The band is the host's own count of the end (contracts/dom.ts): while the
+    // position is inside it the host keeps following, so where it lands is the
+    // pin this frame's growth put under the reader, not the place he chose.
+    if (scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop > FOLLOW_THRESHOLD_PX) return
     if (foldBusy()) return
-    // The host has already written the new tail. Restore the position the
-    // reader chose, which is the old tail only for a touch held there (#230).
-    writeScroll(scroller, readerScrollPosition(scroller)!, 'reader')
+    // The host has already written the new end. The position he holds is the one
+    // that stays: the owner keeps his own reading place while he holds
+    // (scroll-owner.ts's setHeld and noteScroll), and a hold that never made one
+    // keeps the end this growth pushed him off.
+    writeScroll(scroller, readerScrollPosition(scroller) ?? scroller.scrollTop - grew, 'reader')
   }
 
   /**
@@ -432,7 +437,7 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
     // growth; a first screen filling up moves nothing above it.
     if (column === null || grew === 0 || before < scrollerHeight) return
     if (readerAway()) {
-      holdGrowth(column)
+      holdGrowth(column, grew)
       return
     }
     if (slideWanted(column)) startSlide(column, grew)

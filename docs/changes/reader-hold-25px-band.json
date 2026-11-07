@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-08",
+  "group": "fixes",
+  "order": 0,
+  "external": false,
+  "zh": "修复读者上滑停在底部 25 像素以内时，流式增长的每一段都把正在读的那一行钉到底部",
+  "en": "Fix the line a reader is reading being pinned to the bottom by every streamed growth while he stops within 25 pixels of it"
+}
