@@ -13,8 +13,22 @@
  * leaving the whole text for the reader who opens the row. The `think` script is
  * written to run past that cap on the lane's own column width.
  */
+import path from 'node:path'
 import { settlePage, recordUntil } from './lane.mjs'
 import { bound } from './bounds.mjs'
+import surfaceTable from './data/surface.json' with { type: 'json' }
+
+const SURFACE = surfaceTable.surface
+const selector = (id) => {
+  const entry = SURFACE.find((candidate) => candidate.id === id)
+  if (entry?.selector === undefined) throw new Error(`reasoning-stream: ${id} names no element`)
+  return entry.selector
+}
+const attribute = (id) => {
+  const entry = SURFACE.find((candidate) => candidate.id === id)
+  if (entry?.attribute === undefined) throw new Error(`reasoning-stream: ${id} names no attribute`)
+  return entry.attribute
+}
 
 /** The least wait between two steps of the window; the value and its reason are in packages/testing/data/bounds.json. */
 const STEP_MIN_GAP_MS = bound('reasonStepMinGapMs')
@@ -22,7 +36,9 @@ const STEP_MIN_GAP_MS = bound('reasonStepMinGapMs')
 /** The thinking row, the window the module puts on it and the text it slides. */
 const HOST = {
   row: '[data-variant="think"]',
-  windowed: '[data-variant="think"] [data-dsh-claude-reason-window]',
+  window: selector('chat.reason-window'),
+  windowed: `[data-variant="think"] ${selector('chat.reason-window')}`,
+  capped: attribute('chat.reason-capped'),
   text: '[data-markdown-variant]',
 }
 
@@ -76,7 +92,7 @@ function watchDoor(page) {
 function readInPage(host) {
   const row = document.querySelector(host.row)
   if (row === null) return { row: false, windowed: false }
-  const window = row.querySelector('[data-dsh-claude-reason-window]')
+  const window = row.querySelector(host.window)
   const scope = window ?? row
   const text = scope.querySelector(host.text)
   if (text === null) return { row: true, windowed: window !== null }
@@ -88,7 +104,7 @@ function readInPage(host) {
     phase: row.getAttribute('data-state'),
     expanded: row.hasAttribute('data-expanded'),
     windowed: window !== null,
-    capped: window !== null && window.hasAttribute('data-dsh-claude-reason-capped'),
+    capped: window !== null && window.hasAttribute(host.capped),
     slotHeight: Math.round(scope.getBoundingClientRect().height),
     masked: mask.startsWith('linear-gradient'),
     textHeight: Math.round(text.getBoundingClientRect().height),
@@ -138,13 +154,21 @@ function reasoningStreamScenario({ check }) {
   return {
     script: 'think',
     prompt: 'think it through',
+    patch: [
+      '- id: ui-skin-claude-style',
+      '  config:',
+      '    reasoningDisplay: stepped',
+    ],
     delayMs: 700,
     /** Read the window on every frame while the model reasons, until the window comes off. */
     async duringTurn(context) {
       const { page } = context
       await page.waitForFunction((host) => document.querySelector(host.windowed) !== null, HOST, { timeout: 40000 })
       await watchDoor(page)
-      const frames = await recordUntil(page, readInPage, (seen) => seen[seen.length - 1].windowed === false, HOST, 60000, 'the window coming off the reasoning')
+      const recording = recordUntil(page, readInPage, (seen) => seen[seen.length - 1].windowed === false, HOST, 60000, 'the window coming off the reasoning')
+      await page.waitForFunction((host) => document.querySelector(`${host.windowed}[${host.capped}]`) !== null, HOST, { timeout: 40000 })
+      await page.screenshot({ path: path.join(context.out, 'reasoning-stepped.png') })
+      const frames = await recording
       context.notes.samples = frames.filter((sample) => sample.windowed === true)
     },
     /** Once the reasoning is over, the reader opens the row and reads it whole. */
@@ -261,4 +285,40 @@ function reasoningStreamScenario({ check }) {
   }
 }
 
-export { reasoningStreamScenario }
+function reasoningContinuousScenario({ check }) {
+  return {
+    script: 'think',
+    prompt: 'think it through',
+    delayMs: 700,
+    async duringTurn(context) {
+      const { page } = context
+      await page.waitForFunction((host) => {
+        const row = document.querySelector(host.row)
+        return row !== null && row.getAttribute('data-state') === 'running'
+      }, HOST, { timeout: 40000 })
+      const recording = recordUntil(page, readInPage, (seen) => seen[seen.length - 1].phase !== 'running', HOST, 60000, 'the continuous reasoning ending')
+      await page.waitForFunction((host) => {
+        const row = document.querySelector(host.row)
+        const text = row?.querySelector(host.text)
+        return text !== null && text !== undefined && text.getBoundingClientRect().height > 400
+      }, HOST, { timeout: 40000 })
+      await page.screenshot({ path: path.join(context.out, 'reasoning-continuous.png') })
+      context.notes.samples = await recording
+    },
+    async assert({ session, notes }) {
+      const samples = notes.samples ?? []
+      const running = samples.filter((sample) => sample.phase === 'running' && sample.textHeight > 0)
+      const first = running[0] ?? {}
+      const last = running[running.length - 1] ?? {}
+      return [
+        check('逐字跟随直接显示思考文本，不创建步进窗口',
+          running.length > 20 && running.every((sample) => sample.windowed === false && sample.capped === false && sample.masked === false && sample.offset === 0 && sample.target === ''),
+          JSON.stringify({ samples: running.length, first, last })),
+        check('思考文本随宿主内容到达持续长高', (last.textHeight ?? 0) > (first.textHeight ?? 0), JSON.stringify({ first: first.textHeight, last: last.textHeight })),
+        check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),
+      ]
+    },
+  }
+}
+
+export { reasoningStreamScenario, reasoningContinuousScenario }

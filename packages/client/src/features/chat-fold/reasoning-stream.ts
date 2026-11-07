@@ -1,6 +1,7 @@
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { observeMatches } from '@dsh-claude-style/engine/bus'
-import { motionReduced } from '../../core/prefs'
+import { motionReduced, readPrefs, subscribePrefs } from '../../core/prefs'
+import { REASONING_DISPLAY_STEPPED } from '../../constants'
 import { motionMs } from '../../shared/motion'
 import { EXPANDED_ATTRIBUTE, REASONING_TEXT_SELECTOR, ROW_PHASE_ATTRIBUTE, RUNNING_STATE, THINK_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
 
@@ -183,6 +184,7 @@ export function createReasoningStream() {
       && row.getAttribute(ROW_PHASE_ATTRIBUTE) === RUNNING_STATE
       && row.hasAttribute(EXPANDED_ATTRIBUTE)
       && !motionReduced()
+      && readPrefs().reasoningDisplay === REASONING_DISPLAY_STEPPED
     // The host can rebuild the body under the same row (a session switch, a fresh
     // stream): the window follows what the row holds now.
     const current = live ? textOf(row) : null
@@ -245,7 +247,8 @@ export function createReasoningStream() {
     for (const row of rows) {
       if (!row.isConnected) continue
       const running = row.getAttribute(ROW_PHASE_ATTRIBUTE) === RUNNING_STATE
-      const text = running && row.hasAttribute(EXPANDED_ATTRIBUTE) && !motionReduced() ? textOf(row) : null
+      const text = running && row.hasAttribute(EXPANDED_ATTRIBUTE) && !motionReduced()
+        && readPrefs().reasoningDisplay === REASONING_DISPLAY_STEPPED ? textOf(row) : null
       const viewport = text === null ? null : windowOf(row, text)
       const held = windows.get(row)
       if (text === null || viewport === null) {
@@ -298,11 +301,14 @@ export function createReasoningStream() {
     cancelFrame = requestFrame({ read: readRows, write: writeRows })
   }
 
+  /** Re-read every thinking row after a preference or environment change. */
+  function sync() {
+    for (const row of thinkRows.all()) queue(row)
+  }
+  const offPrefs = subscribePrefs(sync)
+
   return {
-    /** Re-read every thinking row, for a change the caller saw outside a row. */
-    sync() {
-      for (const row of thinkRows.all()) queue(row)
-    },
+    sync,
     queueRow: queue,
     stop() {
       // A row the frame was about to window would otherwise be given a window
@@ -314,6 +320,7 @@ export function createReasoningStream() {
       for (const row of [...windows.keys()]) clearWindow(row)
       pending.clear()
       plans.length = 0
+      offPrefs()
       thinkRows.release()
     },
   }

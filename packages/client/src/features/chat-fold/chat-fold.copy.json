@@ -13,5 +13,9 @@
   "processSummaryFullRecordOther": { "zh": "记录 {count} 条", "en": "{count} records" },
   "processSummaryFullSeparator": { "zh": "，", "en": ", " },
   "messageFoldMore": { "zh": "展开全文", "en": "Show the whole message" },
-  "messageFoldLess": { "zh": "收起", "en": "Show less" }
+  "messageFoldLess": { "zh": "收起", "en": "Show less" },
+  "reasoningDisplayTitle": { "zh": "思考内容显示", "en": "Reasoning display" },
+  "reasoningDisplayDesc": { "zh": "选择思考文字随内容直接出现，或在窗口里按两行步进。", "en": "Show reasoning as it arrives, or step it two lines at a time inside a window." },
+  "reasoningDisplayContinuous": { "zh": "逐字跟随", "en": "As it arrives" },
+  "reasoningDisplayStepped": { "zh": "两行步进", "en": "Two-line steps" }
 }

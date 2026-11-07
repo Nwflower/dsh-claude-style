@@ -109,6 +109,8 @@
     { "id": "model.search-field", "selector": ".dsh-claude-model-search-input", "feature": "model", "sees": "the search field at the top of the second level: the reader types a model's name into it and the list under it narrows" },
     { "id": "model.search-clear", "selector": ".dsh-claude-model-search-clear", "feature": "model", "sees": "the control that clears the search field, drawn while the field holds words" },
     { "id": "model.sub-row", "selector": ".dsh-claude-model-popover-sub .dsh-claude-model-option", "feature": "model", "sees": "one model row of the second level, under its provider's label" },
+    { "id": "chat.reason-window", "selector": "[data-dsh-claude-reason-window]", "feature": "chat-fold", "sees": "the optional two-line reasoning window while the stepped display is active" },
+    { "id": "chat.reason-capped", "attribute": "data-dsh-claude-reason-capped", "feature": "chat-fold", "sees": "the stepped reasoning window once its text reaches the cap and its edge masks appear" },
     { "id": "caret.layer", "selector": "[data-dsh-claude-caret-layer]", "feature": "caret", "sees": "the caret the skin draws in place of the browser's own, on the surface holding the focus" },
     { "id": "caret.mark", "attribute": "data-dsh-claude-caret", "feature": "caret", "sees": "the field whose native caret the skin presses down while its own caret stands for it" },
     { "id": "model.sub-label", "selector": ".dsh-claude-model-group", "feature": "model", "sees": "the provider's name above its models in the second level" },

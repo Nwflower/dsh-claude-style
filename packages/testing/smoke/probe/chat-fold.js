@@ -169,9 +169,13 @@
           transition: textStyle.getPropertyValue('transition-property') + ' ' + textStyle.getPropertyValue('transition-duration'),
         }
       }
+      // This case holds the optional two-line window; the continuous choice has
+      // its own end-to-end scenario (reasoning-stream.mjs).
+      window.__pushForm({ reasoningDisplay: 'stepped' })
+      await probe.settle()
+      foldThink.setAttribute('data-state', 'running')
       // The row reopens for the reasoning: the fold closes it when the phase
       // turns ok, and the window's own reading is of a running, open row.
-      foldThink.setAttribute('data-state', 'running')
       r.fold.reasonGrow = await probe.watch(function () { return windowOf(reasonBody, reasonText) })
       r.fold.reasonWindow = [windowOf(growBody, growText)]
       var growLine = 3

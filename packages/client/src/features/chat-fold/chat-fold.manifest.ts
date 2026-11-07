@@ -11,5 +11,16 @@ export default {
     { file: 'message-fold.css', rank: 205 },
     { file: 'fold-motion.css', rank: 210 },
   ],
+  settingsRows: [{
+    tab: 'motion',
+    rank: 26,
+    pref: 'reasoningDisplay',
+    title: 'reasoningDisplayTitle',
+    desc: 'reasoningDisplayDesc',
+    choiceLabels: {
+      continuous: 'reasoningDisplayContinuous',
+      stepped: 'reasoningDisplayStepped',
+    },
+  }],
   cases: ['chat-fold', 'peer-chat-ux']
 } satisfies FeatureManifest

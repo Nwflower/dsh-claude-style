@@ -25,7 +25,7 @@ import { streamJitterScenario } from './stream-jitter.mjs'
 import { motionScenario } from './motion.mjs'
 import { processSummaryScenario } from './process-summary.mjs'
 import { fileMergeScenario } from './file-merge.mjs'
-import { reasoningStreamScenario } from './reasoning-stream.mjs'
+import { reasoningContinuousScenario, reasoningStreamScenario } from './reasoning-stream.mjs'
 import { waitLineScenario } from './wait-line.mjs'
 import { washLineScenario } from './wash-line.mjs'
 import { longSessionScenario } from './long-session.mjs'
@@ -694,6 +694,7 @@ const SCENARIOS = {
   fileMerge: fileMergeScenario({ check }),
   /** The reasoning's streamed window while the model thinks (reasoning-stream.mjs, D74). */
   reasoningStream: reasoningStreamScenario({ check }),
+  reasoningContinuous: reasoningContinuousScenario({ check }),
   /** The waiting line's own words: the model's clause and the file a call works on (wait-line.mjs, D74). */
   waitLine: waitLineScenario({ check }),
   /** The waiting line's second paint, chosen in the settings (wash-line.mjs, D40). */
