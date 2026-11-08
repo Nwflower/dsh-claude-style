@@ -310,6 +310,16 @@ export default {
       !!nav.switchedOff && nav.switchedOff.rail === 0 && nav.switchedOff.hostReplaced === false && nav.switchedOff.hostShown === 'visible' &&
         !!nav.switchedOn && nav.switchedOn.rail === 1 && nav.switchedOn.hostReplaced === true,
       JSON.stringify({ off: nav.switchedOff, on: nav.switchedOn }))
+    const long = nav.long || {}
+    const longMost = (long.rows || 0) * 24 - (long.height || 0)
+    check('a long conversation\'s card scrolls, and the pointer\'s height over the rail\'s lines is where the list stands — proportional over the span between the ends\' rests',
+      long.rows === 20 && long.atTop === 0 && long.edgeTop === 0 && long.atBottom === longMost && long.edgeBottom === longMost &&
+        long.mid === Math.round(longMost / 2) && long.midAgain === Math.round(longMost / 2) && long.quarter === Math.round(longMost / 4),
+      JSON.stringify(long))
+    check('left of the lines the list stands still, and nothing stands between the wheel and the card\'s list',
+      long.frozen === long.quarter && long.wheelKept === false && long.wheelOverflow === 'auto' &&
+        long.wheelOverscroll === 'contain' && long.pageMoved === 0,
+      JSON.stringify(long))
     const older = nav.olderHost || {}
     check('a host that writes no place on its marks keeps the reading position and presses the mark at the row\'s place, the first row included',
       older.current === 4 && JSON.stringify(older.mid) === '[3]' && JSON.stringify(older.first) === '[3,0]', JSON.stringify(older))

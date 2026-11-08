@@ -23,11 +23,20 @@
     ]
     var snapshot = { navigation: { items: function () { return loaded } }, timeline: { turns: new Map() }, legacy: { runningCalls: [] } }
     var outlineFace = { getSnapshot: function () { return outline }, subscribe: function () { return function () {} } }
+    // A second conversation, long enough that the card's list holds fewer rows
+    // than the turns: twenty outline turns, whose loaded window is the same
+    // snapshot's last two, so the two rails agree on every turn either way.
+    var longOutline = []
+    for (var li = 0; li < 20; li++) {
+      longOutline.push({ turn: li + 1, seq: li * 10, prompt: 'turn ' + (li + 1) + ' question', response: '' })
+    }
+    var longFace = { getSnapshot: function () { return longOutline }, subscribe: function () { return function () {} } }
     return {
       conversation: { binding: function () { return { target: function () { return { getSnapshot: function () { return snapshot } } } } } },
       sessions: host.emptySessions(function (id) {
-        if (id !== 'smoke-nav') return undefined
-        return { session: { projections: { faceOf: function (key) { return key === 'turnOutline' ? outlineFace : undefined } } } }
+        if (id === 'smoke-nav') return { session: { projections: { faceOf: function (key) { return key === 'turnOutline' ? outlineFace : undefined } } } }
+        if (id === 'smoke-nav-long') return { session: { projections: { faceOf: function (key) { return key === 'turnOutline' ? longFace : undefined } } } }
+        return undefined
       }),
     }
   })() : undefined
