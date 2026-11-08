@@ -1,0 +1,8 @@
+{
+  "group": "new",
+  "order": 60,
+  "at": "2026-11-07",
+  "external": false,
+  "zh": "新增请求确认与任务完成时的轻提示音",
+  "en": "Add quiet sound cues when a session waits on you and when a task finishes"
+}

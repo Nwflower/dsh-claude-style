@@ -11,6 +11,7 @@ import { pathToFileURL } from 'url'
 import { brotliDecompressSync } from 'zlib'
 import { ROOT, HOST, SKIN_FIXTURE, same, check } from './shared.mjs'
 import { hostUsage } from './host-half-usage.mjs'
+import { hostSound } from './host-half-sound.mjs'
 
 // ---------------------------------------------------------------------------
 // Host half
@@ -240,6 +241,7 @@ async function hostHalf() {
     }
     const r = await request(host, USER, 'GET', '', browser)
     check('browser username read answered', r.status === 200 && JSON.parse(r.body).ok === true, `HTTP ${r.status}`)
+    await hostSound({ host, request, browser, crossSite })
 
     // The launcher's account contract. Its two layers are the only ones allowed
     // to say who the player is, and the picture's absolute path stays here.

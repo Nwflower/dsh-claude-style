@@ -12,7 +12,7 @@
  * The paths are the shared contract (`@dsh-claude-style/contracts/routes`, * D73): the browser half addresses the same names.
  */
 import { PACKAGE_NAME } from '@dsh-claude-style/contracts/package'
-import { HDSL_PATH, HDSL_SKIN_PATH, PEAKRATE_PATH, PRICES_PATH, ROUTE_PREFIX, SESSION_COST_PATH, SESSION_DELETE_PATH, SESSION_SEARCH_PATH, USAGE_PATH, USERNAME_PATH, WEBFONTS_PATH } from '@dsh-claude-style/contracts/routes'
+import { HDSL_PATH, HDSL_SKIN_PATH, PEAKRATE_PATH, PRICES_PATH, ROUTE_PREFIX, SESSION_COST_PATH, SESSION_DELETE_PATH, SESSION_SEARCH_PATH, SOUND_PATH, USAGE_PATH, USERNAME_PATH, WEBFONTS_PATH } from '@dsh-claude-style/contracts/routes'
 import { OPTIONAL_WEBFONTS } from '@dsh-claude-style/contracts/webfonts'
 import { existsSync, readFileSync, readdirSync, realpathSync, rmSync, statSync } from 'node:fs'
 import { userInfo } from 'node:os'
@@ -22,6 +22,7 @@ import type { DshContext, DshRequest, DshResponse, DshRoute, DshScope } from '@d
 import { harnessPath } from '@dsh-claude-style/engine/node/harness-home'
 import { pluginPath } from './harness-home.js'
 import { fenceRefused, methodRefused, readRequestBody, refusalOf, sendJson } from '@dsh-claude-style/engine/node/http'
+import { clampSoundVolume, isSoundName, playSystemSound, soundCapability } from './sound.js'
 import { createStaticFiles } from '@dsh-claude-style/engine/node/static-files'
 import { createHdslAccount } from './hdsl.js'
 import type { HdslReading } from './hdsl.js'
@@ -44,6 +45,40 @@ function readBillingRows(query: URLSearchParams) {
   const currency = query.get('cur')
   const rows = query.getAll('b').slice(0, BILLING_ROWS_MAX).filter(row => row.length <= BILLING_ROW_MAX)
   return billingRowsOf(rows, currency === 'CNY' || currency === 'USD' ? currency : null)
+}
+
+/**
+ * Read one play request and play its cue. The body is the request's own
+ * boundary, so a malformed or oversized one is answered 400 or 413 rather than
+ * thrown at the server; an unavailable system player is a 409 the browser half
+ * reads as "use your own synthesis" (D89).
+ */
+async function playSoundRequest(req: DshRequest, res: DshResponse) {
+  const body = await readRequestBody(req, SOUND_BODY_MAX)
+  if (body === null) {
+    sendJson(res, 413, { ok: false, error: 'request body too large' })
+    return
+  }
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(body.toString('utf8'))
+  } catch {
+    // A body this route cannot read is the request's own error, answered 400;
+    // nothing on the host needs the parse to succeed.
+    sendJson(res, 400, { ok: false, error: 'request body is not JSON' })
+    return
+  }
+  const request = parsed !== null && typeof parsed === 'object' ? parsed as { name?: unknown, volume?: unknown } : null
+  if (request === null || !isSoundName(request.name)) {
+    sendJson(res, 400, { ok: false, error: 'unknown sound' })
+    return
+  }
+  if (soundCapability().playback !== 'system') {
+    sendJson(res, 409, { ok: false, error: 'system playback unavailable' })
+    return
+  }
+  await playSystemSound(request.name, clampSoundVolume(request.volume))
+  sendJson(res, 200, { ok: true })
 }
 /**
  * Webfonts this plugin serves under `${ROUTE_PREFIX}/fonts/`, mapped to their
@@ -85,6 +120,8 @@ const WEBFONTS_SUB = WEBFONTS_PATH.slice(ROUTE_PREFIX.length)
 const ASSETS_PATH = `${ROUTE_PREFIX}/assets/`
 /** Largest deletion request body read; a real one carries one id. */
 const DELETE_BODY_MAX = 4096
+/** Largest play request body read; a real one carries a cue name and a gain. */
+const SOUND_BODY_MAX = 1024
 
 /**
  * An id the deletion route takes: the characters a plugin-generated id carries
@@ -292,6 +329,15 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
       })
     }
 
+    /**
+     * Answer a route's rejected promise: a 500 carrying its message, or a
+     * closed socket when the headers already went out.
+     */
+    const fail = (res: DshResponse, error: unknown) => {
+      if (res.headersSent) res.destroy()
+      else sendJson(res, 500, { ok: false, error: String((error as { message?: string } | null)?.message ?? String(error)) })
+    }
+
     register('model copy', {
       kind: 'prefix',
       path: ROUTE_PREFIX,
@@ -365,6 +411,23 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
       },
     })
 
+    register('sound', {
+      kind: 'exact',
+      path: SOUND_PATH,
+      handler: (req: DshRequest, res: DshResponse) => {
+        // GET answers whether this machine can play the cues; POST plays one.
+        // Both sit behind the same fence as every other route, and a failure to
+        // start the player answers 500 so the browser half can fall back (D89).
+        if (methodRefused(req, res, ['GET', 'POST'])) return
+        if (fenceRefused(ctx, req, res)) return
+        if (req.method !== 'POST') {
+          sendJson(res, 200, soundCapability())
+          return
+        }
+        void playSoundRequest(req, res).catch((error: unknown) => fail(res, error))
+      },
+    })
+
     register('HDSL account', {
       kind: 'exact',
       path: HDSL_PATH,
@@ -418,10 +481,7 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
         // reach the filesystem.
         if (methodRefused(req, res, ['POST'])) return
         // A fault anywhere in the deletion answers 500 with its message.
-        void deleteSession(ctx, req, res).catch((error: unknown) => {
-          if (res.headersSent) res.destroy()
-          else sendJson(res, 500, { ok: false, error: String((error as { message?: string } | null)?.message ?? String(error)) })
-        })
+        void deleteSession(ctx, req, res).catch((error: unknown) => fail(res, error))
       },
     })
 
