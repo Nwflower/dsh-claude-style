@@ -15,7 +15,8 @@ function titleOffset(row: Element, title: Element): number {
   return Math.round(title.getBoundingClientRect().left - row.getBoundingClientRect().left)
 }
 
-test('the trailing side, the default, keeps the host leading band reserved', () => {
+test('the trailing side keeps the host leading band reserved', () => {
+  bodyAttribute(SIDE, 'right')
   const view = mount('ongoing')
   view.sync()
   expect(getComputedStyle(view.seat).position).toBe('absolute')
@@ -23,7 +24,7 @@ test('the trailing side, the default, keeps the host leading band reserved', () 
   expect(titleOffset(view.row, view.title)).toBe(24)
 })
 
-test('the leading side keeps the host slot in the row flow, drops the trailing column, and leaves the title where it was', () => {
+test('the leading side, the default, keeps the host slot in the row flow, drops the trailing column, and leaves the title where it was', () => {
   bodyAttribute(SIDE, 'left')
   const view = mount('ongoing')
   view.sync()

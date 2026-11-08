@@ -7,7 +7,7 @@ import { RightSessionStatus } from './row-status'
 import { PART_ATTR } from '../../constants'
 import type manifest from './sidebar-status.manifest'
 
-/** Repaint the native indicator at the trailing edge; the host remains its state owner (D43). */
+/** Repaint the native indicator at the end the reader picked; the host remains its state owner (D43). */
 export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const schedule = () => ui.schedule?.()
   const rows = observeMatches<HTMLElement>(`${SIDEBAR_SLOT_SELECTOR} [data-dsh-claude-part~="session-row"]`, schedule)

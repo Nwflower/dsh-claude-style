@@ -382,11 +382,11 @@ export const PREFS = {
   sidebarLayout: { type: 'choice', values: SIDEBAR_LAYOUTS, default: SIDEBAR_LAYOUT_RELAXED },
   ongoingIndicator: { type: 'choice', values: ONGOING_INDICATORS, default: ONGOING_INDICATOR_BREATHE },
   /**
-   * Which end of the row carries that marker. The trailing end (the default)
-   * leaves the host's leading slot empty, and the row keeps that band reserved
-   * so a third-party mark painted over the slot cannot cover the title.
+   * Which end of the row carries that marker. The leading end (the default)
+   * keeps the host's own slot as its place, the title starting after it; the
+   * trailing end leaves that band reserved for a third-party mark.
    */
-  ongoingIndicatorSide: { type: 'choice', values: ONGOING_SIDES, default: ONGOING_SIDE_RIGHT },
+  ongoingIndicatorSide: { type: 'choice', values: ONGOING_SIDES, default: ONGOING_SIDE_LEFT },
   /** Explicit reminders stay separate from the host's completion-unread state. */
   manualUnreadIds: { type: 'list', default: [], max: MANUAL_UNREAD_LIMIT, entryMax: MANUAL_UNREAD_ID_LIMIT, drop: [] },
   turnNav: { type: 'boolean', default: true },
