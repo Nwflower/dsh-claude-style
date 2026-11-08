@@ -387,6 +387,15 @@ export function holdRelations(vocabulary: PartsTableVocabulary): HoldRelation[] 
     held: '[data-session-stats-details], [data-session-stats-usage]',
     attributes: ['data-session-stats-details', 'data-session-stats-usage'],
   },
+  // features/context-stats/footer-layout.css: the compact figures leave the
+  // dock's reserved row empty only while they ride the toolbar as an overlay.
+  {
+    name: 'footer-overlay',
+    holder: part('composer-dock'),
+    held: '[data-dsh-claude-footer-line="overlay"]',
+    direct: true,
+    attributes: ['data-dsh-claude-footer-line'],
+  },
   // features/composer/responsive.css: a compact row may spend its shortage on
   // the model label while no foreign right-hand control needs the wrapping path.
   {

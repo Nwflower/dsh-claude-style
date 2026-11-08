@@ -85,14 +85,14 @@ function workerHomes(base, jobs, total) {
 }
 
 /**
- * The scenarios the default walk leaves out: the two that read the host's own
+ * The scenarios the default walk leaves out: the ones that read the host's own
  * statistics surfaces on a page the reader has moved (stats-position.mjs,
  * stats-overlay.mjs). This list is the only place a scenario is parked — the
  * default walk is every other entry of the table, derived in main() — so a
  * scenario added to the table runs by default, and a name here that the table
  * no longer holds stops the run.
  */
-const PARKED = new Set(['statsPosition', 'statsOverlay'])
+const PARKED = new Set(['statsPosition', 'statsOverlay', 'statsFooter'])
 
 /**
  * What the page looked like when a scenario failed: a picture, the console

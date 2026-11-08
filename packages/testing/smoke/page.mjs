@@ -211,6 +211,9 @@ function page(name, tier, cases, probe = PROBE) {
   var hostControls = '<style>' +
       'body { --dsw-alias-label-primary-foreground: #ffffff; }' +
       'body[data-ds-dark-theme] { --dsw-alias-label-primary-foreground: #0f1115; }' +
+      // InputBar reserves one statistics row plus its top pad even when the skin
+      // hides the host's figures (features/composer/inline-bar.css).
+      '._dock_x_1 { min-height: 22px; padding-top: 4px; }' +
       // The plugin's own strip: absolutely positioned in the dock's band, its
       // height fixed, as dsh-pocket's own sheet pins it.
       '._mobileStats_q_1 { position: absolute; left: 0; right: 0; bottom: 0; height: 28px;' +

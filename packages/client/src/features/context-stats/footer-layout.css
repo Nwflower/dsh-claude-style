@@ -8,6 +8,12 @@ body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] [data-dsh-c
 body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] [data-dsh-claude-footer-line] {
   flex: none;
 }
+/* The overlaid line is out of flow and the host's own faces are hidden, so the
+   dock's reserved row would be blank. Below keeps that row for its in-flow line. */
+body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] [data-dsh-claude-part~="composer-dock"][data-dsh-claude-holds~="footer-overlay"] {
+  min-height: 0;
+  padding-top: 0;
+}
 /* The first frame carries the mark before its measured mode. Keep that frame
    off the screen so the line never paints in the flow and then jumps overlay. */
 body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] [data-dsh-claude-footer-line=""] {

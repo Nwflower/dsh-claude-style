@@ -37,6 +37,9 @@ async function reading(t) {
       cacheLabel: label === null ? null : label.getClientRects().length,
       ring: box(ring),
       meterHidden: meter !== null && getComputedStyle(meter).display === 'none',
+      dock: box(dock),
+      dockMinHeight: dock === null ? null : getComputedStyle(dock).minHeight,
+      dockPaddingTop: dock === null ? null : getComputedStyle(dock).paddingTop,
       line: box(line),
       toolbar: box(row),
       tools: row === null ? null : box(row.querySelector(`[${part}~="tools"]`)),
@@ -48,11 +51,13 @@ async function reading(t) {
 export default spec({ page: 'stats-inline' }, ({ test }) => {
   test('footer figures share the toolbar, follow alignment and restore other modes', async t => {
     await seatStatsSession(t, stats, usage)
-    await t.prefs({ statsPosition: 'footer', motion: 'reduced' })
+    await t.prefs({ statsPosition: 'footer', composerBottomGap: 'compact', motion: 'reduced' })
     const center = await reading(t)
     t.expectThat.equal(center.mode, 'overlay', 'the wide toolbar has room for compact figures')
     t.expectThat.equal(center.detail, 'directions', 'the wide toolbar takes the footer\'s widest detail')
     t.expectThat.equal(center.lineInDock, true, 'the figures keep the dock the host renders them in')
+    t.expectThat.absent(center.dock.height, 'the overlaid figures leave no blank dock below the compact composer')
+    t.expectThat.equal([center.dockMinHeight, center.dockPaddingTop], ['0px', '0px'], 'the overlay releases the host\'s reserved statistics row and its top pad')
     t.expectThat.equal(center.segments, 4, 'cost, both token directions and the cache share stand over the toolbar')
     t.expectThat.equal(center.order[0].startsWith('¥') && center.order[1].startsWith('↑') && center.order[2].startsWith('↓') && center.order[3].endsWith('%'), true, 'the cost leads, the directions follow in order and the cache share closes')
     t.expectThat.equal(center.cacheLabel, 0, 'the cache figure carries its percent sign alone')
@@ -133,6 +138,8 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
     await t.settle()
     const narrow = await reading(t)
     t.expectThat.equal(narrow.mode, 'below', 'the narrow toolbar leaves figures below it')
+    t.expectThat.visible(narrow.dock, 'the dock keeps the line\'s own room when the figures move below')
+    t.expectThat.boxWithin(narrow.line, narrow.dock, 'the below figures stay inside the dock that holds their room')
     t.expectThat.boxesApart(narrow.line, narrow.tools, 'statistics do not cover the left controls')
     t.expectThat.boxesApart(narrow.line, narrow.trailing, 'statistics do not cover the right controls')
     t.expectThat.visible(narrow.ring, 'the ring keeps its place in the row')

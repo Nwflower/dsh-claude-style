@@ -16,7 +16,7 @@
  */
 
 /** The end-to-end lane's scenarios; the lane checks its own names against these. */
-export const E2E_SCENARIOS = ['conversation', 'systemTypography', 'messageActions', 'messageAnswerActions', 'mobileHome', 'composerViewport', 'narrow', 'tool', 'fileMerge', 'send', 'sendFull', 'scroll', 'readerScroll', 'doorPin', 'streamPace', 'streamJitter', 'streamJitterFooter', 'streamJitterInline', 'motion', 'processSummary', 'reasoningStream', 'reasoningContinuous', 'waitLine', 'washLine', 'longSession', 'statsPosition', 'statsOverlay', 'sidebarRail', 'sidebarPeek', 'rightbar', 'contract', 'importance', 'remoteSettings', 'customBrand', 'dsBot', 'shots'] as const
+export const E2E_SCENARIOS = ['conversation', 'systemTypography', 'messageActions', 'messageAnswerActions', 'mobileHome', 'composerViewport', 'narrow', 'tool', 'fileMerge', 'send', 'sendFull', 'scroll', 'readerScroll', 'doorPin', 'streamPace', 'streamJitter', 'streamJitterFooter', 'streamJitterInline', 'motion', 'processSummary', 'reasoningStream', 'reasoningContinuous', 'waitLine', 'washLine', 'longSession', 'statsPosition', 'statsOverlay', 'statsFooter', 'sidebarRail', 'sidebarPeek', 'rightbar', 'contract', 'importance', 'remoteSettings', 'customBrand', 'dsBot', 'shots'] as const
 
 /** One timing assumption, and how it is held. */
 interface HostTimingEntry {

@@ -1206,6 +1206,12 @@
       ]
     },
     "packages/testing/stats-overlay.mjs": {
+      "the overlaid figures leave no reserved dock below the card": [
+        0
+      ],
+      "控制台没有异常": [
+        0
+      ],
       "the ring the skin draws stands in the row after the seat box, inside the card": [
         1
       ],
@@ -1225,7 +1231,7 @@
         7,
         9
       ],
-      "控制台没有异常": [
+      "控制台没有异常 (line 299)": [
         0
       ]
     },

@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-08",
+  "group": "fixes",
+  "order": 3,
+  "external": false,
+  "zh": "修复紧凑底栏的统计浮层下方仍保留空白统计行",
+  "en": "Fix the compact statistics footer leaving a blank dock below its overlaid figures"
+}

@@ -15,7 +15,7 @@
  * and the meter's reading drawn as a pie in the occupancy's own — on the real
  * host's own nodes.
  */
-import { statsOverlayScenario } from './stats-overlay.mjs'
+import { statsFooterScenario, statsOverlayScenario } from './stats-overlay.mjs'
 
 /** Read the composer's bottom line, the line of figures and the meter's pie. */
 const readPosition = (page) => page.evaluate(() => {
@@ -253,14 +253,14 @@ function statsPositionScenario({ check }) {
 }
 
 /**
- * The session statistics' scenarios, one per surface they can take: the line of
- * their own (stats-position.mjs) and the meter's dock laid over the toolbar row
- * (stats-overlay.mjs), registered together under one factory.
+ * The session statistics' scenarios: the line of their own, the meter's dock,
+ * and the compact figures over the toolbar, registered under one factory.
  */
 function statsScenarios({ check }) {
   return {
     statsPosition: statsPositionScenario({ check }),
     statsOverlay: statsOverlayScenario({ check }),
+    statsFooter: statsFooterScenario({ check }),
   }
 }
 

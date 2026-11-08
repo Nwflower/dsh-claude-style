@@ -20,6 +20,7 @@ export default spec({ page: 'composer' }, ({ test }) => {
     const host = hostRoom()
     t.expectThat.equal(await gap(t), host, 'the default stop keeps the host’s own room')
     await t.prefs({ composerBottomGap: 'compact' })
+    t.expectThat.equal(await t.read.attribute('body', t.surface.attribute('composer.bottom-gap')), 'compact', 'the compact stop reaches the page')
     t.expectThat.equal(await gap(t), 0, 'the compact stop takes the room away')
     await t.prefs({ composerBottomGap: 'roomy' })
     t.expectThat.equal(await gap(t), 16, 'the roomy stop widens the room')

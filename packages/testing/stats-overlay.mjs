@@ -33,9 +33,12 @@ const selector = (id) => {
   return entry.selector
 }
 const PAGE_ZOOM = mark('skin.page-zoom')
+const COMPOSER_GAP = mark('composer.bottom-gap')
 const CONTEXT_METER = mark('stats.context-meter')
 const CONTEXT_PANEL = mark('stats.context-panel')
 const CONTEXT_PANEL_PLACED = mark('stats.context-panel-placed')
+const FOOTER_LINE = mark('stats.footer-line')
+const PART = mark('skin.part')
 const METER_RING = selector('stats.meter-ring')
 const MODEL_SEAT = selector('model.seat')
 
@@ -179,6 +182,55 @@ const readPopoverAtZoom = async (page, zoom) => {
   return { ...frames, gap }
 }
 
+/** The compact figures over the toolbar, and the host dock whose reserved row they leave. */
+const readFooterOverlay = (page) => page.evaluate(([lineMark, partMark, gapMark]) => {
+  const card = document.querySelector('[data-composer-card]')
+  const dock = card?.nextElementSibling ?? null
+  const line = document.querySelector(`[${lineMark}]`)
+  const toolbar = card?.querySelector(`[${partMark}~="row"]`) ?? null
+  const box = (element) => element === null || element === undefined ? null : element.getBoundingClientRect().toJSON()
+  return {
+    gap: document.body.getAttribute(gapMark),
+    mode: line?.getAttribute(lineMark) ?? null,
+    line: box(line),
+    toolbar: box(toolbar),
+    dock: box(dock),
+    dockMinHeight: dock === null ? null : getComputedStyle(dock).minHeight,
+    dockPaddingTop: dock === null ? null : getComputedStyle(dock).paddingTop,
+  }
+}, [FOOTER_LINE, PART, COMPOSER_GAP])
+
+function statsFooterScenario({ check }) {
+  return {
+    script: 'greeting',
+    prompt: 'hello there',
+    patch: [
+      '- id: ui-skin-claude-style',
+      '  config:',
+      '    statsPosition: footer',
+      '    composerBottomGap: compact',
+    ],
+    async assert({ page, session }) {
+      await page.waitForFunction(
+        (lineMark) => document.querySelector(`[${lineMark}="overlay"]`) !== null,
+        FOOTER_LINE, { timeout: 20000 },
+      ).catch(() => {})
+      const state = await readFooterOverlay(page)
+      const inside = state.line !== null && state.toolbar !== null &&
+        state.line.left >= state.toolbar.left - 1 && state.line.right <= state.toolbar.right + 1 &&
+        state.line.top >= state.toolbar.top - 1 && state.line.bottom <= state.toolbar.bottom + 1
+      return [
+        check('the stored footer position and compact gap reach the page', state.gap === 'compact' && state.mode === 'overlay', JSON.stringify(state)),
+        check('the compact figures stand inside the toolbar', inside, JSON.stringify(state)),
+        check('the overlaid figures leave no reserved dock below the card',
+          state.dock !== null && state.dock.height === 0 && state.dockMinHeight === '0px' && state.dockPaddingTop === '0px',
+          JSON.stringify(state)),
+        check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),
+      ]
+    },
+  }
+}
+
 function statsOverlayScenario({ check }) {
   return {
     script: 'greeting',
@@ -250,4 +302,4 @@ function statsOverlayScenario({ check }) {
   }
 }
 
-export { statsOverlayScenario }
+export { statsFooterScenario, statsOverlayScenario }
