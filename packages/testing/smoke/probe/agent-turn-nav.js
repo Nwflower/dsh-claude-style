@@ -169,6 +169,67 @@
       navOut.olderHost = { current: oldCurrent, mid: oldMid, first: oldPresses.slice() }
       oldPhase.remove()
 
+      // A long conversation: the card's list holds fewer rows than the turns,
+      // and the pointer's height over the rail's own lines is where the list
+      // stands, proportional between the ends' rests, and left of the lines the
+      // list stands still.
+      var longPhase = document.createElement('div')
+      longPhase.setAttribute('data-phase', 'active')
+      var longMarks = ''
+      for (var gi = 0; gi < 20; gi++) {
+        longMarks += '<button type="button" data-index="' + gi + '"' + (gi === 9 ? ' aria-current="true"' : '') +
+          ' style="position:absolute;left:0;right:0;height:10px;top:' + (1 + gi * 10) + 'px"></button>'
+      }
+      longPhase.innerHTML = '<div data-conversation-session="smoke-nav-long"><div data-conversation-scroll="" style="height:400px;overflow:auto">' +
+        '<div class="_slot_t_1" style="position:relative;height:300px"><nav class="_frame_t_1" style="position:fixed;right:12px;top:100px;width:28px">' +
+        '<div class="_scroller_t_1" style="position:relative;overflow:auto;max-height:200px"><div class="_marks_t_1" style="position:relative;height:202px">' + longMarks + '</div></div>' +
+        '<div role="tooltip">host preview</div></nav></div>' +
+        '<div data-chat-flow="" style="display:flex;flex-direction:column">' +
+        '<div data-chat-flow-kind="user" data-chat-turn="19">nineteenth question</div>' +
+        '<div data-chat-flow-kind="assistant-step" data-chat-turn="19">nineteenth answer</div>' +
+        '<div data-chat-flow-kind="user" data-chat-turn="20">twentieth question</div></div></div></div>'
+      document.body.appendChild(longPhase)
+      await sleep(250)
+      var longRail = longPhase.querySelector('.dsh-claude-turn-rail')
+      longRail.dispatchEvent(new PointerEvent('pointerenter'))
+      await sleep(250)
+      var longCard = longPhase.querySelector('.dsh-claude-turn-nav')
+      var longList = longCard.querySelector('.dsh-claude-turn-nav-list')
+      var longRows = longList.querySelectorAll('.dsh-claude-turn-nav-row').length
+      var longRailBox = longRail.getBoundingClientRect()
+      var longX = longRailBox.right - 4
+      // The steering starts the strip's 8px rest in: a share is measured over
+      // the span between the rests, so the quarter sits a quarter into the span.
+      var longSpan = longRailBox.height - 16
+      var longMove = async function (clientY, clientX) {
+        longCard.dispatchEvent(new PointerEvent('pointermove', { clientX: clientX, clientY: clientY, bubbles: true }))
+        await sleep(120)
+        return longList.scrollTop
+      }
+      var longOut = {
+        rows: longRows,
+        height: Math.round(longList.getBoundingClientRect().height),
+        atTop: await longMove(longRailBox.top, longX),
+        edgeTop: await longMove(longRailBox.top + 2, longX),
+        atBottom: await longMove(longRailBox.bottom, longX),
+        edgeBottom: await longMove(longRailBox.bottom - 2, longX),
+        mid: await longMove(longRailBox.top + 8 + longSpan * 0.5, longX),
+        midAgain: await longMove(longRailBox.top + 8 + longSpan * 0.5, longX),
+        quarter: await longMove(longRailBox.top + 8 + longSpan * 0.25, longX),
+        frozen: await longMove(longRailBox.bottom, longRailBox.left - 120),
+      }
+      // The wheel: nothing stands between it and the card's list, and the page
+      // under the card stays still.
+      var longWheel = new WheelEvent('wheel', { deltaY: 120, bubbles: true, cancelable: true })
+      longCard.dispatchEvent(longWheel)
+      longOut.wheelKept = longWheel.defaultPrevented
+      longOut.wheelOverflow = getComputedStyle(longList).overflowY
+      longOut.wheelOverscroll = getComputedStyle(longList).overscrollBehavior
+      longOut.pageMoved = longPhase.querySelector('[data-conversation-scroll]').scrollTop
+      navOut.long = longOut
+      longPhase.remove()
+      await sleep(200)
+
       r.turnNav = navOut
     })
   })

@@ -59,6 +59,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const TURN_NAV_POPOVER = 'turnNav'
   /** One turn's height on the rail and in the card: the two have to match for a row to sit on its mark. */
   const TURN_NAV_PITCH = 24
+  /** How far the strip's ends rest before the pointer steers the list: a brush on an edge holds the turn it reached. */
+  const TURN_NAV_STEER_INSET_PX = 8
   /**
    * The last stretch of a jump that is glided: about a third of a second on
    * the scroll curve. Neighbouring turns sit a screen or more apart, and
@@ -95,6 +97,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let list: HTMLElement | null = null
   let rowItems: TurnItem[] | null = null
   let open = false
+  /** Cancels the frame a pointer move waits on, and the pointer's last place. */
+  let cancelPointerFrame: (() => void) | null = null
+  /** The pointer's last viewport place; the frame it starts reads it. */
+  let pointer: { x: number, y: number } = { x: 0, y: 0 }
   /** Cancels the frame a coalesced refresh waits on. */
   let cancelRefreshFrame: (() => void) | null = null
   /** The turn the last key went to, and when. */
@@ -195,14 +201,20 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     return Math.min(marks, railMaxHeight)
   }
 
+  /** How far the list can stand from its first turn: the turns' room less the rail's window. */
+  function railMost() {
+    const height = railHeight()
+    if (height === null) return null
+    return Math.max(0, (drawnItems?.length ?? 0) * TURN_NAV_PITCH - height)
+  }
+
   /**
    * Scroll the track, kept within its turns, and say which ends have more.
    * Runs only while the rail is mounted with its marks drawn.
    */
   function setOffset(value: number) {
-    const height = railHeight()
-    if (height === null) return
-    const most = Math.max(0, drawnItems!.length * TURN_NAV_PITCH - height)
+    const most = railMost()
+    if (most === null) return
     offset = Math.round(Math.min(Math.max(value, 0), most))
     track!.style.transform = `translateY(${-offset}px)`
     rail!.toggleAttribute('data-fade-top', offset > 0)
@@ -297,6 +309,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     built.appendChild(rows)
     built.addEventListener('mouseenter', () => { hoverIntent.cancel() })
     built.addEventListener('mouseleave', () => { hoverIntent.scheduleClose() })
+    built.addEventListener('pointermove', onPointerMove)
     rows.addEventListener('click', onRowClick)
     rows.addEventListener('scroll', () => { if (open) setOffset(rows.scrollTop) }, { passive: true })
     card = built
@@ -379,11 +392,51 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     hoverIntent.cancel()
     if (!open) return
     open = false
+    if (cancelPointerFrame !== null) {
+      cancelPointerFrame()
+      cancelPointerFrame = null
+    }
     builtCard().setAttribute('data-open', 'false')
     if (rail !== null) {
       rail.removeAttribute(TURN_NAV_OPEN_ATTR)
       follow()
     }
+  }
+
+  /**
+   * The pointer's height over the rail's own lines is where the list stands,
+   * proportional between the ends' rests; left of the lines — the rows' text —
+   * the list stands still, so a row stays under the pointer to be read.
+   */
+  function onPointerMove(event: PointerEvent) {
+    if (!open || cancelPointerFrame !== null) return
+    pointer = { x: event.clientX, y: event.clientY }
+    /** The pointer's share of the rail's height; negative once the pointer is off the lines. */
+    let share = -1
+    cancelPointerFrame = requestFrame({
+      read() {
+        // Raw viewport pixels on both sides: the ratio is the share whatever the page zoom is.
+        const box = mountedRail().getBoundingClientRect()
+        if (box.height <= 0 || pointer.x < box.left) return
+        const span = box.height - 2 * TURN_NAV_STEER_INSET_PX
+        if (span <= 0) return
+        share = Math.min(Math.max((pointer.y - box.top - TURN_NAV_STEER_INSET_PX) / span, 0), 1)
+      },
+      scroll() {
+        cancelPointerFrame = null
+        if (stopped || !open || share < 0 || list === null) return
+        const most = railMost()
+        if (most === null) return
+        const value = Math.round(share * most)
+        if (list.scrollTop !== value) {
+          list.scrollTop = value
+          // The scroll event this write fires carries the place to the track
+          // before the frame paints; recording it here keeps placeCard's own
+          // sync in this same frame from reading the stale offset.
+          offset = value
+        }
+      },
+    })
   }
 
   /** Only the close is delayed: the grace that lets the pointer come back to the card. */
@@ -585,6 +638,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   return () => {
     stopped = true
     host.stop()
+    if (cancelPointerFrame !== null) cancelPointerFrame()
+    cancelPointerFrame = null
     if (cancelRefreshFrame !== null) cancelRefreshFrame()
     cancelRefreshFrame = null
     unmountRail()
