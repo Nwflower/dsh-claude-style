@@ -1,7 +1,7 @@
 /* @composer-gate */
-/* The actual toolbar, including the hero, owns its natural height. A wide
-   card can still have little space after plugin controls; the card-width
-   breakpoint alone must not decide whether its controls may wrap. */
+/* The actual toolbar, including the hero, owns its natural height. Compact
+   with no foreign right-hand control spends a shortage on the model label;
+   other rows keep the wrapping path, and stacked always takes the second line. */
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant][data-dsh-claude-composer-layout] [data-dsh-claude-composer-toolbar] {
   flex-wrap: wrap;
   height: auto;
@@ -32,7 +32,7 @@ body[data-dsh-claude-style] [data-composer-card][data-dsh-claude-composer-layout
 body[data-dsh-claude-style] [data-dsh-claude-composer-toolbar] > [data-dsh-claude-part~="trailing"] > [data-slot="conversation.input.model"] {
   min-width: 0;
 }
-/* SlotOutlet anchors use display:contents. Wrap their effective children in
+/* SlotOutlet anchors use display:contents. Group their effective children in
    the real controls box, not the zero-width anchor. Do not set display here:
    the host hides this group while an expanded activity owns the toolbar. */
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] [data-dsh-claude-part~="composer-controls"] {
@@ -41,8 +41,7 @@ body[data-dsh-claude-style] [data-composer-card][data-composer-variant] [data-ds
   max-width: 100%;
 }
 /* The seat takes its intrinsic width, then shares any shortage with its
-   fixed-width siblings. Its original model and effort parts can still wrap
-   inside the same seat; the real controls group wraps foreign siblings. */
+   fixed-width siblings. Compact with an empty right slot takes it from the label. */
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat {
   width: auto;
   flex-shrink: 1;
@@ -51,6 +50,16 @@ body[data-dsh-claude-style] [data-composer-card][data-composer-variant] [data-ds
   height: auto;
   min-height: var(--dsh-claude-footer-control-height);
   row-gap: 4px;
+}
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant][data-dsh-claude-composer-layout="compact"]:not([data-dsh-claude-holds~="composer-right-filled"]) [data-dsh-claude-composer-toolbar],
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant][data-dsh-claude-composer-layout="compact"]:not([data-dsh-claude-holds~="composer-right-filled"]) [data-dsh-claude-composer-toolbar] [data-dsh-claude-part~="composer-controls"],
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant][data-dsh-claude-composer-layout="compact"]:not([data-dsh-claude-holds~="composer-right-filled"]) [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat {
+  flex-wrap: nowrap;
+}
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant][data-dsh-claude-composer-layout="stacked"] [data-dsh-claude-composer-toolbar],
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant][data-dsh-claude-composer-layout="stacked"] [data-dsh-claude-composer-toolbar] [data-dsh-claude-part~="composer-controls"],
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant][data-dsh-claude-composer-layout="stacked"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat {
+  flex-wrap: wrap;
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat > .dsh-claude-model-seat-model {
   max-width: 100%;

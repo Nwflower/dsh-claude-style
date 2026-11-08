@@ -387,6 +387,14 @@ export function holdRelations(vocabulary: PartsTableVocabulary): HoldRelation[] 
     held: '[data-session-stats-details], [data-session-stats-usage]',
     attributes: ['data-session-stats-details', 'data-session-stats-usage'],
   },
+  // features/composer/responsive.css: a compact row may spend its shortage on
+  // the model label while no foreign right-hand control needs the wrapping path.
+  {
+    name: 'composer-right-filled',
+    holder: '[data-composer-card]',
+    held: '[data-slot="conversation.input.right"] > *',
+    attributes: [],
+  },
   // features/composer/inline-bar.css: the activity seat carries the stop button
   // while a turn runs, and its flex item is out of the flow while it is empty —
   // its gap would otherwise stand between the seat and the docked meter.

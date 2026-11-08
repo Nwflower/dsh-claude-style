@@ -7,15 +7,16 @@
  * model's name before it takes the ring out of the card.
  *
  * @capability effort-picker
- * @features effort, model, context-stats
+ * @features effort, model, context-stats, composer
  * @risk In a narrow window the ring covers the model's name or pushes the composer wider than the window, and the conversation grows a horizontal scrollbar.
  */
-import { spec } from '../../fixtures/behaviour.mjs'
+import { spec, surface } from '../../fixtures/behaviour.mjs'
 import { boxOf } from '../../fixtures/boxes.mjs'
 import { MODEL_SEAT_NAME } from '../../fixtures/model-seat.mjs'
 
 /** The host's model button: the reader finds it by its name, the model's. */
 const modelButton = (page) => page.getByRole('button', { name: MODEL_SEAT_NAME })
+const PART = surface.attribute('skin.part')
 
 // The geometry is judged at both pixel densities: a device pixel is what the
 // row's slack is spent in, and a fractional edge rounds differently at 2x.
@@ -51,9 +52,8 @@ export default spec({ page: 'effort', bands: ['phone', 'compact', 'wide'], densi
     t.expectThat.noHorizontalOverflow(await t.read.overflow(t.host('composer.card')), 'the composer card')
   })
 
-  test('a card too narrow for the row shortens the model\'s name before it takes the ring out of the card', async (t) => {
+  test('a stacked card gives the model name its own line without taking the ring out of the card', async (t) => {
     const card = t.host('composer.card')
-    const roomy = await t.read.box(t.surface('model.seat'))
     await t.page.evaluate((selector) => {
       const node = document.querySelector(selector)
       node.style.width = '320px'
@@ -63,13 +63,64 @@ export default spec({ page: 'effort', bands: ['phone', 'compact', 'wide'], densi
     const ring = await t.read.box(t.surface('stats.meter-ring'))
     const cardBox = await t.read.box(card)
     const row = await t.read.box(t.surface('composer.row'))
+    const tools = await t.read.box(`[${PART}~="tools"]`)
+    const layout = await t.read.attribute(card, t.surface.attribute('composer.responsive-layout'))
     t.expectThat.visible(narrow, 'the seat box is still drawn')
     t.expectThat.visible(ring, 'the ring is still drawn')
-    t.expectThat.equal(narrow.width < roomy.width, true,
-      `the seat box gives way (${roomy.width} → ${narrow.width}; card ${cardBox.left}–${cardBox.right}, row ${row.left}–${row.right}, ring ${ring.left}–${ring.right})`)
+    t.expectThat.equal(layout, 'stacked', 'the narrowest card keeps its deliberately stacked layout')
+    t.expectThat.equal(narrow.top >= tools.bottom - 1, true, `the seat stands on the stacked second line: ${JSON.stringify({ tools, seat: narrow, row })}`)
     t.expectThat.equal(ring.right <= cardBox.right + 1, true, `the ring stays inside the card (${ring.right} against ${cardBox.right})`)
     t.expectThat.noHorizontalOverflow(await t.read.overflow(card), 'the composer card')
     t.expectThat.noHorizontalOverflow(await t.read.overflow(t.host('chat.scroller')), 'the conversation')
+  })
+
+  test('compact and wide layouts shorten the model name without wrapping the toolbar', async (t) => {
+    const card = t.host('composer.card')
+    const widths = await t.page.evaluate(() => innerWidth < 600 ? [400] : [400, 600])
+    for (const width of widths) {
+      await t.page.evaluate(([selector, value]) => {
+        document.querySelector(selector).style.width = `${value}px`
+      }, [card, width])
+      await t.settle()
+      const state = await t.page.evaluate(([cardSelector, rowSelector, part, layoutMark, seatSelector, labelSelector]) => {
+        const cardElement = document.querySelector(cardSelector)
+        const row = cardElement.querySelector(rowSelector)
+        const tools = row.querySelector(`[${part}~="tools"]`)
+        const trailing = row.querySelector(`[${part}~="trailing"]`)
+        const controls = row.querySelector(`[${part}~="composer-controls"]`)
+        const seat = row.querySelector(seatSelector)
+        const label = row.querySelector(labelSelector)
+        const centre = element => {
+          const box = element.getBoundingClientRect()
+          return box.top + box.height / 2
+        }
+        return {
+          layout: cardElement.getAttribute(layoutMark),
+          rowWrap: getComputedStyle(row).flexWrap,
+          trailingWrap: getComputedStyle(trailing).flexWrap,
+          controlsWrap: controls === null ? null : getComputedStyle(controls).flexWrap,
+          seatWrap: getComputedStyle(seat).flexWrap,
+          toolsCentre: centre(tools),
+          trailingCentre: centre(trailing),
+          labelOverflow: getComputedStyle(label).textOverflow,
+          labelWidth: label.clientWidth,
+          labelContent: label.scrollWidth,
+        }
+      }, [card, t.surface('composer.row'), PART, t.surface.attribute('composer.responsive-layout'), t.surface('model.seat'), t.surface('model.seat-name')])
+      t.expectThat.equal(state.layout, width < 440 ? 'compact' : 'wide', 'the card width chooses the intended toolbar layout')
+      t.expectThat.equal(state.trailingWrap, 'nowrap', 'the trailing controls keep their own line')
+      if (state.layout === 'compact') {
+        t.expectThat.equal([state.rowWrap, state.seatWrap], ['nowrap', 'nowrap'], 'the compact toolbar and seat take the shortage from the model name')
+        if (state.controlsWrap !== null) t.expectThat.equal(state.controlsWrap, 'nowrap', 'the compact grouped controls stay on the same line')
+      }
+      t.expectThat.equal(Math.abs(state.toolsCentre - state.trailingCentre) <= 1, true, `the left and right controls share one line: ${JSON.stringify(state)}`)
+      if (width === 400) {
+        t.expectThat.equal(state.labelOverflow, 'ellipsis', 'the model name ends in an ellipsis')
+        t.expectThat.equal(state.labelContent > state.labelWidth, true, `the long model name is truncated: ${JSON.stringify(state)}`)
+      }
+      t.expectThat.noHorizontalOverflow(await t.read.overflow(card), 'the composer card')
+      t.expectThat.noHorizontalOverflow(await t.read.overflow(t.host('chat.scroller')), 'the conversation')
+    }
   })
 
   test('switching the picker off hands the seat back, and the ring keeps the row', async (t) => {
