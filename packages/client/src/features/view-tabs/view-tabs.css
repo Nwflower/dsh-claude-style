@@ -105,6 +105,22 @@ body[data-dsh-claude-style] [data-conversation-tabs] [data-dsh-claude-part~="vie
   min-height: 0;
   padding: 0 10px;
 }
+/* A tab another plugin renders into this strip (issue #275): the host's own tabs
+   carry the view-tab part, a foreign button carries only its own class, so the
+   plate states one segment box on whatever stands in it — the height, the
+   padding and the centring, not the look, which stays the plugin's. A plugin
+   only has to mount its tab as a child of the tablist the host draws. */
+body[data-dsh-claude-style] [data-conversation-tabs] > :not([data-dsh-claude-part~="view-tab"]) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 22px;
+  min-height: 0;
+  margin: 0;
+  padding: 0 10px;
+  line-height: 18px;
+}
 /* The shipped active-tab underline has no place in a pill. */
 body[data-dsh-claude-style] [data-dsh-view-tabs] [data-dsh-claude-part~="view-tab"]::after,
 body[data-dsh-claude-style] [data-conversation-tabs] [data-dsh-claude-part~="view-tab"]::after {
