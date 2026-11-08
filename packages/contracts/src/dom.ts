@@ -451,6 +451,12 @@ export const RIGHTBAR_HANDLE_SELECTOR = '[data-side="rightbar"]'
 /** The sidebar's drag handle; the host places it at the sidebar's own width. */
 export const SIDEBAR_HANDLE_SELECTOR = '[data-side="sidebar"]'
 /**
+ * The conversation column's width handle: the host draws a 2px bar on its own
+ * `::after` and reveals it while the pointer is over the hit strip, so the skin
+ * owns when that bar is up (features/width-handle, issue #270).
+ */
+export const WIDTH_HANDLE_SELECTOR = '[data-width-handle]'
+/**
  * The frame's collapse marker: the host writes it on the frame while the
  * sidebar is closed and takes it away while the sidebar stands open, whatever
  * opened it (the toggle, its shortcut, a search that asks for the wide list).

@@ -68,6 +68,7 @@ export interface Handles {
   activeFirst: FeatureHandle
   activeShelf: FeatureHandle
   dateGroups: FeatureHandle
+  widthHandle: FeatureHandle
 }
 
 export type HandleName = keyof Handles

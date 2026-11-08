@@ -1,0 +1,22 @@
+/* ---------- the conversation's width handle: the bar waits for the pointer ---------- */
+/* The host states the bar — a 2px rule on the handle's own `::after`, drawn where
+   the pointer was last seen during a drag (ui-conversation's
+   ConversationRoot.module.css) — and reveals it on `:hover`, so a pointer crossing
+   the transcript's edge on its way anywhere else flashes it (issue #270). The bar
+   is revealed from the mark width-handle.ts writes once the pointer has rested on
+   the handle, and from the host's own drag mark, which a press puts there at
+   once. The rule out-specifies the host's `:hover` one; it states the same
+   property and nothing else, so the host's gradient and its pointer's height
+   stay the host's. */
+body[data-dsh-claude-style] [data-width-handle]::after {
+  opacity: 0;
+  transition: opacity var(--dsh-claude-timing-feedback);
+}
+body[data-dsh-claude-style] [data-width-handle][data-dsh-claude-handle-rest]::after,
+body[data-dsh-claude-style] [data-width-handle][data-dragging]::after {
+  opacity: 1;
+}
+/* A press is the reader's answer rather than a rest: nothing fades in under a drag. */
+body[data-dsh-claude-style] [data-width-handle][data-dragging]::after {
+  transition: none;
+}

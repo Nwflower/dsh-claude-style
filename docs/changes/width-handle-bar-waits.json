@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-08",
+  "group": "improvements",
+  "order": 0,
+  "external": false,
+  "zh": "改善对话区宽度手柄的亮线，等指针停住后再出现，不再被掠过的指针闪出",
+  "en": "Improve the conversation width handle's bar to appear once the pointer rests, no longer flashing at a pointer passing over"
+}
