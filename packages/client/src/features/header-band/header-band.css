@@ -102,6 +102,13 @@ body[data-dsh-claude-style] [data-dsh-header-band~="title"] {
   padding-bottom: 0 !important;
   grid-template-rows: auto;
 }
+/* The host's own minimum height holds room for the title row the band has
+   emptied, and the grid's auto rows hand that room to the tab row, where the
+   strip stands at the top and the divider ends up below it. The title's row is
+   the skin's now, so the header closes to what it still holds. */
+body[data-dsh-claude-style] [data-dsh-header-band~="title"] {
+  min-height: 0;
+}
 /* The host hides a chip's label through a container query on the row's own
    width, which protects the title when the two share it. In the caption row the
    title takes no width, so the row has room and the control would only be

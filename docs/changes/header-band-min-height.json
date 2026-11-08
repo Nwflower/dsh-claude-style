@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-08",
+  "group": "fixes",
+  "order": 6,
+  "external": false,
+  "zh": "修复顶栏接管标题后头部按宿主最小高度撑开、标签下划线与分割线之间多出一段空白",
+  "en": "Fix the header keeping the host's minimum height once the caption row holds the title, which left a gap between the tab underline and the divider"
+}
