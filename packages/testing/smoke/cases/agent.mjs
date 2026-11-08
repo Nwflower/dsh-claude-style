@@ -320,6 +320,8 @@ export default {
       long.frozen === long.quarter && long.wheelKept === false && long.wheelOverflow === 'auto' &&
         long.wheelOverscroll === 'contain' && long.pageMoved === 0,
       JSON.stringify(long))
+    check('two moves in one frame land on the last one: off the lines the list holds, back over them it steers',
+      long.sameFrameFrozen === long.quarter && long.sameFrameLatest === longMost, JSON.stringify(long))
     const older = nav.olderHost || {}
     check('a host that writes no place on its marks keeps the reading position and presses the mark at the row\'s place, the first row included',
       older.current === 4 && JSON.stringify(older.mid) === '[3]' && JSON.stringify(older.first) === '[3,0]', JSON.stringify(older))

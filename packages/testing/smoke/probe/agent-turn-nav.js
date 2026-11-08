@@ -218,6 +218,22 @@
         quarter: await longMove(longRailBox.top + 8 + longSpan * 0.25, longX),
         frozen: await longMove(longRailBox.bottom, longRailBox.left - 120),
       }
+      // Two moves dispatched in one task: the frame they share reads the place
+      // the pointer ended at, so leaving the lines holds the list and the
+      // latest move over the lines wins.
+      var longSameFrame = async function (first, second) {
+        longCard.dispatchEvent(new PointerEvent('pointermove', { clientX: first.x, clientY: first.y, bubbles: true }))
+        longCard.dispatchEvent(new PointerEvent('pointermove', { clientX: second.x, clientY: second.y, bubbles: true }))
+        await sleep(120)
+        return longList.scrollTop
+      }
+      longOut.sameFrameFrozen = await longSameFrame(
+        { x: longX, y: longRailBox.bottom - 2 },
+        { x: longRailBox.left - 120, y: longRailBox.bottom - 2 })
+      await longMove(longRailBox.top + 8 + longSpan * 0.25, longX)
+      longOut.sameFrameLatest = await longSameFrame(
+        { x: longX, y: longRailBox.top + 2 },
+        { x: longX, y: longRailBox.bottom - 2 })
       // The wheel: nothing stands between it and the card's list, and the page
       // under the card stays still.
       var longWheel = new WheelEvent('wheel', { deltaY: 120, bubbles: true, cancelable: true })

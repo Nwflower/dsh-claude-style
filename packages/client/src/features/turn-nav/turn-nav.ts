@@ -409,8 +409,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * the list stands still, so a row stays under the pointer to be read.
    */
   function onPointerMove(event: PointerEvent) {
-    if (!open || cancelPointerFrame !== null) return
+    if (!open) return
+    // Every move records its place before the shared frame is asked for: a
+    // pointer that leaves the lines while the frame waits must be read where it
+    // now stands, or the list scrolls away from the row about to be pressed.
     pointer = { x: event.clientX, y: event.clientY }
+    if (cancelPointerFrame !== null) return
     /** The pointer's share of the rail's height; negative once the pointer is off the lines. */
     let share = -1
     cancelPointerFrame = requestFrame({
