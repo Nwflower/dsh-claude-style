@@ -1,12 +1,7 @@
 {
-  "soundCuesTitle": { "zh": "声音提示", "en": "Sound cues" },
-  "soundCuesDesc": { "zh": "需要你确认或任务完成时播放一声轻提示。", "en": "Play a quiet cue when the page needs you or a task finishes." },
-  "soundPermissionTitle": { "zh": "请求确认", "en": "Permission requests" },
-  "soundPermissionDesc": { "zh": "Pop", "en": "Pop" },
-  "soundCompletionTitle": { "zh": "任务完成", "en": "Task finished" },
-  "soundCompletionDesc": { "zh": "Tink", "en": "Tink" },
-  "soundVolumeTitle": { "zh": "音量", "en": "Volume" },
-  "soundVolumeQuiet": { "zh": "轻", "en": "Quiet" },
-  "soundVolumeSubtle": { "zh": "适中", "en": "Subtle" },
-  "soundVolumeClear": { "zh": "清晰", "en": "Clear" }
+  "soundCuesTitle": { "zh": "提示音效", "en": "Sound cue" },
+  "soundCuesDesc": { "zh": "任务完成或受阻时，播放提示音", "en": "Play a cue when a task finishes or is blocked" },
+  "soundLevelOff": { "zh": "关闭", "en": "Off" },
+  "soundLevelSoft": { "zh": "轻柔", "en": "Soft" },
+  "soundLevelClear": { "zh": "清晰", "en": "Clear" }
 }

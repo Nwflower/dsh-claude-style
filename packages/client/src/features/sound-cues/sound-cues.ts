@@ -27,15 +27,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (disposed) return
     const events = pending
     pending = new Set()
-    const prefs = readPrefs()
-    if (!prefs.soundCues) return
     const kind = events.has('permission') ? 'permission' : events.has('finished') ? 'finished' : null
     if (kind === null) return
-    if (kind === 'permission' ? !prefs.soundPermission : !prefs.soundCompletion) return
     const name = kind === 'permission' ? SOUND_CUE_PERMISSION : SOUND_CUE_COMPLETION
     // The player reports its own downgrade to the browser voices; a cue never
     // throws into the status subscription that asked for it (D12).
-    void player.play(name, SOUND_GAIN[prefs.soundVolume])
+    void player.play(name, SOUND_GAIN[readPrefs().soundCues])
   }
 
   function queue(event: AttentionEvent) {

@@ -552,8 +552,8 @@
       "nothing the skin runs leaves an uncaught error or an unhandled rejection": [
         0
       ],
-      "only the four features that read the session list were switched off: the permission control, the model picker, the manual unread marks and the sound cues; the date view reads it only once the bell is pressed": [
-        4
+      "only the three features that read the session list were switched off: the permission control, the model picker and the manual unread marks; the date view reads it only once the bell is pressed, and the sound cues stand down with their setting": [
+        3
       ],
       "every unit the footer holds is hidden in place before the drawer is ever opened, the plugin's inline box included": [
         3

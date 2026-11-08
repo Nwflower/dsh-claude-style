@@ -10,7 +10,7 @@
  */
 import { OFFICIAL_MODEL_GROUP } from './services'
 import { CURRENCIES, CURRENCY_CNY } from './prices'
-import { SOUND_VOLUME_SUBTLE, SOUND_VOLUMES } from './sound'
+import { SOUND_LEVELS, SOUND_LEVEL_OFF } from './sound'
 
 /* ---------- the value vocabulary ---------- */
 
@@ -411,12 +411,11 @@ export const PREFS = {
   caretMotion: { type: 'choice', values: CARET_MOTIONS, default: CARET_MOTION_TYPING },
   messageEnter: { type: 'choice', values: MESSAGE_ENTER_MODES, default: MESSAGE_ENTER_FLIGHT },
   processRows: { type: 'choice', values: PROCESS_ROWS_LAYOUTS, default: PROCESS_ROWS_FLAT },
-  /** Whether the page plays a cue when a session waits on the reader or a task finishes (D89). */
-  soundCues: { type: 'boolean', default: true },
-  soundPermission: { type: 'boolean', default: true },
-  soundCompletion: { type: 'boolean', default: true },
-  /** How loud a cue is; the three levels are the shared table's (contracts/sound.ts). */
-  soundVolume: { type: 'choice', values: SOUND_VOLUMES, default: SOUND_VOLUME_SUBTLE },
+  /**
+   * How loud the cue for a finished or blocked task is (D89). Off unless the
+   * reader asks for it: a sound the reader did not ask for is an interruption.
+   */
+  soundCues: { type: 'choice', values: SOUND_LEVELS, default: SOUND_LEVEL_OFF },
 } as const satisfies Record<string, PrefSpec>
 
 /** One preference's key. */

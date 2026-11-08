@@ -1,3 +1,4 @@
+import { SOUND_LEVEL_CLEAR, SOUND_LEVEL_SOFT } from '@dsh-claude-style/contracts/sound'
 import type { FeatureManifest } from '../../core/feature'
 
 export default {
@@ -5,6 +6,9 @@ export default {
   order: 50,
   contracts: [],
   pref: 'soundCues',
+  // Off is a level like the other two: the feature is not installed, so a
+  // silenced page subscribes to nothing and starts no player (D89).
+  prefValues: [SOUND_LEVEL_SOFT, SOUND_LEVEL_CLEAR],
   stylesheets: [],
   settingsRows: [{
     tab: 'general',
@@ -12,27 +16,7 @@ export default {
     pref: 'soundCues',
     title: 'soundCuesTitle',
     desc: 'soundCuesDesc',
-  }, {
-    tab: 'general',
-    rank: 61,
-    pref: 'soundPermission',
-    parent: 'soundCues',
-    title: 'soundPermissionTitle',
-    desc: 'soundPermissionDesc',
-  }, {
-    tab: 'general',
-    rank: 62,
-    pref: 'soundCompletion',
-    parent: 'soundCues',
-    title: 'soundCompletionTitle',
-    desc: 'soundCompletionDesc',
-  }, {
-    tab: 'general',
-    rank: 63,
-    pref: 'soundVolume',
-    parent: 'soundCues',
-    title: 'soundVolumeTitle',
-    choiceLabels: { quiet: 'soundVolumeQuiet', subtle: 'soundVolumeSubtle', clear: 'soundVolumeClear' },
+    choiceLabels: { off: 'soundLevelOff', soft: 'soundLevelSoft', clear: 'soundLevelClear' },
   }],
   cases: ['settings'],
 } satisfies FeatureManifest
