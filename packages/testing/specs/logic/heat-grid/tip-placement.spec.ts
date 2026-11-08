@@ -164,7 +164,9 @@ test('hovering every day leaves the panel\'s own height where it was', async () 
       expect(panel.scrollHeight).toBe(scroll)
     }
   }
-})
+  // One pointer step per day: the browser's own hit-testing is the cost, not a
+  // measurement, and 182 steps outlast the suite's default budget on a slow machine.
+}, 20000)
 
 test('the pill\'s box is its own, whatever scale it is drawn at', () => {
   const plain = mount()
