@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-08",
+  "group": "fixes",
+  "order": 0,
+  "external": false,
+  "zh": "修复皮肤浮层卡片内的宿主提示气泡被卡片盖住，只露出卡片边缘外的一截",
+  "en": "Fix a host tooltip opened inside a skin card being painted under the card, leaving only a strip past the card's edge"
+}

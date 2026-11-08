@@ -273,3 +273,18 @@ body[data-dsh-claude-style] .dsh-claude-popover-item.dsh-claude-popover-item-sta
 body[data-dsh-claude-style] [data-dsh-claude-part~="foot-area"] > .dsh-claude-popover-item {
   display: none !important;
 }
+
+/* ---------- A host tooltip over a skin card ---------- */
+/* The host draws its tooltip in a fixed bubble portalled to the body and states
+   the bubble's own place in its sheet, below every card this skin floats. A
+   bubble opened from a control inside one — the model picker's rate badge is the
+   one that showed it — is therefore painted under the card that asked for it,
+   and the reader sees only the words past the card's right edge. The bubble
+   takes the tooltip layer: above the cards that raise it, under a takeover,
+   which covers the window whole. The selector is the host bubble's own pair of
+   marks: `role="tooltip"` for the surface and `data-portal` for the body mount
+   (a bubble the host draws inside the card is clipped with it and takes no
+   place here). */
+body[data-dsh-claude-style] [role="tooltip"][data-portal] {
+  z-index: var(--dsh-claude-layer-tooltip);
+}
