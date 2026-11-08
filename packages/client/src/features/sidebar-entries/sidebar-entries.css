@@ -8,6 +8,18 @@ body[data-dsh-claude-style] nav[data-dsh-claude-part~="panel-list"] > [data-dsh-
   display: none;
 }
 
+/* ---------- More: the card ---------- */
+/* Claude's card is as wide as its longest row and stands beside the launcher;
+   the host asks 288px under it. The shift is written by more-placement.ts, and
+   `translate` composes with whatever transform the opening plays. */
+body[data-dsh-claude-style] [data-dsh-claude-more-menu] {
+  width: max-content;
+  min-width: 180px;
+  max-width: var(--dsh-anchored-max-width, calc(100vw - 24px));
+  translate: var(--dsh-claude-more-shift-x, 0px) var(--dsh-claude-more-shift-y, 0px);
+  transform-origin: top left;
+}
+
 /* ---------- More: the hidden entries and the Edit sidebar row ---------- */
 /* The icon seat of the skin's rows: a copy of the row's own glyph at the menu's
    16px, or nothing, which still keeps the words in line with the rows above. */

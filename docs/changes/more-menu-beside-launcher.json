@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-07",
+  "group": "improvements",
+  "order": 7,
+  "external": false,
+  "zh": "改善侧栏「更多」菜单的外观，使其在启动按钮右侧弹出、宽度随内容收缩、图标与文字同色、投影更深，并把侧栏顶部的图标改为更大的无底色图标",
+  "en": "Improve the sidebar More menu so it opens beside its launcher, fits its rows, draws icons in the text colour and casts a deeper shadow, and give the sidebar's top rows larger icons without a backing disc"
+}
