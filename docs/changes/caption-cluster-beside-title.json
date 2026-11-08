@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-08",
-  "group": "fixes",
-  "order": 4,
-  "external": false,
-  "zh": "修复「标题进入顶栏」把模式与智能体芯片留在标题下方另起一行，顶栏因此高出一整行、分割线随之下沉",
-  "en": "Fix the preset picker and the session chips standing on a second row under the lifted title, leaving the caption a row taller with its divider sunk below that row"
-}

@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-08",
-  "group": "fixes",
-  "order": 2,
-  "external": false,
-  "zh": "修复窄屏输入框工具栏随模型名长度折行，长模型名在原地省略",
-  "en": "Fix the narrow composer toolbar wrapping with model name length, truncating long model names in place"
-}

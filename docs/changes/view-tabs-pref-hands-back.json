@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-08",
-  "group": "fixes",
-  "order": 4,
-  "external": false,
-  "zh": "修复关闭「对话 / 轨迹标签条」后宿主标签条仍被皮肤的悬停淡出、下划线隐藏与内边距接管",
-  "en": "Fix the host's own conversation tabs staying under the skin's hover fade, hidden underline and padding after the Chat / Trajectory tabs switch is turned off"
-}

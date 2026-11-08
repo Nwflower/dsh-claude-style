@@ -1,8 +1,0 @@
-{
-  "group": "improvements",
-  "order": 11,
-  "at": "2026-11-08",
-  "external": false,
-  "zh": "改善轮次导航卡片对指针的跟随，指针的高度即列表位置，移到横线左侧即停住以便点选",
-  "en": "Improve the turn card's pointer steering, whose height over the rail's lines is the list's place, standing still once the pointer leaves the lines for a row to be pressed"
-}

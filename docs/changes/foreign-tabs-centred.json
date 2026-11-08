@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-08",
-  "group": "fixes",
-  "order": 3,
-  "external": false,
-  "zh": "修复第三方插件插入的标签与宿主标签不垂直居中，标签栏按一个 segment 排它的每一个直接子元素",
-  "en": "Fix a third-party plugin's tab in the conversation strip sitting off the host tabs' centre line, by stating one segment box for every child of the tablist"
-}

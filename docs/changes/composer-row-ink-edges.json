@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-08",
-  "group": "fixes",
-  "order": 2,
-  "external": false,
-  "zh": "修复输入框底行右侧上下文圆环比左侧权限控件多缩进一层、两端视觉边界不对称",
-  "en": "Fix the context ring at the composer row's right end sitting a layer further in than the permission control at its left"
-}

@@ -2,6 +2,60 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [0.20.1] - 2026-11-08
+
+[中文](#cn-0.20.1) | [English](#en-0.20.1)
+
+<h3 id="cn-0.20.1">新增功能</h3>
+
+- 新增「提示音效」设置，任务完成或受阻时播放提示音，可选关闭、轻柔、清晰，默认关闭
+
+### 体验优化
+
+- 改善对话区宽度手柄的亮线，等指针停住后再出现，不再被掠过的指针闪出
+- 改善侧栏「更多」菜单的外观，使其在启动按钮右侧弹出、宽度随内容收缩、图标与文字同色、投影更深，并把侧栏顶部的图标改为更大的无底色图标
+- 把「进行中对话」标记位置的默认值改到左侧
+- 改善轮次导航卡片对指针的跟随，指针的高度即列表位置，移到横线左侧即停住以便点选
+
+### 问题修复
+
+- 修复日期视图开着时从视图菜单改的分组被按回单列表
+- 修复皮肤浮层卡片内的宿主提示气泡被卡片盖住，只露出卡片边缘外的一截
+- 修复图片预览蒙版被全局对话框尺寸上限缩小、右侧与底部各留出 48px
+- 修复窄屏输入框工具栏随模型名长度折行，长模型名在原地省略
+- 修复输入框底行右侧上下文圆环比左侧权限控件多缩进一层、两端视觉边界不对称
+- 修复第三方插件插入的标签与宿主标签不垂直居中，标签栏按一个 segment 排它的每一个直接子元素
+- 修复紧凑底栏的统计浮层下方仍保留空白统计行
+- 修复「标题进入顶栏」把模式与智能体芯片留在标题下方另起一行，顶栏因此高出一整行、分割线随之下沉
+- 修复关闭「对话 / 轨迹标签条」后宿主标签条仍被皮肤的悬停淡出、下划线隐藏与内边距接管
+- 修复模型列表的每一行在分钟切换后多出一个峰谷电价表
+- 修复顶栏接管标题后头部按宿主最小高度撑开、标签下划线与分割线之间多出一段空白
+
+<h3 id="en-0.20.1">New Features</h3>
+
+- Add a Sound cue setting that plays a cue when a task finishes or is blocked, choosing Off, Soft or Clear, off by default
+
+### Improvements
+
+- Improve the conversation width handle's bar to appear once the pointer rests, no longer flashing at a pointer passing over
+- Improve the sidebar More menu so it opens beside its launcher, fits its rows, draws icons in the text colour and casts a deeper shadow, and give the sidebar's top rows larger icons without a backing disc
+- Move the Ongoing conversations marker side's default to the left
+- Improve the turn card's pointer steering, whose height over the rail's lines is the list's place, standing still once the pointer leaves the lines for a row to be pressed
+
+### Bug Fixes
+
+- Fix a grouping picked from the view menu being forced back to one list while the date view is on
+- Fix a host tooltip opened inside a skin card being painted under the card, leaving only a strip past the card's edge
+- Fix the image preview backdrop being shrunk by the global dialog size cap, leaving a 48px gap at its right and bottom edges
+- Fix the narrow composer toolbar wrapping with model name length, truncating long model names in place
+- Fix the context ring at the composer row's right end sitting a layer further in than the permission control at its left
+- Fix a third-party plugin's tab in the conversation strip sitting off the host tabs' centre line, by stating one segment box for every child of the tablist
+- Fix the compact statistics footer leaving a blank dock below its overlaid figures
+- Fix the preset picker and the session chips standing on a second row under the lifted title, leaving the caption a row taller with its divider sunk below that row
+- Fix the host's own conversation tabs staying under the skin's hover fade, hidden underline and padding after the Chat / Trajectory tabs switch is turned off
+- Fix a second peak rate meter appearing on every model row after a minute rollover
+- Fix the header keeping the host's minimum height once the caption row holds the title, which left a gap between the tab underline and the divider
+
 ## [0.20.0] - 2026-11-07
 
 [中文](#cn-0.20.0) | [English](#en-0.20.0)
