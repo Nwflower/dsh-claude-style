@@ -2,6 +2,7 @@ import * as React from 'react'
 import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
 import {
   CONVERSATION_HEADER_SELECTOR,
+  HEADER_ACTIONS_SELECTOR,
   HEADER_CORNER_SELECTOR,
   HEADER_TITLE_ROW_SELECTOR,
   HEADER_TITLE_SELECTOR,
@@ -47,11 +48,22 @@ import { copy } from './copy'
 export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The body marker: which parts of the row the caption row holds, as a token list. */
   const BAND_ATTR = 'data-dsh-header-band'
-  /** The title's stamp, and the numbers its rule reads. */
+  /** The title's stamp. */
   const TITLE_ATTR = 'data-dsh-header-title'
+  /**
+   * The numbers every piece the caption row holds reads, written on the piece
+   * itself: where it stands, how wide its place is, and the row's middle it is
+   * centred on.
+   */
   const TITLE_LEFT = '--dsh-header-band-left'
   const TITLE_MAX = '--dsh-header-band-max'
   const TITLE_TOP = '--dsh-header-band-title-top'
+  /**
+   * The cluster the host keeps beside the title — the preset picker and the
+   * chips the session mounts there. Left in the row it carries no stamp and the
+   * row keeps the height it takes there.
+   */
+  const TRAIL_ATTR = 'data-dsh-header-trail'
   /**
    * The row's own stamp and the negative top margin its rule reads: with the
    * title gone the row holds only the controls, and the host's top inset for a
@@ -87,6 +99,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const FURNITURE = 48
   /** Below this a lifted title would be a stub: it stays in the row instead. */
   const MIN_TITLE = 120
+  /** Below this the cluster beside the title would be an icon stub: it stays in the row instead. */
+  const MIN_TRAIL = 120
   /** The host's seat in the header's own row that the header utilities land in. */
   const UTILITIES_SLOT = 'conversation.session.header.utilities'
   /** The skin's own control there, which the stylesheet paints and the pass shows. */
@@ -94,6 +108,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   const rowStamp = createStamp<HTMLElement>(ROW_ATTR)
   const titleStamp = createStamp<HTMLElement>(TITLE_ATTR)
+  const trailStamp = createStamp<HTMLElement>(TRAIL_ATTR)
   const actionsStamp = createStamp<HTMLElement>(ACTIONS_ATTR)
   const cornerStamp = createStamp<HTMLElement>(CORNER_ATTR)
   const tabsStamp = createStamp<HTMLElement>(TABS_ATTR)
@@ -216,6 +231,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   function clear() {
     rowStamp.release()
     titleStamp.release()
+    trailStamp.release()
     actionsStamp.release()
     cornerStamp.release()
     tabsStamp.release()
@@ -253,6 +269,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     row: HTMLElement
     header: HTMLElement | null
     title: HTMLElement | null
+    trail: HTMLElement | null
     utilities: HTMLElement | null
     corner: HTMLElement | null
     stripEl: HTMLElement | null
@@ -263,6 +280,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     utilitiesBox: DOMRect | null
     cornerBox: DOMRect | null
     titleBox: DOMRect | null
+    trailBox: DOMRect | null
   }
 
   /** The reading this pass places against, and whether `measure` took it for this pass. */
@@ -287,6 +305,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     }
     const header = row.closest<HTMLElement>(CONVERSATION_HEADER_SELECTOR)
     const title = row.querySelector<HTMLElement>(HEADER_TITLE_SELECTOR)
+    const trail = row.querySelector<HTMLElement>(HEADER_ACTIONS_SELECTOR)
     const utilities = row.querySelector<HTMLElement>(HEADER_UTILITIES_SELECTOR)
     const corner = row.querySelector<HTMLElement>(HEADER_CORNER_SELECTOR)
     const stripEl = header === null ? null : header.querySelector<HTMLElement>(VIEW_TABS_STRIP_SELECTOR)
@@ -296,6 +315,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       row,
       header,
       title,
+      trail,
       utilities,
       corner,
       stripEl,
@@ -309,6 +329,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       utilitiesBox: rect(utilities),
       cornerBox: rect(corner),
       titleBox: rect(title),
+      trailBox: rect(trail),
     }
   }
 
@@ -377,6 +398,17 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const room = rightStop - GAP - (inBand ? stripWidth + GAP : 0) - left
     const titleBox = current.titleBox
     const liftTitle = title !== null && room >= MIN_TITLE
+    // The cluster the host keeps beside the title — the preset picker and the
+    // chips the session mounts there — takes the room left over between the
+    // title's own edge and what that room already reserves for the strip and the
+    // controls. A window too narrow for it keeps it in the row, which then keeps
+    // the height it takes there.
+    const trail = current.trail
+    const trailBox = current.trailBox
+    const trailRoom = room - (titleBox === null ? 0 : titleBox.width) - GAP
+    const liftTrail = liftTitle && trail !== null && trailBox !== null && titleBox !== null &&
+      trailRoom >= MIN_TRAIL && trailBox.width <= trailRoom
+    const trailLeft = left + (titleBox === null ? 0 : titleBox.width) + GAP
     // The row the title leaves holds only controls, and the host's inset for a
     // row that still carried a title would leave them floating below the caption
     // row. It starts at the title box's lower edge; the target is computed rather
@@ -404,8 +436,16 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     titleStamp.mark(liftTitle ? title : null)
     if (liftTitle && title !== null) {
       setVar(title, TITLE_LEFT, `${Math.round(left)}px`)
-      setVar(title, TITLE_MAX, `${Math.round(room)}px`)
+      // With the cluster standing beside it the title stops at the width it
+      // holds now: the room past that belongs to the cluster.
+      setVar(title, TITLE_MAX, `${Math.round(liftTrail && titleBox !== null ? titleBox.width : room)}px`)
       setVar(title, TITLE_TOP, `${Math.round(titleCentre)}px`)
+    }
+    trailStamp.mark(liftTrail ? trail : null)
+    if (liftTrail && trail !== null) {
+      setVar(trail, TITLE_LEFT, `${Math.round(trailLeft)}px`)
+      setVar(trail, TITLE_MAX, `${Math.round(trailRoom)}px`)
+      setVar(trail, TITLE_TOP, `${Math.round(titleCentre)}px`)
     }
     actionsStamp.mark(liftActions && utilitiesBox !== null ? utilities : null)
     cornerStamp.mark(liftActions && cornerBox !== null ? corner : null)
@@ -420,7 +460,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     // shell's own left end and the caption buttons when a side stayed in the row.
     const stripInBand = inBand && stripEl !== null
     if (stripInBand && stripEl !== null) {
-      const leftStop = liftTitle && titleBox !== null ? left + titleBox.width : furniture
+      const leftStop = liftTrail && trailBox !== null
+        ? trailLeft + Math.min(trailBox.width, trailRoom)
+        : liftTitle && titleBox !== null ? left + titleBox.width : furniture
       setVar(stripEl, TABS_LEFT, `${Math.round((leftStop + rightStop) / 2)}px`)
     }
     tabsStamp.mark(stripInBand ? stripEl : null)
@@ -458,6 +500,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   return () => {
     const row = rowStamp.current()
     const title = titleStamp.current()
+    const trail = trailStamp.current()
     const utilities = actionsStamp.current()
     const corner = cornerStamp.current()
     const strip = tabsStamp.current()
@@ -466,6 +509,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       title.style.removeProperty(TITLE_LEFT)
       title.style.removeProperty(TITLE_MAX)
       title.style.removeProperty(TITLE_TOP)
+    }
+    if (trail !== null) {
+      trail.style.removeProperty(TITLE_LEFT)
+      trail.style.removeProperty(TITLE_MAX)
+      trail.style.removeProperty(TITLE_TOP)
     }
     if (utilities !== null) utilities.style.removeProperty(ACTIONS_RIGHT)
     if (corner !== null) corner.style.removeProperty(ACTIONS_RIGHT)

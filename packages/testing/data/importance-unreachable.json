@@ -294,6 +294,7 @@
         "body[data-dsh-claude-style] [data-dsh-claude-part~=center-column] [data-dsh-titlebar-tabs] [data-dsh-view-tabs]",
         "body[data-dsh-claude-style] [data-dsh-claude-part~=conversation-header][data-dsh-titlebar-tabs][data-dsh-claude-holds~=view-tabs]",
         "body[data-dsh-claude-style] [data-dsh-header-band~=title] [data-dsh-header-title]",
+        "body[data-dsh-claude-style] [data-dsh-header-band~=title] [data-dsh-header-trail]",
         "body[data-dsh-claude-style] [data-dsh-titlebar-tabs] [data-dsh-header-band-tabs]",
         "body[data-dsh-claude-style] [data-dsh-header-band~=title] [data-dsh-header-row]",
         "body[data-dsh-claude-style] [data-dsh-header-band~=title] [data-dsh-header-row] [data-dsh-claude-part~=header-label]",

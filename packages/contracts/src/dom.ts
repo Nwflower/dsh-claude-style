@@ -494,6 +494,12 @@ export const HEADER_TITLE_ROW_SELECTOR = '[data-dsh-claude-part~="title-row"]'
  * where the title ends).
  */
 export const HEADER_TITLE_SELECTOR = '[data-dsh-claude-part~="header-title"]'
+/**
+ * The seat the host keeps beside the title inside the same cluster: the preset
+ * picker and the chips the session mounts there. The band lifts it into the
+ * caption row after the title, so the row the title leaves holds nothing.
+ */
+export const HEADER_ACTIONS_SELECTOR = '[data-dsh-claude-part~="header-actions"]'
 /** The header's utilities cluster: the workspace opener, the overflow menu, the bottom-panel toggle. */
 export const HEADER_UTILITIES_SELECTOR = '[data-dsh-claude-part~="header-utilities"]'
 /** The corner seat beside the utilities, carrying the right-sidebar toggle. */

@@ -176,13 +176,17 @@ export default {
     check('the words the row carries are the window\'s own: a press on the title starts no selection',
       laid.titleSelect === 'none' && laid.headerSelect === 'none',
       JSON.stringify({ title: laid.titleSelect, header: laid.headerSelect }))
-    check('the title is handed the room left between its own edge and the controls once the strip\'s width is reserved, and the row it left starts at the title box without the host\'s old inset',
+    check('the cluster the row keeps beside the title takes the caption row\'s next place, so the row the title leaves holds nothing it has to keep standing',
+      marks.trail === true && laid.preset.x === laid.title.right + b.air && laid.preset.y === middle + b.titleDrop &&
+        laid.trailLeft === laid.title.right + b.air + 'px' && laid.trailHit === true,
+      JSON.stringify({ marks: marks, title: laid.title, preset: laid.preset, trailLeft: laid.trailLeft, trailHit: laid.trailHit }))
+    check('the title is handed the room up to the cluster beside it, and the row it left starts at the title box without the host\'s old inset',
       laid.titleLeft === laid.row.x + 'px' &&
-        laid.titleMax === laid.utilities.x - b.air - ((laid.strip.right - laid.strip.x) + b.air) - laid.title.x + 'px' &&
+        laid.titleMax === laid.title.right - laid.title.x + 'px' &&
         laid.row.y === laid.title.y + 28 + b.rowGap && laid.rowPosition === 'relative' && laid.rowOffset === laid.rowLift &&
         laid.row.y === laid.rowLift.replace('px', '') * 1 + laid.header.y + parseFloat(laid.headerPaddingTop) &&
-        laid.headerPaddingTop === '0px' && laid.preset.x === laid.row.x,
-      JSON.stringify({ left: laid.titleLeft, max: laid.titleMax, lift: laid.rowLift, offset: laid.rowOffset, row: laid.row, header: laid.header, preset: laid.preset, utilities: laid.utilities, strip: laid.strip }))
+        laid.headerPaddingTop === '0px',
+      JSON.stringify({ left: laid.titleLeft, max: laid.titleMax, lift: laid.rowLift, offset: laid.rowOffset, row: laid.row, header: laid.header, utilities: laid.utilities, strip: laid.strip }))
     const panelClosed = b.panelClosed || {}
     check('the right panel\'s collapse control is the skin\'s own, drawn in the header\'s row: it shows while the panel is open and hides with the panel, and the panel\'s own copy stays where the host drew it',
       laid.closeInline === 'inline-flex' && laid.closeShown !== 'none' &&
@@ -190,25 +194,25 @@ export default {
       JSON.stringify({ laid: { close: laid.closeInline, shown: laid.closeShown, host: laid.hostToggleDisplay }, closed: panelClosed }))
     const solo = b.solo || {}
     check('with the corner seat empty — the right sidebar is open — the cluster that is there still lifts, into the corner\'s own place',
-      solo.marks.band === 'title actions' && solo.marks.corner === false && solo.utilities.right === right,
+      solo.marks.band === 'title actions' && solo.marks.corner === false && solo.marks.trail === true && solo.utilities.right === right,
       JSON.stringify(solo))
     const tight = b.tight || {}
     const off = b.off || {}
     check('when the shell\'s own seat takes the row\'s left end, both sides stay in the header\'s row: no marker, no stamp, the row back at its own inset',
-      tight.marks.band === null && tight.marks.row === false && tight.marks.title === false &&
+      tight.marks.band === null && tight.marks.row === false && tight.marks.title === false && tight.marks.trail === false &&
         tight.marks.utilities === false && tight.marks.corner === false &&
         tight.row.y === (off.row || {}).y && tight.title.y > b.band && tight.utilities.y > b.band,
       JSON.stringify({ tight: tight, off: off.row }))
     const back = b.back || {}
     check('switching the feature off hands the row back whole — the strip the other feature placed stays, and the cluster\'s own fade with it — and switching it on places both sides again',
-      off.marks.band === null && off.marks.title === false && off.marks.utilities === false && off.marks.corner === false &&
+      off.marks.band === null && off.marks.title === false && off.marks.trail === false && off.marks.utilities === false && off.marks.corner === false &&
         off.stripStamped === true && off.clusterMask !== 'none' &&
-        back.marks.band === 'title actions' && back.marks.title === true && back.marks.utilities === true &&
+        back.marks.band === 'title actions' && back.marks.title === true && back.marks.trail === true && back.marks.utilities === true &&
         back.titleHit === true && back.clusterMask === 'none',
       JSON.stringify({ off: off, back: back }))
     const left = b.left || {}
     check('taking the desktop shell\'s marker away leaves no band marker and no stamps behind',
-      left.band === null && left.row === false && left.title === false && left.utilities === false && left.corner === false,
+      left.band === null && left.row === false && left.title === false && left.trail === false && left.utilities === false && left.corner === false,
       JSON.stringify(left))
     commonChecks(r)
   },

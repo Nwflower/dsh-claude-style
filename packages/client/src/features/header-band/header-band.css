@@ -33,14 +33,21 @@ body[data-dsh-claude-style] .dsh-claude-rightbar-close:focus-visible {
   background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
 }
 
-body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-header-title] {
+/* The two pieces the caption row holds — the session title, and the cluster the
+   host keeps beside it (the preset picker and the chips the session mounts
+   there) — take one place each. The pass stamps a piece it lifted and writes its
+   numbers on it; a piece left in the row carries no stamp, so these rules miss
+   it and the row keeps the height it takes there. */
+body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-header-title],
+body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-header-trail] {
   position: fixed !important;
-  /* The pass centres the box on the measured caption row's middle. */
+  /* The pass centres each box on the measured caption row's middle. */
   top: var(--dsh-header-band-title-top, calc(var(--dsh-windows-titlebar-height, 40px) / 2)) !important;
   left: var(--dsh-header-band-left) !important;
-  /* The room the pass measured: past it the title would run into the tab strip
-     or the controls. The title's own crumb ellipsizes inside whatever width
-     this leaves (the host's own rule, unchanged). */
+  /* The room the pass measured for this piece: past it the title would run into
+     the tab strip or the controls, and the cluster into what stands after it.
+     The title's own crumb ellipsizes inside whatever width this leaves (the
+     host's own rule, unchanged). */
   max-width: var(--dsh-header-band-max, none) !important;
   margin: 0 !important;
   transform: translateY(-50%) !important;
@@ -67,12 +74,12 @@ body[data-dsh-claude-style] [data-dsh-titlebar-tabs] [data-dsh-header-band-tabs]
   left: var(--dsh-header-band-tabs-left, 50%) !important;
 }
 
-/* The row the title left: what it still holds — the preset picker, the
-   background-task chips, whatever the host mounts — rides up to sit just under
-   the title instead of on the line the title used to take. It is offset, not
-   re-laid, so the fixed pieces keep no containing block of their own. The pass
-   writes the rise it measured, so the host's inset is not assumed, and the row
-   declares itself no-drag: its top now lies inside the shell's drag strip. */
+/* The row the title left: what it still holds — the background-task chips,
+   whatever the host mounts there — rides up to sit just under the title instead
+   of on the line the title used to take. It is offset, not re-laid, so the fixed
+   pieces keep no containing block of their own. The pass writes the rise it
+   measured, so the host's inset is not assumed, and the row declares itself
+   no-drag: its top now lies inside the shell's drag strip. */
 body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-header-row] {
   position: relative !important;
   top: var(--dsh-header-band-row-lift, 0px) !important;
@@ -86,10 +93,13 @@ body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-header-row
 /* The header closes around that row: the height it kept was the title's, and
    the title now stands in the caption row. The measured top inset overrides the
    host's inline value, the bottom one is dropped, and view-tabs reads that second
-   number where it restates the host's padding for a header without a tab strip. */
+   number where it restates the host's padding for a header without a tab strip.
+   The air the host keeps under its row is dropped with it: with nothing left in
+   the row the divider belongs at the caption row's own edge. */
 body[data-dsh-claude-style] [data-dsh-header-band~="title"] {
   --dsh-header-band-bottom: 0px;
   padding-top: var(--dsh-header-band-top, 10px) !important;
+  padding-bottom: 0 !important;
   grid-template-rows: auto;
 }
 /* The host hides a chip's label through a container query on the row's own

@@ -129,6 +129,7 @@
           band: header.getAttribute('data-dsh-header-band'),
           row: row.hasAttribute('data-dsh-header-row'),
           title: title.hasAttribute('data-dsh-header-title'),
+          trail: actions.hasAttribute('data-dsh-header-trail'),
           utilities: utilities.hasAttribute('data-dsh-header-actions'),
           corner: corner.hasAttribute('data-dsh-header-corner'),
         }
@@ -163,6 +164,8 @@
         headerPaddingTop: getComputedStyle(header).paddingTop,
         titleLeft: title.style.getPropertyValue('--dsh-header-band-left'),
         titleMax: title.style.getPropertyValue('--dsh-header-band-max'),
+        trailLeft: actions.style.getPropertyValue('--dsh-header-band-left'),
+        trailMax: actions.style.getPropertyValue('--dsh-header-band-max'),
         utilitiesRight: utilities.style.getPropertyValue('--dsh-header-band-right'),
         cornerRight: corner.style.getPropertyValue('--dsh-header-band-right'),
         rowLift: row.style.getPropertyValue('--dsh-header-band-row-lift'),
@@ -179,6 +182,7 @@
         closeShown: getComputedStyle(closeButton).display,
         hostToggleDisplay: getComputedStyle(hostToggle).display,
         titleHit: hitAt(title),
+        trailHit: hitAt(actions),
         clusterMask: getComputedStyle(cluster).maskImage,
       }
       // The corner seat is empty while the right sidebar is open, and the
