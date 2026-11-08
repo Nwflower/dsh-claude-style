@@ -70,7 +70,7 @@ body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper]
 
 body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper] :is([data-phase="active"], [data-content-phase="active"]) [data-composer-seat]::before,
 body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper] [data-dsh-claude-transcript] [data-composer-seat]::before,
-body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper] [data-dsh-claude-part~="conversation-header"][data-dsh-claude-holds~="view-tabs"]::after {
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper] [data-dsh-claude-part~="conversation-header"][data-dsh-view-tabs-taken]::after {
   display: none;
 }
 

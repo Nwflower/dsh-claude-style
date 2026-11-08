@@ -87,12 +87,20 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let lastEl: HTMLElement | null = null
   /** The header marker the stylesheet reads for the fixed titlebar placement. */
   const TITLEBAR_ATTR = 'data-dsh-titlebar-tabs'
+  /**
+   * The header marker the theme's chrome sheet reads for the skin's edge on the
+   * strip's row: on while this feature holds the strip, off again the moment the
+   * preference hands the header back, so the host's own line stands there.
+   */
+  const TAKEN_ATTR = 'data-dsh-view-tabs-taken'
   /** Whether the last pass saw the host's Windows titlebar marker. */
   let titlebar = false
   /** The header carrying TITLEBAR_ATTR right now, or null. */
   let titlebarHost: HTMLElement | null = null
   /** The strip mark every strip rule in view-tabs.css keys on. */
   const stripStamp = createStamp<HTMLElement>('data-dsh-view-tabs')
+  /** The header carrying the strip, marked for the theme's chrome sheet. */
+  const takenStamp = createStamp<HTMLElement>(TAKEN_ATTR)
   /** The control wearing the shared small segment look (shared/segment-control.css): a class, since the look is the control's own, not the mark's. */
   let classedControl: HTMLElement | null = null
   function classStamp(control: HTMLElement | null) {
@@ -275,12 +283,14 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const found = findStrip()
     if (found === null) {
       markTitlebar(null)
+      takenStamp.mark(null)
       stripStamp.mark(null)
       classStamp(null)
       pill.sync(null)
       return
     }
     const { header, strip, list } = found
+    takenStamp.mark(header)
     markTitlebar(header)
     stripStamp.mark(strip)
     classStamp(list)
@@ -367,6 +377,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const found = findStrip()
     if (found === null) return
     const { header, strip, list } = found
+    takenStamp.mark(header)
     if (placedForPaint(strip, header)) return
     markTitlebar(header)
     stripStamp.mark(strip)
@@ -389,6 +400,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (strip !== null) strip.style.removeProperty(SHIFT)
     pill.release()
     stripStamp.release()
+    takenStamp.release()
     classStamp(null)
     last = null
     lastEl = null
