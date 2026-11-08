@@ -190,25 +190,28 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    *
    * 扁平是我们的写入。压平之后再读到的分组只要是别人的，就说明读者在宿主的视图
    * 菜单里改了分组：日期视图让开，把他选的这一档留在 store 里（#267）。
+   * @returns 日期视图让开了没有：让开的那一遍不能接着排版，否则 disable() 收走的
+   * 段落标题与行内标签会被这一遍重新插回一个已经没有模式标记的页面。
    */
-  function flatten() {
+  function flatten(): boolean {
     const store = viewNow()
-    if (store === null || store === undefined) return
-    if (typeof store.getSnapshot !== 'function' || typeof store.actions?.setGroupBy !== 'function') return
+    if (store === null || store === undefined) return false
+    if (typeof store.getSnapshot !== 'function' || typeof store.actions?.setGroupBy !== 'function') return false
     const group = store.getSnapshot().groupBy
     if (group === 'flat') {
       flattening = true
-      return
+      return false
     }
     if (flattening) {
       // disable 拿到这一档：让开的时候不能拿 previousGroup 那份盖掉读者刚选的。
       disable(group)
-      return
+      return true
     }
     previousGroup = group
     rememberGroup(group)
     flattening = true
     store.actions.setGroupBy('flat')
+    return false
   }
 
   /** 工作区标签：插在行内按钮前面，太长由样式表省略。 */
@@ -305,7 +308,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       return
     }
     document.body.removeAttribute(ARCHIVED_ATTRIBUTE)
-    flatten()
+    // 让开的那一遍到此为止：disable() 已经收走标题与标签，接着排下去会把它们
+    // 插回一个没有模式标记的页面，而这些节点只有日期视图的样式表认。
+    if (flatten()) return
     const { titles, ready } = workspacesById()
     const times = timesById()
     const today = startOfDay(Date.now())
