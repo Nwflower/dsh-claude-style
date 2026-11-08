@@ -29,6 +29,7 @@
 | [D84](D84-answer-first-line.md) | 正式回答的第一行是阅读位置的起点 |  |
 | [D85](D85-stream-slide-follows-arrival.md) | 流式输出的跟随由宿主写位置，皮肤只画位移，位移的时长跟着到达的节奏 | D71 |
 | [D87](D87-testing-layers-and-touchpoints.md) | 测试分层与触点 | D66、D77、D86 |
+| [D88](D88-borrowed-view-state-yields.md) | 借来的视图状态被改写时整页让开 |  |
 
 ## 作废的编号
 
