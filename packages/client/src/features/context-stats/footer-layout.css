@@ -8,16 +8,25 @@ body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] [data-dsh-c
 body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] [data-dsh-claude-footer-line] {
   flex: none;
 }
-/* The overlaid line is out of flow and the host's own faces are hidden, so the
-   dock's reserved row would be blank. Below keeps that row for its in-flow line. */
-body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] [data-dsh-claude-part~="composer-dock"][data-dsh-claude-holds~="footer-overlay"] {
+/* The host's row holds figures that keep a line under the toolbar. While they
+   ride the toolbar as an overlay — and while a session holds no figures yet —
+   the row would stand blank, and releasing it then also keeps the composer's
+   height from changing when the first numbers arrive. */
+body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] [data-dsh-claude-part~="composer-dock"]:not([data-dsh-claude-holds~="footer-below"]) {
   min-height: 0;
   padding-top: 0;
 }
 /* The first frame carries the mark before its measured mode. Keep that frame
-   off the screen so the line never paints in the flow and then jumps overlay. */
+   off the screen, and out of the dock's flow, so the line never paints and
+   never holds a row open — or spills past the dock's foot — for the frame
+   before its mode is measured. Its natural width is what the mode is read from,
+   so the box stays white-space: nowrap's own size. */
 body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] [data-dsh-claude-footer-line=""] {
   visibility: hidden;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: max-content;
 }
 body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] [data-dsh-claude-footer-line="overlay"] {
   position: absolute;

@@ -387,12 +387,13 @@ export function holdRelations(vocabulary: PartsTableVocabulary): HoldRelation[] 
     held: '[data-session-stats-details], [data-session-stats-usage]',
     attributes: ['data-session-stats-details', 'data-session-stats-usage'],
   },
-  // features/context-stats/footer-layout.css: the compact figures leave the
-  // dock's reserved row empty only while they ride the toolbar as an overlay.
+  // features/context-stats/footer-layout.css: the dock's reserved row stands
+  // only for figures that keep their own line under the toolbar. An overlaid
+  // line and a dock with no figures yet both leave the row empty.
   {
-    name: 'footer-overlay',
+    name: 'footer-below',
     holder: part('composer-dock'),
-    held: '[data-dsh-claude-footer-line="overlay"]',
+    held: '[data-dsh-claude-footer-line="below"]',
     direct: true,
     attributes: ['data-dsh-claude-footer-line'],
   },
