@@ -16,7 +16,13 @@ body[data-dsh-claude-style] [data-dsh-claude-meter-ring] > button {
   align-items: center;
   gap: 6px;
   height: 22px;
-  padding: 1px 8px;
+  /* The row states 4px of its own padding at each end (features/composer/inline.css)
+     and the left control's word lands on that edge. A symmetric 8px here would
+     put the reading a second layer in from the right end and leave the line
+     looking short of one side (issue #272), so the plate keeps its air on the
+     left, where it separates the ring from the model trigger, and states none on
+     the right: the reading and the ring's arc both stop on the row's own edge. */
+  padding: 1px 0 1px 8px;
   border: none;
   border-radius: 7px;
   background: transparent;
