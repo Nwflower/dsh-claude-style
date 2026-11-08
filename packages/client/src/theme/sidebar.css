@@ -73,7 +73,7 @@ body[data-dsh-claude-style][data-dsh-claude-sidebar-brand="off"] [data-dsh-claud
 }
 
 /* ---------- Claude Code layout: new session button ---------- */
-/* A narrow, left-aligned row with a leading 20px chip, flat until the pointer is
+/* A narrow, left-aligned row with a leading 20px icon box, flat until the pointer is
    on it. The row treatment holds while the column is expanded: collapsed, the host
    re-seats this button as its own icon control, where a full-width plate would
    span the titlebar. The expanded state is read down from the app frame, which
@@ -120,11 +120,11 @@ body[data-dsh-claude-style][data-ds-dark-theme] [data-dsh-claude-part~="layout-f
 body[data-dsh-claude-style] [data-sidebar-collapsed] button[data-dsh-claude-part~="new-session"]:hover {
   background: transparent !important;
 }
-/* Collapsed, that control is the host's 36px icon button with the chip as its
+/* Collapsed, that control is the host's 36px icon button with the plus as its
    icon, and the host's own icon seat holds nothing there (the svg below is
    hidden, the label is 0 wide). The seat still takes its share of the flex row,
-   which pushes the chip that far left of the rail's centre line; the seat goes,
-   and the button's own centring puts the chip where every other icon stands. */
+   which pushes the plus that far left of the rail's centre line; the seat goes,
+   and the button's own centring puts the plus where every other icon stands. */
 body[data-dsh-claude-style] [data-sidebar-collapsed] button[data-dsh-claude-part~="new-session"] [data-dsh-claude-part~="new-session-mask"] {
   display: none;
 }
@@ -132,7 +132,7 @@ body[data-dsh-claude-style] button[data-dsh-claude-part~="new-session"] svg {
   display: none;
 }
 /* The expanded row centers its label inside a flex-1 mask and parks the shortcut
-   at the far right; Claude's row reads left to right from the chip. */
+   at the far right; Claude's row reads left to right from the plus. */
 body[data-dsh-claude-style] button[data-dsh-claude-part~="new-session"] [data-dsh-claude-part~="new-session-content"] {
   justify-content: flex-start;
 }
@@ -143,9 +143,8 @@ body[data-dsh-claude-style] button[data-dsh-claude-part~="new-session"] [data-ds
 body[data-dsh-claude-style] button[data-dsh-claude-part~="new-session"] [data-dsh-claude-part~="new-session-shortcut"] kbd[data-dsh-claude-part~="key-separator"] {
   display: none;
 }
-/* The chip paints BOTH the circular fill and the plus. A mask cannot: it clips the
-   element to the glyph and takes the fill with it, so the plus is a background
-   image, which costs the currentColor adaptivity and buys a theme pair below. */
+/* A bare plus, the size of the panel glyphs below, painted as a mask over
+   currentColor so it follows the row's ink in both themes. */
 body[data-dsh-claude-style] button[data-dsh-claude-part~="new-session"]::before {
   content: "";
   display: inline-block;
@@ -153,22 +152,9 @@ body[data-dsh-claude-style] button[data-dsh-claude-part~="new-session"]::before 
   height: 20px;
   margin-right: 0;
   flex: none;
-  border-radius: 50%;
-  /* The page inherits `corner-shape: superellipse(1.5)` from <html>, which turns a
-     50% radius into a pebble; the host's own spinner/dot/toggle rules say round
-     for the same reason. */
-  corner-shape: round;
-  background-color: rgba(0, 0, 0, 0.10);
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23141413' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='6' x2='12' y2='18'></line><line x1='6' y1='12' x2='18' y2='12'></line></svg>");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 12px 12px;
-  -webkit-mask: none;
-  mask: none;
-}
-body[data-dsh-claude-style][data-ds-dark-theme] button[data-dsh-claude-part~="new-session"]::before {
-  background-color: rgba(255, 255, 255, 0.14);
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23faf9f5' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='6' x2='12' y2='18'></line><line x1='6' y1='12' x2='18' y2='12'></line></svg>");
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round'><line x1='12' y1='4' x2='12' y2='20'></line><line x1='4' y1='12' x2='20' y2='12'></line></svg>") center / 16px 16px no-repeat;
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round'><line x1='12' y1='4' x2='12' y2='20'></line><line x1='4' y1='12' x2='20' y2='12'></line></svg>") center / 16px 16px no-repeat;
 }
 
 /* ---------- the sidebar's panel rows (插件 + plugin entries) ---------- */
@@ -215,29 +201,29 @@ body[data-dsh-claude-style][data-ds-dark-theme] button[data-dsh-claude-part~="pa
 body[data-dsh-claude-style][data-ds-dark-theme] button[data-dsh-claude-part~="panel-row"]:hover {
   background: rgba(255, 255, 255, 0.08) !important;
 }
-/* A 13px glyph in a 20px box: the box the new-session chip occupies. */
+/* A 16px glyph in a 20px box: the box the new-session plus occupies. */
 body[data-dsh-claude-style] button[data-dsh-claude-part~="panel-row"] svg {
-  width: 13px;
-  height: 13px;
-  margin: 0 3.5px;
+  width: 16px;
+  height: 16px;
+  margin: 0 2px;
   flex: none;
 }
 
 /* More is three dots in Claude's sidebar: the host's tiles-and-plus glyph gives
    way to three round dots in the same box, one per third of its width. The box
-   scales: the wide row asks for 13px and the collapsed rail's icon button for
+   scales: the wide row asks for 16px and the collapsed rail's icon button for
    18px (below), so the dots and their step are stated once, off the box. */
 body[data-dsh-claude-style] button[data-dsh-claude-part~="panel-row"][aria-haspopup="menu"] [data-dsh-claude-part~="panel-glyph"] > svg {
   display: none;
 }
 body[data-dsh-claude-style] button[data-dsh-claude-part~="panel-row"][aria-haspopup="menu"] [data-dsh-claude-part~="panel-glyph"]::before {
-  --dsh-claude-dot-box: 13px;
+  --dsh-claude-dot-box: 16px;
   content: "";
   display: block;
   flex: none;
   width: var(--dsh-claude-dot-box);
   height: var(--dsh-claude-dot-box);
-  margin: 0 3.5px;
+  margin: 0 2px;
   background-image: radial-gradient(circle, currentColor calc(var(--dsh-claude-dot-box) * 0.085), transparent calc(var(--dsh-claude-dot-box) * 0.115));
   background-size: calc(var(--dsh-claude-dot-box) / 3) 100%;
   background-repeat: repeat-x;

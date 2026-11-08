@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-08",
+  "group": "fixes",
+  "order": 5,
+  "external": false,
+  "zh": "修复模型列表的每一行在分钟切换后多出一个峰谷电价表",
+  "en": "Fix a second peak rate meter appearing on every model row after a minute rollover"
+}

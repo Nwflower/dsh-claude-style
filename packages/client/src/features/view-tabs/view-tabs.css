@@ -11,12 +11,14 @@
    look; the stamp stands in for `header:has(tabs)`, which made every DOM change
    re-match the whole document. This sheet keeps the strip's placement and
    reveal; the control's look is the shared sheet's. */
-/* The row and the plate share the reveal and the fallback placement; the plate is
-   read by the host's own tablist mark, which is there before the stamp lands on
-   the row (view-tabs.ts also stamps inside the mutation batch, so the mark is
-   there for the first paint — #189). */
+/* The row and the plate share the reveal and the fallback placement, and both
+   are reached through the stamp: the plate is the host's own tablist inside the
+   stamped row. The stamp is written in the batch that mounts the strip, so the
+   first paint carries it (#189); it is also the whole of the gate — a preference
+   turned off takes it away, and the host's strip, its underline and its spacing
+   come back untouched. */
 body[data-dsh-claude-style] [data-dsh-view-tabs],
-body[data-dsh-claude-style] [data-conversation-tabs] {
+body[data-dsh-claude-style] [data-dsh-view-tabs] [data-conversation-tabs] {
   /* Hug the tabs. The host's tablist is a full-width flex row, so without this
      the pill shell stretches across the whole header: the "groove" reads as one
      long empty bar and clicks to the right of the last tab land on nothing —
@@ -76,28 +78,27 @@ body[data-dsh-claude-style] [data-dsh-titlebar-tabs] [data-dsh-view-tabs] > * {
    strip itself keeps it up, while the right sidebar — which sits outside it —
    does not bring it back. */
 body[data-dsh-claude-style] [data-dsh-claude-part~="center-column"]:hover [data-dsh-view-tabs],
-body[data-dsh-claude-style] [data-dsh-claude-part~="center-column"]:hover [data-conversation-tabs] {
+body[data-dsh-claude-style] [data-dsh-claude-part~="center-column"]:hover [data-dsh-view-tabs] [data-conversation-tabs] {
   opacity: 1;
 }
 /* What stands in the strip takes a press despite the row's own stand-down, and is
    the only no-drag box in the titlebar band. */
 body[data-dsh-claude-style] [data-dsh-view-tabs] > *,
-body[data-dsh-claude-style] [data-conversation-tabs] > * {
+body[data-dsh-claude-style] [data-dsh-view-tabs] [data-conversation-tabs] > * {
   pointer-events: auto;
   -webkit-app-region: no-drag;
 }
 /* The tablist is the plate: the shared sheet draws its shell, and
    the pill travels inside it. The host wraps its own tabs, so the strip keeps them
    on one line whatever the window does with the rest of the row. */
-body[data-dsh-claude-style] [data-dsh-claude-part~="view-tabs-list"] {
+body[data-dsh-claude-style] [data-dsh-view-tabs] [data-dsh-claude-part~="view-tabs-list"] {
   position: relative;
   flex-wrap: nowrap;
   /* The host keeps a 25px line for its own tab boxes; the plate is the shell
      drawn around them. */
   min-height: 0;
 }
-body[data-dsh-claude-style] [data-dsh-view-tabs] [data-dsh-claude-part~="view-tab"],
-body[data-dsh-claude-style] [data-conversation-tabs] [data-dsh-claude-part~="view-tab"] {
+body[data-dsh-claude-style] [data-dsh-view-tabs] [data-dsh-claude-part~="view-tab"] {
   /* The host's negative text-tab margins would overlap adjacent segments. */
   margin: 0;
   height: 22px;
@@ -110,7 +111,7 @@ body[data-dsh-claude-style] [data-conversation-tabs] [data-dsh-claude-part~="vie
    plate states one segment box on whatever stands in it — the height, the
    padding and the centring, not the look, which stays the plugin's. A plugin
    only has to mount its tab as a child of the tablist the host draws. */
-body[data-dsh-claude-style] [data-conversation-tabs] > :not([data-dsh-claude-part~="view-tab"]) {
+body[data-dsh-claude-style] [data-dsh-view-tabs] [data-conversation-tabs] > :not([data-dsh-claude-part~="view-tab"]) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -122,20 +123,19 @@ body[data-dsh-claude-style] [data-conversation-tabs] > :not([data-dsh-claude-par
   line-height: 18px;
 }
 /* The shipped active-tab underline has no place in a pill. */
-body[data-dsh-claude-style] [data-dsh-view-tabs] [data-dsh-claude-part~="view-tab"]::after,
-body[data-dsh-claude-style] [data-conversation-tabs] [data-dsh-claude-part~="view-tab"]::after {
+body[data-dsh-claude-style] [data-dsh-view-tabs] [data-dsh-claude-part~="view-tab"]::after {
   display: none;
 }
 /* The row's "more views" button: a chip seated beside the plate, sized like a tab
    so the two line up. Its colour states stay the host's own — the accent marks
    the view sitting in the menu. */
-body[data-dsh-claude-style] [data-dsh-claude-part~="view-tabs-more"] {
+body[data-dsh-claude-style] [data-dsh-view-tabs] [data-dsh-claude-part~="view-tabs-more"] {
   width: 22px;
   height: 22px;
   margin-top: 0;
   border-radius: 5px;
 }
-body[data-dsh-claude-style] [data-dsh-claude-part~="view-tabs-more"]:hover {
+body[data-dsh-claude-style] [data-dsh-view-tabs] [data-dsh-claude-part~="view-tabs-more"]:hover {
   background: var(--dsh-claude-hover-bg);
 }
 

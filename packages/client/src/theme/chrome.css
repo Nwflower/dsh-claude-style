@@ -347,10 +347,10 @@ body[data-dsh-claude-style] [data-slot="conversation.session.header.actions"] > 
    only if the host changes its geometry. */
 
 /* The conversation header carries the host's own bottom border — the line under
-   the tabs; the transcript's top fade below takes over that job. Scoped by the
-   hold mark to the header that owns the tab strip, so no other header loses its
-   edge (D9). */
-body[data-dsh-claude-style] [data-dsh-claude-part~="conversation-header"][data-dsh-claude-holds~="view-tabs"] {
+   the tabs; the transcript's top fade below takes over that job. Scoped to the
+   header view-tabs has marked as its own, so no other header loses its edge and
+   a switched-off preference hands this one back its line (D9). */
+body[data-dsh-claude-style] [data-dsh-claude-part~="conversation-header"][data-dsh-view-tabs-taken] {
   border-bottom-color: transparent;
   /* The host's header rule sets no position, so it is static and an absolutely
      positioned band would anchor to a far ancestor. The stickiness lives on the
@@ -362,7 +362,7 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="conversation-header"][data-d
 /* The transcript's top fade: the header already covers the transcript, so the
    band hangs off the header's own bottom edge and follows it. One knob,
    --dsh-transcript-fade-h, matching the composer's own fade. */
-body[data-dsh-claude-style] [data-dsh-claude-part~="conversation-header"][data-dsh-claude-holds~="view-tabs"]::after {
+body[data-dsh-claude-style] [data-dsh-claude-part~="conversation-header"][data-dsh-view-tabs-taken]::after {
   content: "";
   position: absolute;
   left: 0;
