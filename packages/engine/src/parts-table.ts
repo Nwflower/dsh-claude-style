@@ -256,6 +256,11 @@ export const PAGE_PARTS: PartTable = {
   // is page-wide.
   navList: 'nav-list',
   mask: 'mask',
+  // The image preview's full-window root (ui-primitives' ImageLightbox): the
+  // dialog the reader faces is the backdrop itself, not the card inside it, so
+  // the sheet reads this name to keep a full-window layer out of the dialog
+  // card's size cap (theme/chrome.css, issue #278).
+  backdrop: 'backdrop',
   tagSystem: 'tag-system',
   tagUser: 'tag-user',
   tagContext: 'tag-context',

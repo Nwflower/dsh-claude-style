@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-08",
+  "group": "fixes",
+  "order": 1,
+  "external": false,
+  "zh": "修复图片预览蒙版被全局对话框尺寸上限缩小、右侧与底部各留出 48px",
+  "en": "Fix the image preview backdrop being shrunk by the global dialog size cap, leaving a 48px gap at its right and bottom edges"
+}
