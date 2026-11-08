@@ -79,8 +79,25 @@ export function createModelRows(options: {
   const closeSub = options.closeSub
   const openSub = options.openSub
   const rate = options.rate
+  /**
+   * One painted row and the meter this half placed on it. The row keeps both the
+   * badge and its shell: the host tooltip draws the badge through React, and a
+   * re-render (its label changes every minute) leaves the shell without that
+   * child for a frame. Reading the meter back out of the row in that frame
+   * answered "no meter" and placed a second one.
+   */
+  interface PaintedRate {
+    item: HTMLElement
+    provider: string
+    modelId: string
+    /** The shell carrying the badge, or null while the row has no meter. */
+    anchor: HTMLElement | null
+    /** The badge that shell carries. */
+    badge: HTMLElement | null
+  }
+
   /** Every row still standing, with the provider and model it names. */
-  const painted: { item: HTMLElement, provider: string, modelId: string }[] = []
+  const painted: PaintedRate[] = []
   /** The wall-clock minute the standing rows' meters were drawn at, or -1 before a paint. */
   let paintedMinute = -1
   /** The rate badge's tooltip anchor in a row: the badge rides inside the host's bubble anchor. */
@@ -97,13 +114,22 @@ export function createModelRows(options: {
     tip.node.setAttribute(RATE_ANCHOR_ATTRIBUTE, '')
     rateTips.set(tip.node, tip)
     item.insertBefore(tip.node, before)
+    return { anchor: tip.node, badge }
   }
 
-  /** Take one row's badge out, tooltip and all. */
-  function dropRateBadge(anchor: HTMLElement) {
-    rateTips.get(anchor)?.release()
-    rateTips.delete(anchor)
-    anchor.remove()
+  /** Take one row's meter off: shell, tooltip and badge together. */
+  function dropRateBadge(row: PaintedRate) {
+    const anchor = row.anchor
+    if (anchor !== null) {
+      rateTips.get(anchor)?.release()
+      rateTips.delete(anchor)
+      anchor.remove()
+      // The release hands the badge back into the row, which is what it exists
+      // for; a dropped meter takes that badge with it.
+      row.badge?.remove()
+    }
+    row.anchor = null
+    row.badge = null
   }
 
   /** Release the tooltips of badges whose card has left the page (a rebuild elsewhere). */
@@ -205,7 +231,8 @@ export function createModelRows(options: {
     // badge is the one minute-sensitive part of a row, and the open and the
     // minute rollover swap the meters in place rather than rebuilding every
     // row (model-picker.ts).
-    painted.push({ item, provider: group.id, modelId: model.id })
+    const row: PaintedRate = { item, provider: group.id, modelId: model.id, anchor: null, badge: null }
+    painted.push(row)
     const copy = built.text
     // A model the host names with an empty string still reads as itself: the
     // row is picked by that id, so the label falls back to it.
@@ -227,7 +254,11 @@ export function createModelRows(options: {
     // its rate before it is picked, and a model whose provider bills on no
     // clock carries no badge at all (packages/client/src/features/peakrate/).
     const meter = rate(group.id, model.id)
-    if (meter !== null) placeRateBadge(item, meter, built.check)
+    if (meter !== null) {
+      const placed = placeRateBadge(item, meter, built.check)
+      row.anchor = placed.anchor
+      row.badge = placed.badge
+    }
     built.check!.innerHTML = selected ? POPOVER_CHECK_SVG : ''
     item.addEventListener('click', (e: MouseEvent) => {
       e.stopPropagation()
@@ -308,35 +339,40 @@ export function createModelRows(options: {
    * own passes, and a settled page stays settled. The countdown and the period
    * switch read on the wall clock's minute, so the sweep asks for nothing
    * while the minute a paint drew at stands.
+   *
+   * What a row carries is the row's own record (placeRateBadge's answer), not
+   * what its document happens to hold: the badge is drawn through React and
+   * leaves its shell for a frame on every label change, which the document reads
+   * as a row without a meter.
    */
   function refreshRates() {
     pruneRateBadges()
     const minute = Math.floor(Date.now() / 60000)
-    // A badge that is still missing is placed whatever the minute: a catalog
+    // A meter that is still missing is placed whatever the minute: a catalog
     // arriving after the rows were painted is what fills an empty seat, and
     // waiting for the clock would leave it empty until the next minute.
     const missing = painted.some((row) => row.item.isConnected &&
-      row.item.querySelector(`:scope > [${RATE_ANCHOR_ATTRIBUTE}]`) === null)
+      (row.badge === null || !row.badge.isConnected))
     if (painted.length === 0 || (minute === paintedMinute && !missing)) return
     let standing = 0
     for (let i = 0; i < painted.length; i++) {
       const row = painted[i]!
       if (!row.item.isConnected) continue
       painted[standing++] = row
-      const anchor = row.item.querySelector<HTMLElement>(`:scope > [${RATE_ANCHOR_ATTRIBUTE}]`)
-      // The badge rides inside the anchor's own box, the way placeRateBadge
-      // seats it: the anchor's first child is that box, not the badge, and the
-      // name, the period and the words all belong to the badge itself.
-      const meter = anchor?.querySelector<HTMLElement>('.dsh-claude-peakrate') ?? null
       const next = rate(row.provider, row.modelId)
       if (next === null) {
-        if (anchor !== null) dropRateBadge(anchor)
+        dropRateBadge(row)
         continue
       }
-      if (anchor === null || meter === null) {
-        placeRateBadge(row.item, next, row.item.lastElementChild)
+      if (row.badge === null || row.anchor === null || !row.badge.isConnected || !row.anchor.isConnected) {
+        dropRateBadge(row)
+        const placed = placeRateBadge(row.item, next, row.item.lastElementChild)
+        row.anchor = placed.anchor
+        row.badge = placed.badge
         continue
       }
+      const meter = row.badge
+      const anchor = row.anchor
       const detail = next.getAttribute('aria-label') ?? ''
       if (meter.getAttribute('aria-label') !== detail) {
         meter.setAttribute('aria-label', detail)
