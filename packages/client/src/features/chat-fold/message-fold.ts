@@ -70,6 +70,10 @@ export function createMessageFold(requestPass: () => void) {
   }
 
   /** The width the messages are read at: the column they stand in, or the window while there is none. */
+  /** The column width the pass's read phase took; -1 until the first pass. */
+  let measuredColumn = -1
+
+  /** The width the messages are read at, read here and only from a read phase (D40). */
   function columnWidth() {
     const column = conversationColumn()
     return column === null ? window.innerWidth : column.clientWidth
@@ -77,7 +81,7 @@ export function createMessageFold(requestPass: () => void) {
 
   /** Scrolls do not rewrap text; clamped bubbles need this width check because their box stays capped. */
   function reposition() {
-    const width = columnWidth()
+    const width = measuredColumn
     if (measuredWidth === width) return
     const first = measuredWidth === -1
     measuredWidth = width
@@ -199,7 +203,12 @@ export function createMessageFold(requestPass: () => void) {
   }
 
   /** Read every bubble the fold has no answer for (the pass's read phase, D40). */
+  function measureColumn() {
+    measuredColumn = columnWidth()
+  }
+
   function measure() {
+    measuredColumn = columnWidth()
     for (const row of rows.all()) {
       const bubble = bubbleOf(row)
       if (bubble !== null) decide(bubble)
@@ -229,6 +238,7 @@ export function createMessageFold(requestPass: () => void) {
 
   return {
     measure,
+    measureColumn,
     sync,
     reposition,
     /** A change of copy re-wraps and relabels: the next pass reads every height again. */
