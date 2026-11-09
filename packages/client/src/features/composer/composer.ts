@@ -3,7 +3,7 @@ import { COMPOSER_ATTACHMENT_RAIL_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_INP
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { conversationColumn } from '@dsh-claude-style/engine/chat-dom'
-import { COMPOSER_STACK, closestComposerCard, conversationSessionId, conversationViewPreference, findAccessTrigger, findComposerPlaceholder, findComposerRowIn, findComposerSeat, findConversationScroller, findConversationSession, findHeroRoot, observeComposerCards, observeComposerPlaceholders } from '@dsh-claude-style/engine/host'
+import { COMPOSER_STACK, closestComposerCard, conversationSessionId, conversationViewPreference, findAccessTrigger, findComposerPlaceholder, findComposerRowIn, findPageComposerSeat, findConversationScroller, findConversationSession, findHeroRoot, observeComposerCards, observeComposerPlaceholders } from '@dsh-claude-style/engine/host'
 import { composerRestyleRetired, readPrefs } from '../../core/prefs'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { FeatureHandle } from '@dsh-claude-style/engine/scheduler'
@@ -316,7 +316,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * whole otherwise.
    */
   function syncRootMarks() {
-    const root = closestFrom(findComposerSeat(), `[${PHASE_ATTRIBUTE}]`)
+    const root = closestFrom(findPageComposerSeat(), `[${PHASE_ATTRIBUTE}]`)
     const view = conversationViewPreference(conversationSessionId(findConversationSession()))
     chatHidden = active && view !== null && COMPOSER_HIDDEN_VIEWS.has(view)
     if (root !== hiddenRoot) {

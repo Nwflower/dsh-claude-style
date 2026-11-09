@@ -421,10 +421,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     // Idempotent against a torn-down-less reload, like the account footer:
     // client HMR drops the old fiber's disposals, so a previous generation's
     // trigger and popovers are still in the DOM while this fresh scope starts
-    // from null. Sweep the strays, or the seat renders twice.
+    // from null. Sweep the strays, or the seat renders twice. The popovers'
+    // own sweep runs once at install: it walks the whole document, and this
+    // path runs every pass.
     removeStrayNodes(slot, '.dsh-claude-model-seat', [seatBox])
     removeStrayNodes(slot, '.dsh-claude-model-btn', [modelBtn])
-    cards.sweep()
     // The host's own seat root, not the nodes the skin appended beside it: a
     // swap can put React's node after ours, and the effort level and the
     // context meter's ring stand in the same slot. It is hidden only while the
@@ -534,6 +535,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
   if (typeof ctx.on === 'function') {
     ctx.effect(() => ctx.on!('slots/changed', () => { ui.schedule?.() }), 'dsh-claude-style: model seat ledger')
   }
+
+  // One sweep of this generation's strays, before the first pass: a document
+  // walk belongs here rather than on the pass, which runs every frame.
+  cards.sweep()
 
   ui.model = {
     sync: syncModelControl,

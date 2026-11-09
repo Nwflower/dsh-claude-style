@@ -249,6 +249,34 @@ test('a match carried into the page with its own subtree in one batch is registe
   expect(matches.all()).toEqual([inner, sibling, inside])
 })
 
+test('registries of different selectors each keep their own matches from one large mount', async () => {
+  const second = 'data-test-probe-second'
+  const firstMatches = observeMatches<HTMLElement>(`[${PROBE}]`)
+  const secondMatches = observeMatches<HTMLElement>(`[${second}]`)
+  cleanups.push(() => firstMatches.release(), () => secondMatches.release())
+  // A batch over the weight a session switch mounts: these registries share one
+  // selection of it, and each must still hear only what its own selector matches.
+  const carrier = document.createElement('section')
+  const expectedFirst: Element[] = []
+  const expectedSecond: Element[] = []
+  for (let index = 0; index < 60; index += 1) {
+    const row = document.createElement('div')
+    const first = document.createElement('span')
+    first.setAttribute(PROBE, '')
+    const other = document.createElement('span')
+    other.setAttribute(second, '')
+    row.append(first, other)
+    carrier.append(row)
+    expectedFirst.push(first)
+    expectedSecond.push(other)
+  }
+  document.body.append(carrier)
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  await settle()
+  expect(firstMatches.all()).toEqual(expectedFirst)
+  expect(secondMatches.all()).toEqual(expectedSecond)
+})
+
 test('a match registry keeps the same array until a match changes', async () => {
   const root = host()
   const only = probed('i')
@@ -346,4 +374,19 @@ test('a registry listener hears every change of the set and nothing after its re
   root.append(probed('u'))
   await settle()
   expect(heard).toEqual([1, 2])
+})
+
+test('a registry listener hears the batch that removes a match, with nothing arriving', async () => {
+  const root = host()
+  const held = probed('i')
+  root.append(held)
+  const heard: Element[][] = []
+  const matches = observeMatches<HTMLElement>(`[${PROBE}]`, () => heard.push(matches.all()))
+  cleanups.push(() => matches.release())
+  held.remove()
+  // A reader of the set is told of the departure in that batch: a feature that
+  // keeps per-element subscriptions ends them here (message-fold).
+  await settle()
+  expect(heard).toHaveLength(1)
+  expect(heard[0]).toEqual([])
 })

@@ -151,7 +151,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
    * own strays the same way.
    */
   function ensureEffortChrome() {
-    removeStrayNodes(document, popoverSelector, [effortPop])
     if (effortPop === null || effortPop.parentElement === null) {
       effortPop = document.createElement('div')
       effortPop.className = 'dsh-claude-popover-card dsh-claude-effort-popover'
@@ -278,6 +277,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
   }
 
   registerPopover(popoverKey, closeEffortPopover)
+  // A previous generation's card — client HMR drops its disposals — is swept
+  // once here: the pass builds and reuses this generation's, and a document
+  // walk on that path would run on every frame of the page.
+  removeStrayNodes(document, popoverSelector, [])
 
   ui.effort = {
     measure() {

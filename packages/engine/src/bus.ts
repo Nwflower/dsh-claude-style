@@ -131,6 +131,32 @@ function scheduleDispatch() {
   dispatchTimer = setTimeout(dispatchSlices, 0)
 }
 
+/**
+ * The records one subscription selects out of a batch. Every match registry
+ * asks the same body child-list question of the same batch, so that answer is
+ * one array: the additions derived from it are then gathered once, not once
+ * per registry (a session switch mounts a whole conversation in one batch).
+ */
+const bodyChildListSelections = new WeakMap<MutationRecord[], MutationRecord[]>()
+
+function bodyChildListOnly(subscription: MutationSubscription) {
+  const options = subscription.options
+  return subscription.target === document.body &&
+    options.childList === true && options.subtree === true &&
+    options.characterData !== true && options.characterDataOldValue !== true &&
+    options.attributes !== true && options.attributeFilter === undefined &&
+    options.attributeOldValue !== true && options.skipQuiet !== true && options.beforePaint !== true
+}
+
+function selectedRecords(subscription: MutationSubscription, records: MutationRecord[]) {
+  if (!bodyChildListOnly(subscription)) return records.filter(record => selects(subscription, record))
+  const known = bodyChildListSelections.get(records)
+  if (known !== undefined) return known
+  const selected = records.filter(record => selects(subscription, record))
+  bodyChildListSelections.set(records, selected)
+  return selected
+}
+
 /** Run deferred callbacks until the slice's budget is spent, then wait for the next task. */
 function dispatchSlices() {
   dispatchTimer = null
@@ -141,7 +167,7 @@ function dispatchSlices() {
       const subscription = batch.audience[batch.cursor++]
       // A subscription removed before its turn hears nothing more.
       if (!mutationSubscriptionSet.has(subscription)) continue
-      const selected = batch.records.filter(record => selects(subscription, record))
+      const selected = selectedRecords(subscription, batch.records)
       if (selected.length === 0) continue
       // One subscriber's error must neither stop the others nor vanish (D12).
       try { subscription.callback(selected) } catch (error) { reportError(error) }
@@ -156,7 +182,7 @@ function dispatchSlices() {
 
 /** Hand one subscription the records it selects, isolating its failure from the rest (D12). */
 function deliver(subscription: MutationSubscription, records: MutationRecord[]) {
-  const selected = records.filter(record => selects(subscription, record))
+  const selected = selectedRecords(subscription, records)
   if (selected.length === 0) return
   try { subscription.callback(selected) } catch (error) { reportError(error) }
 }
@@ -279,6 +305,46 @@ function byDocumentOrder(left: Element, right: Element) {
   return (left.compareDocumentPosition(right) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0 ? -1 : 1
 }
 
+/**
+ * What every match registry derives from one batch: the additions gathered
+ * once, the position each holds, and whether anything left. A session switch
+ * mounts a whole conversation in one batch, and every registry asks the same
+ * of it; the shapes below are computed once for all of them.
+ */
+interface BatchAdditions {
+  added: Element[]
+  addedAt: Map<Element, number>
+  placedIn: Element | null
+  removed: boolean
+}
+
+const additionsByBatch = new WeakMap<MutationRecord[], BatchAdditions>()
+
+/** Gather the batch's element additions once; a carrier the batch also added is left to its carrier's walk. */
+function additionsOf(records: MutationRecord[]): BatchAdditions {
+  const known = additionsByBatch.get(records)
+  if (known !== undefined) return known
+  const batch = new Set<Element>()
+  let removed = false
+  for (const record of records) {
+    for (const node of record.addedNodes) {
+      if (node instanceof Element) batch.add(node)
+    }
+    if (record.removedNodes.length > 0) removed = true
+  }
+  const added = [...batch]
+  const addedAt = new Map<Element, number>(added.map((node, index): [Element, number] => [node, index]))
+  // The element the addition went into, asked the same way as the node.
+  let placedIn: Element | null = null
+  for (const record of records) {
+    if (record.addedNodes.length === 0 || !(record.target instanceof Element)) continue
+    placedIn = record.target
+  }
+  const summary = { added, addedAt, placedIn, removed }
+  additionsByBatch.set(records, summary)
+  return summary
+}
+
 function registryFor(selector: string): MatchRegistry {
   const kept = matchRegistries.get(selector)
   if (kept !== undefined) {
@@ -301,31 +367,35 @@ function registryFor(selector: string): MatchRegistry {
     stop: () => {},
   }
   registry.stop = subscribeMutations(document.body, { childList: true, subtree: true }, records => {
-    let changed = false
-    // The batch is one frame of the host's mounting, and a subtree usually
-    // arrives with its own children in the same batch: the additions are
-    // gathered here and each is asked once, so a node a carrier in this batch
-    // already holds is reached by that carrier's own walk instead of being
-    // matched and searched again. Work a stream pays for every token.
-    const batch = new Set<Element>()
-    for (const record of records) {
-      for (const node of record.addedNodes) {
-        if (node instanceof Element) batch.add(node)
+    const summary = additionsOf(records)
+    let changed = summary.removed
+    // A subtree the batch removed leaves the registry now, not at a later read:
+    // a selector no pass reads again would otherwise hold the whole transcript
+    // of a switched-away session for the rest of the page's life. The pruning
+    // runs before this batch's additions, so a node the page moved stays.
+    if (summary.removed) {
+      const removedRoots: Element[] = []
+      for (const record of records) {
+        for (const node of record.removedNodes) {
+          if (node instanceof Element) removedRoots.push(node)
+        }
       }
-      if (record.removedNodes.length > 0) changed = true
+      if (removedRoots.length > 0) {
+        for (const item of registry.items) {
+          for (const root of removedRoots) {
+            if (root === item || root.contains(item)) {
+              registry.items.delete(item)
+              break
+            }
+          }
+        }
+      }
     }
-    const added = [...batch]
-    // The position of every addition in the batch: an ancestor the batch has
-    // already walked reaches this node on that walk, so the node is not walked
-    // again. The check climbs the tree instead of asking `contains()` of every
-    // earlier addition, which made a mount of n nodes cost n²/2 walks.
-    const addedAt = new Map<Element, number>(added.map((node, index): [Element, number] => [node, index]))
-    // The element the addition went into, asked the same way as the node.
-    let placedIn: Element | null = null
-    for (const record of records) {
-      if (record.addedNodes.length === 0 || !(record.target instanceof Element)) continue
-      placedIn = record.target
-    }
+    // A node the page has not attached yet is still asked of itself: it may
+    // already be the card it will stand in (see this registry's note above).
+    const added = summary.added
+    const addedAt = summary.addedAt
+    const placedIn = summary.placedIn
     for (let at = 0; at < added.length; at += 1) {
       const node = added[at]
       let carried = false
@@ -401,6 +471,8 @@ export function observeMatches<T extends Element>(selector: string, onChange?: (
 /** A size subscription: the elements it watches and what hears their entries. */
 interface SizeSubscription {
   targets: Element[]
+  /** The same elements as a set: one batch can carry thousands of entries, and `includes()` would scan them per entry. */
+  lookup: Set<Element>
   callback: (entries: ResizeObserverEntry[]) => void
 }
 
@@ -419,7 +491,7 @@ function makeSizeObserver(registry: SizeRegistry) {
   return new ResizeObserver(entries => {
     for (const subscription of registry.subscriptions.slice()) {
       if (!registry.subscriptions.includes(subscription)) continue
-      const own = entries.filter(entry => subscription.targets.includes(entry.target))
+      const own = entries.filter(entry => subscription.lookup.has(entry.target))
       if (own.length === 0) continue
       // A failing subscription must not keep the rest of the batch from hearing it (D12); reportError still surfaces the failure.
       try { subscription.callback(own) } catch (error) { reportError(error) }
@@ -436,7 +508,8 @@ function makeSizeObserver(registry: SizeRegistry) {
  */
 export function observeSize(targets: Element | Element[], callback: (entries: ResizeObserverEntry[]) => void, options?: { afterHost?: boolean }) {
   const registry = options?.afterHost === true ? afterHost : early
-  const subscription = { targets: Array.isArray(targets) ? [...targets] : [targets], callback }
+  const list = Array.isArray(targets) ? [...targets] : [targets]
+  const subscription = { targets: list, lookup: new Set(list), callback }
   registry.subscriptions.push(subscription)
   for (const target of subscription.targets) registry.watchers.set(target, (registry.watchers.get(target) ?? 0) + 1)
   if (registry === afterHost) {

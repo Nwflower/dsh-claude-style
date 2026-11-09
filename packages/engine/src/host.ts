@@ -42,8 +42,10 @@ function stillFirstMatch(element: Element, selector: string) {
 
 /** The batch count the one shared body watch has seen: an absent seat is retried once per batch. */
 let matchEpoch = 0
-/** Whether the shared body watch is open. One is enough for every seat, and it is never closed. */
+/** Whether the shared body watch is open. One is enough for every seat. */
 let matchEpochWatched = false
+/** Stops the shared body watch; the entry's teardown drops it with the generation that opened it. */
+let stopMatchEpochWatch: (() => void) | null = null
 
 /** Open the one body watch the cached seats read: the first cacheFirstMatch call does it. */
 function openMatchEpochWatch() {
@@ -51,13 +53,24 @@ function openMatchEpochWatch() {
   matchEpochWatched = true
   // The bump runs inside the batch's own callback, so a `beforePaint` reader
   // (D40) sees the batch's nodes rather than the previous batch's answer.
-  subscribeMutations(document.body, { subtree: true, childList: true, beforePaint: true }, () => {
+  stopMatchEpochWatch = subscribeMutations(document.body, { subtree: true, childList: true, beforePaint: true }, () => {
     matchEpoch += 1
   })
 }
 
 /**
- * The first match of `selector`, resolved once and kept while it stays the first match (D40): repeated batches reuse it, and the document is queried again only when the host replaced the element or mounted one before it. An answer of "nothing matched" is kept for the rest of the batch and retried after a later one; one body watch serves every cached seat and is never closed. Exported for the seats one feature alone reads.
+ * Drop the shared seat watch: the entry's teardown calls it, so a page that
+ * gives the skin back keeps no body subscription behind. A later generation
+ * opens its own on its first seat read.
+ */
+export function closeHostSeats() {
+  if (stopMatchEpochWatch !== null) stopMatchEpochWatch()
+  stopMatchEpochWatch = null
+  matchEpochWatched = false
+}
+
+/**
+ * The first match of `selector`, resolved once and kept while it stays the first match (D40): repeated batches reuse it, and the document is queried again only when the host replaced the element or mounted one before it. An answer of "nothing matched" is kept for the rest of the batch and retried after a later one; one body watch serves every cached seat, and closeHostSeats drops it with the generation. Exported for the seats one feature alone reads.
  */
 export function cacheFirstMatch<T extends Element>(selector: string) {
   openMatchEpochWatch()
@@ -247,6 +260,9 @@ export function findComposerSeat(scope: ParentNode = document) {
   return scope.querySelector<HTMLElement>(COMPOSER_SELECTOR)
 }
 
+/** The page's composer seat, kept per mutation batch (D40): the composer's pass reads it every frame, and a query from the document root on that path costs the page's size. */
+export const findPageComposerSeat = cacheFirst<HTMLElement>(COMPOSER_SELECTOR)
+
 /** The session scroller: the element the host hangs its own follow off (D40). */
 export const findConversationScroller = cacheFirst<HTMLElement>(CONVERSATION_SCROLL_SELECTOR)
 
@@ -267,15 +283,22 @@ export function conversationSessionId(host: Element | null | undefined) {
   return typeof id === 'string' ? id : null
 }
 
+/** The saved view last parsed, with the raw string it was parsed from: the composer's pass reads it every frame and the store moves only on a view switch. */
+let savedView: { raw: string, view: string | null } | null = null
+
 /** The view id the host saved for this session; null means chat or no usable saved value. */
 export function conversationViewPreference(sessionId: string | null | undefined): string | null {
   if (typeof sessionId !== 'string' || typeof localStorage === 'undefined') return null
   try {
     const raw = localStorage.getItem(CONVERSATION_VIEW_STORAGE_PREFIX + sessionId)
     if (raw === null) return null
+    if (savedView !== null && savedView.raw === raw) return savedView.view
     const stored: unknown = JSON.parse(raw)
-    if (typeof stored !== 'object' || stored === null || !('view' in stored)) return null
-    return typeof stored.view === 'string' ? stored.view : null
+    const view = typeof stored !== 'object' || stored === null || !('view' in stored)
+      ? null
+      : typeof stored.view === 'string' ? stored.view : null
+    savedView = { raw, view }
+    return view
   } catch {
     // The host reads an unavailable store or malformed JSON as no saved view too.
     return null
