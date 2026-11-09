@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-09",
+  "group": "improvements",
+  "order": 8,
+  "external": false,
+  "zh": "降低内容搜索的内存占用，小写文本只为查过的会话保留，并设固定上限",
+  "en": "Hold the lowercased search text only for the sessions a query reached, within a fixed budget"
+}

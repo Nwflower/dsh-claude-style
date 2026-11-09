@@ -32,6 +32,13 @@ const CACHE_WRITE_INTERVAL_MS = 5000
 const LIST_INTERVAL_MS = 2000
 /** The corpus cache document's version: a document from another build is discarded. */
 const CACHE_VERSION = 1
+/**
+ * Characters of lowercased text kept across sessions. A search reads every
+ * corpus, so keeping all of them lowercased would double the memory the
+ * corpora themselves take; the sessions a search just read stay at the end of
+ * the table and are the last to go.
+ */
+const LOWER_CACHE_CHARS = 4_000_000
 
 /**
  * The host services this module reads, and the shapes it keeps between reads.
@@ -175,8 +182,14 @@ function isStoredMessage(value: unknown): value is SearchMessage {
 export function createSessionSearch(ctx: DshContext) {
   /** Session id → its corpus. */
   const cache = new Map<string, CachedSession>()
-  /** Lowercased message text per session, built with the corpus and dropped with it. */
+  /**
+   * Lowercased message text per session, built by the first search that needs
+   * it and dropped by the newest one when the table is full: keeping it for
+   * every session doubled what the corpus itself holds.
+   */
   const lower = new Map<string, string[]>()
+  /** How many characters the lowercased table holds. */
+  let lowerChars = 0
   /** When each session's cache file was last written, for the write throttle. */
   const writtenAt = new Map<string, number>()
   /** The catch-up in flight, shared by the searches that arrive meanwhile, and whether it lists the store. */
@@ -218,7 +231,9 @@ export function createSessionSearch(ctx: DshContext) {
     // write the cache file of a plugin that is no longer installed.
     if (disposed) return
     cache.set(sessionId, entry)
-    lower.set(sessionId, entry.messages.map(message => message.text.toLowerCase()))
+    // The lowercased copy is built by the search that needs it: a session no
+    // query reaches never holds a second copy of its text.
+    forgetLower(sessionId)
     const now = Date.now()
     if (!force && now - (writtenAt.get(sessionId) ?? 0) < CACHE_WRITE_INTERVAL_MS) return
     writtenAt.set(sessionId, now)
@@ -230,11 +245,46 @@ export function createSessionSearch(ctx: DshContext) {
     })
   }
 
+  /** Drop one session's lowercased copy, with its characters from the table's count. */
+  function forgetLower(sessionId: string) {
+    const held = lower.get(sessionId)
+    if (held === undefined) return
+    for (const text of held) lowerChars -= text.length
+    lower.delete(sessionId)
+  }
+
+  /**
+   * One session's lowercased text, built the first time a search reads it and
+   * moved to the end of the table on every later read. A corpus larger than
+   * the whole table is answered for this query alone: it would evict every
+   * other session and be rebuilt on the next one.
+   */
+  function loweredFor(sessionId: string, entry: CachedSession) {
+    const held = lower.get(sessionId)
+    if (held !== undefined) {
+      lower.delete(sessionId)
+      lower.set(sessionId, held)
+      return held
+    }
+    const texts = entry.messages.map(message => message.text.toLowerCase())
+    let size = 0
+    for (const text of texts) size += text.length
+    if (size > LOWER_CACHE_CHARS) return texts
+    while (lowerChars + size > LOWER_CACHE_CHARS && lower.size > 0) {
+      const oldest = lower.keys().next().value
+      if (oldest === undefined) break
+      forgetLower(oldest)
+    }
+    lower.set(sessionId, texts)
+    lowerChars += size
+    return texts
+  }
+
   /** Drop one session's corpus from memory and from disk. */
   function forget(sessionId: string) {
     if (disposed) return
     cache.delete(sessionId)
-    lower.delete(sessionId)
+    forgetLower(sessionId)
     writtenAt.delete(sessionId)
     writeJsonDocument(ctx, cacheFile(sessionId), 'session search cache', null)
   }
@@ -298,7 +348,6 @@ export function createSessionSearch(ctx: DshContext) {
         continue
       }
       cache.set(id, entry)
-      if (!lower.has(id)) lower.set(id, entry.messages.map(message => message.text.toLowerCase()))
       if (want.live !== null) {
         if (entry.lastSeq > want.live.seq) stale.push(id)
         else if (entry.lastSeq < want.live.seq) {
@@ -359,7 +408,10 @@ export function createSessionSearch(ctx: DshContext) {
     const pattern = single === '' ? compileQuery(query) : null
     const hits: { sessionId: string, seq: number, time: number, role: string, snippet: string, match: [number, number] }[] = []
     for (const [sessionId, entry] of cache) {
-      const lowered = lower.get(sessionId) ?? []
+      // A multi-part query reads the corpus itself through the regex: the
+      // lowercased copy is what one part is matched on, and it is built only
+      // for the sessions a one-part query reaches.
+      const lowered = single === '' ? [] : loweredFor(sessionId, entry)
       for (let i = entry.messages.length - 1; i >= 0; i--) {
         const message = entry.messages[i]
         // One part is the common case, and a substring search over the
@@ -384,6 +436,7 @@ export function createSessionSearch(ctx: DshContext) {
     disposed = true
     cache.clear()
     lower.clear()
+    lowerChars = 0
     writtenAt.clear()
     stored = null
     refreshing = null
