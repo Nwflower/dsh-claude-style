@@ -7,6 +7,14 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"][data-dsh-claud
   position: relative;
   padding-inline-end: 26px;
 }
+/* A row whose leading seat carries another plugin's content stands outside the
+   skin's own mark: with the mark on the leading side no column is kept at the
+   trailing end for it, or its time would end a seat's width short of the other
+   rows' times. With the mark on the trailing side that column is the shared
+   edge every time label ends on, and this row keeps it. */
+body[data-dsh-claude-style][data-dsh-claude-ongoing-side="left"] [data-dsh-claude-part~="session-row"][data-dsh-claude-row-status="foreign"] {
+  padding-inline-end: 6px;
+}
 /* A row whose leading seat carries another plugin's own content keeps its
    padding as it was: that content still stands in the host's slot. */
 body[data-dsh-claude-style]:not([data-dsh-claude-ongoing-side="left"]) [data-dsh-claude-part~="session-row"][data-dsh-claude-row-status="active"],

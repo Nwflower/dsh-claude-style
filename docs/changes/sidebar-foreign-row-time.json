@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-09",
+  "group": "fixes",
+  "order": 1,
+  "external": false,
+  "zh": "修复状态标记放在行首时，行首位带着其他插件内容的会话行，时间比其他行往左缩进一截",
+  "en": "Fix a session row whose leading seat carries another plugin's content showing its time a seat's width short of the others' when the mark stands on the leading side"
+}
