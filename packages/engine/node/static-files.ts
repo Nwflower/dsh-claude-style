@@ -9,6 +9,8 @@ import type { DshContext, DshRequest, DshResponse } from './dsh'
 
 /** The build's asset manifest inside the assets directory: which names exist, their type and their storage. */
 const ASSETS_MANIFEST = 'manifest.json'
+/** How many decompressed assets are held: the sheets a client asks for again, with room for a rebuild's new names without keeping every name a rebuild ever made. */
+const UNPRESSED_LIMIT = 32
 
 /** Create file and manifest-backed asset responders. */
 export function createStaticFiles(ctx: DshContext, packageName: string, assetsDir: string) {
@@ -83,6 +85,9 @@ export function createStaticFiles(ctx: DshContext, packageName: string, assetsDi
       return true
     }
     const body = brotliDecompressSync(readFileSync(stored))
+    // A rebuild retires every name it shipped before; without a cap the table
+    // would keep each retired name's payload for the life of the host process.
+    if (unpressed.size >= UNPRESSED_LIMIT) unpressed.clear()
     unpressed.set(name, body)
     sendFile(res, method, stored, headers, body)
     return true
