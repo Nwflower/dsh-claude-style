@@ -10,8 +10,9 @@
  * rail on the real host, then reads what a reader sees, judged on the host's
  * own collapse marker and the boxes of the first two columns: the centre keeps
  * its box while the sidebar stands over it at its open width; leaving closes
- * it; a click on the toggle keeps it open and the centre then makes room;
- * picking a session in it closes it behind the switch.
+ * it with the centre standing still; a click on the toggle keeps it open and
+ * the centre then makes room; picking a session in it closes it behind the
+ * switch.
  */
 import surfaceTable from './data/surface.json' with { type: 'json' }
 import { collapseRail } from './sidebar-rail.mjs'
@@ -90,6 +91,30 @@ async function leave(page) {
   await page.mouse.move(Math.round(viewport.width * 0.75), Math.round(viewport.height / 2))
 }
 
+/**
+ * Watch the centre while the pointer leaves the peek.
+ *
+ * The peek keeps the page standing where it was, so its close is the column
+ * sliding away and nothing else: a centre that moves here is the host folding
+ * its track a second time under the page.
+ */
+const centerHeldWhileLeaving = (page, center) => page.evaluate(({ peek, held, ms }) => new Promise((resolve) => {
+  const element = document.querySelector(peek.center)
+  const box = () => {
+    const rect = element.getBoundingClientRect()
+    return { left: Math.round(rect.left), width: Math.round(rect.width) }
+  }
+  const startedAt = performance.now()
+  const moved = []
+  const tick = () => {
+    const now = box()
+    if (now.left !== held.left || now.width !== held.width) moved.push(now)
+    if (performance.now() - startedAt < ms) requestAnimationFrame(tick)
+    else resolve(moved)
+  }
+  requestAnimationFrame(tick)
+}), { peek: PEEK, held: center, ms: 900 })
+
 function sidebarPeekScenario({ check }) {
   return {
     script: 'greeting',
@@ -106,8 +131,10 @@ function sidebarPeekScenario({ check }) {
       const open = await settledFrame(page)
 
       await leave(page)
+      const held = centerHeldWhileLeaving(page, before.center)
       const closed = await waitForSidebar(page, true)
       const after = await settledFrame(page)
+      const moved = await held
 
       await openPeek(page)
       await page.locator(PEEK.toggle).first().click()
@@ -134,6 +161,9 @@ function sidebarPeekScenario({ check }) {
         check('鼠标移开后侧栏收起，主区回到原来的盒子',
           closed && same(before.center, after.center),
           JSON.stringify(after)),
+        check('收起期间主区不跟着动',
+          moved.length === 0,
+          JSON.stringify(moved.slice(0, 2))),
         check('展开时点击按钮让侧栏固定展开，鼠标移开也不收起，主区让出侧栏的宽度',
           !pinned.collapsed && pinned.column !== null && pinned.center !== null &&
             pinned.center.left >= pinned.column.width - 1,
