@@ -107,10 +107,12 @@ body[data-dsh-claude-style] [data-dsh-view-tabs] [data-dsh-claude-part~="view-ta
   padding: 0 10px;
 }
 /* A tab another plugin renders into this strip (issue #275): the host's own tabs
-   carry the view-tab part, a foreign button carries only its own class, so the
+   carry the view-tab part, a foreign tab carries only its own class, so the
    plate states one segment box on whatever stands in it — the height, the
-   padding and the centring, not the look, which stays the plugin's. A plugin
-   only has to mount its tab as a child of the tablist the host draws. */
+   padding and the centring, not the look, which stays the plugin's. The box
+   reaches the tablist's direct child alone: a tab that wraps a button carrying
+   the host's pre-skin bottom padding still puts its own label off the centre
+   line, and that padding is the plugin's to drop (issue #285). */
 body[data-dsh-claude-style] [data-dsh-view-tabs] [data-conversation-tabs] > :not([data-dsh-claude-part~="view-tab"]) {
   display: inline-flex;
   align-items: center;
