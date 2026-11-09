@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-09",
-  "group": "fixes",
-  "order": 21,
-  "external": false,
-  "zh": "修复页面缩放在 101% 时右侧栏列宽可能晚一帧换算的问题",
-  "en": "Fix delayed column scaling when the right sidebar is toggled at 101% page zoom"
-}

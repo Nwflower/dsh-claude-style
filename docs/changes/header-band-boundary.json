@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-09",
-  "group": "fixes",
-  "order": 6,
-  "external": false,
-  "zh": "修复会话头那簇控件在顶栏边界处被压窄的问题，宽度不够时它退回会话头那一行而不是截断或折行",
-  "en": "Fix the header's control cluster being squeezed at the caption row's boundary, so it returns to the header's own row instead of truncating when its width no longer fits"
-}

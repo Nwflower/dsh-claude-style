@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-09",
-  "group": "fixes",
-  "order": 9,
-  "external": false,
-  "zh": "修复统计面板绑定在会话切换后留住旧对话，长会话反复切换时页面不再逐次增长",
-  "en": "Fix the statistics panel bindings keeping a switched-away conversation, so repeated long-session switches stop growing the page"
-}

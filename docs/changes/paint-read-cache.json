@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-09",
-  "group": "improvements",
-  "order": 10,
-  "external": false,
-  "zh": "同一颜色只回读一次画布，输入区的根标记经缓存的座位读取，页面不再为每帧的颜色与座位付一次查询",
-  "en": "Read each painted colour from the canvas once, and read the composer's root through the cached seat instead of a document query on every frame"
-}
