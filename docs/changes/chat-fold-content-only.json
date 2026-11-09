@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-09",
+  "group": "improvements",
+  "order": 20,
+  "external": false,
+  "zh": "改善助手流式输出时的折叠调度，用户消息的新增、替换和尺寸变化仍会触发完整检查",
+  "en": "Improve streaming performance by skipping user-message folding for assistant-only growth while structural and size changes still refresh the fold"
+}

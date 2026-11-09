@@ -32,6 +32,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     isBusy: isChatFoldBusy,
     measure: () => messageFold.measure(),
     sync: () => messageFold.sync(),
+    // Assistant text cannot change a user bubble; structural and size changes
+    // request their own full pass from message-fold's registries.
+    skipOnContentOnly: true,
     onCopyChange: () => {
       summary.rewrite()
       stream.sync()
