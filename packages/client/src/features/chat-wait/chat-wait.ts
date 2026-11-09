@@ -160,6 +160,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (standing !== undefined && standing.line.isConnected) {
       // The same row can stand for another turn (the host reuses the running
       // row): the wording is looked up under the turn in hand from here on.
+      // A key that was the row itself goes with it: the map holds its keys
+      // strongly, and the row would outlive the page it stood on.
+      if (standing.key !== key && typeof standing.key !== 'string') wording.delete(standing.key)
       standing.key = key
       return standing
     }

@@ -80,8 +80,29 @@ let members = 0
 let ownerGeneration = 0
 let stopSubmissionWatch: (() => void) | null = null
 
+/**
+ * Drop the containers the page took away. A detached container never sends the
+ * scroll that ends its hold, so an entry left in `held` would keep the whole
+ * transcript under it reachable: a session switch replaces the conversation
+ * subtree, and the holds taken on the old one are finished there.
+ */
+function forgetDetached() {
+  for (const container of [...held]) {
+    if (container.isConnected) continue
+    held.delete(container)
+    readerPositions.delete(container)
+    heldTowardEnd.delete(container)
+  }
+  for (const scroller of [...markedScrollers]) {
+    if (scroller.isConnected) continue
+    scroller.removeAttribute(skin().readerHold)
+    markedScrollers.delete(scroller)
+  }
+}
+
 /** Publish the hold on the container's conversation scroller, where the waiting line's pin hangs (chat-wait.css); a flip there invalidates the conversation's subtree rather than the document (D9). A held container with no conversation scroller above it marks nothing. */
 function syncHoldMark(container: Element) {
+  forgetDetached()
   const scroller = container.closest(CONVERSATION_SCROLL_SELECTOR)
   if (scroller === null) return
   let anyHeld = false
@@ -201,12 +222,16 @@ let sessionId: string | null = null
  */
 function claimConversation() {
   if (sessionElement === null || !sessionElement.isConnected) {
+    // The conversation this owner knew is gone: the next one's scroller is a
+    // different element, and the holds taken on the old one ended with it.
+    if (sessionElement !== null) forgetDetached()
     sessionElement = conversationScroller()?.closest(CONVERSATION_SESSION_SELECTOR) ?? null
   }
   const next = sessionElement?.getAttribute(CONVERSATION_SESSION_ATTRIBUTE) ?? null
   if (next === sessionId) return
   sessionId = next
   submissionHoldUntil = 0
+  forgetDetached()
 }
 
 /**

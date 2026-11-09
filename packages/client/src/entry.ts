@@ -1,4 +1,5 @@
 import { ACCOUNT_MENU_ATTR, HANDOFF_ATTR, HERO_MENU_ATTR, HOLDS_ATTR, MORE_MENU_ATTR, PACKAGE_NAME, PART_ATTR, QUIET_ATTR, READER_HOLD_ATTR } from './constants'
+import { closeHostSeats } from '@dsh-claude-style/engine/host'
 import { installParts } from '@dsh-claude-style/engine/parts'
 import { installPageScale } from './shared/page-scale'
 import { adoptSkin } from '@dsh-claude-style/engine/skin'
@@ -175,6 +176,9 @@ export function apply(ctx: HostContext) {
       stopExternalControls()
       stopExternalControls = null
     }
+    // The seats' shared body watch belongs to this generation: a page handed
+    // back keeps no subscription, and a later generation opens its own.
+    closeHostSeats()
     setHostContext(null)
     disposePrefsBinding()
   }

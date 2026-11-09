@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-09",
+  "group": "fixes",
+  "order": 7,
+  "external": false,
+  "zh": "修复会话切换后旧对话仍被滚动位置与等待行文案持有的问题，切换后不再保留上一段对话的页面内容",
+  "en": "Release the old conversation's page content on a session switch, where the scroll hold and the waiting line's wording no longer keep a transcript the page removed"
+}
