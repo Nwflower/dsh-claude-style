@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-09",
+  "group": "fixes",
+  "order": 0,
+  "external": false,
+  "zh": "修复新会话首页切到「模型」标签页时的卡顿",
+  "en": "Fix the stall when switching to the Models tab on the new-conversation page"
+}
