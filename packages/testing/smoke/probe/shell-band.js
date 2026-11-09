@@ -71,7 +71,7 @@
         'padding-top:' + HEADER_INSET + 'px;display:block'
       header.innerHTML = '<div class="_titleRow_b_1" style="display:flex;align-items:center;width:100%;height:30px">' +
         '<div class="_titleCluster_b_1" style="display:flex;align-items:center;flex:1 1 0%;gap:10px">' +
-        '<nav class="_crumbs_b_1" style="display:flex;height:' + TITLE_HEIGHT + 'px;width:180px">Session title</nav>' +
+        '<nav class="_crumbs_b_1" style="display:flex;height:' + TITLE_HEIGHT + 'px">Session title</nav>' +
         '<div class="_headerActions_b_1" style="width:60px;height:' + TITLE_HEIGHT + 'px">Preset</div></div>' +
         // The host's utilities seat, with the skin's own right-panel control in it,
         // the way the host's slot renders it: the pass shows or hides that node.
@@ -211,6 +211,30 @@
       window.__pushForm({ headerBand: true })
       await sleep(250)
       r.band.back = { marks: marks(), title: box(title), utilities: box(utilities), titleHit: hitAt(title), clusterMask: getComputedStyle(cluster).maskImage }
+      // The name a session carries changes while the header stands: the host
+      // draws the crumb ellipsized inside the width the band last gave it, so a
+      // name longer than the one before has to widen the title again instead of
+      // keeping the width of the name it replaced.
+      var titleName = title.textContent
+      var SHORT = 'Short'
+      var LONG = 'A session name longer than the one before it'
+      var readName = function () {
+        var b = box(title)
+        return { width: Math.round(b.right - b.x), max: title.style.getPropertyValue('--dsh-header-band-max') }
+      }
+      var nameBefore = readName()
+      title.textContent = LONG
+      await sleep(250)
+      var nameLong = readName()
+      title.textContent = SHORT
+      await sleep(250)
+      var nameShort = readName()
+      title.textContent = LONG
+      await sleep(250)
+      var nameAgain = readName()
+      title.textContent = titleName
+      await sleep(250)
+      r.band.names = { before: nameBefore, long: nameLong, short: nameShort, again: nameAgain }
       // The panel closes: its own collapse control leaves the page with it, and
       // the skin's control goes back to hidden.
       panel.remove()

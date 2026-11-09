@@ -180,13 +180,22 @@ export default {
       marks.trail === true && laid.preset.x === laid.title.right + b.air && laid.preset.y === middle + b.titleDrop &&
         laid.trailLeft === laid.title.right + b.air + 'px' && laid.trailHit === true,
       JSON.stringify({ marks: marks, title: laid.title, preset: laid.preset, trailLeft: laid.trailLeft, trailHit: laid.trailHit }))
-    check('the title is handed the room up to the cluster beside it, and the row it left starts at the title box without the host\'s old inset',
+    check('the title is handed the room up to the cluster beside it rather than the width its own box holds, and the row it left starts at the title box without the host\'s old inset',
       laid.titleLeft === laid.row.x + 'px' &&
-        laid.titleMax === laid.title.right - laid.title.x + 'px' &&
+        parseFloat(laid.titleMax) > laid.title.right - laid.title.x &&
         laid.row.y === laid.title.y + 28 + b.rowGap && laid.rowPosition === 'relative' && laid.rowOffset === laid.rowLift &&
         laid.row.y === laid.rowLift.replace('px', '') * 1 + laid.header.y + parseFloat(laid.headerPaddingTop) &&
         laid.headerPaddingTop === '0px',
-      JSON.stringify({ left: laid.titleLeft, max: laid.titleMax, lift: laid.rowLift, offset: laid.rowOffset, row: laid.row, header: laid.header, utilities: laid.utilities, strip: laid.strip }))
+      JSON.stringify({ left: laid.titleLeft, max: laid.titleMax, box: laid.title.right - laid.title.x, lift: laid.rowLift, offset: laid.rowOffset, row: laid.row, header: laid.header, utilities: laid.utilities, strip: laid.strip }))
+    const names = b.names || {}
+    const before = names.before || {}
+    const long = names.long || {}
+    const short = names.short || {}
+    const again = names.again || {}
+    check('a session name longer than the one before widens the title again, and a name that returns after a shorter one is not left clipped at the shorter one\'s width',
+      before.width < long.width && short.width < long.width && again.width === long.width &&
+        long.max === again.max && parseFloat(long.max) > long.width,
+      JSON.stringify(names))
     const panelClosed = b.panelClosed || {}
     check('the right panel\'s collapse control is the skin\'s own, drawn in the header\'s row: it shows while the panel is open and hides with the panel, and the panel\'s own copy stays where the host drew it',
       laid.closeInline === 'inline-flex' && laid.closeShown !== 'none' &&

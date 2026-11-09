@@ -1061,7 +1061,7 @@
       "a view switch slides the pill to the newly active tab (line 146)": [
         1
       ],
-      "the title is handed the room up to the cluster beside it, and the row it left starts at the title box without the host's old inset": [
+      "the title is handed the room up to the cluster beside it rather than the width its own box holds, and the row it left starts at the title box without the host's old inset": [
         1,
         28
       ],

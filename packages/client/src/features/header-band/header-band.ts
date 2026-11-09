@@ -99,8 +99,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const FURNITURE = 48
   /** Below this a lifted title would be a stub: it stays in the row instead. */
   const MIN_TITLE = 120
-  /** Below this the cluster beside the title would be an icon stub: it stays in the row instead. */
-  const MIN_TRAIL = 120
   /** The host's seat in the header's own row that the header utilities land in. */
   const UTILITIES_SLOT = 'conversation.session.header.utilities'
   /** The skin's own control there, which the stylesheet paints and the pass shows. */
@@ -399,15 +397,19 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const titleBox = current.titleBox
     const liftTitle = title !== null && room >= MIN_TITLE
     // The cluster the host keeps beside the title — the preset picker and the
-    // chips the session mounts there — takes the room left over between the
-    // title's own edge and what that room already reserves for the strip and the
-    // controls. A window too narrow for it keeps it in the row, which then keeps
-    // the height it takes there.
+    // chips the session mounts there — takes the caption row's next place, and
+    // its own width comes off the title's room. The title's box is not that
+    // limit: the host draws the crumb ellipsized inside the width this pass last
+    // wrote, so a name that grew back would stay clipped at the old name's size.
     const trail = current.trail
     const trailBox = current.trailBox
+    const trailWidth = trailBox === null ? 0 : trailBox.width
+    const titleRoom = room - trailWidth - GAP
+    // A window too narrow for both keeps the cluster in the row the host drew it
+    // in, which then keeps the height it takes there: the title keeps its own
+    // width rather than shrinking to the stub beside the cluster.
+    const liftTrail = liftTitle && trail !== null && trailBox !== null && titleRoom >= MIN_TITLE
     const trailRoom = room - (titleBox === null ? 0 : titleBox.width) - GAP
-    const liftTrail = liftTitle && trail !== null && trailBox !== null && titleBox !== null &&
-      trailRoom >= MIN_TRAIL && trailBox.width <= trailRoom
     const trailLeft = left + (titleBox === null ? 0 : titleBox.width) + GAP
     // The row the title leaves holds only controls, and the host's inset for a
     // row that still carried a title would leave them floating below the caption
@@ -436,9 +438,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     titleStamp.mark(liftTitle ? title : null)
     if (liftTitle && title !== null) {
       setVar(title, TITLE_LEFT, `${Math.round(left)}px`)
-      // With the cluster standing beside it the title stops at the width it
-      // holds now: the room past that belongs to the cluster.
-      setVar(title, TITLE_MAX, `${Math.round(liftTrail && titleBox !== null ? titleBox.width : room)}px`)
+      // The title's room runs up to the cluster standing beside it, and no
+      // further; without one it is the row's whole run.
+      setVar(title, TITLE_MAX, `${Math.round(liftTrail ? titleRoom : room)}px`)
       setVar(title, TITLE_TOP, `${Math.round(titleCentre)}px`)
     }
     trailStamp.mark(liftTrail ? trail : null)
