@@ -2,13 +2,81 @@ import * as React from 'react'
 import { HOME_MODEL_ROWS, formatHomeCount, homeShortDate, homeShortDateFormat } from './data'
 import type { HomeModel, HomePanel } from './data'
 import { formatCompactTokens } from '../../shared/format'
-import { inPagePixels } from '../../shared/page-zoom'
+import { inPagePixels, pageZoomFactor } from '../../shared/page-zoom'
 import { homeChartTicks } from './chart-axis'
 import { copy } from './copy'
 
 /**
- * The panel's Models tab: Claude Code's own shape — a per-day stacked chart
- * over a ranked list of the models that spent those tokens.
+ * Widths a date label has been measured at, by the face they were measured in.
+ *
+ * A month's axis asks for thirty dates, and a reader who leaves the tab and
+ * comes back asks for the same thirty: a width is measured once per face and
+ * read from here afterwards. The face carries the font the stylesheet set, the
+ * page's own scale and whether the web fonts have landed, because any of the
+ * three moves a label's width.
+ */
+const measuredLabels = new Map<string, number>()
+
+/** How many widths the cache keeps before it starts over. */
+const MEASURED_LABEL_LIMIT = 4096
+
+/** The face a label is drawn in, as the key its width is filed under. */
+function labelFace(sample: HTMLElement) {
+  const style = getComputedStyle(sample)
+  return [
+    style.fontFamily,
+    style.fontSize,
+    style.fontWeight,
+    style.fontStyle,
+    style.letterSpacing,
+    pageZoomFactor(),
+    document.fonts.status,
+  ].join('\u0000')
+}
+
+/**
+ * Every label's width, in the axis's own pixels.
+ *
+ * A width is measured by laying the word out and reading its box, so the words a
+ * face has not seen yet go into one hidden holder together: the first read lays
+ * the holder out once and the rest measure it. Writing the sample and reading it
+ * once per word instead forced one layout per label, and with the skin's
+ * stylesheet a layout is the expensive half of the tab switch.
+ */
+function measureLabels(axis: HTMLElement, face: string, labels: string[]) {
+  const widths: (number | undefined)[] = labels.map(text => measuredLabels.get(`${face}\u0000${text}`))
+  if (widths.every(width => width !== undefined)) return widths as number[]
+  const holder = document.createElement('span')
+  holder.setAttribute('aria-hidden', 'true')
+  holder.style.cssText = 'position:absolute;left:0;top:0;visibility:hidden;white-space:pre'
+  const nodes = labels.map((text, at) => {
+    if (widths[at] !== undefined) return null
+    const node = document.createElement('span')
+    node.className = 'dsh-claude-home-chart-label'
+    // The label's own place in the axis is absolute; the holder lays its copy
+    // out in one line so the words measure side by side.
+    node.style.position = 'static'
+    node.style.display = 'inline-block'
+    node.textContent = text
+    holder.appendChild(node)
+    return node
+  })
+  axis.appendChild(holder)
+  const boxed = nodes.map(node => node === null ? null : inPagePixels(node.getBoundingClientRect().width))
+  holder.remove()
+  for (let at = 0; at < boxed.length; at += 1) {
+    const measured = boxed[at]
+    if (measured === null || measured === undefined) continue
+    if (measuredLabels.size >= MEASURED_LABEL_LIMIT) measuredLabels.clear()
+    measuredLabels.set(`${face}\u0000${labels[at]}`, measured)
+    widths[at] = measured
+  }
+  return widths as number[]
+}
+
+/**
+ * The Models tab's chart: a per-day stacked chart over a ranked list of the
+ * models that spent those tokens.
  *
  * The chart stacks each day's per-model totals (the ledger's per-provider
  * split, or the fold's route attribution when the event names one), so a model's
@@ -85,14 +153,9 @@ export function createHomeModels() {
       const sync = () => {
         if (stopped) return
         const width = plot.clientWidth
-        // The sample is a real label, so every measured word is the width the
-        // axis will paint it at: a canvas face measures the date narrower than
-        // the page sets it.
-        const widths = labels.map(text => {
-          sample.textContent = text
-          return inPagePixels(sample.getBoundingClientRect().width)
-        })
-        sample.textContent = ''
+        const axis = sample.parentElement
+        if (axis === null) return
+        const widths = measureLabels(axis, labelFace(sample), labels)
         setBox(held => held !== null && held.key === labelsKey && held.width === width
           && held.widths.length === widths.length
           && held.widths.every((one, at) => one === widths[at]) ? held : { key: labelsKey, width, widths })
