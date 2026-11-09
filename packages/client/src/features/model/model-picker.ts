@@ -321,11 +321,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
       // scrolls under them while the row stays reachable. The effort slider
       // is not here any more: it has its own trigger and card.
       if (cards.footer()) {
-        // "More models" carries what level 1 does not. A catalog with more than
-        // one provider carries the whole of it and the search field above it: a
-        // first level that lists every provider would otherwise leave the reader
-        // no way to look a model up.
-        const showMore = modelRows.remainingGroups(groups, sections).length > 0 || groups.length > 1
+        // "More models" carries what level 1 does not. A first level that
+        // already lists every provider leaves it nothing to carry, so the row
+        // goes away with the last remaining provider (issue #286): the search
+        // field is still reached by typing a key on level 1 (onKey below), and
+        // the second level lists the whole catalog once it is opened that way.
+        const showMore = modelRows.remainingGroups(groups, sections).length > 0
         // The divider exists to close the list off from what follows it. With
         // no More-models row there is nothing left to close off, and a bare
         // line under the list reads as a stray rule. layoutModelFooter owns

@@ -133,19 +133,24 @@ export default spec({ page: 'effort' }, ({ test }) => {
     t.expectThat.equal(field.top < (await t.read.box(t.surface('model.sub-row'))).top, true, 'the field stands above the rows')
   })
 
-  test('with every provider on the first level, More models opens a second level that lists them all', async (t) => {
+  test('with every provider on the first level, no More-models row is drawn and a key still opens the search', async (t) => {
     // The chosen provider joins the official one on the first level, so no
-    // provider is left behind it and the second level carries the whole catalog.
+    // provider is left behind it: the row that leads there has nothing to
+    // carry and goes away. The search field is reached by typing instead.
     await t.prefs({ quickProviders: ['zai'] })
     await trigger(t.page).click()
     await t.settle()
     const firstLevel = await t.page.locator(t.surface('model.row')).allInnerTexts()
     t.expectThat.equal(firstLevel.length, 3, `the first level lists every provider (${JSON.stringify(firstLevel)})`)
-    await t.page.getByRole('menuitem', { name: 'More models' }).click()
+    t.expectThat.equal(await t.page.getByRole('menuitem', { name: 'More models' }).count(), 0, 'no More-models row is drawn')
+    await t.page.keyboard.type('glm')
     await t.settle()
-    t.expectThat.visible(await t.read.box(t.surface('model.sub-card')), 'the second level is open')
+    t.expectThat.visible(await t.read.box(t.surface('model.sub-card')), 'a key typed on the first level opens the second one')
+    t.expectThat.equal(await t.page.locator(t.surface('model.search-field')).inputValue(), 'glm', 'the field holds the key that opened the card')
+    await t.page.click(t.surface('model.search-clear'))
+    await t.page.waitForFunction((selector) => document.querySelectorAll(selector).length > 1, t.surface('model.sub-row'), { timeout: 4000 })
+    await t.settle()
     const secondLevel = await t.page.locator(t.surface('model.sub-row')).allInnerTexts()
-    t.expectThat.equal(secondLevel.length, 3, `the second level lists every model (${JSON.stringify(secondLevel)})`)
-    t.expectThat.equal((await t.read.text(t.surface('model.sub-card')))?.includes('No models available.'), false, 'the card is not empty')
+    t.expectThat.equal(secondLevel.length, 3, `with the query cleared the card lists the whole catalog (${JSON.stringify(secondLevel)})`)
   })
 })
