@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-09",
+  "group": "fixes",
+  "order": 0,
+  "external": false,
+  "zh": "修复侧栏「展开其余 N 个会话」的文字起点比会话标题靠右一截，两者现在同一起点",
+  "en": "Fix the sidebar's overflow row (“Show N more sessions”) starting its words further in than the session titles above it; the two now share one start"
+}

@@ -77,6 +77,7 @@ export const SIDEBAR_PARTS: PartTable = {
   groupSection: 'group-section',
   projectRow: 'project-row',
   sessionRow: 'session-row',
+  sessionOverflowButton: 'session-overflow',
   title: 'row-title',
   projectText: 'row-project-text',
   time: 'row-time',
