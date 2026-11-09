@@ -31,6 +31,7 @@
 | [D87](D87-testing-layers-and-touchpoints.md) | 测试分层与触点 | D66、D77、D86 |
 | [D88](D88-borrowed-view-state-yields.md) | 借来的视图状态被改写时整页让开 |  |
 | [D89](D89-sound-cues.md) | 提示音由宿主半播放系统声音，浏览器半只判断何时响 |  |
+| [D90](D90-kept-row-heights.md) | 已看过的消息按上次高度跳过离屏排版 |  |
 
 ## 作废的编号
 
