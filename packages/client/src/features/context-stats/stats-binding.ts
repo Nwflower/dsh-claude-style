@@ -39,12 +39,34 @@ export function createContextStatsBinding(ring: () => HTMLElement | null) {
   /** The open panel's size watcher, or null before a panel has been seen. */
   let stopPanelSize: (() => void) | null = null
   /**
-   * Every listener this generation put on a node the host owns, with the call
-   * that takes it off. The ring, the meter, the line and the panel outlive the
-   * generation, so the teardown has to remove what it bound: the token above
-   * only keeps one generation from binding the same element twice.
+   * Every listener this generation put on a node the host owns, with the node
+   * and the call that takes it off. The ring, the meter, the line and the panel
+   * outlive the generation, so the teardown removes what it bound, and a node
+   * the page takes out is released as soon as the next binding sees it
+   * (forgetDetachedBindings): the token above only keeps one generation from
+   * binding the same element twice.
    */
-  const boundListeners: { remove: () => void }[] = []
+  const boundListeners: { surface: Element, remove: () => void }[] = []
+
+  /**
+   * Drop the bindings whose surface the page took out. A session switch
+   * replaces the meter, the line and the panel under the old conversation, and
+   * a binding left behind holds that element, whose ancestors hold the whole
+   * removed transcript. The token comes off with it, so a surface the page
+   * moves back is bound again.
+   */
+  function forgetDetachedBindings() {
+    for (let index = boundListeners.length - 1; index >= 0; index -= 1) {
+      const binding = boundListeners[index]
+      if (binding.surface.isConnected) continue
+      binding.remove()
+      delete binding.surface.__dshContextMeterToken
+      delete binding.surface.__dshContextLineToken
+      delete binding.surface.__dshContextPanelToken
+      if (binding.surface === dwellFace) dwellFace = null
+      boundListeners.splice(index, 1)
+    }
+  }
 
   /**
    * The trigger a face drives: the meter of that face's own composer card, else
@@ -138,6 +160,7 @@ export function createContextStatsBinding(ring: () => HTMLElement | null) {
    * (shared/popover.ts::pressKeepsPopoverOpen).
    */
   function bindContextMeter(surface: HTMLElement, ringSurface: boolean) {
+    forgetDetachedBindings()
     if (surface.__dshContextMeterToken === statsBindingToken) return
     surface.__dshContextMeterToken = statsBindingToken
     const onDown = (event: Event) => {
@@ -191,6 +214,7 @@ export function createContextStatsBinding(ring: () => HTMLElement | null) {
     surface.addEventListener('mouseleave', onLeave)
     surface.addEventListener('click', onClick, true)
     boundListeners.push({
+      surface,
       remove() {
         surface.removeEventListener('pointerdown', onDown, true)
         surface.removeEventListener('mouseenter', onEnter)
@@ -208,6 +232,7 @@ export function createContextStatsBinding(ring: () => HTMLElement | null) {
    * once per generation, like the meter.
    */
   function bindContextLine(line: Element) {
+    forgetDetachedBindings()
     if (line.__dshContextLineToken === statsBindingToken) return
     line.__dshContextLineToken = statsBindingToken
     line.setAttribute('role', 'button')
@@ -235,6 +260,7 @@ export function createContextStatsBinding(ring: () => HTMLElement | null) {
     line.addEventListener('click', onClick)
     line.addEventListener('keydown', onKeyDown)
     boundListeners.push({
+      surface: line,
       remove() {
         line.removeEventListener('click', onClick)
         line.removeEventListener('keydown', onKeyDown)
@@ -304,6 +330,7 @@ export function createContextStatsBinding(ring: () => HTMLElement | null) {
   }
 
   function bindContextPanel(panel: HTMLElement) {
+    forgetDetachedBindings()
     if (!panel.hasAttribute(CONTEXT_PANEL_ATTR)) panel.setAttribute(CONTEXT_PANEL_ATTR, '')
     if (panel.__dshContextPanelToken === statsBindingToken) {
       // A reading taken before the face had a box is no reading: the panel
@@ -322,6 +349,7 @@ export function createContextStatsBinding(ring: () => HTMLElement | null) {
     panel.addEventListener('mouseenter', onEnter)
     panel.addEventListener('mouseleave', onLeave)
     boundListeners.push({
+      surface: panel,
       remove() {
         panel.removeEventListener('mouseenter', onEnter)
         panel.removeEventListener('mouseleave', onLeave)
