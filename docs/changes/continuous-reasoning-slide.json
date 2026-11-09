@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-09",
+  "group": "fixes",
+  "order": 22,
+  "external": false,
+  "zh": "修复连续思考增长时上方正文可能整段跳变的问题",
+  "en": "Fix whole-step jumps in earlier reasoning text as continuous reasoning grows"
+}

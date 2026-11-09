@@ -183,8 +183,8 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
   let stopSlideSize: (() => void) | null = null
   /** The column's height as the slide last saw it; the growth a frame is measured against. */
   let slideHeight = 0
-  /** The scroller's own height as its size subscription last reported it. */
-  let scrollerHeight = 0
+  /** The scroller position after the previous resize batch; null until the first report. */
+  let slideScrollTop: number | null = null
   /** The slide running now: the column's, the pinned row's counter-slide, the distance both started from, and the glide they run on. */
   let slide: { column: Animation, row: Animation | null, from: number, duration: number } | null = null
   /** The column the hold mark (FOLLOW_HOLD_ATTR) is on, or null while no door holds it. */
@@ -343,7 +343,7 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
    * (ChatViewport.attach). Subscribed `afterHost` once the column is there
    * (D40), this one runs after the pin in the same frame and puts the column
    * back down before it paints; one made at install would run first, and every
-   * pin would paint. The scroller is watched too, for its own height.
+   * pin would paint.
    *
    * The column's height is not read here: this runs in the batch's own
    * callback, when the host has just mounted the whole tree, and an
@@ -362,14 +362,13 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
     slideColumn = column
     slideArmed = false
     slideHeight = 0
-    scrollerHeight = 0
+    slideScrollTop = null
     // A new column is a new conversation: the pace the old one streamed at is
     // no reading of how fast this one's pieces arrive (D85).
     grewAt = 0
     grewEvery = 0
     if (column === null) return
-    const scroller = column.closest(CONVERSATION_SCROLL_SELECTOR)
-    stopSlideSize = observeSize(scroller === null ? [column] : [column, scroller], onSlideResize, { afterHost: true })
+    stopSlideSize = observeSize(column, onSlideResize, { afterHost: true })
   }
 
   /**
@@ -420,22 +419,17 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
   const onSlideResize = (entries: ResizeObserverEntry[]) => {
     const column = slideColumn
     let grew = 0
-    let before = slideHeight
     for (const entry of entries) {
-      if (entry.target !== column) {
-        scrollerHeight = blockSize(entry)
-        continue
-      }
+      if (column === null || entry.target !== column) continue
       const box = blockSize(entry)
       // The subscription's first report for a column is its height as mounted:
       // the baseline a later growth is measured against, never a growth itself.
       if (!slideArmed) {
         slideArmed = true
         slideHeight = box
-        before = box
+        slideScrollTop = column.closest(CONVERSATION_SCROLL_SELECTOR)?.scrollTop ?? 0
         continue
       }
-      before = slideHeight
       const delta = box - slideHeight
       slideHeight = box
       // A structural shrink moves the host's pin by the height that left. An
@@ -457,15 +451,22 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
         grewAt = now
       }
     }
+    const scroller = column?.closest(CONVERSATION_SCROLL_SELECTOR) ?? null
+    const scrollTop = scroller?.scrollTop ?? null
+    // Sibling rows can change the pin by less or more than the column grew.
+    // Compensate the host's actual position write, not only the column's delta.
+    const moved = slideScrollTop === null || scrollTop === null ? 0 : scrollTop - slideScrollTop
+    slideScrollTop = scrollTop
     holdCheck()
-    // Only a column that already overflowed had its end pinned by the whole
-    // growth; a first screen filling up moves nothing above it.
-    if (column === null || grew === 0 || before < scrollerHeight) return
+    if (column === null || grew === 0) return
     if (readerAway()) {
       holdGrowth(column)
+      if (scroller !== null) slideScrollTop = scroller.scrollTop
       return
     }
-    if (slideWanted(column)) startSlide(column, grew)
+    if (!slideWanted(column)) return
+    if (moved < 0) stopSlide()
+    if (moved > 0) startSlide(column, moved)
   }
 
   /**
