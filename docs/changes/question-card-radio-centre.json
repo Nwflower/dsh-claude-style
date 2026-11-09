@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-09",
+  "group": "fixes",
+  "order": 10,
+  "external": false,
+  "zh": "修复提问卡片中被选中的单选圆环在深色主题下显示为白色圆心的问题",
+  "en": "Fix the question card's chosen radio showing a white centre under the dark theme"
+}

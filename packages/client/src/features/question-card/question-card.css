@@ -132,11 +132,15 @@ body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row]
 }
 
 /* Single-choice marks are radios. Their number yields to a hollow ring; the
-   chosen ring carries the selection blue and a light centre. */
+   chosen one thickens into the selection blue, its centre staying the row's
+   own surface rather than taking any ink of its own — a painted centre reads
+   as a white disc wherever the row is dark. */
 body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role="radio"] > :first-child,
 body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role="radiogroup"] > [data-dsh-claude-question-custom]:not([data-dsh-claude-question-custom="free"]) > :first-child {
   box-sizing: border-box;
   position: relative;
+  display: grid;
+  place-items: center;
   width: 20px;
   min-width: 20px;
   height: 20px;
@@ -151,14 +155,13 @@ body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role="radiogroup
   background: transparent;
   color: transparent;
   font-size: 0;
-  transition: background-color var(--dsh-claude-timing-feedback), border-color var(--dsh-claude-timing-feedback);
+  transition: border-color var(--dsh-claude-timing-feedback), border-width var(--dsh-claude-timing-feedback);
 }
 
 body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role="radio"][aria-checked="true"] > :first-child,
 body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role="radiogroup"] > [data-dsh-claude-question-custom-active]:not([data-dsh-claude-question-custom="free"]) > :first-child {
   border-color: var(--dsh-claude-field-ring);
-  background-color: var(--dsh-claude-field-ring);
-  background-image: radial-gradient(circle, var(--dsw-alias-brand-text) 0 5px, transparent 5px);
+  border-width: 5px;
 }
 
 body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role="checkbox"] > :first-child,

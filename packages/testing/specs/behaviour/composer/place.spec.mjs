@@ -344,6 +344,8 @@ export default spec({ page: 'composer' }, ({ test }) => {
         markWidth: paint(mark).width,
         markHeight: paint(mark).height,
         markBackground: paint(mark).backgroundColor,
+        markRing: paint(mark).borderTopColor,
+        markRingWidth: paint(mark).borderTopWidth,
         markCentre: paint(mark).backgroundImage,
         badgeColor: paint(badge).color,
         selectionBlue: paint(probe).backgroundColor,
@@ -362,8 +364,9 @@ export default spec({ page: 'composer' }, ({ test }) => {
     t.expectThat.equal(reading.markRadius, '50%', 'a single-choice option carries a circular radio')
     t.expectThat.equal(reading.markWidth, reading.markHeight, 'the radio keeps equal width and height')
     t.expectThat.equal(reading.markWidth, '20px', 'the radio uses the compact reference size')
-    t.expectThat.equal(reading.markBackground, reading.selectionBlue, 'the option taken is filled with the selection blue')
-    t.expectThat.equal(reading.markCentre.includes('radial-gradient'), true, 'the radio\'s light centre is drawn as a true circle')
+    t.expectThat.equal(reading.markRing, reading.selectionBlue, 'the option taken carries the selection blue as its ring')
+    t.expectThat.equal(reading.markRingWidth, '5px', 'the ring is thick enough to read as one and leaves a see-through centre')
+    t.expectThat.equal([reading.markBackground, reading.markCentre], ['rgba(0, 0, 0, 0)', 'none'], 'the centre stays the row\'s own surface rather than a painted disc')
     t.expectThat.equal(reading.badgeColor, reading.selectionBlue, 'the recommendation badge uses the same blue')
     t.expectThat.equal(reading.termSize, '12px', 'the question reads as the caption of the pair')
     t.expectThat.equal(reading.answerWeight, '500', 'the answer carries the weight')
@@ -405,10 +408,10 @@ export default spec({ page: 'composer' }, ({ test }) => {
     })
     await t.page.waitForFunction(({ attribute, expected }) => {
       const row = window.__debugQuestion.section.querySelector(`[${attribute}]`)
-      return row !== null && getComputedStyle(row.querySelector(':scope > :first-child')).backgroundColor === expected
+      return row !== null && getComputedStyle(row.querySelector(':scope > :first-child')).borderTopColor === expected
     }, { attribute: CUSTOM_ACTIVE_ATTR, expected: reading.selectionBlue })
-    const customBackground = await t.page.evaluate((attribute) => getComputedStyle(window.__debugQuestion.section.querySelector(`[${attribute}] > :first-child`)).backgroundColor, CUSTOM_ACTIVE_ATTR)
-    t.expectThat.equal(customBackground, reading.selectionBlue, 'writing a custom answer selects its radio with the same blue')
+    const customRing = await t.page.evaluate((attribute) => getComputedStyle(window.__debugQuestion.section.querySelector(`[${attribute}] > :first-child`)).borderTopColor, CUSTOM_ACTIVE_ATTR)
+    t.expectThat.equal(customRing, reading.selectionBlue, 'writing a custom answer rings its radio in the same blue')
     await t.page.evaluate(() => {
       const { section, row } = window.__debugQuestion
       section.querySelector('textarea').value = ''
