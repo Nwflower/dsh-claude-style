@@ -55,24 +55,32 @@ export function createChatProcessFollow() {
   }
 
   /**
-   * Re-observe each body's content layer, whose size changes while the capped
+   * Re-observe one body's content layer, whose size changes while the capped
    * body's does not; React remounts require a fresh observer.
+   */
+  const syncBody = (body: Element) => {
+    const content = body.querySelector(PROCESS_CONTENT_SELECTOR)
+    let entry = watched.get(body)
+    if (entry === undefined) {
+      entry = { content: null, stopBody: observeSize(body, onResize), stopContent: null }
+      watched.set(body, entry)
+    } else if (entry.content === content) {
+      return
+    }
+    if (entry.stopContent !== null) entry.stopContent()
+    entry.content = content
+    entry.stopContent = content === null ? null : observeSize(content, onResize)
+  }
+
+  /**
+   * Re-observe every body and drop the ones that left. A batch inside one body
+   * asks for that body alone (syncBody): a streamed answer lives in one, and
+   * re-reading every body on each of its batches is the transcript's size paid
+   * per frame.
    */
   const sync = () => {
     const present = new Set(bodies.all())
-    for (const body of present) {
-      const content = body.querySelector(PROCESS_CONTENT_SELECTOR)
-      let entry = watched.get(body)
-      if (entry === undefined) {
-        entry = { content: null, stopBody: observeSize(body, onResize), stopContent: null }
-        watched.set(body, entry)
-      } else if (entry.content === content) {
-        continue
-      }
-      if (entry.stopContent !== null) entry.stopContent()
-      entry.content = content
-      entry.stopContent = content === null ? null : observeSize(content, onResize)
-    }
+    for (const body of present) syncBody(body)
     for (const [body, entry] of [...watched]) {
       if (present.has(body)) {
         // A body that was folded and is open again should not carry the last hold over.
@@ -93,16 +101,17 @@ export function createChatProcessFollow() {
   const stopWatch = subscribeMutations(document.body, { childList: true, subtree: true }, records => {
     for (const record of records) {
       const target = record.target instanceof Element ? record.target : record.target.parentElement
-      if (target !== null && target.closest(PROCESS_BODY_SELECTOR) !== null) {
-        sync()
-        return
+      if (target !== null) {
+        const body = target.closest(PROCESS_BODY_SELECTOR)
+        if (body !== null) {
+          syncBody(body)
+          return
+        }
       }
       for (const node of record.addedNodes) {
         if (!(node instanceof Element)) continue
-        if (node.matches(PROCESS_BODY_SELECTOR) || node.querySelector(PROCESS_BODY_SELECTOR) !== null) {
-          sync()
-          return
-        }
+        if (node.matches(PROCESS_BODY_SELECTOR)) syncBody(node)
+        for (const found of node.querySelectorAll(PROCESS_BODY_SELECTOR)) syncBody(found)
       }
       for (const node of record.removedNodes) {
         if (!(node instanceof Element)) continue

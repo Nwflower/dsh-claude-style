@@ -298,6 +298,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** 一遍写入：先把宿主的列表压平，再按日期重排每条列表、给行加标签。 */
   function arrange() {
     if (disposed) return
+    // A label or heading whose row the host repainted left the page with it:
+    // the set holds what this feature inserted, and dropping the detached ones
+    // keeps a long sidebar session from accumulating them.
+    for (const node of mine) if (!node.isConnected) mine.delete(node)
     // 还原必须排在压平之前：应用上次在日期视图里被关掉时，宿主记下的是扁平，
     // 读者自己的分组只剩这份备份。反过来做会把刚压平的列表又展开。
     healLeftover()

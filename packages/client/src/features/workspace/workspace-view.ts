@@ -149,8 +149,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     segments.release()
     labelStamp.release()
     viewStamp.release()
-    labelWatch?.release()
-    labelWatch = null
   }
 
   function sync() {
@@ -209,6 +207,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     stopAdditions = null
     additionsRoot = null
     dropSection()
+    // The heading's list outlives a rail: the section is dropped on every pass
+    // there, and rebuilding the registry each time would walk the document and
+    // rebuild the bus's subscriptions for it twice a pass.
+    labelWatch?.release()
+    labelWatch = null
     delete ui.workspace
   }
 }

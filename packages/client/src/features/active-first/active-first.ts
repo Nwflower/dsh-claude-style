@@ -42,12 +42,13 @@ export function install() {
   const lift = (boxes: HTMLElement[]) => {
     const running = boxes.filter(runs)
     if (running.length === 0 || running.length === boxes.length) return
-    const rest = boxes.filter((box) => !running.includes(box))
+    const runningSet = new Set(running)
+    const rest = boxes.filter((box) => !runningSet.has(box))
     const anchor = rest[0]
     const parent = anchor.parentElement
     if (parent === null) return
     // A list already standing first: every running seat is ahead of the first waiting one.
-    if (boxes.slice(0, running.length).every((box) => running.includes(box))) return
+    if (boxes.slice(0, running.length).every((box) => runningSet.has(box))) return
     for (const box of running) parent.insertBefore(box, anchor)
   }
 
@@ -66,13 +67,15 @@ export function install() {
   const reorder = () => {
     if (document.body.hasAttribute('data-dsh-claude-date-groups')) return
     const lists = new Map<Element, HTMLElement[]>()
+    const seen = new Set<HTMLElement>()
     for (const row of rows.all()) {
       const box = row.parentElement
       const list = box === null ? null : box.parentElement
-      if (box === null || list === null) continue
+      if (box === null || list === null || seen.has(box)) continue
+      seen.add(box)
       const seats = lists.get(list)
       if (seats === undefined) lists.set(list, [box])
-      else if (!seats.includes(box)) seats.push(box)
+      else seats.push(box)
     }
     for (const seats of lists.values()) lift(seats)
   }
@@ -98,7 +101,19 @@ export function install() {
   const stopRows = subscribeMutations(
     document.body,
     { childList: true, subtree: true, attributes: true, attributeFilter: ['data-state'] },
-    schedule,
+    (records) => {
+      // Only a change inside a session row can move this order: a streamed
+      // answer reaches the body on every frame, and re-reading every list for
+      // it would put the whole sidebar on the conversation's clock. Rows the
+      // host adds or removes are announced by the registry above.
+      for (const record of records) {
+        const target = record.target
+        if (target instanceof Element && target.closest(SESSION_ROW_SELECTOR) !== null) {
+          schedule()
+          return
+        }
+      }
+    },
   )
 
   reorder()

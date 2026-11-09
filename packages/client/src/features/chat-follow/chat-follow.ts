@@ -71,33 +71,57 @@ function conversationComposerCard(cards: readonly HTMLElement[]) {
   return found
 }
 
+/** Where the host's back-to-end button stands this frame, as a frame's read phase found it. */
+interface FollowTailPlacement {
+  button: HTMLElement
+  left: string
+  bottom: string
+}
+
 /**
  * The host's back-to-end button, centred over the composer.
  *
  * The button is the host's own and renders only while its follow is off; its
  * shipped place is the conversation column's right edge, which is where the
- * mascot stands on the card. The pass marks it and writes the two numbers its
- * stylesheet reads — the column's centre and the composer's top edge — because
- * the button is fixed and the column moves with the sidebars and the window.
+ * mascot stands on the card. The two numbers its stylesheet reads — the
+ * column's centre and the composer's top edge — belong to the frame's read
+ * phase (D40): the button is fixed and the column moves with the sidebars and
+ * the window, so every pass places it again.
  *
- * @param stamp - the mark to move onto the button, or off when it is not there.
+ * @param cards - the composer cards, kept current by the bus (D40).
+ * @returns null while the button, the card or the scroller is not there.
  */
-function placeFollowTail(stamp: ReturnType<typeof createStamp<HTMLElement>>, cards: readonly HTMLElement[]) {
+function readFollowTail(cards: readonly HTMLElement[]): FollowTailPlacement | null {
   const button = findFollowTailButton()
-  const card = button === null ? null : conversationComposerCard(cards)
-  const scroller = button === null ? null : conversationScroller()
-  if (button === null || card === null || scroller === null) {
-    stamp.release()
-    return
-  }
-  stamp.mark(button)
+  if (button === null) return null
+  const card = conversationComposerCard(cards)
+  const scroller = conversationScroller()
+  if (card === null || scroller === null) return null
   // The boxes are measured in the viewport's pixels and the two properties are
   // read in the page's own, which the reader's page zoom scales
   // (shared/page-zoom.ts).
   const cardBox = inPageBox(card.getBoundingClientRect())
   const scrollBox = inPageBox(scroller.getBoundingClientRect())
-  const left = `${Math.round(scrollBox.left + scrollBox.width / 2)}px`
-  const bottom = `${Math.round(pageViewport().height - cardBox.top + FOLLOW_TAIL_AIR_PX)}px`
+  return {
+    button,
+    left: `${Math.round(scrollBox.left + scrollBox.width / 2)}px`,
+    bottom: `${Math.round(pageViewport().height - cardBox.top + FOLLOW_TAIL_AIR_PX)}px`,
+  }
+}
+
+/**
+ * Put the button where a read phase measured it; the frame's write phase's half.
+ *
+ * @param stamp - the mark to move onto the button, or off when it is not there.
+ * @param placement - what the frame measured, or null when the button is absent.
+ */
+function writeFollowTail(stamp: ReturnType<typeof createStamp<HTMLElement>>, placement: FollowTailPlacement | null) {
+  if (placement === null) {
+    stamp.release()
+    return
+  }
+  const { button, left, bottom } = placement
+  stamp.mark(button)
   if (button.style.getPropertyValue(FOLLOW_TAIL_LEFT) !== left) button.style.setProperty(FOLLOW_TAIL_LEFT, left)
   if (button.style.getPropertyValue(FOLLOW_TAIL_BOTTOM) !== bottom) button.style.setProperty(FOLLOW_TAIL_BOTTOM, bottom)
 }
@@ -181,13 +205,19 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
 
   /**
    * Whether content is arriving right now: the mark the host writes while it
-   * streams. It is looked for inside the message column rather than across the
-   * document — the mark lives there, and a document query made after the host's
-   * own write forces a style pass over the whole page (D9).
+   * streams. It rides the newest block — the answer the flow is writing — so
+   * the query starts from the end of the column: only a page whose mark stands
+   * somewhere else pays for the whole transcript, and that is not the batch a
+   * stream produces.
    */
   const streaming = () => {
     const column = conversationColumn()
-    return column !== null && column.querySelector(FOLLOW_RUNNING_SELECTOR) !== null
+    if (column === null) return false
+    let block = column.lastElementChild
+    for (let at = 0; at < 3 && block !== null; at += 1, block = block.previousElementSibling) {
+      if (block.querySelector(FOLLOW_RUNNING_SELECTOR) !== null) return true
+    }
+    return column.querySelector(FOLLOW_RUNNING_SELECTOR) !== null
   }
 
   /**
@@ -606,17 +636,37 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const stopProcess = createChatProcessFollow()
   const tailStamp = createStamp<HTMLElement>(FOLLOW_TAIL_ATTR)
   const cards = observeComposerCards()
+  /** What the pass's read phase measured; the pass's sync consumes it. */
+  let passPlacement: FollowTailPlacement | null = null
+  /** What the viewport frame's read phase measured; that frame's reposition consumes it. */
+  let viewportPlacement: FollowTailPlacement | null = null
+  const readPlacement = () => readFollowTail(cards.all())
   document.body.setAttribute(CHAT_FOLLOW_ATTR, '')
   ui.chatFollow = {
-    sync() {
-      placeFollowTail(tailStamp, cards.all())
+    measure() {
+      passPlacement = readPlacement()
     },
-    /** A viewport or composer-card change moves the column: the button is placed again in the same frame. */
-    reposition() {
-      placeFollowTail(tailStamp, cards.all())
+    measureReposition() {
+      viewportPlacement = readPlacement()
+    },
+    sync() {
+      const placement = passPlacement
+      passPlacement = null
+      writeFollowTail(tailStamp, placement)
+    },
+    /**
+     * A viewport change was measured in its frame's read phase; a composer card
+     * resizing is reported after that layout, so it reads here and writes on.
+     */
+    reposition(reason) {
+      const placement = reason === 'viewport' && viewportPlacement !== null ? viewportPlacement : readPlacement()
+      viewportPlacement = null
+      writeFollowTail(tailStamp, placement)
     },
   }
   return () => {
+    passPlacement = null
+    viewportPlacement = null
     document.body.removeAttribute(CHAT_FOLLOW_ATTR)
     tailStamp.release()
     cards.release()

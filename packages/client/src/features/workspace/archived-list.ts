@@ -169,7 +169,14 @@ export function createArchivedList(deps: ArchivedListDeps): ArchivedList {
     const byId = snapshot?.byId ?? {}
     const current = deps.host.currentSession()
     const order = archivedOrder(archived, byId, current)
-    const sig = JSON.stringify([current, order.map((id) => [id, byId[id].updatedAt, byId[id].displayTitle])])
+    // The window the list draws is what a re-render has to see: a change below
+    // it cannot move a row the reader holds, and signing the whole archive
+    // would build a string over every archived title on each pass.
+    const sig = JSON.stringify([
+      current,
+      cursor,
+      order.slice(0, cursor).map((id) => [id, byId[id]?.updatedAt, byId[id]?.displayTitle]),
+    ])
     return { order, byId, sig }
   }
 
@@ -247,9 +254,9 @@ export function createArchivedList(deps: ArchivedListDeps): ArchivedList {
 
   /**
    * Bring the container to the fresh window: rows the archive no longer shows
-   * leave, new ones arrive, and appendChild on a standing row moves it into the
-   * fresh order — the reader's place holds as long as the archive still shows
-   * it. A title that moved is written again.
+   * leave, new ones arrive, and a row standing out of place moves into it — a
+   * row already in its place is left where it stands. A title that moved is
+   * written again.
    */
   function render() {
     if (container === null) return
@@ -268,7 +275,8 @@ export function createArchivedList(deps: ArchivedListDeps): ArchivedList {
     }
     if (emptyLine !== null && emptyLine.parentElement === container) container.removeChild(emptyLine)
     const wanted = new Set(shown)
-    for (const id of shown) {
+    for (let at = 0; at < shown.length; at += 1) {
+      const id = shown[at]!
       const summary = latest.byId[id]
       let row = rows.get(id)
       if (row === undefined) {
@@ -281,7 +289,10 @@ export function createArchivedList(deps: ArchivedListDeps): ArchivedList {
         relabel(titleNode, title)
         syncActionCopy(row)
       }
-      container.appendChild(row)
+      // A row already standing at its place costs nothing: appendChild on it
+      // would detach and re-insert it, which is a mutation the reader's scroll
+      // and the bus both have to handle for a list that did not move.
+      if (container.children[at] !== row) container.insertBefore(row, container.children[at] ?? null)
     }
     for (const [id, row] of rows) {
       if (wanted.has(id)) continue
@@ -404,6 +415,9 @@ export function createArchivedList(deps: ArchivedListDeps): ArchivedList {
     container = null
     signature = ''
     cursor = ARCHIVED_PAGE_SIZE
+    // The freshest reading holds every shown summary and its titles: a list
+    // taken off the page has nothing left to draw from it.
+    latest = { order: [], byId: {}, sig: '' }
   }
 
   function sync() {

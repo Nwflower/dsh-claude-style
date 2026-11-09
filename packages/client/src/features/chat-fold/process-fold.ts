@@ -22,13 +22,34 @@ export function createProcessFold() {
   let scanQueued = false
   /** The groups this batch of mutations touched. */
   const touchedGroups = new Set<Element>()
+  /**
+   * Each flow's process groups by turn, for the batch being handled: one whole
+   * column query per flow replaces one per touched node, which on a session
+   * mount is one per group.
+   */
+  let turnGroups: Map<Element, Map<string, Element[]>> | null = null
 
   /** Stream and answer changes occur outside the group, so settle all groups in that turn. */
   const settleTurnOf = (node: Element) => {
     const flow = node.closest(CHAT_FLOW_SELECTOR)
     const turn = node.closest(`[${CHAT_TURN_ATTRIBUTE}]`)?.getAttribute(CHAT_TURN_ATTRIBUTE) ?? null
     if (flow === null || turn === null) return
-    for (const group of flow.querySelectorAll(`${PROCESS_GROUP_SELECTOR}[${CHAT_TURN_ATTRIBUTE}="${CSS.escape(turn)}"]`)) touchedGroups.add(group)
+    turnGroups ??= new Map()
+    let byTurn = turnGroups.get(flow)
+    if (byTurn === undefined) {
+      byTurn = new Map()
+      // Document order: a turn's groups keep the order the host wrote them in.
+      for (const group of flow.querySelectorAll(PROCESS_GROUP_SELECTOR)) {
+        const key = group.getAttribute(CHAT_TURN_ATTRIBUTE) ?? ''
+        const list = byTurn.get(key)
+        if (list === undefined) byTurn.set(key, [group])
+        else list.push(group)
+      }
+      turnGroups.set(flow, byTurn)
+    }
+    const groups = byTurn.get(turn)
+    if (groups === undefined) return
+    for (const group of groups) touchedGroups.add(group)
   }
 
 
@@ -165,6 +186,9 @@ export function createProcessFold() {
   // Streaming changes the DOM far faster than this needs to run, so one scan
   // a frame at most.
   const onRecords = (records: MutationRecord[]) => {
+    // One batch, one reading of each flow's groups: the cache below lives no
+    // longer than this call.
+    turnGroups = null
     const known = touchedGroups.size
     for (const record of records) {
       if (record.type === 'attributes' && record.attributeName === STREAMING_ATTRIBUTE) {
@@ -197,6 +221,7 @@ export function createProcessFold() {
         if (answer !== null) settleTurnOf(answer)
       }
     }
+    turnGroups = null
     // A change with no process group in it (the sidebar, the plugin page) is
     // not worth a frame.
     if (touchedGroups.size === known) return
