@@ -162,7 +162,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   /** Register that control in the header's utilities seat, which renders it wherever it stands. */
   function registerRightbarClose() {
-    registerSlotEntries(ctx, [{
+    return registerSlotEntries(ctx, [{
       options: { name: UTILITIES_SLOT, id: 'claude-style-rightbar-close', order: 90 },
       component: RightbarClose,
     }], 'dsh-claude-style: right panel control')
@@ -520,7 +520,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   // a streaming batch touches, so such a batch skips this pass (D40). The boxes
   // are read in the pass's read phase and written in its write phase.
   ui.headerBand = { measure, sync, skipOnContentOnly: true }
-  registerRightbarClose()
+  // The slot entry is this generation's: the fiber is what takes it back when
+  // the reader switches the band off, or another owner hands the page over.
+  const closeButtonSlot = registerRightbarClose()
 
   return () => {
     const row = rowStamp.current()
@@ -547,6 +549,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     watch(null)
     titleRows.release()
     closeButtons.release()
+    if (closeButtonSlot !== null) closeButtonSlot.dispose()
     keptRow = null
     delete ui.headerBand
   }

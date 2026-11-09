@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-09",
+  "group": "fixes",
+  "order": 8,
+  "external": false,
+  "zh": "修复关闭再打开标题栏功能时重复注册右侧栏控件的问题",
+  "en": "Release the right-panel control's slot registration when the header band is switched off, so a later switch-on registers it once"
+}
