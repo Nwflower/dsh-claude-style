@@ -151,7 +151,9 @@ export function createModelSubMenu(options: ModelSubMenuOptions) {
     const remaining = rows.remainingGroups(groups, rows.levelOneSections(groups))
     // A catalog whose every provider is already on level 1 leaves this card
     // nothing to carry, and the card would open on an empty list. It carries
-    // the whole catalog then, and the search field above it stays a way in.
+    // the whole catalog then: level 1 keeps no More-models row in that state
+    // (issue #286), so a key typed on it is what opens this card, and the
+    // catalog it lists is what the search field above filters.
     const sections = query === '' ? (remaining.length > 0 ? remaining : groups) : groups
     let listed = 0
     for (let g = 0; g < sections.length; g++) {

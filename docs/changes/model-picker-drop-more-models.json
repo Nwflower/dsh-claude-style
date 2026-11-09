@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-08",
+  "group": "improvements",
+  "order": 0,
+  "external": false,
+  "zh": "改善模型选择器一级列表的收尾，所选快捷供应商已列全时不再显示「更多模型」",
+  "en": "Improve the model picker's first level so More models is not drawn once the chosen quick providers already list the whole catalog"
+}

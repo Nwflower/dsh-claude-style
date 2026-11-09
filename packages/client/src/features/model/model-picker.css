@@ -1,8 +1,9 @@
 /* ---------- Claude Code layout: model picker ---------- */
 /* Replaces the host's two-pane model menu: level 1 carries the current
-   provider's models, a divider, the effort row and a More models row; both
-   rows open their level 2 beside this popover. The card is the shared popover
-   card (shared/popover.css); what is the picker's own is below. */
+   provider's models, a divider and a More models row while the rest of the
+   catalog is behind it; that row opens a level 2 beside this popover. The card
+   is the shared popover card (shared/popover.css); what is the picker's own is
+   below. */
 body[data-dsh-claude-style] .dsh-claude-model-popover {
   position: fixed;
   min-width: 248px;
@@ -36,6 +37,12 @@ body[data-dsh-claude-style] .dsh-claude-model-footer {
   flex-direction: column;
   gap: 2px;
   min-width: 0;
+}
+/* The footer holds only the divider and the More-models row, so an emptied one
+   is the card's flex gap and nothing else: a catalog whose every provider is
+   already on level 1 draws no row, and this keeps that gap off the card. */
+body[data-dsh-claude-style] .dsh-claude-model-footer:empty {
+  display: none;
 }
 /* The sub popover splits the way level 1 does: the search field is pinned at
    the top and only the list under it scrolls, so the reader keeps what they
