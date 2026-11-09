@@ -149,6 +149,28 @@ test('a frame mounted after the rule runs is found and converted', async () => {
   expect(columnsOf(frame)).toBe('224px 400px 320px')
 })
 
+test('a right column toggled in a session-sized batch is carried before that batch paints', async () => {
+  drawnAt(1.01)
+  const frame = hostFrame('280px minmax(400px, 1fr) minmax(0px, 0px)')
+  installed()
+  await settle()
+  const writes = [
+    ['280px minmax(400px, 1fr) minmax(0px, 400px)', '277.23px minmax(396.04px, 1fr) minmax(0px, 396.04px)'],
+    ['280px minmax(400px, 1fr) minmax(0px, 0px)', '277.23px minmax(396.04px, 1fr) minmax(0px, 0px)'],
+    ['280px minmax(400px, 1fr) minmax(0px, 400px)', '277.23px minmax(396.04px, 1fr) minmax(0px, 396.04px)'],
+  ] as const
+  for (const [written, expected] of writes) {
+    const mounted = document.createElement('div')
+    for (let index = 0; index < 120; index += 1) mounted.append(document.createElement('div'))
+    document.body.append(mounted)
+    frame.style.setProperty('grid-template-columns', written)
+    // A heavy batch reaches the observer before paint; a deferred callback would
+    // leave the host's unscaled columns standing for that frame.
+    await Promise.resolve()
+    expect(columnsOf(frame)).toBe(expected)
+  }
+})
+
 test('the teardown hands the host its own numbers back', async () => {
   drawnAt(1.25)
   const frame = hostFrame('280px 500px 400px')

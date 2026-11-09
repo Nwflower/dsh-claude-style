@@ -203,7 +203,9 @@ export function installFrameColumns(vocabulary: FrameColumnsVocabulary) {
     for (const [box, declaration] of standing()) {
       present.add(box)
       if (!heard.has(box)) {
-        heard.set(box, { declaration, off: subscribeMutations(box, { attributes: true, attributeFilter: ['style'] }, () => carry(box, declaration)) })
+        // The host's next grid/frame paint reads this declaration. A heavy
+        // batch must not leave the unscaled value standing until a later task.
+        heard.set(box, { declaration, off: subscribeMutations(box, { attributes: true, attributeFilter: ['style'], beforePaint: true }, () => carry(box, declaration)) })
       }
       carry(box, declaration)
     }
