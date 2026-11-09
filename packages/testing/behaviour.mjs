@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 /**
- * Drive the built plugin in the stand-in host with Playwright (D87). Failures keep
- * a trace, screenshot and markup under `.debug/behaviour/`; quarantined specs
- * only fail when they pass. `--open`, `--eval` and `--close` inspect one live page.
+ * behaviour.mjs — the behaviour layer (D87): what a reader can see on the BUILT
+ * plugin (`lib/`), loaded into the smoke's stand-in host page and driven from
+ * outside through Playwright; no running DSH instance is needed.
+ *
+ * Failures keep a trace, screenshot and markup under `.debug/behaviour/`;
+ * quarantined specs only fail when they pass. `--open`, `--eval` and `--close`
+ * inspect one live page.
  * Usage: `node packages/testing/behaviour.mjs [--feature <dir>] [--spec <id>] [--band <name>] [--jobs <n>] [--list]`
  * Exit: 0 passed or session ended; 1 failed or unanswered; 2 could not start.
  */

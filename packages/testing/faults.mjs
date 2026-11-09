@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Apply the defect corpus to scratch copies and require a red assertion (D87).
- * Only assertion failures count; a patch that no longer applies fails the run.
+ * faults.mjs — whether the specs catch known defects (D87). Only assertion
+ * failures count; a patch that no longer applies fails the run.
  * Usage: `node packages/testing/faults.mjs [--fault <id>] [--suite new|old --base <ref>] [--keep]`.
  */
 import { execFileSync, spawnSync } from 'node:child_process'

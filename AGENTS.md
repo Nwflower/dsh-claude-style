@@ -99,25 +99,25 @@ Each script states its own purpose at the top of the script; the table below is 
 | Command | What it does |
 |---|---|
 | `npm install` | the dev dependencies: TypeScript, esbuild, Ajv, Vitest, Playwright and the React types |
-| `npm run build` | bundle `lib/client.js` from the TypeScript modules and stylesheets in `packages/client/src/` |
-| `npm run dev` | rebuild on every change to what the build reads |
-| `npm run changelog` | keep a released version's section in docs/CHANGELOG.md and print the pending one from docs/changes/ |
+| `npm run build` | type-check and bundle the client, generated modules, assets and host half |
+| `npm run dev` | rebuild inputs in a fresh process to avoid stale evaluated constants |
+| `npm run changelog` | validate change fragments and render pending, released or GitHub Release sections |
 | `npm run changelog:check` | fail when a `docs/changes/` fragment does not validate or `docs/CHANGELOG.md` holds an `[Unreleased]` section; the cloud job runs this |
-| `npm run docs:index` | write docs/adr/README.md from the ADR files themselves |
+| `npm run docs:index` | generate and check the ADR index from decision and retirement files |
 | `npm run docs:check` | fail when the committed ADR index differs from the ADR files; the cloud job runs this |
 | `npm run checks:numbers` | every number a check decides on, as a generated record |
 | `npm run agents` | write this table into AGENTS.md from `package.json` and each script's own header |
 | `npm run agents:check` | fail when AGENTS.md's command table differs from `package.json`; the cloud job runs this |
-| `npm run lint` | the rules that need no build |
+| `npm run lint` | check source limits, repository references, dependency direction and spec contracts (D72, D87) |
 | `npm run probe` | headless UI regression probe for the composer invariants |
-| `npm run smoke` | zero-dependency smoke test of the BUILT plugin (`lib/`); no running DSH instance is needed |
+| `npm run smoke` | the BUILT plugin (`lib/`): the host half in Node and the browser half in the stand-in host page under headless Chrome, with no DSH instance running; pages run several at a time, the motion pages two at a time last |
 | `npm run behaviour` | the behaviour layer (D87): what a reader can see on the BUILT plugin (`lib/`), loaded into the smoke's stand-in host page and driven from outside through Playwright; no running DSH instance is needed |
 | `npm run faults` | whether the specs catch known defects |
 | `npm run coverage` | which layer guards which feature (D87), as an observation |
 | `npm test` | the logic and mechanism specs on their own, as the cloud job runs them: Vitest in browser mode on the local Chrome or Edge |
-| `npm run verify` | the one entry a test run goes through |
-| `npm run work` | keep task context for continuation, handoff and sustained review |
-| `npm run tmp` | manage session scratch files without a work order |
+| `npm run verify` | the one entry a test run goes through (D87): serialized lanes, staged gates, and verdicts cached by tree and selection |
+| `npm run work` | keep task context under .debug/work for continuation, handoff and review; close deletes the order |
+| `npm run tmp` | manage owned scratch directories, preserving failure evidence and collecting expired sessions |
 
 <!-- commands:end -->
 
