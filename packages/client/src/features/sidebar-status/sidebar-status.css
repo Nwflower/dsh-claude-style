@@ -13,6 +13,18 @@ body[data-dsh-claude-style]:not([data-dsh-claude-ongoing-side="left"]) [data-dsh
 body[data-dsh-claude-style]:not([data-dsh-claude-ongoing-side="left"]) [data-dsh-claude-part~="session-row"][data-dsh-claude-row-status="idle"] {
   padding-inline-start: calc(20px + var(--dsh-workspace-indent, 0px));
 }
+/* The list's own overflow row — “Show N more sessions” — carries the host's
+   inset for a row that still holds the leading status band, so its words stand
+   past the titles above it. It takes each row's own text start: the skin's 6px
+   row inset, the host's leading seat and the title's own 4px margin while the
+   mark stands there, and the 20px start the mark's trailing column leaves when
+   it does not. */
+body[data-dsh-claude-style][data-dsh-claude-ongoing-side="left"] [data-dsh-claude-part~="session-overflow"] {
+  padding-inline-start: calc(26px + var(--dsh-workspace-indent, 0px));
+}
+body[data-dsh-claude-style]:not([data-dsh-claude-ongoing-side="left"]) [data-dsh-claude-part~="session-overflow"] {
+  padding-inline-start: calc(24px + var(--dsh-workspace-indent, 0px));
+}
 /* The leading side keeps the mark where the host puts it, in the row's flow
    inside that band; the trailing column then belongs to the actions alone. */
 body[data-dsh-claude-style][data-dsh-claude-ongoing-side="left"] [data-dsh-claude-part~="session-row"][data-dsh-claude-row-status="active"],
