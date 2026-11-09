@@ -273,8 +273,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     }
     const box = buildElement('span', BUTTONS_SEAT_CLASS)
     box.setAttribute(BUTTONS_SEAT_ATTRIBUTE, '')
-    // 宿主在这一行里先画时间与复制，两个按钮跟在后面，与 Claude Code 的顺序一致。
-    line.append(box)
+    // 宿主在这一行里先画时间与复制；回答行的行尾是它的用量与时间。两个按钮排在
+    // 那组信息之前，跟宿主的动作按钮同处一簇，数字与时间仍留在行尾。
+    if (answer === null || line.lastElementChild === null) line.append(box)
+    else line.insertBefore(box, line.lastElementChild)
     const seat: Seat = { box, root: reactDom.createRoot(box) }
     seats.set(line, seat)
     draw(seat, row, line)

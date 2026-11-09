@@ -2,7 +2,7 @@ import * as React from 'react'
 import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
 
 /**
- * 读者消息控件行末尾的两个按钮，画成宿主自己的按钮：标签走宿主的 Tooltip
+ * 消息控件行里的两个按钮，画成宿主自己的按钮：标签走宿主的 Tooltip
  * （primitives 包，与复制按钮同一份），图标是本地的一笔路径。
  *
  * 用 React 渲染是因为 Tooltip 只有组件一种用法；宿主自己的按钮也长在同一棵
