@@ -1,4 +1,5 @@
 import { requestFrame } from '@dsh-claude-style/engine/frame'
+import { revealEntryAt } from './reveal-text'
 import {
   CHAT_REVEAL_FRAME_GAP_MS,
   CHAT_REVEAL_HIDDEN_GAP_MS,
@@ -117,20 +118,7 @@ export function createRevealPainter(state: RevealState, hooks: RevealPaintHooks)
       // search over the snapshot: character-by-character segments mean many
       // lookups a frame, and scanning from the message's start is too slow.
       const end = run.start + run.length
-      let low = 0
-      let high = snapshot.entries.length - 1
-      let firstIndex = -1
-      while (low <= high) {
-        const middle = (low + high) >> 1
-        const entry = snapshot.entries[middle]
-        if (entry === undefined) break
-        if (entry.start + entry.node.data.length <= run.start) {
-          low = middle + 1
-          continue
-        }
-        firstIndex = middle
-        high = middle - 1
-      }
+      const firstIndex = revealEntryAt(snapshot.entries, run.start)
       // The segment is no longer in the DOM.
       const firstEntry = snapshot.entries[firstIndex]
       if (firstEntry === undefined) continue

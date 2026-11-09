@@ -11,6 +11,10 @@ export { byDocumentOrder, createFileMerge, mergeViews, rowCarrier } from './feat
 export type { FileMergeRow } from './features/chat-files/file-row-merge'
 export { foldExpandedBody } from './features/chat-fold/fold-glide-parts'
 export { createRowHeightCache, ROW_HEIGHT_CACHE_LIMIT, rowHeightKey } from './features/row-skip/row-heights'
+export { appendRevealSnapshot, revealEntryAt, revealTextSlice } from './features/chat-reveal/reveal-text'
+export { createRevealScanner } from './features/chat-reveal/reveal-diff'
+export { CHAT_REVEAL_ACTIVE_LIMIT, createRevealState } from './features/chat-reveal/reveal-params'
+export type { RevealRun, RevealSnapshot, RevealState } from './features/chat-reveal/reveal-params'
 export { countProcessItems, summaryForm, summaryParts, summarySeparator, summaryText } from './features/chat-fold/process-summary'
 export {
   CHAT_DRAFT_HANDOFF_AT, CHAT_FLIGHT_MS, CHAT_LANDING_MS, CHAT_MAX_TEXT_LAYERS, CHAT_MORPH_END, CHAT_RISE_DAMPING, CHAT_RISE_OMEGA, CHAT_SHAPE_SAMPLES,

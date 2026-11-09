@@ -3,8 +3,8 @@ import { isChatFoldToggle } from '../chat-fold/fold-toggle'
 import { STREAMING_ATTRIBUTE, STREAMING_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { createRevealScanner } from './reveal-diff'
 import { createRevealPainter } from './reveal-paint'
-import { CHAT_REVEAL_COLOR_VAR, CHAT_REVEAL_FOLD_QUIET_MS, CHAT_REVEAL_HIGHLIGHT_PREFIX, CHAT_REVEAL_STEPS } from './reveal-params'
-import type { RevealSnapshot, RevealState } from './reveal-params'
+import { CHAT_REVEAL_COLOR_VAR, CHAT_REVEAL_FOLD_QUIET_MS, CHAT_REVEAL_HIGHLIGHT_PREFIX, CHAT_REVEAL_STEPS, createRevealState } from './reveal-params'
+import type { RevealState } from './reveal-params'
 
 /**
  * The token reveal's engine, ported from dsh-chat-ux: new characters arrive
@@ -140,17 +140,7 @@ export function createChatRevealEngine() {
   const HighlightConstructor = globalThis.Highlight
   if (registry === undefined || registry === null || typeof HighlightConstructor !== 'function') return null
 
-  const state: RevealState = {
-    liveRuns: [],
-    historyContainers: new WeakSet<Element>(),
-    textSnapshots: new WeakMap<Element, RevealSnapshot>(),
-    foldQuietUntil: new WeakMap<Element, number>(),
-    liveContainers: [],
-    lastFrameAt: 0,
-    slowFrames: 0,
-    yieldUntil: 0,
-    cancelPaintFrame: null,
-  }
+  const state: RevealState = createRevealState()
   for (const container of document.querySelectorAll(STREAMING_SELECTOR)) state.historyContainers.add(container)
 
   const { clearHighlights, showStep } = createRevealHighlights(registry, HighlightConstructor)
@@ -193,6 +183,7 @@ export function createChatRevealEngine() {
   const onRecords = (records: MutationRecord[]) => {
     let everything = false
     const touched = new Set<Element>()
+    const changes = new Map<Element, MutationRecord[]>()
     for (const record of records) {
       // data-streaming is watched too: a streaming container is not always "a
       // newly inserted node" — when React adds the attribute to a div already
@@ -205,7 +196,12 @@ export function createChatRevealEngine() {
       const target = record.target
       const element = target instanceof Element ? target : target.parentElement
       const container = element?.closest(STREAMING_SELECTOR) ?? null
-      if (container !== null) touched.add(container)
+      if (container !== null) {
+        touched.add(container)
+        const batch = changes.get(container) ?? []
+        batch.push(record)
+        changes.set(container, batch)
+      }
       if (record.type !== 'childList' || everything) continue
       for (const added of record.addedNodes) {
         if (!(added instanceof Element)) continue
@@ -216,7 +212,7 @@ export function createChatRevealEngine() {
       }
     }
     if (everything) scan(null)
-    else if (touched.size > 0) scan(touched)
+    else if (touched.size > 0) scan(touched, changes)
   }
   const stopMutations = subscribeMutations(document.body, {
     subtree: true,

@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-09",
+  "group": "improvements",
+  "order": 6,
+  "external": false,
+  "zh": "降低超长回答流式输出时的扫描与渐显开销",
+  "en": "Reduce streaming scan and reveal cost on very long answers"
+}

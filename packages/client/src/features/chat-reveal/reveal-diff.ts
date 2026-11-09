@@ -1,5 +1,7 @@
 import { STREAMING_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { appendRevealSnapshot, revealEntryAt, revealTextSlice } from './reveal-text'
 import {
+  CHAT_REVEAL_ACTIVE_LIMIT,
   CHAT_REVEAL_BURST_LIMIT,
   CHAT_REVEAL_FIRST_SIGHT_LIMIT,
   CHAT_REVEAL_LOCAL_REWRITE_LIMIT,
@@ -89,18 +91,6 @@ function commonSuffix(previous: RevealSnapshot | undefined, entries: readonly Re
   return suffix
 }
 
-/** The characters between two offsets, read off the nodes that hold them. */
-function sliceText(entries: readonly RevealTextEntry[], from: number, to: number) {
-  let text = ''
-  for (const entry of entries) {
-    const end = entry.start + entry.data.length
-    if (end <= from) continue
-    if (entry.start >= to) break
-    text += entry.data.slice(Math.max(from, entry.start) - entry.start, Math.min(to, end) - entry.start)
-  }
-  return text
-}
-
 /**
  * The scan's entry point, with the engine's segments and snapshots in `state`.
  *
@@ -118,7 +108,7 @@ export function createRevealScanner(state: RevealState, hooks: RevealScanHooks) 
    *     mutations touched); null looks at every container on the page and
    *     drops the ones that are gone.
    */
-  return (only: Set<Element> | null) => {
+  return (only: Set<Element> | null, changes?: ReadonlyMap<Element, readonly MutationRecord[]>) => {
     const now = performance.now()
     let containers: Element[]
     if (only === null) {
@@ -159,23 +149,23 @@ export function createRevealScanner(state: RevealState, hooks: RevealScanHooks) 
     const createdRuns: RevealRun[] = []
     for (const container of containers) {
       const batchStart = createdRuns.length
-      // Walk every text node under the container once, remembering its offset
-      // and its text. No joined string is built: a batch compares nodes, and
-      // only a rewritten middle is ever materialised.
-      const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT)
-      const entries: RevealTextEntry[] = []
-      let length = 0
-      let node = walker.nextNode()
-      while (node !== null) {
-        // SHOW_TEXT: every node the walker yields is a text node.
-        const textNode = node as Text
-        const data = textNode.data
-        entries.push({ node: textNode, start: length, data })
-        length += data.length
-        node = walker.nextNode()
-      }
-
       const previous = state.textSnapshots.get(container)
+      const beforeLength = previous?.length ?? 0
+      const appended = appendRevealSnapshot(previous, changes?.get(container))
+      const entries: RevealTextEntry[] = appended?.entries ?? []
+      let length = appended?.length ?? 0
+      if (appended === null) {
+        // Structural changes rebuild the index; tail-only text mutations keep it.
+        const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT)
+        let node = walker.nextNode()
+        while (node !== null) {
+          const textNode = node as Text
+          const data = textNode.data
+          entries.push({ node: textNode, start: length, data })
+          length += data.length
+          node = walker.nextNode()
+        }
+      }
       state.textSnapshots.set(container, { length, entries })
 
       // The first sight of this container. One that was on the page when the
@@ -184,7 +174,6 @@ export function createRevealScanner(state: RevealState, hooks: RevealScanHooks) 
       // that appeared after install without much text — a new answer — has its
       // opening characters counted as new.
       if (previous === undefined && (state.historyContainers.has(container) || length > CHAT_REVEAL_FIRST_SIGHT_LIMIT)) continue
-      const beforeLength = previous === undefined ? 0 : previous.length
 
       // This batch's two stable stretches: segments inside the common prefix
       // keep their place, ones inside the common suffix move as a whole, and
@@ -200,29 +189,28 @@ export function createRevealScanner(state: RevealState, hooks: RevealScanHooks) 
       // batch really touched are compared character by character. A streamed
       // append is the batch that matters most, and its check is the native
       // prefix test below rather than a loop over the whole answer.
-      const prefix = commonPrefix(previous, entries)
-      const suffix = commonSuffix(previous, entries, prefix)
+      const prefix = appended === null ? commonPrefix(previous, entries) : beforeLength
+      const suffix = appended === null ? commonSuffix(previous, entries, prefix) : 0
       const stableFrom = beforeLength - suffix
       const shift = length - beforeLength
-      let kept = 0
-      for (let index = 0; index < state.liveRuns.length; index += 1) {
-        const run = state.liveRuns[index]
-        if (run === undefined) continue
-        if (run.container !== container || run.start + run.length <= prefix) {
-          state.liveRuns[kept] = run
-          kept += 1
-          continue
+      if (appended === null) {
+        let kept = 0
+        for (let index = 0; index < state.liveRuns.length; index += 1) {
+          const run = state.liveRuns[index]
+          if (run === undefined) continue
+          if (run.container !== container || run.start + run.length <= prefix) {
+            state.liveRuns[kept] = run
+            kept += 1
+            continue
+          }
+          if (run.start >= stableFrom) {
+            // Stable suffix segments move together and retain their age.
+            state.liveRuns[kept] = { ...run, start: run.start + shift }
+            kept += 1
+          }
         }
-        if (run.start >= stableFrom) {
-          // The same characters, moved as a whole: they follow, keeping their
-          // age and their stagger.
-          state.liveRuns[kept] = { ...run, start: run.start + shift }
-          kept += 1
-          continue
-        }
-        // Stale: this batch rewrote the characters it stood for.
+        state.liveRuns.length = kept
       }
-      state.liveRuns.length = kept
 
       if (yielding) continue
 
@@ -246,12 +234,14 @@ export function createRevealScanner(state: RevealState, hooks: RevealScanHooks) 
       const oldMiddleLength = beforeLength - prefix - suffix
       const newMiddleLength = length - prefix - suffix
       if (newMiddleLength === 0) continue
+      const available = Math.max(0, CHAT_REVEAL_ACTIVE_LIMIT - state.liveRuns.length)
+      if (oldMiddleLength === 0 && newMiddleLength > Math.min(CHAT_REVEAL_BURST_LIMIT, available)) continue
       if (oldMiddleLength > 0 && oldMiddleLength * newMiddleLength > CHAT_REVEAL_REWRITE_DIFF_BUDGET) continue
       // The middles are materialised only now, and only as far as the budget
       // above lets them be: the common batch (an append) leaves the old middle
       // empty and pays for nothing here.
-      const oldMiddle = oldMiddleLength === 0 || previous === undefined ? '' : sliceText(previous.entries, prefix, stableFrom)
-      const newMiddle = sliceText(entries, prefix, length - suffix)
+      const oldMiddle = oldMiddleLength === 0 || previous === undefined ? '' : revealTextSlice(previous.entries, prefix, stableFrom)
+      const newMiddle = revealTextSlice(entries, prefix, length - suffix)
 
       // Whether each new character matches one in the old text. With an empty
       // old middle every character is new and no alignment is needed.
@@ -309,7 +299,7 @@ export function createRevealScanner(state: RevealState, hooks: RevealScanHooks) 
       // every frame (one Range per segment).
       let addedLength = 0
       for (const range of addedRanges) addedLength += range.end - range.start
-      if (addedLength > CHAT_REVEAL_BURST_LIMIT) continue
+      if (addedLength > Math.min(CHAT_REVEAL_BURST_LIMIT, available)) continue
 
       // The walk goes node by node rather than over the joined string: every
       // segment has to carry the element it renders in (that is where the step
@@ -321,8 +311,8 @@ export function createRevealScanner(state: RevealState, hooks: RevealScanHooks) 
       // whitespace takes no segment of its own but still advances the offset.
       const touchedElements = new Set<Element>()
       for (const range of addedRanges) {
-        for (const entry of entries) {
-          if (entry.start + entry.node.data.length <= range.start) continue
+        for (let index = revealEntryAt(entries, range.start); index < entries.length; index += 1) {
+          const entry = entries[index]!
           if (entry.start >= range.end) break
           const begin = Math.max(range.start, entry.start)
           const end = Math.min(range.end, entry.start + entry.node.data.length)

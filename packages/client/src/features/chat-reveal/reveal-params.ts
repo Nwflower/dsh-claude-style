@@ -11,8 +11,10 @@ export const CHAT_REVEAL_MIN_STAGGER_MS = 1
 export const CHAT_REVEAL_MAX_STAGGER_MS = 8
 /** Folding rewrites a still-streaming container; skip it until React's mutations settle. */
 export const CHAT_REVEAL_FOLD_QUIET_MS = 400
-/** Cap per-frame Range work; oversized batches are shown without reveal. */
+/** Oversized batches are shown without reveal. */
 export const CHAT_REVEAL_BURST_LIMIT = 10000
+/** Bound all overlapping batches together, before allocating character segments. */
+export const CHAT_REVEAL_ACTIVE_LIMIT = 2048
 /** How many characters a container that just appeared may hold and still count as "the start of an answer". */
 export const CHAT_REVEAL_FIRST_SIGHT_LIMIT = 200
 /** A gap between frames longer than this means no frame was drawn in between (a hidden page, or a held-up main thread). */
@@ -56,6 +58,21 @@ export interface RevealTextEntry {
 export interface RevealSnapshot {
   length: number
   entries: RevealTextEntry[]
+}
+
+/** The empty engine state; the installer fills the history containers it found on the page. */
+export function createRevealState(): RevealState {
+  return {
+    liveRuns: [],
+    historyContainers: new WeakSet<Element>(),
+    textSnapshots: new WeakMap<Element, RevealSnapshot>(),
+    foldQuietUntil: new WeakMap<Element, number>(),
+    liveContainers: [],
+    lastFrameAt: 0,
+    slowFrames: 0,
+    yieldUntil: 0,
+    cancelPaintFrame: null,
+  }
 }
 
 /** Scan and paint modules share this object so scalar state writes remain visible to both. */
