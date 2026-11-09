@@ -336,7 +336,8 @@ async function runScenario(name, options) {
       const context = { page, session, url: host.url, home, trace: [], notes: {}, out: options.out }
       if (scenario.beforeSend !== undefined) await scenario.beforeSend(context)
       step('sending the prompt')
-      await startTrace(page)
+      // Performance scenarios supply their own probe for every measured round.
+      if (scenario.trace !== false) await startTrace(page)
       await sendPrompt(page, scenario.prompt)
       step('waiting for the turn to settle')
       // A scenario that acts while the turn runs, beside the wait rather than after it.

@@ -48,13 +48,17 @@ const GROWTH_SLACK = bound('longSessionGrowthSlack')
 const QUERY_SLACK = bound('longSessionQuerySlack')
 const GROWTH_FLOOR_MS = bound('longSessionGrowthFloorMs')
 
-/** The in-page readings of one measured round, counters reset first. */
-async function measureTurn(page, prompt) {
+/** Keep both measured rounds' counters on the same reset boundary. */
+async function resetRound(page) {
   await page.evaluate(() => {
     window.__longSession.frames.length = 0
     window.__longSession.longtasks.length = 0
     window.__longSession.queries = 0
   })
+}
+
+async function measureTurn(page, prompt) {
+  await resetRound(page)
   await sendPrompt(page, prompt)
   await waitForTurn(page)
   return read(page)
@@ -66,6 +70,7 @@ async function read(page) {
     frames: window.__longSession.frames.slice(),
     longtasks: window.__longSession.longtasks.slice(),
     queries: window.__longSession.queries,
+    tracing: window.__e2eTrace !== undefined,
     nodes: document.querySelectorAll('body *').length,
     rows: document.querySelectorAll('[data-chat-flow-kind]').length,
   }))
@@ -83,6 +88,8 @@ function cost(round) {
 function longSessionScenario({ check }) {
   return {
     script: 'long',
+    // Both rounds use only initScript's probe; the lane's layout trace adds document queries per frame.
+    trace: false,
     prompt: 'write a long answer',
     delayMs: STREAM_DELAY_MS,
     // A tall window, so the measured turn streams into a transcript that is
@@ -131,16 +138,12 @@ function longSessionScenario({ check }) {
         await sendPrompt(page, `fill the transcript ${index + 1}`)
         await waitForTurn(page)
       }
-      await page.evaluate(() => {
-        window.__longSession.frames.length = 0
-        window.__longSession.longtasks.length = 0
-        window.__longSession.queries = 0
-      })
       const filled = await page.evaluate(() => ({
         nodes: document.querySelectorAll('body *').length,
         rows: document.querySelectorAll('[data-chat-flow-kind]').length,
       }))
       context.notes.filled = filled
+      await resetRound(page)
     },
     async assert({ page, session, notes }) {
       const measured = await read(page)
@@ -166,10 +169,12 @@ function longSessionScenario({ check }) {
       const readings = `rows ${short.rows} → ${measured.rows} (×${ratio.toFixed(2)}), queries ${short.queries} → ${measured.queries}, ` +
         `long tasks ${shortCost.longTotal}ms → ${longCost.longTotal}ms, p95 ${shortCost.p95}ms → ${longCost.p95}ms`
       rounds.push(
-        check('两轮量的是同一个长度比：会话长了几倍，这一轮的量也长了几倍',
+        check('两轮都只使用性能探针，没有逐帧布局追踪',
+          short.tracing === false && measured.tracing === false, `trace short=${short.tracing}, long=${measured.tracing}`),
+        check('长会话与短会话的行数比达到比较要求',
           ratio >= GROWTH_RATIO && measured.rows > short.rows,
           readings),
-        check('整份文档的查找次数不随会话长度放大', measured.queries <= short.queries * ratio * QUERY_SLACK + 1, readings),
+        check('整份文档查找次数的增长不超过行数倍率、查询容差与固定余量', measured.queries <= short.queries * ratio * QUERY_SLACK + 1, readings),
         // The long tasks are printed with the two checks below and bounded by
         // the budget above, not compared between the rounds: the host commits
         // every streamed batch in a frame task of its own, and on a long
@@ -177,7 +182,7 @@ function longSessionScenario({ check }) {
         // measures the host's frame size as much as the skin's pass. A cost
         // that follows the rows or their square shows in the two checks that
         // do compare — the whole-document lookups and the p95 frame.
-        check('这一轮的 p95 帧时不随会话长度放大',
+        check('p95 帧时的增长不超过行数倍率、增长容差与固定余量',
           longCost.p95 <= shortCost.p95 * allowed + GROWTH_FLOOR_MS, readings),
       )
       return rounds

@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-09",
+  "group": "fixes",
+  "order": 5,
+  "external": false,
+  "zh": "修复长会话性能测试两轮采样的仪器一致性和倍率门槛说明",
+  "en": "Fix instrumentation consistency and growth-bound descriptions across the two long-session performance samples"
+}
