@@ -7,33 +7,9 @@ import { foldControlAt, foldControlAtBottom, foldExpandedBody } from './fold-gli
 import { inPagePixels } from '../../shared/page-zoom'
 import { EXPANDED_ATTRIBUTE, ROW_PHASE_ATTRIBUTE, RUNNING_STATE, THINK_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
 
-/**
- * Keep a thinking row open while the model is still reasoning, and fold it
- * back once the reasoning stops.
- *
- * Every thinking row the host renders arrives collapsed: its ReasoningRow
- * pins it with a plain useState(false), and no setting exposes it. The row's
- * own expand control is the one lever this feature can pull, and at least
- * that lever is stable — the row carries data-variant="think", data-state
- * (running while the model reasons, ok once it stops) and data-expanded,
- * all semantic attributes rather than the hashed class names around them.
- *
- * The row still belongs to the reader. A press or a key inside it records
- * the phase it happened in, and this module leaves the row alone for that
- * phase: folded mid-reasoning it stays folded, and a stopped row opened by
- * hand stays open. The hand-over is deliberately per phase rather than per
- * row — folding and unfolding while the model reasons is not a request to
- * keep it open once the reasoning stops, so the ok phase still folds it.
- */
-/**
- * Watch every thinking row on the page and bring each to what its phase asks
- * for.
- *
- * @param onRows - hears the rows this scan touched, for the feature's other
- *     reading of a thinking row (its reasoning's streamed window). One observer
- *     answers both, so the two cannot see different batches.
- * @returns teardown: the observer and the two listeners go away.
- */
+/* Host ReasoningRow starts collapsed; data-state and data-expanded are its stable phase contract.
+   Reader overrides last only for the current phase. onRows shares each scan with the reasoning
+   window so both features observe the same batch. */
 export function createReasoningFold(onRows?: (rows: readonly Element[]) => void) {
   /** The phase a row was in when the reader last touched it. */
   const touchedIn = new WeakMap<Element, string>()
@@ -64,10 +40,7 @@ export function createReasoningFold(onRows?: (rows: readonly Element[]) => void)
     return control instanceof HTMLElement ? control : null
   }
 
-  /**
-   * What the glide reads when a press lands (fold-glide.ts), taken in the
-   * scan's read phase for the rows it is about to press (D40).
-   */
+  /** Read before the write phase presses rows (D40). */
   const readPress = (rows: Iterable<Element>): FoldPressReading | null => {
     const heights = new Map<Element, number>()
     let atBottom: boolean | null = null
@@ -83,17 +56,7 @@ export function createReasoningFold(onRows?: (rows: readonly Element[]) => void)
     return atBottom === null ? null : { atBottom, heights }
   }
 
-  /**
-   * Bring these rows to what their current phase asks for.
-   *
-   * Which node is the control depends on how the host configures the
-   * expandable area: with expandOnRowClick the whole row is the button,
-   * otherwise it is the chevron on its leading edge. "The first descendant
-   * that looks like a button" covers both without betting on which one this
-   * build chose.
-   *
-   * @param rows - this batch of rows; some may already be unattached.
-   */
+  /** The host may make either the whole row or its chevron the control. */
   const syncRows = (rows: Iterable<Element>, reading: FoldPressReading | null = null) => {
     for (const row of rows) {
       const phase = phaseToPress(row)
@@ -179,11 +142,7 @@ export function createReasoningFold(onRows?: (rows: readonly Element[]) => void)
       },
     })
   }
-  /**
-   * Settle everything once a composition has landed: a scan that ran while one
-   * was in flight left its rows alone (syncRows), and the reasoning may have
-   * stopped before another batch arrived to ask again.
-   */
+  /** Composition may have suppressed the final scan; settle again when it ends. */
   const onCompositionEnd = () => {
     requestFrame({ write() { syncEveryRow() } })
   }

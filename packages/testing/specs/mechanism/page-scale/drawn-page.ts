@@ -1,10 +1,7 @@
 /**
- * The page drawn at a scale, for the specs that drive a mechanism which reads it.
- *
- * The stylesheet draws the page at the reader's scale with one `zoom` on the
- * body, and a mechanism reads that scale from the vocabulary it is handed (D73).
- * A spec draws the page the same way and hands the same number over, so the
- * mechanism is measured against the box the browser gives it.
+ * The page drawn at a scale, for the specs that drive a mechanism which reads it:
+ * the stylesheet draws the page with one `zoom` on the body, and the mechanism
+ * reads that scale from the vocabulary it is handed (D73).
  */
 
 /** The scale the page is drawn at, as the mechanism's own vocabulary answers it. */

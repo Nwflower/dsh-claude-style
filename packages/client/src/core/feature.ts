@@ -6,202 +6,100 @@ import type { CopyEntries } from './i18n'
 import type { SchedulerCalls } from '@dsh-claude-style/engine/scheduler'
 import type { HandleName, Handles, Ui } from './scheduler'
 
-/**
- * A feature's manifest (D72): every fact about the feature that something
- * outside it needs. It sits beside the feature's main module as
- * `<main>.manifest.ts` and holds data only — the build evaluates it in Node
- * (scripts/shared/read-manifests.cjs) to order the features and their stylesheets,
- * to check the switches, and to hand the smoke run its coverage table; the
- * browser half receives the runtime fields through the generated registry.
- */
+/** Data-only manifests are evaluated by the build and projected into the browser registry (D72). */
 export type FeatureManifest = FeatureIdentity & FeatureFields & FeatureSwitch
 
-/** Exactly one of `pref` and `ungated` (D76). */
+/** Exactly one of `pref` and `ungated`; preference flips install or tear down live (D76). */
 export type FeatureSwitch =
   | {
-      /**
-       * The preference that decides whether the reader gets the feature, live:
-       * a flip installs or tears it down without a reload (D76).
-       */
       pref: keyof Prefs
-      /**
-       * The preference values the feature runs under, for a choice switch: a
-       * value outside the list runs its teardown. A boolean switch leaves this
-       * out and is on unless stored as `false`.
-       */
+      /** Choice values outside this list tear the feature down. */
       prefValues?: string[]
       ungated?: never
     }
-  | { /** Why the feature has no switch, for a feature that reads preferences while installed itself. */ ungated: string, pref?: never }
+  | { /** Why this feature has no switch despite reading preferences. */ ungated: string, pref?: never }
 
-/**
- * The install name — the failure report, the teardown and `retire()` use it —
- * and the name the feature's handle registers on `ui`. They are one name,
- * except for the settings page, whose handle is its navigation alone
- * (settingsNav): a failing sync stops the navigation and keeps the page.
- */
+/** Settings uses `settingsNav` so a failed sync stops navigation without removing its page. */
 export type FeatureIdentity =
   | { id: HandleName, handle?: never }
   | { id: 'settings', handle: HandleName }
 
 export interface FeatureFields {
-  /**
-   * The other features' handles this feature's modules read off `ui`
-   * (D72). Its modules see `ui` as FeatureUi of this manifest, so a read
-   * the manifest does not declare fails the type check.
-   */
+  /** Undeclared handle reads fail the type check (D72). */
   reads?: HandleName[]
-  /** Install order, and with it the scheduler's pass order: ascending, unique. */
+  /** Unique ascending install and scheduler pass order. */
   order: number
-  /** The plugin implementing the same behaviour: while it is on the page the feature stays uninstalled (D74). */
+  /** Stay uninstalled while this peer owns the behaviour (D74). */
   yieldsTo?: PeerPlugin
-  /**
-   * `'deferred'`: the feature's own modules leave the bundle for a chunk of
-   * their own, fetched once the page is taken and installed when it arrives
-   * (D72). Only for a feature the first frames can do without.
-   */
+  /** Deferred features must be unnecessary for the first frames (D72). */
   load?: 'deferred'
-  /** The feature's stylesheets, relative to its directory; `rank` places each one in the concatenated sheet. */
   stylesheets: FeatureStylesheet[]
-  /**
-   * The settings rows this feature owns (D72): each writes one preference, and
-   * the settings page assembles them by slot — a tab, or one of the main
-   * window's groups — and rank with the rows it writes itself. A preference is
-   * written by one row, in the feature it belongs to.
-   */
+  /** Each preference has one owning settings row (D72). */
   settingsRows?: FeatureSettingsRow[]
-  /** The smoke cases that cover the feature (`npm run smoke -- --feature <dir>`). */
   cases: string[]
-  /**
-   * The host contract's entries this feature's own modules name
-   * (packages/contracts/src/table.ts, D3): the answer to "what breaks if the host
-   * changes this", and the build refuses an entry no manifest claims.
-   */
+  /** The build refuses host contract entries no manifest claims (D3). */
   contracts: string[]
 }
 
-/** The other plugins a feature can yield to. */
 export type PeerPlugin = 'dsh-chat-ux'
 
-/** A written stylesheet, or one the build writes from constants.ts. */
 export type FeatureStylesheet = FeatureStylesheetFile | FeatureStylesheetGenerated
 
 export interface FeatureStylesheetFile {
   file: string
-  /** Position in the concatenated stylesheet, shared with the theme's sheets (scripts/build.mjs). Unique. */
+  /** Unique rank across feature and theme sheets. */
   rank: number
-  /** The composer rules are gated (D9). */
+  /** Whether composer rules need the build gate (D9). */
   gate?: boolean
-  /**
-   * `'surface'`: the sheet is scoped to `body[data-dsh-claude-surface]` and
-   * ships apart from the theme's sheet, so it stays while ds-bot's surface has
-   * the page (D74).
-   */
+  /** Surface sheets ship separately to survive ds-bot's ownership (D74). */
   scope?: 'surface'
 }
 
-/** A sheet of one rule per entry of a table the code reads too: its generator's name in scripts/feature-sheets.mjs. */
+/** Names a generator in scripts/feature-sheets.mjs. */
 export interface FeatureStylesheetGenerated {
   generated: string
   rank: number
 }
 
-/**
- * The settings tabs, by id (packages/client/src/features/settings/settings-tab-*.ts).
- */
 export type SettingsTabId = 'general' | 'appearance' | 'main-window' | 'sidebar' | 'motion'
 
-/**
- * The groups the main-window tab draws, by id: the conversation side, the
- * composer's controls, and the context and cost figures under the composer,
- * each under its own label
- * (packages/client/src/features/settings/settings-tab-main-window.ts).
- */
 export type SettingsGroupId = 'conversation' | 'composer' | 'statistics'
 
-/** Where a settings row stands: a tab of the strip, or one of the main window's groups. */
 export type SettingsRowSlot = SettingsTabId | SettingsGroupId
 
-/**
- * One settings row a feature owns (D72). The control follows the preference's
- * own declaration (packages/contracts/src/prefs.ts): a boolean is an on/off
- * switch, a choice a segmented control over the values the table carries. Every
- * line is a key in the feature's own copy (`<功能>.copy.json`).
- */
+/** Copy keys and control types must match the preference declaration (D72). */
 export interface FeatureSettingsRow {
-  /** The tab, or the main window group, the row stands in. */
   tab: SettingsRowSlot
-  /** Position among the tab's rows, shared with the rows the settings feature writes itself. */
+  /** Rank is shared with rows written by the settings feature. */
   rank: number
-  /** The preference the row writes. */
   pref: keyof Prefs
-  /** The row's title, by key in the feature's own copy; a row whose own control is the whole row carries none. */
   title?: string
-  /** The line under the title; a row whose own control is the explanation carries none. */
   desc?: string
-  /** A choice preference's labels: the copy key of each value. A value left out is drawn with its bare id. */
+  /** Values without labels show their bare ids. */
   choiceLabels?: Readonly<Record<string, string>>
-  /**
-   * The preference whose row this row stands under: it is drawn indented, with
-   * no hairline between them, and refuses input while that preference is off
-   * (`false`, or a choice's own `off`) or while the row above it cannot act at
-   * all — a requirement of its own unmet, or an owner that yields the page.
-   */
+  /** A child row is disabled while its parent or owner cannot act. */
   parent?: keyof Prefs
-  /** The preference the row's control only works under (D72). */
   requires?: FeatureRowRequirement
-  /**
-   * The row acts on the Windows desktop window alone: on any other page it
-   * keeps the stored choice on show, refuses input and says where it acts
-   * (packages/engine/src/desktop-band.ts).
-   */
+  /** Other platforms show the stored choice but refuse input. */
   windowsOnly?: boolean
-  /**
-   * The row's cards show a motion: while the animation choice resolves to
-   * reduced they stand as stills that still tell the choices apart, the row
-   * says so, and the choice stays editable.
-   */
+  /** Reduced motion swaps previews for distinguishable stills without disabling the choice. */
   stillWhenReduced?: boolean
-  /**
-   * The feature's own module that draws this row's control, beside its main
-   * module: a preview card, a picker or an editor the generic switch cannot
-   * draw. The build collects these modules for the settings page (D72).
-   */
+  /** Names a feature module collected by the settings build (D72). */
   control?: string
-  /**
-   * A choice preference drawn as an on/off switch: the value each side of the
-   * switch writes. A stored value outside the two is drawn as off, and stays
-   * stored until the reader flips the switch.
-   */
+  /** Values outside this pair display as off and remain stored until flipped. */
   switch?: { on: string, off: string }
-  /**
-   * The feature's own module that draws a live line under the row's title,
-   * beside its main module like `control`: what the feature is doing on the
-   * page right now, which no fixed description can say.
-   */
+  /** Names a feature module that renders live status. */
   status?: string
-  /** The row carries the host's experimental tag beside its title: the feature is on show but not settled. */
   experimental?: boolean
 }
 
-/**
- * Another preference a row's control only works under: while that preference
- * holds none of `values` the row keeps the stored choice on show, refuses input
- * and says why with `note` under its description.
- */
+/** Unmet requirements preserve the stored choice, disable input and show `note`. */
 export interface FeatureRowRequirement {
   pref: keyof Prefs
   values: readonly string[]
-  /** The line the row shows while the requirement is unmet, by key in the feature's own copy. */
   note: string
 }
 
-/**
- * What a feature's own settings row control is rendered with (D72): the
- * preferences on show, the page's own write path, and whether the row can act
- * at all right now (it yields for another plugin, a requirement is unmet, or
- * the switch it stands under is off).
- */
 export interface SettingsRowView {
   prefs: Prefs
   write(patch: Partial<Prefs>): void
@@ -228,21 +126,14 @@ export type FeatureRuntime = FeatureIdentity & Pick<FeatureFields, 'order' | 'yi
   pref?: keyof Prefs
   prefValues?: string[]
   ungated?: string
-  /**
-   * The feature's own copy, for the settings page: a feature that declares
-   * settings rows carries its lines so the page can label them whether the
-   * feature is installed or not (D72).
-   */
+  /** Settings copy remains available while the feature is uninstalled (D72). */
   copy?: CopyEntries
 }
 
 /** A feature main module's `install`. */
 export type FeatureInstall = (ctx: HostContext, ui: Ui) => (() => void) | void
 
-/**
- * One installable feature: its runtime manifest fields beside its main
- * module's `install`, or beside the address of the chunk that carries it (D72).
- */
+/** A feature carries either `install` or its deferred chunk address (D72). */
 export type Feature = FeatureRuntime & ({ install: FeatureInstall, chunk?: never } | { chunk: string, install?: never })
 
 /** The name a feature's handle registers under on `ui`. */

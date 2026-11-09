@@ -1,11 +1,6 @@
 /* ---------- The shared motion presets, and the motion tokens they read ---------- */
-/* The effects more than one feature needs, in one place (D9). Every value is a
-   token from packages/client/src/theme/tokens.json, generated into the token sheet; a
-   feature that wants a different distance sets the preset's own custom property
-   where it uses it, and keeps its own keyframes only when the effect is its own.
-   The reduced-animation choice is answered once, for every skin animation, in
-   theme/chrome.css (D40, D9); the presets end where the element rests, so a
-   duration of one instant leaves no half state behind. */
+/* Shared presets read generated tokens; features override their custom properties locally (D9).
+   Presets end at the resting pose so reduced motion leaves no intermediate state (D40). */
 
 body[data-dsh-claude-style] {
   /* The wording swap's own values: shared/swapping-text.css lays the box out

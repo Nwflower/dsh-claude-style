@@ -1,7 +1,6 @@
 /**
- * A fixed-position footer overlay can mount after the scheduler's read phase.
- * The following sync must recognise the new node while gathering its trigger
- * into the account menu.
+ * A fixed-position footer overlay can mount after the scheduler's read phase, so
+ * the following sync must recognise the new node while gathering its trigger.
  *
  * @capability footer-mirror
  * @features account

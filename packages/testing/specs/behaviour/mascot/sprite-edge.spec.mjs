@@ -1,19 +1,8 @@
 /**
- * The crab draws its own frame and nothing of the frames beside it. Its sheet
- * holds every frame of an animation side by side, and its window shows one of
- * them; the frame's own outermost cells are empty, so the window's edge shows
- * the page behind the crab, never the neighbouring frame.
- *
- * The edge's device pixels are read with one allowance. The sheet is
- * upscaled by the device scale (a fractional multiple here), and which sheet
- * pixel a device pixel's nearest sample takes depends on where in the sheet
- * its centre falls: past the half of a sheet pixel, one rasterizer takes the
- * next sheet pixel and another keeps the previous one (macOS and Linux have
- * drawn the frame's own first ink column where Windows drew the empty cell
- * beside it). A stray is therefore held against the frame's own first ink
- * column, composited over the page behind it: a match is the sampler's
- * half-pixel, not the padding; anything else — the neighbouring frame's
- * content, above all — is the defect this spec exists for.
+ * The crab draws its own frame and nothing of the frames beside it: its window's
+ * outermost cells are empty, and a stray device pixel is allowed only where it
+ * matches the frame's own first ink column, which the sampler's half-pixel can
+ * pull in at a fractional density. Anything else is the defect this spec exists for.
  *
  * @capability mascot
  * @features mascot
@@ -39,9 +28,8 @@ const STACK_PART = Object.keys(CONVERSATION_PARTS).find((stem) => CONVERSATION_P
 
 /**
  * Put the crab on the conversation's input area at work on a reasoning turn:
- * under reduced motion it holds the thinking sheet's still frame, which has
- * the claw of the frame before it and the legs of the frame above it right
- * against its own empty edges.
+ * under reduced motion it holds the thinking sheet's still frame, which has its
+ * neighbours' claw and legs right against its own empty edges.
  */
 async function thinkingCrab(t) {
   await t.page.evaluate(([id, phase, scroller, session, seat, stackClass, sessionId]) => {
@@ -86,10 +74,7 @@ function decode(t, uri) {
   }, uri)
 }
 
-/**
- * The window and the sheet as drawn: their boxes, and the colour sheet and ink
- * mask the strip paints.
- */
+/** The window and the sheet as drawn: their boxes, and the colour sheet and ink mask the strip paints. */
 async function readSprite(t) {
   return t.page.evaluate(([windowSelector, stripSelector]) => {
     const view = document.querySelector(windowSelector)
@@ -120,9 +105,9 @@ async function shoot(t, clip, hidden) {
 }
 
 /**
- * The device pixels along the window's edges that sit inside one of the
- * frame's empty outermost cells, and those of them that differ from the page
- * behind the crab beyond the sampler's half-pixel.
+ * The device pixels along the window's edges that sit inside one of the frame's
+ * empty outermost cells, and those of them that differ from the page behind the
+ * crab beyond the sampler's half-pixel.
  */
 async function strayEdges(t, sheets) {
   const sprite = await readSprite(t)
@@ -153,10 +138,9 @@ async function strayEdges(t, sheets) {
     return [0, 1, 2].map(channel => body.data[at(body, x, y) + channel] * alpha + base[channel] * (1 - alpha))
   }
   /**
-   * The colours the sampler's half-pixel may legitimately put in this edge
-   * pixel: the frame's own first ink column beside the empty cell, at the row
-   * itself and the one either side (the sample's row is as fractional as its
-   * column).
+   * The colours the sampler's half-pixel may legitimately put in this edge pixel:
+   * the frame's own first ink column beside the empty cell, at the row and the one
+   * either side, since the sample's row is as fractional as its column.
    */
   const allowed = (side, at, base) => {
     const colours = []
@@ -170,9 +154,8 @@ async function strayEdges(t, sheets) {
     }
     return colours
   }
-  // The first two device pixels on each side, starting from the one the
-  // window's edge cuts through: the sliver lands there, and a cell is wider
-  // than two device pixels at every scale here, so both stand on the frame's
+  // The first two device pixels on each side, starting from the one the window's
+  // edge cuts through: the sliver lands there, and both stand on the frame's
   // outermost cell or outside the window.
   const device = cell * sprite.dpr
   const left = Math.floor((sprite.view.left - clip.x) * sprite.dpr)
@@ -190,8 +173,8 @@ async function strayEdges(t, sheets) {
     if (empty(frameX + column, frameY)) points.push(['top', column, x, top], ['top', column, x, top + 1])
     if (empty(frameX + column, frameY + rows - 1)) points.push(['bottom', column, x, bottom], ['bottom', column, x, bottom - 1])
   }
-  // The capture is cut at a whole CSS pixel, which a fractional density can
-  // leave short of the window's last device pixel: what it did not take is not read.
+  // The capture is cut at a whole CSS pixel, so a fractional density can leave
+  // its last device pixel unread.
   const inside = points.filter(([, , x, y]) => x >= 0 && y >= 0 && x < drawn.width && y < drawn.height)
   const strays = []
   for (const [side, at, x, y] of inside) {

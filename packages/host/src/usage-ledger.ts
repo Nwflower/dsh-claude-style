@@ -1,22 +1,19 @@
 /**
- * The cost-meter plugin's ledger: the cheapest source of cross-session usage.
+ * The cost-meter plugin's ledger: the cheapest source of cross-session usage, at
+ * `$DSH_HOME/storages/cost-meter/ledger.json`, and read ONLY.
  *
- * `$DSH_HOME/storages/cost-meter/ledger.json` is another plugin's document and is
- * read ONLY. Its `days` map is already a per-day token roll-up, and each day's
- * `byProviderModel` splits it by `<provider>:<model>`. It also outlives the
- * logs: a deleted session's tokens stay in it. A day it records can be only
- * part of that day — a history reset or a cleared file starts it mid-day — and
- * it has no hour dimension, so the fold still runs behind a ledger answer: it
- * supplies the day's hours and sessions, and the fuller figure of a day the
- * ledger recorded less of. The file is never written: its owner rebuilds the whole
- * document from a fixed field list and rewrites it under a cross-process lock, so
- * a foreign key would be dropped by their next flush, a write outside their lock
- * could lose theirs, and a version they do not recognise makes them quarantine
- * the file (`ledger.json.corrupt-<stamp>`) and start empty.
+ * Its `days` map is already a per-day token roll-up split by `<provider>:<model>`,
+ * and it outlives the logs, so a deleted session's tokens stay in it. A day it
+ * records can be only part of that day and it has no hour dimension, so the fold
+ * still runs behind a ledger answer.
+ *
+ * The file is never written: its owner rebuilds the whole document from a fixed
+ * field list under a cross-process lock, so a foreign key would be dropped by
+ * their next flush and a version they do not recognise makes them quarantine the
+ * file and start empty.
  *
  * The bucket shapes below are the ones the ledger, the cache and the fold all
- * speak: none of those documents ships types, so the members this reader touches
- * are declared here.
+ * speak; none of those documents ships types.
  */
 import { PACKAGE_NAME } from '@dsh-claude-style/contracts/package'
 import { existsSync, readFileSync } from 'node:fs'
@@ -28,12 +25,9 @@ const LEDGER_VERSION = 1
 
 /**
  * Whether a `days` key is a day this half can read: `YYYY-MM-DD` and a real
- * calendar day.
- *
- * The ledger is another plugin's document, so its keys are checked like its
- * values. A key that is not a day is dropped rather than kept: the merge
- * compares day keys as strings, and one sorting past every real day would take
- * the newest-day mark with it and hide the days the fold itself contributed.
+ * calendar day. A key that is not a day is dropped rather than kept: the merge
+ * compares day keys as strings, and one sorting past every real day would hide
+ * the days the fold itself contributed.
  */
 function isDayKey(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
@@ -87,11 +81,9 @@ export function addBuckets(target: Buckets, buckets: Partial<Buckets> | null | u
 
 /**
  * The ledger's day map, or null when it cannot answer: the cost meter is not
- * installed, its file is mid-write, or its version is not the one read here.
- *
- * The same answer covers a read that loses the writer's race: the local fold is
- * an account of the same days on its own, so one plugin's file cannot fail the
- * pass.
+ * installed, its file is mid-write, or its version is not the one read here. The
+ * local fold is an account of the same days on its own, so one plugin's file
+ * cannot fail the pass.
  *
  * @param home - the harness home, resolved by the caller through the shared
  *   accessor.

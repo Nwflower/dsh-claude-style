@@ -1,41 +1,25 @@
-/* ---------- chat send: the bubble's take-off ---------- */
-/* One rule: the real row hides while the stand-in flies. visibility rather than
-   display — the hidden row has to keep its layout box, because the stand-in
-   measures the destination from it every frame. The attribute name is
-   constants.ts's CHAT_FLYING_ATTR, spelled the same by the JS that writes it. */
+/* visibility preserves the destination box that the stand-in measures each frame. */
 body[data-dsh-claude-style] [data-dsh-claude-send-flight] {
   visibility: hidden;
 }
 
-/* The other answer (constants.ts MESSAGE_ENTER_MODES, constants.ts
-   MESSAGE_ENTER_ATTR): the message grows where it lands. A transform only, so
-   the row keeps its box, the transcript does not reflow, and nothing beside the
-   message moves — the corner it grows about is its own bottom-right one, the
-   side the message was sent from. The mark is written only on a row that
-   replaced the echo of a submission the reader just made (send-grow.ts), and
-   the growth is the only thing it does. */
+/* Transform-only growth preserves transcript layout; send-grow.ts marks only a fresh replacement row. */
 body[data-dsh-claude-style] [data-dsh-claude-message-enter] {
   transform-origin: 100% 100%;
   animation: dsh-claude-enter-grow var(--dsh-claude-duration-enter) var(--dsh-claude-ease-enter) both;
 }
 
-/* The reader's animation choice (D40): the mark is not written on a still page,
-   and this is the second net for one written before the choice changed. */
+/* Also clear a mark written before reduced motion became active (D40). */
 body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-claude-message-enter] {
   animation: none;
 }
 
-/* The stand-in flies over the whole window: nothing the page stacks may cut
-   across the bubble on its way to its row (send-morph.ts builds it). */
+/* Keep the stand-in above page stacking contexts during flight. */
 body[data-dsh-claude-style] [data-dsh-claude-send-ghost] {
   z-index: var(--dsh-claude-layer-takeover);
 }
 
-/* The imitation ancestor chain is there for selector matching alone. Its links
-   are `display: contents`, which keeps their pseudo-elements: the Windows
-   desktop's layout frame draws its title bar strip as an absolutely placed
-   `::before`, and on a link it lands on the stand-in's top 40px in the sidebar
-   fill, over the bubble's own (send-snapshot.ts's CHAT_SEND_LINK_ATTR). */
+/* display:contents links retain pseudo-elements; suppress the desktop titlebar strip on the imitation chain. */
 body[data-dsh-claude-style] [data-dsh-claude-send-ghost] [data-dsh-claude-send-link]::before,
 body[data-dsh-claude-style] [data-dsh-claude-send-ghost] [data-dsh-claude-send-link]::after {
   content: none;

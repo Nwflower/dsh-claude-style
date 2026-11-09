@@ -1,17 +1,6 @@
 /**
- * The price snapshot both halves read, and the arithmetic over it (D73).
- *
- * The document is maintained by `scripts/fetch-prices.mjs` and shipped beside
- * the bundle as `lib/prices.json`; the host half refreshes it from the
- * repository once a day. Values are the official list prices per million
- * tokens, in the two currencies DeepSeek publishes them in, and they are kept
- * apart per currency: the two official tables are not one table converted at a
- * rate, so one of them can never be derived from the other.
- *
- * `costMicro` prices one settlement. Its unit is 1e-6 of the chosen currency,
- * which makes a per-million-token price the per-token cost: `tokens × rate`
- * lands in micro units with no division, and the count can chase it without
- * losing the fourth decimal.
+ * Shared official price snapshot and arithmetic (D73); currency tables remain distinct.
+ * `costMicro` returns millionths of the currency, so `tokens × rate per million` needs no division.
  */
 
 /** The two currencies the snapshot carries, in the settings' order. */
@@ -48,10 +37,7 @@ export interface PriceWindow {
   end: string
 }
 
-/**
- * The clock the tiers follow: weekdays and windows in one zone, with the
- * public holidays (in `holidayZone`, a date's own zone) fully off-peak.
- */
+/** Peak weekdays/windows in `timeZone`; dates in `holidayZone` are fully off-peak. */
 export interface PriceSchedule {
   timeZone: string
   peakDays: number[]
@@ -73,18 +59,9 @@ export interface PriceDocument {
   models: Record<string, Record<Currency, ModelPrice>>
   /** Retired or provider-prefixed ids that bill as another model. */
   aliases: Record<string, string>
-  /**
-   * The fallback list prices, one per model id the public catalogue knows:
-   * `"input cacheRead output"` in USD per million tokens (§ the catalogue's own
-   * unit). A session on a model the official table does not carry still shows
-   * the list-price equivalent rather than nothing.
-   */
+  /** Fallback `"input cacheRead output"` USD rates per million tokens for models absent from the official table. */
   catalog?: Record<string, string>
-  /**
-   * The same lines for models whose vendor publishes a CNY list price: those
-   * answer in CNY as published, and only a model without one is converted from
-   * `catalog` at `usdToCny`.
-   */
+  /** Published CNY fallback rates; models without one convert `catalog` at `usdToCny`. */
   catalogCny?: Record<string, string>
   /** The rate the USD catalogue converts at when the reader chose CNY. */
   usdToCny?: number
@@ -130,10 +107,7 @@ function formatter(timeZone: string) {
   return held
 }
 
-/**
- * One instant read on a zone's own calendar: its weekday, its date and its
- * minutes since midnight, or null when the zone cannot be resolved.
- */
+/** Calendar fields in `timeZone`, or null for an invalid instant or unresolvable zone. */
 export function clockAt(atMs: number, timeZone: string): { weekday: number, date: string, minutes: number } | null {
   if (!Number.isFinite(atMs)) return null
   let parts: Intl.DateTimeFormatPart[]
@@ -162,13 +136,7 @@ function clockMinutes(value: string) {
   return Number(match[1]) * 60 + Number(match[2])
 }
 
-/**
- * Whether one instant bills at the peak tier: a listed weekday, an hour inside
- * one of the windows, and a date the holiday list does not name.
- *
- * A machine whose zone database lacks the schedule's zone judges every instant
- * off-peak, which is the lower of the two rates and keeps the figure honest.
- */
+/** Peak requires a listed weekday/window and no holiday; unresolved zones stay off-peak. */
 export function isPeak(atMs: number, schedule: PriceSchedule): boolean {
   const clock = clockAt(atMs, schedule.timeZone)
   if (clock === null || !schedule.peakDays.includes(clock.weekday)) return false
@@ -195,10 +163,7 @@ export function bareModelId(modelId: string): string | null {
 /** The suffixes a session may add to a model id that the catalogue does not carry. */
 const CATALOG_SUFFIXES = ['-high', '-low', '-fast', '-sg', '-256k', '-128k', '-1m', '-32k', '-200k', '-flex']
 
-/**
- * The catalogue id one model resolves to, trying the id itself, the snapshot's
- * alias, and the bare id with a variant suffix taken off.
- */
+/** Resolve by alias, bare id, then known variant-suffix removal. */
 function catalogIdFor(document: PriceDocument, bare: string): string | null {
   const catalog = document.catalog
   if (catalog === undefined) return null
@@ -222,13 +187,8 @@ export function priceModelId(document: PriceDocument, modelId: string): string |
 }
 
 /**
- * One model's two tiers for one currency, or undefined when the document does
- * not price it.
- *
- * The official table answers first, in the currency the reader chose. A model
- * only the catalogue knows answers at its list price — the published CNY line
- * when there is one, the USD line converted at the snapshot's rate otherwise.
- * Its two tiers are the same, since the catalogue has no clock.
+ * Prefer official rates; catalog-only models use published CNY or converted USD fallback rates.
+ * Catalog fallback tiers are identical because the catalog has no schedule.
  */
 export function priceFor(document: PriceDocument, modelId: string, currency: Currency): ModelPrice | undefined {
   const id = priceModelId(document, modelId)
@@ -253,10 +213,7 @@ export function priceTierAt(price: ModelPrice, atMs: number, schedule: PriceSche
   return isPeak(atMs, schedule) ? price.peak : price.offPeak
 }
 
-/**
- * One settlement's cost in micro units: every bucket against its rate, with
- * cache writes at the hit rate and reasoning tokens already inside `output`.
- */
+/** Cache writes use the hit rate; reasoning tokens are already included in `output`. */
 export function costMicro(usage: PriceUsage, tier: PriceTier): number {
   const count = (value: number) => (Number.isFinite(value) && value > 0 ? value : 0)
   const cost = count(usage.input) * tier.cacheMiss
@@ -276,11 +233,7 @@ function significantFigure(amount: number) {
   return String(Math.round(amount / scale) * scale)
 }
 
-/**
- * One amount in micro units, as the shorter of its four-significant-digit and
- * four-decimal figures: a small amount keeps its decimals, a large one its
- * significant digits.
- */
+/** Use the shorter of four-significant-digit and four-decimal formatting. */
 export function formatMoneyMicro(micro: number, currency: Currency): string {
   const amount = Number.isFinite(micro) && micro > 0 ? micro / 1_000_000 : 0
   const decimals = amount.toFixed(4)

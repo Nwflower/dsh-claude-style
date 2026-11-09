@@ -1,15 +1,7 @@
 import { MOTION } from 'virtual:dsh-claude-style/generated'
 
-/**
- * The motion tokens as the browser half reads them (D9): the values come from
- * packages/client/src/theme/tokens.json through a generated module, so a
- * duration or a curve written here and one written in a stylesheet cannot
- * drift. A name the token table does not carry throws where it is read — a
- * misspelt name is a bug, not a fallback (D12).
- *
- * Timers that wait for something other than an animation (a poll interval, a
- * grace period since the last mutation) are not motion and are declared beside
- * the feature that keeps them.
+/** Generated tokens keep script and CSS values identical; unknown names fail immediately (D9, D12).
+ * Non-animation timers belong beside their features.
  */
 
 export function motionValue(token: string): string {
@@ -61,18 +53,7 @@ function bezierAt(t: number, first: number, second: number) {
   return 3 * rest * rest * t * first + 3 * rest * t * t * second + t * t * t
 }
 
-/**
- * How far along a cubic-bezier token's own curve a linear progress stands: the
- * value the browser paints for an animation whose easing is that token.
- *
- * `x(t) = progress` is solved on the curve and the answer is `y(t)`. Bisection
- * assumes x rises with t, which is what the curves this table carries do; the
- * two sides have to agree, or a slide restarted from this reading would start
- * where the frame before it did not stand.
- *
- * @param token - the curve's token name.
- * @param progress - the linear share of the animation's duration, 0 to 1.
- */
+/** Solve `x(t) = progress` and return `y(t)`; bisection requires the token curves' monotonic x axis. */
 export function motionEaseAt(token: string, progress: number): number {
   const [x1, y1, x2, y2] = curveOf(token)
   let low = 0

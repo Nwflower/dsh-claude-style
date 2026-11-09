@@ -1,18 +1,17 @@
 /**
  * What one session has cost so far, from the durable settlement records.
  *
- * The fold is the same one `usage-fold.ts` makes for days, carried one step
- * further: every `assistant/message` or `assistant/attempt` that reports usage
- * is priced at its own `time` and its own route, and a retry replaces the
- * sample it re-reports. The price table supplies both currencies, so one fold
- * answers either setting.
+ * The fold is the one `usage-fold.ts` makes for days, carried one step further:
+ * every `assistant/message` or `assistant/attempt` that reports usage is priced
+ * at its own `time` and its own route, and a retry replaces the sample it
+ * re-reports. The price table supplies both currencies, so one fold answers
+ * either setting.
  *
- * The totals are kept per session in memory and advanced from `session/event`
- * as the host commits, which is what makes the route O(1) after the first read.
- * A session first asked about is folded from its stored log; a host restart
- * loses the memory and refolds on the next ask, so the figure survives it. A
- * replaced price table clears every total: the next ask re-prices the log
- * against the table in force, the way the plugins that keep a ledger do not.
+ * The totals are kept per session in memory and advanced from `session/event` as
+ * the host commits, which is what makes the route O(1) after the first read. A
+ * session first asked about is folded from its stored log; a host restart loses
+ * the memory and refolds on the next ask. A replaced price table clears every
+ * total, so the next ask re-prices the log against the table in force.
  */
 import { PACKAGE_NAME } from '@dsh-claude-style/contracts/package'
 import { costMicro, priceFor, priceTierAt } from '@dsh-claude-style/contracts/prices'
@@ -176,8 +175,7 @@ export function createSessionCost(ctx: DshContext, prices: PriceStore): SessionC
   const states = new Map<string, CostState>()
   /**
    * The rows the live subscription prices with, and the signature of the last
-   * ask: a reader who edits the table gets every total folded again, the way a
-   * replaced price table clears them.
+   * ask: a reader who edits the table gets every total folded again.
    */
   let liveBilling: BillingRows = NO_BILLING
   let billingSignature = ''

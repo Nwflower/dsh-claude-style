@@ -1,8 +1,7 @@
 /**
  * The account row's menu opens over the row at the page's own scale and under
- * the reader's page zoom alike. The host places its own card from the row's
- * bounding box and the card's laid-out height, and the two are measured in
- * different pixels once the page is drawn at a zoom factor.
+ * the reader's page zoom alike: the host places its card from the row's box and
+ * the card's laid-out height, measured in different pixels once page zoom applies.
  *
  * @capability account-menu
  * @features account
@@ -30,9 +29,8 @@ async function windowBox(t) {
 
 /**
  * The card is not on the row: its bottom edge stands above the row's top edge.
- * The row is read after the card is open — a press on it changes the page — and
- * Playwright's own hit testing is what reads it, the row being covered by the
- * card rather than merely overlapped.
+ * Playwright's hit testing reads the row, the card covering it rather than
+ * merely overlapping it.
  */
 async function aboveTheRow(t) {
   const card = await cardBox(t)
@@ -44,10 +42,9 @@ async function aboveTheRow(t) {
 
 /**
  * The card opens upward from its row: its top edge stands above the row and its
- * bottom edge does not run past the row's. A card taller than the room above
- * the row is held against the window's top edge and covers the row by the least
- * it can — the zoomed card on a short window, with a platform's taller fonts, is
- * one — so this is the reading the zoom is judged on.
+ * bottom edge does not run past the row's. A card taller than the room above the
+ * row is held against the window's top edge and covers the row by the least it
+ * can, so this is the reading the zoom is judged on.
  */
 async function upwardFromTheRow(t) {
   const card = await cardBox(t)
@@ -59,8 +56,7 @@ async function upwardFromTheRow(t) {
 
 /**
  * Open the row's menu and wait for the card itself, not a fixed slice of time:
- * the entrance transition settles once the card is mounted, and a platform that
- * mounts it later is still the same page.
+ * a platform that mounts it later is still the same page.
  */
 async function openMenu(t) {
   await accountRow(t.page).click()
@@ -77,9 +73,8 @@ export default spec({ page: 'desktop' }, ({ test }) => {
 
   test('under page zoom the menu still opens upward from its row, inside the window', async (t) => {
     await t.prefs({ pageZoom: '1.25' })
-    // The zoom is what this reading is about, so it is judged too: a preference
-    // that never reached the page would leave the placement at 100% and the
-    // comparison would pass over a state nothing exercised.
+    // The zoom is judged too: a preference that never reached the page would
+    // leave the placement at 100% and the comparison would pass over nothing.
     t.expectThat.equal(await t.read.attribute('body', t.surface.attribute('skin.page-zoom')), '1.25', 'the page is drawn at 125%')
     await openMenu(t)
     await upwardFromTheRow(t)

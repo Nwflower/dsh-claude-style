@@ -9,13 +9,7 @@ import { notifyAll } from '@dsh-claude-style/engine/notify'
 import { createSettingsBinding } from '@dsh-claude-style/engine/settings-binding'
 import { pageOwner } from '../shared/visual-owner'
 
-/**
- * Skin preferences: the host settings namespace is the store, and every
- * value is mirrored onto the document as an attribute so the stylesheet
- * decides what it means (D75). Until the first read settles — and if
- * it fails — the table's defaults hold. The clamp that turns a stored value
- * into one of these is the table's own (packages/contracts/src/prefs.ts, D73).
- */
+/** Defaults hold until the host form answers; the shared table clamps stored values (D73, D75). */
 export let prefs = clampPrefs({})
 const prefsListeners: ((prefs: Prefs) => void)[] = []
 /** Whether the preferences on hand came from the form: until then they are the table's defaults. */
@@ -45,12 +39,7 @@ export function loadPrefs() {
   binding.read()
 }
 
-/**
- * Runtime overrides that outrank the stored preferences: a feature retired
- * after failing hands its surface back to the host, because both of these
- * HIDE host controls and a takeover whose replacement is gone would leave
- * nothing in their place.
- */
+/** Retired takeovers must reveal the host controls they hid. */
 let footerTakeoverRetired = false
 export let composerRestyleRetired = false
 
@@ -89,15 +78,7 @@ export function subscribePrefs(listener: (prefs: Prefs) => void) {
   }
 }
 
-/**
- * The document mirror: one entry per preference the stylesheet switches on,
- * with the attribute it rides and the resolver that turns the preference into
- * what the rules test (the resolved mascot, the dock's look, the footer's
- * presence). One list is the whole contract with the stylesheets: `adoptPrefs`
- * writes these and `clearPrefsAttributes` takes the same names back (entry.ts).
- * Its entries are literals so the build can hold every attribute a stylesheet
- * reads to a name written here (D9).
- */
+/** Literal mirrors let the build match stylesheet attributes to writes; cleanup uses the same list (D9). */
 interface PrefMirror {
   key: PrefKey
   attr: string
@@ -170,13 +151,7 @@ const MIRRORS = [
 /** Every attribute the mirror writes, plus the animation answer `writeMotionAttribute` resolves. */
 const MIRROR_ATTRS: readonly string[] = [...MIRRORS.map(mirror => mirror.attr), MOTION_ATTR]
 
-/**
- * Adopt a preference set: mirror it onto the document, then notify. A page a
- * skin or ds-bot owns carries none of this theme's attributes (D74): the set is
- * kept, and taking the page back mirrors it (entry.ts). The form answers
- * whenever it answers, and the settings section installs whenever its chunk
- * arrives (D72), so a yielded page hears adoptions too.
- */
+/** Update state even while yielded, but write attributes only on our page; notify after mirroring (D74). */
 export function adoptPrefs(next: Prefs) {
   prefs = next
   if (pageOwner() === null) {

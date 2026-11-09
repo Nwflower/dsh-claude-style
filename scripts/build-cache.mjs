@@ -1,45 +1,19 @@
-/**
- * build-cache.mjs — the results of the build's slow pure steps, kept between runs.
- *
- * Converting Deepy's sheets to vectors and brotli-compressing the routed text
- * assets take most of a build and change only when their inputs do. Each result
- * is stored under the hash of everything it is computed from, the code that
- * computes it included, so a hit hands back the very bytes a fresh run would
- * produce: `lib/` is the same with the cache or without it. The directory sits
- * in `.debug/` (gitignored); a fresh clone starts empty and computes all, and
- * the continuous integration run restores what an earlier run over the same tree
- * saved.
- */
+/** build-cache.mjs — cache pure build steps by every input, including the computing code. */
 import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 
-/**
- * How long an entry no build has used is kept. Another build of the same tree
- * may be reading entries this one does not use (an earlier stylesheet, another
- * branch's chunk), so pruning only takes what has stood unused for a day.
- */
+/** Delay pruning because another build of the tree may still read entries this one skips. */
 const UNUSED_LIFETIME_MS = 24 * 60 * 60 * 1000
 
-/**
- * Open the cache directory.
- *
- * @param dir - the cache directory; created on the first store.
- * @returns `get` to read or compute one result, `prune` to drop stale entries
- *     after a build that succeeded, and `counts` for the build log.
- */
+
 export function openBuildCache(dir) {
   /** step → the keys this build read or stored. */
   const used = new Map()
   let hits = 0
   let misses = 0
   return {
-    /**
-     * @param step - the step's name, one directory under the cache.
-     * @param inputs - everything the result depends on, as strings or bytes.
-     * @param compute - the step itself; returns the result's bytes.
-     * @returns the stored bytes for these inputs, or compute()'s, which are then stored.
-     */
+
     get(step, inputs, compute) {
       const hash = createHash('sha256')
       for (const input of inputs) {

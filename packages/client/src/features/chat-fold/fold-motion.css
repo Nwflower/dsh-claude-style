@@ -1,50 +1,6 @@
-/* ---------- chat fold: a body's entrance, and the door while it rolls ---------- */
-/* The host's DisclosureRow unmounts a body whole when it closes ({open &&
-   children}, ui-primitives' DisclosureRow.tsx), so the frame it is inserted on is
-   the only chance to attach a transition: @starting-style gives it a start value
-   and the body fades in from 2px above instead of snapping into place. This
-   covers every such row in the chat area — tool cards, thinking rows, system
-   notices, context injections, the generic command card — and the feature's own
-   file-change rows once they land.
-
-   Only opacity and translate move; the height is final at insertion. The chat
-   area is one scrolling container with a follow, and a process group's body has
-   its own ResizeObserver follow inside it: rewriting the height frame by frame
-   would send both chasing a moving target, and the paging anchors are recorded
-   by element position, which would drift during the animation. So this is a fade,
-   not an unfold.
-
-   The closed direction has no exit: the element is removed in the same frame and
-   CSS has no old value to transition from. An exit would mean taking over the
-   render.
-
-   The selector anchors on data-disclosure-row and data-disclosure-header,
-   attributes DisclosureRow emits itself rather than hashed class names, so a
-   host release cannot break it. Every sibling after the row is its body. A
-   newer host build wraps the row and its accessory in a header and puts the
-   expanded content inside that same wrapper: the body is then the innermost
-   element, which the attribute selector below names in both shapes.
-
-   Two exclusions:
-
-     outside the chat area  [data-disclosure-row] comes from a page-wide
-                            component that file previews and workflow panels use
-                            too, and they should not follow the chat area's rules:
-                            the rule is scoped to [data-chat-flow].
-     the turn's header      at the end of a turn the host gathers that turn's
-                            non-final content under its header (the "took X
-                            seconds" button, [data-turn-process]), and opening it
-                            brings those process members back into view at once —
-                            every body inside them would be treated as "just
-                            inserted" and dozens would fade in from 2px above,
-                            sliding the whole block into place. The process
-                            members carry the host's own data-turn-process-member,
-                            so that subtree is excluded whole; the turn's trigger
-                            notice ([data-turn-trigger]) likewise.
-
-   The trailing :is() picks the body out of both host shapes: the sibling after
-   the row where the row is its own header, and the innermost element of the
-   box the wrapper holds where the row sits inside a header. */
+/* DisclosureRow unmounts closed bodies, so only insertion can transition; height must stay final
+   because host follow and paging anchors track layout. The selectors support both host wrappers;
+   turn-process subtrees are excluded to avoid replaying every nested entrance. */
 @starting-style {
   body[data-dsh-claude-style][data-dsh-claude-chat-fold] [data-chat-flow] :is([data-disclosure-row], [data-disclosure-header]) ~ *:not([data-turn-process-member] *, [data-turn-trigger] *):is([data-disclosure-row] ~ *, [data-disclosure-header] ~ * *) {
     opacity: 0;
@@ -52,50 +8,24 @@
   }
 }
 
-/* The entrance: 2px up and a fade, at the 120 ms the chat area already uses
-   (MessageItem and the TurnNavigator preview match it), which is the reveal
-   token (D9). It rides the folding switch with the rest of the feature: off
-   leaves the host's own insertion. */
+/* Reveal timing and the feature switch follow D9. */
 body[data-dsh-claude-style][data-dsh-claude-chat-fold] [data-chat-flow] :is([data-disclosure-row], [data-disclosure-header]) ~ *:not([data-turn-process-member] *, [data-turn-trigger] *):is([data-disclosure-row] ~ *, [data-disclosure-header] ~ * *) {
   transition: opacity var(--dsh-claude-duration-reveal) var(--dsh-claude-ease-out), translate var(--dsh-claude-duration-reveal) var(--dsh-claude-ease-out);
 }
 
-/* The reader's animation choice, resolved onto <body> (packages/client/src/core/prefs.ts, D40):
-   the system setting is folded into that attribute by "follow the system", so
-   this one rule covers both it and the explicit "reduced". */
+/* The resolved body attribute covers explicit and system reduced motion (D40). */
 body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-chat-flow] :is([data-disclosure-row], [data-disclosure-header]) ~ *:not([data-turn-process-member] *, [data-turn-trigger] *):is([data-disclosure-row] ~ *, [data-disclosure-header] ~ * *) {
   transition: none;
 }
 
-/* While the door rolls (fold-glide.ts hangs the mark), every card inside is laid
-   out at its natural height rather than squeezed: a body is often a flex column,
-   and with the height pressed the flex would shrink away the card that can shrink
-   (a code card's automatic minimum height is 0) first, so a run_code body of
-   "code card plus output card" would roll in two stages. Marked, each card takes
-   its own height and only the frame clips. The mark goes away with the door and
-   the layout returns to the host's own — at the end point the two arrangements
-   agree to the pixel. !important because nothing may change it during those
-   200 ms. */
+/* Keep children at natural height while the frame clips; flex shrinking would collapse code cards
+   in stages. !important protects this invariant for the whole roll. */
 body[data-dsh-claude-style] [data-dsh-claude-rolling] > * {
   flex: none !important;
 }
 
-/* ---------- chat fold: the reasoning's streamed window ---------- */
-/* While the model reasons, the thinking row's text stands in a window that grows
-   with it and steps up on the snippet's clock once it can grow no further
-   (reasoning-stream.ts, transitions.dev's "Reasoning stream", MIT): the edges
-   are a mask rather than gradients painted over the text, so the card behind
-   them can be anything. The module puts the mark on the nearest box around the
-   host's rendered Markdown — one host version wraps that in a slot generating no
-   box of its own — and the Markdown inside is what it slides.
-
-   The tokens are the snippet's, under this skin's names; the window's own height
-   arrives as a pixel measure the module writes, since it is the text's height
-   held under the cap. --dsh-claude-reason-window-cap is the height reasoning is
-   allowed to reach — the host's own max-height on a process group's body, which
-   is the tallest the open row gets once the window comes off — and the mask
-   belongs to the capped state alone: while the text still fits under the cap the
-   window is exactly as tall as the text and nothing is faded. */
+/* reasoning-stream.ts writes the measured height; the cap mirrors the host process body.
+   Mask only the capped state so shorter reasoning stays unfaded and any card background shows through. */
 
 body[data-dsh-claude-style] [data-dsh-claude-reason-window] {
   --dsh-claude-reason-lines: 2;
@@ -119,11 +49,8 @@ body[data-dsh-claude-style] [data-dsh-claude-reason-window] [data-dsh-claude-rea
   will-change: transform;
 }
 
-/* The reader's animation choice (D40), resolved onto <body>: reduced takes the
-   window and its stepping off whole — reasoning-stream.ts asks the same question
-   before it starts one, so no half state is left behind. The mask is named here
-   as well, since a window the module left standing carries it on the capped
-   attribute. */
+/* Clear the capped mask too: reasoning-stream.ts stops new windows under reduced motion (D40),
+   while an existing window may still carry the attribute. */
 body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-claude-reason-window] {
   -webkit-mask-image: none;
   mask-image: none;

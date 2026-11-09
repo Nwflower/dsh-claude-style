@@ -1,13 +1,8 @@
 /**
  * What a behaviour spec is written with (D87): `spec()` to declare its page and
  * its tests, the readers that take user-observable results off the built page,
- * and the predicates that judge them.
- *
- * A spec reaches the page three ways only: the host contract by id
- * (packages/contracts/src/table.ts), the skin's surface by id
- * (packages/testing/data/surface.json), and what the reader sees — boxes, computed
- * styles, text, roles and names, and the animations the page is running. A
- * reader answers plain data, so a failure carries the evidence it was judged on.
+ * and the predicates that judge them. A spec reaches the page only through the
+ * host contract by id, the skin's surface by id, or what the reader sees.
  */
 import parser from 'postcss-selector-parser'
 import registry from '../../data/surface.json' with { type: 'json' }
@@ -68,11 +63,7 @@ host.attributes = (id) => {
   })
 }
 
-/**
- * Declare one spec: the stand-in page its tests load (packages/testing/smoke/page.mjs
- * names them), the viewport bands it is judged at (packages/testing/data/matrix.json,
- * `wide` unless named), and its tests, each a name and a body.
- */
+/** Declare one spec: its stand-in page, the viewport bands it is judged at (`wide` unless named), and its tests as name and body. */
 function spec(options, define) {
   const tests = []
   define({ test: (name, body) => tests.push({ name, body }) })
@@ -103,10 +94,9 @@ function readers(page) {
     /** How many elements match. */
     count: (selector) => page.evaluate((s) => document.querySelectorAll(s).length, selector),
     /**
-     * Every animation running on a matching element: whether it plays and how
-     * long one cycle is. The iteration count is left out on purpose: an
-     * infinite one crosses the page boundary as null, so a judgement reading it
-     * would answer about the transport rather than the page.
+     * Every animation running on a matching element: play state and one cycle's
+     * length. Iteration count is left out: an infinite one crosses the page
+     * boundary as null, and a judgement reading it would answer about the transport.
      */
     animations: (selector) => page.evaluate((s) => document.getAnimations()
       .filter((animation) => animation.effect !== null && animation.effect.target instanceof Element && animation.effect.target.matches(s))
@@ -157,19 +147,17 @@ const expectThat = {
   },
   /**
    * The content fits its box across: no horizontal scrollbar can appear. A
-   * clipped sub-pixel child reports one pixel past its box (a 100.9px child in
-   * a 100px box reads 101) without any bar being possible, so one step is the
-   * tolerance the reading needs.
+   * clipped sub-pixel child reads one pixel past its box without any bar being
+   * possible, so one step is the tolerance the reading needs.
    */
   noHorizontalOverflow(overflow, label) {
     if (overflow === null || overflow.scrollWidth - overflow.clientWidth > 1) throw new PredicateError('noHorizontalOverflow', label, 'scrollWidth <= clientWidth', overflow)
   },
   /**
-   * Nothing moves: no animation with a cycle a reader can see. The reduced
-   * motion net the skin writes forces every animation to a 0.01ms cycle and
-   * leaves its iteration count alone, so an infinite animation keeps reporting
-   * `running` while painting one still frame; the floor is the same one
-   * `moving` reads, so the two answer about the same visible cycle.
+   * Nothing moves: no animation with a cycle a reader can see. The
+   * reduced-motion net forces a 0.01ms cycle but leaves iteration count alone,
+   * so an infinite animation keeps reporting `running` over one still frame;
+   * `moving` reads the same floor.
    */
   still(animations, label) {
     const moving = animations.filter((animation) => animation.playState === 'running' && animation.duration >= 100)

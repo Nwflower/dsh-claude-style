@@ -1,24 +1,6 @@
-/**
- * The model picker's and the effort ladder's fixed labels, and the route the
- * copy document is served under.
- *
- * The description lines themselves are NOT here: they ship as
- * `model-descriptions.json` beside the bundle, and the browser half fetches it
- * at runtime (the host half serves it under MODEL_COPY_ROUTE), so the model
- * table grows without a rebuild and no copy enters the bundle. The language
- * comes from the shell's own `locale` service — one line per row, in the
- * language the rest of the UI is in — never two languages stacked.
- *
- * The constants below are the neutral fallbacks painted before that document
- * arrives, and kept if it never does. They are English because a failed
- * fetch has no locale to honour.
- */
-/**
- * The host's group id for its official provider, which this feature reads as
- * the picker's default rather than a choice (packages/contracts/src/services.ts,
- * where the host's model catalog declares it). The account group takes that
- * place when the API-key route advertises nothing (level-one.ts).
- */
+/* Descriptions are fetched from MODEL_COPY_ROUTE so catalog copy can change without a rebuild.
+   The English constants are fallbacks before that document arrives or when its fetch fails. */
+/** The account group becomes the default when the API-key route advertises no official models. */
 export { ACCOUNT_MODEL_GROUP as MODEL_ACCOUNT_GROUP, OFFICIAL_MODEL_GROUP as MODEL_OFFICIAL_GROUP } from '@dsh-claude-style/contracts/services'
 export const MODEL_COPY_ROUTE = '/dsh-claude-style/model-descriptions.json'
 export const MODEL_COPY_FALLBACK_LOCALE = 'en'
@@ -27,11 +9,9 @@ export const MODEL_LOADING_LABEL = 'Loading models…'
 export const MODEL_EMPTY_LABEL = 'No models available.'
 export const MODEL_EFFORT_LABEL = 'Reasoning effort'
 export const MODEL_EFFORT_DEFAULT = 'Default'
-/** The effort slider's two ends. Kept in English in every locale: they name
- *  the axis, not a level, and the level's own name rides beside the label. */
+/** Axis labels stay English in every locale; the localized level name appears beside them. */
 export const MODEL_EFFORT_FASTER = 'Faster'
 export const MODEL_EFFORT_SMARTER = 'Smarter'
-/** What the slider reads when the model offers no levels at all. */
 export const MODEL_EFFORT_NONE = '—'
 export const MODEL_MORE_LABEL = 'More models'
 export const MODEL_TRIGGER_LABEL = 'Select model, currently {model}'

@@ -26,10 +26,7 @@ interface Window {
 /** Additions this skin puts on the global scope. */
 declare var __dshStepDisplay: { set: (mode: 'compact' | 'standard' | 'detailed' | 'verbose') => Promise<boolean>, read: () => string } | undefined
 
-/**
- * Marks the skin keeps on nodes it binds, so a later pass or a later
- * generation can tell its own binding apart from one it must redo.
- */
+/** Binding tokens distinguish this generation's nodes from stale ones. */
 interface Element {
   /** The context meter, panel and line of numbers bound by this generation (features/context-stats). */
   __dshContextMeterToken?: object
@@ -49,11 +46,7 @@ interface Element {
 }
 
 interface HTMLScriptElement {
-  /**
-   * What a feature chunk's script hands back (D72): the chunk's factory, set
-   * on its own script element while it runs. It is called with the `require`
-   * that resolves the modules the chunk shares with the bundle.
-   */
+  /** The running chunk publishes its factory here; `require` resolves shared bundle modules (D72). */
   __dshChunk?: (require: (id: string) => unknown) => { install?: unknown }
 }
 

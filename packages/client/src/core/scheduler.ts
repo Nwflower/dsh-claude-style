@@ -15,11 +15,7 @@ import type { ModelHandle } from '../features/model/model-picker'
 import type { PeakRateHandle } from '../features/peakrate/peakrate'
 import type { QuickProvidersHandle } from '../features/settings/quick-providers'
 
-/**
- * Every feature's handle, under the name it registers on `ui` (its manifest's
- * `handle`, or its `id`). A feature that other features read publishes a
- * handle type of its own; the others are plain scheduler hooks.
- */
+/** Public feature handles; a feature sees only its own and its manifest's `reads`. */
 export interface Handles {
   brand: FeatureHandle
   composer: ComposerHandle
@@ -74,12 +70,7 @@ export interface Handles {
 
 export type HandleName = keyof Handles
 
-/**
- * The whole registry, as entry.ts and the scheduler hold it: each installed
- * feature's handle under its handle name. A feature sees only its own part of
- * it (FeatureUi in core/feature.ts): its handle and the ones its manifest
- * `reads`.
- */
+
 export type Ui = SchedulerCalls & { [K in HandleName]?: Handles[K] }
 
 /** Run the engine's scheduler over this skin's features, listening to the sources that change what they show. */

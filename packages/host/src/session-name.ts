@@ -4,10 +4,9 @@
  *
  * This restates `encodeSegment` in the host's session persistence
  * (`@deepseek-ai/dsh-session-persistence-jsonl`), which no shared module hands
- * to the host half, so both directions live beside the routes and readers that
- * cross between them. A code unit outside `A-Za-z0-9._-` becomes `~XXXX`, `.`
- * and `..` included, so a plugin-generated id
- * (`im:<channel>:dm:<user>:<token>@<domain>`) has a name of its own.
+ * to the host half. A code unit outside `A-Za-z0-9._-` becomes `~XXXX`, `.` and
+ * `..` included, so a plugin-generated id (`im:<channel>:dm:<user>:<token>@<domain>`)
+ * has a name of its own.
  */
 
 /** One escaped code unit: the four uppercase hex digits the storage writes. */

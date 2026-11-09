@@ -1,11 +1,8 @@
 /**
  * The written-back figure's full readings ride on the interval the estimate
- * declares (#211): each one walks every streaming container's text, so the
- * readings between a stream's first and its settlement answer structure alone
- * and mid-window text does not move the figure. Around that window everything
- * stays immediate: the very first reading, and a settlement's correction,
- * which lands on the next frame whatever the window says. The window itself
- * is judged on the page's own clock, the one allowance a duration gets.
+ * declares (#211): every reading walks each streaming container's text, so a
+ * batch inside the window answers structure alone. The first reading and a
+ * settlement's correction stay immediate; the window is judged on the page clock.
  *
  * @capability context-stats
  * @features context-stats
@@ -15,10 +12,9 @@ import { spec } from '../../fixtures/behaviour.mjs'
 import { readWrittenBackTokens, seatStreamingStatsSession } from '../../fixtures/stats-session.mjs'
 
 /**
- * An empty streaming container of the host's inside the conversation, mounted
- * long enough for the estimate's next reading — due at its first ask — to
- * stand as the container's baseline. Returns the page clock at the tick that
- * took the reading.
+ * An empty streaming container of the host's, mounted long enough for the
+ * estimate's next reading to stand as its baseline. Returns the page clock at
+ * the tick that took the reading.
  */
 async function baselineContainer(t) {
   return t.page.evaluate(async ([scroller, streaming]) => {
@@ -60,9 +56,8 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
     await seatStreamingStatsSession(t)
     const at = await baselineContainer(t)
     t.expectThat.equal(await readWrittenBackTokens(t), 100, 'the baseline over an empty container adds nothing')
-    // Text lands; then, a batch driven inside the window — after the old
-    // 100 ms answer would have scanned, before this one's 800 ms does. The
-    // pass it triggers is not a due reading here: the figure stands.
+    // Text lands; then a batch driven inside the window, before the new answer's
+    // reading is due. The pass it triggers is not a due reading: the figure stands.
     await landText(t, 'abcdefghijklmnopqrst')
     const mid = await t.page.evaluate(async ([from, line]) => {
       const container = document.querySelector('[data-test-tick]')
@@ -76,9 +71,8 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
     t.expectThat.equal(mid.at < 800, true, `the inside batch came within the window (${Math.round(mid.at)} ms)`)
     t.expectThat.equal(midFigure === null ? null : Number(midFigure[1].replace(/,/g, '')), 100,
       'inside the window the figure stands on the settled total')
-    // A batch past the window is the next due reading: it counts the text.
-    // The tick only queues that pass, so the figure is read once the page has
-    // settled on it rather than right after the batch that asked for it.
+    // A batch past the window is the next due reading. The tick only queues that
+    // pass, so the figure is read once the page has settled on it.
     await t.page.evaluate((wait) => new Promise((resolve) => setTimeout(resolve, wait)), 700)
     await tick(t)
     await t.settle()
@@ -90,9 +84,8 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
     const at = await baselineContainer(t)
     await landText(t, 'abcdefghijklmnopqrst')
     t.expectThat.equal(await readWrittenBackTokens(t), 100, 'mid-window text does not move the figure')
-    // The answer's step settles while the window is still open. The
-    // settlement makes the next reading due whatever the clock says, and the
-    // host's own total takes over on the very next frame.
+    // The answer's step settles while the window is still open: the settlement
+    // makes the next reading due, and the host's total takes over on the next frame.
     const pushedAt = await t.page.evaluate(() => {
       window.__pushStats('tokenUsage', { outputTokens: 130 })
       return performance.now()

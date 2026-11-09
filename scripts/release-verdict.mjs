@@ -1,26 +1,7 @@
 #!/usr/bin/env node
 /**
- * release-verdict.mjs — the matrix verdict a release reads instead of running
- * the gates a second time (D87).
- *
- * The whole matrix — the smoke, the behaviour specs on three systems and the
- * end-to-end lane — is judged once, on a manual run of `.github/workflows/ci.yml`
- * against master, before a version is cut. This asks GitHub for that run on the
- * commit a tag names and answers whether it is a verdict this release may stand
- * on: the run answered the manual event, it succeeded, and every lane the matrix
- * holds gave a verdict of its own rather than being skipped.
- *
- * The commit, not the tree, is compared: the tag names a commit and the matrix
- * ran on one, so a match says the very files this release packs were the files
- * the lanes read. A tree that moved under the matrix is another commit, and the
- * answer is no verdict.
- *
- * Reads GH_TOKEN (or GITHUB_TOKEN), GITHUB_REPOSITORY and GITHUB_SHA; `--sha`,
- * `--repo` and `--workflow` name them on a machine without the event, and
- * `--api` points the reading at another host, which is how the answer is tried
- * against a recorded response. Prints the answer and the reason; writes
- * `matrix=reuse` to $GITHUB_OUTPUT when there is one, and answers 1 with the
- * reason when there is none, so a release stops before it packs anything.
+ * release-verdict.mjs — require a successful manual matrix on the tagged commit
+ * with no skipped lane (D87); stop before packing when no verdict exists.
  */
 import fs from 'node:fs'
 import { argOf } from './shared/args.mjs'
@@ -32,12 +13,7 @@ const fail = (message) => {
   throw new NoVerdict(message)
 }
 
-/**
- * The lanes the matrix holds, as the names its run reports them under: the
- * build every page lane reads, the spec lane with the store and the behaviour
- * specs, the host half on Windows, the behaviour specs on macOS, and one job per
- * end-to-end shard. The aggregation job is left out: it reports the others.
- */
+/** Match actual lanes; the aggregation job only reports them. */
 const LANES = [
   { what: 'the build', pattern: /^build$/ },
   { what: 'the spec, smoke and behaviour lane', pattern: /^unit-smoke$/ },

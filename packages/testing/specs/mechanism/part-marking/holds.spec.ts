@@ -1,8 +1,8 @@
 /**
- * The part walk turns the host's hashed class names into stable part marks,
- * and answers the structural relations a stylesheet asks (`A:has(B)`) as one
- * hold mark on the holder, from the same walk (D9). The host's class names
- * come from the engine's own tables, so a host rename is one table line.
+ * The part walk turns the host's hashed class names into stable part marks and
+ * answers the structural relations a stylesheet asks (`A:has(B)`) as one hold
+ * mark on the holder, from the same walk (D9); the class names come from the
+ * engine's own tables, so a host rename is one table line.
  *
  * @capability part-marking
  * @features engine

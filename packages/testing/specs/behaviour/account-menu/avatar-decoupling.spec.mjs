@@ -1,8 +1,7 @@
 /**
  * The account row's picture is decoupled from the page's opening path (#211):
- * it stands at the foot of the page, outside the first screen almost always,
- * so it is handed to the browser as a lazy, asynchronously decoded image and
- * the opening paint does not queue its fetch or its decode.
+ * it stands at the foot of the page, so it is handed to the browser lazy and
+ * asynchronously decoded, and the opening paint queues neither fetch nor decode.
  *
  * @capability account-menu
  * @features account

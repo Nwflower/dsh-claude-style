@@ -1,66 +1,19 @@
 /**
- * assets.mjs — every image the skin ships, one directory and one manifest.
- *
- * Two delivery forms, chosen by size:
- *
- *   inline   the file's own bytes ride the bundle as a data URI (an image) or
- *            as markup (the vendor lockups, which the picker stamps into a row
- *            with innerHTML so the mono layer inherits the row's color).
- *   route    the file is written to `lib/assets/<hash>.<ext>` and served by the
- *            host half under ASSETS_ROUTE; the name carries the content hash,
- *            so the address may be cached for good.
- *
- * The deferred features' chunks and their source maps (D72) ride the same route:
- * the build hands their text in (routeText), always routed.
- *
- * A file whose bytes are text (SVG, a chunk) is stored brotli-compressed beside
- * its name; the host half sends it as-is to a client that takes brotli and
- * decompresses it for one that does not, so the package carries the sheets
- * once, small.
- *
- * Deepy's sheets are drawn as PNG but ship as the vector the browser already
- * plays: the same cell layout as the sprite's own geometry — every frame keeps
- * DEEPY_GUTTER of transparency on all four sides, or the downscale that draws
- * it samples the frame above's shadow along the cell's edge — with one path per
- * color, each row's runs extended downwards into rectangles. The PNGs are
- * inputs of the build and never reach `lib/`.
- *
- * The crab's sheets ship as PNG, laid out again with CRAB_GUTTER of
- * transparency around every frame: drawn at a fractional device scale, the
- * window around a frame takes in a sliver of the cell beside it.
- *
- * Whalegirl's strips ship as the PNG the emoji set gives, routed rather than
- * inlined even though each is small: the build forces the route (planAssets'
- * `route` set) so the deferred mascot chunk carries none of her art and a page
- * fetches an animation's strip the first time it plays.
- *
- * The manifest is also the gate: a file under `packages/assets/src/` that no table or
- * token claims fails the build, so an image added for one run cannot ship
- * unused. `packages/assets/src/fonts/` stands outside that gate: buildFonts copies the
- * faces and the licences the package ships into `lib/fonts/`, where the host
- * half's font route reads them, and Anthropic's own faces sit one directory
- * down, in `anthropic/`, because they never enter the package.
+ * Build and validate the asset manifest. Large assets and deferred chunks (D72)
+ * use content-hashed routes; unclaimed source files fail the build.
  */
 import fs from 'node:fs'
 import path from 'node:path'
 import { createHash } from 'node:crypto'
 import { brotliCompressSync } from 'node:zlib'
 
-/** The largest file that rides the bundle rather than the route. */
 export const INLINE_LIMIT_BYTES = 16 * 1024
-/** Where the host half serves the routed assets. */
 export const ASSETS_ROUTE = '/dsh-claude-style/assets/'
-/** The manifest the host half reads to decide what it may serve. */
 export const ASSETS_MANIFEST = 'manifest.json'
-/** The fonts under packages/assets/src/, delivered by buildFonts rather than by the manifest. */
 export const FONT_DIR = 'fonts'
-/** The directory inside it for Anthropic's own faces, which the package never carries. */
+/** Anthropic's fonts are repository-only and never enter the package. */
 export const PRIVATE_FONT_DIR = 'anthropic'
-/**
- * What `packages/assets/src/fonts/` ships, in the order the build log counts it: the
- * five faces and the one licence file that covers them, which OFL 1.1 requires
- * to travel with them. The pixel face is cut by scripts/pixel-font.py.
- */
+/** OFL 1.1 requires the licence to travel with the shipped font faces. */
 const SHIPPED_FONTS = [
   'JetBrainsMonoVariable.ttf',
   'JetBrainsMonoItalicVariable.ttf',
@@ -78,11 +31,7 @@ const CONTENT_TYPES = {
   '.jpg': 'image/jpeg',
 }
 
-/**
- * Files under packages/assets/src/ that the package does not ship: drawing material for
- * the hand-run scripts. They are inputs, so listing them here is what says the
- * manifest is not silently missing them.
- */
+/** Declare drawing inputs explicitly so the manifest does not mistake them for omissions. */
 export const SOURCE_ONLY = new Set([
   // scripts/draw-crab.py takes the crab's own laptop frames from these.
   'mascot/crab/crab-laptop-body.png',
@@ -94,26 +43,9 @@ export const SOURCE_ONLY = new Set([
   'icons/reflection.svg',
 ])
 
-/**
- * The file name a mascot sheet may have, matching what the mascot's animation
- * table spells.
- */
 const SHEET_FILE = /^[a-z]+(?:-[a-z]+)*\.png$/
 
-/**
- * Hold one mascot's sheet directory to its animation table in packages/client/src/constants.ts.
- *
- * Each entry needs its files and a well-formed row — a frame count, a crop box
- * inside the character's grid, a still frame the sheet holds — and a file no
- * entry names is refused, so the package never ships a sheet the mascot cannot
- * play or an entry that would draw nothing.
- *
- * @param table - the table's name, for diagnostics.
- * @param sheets - animation → `{ frames, box, still }`.
- * @param grid - `[width, height]` of the character's grid.
- * @param dir - the sheet directory.
- * @param filesOf - animation → the file names its entry needs.
- */
+/** Reject sheets and animation entries that cannot produce a playable frame. */
 export function checkSheets(table, sheets, grid, dir, filesOf) {
   const where = path.relative(process.cwd(), dir).replace(/\\/g, '/')
   const wanted = new Set(Object.keys(sheets).flatMap(filesOf))
@@ -133,18 +65,7 @@ export function checkSheets(table, sheets, grid, dir, filesOf) {
   }
 }
 
-/**
- * Hold a sheet's own pixels to its entry: the crop box has to tile it whole,
- * and the cells have to hold every frame the table names. A sheet drawn on a
- * different grid, or cropped differently, would play a wrong slice of itself.
- *
- * @param table - the table's name, for diagnostics.
- * @param name - the animation.
- * @param image - the decoded sheet (`{ width, height }`).
- * @param sheet - the table's entry.
- * @param scale - device pixels to a logical pixel in this character's sheets.
- * @returns the cell grid: `{ columns, rows }`.
- */
+/** Require the crop box to tile the sheet and contain every declared frame. */
 export function checkSheetPixels(table, name, image, sheet, scale) {
   const innerWidth = sheet.box[2] * scale
   const innerHeight = sheet.box[3] * scale
@@ -171,16 +92,7 @@ function colorAt(data, at) {
     : `rgba(${r},${g},${b},${(a / 255).toFixed(3)})`
 }
 
-/**
- * Lay the sheet's frames out one cell each, with the transparent margin the
- * sprite's geometry expects, and read every run of one color per row.
- *
- * @param image - the decoded sheet (`{ width, height, data }`, RGBA).
- * @param box - the frame's crop box `[x, y, width, height]` in logical pixels.
- * @param scale - device pixels to a logical pixel in this character's sheets.
- * @param gutter - the transparent margin in logical pixels.
- * @returns `{ data, width, height }` of the laid-out pixels.
- */
+/** Preserve transparent gutters so fractional-scale drawing cannot sample adjacent frames. */
 export function layoutCells(image, box, scale, gutter) {
   const innerWidth = box[2] * scale
   const innerHeight = box[3] * scale
@@ -205,18 +117,7 @@ export function layoutCells(image, box, scale, gutter) {
   return { data, width, height }
 }
 
-/**
- * Rebuild one sheet as SVG text over the laid-out cells: a run of one color is
- * extended downwards for as long as the rows below carry the same color over
- * the same span, so a flat area becomes one rectangle instead of one per row.
- * Transparent pixels are simply absent.
- *
- * @param image - the decoded sheet.
- * @param box - the frame's crop box in logical pixels.
- * @param scale - device pixels to a logical pixel in this character's sheets.
- * @param gutter - the transparent margin in logical pixels.
- * @returns the SVG text and the box it draws into.
- */
+/** Merge matching vertical runs into SVG rectangles; omit transparent pixels. */
 export function vectorizeSheet(image, box, scale, gutter) {
   const { data, width, height } = layoutCells(image, box, scale, gutter)
   /** Color string → the rectangles of that color, in drawing order. */
@@ -258,21 +159,7 @@ export function vectorizeSheet(image, box, scale, gutter) {
   return { svg: parts.join(''), width, height }
 }
 
-/**
- * Every file under the assets directory, with its content hash and the address
- * it is reached by.
- *
- * @param options.assetsDir - the directory the images live in.
- * @param options.generated - assets the build produced rather than read:
- *     path under the directory → text (Deepy's vector, in place of its source
- *     PNG) or bytes (a crab sheet laid out with its gutter, under its own path).
- * @param options.replaced - paths under assets/ whose generated asset takes
- *     their place: the file is an input of the build and does not ship.
- * @param options.sourceOnly - paths under assets/ that do not ship.
- * @param options.limit - the largest file inlined.
- * @param options.route - paths under assets/ that are served from the route even when small.
- * @returns `{ entries, routed }`; `entries` is keyed by the path under assets/.
- */
+/** Plan inline and content-hashed routes; generated assets replace their source inputs. */
 export function planAssets({ assetsDir, generated = new Map(), replaced = new Set(), sourceOnly = SOURCE_ONLY, limit = INLINE_LIMIT_BYTES, route = new Set() }) {
   const root = assetsDir
   const entries = new Map()
@@ -313,32 +200,14 @@ export function planAssets({ assetsDir, generated = new Map(), replaced = new Se
   return { entries, routed: [...entries.values()].filter((entry) => !entry.inline) }
 }
 
-/**
- * Refuse an asset nothing names: a file under packages/assets/src/ that no animation
- * table, brand token or lockup reads would otherwise ship (or sit in the
- * repository) with nothing to say it is unused.
- *
- * @param plan - the plan (planAssets).
- * @param claimed - the paths the build read.
- */
+/** Fail on unclaimed assets so unused files cannot ship unnoticed. */
 export function checkClaimed(plan, claimed) {
   for (const file of plan.entries.keys()) {
     if (!claimed.has(file)) throw new Error(`build: packages/assets/src/${file} is read by nothing; name it in an animation table, a brand token or delete it`)
   }
 }
 
-/**
- * Route a text file the build produced rather than read from packages/assets/src/: a
- * feature chunk or its source map (D72). It is never inlined — a chunk inlined
- * into the bundle would put its feature back — and the build names it.
- *
- * @param plan - the plan (planAssets); the entry joins its routed files.
- * @param file - the key the plan holds it under.
- * @param name - its file name under lib/assets/, which its address carries.
- * @param type - its content type.
- * @param text - its contents.
- * @returns the entry, whose `url` is the route's address for it.
- */
+/** Route generated chunks and source maps; inlining would defeat deferred loading (D72). */
 export function routeText(plan, { file, name, type, text }) {
   const bytes = Buffer.from(text, 'utf8')
   const entry = { file, bytes, text, type, hash: name.split('.')[0], name, url: ASSETS_ROUTE + name, inline: false }
@@ -348,28 +217,8 @@ export function routeText(plan, { file, name, type, text }) {
 }
 
 /**
- * Write the routed assets and the manifest the host half serves them from.
- *
- * Text assets are stored brotli-compressed beside their name (the payload the
- * route prefers); everything else is stored as it is.
- *
- * The order is the point: the new files go down first and the manifest after
- * them, so every name the manifest carries is already on disk when a client
- * asks for it; files the new manifest does not name are removed last, so a page
- * still running the previous build keeps finding its own.
- *
- * `retain` carries the previous manifest's entries over, for the linked
- * checkout that rebuilds against a live page (D72): the page that booted the
- * previous bundle asks for that build's chunk names, and this keeps them
- * addressable. An entry whose file is gone is dropped, because the manifest is
- * the gate the route answers from.
- *
- * @param libDir - the build output directory.
- * @param plan - the plan (planAssets).
- * @param options.retain - whether the previous manifest's entries carry over.
- * @param options.compress - bytes → their brotli form; the build passes one that
- *     reads its cache (scripts/build-cache.mjs).
- * @returns `{ files, bytes, kept }` of what was written and what carried over, for the build log.
+ * Write assets before their manifest and prune old files last so live pages
+ * never see a missing route; retain keeps previous chunks addressable (D72).
  */
 export function writeAssets(libDir, plan, { retain = false, compress = brotliCompressSync } = {}) {
   const dir = path.join(libDir, 'assets')
@@ -408,20 +257,7 @@ export function writeAssets(libDir, plan, { retain = false, compress = brotliCom
   return { files: plan.routed.length, bytes, kept }
 }
 
-/**
- * Copy the faces the package ships, with the one licence file that OFL 1.1
- * requires to travel with them, from `packages/assets/src/fonts/` into
- * `<out>/fonts/`, where the host half's font route reads them.
- *
- * The file list is the whole contract for that directory, as the manifest is
- * for the rest of packages/assets/src/: a name it does not carry ships nothing, and
- * Anthropic's own faces live one directory down in `anthropic/`, out of the
- * package.
- *
- * @param options.assetsDir - the directory the fonts live in.
- * @param options.libDir - the build output directory.
- * @returns `{ files, bytes }` of what was written, for the build log.
- */
+/** Copy only listed font faces and their OFL licence; Anthropic's private directory never ships. */
 export function buildFonts({ assetsDir, libDir }) {
   const source = path.join(assetsDir, FONT_DIR)
   for (const entry of fs.readdirSync(source, { withFileTypes: true })) {

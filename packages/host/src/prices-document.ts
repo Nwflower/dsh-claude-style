@@ -2,12 +2,10 @@
  * The price snapshot's validator: the shape the host half and the build both
  * hold a document to.
  *
- * The document is produced by `scripts/fetch-prices.mjs` from the official
- * page, shipped beside the bundle, refreshed from the repository and read from
- * the browser over a route — so every field a judgement is made from is checked
- * here. A document this reader refuses is dropped whole (the host keeps the one
- * it already had), because a half-read table would price some settlements at
- * one rate and the rest at another.
+ * The document is produced by `scripts/fetch-prices.mjs` from the official page
+ * and every field a judgement is made from is checked here. A document this
+ * reader refuses is dropped whole, because a half-read table would price some
+ * settlements at one rate and the rest at another.
  */
 import { CURRENCIES, PRICE_SCHEMA_VERSION, clockAt } from '@dsh-claude-style/contracts/prices'
 import type { Currency, ModelPrice, PriceDocument, PriceSchedule, PriceTier, PriceWindow } from '@dsh-claude-style/contracts/prices'
@@ -101,12 +99,11 @@ function asSchedule(value: unknown): PriceSchedule | null {
 }
 
 /**
- * One catalogue table, validated: model id → `"input cacheRead output"`.
- * A line holding exactly three non-negative numbers is kept in whatever spacing
- * it arrived with; anything else is dropped alone. A run of spaces is one
- * separator, so it can never stand for an empty number, and the stored line is
- * rewritten with single spaces because the client splits it that way
- * (`split(' ')` in the price contract).
+ * One catalogue table, validated: model id → `"input cacheRead output"`. A line
+ * holding exactly three non-negative numbers is kept; anything else is dropped
+ * alone. A run of spaces is one separator, and the stored line is rewritten with
+ * single spaces because the client splits it that way (`split(' ')` in the price
+ * contract).
  */
 function asCatalog(value: unknown): Record<string, string> | null {
   const raw = asRecord(value)

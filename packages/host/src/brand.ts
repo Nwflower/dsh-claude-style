@@ -2,11 +2,11 @@
  * The reader's own brand images (D30), kept under the harness home's
  * `dsh-claude-style/brand/` as `mark.<ext>` and `wordmark.<ext>`.
  *
- * The status route answers which images are in place; each image's route
- * serves, replaces or removes its bytes. Every request runs the fence: the
- * files are the reader's, and a write changes what every page of this host
- * paints. The directory is read per request, so a file the reader drops in by
- * hand shows up on the next status read.
+ * The status route answers which images are in place; each image's route serves,
+ * replaces or removes its bytes. The files are the reader's and a write changes
+ * what every page of this host paints, so every request runs the fence. The
+ * directory is read per request, so a file dropped in by hand shows up on the
+ * next status read.
  */
 import { BRAND_IMAGE_KINDS, BRAND_IMAGE_MAX_BYTES, BRAND_IMAGE_TYPES } from '@dsh-claude-style/contracts/brand'
 import type { BrandAnswer, BrandImageKind, BrandImageState } from '@dsh-claude-style/contracts/brand'

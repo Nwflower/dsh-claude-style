@@ -1,34 +1,16 @@
 /**
  * Message-content search for the browser half's search palette.
  *
- * What is searchable is the conversation itself: the messages the reader sent
- * and the text the model answered with. Injected context arrives as
- * `user/message` too — environment snapshots, the Skill catalog, AGENTS.md and
- * compaction checkpoints — and carries a `data.source.kind` other than `user`,
- * so it is left out; reasoning blocks and tool calls and results are other block
- * and event types and never enter the corpus.
+ * The corpus is the reader's own messages and the model's answers, matched the
+ * way the host's own `text` filter does: literal, case-insensitive, whitespace
+ * flexible — the host's content index matches whitespace-delimited tokens only,
+ * so part of a Chinese sentence never matches there, and it is off in the
+ * shipped web composition anyway.
  *
- * Reading. The host's own content index (`@deepseek-ai/dsh-session-query-sqlite`)
- * is off in the shipped web composition (`openAt: never`), and its `unicode61`
- * tokenizer matches whitespace-delimited tokens only, so part of a Chinese
- * sentence never matches there. This search reads history through the host's
- * query service instead and matches the way the service's own `text` filter
- * does — a literal, case-insensitive, whitespace-flexible scan.
- *
- * Caching. Each session's corpus is kept in memory and in
- * `$DSH_HOME/cache/dsh-claude-style/search/<sha256 of the id>.json` beside a
- * change token: the persistence revision for a stored log, the log length for a
- * session the host holds open. A warm start reads those files and re-reads only
- * the sessions whose token moved; a session the host holds open contributes only
- * the events appended since the last fold, because its log is in memory. The
- * first search on a machine with no cache reads every top-level session once.
- *
- * Everything here runs only while the reader has the search panel switched on:
- * the route is called by the palette alone, so a corpus is never built for a
- * reader who does not search.
- *
- * @param ctx - host plugin context.
- * @returns `{ search(query), warm() }`.
+ * `user/message` also carries injected context, which names itself in
+ * `data.source.kind`, so only `user` counts. Each session's corpus is cached
+ * beside a change token, so a warm start re-reads only what moved, and nothing
+ * is built unless the palette asks for a search or a prewarm.
  */
 
 /** Stored logs read at once while the cache catches up. */
@@ -44,9 +26,8 @@ export const QUERY_MAX = 200
 const CACHE_WRITE_INTERVAL_MS = 5000
 /**
  * How often the stored sessions may be listed. Listing opens every stored log's
- * header, which costs about a second across a few hundred sessions, so only the
- * palette's own prewarm asks for it and a repeat within this window reuses the
- * listing already held; a content query never lists at all.
+ * header, so only the palette's own prewarm asks for it and a repeat within this
+ * window reuses the listing already held.
  */
 const LIST_INTERVAL_MS = 2000
 /** The corpus cache document's version: a document from another build is discarded. */
@@ -119,8 +100,7 @@ import { readEvents } from '@dsh-claude-style/engine/node/session-events'
 /**
  * The query service's own text rule (dsh-session-query `compileSessionTextFilter`):
  * whitespace-separated parts, each escaped, joined by `\s+`, Unicode and
- * case-insensitive. A one-part query takes the `indexOf` path in `search()`,
- * which says the same thing for one part.
+ * case-insensitive.
  */
 function compileQuery(query: string) {
   const pattern = query
@@ -141,9 +121,8 @@ function messageText(content: ContentBlock[]) {
 }
 
 /**
- * Whether one `user/message` carries the reader's own words. The harness records
- * the context it injects as user messages too — environment snapshots, the Skill
- * catalog, AGENTS.md, compaction checkpoints — each naming itself in `source`.
+ * Whether one `user/message` carries the reader's own words: the harness records
+ * the context it injects as user messages too, each naming itself in `source`.
  */
 function isHumanMessage(event: LogEvent) {
   return event.data?.source?.kind === 'user'
@@ -187,6 +166,12 @@ function isStoredMessage(value: unknown): value is SearchMessage {
     && typeof message.text === 'string'
 }
 
+/**
+ * The search the palette's route serves.
+ *
+ * @param ctx - host plugin context.
+ * @returns `{ search(query), warm(), dispose() }`.
+ */
 export function createSessionSearch(ctx: DshContext) {
   /** Session id → its corpus. */
   const cache = new Map<string, CachedSession>()
@@ -271,9 +256,8 @@ export function createSessionSearch(ctx: DshContext) {
 
   /**
    * Bring the corpus level with the host. `store` is what the caller needs: a
-   * search over stored sessions lists them, a search that only wants the newest
-   * tail leaves the listing alone (it costs about a second across a few hundred
-   * sessions and only the palette's own prewarm pays it).
+   * search over stored sessions lists them, a tail-only pass leaves the listing
+   * alone.
    */
   async function refresh(store: boolean) {
     const persistence = ctx.get('sessionPersistence') as PersistenceService | null | undefined
@@ -349,9 +333,8 @@ export function createSessionSearch(ctx: DshContext) {
     if (refreshing !== null && (refreshingStore || !store)) return refreshing
     refreshingStore = store
     const pass = refresh(store)
-    // Only the pass that is still the current one clears the shared state: a
-    // store listing replaces a tail-only pass, and the older pass's own end
-    // must not open the door for a third one to run beside the newer.
+    // Only the pass that is still current clears the shared state: a store
+    // listing replaces a tail-only pass, whose end must not admit a third one.
     const done = pass.finally(() => {
       if (refreshing === done) {
         refreshing = null
@@ -394,9 +377,8 @@ export function createSessionSearch(ctx: DshContext) {
   }
 
   /**
-   * The corpora this store holds. Each one is a whole session's message text,
-   * in original and folded case, so the store is dropped with the routes that
-   * serve it: a reloaded plugin builds a fresh one from the cache files.
+   * Drop the corpora with the routes that serve them: a reloaded plugin builds a
+   * fresh one from the cache files.
    */
   function dispose() {
     disposed = true

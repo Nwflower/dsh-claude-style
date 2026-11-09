@@ -1,9 +1,7 @@
 /**
- * build-checks.mjs — the build's refusals that are not about the stylesheets
- * (those are in scripts/css.mjs): the type check, the import graph, the
- * scroll owner's monopoly, every source reaching the bundle, every feature
- * directory against its manifest, and the host contract and timing tables
- * (D36, D40, D72, D3).
+ * build-checks.mjs — the build's refusals that are not about the stylesheets (those are in
+ * scripts/css.mjs): types, the import graph, the scroll owner, listed sources, manifests,
+ * and the host contract and timing tables (D36, D40, D72, D3).
  */
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -17,16 +15,7 @@ const SRC = path.join(ROOT, 'packages', 'client', 'src')
 const PROBE_STATES = new Set(['any', 'hero', 'sending', 'streaming', 'conversation', 'menu', 'dark'])
 const PROBE_KINDS = new Set(['selector', 'attribute', 'property', 'computed', 'global', 'value', 'rail-geometry', 'none'])
 
-/**
- * Refuse a source file that does not ship: a stylesheet no manifest and no
- * theme entry names, or a module nothing imports, would otherwise sit in packages/client/src/
- * with no way to reach the page. Manifests are data the build reads, the
- * contract table is read by the build and the tests (D3), and pure.ts is the
- * logic surface the specs call (D87); none of them is a module the bundle carries.
- *
- * @param bundled - the modules in the bundle (esbuild's metafile), relative to packages/client/src.
- * @param sheets - every stylesheet the bundle carries (styleFiles).
- */
+/** Refuse unreachable source files; manifests, contracts and pure.ts are intentional exceptions (D3, D87). */
 export function checkListed(bundled, sheets) {
   const listed = new Set(sheets.map((sheet) => sheet.file))
   const walk = (dir) => fs.readdirSync(path.join(SRC, dir), { withFileTypes: true }).flatMap((entry) => {
@@ -41,17 +30,7 @@ export function checkListed(bundled, sheets) {
   }
 }
 
-/**
- * Refuse a host package in `dependencies` (D36): both halves reach the host at
- * runtime — the client half through the loader's own `require`, the host half
- * through the harness beside its bin — so nothing here is imported from the
- * package's own tree. An entry on `@deepseek-ai/*` makes an installer pull that
- * package's whole closure into the profile, where it stands beside the copy
- * every other plugin resolves its host imports from; the two copies disagree and
- * the app stops starting (issue #39). A package that has to share the host's
- * instance is declared in `peerDependencies` (and in `devDependencies`, for the
- * type check and the tests), which installs nothing.
- */
+/** Host packages must be peers: a second installed copy disagrees with the running host (D36). */
 export function checkDependencies() {
   const { dependencies } = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'))
   const host = Object.keys(dependencies ?? {}).filter((name) => name.startsWith('@deepseek-ai/'))
@@ -60,14 +39,7 @@ export function checkDependencies() {
   }
 }
 
-/**
- * Hold the manifests to the rest of the repository: every feature directory
- * carries at least one manifest. A `pref` names a key of the shared preference
- * table, which the reader of the manifests itself refuses
- * (scripts/shared/read-manifests.mjs).
- *
- * @param manifests - the feature manifests (scripts/shared/read-manifests.mjs).
- */
+/** Every feature directory needs a manifest; the shared reader validates preference keys. */
 export function checkManifests(manifests) {
   const covered = new Set(manifests.map((manifest) => manifest.dir))
   for (const dir of fs.readdirSync(path.join(SRC, 'features'), { withFileTypes: true })) {
@@ -75,11 +47,7 @@ export function checkManifests(manifests) {
   }
 }
 
-/**
- * Type-check the browser half, the contract and engine packages and the specs
- * (tsconfig.json, strict). esbuild only strips types, so this is what turns a
- * missing import, a misspelt name or a wrong argument into a build failure.
- */
+/** esbuild only strips types; tsc makes unresolved names and invalid arguments fail. */
 export function checkTypes() {
   const tsc = path.join(ROOT, 'node_modules', 'typescript', 'bin', 'tsc')
   try {
@@ -90,12 +58,7 @@ export function checkTypes() {
   }
 }
 
-/**
- * Refuse an import cycle. Modules in a cycle evaluate one before the other has
- * finished, so a constant read across it can be read before it is initialized.
- *
- * @param metafile - esbuild's metafile for the bundle.
- */
+/** Import cycles can expose constants before initialization. */
 export function checkCycles(metafile) {
   const graph = new Map(Object.entries(metafile.inputs).map(([file, input]) => [file, input.imports.filter((item) => !item.external).map((item) => item.path)]))
   const state = new Map()
@@ -116,18 +79,7 @@ export function checkCycles(metafile) {
   for (const file of graph.keys()) if (!state.has(file)) visit(file)
 }
 
-/**
- * Hold the host contract together (D3).
- *
- * The literals the skin keys on live in packages/contracts/src/dom.ts and the table of
- * what they mean in packages/contracts/src/table.ts; neither may drift from the other,
- * and every entry has to be claimed by a feature manifest (D72), so a selector
- * cannot enter the skin without a note and an owner, and a host upgrade can be
- * audited by walking one list.
- *
- * @param manifests - the feature manifests (scripts/shared/read-manifests.mjs).
- * @returns the table, for the build log.
- */
+/** Keep host literals, probe metadata and manifest owners synchronized (D3, D72). */
 export function checkContracts(manifests) {
   const literals = loadModule('packages/contracts/src/dom.ts')
   const { HOST_DOM: table } = loadModule('packages/contracts/src/table.ts')
@@ -140,17 +92,14 @@ export function checkContracts(manifests) {
     if (listed.has(entry.id)) throw new Error(`build: packages/contracts/src/table.ts lists "${entry.id}" twice`)
     listed.add(entry.id)
   }
-  // Every entry says how the contract test checks it (D3), so a host upgrade
-  // walks one list with no entry quietly unchecked.
+  // Every entry says how the contract test checks it (D3), so a host upgrade walks one list.
   for (const entry of table) {
     const probe = entry.probe
     if (probe === null || typeof probe !== 'object') throw new Error(`build: packages/contracts/src/table.ts entry "${entry.id}" has no probe`)
     if (!PROBE_STATES.has(probe.state)) throw new Error(`build: packages/contracts/src/table.ts entry "${entry.id}" has probe state "${probe.state}"`)
     if (!PROBE_KINDS.has(probe.kind)) throw new Error(`build: packages/contracts/src/table.ts entry "${entry.id}" has probe kind "${probe.kind}"`)
     if (probe.within !== undefined && !listed.has(probe.within)) throw new Error(`build: packages/contracts/src/table.ts entry "${entry.id}" is checked within "${probe.within}", which the table does not list`)
-    // A computed reading names the property it reads and the snapshot key it
-    // compares, so a host value cannot enter the table with nothing to read it
-    // against or a probe with no property at all.
+    // A computed reading names the property it reads and the snapshot key it compares.
     if (probe.kind === 'computed' && (typeof probe.property !== 'string' || probe.property === '')) {
       throw new Error(`build: packages/contracts/src/table.ts entry "${entry.id}" is a computed probe with no property`)
     }
@@ -186,10 +135,7 @@ export function checkContracts(manifests) {
   return table
 }
 
-/**
- * Whether a spec answers to a stable id `<layer>/<capability>/<test name>`: a
- * spec file of that capability declares a test of that name (D87).
- */
+
 function specIdExists(id) {
   const [layer, capability, ...rest] = id.split('/')
   const name = rest.join('/')
@@ -200,14 +146,7 @@ function specIdExists(id) {
     .some((file) => quoted.some((literal) => fs.readFileSync(path.join(dir, file), 'utf8').includes(`test(${literal}`)))
 }
 
-/**
- * Hold the timing table to its checks (D3).
- *
- * The timing assumptions live in packages/contracts/src/timing.ts, each naming what holds
- * it: a scenario of the end-to-end lane or a spec by its stable id (D87). Both
- * names have to exist, so an assumption cannot enter the table with nothing that
- * would notice it changing.
- */
+/** Every timing assumption needs an existing scenario or stable spec id (D3, D87). */
 function checkTiming() {
   const { E2E_SCENARIOS, HOST_TIMING } = loadModule('packages/contracts/src/timing.ts')
   if (!Array.isArray(HOST_TIMING) || HOST_TIMING.length === 0) throw new Error('build: packages/contracts/src/timing.ts exports no HOST_TIMING')
@@ -235,13 +174,7 @@ function checkTiming() {
   }
 }
 
-/**
- * Refuse a module other than the scroll owner importing the spring: the chat
- * area's positions have one writer (D40), and a direct ease would bypass its
- * arbitration.
- *
- * @param metafile - esbuild's metafile for the bundle.
- */
+/** Only the scroll owner may import the spring so position writes stay arbitrated (D40). */
 export function checkScrollOwner(metafile) {
   for (const [file, input] of Object.entries(metafile.inputs)) {
     if (file === 'packages/engine/src/scroll-owner.ts') continue
@@ -251,17 +184,7 @@ export function checkScrollOwner(metafile) {
   }
 }
 
-/**
- * Refuse an easing curve written as a literal in the browser half (D9): a curve
- * is a token, so a Web Animations call names one through
- * packages/client/src/shared/motion.ts and a curve changed in the token table reaches
- * every animation. `linear` and the step functions are mechanical timing and
- * stay; the check reads the `easing` option of a keyframe or of an animation.
- * A stacking level above the local orders is refused the same way (D9): the
- * browser half marks the element, and a sheet places it on a layer.
- *
- * @param sources - the browser half on its syntax tree (scripts/source-tree.mjs).
- */
+/** Read easing and nonlocal stacking from tokens so one table controls every animation and layer (D9). */
 export function checkMotionSources(sources) {
   for (const [value, where] of sources.easings) {
     if (value === 'linear' || /^steps\(/.test(value)) continue

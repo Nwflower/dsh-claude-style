@@ -1,15 +1,6 @@
-/**
- * The host's account service as the skin reads it (`remote.account`): the
- * identity each call carries, the profile and balance reads and the state
- * stream. Read off the host build the way packages/contracts/src/services.ts is (D3).
- */
+/** Host `remote.account` contract, read from the host build (D3). */
 
-/**
- * The identity one account call carries, which the Host forwards to the
- * Platform as its client headers. The Remote takes it as the method's own
- * argument and the Host refuses a call whose argument fields do not match its
- * descriptor, so a call without it never reaches the Platform.
- */
+/** The Host forwards this identity as Platform client headers and rejects calls whose fields miss the descriptor. */
 export interface HostAccountClient {
   /** The calling client build's version. */
   version: string
@@ -19,18 +10,14 @@ export interface HostAccountClient {
   timezoneOffsetSeconds: number
 }
 
-/** The account service (`remote.account`): the profile and balance reads, and the state stream. */
+/** `remote.account` profile, balance and state-stream surface. */
 export interface HostAccountService {
   getProfile(client: HostAccountClient): Promise<HostAccountAnswer>
   getBalance(client: HostAccountClient): Promise<HostBalanceAnswer>
   watch(signal: AbortSignal): AsyncIterable<HostAccountFrame>
 }
 
-/**
- * The balance read's answer: `value` is null when no credential is stored, a
- * `failed` status a platform miss, and a `ready` one carries one wallet per
- * currency with the gifted wallets apart.
- */
+/** Null means no credential; `failed` means the Platform missed; gifted wallets stay separate. */
 export interface HostBalanceAnswer {
   ok?: boolean
   value?: { status: 'ready', value: HostWallet[], bonusWallets: HostWallet[] } | { status: 'failed' } | null

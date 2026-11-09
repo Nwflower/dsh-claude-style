@@ -13,70 +13,19 @@ import type { FeatureUi } from '../../core/feature'
 import type manifest from './view-tabs.manifest'
 
 /**
- * The conversation view-tab strip's placement — measured, not guessed.
- *
- * The host draws the strip as a row holding the tablist and, when it has views
- * to offer beyond the pinned ones, the "more views" button; it reads that row's
- * width to decide how many tabs stay visible. The row therefore keeps the
- * header's full width while the plate inside it hugs the tabs (view-tabs.css),
- * and every box this pass places from is the row's content box
- * (shared/content-box.ts).
- *
- * The strip's own row sits below the header's title row, and that title row ALSO
- * carries the header actions (the background-task chip, the workspace / preset
- * picker, the overflow menu, the panel toggle). Whether the strip can rise onto
- * the title's line therefore depends on the window: centred, it fits beside a
- * short title on a wide header and collides with the actions on a narrow one, so
- * a fixed offset cannot be right in both cases.
- *
- * So the skin measures the boxes and writes ONE custom property,
- * `--dsh-view-tabs-shift`, which the stylesheet turns into the translate. The
- * stylesheet keeps the fallback (its own row); this only lifts the strip when the
- * room above is real — the title and the actions both clear it, and the header's
- * top inset still holds.
- *
- * Windows titlebar mode is the one case where no measurement is needed: the
- * desktop shell marks <html> with `data-windows-titlebar` and the strip is
- * placed fixed in the titlebar row, centred (view-tabs.css). This mirrors that
- * marker onto the header holding the strip so the stylesheet can switch, and
- * skips the measured shift entirely there.
- *
- * macOS keeps the measured path. Its shell hands the top of the window to
- * the traffic lights and pads no content around them: the host sets
- * `--dsh-frame-top-clearance: 48px` under `html[data-platform=darwin]` and
- * leaves `--dsh-frame-chrome-top` at 0, so the conversation header keeps its
- * own top inset and draws its first row inside that strip. A fixed strip
- * would land on the title and the header actions; the measured shift already
- * seats it on the row beneath the strip.
- *
- * The row is stamped `data-dsh-view-tabs`, and every strip rule in
- * view-tabs.css keys on that attribute. The marks and the Windows titlebar marker are written in the
- * batch that mounts the strip, before the browser paints; the measured shift is
- * taken and written in that same frame's read and write phases, so the first
- * frame already draws the skin's placement (#189) without forcing the rest of
- * the freshly mounted page to lay out again in the observer's callback (#196).
- * The pass afterwards keeps them all on the element the page shows. Finding the
- * strip is a query this pass runs once; as a stylesheet selector
- * (`header:has(tabs) tabs`) it would make the browser re-match the whole
- * document on every DOM change.
- *
- * The strip's active pill slides between tabs (packages/client/src/shared/sliding-pill.ts).
+ * Measure the view-tab strip's lift onto the title row and write
+ * `--dsh-view-tabs-shift`. Windows titlebar mode places it fixed; the pill
+ * slides between tabs (shared/sliding-pill.ts).
  */
 export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const STRIP = '[data-dsh-claude-part~="view-tabs"]'
   const HEADER = `[data-dsh-claude-part~="conversation-header"]:has(${STRIP})`
-  /**
-   * The title's TEXT, not its row or cluster: the title row is a flex row and
-   * the cluster takes up the slack, so testing against them reported a clash on
-   * every window and the strip never lifted. The crumb is the content-sized
-   * element that actually draws the words; the cluster is the fallback for a
-   * header whose crumb the host does not render.
-   */
+  /** Measure the title text, not the flexible row; the cluster is the fallback. */
   const TITLE = '[data-dsh-claude-part~="header-crumb"], [data-dsh-claude-part~="title-cluster"]'
   const ACTIONS = '[data-dsh-claude-part~="header-actions"], [data-dsh-claude-part~="header-utilities"]'
   /** The custom property the stylesheet turns into the strip's translate (view-tabs.css). */
   const SHIFT = '--dsh-view-tabs-shift'
-  /** The stylesheet's fallback: the strip's own row, 10px up from y=50. */
+  /** The stylesheet's fallback: the strip's own row (view-tabs.css reads the same value). */
   const FALLBACK = -10
   /** The header's own top inset; the lifted strip may not enter it. */
   const TOP_INSET = 8
@@ -87,11 +36,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let lastEl: HTMLElement | null = null
   /** The header marker the stylesheet reads for the fixed titlebar placement. */
   const TITLEBAR_ATTR = 'data-dsh-titlebar-tabs'
-  /**
-   * The header marker the theme's chrome sheet reads for the skin's edge on the
-   * strip's row: on while this feature holds the strip, off again the moment the
-   * preference hands the header back, so the host's own line stands there.
-   */
+  /** Theme marker for the strip row's edge; off when the feature yields the header. */
   const TAKEN_ATTR = 'data-dsh-view-tabs-taken'
   /** Whether the last pass saw the host's Windows titlebar marker. */
   let titlebar = false
@@ -101,7 +46,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const stripStamp = createStamp<HTMLElement>('data-dsh-view-tabs')
   /** The header carrying the strip, marked for the theme's chrome sheet. */
   const takenStamp = createStamp<HTMLElement>(TAKEN_ATTR)
-  /** The control wearing the shared small segment look (shared/segment-control.css): a class, since the look is the control's own, not the mark's. */
+  /** The control wearing the shared small segment look (shared/segment-control.css). */
   let classedControl: HTMLElement | null = null
   function classStamp(control: HTMLElement | null) {
     if (classedControl !== null && classedControl !== control) classedControl.classList.remove(VIEW_SWITCH_CLASS)
@@ -109,34 +54,26 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (control !== null) control.classList.add(VIEW_SWITCH_CLASS)
   }
   const pill = createSlidingPill('[aria-selected="true"]')
-  /**
-   * The two seats a strip is found through, each resolved once per batch
-   * (engine/host.ts): a pass re-reads them, and the document is walked again
-   * only when the page's structure changed.
-   */
+  /** The two seats a strip is found through, each resolved once per batch (engine/host.ts). */
   const firstStamped = cacheFirstMatch<HTMLElement>(STRIP)
   const firstTabs = cacheFirstMatch<HTMLElement>(CONVERSATION_TABS_SELECTOR)
-  // Warm the cache's own batch watch here, before the mutation route below
-  // subscribes: the watch bumps the epoch at the head of a batch, and a seat read
-  // after that bump sees the batch's own nodes. Subscribed later than the route,
-  // it would leave the route reading the previous batch's answer (#189).
+  // Warm the cache's batch watch before the mutation route subscribes: the watch
+  // bumps the epoch at the head of a batch, and a seat read after that bump sees
+  // the batch's own nodes (#189).
   firstStamped()
 
   /**
-   * Read the host's Windows titlebar marker; the write that publishes it
-   * happens in sync, on the header holding the strip. The mode is a shell
-   * fact, so it flips only with the window's chrome.
+   * Read the host's Windows titlebar marker: a shell fact, so it flips only with
+   * the window's chrome.
    */
   function syncTitlebar() {
     titlebar = windowsDesktop()
   }
 
   /**
-   * Publish the mode on the header holding the strip — the mark's every
-   * reader is that header or the strip inside it, and a header-level write
-   * keeps a flip from invalidating the document (D9). The observer's
-   * attributeFilter is aria-* only, so this write cannot feed itself another
-   * pass.
+   * Publish the mode on the header holding the strip: every reader is that header
+   * or the strip inside it, and a header-level write keeps a flip from
+   * invalidating the document (D9). The observer filters `aria-*` only.
    */
   function markTitlebar(header: HTMLElement | null) {
     const host = titlebar ? header : null
@@ -155,10 +92,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   }
 
   /**
-   * The title's box. `querySelector` on the selector list returns the first
-   * match in DOCUMENT order, which is the wrapper (`.titleCluster` contains
-   * the crumb) — and the wrapper stretches, so the strip never lifted. Take
-   * the narrowest match instead: that is the element drawing the words.
+   * `querySelector` returns the wrapper in document order, and the wrapper
+   * stretches; take the narrowest match, the element that draws the words.
    */
   function titleBoxOf(header: Element) {
     const all = header.querySelectorAll(TITLE)
@@ -172,16 +107,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   }
 
   /**
-   * The strip and the header holding it.
-   *
-   * A strip the skin has stamped is taken as it is. One it has not is read off
-   * the host's own tablist mark, which sits on the plate: its parent is the row
-   * the host keeps for its own tab count. Answering this before the pass has
-   * stamped anything is what the mutation route below needs to mark a strip in
-   * the batch that mounted it (#189).
-   *
-   * `header` is the conversation header above the strip — its part mark once the
-   * walk has run, the slot it is mounted in before that; `list` is the tablist.
+   * The strip and the header holding it. A stamped strip is taken as it is; one
+   * not yet stamped is read off the host's tablist mark, whose parent is the row
+   * the host keeps. Answering before the pass has stamped anything is what lets
+   * the mutation route mark a strip in the batch that mounted it (#189).
    */
   function findStrip() {
     const header = (el: Element) => el.closest<HTMLElement>(CONVERSATION_HEADER_SELECTOR) ?? el.closest<HTMLElement>(CONVERSATION_HEADER_SLOT_SELECTOR)
@@ -198,12 +127,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     return marked === null ? null : { header: marked, strip, list }
   }
 
-  /**
-   * The boxes the shift is decided from: the strip's content, the header, the
-   * title that carries the words and the header's actions. Taken in the pass's
-   * read phase (D40), so no feature's write of the same frame can invalidate
-   * them.
-   */
+  /** The boxes the shift is decided from, taken in the pass's read phase (D40). */
   interface StripReading {
     header: HTMLElement
     strip: HTMLElement
@@ -239,15 +163,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   }
 
   /**
-   * Place a strip a batch has mounted, in the frame that batch paints in.
-   *
-   * The marks go on in the observer's callback, so the first frame draws the
-   * skin's own layout (#189). The boxes the shift is decided from are taken in
-   * that frame's read phase instead: a read here would force the whole freshly
-   * mounted, still-dirty conversation to lay out again inside the observer's
-   * callback, and every batch of the switch would pay it once more; the frame
-   * pipeline takes one read after the frame's writes, and a later batch before
-   * the frame joins the same read (#196).
+   * Place a strip a batch has mounted, in the frame that batch paints in. The
+   * marks go on in the observer's callback (#189); the boxes are read in that
+   * frame's read phase, since a read here would re-lay out the whole freshly
+   * mounted conversation (#196).
    */
   function placeForPaint(header: HTMLElement, strip: HTMLElement) {
     pendingShift = { header, strip }
@@ -304,8 +223,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   /**
    * The shift the boxes ask for: the measured one when the room above is real,
-   * the stylesheet's fallback otherwise, and null for a strip with no box to
-   * decide from.
+   * the stylesheet's fallback otherwise, null with no box to decide from.
    */
   function shiftIn(boxes: StripReading) {
     const stripBox = boxes.stripBox
@@ -348,10 +266,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   ui.viewTabs = { measure, sync, skipOnContentOnly: true }
 
   /**
-   * Whether a strip already draws the way the frame's paint reads it: its own
-   * mark on it, the titlebar mode on its header, and the shift
-   * this window needs — Windows titlebar mode places the strip itself, so it
-   * writes none.
+   * Whether a strip already draws the way the frame's paint reads it: its mark,
+   * the titlebar mode on its header, and the shift this window needs — Windows
+   * titlebar mode places the strip itself and writes none.
    */
   function placedForPaint(strip: HTMLElement, header: HTMLElement) {
     if (stripStamp.current() !== strip) return false
@@ -360,17 +277,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   }
 
   /**
-   * Put the marks a batch has just mounted before the browser paints (#189).
-   *
-   * The pass lands on the next frame, and a batch the size of a session switch
-   * is dispatched after that frame's paint (engine/bus.ts): a strip left for
-   * either draws in the host's own layout and jumps when the pass reaches it.
-   * This subscription asks for `beforePaint`, so it runs inside every batch's
-   * callback whatever the batch weighs, and writes what that frame reads: the
-   * strip's mark, the control's class and the header's titlebar mark. A strip already
-   * placed costs one kept lookup and a style read; the pass keeps everything in
-   * step afterwards. The shift the boxes ask for is measured and written in the
-   * same frame's read and write phases (placeForPaint), not here.
+   * Put the marks a batch has just mounted before the browser paints (#189): the
+   * pass lands on the next frame, and a session-switch batch is dispatched after
+   * that frame's paint, so a strip left for it draws in the host's layout and
+   * jumps. `beforePaint` runs inside every batch's callback; the shift itself is
+   * measured and written in the same frame (placeForPaint).
    */
   const stopMutations = subscribeMutations(document.body, { childList: true, subtree: true, beforePaint: true }, () => {
     syncTitlebar()
@@ -394,8 +305,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     shiftReading = null
     titlebar = false
     markTitlebar(null)
-    // The strip the passes wrote to: the placement belongs to the element the
-    // last pass held, and the page may have moved on since.
+    // The placement belongs to the element the last pass held.
     const strip = stripStamp.current()
     if (strip !== null) strip.style.removeProperty(SHIFT)
     pill.release()

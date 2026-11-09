@@ -1,58 +1,35 @@
 /* ---------- conversation view tabs: the skin's own segment control ---------- */
-/* The host draws the view tabs as a row (`_tabs`) holding the tablist
-   (`_viewTabs`) and, when it has views to offer beyond the pinned ones, the
-   "more views" button. The row's width is what the host counts room for every
-   tab from, so the row keeps the header's full width while the plate inside it
-   hugs the tabs. The plate wears the shared small segment look
-   (packages/client/src/shared/segment-control.css, stamped by view-tabs.ts) — a
-   7px pill shell with a raised pill for the active tab, instead of the shipped
-   underline. Every strip rule here is scoped to the mark view-tabs.ts stamps on
-   the row in the conversation header, so the settings page's own tabs keep their
-   look; the stamp stands in for `header:has(tabs)`, which made every DOM change
-   re-match the whole document. This sheet keeps the strip's placement and
-   reveal; the control's look is the shared sheet's. */
-/* The row and the plate share the reveal and the fallback placement, and both
-   are reached through the stamp: the plate is the host's own tablist inside the
-   stamped row. The stamp is written in the batch that mounts the strip, so the
-   first paint carries it (#189); it is also the whole of the gate — a preference
-   turned off takes it away, and the host's strip, its underline and its spacing
-   come back untouched. */
+/* The host counts tab room from the row's width, so the row keeps the header's
+   full width while the plate inside it hugs the tabs; the plate wears the shared
+   small segment look (shared/segment-control.css) in place of the shipped
+   underline. Every rule here keys on the stamp view-tabs.ts writes in the batch
+   that mounts the strip (#189) — it stands in for `header:has(tabs)`, which
+   re-matched the document on every change — and turning the preference off
+   removes it, leaving the host's strip untouched. */
 body[data-dsh-claude-style] [data-dsh-view-tabs],
 body[data-dsh-claude-style] [data-dsh-view-tabs] [data-conversation-tabs] {
-  /* Hug the tabs. The host's tablist is a full-width flex row, so without this
-     the pill shell stretches across the whole header: the "groove" reads as one
-     long empty bar and clicks to the right of the last tab land on nothing —
-     which is what made switching feel unresponsive. The row overrides this with
-     the width the host's own count needs. */
+  /* Hug the tabs: the host's tablist is a full-width flex row, so the pill shell
+     would stretch across the header and clicks right of the last tab would land
+     on nothing. The row overrides this with the width its own count needs. */
   width: fit-content;
   max-width: 100%;
   align-self: flex-start;
-  /* Horizontally centred in the header (the strip already spans grid-column 1/-1,
-     so justify-self alone does it). The vertical shift is MEASURED, not fixed: the
-     title's row also carries the header actions, so whether the strip can rise onto
-     it depends on the window — packages/client/src/features/view-tabs/view-tabs.ts writes
-     --dsh-view-tabs-shift when the room is there, and this fallback (its own row,
-     10px up from y=50) holds the rest of the time. */
+  /* Horizontally centred (the strip spans grid-column 1/-1); the vertical shift
+     is measured in view-tabs.ts, and this fallback (the strip's own row) holds
+     when the room above is missing. */
   justify-self: center;
   transform: translateY(var(--dsh-view-tabs-shift, -10px));
   /* The sliding pill (shared/sliding-pill.css) is absolutely placed against the control. */
   position: relative;
-  /* A view switcher, not furniture: it fades in when the pointer is in the
-     conversation pane and out when it leaves, the same idiom as the sidebar's
-     进行中 / 已归档 control. Opacity, not display, so the header keeps its height
-     and the actions beside it never move. */
+  /* A view switcher, not furniture: it fades in while the pointer is in the
+     conversation pane, and opacity keeps the header's height. */
   opacity: 0;
   transition: opacity var(--dsh-claude-duration-surface) var(--dsh-claude-ease-standard);
 }
 /* The row spans the header so the host counts room for every tab, centres what
-   it draws, and takes no press of its own — only the controls standing in it do.
-   The mark is view-tabs.ts's: it is written in the batch that mounts the row, so
-   the row is laid out this way from the first frame (#189).
-   What rises is the content, not the row. Translating the row would drag its
-   full-width box onto the title row, where it covers the header's actions; macOS
-   reads the box rather than pointer-events for its native drag region, so a
-   press on a button under it moves the window (#174). The shift already keeps
-   the content clear of the title and the actions sideways. */
+   it draws and takes no press of its own. What rises is the content, not the
+   row: translating it would cover the header actions and, on macOS, sit on the
+   native drag region, where a press moves the window (#174). */
 body[data-dsh-claude-style] [data-dsh-view-tabs] {
   display: flex;
   width: 100%;
@@ -88,9 +65,8 @@ body[data-dsh-claude-style] [data-dsh-view-tabs] [data-conversation-tabs] > * {
   pointer-events: auto;
   -webkit-app-region: no-drag;
 }
-/* The tablist is the plate: the shared sheet draws its shell, and
-   the pill travels inside it. The host wraps its own tabs, so the strip keeps them
-   on one line whatever the window does with the rest of the row. */
+/* The tablist is the plate: the shared sheet draws its shell and the pill
+   travels inside it; the host wraps its own tabs, so they stay on one line. */
 body[data-dsh-claude-style] [data-dsh-view-tabs] [data-dsh-claude-part~="view-tabs-list"] {
   position: relative;
   flex-wrap: nowrap;
@@ -106,13 +82,10 @@ body[data-dsh-claude-style] [data-dsh-view-tabs] [data-dsh-claude-part~="view-ta
   min-height: 0;
   padding: 0 10px;
 }
-/* A tab another plugin renders into this strip (issue #275): the host's own tabs
-   carry the view-tab part, a foreign tab carries only its own class, so the
-   plate states one segment box on whatever stands in it — the height, the
-   padding and the centring, not the look, which stays the plugin's. The box
-   reaches the tablist's direct child alone: a tab that wraps a button carrying
-   the host's pre-skin bottom padding still puts its own label off the centre
-   line, and that padding is the plugin's to drop (issue #285). */
+/* A tab another plugin renders into this strip (issue #275): it carries only its
+   own class, so the plate states one segment box on whatever stands in it and
+   leaves the look to the plugin. The box reaches the tablist's direct child
+   alone; a wrapped button's own bottom padding is the plugin's to drop (#285). */
 body[data-dsh-claude-style] [data-dsh-view-tabs] [data-conversation-tabs] > :not([data-dsh-claude-part~="view-tab"]) {
   display: inline-flex;
   align-items: center;
@@ -128,9 +101,8 @@ body[data-dsh-claude-style] [data-dsh-view-tabs] [data-conversation-tabs] > :not
 body[data-dsh-claude-style] [data-dsh-view-tabs] [data-dsh-claude-part~="view-tab"]::after {
   display: none;
 }
-/* The row's "more views" button: a chip seated beside the plate, sized like a tab
-   so the two line up. Its colour states stay the host's own — the accent marks
-   the view sitting in the menu. */
+/* The row's "more views" chip, sized like a tab so the two line up. Its colour
+   stays the host's own: the accent marks the view sitting in the menu. */
 body[data-dsh-claude-style] [data-dsh-view-tabs] [data-dsh-claude-part~="view-tabs-more"] {
   width: 22px;
   height: 22px;
@@ -142,16 +114,12 @@ body[data-dsh-claude-style] [data-dsh-view-tabs] [data-dsh-claude-part~="view-ta
 }
 
 /* ---------- Windows titlebar mode: the strip moves into the titlebar ---------- */
-/* The desktop shell marks <html> with data-windows-titlebar and draws the
-   titlebar strip with the frame's ::before; packages/client/src/features/view-tabs/view-tabs.ts mirrors
-   the marker onto the header holding the strip. There the strip leaves its
-   own row and sits fixed in the titlebar, horizontally centred in the window —
-   the same row the host gives the collapsed sidebar's new-session button. The
-   measured --dsh-view-tabs-shift is not written in this mode, so the base
-   transform gives way.
-   macOS has no such block: its shell leaves the frame unpadded, so the
-   conversation header draws its first row inside the strip and the measured
-   shift seats the tabs on the row beneath it (view-tabs.ts). */
+/* The desktop shell marks <html> with data-windows-titlebar, and view-tabs.ts
+   mirrors the marker onto the header holding the strip. The strip leaves its own
+   row and sits fixed, centred in the titlebar — the row the host gives the
+   collapsed sidebar's new-session button. No shift is written in this mode, so
+   the base transform gives way. macOS has none of this: its frame top is
+   unpadded, so the measured shift seats the tabs inside it (view-tabs.ts). */
 body[data-dsh-claude-style] [data-dsh-titlebar-tabs] [data-dsh-view-tabs] {
   position: fixed !important;
   top: calc(var(--dsh-windows-titlebar-height, 40px) / 2) !important;
@@ -162,30 +130,24 @@ body[data-dsh-claude-style] [data-dsh-titlebar-tabs] [data-dsh-view-tabs] {
   transform: translate(-50%, -50%) !important;
   z-index: var(--dsh-claude-layer-chrome) !important;
   /* The row spans the window, so the band stays the shell's drag region and the
-     controls inside it stay the only boxes that take a press (the row's own
-     stand-down above). */
-  /* The pane-hover reveal stays the rule here, as it was inside the header. The
-     strip now sits outside the pane, so the pointer leaving the pane on its way
-     up must not blank it: its own hover keeps it up, and the longer fade covers
-     the 40px crossing between the pane and the titlebar. */
+     controls inside it stay the only boxes that take a press. */
+  /* The pane-hover reveal stays the rule here, but the strip now sits outside
+     the pane: its own hover keeps it up, and the longer fade covers the cross. */
   opacity: 0 !important;
   transition: opacity var(--dsh-claude-duration-fade) var(--dsh-claude-ease-standard) !important;
 }
 body[data-dsh-claude-style] [data-dsh-titlebar-tabs] [data-dsh-view-tabs]:hover {
   opacity: 1 !important;
 }
-/* The pane-hover reveal above cannot outweigh this mode's own resting opacity,
-   which is stated with `!important` because the strip is fixed over the caption
-   row; without this the strip only answers the pointer once it is already in
-   that row. The pane is the header's ancestor, so the compound order turns
-   around: the hovered pane, then the marked header, then the strip. */
+/* The pane-hover reveal cannot outweigh this mode's resting `!important`
+   opacity: the pane is the header's ancestor, so the compound order turns
+   around — hovered pane, marked header, then the strip. */
 body[data-dsh-claude-style] [data-dsh-claude-part~="center-column"]:hover [data-dsh-titlebar-tabs] [data-dsh-view-tabs] {
   opacity: 1 !important;
 }
-/* The strip's row is gone from the flow, so the header takes the shape it has
-   when it owns no tab strip: no min-height, and the bottom padding the host
-   gives that shape — which the header band closes further once it has taken the
-   title out of the header (--dsh-header-band-bottom). */
+/* The strip's row has left the flow, so the header takes the shape it has when
+   it owns no tab strip: no min-height, and the header band closes its bottom
+   padding further (--dsh-header-band-bottom). */
 body[data-dsh-claude-style] [data-dsh-claude-part~="conversation-header"][data-dsh-titlebar-tabs][data-dsh-claude-holds~="view-tabs"] {
   min-height: 0 !important;
   padding-bottom: var(--dsh-header-band-bottom, 10px) !important;

@@ -1,10 +1,8 @@
 /**
  * The host names its one activity seat two ways: `activity` while the slot is
- * idle, and `activityExpanded` while a plugin expands it — the built-in voice
- * input is the one that does. The seat has to read as the skin's own part in
- * both, because the rules that stand it down and lay it out read that part and
- * nothing else; the seat's emptiness is answered by the hold around its slot, so
- * whatever a plugin mounts there keeps the seat in the row.
+ * idle and `activityExpanded` while a plugin expands it. The seat reads as the
+ * skin's own part in both, and its emptiness is answered by the hold around its
+ * slot, so whatever a plugin mounts there keeps the seat in the row.
  *
  * @capability part-marking
  * @features engine

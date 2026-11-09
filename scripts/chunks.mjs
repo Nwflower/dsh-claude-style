@@ -1,14 +1,6 @@
 /**
- * chunks.mjs — the deferred features' chunks (D72).
- *
- * A feature whose manifest says `load: 'deferred'` leaves the bundle: its own
- * modules become one chunk, a classic script the host half's asset route
- * serves, which packages/client/src/core/chunks.ts fetches once the page
- * is taken. A module the bundle carries is never copied into a chunk — a second
- * copy of a module with state would split that state — so every import of one
- * stays an import, resolved at run time against the bundle's own instance
- * through the table `virtual:dsh-claude-style/chunk-modules`. A module two
- * chunks would both carry moves into the bundle for the same reason.
+ * chunks.mjs — split deferred features without duplicating stateful modules
+ * (D72); shared imports resolve against the main bundle's own instances.
  */
 import { createHash } from 'node:crypto'
 import path from 'node:path'
@@ -23,14 +15,7 @@ const VIRTUAL_PREFIX = 'virtual:dsh-claude-style/'
 /** A module's id in the shared table: its path from the repository root, as esbuild's metafile keys it. */
 const moduleId = (file) => path.relative(ROOT, file).split(path.sep).join('/')
 
-/**
- * The repository's own modules among a metafile's inputs, as the ids the shared
- * table uses: a real module by its path from the repository root, a module a
- * build plugin generated under its own path (esbuild keys those as * `<namespace>:<path>`, and the generated data is one of them, D36).
- *
- * The host packages and the virtual entry left out: they are the loader's or the
- * build's own, and the table resolves them where they stand.
- */
+/** Use repository-relative and virtual ids; loader-owned modules stay outside the shared table (D36). */
 export function ownModuleIds(metafile) {
   const ids = new Set()
   for (const file of Object.keys(metafile.inputs)) {
@@ -42,12 +27,7 @@ export function ownModuleIds(metafile) {
   return [...ids]
 }
 
-/**
- * Keep the modules the bundle carries out of a chunk: each import that
- * resolves to one stays external under its module id.
- *
- * @param shared - the module ids the bundle carries.
- */
+/** Keep main-bundle imports external under stable module ids. */
 function sharedModules(shared) {
   return {
     name: 'shared-modules',
@@ -70,11 +50,7 @@ function sharedModules(shared) {
   }
 }
 
-/**
- * The script around a chunk's CommonJS body: it hands its factory to the
- * loader through its own script element, and the factory's `require` resolves
- * the shared modules and the host packages.
- */
+/** Expose the chunk factory through its own script element. */
 const chunkOpen = (id) => `/* dsh-claude-style feature chunk "${id}". GENERATED FILE — do not edit; \`npm run build\` writes it from packages/client/src/. */
 document.currentScript.__dshChunk = (require) => {
   var module = { exports: {} }
@@ -82,15 +58,7 @@ document.currentScript.__dshChunk = (require) => {
 const CHUNK_CLOSE = `  return module.exports
 }`
 
-/**
- * Bundle one deferred feature's chunk against the modules the bundle carries.
- *
- * @param manifest - the feature's manifest.
- * @param shared - the module ids the bundle carries.
- * @param options.external - the host packages, never bundled.
- * @param options.plugins - the generated-module plugin: a chunk carries the build-time values it reads.
- * @returns esbuild's result, with the chunk and its source map as output files.
- */
+
 function bundleChunk(manifest, shared, { external, plugins }) {
   return esbuild.build({
     stdin: { contents: `export { install } from ${JSON.stringify(`./${manifest.main}`)}`, resolveDir: SRC, loader: 'ts', sourcefile: `chunk-${manifest.id}.ts` },
@@ -117,22 +85,7 @@ function bundleChunk(manifest, shared, { external, plugins }) {
   })
 }
 
-/**
- * Split the deferred features out of the bundle.
- *
- * The bundle's module set decides what every chunk leaves out, and a module
- * two chunks would carry joins the bundle, which can change that set: so the
- * two are worked out together until no module is carried twice.
- *
- * @param deferred - the deferred features' manifests.
- * @param mainModules - (promoted ids) => the module ids the bundle carries
- *     when its shared table also names `promoted`.
- * @param options - what bundleChunk takes besides the manifest.
- * @param slot - text no chunk may carry (the build id's stand-in: a chunk is
- *     hashed before the bundle, so it cannot carry the bundle's id).
- * @returns each chunk's result by feature id, the module ids the chunks share
- *     with the bundle, and the bundle's own module ids.
- */
+/** Promote multiply shared modules and repeat until bundle and chunk membership stabilizes. */
 export async function splitChunks({ deferred, mainModules, options, slot }) {
   const promoted = new Set()
   for (;;) {

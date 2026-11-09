@@ -12,26 +12,20 @@ const FLOW_ROW_SHIFT = 0.03
 const FLOW_JITTER = 0.05
 
 /**
- * The dot matrix the reasoning-effort slider (effort/slider.ts) shows on
- * its top rung.
- *
- * The grid is solved in whole device pixels, and three layers ride each block:
- * its own hash-scattered flash, a stream of light travelling right to left
- * through hash-scattered clusters, and a one-pass glow as the entrance sweep
- * passes. The flash is independent of the stream — its phase, cycle length and
- * peak are the field's own randomness — while the stream is the one layer that
- * carries a direction, and it is the brightest of the three. The control decides
- * when the top rung is reached; this factory builds the grid inside `matrix` for
- * the width of `track`, and returns `{ ensure, dispose }` — `ensure()`
- * (re)builds it for the track's current device-pixel size and answers false
- * while the track has no layout yet; `dispose()` drops the preference listener.
+ * The dot matrix the reasoning-effort slider (effort/slider.ts) shows on its
+ * top rung. The grid is solved in whole device pixels, and three layers ride
+ * each block: its own hash-scattered flash, a stream of light travelling right
+ * to left through hash-scattered clusters, and a one-pass glow as the entrance
+ * sweep passes. The stream is the only ordered layer and the brightest, so the
+ * direction the eye reads is the stream's. The factory builds the grid inside
+ * `matrix` for the width of `track`; `ensure()` answers false while the track
+ * has no layout, and `dispose()` drops the preference listener.
  */
 export function createEffortMatrix(track: HTMLElement, matrix: HTMLElement) {
   /**
-   * The grid the matrix is built for, '`widthDev@dpr`'; '' while unbuilt.
-   * The picker's width is fixed, so a built grid is reused for the whole
-   * mount; a device-pixel-ratio change (window dragged across monitors)
-   * changes the signature and forces one rebuild on the next apex entry.
+   * The grid the matrix is built for, `widthDev@dpr`; '' while unbuilt. The
+   * picker's width is fixed, so a built grid lasts the mount; a device-pixel
+   * ratio change forces one rebuild on the next apex entry.
    */
   let matrixSig = ''
   /** Whether the grid standing in the document was built under the reduced answer. */
@@ -39,10 +33,9 @@ export function createEffortMatrix(track: HTMLElement, matrix: HTMLElement) {
 
   /**
    * Scatter one cell's phase. A linear rule such as `(7r + 13c) % 29` maps
-   * neighbours onto a regular lattice, which the eye reads as diagonal
-   * bands; avalanching both coordinates first scatters them instead. The
-   * result is continuous rather than quantised into buckets, so no two
-   * cells are forced to flip in the very same instant every round.
+   * neighbours onto a regular lattice the eye reads as diagonal bands;
+   * avalanching both coordinates first scatters them, and the result stays
+   * continuous so no two cells flip in the same instant every round.
    */
   function cellUnit(r: number, c: number, seed: number) {
     let h = Math.imul(r + 1, 0x9e3779b1) ^ Math.imul(c + 1, 0x85ebca6b) ^ Math.imul(seed + 1, 0x27d4eb2f)
@@ -60,9 +53,9 @@ export function createEffortMatrix(track: HTMLElement, matrix: HTMLElement) {
   /**
    * The share of the flow band one block carries. The band alone lights every
    * block in a column, which reads as one sweeping stripe; a coarse hash groups
-   * neighbours into clusters and a sparse threshold lets only some of them carry
-   * the band, so it travels as a stream of scattered particles. The floor keeps
-   * the rest of the field from going black where the band crosses it.
+   * neighbours into clusters and a sparse threshold lets only some carry it, so
+   * it travels as scattered particles. The floor keeps the rest from going
+   * black where the band crosses.
    */
   function flowStrength(r: number, c: number, fx: number) {
     const cluster = Math.min(FLOW_CLUSTERS - 1, Math.floor(fx * FLOW_CLUSTERS))
@@ -73,9 +66,8 @@ export function createEffortMatrix(track: HTMLElement, matrix: HTMLElement) {
   }
 
   /**
-   * The matrix's left-to-right mask: the right end is solid, the left end
-   * dissolves back into the bare track, so the grid reads as a gradient
-   * rather than a wall of blocks.
+   * The matrix's left-to-right mask: solid at the right end, dissolving back
+   * into the bare track at the left, so the grid reads as a gradient.
    */
   function cellFade(fx: number) {
     if (fx <= 0.05) return 0
@@ -85,17 +77,14 @@ export function createEffortMatrix(track: HTMLElement, matrix: HTMLElement) {
   }
 
   /**
-   * Solve the grid in whole device pixels. Rounding here — instead of
-   * handing the browser a fractional remainder — is what keeps the matrix
-   * uniform: a fractional pitch rasterizes as alternating gaps, and a
-   * centred fractional remainder leaves one edge with a different gap. The
-   * vertical rest goes back into the top/bottom padding, so the blocks
-   * stay square and centred inside the groove whatever the device ratio.
+   * Solve the grid in whole device pixels: a fractional pitch rasterizes as
+   * alternating gaps, and a centred fractional remainder leaves one edge with a
+   * different gap. The vertical rest goes into the top/bottom padding, so the
+   * blocks stay square and centred in the groove at any device ratio.
    */
   function solveMatrix(wDev: number, dpr: number) {
-    /* Five rows of ~4px blocks on the 26px groove: chunky enough for the
-       grid to read as PIXELS (Claude's own matrix is similarly coarse);
-       six rows solved to 3px blocks and blurred into a texture. */
+    /* Five rows of ~4px blocks on the 26px groove: chunky enough for the grid
+       to read as PIXELS; six rows solved to 3px blocks and blurred. */
     const ROWS = 5
     const gap = Math.max(1, Math.round(1 * dpr))
     const margin = Math.max(1, Math.round(0.5 * dpr))
@@ -116,20 +105,17 @@ export function createEffortMatrix(track: HTMLElement, matrix: HTMLElement) {
     }
   }
   /**
-   * Give one particle its twinkle: a hash-scattered phase, a hash-scattered
-   * CYCLE LENGTH and a hash-scattered peak. Nothing here is ordered — the
-   * phases spread across the cycle so no two neighbours fire together, and the
-   * per-block durations drift the phases apart so the pattern never repeats
-   * exactly. The stream is the field's only ordered layer, and it is brighter
-   * than any block's flash, so the direction the eye reads is the stream's.
+   * Give one particle its twinkle: a hash-scattered phase, CYCLE LENGTH and
+   * peak. Nothing here is ordered — the phases spread so no two neighbours fire
+   * together, and the per-block durations drift them apart. The stream stays the
+   * field's only ordered layer.
    */
   function paintParticle(sq: HTMLElement, r: number, c: number) {
-    /* The flash peak as a continuous share of the apex colour, held below the
-       flow's own tone: the band must stay the brightest thing on the block, or
-       the eye follows the flash instead and reads no direction. The eight
-       buckets this replaced showed as bands across a wide track. */
+    /* The flash peak, held below the flow's own tone: the band must stay the
+       brightest thing on the block, or the eye follows the flash instead and
+       reads no direction. */
     sq.style.setProperty('--dsh-flash-mix', `${(62 - cellUnit(r, c, 1) * 22).toFixed(1)}%`)
-    // Standing still, the cycle and the phase are not written at all: an inline
+    // Standing still, the cycle and the phase are not written: an inline
     // `!important` duration outranks the reduced-motion rule, and a plume that
     // flashes once per block after a scattered delay is motion like any other
     // (D40). Without them the stylesheet's own duration answers the rule.
@@ -144,10 +130,10 @@ export function createEffortMatrix(track: HTMLElement, matrix: HTMLElement) {
 
 
   /**
-   * (Re)build the matrix for the track's current device-pixel size. Returns
-   * false when the track has no layout yet (the picker is still hidden);
-   * the caller then keeps the apex treatment off, and the next paintValue
-   * retries — the attribute never marks a grid that is not there.
+   * (Re)build the matrix for the track's current device-pixel size. False when
+   * the track has no layout yet (the picker is hidden): the caller keeps the
+   * apex treatment off and the next paintValue retries, so the attribute never
+   * marks a grid that is not there.
    */
   function ensureMatrix() {
     const w = track.clientWidth
@@ -172,9 +158,8 @@ export function createEffortMatrix(track: HTMLElement, matrix: HTMLElement) {
         if (!motionReduced()) {
           /* The entrance sweeps in from the right — the end the knob reached
              for — with a whisper of scatter so it does not read as a wipe.
-             The frontier glow rides the same delay. !important inline: the
-             stylesheet's animation shorthand is !important (it resets
-             delay/duration), so a plain assignment would silently lose.
+             !important inline: the stylesheet's animation shorthand resets
+             delay/duration, so a plain assignment would silently lose.
              Standing still both are left off, for the same reason
              paintParticle leaves the cycle off (D40). */
           const entrance = (1 - fx) * FLASH_S * 0.31 + cellUnit(r, c, 4) * FLASH_S * 0.055
@@ -200,9 +185,7 @@ export function createEffortMatrix(track: HTMLElement, matrix: HTMLElement) {
   /**
    * A change of the animation choice rebuilds the grid: the per-block cycles are
    * inline with `!important`, so a grid built while motion played would keep
-   * pulsing after the reader asks for reduced motion. The rebuild writes no
-   * cycles under the reduced answer, and the stylesheet's own rules hold the
-   * layers still.
+   * pulsing. The rebuild writes no cycles under the reduced answer.
    */
   const stopPrefs = subscribePrefs(() => {
     if (motionReduced() === builtReduced) return

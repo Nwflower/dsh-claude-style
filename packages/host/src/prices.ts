@@ -3,15 +3,13 @@
  * refreshed from the repository, and which of the two is newer.
  *
  * The repository owns the scraping (`scripts/fetch-prices.mjs`, run by
- * `.github/workflows/data.yml`); a host only downloads the validated result,
- * once a day, and keeps it on disk. The packaged copy is what a machine with no
- * reach judges by, so the meter works on a first run with no network at all.
+ * `.github/workflows/data.yml`); a host only downloads the validated result, once
+ * a day, and keeps it on disk. The packaged copy is what a machine with no reach
+ * judges by, so the meter works on a first run with no network at all.
  *
  * The refresh follows `peakrate.ts`: a timer that starts with the first reader,
- * stands down when nobody has asked for two days, and keeps the current
- * document whenever the fetch or the parse fails. Compared with parsing the
- * official page here, this moves the fragile half into CI, where a break is one
- * red run instead of every install.
+ * stands down when nobody has asked for two days, and keeps the current document
+ * whenever the fetch or the parse fails.
  */
 import { PACKAGE_NAME } from '@dsh-claude-style/contracts/package'
 import { statSync } from 'node:fs'

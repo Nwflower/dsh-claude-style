@@ -1,13 +1,6 @@
 /**
- * A host half's derived cache files, under `$DSH_HOME/cache/<package name>/`.
- *
- * Every cache here only saves work: a file that does not parse is reported and
- * read as "no cache", and a write that fails leaves the pass that computed the
- * value still answering (D12). A write goes through a temporary
- * file and a rename, so a reader never sees half a document.
- *
- * The path resolution stays in harness-home.ts, so the cache sits in the same
- * directory as the delete route's and the usage roll-up's reads.
+ * Derived caches under `$DSH_HOME/cache/<package name>/`; failures degrade to no cache (D12).
+ * Temporary-file rename keeps readers from seeing partial JSON.
  */
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -22,14 +15,7 @@ export function createCacheFiles(packageName: string) {
       return join(harnessPath(ctx, 'cache', packageName), ...segments)
     },
 
-    /**
-     * One JSON document from disk.
-     *
-     * @param ctx - host plugin context, for the warning a failure leaves.
-     * @param path - the file to read.
-     * @param label - what the file is, for the warning.
-     * @returns the parsed document, or undefined when it is absent or unreadable.
-     */
+    /** Return parsed JSON, or undefined with a warning when absent or unreadable. */
     readJsonDocument(ctx: DshContext, path: string, label: string): unknown {
       if (!existsSync(path)) return undefined
       try {
@@ -40,15 +26,7 @@ export function createCacheFiles(packageName: string) {
       }
     },
 
-    /**
-     * Replace one cache file through a temporary file.
-     *
-     * @param ctx - host plugin context, for the warning a failure leaves.
-     * @param path - the file to write.
-     * @param label - what the file is, for the warning.
-     * @param document - the value to store.
-     * @returns whether the file now holds the document.
-     */
+    /** Write through a temporary file; report failure and return whether the replace succeeded. */
     writeJsonDocument(ctx: DshContext, path: string, label: string, document: unknown): boolean {
       const temporary = `${path}.${process.pid}.tmp`
       try {

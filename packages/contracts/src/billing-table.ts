@@ -1,19 +1,10 @@
 /**
- * The reader's own prices (the settings page's custom price table).
- *
- * A row overrides the price tables for one model: the buckets it fills are taken
- * from the row, the buckets it leaves blank come from the table in force for that
- * model, and a model the tables do not price at all is priced from the row's own
- * buckets. Rows are stored as `model|input|cacheRead|output` per million tokens,
- * in the billing currency — text rather than numbers, so a stored rate keeps
- * every digit the reader typed.
- *
- * The same parser runs in both halves (D73): the host prices a settlement with
- * it, the browser prices the answer still streaming.
+ * Custom rates overlay the table by model; blank buckets inherit its rates.
+ * Stored as `model|input|cacheRead|output` text to preserve entered digits, and shared by both halves (D73).
  */
 import type { PriceTier } from './prices'
 
-/** One row of the reader's own table, as it is parsed. */
+/** Parsed custom price row. */
 export interface BillingRow {
   /** The model id as the reader wrote it, trimmed. */
   model: string
@@ -75,18 +66,7 @@ export function billingRowFor(rows: readonly BillingRow[], modelId: string): Bil
   return null
 }
 
-/**
- * One model's rates with the reader's row laid over the table's own.
- *
- * A blank bucket in the row keeps the table's rate; a model the table does not
- * price at all is priced from the row alone. A row with nothing filled answers
- * with the table unchanged.
- *
- * @param rows - the reader's rows.
- * @param modelId - the route the settlement named.
- * @param table - the rate the price table resolves for it, or undefined.
- * @returns the rate in force, or undefined when neither answers.
- */
+/** Apply custom rows; an entirely zero result means neither source prices the model. */
 export function overlayBilling(
   rows: readonly BillingRow[],
   modelId: string,

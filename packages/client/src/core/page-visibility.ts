@@ -1,17 +1,7 @@
 import { ASLEEP_ATTR } from '../constants'
 import { notifyAll } from '@dsh-claude-style/engine/notify'
 
-/**
- * The page's visibility (D40): the browser's own answer has one owner, because
- * the stylesheet and the clocks in script both act on it. A page is off screen
- * when the window is hidden or another application covers it — not when it
- * merely lost the focus and stands beside the one that has it.
- *
- * While the page is off screen the document wears ASLEEP_ATTR and the sheet
- * holds every animation still (theme/chrome.css). A compositor animation left
- * running keeps producing frames for a window nobody sees, and those frames are
- * what the page has to catch up on the moment the reader comes back.
- */
+/** One visibility owner drives script clocks and ASLEEP_ATTR; losing focus alone does not pause them (D40). */
 const listeners: ((hidden: boolean) => void)[] = []
 
 /** Whether the page is off screen right now. */
@@ -28,13 +18,7 @@ export function subscribePageHidden(listener: (hidden: boolean) => void) {
   }
 }
 
-/**
- * Mirror the answer onto the document and tell what waits on it. Installed with
- * the sheet and taken off by release(), so the mark belongs to the generation
- * that owns the page (D74).
- *
- * @returns the stop that takes the listener and the mark away.
- */
+/** The stop removes both listener and mark so they belong to one page generation (D74). */
 export function installPageVisibility() {
   let hidden = pageHidden()
   writeMark(hidden)

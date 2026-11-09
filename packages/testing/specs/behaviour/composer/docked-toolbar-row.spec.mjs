@@ -80,10 +80,9 @@ export default spec({ page: 'automode' }, ({ test }) => {
     const after = await read()
     t.expectThat.equal(after.flexWrap, 'nowrap', "the docked row takes the skin's toolbar layout")
     t.expectThat.equal(after.hasSlot, true, 'the marked row is the one carrying the model slot')
-    // One line: the clusters are centred inside the row, so their centres
-    // agree — a wrapped cluster would centre a full line lower. Their heights
-    // differ (the host's buttons are taller than the 28px row), so tops would
-    // not agree even on one line.
+    // One line: the clusters are centred in the row, so their centres agree; a
+    // wrapped cluster centres a line lower, and tops differ because the host's
+    // buttons are taller than the 28px row.
     const centre = (box) => Math.round(box.top + box.height / 2)
     t.expectThat.equal(centre(after.leading), centre(after.trailing), 'tools and model cluster centre on the same line')
     t.expectThat.equal(centre(after.trailing), centre(after.row), 'the model cluster centres on the row')

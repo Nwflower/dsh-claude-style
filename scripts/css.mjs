@@ -1,33 +1,6 @@
 /**
- * css.mjs — the stylesheet half of the build (D9).
- *
- * Every stylesheet is plain CSS: it is parsed with PostCSS, and the rules the
- * skin's CSS lives by are checked on the syntax tree, selectors through
- * postcss-selector-parser:
- *
- *   scope        every selector holds `body[data-dsh-claude-style]` (outside :not());
- *                a sheet whose manifest entry says `scope: 'surface'` holds
- *                `body[data-dsh-claude-surface]` instead and ships apart (D74)
- *   :has()       only in its selector's last compound, at every nesting level (D9)
- *   token gates  a rule writing a host token carries the Claude palette or
- *                typeface gate, and every private token the Claude choice
- *                defines has an alias under the host's (D30)
- *   composer     the rules below a sheet's `@composer-gate` comment get the
- *                composer gate stamped onto their scope compound (D9)
- *   attributes   every `data-dsh-*` attribute a selector reads is one the
- *                browser half writes, read off its syntax tree (scripts/source-tree.mjs)
- *   motion       a time or an easing curve is written only in the token
- *                stylesheet, no two keyframes say the same thing, and every
- *                motion token is read somewhere (D9)
- *   layers       a z-index above the local orders 0 to 9 is a layer token,
- *                and every layer token is read somewhere (D9)
- *
- * The token stylesheet is generated from packages/client/src/theme/tokens.json, and so are the
- * token, motion and layer tables in docs/STYLE.md; it also declares the brand marks' addresses
- * as `--dsh-claude-image-<name>`, the one thing in the CSS only the build knows.
- *
- * The joined sheet ships minified (scripts/shared/minify-css.mjs): comments and
- * formatting are for the source, and the checks above read the source.
+ * css.mjs — check and join stylesheets on the syntax tree (D9). Enforce scope,
+ * host-token and @composer-gate contracts, generated tokens and layer limits.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -45,11 +18,7 @@ const SCOPE_TAG = 'body'
 const DOCUMENT_TAG = 'html'
 const SCOPE_ATTRIBUTE = 'data-dsh-claude-style'
 const SCOPE = `${SCOPE_TAG}[${SCOPE_ATTRIBUTE}]`
-/**
- * The scope of the sheets that stay on the page while ds-bot's surface has it
- * (D74): the theme's own scope is gone then, and these rules are the surface
- * switch's whole look.
- */
+/** Surface sheets remain after the theme scope is removed (D74). */
 const SURFACE_SCOPE_ATTRIBUTE = 'data-dsh-claude-surface'
 /** The comment in a gated sheet below which every rule follows the composer preference. */
 const COMPOSER_GATE_MARKER = '@composer-gate'
@@ -58,20 +27,10 @@ const MOTION_BEGIN = '<!-- generated:motion (packages/client/src/theme/tokens.js
 const MOTION_END = '<!-- /generated:motion -->'
 const LAYER_BEGIN = '<!-- generated:layers (packages/client/src/theme/tokens.json) -->'
 const LAYER_END = '<!-- /generated:layers -->'
-/**
- * A z-index a sheet may write as it is: an order among siblings inside one
- * box (D9). Anything that stacks against the host's own surfaces is a layer
- * token instead.
- */
+/** Only sibling-local stacking may use a literal z-index; host surfaces need tokens (D9). */
 const LOCAL_LAYER = /^(?:auto|-1|[0-9])$/
 
-/**
- * A time and an easing curve as a declaration's value spells them (D9). A
- * name such as `--dsh-claude-ease-out` is no match, and neither is a digit
- * inside an identifier: the character before must not continue an identifier or
- * a number. `linear` and the step functions are mechanical timing, not a style
- * choice, and stay.
- */
+/** Match declaration values, not identifiers; mechanical linear and step timing stay literal (D9). */
 const TIME_PATTERN = /(?<![\w.#-])(\d*\.?\d+)(ms|s)(?![\w-])/g
 const EASE_PATTERN = /(?<![\w-])(?:ease|ease-in|ease-out|ease-in-out)(?![\w-])|cubic-bezier\(/
 
@@ -102,12 +61,7 @@ function negated(node) {
   return false
 }
 
-/**
- * The scope compounds of one selector: each scope attribute
- * (`[data-dsh-claude-style]` unless named) on a `body` compound outside
- * :not(), with the compound around it. A rule that paints the document
- * element reaches the scope through `html:has(…)`.
- */
+/** Find body scope compounds outside :not(); document rules enter through html:has(…). */
 function scopeCompounds(selector, scopeAttribute = SCOPE_ATTRIBUTE) {
   const found = []
   selector.walkAttributes((attribute) => {
@@ -123,12 +77,7 @@ function carries(selector, attribute, value) {
   return scopeCompounds(selector).some(({ compound }) => compound.some((node) => node.type === 'attribute' && node.attribute === attribute && node.value === value))
 }
 
-/**
- * Refuse a `:has()` outside its selector's last compound (D9): `A:has(B) C`
- * re-matches every descendant of every A on each DOM change below it. Each
- * level is checked on the way out, so `:is(A:has(B) C)` and
- * `A:not(:has(B)) C` are refused too.
- */
+/** A trailing combinator after :has() causes descendant-wide rematching; reject at every nesting level (D9). */
 function checkHasPlacement(where, selector) {
   selector.walkPseudos((pseudo) => {
     if (pseudo.value.toLowerCase() !== ':has') return
@@ -143,15 +92,7 @@ function checkHasPlacement(where, selector) {
   })
 }
 
-/**
- * Refuse a `:has()` that asks about a mark (D9). What the argument selects on is
- * what the skin already knows — a part, a host `data-*` mark, one of the skin's
- * own markers — so the pass answers it as `data-dsh-claude-holds`
- * (packages/engine/src/parts-table.ts) and the rule reads the answer. Two shapes stay: a
- * `:has()` over state the skin cannot mark (a pseudo-class, a class name), and
- * the document element's own entry into scope, where the whole gate compound
- * sits inside the `:has()` (D9) and nothing else can carry the rule.
- */
+/** Read known attribute relations through data-dsh-claude-holds instead of querying them with :has() (D9). */
 function checkHasMarks(where, selector) {
   selector.walkPseudos((pseudo) => {
     if (pseudo.value.toLowerCase() !== ':has') return
@@ -162,15 +103,7 @@ function checkHasMarks(where, selector) {
   })
 }
 
-/**
- * Hold every write of a host token to its gate (D30), and record the private
- * tokens the Claude choice defines and the host choice aliases.
- *
- * A `--dsw-font-*` declaration sits in a rule whose every selector carries one
- * of the skin-owned typeface gates; any other `--dsw-*` one in a rule carrying
- * the Claude palette gate. Under "follow the host" those rules drop out and the
- * host's tokens (or another theme plugin's) stand.
- */
+/** Gate host-token writes so follow-host mode can drop every override (D30). */
 function checkTokenGates(label, rule, selectors, gates, names) {
   const every = (gate, value) => selectors.every((selector) => carries(selector, gate.attribute, value))
   for (const node of rule.nodes) {
@@ -417,17 +350,7 @@ function checkAttributes(read, sources) {
   }
 }
 
-/**
- * Hold every part name a selector reads to the table that defines it (D3).
- *
- * `[data-dsh-claude-part~="x"]` is the whole of a host anchor now, so a
- * misspelt or retired name leaves a rule that matches nothing — the failure the
- * substring selectors hid, made loud. The table is data
- * (packages/engine/src/parts-table.ts), so the build reads the same list the
- * browser half walks.
- *
- * @param parts - part name → where a selector first reads it.
- */
+/** Reject unknown part names that would leave selectors matching nothing (D3). */
 function checkParts(parts) {
   const known = new Set(partNames())
   if (known.size === 0) {
@@ -438,12 +361,7 @@ function checkParts(parts) {
   }
 }
 
-/**
- * The part names and hold relations the marking pass answers from, read in Node
- * the way the browser half builds them: the tables are functions of the skin's
- * own attribute vocabulary, which this reads from the browser half's constants
- * (packages/engine/src/parts.ts, D73).
- */
+/** Build relation tables with the same skin vocabulary the browser uses (D73). */
 function partsVocabulary() {
   const { ACCOUNT_MENU_ATTR, HERO_MENU_ATTR, MORE_MENU_ATTR, PART_ATTR } = loadModule('packages/client/src/constants.ts')
   return { part: PART_ATTR, regions: { account: ACCOUNT_MENU_ATTR, hero: HERO_MENU_ATTR, more: MORE_MENU_ATTR } }
@@ -461,15 +379,7 @@ function holdRelations() {
   return holdRelations(partsVocabulary())
 }
 
-/**
- * Hold every relation a stylesheet reads to the table the pass answers from
- * (D9), in both directions: a rule reading a mark no relation declares matches
- * nothing, and a declared relation no rule reads is a mark written for nobody.
- * The selectors inside the declarations are checked too, so a part name they
- * name is one the table defines.
- *
- * @param relations - relation name → where a selector first reads it.
- */
+/** Reject unknown relations and unused declarations in both directions (D9). */
 function checkHolds(relations) {
   const relationsTable = holdRelations()
   if (!Array.isArray(relationsTable)) throw new Error('build: packages/engine/src/parts-table.ts exports no hold relations')
@@ -494,19 +404,7 @@ function checkHolds(relations) {
   }
 }
 
-/**
- * Every sheet in cascade order, checked, gated and joined.
- *
- * @param options.sheets - `{ file, rank, gate?, scope? }` or `{ generated, rank }` in cascade order (TOKEN_SHEET generated).
- * @param options.srcDir - the source directory.
- * @param options.sources - the browser half on its syntax tree (scripts/source-tree.mjs).
- * @param options.tokenDoc - packages/client/src/theme/tokens.json (loadTokens).
- * @param options.gates - `{ composer, palette: { attribute, claude, host }, paletteCard: { attribute }, typeface: { attribute, claude, system, host }, brand: { attribute, deepseek } }`.
- * @param options.images - brand mark name → its address, for the token sheet.
- * @param options.featureConstants - what the generated feature sheets are written from (scripts/feature-sheets.mjs).
- * @returns `{ main, surface }`: the theme's sheet and the surface sheets (D74),
- *     each minified once every check has read every sheet.
- */
+/** Run all source checks before minifying and joining the main and surface sheets (D74). */
 export function buildStylesheet({ sheets, srcDir, sources, tokenDoc, gates, images, featureConstants }) {
   const names = { claude: new Set(), host: new Set() }
   const read = new Map()
@@ -541,21 +439,8 @@ export function buildStylesheet({ sheets, srcDir, sources, tokenDoc, gates, imag
 }
 
 /**
- * Every `!important` the built sheet carries must be one the importance walk
- * decided (D9): the weight is only ever there over a host `!important`, an
- * inline style or another skin rule, and which of those it stands over was read
- * off the page by that walk. The walk writes every declaration it read — the
- * ones it proved necessary with what each beats, and the ones no page state
- * could reach with the verdict that says so — into
- * packages/testing/data/importance-ledger.json, keyed by the declaration's rule text
- * and property, which is the same key this check computes over the built sheet.
- * A declaration in no entry is weight nobody has read the page for: write the
- * reason into a decision, then run the walk with `DSH_IMPORTANCE_LEDGER=write`
- * and read the ledger's diff. That run builds the very sheet it is about to
- * record, so the check stands aside for it; nothing else sets the variable.
- *
- * @param main - the built theme sheet, minified, as the page runs it.
- * @param srcDir - packages/client/src, from which the repository root is reached.
+ * Require every !important declaration in the recorded page audit (D9).
+ * DSH_IMPORTANCE_LEDGER=write bypasses the check only while recording that sheet.
  */
 function checkImportance(main, srcDir) {
   if (process.env.DSH_IMPORTANCE_LEDGER === 'write') return

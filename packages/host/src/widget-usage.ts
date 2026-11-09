@@ -4,14 +4,12 @@
  * The board runs beside this plugin in the same host process, so the dashboard
  * widget reads the account this half already folds instead of walking every
  * session log a second time. The capability answers `createUsage`'s snapshot —
- * the same value the `usage` route serves the home page — so a widget card and
- * the home panel can never disagree about a day.
+ * the same value the `usage` route serves — so a widget card and the home panel
+ * cannot disagree about a day.
  *
- * The board's call timeout is longer than this one's wait, so a card waits out
- * the first cold pass. It is granted once per widget version (the board asks
- * before the first call): the answer covers the user's whole session history,
- * which is why the capability asks for a permission `{}` the way the board's
- * own read-only sources do.
+ * The answer covers the user's whole session history, which is why the capability
+ * asks for a permission `{}` the way the board's own read-only sources do; the
+ * board grants it once per widget version.
  */
 import type { DshContext } from '@dsh-claude-style/engine/node/dsh'
 import { createUsage } from './usage.js'
@@ -237,8 +235,7 @@ async function waitForSummary(usage: ReturnType<typeof createUsage>, signal: Abo
  *
  * The board is waited for through `inject`, like the routes wait for the web
  * server: a profile lists the two plugins in its own order, and the board
- * provides its service only when its own fiber applies. A host with no board
- * simply never answers, and everything else this half does stands.
+ * provides its service only when its own fiber applies.
  *
  * @param ctx - the host plugin context.
  * @returns nothing; the registration drops with this generation.

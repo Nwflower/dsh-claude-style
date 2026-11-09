@@ -1,15 +1,4 @@
-/**
- * feature-sheets.mjs — the feature stylesheets the build writes from the
- * browser half's own constants (D9). Each is one rule per entry of a table
- * whose length the code reads too, so the count and the rules have one source
- * in packages/client/src/constants.ts.
- *
- *   reveal-steps  one ::highlight() rule per step of the reveal's fade (features/chat-reveal)
- *   heat-levels   one rule per level of the home heat grid's ramp (features/home)
- *
- * A manifest names one as `{ generated: '<name>', rank }` (FeatureStylesheet).
- * The sheet then goes through every check a written one does.
- */
+/** feature-sheets.mjs — generate feature stylesheets from the constants their runtime reads (D9). */
 
 /** The constants the generators read, by name; scripts/build.mjs picks them out of constants.ts. */
 export const FEATURE_SHEET_CONSTANTS = [
@@ -23,23 +12,7 @@ export const FEATURE_SHEET_CONSTANTS = [
 
 const SCOPE = 'body[data-dsh-claude-style]'
 
-/**
- * The reveal's fading rules, one per step: step 0 is the faintest a character
- * ever is, the last step is its own colour, so the text reaches its final
- * colour exactly when its segment leaves the highlight registry.
- *
- * The fade is a change of the text's own alpha, never a swap of colours: every
- * step paints the character in the colour it will come to rest in (its own,
- * published per element to the colour variable by the engine) and walks the
- * alpha up to fully opaque. `::highlight()` accepts no `opacity`, so the alpha
- * rides on `color`: `color-mix(in srgb, C p%, transparent)` weights the
- * result's alpha by p and leaves the hue alone.
- *
- * Every rule sits under the streaming containers: the fade happens nowhere
- * else, and elements outside one are filtered out by their ancestor during
- * style matching. The two selectors per step cover the container's own text
- * and the text of any element under it.
- */
+/** `::highlight()` cannot animate opacity; mix the final color with transparent to fade alpha only. */
 function revealSteps(constants) {
   const steps = constants.CHAT_REVEAL_STEPS
   const floor = constants.CHAT_REVEAL_MIN_OPACITY
@@ -53,24 +26,13 @@ function revealSteps(constants) {
   return rules.join('\n')
 }
 
-/**
- * The heat grid's levels: level n mixes the ramp's n-th share of the heat ink
- * (features/home/home-overview.css declares the ink) into the empty cell's
- * transparency.
- */
+
 function heatLevels(constants) {
   return constants.HOME_HEAT_RAMP.map((share, index) => `${SCOPE} .dsh-claude-home-heat-cell[data-level="${index + 1}"] {\n  background: color-mix(in srgb, var(--dsh-claude-heat-ink) ${share}%, transparent);\n}\n`).join('\n')
 }
 
 const GENERATORS = { 'reveal-steps': revealSteps, 'heat-levels': heatLevels }
 
-/**
- * One generated feature stylesheet.
- *
- * @param name - the manifest's `generated` value.
- * @param constants - FEATURE_SHEET_CONSTANTS, picked out of constants.ts.
- * @returns the sheet's text.
- */
 export function featureSheet(name, constants) {
   const generate = GENERATORS[name]
   if (generate === undefined) throw new Error(`build: no feature stylesheet generator is named "${name}" (scripts/feature-sheets.mjs)`)

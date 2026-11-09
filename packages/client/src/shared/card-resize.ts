@@ -2,21 +2,8 @@ import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { motionEase, motionMs } from './motion'
 import { motionReduced } from '../core/prefs'
 
-/**
- * A card taking a new height over transitions.dev's "Card resize" (MIT, see
- * docs/THIRD_PARTY_NOTICES.md): its width and height tween, with the duration
- * this package keeps as `--dsh-claude-duration-resize` and the settling curve
- * the other surface transitions read.
- *
- * A height cannot be interpolated into `auto`, so the caller measures the card
- * before its content changes: the new height is read with the height released,
- * and the travel runs between the two as its own animation. The card's own
- * `transition` stays untouched — the popover's open and close ride that one,
- * and a height written into it would replace them.
- *
- * A card anchored above its trigger is laid out from its height, so the caller
- * also hands over the placement it wants followed: it runs on every frame, and
- * once more when the height returns to the content.
+/** Measure before content changes, then release height to obtain the destination for the animation.
+ * Keep height off `transition`, which popover open/close owns; anchored placement follows every frame.
  */
 
 /** The card mid-travel, its animation, and the placement to follow. */

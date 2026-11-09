@@ -2,14 +2,9 @@ import parser from 'postcss-selector-parser'
 
 /**
  * Host markup built from the host contract (D3, D87): a spec names the
- * contract's selector, and the element it gets carries exactly what that
- * selector reads. A host rename is then one line of packages/contracts/src/dom.ts,
- * and no spec spells a host attribute of its own.
- *
- * Only a compound selector has one element that matches it: a tag, classes,
- * and attributes that are present or equal to (or hold the word) a value. A
- * selector with a combinator, a pseudo-class or a list is refused, since it
- * names a structure rather than an element.
+ * contract's selector and gets an element carrying exactly what it reads, so a
+ * host rename stays in packages/contracts/src/dom.ts. Only a compound selector
+ * names one element; a combinator, pseudo-class or list is refused.
  */
 export function hostElement<T extends HTMLElement = HTMLElement>(selector: string, value?: string): T {
   const root = parser().astSync(selector)

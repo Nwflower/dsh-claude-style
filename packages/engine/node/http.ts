@@ -5,26 +5,9 @@
 import type { DshContext, DshRequest, DshResponse } from './dsh'
 
 /**
- * Why a request to a route reading the user's own data must be refused, or
- * undefined when it may proceed.
- *
- * `webServer.register()` hands a plugin route raw requests: the host's own
- * `/api` sits behind a Host/Origin fence and the browser-session cookie, but
- * nothing puts a plugin route there, and these routes read the OS user and the
- * reader's files. So they borrow the host's own check,
- * `connection.requestRejection()` — the fence and authentication `/api`
- * applies. The browser passes it with a same-origin request that carries the
- * session cookie; the desktop shell passes it because it forwards to a loopback
- * Host, drops the page's Origin and attaches the cookie itself. A host without
- * that service cannot authenticate anyone, so the stand-in below serves
- * loopback only: a peer on the loopback interface, a loopback Host (which also
- * defeats DNS rebinding), no cross-site marker, and an Origin, when sent,
- * naming that Host. The peer address is the part of the request the caller
- * cannot write, so it is the one that has to hold.
- *
- * @param ctx - host plugin context.
- * @param req - node request.
- * @returns 401 / 403, or undefined when the request may proceed.
+ * Plugin routes do not inherit `/api` authentication. Prefer `connection.requestRejection`;
+ * without it require a loopback peer and Host, same-site marker and matching Origin.
+ * The socket peer is mandatory because request headers alone cannot establish locality.
  */
 export function refusalOf(ctx: DshContext, req: DshRequest) {
   const connection = ctx.get('connection')
@@ -45,10 +28,7 @@ export function refusalOf(ctx: DshContext, req: DshRequest) {
   return new URL(origin).host === host ? undefined : 403
 }
 
-/**
- * Whether a socket address is this machine: IPv4 `127/8`, IPv6 `::1`, or the
- * IPv4-mapped spelling Node reports for a v4 peer on a dual-stack socket.
- */
+/** Accept IPv4 `127/8`, IPv6 `::1` and Node's IPv4-mapped dual-stack spelling. */
 function isLoopbackPeer(address: string | undefined) {
   if (address === undefined) return false
   const plain = address.startsWith('::ffff:') ? address.slice('::ffff:'.length) : address
@@ -66,10 +46,7 @@ export function sendJson(res: DshResponse, status: number, payload: unknown) {
   res.end(body)
 }
 
-/**
- * Answer 405 for a request whose method the route does not take.
- * @returns whether the request was turned away.
- */
+/** Send 405 with `Allow` for unsupported methods and report whether the request was refused. */
 export function methodRefused(req: DshRequest, res: DshResponse, methods: string[]) {
   if (req.method !== undefined && methods.includes(req.method)) return false
   res.writeHead(405, { allow: methods.join(', ') })
@@ -77,12 +54,7 @@ export function methodRefused(req: DshRequest, res: DshResponse, methods: string
   return true
 }
 
-/**
- * The fence every route that reads the user's own data runs first: the
- * host's own check where that service exists, the loopback stand-in
- * otherwise (see refusalOf).
- * @returns whether the request was turned away.
- */
+/** Apply `refusalOf` before private-data routes and send its 401/403 JSON response. */
 export function fenceRefused(ctx: DshContext, req: DshRequest, res: DshResponse) {
   const refused = refusalOf(ctx, req)
   if (refused === undefined) return false
@@ -91,11 +63,8 @@ export function fenceRefused(ctx: DshContext, req: DshRequest, res: DshResponse)
 }
 
 /**
- * One bounded request body, or null when it is oversized or unreadable.
- *
- * Over the limit the rest of the body is dropped and the promise answers null:
- * the answer (400 / 413) still has to reach the client, so the socket is not
- * cut here — the caller ends it once the answer has gone out.
+ * Return null for oversized/unreadable bodies. Drain oversized input without cutting
+ * the socket so the caller can send 400/413 before ending it.
  */
 export function readRequestBody(req: DshRequest, limit: number): Promise<Buffer | null> {
   return new Promise<Buffer | null>((settle) => {

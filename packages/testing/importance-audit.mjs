@@ -1,48 +1,8 @@
 /**
- * importance-audit.mjs — which of the skin's `!important` declarations the page needs (D9).
- *
- * The host's own styles carry a handful of `!important` and sit in no cascade
- * layer, so the skin's selectors — every one starting at
- * `body[data-dsh-claude-style]` — already outweigh the host's single-class rules
- * on specificity. A skin `!important` is needed where it beats a host
- * `!important`, an inline style, or another skin rule; everywhere else it only
- * adds weight. Which is which is decided on the real page, never by reading:
- *
- *   1. The page's stylesheet is parsed (PostCSS) and every style rule carries a
- *      marker declaration, so the page's CSSOM rules map back to the parsed ones.
- *   2. In each page state, the declarations not yet decided are tried in source
- *      order: the importance is dropped through the CSSOM and the computed value
- *      of every longhand on every matched element (and pseudo-element) is compared
- *      with the value before. Unchanged — and no transition started — means the
- *      `!important` is not needed here, and it stays dropped while the next one is
- *      tried, so the set grows consistently. Changed means it is needed.
- *   3. Before a state's trial, the set dropped in the earlier states is checked
- *      whole: the stylesheet with the set dropped against the original, every
- *      element's computed value of every property any `!important` names. A
- *      difference sends the declarations behind it back to "needed" — the ones
- *      whose rule reaches the element or an ancestor, or, when a value moved
- *      through the layout with no such rule, the one a halving search finds.
- *
- * Every read happens on a page held still: transitions and finite animations
- * landed, endless ones stopped at their first frame.
- *
- * The same states answer the other half of "every line is necessary": in each
- * state every selector the sheet writes that no state has matched yet is
- * queried against the page, and a selector that never matches an element in any
- * state fails the run. Pseudo-elements and the pseudo-classes of an interaction
- * come out first — the question is whether the element exists — and third-party
- * answers and the skin's own transient marks are excused by contract, as their
- * declarations are above.
- *
- * A declaration that never matched an element is kept: no state showed what it
- * holds. So is one in theme/third-party.css, which answers other plugins' styles
- * the scratch host does not install, one under a transient mark the walk cannot
- * hold (TRANSIENT_SELECTORS), one whose property the rule declares
- * twice, and one whose rule stands under a conditional at-rule the page is not
- * in — dropping its importance cannot change a value the condition already
- * keeps out of the cascade.
- *
- * The states come from the lane's walk beside this file (packages/testing/importance.mjs).
+ * Decide on the live page which skin `!important` declarations are needed, by
+ * dropping each through the CSSOM and comparing computed values. Unmatched
+ * selectors fail; third-party and transient marks are excused (D9). States come
+ * from packages/testing/importance.mjs.
  */
 import fs from 'node:fs'
 import path from 'node:path'

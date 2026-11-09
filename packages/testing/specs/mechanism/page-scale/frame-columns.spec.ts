@@ -1,13 +1,9 @@
 /**
- * The host frame's three columns in a page drawn at a scale (D43, D81). The host
+ * The host frame's three columns in a page drawn at a scale (D43, D81): the host
  * measures the frame in the window's pixels and writes the columns in the page's,
- * so the grid is drawn at the scale again: the columns add up to a factor past
- * the window, the last column stands outside the frame, and a sidebar dragged to
- * a width is drawn that factor wider. A column narrowed to nothing is carried
- * like any other — it stands at zero in both spaces, and the `1fr` beside it
- * takes the rest of the page's own width. The sidebar's own box and its drag
- * handle carry the sidebar column's width a second and a third time, and are
- * carried with it.
+ * so the grid is drawn at the scale again, the columns add up to a factor past the
+ * window, and a sidebar dragged to a width is drawn that factor wider. A column
+ * narrowed to nothing stands at zero in both spaces.
  *
  * @capability page-scale
  * @features shared

@@ -1,10 +1,4 @@
-/**
- * What every mechanism spec does around its cases: register the stops it
- * installs, run them after the case, empty the document, and wait a few frames
- * for the browser to catch up. This lived copy-pasted in each spec file —
- * jscpd counts those copies as duplicated code — so it lives here once and the
- * specs import it.
- */
+/** What every mechanism spec does around its cases: run the stops it registered after the case, then empty the document. */
 import { afterEach } from 'vitest'
 
 /** Every teardown a case registered. */

@@ -1,10 +1,6 @@
 /* ---------- Masked brand marks ---------- */
-/* A Claude brand mark drawn as an alpha mask over the element's own ink: the
-   mask value is stated once here, and the classes carry it for the skin's own
-   elements. A host pseudo-element cannot take a class, so the sidebar and the
-   settings tab icon read the same value on their ::before rules
-   (theme/sidebar.css, features/settings/settings.css); in both shapes the rule
-   that seats the mark carries the ink (background-color) and the box. */
+/* Host pseudo-elements cannot take these classes and read the same mask variables directly.
+   The seating rule owns background-color and geometry (docs/STYLE.md). */
 body[data-dsh-claude-style] {
   --dsh-claude-mask-claude-mark: var(--dsh-claude-image-claude-mark) center / contain no-repeat;
   --dsh-claude-mask-claude-word: var(--dsh-claude-image-claude-word) center / contain no-repeat;

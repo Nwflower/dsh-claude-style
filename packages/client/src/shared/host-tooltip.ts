@@ -2,17 +2,7 @@ import * as React from 'react'
 import * as reactDom from 'react-dom/client'
 import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
 
-/**
- * 一个不归 React 管的控件挂上宿主自己的提示气泡。
- *
- * 宿主的 Tooltip 只接受一个 React 元素作锚点，并把气泡摆在那个元素的矩形旁边；
- * 所以控件外面套两层：调用方插进页面的那一层是 `display: contents`（不占排布），
- * React 画的那一层是控件真正的盒子 —— 尺寸跟着控件，气泡因此落在控件旁边。
- * 控件由 React 的 ref 交进内层，指针与焦点事件照样冒上来。
- *
- * 用它的地方是那些由皮肤直接拼出来的控件：浏览器原生的 `title` 与宿主自己的
- * 提示同屏时会露出两种样式。
- */
+/** 宿主 Tooltip 需要 React 锚点；外层不参与排布，内层提供控件矩形，ref 保留原控件及事件。 */
 
 export interface HostTooltipOptions {
   side?: 'right' | 'bottom' | 'top'

@@ -5,32 +5,9 @@ import { MESSAGE_FOLD_ATTR } from '../../constants'
 import { SUBMISSION_ECHO_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { copy } from './copy'
 
-/**
- * Fold a message the reader sent that is taller than the conversation can spare.
- *
- * The host renders a user message whole however long it is: a pasted trace or a
- * log dump stands in the column at its full height and pushes the rest of the
- * conversation away. Nothing in the host's markup offers a fold, so the skin
- * folds it — the bubble is clamped to the stylesheet's cap with its bottom edge
- * softened, and the skin's own toggle under it hands the whole message back. The
- * mark and the toggle are the skin's; the bubble, its words and the actions
- * beside it stay the host's.
- *
- * Both faces of a sent message are folded: the echo the host mounts the moment
- * the message goes out, and the durable row that replaces it. The reader sees
- * his message clamped as soon as it lands, not once the turn is over: the echo
- * is folded in the batch that mounts it rather than in the pass after, because
- * the send flight takes the bubble's box at take-off and carries its stand-in to
- * that box for the whole animation (chat-send/send-flight.ts).
- *
- * A message the reader opened stays open while its node stands — the choice is
- * kept per bubble, and every later pass re-applies it.
- *
- * The cap and the fade are the stylesheet's, read back off the bubble
- * (message-fold.css), so the threshold and the clamp are one number. A bubble is
- * read the first time it is seen and again whenever its own box moves: a row can
- * arrive before its own text has its final height.
- */
+/* Fold both the submission echo and durable row: send-flight measures the echo immediately.
+   Reader expansion is remembered per bubble; cap and fade come from message-fold.css so the
+   threshold and clamp share one source. */
 
 /** The toggle the skin draws under a foldable message: the stylesheet and the press route both read it. */
 export const MESSAGE_FOLD_TOGGLE_CLASS = 'dsh-claude-message-fold-toggle'
@@ -40,14 +17,7 @@ const FALLBACKS = { cap: 320, fade: 40 }
 /** What the reader asked for on one message. */
 type FoldChoice = 'collapsed' | 'expanded'
 
-/**
- * Watch every user message and fold the tall ones.
- *
- * @param requestPass - asks the scheduler for a pass (a box moved under the
- *     fold's own reading).
- * @returns the pass's read phase, its write phase, the two events that move a
- *     height, and the teardown.
- */
+
 export function createMessageFold(requestPass: () => void) {
   /** Every row a submission is recognised by, kept current by the bus (D40). */
   const rows = observeMatches<HTMLElement>(CHAT_ROW_SELECTOR)
@@ -78,12 +48,7 @@ export function createMessageFold(requestPass: () => void) {
     return column === null ? window.innerWidth : column.clientWidth
   }
 
-  /**
-   * The scheduler dispatches this for a scroll as well as a resize, and a scroll
-   * moves no text: only a column of another width re-wraps the words. The folded
-   * bubbles are the reason the width is read here — their box is held at the cap,
-   * so their own size subscription never hears the words re-wrapping under it.
-   */
+  /** Scrolls do not rewrap text; clamped bubbles need this width check because their box stays capped. */
   function reposition() {
     const width = columnWidth()
     if (measuredWidth === width) return
@@ -103,14 +68,7 @@ export function createMessageFold(requestPass: () => void) {
     return bubble
   }
 
-  /**
-   * Hear one bubble's box, once.
-   *
-   * The row can stand before its own text has its final height (the host mounts
-   * it before the fill or the words arrive), and the skin's own clamp moves the
-   * box too, so the browser is the one that says when the answer may have
-   * changed: the next pass reads the content's height again.
-   */
+  /** Text may arrive after the row; box changes invalidate the earlier height decision. */
   function watchSize(bubble: HTMLElement) {
     if (sizes.has(bubble)) return
     sizes.set(bubble, observeSize(bubble, () => {
@@ -182,13 +140,7 @@ export function createMessageFold(requestPass: () => void) {
     writeLabel(toggle, collapsed)
   }
 
-  /**
-   * The reader pressing the skin's own toggle: the message takes the other state.
-   *
-   * The press is caught before the row hears it — the row belongs to the host,
-   * and a click on it may mean something else (a selection, the whole turn) —
-   * and it never reaches the fold's own door, which rolls host disclosures.
-   */
+  /** Stop the press before host row handlers and the host-disclosure glide see it. */
   const onPress = (event: Event) => {
     const target = event.target
     if (!(target instanceof Element)) return
@@ -222,11 +174,7 @@ export function createMessageFold(requestPass: () => void) {
     }
   }
 
-  /**
-   * Write every mark and toggle (the pass's write phase, D40). The bubbles are
-   * the ones the read phase found: walking a row here reads computed styles
-   * after the other features' writes, a style recalculation on every pass.
-   */
+  /** Use bubbles cached in the read phase; querying here would force style recalculation (D40). */
   function sync() {
     for (const row of rows.all()) {
       const bubble = bubbles.get(row)
@@ -234,17 +182,7 @@ export function createMessageFold(requestPass: () => void) {
     }
   }
 
-  /**
-   * The echo the host mounts the moment a submission goes through, folded in the
-   * batch that mounts it.
-   *
-   * The send flight (chat-send/send-flight.ts) measures the bubble it hands the
-   * message to and carries its stand-in to that box, so a fold landing in the
-   * pass after the echo mounts leaves the stand-in flying to the message's full
-   * height and holds the real row back until the flight's own wait runs out. This
-   * watch is made at install and the flight's own only once a submission has been
-   * captured, so this callback runs first and the flight measures what it wrote.
-   */
+  /* This observer is installed before send-flight's, so the echo is clamped before flight measures it. */
   const stopEchoWatch = subscribeMutations(document.body, { childList: true, subtree: true, skipQuiet: true }, records => {
     for (const record of records) {
       for (const node of record.addedNodes) {

@@ -10,23 +10,12 @@ import type { DshContext, DshRequest, DshResponse } from './dsh'
 /** The build's asset manifest inside the assets directory: which names exist, their type and their storage. */
 const ASSETS_MANIFEST = 'manifest.json'
 
-/**
- * @param ctx - host plugin context, for the warning an unreadable manifest leaves.
- * @param packageName - the plugin's name, which prefixes that warning.
- * @param assetsDir - the build output directory holding the routed assets and their manifest.
- */
+/** Create file and manifest-backed asset responders. */
 export function createStaticFiles(ctx: DshContext, packageName: string, assetsDir: string) {
   /** The decompressed payload of each brotli-stored asset served to a client that cannot take it. */
   const unpressed = new Map<string, Buffer>()
 
-  /**
-   * Answer one request with a static file.
-   * @param res - node response.
-   * @param method - request method; HEAD sends headers only.
-   * @param path - absolute file to read.
-   * @param headers - content-type / cache-control pair for the payload.
-   * @param body - the payload, when the caller already holds it.
-   */
+  /** Send a file, or an already held body; HEAD omits the payload. */
   function sendFile(res: DshResponse, method: string, path: string, headers: Record<string, string>, body: Buffer | null = null) {
     // An optional file the user never dropped in, or a name no build shipped,
     // is absent: 404.
@@ -60,17 +49,8 @@ export function createStaticFiles(ctx: DshContext, packageName: string, assetsDi
   }
 
   /**
-   * Answer one request for a routed asset.
-   *
-   * The manifest is read per request, like every other file here: the build
-   * decides what exists, and a rebuild then shows up without restarting the
-   * host. A name the manifest does not carry is a 404 — that is also what
-   * keeps the directory unreachable by any other spelling.
-   *
-   * @param req - node request (its accept-encoding decides the payload).
-   * @param res - node response.
-   * @param name - the file name from the request path.
-   * @returns whether the request was answered.
+   * Read the manifest per request so rebuilds appear without restart.
+   * Only manifest names are reachable; other paths return false.
    */
   function sendAsset(req: DshRequest, res: DshResponse, name: string) {
     const asset = readManifest()?.[name]

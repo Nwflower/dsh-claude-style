@@ -1,9 +1,8 @@
 /**
- * While an answer streams, the written-back figure under the composer grows
- * with the text on the page, at each character's rough token share; a tool
- * call's arguments never reach the page, so each call row adds its tool's own
- * price once. When the step settles, the host's own total takes over and
- * nothing it covers is counted again.
+ * While an answer streams, the written-back figure under the composer grows with
+ * the text on the page at each character's rough token share, and each tool call
+ * row adds its tool's price once. When the step settles, the host's own total
+ * takes over and nothing it covers is counted again.
  *
  * @capability context-stats
  * @features context-stats
@@ -13,9 +12,9 @@ import { spec } from '../../fixtures/behaviour.mjs'
 import { readWrittenBackTokens, seatStreamingStatsSession } from '../../fixtures/stats-session.mjs'
 
 /**
- * A streaming container of the host's, inside the conversation or beside it,
- * filled the way a stream fills it: a piece at a time, a little apart, so the
- * reading the skin takes between passes sees the text arrive.
+ * A streaming container of the host's, filled the way a stream fills it. The
+ * estimate takes a container's first reading as a baseline and counts from the
+ * next due one, so the container stands empty well past that interval first.
  */
 async function stream(t, text, { inside = true, id = 'stream' } = {}) {
   await t.page.evaluate(async ([scroller, streaming, words, within, key]) => {
@@ -27,21 +26,15 @@ async function stream(t, text, { inside = true, id = 'stream' } = {}) {
       container.setAttribute(streaming, '')
       parent.append(container)
     }
-    // The estimate takes a container's first reading as its baseline and counts
-    // from the next due one, one reading interval (800ms,
-    // features/context-stats/stream-estimate.ts) after it. The container stands
-    // empty well past that interval before any text arrives, so the first
-    // piece's batch is a due reading over no more than that piece: on a machine
-    // loaded enough to miss it, a baseline taken over the whole text would
-    // leave no growth to read.
+    // Empty well past the reading interval: the first piece's batch then stands as
+    // a due reading over that piece alone, so a loaded machine still shows growth.
     await new Promise((resolve) => setTimeout(resolve, 1000))
     for (const piece of words.match(/[\s\S]{1,4}/g) ?? []) {
       container.append(piece)
       await new Promise((resolve) => setTimeout(resolve, 40))
     }
-    // One more change a full interval after the last due reading, the way the
-    // stream goes on: whatever the frame that carried the first reading cost,
-    // this batch is due and reads everything the pieces brought.
+    // One more change a full interval after the last due reading: whatever the
+    // frame that carried the first reading cost, this batch is due.
     await new Promise((resolve) => setTimeout(resolve, 900))
     container.append('')
     container.setAttribute('data-test-tick', String(Date.now()))

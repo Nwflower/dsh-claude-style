@@ -1,44 +1,10 @@
 #!/usr/bin/env node
 /**
- * behaviour.mjs — the behaviour layer (D87): what a reader can see on the BUILT
- * plugin (`lib/`), loaded into the smoke's stand-in host page and driven from
- * outside through Playwright; no running DSH instance is needed.
- *
- * Each spec under packages/testing/specs/behaviour/<capability>/ names the
- * stand-in page it loads and the viewport bands it is judged at
- * (packages/testing/data/matrix.json); every test gets a fresh context, a fresh page
- * and the skin applied and settled, and judges what it reads with the
- * predicates in packages/testing/specs/fixtures/behaviour.mjs. A test's id is
- * `behaviour/<capability>/<name>`, with `@<band>` when the spec is judged at
- * more than one band.
- *
- * A failure leaves its evidence under `.debug/behaviour/<run>/<test>/`: the
- * Playwright trace of the whole test (DOM snapshots per action, console and
- * network), a screenshot and the page's markup at the moment it failed, and
- * the predicate's expected and actual values. `npx playwright show-trace
- * <trace.zip>` opens the trace; `--spec <id>` runs that one test again.
- *
- * A test listed in packages/testing/data/quarantine.json fails over a defect someone
- * has taken up: it runs and prints like any other, its failure does not fail
- * the run, and its passing does, so the entry leaves with the fix.
- *
- * Usage: node packages/testing/behaviour.mjs [--feature <dir>[,<dir>…]] [--spec <id prefix>[,…]] [--band <name>] [--jobs <n>] [--list]
- *        node packages/testing/behaviour.mjs --open <page> [--prefs <json>] [--band <name>]
- *        node packages/testing/behaviour.mjs --eval --at <address> "<expression>" [--raw | --json] [--timeout <ms>]
- *        node packages/testing/behaviour.mjs --eval --at <address> --stdin [--raw | --json] [--timeout <ms>]
- *        node packages/testing/behaviour.mjs --close --at <address>
- *        --feature runs the specs whose @features name the directory, --spec the
- *        tests whose id starts with a prefix, --band one viewport band of those
- *        a spec declares; none of them means every test. --list prints the ids.
- *        --open keeps one stand-in page from the built bundle running and
- *        prints the address another command line evaluates at: --eval takes an
- *        expression, or a script on standard input, and runs it in that page;
- *        --close ends the session. --prefs applies a preference patch through
- *        window.__pushForm, the entry a test's t.prefs uses, before the page is
- *        handed over. The open session takes no verify lock, the way the scratch
- *        host does, so it can sit beside a run; Ctrl+C ends it too.
- * Exit:  0 every test passed, or the session ended · 1 a test failed or the page
- *        did not answer · 2 the run could not start
+ * Drive the built plugin in the stand-in host with Playwright (D87). Failures keep
+ * a trace, screenshot and markup under `.debug/behaviour/`; quarantined specs
+ * only fail when they pass. `--open`, `--eval` and `--close` inspect one live page.
+ * Usage: `node packages/testing/behaviour.mjs [--feature <dir>] [--spec <id>] [--band <name>] [--jobs <n>] [--list]`
+ * Exit: 0 passed or session ended; 1 failed or unanswered; 2 could not start.
  */
 import { randomUUID } from 'node:crypto'
 import fs from 'node:fs'

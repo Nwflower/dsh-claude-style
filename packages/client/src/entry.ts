@@ -46,11 +46,7 @@ parkForeignSheets()
  */
 const isLive = (feature: Feature) => feature.pref !== undefined || feature.yieldsTo !== undefined
 
-/**
- * Whether a live feature is wanted now: its preference is on, and no plugin it
- * yields to is on the page. A boolean switch is on unless stored as `false`;
- * a choice switch runs under the values its manifest names (`prefValues`).
- */
+/** Boolean switches default on; choice switches require a listed value and no yielding peer. */
 function isWanted(feature: Feature) {
   if (feature.pref !== undefined) {
     const value = readPrefs()[feature.pref]

@@ -1,17 +1,5 @@
 #!/usr/bin/env node
-/**
- * work.mjs — keep task context for continuation, handoff and sustained review.
- *
- * A work order is a directory under `.debug/work/`: `work.md` carries the goal,
- * acceptance criteria, measurements and a JSON block, while `refs/`, `shots/`
- * and `tmp/` hold the screenshots and scratch files. The order is not a
- * document: `close` deletes the whole directory after each durable fact has
- * moved to its one home (a token, a spec, a comment, an ADR or a change file).
- * `index.json` is generated from the directories, never typed by hand.
- *
- * Usage: node scripts/work.mjs <new|list|start|verify|review|check|close|gc|path|help>
- *        Run `node scripts/work.mjs help` for the arguments of each command.
- */
+/** work.mjs — keep task context under .debug/work for continuation, handoff and review; close deletes the order. */
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -19,10 +7,7 @@ import Ajv2020 from 'ajv/dist/2020.js'
 import { createTemporaryFiles, removeDebugDirectory } from './shared/temporary-files.mjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
-/**
- * Orders and the temporary sessions `gc` collects live in the main working tree's
- * `.debug`, shared by every linked worktree; the schema and template come from ROOT.
- */
+/** Store orders in the main tree so linked worktrees share them. */
 const COMMON = execFileSync('git', ['rev-parse', '--path-format=absolute', '--git-common-dir'], { cwd: ROOT, encoding: 'utf8' }).trim()
 const STORAGE = path.dirname(path.resolve(ROOT, COMMON))
 const DEBUG = path.join(STORAGE, '.debug')
@@ -313,10 +298,7 @@ function validateOrder(order, all) {
   return problems
 }
 
-/**
- * The work-order check, shared with `npm run lint`. It reads no index before
- * `.debug/work` exists, so a clean checkout and CI see no orders and no failure.
- */
+/** A clean checkout without .debug/work has no orders to validate. */
 export function checkWorkOrders() {
   const { orders, problems, warnings } = readAll()
   for (const order of orders) problems.push(...validateOrder(order, orders))

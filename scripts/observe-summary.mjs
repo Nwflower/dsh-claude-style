@@ -1,28 +1,7 @@
 #!/usr/bin/env node
 /**
- * observe-summary.mjs — put an observation run's failures where a reader sees them.
- *
- * The observe workflow runs the build, the smoke's quick tier and the whole
- * behaviour lane on a push to master, outside the branch rule; nothing waits on
- * it, so its answer has to be readable from the run page. The behaviour lane
- * leaves `.debug/behaviour/report.json` (`packages/testing/behaviour.mjs`), and
- * each result carries the test's id, its error and the directory its evidence
- * was written to: this reads that report into the job summary and one
- * annotation per failing test. A step that failed before the report exists —
- * the build, or a smoke case — has no such record, and the summary names the
- * step whose log carries it.
- *
- * The step's own outcome already fails the job, so this exits 0: a summary step
- * that failed on top would add a second red step and say nothing more.
- *
- * Usage: node scripts/observe-summary.mjs [--report <path>]
- *        The step outcomes come from BUILD_OUTCOME, SMOKE_OUTCOME and
- *        BEHAVIOUR_OUTCOME, the workflow's `steps.<id>.outcome` values; the
- *        behaviour report defaults to `.debug/behaviour/report.json`. The
- *        summary goes to $GITHUB_STEP_SUMMARY, or to stdout when it is unset.
- *        A variable the workflow passes but GitHub left empty — the steps a
- *        failed build skipped — reads as `skipped`; a variable the workflow never
- *        set fails the run.
+ * observe-summary.mjs — summarize observation outcomes and behaviour failures.
+ * Exit successfully because the originating steps already carry the failure.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -72,12 +51,7 @@ function evidenceOf(result) {
   return `\`${String(result.evidence).replace(/^\.debug\/behaviour\//, '')}\` in the \`${ARTIFACT}\` artifact`
 }
 
-/**
- * The step outcomes the workflow hands over. An empty value is a step GitHub
- * reports nothing for — one a failed build left out — and reads as `skipped`;
- * a variable the workflow never set is a misconfigured workflow, and a summary
- * built from guesses would describe a run nobody had.
- */
+/** Empty outcomes mean skipped; missing variables indicate workflow misconfiguration. */
 const outcomes = STEPS.map((step) => {
   const outcome = process.env[step.env]
   if (outcome === undefined) throw new Error(`observe-summary: ${step.env} is not set; the workflow passes each step's outcome`)

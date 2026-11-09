@@ -1,25 +1,18 @@
 name: Faults
 
-# Whether the specs catch known defects (D87). The corpus in
-# packages/testing/faults/ is applied one fault at a time to a scratch copy of
-# the tree, built and run there, and every fault has to turn an assertion red.
+# Verify that each known defect still turns a spec red in a scratch tree (D87).
 #
-# The run pays a build for each fault that reaches the browser half, so it is not
-# part of the per-push CI (`.github/workflows/ci.yml`): a weekly run is what
-# keeps the corpus from rotting green between releases, and a manual run reads it
-# on demand. A failure is the corpus's own verdict — a fault that no longer
-# applies, or one no assertion catches — and is fixed by bringing the patch or
-# the specs up to the tree, never by widening the gate.
+# Run weekly or manually because browser faults each need a build; failures
+# mean the defect corpus or specs need updating.
 
 on:
   schedule:
-    # Mondays, 04:00 UTC: after the weekly dependency updates land, before the
-    # week's work starts.
+    # Mondays at 04:00 UTC, after weekly dependency updates.
     - cron: '0 4 * * 1'
   workflow_dispatch:
 
 concurrency:
-  # One corpus run at a time: it writes scratch copies under .debug/faults.
+  # Serialize runs because they write scratch copies under .debug/faults.
   group: faults
   cancel-in-progress: false
 
@@ -29,7 +22,6 @@ permissions:
 jobs:
   faults:
     runs-on: ubuntu-latest
-    # 33 faults, each a spec run and, where the browser half is reached, a build.
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7

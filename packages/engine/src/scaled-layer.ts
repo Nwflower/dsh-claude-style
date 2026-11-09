@@ -1,26 +1,9 @@
 import { subscribeMutations } from './bus'
 
 /**
- * The host's floating layer in a page the skin draws at a scale (D43, D81).
- *
- * The skin draws the page at the reader's own scale by putting `zoom` on the
- * body (packages/client/src/theme/chrome.css, docs/STYLE.md). A box laid out
- * inside that scaling is drawn at the scale, and a length written into it is
- * read through the same scale again: a host card that measures a row in the
- * viewport's pixels and writes that box whole comes out at the square of the
- * scale. Worse, the host measures its own card in the page's pixels while it
- * measures the row it hangs from in the viewport's, so a card placed from its
- * own height — a menu opening over its trigger — lands short of it by the
- * height's share of the scale.
- *
- * Both come from one cause: the host writes its placement for a box that is one
- * pixel to one pixel with the window. What is given back here is that box, and
- * only to the host's own floating cards: the card's own space is drawn at the
- * page's scale divided out again, so a length the host writes and a box the host
- * measures are the same length on screen.
- *
- * The skin's own cards are placed by the skin, which reads the scale itself
- * (packages/client/src/shared/page-zoom.ts), and are left alone.
+ * Host floating cards use viewport-pixel placement inside the body's zoomed space (D43, D81).
+ * Counter-scale only those cards so host-written lengths and measurements stay one-to-one;
+ * skin-owned cards handle scale themselves and must be left alone.
  */
 
 /** What this mechanism needs from the skin it serves (D73). */
@@ -29,10 +12,7 @@ export interface PageScaleVocabulary {
   isOwn(node: Element): boolean
   /** The scale the page is drawn at right now: 1 while the page is not scaled. */
   scale(): number
-  /**
-   * A scale change was read; set the page's own readings straight. Called from
-   * the child observer the update walks, so it must not write the body's children.
-   */
+  /** Runs inside the body child observer; must not mutate those children. */
   onChange?(): void
   /** Every card is handed back; the readings of the page in hand wait to be read again. */
   onRelease?(): void
@@ -47,18 +27,9 @@ export function counterScale(scale: number) {
 }
 
 /**
- * Give the host's floating cards their own one-to-one space, and take it back on
- * the teardown.
- *
- * Only a body-level node the host gave its own `left` and `top` and a floating
- * position is given the space: a card positioned by the host's stylesheet is
- * read at the page's scale once, the way everything else on the page is, and
- * needs nothing. Every other body-level node is heard anyway, because a card the
- * host mounts before it knows where it goes takes its `left` and `top` a moment
- * later.
- *
- * @returns settle: read every card again, for a scale that changed under them;
- *     stop: give every card back.
+ * Counter-scale only body-level floating cards with inline `left` and `top`;
+ * stylesheet-positioned cards already scale normally. Watch others for late inline placement.
+ * `settle` refreshes after scale changes; `stop` restores every written card.
  */
 export function installScaledLayer(vocabulary: PageScaleVocabulary) {
   /** The body-level nodes being heard, each with the subscription that hears it. */

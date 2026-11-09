@@ -3,13 +3,7 @@ import type { BrandAnswer, BrandImageKind, BrandImageState } from '@dsh-claude-s
 import { BRAND_MARK_ROUTE, BRAND_ROUTE, BRAND_WORDMARK_ROUTE } from '../constants'
 import { notifyAll } from '@dsh-claude-style/engine/notify'
 
-/**
- * The reader's own brand images as the page paints them (D30): which of the
- * mark and the wordmark the host half holds, each with an address that changes
- * with its bytes and its width over its height. The brand feature paints them
- * (packages/client/src/features/brand/brand.ts) and the settings page replaces
- * and removes them; both follow this one state.
- */
+/** Painting and settings share this host-backed image state; URLs change with image bytes (D30). */
 
 /** One custom image: its address, and its width over its height. */
 export interface BrandImage {

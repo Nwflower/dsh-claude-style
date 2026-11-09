@@ -1,11 +1,6 @@
 /* ---------- Segmented controls: the shared looks ---------- */
-/* The classes are neutral (shared/segment-control.ts). The large variant is
-   the composer's permission presets and the settings page's switches; the
-   small variant (.dsh-claude-view-switch) is the conversation view tabs and
-   the sidebar's 进行中 / 已归档 switch — its items are styled straight off the
-   shell, so the view tabs' host-built buttons need no class of their own.
-   Each control positions and sizes itself in its own feature sheet; the
-   pill's box and motion are shared/sliding-pill.css. */
+/* Neutral classes and direct-child selectors support host-built items without feature-specific classes.
+   Feature sheets position controls; shared/sliding-pill.css owns pill geometry and motion. */
 body[data-dsh-claude-style] .dsh-claude-segments {
   flex: none;
   align-items: center;

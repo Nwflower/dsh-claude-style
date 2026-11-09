@@ -1,19 +1,4 @@
-/**
- * theme-tokens.mjs — the palette document, the token stylesheet and the token
- * table (D9, D30).
- *
- * A card is a whole look: an accent, a canvas per scheme and, when its prose
- * links keep a family of their own, a link per scheme. Every colour token is a
- * tone of one of those seeds — a lightness step, a chroma and an alpha — and
- * this module resolves the tones into plain colours at build time, so the page
- * ships the same literal values it always has and nothing derives in the
- * browser.
- *
- * A tone's chroma is an offset from the seed's (`dc`), a multiple of it (`m`) or an
- * absolute value (`c`); a hue shift (`h`) turns a tone away from the seed's hue,
- * which the code ink uses to keep Claude's brick red. A card without a link seed
- * takes one mixed from its accent.
- */
+/** theme-tokens.mjs — resolve palette seed tones into build-time colors and generate the token stylesheet and table (D9, D30). */
 import fs from 'node:fs'
 import path from 'node:path'
 import Ajv2020 from 'ajv/dist/2020.js'
@@ -108,10 +93,7 @@ export function resolvePalette(doc) {
   return out
 }
 
-/**
- * Read and validate packages/client/src/theme/tokens.json: its declared shape, a
- * name once per group, and every tone a token names.
- */
+/** Read tokens.json and hold it to its schema, a name once per group, and every tone a token names. */
 export function loadTokens(srcDir) {
   const schema = JSON.parse(fs.readFileSync(path.join(srcDir, TOKEN_SCHEMA), 'utf8'))
   const validate = new Ajv2020({ allErrors: true }).compile(schema)
@@ -190,11 +172,8 @@ function relativeColour(seed, step) {
 }
 
 /**
- * The reader's own palette, resolved in the page: the same ladder, written as
- * relative colours over the four seeds the brand layer writes on <body>. One
- * block per card and scheme keeps the card's edge style and logo ink, and the
- * link family follows the custom accent the way a card without its own link
- * does at build time.
+ * The reader's own palette, resolved in the page as relative colours over the four
+ * seeds the brand layer writes on <body>; the link family follows the custom accent.
  */
 function customPaletteBlocks(doc, gates) {
   const blocks = []
@@ -222,8 +201,7 @@ function customPaletteBlocks(doc, gates) {
       }
       for (const spec of doc.palette.tokens) {
         if (spec.schemes !== undefined && !spec.schemes.includes(scheme)) continue
-        // The brand art's ink belongs to the brand, not to the colour card: its
-        // own block states it under the brand attribute.
+        // The brand art's ink belongs to the brand, not to the colour card.
         if (spec.card === 'logoInk') continue
         let value
         if (spec.tone !== undefined) value = `var(--dsh-tone-${card.edges === 'surface' && spec.flat !== undefined && scheme === 'dark' ? spec.flat : spec.tone})`
@@ -232,8 +210,7 @@ function customPaletteBlocks(doc, gates) {
         else if (spec.card === 'code') value = `var(--dsh-claude-custom-code-${scheme})`
         // The reader's canvas carries its own sidebar step, like the cards'.
         else if (spec.card === 'sidebar') value = 'var(--dsh-tone-sidebar)'
-        // The bubble follows the reader's canvas too; a card with flat contours
-        // reads its own dark rung.
+        // The bubble follows the reader's canvas; a card with flat contours reads its dark rung.
         else if (spec.card === 'bubble') value = `var(--dsh-tone-${card.edges === 'surface' && scheme === 'dark' ? 'bubble-flat' : 'bubble'})`
         else throw new Error('build: a palette token names no colour source')
         declarations.push([spec.token, value])
@@ -248,20 +225,14 @@ function customPaletteBlocks(doc, gates) {
 }
 
 /**
- * The token stylesheet, in cascade order.
+ * The token stylesheet, in cascade order: brand marks first, then the ungated motion
+ * and layer blocks, the typeface and apex blocks, the palette, and the custom palette.
  *
- * Every block that writes a host token carries the Claude gate, so under
- * "follow the host" the host's own tokens stand (D30). The palette blocks name
- * `[data-ds-dark-theme]` for dark on purpose: the host's own dark block weighs
- * the same (0,1,1) as a bare `body[data-dsh-claude-style]`, so whichever sheet
- * the loader appended last would win; naming the attribute lifts these to
- * (0,2,1). The first card is the default look; every later card states only the
- * tokens that differ from it, under its own colour-card attribute. The brand
- * art's ink stays under the brand attribute, so a picked card paints the
- * palette while the mark above it keeps its own. The brand marks' addresses
- * come first: every choice paints with them. The motion and layer tokens are
- * ungated blocks beside them: the same durations, curves, distances and
- * stacking levels under every card and typeface (D9).
+ * Every block writing a host token carries the Claude gate, so "follow the host" keeps
+ * the host's own tokens (D30). Dark names `[data-ds-dark-theme]` on purpose: the host's
+ * own dark block weighs the same (0,1,1) as a bare `body[data-dsh-claude-style]`, and
+ * naming the attribute lifts these to (0,2,1). The first card is the default look; every
+ * later card states only the tokens that differ from it.
  *
  * @param images - brand mark name → its address (data URI or route).
  */
@@ -274,8 +245,7 @@ export function tokenSheet(doc, gates, images) {
   const typeface = (value) => `${SCOPE}${gate(gates.typeface, value)}`
   const values = resolvePalette(doc)
   const [first, ...rest] = doc.palette.cards
-  // The brand art's ink is the brand's own: it stays outside the colour-card
-  // blocks, under the brand attribute, whichever card paints the palette.
+  // The brand art's ink is the brand's own: it stays under the brand attribute, whichever card paints the palette.
   const paletteTokens = (map) => declarationsOf(doc, map).filter(([token]) => token !== '--dsh-claude-logo-ink')
   const schemeOf = (scheme) => scheme === 'dark' ? dark : light
   const blocks = []

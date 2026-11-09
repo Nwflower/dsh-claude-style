@@ -42,12 +42,7 @@ export interface ListSummary {
 
 /** Where the roll-up lands while the host half is still folding. */
 export const HOME_POLL_MS = 800
-/**
- * Polls in a row a cold fold may go unanswered before the panel settles on what
- * it has: the fold reads every changed session log, and a large history on a
- * slow disk takes minutes, so the panel stops waiting long after the first
- * numbers could have arrived. The next read starts over once they do.
- */
+/** Stop waiting after this many cold-fold polls; the next read starts over. */
 export const HOME_POLL_MAX = 180
 
 /** A local calendar day, matching the host half's day keys. */
@@ -56,23 +51,8 @@ export function homeDayKey(date: Date) {
 }
 
 /**
- * The roll-up store: the route's answer, the list's answer, and the reads that
- * keep the first one current.
- *
- * The route (`USAGE_ROUTE`) is the panel's first source: it folds the local
- * session logs (or reads the cost-meter ledger) and answers immediately with
- * whatever it already knows. A cold answer carries `computing`, and the panel
- * keeps its skeleton up and polls until the value lands — so the first paint
- * never waits on the aggregation, and a value that has not arrived yet is
- * never drawn as a zero.
- *
- * The session list is the second source. Every listed session carries the
- * host's token-usage and model-selection projections, so it answers even when
- * the route cannot (an older host half, or a failed fold). It is coarser —
- * one total per session, bucketed onto that session's last-activity day — so
- * the panel names the source it drew from.
- *
- * @returns accessors, the loads, and a stop that ends the reads and listeners.
+ * The usage roll-up store. The route answers immediately while a cold fold polls;
+ * the session list is a coarser fallback, so the panel names its source.
  */
 export function createHomeUsage(ctx: HostContext) {
   /** What the panel draws: the last answer, whether more is coming, and why not. */
@@ -105,9 +85,8 @@ export function createHomeUsage(ctx: HostContext) {
   }
 
   /**
-   * One read of the roll-up. The answer's `computing` schedules the next poll,
-   * so the panel fills in as soon as the host half has the numbers; a read whose
-   * polls run out leaves the panel on what it has, and the next ask starts the
+   * Read the roll-up once. `computing` schedules a poll; exhausted polls leave the
+   * panel on its current data until the next ask. The next ask starts the
    * count over.
    *
    * @param force - read even though numbers are on show and nothing is folding.
@@ -159,17 +138,10 @@ export function createHomeUsage(ctx: HostContext) {
     })
   }
 
-  /**
-   * Read the roll-up again if the numbers on show have aged past the wake or
-   * the period (usage-refresh.ts), and answer whether this page asked.
-   *
-   * A read of this page's own counts as in flight while it crosses or while it
-   * has a poll pending: that poll is what carries the numbers in. A read whose
-   * polls have run out leaves nothing pending, so the next period asks again
-   * rather than the panel going quiet for good.
-   *
-   * @param reason - `'tick'` for a panel standing on the page, `'wake'` for one the reader came back to.
-   */
+/**
+ * Refresh stale figures for a tick or wake (usage-refresh.ts). A pending poll
+ * keeps the read in flight; exhausted polls let the next period ask again.
+ */
   function refreshUsage(reason: HomeRefreshReason) {
     if (disposed) return false
     const due = homeRefreshDue(Date.now(), { answeredAt: usage.answeredAt, busy: usage.loading || pollTimer !== null }, reason)
@@ -179,18 +151,8 @@ export function createHomeUsage(ctx: HostContext) {
   }
 
   /**
-   * The session list's roll-up.
-   *
-   * The host's list rows carry their own projection block
-   * (`projections.values`): `tokenUsage` with its four disjoint buckets,
-   * `modelSelection` with the route the session last used, and
-   * `sessionListMetadata` with the blank flag and the last prompt time.
-   * Summing them gives the panel a second, cheaper source — and the model
-   * list's fallback when the roll-up route cannot answer.
-   *
-   * A session's whole total is bucketed onto its own last-activity day: the
-   * list has no per-day split, so this is coarser than the host half's fold,
-   * which is exactly why the panel names the source it drew from.
+   * Sum the list rows' usage projections as the fallback source. A session's
+   * whole total lands on its last-activity day because the list has no split.
    */
   function summarizeSessionList(rows: HostSessionRow[]): ListSummary {
     let tokens = 0

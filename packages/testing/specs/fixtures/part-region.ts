@@ -3,10 +3,8 @@ import type { PartsVocabulary } from '@dsh-claude-style/engine/parts'
 
 /**
  * One region of the part tables, read the way a spec needs it: `box(local)`
- * builds the host's element for a local class name the region names (the hash
- * is the fixture's), and `part(local)` is the part it becomes. A spec never
- * spells a host class name itself (D3), and a rename in the tables moves every
- * spec that reads the region with it.
+ * builds the host's element for a local class name, `part(local)` is the part it
+ * becomes, so no spec spells a host class name itself (D3).
  *
  * @param within - the selector the region is walked within.
  * @param vocabulary - the spec's own vocabulary, so the tables are read with it.

@@ -1,10 +1,6 @@
 /**
- * The two sound cues and the one setting that carries them, shared by both
- * halves (D89).
- *
- * The browser half decides which cue a moment plays and how loud; the host half
- * maps a cue onto the machine's own macOS system file and clamps the gain. The
- * package ships no audio: the files stay where the operating system keeps them.
+ * Shared sound cue contract (D89). The host plays operating-system files;
+ * the package ships no audio.
  */
 
 /** The system sound a session waiting on the reader plays. */
@@ -33,11 +29,7 @@ export const SOUND_GAIN: Readonly<Record<SoundLevel, number>> = {
 export const SOUND_CUE_PERMISSION: SoundName = SOUND_POP
 export const SOUND_CUE_COMPLETION: SoundName = SOUND_TINK
 
-/**
- * What the capability read answers: whether the host can play a system sound
- * itself, and which cues it can play. A host on another platform answers
- * `browser` and the page synthesises the same two voices.
- */
+/** `browser` tells the page to synthesize cues when system playback is unavailable. */
 export interface HostSoundCapability {
   ok: true
   playback: 'system' | 'browser'

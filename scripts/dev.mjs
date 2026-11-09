@@ -1,16 +1,7 @@
 #!/usr/bin/env node
 /**
- * dev.mjs — rebuild on every change to what the build reads (`npm run dev`).
- *
- * Each rebuild is a whole `node scripts/build.mjs` in a fresh process: the build
- * evaluates packages/client/src/constants.ts and the manifests once at start, so
- * one process per run is what keeps a changed constant from being read stale.
- * The build cache (scripts/build-cache.mjs) is what makes that cheap.
- *
- * The runs carry DSH_CLAUDE_STYLE_DEBUG=1: a watched checkout is the linked one
- * whose live page hot-reloads to every new bundle, and the page still running the
- * previous one asks for that build's chunks (D72). A plain `npm run build`
- * afterwards leaves lib/assets/ holding one build's assets again.
+ * dev.mjs — rebuild inputs in a fresh process to avoid stale evaluated constants.
+ * Debug builds retain previous chunks for live linked pages (D72).
  */
 import { spawn } from 'node:child_process'
 import fs from 'node:fs'
@@ -19,12 +10,7 @@ import path from 'node:path'
 const ROOT = path.resolve(import.meta.dirname, '..')
 const BUILD = path.join(ROOT, 'scripts', 'build.mjs')
 
-/**
- * What the build reads, as paths relative to the repository. A directory covers
- * everything under it; packages/testing/ is not a build input as a directory, so
- * the records under it the build does read are named one by one. The build
- * writes nothing under any of these.
- */
+/** Name individual testing records because the rest of packages/testing is not a build input. */
 const WATCHED_DIRS = ['packages/client', 'packages/assets', 'packages/host', 'packages/engine', 'packages/contracts', 'scripts']
 const WATCHED_FILES = ['package.json', 'tsconfig.json', 'packages/testing/data/importance-ledger.json']
 

@@ -1,60 +1,11 @@
 #!/usr/bin/env node
 /**
- * verify.mjs — the one entry a test run goes through (D87).
- *
- * Parallel sessions share this working tree, and each of them reaching for a
- * runner of its own is what made the machine run the same build and the same
- * browser several times over. This file is the only place the gates are
- * started; a session asks it and reads its answer. Development asks it for
- * nothing: a change is carried by the build, and the gates are run together
- * before a release (D87).
- *
- *   one entry  the checks, the build, the logic and mechanism specs, the
- *              smoke, the behaviour specs and the end-to-end lane, from one
- *              command.
- *   staged     a gate starts as soon as what it reads exists: the checks, the
- *              build and the spec lane answer about the sources and run
- *              together, and the browser lanes read the build's output and
- *              run together once it is written. What the run costs is the
- *              slowest gate of each stage rather than their sum.
- *   serial     `.debug/verify.lock/` holds one run at a time. A request that
- *              arrives during a run waits for it rather than starting a second
- *              browser, and asks for its own key again when the lock is free.
- *              Every gate carries the cloud step's own deadline; a gate past
- *              it has hung, and is taken down with its browsers so the lock
- *              goes free.
- *   reuse      a run records its verdict under the hash of the tree it read and
- *              the gates it ran. A later request for the same pair reads that
- *              record instead of starting anything, and says it did.
- *   honest     the build output the browser gates read is hashed when the build
- *              gate ends and again when the run ends: a build outside the run
- *              takes no lock, so it can swap the page under the gates, and a
- *              run that saw two different outputs files no verdict.
- *   unjudged   a gate that gave no verdict answers UNJUDGED: a deadline this
- *              file enforced, a process the system ended, a browser that would
- *              not start, a spec suite that did not load. Such a run files no
- *              verdict, so the next request runs it again (D87); a failed
- *              assertion is a verdict and is filed like a pass.
- *
- * A verdict in the cache is one a run produced. A request whose gates were
- * never run — another tier, a narrower selection, one file changed — is another
- * key and runs; `--force` re-runs a key that has an answer.
+ * verify.mjs — the one entry a test run goes through (D87): serialized lanes, staged
+ * gates, and verdicts cached by tree and selection.
  *
  * Usage: node scripts/verify.mjs [--quick] [--e2e] [--scenario <name>[,<name>…]]
  *        [--case <name>[,<name>…]] [--feature <dir>[,<dir>…]] [--full]
  *        [--no-e2e] [--force] [--help]
- *        A bare run is the iteration tier: the checks, the build and the tests
- *        the working tree's change reaches, at once, and nothing that starts a
- *        browser. --quick adds the smoke's quick tier (its motion cases left
- *        out) and every behaviour spec, --case and --feature name the smoke's
- *        cases as they do on its own command line (naming them runs the motion
- *        cases too) and --feature the behaviour specs of those directories,
- *        --full walks the whole smoke and every behaviour spec, and --e2e and
- *        --scenario add the end-to-end lane.
- *        --no-e2e leaves the lane out of either. A request for the whole smoke
- *        and the lane's default table together prints `请确认你正处于发布流程。`
- *        before its gates start: that pair is the cloud's release gate.
- *        --help prints this block and stops.
  */
 import { execFileSync, spawn } from 'node:child_process'
 import crypto from 'node:crypto'
@@ -71,24 +22,17 @@ const require = createRequire(import.meta.url)
 const { UNJUDGED_EXIT } = require('../packages/testing/host-version.mjs')
 const ROOT = path.resolve(import.meta.dirname, '..')
 const CACHE = path.join(ROOT, '.debug', 'verify-cache')
-/**
- * Vitest's own entry, resolved from the installed package: a nested copy of
- * vitest answers the same way the hoisted one does.
- */
+/** Resolve the installed Vitest entry so nested and hoisted installs behave alike. */
 const VITEST = path.join(path.dirname(require.resolve('vitest/package.json')), 'vitest.mjs')
 /** Bumped when a recorded verdict stops meaning what this file reads it as. */
 const FORMAT = 2
-/**
- * Where the spec lane writes its structured report, and the behaviour lane's
- * own; both sit under `.debug/` and are read only after their gate ends.
- */
+/** Read structured reports only after their gates finish. */
 const UNIT_REPORT = path.join(ROOT, '.debug', 'verify', 'unit.json')
 const BEHAVIOUR_REPORT = path.join(ROOT, '.debug', 'behaviour', 'report.json')
 /**
- * How many pages and scenarios the browser gates drive at once, as one budget
- * for the gates sharing a stage. It follows the machine's cores and never its
- * load, and the split it hands each gate is part of the gates' arguments, so a
- * verdict is filed under the same key on the same machine.
+ * How many pages and scenarios the browser gates drive at once, as one budget for the
+ * gates sharing a stage. It follows the machine's cores and never its load, and the split
+ * is part of the gates' arguments, so a verdict is filed under the same key on the same machine.
  */
 const BROWSER_JOBS = Math.max(2, Math.min(8, Math.floor(availableParallelism() / 2)))
 /** The flags a request may carry, without their dashes; the three name-taking ones carry values. */
@@ -112,18 +56,15 @@ function bad(message) {
 const UNIT_SOURCES = ['packages/client/src', 'packages/contracts/src', 'packages/engine/src', 'packages/testing/specs']
 
 /**
- * The spec lane's structured report: Vitest keeps its terminal reporter and
- * writes the same run as JSON beside it, which is what tells a failed assertion
- * from a suite that never loaded.
+ * The spec lane's report: Vitest keeps its terminal reporter and writes the same run as
+ * JSON beside it, which tells a failed assertion from a suite that never loaded.
  */
 const UNIT_REPORT_ARGS = ['--reporter=default', '--reporter=json', `--outputFile.json=${path.relative(ROOT, UNIT_REPORT).replace(/\\/g, '/')}`]
 
 /**
- * The spec gate of a request (the logic and mechanism layers, D87): the whole
- * lane, or — for the iteration tier — the specs the working tree's change reaches, which is what makes that tier answer
- * in seconds while a session is editing. A tree with no change under the
- * sources runs the lane whole: a bare request on a still tree still answers for
- * every test.
+ * The spec gate of a request (the logic and mechanism layers, D87): the whole lane, or for
+ * the iteration tier the specs the working tree's change reaches. A tree with no change
+ * under the sources runs the lane whole.
  */
 function unitGate(iteration) {
   const changed = iteration ? changedPaths(...UNIT_SOURCES) : []
@@ -132,10 +73,9 @@ function unitGate(iteration) {
 }
 
 /**
- * The bytes of the build output the browser gates read, or null before the
- * build has written any. A build outside the run takes no lock, so this is
- * what tells a run whether the page it drove is still the page its build
- * produced.
+ * The bytes of the build output the browser gates read, or null before the build has
+ * written any. A build outside the run takes no lock, so this is what tells a run whether
+ * the page it drove is still the page its build produced.
  */
 function libHash() {
   const digest = crypto.createHash('sha256')
@@ -151,10 +91,7 @@ function libHash() {
   return digest.digest('hex')
 }
 
-/**
- * The usage text, read off this file's own header: everything from the `Usage:`
- * line on, so the header stays its one home.
- */
+/** The usage text, read off this file's own header from the `Usage:` line on. */
 function usage() {
   const header = fs.readFileSync(new URL(import.meta.url), 'utf8').match(/\/\*\*([\s\S]*?)\*\//)[1]
   const lines = header.split('\n').map((line) => line.replace(/^\s*\*?\s?/, ''))
@@ -228,9 +165,8 @@ function parseRequest() {
 }
 
 /**
- * Whether a request walks everything the tool holds: the whole smoke and the
- * end-to-end lane's default table. That pair is the cloud's release gate, so a
- * request for it is asked to say what it is before the minutes start.
+ * Whether a request walks everything the tool holds: the whole smoke and the lane's
+ * default table, which is the cloud's release gate.
  */
 function walksEverything(request) {
   return request.smoke !== null && request.smoke.length === 0
@@ -239,11 +175,9 @@ function walksEverything(request) {
 }
 
 /**
- * How many page loads each browser gate drives beside its stage's other gates.
- * The budget follows the machine's cores, never its load, so the same tree on
- * the same machine files under the same key; the behaviour lane takes at most
- * two, leaving room for the Vitest browser that waits on frames beside it, and
- * smoke leaves room for the end-to-end lane.
+ * How many page loads each browser gate drives beside its stage's other gates. The budget
+ * follows the machine's cores, never its load; the behaviour lane takes at most two,
+ * leaving room for the Vitest browser that waits on frames beside it.
  */
 function browserJobs(request) {
   const behaviour = Math.max(1, Math.min(2, Math.floor(BROWSER_JOBS / 2)))
@@ -255,22 +189,20 @@ function browserJobs(request) {
 function gatesFor(request) {
   const jobs = browserJobs(request)
   const gates = [
-    // The cloud's fast tier starts with the checks that need no build, so the
-    // same set answers here and a document mistake fails in seconds.
+    // The checks that need no build first, so a document mistake fails in seconds.
     { id: 'lint', minutes: 5, script: 'scripts/lint.mjs', args: [] },
     { id: 'docs', minutes: 5, script: 'scripts/decisions-index.mjs', args: ['--check'] },
     { id: 'changelog', minutes: 5, script: 'scripts/changelog.mjs', args: ['--check'] },
     { id: 'agents', minutes: 5, script: 'scripts/agents-commands.mjs', args: ['--check'] },
     { id: 'numbers', minutes: 5, script: 'packages/testing/check-numbers.mjs', args: ['--check'] },
-    // The rule that the appearance snapshot only moves with what draws or reads
-    // the pages (D87), and the records that only shrink, against HEAD.
+    // The appearance snapshot's sources rule and the shrink-only ledgers, against HEAD (D87).
     { id: 'scope', minutes: 5, script: 'scripts/ci-scope.mjs', args: ['--appearance', '--ledgers', '--tree'] },
     { id: 'build', minutes: 15, script: 'scripts/build.mjs', args: [] },
     unitGate(request.iteration),
   ]
   if (request.smoke !== null) gates.push({ id: 'smoke', minutes: 30, script: 'packages/testing/smoke.mjs', args: [...request.smoke, '--jobs', String(jobs.smoke)] })
-  // The behaviour specs ride with the smoke: they read the same build and the
-  // same stand-in host. A request naming smoke cases alone names no spec.
+  // The behaviour specs ride with the smoke: the same build and the same stand-in host.
+  // A request naming smoke cases alone names no spec.
   if (request.smoke !== null && !(request.cases.length > 0 && request.features.length === 0)) {
     const selection = request.features.length > 0 ? ['--feature', request.features.join(',')] : []
     gates.push({ id: 'behaviour', minutes: 15, script: 'packages/testing/behaviour.mjs', args: [...selection, '--jobs', String(jobs.behaviour)] })
@@ -287,13 +219,11 @@ function gatesFor(request) {
 }
 
 /**
- * Those gates grouped by what waits for what. The checks and the build stand
- * first: the build writes what the browser lanes read, and the checks answer in
- * moments. The spec lane answers about the sources and waits for nothing, so it
- * runs beside the behaviour specs; the smoke and the end-to-end lane come last,
- * on their own, because their checks that watch frames and passes are what a
- * loaded machine disturbs, and the behaviour specs' pages beside them load it.
- * Each stage costs its slowest gate instead of the sum of its gates.
+ * Those gates grouped by what waits for what. The checks and the build come first, because
+ * the build writes what the browser lanes read; the spec lane waits for nothing and runs
+ * beside the behaviour specs; the smoke and the end-to-end lane come last on their own,
+ * because their frame-watching passes are what a loaded machine disturbs. Each stage costs
+ * its slowest gate rather than the sum of its gates.
  */
 function stagesFor(request) {
   const gates = gatesFor(request)
@@ -337,9 +267,8 @@ function unitOutcome(gate) {
 }
 
 /**
- * What a nonzero behaviour run says. Its report is written once the walk
- * reaches its end; a report older than this gate is the only one a run that
- * never started leaves behind, and either way there is no test verdict to file.
+ * What a nonzero behaviour run says. Its report is written once the walk reaches its end,
+ * so a report older than this gate says nothing about this run.
  */
 function behaviourOutcome(startedAt) {
   let report
@@ -356,10 +285,9 @@ function behaviourOutcome(startedAt) {
 }
 
 /**
- * What one gate's ending says. Only a gate that names a failed assertion is a
- * verdict; everything the system ended, or that never reached a test, is a
- * gate the next request has to run again. A deadline is the one this file
- * enforced, not an exit code the gate itself chose.
+ * What one gate's ending says. Only a gate that names a failed assertion is a verdict;
+ * everything the system ended, or that never reached a test, runs again on the next
+ * request. A deadline is the one this file enforced, not an exit code the gate chose.
  */
 function classifyGate(gate, code, signal, timedOut, startedAt) {
   if (timedOut) return { outcome: 'unjudged', reason: `passed its ${gate.minutes} min deadline` }
@@ -383,8 +311,8 @@ function gateWord(outcome, reason) {
 }
 
 /**
- * Take a gate down with every process under it: a lane's browsers are its
- * grandchildren, and a hung one left behind keeps the lock this run holds.
+ * Take a gate down with every process under it: a lane's browsers are its grandchildren,
+ * and a hung one left behind keeps the lock this run holds.
  */
 function killTree(child) {
   if (process.platform === 'win32') {
@@ -395,10 +323,10 @@ function killTree(child) {
 }
 
 /**
- * Run one gate with its output on this terminal, and answer with how it ended.
- * A gate past its deadline — the cloud step's own `timeout-minutes` — is a gate
- * that hung: it is taken down and answers TIMED_OUT_EXIT, so the run ends and
- * the lock goes free. A gate that writes a report starts with none beside it.
+ * Run one gate with its output on this terminal, and answer with how it ended. A gate past
+ * its deadline — the cloud step's own `timeout-minutes` — has hung: it is taken down and
+ * answers TIMED_OUT_EXIT, so the run ends and the lock goes free. A gate that writes a
+ * report starts with none beside it.
  */
 function runGate(gate) {
   return new Promise((resolve, reject) => {
@@ -424,9 +352,8 @@ function runGate(gate) {
 }
 
 /**
- * Run the gates of one stage beside each other. The gates of a stage read what
- * the stages before them wrote and nothing the stage itself produces, so what
- * the stage costs is its slowest gate.
+ * Run the gates of one stage beside each other: they read what the stages before them
+ * wrote and nothing the stage itself produces, so the stage costs its slowest gate.
  */
 async function runStage(stage) {
   say(`\nverify: ${stage.length === 1 ? stage[0].id : `${stage.map((gate) => gate.id).join(', ')} together`}`)
@@ -453,10 +380,9 @@ async function runAll(request, tree, key) {
     gates.push(...await runStage(stage))
     if (stage.some((gate) => gate.id === 'build')) built = libHash()
     if (gates.some((gate) => gate.outcome !== 'ok')) {
-      // A gate that is not ok ends the run before the next stage: the lanes above
-      // it read what it produces, and the fix comes before their minutes are
-      // spent. A gate that gave no verdict is not a failure and not a pass, so the
-      // run answers "unjudged" unless another gate failed.
+      // A gate that is not ok ends the run before the next stage: the lanes above it read
+      // what it produces. A gate that gave no verdict is not a failure and not a pass, so
+      // the run answers "unjudged" unless another gate failed.
       break
     }
   }
@@ -514,8 +440,8 @@ async function main() {
     report(before, 'cache')
     process.exit(before.exitCode)
   }
-  // A verdict already filed answers in a moment and says nothing; a run that is
-  // about to spend the release gate's minutes asks before it starts.
+  // A verdict already answers in a moment and says nothing; a run about to spend the
+  // release gate's minutes asks before it starts.
   if (walksEverything(request)) say('verify: warning — 请确认你正处于发布流程。')
   const release = await takeLock('verify', key.slice(0, 12))
   holding = release
@@ -537,8 +463,7 @@ async function main() {
 for (const signal of ['SIGINT', 'SIGTERM']) {
   process.on(signal, () => {
     for (const child of running) child.kill(signal)
-    // Only the lock this process holds is released: a request still waiting for
-    // the lock must leave the run it is waiting for alone.
+    // Only the lock this process holds is released: a request waiting for the lock must leave the run alone.
     if (holding !== null) holding()
     say(`verify: interrupted (${signal})`)
     process.exit(signal === 'SIGINT' ? 130 : 143)

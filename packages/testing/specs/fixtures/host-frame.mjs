@@ -1,16 +1,8 @@
 /**
- * The host's own conversation frame, mounted from the snapshot the capture tool
- * writes (packages/testing/data/host-snapshot.json, D3, D87).
- *
- * A behaviour spec on the stand-in page used to hand-build the host's phase
- * root, conversation body, width handles and input bar, and to write the host's
- * numbers into the spec. Both are the host's: the frame here is the tags, class
- * names and attributes the host itself wrote, and the values the stand-in mounts
- * are the ones the host declared on that page. The behaviour layer reads this
- * stored record, so a host upgrade reaches it through the capture command's
- * diff and the `contract` scenario's host-output observations, which is where a
- * change is named; `node packages/testing/host-snapshot.mjs` writes the record
- * again.
+ * The host's own conversation frame, mounted from the record the capture tool
+ * writes (packages/testing/data/host-snapshot.json, D3, D87): its tags, class
+ * names, attributes and values are the host's, and `node
+ * packages/testing/host-snapshot.mjs` writes the record again.
  */
 import snapshot from '../../data/host-snapshot.json' with { type: 'json' }
 
@@ -26,13 +18,7 @@ function hostRoom(frame = snapshot) {
   return room
 }
 
-/**
- * Mount the captured frame around the stand-in's card and scroller: the composer
- * stack and the bar the card hangs in, and the conversation's phase root, body
- * and width handles. Runs once per test, on a page the runner has just opened.
- *
- * @param t - the behaviour test's context (`page`, `host`, `settle`).
- */
+/** Mount the captured frame around the stand-in's card and scroller: the composer stack, the bar, and the conversation's phase root, body and width handles. */
 async function mountConversation(t) {
   await t.page.evaluate(mountFrame, {
     frame: snapshot,

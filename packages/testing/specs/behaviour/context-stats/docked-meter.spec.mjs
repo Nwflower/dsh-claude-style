@@ -1,12 +1,8 @@
 /**
- * A docked conversation's context meter opens its own panel, above itself.
- *
- * A page can carry more than one composer card: a sub-agent's sidebar mounts an
- * embedded conversation, and the host renders the same composer in it. Each card
- * the skin has restyled draws the ring in its own toolbar row, and the panel a
- * ring opens belongs over that ring. The page's first ring is not it, and the
- * card's host meter — which the host renders in the dock line *under* the card —
- * stays out of the paint, or its reading would look like a second line.
+ * A docked conversation's context meter opens its own panel above itself: each
+ * card the restyle covers draws a ring in its own toolbar row, and the panel a
+ * ring opens belongs over that ring. The card's host meter, drawn in the dock
+ * line under the card, stays out of the paint.
  *
  * @capability context-stats
  * @features context-stats
@@ -26,12 +22,7 @@ const RING = surface('stats.meter-ring')
 const PHASE = host('shell.phase')
 const VARIANT = host('composer.variant')
 
-/**
- * The stand-in's composer rides the document flow; the host keeps the main one
- * at the window's bottom, where a ring and a panel above it mean something.
- * The docked conversation is mounted above it, so the two anchors are far apart
- * and a panel placed over the wrong one is caught.
- */
+/** Pin the stand-in's composer at the window's bottom, the way the host keeps it, so a panel placed above the wrong anchor is caught. */
 async function seatMainComposer(t) {
   await t.page.evaluate((card) => {
     const stack = document.querySelector(card).parentElement
@@ -42,12 +33,8 @@ async function seatMainComposer(t) {
 
 /**
  * Gives the docked meter its host behaviour: a press opens a dialog above the
- * trigger by the host's own gap, and a second press closes it. The panel is
- * portaled to <body>, fixed, and clamped into the window, as the host's own is.
- *
- * The trigger is that card's own meter, behind the skin's ring: the ring is
- * bound by the skin, which forwards the press to the meter, so the stand-in's
- * own button is the one pressed.
+ * trigger by the host's own gap, portaled to <body> and clamped into the window.
+ * The stand-in's own button is pressed: the skin's ring forwards the press to it.
  */
 async function openDockedMeter(t) {
   await t.page.waitForFunction(([sidebar, attribute]) => document.querySelector(sidebar + ' [' + attribute + ']') !== null,
@@ -104,11 +91,7 @@ const dockedParts = [{
     </span>`,
 }]
 
-/**
- * Reads the two cards' variants and what the docked one draws: the page here
- * carries the main card and the docked one, and both hero tests need the same
- * reading to tell which card the host's phase marker reached.
- */
+/** Reads the two cards' variants and what the docked one draws, the reading both hero tests need to tell which card the phase marker reached. */
 async function readDockedState(t) {
   return t.page.evaluate((config) => {
     const sidebar = document.querySelector(config.sidebar)

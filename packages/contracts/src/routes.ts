@@ -1,8 +1,4 @@
-/**
- * The plugin's private route names, shared by both halves (D73): the host half
- * registers them under this prefix and the browser half addresses them, so
- * every path is declared once.
- */
+/** Private route names registered by the host and addressed by the browser (D73). */
 
 /** Route prefix this plugin owns. */
 export const ROUTE_PREFIX = '/dsh-claude-style'
@@ -10,42 +6,22 @@ export const ROUTE_PREFIX = '/dsh-claude-style'
 /** One-shot host OS user route; the browser half caches the response and never polls. */
 export const USERNAME_PATH = `${ROUTE_PREFIX}/username`
 
-/**
- * The HDSL launcher's account metadata. The browser half cannot read a process
- * environment, so the `HDSL_`-prefixed variables the launcher publishes are
- * forwarded from here; the player's avatar bytes ride HDSL_SKIN_PATH.
- */
+/** Forwards the launcher's `HDSL_` environment metadata, which browser code cannot read. */
 export const HDSL_PATH = `${ROUTE_PREFIX}/hdsl`
 
 /** The player's own avatar PNG, forwarded; the absolute path never leaves the host half. */
 export const HDSL_SKIN_PATH = `${ROUTE_PREFIX}/hdsl-skin.png`
 
-/**
- * Session deletion. The harness gives the browser half no deletion API of its
- * own, so the archived row's delete button posts one session id here and the
- * host half removes the stored session directory and drops the id from the
- * workspace registry's archive set.
- */
+/** Deletes stored session data and its archive id; the browser has no host deletion API. */
 export const SESSION_DELETE_PATH = `${ROUTE_PREFIX}/session-delete`
 
-/**
- * Cross-session usage roll-up for the home dashboard: the browser half cannot
- * reach the host's `sessionQuery` service or read the cost-meter ledger, so the
- * day buckets are assembled on the host half and handed over as one small JSON
- * document.
- */
+/** Host-assembled usage roll-up; browser code cannot reach `sessionQuery` or the cost ledger. */
 export const USAGE_PATH = `${ROUTE_PREFIX}/usage`
 
-/**
- * Message-content search for the search palette; `?q=` is the query, and
- * without one the route only brings its message cache up to date.
- */
+/** `?q=` searches message content; without it, the route only refreshes its cache. */
 export const SESSION_SEARCH_PATH = `${ROUTE_PREFIX}/session-search`
 
-/**
- * The reader's own brand images (D30): `GET` answers which of them are in
- * place, each with a version that changes with its bytes.
- */
+/** Brand status; each stored image's version changes with its bytes (D30). */
 export const BRAND_PATH = `${ROUTE_PREFIX}/brand`
 
 /** The custom mark's bytes: `GET` serves them, `PUT` replaces them, `DELETE` removes them. */
@@ -54,46 +30,20 @@ export const BRAND_MARK_PATH = `${ROUTE_PREFIX}/brand/mark`
 /** The custom wordmark's bytes, answered the same three ways as the mark. */
 export const BRAND_WORDMARK_PATH = `${ROUTE_PREFIX}/brand/wordmark`
 
-/**
- * The model peak / off-peak catalog the host half keeps. `GET` answers the
- * document it holds; `POST` makes it fetch the source first, so the browser
- * half can ask for a fresh copy without knowing the source's address.
- */
+/** `GET` returns the cached peak-rate catalog; `POST` refreshes it from the host-known source. */
 export const PEAKRATE_PATH = `${ROUTE_PREFIX}/peakrate`
 
-/**
- * The price snapshot the host half holds. `GET` answers the document; `POST`
- * makes the host fetch the repository's copy first, so the browser can ask for
- * a fresh table without knowing where it lives.
- */
+/** `GET` returns the price snapshot; `POST` refreshes it from the repository. */
 export const PRICES_PATH = `${ROUTE_PREFIX}/prices`
 
-/**
- * One session's cost in both currencies: `?id=` names the session. The host
- * prices the session's settlements itself, so the answer does not depend on
- * another plugin being installed.
- */
+/** `?id=` selects the session; the host prices its settlements without another plugin. */
 export const SESSION_COST_PATH = `${ROUTE_PREFIX}/session-cost`
 
-/**
- * Where the webfont files are served, one whitelisted name under it. The
- * optional Anthropic faces are the ones no page may point at blind: the
- * stylesheet declares no `@font-face` for one, and the browser half registers it
- * from WEBFONTS_PATH's answer.
- */
+/** Serves whitelisted font files; optional faces are declared only after WEBFONTS_PATH reports them. */
 export const FONT_FILES_PATH = `${ROUTE_PREFIX}/fonts/`
 
-/**
- * `GET` answers which of the optional faces the drop point holds, as their file
- * names. The package does not carry the Anthropic faces, so a `@font-face` for
- * one of them is fetched on every load and answers 404 on an install without the
- * file; the browser half declares only the names this route reports (D75).
- */
+/** Lists optional font files present at the drop point; the browser declares only these (D75). */
 export const WEBFONTS_PATH = `${ROUTE_PREFIX}/webfonts`
 
-/**
- * The two system cues: `GET` answers whether the host can play them and which;
- * `POST` plays one. The files are the operating system's own, so this route
- * carries no audio and the package ships none (D89).
- */
+/** `GET` reports system-cue capability and `POST` plays one using OS files (D89). */
 export const SOUND_PATH = `${ROUTE_PREFIX}/sound`

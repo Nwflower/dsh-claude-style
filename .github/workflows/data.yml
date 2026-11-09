@@ -1,14 +1,11 @@
 name: Data
 
-# The price snapshot and the peak rate catalog are scraped once here and
-# committed, so every install downloads a validated file instead of asking the
-# upstream source for one. The two scripts run in order: the price snapshot takes
-# its Chinese public holidays from the catalog. A run that finds nothing new
-# writes nothing, and its commit is excluded from CI (paths-ignore), which is
-# what keeps a daily refresh from starting a full matrix.
+# Commit validated snapshots so installs do not scrape upstream. Refresh the
+# catalog before prices because prices use its Chinese public holidays; CI
+# ignores the resulting data-only commits.
 on:
   schedule:
-    # Once a day, before the first peak window of the Beijing day.
+    # Daily, before Beijing's first peak window.
     - cron: '17 3 * * *'
   workflow_dispatch:
 
@@ -28,9 +25,8 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-      # The scrapers run the host half's own validators through esbuild, so the
-      # repository's dev dependencies have to be in place before they run. The
-      # browser download is the test lanes' and would only slow this job down.
+      # Host validators are bundled with esbuild; skip the test-only browser
+      # download.
       - run: npm ci
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'

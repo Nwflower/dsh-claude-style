@@ -4,36 +4,8 @@ import { parkForeignSheets } from '../core/stylesheet'
 import { notifyAll } from '@dsh-claude-style/engine/notify'
 import type { PeerPlugin } from '../core/feature'
 
-/**
- * The other chat-behaviour plugin, when this page runs it.
- *
- * dsh-chat-ux implements the same chat-area interactions this skin ports
- * (D74): the same fold doors over the same clicks, the
- * same two seat keys at the same priority, the same token fade, the same
- * drawn caret. Two implementations of one behaviour on one page do not
- * merge — the fold doors both intercept the click and replay it at each
- * other, and the second seat registration at one priority throws. So while
- * that plugin is on the page the ported features stand down whole, and the
- * settings page says who took them over.
- *
- * Two signals, either one is enough:
- *
- *   boot    the host's own entry list (`window.__DSH_BOOT__.entries`), which
- *           names every installed client entry before any of them runs, so
- *           the answer holds from the first frame whichever plugin's bundle
- *           the loader evaluates first.
- *   style   the stylesheet that plugin keeps in the head while its browser
- *           half is live. Its own half mounts and removes it, so a plugin
- *           hot reload in either direction shows up here — which the boot
- *           list, fixed at load, cannot report.
- *
- * The boot list is read once, since it does not change after load. The
- * stylesheet is asked on every call, and while anybody is subscribed its
- * arrival or departure is noticed: a subscription to the head's child list
- * (the element is mounted there; the observation bus, D40) re-asks the
- * question and, when the answer changed, re-runs the environment — the
- * entry installs or tears down the features whose manifests yield to that
- * plugin (D72). The head is watched only while something is subscribed.
+/** dsh-chat-ux owns the same interactions, so yielding features must stand down while it is present (D74).
+ * The fixed boot list covers startup; its live stylesheet covers later mounts and hot reloads.
  */
 /** The other plugin's id, as its entry appears in the boot list. */
 const PEER_ENTRY_ID = 'dsh-chat-ux'
@@ -70,23 +42,8 @@ export function peerPresent(plugin: PeerPlugin) {
   throw new Error(`peer-plugin: no presence check for ${plugin}`)
 }
 
-/**
- * Ask the question again and, when the answer moved, say so.
- *
- * What is compared is the answer last announced, not a snapshot of the head:
- * the head changes for many reasons (a stylesheet of anybody's), and only
- * this plugin's own presence is news.
- *
- * The same child list carries the stylesheets that arrive with no owner: a
- * sibling that mounts its sheet from `apply()` leaves it untagged, and the
- * next package to materialize would take it into that package's bookkeeping
- * and delete it at that package's next reload. This callback runs before
- * such a materialization — a mutation callback is a microtask, a
- * materialization is a later task — so the sheet is parked here (D9) while
- * it is still nobody's. This is the only hook the skin has for a sheet that
- * arrives after its own factory ran: `parkForeignSheets()` at module scope
- * covers the sheets already in the document, and nothing of the skin runs
- * between a sibling's append and that sibling's own materialization.
+/** Park untagged sibling sheets in this mutation microtask, before host materialization can claim them (D9).
+ * Notify only when peer presence, rather than unrelated head content, changes.
  */
 export function checkPeerPresence() {
   parkForeignSheets()
@@ -100,12 +57,7 @@ export function checkPeerPresence() {
   notifyEnvironmentChange()
 }
 
-/**
- * Hear about dsh-chat-ux arriving on or leaving the page.
- *
- * @param listener - called with the new answer, only when it changes.
- * @returns unsubscribe.
- */
+/** The first subscriber starts the head watch and the last stops it. */
 export function subscribePeerPresence(listener: (present: boolean) => void) {
   peerListeners.push(listener)
   if (stopHeadWatch === null) {

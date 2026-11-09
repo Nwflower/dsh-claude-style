@@ -1,28 +1,6 @@
 /**
- * The context meter's reading as a pie, derived from dsh-chat-ux
- * (docs/THIRD_PARTY_NOTICES.md): the share taken in the colour its occupancy fell
- * on, the rest of the plate in the quiet tone beside it, drawn as two sectors on
- * one centre.
- *
- * The smaller share keeps the box's own radius, so the part that was pushed out
- * reaches the edge, and the larger one steps in by up to half the lift; the
- * difference eases to nothing as the split comes even, so 15% and 85% mirror
- * each other and an even split is two half discs of one radius. The seam is one
- * width, shared between two strokes by the split: each part is cut by the stroke
- * around the other's path, so the seam follows the whole boundary — both radii,
- * the outer arc and the apex — while the two edges move with the split instead
- * of trading sides at the middle.
- *
- * The pie is the trigger's own background image, computed here as an inline SVG
- * document. The host's theme shapes every radius as a superellipse, so a
- * `border-radius` circle draws a rounded square, and a pseudo-element can read
- * custom properties alone — never geometry. The host's ring keeps its cell and
- * the stylesheet hides it, so the trigger's layout and the room the composer
- * keeps for it stay the host's.
- *
- * The reading beside the pie already changes in place — it is the host's own
- * text — so the pie takes a new reading in the same write rather than growing
- * alone. A reading the page cannot take leaves the ring standing.
+ * Draw the meter as an inline-SVG pie (dsh-chat-ux): the host shapes radii, so a
+ * border-radius circle cannot work. Keep the ring's cell so host layout remains.
  */
 
 /** The mark on the meter while its ring has given way to the pie. */
@@ -52,14 +30,7 @@ const COLOR_MASK_ID = 'dsh-claude-pie-color'
 /** One reading's last painted state, per trigger, so an unchanged pass writes nothing. */
 const painted = new WeakMap<HTMLElement, { percent: number, tone: string, rest: string }>()
 
-/**
- * Draw one reading's pie.
- *
- * @param percent - the occupancy the reader sees.
- * @param tone - the colour the occupied sector takes.
- * @param rest - the colour of the plate the sector has not taken.
- * @returns a `background-image` value.
- */
+/** Return one reading's pie as a `background-image` value. */
 export function contextPieImage(percent: number, tone: string, rest: string) {
   // Both ends are a whole plate: at nothing taken there is no sector to cut,
   // and at everything taken a seam against the plate's own edge says nothing.
@@ -76,11 +47,9 @@ export interface PieColours {
 }
 
 /**
- * Read the colours the meter's pie takes, or null while the meter has no
- * trigger or reading to take them from. Reading a computed style settles the
- * page's styles first, so the caller takes this in the pass's read phase (D40):
- * there the styles are settled once for the frame, and a read after the pass's
- * writes would settle them a second time.
+ * Read the colours the meter's pie takes, or null while the meter has no trigger
+ * or reading. Reading a computed style settles the page's styles, so the caller
+ * takes this in the pass's read phase (D40).
  *
  * @param meter - the host's meter root.
  */
@@ -147,10 +116,9 @@ export function releaseContextPie(meter: HTMLElement) {
 }
 
 /**
- * Put the image on the ring's cell. The trigger lays its children out in a row,
- * so the icon's box is the first cell of the content box; the pie is 2px wider
- * than that box and starts half the difference to its left, which keeps the two
- * concentric down the middle of the line.
+ * Put the image on the ring's cell: the icon's box is the first cell of the
+ * trigger's content box, and the pie is 2px wider, starting half that to the
+ * left, so the two stay concentric on the line.
  */
 function placeImage(trigger: HTMLElement) {
   trigger.style.backgroundRepeat = 'no-repeat'
@@ -160,15 +128,12 @@ function placeImage(trigger: HTMLElement) {
 }
 
 /**
- * The two sectors of a part-way reading. The occupied one starts at twelve and
- * runs clockwise; the rest of the plate fills the other side.
- *
- * The smaller share keeps the box's radius and the larger one steps in by the
- * pull, which is half the lift at a lopsided split and nothing at an even one;
- * the pushed-out part is painted last, grey above the even split and the
- * reading's colour below it. The seam's width is shared between the two strokes
- * by the split, so the parts' edges move with the reading and neither jumps as
- * it crosses the middle.
+ * The two sectors of a part-way reading: the occupied one runs clockwise from
+ * twelve, the rest of the plate fills the other side. The smaller share keeps the
+ * box's radius and the larger steps in by half the lift at a lopsided split; the
+ * pushed-out part is painted last, grey above the even split and the reading's
+ * colour below it. The seam's width is shared by the split, so the edges move
+ * with the reading instead of jumping as it crosses the middle.
  *
  * @param percent - the occupancy the reader sees.
  * @param tone - the occupied sector's colour.
@@ -194,10 +159,10 @@ function splitImage(percent: number, tone: string, rest: string) {
 }
 
 /**
- * The hole's mask: the whole image painted white, then a path stroked black.
- * Black leaves the plate transparent there, and a stroke reaches half its width
- * to either side, so `2 × reach` puts a seam `reach` wide on the plate around
- * the sector's whole path. Round joins keep the seam one width around the apex.
+ * The hole's mask: the plate painted white, then the sector's path stroked black,
+ * which leaves it transparent. A stroke reaches half its width to either side, so
+ * `2 × reach` puts a seam `reach` wide around the whole path; round joins keep it
+ * one width at the apex.
  *
  * @param id - the mask's name inside the document.
  * @param path - the sector's path.
@@ -212,8 +177,8 @@ function strokeMask(id: string, path: string, reach: number) {
 }
 
 /**
- * A whole disc, as two half arcs: one arc whose start and end are the same
- * point is drawn as nothing at all.
+ * A whole disc, as two half arcs: an arc whose start and end are the same point
+ * is drawn as nothing at all.
  *
  * @param cx - centre x.
  * @param cy - centre y.
@@ -228,9 +193,8 @@ function discPath(cx: number, cy: number, radius: number) {
 }
 
 /**
- * One sector: from its apex out to the start angle, then clockwise along the
- * arc to the end angle. Degrees run clockwise from twelve, which is where the
- * host's ring starts too.
+ * One sector: from its apex out to the start angle, then clockwise to the end
+ * angle. Degrees run clockwise from twelve, where the host's ring starts too.
  *
  * @param cx - the apex's x.
  * @param cy - the apex's y.

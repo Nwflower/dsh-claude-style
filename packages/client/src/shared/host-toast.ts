@@ -18,11 +18,7 @@ export interface HostToastOptions {
   actions?: readonly HostToastAction[]
 }
 
-/**
- * The host's Toast, rendered through a React root of the skin's own: the host's
- * notice channel is private to its UI plugins, while the Toast itself portals
- * to the body and looks the same. A new show remounts it by key.
- */
+/** The notice channel is private, so render the host Toast directly; keys remount successive notices. */
 export function createHostToast() {
   let root: reactDom.Root | null = null
   let seq = 0

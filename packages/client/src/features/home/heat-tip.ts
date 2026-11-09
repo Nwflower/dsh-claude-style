@@ -1,21 +1,9 @@
 import { inPageBox, inPagePixels } from '../../shared/page-zoom'
 import { withoutTransition } from '../../shared/transition'
 
-/**
- * The day tip the usage panel's heat grid shows: one pill the grid carries, which
- * names whichever day the pointer is on.
- *
- * It stands in the grid once and moves between cells, so a crossing changes the
- * word in one pill rather than building a box per cell and dropping it again in
- * the 3px gutters between them.
- *
- * Where it stands is decided from the pill's own measured box: centred on its cell
- * while it fits inside the grid, pushed in at the edge where it would hang past
- * it, and hung under cells whose lower side holds more room than the upper one —
- * a pill over the grid's top edge would be clipped by the panel's scroll box.
- */
+/** Move one heat-grid pill between cells, keeping it inside the grid. */
 
-/** The cell the heat grid is built from; the pill names the day it stands for. */
+/** The heat grid's cell whose `data-tip` names the day. */
 export const HEAT_CELL_SELECTOR = '.dsh-claude-home-heat-cell'
 /** The words a cell carries for its own day. */
 export const HEAT_TIP_ATTR = 'data-tip'
@@ -41,17 +29,8 @@ export interface HeatTipPlacement {
 }
 
 /**
- * Stand a cell's pill inside `grid`: line it up with the edge that keeps it in,
- * and put it on the side of the cell that has the room.
- *
- * The boxes are measured in the viewport's pixels and returned as lengths the
- * page's own styles read, since the page may be drawn at a zoom
- * (shared/page-zoom.ts).
- *
- * @param cell - the day under the pointer.
- * @param grid - the grid the pill stands in.
- * @param width - the pill's measured width, padding included, in the page's pixels.
- * @param height - the pill's measured height, padding included, in the page's pixels.
+ * Position a cell's pill inside the grid, converting viewport measurements to
+ * the page's own pixels (shared/page-zoom.ts).
  */
 export function placeHeatTip(cell: HTMLElement, grid: HTMLElement, width: number, height: number): HeatTipPlacement {
   const gridBox = inPageBox(grid.getBoundingClientRect())
@@ -60,33 +39,24 @@ export function placeHeatTip(cell: HTMLElement, grid: HTMLElement, width: number
   const left = Math.min(Math.max(centred, gridBox.left), gridBox.right - width)
   const above = cellBox.top - gridBox.top
   const below = gridBox.bottom - cellBox.bottom
-  // The lower side takes the pill only where it holds more room than the upper
-  // one and room enough for the pill itself: a grid squeezed too short for
-  // either keeps the pill above, where it has always stood.
+  // Keep the pill above unless the lower side has room.
   const side = below > above && below >= height + HEAT_TIP_GAP ? 'below' : 'above'
   const top = side === 'below' ? cellBox.bottom + HEAT_TIP_GAP : cellBox.top - HEAT_TIP_GAP - height
   return {
-    // The pill is positioned in the grid's own box, so the viewport's edges are
-    // measured off the grid rather than written down.
     left: left - gridBox.left,
     top: top - gridBox.top,
     side,
   }
 }
 
-/** The pill one grid carries: the element the page holds now, and a pending write. */
 interface HeatTip {
   element: HTMLElement
   text: HTMLElement
 }
 
-/** The pill each grid was last driven through, by the grid it stands in. */
 const PILLS = new WeakMap<HTMLElement, HeatTip>()
 
-/**
- * The pill standing in `grid`. A re-render replaces the grid's children, so the
- * element is looked up again whenever the one held has left.
- */
+/** Look the pill up again after a render replaces it. */
 function pillOf(grid: HTMLElement) {
   const held = PILLS.get(grid)
   if (held !== undefined && held.element.parentElement === grid) return held
@@ -99,14 +69,9 @@ function pillOf(grid: HTMLElement) {
   return pill
 }
 
-/** The words' own width, taken from the text rather than from the box it sits in. */
 const WORDS = new Range()
 
-/**
- * The factor the pill's box is drawn at, read from the style the sheet gives it:
- * the pill grows from a scale below one into the size it shows at, so a box
- * measured inside it carries the factor of the moment.
- */
+/** Read the pill's entrance scale so its measured box is its settled size. */
 function pillScale(style: CSSStyleDeclaration): number {
   const scale = style.getPropertyValue('scale')
   if (scale === 'none') return 1
@@ -115,21 +80,8 @@ function pillScale(style: CSSStyleDeclaration): number {
 }
 
 /**
- * Name the day under the pointer in the grid's pill, and stand it over that cell.
- *
- * The width comes from the words themselves: the pill travels between two days on
- * a transition, so its own box holds a width from the frame before, and the box
- * the placement needs is the one the new words will take. That travel is also why
- * the first sighting writes its place with the transitions held back — a pill
- * arriving at its day is seen appearing there, never sliding out of the corner it
- * rested in (home-overview.css).
- *
- * The size read is the pill's own: the scale it is drawn at is taken out of the
- * measure, so a box read while the pill is growing is the box it shows at, and
- * the panel's own box does not follow the transition.
- *
- * @param cell - the day under the pointer.
- * @param grid - the grid the cell stands in.
+ * Show the pill for the day under the pointer. Measure its new words rather than
+ * the travelling box, and suppress the first placement's transition.
  */
 export function showHeatTip(cell: HTMLElement, grid: HTMLElement) {
   const label = cell.getAttribute(HEAT_TIP_ATTR)
@@ -140,11 +92,7 @@ export function showHeatTip(cell: HTMLElement, grid: HTMLElement) {
   text.textContent = label
   WORDS.selectNodeContents(text)
   const style = getComputedStyle(element)
-  // The pill grows from a scale below one into the size it shows at, so a box
-  // measured inside it carries the factor of the moment. Both measures are
-  // brought back to the pill's own size and to the page's own pixels, so the box
-  // written below is the same on every day and follows no transition
-  // (shared/page-zoom.ts).
+  // Undo the entrance scale and page zoom before writing the settled box.
   const scale = pillScale(style)
   const words = inPagePixels(WORDS.getBoundingClientRect().width / scale)
   const width = Math.ceil(words) + Math.ceil(Number.parseFloat(style.paddingLeft) + Number.parseFloat(style.paddingRight))

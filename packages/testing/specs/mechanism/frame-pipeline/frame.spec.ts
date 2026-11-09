@@ -1,9 +1,8 @@
 /**
  * The frame pipeline every per-frame write goes through (D40): all reads of a
- * frame before all writes with the scroll owner's position writes between
- * them, each phase in request order, a task requested
- * during a frame belongs to the next one, a cancelled task never runs, and one
- * task throwing does not cost the rest of the frame.
+ * frame before all writes, the scroll owner's position writes between them, each
+ * phase in request order; a task requested during a frame belongs to the next
+ * one, a cancelled task never runs, and a throw costs only its own task.
  *
  * @capability frame-pipeline
  * @features engine

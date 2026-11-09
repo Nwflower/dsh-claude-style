@@ -1,33 +1,9 @@
 #!/usr/bin/env node
 /**
- * e2e.mjs — the end-to-end lane: a real `dsh web` with this checkout's plugin,
- * a scripted model service, and a browser on the page (D87).
- *
- * The smoke's stand-in page reproduces the structure its author knows; this lane
- * runs the assembled client and asserts what only it shows — that a scripted
- * answer renders as the reader sees it, that a scripted tool call becomes a row
- * with its result, that the conversation never jumps or slides backward while
- * the answer streams in, that the send flight hands the reader's words over
- * without a blank frame, and that both palettes capture the README frame's own
- * picture with nothing personal in it. The `contract` scenario walks packages/contracts/src/table.ts against the same page, so
- * each host literal the skin depends on is checked where it lives (D3), and the
- * `importance` scenario holds every `!important` the skin writes to one the page
- * needs (packages/testing/importance.mjs, D9).
- *
- * This file is the runner: it boots each scenario's instance, samples the page
- * once per frame while the turn runs, and writes the evidence of a failure. The
- * scenarios are the table in packages/testing/scenarios.mjs.
- * Every scenario runs against its own scratch instance, so nothing a scenario
- * writes can reach another. The instances stand beside each other: the walk runs
- * several scenarios at once (DEFAULT_JOBS, `--jobs` to change it), each in a
- * scratch home of its own, over one browser the lane starts for the whole walk.
- *
- * Usage: node packages/testing/e2e.mjs [--scenario <name>[,<name>…]] [--shard <index>:<total>] [--jobs <n>] [--headed] [--out <dir>] [--delay <ms>]
- *        --scenario names what to run; without it the walk is every scenario in
- *        the table (packages/testing/scenarios.mjs) but the parked pair below.
- *        --shard takes one slice of that walk, so several runs hold the whole
- *        of it between them (D87); a slice runs one scenario at a time, since
- *        the cloud's own parallelism is the shards.
+ * Run real `dsh web` scenarios against this checkout, the scripted model and a
+ * browser (D87), each in its own scratch home. Usage: `node packages/testing/e2e.mjs
+ * [--scenario <name>] [--shard <i>:<n>] [--jobs <n>] [--headed]`; shards run one
+ * scenario at a time.
  */
 import fs from 'node:fs'
 import { availableParallelism } from 'node:os'

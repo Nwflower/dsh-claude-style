@@ -2,29 +2,9 @@ import { motionReduced } from '../../core/prefs'
 import { motionEase, motionMs } from '../../shared/motion'
 
 /**
- * The waiting line's loader carries three motions at once, one lane each, and
- * this is the state machine that rotates them (chat-wait.css holds the lanes,
- * their motions, and what each motion's own moments are).
- *
- * The loader opens on one of the three at random, its dots fading in where that
- * motion carries them, and then, every `--dsh-claude-period-dot-rotate`, hands
- * the row over to another — a motion never follows itself, so the turn is always
- * a visible change: the hopping dots, the dots walking three lines through one
- * point, and the four dots swapping the corners of a 45 : 55 rectangle.
- *
- * A change is a morph: the dots travel from one motion into the next and the box
- * never empties. Each dot of the motion leaving waits for its own still moment —
- * the top of a hop, an end of a walk, a corner between two swaps — and at that
- * frame the dot it is paired with in the motion arriving takes its place, drawn
- * exactly where it stood and at its size, then carried into its own path over
- * `--dsh-claude-duration-dot-morph`: an offset added onto that path that
- * shrinks to nothing, so the dot is already moving with its new motion when it
- * lands in it. The two motions are paired so the dots travel least; going from
- * three dots to four one of them splits in two, and going from four to three
- * the spare one glides onto its partner and is gone where the two meet.
- *
- * Under the Reduced animation choice (D40) a change lands at once: each lane
- * holds the frame its own motion stands on.
+ * Rotate the waiting loader's three dot motions every token period, morphing
+ * each dot at its still frame. Pairings minimise travel; reduced motion snaps to
+ * the resting frame (D40). Lanes and keyframes live in chat-wait.css.
  */
 
 /** A motion the loader's dots play. */
@@ -47,14 +27,7 @@ const HAND_OVER = 'dsh-claude-wait-hand-over'
 
 const DOT = 'dsh-claude-chat-wait-dot'
 
-/**
- * A lane's own account of its motion: the shares of its keyframes at which one
- * of its dots fades in as the loader opens, the shares at which a dot stands
- * still at its own size and can be handed to the next motion, and how long the
- * opening fade takes as a share of the motion's own turn. The stylesheet owns
- * these beside the keyframes they describe; the curve a fade runs on is chosen
- * below, from the token sheet (D9).
- */
+/** A lane's fade-in and still-frame shares plus its opening fade length. */
 type LaneTiming = {
   arrives: number[]
   leaves: number[]
@@ -78,11 +51,7 @@ type MotionClock = {
   active: number
 }
 
-/**
- * Where a dot stands in the loader's own pixels: the point its scale is taken
- * about (the bottom of the dot, chat-wait.css), the same point with its motion's
- * `translate` left out, and the size its motion draws it at.
- */
+/** A dot's loader-space pose: scale origin, untranslated position and size. */
 type Pose = {
   x: number
   y: number
@@ -111,11 +80,7 @@ function dotsOf(loader: HTMLElement, motion: WaitLoaderMotion): HTMLElement[] {
   return Array.from(laneOf(loader, motion).querySelectorAll<HTMLElement>(`.${DOT}`))
 }
 
-/**
- * Put every lane in its place in one pass, so no lane ever holds two of these at
- * once: the one in play draws, the one leaving keeps drawing until each of its
- * dots has been handed over, and the rest are out of the page.
- */
+/** Draw the active lane, keep the leaving lane until hand-over, and rest the others. */
 function place(loader: HTMLElement, active: WaitLoaderMotion | null, leaving: WaitLoaderMotion | null) {
   for (const { motion } of LANES) {
     const lane = laneOf(loader, motion)

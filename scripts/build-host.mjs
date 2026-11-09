@@ -1,18 +1,6 @@
 /**
- * build-host.mjs — write the host half into the package's build output (D73).
- *
- * The half lives in `packages/host/src` in TypeScript and ships as JavaScript
- * build output, so the packaged layout holds one `lib/` and no source tree.
- * Each module is built on its own: the half is ESM and the module loader
- * imports it by file, so the relative specifiers stay as they are. The values
- * of `@dsh-claude-style/contracts` and the engine's Node-side modules
- * (`@dsh-claude-style/engine/node/*`) are inlined into each module that reads
- * them — neither package is among the published files, so a bare specifier
- * left in the output would not resolve at runtime — and every other
- * import (relative paths, `cordis`, `schemastery`, `node:*`) stays external.
- * The type check over these modules is its own pass (see the decision).
- *
- * Imported by build.mjs.
+ * build-host.mjs — build host modules separately into lib/host (D73): inline the unpublished
+ * shared packages, keep relative and host-package imports as they are.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -28,13 +16,7 @@ const INLINED = [
   { prefix: '@dsh-claude-style/engine/node/', dir: path.join(ROOT, 'packages', 'engine', 'node') },
 ]
 
-/**
- * Keep every import but the shared packages' external: marking a specifier
- * external leaves it in the output verbatim, so the published file imports the
- * same relative modules and host packages it did before. A shared module that
- * imports its neighbour (`./services`) resolves here as well — left external,
- * the published file would ask for a file the package does not ship.
- */
+/** Resolve shared modules and their relative imports; leave publishable imports external. */
 const externalButShared = {
   name: 'external-but-shared',
   setup(build) {
@@ -49,11 +31,7 @@ const externalButShared = {
   },
 }
 
-/**
- * Type-check the host half (its own tsconfig, strict).
- *
- * @returns the number of modules checked, for the build log.
- */
+
 function checkTypes() {
   const tsc = path.join(ROOT, 'node_modules', 'typescript', 'bin', 'tsc')
   try {
@@ -64,16 +42,7 @@ function checkTypes() {
   return fs.readdirSync(SOURCE).filter((name) => name.endsWith('.ts')).length
 }
 
-/**
- * Build every module of the host half into `lib/host/`.
- *
- * The async esbuild API is the one that takes plugins (the sync call refuses
- * them), so this function is async and its caller awaits it; the module list is
- * walked first, so a non-TypeScript file fails before anything is written.
- *
- * @param options.outDir - the build output directory (default `<root>/lib`).
- * @returns `{ files, bytes }` of what was written, for the build log.
- */
+/** Await esbuild's plugin-capable API; enumerate modules before writing so invalid files fail early. */
 export async function buildHostHalf({ outDir = path.join(ROOT, 'lib') } = {}) {
   checkTypes()
   const to = path.join(outDir, 'host')

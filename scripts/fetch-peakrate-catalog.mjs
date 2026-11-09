@@ -1,15 +1,5 @@
 #!/usr/bin/env node
-/**
- * fetch-peakrate-catalog.mjs — refresh the peak rate catalog the package ships
- *
- * Run by hand when the data source publishes new schedules; like
- * `scripts/fetch-lobe-combines.py`, it is the only kind of script here that
- * reaches the network, and nothing runs it automatically. The document is
- * stored as the source serves it, because the host half's parser — not this
- * script — decides what is usable.
- *
- *   node scripts/fetch-peakrate-catalog.mjs
- */
+/** fetch-peakrate-catalog.mjs — refresh the shipped catalog while preserving the source document. */
 import fs from 'node:fs'
 import path from 'node:path'
 import { PEAKRATE_CATALOG, validatePeakCatalog } from './peakrate-catalog.mjs'

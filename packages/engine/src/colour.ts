@@ -1,11 +1,4 @@
-/**
- * A colour as channels, in the form the skin can paint with.
- *
- * A computed colour reaches the skin in the form its table states: `rgb()` from
- * the host's own rules, a literal from a card's token, or the relative colour a
- * reader's palette derives from their canvas (D30). Painting one pixel is where
- * every one of those forms comes out the same way.
- */
+/** Normalize literal, `rgb()` and relative CSS colours by painting one shared pixel (D30). */
 export interface PaintedColour {
   readonly red: number
   readonly green: number
@@ -23,15 +16,7 @@ function scratchContext() {
   return scratch
 }
 
-/**
- * Paint a CSS colour on one pixel and read it back.
- *
- * The pixel starts see-through, because a value the canvas cannot paint leaves
- * `fillStyle` as it was: that turns the refusal into an empty pixel instead of
- * the colour the previous read left behind. Null is that empty pixel — a value
- * the page states but no browser can resolve, which is a mistake in the rule
- * that stated it.
- */
+/** Clear to transparent first: invalid values leave `fillStyle` unchanged and must return null, not stale colour. */
 export function resolveColour(value: string, context: CanvasRenderingContext2D = scratchContext()): PaintedColour | null {
   context.fillStyle = 'rgba(0, 0, 0, 0)'
   context.fillStyle = value

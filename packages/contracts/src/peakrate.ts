@@ -1,11 +1,4 @@
-/**
- * The peak / off-peak rate catalog both halves exchange
- *
- * The host half fetches the data source, validates it into these shapes and
- * serves them over its own route; the browser half evaluates them against the
- * clock. One declaration covers both, so a field the host drops is a field the
- * browser cannot read.
- */
+/** Peak/off-peak catalog served by the host and evaluated by the browser (D73). */
 
 /** One billing window: `"HH:mm"` in the schedule's own time zone, start inclusive, end exclusive. */
 export interface RateWindow {
@@ -13,10 +6,7 @@ export interface RateWindow {
   end: string
 }
 
-/**
- * A dated promotional window. Campaigns outrank the regular peak / off-peak
- * cycle, so a provider running one is neither of the two ordinary states.
- */
+/** Dated campaign; it outranks the regular peak/off-peak cycle. */
 export interface RateOverride {
   /** Always `campaign`: an override that restates the regular cycle is dropped when the catalog is parsed. */
   period: 'campaign'
@@ -30,12 +20,7 @@ export interface RateOverride {
   /** Inclusive `YYYY-MM-DD` bounds; an absent bound is unbounded. */
   startDate?: string
   endDate?: string
-  /**
-   * ISO 8601 instant bounds, as the document states them (`2026-08-13T09:00:00-07:00`):
-   * the opening instant is covered, the closing instant is the first the
-   * campaign is over. A campaign that expired must stay expired: without its
-   * instant bound it would apply from the beginning of time.
-   */
+  /** Start-inclusive, end-exclusive ISO instants; keep expired campaigns' bounds so they cannot become unbounded. */
   startAt?: string
   endAt?: string
   /** Weekdays, 0 = Sunday; empty means every day. */
@@ -118,12 +103,7 @@ export function isIsoDate(value: unknown): value is string {
   return at.getUTCFullYear() === year && at.getUTCMonth() === month - 1 && at.getUTCDate() === day
 }
 
-/**
- * An ISO 8601 instant with its own offset (`2026-08-13T09:00:00-07:00`, `...Z`).
- *
- * The zone offset is required: a bare local date-time would be read in whichever
- * zone the host happens to run in, which is not the campaign's own boundary.
- */
+/** ISO 8601 instants require `Z` or an offset; host-local interpretation would move campaign boundaries. */
 export function isIsoInstant(value: unknown): value is string {
   if (typeof value !== 'string') return false
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)) return false

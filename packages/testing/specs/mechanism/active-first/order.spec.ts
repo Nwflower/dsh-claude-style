@@ -1,7 +1,7 @@
 /**
- * A session that is running stands at the head of the list it belongs to, the
- * waiting rows behind it: each partition keeps the order it came in, and a list
- * already standing that way is left untouched.
+ * A session that is running stands at the head of its list, waiting rows behind
+ * it, each partition keeping the order it came in; a list already standing that
+ * way is left untouched.
  *
  * @capability active-first
  * @features active-first
@@ -53,7 +53,8 @@ function phaseDot() {
 
 /** The seats a reader sees, in order. */
 function order(list: Element) {
-  // 座位的名字从行自己的 data-row-key 里读（合同里的常量），不另写一个宿主属性。
+  // The seat's name is read through the contract's own key attribute, never a
+  // host attribute spelled here.
   return [...list.querySelectorAll<HTMLElement>(`[${SESSION_ROW_KEY_ATTRIBUTE}]`)].map(row => {
     const key = row.getAttribute(SESSION_ROW_KEY_ATTRIBUTE) ?? ''
     return key.startsWith('session:') ? key.slice('session:'.length) : key

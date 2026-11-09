@@ -1,25 +1,7 @@
 #!/usr/bin/env node
 /**
- * release-pack.mjs — the two tarballs a release publishes (D47).
- *
- * A release publishes twice: minutes after the tag push the version goes out as
- * `<version>-dev.<run number>` under npm's `dev` tag so it can be tried before
- * the gates finish, and the same files with the version field restored go out as
- * `latest` once the gates pass. Both come from this one pack, so the two
- * tarballs differ in the version field alone.
- *
- * `npm pack` writes the package's own file list and manifest, and the build runs
- * here rather than being assumed: `lib/` is not in version control (D47), so a
- * fresh checkout has none (`npm pack` runs `prepack` and `prepare`, never
- * `prepublishOnly`).
- *
- * Both tarballs are published as tarballs, which is what keeps the promotion
- * honest: npm runs no lifecycle script for a tarball, so what `latest` gets is
- * the bytes this run packed rather than a second build of the same sources.
- *
- * Usage: node scripts/release-pack.mjs [--out <dir>] [--dev <version>]
- * Progress goes to stderr; stdout carries the tarball paths, one per line, the
- * release first.
+ * release-pack.mjs — build once and pack release plus dev tarballs that differ
+ * only in version (D47); publishing tarballs prevents a second build.
  */
 import fs from 'node:fs'
 import path from 'node:path'

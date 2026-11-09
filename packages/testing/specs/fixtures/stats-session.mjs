@@ -22,8 +22,7 @@ const PRICED_USAGE = { uncachedInputTokens: 1000, cacheReadTokens: 9000, cacheWr
 
 /**
  * The stand-in's statistics session, seated the way the host seats it (D87):
- * the composer card and its dock move into the active phase's session column,
- * whose id is the one the stand-in's projections answer for, and the two
+ * the card and its dock move into the active phase's session column, and both
  * projections land their first readings.
  */
 async function seatStatsSession(t, stats, usage) {

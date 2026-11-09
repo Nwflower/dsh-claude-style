@@ -1,18 +1,5 @@
 #!/usr/bin/env node
-/**
- * release-state.mjs — what a release rerun has to know (D47).
- *
- * A release publishes a dev build of the version first and promotes it after the
- * gates, so a rerun continues from where the last attempt stopped: whether the
- * version is on npm, whether a dev build of it is already there, and whether the
- * version tag sits on the `dist` head. Prints `published=`, `dev=` and
- * `packaged=`, one per line, for the workflow to append to `$GITHUB_OUTPUT`.
- *
- * The registry is asked once for the whole version list: a version that is not
- * there is an answer, while a registry that cannot be read fails the run.
- *
- * Usage: node scripts/release-state.mjs
- */
+/** release-state.mjs — report published, dev and packaged state so a release rerun resumes safely (D47). */
 import fs from 'node:fs'
 import path from 'node:path'
 import { runner } from './shared/run.mjs'

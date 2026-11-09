@@ -1,41 +1,10 @@
 #!/usr/bin/env node
 /**
- * shoot.mjs — capture the README screenshots, light and dark, for one brand and
- * one scene: `docs/screenshots/<brand>-<scene>-light.png` and `-dark.png`.
- *
- * Drives a headless Chrome against a running DSH web GUI with this
- * theme loaded, replaces personal data in the DOM (workspace / session titles,
- * inferred username, absolute paths, quota amounts) with neutral stand-ins,
- * then captures the page in light and dark. Dark mode is produced by setting
- * `body[data-ds-dark-theme]` — the same DOM state the host's theme presenter
- * produces for the dark palette — instead of writing the shared theme
- * preference or relying on emulation, which the durable light preference would
- * ignore. The visible text must pass a leak sweep before anything is written,
- * so a miss fails the run instead of shipping a screenshot with real workspace
- * names in it.
- *
- * Scenes:
- *   home          the new-conversation page, as the instance's home layout draws
- *                 it. A page showing conversation turns is refused.
- *   conversation  one conversation, opened from the sidebar by its title
- *                 (`--session`, default DEMO_TITLE). Only a conversation whose
- *                 every user message is DEMO_PROMPT is captured, and its title
- *                 must be a stand-in: send DEMO_PROMPT in a scratch instance
- *                 to make one.
- *
- * The brand is the instance's own (the settings page's Theme style); `--brand`
- * names the one expected, and a page carrying another fails the run.
- *
- * Usage:
- *   node packages/testing/shoot.mjs --token <launch-token> [--url http://127.0.0.1:3080]
- *     [--brand claude|deepseek] [--scene home|conversation] [--session <title>]
- *
- * The launch token comes from the `dsh web` banner (GUI URL `/?token=…`) or
- * the DSH_WEB_TOKEN env var. Chrome comes from packages/testing/browser.mjs and
- * is stopped when the run ends.
- *
- * `shoot(options)` is exported for scripts that stage more of the page first:
- * its `prepare(page)` hook runs after the page is up and before the sanitize.
+ * Capture one README screenshot pair in light and dark after the privacy sweep.
+ * Only the home scene, or the demo conversation whose every user message is the
+ * demo prompt, is admissible. Usage: `node packages/testing/shoot.mjs --token <token>
+ * [--brand <name>] [--scene <name>] [--session <title>]`; `prepare(page)` runs
+ * before sanitizing.
  */
 import fs from 'fs'
 import path from 'path'

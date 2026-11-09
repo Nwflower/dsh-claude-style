@@ -2,17 +2,10 @@ import { setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
 
 /**
  * The context meter's face (features/context-stats/meter-ring.ts,
- * session-stats.ts, context-stats.settings.ts): the ring's geometry, its arc,
- * and the three-band rule the measured face takes.
- *
- * The ring is the host's own 14 px meter box: a 5.5 px radius and a 2 px
- * stroke for the drawn ring, and a 2.2 px stroke for the face measured from
- * the reference image — 2.2 / (2 × 5.5 + 2.2) = 16.7 %, the 4.5 / 27 the image
- * carries at twice the size. The three bands break at 70 % (blue below, the
- * reference image's #257DE0) and 90 % (gold from 70, the second image's
- * #FBB315, and red from 90, #DC3C3D); the stylesheet also darkens the number's
- * ink on a light canvas, where the measured gold would not carry a 12 px
- * reading.
+ * session-stats.ts, context-stats.settings.ts): the ring's geometry, its arc and
+ * the three-band rule. The bands break at 70 % and 90 %, and the stylesheet
+ * darkens the number's ink on a light canvas, where the gold would not carry a
+ * 12 px reading.
  */
 
 /** The ring's viewBox, and the radius every face draws on. */
@@ -28,13 +21,12 @@ export const CONTEXT_BAND_ATTR = 'data-dsh-claude-context-band'
 export const CONTEXT_BAND_BLUE = 'blue'
 export const CONTEXT_BAND_YELLOW = 'yellow'
 export const CONTEXT_BAND_RED = 'red'
-/** Where the three bands break, as the reference's rule states them. */
+/** Where the three bands break. */
 export const CONTEXT_BAND_YELLOW_FLOOR = 70
 export const CONTEXT_BAND_RED_FLOOR = 90
 
 /**
- * The band one reading falls in: blue below 70 %, yellow from 70 % to under
- * 90 %, red from 90 % on.
+ * The band one reading falls in.
  *
  * @param percent - the occupancy the reader sees.
  * @returns the band's name.

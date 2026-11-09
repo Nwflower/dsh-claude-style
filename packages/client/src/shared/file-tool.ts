@@ -1,12 +1,7 @@
 import { callArgsOf, callString } from './call-args'
 import type { HostChatBlock } from '@dsh-claude-style/contracts/services'
 
-/**
- * The file tools, read off a call's own block: which operation a call is, and
- * the name of the file it works on. The waiting line says these beside the
- * host's whale (features/chat-wait); the file rows read the same arguments for
- * their own paths and diffs (features/chat-files).
- */
+
 
 /** The three file operations the host gives a file row. */
 export type FileToolOperation = 'read' | 'edit' | 'write'

@@ -12,19 +12,7 @@ const SRC = path.join(ROOT, 'packages', 'client', 'src')
 /** The manifest fields the browser half reads (FeatureRuntime in packages/client/src/core/feature.ts). */
 const RUNTIME_FIELDS = ['id', 'handle', 'order', 'pref', 'prefValues', 'ungated', 'yieldsTo', 'settingsRows']
 
-/**
- * The feature registry, `virtual:dsh-claude-style/features`: each manifest's
- * runtime fields beside its main module's `install`, or beside its chunk's
- * address for a deferred feature (D72), in install order. The manifests
- * themselves stay out of the bundle: the page reads none of their test coverage.
- *
- * A feature that declares settings rows also carries its own copy here: the
- * settings page labels those rows whether the feature is installed or not, so
- * the lines it needs cannot wait for a chunk (D72).
- *
- * @param manifests - the feature manifests in install order.
- * @param chunks - each deferred feature's chunk address, by feature id.
- */
+/** Include settings copy eagerly because labels must render before deferred features install (D72). */
 export function featuresModule(manifests, chunks) {
   const copyOwners = manifests.filter((manifest) => manifest.settingsRows !== undefined)
   const imports = manifests.flatMap((manifest, index) => manifest.load === 'deferred' ? [] : [`import { install as install${index} } from ${JSON.stringify(`./${manifest.main}`)}`])
@@ -51,15 +39,7 @@ export function featuresModule(manifests, chunks) {
   }
 }
 
-/**
- * The table the feature chunks resolve their shared modules from,
- * `virtual:dsh-claude-style/chunk-modules` (D72): each id a chunk imports, as
- * this bundle's own instance — a source module's namespace or a generated
- * module's, or the host package exactly as the loader's `require` hands it
- * over, so the chunk's own import helpers treat it as the bundle's do.
- *
- * @param ids - module ids (paths from the repository root, or the `virtual:` path a generated module resolves under) and host package names.
- */
+/** Resolve chunk imports to the main bundle's own module instances (D72). */
 export function chunkModulesModule(ids) {
   const own = ids.filter((id) => id.startsWith('packages/') || id.startsWith('virtual:'))
   const source = (id) => (id.startsWith('virtual:') ? id : path.join(ROOT, id))
@@ -78,14 +58,7 @@ export function chunkModulesModule(ids) {
   }
 }
 
-/**
- * The table the settings page resolves its own row controls from,
- * `virtual:dsh-claude-style/settings-controls` (D72): each feature that draws a
- * control or a status line itself exports them from `<功能>.settings.ts` beside its main module,
- * and the settings page — the only importer — carries them with its own chunk.
- *
- * @param manifests - the feature manifests in install order.
- */
+/** Keep custom settings controls in the settings page's own chunk (D72). */
 export function settingsControlsModule(manifests) {
   const owners = manifests.filter((manifest) => (manifest.settingsRows ?? []).some((row) => row.control !== undefined || row.status !== undefined))
   const imports = owners.map((manifest) => `import { controls as ROWS_${manifest.id} } from ${JSON.stringify(`./features/${manifest.dir}/${manifest.dir}.settings`)}`)
@@ -100,21 +73,12 @@ export function settingsControlsModule(manifests) {
   }
 }
 
-/**
- * The generated module's source: everything the build produces for the browser
- * half, as named exports. The build serves it to the bundle and the unit tests'
- * config writes it out, so both hand a module under test the same values.
- *
- * @param values - export name → value.
- */
+/** Share identical generated values between the bundle and test config. */
 export function generatedSource(values) {
   return Object.entries(values).map(([name, value]) => `export const ${name} = ${JSON.stringify(value)}`).join('\n')
 }
 
-/**
- * The generated module (packages/client/src/generated.d.ts) as an esbuild plugin: everything the
- * build produces for the browser half, as named exports.
- */
+
 export function generatedModule(values) {
   const contents = generatedSource(values)
   return {

@@ -2,14 +2,14 @@
  * The plugin's host routes: everything the browser half cannot reach itself.
  *
  * These are the surfaces D75 describes — the model copy document, the webfonts,
- * the OS user, the HDSL account, the routed assets, session deletion, the
- * usage and search roll-ups, the peak rate catalog and the reader's brand
- * images (packages/host/src/brand.ts) — each registered on the
- * host's web server under this plugin's route prefix. Every route is
- * registered on its own: one path the web server refuses is reported, and the
- * other routes still register.
+ * the OS user, the HDSL account, the routed assets, session deletion, the usage
+ * and search roll-ups, the peak rate catalog and the reader's brand images — each
+ * registered on the host's web server under this plugin's route prefix. Every
+ * route is registered on its own: one path the web server refuses is reported,
+ * and the other routes still register.
  *
- * The paths are the shared contract (`@dsh-claude-style/contracts/routes`, * D73): the browser half addresses the same names.
+ * The paths are the shared contract (`@dsh-claude-style/contracts/routes`, D73):
+ * the browser half addresses the same names.
  */
 import { PACKAGE_NAME } from '@dsh-claude-style/contracts/package'
 import { HDSL_PATH, HDSL_SKIN_PATH, PEAKRATE_PATH, PRICES_PATH, ROUTE_PREFIX, SESSION_COST_PATH, SESSION_DELETE_PATH, SESSION_SEARCH_PATH, SOUND_PATH, USAGE_PATH, USERNAME_PATH, WEBFONTS_PATH } from '@dsh-claude-style/contracts/routes'
@@ -83,17 +83,13 @@ async function playSoundRequest(req: DshRequest, res: DshResponse) {
 /**
  * Webfonts this plugin serves under `${ROUTE_PREFIX}/fonts/`, mapped to their
  * content type. The table is a whitelist: the filename is the whole request
- * contract, so no path outside the two directories below is reachable and no
- * path traversal is possible.
+ * contract, so no path outside the two directories below is reachable.
  *
  * A name is looked up in the user's own drop point first — the harness home's
  * `dsh-claude-style/fonts/` — and then in the package's `lib/fonts/` (D75). The
- * JetBrains Mono files and the two look-alike faces behind the Anthropic ones
- * (Inter, Noto Serif) ship in the npm package; the Anthropic faces do not
- * (copyright), so only a copy the user dropped in answers them. A name neither
- * directory holds is absent: sendFile's ENOENT becomes a 404, which the browser
- * half's font stacks fall back from — that side registers no `@font-face` for a
- * name the webfonts route does not report (packages/client/src/shared/webfonts.ts).
+ * Anthropic faces are not in the npm package (copyright), so only a copy the user
+ * dropped in answers them; a name neither directory holds is absent, and the
+ * browser half registers no `@font-face` for a name this route does not report.
  */
 const FONT_FILES = {
   'JetBrainsMonoVariable.ttf': 'font/ttf',
@@ -107,15 +103,14 @@ const FONT_FILES = {
 const WEBFONTS_SUB = WEBFONTS_PATH.slice(ROUTE_PREFIX.length)
 /**
  * The assets the build routed rather than inlined, served under
- * `${ROUTE_PREFIX}/assets/` from the build output in `lib/assets/`
+ * `${ROUTE_PREFIX}/assets/` from the build output in `lib/assets/`.
  *
  * The request name is the whole contract: it must be a key of the build's
- * manifest, which is `<content hash>.<ext>` — no separator, no dot segment —
- * so nothing outside that directory is reachable and a name the build did not
- * produce is a 404. The name carries the content hash, so the answer may be
- * cached for good. A text asset is stored brotli-compressed beside its name:
- * a client that takes brotli receives it as it lies, and one that does not
- * gets it decompressed, so the package carries the sheets once, small.
+ * manifest, which is `<content hash>.<ext>`, so nothing outside that directory is
+ * reachable and a name the build did not produce is a 404. The name carries the
+ * content hash, so the answer may be cached for good. A text asset is stored
+ * brotli-compressed beside its name: a client that takes brotli receives it as it
+ * lies, and one that does not gets it decompressed.
  */
 const ASSETS_PATH = `${ROUTE_PREFIX}/assets/`
 /** Largest deletion request body read; a real one carries one id. */
@@ -125,22 +120,18 @@ const SOUND_BODY_MAX = 1024
 
 /**
  * An id the deletion route takes: the characters a plugin-generated id carries
- * (`:`, `@`), and none that could name a place of its own.
- *
- * The stored name below escapes `/`, `\` and `~` as well, so an id carrying one
- * is refused here rather than silently resolved through the escape: a client
- * naming a path segment is not naming a session.
+ * (`:`, `@`), and none that could name a place of its own. The stored name
+ * escapes `/`, `\` and `~`, so an id carrying one is refused here rather than
+ * silently resolved through the escape.
  */
 const SESSION_ID_RE = /^[A-Za-z0-9._\-:@]{1,200}$/
 
 /**
  * Whether the host holds this session open right now.
  *
- * A live session's log is open and being appended to, so its directory must not
- * be removed under the writer. A sessions service that offers no way to read
- * its live set answers "live": an unreadable set cannot authorize the
- * deletion. A read that throws fails the request (500), which refuses the
- * deletion as well.
+ * A live session's log is being appended to, so its directory must not be removed
+ * under the writer. A sessions service that offers no way to read its live set
+ * answers "live": an unreadable set cannot authorize the deletion.
  */
 function sessionIsLive(ctx: DshContext, sessionId: string): boolean {
   const sessions = ctx.get('sessions')
@@ -162,11 +153,10 @@ function sessionIsLive(ctx: DshContext, sessionId: string): boolean {
 /**
  * Drop one id from the workspace registry's archive set, durably.
  *
- * The registry is read at request time: it mounts with the workspace domain and
- * can complete after this plugin. A host without one has no archive set to
- * update — and no archived list to delete from — while a failing unarchive
- * propagates: the route answers 500, the row stays, and the next delete
- * retries through the miss branch.
+ * The registry is read at request time because it mounts with the workspace domain
+ * and can complete after this plugin. A host without one has no archive set to
+ * update, while a failing unarchive propagates: the route answers 500, the row
+ * stays, and the next delete retries.
  */
 async function unarchiveSession(ctx: DshContext, sessionId: string) {
   const registry = ctx.get('workspaceRegistry')
@@ -179,17 +169,14 @@ async function unarchiveSession(ctx: DshContext, sessionId: string) {
  * sessions root's working-directory directories, and the id's entry in the
  * workspace registry's archive set.
  *
- * The id reaches the filesystem as the name the harness stores it under, never
- * as its own spelling, and only after the id check: the lookup is by exact name
- * and the resolved directory must stay inside the sessions root.
+ * The id reaches the filesystem as the name the harness stores it under, never as
+ * its own spelling, and only after the id check: the lookup is by exact name and
+ * the resolved directory must stay inside the sessions root.
  *
- * The archive set can name a session whose stored directory is already gone —
- * an earlier removal took the directory while the registry entry stayed, and
- * the stale session summary keeps its row on the archived list. The miss
- * answers success too: the registry's unarchive runs no existence check and
- * resolves without writing for an id that is not archived, so the entry leaves
- * the set either way and the row is gone for good instead of coming back on
- * the next reload.
+ * The archive set can name a session whose directory is already gone. The miss
+ * answers success too: the unarchive resolves without writing for an id it does
+ * not hold, so the entry leaves the set and the row does not come back on the
+ * next reload.
  */
 async function deleteSession(ctx: DshContext, req: DshRequest, res: DshResponse) {
   const refused = refusalOf(ctx, req)
@@ -287,11 +274,8 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
      * Register one route. The web server refuses a path another plugin already
      * holds by throwing; that refusal is reported and the other routes still
      * register, because a throw here would fail this fiber and drop the client
-     * bundle — the whole skin — with it (D12).
-     *
-     * A host that serves no web server at all registers nothing: that is said
-     * once here, and nothing below is built, so the teardown is left with the
-     * real disposers alone.
+     * bundle — the whole skin — with it (D12). A host without a web server
+     * registers nothing, and nothing below is built for it.
      */
     const server = scope.webServer
     if (server === undefined || server === null) {
@@ -490,11 +474,10 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
       path: USAGE_PATH,
       handler: (req: DshRequest, res: DshResponse) => {
         // Read-only and same-origin only: the answer is the plugin's own
-        // aggregate over the user's session history, which is why it runs the
-        // same fence as the username route. It answers with whatever is already
-        // known: a cold pass reports `computing` and the browser half keeps its
-        // skeleton up while it polls. The service owns when a pass is due, so
-        // asking faster than its period starts nothing.
+        // aggregate over the user's session history. A cold pass reports
+        // `computing` and the browser half keeps its skeleton up; the service
+        // owns when a pass is due, so asking faster than its period starts
+        // nothing.
         if (methodRefused(req, res, ['GET', 'HEAD'])) return
         if (fenceRefused(ctx, req, res)) return
         void usage.refresh()
@@ -512,10 +495,9 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
       kind: 'exact',
       path: SESSION_SEARCH_PATH,
       handler: (req: DshRequest, res: DshResponse) => {
-        // Read-only, behind the same fence as the usage route: the answer
-        // quotes the user's own conversations. Without `?q=` it only brings the
-        // message cache up to date, which the palette asks for as it opens so
-        // the first real query is quick (packages/host/src/search.ts).
+        // Read-only, behind the same fence as the usage route: the answer quotes
+        // the user's own conversations. Without `?q=` it only brings the message
+        // cache up to date, which the palette asks for as it opens.
         if (methodRefused(req, res, ['GET'])) return
         if (fenceRefused(ctx, req, res)) return
         const query = (new URL(req.url ?? '/', 'http://local').searchParams.get('q') ?? '').trim().slice(0, QUERY_MAX)
@@ -530,11 +512,10 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
       kind: 'exact',
       path: PEAKRATE_PATH,
       handler: (req: DshRequest, res: DshResponse) => {
-        // The catalog is public data, and the browser half is the only client:
-        // the route runs the same fence as the rest of the plugin's routes so
-        // that only this page can make the host reach the source. `POST` is the
-        // browser half asking for a fresh copy, because it cannot name the
-        // source itself.
+        // The catalog is public data and the browser half is the only client, so
+        // the fence keeps every other page from making the host reach the source.
+        // `POST` is the browser half asking for a fresh copy, because it cannot
+        // name the source itself.
         if (methodRefused(req, res, ['GET', 'POST'])) return
         if (fenceRefused(ctx, req, res)) return
         peakrate.ensure()
@@ -547,9 +528,8 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
       kind: 'exact',
       path: PRICES_PATH,
       handler: (req: DshRequest, res: DshResponse) => {
-        // Read-only apart from the refresh ask; the table is public data, and
-        // the fence keeps the same rule as the other routes: only this page
-        // makes the host reach the repository.
+        // Read-only apart from the refresh ask; the table is public data, and the
+        // fence keeps every other page from making the host reach the repository.
         if (methodRefused(req, res, ['GET', 'POST'])) return
         if (fenceRefused(ctx, req, res)) return
         prices.ensure()

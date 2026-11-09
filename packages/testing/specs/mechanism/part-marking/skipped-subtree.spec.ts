@@ -1,9 +1,7 @@
 /**
  * A region does not read its host class names inside the separate element the
- * host mounts in its box. The composer card's overlay seat is that element: the
- * host renders the `@` and `/` menus into it, and a menu row's own `_item` and
- * `_trailing` are not the composer's row and cluster. The seat keeps the parts
- * its own class names carry, because it is the composer's box.
+ * host mounts in its box: the composer card's overlay seat holds the `@` and `/`
+ * menus, whose `_item` and `_trailing` are not the composer's row and cluster.
  *
  * @capability part-marking
  * @features engine

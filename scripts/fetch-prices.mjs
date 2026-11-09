@@ -1,21 +1,7 @@
 #!/usr/bin/env node
 /**
- * fetch-prices.mjs — refresh the price snapshot the package ships
- *
- * Run by `.github/workflows/data.yml` once a day (and by hand after a pricing
- * change): the official page is parsed once here, in CI, and the result is
- * committed to `packages/host/data/prices.json`. Every install downloads the
- * validated document instead of parsing the page, so a page redesign breaks one
- * workflow run rather than every reader's meter.
- *
- * Both official tables are kept: the Chinese page's CNY prices and the English
- * page's USD prices are published independently (their per-model ratios differ),
- * so neither may be derived from the other. The peak clock and the Chinese
- * public holidays come from the peak rate catalog the same workflow refreshes;
- * a run without them keeps every day at the off-peak rate, which would overprice
- * holidays, so they are required.
- *
- *   node scripts/fetch-prices.mjs
+ * fetch-prices.mjs — refresh independent CNY and USD snapshots from official
+ * tables. Require the peak catalog so holidays are not priced as off-peak.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -29,23 +15,11 @@ const SOURCE = {
   zh: 'https://api-docs.deepseek.com/zh-cn/quick_start/pricing/',
   en: 'https://api-docs.deepseek.com/quick_start/pricing/',
 }
-/**
- * The public model catalogue the fallback prices come from: every vendor's
- * list price in USD per million tokens, one entry per model id. The snapshot
- * keeps only the id and three numbers, so a session on any listed model shows
- * the list-price equivalent instead of no figure at all. Vendors' differences
- * are not kept apart: the first positive entry for an id wins.
- */
+/** Fallback prices use the first positive public list price for each model id. */
 const CATALOG_URL = 'https://models.dev/api.json'
 /** The rate the USD catalogue converts at for a reader who chose CNY. */
 const USD_TO_CNY = 7.2
-/**
- * CNY list prices for models whose vendor publishes them, in the same
- * `"input cacheRead output"` form (yuan per million tokens). The K3 tables also
- * list cache writes (K3 at ¥20 for 5 min and ¥40 for 1 hour); this meter bills
- * writes at the hit rate, so a line carries the three it prices.
- * Source: Kimi's pricing page, observed 2026-10-24.
- */
+/** Cache writes use the hit rate; retain only the three metrics this meter prices. */
 const CATALOG_CNY = {
   'kimi-k3': '20 2 100',
   'kimi-k3.1-pro': '13 1.3 68',
@@ -183,12 +157,7 @@ function parsePage(html, url) {
 
 /** The Chinese public holidays the peak rate catalog carries for DeepSeek. */
 /**
- * The clock the snapshot prices by: the peak rate catalog's own DeepSeek profile.
- *
- * The catalog is the one place this package's billing clock comes from — the
- * meter draws its badge from the same document — so the price snapshot copies
- * the profile's windows, days and holidays instead of keeping a second copy
- * that would drift. The pricing page only supplies money.
+ * Copy the shared DeepSeek billing clock so pricing and badges cannot drift.
  */
 function scheduleFromCatalog() {
   if (!fs.existsSync(CATALOG)) throw new Error(`fetch-prices: ${CATALOG} is missing; run scripts/fetch-peakrate-catalog.mjs first`)
@@ -221,18 +190,7 @@ function scheduleFromCatalog() {
   return { timeZone, holidayZone, peakDays, peakWindows, holidays }
 }
 
-/**
- * The fallback price table: one list price per model, as
- * `[input, cacheRead, output]` USD per million tokens.
- *
- * The public catalogue lists the same model under many vendors, each with its
- * own price. Coarse matching folds them into one entry per bare model id, the
- * median of each field across the entries that carry a positive price: the
- * result does not depend on provider order, an outlier reseller neither wins
- * nor is lost, and the table has one row per model instead of one per route.
- * Plan listings (every number zero) are left out, so a session on them shows
- * nothing rather than a zero.
- */
+/** Use per-model medians to ignore provider order and reseller outliers; omit zero-priced plans. */
 async function catalogPrices() {
   const body = JSON.parse(await load(CATALOG_URL))
   const providers = body !== null && typeof body === 'object' ? body : {}

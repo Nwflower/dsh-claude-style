@@ -35,31 +35,9 @@ const ROLL_MS = motionMs('--dsh-claude-duration-roll')
 const SWAP_MS = motionMs('--dsh-claude-duration-swap')
 
 /**
- * The file row: a read, an edit or a write rendered as the host's own file row,
- * with the card the host draws for root calls only.
- *
- * The row takes the seat's owner payload and the seat's own `t` seat, and
- * renders collapsed as the operation's icon and title, the path and the
- * `+n -m` tail, expanded as the diff card or the read card. The host's own rows
- * are the three keyed seats at the default priority 0, and a keyed seat renders
- * the lowest priority, so all three are taken over at priority -1; a second
- * registration at one priority throws, so the keys are claimed together.
- *
- * The host's ToolRow component and its CSS Modules names are not part of the
- * frozen primitives table, so the chrome is redrawn here from the primitives
- * that are shared (DisclosureRow, TextShimmer, DiffBlock, ReadBlock,
- * diffTotals); the row's own sizes and rhythm are in chat-files.css.
- *
- * The calls that touched one file inside one process group stand as one
- * (file-row-merge.ts): the earliest of them draws the file's whole tail and
- * whole card, and wears the operation its file's work last reached, while the
- * others take their boxes off the page. A file touched once is drawn exactly as
- * it was before merging existed.
- *
- * dsh-chat-ux claims the same keys on the same seat at the same priority, and a
- * second registration at one priority throws, so the entry keeps this feature
- * uninstalled while that plugin is on the page and installs it when the plugin
- * goes (the manifest).
+ * Render host file rows for reads, edits and writes, rebuilding chrome from
+ * shared primitives and merging one file's calls per process group. Three keyed
+ * seats are claimed together at priority -1; dsh-chat-ux yields this feature.
  */
 export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const h = React.createElement
@@ -67,15 +45,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The rows of one file read together; one install owns one registry */
   const fileMerge = createFileMerge()
 
-  /**
-   * One figure of the row's tail. Every character whose own digit changed turns
-   * over its own middle in its own box — the digit that was there swings down and
-   * away as the new one swings in from above, the 160 ms the stylesheet's own
-   * roll runs (zai-org/ZCode's metric flip, docs/THIRD_PARTY_NOTICES.md) — while the
-   * characters that hold keep their place, so a growing number reads as one
-   * figure turning rather than as a whole new number. The animation choice
-   * decides whether a digit on its way out is drawn at all (D40).
-   */
+  /** Roll only changed digits in place; reduced motion drops the outgoing digit (D40). */
   const RollingStat = (props: { className: string, text: string, running: boolean }) => {
     const [leaving, setLeaving] = React.useState<string | null>(null)
     const shown = React.useRef(props.text)
@@ -85,10 +55,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       shown.current = props.text
       setLeaving(motionReduced() ? null : before)
     }, [props.text])
-    // The digit on its way out goes when its turn is over. The turn's own end
-    // event would say the same, but it never arrives when the stylesheet's
-    // animation does not run, and the digit would then stay in the box that the
-    // digit taking its place already fills.
+    // Timer, not animationend: no event arrives when the animation does not run.
     React.useEffect(() => {
       if (leaving === null) return
       const timer = window.setTimeout(() => setLeaving(null), ROLL_MS)

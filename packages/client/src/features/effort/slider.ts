@@ -25,43 +25,21 @@ export interface EffortTrackBox {
 }
 
 /**
- * The reasoning-effort slider inside the effort picker's card
- * (packages/client/src/features/effort/effort-picker.ts).
+ * The reasoning-effort slider in the effort picker's card
+ * (features/effort/effort-picker.ts): the catalog's discrete ladder drawn as a
+ * track ordered by strength (ladder.ts). The knob follows the pointer
+ * continuously and settles on the nearest level at the release; the top rung
+ * swaps the fill for the dot matrix (effort/matrix.ts). A seat that names no
+ * levels keeps the travel and eases back, with nothing to select.
  *
- * The catalog describes a model's reasoning as a discrete ladder
- * (`reasoning.efforts` plus the level in force), and this control draws that
- * ladder as a track ordered by strength (ladder.ts): the label carries the
- * level's name, `Faster` / `Smarter` name the direction of travel, and the
- * knob follows the pointer
- * CONTINUOUSLY rather than hopping stop to stop. The value settles only at
- * the release, on the NEAREST level, so dragging never reads as a hard switch
- * between fixed positions.
+ * The element is built once and never detached (effort-picker.ts): a detach
+ * mid-gesture drops the pointer capture, and a re-insertion restarts the CSS
+ * animations.
  *
- * The face of the control follows Claude Desktop's effort slider: a filled
- * portion grows from the left end to the knob, one tick dot marks every
- * stop the ladder offers, and the TOP rung is special — reaching it swaps
- * the plain fill for a dot-matrix (effort/matrix.ts) in the manner of Claude's
- * Ultracode field (the grid is solved in whole device pixels, the phases
- * scattered by hash, the entrance swept in from the right, in the manner of
- * the community skin-switcher plugin), tints the knob, and colours the level's
- * name. The matrix and the whole name ramp take the reader's theme accent.
- *
- * A seat that names no levels (the catalog has not produced a ladder yet)
- * leaves the slider in its empty state: the knob travels the same way and
- * eases back to its resting end, but there is nothing to snap to and
- * nothing to select.
- *
- * The element is built once and never detached (effort-picker.ts): a
- * detach mid-gesture would drop the pointer capture, and a re-insertion
- * restarts its CSS animations.
- *
- * @param opts - `{ read, onPick, onDragStart, onDragEnd }`. `read()` returns
- *   the current seat's effort descriptor — the model picker's `effort()`,
- *   held over while a selection is in flight — or null,
- *   `onPick(levelId)` commits one level — `undefined` is the
- *   model's own default level — and `onDragEnd(event)` hears the release
- *   wherever it lands, the pointer outside the card included.
- * @returns `{ el, update, isHeld }`.
+ * @param opts - `read()` returns the current seat's effort descriptor or null,
+ *   `onPick(levelId)` commits one level (`undefined` is the model's own
+ *   default), and `onDragEnd(event)` hears the release wherever it lands.
+ * @returns `{ el, update, measure, isHeld, dispose }`.
  */
 export function createEffortControl(opts: {
   read: () => ReturnType<ModelCatalog['effort']>
@@ -74,8 +52,7 @@ export function createEffortControl(opts: {
   const labelEl = buildElement('span', 'dsh-claude-effort-label')
   const valueEl = buildElement('span', 'dsh-claude-effort-value')
   /* The name being travelled to, absolutely positioned over the value: the
-     slider's own travel is its progress, so the incoming words sit where the
-     knob has not reached yet and take no layout space. */
+     incoming words sit where the knob has not reached and take no layout space. */
   const valuePreview = buildElement('span', 'dsh-claude-effort-value-preview')
   const ends = buildElement('div', 'dsh-claude-effort-ends')
   const fasterEl = buildElement('span', 'dsh-claude-effort-end')
@@ -114,19 +91,15 @@ export function createEffortControl(opts: {
   /** Which way the knob last moved: 1 toward stronger, -1 toward weaker, 0 still. */
   let moveDirection = 0
   /**
-   * A press and a drag are two states, not one. `pressed` starts on
-   * pointerdown and the knob GLIDES to the press position (the stylesheet's
-   * translate transition is still live, so a click on bare track reads as
-   * travel rather than a teleport). `dragging` starts on the first move and
-   * writes directly, with `data-dragging` switching the transition off so
-   * the knob keeps up with the pointer. Setting the drag flag at pointerdown
-   * would kill the glide before the browser ever started it: the transition
-   * list is read at the next style recalc, by which time the flag is on.
+   * A press and a drag are two states. `pressed` starts on pointerdown and the
+   * knob GLIDES to the press position on the stylesheet's transition;
+   * `dragging` starts on the first move and switches the transition off so the
+   * knob keeps up. Setting the drag flag at pointerdown would kill the glide:
+   * the transition list is read at the next style recalc, by then already on.
    *
    * The hold spans the whole gesture: the pointer capture keeps the moves
-   * coming after it leaves the control, and only the release ends it, so the
-   * picker's hover-close — which stands down while `pressed` — hears the
-   * button up first (onRelease).
+   * coming outside the control, and only the release ends it, so the picker's
+   * hover-close hears the button up first (onRelease).
    */
   let pressed = false
   let dragging = false
@@ -149,28 +122,23 @@ export function createEffortControl(opts: {
   let ticksWidth = -1
   /**
    * The level just committed, and whether the host has echoed it back yet.
-   * The host's catalog snapshot TRAILS the commit — its selection RPC is
-   * slow (seconds, on some providers) — so between the release and the echo
-   * the snapshot still names the OLD level. Following it there would drag
-   * the knob back to where the gesture started, then forward again once the
-   * echo lands: the "bounce" on release. While this flag is set, update()
-   * keeps the knob on the committed level; the echo (or the safety timeout,
-   * for a commit that never lands) ends the wait.
+   * The host's catalog snapshot TRAILS the commit, so between the release and
+   * the echo it still names the OLD level: following it would drag the knob
+   * back and forward again — the "bounce" on release. While this flag is set,
+   * update() keeps the knob on the committed level; the echo, or the safety
+   * timeout, ends the wait.
    */
   let pendingEcho = false
   let pendingId: string | undefined = undefined
   let pendingTimer = 0
-  /** Longest a commit waits for its echo before the host is trusted again.
-      Host selections have been measured at up to ~8s on slow providers. */
+  /** Longest a commit waits for its echo before the host is trusted again. */
   const PENDING_ECHO_MS = 12000
 
   /**
    * The ladder as ordered steps, the step in force, and the words. A model
-   * with no reasoning (or one whose catalog entry has not loaded) resolves to
-   * an empty ladder: the slider is still shown, it just has nothing to
-   * select. The catalog may leave out a default level (`defaultEffort` is
-   * undefined) — that "Default" is a real position on the track, so it leads
-   * the steps with an undefined id.
+   * with no reasoning (or no catalog entry yet) resolves to an empty ladder:
+   * the slider shows with nothing to select. A missing `defaultEffort` is a
+   * real position on the track, so it leads the steps with an undefined id.
    */
   function state(): { steps: EffortStep[], index: number, labels: EffortLabels } {
     const effort = opts.read()
@@ -216,19 +184,15 @@ export function createEffortControl(opts: {
   }
 
   /**
-   * Move the knob. While the gesture runs this is ONE compositor write:
-   * the stylesheet already drops `translate` from the transition for
-   * `data-dragging`, so an inline transition dance (and the forced reflow
-   * it needs to take effect) would be pure overhead on every pointermove.
-   * The inline dance survives only for the rare non-drag instant move (a
-   * ladder swap on first paint), where the stylesheet's transition would
-   * otherwise animate the jump.
+   * Move the knob. While the gesture runs this is ONE compositor write: the
+   * stylesheet drops `translate` from the transition under `data-dragging`, so
+   * an inline transition dance and its forced reflow would be pure overhead.
+   * That dance survives only for the rare non-drag instant move (a ladder swap
+   * on first paint), where the stylesheet would otherwise animate the jump.
    *
-   * The travel goes through the INDIVIDUAL `translate` property, never
-   * `transform`: the drag lift is `scale`, and the individual properties
-   * compose as translate → scale. Writing the travel into `transform` puts
-   * it AFTER the scale in the product, so a 1.1 lift would scale the travel
-   * itself (see the stylesheet's note on the knob).
+   * The travel goes through the INDIVIDUAL `translate`, never `transform`: the
+   * drag lift is `scale`, and the individual properties compose as
+   * translate → scale, so a travel in `transform` would be scaled by the lift.
    */
   let lastTravel = ''
   let lastWidth = ''
@@ -236,15 +200,13 @@ export function createEffortControl(opts: {
   function place(x: number, animate: boolean) {
     const px = Math.round(x)
     const value = `${px}px`
-    /* The fill runs from the track's left end to the knob's centre (+8 is
-       half the 16px knob from the stylesheet) and disappears under the
-       opaque knob, so its right end is never seen. An empty ladder selects
-       nothing, and nothing stays unfilled. */
+    /* The fill runs from the track's left end to the knob's centre (+8 is half
+       the 16px knob) and disappears under the opaque knob. An empty ladder
+       selects nothing, and nothing stays unfilled. */
     const width = steps.length === 0 ? '0px' : `${px + 8}px`
     /* Same-value guard: update() runs on every scheduler pass, and re-writing
-       an unchanged position would run the transition dance's forced reflow
-       for nothing — worse, mid-glide it cancels the transition and snaps the
-       knob to its end. Only a real change touches the DOM. */
+       an unchanged position would run the transition dance's forced reflow —
+       worse, mid-glide it cancels the transition and snaps the knob. */
     if (value === lastTravel && width === lastWidth) return
     lastTravel = value
     lastWidth = width
@@ -269,32 +231,25 @@ export function createEffortControl(opts: {
   }
 
   /**
-   * How strongly the knob resists leaving a stop, as a fraction of the
-   * pointer's speed right at the stop. 0 is pure 1:1 tracking; 0.8 makes the
-   * knob creep out of a stop at a FIFTH of the pointer's speed (slope
-   * 1 - D at t = 0) and then overtake it mid-segment (slope 1 + D at t = ½,
-   * i.e. 1.8×) — a detent you can feel. Must stay below 1: the slope
-   * `1 - D·cos(2πt)` would reach zero and the travel would stop being
-   * monotone, so the knob could jump backwards.
+   * How strongly the knob resists leaving a stop: 0 is pure 1:1 tracking;
+   * 0.8 makes it creep out at a fifth of the pointer's speed and overtake it
+   * mid-segment. Must stay below 1, or the slope `1 - D·cos(2πt)` reaches zero
+   * and the travel stops being monotone.
    */
   const DETENT = 0.8
   /**
    * How far the pointer must travel before a press becomes a drag. A click
-   * often brings one or two pixels of movement; treating that as a drag would
-   * switch the knob's transition off before the press glide has played, and
-   * the knob would teleport to the pointer instead of easing to it.
+   * brings a pixel or two, and treating that as a drag would switch the
+   * transition off before the press glide has played.
    */
   const DRAG_THRESHOLD_PX = 3
 
   /**
-   * The detent transfer: raw pointer travel → knob travel. Within one
-   * segment the knob lags near the ends and catches up in the middle
-   * (`t - D·sin(2πt)/2π`), so leaving a stop feels damped while the middle
-   * still tracks the pointer. The curve fixes every stop and every midpoint
-   * (t = 0, ½, 1 map to themselves) and is monotone, so `nearest()` may keep
-   * reading the RAW position: the knob's nearest stop is the pointer's
-   * nearest stop either way. Applied on the pointer paths only — settle and
-   * the host echo place the knob on a stop, which the curve already fixes.
+   * The detent transfer: raw pointer travel → knob travel. Within one segment
+   * the knob lags near the ends and catches up in the middle
+   * (`t - D·sin(2πt)/2π`). The curve fixes every stop and midpoint and is
+   * monotone, so `nearest()` may keep reading the RAW position. Applied on the
+   * pointer paths only — settle and the host echo place the knob on a stop.
    */
   function dampTravel(x: number) {
     if (steps.length < 2) return x
@@ -317,11 +272,10 @@ export function createEffortControl(opts: {
   }
 
   /**
-   * The top rung is the slider's showpiece: reaching it (a settled level or
-   * a drag's live position alike) swaps the plain fill for the matrix,
-   * tints the knob and colours the level's name. Everything hangs off
-   * `data-apex`; the guard keeps the attribute writes — which the
-   * scheduler's observer sees — to actual transitions.
+   * The top rung is the showpiece: reaching it (a settled level or a drag's
+   * live position) swaps the plain fill for the matrix, tints the knob and
+   * colours the name. Everything hangs off `data-apex`; the guard keeps the
+   * attribute writes — which the scheduler's observer sees — to transitions.
    */
   function paintApex(at: number) {
     const want = steps.length > 1 && at === steps.length - 1
@@ -333,11 +287,10 @@ export function createEffortControl(opts: {
   }
 
   /**
-   * One tick dot per stop, centred on the stop's resting position. Rebuilt
-   * when the ladder changes or the track's width moved out from under the
-   * last layout (first paint can run before the picker has its width).
-   * The dots carry no state: the fill they share a colour with swallows
-   * the passed ones, and the opaque knob swallows the current one.
+   * One tick dot per stop, centred on the stop's resting position. Rebuilt when
+   * the track's width moves out from under the last layout (first paint can run
+   * before the picker has its width). The dots carry no state: the fill and the
+   * opaque knob swallow the passed ones.
    */
   function paintTicks() {
     const w = trackBox().width
@@ -354,8 +307,7 @@ export function createEffortControl(opts: {
 
   /**
    * The level's name while the gesture runs, the committed one otherwise. The
-   * two layers and their progress live in name-swap.ts; this reads the slider's
-   * own travel into them.
+   * two layers live in name-swap.ts; this reads the slider's travel into them.
    */
   function paintValue() {
     const at = pressed ? live : selected
@@ -365,10 +317,9 @@ export function createEffortControl(opts: {
 
   function paintAria(labels: EffortLabels) {
     noneLabel = labels.none
-    // Same-value guards throughout: update() runs on every scheduler pass,
-    // and an identical write here (in particular the aria-label, which is
-    // in the observer's attributeFilter) re-schedules the next pass — a
-    // self-sustaining one-pass-per-frame loop.
+    // Same-value guards throughout: update() runs on every scheduler pass, and
+    // an identical write here (the aria-label is in the observer's
+    // attributeFilter) re-schedules the next pass — a self-sustaining loop.
     if (labelEl.textContent !== labels.label) labelEl.textContent = labels.label
     if (fasterEl.textContent !== labels.faster) fasterEl.textContent = labels.faster
     if (smarterEl.textContent !== labels.smarter) smarterEl.textContent = labels.smarter
@@ -437,11 +388,9 @@ export function createEffortControl(opts: {
     const index = live
     const previous = selected
     live = -1
-    /* Commit FIRST, then paint ONCE on the committed level. Painting before
-       the commit read the OLD `selected`: the name went back to the level
-       the gesture started from, and the apex attribute flipped off and on,
-       which hid the matrix and restarted its entrance sweep — a visible
-       double take on every release. */
+    /* Commit FIRST, then paint ONCE on the committed level: painting before the
+       commit read the OLD `selected`, flipping the apex off and on — which hid
+       the matrix and restarted its entrance sweep, a visible double take. */
     commit(index)
     place(positionFor(selected), true)
     paintApex(selected)
@@ -450,11 +399,10 @@ export function createEffortControl(opts: {
 
   /**
    * The physical release, wherever it lands: the pointer may be outside the
-   * card when the button comes up, and the picker closes the card there. It
-   * is heard on the document — capture phase, so a host handler's
-   * stopPropagation cannot steal it — and fires BEFORE the track's
-   * bubble-phase pointerup (settle), which is safe: the close it may cause
-   * only flips data-open, the commit below proceeds regardless.
+   * card, where the picker closes it. It is heard on the document in the
+   * capture phase, so a host handler's stopPropagation cannot steal it, and it
+   * fires BEFORE the track's bubble-phase pointerup (settle) — safe, since the
+   * close it may cause only flips data-open.
    */
   function onRelease(e: PointerEvent) {
     if (e.pointerId !== pointerId) return
@@ -476,10 +424,9 @@ export function createEffortControl(opts: {
     // A pending settle no longer owns the words: this gesture does.
     nameSwap.reset()
     const x = pointerTravel(e.clientX)
-    /* Glide to the press position. The drag state (and with it the
-       transition-off flag) only starts on the first MOVE — see the flags'
-       note: setting it here would suppress the very transition that makes
-       this read as travel. */
+    /* Glide to the press position; the drag state (and its transition-off flag)
+       starts only on the first MOVE — setting it here would suppress the very
+       transition that makes this read as travel. */
     pressed = true
     downX = e.clientX
     liveTravel = dampTravel(x)
@@ -491,11 +438,10 @@ export function createEffortControl(opts: {
   }
 
   /**
-   * The gesture's latest pointer position. pointermove fires faster than
-   * frames render; the event stores the position and ONE animation-frame
-   * callback applies it — reads the travel geometry first, writes after (one
-   * transform + the level name) — so the drag costs one layout flush per
-   * frame instead of one forced reflow per event.
+   * The gesture's latest pointer position. pointermove fires faster than frames
+   * render; the event stores the position and ONE animation-frame callback
+   * reads the geometry and then writes (one transform + the name), so the drag
+   * costs one layout flush per frame instead of one forced reflow per event.
    */
   let cancelPendingFrame: (() => void) | null = null
   let moveQueued = false
@@ -507,15 +453,14 @@ export function createEffortControl(opts: {
     if (!pressed) return
     // The pointer may run past either end or off the control with the button
     // down: the travel clamps to the track and the gesture goes on, so an end
-    // stop stays reachable — ending it at the control's edge left the reader
-    // unable to drag back off that stop.
+    // stop stays reachable.
     const x = pointerTravel(pendingX)
     const travel = dampTravel(x)
     const delta = travel - liveTravel
     if (Math.abs(delta) > 0.1) moveDirection = Math.sign(delta)
     liveTravel = travel
-    // Until the press has actually become a drag, the knob keeps the press
-    // glide's transition: a click's one-pixel move must not snap it.
+    // Until the press has become a drag, the knob keeps the press glide's
+    // transition: a click's one-pixel move must not snap it.
     place(travel, !dragging)
     live = nearest(x)
     paintValue()
@@ -565,14 +510,13 @@ export function createEffortControl(opts: {
   })
 
   /**
-   * Re-point the control at the model in force. The ladder is rebuilt only
-   * when the levels themselves change; the knob is only animated when the
-   * selected level moved on its own (the host echoing a selection back).
+   * Re-point the control at the model in force. The ladder is rebuilt only when
+   * the levels themselves change; the knob is animated only when the selected
+   * level moved on its own (the host echoing a selection back).
    *
-   * @param box - the track's reading from the pass's read phase (D40): the
-   *   card keeps its layout box while closed, so a read here, after the pass's
-   *   writes, would force a layout on every pass. Left out, the update reads
-   *   the layout itself.
+   * @param box - the track's reading from the pass's read phase (D40): the card
+   *   keeps its layout box while closed, so reading it after the pass's writes
+   *   would force a layout on every pass. Left out, the update reads it itself.
    */
   function update(box?: EffortTrackBox | null) {
     passBox = box ?? null
@@ -618,15 +562,14 @@ export function createEffortControl(opts: {
     el: root,
     update,
     measure: measureTrack,
-    // The picker's hover-close guard keys on the hold, from pointerdown
-    // until the release wherever it lands: a gesture that travels out of the
-    // card keeps it open, and the release outside closes it (onDragEnd).
+    // The picker's hover-close guard keys on the hold, from pointerdown until
+    // the release wherever it lands: a gesture out of the card keeps it open,
+    // and the release outside closes it (onDragEnd).
     isHeld() { return pressed },
     /**
-     * The control's own teardown. The listeners a hold put on the document,
-     * the frame a pending move waits on and the wait for the host's echo all
-     * outlive the card they serve, so the picker calls this when it drops the
-     * slider rather than letting the removal of the node drop them.
+     * The control's own teardown: the document listeners a hold left, the
+     * pending frame and the echo wait outlive the card, so the picker calls
+     * this rather than letting the node's removal drop them.
      */
     dispose() {
       dotMatrix.dispose()

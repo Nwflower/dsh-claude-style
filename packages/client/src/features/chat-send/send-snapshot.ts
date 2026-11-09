@@ -2,15 +2,7 @@ import { colorAlpha, colorParts } from '@dsh-claude-style/engine/chat-dom'
 import { COMPOSER_SCROLL_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { inPageBox } from '../../shared/page-zoom'
 
-/**
- * The send flight's capture, ported from dsh-chat-ux: everything taken off the
- * composer card before React clears the draft — its geometry, its looks, and a
- * whole clone of it.
- *
- * The flight hands the clone to the compositor; send-morph.ts builds it and
- * send-shape.ts holds the curve. Nothing here touches the page: it reads
- * layout the browser has already resolved, plus one cloneNode.
- */
+/** Capture geometry, styles and a clone before React clears the submitted draft. */
 /** Marks the stand-in while it is on the page. A handle for looking things up; no rule hangs off it. */
 export const CHAT_SEND_GHOST_ATTR = 'data-dsh-claude-send-ghost'
 /** Marks each link of the stand-in's imitation ancestor chain; send-flight.css takes their pseudo-elements away. */
@@ -20,57 +12,18 @@ export const CHAT_SEND_LINK_ATTR = 'data-dsh-claude-send-link'
 // card, its scroll area and the echo bubble are the host's own attributes,
 // read from the one contract table (packages/engine/src/chat-dom.ts).
 
-/**
- * How many ancestors the stand-in's imitation chain may carry.
- *
- * Past this the chain is dropped whole rather than cut short: the chain is
- * counted outwards from the card, so the outer links are what a rule like
- * `.hero .input` matches, and half a chain matches the wrong elements.
- *
- * Measured, not guessed: the composer card sits fifteen levels below body,
- * seven of them wordless `div`s and `[data-slot]` seats. 24 leaves room for
- * a few more containers while still refusing a pathological depth — at that
- * scale some plugin has wrapped the whole tree, and copying that chain would
- * drag its own layout in.
- */
+/** Drop an over-deep chain whole: truncating outer links would change descendant-selector matches. */
 export const CHAT_MAX_ANCESTOR_LINKS = 24
 
-/**
- * The ordinary properties the clone has to carry over from the card's
- * ancestors.
- *
- * font-size and line-height have to be in: the host sets the composer's type
- * on an ancestor selector, and a clone that leaves that chain drops straight
- * to body's 16px — measured, 26 of 37 compared elements disagreed on type
- * size, on every single flight.
- *
- * Writing them on the shell does not steal any type a clone sets for itself:
- * a rule that matches directly beats inheritance, so only the elements that
- * expect to inherit are caught, which is the point.
- */
+/** Copy inherited typography lost with the ancestor chain; directly matched clone rules still win. */
 export const CHAT_INHERITED_PROPERTIES = [
   'color', 'font-family', 'font-size', 'font-weight', 'font-style', 'font-stretch', 'font-feature-settings',
   'font-variation-settings', 'font-kerning', 'line-height', 'letter-spacing', 'word-spacing', 'text-rendering',
   '-webkit-font-smoothing', 'direction',
 ]
 
-/**
- * The marks scrubbed out of a clone: the ones the host and this skin use to
- * find a composer. The stand-in must not be found as one, and it must not be
- * focusable.
- *
- * The style hooks stay: attribute selectors match an exact name, so a rule
- * like `[data-composer-card]` either finds the attribute or does not. What
- * keeping them costs is measured — document.querySelector takes the first in
- * document order and the stand-in is always appended last, and the host's own
- * card lookups walk up with closest; the stand-in lives 400 ms and carries
- * `inert`, so nothing inside it can be focused or read out. What it buys is
- * that the host's and other plugins' rules written on those attributes still
- * match the clone. So the three style hooks — `data-composer-card`,
- * `data-composer-input`, `data-input-scroll` — are not in this list. `id` is,
- * because a second node with the same id breaks getElementById, label[for] and
- * in-page anchors for everyone.
- */
+/* Remove composer identity and focus hooks, but retain data-composer-* style hooks for host rules.
+   The inert stand-in is appended after the real card; duplicate ids would still break global lookups. */
 export const CHAT_IDENTITY_ATTRIBUTES = [
   'id', 'contenteditable', 'data-lexical-editor', 'data-dsh-claude-caret', 'tabindex', 'autofocus',
 ]
@@ -84,22 +37,7 @@ export function chatSendPixel(value: string) {
   return Number.isFinite(parsed) ? parsed : 0
 }
 
-/**
- * One colour painted the way the screen paints it: `color` composited over
- * `behind`, at full opacity.
- *
- * The stand-in's shell carries the bubble's own fill, and the host's user bubble
- * is often a translucent token over the canvas. Left translucent, the stand-in
- * is two paints at once: its own
- * fill composited again over the real bubble it fades across, so the part of the
- * row it covers comes out a shade apart from the part left outside it. Written
- * flat, it is the page's own colour wherever it stands, alone or on the row.
- *
- * The bubble's backdrop is the canvas: the chat flow paints no fill of its own.
- * @param color - the computed colour to flatten.
- * @param behind - what it is painted over; an unreadable backdrop leaves the colour as it is.
- * @returns an `rgb()` / `rgba()` string.
- */
+/** Flatten translucent bubble fill over the canvas so it does not composite twice during landing. */
 export function chatSendOpaque(color: string, behind: string) {
   const front = colorParts(color)
   if (front === null) return color
@@ -122,24 +60,7 @@ export function chatSendOpaque(color: string, behind: string) {
   return 'rgba(' + mix(0) + ', ' + mix(1) + ', ' + mix(2) + ', ' + Math.round(total * 1000) / 1000 + ')'
 }
 
-/**
- * The element inside the composer card that really paints the card's surface.
- *
- * The card element is not always the one that carries the hairline and the
- * shadow. This skin's card.css paints them on the draft area's scroll box and
- * leaves the card itself with no background at all, so a flight that read them
- * off the card would shrink an empty shadow while the clone's own surface
- * painted itself for the whole flight.
- *
- * The walk is shallow on purpose — the first descendant that paints a fill, in
- * breadth-first order — and it costs nothing on a card that paints itself,
- * which is the ordinary case.
- *
- * @param card - the composer card.
- * @param cardStyle - its computed style.
- * @returns the surface element and its child-index path from the card (empty
- *          when the card is the surface).
- */
+/** Find the first filled descendant because card.css may paint the scroll box instead of the card. */
 export function chatSendSurface(card: HTMLElement, cardStyle: CSSStyleDeclaration): { element: HTMLElement, path: number[] } {
   if (colorAlpha(cardStyle.backgroundColor) > 0) return { element: card, path: [] }
   const queue = Array.from(card.children)
@@ -159,11 +80,7 @@ export function chatSendSurface(card: HTMLElement, cardStyle: CSSStyleDeclaratio
   return { element: card, path: [] }
 }
 
-/**
- * The shadow the stand-in's halo draws: the surface's own box-shadow plus its
- * border as one more ring, so the hairline shrinks and fades with the shadow
- * (send-morph.ts's halo run) instead of staying on the clone.
- */
+/** Turn the border into a halo ring so hairline and shadow shrink together. */
 export function chatSendSurfaceShadow(style: CSSStyleDeclaration) {
   const parts: string[] = []
   const shadow = style.boxShadow
@@ -181,28 +98,12 @@ export function chatSendElementAt(root: Element, path: number[]) {
   return element instanceof HTMLElement ? element : null
 }
 
-/**
- * Pin declarations inline with `!important`.
- *
- * Two things inside the stand-in are matched by other people's rules: the
- * clone (which keeps the card's classes and data hooks on purpose) and the
- * imitation ancestor chain around it. Those rules may carry `!important` —
- * measured, a colour plugin on the same page uses it against
- * `[data-composer-card]` — and a plain inline style loses to that: one
- * centring rule is enough to fly the clone to the middle of the screen and
- * drop it back. Inline plus `!important` is the top of the style order (only
- * animations beat it), pinning the position and size to what was measured at
- * take-off.
- */
+/** Host and plugin !important rules still match retained hooks; inline !important keeps measured geometry. */
 export function chatSendPin(element: HTMLElement, declarations: [string, string][]) {
   for (const [name, value] of declarations) element.style.setProperty(name, value, 'important')
 }
 
-/**
- * Strip every identity mark out of a cloned tree: the stand-in must not be
- * found as a composer and must not take focus. Which marks and why the style
- * hooks stay: see CHAT_IDENTITY_ATTRIBUTES.
- */
+/** Remove identity and focus hooks listed in CHAT_IDENTITY_ATTRIBUTES. */
 export function chatSendScrub(root: Element) {
   const all = [root, ...root.querySelectorAll('*')]
   for (const element of all) {
@@ -211,34 +112,12 @@ export function chatSendScrub(root: Element) {
   for (const layer of root.querySelectorAll('[data-dsh-claude-caret-layer]')) layer.remove()
 }
 
-/**
- * Where the stand-in hangs, and what it inherits from.
- *
- * One place with two uses on purpose: snapshotComposer takes it as the
- * baseline for custom properties (what the stand-in inherits), startMorph as
- * the mount point. Writing `document.body` in both would leave the coupling
- * alive only in a comment — the day the mount point moves (into a portal
- * container, say) and the baseline is missed, the symptom is a few variables
- * quietly carrying the wrong value, which is nearly impossible to trace back
- * to a mount point.
- *
- * The mount point also has to be the document's last child: see startMorph.
- */
+/** The mount point and custom-property baseline must stay coupled; startMorph also requires last-child order. */
 export function chatSendGhostHost() {
   return document.body
 }
 
-/**
- * Take one reading of the composer card: geometry, looks, and the whole clone.
- *
- * Call this in the capture phase of a submission, while the draft is still
- * there. Everything read is already laid out and the clone is one
- * cloneNode, so the reader's Enter press does not wait on it.
- *
- * @param input - the draft's editable surface.
- * @param card - the composer card.
- * @returns the snapshot, or null when the card has no box or the draft area is not in the card.
- */
+/** Call during submission capture, while the laid-out draft still exists. */
 export function snapshotComposer(input: HTMLElement, card: HTMLElement) {
   // Every box here is in the page's own pixels — the space the stand-in's
   // styles and animations are read in — while the computed styles already are
@@ -304,22 +183,8 @@ export function snapshotComposer(input: HTMLElement, card: HTMLElement) {
     if (child !== scroll) collect(child, [index])
   })
 
-  // The inherited environment: custom properties are taken only where they
-  // differ from the mount point (the stand-in hangs there, so an equal value
-  // already reaches it).
-  //
-  // The baseline is the mount point, checked against all three cases:
-  //   a variable defined only on an ancestor in between (not on the mount
-  //     point) reads as an empty string there, the two differ, and it is
-  //     copied; without that the stand-in would not have the variable at all
-  //     and `var(--x)` would fall into its fallback while the real card has it.
-  //   the mount point and the card agree → not copied; the stand-in inherits
-  //     the same value.
-  //   an ancestor overrides the mount point's value and the card follows —
-  //     the two differ, and what is copied is the ancestor's, which is also
-  //     what the card reads right now, so the stand-in agrees with the card.
-  // The one edge is a variable defined only on the mount point: the stand-in
-  // inherits it anyway, and not copying is still right.
+  // Copy only custom properties whose card values differ from the mount point; equal or mount-only
+  // values already inherit, while intermediate-ancestor values must travel with the clone.
   const hostStyle = window.getComputedStyle(chatSendGhostHost())
   const context: [string, string][] = []
   for (let index = 0; index < cardStyle.length; index += 1) {

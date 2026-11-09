@@ -1,11 +1,10 @@
 /**
  * The HDSL launcher's account contract, as this half forwards it.
  *
- * HDSL publishes who the player is through `HDSL_`-prefixed variables (its
- * plugin guide lives in the launcher's own repository). The browser half cannot
- * read a process environment, and the player's avatar is a PNG that only exists
- * under the launcher's data directory, so this module reads the contract out of
- * the launch environment and the routes in routes.ts serve it.
+ * HDSL publishes who the player is through `HDSL_`-prefixed variables. The
+ * browser half cannot read a process environment, and the player's avatar is a
+ * PNG that only exists under the launcher's data directory, so the contract is
+ * read here and the routes in routes.ts serve it.
  */
 import type { DshContext } from '@dsh-claude-style/engine/node/dsh'
 
@@ -13,35 +12,16 @@ import type { DshContext } from '@dsh-claude-style/engine/node/dsh'
 const HDSL_CONTRACT = '1'
 /**
  * The context slot the harness's boot fills with this launch's environment
- * snapshot (`@deepseek-ai/dsh-launch-environment` defines the same key, and its
- * `launchEnvironmentOf(ctx)` reads exactly this slot before falling back).
+ * snapshot (`@deepseek-ai/dsh-launch-environment` defines the same key).
  */
 const DSH_LAUNCH_ENVIRONMENT_KEY = 'launchEnvironment'
 /**
- * The layers allowed to declare who the player is, in the launcher's own trust
- * order. A project directory's `.env` travels with a cloned repository, so it
- * has no standing to say who is signed in; the launcher's own two layers do.
+ * The layers allowed to declare who the player is, in the launcher's trust
+ * order: a project directory's `.env` travels with a cloned repository, so it
+ * has no standing to say who is signed in.
  */
 const HDSL_LAYERS = ['process', 'user-env']
 
-/**
- * The HDSL account contract of this launch, read once.
- *
- * The contract is fixed for the process lifetime, so the answer is memoized and
- * every request re-serves it. `skinFile` is the player's avatar path: it stays
- * inside this half and is never serialized to the browser.
- *
- * The snapshot is read through the slot the harness itself fills
- * (`ctx.launchEnvironment` — the first thing `launchEnvironmentOf()` reads),
- * rather than by importing `@deepseek-ai/dsh-launch-environment`: importing a
- * harness-provided package fails outright for a `link:`-installed plugin (the
- * same resolution problem `resolveSchemaFactory` documents), and a host that
- * fills no slot simply has no contract to read.
- *
- * @param ctx - host plugin context.
- * @returns `{ read() }`, whose promise resolves to the contract or to
- *          `{ contract: false }` when HDSL did not launch this instance.
- */
 /** What one HDSL launch reports: whether it launched this instance, and its account. */
 export interface HdslReading {
   contract: boolean
@@ -50,6 +30,22 @@ export interface HdslReading {
   [field: string]: unknown
 }
 
+/**
+ * Read this launch's HDSL account contract, once: the contract is fixed for the
+ * process lifetime, so the answer is memoized and every request re-serves it.
+ * `skinFile` is the player's avatar path, which stays inside this half and is
+ * never serialized to the browser.
+ *
+ * The snapshot comes through the slot the harness fills itself
+ * (`ctx.launchEnvironment`) rather than an import of
+ * `@deepseek-ai/dsh-launch-environment`: importing a harness-provided package
+ * fails outright for a `link:`-installed plugin, and a host that fills no slot
+ * simply has no contract to read.
+ *
+ * @param ctx - host plugin context.
+ * @returns `{ read() }`, whose promise resolves to the contract or to
+ *          `{ contract: false }` when HDSL did not launch this instance.
+ */
 export function createHdslAccount(ctx: DshContext) {
   let reading: Promise<HdslReading> | null = null
   const read = () => {

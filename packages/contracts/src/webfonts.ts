@@ -1,8 +1,4 @@
-/**
- * The optional webfonts both halves handle (D75): the faces the package does
- * not carry, the family each one is declared under, and the answer the route
- * that reports them sends.
- */
+/** Optional user-supplied webfont contract shared by both halves (D75). */
 
 /** One face the reader may supply: the stylesheet family's name and the file the drop point holds. */
 export interface OptionalWebfont {
@@ -11,11 +7,8 @@ export interface OptionalWebfont {
 }
 
 /**
- * The Anthropic faces. They are not in the npm package (they remain Anthropic's
- * property), so the stylesheet declares no `@font-face` for them: one for a file
- * that is not there is fetched on every load and answers 404. The browser half
- * declares only the ones the drop point holds, and a copy installed on the
- * system still resolves, because no `@font-face` shadows its name.
+ * Anthropic faces are not shipped. Declare only files present at the drop point;
+ * omitting `@font-face` avoids repeated 404s and lets system-installed faces resolve.
  */
 export const OPTIONAL_WEBFONTS: readonly OptionalWebfont[] = [
   { family: 'Anthropic Sans Web Text', file: 'AnthropicSansWebText.ttf' },

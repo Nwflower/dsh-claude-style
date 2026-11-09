@@ -5,36 +5,9 @@ import { REASONING_DISPLAY_STEPPED } from '../../constants'
 import { motionMs } from '../../shared/motion'
 import { EXPANDED_ATTRIBUTE, REASONING_TEXT_SELECTOR, ROW_PHASE_ATTRIBUTE, RUNNING_STATE, THINK_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
 
-/**
- * While the model reasons, its thinking row plays the reasoning back the way
- * transitions.dev's "Reasoning stream" does: the text steps up two lines at a
- * time on the snippet's own clock instead of pushing the conversation down line
- * by line, with a soft mask at each edge once it can step.
- *
- * What the snippet loops over a fixed transcript, this reads as live text: no
- * copy, no wrap, and the stepping stops at the newest line, so the reader never
- * loses the end of the reasoning. A model can write faster than two lines a
- * step, so one step rises by as many two-line steps as the text has grown past
- * the window since the last. The host keeps its row, its header and its own
- * collapsing: the window is the nearest ancestor of the host's rendered Markdown
- * that has a box of its own — one host version wraps it in a slot that generates
- * none — and what slides inside that is the Markdown itself, marked for the
- * stylesheet, since the slot between the two leaves it no child of the window.
- *
- * The window grows with the reasoning and stops at the height reasoning is
- * allowed to reach — the host's own cap on a process group's body, the tallest
- * the open row gets — so the text is never cut off to a height the row will not
- * keep: below the cap the window is exactly as tall as the text, and at the cap
- * it stays there and the text steps. That is also what makes the end of the
- * reasoning quiet: the window comes off a text box that already stands at its
- * own height. The mask belongs to the capped state alone, so a reasoning shorter
- * than the cap is never faded.
- *
- * The window's watch is the fold's own observer: a queued row is measured again
- * in the frame's read phase (D40), so the height follows the text as it streams,
- * with no second observer on the streaming subtree; the step's clock only moves
- * the text inside a window that has reached the cap.
- */
+/* Adapted from transitions.dev's "Reasoning stream" (MIT) for live text. The nearest boxed ancestor
+   clips because host slots may use display:contents. Reuse the fold observer and frame read/write
+   phases (D40); step only at the cap and never beyond the newest line. */
 
 /** On the reasoning's window while it stands: the stylesheet clips it and hangs the step on the text. */
 export const REASON_WINDOW_ATTR = 'data-dsh-claude-reason-window'
@@ -45,18 +18,10 @@ export const REASON_CAPPED_ATTR = 'data-dsh-claude-reason-capped'
 /** The window's height in pixels: the text's own height, held under the cap. */
 export const REASON_WINDOW_HEIGHT_PROPERTY = '--dsh-claude-reason-window-height'
 
-/**
- * What each of the snippet's lengths falls back to when the stylesheet's own
- * value cannot be read. `cap` mirrors the host's max-height on a process group's
- * body, which the stylesheet's --dsh-claude-reason-window-cap carries.
- */
+/** cap mirrors the host process body's max-height through the CSS token. */
 const FALLBACKS = { lines: 2, cap: 400 }
 
-/**
- * The wait between two steps, read off the token table (D9): the shipped
- * stylesheet is minified and writes a time in seconds, so a computed value read
- * as a number of milliseconds turns the wait into a one-millisecond loop.
- */
+/** motionMs handles the seconds unit emitted by the minified stylesheet (D9). */
 const HOLD_MS = motionMs('--dsh-claude-period-hold')
 
 /** A duration, a count or a length written in a CSS token. */
@@ -153,14 +118,7 @@ export function createReasoningStream() {
     state.text.style.removeProperty('transform')
   }
 
-  /**
-   * One wait of the window: the window takes the text's own height up to the cap,
-   * the text rises by whole steps once it stands at the cap — one, or as many as
-   * the text has grown past the window — never past the newest line, and the
-   * next wait is booked for when this one has landed.
-   * The wait is also where the text is re-measured, so a reasoning that has
-   * grown since the last step is met at its new height on this one.
-   */
+  /** Each tick remeasures growth and catches up by whole steps without passing the newest line. */
   function tick(row: Element, state: WindowState) {
     writeStep(row, state, readStep(row, state))
   }
@@ -232,13 +190,7 @@ export function createReasoningStream() {
     writeOffset(state, Math.min(state.offset, grow.reachable))
   }
 
-  /**
-   * Read what each queued row's phase asks for (the frame's read phase, D40):
-   * the text's box and its ancestors' display, what a row's text measures — its
-   * first wait's lengths for a row taking a new window, its height alone for one
-   * keeping the window it holds. Read after the other features' writes, these
-   * would force a layout of their own.
-   */
+  /** Batch layout reads before writes (D40). */
   function readRows() {
     cancelFrame = null
     queued = false

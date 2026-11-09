@@ -1,13 +1,4 @@
-/**
- * Read the feature manifests (packages/client/src/features/**\/<main>.manifest.ts, D72).
- *
- * A manifest is data only, so it is evaluated here in Node: esbuild bundles
- * every manifest into one CommonJS body and the body runs in a fresh vm
- * context. The build reads the result to order the features and their
- * stylesheets and to generate the browser half's registry; the smoke run
- * reads it for its coverage table. Every structural rule a manifest must
- * keep is checked here, so both readers see the same refusal.
- */
+/** read-manifests.mjs — load and validate feature manifests for build ordering and smoke coverage (D72). */
 import fs from 'node:fs'
 import path from 'node:path'
 import vm from 'node:vm'
@@ -42,11 +33,7 @@ function manifestFiles() {
   return found.sort()
 }
 
-/**
- * @returns the manifests in install order, each with `file` (the manifest),
- *     `main` (its main module) and `dir` (the feature directory's name), all
- *     relative to packages/client/src.
- */
+
 function readManifests() {
   const files = manifestFiles()
   const contents = files.map((file, index) => `export { default as m${index} } from ${JSON.stringify(`./${file}`)}`).join('\n')
@@ -168,10 +155,7 @@ function checkManifests(manifests) {
   }
 }
 
-/**
- * The smoke run's coverage table: each feature directory and the cases its
- * manifests name, in manifest order without repeats.
- */
+/** The smoke run's coverage table: each feature directory and the cases its manifests name, without repeats. */
 function featureCases(manifests) {
   const table = {}
   for (const manifest of manifests) {

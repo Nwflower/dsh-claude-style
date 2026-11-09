@@ -3,21 +3,13 @@ import { SKIN_STAMP_ATTR } from '../constants'
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
 
 /**
- * Who has this page instead of the theme (D74): a skin, or ds-bot's Bot
- * surface. Null leaves the page to the theme.
+ * Skin and ds-bot marks define page ownership (D74).
+ * Until ds-bot's browser registry arrives, its saved mode prevents a Bot page flashing this theme.
  *
- * The skin center stamps `html[data-dsh-skin]` while a skin is painting, and
- * injects it into the served document, so that answer holds from the first
- * frame. It does not stamp its attribute for this theme's own row: selecting
- * this theme means the page has no skin on it, which is what leaves the page
- * free for the theme to take. A wallpaper plugin is not an owner: it paints
- * behind the shell, and the theme shares the page with it.
+
  *
- * ds-bot paints its whole Bot surface over the shell and withdraws it for the
- * shell's own interface in its Agent mode; its shell group marks `<body>`
- * while it is painted. Its browser half runs after this theme's, so until its
- * registry is on `window` the mode it saved answers instead, and a page that
- * reopens on the Bot surface never shows the theme first.
+
+
  */
 export type PageOwner = 'skin' | 'ds-bot'
 

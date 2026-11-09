@@ -1,22 +1,7 @@
 #!/usr/bin/env node
 /**
- * worktree.mjs — create or take off a scratch worktree without touching the
- * tree it borrows from.
- *
- * A scratch worktree under `.debug/` or `.agents/worktrees/` borrows the main
- * tree's `node_modules` by way of a directory link, so the checkout it runs in
- * needs no install of its own. `add` creates the worktree at a commit and links
- * `node_modules` into it; `remove` unlinks that link first and then hands the
- * directory to git. `git worktree remove` deletes the worktree's files itself,
- * and on Windows it follows such a link: every file of the main tree's
- * `packages/` and `node_modules/` goes with it. Unlinking first keeps what is
- * deleted to the worktree's files and the links, and nothing a link points at.
- *
- * Only a worktree under `.debug/` or `.agents/worktrees/` is accepted, and only
- * a linked one: the main working tree is never a candidate.
- *
- * Usage: node scripts/worktree.mjs add <path> <ref>
- *        node scripts/worktree.mjs remove <path> [--dry-run]
+ * worktree.mjs — manage scratch worktrees with linked node_modules. Unlink
+ * before removal because Windows git would otherwise delete the link target.
  */
 import fs from 'node:fs'
 import path from 'node:path'

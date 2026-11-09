@@ -1,19 +1,5 @@
-/**
- * The words the model's own reasoning hands the waiting line (features/chat-wait,
- * D70): the clause the model says it is on — "I am checking the file is true" —
- * read off the tail of the newest reasoning block, carried whole and without the
- * inline markers the reasoning is written with.
- *
- * The shape is the whole rule: an auxiliary (`am`, `is`, `are`, their
- * contractions, `have been`), up to two words of the closed class that may stand
- * between it and its participle, and a participle. A negated clause, a plan the
- * model has not started, anything inside a quotation, and reasoning in another
- * language all hand the line nothing, and where a sentence ends is the page's
- * own sentence rules (`Intl.Segmenter`), so a dot inside a file name does not
- * cut a clause short. The direction and what it costs the reader are D70's.
- *
- * The reading is remembered for the text it read: a pass runs several times a
- * second, and a reasoning block that has not grown answers the same both times.
+/** Extract only ended English present/perfect progressive clauses; quotations and negation are excluded (D70).
+ * Intl.Segmenter supplies sentence boundaries, and identical input reuses the last scan.
  */
 
 /** How much of the reasoning's tail one scan reads, in characters. */
@@ -32,11 +18,7 @@ const CLAUSE_END = /[,;:\u2014\u2013)\uff0c\uff1b\uff1a\uff09]/
 const QUOTED = /「[^」]*」|『[^』]*』|“[^”]*”|"[^"]*"/g
 /** A whole word, which is what an auxiliary, a qualifier and a participle are read as. */
 const WORD = /[A-Za-z\u2019']+/g
-/**
- * The words that may stand between an auxiliary and its participle. The list is
- * the whole class: anything else there means the auxiliary heads something this
- * line has no words for.
- */
+/** Closed qualifier class; any other intervening word rejects the clause. */
 const QUALIFIERS = new Set(['not', 'now', 'currently', 'still', 'just', 'already', 'again', 'simply', 'only', 'also', 'really'])
 /** How many qualifiers one clause may carry. */
 const QUALIFIER_LIMIT = 2

@@ -1,26 +1,9 @@
 import type { RateOverride, RatePeriod, RateProfile, RateSchedule, RateState, RateWindow } from '@dsh-claude-style/contracts/peakrate'
 
 /**
- * Which rate is in force, judged against the clock.
- *
- * Every judgement is made from real instants: the wall clock is read in the
- * schedule's own zone through `Intl`, a wall-clock time is converted back to a
- * real instant before it is compared with now, and day arithmetic runs on the
- * zone's own calendar. That is what makes a daylight-saving boundary and a
- * window crossing midnight come out right rather than approximately right —
- * "wall-clock minutes plus 1440" is off by an hour across a transition and by
- * a day at a window's edge.
- *
- * Precedence, highest first: a dated promotional window, a public holiday
- * (off-peak in full), then the weekday filter and the peak windows. A window
- * crossing midnight belongs to the day it starts, so the small hours are
- * judged against the previous day's weekday and holiday.
- *
- * The judgement is local because the data source publishes only schedules; no
- * provider answers "is this peak now". A profile's zone is read without a guard
- * because the host half's parser already dropped any zone the platform cannot
- * resolve. `00:00–00:00` covers the whole day, which keeps an all-day provider's
- * badge. A peak flag in the host's model catalog would take this over.
+ * Judge the active rate from real instants in the schedule's zone. Precedence:
+ * campaign, public holiday, weekday, peak windows; windows crossing midnight
+ * belong to their start day. Zones are prevalidated by the host parser.
  */
 
 /** How many days ahead the switch search looks; a weekday cycle fits twice. */
@@ -148,23 +131,8 @@ function zoneOffsetMs(timeZone: string, at: Date): number {
 }
 
 /**
- * The real instant of one wall-clock time in a zone.
- *
- * The day is added on the zone's own calendar first and the offset is resolved
- * afterwards, so a 23- or 25-hour day cannot shift the answer by a day; one
- * correction step settles the offset the new instant actually has.
- *
- * A wall-clock time the zone skips (the hour a spring-forward transition jumps
- * over) has no instant of its own: the correction lands on either side of the
- * transition, and the answer is the transition itself, found by search. That is
- * what keeps a window edge written inside the skipped hour from being read as a
- * moment in the past and pushing the next switch a day out.
- *
- * @param timeZone - the schedule's zone.
- * @param baseDate - `YYYY-MM-DD` in that zone, the day the offset counts from.
- * @param dayOffset - whole days from `baseDate`.
- * @param minuteOfDay - minutes from that day's midnight.
- * @returns the instant in milliseconds, or NaN when the zone cannot be read.
+ * Resolve a wall-clock time in a zone on that zone's calendar, correcting once
+ * for its offset. A skipped spring-forward time resolves to the transition.
  */
 function instantOf(timeZone: string, baseDate: string, dayOffset: number, minuteOfDay: number): number {
   const date = addDays(baseDate, dayOffset)
@@ -193,11 +161,7 @@ function instantOf(timeZone: string, baseDate: string, dayOffset: number, minute
   return high
 }
 
-/**
- * The calendar day a holiday calendar reads at one instant, in its own zone
- * when it names one. The parser drops a zone the platform cannot resolve, so
- * the profile's own zone needs no guard here.
- */
+/** The holiday calendar's date in its own zone, or the profile's date as fallback. */
 function holidayDateAt(schedule: RateSchedule, at: Date, fallback: string): string {
   const zone = schedule.publicHolidayTimeZone
   if (zone === undefined || schedule.publicHolidayDates === undefined) return fallback
@@ -219,13 +183,7 @@ function covers(override: RateOverride, date: string, weekday: number, instant: 
   return override.days.length === 0 || override.days.includes(weekday)
 }
 
-/**
- * Whether a promotional window is in force.
- *
- * The leg after midnight belongs to the day the window started, so the
- * previous day's weekday and date range decide it — the same rule the regular
- * peak windows follow.
- */
+/** Judge a campaign, attributing its post-midnight leg to its start day. */
 function overrideInForce(override: RateOverride, moment: Moment): boolean {
   const previousDate = addDays(moment.date, -1)
   const previousWeekday = (moment.weekday + 6) % 7
@@ -260,12 +218,7 @@ function activeOverride(schedule: RateSchedule, moment: Moment): RateOverride | 
   return undefined
 }
 
-/**
- * Whether the regular cycle bills peak right now. A window crossing midnight
- * spills into the next day's small hours, and the previous day's holiday
- * suppresses that spill: a holiday evening's peak window must not make the
- * working day after it peak.
- */
+/** Judge peak now, including a crossing window's spill; a previous holiday suppresses it. */
 function isPeak(schedule: RateSchedule, spans: readonly Span[], moment: Moment, previousDayHoliday: boolean): boolean {
   const previousWeekday = (moment.weekday + 6) % 7
   if (!previousDayHoliday && schedule.peakDays.includes(previousWeekday)) {
@@ -314,14 +267,8 @@ interface Flip {
 }
 
 /**
- * When the state next changes, and into what.
- *
- * A window boundary is not a switch: two peak windows meeting at noon change
- * nothing. So candidates are every midnight, every window edge for the next
- * days (both of a crossing window's legs), and every instant a campaign states
- * as its bound — a campaign can open or close at a moment that is none of the
- * clock's own edges. Each candidate is judged with the same predicate as now,
- * and the first whose judgement differs is the switch.
+ * Find the next state change among midnights, both legs of each window edge and
+ * campaign bounds; adjacent windows of one state are not a switch.
  */
 function nextFlip(schedule: RateSchedule, spans: readonly Span[], now: Date, moment: Moment, current: Judgement): Flip | undefined {
   const points: number[] = []
@@ -329,9 +276,7 @@ function nextFlip(schedule: RateSchedule, spans: readonly Span[], now: Date, mom
   const edges = (list: readonly Span[], base: number) => {
     for (const span of list) {
       points.push(base + span.start)
-      // A crossing window's end is normalised above 1440, and `end % 1440` is
-      // the edge it has on the day the window starts; both are candidates,
-      // because which one is the real edge depends on the day being scanned.
+      // Both spellings of a crossing end are candidates for the scanned day.
       points.push(base + (span.end % MINUTES_PER_DAY))
       points.push(base + span.end)
     }
@@ -374,13 +319,7 @@ function nextFlip(schedule: RateSchedule, spans: readonly Span[], now: Date, mom
 /** The last judgement computed, per profile and minute: the search is the pricey part. */
 const judged = new Map<string, { minute: number, state: RateState }>()
 
-/**
- * The rate in force for one profile at one instant.
- *
- * @param profile - the matched profile.
- * @param now - the instant to judge.
- * @returns the state, its badge and the switch that follows it.
- */
+/** The state, badge and next switch for one profile at one instant. */
 export function currentRate(profile: RateProfile, now: Date): RateState {
   const minute = Math.floor(now.getTime() / 60000)
   const cached = judged.get(profile.id)

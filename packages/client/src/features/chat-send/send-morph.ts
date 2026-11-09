@@ -12,33 +12,9 @@ interface TextInsets {
   lineHeight: number
 }
 
-/**
- * The send flight's morph: one composer card continuously growing into one
- * bubble, the whole path worked out at take-off and handed to the compositor.
- *
- * What the reader sees: on submission the composer card rises as it is — its
- * fill, corner, hairline and shadow, its toolbar, the words in the draft — and
- * sheds what is extra as it travels (the toolbar's two groups shrink and fade
- * into their nearest corners, the hairline and shadow shrink with the shape and
- * fade), narrows into a bubble, its words re-flowing into the narrowing shape a
- * line at a time, and lands exactly on the real bubble. The real composer stays
- * where it was, cleared, and the stand-in leaves it.
- *
- * Why a stand-in at all: the host's echo bubble lives about 159 ms, and the
- * real row takes over a second to arrive. An animation hung on either node is
- * dead on arrival — on the echo it loses its node midway, and waiting for the
- * real row leaves the reader a second of nothing.
- */
-/**
- * Work out the shape's whole timeline: what the outer frame, the padding, the
- * line height and the width available to the words are at each sample.
- */
+/** Precompute one compositor timeline because the host replaces the echo before the real row arrives. */
 export function chatSendSamples(start: DOMRect, end: DOMRect, from: TextInsets, to: TextInsets, W0: number, H0: number, W1: number, H1: number, R0: number, R1: number, dx: number) {
-  // The hard ceiling on the right edge: the destination bubble's right side.
-  // The curve already keeps the edge inside it (see CHAT_ACROSS_OMEGA); this
-  // clamp is for accidents like the shape falling behind the displacement
-  // while the main thread stalls, and all it costs then is a missing edge for
-  // the first few frames.
+  // Clamp the right edge to the destination if shape and displacement ever disagree.
   const reach = end.right - start.left
   const samples: ShapeSample[] = []
   for (let step = 0; step <= CHAT_SHAPE_SAMPLES; step += 1) {
@@ -67,19 +43,7 @@ export function chatSendSamples(start: DOMRect, end: DOMRect, from: TextInsets, 
   return samples
 }
 
-/**
- * Start one morph: hang the stand-in on the page and hand every animation to
- * the compositor.
- * @param snapshot - the composer card taken at take-off.
- * @param bubble - the destination bubble (in layout already, and hidden).
- * @param end - the bubble's viewport rect.
- * @param capped - the fold holds this message under a cap (feature chat-fold): its
- *     words are its own from the first frame and every step stands on the line from the
- *     composer's own box to the row's, so the reader watches the folded message arrive.
- * @returns the morph, or null when the bubble has no box. `shell` is the drawn
- *          shape itself, which send-flight.ts measures to know the stand-in has
- *          arrived before it shows the real row.
- */
+/** shell is the visible shape measured by send-flight's landing gate; capped messages use bubble text layout immediately. */
 export function startMorph(snapshot: ComposerSnapshot, bubble: HTMLElement, end: DOMRect, capped = false) {
   if (end.width === 0 || end.height === 0) return null
   const start = snapshot.box
@@ -87,11 +51,7 @@ export function startMorph(snapshot: ComposerSnapshot, bubble: HTMLElement, end:
   const W0 = start.width
   const H0 = start.height
   const W1 = end.width
-  // The row's height as it stands, not as it stood when the echo was noticed: the
-  // host grows a new row into place, so the box read a frame earlier can be well
-  // short of the one the stand-in lands on. A stand-in shorter than its row
-  // fades across part of it and leaves
-  // a stripe where the two paints meet (send-shape.ts's height floor).
+  // Reread the growing row so the stand-in covers its full final height.
   const H1 = Math.max(end.height, inPagePixels(bubble.getBoundingClientRect().height))
   const R0 = snapshot.radius
   const R1 = chatSendPixel(style.borderTopLeftRadius)
@@ -120,11 +80,7 @@ export function startMorph(snapshot: ComposerSnapshot, bubble: HTMLElement, end:
   wrapper.style.top = start.top + 'px'
   const mover = document.createElement('div')
   mover.style.cssText = 'position:absolute;left:0;top:0;width:0;height:0;will-change:transform'
-  // The halo hangs where the card's surface is, not where the frame is: the
-  // surface is what carries the hairline and the shadow (send-snapshot.ts's
-  // chatSendSurface), and on a card whose surface sits inside the frame the
-  // shadow would otherwise be drawn around the toolbar row too, which paints
-  // nothing.
+  // Place the halo on the actual painted surface, which may sit inside the card frame.
   const surface = snapshot.surface
   const halo = document.createElement('div')
   halo.style.cssText = 'position:absolute;transform-origin:0 0;background:transparent;will-change:transform,opacity'
@@ -138,14 +94,8 @@ export function startMorph(snapshot: ComposerSnapshot, bubble: HTMLElement, end:
   shell.style.cssText = 'position:absolute;left:0;top:0;overflow:hidden;transform-origin:0 0;will-change:transform'
   shell.style.width = boxWidth + 'px'
   shell.style.height = boxHeight + 'px'
-  // The shape carries the destination bubble's fill from the first frame, and it
-  // carries it on the shell itself — the one element that is the visible shape at
-  // every step. A layer inside the scaler has to be grown out to meet the shape
-  // (the fills' run this replaced), and until it arrives the shape shows the page
-  // through it, which reads as the bubble turning pale and then blue. Nothing is
-  // animated here: the plate is one declaration, so no clock can leave it behind.
-  // Written flat — see chatSendOpaque: a translucent token would composite again
-  // over the row this stand-in fades across.
+  // Keep an opaque destination fill on the visible shell from the first frame; an animated inner
+  // fill could lag the shape and translucent fill would composite twice during landing.
   shell.style.backgroundColor = chatSendOpaque(style.backgroundColor, window.getComputedStyle(chatSendGhostHost()).backgroundColor)
   // The shape carries the destination's own edge as well: a bubble the fold holds
   // softens its bottom with a mask, and the stand-in is that bubble until it lands. A
@@ -153,13 +103,8 @@ export function startMorph(snapshot: ComposerSnapshot, bubble: HTMLElement, end:
   shell.style.setProperty('mask-image', style.maskImage)
   shell.style.setProperty('-webkit-mask-image', style.maskImage)
   for (const [name, value] of snapshot.context) shell.style.setProperty(name, value)
-  // The shell does two things only: it scales (the shape) and it clips
-  // (`overflow: hidden`). The `scaler` inside takes the reciprocal of every
-  // step — as much as the shell shrinks, the content grows — so the content's
-  // visual size and position do not move by a pixel and only the clipping
-  // frame changes. Two layers and a displacement are all pure `transform`, on
-  // one timeline and one compositor: when the host holds the main thread they
-  // stall in the same place.
+  // Shell scales and clips; scaler applies the reciprocal so content stays visually unchanged.
+  // Both share the displacement's compositor timeline and therefore stall together.
   const scaler = document.createElement('div')
   scaler.style.cssText = 'position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform'
   scaler.style.width = boxWidth + 'px'
@@ -169,25 +114,12 @@ export function startMorph(snapshot: ComposerSnapshot, bubble: HTMLElement, end:
   // machine shows a square box first. The radius compensation is below.
   shell.style.borderRadius = chatSendCornerRadius(R0, W0 / boxWidth, H0 / boxHeight)
   shell.appendChild(scaler)
-  // The clone has left the card's parent chain, so descendant selectors match
-  // nothing on it, and the chain is put back around it — each link
-  // `display: contents`, so it makes no box, takes no part in layout and is no
-  // containing block (the clone still positions against the shell), while
-  // still taking part in selector matching, which is the whole point. The
-  // chain sits inside the shell and outside the clone: those selectors match
-  // elements inside the clone and only need the chain above it, whereas
-  // wrapping it outside the mover would cover the halo and the shell, which
-  // are the stand-in's own decoration rather than the card's descendants. With
-  // no chain (ancestors is null) the clone hangs straight on the shell.
+  // Recreate ancestor selector matching with display:contents links around the clone only.
+  // These links create no boxes or containing blocks; null ancestors leave the clone on the shell.
   let cloneHost: HTMLElement = scaler
   for (const mark of snapshot.ancestors ?? []) {
     const link = document.createElement(mark.tag)
-    // `!important` here is just as necessary as on the clone: a link carries
-    // an ancestor's class, and a rule at that level may set `display`
-    // (measured: another plugin on the page uses `!important`). Once it grows
-    // a box it is not merely an extra level — it can become the clone's
-    // containing block, and the clone's `left: 0; top: 0` would be measured
-    // against it, moving the whole thing.
+    // Ancestor-class rules may be !important; a boxed link would become the clone's containing block.
     link.style.setProperty('display', 'contents', 'important')
     link.setAttribute('aria-hidden', 'true')
     // `display: contents` takes away the link's own box but not its
@@ -234,22 +166,13 @@ export function startMorph(snapshot: ComposerSnapshot, bubble: HTMLElement, end:
     animations.push(animation)
     return animation
   }
-  // Sampling only inside [windowFrom, windowUntil], with one frame pinned at
-  // each end: past the end of the shape those properties stop changing, and a
-  // text layer is only visible inside its own window — keyframes outside it
-  // would just make the take-off frame parse a few hundred more (measured:
-  // building the animations was half of building the stand-in).
+  // Sample only the active window and pin both ends; keyframes outside it add setup cost only.
   const between = (windowFrom: number, windowUntil: number, frame: (sample: ShapeSample) => Keyframe, stride?: number) => {
     const step = stride ?? 1
     const inside = samples.filter(sample => sample.u >= windowFrom && sample.u <= windowUntil)
     const frames: Keyframe[] = []
     inside.forEach((sample, index) => {
-      // `stride` is only for the stretches that take no part in the geometric
-      // cancellation (corner, fill, halo, toolbar): their curves are gentle
-      // enough to skip every other sample, and the keyframes saved are real
-      // animation-building time. The shape and the content must stay on the
-      // same samples, or the two layers stop being reciprocals and a gap shows
-      // in the middle.
+      // Shape and content require identical samples to remain reciprocal; decorative runs may stride.
       if (index % step !== 0) return
       frames.push({ ...frame(sample), offset: sample.u })
     })
@@ -266,12 +189,7 @@ export function startMorph(snapshot: ComposerSnapshot, bubble: HTMLElement, end:
     return frames
   }
 
-  // The displacement goes to the compositor as one `transform` keyframe run.
-  // It shares the shape's timeline (one duration, one set of offsets), so
-  // "they travel together and stall together" is the timeline's guarantee
-  // rather than a matter of timing. The left edge goes from the card's to the
-  // bubble's and the right edge follows from the width; both edges are
-  // monotone.
+  // Share duration and offsets with shape so displacement and width stall together.
   const travel = run(mover, samples.map(sample => ({
     offset: sample.u,
     transform: 'translate(' + dx * sample.m + 'px, '

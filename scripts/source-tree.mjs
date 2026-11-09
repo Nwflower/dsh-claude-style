@@ -1,22 +1,6 @@
 /**
- * source-tree.mjs — the browser half's TypeScript read on its syntax tree, for
- * the build's refusals that are about what the code does (D9).
- *
- * TypeScript's own program over tsconfig.json answers through types: a name
- * handed over as a constant, a union or a parameter reaches a check as the
- * literal it is, and a comment is no code at all.
- *
- *   attributes  every attribute the browser half writes: the name given to
- *               `setAttribute` / `toggleAttribute`, followed back through the
- *               parameters of the helpers that hand it on, and the keys of
- *               the props a React element is created with
- *   easings     the curves the `easing` option of a keyframe or an animation names
- *   stacking    the stacking levels an inline style writes
- *   motion      the token names the code asks shared/motion.ts for
- *   strings     every string literal, for "does any module name this token"
- *
- * The program comes from TypeScript 7's API under `typescript/unstable/sync`,
- * which package.json pins to one exact version.
+ * source-tree.mjs — collect literal DOM, motion and stacking writes through
+ * TypeScript's type-aware syntax tree for build checks (D9).
  */
 import path from 'node:path'
 import postcss from 'postcss'
@@ -37,16 +21,7 @@ const STACKING_PROPERTIES = new Set(['zIndex', 'z-index'])
 
 const slashes = (file) => file.replaceAll('\\', '/')
 
-/**
- * Read the browser half once.
- *
- * @param root - the repository root, where tsconfig.json is.
- * @param srcDirs - the directories the browser half is written in (packages/client/src
- *   and the engine beside it); tests and declaration files are left out.
- * @returns `{ attributes, easings, stacking, motion, strings }`: the first four
- *   map each value to where it is first written; a value the build cannot read
- *   as a literal is a refusal (see follow).
- */
+/** Always close the TypeScript API after collecting build inputs. */
 export function readSourceTree(root, srcDirs) {
   const api = new API({ cwd: root })
   const dirs = (Array.isArray(srcDirs) ? srcDirs : [srcDirs]).map(slashes)

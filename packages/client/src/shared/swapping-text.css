@@ -1,17 +1,6 @@
 /* ---------- A line of words that swaps in place ---------- */
-/* transitions.dev's "Text states swap" (MIT), composed the way its "Thinking
-   states" recipe does it: the outgoing copy leaves upward through a blur while
-   the incoming copy rises from below, both in the box at once, and the outgoing
-   copy is taken down once the incoming one has settled (shared/swapping-text.ts).
-
-   The box's width and height belong to the hidden sizer, which is the recipe's
-   own arrangement: the copies are out of the flow, so a box holding only them
-   would read as empty for the length of the swap and throw every neighbour to
-   the left edge and back, and the entering copy rising from below would make
-   the box taller while it is still off its mark. The sizer carries the widest
-   of the words a swap puts in the box while it runs and comes down onto the
-   words standing once it settles (shared/swapping-text.ts), so the clock beside
-   the line sits right after them at rest. */
+/* Absolutely positioned copies rely on the hidden sizer for stable width and height during swaps.
+   The sizer holds every in-flight wording, then returns to the settled wording (shared/swapping-text.ts). */
 
 /* The words are the caller's: they can be a clause the model itself wrote,
    longer than any state word and longer than the box may take. The box clips

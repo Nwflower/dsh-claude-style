@@ -1,9 +1,7 @@
 /**
- * Who may move the conversation (D40, D85): writes and eases are ranked by
- * source, the reader's own wheel, key or scrollbar drag holds the conversation
- * against every following source until they come back to its end, the hold is
- * marked on the container for the stylesheet, and reduced motion writes an
- * ease's destination at once.
+ * Who may move the conversation (D40, D85): writes and eases are ranked by source,
+ * and the reader's own wheel, key or scrollbar drag holds the conversation against
+ * every following source until they come back to its end, marked on the container.
  *
  * @capability scroll-ownership
  * @features engine

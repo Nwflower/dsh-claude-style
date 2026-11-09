@@ -35,32 +35,9 @@ export interface SearchSection {
 }
 
 /**
- * What the search palette lists, read from the host's own client services
- * and turned into rows: `{ kind, id, title, detail?, snippet?,
- * snippetMatch?, label?, keys?, icon?, image?, run }` — `snippetMatch` is
- * the `[start, end)` of the query within the excerpt, and `label` is the
- * second key a query matches (a path, a package name, a description,
- * aliases). Every row's `run` is
- * the host's own navigation for that thing — nothing here re-implements
- * what a host surface already does.
- *
- * - Sessions: the session list (titles, times) minus the archived set,
- *   subagent children and blank placeholders; a typed query also asks the
- *   host half's message-content search (packages/host/src/search.ts). Opening goes
- *   through `uiWorkspace.openSession`.
- * - Projects: the workspace list; picking one starts a session in it
- *   (`uiWorkspace.startSession`), the same as the host's group ＋.
- * - Plugins: the plugin manager's bundles; picking one opens its page
- *   (`pluginNavigation.openBundle`).
- * - Skills: the current session's skill catalog (`skills/list` answers per
- *   session, so there is none before a session is open); picking one puts
- *   `/name ` at the head of that session's draft.
- * - Shortcuts: the shortcut catalog; picking one opens the host's shortcut
- *   reference filtered to it (commands have no public way to run).
- * - Actions: new session, settings, plugins and the shortcut reference.
- * @param reveal - lands the conversation on one message's turn after a content
- *     hit is picked; the palette owns the waiting, the navigator the jump
- * @returns the source table the palette reads.
+ * Build palette rows from host services for sessions, projects, plugins,
+ * skills, shortcuts and actions. Each row's `run` delegates to host navigation;
+ * `reveal` jumps a picked content hit to its turn.
  */
 export function createSearchSources(ctx: HostContext, reveal: (sessionId: string, seq: number) => void) {
   /** Rows per section when the palette shows every kind at once, and the cap for one kind. */

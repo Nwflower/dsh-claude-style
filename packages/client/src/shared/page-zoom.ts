@@ -1,18 +1,7 @@
 import { PAGE_ZOOM_ATTR, PAGE_ZOOM_MAX, PAGE_ZOOM_MIN, PAGE_ZOOM_VAR } from '../constants'
 
-/**
- * The page's own scale (settings › General): the factor the stylesheet draws
- * the page at, 1 while the page follows the system.
- *
- * The stylesheet's `zoom` scales the space a `left`, a `top` or a length
- * written into the page is read in, while `getBoundingClientRect` keeps
- * answering in the viewport's own pixels. A feature that turns a measured box
- * into a position or a size therefore divides by this factor, and one that
- * hands the page a number to compare against the viewport converts the
- * window's size the other way. The factor is one mark on the body — this
- * attribute, which the scripts read — and the sheet's `zoom` reads it through
- * the custom property `projectPageZoomFactor` writes from it. A page handed to
- * another skin carries neither, so it reads 1 again.
+/** CSS `zoom` scales written geometry while DOMRects remain in viewport pixels; conversions must use this factor.
+ * The body attribute is the source and the custom property drives the stylesheet; an unowned page reads 1.
  */
 export function pageZoomFactor() {
   const stored = document.body.getAttribute(PAGE_ZOOM_ATTR)
@@ -21,14 +10,7 @@ export function pageZoomFactor() {
   return Number.isFinite(factor) && factor > 0 ? factor : 1
 }
 
-/**
- * Project the attribute into the property the sheet's one `zoom` rule reads.
- *
- * The mirror calls this after writing the attribute (core/prefs.ts), and the
- * page's scale watcher calls it whenever the attribute moves (shared/page-scale.ts):
- * the mark is a page surface, and whatever sets it — a stylesheet, a script,
- * another session — must draw at the factor it names.
- */
+/** Call after every attribute write so the stylesheet cannot retain a stale factor. */
 export function projectPageZoomFactor() {
   const factor = pageZoomFactor()
   if (factor === 1) document.body.style.removeProperty(PAGE_ZOOM_VAR)

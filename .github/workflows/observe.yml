@@ -1,41 +1,21 @@
 name: Observe
 
-# A push to master is judged in `.github/workflows/ci.yml` by the checks, the
-# build, the spec lane and the part of the smoke and the behaviour lane its
-# change reaches (D87). A push held inside feature directories walks only those
-# directories there, so what it did to the rest of the page is observed here, on
-# the same push, through the smoke's quick tier and every behaviour spec, without
-# joining the branch rule. A push whose change reached the shared layer already
-# walked those two in CI's own verdict, and this workflow leaves it alone.
-# Nothing about a pull request, a merge-queue entry or the release matrix
-# changes: this workflow answers a push or a manual run, it is not the
-# `required` check, and the whole matrix still runs before a version is cut.
+# Observe feature-only master pushes with the full quick smoke and all
+# behaviour specs, outside the branch rule; CI already covers shared-layer
+# pushes (D87).
 #
-# `scripts/ci-scope.mjs` answers the three questions the job needs, the way it
-# does for CI: `code` is false for a push holding only documents, locale files
-# or this workflow, so the page lane is skipped; `selection` is empty for a push
-# CI already walked whole; `tree` keys the build cache, so a run over a tree
-# another lane already built restores its slow pure steps
-# (`scripts/build-cache.mjs`). A manual run judges the whole tree whatever its
-# diff against master would say.
+# Manual runs cover the whole tree. `scripts/ci-scope.mjs` supplies the
+# code/selection gate and tree-keyed build cache.
 #
-# The build, the smoke and the behaviour lane are separate steps: the smoke and
-# the behaviour lane each wait on the build through `!cancelled()`, so both run
-# once the build succeeded, neither waits on the other, and a build that failed
-# or was cancelled starts neither. `scripts/observe-summary.mjs` then reads the
-# behaviour lane's report into the job summary, one annotation per failing test,
-# and names the step log for a failure that left no report; the step's own
-# outcome keeps the job red, so the summary adds a reading rather than a verdict.
+# Build must succeed before smoke or behaviour; `!cancelled()` lets them run
+# independently. The summary annotates failures without changing the verdict.
 #
-# One concurrency group per event and commit, and nothing is cancelled: every
-# push keeps its own verdict, because a newer push is no evidence about the tree
-# an older one reported on, and a push and a manual run on one commit are
-# different events that both finish.
+# Concurrency is per event and commit, with no cancellation so every push keeps
+# its own result.
 on:
   push:
     branches: [master]
-    # The daily data refresh writes only these files; its own workflow validates
-    # them, and no page reads them.
+    # Data-only commits are validated by Data and read by no page.
     paths-ignore:
       - 'packages/host/data/**'
   workflow_dispatch:
@@ -72,9 +52,8 @@ jobs:
 
   observe:
     needs: changed
-    # A manual run is asked for on purpose and observes even when its commit
-    # differs from master in nothing the page reads; a push observes only when
-    # its diff holds code and CI walked a feature selection.
+    # Manual runs always observe; pushes observe only code changes for which CI
+    # selected specific features.
     if: github.event_name == 'workflow_dispatch' || (needs.changed.outputs.code == 'true' && needs.changed.outputs.selection != '')
     runs-on: ubuntu-latest
     timeout-minutes: 40
@@ -94,10 +73,8 @@ jobs:
       - id: build
         run: npm run build
         timeout-minutes: 15
-      # The whole quick tier: the observation answers what master looks like, and
-      # a selection would only repeat what the push's own scope already judged.
-      # `!cancelled()` keeps GitHub's implicit success() out of the condition: a
-      # red smoke must not take the behaviour lane down with it.
+      # Run the full quick tier, not CI's feature selection; `!cancelled()`
+      # prevents a failed smoke from skipping behaviour.
       - id: smoke
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: node packages/testing/smoke.mjs --quick
@@ -106,7 +83,6 @@ jobs:
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: npm run behaviour
         timeout-minutes: 15
-      # The report and every failing test's trace, screenshot and markup.
       - uses: actions/upload-artifact@v7
         if: always()
         with:

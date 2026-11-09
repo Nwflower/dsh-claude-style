@@ -1,18 +1,6 @@
 /**
- * The host's timing as one table (D3): the orders the skin depends on, what
- * breaks when one stops holding, and the check that holds each of them.
- *
- * The DOM contract (dom.ts, table.ts) says what the host's marks mean; this file
- * says *when* they happen — inside which callback, in which order relative to
- * the skin's own work. These are the assumptions a host upgrade breaks silently:
- * a selector that still matches but fires a frame later leaves the reader with a
- * jitter no smoke case notices.
- *
- * The checks are named rather than described: a scenario of the end-to-end lane
- * (packages/testing/e2e.cjs) or a unit test beside its module. The build refuses an entry
- * that names neither, and the lane refuses a scenario name outside
- * E2E_SCENARIOS, so an assumption cannot enter this table without something that
- * would notice it changing.
+ * Host callback ordering the skin depends on (D3), with the check guarding each assumption.
+ * Every entry must name an end-to-end scenario or spec (D87).
  */
 
 /** The end-to-end lane's scenarios; the lane checks its own names against these. */

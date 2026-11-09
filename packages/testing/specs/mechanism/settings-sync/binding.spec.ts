@@ -3,11 +3,7 @@
  * (D75): a field this page is writing keeps the reader's value while the host
  * re-publishes the document mid-write, a refused write lands back on the stored
  * value, and a change made elsewhere is adopted once nothing of ours is in flight.
- *
- * The host's form stands in at the boundary the binding reads: one namespace,
- * writes that settle only when the spec says so, and a document re-published
- * while a write is still crossing — what the real host does when a settings
- * write restarts neighbouring plugin fibers.
+ * The host's form writes only when the spec settles it.
  *
  * @capability settings-sync
  * @features engine, settings

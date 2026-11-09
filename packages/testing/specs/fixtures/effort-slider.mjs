@@ -1,9 +1,8 @@
 /**
  * The effort slider's geometry after its card opens: the track's box, the
- * knob's box and the centre line they share. `stops` is the stand-in ladder's
- * length, so `segment` is the travel between two neighbouring stops.
+ * knob's box, the centre line they share, and `segment`, the travel between two
+ * neighbouring stops.
  *
- * @param t - the behaviour test's page and surface readers.
  * @param stops - how many rungs the ladder holds.
  */
 async function openSlider(t, stops) {

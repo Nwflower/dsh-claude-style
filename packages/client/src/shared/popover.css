@@ -1,22 +1,7 @@
 /* ---------- Popover card: the skin's own floating cards ---------- */
-/* Every card the skin builds (permission, model picker, effort, account,
-   session stats, quick providers) wears this shell: one fill, hairline, 12px
-   radius, shadow and 6px inset, closed until data-open="true" and growing out
-   of its trigger as it opens. The edge stays the card's own border — the box the
-   placement reads and the opening animation scales keeps the paint path it has
-   always had, where a stroke moved into the shadow is rasterized inside that
-   scaled layer. Each card's own stylesheet adds only what differs — its
-   placement, its width limits, the corner it grows from — and comes later in the
-   cascade, so it wins where the two overlap.
-
-   The motion is transitions.dev's "Menu dropdown" (MIT), written as a
-   transition on `data-open`: the card grows from --dsh-claude-scale-dropdown
-   about its own transform-origin and closes faster than it opens, dipping only
-   to --dsh-claude-scale-dropdown-exit while it fades. The dip is `transform`;
-   the rest of the way back to the opening scale is the separate `scale`
-   property, taken in one step once the fade has ended, so every opening grows
-   the full distance without a closing state of its own. A menu the host MOUNTS
-   instead plays the shared dsh-claude-dropdown-in entrance (shared/motion.css, D9). */
+/* Shared card paint; feature sheets add placement and sizing later in the cascade (docs/STYLE.md).
+   Closing splits the dip (`transform`) from the delayed `scale` reset so the next opening starts fully shrunk.
+   Host-mounted menus use dsh-claude-dropdown-in instead (D9). */
 body[data-dsh-claude-style] .dsh-claude-popover-card {
   background: var(--dsw-alias-bg-overlay, #ffffff);
   border: 1px solid var(--dsw-alias-border-l1, #e9e9e9);

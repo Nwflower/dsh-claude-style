@@ -1,13 +1,5 @@
 #!/usr/bin/env node
-/**
- * temporary.mjs — manage session scratch files without a work order.
- *
- * new prints a scratch directory; path refreshes its activity and ownership.
- * run passes DSH_TMP_DIR to a command, removes its directory on success and
- * keeps failure evidence. gc previews expired directories; --yes removes them.
- *
- * Usage: node scripts/temporary.mjs <new|path|run|list|close|gc|check|help>
- */
+/** temporary.mjs — manage owned scratch directories, preserving failure evidence and collecting expired sessions. */
 import path from 'node:path'
 import { spawn } from 'node:child_process'
 import { parseArgs } from 'node:util'

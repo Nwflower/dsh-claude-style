@@ -3,16 +3,13 @@
  * `usage` route answers with.
  *
  * The merge keeps the ids behind each day, because the dashboard unions session
- * ids over an arbitrary range window instead of summing per-day counts (a session
- * spanning two days is one session). The payload's `hours` arrays are the one
- * figure the fold alone can supply; the ledger has no hour dimension.
+ * ids over a range window instead of summing per-day counts: a session spanning
+ * two days is one session. The payload's `hours` arrays are the one figure the
+ * fold alone can supply.
  *
- * The cost meter's ledger and our own fold are two accounts of the same days, so
- * they combine by date and never by addition. Each day keeps the account that
- * recorded more of it: the ledger can hold only part of a day, and can leave out
- * settlements it did not bill, while the fold can lack the sessions whose logs
- * are gone. The day's sessions come from both accounts, and the fold's hour
- * histogram fills the one column the ledger has no dimension for.
+ * The ledger and our own fold are two accounts of the same days, so they combine
+ * by date and never by addition: each day keeps the account that recorded more of
+ * it, and the day's sessions come from both.
  */
 import { BUCKET_KEYS, addBuckets, emptyBuckets } from './usage-ledger.js'
 import type { Buckets, DayBuckets } from './usage-ledger.js'
@@ -162,21 +159,19 @@ export interface LedgerMerge {
 /**
  * Combine the cost meter's ledger with our own fold by date.
  *
- * Both accounts describe the same settlements, so a day is never their sum: it
- * is the fuller account of that day. The ledger can hold only part of a day — a
- * history reset or a cleared file starts it mid-day — and can leave out
- * settlements it did not bill, while the fold sees every stored log and can be
- * short of the sessions whose logs are gone, which the ledger still holds. A day
- * therefore keeps whichever account recorded more tokens on it, and takes its
- * session ids from both. The model split travels with the account whose tokens
- * the day keeps; the hour histogram is always the fold's, the one dimension the
- * ledger has no column for.
+ * Both describe the same settlements, so a day is never their sum: the ledger can
+ * hold only part of a day and can leave out settlements it did not bill, while
+ * the fold sees every stored log and can be short of the sessions whose logs are
+ * gone, which the ledger still holds. A day therefore keeps whichever account
+ * recorded more tokens on it, takes its session ids from both, and keeps the
+ * model split of the account whose tokens it holds. The hour histogram is always
+ * the fold's.
  *
  * @param ledgerDays - the ledger's day map, or null when there is no ledger at
- *     all: a null is what tells the caller the answer is the fold's alone, which
- *     an empty map cannot say. Its session ids are already spelled as the stored
- *     directory names the record keys a session by.
- * @param sessions - the per-session folds, keyed by the name the usage record holds (the stored directory name).
+ *     all: a null is what tells the caller the answer is the fold's alone. Its
+ *     session ids are already spelled as the stored directory names the record
+ *     keys a session by.
+ * @param sessions - the per-session folds, keyed by the stored directory name.
  */
 export function mergeLedgerFold(
   ledgerDays: ReadonlyMap<string, DayBuckets> | null,

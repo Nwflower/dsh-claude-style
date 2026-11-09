@@ -1,12 +1,9 @@
 /**
  * The sodium rewrite's mechanism (D78): a rule is rewritten where it stands and
- * written back exactly; a selector the sheet refuses is an error that leaves the
- * sheet as its owner wrote it; a rule another writer changed since is left to
- * that writer and handed back; the flow-child mark stands on every child of the
- * flow's containers through every change; and the table's rewrite of the host's
- * flow rules selects the same elements as the rules themselves, at the same
- * specificity, as the browser's own cascade judges it — an item filled or
- * emptied included, in the very task that changed it.
+ * written back exactly; a selector the sheet refuses leaves the sheet as its
+ * owner wrote it; a rule another writer changed is handed back; the flow-child
+ * mark stands on every child through every change; and the table's flow rewrite
+ * selects the same elements at the same specificity as the host's own rules.
  *
  * @capability style-rewrite
  * @features engine, sodium
@@ -85,12 +82,10 @@ function steeringItem() {
 }
 
 /**
- * A chat column after older turns, its flow slot holding every kind of child
- * the host's rules tell apart and ending on the running line, and beside it a
- * process group's own list of items, which none of the flow rules spaces.
- *
- * The column holds the host's text-interaction surface as well: it stands in
- * the column beside the flow, and the column's own gap rule leaves it out.
+ * A chat column after older turns, its flow slot holding every kind of child the
+ * host's rules tell apart and ending on the running line, beside a process
+ * group's own item list that none of the flow rules spaces. The column holds the
+ * host's text-interaction surface too, and the column's gap rule leaves it out.
  */
 function conversation() {
   const column = document.createElement('div')
@@ -209,8 +204,8 @@ const HOST_RULES = [
 const SPREAD = HOST_RULES.filter(rule => rule.includes(VISIBLE) || rule.includes(SURFACE_VISIBLE))
 
 /**
- * The table's chat flow entry, rewriting and keeping the mark on a sheet
- * holding the host rules.
+ * The table's chat flow entry, rewriting and keeping the mark on a sheet holding
+ * the host rules.
  *
  * @param rules - the host's rules, in the shape the sheet carries.
  */
@@ -244,9 +239,8 @@ test('a turn ending in one task is read by the rewritten rules as the host rules
   const { slot } = conversation()
   const rewritten = rewriteHostRules()
   const [, empty, emptyNode, , full] = [...slot.children]
-  // The host fills and empties items, takes the running line down and puts
-  // the turn's last rows in, then reads the layout, all in one task: the
-  // rewritten rules have to agree at that moment.
+  // The host fills and empties items, takes the running line down and puts the
+  // turn's last rows in, then reads the layout, all in one task.
   empty.append('arrived')
   emptyNode.firstElementChild!.append('streamed')
   full.firstElementChild!.replaceChildren()

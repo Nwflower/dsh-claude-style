@@ -1,10 +1,6 @@
 import type { HostText } from '@dsh-claude-style/contracts/services'
 
-/**
- * A two-digit number for a clock or a date part: "09", "23". Every caller
- * hands it a value in [0, 60); the padding is what keeps a time string the
- * same width at every hour.
- */
+
 export function pad2(value: number) {
   return value < 10 ? `0${value}` : String(value)
 }

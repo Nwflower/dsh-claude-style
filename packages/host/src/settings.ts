@@ -3,13 +3,9 @@
  * derives its form from, and the registration that hands it over.
  *
  * The host derives every settings form from the profile entry's Config and
- * exposes only the fields marked `.volatile()`; the schema resolution is
- * defensive because a `link:`-installed plugin resolves its realpath outside
- * the profile tree (see resolveSchemaFactory). A host that cannot resolve the
- * package still loads the skin — it just loses the settings form.
- *
- * The preference list itself is the shared table, so both halves declare the
- * fields from one declaration (`@dsh-claude-style/contracts/prefs`, D73).
+ * exposes only the fields marked `.volatile()`. The preference list is the
+ * shared table, so both halves declare the fields from one declaration
+ * (`@dsh-claude-style/contracts/prefs`, D73).
  */
 import { PACKAGE_NAME } from '@dsh-claude-style/contracts/package'
 import { PREFS } from '@dsh-claude-style/contracts/prefs'
@@ -19,14 +15,14 @@ import type { DshContext, DshScope } from '@dsh-claude-style/engine/node/dsh'
 /**
  * The schemastery instance the HARNESS itself resolves.
  *
- * A plugin installed by link (`link:D:/…`) resolves its realpath outside the
- * profile tree, so Node never walks the profile's `node_modules` and the plain
- * import fails outright — and the copy the profile's interception layer would
- * offer can belong to a DIFFERENT installation (the Desktop bundle's 3.18.2,
- * which has no `.volatile()`). The harness always carries schemastery beside
- * its own bin, and that copy is the instance the settings domain validates
- * forms against, so it is asked for first; normal resolution stays as the
- * fallback for a plainly installed plugin.
+ * A `link:`-installed plugin resolves its realpath outside the profile tree, so
+ * Node never walks the profile's `node_modules` and the plain import fails
+ * outright; the copy the profile's interception layer would offer can belong to
+ * a different installation (the Desktop bundle's 3.18.2, which has no
+ * `.volatile()`). The harness always carries schemastery beside its own bin, and
+ * that copy is the instance the settings domain validates forms against, so it
+ * is asked for first; normal resolution is the fallback for a plainly installed
+ * plugin.
  *
  * @returns the schema factory, or null when neither path resolves.
  */
@@ -77,14 +73,11 @@ function volatileField(field: SchemaField | null | undefined) {
 
 /**
  * One Config field for one preference, permissive on purpose: it takes the
- * shapes a stored value may have carried — a string, a boolean or an array of
- * strings — and keeps the table's default (packages/contracts/src/prefs.ts,
- * D73). A value an older build stored (`autoPopover` was a boolean,
- * `chatAnimations` held a choice) therefore never fails the host's own
- * validation and never keeps the package from starting: the host checks a
- * profile entry's config against this Config before it starts the plugin, and a
- * refused value starts nothing of this package at all. The browser half clamps
- * what it reads and falls back to the default (packages/client/src/core/prefs.ts).
+ * shapes a stored value may carry — a string, a boolean or an array of strings
+ * — and keeps the table's default (packages/contracts/src/prefs.ts, D73). The
+ * host checks a profile entry's config against this Config before it starts the
+ * plugin, and a refused value starts nothing of this package at all. The browser
+ * half clamps what it reads and falls back to the default.
  */
 function prefsField(Schema: SchemaFactory, key: PrefKey) {
   return Schema
@@ -93,23 +86,14 @@ function prefsField(Schema: SchemaFactory, key: PrefKey) {
 }
 
 /**
- * The declared Config.
+ * The declared Config: the preferences, each marked `.volatile()` only where
+ * the installed factory provides the marker. The import is guarded and
+ * top-level-awaited (D75), so a host that cannot resolve schemastery still
+ * loads the skin and only loses the settings form.
  *
- * The host derives every settings form from the profile entry's Config and
- * exposes only the fields marked `.volatile()`, so the preferences are
- * declared here. schemastery grew `volatile()` in 3.18.3 and the desktop
- * bundle ships 3.18.2, so the marker is applied only when the installed
- * factory provides it.
- *
- * The import is guarded and top-level-awaited (D75): a
- * host that cannot resolve schemastery must still load the skin — it just
- * loses the settings form.
- *
- * Field types stay permissive on purpose: the accepted sets are enforced where
- * they are consumed — the browser half clamps everything it reads and falls
- * back to the shipped default — so a set declared here would only narrow what a
- * stored value may keep, and a value the Config refuses keeps the host from
- * starting this package at all (prefsField above).
+ * Field types stay permissive: the accepted sets are enforced where they are
+ * consumed, and a value the Config refuses keeps the host from starting this
+ * package at all (prefsField above).
  */
 export const Config = SchemaFactory === null
   ? undefined
@@ -118,13 +102,13 @@ export const Config = SchemaFactory === null
     ))
 
 /**
- * Register the settings surface: the skin ships its own settings page, which
- * is what `configure({ auto: false })` says — without it a client that
- * projects pages from the schema would grow a second page beside ours.
+ * Register the settings surface. The skin ships its own settings page, which is
+ * what `configure({ auto: false })` says; a client projecting pages from the
+ * schema would otherwise grow a second one beside ours.
  *
- * The wait is declarative (`ctx.inject`) because `settings` may mount after
- * this plugin. The inject callback deliberately returns nothing — a plain
- * object throws "Invalid effect" and would take the whole plugin down.
+ * The wait is declarative because `settings` may mount after this plugin, and
+ * the inject callback deliberately returns nothing: a plain object throws
+ * "Invalid effect" and would take the whole plugin down.
  *
  * @param ctx - host plugin context.
  */

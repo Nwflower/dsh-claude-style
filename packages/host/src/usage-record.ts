@@ -1,28 +1,24 @@
 /**
- * The usage record: this plugin's own account of usage, kept at
+ * The usage record: this plugin's own account of usage, at
  * `$DSH_HOME/dsh-claude-style/usage.json`.
  *
  * One entry per session: the fingerprint of the log it was folded from, while
  * that log exists, and the days it settled on. An entry whose log is gone stays
- * as it stands — the days it holds are then the only account of them left, and
- * folding cannot bring them back — so deleting a conversation no longer takes
- * its tokens off the panel. That is also why the file sits in the plugin's own
- * directory rather than under `cache/`, which anything may clear.
+ * as it stands — the days it holds are the only account of them left, and folding
+ * cannot bring them back — so deleting a conversation does not take its tokens
+ * off the panel. That is also why the file sits in the plugin's own directory
+ * rather than under `cache/`, which anything may clear.
  *
- * A stored day carries its tokens per route: the day's own buckets are the sum
- * of its routes, a settlement that named no model rides under the empty key, and
- * the hour histogram keeps its non-zero slots alone. The session's own histogram
- * is not stored: the summary reads the days'.
+ * A stored day carries its tokens per route: the day's own buckets are the sum of
+ * its routes, a settlement that named no model rides under the empty key, and the
+ * hour histogram keeps its non-zero slots alone.
  *
  * The file is written when the pass changed something, and a version this build
- * does not write is left as it stands rather than overwritten from the logs that
- * happen to remain. A file that does not parse is moved aside under a stamped
- * name before the pass rebuilds it, so the days only it held stay recoverable.
- * Every instance under one harness home writes the whole document, so a write
- * first lays the pass over what the file holds by then. The one document before
- * this one — the fold cache at `cache/dsh-claude-style/usage.json` — is merged
- * in while it exists and removed once a record holding it is written, so the
- * days of sessions deleted before the record are carried across.
+ * does not write is left as it stands. A file that does not parse is moved aside
+ * under a stamped name before the pass rebuilds it. Every instance under one
+ * harness home writes the whole document, so a write first lays the pass over what
+ * the file holds by then. The earlier fold cache is read while it exists and
+ * removed once a record holding it is written.
  */
 import { PACKAGE_NAME } from '@dsh-claude-style/contracts/package'
 import { existsSync, renameSync, unlinkSync } from 'node:fs'
@@ -241,12 +237,9 @@ function legacyCachePath(ctx: DshContext): string {
 
 /**
  * The entries of the fold cache this record replaced, or null when there is no
- * such file.
- *
- * The cache is read at its own path and its own version: this build never
- * writes it, and a home that never ran the earlier build simply has none. A file
- * that is there but holds nothing of that version reads as no entries, so the
- * write that follows still removes it.
+ * such file. The cache is read at its own path and version: this build never
+ * writes it. A file that is there but holds nothing of that version reads as no
+ * entries, so the write that follows still removes it.
  */
 function legacyRecord(ctx: DshContext): Map<string, RecordSession> | null {
   const path = legacyCachePath(ctx)
@@ -279,9 +272,8 @@ type StoredRecord =
  *
  * A file that does not parse is renamed to `usage.json.corrupt-<stamp>` and then
  * reads as absent: the pass rebuilds the record from the logs, and the days of
- * deleted sessions that only that file held stay on disk for recovery instead of
- * being overwritten. The rename is not caught; a record that can be neither read
- * nor moved fails the pass (D12).
+ * deleted sessions that only that file held stay on disk for recovery. The rename
+ * is not caught; a record that can be neither read nor moved fails the pass (D12).
  */
 function readStored(ctx: DshContext): StoredRecord {
   const path = pluginPath(ctx, RECORD_FILE)
@@ -311,12 +303,11 @@ function readStored(ctx: DshContext): StoredRecord {
 /**
  * The record's entries, and what this pass may write back.
  *
- * An absent or unreadable document is written out again whatever the pass
- * found. A version this build does not write is left as it stands: it was
- * written by a build that knew more, and overwriting it would drop the days of
- * the sessions deleted in between, which nothing can fold again (D12). The old
- * fold cache's entries join wherever the record has none of its own for that
- * session.
+ * An absent or unreadable document is written out again whatever the pass found.
+ * A version this build does not write is left as it stands: overwriting it would
+ * drop the days of the sessions deleted in between, which nothing can fold again
+ * (D12). The old fold cache's entries join wherever the record has none of its
+ * own for that session.
  *
  * @param ctx - host plugin context, for the record's path and the warning a
  *   failure leaves.
@@ -333,14 +324,11 @@ export function readRecord(ctx: DshContext): RecordRead {
 }
 
 /**
- * This pass's sessions laid over the record as another instance may have
- * written it since this pass read it.
- *
- * Every instance under one harness home folds the same logs and writes the
- * whole document, so what a later write would lose is only what its pass never
- * held: a session another instance folded whose log is gone by now, or that
- * instance's newer fold of one whose log went away. A session this pass
- * compared against its log keeps this pass's entry.
+ * This pass's sessions laid over the record as another instance may have written
+ * it since this pass read it. What a later write would lose is only what its pass
+ * never held: a session another instance folded whose log is gone by now, or that
+ * instance's newer fold of one whose log went away. A session this pass compared
+ * against its log keeps this pass's entry.
  */
 function overStored(stored: ReadonlyMap<string, RecordSession>, sessions: ReadonlyMap<string, RecordSession>, live: ReadonlySet<string>): Map<string, RecordSession> {
   const merged = new Map(sessions)
@@ -355,9 +343,8 @@ function overStored(stored: ReadonlyMap<string, RecordSession>, sessions: Readon
 }
 
 /**
- * Write down the sessions this pass ended up with, over whatever the record
- * holds by now, and remove the old fold cache once the record holding it is on
- * disk.
+ * Write down the sessions this pass ended up with, over whatever the record holds
+ * by now, and remove the old fold cache once the record holding it is on disk.
  *
  * @param ctx - host plugin context, for the record's path and the warning a
  *   failed write leaves.

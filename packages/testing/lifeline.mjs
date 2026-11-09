@@ -1,18 +1,6 @@
 /**
- * lifeline.mjs — preloaded into the scratch host by packages/testing/dsh-web.mjs
- * (`NODE_OPTIONS=--require`), so the host never outlives the process that
- * started it (D87).
- *
- * The launcher gives the host a stdin pipe and never writes to it. However the
- * launcher ends — a normal exit, an uncaught error, Ctrl+C, taskkill /F — the OS
- * closes its end, the host reads end-of-file, and this module ends the host.
- * The launcher's own `stop()` cannot cover the last two: no code of its runs,
- * and on Windows its direct child is the cmd.exe the shell spawn puts in front
- * of the host.
- *
- * NODE_OPTIONS reaches every node process the host spawns, and their stdin is
- * not the lifeline: only the process carrying `DSH_WEB_LIFELINE` — the host —
- * watches, and it removes the mark so its children inherit none.
+ * Exit the scratch host when its launcher's stdin closes (D87). Only the
+ * marked host watches the pipe; children must not inherit the marker.
  */
 if (process.env.DSH_WEB_LIFELINE === '1') {
   delete process.env.DSH_WEB_LIFELINE

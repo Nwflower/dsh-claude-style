@@ -1,12 +1,6 @@
 /**
- * The usage payload the plugin's two halves exchange .
- *
- * `packages/host/src/usage.ts` answers `GET /dsh-claude-style/usage` with this shape and the
- * browser half reads it in `packages/client/src/features/home/data.ts`; the session list's own
- * roll-up (`sessions.list`, a host service) answers a narrower version of the
- * same entries, which is why several fields below are optional. These types are
- * the plugin's own contract rather than the host's, so they live beside the code
- * that produces them; D73 moves them into the shared contracts package.
+ * Shared usage payload (D73). The narrower `sessions.list` roll-up omits fields
+ * that the plugin's own usage route can supply.
  */
 
 /** One day of a roll-up: the four buckets, the settled calls, and the day's models. */
@@ -46,13 +40,7 @@ export interface UsageModel {
 
 /** What the usage route answers: the window's days, the models, and where the figures came from. */
 export interface UsageReport {
-  /**
-   * Which source answered: the fold over the session logs (`local`), the cost
-   * ledger (`cost-meter`), or both when the fold supplied a day's figures, either
-   * a date the ledger does not record or a fuller account of one it records only
-   * partly (`cost-meter+local`). The two accounts are merged by date, never
-   * summed
-   */
+  /** `cost-meter+local` merges sources by date to fill missing or partial figures; never sums them. */
   source: string
   computedAt: number
   days: UsageDay[]
@@ -63,7 +51,7 @@ export interface UsageReport {
   hours?: number[]
   /** The window's sums: the four buckets, the settled calls, and how many days and sessions they came from. */
   totals: UsageTotals
-  /** An older host half sent the window's favourite model here; the panel still reads it as a fallback. */
+  /** The window's favourite model, read as a fallback for the headline. */
   model?: string
   totalSessions?: number
 }
@@ -81,11 +69,7 @@ export interface UsageTotals {
   total?: number
 }
 
-/**
- * The usage route's envelope: whether the read worked, the report behind it,
- * and whether the host half is still folding (in which case the panel polls
- * again).
- */
+/** `computing` tells the panel to poll again while the host folds usage. */
 export interface UsageAnswer {
   ok?: boolean
   value?: UsageReport | null
@@ -93,11 +77,7 @@ export interface UsageAnswer {
   error?: string
 }
 
-/**
- * The answer of the plugin's own content search (`packages/host/src/search.ts`,
- * `GET /dsh-claude-style/session-search`): the hits, each naming its session
- * and the match inside the excerpt.
- */
+/** Content-search hits identify their session and matched excerpt range. */
 export interface SearchAnswer {
   ok?: boolean
   error?: string

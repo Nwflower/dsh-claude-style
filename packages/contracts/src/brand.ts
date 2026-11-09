@@ -1,8 +1,4 @@
-/**
- * The custom brand images both halves handle (D30): which images there are,
- * the formats and the size the host half takes, and the answer its status
- * route sends.
- */
+/** Custom brand image contract shared by both halves (D30). */
 
 /** The two images a reader can put in place of the brand's own art. */
 export type BrandImageKind = 'mark' | 'wordmark'
@@ -16,7 +12,7 @@ export const BRAND_IMAGE_TYPES: Readonly<Record<string, string>> = {
   'image/webp': 'webp',
 }
 
-/** Largest image the host half stores; a brand mark is a few kilobytes. */
+/** Host upload limit. */
 export const BRAND_IMAGE_MAX_BYTES = 2 * 1024 * 1024
 
 /** One stored image: its content type, and a version that changes whenever its bytes do. */

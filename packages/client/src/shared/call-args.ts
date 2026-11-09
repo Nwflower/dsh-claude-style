@@ -1,10 +1,4 @@
-/**
- * One tool call's arguments, as the host hands them over: the raw JSON text a
- * running call has received so far, or the object a settled call reports. Two
- * readers share this — the file rows (features/chat-files) and the waiting
- * line's own words (shared/file-tool) — so the reading lives here rather than
- * in either of them (D73).
- */
+/** Shared readers accept the host's streamed JSON text and settled argument objects (D73). */
 
 /** A call's parsed arguments. */
 export type CallArgs = Record<string, unknown>

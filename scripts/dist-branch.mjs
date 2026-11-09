@@ -1,23 +1,7 @@
 #!/usr/bin/env node
 /**
- * dist-branch.mjs — put the released package on the `dist` branch (D47).
- *
- * `master` carries sources: `lib/` is build output, and a git install of master
- * would ask the reader to approve a build and download the development
- * dependencies first. This script packs the package exactly as npm publishes it
- * — `npm pack` builds through `prepublishOnly`, so both come from one build —
- * and writes those files as a single commit on an orphan `dist` branch. The
- * version tag then points at that commit, so a tag install gets the built
- * package too. `--push` sends the branch and the tag to origin.
- *
- * The release workflow runs on the tag's own push, so the tag usually exists
- * already and points at the release commit: this script moves it onto the dist
- * commit, which is what makes the two install paths one artifact.
- *
- * The commit is made with plumbing against a scratch index, so the working tree
- * and the checked-out branch are never touched.
- *
- * Usage: node scripts/dist-branch.mjs [--push]
+ * dist-branch.mjs — commit the exact npm package to orphan `dist` and move its version
+ * tag (D47); the scratch index leaves the checkout untouched.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -46,17 +30,14 @@ fs.rmSync(DEBUG, { recursive: true, force: true })
 fs.mkdirSync(PACK, { recursive: true })
 fs.mkdirSync(TREE, { recursive: true })
 
-// The tarball is the npm package: its file list, its manifest and its build.
-// The build runs here rather than being assumed: `lib/` is not in version
-// control (D47), so a fresh checkout has none, and `npm pack` alone would ship a
-// package whose `main` points at a file that is not in it.
+// Build before packing because lib/ is absent from a fresh checkout (D47).
 run('npm', ['run', 'build'])
 const packed = run('npm', ['pack', '--pack-destination', PACK]).split('\n').pop()
 run('tar', ['-xzf', path.join(PACK, packed), '-C', TREE, '--strip-components=1'])
 
-// One release per version: a tag that already exists is the release commit this
-// run is publishing, and it moves onto the dist commit below. A tag that exists
-// on another branch of history is another release, and the version must move.
+// One release per version: a tag that already exists is the release commit this run is
+// publishing, and it moves onto the dist commit below; a tag outside this history is
+// another release, and the version must move.
 const existing = run('git', ['tag', '--list', tag])
 const ancestor = existing === '' ? true : (() => {
   try {
@@ -69,9 +50,9 @@ const ancestor = existing === '' ? true : (() => {
 })()
 if (existing !== '' && !ancestor) throw new Error(`dist: ${tag} exists outside this history; bump the version before releasing`)
 
-// One commit on an orphan branch: the branch carries the package, no history.
-// The identity is this script's own rather than whatever the checkout has: a CI
-// runner has none configured, and `commit-tree` refuses an empty one.
+// One commit on an orphan branch: the branch carries the package, no history. The
+// identity is this script's own: a CI runner has none configured and `commit-tree`
+// refuses an empty one.
 git(['read-tree', '--empty'])
 git(['add', '--all'])
 const tree = git(['write-tree'])

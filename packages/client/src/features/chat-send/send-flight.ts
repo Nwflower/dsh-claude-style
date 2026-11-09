@@ -56,57 +56,25 @@ export const CHAT_ORIGIN_TTL_MS = 1500
  */
 export const CHAT_FLIGHT_LIMIT_FLOOR_PX = 900
 
-/**
- * The backstop keeps a good while longer than the flight itself: the stand-in
- * holds until it has stood on the row for CHAT_ARRIVED_FRAMES (arrived()), and a
- * transcript still gliding to its tail can take a tenth of a second past the
- * flight's own end. A throttled background timer still has to release the message
- * before the reader comes back.
- */
+/** Release hidden rows even when landing stalls or background timers are throttled. */
 export const CHAT_RESCUE_MARGIN_MS = 1500
 
-/**
- * How long the stand-in waits for a row to hand the message over to.
- *
- * The echo can be gone before the real row mounts — the echo lives about 159 ms
- * while the real row takes over a second — so the flight can finish with nothing
- * at the destination. This is the backstop for that window: the stand-in stays
- * visible until a row is there, and a host that never mounts one gets the page
- * back when the wait runs out.
- */
+/** Keep the stand-in visible when the echo disappears before the real row mounts, with a bounded wait. */
 export const CHAT_HANDOVER_WAIT_MS = 2500
 
 /** Only an echo inside the chat flow counts: one waiting in the queue dock is another transition, not this one. */
 export const CHAT_ECHO_SELECTOR = CHAT_FLOW_SELECTOR + ' ' + SUBMISSION_ECHO_SELECTOR
 
-/**
- * How close the stand-in has to be to the row before the row may be shown
- * (arrived()). Half a pixel: the landing's own spring give is a fraction of a
- * pixel, and anything a reader could see as two pictures of one message is
- * larger than that.
- */
+/** Require subpixel agreement before exposing the real row beneath the stand-in. */
 export const CHAT_ARRIVED_PX = 0.5
 
-/**
- * How close the stand-in has to be before the wait for stillness is shortened
- * (arrived()): at this gap the two pictures already agree to the eye.
- */
+/** At this gap, a bounded near-arrival wait may replace exact stillness. */
 export const CHAT_ARRIVED_NEAR_PX = 3
 
-/**
- * The longest the flight holds a settled destination before showing the row
- * anyway (arrived()). The wait is for the row to stop moving, and a page that
- * keeps changing around it — the reader's own scrolling, a stream growing below
- * — would otherwise hold the message away for good. Measured: the hand-over's own
- * wait is two frames when the row is still; this ceiling is the backstop.
- */
+/** Bound the stillness wait so scrolling or streaming cannot hide the row indefinitely. */
 export const CHAT_ARRIVED_CEILING_MS = 500
 
-/**
- * How many frames in a row the stand-in has to stand on the row before the row
- * may be shown (arrived()): one frame of slack for a layout the host changes in
- * its own frame, which this flight can only read a frame later.
- */
+/** Require several stable frames because host layout changes are observed one frame later. */
 export const CHAT_ARRIVED_FRAMES = 8
 
 /** A settled user row. It and the echo row are two faces of one component, a level apart (send-rows.ts). */
@@ -117,62 +85,9 @@ export interface ChatSendHandle extends FeatureHandle {
   isEntering(): boolean
 }
 
-/**
- * The send bubble's take-off, ported from dsh-chat-ux.
- *
- * After a submission the host mounts an echo bubble at once and swaps it for
- * the real row the moment that arrives. Measured: the echo lives 159 ms while
- * the real row takes over a second. An animation hung on either node is dead on
- * arrival (on the echo it loses its node midway; waiting for the real row leaves
- * a second of nothing), so this draws a stand-in of its own: a copy of the
- * composer card lifts off and narrows into the bubble as it travels. How the
- * stand-in is built and how the shape is worked out is in send-morph.ts; this
- * module decides when it takes off, where it flies and when it lands.
- *
- *   capture   the submission's capture phase takes the whole composer card
- *             (clone, geometry, looks), all before React clears the draft.
- *   notice    the echo row is noticed the moment it mounts, through a
- *             MutationObserver rather than a per-frame poll.
- *   launch    the stand-in goes on the page and the whole animation goes to
- *             the compositor; the real row is marked and hidden (keeping its
- *             layout box, so the destination can be measured every frame).
- *   per frame exactly two things: how far the destination moved (the host
- *             scrolling to the end, the echo becoming the real row) is added to
- *             the stand-in's outer layer; and once the shape's stretch is over,
- *             the shell is normalised (see send-morph.ts's compact). Position,
- *             shape, colour and the words' re-flow are all on the compositor,
- *             so they keep moving while the host parses a response on the main
- *             thread.
- *   land      unmark the real row and fade the stand-in out over it
- *             (CHAT_LANDING_MS), then drop the stand-in — the real row is
- *             already at the destination, so the hand-over moves nothing,
- *             and the fade carries the words from the stand-in's rendering
- *             to the page's (see land()). The echo being gone before the real
- *             row mounts holds the stand-in where it is until a row is there.
- *
- * Five edges:
- *
- *   Hide in the same frame   the observer's callback runs before this frame
- *                            paints, so the real row is never shown for a frame;
- *                            a frame later the reader sees a normal bubble
- *                            flash and then be wiped.
- *   Notice outside the frame  "at once" is not "every frame": the echo being
- *                            swapped for the real row is recognised
- *                            synchronously before this frame paints, and asking
- *                            again in the frame is wasted work.
- *   No origin, no flight     when the origin cannot be captured (a keyboard
- *                            shortcut, a programmatic submission) nothing is
- *                            done and the reader sees the host's own behaviour.
- *   Hidden must be returned  while the real row is hidden the reader cannot see
- *                            that message, so besides the normal landing there
- *                            is a timer as a backstop: rAF stops in a hidden
- *                            tab, the stand-in stops, and the mark must not stay.
- *   One screen only          with either end off screen the stand-in would
- *                            vanish at the edge and the message would look like
- *                            it appeared out of nothing, so it does not fly.
- * @returns teardown: the listeners go, and a flight in progress — a hidden
- *     message included — is settled.
- */
+/* Capture before React clears the draft, observe the echo/real-row swap synchronously, and hide
+   the destination without removing its layout box. No captured origin or offscreen endpoints means
+   no flight; rescue and teardown must always restore hidden rows. */
 export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The origin captured last. */
   let origin: SendOrigin | null = null
@@ -185,15 +100,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   for (const echo of document.querySelectorAll(CHAT_ECHO_SELECTOR)) handled.add(echo)
 
-  /**
-   * Watch the row during a flight: the echo being swapped for the real row is
-   * the one thing that has to be known at once.
-   *
-   * It runs before this frame paints, so one synchronous look is enough; and
-   * only rows arriving or leaving are looked at — the pre-filter checks the
-   * added and removed nodes themselves, since both marks sit on the row
-   * element and finding the row needs no subtree walk.
-   */
+  /** Handle row replacement before paint; touchesUserRow avoids walking unchanged subtrees. */
   const onRowRecords = (records: MutationRecord[]) => {
     const activeFlight = flight
     if (activeFlight === null || !touchesUserRow(records)) return
@@ -218,25 +125,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     stopRowWatch = null
   }
 
-  /**
-   * Hand the stand-in over to the real bubble: show the real row under it and
-   * fade the stand-in out over CHAT_LANDING_MS, still following the
-   * destination, then settle.
-   *
-   * Nothing is handed over while no row is on the page: the host can take the
-   * echo away before the real row mounts, and fading then would carry the
-   * reader's message into the page and put it back a second later — the bubble
-   * turning white and then blue again. The stand-in holds instead, still
-   * visible and still following, until the observer recognises a row to land on.
-   *
-   * The two are the same bubble in the same place, but they are not drawn
-   * alike: the stand-in flies on compositor layers, and a transparent layer
-   * draws its words with greyscale antialiasing where the page draws the
-   * real bubble's with the screen's subpixel antialiasing (ClearType on
-   * Windows). Swapped in one frame, the words visibly darken and change
-   * weight the instant the flight ends; faded across, they sharpen into the
-   * real ones.
-   */
+/* Hold until a real row exists, then snap to it and crossfade. The fade bridges compositor
+   greyscale text and the page's subpixel text without a visible weight change. */
   const land = () => {
     const activeFlight = flight
     if (activeFlight === null || activeFlight.landing) return
@@ -273,34 +163,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     }
   }
 
-  /**
-   * Hand over only once the stand-in has arrived.
-   *
-   * The take-off transform is built for where the destination stood at that
-   * moment (send-shape.ts's `end`), and the host keeps moving the row after it:
-   * the transcript glides to the tail, the echo row becomes the real one, and a
-   * row that arrived while the new one is still growing settles somewhere else.
-   * Showing the real row before the stand-in has caught up leaves both on screen
-   * at once — two copies of the same message, tens of pixels apart — for as long
-   * as the landing fade lasts, which reads as a flicker. Measured with real turns
-   * on this build: the row moved 55 to 109 px once, hundreds of milliseconds
-   * after the flight was over, while the transcript glided to its tail.
-   *
-   * So the wait is for stillness, not for arrival: the stand-in is within half a
-   * pixel of the row AND the row's own box has held still for
-   * CHAT_ARRIVED_FRAMES. The host changes layout in its own frame, which this
-   * flight reads one frame late: a gate on a single frame's reading lets a row
-   * that is about to move through.
-   *
-   * The wait is bounded, because a page that keeps changing around the flight (the
-   * reader scrolling, a stream growing below) would otherwise hold the row away for
-   * good — the flight's own animation has been over since the first frame of this
-   * wait, so nothing else ends it. Two ceilings: a gap already too small to see
-   * shortens the wait, and the flight's own end plus
-   * CHAT_ARRIVED_CEILING_MS ends it whatever the page is doing. land() snaps the
-   * row onto the stand-in in that frame, so the pair agrees even then.
-   * @returns true when the row may be shown.
-   */
+/* Require close geometry and several stable frames because the host can keep moving the row.
+   Near-arrival and post-animation ceilings prevent indefinite hiding; land() snaps before fading. */
   const arrived = (value: Flight) => {
     const row = value.hidden
     const bubble = value.bubble
@@ -344,36 +208,13 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     window.clearTimeout(rescue)
     rescue = 0
     activeFlight.hidden?.removeAttribute(CHAT_FLYING_ATTR)
-    // The stand-in leaves the document **before** its animations are
-    // cancelled, never the other way round. Cancelling returns the halo to
-    // "never moved" — as large as the whole composer card — and the halo's
-    // run mixes scale and opacity into one compositable animation: the cancel
-    // goes through the compositor, the node removal goes through the
-    // compositor, and the wrong order paints one extra frame, which the reader
-    // sees as the width stretching and snapping back. Once the node is out of
-    // the document its animations are void, and the cancel below only clears
-    // the references.
+    // Remove before cancelling: cancellation can otherwise paint the compositor's initial halo for one frame.
     activeFlight.morph.wrapper.remove()
     for (const animation of activeFlight.morph.animations) animation.cancel()
   }
 
-  /**
-   * Three things per frame: notice the shape's stretch is over and normalise
-   * the shell, add the destination's movement, and book the next frame.
-   * Recognising the row is the observer's job above — it is not a
-   * per-frame question.
-   *
-   * Neither the displacement nor the shape is written here: the two keyframe
-   * runs share one timeline (one duration, one set of offsets) and keep running
-   * together through the tens to hundreds of milliseconds the host holds the
-   * main thread, so the right-edge equation in send-shape.ts holds throughout.
-   * This path was burnt once: the displacement on the compositor with the shape
-   * left in a main-thread `clip-path`, and a stall flew a card that had not
-   * narrowed to the destination.
-   *
-   * The other two are main-thread work: `compact` writes styles once, and
-   * `followTarget` reads the current layout.
-   */
+/* Per frame only normalize and follow the destination; row replacement stays in the observer.
+   Displacement and shape remain shared compositor keyframe runs so main-thread stalls cannot separate them. */
   const tick = () => {
     const activeFlight = flight
     if (activeFlight === null) return

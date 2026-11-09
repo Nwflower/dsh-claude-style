@@ -1,9 +1,9 @@
 /**
  * The macOS system cues the host half plays (D89).
  *
- * The two files are the machine's own, so the package carries no audio and no
- * Apple data. A machine without the player or the files answers `browser`, and
- * the page synthesises the same two voices there.
+ * The files are the machine's own, so the package carries no audio and no Apple
+ * data. A machine without the player or the files answers `browser`, and the page
+ * synthesises the same two voices there.
  */
 import { SOUND_NAMES, SOUND_POP, SOUND_TINK } from '@dsh-claude-style/contracts/sound'
 import type { HostSoundCapability, SoundName } from '@dsh-claude-style/contracts/sound'

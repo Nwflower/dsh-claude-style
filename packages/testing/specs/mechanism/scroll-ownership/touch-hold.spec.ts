@@ -63,8 +63,8 @@ async function moveTo(box: HTMLElement, top: number) {
 
 /**
  * A drag that reached the end of the host's own frame: the column the follow's
- * button is found from, and the button itself, which is the only way the host
- * lights its follow back up once its sampling window has settled.
+ * button is found from, and the button itself, the only way the host lights its
+ * follow back up once its sampling window has settled.
  */
 function followFrame(cleanups: (() => void)[]) {
   const box = scrollBox()

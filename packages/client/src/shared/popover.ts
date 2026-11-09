@@ -1,19 +1,8 @@
 import { buildElement, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
 import { inPageBox, pageViewport } from './page-zoom'
 
-/**
- * The skin's popovers: one card shell, one dwell and grace, one card on screen
- * at a time.
- *
- * Every skin card carries `dsh-claude-popover-card` (shared/popover.css) for
- * its look; a feature's own stylesheet adds only placement and width, so one
- * picker's change cannot reach another.
- *
- * The host offers no global popover exclusion, so each popover registers its
- * close path here and calls `closeOtherPopovers` before it opens. A picker's
- * second level registers as one entry with its first. The registry is module
- * state: a feature unregisters on teardown, and a reload replaces a closer by
- * name because the previous generation's scope is gone.
+/** Features register closers and close siblings before opening; nested levels share one registration.
+ * Replacement by name drops stale reload closures, and teardown must unregister.
  */
 
 export const POPOVER_MARGIN = 8
@@ -40,12 +29,7 @@ export interface AnchorSpace {
   viewport: { width: number, height: number }
 }
 
-/**
- * The trigger's box and the window's size in the page's own pixels: a bounding
- * rect is measured in the viewport's, while a card's laid-out size and every
- * `left`/`top` written for it are read in the page's, which the reader's page
- * zoom scales (shared/page-zoom.ts).
- */
+/** DOMRects and written card coordinates use different spaces under page zoom. */
 export function anchorSpace(trigger: Element): AnchorSpace {
   return { rect: inPageBox(trigger.getBoundingClientRect()), viewport: pageViewport() }
 }

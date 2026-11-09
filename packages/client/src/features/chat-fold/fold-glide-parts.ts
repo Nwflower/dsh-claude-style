@@ -5,25 +5,9 @@ import { handBackFollow, readerMovedSince } from '@dsh-claude-style/engine/scrol
 import { motionMs } from '../../shared/motion'
 import { inPagePixels } from '../../shared/page-zoom'
 
-/**
- * The measuring and bookkeeping half of the fold glide (fold-glide.ts): what
- * a folding body is, how far a door has to travel to be seen, the viewer's
- * own intent, the height animation's scaffolding, and the clock that says
- * "the position belongs to the animation right now".
- *
- * The glide itself — the click it takes over, the intent it remembers, the
- * two directions it rolls — lives in fold-glide.ts.
- */
-/** The door's duration: the movement token, which the sliding highlight shares (D9). */
+/** Movement token shared with the sliding highlight (D9). */
 export const FOLD_ROLL_MS = motionMs('--dsh-claude-duration-move')
-/**
- * The share of that duration the visible stretch gets; the rest is left for
- * the height outside the viewport.
- *
- * Something has to be left: the door's two stretches meet at "the part the
- * reader can see", and a final step that jumped would drag the content below
- * along with it.
- */
+/** Reserve time for offscreen height so the visible and offscreen stretches meet without a jump. */
 export const FOLD_VISIBLE_SHARE = 0.9
 /** An intent older than this is no longer trustworthy (no layout change followed, or it came from elsewhere). */
 export const FOLD_INTENT_TTL_MS = 500
@@ -34,15 +18,7 @@ export const FOLD_POPUP_SELECTOR = '[aria-haspopup]'
 export const FOLD_SHUT_CONFIRM_FRAMES = 3
 /** After the door lands, "the position belongs to the animation" is counted this much longer, so the settle frame does not meet the follow guard. */
 export const FOLD_BUSY_GRACE_MS = 50
-/**
- * Two frame timestamps further apart than this mean the main thread was held
- * up in between.
- *
- * Shorter than the stall itself: the first frame after a long task still
- * carries the timestamp queued before the stall, so the jump lands on the one
- * after it and the two are always further apart than the stall was long. 25 ms
- * is about half a frame at 60 Hz.
- */
+/** A post-stall frame carries its pre-stall timestamp, so the gap appears on the following frame. */
 export const FOLD_FRAME_GAP_LIMIT_MS = 25
 /** Before this screen's own frame interval has been measured, one frame at 60 Hz. */
 export const FOLD_NOMINAL_FRAME_MS = 16.7
@@ -50,13 +26,7 @@ export const FOLD_NOMINAL_FRAME_MS = 16.7
 /** Until when the position belongs to the animation. */
 export let chatFoldBusyUntil = 0
 
-/**
- * Whether a door is rolling right now.
- *
- * The position belongs to the animation while it does: were the follow guard
- * to pull the scroll to the end now, the height being pulled along would move
- * with it and read as a shake. It waits this stretch out.
- */
+/** Host follow waits while height animation owns the scroll position. */
 export function isChatFoldBusy() {
   return performance.now() < chatFoldBusyUntil
 }
@@ -66,19 +36,7 @@ export function markChatFoldBusy() {
   chatFoldBusyUntil = performance.now() + FOLD_ROLL_MS + FOLD_BUSY_GRACE_MS
 }
 
-/**
- * How far down the part of this element the reader can see reaches.
- *
- * When the content is taller than the window the element occupies its whole
- * height and the reader only sees a stretch of it: a process group's body
- * (max-height: min(400px, 50vh)) is that window, and the viewport is the
- * outermost one. The door's travel is computed from that stretch, so it only
- * rolls where the reader can see; at full height, eight thousand pixels would
- * be covered in 200 ms and read as a pop.
- *
- * @param element - the element the door pulls.
- * @returns the offset to the visible end, in the pixels a written height is read in; 0 when it is entirely outside the viewport.
- */
+/** Measure visible travel through every clipping ancestor so tall content does not animate at full-height speed. */
 export function foldVisibleReach(element: Element) {
   const rect = element.getBoundingClientRect()
   let bottom = Math.min(rect.bottom, window.innerHeight)
@@ -103,22 +61,8 @@ export function foldControlAt(target: Element) {
   return disclosure !== null ? disclosure : target.closest<HTMLElement>(FOLD_TOGGLE_SELECTOR)
 }
 
-/**
- * The body a control expands. When the control names one with aria-controls
- * that id is the answer (useId makes it carry colons, so getElementById is
- * the only way); otherwise the shape of the unmounting family decides it.
- *
- * That shape differs between host builds. A row DisclosureRow renders is one
- * of the family's children with the body beside it; a newer build wraps the
- * row and its accessory in a header (DISCLOSURE_HEADER_SELECTOR) and puts the
- * expanded content inside that same wrapper, so the family's last child is the
- * wrapper the control itself lives in. The body is then that wrapper's own
- * last child. Null means this control is collapsed right now.
- *
- * A process group's header never arrives here: foldProcessBody claims it
- * first, and that path presses the group root rather than the body's own
- * height.
- */
+/* Prefer aria-controls; useId values can contain colons. Without it, support both the sibling-body
+   and wrapped-header host shapes. Process headers are handled separately because they animate the root. */
 export function foldExpandedBody(control: Element) {
   const controls = control.getAttribute('aria-controls')
   if (controls !== null) {
@@ -135,20 +79,7 @@ export function foldExpandedBody(control: Element) {
   return inner instanceof HTMLElement && inner !== control ? inner : null
 }
 
-/**
- * The process group body a control controls.
- *
- * Only a group's header points at its body with aria-controls (the host's
- * ProcessGroupHeader); the member rows inside a group do not carry that
- * attribute — their expanded body is their next sibling. So "the control
- * lives inside a process group" does not mean "the control is a group
- * header": every tool row and thinking row inside a body lives in one too.
- * Asking closest() alone would read a click on a tool row as opening the
- * whole group and press the group root in that row's place.
- *
- * @param control - the control that was pressed.
- * @returns the group body it controls, or null when it is not a header.
- */
+/** Only ProcessGroupHeader uses aria-controls for the group body; member rows must not match via closest(). */
 export function foldProcessBody(control: Element) {
   const controls = control.getAttribute('aria-controls')
   if (controls === null) return null
@@ -166,20 +97,7 @@ export function foldControlAtBottom(control: Element) {
   return scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight <= FOLLOW_THRESHOLD_PX
 }
 
-/**
- * Start watching whether the reader takes the scroll over before this fold
- * settles.
- *
- * The settle hands the position back to the host's follow, and that only
- * holds for a reader who was at the bottom: the settle comes a couple of
- * hundred milliseconds after the press, and he can take over in between —
- * his intent is only visible in events, which the scroll owner reads
- * (readerMovedSince). A pointer or key inside the composer does not count:
- * he is typing, not scrolling.
- *
- * @param atBottom - whether the reader was at the bottom when the fold began.
- * @returns this fold's settle credentials.
- */
+/** Record reader scroll events during the fold; composer input events do not count as scrolling. */
 export function foldWatchReader(atBottom: boolean) {
   const since = performance.now()
   return { atBottom, moved: () => readerMovedSince(since) }
@@ -188,37 +106,14 @@ export function foldWatchReader(atBottom: boolean) {
 /** One fold's settle credentials (foldWatchReader). */
 export type FoldWatch = ReturnType<typeof foldWatchReader>
 
-/**
- * Fold settle: a reader who was at the bottom when the fold began gets the
- * position handed back to the host's follow.
- *
- * A fold is a large height change, and the host's follow is switched off by a
- * scroll that looks like the reader moving without reaching the end — its own
- * "back to the end" button is the only way in again. This decides whether the
- * hand-back still stands; how it is done (walk first, press the button only if
- * the attribute does not come back) is the scroll owner's handBackFollow, the
- * same road the follow guard takes.
- *
- * The test is "the reader was at the bottom when the fold began": if he was
- * reading higher up, the hand-back is none of his business.
- */
+/** Hand follow back only when the reader started at the bottom and has not scrolled since. */
 export function foldHandBackFollow(watch: FoldWatch) {
   if (!watch.atBottom) return
   // He took the scroll over himself in between: the hand-back is void.
   handBackFollow('fold', { stillWanted: () => !watch.moved() })
 }
 
-/**
- * The settle's entrance: look at the follow once the animation is over.
- *
- * The replay of a collapse and the cancellation of an expand both land at the
- * end of the animation, and the position only settles then. The expand passes
- * its own animation in and waits for it to really finish — a held-up main
- * thread stretches it (see foldHoldThroughStalls), and waiting a fixed
- * duration would pin the position while the door is still rolling. With no
- * animation to wait for (a collapse settling from onfinish, or a fold that
- * never started one) it waits FOLD_ROLL_MS.
- */
+/** Wait for the actual animation when present because stalls extend it; otherwise use the duration. */
 export function foldSettleAfter(watch: FoldWatch, roll?: Animation | null) {
   if (roll === null || roll === undefined) {
     const timer = window.setTimeout(() => {
@@ -237,23 +132,8 @@ export function foldSettleAfter(watch: FoldWatch, roll?: Animation | null) {
   return () => { stopped = true }
 }
 
-/**
- * Frames in which the main thread was held up do not count towards the door's
- * duration.
- *
- * The height animation runs on the main thread and paints nothing while it is
- * stuck, while WAAPI measures progress on the wall clock: the first frame
- * after the stall jumps straight to where it "should" be, which reads as the
- * door stopping and then leaping. So every frame the gap is read, and a long
- * one winds the animation's current time back to "one frame past the last
- * look" — the door pauses and then continues from where the reader last saw
- * it. "One frame" is this screen's most recent normal interval, so a
- * high-refresh display does not take an extra step. The wound-back stretch is
- * added to the busy window too, and the follow guard waits it out.
- *
- * Measured in an isolated page: winding currentTime back after a long task
- * works, and the next frame continues from there.
- */
+/* WAAPI advances through main-thread stalls that paint nothing. Rewind long gaps by the measured
+   frame interval and extend the busy window so animation and follow resume together. */
 export function foldHoldThroughStalls(roll: Animation) {
   let lastFrameAt = 0
   let lastTime = 0
@@ -292,17 +172,7 @@ export function foldHoldThroughStalls(roll: Animation) {
   }
 }
 
-/**
- * Wait for React to land this collapse on the DOM, then withdraw the
- * animation and the inline styles.
- *
- * A collapse's height animation carries fill: 'forwards', which pins the
- * element at its final height. If React has not taken the click yet, cancel()
- * hands the whole height back to CSS — a jump from the end back to full
- * height, enough to throw the host's follow off. So the withdraw waits until
- * the DOM really collapsed; a few frames without that means the click did not
- * fold anything, and the element is put back as it was.
- */
+/** fill:forwards pins the final height; wait for React's collapse before cancelling to avoid a full-height jump. */
 export function foldConfirmCollapsed(settled: () => boolean, done: () => void) {
   /** Set by the returned stop: the frames in flight do not press on. */
   let stopped = false
@@ -327,18 +197,7 @@ export function foldConfirmCollapsed(settled: () => boolean, done: () => void) {
   }
 }
 
-/**
- * The three pieces of bookkeeping a height animation starts with: clip the
- * overflow, make height mean border-box, and mark the door as rolling so the
- * children lay out at their natural height rather than being squeezed by flex
- * (fold-motion.css).
- *
- * Both directions do the same bookkeeping and both have to give it back, so
- * the old values and the restore travel together.
- *
- * @param target - the element the door presses.
- * @returns the restore: the inline styles and the mark, as they were.
- */
+/** Return prior inline styles and mark with the clip setup so either direction restores all of them. */
 export function foldBeginHeightClip(target: HTMLElement) {
   const previousOverflow = target.style.overflow
   const previousBoxSizing = target.style.boxSizing

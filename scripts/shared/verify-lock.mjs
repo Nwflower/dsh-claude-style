@@ -1,18 +1,6 @@
 /**
- * verify-lock.mjs — the one run at a time a shared working tree allows (D87).
- *
- * Two sessions on one tree otherwise drive browsers on top of each other's
- * runs. Every entry that drives a browser through `lib/` takes this lock — the
- * smoke, the end-to-end lane and the live probes — and `npm run verify` owns
- * the run that starts the gates, so a gate it starts inherits
- * `DSH_CLAUDE_STYLE_LOCK_HELD` and takes nothing. A build takes nothing: it is
- * the loop development runs on and never waits minutes for a test run (D87),
- * and a run whose page a build swapped files no verdict (scripts/verify.mjs).
- *
- * The lock is a directory and `owner.json` names the process holding it, so a
- * run killed outright reads as gone and its lock is taken over: either its pid
- * is dead, or — where the platform handed that number to another process — the
- * time it states is past the longest run this repository has.
+ * verify-lock.mjs — serialize browser runs on a shared tree (D87): child gates inherit
+ * the lock, and stale owner records are reclaimed.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -20,17 +8,10 @@ import path from 'node:path'
 const ROOT = path.resolve(import.meta.dirname, '..', '..')
 const LOCK = path.join(ROOT, '.debug', 'verify.lock')
 const OWNER = path.join(LOCK, 'owner.json')
-/** Set on the gates of a run and on the rebuilds of the watcher. */
 const HELD = 'DSH_CLAUDE_STYLE_LOCK_HELD'
 const DEV = 'DSH_CLAUDE_STYLE_DEV'
-/** A lock whose owner file cannot be read is given this long before it is read as a run that died taking it. */
 const OWNER_GRACE_MS = 60_000
-/**
- * How long one run may hold the lock: past the sum of its stages' deadlines
- * (scripts/verify.mjs takes a gate down at its own), so a holder older than this
- * is a dead run whose pid the platform reused, which is the one state the
- * liveness check reads as alive forever.
- */
+/** Outliving every stage deadline means the pid may have been reused; treat the lock as stale. */
 const MAX_HOLD_MS = 90 * 60 * 1000
 /** How often a waiting request looks at the lock again. */
 const WAIT_POLL_MS = 2_000
@@ -39,11 +20,7 @@ const WAIT_SAY_MS = 30_000
 
 const say = (line) => process.stdout.write(`${line}\n`)
 
-/**
- * Whether a pid is still alive. The operating system answers this by throwing
- * rather than by returning: `ESRCH` means the process is gone, `EPERM` that it
- * exists and belongs to somebody else.
- */
+/** `EPERM` still proves the process exists; `ESRCH` means it is gone. */
 function alive(pid) {
   try {
     process.kill(pid, 0)
@@ -53,17 +30,13 @@ function alive(pid) {
   }
 }
 
-/**
- * What the lock says right now.
- * @returns `{ kind: 'free' }`, `{ kind: 'held', owner }` or `{ kind: 'stale', note }`.
- */
+
 function lockState() {
   const stat = fs.statSync(LOCK, { throwIfNoEntry: false })
   if (stat === undefined) return { kind: 'free' }
   if (fs.existsSync(OWNER)) {
     let owner = null
-    // The file is read and parsed in one step: it is written whole, so what
-    // fails here is a reader that raced a run taking the lock, not a state.
+    // Written whole, so what fails here is a reader that raced a run taking the lock, not a state.
     try {
       owner = JSON.parse(fs.readFileSync(OWNER, 'utf8'))
     } catch {
@@ -89,10 +62,7 @@ async function takeLock(label, runId) {
   let announced = 0
   for (;;) {
     try {
-      // The lock directory is the lock, and it lives under `.debug/`, which a
-      // fresh checkout does not have yet: create that parent first, so the
-      // mkdir below answers EEXIST for a lock in flight instead of ENOENT for
-      // a missing parent.
+      // Create .debug first so an existing lock reports EEXIST rather than ENOENT.
       fs.mkdirSync(path.dirname(LOCK), { recursive: true })
       fs.mkdirSync(LOCK)
       fs.writeFileSync(OWNER, `${JSON.stringify({ pid: process.pid, at: new Date().toISOString(), label, runId }, null, 2)}\n`)
@@ -118,11 +88,7 @@ async function takeLock(label, runId) {
   }
 }
 
-/**
- * Run `body` under the lock, releasing it however `body` ends. A gate of a run
- * and a rebuild behind the watcher go straight through: the lock is already
- * held above them.
- */
+/** Always release after `body`; inherited gates and watcher rebuilds already hold the lock. */
 async function withLock(label, runId, body) {
   if (process.env[HELD] === LOCK || process.env[DEV] === '1') return await body()
   const release = await takeLock(label, runId)

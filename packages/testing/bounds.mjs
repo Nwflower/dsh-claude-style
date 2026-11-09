@@ -1,18 +1,5 @@
 #!/usr/bin/env node
-/**
- * bounds.mjs — the bounds a check compares against, read from one table
- * (D87).
- *
- * A bound is a limit on a reading rather than a fixture the walk sets up: how
- * far behind the tail the scroller may lag, how long a frame may take, how much
- * long-task time a turn may spend. Those numbers are what a failing check gets
- * loosened to, so they live in packages/testing/data/bounds.json with the reason each
- * holds its value, and a check reads them from here instead of carrying a
- * literal of its own — a loosened bound is then one line in one file, visible in
- * the diff beside its reason.
- *
- * Usage: `const { bound } = require('./bounds.mjs')` from a lane's own module.
- */
+/** Read test limits from data/bounds.json so each adjustment stays beside its recorded reason (D87). */
 import fs from 'node:fs'
 import path from 'node:path'
 

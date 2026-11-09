@@ -16,26 +16,8 @@ export interface ChatFoldHandle extends FeatureHandle {
   isBusy(): boolean
 }
 
-/**
- * The chat area's folding, ported from dsh-chat-ux: a thinking row stays open
- * while the model reasons and folds back once it stops (reasoning-fold.ts), a
- * process group opens while its section runs and folds back when it ends
- * (process-fold.ts), a message the reader sent is clamped under a cap while the
- * skin's own toggle under it hands the whole message back (message-fold.ts), a
- * reader's own press on a row rolls the body down or up instead of snapping it
- * (fold-glide.ts), a process group's header counts what the group holds
- * (process-summary.ts), and a running reasoning plays back inside a window that
- * steps up as it streams (reasoning-stream.ts). All of them ride the one
- * preference: it means "the skin may fold the chat area", so off leaves the
- * automatic folding, the door, the header's words, the reasoning's window and
- * the reader's own folded messages to the host.
- *
- * The door takes over the reader's clicks on a folding row, a takeover of the
- * host's interface like any other (D72): the entry installs this only while
- * the preference is on and dsh-chat-ux is off the page (the manifest), and
- * this teardown leaves the clicks alone again. The follow guard asks whether
- * a door is rolling through `ui.chatFold`, which exists only while installed.
- */
+/* One preference controls every fold behaviour. Install only while dsh-chat-ux is absent (D72);
+   ui.chatFold lets the follow guard exclude an active glide and disappears on teardown. */
 export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   document.body.setAttribute(CHAT_FOLD_ATTR, '')
   const stream = createReasoningStream()

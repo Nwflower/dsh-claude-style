@@ -4,41 +4,9 @@ import { motionReduced } from '../core/prefs'
 import { motionMs } from './motion'
 import { buildSweepBand } from './sweep-band'
 
-/**
- * One line of words that swaps in place, after transitions.dev's "Text states
- * swap" (MIT), by way of its "Thinking states" composition: the wording leaving
- * rises out through a small blur, the wording arriving comes up from below while
- * the one leaving is still on its way out — the arriving copy stands parked and
- * is released one gap after the leaving one started — and the box neither
- * resizes nor jumps mid-swap.
- *
- * The box's width belongs to a hidden sizer, which is the recipe's own answer to
- * the problem the swap would otherwise cause: the copies are absolutely
- * positioned, so a box that held only what is moving would read as empty for the
- * length of a swap and throw everything laid out beside it to the left edge and
- * back. The sizer holds every word a swap puts in the box while it runs, laid
- * over each other, and comes down onto the words standing the moment it settles
- * — so two states of different lengths never leave the clock beside the line
- * stranded after words that are no longer that long. Each of those two widths
- * is a move rather than a jump: the box is pinned at the width it stands at,
- * written with the one it heads for, and the stylesheet's transition carries it
- * there (shared/swapping-text.css), so the clock beside the line travels with
- * it instead of being displaced twice per wording.
- *
- * Nothing here reads the layout (D40). The words arrive in some feature's write
- * phase, and a box read there or in any frame's read phase forces the page's
- * style and layout ahead of the render, which on a long conversation costs more
- * than the frame. The sizer's width is heard instead, through the observation
- * bus, from the layout the render makes anyway; the box is pinned at the width
- * last heard, which is the width it stands at. Whatever has to start from a
- * committed pose — the box travelling off its pin, the copies leaving their
- * start poses — is written in a frame after the render that laid it out.
- *
- * The names, the blurs and the distance are the recipe's, carried as this
- * skin's own properties; shared/swapping-text.css reads them. The reader's
- * animation choice (D40) decides at call time whether any of it runs, instead
- * of the recipe's own media query — core/prefs.ts has already resolved the
- * setting and the system preference into one answer.
+/** The hidden sizer keeps absolutely positioned copies from collapsing the box during swaps.
+ * Widths come from ResizeObserver and motion starts only after the starting layout has rendered (D40).
+ * Visual values and the transition contract are in shared/swapping-text.css.
  */
 
 /** The class on the hidden sizer the box takes its width from. */
@@ -49,29 +17,16 @@ const SIZER_WORD_CLASS = 'dsh-claude-swap-sizer-word'
 const COPY_CLASS = 'dsh-claude-swap-copy'
 
 interface SwapState {
-  /**
-   * Whether this element has ever been written: a line that already carries its
-   * words when it is first handed over must not swap them for the identical
-   * words.
-   */
+  /** Suppresses a redundant swap for text already present on the first write. */
   written: boolean
-  /**
-   * The sizer's width as the last layout took it, null before its first. A
-   * resize observer answers in the pixels a written width is read in, whatever
-   * the page's own scale (shared/page-zoom.ts).
-   */
+  /** Last observed width in the page's written pixel space. */
   sizerWidth: number | null
-  /** The sizer's size subscription on the observation bus. */
   unobserve: (() => void) | null
-  /** The swap in flight: its two copies, and whether the classes that move them have been written. */
   swap: { leaving: HTMLElement, entering: HTMLElement, moving: boolean } | null
-  /** The timer that takes the copy that left down once the swap has settled. */
   settle: number | null
-  /** The width written on the box, or null while the box is the sizer's own width. */
   width: number | null
-  /** The timer that lets the written width go once the travel to it has landed. */
   travel: number | null
-  /** The frames waiting for the render of the newest writes: cancels them. */
+  /** Cancels frames waiting for the newest writes to render. */
   frame: (() => void) | null
 }
 

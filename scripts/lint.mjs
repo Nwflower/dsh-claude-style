@@ -1,21 +1,5 @@
 #!/usr/bin/env node
-/**
- * lint.mjs — the rules that need no build.
- *
- * The promises the repository makes in prose and a tool can check without
- * guessing: no source file crosses the stop line, every link in the committed
- * Markdown resolves, every decision a comment or a document cites exists
- * (numbers are stable and a retired one stays citable, while a decision's own
- * prose names the decision in force), every decision file carries its four
- * sections in order, every repository path prose names exists, no feature
- * module reaches past the handles its manifest
- * declares (D72), no pair of files holds a copied stretch (jscpd), and every
- * spec keeps to the channels and the header D87 sets.
- * Everything else a tool could enforce is already a build check, the type check
- * or a smoke case.
- *
- * Usage: node scripts/lint.mjs
- */
+/** lint.mjs — check source limits, repository references, dependency direction and spec contracts (D72, D87). */
 import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import { createRequire } from 'node:module'
@@ -28,29 +12,17 @@ const ROOT = path.resolve(import.meta.dirname, '..')
 const DECISIONS = path.join(ROOT, 'docs', 'adr')
 /** The stop line: a source file approaching this gets split, not extended. */
 const MAX_LINES = 750
-/**
- * Files already past the stop line, with the size they stood at when the rule
- * was written: they may not grow until the split lands.
- */
+/** Recorded oversize files may not grow before their split. */
 const OVERSIZE = {}
 
 const problems = []
 
-/**
- * What the walk never enters: a directory of local scratch a rule does not
- * govern. `.claude/` holds the editor's own state (gitignored), and a whole
- * second copy of every document inside one would be read as the repository's
- * own files.
- */
+/** Exclude scratch and editor state so duplicate documents are not linted as repository files. */
 const SKIPPED_DIRS = new Set(['.git', '.debug', '.claude', 'node_modules'])
 
 const relative = (file) => path.relative(ROOT, file).replace(/\\/g, '/')
 
-/**
- * The decision numbers that exist and the ones a replacing decision retired.
- * Numbers retired without a successor sit in retired.txt, one per line; a
- * number is never reused, so this set only grows.
- */
+/** Retired numbers remain citable and are never reused. */
 function decisionNumbers() {
   const live = new Set()
   const retired = new Set()
@@ -74,9 +46,9 @@ function decisionNumbers() {
   return { live, retired }
 }
 
-// 1. The stop line. A unit test file counts like any other: a test that grew
-// past the line is one file holding several subjects, which is the shape the
-// line exists to catch (D87). Declaration files are generated and stand aside.
+// 1. The stop line. A unit test file counts like any other: a test that grew past the
+// line is one file holding several subjects, which is the shape the line exists to catch
+// (D87). Declaration files are generated and stand aside.
 const sources = [
   ...filesUnder(path.join(ROOT, 'packages'), ['.ts', '.css', '.mjs', '.js'], SKIPPED_DIRS),
   ...filesUnder(path.join(ROOT, 'scripts'), ['.mjs', '.mjs', '.js'], SKIPPED_DIRS),
@@ -91,10 +63,8 @@ for (const file of sources) {
   }
 }
 
-// The engine's dependency direction (D73): it serves the skin and talks to the
-// host, so it may read the shared contract and the host's own packages, and
-// nothing of the skin it serves — no client or host module, no generated module
-// carrying the skin's own vocabulary.
+// The engine's dependency direction (D73): it serves the skin and talks to the host, so it
+// may read the shared contract and the host's own packages, and nothing of the skin it serves.
 const ENGINE = path.join(ROOT, 'packages', 'engine', 'src')
 for (const file of sources.filter((candidate) => /^packages\/engine\/(?:src|node)\//.test(relative(candidate)))) {
   const text = fs.readFileSync(file, 'utf8')
@@ -127,11 +97,9 @@ for (const file of markdown) {
   }
 }
 
-// 3. Decision numbers cited by code and documents. A retired number stays
-// citable (D48): a comment or an older record points at it and the index leads
-// on to the decision that replaced it. A decision file is where the reader
-// stops, so its own prose names the decision in force — only its 取代 line, and
-// the index generated from those lines, name retired numbers.
+// 3. Decision numbers cited by code and documents. A retired number stays citable (D48): a
+// comment or an older record points at it and the index leads on to what replaced it. A
+// decision file names the decision in force — only its 取代 line names retired numbers.
 const { live, retired } = decisionNumbers()
 const citing = [
   ...sources,
@@ -165,8 +133,7 @@ for (const file of citing) {
   })
 }
 
-// 4. The shape of a decision file (D48): 背景、决定、后果 and 重审条件 in that
-// order, the last one saying when the direction is worth revisiting.
+// 4. The shape of a decision file (D48): 背景、决定、后果 and 重审条件 in that order.
 const SECTIONS = ['## 背景', '## 决定', '## 后果', '## 重审条件']
 let decisionFiles = 0
 for (const name of fs.readdirSync(DECISIONS)) {
@@ -183,9 +150,9 @@ for (const name of fs.readdirSync(DECISIONS)) {
   }
 }
 
-// 5. A backticked repository path in prose has to exist. Directory mentions and
-// placeholder segments are out of reach; the CHANGELOG is a historical record.
-// A path that starts at a feature layer names a file under packages/client/src.
+// 5. A backticked repository path in prose has to exist. Directory mentions and placeholder
+// segments are out of reach; the CHANGELOG is a historical record, and a path that starts at
+// a feature layer names a file under packages/client/src.
 const prose = citing.filter((file) => !relative(file).endsWith('CHANGELOG.md'))
 const PROSE_PATHS = [
   { pattern: /`((?:packages|scripts|docs|tests|changes|locale)\/[^`\s]+?\.[a-z0-9]+)`/g, base: ROOT },
@@ -207,27 +174,26 @@ for (const file of prose) {
   })
 }
 
-// 6. A feature sees `ui` as FeatureUi of its own manifest: its handle and the
-// handles the manifest `reads` (D72). The whole registry type is the entry's
-// and the scheduler's; a feature module importing it would read any handle
-// with nothing declared.
+// 6. A feature sees `ui` as FeatureUi of its own manifest: its handle and the handles the
+// manifest `reads` (D72). A feature module importing the whole registry type would read any
+// handle with nothing declared.
 const featureModules = filesUnder(path.join(ROOT, 'packages', 'client', 'src', 'features'), ['.ts'], SKIPPED_DIRS).filter((file) => !/\.(test|manifest)\.ts$/.test(file))
 let featureUiChecked = 0
 for (const file of featureModules) {
   const text = fs.readFileSync(file, 'utf8')
   if (/\bFeatureUi\b/.test(text)) featureUiChecked += 1
   if (/^import type \{[^}]*\bUi\b[^}]*\} from '[./]+core\/scheduler'/m.test(text)) problems.push(`${relative(file)}: imports the whole ui registry type; type ui as FeatureUi<typeof manifest> and list the handles it reads in the manifest (D72)`)
-  // A host service is read through an accessor in the engine's host.ts, which owns its
-  // name, its shape and the answer where the host carries none (D3, D73).
+  // A host service is read through an accessor in the engine's host.ts, which owns its name,
+  // its shape and the answer where the host carries none (D3, D73).
   text.split('\n').forEach((line, at) => {
     if (/^\s*(\*|\/\/|\/\*)/.test(line)) return
     if (/\b(?:ctx|scope|lookup)\??\.get\(/.test(line)) problems.push(`${relative(file)}:${at + 1}: reads a host service by name; add an accessor to packages/engine/src/host.ts and call it (D73)`)
   })
 }
 
-// 7. Copied code (jscpd, scanned as .jscpd.json says): a pattern's second copy
-// is where it moves into the shared layer, so any copy at all fails, and so
-// does a scan that read nothing. `npx jscpd` lists every copy.
+// 7. Copied code (jscpd, scanned as .jscpd.json says): a pattern's second copy is where it
+// moves into the shared layer, so any copy at all fails, and so does a scan that read
+// nothing. `npx jscpd` lists every copy.
 const copies = spawnSync(process.execPath, [
   path.join(ROOT, 'node_modules', 'jscpd', 'run-jscpd.js'),
   '--threshold', '0',
@@ -240,19 +206,14 @@ if (copies.status !== 0) {
   problems.push(`copied code; move the shared part into the shared layer (npx jscpd lists every copy):\n${copies.stdout}${copies.stderr}`)
 }
 
-// 8. The whole-document lookups the browser half makes outside the modules that
-// own them (D9): a lookup inside a refresh pass or a frame callback costs the
-// page's own size on every frame of a long conversation, and each of the
-// regressions behind that cost was one such call. A query by an element's id is
-// not counted: the browser answers it from its own index rather than by walking
-// the tree. The sanctioned readers are the accessors and registries that cache
-// their answer — the engine's host.ts, bus.ts and chat-dom.ts, and the sheet the
-// engine's stylesheet.ts mounts itself. Every other site is recorded in
-// packages/testing/data/document-lookups.json with the reason it is still there: a
-// file's count has to match its entry, and an entry whose count reaches zero
-// comes out of the file. That the record's total never rises is held against
-// the base by scripts/ci-scope.mjs --ledgers. A unit test stands outside the
-// rule: its document runs in the test browser and costs no reader anything.
+// 8. The whole-document lookups the browser half makes outside the modules that own them
+// (D9): a lookup inside a refresh pass or a frame callback costs the page's own size on
+// every frame of a long conversation. A query by an element's id is not counted, and the
+// sanctioned readers are the accessors and registries that cache their answer — the
+// engine's host.ts, bus.ts and chat-dom.ts, and the sheet stylesheet.ts mounts. Every other
+// site is recorded in packages/testing/data/document-lookups.json with its reason: a file's
+// count has to match its entry, an entry whose count reaches zero comes out, and
+// scripts/ci-scope.mjs --ledgers holds the total against the base. A unit test stands outside the rule.
 const LOOKUP = /document\.(?:querySelectorAll|querySelector)(?:<[^>]*>)?\s*\(|document\.body\.(?:querySelectorAll|querySelector)(?:<[^>]*>)?\s*\(|removeStrayNodes\(\s*document\b/g
 const LOOKUP_OWNERS = new Set([
   'packages/engine/src/host.ts',
@@ -286,12 +247,10 @@ for (const file of Object.keys(recordedLookups)) {
 }
 
 // 9. The bounds a check compares against, and every name a check asks for.
-// packages/testing/data/bounds.json is where a limit on a reading lives, each with
-// the reason it holds its value, so loosening one is a line in a diff rather
-// than a number buried in an assertion (D87). A name nothing reads
-// means the rule it guards is gone; a name something reads and the table does
-// not hold fails where it is read, which is why the pass over the sources is
-// part of the rule rather than a comment on the table.
+// packages/testing/data/bounds.json holds each limit on a reading with the reason for its
+// value, so loosening one is a line in a diff rather than a number in an assertion (D87). A
+// name nothing reads means the rule it guards is gone; a name something reads and the table
+// does not hold fails where it is read, which is why the sources are walked here too.
 const boundsFile = path.join(ROOT, 'packages', 'testing', 'data', 'bounds.json')
 const readBounds = JSON.parse(fs.readFileSync(boundsFile, 'utf8'))
 if (!Array.isArray(readBounds.bounds) || readBounds.bounds.length === 0) {
@@ -335,23 +294,17 @@ for (const name of boundNames) {
 }
 if (boundReads === 0) problems.push('lint: no bound was read — the bounds pattern matches nothing')
 
-// 10. The specs (D87). A spec reaches the product through three channels only —
-// the declared logic surface, the contract and engine packages, and what the
-// reader sees on the built page — and it names the skin's and the host's own
-// marks through the surface table and the host contract, never by spelling
-// them. Each opens with the header the runners, the fault corpus and the
-// coverage read (scripts/shared/spec-header.mjs).
+// 10. The specs (D87). A spec reaches the product through three channels only — the declared
+// logic surface, the contract and engine packages, and what the reader sees on the built
+// page — and it names the skin's and the host's own marks through the surface table and the
+// host contract, never by spelling them. Each opens with the header the runners and the fault
+// corpus read (scripts/shared/spec-header.mjs).
 const require = createRequire(import.meta.url)
 const { AREAS, specFiles, readHeader } = require('./shared/spec-header.mjs')
 const featureDirs = new Set(fs.readdirSync(path.join(ROOT, 'packages', 'client', 'src', 'features'), { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name))
 /** What a spec may import or require by name; a relative path must stay inside packages/testing/specs/. */
 const SPEC_IMPORTS = [/^vitest$/, /^vitest\/browser$/, /^fast-check$/, /^@dsh-claude-style\/client\/pure$/, /^@dsh-claude-style\/contracts\/[\w-]+$/, /^@dsh-claude-style\/engine\/[\w-]+$/]
-/**
- * Calls that put a stand-in where the product's own code runs, or freeze an
- * output instead of judging it. The bracket form is the same call to the
- * engine, so it is refused by name too; the stub calls install a stand-in
- * globally and are refused for the same reason.
- */
+/** Refuse mocks, global stubs and snapshots, including bracket-call forms (D87). */
 const REFUSED_NAMES = 'mock|doMock|importMock|importActual|hoisted|stubGlobal|stubEnv'
 const SPEC_REFUSED = [
   new RegExp(`\\bvi\\.(?:${REFUSED_NAMES})\\s*\\(`),
@@ -370,11 +323,7 @@ const SPEC_SPELLED = [
 const CONCATENATED_CLASS = /['"`]_?[A-Za-z]+_['"`]\s*\+/
 const specs = specFiles()
 const spellingSpec = (file) => /\.spec\.(ts|mjs)$/.test(file)
-/**
- * A stand-in page may carry a host's hashed class name: nothing in the part
- * tables names the rail ui-attachment draws a draft's files into until the walk
- * has marked it, and the page has to draw that rail itself.
- */
+/** Stand-in pages may draw host-only markup that has no contract-table entry. */
 const standInPage = (file) => file.startsWith('packages/testing/smoke/')
 /** Where a spec stands: `<layer>/<capability>/<name>.spec.(ts|mjs)`, and nowhere else. */
 const SPEC_PLACE = /^packages\/testing\/specs\/(logic|mechanism|behaviour)\/[^/]+\/[^/]+\.spec\.(ts|mjs)$/
@@ -390,9 +339,8 @@ for (const file of specs) {
   if (typeof header.risk !== 'string' || header.risk.trim().length < 40) problems.push(`${file}: @risk does not say, in the reader's terms, what goes wrong when it fails`)
   const text = fs.readFileSync(path.join(ROOT, file), 'utf8')
   const lines = text.split('\n')
-  // Every way a module reaches the file by name: a static import (side-effect
-  // ones carry no binding), an export-from, a require and a dynamic import,
-  // each quoted with either mark.
+  // Every way a module reaches the file by name: a static import, an export-from, a require
+  // and a dynamic import, each quoted with either mark.
   const specifiers = [...text.matchAll(/\bfrom\s*['"]([^'"]+)['"]|\brequire\s*\(\s*['"]([^'"]+)['"]|\bimport\s*\(\s*['"]([^'"]+)['"]|\bimport\s+['"]([^'"]+)['"]/g)]
     .map((match) => match[1] ?? match[2] ?? match[3] ?? match[4])
   for (const specifier of specifiers) {
@@ -420,8 +368,8 @@ for (const file of specs) {
   })
 }
 
-// The surface table (packages/testing/data/surface.json): each entry names a mark
-// the browser half writes, under one id, and a spec reads every entry.
+// The surface table (packages/testing/data/surface.json): each entry names a mark the
+// browser half writes, under one id, and a spec reads every entry.
 const surfaceTable = JSON.parse(fs.readFileSync(path.join(ROOT, 'packages', 'testing', 'data', 'surface.json'), 'utf8')).surface
 const clientText = filesUnder(path.join(ROOT, 'packages', 'client', 'src'), ['.ts', '.css'], SKIPPED_DIRS).map((file) => fs.readFileSync(file, 'utf8')).join('\n')
 const specText = specs.map((file) => fs.readFileSync(path.join(ROOT, file), 'utf8')).join('\n')
@@ -442,8 +390,8 @@ for (const match of specText.matchAll(/surface(?:Attribute|Class|Selector|\.attr
   if (!surfaceIds.has(match[1])) problems.push(`a spec reads the surface entry "${match[1]}", which packages/testing/data/surface.json does not hold`)
 }
 
-// The quarantine (packages/testing/data/quarantine.json): each entry is a behaviour
-// test that exists, with the defect it fails over said in the reader's terms.
+// The quarantine (packages/testing/data/quarantine.json): each entry is a behaviour test
+// that exists, with the defect it fails over said in the reader's terms.
 for (const entry of JSON.parse(fs.readFileSync(path.join(ROOT, 'packages', 'testing', 'data', 'quarantine.json'), 'utf8')).tests) {
   const [layer, capability, ...rest] = entry.id.replace(/@[\w.]+$/g, '').split('/')
   const name = rest.join('/')
@@ -454,16 +402,15 @@ for (const entry of JSON.parse(fs.readFileSync(path.join(ROOT, 'packages', 'test
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(entry.since))) problems.push(`packages/testing/data/quarantine.json: "${entry.id}" carries no date it entered`)
 }
 
-// A width media query reads the window unzoomed, so a page drawn at a zoom
-// would keep the layout of a window its own width is not: the stylesheets read
-// the page's width marks instead (packages/client/src/shared/page-scale.ts).
+// A width media query reads the window unzoomed, so a page drawn at a zoom would keep the
+// layout of a window its own width is not: the stylesheets read the page's width marks
+// (packages/client/src/shared/page-scale.ts).
 for (const match of clientText.matchAll(/@media[^{]*\((?:max|min)-width:\s*\d+px\)/g)) {
   problems.push(`packages/client/src/: "${match[0]}" reads the window unzoomed — read the page's width mark (data-dsh-claude-page-under-<width>, shared/page-scale.ts) instead`)
 }
 
-// The release matrix's viewport bands (packages/testing/data/matrix.json) stand on
-// both sides of every page width breakpoint the stylesheets read, so no layout
-// the skin draws goes unwalked.
+// The release matrix's viewport bands (packages/testing/data/matrix.json) stand on both
+// sides of every page width breakpoint the stylesheets read, so no layout goes unwalked.
 const bands = JSON.parse(fs.readFileSync(path.join(ROOT, 'packages', 'testing', 'data', 'matrix.json'), 'utf8')).bands
 let breakpoints = 0
 for (const match of new Set(clientText.match(/data-dsh-claude-page-under-\d+/g) ?? [])) {
@@ -474,11 +421,10 @@ for (const match of new Set(clientText.match(/data-dsh-claude-page-under-\d+/g) 
   }
 }
 
-// The skin's marks spelled out in the smoke's and the lane's own code, which
-// predate the surface table: a count per file that only shrinks
-// (packages/testing/data/skin-literals.json, held against the base by
-// scripts/ci-scope.mjs --ledgers). New code reads the table, except for the
-// smoke's stand-in form, which writes a mark the host would have written.
+// The skin's marks spelled out in the smoke's and the lane's own code, which predate the
+// surface table: a count per file that only shrinks (packages/testing/data/skin-literals.json,
+// held against the base by scripts/ci-scope.mjs --ledgers). New code reads the table, except
+// for the smoke's stand-in form, which writes a mark the host would have written.
 const SKIN_MARK = /(?<![@\w/.])(?:data-)?dsh-claude-(?!style\b)[a-z][\w-]*/g
 const recordedMarks = JSON.parse(fs.readFileSync(path.join(ROOT, 'packages', 'testing', 'data', 'skin-literals.json'), 'utf8')).files
 /** The page that draws the host's own markup, where a skin mark is what the host's copy of it carries. */
@@ -501,8 +447,7 @@ for (const file of Object.keys(recordedMarks)) {
   if (!fs.existsSync(path.join(ROOT, file))) problems.push(`packages/testing/data/skin-literals.json: ${file} is gone from the tree — take its entry out`)
 }
 
-// A rule whose pattern stopped matching anything would pass forever: each of the
-// rules has to have looked at something.
+// A rule whose pattern stopped matching anything would pass forever: each rule has to have looked at something.
 if (specs.length === 0) problems.push('lint: no spec was examined — the spec rule matches nothing')
 if (breakpoints === 0) problems.push('lint: no viewport breakpoint was read — the matrix rule matches nothing')
 if (featureUiChecked === 0) problems.push('lint: no feature module types ui as FeatureUi — the feature rule matches nothing')
@@ -513,8 +458,7 @@ if (decisionFiles === 0) problems.push('lint: no decision file was read — the 
 if (prosePaths === 0) problems.push('lint: no repository path in prose was examined — the path pattern matches nothing')
 if (lookups === 0) problems.push('lint: no whole-document lookup was counted — the lookup rule matches nothing')
 
-// Work orders live under .debug/work: their facts are transient, so this reads
-// the local tree only and passes in CI, where the directory is absent.
+// Work orders live under .debug/work: this reads the local tree only and passes in CI, where it is absent.
 for (const result of [checkWorkOrders(), createTemporaryFiles(ROOT).check()]) {
   problems.push(...result.problems)
   for (const warning of result.warnings) console.warn(`lint: ${warning}`)

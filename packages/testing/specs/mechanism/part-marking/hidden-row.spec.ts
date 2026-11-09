@@ -1,6 +1,6 @@
 /**
  * The hold that keeps a row the host has folded out of the off-screen rule
- * (features/row-skip/row-skip.css): a row that hides a cell inside itself carries the
+ * (features/row-skip/row-skip.css): a row hiding a cell inside itself carries the
  * mark, and the row the host draws in its place does not.
  *
  * @capability part-marking
@@ -23,11 +23,9 @@ const row = () => {
 }
 
 /**
- * The rows mounted the way the host draws them, with the marking pass installed
- * over them.
+ * The rows mounted the way the host draws them, with the marking pass installed.
  *
  * @param rows - the rows to mount, each the outer element of its own flow item.
- * @returns the rows.
  */
 function flow(rows: Element[]) {
   rowInFlow(rows)

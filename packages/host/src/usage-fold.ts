@@ -2,10 +2,10 @@
  * The session logs: which ones exist, how to read one, and the fold that turns
  * its events into per-day buckets and hour histograms.
  *
- * The events come through the host's own `sessionQuery` service. The logs are
- * multi-frame zstd (one frame per appended batch: a 9 MB log holds ~4000 frames)
- * and `node:zlib` decodes only the first frame, silently discarding the rest — so
- * the frames are left to the engine's reader and only the aggregation is ours.
+ * The events come through the host's own `sessionQuery` service. A log is
+ * multi-frame zstd and `node:zlib` decodes only the first frame, silently
+ * discarding the rest, so the frames are left to the engine's reader and only
+ * the aggregation is ours.
  *
  * The fold mirrors the host's own `tokenUsage` projection (see
  * `@deepseek-ai/dsh-token-meter/usage-projection`): one durable Assistant
@@ -118,10 +118,9 @@ function bucketsEqual(left: Buckets, right: Buckets) {
 
 /**
  * The route a settlement's sample belongs to, or null when the event names none.
- *
  * Only `assistant/message` carries the assembled message; an `assistant/attempt`
- * that committed no surface message keeps its usage but has no route to attribute
- * it to, and its tokens then count toward the day alone.
+ * that committed no surface message keeps its usage but has no route, so its
+ * tokens count toward the day alone.
  */
 export function modelOf(event: UsageEvent): string | null {
   const model = event?.data?.message?.source?.model
@@ -130,9 +129,9 @@ export function modelOf(event: UsageEvent): string | null {
 
 /**
  * Fold one session's events into per-day buckets, plus a settlement count per
- * hour of day — the dashboard's peak-hour cell — both for the whole session and
- * for each day, so a range window can sum its own days' hours. A replaced
- * sample leaves its hour the same way it leaves its day.
+ * hour of day for the dashboard's peak-hour cell, both for the whole session and
+ * for each day, so a range window can sum its own days' hours. A replaced sample
+ * leaves its hour the same way it leaves its day.
  *
  * @param events - the session's durable events, in sequence order.
  * @returns a map of local day key to buckets, and a 24-slot hour histogram.

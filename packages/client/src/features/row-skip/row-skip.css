@@ -1,34 +1,6 @@
-/* ---------- the conversation's rows: what the reader cannot see is not laid out ---------- */
-/* A long transcript is laid out whole on every measurement: the host's follow reads
-   scrollHeight after each streamed batch, and every such read pays for every row.
-   content-visibility: auto skips a row's style, layout and paint while it stands far
-   from the viewport, and contain-intrinsic-size: auto keeps the row's box at the height
-   it had when it was last laid out.
-
-   A row is skipped only once it carries the laid-out mark (row-skip.ts), written the
-   frame after the one that laid it out at its real size; a row under a hidden element (a
-   folded group's body) is not laid out, and is marked only once it is shown. A row
-   skipped before that would
-   stand at the fallback height until the reader neared it, and its real height would
-   arrive under him: while the host follows the end it turns scroll anchoring off, and the
-   page jumps by the difference on every such row. The fallback is never stood at; the
-   intrinsic size is stated on every row so its height is remembered from its first layout.
-
-   Rows that stay laid out:
-
-     a message the reader sent   chat-fold reads its bubble's scrollHeight to decide
-                                 whether the cap hides part of it, and a row the browser
-                                 has skipped answers that question with no layout at all.
-     the answer of a process     the answer is what the reader came for, and it keeps its
-     group                       own layout while the group above it is a door away.
-                                  The host writes no mark of its own for that row: it is
-                                  the assistant step the turn's process does not hold.
-     a row hiding something      the host folds a turn's process members with
-                                 hidden="until-found", and draws them no box: a skipped
-                                 row would stand at its remembered size, so a folded group
-                                 would open a page of empty band. The row that holds a
-                                 hidden cell or a hidden mark carries the hold
-                                 (parts-table.ts). */
+/* Skip only rows marked after real layout: the host disables scroll anchoring while following,
+   so a fallback height would make the page jump. User rows, process answers and rows holding
+   hidden content must stay laid out because their measurements or hidden boxes depend on it. */
 
 body[data-dsh-claude-style] [data-chat-flow-kind]:not([data-chat-flow-kind='user']):not([data-chat-flow-kind='assistant-step']:not([data-turn-process-member]), [data-turn-process-hidden], [data-disclosure-row] [hidden], [hidden], [data-dsh-claude-holds~='hidden-row']) {
   contain-intrinsic-size: auto 240px;

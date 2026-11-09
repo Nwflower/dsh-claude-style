@@ -1,18 +1,5 @@
-/**
- * The browser half's declared logic surface (D87): the functions the logic layer
- * of the specs (packages/testing/specs/logic/) may call below the page, and the
- * one stylesheet a placement function measures against.
- *
- * An entry here answers from its arguments alone — numbers, strings, snapshots
- * the host hands over, or DOM nodes passed in — and keeps nothing between calls
- * beyond what it returns. Everything else a feature does is reached through
- * `apply(ctx)` on the built page (packages/testing/specs/behaviour/). A spec
- * names an entry, never a module path, so moving or splitting a module changes
- * this file and no spec.
- *
- * The bundle never carries this module: entry.ts does not import it, and the
- * build's source check stands it aside the way it stands the manifests aside
- * (scripts/build-checks.mjs).
+/** Stateless spec entries only; specs name these exports so module moves do not change tests (D87).
+ * The production entry never imports this module.
  */
 
 export { resolveMascot } from './core/prefs'

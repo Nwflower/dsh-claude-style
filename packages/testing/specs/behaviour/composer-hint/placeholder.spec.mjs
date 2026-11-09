@@ -71,10 +71,9 @@ export default spec({ page: 'composer' }, ({ test }) => {
   test('a composition in flight holds the hint until it lands', async (t) => {
     await openAttachmentForm(t)
     t.expectThat.equal((await readHint(t)).standIns, ['Type / for commands'], 'the stand-in of the attachment form')
-    // The host raises its flag on the field for the span of a composition, and
-    // every keystroke inside one announces itself with an input event: a hint
-    // written under that span is what makes the browser drop the letters typed
-    // but not committed.
+    // The host flags the field for the span of a composition and announces each
+    // keystroke inside it with an input event; a hint written under that span
+    // makes the browser drop the letters typed but not committed.
     await t.page.evaluate(([field, composing]) => {
       const input = document.querySelector(field)
       input.setAttribute(composing, '')

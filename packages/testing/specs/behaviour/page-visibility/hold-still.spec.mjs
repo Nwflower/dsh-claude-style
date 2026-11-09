@@ -1,9 +1,7 @@
 /**
  * A window in the background holds still: every animation on the page pauses
- * where it stands — the skin's and the host's, on elements and on the overlays
- * they draw — and plays again from there when the page comes back. The reader
- * who returns to a window they left meets the page they left, instead of a
- * window catching up on the frames the animations queued while nobody looked.
+ * where it stands, the skin's and the host's alike, and plays again from there
+ * when the page comes back.
  *
  * @capability page-visibility
  * @features caret, effort, home-ripple
@@ -17,8 +15,7 @@ const OVERLAY = '::after'
 /**
  * Report the page off screen, then back, at the browser's boundary: a headless
  * window is never hidden, so the answer the page reads and the event it hears
- * stand in for the move. The property is deleted rather than restored, so the
- * return leaves the browser's own answer in place.
+ * stand in for the move.
  */
 async function reportPage(t, offScreen) {
   await t.page.evaluate((off) => {

@@ -1,20 +1,10 @@
 name: Release
 
-# A release starts from a tag the maintainer pushes: the version's CHANGELOG
-# section and the bumped package.json are already in that commit. What it stands
-# on is the matrix already run against that commit — the manual CI run the
-# release stretch starts before the version is cut (D87) — so this workflow reads
-# that verdict rather than walking the same lanes a second time on the same tree.
-# A tag whose commit carries no green matrix stops here, before anything is
-# packed or published, and names the command that produces one.
+# Require a green manual CI matrix on the tagged commit before packing or
+# publishing (D87).
 #
-# The rest is the packing and the two publications: the package is packed once
-# and published as `<version>-dev.<run number>` under npm's `dev` tag so the
-# version can be tried immediately, then the checks that read no page confirm the
-# tree, and `<version>` goes out as `latest` from the same tarball. The same files
-# npm gets are written to the `dist` branch so a git install needs no build
-# (D47), and the GitHub Release opens with the version's CHANGELOG section. The
-# promotion is the last step.
+# Pack once, publish dev, recheck the tree, then promote the same tarball to
+# latest; dist carries npm's files for build-free git installs (D47).
 
 on:
   push:
@@ -22,8 +12,8 @@ on:
 
 # contents: the dist branch, the moved tag and the GitHub Release (D47).
 # actions: the matrix verdict, read from this repository's own runs (D87).
-# id-token: what npm's trusted publishing exchanges for a one-time publish
-# token, so no npm secret is stored.
+# id-token: npm trusted publishing exchanges it for a one-time token, avoiding
+# a stored npm secret.
 permissions:
   contents: write
   actions: read
@@ -34,9 +24,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # The gate the promotion stands on, read before the pack: `release-verdict.mjs`
-  # finds the manual CI run on this commit and holds it to every lane the matrix
-  # has. A release that fails here has published nothing.
+  # Require every matrix lane to be green on this commit before publication
+  # (D87).
   verdict:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -75,24 +64,20 @@ jobs:
             exit 1
           fi
           echo "version=${version}" >> "$GITHUB_OUTPUT"
-      # The GitHub Release shows this version's section, and the changelog gate
-      # reads the same file: a tag cut without one fails here, before the dev
-      # build goes out, rather than after `latest` sits on npm with nothing to say.
+      # Fail before the dev publish if this version has no CHANGELOG section;
+      # GitHub Release notes read the same file.
       - name: Check the version has its CHANGELOG section
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: node scripts/changelog.mjs --notes "${VERSION}" > /dev/null
       - run: npm ci
-      # A rerun carries on from where the last attempt stopped: npm refuses a
-      # version twice, the dev build of this tag is not published again, and a
-      # tag already on the dist head means the branch went out.
+      # Reruns skip existing publications and dist output; npm rejects duplicate
+      # versions.
       - name: Read what is already out
         id: state
         run: node scripts/release-state.mjs >> "$GITHUB_OUTPUT"
-      # One build, two tarballs: the release the promotion publishes, and the
-      # same files with the dev version in them that the `dev` tag gets now. The
-      # tarballs carry the bundle this commit builds, which is the one the matrix
-      # judged.
+      # Pack release and dev from one build so both tarballs contain the tree
+      # the matrix judged.
       - name: Pack the release and its dev version
         id: pack
         env:
@@ -101,23 +86,20 @@ jobs:
           paths="$(node scripts/release-pack.mjs --out .debug/release --dev "${VERSION}-dev.${GITHUB_RUN_NUMBER}")"
           echo "release=$(printf '%s\n' "${paths}" | sed -n 1p)" >> "$GITHUB_OUTPUT"
           echo "dev=$(printf '%s\n' "${paths}" | sed -n 2p)" >> "$GITHUB_OUTPUT"
-      # Out at once, so the version can be installed and tried while the checks
-      # below run; a check that fails leaves the dev build where it is and
-      # promotes nothing.
+      # Publish dev first for early trials; a later failure leaves latest
+      # unpromoted.
       - name: Publish the dev version
         if: steps.state.outputs.published != 'true' && steps.state.outputs.dev == ''
         run: npm publish "${{ steps.pack.outputs.dev }}" --access public --provenance --tag dev
-      # The checks that read no page, on the tree npm is about to receive: seconds
-      # each, and the matrix that judged the pages is what the verdict job read.
+      # Recheck the tree being published; page results come from `verdict`.
       - run: npm run lint
       - run: npm run docs:check
       - run: npm run changelog:check
       - run: npm run agents:check
       - run: npm run checks:numbers -- --check
       - run: npm run build
-      # The dist branch carries the npm package's own contents, and the step
-      # builds first: `lib/` is not in version control, so a fresh checkout has
-      # none and packing alone would ship a `main` that is not in the package.
+      # Build before writing npm's contents to dist because generated `lib/` is
+      # absent from a fresh checkout (D47).
       - name: Write the dist branch and move the tag
         if: steps.state.outputs.packaged != 'true'
         run: node scripts/dist-branch.mjs --push

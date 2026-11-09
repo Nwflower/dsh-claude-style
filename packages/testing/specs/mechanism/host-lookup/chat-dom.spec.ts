@@ -1,8 +1,8 @@
 /**
- * The two chat seats read on every frame of a stream — the conversation
- * scroller and the message column — are kept while they stay in the document
- * and read again once they leave (D9), and a press beside a scroller's client
- * box is read as a press on its scrollbar.
+ * The two chat seats read on every frame of a stream — the conversation scroller
+ * and the message column — are kept while they stay in the document and read
+ * again once they leave (D9); a press beside a scroller's client box reads as a
+ * press on its scrollbar.
  *
  * @capability host-lookup
  * @features engine

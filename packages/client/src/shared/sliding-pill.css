@@ -1,15 +1,7 @@
 /* ---------- Sliding pill: the segmented controls' shared highlight ---------- */
-/* packages/client/src/shared/sliding-pill.ts marks a control with data-dsh-claude-pill and
-   writes the active item's own box; this draws one box there and slides it on
-   every later change. The whole box is written — offset and size on both
-   axes — so the pill still covers exactly its item when a control wraps onto
-   a second line (the settings tabs at a narrow width). The shape and fill are
-   shared too (shared/segment-control.css); each control is positioned by its
-   own feature sheet, since one of them is absolutely placed.
-   While the pill is there, the active item's own background gives way to it.
-   The slide ignores the system's reduced-motion request on purpose: a
-   quarter-second move of one small box is how the switch reads, and the user
-   asked for it to always play. */
+/* The script writes both offset and size so wrapped items keep their own pill geometry.
+   Feature sheets position the control; the active item yields its background to the pill.
+   This functional slide remains under reduced motion (docs/STYLE.md). */
 body[data-dsh-claude-style] [data-dsh-claude-pill]::before {
   content: "";
   position: absolute;

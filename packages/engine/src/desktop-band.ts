@@ -1,15 +1,6 @@
 import { FRAME_TOP_CLEARANCE_PROPERTY, FULLSCREEN_ATTRIBUTE, WINDOWS_TITLEBAR_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 
-/**
- * The skin's one entry point for reading the desktop caption strip: a single
- * call answers whether the strip is there, how tall it is, and which end the
- * platform's window controls take.
- *
- * The two platforms differ in marker, height source and control side; resolved
- * here once, so no consumer repeats them. The height is read through the
- * computed style because under Windows `--dsh-frame-top-clearance` is an alias
- * chain. A host caption-strip slot or measurement retires this module.
- */
+/** Resolve native caption geometry once per platform; computed style resolves Windows' aliased height token. */
 
 /** macOS: the clearance the traffic lights need, read off the host's own leading seat. */
 const MAC_TRAFFIC_LIGHTS = 88
@@ -20,57 +11,20 @@ const WIN_CAPTION_CONTROLS = 140
 /** Windows: the strip height the host declares, used when the token is absent. */
 const WIN_BAND_HEIGHT = 40
 
-/**
- * The host's declared caption-strip height, or `fallback` when the host
- * declares none.
- *
- * `--dsh-frame-top-clearance` is the host's own name for the strip, and the
- * one token both desktop platforms set: 48px under
- * `html[data-platform=darwin]`, and `var(--dsh-windows-titlebar-height)`
- * under `html[data-windows-titlebar]`. It is read through the computed
- * style, so that alias chain resolves to a length.
- *
- * @param fallback - the height to answer with when the token is absent.
- * @returns the height in CSS pixels.
- */
+/** Read the shared host clearance token through computed style to resolve platform aliases. */
 function bandHeight(fallback: number) {
   const declared = parseFloat(getComputedStyle(document.documentElement).getPropertyValue(FRAME_TOP_CLEARANCE_PROPERTY))
   return isFinite(declared) && declared > 0 ? Math.round(declared) : fallback
 }
 
-/**
- * Whether this page is the Windows desktop window: the shell's preload marks
- * `<html>` with `data-windows-titlebar` there and nowhere else. It says which
- * page this is, fullscreen or not; where the caption strip stands right now is
- * desktopBand's answer.
- */
+/** The preload's Windows-only mark identifies the window regardless of fullscreen state. */
 export function windowsDesktop() {
   return document.documentElement.hasAttribute(WINDOWS_TITLEBAR_ATTRIBUTE)
 }
 
 /**
- * The desktop shell's native caption strip, resolved in one place.
- *
- * Both desktop platforms hand the top of the window to a native layer, and
- * every consumer of that strip asks the same three questions: whether it
- * exists, how tall it is, and which end the platform's window controls take.
- * The platforms answer differently, so the answers are resolved here once.
- *
- *   - Marker. Windows marks `<html>` with `data-windows-titlebar`; macOS
- *     marks it `data-platform="darwin"`. The shell's preload writes both.
- *   - Controls. Windows draws its three caption buttons at the right end and
- *     publishes their box through the Window Controls Overlay API; macOS
- *     draws its traffic lights at the left, at (16, 18) — the shell's own
- *     `trafficLightPosition` — and publishes no measurement. The host's own
- *     leading seat starts at 88px, the clearance those lights need.
- *   - Fullscreen. A fullscreen macOS window hides its traffic lights, and
- *     the host zeroes `--dsh-frame-chrome-top` with them, so that platform
- *     answers null. Windows' frame holds the strip and its padding in
- *     fullscreen too, and the Window Controls Overlay API's own visibility is
- *     the authority there; `data-fullscreen` takes no part in that branch.
- *
- * @returns {{ platform: 'win32' | 'darwin', height: number, controls: { side: 'left' | 'right', size: number } } | null}
- *          the strip, or null when the page owns its whole surface.
+ * Windows uses overlay visibility and right-side controls; macOS uses 88px left clearance.
+ * Fullscreen macOS has no strip; Windows ignores `data-fullscreen` and follows overlay visibility.
  */
 export function desktopBand() {
   const root = document.documentElement

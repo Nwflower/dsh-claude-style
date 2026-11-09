@@ -1,15 +1,6 @@
 /**
- * The host services the skin reads, as the skin needs them (D3).
- *
- * Each interface declares only the members the skin actually touches, with the
- * meaning it gives them; the host's own types are wider and are not shipped
- * here, so this file is the contract a host upgrade is checked against. These
- * shapes were read off the host build (0.2.1-alpha.1) and are exercised by the
- * end-to-end lane (D87).
- *
- * A service the host does not mount comes back `undefined` from `ctx.get`, so
- * every reader takes the value as possibly absent (D12) — that is the reason
- * these types are returned as `| undefined` rather than asserted.
+ * Minimal host service shapes the skin uses, checked against live hosts (D3, D87).
+ * `ctx.get` may return undefined for an unmounted service; callers must keep that boundary (D12).
  */
 
 /** A host value that publishes snapshots and changes: sessions, projections, chat. */
@@ -67,23 +58,17 @@ export interface HostWorkspacesService {
 /** Session-list grouping: sibling Workspace sections, a Workspace tree, or one flat list. */
 export type HostSessionGroupBy = 'workspace' | 'workspace-tree' | 'flat'
 
-/** Which archived rows the host's tree shows: `default` hides them, `show` keeps them among the others, `only` shows nothing else. */
+/** Which archived rows the host's tree shows: `default` hides them, `show` keeps them, `only` shows nothing else. */
 export type HostArchivedFilter = 'default' | 'show' | 'only'
 
 /** The workspace browser's view state, as the host's own view menu reads it. */
 export interface HostWorkspaceViewSnapshot {
   groupBy: HostSessionGroupBy
-  /** Absent in pre-filter snapshots; the host reads it as `default`. */
+  /** Absent until the host filters; a missing value reads as `default`. */
   archivedFilter?: HostArchivedFilter
 }
 
-/**
- * The workspace browser's viewing store: the host registers it under
- * `sidebar.workspaces` with a `create` that answers the one instance its
- * browser renders from, so a write here is the view menu's own write. The skin
- * reads the filter and grouping from `getSnapshot` and drives both through
- * `actions`; the host build these shapes were read on is 0.2.1-rc.2.
- */
+/** `sidebar.workspaces` returns the view menu's own store; writes through `actions` drive that menu. */
 export interface HostWorkspaceViewStore {
   getSnapshot(): HostWorkspaceViewSnapshot
   actions: {
@@ -107,11 +92,7 @@ export interface HostShortcutsService {
   fixedCatalog: HostSnapshotSource<HostShortcutRow[]>
 }
 
-/**
- * The `slots` service: what is registered under a key, and how a plugin adds its
- * own. `inject` waits for the host to declare a slot and `register` hands one
- * entry over, each answering the function that takes it back (D42).
- */
+/** `inject` waits for slot declaration; both registration calls return their undo function (D42). */
 export interface HostSlotsService {
   entries(key: string): HostSlotRegistration[]
   /** The entries a list slot renders: one per id, the winner of each, as its owner reads them. */
@@ -200,10 +181,7 @@ export interface HostSkillListAnswer {
   value: { skills: HostSkill[] }
 }
 
-/**
- * A session binding's own context, which the conversation service keys its
- * input by; the plugin's `HostContext` satisfies it by shape.
- */
+/** Conversation input is keyed by this binding context; plugin `HostContext` satisfies it structurally. */
 export interface HostServiceLookup {
   get(name: string): any
 }
@@ -218,10 +196,7 @@ export interface HostConversationInput {
   state: HostSnapshotSource<{ draft: string }>
   setDraft(draft: string): void
   focus(): void
-  /**
-   * The composer's own action face (read on 0.2.2-rc.1): `submit` is the press
-   * the composer's own send button makes, over whatever draft the input holds.
-   */
+  /** `submit` follows the host send button's action on the current draft. */
   actions?: {
     submit?(): void
     addAttachments?(ids: string[]): void
@@ -233,10 +208,7 @@ export interface HostModelDirectoriesService {
   directoryFor(sessionId: string): HostModelDirectory
 }
 
-/**
- * One session's model directory: the instance carries the load and the pick,
- * and its reactive state hangs off the store the host hands its own menu.
- */
+/** Model loading, selection and reactive catalog state for one session. */
 export interface HostModelDirectory {
   store?: HostSnapshotSource<HostModelCatalogSnapshot>
   load?(): Promise<unknown> | undefined
@@ -259,19 +231,10 @@ export interface HostModelGroup {
   models: HostModelEntry[]
 }
 
-/**
- * The host's own group id for its official provider: that group is the picker's
- * default rather than a choice, so it carries no display name of its own
- * (`features/model/`) and a stored quick-provider id for it is dropped
- * (contracts/prefs.ts).
- */
+/** The host's official provider group: the picker's default, and prefs drops a stored id for it. */
 export const OFFICIAL_MODEL_GROUP = 'deepseek-official'
 
-/**
- * The host's group id for the signed-in account route. The API-key route's
- * catalog is empty while no key is configured, so this group leads the picker's
- * first level in that state (`features/model/level-one.ts`).
- */
+/** Signed-in account group; it leads when the API-key catalog is empty without a key. */
 export const ACCOUNT_MODEL_GROUP = 'deepseek-account'
 
 /** One model: its id, its name, its own description text, and the reasoning metadata the effort control reads. */
@@ -289,23 +252,14 @@ export interface HostModelReasoning {
   efforts: { id: string, name: string }[]
 }
 
-/**
- * One block of a turn's timeline, as the tool rows read it: a running call's
- * own block (`phase`, `name`, `argsRaw`) or the settled node the result
- * brought back (`kind`, `call`, `meta`, `isError`, `error`, `content`). The
- * members are optional because the two stages carry different ones.
- */
+/** Running and settled tool-call stages carry different fields, hence the optional members. */
 export interface HostChatBlock {
   /** Set on a settled node; a running block carries none. */
   kind?: string
   phase?: string
   name?: string
   argsRaw?: string
-  /**
-   * The host's own id for this call, on both stages. The host draws one row
-   * element per call and hands it to the next call on the same file, so the id
-   * is what tells the file's calls apart on one element
-   */
+  /** Stable across running/settled stages; distinguishes calls when the host reuses a row element. */
   callId?: string
   /** The call a settled node reports: its tool name and the raw arguments. */
   call?: { name: string, argsRaw: string }
@@ -343,11 +297,7 @@ export interface HostSessionRow {
   projections?: { values?: HostSessionProjectionValues }
 }
 
-/**
- * The projection values a session row carries, as the home panel sums them:
- * whether the session is blank, when it was last prompted, what it has spent,
- * and which model it is on.
- */
+/** Session-list projections used by home usage aggregation. */
 interface HostSessionProjectionValues {
   sessionListMetadata?: { blank?: boolean, lastPromptAt?: number }
   tokenUsage?: {
@@ -365,22 +315,14 @@ export interface HostRemoteListAnswer {
   value?: { items?: HostSessionRow[] }
 }
 
-/**
- * What the session remote's rename answers: whether it worked, and the title it
- * accepted, with the event sequence that carries it. The host normalizes the
- * text, so `value.title` is what the row and the header will show.
- */
+/** `value.title` is the host-normalized title that the row and header will display. */
 export interface HostSessionRenameAnswer {
   ok?: boolean
   value?: { title?: string, seq?: number }
   error?: { message?: string }
 }
 
-/**
- * One event of a session's feed, of the four types the skin reads: a turn
- * ending, a tool result, and a compaction starting or finishing. A host that
- * adds another type is ignored by the reader, which compares the type first.
- */
+/** Feed events used by the skin; readers must ignore unknown host event types. */
 export type HostSessionEvent =
   | { type: 'turn/end', data: { reason: { kind?: string } } }
   | { type: 'tool/result', data: { message: { isError?: boolean }, error?: { name?: string } } }
@@ -393,11 +335,7 @@ export interface HostFeedEntry {
   event: HostSessionEvent
 }
 
-/**
- * What a fork takes (read on 0.2.2-rc.1, the host's own branch button): the
- * source session, the inclusive event boundary the child keeps — the latest
- * completed turn when omitted — and whether its title carries the source's.
- */
+/** `atSeq` is the inclusive source-event boundary; omitted means the latest completed turn. */
 export interface HostSessionForkRequest {
   sessionId: string
   atSeq?: number
@@ -409,20 +347,13 @@ export interface HostSessionForkRequest {
 export interface HostSessionsService {
   list: HostSnapshotSource<HostSessionListSnapshot>
   binding(id: string): HostSessionBinding | undefined | null
-  /**
-   * Copy the source's prefix into a new session and answer its id. It refuses
-   * a boundary that is not an event of the source, so the cut a feature takes
-   * has to be one the log holds.
-   */
+  /** Fork rejects `atSeq` values that are not source-log event boundaries. */
   fork?(request: HostSessionForkRequest): Promise<string>
   /** Pull the list again; the host's own single-flight refresh, so a pull under way is reused. */
   refresh(): Promise<unknown>
 }
 
-/**
- * One session's binding: the session itself, the live event feed the mascot
- * reads to see compaction start and finish, and the binding's own context.
- */
+/** Session, live event feed and service lookup context for one binding. */
 export interface HostSessionBinding {
   session?: HostSession
   eventSource?: HostSnapshotSource<{ entries: HostFeedEntry[], change: HostFeedChange }>
@@ -443,7 +374,7 @@ export interface HostSession {
   }
   /** The session's own state: `open` while the shell has it mounted. */
   getSnapshot?(): { openState?: string }
-  /** Run one of the host's own slash commands in this session (`/permission …`); nulls for a host without it. */
+  /** Run one of the host's own slash commands in this session (`/permission …`); null where the host offers none. */
   command(text: string): Promise<HostCommandResult> | null | undefined
 }
 
@@ -457,13 +388,13 @@ interface HostCommandResult {
 export interface HostUiSessionService {
   current?: {
     value?: { key?: unknown }
-    /** Main-view identity changes, exposed by Desktop 0.2.1-rc.5. */
+    /** Main-view identity changes; absent where a host publishes none. */
     subscribe?(listener: () => void): () => void
   }
   sessionStatus?: HostSnapshotSource<HostSessionStatusSnapshot>
 }
 
-/** ui-workspace's session menu slot props on Desktop 0.2.1-rc.5. */
+/** ui-workspace's session menu slot props. */
 export interface HostSessionMenuProps {
   sessionId: string
   useMenuOpenState?(): readonly [boolean, (open: boolean) => void]
@@ -479,11 +410,7 @@ export interface HostUiConversationService {
   binding(id: string): HostConversationBinding
 }
 
-/**
- * One conversation's binding. `target('chat')` is the chat view's own data,
- * and the host builds it only for a subscriber or while the shell shows that
- * session's chat view.
- */
+/** `target('chat')` exists only for a subscriber or while the shell shows that chat view. */
 interface HostConversationBinding {
   target(name: string): HostChatTarget | null | undefined
 }
@@ -502,11 +429,7 @@ export interface HostChatSnapshot {
   legacy?: { runningCalls?: HostRunningCall[] }
   /** The turn navigator's own list of the loaded window's turns. */
   navigation?: { items?(): HostLoadedTurn[] }
-  /**
-   * The loaded window's own nodes, which the host's rows render from (read on
-   * 0.2.2-rc.1). A node's key is the flow row's `data-chat-node-key`, and a
-   * reader's message node carries the event `seq` in its data.
-   */
+  /** Loaded nodes map to rows by `data-chat-node-key`; user-message data carries its event `seq`. */
   nodes?: { values?(): HostChatNode[] }
 }
 
@@ -555,10 +478,7 @@ interface HostStep {
   data: { get(kind: string): HostAssistantStep | undefined }
 }
 
-/**
- * One block of a running or settled assistant step: its kind, and the text the
- * two kinds the host streams text into carry as it arrives.
- */
+/** Assistant block kind and streamed text, where applicable. */
 export interface HostStepBlock {
   kind: string
   /** The block's text so far, on a reasoning or an answer block. */
@@ -574,11 +494,7 @@ export interface HostAssistantStep {
   usage?: { outputTokens?: number, [field: string]: unknown }
 }
 
-/**
- * A tool call the host reports as running, with the turn it belongs to: the
- * call's own block, carrying the name and the arguments it has received so far
- * (the waiting line names the file a call works on from it).
- */
+/** Running call with its turn and partial arguments received so far. */
 export interface HostRunningCall extends HostChatBlock {
   turn: number
 }
@@ -591,10 +507,7 @@ export interface HostLocaleService {
   resolveText?(value: unknown, params?: Record<string, string | number>): unknown
 }
 
-/**
- * The host's settings-form service (`configForms`, D75): one form per
- * namespace, plus the catalogue of namespaces it serves.
- */
+/** `configForms` settings forms and their namespace catalog (D75). */
 export interface HostConfigFormsService {
   get(namespace: string): HostConfigForm | undefined | null
   /** The catalogue of served namespaces; it loads on demand. */
@@ -623,10 +536,7 @@ interface HostConfigSnapshot {
 /** A host locale namespace's translate seat (`locale.bind(namespace)`). */
 export type HostText = (key: string, params?: Record<string, string | number>) => string
 
-/**
- * A handle from `remote.$stream`: an async iterable stepped by hand, which
- * reopens itself across reconnects and is disposed by its owner.
- */
+/** `remote.$stream` handle reconnects itself and requires owner disposal. */
 export interface HostStream<Frame> {
   dispose(): void
   [Symbol.asyncIterator](): { next(): Promise<HostStreamStep<Frame>> }
@@ -651,11 +561,7 @@ export interface HostPermissionOption {
   description?: string
 }
 
-/**
- * The session statistics projection: what the context panel's figures come
- * from, with the milliseconds each phase took and the tokens it produced. A
- * face that exists carries all of them; the panel reads zero as "no such row".
- */
+/** Session timing and token statistics; zero means no corresponding host row. */
 export interface HostSessionStatsProjection {
   /** Distinct turns with a closed step, and closed steps: the host row's two counts. */
   turns: number
@@ -677,14 +583,7 @@ export interface HostTokenUsageProjection {
   outputTokens: number
 }
 
-/**
- * The context-pressure projection: the context meter's own reading. The host
- * works out the share of the route's window the session has taken and its meter
- * paints it; the skin draws the same number on the ring of its own
- * (features/context-stats/session-stats.ts). `projectedTokens` is what the next
- * request is expected to carry and stands over `pressureTokens` when both are
- * served.
- */
+/** Host context-pressure reading; prefer `projectedTokens` over `pressureTokens` when both exist. */
 export interface HostContextPressureProjection {
   projectedTokens?: number
   pressureTokens?: number

@@ -1,11 +1,8 @@
 /**
  * Under the column layout an open process group's rows stand in one bordered
- * card: one row a line, a separator between them, no icon leading a row and a
- * chevron trailing every row that opens. A thought reads as the thought itself;
- * a named call keeps its verb, and a row with nothing after its title keeps the
- * title. The card keeps the host's own window on the group: a long group
- * scrolls inside it, and its opened thought scrolls with the group. The flat
- * layout is the host's own list, untouched.
+ * card: a line a row, a separator between them, no icon leading a row and a
+ * chevron trailing every row that opens. The card keeps the host's own window on
+ * the group, and the flat layout is the host's list untouched.
  *
  * @capability process-column
  * @features process-column
@@ -17,9 +14,8 @@ import { partClass } from '../../fixtures/parts.mjs'
 
 /**
  * One process group in the conversation's scroller: a thought with its
- * description, a named call, and a thought whose title stands alone. Each row
- * is the host's DisclosureRow: the icon's seat, the title, the separator and
- * the description, the last two only where there is a description.
+ * description, a named call, and a thought whose title stands alone; each row is
+ * the host's DisclosureRow, the description only where there is one.
  */
 async function mountGroup(t) {
   await t.page.evaluate((m) => {

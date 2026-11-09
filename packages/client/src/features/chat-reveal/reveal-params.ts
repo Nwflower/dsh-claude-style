@@ -1,41 +1,17 @@
-/**
- * The reveal engine's tuning table and the shapes its modules pass around:
- * the constants, one fading segment, one container's snapshot, and the state
- * the factory owns.
- */
 import { motionMs } from '../../shared/motion'
 
-// The four the build also reads, to write the step rules, live in constants.ts.
+// The build reads these constants to write the step rules.
 export { CHAT_REVEAL_COLOR_VAR, CHAT_REVEAL_HIGHLIGHT_PREFIX, CHAT_REVEAL_MIN_OPACITY, CHAT_REVEAL_STEPS } from '../../constants'
-/**
- * How long a character takes to become fully opaque: the reveal token, the same
- * pace the chat area's own entrances run at (D9). Moving it means weighing the
- * step count (constants.ts) again: each step stands this long divided by it.
- */
+/** Changing this duration requires reviewing CHAT_REVEAL_STEPS (D9). */
 export const CHAT_REVEAL_MS = motionMs('--dsh-claude-duration-reveal')
-/** The share of one fade a batch's stagger spreads over: proportional to the fade, so neither pace lets staggering take over. */
+/** Stagger scales with the fade duration (D9). */
 export const CHAT_REVEAL_STAGGER_DIVISOR = 50
-/** The stagger step's bounds: smaller shows no sweep, larger makes the last characters late. */
+/** Bounds keep the sweep visible without delaying trailing characters. */
 export const CHAT_REVEAL_MIN_STAGGER_MS = 1
 export const CHAT_REVEAL_MAX_STAGGER_MS = 8
-/**
- * How long a container is left out of the reveal after a fold.
- *
- * A container carries data-streaming for the whole turn, including the answer
- * that arrives after the reasoning stops, so pressing a thinking or tool row
- * rewrites a container the scan is still reading. This is long enough to cover
- * React's re-render and the mutations it makes, and short enough that a stream
- * resuming right after the press still animates.
- */
+/** Folding rewrites a still-streaming container; skip it until React's mutations settle. */
 export const CHAT_REVEAL_FOLD_QUIET_MS = 400
-/**
- * The most characters one batch may hold.
- *
- * The segment count is the batch's character count and multiplies every frame
- * (one Range per segment), and the frame-gap compensation keeps those segments
- * alive so the page cannot catch up. Real streaming batches run a median of a
- * dozen characters, so this gate is never touched.
- */
+/** Cap per-frame Range work; oversized batches are shown without reveal. */
 export const CHAT_REVEAL_BURST_LIMIT = 10000
 /** How many characters a container that just appeared may hold and still count as "the start of an answer". */
 export const CHAT_REVEAL_FIRST_SIGHT_LIMIT = 200
@@ -82,12 +58,7 @@ export interface RevealSnapshot {
   entries: RevealTextEntry[]
 }
 
-/**
- * Everything the engine factory owns. The paint loop and the scan are separate
- * modules and share it instead of closing over the factory's locals; a scalar
- * they write (lastFrameAt, slowFrames, yieldUntil, cancelPaintFrame) has to
- * come back through the same object.
- */
+/** Scan and paint modules share this object so scalar state writes remain visible to both. */
 export interface RevealState {
   /** The segments still fading. */
   liveRuns: RevealRun[]

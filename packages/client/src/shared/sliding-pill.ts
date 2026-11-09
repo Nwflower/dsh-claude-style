@@ -1,27 +1,8 @@
 import { observeSize } from '@dsh-claude-style/engine/bus'
 import { inPageBox } from './page-zoom'
 
-/**
- * The sliding highlight of a segmented control: one pseudo-element on the
- * control (shared/sliding-pill.css) that travels to the active item,
- * instead of each item fading its own background out and the next one in.
- * Every segmented control in the skin places it through this one factory, so
- * they share one feel.
- *
- * The attribute and the first placement land in the same call: the
- * pseudo-element does not exist before it, so the pill appears in place and
- * only later moves slide. The whole box is measured, so a control that wraps
- * onto two lines still lands the pill on the item's own line. Font loading
- * changes widths with no DOM mutation, hence the ResizeObserver. Reduced
- * motion does not stop the slide; the movement is required of the control.
- *
- * @param activeSelector - the active item, relative to the control.
- * @returns `{ measure(control), sync(control), release() }`: `measure` takes
- *   the reading in the pass's read phase and `sync` places the pill from it in
- *   the write phase; a `sync` whose pass took no reading measures then, which
- *   is what a control built during the write phase needs. A different control
- *   takes the placement off the previous one, null just takes it off;
- *   `release` takes it off and stops watching.
+/** `measure` reads and `sync` writes; a fresh control measures in `sync` so its first pill does not slide.
+ * ResizeObserver covers font-driven width changes. Reduced motion keeps this functional movement.
  */
 export function createSlidingPill(activeSelector: string) {
   const PILL_ATTR = 'data-dsh-claude-pill'

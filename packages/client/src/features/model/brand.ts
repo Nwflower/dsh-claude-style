@@ -2,36 +2,12 @@ import { modelCopy, resolveModelBrand } from './model-copy'
 import { buildElement } from '@dsh-claude-style/engine/dom'
 import { COMBINE_SVGS, COMBINE_WORDS } from 'virtual:dsh-claude-style/generated'
 
-/**
- * The brand mark for one model: the vendor that made it, not the route it is
- * resold through — an OpenRouter group listing Claude models shows Anthropic
- * marks on the rows, never OpenRouter's own.
- *
- * Rules are ordered and anchored in the document; the first match wins over the
- * model's id and then over its display name (D79). There is deliberately **no
- * fallback to the provider route**: a model no rule claims draws no lockup at
- * all.
- *
- * @param modelId - catalog model id.
- * @param modelName - catalog display name, the second string a rule reads.
- * @returns the vendored lockup's id, or null when no rule claims it.
- */
+/** Match the model vendor, never the reseller route; unmatched models have no lockup (D79). */
 export function modelBrand(modelId: unknown, modelName: unknown) {
   return resolveModelBrand(modelCopy, modelId, modelName)
 }
 
-/**
- * The vendor lockup a label should draw, if any.
- *
- * Every vendor with a vendored lockup has one, and the lockup carries both the
- * mark and the vendor's word as one piece of art — so it replaces that word
- * when the catalog spells it in the name, and leads the label when it does not
- * (Kimi's own catalog calls the model "K3").
- *
- * @param brand - resolved brand id, or null.
- * @param name - the catalog's display name (always a string; the caller guards).
- * @returns `{ id, word, svg, at }` — `at` is the word's index in the name, or -1.
- */
+/** A lockup includes the vendor word, so it replaces that word in the catalog name when present. */
 export function modelCombine(brand: string | null, name: string) {
   if (brand === null || !COMBINE_SVGS[brand]) return null
   const word = COMBINE_WORDS[brand]
@@ -39,17 +15,7 @@ export function modelCombine(brand: string | null, name: string) {
   return { id: brand, word, svg: COMBINE_SVGS[brand], at }
 }
 
-/**
- * One row's label, with the vendor's lockup standing in for its name.
- *
- * The lockup is decoration in the DOM — it *is* the vendor's name, drawn as art
- * — so the word it stands in for stays in the accessibility tree as hidden
- * text, and the label keeps naming the vendor for assistive tech.
- *
- * @param name - the catalog's display name.
- * @param brand - resolved brand id, or null.
- * @returns the label element.
- */
+/** Keep the vendor word as hidden text because its visible lockup is aria-hidden. */
 export function buildModelLabel(name: unknown, brand: string | null) {
   const el = buildElement('span', 'dsh-claude-model-name')
   const text = typeof name === 'string' ? name : ''

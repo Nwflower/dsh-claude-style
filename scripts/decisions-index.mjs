@@ -1,13 +1,5 @@
 #!/usr/bin/env node
-/**
- * decisions-index.mjs — write docs/adr/README.md from the ADR files themselves.
- *
- * An ADR states its own number and title, and one that replaces earlier
- * decisions names them on its 取代 line; numbers retired without a successor sit
- * in retired.txt, one per line. The index is the table of those facts, so it
- * cannot drift from the files it lists. Run it to write the file, or with
- * `--check` to fail when the committed index differs — which is what CI runs.
- */
+/** decisions-index.mjs — generate and check the ADR index from decision and retirement files. */
 import fs from 'node:fs'
 import path from 'node:path'
 

@@ -1,25 +1,8 @@
-"""Draw the composer crab's animation sheets (packages/assets/src/mascot/crab/).
+"""Draw the composer crab's animation sheets; requires Pillow.
 
-Run by hand after changing a drawing; the build never runs it:
-
-    python scripts/draw-crab.py                                  # every sheet
-    python scripts/draw-crab.py thinking happy                   # only the named animations
-    python scripts/draw-crab.py thinking --preview .debug/crab   # and an enlarged GIF of each to look at
-
-Needs Pillow. The crab is drawn on a 52x36 grid of cells, one pixel a cell,
-feet on the bottom row and the right claw four columns in from the right
-edge (the room a lean, a note or a sparkle takes on that side) — the stance
-of Claude Code's own crab, whose laptop routine (packages/assets/src/mascot/crab/
-crab-laptop-body.png and crab-laptop-ink.png, 34x23 cells a frame: the crab
-pulls out a laptop, types, and puts it away) is laid onto the same grid for the
-typing animations. Every animation is written as two sheets: `<key>.png`
-carries the shell, its shaded side and the eyes in their colours;
-`<key>-ink.png` is a mask the stylesheet fills with the theme's quiet ink
-(the laptop, the bubble wand and its bubbles, letters, notes, the hat). A
-sheet holds eight frames to a row, each cropped to the smallest box that
-holds every frame of that animation. The script prints the rows of the
-CRAB_SHEETS table in packages/client/src/features/mascot/sheets.ts for the
-animations it drew; a changed frame count or box is copied there by hand.
+Run `python scripts/draw-crab.py [keys...] [--preview DIR]` by hand. Each
+animation produces a colour sheet and an ink mask, eight cropped frames per
+row; copy the printed geometry into mascot/sheets.ts when it changes.
 """
 import argparse
 import os
@@ -122,14 +105,7 @@ def claw_at(side, pose, dx=0, dy=0, squish=0, puff=0):
 
 
 def crab(f, dx=0, dy=0, eyes='open', left='rest', right='rest', legs='stand', squish=0, puff=0, turn=None):
-    """The crab, moved by (dx, dy). `squish` presses the shell down by that
-    many rows and widens it by as many columns on each side; `puff` fills it
-    with a breath, raising its top by that many rows and widening it the
-    same way. `turn` ('left' or 'right') turns it a little toward that side,
-    the turn of Claude Code's own crab as it puts its laptop away: the far
-    side of the shell becomes a shaded face two columns wide, the eyes move
-    toward the near side, and the far leg and the far claw's inner column
-    fall into the shade."""
+    """Draw the crab; squish/puff resize the shell and turn shades its far side."""
     c, r = C0 + dx, R0 + dy
     top = r + squish - puff
     spread = squish + puff
@@ -281,12 +257,7 @@ def bubble_wand(f, claw):
 
 
 def thinking():
-    """Blowing bubbles, a round of 48 frames that ends where it starts: the
-    crab, turned toward the wand it holds up in its near claw, looks at it,
-    breathes in until its shell swells, blows the breath out into a bubble
-    that grows out of the loop with a small one trailing, leans after the
-    big one as it wobbles up and drifts over its head, hops twice for joy
-    with its far claw up, flinches when it pops and hops once more."""
+    """Draw the 48-frame bubble routine."""
     frames = []
     eyes = (['upleft'] * 4 + ['shut'] * 12 + ['up'] * 6 + ['happy'] * 8 + ['upright'] * 6
             + ['wide'] * 2 + ['happy'] * 6 + ['upleft'] * 4)
@@ -358,10 +329,7 @@ def building():
 
 
 def music():
-    """Dancing to the headphones: the crab bobs on every other frame and
-    turns its head from side to side on the beat, its claws swinging in
-    turn. Two notes take turns leaving the ear cups: each grows in, rises
-    and sways for most of the round, and shrinks away before it starts again."""
+    """Draw the headphone dance and its alternating notes."""
     frames = []
     # Where each note starts (its top-left cell) and which way it sways.
     notes = [(C0 - 7, R0 - 6, -1), (C0 + 16, R0 - 7, 1)]
@@ -464,11 +432,7 @@ def compacting():
 
 
 def sleeping():
-    """Asleep, turned a little to one side and crouched on tucked legs, the
-    shell swelling with each slow breath. Three letters at a time leave the
-    head eight frames apart: each starts as a dot, grows to a small z and
-    then a large one as it rises and drifts toward the open side, and
-    shrinks back to a dot before it goes."""
+    """Draw the breathing pose and three staggered sleep glyphs."""
     frames = []
     for step in range(32):
         breathe = 1 if step % 16 >= 8 else 0

@@ -1,31 +1,8 @@
 #!/usr/bin/env node
 /**
- * file-merge.mjs — the calls on one file read as one row (D87).
- *
- * Registered in the lane's scenario table (packages/testing/scenarios.mjs).
- *
- * The `fileEdits` script (packages/testing/mock-llm.mjs) works on four files
- * from inside one program: it reads `app.js`, changes it four times and reads it
- * again; writes `notes.md` and reads it; writes `only.md` once; and reads
- * `plain.md` twice without changing it. The host renders one row per call, and a
- * program's calls stand side by side under the program's own row, so every
- * file's calls are on the page together; the program waits between its changes,
- * so the tail can be watched growing.
- *
- * They have to stand as one: one row stays visible per file, wearing the
- * operation its file's work last reached — `app.js` starts as a read, moves to
- * the edit as the first change lands and ends as a read — while the tail counts
- * the changes it took and turns character by character as each one lands, and the
- * calls it stands for leave the page whole. `plain.md`, whose two calls changed nothing, shows no
- * tail at all and opens onto the window it was read at. `only.md`, touched once,
- * is drawn as it was before any of this existed. The row that stands for
- * `app.js` opens onto every change of the file.
- *
- * The calls have to be dispatched from a program: the host's `run_code` is the
- * only model-facing tool of the `ptc` agent preset, which this scenario selects
- * in the lane's patch layer — a direct call would be rejected before the page
- * ever saw a row. The calls that share one row element across a step are covered
- * by the registry's unit tests (packages/client/src/features/chat-files/).
+ * Exercise one merged row per file after a `run_code` program's four-file script
+ * (D87). One row keeps the latest operation and counts its calls; unchanged and
+ * single-call files stay distinct. Unit tests cover the shared row element.
  */
 import fs from 'node:fs'
 import path from 'node:path'

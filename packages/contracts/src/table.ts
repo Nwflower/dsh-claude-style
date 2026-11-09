@@ -1,48 +1,15 @@
 /**
- * The host contract as one table (D3): the literals in packages/contracts/src/dom.ts,
- * each with what the skin reads it for and how the contract test checks it on
- * a live host (D87).
- *
- * The table is build and test data rather than runtime data: the browser bundle
- * carries the literals alone, so the notes cost the page nothing. The build
- * holds the two lists together — every exported literal of the DOM contract has
- * to appear here, and every id has to be named by a feature manifest (D72) — so
- * a selector cannot enter the skin without a note and an owner, and a host
- * upgrade can be audited from this list alone.
- *
- * The host build these entries were checked on is the one the service shapes
- * name (packages/contracts/src/services.ts, 0.2.1-alpha.1), and the lane's
- * `contract` scenario walks every `probe` below against a live host (D3, D87).
+ * Build/test registry for dom.ts literals and their live-host probes (D3, D87).
+ * Every literal needs an entry and every id a manifest owner (D72).
  */
 import * as dom from './dom'
 
-/**
- * The page state an entry is checked in (D87): the empty page, the moment a
- * submission goes through, an answer streaming in, a settled conversation of two
- * turns, the host's own account menu open, or the host's dark flip. `any` holds
- * everywhere the page is served.
- */
+/** Live page state required by a probe; `any` has no state requirement (D87). */
 type HostDomProbeState = 'any' | 'hero' | 'sending' | 'streaming' | 'conversation' | 'menu' | 'dark'
 
 /**
- * How the literal is checked:
- *
- * - `selector` — it matches at least `min` elements (default 1).
- * - `attribute` — some element carries it.
- * - `property` — the element `within` names, or the document element when it
- *   names none, resolves it as a custom property.
- * - `computed` — the element `within` names, or that element's parent under
- *   `parent`, resolves `property`; the value the host snapshot holds under
- *   `record` is compared as the host's own output, so a difference is reported
- *   as an observation (D87).
- * - `global` — the dotted path resolves on the page.
- * - `value` — the string appears as the value of some attribute.
- * - `rail-geometry` — the rail's marks and its scroller's content height agree
- *   with `turn.rail-pitch` and `turn.rail-inset`.
- * - `none` — no page form: a number, a value only another platform writes, or a
- *   literal of a plugin this instance does not install. The behaviour scenarios
- *   and the unit tests hold these; the contract test reports them by id so a
- *   host upgrade still walks the whole list.
+ * Probe mechanism. `computed` compares against the host snapshot under `record`;
+ * `rail-geometry` checks pitch/inset; `none` is covered outside the live page (D87).
  */
 type HostDomProbeKind = 'selector' | 'attribute' | 'property' | 'computed' | 'global' | 'value' | 'rail-geometry' | 'none'
 
@@ -62,10 +29,7 @@ interface HostDomProbe {
   record?: string
 }
 
-/**
- * One entry of the table: the literal the host writes, and what the skin reads
- * it for.
- */
+/** One host literal and the skin behavior that depends on it. */
 interface HostDomEntry {
   /** Stable id; a feature manifest names it (D72) and the contract test reports by it. */
   id: string
@@ -73,19 +37,11 @@ interface HostDomEntry {
   value: string
   /** How the contract test checks it (D87). */
   probe: HostDomProbe
-  /**
-   * A bare attribute name (`data-placeholder`) rather than a selector: what the
-   * skin reads with `getAttribute`, so packages/contracts/src/dom.ts may export
-   * the name alone.
-   */
+  /** Bare attribute name used through `getAttribute`, when the value is not a selector. */
   name?: string
   /** What the host means by it, and what reads it. */
   use: string
-  /**
-   * Set on an entry no feature reads: the plugin's own shell does, through the
-   * core and shared modules (the boot graph, stylesheet parking, the peer
-   * verdict, the yield). Every other entry is named by a feature manifest.
-   */
+  /** Marks core/shared ownership; other entries must be claimed by a feature manifest. */
   owner?: 'core'
 }
 
@@ -124,12 +80,12 @@ export const HOST_DOM: HostDomEntry[] = [
   { id: 'chat.following-tail-attribute', value: dom.FOLLOWING_TAIL_ATTRIBUTE, probe: { state: 'streaming', kind: 'attribute' }, use: 'the same mark as an attribute name' },
   { id: 'chat.follow-threshold', value: String(dom.FOLLOW_THRESHOLD_PX), probe: { state: 'any', kind: 'none' }, use: 'how close to the end counts as reading the tail, by the host\u2019s own line' },
   { id: 'chat.running', value: dom.CHAT_RUNNING_SELECTOR, probe: { state: 'streaming', kind: 'selector' }, use: 'the live turn\u2019s status line at the end of the flow, which the status feature pins while the reader is at the tail; a child of the flow the sodium rewrite buckets its gap rules on (D78)' },
-  { id: 'chat.running-holding', value: dom.CHAT_RUNNING_HOLDING_ATTRIBUTE, probe: { state: 'any', kind: 'none' }, use: 'marks the running row the host keeps after the turn stops: it still matches chat.running and still holds its content span, so the waiting line must not draw into it or a second line sits beside the live row\u2019s own (chat-wait)' },
+  { id: 'chat.running-holding', value: dom.CHAT_RUNNING_HOLDING_ATTRIBUTE, probe: { state: 'any', kind: 'none' }, use: 'marks the running row the host keeps after the turn stops: it still matches chat.running and still holds its content span, so the waiting line must not draw into it or a second line sits beside the live row’s own (chat-wait)' },
   { id: 'composer.seat', value: dom.COMPOSER_SELECTOR, probe: { state: 'hero', kind: 'selector' }, use: 'the composer seat: a pointer or key inside it is the reader typing' },
   { id: 'composer.model-slot', value: dom.MODEL_SLOT_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'the host\u2019s model slot in a composer card\u2019s toolbar: one per card, a docked conversation\u2019s included, so the model seat and the context ring stand in the page\u2019s MAIN composer and a sub-agent\u2019s card does not take them (engine/host.ts::findPrimaryModelSlot)' },
   { id: 'composer.activity-slot', value: dom.CONVERSATION_ACTIVITY_SLOT_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'the slot a plugin mounts its own entry in, beside the model seat: the built-in voice input puts its microphone there, and the seat around the slot stands down while nothing is in it' },
   { id: 'composer.input', value: dom.COMPOSER_INPUT_SELECTOR, probe: { state: 'hero', kind: 'selector' }, use: 'the editable draft: caret motion and the send flight read it' },
-  { id: 'composer.composing', value: dom.COMPOSER_COMPOSING_ATTRIBUTE, probe: { state: 'any', kind: 'none' }, use: 'the draft is part-way through an input-method composition, raised by the host\u2019s composer keymap for its span: the fold presses outside the composer wait for it to land, because a focus or selection moved under a composition makes the browser drop the letters typed but not committed' },
+  { id: 'composer.composing', value: dom.COMPOSER_COMPOSING_ATTRIBUTE, probe: { state: 'any', kind: 'none' }, use: 'the draft is part-way through an input-method composition, raised by the host’s composer keymap for its span: the fold presses outside the composer wait for it to land, because a focus or selection moved under a composition makes the browser drop the letters typed but not committed' },
   { id: 'composer.card', value: dom.COMPOSER_CARD_SELECTOR, probe: { state: 'hero', kind: 'selector' }, use: 'the composer card the send flight lifts a copy of' },
   { id: 'composer.bar', value: dom.COMPOSER_CARD_SELECTOR, probe: { state: 'conversation', kind: 'computed', within: 'composer.card', parent: true, property: 'padding-bottom', record: 'composer.bar.paddingBottom' }, use: 'the host’s input bar around the composer card, which pads the room under it; the gap stops write over that padding and the default stop leaves it standing' },
   { id: 'composer.overlay', value: dom.COMPOSER_OVERLAY_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'the card\u2019s overlay seat, where the host mounts its @ and / menus: the part walk does not read the composer\u2019s class names inside it, because a menu row\u2019s own trailing cluster is not the toolbar\u2019s (D3)', owner: 'core' },
@@ -151,7 +107,7 @@ export const HOST_DOM: HostDomEntry[] = [
   { id: 'composer.access-slot', value: dom.PERMISSION_SLOT_SELECTOR, probe: { state: 'any', kind: 'none' }, use: 'the permission slot in a composer toolbar: the seat the host\u2019s access trigger stands in, one per composer card' },
   { id: 'composer.access-trigger', value: dom.PERMISSION_TRIGGER_SELECTOR, probe: { state: 'hero', kind: 'selector' }, use: 'the host\u2019s access-mode trigger inside its permission slot' },
   { id: 'sidebar.chat', value: dom.SIDEBAR_CHAT_SELECTOR, probe: { state: 'any', kind: 'none' }, use: 'the subagent sidebar\u2019s chat tab: the column that mounts an embedded conversation and composer, which the skin styles like the main one' },
-  { id: 'composer.dialog-trigger', value: dom.DIALOG_TRIGGER_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'a host button that opens a dialog (the context meter and the statistics pills); the context panel tells a figure\u2019s own trigger by it, and the ring the skin draws presses the meter\u2019s trigger to open the host\u2019s panel. The host keeps none on the hero page, where the composer stands without a reading' },
+  { id: 'composer.dialog-trigger', value: dom.DIALOG_TRIGGER_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'a host button that opens a dialog (the context meter and the statistics pills); the context panel tells a figure’s own trigger by it, and the ring the skin draws presses the meter’s trigger to open the host’s panel. The host keeps none on the hero page, where the composer stands without a reading' },
   { id: 'composer.meter-fill', value: dom.CONTEXT_METER_FILL_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'the filled arc of the context meter: the circle the host gives a dash array, painted with the colour the occupancy fell on where the host\u2019s ring keeps its place' },
   { id: 'composer.fallback-panel', value: dom.CHAIN_OVERLAY_FALLBACK_ATTRIBUTE, probe: { state: 'any', kind: 'none' }, use: 'the host\u2019s panel that replaces the composer card, which the mascot stands on' },
   { id: 'process.group', value: dom.PROCESS_GROUP_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'every process group root: auto-fold and the fold glide work on it' },
@@ -225,7 +181,7 @@ export const HOST_DOM: HostDomEntry[] = [
   { id: 'shell.rightbar-panel', value: dom.RIGHTBAR_PANEL_SELECTOR, probe: { state: 'any', kind: 'none' }, use: 'the right panel\u2019s own box, mounted only once that panel has been opened: the host states its width from the viewport\u2019s pixels, which the page\u2019s zoom scales a second time' },
   { id: 'shell.rightbar-handle', value: dom.RIGHTBAR_HANDLE_SELECTOR, probe: { state: 'any', kind: 'none' }, use: 'the right column\u2019s drag handle: the host places it from the viewport\u2019s own width, so it leaves the panel\u2019s visible edge under the page\u2019s zoom' },
   { id: 'shell.sidebar-handle', value: dom.SIDEBAR_HANDLE_SELECTOR, probe: { state: 'any', kind: 'none' }, use: 'the sidebar\u2019s drag handle, mounted only while the sidebar is expanded: the host places it at the sidebar\u2019s width, which the page\u2019s zoom scales a second time', owner: 'core' },
-  { id: 'shell.width-handle', value: dom.WIDTH_HANDLE_SELECTOR, probe: { state: 'any', kind: 'none' }, use: 'the conversation column\u2019s width handle, drawn from the transcript\u2019s own edge: the host\u2019s bar on its `::after` is revealed the frame the pointer enters the strip, so the skin states when it is up (issue #270)' },
+  { id: 'shell.width-handle', value: dom.WIDTH_HANDLE_SELECTOR, probe: { state: 'any', kind: 'none' }, use: 'the conversation column’s width handle, drawn from the transcript’s own edge: the host’s bar on its `::after` is revealed the frame the pointer enters the strip, so the skin states when it is up (issue #270)' },
   { id: 'shell.sidebar-collapsed', value: dom.SIDEBAR_COLLAPSED_ATTRIBUTE, probe: { state: 'any', kind: 'none' }, use: 'the frame\u2019s collapse marker, written only while the sidebar is closed: the peek opens only from it, and its return is when the peek gives the column back to the grid' },
   { id: 'shell.rightbar-collapsed', value: dom.RIGHTBAR_COLLAPSED_ATTRIBUTE, probe: { state: 'any', kind: 'attribute' }, use: 'the frame gives the right panel no track; while it is absent on a narrow frame, opening the sidebar would take that panel away, so the peek stays shut' },
   { id: 'shell.sidebar-beside-rightbar', value: String(dom.SIDEBAR_BESIDE_RIGHTBAR_MIN_PX), probe: { state: 'any', kind: 'none' }, use: 'the narrowest frame the host keeps an open right panel on beside an open sidebar; below it the peek stays shut, since opening the sidebar would take that panel away' },

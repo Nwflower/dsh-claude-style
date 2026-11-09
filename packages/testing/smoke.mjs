@@ -1,72 +1,14 @@
 #!/usr/bin/env node
 /**
- * smoke.mjs — zero-dependency smoke test of the BUILT plugin (`lib/`); no running
- * DSH instance is needed.
- *
- * Host half, in Node: `lib/host/index.js` is applied to a fake cordis context and the
- * username and session-delete routes get the request shapes that matter
- * (D75) — a cross-site page, a LAN peer and the browser's
- * own same-origin fetch, plus the deletion route's own guards (POST only, a
- * path-shaped id, an id carrying the escape itself, an open session) and a real
- * deletion against a scratch harness home under .debug/, including a
- * plugin-generated id stored under the harness's escaped name — once through a
- * host that offers
- * `connection.requestRejection()` and once through the local stand-in. The
- * public prefix route serves the assets the build routed from lib/assets/,
- * under the build's own manifest, and nothing else.
- *
- * Browser half, in headless Chrome/Edge through Playwright (packages/testing/browser.mjs):
- * `lib/client.js` is loaded into
- * a page that stands in for the host (module loader, ctx, a sidebar footer with
- * an account menu and two plugin entries, a composer whose editor handles Enter
- * the way the host's keymap does), and checked for:
- *   - boot       apply() installs every feature and registers its teardown;
- *   - idle       once settled, no scheduler pass runs — a pass that mutates the
- *                DOM schedules the next one, and then the page never idles;
- *   - enter      Enter on an open composer menu reaches the host, never "Send";
- *   - popovers   the shared popover rule: a pointer crossing a trigger opens
- *                nothing before the dwell elapses, and whichever card opens last
- *                folds the one before it — the skin's own cards and the host's
- *                hero menu alike;
- *   - desktop    the desktop footer: the host's own account row is the
- *                entry, and our container is injected into its account menu —
- *                first child, self-healing across a host re-render, reachable
- *                by the host's keyboard walk, and gone when the menu closes;
- *   - markup     strings from settings, the account service and plugins render
- *                as text, never as markup;
- *   - isolation  a host API that breaks one feature — at install or at sync —
- *                retires only that feature and hands its surface back (D12);
- *   - deepy      the DeepSeek brand: the whale stands on the home card and on
- *                the conversation's input area (or the panel replacing its
- *                card), follows the session's state and moments, changes
- *                frames without waking a pass, and leaves with the page;
- *   - teardown   dispose leaves no skin node, marker, body attribute or
- *                stylesheet behind, and no pass runs afterwards.
- *
- * This file is the runner. The parts live in packages/testing/smoke/: shared.mjs (paths,
- * fixtures, `check`), host-half.mjs (the Node half), page.mjs (one case's
- * stand-in page), the stand-in/ and probe/ parts (the scripts that page runs
- * before and after the bundle) and cases.mjs (what each case's report must show).
+ * smoke.mjs — the BUILT plugin (`lib/`): the host half in Node and the browser
+ * half in the stand-in host page under headless Chrome, with no DSH instance
+ * running; pages run several at a time, the motion pages two at a time last.
  *
  * Usage: node packages/testing/smoke.mjs [--case <name>[,<name>…]] [--feature <dir>[,<dir>…]] [--quick] [--jobs <n>] [--host]
- *        (CHROME_PATH overrides the browser lookup, DSH_SMOKE_JOBS the page count)
- *        --case runs the named browser cases alone, --feature the cases that
- *        cover the named directories under packages/client/src/features/; both may be repeated,
- *        combined, and neither means every case. --quick leaves out the cases
- *        and the checks that watch motion (TIMING_CASES in packages/testing/smoke/
- *        shared.mjs). Cases that share a stand-in configuration and a markup
- *        run in one page load (PAGES in shared.mjs), and the log names the pages
- *        it loaded. The pages are independent of one another — each carries its
- *        own context, markup and probe — so they are driven several at a time
- *        (JOBS below, `--jobs` or DSH_SMOKE_JOBS to change it) and the pages
- *        that watch motion run two at a time at the end, over a quiet browser.
- *        The Node host half runs either way; --host runs it alone and opens no
- *        page, which is what a system the browser lanes do not run on judges
- *        with (the host half reads that system's directories, drive letters and
- *        file times). --host takes no case, directory or tier.
+ *        (CHROME_PATH picks the browser, DSH_SMOKE_JOBS the page count; --host
+ *        runs the Node half alone and takes no case, directory or tier)
  * Exit:  0 every check passed · 1 a check failed · 2 the command line names
- *        nothing it can run · 3 the browser half gave no verdict (no browser, or
- *        it could not start)
+ *        nothing it can run · 3 the browser half gave no verdict
  */
 import { availableParallelism } from 'os'
 import { findChrome, openBrowser } from './browser.mjs'

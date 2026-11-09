@@ -11,65 +11,9 @@ import { inPageBox, inPagePixels } from '../../shared/page-zoom'
 /** Margin past the roll's own duration for the backstop that unlocks the click. */
 const FOLD_ROLL_BACKSTOP_MS = 200
 
-/**
- * When a fold closes, the content below is pushed away and the body rolls up
- * like a door.
- *
- * The host's DisclosureRow unmounts the body whole when it closes ({open &&
- * children}), so CSS has no old value to transition from and a pure CSS
- * height animation is impossible in the chat area. This takes over outside
- * the DOM by intercepting the click: stopPropagation() in the capture phase,
- * so React never sees it and the real element stays where it is, still open,
- * and can have its height pressed down. When the press reaches the end the
- * click is handed back as it was. Pressing the real element means there is no
- * clone and none of a clone's trouble (inheritance, coordinates, scrolling,
- * node limits).
- *
- *   opening   acts after React has inserted the body — the observer callback
- *             still runs before paint, so the height can be pressed back to
- *             the start and animated to full while the layout grows frame by
- *             frame. The content below is really pushed away, with no FLIP.
- *   closing   intercepts the click and keeps the element open, so its height
- *             can be pressed to the end just as in the opening direction, and
- *             only then lets the click through: React unmounts an element
- *             that takes no space, so the collapsed layout does not jump.
- *
- * What gets pressed depends on the family:
- *
- *   a DisclosureRow    the body itself; it is a plain block with no inner scroll.
- *   a process group    the group root, not its body. The body carries its own
- *                      scrollbar and the host's use-process-scroll watches it:
- *                      pressing it would make follow.toBottom smooth-scroll the
- *                      content to the end and turn the door into a column of
- *                      text running upwards. The root is only the box around
- *                      it — the body inside keeps every pixel of its size, so
- *                      the host's follow receives no ResizeObserver notice,
- *                      while the root's height is part of the layout and still
- *                      pushes the content below away.
- *   not at all         a turn's header (the "took X seconds" button) and its
- *                      trigger notice: what they open is a whole turn's
- *                      content, nested scrolls included, and the host's own
- *                      instant toggle is the steadier answer there.
- *
- * The door only rolls what can be seen. The height has to travel from start
- * to end for the layout to really make room, but the animation's distance is
- * the full height: eight thousand pixels of reasoning would run out in 200 ms
- * and look like a pop. So the height runs in two stretches, and the boundary
- * is the visible reach foldVisibleReach measures — the stretch the reader can
- * see gets FOLD_VISIBLE_SHARE of the duration, and the height outside the
- * viewport takes the rest in one go. A door two hundred pixels tall and one
- * twenty thousand tall then move at the same speed in front of the reader,
- * and the two stretches are continuous rather than a jump.
- *
- * An intent is only taken from a reader's own click, and it only keeps one
- * number: the starting height for the opening direction. Streaming additions
- * and paging through history have no click and so no animation; this
- * feature's own automatic folding dispatches real clicks down this very
- * capture path, so those are recognised through isChatFoldToggle and let
- * through — there the content is meant to grow naturally.
- *
- * @returns teardown: the click listener and the observer go away.
- */
+/* DisclosureRow unmounts on close, so closing intercepts the click, animates the real body, then
+   replays the click; opening animates after React inserts it. Process groups animate their root
+   because resizing their scrolled body triggers host follow. Only reader clicks create intent. */
 export function installChatFoldGlide() {
   /** The opening direction's intent, waiting for React to insert the body. */
   let glideIntent: {
@@ -90,13 +34,7 @@ export function installChatFoldGlide() {
   let queuedPress: Element | null = null
   /** The intercepted click is being replayed to React, and that one must not be intercepted again. */
   let glideReplaying = false
-  /**
-   * What the last fold left running: the stall watch on its animation, the
-   * settle that hands the follow back, and a collapse's confirmation. All three
-   * end by writing the scroll position or pressing the host's own button, so
-   * the teardown cancels them; a new fold of the same kind cancels the one
-   * before it.
-   */
+  /** These waits write scroll or click host controls; teardown and a new fold must cancel them. */
   let stopStallWatch: (() => void) | null = null
   let stopSettleWait: (() => void) | null = null
   let stopConfirmWait: (() => void) | null = null
@@ -113,15 +51,7 @@ export function installChatFoldGlide() {
   // reduced motion.
   const reduceMotion = () => motionReduced()
 
-  /**
-   * Hand the intercepted click back to React as it was. No intercepting during
-   * the replay, and no collapse started.
-   *
-   * A press this feature made itself is replayed as one (fold-toggle.ts): the
-   * replay lands after the door, outside the press that declared it, and the
-   * reader-intent guards — the token reveal's among them — would otherwise
-   * read it as the reader's.
-   */
+  /** Replayed automatic presses must remain marked after the original toggle scope has ended. */
   const replay = (control: HTMLElement, own: boolean) => {
     glideShutting = false
     glideReplaying = true
@@ -147,24 +77,7 @@ export function installChatFoldGlide() {
     target.click()
   }
 
-  /**
-   * Roll the door open: the height grows frame by frame from the starting
-   * point to full, taking exactly as much room as it shows.
-   *
-   * There is only the height, but it runs in two stretches: the visible one
-   * gets FOLD_VISIBLE_SHARE of the duration and the height outside the
-   * viewport is finished with the rest.
-   *
-   * A rect measures border-box height while CSS height means content-box by
-   * default: without switching to border-box the animation runs the padding
-   * twice and then shrinks it back on cancel, which reads as the padding
-   * moving.
-   *
-   * @param target - the element the door pulls: a body, or a process group's root.
-   * @param from - the starting height. A body starts at 0; a group root starts
-   *     at the header's own stretch, with the body hidden under it.
-   * @returns the animation the settle waits for, or null when none started.
-   */
+  /** Animate visible and offscreen height separately; border-box prevents padding from moving twice. */
   const rollOpen = (target: HTMLElement, from: number) => {
     markChatFoldBusy()
     const height = inPagePixels(target.getBoundingClientRect().height)
@@ -192,23 +105,7 @@ export function installChatFoldGlide() {
   /** Whether the reader is at the session's end: as the scan behind this press read it, or read now. */
   const atBottomFor = (control: Element) => chatFoldPressReading()?.atBottom ?? foldControlAtBottom(control)
 
-  /**
-   * Roll the door shut: the real element is pressed, nothing is cloned.
-   *
-   * The click was intercepted in the capture phase, so React has not folded
-   * anything and the element still stands at full height: it can be pressed
-   * down just as in the opening direction, the layout shrinking frame by frame
-   * and the content below really being made room. At the end of the press the
-   * click is let through; React collapses then, when the element takes no
-   * extra space, so the collapsed layout does not jump.
-   *
-   * Only the height, in two stretches again, in the opposite direction: the
-   * part outside the viewport goes first and the visible stretch rolls up over
-   * FOLD_VISIBLE_SHARE of the duration.
-   *
-   * @param fold - the element to press, the end height, the test for "React
-   *     has collapsed it", and whether this feature made the press.
-   */
+  /** Shrink the still-mounted element before replaying the click so React removes no visible height. */
   const rollShut = (fold: { target: HTMLElement, floor: number, collapsed: () => boolean, control: HTMLElement, own: boolean, watch: FoldWatch }) => {
     markChatFoldBusy()
     // A press this feature's own scan made carries the height its read phase took.

@@ -3,46 +3,14 @@ import { PROCESS_BODY_SELECTOR, PROCESS_CONTENT_SELECTOR, PROCESS_EXPANDED_MODE_
 import { easeScrollToEndFor, joinScrollOwner, readerHolds, releaseReader, stopScrollFor } from '@dsh-claude-style/engine/scroll-owner'
 
 /**
- * The capped process group's follow: inside it, thinking and tool output do
- * not fall behind.
- *
- * The standard and compact tiers cap one process group's body (a max
- * height with its own scrollbar), and the host follows that body with a
- * native smooth scroll. Two things make it miss while content streams:
- *
- *   travel  a native smooth scroll eases out as it nears its target, and
- *           the content grows at a steady rate instead — a thinking section
- *           followed by tool output grows no slower than the scroll.
- *   single  the host starts the next one only once the previous has landed,
- *           so anything the content grows meanwhile waits.
- *
- * Together they leave the position 20 to 50 px off the end — exactly the
- * last two lines. Nothing here changes the host's own state: past
- * CATCH_UP_GAP_PX the catch-up asks the scroll owner to walk the body's
- * position to its end (packages/engine/src/scroll-owner.ts, D40), so the text above the
- * last line is pushed up smoothly rather than in a jump, and inside that
- * threshold it leaves the host's smooth scroll alone, which is the pleasant
- * one while it keeps up. The reader scrolling inside a body holds that body
- * until he comes back to its end (the owner's readerHolds).
- *
- * The catch-up and the host's own follow do not fight: moving scrollTop
- * runs its onScroll, and it reads a position at the end as the reader
- * reaching the end — which lights its follow up again and drops the
- * animation target that was stuck.
+ * Keep a capped process body at its end while content streams. Beyond the
+ * threshold the scroll owner eases past the host's slow smooth scroll (D40);
+ * a reader-scrolled body stays held until they return to its end.
  */
-/**
- * Past this the catch-up takes over. Inside it the host's smooth scroll
- * gets to finish; measured while streaming, its steady-state lag runs
- * between 20 and 50 px, so 40 sits in the middle.
- */
+/** Gap past which the catch-up replaces the host's smooth scroll. */
 export const CATCH_UP_GAP_PX = 40
 
-/**
- * Watch every process group's body on the page and catch up the ones that
- * fall behind.
- *
- * @returns teardown: the size subscriptions and the timer go away.
- */
+/** Watch every process body and catch up the ones that fall behind. */
 export function createChatProcessFollow() {
   const leaveOwner = joinScrollOwner()
   /** Every body on the page; taken before the mutation watch below, so the bus delivers a batch to it first. */
@@ -70,10 +38,7 @@ export function createChatProcessFollow() {
     if (readerHolds(body)) return
     if (!followable(body)) return
     if (gapOf(body) <= CATCH_UP_GAP_PX) return
-    // Written outright, the catch-up lands as a jump of forty-odd pixels
-    // several times a second while text streams, which reads as the
-    // paragraph above the last line snapping upward; the owner eases it there
-    // instead, and writes it outright under reduced motion.
+    // Ease rather than jump; reduced motion writes the position directly.
     easeScrollToEndFor(body, 'process', () => !stopped && followable(body))
   }
 
@@ -90,13 +55,8 @@ export function createChatProcessFollow() {
   }
 
   /**
-   * Session switches, groups coming and going, and a content layer being
-   * remounted all have to be followed.
-   *
-   * The content layer is resolved again on every sync rather than once:
-   * the body is capped, so content growth does not change its own size —
-   * the layer inside it is what changes size, and once React remounts that
-   * layer the old element stops reporting.
+   * Re-observe each body's content layer, whose size changes while the capped
+   * body's does not; React remounts require a fresh observer.
    */
   const sync = () => {
     const present = new Set(bodies.all())
@@ -129,12 +89,7 @@ export function createChatProcessFollow() {
     }
   }
 
-  /**
-   * The bodies that have to be followed, and the moment to look for them: a
-   * batch that touches one, brings one, or takes one away. Sized changes are
-   * the subscriptions' own business (onResize), so no timer is left running
-   * over a page that holds no process group at all (D40).
-   */
+  /** Re-sync when a batch adds, removes or touches a body; sizes have their own watchers (D40). */
   const stopWatch = subscribeMutations(document.body, { childList: true, subtree: true }, records => {
     for (const record of records) {
       const target = record.target instanceof Element ? record.target : record.target.parentElement

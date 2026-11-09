@@ -1,9 +1,8 @@
 /**
  * A session switch mounts its transcript in one large batch, and the marks that
- * batch needs are what the sheet draws that frame with — the prose's face and
- * line height, the table's widths. The marking pass therefore runs in the
- * observer's callback, before the frame is painted; a batch the bus deferred
- * would paint the host's own type first and move it a task later.
+ * batch needs are what the sheet draws that frame with. The marking pass therefore
+ * runs in the observer's callback, before the frame is painted; a batch the bus
+ * deferred would paint the host's own type first and move it a task later.
  *
  * @capability part-marking
  * @features engine

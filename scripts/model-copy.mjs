@@ -8,34 +8,14 @@ import addFormats from 'ajv-formats'
 
 /** The model copy and its schema: data beside the browser half's code, never bundled. */
 const DATA = path.join(path.resolve(import.meta.dirname, '..'), 'packages', 'client', 'data')
-/**
- * Model copy ships as DATA beside the bundle, not inside it: the browser half
- * fetches it at runtime (the host half serves it), so the table grows without
- * touching this build. It is validated here so a malformed table fails the
- * build instead of the picker.
- */
+/** The browser fetches this data at runtime, so malformed copy must fail the build (D5). */
 export const MODEL_COPY = 'model-descriptions.json'
 /** The model copy's declared shape; validateModelCopy adds the references a schema cannot see. */
 const MODEL_COPY_SCHEMA = 'model-descriptions.schema.json'
 const validateModelCopyShape = addFormats(new Ajv2020({ allErrors: true }), ['regex'])
   .compile(JSON.parse(fs.readFileSync(path.join(DATA, MODEL_COPY_SCHEMA), 'utf8')))
 
-/**
- * Check the model copy document before it ships. Every failure here is one the
- * picker could otherwise only express as a silently missing or wrong line, so
- * they all throw.
- *
- * The document's shape is declared in packages/client/data/model-descriptions.schema.json: the
- * tables, the `{locale: text}` lines and a rule's compilable `match` with the
- * line it carries. What a schema cannot see is checked after it: every brand
- * id must be a vendored lockup under packages/assets/src/icons/combine/ (a typo
- * would render as a silently missing mark on one row), and the document must
- * carry at least two locales.
- *
- * @param doc - parsed `packages/client/data/model-descriptions.json`.
- * @param lobeBrands - the vendored lockups keyed by brand id (loadCombines).
- * @returns the number of family rules, for the build log.
- */
+/** Check schema-external brand references and translations so picker rows cannot lose copy silently. */
 export function validateModelCopy(doc, lobeBrands) {
   const fail = (message) => {
     throw new Error(`build: ${MODEL_COPY} ${message}`)

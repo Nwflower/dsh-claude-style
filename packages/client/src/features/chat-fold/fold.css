@@ -1,13 +1,5 @@
-/* ---------- chat fold: the process group's counted summary ---------- */
-/* A group's header names what the group holds — 「执行 2 次思考，调用 1 次工具」 —
-   instead of the host's list of activities (process-summary.ts). The summary is
-   the skin's own span at the end of the header control; the host's words — the
-   control's one child it does not mark decorative — step aside while it stands,
-   and the icon, the chevron and the control itself stay the host's.
-
-   The span takes all the room the header has left, which is what the width
-   check reads: the hidden span inside it holds the sentence, and while that
-   sentence is wider than this room the summary stands in the compact figures. */
+/* process-summary.ts hides the host's non-decorative words while its own summary is present.
+   The hidden sentence supplies the natural width used to choose compact figures. */
 
 body[data-dsh-claude-style][data-dsh-claude-chat-fold] [data-step-process][data-dsh-claude-summary] button[data-process-activity] > :not([aria-hidden="true"]) {
   display: none;
@@ -23,9 +15,7 @@ body[data-dsh-claude-style] .dsh-claude-process-summary {
   white-space: nowrap;
 }
 
-/* The hidden measurement: the sentence laid out where it takes no room and no
-   width from the summary's own box, so the header's room can be compared with
-   the sentence as it would be written. */
+/* Measure the sentence out of flow so it does not consume the room being tested. */
 body[data-dsh-claude-style] .dsh-claude-process-summary-fit {
   position: absolute;
   width: max-content;
@@ -87,29 +77,18 @@ body[data-dsh-claude-style] .dsh-claude-process-summary-digit[data-dsh-claude-ro
   to { transform: translateY(0); opacity: 1; }
 }
 
-/* While the section runs, the summary sweeps the way the host's words did: the
-   host's own band (shared/motion.css), whose copy holds the summary's figures
-   as they stand, the rolling digits settled (process-summary.ts). The copy is
-   laid out the way the summary lays out its figures. */
+/* The sweep copy mirrors the summary layout with rolling digits settled. */
 body[data-dsh-claude-style] .dsh-claude-sweep-glyphs.dsh-claude-process-summary-glyphs {
   display: flex;
   align-items: baseline;
 }
 
-/* The reader's animation choice, resolved onto <body> by core/prefs.ts (D40):
-   reduced sets every count down at once, and the band stands down with every
-   other band (shared/motion.css). The attribute already folds in the system
-   setting, so no media query here. */
+/* The resolved body attribute includes system reduced motion (D40). */
 body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-process-summary-digit {
   animation: none;
 }
 
-/* ---------- chat fold: the gap under an open group's header ---------- */
-/* The host puts the gap between an open header and its body in the header's own
-   bottom padding, which goes the moment the header reads closed, before the body
-   has moved. As the body's top margin it leaves with the body: the host's own
-   roll takes height and top margin down together, and the fold glide's door
-   stops at the header's height with nothing left to drop afterwards. */
+/* Move the host header's gap onto the body so it collapses with the body in both host and skin glides. */
 body[data-dsh-claude-style][data-dsh-claude-chat-fold] [data-step-process] button[data-process-activity][aria-expanded="true"] {
   padding-bottom: 0;
 }

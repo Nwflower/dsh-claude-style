@@ -1,90 +1,22 @@
 name: CI
 
-# A push to master is judged by the checks, the build, the spec lane and the
-# part of the smoke and the behaviour lane its change reaches (D87): a change
-# held inside feature directories walks those directories' smoke cases and
-# behaviour specs, and any other change walks the smoke's quick tier and every
-# behaviour spec. A regression a push brings is red on that push, so it is not
-# left on master for every later pull request to inherit. Master names no
-# required check, so a red push verdict does not keep the commit out; the pusher
-# fixes it in the next push. What a feature-only push's selection leaves out is
-# observed beside it in `.github/workflows/observe.yml`, which joins no branch
-# rule. The whole matrix — the smoke, the behaviour specs on three systems and
-# the end-to-end lane — is judged on a manual run, which is the one a release
-# takes before its tag; a pull request and a merge-queue entry walk the smoke,
-# the behaviour specs on Linux and the end-to-end lane, and the macOS lane meets
-# them in `.github/workflows/nightly.yml`. A branch is judged through its pull
-# request or the queue, so a branch push of its own is not read here, and
-# `branches` keeps every other push out, tag pushes with them: the release
-# workflow owns tags.
+# Master pushes run checks and the lanes selected by the change (D87);
+# feature-only pushes leave the remaining quick smoke and behaviour specs to
+# Observe, outside the branch rule.
 #
-# One concurrency group per event and commit, so a series of pushes each finish
-# with a verdict instead of cancelling one another, and a pull request does not
-# cancel the push run it came from. A repeat of the same event on the same commit
-# — the pull request a push already opened — is the duplicate this drops. A queue
-# entry is never cancelled: it is the run a merge waits on.
+# Pull requests and merge queues run full smoke, Linux behaviour and e2e;
+# manual runs add macOS for the release matrix. Tag pushes belong to Release.
 #
-# `scripts/ci-scope.mjs` reads the change before any lane starts and prints the
-# three outputs the jobs below read. A push holding only documents, locale files
-# or the workflow itself reaches no page a lane reads, so `code` is false and the
-# page lanes are skipped while the checks still run. A change inside feature
-# directories names them in `selection`, one `--feature` flag the smoke and the
-# behaviour lane both read; a change to the shared layer, and any path the map
-# cannot place, selects nothing, which earns the whole walk on a pull request and
-# the quick tier with every behaviour spec on a push. The directory names are
-# checked against the feature table the manifests produce (D76), so a printed
-# selection is one the smoke accepts. `tree` is the hash of
-# the tree (`scripts/shared/tree-hash.mjs`), which keys the build cache: the
-# build's slow pure steps are stored under the hash of their inputs, so a run
-# over the same tree restores them instead of computing them
-# (`scripts/build-cache.mjs`).
+# `scripts/ci-scope.mjs` supplies the feature selection and tree-keyed build
+# cache; page lanes wait for checks and scope, then share one `lib/` artifact.
 #
-# The jobs are split by what they need. `checks` reads no built page, so it runs
-# on every event and starts while the scope job is still reading the diff; the
-# lanes that read a page wait on the checks and on the scope. `build` writes the
-# one `lib/` every lane below downloads, so one tree is bundled once and no two
-# lanes judge different bundles of it. `unit-smoke` carries the spec lane in a
-# real browser, the smoke and the behaviour specs over that bundle;
-# `smoke-windows` reads the host half on the readers' own system, which is what
-# that system judges (its directories, drive letters and file times) — the pages
-# themselves are Linux's and macOS's; `behaviour-macos` walks the behaviour specs
-# on the third platform, on the manual run a release takes and in the nightly
-# matrix; `e2e` drives a scratch `dsh web` on the newest host version published,
-# under whichever dist-tag (`packages/testing/host-version.mjs` reads the
-# registry; the lane gives no verdict on a machine whose host differs) with the
-# scripted model service (D87), so a selector or entry the host stopped honouring
-# shows up in the run that meets the new host. Every job carries a deadline, and
-# every step that waits on the network carries its own: the job's is the
-# backstop, the step's ends a stuck wait in minutes.
-#
-# The end-to-end lane's default table is sliced by
-# `packages/testing/e2e.mjs --shard <index>:<total>`, one slice per matrix entry,
-# because the scenarios do not depend on one another: the whole table is covered
-# in the time the longest single scenario takes, and each shard uploads its own
-# traces under its own name. The cost is that one failure's traces sit in one of
-# four artifacts, so reading them means knowing the shard number, and a change
-# the path map cannot place still walks the whole smoke, so a new class of
-# directory stays slow.
-#
-# `required` runs `always()` over every job above, so it reports on a run whose
-# other jobs failed or were cancelled, and `scripts/ci-required.mjs` is the one
-# check the branch rule names: it reads the result of every job above through
-# `toJson(needs)`, fails on any that reports neither `success` nor `skipped`, and
-# prints them all. A skipped job counting as passed is what lets a push that
-# touched no code finish green, and the rule surviving a job added, renamed or
-# removed is what keeps a new job from being left out of a merge.
-#
-# Four things outside the repository decide this shape: the merge queue's
-# conclusion time, GitHub counting a skipped job as passed, the host version
-# `e2e` installs, and the Actions versions Dependabot proposes weekly
-# (`.github/dependabot.yml`). When one of them moves, this file is where the
-# arrangement is read again: a shorter conclusion from the queue earns fewer
-# shards, and GitHub's reading of a skipped job is what the aggregation rests on.
+# Concurrency is per event and commit; merge-queue runs are never cancelled.
+# `required` aggregates every job with `always()` because GitHub counts skipped
+# jobs as passed.
 on:
   push:
     branches: [master]
-    # The daily data refresh writes only these files; its own workflow validates
-    # them, and a full matrix for a numbers-only commit buys nothing.
+    # Data-only commits are validated by the Data workflow.
     paths-ignore:
       - 'packages/host/data/**'
   pull_request:
@@ -101,10 +33,7 @@ permissions:
   contents: read
 
 jobs:
-  # The base is what the event names — the pull request's base commit, the commit
-  # a push came from, master when neither is there — and the three-dot diff reads
-  # the merge base, so the answer is the commits this event added rather than
-  # everything master did meanwhile.
+  # Diff against the event's merge base, excluding unrelated master changes.
   changed:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -123,19 +52,14 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      # The scope reads the feature manifests, which esbuild bundles (D42), so
-      # the dependencies are installed here as well.
+      # Install dependencies for esbuild to bundle the feature manifests (D42).
       - run: npm ci
       - id: scope
         run: node scripts/ci-scope.mjs --base "${{ github.event.pull_request.base.sha || github.event.before || 'origin/master' }}"
-      # The pushes the scope refuses against the same base: an appearance
-      # snapshot moved without the sheets that draw it, and a record that only
-      # shrinks grown (D87, D9).
+      # Reject snapshots moved without their sheets and ledgers that only
+      # shrink (D87, D9).
       - run: node scripts/ci-scope.mjs --appearance --ledgers --base "${{ github.event.pull_request.base.sha || github.event.before || 'origin/master' }}"
 
-  # The gates that need no build: the lint rules, the decisions index against
-  # the files it lists, the changelog, AGENTS.md's command table and the numbers
-  # the checks decide on.
   checks:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -154,12 +78,7 @@ jobs:
       - run: npm run agents:check
       - run: npm run checks:numbers -- --check
 
-  # The build every lane below reads, made once. `lib/` is not in version
-  # control (D47), and four lanes read it: bundling it four times bought nothing
-  # and let two of them judge two different bundles of one tree. The artifact is
-  # the whole `lib/` directory — the bundle, its deferred chunks, its sheets and
-  # the host half — and it is text, so the Windows and macOS lanes read the same
-  # one Linux wrote.
+  # Build `lib/` once so every lane judges the same generated artifact (D47).
   build:
     needs: [changed, checks]
     if: needs.changed.outputs.code == 'true'
@@ -174,8 +93,6 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      # A miss computes everything and saves the entry for the next run over the
-      # same tree.
       - uses: actions/cache@v6
         with:
           path: .debug/build-cache
@@ -208,19 +125,16 @@ jobs:
           path: lib
       - run: npm test
         timeout-minutes: 15
-      # The entries are called directly: the selection `changed` printed carries
-      # a flag, and npm would read a flag of its own rather than pass it on. An
-      # empty selection is the whole walk on every other event and the quick tier
-      # on a push, which judges the push without the motion cases' minutes.
+      # Call the scripts directly so npm does not consume the feature-selection
+      # flag; an empty push selection means `--quick`.
       - run: node packages/testing/smoke.mjs ${{ needs.changed.outputs.selection }}
         if: github.event_name != 'push'
         timeout-minutes: 30
       - run: node packages/testing/smoke.mjs ${{ needs.changed.outputs.selection || '--quick' }}
         if: github.event_name == 'push'
         timeout-minutes: 30
-      # The behaviour specs read the same build on the same stand-in host (D87);
-      # a push walks the directories its change reaches, every other event all of
-      # them. A failure leaves its trace, screenshot and evidence for the artifact.
+      # Use the same build and stand-in host (D87); pushes run selected
+      # features, other events run all.
       - run: node packages/testing/behaviour.mjs ${{ github.event_name == 'push' && needs.changed.outputs.selection || '' }}
         timeout-minutes: 15
       - uses: actions/upload-artifact@v7
@@ -230,10 +144,8 @@ jobs:
           path: .debug/behaviour
           if-no-files-found: ignore
 
-  # The readers' desktop runs on Windows, and the host half reads session
-  # directories, drive-letter paths and file times there. What the same tree's
-  # pages do on that system is judged on Linux and macOS, so this job opens none:
-  # `--host` runs the Node half alone.
+  # Windows exercises host filesystem behavior only; page behavior is covered
+  # on Linux and macOS.
   smoke-windows:
     needs: [changed, checks, build]
     if: needs.changed.outputs.code == 'true' && github.event_name != 'push'
@@ -255,11 +167,8 @@ jobs:
       - run: node packages/testing/smoke.mjs --host
         timeout-minutes: 10
 
-  # The third platform of the release matrix (packages/testing/data/matrix.json,
-  # D87): the behaviour specs over macOS's own fonts and Chrome, where a layout
-  # that fits on the other two can still overflow. It runs on the manual run a
-  # release takes and in the nightly matrix, which reaches it between releases;
-  # a pull request pays Linux alone, whose queue it would otherwise wait out.
+  # Release/nightly-only macOS behaviour catches font and Chrome overflow
+  # without delaying pull request queues (D87).
   behaviour-macos:
     needs: [changed, checks, build]
     if: needs.changed.outputs.code == 'true' && github.event_name == 'workflow_dispatch'
@@ -287,14 +196,12 @@ jobs:
           path: .debug/behaviour
           if-no-files-found: ignore
 
-  # The assembled host: a scratch `dsh web` with this checkout's plugin and the
-  # scripted model service, driven through a real conversation (D87).
+  # Test the assembled plugin against the newest published host (D87).
   e2e:
     needs: [changed, checks, build]
     if: needs.changed.outputs.code == 'true' && github.event_name != 'push'
     strategy:
-      # One shard's failure is evidence about that shard; the others finish and
-      # report their own.
+      # Run all shards so one failure does not hide the others.
       fail-fast: false
       matrix:
         shard: [0, 1, 2, 3]
@@ -313,11 +220,9 @@ jobs:
         with:
           name: lib
           path: lib
-      # The lane boots the host's own CLI, which needs pnpm to install a
-      # profile's plugins.
+      # The host CLI needs pnpm to install profile plugins.
       - run: npm install --global pnpm@11 @deepseek-ai/dsh@$(node packages/testing/host-version.mjs)
         timeout-minutes: 10
-      # A named scenario takes its own deadline; this is the shard's backstop.
       - run: node packages/testing/e2e.mjs --shard ${{ matrix.shard }}:4
         timeout-minutes: 25
       - uses: actions/upload-artifact@v7

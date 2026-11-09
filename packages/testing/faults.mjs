@@ -1,34 +1,8 @@
 #!/usr/bin/env node
 /**
- * faults.mjs — whether the specs catch known defects (D87).
- *
- * The corpus (packages/testing/faults/corpus.json) holds defects as patches on
- * the product's sources: a fix from history that still reverses on the current
- * tree (`"apply": "reverse"` over the fix's own diff), or a defect written down
- * from a spec's intent (`"apply": "forward"`). Each fault is applied in a
- * scratch copy of the tree under `.debug/faults/` — the working tree is never
- * touched, and the copy borrows `node_modules` through a directory link — and
- * the layers it can reach are run there: the logic and mechanism specs always,
- * the build and the behaviour specs of the feature directories the patch
- * touches. A fault is caught when an assertion of one of them goes red: a spec
- * that only stops loading, or a build check that refuses the source, proves
- * nothing about the reader's page and is reported apart. The ids that went red
- * are what the report keeps, so a spec no fault ever turns red is visible, and a
- * fault whose patch no longer applies fails the run rather than leaving the
- * corpus quietly.
- *
- * `--suite old` runs the same corpus against the unit lane the tree had at
- * `--base` (a revision of the caller's choosing: the lane stopped existing when
- * the specs replaced it), copied from git: the comparison the migration was
- * accepted on. The smoke and the end-to-end lane are the same in both suites and
- * are not run here.
- *
- * Usage: node packages/testing/faults.mjs [--fault <id>[,<id>…]] [--suite new|old --base <ref>] [--keep]
- *        --keep leaves the scratch copies in place for reading.
- * Exit:  0 the corpus caught at least the number packages/testing/faults/expected.json
- *        records, every fault applied, and the chosen faults were each caught ·
- *        1 the rate fell below the record, a fault no longer applies, or a named
- *        fault no assertion catches · 2 the run could not start
+ * Apply the defect corpus to scratch copies and require a red assertion (D87).
+ * Only assertion failures count; a patch that no longer applies fails the run.
+ * Usage: `node packages/testing/faults.mjs [--fault <id>] [--suite new|old --base <ref>] [--keep]`.
  */
 import { execFileSync, spawnSync } from 'node:child_process'
 import fs from 'node:fs'

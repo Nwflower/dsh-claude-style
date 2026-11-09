@@ -1,14 +1,4 @@
-/**
- * privacy.mjs — the replacements and the sweep every screenshot path runs before
- * anything reaches disk (D87).
- *
- * A screenshot is taken from a page that carries the machine's own data: sidebar
- * workspace and session titles, the account row's inferred username, absolute
- * drive paths, quota amounts. `sanitizePage` rewrites them to neutral stand-ins
- * in the live page and then sweeps the visible text; a surviving match throws
- * instead of shipping. The regex sources stay strings so the page sweep and the
- * final assertion rebuild from one copy.
- */
+/** privacy.mjs — replace private page data and fail screenshot writes on a leak match (D87). */
 const PROJECT_NAMES = ['demo-project', 'sample-app', 'docs-site', 'theme-lab', 'notes-app', 'e-comm-demo']
 const SESSION_NAMES = [
   'Fix flaky onboarding test',
@@ -23,25 +13,14 @@ const SESSION_NAMES = [
 ]
 const USERNAME = 'Ada'
 
-/**
- * LEAK covers the local username, drive paths and quota amounts; PATH and
- * BALANCE cover the two rewrites.
- */
+
 const USERNAME_RE_SOURCE = 'Nwflower'
 const PATH_RE_SOURCE = '[A-Z]:[\\\\/][^\\s"\']*'
 const BALANCE_RE_SOURCE = '\u00a5\\s?[0-9][0-9.,]*'
 
 /**
- * Replace sidebar titles with stand-ins; swap the username nodes for static
- * ones under a different class — the theme's footer sync re-writes any node
- * still carrying `.dsh-claude-account-user` with the inferred real name, so
- * the stand-in must be invisible to that query. The name the account row
- * shows is replaced everywhere else too (the studio greeting says it).
- *
- * A title that already is a stand-in — bare, or after a source label such as
- * "Claude · " — stays, and so does a blank session's, which is the host's own
- * label for one (the same words as its New session button); the others take
- * the stand-ins no row uses yet.
+ * Replace private labels with unused stand-ins. Username nodes lose the class whose
+ * footer synchronization would restore the inferred real name.
  */
 const SANITIZE_JS = `(() => {
   const blank = ((document.querySelector('button[class*="newSession"]') || {}).innerText || '').trim().split('\\n')[0]
@@ -120,18 +99,12 @@ function assertClean(visibleText) {
   if (found !== null) throw new Error(`sensitive text still visible after sanitize: ${JSON.stringify(found[0].slice(0, 60))}\n${visibleText}`)
 }
 
-/**
- * Sanitize the page behind `run` — an expression evaluator for the driver in
- * use — and prove the result carries no personal data.
- *
- * @param run - `(expression) => Promise<value>` in the live page.
- * @returns the replaced node count, what the sweep caught, and the visible text.
- */
+/** Sanitize the page behind `run` and prove the result carries no personal data. */
 async function sanitizePage(run) {
   const swapped = await run(SANITIZE_JS)
   const caught = []
-  // The account label can arrive or be rewritten after the first sweep. Give
-  // that sync three bounded chances to settle, and never keep a leaky capture.
+  // The account label can arrive or be rewritten after the first sweep; give that
+  // sync three bounded chances to settle and never keep a leaky capture.
   for (let attempt = 0; attempt < 3; attempt++) {
     caught.push(...await run(SWEEP_JS))
     const visibleText = await run('document.body.innerText')

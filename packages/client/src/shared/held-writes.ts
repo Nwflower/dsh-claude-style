@@ -1,12 +1,4 @@
-/**
- * The declarations a feature writes beside the host's own value.
- *
- * A page-zoom feature rewrites lengths the host states from the viewport, so it
- * has to know which value it wrote, unwrap it back to the host's number on the
- * host's next write, and put the host's number back when the feature stands
- * down. Keeping that bookkeeping in one place keeps the features themselves to
- * the measurement they make.
- */
+/** Track raw host declarations so our rewrites are never mistaken for new host values and teardown can restore them. */
 
 interface Held {
   raw: string

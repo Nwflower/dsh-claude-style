@@ -1,24 +1,7 @@
 #!/usr/bin/env node
 /**
- * changelog.mjs — keep a released version's section in docs/CHANGELOG.md and print the pending one from docs/changes/ (D48).
- *
- * A change adds one small JSON file under docs/changes/ and never edits the
- * CHANGELOG: the file carries its group, where it sits in that group, whether it
- * moves an external contract, the date it landed and the entry in both
- * languages. The pending changes stay in that directory rather than in the
- * file: two branches that each add a file touch nothing in common, so merging
- * them cannot conflict on the CHANGELOG. `--release` turns them into the
- * version's section above the older ones and clears the directory; until then
- * the default prints the section the release would write, and writes nothing.
- *
- * Usage: node scripts/changelog.mjs [--check | --release <version> [--date <YYYY-MM-DD>] | --notes <version>]
- *        --check writes nothing and fails when a fragment does not validate or
- *        docs/CHANGELOG.md holds an [Unreleased] section.
- *        --release turns the pending changes into the version's section, puts it
- *        above the older ones, and clears docs/changes/.
- *        --notes prints a released version's section without its heading: the
- *        body of that version's GitHub Release.
- *        No flag prints the pending section on stdout and writes nothing.
+ * changelog.mjs — validate change fragments and render pending, released or
+ * GitHub Release sections (D48). `--release` also clears the fragments.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -62,11 +45,7 @@ function readFragments() {
   return fragments.sort((a, b) => a.at === b.at ? a.name.localeCompare(b.name) : a.at.localeCompare(b.at))
 }
 
-/**
- * The section's body: the Chinese groups in order, then the English ones. The
- * first heading of each language carries the anchor that language's line points
- * at, so the anchors stay on whichever group happens to come first.
- */
+/** Attach each language anchor to its first nonempty group. */
 function body(fragments) {
   const lines = []
   for (const [language, anchor] of [['zh', 'cn-unreleased'], ['en', 'en-unreleased']]) {

@@ -1,27 +1,10 @@
-/**
- * ts-module.mjs — load one TypeScript module of this repository into a Node process.
- *
- * The build reads the host contract (D3) and the token data as data, and the
- * end-to-end lane runs the same table against a live page (D87); both need the
- * module's exports without a second compiler setup. esbuild is already the
- * bundler, so it does the transform and the relative imports are resolved here.
- *
- * Paths are given from the repository root, so a module that has moved into a
- * package (D73) is loaded by its own path.
- */
+/** ts-module.mjs — load repository TypeScript modules through the existing esbuild setup (D73, D87). */
 import path from 'node:path'
 import vm from 'node:vm'
 import esbuild from 'esbuild'
 
-/** The repository root: this module sits one level below `scripts/`. */
 const ROOT = path.resolve(import.meta.dirname, '..', '..')
 
-/**
- * Evaluate one module of this repository and return its exports.
- *
- * @param file - repository-relative module path, extension included.
- * @returns the module's exports object.
- */
 function loadModule(file) {
   const { outputFiles } = esbuild.buildSync({
     entryPoints: [path.join(ROOT, file)],
@@ -36,13 +19,7 @@ function loadModule(file) {
   return module.exports
 }
 
-/**
- * Evaluate one module that uses top-level await, which the CJS path above
- * cannot carry: the bundle is handed to the ESM loader as a data URL.
- *
- * @param file - repository-relative module path, extension included.
- * @returns the module's exports object.
- */
+/** Use an ESM data URL because the CommonJS loader cannot evaluate top-level await. */
 async function loadModuleEsm(file) {
   const { outputFiles } = esbuild.buildSync({
     entryPoints: [path.join(ROOT, file)],

@@ -1,7 +1,7 @@
 /**
  * The pieces the part-marking specs share for reading a hold: the relation a
- * stylesheet reads by name, the words an element carries, a chat flow to mount
- * rows in, and one turn of the event loop for the marking pass.
+ * stylesheet reads by name, the hold words an element carries, and a chat flow
+ * to mount rows in.
  */
 import { holdRelations } from '@dsh-claude-style/engine/parts-table'
 import type { HoldRelation } from '@dsh-claude-style/engine/parts-table'
@@ -18,8 +18,6 @@ export const settle = () => new Promise((resolve) => { setTimeout(resolve, 0) })
 /**
  * The relation a stylesheet reads under this name.
  * @param vocabulary - the vocabulary the specs hand the engine.
- * @param name - the word the stylesheet writes in the hold attribute.
- * @returns the relation.
  */
 export function holdRelation(vocabulary: Parameters<typeof holdRelations>[0], name: string): HoldRelation {
   const relation = holdRelations(vocabulary).find((candidate) => candidate.name === name)
@@ -27,21 +25,13 @@ export function holdRelation(vocabulary: Parameters<typeof holdRelations>[0], na
   return relation
 }
 
-/**
- * The hold words an element carries.
- * @param element - the element to read.
- * @returns the words, or null when it carries no hold attribute.
- */
+/** The hold words an element carries, or null when it carries no hold attribute. */
 export function holdsOf(element: Element) {
   const value = element.getAttribute(HOLDS_ATTR)
   return value === null ? null : value.split(/\s+/).filter((word) => word !== '')
 }
 
-/**
- * Mount the given rows as one box's children inside a chat flow.
- * @param rows - the elements to stand in the flow.
- * @returns the flow.
- */
+/** Mount the given rows as one box's children inside a chat flow. */
 export function rowInFlow(rows: Element[]) {
   const flow = document.createElement('div')
   flow.setAttribute(CHAT_FLOW_SELECTOR.slice(1, -1), '')

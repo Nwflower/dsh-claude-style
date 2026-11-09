@@ -1,11 +1,8 @@
 /**
  * The context popover opens over the ring the composer row carries and stays
- * inside the window at the page's own scale and under the reader's page zoom
- * alike. The host places it from the anchor's own box, and that anchor is the
- * host's meter, which stands in a dock the skin's ring replaces — a node with no
- * box, so the host's own answer is the window's corner. The skin reads the ring
- * and writes both edges itself; a panel painted before it has placed the panel
- * would stand in that corner for a frame.
+ * inside the window at the page's own scale and under page zoom alike. The host
+ * places it from the host meter's box, which has none once the skin's ring
+ * replaces it, so the skin reads the ring and writes both edges itself.
  *
  * @capability context-stats
  * @features context-stats
@@ -14,10 +11,9 @@
 import { spec } from '../../fixtures/behaviour.mjs'
 
 /**
- * The stand-in's composer rides the document flow; the host keeps it at the
- * window's bottom, which is the only place the popover's own placement means
- * anything — the popover opens upward from a ring standing there. The stack
- * holding the card and its dock is pinned the way the host pins it.
+ * Pin the composer stack the way the host pins it: the popover opens upward from
+ * a ring standing at the window's bottom, which is where its placement means
+ * anything.
  */
 async function seatComposer(t) {
   await t.page.evaluate((card) => {
@@ -29,7 +25,7 @@ async function seatComposer(t) {
 
 /**
  * Every frame from the press on, so a panel painted anywhere but over the ring
- * is caught: the box the reader would see, and whether it is painted at all.
+ * is caught.
  */
 async function watchPanel(t) {
   await t.page.evaluate((selector) => {
@@ -67,10 +63,7 @@ async function openPanel(t) {
   return panel
 }
 
-/**
- * The popover's own box, the ring's box and the window's, once the skin has
- * marked the panel as placed, and every frame the panel was painted in.
- */
+/** The popover's box, the ring's box, the window's, and every frame the panel was painted in. */
 async function readPlacement(t, panel) {
   return t.page.evaluate(([selector, ringSelector, placedMark]) => {
     const element = document.querySelector(selector)
@@ -121,9 +114,8 @@ export default spec({ page: 'context-stats' }, ({ test }) => {
   test('under page zoom the context popover still opens over the ring, inside the window', async (t) => {
     await seatComposer(t)
     await t.prefs({ pageZoom: '1.25' })
-    // The zoom is what this reading is about, so it is judged too: a preference
-    // that never reached the page would leave the placement at 100% and the
-    // comparison would pass over a state nothing exercised.
+    // The zoom is judged too: a preference that never reached the page would
+    // leave the placement at 100% and the comparison would pass over nothing.
     t.expectThat.equal(await t.read.attribute('body', t.surface.attribute('skin.page-zoom')), '1.25', 'the page zoom reaches the document')
     t.expectThat.equal(await t.read.computed('body', 'zoom'), '1.25', 'the page is drawn at 125%')
     const panel = await openPanel(t)

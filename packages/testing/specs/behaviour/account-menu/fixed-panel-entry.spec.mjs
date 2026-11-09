@@ -1,12 +1,8 @@
 /**
- * A plugin's fixed-position panel mounted into the sidebar footer keeps its box
- * once the skin takes the footer over. The takeover gathers every unit the
- * footer's action slot holds and collapses each collected one with
- * `display: contents`, so a unit that is itself a fixed-position overlay has to
- * be read as an overlay on every pass, not on the pass that first saw it. The
- * Remote plugin's page is that shape: its action renders the trigger and, while
- * the page is open, a fixed backdrop holding the dialog — two siblings in the
- * same slot.
+ * A plugin's fixed-position panel in the sidebar footer keeps its box after the
+ * takeover collapses the slot's units with `display: contents`: a fixed overlay
+ * must be read as one on every pass, not only the pass that first saw it, and
+ * the Remote plugin mounts its trigger and backdrop as siblings in the slot.
  *
  * @capability account-menu
  * @features account
@@ -22,10 +18,8 @@ const SLOT_ANCHOR = host('shell.slot-anchor')
 const ACTION_INDEX = surface.attribute('account.action-index')
 
 /**
- * The plugin's action as its own module renders it: a trigger in the action
- * slot, and — while the page is open — a fixed backdrop with the dialog inside,
- * mounted beside the trigger in the same slot. Both are the slot's children,
- * which is what the takeover collects as separate units.
+ * The plugin's action as its own module renders it: a trigger in the action slot
+ * and, while the page is open, a fixed backdrop holding the dialog beside it.
  */
 const mountPanelAction = (t) => t.page.evaluate(({ part, anchor }) => {
   const actions = document.querySelector(`[${part}~="footer-actions"]`)

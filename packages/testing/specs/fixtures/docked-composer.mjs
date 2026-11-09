@@ -1,16 +1,9 @@
 /**
- * A docked conversation as the host mounts it (D87): a sidebar chat column
- * holding an embedded conversation, its composer card, and the host's dock line
- * after the card. A spec adds what its own feature reads — the model slot, the
- * access slot, the meter's trigger — through the host contracts it already
- * names, so no spec spells a host attribute of its own.
+ * A docked conversation as the host mounts it (D87): a sidebar chat column with
+ * an embedded conversation, its composer card, and the host's dock line after
+ * the card. `card.parts` and `dock` are plain data; positions stay the spec's,
+ * since what a panel or a seat does depends on where the two cards stand.
  *
- * The options are plain data: `card.parts` become children of the card (each
- * with `tag`, host `attributes`, inline `style`, `html` or `text`), and
- * `dock` becomes the line after the card. Positions are the spec's, since what
- * a panel or a seat does depends on where the two cards stand in the window.
- *
- * @param t - the behaviour spec's page.
  * @param options - the sidebar's style, the card's parts, and the dock line.
  */
 async function mountDockedComposer(t, options = {}) {

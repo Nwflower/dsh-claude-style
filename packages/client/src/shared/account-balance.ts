@@ -4,14 +4,8 @@ import { activeLocale } from '../core/i18n'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { HostAccountClient, HostWallet } from '@dsh-claude-style/contracts/account'
 
-/**
- * The identity every account call carries. The Remote requires it as the
- * method's own argument: the Host refuses a call whose argument fields do
- * not match its descriptor, so a call without it never reaches the
- * Platform. Each field is read at call time, so a language or a zone change
- * reaches the next read. The version is this bundle's own build version —
- * the DSH build the page runs is readable from no host service the browser
- * half can see.
+/** Host Remote validates this descriptor on every call; locale and zone must be read at call time.
+ * CLIENT_VERSION is the bundle version because the host build version is unavailable here.
  */
 export function accountClient(ctx: HostContext): HostAccountClient {
   return {

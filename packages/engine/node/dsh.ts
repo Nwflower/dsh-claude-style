@@ -1,13 +1,8 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
 /**
- * What the host half reads off the DSH plugin context (D73).
- *
- * The half runs inside DSH's loader, which hands it a context object; DSH ships
- * no types for it, so this file declares the members the half actually touches,
- * with the meaning the half gives them. Reading by name (`get`) is lenient: a
- * host that does not provide a service answers `undefined`, and each reader
- * decides what that means (D12).
+ * Minimal DSH loader context types (D73); the host ships no types for them.
+ * `get` returns undefined for missing services and callers handle that boundary (D12).
  */
 
 /** One host plugin context, as the half reads it. */
@@ -35,15 +30,8 @@ export interface DshScope extends DshContext {
 }
 
 /**
- * One host session observation, as the half reads it.
- *
- * The host's `sessionQuery.observeSession` answers a live or stored log without
- * the corpus listing its `readSession` preflights, which is what a per-session
- * read over the whole history can afford. The value is a lease released through
- * the well-known symbol: until it is released a stored log stays pinned in the
- * host's prepared-session cache, whose entries an unreleased observation keeps
- * out of eviction. `events` is the host's own frozen array, read in place and
- * never written to.
+ * Observation leases pin prepared logs until disposal; always release them.
+ * `events` is the host's frozen array and must not be mutated.
  */
 export interface DshSessionObservation {
   readonly events: readonly unknown[]

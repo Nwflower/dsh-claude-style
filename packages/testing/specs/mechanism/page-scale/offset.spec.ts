@@ -1,8 +1,7 @@
 /**
- * The host's floating layer in a page drawn at a scale (D43, D81): a card the
- * host positioned from a measurement is drawn where its own numbers put it, in a
- * space one pixel to one pixel with the window, and the teardown hands every
- * carried card back.
+ * The host's floating layer in a page drawn at a scale (D43, D81): a card the host
+ * positioned from a measurement is drawn where its own numbers put it, in a space
+ * one pixel to one pixel with the window, and the teardown hands every card back.
  *
  * @capability page-scale
  * @features engine
@@ -69,8 +68,7 @@ test('a card the host sized is measured the way it is drawn, so a placement from
   installed()
   await settle()
   // The host places a menu over its trigger as `top = triggerTop - offsetHeight - gap`,
-  // in the window's pixels. Held at the page's scale the card is drawn a quarter
-  // taller than it was measured, and lands that much past the trigger.
+  // in the window's pixels, and the card's own height must fit that space.
   const triggerTop = 400
   const offsetHeight = card.offsetHeight
   const wanted = triggerTop - offsetHeight - 4

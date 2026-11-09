@@ -1,18 +1,7 @@
 #!/usr/bin/env node
 /**
- * agents-commands.mjs — write AGENTS.md's command table from `package.json` (D48).
- *
- * A command list typed by hand goes stale the moment a script is added, renamed
- * or repurposed, and AGENTS.md is the file an agent reads first. Each script's
- * purpose already stands at the top of the script itself, so this reads
- * `package.json`'s `scripts` in declaration order, takes each script file's own
- * header line and writes the table between two markers in AGENTS.md. The
- * purposes a file cannot state (a `:check` twin, the unit lane's own runner) are
- * named in OVERRIDES below.
- *
- * Usage: node scripts/agents-commands.mjs [--print | --check]
- *        --print writes nothing and shows the table; --check fails when the
- *        committed table differs from the scripts.
+ * agents-commands.mjs — write AGENTS.md's command table from package.json
+ * and each script's own `file — purpose` header (D48).
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -22,10 +11,7 @@ const AGENTS = path.join(ROOT, 'AGENTS.md')
 const START = '<!-- commands:start — written by npm run agents, not by hand -->'
 const END = '<!-- commands:end -->'
 
-/**
- * The purposes a script file does not carry: its twin reads the same file, and
- * `test` is the runner's own command.
- */
+/** Supply purposes for commands that share another script or have no script header. */
 const OVERRIDES = {
   test: 'the logic and mechanism specs on their own, as the cloud job runs them: Vitest in browser mode on the local Chrome or Edge',
   'changelog:check': 'fail when a `docs/changes/` fragment does not validate or `docs/CHANGELOG.md` holds an `[Unreleased]` section; the cloud job runs this',
@@ -37,11 +23,7 @@ const OVERRIDES = {
 /** A script whose file is the script itself, so the header line can be read. */
 const SCRIPT_FILE = /^node\s+(\S+\.(?:mjs))(?:\s|$)/
 
-/**
- * The purpose one script states in its own header: the line that names the file
- * and then says what it does, cut at its first sentence and stripped of a
- * trailing decision citation.
- */
+/** Parse the first sentence after the header's em dash; drop trailing decision citations. */
 function statedPurpose(file) {
   const text = fs.readFileSync(path.join(ROOT, file), 'utf8')
   const block = text.match(/\/\*\*([\s\S]*?)\*\//)

@@ -2,12 +2,7 @@ import { HDSL_ROUTE, HDSL_SKIN_ROUTE, USERNAME_MAX, USERNAME_ROUTE } from '../co
 import { readPrefs } from '../core/prefs'
 import { createHostResource } from '@dsh-claude-style/engine/resource'
 
-/**
- * Who the skin shows. Nickname: the custom nickname, the signed-in account's
- * name, the HDSL launcher's account name, the cached OS-user probe, the fresh
- * probe. Picture: the signed-in account's avatar, the HDSL launcher's avatar,
- * then nothing, which lets the brand mark show (D75).
- */
+/** Identity precedence is custom name, account, launcher, cached OS probe, fresh probe; missing avatar shows the brand (D75). */
 export let accountName = ''
 export let accountAvatar = ''
 

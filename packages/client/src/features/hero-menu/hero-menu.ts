@@ -8,45 +8,9 @@ import type { FeatureUi } from '../../core/feature'
 import type manifest from './hero-menu.manifest'
 
 /**
- * The hero row's two pickers — the workspace (directory) chip and the
- * agent-preset seat — both open the host's shared menu primitive, which
- * portals its card to <body>. That card carries no marker of its own, so a
- * stylesheet cannot tell it apart from the host's other menus (sidebar row
- * menus, the settings permission row, submenus) — and it has to: this skin
- * redraws these two and leaves the rest alone.
- *
- * So the browser half stamps the open card rather than guessing in CSS.
- * While either trigger reports `aria-expanded="true"`, the one host menu
- * sitting in <body> is that card; HERO_MENU_ATTR is what
- * features/hero-menu/hero-menu.css switches on, and its value (`workspace` or
- * `preset`) names the picker, since the two cards are drawn differently.
- *
- * The scheduler's attributeFilter does not watch `aria-expanded`, but the
- * card is inserted into <body> as it opens — a childList mutation the pass
- * already observes — so the stamp lands on the frame the menu appears. Two
- * candidates mean an unrelated menu is open as well: the pass then leaves
- * every card alone rather than stamping the wrong one.
- *
- * The host drops that card below its trigger, which is exactly where the
- * composer sits: it would land on the input area and on the controls in it.
- * This row sits above the composer, so the card is placed the way the skin's
- * own composer pickers sit on their triggers — right-aligned with the
- * trigger and opening upward, flipped below it only when the viewport leaves
- * no room above. The host re-places the card from its own geometry on every
- * frame while the card is open, and an inline `left` / `top` written here
- * would live only until the host's next frame. The position therefore
- * travels in two custom properties, which the host's style writes never
- * touch, and
- * features/hero-menu/hero-menu.css reads them with `!important`: an author
- * `!important` declaration outranks the host's plain inline value, so the
- * card holds this position from the pass that stamps it onward. The
- * scheduler's scroll/resize hook re-applies it when the anchor moves.
- *
- * Hover is the host's own click handler driven from here: the "Open popovers
- * on hover" preference's `all` scope covers these two, and the host offers no
- * hover of its own. The listeners are delegated from the document because
- * React replaces the triggers, and the close waits out the gap between the
- * trigger and the card so crossing it does not shut the menu.
+ * Stamp the host's portalled hero menu with its picker name, place it above the
+ * trigger through `!important` custom properties, and drive the host's click
+ * handler from delegated hover. Two open candidates leave every card alone.
  */
 export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** Air between the trigger and its card, as the skin's other pickers take. */
@@ -54,12 +18,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The two triggers, and the card once it is stamped. */
   const TRIGGER_SELECTOR = '[data-dsh-claude-part~="hero-workspace-row"] [aria-haspopup="menu"]'
 
-/**
- * The composer card's own workspace trigger, the second view of the same picker
- * state as the row's chip: one element, kept while it stays the first match, so
- * the pass that reads it every time pays the page's own size only when the page
- * changed (D9).
- */
+/** The composer card's workspace trigger, cached while it stays first (D9). */
 const findCardTrigger = cacheFirstMatch<HTMLElement>('[data-dsh-claude-part~="card-workspace-trigger"] [aria-expanded="true"]')
   const CARD_SELECTOR = `[${HERO_MENU_ATTR}]`
   /** The open card, marked with the picker it belongs to, and the trigger it was stamped for. */
@@ -72,11 +31,7 @@ const findCardTrigger = cacheFirstMatch<HTMLElement>('[data-dsh-claude-part~="ca
   let pointerTrigger: HTMLElement | null = null
   /** The trigger a scheduled hover open clicks when its dwell runs out. */
   let pendingTrigger: HTMLElement | null = null
-  /**
-   * The hover dwell and grace, shared with the skin's own pickers: the dwell
-   * swallows a pointer merely crossing the hero row, the grace lets it
-   * travel the gap between the trigger and the card.
-   */
+  /** Shared dwell and grace: tolerate a crossing row and travel to the card. */
   const hoverIntent = createHoverIntent(
     () => {
       const trigger = pendingTrigger
@@ -88,21 +43,13 @@ const findCardTrigger = cacheFirstMatch<HTMLElement>('[data-dsh-claude-part~="ca
     POPOVER_CLOSE_DELAY,
   )
 
-  /**
-   * Open what hover asked for, once the pointer has stayed the dwell out.
-   * The host's menu has no hover of its own — this clicks its trigger — so
-   * the dwell is what keeps a pointer merely crossing the hero row from
-   * unfolding the card.
-   */
+  /** Click the host's trigger once the dwell has passed; the host's menu has no hover of its own. */
   function openFromHover(trigger: HTMLElement) {
     if (!hoverEnabled()) return
     if (trigger.getAttribute('aria-expanded') === 'true') return
-    // One card at a time. The row carries two pickers — the workspace chip and
-    // the preset seat — and they are two independent host menus, while the
-    // shared registry holds ONE entry for the row. The sibling therefore has
-    // to be folded here: crossing from the preset straight to the workspace
-    // chip left both cards up, and syncHeroMenu (which stamps and places a
-    // single card) then placed neither.
+    // One card at a time: the row's two pickers are two host menus while the
+    // shared registry holds one entry, so the sibling folds here — crossing
+    // between them otherwise left both cards up and neither placed.
     closeSiblingHeroMenus(trigger)
     closeOtherPopovers('hero')
     trigger.click()
@@ -110,12 +57,7 @@ const findCardTrigger = cacheFirstMatch<HTMLElement>('[data-dsh-claude-part~="ca
     hoverTrigger = trigger
   }
 
-  /**
-   * Close every open hero menu, whatever opened it — a hover or a click. The
-   * shared popover rule calls this when another popover opens; the hover-leave
-   * path comes through closeFromHover below, which closes only what hover
-   * opened.
-   */
+  /** Close every open hero menu, whatever opened it; the hover-leave path uses closeFromHover. */
   function closeHeroMenu() {
     hoverIntent.cancel()
     pendingTrigger = null
@@ -136,9 +78,8 @@ const findCardTrigger = cacheFirstMatch<HTMLElement>('[data-dsh-claude-part~="ca
   }
 
   /**
-   * The row's other open picker, folded so only one card can be up. The list
-   * is read before the first press: a press re-renders the host's row, and a
-   * node it replaced answers no click anyway.
+   * Fold the row's other open picker. The list is read before the first press: a
+   * press re-renders the host's row, and a node it replaced answers no click.
    */
   function closeSiblingHeroMenus(trigger: HTMLElement) {
     const open = openTriggers()
@@ -185,12 +126,9 @@ const findCardTrigger = cacheFirstMatch<HTMLElement>('[data-dsh-claude-part~="ca
   document.addEventListener('mouseout', onHeroPointerOut, true)
 
   /**
-   * A press on a trigger whose card the dwell already opened keeps the card
-   * up. The host's own onClick toggles its menu and is delegated from the
-   * document, so the press is stopped on its way there — the same interception
-   * the account row makes (features/account/account-footer.ts), for the same
-   * reason: without it the reader's hand on the trigger folds the card it just
-   * opened, and the hover's own leave never gets to be the way out.
+   * A press on a trigger whose card the dwell already opened keeps the card up:
+   * the host's click toggles its menu and is delegated from the document, so the
+   * press is stopped on its way there (as features/account/account-footer.ts does).
    */
   function onHeroPressCapture(e: MouseEvent) {
     if (isProgrammaticPress()) return
@@ -206,11 +144,8 @@ const findCardTrigger = cacheFirstMatch<HTMLElement>('[data-dsh-claude-part~="ca
   document.addEventListener('click', onHeroPressCapture, true)
 
   /**
-   * Which picker a trigger opens, written as the stamp's value so the
-   * stylesheet can draw the two cards apart. The workspace chip is the
-   * button carrying the host's workspace label; the composer card's own
-   * workspace trigger opens that same picker; anything else in the row is
-   * the agent-preset seat.
+   * The stamp's value: the workspace chip and the composer card's own trigger
+   * open the workspace picker, anything else in the row is the preset seat.
    */
   function pickerKind(trigger: HTMLElement) {
     if (trigger.querySelector('[data-dsh-claude-part~="workspace-chip-label"]') !== null) return 'workspace'
@@ -232,11 +167,9 @@ const findCardTrigger = cacheFirstMatch<HTMLElement>('[data-dsh-claude-part~="ca
   }
 
   /**
-   * The open pickers, one entry each. The composer card's own workspace trigger
-   * is a SECOND view of the same picker state as the row's chip (both read the
-   * host's `pickerOpen`), so it stands in only when the row carries no open
-   * picker: pressing both views in one task toggles the picker shut and open
-   * again.
+   * The open pickers, one entry each. The composer card's trigger is a second
+   * view of the same picker state, so it stands in only when the row carries no
+   * open picker: pressing both views in one task toggles the picker shut again.
    */
   function openTriggers() {
     const row = rowTriggers()
@@ -252,20 +185,16 @@ const findCardTrigger = cacheFirstMatch<HTMLElement>('[data-dsh-claude-part~="ca
   }
 
   /**
-   * Park the card on its trigger: right-aligned with it and opening above it
-   * by the same air the skin's own pickers take, flipped below when the
-   * viewport leaves no room above, and clamped to the viewport either way.
-   * A card that has not been laid out yet is left for the next pass rather
-   * than pinned to a zero-sized guess.
+   * Park the card right-aligned with its trigger and opening above it by the
+   * skin's own air, flipped below when the viewport leaves no room and clamped
+   * either way. A card not yet laid out is left for the next pass.
    */
   function placeCard(trigger: HTMLElement, card: HTMLElement) {
     const width = card.offsetWidth
     const height = card.offsetHeight
     if (width === 0 || height === 0) return
-    // The shared above-anchor geometry; the answer goes into custom
-    // properties the host's own per-frame style writes never touch (see
-    // the header note). The box and the window arrive in the pixels those
-    // properties are read in.
+    // The shared above-anchor geometry, written into custom properties the
+    // host's per-frame style writes never touch.
     const space = anchorSpace(trigger)
     const resolved = resolveAnchoredPosition(space.rect, width, height, { gap: GAP, viewport: space.viewport })
     const { x, y } = clampToViewport(resolved, width, height, space.viewport, POPOVER_MARGIN)
@@ -291,22 +220,17 @@ const findCardTrigger = cacheFirstMatch<HTMLElement>('[data-dsh-claude-part~="ca
       clearStamp()
       return
     }
-    // Both of the row's pickers being open at once — a click on the second
-    // trigger is enough — is the state this feature exists to prevent, and
-    // with two cards up neither can be stamped or placed. The picker the
-    // pointer is on stays (a click on it is the newest intent), the row's
-    // other pickers fold. The hover path never arrives here: openFromHover
-    // folds the sibling before it presses.
+    // Two cards up (a click on the second trigger does it) is the state this
+    // feature prevents: with both open neither can be stamped. The picker the
+    // pointer is on stays, the rest fold; the hover path folds before pressing.
     const open = openTriggers()
     if (open.length > 1) {
       closeSiblingHeroMenus(pointerTrigger !== null && open.includes(pointerTrigger) ? pointerTrigger : trigger)
       clearStamp()
       return
     }
-    // The host's own card, read through the one accessor that keeps the answer
-    // (D40): the skin's popovers carry a `dsh-claude-` class token, and opening
-    // a menu folds the shell's others, so the open host card is the one to place
-    // against.
+    // The host's card, read through the one accessor that keeps the answer
+    // (D40): the skin's popovers carry a `dsh-claude-` class token.
     const card = findHostMenu()
     if (card === null) {
       clearStamp()
@@ -317,9 +241,8 @@ const findCardTrigger = cacheFirstMatch<HTMLElement>('[data-dsh-claude-part~="ca
     placeCard(trigger, card)
   }
 
-  // The hero row's two host menus take part in the shared popover rule
-  // (shared/popover.ts): the entry closes whatever menu the row has open,
-  // however that menu was opened.
+  // The row's two host menus take part in the shared popover rule
+  // (shared/popover.ts): the entry closes whatever menu the row opened.
   registerPopover('hero', closeHeroMenu)
 
   ui.heroMenu = { sync: syncHeroMenu, reposition: repositionHeroMenu }

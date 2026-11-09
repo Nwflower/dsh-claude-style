@@ -1,20 +1,6 @@
 /**
- * The frame pipeline (D40): every frame callback the skin needs goes through
- * one `requestAnimationFrame`, split into a read phase and a write phase.
- * Every task's `read` runs first, then every task's `write`, so the features
- * measure the layout the frame started with and never force a layout between
- * each other's writes. A `write` may still read; it then sees the writes made
- * before it in this frame.
- *
- * Between the two phases every task's `scroll` runs, for the scroll owner's
- * own writes: Chromium lays the page out on a `scrollTop` write, so a position
- * written after another task's write pays for that write's layout, and one
- * written while the reads have left the layout settled costs nothing. A
- * position write invalidates no layout, so a `scroll` may read as well.
- *
- * A task asked for while a frame runs belongs to the next frame. A task
- * cancelled while its frame runs is not called again in that frame. A task
- * that throws is reported and the rest of the frame runs (D12).
+ * Shared read → scroll → write frame phases (D40); scroll writes run before layout-invalidating writes.
+ * Requests during a frame wait for the next; cancellation skips remaining phases; errors are isolated (D12).
  */
 export interface FrameTask {
   read?(now: number): void
@@ -48,10 +34,7 @@ function runFrame(now: number) {
   }
 }
 
-/**
- * Run a task on the next frame.
- * @returns cancel: the task does not run, or does not run its remaining phase.
- */
+/** Queue for the next frame; returned cancellation also skips remaining phases of a running task. */
 export function requestFrame(task: FrameTask) {
   if (live.has(task)) throw new Error('frame: this task is already requested')
   live.add(task)

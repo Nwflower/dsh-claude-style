@@ -5,26 +5,8 @@ import { motionMs } from '../../shared/motion'
 import { currentRow, lastUserRow, takeFreshEcho, touchesUserRow } from './send-rows'
 import { SUBMISSION_ECHO_SELECTOR } from '@dsh-claude-style/contracts/dom'
 
-/**
- * The reader's message growing into its row instead of flying to it
- * (constants.ts MESSAGE_ENTER_MODES, the Motion tab's card): the same two
- * moments the flight watches — the host's echo, then the real row replacing it
- * — with no stand-in at all. The echo keeps its box and is hidden, and the row
- * that takes its place is marked so the stylesheet grows it out of its own
- * bottom-right corner (send-flight.css, shared/motion.css). Nothing beside the
- * message moves, which is the whole of the choice: the flight carries the words
- * up from the box they were typed in, this one writes them where they belong
- * and lets them take their size.
- *
- * Only the row that replaced the echo this watcher was following is marked, so
- * a row rendered by a restored session never animates: the echoes lying on the
- * page at install time are all handled up front.
- *
- * @returns the teardown, and `entering`, which says whether a submission the
- *     reader just made is still taking its place. The row's growth is drawn
- *     about its own corner and reads no box, but the follow has one answer for
- *     both entrances, and this is its half.
- */
+/* Mark only the row replacing a freshly observed echo; restored-session rows never animate.
+   entering lets follow treat this entrance and send-flight consistently. */
 export function watchGrowEnter() {
   /** The echoes already dealt with; the ones lying on the page at install time are included (a restored session has them). */
   const handled = new WeakSet<Element>()
@@ -59,12 +41,7 @@ export function watchGrowEnter() {
     previous = null
   }
 
-  /**
-   * Grow the row that has taken the echo's place. The mark comes off on the
-   * row's own animationend, so a row that never animates — the choice turned to
-   * Reduced while it waited — keeps no mark either; the timer is the second net
-   * for a row whose animation never reports.
-   */
+  /** The timer removes the mark when no animationend arrives, including a reduced-motion change. */
   const growRow = (records: MutationRecord[]) => {
     if (!touchesUserRow(records)) return
     const row = currentRow(previous)

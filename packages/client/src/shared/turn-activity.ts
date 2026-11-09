@@ -7,20 +7,8 @@ import type { CopyParams } from '../core/i18n'
 import type { FileToolOperation } from './file-tool'
 import type { HostAssistantStep, HostChatBlock, HostChatSnapshot, HostRunningCall, HostTurn } from '@dsh-claude-style/contracts/services'
 
-/**
- * What an open turn is doing now, in words (D74): the states the waiting line
- * says, the one line that speaks for a running turn.
- *
- * The words themselves are the waiting line's own copy
- * (features/chat-wait/chat-wait.copy.json): a state carries the key it stands
- * under, and the feature that draws the line reads that key through its own
- * copy. Three states are not copy, and the `precise` choice decides whether the
- * line reads them at all: the file a call in flight works on
- * (shared/file-tool), which fills the copy's `{file}` slot, the description a
- * command call declares for itself (callDescription below), and the clause
- * the model's own reasoning says it is on (shared/activity-phrase). The last
- * two are the model's text as it wrote it and carry no copy key. The simple
- * choice reads none of them: every state is its bare copy.
+/** `precise` adds file names, command descriptions and reasoning clauses; simple mode uses copy keys alone (D74).
+ * Model-authored text has `key: null`; tool details survive the waiting line's standing lock.
  */
 
 /** One state's words: the key they stand under in the line's copy, or the model's own text. */
@@ -52,17 +40,7 @@ export const ACTIVITY_TOOL_CALL: ActivityWords = { key: 'chatWaitToolCall', abou
 /** The turn's tool calls are running, and the running call says nothing of its own. */
 export const ACTIVITY_TOOLS: ActivityWords = { key: 'chatWaitTools', aboutCall: 'generic' }
 
-/**
- * The one word a wait stands on: what the line says while the model is thinking
- * and what it says where no state can be read at all. The Claude brand says the
- * skin's own word for both; the DeepSeek brand says the host's own word for
- * both, which is the word that brand's own interface shows. One word per brand,
- * so the line never swaps between two words for the same wait.
- *
- * @param brand - the brand in force (core/prefs, `BRAND_ATTR`).
- * @param hostWord - the host's own word for a wait (`hostChatCopy('chat.deepDiving', …)`).
- * @param skinWord - the skin's own word, read from the caller's copy.
- */
+/** Keep one waiting word per brand to avoid swapping between equivalent labels. */
 export function waitingWord(brand: string, hostWord: string, skinWord: string) {
   return brand === BRAND_DEEPSEEK ? hostWord : skinWord
 }
@@ -74,14 +52,7 @@ const ACTIVITY_FILE: Record<FileToolOperation, ActivityWords> = {
   write: { key: 'chatWaitWritingFile', aboutCall: 'detail' },
 }
 
-/**
- * The words for what the turn is doing, or null where there is nothing to say:
- * the model has written nothing in its newest step and no tool is running. A
- * turn's newest block decides among thinking, a tool call being drawn up and
- * writing; any other block kind reads as writing. `precise` is the
- * waiting line's detail choice: without it the states read as their bare copy
- * and nothing the moment carries is extracted.
- */
+/** Null means no newest output or running tool; other block kinds read as writing. */
 export function activityWords(snapshot: HostChatSnapshot | null, turn: HostTurn | undefined, precise: boolean): ActivityWords | null {
   if (snapshot === null || turn === undefined) return null
   const activity = readTurnActivity(snapshot, turn)

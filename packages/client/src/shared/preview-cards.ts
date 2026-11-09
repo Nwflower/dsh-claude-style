@@ -1,15 +1,6 @@
 import * as React from 'react'
 
-/**
- * The preview-card row the settings page's choices stand in (D72).
- *
- * A row shown as the effect itself draws one card per option, and every card is
- * the same thing: one press, one pressed state, one accessible name, and the
- * option's own sample inside. The look, its hover, its focus ring and its
- * pressed border live on `PREVIEW_PICKER_CLASS` and `PREVIEW_CARD_CLASS`
- * (features/settings/settings-cards.css); a card adds what it paints, through
- * the class `cardClass` names and the attributes its option carries.
- */
+/** Shared classes own interaction styling; feature classes and attributes own preview content (D72). */
 
 /** The row's group: settings-cards.css lays its cards out as one grid. */
 export const PREVIEW_PICKER_CLASS = 'dsh-claude-preview-picker'

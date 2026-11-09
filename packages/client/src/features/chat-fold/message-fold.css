@@ -1,15 +1,5 @@
-/* ---------- chat fold: a message the reader sent ---------- */
-/* The host renders a user message whole, however long it is: a pasted trace or a
-   log dump stands in the column at its full height and pushes the rest of the
-   conversation away. A tall bubble is clamped to the cap here, with its bottom
-   edge softened so the cut reads as "there is more"; the toggle under it is the
-   skin's own (message-fold.ts) and hands the whole message back.
-
-   The two lengths are stated here and read back off the bubble by that module,
-   so the height the reader sees and the height the fold decides on are one
-   number. The stylesheet belongs to the feature's one switch: with the chat
-   area's folding off (or the page handed to another plugin, D74) the attribute
-   is never written and nothing here applies. */
+/* message-fold.ts reads these tokens for its threshold so measurement and clamping agree.
+   Rules apply only while the feature owns the page (D74). */
 
 body[data-dsh-claude-style][data-dsh-claude-chat-fold] {
   --dsh-claude-message-fold-cap: 320px;

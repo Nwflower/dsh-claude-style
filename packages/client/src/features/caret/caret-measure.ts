@@ -1,30 +1,8 @@
 /**
- * Measuring the caret's viewport box, ported from dsh-chat-ux's caret
- * motion: the rich surface (dsh's contenteditable composer input) is
- * measured through the collapsed Range the browser keeps, the plain one
- * (a textarea under the composer seat) through a hidden mirror.
- *
- * Facts that shape both, all of them measured in a real Chromium:
- *
- *   rich    a collapsed Range inside the text, beside a decorator or at a
- *           soft wrap gives an exact box. At a line break Chromium gives a
- *           0x0 rect, and empty paragraphs and soft wraps are exactly where
- *           that happens — so the break itself is measured there, whose own
- *           rect is always one line tall.
- *   plain   a textarea's selection is not in the DOM and a Range cannot
- *           reach it. The mirror copies the styles that decide glyph width
- *           and wrap position, is as wide as the textarea's content box,
- *           and breaks the text at the caret: the front half is bare text,
- *           the back half one span whose first line box is the caret. The
- *           whole back half has to be there — soft wrapping goes by whole
- *           words, so a front-half-only mirror puts the word being typed on
- *           the line above.
- *
- * Nothing here touches a container the host owns: both probes are built,
- * measured and removed within the call. What a probe yields is remembered per
- * surface, because it says where the caret sits inside the input's own box and
- * not where that box stands on the page: a repeat measurement of the same words
- * at the same width reads the input's box alone (D9).
+ * Measure the caret for rich contenteditable input (collapsed Range) and plain
+ * textareas (hidden mirror). Measure a line break's own rect when Chromium
+ * returns 0x0; keep the mirror's trailing text so soft wraps match. Probes never
+ * touch host-owned containers (D9).
  */
 
 /** A caret's viewport box: its left edge, its top and its height. */
@@ -34,27 +12,16 @@ export interface CaretBox {
   height: number
 }
 
-/**
- * A measured caret: the box, and the input's own box for the surfaces that
- * clip against it. The plain surface's measurement reads that box anyway, and
- * clipping from the same reading keeps the pass from reading it twice.
- */
+/** A caret box plus the input box used for clipping and repeated reads. */
 export interface CaretReading {
   box: CaretBox
   field: DOMRect | null
 }
 
-/**
- * The styles the empty-line probe copies from the input: the ones that decide
- * where the text box sits in its line and how tall the line is.
- */
+/** Styles that determine the empty line's text box and height. */
 const CARET_PROBE_PROPERTIES = ['padding', 'font-family', 'font-size', 'font-weight', 'font-style', 'line-height']
 
-/**
- * The styles the mirror copies from the textarea: everything that decides
- * glyph width or wrap position. One missing entry and the mirror wraps
- * differently from the textarea, putting the caret on the wrong line.
- */
+/** Every style that affects glyph width or wrap position; omitting one misplaces the caret. */
 export const CARET_MIRRORED_PROPERTIES = [
   'direction', 'font-family', 'font-size', 'font-size-adjust', 'font-stretch', 'font-style',
   'font-variant', 'font-weight', 'font-feature-settings', 'font-variation-settings', 'font-kerning',
@@ -73,13 +40,8 @@ export function caretChildIndex(parent: Node, child: Node) {
 }
 
 /**
- * The line break the caret is sitting against, if any.
- *
- * The break itself is what gets measured, never the paragraph it sits in:
- * a paragraph can be many lines tall, while a break's own rect is always
- * one line and exactly the text height. A 0x0 rect only happens beside a
- * break, so finding none here means there is nothing to measure — the
- * caller hands the native caret back rather than painting a guessed spot.
+ * Find the line break beside the caret; a break's rect is one line tall, while a
+ * paragraph's is not. None means hand back the native caret.
  */
 export function caretNearestBreak(range: Range) {
   const container = range.startContainer
@@ -145,17 +107,8 @@ export function noteFacesLoaded() {
 }
 
 /**
- * An empty input — a session just switched to leaves a shell with no
- * paragraph at all — is measured through a matching break parked off in a
- * corner of the page.
- *
- * The caret belongs at the start of the content box's first line, and how
- * tall that line is and where the text box sits in it has to be asked of
- * something. The probe never enters a container the host owns: a node under
- * the composer's own wrapper would wake React. What it yields is remembered,
- * so the probe is built only when the styles or the faces it copies change.
- *
- * @returns the viewport left, top and height, or null when nothing measures.
+ * Measure an empty input's first line through a hidden break probe, kept outside
+ * host containers and cached by copied styles and font generation.
  */
 export function caretEmptyLineBox(input: Element, probeHome: Element | null): CaretBox | null {
   if (probeHome === null) return null
@@ -173,10 +126,7 @@ export function caretEmptyLineBox(input: Element, probeHome: Element | null): Ca
   return { left: inputRect.left + spot.dx, top: inputRect.top + spot.dy, height: spot.height }
 }
 
-/**
- * Build the probe, read it and take it away again.
- * @returns the caret's offset inside the input's box and the line's height.
- */
+/** Build, read and remove the empty-line probe. */
 function takeEmptyLineSpot(copied: readonly string[], probeHome: Element): CaretSpot | null {
   const probe = document.createElement('div')
   probe.style.cssText = 'position:fixed;top:0;left:0;visibility:hidden;pointer-events:none'
@@ -194,10 +144,7 @@ function takeEmptyLineSpot(copied: readonly string[], probeHome: Element): Caret
   return { dx: breakRect.left - probeRect.left, dy: breakRect.top - probeRect.top, height: breakRect.height }
 }
 
-/**
- * The viewport box of this collapsed selection on the rich surface.
- * @returns null when it cannot be measured: the caller hands the native caret back.
- */
+/** Measure the rich surface's collapsed selection, or return null for the native caret. */
 export function caretMeasureRich(input: Element, range: Range, probeHome: Element | null): CaretReading | null {
   const rect = range.getBoundingClientRect()
   if (rect.height > 0) return { box: { left: rect.left, top: rect.top, height: rect.height }, field: null }
@@ -228,24 +175,9 @@ export function caretMeasureRich(input: Element, range: Range, probeHome: Elemen
 }
 
 /**
- * A caret's viewport box on the plain surface, measured through a hidden
- * mirror.
- *
- * The caret's offset at a soft wrap naturally lands at the next line's start
- * in the mirror; with `endKeyed` set (the last move was End) the character
- * before it is measured instead, which is the previous line's end — where
- * the native caret draws after End.
- *
- * The input's own box is read first and the mirror's width taken from it, so
- * the box the caret is placed from is read once per measurement. What the
- * mirror then says is remembered under the words, the offset, the leaning, the
- * copied styles and the width it was laid out at: a measurement that repeats
- * one of those pays for the mirror no more (D9).
- *
- * @param input - the textarea or field holding the focus.
- * @param endKeyed - whether the last explicit move was the End key.
- * @param probeHome - the marked container the mirror is built in.
- * @returns null when it cannot be measured: the caller hands the native caret back.
+ * Measure a plain surface through a hidden mirror, cache by words, offset, End
+ * key, styles and width (D9). End measures the previous character so a soft
+ * wrap lands on the line the native caret draws after.
  */
 export function caretMeasurePlain(input: PlainSurface, endKeyed: boolean, probeHome: Element | null): CaretReading | null {
   if (probeHome === null) return null
@@ -267,9 +199,7 @@ export function caretMeasurePlain(input: PlainSurface, endKeyed: boolean, probeH
     plainSpots.set(input, { key, spot })
   }
   if (spot === null) return null
-  // The mirror has no border and carries the surface's padding, so the spot is
-  // the caret's place inside the padding box; the surface's own scroll is
-  // subtracted.
+  // The spot is inside the padding box; subtract the surface's scroll.
   return {
     box: {
       left: field.left + input.clientLeft + spot.dx - input.scrollLeft,
@@ -280,10 +210,7 @@ export function caretMeasurePlain(input: PlainSurface, endKeyed: boolean, probeH
   }
 }
 
-/**
- * Build the mirror, read the caret out of it and take it away again.
- * @returns the caret's offset inside the input's padding box and its height.
- */
+/** Build, read and remove the mirror. */
 function takePlainSpot(
   input: PlainSurface,
   caretAt: number,
@@ -322,10 +249,7 @@ function takePlainSpot(
   }
   mirror.remove()
   if (spot === undefined || edge === undefined) return null
-  // A single-line field centres its one line inside the content box, while the
-  // mirror's line box starts at the padding top: without this the drawn caret
-  // stands above the text it belongs beside. A textarea lays its lines out from
-  // the top and needs no correction.
+  // Centre a single-line input's line; textareas already lay out from the top.
   let dy = spot.top - mirrorRect.top
   if (input instanceof HTMLInputElement) {
     const contentHeight = input.clientHeight - (Number.parseFloat(getComputedStyle(input).paddingTop) || 0) - (Number.parseFloat(getComputedStyle(input).paddingBottom) || 0)
@@ -343,16 +267,7 @@ function takePlainSpot(
   return { dx: edge - mirrorRect.left, dy, height }
 }
 
-/**
- * Clip a viewport box to the part of the textarea that shows.
- *
- * The drawn caret does not live inside the textarea, so the textarea's own
- * clipping does not reach it: when the caret scrolls out of view the native
- * one disappears and this one has to disappear as well.
- *
- * @param field - the textarea's box, as the measurement read it.
- * @returns the clipped box, or null when nothing of it is left.
- */
+/** Clip the drawn caret to the textarea's visible box, matching native clipping. */
 export function caretClipToField(input: Element, field: DOMRect, box: CaretBox): CaretBox | null {
   const clipTop = field.top + input.clientTop
   const clipBottom = clipTop + input.clientHeight

@@ -1,26 +1,11 @@
 import { CHAT_FLOW_SELECTOR, CONVERSATION_SCROLL_SELECTOR, FLOW_KIND_ATTRIBUTE, MESSAGE_BUBBLE_SELECTOR, SUBMISSION_ECHO_SELECTOR, USER_ROW_KIND } from '@dsh-claude-style/contracts/dom'
 import { resolveColour } from './colour'
 
-/**
- * The chat area's DOM helpers: the column and the session's scroll container, the
- * scrollbar strip, the host's own follow button, and the reads the chat's
- * features make on a submitted message — the row selectors, the bubble a row
- * paints, and the colours a fill is decided by. The literals they use are the
- * host contract's (packages/contracts/src/dom.ts, D3); everything the skin writes
- * stays with the feature that writes it.
- */
+/** Chat DOM helpers over host-owned literals (D3); skin-owned marks remain with their features. */
 /** The keys that scroll the viewport; the same set the host reads. */
 export const SCROLL_KEYS = new Set(['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '])
 
-/**
- * The session's scroll container: the host hangs its follow and its fold
- * animation on it.
- *
- * Kept once it is read: every feature that writes a scroll position asks for it
- * on each frame of a stream, and a document query made after the host's own
- * write forces a style pass over the whole page (D9). A session switch replaces
- * the element, which detaches the one held here.
- */
+/** Cache the host scroller to avoid per-frame queries and forced style passes; detach on session replacement (D9). */
 let scroller: HTMLElement | null = null
 
 export function conversationScroller() {
@@ -28,11 +13,7 @@ export function conversationScroller() {
   return scroller
 }
 
-/**
- * The conversation's message column, kept the way the scroller is: the stream
- * glide asks for it on every frame it holds the position. A session switch
- * replaces the element, which detaches the one held here.
- */
+/** Cache the column for stream frames; session replacement invalidates it through `isConnected`. */
 let column: HTMLElement | null = null
 
 export function conversationColumn() {
@@ -41,19 +22,8 @@ export function conversationColumn() {
 }
 
 /**
- * Whether a pointer event landed on a container's own scrollbar strip.
- *
- * The one intent with no event of its own: a drag of the bar is a pointer
- * event, so the scroll owner (packages/engine/src/scroll-owner.ts) tells the
- * strip from the content by the node the event was addressed to and the
- * geometry the browser leaves beside `clientWidth`. False on an overlay
- * scrollbar, which takes no room: there the pointer is over the content, and
- * the content is not the bar.
- *
- * @param container - the scrolling element whose strip is asked about.
- * @param event - the pointer event.
- * @param target - the node the event was addressed to (`event.target`).
- * @returns true when the pointer sits in the strip and not on the content.
+ * Detect the classic scrollbar by event target and `clientWidth` geometry.
+ * Overlay scrollbars occupy no strip and therefore return false.
  */
 export function isScrollbarStrip(container: Element, event: PointerEvent, target: EventTarget | null) {
   if (target !== container) return false
@@ -61,17 +31,7 @@ export function isScrollbarStrip(container: Element, event: PointerEvent, target
   return event.clientX >= box.left + container.clientWidth
 }
 
-/**
- * The host's own "back to the end" button, the one it renders only while its
- * follow is off.
- *
- * With the follow off, data-chat-following-tail is gone, so the frame that
- * holds the button is found by walking back out of the column: column to
- * scroll frame to frame, and the button sits beside the frame. The stream
- * glide (chat-follow.ts) needs the same button to keep it out of sight while
- * it follows.
- * @returns the button, or null when the frame or the button is not there.
- */
+/** Host follow-off button sits beside the column's grandparent frame; return null if that shape is absent. */
 export function findFollowTailButton() {
   const root = (() => {
     const column = conversationColumn()
@@ -82,25 +42,13 @@ export function findFollowTailButton() {
   return root.nextElementSibling.querySelector('button')
 }
 
-/**
- * The two faces of one submitted message: the settled user row, and the echo
- * the host mounts in its place before that row arrives. Their marks sit a level
- * apart, so each is asked for on its own.
- */
+/** Settled and optimistic echo rows carry marks at different depths and need separate selectors. */
 export const CHAT_USER_ROW_SELECTOR = `${CHAT_FLOW_SELECTOR} [${FLOW_KIND_ATTRIBUTE}="${USER_ROW_KIND}"]`
 export const SUBMISSION_ROW_SELECTOR = `[${FLOW_KIND_ATTRIBUTE}="${USER_ROW_KIND}"], ${SUBMISSION_ECHO_SELECTOR}`
 /** Both faces inside the chat column, asked in one query. */
 export const CHAT_ROW_SELECTOR = `${CHAT_USER_ROW_SELECTOR}, ${SUBMISSION_ECHO_SELECTOR}`
 
-/**
- * A computed colour's channels, or null when the page paints nothing with it.
- *
- * The host's own rules state a fill as `rgb()`, while a card's token and a
- * reader's custom palette reach the page as a literal or as a relative colour
- * (D30), which no pattern over the written form reads: the painted pixel is the
- * one reading that covers them all. The `rgb()` fast path keeps the ordinary
- * case off the canvas.
- */
+/** Parse ordinary `rgb()` directly; resolve other CSS colour forms through a painted pixel (D30). */
 export function colorParts(color: string) {
   const match = /^rgba?\(([^)]+)\)$/.exec(color.trim())
   if (match !== null) {
@@ -122,19 +70,8 @@ export function colorAlpha(color: string) {
 }
 
 /**
- * The element inside a user row that really paints a fill, which is the bubble.
- *
- * The host marks the bubble itself, so the mark is what the walk starts from:
- * the host writes it on the bubble of a message the reader sent, and on no
- * other part of the row. A host build that writes no mark is read the way it
- * was read before: the depth cannot be assumed, since the echo row is the
- * bubble's own row (the echo mark sits on it) while the real row has a
- * flow-block wrapper around it, so the two differ by a level. The walk goes
- * down level by level and takes the first element that paints a fill;
- * attachment rows and quote summaries paint none and are skipped.
- *
- * @param row - a settled user row, or the echo row standing in for one.
- * @returns the bubble, or null where the row paints no fill of its own.
+ * Prefer the host bubble mark. Without it, breadth-first descent finds the first painted element;
+ * fixed depth is unsafe because echo and settled rows differ by a wrapper.
  */
 export function userBubble(row: Element) {
   const marked = row.querySelector<HTMLElement>(MESSAGE_BUBBLE_SELECTOR)

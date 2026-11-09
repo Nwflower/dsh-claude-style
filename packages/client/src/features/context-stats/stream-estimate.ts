@@ -9,45 +9,32 @@ import { textTokens } from './text-tokens'
  * The tokens a streaming answer has added so far, as an estimate.
  *
  * The host settles its usage a step at a time (`tokenUsage` moves on
- * `assistant/message`), so the written-back figure would stand still while the
- * answer streams and jump once when the step ends. The text the host streams is
- * on the page: pricing the text the streaming containers have grown by
- * is enough to let the figure move, and the settlement replaces the estimate
- * with the provider's own number.
+ * `assistant/message`), so the written-back figure would stand still through the
+ * answer and jump once the step ends. Pricing the text the streaming containers
+ * have grown by lets it move, and the settlement replaces the estimate with the
+ * provider's own number.
  *
  * The page's text is thinner than what the provider bills: a tool call's
- * arguments are not on the page as text at all, and the renderer drops the
- * markers it parses. So each call row of the step counts its tool's own price
- * beside the text, whose own share is priced by shape (text-tokens.ts), and the
- * figure is corrected as soon as the step's usage lands, so only the written-back
- * side rides on them: a request's prompt is fixed while it streams. The counts
- * are read off the structure bus, not per frame, and the readings stay on the
- * interval below.
- *
- * Both prices were fitted to one provider's tokenizer, so each model's own
- * settlements also carry a multiplier between 0.9 and 1.1 that the figure is
- * written at (estimate-scale.ts). The tokens the readings grow by are kept
- * unscaled, which is what lets a settlement compare the fitted estimate with
- * the host's number rather than with a corrected one.
+ * arguments are not on the page at all, and the renderer drops the markers it
+ * parses. Each call row therefore counts its tool's own price beside the text
+ * (text-tokens.ts, call-tokens.ts), read off the structure bus rather than per
+ * frame. Both prices were fitted to one provider's tokenizer, so each model's
+ * settlements carry a multiplier between 0.9 and 1.1 that the figure is written
+ * at; the grown tokens stay unscaled, so a settlement compares the fitted
+ * estimate with the host's number (estimate-scale.ts).
  */
 /**
- * How old the last reading may be before the streamed text is read again, in
- * milliseconds. The readings between a stream's first and its settlement ride
- * on this window (#211): each full reading walks every streaming container's
- * text, and the written-back figure is a meter, not a ticker. What stays
- * immediate is everything around them: the first reading (readAt starts at
- * zero), a settlement's correction (settle makes the next reading due), and a
- * session switch (reset puts the clock back to zero).
+ * How old the last reading may be before the streamed text is read again: a full
+ * reading walks every streaming container's text, and the figure is a meter, not
+ * a ticker (#211). The first reading, a settlement and a session switch stay
+ * immediate.
  */
 const SCAN_MS = 800
 
 /**
- * The estimate's reader.
- *
- * A batch is heard as the page's changes settle, so the page it meets is not
- * always the page it leaves: the rest of the bus moves a conversation of this
- * skin's own under a container of the skin's. Every row's column is therefore
- * asked at the reading, after the batch has been handed on.
+ * The estimate's reader. A batch is heard as the page's changes settle, so the
+ * page it meets is not the page it leaves: every row's column is asked at the
+ * reading, after the batch has been handed on.
  *
  * @returns { settle, tokens, watch, reset, stop }, where `watch` puts the
  *   structure bus behind the call rows, `reset` is a session switch and `stop`
@@ -79,11 +66,9 @@ export function createStreamEstimate() {
   let watching: (() => void) | null = null
   let watchingToken = 0
   /**
-   * The ratios each model's own settlements have shown, by model id, with the
-   * multiplier they put the estimate at. The learning outlives a session
-   * switch: it is a fact about the route's tokenizer, not about the
-   * conversation on screen. The multiplier is kept beside the ratios so a
-   * reading answers it without walking them again.
+   * The ratios each model's settlements have shown, and the multiplier they put
+   * the estimate at. The learning outlives a session switch: it is a fact about
+   * the route's tokenizer, not about the conversation on screen.
    */
   const ratios = new Map<string, readonly number[]>()
   const scales = new Map<string, number>()
@@ -127,14 +112,10 @@ export function createStreamEstimate() {
 
   /**
    * Take the nodes one structure batch brought in, without reading the
-   * conversation. A node put into a column holds that column's rows; a node
-   * found inside a column holds the rows the record's target carries; a node
-   * the page does not hold yet is asked for its column at the reading, once the
-   * rest of the bus has attached the page it came in with.
-   *
-   * Every other addition the page makes — streamed text, the composer, another
-   * panel — carries no call row, and is left after one scoped query rather than
-   * walked to the root for a column it does not have.
+   * conversation: a node put into a column holds that column's rows, one inside a
+   * column holds the record target's rows, and one the page does not hold yet is
+   * asked for its column at the reading. An addition carrying no call row —
+   * streamed text, the composer — is left after one scoped query.
    *
    * @param records - this batch's records.
    */
@@ -165,29 +146,19 @@ export function createStreamEstimate() {
 
   /**
    * The estimate right now, reading the page again when the last reading is old
-   * enough.
-   *
-   * A reading between the two due ones is not idle: the structure batches came
-   * since the last one, and whether they count is asked of the page as it stands
-   * then. Asking costs the streaming mark and the nodes a batch brought, while
-   * a full reading walks every container's text.
-   *
-   * The figure is written at the multiplier the model's own settlements have
-   * earned (estimate-scale.ts); the tokens the readings grow by stay unscaled,
-   * so a settlement compares the fitted estimate with the host's number and
-   * never with a corrected one.
+   * enough. Between the due ones it answers the structure batches alone: asking
+   * costs the streaming mark and the nodes a batch brought, while a full reading
+   * walks every container's text. The figure is written at the multiplier the
+   * model's settlements have earned; the grown tokens stay unscaled.
    *
    * @param model - the model answering, or null while the page names none.
-   * @param now - the frame's time, so the interval is read off the pipeline's
-   *   own clock.
+   * @param now - the frame's time, so the interval rides the pipeline's clock.
    */
   function tokens(model: string | null, now = performance.now()) {
     const scale = scaleOf(model)
     if (clock === 0) clock = now
-    // A reading between the two due ones answers the structure batches alone,
-    // and only when one brought a call row: the conversation seat is resolved
-    // when a reading is due or a row is waiting, never per frame, and a batch
-    // of streamed text leaves nothing waiting.
+    // A reading between the due ones answers the structure batches alone, and
+    // only when one brought a call row; a batch of streamed text leaves nothing.
     if (now - readAt < SCAN_MS) {
       if (readBatches === batches) return grown * scale
       if (batchRows.length === 0 && batchNodes.length === 0) {
@@ -209,8 +180,7 @@ export function createStreamEstimate() {
       live.add(container)
       const counts = countText(container)
       // A container seen for the first time is a baseline: text already on the
-      // page belongs to a settlement or to an answer that started before this
-      // reader asked, and counting it again would double the figure.
+      // page belongs to a settlement, and counting it again would double the figure.
       const before = seen.get(container)
       if (before !== undefined) grown += Math.max(0, counts - before)
       seen.set(container, counts)
@@ -220,10 +190,8 @@ export function createStreamEstimate() {
   }
 
   /**
-   * The tool a call row runs, or null while the page has not named it.
-   *
-   * The host's tool view carries the name, and a row met before that view is
-   * mounted is priced as an unknown call rather than not at all.
+   * The tool a call row runs, or null while the page has not named it: a row met
+   * before the host's tool view is mounted is priced as an unknown call.
    */
   function toolOf(row: Element) {
     const view = row.querySelector(CHAT_CALL_TOOL_SELECTOR)
@@ -234,19 +202,13 @@ export function createStreamEstimate() {
    * Count the call rows the structure batches brought since the last reading.
    *
    * A step that streams no text (a call inside a call) has no streaming
-   * container, so its rows count as they arrive: the step the last settlement
-   * ended in is over, and those rows are behind. A step that streams text is
-   * the one the batch met from its first row on, so everything the batch brings
-   * in that step counts; a row the session has already accounted for stays
-   * accounted for, a row the host re-renders in place being still the same row.
-   *
-   * Each row counts its tool's own price (call-tokens.ts), read off the row at
-   * this moment: a step that only calls a tool has no text to price, and a mean
-   * over every tool would price a `read` like a `write`.
-   *
-   * Before this session's first settlement the page's rows are history, and
-   * none of them is a call of a step that ran here: they are held without
-   * counting, and the settlement that follows takes them as its own.
+   * container, so its rows count as they arrive; a step that streams text owns
+   * everything the batch brings in that step. A row already accounted for stays
+   * so, a row the host re-renders in place being the same row. Each row counts
+   * its tool's own price (call-tokens.ts): a step that only calls a tool has no
+   * text to price, and a mean over every tool would price a `read` like a
+   * `write`. Before this session's first settlement the page's rows are history:
+   * they are held without counting.
    *
    * @param scroller - the conversation column, or null outside one.
    */
@@ -292,18 +254,11 @@ export function createStreamEstimate() {
   return {
     /**
      * Take the settled output total. A new one is a step's settlement: the
-     * estimate starts over, and the next reading re-baselines the containers
-     * still streaming, so the text the settled number already covers is not
-     * counted again. The rows the step counted are already accounted for and
-     * stay so, a row the host re-renders in place being still the same row; the
-     * ones the page has dropped go, and a settlement makes the next reading due
-     * whatever the clock says.
-     *
-     * The step's settled tokens are also the reading the model's multiplier
-     * learns from: the figure had added `grown` for it, the host settled the
-     * difference, and the two give one ratio (estimate-scale.ts). A total that
-     * fell, and the first total after the page opened, are no reading: the page
-     * may have missed part of the step.
+     * estimate starts over, and the next reading re-baselines the containers still
+     * streaming, so text the settled number already covers is not counted again.
+     * A settlement also makes the next reading due, and its difference from `grown`
+     * is one ratio for the model's multiplier (estimate-scale.ts). A total that
+     * fell, and the first after the page opened, are no reading.
      *
      * @param outputTokens - the session's settled output total.
      * @param model - the model that answered the step, or null while the page
@@ -326,10 +281,9 @@ export function createStreamEstimate() {
     /** The estimate, reading the page again if the last reading is old enough. */
     tokens,
     /**
-     * Watch the structure: the call rows, and the streaming container that
-     * marks the step now running. It is made before any other subscriber, so a
-     * record of the page reaching here first finds the page as the change left
-     * it.
+     * Watch the structure: the call rows, and the streaming container that marks
+     * the step now running. It subscribes before any other subscriber, so a record
+     * reaching here first finds the page as the change left it.
      */
     watch() {
       watching?.()

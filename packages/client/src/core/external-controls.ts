@@ -1,4 +1,4 @@
-/** Control-specific mount options are contributed through declaration merging beside each control. */
+/** Controls add their mount option shapes here through declaration merging. */
 export interface ClaudeControlMountMap {}
 
 export type ClaudeControlId = Extract<keyof ClaudeControlMountMap, string>
@@ -11,7 +11,6 @@ export interface ClaudeControlsApi {
   mount<Id extends ClaudeControlId>(id: Id, options: ClaudeControlMountMap[Id]): () => void
 }
 
-/** Publish one lifecycle for every externally mounted control, with each control keeping its own option shape. */
 export function installExternalControls(controls: ClaudeControlMounters): () => void {
   const previous = window.__DSH_CLAUDE_STYLE_CONTROLS__
   const active = new Set<() => void>()

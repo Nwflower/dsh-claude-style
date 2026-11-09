@@ -1,8 +1,7 @@
 /**
- * The host's version-update control keeps its place in the sidebar footer. The
- * takeover hides the controls beside the account row, and the host renders that
- * update control as its own button in the same row; it has to stay painted and
- * pressable, because the skin has no copy of it to stand in its place.
+ * The host's version-update control keeps its place in the sidebar footer: the
+ * takeover hides the controls beside the account row, and this one has to stay
+ * painted and pressable, since the skin keeps no copy of it.
  *
  * @capability account-menu
  * @features account

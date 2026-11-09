@@ -1,17 +1,7 @@
-"""Cut the mascot bubble's pixel face (packages/assets/src/fonts/ClaudeStylePixel.woff2).
+"""Subset PoxiaoPixel for the mascot bubble; requires fontTools and brotli.
 
-Run by hand after changing the bubble's copy; the build never runs it:
-
-    python scripts/pixel-font.py <poxiao-pixel-12px-square.ttf>
-
-Needs fontTools and brotli. The source is PoxiaoPixel's square-dot outline
-cut (DWNfonts, SIL OFL 1.1), drawn on a 12px grid at 83 units a pixel, so it
-renders cell for cell at 12px. The subset keeps the glyphs the bubble writes:
-the digits and the money signs formatMoneyMicro and the balance answer use, and
-every character of the bubble's labels in both languages, read from
-packages/client/src/features/mascot/mascot.copy.json. The family is renamed,
-as OFL asks of a modified version, so a reader's own full PoxiaoPixel keeps
-its name.
+Run `python scripts/pixel-font.py <poxiao-pixel-12px-square.ttf>` by hand.
+The family is renamed as the SIL OFL requires for a modified font.
 """
 
 import json

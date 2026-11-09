@@ -1,8 +1,7 @@
 /**
  * The footer's seated entries: a control a plugin mounts into the sidebar footer
- * that the skin keeps in the sidebar — the update control — stands as a copy at
- * the right end of the account row, and a press on the copy reaches the
- * plugin's own node.
+ * that the skin keeps in the sidebar stands as a copy at the right end of the
+ * account row, and a press on the copy reaches the plugin's own node.
  *
  * @capability account-menu
  * @features account
@@ -16,8 +15,7 @@ const UPDATE_ENTRY = host('footer.plugin-entry-update')
 
 /**
  * The plugin's update control, as its own module mounts it: the footer's action
- * slot holds the button the plugin names, and every press lands on a counter in
- * the page so the copy's forwarding is visible.
+ * slot holds the button the plugin names, and every press lands on a counter.
  */
 const mountEntry = (t, entry) => t.page.evaluate((selector) => {
   // The stand-in's own footer button names the slot anchor it sits in: the

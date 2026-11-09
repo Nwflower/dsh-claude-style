@@ -1,14 +1,8 @@
 /**
  * The card a plugin mounts into the sidebar footer stands in the account surface
- * as a live copy the takeover rebuilds from the plugin's own node, and that copy
- * has two jobs a rebuild can get wrong.
- *
- * A rebuild between `pointerdown` and `pointerup` replaces the node the reader is
- * pressing: the browser cancels the press and the click never lands. And the
- * copy's own press opens one of the host's overlays, which the menu's hover
- * dismissal must not take down with it — that dismissal is an Escape addressed to
- * the host's Menu, and the host's Menu is one listener among several answering
- * that key. The settings panel the usage card opens is that second case.
+ * as a live copy the takeover rebuilds from the plugin's node. A rebuild between
+ * `pointerdown` and `pointerup` cancels the press, and the overlay that press
+ * opened must outlive the menu's own hover dismissal.
  *
  * @capability account-menu
  * @features account
@@ -28,8 +22,7 @@ const STAMP = 'Updated 19:01'
 
 /**
  * A plugin card mounted straight into the foot area, the way the usage plugin
- * mounts its own: words the plugin rewrites on a poll, and a control whose press
- * opens one of the host's overlays. Both behaviours of the copy are read off it.
+ * mounts its own: words rewritten on a poll, and a control opening a host overlay.
  */
 const mountCard = (t) => t.page.evaluate(({ part, stamp }) => {
   const foot = document.querySelector(`[${part}~="foot-area"]`)

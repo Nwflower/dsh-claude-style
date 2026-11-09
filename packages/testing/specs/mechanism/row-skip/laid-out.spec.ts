@@ -1,9 +1,7 @@
 /**
- * A conversation row may be skipped off screen only once it has been laid out
- * at its real size: it is marked the frame after the one that laid it out, so
- * the height it keeps while skipped is its own. A change of the column's width
- * takes every mark off, so every row is laid out again at the new width before
- * it may be skipped again.
+ * A conversation row may be skipped off screen only once it has been laid out at
+ * its real size, so the height it keeps while skipped is its own; a change of the
+ * column's width takes every mark off, and each row is laid out again.
  *
  * @capability row-skip
  * @features row-skip

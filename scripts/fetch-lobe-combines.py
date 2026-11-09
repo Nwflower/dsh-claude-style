@@ -1,36 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Build the model picker's vendor lockups from Lobe Icons.
+"""Build the model picker's vendor lockups from pinned Lobe Icons assets.
 
-Manual tool, not part of `npm run build`: it is the repo's networked step (like
-`fetch-lobe-icons.mjs` was), and the zero-dependency Node build must stay offline.
-It replaces that script, because the skin no longer draws a vendor mark beside a
-text label — it draws one lockup per vendor, the way Lobe's React `Combine` does.
-
-    pip install fonttools
-    python scripts/fetch-lobe-combines.py
-
-Where the pieces come from (all pinned to one upstream version):
-
-- `@lobehub/icons-static-svg` ships the artwork: `<id>.svg` (mono mark),
-  `<id>-color.svg` (colour mark), `<id>-text.svg` (wordmark), and for a few
-  vendors `<id>-brand.svg` / `<id>-brand-color.svg` (a ready-made lockup). There
-  is no `-combine` file: Combine is a React composition, not an asset.
-- `@lobehub/icons` ships the rules: `es/toc.js` has the brand colour and which
-  variants exist, and each `es/<Icon>/style.js` has the composition ratios
-  (`TEXT_MULTIPLE`, `SPACE_MULTIPLE`, `COLOR_PRIMARY`).
-
-Each vendor becomes one SVG under `packages/assets/src/icons/combine/`:
-
-    <svg viewBox="0 0 <width> <cap band>">
-      <g class="dsh-combine-color">…</g>   colour canvas: the colour art
-      <g class="dsh-combine-mono">…</g>    dark canvas: mono art in currentColor
-    </svg>
-
-The viewBox is the *wordmark's capital band*, not the artwork's box, so the
-stylesheet can size every lockup with one `height: 1cap` rule and let the mark
-(which is taller) paint outside it — the same trick the hand-vendored wordmarks
-used. The stylesheet shows one layer per canvas.
+Run manually with `python scripts/fetch-lobe-combines.py` (requires fonttools);
+the Node build stays offline. The viewBox uses the wordmark's capital band so
+CSS can size every lockup with `height: 1cap` and let the mark overflow.
 """
 import json
 import os
@@ -49,34 +23,21 @@ VERSION = '1.95.0'
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 COPY = os.path.join(ROOT, 'packages', 'client', 'data', 'model-descriptions.json')
 OUT_DIR = os.path.join(ROOT, 'packages', 'assets', 'src', 'icons', 'combine')
-# Hand-provided artwork (a ready-made lockup, or one file holding both halves) is
-# preferred over anything fetched: <brand>.svg here wins.
+# Local <brand>.svg artwork takes precedence over fetched assets.
 COMBINE_SRC = os.path.join(ROOT, 'packages', 'assets', 'src', 'icons')
 
-# Canvas colours the contrast check is run against (packages/client/src/theme/tokens.css).
 LIGHT_CANVAS = '#ffffff'
 DARK_CANVAS = '#191919'
-# WCAG contrast below this and the brand colour is not legible on that canvas, so
-# the mono layer (currentColor) is used there instead of a tint.
+# Below this contrast, use currentColor instead of a brand tint.
 MIN_CONTRAST = 3.0
 
-# The mark's height and the gap after it, both in units of the wordmark's cap band
-# (the unit the composed viewBox uses). Deliberately *global* rather than Lobe's
-# per-icon TEXT_MULTIPLE / SPACE_MULTIPLE (0.65–0.75, 0.1–0.25): those ratios are
-# relative to each wordmark's own box, so composing with them gave every vendor a
-# differently sized mark and a differently sized gap — the column looked ragged.
-# One number each is what the row actually needs.
+# Global cap-band ratios keep mark sizes and gaps consistent across vendors.
 MARK_HEIGHT = 1.45
 MARK_GAP = 0.3
-# How far past the square a mark may reach and still count as fitting it. Lobe's
-# path data rounds to thousandths, so a mark drawn to the square's very edge lands
-# a few thousandths outside it; that is no reason to resize it.
+# Allow rounding error at the square's edge.
 MARK_FIT_SLACK = 1.01
 
-# An upstream colour variant is trusted unless it is essentially invisible on the
-# ivory canvas — a logo may carry a white highlight, and a strict threshold would
-# throw away a dozen perfectly good colour variants. The strict number is for the
-# tint *we* choose when there is no usable artwork.
+# Upstream artwork tolerates lower contrast than a tint chosen here.
 ART_MIN_CONTRAST = 1.5
 
 TEXT_TAG = re.compile(r'<(path|g|defs|circle|rect|ellipse|polygon|polyline)\b')
@@ -98,12 +59,8 @@ def inner(svg):
     if box is None:
         raise ValueError('no viewBox')
     body = svg[match.end():svg.rindex('</svg>')]
-    # Upstream puts the paint on the *root* (`fill="currentColor"`,
-    # `fill-rule="evenodd"`) and the paths inside inherit it, so taking only the
-    # inner markup leaves every shape unpainted — which is what the first build of
-    # this script shipped: the lockups held their space and drew nothing. Re-apply
-    # the root's paint on a wrapper group, and drop the upstream `<title>` (the
-    # row's own label is the accessible name; a title would be a hover tooltip).
+    # Re-apply the root's inherited paint on a wrapper; drop <title> because the
+    # row already supplies the accessible name.
     body = re.sub(r'<title>.*?</title>', '', body, flags=re.S)
     paint = ''
     for name in ('fill', 'fill-rule'):
@@ -142,12 +99,7 @@ def subpath_boxes(d):
 
 
 def cap_band(boxes):
-    """The capital band of a wordmark, from its own subpath boxes.
-
-    The baseline is the most common bottom edge (every flat letter rests on it),
-    and the cap height is the tallest letter that also rests on that baseline —
-    so an ascender like "k" cannot stretch it. Returns (top, baseline) or None.
-    """
+    """Infer (top, baseline) from the common baseline and tallest flat letter."""
     if not boxes:
         return None
     bottoms = {}
@@ -189,14 +141,8 @@ def tint(body, colour):
 
 
 def recolour_illegible(body, canvas):
-    """Swap an artwork's illegible *dominant* fill for `currentColor`.
-
-    Kimi's colour variant is a white K carrying the bulk of the ink plus a blue dot:
-    the K assumes a dark surface, the dot does not, so the K becomes currentColor and
-    the dot keeps its blue. Judging each fill on its own blackened part of Hunyuan's
-    mark instead — a white highlight inside an otherwise dark mark is not a mistake.
-    Artwork with no literal colours (gradients, `currentColor`) is left alone.
-    """
+    """Replace only an illegible dominant fill; highlights and non-literal
+    colours such as gradients and currentColor stay unchanged."""
     weight = {}
     for tag in re.findall(r'<path[^>]*>', body):
         colour = re.search(r'fill="(#[^"]+)"', tag)
@@ -233,12 +179,7 @@ def ink_box(body):
 
 
 def split_clusters(boxes):
-    """Split ink boxes into the left cluster (a mark) and the right one (a wordmark).
-
-    A ready-made lockup draws both in one artwork; the widest horizontal gap is the
-    space between them, which is what separates "which part is the wordmark" — the
-    part whose capital band has to line up with the label's.
-    """
+    """Split a ready-made lockup at its widest horizontal ink gap."""
     ordered = sorted(boxes, key=lambda box: box[0])
     if len(ordered) < 2:
         return ordered, []
@@ -251,14 +192,8 @@ def split_clusters(boxes):
 
 
 def split_markup(body):
-    """Split a hand-provided artwork into its mark and its wordmark markup.
-
-    Tracing tools export the mark and the lettering as separate elements, so the
-    widest horizontal gap between their ink boxes says where one ends and the other
-    begins. Returns (mark markup, wordmark markup), or None when it cannot tell.
-    """
-    # Leaf shapes only: a tracing export wraps them in a <g>, and matching that
-    # container would read the whole artwork as one element.
+    """Split local artwork at its widest gap, or return None when ambiguous."""
+    # Measure leaf shapes; a wrapper would make the whole artwork one element.
     leaf = r'<(?:path|circle|rect|ellipse|polygon|polyline)\b'
     elements = [
         m.group(0)
@@ -287,12 +222,8 @@ def split_markup(body):
 
 
 def compose_lockup(layers, word, boxes, text_boxes):
-    """A lockup whose artwork already holds the mark and the wordmark together.
-
-    The capital band comes from the wordmark cluster, so `height: 1cap` still lines
-    the lockup up with the label — but the box spans the *whole* artwork, mark
-    included, or the mark paints outside the element and drifts left of the column.
-    """
+    """Compose existing lockup artwork; span the full width so the mark keeps
+    its place while the viewBox height follows the wordmark's capital band."""
     band = cap_band(text_boxes)
     if band is None:
         raise ValueError('lockup has no measurable wordmark')
@@ -312,14 +243,9 @@ def compose_lockup(layers, word, boxes, text_boxes):
 def compose(brand, mark_body, mark_box, text_body, text_box, colour_body, word, keep=1.0, skip=0.0):
     """One lockup: the mark, the gap, then the wordmark, on a cap-band viewBox."""
     mark_w, mark_h = mark_box[2], mark_box[3]
-    # Both halves are sized by their *ink*, never by their viewBox: Lobe's text
-    # variants carry trailing space inside the box (Gemini's noticeably so), and
-    # counting it made the gap after the lockup twice the intended width.
+    # Measure ink rather than viewBoxes, which may contain padding or trailing space.
     text_ink = ink_box(text_body)
     text_w, text_h = text_ink[2] - text_ink[0], text_ink[3] - text_ink[1]
-    # The gap is measured from the mark's ink, not its box: Lobe's icons carry
-    # padding inside the 24-unit square (Gemini's sparkle is far narrower than its
-    # box), and measuring the box left a visibly oversized gap before the wordmark.
     mark_ink = ink_box(mark_body)
 
     boxes = []
@@ -331,15 +257,8 @@ def compose(brand, mark_body, mark_box, text_body, text_box, colour_body, word, 
     cap_top, baseline = band
     cap_height = baseline - cap_top
 
-    # The composed space's height is the wordmark's cap band, so the label's own cap
-    # height sizes the whole lockup and the mark — taller than the band — paints
-    # outside it (the stylesheet keeps overflow visible). The mark is sized by its
-    # box, the way Lobe renders its own icons, so every vendor's mark occupies the
-    # same square and the gap after it is the same width. Artwork wider than that
-    # square is sized by its width instead: a hand-provided artwork has no box of
-    # its own to keep it in, and Reflection's two circles — twice as wide as they
-    # are tall — would otherwise make a mark wider than any Lobe icon's and push
-    # the wordmark that much further right.
+    # Size marks to a consistent square; constrain unusually wide artwork by
+    # width so it cannot push the wordmark right.
     text_scale = 1.0 / cap_height  # text units -> composed units (cap band = 1)
     mark_height = MARK_HEIGHT
     mark_ink_width = mark_ink[2] - mark_ink[0]
@@ -349,26 +268,19 @@ def compose(brand, mark_body, mark_box, text_body, text_box, colour_body, word, 
     mark_left = mark_ink[0] * mark_scale
     mark_width = (mark_ink[2] - mark_ink[0]) * mark_scale
     gap = MARK_GAP
-    # `skip` / `keep` crop the wordmark from the left / right: GLM-V drops its "-V",
-    # and the hand-provided ChatGPT art drops "Chat" so only "GPT" stands in for the
-    # word. The art shifts left by the skipped part and a clip hides it.
+    # `skip` and `keep` crop unwanted lettering from the wordmark's ends.
     art_width = text_w * text_scale
     span = (keep - skip) * art_width
     text_width = span
 
-    # The mark centres on the cap band; the wordmark's baseline is the box's bottom.
-    # Both boxes carry their ink origin, because a hand-provided artwork is not
-    # drawn from (0,0) — Lobe's files are, so the extra term vanishes there. The
-    # mark's own box is what centres, so a mark sized by its width — shorter than
-    # MARK_HEIGHT — sits on the band rather than riding above it.
+    # Centre the mark's own box on the cap band and preserve each ink origin;
+    # width-constrained marks then sit on the band instead of floating above it.
     mark_dy = (1 - mark_h * mark_scale) / 2 - mark_box[1] * mark_scale
     text_dy = -cap_top * text_scale
     text_dx = mark_width + gap - skip * art_width - text_ink[0] * text_scale
 
     width = mark_width + gap + span
-    # The wordmark is shared by both canvases, so it is emitted once; only the mark
-    # has two layers, and the stylesheet swaps them. Duplicating the wordmark into
-    # both layers cost ~120 kB across the set for nothing.
+    # Share one wordmark between both canvases; only the mark needs two layers.
     mark_layers = []
     if colour_body is not None:
         mark_layers.append('<g class="dsh-combine-mark-color">%s</g>' % scale_mark(colour_body, mark_scale, -mark_left, mark_dy))
@@ -381,10 +293,7 @@ def compose(brand, mark_body, mark_box, text_body, text_box, colour_body, word, 
         m.group(0) for m in re.finditer(r'<defs>.*?</defs>', (mark_body or '') + (text_body or '') + (colour_body or ''), re.S)
     )
 
-    # A wordmark may carry more than the name does — GLM-V's "-V" is not part of the
-    # label — so it can be clipped to `keep` of its width. The clip is expressed in
-    # the composed space (the parent of the transformed text) and the viewBox was
-    # already narrowed to the kept width, so the row reserves no room for the rest.
+    # Clip in the composed space; the narrowed viewBox reserves only kept text.
     if skip > 0 or keep < 1.0:
         clip_id = 'crop-%s' % brand
         defs += '<clipPath id="%s"><rect x="%.4f" y="-1" width="%.4f" height="3"/></clipPath>' % (
@@ -418,14 +327,10 @@ def main():
                 break
     toc = {e['id'].lower(): e for e in json.loads(toc_raw[start:end])}
 
-    # Per-brand overrides from the copy document (see `brands.lockups`): a lockup's
-    # two halves may come from different icons, and the word it stands in for is not
-    # always Lobe's TITLE (the catalog spells "step-3.7-flash", not "Stepfun").
+    # `brands.lockups` can override each half and the displayed word.
     overrides = {k: v for k, v in (copy['brands'].get('lockups') or {}).items() if k != 'note'}
 
-    # One parallel pass for every file the build needs. The toc's variant flags say
-    # what exists, so a missing `-color` never costs a round trip; without this the
-    # script spends ~150 sequential requests on ~40 vendors.
+    # Fetch each required file once; variant flags avoid requests for absent art.
     jobs = {}
     plan = {}
     for brand in sorted(brands):
@@ -449,10 +354,8 @@ def main():
         mark_entry = toc.get(mark_id.replace('-', ''))
         text_entry = toc.get(text_id.replace('-', ''))
         entry = mark_entry or text_entry
-        # A vendor the React package does not list still has static artwork; compose
-        # it with a currentColor mark, so the picker covers every vendor the catalog
-        # can name instead of only the documented ones. The variant flags are read
-        # from whichever icon supplies each half.
+        # Static artwork also covers vendors absent from the React catalog;
+        # each half reads its own variant flags.
         urls = {'mark': '%s/%s.svg' % (STATIC, mark_id), 'text': '%s/%s-text.svg' % (STATIC, text_id)}
         if not ((text_entry or {}).get('param') or {}).get('hasText', True):
             urls.pop('text')
@@ -489,19 +392,15 @@ def main():
                     if halves is None:
                         raise ValueError('cannot tell the mark from the wordmark')
                     mark_part, text_part = halves
-                    # Hand-provided art often carries no fill attribute at all (the SVG
-                    # default is black) or hides one in an inline style, which wins over
-                    # a presentation attribute — Inkscape exports `style="fill:#000000"`,
-                    # and that is what kept ChatGPT's knot black on the dark canvas.
+                    # Remove inline fills that override presentation attributes;
+                    # absent fills default to currentColor below.
                     mark_part = re.sub(r'style="[^"]*?"', lambda m: m.group(0) if 'fill' not in m.group(0) else 'style=""', mark_part)
                     text_part = re.sub(r'style="[^"]*?"', lambda m: m.group(0) if 'fill' not in m.group(0) else 'style=""', text_part)
                     if 'fill=' not in mark_part:
                         mark_part = '<g fill="currentColor">%s</g>' % mark_part
                     if 'fill=' not in text_part:
                         text_part = '<g fill="currentColor">%s</g>' % text_part
-                    # Such an artwork is mono, so its colour layer is the mark repainted
-                    # in the `tint` the copy document names; a colour that would not read
-                    # on the ivory canvas is dropped the way a fetched one is.
+                    # Local art is mono; its colour layer uses a legible copy tint.
                     colour_body = None
                     tint_colour = spec.get('tint')
                     if tint_colour is not None:
@@ -542,9 +441,7 @@ def main():
                 fh.write(svg + '\n')
             written.append(brand)
             continue
-        # The brand colour comes from the React package's table; its per-icon
-        # style.js (TEXT_MULTIPLE / SPACE_MULTIPLE / COLOR_PRIMARY) is no longer
-        # fetched, because the composition no longer uses per-vendor ratios.
+        # The React catalog supplies the brand colour.
         brand_colour = (entry or {}).get('color') or '#000'
         if entry is None:
             skipped_toc.append(brand)

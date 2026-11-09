@@ -2,31 +2,21 @@
  * The reasoning ladder's strength order, and the ordering of a model's own
  * levels into it.
  *
- * The host records a model's `reasoning.efforts` as the selectable levels
- * "from least to greatest selectable reasoning effort" (@deepseek-ai/dsh-llm's
- * `LlmModelReasoningInfo`), and the adapters in the wild do not all keep that
- * promise: Qoder sends `xhigh, high, low, max, medium` and
- * `xhigh, low, medium, none`, Raccoon and MiniMax send `high, none`.
- *
- * The slider reads its steps as a strength scale — the ends are named
- * `Faster` and `Smarter` (model-labels.ts) — so an inverted ladder puts the
- * axis the wrong way round: the right end lands on the weakest level, and on a
- * ladder whose last entry is `none` the strongest position reads as thinking
- * switched off.
- *
- * This module restores the documented order level by level: a level the table
- * can rank takes its place on the scale, and a level whose name the table does
- * not know keeps the position the adapter gave it.
+ * The host documents `reasoning.efforts` as "from least to greatest", and the
+ * adapters in the wild break that (Qoder sends `xhigh, high, low, max,
+ * medium`; Raccoon and MiniMax `high, none`). The slider reads its steps as a
+ * strength scale — `Faster` and `Smarter` name the ends (model-labels.ts) — so
+ * an inverted ladder puts the axis the wrong way round. This module restores
+ * the documented order: a level the table can rank takes its place on the
+ * scale, an unknown name keeps the position the adapter gave it.
  */
 
 /**
- * Effort id to strength, larger being stronger. `none` and `off` are the
- * switch-off level and rank lowest.
+ * Effort id to strength, larger being stronger; `none` and `off` rank lowest.
  *
- * The ids are the ones the host's adapters and the OpenAI protocol both use,
- * plus the provider-private names seen on this machine: `light` (TRAE's
- * weakest) and `on` (Raccoon's "thinking on", which carries no strength of
- * its own and therefore ranks with `high`).
+ * The ids are the host's adapters' and the OpenAI protocol's, plus the
+ * provider-private `light` (TRAE's weakest) and `on` (Raccoon's thinking-on,
+ * which carries no strength of its own and ranks with `high`).
  */
 const EFFORT_STRENGTH: Readonly<Record<string, number>> = Object.freeze({
   none: 0,
@@ -62,14 +52,13 @@ export interface EffortLadder {
 /**
  * Order one model's levels by strength.
  *
- * The levels the table can rank fill the slots the adapter gave them, sorted
- * by strength; a level it cannot rank stays in its own slot, where the
- * documented adapter order stands. `undefined` is the model's own default
- * level, which carries no id and therefore no strength; it leads the ladder,
- * where the control's own default row belongs.
+ * The levels the table can rank fill the slots the adapter gave them, sorted by
+ * strength; a level it cannot rank stays in its own slot, where the documented
+ * adapter order stands. `undefined` is the model's own default level, which
+ * carries no strength and leads the ladder.
  *
- * @param ids - the adapter's level ids, in adapter order; `undefined`
- *   marks the model's own default level.
+ * @param ids - the adapter's level ids, in adapter order; `undefined` marks the
+ *   model's own default level.
  * @returns the same ids in strength order.
  */
 export function orderEffortIds(ids: readonly (string | undefined)[]): (string | undefined)[] {
@@ -86,14 +75,12 @@ export function orderEffortIds(ids: readonly (string | undefined)[]): (string | 
 
 /**
  * One model's ladder as the controls draw it: the model's own default level
- * leads when the adapter names no default of its own (the catalog leaves
- * `defaultEffort` out), then every declared level in strength order. The index
- * is the rung in force, or 0 while the catalog names a level the ladder does
- * not hold.
+ * leads when the adapter names no default of its own, then every declared level
+ * in strength order. The index is the rung in force, or 0 while the catalog
+ * names a level the ladder does not hold.
  *
  * @param effort - the catalog's reasoning descriptor.
- * @param defaultName - the word the model's own default level is shown by
- *   (the interface copy), since the level carries no name of its own.
+ * @param defaultName - the word the model's own default level is shown by.
  */
 export function effortSteps(effort: EffortLadder, defaultName: string): { steps: EffortStep[], index: number } {
   const declared = effort.reasoning.efforts
@@ -121,9 +108,8 @@ export function effortSteps(effort: EffortLadder, defaultName: string): { steps:
  *
  * The ramp runs from the theme accent mixed toward the raised surface to the
  * same accent mixed toward the label ink, so every thinking level takes a
- * colour of its own and the top rung wears the card's own accent. The
- * switch-off level and the model's own default level have no strength the
- * catalog names, so both rest.
+ * colour and the top rung wears the card's own accent. The switch-off level and
+ * the model's own default have no strength the catalog names, so both rest.
  */
 export function effortTint(steps: readonly EffortStep[], index: number): number | null {
   if (index < 0 || steps.length === 0) return null

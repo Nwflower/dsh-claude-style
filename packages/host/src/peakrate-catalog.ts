@@ -1,11 +1,10 @@
 /**
- * The data source's document, validated into the shape the browser half reads
+ * The data source's document, validated into the shape the browser half reads.
  *
- * The source is a community-maintained catalog of every provider's billing
- * clock: a document that is not the version read here, a profile without a
- * usable clock, or a window that is not a real time of day is dropped rather
- * than approximated. A malformed entry must never reach the browser, because
- * every judgement there is made from these fields.
+ * A document that is not the version read here, a profile without a usable clock,
+ * or a window that is not a real time of day is dropped rather than approximated:
+ * a malformed entry must never reach the browser, because every judgement there is
+ * made from these fields.
  */
 import { isClockValue, isIsoDate, isIsoInstant } from '@dsh-claude-style/contracts/peakrate'
 import type { PeakCatalog, RateOverride, RateProfile, RateSchedule, RateWindow } from '@dsh-claude-style/contracts/peakrate'
@@ -19,12 +18,9 @@ function asText(value: unknown): string | undefined {
 }
 
 /**
- * Whether the platform can resolve one IANA zone.
- *
- * A zone it cannot resolve would throw inside every judgement made from this
- * profile, so the document's own answer is asked for here: the caller drops
- * the profile, or that one field, instead of carrying a clock nothing can
- * read
+ * Whether the platform can resolve one IANA zone. A zone it cannot resolve would
+ * throw inside every judgement made from this profile, so the caller drops the
+ * profile, or that one field, instead of carrying a clock nothing can read.
  */
 function zoneResolves(timeZone: string): boolean {
   try {
