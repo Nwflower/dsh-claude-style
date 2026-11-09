@@ -220,9 +220,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     return inPagePixels(document.documentElement.clientWidth)
   }
 
-  /** Write one placement number, and nothing when it is already the one there. */
+  /** Write one placement number, and report whether it moved. */
   function setVar(element: HTMLElement, name: string, value: string) {
-    if (element.style.getPropertyValue(name) !== value) element.style.setProperty(name, value)
+    if (element.style.getPropertyValue(name) === value) return false
+    element.style.setProperty(name, value)
+    return true
   }
 
   /** Hand the row back: no placement, no marks. */
@@ -233,6 +235,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     actionsStamp.release()
     cornerStamp.release()
     tabsStamp.release()
+    placedInBand = null
     if (bandHost !== null) {
       bandHost.removeAttribute(BAND_ATTR)
       bandHost.style.removeProperty(ROW_TOP)
@@ -284,6 +287,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The reading this pass places against, and whether `measure` took it for this pass. */
   let reading: BandReading | null = null
   let measured = false
+  /** Which pieces the last pass lifted, so a lift can ask for one more pass to settle against it. */
+  let placedInBand: { title: boolean, trail: boolean } | null = null
 
   /**
    * Read the boxes the pass places against. Written in the pass's read phase,
@@ -407,9 +412,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const titleRoom = room - trailWidth - GAP
     // A window too narrow for both keeps the cluster in the row the host drew it
     // in, which then keeps the height it takes there: the title keeps its own
-    // width rather than shrinking to the stub beside the cluster.
+    // width rather than shrinking to the stub beside the cluster. The pass writes
+    // no width limit on the cluster, so the width this fit is judged by is the
+    // one the cluster needs: a capped cluster measures at the cap, and one that
+    // outgrew its place would keep passing the test and be crushed there instead
+    // of returning to the row (D9).
     const liftTrail = liftTitle && trail !== null && trailBox !== null && titleRoom >= MIN_TITLE
-    const trailRoom = room - (titleBox === null ? 0 : titleBox.width) - GAP
     const trailLeft = left + (titleBox === null ? 0 : titleBox.width) + GAP
     // The row the title leaves holds only controls, and the host's inset for a
     // row that still carried a title would leave them floating below the caption
@@ -423,6 +431,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     /** Where the row's top belongs: the lower edge of the title's centred box. */
     const rowTop = titleCentre + titleHeight / 2
     const rise = !liftTitle ? 0 : Math.max(0, Math.round(rowBox.top - (isFinite(applied) ? applied : 0) - rowTop))
+    // A lift, or a title whose room changed, leaves the cluster beside it placed
+    // against the width the title no longer has. One more pass reads the width
+    // this one writes, and a pass that changes nothing ends it (D40).
+    let settle = placedInBand !== null && (placedInBand.title !== liftTitle || placedInBand.trail !== liftTrail)
 
     rowStamp.mark(liftTitle ? row : null)
     if (liftTitle) setVar(row, ROW_LIFT, `${-rise}px`)
@@ -440,14 +452,16 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       setVar(title, TITLE_LEFT, `${Math.round(left)}px`)
       // The title's room runs up to the cluster standing beside it, and no
       // further; without one it is the row's whole run.
-      setVar(title, TITLE_MAX, `${Math.round(liftTrail ? titleRoom : room)}px`)
+      if (setVar(title, TITLE_MAX, `${Math.round(liftTrail ? titleRoom : room)}px`) && liftTrail) settle = true
       setVar(title, TITLE_TOP, `${Math.round(titleCentre)}px`)
     }
     trailStamp.mark(liftTrail ? trail : null)
     if (liftTrail && trail !== null) {
       setVar(trail, TITLE_LEFT, `${Math.round(trailLeft)}px`)
-      setVar(trail, TITLE_MAX, `${Math.round(trailRoom)}px`)
       setVar(trail, TITLE_TOP, `${Math.round(titleCentre)}px`)
+      // A limit this element still carries from an earlier placement would be
+      // measured as its width and squeeze the chips it holds.
+      if (trail.style.getPropertyValue(TITLE_MAX) !== '') trail.style.removeProperty(TITLE_MAX)
     }
     actionsStamp.mark(liftActions && utilitiesBox !== null ? utilities : null)
     cornerStamp.mark(liftActions && cornerBox !== null ? corner : null)
@@ -462,8 +476,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     // shell's own left end and the caption buttons when a side stayed in the row.
     const stripInBand = inBand && stripEl !== null
     if (stripInBand && stripEl !== null) {
+      // The left-hand content ends where the cluster beside the title ends: the
+      // title's own width is the one this pass is about to write, not the width
+      // it still holds.
       const leftStop = liftTrail && trailBox !== null
-        ? trailLeft + Math.min(trailBox.width, trailRoom)
+        ? left + Math.min(titleBox === null ? 0 : titleBox.width, titleRoom) + GAP + trailWidth
         : liftTitle && titleBox !== null ? left + titleBox.width : furniture
       setVar(stripEl, TABS_LEFT, `${Math.round((leftStop + rightStop) / 2)}px`)
     }
@@ -491,6 +508,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       setVar(header, BAND_HEIGHT, `${band.height}px`)
       setAttributeIfChanged(header, BAND_ATTR, tokens)
     }
+    // A lift changes the width the other piece may keep: the title is measured
+    // where it stood before this pass, so the cluster beside it is placed against
+    // the room it is about to lose or gain. One more pass places it against what
+    // this one wrote, and settles there; a pass that lifts nothing new ends it.
+    if (settle) ui.schedule?.()
+    placedInBand = { title: liftTitle, trail: liftTrail }
   }
 
   // The row it reads lives in the conversation header, never inside the column

@@ -47,7 +47,9 @@ body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-header-tra
   /* The room the pass measured for this piece: past it the title would run into
      the tab strip or the controls, and the cluster into what stands after it.
      The title's own crumb ellipsizes inside whatever width this leaves (the
-     host's own rule, unchanged). */
+     host's own rule, unchanged). The pass hands the cluster no limit of its own:
+     a capped cluster measures at the cap, so the width it needs is only known
+     while it stands uncapped (header-band.ts). */
   max-width: var(--dsh-header-band-max, none) !important;
   margin: 0 !important;
   transform: translateY(-50%) !important;
