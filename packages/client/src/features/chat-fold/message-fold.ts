@@ -20,7 +20,7 @@ type FoldChoice = 'collapsed' | 'expanded'
 
 export function createMessageFold(requestPass: () => void) {
   /** Every row a submission is recognised by, kept current by the bus (D40). */
-  const rows = observeMatches<HTMLElement>(CHAT_ROW_SELECTOR)
+  const rows = observeMatches<HTMLElement>(CHAT_ROW_SELECTOR, prune)
   /** The size subscription of each bubble read so far: the browser reports when its box moves. */
   const sizes = new Map<Element, () => void>()
   /** The reader's own choice per message. */
@@ -40,6 +40,25 @@ export function createMessageFold(requestPass: () => void) {
   function invalidate() {
     decided = new WeakMap()
     requestPass()
+  }
+
+  /**
+   * End one bubble's size subscription and the height read it carried. A bubble
+   * that comes back is decided again, which subscribes it afresh.
+   */
+  function release(bubble: Element) {
+    const stop = sizes.get(bubble)
+    if (stop === undefined) return
+    stop()
+    sizes.delete(bubble)
+    decided.delete(bubble)
+  }
+
+  /** A row the page dropped leaves its bubble behind; a detached bubble never reports a size again. */
+  function prune() {
+    for (const bubble of sizes.keys()) {
+      if (!bubble.isConnected) release(bubble)
+    }
   }
 
   /** The width the messages are read at: the column they stand in, or the window while there is none. */
@@ -62,7 +81,12 @@ export function createMessageFold(requestPass: () => void) {
   /** The bubble under one row, walked once per row until the host replaces it. */
   function bubbleOf(row: Element) {
     const held = bubbles.get(row)
-    if (held !== undefined && held.isConnected) return held
+    if (held !== undefined) {
+      if (held.isConnected) return held
+      // The host replaced the bubble inside a row that itself stands: the row
+      // set did not change, so `prune` never saw this one leave.
+      release(held)
+    }
     const bubble = userBubble(row)
     if (bubble !== null) bubbles.set(row, bubble)
     return bubble

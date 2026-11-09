@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-09",
+  "group": "fixes",
+  "order": 4,
+  "external": false,
+  "zh": "释放页面已移除的消息的尺寸观察，长会话里这份订阅不再随消息累积",
+  "en": "Release the size observation of a message the page removes, so the subscriptions stop accumulating across a long conversation"
+}

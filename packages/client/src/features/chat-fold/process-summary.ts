@@ -457,7 +457,9 @@ export function createProcessSummary() {
     attributeFilter: [SHIMMER_ATTRIBUTE],
     skipQuiet: true,
   }, records => {
+    let removed = false
     for (const record of records) {
+      if (record.removedNodes.length > 0) removed = true
       const target = record.target instanceof Element ? record.target : record.target.parentElement
       const group = target?.closest(PROCESS_GROUP_SELECTOR) ?? null
       if (group !== null) queue(group)
@@ -466,6 +468,13 @@ export function createProcessSummary() {
         if (node.matches(PROCESS_GROUP_SELECTOR)) queue(node)
         for (const found of node.querySelectorAll(PROCESS_GROUP_SELECTOR)) queue(found)
       }
+    }
+    // A header the host unmounted takes its summary and its size subscription
+    // with it now: the next transcript may hold no group at all, and the flush
+    // that would have swept it never comes.
+    if (removed) {
+      for (const header of [...named.keys()]) if (!header.isConnected) release(header)
+      watchSummaries([...named.values()].map(entry => entry.summary))
     }
   })
   for (const group of document.querySelectorAll(PROCESS_GROUP_SELECTOR)) queue(group)
