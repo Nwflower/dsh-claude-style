@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-10",
+  "group": "fixes",
+  "order": 15,
+  "external": false,
+  "zh": "修复某一轮运行失败后上下文计量环读到 0% 的问题，失败尝试的零用量样本不再顶掉提供方上一次报告的读数",
+  "en": "Fix the context meter reading 0 % after a round fails, where a failed attempt's zero usage sample displaced the reading the provider last reported"
+}

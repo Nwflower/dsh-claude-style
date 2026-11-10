@@ -209,6 +209,12 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
   /** The pie's colours this frame's read phase took, until the pass's sync uses them. */
   let pieColours: PieColours | null = null
 
+  /**
+   * The occupancy a provider sample answered for the shown session, kept while
+   * a failed attempt's zero sample stands in the projection (occupancyOf).
+   */
+  let sampledOccupancy: number | null = null
+
   /** Stop following the projections (a different session, or the teardown). */
   function releaseWatch() {
     if (watch !== null) {
@@ -220,10 +226,28 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
     estimate.reset()
     // The settled cost belongs to the session it was read from.
     cost.follow('')
+    // So does the occupancy the last real sample answered.
+    sampledOccupancy = null
     readingMemo = null
     // The skeleton holds the panel's place, not the session's (stats-block.ts);
     // the line keeps the numbers it shows, which the next session counts on from.
     block.stopSkeleton()
+  }
+
+  /**
+   * The occupancy the meter shows: the projection's own reading, unless its
+   * newest usage sample is a failed attempt's zero. A failed attempt reports
+   * `{ inputTokens: 0 }`, the projection's last-wins sample slot takes it, and
+   * `projectedTokens` is re-anchored to that zero, so a meter that read a fifth
+   * of the window would read 0 % until the next request reports usage. The last
+   * sample a provider did report stands while that placeholder does, and a
+   * session that never had one leaves the reading to the host's own text.
+   */
+  function occupancyOf(pressure: HostContextPressureProjection | null) {
+    if (pressure?.pressureTokens === 0) return sampledOccupancy
+    const occupancy = pressureOccupancy(pressure)
+    if (occupancy !== null) sampledOccupancy = occupancy
+    return occupancy
   }
 
   /**
@@ -349,7 +373,7 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
     for (let i = 0; i < meters.length; i += 1) binding.bindMeter(meters[i], false)
     // The ring reads the context-pressure projection itself; the host's meter
     // stops painting, so its text falls back to a host serving no projection.
-    const occupancy = pressureOccupancy(faceValue<HostContextPressureProjection>('contextPressure') ?? null)
+    const occupancy = occupancyOf(faceValue<HostContextPressureProjection>('contextPressure') ?? null)
       ?? (meter === null ? null : meterOccupancy(meter))
     if (skinRing !== null && ringRoot !== null) skinRing.setReading(occupancy)
     else if (meter !== null) {
