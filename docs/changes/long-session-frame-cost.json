@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-09",
-  "group": "improvements",
-  "order": 9,
-  "external": false,
-  "zh": "改善长会话的每帧开销，流式跟随、进程分组与等待行不再按整栏或整页扫描，归档列表只移动真正换位的行",
-  "en": "Reduce the per-frame cost of a long conversation, where the stream follow, the process groups and the waiting line stop scanning whole columns and the archive moves only the rows that changed place"
-}

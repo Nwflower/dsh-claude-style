@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-08",
-  "group": "improvements",
-  "order": 0,
-  "external": false,
-  "zh": "把回答行里的重跑与删除移到用量与时间之前，与宿主的动作按钮同处一簇",
-  "en": "Move rerun and delete on an answer's control row ahead of its usage and time, beside the host's own action buttons"
-}

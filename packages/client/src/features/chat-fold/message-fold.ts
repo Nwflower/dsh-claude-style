@@ -2,7 +2,7 @@ import { observeMatches, observeSize, subscribeMutations } from '@dsh-claude-sty
 import { CHAT_ROW_SELECTOR, conversationColumn, userBubble } from '@dsh-claude-style/engine/chat-dom'
 import { buildElement, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
 import { MESSAGE_FOLD_ATTR } from '../../constants'
-import { SUBMISSION_ECHO_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { MESSAGE_BUBBLE_SELECTOR, SUBMISSION_ECHO_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { copy } from './copy'
 
 /* Fold both the submission echo and durable row: send-flight measures the echo immediately.
@@ -19,8 +19,16 @@ type FoldChoice = 'collapsed' | 'expanded'
 
 
 export function createMessageFold(requestPass: () => void) {
+  /** A structural change needs a full pass even when the batch sits inside the conversation. */
+  function structureChanged() {
+    prune()
+    requestPass()
+  }
+
   /** Every row a submission is recognised by, kept current by the bus (D40). */
-  const rows = observeMatches<HTMLElement>(CHAT_ROW_SELECTOR, prune)
+  const rows = observeMatches<HTMLElement>(CHAT_ROW_SELECTOR, structureChanged)
+  /** A marked bubble can be replaced while its row stays mounted. */
+  const markedBubbles = observeMatches<HTMLElement>(MESSAGE_BUBBLE_SELECTOR, structureChanged)
   /** The size subscription of each bubble read so far: the browser reports when its box moves. */
   const sizes = new Map<Element, () => void>()
   /** The reader's own choice per message. */
@@ -48,15 +56,15 @@ export function createMessageFold(requestPass: () => void) {
   }
 
   /**
-   * End one bubble's size subscription and the height read it carried. A bubble
-   * that comes back is decided again, which subscribes it afresh.
+   * End one bubble's size subscription, height read and control. A bubble that
+   * comes back is decided again, which subscribes it afresh.
    */
   function release(bubble: Element) {
     const stop = sizes.get(bubble)
-    if (stop === undefined) return
-    stop()
+    if (stop !== undefined) stop()
     sizes.delete(bubble)
     decided.delete(bubble)
+    dropToggle(bubble)
   }
 
   /** A row the page dropped leaves its bubble behind; a detached bubble never reports a size again. */
@@ -142,12 +150,12 @@ export function createMessageFold(requestPass: () => void) {
   }
 
   /** Take one bubble's toggle down. */
-  function dropToggle(bubble: HTMLElement) {
+  function dropToggle(bubble: Element) {
     const toggle = under.get(bubble)
     if (toggle === undefined) return
     under.delete(bubble)
     owners.delete(toggle)
-    if (toggle.isConnected) toggle.remove()
+    toggle.remove()
   }
 
   /** The toggle's words say what pressing it does. */
@@ -270,6 +278,7 @@ export function createMessageFold(requestPass: () => void) {
       }
       for (const stop of sizes.values()) stop()
       sizes.clear()
+      markedBubbles.release()
       rows.release()
     },
   }

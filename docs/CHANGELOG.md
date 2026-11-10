@@ -2,6 +2,68 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [0.20.2] - 2026-11-09
+
+[中文](#cn-0.20.2) | [English](#en-0.20.2)
+
+<h3 id="cn-0.20.2">体验优化</h3>
+
+- 把回答行里的重跑与删除移到用量与时间之前，与宿主的动作按钮同处一簇
+- 改善模型选择器一级列表的收尾，所选快捷供应商已列全时不再显示「更多模型」
+- 降低超长回答流式输出时的扫描与渐显开销
+- 改善长会话之间切换时的页面响应
+- 看过的消息按上次高度跳过离屏排版，长会话之间切换更流畅
+- 降低内容搜索的内存占用，小写文本只为查过的会话保留，并设固定上限
+- 改善长会话的每帧开销，流式跟随、进程分组与等待行不再按整栏或整页扫描，归档列表只移动真正换位的行
+- 同一颜色只回读一次画布，输入区的根标记经缓存的座位读取，页面不再为每帧的颜色与座位付一次查询
+- 改善助手流式输出时的折叠调度，用户消息的新增、替换和尺寸变化仍会触发完整检查
+
+### 问题修复
+
+- 修复新会话首页切到「模型」标签页时的卡顿
+- 修复侧栏「展开其余 N 个会话」的文字起点比会话标题靠右一截，两者现在同一起点
+- 修复状态标记放在行首时，行首位带着其他插件内容的会话行，时间比其他行往左缩进一截
+- 修复侧栏悬停展开后鼠标移开时收起动作播放两遍，现在只滑出一次
+- 修复会话标题进入顶栏后缩成「论…」，标题宽度不再按上一个名字裁切后的宽度锁定，改名或换到标题更长的会话后重新占满可用宽度
+- 释放页面已移除的消息的尺寸观察，长会话里这份订阅不再随消息累积
+- 修复长会话性能测试两轮采样的仪器一致性和倍率门槛说明
+- 修复会话头那簇控件在顶栏边界处被压窄的问题，宽度不够时它退回会话头那一行而不是截断或折行
+- 修复会话切换后旧对话仍被滚动位置与等待行文案持有的问题，切换后不再保留上一段对话的页面内容
+- 修复关闭再打开标题栏功能时重复注册右侧栏控件的问题
+- 修复统计面板绑定在会话切换后留住旧对话，长会话反复切换时页面不再逐次增长
+- 修复提问卡片中被选中的单选圆环在深色主题下显示为白色圆心的问题
+- 修复页面缩放在 101% 时右侧栏列宽可能晚一帧换算的问题
+- 修复连续思考增长时上方正文可能整段跳变的问题
+
+<h3 id="en-0.20.2">Improvements</h3>
+
+- Move rerun and delete on an answer's control row ahead of its usage and time, beside the host's own action buttons
+- Improve the model picker's first level so More models is not drawn once the chosen quick providers already list the whole catalog
+- Reduce streaming scan and reveal cost on very long answers
+- Improve page responsiveness when switching between long conversations
+- Skip off-screen layout of seen messages at their kept height, so switching between long conversations stays responsive
+- Hold the lowercased search text only for the sessions a query reached, within a fixed budget
+- Reduce the per-frame cost of a long conversation, where the stream follow, the process groups and the waiting line stop scanning whole columns and the archive moves only the rows that changed place
+- Read each painted colour from the canvas once, and read the composer's root through the cached seat instead of a document query on every frame
+- Improve streaming performance by skipping user-message folding for assistant-only growth while structural and size changes still refresh the fold
+
+### Bug Fixes
+
+- Fix the stall when switching to the Models tab on the new-conversation page
+- Fix the sidebar's overflow row (“Show N more sessions”) starting its words further in than the session titles above it; the two now share one start
+- Fix a session row whose leading seat carries another plugin's content showing its time a seat's width short of the others' when the mark stands on the leading side
+- Fix the sidebar's hover peek retracting twice when the pointer leaves; it now slides away once
+- Fix the session title shrinking to its first character in the caption row, with its width no longer locked to the ellipsized width of the name before, so a rename or a longer name takes the room again
+- Release the size observation of a message the page removes, so the subscriptions stop accumulating across a long conversation
+- Fix instrumentation consistency and growth-bound descriptions across the two long-session performance samples
+- Fix the header's control cluster being squeezed at the caption row's boundary, so it returns to the header's own row instead of truncating when its width no longer fits
+- Release the old conversation's page content on a session switch, where the scroll hold and the waiting line's wording no longer keep a transcript the page removed
+- Release the right-panel control's slot registration when the header band is switched off, so a later switch-on registers it once
+- Fix the statistics panel bindings keeping a switched-away conversation, so repeated long-session switches stop growing the page
+- Fix the question card's chosen radio showing a white centre under the dark theme
+- Fix delayed column scaling when the right sidebar is toggled at 101% page zoom
+- Fix whole-step jumps in earlier reasoning text as continuous reasoning grows
+
 ## [0.20.1] - 2026-11-08
 
 [中文](#cn-0.20.1) | [English](#en-0.20.1)

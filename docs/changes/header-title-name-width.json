@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-09",
-  "group": "fixes",
-  "order": 3,
-  "external": false,
-  "zh": "修复会话标题进入顶栏后缩成「论…」，标题宽度不再按上一个名字裁切后的宽度锁定，改名或换到标题更长的会话后重新占满可用宽度",
-  "en": "Fix the session title shrinking to its first character in the caption row, with its width no longer locked to the ellipsized width of the name before, so a rename or a longer name takes the room again"
-}

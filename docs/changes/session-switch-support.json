@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-09",
-  "group": "improvements",
-  "order": 7,
-  "external": false,
-  "zh": "改善长会话之间切换时的页面响应",
-  "en": "Improve page responsiveness when switching between long conversations"
-}

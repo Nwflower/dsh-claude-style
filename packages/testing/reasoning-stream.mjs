@@ -36,6 +36,7 @@ const STEP_MIN_GAP_MS = bound('reasonStepMinGapMs')
 /** The thinking row, the window the module puts on it and the text it slides. */
 const HOST = {
   row: '[data-variant="think"]',
+  flow: '[data-chat-flow]',
   window: selector('chat.reason-window'),
   windowed: `[data-variant="think"] ${selector('chat.reason-window')}`,
   capped: attribute('chat.reason-capped'),
@@ -99,9 +100,11 @@ function readInPage(host) {
   const style = getComputedStyle(scope)
   const mask = style.maskImage === 'none' ? style.webkitMaskImage : style.maskImage
   const matrix = /matrix\(1, 0, 0, 1, 0, (-?[\d.]+)\)/.exec(getComputedStyle(text).transform)
+  const flow = row.closest(host.flow)
   return {
     row: true,
     phase: row.getAttribute('data-state'),
+    flowTop: flow?.getBoundingClientRect().top ?? null,
     expanded: row.hasAttribute('data-expanded'),
     windowed: window !== null,
     capped: window !== null && window.hasAttribute(host.capped),
@@ -292,6 +295,7 @@ function reasoningContinuousScenario({ check }) {
     patch: [
       '- id: ui-skin-claude-style',
       '  config:',
+      '    motion: full',
       '    reasoningDisplay: continuous',
     ],
     delayMs: 1200,
@@ -320,11 +324,36 @@ function reasoningContinuousScenario({ check }) {
       const running = samples.filter((sample) => sample.phase === 'running' && sample.textHeight > 0)
       const first = running[0] ?? {}
       const last = running[running.length - 1] ?? {}
+      // Once the column has overflowed, every later growth is the moment the
+      // host pins the tail. The skin's slide has to carry that growth through
+      // visible intermediate positions rather than leaving one whole-step jump.
+      const growths = []
+      for (let index = 1; index < running.length; index += 1) {
+        const previous = running[index - 1]
+        const current = running[index]
+        if (!(previous.flowTop < first.flowTop - 0.5) || !(current.textHeight > previous.textHeight)) continue
+        let end = index + 1
+        while (end < running.length && running[end].textHeight <= current.textHeight) end += 1
+        const positions = running.slice(index - 1, end).map((sample) => Math.round(sample.flowTop * 10) / 10)
+        growths.push({
+          at: current.at,
+          grew: current.textHeight - previous.textHeight,
+          from: previous.flowTop,
+          to: current.flowTop,
+          positions: new Set(positions).size,
+        })
+      }
+      const jumped = growths.filter((growth) => growth.positions <= 2)
+      const reversals = running.filter((sample, index) => index > 0 && sample.textHeight >= running[index - 1].textHeight
+        && sample.flowTop > running[index - 1].flowTop + 0.5)
       return [
         check('逐字跟随直接显示思考文本，不创建步进窗口',
           running.length > 20 && running.every((sample) => sample.windowed === false && sample.capped === false && sample.masked === false && sample.offset === 0 && sample.target === ''),
           JSON.stringify({ samples: running.length, first, last })),
         check('思考文本随宿主内容到达持续长高', (last.textHeight ?? 0) > (first.textHeight ?? 0), JSON.stringify({ first: first.textHeight, last: last.textHeight })),
+        check('思考溢出后的每次增长都有连续位移，正文不整段跳变',
+          growths.length > 0 && jumped.length === 0 && reversals.length === 0,
+          JSON.stringify({ growths: growths.length, jumped: jumped.slice(0, 3), reversals: reversals.slice(0, 3).map((sample) => ({ at: sample.at, flowTop: sample.flowTop })) })),
         check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),
       ]
     },

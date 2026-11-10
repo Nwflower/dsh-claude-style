@@ -116,6 +116,8 @@
     { "id": "model.sub-row", "selector": ".dsh-claude-model-popover-sub .dsh-claude-model-option", "feature": "model", "sees": "one model row of the second level, under its provider's label" },
     { "id": "chat.reason-window", "selector": "[data-dsh-claude-reason-window]", "feature": "chat-fold", "sees": "the optional two-line reasoning window while the stepped display is active" },
     { "id": "chat.reason-capped", "attribute": "data-dsh-claude-reason-capped", "feature": "chat-fold", "sees": "the stepped reasoning window once its text reaches the cap and its edge masks appear" },
+    { "id": "chat.message-fold", "attribute": "data-dsh-claude-message-fold", "feature": "chat-fold", "sees": "a long user message whose current choice keeps its bubble capped" },
+    { "id": "chat.message-fold-toggle", "selector": ".dsh-claude-message-fold-toggle", "feature": "chat-fold", "sees": "the control under a long user message that expands or caps the bubble" },
     { "id": "caret.layer", "selector": "[data-dsh-claude-caret-layer]", "feature": "caret", "sees": "the caret the skin draws in place of the browser's own, on the surface holding the focus" },
     { "id": "caret.mark", "attribute": "data-dsh-claude-caret", "feature": "caret", "sees": "the field whose native caret the skin presses down while its own caret stands for it" },
     { "id": "model.sub-label", "selector": ".dsh-claude-model-popover-sub .dsh-claude-model-rule-name", "feature": "model", "sees": "the provider's name above its models in the second level" },

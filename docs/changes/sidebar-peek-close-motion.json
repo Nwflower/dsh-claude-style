@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-09",
-  "group": "fixes",
-  "order": 2,
-  "external": false,
-  "zh": "修复侧栏悬停展开后鼠标移开时收起动作播放两遍，现在只滑出一次",
-  "en": "Fix the sidebar's hover peek retracting twice when the pointer leaves; it now slides away once"
-}
