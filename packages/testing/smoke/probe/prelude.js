@@ -75,6 +75,23 @@
       await frame()
     }
   }
+  /**
+   * Wait for one scheduler pass after this call. A step that changes the page
+   * and reads a mark the next pass writes waits on the page's own pass count,
+   * not on a duration: a busy display only pushes that pass later (D92).
+   */
+  async function nextPass(what) {
+    var from = window.__dshClaudePasses
+    await until(function () { return window.__dshClaudePasses },
+      function (counts) { return counts[counts.length - 1] > from },
+      what === undefined ? 'the scheduler to pass over the change' : what)
+  }
+  /** A skin name the page renders, read from the surface table by id (packages/testing/data/surface.json). */
+  function surface(id) {
+    var entry = window.SMOKE_SURFACE.find(function (item) { return item.id === id })
+    if (entry === undefined) throw new Error('smoke: unknown surface ' + id)
+    return entry.selector || entry.attribute
+  }
   function attrs(el) { return el ? Array.prototype.map.call(el.attributes, function (a) { return a.name }) : null }
   // A segmented control's sliding pill (packages/client/src/shared/sliding-pill.ts) against
   // the item it should sit under: its mark, its written placement, the item's
@@ -103,6 +120,8 @@
     watch: watch,
     settle: settle,
     until: until,
+    nextPass: nextPass,
+    surface: surface,
     attrs: attrs,
     pillState: pillState,
     report: { applyError: window.__applyError, teardownRegistered: typeof window.__dispose === 'function' },

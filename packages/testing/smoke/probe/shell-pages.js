@@ -67,45 +67,69 @@
       var greetRandom = Math.random
       var arrive = async function (draw) {
         Math.random = function () { return draw }
+        var written = greetSpan.textContent
         document.body.appendChild(greetHolder)
-        await sleep(150)
-        Math.random = greetRandom
-        return greetSpan.textContent
+        // The welcome is written by the pass after the root arrives, and the
+        // span still carries the host's line until that pass; waiting for the
+        // line itself leaves the draw's random in place for it (D92).
+        var lines
+        try {
+          lines = await probe.until(function () { return greetSpan.textContent },
+            function (read) { return read[read.length - 1] !== written }, 'the classic hero welcome to be drawn')
+        } finally {
+          Math.random = greetRandom
+        }
+        return lines[lines.length - 1]
       }
       r.greeting = { low: await arrive(0) }
       // The classic hero's permission control is the segment group; the studio
       // hero's is the conversation's trigger
-      // (packages/client/src/features/permissions/permissions.ts).
-      var heroModes = document.querySelector('[data-composer-card] [data-dsh-claude-part~="modes"]')
-      r.classicSegments = heroModes === null ? null
-        : Array.prototype.map.call(heroModes.querySelectorAll('.dsh-claude-segments > .dsh-claude-segment'), function (item) { return item.textContent })
-      r.classicPermTrigger = heroModes !== null && heroModes.querySelector('.dsh-claude-perm-btn') !== null
-      // The crab stands on the classic home page's card too, as Deepy does.
-      r.classicCrab = document.querySelector('[data-composer-card] > .dsh-claude-crab') !== null
+      // (packages/client/src/features/permissions/permissions.ts). The strip is
+      // stamped one pass and the group drawn on the pass after it, so the
+      // group's own composer-segments marker is the state this read waits for.
+      var strips = await probe.until(function () {
+        var strip = document.querySelector('[data-composer-card] [data-dsh-claude-part~="modes"]')
+        return strip !== null && strip.querySelector('[data-composer-segments]') !== null ? strip : null
+      }, function (read) { return read[read.length - 1] !== null }, 'the classic hero permission segments')
+      var heroModes = strips[strips.length - 1]
+      r.classicSegments = Array.prototype.map.call(heroModes.querySelectorAll('.dsh-claude-segments > .dsh-claude-segment'), function (item) { return item.textContent })
+      r.classicPermTrigger = heroModes.querySelector(probe.surface('permissions.trigger')) !== null
+      // The crab stands on the classic home page's card too, as Deepy does; the
+      // mascot is a deferred feature, so its chunk and the pass after it decide
+      // when the crab is there.
+      var crabSelector = '[data-composer-card] > ' + probe.surface('mascot.crab')
+      var crabs = await probe.until(function () { return document.querySelector(crabSelector) },
+        function (read) { return read[read.length - 1] !== null }, 'the classic hero crab')
+      r.classicCrab = crabs[crabs.length - 1] !== null
       // The glyph field stands in the hero root, under its content, and takes no
       // press; its switch, off as the page opens, mounts it and takes it back off.
       r.ripple = { off: greetRoot.querySelector('.dsh-claude-ripple-canvas') === null && !greetRoot.hasAttribute('data-dsh-claude-ripple') }
       window.__pushForm({ homeRipple: true })
-      await sleep(150)
-      var rippleCanvas = greetRoot.querySelector(':scope > .dsh-claude-ripple-canvas')
+      var mounted = await probe.until(function () { return greetRoot.querySelector(':scope > .dsh-claude-ripple-canvas') },
+        function (read) { return read[read.length - 1] !== null }, 'the glyph field to mount on the hero root')
+      var rippleCanvas = mounted[mounted.length - 1]
       r.ripple.stamped = greetRoot.hasAttribute('data-dsh-claude-ripple')
-      r.ripple.canvas = rippleCanvas !== null
-      r.ripple.pointerEvents = rippleCanvas === null ? null : getComputedStyle(rippleCanvas).pointerEvents
-      r.ripple.order = rippleCanvas === null ? null : getComputedStyle(rippleCanvas).zIndex
+      r.ripple.canvas = true
+      r.ripple.pointerEvents = getComputedStyle(rippleCanvas).pointerEvents
+      r.ripple.order = getComputedStyle(rippleCanvas).zIndex
       window.__pushForm({ homeRipple: false })
-      await sleep(150)
+      await probe.until(function () { return greetRoot.querySelector('.dsh-claude-ripple-canvas') },
+        function (read) { return read[read.length - 1] === null }, 'the glyph field to leave the hero root')
       r.ripple.gone = !greetRoot.hasAttribute('data-dsh-claude-ripple') && greetRoot.querySelector('.dsh-claude-ripple-canvas') === null
       window.__pushForm({ homeRipple: true })
-      await sleep(150)
+      await probe.until(function () { return greetRoot.querySelector(':scope > .dsh-claude-ripple-canvas') },
+        function (read) { return read[read.length - 1] !== null }, 'the glyph field to mount on the hero root again')
       r.ripple.back = greetRoot.hasAttribute('data-dsh-claude-ripple') && greetRoot.querySelector(':scope > .dsh-claude-ripple-canvas') !== null
+      // A further pass leaves the drawn welcome alone; the pass count is the
+      // page's own record of one having run.
       document.body.appendChild(document.createElement('i'))
-      await sleep(150)
+      await probe.nextPass('the classic hero to hold its welcome between passes')
       r.greeting.held = greetSpan.textContent
       greetHolder.remove()
-      await sleep(150)
+      await probe.nextPass('the classic hero to leave the page')
       r.greeting.high = await arrive(0.999)
       greetHolder.remove()
-      await sleep(150)
+      await probe.nextPass('the classic hero to leave the page again')
     })
     await probe.onlyFor(['view-tabs'], async function () {
       // The conversation view tabs (ConversationSession's strip), in the row the
@@ -228,17 +252,21 @@
       // The composer's host controls are marked by what they are, read from
       // the host's structure; the submit button turning into stop (its glyph
       // becomes a rect) moves its mark with it.
-      var controlOf = function (id) { var el = document.getElementById(id); return el && el.getAttribute('data-dsh-claude-control') }
+      var controlMark = probe.surface('composer.control')
+      var controlOf = function (id) { var el = document.getElementById(id); return el && el.getAttribute(controlMark) }
       // The host's own access button, skipping the skin's controls by their own
       // class namespace, read as whole class tokens.
       var accessButton = document.querySelector('[data-slot="conversation.input.permission"] button:not([class^="dsh-claude-"], [class*=" dsh-claude-"])')
-      r.controls = { commands: controlOf('commands'), send: controlOf('send'), access: accessButton && accessButton.getAttribute('data-dsh-claude-control') }
+      r.controls = { commands: controlOf('commands'), send: controlOf('send'), access: accessButton && accessButton.getAttribute(controlMark) }
       var sendButton = document.getElementById('send')
       var sendSvg = sendButton.querySelector('svg')
       var sendGlyph = sendSvg.innerHTML
+      // The mark follows the glyph on the pass after the swap; waiting for the
+      // mark itself keeps a slow display from reading the old one (D92).
       sendSvg.innerHTML = '<rect x="3" y="3" width="10" height="10"></rect>'
-      await sleep(60)
-      r.controls.stopping = controlOf('send')
+      var stopping = await probe.until(function () { return controlOf('send') },
+        function (read) { return read[read.length - 1] === 'stop' }, 'the submit button to be marked as the stop control')
+      r.controls.stopping = stopping[stopping.length - 1]
       // The stop glyph is the skin's own: the host's square is a scaled SVG glyph
       // whose rasterization lands on a subpixel phase of its own, so the ring and
       // the square are drawn as two boxes the browser snaps alike.
@@ -253,8 +281,9 @@
         ink: getComputedStyle(sendButton).color,
       }
       sendSvg.innerHTML = sendGlyph
-      await sleep(60)
-      r.controls.back = controlOf('send')
+      var sending = await probe.until(function () { return controlOf('send') },
+        function (read) { return read[read.length - 1] === 'send' }, 'the submit button to be marked as the send control again')
+      r.controls.back = sending[sending.length - 1]
     })
     await probe.onlyFor(['search'], async function () {
       // The standalone style registers a host panel-list entry and its main

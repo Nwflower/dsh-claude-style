@@ -39,8 +39,8 @@
       window.__pushForm({ chatReveal: 'on' })
       await probe.settle()
       // Characters arriving, then more of them: every frame from each arrival
-      // until the fade has run out, so the registration is read on the frames
-      // that carry it and the empty registry on the one the page settles on.
+      // until the settle rule has run out, so the registration is read on the
+      // frames that carry it; the fade's own end is read after the growth.
       var revealContainer = document.createElement('div')
       revealContainer.setAttribute('data-streaming', '')
       revealContainer.textContent = 'Hello there'
@@ -48,7 +48,12 @@
       var revealOpening = await probe.watch(revealPeek)
       revealContainer.firstChild.data = 'Hello there, more'
       var revealGrown = await probe.watch(revealPeek)
-      var revealSettled = revealGrown[revealGrown.length - 1]
+      // The fade runs on the engine's own frames, which the settle rule does
+      // not count (a feature painting its own frames must not hold it, D92);
+      // the emptied registry is the state the settled reading waits for.
+      var faded = await probe.until(revealPeek,
+        function (read) { return read[read.length - 1].total === 0 }, 'the faded token highlights to leave the registry')
+      var revealSettled = faded[faded.length - 1]
       window.__pushForm({ chatReveal: 'off' })
       await probe.settle()
       var revealOff = revealPeek()
