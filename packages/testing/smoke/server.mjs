@@ -22,7 +22,8 @@ function readAssets() {
 
 /**
  * Serve the stand-in pages on a free local port.
- * @param html - the page for a name, or undefined where there is none.
+ * @param html - the page for a name and its `probe` query (the behaviour lane
+ *     asks for `prelude`), or undefined where there is none.
  * @returns the base URL and how to close the server.
  */
 async function serveStandIn(html) {
@@ -45,7 +46,8 @@ async function serveStandIn(html) {
     }
   }
   const server = http.createServer((req, res) => {
-    const name = new URL(req.url, 'http://x').pathname.slice(1)
+    const url = new URL(req.url, 'http://x')
+    const name = url.pathname.slice(1)
     if (name === 'client.js') {
       res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8' })
       res.end(fs.readFileSync(CLIENT))
@@ -104,7 +106,9 @@ async function serveStandIn(html) {
       })
       res.end(fs.readFileSync(stored))
     } else {
-      const body = html(name)
+      // A behaviour spec drives the same page name with the prelude alone, which
+      // the page request names so one server can answer both halves of a run.
+      const body = html(name, url.searchParams.get('probe'))
       if (body === undefined) {
         res.writeHead(404)
         res.end()

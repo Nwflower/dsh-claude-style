@@ -143,13 +143,13 @@ function judge(dir, fault, suite, cleanBehaviour) {
   // The behaviour specs read the built page: the build is paid only where one of
   // them covers what the patch touches.
   const selection = wide || features.length === 0 ? [] : ['--feature', features.join(',')]
-  const listed = suite === 'new' && browserHalf ? run(dir, 'packages/testing/behaviour.mjs', ['--list', ...selection]) : null
+  const listed = suite === 'new' && browserHalf ? run(dir, 'packages/testing/stand-in.mjs', ['--list', ...selection]) : null
   if (listed !== null && listed.code === 0 && listed.output.trim() !== '') {
     const build = run(dir, 'scripts/build/build.mjs', [])
     if (build.code !== 0) {
       red.push(`build (${build.output.split('\n').find((line) => /error|refus/i.test(line)) ?? 'failed'})`)
     } else {
-      run(dir, 'packages/testing/behaviour.mjs', [...BEHAVIOUR_JOBS, ...selection])
+      run(dir, 'packages/testing/stand-in.mjs', [...BEHAVIOUR_JOBS, ...selection])
       const report = runsPath(dir, 'behaviour', 'report.json')
       // A behaviour test that already fails on the untouched copy is red for
       // its own reason, and saying the fault was caught by it would credit the
@@ -194,7 +194,7 @@ function main() {
   if (asked.suite === 'new' && chosen.some((fault) => reach(fs.readFileSync(path.join(import.meta.dirname, 'faults', fault.patch), 'utf8')).browserHalf)) {
     const build = run(dir, 'scripts/build/build.mjs', [])
     if (build.code !== 0) bad('the build is red before any fault; the behaviour lane cannot be read')
-    run(dir, 'packages/testing/behaviour.mjs', BEHAVIOUR_JOBS)
+    run(dir, 'packages/testing/stand-in.mjs', [...BEHAVIOUR_JOBS, '--spec', 'specs/behaviour'])
     const report = runsPath(dir, 'behaviour', 'report.json')
     if (fs.existsSync(report)) {
       for (const result of JSON.parse(fs.readFileSync(report, 'utf8')).results) {

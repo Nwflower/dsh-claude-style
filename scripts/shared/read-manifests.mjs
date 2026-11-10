@@ -158,14 +158,4 @@ function checkManifests(manifests) {
   }
 }
 
-/** The smoke run's coverage table: each feature directory and the cases its manifests name, without repeats. */
-function featureCases(manifests) {
-  const table = {}
-  for (const manifest of manifests) {
-    const cases = table[manifest.dir] ?? (table[manifest.dir] = [])
-    for (const name of manifest.cases) if (!cases.includes(name)) cases.push(name)
-  }
-  return table
-}
-
-export { readManifests, featureCases, manifestFiles }
+export { readManifests, manifestFiles }

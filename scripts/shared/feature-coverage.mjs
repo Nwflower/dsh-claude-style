@@ -1,10 +1,16 @@
 /**
  * One feature's verification coverage, read from its own manifest and the specs'
- * headers (D76, D92). Scope selection and the coverage report share this table.
+ * headers (D76, D92). Scope selection, the smoke's case table and the coverage
+ * report all read this one table, so a manifest's cases and scenarios have a
+ * single reader.
  */
 import { readManifests } from './read-manifests.mjs'
 import { LAYERS, readHeader, specFiles } from './spec-header.mjs'
 
+/**
+ * Each feature directory's row: the installation cases and end-to-end scenarios
+ * its manifest names, and the specs whose `@features` names it, by layer.
+ */
 function featureCoverage(manifests = readManifests(), headers = specFiles().map(readHeader)) {
   const table = {}
   for (const manifest of manifests) {

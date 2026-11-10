@@ -1,6 +1,7 @@
 /** Share smoke fixtures, result accounting, tier state and feature-case tables. */
 import path from 'path'
-import { featureCases, readManifests } from '../../../scripts/shared/read-manifests.mjs'
+import { readManifests } from '../../../scripts/shared/read-manifests.mjs'
+import { featureCoverage } from '../../../scripts/shared/feature-coverage.mjs'
 import { loadModule } from '../../../scripts/shared/ts-module.mjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..', '..', '..')
@@ -30,7 +31,9 @@ const TIMING_CASES = ['chat-follow', 'chat-fold', 'chat-reveal', 'chat-send', 'c
 
 /** `--feature` refuses directories without their own cases rather than running unrelated ones (D72). */
 const MANIFESTS = readManifests()
-const FEATURE_CASES = featureCases(MANIFESTS)
+const FEATURE_CASES = Object.fromEntries(
+    Object.entries(featureCoverage(MANIFESTS, [])).map(([dir, row]) => [dir, row.cases]),
+)
 
 /** Credit every deferred feature with loader cases so `--feature` reaches chunk delivery (D72). */
 const DEFERRED_CASES = ['chunk-fault', 'chunk-late']

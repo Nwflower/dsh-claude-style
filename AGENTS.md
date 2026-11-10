@@ -26,7 +26,7 @@ The tree, the two halves and their invariants are in [ARCHITECTURE.md](docs/ARCH
 - The user may withdraw or modify your changes at any time: re-read a file before continuing to edit it, build on the latest state, never re-add what the user deleted.
 - If the user asks about something else mid-task, answer at once if you can, then resume the original task; never leave a task half-done.
 - When fixing an error in documentation or code, leave no trace of the error.
-- Every feature is implemented and iterated until it works; never stop after a first version and ask the user to test. During development a change is carried by `npm run build` and the live page, and a commit or push waits on no test run; the browser lanes are run together before a release (D92). A spec the change touches may be run on its own (`npx vitest run <path>`, `node packages/testing/behaviour.mjs --spec <id>`) when its answer is what the work needs.
+- Every feature is implemented and iterated until it works; never stop after a first version and ask the user to test. During development a change is carried by `npm run build` and the live page, and a commit or push waits on no test run; the browser lanes are run together before a release (D92). A spec the change touches may be run on its own (`npx vitest run <path>`, `node packages/testing/stand-in.mjs --spec <id>`) when its answer is what the work needs.
 - Never inline long multi-line scripts on the command line; write the script to `.debug/` and run it.
 - Authored changes — new logic, copy, rules — go through the edit tools. Mechanical transformations across files (moving, renaming, rewriting paths, migrating syntax) may be scripted: the script lives in `.debug/`, its whole diff is read afterwards and the gates are passed; the script never writes new logic.
 - Never hand-write a parser for a mature file format; use a library, or avoid parsing.
@@ -98,7 +98,7 @@ Each script states its purpose at the top of the script. `node scripts/checks/ve
 | `npm run element-collections` | the element-keyed collections the browser half keeps, by file (C1) |
 | `npm run probe` | headless UI regression probe for the composer invariants |
 | `npm run stand-in` | the built plugin's one stand-in-page lane (D92): host-half and installation checks, then the behaviour specs a reader can observe |
-| `npm run behaviour` | focused behaviour specs and live-page debugging for stand-in.mjs (D92), driven from outside through Playwright on the BUILT plugin (`lib/`); no running DSH instance is needed |
+| `npm run behaviour` | live-page debugging and focused spec listing for the stand-in page (D92), driven from outside through Playwright on the BUILT plugin (`lib/`); no running DSH instance is needed |
 | `npm run faults` | whether the specs catch known defects |
 | `npm run coverage` | which layer guards which feature (D92), as an observation |
 | `npm test` | the logic and mechanism specs on their own, as the cloud job runs them: Vitest in browser mode on the local Chrome or Edge |

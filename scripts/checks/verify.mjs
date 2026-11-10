@@ -178,8 +178,8 @@ function walksEverything(request) {
 
 /**
  * How many page loads each browser gate drives beside its stage's other gates. The budget
- * follows the machine's cores, never its load; the behaviour lane takes at most two,
- * leaving room for the Vitest browser that waits on frames beside it.
+ * follows the machine's cores, never its load; the stand-in lane and the end-to-end lane
+ * split it when both run, so the frame-watching pages keep the browser's frame rate.
  */
 function browserJobs(request) {
   if (!request.e2e) return { smoke: BROWSER_JOBS, e2e: 0 }
@@ -224,7 +224,7 @@ function gatesFor(request) {
 /**
  * Those gates grouped by what waits for what. The checks and the build come first, because
  * the build writes what the browser lanes read; the spec lane waits for nothing and runs
- * beside the behaviour specs; the smoke and the end-to-end lane come last on their own,
+ * beside the stand-in lane; the stand-in and the end-to-end lane come last on their own,
  * because their frame-watching passes are what a loaded machine disturbs. Each stage costs
  * its slowest gate rather than the sum of its gates.
  */

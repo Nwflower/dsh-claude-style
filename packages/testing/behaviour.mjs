@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 /**
- * behaviour.mjs — focused behaviour specs and live-page debugging for
- * stand-in.mjs (D92), driven from outside through Playwright on the BUILT
- * plugin (`lib/`); no running DSH instance is needed.
+ * behaviour.mjs — live-page debugging and focused spec listing for the stand-in
+ * page (D92), driven from outside through Playwright on the BUILT plugin
+ * (`lib/`); no running DSH instance is needed. A spec run goes through
+ * stand-in.mjs, which owns the server, the browser and the verify lock.
  *
- * Failures keep a trace, screenshot and markup under `.debug/runs/behaviour/`;
- * quarantined specs only fail when they pass. `--open`, `--eval`, `--shot` and `--close`
- * inspect one live page.
- * Usage: `node packages/testing/behaviour.mjs [--feature <dir>] [--spec <id or file fragment>] [--band <name>] [--jobs <n>] [--list]`
- * Exit: 0 passed or session ended; 1 failed or unanswered; 2 could not start.
+ * Spec failures keep a trace, screenshot and markup under `.debug/runs/behaviour/`;
+ * quarantined specs only fail when they pass. `--open`, `--eval`, `--shot`,
+ * `--pass` and `--close` inspect one live page.
+ * Usage: `node packages/testing/behaviour.mjs --list [--feature <dir>] [--spec <id or file fragment>] [--band <name>]`
+ * Exit: 0 listed or session ended; 1 unanswered; 2 could not start.
  */
 import { randomUUID } from 'node:crypto'
 import fs from 'node:fs'
@@ -17,11 +18,10 @@ import { availableParallelism } from 'node:os'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { launchBrowser, newContextOn } from './browser.mjs'
-import { page as standInPage, PRELUDE } from './smoke/page.mjs'
+import { behaviourPage } from './smoke/page.mjs'
 import { serveStandIn } from './smoke/server.mjs'
 import { readers, expectThat, surface, host } from './specs/fixtures/behaviour.mjs'
 import { ROOT, specFiles, readHeader, testId } from '../../scripts/shared/spec-header.mjs'
-import { withLock } from '../../scripts/shared/verify-lock.mjs'
 import { runsPath } from '../../scripts/shared/debug-paths.mjs'
 import { mapAtOnce } from './at-once.mjs'
 import { sanitizePage } from '../../scripts/shared/privacy.mjs'
@@ -35,7 +35,7 @@ const DARK_ATTR = host('shell.dark-theme')
 const DEFAULT_JOBS = Math.max(2, Math.min(8, Math.floor(availableParallelism() / 2)))
 /** How long one expression may take before the door answers that it has no answer. */
 const EVAL_TIMEOUT_MS = 15000
-/** The longest deadline an expression may be given, and the largest request body the door reads. */
+/** The longest deadline an expression may be given. */
 const EVAL_TIMEOUT_MAX = 600000
 const EVAL_BODY_MAX = 1 << 20
 
@@ -47,7 +47,7 @@ function bad(message) {
 /** The command line's shapes, for --help. */
 function usage() {
   process.stdout.write([
-    'usage: node packages/testing/behaviour.mjs [--feature <dir>[,<dir>…]] [--spec <id or file fragment>[,…]] [--band <name>] [--jobs <n>] [--list]',
+    'usage: node packages/testing/behaviour.mjs --list [--feature <dir>[,<dir>…]] [--spec <id or file fragment>[,…]] [--band <name>]',
     '       node packages/testing/behaviour.mjs --open <page> [--prefs <json>] [--band <name>] [--off <feature>[,<feature>…]]',
     '       node packages/testing/behaviour.mjs --eval --at <address> "<expression>" [--raw | --json] [--timeout <ms>]',
     '       node packages/testing/behaviour.mjs --eval --at <address> --stdin [--raw | --json] [--timeout <ms>]',
@@ -251,26 +251,6 @@ function selectsSpec(item, term) {
   return item.id.toLowerCase().includes(wanted) || item.file.toLowerCase().includes(wanted)
 }
 
-/** The ids nearest a term that selected nothing, by the two-letter runs they share, a literal hit first. */
-function nearestIds(all, term) {
-  const wanted = term.toLowerCase()
-  const runs = (text) => {
-    const out = new Set()
-    for (let at = 0; at < text.length - 1; at += 1) out.add(text.slice(at, at + 2))
-    return out
-  }
-  const mine = runs(wanted)
-  const scored = []
-  for (const id of all) {
-    const text = id.toLowerCase()
-    let score = text.includes(wanted) ? 100 : 0
-    for (const run of runs(text)) if (mine.has(run)) score += 1
-    if (score > 0) scored.push({ id, score })
-  }
-  scored.sort((left, right) => right.score - left.score)
-  return scored.slice(0, 3).map((one) => one.id)
-}
-
 /** A directory name for one test's evidence. */
 const slug = (id) => id.replace(/[^\w@.-]+/g, '-').replace(/-+/g, '-').slice(0, 120)
 
@@ -284,7 +264,7 @@ async function runOne(browser, base, item, runDir) {
   page.on('pageerror', (error) => consoleLines.push(`pageerror: ${error.message}`))
   const started = Date.now()
   try {
-    await page.goto(`${base}/${item.page}`, { waitUntil: 'domcontentloaded' })
+    await page.goto(`${base}/${item.page}?probe=prelude`, { waitUntil: 'domcontentloaded' })
     await page.waitForFunction(() => window.__smoke !== undefined, undefined, { timeout: 10000 })
     const report = await page.evaluate(() => window.__smoke)
     if (report.applyError !== null) throw new Error(`the skin did not apply: ${report.applyError}`)
@@ -316,54 +296,6 @@ async function runOne(browser, base, item, runDir) {
     return { id: item.id, ok: false, ms: Date.now() - started, error: error.message, evidence: path.relative(ROOT, dir).replace(/\\/g, '/') }
   } finally {
     await context.close()
-  }
-}
-
-/** Run one piece of page work for a door route and answer its outcome as JSON. */
-async function answerRun(res, work) {
-  try {
-    const value = await work()
-    reply(res, 200, { ok: true, value: value ?? null })
-  } catch (error) {
-    reply(res, 200, { ok: false, error: { name: error.name ?? 'Error', message: error.message, stack: error.stack } })
-  }
-}
-
-/** Answer one door request as JSON; a value with no JSON form is reported by name rather than left as a dead connection. */
-function reply(res, status, body) {
-  let text
-  try {
-    text = `${JSON.stringify(body)}\n`
-  } catch (error) {
-    status = 200
-    text = `${JSON.stringify({ ok: false, error: { name: 'Unserializable', message: `the page's value cannot be read as JSON: ${error.message}` } })}\n`
-  }
-  res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' })
-  res.end(text)
-}
-
-/** The whole request body, up to the door's limit. */
-async function readBody(req) {
-  const chunks = []
-  let size = 0
-  for await (const chunk of req) {
-    size += chunk.length
-    if (size > EVAL_BODY_MAX) throw new Error(`the request body is over ${EVAL_BODY_MAX} bytes`)
-    chunks.push(chunk)
-  }
-  return Buffer.concat(chunks).toString('utf8')
-}
-
-/**
- * The request body as JSON: a body that is not JSON is answered here with a 400
- * and reported as null, so a route reads the value only when one arrived.
- */
-async function readJsonBody(req, res) {
-  try {
-    return { value: JSON.parse(await readBody(req)) }
-  } catch (error) {
-    reply(res, 400, { ok: false, error: { name: 'BadRequest', message: error.message } })
-    return null
   }
 }
 
@@ -466,6 +398,54 @@ async function openDoor(page, name, stopSession) {
   }
 }
 
+/** Run one piece of page work for a door route and answer its outcome as JSON. */
+async function answerRun(res, work) {
+  try {
+    const value = await work()
+    reply(res, 200, { ok: true, value: value ?? null })
+  } catch (error) {
+    reply(res, 200, { ok: false, error: { name: error.name ?? 'Error', message: error.message, stack: error.stack } })
+  }
+}
+
+/** Answer one door request as JSON; a value with no JSON form is reported by name rather than left as a dead connection. */
+function reply(res, status, body) {
+  let text
+  try {
+    text = `${JSON.stringify(body)}\n`
+  } catch (error) {
+    status = 200
+    text = `${JSON.stringify({ ok: false, error: { name: 'Unserializable', message: `the page's value cannot be read as JSON: ${error.message}` } })}\n`
+  }
+  res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' })
+  res.end(text)
+}
+
+/** The whole request body, up to the door's limit. */
+async function readBody(req) {
+  const chunks = []
+  let size = 0
+  for await (const chunk of req) {
+    size += chunk.length
+    if (size > EVAL_BODY_MAX) throw new Error(`the request body is over ${EVAL_BODY_MAX} bytes`)
+    chunks.push(chunk)
+  }
+  return Buffer.concat(chunks).toString('utf8')
+}
+
+/**
+ * The request body as JSON: a body that is not JSON is answered here with a 400
+ * and reported as null, so a route reads the value only when one arrived.
+ */
+async function readJsonBody(req, res) {
+  try {
+    return { value: JSON.parse(await readBody(req)) }
+  } catch (error) {
+    reply(res, 400, { ok: false, error: { name: 'BadRequest', message: error.message } })
+    return null
+  }
+}
+
 /**
  * Keep one stand-in page running for inspection. The page is the smoke's, the
  * bundle is the built one, and the preference patch goes through the entry a
@@ -477,7 +457,7 @@ async function openStandIn(asked) {
   const { CASES } = await import('./smoke/cases.mjs')
   if (!Object.hasOwn(CASES, asked.page)) bad(`no stand-in page named "${asked.page}"; the pages are: ${Object.keys(CASES).join(', ')}`)
   if (!fs.existsSync(path.join(ROOT, 'lib', 'client.js'))) bad('lib/client.js is missing; run npm run build')
-  const server = await serveStandIn((name) => (name === asked.page ? standInPage(name, 'full', [name], PRELUDE) : undefined))
+  const server = await serveStandIn((name) => (name === asked.page ? behaviourPage(name) : undefined))
   const browser = await launchBrowser()
   let door = null
   let release
@@ -627,63 +607,27 @@ async function closeSession(asked) {
   return 0
 }
 
-/** Run the lane, keep a page open, or ask one: the mode the command line named. */
-async function start(args) {
-  const asked = request(args)
-  if (asked.mode === 'help') {
-    usage()
-    return 0
-  }
-  if (asked.mode === 'open') return openStandIn(asked)
-  if (asked.mode === 'eval') return evaluate(asked)
-  if (asked.mode === 'close') return closeSession(asked)
-  if (asked.mode === 'shot') return shoot(asked)
-  if (asked.mode === 'pass') return askForPass(asked)
-  return withLock('behaviour', 'behaviour', () => run(asked))
-}
-
-async function run(asked) {
-  const { items, all } = await plan(asked)
-  // A spec term that matches nothing is a misspelling: the nearest ids are
-  // printed so the next try needs no `--list` first.
-  if (items.length === 0 && asked.spec.length > 0) {
-    for (const id of nearestIds(all, asked.spec.join(' '))) console.error(`behaviour: did you mean "${id}"?`)
-  }
-  if (asked.list) {
-    for (const item of items) console.log(item.id)
-    return 0
-  }
-  if (items.length === 0) {
-    // A feature directory no behaviour spec covers has nothing here to judge.
-    if (asked.spec.length > 0 || asked.feature.length === 0) bad('the selection holds no behaviour test')
-    console.log(`behaviour: no behaviour spec covers ${asked.feature.join(', ')}`)
-    return 0
-  }
-  if (!fs.existsSync(path.join(ROOT, 'lib', 'client.js'))) bad('lib/client.js is missing; run npm run build')
+/**
+ * Judge the selected tests on the browser and stand-in server the lane opened,
+ * and answer the report the lane files. A test judged against the clock can lose
+ * to a machine busy with the other pages, so it is re-judged alone and only a
+ * failure alone is a failure.
+ */
+async function runBehaviourTests(items, jobs, browser, base) {
   const runDir = path.join(OUT, new Date().toISOString().replace(/[:.]/g, '-'))
-  const server = await serveStandIn((name) => (items.some((item) => item.page === name) ? standInPage(name, 'full', [name], PRELUDE) : undefined))
-  const browser = await launchBrowser()
-  let results
-  try {
-    console.log(`behaviour: ${items.length} tests, ${asked.jobs} at a time`)
-    results = await mapAtOnce(items, asked.jobs, (item) => runOne(browser, server.base, item, runDir))
-    // A test judged against the clock can lose to a machine busy with the other
-    // pages: it is re-judged alone, and only a failure alone is a failure.
-    const timed = results
-      .filter((result) => !result.ok)
-      .map((result) => items.find((item) => item.id === result.id))
-      .filter((item) => item !== undefined && item.frames === true)
-    if (timed.length > 0) {
-      console.log(`behaviour: ${timed.length} frame-sensitive ${timed.length === 1 ? 'test' : 'tests'} failed beside other pages; re-judging ${timed.length === 1 ? 'it' : 'each'} alone`)
-      const alone = await mapAtOnce(timed, 1, (item) => runOne(browser, server.base, item, runDir))
-      for (const retry of alone) {
-        const at = results.findIndex((result) => result.id === retry.id)
-        if (at !== -1) results[at] = { ...retry, rerun: true }
-      }
+  console.log(`behaviour: ${items.length} tests, ${jobs} at a time`)
+  let results = await mapAtOnce(items, jobs, (item) => runOne(browser, base, item, runDir))
+  const timed = results
+    .filter((result) => !result.ok)
+    .map((result) => items.find((item) => item.id === result.id))
+    .filter((item) => item !== undefined && item.frames === true)
+  if (timed.length > 0) {
+    console.log(`behaviour: ${timed.length} frame-sensitive ${timed.length === 1 ? 'test' : 'tests'} failed beside other pages; re-judging ${timed.length === 1 ? 'it' : 'each'} alone`)
+    const alone = await mapAtOnce(timed, 1, (item) => runOne(browser, base, item, runDir))
+    for (const retry of alone) {
+      const at = results.findIndex((result) => result.id === retry.id)
+      if (at !== -1) results[at] = { ...retry, rerun: true }
     }
-  } finally {
-    await browser.close()
-    await server.close()
   }
   for (const result of results) {
     const quarantined = QUARANTINED.has(result.id)
@@ -696,21 +640,70 @@ async function run(asked) {
     if (quarantined && !result.ok) console.log(`       ${QUARANTINED.get(result.id).defect}`)
     if (!result.ok) console.log(`       ${result.error.split('\n').join('\n       ')}\n       evidence: ${result.evidence} (npx playwright show-trace ${result.evidence}/trace.zip)`)
   }
-  fs.mkdirSync(OUT, { recursive: true })
-  fs.writeFileSync(path.join(OUT, 'report.json'), `${JSON.stringify({ at: new Date().toISOString(), results }, null, 2)}\n`)
   const blocking = results.filter((result) => result.blocking).length
   const held = results.filter((result) => result.quarantined && !result.ok).length
   const quarantine = held === 0 ? '' : `; ${held} quarantined ${held === 1 ? 'failure' : 'failures'} printed above`
   console.log(blocking === 0
     ? `\nbehaviour: ${results.length - held} of ${results.length} tests passed${quarantine}`
     : `\nbehaviour: ${blocking} of ${results.length} tests block the run${quarantine}`)
-  return blocking === 0 ? 0 : 1
+  return { results, blocking }
 }
 
-/** Run behaviour specs or one live-page debugging mode; the shared runner uses the same entry. */
-export function runBehaviour(args = process.argv.slice(2)) {
-  return start(args)
+/**
+ * The behaviour half of a stand-in request: the tests its selection names, on the
+ * browser and server the lane opened. A selection a strict request names but no
+ * spec answers ends the request; a feature directory no spec covers has nothing
+ * to judge and prints so.
+ */
+async function serveBehaviour(request, browser, base) {
+  const { items } = await plan({ ...request, list: false })
+  if (!fs.existsSync(path.join(ROOT, 'lib', 'client.js'))) bad('lib/client.js is missing; run npm run build')
+  if (items.length === 0) {
+    if (request.spec.length > 0 || request.feature.length === 0) bad('the selection holds no behaviour test')
+    console.log(`behaviour: no behaviour spec covers ${request.feature.join(', ')}`)
+    return { results: [], blocking: 0 }
+  }
+  const { results, blocking } = await runBehaviourTests(items, request.jobs, browser, base)
+  fs.mkdirSync(OUT, { recursive: true })
+  fs.writeFileSync(path.join(OUT, 'report.json'), `${JSON.stringify({ at: new Date().toISOString(), results }, null, 2)}\n`)
+  return { results, blocking }
 }
+
+/** The live-page debugging commands, each on its own address the lane does not hold. */
+async function runDebugMode(asked) {
+  if (asked.mode === 'open') return openStandIn(asked)
+  if (asked.mode === 'eval') return evaluate(asked)
+  if (asked.mode === 'close') return closeSession(asked)
+  if (asked.mode === 'shot') return shoot(asked)
+  if (asked.mode === 'pass') return askForPass(asked)
+  return null
+}
+
+/** Print the ids a request selects, so the next stand-in run needs no guess. */
+async function listBehaviour(asked) {
+  const { items } = await plan(asked)
+  for (const item of items) console.log(item.id)
+  return 0
+}
+
+/**
+ * This file's command line is the live-page debugger; a spec run goes through
+ * stand-in.mjs, which owns the server, the browser and the lock (D92).
+ */
+export async function runBehaviour(args = process.argv.slice(2)) {
+  const asked = request(args)
+  if (asked.mode === 'help') {
+    usage()
+    return 0
+  }
+  const debug = await runDebugMode(asked)
+  if (debug !== null) return debug
+  if (asked.list) return listBehaviour(asked)
+  console.error('behaviour: a spec run goes through node packages/testing/stand-in.mjs; --open, --eval, --shot, --pass and --close are this command\'s own')
+  return 2
+}
+
+export { serveBehaviour, listBehaviour }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
   runBehaviour().then((code) => process.exit(code ?? 0), (error) => {

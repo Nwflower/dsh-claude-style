@@ -102,10 +102,17 @@ const STAND_IN = readParts('stand-in', STAND_IN_PARTS)
 const PROBE = readParts('probe', PROBE_PARTS)
 /**
  * The probe's own prelude alone: the skin applied and the readers a step uses,
- * with no step of the smoke's. The behaviour layer drives such a page from
- * outside, through Playwright (packages/testing/behaviour.mjs, D92).
+ * with no step of the smoke's. The stand-in lane drives such a page from outside
+ * through Playwright (packages/testing/stand-in.mjs, D92).
  */
 const PRELUDE = readParts('probe', ['prelude.js'])
+
+/**
+ * The page a behaviour spec drives: the same stand-in host and bundle with the
+ * probe's prelude alone, so the spec reads the skin's own report and then drives
+ * the page from outside through Playwright (packages/testing/behaviour.mjs, D92).
+ */
+const behaviourPage = (name) => page(name, 'full', [name], PRELUDE)
 
 /**
  * The stand-in page for one load: host footer, host composer, then the bundle,
@@ -568,4 +575,4 @@ ${foldArea}
 </body></html>`
 }
 
-export { page, PRELUDE }
+export { page, behaviourPage, PRELUDE }
