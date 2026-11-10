@@ -126,16 +126,21 @@ function readers(page) {
     /**
      * What a matching canvas holds, as one number: the drawn channels summed.
      * A field that plays changes it between two readings, a field that stands
-     * still repeats it, and a canvas that is not there reads null. The context
-     * is asked fresh on every reading so a renderer re-creating the canvas does
-     * not leave this one stale.
+     * still repeats it, and a canvas that is not there reads null. Copy into a
+     * software readback canvas: reading the product context can migrate its
+     * rendering backend and change rasterized edges. The probe must leave that
+     * context's rendering choices alone (D92).
      */
     pixels: (selector) => page.evaluate((s) => {
       const canvas = document.querySelector(s)
       if (!(canvas instanceof HTMLCanvasElement) || canvas.width === 0 || canvas.height === 0) return null
-      const context = canvas.getContext('2d')
-      if (context === null) return null
-      const { data } = context.getImageData(0, 0, canvas.width, canvas.height)
+      const snapshot = document.createElement('canvas')
+      snapshot.width = canvas.width
+      snapshot.height = canvas.height
+      const context = snapshot.getContext('2d', { willReadFrequently: true })
+      if (context === null) throw new Error('behaviour/pixels: the snapshot canvas has no 2d context')
+      context.drawImage(canvas, 0, 0)
+      const { data } = context.getImageData(0, 0, snapshot.width, snapshot.height)
       let sum = 0
       for (let at = 0; at < data.length; at += 4) sum += data[at] * 3 + data[at + 1] * 5 + data[at + 2] * 7 + data[at + 3]
       return sum
