@@ -19,14 +19,22 @@
     // frame a few milliseconds later, inside the second the check counts.
     await probe.settle(250)
     if (window.SMOKE_TIER !== 'quick') {
-      var from = window.__passes
-      var mark = performance.now()
-      await sleep(1000)
-      r.idlePasses = window.__passes - from
-      // Where the frames of that second landed, for the check's own detail.
-      r.idlePassTimes = window.__passTimes
-        .filter(function (t) { return t >= mark })
-        .map(function (t) { return Math.round(t - mark) })
+      // A pass inside the sample means the page had not settled yet: let that
+      // activity finish, then take a fresh whole-second sample. A page that keeps
+      // asking for passes still fails when no idle window arrives by the deadline.
+      var deadline = performance.now() + 8000
+      for (;;) {
+        var from = window.__passes
+        var mark = performance.now()
+        await sleep(1000)
+        r.idlePasses = window.__passes - from
+        // Where the frames of that second landed, for the check's own detail.
+        r.idlePassTimes = window.__passTimes
+          .filter(function (t) { return t >= mark })
+          .map(function (t) { return Math.round(t - mark) })
+        if (r.idlePasses === 0 || performance.now() >= deadline) break
+        await probe.settle(250)
+      }
     }
     // The host's statistics are hidden outright: the figures stay in the
     // document as the read's own click targets, and their dialogs are read into
