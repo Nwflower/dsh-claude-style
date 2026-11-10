@@ -58,6 +58,12 @@ export class RightSessionStatus {
       if (node.hidden || node.getAttribute('aria-hidden') === 'true') return false
       if (node === this.row) break
     }
+    // Generated content can replace a plugin-hidden native title (D43).
+    // Clipping our gradient to those hidden glyphs would paint a second title.
+    for (const pseudo of ['::before', '::after']) {
+      const content = getComputedStyle(title, pseudo).content
+      if (content !== 'none' && content !== 'normal') return false
+    }
     const style = getComputedStyle(title)
     const box = title.getBoundingClientRect()
     return style.display !== 'none' && style.visibility === 'visible' && Number(style.opacity) > 0 && box.width > 0 && box.height > 0

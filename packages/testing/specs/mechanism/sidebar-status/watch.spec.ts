@@ -9,6 +9,7 @@ import { SESSION_PHASE_ATTRIBUTE, SIDEBAR_SLOT_SELECTOR } from '@dsh-claude-styl
 import { hostElement } from '../../fixtures/host-markup'
 import { surfaceAttribute } from '../../fixtures/surface'
 import { frames } from '../../fixtures/frames'
+import { CHANNEL_ATTRIBUTE, CHANNEL_TEXT_ATTRIBUTE, installChannelTitleSheet } from '../../fixtures/channel-title'
 
 const PART = surfaceAttribute('skin.part')
 const STATUS = surfaceAttribute('sidebar-status.row')
@@ -125,6 +126,43 @@ test('the shared watch follows a host replacement of the sidebar root', async ()
   expect(next.rows[0].row.getAttribute(STATUS)).toBe('idle')
 })
 
+test('title-only plugin attributes invalidate generated titles without scheduling unrelated row attributes', async () => {
+  const current = sidebar(['ongoing'])
+  cleanups.push(installChannelTitleSheet())
+  const feature = installed()
+  const { row, title } = current.rows[0]
+  await frames(2)
+  const beforeTakeover = feature.calls()
+  title.setAttribute(CHANNEL_ATTRIBUTE, 'feishu')
+  title.setAttribute(CHANNEL_TEXT_ATTRIBUTE, '配置书')
+  await settle()
+  expect(feature.calls()).toBeGreaterThan(beforeTakeover)
+  feature.sync()
+  expect(row.hasAttribute(RUNNING_TITLE)).toBe(false)
+
+  const beforeRename = feature.calls()
+  title.setAttribute(CHANNEL_TEXT_ATTRIBUTE, '新标题')
+  await settle()
+  expect(feature.calls()).toBeGreaterThan(beforeRename)
+  feature.sync()
+  expect(getComputedStyle(title, '::after').content).toContain('新标题')
+  expect(row.hasAttribute(RUNNING_TITLE)).toBe(false)
+
+  const beforeRelease = feature.calls()
+  title.removeAttribute(CHANNEL_ATTRIBUTE)
+  title.removeAttribute(CHANNEL_TEXT_ATTRIBUTE)
+  await settle()
+  expect(feature.calls()).toBeGreaterThan(beforeRelease)
+  feature.sync()
+  expect(row.hasAttribute(RUNNING_TITLE)).toBe(true)
+
+  await frames(2)
+  const beforeUnrelated = feature.calls()
+  row.id = 'external-session-row'
+  await settle()
+  expect(feature.calls()).toBe(beforeUnrelated)
+})
+
 test('teardown stops the shared watch', async () => {
   const current = sidebar(['ongoing'])
   const feature = installed()
@@ -150,9 +188,8 @@ test('the shared watch invalidates title reads while the write phase never measu
   expect(row.hasAttribute(RUNNING_TITLE)).toBe(true)
   const options = observe.mock.calls.find(([target]) => target === current.root)?.[1]
   expect(options?.characterData).toBe(true)
-  expect(options?.attributeFilter).toEqual(expect.arrayContaining([
-    SESSION_PHASE_ATTRIBUTE, PART, 'hidden', 'aria-hidden', 'contenteditable', 'style', 'class',
-  ]))
+  expect(options?.attributes).toBe(true)
+  expect(options?.attributeFilter).toBeUndefined()
 
   // cost: D40 — geometry belongs to the measure phase, never the DOM-writing phase.
   const bounds = vi.spyOn(title, 'getBoundingClientRect')

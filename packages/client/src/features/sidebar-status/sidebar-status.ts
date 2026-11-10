@@ -11,6 +11,7 @@ import type manifest from './sidebar-status.manifest'
 /** Repaint the native indicator at the end the reader picked; the host remains its state owner (D43). */
 export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const schedule = () => ui.schedule?.()
+  const observedAttributes = new Set([SESSION_PHASE_ATTRIBUTE, WORKSPACE_ROW_EXPANDED_ATTRIBUTE, PART_ATTR, 'hidden', 'aria-hidden', 'contenteditable', 'style', 'class'])
   const rows = observeMatches<HTMLElement>(`${SIDEBAR_SLOT_SELECTOR} [data-dsh-claude-part~="session-row"]`, schedule)
   const groupRows = observeMatches<HTMLElement>(`${SIDEBAR_SLOT_SELECTOR} ${WORKSPACE_ROW_SELECTOR}`, schedule)
   const groups = new WorkspaceGroupStatus(ctx, () => groupRows.all(), schedule)
@@ -26,9 +27,14 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       stopWatch?.()
       watchedRoot = root
       stopWatch = root === null ? null : subscribeMutations(root, {
-        childList: true, characterData: true, subtree: true,
-        attributeFilter: [SESSION_PHASE_ATTRIBUTE, WORKSPACE_ROW_EXPANDED_ATTRIBUTE, PART_ATTR, 'hidden', 'aria-hidden', 'contenteditable', 'style', 'class'],
-      }, schedule)
+        childList: true, characterData: true, subtree: true, attributes: true,
+      }, records => {
+        // A plugin's own title attributes can switch generated content on or off.
+        // Keep one root watch (D40); unrelated row attributes need no title read.
+        if (records.some(record => record.type !== 'attributes'
+          || observedAttributes.has(record.attributeName ?? '')
+          || record.target instanceof Element && record.target.getAttribute(PART_ATTR)?.split(/\s+/).includes('row-title'))) schedule()
+      })
     }
     present = new Set(rows.all())
     for (const row of present) {
