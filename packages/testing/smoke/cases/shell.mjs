@@ -196,6 +196,9 @@ export default {
       before.width < long.width && short.width < long.width && again.width === long.width &&
         long.max === again.max && parseFloat(long.max) > long.width,
       JSON.stringify(names))
+    check('the cluster beside the title follows a name that grew back in the same pass, one air gap off the title\'s own end',
+      long.presetX === long.right + b.air && short.presetX === short.right + b.air && again.presetX === again.right + b.air,
+      JSON.stringify(names))
     const panelClosed = b.panelClosed || {}
     check('the right panel\'s collapse control is the skin\'s own, drawn in the header\'s row: it shows while the panel is open and hides with the panel, and the panel\'s own copy stays where the host drew it',
       laid.closeInline === 'inline-flex' && laid.closeShown !== 'none' &&
@@ -212,6 +215,15 @@ export default {
         tight.marks.utilities === false && tight.marks.corner === false &&
         tight.row.y === (off.row || {}).y && tight.title.y > b.band && tight.utilities.y > b.band,
       JSON.stringify({ tight: tight, off: off.row }))
+    const crowded = b.crowded || {}
+    const relaxed = b.relaxed || {}
+    check('a cluster too wide for the place beside the title keeps the header\'s row, and the title is handed that row\'s whole run',
+      crowded.marks.band === 'title actions' && crowded.marks.title === true && crowded.marks.trail === false &&
+        (crowded.preset.right - crowded.preset.x) > 120 && parseFloat(crowded.titleMax) > crowded.preset.right - crowded.preset.x,
+      JSON.stringify(crowded))
+    check('a step of room buys the cluster its place beside the title again, one air gap off the title\'s own end',
+      relaxed.marks.trail === true && relaxed.preset.x === relaxed.title.right + b.air,
+      JSON.stringify(relaxed))
     const back = b.back || {}
     check('switching the feature off hands the row back whole — the strip the other feature placed stays, and the cluster\'s own fade with it — and switching it on places both sides again',
       off.marks.band === null && off.marks.title === false && off.marks.trail === false && off.marks.utilities === false && off.marks.corner === false &&

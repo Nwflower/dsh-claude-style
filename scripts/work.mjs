@@ -560,6 +560,16 @@ function commandPath(args) {
   console.log(dir)
 }
 
+/** Prints the files an order declares, which is the list a commit stages by hand. */
+function commandPaths(args) {
+  const { positional } = flagsOf(args)
+  const order = orderById(positional[0])
+  if (order.meta.paths.length === 0) {
+    throw new Error(`work: ${order.meta.id} declares no paths; add them with a new order or record them in work.md`)
+  }
+  for (const file of order.meta.paths) console.log(file)
+}
+
 function commandCheck(args) {
   const quiet = flagsOf(args).flags.quiet === true
   const result = checkWorkOrders()
@@ -622,6 +632,7 @@ function help() {
   check [--quiet]
   close <id> [--force]
   path <id> [tmp|refs|shots]     print an order directory's absolute path
+  paths <id>                     print the files the order owns, the list a commit stages
   gc [--yes]                     also collect expired .debug/tmp sessions
 
 A work order is deleted by close; measurements live in its work.md until then.`)
@@ -639,6 +650,7 @@ function main() {
     case 'check': return commandCheck(args)
     case 'close': return commandClose(args)
     case 'path': return commandPath(args)
+    case 'paths': return commandPaths(args)
     case 'gc': return commandGc(args)
     default:
       help()

@@ -1,5 +1,5 @@
 import { CHAT_FOLLOW_ATTR, FOLLOW_HOLD_ATTR, READER_HOLD_ATTR } from '../../constants'
-import { observeMatches, observeSize, subscribeMutations } from '@dsh-claude-style/engine/bus'
+import { observeMarker, observeMatches, observeSize, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { motionReduced } from '../../core/prefs'
 import { createChatProcessFollow } from './process-follow'
@@ -206,10 +206,11 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
   /**
    * Whether content is arriving right now: the mark the host writes while it
    * streams. It rides the newest block — the answer the flow is writing — so
-   * the query starts from the end of the column: only a page whose mark stands
-   * somewhere else pays for the whole transcript, and that is not the batch a
-   * stream produces.
+   * the query starts from the end of the column; a mark standing anywhere else
+   * is read off the bus's registry, which hears the attribute arrive, so the
+   * transcript is never walked for it.
    */
+  const runningMarks = observeMarker<HTMLElement>(FOLLOW_RUNNING_SELECTOR)
   const streaming = () => {
     const column = conversationColumn()
     if (column === null) return false
@@ -217,7 +218,7 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
     for (let at = 0; at < 3 && block !== null; at += 1, block = block.previousElementSibling) {
       if (block.querySelector(FOLLOW_RUNNING_SELECTOR) !== null) return true
     }
-    return column.querySelector(FOLLOW_RUNNING_SELECTOR) !== null
+    return runningMarks.all().some((mark) => column.contains(mark))
   }
 
   /**
@@ -608,6 +609,7 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
     stopSlide()
     releaseHold()
     runningRows.release()
+    runningMarks.release()
     slideColumn = null
     leaveOwner()
   }

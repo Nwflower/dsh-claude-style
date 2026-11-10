@@ -33,12 +33,17 @@ export function createMessageFold(requestPass: () => void) {
   const bubbles = new WeakMap<Element, HTMLElement>()
   /** Whether a bubble's content is taller than the cap; absent until it has been read. */
   let decided = new WeakMap<Element, boolean>()
+  /** The bubbles this batch touched: a pass reads and writes only these. */
+  const touched = new Set<HTMLElement>()
+  /** Whether the whole column has to be read again (a change of copy or of the reading width). */
+  let sweep = true
   /** The reading width the last pass was taken at; -1 until one is taken. */
   let measuredWidth = -1
 
   /** Forget every height read and ask for a pass: a change of copy re-wraps the words. */
   function invalidate() {
     decided = new WeakMap()
+    sweep = true
     requestPass()
   }
 
@@ -97,6 +102,7 @@ export function createMessageFold(requestPass: () => void) {
     if (sizes.has(bubble)) return
     sizes.set(bubble, observeSize(bubble, () => {
       decided.delete(bubble)
+      touched.add(bubble)
       requestPass()
     }))
   }
@@ -190,20 +196,41 @@ export function createMessageFold(requestPass: () => void) {
     apply(bubble)
   }
 
-  /** Read every bubble the fold has no answer for (the pass's read phase, D40). */
+  /**
+   * Read every bubble this batch brought or a size change re-opened (the pass's
+   * read phase, D40). A whole column is read again only when the copy or the
+   * reading width moved, which is what `invalidate` asks for.
+   */
   function measure() {
-    for (const row of rows.all()) {
-      const bubble = bubbleOf(row)
-      if (bubble !== null) decide(bubble)
+    if (sweep) {
+      for (const row of rows.all()) {
+        const bubble = bubbleOf(row)
+        if (bubble !== null) decide(bubble)
+      }
+      return
     }
+    for (const bubble of touched) if (bubble.isConnected) decide(bubble)
   }
 
-  /** Use bubbles cached in the read phase; querying here would force style recalculation (D40). */
+  /** Write the bubbles the read phase decided; querying here would force style recalculation (D40). */
   function sync() {
-    for (const row of rows.all()) {
-      const bubble = bubbles.get(row)
-      if (bubble !== undefined && bubble.isConnected) apply(bubble)
+    if (sweep) {
+      for (const row of rows.all()) {
+        const bubble = bubbles.get(row)
+        if (bubble !== undefined && bubble.isConnected) apply(bubble)
+      }
+      sweep = false
+      touched.clear()
+      return
     }
+    for (const bubble of touched) if (bubble.isConnected) apply(bubble)
+    touched.clear()
+  }
+
+  /** Mark the bubble of one row the batch mounted, or of the row a bubble landed in. */
+  function touch(row: Element) {
+    const bubble = bubbleOf(row)
+    if (bubble !== null) touched.add(bubble)
   }
 
   /* This observer is installed before send-flight's, so the echo is clamped before flight measures it. */
@@ -213,6 +240,11 @@ export function createMessageFold(requestPass: () => void) {
         if (!(node instanceof Element)) continue
         if (node.matches(SUBMISSION_ECHO_SELECTOR)) settleRow(node)
         for (const echo of node.querySelectorAll(SUBMISSION_ECHO_SELECTOR)) settleRow(echo)
+        // The row a batch mounts, the rows a mounted subtree carries, and the
+        // row a bubble landed in: the pass after it reads those alone.
+        const row = node.matches(CHAT_ROW_SELECTOR) ? node : node.closest(CHAT_ROW_SELECTOR)
+        if (row !== null) touch(row)
+        for (const mounted of node.querySelectorAll(CHAT_ROW_SELECTOR)) touch(mounted)
       }
     }
   })

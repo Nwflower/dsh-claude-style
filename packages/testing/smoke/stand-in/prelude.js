@@ -5,6 +5,8 @@
  * window.__dshSmokeHost and nothing else.
  */
 (function () {
+  // The bundle exposes its pass entry only on a page carrying this marker.
+  window.__dshStandIn = true
   var CASE = window.SMOKE_CASE
   var MARKUP = window.SMOKE_MARKUP
   window.__dshSmokeHost = { CASE: CASE, MARKUP: MARKUP }

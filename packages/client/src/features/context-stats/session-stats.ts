@@ -1,4 +1,4 @@
-import { conversationSessionId, findConversationSession, hostSessions } from '@dsh-claude-style/engine/host'
+import { conversationSessionId, findConversationSession, hostSessions, observeSession } from '@dsh-claude-style/engine/host'
 import { hostChatSeat } from '../../core/i18n'
 import { prefsFromForm, readPrefs } from '../../core/prefs'
 import { peerPresent } from '../../shared/peer-plugin'
@@ -189,6 +189,12 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
   const block = createStatsBlock(reading, chatText, currency)
   const inline = createInlineStats(reading, chatText, findContextMeter, currency)
   const binding = createContextStatsBinding(() => ring()?.root() ?? null)
+  /**
+   * A session switch is one broadcast (D91): what the old transcript's meter,
+   * line and panel carried is released in the batch the switch is heard in,
+   * rather than at the next binding pass.
+   */
+  const stopSessionWatch = observeSession(() => { binding.onSessionSwitch() })
 
   /**
    * A settled total landed, so the figures on screen were priced from the
@@ -435,6 +441,7 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
       releaseCardWatch()
       releaseDialogWatch()
       // Everything this generation bound on the host's meter, line and panel.
+      stopSessionWatch()
       binding.release()
       inline.clear()
       // A running count would write the block back after the nodes come off.

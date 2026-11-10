@@ -25,7 +25,6 @@ interface Window {
 
 /** Additions this skin puts on the global scope. */
 declare var __dshStepDisplay: { set: (mode: 'compact' | 'standard' | 'detailed' | 'verbose') => Promise<boolean>, read: () => string } | undefined
-
 /** Binding tokens distinguish this generation's nodes from stale ones. */
 interface Element {
   /** The context meter, panel and line of numbers bound by this generation (features/context-stats). */

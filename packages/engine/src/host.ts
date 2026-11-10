@@ -283,6 +283,34 @@ export function conversationSessionId(host: Element | null | undefined) {
   return typeof id === 'string' ? id : null
 }
 
+/** The id of the session the page shows, or null while none is chosen (D91). */
+export function conversationSession(): string | null {
+  return conversationSessionId(findConversationSession())
+}
+
+/**
+ * Hear each session the page switches to, once per change (D91). The host names
+ * the shown session on the conversation column; that id changing is the one
+ * signal every per-session state can be released by. Reads ride the bus (D40),
+ * so no second observer is made for it.
+ *
+ * @returns unsubscribe.
+ */
+export function observeSession(onChange: (sessionId: string | null) => void): () => void {
+  let last = conversationSession()
+  return subscribeMutations(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: [PHASE_ATTRIBUTE, CONVERSATION_SESSION_ATTRIBUTE],
+  }, () => {
+    const next = conversationSession()
+    if (next === last) return
+    last = next
+    onChange(next)
+  })
+}
+
 /** The saved view last parsed, with the raw string it was parsed from: the composer's pass reads it every frame and the store moves only on a view switch. */
 let savedView: { raw: string, view: string | null } | null = null
 

@@ -1,5 +1,5 @@
 import { FLOW_KIND_ATTRIBUTE, STREAMING_SELECTOR } from '@dsh-claude-style/contracts/dom'
-import { observeMatches, observeSize, subscribeMutations } from '@dsh-claude-style/engine/bus'
+import { batchAdditions, observeMatches, observeSize, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { conversationScroller } from '@dsh-claude-style/engine/chat-dom'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { INTERFACE_FONT_SIZE_ATTR } from '../../constants'
@@ -194,17 +194,14 @@ export function install() {
    */
   const onArrivals = (records: MutationRecord[]) => {
     let added = false
-    for (const record of records) {
-      for (const node of record.addedNodes) {
-        if (!(node instanceof Element)) continue
-        if (node.matches(ROW_SELECTOR)) {
-          waiting.add(node as HTMLElement)
-          added = true
-        }
-        for (const row of node.querySelectorAll<HTMLElement>(ROW_SELECTOR)) {
-          waiting.add(row)
-          added = true
-        }
+    for (const node of batchAdditions(records).added) {
+      if (node.matches(ROW_SELECTOR)) {
+        waiting.add(node as HTMLElement)
+        added = true
+      }
+      for (const row of node.querySelectorAll<HTMLElement>(ROW_SELECTOR)) {
+        waiting.add(row)
+        added = true
       }
     }
     followWidth()
@@ -220,12 +217,9 @@ export function install() {
   const onCachedArrivals = (records: MutationRecord[]) => {
     if (heights.size === 0) return
     syncSignature()
-    for (const record of records) {
-      for (const node of record.addedNodes) {
-        if (!(node instanceof Element)) continue
-        if (node.matches(ROW_SELECTOR)) applyCached(node as HTMLElement)
-        for (const row of node.querySelectorAll<HTMLElement>(ROW_SELECTOR)) applyCached(row)
-      }
+    for (const node of batchAdditions(records).added) {
+      if (node.matches(ROW_SELECTOR)) applyCached(node as HTMLElement)
+      for (const row of node.querySelectorAll<HTMLElement>(ROW_SELECTOR)) applyCached(row)
     }
   }
 

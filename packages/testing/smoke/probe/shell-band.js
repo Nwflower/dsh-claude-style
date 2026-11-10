@@ -203,6 +203,23 @@
       await sleep(250)
       r.band.tight = { marks: marks(), title: box(title), utilities: box(utilities), corner: box(corner), row: box(row) }
       seat.remove()
+      // A cluster the place beside the title cannot hold keeps the row, and the
+      // title takes the row's whole run; a step of room buys the cluster its
+      // place back. A width change alone wakes no pass, so a node goes in and
+      // out of the row to ask for one.
+      var nudge = function () {
+        var mark = document.createElement('i')
+        row.appendChild(mark)
+        mark.remove()
+      }
+      actions.style.width = '500px'
+      nudge()
+      await sleep(250)
+      r.band.crowded = { marks: marks(), title: box(title), preset: box(actions), titleMax: title.style.getPropertyValue('--dsh-header-band-max') }
+      actions.style.width = '60px'
+      nudge()
+      await sleep(250)
+      r.band.relaxed = { marks: marks(), title: box(title), preset: box(actions), titleMax: title.style.getPropertyValue('--dsh-header-band-max') }
       // The switch hands the row back on its own, with the strip left in place,
       // and the placement comes back when it is switched on again.
       window.__pushForm({ headerBand: false })
@@ -220,7 +237,12 @@
       var LONG = 'A session name longer than the one before it'
       var readName = function () {
         var b = box(title)
-        return { width: Math.round(b.right - b.x), max: title.style.getPropertyValue('--dsh-header-band-max') }
+        return {
+          width: Math.round(b.right - b.x),
+          right: b.right,
+          max: title.style.getPropertyValue('--dsh-header-band-max'),
+          presetX: Math.round(actions.getBoundingClientRect().x),
+        }
       }
       var nameBefore = readName()
       title.textContent = LONG

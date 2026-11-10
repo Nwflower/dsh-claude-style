@@ -1,5 +1,5 @@
 import { CHAT_CALL_SELECTOR, CHAT_CALL_TOOL_ATTRIBUTE, CHAT_CALL_TOOL_SELECTOR, CONVERSATION_SCROLL_SELECTOR, STREAMING_SELECTOR } from '@dsh-claude-style/contracts/dom'
-import { subscribeMutations } from '@dsh-claude-style/engine/bus'
+import { batchAdditions, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { findConversationScroller } from '@dsh-claude-style/engine/host'
 import { callTokens } from './call-tokens'
 import { estimateScale, recordSettlement } from './estimate-scale'
@@ -120,18 +120,14 @@ export function createStreamEstimate() {
    * @param records - this batch's records.
    */
   function noteStructure(records: MutationRecord[]) {
-    for (const record of records) {
-      if (record.type !== 'childList' || record.addedNodes.length === 0) continue
-      for (const node of record.addedNodes) {
-        if (!(node instanceof Element)) continue
-        const carries = node.matches(CHAT_CALL_SELECTOR) || node.querySelector(CHAT_CALL_SELECTOR) !== null
-        if (!carries) continue
-        if (node.matches(CONVERSATION_SCROLL_SELECTOR)) noteRows(node, node)
-        else {
-          const column = conversationOf(node)
-          if (column !== null) noteRows(column, node)
-          else batchNodes.push(node)
-        }
+    for (const node of batchAdditions(records).added) {
+      const carries = node.matches(CHAT_CALL_SELECTOR) || node.querySelector(CHAT_CALL_SELECTOR) !== null
+      if (!carries) continue
+      if (node.matches(CONVERSATION_SCROLL_SELECTOR)) noteRows(node, node)
+      else {
+        const column = conversationOf(node)
+        if (column !== null) noteRows(column, node)
+        else batchNodes.push(node)
       }
     }
   }
@@ -292,7 +288,7 @@ export function createStreamEstimate() {
       watching = subscribeMutations(document.body, { childList: true, subtree: true }, (records) => {
         if (token !== watchingToken) return
         batches += 1
-        for (const record of records) markStreaming(record.addedNodes)
+        markStreaming(batchAdditions(records).added)
         noteStructure(records)
       })
     },

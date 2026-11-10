@@ -63,10 +63,15 @@ host.attributes = (id) => {
   })
 }
 
-/** Declare one spec: its stand-in page, the viewport bands it is judged at (`wide` unless named), and its tests as name and body. */
+/**
+ * Declare one spec: its stand-in page, the viewport bands it is judged at (`wide`
+ * unless named), and its tests as name and body. A test declared `frames` is
+ * judged against the clock — animation progress, a frame's quiet time — so a
+ * parallel run that fails it re-judges it alone before calling it a failure.
+ */
 function spec(options, define) {
   const tests = []
-  define({ test: (name, body) => tests.push({ name, body }) })
+  define({ test: (name, body, flags) => tests.push({ name, body, frames: flags?.frames === true }) })
   return { page: options.page, bands: options.bands ?? ['wide'], densities: options.densities ?? [1], tests }
 }
 

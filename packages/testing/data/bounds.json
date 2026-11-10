@@ -17,6 +17,21 @@
       "reason": "The lookup counter counts every whole-document query the page makes, the host's own included, and how many of those a turn issues moves with how the host re-renders the growing answer: readings for the same tree have come in near 1.4 and near 4.9 times between the two rounds. The factor is therefore looser than the one for the time readings, while a lookup per element — the regression this counts for — still runs far past it."
     },
     {
+      "name": "longSessionSwitchNodeRatio",
+      "value": 1.2,
+      "reason": "How much the page's node count may grow from the first return to a long transcript to the last of several: each return redraws the same transcript, so a mount that keeps what it replaced — one leaked transcript per round — leaves the page several times its size. The slack covers what the host's own re-render adds between rounds."
+    },
+    {
+      "name": "longSessionMountLongTaskMs",
+      "value": 1500,
+      "reason": "What switching back to a long transcript may cost in long tasks: the mount draws the whole transcript in the host's batches, and D90's kept heights already skip most of the layout. The bound leaves room for a loaded machine while a mount that begins to lay every row out again passes it, and the round is read apart from the streaming one."
+    },
+    {
+      "name": "longSessionColumnQuerySlack",
+      "value": 2.5,
+      "reason": "The same slack as the whole-document counter, for the lookups taken on the conversation column or inside it. The count follows the rows a batch mounts, so its growth tracks the rows' ratio with the same host-driven spread; the checks above it are what a lookup per row trips."
+    },
+    {
       "name": "longSessionGrowthFloorMs",
       "value": 120,
       "reason": "The short round's p95 frame sits near the frame budget on a fast runner, so the p95 ratio is compared against a floor in milliseconds as well as the factor; without it the comparison divides by a number too small to mean anything."

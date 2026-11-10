@@ -149,11 +149,18 @@ function bodyChildListOnly(subscription: MutationSubscription) {
 }
 
 function selectedRecords(subscription: MutationSubscription, records: MutationRecord[]) {
-  if (!bodyChildListOnly(subscription)) return records.filter(record => selects(subscription, record))
+  if (!bodyChildListOnly(subscription)) {
+    const selected = records.filter(record => selects(subscription, record))
+    // One batch answers every subscriber with the same additions, so a feature
+    // reading them (batchAdditions) does not walk the records a second time.
+    additionsByBatch.set(selected, additionsOf(records))
+    return selected
+  }
   const known = bodyChildListSelections.get(records)
   if (known !== undefined) return known
   const selected = records.filter(record => selects(subscription, record))
   bodyChildListSelections.set(records, selected)
+  additionsByBatch.set(selected, additionsOf(records))
   return selected
 }
 
@@ -345,6 +352,17 @@ function additionsOf(records: MutationRecord[]): BatchAdditions {
   return summary
 }
 
+/**
+ * The elements one batch added, its position and whether anything left (D40).
+ * Every subscriber of the batch reads the same object: the additions are walked
+ * once for the registries, and a feature asking here does not walk the records
+ * again. Read it in the callback the records arrived in — the set describes that
+ * batch alone.
+ */
+export function batchAdditions(records: MutationRecord[]): BatchAdditions {
+  return additionsOf(records)
+}
+
 function registryFor(selector: string): MatchRegistry {
   const kept = matchRegistries.get(selector)
   if (kept !== undefined) {
@@ -464,6 +482,70 @@ export function observeMatches<T extends Element>(selector: string, onChange?: (
       if (registry.readers > 0) return
       registry.stop()
       matchRegistries.delete(selector)
+    },
+  }
+}
+
+/**
+ * The attribute names a selector's matching turns on, so the marker's
+ * subscription watches those and nothing else. A marker with neither an
+ * attribute nor a class has no arrival to hear and is refused here.
+ */
+function markerAttributes(selector: string): string[] {
+  const names = new Set<string>()
+  for (const match of selector.matchAll(/\[\s*([\w-]+)/g)) names.add(match[1])
+  if (/(^|[\s,>+~])\./.test(selector)) names.add('class')
+  if (names.size === 0) throw new Error(`observeMarker: "${selector}" names no attribute or class, so no arrival can be watched`)
+  return [...names]
+}
+
+/** The elements a marker sits on, kept current as the marker arrives and leaves (D40). */
+export interface MarkerList<T extends Element> {
+  all(): readonly T[]
+  release(): void
+}
+
+/**
+ * Read the elements carrying one marker — an attribute or a class the host adds
+ * to nodes already standing (D40). The shared match registry follows child
+ * lists alone, so a marker that arrives by attribute is missed there; this
+ * subscription watches the attribute names the selector reads and answers with
+ * the elements carrying it, sorted by nothing the caller may depend on.
+ */
+export function observeMarker<T extends Element>(selector: string): MarkerList<T> {
+  const matches = new Set<Element>(document.querySelectorAll(selector))
+  const stop = subscribeMutations(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: markerAttributes(selector),
+  }, records => {
+    for (const record of records) {
+      if (record.type === 'attributes') {
+        const target = record.target
+        if (!(target instanceof Element)) continue
+        if (target.matches(selector)) matches.add(target)
+        else matches.delete(target)
+        continue
+      }
+      // A removal drops the node now; what stood under it is dropped by the read
+      // below, which keeps a subtree taken away from holding the transcript.
+      for (const node of record.removedNodes) if (node instanceof Element) matches.delete(node)
+      for (const node of record.addedNodes) {
+        if (!(node instanceof Element)) continue
+        if (node.matches(selector)) matches.add(node)
+        for (const found of node.querySelectorAll(selector)) matches.add(found)
+      }
+    }
+  })
+  return {
+    all() {
+      for (const element of matches) if (!element.isConnected) matches.delete(element)
+      return [...matches] as T[]
+    },
+    release() {
+      stop()
+      matches.clear()
     },
   }
 }

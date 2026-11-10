@@ -2,6 +2,7 @@
  * The production entry never imports this module.
  */
 
+export { switchedOff } from './core/switches'
 export { resolveMascot } from './core/prefs'
 export { accentInk, cssString } from './features/brand/brand'
 export { createFooterMirror } from './features/account/footer-mirror'
@@ -33,6 +34,8 @@ export { CACHE_HIT_STOPS, CONTEXT_STOPS, RAMP_SPAN_HIGH, RAMP_SPAN_LOW, rampPosi
 export { textTokens } from './features/context-stats/text-tokens'
 export { effortSteps, effortTint, isRankedEffort, orderEffortIds } from './features/effort/ladder'
 export type { EffortLadder, EffortStep } from './features/effort/ladder'
+export { placeCaptionRow } from './features/header-band/placement'
+export type { CaptionInputs, CaptionPlacement } from './features/header-band/placement'
 export { HEAT_CELL_SELECTOR, HEAT_HINT_CLASS, HEAT_HINT_SHOWN_ATTR, HEAT_HINT_SIDE_ATTR, HEAT_HINT_TEXT_CLASS, HEAT_TIP_ATTR, HEAT_TIP_GAP, hideHeatTip, placeHeatTip, showHeatTip } from './features/home/heat-tip'
 export type { HeatTipPlacement } from './features/home/heat-tip'
 export { HOME_CHART_LABEL_GAP, homeChartTicks } from './features/home/chart-axis'

@@ -428,6 +428,16 @@ export function createContextStatsBinding(ring: () => HTMLElement | null) {
     /** Stop watching the panel's size. */
     releaseSize: releasePanelSize,
     /**
+     * The page switched sessions (D91): the meter, the line and the panel under
+     * the old conversation are released here, in the batch the switch is heard
+     * in, rather than at the next binding pass. A binding left holding one of
+     * those nodes holds the transcript it stands in.
+     */
+    onSessionSwitch() {
+      forgetDetachedBindings()
+      releasePanelSize()
+    },
+    /**
      * The generation's whole binding goes: the hover timers, the size watcher
      * and every listener put on the host's own meter, line and panel. Those
      * nodes outlive the generation, so what is not taken off here would answer

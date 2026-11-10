@@ -95,5 +95,5 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
     t.expectThat.equal(settled, 130, "the figure is the host's settled total on the next frame")
     t.expectThat.equal(readAt - pushedAt < 800, true, 'the correction lands inside the window')
     t.expectThat.equal(readAt - at >= 0, true, 'the reading answers after the baseline')
-  })
+  }, { frames: true })
 })

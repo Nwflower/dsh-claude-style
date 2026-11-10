@@ -11,7 +11,7 @@
  * @risk A feature misses the host's change and the page stops following the conversation, or reacts to its own writes in a loop that never lets the page idle.
  */
 import { afterEach, expect, test } from 'vitest'
-import { observeMatches, observeSize, subscribeMutations } from '@dsh-claude-style/engine/bus'
+import { batchAdditions, observeMarker, observeMatches, observeSize, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { QUIET_ATTR } from '../../fixtures/vocabulary'
 
 /** The attribute these specs match on; the registry is told the selector. */
@@ -389,4 +389,79 @@ test('a registry listener hears the batch that removes a match, with nothing arr
   await settle()
   expect(heard).toHaveLength(1)
   expect(heard[0]).toEqual([])
+})
+
+test('a marker registry follows an attribute that arrives on a node already standing', async () => {
+  const root = host()
+  const row = document.createElement('div')
+  root.append(row)
+  const markers = observeMarker(`[${PROBE}]`)
+  cleanups.push(() => markers.release())
+  expect(markers.all()).toEqual([])
+  row.setAttribute(PROBE, '')
+  await settle()
+  expect(markers.all()).toEqual([row])
+  row.removeAttribute(PROBE)
+  await settle()
+  expect(markers.all()).toEqual([])
+  row.setAttribute(PROBE, '')
+  await settle()
+  expect(markers.all()).toEqual([row])
+})
+
+test('a marker registry takes up what a batch mounts and drops what leaves with it', async () => {
+  const root = host()
+  const markers = observeMarker(`[${PROBE}]`)
+  cleanups.push(() => markers.release())
+  const box = document.createElement('section')
+  const inside = probed('i')
+  box.append(inside)
+  root.append(box)
+  await settle()
+  expect(markers.all()).toEqual([inside])
+  box.remove()
+  await settle()
+  expect(markers.all()).toEqual([])
+})
+
+test('a class marker follows the class list', async () => {
+  const root = host()
+  const card = document.createElement('div')
+  root.append(card)
+  const markers = observeMarker('.test-marker')
+  cleanups.push(() => markers.release())
+  card.classList.add('test-marker')
+  await settle()
+  expect(markers.all()).toEqual([card])
+  card.classList.remove('test-marker')
+  await settle()
+  expect(markers.all()).toEqual([])
+})
+
+test('a released marker registry stops answering', async () => {
+  const root = host()
+  const markers = observeMarker(`[${PROBE}]`)
+  root.append(probed('u'))
+  await settle()
+  expect(markers.all()).toHaveLength(1)
+  markers.release()
+  root.append(probed('v'))
+  await settle()
+  expect(markers.all()).toEqual([])
+})
+
+test('one batch answers every subscriber with the same additions', async () => {
+  const root = host()
+  const seen: unknown[] = []
+  cleanups.push(subscribeMutations(root, { childList: true }, (records) => seen.push(batchAdditions(records))))
+  cleanups.push(subscribeMutations(root, { childList: true, subtree: true }, (records) => seen.push(batchAdditions(records))))
+  const node = document.createElement('section')
+  const inside = document.createElement('i')
+  node.append(inside)
+  root.append(node)
+  await settle()
+  expect(seen).toHaveLength(2)
+  // The same object, derived once: a feature reading it does not walk the batch.
+  expect(seen[0]).toBe(seen[1])
+  expect((seen[0] as { added: Element[] }).added).toEqual([node])
 })

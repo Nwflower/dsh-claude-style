@@ -19,6 +19,7 @@
     "agents": "node scripts/agents-commands.mjs",
     "agents:check": "node scripts/agents-commands.mjs --check",
     "lint": "node scripts/lint.mjs",
+    "element-collections": "node packages/testing/element-collections.mjs",
     "probe": "node packages/testing/probe.mjs",
     "smoke": "node packages/testing/smoke.mjs",
     "behaviour": "node packages/testing/behaviour.mjs",

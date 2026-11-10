@@ -18,6 +18,7 @@
  * @risk Once a conversation is showing, the composer stops following the window's bottom edge and stands in the middle of the transcript, with the rows running past it; a session switch paints the composer in the host's own look for a frame, and a question card is drawn in the host's own box instead of the skin's.
  */
 import { spec, host, surface } from '../../fixtures/behaviour.mjs'
+import { mountQuestion, unmountQuestion } from '../../fixtures/question-card.mjs'
 
 const SEAT = host('composer.seat')
 const COLUMN = host('chat.flow')
@@ -34,23 +35,46 @@ const HINT_ATTR = host.attribute('composer.placeholder')
 const SCROLLER_ATTR = host.attribute('chat.scroller')
 /** The variant the composer pass writes on a card. */
 const VARIANT = host('composer.variant')
-/** The host's question card, the option row in it and the reply that settles it. */
-const QUESTION_ATTR = host.attribute('composer.question-card')
+/** The host's question card's option row, read where the fixture mounted it. */
 const OPTION_ATTR = host.attribute('composer.question-option')
-const REPLY_ATTR = host.attribute('chat.question-reply')
 const CONTENT = host('chat.content')
-const FLOW_SLOT_ATTR = host.attribute('chat.flow-slot')
-const FALLBACK_ATTR = host('composer.fallback-panel')
-const QUESTION_BODY_ATTR = host.attribute('composer.question-body')
 const CUSTOM_LABEL = surface('question-card.label')
 const FLOW_ITEM = surface('question-card.flow-item')
 const QUESTION_SURFACE_ATTR = surface.attribute('question-card.surface')
 const CUSTOM_ACTIVE_ATTR = surface.attribute('question-card.custom-active')
+/** The selection blue the chosen radio's ring and the custom field's ring are painted with. */
 const SELECTION_PROPERTY = surface.property('question-card.selection')
 const SUBMIT_SHORTCUT = surface('question-card.submit-shortcut')
 
 /** The canvas the seat paints its bar with, in the Claude palette. */
 const CANVAS = 'rgb(255, 255, 255)'
+/** The shell's mark for the dark theme, which the skin's dark tokens hang off. */
+const DARK_ATTR = host('shell.dark-theme')
+
+/** Paint the page in the dark theme, or take it back to the light one. */
+function setDark(page, on) {
+  return page.evaluate(([attribute, enabled]) => {
+    document.body.toggleAttribute(attribute, enabled)
+  }, [DARK_ATTR, on])
+}
+
+/** The chosen option's radio as the page paints it, with the selection blue read beside it. */
+function readRadioMark(page) {
+  return page.evaluate(() => {
+    const { mark, probe } = window.__debugQuestion
+    const paint = getComputedStyle
+    return {
+      display: paint(mark).display,
+      width: paint(mark).width,
+      height: paint(mark).height,
+      ring: paint(mark).borderTopColor,
+      ringWidth: paint(mark).borderTopWidth,
+      background: paint(mark).backgroundColor,
+      centre: paint(mark).backgroundImage,
+      selectionBlue: paint(probe).backgroundColor,
+    }
+  })
+}
 
 /**
  * The host's shape around a composer: a phase root, its scroll body, the view
@@ -192,106 +216,6 @@ function mountLargeBatch(t) {
   }, [CARD_ATTR, INPUT_ATTR, HINT_ATTR, SCROLLER_ATTR, VARIANT, CARD, PART])
 }
 
-/**
- * The host's question card, as it mounts it: the question, an option row with
- * the button the reader picks, and the settled reply with the question above
- * the answer.
- */
-function mountQuestion(t) {
-  return t.page.evaluate(([questionAttr, optionAttr, replyAttr, contentSelector, flowAttr, fallbackAttr, seatSelector, scrollerAttr, columnSelector, questionBodyAttr, selectionProperty]) => {
-    const name = (selector) => selector.slice(1, -1)
-    const content = document.createElement('div')
-    content.setAttribute(name(contentSelector), '')
-    const scroller = document.createElement('div')
-    scroller.setAttribute(scrollerAttr, '')
-    const column = document.createElement('div')
-    column.setAttribute(name(columnSelector), '')
-    // The host's column: a flex column narrower than the composer card, which
-    // stands its side clearance wider on either side.
-    column.style.cssText = 'display:flex;flex-direction:column;width:600px;margin-left:40px;--dsh-composer-card-max-width:632px;--dsh-composer-side-clearance:16px'
-    const flow = document.createElement('div')
-    flow.setAttribute(flowAttr, 'conversation.chat.flow')
-    column.append(flow)
-    const seat = document.createElement('div')
-    seat.setAttribute(name(seatSelector), '')
-    const chain = document.createElement('div')
-    const fallback = document.createElement('div')
-    fallback.setAttribute(fallbackAttr, 'conversation.composer')
-    fallback.style.display = 'none'
-    const card = document.createElement('div')
-    card.setAttribute(questionAttr, '')
-    const section = document.createElement('section')
-    const body = document.createElement('div')
-    body.setAttribute(questionBodyAttr, '')
-    const titleBox = document.createElement('div')
-    const title = document.createElement('h2')
-    title.textContent = 'Which one?'
-    titleBox.append(title)
-    const options = document.createElement('div')
-    options.setAttribute('role', 'radiogroup')
-    const row = document.createElement('div')
-    row.setAttribute(optionAttr, '')
-    const button = document.createElement('button')
-    button.setAttribute('role', 'radio')
-    button.setAttribute('aria-checked', 'true')
-    const mark = document.createElement('span')
-    mark.textContent = '1'
-    const copy = document.createElement('span')
-    const line = document.createElement('span')
-    const label = document.createElement('span')
-    label.textContent = 'The first'
-    const badge = document.createElement('span')
-    badge.textContent = 'Recommended'
-    line.append(label, badge)
-    copy.append(line)
-    button.append(mark, copy)
-    row.append(button)
-    const custom = document.createElement('div')
-    const customMark = document.createElement('span')
-    const field = document.createElement('div')
-    const textarea = document.createElement('textarea')
-    textarea.placeholder = 'Type your answer'
-    field.append(textarea)
-    custom.append(customMark, field)
-    options.append(row, custom)
-    body.append(titleBox, options)
-    const footer = document.createElement('footer')
-    const footerActions = document.createElement('div')
-    footerActions.append(document.createElement('button'), document.createElement('button'))
-    footer.append(footerActions)
-    section.append(body, footer)
-    card.append(section)
-    chain.append(fallback, card)
-    seat.append(chain)
-    scroller.append(column, seat)
-    content.append(scroller)
-    const reply = document.createElement('div')
-    reply.setAttribute(replyAttr, '')
-    const list = document.createElement('dl')
-    const term = document.createElement('dt')
-    term.textContent = 'Which one?'
-    const answer = document.createElement('dd')
-    answer.textContent = 'The first'
-    list.append(term, answer)
-    reply.append(list)
-    // The selection blue is read off a probe painted by the same token.
-    const probe = document.createElement('span')
-    probe.style.background = `var(${selectionProperty})`
-    document.body.append(content, reply, probe)
-    window.__debugQuestion = { card, section, title, column, row, mark, badge, term, answer, content, reply, probe, fallbackAttr }
-  }, [QUESTION_ATTR, OPTION_ATTR, REPLY_ATTR, CONTENT, FLOW_SLOT_ATTR, FALLBACK_ATTR, SEAT, SCROLLER_ATTR, COLUMN, QUESTION_BODY_ATTR, SELECTION_PROPERTY])
-}
-
-/** Take the question fixture off the page. */
-function unmountQuestion(t) {
-  return t.page.evaluate(() => {
-    window.__debugQuestion.content.remove()
-    window.__debugQuestion.reply.remove()
-    window.__debugQuestion.probe.remove()
-    delete window.__debugQuestion
-  })
-}
-
 export default spec({ page: 'composer' }, ({ test }) => {
   test('a mounted transcript holds the composer on the scrollport\'s bottom under every phase mark', async (t) => {
     await mount(t, 'active')
@@ -324,7 +248,7 @@ export default spec({ page: 'composer' }, ({ test }) => {
   })
 
   test('the question card and its settled reply are drawn in the skin\'s own look', async (t) => {
-    await mountQuestion(t)
+    await mountQuestion(t.page, SELECTION_PROPERTY)
     await t.page.waitForFunction((selector) => {
       const label = document.querySelector(selector)
       return label !== null && label.textContent === 'Other'
@@ -422,6 +346,15 @@ export default spec({ page: 'composer' }, ({ test }) => {
     await t.page.waitForFunction((attribute) => window.__debugQuestion.section.querySelector(`[${attribute}]`) === null, CUSTOM_ACTIVE_ATTR)
     const customFieldDisplay = await t.page.evaluate(() => getComputedStyle(window.__debugQuestion.section.querySelector('textarea').parentElement).display)
     t.expectThat.equal(customFieldDisplay, 'none', 'choosing an ordinary option closes the custom answer field')
+    // The white disc this card once showed was the centre painted with the dark
+    // theme's own ink, a defect the light theme could not show: the same rule is
+    // read once in each theme.
+    await setDark(t.page, true)
+    const dark = await readRadioMark(t.page)
+    t.expectThat.equal(dark.ring, dark.selectionBlue, 'the ring keeps the selection blue under the dark theme')
+    t.expectThat.equal([dark.background, dark.centre], ['rgba(0, 0, 0, 0)', 'none'], 'the centre stays the row\'s own surface in the dark theme, with no painted disc')
+    t.expectThat.equal([dark.display, dark.width, dark.height], ['grid', '20px', '20px'], 'the dark theme keeps the mark\'s own box rather than leaning on the host\'s class')
+    await setDark(t.page, false)
     await t.page.evaluate(() => { window.__debugQuestion.card.remove() })
     await t.page.waitForFunction((attribute) => document.querySelector(`[${attribute}]`) === null, QUESTION_SURFACE_ATTR)
     const cleaned = await t.page.evaluate((flowItem) => ({
@@ -429,11 +362,11 @@ export default spec({ page: 'composer' }, ({ test }) => {
       composerDisplay: window.__debugQuestion.content.querySelector(`[${window.__debugQuestion.fallbackAttr}]`).style.display,
     }), FLOW_ITEM)
     t.expectThat.equal(cleaned, { mounts: 0, composerDisplay: 'contents' }, 'the host root\'s departure removes the card and leaves the composer visible')
-    await unmountQuestion(t)
+    await unmountQuestion(t.page)
   })
 
   test('turning the question card restyle off hands a pending card back to the composer as the host drew it', async (t) => {
-    await mountQuestion(t)
+    await mountQuestion(t.page, SELECTION_PROPERTY)
     await t.page.waitForFunction((attribute) => document.querySelector(`[${attribute}]`) !== null, QUESTION_SURFACE_ATTR)
     await t.prefs({ questionCard: false })
     await t.page.waitForFunction((attribute) => document.querySelector(`[${attribute}]`) === null, QUESTION_SURFACE_ATTR)
@@ -451,7 +384,7 @@ export default spec({ page: 'composer' }, ({ test }) => {
     await t.prefs({ questionCard: true })
     await t.page.waitForFunction((attribute) => document.querySelector(`[${attribute}]`) !== null, QUESTION_SURFACE_ATTR)
     t.expectThat.equal(await t.page.evaluate((flowItem) => window.__debugQuestion.section.parentElement.matches(flowItem), FLOW_ITEM), true, 'turning it back on moves the card to the flow\'s end again')
-    await unmountQuestion(t)
+    await unmountQuestion(t.page)
   })
 
   test('the mark leaves with the transcript, and the place is the host\'s again', async (t) => {

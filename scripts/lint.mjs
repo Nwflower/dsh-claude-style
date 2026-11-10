@@ -7,6 +7,7 @@ import path from 'node:path'
 import { filesUnder } from './shared/file-walk.mjs'
 import { checkWorkOrders } from './work.mjs'
 import { createTemporaryFiles } from './shared/temporary-files.mjs'
+import { checkElementCollections } from '../packages/testing/element-collections.mjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
 const DECISIONS = path.join(ROOT, 'docs', 'adr')
@@ -390,6 +391,12 @@ for (const match of specText.matchAll(/surface(?:Attribute|Class|Selector|\.attr
   if (!surfaceIds.has(match[1])) problems.push(`a spec reads the surface entry "${match[1]}", which packages/testing/data/surface.json does not hold`)
 }
 
+// The element-keyed collections (C1): a collection keyed by a page node is only
+// safe while its author knows how long it is held, so every new one is a
+// decision the record shows (docs/ARCHITECTURE.md 的持有期限).
+const collections = checkElementCollections()
+for (const problem of collections.problems) problems.push(problem)
+
 // The quarantine (packages/testing/data/quarantine.json): each entry is a behaviour test
 // that exists, with the defect it fails over said in the reader's terms.
 for (const entry of JSON.parse(fs.readFileSync(path.join(ROOT, 'packages', 'testing', 'data', 'quarantine.json'), 'utf8')).tests) {
@@ -469,5 +476,5 @@ if (problems.length > 0) {
   console.error(`lint: ${problems.length} problems in ${sources.length} sources and ${markdown.length} documents`)
   process.exitCode = 1
 } else {
-  console.log(`lint: ${sources.length} sources, ${markdown.length} documents, ${links} links, ${citations} decision citations in ${decisionFiles} decision files, ${prosePaths} prose paths, ${lookups} recorded whole-document lookups, ${featureUiChecked} feature modules' ui, ${specs.length} specs and ${spelledMarks} recorded skin marks in the older test code clean (stop line ${MAX_LINES} lines; no copied code anywhere)`)
+  console.log(`lint: ${sources.length} sources, ${markdown.length} documents, ${links} links, ${citations} decision citations in ${decisionFiles} decision files, ${prosePaths} prose paths, ${lookups} recorded whole-document lookups, ${collections.total} element-keyed collections recorded, ${featureUiChecked} feature modules' ui, ${specs.length} specs and ${spelledMarks} recorded skin marks in the older test code clean (stop line ${MAX_LINES} lines; no copied code anywhere)`)
 }

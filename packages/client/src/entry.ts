@@ -22,6 +22,7 @@ import { pageOwner, subscribePageOwner } from './shared/visual-owner'
 import type { PageOwner } from './shared/visual-owner'
 import { loadFeatureChunk } from './core/chunks'
 import { handleName, setFeatureRegistry } from './core/feature'
+import { switchedOff } from './core/switches'
 import type { Feature, FeatureInstall } from './core/feature'
 import { FEATURES } from 'virtual:dsh-claude-style/features'
 import { BUILD_ID } from 'virtual:dsh-claude-style/generated'
@@ -46,6 +47,15 @@ parkForeignSheets()
  * switch, or it yields to a plugin that can arrive or leave.
  */
 const isLive = (feature: Feature) => feature.pref !== undefined || feature.yieldsTo !== undefined
+
+/**
+ * The features a test build switches off by name (docs/DEBUGGING.md, 功能二分):
+ * the testing prelude sets `window.__dshClaudeOff` before boot, so a run can
+ * bisect the page without a rebuild. A page the reader opens never sets it.
+ */
+function switchedOffHere(id: string): boolean {
+  return switchedOff(id, (window as unknown as { __dshClaudeOff?: unknown }).__dshClaudeOff)
+}
 
 /** Boolean switches default on; choice switches require a listed value and no yielding peer. */
 function isWanted(feature: Feature) {
@@ -336,7 +346,7 @@ export function apply(ctx: HostContext) {
   function yieldTo(next: PageOwner) {
     const keep = KEPT_FOR[next]
     for (const feature of FEATURES) {
-      if (!keep.includes(feature.id) || failed.has(feature.id) || installed.some(entry => entry.id === feature.id)) continue
+      if (!keep.includes(feature.id) || switchedOffHere(feature.id) || failed.has(feature.id) || installed.some(entry => entry.id === feature.id)) continue
       installFeature(feature)
     }
     release(keep)
@@ -389,7 +399,7 @@ export function apply(ctx: HostContext) {
     // and the host's floating cards are carried under it (engine/src/scaled-layer.ts).
     if (stopScale === null) stopScale = installPageScale()
     for (const feature of FEATURES) {
-      if (failed.has(feature.id) || installed.some(entry => entry.id === feature.id)) continue
+      if (failed.has(feature.id) || switchedOffHere(feature.id) || installed.some(entry => entry.id === feature.id)) continue
       if (isLive(feature)) applySwitch(feature)
       else installFeature(feature)
     }
@@ -404,6 +414,12 @@ export function apply(ctx: HostContext) {
     // skin at all — so if it cannot install, the whole skin rolls back.
     if (installed.some(entry => entry.id === 'scheduler')) return
     if (!install('scheduler', null, () => installScheduler(ctx, ui, handleNames))) teardown()
+    // A stand-in page asks for one scheduler pass by name (docs/DEBUGGING.md):
+    // the smoke prelude sets the marker before the bundle boots, and a page the
+    // reader opens never carries it.
+    if ((window as unknown as { __dshStandIn?: unknown }).__dshStandIn === true) {
+      (window as unknown as { __dshClaudePass?: () => void }).__dshClaudePass = () => { ui.schedule?.() }
+    }
   }
 
   setHostContext(ctx)

@@ -19,6 +19,7 @@ import type { FeatureUi } from '../../core/feature'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type manifest from './header-band.manifest'
 import { copy } from './copy'
+import { placeCaptionRow } from './placement'
 
 /**
  * The conversation header's title row, lifted into the desktop caption row.
@@ -93,12 +94,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The two tokens the body marker carries. */
   const TITLE_TOKEN = 'title'
   const ACTIONS_TOKEN = 'actions'
-  /** The air between anything placed here and its neighbour. */
-  const GAP = 8
-  /** What the row keeps clear at its left end when the shell mounts no menu seat: the sidebar's control. */
-  const FURNITURE = 48
-  /** Below this a lifted title would be a stub: it stays in the row instead. */
-  const MIN_TITLE = 120
   /** The host's seat in the header's own row that the header utilities land in. */
   const UTILITIES_SLOT = 'conversation.session.header.utilities'
   /** The skin's own control there, which the stylesheet paints and the pass shows. */
@@ -114,6 +109,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let watched: HTMLElement | null = null
   /** Stops watching it. */
   let stopSize: (() => void) | null = null
+  /** The cluster's needed width, measured while nothing capped it (D9). */
+  let clusterNeed: number | null = null
   /** Every candidate title row, kept current by the bus (D40), and the one this pass took. */
   const titleRows = observeMatches<HTMLElement>(HEADER_TITLE_ROW_SELECTOR)
   let keptRow: HTMLElement | null = null
@@ -235,7 +232,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     actionsStamp.release()
     cornerStamp.release()
     tabsStamp.release()
-    placedInBand = null
     if (bandHost !== null) {
       bandHost.removeAttribute(BAND_ATTR)
       bandHost.style.removeProperty(ROW_TOP)
@@ -282,13 +278,15 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     cornerBox: DOMRect | null
     titleBox: DOMRect | null
     trailBox: DOMRect | null
+    /** The width the title's words need, past any limit an earlier pass wrote. */
+    titleNatural: number
+    /** The width the cluster needs, measured while nothing capped it (D9). */
+    trailNeed: number
   }
 
   /** The reading this pass places against, and whether `measure` took it for this pass. */
   let reading: BandReading | null = null
   let measured = false
-  /** Which pieces the last pass lifted, so a lift can ask for one more pass to settle against it. */
-  let placedInBand: { title: boolean, trail: boolean } | null = null
 
   /**
    * Read the boxes the pass places against. Written in the pass's read phase,
@@ -312,6 +310,13 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const utilities = row.querySelector<HTMLElement>(HEADER_UTILITIES_SELECTOR)
     const corner = row.querySelector<HTMLElement>(HEADER_CORNER_SELECTOR)
     const stripEl = header === null ? null : header.querySelector<HTMLElement>(VIEW_TABS_STRIP_SELECTOR)
+    const titleBox = rect(title)
+    const trailBox = rect(trail)
+    // The cluster's need is measured while nothing of ours caps it, which is the
+    // one state its box answers the question: a capped cluster measures at the
+    // cap (D9). The pass writes no limit on the cluster, so this re-read never
+    // follows a limit of its own writing.
+    if (trail !== null && trailBox !== null && trail.style.getPropertyValue(TITLE_MAX) === '') clusterNeed = trailBox.width
     reading = {
       band: pageBand(band),
       width: pageWidth(),
@@ -331,8 +336,13 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       menuBox: rect(findWindowsMenu()),
       utilitiesBox: rect(utilities),
       cornerBox: rect(corner),
-      titleBox: rect(title),
-      trailBox: rect(trail),
+      titleBox,
+      trailBox,
+      // The host draws the crumb ellipsized inside the width this pass last
+      // wrote, so the box is that width; what the words take is the scrollable
+      // content, which a cap does not change.
+      titleNatural: title === null ? 0 : Math.max(titleBox === null ? 0 : titleBox.width, title.scrollWidth),
+      trailNeed: clusterNeed === null ? 0 : clusterNeed,
     }
   }
 
@@ -356,134 +366,70 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       return
     }
     // Only a strip the view-tabs feature has already lifted shares the caption
-    // row; one still drawn in the header's own row takes nothing from it. Its
-    // room is read off the width rather than the box: view-tabs centres it on
-    // the window, this pass then moves it, and a fit decided against the moved
-    // box would answer differently on the next pass. The box is the strip's
-    // content (the plate and the overflow button), because the row the host
-    // draws them in spans the header (shared/content-box.ts).
+    // row; one still drawn in the header's own row takes nothing from it. The box
+    // is the strip's content (the plate and the overflow button), because the row
+    // the host draws them in spans the header (shared/content-box.ts).
     const stripEl = current.stripEl
     const stripBox = current.stripBox
     const inBand = stripBox !== null && stripBox.top < band.height
     const stripWidth = stripBox === null || !inBand ? 0 : stripBox.width
-    const stripRight = stripWidth === 0 ? 0 : current.width / 2 + stripWidth / 2
-    // The shell's own menu seat takes the row's left end, and the collapsed
-    // sidebar's control sits left of it whether the seat is mounted or not.
-    const menuBox = current.menuBox
-    const furniture = menuBox === null ? FURNITURE : Math.max(FURNITURE, menuBox.right)
-    // Either cluster can be missing: the corner seat is empty while the right
-    // sidebar is open, whose own chrome carries those controls. The cluster
-    // that is there still belongs in the caption row, and a missing one leaves
-    // no air behind.
-    const utilitiesBox = current.utilitiesBox
-    const cornerBox = current.cornerBox
-    const utilitiesWidth = utilitiesBox === null ? 0 : utilitiesBox.width
-    const cornerWidth = cornerBox === null ? 0 : cornerBox.width
-    const clusterWidth = utilitiesWidth + cornerWidth + (utilitiesBox === null || cornerBox === null ? 0 : GAP)
-    // The caption buttons' reserve, and the air this skin keeps off it. The
-    // width is the one fixed boxes are placed in: the document's client width
-    // leaves out a page scrollbar, which `innerWidth` counts.
-    const edge = current.width - band.controls.size - GAP
-    const cornerRight = band.controls.size + GAP
-    // The controls hang off the right edge, so whether they fit does not
-    // depend on the title; the title then takes what is left of the row's
-    // left end, up to the first thing in its way.
-    const liftActions = clusterWidth > 0 &&
-      edge - clusterWidth >= Math.max(furniture, stripRight) + GAP
-    const left = Math.max(rowBox.left, furniture + GAP)
-    // Where the row's right-hand content ends: the controls when they are lifted,
-    // the caption buttons when they stayed in the row.
-    const rightStop = liftActions ? edge - clusterWidth : current.width - band.controls.size
-    // The title's room runs up to that end, less the strip's own width and the
-    // air on both sides of it: the strip is centred in what is left between the
-    // two, so its width is reserved here rather than read off a position it is
-    // about to leave.
-    const room = rightStop - GAP - (inBand ? stripWidth + GAP : 0) - left
-    const titleBox = current.titleBox
-    const liftTitle = title !== null && room >= MIN_TITLE
-    // The cluster the host keeps beside the title — the preset picker and the
-    // chips the session mounts there — takes the caption row's next place, and
-    // its own width comes off the title's room. The title's box is not that
-    // limit: the host draws the crumb ellipsized inside the width this pass last
-    // wrote, so a name that grew back would stay clipped at the old name's size.
-    const trail = current.trail
-    const trailBox = current.trailBox
-    const trailWidth = trailBox === null ? 0 : trailBox.width
-    const titleRoom = room - trailWidth - GAP
-    // A window too narrow for both keeps the cluster in the row the host drew it
-    // in, which then keeps the height it takes there: the title keeps its own
-    // width rather than shrinking to the stub beside the cluster. The pass writes
-    // no width limit on the cluster, so the width this fit is judged by is the
-    // one the cluster needs: a capped cluster measures at the cap, and one that
-    // outgrew its place would keep passing the test and be crushed there instead
-    // of returning to the row (D9).
-    const liftTrail = liftTitle && trail !== null && trailBox !== null && titleRoom >= MIN_TITLE
-    const trailLeft = left + (titleBox === null ? 0 : titleBox.width) + GAP
-    // The row the title leaves holds only controls, and the host's inset for a
-    // row that still carried a title would leave them floating below the caption
-    // row. It starts at the title box's lower edge; the target is computed rather
-    // than read because the title has not been lifted on this pass. Where the
-    // offset already applied is taken back out, or the pass would read the raised
-    // row as needing no rise.
-    const titleHeight = titleBox === null ? 0 : titleBox.height
-    const titleCentre = band.height / 2
+    // Where the row's lift already applied is taken back out, or the pass would
+    // read the raised row as needing no rise.
     const applied = parseFloat(row.style.getPropertyValue(ROW_LIFT))
-    /** Where the row's top belongs: the lower edge of the title's centred box. */
-    const rowTop = titleCentre + titleHeight / 2
-    const rise = !liftTitle ? 0 : Math.max(0, Math.round(rowBox.top - (isFinite(applied) ? applied : 0) - rowTop))
-    // A lift, or a title whose room changed, leaves the cluster beside it placed
-    // against the width the title no longer has. One more pass reads the width
-    // this one writes, and a pass that changes nothing ends it (D40).
-    let settle = placedInBand !== null && (placedInBand.title !== liftTitle || placedInBand.trail !== liftTrail)
-
+    const placement = placeCaptionRow({
+      width: current.width,
+      bandHeight: band.height,
+      controls: band.controls.size,
+      rowLeft: rowBox.left,
+      menuRight: current.menuBox === null ? null : current.menuBox.right,
+      strip: { width: stripWidth, inBand },
+      title: { present: title !== null, width: current.titleBox === null ? 0 : current.titleBox.width, natural: current.titleNatural },
+      trail: { present: current.trail !== null, width: current.trailBox === null ? 0 : current.trailBox.width, need: current.trailNeed },
+      utilities: { present: current.utilitiesBox !== null, width: current.utilitiesBox === null ? 0 : current.utilitiesBox.width },
+      corner: { present: current.cornerBox !== null, width: current.cornerBox === null ? 0 : current.cornerBox.width },
+      row: { top: rowBox.top, applied: isFinite(applied) ? applied : 0 },
+      titleHeight: current.titleBox === null ? 0 : current.titleBox.height,
+    })
+    const liftTitle = placement.lift.title
+    const liftActions = placement.lift.actions
     rowStamp.mark(liftTitle ? row : null)
-    if (liftTitle) setVar(row, ROW_LIFT, `${-rise}px`)
+    if (liftTitle) setVar(row, ROW_LIFT, `${-placement.rowLift}px`)
     // The header closes to the row it no longer shares with the title: its top
     // inset becomes the air between its own edge and that row, so the height the
     // title held is not left standing empty above the conversation. A header
     // whose box was not read keeps the host's inset, the stylesheet's fallback.
-    if (liftTitle && current.header !== null && current.headerBox !== null) {
-      setVar(current.header, ROW_TOP, `${Math.max(0, Math.round(rowTop - current.headerBox.top))}px`)
+    if (placement.title !== null && current.header !== null && current.headerBox !== null) {
+      setVar(current.header, ROW_TOP, `${Math.max(0, Math.round(placement.rowTop - current.headerBox.top))}px`)
     } else if (current.header !== null) {
       current.header.style.removeProperty(ROW_TOP)
     }
-    titleStamp.mark(liftTitle ? title : null)
-    if (liftTitle && title !== null) {
-      setVar(title, TITLE_LEFT, `${Math.round(left)}px`)
+    titleStamp.mark(placement.title === null ? null : title)
+    if (placement.title !== null && title !== null) {
+      setVar(title, TITLE_LEFT, `${placement.title.left}px`)
       // The title's room runs up to the cluster standing beside it, and no
       // further; without one it is the row's whole run.
-      if (setVar(title, TITLE_MAX, `${Math.round(liftTrail ? titleRoom : room)}px`) && liftTrail) settle = true
-      setVar(title, TITLE_TOP, `${Math.round(titleCentre)}px`)
+      setVar(title, TITLE_MAX, `${placement.title.max}px`)
+      setVar(title, TITLE_TOP, `${placement.title.top}px`)
     }
-    trailStamp.mark(liftTrail ? trail : null)
-    if (liftTrail && trail !== null) {
-      setVar(trail, TITLE_LEFT, `${Math.round(trailLeft)}px`)
-      setVar(trail, TITLE_TOP, `${Math.round(titleCentre)}px`)
+    const trail = current.trail
+    trailStamp.mark(placement.trail === null ? null : trail)
+    if (placement.trail !== null && trail !== null) {
+      setVar(trail, TITLE_LEFT, `${placement.trail.left}px`)
+      setVar(trail, TITLE_TOP, `${placement.trail.top}px`)
       // A limit this element still carries from an earlier placement would be
       // measured as its width and squeeze the chips it holds.
       if (trail.style.getPropertyValue(TITLE_MAX) !== '') trail.style.removeProperty(TITLE_MAX)
     }
-    actionsStamp.mark(liftActions && utilitiesBox !== null ? utilities : null)
-    cornerStamp.mark(liftActions && cornerBox !== null ? corner : null)
-    if (liftActions) {
-      const utilitiesRight = cornerRight + (cornerBox === null ? 0 : cornerWidth + GAP)
-      if (utilities !== null && utilitiesBox !== null) setVar(utilities, ACTIONS_RIGHT, `${Math.round(utilitiesRight)}px`)
-      if (corner !== null && cornerBox !== null) setVar(corner, ACTIONS_RIGHT, `${Math.round(cornerRight)}px`)
-    }
+    actionsStamp.mark(placement.utilitiesRight === null ? null : utilities)
+    cornerStamp.mark(placement.cornerRight === null ? null : corner)
+    if (placement.utilitiesRight !== null && utilities !== null) setVar(utilities, ACTIONS_RIGHT, `${placement.utilitiesRight}px`)
+    if (placement.cornerRight !== null && corner !== null) setVar(corner, ACTIONS_RIGHT, `${placement.cornerRight}px`)
     // view-tabs centres the strip on the window; with the title and the controls
     // standing on either side of it that stops reading as the middle of the row,
     // so it takes the middle of what is left between them — or between the
     // shell's own left end and the caption buttons when a side stayed in the row.
     const stripInBand = inBand && stripEl !== null
-    if (stripInBand && stripEl !== null) {
-      // The left-hand content ends where the cluster beside the title ends: the
-      // title's own width is the one this pass is about to write, not the width
-      // it still holds.
-      const leftStop = liftTrail && trailBox !== null
-        ? left + Math.min(titleBox === null ? 0 : titleBox.width, titleRoom) + GAP + trailWidth
-        : liftTitle && titleBox !== null ? left + titleBox.width : furniture
-      setVar(stripEl, TABS_LEFT, `${Math.round((leftStop + rightStop) / 2)}px`)
-    }
+    if (stripInBand && stripEl !== null && placement.stripLeft !== null) setVar(stripEl, TABS_LEFT, `${placement.stripLeft}px`)
     tabsStamp.mark(stripInBand ? stripEl : null)
 
     // The tokens ride the header itself: they change on every page the row
@@ -508,12 +454,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       setVar(header, BAND_HEIGHT, `${band.height}px`)
       setAttributeIfChanged(header, BAND_ATTR, tokens)
     }
-    // A lift changes the width the other piece may keep: the title is measured
-    // where it stood before this pass, so the cluster beside it is placed against
-    // the room it is about to lose or gain. One more pass places it against what
-    // this one wrote, and settles there; a pass that lifts nothing new ends it.
-    if (settle) ui.schedule?.()
-    placedInBand = { title: liftTitle, trail: liftTrail }
   }
 
   // The row it reads lives in the conversation header, never inside the column

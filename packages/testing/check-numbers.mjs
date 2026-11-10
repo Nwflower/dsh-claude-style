@@ -23,6 +23,7 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
+import { spawnSync } from 'node:child_process'
 import { SyntaxKind, skipTrivia } from 'typescript/unstable/ast'
 import { API } from 'typescript/unstable/sync'
 
@@ -145,6 +146,22 @@ function differences(recorded, tree) {
   return problems
 }
 
+/**
+ * The files git reports as changed under the testing tree, as paths relative to
+ * the repository; null when git cannot answer, which keeps the check strict.
+ */
+function uncommitted() {
+  const run = spawnSync('git', ['status', '--porcelain', '--', 'packages/testing'], { cwd: ROOT, encoding: 'utf8' })
+  if (run.status !== 0) return null
+  const files = new Set()
+  for (const line of run.stdout.split('\n')) {
+    const entry = line.slice(3).trim()
+    if (entry === '') continue
+    files.add(entry.split(' -> ').pop())
+  }
+  return files
+}
+
 const tree = current()
 if (process.argv.includes('--check')) {
   let recorded = {}
@@ -156,6 +173,17 @@ if (process.argv.includes('--check')) {
   }
   const problems = differences(recorded, tree)
   if (problems.length > 0) {
+    // Several sessions share one tree. A record that trails an uncommitted edit
+    // is that edit's business: the check warns, and the tree that commits the
+    // edit carries the recorded numbers with it. A difference in a file the
+    // working tree has not touched is still a failure.
+    const changed = uncommitted()
+    const files = [...new Set(problems.map((problem) => problem.slice(0, problem.indexOf(': '))))]
+    if (changed !== null && files.every((file) => changed.has(file))) {
+      for (const problem of problems) console.warn(`check-numbers: ${problem}`)
+      console.warn(`check-numbers: ${problems.length} checks moved in ${files.length} uncommitted file(s) — run \`npm run checks:numbers\` before committing`)
+      process.exit(0)
+    }
     for (const problem of problems) console.error(`check-numbers: ${problem}`)
     console.error(`check-numbers: ${problems.length} checks moved — run \`npm run checks:numbers\`, and say in the change why each number moved`)
     process.exit(1)
