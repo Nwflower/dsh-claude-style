@@ -608,6 +608,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     profile.stop()
     unregisterPopover('account')
     mirror.stop()
+    surface.dispose()
     dropAccountFooter(findFootArea())
   }
 }

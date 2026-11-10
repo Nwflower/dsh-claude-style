@@ -292,6 +292,8 @@ export const MODAL_DIALOG_SELECTOR = '[role="dialog"][aria-modal="true"]'
 export const FOREGROUND_SELECTOR = `${MODAL_DIALOG_SELECTOR}, [role="menu"]`
 /** The host's menu card and its list, which the skin injects a row into. */
 export const MENU_ROLE_SELECTOR = '[role="menu"]'
+/** The material card host menus share; account preparation must not hide unrelated cards. */
+export const MENU_MATERIAL_SELECTOR = '[data-menu-material]'
 export const MENU_LIST_SELECTOR = '[role="presentation"]'
 /** The host's account trigger in the sidebar footer. */
 export const ACCOUNT_TRIGGER_SELECTOR = '[aria-haspopup="menu"][data-signed-out]'
