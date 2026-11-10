@@ -219,7 +219,7 @@
       "reason": "宿主的账户菜单与它的账户行：只在桌面外壳里出现，走查跑在网页外壳",
       "selectors": [
         "body[data-dsh-claude-style][data-ds-dark-theme] :is([data-dsh-claude-account-menu],[data-dsh-claude-hero-menu])",
-        "body[data-dsh-claude-style][data-dsh-claude-account-armed] div[role=menu][data-menu-material]:not([data-dsh-claude-account-ready])",
+        "body[data-dsh-claude-style][data-dsh-claude-account-armed] div[role=menu][data-menu-material][data-dsh-claude-account-menu]:not([data-dsh-claude-account-ready])",
         "body[data-dsh-claude-style] [data-dsh-claude-account-menu] [data-dsh-claude-part~=menu-footer]",
         "body[data-dsh-claude-style] [data-dsh-claude-account-menu] [data-dsh-claude-part~=menu-item-selected]"
       ]
