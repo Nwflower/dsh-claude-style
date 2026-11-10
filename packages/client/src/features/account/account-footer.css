@@ -339,8 +339,14 @@ body[data-dsh-claude-style] [data-dsh-claude-account-menu] {
 /* The entry animation is keyed on the armed marker rather than on the card
    marker (constants.ts): the armed marker is in place before the host mounts
    the card, so the animation runs from the card's first frame instead of
-   replaying over a card that was already painted. The host's shared menu card
-   is the only thing that mounts inside that window.
+   replaying over a card that was already painted.
+
+   Both rules also name the card's own marker (surface.ts): the armed marker sits
+   on <body>, and a rule reading it alone would hold every host menu — the
+   sidebar's own More card, the settings page's dropdowns — unpainted for as long
+   as it stands. surface.ts stamps the account menu from the mount pass, and a
+   pass writes before the frame paints, so the card is still held from its first
+   frame.
 
    The card is also held until the reveal marker lands. The host mounts its card
    with its own rows and places it from that geometry; the skin's container
@@ -348,11 +354,11 @@ body[data-dsh-claude-style] [data-dsh-claude-account-menu] {
    that. A card revealed on the mount frame fades in low and jumps up mid-fade,
    so inside the armed window it stays unpainted until surface.ts has seen our
    rows inside it and the host's placement stand still. */
-body[data-dsh-claude-style][data-dsh-claude-account-armed] div[role="menu"][data-menu-material]:not([data-dsh-claude-account-ready]) {
+body[data-dsh-claude-style][data-dsh-claude-account-armed] div[role="menu"][data-menu-material][data-dsh-claude-account-menu]:not([data-dsh-claude-account-ready]) {
   visibility: hidden;
   animation: none;
 }
-body[data-dsh-claude-style][data-dsh-claude-account-armed] div[role="menu"][data-menu-material][data-dsh-claude-account-ready] {
+body[data-dsh-claude-style][data-dsh-claude-account-armed] div[role="menu"][data-menu-material][data-dsh-claude-account-menu][data-dsh-claude-account-ready] {
   transform-origin: bottom left;
   animation: dsh-claude-dropdown-in var(--dsh-claude-duration-open) var(--dsh-claude-ease-settle);
 }
