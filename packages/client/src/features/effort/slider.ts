@@ -547,8 +547,6 @@ export function createEffortControl(opts: {
       painted = true
     }
     paintTicks()
-    // A drag or a key between passes reads the layout it acts on.
-    passBox = null
     paintAria(next.labels)
     if (swapFrom >= 0) {
       paintApex(selected)
@@ -556,6 +554,9 @@ export function createEffortControl(opts: {
     } else {
       paintValue()
     }
+    // The box this pass measured stands for this pass alone: a drag or a key
+    // between passes reads the layout it acts on, in the pass that follows (D40).
+    passBox = null
   }
 
   return {

@@ -246,10 +246,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     drawReading(face, percent)
     if (display === CONTEXT_DISPLAY_PIE) {
       writeContextBand(face.ring, null)
-      const moved = writeRamp(face.ring, 'context', percent === null ? null : rampPosition(percent, CONTEXT_STOPS))
-      // A band that moved carries a new colour: the plate's image is drawn from
-      // the colours read for it, and only a moved band needs a new reading.
-      paintContextPie(face.ring, percent, moved || face.colours === null ? readColoursFor(face) : face.colours)
+      writeRamp(face.ring, 'context', percent === null ? null : rampPosition(percent, CONTEXT_STOPS))
+      // The plate's image is drawn from the colours this pass read before any
+      // write (the meter's `measure`, D40); reading them here would force a
+      // style recalculation between the writes.
+      paintContextPie(face.ring, percent, face.colours)
       return
     }
     // The drawn ring: no plate, and the colour rule the reader picked — the
@@ -356,8 +357,13 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     // The ring's colours come off the page's own styles, which a pass reads in
     // its read phase alone (D40).
     measure() {
-      const face = primaryFace()
-      return face === null ? null : readColoursFor(face)
+      const main = primaryFace()
+      let primary: PieColours | null = null
+      for (const face of faces.values()) {
+        const colours = readColoursFor(face)
+        if (face === main) primary = colours
+      }
+      return primary
     },
     /** The main card's ring, as the pass that drew it left it. */
     root() {

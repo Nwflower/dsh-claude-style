@@ -74,6 +74,9 @@ export function createMessageFold(requestPass: () => void) {
     }
   }
 
+  /** The column width the pass's read phase took; -1 until a pass reads one. */
+  let measuredColumn = -1
+
   /** The width the messages are read at: the column they stand in, or the window while there is none. */
   function columnWidth() {
     const column = conversationColumn()
@@ -82,7 +85,7 @@ export function createMessageFold(requestPass: () => void) {
 
   /** Scrolls do not rewrap text; clamped bubbles need this width check because their box stays capped. */
   function reposition() {
-    const width = columnWidth()
+    const width = measuredColumn
     if (measuredWidth === width) return
     const first = measuredWidth === -1
     measuredWidth = width
@@ -204,12 +207,18 @@ export function createMessageFold(requestPass: () => void) {
     apply(bubble)
   }
 
+  /** The reading width, read in the pass's read phase and compared in its write phase (D40). */
+  function measureColumn() {
+    measuredColumn = columnWidth()
+  }
+
   /**
    * Read every bubble this batch brought or a size change re-opened (the pass's
    * read phase, D40). A whole column is read again only when the copy or the
    * reading width moved, which is what `invalidate` asks for.
    */
   function measure() {
+    measureColumn()
     if (sweep) {
       for (const row of rows.all()) {
         const bubble = bubbleOf(row)
@@ -261,6 +270,7 @@ export function createMessageFold(requestPass: () => void) {
 
   return {
     measure,
+    measureColumn,
     sync,
     reposition,
     /** A change of copy re-wraps and relabels: the next pass reads every height again. */
