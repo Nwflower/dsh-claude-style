@@ -50,12 +50,12 @@ const mountWideWidget = (t) => t.page.evaluate(({ part }) => {
   const card = document.createElement('button')
   card.type = 'button'
   card.className = 'probe-wide-widget'
-  card.setAttribute('aria-label', 'Command Code · Go · 5 小时 $1.23 (42%) · 每周 $8.76 (18%)')
+  card.setAttribute('aria-label', 'Quota card · Pro · 5 小时 $1.23 (42%) · 每周 $8.76 (18%)')
   const head = document.createElement('div')
   head.className = 'probe-head'
   const name = document.createElement('span')
   name.className = 'probe-name'
-  name.textContent = 'Command Code'
+  name.textContent = 'Quota card'
   const headSpacer = document.createElement('span')
   headSpacer.className = 'probe-spacer'
   const badge = document.createElement('span')

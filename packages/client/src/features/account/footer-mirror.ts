@@ -341,10 +341,10 @@ export function createFooterMirror(options: {
       const tag = entry.tagName
       const role = entry.getAttribute('role') || ''
       if (tag !== 'BUTTON' && tag !== 'A' && role !== 'button') return false
-      // A card can be the control itself: the Command Code quota card is one
-      // button whose rows draw a label, an amount and a percentage each. One
-      // label belongs in a menu item; a drawing with several figures keeps
-      // its markup, so a text item would drop what the card exists to show.
+      // A card can be the control itself: a quota card is one button whose
+      // rows draw a label, an amount and a percentage each. One label belongs
+      // in a menu item; a drawing with several figures keeps its markup, so a
+      // text item would drop what the card exists to show.
       return textPieces(entry) < 3
     }
     // Semantic meter markup is always a widget, however small.
