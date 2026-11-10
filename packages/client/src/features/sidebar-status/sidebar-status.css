@@ -59,7 +59,8 @@ body[data-dsh-claude-style] [data-dsh-claude-row-status="active"] > [data-dsh-cl
 }
 /* Keep the reader's ring choice; the default dot uses Claude's opacity-only cadence. */
 body[data-dsh-claude-style]:not([data-dsh-claude-ongoing-indicator="ring"]) [data-dsh-claude-row-status="active"] > [data-dsh-claude-part~="row-slot"] > svg[data-state="ongoing"],
-body[data-dsh-claude-style] .dsh-claude-ongoing-preview:not([data-look="ring"]) .dsh-claude-ongoing-mark {
+body[data-dsh-claude-style] .dsh-claude-ongoing-preview:not([data-look="ring"]) .dsh-claude-ongoing-mark,
+body[data-dsh-claude-style] .dsh-claude-sidebar-group-seat .dsh-claude-ongoing-mark:not([data-look="ring"]) {
   background: var(--dsh-claude-status-running);
   animation: dsh-claude-status-breathe var(--dsh-claude-period-status-breathe) var(--dsh-claude-ease-in-out) infinite;
 }
@@ -68,7 +69,8 @@ body[data-dsh-claude-style] .dsh-claude-ongoing-preview:not([data-look="ring"]) 
   50% { opacity: 1; }
 }
 body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-claude-row-status="active"] > [data-dsh-claude-part~="row-slot"] > svg[data-state="ongoing"],
-body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-ongoing-preview .dsh-claude-ongoing-mark {
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-ongoing-preview .dsh-claude-ongoing-mark,
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-sidebar-group-seat .dsh-claude-ongoing-mark {
   animation: none;
 }
 /* Working titles and their native marker are mutually exclusive. The selected
@@ -77,6 +79,7 @@ body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-ongoin
 @supports (background-clip: text) {
   @media (prefers-reduced-motion: no-preference) and (forced-colors: none) {
     body[data-dsh-claude-style]:not([data-dsh-claude-motion="reduced"])[data-dsh-claude-ongoing-indicator="shimmer"] [data-dsh-claude-running-title]:not([aria-selected="true"]) > [data-dsh-claude-part~="row-title"],
+    body[data-dsh-claude-style]:not([data-dsh-claude-motion="reduced"])[data-dsh-claude-ongoing-indicator="shimmer"] [data-dsh-claude-part~="project-row"][data-dsh-claude-workspace-running] [data-dsh-claude-part~="row-title"],
     body[data-dsh-claude-style]:not([data-dsh-claude-motion="reduced"]) .dsh-claude-ongoing-title[data-look="shimmer"] {
       color: var(--dsw-alias-label-primary);
       background-image: linear-gradient(var(--dsh-claude-title-angle, 120deg),
@@ -96,6 +99,7 @@ body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-ongoin
       animation: dsh-claude-title-shine var(--dsh-claude-period-status-title) var(--dsh-claude-ease-status-title) infinite;
     }
     body[data-dsh-claude-style]:not([data-dsh-claude-motion="reduced"])[data-dsh-claude-ongoing-indicator="shimmer"] [data-dsh-claude-running-title]:dir(rtl):not([aria-selected="true"]) > [data-dsh-claude-part~="row-title"],
+    body[data-dsh-claude-style]:not([data-dsh-claude-motion="reduced"])[data-dsh-claude-ongoing-indicator="shimmer"] [data-dsh-claude-part~="project-row"][data-dsh-claude-workspace-running]:dir(rtl) [data-dsh-claude-part~="row-title"],
     body[data-dsh-claude-style]:not([data-dsh-claude-motion="reduced"]) .dsh-claude-ongoing-title[data-look="shimmer"]:dir(rtl) {
       --dsh-claude-title-angle: 240deg;
       animation-name: dsh-claude-title-shine-rtl;
@@ -104,6 +108,17 @@ body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-ongoin
     body[data-dsh-claude-style]:not([data-dsh-claude-motion="reduced"]) .dsh-claude-ongoing-preview[data-look="shimmer"] .dsh-claude-ongoing-mark {
       visibility: hidden;
       animation: none;
+    }
+    /* The seat leaves the flow while the title carries the mark: a
+       visibility-only hide keeps the leading column it reserves, and the
+       workspace row has no native band that space would stand in for. */
+    body[data-dsh-claude-style]:not([data-dsh-claude-motion="reduced"])[data-dsh-claude-ongoing-indicator="shimmer"] [data-dsh-claude-part~="project-row"][data-dsh-claude-workspace-running] .dsh-claude-sidebar-group-seat {
+      display: none;
+    }
+    /* The seat is out of the flow, so the column it reserved at the trailing
+       end goes back to the title as well. */
+    body[data-dsh-claude-style]:not([data-dsh-claude-motion="reduced"])[data-dsh-claude-ongoing-indicator="shimmer"]:not([data-dsh-claude-ongoing-side="left"]) [data-dsh-claude-part~="project-row"][data-dsh-claude-workspace-running] {
+      padding-inline-end: 6px;
     }
   }
 }
@@ -117,17 +132,20 @@ body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-ongoin
 }
 @media (prefers-reduced-motion: reduce), (forced-colors: active) {
   body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"][data-dsh-claude-row-status="active"] > [data-dsh-claude-part~="row-slot"] > svg[data-state="ongoing"],
-  body[data-dsh-claude-style] .dsh-claude-ongoing-preview .dsh-claude-ongoing-mark[data-look] { animation: none; }
+  body[data-dsh-claude-style] .dsh-claude-ongoing-preview .dsh-claude-ongoing-mark[data-look],
+  body[data-dsh-claude-style] .dsh-claude-sidebar-group-seat .dsh-claude-ongoing-mark[data-look] { animation: none; }
 }
 @media (forced-colors: active) {
   body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"][data-dsh-claude-row-status="active"] > [data-dsh-claude-part~="row-slot"] > svg[data-state="ongoing"],
-  body[data-dsh-claude-style] .dsh-claude-ongoing-preview .dsh-claude-ongoing-mark[data-look] {
+  body[data-dsh-claude-style] .dsh-claude-ongoing-preview .dsh-claude-ongoing-mark[data-look],
+  body[data-dsh-claude-style] .dsh-claude-sidebar-group-seat .dsh-claude-ongoing-mark[data-look] {
     forced-color-adjust: none;
     background: CanvasText;
     border-color: CanvasText;
   }
   body[data-dsh-claude-style][data-dsh-claude-ongoing-indicator="ring"] [data-dsh-claude-row-status="active"] > [data-dsh-claude-part~="row-slot"] > svg[data-state="ongoing"],
-  body[data-dsh-claude-style] .dsh-claude-ongoing-preview[data-look="ring"] .dsh-claude-ongoing-mark { background: transparent; }
+  body[data-dsh-claude-style] .dsh-claude-ongoing-preview[data-look="ring"] .dsh-claude-ongoing-mark,
+  body[data-dsh-claude-style] .dsh-claude-sidebar-group-seat .dsh-claude-ongoing-mark[data-look="ring"] { background: transparent; }
 }
 /* Idle/read sessions have no decorative circle. Native screen-reader labels stay mounted. */
 body[data-dsh-claude-style] [data-dsh-claude-row-status="idle"] > [data-dsh-claude-part~="row-slot"] { visibility: hidden; }
@@ -143,5 +161,44 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"][data-dsh-claud
   }
   body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"][data-dsh-claude-row-status]:is(:hover, [data-dsh-claude-part~="row-menu-open"]) > [data-dsh-claude-part~="row-slot"] {
     visibility: hidden;
+  }
+}
+
+/* A closed workspace takes the mark its session rows cannot show: the host
+   drops a closed workspace's rows, so the group row carries the reader's own
+   running style at the chosen end. The mark is the shared ongoing element
+   (theme/sidebar.css); only its seat is the group row's own. */
+body[data-dsh-claude-style] [data-dsh-claude-part~="project-row"][data-dsh-claude-workspace-running] {
+  position: relative;
+}
+body[data-dsh-claude-style] [data-dsh-claude-part~="project-row"][data-dsh-claude-workspace-running] .dsh-claude-sidebar-group-seat {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 16px;
+  order: 0;
+  margin-inline-end: 2px;
+}
+/* The trailing end: the seat stands in the column a session row's own status
+   seat takes, and the group row reserves that column while the mark is on it. */
+body[data-dsh-claude-style]:not([data-dsh-claude-ongoing-side="left"]) [data-dsh-claude-part~="project-row"][data-dsh-claude-workspace-running] {
+  padding-inline-end: 26px;
+}
+body[data-dsh-claude-style]:not([data-dsh-claude-ongoing-side="left"]) [data-dsh-claude-part~="project-row"][data-dsh-claude-workspace-running] .dsh-claude-sidebar-group-seat {
+  position: absolute;
+  inset-inline-end: 6px;
+  top: calc(50% - 8px);
+  margin: 0;
+}
+/* The row's actions take that end while the pointer is on the group, as they do
+   on a session row: the seat steps aside and its reserved column goes back. */
+@media (hover: hover) {
+  body[data-dsh-claude-style] [data-dsh-claude-part~="project-row"][data-dsh-claude-workspace-running]:is(:hover, [data-dsh-claude-part~="row-menu-open"]) .dsh-claude-sidebar-group-seat {
+    visibility: hidden;
+  }
+  body[data-dsh-claude-style]:not([data-dsh-claude-ongoing-side="left"]) [data-dsh-claude-part~="project-row"][data-dsh-claude-workspace-running]:is(:hover, [data-dsh-claude-part~="row-menu-open"]) {
+    padding-inline-end: 6px;
   }
 }
