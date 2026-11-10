@@ -14,6 +14,7 @@
     "packages/client/src/features/chat-follow/process-follow.ts": 1,
     "packages/client/src/features/chat-reveal/reveal-diff.ts": 2,
     "packages/client/src/features/chat-reveal/reveal-engine.ts": 2,
+    "packages/client/src/features/chat-send/send-flight.ts": 2,
     "packages/client/src/features/chat-wait/chat-wait.ts": 4,
     "packages/client/src/features/composer/composer.ts": 6,
     "packages/client/src/features/composer/placeholder-copy.ts": 2,
