@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-09",
-  "group": "improvements",
-  "order": 6,
-  "external": false,
-  "zh": "把动效滑块、折叠重排、上下文环与光标在写阶段里的布局读取挪回读阶段，交互时不再触发整页样式重算",
-  "en": "Move the layout reads of the motion slider, the fold reposition, the context meter and the caret out of the write phase, so an interaction no longer forces a whole-page style recalculation"
-}

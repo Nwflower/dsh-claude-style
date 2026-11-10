@@ -1,8 +1,0 @@
-{
-  "group": "fixes",
-  "order": 40,
-  "at": "2026-11-10",
-  "external": false,
-  "zh": "修复进行中会话的标题扫光与 IM 渠道标题重叠的问题；由伪元素绘制的标题保留原生运行标记，接管或释放后自动更新",
-  "en": "Fix running-title shimmer overlapping IM channel titles; titles drawn by pseudo-elements retain the native running marker and update when taken over or released"
-}

@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-09",
-  "group": "chores",
-  "order": 30,
-  "external": false,
-  "zh": "整理开发目录与验证入口，功能清单统一登记测试覆盖，替身页面检查共用一个运行器",
-  "en": "Reorganize the development directories and verification entry points, declare feature coverage in the manifests and run the stand-in page checks through one runner"
-}

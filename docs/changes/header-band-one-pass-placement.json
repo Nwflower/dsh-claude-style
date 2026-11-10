@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-09",
-  "group": "improvements",
-  "order": 1,
-  "external": false,
-  "zh": "顶栏落位改为一次算完，标题按文字所需的宽度参与判定，旁边的控件簇在同一趟里跟到标题末尾，不再等下一趟落位",
-  "en": "Place the caption row in one pass, judging the title by the width its words need and moving the cluster beside it to the title's end in that same pass instead of a pass later"
-}

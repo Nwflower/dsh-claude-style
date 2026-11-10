@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-09",
-  "group": "fixes",
-  "order": 13,
-  "external": false,
-  "zh": "修复插件挂在侧栏页脚的整块区块（企业应用）随账户区接管一并消失的问题，区块留在账号行上方，侧栏收成细轨时由账户弹层承载它的副本",
-  "en": "Fix a plugin's footer block — the enterprise apps section — vanishing with the footer the takeover gathers, so the block keeps its place above the account row and the account menu carries its copy while the sidebar stands as the rail"
-}
