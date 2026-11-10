@@ -114,6 +114,31 @@
     }
   }
 
+  /**
+   * Run `change` and answer the pill's state at the moment its slide starts.
+   *
+   * The placement is written in a pass, so the control's style mutation is the
+   * first moment the new position and its transition are both in the page —
+   * even when the next frame is far away. The observer is dropped on a timeout
+   * as well.
+   */
+  async function pillSlide(control, item, change, what) {
+    var switchedAt = null
+    var observer = new MutationObserver(function () {
+      var state = pillState(control, item)
+      if (state.slides.length > 0) switchedAt = state
+    })
+    observer.observe(control, { attributes: true, attributeFilter: ['style'] })
+    try {
+      change()
+      var readings = await until(function () { return switchedAt },
+        function (read) { return read[read.length - 1] !== null }, what)
+      return readings[readings.length - 1]
+    } finally {
+      observer.disconnect()
+    }
+  }
+
   var probe = {
     sleep: sleep,
     frame: frame,
@@ -124,6 +149,7 @@
     surface: surface,
     attrs: attrs,
     pillState: pillState,
+    pillSlide: pillSlide,
     report: { applyError: window.__applyError, teardownRegistered: typeof window.__dispose === 'function' },
     steps: [],
     // The view-tab strip and the search root the shell cases build, and the

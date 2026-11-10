@@ -9,13 +9,10 @@
  */
 (function () {
   var probe = window.__dshSmokeProbe
-  var sleep = probe.sleep
   var r = probe.report
 
   probe.step(async function () {
     await probe.onlyFor(['model-meter'], async function () {
-      await sleep(400)
-
       /** Every row one card holds, with the meter's own place in it. */
       var readRows = function (card) {
         var rows = []
@@ -70,23 +67,36 @@
         return rows
       }
 
-      var trigger = document.querySelector('.dsh-claude-model-btn')
-      if (trigger !== null) trigger.click()
-      await sleep(400)
-      var levelOne = readRows(document.querySelector('.dsh-claude-model-popover:not(.dsh-claude-model-popover-sub)'))
+      var levelOneCard = function () { return document.querySelector('.dsh-claude-model-popover:not(.dsh-claude-model-popover-sub)') }
+      /** The first level's open card and how many rows it holds, or null before it is drawn. */
+      var levelOneState = function () {
+        var card = levelOneCard()
+        return card === null ? null : { open: card.getAttribute('data-open') === 'true', rows: readRows(card).length }
+      }
+      var triggers = await probe.until(function () { return document.querySelector(probe.surface('model.trigger')) },
+        function (read) { return read[read.length - 1] !== null }, 'the model trigger to be seated')
+      var trigger = triggers[triggers.length - 1]
+      trigger.click()
+      // The card and its rows are written by the pass after the press; the
+      // open card carrying rows is the state this read waits for (D92).
+      await probe.until(levelOneState,
+        function (read) { var last = read[read.length - 1]; return last !== null && last.open && last.rows > 0 },
+        'the model picker to open its first level')
+      var levelOne = readRows(levelOneCard())
       // The dwell opens the card on the real page, and the reader's hand then
       // presses the trigger: the card stays up
       // (shared/popover.ts::pressKeepsPopoverOpen). The pointer is dispatched
       // before the press, the way a real one arrives.
-      var triggerOpen = false
-      if (trigger !== null) {
-        trigger.dispatchEvent(new MouseEvent('mouseleave'))
-        trigger.dispatchEvent(new MouseEvent('mouseenter'))
-        await sleep(250)
-        triggerOpen = document.querySelector('.dsh-claude-model-popover[data-open="true"]') !== null
-        trigger.click()
-        await sleep(150)
-      }
+      trigger.dispatchEvent(new MouseEvent('mouseleave'))
+      trigger.dispatchEvent(new MouseEvent('mouseenter'))
+      // The dwell opens the card; the press is taken on the card it left open.
+      await probe.until(function () { return document.querySelector('.dsh-claude-model-popover:not(.dsh-claude-model-popover-sub)[data-open="true"]') !== null },
+        function (read) { return read[read.length - 1] === true }, 'the model card to open under the pointer')
+      var triggerOpen = document.querySelector('.dsh-claude-model-popover:not(.dsh-claude-model-popover-sub)[data-open="true"]') !== null
+      // With hover on, the press keeps the open card by doing nothing: the
+      // handler's own decision is synchronous, so the state is read when the
+      // press returns.
+      trigger.click()
       r.modelPress = {
         opened: triggerOpen,
         kept: document.querySelector('.dsh-claude-model-popover:not(.dsh-claude-model-popover-sub)[data-open="true"]') !== null,
@@ -95,7 +105,11 @@
       // The More-models cell opens the second level, beside the first.
       var cell = document.querySelector('.dsh-claude-model-cell')
       if (cell !== null) cell.click()
-      await sleep(300)
+      // The second level's rows are the state this read waits for.
+      await probe.until(function () {
+        var card = document.querySelector(probe.surface('model.sub-card'))
+        return card === null ? 0 : readRows(card).length
+      }, function (read) { return read[read.length - 1] > 0 }, 'the model picker to open its second level')
 
       r.modelMeter = {
         trigger: trigger !== null,
@@ -111,12 +125,20 @@
       var lineCount = function (rows) {
         return rows.filter(function (row) { return row.desc !== null && row.desc !== '' }).length
       }
+      var firstLevelLines = function () {
+        var card = levelOneCard()
+        return card === null ? 0 : lineCount(readRows(card))
+      }
       window.__pushForm({ modelDescriptions: false })
-      await sleep(250)
-      var bareLevelOne = readRows(document.querySelector('.dsh-claude-model-popover:not(.dsh-claude-model-popover-sub)'))
-      var bareLevelTwo = readRows(document.querySelector('.dsh-claude-model-popover-sub'))
+      // The card repaints on the pass after the preference changes; the lines
+      // leaving the first level is the state this read waits for (D92).
+      await probe.until(firstLevelLines, function (read) { return read[read.length - 1] === 0 },
+        'the model description lines to leave the first level')
+      var bareLevelOne = readRows(levelOneCard())
+      var bareLevelTwo = readRows(document.querySelector(probe.surface('model.sub-card')))
       window.__pushForm({ modelDescriptions: true })
-      await sleep(250)
+      await probe.until(firstLevelLines, function (read) { return read[read.length - 1] > 0 },
+        'the model description lines to come back')
       r.modelDescriptions = {
         listed: levelOne.length,
         lines: lineCount(levelOne),
@@ -128,28 +150,34 @@
       // The picker's own switch is live: off hands the host's seat back, on
       // puts the skin's trigger into it again.
       window.__pushForm({ modelPicker: false })
-      await sleep(400)
+      // The teardown hands the seat back on the pass after the preference
+      // changes; the trigger leaving is the state this read waits for.
+      await probe.until(function () { return document.querySelector(probe.surface('model.trigger')) },
+        function (read) { return read[read.length - 1] === null }, 'the model picker to hand the host seat back')
       var pickerOff = {
-        trigger: document.querySelector('.dsh-claude-model-btn') !== null,
-        hostMarked: document.querySelector('[data-dsh-claude-model-host]') !== null,
+        trigger: document.querySelector(probe.surface('model.trigger')) !== null,
+        hostMarked: document.querySelector('[' + probe.surface('model.host-root') + ']') !== null,
       }
       window.__pushForm({ modelPicker: true })
-      await sleep(500)
+      await probe.until(function () { return document.querySelector(probe.surface('model.trigger')) },
+        function (read) { return read[read.length - 1] !== null }, 'the model picker to take the seat again')
       r.modelPicker = {
         off: pickerOff,
         back: {
-          trigger: document.querySelector('.dsh-claude-model-btn') !== null,
-          hostMarked: document.querySelector('[data-dsh-claude-model-host]') !== null,
+          trigger: document.querySelector(probe.surface('model.trigger')) !== null,
+          hostMarked: document.querySelector('[' + probe.surface('model.host-root') + ']') !== null,
         },
       }
       // The seat's own line carries the tag with the Flash model in force: the
       // same rule the rows use (features/model/release-tag.ts), drawn beside the
       // trigger's name. The reader picks the row; the seat names the model it
       // landed on.
-      var seatTrigger = document.querySelector('.dsh-claude-model-btn')
+      var seatTrigger = document.querySelector(probe.surface('model.trigger'))
       if (seatTrigger !== null) {
         seatTrigger.click()
-        await sleep(300)
+        await probe.until(levelOneState,
+          function (read) { var last = read[read.length - 1]; return last !== null && last.open && last.rows > 0 },
+          'the model picker to open its first level again')
         var seatRows = document.querySelectorAll('.dsh-claude-model-popover:not(.dsh-claude-model-popover-sub) .dsh-claude-model-option')
         for (var s = 0; s < seatRows.length; s++) {
           var seatName = seatRows[s].querySelector('.dsh-claude-model-name')
@@ -158,9 +186,14 @@
             break
           }
         }
-        await sleep(600)
+        // The seat names the model it landed on, on the pass after the pick.
+        await probe.until(function () {
+          var btn = document.querySelector(probe.surface('model.trigger'))
+          return btn === null ? '' : btn.textContent
+        }, function (read) { return (read[read.length - 1] || '').indexOf('V4.1 Flash') !== -1 },
+        'the seat to name the picked model')
       }
-      var seatBtn = document.querySelector('.dsh-claude-model-btn')
+      var seatBtn = document.querySelector(probe.surface('model.trigger'))
       var seatTag = seatBtn === null ? null : seatBtn.lastElementChild
       r.modelSeat = {
         text: seatBtn === null ? null : seatBtn.textContent,
@@ -178,10 +211,13 @@
         slot: externalSlot,
         directory: window.__dshSmokeHost.modelDirectories.directoryFor('smoke-session'),
       })
-      await sleep(250)
-      var externalTrigger = externalSlot.querySelector('.dsh-claude-' + 'model-btn')
+      var externalTriggers = await probe.until(function () { return externalSlot.querySelector(probe.surface('model.trigger')) },
+        function (read) { return read[read.length - 1] !== null }, 'the external model picker to mount')
+      var externalTrigger = externalTriggers[externalTriggers.length - 1]
       if (externalTrigger !== null) externalTrigger.click()
-      await sleep(200)
+      // The external card opens on the pass after the press.
+      await probe.until(function () { return document.querySelector('[data-dsh-claude-model-owner^="external-"][data-open="true"]') !== null },
+        function (read) { return read[read.length - 1] === true }, 'the external model picker to open')
       var mountedCount = document.querySelectorAll('.dsh-claude-' + 'model-btn').length
       var externalPopover = document.querySelector('[data-dsh-claude-' + 'model-owner^="external-"][data-open="true"]') !== null
       var externalStyle = externalTrigger === null ? null : getComputedStyle(externalTrigger)
@@ -190,7 +226,10 @@
       try { controls.mount('not-a-control', {}) } catch (error) { unknownRejected = true }
       externalStop()
       externalSlot.remove()
-      await sleep(200)
+      // The unmount takes the external trigger away; the one trigger left is
+      // the primary seat's.
+      await probe.until(function () { return document.querySelectorAll('.dsh-claude-' + 'model-btn').length },
+        function (read) { return read[read.length - 1] === 1 }, 'the external model picker to unmount')
       r.externalControls = {
         available: controls.has('model-picker'),
         mountedCount: mountedCount,

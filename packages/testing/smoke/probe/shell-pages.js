@@ -30,7 +30,7 @@
       // The DeepSeek card's light shell derives from its pale blue-white canvas;
       // its dark card keeps the blue-black steps it already had.
       window.__pushForm({ paletteColors: 'deepseek' })
-      await sleep(250)
+      await probe.nextPass('the DeepSeek palette to be applied')
       var dsLight = getComputedStyle(document.body)
       r.deepseekPalette = {
         canvas: dsLight.backgroundColor,
@@ -44,7 +44,7 @@
       }
       document.body.removeAttribute('data-ds-dark-theme')
       window.__pushForm({ paletteColors: 'brand' })
-      await sleep(150)
+      await probe.nextPass('the brand palette to be applied')
     })
     await probe.onlyFor(['hero'], async function () {
       // The classic hero's welcome is drawn on arrival and holds between
@@ -148,17 +148,20 @@
         '<button type="button" role="tab" aria-selected="false" class="_tab_c_1">Trajectory</button>' +
         '<button type="button" role="tab" aria-selected="false" class="_tab_c_1">Context</button></div></div>'
       document.body.appendChild(viewHeader)
-      await sleep(150)
       var viewRow = viewHeader.firstElementChild
       probe.viewStrip = { row: viewRow, list: viewRow.firstElementChild }
       var viewTabs = probe.viewStrip.list.children
-      r.viewPill = { stamped: viewRow.hasAttribute('data-dsh-view-tabs'), first: pillState(probe.viewStrip.list, viewTabs[0]) }
-      viewTabs[0].setAttribute('aria-selected', 'false')
-      viewTabs[0].className = '_tab_c_1'
-      viewTabs[2].setAttribute('aria-selected', 'true')
-      viewTabs[2].className = '_tab_c_1 _tabActive_c_1'
-      await sleep(60)
-      r.viewPill.switched = pillState(probe.viewStrip.list, viewTabs[2])
+      // The pill is placed by the pass after the strip arrives; its mark is
+      // the state the first reading waits for (D92).
+      var placed = await probe.until(function () { return pillState(probe.viewStrip.list, viewTabs[0]) },
+        function (read) { return read[read.length - 1].attr === true }, 'the view-tabs pill to be placed')
+      r.viewPill = { stamped: viewRow.hasAttribute(probe.surface('view-tabs.strip')), first: placed[placed.length - 1] }
+      r.viewPill.switched = await probe.pillSlide(probe.viewStrip.list, viewTabs[2], function () {
+        viewTabs[0].setAttribute('aria-selected', 'false')
+        viewTabs[0].className = '_tab_c_1'
+        viewTabs[2].setAttribute('aria-selected', 'true')
+        viewTabs[2].className = '_tab_c_1 _tabActive_c_1'
+      }, 'the view-tabs pill to take the newly active tab')
       // The slide plays whatever the system's motion setting: no reduced-motion
       // block in the shipped stylesheets may reach the pill.
       r.viewPill.reducedMotionRules = 0
@@ -193,7 +196,6 @@
         '<span class="_viewsMoreAnchor_v_1"><button type="button" class="_viewsMore_v_1" aria-haspopup="menu" aria-expanded="false">more</button></span>' +
         '</div>'
       document.body.appendChild(rowHeader)
-      await sleep(150)
       // Read by the host's own structure: the row is the header's first box, the
       // tablist its marked tablist, and the overflow button the tablist's
       // neighbour (the skin's marks are what the assertions below see in styles).
@@ -201,6 +203,10 @@
       var list = row.querySelector('[role="tablist"]')
       var more = list.nextElementSibling.querySelector('button')
       var rowTabs = list.children
+      // The plate's class and the pill's placement are written by the pass
+      // after the row arrives; the pill's mark is the state this read waits for.
+      var placed = await probe.until(function () { return pillState(list, rowTabs[0]) },
+        function (read) { return read[read.length - 1].attr === true }, 'the view-tabs row pill to be placed')
       var rowBox = row.getBoundingClientRect()
       var listBox = list.getBoundingClientRect()
       var moreBox = more.getBoundingClientRect()
@@ -238,14 +244,14 @@
         tabHeight: getComputedStyle(rowTabs[0]).height,
         tabBoxes: tabBoxes,
         underline: getComputedStyle(rowTabs[0], '::after').display,
-        pill: pillState(list, rowTabs[0]),
+        pill: placed[placed.length - 1],
       }
-      rowTabs[0].setAttribute('aria-selected', 'false')
-      rowTabs[0].className = '_tab_v_1'
-      rowTabs[2].setAttribute('aria-selected', 'true')
-      rowTabs[2].className = '_tab_v_1 _tabActive_v_1'
-      await sleep(60)
-      r.viewRow.pillSwitched = pillState(list, rowTabs[2])
+      r.viewRow.pillSwitched = await probe.pillSlide(list, rowTabs[2], function () {
+        rowTabs[0].setAttribute('aria-selected', 'false')
+        rowTabs[0].className = '_tab_v_1'
+        rowTabs[2].setAttribute('aria-selected', 'true')
+        rowTabs[2].className = '_tab_v_1 _tabActive_v_1'
+      }, 'the view-tabs row pill to take the newly active tab')
       probe.viewRow = { row: row, list: list }
     })
     await probe.onlyFor(['composer'], async function () {
@@ -307,24 +313,47 @@
         '<div class="_searchSlot_n_1"><button type="button" class="_searchButton_n_1" aria-label="Search sessions">search</button>' +
         '<input class="_searchInput_n_1" type="text" tabindex="-1"></div></div></div>'
       document.body.appendChild(sidebarSlot)
-      await sleep(150)
+      // The shell stamps the sidebar's parts on the pass after the subtree
+      // arrives; the two this case reads are the state it waits for.
+      var parts = await probe.until(function () {
+        return {
+          logo: sidebarSlot.querySelector('[data-dsh-claude-part~="logo-row"]'),
+          search: sidebarSlot.querySelector('[data-dsh-claude-part~="search-button"]'),
+        }
+      }, function (read) {
+        var last = read[read.length - 1]
+        return last.logo !== null && last.search !== null
+      }, 'the sidebar search parts to be stamped')
+      var logoRow = parts[parts.length - 1].logo
+      var hostSearchButton = parts[parts.length - 1].search
       // The search feature arrives in its own chunk; its registrations are read
       // once they land rather than on the first frame after the page boots.
       for (var waited = 0; waited < 3000 && !(window.__slots || []).some(function (entry) {
         return entry.id === 'dsh-claude-style.search'
       }); waited += 50) await sleep(50)
-      var logoRow = sidebarSlot.querySelector('[data-dsh-claude-part~="logo-row"]')
-      var hostSearchButton = sidebarSlot.querySelector('[data-dsh-claude-part~="search-button"]')
+      // The takeover follows the host's button on a pass: the registration
+      // above can land in the pass that stamps that part only afterwards. Ask
+      // for the pass that follows the stamp through a child mutation, which is
+      // the page's own pass source, so the listener is attached in a pass this
+      // wait owns rather than a later one nothing promises.
+      sidebarSlot.appendChild(document.createElement('i'))
+      await probe.nextPass('the search takeover to follow the host control')
       var rootsBefore = window.__roots.length
       if (hostSearchButton) hostSearchButton.click()
-      await sleep(60)
-      probe.searchRoot = window.__roots[rootsBefore]
+      // The host modal is rendered through the skin's own root: the root's
+      // first render is the state this read waits for.
+      var roots = await probe.until(function () { return window.__roots[rootsBefore] || null },
+        function (read) {
+          var root = read[read.length - 1]
+          return root !== null && root.renders > 0
+        }, 'the search modal root to render')
+      probe.searchRoot = roots[roots.length - 1]
       // One style at a time, through the form; the host registrations are read
       // back after each change.
       var styleOf = async function (style) {
         window.__pushForm({ searchStyle: style })
         sidebarSlot.appendChild(document.createElement('i'))
-        await sleep(200)
+        await probe.nextPass('the search style to pass over the sidebar')
         var entries = (window.__slots || []).filter(function (entry) {
           return entry.id === 'dsh-claude-style.search' || entry.seat === 'dsh-claude-style.search'
         })
@@ -355,7 +384,8 @@
       var countHost = function () { reachedHost++ }
       sidebarSlot.addEventListener('click', countHost)
       if (hostButton) hostButton.click()
-      await sleep(60)
+      // A click's listeners run inside the dispatch, so the host's count is
+      // final when it returns; no pass is due for it.
       sidebarSlot.removeEventListener('click', countHost)
       r.search.icon.hostClicksReachingHost = reachedHost
       r.search.back = await styleOf('standalone')
