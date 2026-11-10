@@ -331,9 +331,16 @@ body[data-dsh-claude-style] .dsh-claude-account-inject {
    are the shared repainted-menu look (shared/popover.css); this card adds its
    width. */
 body[data-dsh-claude-style] [data-dsh-claude-account-menu] {
-  width: var(--dsh-claude-account-width, 260px);
+  /* A mirrored footer widget was laid out in the footer's content box, and the
+     account row is narrower than that box whenever the update indicator shares
+     the row's line. The card takes the wider of the row and the footer, the
+     footer plus the card's own horizontal padding and border (14px), so a
+     mirrored widget keeps the width it was built for. The row remains the floor
+     for a footer without a wide entry, and the page bound keeps a wide footer
+     from carrying the card past the window. */
+  width: max(var(--dsh-claude-account-width, 260px), calc(var(--dsh-claude-account-footer-width, 0px) + 14px));
   min-width: 0;
-  max-width: none;
+  max-width: min(340px, calc(var(--dsh-claude-page-width, 100vw) - 16px));
   box-sizing: border-box;
 }
 /* The entry animation is keyed on the armed marker rather than on the card

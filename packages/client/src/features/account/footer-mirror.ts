@@ -340,7 +340,12 @@ export function createFooterMirror(options: {
       // container (a region or tabindex wrapper) is still a widget.
       const tag = entry.tagName
       const role = entry.getAttribute('role') || ''
-      return tag === 'BUTTON' || tag === 'A' || role === 'button'
+      if (tag !== 'BUTTON' && tag !== 'A' && role !== 'button') return false
+      // A card can be the control itself: the Command Code quota card is one
+      // button whose rows draw a label, an amount and a percentage each. One
+      // label belongs in a menu item; a drawing with several figures keeps
+      // its markup, so a text item would drop what the card exists to show.
+      return textPieces(entry) < 3
     }
     // Semantic meter markup is always a widget, however small.
     if (entry.querySelector('[role="progressbar"], [role="meter"], meter, progress') !== null) return false
@@ -352,9 +357,13 @@ export function createFooterMirror(options: {
     return entryText.length - triggerText.length <= 2
   }
 
-  /** Visible text of an entry, skipping overlay subtrees. */
-  function textExcludingOverlays(entry: Element) {
-    let text = ''
+  /**
+   * The entry's own text nodes, in document order, with the subtrees of any
+   * overlay left out: an open panel's copy must not change what its entry
+   * reads as.
+   */
+  function ownTextNodes(entry: Element): Text[] {
+    const nodes: Text[] = []
     const walker = document.createTreeWalker(entry, 4 /* SHOW_TEXT */, {
       acceptNode(node) {
         let p = node.parentElement
@@ -365,8 +374,30 @@ export function createFooterMirror(options: {
         return 1 // ACCEPT
       }
     })
-    while (walker.nextNode()) text += walker.currentNode.nodeValue
-    return text.trim()
+    while (walker.nextNode()) nodes.push(walker.currentNode as Text)
+    return nodes
+  }
+
+  /**
+   * The number of separate leaves an entry writes text into. One label is an
+   * action's whole vocabulary; a card that draws figures has several (a name,
+   * an amount and a percentage per row), and a text menu item would drop them.
+   */
+  function textPieces(entry: Element): number {
+    let pieces = 0
+    let holder: Element | null = null
+    for (const node of ownTextNodes(entry)) {
+      if ((node.nodeValue || '').trim() === '') continue
+      if (node.parentElement === null || node.parentElement === holder) continue
+      holder = node.parentElement
+      pieces++
+    }
+    return pieces
+  }
+
+  /** Visible text of an entry, skipping overlay subtrees. */
+  function textExcludingOverlays(entry: Element) {
+    return ownTextNodes(entry).map(node => node.nodeValue).join('').trim()
   }
 
   /**

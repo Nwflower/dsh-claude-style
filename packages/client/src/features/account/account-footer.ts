@@ -357,6 +357,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   /** The entry row's width, as last written to the stylesheet. */
   let accountWidth = 0
+  /** The footer's content width, as last written: the width mirrored entries were laid out in. */
+  let footerWidth = 0
   /** The self-built drawer's distance from the footer's edges, as last written. */
   let accountInsetLeft = -1
   let accountInsetRight = -1
@@ -380,6 +382,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (accountWidth !== 0) {
       accountWidth = 0
       document.body.style.removeProperty('--dsh-claude-account-width')
+    }
+    if (footerWidth !== 0) {
+      footerWidth = 0
+      document.body.style.removeProperty('--dsh-claude-account-footer-width')
     }
     if (accountInsetLeft !== -1 || accountInsetRight !== -1) {
       accountInsetLeft = -1
@@ -414,7 +420,14 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   }
 
   /** The entry row's boxes, taken in the pass's read phase when the row already stands (D40). */
-  let rowBoxes: { row: Element, rowRect: DOMRect, footRect: DOMRect | null } | null = null
+  let rowBoxes: { row: Element, rowRect: DOMRect, footRect: DOMRect | null, footerWidth: number } | null = null
+
+  /** The footer's content width: the box a plugin's own footer entry is laid out in. */
+  function readFooterContentWidth(footArea: Element): number {
+    const styles = getComputedStyle(footArea)
+    const contentWidth = Math.round(footArea.clientWidth - parseFloat(styles.paddingLeft) - parseFloat(styles.paddingRight))
+    return contentWidth > 0 ? contentWidth : 0
+  }
 
   /**
    * Read the entry row's box before the pass writes. The row a pass creates
@@ -429,7 +442,14 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const synthetic = surface.mode() === 'synthetic'
     const row = synthetic ? drawer.btn() : hostMenu.trigger()
     if (row === null) return
-    rowBoxes = { row, rowRect: inPageBox(row.getBoundingClientRect()), footRect: synthetic ? inPageBox(footArea.getBoundingClientRect()) : null }
+    // A plugin's footer entries are laid out in the footer's content box; a
+    // mirrored entry keeps that width so the card inside it does not reflow.
+    rowBoxes = {
+      row,
+      rowRect: inPageBox(row.getBoundingClientRect()),
+      footRect: synthetic ? inPageBox(footArea.getBoundingClientRect()) : null,
+      footerWidth: readFooterContentWidth(footArea)
+    }
   }
 
   /**
@@ -494,12 +514,21 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const synthetic = surface.mode() === 'synthetic'
     const measured = rowBoxes !== null && rowBoxes.row === row
       ? rowBoxes
-      : { row, rowRect: inPageBox(row.getBoundingClientRect()), footRect: synthetic ? inPageBox(footArea.getBoundingClientRect()) : null }
+      : {
+          row,
+          rowRect: inPageBox(row.getBoundingClientRect()),
+          footRect: synthetic ? inPageBox(footArea.getBoundingClientRect()) : null,
+          footerWidth: readFooterContentWidth(footArea)
+        }
     const rowRect = measured.rowRect
     const rowWidth = Math.round(rowRect.width)
     if (rowWidth > 0 && rowWidth !== accountWidth) {
       accountWidth = rowWidth
       document.body.style.setProperty('--dsh-claude-account-width', `${rowWidth}px`)
+    }
+    if (measured.footerWidth > 0 && measured.footerWidth !== footerWidth) {
+      footerWidth = measured.footerWidth
+      document.body.style.setProperty('--dsh-claude-account-footer-width', `${footerWidth}px`)
     }
     if (!synthetic || measured.footRect === null) return
     const footRect = measured.footRect

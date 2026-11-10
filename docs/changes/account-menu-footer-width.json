@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-10",
+  "group": "fixes",
+  "order": 15,
+  "external": false,
+  "zh": "修复账号菜单把插件组件副本收窄到账号行宽度、宽卡片标签折行并撑高的问题",
+  "en": "Fix the account menu narrowing a plugin widget's copy to the account row's width, which folded a wide card's labels onto a second line and made it taller"
+}
