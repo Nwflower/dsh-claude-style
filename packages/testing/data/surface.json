@@ -106,6 +106,7 @@
     { "id": "account.footer-overlay", "attribute": "data-dsh-claude-footer-overlay", "feature": "account", "sees": "a footer overlay the takeover leaves whole so its floating panel keeps its box" },
     { "id": "account.footer-entry", "attribute": "data-dsh-claude-footer-entry", "feature": "account", "sees": "a footer entry the takeover collects into the account menu" },
     { "id": "account.footer-hidden", "attribute": "data-dsh-claude-footer-hidden", "feature": "account", "sees": "a footer branch the takeover hides after rebuilding it in the account menu" },
+    { "id": "account.footer-block", "attribute": "data-dsh-claude-footer-block", "feature": "account", "sees": "a plugin's footer block — the enterprise apps section — kept above the account row, with the footer's action box given back its size for it" },
     { "id": "account.action-index", "attribute": "data-action-index", "feature": "account", "sees": "the footer entry index behind a mirrored account-menu action" },
     { "id": "account.settings-row", "selector": "[data-dsh-claude-part~=\"settings-trigger\"]", "feature": "account", "sees": "the host's settings row in the sidebar foot, where the account row and the host's version-update control stand beside each other" },
     { "id": "account.embed", "selector": ".dsh-claude-popover-embed", "feature": "account", "sees": "a live copy of a footer widget a plugin mounted (the usage plugin's foot card), standing in the account surface with the plugin's own markup so its figures and its controls keep working" },

@@ -48,6 +48,8 @@ export const FOOTER_SEAT_ATTR = 'data-dsh-claude-footer-seat'
 export const FOOTER_SEATS = [
   { seat: 'update', selector: PLUGIN_ENTRY_UPDATE_SELECTOR },
 ] as const
+/** A footer entry a plugin lays out as a block of its own — a `<section>` carrying its heading and its rows — which the takeover keeps above the account row instead of gathering it into the account menu (features/account/footer-mirror.ts, footer-takeover.css). */
+export const FOOTER_BLOCK_ATTR = 'data-dsh-claude-footer-block'
 
 /** The host frame's mark while the sidebar stands over the page from a hover (features/sidebar-peek): `open`, then `closing` for the slide back out.
  * The two custom properties carry the collapsed width the centre keeps clear of and the width the slide travels. */

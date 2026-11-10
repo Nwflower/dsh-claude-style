@@ -7,10 +7,8 @@
  * @risk A panel mounted between measurement and sync is collapsed as an ordinary footer entry, so the account-menu trigger opens a dialog with no box.
  */
 import { afterEach, expect, test } from 'vitest'
-import { FOOTER_ACTIONS_SELECTOR, SLOT_ANCHOR_SELECTOR } from '@dsh-claude-style/contracts/dom'
-import { createFooterMirror } from '@dsh-claude-style/client/pure'
-import { attach } from '../../fixtures/host-markup'
 import { surfaceAttribute } from '../../fixtures/surface'
+import { footerMirrorHarness } from '../../fixtures/footer-mirror'
 
 const FOOTER_OVERLAY = surfaceAttribute('account.footer-overlay')
 const FOOTER_ENTRY = surfaceAttribute('account.footer-entry')
@@ -22,26 +20,13 @@ afterEach(() => {
 })
 
 test('a fixed panel mounted after measurement stays an overlay while its trigger enters the account menu', () => {
-  const footArea = document.createElement('div')
-  const actions = attach(footArea, FOOTER_ACTIONS_SELECTOR)
-  const slot = attach(actions, SLOT_ANCHOR_SELECTOR)
+  const { footArea, slot, popover, mirror } = footerMirrorHarness()
   const trigger = document.createElement('div')
   const button = document.createElement('button')
   button.setAttribute('aria-label', 'Remote workspace')
   button.textContent = 'Remote'
   trigger.append(button)
   slot.append(trigger)
-
-  const popover = document.createElement('div')
-  const anchor = document.createElement('div')
-  popover.append(anchor)
-  document.body.append(footArea, popover)
-  const mirror = createFooterMirror({
-    body: () => popover,
-    anchor: () => anchor,
-    isOpen: () => false,
-    close: () => {},
-  })
 
   mirror.measure(footArea)
   const backdrop = document.createElement('div')

@@ -1,7 +1,7 @@
 import { FOOTER_ACTIONS_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { findFootArea } from '@dsh-claude-style/engine/host'
 import { hasSkinClass } from '@dsh-claude-style/engine/dom'
-import { FOOTER_SEAT_ATTR, FOOTER_SEATS } from '../../constants'
+import { FOOTER_BLOCK_ATTR, FOOTER_SEAT_ATTR, FOOTER_SEATS } from '../../constants'
 import { buildPopoverItem } from '../../shared/popover'
 import { copy } from './copy'
 
@@ -70,6 +70,10 @@ export function createFooterMirror(options: {
    *   - an entry a FOOTER_SEATS seat claims (constants.ts) stays in the
    *     sidebar: it keeps its entry mark and gains the seat and the snapshot
    *     its rule copies, and the popover gathers no row for it.
+   *   - an entry that is a `<section>` is a block the plugin laid out for the
+   *     sidebar, not a control: it keeps its place above the account row under
+   *     FOOTER_BLOCK_ATTR, the popover carries a copy of it for the collapsed
+   *     rail alone.
    * Returns the live entry list for popover mirroring.
    */
   function syncFooterVisibility(footArea: Element) {
@@ -92,6 +96,7 @@ export function createFooterMirror(options: {
         // overlay that nothing paints (issue #97).
         entry.removeAttribute('data-dsh-claude-footer-entry')
         entry.removeAttribute('data-dsh-claude-footer-hidden')
+        entry.removeAttribute(FOOTER_BLOCK_ATTR)
         entry.setAttribute('data-dsh-claude-footer-overlay', '')
         continue
       }
@@ -104,9 +109,24 @@ export function createFooterMirror(options: {
         entry.setAttribute(FOOTER_SEAT_ATTR, seat)
         entry.removeAttribute('data-dsh-claude-footer-entry')
         entry.removeAttribute('data-dsh-claude-footer-hidden')
+        entry.removeAttribute(FOOTER_BLOCK_ATTR)
         continue
       }
       entry.removeAttribute(FOOTER_SEAT_ATTR)
+      const block = entry.tagName === 'SECTION'
+      if (block) {
+        // A section is the plugin's own block laid out for the sidebar — a
+        // heading and the rows under it — not a control the account menu can
+        // stand in for: it keeps its place above the account row, and
+        // footer-takeover.css gives the footer's action box its size back for
+        // it. The popover still carries a copy, which the rail shows where the
+        // block itself has no room.
+        entry.setAttribute(FOOTER_BLOCK_ATTR, '')
+        entry.removeAttribute('data-dsh-claude-footer-entry')
+        entry.removeAttribute('data-dsh-claude-footer-hidden')
+        continue
+      }
+      entry.removeAttribute(FOOTER_BLOCK_ATTR)
       entry.setAttribute('data-dsh-claude-footer-entry', '')
       const all = entry.querySelectorAll('*')
       for (let j = 0; j < all.length; j++) {
@@ -566,9 +586,10 @@ export function createFooterMirror(options: {
         // balance stack is itself clickable). A card a plugin mounted into
         // the footer itself is one of those whatever its own text says: the
         // usage card reads as one line, and a text row would drop the
-        // figures it draws, so it keeps its own markup.
+        // figures it draws, so it keeps its own markup. A block is one for
+        // the same reason, and its clone is the copy the rail shows.
         const inSlot = entry.closest(FOOTER_ACTIONS_SELECTOR) !== null
-        if (!inSlot || !entryIsActionLike(entry, trigger)) {
+        if (!inSlot || entry.hasAttribute(FOOTER_BLOCK_ATTR) || !entryIsActionLike(entry, trigger)) {
           removeActionMirror(idx)
           if (hasContent) {
             syncEmbedMirror(entry, idx, trigger)
@@ -670,13 +691,14 @@ export function createFooterMirror(options: {
   /** Drop every takeover marker from the host's footer entries. */
   function clear(footArea: Element) {
     const marked = footArea.querySelectorAll(
-      '[data-dsh-claude-footer-entry], [data-dsh-claude-footer-hidden], [data-dsh-claude-footer-overlay], [data-dsh-claude-footer-seat]',
+      '[data-dsh-claude-footer-entry], [data-dsh-claude-footer-hidden], [data-dsh-claude-footer-overlay], [data-dsh-claude-footer-seat], [data-dsh-claude-footer-block]',
     )
     for (let i = 0; i < marked.length; i++) {
       marked[i].removeAttribute('data-dsh-claude-footer-entry')
       marked[i].removeAttribute('data-dsh-claude-footer-hidden')
       marked[i].removeAttribute('data-dsh-claude-footer-overlay')
       marked[i].removeAttribute(FOOTER_SEAT_ATTR)
+      marked[i].removeAttribute(FOOTER_BLOCK_ATTR)
     }
   }
 

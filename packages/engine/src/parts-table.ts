@@ -369,6 +369,15 @@ export function holdRelations(vocabulary: PartsTableVocabulary): HoldRelation[] 
     scope: part('foot-area'),
     attributes: ['data-dsh-claude-account-host-row'],
   },
+  // features/account/footer-takeover.css: only the footer's action box that holds a
+  // plugin's block keeps its size; the takeover zeroes it for the entries it
+  // gathers into the account menu.
+  {
+    name: 'footer-block',
+    holder: part('footer-actions'),
+    held: '[data-dsh-claude-footer-block]',
+    attributes: ['data-dsh-claude-footer-block'],
+  },
   // features/account/footer-takeover.css: the host mounts its own account menu on
   // <body>, outside the sidebar, so the collapsed rail's card width cannot be read
   // from a sidebar ancestor; the body takes the mark from the frame's own attribute.
