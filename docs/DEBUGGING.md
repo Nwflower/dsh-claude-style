@@ -14,6 +14,7 @@
 
 同一页面、同一操作，改动前后各测一轮再比较；两台机器、两个窗口之间的读数不可比。
 
+- 实时页面用本次会话提供的浏览器工具读：`browser_navigate` 打开地址，`browser_snapshot` 读结构与文字，`browser_screenshot` 存图，`browser_console` 与 `browser_network` 读报错与请求。页面内的表达式、按功能关掉一块、清场后的图与明暗轮换仍用下面这些入口。
 - 替身页：`node packages/testing/behaviour.mjs --open <page>` 起一个页面并打印地址，`--eval --at <地址> "<表达式>"` 在同一个页面里跑脚本，`--shot --at <地址> [--dark]` 落一张清场后的图，`--pass --at <地址>` 让页面立即排一趟（不必去改宽度或等下一次自然排趟）。
 - 端到端：`node packages/testing/e2e.mjs --scenario <名字>` 自带宿主与脚本化模型，`--headed` 观察过程。同一场景在同一台机器上重跑两次，差值超过容差就有东西变了。
 - 时间读 `performance.now()` 与 `PerformanceObserver` 的长任务；内存读 `performance.memory`（Chrome）或宿主进程的堆。两者都只在同条件的两轮之间比较。
