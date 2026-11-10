@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-10",
+  "group": "fixes",
+  "order": 12,
+  "external": false,
+  "zh": "修复手机上输入框获得焦点后被键盘盖住，输入文字在触屏设备上至少 16px，页面不再被 iOS 放大，浏览器工具栏的几像素变化也不再被当作键盘",
+  "en": "Fix the composer being covered by the keyboard on a phone, with the field's text at least 16px on touch devices so iOS no longer zooms the page, and the browser toolbar moving by a few pixels no longer taken for a keyboard"
+}

@@ -36,6 +36,16 @@ body[data-dsh-claude-style] [data-composer-input] {
   height: auto;
 }
 
+/* iOS Safari zooms the page when an editable control smaller than 16px takes
+   focus. The zoom moves the visual viewport's scale off 1, which ends the
+   keyboard follow in visual-viewport.ts and leaves the keyboard over the card. */
+@media (pointer: coarse) {
+  body[data-dsh-claude-style] [data-composer-input],
+  body[data-dsh-claude-style] [data-composer-card][data-composer-variant="hero"] [data-dsh-synthetic-placeholder] {
+    font-size: max(16px, calc(15px * var(--dsh-claude-interface-font-scale, 1)));
+  }
+}
+
 /* The hint the skin supplies for the attachment form, where the host draws none.
    The host renders its own placeholder only while the draft is empty AND
    nothing is attached, so attaching an image with no text leaves the card
