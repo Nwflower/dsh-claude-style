@@ -1314,23 +1314,6 @@
       "prop": "font-family",
       "verdict": "unmatched"
     },
-    "body[data-dsh-claude-style] .dsh-claude-effort[data-apex] .dsh-claude-effort-matrix{display:grid!;grid-auto-flow:row!}|display": {
-      "selector": "body[data-dsh-claude-style] .dsh-claude-effort[data-apex] .dsh-claude-effort-matrix",
-      "prop": "display",
-      "verdict": "unmatched"
-    },
-    "body[data-dsh-claude-style] .dsh-claude-effort[data-apex] .dsh-claude-effort-matrix{display:grid!;grid-auto-flow:row!}|grid-auto-flow": {
-      "selector": "body[data-dsh-claude-style] .dsh-claude-effort[data-apex] .dsh-claude-effort-matrix",
-      "prop": "grid-auto-flow",
-      "verdict": "unmatched"
-    },
-    "body[data-dsh-claude-style] .dsh-claude-effort-popover:not([data-open=true]) .dsh-claude-effort-matrix-sq,body[data-dsh-claude-style] .dsh-claude-effort-popover:not([data-open=true]) .dsh-claude-effort-matrix-sq:before,body[data-dsh-claude-style] .dsh-claude-effort-popover:not([data-open=true]) .dsh-claude-effort-matrix-sq:after,body[data-dsh-claude-style][data-dsh-claude-motion=reduced] .dsh-claude-effort-matrix-sq{animation:none!}|animation": {
-      "selector": "body[data-dsh-claude-style] .dsh-claude-effort-popover:not([data-open=true]) .dsh-claude-effort-matrix-sq,body[data-dsh-claude-style] .dsh-claude-effort-popover:not([data-open=true]) .dsh-claude-effort-matrix-sq:before,body[data-dsh-claude-style] .dsh-claude-effort-popover:not([data-open=true]) .dsh-claude-effort-matrix-sq:after,body[data-dsh-claude-style][data-dsh-claude-motion=reduced] .dsh-claude-effort-matrix-sq",
-      "prop": "animation",
-      "verdict": "needed",
-      "state": "settings control 5.2",
-      "opponents": []
-    },
     "body[data-dsh-claude-style] .dsh-claude-effort[data-apex] .dsh-claude-effort-fill,body[data-dsh-claude-style] .dsh-claude-effort[data-apex] .dsh-claude-effort-ticks{opacity:0!}|opacity": {
       "selector": "body[data-dsh-claude-style] .dsh-claude-effort[data-apex] .dsh-claude-effort-fill,body[data-dsh-claude-style] .dsh-claude-effort[data-apex] .dsh-claude-effort-ticks",
       "prop": "opacity",

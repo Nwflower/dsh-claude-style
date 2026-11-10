@@ -358,6 +358,14 @@ export function installScheduler<Name extends string>(ctx: HostContext, ui: Sche
         scheduled = false
         cancelPass = null
         if (stopped) return
+        // A stand-in page counts scheduler passes, not frames: a feature that
+        // paints its own frames (the effort field's canvas) asks the page for a
+        // frame every tick, and the probe's settle rule must still see the skin
+        // as quiet once the passes stop (D92).
+        if ((window as unknown as { __dshStandIn?: unknown }).__dshStandIn === true) {
+          const counts = window as unknown as { __dshClaudePasses?: number }
+          counts.__dshClaudePasses = (counts.__dshClaudePasses ?? 0) + 1
+        }
         const content = passContentOnly
         passContentOnly = false
         if (!measured) {

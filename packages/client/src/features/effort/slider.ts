@@ -80,7 +80,7 @@ export function createEffortControl(opts: {
   track.setAttribute('role', 'slider')
   track.setAttribute('tabindex', '0')
   /** The top rung's dot matrix (effort/matrix.ts). */
-  const dotMatrix = createEffortMatrix(track, matrix)
+  const dotMatrix = createEffortMatrix(matrix)
 
   /** The ladder in force, the level it is on, and the words around it. */
   let steps: EffortStep[] = []
@@ -159,15 +159,26 @@ export function createEffortControl(opts: {
 
   /** The knob's width and the track's, as the pass's read phase took them for the update in hand. */
   let passBox: EffortTrackBox | null = null
+  /**
+   * The last reading the read phase took, and the track's left edge then. A
+   * gesture writes without reading layout: the release used to read
+   * `offsetWidth` right after the apex opened and paid for every pending style
+   * in the card.
+   */
+  let measured: EffortTrackBox | null = null
+  let trackLeft = 0
 
-  /** The knob's width and the track's: the pass's reading inside its update, a fresh one anywhere else. */
+  /** The knob's width and the track's: the pass's reading inside its update, the last reading anywhere else. */
   function trackBox(): EffortTrackBox {
-    return passBox ?? measureTrack()
+    return passBox ?? measured ?? measureTrack()
   }
 
-  /** Read the knob's width and the track's off the layout. */
+  /** Read the knob's width, the track's width and the track's left edge off the layout. */
   function measureTrack(): EffortTrackBox {
-    return { size: knob.offsetWidth || 16, width: track.clientWidth }
+    const box = { size: knob.offsetWidth || 16, width: track.clientWidth }
+    measured = box
+    trackLeft = track.getBoundingClientRect().left
+    return box
   }
 
   /** How wide the knob is, and how far its centre may travel. */
@@ -225,8 +236,9 @@ export function createEffortControl(opts: {
   function pointerTravel(clientX: number) {
     const box = geometry()
     // The distance the pointer covers, in the pixels the travel is written in;
-    // the knob's own size already is (shared/page-zoom.ts).
-    const raw = inPagePixels(clientX - track.getBoundingClientRect().left) - box.size / 2
+    // the knob's own size already is (shared/page-zoom.ts). The left edge comes
+    // from the read phase, never from a fresh read inside a frame.
+    const raw = inPagePixels(clientX - trackLeft) - box.size / 2
     return Math.max(0, Math.min(box.span, raw))
   }
 
@@ -280,10 +292,16 @@ export function createEffortControl(opts: {
   function paintApex(at: number) {
     const want = steps.length > 1 && at === steps.length - 1
     if (want === apexOn) return
-    if (want && !dotMatrix.ensure()) return
+    if (want && !dotMatrix.ensure(trackBox())) return
     apexOn = want
-    if (want) root.setAttribute('data-apex', '')
-    else root.removeAttribute('data-apex')
+    if (want) {
+      root.setAttribute('data-apex', '')
+      // After the mark: the field asks the page whether the rung is lit, and a
+      // frame queued before this line would find it dark and stop.
+      dotMatrix.wake()
+    } else {
+      root.removeAttribute('data-apex')
+    }
   }
 
   /**
@@ -423,6 +441,9 @@ export function createEffortControl(opts: {
     if (typeof opts.onDragStart === 'function') opts.onDragStart()
     // A pending settle no longer owns the words: this gesture does.
     nameSwap.reset()
+    // The press is an event, not a frame: it can afford the one reading the
+    // gesture keeps for the rest of its moves.
+    measureTrack()
     const x = pointerTravel(e.clientX)
     /* Glide to the press position; the drag state (and its transition-off flag)
        starts only on the first MOVE — setting it here would suppress the very
@@ -478,6 +499,11 @@ export function createEffortControl(opts: {
     if (moveQueued) return
     moveQueued = true
     cancelPendingFrame = requestFrame({
+      // The track's box and its edge are read in the frame's read phase (D40);
+      // the writes below then run without forcing a layout of their own.
+      read() {
+        measureTrack()
+      },
       write() {
         moveQueued = false
         cancelPendingFrame = null
@@ -516,7 +542,8 @@ export function createEffortControl(opts: {
    *
    * @param box - the track's reading from the pass's read phase (D40): the card
    *   keeps its layout box while closed, so reading it after the pass's writes
-   *   would force a layout on every pass. Left out, the update reads it itself.
+   *   would force a layout on every pass. Left out, the update uses the last
+   *   reading the read phase took.
    */
   function update(box?: EffortTrackBox | null) {
     passBox = box ?? null
@@ -563,6 +590,8 @@ export function createEffortControl(opts: {
     el: root,
     update,
     measure: measureTrack,
+    /** Ask the top rung's field for a frame: the picker calls this as the card opens. */
+    wake() { dotMatrix.wake() },
     // The picker's hover-close guard keys on the hold, from pointerdown until
     // the release wherever it lands: a gesture out of the card keeps it open,
     // and the release outside closes it (onDragEnd).

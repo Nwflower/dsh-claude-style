@@ -12,6 +12,10 @@
   window.__dshSmokeHost = { CASE: CASE, MARKUP: MARKUP }
   window.__pwned = 0
   window.__passes = 0
+  // The skin's scheduler passes, which the settle rule reads: a feature painting
+  // its own frames (the effort field's canvas) asks the page for a frame every
+  // tick without asking the scheduler for one.
+  window.__dshClaudePasses = 0
   window.__passTimes = []
   var raf = window.requestAnimationFrame.bind(window)
   // The settle probe drives the clock through this reference while it waits: the

@@ -340,8 +340,6 @@
     {
       "reason": "推理强度选择器：走查没有拖动它，也没有停在顶档",
       "selectors": [
-        "body[data-dsh-claude-style] .dsh-claude-effort-matrix-cell",
-        "body[data-dsh-claude-style] .dsh-claude-effort-matrix-sq",
         "body[data-dsh-claude-style] .dsh-claude-effort[data-dragging] .dsh-claude-effort-knob",
         "body[data-dsh-claude-style] .dsh-claude-effort[data-dragging] .dsh-claude-effort-fill",
         "body[data-dsh-claude-style] .dsh-claude-effort[data-empty] .dsh-claude-effort-track",

@@ -107,6 +107,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     // marked open, so positioning first would skip it and leave the card
     // where it stood.
     if (effortPop !== null) setMenuPopoverOpen(effortPop, true, effortBtn)
+    // The field's frames stop with the card, so reopening it is what asks the
+    // top rung for the next one.
+    if (effortSlider !== null) effortSlider.wake()
     positionEffortPopover()
   }
 

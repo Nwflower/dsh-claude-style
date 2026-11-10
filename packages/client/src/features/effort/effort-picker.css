@@ -184,13 +184,14 @@ body[data-dsh-claude-style] .dsh-claude-effort-tick {
   corner-shape: round;
   background: color-mix(in srgb, var(--dsw-alias-label-primary, #161616) 26%, transparent);
 }
-/* The top rung's dot matrix: a grid of accent blocks floating on the bare track
-   (the 1px gaps ARE the grid lines). Three layers ride every block: its own
-   hash-scattered flash, a band of light travelling right to left through
-   hash-scattered clusters, and a one-pass glow as the entrance sweep passes it.
-   The plume shape (solid at the nozzle, dissolving into the track by the far
-   left) is a static per-block opacity all three ride through. The grid lives
-   only while the apex is shown, so the cost stays bounded to that state. */
+/* The top rung's dot matrix: five rows of accent blocks over the bare track
+   (the 1px gaps ARE the grid lines), drawn on one canvas by
+   features/effort/matrix.ts. Three layers ride every block: its own
+   hash-scattered flash, a stream of light travelling right to left through
+   hash-scattered clusters, and a one-pass glow as the arrival reaches it. The
+   plume (solid at the nozzle, dissolving into the track by the far left) is a
+   static per-block alpha all three ride through. The field lives only while the
+   apex is shown, and its frames stop with the card. */
 body[data-dsh-claude-style] .dsh-claude-effort-matrix {
   position: absolute;
   left: 0;
@@ -202,112 +203,20 @@ body[data-dsh-claude-style] .dsh-claude-effort-matrix {
   corner-shape: round;
   overflow: hidden;
   box-sizing: border-box;
-  /* display: none while the apex is off — the twinkle costs nothing until the
-     top rung is actually reached. */
+  /* display: none while the apex is off: nothing is drawn or asked for until
+     the top rung is actually reached. */
   display: none;
   pointer-events: none;
 }
 body[data-dsh-claude-style] .dsh-claude-effort[data-apex] .dsh-claude-effort-matrix {
-  display: grid !important;
-  grid-auto-flow: row !important;
+  display: block;
 }
-/* No base opacity: an !important declaration would outrank the animation in
-   the cascade and freeze the cell at 0. fill-mode both covers the pre-delay
-   (from) and the rest (to), so the keyframes own the whole life cycle. */
-body[data-dsh-claude-style] .dsh-claude-effort-matrix-cell {
-  animation: dsh-claude-fade-in var(--dsh-claude-duration-surface) var(--dsh-claude-ease-standard) both;
-}
-body[data-dsh-claude-style] .dsh-claude-effort-matrix-sq {
+/* The field's one canvas: the renderer sizes its backing store in device pixels
+   and keeps the box the groove's height, so the rows read square at any ratio. */
+body[data-dsh-claude-style] .dsh-claude-effort-matrix-canvas {
+  display: block;
   width: 100%;
   height: 100%;
-  border-radius: 1px;
-  /* NOT !important: the flash animates background-color, and no animation can
-     outrank an !important declaration — the same cascade trap the cell's
-     opacity fell into. Nothing in the host targets these private classes. */
-  background-color: var(--dsh-claude-apex, #8b7ad0);
-  --dsh-flash-light: var(--dsh-claude-apex-flash, #d9d2f5);
-  /* One flash cycle: the block holds the accent, jumps to its lighter peak for a
-     short window, and eases back over the rest of the period. var() in keyframes
-     resolves against the animated block, so one keyframes rule serves every
-     block's own peak colour. */
-  animation: dshClaudeEffortFlash var(--dsh-claude-period-flash) infinite var(--dsh-claude-ease-in-out);
-}
-/* The block's flash peak lives HERE, never inline: the override only picks the
-   share of apex the peak mixes (--dsh-flash-mix), so a stylesheet swap always
-   re-colours every block. Inline rgb peaks did not — after the accent landed,
-   blocks built by the previous clay bundle kept flashing orange from their
-   stale inline values. A continuous share, not eight buckets: the buckets
-   showed as bands across a wide track. The rule is its own so the declarations
-   above keep the shape the importance walk recorded. */
-body[data-dsh-claude-style] .dsh-claude-effort-matrix-sq {
-  position: relative;
-  --dsh-flash-light: color-mix(in srgb, var(--dsh-claude-apex, #8b7ad0) var(--dsh-flash-mix, 62%), var(--dsh-claude-apex-flash, #d9d2f5));
-}
-/* The frontier glow: the block lights past its own peak as the entrance sweep
-   passes it, which is what makes the arrival read as an edge rather than a
-   fade. One pass per block, on the block's own entrance delay. */
-body[data-dsh-claude-style] .dsh-claude-effort-matrix-sq::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background-color: var(--dsh-claude-apex-flash, #d9d2f5);
-  opacity: 0;
-  animation: dshClaudeEffortFront var(--dsh-claude-duration-surface) var(--dsh-claude-ease-standard) var(--dsh-front-delay, 0s) both;
-}
-/* The flow: a stream of light travelling right to left, each block lighting only
-   while the stream is on it (--dsh-flow-delay) and only as far as its sparse
-   cluster gate allows (--dsh-flow-strength), so the stream passes as scattered
-   particles rather than a stripe. It wears the brightest tone of the three
-   layers and the flash peak is held below it, so the one direction on the field
-   is the stream's; the base flash alone is a field of independent blinks. */
-body[data-dsh-claude-style] .dsh-claude-effort-matrix-sq::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background-color: var(--dsh-claude-apex-flash, #d9d2f5);
-  opacity: 0;
-  animation: dshClaudeEffortFlow var(--dsh-claude-period-flow) linear var(--dsh-flow-delay, 0s) infinite;
-}
-/* The closed card keeps its blocks laid out — placement reads the card's box —
-   and visibility:hidden stops their pixels, not their animation clocks. The
-   flash paints a background-color, so a card left closed with the top rung in
-   force kept a style recalculation and two infinite animations per block on
-   the main thread with nothing on screen. Reduced motion stops the same pair:
-   the net in theme/chrome.css shortens every animation it reaches, but the
-   flash's own `infinite` outranks that net's iteration count, so it kept
-   repainting the same colour every frame. Opening with motion full puts the
-   shorthand back. */
-body[data-dsh-claude-style] .dsh-claude-effort-popover:not([data-open="true"]) .dsh-claude-effort-matrix-sq,
-body[data-dsh-claude-style] .dsh-claude-effort-popover:not([data-open="true"]) .dsh-claude-effort-matrix-sq::before,
-body[data-dsh-claude-style] .dsh-claude-effort-popover:not([data-open="true"]) .dsh-claude-effort-matrix-sq::after,
-body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-effort-matrix-sq {
-  animation: none !important;
-}
-/* The reduced answer stops the two added layers at once: their animations are
-   not `!important`, so the choice in the selector outranks them (theme/chrome.css
-   holds the base flash, which is). */
-body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-effort-matrix-sq::before,
-body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-effort-matrix-sq::after {
-  animation: none;
-  opacity: 0;
-}
-@keyframes dshClaudeEffortFlash {
-  0%, 14% { background-color: var(--dsh-claude-apex, #8b7ad0); }
-  20%, 34% { background-color: var(--dsh-flash-light, #d9d2f5); }
-  100% { background-color: var(--dsh-claude-apex, #8b7ad0); }
-}
-@keyframes dshClaudeEffortFront {
-  0% { opacity: 0; }
-  30% { opacity: .9; }
-  100% { opacity: 0; }
-}
-@keyframes dshClaudeEffortFlow {
-  0% { opacity: 0; }
-  3% { opacity: calc(var(--dsh-flow-strength, 1) * .95); }
-  6% { opacity: 0; }
-  100% { opacity: 0; }
 }
 /* Reaching the top rung: the plain fill and the ticks hand the groove over to
    the matrix, the knob takes the theme accent's tint and a soft glow, and the

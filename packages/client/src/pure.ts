@@ -34,6 +34,10 @@ export { CACHE_HIT_STOPS, CONTEXT_STOPS, RAMP_SPAN_HIGH, RAMP_SPAN_LOW, rampPosi
 export { textTokens } from './features/context-stats/text-tokens'
 export { effortSteps, effortTint, isRankedEffort, orderEffortIds } from './features/effort/ladder'
 export type { EffortLadder, EffortStep } from './features/effort/ladder'
+export {
+  BAND_H, FLASH_S, FLOW_S, SURFACE_S, arrivalGlow, arrivalPhase, arrivalRise, cellFade, cellUnit, composeBlockColour, flashAt, flashEnvelope, flowAt, flowEnvelope, flowStrength, solveField,
+} from './features/effort/matrix-field'
+export type { Channels, FieldBlock, FieldGrid } from './features/effort/matrix-field'
 export { placeCaptionRow } from './features/header-band/placement'
 export type { CaptionInputs, CaptionPlacement } from './features/header-band/placement'
 export { HEAT_CELL_SELECTOR, HEAT_HINT_CLASS, HEAT_HINT_SHOWN_ATTR, HEAT_HINT_SIDE_ATTR, HEAT_HINT_TEXT_CLASS, HEAT_TIP_ATTR, HEAT_TIP_GAP, hideHeatTip, placeHeatTip, showHeatTip } from './features/home/heat-tip'

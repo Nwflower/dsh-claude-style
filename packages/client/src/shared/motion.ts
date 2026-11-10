@@ -30,11 +30,29 @@ export function motionEase(token: string): string {
 /** The curves already parsed, by token: a curve is read at most once per token. */
 const CURVES = new Map<string, readonly [number, number, number, number]>()
 
-/** A cubic-bezier token's four control points, in the form the CSS function takes them. */
+/**
+ * The keyword curves' control points, as CSS Easing Functions writes them: a
+ * token may name a keyword, and a caller evaluating it needs the same points a
+ * cubic-bezier token carries.
+ */
+const KEYWORD_CURVES: Record<string, readonly [number, number, number, number]> = {
+  linear: [0, 0, 1, 1],
+  ease: [0.25, 0.1, 0.25, 1],
+  'ease-in': [0.42, 0, 1, 1],
+  'ease-out': [0, 0, 0.58, 1],
+  'ease-in-out': [0.42, 0, 0.58, 1],
+}
+
+/** A token's four control points, in the form the CSS function takes them. */
 function curveOf(token: string): readonly [number, number, number, number] {
   const held = CURVES.get(token)
   if (held !== undefined) return held
   const value = motionEase(token)
+  const keyword = KEYWORD_CURVES[value]
+  if (keyword !== undefined) {
+    CURVES.set(token, keyword)
+    return keyword
+  }
   const match = /^cubic-bezier\(([^)]+)\)$/.exec(value)
   const parts = match === null ? [] : match[1].split(',').map(part => Number(part.trim()))
   const [x1, y1, x2, y2] = parts

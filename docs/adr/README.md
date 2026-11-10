@@ -33,6 +33,7 @@
 | [D90](D90-kept-row-heights.md) | 已看过的消息按上次高度跳过离屏排版 |  |
 | [D91](D91-session-switch-broadcast.md) | 会话切换是一件广播出来的事 |  |
 | [D92](D92-testing-evidence-and-selection.md) | 测试按证据分层，运行范围由一种选择器表达 | D87 |
+| [D93](D93-canvas-per-block-motion.md) | 逐格独立相位的动效由一块画布绘制，令牌仍是唯一的取值来源 |  |
 
 ## 作废的编号
 

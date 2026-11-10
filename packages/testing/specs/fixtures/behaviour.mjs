@@ -123,6 +123,23 @@ function readers(page) {
       const element = document.querySelector(s)
       return element === null ? null : getComputedStyle(element, e ?? null).getPropertyValue(p)
     }, [selector, property, pseudo]),
+    /**
+     * What a matching canvas holds, as one number: the drawn channels summed.
+     * A field that plays changes it between two readings, a field that stands
+     * still repeats it, and a canvas that is not there reads null. The context
+     * is asked fresh on every reading so a renderer re-creating the canvas does
+     * not leave this one stale.
+     */
+    pixels: (selector) => page.evaluate((s) => {
+      const canvas = document.querySelector(s)
+      if (!(canvas instanceof HTMLCanvasElement) || canvas.width === 0 || canvas.height === 0) return null
+      const context = canvas.getContext('2d')
+      if (context === null) return null
+      const { data } = context.getImageData(0, 0, canvas.width, canvas.height)
+      let sum = 0
+      for (let at = 0; at < data.length; at += 4) sum += data[at] * 3 + data[at + 1] * 5 + data[at + 2] * 7 + data[at + 3]
+      return sum
+    }, selector),
   }
 }
 

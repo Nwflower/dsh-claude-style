@@ -23,11 +23,13 @@
   }
   /**
    * Record `read()` on every frame from now until the page has settled, and
-   * answer the readings with the settled one last (D87: the settle rule). The
-   * page has settled when its finite animations have landed and the skin has
-   * asked for no pass for eight frames' worth of a 60 Hz display (134 ms, over
-   * at least two frames, so a slower display waits the same wall clock). A clock
-   * of the page's own — the waiting line ticks four times a second while a turn
+   * answer the readings with the settled one last (D92: the settle rule). The
+   * page has settled when its finite animations have landed and the skin's
+   * scheduler has run no pass for eight frames' worth of a 60 Hz display
+   * (134 ms, over at least two frames, so a slower display waits the same wall
+   * clock); a feature that paints its own frames asks the page for them without
+   * asking the scheduler for a pass, so it does not hold the rule. A clock of
+   * the page's own — the waiting line ticks four times a second while a turn
    * runs — is its life, the way an endless animation is, so a quiet run between
    * two ticks counts. `quietMs` adds a stretch of wall clock with no pass at
    * all, for a reading that counts passes itself. A page that never settles
@@ -40,9 +42,9 @@
     var started = performance.now()
     for (;;) {
       if (read !== undefined) readings.push(read())
-      var before = window.__passes
+      var before = window.__dshClaudePasses
       await frame()
-      if (window.__passes === before) quietFrames += 1
+      if (window.__dshClaudePasses === before) quietFrames += 1
       else {
         quietFrames = 0
         lastPass = performance.now()
