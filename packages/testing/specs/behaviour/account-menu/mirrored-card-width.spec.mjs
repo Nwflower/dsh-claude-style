@@ -109,8 +109,10 @@ const copyGeometry = (t) => t.page.evaluate(({ embedSelector, menuSelector, part
   if (foot === null) throw new Error('the stand-in footer is missing')
   const footStyle = getComputedStyle(foot)
   const footerWidth = Math.round(foot.clientWidth - parseFloat(footStyle.paddingLeft) - parseFloat(footStyle.paddingRight))
+  const embedStyle = getComputedStyle(embed)
   return {
     footerWidth,
+    embedPadding: [embedStyle.paddingTop, embedStyle.paddingRight, embedStyle.paddingBottom, embedStyle.paddingLeft],
     cardWidth: Math.round(card.getBoundingClientRect().width),
     labelHeights: labels.map(el => Math.round(el.getBoundingClientRect().height)),
     labelClipped: labels.map(el => el.scrollWidth > el.clientWidth + 1),
@@ -130,6 +132,8 @@ export default spec({ page: 'desktop' }, ({ test }) => {
     const footerWidth = geometry.footerWidth
     t.expectThat.equal(Math.abs(geometry.cardWidth - footerWidth) <= 6, true,
       `the copy keeps the footer's width (${geometry.cardWidth} against ${footerWidth})`)
+    t.expectThat.equal(geometry.embedPadding, ['2px', '2px', '2px', '2px'],
+      'the copy sits the same distance inside its wrapper on every side')
     t.expectThat.equal(geometry.labelHeights, [16, 16],
       'each quota label stays on its row\'s single line')
     t.expectThat.equal(geometry.labelClipped, [false, false],
