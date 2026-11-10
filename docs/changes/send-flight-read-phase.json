@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-10",
+  "group": "improvements",
+  "order": 7,
+  "external": false,
+  "zh": "发送消息的过渡不再每帧读布局，连发两条时不再留下重复的气泡",
+  "en": "Stop the send transition from reading layout every frame, so a second send no longer leaves a duplicate bubble behind"
+}

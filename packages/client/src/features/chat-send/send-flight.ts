@@ -6,7 +6,7 @@ import { startMorph } from './send-morph'
 import { currentRow, lastUserRow, takeFreshEcho, touchesUserRow } from './send-rows'
 import { watchGrowEnter } from './send-grow'
 import { CHAT_FLIGHT_MS, CHAT_LANDING_MS } from './send-shape'
-import { snapshotComposer } from './send-snapshot'
+import { CHAT_SEND_GHOST_ATTR, snapshotComposer } from './send-snapshot'
 import { CHAT_FLOW_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, FLOW_KIND_ATTRIBUTE, SUBMISSION_ECHO_SELECTOR, USER_ROW_KIND } from '@dsh-claude-style/contracts/dom'
 import { CHAT_USER_ROW_SELECTOR, userBubble } from '@dsh-claude-style/engine/chat-dom'
 import { motionEase } from '../../shared/motion'
@@ -46,6 +46,20 @@ interface Flight {
   endedAt: number | null
   landedRow: HTMLElement | null
   bubble: HTMLElement | null
+  /** This frame's layout reading, taken in the pass's read phase (D40). */
+  measure: FlightMeasure | null
+}
+
+/** What a flight frame reads and then writes: taken once, in the read phase. */
+interface FlightMeasure {
+  /** The stand-in's box, null when the shell is gone. */
+  shell: DOMRect | null
+  /** The row the stand-in is landing on this frame. */
+  bubble: HTMLElement | null
+  /** That row's viewport box, the one arrival is judged in. */
+  rect: DOMRect | null
+  /** The same box in the page's own pixels, what the stand-in is placed by. */
+  box: ReturnType<typeof inPageBox> | null
 }
 
 /** The origin is only trusted this long: an echo that appears later than this is not this submission's. */
@@ -111,11 +125,14 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (activeFlight.landing) {
       activeFlight.landedRow = row
     } else {
-      activeFlight.hidden?.removeAttribute(CHAT_FLYING_ATTR)
-      row.setAttribute(CHAT_FLYING_ATTR, '')
+      if (activeFlight.hidden !== null) showRow(activeFlight.hidden)
+      hideRow(row)
       activeFlight.hidden = row
     }
     activeFlight.bubble = userBubble(row)
+    // A row replaced between frames: the next frame's read is a frame away, and
+    // the stand-in must not lag on the row it is handing over to.
+    activeFlight.measure = measureFlight(activeFlight)
     followTarget(activeFlight)
   }
   /** Stops the row watch; set only while a flight is in the air. */
@@ -142,7 +159,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       return
     }
     activeFlight.landing = true
-    row.removeAttribute(CHAT_FLYING_ATTR)
+    showRow(row)
     activeFlight.hidden = null
     activeFlight.landedRow = row
     // The stand-in is put exactly on the row in this frame. arrived() has just
@@ -171,6 +188,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (row === null || bubble === null) return false
     const shell = value.morph.shell
     if (shell === null) return false
+    // The stand-in's own box is read here, not taken from the frame's read
+    // phase: the normalising frame changes that box between the two phases, and
+    // an arrival judged on the box before it lands early. This runs only once
+    // the flight's own animation has finished, not every frame.
     const here = shell.getBoundingClientRect()
     const there = bubble.getBoundingClientRect()
     // A row with no box yet is not somewhere to land: hold, as land() does.
@@ -200,17 +221,53 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   }
 
   /** Land: release the real row first, then drop the stand-in. Reversed, a blank flashes. */
+  /** Every stand-in this installer made and every row it hid: one per flight, and none left behind. */
+  const ghosts = new Set<HTMLElement>()
+  const flyingRows = new Set<HTMLElement>()
+  const hideRow = (row: HTMLElement) => {
+    row.setAttribute(CHAT_FLYING_ATTR, '')
+    flyingRows.add(row)
+  }
+  const showRow = (row: HTMLElement) => {
+    row.removeAttribute(CHAT_FLYING_ATTR)
+    flyingRows.delete(row)
+  }
+
   const settle = () => {
     const activeFlight = flight
-    if (activeFlight === null) return
     flight = null
     unwatchRows()
     window.clearTimeout(rescue)
     rescue = 0
-    activeFlight.hidden?.removeAttribute(CHAT_FLYING_ATTR)
+    // One stand-in per send: anything an earlier flight left (a second send that
+    // overtook it, a hand-over that never settled) goes here, and no row stays
+    // hidden behind it. A flight starting now has neither yet — this runs first.
+    for (const ghost of ghosts) ghost.remove()
+    ghosts.clear()
+    for (const row of flyingRows) row.removeAttribute(CHAT_FLYING_ATTR)
+    flyingRows.clear()
+    if (activeFlight === null) return
+    if (activeFlight.hidden !== null) showRow(activeFlight.hidden)
     // Remove before cancelling: cancellation can otherwise paint the compositor's initial halo for one frame.
     activeFlight.morph.wrapper.remove()
+    ghosts.delete(activeFlight.morph.wrapper)
     for (const animation of activeFlight.morph.animations) animation.cancel()
+  }
+
+/* One task a frame: the read phase takes the frame's reading, the write phase
+   places the stand-in from it. A fresh task each time, as a task object cannot
+   be requested while the previous one is still queued — a second send while a
+   flight is in the air would then lose its loop and leave the stand-in behind. */
+  const requestFlightFrame = () => {
+    requestFrame({
+      read() {
+        const activeFlight = flight
+        if (activeFlight !== null) activeFlight.measure = measureFlight(activeFlight)
+      },
+      write() {
+        tick()
+      },
+    })
   }
 
 /* Per frame only normalize and follow the destination; row replacement stays in the observer.
@@ -218,6 +275,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const tick = () => {
     const activeFlight = flight
     if (activeFlight === null) return
+    // Every read this frame needed was taken in the read phase, before any
+    // feature wrote: reading here would force a style recalculation each frame
+    // of the flight (D40).
     const u = activeFlight.morph.progress()
     activeFlight.morph.compact(u)
     if (activeFlight.endedAt === null && u >= 1) activeFlight.endedAt = performance.now()
@@ -232,7 +292,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       // uncovers the row's own foot, which reads as a line under the message.
       followTarget(activeFlight, true)
     }
-    requestFrame({ write: tick })
+    requestFlightFrame()
   }
 
   /** Start one flight: stand-in up, real row hidden. All of it synchronously — a frame later the reader sees the real bubble flash. */
@@ -257,7 +317,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     // (send-morph.ts's capped flight).
     const morph = startMorph(draft.snapshot, bubble, box, bubble.hasAttribute(MESSAGE_FOLD_ATTR))
     if (morph === null) return
-    echo.setAttribute(CHAT_FLYING_ATTR, '')
+    ghosts.add(morph.wrapper)
+    hideRow(echo)
     flight = {
       morph,
       targetAt: { left: box.left, top: box.top },
@@ -275,11 +336,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       endedAt: null,
       landedRow: null,
       bubble,
+      measure: null,
     }
     if (stopRowWatch === null) stopRowWatch = subscribeMutations(document.body, { childList: true, subtree: true }, onRowRecords)
     rescue = window.setTimeout(settle, CHAT_FLIGHT_MS + CHAT_LANDING_MS + CHAT_RESCUE_MARGIN_MS)
     // The flight compacts the card and follows the destination's layout: write phase (D40).
-    requestFrame({ write: tick })
+    requestFlightFrame()
   }
 
   /**
@@ -396,8 +458,42 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
  * for the rest of the flight, lands tens of pixels away from the row, and both
  * are on screen at once through the landing fade (arrived() in the installer).
  */
-export function followTarget(value: Flight, snap = false) {
+/**
+ * Take one frame's layout reading: the stand-in's box and the row it is landing
+ * on, resolved the way the destination is followed. Read in the pass's read
+ * phase; the write phase only places the stand-in from this.
+ */
+export function measureFlight(value: Flight): FlightMeasure {
   let bubble = value.bubble
+  if (value.hidden !== null) {
+    const held = userBubble(value.hidden)
+    if (held !== null) bubble = held
+  }
+  let rect = bubble === null ? null : bubble.getBoundingClientRect()
+  // A row the flight holds can leave the document while the stand-in still
+  // flies (the echo becoming the real row); its box reads zero there, and the
+  // destination is taken from the row on the page by the rule the row watch uses.
+  if (rect !== null && rect.width === 0) {
+    const row = currentRow(value.previous) ?? value.landedRow
+    const fresh = row === null ? null : userBubble(row)
+    if (fresh !== null && fresh !== bubble) {
+      bubble = fresh
+      rect = fresh.getBoundingClientRect()
+    }
+  }
+  const shell = value.morph.shell === null ? null : value.morph.shell.getBoundingClientRect()
+  return {
+    shell,
+    bubble,
+    rect,
+    box: rect === null || rect.width === 0 ? null : inPageBox(rect),
+  }
+}
+
+export function followTarget(value: Flight, snap = false) {
+  const measured = value.measure ?? measureFlight(value)
+  value.measure = measured
+  let bubble = measured.bubble
   // The node the destination was taken from can stop being the row's own: the
   // echo row is unmounted once the real one is there, and the host can mount
   // another echo or swap the row again while this flight still points at the
@@ -407,22 +503,8 @@ export function followTarget(value: Flight, snap = false) {
   // row the flight is holding, every frame.
   const held = value.hidden === null ? null : userBubble(value.hidden)
   if (held !== null && bubble !== held) bubble = held
-  if (bubble === null) return
-  let box = inPageBox(bubble.getBoundingClientRect())
-  // The row the flight holds can leave the document while the stand-in still
-  // flies (the echo becoming the real row), and a node off the document measures
-  // a zero box. Holding still there leaves the stand-in hundreds of pixels off a
-  // row that is already showing — the same message twice, one above the other —
-  // so the destination is taken from the row on the page, by the rule the row
-  // watch uses. Once the row is back, the frame closes the difference whole.
-  if (box.width === 0) {
-    const row = currentRow(value.previous) ?? value.landedRow
-    const fresh = row === null ? null : userBubble(row)
-    if (fresh === null || fresh === bubble) return
-    bubble = fresh
-    box = inPageBox(bubble.getBoundingClientRect())
-    if (box.width === 0) return
-  }
+  const box = measured.box
+  if (bubble === null || box === null) return
   if (bubble !== value.bubble) {
     value.bubble = bubble
     // The new node's own position is where the stand-in is being carried from,
