@@ -121,6 +121,8 @@ export function createSettingsGeneralTab(): SettingsTab {
             spellCheck: false,
             autoComplete: 'off',
             onChange: username.onChange,
+            onCompositionStart: username.onCompositionStart,
+            onCompositionEnd: username.onCompositionEnd,
             onBlur: username.onBlur,
             onKeyDown: username.onKeyDown,
           }),

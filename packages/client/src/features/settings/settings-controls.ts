@@ -47,6 +47,8 @@ export interface SettingsView {
   username: {
     value: string
     onChange(e: React.ChangeEvent<HTMLInputElement>): void
+    onCompositionStart(e: React.CompositionEvent<HTMLInputElement>): void
+    onCompositionEnd(e: React.CompositionEvent<HTMLInputElement>): void
     onBlur(): void
     onKeyDown(e: React.KeyboardEvent<HTMLInputElement>): void
   }

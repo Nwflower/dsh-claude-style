@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-09",
+  "group": "fixes",
+  "order": 12,
+  "external": false,
+  "zh": "修复中文输入法组词时自定义用户名的字母重复，编辑期间输入框保留读者自己的文本，放弃编辑回到编辑前的用户名",
+  "en": "Fix duplicated letters in the custom username while a Chinese input method composes it, keeping the reader's own text in the field until the edit commits and restoring the username an abandoned edit replaced"
+}
