@@ -8,7 +8,8 @@ import surfaceTable from './data/surface.json' with { type: 'json' }
 
 const STATS_LINE = surfaceTable.surface.find((entry) => entry.id === 'stats.inline-line')
 const STATS_FOOTER_LINE = surfaceTable.surface.find((entry) => entry.id === 'stats.footer-line')
-if (STATS_LINE?.selector === undefined || STATS_FOOTER_LINE?.attribute === undefined) throw new Error('lane: the statistics surfaces are incomplete')
+const VIEW_TABS_STRIP = surfaceTable.surface.find((entry) => entry.id === 'view-tabs.strip')
+if (STATS_LINE?.selector === undefined || STATS_FOOTER_LINE?.attribute === undefined || VIEW_TABS_STRIP?.attribute === undefined) throw new Error('lane: the statistics, view-tab and details surfaces are incomplete')
 
 /**
  * The host's page markers this lane reads. Each one is a D3 entry in
@@ -45,6 +46,7 @@ const SKIN = {
   hold: '[data-dsh-claude-follow-hold]', // FOLLOW_HOLD_ATTR
   statsLine: STATS_LINE.selector,
   statsFooterLine: STATS_FOOTER_LINE.attribute,
+  viewTabsStrip: `[${VIEW_TABS_STRIP.attribute}]`,
 }
 
 /** Both tables, for the sampler that runs inside the page. */

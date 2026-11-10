@@ -275,6 +275,35 @@ out of reach. The stack scrolls: the first entry's top margin and the last
 entry's bottom margin take the free space while the stack fits, and fall to
 zero once it does not, so the list starts at the top and scrolls to its end.
 
+**The conversation details rail.** The rail is the skin's own fixed column
+against the conversation column's right edge: 300px wide, one 14px side inset
+and one scroll inside, opened and retreated by the column's width (a 1360px window with an 860px column to open, 1180px or a 760px column to
+retreat) and squeezing the chat while it stands. Its header
+carries the session's title, the preset's own words and the close control; the
+conversation header's details button flips the same state. Its
+sections are separated by 22px and titled in a quiet 11px uppercase line with
+0.07em tracking; rows stand on a 28px rhythm with an 8px hover plate, a 13/18
+title over an 11.5/16 detail, and a 20px chip at the trailing edge. The context
+bar is 5px tall: its fill is the provider-anchored occupancy, split by the
+meter's heuristic composition, which is a different quantity and therefore
+printed as approximations beside it rather than as shares of the window
+(`~` before each figure, the free space after a divider). The composition's
+three marks are the quiet ink, the skin's orange tone and its data blue, so they
+stay apart from the accent and from each other on either canvas. A section lists
+two rows; the rest fold behind a quiet full-width control that names the count
+left, which keeps a long list from pushing the sections under it out of the
+column. A background category folds the same way, keeping its two leading rows.
+With the rail standing the conversation's view switch shares the title's line at
+the row's right end, before the utilities, and the title truncates to the span
+left over. The session stats section prints label over value in two columns:
+turns and steps, model and tool time, first token, output speed, cache hit and
+cost, then the token buckets at the same size. A finished command keeps its row
+in Background tasks, its status from the durable job records and its output from
+the log the command wrote. The section's rows are filed under quiet eyebrow
+labels by kind — commands, subagents, team — and a group appears only when it has
+a row, folding past its second row like the sections above it, so the list stays
+a summary of what actually runs.
+
 ## Typography
 
 - **Serif display** — headings / editorial statements (`--dsh-claude-font-serif`).

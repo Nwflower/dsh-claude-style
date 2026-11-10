@@ -13,6 +13,7 @@ import { brotliDecompressSync } from 'zlib'
 import { ROOT, HOST, SKIN_FIXTURE, same, check } from './shared.mjs'
 import { hostUsage } from './host-half-usage.mjs'
 import { hostSound } from './host-half-sound.mjs'
+import { hostPanel } from './host-half-panel.mjs'
 
 // ---------------------------------------------------------------------------
 // Host half
@@ -36,7 +37,7 @@ import { hostSound } from './host-half-sound.mjs'
  *   `unarchived` list records every call.
  */
 function fakeHost(mod, options = {}) {
-  const { fenced, home, live = [], events, launch, stored, reads, releases, lists, listCalls, registry, tails, queryShapes, broken, onRead } = options
+  const { fenced, home, live = [], events, launch, stored, reads, releases, lists, listCalls, registry, tails, queryShapes, broken, onRead, projections, jobs } = options
   const shapes = queryShapes ?? ['readSession', 'observeSession', 'readTitleSnapshots']
   const routes = {}
   const settings = { configure: () => () => {} }
@@ -86,6 +87,7 @@ function fakeHost(mod, options = {}) {
         })),
       }
       if (name === 'launchEnvironment') return launchEnvironment
+      if (name === 'jobs' && jobs !== undefined) return jobs
       if (name === 'sessionPersistence' && stored !== undefined) {
         return { list: async () => { if (lists !== undefined) lists.push(stored.length); return stored } }
       }
@@ -123,6 +125,7 @@ function fakeHost(mod, options = {}) {
                 events: log(id),
                 cursor: -1,
                 revision: 'r',
+                ...(projections === undefined ? {} : { projections: { asOfSeq: -1, values: projections[id] ?? {} } }),
                 [Symbol.dispose]() { if (releases !== undefined) releases.push(id) },
               }
             },
@@ -575,6 +578,8 @@ async function hostHalf() {
       catalogBody.value.usd === 15_000_000 && catalogBody.value.cny === 100_000_000 &&
       catalogBody.value.partial === false,
     JSON.stringify(catalogBody?.value ?? catalogBody))
+
+  await hostPanel({ mod, fakeHost, request, browser, crossSite, scratchHome })
 
   // The routed assets, on the public prefix route: the manifest the
   // build wrote decides what exists, a text asset is stored brotli-compressed,

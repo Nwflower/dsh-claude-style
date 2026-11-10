@@ -1,6 +1,9 @@
 import { windowsDesktop } from '@dsh-claude-style/engine/desktop-band'
+import { SESSION_PANEL_ATTR } from '../../constants'
+import { FALLBACK_VIEW_TAB_SHIFT, placementFor } from './placement'
+import type { StripPlacement } from './placement'
 import { cacheFirstMatch } from '@dsh-claude-style/engine/host'
-import { subscribeMutations } from '@dsh-claude-style/engine/bus'
+import { observeSize, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { createStamp } from '@dsh-claude-style/engine/dom'
 import { CONVERSATION_HEADER_SELECTOR, CONVERSATION_HEADER_SLOT_SELECTOR, CONVERSATION_TABS_SELECTOR } from '@dsh-claude-style/contracts/dom'
@@ -25,13 +28,13 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const ACTIONS = '[data-dsh-claude-part~="header-actions"], [data-dsh-claude-part~="header-utilities"]'
   /** The custom property the stylesheet turns into the strip's translate (view-tabs.css). */
   const SHIFT = '--dsh-view-tabs-shift'
-  /** The stylesheet's fallback: the strip's own row (view-tabs.css reads the same value). */
-  const FALLBACK = -10
-  /** The header's own top inset; the lifted strip may not enter it. */
-  const TOP_INSET = 8
-  /** Breathing room between the lifted strip and whatever shares the line. */
-  const CLEARANCE = 6
-  let last: number | null = null
+  /** The horizontal part of the same translate, used when the session overview takes the title's line. */
+  const SHIFT_X = '--dsh-view-tabs-shift-x'
+  /** The width the title's words keep when the strip shares its line. */
+  const TITLE_CAP = '--dsh-view-tabs-title-cap'
+  /** The header's own right cluster, the boundary a strip placed beside the title may not cross. */
+  const UTILITIES = '[data-dsh-claude-part~="header-utilities"]'
+  let last: string | null = null
   /** The element last was written to: a re-rendered strip must be told again. */
   let lastEl: HTMLElement | null = null
   /** The header marker the stylesheet reads for the fixed titlebar placement. */
@@ -136,6 +139,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     headerBox: DOMRect | null
     titleBox: DOMRect | null
     actionsBox: DOMRect | null
+    utilitiesBox: DOMRect | null
   }
 
   /** The reading this pass places from, and the strip it belongs to. */
@@ -159,6 +163,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       headerBox: rect(header),
       titleBox: titleBoxOf(header),
       actionsBox: rect(header.querySelector(ACTIONS)),
+      utilitiesBox: rect(header.querySelector(UTILITIES)),
     }
   }
 
@@ -184,7 +189,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
         shiftReading = null
         if (target === null || boxes === null) return
         if (boxes.strip !== target.strip || !target.strip.isConnected) return
-        writeShift(target.strip, shiftIn(boxes))
+        writePlacement(target.strip, target.header, placementIn(boxes))
       },
     })
   }
@@ -206,6 +211,14 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       stripStamp.mark(null)
       classStamp(null)
       pill.sync(null)
+      if (stopSize !== null) stopSize()
+      stopSize = null
+      if (stopTitle !== null) stopTitle()
+      stopTitle = null
+      sizedHeader = null
+      titledHeader = null
+      sizedWidth = 0
+      clearTitleCap()
       return
     }
     const { header, strip, list } = found
@@ -214,50 +227,130 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     stripStamp.mark(strip)
     classStamp(list)
     pill.sync(list)
+    followSize(header)
+    followTitle(header)
     // Windows titlebar mode places the strip itself (view-tabs.css): it is
     // fixed there, so neither the measured shift nor the fallback applies.
-    if (titlebar) return
+    if (titlebar) {
+      clearTitleCap()
+      return
+    }
     const boxes = reading !== null && measuredStrip === strip ? reading : takeReading(header, strip)
-    writeShift(strip, shiftIn(boxes))
+    writePlacement(strip, header, placementIn(boxes))
   }
 
   /**
-   * The shift the boxes ask for: the measured one when the room above is real,
-   * the stylesheet's fallback otherwise, null with no box to decide from.
+   * Where the boxes put the strip, in the page's pixels.
+   *
+   * The strip is lifted onto the title's own line when the room above it is
+   * real. When the session overview is installed the lift always happens and a
+   * sideways clash is answered by moving the strip past the title's own actions
+   * instead of leaving it on its row: the panel has taken the header's
+   * background-work chips, and the reader expects this switch beside the title.
+   * Without the panel the lift still stands down on a clash, as before.
    */
-  function shiftIn(boxes: StripReading) {
-    const stripBox = boxes.stripBox
-    if (stripBox === null) return null
-    const headerBox = boxes.headerBox
-    if (headerBox === null) return null
-    // The strip's own layout position, with the shift we may already have
-    // applied taken back out: rect.top moves with the transform.
-    let applied = parseFloat(boxes.strip.style.getPropertyValue(SHIFT))
-    if (!isFinite(applied)) applied = FALLBACK
-    const naturalTop = stripBox.top - applied
-    const titleBox = boxes.titleBox
-    let shift = FALLBACK
-    if (titleBox !== null) {
-      let want = titleBox.top + titleBox.height / 2 - naturalTop - stripBox.height / 2
-      // Room above: the lifted strip stays under the header's top inset.
-      const top = naturalTop + want
-      if (top < headerBox.top + TOP_INSET) want = headerBox.top + TOP_INSET - naturalTop
-      // Room sideways: centred, it must clear the title and the actions, the
-      // boxes it would share the title's line with.
-      const actionsBox = boxes.actionsBox
-      const clash = [titleBox, actionsBox].some((box) => box !== null && stripBox.right > box.left - CLEARANCE && stripBox.left < box.right + CLEARANCE)
-      if (!clash) shift = Math.round(want)
-    }
-    return shift
+  function placementIn(boxes: StripReading) {
+    const strip = boxes.strip
+    // The strip's own box comes from the pass's content read; the applied
+    // translate is read off the element the stylesheet will update.
+    let appliedY = parseFloat(strip.style.getPropertyValue(SHIFT))
+    if (!isFinite(appliedY)) appliedY = FALLBACK_VIEW_TAB_SHIFT
+    let appliedX = parseFloat(strip.style.getPropertyValue(SHIFT_X))
+    if (!isFinite(appliedX)) appliedX = 0
+    return placementFor({
+      strip: boxes.stripBox,
+      header: boxes.headerBox,
+      title: boxes.titleBox,
+      actions: boxes.actionsBox,
+      utilities: boxes.utilitiesBox,
+    }, { y: appliedY, x: appliedX }, document.body.hasAttribute(SESSION_PANEL_ATTR))
   }
 
-  /** Write the shift the strip takes; the strip already wearing it takes no write. */
-  function writeShift(strip: HTMLElement, shift: number | null) {
-    if (shift === null) return
-    if (shift === last && strip === lastEl) return
-    last = shift
-    lastEl = strip
-    strip.style.setProperty(SHIFT, `${shift}px`)
+  /**
+   * Follow the header's own size: a column resize or an opened sidebar reshapes
+   * every box under it. The observer's first report is the header's current
+   * width and asks for nothing; only a width it has not seen wakes a pass.
+   */
+  function followSize(header: HTMLElement) {
+    if (header === sizedHeader) return
+    if (stopSize !== null) stopSize()
+    sizedHeader = header
+    sizedWidth = 0
+    stopSize = observeSize(header, (entries) => {
+      const width = entries[0]?.contentRect.width ?? header.getBoundingClientRect().width
+      if (sizedWidth === 0) {
+        sizedWidth = width
+        return
+      }
+      if (Math.abs(width - sizedWidth) < 1) return
+      sizedWidth = width
+      // A column resize moves every box a placement reads; it is rare, so it
+      // places the strip itself rather than making each streaming batch check.
+      const strip = stripStamp.current()
+      if (strip !== null) placeForPaint(header, strip)
+    })
+  }
+
+  /**
+   * Follow the title's own words: the session title and its crumb arrive after
+   * the strip mounts, so a change there places the strip again. Only the title's
+   * subtree is watched character by character; the page's own text streams do
+   * not wake this feature.
+   */
+  function followTitle(header: HTMLElement) {
+    if (header === titledHeader) return
+    if (stopTitle !== null) stopTitle()
+    titledHeader = header
+    const title = header.querySelector(TITLE)
+    if (title === null) {
+      stopTitle = null
+      return
+    }
+    stopTitle = subscribeMutations(title, { childList: true, characterData: true, subtree: true, beforePaint: true }, () => {
+      const strip = stripStamp.current()
+      if (strip !== null) placeForPaint(header, strip)
+    })
+  }
+
+  /** The header whose title the last placement capped, and the cap it holds. */
+  let cappedHeader: HTMLElement | null = null
+  let cappedAt: number | null = null
+  /** Whether the session overview was installed when the last placement was written. */
+  let placedMark: boolean | null = null
+  /** The header whose title the pass follows, and the subscription on the title's own words. */
+  let titledHeader: HTMLElement | null = null
+  let stopTitle: (() => void) | null = null
+  /** The header whose size the pass follows, the subscription on it, and the width last reported. */
+  let sizedHeader: HTMLElement | null = null
+  let stopSize: (() => void) | null = null
+  let sizedWidth = 0
+
+  /** Give the title its own width back where a cap stands. */
+  function clearTitleCap() {
+    if (cappedHeader !== null) cappedHeader.style.removeProperty(TITLE_CAP)
+    cappedHeader = null
+    cappedAt = null
+  }
+
+  /** Write the placement the strip takes; the strip already wearing it takes no write. */
+  function writePlacement(strip: HTMLElement, header: HTMLElement, placement: StripPlacement | null) {
+    if (placement === null) return
+    const seen = `${placement.y}|${placement.x}`
+    if (seen !== last || strip !== lastEl) {
+      last = seen
+      lastEl = strip
+      strip.style.setProperty(SHIFT, `${placement.y}px`)
+      strip.style.setProperty(SHIFT_X, `${placement.x}px`)
+    }
+    placedMark = document.body.hasAttribute(SESSION_PANEL_ATTR)
+    if (placement.titleCap === null) {
+      clearTitleCap()
+    } else if (header !== cappedHeader || placement.titleCap !== cappedAt) {
+      clearTitleCap()
+      header.style.setProperty(TITLE_CAP, `${placement.titleCap}px`)
+      cappedHeader = header
+      cappedAt = placement.titleCap
+    }
   }
 
   // The strip lives in the conversation header, outside the column a streaming
@@ -273,6 +366,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   function placedForPaint(strip: HTMLElement, header: HTMLElement) {
     if (stripStamp.current() !== strip) return false
     if (header.getAttribute(TITLEBAR_ATTR) !== (titlebar ? '' : null)) return false
+    // The session overview changes where the strip may stand, so a flip of its
+    // mark makes the last placement stale without touching the strip itself.
+    if (placedMark !== document.body.hasAttribute(SESSION_PANEL_ATTR)) return false
     return titlebar || strip.style.getPropertyValue(SHIFT) !== ''
   }
 
@@ -283,12 +379,16 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * jumps. `beforePaint` runs inside every batch's callback; the shift itself is
    * measured and written in the same frame (placeForPaint).
    */
-  const stopMutations = subscribeMutations(document.body, { childList: true, subtree: true, beforePaint: true }, () => {
+  const stopMutations = subscribeMutations(document.body, { childList: true, subtree: true, beforePaint: true, attributes: true, attributeFilter: [SESSION_PANEL_ATTR] }, () => {
     syncTitlebar()
     const found = findStrip()
     if (found === null) return
     const { header, strip, list } = found
     takenStamp.mark(header)
+    followSize(header)
+    // The title's own subscription and the size observer place the strip when
+    // the words or the row's width move; a batch that changed neither leaves the
+    // placement alone, so streaming text wakes no placement work.
     if (placedForPaint(strip, header)) return
     markTitlebar(header)
     stripStamp.mark(strip)
@@ -305,15 +405,27 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     shiftReading = null
     titlebar = false
     markTitlebar(null)
+    clearTitleCap()
     // The placement belongs to the element the last pass held.
     const strip = stripStamp.current()
-    if (strip !== null) strip.style.removeProperty(SHIFT)
+    if (strip !== null) {
+      strip.style.removeProperty(SHIFT)
+      strip.style.removeProperty(SHIFT_X)
+    }
     pill.release()
     stripStamp.release()
     takenStamp.release()
     classStamp(null)
+    if (stopSize !== null) stopSize()
+    stopSize = null
+    if (stopTitle !== null) stopTitle()
+    stopTitle = null
+    sizedHeader = null
+    titledHeader = null
+    sizedWidth = 0
     last = null
     lastEl = null
+    placedMark = null
     delete ui.viewTabs
   }
 }

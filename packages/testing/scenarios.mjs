@@ -42,6 +42,7 @@ import { usernameCompositionScenario } from './scenarios/username-composition.mj
 import { usernameImeScenario } from './scenarios/username-ime.mjs'
 import { customBrandScenario } from './scenarios/custom-brand.mjs'
 import { dsBotScenario } from './scenarios/ds-bot.mjs'
+import { sessionPanelScenario } from './scenarios/session-panel.mjs'
 import { CANVAS } from './shoot.mjs'
 import { sanitizePage } from '../../scripts/shared/privacy.mjs'
 import { bound } from './bounds.mjs'
@@ -607,6 +608,12 @@ const SCENARIOS = {
   customBrand: customBrandScenario({ check }),
   /** The Chat / Code switch beside ds-bot's published browser half (packages/testing/scenarios/ds-bot.mjs, D74). */
   dsBot: dsBotScenario({ check }),
+  /**
+   * The session overview in the right column (packages/testing/scenarios/session-panel.mjs,
+   * D94): its five sections on a blank and a worked session, the two-row folding,
+   * the view switch on the title's line, and the column's opening width.
+   */
+  sessionPanel: sessionPanelScenario({ check }),
   /** Both palettes captured to the run's out directory and swept for personal data. */
   shots: {
     script: 'greeting',

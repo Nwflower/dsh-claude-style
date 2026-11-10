@@ -34,6 +34,7 @@
 | [D91](D91-session-switch-broadcast.md) | 会话切换是一件广播出来的事 |  |
 | [D92](D92-testing-evidence-and-selection.md) | 测试按证据分层，运行范围由一种选择器表达 | D87 |
 | [D93](D93-canvas-per-block-motion.md) | 逐格独立相位的动效由一块画布绘制，令牌仍是唯一的取值来源 |  |
+| [D94](D94-session-overview-details-rail.md) | 会话总览是对话右侧的详情栏，数据由宿主半边折叠 |  |
 
 ## 作废的编号
 

@@ -18,7 +18,7 @@ body[data-dsh-claude-style] [data-dsh-view-tabs] [data-conversation-tabs] {
      is measured in view-tabs.ts, and this fallback (the strip's own row) holds
      when the room above is missing. */
   justify-self: center;
-  transform: translateY(var(--dsh-view-tabs-shift, -10px));
+  transform: translate(var(--dsh-view-tabs-shift-x, 0px), var(--dsh-view-tabs-shift, -10px));
   /* The sliding pill (shared/sliding-pill.css) is absolutely placed against the control. */
   position: relative;
   /* A view switcher, not furniture: it fades in while the pointer is in the
@@ -44,7 +44,7 @@ body[data-dsh-claude-style] [data-dsh-view-tabs] {
   transform: none;
 }
 body[data-dsh-claude-style] [data-dsh-view-tabs] > * {
-  transform: translateY(var(--dsh-view-tabs-shift, -10px));
+  transform: translate(var(--dsh-view-tabs-shift-x, 0px), var(--dsh-view-tabs-shift, -10px));
 }
 /* The Windows titlebar mode places the strip itself and writes no shift; the
    content keeps out of the translate there. */
@@ -151,4 +151,13 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="center-column"]:hover [data-
 body[data-dsh-claude-style] [data-dsh-claude-part~="conversation-header"][data-dsh-titlebar-tabs][data-dsh-claude-holds~="view-tabs"] {
   min-height: 0 !important;
   padding-bottom: var(--dsh-header-band-bottom, 10px) !important;
+}
+
+/* With the session overview installed the strip shares the title's line: the
+   title's own words keep the width the measurer leaves them and truncate under
+   the host's ellipsis, so the strip's slot stays clear of the title and its
+   actions (view-tabs.ts writes the cap; the variable is absent when the strip
+   keeps its own row). */
+body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-view-tabs-taken] [data-dsh-claude-part~="header-title"] {
+  max-width: var(--dsh-view-tabs-title-cap);
 }

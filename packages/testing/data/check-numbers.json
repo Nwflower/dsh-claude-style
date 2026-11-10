@@ -40,7 +40,7 @@
       "再窄一些时控件仍留在卡片里，输入区也不再横向滚动": [
         0
       ],
-      "控制台没有异常 (line 289)": [
+      "控制台没有异常 (line 290)": [
         0
       ],
       "收起时那枚按钮不占位置，宿主自己的打开按钮在": [
@@ -53,7 +53,7 @@
       "按下它面板收起，宿主的打开按钮回到原处": [
         0
       ],
-      "控制台没有异常 (line 342)": [
+      "控制台没有异常 (line 343)": [
         0
       ],
       "工具调用单独成行": [
@@ -65,7 +65,7 @@
       "过程组收住了整轮": [
         1
       ],
-      "控制台没有异常 (line 357)": [
+      "控制台没有异常 (line 358)": [
         0
       ],
       "逐帧采样真的在跑": [
@@ -93,7 +93,7 @@
         0,
         10
       ],
-      "控制台没有异常 (line 404)": [
+      "控制台没有异常 (line 405)": [
         0
       ],
       "替身起飞后离开页面": [
@@ -114,32 +114,32 @@
       "Windows 标题栏标记下，替身里的祖先链不画伪元素": [
         0
       ],
-      "控制台没有异常 (line 480)": [
+      "控制台没有异常 (line 481)": [
         0
       ],
       "满屏的对话里也读到了飞行": [
         1,
         5
       ],
-      "替身落地时不低于它替换的那一行 (line 514)": [
+      "替身落地时不低于它替换的那一行 (line 515)": [
         0
       ],
       "落定后那一行带着字": [
         0
       ],
-      "控制台没有异常 (line 516)": [
+      "控制台没有异常 (line 517)": [
         0
       ],
       "没有页面形态的条目已逐条列出": [
         0
       ],
-      "控制台没有异常 (line 574)": [
+      "控制台没有异常 (line 575)": [
         0
       ],
       "脚本回答已渲染": [
         0
       ],
-      "控制台没有异常 (line 623)": [
+      "控制台没有异常 (line 630)": [
         0
       ]
     },
@@ -442,6 +442,37 @@
         0
       ],
       "控制台没有异常": [
+        0
+      ]
+    },
+    "packages/testing/scenarios/session-panel.mjs": {
+      "the context section arrives with the turn": [
+        2
+      ],
+      "the session stats carry the figures and the token buckets": [
+        8
+      ],
+      "Outputs lists the files the turn wrote and folds past its second row": [
+        0,
+        2
+      ],
+      "the fold control shows the rest and puts them away again": [
+        2,
+        4
+      ],
+      "Background tasks lists the commands and files them under their kind": [
+        0,
+        1,
+        2
+      ],
+      "the view switch stands on the title's own line, clear of the title and the utilities": [
+        2,
+        4
+      ],
+      "the host header chips step aside while the rail stands": [
+        0
+      ],
+      "a closed rail stops asking the host": [
         0
       ]
     },

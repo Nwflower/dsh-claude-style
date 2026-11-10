@@ -63,6 +63,8 @@ export { currentRate, forgetRates, formatCountdown } from './features/peakrate/s
 export { keepFlowChildMark } from './features/sodium/flow-items'
 export { SODIUM_MEMBERS } from './features/sodium/members'
 export { versionAtLeast } from './features/sodium/version'
+export { FALLBACK_VIEW_TAB_SHIFT, VIEW_TAB_CLEARANCE, VIEW_TAB_TOP_INSET, placementFor } from './features/view-tabs/placement'
+export type { PlacementBox, StripBoxes, StripPlacement, StripTranslate } from './features/view-tabs/placement'
 export { PHRASE_TAIL_CHARS, activityPhrase } from './shared/activity-phrase'
 export { backgroundOpacityOf, backgroundOpacityPercent } from './shared/background-opacity'
 export { callDescription } from './shared/turn-activity'

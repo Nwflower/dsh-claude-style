@@ -4,7 +4,7 @@
  */
 
 /** The end-to-end lane's scenarios; the lane checks its own names against these. */
-export const E2E_SCENARIOS = ['conversation', 'systemTypography', 'messageActions', 'messageAnswerActions', 'mobileHome', 'composerViewport', 'narrow', 'tool', 'fileMerge', 'send', 'sendFull', 'scroll', 'readerScroll', 'doorPin', 'streamPace', 'streamJitter', 'streamJitterFooter', 'streamJitterInline', 'motion', 'processSummary', 'reasoningStream', 'reasoningContinuous', 'waitLine', 'washLine', 'longSession', 'statsPosition', 'statsOverlay', 'statsFooter', 'sidebarRail', 'sidebarPeek', 'rightbar', 'contract', 'importance', 'remoteSettings', 'usernameComposition', 'usernameIme', 'customBrand', 'dsBot', 'shots'] as const
+export const E2E_SCENARIOS = ['conversation', 'systemTypography', 'messageActions', 'messageAnswerActions', 'mobileHome', 'composerViewport', 'narrow', 'tool', 'fileMerge', 'send', 'sendFull', 'scroll', 'readerScroll', 'doorPin', 'streamPace', 'streamJitter', 'streamJitterFooter', 'streamJitterInline', 'motion', 'processSummary', 'reasoningStream', 'reasoningContinuous', 'waitLine', 'washLine', 'longSession', 'statsPosition', 'statsOverlay', 'statsFooter', 'sidebarRail', 'sidebarPeek', 'rightbar', 'sessionPanel', 'contract', 'importance', 'remoteSettings', 'usernameComposition', 'usernameIme', 'customBrand', 'dsBot', 'shots'] as const
 
 /** One timing assumption, and how it is held. */
 interface HostTimingEntry {
@@ -60,6 +60,18 @@ export const HOST_TIMING: HostTimingEntry[] = [
     assumption: 'The host mounts the right panel’s own collapse control only while that panel is expanded, inside a chrome strip under a transformed, clipped subtree.',
     use: 'The skin’s control stands in the header’s row and presses the host’s one, which cannot be placed there: a fixed box inside that subtree is measured from the panel and cut at its edge (features/header-band).',
     checks: ['scenario:rightbar'],
+  },
+  {
+    id: 'host.rightbar-width',
+    assumption: 'The layout root slot seats a store whose create() answers the page\u2019s single layout instance, and that instance\u2019s actions carry setRightbar(px) — the same action the resize handle writes.',
+    use: 'The session overview opens the right column at its minimum width through that action (features/session-panel); a host that moves the store or renames the action leaves the column at the width it had.',
+    checks: ['scenario:sessionPanel'],
+  },
+  {
+    id: 'host.rightbar-tab-body',
+    assumption: 'A right-column tab body mounts with no padding and no scroll container of its own: the body root supplies both, and the pane body never scrolls it.',
+    use: 'The session overview draws its own padding and scrolling (features/session-panel); a body that inherited the pane\u2019s scrolling would either double the scroll or cut the last row off at the panel\u2019s edge.',
+    checks: ['scenario:sessionPanel'],
   },
   {
     id: 'host.composer-place',

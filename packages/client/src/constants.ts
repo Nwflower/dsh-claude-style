@@ -160,6 +160,8 @@ export const PART_ATTR = 'data-dsh-claude-part'
 /** On a host element, naming the parts its own subtree holds (packages/engine/src/parts.ts, packages/engine/src/parts-table.ts). A rule that used to ask whether an element contains another (`A:has(B)`) reads this mark instead.
  * The marking pass already walks that subtree, so the answer costs one attribute read rather than a style pass over every candidate (D9); the values are the relation names declared in the parts table. */
 export const HOLDS_ATTR = 'data-dsh-claude-holds'
+/** On the body while the session overview is installed (features/session-panel): the stylesheet hides the host's background-work chips, and the view-tab strip takes the title's line beside the title's own actions (features/view-tabs). It goes with the feature's seats, so its absence is the preference off. */
+export const SESSION_PANEL_ATTR = 'data-dsh-claude-session-panel'
 /** On the element the fold glide is pressing right now (features/chat-fold/fold-glide.ts): while it stands, the elements inside lay out at their natural height instead of being squeezed by flex (fold-motion.css). */
 export const CHAT_ROLLING_ATTR = 'data-dsh-claude-rolling'
 /** On an editable surface once the caret motion has taken it over (features/caret/). */

@@ -339,6 +339,8 @@ export const HEADER_TITLE_ROW_SELECTOR = '[data-dsh-claude-part~="title-row"]'
 export const HEADER_TITLE_SELECTOR = '[data-dsh-claude-part~="header-title"]'
 /** Preset/chip seat beside the title; the band moves it into the caption row after the title. */
 export const HEADER_ACTIONS_SELECTOR = '[data-dsh-claude-part~="header-actions"]'
+/** The host's background-work chips in that seat: the jobs count (a trigger with no popup) and the subagent catalog (a tree popup), each drawn only while its work exists. */
+export const HEADER_ACTION_CHIPS_SELECTOR = '[data-dsh-claude-part~="header-actions"] button[aria-haspopup="tree"], [data-dsh-claude-part~="header-actions"] button[aria-expanded]:not([aria-haspopup])'
 /** The header's utilities cluster: the workspace opener, the overflow menu, the bottom-panel toggle. */
 export const HEADER_UTILITIES_SELECTOR = '[data-dsh-claude-part~="header-utilities"]'
 /** The corner seat beside the utilities, carrying the right-sidebar toggle. */
