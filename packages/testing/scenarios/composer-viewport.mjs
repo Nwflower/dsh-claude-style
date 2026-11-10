@@ -1,8 +1,8 @@
 /** The composer remains reachable and keeps its draft through a visible-height change. */
 import path from 'node:path'
 import { COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR } from '@dsh-claude-style/contracts/dom'
-import { check } from './lane.mjs'
-import { sanitizePage } from '../../scripts/shared/privacy.mjs'
+import { check } from '../lane.mjs'
+import { sanitizePage } from '../../../scripts/shared/privacy.mjs'
 
 async function read(page) {
   return page.evaluate((host) => {

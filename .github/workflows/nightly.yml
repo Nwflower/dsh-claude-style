@@ -33,13 +33,13 @@ jobs:
       - run: npm ci
       - run: npm run build
         timeout-minutes: 15
-      - run: npm run behaviour
+      - run: npm run stand-in
         timeout-minutes: 15
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: nightly-behaviour-macos
-          path: .debug/behaviour
+          path: .debug/runs/behaviour
           if-no-files-found: ignore
 
   e2e-host:
@@ -66,5 +66,5 @@ jobs:
         if: always()
         with:
           name: nightly-e2e-traces
-          path: .debug/e2e/out
+          path: .debug/runs/e2e/out
           if-no-files-found: ignore

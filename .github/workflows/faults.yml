@@ -1,6 +1,6 @@
 name: Faults
 
-# Verify that each known defect still turns a spec red in a scratch tree (D87).
+# Verify that each known defect still turns a spec red in a scratch tree (D92).
 #
 # Run weekly or manually because browser faults each need a build; failures
 # mean the defect corpus or specs need updating.
@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  # Serialize runs because they write scratch copies under .debug/faults.
+  # Serialize runs because they write scratch copies under .debug/runs/faults.
   group: faults
   cancel-in-progress: false
 
@@ -37,5 +37,5 @@ jobs:
         if: always()
         with:
           name: faults-report
-          path: .debug/faults/report-new.json
+          path: .debug/runs/faults/report-new.json
           if-no-files-found: ignore

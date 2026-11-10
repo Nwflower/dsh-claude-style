@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * reasoning-stream.mjs — the reasoning's streamed window, end to end (D87).
+ * reasoning-stream.mjs — the reasoning's streamed window, end to end (D92).
  *
  * Registered in the lane's scenario table (packages/testing/scenarios.mjs).
  *
@@ -14,9 +14,9 @@
  * written to run past that cap on the lane's own column width.
  */
 import path from 'node:path'
-import { settlePage, recordUntil } from './lane.mjs'
-import { bound } from './bounds.mjs'
-import surfaceTable from './data/surface.json' with { type: 'json' }
+import { settlePage, recordUntil } from '../lane.mjs'
+import { bound } from '../bounds.mjs'
+import surfaceTable from '../data/surface.json' with { type: 'json' }
 
 const SURFACE = surfaceTable.surface
 const selector = (id) => {

@@ -365,7 +365,7 @@ export function apply(ctx: HostContext) {
    * when its chunk arrives, after this pass and the scheduler (D72).
    */
   function own() {
-    // The value is the build id (scripts/build.mjs): the stylesheet keys on
+    // The value is the build id (scripts/build/build.mjs): the stylesheet keys on
     // the attribute alone, and a live page reads which lib/client.js it runs.
     body.setAttribute('data-dsh-claude-style', BUILD_ID)
     // The handoff marker rides the live stamp: its presence is what lets the

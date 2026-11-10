@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * reader-scroll.mjs — the reader's own scrolling during a live turn, end to end
- * (D40, D87).
+ * (D40, D92).
  *
  * Registered in the lane's scenario table (packages/testing/scenarios.mjs). It
  * samples the page itself: the frames the shared trace carries are the scroll
@@ -13,7 +13,7 @@
  * rather than floating at the pinned spot over what he went back to read. The
  * scenario wheels once, mid-turn, and reads the frames it recorded.
  */
-import { bound } from './bounds.mjs'
+import { bound } from '../bounds.mjs'
 
 /** The host's page markers this scenario reads, as packages/testing/lane.mjs names them. */
 const HOST = {

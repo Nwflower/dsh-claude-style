@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Exercise one merged row per file after a `run_code` program's four-file script
- * (D87). One row keeps the latest operation and counts its calls; unchanged and
+ * (D92). One row keeps the latest operation and counts its calls; unchanged and
  * single-call files stay distinct. Unit tests cover the shared row element.
  */
 import fs from 'node:fs'
@@ -124,7 +124,7 @@ const HEAD_FACTS = ([suffix, figuresSource]) => {
 }
 
 /**
- * Record every sample the page itself writes (D87): a runner loaded by the
+ * Record every sample the page itself writes (D92): a runner loaded by the
  * other scenarios is starved for as long as they hold the machine, and a change
  * that lands inside that stall is a change no reading from here ever saw — the
  * tail's number, the roll it turns with and the label swapping in are each

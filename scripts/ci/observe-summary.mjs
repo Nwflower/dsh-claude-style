@@ -5,8 +5,9 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
+import { runsPath } from '../shared/debug-paths.mjs'
 
-const ROOT = path.resolve(import.meta.dirname, '..')
+const ROOT = path.resolve(import.meta.dirname, '..', '..')
 const ARTIFACT = 'observe-behaviour'
 /** How much of a test's error the summary and the annotation carry; the evidence holds the rest. */
 const MESSAGE_MAX = 300
@@ -14,7 +15,7 @@ const MESSAGE_MAX = 300
 const args = process.argv.slice(2)
 const reportAt = (() => {
   const at = args.indexOf('--report')
-  if (at === -1) return path.join(ROOT, '.debug', 'behaviour', 'report.json')
+  if (at === -1) return runsPath(ROOT, 'behaviour', 'report.json')
   const value = args[at + 1]
   if (value === undefined) throw new Error('observe-summary: --report needs a path')
   return path.resolve(value)
@@ -22,8 +23,7 @@ const reportAt = (() => {
 
 const STEPS = [
   { id: 'build', env: 'BUILD_OUTCOME', what: 'the build' },
-  { id: 'smoke', env: 'SMOKE_OUTCOME', what: "the smoke's quick tier" },
-  { id: 'behaviour', env: 'BEHAVIOUR_OUTCOME', what: 'the behaviour lane' },
+  { id: 'stand-in', env: 'STAND_IN_OUTCOME', what: "the stand-in page's quick tier and behaviour specs" },
 ]
 
 /** One result's message as one line, cut to what a summary row can hold. */
@@ -45,10 +45,10 @@ function behaviourResults() {
   return report.results
 }
 
-/** Where a failing test's evidence sits in the uploaded artifact, which holds `.debug/behaviour` as its root; null when the result left none. */
+/** Where a failing test's evidence sits in the uploaded artifact, which holds `.debug/runs/behaviour` as its root; null when the result left none. */
 function evidenceOf(result) {
   if (result.evidence === undefined) return null
-  return `\`${String(result.evidence).replace(/^\.debug\/behaviour\//, '')}\` in the \`${ARTIFACT}\` artifact`
+  return `\`${String(result.evidence).replace(/^\.debug\/runs\/behaviour\//, '')}\` in the \`${ARTIFACT}\` artifact`
 }
 
 /** Empty outcomes mean skipped; missing variables indicate workflow misconfiguration. */
@@ -65,11 +65,11 @@ for (const step of outcomes) lines.push(`| ${step.what} | ${step.outcome} |`)
 lines.push('')
 
 for (const step of failed) {
-  if (step.id !== 'behaviour') {
+  if (step.id !== 'stand-in') {
     lines.push(`- ${step.what} failed and left no test report; the \`${step.id}\` step's log in this job carries the output.`)
   }
 }
-if (failed.some((step) => step.id === 'behaviour') && blocking.length === 0) {
+if (failed.some((step) => step.id === 'stand-in') && blocking.length === 0) {
   lines.push(`- The behaviour lane failed before it wrote a report; the \`behaviour\` step's log in this job carries the output.`)
 }
 /** Why a blocking result blocked: an assertion's own message, or a quarantined test that passed. */
@@ -96,7 +96,7 @@ if (summaryFile === undefined || summaryFile === '') process.stdout.write(summar
 else fs.appendFileSync(summaryFile, summary)
 
 for (const step of failed) {
-  if (step.id === 'behaviour' && blocking.length > 0) continue
+  if (step.id === 'stand-in' && blocking.length > 0) continue
   console.log(`::error title=Observe ${step.id}::${data(`${step.what} failed; the step's log in this job carries the output`)}`)
 }
 for (const result of blocking) console.log(`::error title=${property(result.id)}::${data(detail(result))}`)

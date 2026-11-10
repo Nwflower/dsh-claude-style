@@ -3,8 +3,8 @@
  * while code, math, italic emphasis and language metadata keep their own rules.
  */
 import path from 'node:path'
-import { check } from './lane.mjs'
-import { sanitizePage } from '../../scripts/shared/privacy.mjs'
+import { check } from '../lane.mjs'
+import { sanitizePage } from '../../../scripts/shared/privacy.mjs'
 
 function systemTypographyScenario() {
   return {

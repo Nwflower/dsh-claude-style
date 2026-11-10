@@ -21,7 +21,7 @@ const PRICED_STATS = { turns: 2, steps: 20, llmMs: 0, toolMs: 0, ttftMs: 0, ttft
 const PRICED_USAGE = { uncachedInputTokens: 1000, cacheReadTokens: 9000, cacheWriteTokens: 0, outputTokens: 100 }
 
 /**
- * The stand-in's statistics session, seated the way the host seats it (D87):
+ * The stand-in's statistics session, seated the way the host seats it (D92):
  * the card and its dock move into the active phase's session column, and both
  * projections land their first readings.
  */

@@ -7,7 +7,7 @@ import path from 'node:path'
 import vm from 'node:vm'
 import esbuild from 'esbuild'
 
-const ROOT = path.resolve(import.meta.dirname, '..')
+const ROOT = path.resolve(import.meta.dirname, '..', '..')
 const SRC = path.join(ROOT, 'packages', 'client', 'src')
 /** The path every module a build plugin generates is resolved under (D36). */
 const VIRTUAL_PREFIX = 'virtual:dsh-claude-style/'

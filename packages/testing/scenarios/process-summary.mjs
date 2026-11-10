@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * process-summary.mjs — the enhanced tier's waiting line and counted process
- * headers on the real host (D74, D87).
+ * headers on the real host (D74, D92).
  *
  * Registered in the lane's scenario table (packages/testing/scenarios.mjs).
  *
@@ -19,8 +19,8 @@
  * host's own word for the fallback is read off the page itself. The waiting
  * line's words belong to chat-wait and the counted headers' to chat-fold (D72).
  */
-import waitCopy from '../client/src/features/chat-wait/chat-wait.copy.json' with { type: 'json' }
-import foldCopy from '../client/src/features/chat-fold/chat-fold.copy.json' with { type: 'json' }
+import waitCopy from '../../client/src/features/chat-wait/chat-wait.copy.json' with { type: 'json' }
+import foldCopy from '../../client/src/features/chat-fold/chat-fold.copy.json' with { type: 'json' }
 
 const COPY = {
   ...waitCopy,

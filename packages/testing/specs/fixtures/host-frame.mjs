@@ -1,6 +1,6 @@
 /**
  * The host's own conversation frame, mounted from the record the capture tool
- * writes (packages/testing/data/host-snapshot.json, D3, D87): its tags, class
+ * writes (packages/testing/data/host-snapshot.json, D3, D92): its tags, class
  * names, attributes and values are the host's, and `node
  * packages/testing/host-snapshot.mjs` writes the record again.
  */

@@ -1,5 +1,5 @@
 /** peakrate-catalog.mjs — validate the shipped fallback with the host parser and meter mappings. */
-import { loadModule } from './shared/ts-module.mjs'
+import { loadModule } from '../shared/ts-module.mjs'
 
 export const PEAKRATE_CATALOG = 'peakrate-catalog.json'
 

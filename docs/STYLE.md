@@ -930,7 +930,7 @@ conversation (unless Where it appears keeps it to the home page) — and follows
 same states with the same keys. Its frames, its crop boxes and the frame each
 state holds under reduced motion are in
 `packages/client/src/features/mascot/sheets.ts`, the table the build cuts the
-sheets from; the art is drawn by `scripts/draw-crab.py` after Claude Code's
+sheets from; the art is drawn by `scripts/art/draw-crab.py` after Claude Code's
 character. The shell keeps the clay accent in both themes and the props (the
 laptop, the bubble wand and its bubbles, letters, notes, the hard hat) are an ink mask filled
 with the tertiary label ink, so the mascot reads as part of the card it stands on.

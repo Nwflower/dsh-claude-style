@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * motion.mjs — the transitions.dev surfaces on the real page (D9, D87).
+ * motion.mjs — the transitions.dev surfaces on the real page (D9, D92).
  *
  * Registered in the lane's scenario table (packages/testing/scenarios.mjs).
  *
@@ -14,8 +14,8 @@
  * model silent past the overtime mark, so the badge comes and goes in one turn.
  * The page runs the studio home, which draws the usage panel.
  */
-import { waitForSkin } from './dsh-web.mjs'
-import { recordUntil } from './lane.mjs'
+import { waitForSkin } from '../dsh-web.mjs'
+import { recordUntil } from '../lane.mjs'
 import { openSkinSettings } from './remote-settings.mjs'
 
 /** The host's page markers this scenario reads. */
@@ -64,7 +64,7 @@ const animationOf = (page, selector) => page.evaluate((target) => {
  * Each surface is recorded on every frame from the press until its own motion
  * has landed: the settings page keeps preview cards moving on their own clocks,
  * so the page as a whole never comes to rest, and what is waited for is the
- * element under test (D87: the settle rule).
+ * element under test (D92: the settle rule).
  */
 
 /** The first settings switch's knob, read inside the page, with whether its own motion is still running. */

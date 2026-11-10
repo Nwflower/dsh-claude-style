@@ -6,7 +6,7 @@
  */
 import path from 'node:path'
 
-const ROOT = path.resolve(import.meta.dirname, '..')
+const ROOT = path.resolve(import.meta.dirname, '..', '..')
 const SRC = path.join(ROOT, 'packages', 'client', 'src')
 
 /** The manifest fields the browser half reads (FeatureRuntime in packages/client/src/core/feature.ts). */

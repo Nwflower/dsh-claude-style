@@ -7,5 +7,6 @@ export default {
   pref: 'chatAnimations',
   yieldsTo: 'dsh-chat-ux',
   stylesheets: [{ file: 'chat-files.css', rank: 190 }],
-  cases: ['chat-files', 'peer-chat-ux']
+  cases: ['chat-files', 'peer-chat-ux'],
+  scenarios: ['fileMerge'],
 } satisfies FeatureManifest

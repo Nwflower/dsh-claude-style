@@ -2,17 +2,17 @@
  * Decide on the live page which skin `!important` declarations are needed, by
  * dropping each through the CSSOM and comparing computed values. Unmatched
  * selectors fail; third-party and transient marks are excused (D9). States come
- * from packages/testing/importance.mjs.
+ * from packages/testing/scenarios/importance.mjs.
  */
 import fs from 'node:fs'
 import path from 'node:path'
 import postcss from 'postcss'
 import selectorParser from 'postcss-selector-parser'
-import { minifyCss } from '../../scripts/shared/minify-css.mjs'
-import { ruleKey } from '../../scripts/shared/rule-key.mjs'
-import surfaceTable from './data/surface.json' with { type: 'json' }
+import { minifyCss } from '../../../scripts/shared/minify-css.mjs'
+import { ruleKey } from '../../../scripts/shared/rule-key.mjs'
+import surfaceTable from '../data/surface.json' with { type: 'json' }
 
-const ROOT = path.resolve(import.meta.dirname, '..', '..')
+const ROOT = path.resolve(import.meta.dirname, '..', '..', '..')
 /** The marker declaration carrying each rule's index into the page's CSSOM. */
 const MARK = '--dsh-audit-rule'
 /** The skin's stylesheet, by the tag it wears (D9). */
@@ -22,7 +22,7 @@ const READABLE_PSEUDO = new Set(['::before', '::after', '::marker', '::placehold
 /**
  * A skin mark as a selector reads it, taken from the surface table: the marks
  * the list below already spells stay as they are, and one added now is read
- * rather than written down a second time (D87).
+ * rather than written down a second time (D92).
  */
 function mark(id) {
   const entry = surfaceTable.surface.find((candidate) => candidate.id === id)

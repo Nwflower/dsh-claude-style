@@ -77,5 +77,6 @@ export default {
     control: 'billing-table',
     requires: CONVERSATION_COMPOSER_REQUIRES,
   }],
-  cases: ['context-stats', 'stats-compact', 'stats-inline']
+  cases: ['context-stats', 'stats-compact', 'stats-inline'],
+  scenarios: ['statsPosition', 'statsOverlay', 'statsFooter'],
 } satisfies FeatureManifest

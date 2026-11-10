@@ -37,6 +37,8 @@ export interface FeatureFields {
   /** Each preference has one owning settings row (D72). */
   settingsRows?: FeatureSettingsRow[]
   cases: string[]
+  /** End-to-end scenarios that guard this feature (D92). */
+  scenarios?: string[]
   /** The build refuses host contract entries no manifest claims (D3). */
   contracts: string[]
 }
@@ -55,7 +57,7 @@ export interface FeatureStylesheetFile {
   scope?: 'surface'
 }
 
-/** Names a generator in scripts/feature-sheets.mjs. */
+/** Names a generator in scripts/build/feature-sheets.mjs. */
 export interface FeatureStylesheetGenerated {
   generated: string
   rank: number

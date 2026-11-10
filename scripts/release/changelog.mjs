@@ -6,7 +6,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-const ROOT = path.resolve(import.meta.dirname, '..')
+const ROOT = path.resolve(import.meta.dirname, '..', '..')
 const CHANGES = path.join(ROOT, 'docs', 'changes')
 const FILE = path.join(ROOT, 'docs', 'CHANGELOG.md')
 

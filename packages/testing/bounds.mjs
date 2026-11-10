@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Read test limits from data/bounds.json so each adjustment stays beside its recorded reason (D87). */
+/** Read test limits from data/bounds.json so each adjustment stays beside its recorded reason (D92). */
 import fs from 'node:fs'
 import path from 'node:path'
 

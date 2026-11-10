@@ -36,5 +36,6 @@ export default {
     },
     requires: CONVERSATION_COMPOSER_REQUIRES,
   }],
-  cases: ['composer', 'sync-fault', 'hero', 'late-forms']
+  cases: ['composer', 'sync-fault', 'hero', 'late-forms'],
+  scenarios: ['composerViewport', 'usernameIme', 'streamPace', 'streamJitter', 'streamJitterFooter', 'streamJitterInline'],
 } satisfies FeatureManifest

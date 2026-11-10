@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Run real `dsh web` scenarios against this checkout, the scripted model and a
- * browser (D87), each in its own scratch home. Usage: `node packages/testing/e2e.mjs
+ * browser (D92), each in its own scratch home. Usage: `node packages/testing/e2e.mjs
  * [--scenario <name>] [--shard <i>:<n>] [--jobs <n>] [--headed]`; shards run one
  * scenario at a time.
  */
@@ -19,9 +19,11 @@ import { startMockLlm } from './mock-llm.mjs'
 import { startMockPlatform, accountStore } from './mock-platform.mjs'
 import { loadModule } from '../../scripts/shared/ts-module.mjs'
 import { withLock } from '../../scripts/shared/verify-lock.mjs'
+import { runsPath } from '../../scripts/shared/debug-paths.mjs'
+import { featureCoverage } from '../../scripts/shared/feature-coverage.mjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..', '..')
-const DEFAULT_OUT = path.join(ROOT, '.debug', 'e2e', 'out')
+const DEFAULT_OUT = runsPath(ROOT, 'e2e', 'out')
 /**
  * How long one scenario may take. A wait that never settles would otherwise hold
  * the run until the runner's own limit: this deadline writes the failure evidence
@@ -351,7 +353,7 @@ async function runScenario(name, options) {
       }
       step('asserting')
       const checks = await scenario.assert(context)
-      // An observation that differs is printed as a difference and fails nothing (D87).
+      // An observation that differs is printed as a difference and fails nothing (D92).
       for (const item of checks) say(`  ${item.ok ? '✓' : item.observation === true ? '△' : '✗'} ${item.name}${item.detail === '' ? '' : `  — ${item.detail}`}\n`)
       const failed = checks.filter((item) => !item.ok && item.observation !== true).length
       const observed = checks.filter((item) => !item.ok && item.observation === true)
@@ -386,7 +388,7 @@ async function runScenario(name, options) {
 /**
  * One slice of a walk: every `<total>`th name from `<index>`. The scenarios of a
  * walk are independent of one another, so slices taken this way cover the walk
- * exactly once between them however many runners hold it (D87).
+ * exactly once between them however many runners hold it (D92).
  */
 function shardOf(names, spec) {
   const at = spec.indexOf(':')
@@ -400,12 +402,15 @@ function shardOf(names, spec) {
 
 async function main() {
   const args = process.argv.slice(2)
-  // The lane reads what the host draws; a host other than the pinned one gets no verdict (D87).
+  // The lane reads what the host draws; a host other than the pinned one gets no verdict (D92).
   requireNewestHost()
   // The timing table names the scenarios that hold it (D3), so the two lists are
   // checked against each other rather than kept in step by hand.
   const { E2E_SCENARIOS } = loadModule('packages/contracts/src/timing.ts')
   const known = Object.keys(SCENARIOS)
+  const claimed = [...new Set(Object.values(featureCoverage()).flatMap((row) => row.scenarios))]
+  const missing = claimed.filter((name) => !known.includes(name))
+  if (missing.length > 0) throw new Error(`feature manifests name scenarios the lane does not hold: ${missing.join(', ')}`)
   const unknown = E2E_SCENARIOS.filter((name) => !known.includes(name))
   const unnamed = known.filter((name) => !E2E_SCENARIOS.includes(name))
   if (unknown.length > 0 || unnamed.length > 0) {

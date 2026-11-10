@@ -6,7 +6,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-const ROOT = path.resolve(import.meta.dirname, '..')
+const ROOT = path.resolve(import.meta.dirname, '..', '..')
 const AGENTS = path.join(ROOT, 'AGENTS.md')
 const START = '<!-- commands:start — written by npm run agents, not by hand -->'
 const END = '<!-- commands:end -->'
@@ -52,7 +52,7 @@ function table() {
     const override = OVERRIDES[name]
     const file = command.match(SCRIPT_FILE)?.[1]
     const purpose = override ?? (file === undefined ? null : statedPurpose(file))
-    if (purpose === null) throw new Error(`agents: npm run ${name} runs "${command}", which states no purpose — add it to OVERRIDES in scripts/agents-commands.mjs`)
+    if (purpose === null) throw new Error(`agents: npm run ${name} runs "${command}", which states no purpose — add it to OVERRIDES in scripts/checks/agents-commands.mjs`)
     rows.push(`| \`${name === 'test' ? 'npm test' : `npm run ${name}`}\` | ${purpose} |`)
   }
   return rows.join('\n')

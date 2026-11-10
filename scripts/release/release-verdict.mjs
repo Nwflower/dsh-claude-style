@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
  * release-verdict.mjs — require a successful manual matrix on the tagged commit
- * with no skipped lane (D87); stop before packing when no verdict exists.
+ * with no skipped lane (D92); stop before packing when no verdict exists.
  */
 import fs from 'node:fs'
-import { argOf } from './shared/args.mjs'
+import { argOf } from '../shared/args.mjs'
 
 /** A reason the release may not go on; the message is what the release prints. */
 class NoVerdict extends Error {}

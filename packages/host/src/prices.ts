@@ -2,7 +2,7 @@
  * The price snapshot the host holds: the copy shipped in the package, the copy
  * refreshed from the repository, and which of the two is newer.
  *
- * The repository owns the scraping (`scripts/fetch-prices.mjs`, run by
+ * The repository owns the scraping (`scripts/data/fetch-prices.mjs`, run by
  * `.github/workflows/data.yml`); a host only downloads the validated result, once
  * a day, and keeps it on disk. The packaged copy is what a machine with no reach
  * judges by, so the meter works on a first run with no network at all.

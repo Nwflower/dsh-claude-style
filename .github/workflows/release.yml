@@ -1,7 +1,7 @@
 name: Release
 
 # Require a green manual CI matrix on the tagged commit before packing or
-# publishing (D87).
+# publishing (D92).
 #
 # Pack once, publish dev, recheck the tree, then promote the same tarball to
 # latest; dist carries npm's files for build-free git installs (D47).
@@ -11,7 +11,7 @@ on:
     tags: ['v*']
 
 # contents: the dist branch, the moved tag and the GitHub Release (D47).
-# actions: the matrix verdict, read from this repository's own runs (D87).
+# actions: the matrix verdict, read from this repository's own runs (D92).
 # id-token: npm trusted publishing exchanges it for a one-time token, avoiding
 # a stored npm secret.
 permissions:
@@ -25,7 +25,7 @@ concurrency:
 
 jobs:
   # Require every matrix lane to be green on this commit before publication
-  # (D87).
+  # (D92).
   verdict:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -38,7 +38,7 @@ jobs:
           node-version: 24
       - env:
           GH_TOKEN: ${{ github.token }}
-        run: node scripts/release-verdict.mjs
+        run: node scripts/release/release-verdict.mjs
 
   release:
     needs: verdict
@@ -69,13 +69,13 @@ jobs:
       - name: Check the version has its CHANGELOG section
         env:
           VERSION: ${{ steps.version.outputs.version }}
-        run: node scripts/changelog.mjs --notes "${VERSION}" > /dev/null
+        run: node scripts/release/changelog.mjs --notes "${VERSION}" > /dev/null
       - run: npm ci
       # Reruns skip existing publications and dist output; npm rejects duplicate
       # versions.
       - name: Read what is already out
         id: state
-        run: node scripts/release-state.mjs >> "$GITHUB_OUTPUT"
+        run: node scripts/release/release-state.mjs >> "$GITHUB_OUTPUT"
       # Pack release and dev from one build so both tarballs contain the tree
       # the matrix judged.
       - name: Pack the release and its dev version
@@ -83,7 +83,7 @@ jobs:
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          paths="$(node scripts/release-pack.mjs --out .debug/release --dev "${VERSION}-dev.${GITHUB_RUN_NUMBER}")"
+          paths="$(node scripts/release/release-pack.mjs --out .debug/runs/release --dev "${VERSION}-dev.${GITHUB_RUN_NUMBER}")"
           echo "release=$(printf '%s\n' "${paths}" | sed -n 1p)" >> "$GITHUB_OUTPUT"
           echo "dev=$(printf '%s\n' "${paths}" | sed -n 2p)" >> "$GITHUB_OUTPUT"
       # Publish dev first for early trials; a later failure leaves latest
@@ -102,7 +102,7 @@ jobs:
       # absent from a fresh checkout (D47).
       - name: Write the dist branch and move the tag
         if: steps.state.outputs.packaged != 'true'
-        run: node scripts/dist-branch.mjs --push
+        run: node scripts/release/dist-branch.mjs --push
       - name: Publish to npm
         if: steps.state.outputs.published != 'true'
         env:
@@ -119,9 +119,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          mkdir -p .debug
-          notes=.debug/release-notes.md
-          node scripts/changelog.mjs --notes "${VERSION}" > "${notes}"
+          mkdir -p .debug/runs/release
+          notes=.debug/runs/release/notes.md
+          node scripts/release/changelog.mjs --notes "${VERSION}" > "${notes}"
           if gh release view "v${VERSION}" > /dev/null 2>&1; then
             gh release edit "v${VERSION}" --notes-file "${notes}"
           else

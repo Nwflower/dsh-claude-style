@@ -2,7 +2,7 @@
 /**
  * stream-pace.mjs — where the composer stands, and how far behind the pin the
  * answer runs, while an answer arrives faster than a slide carries it, end to
- * end (D85, D87).
+ * end (D85, D92).
  *
  * Registered in the lane's scenario table (packages/testing/scenarios.mjs). It
  * reads the lane's own frame trace (packages/testing/e2e.mjs), which carries
@@ -21,7 +21,7 @@
  * where it stood, and no frame leaves the column off the pin by more than one
  * slide covers.
  */
-import { bound } from './bounds.mjs'
+import { bound } from '../bounds.mjs'
 
 /** The host's page markers this scenario reads, as packages/testing/lane.mjs names them. */
 const HOST = {

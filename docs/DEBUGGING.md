@@ -6,7 +6,7 @@
 
 真实宿主上的读数与替身页不同：宿主自己的 React 重渲染、会话日志与窗口化都在替身页之外。
 
-- `node packages/testing/dsh-web.mjs` 在 `.debug/` 下起一个独立的 `$DSH_HOME` 并把本检出链进去，打印地址；它不占验证锁，可以与其他车道并存。
+- `node packages/testing/dsh-web.mjs` 在 `.debug/runs/e2e/` 下起一个独立的 `$DSH_HOME` 并把本检出链进去，打印地址；它不占验证锁，可以与其他车道并存。
 - 桌面窗口用桥读：`node D:\DSH\dsh-gui-bridge\bin\bridge.cjs "<表达式>"`。窗口在后台时动画帧暂停，等帧的探针会挂住。
 - 页面在跑哪一份构建，只看 `document.body.getAttribute('data-dsh-claude-style')`，`npm run build` 打印它写下的编号。热重载会换包而不会刷页面，经过多次热重载的页面先刷新再当证据。
 

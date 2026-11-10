@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
  * Enter skin settings through the host shortcut. Current shells expose the
- * entry through the account menu; older web shells open the dialog directly (D87).
+ * entry through the account menu; older web shells open the dialog directly (D92).
  */
-import { bound } from './bounds.mjs'
+import { bound } from '../bounds.mjs'
 
 const SETTINGS_PAGE = '.dsh-claude-settings'
 const MENU_WAIT_MS = bound('settingsRouteMenuWaitMs')

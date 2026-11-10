@@ -7,8 +7,8 @@ import { spawn } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 
-const ROOT = path.resolve(import.meta.dirname, '..')
-const BUILD = path.join(ROOT, 'scripts', 'build.mjs')
+const ROOT = path.resolve(import.meta.dirname, '..', '..')
+const BUILD = path.join(ROOT, 'scripts', 'build', 'build.mjs')
 
 /** Name individual testing records because the rest of packages/testing is not a build input. */
 const WATCHED_DIRS = ['packages/client', 'packages/assets', 'packages/host', 'packages/engine', 'packages/contracts', 'scripts']

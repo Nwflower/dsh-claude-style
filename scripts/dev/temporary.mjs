@@ -3,9 +3,9 @@
 import path from 'node:path'
 import { spawn } from 'node:child_process'
 import { parseArgs } from 'node:util'
-import { createTemporaryFiles } from './shared/temporary-files.mjs'
+import { createTemporaryFiles } from '../shared/temporary-files.mjs'
 
-const ROOT = path.resolve(import.meta.dirname, '..')
+const ROOT = path.resolve(import.meta.dirname, '..', '..')
 
 function help() {
   console.log(`temporary: session scratch under .debug/tmp

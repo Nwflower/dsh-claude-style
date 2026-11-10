@@ -1,12 +1,13 @@
 /**
- * verify-lock.mjs — serialize browser runs on a shared tree (D87): child gates inherit
+ * verify-lock.mjs — serialize browser runs on a shared tree (D92): child gates inherit
  * the lock, and stale owner records are reclaimed.
  */
 import fs from 'node:fs'
 import path from 'node:path'
+import { runsPath } from './debug-paths.mjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..', '..')
-const LOCK = path.join(ROOT, '.debug', 'verify.lock')
+const LOCK = runsPath(ROOT, 'verify.lock')
 const OWNER = path.join(LOCK, 'owner.json')
 const HELD = 'DSH_CLAUDE_STYLE_LOCK_HELD'
 const DEV = 'DSH_CLAUDE_STYLE_DEV'
@@ -62,7 +63,7 @@ async function takeLock(label, runId) {
   let announced = 0
   for (;;) {
     try {
-      // Create .debug first so an existing lock reports EEXIST rather than ENOENT.
+      // Create the lock's directory first so an existing lock reports EEXIST rather than ENOENT.
       fs.mkdirSync(path.dirname(LOCK), { recursive: true })
       fs.mkdirSync(LOCK)
       fs.writeFileSync(OWNER, `${JSON.stringify({ pid: process.pid, at: new Date().toISOString(), label, runId }, null, 2)}\n`)

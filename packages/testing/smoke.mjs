@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * smoke.mjs — the BUILT plugin (`lib/`): the host half in Node and the browser
- * half in the stand-in host page under headless Chrome, with no DSH instance
- * running; pages run several at a time, the motion pages two at a time last.
+ * smoke.mjs — installation-case implementation for stand-in.mjs (D92): the
+ * host half in Node and the browser half in the stand-in host page under
+ * headless Chrome; pages run several at a time, the motion pages two at a time last.
  *
  * Usage: node packages/testing/smoke.mjs [--case <name>[,<name>…]] [--feature <dir>[,<dir>…]] [--quick] [--jobs <n>] [--host]
  *        (CHROME_PATH picks the browser, DSH_SMOKE_JOBS the page count; --host
@@ -11,6 +11,7 @@
  *        nothing it can run · 3 the browser half gave no verdict
  */
 import { availableParallelism } from 'os'
+import { pathToFileURL } from 'node:url'
 import { findChrome, openBrowser } from './browser.mjs'
 import { UNJUDGED_EXIT } from './host-version.mjs'
 import { check, failures, skips, setTier, tierName, TIMING_CASES, FEATURE_CASES, pagesFor } from './smoke/shared.mjs'
@@ -51,9 +52,8 @@ const MOTION_JOBS = 2
  * combined. An unknown argument, case or directory ends the run with exit 2, so
  * a misspelling cannot pass as a full run.
  */
-function selection() {
+function selection(args) {
   const cases = []
-  const args = process.argv.slice(2)
   let quick = false
   let host = false
   let jobs = DEFAULT_JOBS
@@ -213,17 +213,17 @@ async function browserHalf(planned, jobs) {
   }
 }
 
-async function main() {
-  const { cases, quick, jobs, host } = selection()
+async function main(args) {
+  const { cases, quick, jobs, host } = selection(args)
   checkFeatureTable()
   if (host) {
     await hostHalf()
     if (failures() > 0) {
       console.log(`\nsmoke: ${failures()} check(s) failed`)
-      process.exit(1)
+      return 1
     }
     console.log('\nsmoke: the host half passed; no page was opened')
-    process.exit(0)
+    return 0
   }
   const planned = plan(cases, quick)
   setTier(quick ? 'quick' : 'full')
@@ -233,10 +233,17 @@ async function main() {
   if (failures() > 0) console.log(`\nsmoke: ${failures()} check(s) failed`)
   else if (ran) console.log(`\nsmoke: all checks passed (${scope}${skipped})`)
   else console.log(`\nsmoke: the browser half gave no verdict${skipped}`)
-  process.exit(failures() > 0 ? 1 : ran ? 0 : UNJUDGED_EXIT)
+  return failures() > 0 ? 1 : ran ? 0 : UNJUDGED_EXIT
 }
 
-withLock('smoke', 'smoke', main).catch((error) => {
-  console.error(error)
-  process.exit(1)
-})
+/** Run the stand-in's installation checks; the shared runner and this file's own CLI both use it. */
+export function runSmoke(args = process.argv.slice(2)) {
+  return withLock('smoke', 'smoke', () => main(args))
+}
+
+if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  runSmoke().then((code) => process.exit(code), (error) => {
+    console.error(error)
+    process.exit(1)
+  })
+}

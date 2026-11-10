@@ -7,9 +7,9 @@ import path from 'node:path'
 import postcss from 'postcss'
 import selectorParser from 'postcss-selector-parser'
 import { featureSheet } from './feature-sheets.mjs'
-import { minifyCss } from './shared/minify-css.mjs'
-import { loadModule } from './shared/ts-module.mjs'
-import { ruleKey } from './shared/rule-key.mjs'
+import { minifyCss } from '../shared/minify-css.mjs'
+import { loadModule } from '../shared/ts-module.mjs'
+import { ruleKey } from '../shared/rule-key.mjs'
 import { TOKEN_SHEET, tokenSheet } from './theme-tokens.mjs'
 
 /** The selector root every skin rule hangs off. */
@@ -185,9 +185,9 @@ function collectKeyframes(label, root, seen) {
   })
 }
 
-/** Where a sheet's rules are reported: its file, or the generator that wrote it (scripts/feature-sheets.mjs). */
+/** Where a sheet's rules are reported: its file, or the generator that wrote it (scripts/build/feature-sheets.mjs). */
 function sheetLabel(sheet) {
-  return sheet.generated === undefined ? `packages/client/src/${sheet.file}` : `scripts/feature-sheets.mjs (${sheet.generated})`
+  return sheet.generated === undefined ? `packages/client/src/${sheet.file}` : `scripts/build/feature-sheets.mjs (${sheet.generated})`
 }
 
 /**
@@ -314,7 +314,7 @@ export function writeLayerTable(stylePath, doc) {
  *
  * @param doc - packages/client/src/theme/tokens.json.
  * @param sheetText - every stylesheet but the token sheet, and the tokens' own values.
- * @param sources - the browser half on its syntax tree (scripts/source-tree.mjs).
+ * @param sources - the browser half on its syntax tree (scripts/build/source-tree.mjs).
  */
 function checkTokensRead(doc, sheetText, sources) {
   const names = new Set(doc.motion.map((item) => item.token))
@@ -337,7 +337,7 @@ function checkTokensRead(doc, sheetText, sources) {
 
 /**
  * Hold every skin attribute a selector reads to the browser half: some code
- * has to write it (scripts/source-tree.mjs follows the name into the DOM call
+ * has to write it (scripts/build/source-tree.mjs follows the name into the DOM call
  * or the React props that write it). An attribute renamed in the code, written
  * nowhere any more, or misspelt in a sheet leaves a rule that matches nothing.
  *

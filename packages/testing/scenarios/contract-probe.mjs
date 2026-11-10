@@ -1,10 +1,10 @@
 /**
  * contract-probe.mjs — the host contract table (packages/contracts/src/table.ts)
  * checked entry by entry on the lane's real page, for the `contract` scenario
- * (D3, D87).
+ * (D3, D92).
  */
-import snapshot from './data/host-snapshot.json' with { type: 'json' }
-import { loadModule } from '../../scripts/shared/ts-module.mjs'
+import snapshot from '../data/host-snapshot.json' with { type: 'json' }
+import { loadModule } from '../../../scripts/shared/ts-module.mjs'
 
 /** The value the host snapshot records under one dotted key. */
 function recorded(key) {
@@ -38,7 +38,7 @@ async function probeContract(page, states, windowMs = 0) {
   const { HOST_DOM } = loadModule('packages/contracts/src/table.ts')
   // A computed reading compares the host's own output with the snapshot the
   // stand-in mounts its structure from, so the two records cannot drift apart
-  // in silence (D3, D87).
+  // in silence (D3, D92).
   const entries = HOST_DOM.filter((entry) => states.includes(entry.probe.state))
     .map((entry) => (entry.probe.kind === 'computed' ? { ...entry, expected: recorded(entry.probe.record) } : entry))
   const frames = windowMs === 0 ? 0 : Math.round(windowMs / 16)
@@ -110,7 +110,7 @@ function runProbes({ table, entries, frames = 0 }) {
     }
     if (probe.kind === 'computed') {
       // The host's own exact output: a difference from the snapshot is reported
-      // as an observation and blocks nothing (D87).
+      // as an observation and blocks nothing (D92).
       const named = probe.within === undefined ? null : document.querySelector(byId.get(probe.within).value)
       const element = probe.parent === true && named !== null ? named.parentElement : named
       const resolved = element === null ? '' : getComputedStyle(element).getPropertyValue(probe.property).trim()

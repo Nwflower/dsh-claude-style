@@ -34,7 +34,7 @@ import { billingRowsOf, createSessionCost } from './session-cost.js'
 import { sessionDirectoryName } from './session-name.js'
 import { createUsage } from './usage.js'
 
-/** The copy document, built from `packages/client/data/model-descriptions.json` by scripts/build.mjs. */
+/** The copy document, built from `packages/client/data/model-descriptions.json` by scripts/build/build.mjs. */
 const COPY_FILE = 'model-descriptions.json'
 
 /** The custom price rows one ask carries: one `b` query parameter per row, plus the currency they are written in. */

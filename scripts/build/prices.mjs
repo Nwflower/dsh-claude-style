@@ -1,5 +1,5 @@
 /** prices.mjs — validate the shipped price snapshot with the host parser. */
-import { loadModule } from './shared/ts-module.mjs'
+import { loadModule } from '../shared/ts-module.mjs'
 
 export const PRICES_FILE = 'prices.json'
 

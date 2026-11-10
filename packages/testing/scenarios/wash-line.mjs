@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * wash-line.mjs — the waiting line's colour wash, end to end (D87).
+ * wash-line.mjs — the waiting line's colour wash, end to end (D92).
  *
  * Registered in the lane's scenario table (packages/testing/scenarios.mjs).
  *

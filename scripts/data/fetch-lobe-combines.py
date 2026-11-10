@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """Build the model picker's vendor lockups from pinned Lobe Icons assets.
 
-Run manually with `python scripts/fetch-lobe-combines.py` (requires fonttools);
+Run manually with `python scripts/data/fetch-lobe-combines.py` (requires fonttools);
 the Node build stays offline. The viewBox uses the wordmark's capital band so
 CSS can size every lockup with `height: 1cap` and let the mark overflow.
 """
@@ -20,7 +20,7 @@ STATIC = 'https://unpkg.com/@lobehub/icons-static-svg@1.95.0/icons'
 REACT = 'https://unpkg.com/@lobehub/icons@1.95.0'
 VERSION = '1.95.0'
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 COPY = os.path.join(ROOT, 'packages', 'client', 'data', 'model-descriptions.json')
 OUT_DIR = os.path.join(ROOT, 'packages', 'assets', 'src', 'icons', 'combine')
 # Local <brand>.svg artwork takes precedence over fetched assets.

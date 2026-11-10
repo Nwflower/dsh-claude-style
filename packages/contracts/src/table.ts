@@ -1,15 +1,15 @@
 /**
- * Build/test registry for dom.ts literals and their live-host probes (D3, D87).
+ * Build/test registry for dom.ts literals and their live-host probes (D3, D92).
  * Every literal needs an entry and every id a manifest owner (D72).
  */
 import * as dom from './dom'
 
-/** Live page state required by a probe; `any` has no state requirement (D87). */
+/** Live page state required by a probe; `any` has no state requirement (D92). */
 type HostDomProbeState = 'any' | 'hero' | 'sending' | 'streaming' | 'conversation' | 'menu' | 'dark'
 
 /**
  * Probe mechanism. `computed` compares against the host snapshot under `record`;
- * `rail-geometry` checks pitch/inset; `none` is covered outside the live page (D87).
+ * `rail-geometry` checks pitch/inset; `none` is covered outside the live page (D92).
  */
 type HostDomProbeKind = 'selector' | 'attribute' | 'property' | 'computed' | 'global' | 'value' | 'rail-geometry' | 'none'
 
@@ -35,7 +35,7 @@ interface HostDomEntry {
   id: string
   /** The literal, as the host writes it. */
   value: string
-  /** How the contract test checks it (D87). */
+  /** How the contract test checks it (D92). */
   probe: HostDomProbe
   /** Bare attribute name used through `getAttribute`, when the value is not a selector. */
   name?: string

@@ -2,7 +2,7 @@
  * The price snapshot's validator: the shape the host half and the build both
  * hold a document to.
  *
- * The document is produced by `scripts/fetch-prices.mjs` from the official page
+ * The document is produced by `scripts/data/fetch-prices.mjs` from the official page
  * and every field a judgement is made from is checked here. A document this
  * reader refuses is dropped whole, because a half-read table would price some
  * settlements at one rate and the rest at another.

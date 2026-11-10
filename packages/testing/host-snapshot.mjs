@@ -2,7 +2,7 @@
 /**
  * host-snapshot.mjs — the host's own conversation and composer markup, captured
  * from a scratch instance of the installed host for the behaviour lane's
- * stand-in page (D3, D87).
+ * stand-in page (D3, D92).
  *
  * The two behaviour specs of the conversation's width and the composer's bottom
  * gap used to hand-build the host's phase root, conversation body, width handles
@@ -33,12 +33,13 @@ import { startMockLlm } from './mock-llm.mjs'
 import { sendPrompt, waitForTurn } from './prompt.mjs'
 import { sanitizePage, assertClean } from '../../scripts/shared/privacy.mjs'
 import { loadModule } from '../../scripts/shared/ts-module.mjs'
+import { runsPath } from '../../scripts/shared/debug-paths.mjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..', '..')
 /** Where the lane's stand-in reads the host's markup from. */
 const SNAPSHOT = path.join(ROOT, 'packages', 'testing', 'data', 'host-snapshot.json')
 /** The scratch home of the capture host: a run of its own, so no lane's state is read. */
-const HOME = path.join(ROOT, '.debug', 'e2e', 'home-snapshot')
+const HOME = runsPath(ROOT, 'e2e', 'home-snapshot')
 const VIEWPORT = { width: 1440, height: 900 }
 
 const { HOST_DOM } = loadModule('packages/contracts/src/table.ts')
@@ -206,7 +207,7 @@ async function capture(options) {
     if (frame.content.classes.length === 0) throw new Error('host snapshot: the conversation body carries no host class name')
     if (frame.composer.bar.classes.length === 0) throw new Error('host snapshot: the bar around the card carries no host class name')
     const snapshot = {
-      note: 'The host\'s own conversation and composer markup, captured by packages/testing/host-snapshot.mjs on a scratch host and read by the stand-in page (packages/testing/specs/fixtures/host-frame.mjs, D3, D87). Regenerate with node packages/testing/host-snapshot.mjs.',
+      note: 'The host\'s own conversation and composer markup, captured by packages/testing/host-snapshot.mjs on a scratch host and read by the stand-in page (packages/testing/specs/fixtures/host-frame.mjs, D3, D92). Regenerate with node packages/testing/host-snapshot.mjs.',
       host: { version: installedHostVersion(), viewport, captured: today() },
       conversation: { phase: frame.phase, content: frame.content, siblings: frame.siblings },
       composer: frame.composer,

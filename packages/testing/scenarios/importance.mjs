@@ -1,5 +1,5 @@
 /**
- * importance.mjs — the lane's `importance` scenario: the walk over the page states (D9, D87).
+ * importance.mjs — the lane's `importance` scenario: the walk over the page states (D9, D92).
  *
  * The audit itself is in importance-audit.mjs; this file is the walk that gives
  * it states to read — the empty page and a conversation, a draft in the
@@ -21,9 +21,9 @@ import path from 'node:path'
 import { createImportanceAudit, planImportance, dropImportance, ROOT } from './importance-audit.mjs'
 import { openSkinSettings } from './settings-route.mjs'
 import { readAppearance, compareAppearance, writeAppearance, HOST_DEPENDENT_STATES } from './appearance.mjs'
-import surfaceTable from './data/surface.json' with { type: 'json' }
+import surfaceTable from '../data/surface.json' with { type: 'json' }
 
-/** A mark the walk sets, read from the surface table rather than spelled here (D87). */
+/** A mark the walk sets, read from the surface table rather than spelled here (D92). */
 const surfaceAttribute = (id) => surfaceTable.surface.find((entry) => entry.id === id).attribute
 
 /**
@@ -33,7 +33,7 @@ const surfaceAttribute = (id) => surfaceTable.surface.find((entry) => entry.id =
  * recorded here fails the scenario, and a recorded one that starts matching
  * fails it too, so the list only shrinks.
  */
-const UNREACHABLE_FILE = JSON.parse(fs.readFileSync(path.join(import.meta.dirname, 'data', 'importance-unreachable.json'), 'utf8'))
+const UNREACHABLE_FILE = JSON.parse(fs.readFileSync(path.join(import.meta.dirname, '..', 'data', 'importance-unreachable.json'), 'utf8'))
 const UNREACHABLE = new Map(UNREACHABLE_FILE.groups.flatMap((group) => group.selectors.map((selector) => [selector, group.reason])))
 /**
  * A recorded group the walk cannot decide either way: its rules paint inside an
@@ -51,7 +51,7 @@ const EITHER = new Set(UNREACHABLE_FILE.groups.filter((group) => group.either ==
  * is no longer needed; `DSH_IMPORTANCE_LEDGER=write` writes the record from the
  * run so the difference is read in the diff.
  */
-const LEDGER_FILE = path.join(import.meta.dirname, 'data', 'importance-ledger.json')
+const LEDGER_FILE = path.join(import.meta.dirname, '..', 'data', 'importance-ledger.json')
 const LEDGER = JSON.parse(fs.readFileSync(LEDGER_FILE, 'utf8'))
 const evidenceKey = (item) => `${item.ruleKey}|${item.prop}`
 /* ---------- the lane's scenario ---------- */
@@ -238,7 +238,7 @@ function importanceScenario(lane) {
       const reference = process.env.DSH_IMPORTANCE_REFERENCE
       const audit = await createImportanceAudit(page, reference === undefined ? undefined : fs.readFileSync(reference, 'utf8'))
       // Every state the walk audits is also read for the appearance layer
-      // (appearance.mjs, D87): once the audit has landed the state's animations
+      // (appearance.mjs, D92): once the audit has landed the state's animations
       // and put the skin's own sheet back, so the reading is the page the
       // reader gets.
       context.appearance = {}
@@ -384,7 +384,7 @@ function importanceScenario(lane) {
         lane.check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),
       ]
       // The appearance layer's snapshot is judged on the platform the cloud's
-      // lane runs (D87); `DSH_APPEARANCE=write` records it from this walk.
+      // lane runs (D92); `DSH_APPEARANCE=write` records it from this walk.
       fs.writeFileSync(path.join(out, 'appearance-reading.json'), `${JSON.stringify(appearance, null, 2)}\n`)
       if (process.env.DSH_APPEARANCE === 'write') writeAppearance(appearance)
       const looks = compareAppearance(appearance)

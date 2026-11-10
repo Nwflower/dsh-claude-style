@@ -7,7 +7,7 @@ import Ajv2020 from 'ajv/dist/2020.js'
 import addFormats from 'ajv-formats'
 
 /** The model copy and its schema: data beside the browser half's code, never bundled. */
-const DATA = path.join(path.resolve(import.meta.dirname, '..'), 'packages', 'client', 'data')
+const DATA = path.join(path.resolve(import.meta.dirname, '..', '..'), 'packages', 'client', 'data')
 /** The browser fetches this data at runtime, so malformed copy must fail the build (D5). */
 export const MODEL_COPY = 'model-descriptions.json'
 /** The model copy's declared shape; validateModelCopy adds the references a schema cannot see. */

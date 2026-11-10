@@ -1,5 +1,5 @@
 /**
- * What a behaviour spec is written with (D87): `spec()` to declare its page and
+ * What a behaviour spec is written with (D92): `spec()` to declare its page and
  * its tests, the readers that take user-observable results off the built page,
  * and the predicates that judge them. A spec reaches the page only through the
  * host contract by id, the skin's surface by id, or what the reader sees.

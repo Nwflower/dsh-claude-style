@@ -1,6 +1,6 @@
 /**
  * spec-header.mjs — read specs and their @capability, @features and @risk
- * headers (D87). Test ids use layer/capability/name to survive source moves.
+ * headers (D92). Test ids use layer/capability/name to survive source moves.
  */
 import fs from 'node:fs'
 import path from 'node:path'

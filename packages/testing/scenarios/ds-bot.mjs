@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * ds-bot.mjs — the Chat / Code switch beside ds-bot's real browser half (D74, D87).
+ * ds-bot.mjs — the Chat / Code switch beside ds-bot's real browser half (D74, D92).
  *
  * Registered in the lane's scenario table (packages/testing/scenarios.mjs).
  *
@@ -21,7 +21,7 @@
  *   - dressed as the Windows desktop, the switch takes the caption strip and
  *     leaves the screen while the sidebar is collapsed.
  */
-import { dismissOverlays } from './dsh-web.mjs'
+import { dismissOverlays } from '../dsh-web.mjs'
 
 /** The ds-bot release the lane checks against. */
 const DS_BOT = 'ds-bot@0.1.5'

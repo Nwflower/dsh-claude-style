@@ -1,5 +1,5 @@
 /**
- * A docked conversation as the host mounts it (D87): a sidebar chat column with
+ * A docked conversation as the host mounts it (D92): a sidebar chat column with
  * an embedded conversation, its composer card, and the host's dock line after
  * the card. `card.parts` and `dock` are plain data; positions stay the spec's,
  * since what a panel or a seat does depends on where the two cards stand.

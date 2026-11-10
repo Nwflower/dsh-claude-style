@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * host-version.mjs — which host a run was judged against (D87).
+ * host-version.mjs — which host a run was judged against (D92).
  *
  * The end-to-end lane reads what the host draws, so a verdict only means
  * something when the host is the newest one published, whichever dist-tag it
@@ -13,7 +13,7 @@ import { execSync } from 'node:child_process'
 
 const HOST_PACKAGE = '@deepseek-ai/dsh'
 
-/** The exit code of a run that gave no verdict, which `scripts/verify.mjs` reads as "unjudged". */
+/** The exit code of a run that gave no verdict, which `scripts/checks/verify.mjs` reads as "unjudged". */
 const UNJUDGED_EXIT = 3
 
 /** Run a command line (fixed words only) and return its trimmed standard output. */

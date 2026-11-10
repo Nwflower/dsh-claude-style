@@ -139,7 +139,7 @@ export const READER_HOLD_ATTR = 'data-dsh-claude-reader-hold'
 /** Present while the ported token reveal is installed (features/chat-reveal/): its step rules hang off it, and switching the feature off leaves the page with no trace of it. */
 export const CHAT_REVEAL_ATTR = 'data-dsh-claude-chat-reveal'
 /** The reveal's fade: how many alpha steps a character walks through, the faintest of them, the prefix of each step's highlight name and the custom property an element publishes its own colour to.
- * The engine registers one highlight per step; the build writes one `::highlight()` rule per step from the same four values (scripts/feature-sheets.mjs). */
+ * The engine registers one highlight per step; the build writes one `::highlight()` rule per step from the same four values (scripts/build/feature-sheets.mjs). */
 export const CHAT_REVEAL_STEPS = 24
 /** The faintest step: a fifth faint, which still reads as text arriving in both themes. */
 export const CHAT_REVEAL_MIN_OPACITY = 0.2
@@ -225,7 +225,7 @@ export const HOME_LAYOUT_ATTR = 'data-dsh-claude-home-layout'
 /** Present while the studio layout owns the page shown: the studio layout is in force and the page is the new-conversation hero.
  * Every studio rule keys on it, so the host's hero-phase marker is read once per pass in JS rather than repeated across the stylesheet. */
 export const HOME_HERO_ATTR = 'data-dsh-claude-home-hero'
-/** The heat grid's ramp: how much of the heat ink each level paints, in percent, faintest first. Its length is the number of levels a day's tokens are bucketed into (features/home/data.ts); the build writes one rule per level from it (scripts/feature-sheets.mjs).
+/** The heat grid's ramp: how much of the heat ink each level paints, in percent, faintest first. Its length is the number of levels a day's tokens are bucketed into (features/home/data.ts); the build writes one rule per level from it (scripts/build/feature-sheets.mjs).
  * Not even steps: the low levels stay apart from each other and from the empty cell. */
 export const HOME_HEAT_RAMP = [20, 40, 65, 100] as const
 /** The host half's private routes, under this half's own names; the paths are the shared contract (packages/contracts/src/routes.ts, D73), declared once for both halves. */

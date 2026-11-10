@@ -17,5 +17,6 @@ export default {
     control: 'reveal-preview',
     stillWhenReduced: true,
   }],
-  cases: ['chat-reveal']
+  cases: ['chat-reveal'],
+  scenarios: ['reasoningStream', 'reasoningContinuous'],
 } satisfies FeatureManifest

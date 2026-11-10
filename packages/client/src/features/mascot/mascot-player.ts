@@ -32,7 +32,7 @@ export interface MascotSheets {
 /**
  * The characters the player plays. A union of literals: the anchor mark is
  * built from the name, and the build reads the marks the stylesheets key on
- * off this type (scripts/source-tree.mjs).
+ * off this type (scripts/build/source-tree.mjs).
  */
 export type MascotName = 'crab' | 'deepy' | 'whalegirl'
 

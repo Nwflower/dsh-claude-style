@@ -1,7 +1,7 @@
 /**
  * The stand-in host's own server: the built bundle, the routed assets under the
  * build's manifest, the launcher's pictures, and one HTML page per name. The
- * smoke and the behaviour layer (D87) load their pages from it, so both read
+ * smoke and the behaviour layer (D92) load their pages from it, so both read
  * the same stand-in and the same build output.
  */
 import fs from 'fs'

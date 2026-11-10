@@ -1,5 +1,5 @@
 /**
- * Minimal host service shapes the skin uses, checked against live hosts (D3, D87).
+ * Minimal host service shapes the skin uses, checked against live hosts (D3, D92).
  * `ctx.get` may return undefined for an unmounted service; callers must keep that boundary (D12).
  */
 

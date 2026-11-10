@@ -1,6 +1,6 @@
 """Draw the composer crab's animation sheets; requires Pillow.
 
-Run `python scripts/draw-crab.py [keys...] [--preview DIR]` by hand. Each
+Run `python scripts/art/draw-crab.py [keys...] [--preview DIR]` by hand. Each
 animation produces a colour sheet and an ink mask, eight cropped frames per
 row; copy the printed geometry into mascot/sheets.ts when it changes.
 """
@@ -8,7 +8,7 @@ import argparse
 import os
 from PIL import Image
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 OUT = os.path.join(ROOT, 'packages', 'assets', 'src', 'mascot', 'crab')
 LEGACY_BODY = os.path.join(OUT, 'crab-laptop-body.png')
 LEGACY_INK = os.path.join(OUT, 'crab-laptop-ink.png')

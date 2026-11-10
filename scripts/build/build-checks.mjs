@@ -1,21 +1,21 @@
 /**
  * build-checks.mjs — the build's refusals that are not about the stylesheets (those are in
- * scripts/css.mjs): types, the import graph, the scroll owner, listed sources, manifests,
+ * scripts/build/css.mjs): types, the import graph, the scroll owner, listed sources, manifests,
  * and the host contract and timing tables (D36, D40, D72, D3).
  */
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
-import { loadModule } from './shared/ts-module.mjs'
+import { loadModule } from '../shared/ts-module.mjs'
 
-const ROOT = path.resolve(import.meta.dirname, '..')
+const ROOT = path.resolve(import.meta.dirname, '..', '..')
 const SRC = path.join(ROOT, 'packages', 'client', 'src')
 
-/** The page states and check kinds packages/contracts/src/table.ts records (D3, D87). */
+/** The page states and check kinds packages/contracts/src/table.ts records (D3, D92). */
 const PROBE_STATES = new Set(['any', 'hero', 'sending', 'streaming', 'conversation', 'menu', 'dark'])
 const PROBE_KINDS = new Set(['selector', 'attribute', 'property', 'computed', 'global', 'value', 'rail-geometry', 'none'])
 
-/** Refuse unreachable source files; manifests, contracts and pure.ts are intentional exceptions (D3, D87). */
+/** Refuse unreachable source files; manifests, contracts and pure.ts are intentional exceptions (D3, D92). */
 export function checkListed(bundled, sheets) {
   const listed = new Set(sheets.map((sheet) => sheet.file))
   const walk = (dir) => fs.readdirSync(path.join(SRC, dir), { withFileTypes: true }).flatMap((entry) => {
@@ -146,7 +146,7 @@ function specIdExists(id) {
     .some((file) => quoted.some((literal) => fs.readFileSync(path.join(dir, file), 'utf8').includes(`test(${literal}`)))
 }
 
-/** Every timing assumption needs an existing scenario or stable spec id (D3, D87). */
+/** Every timing assumption needs an existing scenario or stable spec id (D3, D92). */
 function checkTiming() {
   const { E2E_SCENARIOS, HOST_TIMING } = loadModule('packages/contracts/src/timing.ts')
   if (!Array.isArray(HOST_TIMING) || HOST_TIMING.length === 0) throw new Error('build: packages/contracts/src/timing.ts exports no HOST_TIMING')

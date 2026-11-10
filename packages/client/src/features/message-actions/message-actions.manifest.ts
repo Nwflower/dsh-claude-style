@@ -14,4 +14,5 @@ export default {
     title: 'actionsTitle',
   }],
   cases: [],
+  scenarios: ['messageActions', 'messageAnswerActions'],
 } satisfies FeatureManifest

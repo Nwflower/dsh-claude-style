@@ -5,10 +5,11 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
-import { runner } from './shared/run.mjs'
+import { runner } from '../shared/run.mjs'
+import { runsPath } from '../shared/debug-paths.mjs'
 
-const ROOT = path.resolve(import.meta.dirname, '..')
-const DEFAULT_OUT = path.join(ROOT, '.debug', 'release')
+const ROOT = path.resolve(import.meta.dirname, '..', '..')
+const DEFAULT_OUT = runsPath(ROOT, 'release')
 const run = runner(ROOT)
 
 function fail(message) {

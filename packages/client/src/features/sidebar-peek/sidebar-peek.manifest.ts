@@ -14,4 +14,5 @@ export default {
     desc: 'peekDesc',
   }],
   cases: [],
+  scenarios: ['sidebarPeek'],
 } satisfies FeatureManifest

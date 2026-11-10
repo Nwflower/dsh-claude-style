@@ -2,7 +2,7 @@
  * The mascot sheet tables: which frames each animation holds, the box each
  * frame is cropped to, the frame shown under reduced motion, and — for a set
  * that paces itself — each frame's duration and the frames per sheet row.
- * `scripts/build.mjs` reads them to cut and serve each character's sheets (the
+ * `scripts/build/build.mjs` reads them to cut and serve each character's sheets (the
  * crab's inlined, Deepy's rebuilt as vectors, Whalegirl's routed as PNG), so a
  * face and its animation cannot drift apart.
  */
@@ -59,7 +59,7 @@ export const DEEPY_SHEETS: Record<string, { frames: number, box: number[], still
 
 /**
  * The composer crab's animations (features/mascot/crab.ts), drawn by
- * scripts/draw-crab.py into packages/assets/src/mascot/crab/: one sheet in the
+ * scripts/art/draw-crab.py into packages/assets/src/mascot/crab/: one sheet in the
  * crab's colours and one ink mask per animation, inlined by the build as
  * CRAB_SHEET_URLS.
  *
@@ -75,7 +75,7 @@ export const DEEPY_SHEETS: Record<string, { frames: number, box: number[], still
 export const CRAB_FRAME_MS = 80
 /**
  * The transparent margin, in cells, the build lays around every frame of the
- * crab's sheets (gutterCrabSheets in scripts/build.mjs). The art is drawn
+ * crab's sheets (gutterCrabSheets in scripts/build/build.mjs). The art is drawn
  * edge to edge, and at a fractional device scale the window around a frame
  * takes in a sliver of the cell beside it: the neighbouring frame's claw, read
  * on the page as a one-device-pixel line down the crab's left side.

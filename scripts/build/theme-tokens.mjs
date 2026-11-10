@@ -7,7 +7,7 @@ import { parse, converter, formatHex, formatRgb } from 'culori'
 /** The token document's place in the source tree: also the sheet list's marker for the generated sheet. */
 export const TOKEN_SHEET = 'theme/tokens.json'
 const TOKEN_SCHEMA = 'theme/tokens.schema.json'
-/** The element and attribute every skin rule hangs off (scripts/css.mjs). */
+/** The element and attribute every skin rule hangs off (scripts/build/css.mjs). */
 const SCOPE = 'body[data-dsh-claude-style]'
 /** The region of docs/STYLE.md the token table is written into. */
 const TABLE_BEGIN = '<!-- generated:tokens (packages/client/src/theme/tokens.json) -->'
@@ -268,7 +268,7 @@ export function tokenSheet(doc, gates, images) {
     }
   }
   return [
-    `/* Generated from packages/client/src/${TOKEN_SHEET} by scripts/theme-tokens.mjs; edit the JSON. */\n`,
+    `/* Generated from packages/client/src/${TOKEN_SHEET} by scripts/build/theme-tokens.mjs; edit the JSON. */\n`,
     tokenBlock(SCOPE, Object.entries(images).map(([name, url]) => [`--dsh-claude-image-${name}`, `url("${url}")`])),
     tokenBlock(SCOPE, doc.motion.map((item) => [item.token, item.value])),
     tokenBlock(SCOPE, doc.layer.map((item) => [item.token, item.value])),

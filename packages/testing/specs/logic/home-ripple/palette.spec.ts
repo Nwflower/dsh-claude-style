@@ -20,7 +20,7 @@ test('every form the browser reads as one colour comes out as the same channels'
 
 test('the relative colour a reader\'s palette derives resolves to the channels the page paints', () => {
   // The step the tone table takes for --dsh-claude-ripple-ink over a white canvas
-  // (scripts/theme-tokens.mjs): the form the field used to refuse.
+  // (scripts/build/theme-tokens.mjs): the form the field used to refuse.
   const derived = 'oklch(from #ffffff calc(l - .365) calc(c + .011) h)'
   const probe = document.createElement('span')
   probe.style.color = derived

@@ -12,23 +12,24 @@ import { brotliCompressSync } from 'node:zlib'
 import esbuild from 'esbuild'
 import { PNG } from 'pngjs'
 import { buildHostHalf } from './build-host.mjs'
-import { buildFonts, checkClaimed, checkSheetPixels, checkSheets, layoutCells, planAssets, routeText, vectorizeSheet, writeAssets } from '../packages/assets/assets.mjs'
+import { buildFonts, checkClaimed, checkSheetPixels, checkSheets, layoutCells, planAssets, routeText, vectorizeSheet, writeAssets } from '../../packages/assets/assets.mjs'
 import { openBuildCache } from './build-cache.mjs'
 import { checkContracts, checkCycles, checkDependencies, checkListed, checkManifests, checkMotionSources, checkScrollOwner, checkTypes } from './build-checks.mjs'
 import { chunkFiles, chunkModules, ownModuleIds, splitChunks } from './chunks.mjs'
 import { TOKEN_SHEET, loadTokens, writeTokenTable } from './theme-tokens.mjs'
 import { buildStylesheet, writeLayerTable, writeMotionTable } from './css.mjs'
 import { FEATURE_SHEET_CONSTANTS } from './feature-sheets.mjs'
-import { motionValues } from './shared/motion-tokens.mjs'
+import { motionValues } from '../shared/motion-tokens.mjs'
 import { readSourceTree } from './source-tree.mjs'
 import { MODEL_COPY, validateModelCopy } from './model-copy.mjs'
 import { PEAKRATE_CATALOG, validatePeakCatalog } from './peakrate-catalog.mjs'
 import { PRICES_FILE, validatePrices } from './prices.mjs'
-import { readManifests } from './shared/read-manifests.mjs'
-import { loadModule } from './shared/ts-module.mjs'
+import { readManifests } from '../shared/read-manifests.mjs'
+import { loadModule } from '../shared/ts-module.mjs'
+import { cachePath, runsPath } from '../shared/debug-paths.mjs'
 import { chunkModulesModule, featuresModule, generatedModule, settingsControlsModule } from './virtual-modules.mjs'
 
-const ROOT = path.resolve(import.meta.dirname, '..')
+const ROOT = path.resolve(import.meta.dirname, '..', '..')
 const SRC = path.join(ROOT, 'packages', 'client', 'src')
 /** The model copy: data beside the browser half's code, never bundled. */
 const DATA = path.join(ROOT, 'packages', 'client', 'data')
@@ -42,8 +43,8 @@ const BRAND_ASSETS = path.join(ASSETS, 'brand')
 const STYLE_GUIDE = path.join(ROOT, 'docs', 'STYLE.md')
 const LIB = path.join(ROOT, 'lib')
 const OUT = path.join(LIB, 'client.js')
-/** The slow steps' results between runs (scripts/build-cache.mjs). */
-const CACHE_DIR = path.join(ROOT, '.debug', 'build-cache')
+/** The slow steps' results between runs (scripts/build/build-cache.mjs). */
+const CACHE_DIR = cachePath(ROOT, 'build')
 /** The code that checks and vectorizes a sheet: part of every vector's cache key. */
 const ASSETS_MODULE = path.join(ROOT, 'packages', 'assets', 'assets.mjs')
 
@@ -53,7 +54,7 @@ const ICON_FILE = 'claude-mark.svg'
 
 /** Theme and feature sheets share one rank order because later rules win ties (D72). */
 const THEME_SHEETS = [
-  // Generated from packages/client/src/theme/tokens.json (scripts/css.mjs).
+  // Generated from packages/client/src/theme/tokens.json (scripts/build/css.mjs).
   { file: TOKEN_SHEET, rank: 5 },
   { file: 'theme/tokens.css', rank: 10 },
   { file: 'theme/typography.css', rank: 20 },
@@ -76,7 +77,7 @@ const THEME_SHEETS = [
 function styleFiles(manifests) {
   const sheets = [
     ...THEME_SHEETS,
-    // A generated sheet has no file of its own; it is written from constants.ts (scripts/feature-sheets.mjs).
+    // A generated sheet has no file of its own; it is written from constants.ts (scripts/build/feature-sheets.mjs).
     ...manifests.flatMap((manifest) => manifest.stylesheets.map((sheet) => (sheet.generated === undefined ? { ...sheet, file: `features/${manifest.dir}/${sheet.file}` } : sheet))),
   ].sort((a, b) => a.rank - b.rank)
   for (let i = 1; i < sheets.length; i++) {
@@ -175,7 +176,7 @@ const BRAND_MARKS = [
 
 /**
  * The vendored vendor lockups, keyed by brand id: one file per vendor, composed by
- * scripts/fetch-lobe-combines.py, each carrying its word in `data-combine-word` (the
+ * scripts/data/fetch-lobe-combines.py, each carrying its word in `data-combine-word` (the
  * word is not derivable from the brand id: `moonshot` draws "MoonshotAI"). Markup
  * rather than a data URI, because the picker stamps it in with `innerHTML` so the
  * mono layer inherits the row's `color`.
@@ -191,12 +192,12 @@ function loadCombines(plan, claimed) {
       throw new Error(`build: packages/assets/src/${file} is not a scalable SVG (needs <svg viewBox=…>)`)
     }
     if (svg.includes('</') && /<\/script/i.test(svg)) throw new Error(`build: packages/assets/src/${file} carries a script end tag`)
-    if (svg.includes('\n')) throw new Error(`build: packages/assets/src/${file} is multi-line; run scripts/fetch-lobe-combines.py`)
+    if (svg.includes('\n')) throw new Error(`build: packages/assets/src/${file} is multi-line; run scripts/data/fetch-lobe-combines.py`)
     const word = /data-combine-word="([^"]+)"/.exec(svg)
     if (word === null) throw new Error(`build: packages/assets/src/${file} has no data-combine-word`)
     out[id] = { svg, word: word[1] }
   }
-  if (Object.keys(out).length === 0) throw new Error('build: packages/assets/src/icons/combine/ holds no lockups; run scripts/fetch-lobe-combines.py')
+  if (Object.keys(out).length === 0) throw new Error('build: packages/assets/src/icons/combine/ holds no lockups; run scripts/data/fetch-lobe-combines.py')
   return out
 }
 
@@ -421,13 +422,13 @@ async function main() {
   const bundle = draft.replace(BUILD_ID_SLOT, buildId)
 
   // Syntax gate: the bundle must parse before it is written. The failing bundle is
-  // kept in .debug/ so the line the parser names can be read.
+  // kept under .debug/runs/build/ so the line the parser names can be read.
   try {
     new vm.Script(bundle, { filename: 'lib/client.js' })
   } catch (error) {
-    fs.mkdirSync(path.join(ROOT, '.debug'), { recursive: true })
-    fs.writeFileSync(path.join(ROOT, '.debug', 'failed-bundle.js'), bundle)
-    throw new Error(`build: generated bundle failed to parse (written to .debug/failed-bundle.js): ${error.message}`)
+    fs.mkdirSync(runsPath(ROOT, 'build'), { recursive: true })
+    fs.writeFileSync(runsPath(ROOT, 'build', 'failed-bundle.js'), bundle)
+    throw new Error(`build: generated bundle failed to parse (written to .debug/runs/build/failed-bundle.js): ${error.message}`)
   }
 
   // Everything is validated before anything is written: a refusal must not leave lib/
@@ -486,7 +487,7 @@ async function main() {
   }
   const pruned = cache.prune()
   const { hits, misses } = cache.counts()
-  console.log(`build cache .debug/build-cache/: ${hits} reused, ${misses} computed${pruned > 0 ? `, ${pruned} unused for a day removed` : ''}`)
+  console.log(`build cache .debug/cache/build/: ${hits} reused, ${misses} computed${pruned > 0 ? `, ${pruned} unused for a day removed` : ''}`)
   if (!RETAIN_ASSETS) {
     const linked = linkedProfiles()
     if (linked.length > 0) {
@@ -495,5 +496,5 @@ async function main() {
   }
 }
 
-// A build never waits on the test lock (D87): a run a build swaps the page under says so itself.
+// A build never waits on the test lock (D92): a run a build swaps the page under says so itself.
 await main()

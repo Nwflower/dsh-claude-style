@@ -1,4 +1,4 @@
-/** changed-paths.mjs — read working-tree changes once for verification and scope checks (D87). */
+/** changed-paths.mjs — read working-tree changes once for verification and scope checks (D92). */
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'

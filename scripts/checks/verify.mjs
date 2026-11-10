@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 /**
- * verify.mjs — the one entry a test run goes through (D87): serialized lanes, staged
+ * verify.mjs — the one entry a test run goes through (D92): serialized lanes, staged
  * gates, and verdicts cached by tree and selection.
  *
- * Usage: node scripts/verify.mjs [--quick] [--e2e] [--scenario <name>[,<name>…]]
- *        [--case <name>[,<name>…]] [--feature <dir>[,<dir>…]] [--full]
- *        [--no-e2e] [--force] [--help]
+ * Usage: node scripts/checks/verify.mjs [--full] [--only <selector>[,<selector>…]]
+ *        [--force] [--help]
+ *
+ * A bare request judges what the working tree's change reaches. --full walks every
+ * gate, including the release lane. --only names a walk: quick, browser, e2e,
+ * case:<name>, feature:<directory> or scenario:<name>.
  */
 import { execFileSync, spawn } from 'node:child_process'
 import crypto from 'node:crypto'
@@ -13,30 +16,34 @@ import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import { availableParallelism } from 'node:os'
 import path from 'node:path'
-import { filesUnder } from './shared/file-walk.mjs'
-import { changedPaths } from './shared/changed-paths.mjs'
-import { SKIPPED, TREES, treeHash } from './shared/tree-hash.mjs'
-import { HELD, LOCK, takeLock } from './shared/verify-lock.mjs'
+import { filesUnder } from '../shared/file-walk.mjs'
+import { changedPaths } from '../shared/changed-paths.mjs'
+import { SKIPPED, TREES, treeHash } from '../shared/tree-hash.mjs'
+import { HELD, LOCK, takeLock } from '../shared/verify-lock.mjs'
+import { cachePath, runsPath } from '../shared/debug-paths.mjs'
+import { featureCoverage } from '../shared/feature-coverage.mjs'
 
 const require = createRequire(import.meta.url)
-const { UNJUDGED_EXIT } = require('../packages/testing/host-version.mjs')
-const ROOT = path.resolve(import.meta.dirname, '..')
-const CACHE = path.join(ROOT, '.debug', 'verify-cache')
+const { UNJUDGED_EXIT } = require('../../packages/testing/host-version.mjs')
+const ROOT = path.resolve(import.meta.dirname, '..', '..')
+const CACHE = cachePath(ROOT, 'verify')
 /** Resolve the installed Vitest entry so nested and hoisted installs behave alike. */
 const VITEST = path.join(path.dirname(require.resolve('vitest/package.json')), 'vitest.mjs')
 /** Bumped when a recorded verdict stops meaning what this file reads it as. */
 const FORMAT = 2
 /** Read structured reports only after their gates finish. */
-const UNIT_REPORT = path.join(ROOT, '.debug', 'verify', 'unit.json')
-const BEHAVIOUR_REPORT = path.join(ROOT, '.debug', 'behaviour', 'report.json')
+const UNIT_REPORT = runsPath(ROOT, 'verify', 'unit.json')
+const STAND_IN_REPORT = runsPath(ROOT, 'stand-in', 'report.json')
 /**
  * How many pages and scenarios the browser gates drive at once, as one budget for the
  * gates sharing a stage. It follows the machine's cores and never its load, and the split
  * is part of the gates' arguments, so a verdict is filed under the same key on the same machine.
  */
 const BROWSER_JOBS = Math.max(2, Math.min(8, Math.floor(availableParallelism() / 2)))
-/** The flags a request may carry, without their dashes; the three name-taking ones carry values. */
-const FLAGS = new Set(['quick', 'full', 'e2e', 'no-e2e', 'force', 'case', 'feature', 'scenario'])
+/** The flags a request may carry, without their dashes; --only takes the selectors. */
+const FLAGS = new Set(['full', 'force', 'only'])
+const WALK_SELECTORS = new Set(['quick', 'browser', 'e2e'])
+const NAMED_SELECTORS = new Set(['case', 'feature', 'scenario'])
 
 /** The gates in flight, so an interrupt can take them down with this process. */
 const running = new Set()
@@ -62,7 +69,7 @@ const UNIT_SOURCES = ['packages/client/src', 'packages/contracts/src', 'packages
 const UNIT_REPORT_ARGS = ['--reporter=default', '--reporter=json', `--outputFile.json=${path.relative(ROOT, UNIT_REPORT).replace(/\\/g, '/')}`]
 
 /**
- * The spec gate of a request (the logic and mechanism layers, D87): the whole lane, or for
+ * The spec gate of a request (the logic and mechanism layers, D92): the whole lane, or for
  * the iteration tier the specs the working tree's change reaches. A tree with no change
  * under the sources runs the lane whole.
  */
@@ -105,51 +112,48 @@ function parseRequest() {
     say(usage())
     process.exit(0)
   }
-  const values = { case: [], feature: [], scenario: [] }
+  const selected = []
   for (let at = 0; at < args.length; at += 1) {
     const arg = args[at]
     const split = arg.indexOf('=')
     const flag = (split === -1 ? arg : arg.slice(0, split)).replace(/^--/, '')
     if (!arg.startsWith('--') || !FLAGS.has(flag)) bad(`unknown argument "${arg}"`)
-    if (values[flag] === undefined) {
+    if (flag !== 'only') {
       if (split !== -1) bad(`--${flag} takes no value`)
       continue
     }
-    let value
-    if (split === -1) {
-      at += 1
-      value = args[at]
-    } else {
-      value = arg.slice(split + 1)
+    const value = split === -1 ? args[++at] : arg.slice(split + 1)
+    if (value === undefined || value.trim() === '' || value.startsWith('--')) bad('--only needs a selector')
+    selected.push(...value.split(',').map((name) => name.trim()).filter(Boolean))
+  }
+  const full = args.includes('--full')
+  if (full && selected.length > 0) bad('--full already walks everything; drop --only')
+  const values = { case: [], feature: [], scenario: [] }
+  const walks = new Set()
+  for (const selector of selected) {
+    if (WALK_SELECTORS.has(selector)) {
+      walks.add(selector)
+      continue
     }
-    if (value === undefined || value.trim() === '' || value.startsWith('--')) bad(`--${flag} needs a name`)
-    values[flag].push(...value.split(',').map((name) => name.trim()).filter(Boolean))
+    const split = selector.indexOf(':')
+    const kind = split === -1 ? '' : selector.slice(0, split)
+    const name = split === -1 ? '' : selector.slice(split + 1)
+    if (!NAMED_SELECTORS.has(kind) || name === '') {
+      bad(`unknown selector "${selector}" — use quick, browser, e2e, case:<name>, feature:<directory> or scenario:<name>`)
+    }
+    values[kind].push(name)
   }
   const sorted = (names) => [...new Set(names)].sort()
   const cases = sorted(values.case)
   const features = sorted(values.feature)
-  const scenarios = sorted(values.scenario)
-  const full = args.includes('--full')
-  const askLane = args.includes('--e2e')
-  const noLane = args.includes('--no-e2e')
-  const named = cases.length + features.length + scenarios.length > 0
-  // The two ways to spend minutes are named and never inherited: a bare request
-  // is the quick answer about a change, and each of these is asked for by name.
-  if (full && named) bad('--full walks the whole smoke and the lane\'s every scenario; drop the names')
-  if (askLane && noLane) bad('--e2e and --no-e2e say opposite things; keep one')
-  if (args.includes('--quick') && (full || askLane || scenarios.length > 0)) {
-    bad('--quick is the smoke\'s quick tier on its own; --e2e, --scenario and --full name the longer walks')
-  }
-  // The iteration tier is the bare request: the checks, the build and the tests
-  // the change reaches, with no browser at all. Everything else runs the smoke,
-  // and the whole walk is asked for by name.
-  const iteration = !full && !args.includes('--quick') && !askLane && !noLane
-    && cases.length === 0 && features.length === 0 && scenarios.length === 0
+  const coverage = featureCoverage()
+  const scenarios = sorted([...values.scenario, ...features.flatMap((name) => coverage[name]?.scenarios ?? [])])
+  const iteration = !full && selected.length === 0
+  const browser = full || walks.has('browser')
   return {
-    // The smoke's walk: the whole walk under --full, the named cases or features
-    // when the request names them, the quick tier otherwise.
+    // A named case or feature narrows the stand-in walk; a walk selector sets its tier.
     smoke: iteration ? null
-      : full ? []
+      : browser ? []
         : cases.length + features.length > 0
           ? [...(cases.length > 0 ? ['--case', cases.join(',')] : []), ...(features.length > 0 ? ['--feature', features.join(',')] : [])]
           : ['--quick'],
@@ -158,9 +162,7 @@ function parseRequest() {
     cases,
     features,
     scenarios,
-    // The lane is named: `--full` is the whole smoke walk, and the release gate
-    // is that walk with the lane beside it (`--full --e2e`).
-    e2e: !noLane && (askLane || scenarios.length > 0),
+    e2e: full || walks.has('e2e') || scenarios.length > 0,
   }
 }
 
@@ -180,32 +182,33 @@ function walksEverything(request) {
  * leaving room for the Vitest browser that waits on frames beside it.
  */
 function browserJobs(request) {
-  const behaviour = Math.max(1, Math.min(2, Math.floor(BROWSER_JOBS / 2)))
-  if (!request.e2e) return { smoke: BROWSER_JOBS, e2e: 0, behaviour }
+  if (!request.e2e) return { smoke: BROWSER_JOBS, e2e: 0 }
   const smoke = Math.max(1, Math.ceil(BROWSER_JOBS / 2))
-  return { smoke, e2e: Math.max(1, BROWSER_JOBS - smoke), behaviour }
+  return { smoke, e2e: Math.max(1, BROWSER_JOBS - smoke) }
 }
 
 function gatesFor(request) {
   const jobs = browserJobs(request)
   const gates = [
     // The checks that need no build first, so a document mistake fails in seconds.
-    { id: 'lint', minutes: 5, script: 'scripts/lint.mjs', args: [] },
-    { id: 'docs', minutes: 5, script: 'scripts/decisions-index.mjs', args: ['--check'] },
-    { id: 'changelog', minutes: 5, script: 'scripts/changelog.mjs', args: ['--check'] },
-    { id: 'agents', minutes: 5, script: 'scripts/agents-commands.mjs', args: ['--check'] },
+    { id: 'lint', minutes: 5, script: 'scripts/checks/lint.mjs', args: [] },
+    { id: 'docs', minutes: 5, script: 'scripts/checks/decisions-index.mjs', args: ['--check'] },
+    { id: 'changelog', minutes: 5, script: 'scripts/release/changelog.mjs', args: ['--check'] },
+    { id: 'agents', minutes: 5, script: 'scripts/checks/agents-commands.mjs', args: ['--check'] },
     { id: 'numbers', minutes: 5, script: 'packages/testing/check-numbers.mjs', args: ['--check'] },
-    // The appearance snapshot's sources rule and the shrink-only ledgers, against HEAD (D87).
-    { id: 'scope', minutes: 5, script: 'scripts/ci-scope.mjs', args: ['--appearance', '--ledgers', '--tree'] },
-    { id: 'build', minutes: 15, script: 'scripts/build.mjs', args: [] },
+    // The appearance snapshot's sources rule and the shrink-only ledgers, against HEAD (D92).
+    { id: 'scope', minutes: 5, script: 'scripts/ci/ci-scope.mjs', args: ['--appearance', '--ledgers', '--tree'] },
+    { id: 'build', minutes: 15, script: 'scripts/build/build.mjs', args: [] },
     unitGate(request.iteration),
   ]
-  if (request.smoke !== null) gates.push({ id: 'smoke', minutes: 30, script: 'packages/testing/smoke.mjs', args: [...request.smoke, '--jobs', String(jobs.smoke)] })
-  // The behaviour specs ride with the smoke: the same build and the same stand-in host.
-  // A request naming smoke cases alone names no spec.
-  if (request.smoke !== null && !(request.cases.length > 0 && request.features.length === 0)) {
-    const selection = request.features.length > 0 ? ['--feature', request.features.join(',')] : []
-    gates.push({ id: 'behaviour', minutes: 15, script: 'packages/testing/behaviour.mjs', args: [...selection, '--jobs', String(jobs.behaviour)] })
+  if (request.smoke !== null) {
+    gates.push({
+      id: 'stand-in',
+      minutes: 45,
+      script: 'packages/testing/stand-in.mjs',
+      args: [...request.smoke, '--jobs', String(jobs.smoke)],
+      report: STAND_IN_REPORT,
+    })
   }
   if (request.e2e) {
     gates.push({
@@ -227,9 +230,9 @@ function gatesFor(request) {
  */
 function stagesFor(request) {
   const gates = gatesFor(request)
-  const framed = gates.filter((gate) => gate.id === 'smoke' || gate.id === 'e2e')
-  const before = gates.filter((gate) => gate.id === 'unit' || gate.id === 'behaviour')
-  if (framed.length === 0 && !before.some((gate) => gate.id === 'behaviour')) return [gates]
+  const framed = gates.filter((gate) => gate.id === 'stand-in' || gate.id === 'e2e')
+  const before = gates.filter((gate) => gate.id === 'unit')
+  if (framed.length === 0) return [gates]
   const first = gates.filter((gate) => framed.indexOf(gate) === -1 && before.indexOf(gate) === -1)
   return [first, before, framed].filter((stage) => stage.length > 0)
 }
@@ -266,22 +269,20 @@ function unitOutcome(gate) {
   return { outcome: 'unjudged', reason: 'ended nonzero without a failed assertion' }
 }
 
-/**
- * What a nonzero behaviour run says. Its report is written once the walk reaches its end,
- * so a report older than this gate says nothing about this run.
- */
-function behaviourOutcome(startedAt) {
+/** What a nonzero stand-in run says: which case kind failed, or which gave no verdict. */
+function standInOutcome(gate) {
   let report
   try {
-    report = JSON.parse(fs.readFileSync(BEHAVIOUR_REPORT, 'utf8'))
+    report = JSON.parse(fs.readFileSync(gate.report, 'utf8'))
   } catch {
-    return { outcome: 'unjudged', reason: 'wrote no report' }
+    return { outcome: 'unjudged', reason: 'wrote no readable stand-in report' }
   }
-  const at = Date.parse(report.at ?? '')
-  if (!Number.isFinite(at) || at < startedAt) return { outcome: 'unjudged', reason: 'left no report from this run' }
-  const blocking = Array.isArray(report.results) ? report.results.filter((result) => result.blocking).length : 0
-  if (blocking > 0) return { outcome: 'fail', reason: `${blocking} test${blocking === 1 ? '' : 's'} failed` }
-  return { outcome: 'unjudged', reason: 'ended nonzero without a blocking failure' }
+  const lanes = Object.entries(report).filter(([name, code]) => name !== 'at' && Number.isInteger(code))
+  const failed = lanes.filter(([, code]) => code === 1 || code === 2).map(([name]) => name)
+  if (failed.length > 0) return { outcome: 'fail', reason: `${failed.join(', ')} failed` }
+  const unjudged = lanes.filter(([, code]) => code === UNJUDGED_EXIT).map(([name]) => name)
+  if (unjudged.length > 0) return { outcome: 'unjudged', reason: `${unjudged.join(', ')} gave no verdict` }
+  return { outcome: 'unjudged', reason: 'ended nonzero without a lane outcome' }
 }
 
 /**
@@ -289,18 +290,18 @@ function behaviourOutcome(startedAt) {
  * everything the system ended, or that never reached a test, runs again on the next
  * request. A deadline is the one this file enforced, not an exit code the gate chose.
  */
-function classifyGate(gate, code, signal, timedOut, startedAt) {
+function classifyGate(gate, code, signal, timedOut) {
   if (timedOut) return { outcome: 'unjudged', reason: `passed its ${gate.minutes} min deadline` }
   if (signal !== null) return { outcome: 'unjudged', reason: `stopped by ${signal}` }
   if (code === null) return { outcome: 'unjudged', reason: 'ended without an exit code' }
   if (code === 0) return { outcome: 'ok', reason: 'passed' }
-  if (code === UNJUDGED_EXIT && (gate.id === 'smoke' || gate.id === 'e2e')) {
-    const reason = gate.id === 'smoke' ? 'the browser half gave no verdict' : 'the lane gave no verdict on this host'
+  if (code === UNJUDGED_EXIT && (gate.id === 'stand-in' || gate.id === 'e2e')) {
+    const reason = gate.id === 'stand-in' ? 'the stand-in page gave no verdict' : 'the lane gave no verdict on this host'
     return { outcome: 'unjudged', reason }
   }
   if (code < 0 || code > 255) return { outcome: 'unjudged', reason: `ended with an abnormal exit code ${code}` }
   if (gate.id === 'unit') return unitOutcome(gate)
-  if (gate.id === 'behaviour') return behaviourOutcome(startedAt)
+  if (gate.id === 'stand-in') return standInOutcome(gate)
   return { outcome: 'fail', reason: `exit ${code}` }
 }
 
@@ -362,7 +363,7 @@ async function runStage(stage) {
     const startedAt = Date.now()
     const { code, signal, timedOut } = await runGate(gate)
     const ms = Date.now() - startedAt
-    const { outcome, reason } = classifyGate(gate, code, signal, timedOut, startedAt)
+    const { outcome, reason } = classifyGate(gate, code, signal, timedOut)
     say(`verify: ${gate.id} ${gateWord(outcome, reason)} (${seconds(ms)})`)
     return { id: gate.id, code, ms, outcome, reason }
   }))

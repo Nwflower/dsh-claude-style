@@ -14,5 +14,6 @@ export default {
     title: 'workspaceTitle',
     desc: 'workspaceDesc',
   }],
-  cases: ['switches', 'popovers']
+  cases: ['switches', 'popovers'],
+  scenarios: ['sidebarRail'],
 } satisfies FeatureManifest

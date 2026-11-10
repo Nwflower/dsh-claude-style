@@ -1,5 +1,5 @@
 {
-  "note": "The bounds a check compares against, each with the reason it holds that value (D87: a check reads its bound here instead of carrying a number of its own, so loosening one is a visible change with a reason beside it). The bounds of the other lanes move in with the migration; this file holds the ones a check reads so far.",
+  "note": "The bounds a check compares against, each with the reason it holds that value (D92: a check reads its bound here instead of carrying a number of its own, so loosening one is a visible change with a reason beside it). The bounds of the other lanes move in with the migration; this file holds the ones a check reads so far.",
   "bounds": [
     {
       "name": "longSessionGrowthRatio",
@@ -54,7 +54,7 @@
     {
       "name": "followAtEndPx",
       "value": 6,
-      "reason": "A browser clamps a scroll position a few pixels inside `scrollHeight - clientHeight` when a child's own overflow or a scrollbar rounds it, so this is the distance from the end that counts as arrived (D87)."
+      "reason": "A browser clamps a scroll position a few pixels inside `scrollHeight - clientHeight` when a child's own overflow or a scrollbar rounds it, so this is the distance from the end that counts as arrived (D92)."
     },
     {
       "name": "followCatchUpStartPx",

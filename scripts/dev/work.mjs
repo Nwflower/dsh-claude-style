@@ -4,9 +4,9 @@ import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import Ajv2020 from 'ajv/dist/2020.js'
-import { createTemporaryFiles, removeDebugDirectory } from './shared/temporary-files.mjs'
+import { createTemporaryFiles, removeDebugDirectory } from '../shared/temporary-files.mjs'
 
-const ROOT = path.resolve(import.meta.dirname, '..')
+const ROOT = path.resolve(import.meta.dirname, '..', '..')
 /** Store orders in the main tree so linked worktrees share them. */
 const COMMON = execFileSync('git', ['rev-parse', '--path-format=absolute', '--git-common-dir'], { cwd: ROOT, encoding: 'utf8' }).trim()
 const STORAGE = path.dirname(path.resolve(ROOT, COMMON))
@@ -14,8 +14,8 @@ const DEBUG = path.join(STORAGE, '.debug')
 const WORK = path.join(DEBUG, 'work')
 const INDEX = path.join(WORK, 'index.json')
 const LOCK = path.join(WORK, '.lock')
-const SCHEMA = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts', 'work', 'schema.json'), 'utf8'))
-const TEMPLATE = fs.readFileSync(path.join(ROOT, 'scripts', 'work', 'template.md'), 'utf8')
+const SCHEMA = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts', 'dev', 'work', 'schema.json'), 'utf8'))
+const TEMPLATE = fs.readFileSync(path.join(ROOT, 'scripts', 'dev', 'work', 'template.md'), 'utf8')
 const validate = new Ajv2020({ allErrors: true }).compile(SCHEMA)
 const ID = /^[0-9]{8}-[a-z0-9]+(?:-[a-z0-9]+)*$/
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/

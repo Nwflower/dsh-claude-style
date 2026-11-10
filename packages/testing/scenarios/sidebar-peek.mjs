@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * sidebar-peek.mjs — the collapsed sidebar opened over the page from a hover (D87).
+ * sidebar-peek.mjs — the collapsed sidebar opened over the page from a hover (D92).
  *
  * Registered in the lane's scenario table (packages/testing/scenarios.mjs).
  *
@@ -14,10 +14,10 @@
  * the centre then makes room; picking a session in it closes it behind the
  * switch.
  */
-import surfaceTable from './data/surface.json' with { type: 'json' }
+import surfaceTable from '../data/surface.json' with { type: 'json' }
 import { collapseRail } from './sidebar-rail.mjs'
 
-/** The skin's part mark, read off the surface table rather than spelled here (D87). */
+/** The skin's part mark, read off the surface table rather than spelled here (D92). */
 const PART = surfaceTable.surface.find((entry) => entry.id === 'skin.part').attribute
 const part = (name) => `[${PART}~="${name}"]`
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * remote-settings.mjs — a page under a non-loopback name on the real host
- * (D75, D87).
+ * (D75, D92).
  *
  * The host serves a page whose hostname it was told to trust the same settings
  * document it serves the loopback page: one instance, two names, one store. The
@@ -13,8 +13,8 @@
  * one. The settings document lives in the scratch home the other scenarios
  * share, so the scenario writes the theme style back before it ends.
  */
-import { bound } from './bounds.mjs'
-import { waitForSkin, dismissOverlays, consoleProblem } from './dsh-web.mjs'
+import { bound } from '../bounds.mjs'
+import { waitForSkin, dismissOverlays, consoleProblem } from '../dsh-web.mjs'
 import { openSkinSettings, SETTINGS_PAGE } from './settings-route.mjs'
 
 /** The non-loopback name the remote page is opened under; the browser maps it onto 127.0.0.1. */

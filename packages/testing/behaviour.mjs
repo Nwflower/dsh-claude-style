@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * behaviour.mjs — the behaviour layer (D87): what a reader can see on the BUILT
- * plugin (`lib/`), loaded into the smoke's stand-in host page and driven from
- * outside through Playwright; no running DSH instance is needed.
+ * behaviour.mjs — focused behaviour specs and live-page debugging for
+ * stand-in.mjs (D92), driven from outside through Playwright on the BUILT
+ * plugin (`lib/`); no running DSH instance is needed.
  *
- * Failures keep a trace, screenshot and markup under `.debug/behaviour/`;
+ * Failures keep a trace, screenshot and markup under `.debug/runs/behaviour/`;
  * quarantined specs only fail when they pass. `--open`, `--eval`, `--shot` and `--close`
  * inspect one live page.
  * Usage: `node packages/testing/behaviour.mjs [--feature <dir>] [--spec <id or file fragment>] [--band <name>] [--jobs <n>] [--list]`
@@ -22,12 +22,13 @@ import { serveStandIn } from './smoke/server.mjs'
 import { readers, expectThat, surface, host } from './specs/fixtures/behaviour.mjs'
 import { ROOT, specFiles, readHeader, testId } from '../../scripts/shared/spec-header.mjs'
 import { withLock } from '../../scripts/shared/verify-lock.mjs'
+import { runsPath } from '../../scripts/shared/debug-paths.mjs'
 import { mapAtOnce } from './at-once.mjs'
 import { sanitizePage } from '../../scripts/shared/privacy.mjs'
 
 const MATRIX = JSON.parse(fs.readFileSync(path.join(import.meta.dirname, 'data', 'matrix.json'), 'utf8'))
 const QUARANTINED = new Map(JSON.parse(fs.readFileSync(path.join(import.meta.dirname, 'data', 'quarantine.json'), 'utf8')).tests.map((entry) => [entry.id, entry]))
-const OUT = path.join(ROOT, '.debug', 'behaviour')
+const OUT = runsPath(ROOT, 'behaviour')
 /** The shell's mark for the dark theme, which the skin's dark tokens hang off. */
 const DARK_ATTR = host('shell.dark-theme')
 /** Pages wait on the skin's passes and on frames, so they run beside each other up to half the cores. */
@@ -91,8 +92,7 @@ const PLAIN_FLAGS = new Set(['list', 'help', 'eval', 'close', 'shot', 'dark', 'p
 const VALUE_FLAGS = new Set(['feature', 'spec', 'band', 'jobs', 'open', 'prefs', 'at', 'timeout', 'off'])
 
 /** The request on the command line: the run's selection, or one debug mode with its own flags. */
-function request() {
-  const args = process.argv.slice(2)
+function request(args) {
   const named = { feature: [], spec: [], band: [] }
   const given = new Set()
   const positional = []
@@ -628,8 +628,8 @@ async function closeSession(asked) {
 }
 
 /** Run the lane, keep a page open, or ask one: the mode the command line named. */
-async function start() {
-  const asked = request()
+async function start(args) {
+  const asked = request(args)
   if (asked.mode === 'help') {
     usage()
     return 0
@@ -707,7 +707,14 @@ async function run(asked) {
   return blocking === 0 ? 0 : 1
 }
 
-start().then((code) => process.exit(code ?? 0), (error) => {
-  console.error(error)
-  process.exit(1)
-})
+/** Run behaviour specs or one live-page debugging mode; the shared runner uses the same entry. */
+export function runBehaviour(args = process.argv.slice(2)) {
+  return start(args)
+}
+
+if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  runBehaviour().then((code) => process.exit(code ?? 0), (error) => {
+    console.error(error)
+    process.exit(1)
+  })
+}

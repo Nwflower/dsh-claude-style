@@ -8,9 +8,9 @@
  */
 import path from 'node:path'
 import { CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, TURN_TAIL_SELECTOR } from '@dsh-claude-style/contracts/dom'
-import { HOST } from './lane.mjs'
-import { sendPrompt } from './prompt.mjs'
-import { sanitizePage } from '../../scripts/shared/privacy.mjs'
+import { HOST } from '../lane.mjs'
+import { sendPrompt } from '../prompt.mjs'
+import { sanitizePage } from '../../../scripts/shared/privacy.mjs'
 
 const RERUN = /^(重跑这一轮|Run this turn again)$/
 const DELETE = /^(删除此轮|Delete this turn)$/

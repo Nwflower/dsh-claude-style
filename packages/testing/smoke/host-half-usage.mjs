@@ -4,6 +4,7 @@
  */
 import fs from 'fs'
 import path from 'path'
+import { runsPath } from '../../../scripts/shared/debug-paths.mjs'
 import { pathToFileURL } from 'url'
 import { ROOT, same, check } from './shared.mjs'
 
@@ -192,7 +193,7 @@ async function hostUsage({ mod, fakeHost, request, browser, scratchHome, scratch
   // session behind both accounts counts once (#194).
   console.log('\nhost half — a partly recorded ledger day keeps the fold\'s fuller figure')
   {
-    const home = path.join(ROOT, '.debug', 'smoke-home-usage-partial')
+    const home = runsPath(ROOT, 'smoke', 'home-usage-partial')
     fs.rmSync(home, { recursive: true, force: true })
     const cwd = path.join(home, 'sessions', '--D-smoke--')
     fs.mkdirSync(path.join(home, 'storages', 'cost-meter'), { recursive: true })
@@ -245,7 +246,7 @@ async function hostUsage({ mod, fakeHost, request, browser, scratchHome, scratch
   // exist yet, so the days of the sessions deleted before it come across
   console.log('\nhost half — the previous fold cache is migrated into the record')
   {
-    const home = path.join(ROOT, '.debug', 'smoke-home-usage-migrate')
+    const home = runsPath(ROOT, 'smoke', 'home-usage-migrate')
     fs.rmSync(home, { recursive: true, force: true })
     const day = localDay(at(-3, 11))
     const slots = new Array(24).fill(0)
@@ -287,7 +288,7 @@ async function hostUsage({ mod, fakeHost, request, browser, scratchHome, scratch
   // sessions are left, so it is moved aside before the pass rebuilds it
   console.log('\nhost half — an unreadable record is moved aside before it is rebuilt')
   {
-    const home = path.join(ROOT, '.debug', 'smoke-home-usage-corrupt')
+    const home = runsPath(ROOT, 'smoke', 'home-usage-corrupt')
     fs.rmSync(home, { recursive: true, force: true })
     const cwd = path.join(home, 'sessions', '--D-smoke--')
     fs.mkdirSync(path.join(cwd, 'r1'), { recursive: true })
@@ -310,7 +311,7 @@ async function hostUsage({ mod, fakeHost, request, browser, scratchHome, scratch
   // wrote while this pass was folding stays in it
   console.log('\nhost half — a write keeps what another instance wrote during the pass')
   {
-    const home = path.join(ROOT, '.debug', 'smoke-home-usage-concurrent')
+    const home = runsPath(ROOT, 'smoke', 'home-usage-concurrent')
     fs.rmSync(home, { recursive: true, force: true })
     const cwd = path.join(home, 'sessions', '--D-smoke--')
     fs.mkdirSync(path.join(cwd, 'c1'), { recursive: true })
@@ -341,7 +342,7 @@ async function hostUsage({ mod, fakeHost, request, browser, scratchHome, scratch
   // this half had before the observation existed (D12).
   console.log('\nhost half — the log reader a host without the observation still answers')
   {
-    const home = path.join(ROOT, '.debug', 'smoke-home-readsession')
+    const home = runsPath(ROOT, 'smoke', 'home-readsession')
     fs.rmSync(home, { recursive: true, force: true })
     const cwd = path.join(home, 'sessions', '--D-smoke--')
     fs.mkdirSync(path.join(cwd, 'f1'), { recursive: true })
@@ -369,7 +370,7 @@ async function hostUsage({ mod, fakeHost, request, browser, scratchHome, scratch
   // it every request folds the whole corpus again (#126).
   console.log('\nhost half — a log the reader throws on leaves the rest of the record written')
   {
-    const home = path.join(ROOT, '.debug', 'smoke-home-usage-broken')
+    const home = runsPath(ROOT, 'smoke', 'home-usage-broken')
     fs.rmSync(home, { recursive: true, force: true })
     const cwd = path.join(home, 'sessions', '--D-smoke--')
     for (const id of ['ok-a', 'bad-b', 'ok-c']) {
@@ -403,7 +404,7 @@ async function hostUsage({ mod, fakeHost, request, browser, scratchHome, scratch
   // longer than the period would otherwise leave no idle stretch at all (#126).
   console.log('\nhost half — a pass that outlasts the period is not folded back to back')
   {
-    const home = path.join(ROOT, '.debug', 'smoke-home-usage-slow')
+    const home = runsPath(ROOT, 'smoke', 'home-usage-slow')
     fs.rmSync(home, { recursive: true, force: true })
     const cwd = path.join(home, 'sessions', '--D-smoke--')
     fs.mkdirSync(path.join(cwd, 'slow-1'), { recursive: true })

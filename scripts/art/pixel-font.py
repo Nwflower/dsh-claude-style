@@ -1,6 +1,6 @@
 """Subset PoxiaoPixel for the mascot bubble; requires fontTools and brotli.
 
-Run `python scripts/pixel-font.py <poxiao-pixel-12px-square.ttf>` by hand.
+Run `python scripts/art/pixel-font.py <poxiao-pixel-12px-square.ttf>` by hand.
 The family is renamed as the SIL OFL requires for a modified font.
 """
 
@@ -11,7 +11,7 @@ from pathlib import Path
 from fontTools import subset
 from fontTools.ttLib import TTFont
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 COPY = ROOT / 'packages/client/src/features/mascot/mascot.copy.json'
 OUT = ROOT / 'packages/assets/src/fonts/ClaudeStylePixel.woff2'
 FAMILY = 'Claude Style Pixel'
@@ -29,7 +29,7 @@ def bubble_text():
 
 def main():
     if len(sys.argv) != 2:
-        sys.exit('usage: python scripts/pixel-font.py <poxiao-pixel-12px-square.ttf>')
+        sys.exit('usage: python scripts/art/pixel-font.py <poxiao-pixel-12px-square.ttf>')
     text = bubble_text()
     font = TTFont(sys.argv[1])
     cmap = font.getBestCmap()

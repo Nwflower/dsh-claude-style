@@ -3,7 +3,7 @@
  * (the report is the object the scripts under packages/testing/smoke/probe/ build in the page).
  *
  * The cases live in cases/, one module per subject; this file keeps the table
- * the runner reads (D87).
+ * the runner reads (D92).
  */
 import shell from './cases/shell.mjs'
 import stats from './cases/stats.mjs'

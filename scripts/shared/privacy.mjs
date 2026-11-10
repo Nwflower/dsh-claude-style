@@ -1,4 +1,4 @@
-/** privacy.mjs — replace private page data and fail screenshot writes on a leak match (D87). */
+/** privacy.mjs — replace private page data and fail screenshot writes on a leak match (D92). */
 const PROJECT_NAMES = ['demo-project', 'sample-app', 'docs-site', 'theme-lab', 'notes-app', 'e-comm-demo']
 const SESSION_NAMES = [
   'Fix flaky onboarding test',

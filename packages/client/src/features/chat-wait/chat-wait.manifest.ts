@@ -31,5 +31,6 @@ export default {
     control: 'status-paint',
     stillWhenReduced: true,
   }],
-  cases: ['chat-wait']
+  cases: ['chat-wait'],
+  scenarios: ['waitLine', 'washLine'],
 } satisfies FeatureManifest

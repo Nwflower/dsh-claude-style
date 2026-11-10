@@ -1,7 +1,7 @@
 import parser from 'postcss-selector-parser'
 
 /**
- * Host markup built from the host contract (D3, D87): a spec names the
+ * Host markup built from the host contract (D3, D92): a spec names the
  * contract's selector and gets an element carrying exactly what it reads, so a
  * host rename stays in packages/contracts/src/dom.ts. Only a compound selector
  * names one element; a combinator, pseudo-class or list is refused.

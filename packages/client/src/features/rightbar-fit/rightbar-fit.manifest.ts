@@ -7,4 +7,5 @@ export default {
   ungated: '把宿主右栏的面板宽度与拖拽手柄换算回页面自己的像素；页面在 1 倍时不写任何东西',
   stylesheets: [],
   cases: [],
+  scenarios: ['rightbar'],
 } satisfies FeatureManifest

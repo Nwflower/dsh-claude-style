@@ -1,5 +1,5 @@
 {
-  "note": "The host's own conversation and composer markup, captured by packages/testing/host-snapshot.mjs on a scratch host and read by the stand-in page (packages/testing/specs/fixtures/host-frame.mjs, D3, D87). Regenerate with node packages/testing/host-snapshot.mjs.",
+  "note": "The host's own conversation and composer markup, captured by packages/testing/host-snapshot.mjs on a scratch host and read by the stand-in page (packages/testing/specs/fixtures/host-frame.mjs, D3, D92). Regenerate with node packages/testing/host-snapshot.mjs.",
   "host": {
     "version": "0.2.2-alpha.3",
     "viewport": {

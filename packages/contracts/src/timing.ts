@@ -1,10 +1,10 @@
 /**
  * Host callback ordering the skin depends on (D3), with the check guarding each assumption.
- * Every entry must name an end-to-end scenario or spec (D87).
+ * Every entry must name an end-to-end scenario or spec (D92).
  */
 
 /** The end-to-end lane's scenarios; the lane checks its own names against these. */
-export const E2E_SCENARIOS = ['conversation', 'systemTypography', 'messageActions', 'messageAnswerActions', 'mobileHome', 'composerViewport', 'narrow', 'tool', 'fileMerge', 'send', 'sendFull', 'scroll', 'readerScroll', 'doorPin', 'streamPace', 'streamJitter', 'streamJitterFooter', 'streamJitterInline', 'motion', 'processSummary', 'reasoningStream', 'reasoningContinuous', 'waitLine', 'washLine', 'longSession', 'statsPosition', 'statsOverlay', 'statsFooter', 'sidebarRail', 'sidebarPeek', 'rightbar', 'contract', 'importance', 'remoteSettings', 'customBrand', 'dsBot', 'shots'] as const
+export const E2E_SCENARIOS = ['conversation', 'systemTypography', 'messageActions', 'messageAnswerActions', 'mobileHome', 'composerViewport', 'narrow', 'tool', 'fileMerge', 'send', 'sendFull', 'scroll', 'readerScroll', 'doorPin', 'streamPace', 'streamJitter', 'streamJitterFooter', 'streamJitterInline', 'motion', 'processSummary', 'reasoningStream', 'reasoningContinuous', 'waitLine', 'washLine', 'longSession', 'statsPosition', 'statsOverlay', 'statsFooter', 'sidebarRail', 'sidebarPeek', 'rightbar', 'contract', 'importance', 'remoteSettings', 'usernameIme', 'customBrand', 'dsBot', 'shots'] as const
 
 /** One timing assumption, and how it is held. */
 interface HostTimingEntry {
@@ -14,7 +14,7 @@ interface HostTimingEntry {
   assumption: string
   /** What the skin does with that order, and what breaks without it. */
   use: string
-  /** Where it is held: `scenario:<name>` of the lane, or `spec:<id>` of a spec (D87). */
+  /** Where it is held: `scenario:<name>` of the lane, or `spec:<id>` of a spec (D92). */
   checks: string[]
 }
 

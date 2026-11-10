@@ -7,7 +7,7 @@ import path from 'node:path'
 import { execFileSync } from 'node:child_process'
 import esbuild from 'esbuild'
 
-const PACKAGE = path.resolve(import.meta.dirname, '..', 'packages', 'host')
+const PACKAGE = path.resolve(import.meta.dirname, '..', '..', 'packages', 'host')
 const ROOT = path.resolve(PACKAGE, '..', '..')
 const SOURCE = path.join(PACKAGE, 'src')
 /** The package names a module's build resolves and inlines, each with the directory whose relative imports are inlined with it. */

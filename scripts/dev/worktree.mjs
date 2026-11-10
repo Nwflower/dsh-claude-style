@@ -5,17 +5,17 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
-import { runner } from './shared/run.mjs'
+import { runner } from '../shared/run.mjs'
 
-const ROOT = path.resolve(import.meta.dirname, '..')
+const ROOT = path.resolve(import.meta.dirname, '..', '..')
 const run = runner(ROOT)
 
 /** The directories a scratch worktree may sit in; the main working tree is never a candidate. */
-const SCRATCH = [path.join(ROOT, '.debug'), path.join(ROOT, '.agents', 'worktrees')]
+const SCRATCH = [path.join(ROOT, '.debug', 'worktrees'), path.join(ROOT, '.agents', 'worktrees')]
   .map((dir) => dir.toLowerCase() + path.sep)
 
 function usage() {
-  console.error('usage: node scripts/worktree.mjs add <path> <ref>\n       node scripts/worktree.mjs remove <path> [--dry-run]')
+  console.error('usage: node scripts/dev/worktree.mjs add <path> <ref>\n       node scripts/dev/worktree.mjs remove <path> [--dry-run]')
   process.exit(2)
 }
 
@@ -23,7 +23,7 @@ function usage() {
 function scratch(target) {
   const worktree = path.resolve(ROOT, target)
   if (!SCRATCH.some((dir) => worktree.toLowerCase().startsWith(dir))) {
-    console.error(`worktree: ${worktree} is outside .debug/ and .agents/worktrees/; the main tree is never a candidate`)
+    console.error(`worktree: ${worktree} is outside .debug/worktrees/ and .agents/worktrees/; the main tree is never a candidate`)
     process.exit(1)
   }
   return worktree

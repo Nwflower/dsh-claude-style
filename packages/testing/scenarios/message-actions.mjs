@@ -1,6 +1,6 @@
 import path from 'node:path'
-import { HOST, check } from './lane.mjs'
-import { sanitizePage } from '../../scripts/shared/privacy.mjs'
+import { HOST, check } from '../lane.mjs'
+import { sanitizePage } from '../../../scripts/shared/privacy.mjs'
 
 /** The visible host Tooltip, read off the page: its words and the look the host gives it. */
 function readTooltip(page) {

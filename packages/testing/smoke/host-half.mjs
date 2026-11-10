@@ -6,6 +6,7 @@
 import fs from 'fs'
 import http from 'http'
 import path from 'path'
+import { runsPath } from '../../../scripts/shared/debug-paths.mjs'
 import { Readable } from 'stream'
 import { pathToFileURL } from 'url'
 import { brotliDecompressSync } from 'zlib'
@@ -199,9 +200,9 @@ async function hostHalf() {
   const rebound = { host: 'attacker.example:43120', origin: 'http://attacker.example:43120', 'sec-fetch-site': 'same-origin' }
 
   // Session deletion: the route removes one stored session directory. The root
-  // is a scratch harness home under .debug/, never the user's own.
+  // is a scratch harness home under .debug/runs/smoke/, never the user's own.
   const DELETE = '/dsh-claude-style/session-delete'
-  const scratchHome = path.join(ROOT, '.debug', 'smoke-home')
+  const scratchHome = runsPath(ROOT, 'smoke', 'home')
   const scratchCwd = path.join(scratchHome, 'sessions', '--D-smoke--')
   const scratchId = 'session-smoke-delete-0001'
 
@@ -456,7 +457,7 @@ async function hostHalf() {
   const liveLists = []
   // An open session contributes its growth through the live log's own tail. Its
   // own home, so the corpus is built here rather than read back from the pass above.
-  const liveHome = path.join(ROOT, '.debug', 'smoke-home-live')
+  const liveHome = runsPath(ROOT, 'smoke', 'home-live')
   fs.rmSync(liveHome, { recursive: true, force: true })
   const liveTails = []
   const liveEvents = { ...searchEvents, 'session-a': searchEvents['session-a'].slice() }
@@ -629,7 +630,7 @@ async function hostHalf() {
   // exactly its own set.
   console.log('\nbuild — the debug asset retention')
   const { writeAssets } = await import(pathToFileURL(path.join(ROOT, 'packages', 'assets', 'assets.mjs')).href)
-  const retainDir = path.join(ROOT, '.debug', 'smoke-assets-retention')
+  const retainDir = runsPath(ROOT, 'smoke', 'assets-retention')
   fs.rmSync(retainDir, { recursive: true, force: true })
   const assetPlan = (...names) => ({
     routed: names.map((name) => ({
@@ -660,7 +661,7 @@ async function hostHalf() {
   // home, so the answer says nothing about what the machine running this has
   // installed.
   console.log('\nhost half — the fonts route and the drop point')
-  const fontHome = path.join(ROOT, '.debug', 'smoke-font-home')
+  const fontHome = runsPath(ROOT, 'smoke', 'font-home')
   const droppedDir = path.join(fontHome, 'dsh-claude-style', 'fonts')
   fs.rmSync(fontHome, { recursive: true, force: true })
   const fontHost = fakeHost(mod, { home: fontHome })

@@ -1,5 +1,5 @@
 /**
- * scenarios.mjs — the end-to-end lane's scenario table (D87). The runner
+ * scenarios.mjs — the end-to-end lane's scenario table (D92). The runner
  * (packages/testing/e2e.mjs) boots an instance per scenario, sends its prompt
  * and calls its hooks; a scenario carrying its own reader is a module beside
  * this one (a `*Scenario` export), registered in the table below.
@@ -15,31 +15,32 @@
  */
 import path from 'node:path'
 import { HOST, SKIN, readFlow, check, observe } from './lane.mjs'
-import { recordProbes } from './contract-probe.mjs'
+import { recordProbes } from './scenarios/contract-probe.mjs'
 import { sendPrompt, waitForTurn } from './prompt.mjs'
-import { importanceScenario } from './importance.mjs'
-import { readerScrollScenario } from './reader-scroll.mjs'
-import { doorPinScenario } from './door-pin.mjs'
-import { streamPaceScenario } from './stream-pace.mjs'
-import { streamJitterScenario } from './stream-jitter.mjs'
-import { motionScenario } from './motion.mjs'
-import { processSummaryScenario } from './process-summary.mjs'
-import { fileMergeScenario } from './file-merge.mjs'
-import { reasoningContinuousScenario, reasoningStreamScenario } from './reasoning-stream.mjs'
-import { messageAnswerActionsScenario } from './message-answer-actions.mjs'
-import { messageActionsScenario } from './message-actions.mjs'
-import { systemTypographyScenario } from './system-typography.mjs'
-import { mobileHomeScenario } from './mobile-home.mjs'
-import { composerViewportScenario } from './composer-viewport.mjs'
-import { waitLineScenario } from './wait-line.mjs'
-import { washLineScenario } from './wash-line.mjs'
-import { longSessionScenario } from './long-session.mjs'
-import { statsScenarios } from './stats-position.mjs'
-import { sidebarRailScenario } from './sidebar-rail.mjs'
-import { sidebarPeekScenario } from './sidebar-peek.mjs'
-import { remoteSettingsScenario } from './remote-settings.mjs'
-import { customBrandScenario } from './custom-brand.mjs'
-import { dsBotScenario } from './ds-bot.mjs'
+import { importanceScenario } from './scenarios/importance.mjs'
+import { readerScrollScenario } from './scenarios/reader-scroll.mjs'
+import { doorPinScenario } from './scenarios/door-pin.mjs'
+import { streamPaceScenario } from './scenarios/stream-pace.mjs'
+import { streamJitterScenario } from './scenarios/stream-jitter.mjs'
+import { motionScenario } from './scenarios/motion.mjs'
+import { processSummaryScenario } from './scenarios/process-summary.mjs'
+import { fileMergeScenario } from './scenarios/file-merge.mjs'
+import { reasoningContinuousScenario, reasoningStreamScenario } from './scenarios/reasoning-stream.mjs'
+import { messageAnswerActionsScenario } from './scenarios/message-answer-actions.mjs'
+import { messageActionsScenario } from './scenarios/message-actions.mjs'
+import { systemTypographyScenario } from './scenarios/system-typography.mjs'
+import { mobileHomeScenario } from './scenarios/mobile-home.mjs'
+import { composerViewportScenario } from './scenarios/composer-viewport.mjs'
+import { waitLineScenario } from './scenarios/wait-line.mjs'
+import { washLineScenario } from './scenarios/wash-line.mjs'
+import { longSessionScenario } from './scenarios/long-session.mjs'
+import { statsScenarios } from './scenarios/stats-position.mjs'
+import { sidebarRailScenario } from './scenarios/sidebar-rail.mjs'
+import { sidebarPeekScenario } from './scenarios/sidebar-peek.mjs'
+import { remoteSettingsScenario } from './scenarios/remote-settings.mjs'
+import { usernameImeScenario } from './scenarios/username-ime.mjs'
+import { customBrandScenario } from './scenarios/custom-brand.mjs'
+import { dsBotScenario } from './scenarios/ds-bot.mjs'
 import { CANVAS } from './shoot.mjs'
 import { sanitizePage } from '../../scripts/shared/privacy.mjs'
 import { bound } from './bounds.mjs'
@@ -557,7 +558,7 @@ const SCENARIOS = {
       const results = notes.contract
       const byState = (state) => results.filter((result) => result.state === state)
       // A computed reading is the host's own exact output; a difference from the
-      // snapshot is printed as an observation and blocks nothing (D87).
+      // snapshot is printed as an observation and blocks nothing (D92).
       const failed = results.filter((result) => !result.ok && result.observation !== true)
       const differing = results.filter((result) => !result.ok && result.observation === true)
       const unchecked = results.filter((result) => result.observed === 'reported, not checked here')
@@ -593,13 +594,15 @@ const SCENARIOS = {
   washLine: washLineScenario({ check }),
   /** What a frame costs in a transcript that is already long (long-session.mjs, D40). */
   longSession: longSessionScenario({ check }),
-  /** Every `!important` the skin writes is needed on the real page (packages/testing/importance.mjs, D9). */
+  /** Every `!important` the skin writes is needed on the real page (packages/testing/scenarios/importance.mjs, D9). */
   importance: importanceScenario({ check, observe, sendPrompt, waitForTurn, host: HOST }),
-  /** A page under a non-loopback name reads and writes the host's settings beside the loopback one (packages/testing/remote-settings.mjs, D75). */
+  /** A page under a non-loopback name reads and writes the host's settings beside the loopback one (packages/testing/scenarios/remote-settings.mjs, D75). */
   remoteSettings: remoteSettingsScenario({ check }),
-  /** The reader's own brand images through the host half's routes and on the real shell (packages/testing/custom-brand.mjs, D30). */
+  /** The username keeps the reader's text while an input method composes it across a save (packages/testing/scenarios/username-ime.mjs, D92). */
+  usernameIme: usernameImeScenario({ check }),
+  /** The reader's own brand images through the host half's routes and on the real shell (packages/testing/scenarios/custom-brand.mjs, D30). */
   customBrand: customBrandScenario({ check }),
-  /** The Chat / Code switch beside ds-bot's published browser half (packages/testing/ds-bot.mjs, D74). */
+  /** The Chat / Code switch beside ds-bot's published browser half (packages/testing/scenarios/ds-bot.mjs, D74). */
   dsBot: dsBotScenario({ check }),
   /** Both palettes captured to the run's out directory and swept for personal data. */
   shots: {

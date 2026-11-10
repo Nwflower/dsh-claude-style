@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * stats-overlay.mjs — the context meter's ring in the composer row (D87).
+ * stats-overlay.mjs — the context meter's ring in the composer row (D92).
  *
- * Registered in the lane's scenario table through packages/testing/stats-position.mjs.
+ * Registered in the lane's scenario table through packages/testing/scenarios/stats-position.mjs.
  *
  * The host's meter cannot leave the dock the host renders it in, so the skin
  * draws the ring itself, after the seat box in the host's model slot, and the
@@ -17,9 +17,9 @@
 
 /**
  * The skin's own marks, read off the surface table rather than spelled here
- * (D87): the table is what a lane names a skin mark through.
+ * (D92): the table is what a lane names a skin mark through.
  */
-import surfaceTable from './data/surface.json' with { type: 'json' }
+import surfaceTable from '../data/surface.json' with { type: 'json' }
 
 const SURFACE = surfaceTable.surface
 const mark = (id) => {
@@ -124,6 +124,7 @@ const readPanelFrames = async (page, action) => {
     const painted = frames.filter((frame) => frame.painted)
     const panel = document.querySelector(`[${panelMark}]`)
     const rect = panel === null ? null : panel.getBoundingClientRect()
+    const tenth = (value) => Math.round(value * 10) / 10
     return {
       painted: painted.length,
       first: painted[0] ?? null,
@@ -133,12 +134,7 @@ const readPanelFrames = async (page, action) => {
       outsideWindowFrames: painted.filter((frame) => frame.left < 0 || frame.top < 0 ||
         frame.right > frame.window.width + 1 || frame.bottom > frame.window.height + 1).length,
       placed: panel !== null && panel.hasAttribute(placedMark),
-      panel: rect === null ? null : {
-        left: Math.round(rect.left * 10) / 10,
-        top: Math.round(rect.top * 10) / 10,
-        right: Math.round(rect.right * 10) / 10,
-        bottom: Math.round(rect.bottom * 10) / 10,
-      },
+      panel: rect === null ? null : { left: tenth(rect.left), top: tenth(rect.top), right: tenth(rect.right), bottom: tenth(rect.bottom) },
     }
   }, [CONTEXT_PANEL, CONTEXT_PANEL_PLACED])
 }

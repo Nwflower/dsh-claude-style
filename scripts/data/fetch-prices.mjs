@@ -6,9 +6,9 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { PRICES_FILE, validatePrices } from './prices.mjs'
+import { PRICES_FILE, validatePrices } from '../build/prices.mjs'
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
 const TARGET = path.join(ROOT, 'packages', 'host', 'data', PRICES_FILE)
 const CATALOG = path.join(ROOT, 'packages', 'host', 'data', 'peakrate-catalog.json')
 const SOURCE = {
@@ -160,7 +160,7 @@ function parsePage(html, url) {
  * Copy the shared DeepSeek billing clock so pricing and badges cannot drift.
  */
 function scheduleFromCatalog() {
-  if (!fs.existsSync(CATALOG)) throw new Error(`fetch-prices: ${CATALOG} is missing; run scripts/fetch-peakrate-catalog.mjs first`)
+  if (!fs.existsSync(CATALOG)) throw new Error(`fetch-prices: ${CATALOG} is missing; run scripts/data/fetch-peakrate-catalog.mjs first`)
   const catalog = JSON.parse(fs.readFileSync(CATALOG, 'utf8'))
   const profile = (catalog.profiles ?? []).find(entry => entry?.id === 'deepseek-v4')
   const schedule = profile?.schedule

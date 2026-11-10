@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * long-session.mjs — what a frame costs once the conversation is long (D87).
+ * long-session.mjs — what a frame costs once the conversation is long (D92).
  *
  * Registered in the lane's scenario table (packages/testing/scenarios.mjs).
  *
@@ -18,8 +18,8 @@
  * change to the pass (a `git worktree` of the previous revision runs the same
  * scenario).
  */
-import { sendPrompt, waitForTurn } from './prompt.mjs'
-import { bound } from './bounds.mjs'
+import { sendPrompt, waitForTurn } from '../prompt.mjs'
+import { bound } from '../bounds.mjs'
 import { CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, SESSION_ROW_KEY_ATTRIBUTE, SIDEBAR_NEW_SESSION_SELECTOR } from '@dsh-claude-style/contracts/dom'
 
 /**

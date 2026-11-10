@@ -1,15 +1,16 @@
 #!/usr/bin/env node
-/** lint.mjs — check source limits, repository references, dependency direction and spec contracts (D72, D87). */
+/** lint.mjs — check source limits, repository references, dependency direction and spec contracts (D72, D92). */
 import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
-import { filesUnder } from './shared/file-walk.mjs'
-import { checkWorkOrders } from './work.mjs'
-import { createTemporaryFiles } from './shared/temporary-files.mjs'
-import { checkElementCollections } from '../packages/testing/element-collections.mjs'
+import { filesUnder } from '../shared/file-walk.mjs'
+import { checkWorkOrders } from '../dev/work.mjs'
+import { createTemporaryFiles } from '../shared/temporary-files.mjs'
+import { DEBUG_HOMES, debugPath } from '../shared/debug-paths.mjs'
+import { checkElementCollections } from '../../packages/testing/element-collections.mjs'
 
-const ROOT = path.resolve(import.meta.dirname, '..')
+const ROOT = path.resolve(import.meta.dirname, '..', '..')
 const DECISIONS = path.join(ROOT, 'docs', 'adr')
 /** The stop line: a source file approaching this gets split, not extended. */
 const MAX_LINES = 750
@@ -49,7 +50,7 @@ function decisionNumbers() {
 
 // 1. The stop line. A unit test file counts like any other: a test that grew past the
 // line is one file holding several subjects, which is the shape the line exists to catch
-// (D87). Declaration files are generated and stand aside.
+// (D92). Declaration files are generated and stand aside.
 const sources = [
   ...filesUnder(path.join(ROOT, 'packages'), ['.ts', '.css', '.mjs', '.js'], SKIPPED_DIRS),
   ...filesUnder(path.join(ROOT, 'scripts'), ['.mjs', '.mjs', '.js'], SKIPPED_DIRS),
@@ -214,7 +215,7 @@ if (copies.status !== 0) {
 // engine's host.ts, bus.ts and chat-dom.ts, and the sheet stylesheet.ts mounts. Every other
 // site is recorded in packages/testing/data/document-lookups.json with its reason: a file's
 // count has to match its entry, an entry whose count reaches zero comes out, and
-// scripts/ci-scope.mjs --ledgers holds the total against the base. A unit test stands outside the rule.
+// scripts/ci/ci-scope.mjs --ledgers holds the total against the base. A unit test stands outside the rule.
 const LOOKUP = /document\.(?:querySelectorAll|querySelector)(?:<[^>]*>)?\s*\(|document\.body\.(?:querySelectorAll|querySelector)(?:<[^>]*>)?\s*\(|removeStrayNodes\(\s*document\b/g
 const LOOKUP_OWNERS = new Set([
   'packages/engine/src/host.ts',
@@ -249,7 +250,7 @@ for (const file of Object.keys(recordedLookups)) {
 
 // 9. The bounds a check compares against, and every name a check asks for.
 // packages/testing/data/bounds.json holds each limit on a reading with the reason for its
-// value, so loosening one is a line in a diff rather than a number in an assertion (D87). A
+// value, so loosening one is a line in a diff rather than a number in an assertion (D92). A
 // name nothing reads means the rule it guards is gone; a name something reads and the table
 // does not hold fails where it is read, which is why the sources are walked here too.
 const boundsFile = path.join(ROOT, 'packages', 'testing', 'data', 'bounds.json')
@@ -295,17 +296,17 @@ for (const name of boundNames) {
 }
 if (boundReads === 0) problems.push('lint: no bound was read — the bounds pattern matches nothing')
 
-// 10. The specs (D87). A spec reaches the product through three channels only — the declared
+// 10. The specs (D92). A spec reaches the product through three channels only — the declared
 // logic surface, the contract and engine packages, and what the reader sees on the built
 // page — and it names the skin's and the host's own marks through the surface table and the
 // host contract, never by spelling them. Each opens with the header the runners and the fault
 // corpus read (scripts/shared/spec-header.mjs).
 const require = createRequire(import.meta.url)
-const { AREAS, specFiles, readHeader } = require('./shared/spec-header.mjs')
+const { AREAS, specFiles, readHeader } = require('../shared/spec-header.mjs')
 const featureDirs = new Set(fs.readdirSync(path.join(ROOT, 'packages', 'client', 'src', 'features'), { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name))
 /** What a spec may import or require by name; a relative path must stay inside packages/testing/specs/. */
 const SPEC_IMPORTS = [/^vitest$/, /^vitest\/browser$/, /^fast-check$/, /^@dsh-claude-style\/client\/pure$/, /^@dsh-claude-style\/contracts\/[\w-]+$/, /^@dsh-claude-style\/engine\/[\w-]+$/]
-/** Refuse mocks, global stubs and snapshots, including bracket-call forms (D87). */
+/** Refuse mocks, global stubs and snapshots, including bracket-call forms (D92). */
 const REFUSED_NAMES = 'mock|doMock|importMock|importActual|hoisted|stubGlobal|stubEnv'
 const SPEC_REFUSED = [
   new RegExp(`\\bvi\\.(?:${REFUSED_NAMES})\\s*\\(`),
@@ -329,9 +330,9 @@ const standInPage = (file) => file.startsWith('packages/testing/smoke/')
 /** Where a spec stands: `<layer>/<capability>/<name>.spec.(ts|mjs)`, and nowhere else. */
 const SPEC_PLACE = /^packages\/testing\/specs\/(logic|mechanism|behaviour)\/[^/]+\/[^/]+\.spec\.(ts|mjs)$/
 for (const file of specs) {
-  if (!SPEC_PLACE.test(file)) problems.push(`${file}: a spec stands at packages/testing/specs/<layer>/<capability>/<name>.spec.(ts|mjs) (D87)`)
+  if (!SPEC_PLACE.test(file)) problems.push(`${file}: a spec stands at packages/testing/specs/<layer>/<capability>/<name>.spec.(ts|mjs) (D92)`)
   const header = readHeader(file)
-  if (!header.hasHeader) { problems.push(`${file}: opens with no header comment carrying @capability, @features and @risk (D87)`); continue }
+  if (!header.hasHeader) { problems.push(`${file}: opens with no header comment carrying @capability, @features and @risk (D92)`); continue }
   if (header.capability !== header.directory) problems.push(`${file}: @capability "${header.capability}" is not the directory it sits in (${header.directory})`)
   if (header.features.length === 0) problems.push(`${file}: @features names nothing`)
   for (const feature of header.features) {
@@ -347,15 +348,15 @@ for (const file of specs) {
   for (const specifier of specifiers) {
     if (specifier.startsWith('.')) {
       const resolved = path.resolve(path.dirname(path.join(ROOT, file)), specifier)
-      if (!relative(resolved).startsWith('packages/testing/specs/')) problems.push(`${file}: reaches ${specifier} outside packages/testing/specs/; reach the product through its declared surface (D87)`)
+      if (!relative(resolved).startsWith('packages/testing/specs/')) problems.push(`${file}: reaches ${specifier} outside packages/testing/specs/; reach the product through its declared surface (D92)`)
       continue
     }
     if (file.endsWith('.mjs') && specifier.startsWith('node:')) continue
-    if (!SPEC_IMPORTS.some((allowed) => allowed.test(specifier))) problems.push(`${file}: imports ${specifier}; a spec reaches the product through @dsh-claude-style/client/pure, the contracts and the engine's public modules (D87)`)
+    if (!SPEC_IMPORTS.some((allowed) => allowed.test(specifier))) problems.push(`${file}: imports ${specifier}; a spec reaches the product through @dsh-claude-style/client/pure, the contracts and the engine's public modules (D92)`)
   }
   lines.forEach((line, at) => {
     if (/^\s*(\*|\/\/|\/\*)/.test(line)) return
-    for (const refused of SPEC_REFUSED) if (refused.test(line)) problems.push(`${file}:${at + 1}: puts a stand-in where the product runs, or freezes an output instead of judging it (D87)`)
+    for (const refused of SPEC_REFUSED) if (refused.test(line)) problems.push(`${file}:${at + 1}: puts a stand-in where the product runs, or freezes an output instead of judging it (D92)`)
     if (SPEC_WATCHES.test(line) && !lines.slice(Math.max(0, at - 2), at + 1).some((near) => /\/\/\s*cost: D\d+/.test(near))) {
       problems.push(`${file}:${at + 1}: watches a method; say the cost a decision names beside it (// cost: D<n> — …)`)
     }
@@ -364,7 +365,7 @@ for (const file of specs) {
       if (!pattern.test(line)) continue
       // A class name built from its own prefix at run time spells no name.
       if (what.startsWith('a host class') && CONCATENATED_CLASS.test(line)) continue
-      problems.push(`${file}:${at + 1}: spells ${what} (D87)`)
+      problems.push(`${file}:${at + 1}: spells ${what} (D92)`)
     }
   })
 }
@@ -430,7 +431,7 @@ for (const match of new Set(clientText.match(/data-dsh-claude-page-under-\d+/g) 
 
 // The skin's marks spelled out in the smoke's and the lane's own code, which predate the
 // surface table: a count per file that only shrinks (packages/testing/data/skin-literals.json,
-// held against the base by scripts/ci-scope.mjs --ledgers). New code reads the table, except
+// held against the base by scripts/ci/ci-scope.mjs --ledgers). New code reads the table, except
 // for the smoke's stand-in form, which writes a mark the host would have written.
 const SKIN_MARK = /(?<![@\w/.])(?:data-)?dsh-claude-(?!style\b)[a-z][\w-]*/g
 const recordedMarks = JSON.parse(fs.readFileSync(path.join(ROOT, 'packages', 'testing', 'data', 'skin-literals.json'), 'utf8')).files
@@ -469,6 +470,14 @@ if (lookups === 0) problems.push('lint: no whole-document lookup was counted —
 for (const result of [checkWorkOrders(), createTemporaryFiles(ROOT).check()]) {
   problems.push(...result.problems)
   for (const warning of result.warnings) console.warn(`lint: ${warning}`)
+}
+
+// `.debug/` holds its declared homes and nothing beside them (D83); like the work orders, it exists in the local tree only.
+const strays = fs.existsSync(debugPath(ROOT))
+  ? fs.readdirSync(debugPath(ROOT)).filter((name) => !DEBUG_HOMES.includes(name))
+  : []
+if (strays.length > 0) {
+  problems.push(`.debug: ${strays.length} entries outside its homes (${DEBUG_HOMES.join(', ')}): ${strays.slice(0, 5).join(', ')}${strays.length > 5 ? ', …' : ''} — scratch goes through \`npm run tmp\`, a tool's output through scripts/shared/debug-paths.mjs`)
 }
 
 if (problems.length > 0) {

@@ -19,4 +19,5 @@ export default {
     control: 'process-rows-preview',
   }],
   cases: [],
+  scenarios: ['processSummary'],
 } satisfies FeatureManifest

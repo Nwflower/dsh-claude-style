@@ -1,4 +1,4 @@
-/** Stateless spec entries only; specs name these exports so module moves do not change tests (D87).
+/** Stateless spec entries only; specs name these exports so module moves do not change tests (D92).
  * The production entry never imports this module.
  */
 

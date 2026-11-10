@@ -15,7 +15,7 @@ import { PALETTE_CARDS } from 'virtual:dsh-claude-style/generated'
  * brand (`accent` and `text` in the settings' row).
  *
  * The four colours are seeds: the token sheet turns them into the whole palette
- * at runtime (scripts/theme-tokens.mjs), which is why they are written as
+ * at runtime (scripts/build/theme-tokens.mjs), which is why they are written as
  * properties rather than resolved here. A seed the reader has not picked falls
  * back to the card's own value, so picking one colour keeps the rest of the
  * look.

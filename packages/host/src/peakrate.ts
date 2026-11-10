@@ -23,7 +23,7 @@ import { cachePath, readJsonDocument, writeJsonDocument } from './cache-file.js'
 import { packageRoot } from './package-root.js'
 import { parseCatalog } from './peakrate-catalog.js'
 
-/** The catalog document the build copies beside the bundle (scripts/build.mjs). */
+/** The catalog document the build copies beside the bundle (scripts/build/build.mjs). */
 export const PEAKRATE_CATALOG_FILE = 'peakrate-catalog.json'
 
 /**

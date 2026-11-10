@@ -1,5 +1,5 @@
 /**
- * Exit the scratch host when its launcher's stdin closes (D87). Only the
+ * Exit the scratch host when its launcher's stdin closes (D92). Only the
  * marked host watches the pipe; children must not inherit the marker.
  */
 if (process.env.DSH_WEB_LIFELINE === '1') {

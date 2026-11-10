@@ -1,7 +1,7 @@
 /**
  * lane.mjs — what the end-to-end lane's runner and its scenarios read off the
  * page alike: the host's markers, the skin's own marks, the settled flow, and
- * the shape of one assertion (D87).
+ * the shape of one assertion (D92).
  */
 
 import surfaceTable from './data/surface.json' with { type: 'json' }
@@ -74,7 +74,7 @@ function check(name, ok, detail) {
 
 /**
  * One reading of what the host draws, compared with the record the repository
- * keeps of it (D87). The host is not this repository's to change, so a
+ * keeps of it (D92). The host is not this repository's to change, so a
  * difference is reported with its evidence and fails nothing: the run prints it,
  * files it in the traces, and the record is written again when someone reads it.
  */
@@ -103,7 +103,7 @@ function measureFrameMs(page) {
 
 /**
  * Record `read(arg)` inside the page on every frame from now until the page has
- * settled, and answer the readings (D87: the settle rule). The page has settled
+ * settled, and answer the readings (D92: the settle rule). The page has settled
  * when its finite animations have landed and the document has not changed for
  * eight frames' worth of a 60 Hz display (134 ms, over at least two frames, so a
  * slower display waits the same wall clock); an endless animation (a sweep, a

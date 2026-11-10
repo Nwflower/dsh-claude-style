@@ -31,9 +31,9 @@ jobs:
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
       - name: Refresh the peak rate catalog
-        run: node scripts/fetch-peakrate-catalog.mjs
+        run: node scripts/data/fetch-peakrate-catalog.mjs
       - name: Refresh the price snapshot
-        run: node scripts/fetch-prices.mjs
+        run: node scripts/data/fetch-prices.mjs
       - name: Commit a change
         run: |
           if git diff --quiet -- packages/host/data; then

@@ -1,0 +1,34 @@
+/**
+ * One feature's verification coverage, read from its own manifest and the specs'
+ * headers (D76, D92). Scope selection and the coverage report share this table.
+ */
+import { readManifests } from './read-manifests.mjs'
+import { LAYERS, readHeader, specFiles } from './spec-header.mjs'
+
+function featureCoverage(manifests = readManifests(), headers = specFiles().map(readHeader)) {
+  const table = {}
+  for (const manifest of manifests) {
+    const row = table[manifest.dir] ?? (table[manifest.dir] = {
+      cases: [],
+      scenarios: [],
+      specs: Object.fromEntries(LAYERS.map((layer) => [layer, []])),
+    })
+    for (const name of manifest.cases) if (!row.cases.includes(name)) row.cases.push(name)
+    for (const name of manifest.scenarios ?? []) if (!row.scenarios.includes(name)) row.scenarios.push(name)
+  }
+  for (const header of headers) {
+    if (!LAYERS.includes(header.layer)) continue
+    for (const feature of header.features) {
+      const row = table[feature]
+      if (row !== undefined) row.specs[header.layer].push(header)
+    }
+  }
+  return table
+}
+
+/** Whether a change inside this directory can select a lane narrower than the whole walk. */
+function covered(row) {
+  return row !== undefined && (row.cases.length > 0 || row.scenarios.length > 0 || LAYERS.some((layer) => row.specs[layer].length > 0))
+}
+
+export { featureCoverage, covered }

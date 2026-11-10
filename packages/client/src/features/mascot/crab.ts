@@ -11,7 +11,7 @@ import type manifest from './mascot.manifest'
  * mascot.ts decides which mascot is out).
  *
  * Its animations share Deepy's keys, so the one state machine drives both
- * (CRAB_SHEETS, drawn by scripts/draw-crab.py). Between jobs it looks
+ * (CRAB_SHEETS, drawn by scripts/art/draw-crab.py). Between jobs it looks
  * around, waves, or now and then pulls out its laptop and types for a
  * while — Claude Code's own routine, whole. The sheets ride the bundle
  * as data URIs (CRAB_SHEET_URLS): each animation is a sheet in the crab's

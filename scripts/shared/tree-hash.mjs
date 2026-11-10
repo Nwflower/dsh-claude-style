@@ -1,4 +1,4 @@
-/** tree-hash.mjs — hash source inputs so local verdicts and cloud caches name the same tree (D87). */
+/** tree-hash.mjs — hash source inputs so local verdicts and cloud caches name the same tree (D92). */
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'

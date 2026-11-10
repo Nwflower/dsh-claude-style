@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 /**
- * ci-scope.mjs — map changed paths to workflow selections and tree hashes (D76, D87).
+ * ci-scope.mjs — map changed paths to workflow selections and tree hashes (D76, D92).
  * Unknown changes select full lanes; appearance snapshots move with their sources or
  * readers, and shrink-only ledgers may not grow.
  */
 import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
-import { createRequire } from 'node:module'
 import path from 'node:path'
-import { changedPaths } from './shared/changed-paths.mjs'
-import { treeHash } from './shared/tree-hash.mjs'
+import { changedPaths } from '../shared/changed-paths.mjs'
+import { treeHash } from '../shared/tree-hash.mjs'
+import { covered, featureCoverage } from '../shared/feature-coverage.mjs'
+import { readHeader } from '../shared/spec-header.mjs'
 
-const require = createRequire(import.meta.url)
-const ROOT = path.resolve(import.meta.dirname, '..')
+const ROOT = path.resolve(import.meta.dirname, '..', '..')
 const args = process.argv.slice(2)
 const argOf = (flag) => {
   const at = args.indexOf(`--${flag}`)
@@ -24,7 +24,7 @@ const UNREAD = [/^docs\//, /^locale\//, /^\.github\//, /\.md$/, /^LICENSE$/, /^T
 
 /** Only page sources or snapshot readers may move the appearance snapshot. */
 const APPEARANCE = 'packages/testing/data/appearance.json'
-const APPEARANCE_READERS = ['packages/testing/appearance.mjs', 'packages/testing/data/appearance-parts.json', 'packages/testing/importance.mjs']
+const APPEARANCE_READERS = ['packages/testing/scenarios/appearance.mjs', 'packages/testing/data/appearance-parts.json', 'packages/testing/scenarios/importance.mjs']
 const APPEARANCE_SOURCES = [/^packages\/client\/src\//]
 
 function git(...argv) {
@@ -83,8 +83,7 @@ function changedFiles() {
 
 /** The answers the workflow's jobs read. */
 function scope(files) {
-  const { featureCases, readManifests } = require('./shared/read-manifests.mjs')
-  const featureCasesOf = featureCases(readManifests())
+  const coverage = featureCoverage()
   const features = new Set()
   let code = false
   let shared = false
@@ -92,9 +91,17 @@ function scope(files) {
     if (UNREAD.some((pattern) => pattern.test(file))) continue
     code = true
     const feature = file.match(/^packages\/client\/src\/features\/([^/]+)\//)
-    if (feature !== null && (featureCasesOf[feature[1]] ?? []).length > 0) {
+    if (feature !== null && covered(coverage[feature[1]])) {
       features.add(feature[1])
       continue
+    }
+    const spec = /^packages\/testing\/specs\/(logic|mechanism|behaviour)\/.+\.spec\.(ts|mjs)$/.test(file)
+    if (spec && fs.existsSync(path.join(ROOT, file))) {
+      const named = readHeader(file).features
+      if (named.length > 0 && named.every((name) => covered(coverage[name]))) {
+        for (const name of named) features.add(name)
+        continue
+      }
     }
     shared = true
   }

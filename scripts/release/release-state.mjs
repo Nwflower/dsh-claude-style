@@ -2,9 +2,9 @@
 /** release-state.mjs — report published, dev and packaged state so a release rerun resumes safely (D47). */
 import fs from 'node:fs'
 import path from 'node:path'
-import { runner } from './shared/run.mjs'
+import { runner } from '../shared/run.mjs'
 
-const ROOT = path.resolve(import.meta.dirname, '..')
+const ROOT = path.resolve(import.meta.dirname, '..', '..')
 const PACKAGE = 'dsh-claude-style'
 const version = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version
 const tag = `v${version}`

@@ -2,9 +2,9 @@
 /** fetch-peakrate-catalog.mjs — refresh the shipped catalog while preserving the source document. */
 import fs from 'node:fs'
 import path from 'node:path'
-import { PEAKRATE_CATALOG, validatePeakCatalog } from './peakrate-catalog.mjs'
+import { PEAKRATE_CATALOG, validatePeakCatalog } from '../build/peakrate-catalog.mjs'
 
-const ROOT = path.resolve(import.meta.dirname, '..')
+const ROOT = path.resolve(import.meta.dirname, '..', '..')
 const URL_SOURCE = 'https://offpeakclock.com/pricing.json'
 const TARGET = path.join(ROOT, 'packages', 'host', 'data', PEAKRATE_CATALOG)
 

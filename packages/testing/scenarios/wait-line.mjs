@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * wait-line.mjs — the waiting line's own words, end to end (D87).
+ * wait-line.mjs — the waiting line's own words, end to end (D92).
  *
  * Registered in the lane's scenario table (packages/testing/scenarios.mjs).
  *
@@ -23,7 +23,7 @@
  * that same row: under the Claude brand the skin's own loading dots stand where
  * the host draws its whale tail, resting on the wording's line.
  */
-import { bound } from './bounds.mjs'
+import { bound } from '../bounds.mjs'
 import fs from 'node:fs'
 import path from 'node:path'
 

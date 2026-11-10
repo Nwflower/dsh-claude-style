@@ -3,7 +3,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-const DIR = path.resolve(import.meta.dirname, '..', 'docs', 'adr')
+const DIR = path.resolve(import.meta.dirname, '..', '..', 'docs', 'adr')
 const FILE = path.join(DIR, 'README.md')
 const RETIRED = path.join(DIR, 'retired.txt')
 

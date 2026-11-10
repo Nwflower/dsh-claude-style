@@ -1,13 +1,13 @@
 name: CI
 
-# Master pushes run checks and the lanes selected by the change (D87);
+# Master pushes run checks and the lanes selected by the change (D92);
 # feature-only pushes leave the remaining quick smoke and behaviour specs to
 # Observe, outside the branch rule.
 #
 # Pull requests and merge queues run full smoke, Linux behaviour and e2e;
 # manual runs add macOS for the release matrix. Tag pushes belong to Release.
 #
-# `scripts/ci-scope.mjs` supplies the feature selection and tree-keyed build
+# `scripts/ci/ci-scope.mjs` supplies the feature selection and tree-keyed build
 # cache; page lanes wait for checks and scope, then share one `lib/` artifact.
 #
 # Concurrency is per event and commit; merge-queue runs are never cancelled.
@@ -55,10 +55,10 @@ jobs:
       # Install dependencies for esbuild to bundle the feature manifests (D42).
       - run: npm ci
       - id: scope
-        run: node scripts/ci-scope.mjs --base "${{ github.event.pull_request.base.sha || github.event.before || 'origin/master' }}"
+        run: node scripts/ci/ci-scope.mjs --base "${{ github.event.pull_request.base.sha || github.event.before || 'origin/master' }}"
       # Reject snapshots moved without their sheets and ledgers that only
-      # shrink (D87, D9).
-      - run: node scripts/ci-scope.mjs --appearance --ledgers --base "${{ github.event.pull_request.base.sha || github.event.before || 'origin/master' }}"
+      # shrink (D92, D9).
+      - run: node scripts/ci/ci-scope.mjs --appearance --ledgers --base "${{ github.event.pull_request.base.sha || github.event.before || 'origin/master' }}"
 
   checks:
     runs-on: ubuntu-latest
@@ -95,7 +95,7 @@ jobs:
       - run: npm ci
       - uses: actions/cache@v6
         with:
-          path: .debug/build-cache
+          path: .debug/cache/build
           key: build-cache-${{ runner.os }}-${{ needs.changed.outputs.tree }}
       - run: npm run build
         timeout-minutes: 15
@@ -125,23 +125,19 @@ jobs:
           path: lib
       - run: npm test
         timeout-minutes: 15
-      # Call the scripts directly so npm does not consume the feature-selection
-      # flag; an empty push selection means `--quick`.
-      - run: node packages/testing/smoke.mjs ${{ needs.changed.outputs.selection }}
+      # One stand-in run judges installation and reader-visible behaviour (D92);
+      # an empty push selection means `--quick`.
+      - run: node packages/testing/stand-in.mjs ${{ needs.changed.outputs.selection }}
         if: github.event_name != 'push'
-        timeout-minutes: 30
-      - run: node packages/testing/smoke.mjs ${{ needs.changed.outputs.selection || '--quick' }}
+        timeout-minutes: 45
+      - run: node packages/testing/stand-in.mjs ${{ needs.changed.outputs.selection || '--quick' }}
         if: github.event_name == 'push'
-        timeout-minutes: 30
-      # Use the same build and stand-in host (D87); pushes run selected
-      # features, other events run all.
-      - run: node packages/testing/behaviour.mjs ${{ github.event_name == 'push' && needs.changed.outputs.selection || '' }}
-        timeout-minutes: 15
+        timeout-minutes: 45
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: behaviour-evidence-linux
-          path: .debug/behaviour
+          path: .debug/runs/behaviour
           if-no-files-found: ignore
 
   # Windows exercises host filesystem behavior only; page behavior is covered
@@ -164,11 +160,11 @@ jobs:
         with:
           name: lib
           path: lib
-      - run: node packages/testing/smoke.mjs --host
+      - run: node packages/testing/stand-in.mjs --host
         timeout-minutes: 10
 
   # Release/nightly-only macOS behaviour catches font and Chrome overflow
-  # without delaying pull request queues (D87).
+  # without delaying pull request queues (D92).
   behaviour-macos:
     needs: [changed, checks, build]
     if: needs.changed.outputs.code == 'true' && github.event_name == 'workflow_dispatch'
@@ -187,16 +183,16 @@ jobs:
         with:
           name: lib
           path: lib
-      - run: npm run behaviour
+      - run: npm run stand-in
         timeout-minutes: 15
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: behaviour-evidence-macos
-          path: .debug/behaviour
+          path: .debug/runs/behaviour
           if-no-files-found: ignore
 
-  # Test the assembled plugin against the newest published host (D87).
+  # Test the assembled plugin against the newest published host (D92).
   e2e:
     needs: [changed, checks, build]
     if: needs.changed.outputs.code == 'true' && github.event_name != 'push'
@@ -229,7 +225,7 @@ jobs:
         if: always()
         with:
           name: e2e-traces-${{ matrix.shard }}
-          path: .debug/e2e/out
+          path: .debug/runs/e2e/out
           if-no-files-found: ignore
 
   required:
@@ -244,4 +240,4 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 24
-      - run: node scripts/ci-required.mjs '${{ toJson(needs) }}'
+      - run: node scripts/ci/ci-required.mjs '${{ toJson(needs) }}'

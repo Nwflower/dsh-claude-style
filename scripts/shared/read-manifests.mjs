@@ -75,8 +75,11 @@ function checkManifests(manifests) {
     if (!Array.isArray(manifest.contracts) || manifest.contracts.some((id) => typeof id !== 'string' || id === '')) {
       fail(manifest, 'needs "contracts": the host contract ids its own modules name (D3)')
     }
+    if (manifest.scenarios !== undefined && (!Array.isArray(manifest.scenarios) || manifest.scenarios.some((name) => typeof name !== 'string' || name === ''))) {
+      fail(manifest, 'needs "scenarios": the end-to-end scenario names that guard this feature')
+    }
     for (const sheet of manifest.stylesheets) {
-      // A generated sheet is checked where it is written (scripts/feature-sheets.mjs).
+      // A generated sheet is checked where it is written (scripts/build/feature-sheets.mjs).
       if (sheet.generated !== undefined) continue
       if (!fs.existsSync(path.join(FEATURES, manifest.dir, sheet.file))) fail(manifest, `names the stylesheet ${sheet.file}, which packages/client/src/features/${manifest.dir}/ does not hold`)
       if (sheet.scope !== undefined && sheet.scope !== 'surface') fail(manifest, `gives ${sheet.file} the scope "${sheet.scope}"; the one scope a sheet can name is "surface"`)

@@ -1,6 +1,6 @@
 /**
  * appearance.mjs — the appearance layer: what each page state's parts compute
- * to on the real host, against the committed snapshot (D87).
+ * to on the real host, against the committed snapshot (D92).
  *
  * A behaviour check asks whether a thing works; this asks what it looks like.
  * The importance walk (importance.mjs) is the lane's tour of every page state on
@@ -17,14 +17,14 @@
  * state no longer draws are each named with the values on both sides. The
  * snapshot is written by a run, never by hand —
  * `DSH_APPEARANCE=write node packages/testing/e2e.mjs --scenario importance` —
- * and scripts/ci-scope.mjs refuses one that moves without the client sources
+ * and scripts/ci/ci-scope.mjs refuses one that moves without the client sources
  * that draw the pages.
  */
 import fs from 'node:fs'
 import path from 'node:path'
 
-const SNAPSHOT = path.join(import.meta.dirname, 'data', 'appearance.json')
-const PARTS = JSON.parse(fs.readFileSync(path.join(import.meta.dirname, 'data', 'appearance-parts.json'), 'utf8')).parts
+const SNAPSHOT = path.join(import.meta.dirname, '..', 'data', 'appearance.json')
+const PARTS = JSON.parse(fs.readFileSync(path.join(import.meta.dirname, '..', 'data', 'appearance-parts.json'), 'utf8')).parts
 /**
  * The states whose readings belong to what the host version and the walk's own
  * sign-in show, and so cannot be compared across two runs: the controls found
@@ -118,7 +118,7 @@ function writeAppearance(readings) {
   const states = {}
   for (const name of Object.keys(readings).sort()) states[name] = readings[name]
   fs.writeFileSync(SNAPSHOT, `${JSON.stringify({
-    note: 'The appearance layer\'s snapshot: what each page state\'s parts compute to on the real host, read by the importance walk through packages/testing/appearance.mjs (D87). Regenerate with DSH_APPEARANCE=write node packages/testing/e2e.mjs --scenario importance; a change here without a change under packages/client/src fails scripts/ci-scope.mjs.',
+    note: 'The appearance layer\'s snapshot: what each page state\'s parts compute to on the real host, read by the importance walk through packages/testing/scenarios/appearance.mjs (D92). Regenerate with DSH_APPEARANCE=write node packages/testing/e2e.mjs --scenario importance; a change here without a change under packages/client/src fails scripts/ci/ci-scope.mjs.',
     states,
   }, null, 2)}\n`)
 }

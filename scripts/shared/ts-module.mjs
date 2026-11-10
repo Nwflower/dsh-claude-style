@@ -1,4 +1,4 @@
-/** ts-module.mjs — load repository TypeScript modules through the existing esbuild setup (D73, D87). */
+/** ts-module.mjs — load repository TypeScript modules through the existing esbuild setup (D73, D92). */
 import path from 'node:path'
 import vm from 'node:vm'
 import esbuild from 'esbuild'

@@ -2,9 +2,9 @@ name: Observe
 
 # Observe feature-only master pushes with the full quick smoke and all
 # behaviour specs, outside the branch rule; CI already covers shared-layer
-# pushes (D87).
+# pushes (D92).
 #
-# Manual runs cover the whole tree. `scripts/ci-scope.mjs` supplies the
+# Manual runs cover the whole tree. `scripts/ci/ci-scope.mjs` supplies the
 # code/selection gate and tree-keyed build cache.
 #
 # Build must succeed before smoke or behaviour; `!cancelled()` lets them run
@@ -48,7 +48,7 @@ jobs:
       # The scope reads the feature manifests, which esbuild bundles (D42).
       - run: npm ci
       - id: scope
-        run: node scripts/ci-scope.mjs --base "${{ github.event.before || 'origin/master' }}"
+        run: node scripts/ci/ci-scope.mjs --base "${{ github.event.before || 'origin/master' }}"
 
   observe:
     needs: changed
@@ -68,32 +68,26 @@ jobs:
       - run: npm ci
       - uses: actions/cache@v6
         with:
-          path: .debug/build-cache
+          path: .debug/cache/build
           key: build-cache-${{ runner.os }}-${{ needs.changed.outputs.tree }}
       - id: build
         run: npm run build
         timeout-minutes: 15
-      # Run the full quick tier, not CI's feature selection; `!cancelled()`
-      # prevents a failed smoke from skipping behaviour.
-      - id: smoke
+      # Run the full quick tier and every behaviour spec, not CI's feature selection.
+      - id: stand-in
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
-        run: node packages/testing/smoke.mjs --quick
-        timeout-minutes: 30
-      - id: behaviour
-        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
-        run: npm run behaviour
-        timeout-minutes: 15
+        run: node packages/testing/stand-in.mjs --quick
+        timeout-minutes: 45
       - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: observe-behaviour
-          path: .debug/behaviour
+          path: .debug/runs/behaviour
           if-no-files-found: ignore
       - name: Report what failed
         if: always()
         timeout-minutes: 5
         env:
           BUILD_OUTCOME: ${{ steps.build.outcome }}
-          SMOKE_OUTCOME: ${{ steps.smoke.outcome }}
-          BEHAVIOUR_OUTCOME: ${{ steps.behaviour.outcome }}
-        run: node scripts/observe-summary.mjs
+          STAND_IN_OUTCOME: ${{ steps['stand-in'].outcome }}
+        run: node scripts/ci/observe-summary.mjs

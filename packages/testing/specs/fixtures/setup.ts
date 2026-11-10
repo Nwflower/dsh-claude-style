@@ -5,5 +5,5 @@ import { TEST_SKIN } from './vocabulary'
 // Specs use the test vocabulary unless they provide their own seam (D73).
 adoptSkin(TEST_SKIN)
 
-// Fix the property seed so failures reproduce across machines (D87).
+// Fix the property seed so failures reproduce across machines (D92).
 fc.configureGlobal({ seed: 20261019 })

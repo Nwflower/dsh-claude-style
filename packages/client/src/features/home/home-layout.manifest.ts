@@ -23,5 +23,6 @@ export default {
     desc: 'homeDesc',
     control: 'layout-preview',
   }],
-  cases: ['hero', 'studio', 'late-forms', 'hdsl', 'hdsl-noskin', 'hdsl-broken']
+  cases: ['hero', 'studio', 'late-forms', 'hdsl', 'hdsl-noskin', 'hdsl-broken'],
+  scenarios: ['mobileHome', 'systemTypography'],
 } satisfies FeatureManifest

@@ -50,7 +50,7 @@ Crab artwork notice: the pixel crab (Clawd) is a character of Anthropic, and
 all rights in it remain with Anthropic. `packages/assets/src/mascot/crab/crab-laptop-body.png`
 and `packages/assets/src/mascot/crab/crab-laptop-ink.png` are frames of Claude Code's own
 animation; the remaining sheets in that directory are drawn by this project
-after that character (by `scripts/draw-crab.py`, which carries the drawings).
+after that character (by `scripts/art/draw-crab.py`, which carries the drawings).
 These files, and their copies inlined into `lib/client.js`, are **not** covered
 by the MIT license above. This plugin is an unofficial fan work, not affiliated
 with or endorsed by Anthropic.
