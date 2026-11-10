@@ -295,8 +295,5 @@ body[data-dsh-claude-style] .dsh-claude-popover-embed[data-clickable] {
   cursor: pointer;
 }
 
-body[data-dsh-claude-style] .dsh-claude-popover-embed[data-clickable]:hover {
-  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
-}
 
 
