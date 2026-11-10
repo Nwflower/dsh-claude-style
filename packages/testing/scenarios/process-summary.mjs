@@ -158,8 +158,12 @@ function processSummaryScenario({ check }) {
       const stateWords = [COPY.chatWaitThinking, COPY.chatWaitWriting, COPY.chatWaitToolCall, COPY.chatWaitTools]
       const lang = stateWords.some((word) => word.zh === working.label) ? 'zh' : 'en'
       const sentence = (parts) => parts.join(COPY.processSummaryFullSeparator[lang])
+      // The figures are the body's own rows, and the host keeps a call's result
+      // inside the call's own row (its conversation-nodes/tool.js builds one node
+      // per call), so these groups hold thoughts and calls alone: no record row
+      // stands in this turn for the summary to count.
       const expected = [
-        sentence([fill(COPY.processSummaryFullThoughtOther[lang], 2), fill(COPY.processSummaryFullToolOne[lang], 1), fill(COPY.processSummaryFullRecordOther[lang], 4)]),
+        sentence([fill(COPY.processSummaryFullThoughtOther[lang], 2), fill(COPY.processSummaryFullToolOne[lang], 1)]),
         sentence([fill(COPY.processSummaryFullThoughtOne[lang], 1), fill(COPY.processSummaryFullToolOne[lang], 1)]),
       ]
       return [
