@@ -280,15 +280,14 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="sidebar-root"][data-dsh-clau
 /* Embedded footer widgets: display-only plugin entries (progress bars,
    status panels — the cost-meter balance/quota stack is the known case)
    cannot collapse into a text menu item, so overrides.js embeds a live clone
-   of the entry into the popover. The embed sits above the action items with
-   a hairline separator; the cloned plugin markup keeps its own classes, so
-   the plugin's own stylesheet styles the content. The inset is the same on
-   all four sides: an entry that draws its own border and radius reads as a
-   box inside a box once the wrapper leaves a deeper strip at the bottom. */
+   of the entry into the popover. The cloned plugin markup keeps its own
+   classes, so the plugin's own stylesheet styles the content. The inset is
+   the same on all four sides: an entry that draws its own border and radius
+   reads as a box inside a box once the wrapper leaves a deeper strip at the
+   bottom. */
 body[data-dsh-claude-style] .dsh-claude-popover-embed {
   padding: 2px;
   margin-bottom: 4px;
-  border-bottom: 0.5px solid var(--dsh-claude-divider, var(--dsw-alias-border-l2, #dedede));
   border-radius: 7px;
 }
 
@@ -300,7 +299,4 @@ body[data-dsh-claude-style] .dsh-claude-popover-embed[data-clickable]:hover {
   background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
 }
 
-body[data-dsh-claude-style]:not([data-ds-dark-theme]) .dsh-claude-popover-embed {
-  border-bottom-color: var(--dsw-alias-border-l1);
-}
 
