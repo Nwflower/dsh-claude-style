@@ -5,16 +5,19 @@
  * draws the ring itself, after the seat box, and leaves the host's node in place
  * with no paint: the press on the ring is handed to the host's trigger, and the
  * host's panel opens over the ring. The ring says the same reading the host's
- * meter says, in the colour band that reading fell on, and reads it as a pie;
- * the reader may keep the drawn ring in that continuous band instead, or take
- * the measured ring in three bands, and may hide the number beside either face.
- * On a phone-width card it keeps the arc and gives up the number.
+ * meter says, except while the newest usage sample is a failed attempt's zero:
+ * the reading a provider last reported stands until a real sample lands. The
+ * reading falls in colour bands, drawn as a pie; the reader may keep the drawn
+ * ring in that continuous band instead, or take the measured ring in three
+ * bands, and may hide the number beside either face. On a phone-width card it
+ * keeps the arc and gives up the number.
  *
  * @capability context-stats
  * @features context-stats
- * @risk The ring the skin draws disagrees with the host's own reading, or names itself differently to a screen reader, or opens the host's panel somewhere the reader cannot see it, or ignores the face and the number the reader picked.
+ * @risk The ring the skin draws disagrees with the host's own reading, or names itself differently to a screen reader, or opens the host's panel somewhere the reader cannot see it, or ignores the face and the number the reader picked, or blanks the reading because a failed attempt's zero sample displaced the last one.
  */
 import { spec } from '../../fixtures/behaviour.mjs'
+import { seatStreamingStatsSession } from '../../fixtures/stats-session.mjs'
 
 /** The ring, its button, the host's meter and the host's own trigger, as the page holds them. */
 const readRing = (t) => t.page.evaluate(([ringSelector, meterAttr, rampAttr, rampSpanAttr, pieAttr, bandAttr]) => {
@@ -27,6 +30,7 @@ const readRing = (t) => t.page.evaluate(([ringSelector, meterAttr, rampAttr, ram
   const hostButton = meter === null ? null : meter.querySelector('button')
   return {
     text: (ring.textContent ?? '').trim(),
+    dash: ring.querySelector('circle[stroke-dasharray]')?.getAttribute('stroke-dasharray') ?? null,
     hostText: (meter?.textContent ?? '').trim(),
     label: button?.getAttribute('aria-label') ?? null,
     hostLabel: hostButton?.getAttribute('aria-label') ?? null,
@@ -154,5 +158,25 @@ export default spec({ page: 'context-stats', bands: ['phone', 'wide'] }, ({ test
     t.expectThat.equal(reading.valueShown, !narrow,
       narrow ? 'the number is given up on a phone-width card' : `the number is drawn beside the arc (${reading.text})`)
     t.expectThat.visible(await t.read.box(t.surface('stats.meter-ring')), 'the ring stands at both widths')
+  })
+
+  test('a failed attempt\'s zero sample leaves the last reading standing', async (t) => {
+    await seatStreamingStatsSession(t)
+    // The ring's own words stay readable when the phone-width card gives the
+    // span up, and the arc carries the reading at every width.
+    await t.page.evaluate(() => window.__pushStats('contextPressure', { pressureTokens: 200000, projectedTokens: 200000, contextWindow: 1000000 }))
+    await t.page.evaluate(() => window.__dshClaudePass())
+    await t.settle()
+    const sampled = await readRing(t)
+    t.expectThat.equal(sampled.text, '20%', 'the ring answers the provider\'s sample')
+    // A request that never reached the provider reports a zero prompt-side
+    // sample: the host's projection takes it as the newest one and re-anchors
+    // projectedTokens to that zero, which a meter would read as an empty window.
+    await t.page.evaluate(() => window.__pushStats('contextPressure', { pressureTokens: 0, projectedTokens: 0 }))
+    await t.page.evaluate(() => window.__dshClaudePass())
+    await t.settle()
+    const failed = await readRing(t)
+    t.expectThat.equal(failed.text, '20%', 'the failed attempt keeps the reading it displaced')
+    t.expectThat.equal(failed.dash, sampled.dash, `the arc still covers the reading (${failed.dash})`)
   })
 })
