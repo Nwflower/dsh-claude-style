@@ -449,6 +449,10 @@
       "the context section arrives with the turn": [
         2
       ],
+      "keyboard activation opens one section independently and all sections open again": [
+        0,
+        1
+      ],
       "the session stats carry the figures and the token buckets": [
         8
       ],
@@ -479,7 +483,13 @@
         0,
         1,
         2,
-        300
+        320
+      ],
+      "the host right panel takes the side and the rail keeps away": [
+        0
+      ],
+      "the details control closes the host right panel before the rail stands": [
+        0
       ],
       "an output opens its file in the host preview without another browser tab": [
         0
