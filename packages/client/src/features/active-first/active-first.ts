@@ -66,18 +66,35 @@ export function install() {
    */
   const reorder = () => {
     if (document.body.hasAttribute('data-dsh-claude-date-groups')) return
-    const lists = new Map<Element, HTMLElement[]>()
-    const seen = new Set<HTMLElement>()
+    const seatsByList = new Map<Element, Set<HTMLElement>>()
     for (const row of rows.all()) {
       const box = row.parentElement
       const list = box === null ? null : box.parentElement
-      if (box === null || list === null || seen.has(box)) continue
-      seen.add(box)
-      const seats = lists.get(list)
-      if (seats === undefined) lists.set(list, [box])
-      else seats.push(box)
+      if (box === null || list === null) continue
+      let known = seatsByList.get(list)
+      if (known === undefined) {
+        known = new Set()
+        seatsByList.set(list, known)
+      }
+      known.add(box)
     }
-    for (const seats of lists.values()) lift(seats)
+    // Walk each list's children in DOM order and treat any non-session child
+    // (workspace headings, group headings, dividers) as a hard boundary, so a
+    // shared flat list never lifts a running session across workspaces. The
+    // children are read once into an array: lifting a segment moves its seats,
+    // and the live collection would shift under a running iteration.
+    for (const [list, known] of seatsByList) {
+      let segment: HTMLElement[] = []
+      for (const child of [...list.children]) {
+        if (child instanceof HTMLElement && known.has(child)) {
+          segment.push(child)
+          continue
+        }
+        if (segment.length > 1) lift(segment)
+        segment = []
+      }
+      if (segment.length > 1) lift(segment)
+    }
   }
 
   const schedule = () => {

@@ -110,3 +110,73 @@ test('the teardown leaves the rows where they stand', async () => {
   await frames(2)
   expect(order(list)).toEqual(['b', 'a'])
 })
+
+test('non-session headers in a shared flat list bound each workspace and group segment', async () => {
+  const list = document.createElement('div')
+  list.setAttribute('role', 'tree')
+  document.body.append(list)
+  const addHeader = (name: string) => {
+    const header = document.createElement('div')
+    header.setAttribute('data-test-header', name)
+    list.append(header)
+  }
+  const rows = new Map<string, HTMLElement>()
+  const boxes = new Map<string, HTMLElement>()
+  const addSeat = (id: string, running = false) => {
+    const row = document.createElement('div')
+    row.setAttribute(SESSION_ROW_KEY_ATTRIBUTE, `session:${id}`)
+    if (running) row.append(phaseDot())
+    // The host draws every row inside a box of its own: the box is the seat.
+    const box = document.createElement('span')
+    box.append(row)
+    list.append(box)
+    boxes.set(id, box)
+    rows.set(id, row)
+  }
+  // Workspace A has an idle session; Workspace B has two groups with running
+  // sessions; workspace C starts with the running row already at its head.
+  addHeader('ws-a')
+  addSeat('a-idle')
+  addHeader('ws-b')
+  addSeat('b-idle')
+  addSeat('b-running', true)
+  addHeader('ws-b-pinned')
+  addSeat('p-idle')
+  addSeat('p-running', true)
+  addHeader('ws-c')
+  addSeat('c-running', true)
+  addSeat('c-idle')
+
+  installed()
+  await frames(2)
+
+  const sequence = [...list.children].map((child) => {
+    const header = child.getAttribute('data-test-header')
+    if (header !== null) return header
+    const row = child.querySelector(`[${SESSION_ROW_KEY_ATTRIBUTE}]`)
+    return row?.getAttribute(SESSION_ROW_KEY_ATTRIBUTE) ?? '?'
+  })
+  expect(sequence).toEqual([
+    'ws-a',
+    'session:a-idle',
+    'ws-b',
+    'session:b-running',
+    'session:b-idle',
+    'ws-b-pinned',
+    'session:p-running',
+    'session:p-idle',
+    'ws-c',
+    'session:c-running',
+    'session:c-idle',
+  ])
+  // No running seat ever crossed a workspace header: it stays inside the boxes
+  // that stand between two headers.
+  expect(boxes.get('b-running')!.nextElementSibling).toBe(boxes.get('b-idle'))
+  expect(boxes.get('p-running')!.nextElementSibling).toBe(boxes.get('p-idle'))
+
+  // A continuous state flip stays inside its own segment.
+  rows.get('b-idle')?.append(phaseDot())
+  rows.get('b-running')?.querySelector(SESSION_ONGOING_SELECTOR)?.remove()
+  await frames(3)
+  expect(order(list)).toEqual(['a-idle', 'b-idle', 'b-running', 'p-running', 'p-idle', 'c-running', 'c-idle'])
+})
