@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-11",
+  "group": "fixes",
+  "order": 22,
+  "external": false,
+  "zh": "修复长思考展开状态下流式输出时顶部吸顶的思考标题随消息列位移上下跳动的问题",
+  "en": "Counter-slide top-pinned thinking disclosure headers during streamed growth so the sticky header stays stationary"
+}

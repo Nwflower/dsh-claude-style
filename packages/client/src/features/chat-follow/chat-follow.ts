@@ -3,7 +3,7 @@ import { observeMarker, observeMatches, observeSize, subscribeMutations } from '
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { motionReduced } from '../../core/prefs'
 import { createChatProcessFollow } from './process-follow'
-import { CHAT_CALL_SELECTOR, CHAT_RUNNING_SELECTOR, CONVERSATION_SCROLL_SELECTOR, FLOW_BLOCK_SELECTOR, FOLLOWING_TAIL_ATTRIBUTE, FOLLOWING_TAIL_SELECTOR, ROW_PHASE_ATTRIBUTE, RUNNING_STATE, SHIMMER_SELECTOR, STREAMING_SELECTOR, THINK_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { CHAT_CALL_SELECTOR, CHAT_RUNNING_SELECTOR, CONVERSATION_SCROLL_SELECTOR, DISCLOSURE_HEADER_SELECTOR, DISCLOSURE_ROW_SELECTOR, EXPANDED_ATTRIBUTE, FLOW_BLOCK_SELECTOR, FOLLOWING_TAIL_ATTRIBUTE, FOLLOWING_TAIL_SELECTOR, FOLLOW_THRESHOLD_PX, PROCESS_BODY_SELECTOR, PROCESS_EXPANDED_MODE_ATTRIBUTE, ROW_PHASE_ATTRIBUTE, RUNNING_STATE, SHIMMER_SELECTOR, STREAMING_SELECTOR, THINK_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { conversationColumn, conversationScroller, findFollowTailButton } from '@dsh-claude-style/engine/chat-dom'
 import { createStamp } from '@dsh-claude-style/engine/dom'
 import { motionEase, motionEaseAt, motionMs } from '../../shared/motion'
@@ -185,23 +185,24 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
   let slideHeight = 0
   /** The scroller position after the previous resize batch; null until the first report. */
   let slideScrollTop: number | null = null
-  /** The slide running now: the column's, the pinned row's counter-slide, the distance both started from, and the glide they run on. */
-  let slide: { column: Animation, row: Animation | null, from: number, duration: number } | null = null
+  /** Whether the current conversation column has ever stood at or followed the tail. */
+  let seenAtTail = false
+  /** The slide running now: the column's, the counter-slides on stuck chrome, the distance they started from, and their duration. */
+  let slide: { column: Animation, counters: Animation[], from: number, duration: number } | null = null
   /** The column the hold mark (FOLLOW_HOLD_ATTR) is on, or null while no door holds it. */
   let heldColumn: HTMLElement | null = null
   /** Whether the size subscription's first report for the current column has been taken as its baseline. */
   let slideArmed = false
-  /** When the last growth arrived, and the smoothed gap before it: the pace a slide is timed to (D85). */
+  /** When the last growth arrived, and the smoothed gap before it: the pace a slide is timed to (D95). */
   let grewAt = 0
   let grewEvery = 0
   /**
-   * The live turn's own row, kept current by the bus (D40): the stream slide
-   * counter-slides it so it stands while the column glides. The host draws the
-   * row at the flow's end and appends a hidden interaction surface after it, so
-   * the column's last child is not the row itself and the bus's list is where
-   * the row is read from.
+   * The live turn's own row and thinking rows, kept current by the bus (D40):
+   * the stream slide counter-slides both the bottom waiting row and any top-stuck
+   * expanded thinking header so neither jumps while the column glides (D95).
    */
   const runningRows = observeMatches<HTMLElement>(CHAT_RUNNING_SELECTOR)
+  const thinkRows = observeMatches<HTMLElement>(THINK_ROW_SELECTOR)
 
   /**
    * Whether content is arriving right now: the mark the host writes while it
@@ -242,12 +243,21 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
     return column.closest(FOLLOWING_TAIL_SELECTOR) !== null
   }
 
-  /** End the running slide where it is: the column and its pinned row land at rest together. */
+  /** End the running slide where it is: the column and its counter-slid elements land at rest together. */
   const stopSlide = () => {
     if (slide === null) return
     slide.column.cancel()
-    if (slide.row !== null) slide.row.cancel()
+    for (const counter of slide.counters) counter.cancel()
     slide = null
+  }
+
+  /** Whether the conversation scroller currently stands at or follows its tail. */
+  const noteTailIfNear = (scroller: Element | null) => {
+    if (seenAtTail || scroller === null) return
+    if (scroller.querySelector(FOLLOWING_TAIL_SELECTOR) !== null
+      || scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop <= FOLLOW_THRESHOLD_PX) {
+      seenAtTail = true
+    }
   }
 
   /** The distance the running slide still carries, off its own clock and curve: no style is read. */
@@ -295,18 +305,46 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
    * so it gets the same slide reversed, started in the same frame: the two
    * cancel and it stands.
    */
-  const startSlide = (column: HTMLElement, grew: number) => {
+  /** Expanded thinking headers currently stuck against the outer scroller's top edge (D95). */
+  const stuckThinkHeaders = (column: HTMLElement, scroller: Element | null): HTMLElement[] => {
+    if (scroller === null) return []
+    const found: HTMLElement[] = []
+    let scrollerTop: number | null = null
+    const all = thinkRows.all()
+    for (let i = all.length - 1; i >= 0; i -= 1) {
+      const think = all[i]
+      if (!think.hasAttribute(EXPANDED_ATTRIBUTE) || !column.contains(think)) continue
+      // Inside a capped process body, the whole body glides as one box with the column.
+      const processBody = think.closest(PROCESS_BODY_SELECTOR)
+      if (processBody !== null && processBody.closest(`[${PROCESS_EXPANDED_MODE_ATTRIBUTE}]`) === null) continue
+      const header = think.querySelector<HTMLElement>(DISCLOSURE_HEADER_SELECTOR)
+        ?? think.querySelector<HTMLElement>(DISCLOSURE_ROW_SELECTOR)
+      if (header === null || getComputedStyle(header).position !== 'sticky') continue
+      if (scrollerTop === null) scrollerTop = scroller.getBoundingClientRect().top
+      const rowRect = think.getBoundingClientRect()
+      const headerRect = header.getBoundingClientRect()
+      if (rowRect.top < scrollerTop - 0.5
+        && rowRect.bottom > scrollerTop + headerRect.height + 0.5
+        && Math.abs(headerRect.top - scrollerTop) <= 2) {
+        found.push(header)
+      }
+    }
+    return found
+  }
+
+  const startSlide = (column: HTMLElement, scroller: Element | null, grew: number) => {
     const from = Math.min(SCROLL_EASE_LEAD_PX, slideCarried() + grew)
     stopSlide()
+    const countersToAnimate: HTMLElement[] = []
+    const pinned = runningRows.all().find((row) => column.contains(row)) ?? null
+    if (pinned !== null) countersToAnimate.push(pinned)
+    for (const header of stuckThinkHeaders(column, scroller)) countersToAnimate.push(header)
     const duration = slideDuration()
     const timing = { duration, easing: motionEase(GLIDE_TOKEN) }
     const columnSlide = column.animate([{ transform: `translateY(${from}px)` }, { transform: 'translateY(0px)' }], timing)
-    // The live turn's row, from the bus's list and this column's own: the host's
-    // trailing interaction surface stands after the row, so the column's last
-    // child is not it.
-    const pinned = runningRows.all().find((row) => column.contains(row)) ?? null
-    const rowSlide = pinned === null ? null : pinned.animate([{ transform: `translateY(${-from}px)` }, { transform: 'translateY(0px)' }], timing)
-    const running = { column: columnSlide, row: rowSlide, from, duration }
+    const counterFrames = [{ transform: `translateY(${-from}px)` }, { transform: 'translateY(0px)' }]
+    const counters = countersToAnimate.map((element) => element.animate(counterFrames, timing))
+    const running = { column: columnSlide, counters, from, duration }
     columnSlide.onfinish = () => {
       if (slide === running) slide = null
     }
@@ -364,11 +402,13 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
     slideArmed = false
     slideHeight = 0
     slideScrollTop = null
+    seenAtTail = false
     // A new column is a new conversation: the pace the old one streamed at is
-    // no reading of how fast this one's pieces arrive (D85).
+    // no reading of how fast this one's pieces arrive (D95).
     grewAt = 0
     grewEvery = 0
     if (column === null) return
+    noteTailIfNear(column.closest(CONVERSATION_SCROLL_SELECTOR))
     stopSlideSize = observeSize(column, onSlideResize, { afterHost: true })
   }
 
@@ -453,6 +493,7 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
       }
     }
     const scroller = column?.closest(CONVERSATION_SCROLL_SELECTOR) ?? null
+    noteTailIfNear(scroller)
     const scrollTop = scroller?.scrollTop ?? null
     // Sibling rows can change the pin by less or more than the column grew.
     // Compensate the host's actual position write, not only the column's delta.
@@ -467,7 +508,7 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
     }
     if (!slideWanted(column)) return
     if (moved < 0) stopSlide()
-    if (moved > 0) startSlide(column, moved)
+    if (moved > 0) startSlide(column, scroller, moved)
   }
 
   /**
@@ -479,6 +520,9 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
     if (stopped || readerAway()) return
     const scroller = conversationScroller()
     if (scroller === null) return
+    noteTailIfNear(scroller)
+    // A conversation opened onto a saved historical position has never followed the tail.
+    if (!seenAtTail) return
     // More than a screen off the end is the reader reading higher up, not a follow that fell one step behind.
     if (scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop > scroller.clientHeight) return
     // A fold glide is moving the height, and the position is its business until it lands.
@@ -583,6 +627,7 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
     const contentArrived = records.some(record => record.type === 'characterData' || record.addedNodes.length > 0 || record.removedNodes.length > 0)
     if (contentArrived) {
       slideSync()
+      noteTailIfNear(conversationScroller())
       holdCheck()
     }
   }
@@ -610,6 +655,7 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
     stopSlide()
     releaseHold()
     runningRows.release()
+    thinkRows.release()
     runningMarks.release()
     slideColumn = null
     leaveOwner()
