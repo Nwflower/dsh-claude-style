@@ -19,6 +19,7 @@ import { check } from './shared.mjs'
  */
 async function hostPanel({ mod, fakeHost, request, browser, crossSite, scratchHome }) {
   console.log('\nhost half — the session overview panel')
+  const splitWrite = [{ seq: 1, type: 'tool/call', data: { callId: 'split-write', name: 'write', arguments: { file_path: 'split-note.md' } } }]
   const panelHost = fakeHost(mod, {
     fenced: true,
     home: scratchHome,
@@ -52,6 +53,7 @@ async function hostPanel({ mod, fakeHost, request, browser, crossSite, scratchHo
         },
       ],
       'child-recon': [],
+      'split-write': splitWrite,
     },
     projections: {
       'session-overview': {
@@ -72,6 +74,7 @@ async function hostPanel({ mod, fakeHost, request, browser, crossSite, scratchHo
     stored: [
       { header: { id: 'session-overview' }, revision: 'o1' },
       { header: { id: 'child-recon' }, revision: 'c1' },
+      { header: { id: 'split-write' }, revision: 's1' },
     ],
     jobs: {
       list: () => [{ id: 'bash-panel-job', label: 'sleep 9 && echo panel', status: 'completed', startedAt: 1_000, finishedAt: 9_000, progress: 'done' }],
@@ -122,6 +125,14 @@ async function hostPanel({ mod, fakeHost, request, browser, crossSite, scratchHo
   check('a dropped job keeps the output the session log carries',
     keptBody !== null && keptBody.ok === true && keptBody.value?.text === 'finished-line\n',
     JSON.stringify(keptBody?.value ?? keptBody))
+  const pendingAnswer = await request(panelHost, '/dsh-claude-style/session-panel?id=split-write', 'GET', '', browser)
+  check('a pending write is absent until its result arrives', JSON.parse(pendingAnswer.body).value.outputs.length === 0)
+  splitWrite.push({ seq: 2, type: 'tool/result', data: { message: { source: { callId: 'split-write' }, content: [] } } })
+  // The panel's answer cache lasts 1200ms; the next request must fold a new batch.
+  await new Promise(resolve => setTimeout(resolve, 1300))
+  const splitAnswer = await request(panelHost, '/dsh-claude-style/session-panel?id=split-write', 'GET', '', browser)
+  const splitOutputs = JSON.parse(splitAnswer.body).value.outputs
+  check('a write completed in a later poll remains an output', splitOutputs.length === 1 && splitOutputs[0].path === 'split-note.md', JSON.stringify(splitOutputs))
   const shapedJob = await request(panelHost, '/dsh-claude-style/session-panel?id=session-overview&job=..%2Fetc', 'GET', '', browser)
   check('a job id that names a path is refused', shapedJob.status === 400, `HTTP ${shapedJob.status}`)
 }

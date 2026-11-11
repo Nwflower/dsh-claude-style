@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-11",
+  "group": "fixes",
+  "order": 1,
+  "external": false,
+  "zh": "写文件调用和执行结果跨两次详情栏轮询到达时，成功写入的文件仍会完整列入产出",
+  "en": "Keep successfully written files in Outputs when a write call and its result arrive in separate details-rail polls"
+}

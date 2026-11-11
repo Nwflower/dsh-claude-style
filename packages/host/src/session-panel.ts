@@ -160,6 +160,8 @@ interface Entry {
   /** The last event seq folded into `outputs`. */
   cursor: number
   outputs: PanelOutput[]
+  /** Writing calls awaiting a result across polls; owned by this session's fold. */
+  writes: Map<string, string>
   /** Child sessions' facts, by child id, with the time they were read. */
   children: Map<string, { facts: ChildFacts, at: number }>
   /** Every job this session has registered, kept after the registry drops it. */
@@ -341,8 +343,9 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
 
   /** Fold the new events into the session's outputs: presented files first, then written ones. */
   function foldOutputs(entry: Entry, events: readonly PanelEvent[], directory: string | null) {
-    /** Call ids of writing calls whose result has not landed yet, with the path each named. */
-    const calls = new Map<string, string>()
+    // A poll may end between a call and its result; the session keeps the
+    // pending path until that result arrives, including unsuccessful results.
+    const calls = entry.writes
     const present = new Set(entry.outputs.map(output => output.path))
     for (const event of events) {
       const data = event.data
@@ -363,12 +366,12 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
         }
         continue
       }
-      if (event.type === 'tool/result' && data.error === undefined && data.message?.isError !== true) {
+      if (event.type === 'tool/result') {
         const callId = text(data.message?.source?.callId)
         const written = callId === null ? null : calls.get(callId)
         if (callId === null || written === undefined || written === null) continue
         calls.delete(callId)
-        if (present.has(written)) continue
+        if (data.error !== undefined || data.message?.isError === true || present.has(written)) continue
         present.add(written)
         entry.outputs.push(outputOf(written, 'written', directory))
       }
@@ -612,6 +615,7 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
       at: 0,
       cursor: -1,
       outputs: [],
+      writes: new Map(),
       children: new Map(),
       jobs: new Map(),
       jobOutputs: new Map(),
