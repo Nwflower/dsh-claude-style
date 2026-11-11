@@ -13,7 +13,7 @@ import { createRoot } from 'react-dom/client'
 import { SessionPanelRail } from './session-panel-rail'
 import { SessionPanelButton } from './session-panel-button'
 import { copy } from './copy'
-import { hostSlots } from '@dsh-claude-style/engine/host'
+import { registerSlotEntries } from '@dsh-claude-style/engine/host'
 import { clearPanelContext, setPanelContext } from './session-panel-host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 
@@ -21,19 +21,15 @@ export function install(ctx: HostContext) {
   setPanelContext(ctx)
   // The header's control joins the conversation's utilities; a host without
   // that seat keeps the rail's own close control.
-  let fiber: { dispose?(): void } | null | undefined = null
-  if (typeof ctx.inject === 'function') {
-    fiber = ctx.inject(['slots'], (scope) => {
-      const slots = hostSlots(scope)
-      if (slots === null) return
-      scope.effect(() => slots.inject('conversation.session.header.utilities', () => slots.register({
-        name: 'conversation.session.header.utilities',
-        id: 'claude-style-session-panel',
-        order: 85,
-        label() { return copy('detailsToggle') },
-      }, SessionPanelButton)), 'dsh-claude-style: details control')
-    }) as unknown as { dispose?(): void } | null | undefined
-  }
+  const fiber = registerSlotEntries(ctx, [{
+    options: {
+      name: 'conversation.session.header.utilities',
+      id: 'claude-style-session-panel',
+      order: 85,
+      label() { return copy('detailsToggle') },
+    },
+    component: SessionPanelButton,
+  }], 'dsh-claude-style: details control')
   const container = document.createElement('div')
   container.className = 'dsh-claude-details-root'
   document.body.append(container)

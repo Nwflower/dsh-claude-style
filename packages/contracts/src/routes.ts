@@ -48,5 +48,5 @@ export const WEBFONTS_PATH = `${ROUTE_PREFIX}/webfonts`
 /** `GET` reports system-cue capability and `POST` plays one using OS files (D89). */
 export const SOUND_PATH = `${ROUTE_PREFIX}/sound`
 
-/** `?id=` selects the session; the answer is the session overview panel's folded data (D91). */
+/** `?id=` selects the session; the answer is the session overview panel's folded data (D94). */
 export const SESSION_PANEL_PATH = `${ROUTE_PREFIX}/session-panel`

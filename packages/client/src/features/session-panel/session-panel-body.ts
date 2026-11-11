@@ -11,7 +11,7 @@ import type { PanelBackground, PanelChange, PanelContext, PanelEnvironment, Pane
 
 const h = React.createElement
 
-/** The props the host's right-column tab slot hands its body: the session the tab belongs to. */
+/** The conversation session whose details the rail's body reads. */
 export interface PanelBodyProps {
   sessionId?: unknown
 }
@@ -49,7 +49,7 @@ function PanelView({ sessionId }: { sessionId: string }) {
     value.environment === null ? null : h(EnvironmentSection, { key: 'environment', environment: value.environment }),
     h(ContextSection, { key: 'context', context: value.context }),
     value.stats === null || value.stats === undefined ? null : h(StatsSection, { key: 'stats', stats: value.stats }),
-    value.outputs.length === 0 ? null : h(OutputsSection, { key: 'outputs', sessionId, outputs: value.outputs }),
+    value.outputs.length === 0 ? null : h(OutputsSection, { key: 'outputs', sessionId, directory: value.environment?.directory, outputs: value.outputs }),
     value.changes.length === 0 ? null : h(ChangesSection, { key: 'changes', changes: value.changes }),
     hasBackgroundWork(value.background) ? h(BackgroundSection, { key: 'background', sessionId, background: value.background }) : null)
 }
@@ -65,7 +65,7 @@ function Section({ title, children }: { title: string, children?: React.ReactNod
 const FOLD_LIMIT = 2
 
 /**
- * One section's rows, folded after three while the reader has not asked for the
+ * One section's rows, folded after two while the reader has not asked for the
  * rest: the panel is a summary, and a long list would push every section after
  * it out of the column. A row opened in place (a job's output) folds with the
  * rows it belongs to.
@@ -308,7 +308,7 @@ function useBillingCurrency() {
 }
 
 /** The files the session presented or wrote. */
-function OutputsSection({ sessionId, outputs }: { sessionId: string, outputs: readonly PanelOutput[] }) {
+function OutputsSection({ sessionId, directory, outputs }: { sessionId: string, directory?: string, outputs: readonly PanelOutput[] }) {
   return h(Section, { title: copy('outputs') },
     h(FoldedList, { rows: outputs.map(output => h(Row, {
       key: output.path,
@@ -316,7 +316,7 @@ function OutputsSection({ sessionId, outputs }: { sessionId: string, outputs: re
       title: output.name,
       detail: output.display === output.name ? undefined : output.display,
       side: h(Chip, { text: copy(output.origin === 'presented' ? 'presented' : 'written') }),
-      onClick: () => openPanelFile(sessionId, output.path),
+      onClick: () => openPanelFile(sessionId, directory, output.path),
     })) }))
 }
 

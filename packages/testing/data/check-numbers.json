@@ -474,6 +474,15 @@
       ],
       "a closed rail stops asking the host": [
         0
+      ],
+      "the details rail stays inside the viewport in both themes": [
+        0,
+        1,
+        2,
+        300
+      ],
+      "an output opens its file in the host preview without another browser tab": [
+        0
       ]
     },
     "packages/testing/scenarios/sidebar-peek.mjs": {

@@ -323,7 +323,7 @@ body[data-dsh-claude-style] .dsh-claude-panel-job-output {
 }
 
 /* The host's own background-work chips beside the title step aside while the
-   overview is installed: the same work is the panel's Background tasks section,
+   details rail stands: the same work is the panel's Background tasks section,
    where a row opens the child session or the job's output (D94). The team and
    preset chips keep their seats. */
 body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-claude-part~="header-actions"] button[aria-haspopup="tree"],
@@ -331,7 +331,7 @@ body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-claude-part
   display: none;
 }
 
-/* The control that unfolds a section's rows past the third. */
+/* The control that unfolds a section's rows past the second. */
 body[data-dsh-claude-style] .dsh-claude-panel-more {
   box-sizing: border-box;
   width: 100%;

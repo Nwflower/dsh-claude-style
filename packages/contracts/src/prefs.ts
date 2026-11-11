@@ -311,7 +311,7 @@ export const PREFS = {
   messageActions: { type: 'boolean', default: true },
   viewTabs: { type: 'boolean', default: true },
   headerBand: { type: 'boolean', default: true },
-  /** Whether the right column offers the session overview panel (D91). */
+  /** Whether the conversation offers its own session details rail (D94). */
   sessionPanel: { type: 'boolean', default: true },
   /** The legacy choices all mean on except `off`. */
   chatAnimations: { type: 'boolean', default: true, legacy: { [CHAT_ANIMATIONS_OFF]: false, enhanced: true, redraw: true } },

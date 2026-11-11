@@ -3,11 +3,10 @@
  * host's own preview and a subagent or Team member's session in the
  * conversation view.
  *
- * The install hands the host context over here because the rail is a React
- * component the host owns the lifetime of: it reads the seats through this one
- * place instead of carrying a copy of the install's closure.
+ * The install hands its host context over for the lifetime of the rail's React
+ * root. Row actions read the host through this one place; teardown releases it.
  */
-import { hostUiWorkspace } from '@dsh-claude-style/engine/host'
+import { hostUiWorkspace, openHostFile } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 
 /** The host context this generation runs on, for the seats behind the panel's rows. */
@@ -32,7 +31,7 @@ export function openPanelSession(sessionId: string) {
 }
 
 /** Open one produced file in the host's own preview page. */
-export function openPanelFile(sessionId: string, path: string) {
-  const address = path.split('/').map(encodeURIComponent).join('/')
-  window.open(`dsh-resource://file/session/${sessionId}/${address}`, '_blank', 'noopener')
+export function openPanelFile(sessionId: string, directory: string | undefined, path: string) {
+  if (host === null) throw new Error('the session details rail is not installed')
+  openHostFile(host, sessionId, directory, path)
 }

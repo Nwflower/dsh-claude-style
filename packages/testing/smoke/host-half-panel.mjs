@@ -4,6 +4,7 @@
  * output it carries, and the fence and id checks every read of the user's own
  * session runs (D75, D94).
  */
+import { resolve } from 'node:path'
 import { check } from './shared.mjs'
 
 /**
@@ -87,7 +88,7 @@ async function hostPanel({ mod, fakeHost, request, browser, crossSite, scratchHo
   const panelBody = panelAnswer.status === 200 ? JSON.parse(panelAnswer.body) : null
   check('the overview answers the working directory, the context reading and the presented file',
     panelBody !== null && panelBody.ok === true &&
-      panelBody.value?.environment?.directory === '/panel/does-not-exist' &&
+      panelBody.value?.environment?.directory === resolve('/panel/does-not-exist') &&
       panelBody.value?.context?.used === 32_000 && panelBody.value?.context?.window === 1_000_000 &&
       panelBody.value?.outputs?.length === 1 && panelBody.value.outputs[0].name === 'notes.md' &&
       panelBody.value.outputs[0].origin === 'presented' && panelBody.value.outputs[0].kind === 'document' &&

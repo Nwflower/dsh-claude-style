@@ -94,6 +94,7 @@ const railMounted = (page) => page.evaluate(() => document.querySelector('.dsh-c
  * @returns the scenario body the runner drives.
  */
 export function sessionPanelScenario({ check }) {
+  const commandTool = process.platform === 'win32' ? 'pwsh' : 'bash'
   return {
     script: {
       conversation: [
@@ -101,13 +102,13 @@ export function sessionPanelScenario({ check }) {
         { thinking: ['Leave the rail four files of the turn.'], tool: { name: 'write', input: { file_path: '{{workspace}}/panel-note.md', content: '# Panel note\n\nA file the session rail lists.\n' } } },
         { thinking: ['Second file.'], tool: { name: 'write', input: { file_path: '{{workspace}}/panel-two.md', content: '# Two\n' } } },
         { thinking: ['Third file.'], tool: { name: 'write', input: { file_path: '{{workspace}}/panel-three.md', content: '# Three\n' } } },
-        { thinking: ['Fourth file.'], tool: { name: 'write', input: { file_path: '{{workspace}}/panel-four.md', content: '# Four\n' } } },
+        { thinking: ['Fourth file.'], tool: { name: 'write', input: { file_path: '{{workspace}}/panel four.md', content: '# Four\n' } } },
         { thinking: ['The files are written.'], text: ['Wrote four files.\n'] },
         // The second prompt runs three commands: the rail keeps all three in
         // its job history, and the third folds behind the first two.
-        { thinking: ['First command.'], tool: { name: 'bash', input: { command: 'echo panel-command-one', description: 'print the first rail line' } } },
-        { thinking: ['Second command.'], tool: { name: 'bash', input: { command: 'echo panel-command-two', description: 'print the second rail line' } } },
-        { thinking: ['Third command.'], tool: { name: 'bash', input: { command: 'echo panel-command-three', description: 'print the third rail line' } } },
+        { thinking: ['First command.'], tool: { name: commandTool, input: { command: 'echo panel-command-one', description: 'print the first rail line' } } },
+        { thinking: ['Second command.'], tool: { name: commandTool, input: { command: 'echo panel-command-two', description: 'print the second rail line' } } },
+        { thinking: ['Third command.'], tool: { name: commandTool, input: { command: 'echo panel-command-three', description: 'print the third rail line' } } },
         { thinking: ['The commands ran.'], text: ['Ran three commands.\n'] },
       ],
       auxiliary: { text: ['Scripted rail turn'] },
@@ -139,7 +140,7 @@ export function sessionPanelScenario({ check }) {
       await sendPrompt(page, 'Run the three commands.')
       await waitForTurn(page)
       await page.waitForSelector('.dsh-claude-details', { timeout: 20000 })
-      await page.waitForFunction(() => /panel-four\.md/.test(document.querySelector('.dsh-claude-details')?.textContent ?? ''), undefined, { timeout: 30000 })
+      await page.waitForFunction(() => /panel four\.md/.test(document.querySelector('.dsh-claude-details')?.textContent ?? ''), undefined, { timeout: 30000 })
       // Background tasks catches up on its own poll; the third command starts
       // folded, so the second one is what says it arrived.
       await page.waitForFunction(() => /panel-command-three/.test(document.querySelector('.dsh-claude-details')?.textContent ?? ''), undefined, { timeout: 30000 })
@@ -246,6 +247,28 @@ export function sessionPanelScenario({ check }) {
       await pressDetails(page)
       await page.waitForTimeout(2500)
       notes.closedAsks = notes.panelAsks.length - quiet
+      // The output opens through the host's preview controller without a browser tab.
+      await pressDetails(page)
+      notes.themes = []
+      for (const theme of ['light', 'dark']) {
+        await page.evaluate(value => document.body.toggleAttribute('data-ds-dark-theme', value === 'dark'), theme)
+        await page.waitForTimeout(150)
+        notes.themes.push(await page.evaluate(value => {
+          const rail = document.querySelector('.dsh-claude-details')
+          const box = rail.getBoundingClientRect()
+          return { theme: value, width: box.width, inside: box.left >= 0 && box.right <= innerWidth, background: getComputedStyle(rail).backgroundColor }
+        }, theme))
+        if (context.out !== undefined) await page.screenshot({ path: `${context.out}/session-panel-${theme}.png` })
+      }
+      const pagesBefore = page.context().pages().length
+      const outputs = page.locator('.dsh-claude-details .dsh-claude-panel-section').filter({ hasText: /产出|Outputs/ }).first()
+      await outputs.locator('button.dsh-claude-panel-row').filter({ hasText: 'panel four.md' }).click()
+      await page.waitForFunction(() => {
+        const preview = document.querySelector('[data-sidebar-right-open]')
+        return preview !== null && /panel four\.md/.test(preview.textContent ?? '') && /Four/.test(preview.textContent ?? '')
+      }, undefined, { timeout: 15000 })
+      notes.filePreview = await page.evaluate(() => document.querySelector('[data-sidebar-right-open]')?.textContent ?? '')
+      notes.extraPages = page.context().pages().length - pagesBefore
       if (context.out !== undefined) await page.screenshot({ path: `${context.out}/session-panel.png` })
     },
 
@@ -276,7 +299,7 @@ export function sessionPanelScenario({ check }) {
             anyOf(words('statsModelTime'), (rail.stats ?? []).join('|')) && anyOf(words('statsCost'), (rail.stats ?? []).join('|')),
           JSON.stringify((rail.stats ?? []).slice(0, 12))),
         check('Outputs lists the files the turn wrote and folds past its second row',
-          (notes.fold?.rows ?? 0) === 2 && /panel-four\.md/.test(rail.outputs ?? '') && notes.fold?.more !== null,
+          (notes.fold?.rows ?? 0) === 2 && /panel four\.md/.test(rail.outputs ?? '') && notes.fold?.more !== null,
           JSON.stringify(notes.fold ?? null)),
         check('the fold control shows the rest and puts them away again', notes.fold?.expanded === 4 && notes.fold?.collapsed === 2, JSON.stringify({ expanded: notes.fold?.expanded, collapsed: notes.fold?.collapsed })),
         check('Changes stays off the page without a change request', !anyOf(changesWords, (rail.headings ?? []).join('|')), JSON.stringify(rail.headings ?? null)),
@@ -311,6 +334,12 @@ export function sessionPanelScenario({ check }) {
           notes.reopened === true && (notes.utilitiesReopened ?? []).find((entry) => /details|详情/i.test(entry.label ?? ''))?.pressed === 'true',
           JSON.stringify({ reopened: notes.reopened, utilities: notes.utilitiesReopened ?? null })),
         check('a closed rail stops asking the host', notes.closedAsks === 0, JSON.stringify({ asks: notes.closedAsks })),
+        check('the details rail stays inside the viewport in both themes',
+          notes.themes?.length === 2 && notes.themes.every(theme => theme.width === 300 && theme.inside) && notes.themes[0].background !== notes.themes[1].background,
+          JSON.stringify(notes.themes)),
+        check('an output opens its file in the host preview without another browser tab',
+          /panel four\.md/.test(notes.filePreview ?? '') && /Four/.test(notes.filePreview ?? '') && notes.extraPages === 0,
+          JSON.stringify({ preview: notes.filePreview, extraPages: notes.extraPages })),
       ]
     },
   }

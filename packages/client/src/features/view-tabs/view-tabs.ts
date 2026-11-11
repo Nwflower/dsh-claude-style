@@ -315,7 +315,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The header whose title the last placement capped, and the cap it holds. */
   let cappedHeader: HTMLElement | null = null
   let cappedAt: number | null = null
-  /** Whether the session overview was installed when the last placement was written. */
+  /** Whether the session details rail stood open when the last placement was written. */
   let placedMark: boolean | null = null
   /** The header whose title the pass follows, and the subscription on the title's own words. */
   let titledHeader: HTMLElement | null = null
