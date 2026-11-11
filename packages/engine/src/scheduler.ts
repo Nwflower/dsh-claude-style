@@ -3,6 +3,7 @@ import type { HostContext } from './host'
 import { observeSize, subscribeMutations } from './bus'
 import { requestFrame } from './frame'
 import { closestFrom } from './dom'
+import { PHASE_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import { skin } from './skin'
 
 /**
@@ -411,9 +412,11 @@ export function installScheduler<Name extends string>(ctx: HostContext, ui: Sche
   schedule()
 
   // Copy that follows the clock (the hero greeting rolls over on the hour) has
-  // no DOM change to wake a pass. The syncs skip identical writes, so this
-  // cannot feed the observer.
-  const clockTimer = setInterval(() => schedule(), 60000)
+  // no DOM change to wake a pass; skip background tabs and active conversations.
+  const clockTimer = setInterval(() => {
+    if (document.hidden) return
+    schedule()
+  }, 60000)
 
   return () => {
     // A pass already requested would run against torn-down features and build

@@ -282,7 +282,7 @@ body[data-dsh-claude-style] .dsh-claude-model-cell {
 }
 /* A description makes the row two lines — 16px name, 2px, 14px description —
    inside 1px of padding above and below, so 34px is its floor. */
-body[data-dsh-claude-style] .dsh-claude-model-option:has(.dsh-claude-model-desc) {
+body[data-dsh-claude-style] .dsh-claude-model-option.dsh-claude-model-described {
   min-height: 34px;
 }
 body[data-dsh-claude-style] .dsh-claude-model-option:hover,

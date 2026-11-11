@@ -40,12 +40,20 @@ export function install(_ctx: HostContext, _ui: FeatureUi<typeof manifest>) {
   /** The live answer row an element belongs to, or null where it belongs to none. */
   const answerRowOf = (node: Element) => node.closest<HTMLElement>(CHAT_ANSWER_ROW_SELECTOR)
 
-  /** The newest answer row in the column: the one a starting answer streams into. */
+  /** The newest answer row in the column, walked from the tail instead of scanning the transcript. */
   const liveAnswer = () => {
     const column = conversationColumn()
     if (column === null) return null
-    const rows = column.querySelectorAll<HTMLElement>(CHAT_ANSWER_ROW_SELECTOR)
-    return rows.length === 0 ? null : rows[rows.length - 1]!
+    let scope: Element = column
+    if (scope.childElementCount === 1 && scope.firstElementChild !== null && !scope.firstElementChild.matches(CHAT_ANSWER_ROW_SELECTOR)) {
+      scope = scope.firstElementChild
+    }
+    for (let child = scope.lastElementChild; child !== null; child = child.previousElementSibling) {
+      if (child instanceof HTMLElement && child.matches(CHAT_ANSWER_ROW_SELECTOR)) return child
+      const inside = child.querySelectorAll<HTMLElement>(CHAT_ANSWER_ROW_SELECTOR)
+      if (inside.length > 0) return inside[inside.length - 1]!
+    }
+    return null
   }
 
   /** Drop the growth watch (a reader's own move, a finished answer, a new anchor, teardown). */

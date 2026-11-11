@@ -105,7 +105,7 @@ body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [data-dsh-claude-pa
 }
 /* While the sidebar stands wide the block speaks for itself, so its copy in the
    account menu stands down: one control appears in one place. */
-body[data-dsh-claude-style]:not([data-dsh-claude-holds~="sidebar-rail"]) .dsh-claude-popover-embed:has(> section) {
+body[data-dsh-claude-style]:not([data-dsh-claude-holds~="sidebar-rail"]) .dsh-claude-popover-embed.dsh-claude-popover-embed-section {
   display: none;
 }
 

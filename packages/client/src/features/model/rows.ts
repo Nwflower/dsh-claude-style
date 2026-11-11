@@ -249,7 +249,10 @@ export function createModelRows(options: {
     // line has its own switch under the picker's settings row, and a row built
     // without it is the same row with the copy block left as the name alone.
     const desc = withDescription && readPrefs().modelDescriptions !== false ? modelDescription(ctx, group.id, model) : ''
-    if (desc) copy.appendChild(buildElement('span', 'dsh-claude-model-desc', desc))
+    if (desc) {
+      item.classList.add('dsh-claude-model-described')
+      copy.appendChild(buildElement('span', 'dsh-claude-model-desc', desc))
+    }
     // The peak rate meter rides in front of the check: the row is compared by
     // its rate before it is picked, and a model whose provider bills on no
     // clock carries no badge at all (packages/client/src/features/peakrate/).

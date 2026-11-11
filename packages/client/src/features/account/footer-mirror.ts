@@ -462,6 +462,7 @@ export function createFooterMirror(options: {
       embed.setAttribute('data-embed-html', html)
       while (embed.firstChild) embed.removeChild(embed.firstChild)
       embed.appendChild(clone)
+      embed.classList.toggle('dsh-claude-popover-embed-section', clone.tagName === 'SECTION')
     }
   }
 

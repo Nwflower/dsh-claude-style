@@ -31,3 +31,38 @@ export function isChatFoldToggle() {
 export function chatFoldPressReading() {
   return chatFoldToggleDepth > 0 ? pressReading : null
 }
+
+interface FoldReaderSubscriber {
+  onInteract(event: Event): void
+  onCompositionEnd(): void
+}
+
+const foldSubscribers = new Set<FoldReaderSubscriber>()
+
+function routeFoldInteract(event: Event) {
+  for (const subscriber of foldSubscribers) subscriber.onInteract(event)
+}
+
+function routeFoldCompositionEnd() {
+  for (const subscriber of foldSubscribers) subscriber.onCompositionEnd()
+}
+
+/** Share one capture-phase click/keydown/compositionend hub across fold modules. */
+export function subscribeFoldReaderEvents(
+  onInteract: (event: Event) => void,
+  onCompositionEnd: () => void,
+) {
+  const entry: FoldReaderSubscriber = { onInteract, onCompositionEnd }
+  if (foldSubscribers.size === 0) {
+    document.addEventListener('click', routeFoldInteract, true)
+    document.addEventListener('keydown', routeFoldInteract, true)
+    document.addEventListener('compositionend', routeFoldCompositionEnd, true)
+  }
+  foldSubscribers.add(entry)
+  return () => {
+    if (!foldSubscribers.delete(entry) || foldSubscribers.size > 0) return
+    document.removeEventListener('click', routeFoldInteract, true)
+    document.removeEventListener('keydown', routeFoldInteract, true)
+    document.removeEventListener('compositionend', routeFoldCompositionEnd, true)
+  }
+}

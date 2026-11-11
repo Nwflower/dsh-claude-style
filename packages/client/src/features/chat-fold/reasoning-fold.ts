@@ -1,6 +1,6 @@
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
-import { beginChatFoldToggle, endChatFoldToggle, isChatFoldToggle } from './fold-toggle'
+import { beginChatFoldToggle, endChatFoldToggle, isChatFoldToggle, subscribeFoldReaderEvents } from './fold-toggle'
 import type { FoldPressReading } from './fold-toggle'
 import { composerComposing } from '../../shared/composer-caret'
 import { foldControlAt, foldControlAtBottom, foldExpandedBody } from './fold-glide-parts'
@@ -152,15 +152,11 @@ export function createReasoningFold(onRows?: (rows: readonly Element[]) => void)
     attributes: true,
     attributeFilter: [ROW_PHASE_ATTRIBUTE, EXPANDED_ATTRIBUTE],
   }, onRecords)
-  document.addEventListener('click', rememberReaderTouched, true)
-  document.addEventListener('keydown', rememberReaderTouched, true)
-  document.addEventListener('compositionend', onCompositionEnd, true)
+  const stopReaderEvents = subscribeFoldReaderEvents(rememberReaderTouched, onCompositionEnd)
   syncEveryRow()
 
   return () => {
     stopMutations()
-    document.removeEventListener('click', rememberReaderTouched, true)
-    document.removeEventListener('keydown', rememberReaderTouched, true)
-    document.removeEventListener('compositionend', onCompositionEnd, true)
+    stopReaderEvents()
   }
 }

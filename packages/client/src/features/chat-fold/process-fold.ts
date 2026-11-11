@@ -1,6 +1,6 @@
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
-import { beginChatFoldToggle, endChatFoldToggle, isChatFoldToggle } from './fold-toggle'
+import { beginChatFoldToggle, endChatFoldToggle, isChatFoldToggle, subscribeFoldReaderEvents } from './fold-toggle'
 import { writeScroll } from '@dsh-claude-style/engine/scroll-owner'
 import { captureComposerCaret, composerComposing, focusKeepingComposerCaret } from '../../shared/composer-caret'
 import { CHAT_FLOW_SELECTOR, CHAT_TURN_ATTRIBUTE, CONVERSATION_SCROLL_SELECTOR, FOLLOW_THRESHOLD_PX, PROCESS_ACTIVITY_SELECTOR, PROCESS_BODY_SELECTOR, PROCESS_EXPANDED_MODE_ATTRIBUTE, PROCESS_GROUP_SELECTOR, RUNNING_STATE, SHIMMER_ATTRIBUTE, SHIMMER_SELECTOR, STREAMING_ATTRIBUTE, ASSISTANT_STEP_KIND, FLOW_KIND_ATTRIBUTE, TURN_PROCESS_MEMBER_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
@@ -249,15 +249,11 @@ export function createProcessFold() {
     // adds or removes it, and that batch has to be scanned again.
     attributeFilter: [SHIMMER_ATTRIBUTE, 'hidden', PROCESS_EXPANDED_MODE_ATTRIBUTE, STREAMING_ATTRIBUTE, TURN_PROCESS_MEMBER_ATTRIBUTE],
   }, onRecords)
-  document.addEventListener('click', rememberReaderTouched, true)
-  document.addEventListener('keydown', rememberReaderTouched, true)
-  document.addEventListener('compositionend', onCompositionEnd, true)
+  const stopReaderEvents = subscribeFoldReaderEvents(rememberReaderTouched, onCompositionEnd)
   requestFrame({ write() { syncEveryGroup() } })
 
   return () => {
     stopMutations()
-    document.removeEventListener('click', rememberReaderTouched, true)
-    document.removeEventListener('keydown', rememberReaderTouched, true)
-    document.removeEventListener('compositionend', onCompositionEnd, true)
+    stopReaderEvents()
   }
 }

@@ -38,7 +38,7 @@ body[data-dsh-claude-style] [data-dsh-claude-question-surface] > header {
   display: none;
 }
 
-body[data-dsh-claude-style] [data-dsh-claude-question-surface] > header:has(h2) {
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] > header.dsh-claude-question-titled {
   display: flex;
   padding: 12px 48px 12px 16px;
   background: var(--dsh-claude-table-head);
@@ -265,7 +265,7 @@ body[data-dsh-claude-style] [data-dsh-claude-question-surface] > footer {
   padding: 8px 16px 12px;
 }
 
-body[data-dsh-claude-style] [data-dsh-claude-question-surface] > footer > div:first-child:has(> button:first-child:disabled):has(> button:last-child:disabled) {
+body[data-dsh-claude-style] [data-dsh-claude-question-surface] > footer > div.dsh-claude-question-pager-idle {
   display: none;
 }
 

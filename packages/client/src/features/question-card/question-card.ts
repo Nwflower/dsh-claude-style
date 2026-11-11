@@ -23,6 +23,8 @@ const SHORTCUT_CLASS = 'dsh-claude-question-submit-shortcut'
 const SURFACE_ATTR = 'data-dsh-claude-question-surface'
 const RELOCATED_ATTR = 'data-dsh-claude-question-relocated'
 const FLOW_ITEM_CLASS = 'dsh-claude-question-flow-item'
+const TITLED_HEADER_CLASS = 'dsh-claude-question-titled'
+const PAGER_IDLE_CLASS = 'dsh-claude-question-pager-idle'
 
 interface Placement {
   surface: HTMLElement
@@ -151,9 +153,27 @@ export function createQuestionCards() {
     }
   }
 
-  function syncSubmitShortcut(surface: HTMLElement) {
+  function syncSurfaceChrome(surface: HTMLElement) {
+    const header = surface.querySelector<HTMLElement>(':scope > header')
+    if (header !== null) header.classList.toggle(TITLED_HEADER_CLASS, header.querySelector('h2') !== null)
+    const pager = surface.querySelector<HTMLElement>(':scope > footer > div:first-child')
+    if (pager !== null) {
+      const first = pager.querySelector(':scope > button:first-child')
+      const last = pager.querySelector(':scope > button:last-child')
+      const bothDisabled = first instanceof HTMLButtonElement && last instanceof HTMLButtonElement && first.disabled && last.disabled
+      pager.classList.toggle(PAGER_IDLE_CLASS, bothDisabled)
+    }
     const submit = surface.querySelector(':scope > footer > div:last-child > button:not([aria-label]):last-child')
     if (submit !== null && submit.querySelector(`.${SHORTCUT_CLASS}`) === null) submit.append(buildSubmitShortcut())
+  }
+
+  let choiceBound = false
+  function syncChoiceListener() {
+    const wanted = placements.size > 0
+    if (wanted === choiceBound) return
+    choiceBound = wanted
+    if (wanted) document.addEventListener('click', onChoice)
+    else document.removeEventListener('click', onChoice)
   }
 
   function onChoice(event: MouseEvent) {
@@ -174,8 +194,6 @@ export function createQuestionCards() {
     for (const row of surface.querySelectorAll<HTMLElement>(CUSTOM_ROW_SELECTOR)) customSelected.delete(row)
     queue(sync)
   }
-  document.addEventListener('click', onChoice)
-
   function sync() {
     if (released) return
     const seenRows = new Set<HTMLElement>()
@@ -185,7 +203,7 @@ export function createQuestionCards() {
       if (placement === null) continue
       seenFrames.add(frame)
       syncCustomAnswers(placement.surface, seenRows)
-      syncSubmitShortcut(placement.surface)
+      syncSurfaceChrome(placement.surface)
     }
     for (const [frame, placement] of placements) {
       if (seenFrames.has(frame)) continue
@@ -193,6 +211,7 @@ export function createQuestionCards() {
       releaseComposer(placement.seat, true)
       placements.delete(frame)
     }
+    syncChoiceListener()
     for (const [row, label] of labels) {
       if (seenRows.has(row)) continue
       label.remove()
@@ -209,11 +228,16 @@ export function createQuestionCards() {
       released = true
       for (const cancel of pendingFrames) cancel()
       pendingFrames.clear()
-      document.removeEventListener('click', onChoice)
+      if (choiceBound) {
+        document.removeEventListener('click', onChoice)
+        choiceBound = false
+      }
       for (const [frame, placement] of placements) {
         frame.append(placement.surface)
         frame.removeAttribute(RELOCATED_ATTR)
         placement.surface.removeAttribute(SURFACE_ATTR)
+        placement.surface.querySelector(':scope > header')?.classList.remove(TITLED_HEADER_CLASS)
+        placement.surface.querySelector(':scope > footer > div:first-child')?.classList.remove(PAGER_IDLE_CLASS)
         placement.surface.querySelectorAll(`.${SHORTCUT_CLASS}`).forEach(shortcut => shortcut.remove())
         placement.mount.remove()
         releaseComposer(placement.seat, false)
