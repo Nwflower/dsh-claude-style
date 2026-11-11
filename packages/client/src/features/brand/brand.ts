@@ -1,4 +1,4 @@
-import { BRAND_INK_ACCENT, BRAND_INK_ATTR, BRAND_INK_ORIGINAL, BRAND_INK_TEXT, CUSTOM_MARK_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_TINT_ATTR, CUSTOM_WORD_ATTR, CUSTOM_WORD_IMAGE, CUSTOM_WORD_TEXT, PALETTE_COLORING_CUSTOM } from '../../constants'
+import { BRAND_INK_ACCENT, BRAND_INK_ATTR, BRAND_INK_ORIGINAL, BRAND_INK_TEXT, CUSTOM_MARK_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_TINT_ATTR, CUSTOM_WORD_ATTR, CUSTOM_WORD_IMAGE, CUSTOM_WORD_TEXT, INLINE_CODE_COLOR_ATTR, INLINE_CODE_COLOR_CLASSIC, PALETTE_COLORING_CUSTOM } from '../../constants'
 import { readPrefs, subscribePrefs } from '../../core/prefs'
 import { loadBrandImages, readBrandImages, resetBrandImages, subscribeBrandImages } from '../../shared/custom-brand'
 import { PALETTE_CARDS } from 'virtual:dsh-claude-style/generated'
@@ -38,7 +38,7 @@ const PROPERTIES = [
   MARK_PROPERTY, WORD_PROPERTY, WORD_RATIO_PROPERTY, NAME_PROPERTY,
   ACCENT_PROPERTY, ACCENT_INK_PROPERTY, CANVAS_LIGHT_PROPERTY, CANVAS_DARK_PROPERTY, CODE_LIGHT_PROPERTY, CODE_DARK_PROPERTY, LOGO_INK_PROPERTY,
 ]
-const ATTRIBUTES = [CUSTOM_MARK_ATTR, CUSTOM_WORD_ATTR, CUSTOM_TINT_ATTR, CUSTOM_PALETTE_ATTR, BRAND_INK_ATTR]
+const ATTRIBUTES = [CUSTOM_MARK_ATTR, CUSTOM_WORD_ATTR, CUSTOM_TINT_ATTR, CUSTOM_PALETTE_ATTR, BRAND_INK_ATTR, INLINE_CODE_COLOR_ATTR]
 
 /** The two inks text on an accent fill can take: the dark and the light canvas (docs/STYLE.md). */
 const INK_DARK = '#191919'
@@ -96,6 +96,8 @@ export function install() {
     attribute(CUSTOM_TINT_ATTR, prefs.brandInk !== BRAND_INK_ORIGINAL && images ? '' : null)
     attribute(BRAND_INK_ATTR, prefs.brandInk === BRAND_INK_ACCENT ? BRAND_INK_ACCENT : prefs.brandInk === BRAND_INK_TEXT ? BRAND_INK_TEXT : null)
     attribute(CUSTOM_PALETTE_ATTR, custom ? '' : null)
+    // A reader-authored card keeps its own code colour even if classic was picked earlier.
+    attribute(INLINE_CODE_COLOR_ATTR, !custom && prefs.inlineCodeColor === INLINE_CODE_COLOR_CLASSIC ? INLINE_CODE_COLOR_CLASSIC : null)
     property(ACCENT_PROPERTY, custom ? accent : null)
     property(ACCENT_INK_PROPERTY, custom ? accentInk(accent) : null)
     property(CANVAS_LIGHT_PROPERTY, custom ? (prefs.customCanvasLight === '' ? card.canvas.light : prefs.customCanvasLight) : null)

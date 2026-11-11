@@ -26,6 +26,11 @@ export const PALETTE_COLORING_BRAND = 'brand'
 export const PALETTE_COLORING_CUSTOM = 'custom'
 export const PALETTE_COLORINGS = [PALETTE_COLORING_BRAND, ...BRANDS, PALETTE_COLORING_CUSTOM] as const
 
+/** Inline code follows the active card or restores Claude 0.19.7's warm ink. */
+export const INLINE_CODE_COLOR_PALETTE = 'palette'
+export const INLINE_CODE_COLOR_CLASSIC = 'classic'
+export const INLINE_CODE_COLORS = [INLINE_CODE_COLOR_PALETTE, INLINE_CODE_COLOR_CLASSIC] as const
+
 /** How the brand art is painted: in its own colours, in the accent, or as a shape in the text colour. */
 export const BRAND_INK_ORIGINAL = 'original'
 export const BRAND_INK_ACCENT = 'accent'
@@ -246,6 +251,7 @@ export const PREFS = {
   customCanvasLight: { type: 'color', default: '' },
   customCanvasDark: { type: 'color', default: '' },
   customCode: { type: 'color', default: '' },
+  inlineCodeColor: { type: 'choice', values: INLINE_CODE_COLORS, default: INLINE_CODE_COLOR_PALETTE },
   motion: { type: 'choice', values: MOTION_MODES, default: MOTION_SYSTEM },
   statusMotion: { type: 'choice', values: STATUS_MOTIONS, default: STATUS_MOTION_SWEEP },
   /** The two legacy words: `precise` is on and `simple` off. */

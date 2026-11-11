@@ -16,7 +16,7 @@ export default {
     check('the settings section registers with the settings dialog', settings.registered === true, JSON.stringify(settings.registered))
     const expected = {
       general: ['brand', 'username', 'pageZoom', 'interfaceFontSize', 'autoPopover', 'sodium', 'soundCues'],
-      appearance: ['sidebarBrand', 'brandLockup', 'brandInk', 'palette', 'paletteCards', 'backgroundOpacity', 'typeface', 'homeLayout', 'homeRipple', 'mascot', 'mascotScope'],
+      appearance: ['sidebarBrand', 'brandLockup', 'brandInk', 'palette', 'paletteCards', 'inlineCodeColor', 'backgroundOpacity', 'typeface', 'homeLayout', 'homeSessionScope', 'homeRipple', 'mascot', 'mascotScope'],
       'main-window': ['turnNav', 'messageActions', 'conversationWidth', 'viewTabs', 'headerBand', 'processRows', 'answerAnchor', 'sessionPanel', 'composerScope', 'composerBottomGap', 'questionCard', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent', 'contextDisplay', 'contextNumbers', 'statsPosition', 'statsFooterAlign', 'billingCurrency', 'billingTable'],
       sidebar: ['collapseFooter', 'banLocale', 'sidebarSearch', 'searchStyle', 'sidebarEntries', 'workspaceView', 'sidebarPeek', 'sidebarLayout'],
       motion: ['motion', 'chatAnimations', 'chatWait', 'statusDetail', 'statusMotion', 'chatReveal', 'chatSend', 'messageEnter', 'caretMotion', 'ongoingIndicator', 'ongoingIndicatorSide', 'reasoningDisplay'],

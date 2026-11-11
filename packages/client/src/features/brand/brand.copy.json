@@ -1,0 +1,7 @@
+{
+  "inlineCodeColorTitle": { "zh": "行内代码字色", "en": "Inline code colour" },
+  "inlineCodeColorDesc": { "zh": "跟随当前颜色卡，或恢复 Claude 0.19.7 的暖色；自定义颜色卡优先。", "en": "Follow the active colour card or restore Claude 0.19.7's warm ink; the custom card takes precedence." },
+  "inlineCodeColorPalette": { "zh": "跟随配色", "en": "Follow palette" },
+  "inlineCodeColorClassic": { "zh": "经典暖色", "en": "Classic warm" },
+  "inlineCodeColorRequired": { "zh": "跟随宿主配色时由宿主决定行内代码字色。", "en": "The host owns inline-code colour while its palette is selected." }
+}

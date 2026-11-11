@@ -151,6 +151,7 @@ card leaves unset.
 | `--dsw-focus-ring-color` | literal | `rgba(20, 20, 19, 0.45)` | `rgba(250, 249, 245, 0.60)` | `rgba(20, 20, 19, 0.45)` | `rgba(250, 249, 245, 0.60)` | host's own | the keyboard focus ring: the host's own `:focus-visible` rules paint it, and the skin's fallback ring reads it |
 | `--dsh-claude-inline-code-bg` | `code-wash` | `rgba(6, 6, 6, 0.05)` | `rgba(255, 255, 255, 0.05)` | `rgba(4, 4, 6, 0.05)` | `rgba(251, 255, 255, 0.05)` | `var(--dsw-alias-markdown-inline-code)` | inline code fill |
 | `--dsh-claude-inline-code-fg` | card `code` | `#161616` | `#fdfdfd` | `#0f1115` | `#eef1f8` | `var(--dsw-alias-label-primary)` | inline code ink |
+| `--dsh-claude-classic-code` | literal | `#943333` | `#e8a08a` | `#943333` | `#e8a08a` | `light-dark(#943333, #e8a08a)` | Claude 0.19.7's optional warm inline-code ink |
 | `--dsh-claude-link` | `link` | `#184f95` | `#8ab4f8` | `#3b56d9` | `#8fa4ff` | `var(--dsw-alias-link)` | markdown links |
 | `--dsh-claude-link-underline` | `link-underline` | `rgba(24, 79, 149, 0.6)` | `rgba(138, 180, 248, 0.6)` | `rgba(59, 86, 217, 0.6)` | `rgba(143, 164, 255, 0.6)` | `color-mix(in srgb, var(--dsw-alias-link) 60%, transparent)` | markdown link underline |
 | `--dsw-alias-markdown-code-block` | `code-block` | `#ffffff` | `#212121` | `#ffffff` | `#1b1e26` | host's own |  |
@@ -179,7 +180,17 @@ card leaves unset.
 | `--dsh-claude-inverse-ink` | `inverse-ink` | `#ffffff` | `#171717` | `#feffff` | `#11141a` | `var(--dsw-alias-label-primary)` | the model picker's group label ink |
 | `--dsh-claude-table-head` | `table-head` | `#f4f4f4` | `#282828` | `#f0f1f4` | `#22252d` | `var(--dsw-alias-bg-layer-2)` | table header row |
 | `--dsh-claude-ripple-ink` | `ink-3` | `#91888a` | `#9c9395` | `#848891` | `#8a92a3` | `var(--dsw-alias-label-secondary, #8a8a85)` | the new-conversation page's glyph field, and the wake a ripple leaves in it |
-| `--dsh-claude-data-ink` | literal | `#3b6ecf` | `#3b6ecf` | `#3b6ecf` | `#3b6ecf` | `var(--dsw-alias-link, #3b6ecf)` | the home page's data blue: the deepest step of the model chart's ramp and the ink the heat grid's levels are mixed from |
+| `--dsh-claude-data-ink` | literal | `#3b6ecf` | `#3b6ecf` | `#3b6ecf` | `#3b6ecf` | `var(--dsw-alias-link, #3b6ecf)` | the home heat grid's single data blue |
+| `--dsh-claude-data-0` | literal | `#3366b3` | `#82aaff` | `#3366b3` | `#82aaff` | `light-dark(#3366b3, #82aaff)` | the Models chart and legend's categorical colour 0 |
+| `--dsh-claude-data-1` | literal | `#c4571f` | `#f0a35e` | `#c4571f` | `#f0a35e` | `light-dark(#c4571f, #f0a35e)` | the Models chart and legend's categorical colour 1 |
+| `--dsh-claude-data-2` | literal | `#167552` | `#63c59a` | `#167552` | `#63c59a` | `light-dark(#167552, #63c59a)` | the Models chart and legend's categorical colour 2 |
+| `--dsh-claude-data-3` | literal | `#7651a8` | `#c5a3e0` | `#7651a8` | `#c5a3e0` | `light-dark(#7651a8, #c5a3e0)` | the Models chart and legend's categorical colour 3 |
+| `--dsh-claude-data-4` | literal | `#08798c` | `#55c5d8` | `#08798c` | `#55c5d8` | `light-dark(#08798c, #55c5d8)` | the Models chart and legend's categorical colour 4 |
+| `--dsh-claude-data-5` | literal | `#a43b68` | `#f08db6` | `#a43b68` | `#f08db6` | `light-dark(#a43b68, #f08db6)` | the Models chart and legend's categorical colour 5 |
+| `--dsh-claude-data-6` | literal | `#806000` | `#e3bd54` | `#806000` | `#e3bd54` | `light-dark(#806000, #e3bd54)` | the Models chart and legend's categorical colour 6 |
+| `--dsh-claude-data-7` | literal | `#ad4040` | `#ef8585` | `#ad4040` | `#ef8585` | `light-dark(#ad4040, #ef8585)` | the Models chart and legend's categorical colour 7 |
+| `--dsh-claude-data-8` | literal | `#326b67` | `#83c8be` | `#326b67` | `#83c8be` | `light-dark(#326b67, #83c8be)` | the Models chart and legend's categorical colour 8 |
+| `--dsh-claude-data-9` | literal | `#65616c` | `#b8b3bf` | `#65616c` | `#b8b3bf` | `light-dark(#65616c, #b8b3bf)` | the Models chart and legend's categorical colour 9 |
 | `--dsh-claude-context-messages` | literal | `#2b7de9` | `#2b7de9` | `#2b7de9` | `#2b7de9` | `var(--dsw-alias-link, #2b7de9)` | context messages: Claude Desktop's blue category |
 | `--dsh-claude-context-tools` | literal | `#ff6b2c` | `#ff6b2c` | `#ff6b2c` | `#ff6b2c` | `var(--dsw-alias-state-warning-primary, #ff6b2c)` | context system tools: Claude Desktop's orange category |
 | `--dsh-claude-context-mcp` | literal | `#00b894` | `#00b894` | `#00b894` | `#00b894` | `var(--dsw-alias-state-success-primary, #00b894)` | context MCP tools: Claude Desktop's green category |

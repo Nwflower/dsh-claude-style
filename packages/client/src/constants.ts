@@ -69,6 +69,8 @@ export const PALETTE_ATTR = 'data-dsh-claude-palette'
 /** The colour card the page paints, resolved from `paletteColors` (D30): a palette card id. Following the brand and the reader's four resolve to the brand's card, so those tokens stand and the custom blocks layer over them.
  * A picked card stands on its own whatever the brand mark is. */
 export const PALETTE_CARD_ATTR = 'data-dsh-claude-palette-card'
+/** The independent inline-code choice; the attribute is present only for classic outside the custom card. */
+export const INLINE_CODE_COLOR_ATTR = 'data-dsh-claude-inline-code-color'
 export const TYPEFACE_ATTR = 'data-dsh-claude-typeface'
 export const MASCOT_ATTR = 'data-dsh-claude-mascot'
 export const SEARCH_STYLE_ATTR = 'data-dsh-claude-search-style'
