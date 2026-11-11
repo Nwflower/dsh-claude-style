@@ -198,6 +198,8 @@ function EnvironmentSection({ environment, preset }: { environment: PanelEnviron
     }),
   ]
   const checkout = environment.checkout
+  // A directory that is no checkout names the folder alone: the branch belongs
+  // to a checkout, and a folder without one has none to show (D94).
   if (checkout !== null) {
     rows.push(h(RepositoryRow, {
       key: `checkout:${checkout.root}`,
@@ -206,15 +208,6 @@ function EnvironmentSection({ environment, preset }: { environment: PanelEnviron
       linked: checkout.linked,
       detail: checkout.repository ?? undefined,
       commit: checkout.commit,
-    }))
-  }
-  for (const repository of environment.repositories) {
-    rows.push(h(RepositoryRow, {
-      key: `repository:${repository.name}`,
-      name: repository.name,
-      branch: repository.branch,
-      linked: false,
-      detail: repository.repository ?? undefined,
     }))
   }
   return h(Section, { title: copy('environment'), summary: baseName(environment.directory) },

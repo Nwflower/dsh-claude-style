@@ -15,12 +15,11 @@
  * rather than thrown at the route.
  */
 import { execFile } from 'node:child_process'
-import { existsSync, readdirSync } from 'node:fs'
 import { homedir, userInfo } from 'node:os'
-import { basename, join, resolve } from 'node:path'
+import { resolve } from 'node:path'
 import { promisify } from 'node:util'
 import { repositorySlug } from '@dsh-claude-style/contracts/session-panel'
-import type { PanelCheckout, PanelEnvironment, PanelRepository } from '@dsh-claude-style/contracts/session-panel'
+import type { PanelCheckout, PanelEnvironment } from '@dsh-claude-style/contracts/session-panel'
 
 const run = promisify(execFile)
 
@@ -30,14 +29,10 @@ const GIT_TIMEOUT_MS = 2500
 const GIT_MAX_OUTPUT = 256 * 1024
 /** How long one directory's answer is kept: a poll every couple of seconds must not spawn Git every time. */
 const CHECKOUT_TTL_MS = 5000
-/** Checkouts listed for a directory that holds several; a project folder stays this small. */
-const REPOSITORY_LIMIT = 12
-/** Checkouts whose branch is read; the rest list their name alone. */
-const BRANCH_LIMIT = 8
 
 /** One directory's Git answer, and when it was read. */
 interface CachedEnvironment {
-  value: Pick<PanelEnvironment, 'home' | 'user' | 'directory' | 'checkout' | 'repositories'>
+  value: Pick<PanelEnvironment, 'home' | 'user' | 'directory' | 'checkout'>
   at: number
 }
 
@@ -84,40 +79,13 @@ async function checkoutOf(directory: string): Promise<PanelCheckout | null> {
   }
 }
 
-/** Checkouts directly under a directory: the repositories a project folder holds. */
-async function repositoriesUnder(directory: string): Promise<PanelRepository[]> {
-  let names: string[]
-  try {
-    names = readdirSync(directory).sort()
-  } catch {
-    // A directory that is not readable has nothing to list; the panel shows the
-    // directory alone.
-    return []
-  }
-  const found: string[] = []
-  for (const name of names) {
-    if (found.length >= REPOSITORY_LIMIT) break
-    if (name.startsWith('.')) continue
-    const candidate = join(directory, name)
-    try {
-      if (!existsSync(join(candidate, '.git'))) continue
-    } catch {
-      continue
-    }
-    found.push(candidate)
-  }
-  return Promise.all(found.map(async (candidate, index) => {
-    const branch = index < BRANCH_LIMIT ? await git(candidate, ['symbolic-ref', '--short', '-q', 'HEAD']) : null
-    const remote = index < BRANCH_LIMIT ? await git(candidate, ['config', '--get', 'remote.origin.url']) : null
-    return { name: basename(candidate), repository: repositorySlug(remote), branch }
-  }))
-}
-
 /**
  * What the panel names about the machine and the session's working directory.
  *
  * The answer is kept per directory for a few seconds: the panel asks again on
  * every read, and a branch changes only when the session checks another one out.
+ * A directory that is no checkout answers the folder alone: the checkouts beside
+ * it are other sessions' business and never enter this answer (D94).
  */
 export async function panelEnvironment(directory: string | null): Promise<PanelEnvironment | null> {
   const home = homedir()
@@ -140,8 +108,7 @@ export async function panelEnvironment(directory: string | null): Promise<PanelE
     // Reading Git is an optional fact here; a failure answers no checkout.
     checkout = null
   }
-  const repositories = checkout === null ? await repositoriesUnder(target) : []
-  const value: CachedEnvironment['value'] = { home, user, directory: target, checkout, repositories }
+  const value: CachedEnvironment['value'] = { home, user, directory: target, checkout }
   environments.set(target, { value, at: Date.now() })
   prune()
   return value

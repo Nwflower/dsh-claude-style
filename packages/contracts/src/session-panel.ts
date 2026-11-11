@@ -19,17 +19,7 @@ export interface PanelCheckout {
   repository: string | null
 }
 
-/** One checkout directly under a directory that is not itself a checkout. */
-export interface PanelRepository {
-  /** Directory name of the checkout. */
-  name: string
-  /** `owner/name` parsed from its origin remote, or null. */
-  repository: string | null
-  /** Its checked-out branch, or null. */
-  branch: string | null
-}
-
-/** Where the session works: the machine, the directory, and the checkouts around it. */
+/** Where the session works: the machine, the directory, and the checkout it sits in. */
 export interface PanelEnvironment {
   /** The session's working directory, or the harness's default directory when the session recorded none. */
   directory: string
@@ -37,10 +27,8 @@ export interface PanelEnvironment {
   home: string
   /** The OS user name the host runs as. */
   user: string
-  /** The checkout containing `directory`, when Git reports one. */
+  /** The checkout containing `directory`, when Git reports one. A directory that is no checkout answers null, and the panel then names the folder alone. */
   checkout: PanelCheckout | null
-  /** Checkouts directly under `directory`, when `directory` is not itself inside one. */
-  repositories: readonly PanelRepository[]
 }
 
 /** The context window's occupancy and its heuristic composition. */
