@@ -2,6 +2,52 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [0.20.3] - 2026-11-10
+
+[中文](#cn-0.20.3) | [English](#en-0.20.3)
+
+<h3 id="cn-0.20.3">新增功能</h3>
+
+- 新增折叠工作区的运行标记，标记样式与位置跟随进行中动效设置
+
+### 体验优化
+
+- 顶栏落位改为一次算完，标题按文字所需的宽度参与判定，旁边的控件簇在同一趟里跟到标题末尾，不再等下一趟落位
+- 把动效滑块、折叠重排、上下文环与光标在写阶段里的布局读取挪回读阶段，交互时不再触发整页样式重算
+
+### 问题修复
+
+- 修复账号菜单预热期间侧栏「更多」与设置页下拉被一并隐藏、按下没有反应的问题
+- 修复中文输入法组词时自定义用户名的字母重复，编辑期间输入框保留读者自己的文本，放弃编辑回到编辑前的用户名
+- 修复插件挂在侧栏页脚的整块区块（企业应用）随账户区接管一并消失的问题，区块留在账号行上方，侧栏收成细轨时由账户弹层承载它的副本
+- 修复推理等级滑块在顶档拖动、停驻与松手时的掉帧，顶档的点阵改由一块画布逐块绘制
+- 修复进行中会话的标题扫光与 IM 渠道标题重叠的问题；由伪元素绘制的标题保留原生运行标记，接管或释放后自动更新
+
+### 其他变更
+
+- 整理开发目录与验证入口，功能清单统一登记测试覆盖，替身页面检查共用一个运行器
+
+<h3 id="en-0.20.3">New Features</h3>
+
+- Add the running mark to a collapsed workspace row, following the ongoing animation and side settings
+
+### Improvements
+
+- Place the caption row in one pass, judging the title by the width its words need and moving the cluster beside it to the title's end in that same pass instead of a pass later
+- Move the layout reads of the motion slider, the fold reposition, the context meter and the caret out of the write phase, so an interaction no longer forces a whole-page style recalculation
+
+### Bug Fixes
+
+- Fix the sidebar's More card and the settings page's dropdowns staying unpainted while the account menu warms up, so a press on them appears to do nothing
+- Fix duplicated letters in the custom username while a Chinese input method composes it, keeping the reader's own text in the field until the edit commits and restoring the username an abandoned edit replaced
+- Fix a plugin's footer block — the enterprise apps section — vanishing with the footer the takeover gathers, so the block keeps its place above the account row and the account menu carries its copy while the sidebar stands as the rail
+- Fix the reasoning slider dropping frames while the reader drags, holds or releases at the strongest level by drawing the top rung's dot field on one canvas
+- Fix running-title shimmer overlapping IM channel titles; titles drawn by pseudo-elements retain the native running marker and update when taken over or released
+
+### Chores
+
+- Reorganize the development directories and verification entry points, declare feature coverage in the manifests and run the stand-in page checks through one runner
+
 ## [0.20.2] - 2026-11-09
 
 [中文](#cn-0.20.2) | [English](#en-0.20.2)

@@ -1,11 +1,7 @@
 /** The running-effect cards, read from the product's rendered tree and shipped CSS. */
 (function () {
   var probe = window.__dshSmokeProbe
-  var surface = function (id) {
-    var entry = window.SMOKE_SURFACE.find(function (item) { return item.id === id })
-    if (entry === undefined) throw new Error('smoke: unknown surface ' + id)
-    return entry.selector || entry.attribute
-  }
+  var surface = probe.surface
 
   // The stand-in React returns a plain tree. Carry its actual HTML and fragment
   // children into the document so preview paint includes the product's parents.

@@ -7,7 +7,7 @@ import { expect, test } from 'vitest'
 import { SIDEBAR_STATUS_SHEET } from '@dsh-claude-style/client/pure'
 import { DARK_THEME_ATTRIBUTE, SESSION_PHASE_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import { surfaceAttribute } from '../../fixtures/surface'
-import { bodyAttribute, ENABLED, mount, nativeDot, painted, PART, removeAfterTest, STATUS } from './fixture'
+import { bodyAttribute, ENABLED, mount, nativeDot, painted, PART, removeAfterTest, sheetRules, STATUS } from './fixture'
 
 const RUNNING_TITLE = surfaceAttribute('sidebar-status.running-title')
 
@@ -342,17 +342,7 @@ test('the shipped CSS gates title motion and SVG hiding out of forced colors and
   bodyAttribute(surfaceAttribute('skin.motion'), 'full')
   const view = mount('ongoing')
   view.sync()
-  const sheet = new CSSStyleSheet()
-  sheet.replaceSync(SIDEBAR_STATUS_SHEET)
-  const rules: { rule: CSSStyleRule, media: string[] }[] = []
-  const visit = (entries: CSSRuleList, media: string[] = []) => {
-    for (const rule of entries) {
-      if (rule instanceof CSSStyleRule) rules.push({ rule, media })
-      else if (rule instanceof CSSMediaRule) visit(rule.cssRules, [...media, rule.conditionText])
-      else if (rule instanceof CSSSupportsRule) visit(rule.cssRules, media)
-    }
-  }
-  visit(sheet.cssRules)
+  const rules = sheetRules(SIDEBAR_STATUS_SHEET)
   const titleMotion = rules.filter(({ rule }) => {
     const animation = rule.style.animation || rule.style.animationName
     return view.title.matches(rule.selectorText) && animation !== '' && animation !== 'none'

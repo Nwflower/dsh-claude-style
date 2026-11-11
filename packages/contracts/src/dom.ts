@@ -292,6 +292,8 @@ export const MODAL_DIALOG_SELECTOR = '[role="dialog"][aria-modal="true"]'
 export const FOREGROUND_SELECTOR = `${MODAL_DIALOG_SELECTOR}, [role="menu"]`
 /** The host's menu card and its list, which the skin injects a row into. */
 export const MENU_ROLE_SELECTOR = '[role="menu"]'
+/** The material card host menus share; account preparation must not hide unrelated cards. */
+export const MENU_MATERIAL_SELECTOR = '[data-menu-material]'
 export const MENU_LIST_SELECTOR = '[role="presentation"]'
 /** The host's account trigger in the sidebar footer. */
 export const ACCOUNT_TRIGGER_SELECTOR = '[aria-haspopup="menu"][data-signed-out]'
@@ -408,6 +410,14 @@ export const SESSION_ROW_SELECTOR = '[data-row-key^="session:"]'
 export const SESSION_PHASE_ATTRIBUTE = 'data-state'
 export const SESSION_ONGOING_STATE = 'ongoing'
 export const SESSION_ONGOING_SELECTOR = '[data-state="ongoing"]'
+/**
+ * One workspace row of the grouped session list: the host keys it
+ * `workspace:<workspaceId>`, and this is the row whose title stands in for the
+ * session rows a closed workspace does not draw.
+ */
+export const WORKSPACE_ROW_SELECTOR = `[${SESSION_ROW_KEY_ATTRIBUTE}^="workspace:"]`
+/** Whether a workspace row's workspace stands open; the host writes it beside the row's role. */
+export const WORKSPACE_ROW_EXPANDED_ATTRIBUTE = 'aria-expanded'
 
 /* ---------- the sidebar's session rows ---------- */
 /** Idle rows render this optional third-party leading decoration outlet. */

@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-09",
-  "group": "fixes",
-  "order": 11,
-  "external": false,
-  "zh": "修复账号菜单预热期间侧栏「更多」与设置页下拉被一并隐藏、按下没有反应的问题",
-  "en": "Fix the sidebar's More card and the settings page's dropdowns staying unpainted while the account menu warms up, so a press on them appears to do nothing"
-}

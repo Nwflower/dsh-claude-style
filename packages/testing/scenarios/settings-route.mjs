@@ -9,6 +9,8 @@ const SETTINGS_PAGE = '.dsh-claude-settings'
 const MENU_WAIT_MS = bound('settingsRouteMenuWaitMs')
 const SETTINGS_WAIT_MS = bound('settingsRouteDialogWaitMs')
 async function openSkinSettings(page) {
+  const existing = page.locator(SETTINGS_PAGE).first()
+  if (await existing.count() > 0 && await existing.isVisible()) return
   await page.keyboard.press('Control+Alt+Comma')
   await page.waitForTimeout(MENU_WAIT_MS)
   const entry = page.locator('[role="menu"] [role="menuitem"]').first()

@@ -57,6 +57,36 @@ const readWait = (page) => page.evaluate(() => {
   }
 })
 
+/** Record the working state on the page's own frames, including a frame the turn ends right after. */
+async function recordWorking(page) {
+  await page.evaluate(() => {
+    window.__waitWorkingActive = true
+    window.__waitWorkingSamples = []
+    const tick = () => {
+      if (!window.__waitWorkingActive) return
+      const row = document.querySelector('[data-chat-running]')
+      const line = row === null ? null : row.querySelector('.dsh-claude-chat-wait')
+      const label = line === null ? null : line.querySelector('.dsh-claude-chat-wait-label')
+      const clock = line === null ? null : line.querySelector('.dsh-claude-chat-wait-clock')
+      const badge = line === null ? null : line.querySelector('.dsh-claude-chat-wait-badge')
+      const words = row === null ? null : row.querySelector(':scope > span > :not([aria-hidden="true"])')
+      window.__waitWorkingSamples.push({
+        row: row !== null,
+        line: line !== null,
+        step: document.querySelector('[data-step-process]') !== null,
+        label: label === null ? '' : label.dataset.text ?? '',
+        labelText: label === null ? '' : label.textContent,
+        clock: clock === null || !clock.checkVisibility() ? null : clock.textContent,
+        badge: badge === null || !badge.checkVisibility() ? null : badge.textContent,
+        words: words === null ? null : words.textContent,
+        wordsShown: words !== null && words.checkVisibility(),
+      })
+      requestAnimationFrame(tick)
+    }
+    tick()
+  })
+}
+
 /**
  * Every process group's header: its name, the wording it draws and the room it
  * had for it. The host's words and the summary are read by their own computed
@@ -100,9 +130,12 @@ function processSummaryScenario({ check }) {
         return badge !== null && badge.checkVisibility()
       }, undefined, { timeout: 15000 }).catch(() => {})
       context.notes.waitOvertime = await readWait(page)
-      await page.waitForFunction(() => document.querySelector('[data-step-process]') !== null, undefined, { timeout: 15000 })
-      await page.waitForTimeout(300)
-      context.notes.waitWorking = await readWait(page)
+      await recordWorking(page)
+      await page.waitForFunction(() => window.__waitWorkingSamples.some(sample => sample.step && sample.row && sample.line && sample.badge === null), undefined, { timeout: 15000 })
+      context.notes.waitWorking = await page.evaluate(() => {
+        window.__waitWorkingActive = false
+        return window.__waitWorkingSamples.find(sample => sample.step && sample.row && sample.line && sample.badge === null)
+      })
     },
     async afterTurn(context) {
       const { page } = context
@@ -125,6 +158,10 @@ function processSummaryScenario({ check }) {
       const stateWords = [COPY.chatWaitThinking, COPY.chatWaitWriting, COPY.chatWaitToolCall, COPY.chatWaitTools]
       const lang = stateWords.some((word) => word.zh === working.label) ? 'zh' : 'en'
       const sentence = (parts) => parts.join(COPY.processSummaryFullSeparator[lang])
+      // The figures are the body's own rows, and the host keeps a call's result
+      // inside the call's own row (its conversation-nodes/tool.js builds one node
+      // per call), so these groups hold thoughts and calls alone: no record row
+      // stands in this turn for the summary to count.
       const expected = [
         sentence([fill(COPY.processSummaryFullThoughtOther[lang], 2), fill(COPY.processSummaryFullToolOne[lang], 1)]),
         sentence([fill(COPY.processSummaryFullThoughtOne[lang], 1), fill(COPY.processSummaryFullToolOne[lang], 1)]),

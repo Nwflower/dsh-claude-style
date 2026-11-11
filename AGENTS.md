@@ -111,7 +111,7 @@ Each script states its purpose at the top of the script. `node scripts/checks/ve
 ## Change Workflow
 
 0. Change `packages/client/src/` or `packages/host/src/`; never touch `lib/`.
-1. Run `npm run build`, or keep `npm run dev` running while iterating. The live page answers what only it shows; a build never waits on the test lock.
+1. Run `npm run build`, or keep `npm run dev` running while iterating. The live page answers what only it shows; a build never waits on the test lock. Browser verification goes through the browser tools the session provides when it has them: `browser_navigate`, `browser_snapshot`, `browser_screenshot`, `browser_console` and `browser_network` read the live page. The Playwright entrypoints carry page-context expressions, viewport and theme matrices, feature isolation, scripted scenario runs and the staged lanes `npm run verify` dispatches (D92).
 2. Check visual changes in light and dark. Re-shoot stale README screenshots through the privacy sweep.
 3. Sync documents: bilingual READMEs change together, a behavior change adds one file under `docs/changes/`, and a direction change adds its replacing ADR before the code. Regenerate affected indexes. Committed judgment records move with the change that moves them.
 4. Test layers, selection and cloud verdicts follow D92 and `.github/workflows/`; those files carry the operational detail. A red run on master over this session's push is this session's to fix and re-push.

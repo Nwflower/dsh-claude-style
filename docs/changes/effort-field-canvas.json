@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-09",
-  "group": "fixes",
-  "order": 14,
-  "external": false,
-  "zh": "修复推理等级滑块在顶档拖动、停驻与松手时的掉帧，顶档的点阵改由一块画布逐块绘制",
-  "en": "Fix the reasoning slider dropping frames while the reader drags, holds or releases at the strongest level by drawing the top rung's dot field on one canvas"
-}

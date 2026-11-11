@@ -97,6 +97,22 @@ export function removeAfterTest(element: Element) {
   teardown.push(() => element.remove())
 }
 
+/** Every style rule of a shipped sheet, with the media conditions wrapping it. */
+export function sheetRules(css: string): { rule: CSSStyleRule, media: string[] }[] {
+  const sheet = new CSSStyleSheet()
+  sheet.replaceSync(css)
+  const rules: { rule: CSSStyleRule, media: string[] }[] = []
+  const visit = (entries: CSSRuleList, media: string[] = []) => {
+    for (const rule of entries) {
+      if (rule instanceof CSSStyleRule) rules.push({ rule, media })
+      else if (rule instanceof CSSMediaRule) visit(rule.cssRules, [...media, rule.conditionText])
+      else if (rule instanceof CSSSupportsRule) visit(rule.cssRules, media)
+    }
+  }
+  visit(sheet.cssRules)
+  return rules
+}
+
 export function painted(element: Element): boolean {
   const style = getComputedStyle(element)
   const box = element.getBoundingClientRect()

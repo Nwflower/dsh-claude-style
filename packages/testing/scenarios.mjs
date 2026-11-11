@@ -38,6 +38,7 @@ import { statsScenarios } from './scenarios/stats-position.mjs'
 import { sidebarRailScenario } from './scenarios/sidebar-rail.mjs'
 import { sidebarPeekScenario } from './scenarios/sidebar-peek.mjs'
 import { remoteSettingsScenario } from './scenarios/remote-settings.mjs'
+import { usernameCompositionScenario } from './scenarios/username-composition.mjs'
 import { usernameImeScenario } from './scenarios/username-ime.mjs'
 import { customBrandScenario } from './scenarios/custom-brand.mjs'
 import { dsBotScenario } from './scenarios/ds-bot.mjs'
@@ -598,6 +599,8 @@ const SCENARIOS = {
   importance: importanceScenario({ check, observe, sendPrompt, waitForTurn, host: HOST }),
   /** A page under a non-loopback name reads and writes the host's settings beside the loopback one (packages/testing/scenarios/remote-settings.mjs, D75). */
   remoteSettings: remoteSettingsScenario({ check }),
+  /** Slow IME composition and cancellation in the real host's username field. */
+  usernameComposition: usernameCompositionScenario({ check }),
   /** The username keeps the reader's text while an input method composes it across a save (packages/testing/scenarios/username-ime.mjs, D92). */
   usernameIme: usernameImeScenario({ check }),
   /** The reader's own brand images through the host half's routes and on the real shell (packages/testing/scenarios/custom-brand.mjs, D30). */
