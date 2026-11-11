@@ -19,7 +19,7 @@ import { check } from './shared.mjs'
  */
 async function hostPanel({ mod, fakeHost, request, browser, crossSite, scratchHome }) {
   console.log('\nhost half — the session overview panel')
-  const splitWrite = [{ seq: 1, type: 'tool/call', data: { callId: 'split-write', name: 'write', arguments: { file_path: 'split-note.md' } } }]
+  const splitWrite = [{ seq: 1, type: 'tool/call', data: { callId: 'split-write', name: 'write', arguments: JSON.stringify({ file_path: 'split-note.md' }) } }]
   const panelHost = fakeHost(mod, {
     fenced: true,
     home: scratchHome,
