@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-11",
+  "group": "fixes",
+  "order": 17,
+  "external": false,
+  "zh": "修复宿主右栏打开时详情栏仍按自身宽度挤压对话、把对话压成窄条的问题，并让详情按钮先收起右栏再让出这一侧",
+  "en": "Fix the details rail keeping its own width and squeezing the conversation to a narrow strip while the host's right panel is open, and have the details control close that panel before handing the side over"
+}

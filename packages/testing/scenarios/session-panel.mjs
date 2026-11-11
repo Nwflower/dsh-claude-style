@@ -89,6 +89,32 @@ async function pressDetails(page) {
 const railMounted = (page) => page.evaluate(() => document.querySelector('.dsh-claude-details') !== null)
 
 /**
+ * The host's own right column: the width it holds, the words on its control, and
+ * what the skin's rail does while it stands.
+ */
+const readRightPanel = (page) => page.evaluate(() => {
+  const column = document.querySelector('[data-rightbar-col]')
+  const toggle = [...document.querySelectorAll('button')]
+    .find((node) => /右侧边栏|right panel/i.test(node.getAttribute('aria-label') ?? node.getAttribute('title') ?? ''))
+  return {
+    width: column === null ? 0 : Math.round(column.getBoundingClientRect().width),
+    toggle: toggle?.getAttribute('aria-label') ?? toggle?.getAttribute('title') ?? null,
+    rail: document.querySelector('.dsh-claude-details') !== null,
+    squeezed: [...document.querySelectorAll('div')].some((node) => getComputedStyle(node).paddingRight === '320px'),
+  }
+})
+
+/** Press the host's own control for its right column. */
+async function pressRightPanel(page) {
+  await page.evaluate(() => {
+    const toggle = [...document.querySelectorAll('button')]
+      .find((node) => /右侧边栏|right panel/i.test(node.getAttribute('aria-label') ?? node.getAttribute('title') ?? ''))
+    toggle?.click()
+  })
+  await page.waitForTimeout(700)
+}
+
+/**
  * The scenario.
  * @param options.check - the lane's check factory.
  * @returns the scenario body the runner drives.
@@ -260,6 +286,15 @@ export function sessionPanelScenario({ check }) {
         }, theme))
         if (context.out !== undefined) await page.screenshot({ path: `${context.out}/session-panel-${theme}.png` })
       }
+      // The host's own right column stands on this side as well: the rail keeps
+      // away while that column holds width, and the header's control hands the
+      // side over by closing it first (D94).
+      notes.rightPanel = await readRightPanel(page)
+      await pressRightPanel(page)
+      notes.rightPanelOpen = await readRightPanel(page)
+      await pressDetails(page)
+      await page.waitForTimeout(500)
+      notes.rightPanelHanded = await readRightPanel(page)
       const pagesBefore = page.context().pages().length
       const outputs = page.locator('.dsh-claude-details .dsh-claude-panel-section').filter({ hasText: /产出|Outputs/ }).first()
       await outputs.locator('button.dsh-claude-panel-row').filter({ hasText: 'panel four.md' }).click()
@@ -337,6 +372,13 @@ export function sessionPanelScenario({ check }) {
         check('the details rail stays inside the viewport in both themes',
           notes.themes?.length === 2 && notes.themes.every(theme => theme.width === 300 && theme.inside) && notes.themes[0].background !== notes.themes[1].background,
           JSON.stringify(notes.themes)),
+        check('the host right panel takes the side and the rail keeps away',
+          notes.rightPanel?.width === 0 && (notes.rightPanelOpen?.width ?? 0) > 0 &&
+            notes.rightPanelOpen?.rail === false && notes.rightPanelOpen?.squeezed === false,
+          JSON.stringify({ before: notes.rightPanel ?? null, opened: notes.rightPanelOpen ?? null })),
+        check('the details control closes the host right panel before the rail stands',
+          notes.rightPanelHanded?.width === 0 && notes.rightPanelHanded?.rail === true,
+          JSON.stringify(notes.rightPanelHanded ?? null)),
         check('an output opens its file in the host preview without another browser tab',
           /panel four\.md/.test(notes.filePreview ?? '') && /Four/.test(notes.filePreview ?? '') && notes.extraPages === 0,
           JSON.stringify({ preview: notes.filePreview, extraPages: notes.extraPages })),

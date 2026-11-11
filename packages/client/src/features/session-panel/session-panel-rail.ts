@@ -1,7 +1,7 @@
 import * as React from 'react'
-import { CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, FLOW_KIND_ATTRIBUTE, SIDEBAR_CHAT_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, FLOW_KIND_ATTRIBUTE, RIGHTBAR_COLUMN_SELECTOR, SIDEBAR_CHAT_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { observeMarker, observeSize, subscribeMutations } from '@dsh-claude-style/engine/bus'
-import { cacheFirstMatch } from '@dsh-claude-style/engine/host'
+import { cacheFirstMatch, findRightbarToggle } from '@dsh-claude-style/engine/host'
 import { conversationScroller } from '@dsh-claude-style/engine/chat-dom'
 import { PART_ATTR } from '../../constants'
 import { SESSION_PANEL_ATTR } from '../../constants'
@@ -100,9 +100,13 @@ function useRailReading(session: string | null) {
   const [box, setBox] = React.useState<RailBox | null>(null)
   /** The reader's own choice for this session: auto follows the width, open and closed stand. */
   const choice = React.useRef<{ session: string | null, mode: 'auto' | 'open' | 'closed' }>({ session: null, mode: 'auto' })
+  /** Whether the host's own right column holds width now, as the last measurement read it. */
+  const hostColumn = React.useRef(false)
   React.useEffect(() => {
     let stopSize: (() => void) | null = null
+    let stopHostSize: (() => void) | null = null
     let center: HTMLElement | null = null
+    let host: HTMLElement | null = null
     const measure = () => {
       const rect = center === null ? null : center.getBoundingClientRect()
       // The rail may stand without the column part (an older host): it then
@@ -113,47 +117,60 @@ function useRailReading(session: string | null) {
         right: rect === null ? 0 : Math.round(window.innerWidth - rect.right),
       })
       if (choice.current.session !== session) choice.current = { session, mode: 'auto' }
+      // The host's own right column stands on this same side, so it comes
+      // first: while it holds width the rail keeps away, automatic and pressed
+      // alike, and the reader's choice stands again once that column closes
+      // (D94). Its width is the host's to give, so it is read from its box.
+      hostColumn.current = host !== null && host.isConnected && host.getBoundingClientRect().width > 0
       if (choice.current.mode !== 'auto') {
-        setOpen(choice.current.mode === 'open')
+        setOpen(choice.current.mode === 'open' && !hostColumn.current)
         return
       }
       const windowWide = window.innerWidth >= OPEN_WINDOW
       const columnWide = rect === null || rect.width >= OPEN_COLUMN
       const windowNarrow = window.innerWidth < CLOSE_WINDOW
       const columnNarrow = rect !== null && rect.width < CLOSE_COLUMN
-      setOpen(current => (current ? !windowNarrow && !columnNarrow : windowWide && columnWide))
+      setOpen(current => !hostColumn.current && (current ? !windowNarrow && !columnNarrow : windowWide && columnWide))
     }
     const columns = observeMarker<HTMLElement>(CENTER)
+    const hostColumns = observeMarker<HTMLElement>(RIGHTBAR_COLUMN_SELECTOR)
     const bind = () => {
       const next = columns.all()[0] ?? null
-      if (next === center) {
-        measure()
-        return
+      const nextHost = hostColumns.all()[0] ?? null
+      // The host rebuilds both columns while a turn streams: each new node is
+      // watched afresh, and either one's width change places the rail again.
+      if (next !== center || nextHost !== host) {
+        if (stopSize !== null) stopSize()
+        if (stopHostSize !== null) stopHostSize()
+        stopSize = null
+        stopHostSize = null
+        center = next
+        host = nextHost
+        if (center !== null) stopSize = observeSize(center, measure)
+        if (host !== null) stopHostSize = observeSize(host, measure)
       }
-      if (stopSize !== null) stopSize()
-      stopSize = null
-      center = next
-      if (center !== null) {
-        stopSize = observeSize(center, measure)
-        measure()
-      } else {
+      if (center === null) {
         setBox(null)
         setOpen(false)
+        return
       }
+      measure()
     }
     // The parts walk marks the column after the first frame, so its arrival is
     // an attribute change, not a child-list one.
     const stopParts = subscribeMutations(document.body, { subtree: true, attributes: true, attributeFilter: ['data-dsh-claude-part'] }, bind)
     bind()
-    // The column's own size observer reports once on attach, which covers a
+    // The columns' own size observers report once on attach, which covers a
     // shell that laid out after this feature's first render; no timer wakes a
     // page that has settled.
     window.addEventListener('resize', bind)
     return () => {
       stopParts()
       columns.release()
+      hostColumns.release()
       window.removeEventListener('resize', bind)
       if (stopSize !== null) stopSize()
+      if (stopHostSize !== null) stopHostSize()
     }
   }, [session])
   const close = React.useCallback(() => {
@@ -166,7 +183,11 @@ function useRailReading(session: string | null) {
       if (open) close()
       else {
         choice.current = { session, mode: 'open' }
-        setOpen(true)
+        // The rail stands where the host's own right column stands: a press
+        // asks for that side, so the column closes first and the rail comes in
+        // as soon as its width is back (D94).
+        if (hostColumn.current) findRightbarToggle()?.click()
+        setOpen(!hostColumn.current)
       }
     }
     setRailToggle(flip)
