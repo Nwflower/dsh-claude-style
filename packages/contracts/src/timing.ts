@@ -62,15 +62,15 @@ export const HOST_TIMING: HostTimingEntry[] = [
     checks: ['scenario:rightbar'],
   },
   {
-    id: 'host.rightbar-width',
-    assumption: 'The layout root slot seats a store whose create() answers the page\u2019s single layout instance, and that instance\u2019s actions carry setRightbar(px) — the same action the resize handle writes.',
-    use: 'The session overview opens the right column at its minimum width through that action (features/session-panel); a host that moves the store or renames the action leaves the column at the width it had.',
+    id: 'host.session-projections',
+    assumption: 'The session query answers projection values under the host keys sessionStats, tokenUsage, contextPressure, contextBreakdown, subagentCatalog, agentTeam and forgeChangeRequests, with the numeric fields the rail prints.',
+    use: 'The details rail folds those values into its sections and session stats (features/session-panel, packages/host/src/session-panel.ts); a host that renames a projection leaves that section empty rather than showing a wrong figure.',
     checks: ['scenario:sessionPanel'],
   },
   {
-    id: 'host.rightbar-tab-body',
-    assumption: 'A right-column tab body mounts with no padding and no scroll container of its own: the body root supplies both, and the pane body never scrolls it.',
-    use: 'The session overview draws its own padding and scrolling (features/session-panel); a body that inherited the pane\u2019s scrolling would either double the scroll or cut the last row off at the panel\u2019s edge.',
+    id: 'host.jobs-retained-output',
+    assumption: 'The jobs registry lists a job for its owning session until that owner collects it, and readAt returns the retained ring without moving the model cursor, with get carrying the settled status.',
+    use: 'A background row expands into its retained output (features/session-panel); a registry that moved the cursor on that read would take the output the model still needs.',
     checks: ['scenario:sessionPanel'],
   },
   {

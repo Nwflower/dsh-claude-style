@@ -207,5 +207,5 @@ export function SessionPanelRail() {
       title: copy('detailsClose'),
       onClick: close,
     }, '×')),
-  h(PanelBody, { sessionId: session }))
+  h(PanelBody, { key: session, sessionId: session }))
 }

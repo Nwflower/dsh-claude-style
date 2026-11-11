@@ -4,6 +4,8 @@ import { formatCompactTokens, formatHostDuration } from '../../shared/format'
 import { hostChatSeat } from '../../core/i18n'
 import { copy } from './copy'
 import { openPanelFile, openPanelSession } from './session-panel-host'
+import { billingCurrency, statsCostText } from './stats-cost'
+import { readPrefs, subscribePrefs } from '../../core/prefs'
 import { useJobOutput, usePanelReading } from './session-panel-data'
 import type { PanelBackground, PanelChange, PanelContext, PanelEnvironment, PanelJob, PanelOutput, PanelStats, PanelSubagent } from '@dsh-claude-style/contracts/session-panel'
 
@@ -270,6 +272,7 @@ function ContextSection({ context }: { context: PanelContext | null }) {
 
 /** The session's own figures: model and tool time, decode speed, tokens and cost. */
 function StatsSection({ stats }: { stats: PanelStats }) {
+  const currency = useBillingCurrency()
   const rows: { key: string, label: string, value: string }[] = []
   rows.push({ key: 'turns', label: copy('statsTurns'), value: String(stats.turns) })
   rows.push({ key: 'steps', label: copy('statsSteps'), value: String(stats.steps) })
@@ -279,7 +282,8 @@ function StatsSection({ stats }: { stats: PanelStats }) {
   if (stats.decodeMs > 0) rows.push({ key: 'speed', label: copy('statsOutputSpeed'), value: `${Math.round(stats.decodeTokens / (stats.decodeMs / 1000))} tok/s` })
   const cacheable = stats.cacheReadTokens + stats.uncachedInputTokens
   if (cacheable > 0) rows.push({ key: 'cache', label: copy('statsCacheHit'), value: `${Math.round((stats.cacheReadTokens / cacheable) * 100)}%` })
-  if (stats.cost !== null) rows.push({ key: 'cost', label: copy('statsCost'), value: costText(stats.cost) })
+  const cost = statsCostText(stats.cost, currency)
+  if (cost !== null) rows.push({ key: 'cost', label: copy('statsCost'), value: cost })
   const tokens: { key: string, label: string, value: string }[] = [
     { key: 'uncached', label: copy('statsUncachedInput'), value: `${formatCompactTokens(stats.uncachedInputTokens)} tok` },
     { key: 'read', label: copy('statsCacheRead'), value: `${formatCompactTokens(stats.cacheReadTokens)} tok` },
@@ -296,10 +300,11 @@ function StatsSection({ stats }: { stats: PanelStats }) {
         h('dd', null, row.value)))))
 }
 
-/** A settled cost in the currency its figures are written in; zero until the first settlement prints as such. */
-function costText(cost: { cny: number, usd: number }) {
-  const signed = (micro: number) => micro >= 0 ? `¥${(micro / 1_000_000).toFixed(2)}` : `-¥${(-micro / 1_000_000).toFixed(2)}`
-  return signed(cost.cny)
+/** The currency the reader's billing setting chose, followed across a settings change. */
+function useBillingCurrency() {
+  const [choice, setChoice] = React.useState<string | null>(() => readPrefs().billingCurrency ?? null)
+  React.useEffect(() => subscribePrefs(prefs => setChoice(prefs.billingCurrency ?? null)), [])
+  return billingCurrency(choice)
 }
 
 /** The files the session presented or wrote. */
