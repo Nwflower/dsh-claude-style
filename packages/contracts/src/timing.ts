@@ -4,7 +4,7 @@
  */
 
 /** The end-to-end lane's scenarios; the lane checks its own names against these. */
-export const E2E_SCENARIOS = ['conversation', 'systemTypography', 'messageActions', 'messageAnswerActions', 'mobileHome', 'composerViewport', 'narrow', 'tool', 'fileMerge', 'send', 'sendFull', 'scroll', 'readerScroll', 'doorPin', 'streamPace', 'streamJitter', 'streamJitterFooter', 'streamJitterInline', 'motion', 'processSummary', 'reasoningStream', 'reasoningContinuous', 'waitLine', 'washLine', 'longSession', 'statsPosition', 'statsOverlay', 'statsFooter', 'sidebarRail', 'sidebarPeek', 'rightbar', 'contract', 'importance', 'remoteSettings', 'usernameComposition', 'usernameIme', 'customBrand', 'dsBot', 'shots'] as const
+export const E2E_SCENARIOS = ['conversation', 'systemTypography', 'messageActions', 'messageAnswerActions', 'mobileHome', 'composerViewport', 'narrow', 'tool', 'fileMerge', 'send', 'sendFull', 'scroll', 'readerScroll', 'doorPin', 'streamPace', 'streamJitter', 'streamJitterFooter', 'streamJitterInline', 'motion', 'processSummary', 'reasoningStream', 'reasoningContinuous', 'waitLine', 'washLine', 'longSession', 'statsPosition', 'statsOverlay', 'statsFooter', 'sidebarRail', 'sidebarPeek', 'rightbar', 'sessionPanel', 'contract', 'importance', 'remoteSettings', 'usernameComposition', 'usernameIme', 'customBrand', 'dsBot', 'shots'] as const
 
 /** One timing assumption, and how it is held. */
 interface HostTimingEntry {
@@ -60,6 +60,18 @@ export const HOST_TIMING: HostTimingEntry[] = [
     assumption: 'The host mounts the right panel’s own collapse control only while that panel is expanded, inside a chrome strip under a transformed, clipped subtree.',
     use: 'The skin’s control stands in the header’s row and presses the host’s one, which cannot be placed there: a fixed box inside that subtree is measured from the panel and cut at its edge (features/header-band).',
     checks: ['scenario:rightbar'],
+  },
+  {
+    id: 'host.session-projections',
+    assumption: 'The session query answers projection values under the host keys sessionStats, tokenUsage, contextPressure, contextBreakdown, subagentCatalog, agentTeam and forgeChangeRequests, with the numeric fields the rail prints.',
+    use: 'The details rail folds those values into its sections and session stats (features/session-panel, packages/host/src/session-panel.ts); a host that renames a projection leaves that section empty rather than showing a wrong figure.',
+    checks: ['scenario:sessionPanel'],
+  },
+  {
+    id: 'host.jobs-retained-output',
+    assumption: 'The jobs registry lists a job for its owning session until that owner collects it, and readAt returns the retained ring without moving the model cursor, with get carrying the settled status.',
+    use: 'A background row expands into its retained output (features/session-panel); a registry that moved the cursor on that read would take the output the model still needs.',
+    checks: ['scenario:sessionPanel'],
   },
   {
     id: 'host.composer-place',

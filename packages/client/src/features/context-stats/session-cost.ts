@@ -1,7 +1,6 @@
 import { PRICES_PATH, SESSION_COST_PATH } from '@dsh-claude-style/contracts/routes'
 import type { PriceDocument, SessionCostAnswer } from '@dsh-claude-style/contracts/prices'
-import { billingRowEntry, parseBillingTable } from '@dsh-claude-style/contracts/billing-table'
-import type { BillingRow } from '@dsh-claude-style/contracts/billing-table'
+import { billingQuery, billingRows } from '../../shared/billing'
 
 /**
  * The price table and the current session's settled cost, both from the host
@@ -19,41 +18,13 @@ const DAY_MS = 24 * 60 * 60 * 1000
 /** The shortest gap between two asks about one session. */
 const ASK_MS = 1500
 
-/** The reader's own rows, and the currency they answer in, as the page last sent them. */
-let billing: { rows: readonly BillingRow[], currency: string | null } = { rows: [], currency: null }
+export { adoptBillingRows, entryOf, billingRows } from '../../shared/billing'
 
 let document: PriceDocument | null = null
 let fetchedAt = 0
 let fetching: Promise<void> | null = null
 /** Bumped when the document changes, so a page that adopted one keeps it. */
 let generation = 0
-
-/** Adopt the reader's rows from the preferences; the answer to hand back is whether they moved. */
-export function adoptBillingRows(entries: readonly string[], currency: string | null) {
-  const rows = parseBillingTable(entries)
-  const same = rows.length === billing.rows.length
-    && rows.every((row, i) => entryOf(row) === entryOf(billing.rows[i]))
-  billing = { rows, currency }
-  return !same
-}
-
-/** One row written back as its stored entry, for comparing what stands. */
-export function entryOf(row: BillingRow) {
-  return billingRowEntry(row.model, String(row.cacheMiss ?? ''), String(row.cacheHit ?? ''), String(row.output ?? ''))
-}
-
-/** The reader's rows in force, for a caller that prices without asking the host. */
-export function billingRows() {
-  return billing.rows
-}
-
-/** The query the host needs to price with the reader's rows. */
-function billingQuery() {
-  const parts: string[] = []
-  if (billing.currency !== null) parts.push(`cur=${encodeURIComponent(billing.currency)}`)
-  for (const row of billing.rows) parts.push(`b=${encodeURIComponent(entryOf(row))}`)
-  return parts.length === 0 ? '' : `&${parts.join('&')}`
-}
 
 /** The table in force, or null until the host answers. */
 export function priceDocument() {

@@ -12,7 +12,7 @@
  * the browser half addresses the same names.
  */
 import { PACKAGE_NAME } from '@dsh-claude-style/contracts/package'
-import { HDSL_PATH, HDSL_SKIN_PATH, PEAKRATE_PATH, PRICES_PATH, ROUTE_PREFIX, SESSION_COST_PATH, SESSION_DELETE_PATH, SESSION_SEARCH_PATH, SOUND_PATH, USAGE_PATH, USERNAME_PATH, WEBFONTS_PATH } from '@dsh-claude-style/contracts/routes'
+import { HDSL_PATH, HDSL_SKIN_PATH, PEAKRATE_PATH, PRICES_PATH, ROUTE_PREFIX, SESSION_COST_PATH, SESSION_DELETE_PATH, SESSION_PANEL_PATH, SESSION_SEARCH_PATH, SOUND_PATH, USAGE_PATH, USERNAME_PATH, WEBFONTS_PATH } from '@dsh-claude-style/contracts/routes'
 import { OPTIONAL_WEBFONTS } from '@dsh-claude-style/contracts/webfonts'
 import { existsSync, readFileSync, readdirSync, realpathSync, rmSync, statSync } from 'node:fs'
 import { userInfo } from 'node:os'
@@ -31,6 +31,7 @@ import { createPeakRate } from './peakrate.js'
 import { createPrices } from './prices.js'
 import { QUERY_MAX, createSessionSearch } from './search.js'
 import { billingRowsOf, createSessionCost } from './session-cost.js'
+import { createSessionPanel } from './session-panel.js'
 import { sessionDirectoryName } from './session-name.js'
 import { createUsage } from './usage.js'
 
@@ -125,6 +126,9 @@ const SOUND_BODY_MAX = 1024
  * silently resolved through the escape.
  */
 const SESSION_ID_RE = /^[A-Za-z0-9._\-:@]{1,200}$/
+
+/** A background job id the panel may read output for: the registry's own `<kind>-<hex>` shape. */
+const JOB_ID_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{1,80}$/
 
 /**
  * Whether the host holds this session open right now.
@@ -288,10 +292,14 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
     const peakrate = createPeakRate(ctx)
     const prices = createPrices(ctx)
     const sessionCost = createSessionCost(ctx, prices)
+    const sessionPanel = createSessionPanel(ctx, sessionCost)
     // The listener is what makes a total O(1) after the first read; the
     // snapshot loads on the first ask, so a reader who never opens the figures
     // never reaches the repository.
     sessionCost.ensure()
+    // The panel's answers are folded on demand; the watch only marks a fold
+    // stale, so a reader who never opens the panel never builds one.
+    sessionPanel.ensure()
 
     const register = (label: string, route: DshRoute) => {
       try {
@@ -320,6 +328,21 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
     const fail = (res: DshResponse, error: unknown) => {
       if (res.headersSent) res.destroy()
       else sendJson(res, 500, { ok: false, error: String((error as { message?: string } | null)?.message ?? String(error)) })
+    }
+
+    /**
+     * The session id one read route serves, after the two checks every read of
+     * the user's own session runs — the method, then the host's peer fence
+     * (D75) — and the shape the id must keep: it names a stored session, so it
+     * never reaches the host as a path. Null means the answer already went out.
+     */
+    const guardedSessionId = (req: DshRequest, res: DshResponse): string | null => {
+      if (methodRefused(req, res, ['GET'])) return null
+      if (fenceRefused(ctx, req, res)) return null
+      const sessionId = (new URL(req.url ?? '/', 'http://local').searchParams.get('id') ?? '').trim()
+      if (SESSION_ID_RE.test(sessionId)) return sessionId
+      sendJson(res, 400, { ok: false, error: 'invalid session id' })
+      return null
     }
 
     register('model copy', {
@@ -544,19 +567,37 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
       handler: (req: DshRequest, res: DshResponse) => {
         // The answer is the user's own conversation priced, so it runs the same
         // fence as the usage roll-up and never accepts a path outside one id.
-        if (methodRefused(req, res, ['GET'])) return
-        if (fenceRefused(ctx, req, res)) return
-        const query = new URL(req.url ?? '/', 'http://local').searchParams
-        const sessionId = (query.get('id') ?? '').trim()
-        if (!SESSION_ID_RE.test(sessionId)) {
-          sendJson(res, 400, { ok: false, error: 'invalid session id' })
-          return
-        }
+        const sessionId = guardedSessionId(req, res)
+        if (sessionId === null) return
         // The reader's own rows travel with the ask (billing-table.ts): the host
         // prices with them, so a session is priced the same on a restart as in
         // the page that holds the settings.
-        const billing = readBillingRows(query)
+        const billing = readBillingRows(new URL(req.url ?? '/', 'http://local').searchParams)
         sendPayload(res, sessionCost.get(sessionId, billing).then(value => ({ value })))
+      },
+    })
+
+    register('session panel', {
+      kind: 'exact',
+      path: SESSION_PANEL_PATH,
+      handler: (req: DshRequest, res: DshResponse) => {
+        // The answer describes the user's own session, so it runs the same
+        // fence as the figures and never accepts a path outside one id.
+        const sessionId = guardedSessionId(req, res)
+        if (sessionId === null) return
+        // `?job=` asks for one job's retained output instead of the fold: the
+        // panel expands a row on demand and never carries output it is not showing.
+        const params = new URL(req.url ?? '/', 'http://local').searchParams
+        const jobId = (params.get('job') ?? '').trim()
+        if (jobId !== '') {
+          if (!JOB_ID_RE.test(jobId)) {
+            sendJson(res, 400, { ok: false, error: 'invalid job id' })
+            return
+          }
+          sendPayload(res, Promise.resolve({ value: sessionPanel.jobOutput(sessionId, jobId) }))
+          return
+        }
+        sendPayload(res, sessionPanel.get(sessionId, readBillingRows(params)).then(value => ({ value })))
       },
     })
 
@@ -568,6 +609,7 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
       prices.dispose()
       sessionCost.dispose()
       sessionSearch.dispose()
+      sessionPanel.dispose()
       // One route's disposer failing must not keep the others registered
       // (D12); the failure is reported.
       for (const dispose of disposers) {

@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-10",
+  "group": "new",
+  "order": 2,
+  "external": false,
+  "zh": "会话总览面板中的子智能体显示实际用时与用量、点击打开对应会话，后台任务可展开查看留存输出",
+  "en": "Show each subagent's real time and usage in the session overview, open its conversation from the row, and expand a background job's retained output"
+}

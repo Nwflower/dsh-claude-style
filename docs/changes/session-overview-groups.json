@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-10",
+  "group": "new",
+  "order": 8,
+  "external": false,
+  "zh": "会话总览的后台任务按进程、子智能体与团队分组，各组只在有行时出现，并在超过两条时各自折叠",
+  "en": "File the session overview's background rows under commands, subagents and team, each group shown only with rows and folded past its second row"
+}

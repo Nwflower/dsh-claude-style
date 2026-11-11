@@ -1,0 +1,482 @@
+/* The conversation's details rail and its sections (D94). The rail is the
+   skin's own fixed column beside the chat, and the body inside keeps the
+   column's own fill, inset and scroll (STYLE.md); every rule is scoped by the
+   skin's own body mark so a page without the skin never sees it. The sections follow Claude Code Desktop's panel: a
+   quiet uppercase heading, then rows of a mark, a title over a detail line and
+   a trailing chip. */
+
+body[data-dsh-claude-style] .dsh-claude-panel {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 14px 32px;
+  color: var(--dsw-alias-label-primary, #161616);
+  font-family: var(--dsw-font-family);
+  scrollbar-gutter: stable;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-section {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-heading {
+  margin: 0 0 6px;
+  padding: 0 8px;
+  color: var(--dsw-alias-label-tertiary, #8a8a8a);
+  font-size: calc(11px * var(--dsh-claude-interface-font-scale, 1));
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  line-height: 16px;
+  text-transform: uppercase;
+}
+
+/* The panel's quiet type: the empty-section note and the context legend read at
+   one size and rhythm. */
+body[data-dsh-claude-style] .dsh-claude-panel-note,
+body[data-dsh-claude-style] .dsh-claude-panel-legend-row {
+  margin: 0;
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 18px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-note {
+  padding: 2px 8px 0;
+  color: var(--dsw-alias-label-tertiary, #8a8a8a);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-row {
+  display: flex;
+  box-sizing: border-box;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-row.is-link,
+body[data-dsh-claude-style] .dsh-claude-panel-row.is-button {
+  cursor: pointer;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-row.is-link:hover,
+body[data-dsh-claude-style] .dsh-claude-panel-row.is-button:hover {
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.06));
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-row.is-link:focus-visible,
+body[data-dsh-claude-style] .dsh-claude-panel-row.is-button:focus-visible {
+  outline: var(--dsw-focus-ring-color, currentColor) solid 1.5px;
+  outline-offset: -1.5px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-mark {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  color: var(--dsw-alias-label-tertiary, #8a8a8a);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-main {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-title {
+  overflow: hidden;
+  color: var(--dsw-alias-label-primary, #161616);
+  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-detail {
+  color: var(--dsw-alias-label-tertiary, #8a8a8a);
+  font-size: calc(11.5px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 16px;
+}
+
+/* One line each, cut with the same ellipsis: a row's detail, the rail's preset
+   and a figure's own label. */
+body[data-dsh-claude-style] .dsh-claude-panel-detail,
+body[data-dsh-claude-style] .dsh-claude-details-preset,
+body[data-dsh-claude-style] .dsh-claude-panel-stat dt {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-side {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 5px;
+  max-width: 52%;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-chip {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  max-width: 150px;
+  height: 20px;
+  padding: 0 7px;
+  overflow: hidden;
+  border: 0.5px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.08));
+  border-radius: 6px;
+  color: var(--dsw-alias-label-secondary, #5c5c5c);
+  font-size: calc(11px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 19px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-chip.is-success {
+  color: var(--dsw-alias-state-success-primary, #1a7f37);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-chip.is-failure {
+  color: var(--dsw-alias-state-error-primary, #cf222e);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-chip.is-pending {
+  color: var(--dsw-alias-label-primary, #161616);
+}
+
+/* Context: the occupancy line, the bar of the three shares, and their legend. */
+
+body[data-dsh-claude-style] .dsh-claude-panel-context-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 8px;
+  margin-bottom: 8px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-percent {
+  color: var(--dsw-alias-label-secondary, #5c5c5c);
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 16px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-figures {
+  color: var(--dsw-alias-label-primary, #161616);
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
+  font-variant-numeric: tabular-nums;
+  line-height: 16px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-bar {
+  display: flex;
+  gap: 1px;
+  height: 5px;
+  margin: 0 8px 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--dsh-claude-divider, rgba(0, 0, 0, 0.06));
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-segment {
+  flex: none;
+  height: 100%;
+  min-width: 0;
+  border-radius: 1px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-system,
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-system {
+  background: var(--dsw-alias-label-tertiary, #8a8a8a);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-tools,
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-tools {
+  background: var(--dsh-claude-tone-orange, #cb936c);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-messages,
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-messages {
+  background: var(--dsh-claude-data-ink, #3b6ecf);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-free {
+  background: var(--dsh-claude-divider, rgba(0, 0, 0, 0.06));
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0;
+  padding: 0 8px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-legend-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  color: var(--dsw-alias-label-secondary, #5c5c5c);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-legend-row dt {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-legend-row dd {
+  margin: 0;
+  color: var(--dsw-alias-label-primary, #161616);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-legend-row dd.dsh-claude-panel-share {
+  color: var(--dsw-alias-label-tertiary, #8a8a8a);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-legend-row.is-free {
+  margin-top: 5px;
+  padding-top: 8px;
+  border-top: 0.5px solid var(--dsh-claude-divider, rgba(0, 0, 0, 0.06));
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-dot {
+  display: inline-block;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+/* The header control wears the host's ghost button; only its box is the
+   header's own, a 28px square like the utilities beside it. The pressed state
+   is the mark the host puts on its panel box while the overview is in front. */
+body[data-dsh-claude-style] .dsh-claude-session-panel-button {
+  box-sizing: border-box;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 7px;
+  color: var(--dsw-alias-label-secondary, #5c5c5c);
+  -webkit-app-region: no-drag;
+}
+
+body[data-dsh-claude-style] .dsh-claude-session-panel-button:hover,
+body[data-dsh-claude-style] .dsh-claude-session-panel-button:focus-visible {
+  color: var(--dsw-alias-label-primary, #161616);
+}
+
+body[data-dsh-claude-style] .dsh-claude-session-panel-button[aria-pressed="true"] {
+  color: var(--dsw-alias-label-primary, #161616);
+  background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, 0.06));
+}
+
+/* One job's retained output, under the row the reader opened. */
+body[data-dsh-claude-style] .dsh-claude-panel-job-output {
+  box-sizing: border-box;
+  max-height: 220px;
+  margin: 0 8px 6px 34px;
+  padding: 8px 10px;
+  overflow: auto;
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-layer-2, rgba(0, 0, 0, 0.03));
+  color: var(--dsw-alias-label-secondary, #5c5c5c);
+  font-family: var(--dsw-font-mono, ui-monospace, monospace);
+  font-size: calc(11px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 16px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* The host's own background-work chips beside the title step aside while the
+   overview is installed: the same work is the panel's Background tasks section,
+   where a row opens the child session or the job's output (D94). The team and
+   preset chips keep their seats. */
+body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-claude-part~="header-actions"] button[aria-haspopup="tree"],
+body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-claude-part~="header-actions"] button[aria-expanded]:not([aria-haspopup]) {
+  display: none;
+}
+
+/* The control that unfolds a section's rows past the third. */
+body[data-dsh-claude-style] .dsh-claude-panel-more {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 2px 0 0;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dsw-alias-label-tertiary, #8a8a8a);
+  font: inherit;
+  font-size: calc(11.5px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 16px;
+  text-align: start;
+  cursor: pointer;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-more:hover,
+body[data-dsh-claude-style] .dsh-claude-panel-more:focus-visible {
+  color: var(--dsw-alias-label-primary, #161616);
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.06));
+}
+
+/* A background category's label: an eyebrow over its rows, quiet enough to
+   read as a division of the section rather than a second heading. */
+body[data-dsh-claude-style] .dsh-claude-panel-group-title {
+  margin: 10px 8px 2px;
+  color: var(--dsw-alias-label-tertiary, #8a8a8a);
+  font: inherit;
+  font-size: calc(11px * var(--dsh-claude-interface-font-scale, 1));
+  font-weight: 600;
+  line-height: 15px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-group:first-of-type .dsh-claude-panel-group-title {
+  margin-top: 0;
+}
+
+/* The conversation's details rail (D94): the skin's own column beside the chat,
+   placed against the conversation column's edge and filled like the column's
+   other pages. It opens and retreats with that column's width, so it carries no
+   tab chrome of its own; the body inside keeps the panel's inset and scroll. */
+/* The rail's own mount: a body child that lays nothing out itself, so the
+   fixed column inside it is placed against the page, not against a box. */
+body[data-dsh-claude-style] .dsh-claude-details-root {
+  display: contents;
+}
+
+body[data-dsh-claude-style] .dsh-claude-details {
+  position: fixed;
+  z-index: var(--dsh-claude-layer-peek);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  border-left: 1px solid var(--dsw-alias-border-secondary, rgba(0, 0, 0, 0.08));
+  background: var(--dsw-alias-bg-layer-1, #ffffff);
+}
+
+body[data-dsh-claude-style] .dsh-claude-details-head {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 10px 4px 14px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-details-title {
+  color: var(--dsw-alias-label-primary, #161616);
+  font-family: var(--dsw-font-family);
+  font-size: calc(12.5px * var(--dsh-claude-interface-font-scale, 1));
+  font-weight: 600;
+  line-height: 20px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-details-preset {
+  min-width: 0;
+  color: var(--dsw-alias-label-tertiary, #8a8a8a);
+  font-size: calc(11.5px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 18px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-details-close {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-tertiary, #8a8a8a);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+body[data-dsh-claude-style] .dsh-claude-details-close:hover,
+body[data-dsh-claude-style] .dsh-claude-details-close:focus-visible {
+  color: var(--dsw-alias-label-primary, #161616);
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.06));
+}
+
+body[data-dsh-claude-style] .dsh-claude-details > .dsh-claude-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding-top: 8px;
+}
+
+/* The rail takes its width from the conversation: the chat reflows into the
+   rest of the column, and the header's own controls follow it. */
+body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-claude-part~="center-column"] {
+  padding-right: 320px;
+}
+
+/* The session's figures: label over value, two columns, tokens listed after
+   the headline figures at the same size. */
+body[data-dsh-claude-style] .dsh-claude-panel-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 12px;
+  margin: 4px 8px 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-stat dt {
+  color: var(--dsw-alias-label-tertiary, #8a8a8a);
+  font-size: calc(11px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 16px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-stat dd {
+  margin: 0;
+  color: var(--dsw-alias-label-primary, #161616);
+  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
+  font-variant-numeric: tabular-nums;
+  line-height: 18px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-stat.is-token dd {
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
+}
