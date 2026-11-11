@@ -1,39 +1,130 @@
 /* The conversation's details rail and its sections (D94). The rail is the
    skin's own fixed column beside the chat, and the body inside keeps the
    column's own fill, inset and scroll (STYLE.md); every rule is scoped by the
-   skin's own body mark so a page without the skin never sees it. The sections follow Claude Code Desktop's panel: a
-   quiet uppercase heading, then rows of a mark, a title over a detail line and
-   a trailing chip. */
+   skin's own body mark so a page without the skin never sees it. Sections use
+   Claude Desktop's regular headings and divider rhythm; environment rows keep
+   the folder and branch on separate single lines. */
 
 body[data-dsh-claude-style] .dsh-claude-panel {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 22px;
   height: 100%;
   min-height: 0;
   overflow-y: auto;
-  padding: 18px 14px 32px;
+  padding: 14px 10px 32px 16px;
   color: var(--dsw-alias-label-primary, #161616);
   font-family: var(--dsw-font-family);
-  scrollbar-gutter: stable;
+  scrollbar-width: thin;
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-section {
-  display: flex;
-  flex-direction: column;
+  display: block;
   min-width: 0;
+  flex: none;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--dsh-claude-divider);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-section:first-child {
+  padding-top: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-section:last-child {
+  border-bottom: 0;
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-heading {
-  margin: 0 0 6px;
-  padding: 0 8px;
-  color: var(--dsw-alias-label-tertiary, #8a8a8a);
-  font-size: calc(11px * var(--dsh-claude-interface-font-scale, 1));
-  font-weight: 600;
-  letter-spacing: 0.07em;
-  line-height: 16px;
-  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  color: var(--dsw-alias-label-primary, #161616);
+  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
+  font-weight: 400;
+  /* The rail's section titles use UI type; the page's display headings use
+     the serif family and tighter tracking (D9, D30, D94). */
+  font-family: var(--dsw-font-family);
+  letter-spacing: normal;
+  line-height: 20px;
+}
+
+/* Native disclosures keep keyboard activation and expose their open state;
+   only the compact reading disappears while the content stands open (D94). */
+body[data-dsh-claude-style] .dsh-claude-panel-section-toggle {
+  display: block;
+  list-style: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-section-toggle::-webkit-details-marker {
+  display: none;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-section-toggle:focus-visible {
+  outline: 1.5px solid var(--dsw-focus-ring-color, currentColor);
+  outline-offset: 3px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-section-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-section-chevron {
+  display: inline-flex;
+  flex: none;
+  color: var(--dsw-alias-label-secondary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-section-reading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 55%;
+  min-width: 0;
+  margin-left: auto;
+  overflow: hidden;
+  color: var(--dsw-alias-label-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-section[open] .dsh-claude-panel-section-reading {
+  display: none;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-section[open] .dsh-claude-panel-section-chevron {
+  transform: rotate(90deg);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-section-content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding-top: 6px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-context-mini {
+  display: inline-flex;
+  flex: none;
+  box-sizing: border-box;
+  width: 24px;
+  height: 8px;
+  padding: 2px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--dsw-alias-border-l1);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-context-mini > span {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--dsh-claude-context-messages);
 }
 
 /* The panel's quiet type: the empty-section note and the context legend read at
@@ -41,19 +132,19 @@ body[data-dsh-claude-style] .dsh-claude-panel-heading {
 body[data-dsh-claude-style] .dsh-claude-panel-note,
 body[data-dsh-claude-style] .dsh-claude-panel-legend-row {
   margin: 0;
-  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
-  line-height: 18px;
+  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 20px;
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-note {
-  padding: 2px 8px 0;
+  padding: 2px 0 0;
   color: var(--dsw-alias-label-tertiary, #8a8a8a);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-list {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 0;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -67,7 +158,8 @@ body[data-dsh-claude-style] .dsh-claude-panel-row {
   width: 100%;
   min-width: 0;
   margin: 0;
-  padding: 6px 8px;
+  min-height: 32px;
+  padding: 6px 0;
   border: 0;
   border-radius: 8px;
   background: transparent;
@@ -98,8 +190,8 @@ body[data-dsh-claude-style] .dsh-claude-panel-mark {
   flex: none;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  color: var(--dsw-alias-label-tertiary, #8a8a8a);
+  width: 20px;
+  color: var(--dsw-alias-label-secondary, #5c5c5c);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-main {
@@ -110,11 +202,39 @@ body[data-dsh-claude-style] .dsh-claude-panel-main {
   min-width: 0;
 }
 
+body[data-dsh-claude-style] .dsh-claude-panel-main.is-inline {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 4px;
+  overflow: hidden;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-main.is-inline,
+body[data-dsh-claude-style] .dsh-claude-panel-title,
+body[data-dsh-claude-style] .dsh-claude-panel-percent {
+  font-size: calc(15px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 20px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-main.is-inline .dsh-claude-panel-title {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-main.is-inline .dsh-claude-panel-detail {
+  flex: 0 2 auto;
+  min-width: 0;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-main.is-inline .dsh-claude-panel-detail::before {
+  content: '· ';
+}
+
 body[data-dsh-claude-style] .dsh-claude-panel-title {
   overflow: hidden;
   color: var(--dsw-alias-label-primary, #161616);
-  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
-  line-height: 18px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -172,86 +292,100 @@ body[data-dsh-claude-style] .dsh-claude-panel-chip.is-pending {
   color: var(--dsw-alias-label-primary, #161616);
 }
 
-/* Context: the occupancy line, the bar of the three shares, and their legend. */
+/* Context categories share their colour between the bar and legend (D9, D94). */
 
 body[data-dsh-claude-style] .dsh-claude-panel-context-head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
-  padding: 0 8px;
-  margin-bottom: 8px;
+  padding: 0;
+  margin-bottom: 6px;
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-percent {
-  color: var(--dsw-alias-label-secondary, #5c5c5c);
-  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
-  line-height: 16px;
+  color: var(--dsw-alias-label-primary, #161616);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-figures {
-  color: var(--dsw-alias-label-primary, #161616);
-  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
+  color: var(--dsw-alias-label-secondary, #5c5c5c);
+  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
   font-variant-numeric: tabular-nums;
   line-height: 16px;
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-bar {
   display: flex;
-  gap: 1px;
-  height: 5px;
-  margin: 0 8px 10px;
+  height: 4px;
+  margin: 0 0 8px;
   overflow: hidden;
   border-radius: 999px;
-  background: var(--dsh-claude-divider, rgba(0, 0, 0, 0.06));
+  background: var(--dsw-alias-border-l1);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-segment {
   flex: none;
   height: 100%;
   min-width: 0;
-  border-radius: 1px;
+  box-shadow: inset -1px 0 var(--dsw-alias-bg-layer-1);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-segment.is-system,
 body[data-dsh-claude-style] .dsh-claude-panel-dot.is-system {
-  background: var(--dsw-alias-label-tertiary, #8a8a8a);
+  background: var(--dsh-claude-context-system);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-segment.is-tools,
 body[data-dsh-claude-style] .dsh-claude-panel-dot.is-tools {
-  background: var(--dsh-claude-tone-orange, #cb936c);
+  background: var(--dsh-claude-context-tools);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-segment.is-messages,
 body[data-dsh-claude-style] .dsh-claude-panel-dot.is-messages {
-  background: var(--dsh-claude-data-ink, #3b6ecf);
+  background: var(--dsh-claude-context-messages);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-mcp,
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-mcp {
+  background: var(--dsh-claude-context-mcp);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-memory,
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-memory,
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-skills,
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-skills {
+  background: var(--dsw-alias-label-tertiary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-other,
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-other {
+  background: var(--dsw-alias-label-caption);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-dot.is-free {
-  background: var(--dsh-claude-divider, rgba(0, 0, 0, 0.06));
+  background: var(--dsw-alias-border-l1);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-legend {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
   margin: 0;
-  padding: 0 8px;
+  padding: 0;
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-legend-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto 50px;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   color: var(--dsw-alias-label-secondary, #5c5c5c);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-legend-row dt {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 12px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -259,26 +393,24 @@ body[data-dsh-claude-style] .dsh-claude-panel-legend-row dt {
 
 body[data-dsh-claude-style] .dsh-claude-panel-legend-row dd {
   margin: 0;
-  color: var(--dsw-alias-label-primary, #161616);
+  color: var(--dsw-alias-label-secondary, #5c5c5c);
   font-variant-numeric: tabular-nums;
   text-align: end;
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-legend-row dd.dsh-claude-panel-share {
-  color: var(--dsw-alias-label-tertiary, #8a8a8a);
+  color: var(--dsw-alias-label-primary, #161616);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-legend-row.is-free {
-  margin-top: 5px;
-  padding-top: 8px;
-  border-top: 0.5px solid var(--dsh-claude-divider, rgba(0, 0, 0, 0.06));
+  color: var(--dsw-alias-label-tertiary);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-dot {
   display: inline-block;
   flex: none;
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 10px;
   border-radius: 2px;
 }
 
@@ -389,56 +521,17 @@ body[data-dsh-claude-style] .dsh-claude-details {
   background: var(--dsw-alias-bg-layer-1, #ffffff);
 }
 
-body[data-dsh-claude-style] .dsh-claude-details-head {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 10px 4px 14px;
-}
-
-body[data-dsh-claude-style] .dsh-claude-details-title {
-  color: var(--dsw-alias-label-primary, #161616);
-  font-family: var(--dsw-font-family);
-  font-size: calc(12.5px * var(--dsh-claude-interface-font-scale, 1));
-  font-weight: 600;
-  line-height: 20px;
-}
-
 body[data-dsh-claude-style] .dsh-claude-details-preset {
   min-width: 0;
+  margin: 6px 0 0 30px;
   color: var(--dsw-alias-label-tertiary, #8a8a8a);
   font-size: calc(11.5px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 18px;
 }
 
-body[data-dsh-claude-style] .dsh-claude-details-close {
-  display: grid;
-  flex: 0 0 auto;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  margin-left: auto;
-  padding: 0;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--dsw-alias-label-tertiary, #8a8a8a);
-  font-size: 16px;
-  line-height: 1;
-  cursor: pointer;
-}
-
-body[data-dsh-claude-style] .dsh-claude-details-close:hover,
-body[data-dsh-claude-style] .dsh-claude-details-close:focus-visible {
-  color: var(--dsw-alias-label-primary, #161616);
-  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.06));
-}
-
 body[data-dsh-claude-style] .dsh-claude-details > .dsh-claude-panel {
   flex: 1 1 auto;
   min-height: 0;
-  padding-top: 8px;
 }
 
 /* The rail takes its width from the conversation: the chat reflows into the
@@ -447,36 +540,36 @@ body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-claude-part
   padding-right: 320px;
 }
 
-/* The session's figures: label over value, two columns, tokens listed after
-   the headline figures at the same size. */
+/* Full-width metric rows keep long durations readable; the token buckets form
+   a second group beneath the session's figures (D94). */
 body[data-dsh-claude-style] .dsh-claude-panel-stats {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 12px;
-  margin: 4px 8px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 18px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-stats + .dsh-claude-panel-stats {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--dsh-claude-divider);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 12px;
   min-width: 0;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-stat dt {
-  color: var(--dsw-alias-label-tertiary, #8a8a8a);
-  font-size: calc(11px * var(--dsh-claude-interface-font-scale, 1));
-  line-height: 16px;
+  color: var(--dsw-alias-label-secondary, #5c5c5c);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-stat dd {
   margin: 0;
   color: var(--dsw-alias-label-primary, #161616);
-  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
   font-variant-numeric: tabular-nums;
-  line-height: 18px;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-stat.is-token dd {
-  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
+  text-align: end;
+  white-space: nowrap;
 }

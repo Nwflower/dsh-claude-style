@@ -7,6 +7,7 @@ import { openPanelFile, openPanelSession } from './session-panel-host'
 import { billingCurrency, statsCostText } from './stats-cost'
 import { readPrefs, subscribePrefs } from '../../core/prefs'
 import { useJobOutput, usePanelReading } from './session-panel-data'
+import { contextRows } from './context-rows'
 import type { PanelBackground, PanelChange, PanelContext, PanelEnvironment, PanelJob, PanelOutput, PanelStats, PanelSubagent } from '@dsh-claude-style/contracts/session-panel'
 
 const h = React.createElement
@@ -14,6 +15,7 @@ const h = React.createElement
 /** The conversation session whose details the rail's body reads. */
 export interface PanelBodyProps {
   sessionId?: unknown
+  preset: string
 }
 
 /**
@@ -28,10 +30,10 @@ export interface PanelBodyProps {
 export function PanelBody(props: PanelBodyProps) {
   const sessionId = typeof props.sessionId === 'string' && props.sessionId !== '' ? props.sessionId : null
   if (sessionId === null) return null
-  return h(PanelView, { sessionId })
+  return h(PanelView, { sessionId, preset: props.preset })
 }
 
-function PanelView({ sessionId }: { sessionId: string }) {
+function PanelView({ sessionId, preset }: { sessionId: string, preset: string }) {
   const { value, failed } = usePanelReading(sessionId)
   // A running row's clock has to move between the panel's own polls.
   const running = value !== null && hasRunningWork(value.background)
@@ -46,7 +48,7 @@ function PanelView({ sessionId }: { sessionId: string }) {
       h('p', { className: 'dsh-claude-panel-note' }, copy(failed ? 'unavailable' : 'loading')))
   }
   return h('div', { className: 'dsh-claude-panel' },
-    value.environment === null ? null : h(EnvironmentSection, { key: 'environment', environment: value.environment }),
+    value.environment === null ? null : h(EnvironmentSection, { key: 'environment', environment: value.environment, preset }),
     h(ContextSection, { key: 'context', context: value.context }),
     value.stats === null || value.stats === undefined ? null : h(StatsSection, { key: 'stats', stats: value.stats }),
     value.outputs.length === 0 ? null : h(OutputsSection, { key: 'outputs', sessionId, directory: value.environment?.directory, outputs: value.outputs }),
@@ -54,11 +56,19 @@ function PanelView({ sessionId }: { sessionId: string }) {
     hasBackgroundWork(value.background) ? h(BackgroundSection, { key: 'background', sessionId, background: value.background }) : null)
 }
 
-/** One titled group of rows. */
-function Section({ title, children }: { title: string, children?: React.ReactNode }) {
-  return h('section', { className: 'dsh-claude-panel-section' },
-    h('h2', { className: 'dsh-claude-panel-heading' }, title),
-    children)
+/** Each section owns a native disclosure (D94): its children stay mounted so
+ * folding preserves list expansion and an opened job's output. An unchanged
+ * `open` prop lets the browser keep the reader's choice across data refreshes.
+ */
+function Section({ title, summary, children }: { title: string, summary?: React.ReactNode, children?: React.ReactNode }) {
+  return h('details', { className: 'dsh-claude-panel-section', open: true },
+    h('summary', { className: 'dsh-claude-panel-section-toggle' },
+      h('h2', { className: 'dsh-claude-panel-heading' },
+        h('span', { className: 'dsh-claude-panel-section-title' }, title),
+        h('span', { className: 'dsh-claude-panel-section-chevron', 'aria-hidden': true },
+          h(primitives.IconChevronRightOutlineRegular, { size: 12 })),
+        summary === undefined ? null : h('span', { className: 'dsh-claude-panel-section-reading' }, summary))),
+    h('div', { className: 'dsh-claude-panel-section-content' }, children))
 }
 
 /** How many rows a section or a background category shows before folding the rest behind its own control. */
@@ -95,10 +105,10 @@ function BackgroundGroup({ title, rows }: { title: string, rows: readonly React.
 }
 
 /** One row: a mark, a title over a line of detail, and a trailing side. */
-function Row(props: { mark?: React.ReactNode, title: string, detail?: string, side?: React.ReactNode, href?: string, onClick?: () => void, expanded?: boolean }) {
+function Row(props: { mark?: React.ReactNode, title: string, detail?: string, inline?: boolean, side?: React.ReactNode, href?: string, onClick?: () => void, expanded?: boolean }) {
   const content = [
     props.mark === undefined ? null : h('span', { key: 'mark', className: 'dsh-claude-panel-mark', 'aria-hidden': true }, props.mark),
-    h('span', { key: 'main', className: 'dsh-claude-panel-main' },
+    h('span', { key: 'main', className: `dsh-claude-panel-main${props.inline ? ' is-inline' : ''}`, title: props.detail === undefined ? props.title : `${props.title} · ${props.detail}` },
       h('span', { className: 'dsh-claude-panel-title' }, props.title),
       props.detail === undefined || props.detail === '' ? null : h('span', { className: 'dsh-claude-panel-detail' }, props.detail)),
     props.side === undefined ? null : h('span', { key: 'side', className: 'dsh-claude-panel-side' }, props.side),
@@ -146,7 +156,7 @@ export function baseName(path: string) {
   return index === -1 ? normalized : normalized.slice(index + 1)
 }
 
-/** A share of a whole, as the panel prints it: one decimal under ten percent. */
+/** The headline occupancy; detailed rows keep one decimal of the window. */
 function sharePercent(value: number, whole: number) {
   if (whole <= 0) return '0'
   const percent = Math.max(0, Math.min(100, value / whole * 100))
@@ -169,58 +179,61 @@ export function elapsedText(ms: number) {
 }
 
 /** Where the session works: the machine, the directory, and the checkouts around it. */
-function EnvironmentSection({ environment }: { environment: PanelEnvironment }) {
+function EnvironmentSection({ environment, preset }: { environment: PanelEnvironment, preset: string }) {
   const rows: React.ReactNode[] = [
     h(Row, {
       key: 'computer',
-      mark: h(primitives.IconWorkspaceTreeOutlineRegular, { size: 15 }),
+      mark: h('svg', { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinejoin: 'round' },
+        h('rect', { x: 5, y: 3, width: 14, height: 12, rx: 2 }),
+        h('path', { d: 'M5 15 2 19v1h20v-1l-3-4M2 19h20' })),
       title: copy('thisComputer'),
-      detail: environment.user === '' ? undefined : environment.user,
     }),
     h(Row, {
       key: 'directory',
-      mark: h(primitives.IconFolderOpenOutlineRegular, { size: 15 }),
+      mark: h(primitives.IconFolderOpenOutlineRegular, { size: 18 }),
       title: baseName(environment.directory),
-      detail: shortPath(environment.directory, environment.home),
+      detail: shortPath(environment.directory, environment.home).replace(/\/[^/]+$/, ''),
+      inline: true,
     }),
   ]
   const checkout = environment.checkout
   if (checkout !== null) {
     rows.push(h(RepositoryRow, {
       key: `checkout:${checkout.root}`,
-      name: checkout.repository ?? baseName(checkout.root),
+      name: shortPath(checkout.root, environment.home) === shortPath(environment.directory, environment.home) ? undefined : baseName(checkout.root),
       branch: checkout.branch,
       linked: checkout.linked,
-      detail: shortPath(checkout.root, environment.home),
+      detail: checkout.repository ?? undefined,
+      commit: checkout.commit,
     }))
   }
   for (const repository of environment.repositories) {
     rows.push(h(RepositoryRow, {
       key: `repository:${repository.name}`,
-      name: repository.repository ?? repository.name,
+      name: repository.name,
       branch: repository.branch,
       linked: false,
-      detail: repository.name,
+      detail: repository.repository ?? undefined,
     }))
   }
-  return h(Section, { title: copy('environment') },
-    h('div', { className: 'dsh-claude-panel-list' }, rows))
+  return h(Section, { title: copy('environment'), summary: baseName(environment.directory) },
+    h('div', { className: 'dsh-claude-panel-list' }, rows),
+    preset === '' ? null : h('p', { className: 'dsh-claude-details-preset', title: preset }, preset))
 }
 
-function RepositoryRow(props: { name: string, branch: string | null, linked: boolean, detail: string }) {
-  const side: React.ReactNode[] = []
-  if (props.branch !== null) {
-    side.push(h(Chip, { key: 'branch', text: props.branch }))
-  }
-  if (props.linked) {
-    side.push(h(Chip, { key: 'worktree', text: copy('worktree') }))
-  }
-  return h(Row, {
-    mark: h(primitives.IconBranchOutlineRegular, { size: 15 }),
-    title: props.name,
-    detail: props.detail,
-    side: side.length === 0 ? undefined : side,
-  })
+function RepositoryRow(props: { name?: string, branch: string | null, linked: boolean, detail?: string, commit?: string | null }) {
+  // A checkout already named by the directory needs only its branch (D94).
+  // Additional checkouts keep their folder row immediately above the branch.
+  return h(React.Fragment, null,
+    props.name === undefined ? null : h(Row, {
+      mark: h(primitives.IconFolderOpenOutlineRegular, { size: 18 }),
+      title: props.name, detail: props.detail, inline: true,
+    }),
+    h(Row, {
+      mark: h(primitives.IconBranchOutlineRegular, { size: 18 }),
+      title: props.branch ?? props.commit ?? copy('detachedHead'),
+      side: props.linked ? h(Chip, { text: copy('worktree') }) : undefined,
+    }))
 }
 
 /** The context window's occupancy, its composition, and the room left. */
@@ -229,57 +242,57 @@ function ContextSection({ context }: { context: PanelContext | null }) {
     return h(Section, { title: copy('context') },
       h('p', { className: 'dsh-claude-panel-note' }, copy('noContext')))
   }
-  const rows = [
-    { key: 'system', className: 'is-system', label: copy('systemTokens'), value: context.system },
-    { key: 'tools', className: 'is-tools', label: copy('toolTokens'), value: context.tools },
-    { key: 'messages', className: 'is-messages', label: copy('messageTokens'), value: context.messages },
-  ]
-  // Occupancy is the provider-anchored reading; the composition is the meter's
-  // own heuristic and does not sum to it (dsh-token-meter's projection). The bar
-  // therefore fills `used` and splits that fill by the composition's own shares,
-  // as the host's meter does; the rows print the approximation their values are,
-  // and carry no percentage they do not have.
-  const composition = rows.reduce((total, row) => total + row.value, 0)
-  const percent = Math.min(100, Math.max(0, context.used / context.window * 100))
+  const rows = contextRows(context)
   const free = Math.max(0, context.window - context.used)
-  return h(Section, { title: copy('context') },
+  const percent = sharePercent(context.used, context.window)
+  return h(Section, {
+    title: copy('context'),
+    summary: h(React.Fragment, null,
+      h('span', null, `${percent}%`),
+      h('span', { className: 'dsh-claude-panel-context-mini', 'aria-hidden': true },
+        h('span', { style: { width: `${Math.min(100, Math.max(0, context.used / context.window * 100))}%` } }))),
+  },
     h('div', { className: 'dsh-claude-panel-context' },
       h('div', { className: 'dsh-claude-panel-context-head' },
-        h('span', { className: 'dsh-claude-panel-percent' }, copy('contextUsedPct', { percent: sharePercent(context.used, context.window) })),
+        h('span', { className: 'dsh-claude-panel-percent' }, copy('contextUsedPct', { percent })),
         h('span', { className: 'dsh-claude-panel-figures' },
           `${formatCompactTokens(context.used)} / ${formatCompactTokens(context.window)}`)),
       h('div', {
         className: 'dsh-claude-panel-bar',
         role: 'img',
-        'aria-label': copy('contextUsedPct', { percent: sharePercent(context.used, context.window) }),
+        'aria-label': copy('contextUsedPct', { percent }),
       }, rows.map(row => h('span', {
-        key: row.key,
-        className: `dsh-claude-panel-segment ${row.className}`,
-        style: { width: `${composition <= 0 ? 0 : percent * row.value / composition}%` },
+        key: row.kind,
+        className: `dsh-claude-panel-segment is-${row.kind}`,
+        style: { width: `${row.share}%` },
       }))),
-      h('dl', { className: 'dsh-claude-panel-legend' },
-        rows.map(row => h('div', { key: row.key, className: 'dsh-claude-panel-legend-row' },
+      h('dl', { className: 'dsh-claude-panel-legend', title: copy('contextEstimate') },
+        rows.map(row => h('div', { key: row.kind, className: 'dsh-claude-panel-legend-row' },
           h('dt', null,
-            h('i', { className: `dsh-claude-panel-dot ${row.className}`, 'aria-hidden': true }),
-            row.label),
-          h('dd', null, `~${formatCompactTokens(row.value)}`))),
+            h('i', { className: `dsh-claude-panel-dot is-${row.kind}`, 'aria-hidden': true }),
+            copy(row.label)),
+          h('dd', null, `~${formatCompactTokens(row.tokens)}`),
+          h('dd', { className: 'dsh-claude-panel-share' }, `~${row.share.toFixed(1)}%`))),
         h('div', { className: 'dsh-claude-panel-legend-row is-free' },
           h('dt', null,
             h('i', { className: 'dsh-claude-panel-dot is-free', 'aria-hidden': true }),
             copy('contextFree')),
-          h('dd', null, `~${formatCompactTokens(free)}`)))))
+          h('dd', null, formatCompactTokens(free)),
+          h('dd', { className: 'dsh-claude-panel-share' }, `${(free / context.window * 100).toFixed(1)}%`)))))
 }
 
-/** The session's own figures: model and tool time, decode speed, tokens and cost. */
+/** The session's own figures, followed by its token buckets (D94). Each figure
+ * gets a full row so a long elapsed time keeps its value beside its label.
+ */
 function StatsSection({ stats }: { stats: PanelStats }) {
   const currency = useBillingCurrency()
   const rows: { key: string, label: string, value: string }[] = []
   rows.push({ key: 'turns', label: copy('statsTurns'), value: String(stats.turns) })
   rows.push({ key: 'steps', label: copy('statsSteps'), value: String(stats.steps) })
+  if (stats.decodeMs > 0) rows.push({ key: 'speed', label: copy('statsOutputSpeed'), value: `${Math.round(stats.decodeTokens / (stats.decodeMs / 1000))} tok/s` })
+  if (stats.ttftSteps > 0) rows.push({ key: 'ttft', label: copy('statsFirstToken'), value: hostDuration(stats.ttftMs / stats.ttftSteps) })
   rows.push({ key: 'model', label: copy('statsModelTime'), value: hostDuration(stats.llmMs) })
   rows.push({ key: 'tool', label: copy('statsToolTime'), value: hostDuration(stats.toolMs) })
-  if (stats.ttftSteps > 0) rows.push({ key: 'ttft', label: copy('statsFirstToken'), value: hostDuration(stats.ttftMs / stats.ttftSteps) })
-  if (stats.decodeMs > 0) rows.push({ key: 'speed', label: copy('statsOutputSpeed'), value: `${Math.round(stats.decodeTokens / (stats.decodeMs / 1000))} tok/s` })
   const cacheable = stats.cacheReadTokens + stats.uncachedInputTokens
   if (cacheable > 0) rows.push({ key: 'cache', label: copy('statsCacheHit'), value: `${Math.round((stats.cacheReadTokens / cacheable) * 100)}%` })
   const cost = statsCostText(stats.cost, currency)
@@ -290,14 +303,12 @@ function StatsSection({ stats }: { stats: PanelStats }) {
     { key: 'write', label: copy('statsCacheWrite'), value: `${formatCompactTokens(stats.cacheWriteTokens)} tok` },
     { key: 'out', label: copy('statsOutput'), value: `${formatCompactTokens(stats.outputTokens)} tok` },
   ]
-  return h(Section, { title: copy('sessionStats') },
-    h('dl', { className: 'dsh-claude-panel-stats' },
-      rows.map(row => h('div', { key: row.key, className: 'dsh-claude-panel-stat' },
-        h('dt', null, row.label),
-        h('dd', null, row.value))),
-      tokens.map(row => h('div', { key: row.key, className: 'dsh-claude-panel-stat is-token' },
-        h('dt', null, row.label),
-        h('dd', null, row.value)))))
+  return h(Section, { title: copy('sessionStats'), summary: copy('sectionTurns', { count: stats.turns }) },
+    [{ key: 'figures', rows }, { key: 'tokens', rows: tokens }].map(group =>
+      h('dl', { key: group.key, className: 'dsh-claude-panel-stats' },
+        group.rows.map(row => h('div', { key: row.key, className: 'dsh-claude-panel-stat' },
+          h('dt', null, row.label),
+          h('dd', null, row.value))))))
 }
 
 /** The currency the reader's billing setting chose, followed across a settings change. */
@@ -309,7 +320,7 @@ function useBillingCurrency() {
 
 /** The files the session presented or wrote. */
 function OutputsSection({ sessionId, directory, outputs }: { sessionId: string, directory?: string, outputs: readonly PanelOutput[] }) {
-  return h(Section, { title: copy('outputs') },
+  return h(Section, { title: copy('outputs'), summary: copy('sectionItems', { count: outputs.length }) },
     h(FoldedList, { rows: outputs.map(output => h(Row, {
       key: output.path,
       mark: h(primitives.FileTypeIcon, { path: output.name, size: 16 }),
@@ -341,7 +352,7 @@ function ChangesSection({ changes }: { changes: readonly PanelChange[] }) {
         href: change.url,
       })
   })
-  return h(Section, { title: copy('changes') }, h(FoldedList, { rows }))
+  return h(Section, { title: copy('changes'), summary: copy('sectionItems', { count: changes.length }) }, h(FoldedList, { rows }))
 }
 
 /** Whether any background row is still moving. */
@@ -485,7 +496,7 @@ function BackgroundSection({ sessionId, background }: { sessionId: string, backg
       }))
     }
   }
-  return h(Section, { title: copy('background') },
+  return h(Section, { title: copy('background'), summary: copy('sectionItems', { count: jobRows.length + childRows.length + teamRows.length }) },
     jobRows.length === 0 ? null : h(BackgroundGroup, { key: 'jobs', title: copy('jobs'), rows: jobRows }),
     childRows.length === 0 ? null : h(BackgroundGroup, { key: 'subagents', title: copy('subagents'), rows: childRows }),
     teamRows.length === 0 ? null : h(BackgroundGroup, { key: 'team', title: copy('team'), rows: teamRows }))

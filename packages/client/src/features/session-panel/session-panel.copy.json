@@ -27,6 +27,10 @@
     "zh": "工作树",
     "en": "Worktree"
   },
+  "detachedHead": {
+    "zh": "分离的 HEAD",
+    "en": "Detached HEAD"
+  },
   "context": {
     "zh": "上下文",
     "en": "Context"
@@ -44,8 +48,28 @@
     "en": "System prompt"
   },
   "toolTokens": {
-    "zh": "工具",
-    "en": "Tools"
+    "zh": "系统工具",
+    "en": "System tools"
+  },
+  "mcpTokens": {
+    "zh": "MCP 工具",
+    "en": "MCP tools"
+  },
+  "memoryTokens": {
+    "zh": "指令文件",
+    "en": "Memory files"
+  },
+  "skillTokens": {
+    "zh": "技能",
+    "en": "Skills"
+  },
+  "otherContextTokens": {
+    "zh": "其他上下文",
+    "en": "Other context"
+  },
+  "contextEstimate": {
+    "zh": "分项按来源估算，并按比例校准至已用上下文；百分比为整个上下文窗口的占比。",
+    "en": "Parts are estimated by source and proportionally calibrated to used context. Percentages refer to the entire context window."
   },
   "messageTokens": {
     "zh": "对话",
@@ -175,9 +199,13 @@
     "zh": "对话详情",
     "en": "Details"
   },
-  "detailsClose": {
-    "zh": "收起对话详情",
-    "en": "Hide details"
+  "sectionItems": {
+    "zh": "{count} 项",
+    "en": "{count} items"
+  },
+  "sectionTurns": {
+    "zh": "{count} 回合",
+    "en": "{count} turns"
   },
   "preset": {
     "zh": "预设",

@@ -16,7 +16,7 @@ const CENTER = `[${PART_ATTR}~="center-column"]`
 const PRESET = `[${PART_ATTR}~="header-label"]`
 
 /** The rail's width, and the window and column widths that open and retreat it (D94). */
-const RAIL_WIDTH = 300
+const RAIL_WIDTH = 320
 /**
  * The rail needs a wide window and a conversation column that keeps a usable
  * chat beside it: the window alone would open it over a chat squeezed by the
@@ -177,7 +177,7 @@ function useRailReading(session: string | null) {
     choice.current = { session, mode: 'closed' }
     setOpen(false)
   }, [session])
-  // The header's control flips the same choice the reader's own close makes.
+  // The header's control keeps the reader's explicit choice for this session.
   React.useEffect(() => {
     const flip = () => {
       if (open) close()
@@ -196,14 +196,14 @@ function useRailReading(session: string | null) {
   React.useEffect(() => {
     setRailOpen(open)
   }, [open])
-  return { open, box, close }
+  return { open, box }
 }
 
 /** The conversation's details rail: the session overview the reader keeps beside the chat (D94). */
 export function SessionPanelRail() {
   const { id: session, live } = useConversationSession()
   const preset = usePresetLabel()
-  const { open, box, close } = useRailReading(session)
+  const { open, box } = useRailReading(session)
   // The page mark squeezes the conversation; it goes with the rail itself, so a
   // hidden rail (a new session, a plugin page) leaves no strip of empty space.
   const shown = session !== null && live && open && box !== null
@@ -218,15 +218,5 @@ export function SessionPanelRail() {
     'aria-label': copy('detailsTitle'),
     style: { top: `${box.top}px`, height: `${box.height}px`, right: `${box.right}px`, width: `${RAIL_WIDTH}px` },
   },
-  h('div', { className: 'dsh-claude-details-head' },
-    h('span', { className: 'dsh-claude-details-title' }, copy('detailsTitle')),
-    preset === '' ? null : h('span', { className: 'dsh-claude-details-preset', title: preset }, preset),
-    h('button', {
-      type: 'button',
-      className: 'dsh-claude-details-close',
-      'aria-label': copy('detailsClose'),
-      title: copy('detailsClose'),
-      onClick: close,
-    }, '×')),
-  h(PanelBody, { key: session, sessionId: session }))
+  h(PanelBody, { key: session, sessionId: session, preset }))
 }

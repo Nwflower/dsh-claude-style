@@ -21,16 +21,26 @@ interface PanelBlock {
   text?: unknown
 }
 
+/** One model-visible message, including producer attribution. */
+export interface PanelMessage {
+  role?: string
+  content?: unknown
+  source?: { callId?: unknown, kind?: string, form?: string }
+  isError?: boolean
+}
+
 /** One raw session event, in the members this module reads. */
 export interface PanelEvent {
   type?: string
   seq?: number
-  data?: {
+  surfaceOp?: 'append' | { startSeq: number, endSeq: number }
+  data?: PanelMessage & {
+    header?: { tools?: readonly { name: string }[] }
     files?: readonly { path?: unknown }[]
     callId?: unknown
     name?: unknown
     arguments?: unknown
-    message?: { content?: unknown, source?: { callId?: unknown }, isError?: boolean }
+    message?: PanelMessage
     error?: unknown
     jobId?: unknown
     label?: unknown

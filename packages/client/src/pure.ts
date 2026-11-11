@@ -68,6 +68,7 @@ export type { PanelPoller, PanelPollerDeps } from './features/session-panel/pane
 export { EMPTY_READING, answeredReading, failedReading, readingFor } from './features/session-panel/reading-state'
 export type { PanelReading, PanelReadingState } from './features/session-panel/reading-state'
 export { billingCurrency, statsCostText } from './features/session-panel/stats-cost'
+export { contextRows } from './features/session-panel/context-rows'
 export { FALLBACK_VIEW_TAB_SHIFT, VIEW_TAB_CLEARANCE, VIEW_TAB_TOP_INSET, placementFor } from './features/view-tabs/placement'
 export type { PlacementBox, StripBoxes, StripPlacement, StripTranslate } from './features/view-tabs/placement'
 export { PHRASE_TAIL_CHARS, activityPhrase } from './shared/activity-phrase'

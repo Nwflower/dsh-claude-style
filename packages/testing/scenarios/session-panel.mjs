@@ -16,6 +16,18 @@ import { CONVERSATION_TABS_SELECTOR, HEADER_TITLE_ROW_SELECTOR, HEADER_TITLE_SEL
 import { SESSION_PANEL_PATH } from '@dsh-claude-style/contracts/routes'
 import { MARKS } from '../lane.mjs'
 import { sendPrompt, waitForTurn } from '../prompt.mjs'
+import { sanitizePage } from '../../../scripts/shared/privacy.mjs'
+
+/** Every retained capture passes the same privacy sweep as the release shots (D92). */
+async function capturePanel(page, file) {
+  const mask = await page.addStyleTag({ content: 'body * { visibility: hidden !important; } body .dsh-claude-details, body .dsh-claude-details * { visibility: visible !important; }' })
+  try {
+    await sanitizePage(expression => page.evaluate(expression))
+    await page.locator('.dsh-claude-details').screenshot({ path: file })
+  } finally {
+    await mask.evaluate(node => node.remove())
+  }
+}
 
 /** One copy key's words in the languages the package ships: the page is in one of them. */
 const words = (key) => Object.values(copy[key] ?? {})
@@ -36,10 +48,11 @@ const readRail = (page) => page.evaluate(({ headings }) => {
   const root = rail?.querySelector('.dsh-claude-panel') ?? null
   if (rail === null || root === null) return { mounted: false }
   const sections = [...root.querySelectorAll('.dsh-claude-panel-section')]
-  const sectionOf = (names) => sections.find((section) => names.includes(section.querySelector('.dsh-claude-panel-heading')?.textContent ?? ''))
+  const titleOf = section => section.querySelector('.dsh-claude-panel-section-title')?.textContent ?? ''
+  const sectionOf = (names) => sections.find((section) => names.includes(titleOf(section)))
   return {
     mounted: true,
-    headings: sections.map((section) => section.querySelector('.dsh-claude-panel-heading')?.textContent ?? ''),
+    headings: sections.map(titleOf),
     environment: sectionOf(headings.environment)?.textContent ?? '',
     context: [...root.querySelectorAll('.dsh-claude-panel-context-head span')].map((node) => node.textContent),
     legend: [...root.querySelectorAll('.dsh-claude-panel-legend-row')].map((row) => row.textContent),
@@ -53,7 +66,7 @@ const readRail = (page) => page.evaluate(({ headings }) => {
       more: group.querySelector('.dsh-claude-panel-more')?.textContent ?? null,
     })),
     chips: [...root.querySelectorAll('.dsh-claude-panel-chip')].map((node) => node.textContent),
-    preset: rail.querySelector('.dsh-claude-details-preset')?.textContent ?? null,
+    preset: sectionOf(headings.environment)?.querySelector('.dsh-claude-details-preset')?.textContent ?? null,
   }
 }, { headings: HEADINGS })
 
@@ -113,6 +126,13 @@ async function pressRightPanel(page) {
   })
   await page.waitForTimeout(700)
 }
+
+/** Native section states and the readings a reader sees with the rows put away. */
+const readDisclosures = page => page.evaluate(() => [...document.querySelectorAll('.dsh-claude-details details')].map(section => ({
+  open: section.open,
+  content: section.querySelector('.dsh-claude-panel-section-content')?.checkVisibility() ?? false,
+  reading: section.querySelector('.dsh-claude-panel-section-reading')?.innerText ?? '',
+})))
 
 /**
  * The scenario.
@@ -179,6 +199,20 @@ export function sessionPanelScenario({ check }) {
       }))
       notes.preset = await readPreset(page)
       notes.rail = await readRail(page)
+      // Section controls are independent, retain their choice through a poll,
+      // and keep the browser's Enter and Space activation (D94).
+      const sectionToggles = page.locator('.dsh-claude-details summary')
+      notes.disclosures = { initial: await readDisclosures(page) }
+      const refreshed = page.waitForResponse(response => response.url().includes(SESSION_PANEL_PATH) && response.ok())
+      for (const toggle of await sectionToggles.all()) await toggle.click()
+      await refreshed
+      notes.disclosures.closed = await readDisclosures(page)
+      await sectionToggles.first().focus()
+      await page.keyboard.press('Enter')
+      notes.disclosures.single = await readDisclosures(page)
+      await page.keyboard.press('Space')
+      for (const toggle of await sectionToggles.all()) await toggle.click()
+      notes.disclosures.reopened = await readDisclosures(page)
       // Outputs folds its fourth row behind its own control.
       notes.fold = await page.evaluate(() => {
         const section = [...document.querySelectorAll('.dsh-claude-details .dsh-claude-panel-section')].find((candidate) => /产出|Outputs/.test(candidate.querySelector('.dsh-claude-panel-heading')?.textContent ?? ''))
@@ -284,7 +318,11 @@ export function sessionPanelScenario({ check }) {
           const box = rail.getBoundingClientRect()
           return { theme: value, width: box.width, inside: box.left >= 0 && box.right <= innerWidth, background: getComputedStyle(rail).backgroundColor }
         }, theme))
-        if (context.out !== undefined) await page.screenshot({ path: `${context.out}/session-panel-${theme}.png` })
+        if (context.out !== undefined) await capturePanel(page, `${context.out}/session-panel-${theme}.png`)
+        const toggles = page.locator('.dsh-claude-details summary')
+        for (const toggle of await toggles.all()) await toggle.click()
+        if (context.out !== undefined) await capturePanel(page, `${context.out}/session-panel-collapsed-${theme}.png`)
+        for (const toggle of await toggles.all()) await toggle.click()
       }
       // The host's own right column stands on this side as well: the rail keeps
       // away while that column holds width, and the header's control hands the
@@ -304,7 +342,6 @@ export function sessionPanelScenario({ check }) {
       }, undefined, { timeout: 15000 })
       notes.filePreview = await page.evaluate(() => document.querySelector('[data-sidebar-right-open]')?.textContent ?? '')
       notes.extraPages = page.context().pages().length - pagesBefore
-      if (context.out !== undefined) await page.screenshot({ path: `${context.out}/session-panel.png` })
     },
 
     async assert({ notes }) {
@@ -326,9 +363,17 @@ export function sessionPanelScenario({ check }) {
         check('the rail shows the environment first', anyOf(environmentWords, (rail.headings ?? []).join('|')), JSON.stringify(rail.headings ?? null)),
         check('the rail names the working directory', /workspace/.test(rail.environment ?? ''), (rail.environment ?? '').slice(0, 160)),
         check('the context section arrives with the turn', anyOf(contextWords, (rail.headings ?? []).join('|')) && (rail.context ?? []).length >= 2, JSON.stringify(rail.context ?? null)),
-        check('the preset text stands in the rail and repeats the header label',
+        check('the environment section carries the preset text from the header',
           (rail.preset ?? '') !== '' && (rail.preset ?? '') === (notes.preset ?? ''),
           JSON.stringify({ rail: rail.preset ?? null, header: notes.preset ?? null })),
+        check('every section folds to its own reading and stays folded through a poll',
+          notes.disclosures?.initial?.length === rail.headings?.length && notes.disclosures.initial.every(section => section.open && section.content) &&
+            notes.disclosures.closed?.every(section => !section.open && !section.content && section.reading !== ''),
+          JSON.stringify(notes.disclosures ?? null)),
+        check('keyboard activation opens one section independently and all sections open again',
+          notes.disclosures?.single?.[0]?.open === true && notes.disclosures.single.slice(1).every(section => !section.open) &&
+            notes.disclosures.reopened?.every(section => section.open && section.content),
+          JSON.stringify(notes.disclosures ?? null)),
         check('the session stats carry the figures and the token buckets',
           anyOf(statsWords, (rail.headings ?? []).join('|')) && (rail.stats ?? []).length >= 8 &&
             anyOf(words('statsModelTime'), (rail.stats ?? []).join('|')) && anyOf(words('statsCost'), (rail.stats ?? []).join('|')),
@@ -370,7 +415,7 @@ export function sessionPanelScenario({ check }) {
           JSON.stringify({ reopened: notes.reopened, utilities: notes.utilitiesReopened ?? null })),
         check('a closed rail stops asking the host', notes.closedAsks === 0, JSON.stringify({ asks: notes.closedAsks })),
         check('the details rail stays inside the viewport in both themes',
-          notes.themes?.length === 2 && notes.themes.every(theme => theme.width === 300 && theme.inside) && notes.themes[0].background !== notes.themes[1].background,
+          notes.themes?.length === 2 && notes.themes.every(theme => theme.width === 320 && theme.inside) && notes.themes[0].background !== notes.themes[1].background,
           JSON.stringify(notes.themes)),
         check('the host right panel takes the side and the rail keeps away',
           notes.rightPanel?.width === 0 && (notes.rightPanelOpen?.width ?? 0) > 0 &&

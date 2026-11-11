@@ -55,6 +55,22 @@ export interface PanelContext {
   tools: number
   /** Tokens the conversation takes. */
   messages: number
+  /** Source-attributed heuristic parts, before calibration to provider occupancy. */
+  parts?: readonly PanelContextPart[]
+}
+
+/** Context categories recovered from the request header and retained message sources (D94). */
+export type PanelContextKind = 'messages' | 'tools' | 'mcp' | 'system' | 'memory' | 'skills' | 'other'
+
+export interface PanelContextPart {
+  kind: PanelContextKind
+  tokens: number
+}
+
+/** The host token meter's aggregate projections, before source attribution. */
+export interface PanelContextProjections {
+  contextPressure?: { projectedTokens?: number, pressureTokens?: number, contextWindow?: number }
+  contextBreakdown?: { systemTokens?: number, toolsTokens?: number, messageTokens?: number }
 }
 
 /** One file the session produced or presented. */

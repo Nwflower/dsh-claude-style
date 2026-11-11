@@ -180,6 +180,10 @@ card leaves unset.
 | `--dsh-claude-table-head` | `table-head` | `#f4f4f4` | `#282828` | `#f0f1f4` | `#22252d` | `var(--dsw-alias-bg-layer-2)` | table header row |
 | `--dsh-claude-ripple-ink` | `ink-3` | `#91888a` | `#9c9395` | `#848891` | `#8a92a3` | `var(--dsw-alias-label-secondary, #8a8a85)` | the new-conversation page's glyph field, and the wake a ripple leaves in it |
 | `--dsh-claude-data-ink` | literal | `#3b6ecf` | `#3b6ecf` | `#3b6ecf` | `#3b6ecf` | `var(--dsw-alias-link, #3b6ecf)` | the home page's data blue: the deepest step of the model chart's ramp and the ink the heat grid's levels are mixed from |
+| `--dsh-claude-context-messages` | literal | `#2b7de9` | `#2b7de9` | `#2b7de9` | `#2b7de9` | `var(--dsw-alias-link, #2b7de9)` | context messages: Claude Desktop's blue category |
+| `--dsh-claude-context-tools` | literal | `#ff6b2c` | `#ff6b2c` | `#ff6b2c` | `#ff6b2c` | `var(--dsw-alias-state-warning-primary, #ff6b2c)` | context system tools: Claude Desktop's orange category |
+| `--dsh-claude-context-mcp` | literal | `#00b894` | `#00b894` | `#00b894` | `#00b894` | `var(--dsw-alias-state-success-primary, #00b894)` | context MCP tools: Claude Desktop's green category |
+| `--dsh-claude-context-system` | literal | `#e9a400` | `#e9a400` | `#e9a400` | `#e9a400` | `var(--dsw-alias-state-warning-primary, #e9a400)` | context system prompt: Claude Desktop's yellow category |
 | `--dsh-claude-ripple-wave` | literal | `#3b6ef0` | `#7fa6ff` | `#3b6ef0` | `#7fa6ff` | `var(--dsw-alias-link, #3b6ef0)` | the front of a ripple in the new-conversation page's glyph field |
 | `--dsh-claude-scrollbar` | `scrollbar` | `rgba(213, 213, 213, 0.9)` | `rgba(62, 62, 62, 0.9)` | `rgba(209, 210, 213, 0.9)` | `rgba(55, 59, 64, 0.9)` | `var(--dsw-alias-border-l2)` | scrollbar thumb |
 | `--dsh-claude-scrollbar-hover` | `scrollbar-hover` | `rgba(138, 138, 138, 0.8)` | `rgba(113, 113, 113, 0.9)` | `rgba(134, 135, 138, 0.8)` | `rgba(105, 109, 115, 0.9)` | `var(--dsw-alias-label-caption)` | scrollbar thumb under the pointer |
@@ -276,28 +280,41 @@ entry's bottom margin take the free space while the stack fits, and fall to
 zero once it does not, so the list starts at the top and scrolls to its end.
 
 **The conversation details rail.** The rail is the skin's own fixed column
-against the conversation column's right edge: 300px wide, one 14px side inset
+against the conversation column's right edge: 320px wide, a 16px left inset
 and one scroll inside, opened and retreated by the column's width (a 1360px window with an 860px column to open, 1180px or a 760px column to
-retreat) and squeezing the chat while it stands. Its header
-carries the session's title, the preset's own words and the close control; the
-conversation header's details button flips the same state. Its
-sections are separated by 22px and titled in a quiet 11px uppercase line with
-0.07em tracking; rows stand on a 28px rhythm with an 8px hover plate, a 13/18
-title over an 11.5/16 detail, and a 20px chip at the trailing edge. The context
-bar is 5px tall: its fill is the provider-anchored occupancy, split by the
-meter's heuristic composition, which is a different quantity and therefore
-printed as approximations beside it rather than as shares of the window
-(`~` before each figure, the free space after a divider). The composition's
-three marks are the quiet ink, the skin's orange tone and its data blue, so they
-stay apart from the accent and from each other on either canvas. A section lists
+retreat) and squeezing the chat while it stands. The environment section starts
+at the top, with the preset's own words below its rows. The conversation header's
+details button opens and closes the rail. Each section is an independent native
+disclosure, initially open, with keyboard activation and a chevron beside its
+heading. Folding keeps its children mounted and its choice survives data refreshes.
+The closed heading shows a directory name, a context percentage and miniature
+meter, a turn count or an item count. Sections use 14px vertical insets and a
+hairline between them, with regular
+13/20 headings in the sans UI family with normal tracking. Environment rows
+stand on a 32px rhythm: a computer mark, a
+folder name with its parent path on the same line, then a separate branch row.
+A checkout already named by the working directory contributes only its branch.
+Other rows keep a 15/20 title over an 11.5/16 detail and a 20px trailing chip.
+The context bar is 4px tall. Messages are blue, system tools orange, MCP tools
+green and the system prompt yellow; instruction files, skills and runtime
+context use gray. Request tool names and retained message sources identify the
+parts, and surface replacements retire the contributions they cover. Parts are
+heuristic estimates proportionally calibrated to provider occupancy: the bar,
+token column and percentage column share that allocation, with percentages
+measured against the whole window. Estimated figures carry `~` and the legend's
+tooltip explains the calibration; free space is the window less occupancy.
+A section lists
 two rows; the rest fold behind a quiet full-width control that names the count
 left, which keeps a long list from pushing the sections under it out of the
 column. A background category folds the same way, keeping its two leading rows.
 With the rail standing the conversation's view switch shares the title's line at
 the row's right end, before the utilities, and the title truncates to the span
-left over. The session stats section prints label over value in two columns:
-turns and steps, model and tool time, first token, output speed, cache hit and
-cost, then the token buckets at the same size. A finished command keeps its row
+left over. Session stats use compact 12/18 rows with a label on the left and a
+value on the right. Turns and steps come first, followed by output speed,
+first-token latency, model and tool time, cache hit and cost. The token buckets
+form a second group below a hairline, using the same type size and alignment.
+Values stay on one line so a long duration can use the row's available width.
+A finished command keeps its row
 in Background tasks, its status from the durable job records and its output from
 the log the command wrote. The section's rows are filed under quiet eyebrow
 labels by kind — commands, subagents, team — and a group appears only when it has

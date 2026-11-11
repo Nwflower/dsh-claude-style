@@ -21,11 +21,13 @@
  * optional service missing is an empty section, not a failed answer.
  */
 import type { DshContext } from '@dsh-claude-style/engine/node/dsh'
-import type { PanelBackground, PanelChange, PanelContext, PanelEnvironment, PanelJob, PanelJobOutput, PanelOutput, PanelStats, PanelSubagent, PanelTeamMember, PanelTeamTask, SessionPanelValue } from '@dsh-claude-style/contracts/session-panel'
+import type { PanelBackground, PanelChange, PanelContextProjections, PanelEnvironment, PanelJob, PanelJobOutput, PanelOutput, PanelStats, PanelSubagent, PanelTeamMember, PanelTeamTask, SessionPanelValue } from '@dsh-claude-style/contracts/session-panel'
 import type { BillingRows } from './session-cost.js'
 import { panelEnvironment } from './checkout.js'
 import { JOB_OUTPUT_MAX, foldJobs } from './session-panel-log.js'
 import type { PanelEvent } from './session-panel-log.js'
+import { createPanelContext, foldPanelContext, panelContextOf } from './session-panel-context.js'
+import type { PanelContextState, PanelTokenMeter } from './session-panel-context.js'
 
 /** Most sessions whose folded panel is kept; the panel reads the session on screen. */
 const KEPT_SESSIONS = 32
@@ -115,10 +117,8 @@ interface AgentsRegistry {
 }
 
 /** The projections the panel reads, as the host's merged table types them. */
-interface PanelProjections {
+interface PanelProjections extends PanelContextProjections {
   workingDirectory?: string | null
-  contextPressure?: { projectedTokens?: number, pressureTokens?: number, contextWindow?: number }
-  contextBreakdown?: { systemTokens?: number, toolsTokens?: number, messageTokens?: number }
   forgeChangeRequests?: readonly ForgeBinding[]
   subagentCatalog?: readonly { id?: unknown, createdAt?: unknown, mode?: unknown, label?: unknown }[]
   sessionStats?: { turns?: unknown, steps?: unknown, llmMs?: unknown, toolMs?: unknown, ttftMs?: unknown, ttftSteps?: unknown, decodeMs?: unknown, decodeTokens?: unknown }
@@ -159,6 +159,7 @@ interface Entry {
   at: number
   /** The last event seq folded into `outputs`. */
   cursor: number
+  context: PanelContextState
   outputs: PanelOutput[]
   /** Writing calls awaiting a result across polls; owned by this session's fold. */
   writes: Map<string, string>
@@ -251,25 +252,6 @@ function writtenPath(argumentsText: unknown): string | null {
   }
   if (!isRecord(parsed)) return null
   return text(parsed.path) ?? text(parsed.file_path) ?? text(parsed.target_file) ?? text(parsed.filePath)
-}
-
-/**
- * Read the context window's occupancy and composition from the projections.
- * @returns the reading, or null while neither number is known.
- */
-function contextOf(projections: PanelProjections): PanelContext | null {
-  const pressure = projections.contextPressure
-  const breakdown = projections.contextBreakdown
-  const used = pressure?.projectedTokens ?? pressure?.pressureTokens
-  const window = pressure?.contextWindow
-  if (used === undefined || window === undefined || window <= 0) return null
-  return {
-    used,
-    window,
-    system: breakdown?.systemTokens ?? 0,
-    tools: breakdown?.toolsTokens ?? 0,
-    messages: breakdown?.messageTokens ?? 0,
-  }
 }
 
 /** One change request as the panel shows it: the binding plus the latest status the forge knew. */
@@ -436,6 +418,7 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
       const events = observation.events ?? []
       if (entry.cursor === -1 || events.length > 0) {
         const incoming = arrivals(events, entry.cursor)
+        foldPanelContext(entry.context, incoming, ctx.get('tokenMeter') as PanelTokenMeter | null | undefined)
         foldOutputs(entry, incoming, resolvedDirectory)
         foldJobs(entry, incoming)
       }
@@ -458,7 +441,7 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
       const background = await backgroundOf(entry, projections, jobs, agents, sessionId)
       const value: SessionPanelValue = {
         environment,
-        context: contextOf(projections),
+        context: panelContextOf(projections, entry.context),
         // Newest first: the row a reader just caused stands at the top of the list.
         outputs: [...entry.outputs].reverse(),
         changes,
@@ -614,6 +597,7 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
       value: { environment: null, context: null, outputs: [], changes: [], background: { jobs: [], subagents: [], team: null } },
       at: 0,
       cursor: -1,
+      context: createPanelContext(),
       outputs: [],
       writes: new Map(),
       children: new Map(),
