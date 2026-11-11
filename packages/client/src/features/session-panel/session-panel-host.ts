@@ -23,6 +23,11 @@ export function clearPanelContext(ctx: HostContext | null) {
   if (host === ctx) host = null
 }
 
+/** The host context this generation runs on, or null before the install handed it over. */
+export function panelHost(): HostContext | null {
+  return host
+}
+
 /** Open one subagent or Team member session in the conversation view. */
 export function openPanelSession(sessionId: string) {
   if (host === null) return

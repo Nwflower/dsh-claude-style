@@ -181,8 +181,8 @@ interface Entry {
 
 /** One session panel service: a folded answer per session, with its watches. */
 export interface SessionPanelService {
-  /** Fold one session's panel, reusing the kept answer while it is fresh. */
-  get(sessionId: string, billing?: BillingRows): Promise<SessionPanelValue>
+  /** Fold one session's panel, reusing the kept answer while it is fresh; `fresh` asks past that kept answer. */
+  get(sessionId: string, billing?: BillingRows, fresh?: boolean): Promise<SessionPanelValue>
   /** Read one background job's retained output, owned by its session. */
   jobOutput(sessionId: string, jobId: string): PanelJobOutput | null
   /** Start the session-event watch that marks folds stale. */
@@ -586,12 +586,12 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
     return { jobs: jobRows, subagents, team: teamRows }
   }
 
-  async function get(sessionId: string, billing: BillingRows = { rows: [], currency: null }): Promise<SessionPanelValue> {
+  async function get(sessionId: string, billing: BillingRows = { rows: [], currency: null }, fresh = false): Promise<SessionPanelValue> {
     const held = entries.get(sessionId)
     if (held !== undefined) {
       held.touchedAt = Date.now()
       if (held.loading !== null) return held.loading
-      if (Date.now() - held.at < ANSWER_TTL_MS) return held.value
+      if (!fresh && Date.now() - held.at < ANSWER_TTL_MS) return held.value
     }
     const entry: Entry = held ?? {
       value: { environment: null, context: null, outputs: [], changes: [], background: { jobs: [], subagents: [], team: null } },

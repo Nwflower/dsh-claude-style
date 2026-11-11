@@ -70,8 +70,8 @@ const readRail = (page) => page.evaluate(({ headings }) => {
   }
 }, { headings: HEADINGS })
 
-/** The header's preset label, the words the rail repeats. */
-const readPreset = (page) => page.evaluate(() => (document.querySelector('[data-slot="conversation.session.header.actions"]')?.textContent ?? '').trim())
+/** The header's preset label, the words the rail repeats: the label's own part, not the whole actions slot, which also carries the host's job and subagent chips. */
+const readPreset = (page) => page.evaluate(() => (document.querySelector('[data-dsh-claude-part~="header-label"]')?.textContent ?? '').trim())
 
 /** The title-adjacent actions: whether the host's own subagent and job chips are on the page. */
 const readHeaderActions = (page) => page.evaluate(() => {
@@ -284,6 +284,19 @@ export function sessionPanelScenario({ check }) {
       }
       notes.jobClosed = await page.evaluate(() => document.querySelector('.dsh-claude-panel-job-output') === null)
       notes.utilitiesOpen = await readUtilities(page)
+      // The figures are the host's own words: exact grouped counts, no compact
+      // k/M suffix; and the environment answers the working folder, never the
+      // repositories lying beside it (D94).
+      notes.wording = await page.evaluate(async (path) => {
+        const id = document.querySelector('[data-conversation-session]')?.getAttribute('data-conversation-session') ?? ''
+        const response = await fetch(`${path}?id=${encodeURIComponent(id)}`, { credentials: 'same-origin', headers: { accept: 'application/json' } })
+        const answer = await response.json()
+        const environment = answer?.value?.environment ?? null
+        return {
+          keys: environment === null ? null : Object.keys(environment).sort(),
+          rows: [...document.querySelectorAll('.dsh-claude-details .dsh-claude-panel-stat')].map((row) => row.textContent.replace(/\s+/g, ' ').trim()),
+        }
+      }, SESSION_PANEL_PATH)
       // The column narrows under its own width: the rail steps back, and comes
       // back when the frame widens again.
       await page.setViewportSize({ width: 1160, height: 900 })
@@ -424,6 +437,13 @@ export function sessionPanelScenario({ check }) {
         check('the details control closes the host right panel before the rail stands',
           notes.rightPanelHanded?.width === 0 && notes.rightPanelHanded?.rail === true,
           JSON.stringify(notes.rightPanelHanded ?? null)),
+        check('the figures read in the host\'s own words, with grouped counts and no compact suffix',
+          (notes.wording?.rows ?? []).some(row => /\d{1,3}(,\d{3})+ tok$/.test(row)) &&
+            !(notes.wording?.rows ?? []).some(row => /\d[.,\d]*\s*(k|M|B) tok$/.test(row)),
+          JSON.stringify((notes.wording?.rows ?? []).slice(0, 12))),
+        check('the environment answers the working folder, not the repositories around it',
+          Array.isArray(notes.wording?.keys) && notes.wording.keys.includes('checkout') && !notes.wording.keys.includes('repositories'),
+          JSON.stringify(notes.wording?.keys ?? null)),
         check('an output opens its file in the host preview without another browser tab',
           /panel four\.md/.test(notes.filePreview ?? '') && /Four/.test(notes.filePreview ?? '') && notes.extraPages === 0,
           JSON.stringify({ preview: notes.filePreview, extraPages: notes.extraPages })),

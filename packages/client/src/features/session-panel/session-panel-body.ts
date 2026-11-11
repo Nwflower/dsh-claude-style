@@ -1,6 +1,7 @@
 import * as React from 'react'
 import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
 import { formatCompactTokens, formatHostDuration } from '../../shared/format'
+import { sessionStatsCacheHit, sessionStatsDuration, sessionStatsSpeed, sessionStatsTokens } from '../../shared/stats-format'
 import { hostChatSeat } from '../../core/i18n'
 import { copy } from './copy'
 import { openPanelFile, openPanelSession } from './session-panel-host'
@@ -286,25 +287,37 @@ function ContextSection({ context }: { context: PanelContext | null }) {
  */
 function StatsSection({ stats }: { stats: PanelStats }) {
   const currency = useBillingCurrency()
+  // The figures are written in the host's own words, through the same four
+  // formatters the composer's readout uses (shared/stats-format.ts): the rail is
+  // a second surface of one session, not a second set of numbers.
+  const chat = hostChatSeat()
+  const duration = (ms: number) => (chat === null ? `${Math.max(0, Math.round(ms / 1000))}s` : sessionStatsDuration(ms, chat))
+  const tokens = (count: number) => (chat === null ? `${formatCompactTokens(count)} tok` : sessionStatsTokens(count, chat))
   const rows: { key: string, label: string, value: string }[] = []
   rows.push({ key: 'turns', label: copy('statsTurns'), value: String(stats.turns) })
   rows.push({ key: 'steps', label: copy('statsSteps'), value: String(stats.steps) })
-  if (stats.decodeMs > 0) rows.push({ key: 'speed', label: copy('statsOutputSpeed'), value: `${Math.round(stats.decodeTokens / (stats.decodeMs / 1000))} tok/s` })
-  if (stats.ttftSteps > 0) rows.push({ key: 'ttft', label: copy('statsFirstToken'), value: hostDuration(stats.ttftMs / stats.ttftSteps) })
-  rows.push({ key: 'model', label: copy('statsModelTime'), value: hostDuration(stats.llmMs) })
-  rows.push({ key: 'tool', label: copy('statsToolTime'), value: hostDuration(stats.toolMs) })
-  const cacheable = stats.cacheReadTokens + stats.uncachedInputTokens
-  if (cacheable > 0) rows.push({ key: 'cache', label: copy('statsCacheHit'), value: `${Math.round((stats.cacheReadTokens / cacheable) * 100)}%` })
+  if (stats.decodeMs > 0) {
+    const speed = sessionStatsSpeed(stats.decodeTokens / (stats.decodeMs / 1000))
+    rows.push({ key: 'speed', label: copy('statsOutputSpeed'), value: chat === null ? `${speed} tok/s` : chat('message.tokensPerSecond', { tps: speed }) })
+  }
+  if (stats.ttftSteps > 0) rows.push({ key: 'ttft', label: copy('statsFirstToken'), value: duration(stats.ttftMs / stats.ttftSteps) })
+  rows.push({ key: 'model', label: copy('statsModelTime'), value: duration(stats.llmMs) })
+  rows.push({ key: 'tool', label: copy('statsToolTime'), value: duration(stats.toolMs) })
+  const billed = stats.uncachedInputTokens + stats.cacheReadTokens + stats.cacheWriteTokens
+  if (billed > 0) {
+    const hit = chat === null ? String(Math.round((stats.cacheReadTokens / billed) * 100)) : sessionStatsCacheHit(stats.cacheReadTokens, billed)
+    if (hit !== null) rows.push({ key: 'cache', label: copy('statsCacheHit'), value: `${hit}%` })
+  }
   const cost = statsCostText(stats.cost, currency)
   if (cost !== null) rows.push({ key: 'cost', label: copy('statsCost'), value: cost })
-  const tokens: { key: string, label: string, value: string }[] = [
-    { key: 'uncached', label: copy('statsUncachedInput'), value: `${formatCompactTokens(stats.uncachedInputTokens)} tok` },
-    { key: 'read', label: copy('statsCacheRead'), value: `${formatCompactTokens(stats.cacheReadTokens)} tok` },
-    { key: 'write', label: copy('statsCacheWrite'), value: `${formatCompactTokens(stats.cacheWriteTokens)} tok` },
-    { key: 'out', label: copy('statsOutput'), value: `${formatCompactTokens(stats.outputTokens)} tok` },
+  const buckets: { key: string, label: string, value: string }[] = [
+    { key: 'uncached', label: copy('statsUncachedInput'), value: tokens(stats.uncachedInputTokens) },
+    { key: 'read', label: copy('statsCacheRead'), value: tokens(stats.cacheReadTokens) },
+    { key: 'write', label: copy('statsCacheWrite'), value: tokens(stats.cacheWriteTokens) },
+    { key: 'out', label: copy('statsOutput'), value: tokens(stats.outputTokens) },
   ]
   return h(Section, { title: copy('sessionStats'), summary: copy('sectionTurns', { count: stats.turns }) },
-    [{ key: 'figures', rows }, { key: 'tokens', rows: tokens }].map(group =>
+    [{ key: 'figures', rows }, { key: 'tokens', rows: buckets }].map(group =>
       h('dl', { key: group.key, className: 'dsh-claude-panel-stats' },
         group.rows.map(row => h('div', { key: row.key, className: 'dsh-claude-panel-stat' },
           h('dt', null, row.label),

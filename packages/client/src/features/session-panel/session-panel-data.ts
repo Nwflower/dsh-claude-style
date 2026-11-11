@@ -2,7 +2,10 @@ import * as React from 'react'
 import { SESSION_PANEL_PATH } from '@dsh-claude-style/contracts/routes'
 import type { PanelJobAnswer, SessionPanelAnswer, SessionPanelValue } from '@dsh-claude-style/contracts/session-panel'
 import { billingQuery } from '../../shared/billing'
+import { sessionProjectionFaces } from '../../shared/session-projections'
 import { createPanelPoller } from './panel-poller'
+import { createWakeThrottle } from './wake-throttle'
+import { panelHost } from './session-panel-host'
 import { EMPTY_READING, answeredReading, failedReading, readingFor } from './reading-state'
 import type { PanelReading, PanelReadingState } from './reading-state'
 
@@ -11,6 +14,10 @@ export type { PanelReading } from './reading-state'
 
 /** How often an open panel asks the host again; the host keeps its own answer for about a second. */
 const POLL_MS = 2500
+/** The projections whose frames refresh the rail: the session's figures and its token buckets. */
+const WAKE_KEYS = ['sessionStats', 'tokenUsage'] as const
+/** The closest two asks from those frames, so one streaming turn is not one ask per frame. */
+const WAKE_MIN_MS = 400
 
 /**
  * Follow one session's overview panel (D94).
@@ -36,9 +43,15 @@ export function usePanelReading(sessionId: string): PanelReading {
     setState({ session: sessionId, reading: EMPTY_READING })
     /** The last answer's text for this session, compared before it reaches React. */
     let shown = ''
+    /** Whether the next ask must pass the host's kept answer. */
+    let liveNext = false
     const fail = () => setState(previous => previous.session === sessionId ? failedReading(previous) : { session: sessionId, reading: { value: null, failed: true } })
     const poller = createPanelPoller({
-      url: () => `${SESSION_PANEL_PATH}?id=${encodeURIComponent(sessionId)}${billingQuery()}`,
+      url: () => {
+        const live = liveNext ? '&live=1' : ''
+        liveNext = false
+        return `${SESSION_PANEL_PATH}?id=${encodeURIComponent(sessionId)}${billingQuery()}${live}`
+      },
       async fetch(url, signal) {
         const response = await fetch(url, { credentials: 'same-origin', headers: { accept: 'application/json' }, signal })
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
@@ -60,9 +73,33 @@ export function usePanelReading(sessionId: string): PanelReading {
       pollMs: POLL_MS,
     })
     poller.start()
+    // The host lands its figures as projection frames (D40), and a streaming turn
+    // moves them every few hundred milliseconds. The rail asks again on those
+    // frames — past the host's kept answer — so its numbers move with the
+    // composer's readout instead of one poll behind it (D94).
+    const throttle = createWakeThrottle({
+      minMs: WAKE_MIN_MS,
+      now: () => Date.now(),
+      setTimeout: (run, ms) => window.setTimeout(run, ms),
+      clearTimeout: id => window.clearTimeout(id),
+      wake() {
+        liveNext = true
+        poller.wake()
+      },
+    })
+    const faces = sessionProjectionFaces(panelHost(), sessionId, WAKE_KEYS)
+    const stops: (() => void)[] = []
+    if (faces !== null) {
+      for (const key of WAKE_KEYS) {
+        const face = faces[key]
+        if (typeof face?.subscribe === 'function') stops.push(face.subscribe(() => throttle.soon()))
+      }
+    }
     document.addEventListener('visibilitychange', poller.wake)
     return () => {
       poller.stop()
+      throttle.stop()
+      for (const stop of stops) stop()
       document.removeEventListener('visibilitychange', poller.wake)
     }
   }, [sessionId])

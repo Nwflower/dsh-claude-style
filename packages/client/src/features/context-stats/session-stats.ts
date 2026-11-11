@@ -1,4 +1,5 @@
 import { conversationSessionId, findConversationSession, hostSessions, observeSession } from '@dsh-claude-style/engine/host'
+import { sessionProjectionFaces } from '../../shared/session-projections'
 import { hostChatSeat } from '../../core/i18n'
 import { prefsFromForm, readPrefs } from '../../core/prefs'
 import { peerPresent } from '../../shared/peer-plugin'
@@ -73,13 +74,7 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
 
   /** The host's key-addressed read faces for one session, when reachable. */
   function statsFaces(sessionId: string) {
-    const sessions = hostSessions(ctx)
-    const binding = typeof sessions?.binding === 'function' ? sessions.binding(sessionId) : undefined
-    const projections = binding?.session?.projections
-    if (typeof projections?.faceOf !== 'function') return null
-    const faces: Record<string, HostSnapshotSource<unknown>> = {}
-    for (let i = 0; i < STATS_KEYS.length; i++) faces[STATS_KEYS[i]] = projections.faceOf(STATS_KEYS[i])
-    return faces
+    return sessionProjectionFaces(ctx, sessionId, STATS_KEYS)
   }
 
   /** The estimate of the text streaming now, riding on the settled written-back total. */
