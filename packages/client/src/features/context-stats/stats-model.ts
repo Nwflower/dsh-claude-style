@@ -1,4 +1,4 @@
-import { sessionStatsCacheHit, sessionStatsDuration, sessionStatsSpeed, sessionStatsTokens } from './stats-format'
+import { sessionStatsCacheHit, sessionStatsDuration, sessionStatsSpeed, sessionStatsTokens } from '../../shared/stats-format'
 import { formatMoneyMicro } from '@dsh-claude-style/contracts/prices'
 import type { Currency } from '@dsh-claude-style/contracts/prices'
 import type { HostText } from '@dsh-claude-style/engine/host'
