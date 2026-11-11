@@ -103,6 +103,12 @@ export default {
     check('a view switch slides the pill to the newly active tab',
       under(pill.switched) && pill.switched.slides.indexOf('transform') !== -1 && pill.switched.x > pill.first.x,
       JSON.stringify(pill.switched), 'timing')
+    check('a desktop mark without a visible Windows overlay keeps the tabs in the conversation header',
+      pill.nonOverlay === true, JSON.stringify(pill.nonOverlay))
+    check('a visible overlay places the tabs in the caption band when the plate is reachable',
+      pill.overlay === true, JSON.stringify(pill.overlay))
+    check('a covered caption band gives the tabs back to the conversation header',
+      pill.covered === true, JSON.stringify(pill.covered))
     check('the pill slides whatever the system motion setting: no reduced-motion rule reaches it',
       pill.reducedMotionRules === 0, `${pill.reducedMotionRules} rules`)
     check('teardown takes the pill, its placement and the strip stamp off the view tabs', pill.left === false, JSON.stringify(pill.left))

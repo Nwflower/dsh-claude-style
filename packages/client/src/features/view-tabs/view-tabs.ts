@@ -1,4 +1,4 @@
-import { windowsDesktop } from '@dsh-claude-style/engine/desktop-band'
+import { desktopBand } from '@dsh-claude-style/engine/desktop-band'
 import { SESSION_PANEL_ATTR } from '../../constants'
 import { FALLBACK_VIEW_TAB_SHIFT, placementFor } from './placement'
 import type { StripPlacement } from './placement'
@@ -41,8 +41,15 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const TITLEBAR_ATTR = 'data-dsh-titlebar-tabs'
   /** Theme marker for the strip row's edge; off when the feature yields the header. */
   const TAKEN_ATTR = 'data-dsh-view-tabs-taken'
-  /** Whether the last pass saw the host's Windows titlebar marker. */
+  /** Whether the Windows shell currently exposes a real Window Controls Overlay. */
   let titlebar = false
+  /** A fixed strip another shell surface covers returns to the conversation header. */
+  let titlebarBlocked = false
+  /** The overlay object currently carrying the geometry listener. */
+  let observedOverlay: WindowControlsOverlay | null = null
+  /** The strip whose fixed placement has already been hit-tested. */
+  let checkedTitlebar: HTMLElement | null = null
+  let cancelTitlebarCheck: (() => void) | null = null
   /** The header carrying TITLEBAR_ATTR right now, or null. */
   let titlebarHost: HTMLElement | null = null
   /** The strip mark every strip rule in view-tabs.css keys on. */
@@ -65,12 +72,23 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   // the batch's own nodes (#189).
   firstStamped()
 
-  /**
-   * Read the host's Windows titlebar marker: a shell fact, so it flips only with
-   * the window's chrome.
-   */
+  /** The desktop shell uses the same attribute on Linux; only a visible overlay owns the caption band. */
   function syncTitlebar() {
-    titlebar = windowsDesktop()
+    const overlay = navigator.windowControlsOverlay ?? null
+    if (overlay !== observedOverlay) {
+      observedOverlay?.removeEventListener('geometrychange', onGeometry)
+      observedOverlay = overlay
+      observedOverlay?.addEventListener('geometrychange', onGeometry)
+    }
+    const available = desktopBand()?.platform === 'win32'
+    if (available === titlebar) return
+    titlebar = available
+    titlebarBlocked = false
+    checkedTitlebar = null
+  }
+
+  function inTitlebar() {
+    return titlebar && !titlebarBlocked
   }
 
   /**
@@ -79,11 +97,41 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * invalidating the document (D9). The observer filters `aria-*` only.
    */
   function markTitlebar(header: HTMLElement | null) {
-    const host = titlebar ? header : null
+    const host = inTitlebar() ? header : null
     if (host === titlebarHost) return
     titlebarHost?.removeAttribute(TITLEBAR_ATTR)
     titlebarHost = host
     host?.setAttribute(TITLEBAR_ATTR, '')
+  }
+
+  /**
+   * Hit-test the fixed plate only after its stylesheet has taken effect. A shell
+   * that paints its own menu over the band keeps the strip in the header instead.
+   */
+  function checkTitlebar(header: HTMLElement, strip: HTMLElement, list: HTMLElement) {
+    if (!inTitlebar() || checkedTitlebar === strip || cancelTitlebarCheck !== null) return
+    checkedTitlebar = strip
+    cancelTitlebarCheck = requestFrame({
+      read() {
+        if (!inTitlebar() || titlebarHost !== header || !strip.isConnected) return
+        const box = list.getBoundingClientRect()
+        if (box.width === 0 || box.height === 0) {
+          titlebarBlocked = true
+          return
+        }
+        // Only the topmost hit matters: elementsFromPoint also lists the
+        // covered strip below the shell's surface.
+        const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)
+        titlebarBlocked = hit === null || (hit !== strip && !strip.contains(hit))
+      },
+      write() {
+        cancelTitlebarCheck = null
+        if (!titlebarBlocked || !strip.isConnected) return
+        markTitlebar(header)
+        // The normal flow's boxes exist only after the fixed mark comes off.
+        placeForPaint(header, strip)
+      },
+    })
   }
 
   function rect(el: Element | null | undefined) {
@@ -229,10 +277,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     pill.sync(list)
     followSize(header)
     followTitle(header)
-    // Windows titlebar mode places the strip itself (view-tabs.css): it is
+    // A visible Windows overlay places the strip itself (view-tabs.css): it is
     // fixed there, so neither the measured shift nor the fallback applies.
-    if (titlebar) {
+    if (inTitlebar()) {
       clearTitleCap()
+      checkTitlebar(header, strip, list)
       return
     }
     const boxes = reading !== null && measuredStrip === strip ? reading : takeReading(header, strip)
@@ -369,7 +418,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     // The session overview changes where the strip may stand, so a flip of its
     // mark makes the last placement stale without touching the strip itself.
     if (placedMark !== document.body.hasAttribute(SESSION_PANEL_ATTR)) return false
-    return titlebar || strip.style.getPropertyValue(SHIFT) !== ''
+    return inTitlebar() || strip.style.getPropertyValue(SHIFT) !== ''
   }
 
   /**
@@ -393,11 +442,37 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     markTitlebar(header)
     stripStamp.mark(strip)
     classStamp(list)
-    if (titlebar) return
+    if (inTitlebar()) {
+      checkTitlebar(header, strip, list)
+      return
+    }
     placeForPaint(header, strip)
   })
 
+  /** Overlay geometry can appear or move without a DOM mutation; re-run one measured pass. */
+  let cancelGeometry: (() => void) | null = null
+  function onGeometry() {
+    checkedTitlebar = null
+    titlebarBlocked = false
+    if (cancelGeometry !== null) return
+    cancelGeometry = requestFrame({
+      read: measure,
+      write() {
+        cancelGeometry = null
+        sync()
+      },
+    })
+  }
+
   return () => {
+    observedOverlay?.removeEventListener('geometrychange', onGeometry)
+    observedOverlay = null
+    if (cancelGeometry !== null) cancelGeometry()
+    cancelGeometry = null
+    if (cancelTitlebarCheck !== null) cancelTitlebarCheck()
+    cancelTitlebarCheck = null
+    checkedTitlebar = null
+    titlebarBlocked = false
     stopMutations()
     if (cancelShift !== null) cancelShift()
     cancelShift = null

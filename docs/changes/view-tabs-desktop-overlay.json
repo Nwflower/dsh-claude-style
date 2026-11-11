@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-11",
+  "group": "fixes",
+  "order": 20,
+  "external": false,
+  "zh": "修复非 Windows 桌面壳误判标题栏、标签被遮挡后无法回退及详情栏打开时控制栏偏右的问题",
+  "en": "Keep view tabs out of unsupported desktop caption bands, restore them when covered and centre the control while the details rail is open"
+}

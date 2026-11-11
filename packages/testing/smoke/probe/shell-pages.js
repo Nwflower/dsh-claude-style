@@ -162,6 +162,46 @@
         viewTabs[2].setAttribute('aria-selected', 'true')
         viewTabs[2].className = '_tab_c_1 _tabActive_c_1'
       }, 'the view-tabs pill to take the newly active tab')
+      // The desktop attribute alone is not a Windows overlay: Linux shells carry
+      // it too. The OS boundary is stubbed, while occlusion is a real DOM cover.
+      var root = document.documentElement
+      var oldOverlay = Object.getOwnPropertyDescriptor(navigator, 'windowControlsOverlay')
+      var oldMark = root.hasAttribute('data-windows-titlebar')
+      var overlay = null
+      var cover = null
+      try {
+        root.setAttribute('data-windows-titlebar', '')
+        Object.defineProperty(navigator, 'windowControlsOverlay', { configurable: true, value: undefined })
+        document.body.appendChild(document.createElement('i'))
+        await probe.nextPass('the desktop mark without an overlay to stay in the header')
+        r.viewPill.nonOverlay = !viewHeader.hasAttribute('data-dsh-titlebar-tabs') && getComputedStyle(viewRow).position !== 'fixed'
+        overlay = new EventTarget()
+        overlay.visible = true
+        overlay.getTitlebarAreaRect = function () { return new DOMRect(0, 0, window.innerWidth, 40) }
+        Object.defineProperty(navigator, 'windowControlsOverlay', { configurable: true, value: overlay })
+        document.body.appendChild(document.createElement('i'))
+        overlay.dispatchEvent(new Event('geometrychange'))
+        await probe.nextPass('the visible Windows overlay to take the caption band')
+        await probe.frame()
+        await probe.frame()
+        r.viewPill.overlay = viewHeader.hasAttribute('data-dsh-titlebar-tabs') && getComputedStyle(viewRow).position === 'fixed'
+        cover = document.createElement('div')
+        cover.style.cssText = 'position:fixed;inset:0;z-index:2147483647;pointer-events:auto'
+        document.body.appendChild(cover)
+        overlay.dispatchEvent(new Event('geometrychange'))
+        await probe.until(function () { return viewHeader.hasAttribute('data-dsh-titlebar-tabs') },
+          function (read) { return read[read.length - 1] === false }, 'the covered caption band to fall back')
+        await probe.frame()
+        await probe.frame()
+        r.viewPill.covered = !viewHeader.hasAttribute('data-dsh-titlebar-tabs') && getComputedStyle(viewRow).position !== 'fixed'
+      } finally {
+        if (cover !== null) cover.remove()
+        if (oldOverlay === undefined) delete navigator.windowControlsOverlay
+        else Object.defineProperty(navigator, 'windowControlsOverlay', oldOverlay)
+        if (!oldMark) root.removeAttribute('data-windows-titlebar')
+        document.body.appendChild(document.createElement('i'))
+        await probe.nextPass('the desktop boundary to be restored')
+      }
       // The slide plays whatever the system's motion setting: no reduced-motion
       // block in the shipped stylesheets may reach the pill.
       r.viewPill.reducedMotionRules = 0

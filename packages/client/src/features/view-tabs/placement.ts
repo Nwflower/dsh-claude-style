@@ -4,11 +4,10 @@
  * translate the stylesheet applies.
  *
  * The strip is lifted onto the title's own line when the room above it is real.
- * With the session overview installed the lift always happens, and a sideways
- * clash with the title or its actions is answered by moving the strip past them
- * — the panel has taken the header's background-work chips, so the switch is
- * expected beside the title. Without the panel a clash leaves the strip on its
- * own row, as the shipped layout shows it.
+ * With the session overview installed the lift always happens, and the strip
+ * takes the header's centre while the title truncates to leave it room. Without
+ * the panel a sideways clash leaves the strip on its own row, as the shipped
+ * layout shows it.
  */
 
 /** One box the placement reads: the four edges and the size, the shape a DOMRect and a spec both answer. */
@@ -103,12 +102,13 @@ export function placementFor(boxes: StripBoxes, applied: StripTranslate, panelOn
   const onLine = Math.round(lift)
   const clash = clashes(natural, title) || (actions !== null && clashes(natural, actions))
   if (!panelOn) return { y: clash ? FALLBACK_VIEW_TAB_SHIFT : onLine, x: 0, titleCap: null }
-  // With the panel installed the strip always takes the row's right end before
-  // the utilities, and the title's words keep only the span to the left of it.
-  // The decision deliberately ignores the title's current width: a decision
-  // that read it would flip as soon as the cap it writes shortened the words.
+  // With the panel installed the strip stays centred in the conversation
+  // header; a wide utilities cluster can move it left, never past its own right
+  // edge. The title's current width stays out of this decision because the cap
+  // written here would otherwise feed back into the next placement (D40).
   const limit = (utilities === null ? header.right : utilities.left) - VIEW_TAB_CLEARANCE
-  const start = limit - strip.width
+  const centred = header.left + (header.width - strip.width) / 2
+  const start = Math.min(centred, limit - strip.width)
   const actionsWidth = actions === null ? 0 : actions.width
   const cap = start - VIEW_TAB_CLEARANCE - actionsWidth - title.left
   // A row with no room for a readable title keeps the strip on its own row.

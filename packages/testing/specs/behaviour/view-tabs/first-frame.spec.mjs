@@ -34,7 +34,14 @@ function switchSession(t, options) {
     const hostStyle = document.createElement('style')
     hostStyle.textContent = '.probe-switch-row { display: flex; justify-content: flex-start; padding-left: 60px; }'
     document.head.append(hostStyle)
-    if (titlebar) document.documentElement.setAttribute(windows, '')
+    const priorOverlay = Object.getOwnPropertyDescriptor(navigator, 'windowControlsOverlay')
+    if (titlebar) {
+      document.documentElement.setAttribute(windows, '')
+      const overlay = new EventTarget()
+      overlay.visible = true
+      overlay.getTitlebarAreaRect = () => new DOMRect(0, 0, window.innerWidth, 40)
+      Object.defineProperty(navigator, 'windowControlsOverlay', { configurable: true, value: overlay })
+    }
 
     const build = () => {
       const slot = document.createElement('div')
@@ -109,6 +116,8 @@ function switchSession(t, options) {
     next.slot.remove()
     hostStyle.remove()
     if (titlebar) document.documentElement.removeAttribute(windows)
+    if (priorOverlay === undefined) delete navigator.windowControlsOverlay
+    else Object.defineProperty(navigator, 'windowControlsOverlay', priorOverlay)
     await settle()
     // cost: D40 — hands the prototype back to the page once the switch has painted.
     Element.prototype.getBoundingClientRect = originalRect

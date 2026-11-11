@@ -1,9 +1,8 @@
 /**
  * Where the conversation's view-tab strip is drawn from the boxes around it:
  * lifted onto the title's line when the room above is real, kept on its own row
- * on a sideways clash, and — with the session overview installed — moved past
- * the title and its actions instead of dropping, because the panel has taken
- * the header's background-work chips and the switch belongs beside the title.
+ * on a sideways clash, and — with the session overview installed — centred in
+ * the header while the title truncates to leave it room.
  * The header's top inset holds in every case, and the utilities cluster at the
  * right end is never run under.
  *
@@ -50,20 +49,21 @@ test('without the panel a sideways clash leaves the strip on its own row', () =>
   expect(placement).toEqual({ y: FALLBACK_VIEW_TAB_SHIFT, x: 0, titleCap: null })
 })
 
-test('with the panel a clash takes the row\'s right end and caps the title to what is left', () => {
+test('with the panel a clash moves to the header centre and caps the title to what is left', () => {
   const placement = placementFor({ strip: strip(350), header: HEADER, title: TITLE, actions: ACTIONS, utilities: UTILITIES }, APPLIED, true)
-  // The strip ends where the clearance before the utilities begins.
-  const start = UTILITIES.left - VIEW_TAB_CLEARANCE - 94
+  const start = HEADER.left + (HEADER.width - 94) / 2
   expect(placement?.x).toBe(start - 350)
   expect(placement?.y).toBe(TITLE.top + TITLE.height / 2 - 60 - 13)
   // The title keeps the span up to the strip, less the actions and the gaps.
   expect(placement?.titleCap).toBe(start - VIEW_TAB_CLEARANCE - ACTIONS.width - TITLE.left)
 })
 
-test('a strip centred past its slot moves left to take the row\'s right end', () => {
-  // The strip's content starts left of where its right end would put it.
-  const placement = placementFor({ strip: strip(400), header: HEADER, title: TITLE, actions: ACTIONS, utilities: UTILITIES }, APPLIED, true)
-  expect(placement?.x).toBe(UTILITIES.left - VIEW_TAB_CLEARANCE - 94 - 400)
+test('a wide utilities cluster moves the centred strip left without being overlapped', () => {
+  const utilities = box(600, 14, 600, 32)
+  const placement = placementFor({ strip: strip(400), header: HEADER, title: TITLE, actions: ACTIONS, utilities }, APPLIED, true)
+  const start = utilities.left - VIEW_TAB_CLEARANCE - 94
+  expect(start).toBeLessThan(HEADER.left + (HEADER.width - 94) / 2)
+  expect(placement?.x).toBe(start - 400)
   expect(placement?.titleCap).not.toBeNull()
 })
 
@@ -80,11 +80,12 @@ test('the lift stays under the header\'s own top inset', () => {
   expect(placement?.titleCap).toBeNull()
 })
 
-test('with the panel the strip takes the row\'s right end even when centred it would not clash', () => {
+test('with the panel the strip takes the header centre even when it already clears the title', () => {
   const placement = placementFor({ strip: strip(795), header: HEADER, title: TITLE, actions: ACTIONS, utilities: UTILITIES }, APPLIED, true)
+  const start = HEADER.left + (HEADER.width - 94) / 2
   expect(placement?.y).toBe(TITLE.top + TITLE.height / 2 - 60 - 13)
-  expect(placement?.x).toBe(UTILITIES.left - VIEW_TAB_CLEARANCE - 94 - 795)
-  expect(placement?.titleCap).toBe(UTILITIES.left - VIEW_TAB_CLEARANCE - 94 - VIEW_TAB_CLEARANCE - ACTIONS.width - TITLE.left)
+  expect(placement?.x).toBe(start - 795)
+  expect(placement?.titleCap).toBe(start - VIEW_TAB_CLEARANCE - ACTIONS.width - TITLE.left)
 })
 
 test('the transform already on the strip is taken out before the next placement', () => {
