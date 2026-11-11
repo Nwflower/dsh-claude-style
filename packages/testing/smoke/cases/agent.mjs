@@ -224,8 +224,10 @@ export default {
     check('the account width variable is the account row box width',
       r.accountWidthVar === Math.round(r.hostRowWidth) + 'px',
       JSON.stringify({ variable: r.accountWidthVar, row: r.hostRowWidth }))
-    check('the host menu card is as wide as the account row',
-      r.menuCardWidth !== null && Math.round(r.menuCardWidth) === Math.round(r.hostRowWidth),
+    // The card takes the wider of the account row and the footer content a
+    // plugin's entry was laid out in, so the row stays its floor.
+    check('the host menu card is no narrower than the account row',
+      r.menuCardWidth !== null && Math.round(r.menuCardWidth) >= Math.round(r.hostRowWidth),
       JSON.stringify({ card: r.menuCardWidth, row: r.hostRowWidth }))
     check('hovering the host account row opens the host menu; leaving it closes',
       r.hoverOpenedMenu === true && r.hoverClosedMenu === true,

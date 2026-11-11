@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-10",
+  "group": "fixes",
+  "order": 16,
+  "external": false,
+  "zh": "修复账号菜单把插件卡片压成一行截断文字、并把卡片副本收窄到账号行宽度导致标签折行与撑高的问题",
+  "en": "Fix the account menu collapsing a plugin's footer card into one truncated line and pinning its copy to the account row's width, which folded the card's labels and made it taller"
+}
