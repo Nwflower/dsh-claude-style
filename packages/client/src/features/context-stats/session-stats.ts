@@ -1,4 +1,5 @@
 import { conversationSessionId, findConversationSession, hostSessions, observeSession } from '@dsh-claude-style/engine/host'
+import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { sessionProjectionFaces } from '../../shared/session-projections'
 import { hostChatSeat } from '../../core/i18n'
 import { prefsFromForm, readPrefs } from '../../core/prefs'
@@ -78,7 +79,7 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
   }
 
   /** The estimate of the text streaming now, riding on the settled written-back total. */
-  const estimate = createStreamEstimate()
+  const estimate = createStreamEstimate(scheduleNumbers)
   estimate.watch()
 
   /** The settled cost the host priced, and the table the estimate ticks by. */
@@ -197,7 +198,8 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
    * so the new figure travels from where the old one stands (stats-count.ts).
    */
   const offCost = cost.onChange(() => {
-    readingMemo = null
+    // Cost asks already have their own 1500ms throttle; a settled answer writes
+    // immediately, while the streaming projection and text sources coalesce.
     renderNumbers()
   })
 
@@ -250,7 +252,23 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
    * carries the rows in BOTH positions: with the numbers on a line of their own,
    * that line opens the panel (stats-binding.ts), so both show one session.
    */
+  let cancelNumbers: (() => void) | null = null
+  let numbersStopped = false
+  const numbersFrame = {
+    write() {
+      cancelNumbers = null
+      renderNumbers()
+    },
+  }
+  /** Projection, price and settlement callbacks share one write in the next frame. */
+  function scheduleNumbers() {
+    if (numbersStopped || cancelNumbers !== null) return
+    cancelNumbers = requestFrame(numbersFrame)
+  }
+
   function renderNumbers() {
+    if (cancelNumbers !== null) cancelNumbers()
+    cancelNumbers = null
     readingMemo = null
     const position = readPrefs().statsPosition
     if (position === STATS_POSITION_INLINE || position === STATS_POSITION_FOOTER) inline.render()
@@ -294,7 +312,7 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
     // pass's own: several projections can change on one settlement, and with
     // billing off there is nothing to ask for.
     if (billingChosen() && currency() !== null) cost.ask(Date.now())
-    renderNumbers()
+    scheduleNumbers()
   }
 
   /**
@@ -348,7 +366,7 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
       void loadPrices(Date.now()).then(() => {
         if (priceGeneration() === before) return
         cost.ask(Date.now(), true)
-        renderNumbers()
+        scheduleNumbers()
       })
       cost.ask(Date.now())
     }
@@ -452,6 +470,9 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
     },
     /** Drop the appends, the line, the projection subscriptions and the host-node bindings. */
     teardown() {
+      numbersStopped = true
+      if (cancelNumbers !== null) cancelNumbers()
+      cancelNumbers = null
       releaseWatch()
       offCost()
       costListeners.clear()

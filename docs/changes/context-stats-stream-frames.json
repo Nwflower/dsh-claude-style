@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-11",
+  "group": "fixes",
+  "order": 21,
+  "external": false,
+  "zh": "合并流式统计的数字重绘并复用宽度探针，减少长会话中的强制同步布局",
+  "en": "Coalesce streaming statistic writes and retain the measurement probe, reducing forced synchronous layout in long conversations"
+}

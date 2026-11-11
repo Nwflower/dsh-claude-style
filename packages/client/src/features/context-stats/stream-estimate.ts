@@ -40,7 +40,7 @@ const SCAN_MS = 800
  *   structure bus behind the call rows, `reset` is a session switch and `stop`
  *   takes the bus away with the rest of the teardown.
  */
-export function createStreamEstimate() {
+export function createStreamEstimate(onChange: () => void) {
   /** The settled output total the estimate rides on, or null before the first reading. */
   let settled: number | null = null
   /** The tokens the streamed text has grown by since that settlement. */
@@ -285,8 +285,15 @@ export function createStreamEstimate() {
       watching?.()
       watchingToken += 1
       const token = watchingToken
-      watching = subscribeMutations(document.body, { childList: true, subtree: true }, (records) => {
+      watching = subscribeMutations(document.body, { childList: true, characterData: true, subtree: true }, (records) => {
         if (token !== watchingToken) return
+        const scroller = findConversationScroller()
+        const inside = (node: Node) => scroller !== null && (node === scroller || scroller.contains(node))
+        const relevant = records.some((record) => inside(record.target) || [...record.addedNodes].some(inside))
+        // A caret, mascot or settings edit outside this conversation has no
+        // reading to wake. Streaming work coalesces into one numbers frame.
+        if (!relevant) return
+        onChange()
         batches += 1
         markStreaming(batchAdditions(records).added)
         noteStructure(records)

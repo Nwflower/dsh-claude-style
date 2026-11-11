@@ -1,5 +1,6 @@
 import { COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_CONTENT_SELECTOR, CONVERSATION_MAIN_SLOT_SELECTOR, PHASE_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
+import { observeSize } from '@dsh-claude-style/engine/bus'
 import { setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
 
 const TOOLBAR = 'data-dsh-claude-composer-toolbar'
@@ -11,7 +12,19 @@ const HEIGHT = '--dsh-claude-composer-toolbar-height'
 export function createComposerResponsive() {
   const rows = new Map<HTMLElement, HTMLElement>()
   const frames = new Set<HTMLElement>()
+  let sizeStops: (() => void)[] = []
   let cancel: (() => void) | null = null
+
+  function stopSizes() {
+    for (const stop of sizeStops) stop()
+    sizeStops = []
+  }
+
+  function sameRows(next: ReadonlyMap<HTMLElement, HTMLElement>) {
+    if (rows.size !== next.size) return false
+    for (const [card, row] of next) if (rows.get(card) !== row) return false
+    return true
+  }
 
   function clear(card: HTMLElement, row: HTMLElement) {
     row.removeAttribute(TOOLBAR)
@@ -87,16 +100,23 @@ export function createComposerResponsive() {
           if (row?.matches('[data-dsh-claude-part~="row"]')) next.set(card, row)
         }
       }
+      const unchanged = sameRows(next)
       for (const [card, row] of rows) if (next.get(card) !== row) clear(card, row)
       rows.clear()
       for (const [card, row] of next) {
         rows.set(card, row)
         setAttributeIfChanged(row, TOOLBAR, '')
       }
+      if (unchanged) return
+      stopSizes()
+      // A repeated scheduler sync with the same boxes has nothing to measure.
+      // Real width or content-height changes arrive through these subscriptions.
+      for (const [card, row] of rows) sizeStops.push(observeSize([card, row], measure))
       measure()
     },
     measure,
     dispose() {
+      stopSizes()
       cancel?.()
       cancel = null
       for (const [card, row] of rows) clear(card, row)

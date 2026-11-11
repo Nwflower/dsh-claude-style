@@ -335,8 +335,8 @@ body[data-dsh-claude-style] .dsh-claude-inline-stats[data-dsh-claude-footer-deta
 body[data-dsh-claude-style] .dsh-claude-inline-stats .dsh-claude-inline-seg[hidden] {
   display: none;
 }
-/* The line's measuring twin: laid out beside the line for one reading and taken
-   off before anything paints. Out of flow, so the dock keeps its layout. */
+/* The line's measuring twin stays beside it, out of flow and hidden between
+   readings, so a fit rewrites text without inserting and removing a subtree. */
 body[data-dsh-claude-style] .dsh-claude-inline-stats[data-dsh-claude-inline-probe] {
   position: absolute;
   visibility: hidden;

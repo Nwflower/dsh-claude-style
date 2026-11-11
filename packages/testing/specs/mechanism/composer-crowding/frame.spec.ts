@@ -112,6 +112,34 @@ test('scope off, removed cards, disconnected roots, disposal and known stale mar
   stale.responsive.sync([stale.card], false); expect(stale.frame.hasAttribute(FRAME)).toBe(false); unchanged(stale.parents)
 })
 
+test('an unchanged card set schedules no empty measurement, while a real resize still refits', async () => {
+  const view = mount()
+  view.responsive.sync([view.card], true)
+  await settle()
+  addRow(view.card)
+  await settle()
+  view.responsive.sync([view.card], true)
+  await settle()
+  expect(view.card.getAttribute(surfaceAttribute('composer.responsive-layout'))).toBe('stacked')
+  const original = window.requestAnimationFrame
+  let calls = 0
+  // cost: D40 — count only requests the product makes during the repeated sync;
+  // the test's own settling frames stay outside the measurement.
+  window.requestAnimationFrame = ((callback: FrameRequestCallback) => {
+    calls += 1
+    return original(callback)
+  }) as typeof requestAnimationFrame
+  try {
+    view.responsive.sync([view.card], true)
+  } finally {
+    window.requestAnimationFrame = original
+  }
+  expect(calls).toBe(0)
+  view.card.style.width = '480px'
+  await settle()
+  expect(view.card.getAttribute(surfaceAttribute('composer.responsive-layout'))).toBe('wide')
+})
+
 test('the same claimed root responds to native phase changes without another sync', async () => {
   const view = mount('hero'); view.responsive.sync([view.card], true); await settle()
   expect(view.frame.hasAttribute(FRAME)).toBe(true)

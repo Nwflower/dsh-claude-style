@@ -100,6 +100,11 @@
           crabHit.dispatchEvent(new PointerEvent('pointerdown', Object.assign({ buttons: 1 }, crabPress)))
           crabHit.dispatchEvent(new PointerEvent('pointerup', Object.assign({ buttons: 0 }, crabPress)))
         }
+        // Late image loads write hidden and ask the parts pass to settle. Wait
+        // for that host work before measuring the poke's animation frames.
+        await probe.until(function () { return Array.from(document.images).every(function (image) { return image.complete }) },
+          function (read) { return read[read.length - 1] === true }, 'the account images to finish loading')
+        await probe.settle()
         // The press settles focus (and the caret motion's own frames with it),
         // so the count starts once that is over: what is measured is the poke's
         // animation running on the browser's engine.

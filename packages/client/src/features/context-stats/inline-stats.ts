@@ -295,6 +295,8 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
     cancelRefit?.()
     cancelRefit = null
     count.reset()
+    // The measuring twin survives every fit, but follows no removed line.
+    if (probe !== null && probe.root.parentElement !== null) probe.root.remove()
     if (line !== null && line.root.parentElement !== null) line.root.parentElement.removeChild(line.root)
     const hostMeter = meter()
     if (hostMeter !== null) hostMeter.removeAttribute(METER_TIGHT_ATTR)
@@ -436,12 +438,21 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
   function ensureProbe() {
     if (probe === null) {
       probe = buildLine()
+      // The probe shares the line's class and styles, but is not a second public line.
+      probe.root.removeAttribute(INLINE_STATS_ATTR)
       probe.root.setAttribute(INLINE_PROBE_ATTR, '')
       // Its coming and going is no page change for the scheduler (D40).
       probe.root.setAttribute(QUIET_ATTR, '')
       probe.root.setAttribute('aria-hidden', 'true')
     }
     return probe
+  }
+
+  /** Keep the out-of-flow twin beside the shown line, moving it only when that line moves. */
+  function mountProbe(shown: Line) {
+    const twin = ensureProbe()
+    if (twin.root.parentElement !== shown.root.parentElement) shown.root.before(twin.root)
+    return twin
   }
 
   /**
@@ -466,31 +477,26 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
   /**
    * How much room ladder step `at` would take, written with the reading the
    * count is moving to and read off the twin. The twin stands out of flow beside
-   * the shown line for the one reading and is taken off before anything paints:
-   * the shown line keeps the numbers it is showing, and the room is measured for
+   * the shown line and stays out of flow between readings: the shown line keeps
+   * the numbers it is showing, and the room is measured for
    * the ones the count is heading for, so the step the line stops on fits before
    * the figures get there. The meter takes the step's shape for the reading and
    * gets the line's back after it.
    */
   function probeWidth(shown: Line, at: number, chat: HostText, reading: StatsReading) {
-    const twin = ensureProbe()
+    const twin = mountProbe(shown)
     writeLine(twin, at, chat, reading.stats, reading.usage, reading.cost, reading.billing, reading.costPending, currency())
     tightenMeter(at)
-    shown.root.before(twin.root)
     const needed = neededWidth(shown, inPagePixels(twin.root.getBoundingClientRect().width))
-    twin.root.remove()
     tightenMeter(level)
     return needed
   }
 
   /** The width a compact footer detail step takes, read off the same twin. */
   function probeFooterWidth(shown: Line, footerAt: number, chat: HostText, reading: StatsReading) {
-    const twin = ensureProbe()
+    const twin = mountProbe(shown)
     writeLine(twin, 0, chat, reading.stats, reading.usage, reading.cost, reading.billing, reading.costPending, currency(), footerAt)
-    shown.root.before(twin.root)
-    const needed = inPagePixels(twin.root.getBoundingClientRect().width)
-    twin.root.remove()
-    return needed
+    return inPagePixels(twin.root.getBoundingClientRect().width)
   }
 
   /**

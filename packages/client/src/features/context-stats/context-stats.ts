@@ -32,6 +32,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   ui.contextStats = {
     measure: stats.measure,
     sync: stats.sync,
+    // Streaming text cannot move the composer row or change a projection by
+    // itself; projection subscriptions schedule the figures on their own frame.
+    skipOnContentOnly: true,
     /**
      * A viewport move under the context panel: the panel is the host's,
      * and the feature only re-takes its own reading of where the panel's
