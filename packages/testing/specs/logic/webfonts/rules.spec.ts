@@ -33,5 +33,5 @@ test('only the faces reported get a declaration, and they keep the contract orde
 })
 
 test('a face the package ships is left to the stylesheet that declares it', () => {
-  expect(webfontRules(['JetBrainsMonoVariable.ttf', 'InterVariable.woff2'])).toBe('')
+  expect(webfontRules(['JetBrainsMonoVariable.woff2', 'InterVariable.woff2'])).toBe('')
 })

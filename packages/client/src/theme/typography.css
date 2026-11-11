@@ -4,7 +4,7 @@
    fetch 404s and the stacks' system fallbacks take over. */
 @font-face {
   font-family: 'JetBrains Mono';
-  src: url('/dsh-claude-style/fonts/JetBrainsMonoVariable.ttf') format('truetype-variations');
+  src: url('/dsh-claude-style/fonts/JetBrainsMonoVariable.woff2') format('woff2');
   font-weight: 100 800;
   font-style: normal;
   font-display: swap;
@@ -12,7 +12,7 @@
 
 @font-face {
   font-family: 'JetBrains Mono';
-  src: url('/dsh-claude-style/fonts/JetBrainsMonoItalicVariable.ttf') format('truetype-variations');
+  src: url('/dsh-claude-style/fonts/JetBrainsMonoItalicVariable.woff2') format('woff2');
   font-weight: 100 800;
   font-style: italic;
   font-display: swap;
@@ -38,6 +38,7 @@
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
+  unicode-range: U+000D, U+0020-007E, U+00A0-017F, U+0192, U+01CD-01D4, U+01E2-01EB, U+01F4-01FF, U+0218-021B, U+0227, U+022F-0237, U+0245, U+0259, U+028C, U+02B0-02BC, U+02C6-02C7, U+02CD, U+02D8-02DD, U+02E1-02E3, U+0300-0304, U+0306-0313, U+0323-0328, U+0331, U+03A9, U+03C0, U+1D37-1D39, U+1D43-1D5B, U+1D9C-1DA0, U+1DBB, U+1E02-1EF3, U+2002-200B, U+2012-2015, U+2018-2022, U+2026, U+2030-2034, U+2039-203D, U+2044, U+2070-208E, U+20AC, U+2122, U+2153-215F, U+2190-2199, U+2202-221E, U+222B, U+2248, U+2260-2265, U+2329-232A, U+25CA, U+25E6, U+2E18, U+2E3A-2E3B, U+FB01-FB02;
 }
 
 @font-face {
@@ -46,6 +47,7 @@
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
+  unicode-range: U+0020-007E, U+00A0-00B4, U+00B6-017F, U+01CD-01D4, U+01E2-01EB, U+01F4-01FF, U+0218-021B, U+0227, U+022F-0237, U+0245, U+0259, U+028C, U+02B0-02BC, U+02C6-02C7, U+02CD, U+02D8-02DD, U+02E1-02E3, U+0300-0304, U+0306-0313, U+0323-0328, U+0331, U+1D37-1D39, U+1D43-1D5B, U+1D9C-1DA0, U+1DBB, U+1E02-1EF3, U+2002-200B, U+2012-2015, U+2018-2022, U+2026, U+2030-2034, U+2039-203D, U+2044, U+2070-208E, U+20AC, U+2122, U+2153-215F, U+2190-2199, U+2202, U+2212-2219, U+2248, U+2260-2265, U+2329-232A, U+25E6, U+2E18, U+2E3A-2E3B, U+E101-E116, U+FB00-FB04;
 }
 
 /* The mascot bubble's pixel face: PoxiaoPixel (SIL OFL 1.1) cut to the bubble's
@@ -82,6 +84,11 @@ body[data-dsh-claude-style] :is(h1, h2, h3, h4, [data-dsh-claude-part~="text-hea
 body[data-dsh-claude-style] :is(h1, [data-dsh-claude-part~="text-headline"]) {
   font-weight: 500;
   letter-spacing: -0.015em;
+}
+
+/* Negative Latin tracking squeezes fullwidth CJK ideographs; restore natural spacing under CJK locales. */
+body[data-dsh-claude-style] :is(h1, h2, h3, h4, [data-dsh-claude-part~="text-headline"], [data-dsh-claude-part~="text-title"]):is(:lang(zh), :lang(ja), :lang(ko)) {
+  letter-spacing: normal;
 }
 
 /* ---------- markdown document prose ---------- */

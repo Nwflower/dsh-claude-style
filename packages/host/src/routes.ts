@@ -93,8 +93,8 @@ async function playSoundRequest(req: DshRequest, res: DshResponse) {
  * browser half registers no `@font-face` for a name this route does not report.
  */
 const FONT_FILES = {
-  'JetBrainsMonoVariable.ttf': 'font/ttf',
-  'JetBrainsMonoItalicVariable.ttf': 'font/ttf',
+  'JetBrainsMonoVariable.woff2': 'font/woff2',
+  'JetBrainsMonoItalicVariable.woff2': 'font/woff2',
   ...Object.fromEntries(OPTIONAL_WEBFONTS.map(face => [face.file, 'font/ttf'])),
   'InterVariable.woff2': 'font/woff2',
   'NotoSerifVariable.woff2': 'font/woff2',

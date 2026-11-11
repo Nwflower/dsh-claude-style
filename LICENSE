@@ -40,8 +40,8 @@ Font files notice:
   covered by the MIT license above; all rights remain with Anthropic. The npm
   package does not ship these files.
 
-- `packages/assets/src/fonts/JetBrainsMonoVariable.ttf` and
-  `packages/assets/src/fonts/JetBrainsMonoItalicVariable.ttf` are JetBrains Mono,
+- `packages/assets/src/fonts/JetBrainsMonoVariable.woff2` and
+  `packages/assets/src/fonts/JetBrainsMonoItalicVariable.woff2` are JetBrains Mono,
   distributed under the SIL Open Font License
   (`packages/assets/src/fonts/OFL.txt`; the package carries them under
   `lib/fonts/`). They may be redistributed with this plugin.

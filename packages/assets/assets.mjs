@@ -15,8 +15,8 @@ export const FONT_DIR = 'fonts'
 export const PRIVATE_FONT_DIR = 'anthropic'
 /** OFL 1.1 requires the licence to travel with the shipped font faces. */
 const SHIPPED_FONTS = [
-  'JetBrainsMonoVariable.ttf',
-  'JetBrainsMonoItalicVariable.ttf',
+  'JetBrainsMonoVariable.woff2',
+  'JetBrainsMonoItalicVariable.woff2',
   'InterVariable.woff2',
   'NotoSerifVariable.woff2',
   'ClaudeStylePixel.woff2',
