@@ -108,7 +108,8 @@
         }
       },
       "source": "https://api-docs.deepseek.com/quick_start/pricing/",
-      "verifiedAt": "2026-10-02"
+      "verifiedAt": "2026-10-02",
+      "policyNote": "Direct DeepSeek API Flash 1017 and V4 Pro 0813 are separately priced in the current table, both with a 2:1 peak/off-peak ratio. An older Pro-routing notice conflicts with the separately listed Pro prices; do not assume Pro calls are billed at Flash prices. Only this provider’s Chinese public-holiday exception is applied. No published end date."
     },
     {
       "id": "codex-reset",
@@ -216,7 +217,7 @@
       "shortName": "AH",
       "title": "AIHubMix DeepSeek pricing clock",
       "subtitle": "AIHubMix DeepSeek pricing hours in your local time",
-      "kicker": "V4.1 Flash · peak rates are 2× off-peak",
+      "kicker": "Model-catalog peak token rates are approximately 2× off-peak",
       "schedule": {
         "timeZone": "UTC",
         "peakDays": [0, 1, 2, 3, 4, 5, 6],
@@ -227,24 +228,25 @@
         "windowName": "peak",
         "sourceTitle": "Peak windows (UTC):",
         "sourceWindows": "01:00–04:00 · 06:00–10:00",
-        "sourceNote": "AIHubMix DeepSeek V4.1 Flash route · the aggregate pricing table shows peak windows 01:00–04:00 and 06:00–10:00 UTC, with off-peak at all other hours · provider-specific routes on the same page publish different windows, so this aggregate schedule is approximate and should be treated as unverified for a chosen route · the page's 30% promotion had a published end date of Sep 27, 2026 and is now expired; no start time was published, so it is not encoded · no published end date for the aggregate schedule"
+        "sourceNote": "Fresh model-catalog API pricing_lines state daily UTC 01:00–04:00 and 06:00–10:00; no weekday filter. Current peak/default ratio ≈1.99871, not exactly 2. Provider-specific route and fallback billing remain unverified; no published end date."
       },
       "periods": {
         "peak": {
           "name": "Peak rate",
-          "status": "Peak rate is active now",
-          "badge": "2×",
-          "detail": "2× the off-peak rate"
+          "status": "Model-catalog peak rate; chosen route may differ",
+          "badge": "≈2×",
+          "detail": "Approximately 1.99871× the off-peak token rates; provider-route pricing is unverified."
         },
         "offPeak": {
           "name": "Off-peak rate",
-          "status": "Off-peak rate is active now",
+          "status": "Model-catalog off-peak rate; chosen route may differ",
           "badge": "1×",
           "detail": "Base rate"
         }
       },
       "source": "https://aihubmix.com/model/deepseek-v4.1-flash",
-      "verifiedAt": "2026-10-01"
+      "verifiedAt": "2026-10-01",
+      "policyNote": "This clock follows the published model-catalog schedule for deepseek-v4.1-flash, daily 01:00–04:00 and 06:00–10:00 UTC. Provider-specific routes and automatic fallback can differ; a chosen-route price guarantee is unverified. Current catalog USD per 1M input/cache/output: off-peak 0.155/0.0031/0.62, peak 0.3098/0.006196/1.2392, approximately—not exactly—2×. The same catalog’s top-level prices (0.1408/0.002816/0.5632) conflict with those tier defaults; no single settled rate is certified. This is not the separate dated Flash 1017 promotion. No published end date for the catalog schedule."
     },
     {
       "id": "alibaba-model-studio-deepseek-v4",
@@ -283,7 +285,7 @@
         }
       },
       "source": "https://www.alibabacloud.com/help/en/model-studio/model-pricing",
-      "verifiedAt": "2026-10-15"
+      "verifiedAt": "2026-11-10"
     },
     {
       "id": "bai-deepseek-v4",
@@ -739,7 +741,8 @@
         }
       },
       "source": "https://help.aliyun.com/en/model-studio/token-plan-personal-overview",
-      "verifiedAt": "2026-11-10"
+      "verifiedAt": "2026-11-10",
+      "policyNote": "China Beijing Token Plan coding/agent tools only · official overview confirms a limited-time 60% discount from 22:00–08:00 Beijing for Qwen3.8-Max and Qwen3.8-Flash · no published end date · Personal edition in China (Beijing), interactive coding/agent tools only, not the pay-as-you-go API. No general discount is inferred for unlisted model IDs."
     },
     {
       "id": "alibaba-deepseek-v4-token-plan",
@@ -776,7 +779,8 @@
         }
       },
       "source": "https://help.aliyun.com/en/model-studio/token-plan-personal-overview",
-      "verifiedAt": "2026-11-10"
+      "verifiedAt": "2026-11-10",
+      "policyNote": "China Beijing Token Plan coding/agent tools only · official overview confirms a limited-time 50% discount from 22:00–08:00 Beijing for DeepSeek V4.1 Flash (including deepseek-v4.1-flash-1017), V4 Pro 0813 and V4 Flash 0731 · no published end date · Personal edition in China (Beijing), interactive coding/agent tools only, not the pay-as-you-go API. No general discount is inferred for unlisted model IDs."
     },
     {
       "id": "xiaomi-mimo-v2-5-token-plan",
@@ -1011,11 +1015,11 @@
       "slug": "tencent",
       "provider": "Tencent Cloud",
       "model": "DeepSeek V4.1 Flash 1017 / V4 Flash 0731 / Pro 0813 / Vision (Vendor Direct)",
-      "product": "TokenHub Enterprise Pro Plan",
+      "product": "TokenHub API · listed token prices",
       "shortName": "TC",
       "title": "Tencent TokenHub vendor-direct clock",
-      "subtitle": "Vendor-direct DeepSeek V4 credit rates in your local time",
-      "kicker": "V4.1 Flash, Flash, Pro and Vision · 2× during weekday peak",
+      "subtitle": "DeepSeek API token rates in your local time",
+      "kicker": "V4.1 Flash, Flash, Pro and Vision · 2× token prices during weekday peak",
       "schedule": {
         "timeZone": "Asia/Shanghai",
         "peakDays": [1, 2, 3, 4, 5],
@@ -1031,29 +1035,30 @@
       },
       "periods": {
         "peak": {
-          "name": "Peak credits",
-          "status": "Peak credit rate is active now",
-          "badge": "2× credits"
+          "name": "Peak token rate",
+          "status": "Peak token rate is active now",
+          "badge": "2× off-peak"
         },
         "offPeak": {
-          "name": "Off-peak credits",
-          "status": "Off-peak credit rate is active now",
-          "badge": "1× credits"
+          "name": "Off-peak token rate",
+          "status": "Off-peak token rate is active now",
+          "badge": "1× off-peak"
         }
       },
-      "source": "https://www-sg.tencentcloud.com/document/product/1300/81489",
-      "verifiedAt": "2026-11-10"
+      "source": "https://intl.cloud.tencent.com/zh/document/product/1300/78937",
+      "verifiedAt": "2026-11-10",
+      "policyNote": "TokenHub API prices in USD per million tokens, for the exact vendor-direct or non-vendor models named in this entry. Billing follows request reception time, not completion. Weekday Beijing 09:00–12:00 and 14:00–18:00 peak; weekends idle. No Chinese-public-holiday exemption or end date is stated. The source is the current pricing page, not the separate model catalog. This page does not establish a subscription-credit or Enterprise Pro Plan restriction; no such restriction is inferred."
     },
     {
       "id": "tencent-deepseek-v4-ga",
       "slug": "tencent-v4-ga",
       "provider": "Tencent Cloud",
       "model": "DeepSeek V4.1 Flash / V4.1 Flash 1017 / Pro 0813 (non-vendor)",
-      "product": "TokenHub Enterprise Pro Plan",
+      "product": "TokenHub API · listed token prices",
       "shortName": "TC",
       "title": "Tencent V4 GA peak-hour clock",
-      "subtitle": "DeepSeek V4 GA credit rates in your local time",
-      "kicker": "Flash and Pro non-vendor · 2× during weekday peak",
+      "subtitle": "DeepSeek API token rates in your local time",
+      "kicker": "Flash and Pro non-vendor · 2× token prices during weekday peak",
       "schedule": {
         "timeZone": "Asia/Shanghai",
         "peakDays": [1, 2, 3, 4, 5],
@@ -1068,18 +1073,19 @@
       },
       "periods": {
         "peak": {
-          "name": "Peak credits",
-          "status": "Peak credit rate is active now",
-          "badge": "2× credits"
+          "name": "Peak token rate",
+          "status": "Peak token rate is active now",
+          "badge": "2× off-peak"
         },
         "offPeak": {
-          "name": "Off-peak credits",
-          "status": "Off-peak credit rate is active now",
-          "badge": "1× credits"
+          "name": "Off-peak token rate",
+          "status": "Off-peak token rate is active now",
+          "badge": "1× off-peak"
         }
       },
-      "source": "https://www-sg.tencentcloud.com/document/product/1300/81489",
-      "verifiedAt": "2026-11-10"
+      "source": "https://intl.cloud.tencent.com/zh/document/product/1300/78937",
+      "verifiedAt": "2026-11-10",
+      "policyNote": "TokenHub API prices in USD per million tokens, for the exact vendor-direct or non-vendor models named in this entry. Billing follows request reception time, not completion. Weekday Beijing 09:00–12:00 and 14:00–18:00 peak; weekends idle. No Chinese-public-holiday exemption or end date is stated. The source is the current pricing page, not the separate model catalog. This page does not establish a subscription-credit or Enterprise Pro Plan restriction; no such restriction is inferred."
     },
     {
       "id": "swarms-swarm-completions",
@@ -1529,7 +1535,11 @@
         "timeZone": "Asia/Shanghai",
         "peakDays": [0, 1, 2, 3, 4, 5, 6],
         "peakWindows": [
-          { "start": "00:00", "end": "00:00", "allDay": true }
+          {
+            "start": "00:00",
+            "end": "00:00",
+            "allDay": true
+          }
         ],
         "windowName": "campaign",
         "sourceTitle": "Campaign hours (Beijing time):",
@@ -1540,7 +1550,11 @@
             "startAt": "2026-08-12T00:00:00+08:00",
             "days": [0, 1, 2, 3, 4, 5, 6],
             "windows": [
-              { "start": "00:00", "end": "00:00", "allDay": true }
+              {
+                "start": "00:00",
+                "end": "00:00",
+                "allDay": true
+              }
             ]
           }
         ],
@@ -1568,7 +1582,8 @@
         }
       },
       "source": "https://docs.b.ai/llmservice/models/glm-5-2/",
-      "verifiedAt": "2026-11-10"
+      "verifiedAt": "2026-11-10",
+      "policyNote": "API and web app offer: 60% of the standard reference price. The source publishes only the start date Aug 12, 2026, not an exact hour or time zone. The historical midnight Beijing boundary in this clock is an assumption, not a verified effective instant. Current offer pricing is confirmed; no published end date, and platform settlement controls."
     },
     {
       "id": "bai-glm53",
@@ -1585,7 +1600,11 @@
         "timeZone": "Asia/Shanghai",
         "peakDays": [0, 1, 2, 3, 4, 5, 6],
         "peakWindows": [
-          { "start": "00:00", "end": "00:00", "allDay": true }
+          {
+            "start": "00:00",
+            "end": "00:00",
+            "allDay": true
+          }
         ],
         "windowName": "campaign",
         "sourceTitle": "Campaign hours (Beijing time):",
@@ -1596,7 +1615,11 @@
             "startAt": "2026-08-14T00:00:00+08:00",
             "days": [0, 1, 2, 3, 4, 5, 6],
             "windows": [
-              { "start": "00:00", "end": "00:00", "allDay": true }
+              {
+                "start": "00:00",
+                "end": "00:00",
+                "allDay": true
+              }
             ]
           }
         ],
@@ -1624,7 +1647,8 @@
         }
       },
       "source": "https://docs.b.ai/llmservice/models/glm-5-3/",
-      "verifiedAt": "2026-11-10"
+      "verifiedAt": "2026-11-10",
+      "policyNote": "API and web app offer: 90% of the standard reference price. The source publishes only the start date Aug 14, 2026, not an exact hour or time zone. The historical midnight Beijing boundary in this clock is an assumption, not a verified effective instant. Current offer pricing is confirmed; no published end date, and platform settlement controls."
     },
     {
       "id": "qoder-qwen3-8-max-service-account",
@@ -1835,7 +1859,7 @@
         }
       },
       "source": "https://goldflow.cc/pricing/deepseek-v4-1-flash-260910",
-      "verifiedAt": "2026-10-13"
+      "verifiedAt": "2026-11-10"
     },
     {
       "id": "qwencloud-qwen38-token-plan",
@@ -1960,6 +1984,308 @@
       "source": "https://docs.qoder.cn/en/product-overview/qwen-3-7-series-model-staggering-discount",
       "verifiedAt": "2026-11-10",
       "temporary": true
+    },
+    {
+      "id": "volcengine-ark-deepseek-v4-1-flash",
+      "slug": "volcengine",
+      "provider": "Volcengine Ark",
+      "model": "DeepSeek V4.1 Flash (regular / economy)",
+      "product": "CN API · regular online inference",
+      "shortName": "VE",
+      "title": "Volcengine Ark Flash pricing clock",
+      "subtitle": "Request-completion pricing in your local time",
+      "kicker": "Weekday peak token rates are 2× off-peak",
+      "policyNote": "Applies to the regular online inference catalog rows deepseek-v4-1-flash and its economy variant (经济版), not other DeepSeek models, low-priority inference or Batch. Actual billing uses request completion time, not submission. This clock shows the rate if completed now. Cached-input token prices change with the clock; cache storage stays CNY 0.017 per million tokens per hour. No Chinese-public-holiday exception, effective instant or end date is published.",
+      "schedule": {
+        "timeZone": "Asia/Shanghai",
+        "peakDays": [1, 2, 3, 4, 5],
+        "peakWindows": [
+          { "start": "09:00", "end": "12:00" },
+          { "start": "14:00", "end": "18:00" }
+        ],
+        "windowName": "peak",
+        "offDayName": "Weekend",
+        "sourceTitle": "Peak hours (Beijing):",
+        "sourceWindows": "09:00–12:00 · 14:00–18:00",
+        "sourceNote": "Monday–Friday; all other hours and weekends off-peak · billed at request completion · CNY per 1M input/cache-hit/output: regular off-peak 1/0.02/4 vs peak 2/0.04/8; economy off-peak 0.8/0.016/3.2 vs peak 1.6/0.032/6.4 · storage fees are not discounted · no published effective date or end date"
+      },
+      "periods": {
+        "peak": {
+          "name": "Peak token rate",
+          "status": "Peak token rate if completed now",
+          "badge": "2× off-peak",
+          "detail": "Twice the off-peak input, cache-hit and output rates; cache storage is separate."
+        },
+        "offPeak": {
+          "name": "Off-peak token rate",
+          "status": "Off-peak token rate if completed now",
+          "badge": "1× off-peak",
+          "detail": "Half the peak token rates; applies to completion time, not request submission."
+        }
+      },
+      "source": "https://ark.volcengine.com/region:cn-beijing/docs/model-pricing.md",
+      "verifiedAt": "2026-11-10"
+    },
+    {
+      "id": "qiniu-enterprise-token-plan",
+      "slug": "qiniu-token-plan",
+      "provider": "Qiniu",
+      "model": "DeepSeek V4 / V4.1 + GLM-5.3",
+      "product": "Enterprise Token Plan · subscription API key",
+      "shortName": "QN",
+      "temporary": true,
+      "title": "Qiniu enterprise night-credit clock",
+      "subtitle": "Subscription-point pricing in your local time",
+      "kicker": "Daily 18:00–08:00 Beijing · 70% fewer subscription points",
+      "policyNote": "Enterprise subscription only, through its dedicated subscription API key with available quota. Participating models are the published DeepSeek V4 Flash, V4 Pro, V4.1 Flash and GLM-5.3 rows; do not extend the offer to every model in the plan. The 0.3× factor is relative to normal subscription-point consumption, not a universal CNY token price or pay-as-you-go discount. Annual-plan discounts can stack, but the advertised 1.2折 is only the minimum combined rate, not this clock’s multiplier. Order-page terms control; no published effective date or end date.",
+      "schedule": {
+        "timeZone": "Asia/Shanghai",
+        "peakDays": [0, 1, 2, 3, 4, 5, 6],
+        "peakWindows": [
+          { "start": "08:00", "end": "18:00" }
+        ],
+        "windowName": "normal-points",
+        "sourceTitle": "Normal-point hours (Beijing, UTC+8):",
+        "sourceWindows": "08:00–18:00",
+        "sourceNote": "Every day, including weekends and public holidays · night 18:00–08:00 uses 0.3× normal subscription points · participating DeepSeek V4/V4.1 and GLM-5.3 only · not other subscription models or pay-as-you-go API · model-specific point coefficients and extra coefficients still apply · no published effective date or end date"
+      },
+      "periods": {
+        "peak": {
+          "name": "Normal subscription points",
+          "status": "Normal subscription-point multiplier is active now",
+          "badge": "1× points",
+          "detail": "Normal point consumption for the eligible model, including its own coefficients."
+        },
+        "offPeak": {
+          "name": "Night subscription points",
+          "status": "Nightly 70% point discount is active now",
+          "badge": "0.3× points",
+          "detail": "30% of normal subscription-point consumption, not 30% of a universal token list price."
+        }
+      },
+      "source": "https://www.qiniu.com/ai/tokenplan",
+      "verifiedAt": "2026-11-10"
+    },
+    {
+      "id": "pareto-deepseek-v4-1-flash",
+      "slug": "pareto",
+      "provider": "Pareto Inference",
+      "model": "DeepSeek V4.1 Flash",
+      "product": "Self-serve API · normal weekly schedule",
+      "shortName": "PI",
+      "title": "Pareto Flash normal-week pricing clock",
+      "subtitle": "Published weekly schedule; holiday dates unverified",
+      "kicker": "Normal weekday peak is 2× off-peak · holiday exceptions unverified",
+      "policyNote": "Exact API model ID: deepseek/deepseek-v4.1-flash. Self-serve prepaid accounts need credits. Pricing is determined when Pareto accepts the request. Pareto says some public holidays are off-peak all day but does not publish their dates or calendar: this clock shows only the normal weekly schedule and can overstate peak pricing on those holidays. Do not reuse another provider’s holiday list; check the dashboard on holidays. Current promotional rates are 30% below DeepSeek reference, not an additional discount to multiply into this clock. No published effective instant or promo end date.",
+      "schedule": {
+        "timeZone": "UTC",
+        "peakDays": [1, 2, 3, 4, 5],
+        "peakWindows": [
+          { "start": "01:00", "end": "04:00" },
+          { "start": "06:00", "end": "10:00" }
+        ],
+        "windowName": "normal-week peak",
+        "offDayName": "Weekend",
+        "sourceTitle": "Normal weekly peak hours (UTC):",
+        "sourceWindows": "01:00–04:00 · 06:00–10:00",
+        "sourceNote": "Monday–Friday UTC; other hours off-peak · unspecified public-holiday exceptions are NOT encoded · request acceptance determines price · current promo USD per 1M input/cache/output: off-peak 0.105/0.0021/0.42 vs peak 0.21/0.0042/0.84 · regular prices also keep the 2:1 ratio · no published effective date or end date"
+      },
+      "periods": {
+        "peak": {
+          "name": "Normal-week peak rate",
+          "status": "Normal-week peak rate; holiday exceptions unverified",
+          "badge": "2× normal",
+          "detail": "Normal weekly schedule only: an unspecified public holiday may instead be off-peak."
+        },
+        "offPeak": {
+          "name": "Normal-week off-peak rate",
+          "status": "Normal-week off-peak rate",
+          "badge": "1× normal",
+          "detail": "Half the normal peak rate; prices are determined when the request is accepted."
+        }
+      },
+      "source": "https://docs.paretoinference.com/pricing",
+      "verifiedAt": "2026-11-10"
+    },
+    {
+      "id": "openrouter-tencent-hy3",
+      "slug": "openrouter-hy3-tencent",
+      "provider": "OpenRouter",
+      "model": "Hy3 · Tencent FP8 route",
+      "product": "API · pinned endpoint only",
+      "shortName": "OR",
+      "title": "OpenRouter Hy3 route pricing clock",
+      "subtitle": "Route-specific API pricing in your local time",
+      "kicker": "37.5% off token prices during daily off-peak hours",
+      "policyNote": "Applies only to model tencent/hy3 on endpoint tencent/fp8; not other OpenRouter providers or the model vendor’s direct API. Pin provider.only to [\"tencent/fp8\"] and set provider.allow_fallbacks=false. Default routing or fallbacks can select differently priced providers. Daily UTC off-peak 16:00–00:00; all other hours peak, including weekends/holidays. Endpoint metadata gives inclusive starts and exclusive ends, with no utc_days restriction. USD per 1M tokens: peak input/cache/output 0.132/0.033/0.528; off-peak 0.0825/0.020625/0.33. These are token rates, not total account charges; billing-time boundary semantics and effective/end dates are not published by this metadata. Check current endpoint pricing and actual usage charges.",
+      "routing": {
+        "only": [
+          "tencent/fp8"
+        ],
+        "allow_fallbacks": false
+      },
+      "schedule": {
+        "timeZone": "UTC",
+        "peakDays": [0, 1, 2, 3, 4, 5, 6],
+        "peakWindows": [
+          { "start": "00:00", "end": "16:00" }
+        ],
+        "windowName": "peak",
+        "sourceTitle": "Peak endpoint hours (UTC):",
+        "sourceWindows": "00:00–16:00",
+        "sourceNote": "Official endpoint pricing.overrides, endpoint tag tencent/fp8 only · no utc_days means daily · USD/M peak input/cache/output 0.132/0.033/0.528; off-peak 0.0825/0.020625/0.33 · no published effective date or end date · no model-wide or direct-provider pricing guarantee"
+      },
+      "periods": {
+        "peak": {
+          "name": "Endpoint peak token rate",
+          "status": "Peak token rate on the pinned endpoint",
+          "badge": "1× peak",
+          "detail": "Only the named OpenRouter endpoint; other routes can charge differently."
+        },
+        "offPeak": {
+          "name": "Endpoint off-peak token rate",
+          "status": "Off-peak token rate on the pinned endpoint",
+          "badge": "0.625× peak",
+          "detail": "37.5% below this endpoint’s peak input, cached-input and output prices."
+        }
+      },
+      "source": "https://openrouter.ai/api/v1/models/tencent/hy3/endpoints",
+      "verifiedAt": "2026-11-10"
+    },
+    {
+      "id": "openrouter-tencent-hy4-preview",
+      "slug": "openrouter-hy4-preview-tencent",
+      "provider": "OpenRouter",
+      "model": "Hy4 Preview · Tencent FP8 route",
+      "product": "API · pinned endpoint only",
+      "shortName": "OR",
+      "title": "OpenRouter Hy4 Preview route pricing clock",
+      "subtitle": "Route-specific API pricing in your local time",
+      "kicker": "10% off token prices during daily off-peak hours",
+      "policyNote": "Applies only to model tencent/hy4-preview on endpoint tencent/fp8; not other OpenRouter providers or the model vendor’s direct API. Pin provider.only to [\"tencent/fp8\"] and set provider.allow_fallbacks=false. Default routing or fallbacks can select differently priced providers. Daily UTC off-peak 16:00–00:00; all other hours peak, including weekends/holidays. Endpoint metadata gives inclusive starts and exclusive ends, with no utc_days restriction. USD per 1M tokens: peak input/cache/output 0.834/0.042/2.501; off-peak 0.7506/0.0378/2.2509. These are token rates, not total account charges; billing-time boundary semantics and effective/end dates are not published by this metadata. Check current endpoint pricing and actual usage charges.",
+      "routing": {
+        "only": [
+          "tencent/fp8"
+        ],
+        "allow_fallbacks": false
+      },
+      "schedule": {
+        "timeZone": "UTC",
+        "peakDays": [0, 1, 2, 3, 4, 5, 6],
+        "peakWindows": [
+          { "start": "00:00", "end": "16:00" }
+        ],
+        "windowName": "peak",
+        "sourceTitle": "Peak endpoint hours (UTC):",
+        "sourceWindows": "00:00–16:00",
+        "sourceNote": "Official endpoint pricing.overrides, endpoint tag tencent/fp8 only · no utc_days means daily · USD/M peak input/cache/output 0.834/0.042/2.501; off-peak 0.7506/0.0378/2.2509 · no published effective date or end date · no model-wide or direct-provider pricing guarantee"
+      },
+      "periods": {
+        "peak": {
+          "name": "Endpoint peak token rate",
+          "status": "Peak token rate on the pinned endpoint",
+          "badge": "1× peak",
+          "detail": "Only the named OpenRouter endpoint; other routes can charge differently."
+        },
+        "offPeak": {
+          "name": "Endpoint off-peak token rate",
+          "status": "Off-peak token rate on the pinned endpoint",
+          "badge": "0.9× peak",
+          "detail": "10% below this endpoint’s peak input, cached-input and output prices."
+        }
+      },
+      "source": "https://openrouter.ai/api/v1/models/tencent/hy4-preview/endpoints",
+      "verifiedAt": "2026-11-10"
+    },
+    {
+      "id": "openrouter-minimax-m3-1-flash",
+      "slug": "openrouter-minimax-m31-flash",
+      "provider": "OpenRouter",
+      "model": "MiniMax M3.1 Flash · Minimax route",
+      "product": "API · pinned endpoint only",
+      "shortName": "OR",
+      "title": "OpenRouter MiniMax Flash route pricing clock",
+      "subtitle": "Route-specific API pricing in your local time",
+      "kicker": "50% off token prices during daily off-peak hours",
+      "policyNote": "Applies only to model minimax/minimax-m3.1-flash on endpoint minimax; not other OpenRouter providers or the model vendor’s direct API. Pin provider.only to [\"minimax\"] and set provider.allow_fallbacks=false. Default routing or fallbacks can select differently priced providers. Daily UTC off-peak 15:00–01:00 next day; all other hours peak, including weekends/holidays. Endpoint metadata gives inclusive starts and exclusive ends, with no utc_days restriction. USD per 1M tokens: peak input/cache/output 0.15/0.015/0.6; off-peak 0.075/0.0075/0.3. These are token rates, not total account charges; billing-time boundary semantics and effective/end dates are not published by this metadata. Check current endpoint pricing and actual usage charges.",
+      "routing": {
+        "only": [
+          "minimax"
+        ],
+        "allow_fallbacks": false
+      },
+      "schedule": {
+        "timeZone": "UTC",
+        "peakDays": [0, 1, 2, 3, 4, 5, 6],
+        "peakWindows": [
+          { "start": "01:00", "end": "15:00" }
+        ],
+        "windowName": "peak",
+        "sourceTitle": "Peak endpoint hours (UTC):",
+        "sourceWindows": "01:00–15:00",
+        "sourceNote": "Official endpoint pricing.overrides, endpoint tag minimax only · no utc_days means daily · USD/M peak input/cache/output 0.15/0.015/0.6; off-peak 0.075/0.0075/0.3 · no published effective date or end date · no model-wide or direct-provider pricing guarantee"
+      },
+      "periods": {
+        "peak": {
+          "name": "Endpoint peak token rate",
+          "status": "Peak token rate on the pinned endpoint",
+          "badge": "1× peak",
+          "detail": "Only the named OpenRouter endpoint; other routes can charge differently."
+        },
+        "offPeak": {
+          "name": "Endpoint off-peak token rate",
+          "status": "Off-peak token rate on the pinned endpoint",
+          "badge": "0.5× peak",
+          "detail": "50% below this endpoint’s peak input, cached-input and output prices."
+        }
+      },
+      "source": "https://openrouter.ai/api/v1/models/minimax/minimax-m3.1-flash/endpoints",
+      "verifiedAt": "2026-11-10"
+    },
+    {
+      "id": "openrouter-alibaba-deepseek-v4-1-flash",
+      "slug": "openrouter-deepseek-alibaba",
+      "provider": "OpenRouter",
+      "model": "DeepSeek V4.1 Flash · Alibaba route",
+      "product": "API · pinned endpoint only",
+      "shortName": "OR",
+      "title": "OpenRouter Alibaba Flash route pricing clock",
+      "subtitle": "Route-specific API pricing in your local time",
+      "kicker": "50% off token prices during daily off-peak hours",
+      "policyNote": "Applies only to OpenRouter model deepseek/deepseek-v4.1-flash on endpoint alibaba, not other OpenRouter routes or Alibaba’s direct API. Pin provider.only to [\"alibaba\"] and set provider.allow_fallbacks=false. Daily UTC 00:00–14:00 peak, 14:00–00:00 off-peak, including weekends and holidays. Endpoint metadata gives inclusive starts/exclusive ends. USD per 1M input/cache/output: peak 0.21/0.021/0.84; off-peak 0.105/0.0105/0.42. These are token rates, not total account charges. Billing-time boundary semantics and effective/end dates are not published by this metadata; check current route prices and actual usage charges.",
+      "routing": {
+        "only": [
+          "alibaba"
+        ],
+        "allow_fallbacks": false
+      },
+      "schedule": {
+        "timeZone": "UTC",
+        "peakDays": [0, 1, 2, 3, 4, 5, 6],
+        "peakWindows": [
+          { "start": "00:00", "end": "14:00" }
+        ],
+        "windowName": "peak",
+        "sourceTitle": "Peak endpoint hours (UTC):",
+        "sourceWindows": "00:00–14:00",
+        "sourceNote": "Official pricing.overrides for Alibaba endpoint only; no utc_days means daily. Half-price 14:00–00:00 UTC. Do not reuse direct Alibaba or DeepSeek clocks. No published effective/end date."
+      },
+      "periods": {
+        "peak": {
+          "name": "Endpoint peak token rate",
+          "status": "Peak token rate on the pinned endpoint",
+          "badge": "1× peak",
+          "detail": "Only the named OpenRouter endpoint; other routes can charge differently."
+        },
+        "offPeak": {
+          "name": "Endpoint off-peak token rate",
+          "status": "Off-peak token rate on the pinned endpoint",
+          "badge": "0.5× peak",
+          "detail": "50% below this endpoint’s peak input, cached-input and output prices."
+        }
+      },
+      "source": "https://openrouter.ai/api/v1/models/deepseek/deepseek-v4.1-flash/endpoints",
+      "verifiedAt": "2026-11-10"
     }
   ]
 }
