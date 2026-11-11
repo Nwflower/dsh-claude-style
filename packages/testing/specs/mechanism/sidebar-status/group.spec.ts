@@ -76,7 +76,7 @@ test('a running closed workspace takes the mark and gives it back when the sessi
   expect(view.row.querySelector(`.${SEAT}`)).toBeNull()
 })
 
-test('the trailing seat stands in the reserved column and the left preference leads the row', () => {
+test('the trailing seat stands in the reserved column and the leading preference reads after the name', () => {
   bodyAttribute(SIDE, 'right')
   const view = mountRow()
   view.mark.update(true, 'breathe')
@@ -92,12 +92,24 @@ test('the trailing seat stands in the reserved column and the left preference le
   bodyAttribute(SIDE, 'left')
   const leading = getComputedStyle(seat)
   expect(leading.position).toBe('static')
-  expect(leading.order).toBe('0')
+  expect(leading.order).toBe('2')
   expect(getComputedStyle(view.row).paddingRight).not.toBe('26px')
-  // order 0 precedes the text (order 1), the chevron (2) and the actions (3),
-  // so the appended seat still stands ahead of the title on the page.
-  expect(seat.getBoundingClientRect().right).toBeLessThanOrEqual(view.title.getBoundingClientRect().left)
+  // order 2 follows the text (order 1) and precedes the actions (order 3): the
+  // appended seat reads after the name, inside the row, clear of the actions.
+  const leadingBox = seat.getBoundingClientRect()
+  expect(leadingBox.left).toBeGreaterThanOrEqual(view.title.getBoundingClientRect().right)
+  expect(leadingBox.right).toBeLessThanOrEqual(view.actions.getBoundingClientRect().left)
   view.mark.dispose()
+})
+
+test('the leading mark leaves the workspace name where it stood', () => {
+  bodyAttribute(SIDE, 'left')
+  const view = mountRow()
+  const nameLeft = view.title.getBoundingClientRect().left
+  view.mark.update(true, 'breathe')
+  expect(view.title.getBoundingClientRect().left).toBe(nameLeft)
+  view.mark.dispose()
+  expect(view.title.getBoundingClientRect().left).toBe(nameLeft)
 })
 
 test('shimmer hands the title to the gradient and parks the dot while motion is allowed', () => {
