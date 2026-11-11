@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-11",
+  "group": "fixes",
+  "order": 21,
+  "external": false,
+  "zh": "修复对话运行期间通过拖动滚动条、按上方向键或翻页回看前文时被新消息与工具调用拉回底部的问题",
+  "en": "Preserve the reader's scrollback position across scrollbar drags, upward keys, content clicks and host growth pins while a turn runs"
+}

@@ -221,6 +221,51 @@ test('only intents that move a position count as the reader moving', () => {
   expect(readerMovedSince(since)).toBe(true)
 })
 
+test('scrollbar drag upward, upward keys, and content clicks keep the hold across growth pins', async () => {
+  setMotion(MOTION_FULL)
+  join()
+  const scroller = scrollBox(CONVERSATION_SCROLL_SELECTOR)
+  scroller.scrollTop = scroller.scrollHeight
+  await settledScroll(scroller)
+
+  // Dragging the conversation scrollbar upward from the very bottom keeps the hold even inside the 25px band.
+  const box = scroller.getBoundingClientRect()
+  scroller.dispatchEvent(new PointerEvent('pointerdown', { clientX: box.left + scroller.clientWidth + 2, clientY: box.bottom - 12, bubbles: true }))
+  scroller.scrollTop = scroller.scrollHeight - scroller.clientHeight - 10
+  await settledScroll(scroller)
+  expect(readerHolds(scroller)).toBe(true)
+  scroller.scrollTop = 420
+  await settledScroll(scroller)
+  document.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }))
+  expect(readerHolds(scroller)).toBe(true)
+
+  // Clicking content or scrolling slightly down then up in history never lets a host growth pin drop the hold.
+  scroller.firstElementChild!.dispatchEvent(new PointerEvent('pointerdown', { clientX: box.left + 10, clientY: box.top + 10, bubbles: true }))
+  scroller.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: 40 }))
+  scroller.scrollTop = 460
+  await settledScroll(scroller)
+  ;(scroller.firstElementChild as HTMLElement).style.height = '3200px'
+  scroller.scrollTop = scroller.scrollHeight
+  await settledScroll(scroller)
+  expect(readerHolds(scroller)).toBe(true)
+  expect(readerScrollPosition(scroller)).toBe(460)
+  expect(writeScroll(scroller, readerScrollPosition(scroller)!, 'reader')).toBe(true)
+  await settledScroll(scroller)
+
+  // Dragging the scrollbar all the way back to the bottom releases the hold.
+  scroller.dispatchEvent(new PointerEvent('pointerdown', { clientX: box.left + scroller.clientWidth + 2, clientY: box.top + 40, bubbles: true }))
+  scroller.scrollTop = scroller.scrollHeight
+  await settledScroll(scroller)
+  document.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }))
+  expect(readerHolds(scroller)).toBe(false)
+
+  // Upward scroll keys at the tail do not release on the first smooth-scroll step.
+  document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }))
+  scroller.scrollTop = scroller.scrollHeight - scroller.clientHeight - 8
+  await settledScroll(scroller)
+  expect(readerHolds(scroller)).toBe(true)
+})
+
 test('once the last member leaves, intents are no longer heard', () => {
   const leave = join()
   const scroller = scrollBox(CONVERSATION_SCROLL_SELECTOR)
