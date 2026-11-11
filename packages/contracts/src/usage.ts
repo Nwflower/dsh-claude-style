@@ -1,3 +1,5 @@
+import type { HomeSessionScope } from './prefs'
+
 /**
  * Shared usage payload (D73). The narrower `sessions.list` roll-up omits fields
  * that the plugin's own usage route can supply.
@@ -53,6 +55,9 @@ export interface UsageReport {
   totals: UsageTotals
   /** The window's favourite model, read as a fallback for the headline. */
   model?: string
+  /** Which session filter produced this answer; an older host leaves it absent. */
+  scope?: HomeSessionScope
+  /** The unfiltered record's session count, shown as a filtered figure's denominator. */
   totalSessions?: number
 }
 

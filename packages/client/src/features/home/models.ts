@@ -4,6 +4,7 @@ import type { HomeModel, HomePanel } from './data'
 import { formatCompactTokens } from '../../shared/format'
 import { inPagePixels, pageZoomFactor } from '../../shared/page-zoom'
 import { homeChartTicks } from './chart-axis'
+import { createHomeModelColours } from './model-colors'
 import { copy } from './copy'
 
 /**
@@ -80,8 +81,8 @@ function measureLabels(axis: HTMLElement, face: string, labels: string[]) {
  *
  * The chart stacks each day's per-model totals (the ledger's per-provider
  * split, or the fold's route attribution when the event names one), so a model's
- * colour is its rank in the list below: the biggest spender is the darkest
- * blue, the ramp walks down to grey, and the list's swatches repeat it. A day
+ * colour comes from its id rather than its usage rank, and the list's swatches
+ * repeat the same categorical assignment (model-colors.ts). A day
  * whose samples are all unattributed draws no stack.
  *
  * The list is a rank, a name, the input and output sides of its tokens, and
@@ -99,6 +100,7 @@ function measureLabels(axis: HTMLElement, face: string, labels: string[]) {
  * @returns `{ component }`, a React component taking `{ data }`.
  */
 export function createHomeModels() {
+  const assignColours = createHomeModelColours()
   /** One decimal of a percentage, as Claude Code writes it: "43.0%". */
   function share(part: number, whole: number) {
     return whole > 0 ? `${(Math.round(part / whole * 1000) / 10).toFixed(1)}%` : '—'
@@ -127,16 +129,13 @@ export function createHomeModels() {
       || entry.cacheRead !== undefined || entry.cacheWrite !== undefined
   }
 
-  /** The palette's last step, for a model the ranked list does not carry. */
-  const RANK_LAST = 7
-
   /**
    * The chart frame. The date axis cannot know which days keep a label until
    * it knows how much room a day has, so the plot is measured once and again
    * on every width change, and the label's face comes from a hidden sample,
    * so the measurement follows the stylesheet.
    */
-  function Chart(props: { columns: HomePanel['modelDays'], rankOf: Record<string, number>, skeleton: boolean }) {
+  function Chart(props: { columns: HomePanel['modelDays'], colours: Record<string, number>, skeleton: boolean }) {
     const list = props.columns === null ? [] : props.columns
     const skeleton = props.skeleton
     const plotRef = React.useRef<HTMLDivElement>(null)
@@ -200,15 +199,14 @@ export function createHomeModels() {
           { key: windowKey, className: 'dsh-claude-home-chart-bars' },
           list.map(column => {
             let dayTotal = 0
-            const stack: { id: string, tokens: number, rank: number }[] = []
+            const stack: { id: string, tokens: number }[] = []
             const models = column.models
             for (const id in models) {
               dayTotal += models[id]
-              const rank = props.rankOf[id]
-              stack.push({ id, tokens: models[id], rank: rank === undefined ? Number.MAX_VALUE : rank })
+              stack.push({ id, tokens: models[id] })
             }
-            // Biggest first, so the darkest slice sits on the axis.
-            stack.sort((left, right) => left.rank - right.rank)
+            // The largest slice sits on the axis; ids break ties without moving colours.
+            stack.sort((left, right) => right.tokens - left.tokens || left.id.localeCompare(right.id))
             // The column is the day's whole stack, sized against the axis top,
             // and each slice is its share of the day: both percentages then
             // resolve against a definite height, and the column's rounding
@@ -224,7 +222,7 @@ export function createHomeModels() {
               stack.map(slice => React.createElement('span', {
                 key: slice.id,
                 className: 'dsh-claude-home-chart-seg',
-                'data-rank': Math.min(slice.rank, RANK_LAST),
+                'data-color': props.colours[slice.id],
                 style: { height: `${dayTotal > 0 ? slice.tokens / dayTotal * 100 : 0}%` },
               })),
             )
@@ -270,7 +268,7 @@ export function createHomeModels() {
         null,
         // The frame comes first, so the chart's height is reserved from the
         // first paint and the list does not jump when the numbers land.
-        React.createElement(Chart, { columns: null, rankOf: {}, skeleton: true }),
+        React.createElement(Chart, { columns: null, colours: {}, skeleton: true }),
         React.createElement(
           'div',
           { className: 'dsh-claude-home-models', 'data-skeleton': '' },
@@ -286,21 +284,24 @@ export function createHomeModels() {
       )
     }
     let total = 0
-    const rankOf: Record<string, number> = {}
+    const ids: string[] = []
     for (let i = 0; i < models.length; i++) {
       total += models[i].tokens
-      rankOf[models[i].id] = i
+      ids.push(models[i].id)
     }
+    // The chart's fixed window can name a model outside the list's date range.
+    if (columns !== null) for (const column of columns) ids.push(...Object.keys(column.models))
+    const colours = assignColours(ids)
     const shown = expanded ? models : models.slice(0, HOME_MODEL_ROWS)
     const hidden = models.length - shown.length
     return React.createElement(
       React.Fragment,
       null,
-      columns === null && !skeleton ? null : React.createElement(Chart, { columns, rankOf, skeleton }),
+      columns === null && !skeleton ? null : React.createElement(Chart, { columns, colours, skeleton }),
       React.createElement(
         'div',
         { className: 'dsh-claude-home-models' },
-        shown.map((entry, rank) => {
+        shown.map((entry) => {
           const parts = sides(entry)
           return React.createElement(
             'div',
@@ -311,7 +312,7 @@ export function createHomeModels() {
                 ? entry.id
                 : `${entry.id} · ${copy('homeModelSessions', { count: formatHomeCount(entry.sessions) })}`,
             },
-            React.createElement('span', { className: 'dsh-claude-home-model-swatch', 'data-rank': Math.min(rank, RANK_LAST) }),
+            React.createElement('span', { className: 'dsh-claude-home-model-swatch', 'data-color': colours[entry.id] }),
             React.createElement('span', { className: 'dsh-claude-home-model-name' }, entry.id),
             React.createElement(
               'span',

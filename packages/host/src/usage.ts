@@ -20,6 +20,8 @@
  * sessions, retires the matching path here.
  */
 import { PACKAGE_NAME } from '@dsh-claude-style/contracts/package'
+import { HOME_SESSION_SCOPE_ALL, HOME_SESSION_SCOPE_WORKSPACE } from '@dsh-claude-style/contracts/prefs'
+import type { HomeSessionScope } from '@dsh-claude-style/contracts/prefs'
 import { join, resolve } from 'node:path'
 import type { DshContext } from '@dsh-claude-style/engine/node/dsh'
 import { harnessPath } from '@dsh-claude-style/engine/node/harness-home'
@@ -94,6 +96,22 @@ interface UsageState {
   error?: string
 }
 
+/** One scope's cache and pass; changing the dashboard's filter never invalidates another scope's answer. */
+interface UsageSlot {
+  state: UsageState | null
+  pending: Promise<UsageSummary | null> | null
+  nextAt: number
+}
+
+interface SessionPersistence {
+  list(): Promise<{ header: { id: string, origin?: string } }[]>
+}
+
+interface WorkspaceRegistry {
+  readonly archivedSessionIds: readonly string[]
+  list(): { id: string, sessionIds: readonly string[] }[]
+}
+
 /**
  * Build the usage service.
  *
@@ -105,14 +123,21 @@ export function createUsage(ctx: DshContext) {
   // The harness home, resolved per read through the one shared accessor.
   const home = () => harnessPath(ctx)
 
-  let state: UsageState | null = null
-  let pending: Promise<UsageSummary | null> | null = null
-  /** When the finished value may be folded again, on the host's clock. */
-  let nextAt = 0
+  const slots = new Map<string, UsageSlot>()
   let disposed = false
 
+  function slotFor(scope: HomeSessionScope, workspaceId: string) {
+    const key = scope === HOME_SESSION_SCOPE_WORKSPACE ? `${scope}:${workspaceId}` : scope
+    let slot = slots.get(key)
+    if (slot === undefined) {
+      slot = { state: null, pending: null, nextAt: 0 }
+      slots.set(key, slot)
+    }
+    return slot
+  }
+
   /** Fold every session whose log changed since the record was written. */
-  async function computeLocal(logs: SessionLog[], ledgerDays: ReadonlyMap<string, DayBuckets> | null) {
+  async function computeLocal(logs: SessionLog[], ledgerDays: ReadonlyMap<string, DayBuckets> | null, allowed: ReadonlySet<string> | null, scope: HomeSessionScope) {
     const record = readRecord(ctx)
     const sessions = new Map<string, RecordSession>()
     let read = 0
@@ -167,11 +192,15 @@ export function createUsage(ctx: DshContext) {
     const recorded = !disposed && record.writable && (record.mustWrite || recordChanged(record.sessions, sessions, read))
       ? writeRecord(ctx, sessions, new Set(logs.map((log) => log.storedName)))
       : sessions
-    const merge = mergeLedgerFold(ledgerDays, recorded)
+    // Filtering happens after the full record has been updated, so switching
+    // scopes never deletes another session's fingerprint or retained history.
+    const account = allowed === null ? recorded : new Map([...recorded].filter(([id]) => allowed.has(id)))
+    const scopedLedger = scope === HOME_SESSION_SCOPE_ALL ? ledgerDays : null
+    const merge = mergeLedgerFold(scopedLedger, account)
     // The source names what answered: with no ledger at all the fold is the
     // whole account, and saying `cost-meter+local` there would credit a plugin
     // that is not installed.
-    const source = ledgerDays === null
+    const source = scopedLedger === null
       ? LOCAL_SOURCE
       : merge.folded ? `${LEDGER_SOURCE}+${LOCAL_SOURCE}` : LEDGER_SOURCE
     const summary = summarize(
@@ -181,35 +210,53 @@ export function createUsage(ctx: DshContext) {
       merge.days.size === 0 ? undefined : hoursOf(merge.days),
       { sessionIds: merge.sessionIds },
     )
+    // Active scopes count every main session whose log exists, including one
+    // that has not settled usage yet; a date range still unions its own days.
+    const shaped = allowed === null ? summary : { ...summary, totals: { ...summary.totals, sessions: allowed.size } }
+    const allIds = new Set<string>()
+    for (const [id, entry] of recorded) if (entry.days.size > 0) allIds.add(id)
+    for (const buckets of ledgerDays?.values() ?? []) for (const id of buckets.sessionIds ?? []) allIds.add(id)
     if (sessions.size === 0 && failed > 0) {
-      return { ...summary, unavailable: true, reason: 'session-query-unavailable' }
+      return { ...shaped, scope, totalSessions: allIds.size, unavailable: true, reason: 'session-query-unavailable' }
     }
-    return { ...summary, read, failed, sessions: logs.length }
+    return { ...shaped, scope, totalSessions: allIds.size, read, failed, sessions: logs.length }
   }
 
   /**
    * @param publish - receives an answer that is already worth serving while the
    *   rest of the pass is still running.
    */
-  async function compute(publish: (partial: UsageSummary) => void): Promise<UsageSummary> {
+  async function compute(publish: (partial: UsageSummary) => void, scope: HomeSessionScope, workspaceId: string): Promise<UsageSummary> {
     const root = resolve(join(home(), 'sessions'))
     // The walk is the store's own readdir/stat, awaited: listing a large
     // history must not hold the event loop.
     const logs = await listSessionLogs(root)
     const ledgerDays = readLedger(home(), ctx.logger)
+    let allowed: Set<string> | null = null
+    if (scope !== HOME_SESSION_SCOPE_ALL) {
+      const persistence = ctx.get('sessionPersistence') as SessionPersistence | null | undefined
+      const stored = persistence === null || persistence === undefined ? [] : await persistence.list()
+      const originById = new Map(stored.map((entry) => [entry.header.id, entry.header.origin]))
+      const registry = ctx.get('workspaceRegistry') as WorkspaceRegistry | null | undefined
+      const archived = new Set(registry?.archivedSessionIds ?? [])
+      let selected = logs.filter((log) => log.storedName !== '' && originById.get(log.id) !== 'subagent' && !archived.has(log.id))
+      if (scope === HOME_SESSION_SCOPE_WORKSPACE) {
+        const workspace = registry?.list().find((entry) => entry.id === workspaceId)
+        const members = new Set(workspace?.sessionIds ?? [])
+        selected = selected.filter((log) => members.has(log.id))
+      }
+      allowed = new Set(selected.map((log) => log.storedName))
+    }
 
-    if (ledgerDays !== null && ledgerDays.size > 0) {
-      // The ledger saw every provider, so it answers for older days whether or
-      // not their logs are stored. Hand that answer over before the fold runs,
-      // so a stale ledger shows its history at once and uncovered days land a
-      // moment later.
+    if (scope === HOME_SESSION_SCOPE_ALL && ledgerDays !== null && ledgerDays.size > 0) {
+      // Only the unfiltered scope may publish the ledger as a partial answer.
       const sessionIds = new Set<string>()
       for (const buckets of ledgerDays.values()) {
         for (const id of buckets.sessionIds ?? []) sessionIds.add(id)
       }
-      publish({ ...summarize(ledgerDays, sessionIds.size, LEDGER_SOURCE), sessions: logs.length })
+      publish({ ...summarize(ledgerDays, sessionIds.size, LEDGER_SOURCE), scope, totalSessions: sessionIds.size, sessions: logs.length })
     }
-    return await computeLocal(logs, ledgerDays) as UsageSummary
+    return await computeLocal(logs, ledgerDays, allowed, scope) as UsageSummary
   }
 
   /**
@@ -217,39 +264,41 @@ export function createUsage(ctx: DshContext) {
    * stretch, which is the pass's own length when that outlasts the base period
    * (recheckDelay), so a large history cannot fold back to back.
    */
-  function refresh(): Promise<UsageSummary | null> {
+  function refresh(scope: HomeSessionScope = HOME_SESSION_SCOPE_ALL, workspaceId = ''): Promise<UsageSummary | null> {
+    const slot = slotFor(scope, workspaceId)
     if (disposed) return Promise.resolve(null)
-    if (pending !== null) return pending
-    if (state !== null && Date.now() < nextAt) return Promise.resolve(state.value)
-    state = state === null ? { value: null, computing: true } : { ...state, computing: true }
+    if (slot.pending !== null) return slot.pending
+    if (slot.state !== null && Date.now() < slot.nextAt) return Promise.resolve(slot.state.value)
+    slot.state = slot.state === null ? { value: null, computing: true } : { ...slot.state, computing: true }
     const startedAt = Date.now()
     /** End the pass, and hold the next one off by what this one cost. */
     const finish = () => {
-      pending = null
+      slot.pending = null
       const finishedAt = Date.now()
-      nextAt = finishedAt + recheckDelay(finishedAt - startedAt)
+      slot.nextAt = finishedAt + recheckDelay(finishedAt - startedAt)
     }
-    pending = compute((partial: UsageSummary) => {
-      if (!disposed) state = { value: partial, computing: true }
-    }).then(
+    slot.pending = compute((partial: UsageSummary) => {
+      if (!disposed) slot.state = { value: partial, computing: true }
+    }, scope, workspaceId).then(
       (value): UsageSummary | null => {
         finish()
         if (disposed) return value
-        state = { value, computing: false }
+        slot.state = { value, computing: false }
         return value
       },
       (error): UsageSummary | null => {
         finish()
-        if (!disposed) state = { value: state?.value ?? null, computing: false, error: messageOf(error) }
+        if (!disposed) slot.state = { value: slot.state?.value ?? null, computing: false, error: messageOf(error) }
         return null
       },
     )
-    return pending ?? Promise.resolve(null)
+    return slot.pending ?? Promise.resolve(null)
   }
 
   return {
-    /** The current state: a value, a computing flag, and the last error if any. */
-    snapshot() {
+    /** The current state for one scope: a value, a computing flag, and the last error if any. */
+    snapshot(scope: HomeSessionScope = HOME_SESSION_SCOPE_ALL, workspaceId = '') {
+      const state = slotFor(scope, workspaceId).state
       return state === null
         ? { ok: true, value: null, computing: false }
         : { ok: true, value: state.value, computing: state.computing === true, error: state.error }

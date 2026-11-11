@@ -61,10 +61,10 @@ async function hostUsage({ mod, fakeHost, request, browser, scratchHome, scratch
     data: { turn, step: 0, usage: { inputTokens: 10, outputTokens: 1 }, message: { source: { model: 'model-b' } } },
   })
   /** Poll the usage route until the pass that is running has settled. */
-  const settledUsage = async (host) => {
+  const settledUsage = async (host, route = USAGE) => {
     let answer = { status: 0 }
     for (let attempt = 0; attempt < 50; attempt += 1) {
-      const reply = await request(host, USAGE, 'GET', '', browser)
+      const reply = await request(host, route, 'GET', '', browser)
       answer = reply.status === 200 ? JSON.parse(reply.body) : { status: reply.status }
       if (answer.value !== undefined && answer.value !== null && answer.computing !== true) break
       await new Promise((resolve) => setTimeout(resolve, 20))
@@ -504,6 +504,44 @@ async function hostUsage({ mod, fakeHost, request, browser, scratchHome, scratch
       picked?.input === 9 && picked.sessions === 2 &&
         JSON.stringify(picked.sessionIds) === JSON.stringify(['ledger-session', 'stored-b']),
       JSON.stringify(picked))
+  }
+
+  // Scope filters use the host's session origin and Workspace registry. The
+  // complete fold still records every log, while each answer keeps the full
+  // record's count as its denominator.
+  console.log('\nhost half — active, Workspace and all-record usage scopes')
+  {
+    const home = runsPath(ROOT, 'smoke', 'home-usage-scopes')
+    const cwd = path.join(home, 'sessions', '--D-smoke--')
+    const ids = ['main', 'child', 'archived', 'other']
+    const events = {}
+    for (const id of ids) {
+      fs.mkdirSync(path.join(cwd, id), { recursive: true })
+      fs.writeFileSync(path.join(cwd, id, 'session.v4.jsonl.zstd'), 'x')
+      events[id] = [settlement(at(0, 15), 1)]
+    }
+    const stored = ids.map((id) => ({ header: { id, origin: id === 'child' ? 'subagent' : undefined }, revision: 'r' }))
+    const registry = {
+      archivedSessionIds: ['archived'],
+      list: () => [
+        { id: 'ws-current', sessionIds: ['main', 'child', 'archived'] },
+        { id: 'ws-other', sessionIds: ['other'] },
+      ],
+    }
+    const host = fakeHost(mod, { fenced: true, home, events, stored, registry })
+    const active = (await settledUsage(host, USAGE + '?scope=active')).value ?? {}
+    check('active scope excludes subagents, archived sessions and record-only deleted sessions',
+      active.scope === 'active' && active.totals?.sessions === 2 && active.totals?.input === 20 && active.totalSessions === 4,
+      JSON.stringify({ scope: active.scope, totals: active.totals, totalSessions: active.totalSessions }))
+    const workspace = (await settledUsage(host, USAGE + '?scope=workspace&workspace=ws-current')).value ?? {}
+    check('Workspace scope keeps only its own active main sessions',
+      workspace.scope === 'workspace' && workspace.totals?.sessions === 1 && workspace.totals?.input === 10 && workspace.totalSessions === 4 &&
+        workspace.days?.[0]?.sessionIds?.join() === 'main',
+      JSON.stringify({ scope: workspace.scope, totals: workspace.totals, days: workspace.days }))
+    const all = (await settledUsage(host, USAGE + '?scope=all')).value ?? {}
+    check('all-record scope restores every log without double counting the retained record',
+      all.scope === 'all' && all.totals?.sessions === 4 && all.totals?.input === 40 && all.totalSessions === 4,
+      JSON.stringify({ scope: all.scope, totals: all.totals, totalSessions: all.totalSessions }))
   }
 }
 

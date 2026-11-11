@@ -1,7 +1,8 @@
-import { USAGE_ROUTE } from '../../constants'
+import { HOME_SESSION_SCOPE_WORKSPACE, USAGE_ROUTE } from '../../constants'
+import { readPrefs } from '../../core/prefs'
 import { pad2 } from '../../shared/format'
 import { notifyAll } from '@dsh-claude-style/engine/notify'
-import { hostRemoteSession } from '@dsh-claude-style/engine/host'
+import { currentSessionId, hostRemoteSession, hostSessions, hostWorkspaces } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { HostRemoteListAnswer, HostSessionRow } from '@dsh-claude-style/contracts/services'
 import type { UsageAnswer, UsageReport } from '@dsh-claude-style/contracts/usage'
@@ -64,6 +65,36 @@ export function createHomeUsage(ctx: HostContext) {
   /** Polls this read has made; reset by each ask (loadUsage). */
   let polls = 0
   let disposed = false
+  let requestSerial = 0
+  let target = { scope: readPrefs().homeSessionScope, workspace: '' }
+
+  /** The current blank's Workspace, falling back to the most recently active one. */
+  function currentWorkspaceId() {
+    const service = hostWorkspaces(ctx)
+    if (service === null) return ''
+    const snapshot = service.list.getSnapshot()
+    if (!Array.isArray(snapshot.items)) return ''
+    const current = currentSessionId(ctx)
+    if (current !== null) {
+      const owned = snapshot.items.find((workspace) => workspace.sessionIds.includes(current))
+      if (owned !== undefined) return owned.workspaceId
+    }
+    const sessions = hostSessions(ctx)?.list.getSnapshot()
+    const archived = new Set(snapshot.archivedSessionIds)
+    let newest = -1
+    let selected = ''
+    for (const workspace of snapshot.items) {
+      for (const id of workspace.sessionIds) {
+        if (archived.has(id)) continue
+        const updatedAt = sessions?.byId[id]?.updatedAt ?? 0
+        if (updatedAt > newest) {
+          newest = updatedAt
+          selected = workspace.workspaceId
+        }
+      }
+    }
+    return selected
+  }
 
   function emit() {
     notifyAll(listeners)
@@ -91,7 +122,23 @@ export function createHomeUsage(ctx: HostContext) {
    *
    * @param force - read even though numbers are on show and nothing is folding.
    */
+  function syncTarget() {
+    const scope = readPrefs().homeSessionScope
+    const workspace = scope === HOME_SESSION_SCOPE_WORKSPACE ? currentWorkspaceId() : ''
+    if (target.scope === scope && target.workspace === workspace) return
+    target = { scope, workspace }
+    requestSerial += 1
+    stopPolling()
+    usage.value = null
+    usage.computing = false
+    usage.error = null
+    usage.loading = false
+    usage.answeredAt = null
+    emit()
+  }
+
   function loadUsage(force?: boolean) {
+    syncTarget()
     if (disposed || usage.loading) return
     if (!force && usage.value !== null && !usage.computing) return
     // Each ask is its own count: a fold behind a cold start may take minutes,
@@ -103,10 +150,13 @@ export function createHomeUsage(ctx: HostContext) {
   /** One request to the route, and the poll its answer asks for while the host half is folding. */
   function read() {
     usage.loading = true
-    const request = fetch(USAGE_ROUTE, { credentials: 'same-origin', headers: { accept: 'application/json' } })
+    const serial = requestSerial
+    const params = new URLSearchParams({ scope: target.scope })
+    if (target.workspace !== '') params.set('workspace', target.workspace)
+    const request = fetch(USAGE_ROUTE + '?' + params.toString(), { credentials: 'same-origin', headers: { accept: 'application/json' } })
     request.then(response => response !== null && response.ok === true ? response.json() : null).then((body: UsageAnswer | null) => {
+      if (disposed || serial !== requestSerial) return
       usage.loading = false
-      if (disposed) return
       // A route that refused still answered: the next ask waits out the same
       // period instead of retrying on every pass.
       usage.answeredAt = Date.now()
@@ -130,8 +180,8 @@ export function createHomeUsage(ctx: HostContext) {
       }
     // A failed usage fetch is the panel's "unavailable" state, not an exception: the panel renders without the numbers (D12).
     }).catch(() => {
+      if (disposed || serial !== requestSerial) return
       usage.loading = false
-      if (disposed) return
       usage.answeredAt = Date.now()
       usage.error = 'unavailable'
       emit()
@@ -246,6 +296,7 @@ export function createHomeUsage(ctx: HostContext) {
     loadList: loadSessionSummary,
     stop() {
       disposed = true
+      requestSerial += 1
       stopPolling()
       listeners.length = 0
     },

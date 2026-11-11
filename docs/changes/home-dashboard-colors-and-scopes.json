@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-11",
+  "group": "new",
+  "order": 20,
+  "external": false,
+  "zh": "首页模型图使用随模型稳定的十色分类色板，热力图扩为五档，并可按活跃会话、当前工作区或全部记录统计",
+  "en": "Give home models stable categorical colours, widen the heat grid to five levels and add active, current-workspace and all-record session scopes"
+}

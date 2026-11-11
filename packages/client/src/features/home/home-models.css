@@ -1,6 +1,6 @@
 /* ---------- the usage panel's Models tab ---------- */
 /* Claude Code's own shape: a per-day stacked chart over a ranked list. A model's
-   rank in the list is its colour in the chart, so both read from `data-rank`. */
+   id selects its colour in the chart and legend, so both read from `data-color`. */
 
 /* The tick labels live in the gutter this variable reserves, outside the plot. */
 body[data-dsh-claude-style] .dsh-claude-home-chart {
@@ -89,48 +89,56 @@ body[data-dsh-claude-style] .dsh-claude-home-chart-label-sample {
   pointer-events: none;
 }
 
-/* The ramp: the biggest spender is the darkest data blue, and the walk down fades
-   toward the card's own fill, ending in the warm grey that stands for every model
-   past the list. Every step is the one data ink at its own opacity, so the chart
-   and the heat grid read off one colour and either card's fill shows through. */
-body[data-dsh-claude-style] .dsh-claude-home-chart-seg[data-rank="0"],
-body[data-dsh-claude-style] .dsh-claude-home-model-swatch[data-rank="0"] {
-  background: var(--dsh-claude-data-ink);
+/* Categorical colours keep models distinguishable at any usage rank. The heat
+   grid alone keeps the single data-ink ramp; the chart and legend share tokens. */
+body[data-dsh-claude-style] .dsh-claude-home-chart-seg[data-color="0"],
+body[data-dsh-claude-style] .dsh-claude-home-model-swatch[data-color="0"] {
+  background: var(--dsh-claude-data-0);
 }
 
-body[data-dsh-claude-style] .dsh-claude-home-chart-seg[data-rank="1"],
-body[data-dsh-claude-style] .dsh-claude-home-model-swatch[data-rank="1"] {
-  background: color-mix(in srgb, var(--dsh-claude-data-ink) 80%, transparent);
+body[data-dsh-claude-style] .dsh-claude-home-chart-seg[data-color="1"],
+body[data-dsh-claude-style] .dsh-claude-home-model-swatch[data-color="1"] {
+  background: var(--dsh-claude-data-1);
 }
 
-body[data-dsh-claude-style] .dsh-claude-home-chart-seg[data-rank="2"],
-body[data-dsh-claude-style] .dsh-claude-home-model-swatch[data-rank="2"] {
-  background: color-mix(in srgb, var(--dsh-claude-data-ink) 66%, transparent);
+body[data-dsh-claude-style] .dsh-claude-home-chart-seg[data-color="2"],
+body[data-dsh-claude-style] .dsh-claude-home-model-swatch[data-color="2"] {
+  background: var(--dsh-claude-data-2);
 }
 
-body[data-dsh-claude-style] .dsh-claude-home-chart-seg[data-rank="3"],
-body[data-dsh-claude-style] .dsh-claude-home-model-swatch[data-rank="3"] {
-  background: color-mix(in srgb, var(--dsh-claude-data-ink) 54%, transparent);
+body[data-dsh-claude-style] .dsh-claude-home-chart-seg[data-color="3"],
+body[data-dsh-claude-style] .dsh-claude-home-model-swatch[data-color="3"] {
+  background: var(--dsh-claude-data-3);
 }
 
-body[data-dsh-claude-style] .dsh-claude-home-chart-seg[data-rank="4"],
-body[data-dsh-claude-style] .dsh-claude-home-model-swatch[data-rank="4"] {
-  background: color-mix(in srgb, var(--dsh-claude-data-ink) 44%, transparent);
+body[data-dsh-claude-style] .dsh-claude-home-chart-seg[data-color="4"],
+body[data-dsh-claude-style] .dsh-claude-home-model-swatch[data-color="4"] {
+  background: var(--dsh-claude-data-4);
 }
 
-body[data-dsh-claude-style] .dsh-claude-home-chart-seg[data-rank="5"],
-body[data-dsh-claude-style] .dsh-claude-home-model-swatch[data-rank="5"] {
-  background: color-mix(in srgb, var(--dsh-claude-data-ink) 34%, transparent);
+body[data-dsh-claude-style] .dsh-claude-home-chart-seg[data-color="5"],
+body[data-dsh-claude-style] .dsh-claude-home-model-swatch[data-color="5"] {
+  background: var(--dsh-claude-data-5);
 }
 
-body[data-dsh-claude-style] .dsh-claude-home-chart-seg[data-rank="6"],
-body[data-dsh-claude-style] .dsh-claude-home-model-swatch[data-rank="6"] {
-  background: color-mix(in srgb, var(--dsh-claude-data-ink) 24%, transparent);
+body[data-dsh-claude-style] .dsh-claude-home-chart-seg[data-color="6"],
+body[data-dsh-claude-style] .dsh-claude-home-model-swatch[data-color="6"] {
+  background: var(--dsh-claude-data-6);
 }
 
-body[data-dsh-claude-style] .dsh-claude-home-chart-seg[data-rank="7"],
-body[data-dsh-claude-style] .dsh-claude-home-model-swatch[data-rank="7"] {
-  background: #b9b5ac;
+body[data-dsh-claude-style] .dsh-claude-home-chart-seg[data-color="7"],
+body[data-dsh-claude-style] .dsh-claude-home-model-swatch[data-color="7"] {
+  background: var(--dsh-claude-data-7);
+}
+
+body[data-dsh-claude-style] .dsh-claude-home-chart-seg[data-color="8"],
+body[data-dsh-claude-style] .dsh-claude-home-model-swatch[data-color="8"] {
+  background: var(--dsh-claude-data-8);
+}
+
+body[data-dsh-claude-style] .dsh-claude-home-chart-seg[data-color="9"],
+body[data-dsh-claude-style] .dsh-claude-home-model-swatch[data-color="9"] {
+  background: var(--dsh-claude-data-9);
 }
 
 body[data-dsh-claude-style] .dsh-claude-home-models {

@@ -229,7 +229,7 @@ export const HOME_LAYOUT_ATTR = 'data-dsh-claude-home-layout'
 export const HOME_HERO_ATTR = 'data-dsh-claude-home-hero'
 /** The heat grid's ramp: how much of the heat ink each level paints, in percent, faintest first. Its length is the number of levels a day's tokens are bucketed into (features/home/data.ts); the build writes one rule per level from it (scripts/build/feature-sheets.mjs).
  * Not even steps: the low levels stay apart from each other and from the empty cell. */
-export const HOME_HEAT_RAMP = [20, 40, 65, 100] as const
+export const HOME_HEAT_RAMP = [16, 40, 64, 84, 100] as const
 /** The host half's private routes, under this half's own names; the paths are the shared contract (packages/contracts/src/routes.ts, D73), declared once for both halves. */
 export {
   BRAND_MARK_PATH as BRAND_MARK_ROUTE,

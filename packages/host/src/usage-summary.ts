@@ -15,6 +15,8 @@ import { BUCKET_KEYS, addBuckets, emptyBuckets } from './usage-ledger.js'
 import type { Buckets, DayBuckets } from './usage-ledger.js'
 import type { RecordSession } from './usage-record.js'
 
+import type { HomeSessionScope } from '@dsh-claude-style/contracts/prefs'
+
 /** What the service reads out: the summarized days, models and totals, or null before the first read. */
 export interface UsageSummary {
   source: string
@@ -33,6 +35,9 @@ export interface UsageSummary {
   totals: Record<string, unknown>
   /** How many session logs the pass walked, against `totals.sessions` from the accounts behind them. */
   sessions?: number
+  scope?: HomeSessionScope
+  /** The unfiltered record's session count, for a scoped panel's denominator. */
+  totalSessions?: number
 }
 
 /** The four disjoint buckets of one day or one model, summed. */

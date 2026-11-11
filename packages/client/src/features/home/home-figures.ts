@@ -381,6 +381,11 @@ export function homePanelData(state: HomeUsageState, listed: ListSummary | null,
     tokens,
     calls,
     sessions,
+    // A date-window denominator would describe a different population; the
+    // scoped denominator is shown on the all-time view alone.
+    totalSessions: ready && start === null && value.scope !== undefined && value.scope !== 'all' && typeof value.totalSessions === 'number'
+      ? value.totalSessions
+      : null,
     activeDays,
     peakHour,
     model,

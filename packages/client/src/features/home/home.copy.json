@@ -92,5 +92,12 @@
   "homeDesc": { "zh": "新会话页的排布；「关闭」时首页保持宿主原样。", "en": "How the new-conversation page is laid out; Off leaves the host's own home page." },
   "homeOff": { "zh": "关闭", "en": "Off" },
   "homeClassic": { "zh": "对话", "en": "Chat" },
-  "homeStudio": { "zh": "编程", "en": "Code" }
+  "homeStudio": { "zh": "编程", "en": "Code" },
+  "homeSessionScopeTitle": { "zh": "首页统计范围", "en": "Home session scope" },
+  "homeSessionScopeDesc": { "zh": "选择首页用量统计包含哪些会话；过滤后显示全部记录数作为分母。", "en": "Choose which sessions the home usage dashboard includes; filtered figures show the full-record denominator." },
+  "homeSessionScopeActive": { "zh": "活跃会话", "en": "Active sessions" },
+  "homeSessionScopeWorkspace": { "zh": "当前工作区", "en": "This workspace" },
+  "homeSessionScopeAll": { "zh": "全部记录", "en": "All recorded" },
+  "homeSessionScopeRequired": { "zh": "仅编程首页提供用量统计。", "en": "The Code home layout contains the usage dashboard." },
+  "homeSessionsScoped": { "zh": "{count} / {total}", "en": "{count} / {total}" }
 }

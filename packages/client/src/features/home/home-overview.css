@@ -75,8 +75,8 @@ body[data-dsh-claude-style] .dsh-claude-home-heat {
 /* Claude Code's heat grid is a blue data ramp, not the brand ember: the empty
    cell stays the neutral base tone, and each level mixes in the data blue by
    its share of the ramp (constants.ts's HOME_HEAT_RAMP; the build writes one
-   rule per level, scripts/build/feature-sheets.mjs). The model chart beside it reads
-   the same ink, so both charts tell one story about which model earned a day. */
+   rule per level, scripts/build/feature-sheets.mjs). The Models chart uses its
+   own categorical tokens; the heat grid keeps this one luminance ramp. */
 body[data-dsh-claude-style] .dsh-claude-home-heat {
   --dsh-claude-heat-ink: var(--dsh-claude-data-ink);
 }

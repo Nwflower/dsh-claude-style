@@ -1,4 +1,4 @@
-import { HOME_LAYOUT_CLASSIC, HOME_LAYOUT_STUDIO } from '../../constants'
+import { HOME_LAYOUT_CLASSIC, HOME_LAYOUT_STUDIO, HOME_SESSION_SCOPE_ACTIVE, HOME_SESSION_SCOPE_ALL, HOME_SESSION_SCOPE_WORKSPACE } from '../../constants'
 import type { FeatureManifest } from '../../core/feature'
 
 export default {
@@ -22,6 +22,23 @@ export default {
     title: 'homeTitle',
     desc: 'homeDesc',
     control: 'layout-preview',
+  }, {
+    tab: 'appearance',
+    rank: 26,
+    pref: 'homeSessionScope',
+    parent: 'homeLayout',
+    title: 'homeSessionScopeTitle',
+    desc: 'homeSessionScopeDesc',
+    choiceLabels: {
+      [HOME_SESSION_SCOPE_ACTIVE]: 'homeSessionScopeActive',
+      [HOME_SESSION_SCOPE_WORKSPACE]: 'homeSessionScopeWorkspace',
+      [HOME_SESSION_SCOPE_ALL]: 'homeSessionScopeAll',
+    },
+    requires: {
+      pref: 'homeLayout',
+      values: [HOME_LAYOUT_STUDIO],
+      note: 'homeSessionScopeRequired',
+    },
   }],
   cases: ['hero', 'studio', 'late-forms', 'hdsl', 'hdsl-noskin', 'hdsl-broken'],
   scenarios: ['mobileHome', 'systemTypography'],

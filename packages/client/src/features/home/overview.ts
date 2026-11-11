@@ -51,13 +51,16 @@ export function createHomeOverview() {
   function view(data: HomePanel) {
     const skeleton = !data.known
     const format = homeShortDateFormat()
+    const sessions = data.sessions === null ? '—' : data.totalSessions === null
+      ? formatHomeCount(data.sessions)
+      : copy('homeSessionsScoped', { count: formatHomeCount(data.sessions), total: formatHomeCount(data.totalSessions) })
     return React.createElement(
       React.Fragment,
       null,
       React.createElement(
         'div',
         { className: 'dsh-claude-home-stats' },
-        statCell('sessions', copy('homeSessions'), data.sessions === null ? '—' : formatHomeCount(data.sessions), skeleton),
+        statCell('sessions', copy('homeSessions'), sessions, skeleton),
         statCell('calls', copy('homeCalls'), data.calls === null ? '—' : formatHomeCount(data.calls), skeleton),
         statCell('tokens', copy('homeTokens'), formatCompactTokens(data.tokens), skeleton),
         statCell('days', copy('homeActiveDays'), data.activeDays === null ? '—' : formatHomeCount(data.activeDays), skeleton),

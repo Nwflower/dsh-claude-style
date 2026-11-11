@@ -153,6 +153,13 @@ export const HOME_LAYOUT_CLASSIC = 'classic'
 export const HOME_LAYOUT_STUDIO = 'studio'
 export const HOME_LAYOUTS = [HOME_LAYOUT_OFF, HOME_LAYOUT_CLASSIC, HOME_LAYOUT_STUDIO] as const
 
+/** Which sessions the studio dashboard aggregates: live main logs, one Workspace, or the whole record. */
+export const HOME_SESSION_SCOPE_ACTIVE = 'active'
+export const HOME_SESSION_SCOPE_WORKSPACE = 'workspace'
+export const HOME_SESSION_SCOPE_ALL = 'all'
+export const HOME_SESSION_SCOPES = [HOME_SESSION_SCOPE_ACTIVE, HOME_SESSION_SCOPE_WORKSPACE, HOME_SESSION_SCOPE_ALL] as const
+export type HomeSessionScope = typeof HOME_SESSION_SCOPES[number]
+
 /** Composer surfaces the restyle may cover, in settings order. */
 export const COMPOSER_SCOPE_OFF = 'off'
 export const COMPOSER_SCOPE_HERO = 'hero'
@@ -270,6 +277,7 @@ export const PREFS = {
   sodium: { type: 'choice', values: SODIUM_MODES, default: SODIUM_UNDECIDED },
   banLocale: { type: 'choice', values: BAN_LOCALES, default: BAN_LOCALE_EN },
   homeLayout: { type: 'choice', values: HOME_LAYOUTS, default: HOME_LAYOUT_STUDIO },
+  homeSessionScope: { type: 'choice', values: HOME_SESSION_SCOPES, default: HOME_SESSION_SCOPE_ACTIVE },
   homeRipple: { type: 'boolean', default: false },
   palette: { type: 'choice', values: PALETTES, default: PALETTE_CLAUDE },
   /** The background fill's opacity as a percentage, between BACKGROUND_OPACITY_MIN and BACKGROUND_OPACITY_MAX. */

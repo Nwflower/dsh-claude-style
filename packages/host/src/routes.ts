@@ -34,6 +34,7 @@ import { billingRowsOf, createSessionCost } from './session-cost.js'
 import { createSessionPanel } from './session-panel.js'
 import { sessionDirectoryName } from './session-name.js'
 import { createUsage } from './usage.js'
+import { HOME_SESSION_SCOPE_ACTIVE, HOME_SESSION_SCOPE_ALL, HOME_SESSION_SCOPE_WORKSPACE } from '@dsh-claude-style/contracts/prefs'
 
 /** The copy document, built from `packages/client/data/model-descriptions.json` by scripts/build/build.mjs. */
 const COPY_FILE = 'model-descriptions.json'
@@ -503,8 +504,16 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
         // nothing.
         if (methodRefused(req, res, ['GET', 'HEAD'])) return
         if (fenceRefused(ctx, req, res)) return
-        void usage.refresh()
-        const snapshot = usage.snapshot()
+        const params = new URL(req.url ?? '/', 'http://local').searchParams
+        const requested = params.get('scope')
+        const scope = requested === HOME_SESSION_SCOPE_ACTIVE || requested === HOME_SESSION_SCOPE_WORKSPACE
+          ? requested
+          : HOME_SESSION_SCOPE_ALL
+        const workspaceId = scope === HOME_SESSION_SCOPE_WORKSPACE
+          ? (params.get('workspace') ?? '').trim().slice(0, 128)
+          : ''
+        void usage.refresh(scope, workspaceId)
+        const snapshot = usage.snapshot(scope, workspaceId)
         sendJson(res, 200, {
           ok: true,
           value: snapshot.value,
