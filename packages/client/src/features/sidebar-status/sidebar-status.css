@@ -178,7 +178,10 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="project-row"][data-dsh-claud
   justify-content: center;
   width: 14px;
   height: 16px;
-  order: 0;
+  /* On the leading side the seat follows the name: standing in the row's own
+     leading flow, it would carry the name right whenever the mark comes and
+     goes. */
+  order: 2;
   margin-inline-end: 2px;
 }
 /* The trailing end: the seat stands in the column a session row's own status
