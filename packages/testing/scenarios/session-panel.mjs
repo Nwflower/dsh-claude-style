@@ -15,6 +15,11 @@ import copy from '../../client/src/features/session-panel/session-panel.copy.jso
 import { CONVERSATION_TABS_SELECTOR, HEADER_TITLE_ROW_SELECTOR, HEADER_TITLE_SELECTOR, HEADER_UTILITIES_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { SESSION_PANEL_PATH } from '@dsh-claude-style/contracts/routes'
 import { MARKS } from '../lane.mjs'
+import surfaceTable from '../data/surface.json' with { type: 'json' }
+
+/** The part mark the skin writes on a host element, read from the surface table rather than spelled here (D92). */
+const PART = surfaceTable.surface.find((entry) => entry.id === 'skin.part')?.attribute
+if (PART === undefined) throw new Error('session-panel: skin.part names no attribute')
 import { sendPrompt, waitForTurn } from '../prompt.mjs'
 import { sanitizePage } from '../../../scripts/shared/privacy.mjs'
 
@@ -71,7 +76,7 @@ const readRail = (page) => page.evaluate(({ headings }) => {
 }, { headings: HEADINGS })
 
 /** The header's preset label, the words the rail repeats: the label's own part, not the whole actions slot, which also carries the host's job and subagent chips. */
-const readPreset = (page) => page.evaluate(() => (document.querySelector('[data-dsh-claude-part~="header-label"]')?.textContent ?? '').trim())
+const readPreset = (page) => page.evaluate((attribute) => (document.querySelector(`[${attribute}~="header-label"]`)?.textContent ?? '').trim(), PART)
 
 /** The title-adjacent actions: whether the host's own subagent and job chips are on the page. */
 const readHeaderActions = (page) => page.evaluate(() => {
