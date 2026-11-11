@@ -21,6 +21,7 @@ import { loadModule } from '../../scripts/shared/ts-module.mjs'
 import { withLock } from '../../scripts/shared/verify-lock.mjs'
 import { runsPath } from '../../scripts/shared/debug-paths.mjs'
 import { featureCoverage } from '../../scripts/shared/feature-coverage.mjs'
+import { sanitizePage } from '../../scripts/shared/privacy.mjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..', '..')
 const DEFAULT_OUT = runsPath(ROOT, 'e2e', 'out')
@@ -81,7 +82,14 @@ const PARKED = new Set(['statsPosition', 'statsOverlay', 'statsFooter'])
 async function captureFailure(session, out, name, say) {
   const { page } = session
   const file = path.join(out, `${name}-failure.png`)
-  await page.screenshot({ path: file }).catch(() => {})
+  try {
+    await sanitizePage(expression => page.evaluate(expression))
+    await page.screenshot({ path: file })
+  } catch (error) {
+    // A refused capture leaves the diagnostic report available without storing
+    // a picture that failed the privacy sweep (D92).
+    say(`  failure capture unavailable: ${error.message.split('\n')[0]}\n`)
+  }
   const state = await page.evaluate(() => {
     const input = document.querySelector('[data-composer-input]')
     return {
