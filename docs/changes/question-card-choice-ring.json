@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-12",
+  "group": "fixes",
+  "order": 17,
+  "external": false,
+  "zh": "修复提问卡片点过「其他」之后再点回原来选中的选项，选中圆圈不再出现的问题",
+  "en": "Fix the question card's chosen option losing its ring after the custom answer is chosen and that option is picked again"
+}

@@ -18,6 +18,13 @@ const CUSTOM_ATTR = 'data-dsh-claude-question-custom'
 /** The mark's value on the field a question with no options draws, which carries no mark of its own. */
 const FREE_TEXT_VALUE = 'free'
 const CUSTOM_ACTIVE_ATTR = 'data-dsh-claude-question-custom-active'
+/**
+ * The surface's own mark while the custom answer holds the choice: the
+ * stylesheet draws no ring on the host's chosen radio under it. The host's
+ * aria-checked is never written — React keeps its own record of that value, and
+ * a false written under it stays missing when the reader picks the option back.
+ */
+const CUSTOM_CHOICE_ATTR = 'data-dsh-claude-question-custom-choice'
 const LABEL_CLASS = 'dsh-claude-question-custom-label'
 const SHORTCUT_CLASS = 'dsh-claude-question-submit-shortcut'
 const SURFACE_ATTR = 'data-dsh-claude-question-surface'
@@ -122,6 +129,7 @@ export function createQuestionCards() {
   }
 
   function syncCustomAnswers(surface: HTMLElement, seen: Set<HTMLElement>) {
+    let customChoice = false
     for (const row of surface.querySelectorAll<HTMLElement>(CUSTOM_ROW_SELECTOR)) {
       seen.add(row)
       const freeText = row.matches(FREE_TEXT_SELECTOR)
@@ -146,11 +154,11 @@ export function createQuestionCards() {
       row.toggleAttribute(CUSTOM_ACTIVE_ATTR, active)
       label.setAttribute('aria-checked', String(active))
       // Until text reaches the host's draft, choosing Other is the skin's
-      // presentation state; keep the host's previous radio from drawing twice.
-      if (active && customSelected.has(row) && row.parentElement?.getAttribute('role') === 'radiogroup') {
-        for (const option of surface.querySelectorAll('[data-option-row] > button[role="radio"]')) setAttributeIfChanged(option, 'aria-checked', 'false')
-      }
+      // presentation state: the surface carries it, and the stylesheet draws the
+      // host's chosen radio without its ring.
+      if (active && customSelected.has(row) && row.parentElement?.getAttribute('role') === 'radiogroup') customChoice = true
     }
+    surface.toggleAttribute(CUSTOM_CHOICE_ATTR, customChoice)
   }
 
   function syncSurfaceChrome(surface: HTMLElement) {
@@ -236,6 +244,7 @@ export function createQuestionCards() {
         frame.append(placement.surface)
         frame.removeAttribute(RELOCATED_ATTR)
         placement.surface.removeAttribute(SURFACE_ATTR)
+        placement.surface.removeAttribute(CUSTOM_CHOICE_ATTR)
         placement.surface.querySelector(':scope > header')?.classList.remove(TITLED_HEADER_CLASS)
         placement.surface.querySelector(':scope > footer > div:first-child')?.classList.remove(PAGER_IDLE_CLASS)
         placement.surface.querySelectorAll(`.${SHORTCUT_CLASS}`).forEach(shortcut => shortcut.remove())
