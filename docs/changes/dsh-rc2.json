@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-11",
-  "group": "chores",
-  "order": 0,
-  "external": false,
-  "zh": "将 DeepSeek Harness 的兼容基线更新到 0.2.2-rc.2",
-  "en": "Raise the DeepSeek Harness compatibility baseline to 0.2.2-rc.2"
-}
