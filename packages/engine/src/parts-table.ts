@@ -414,6 +414,17 @@ export function holdRelations(vocabulary: PartsTableVocabulary): HoldRelation[] 
     scope: '[data-chat-flow]',
     attributes: ['data-turn-process-hidden', 'hidden'],
   },
+  // features/row-skip/row-skip.css: the host draws a non-portal tooltip beside its anchor as a
+  // fixed bubble inside the row, and a skipped row is the bubble's containing block and its
+  // crop. The row keeps its layout while one stands under it; the bubble only exists while its
+  // anchor is hovered, so the row is on screen and the skip saves nothing there.
+  {
+    name: 'tooltip-row',
+    holder: '[data-chat-flow-kind]',
+    held: '[role="tooltip"]',
+    scope: '[data-chat-flow]',
+    attributes: ['role'],
+  },
   // features/process-column/process-column.css: a row's title steps aside only
   // where a description follows it; the host writes the decorative separator
   // only in front of a description that is not empty.

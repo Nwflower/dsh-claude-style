@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-12",
+  "group": "fixes",
+  "order": 25,
+  "external": false,
+  "zh": "承载非 portal 提示气泡的对话行不再跳过排版，消息操作条的悬停提示恢复原位与可见",
+  "en": "Keep the conversation row holding a non-portal tooltip laid out, restoring the message actions' hover labels in place and in view"
+}
