@@ -1,9 +1,10 @@
 /* The conversation's details rail and its sections (D94). The rail is the
    skin's own fixed column beside the chat, and the body inside keeps the
    column's own fill, inset and scroll (STYLE.md); every rule is scoped by the
-   skin's own body mark so a page without the skin never sees it. Sections use
-   Claude Desktop's regular headings and divider rhythm; environment rows keep
-   the folder and branch on separate single lines. */
+   skin's own body mark so a page without the skin never sees it. The whole
+   column reads at one size on one 24px row rhythm: a heading differs by weight,
+   a secondary reading by ink, and only a trailing state, a category label, the
+   fold control and a caption take the small size. Lengths stay on the 4px grid. */
 
 body[data-dsh-claude-style] .dsh-claude-panel {
   box-sizing: border-box;
@@ -12,26 +13,41 @@ body[data-dsh-claude-style] .dsh-claude-panel {
   height: 100%;
   min-height: 0;
   overflow-y: auto;
-  padding: 14px 10px 32px 16px;
+  padding: 16px 12px 32px 16px;
   color: var(--dsw-alias-label-primary, #161616);
   font-family: var(--dsw-font-family);
-  scrollbar-width: thin;
+  /* The column scrolls without a bar: a scrollbar in the rail's last 10px reads
+     as a second border beside the one that separates it from the chat, and the
+     column is short enough that the wheel finds its end (D94). */
+  scrollbar-width: none;
 }
 
+body[data-dsh-claude-style] .dsh-claude-panel::-webkit-scrollbar {
+  display: none;
+}
+
+/* The hairline belongs to a section's top edge, so every section keeps its own
+   line whatever its neighbours do, and the column's divider never depends on a
+   page reading of what the next section holds (D94). */
 body[data-dsh-claude-style] .dsh-claude-panel-section {
   display: block;
   min-width: 0;
   flex: none;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--dsh-claude-divider);
+  padding: 16px 0;
+  border-top: 1px solid var(--dsh-claude-divider);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-section:first-child {
   padding-top: 0;
+  border-top: 0;
 }
 
-body[data-dsh-claude-style] .dsh-claude-panel-section:last-child {
-  border-bottom: 0;
+/* A folded section stands on its heading's own line instead of a section's
+   insets, so its reading keeps its line and its hairline without the room an
+   open section needs. The rule reads the browser's own `open` state, so a
+   reader's fold is followed at once (D94). */
+body[data-dsh-claude-style] .dsh-claude-panel-section:not([open]) {
+  padding: 8px 0;
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-heading {
@@ -43,7 +59,10 @@ body[data-dsh-claude-style] .dsh-claude-panel-heading {
   padding: 0;
   color: var(--dsw-alias-label-primary, #161616);
   font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
-  font-weight: 400;
+  /* The rows under a heading read at the heading's own size, so the weight is
+     what sets it apart; a CJK system face draws nothing between regular and
+     this weight. */
+  font-weight: 600;
   /* The rail's section titles use UI type; the page's display headings use
      the serif family and tighter tracking (D9, D30, D94). */
   font-family: var(--dsw-font-family);
@@ -52,7 +71,9 @@ body[data-dsh-claude-style] .dsh-claude-panel-heading {
 }
 
 /* Native disclosures keep keyboard activation and expose their open state;
-   only the compact reading disappears while the content stands open (D94). */
+   only the compact reading disappears while the content stands open (D94). A
+   heading paints nothing under the pointer: it is the column's own division
+   line, not a row of the list. */
 body[data-dsh-claude-style] .dsh-claude-panel-section-toggle {
   display: block;
   list-style: none;
@@ -90,6 +111,7 @@ body[data-dsh-claude-style] .dsh-claude-panel-section-reading {
   margin-left: auto;
   overflow: hidden;
   color: var(--dsw-alias-label-secondary);
+  font-weight: 400;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -98,15 +120,26 @@ body[data-dsh-claude-style] .dsh-claude-panel-section[open] .dsh-claude-panel-se
   display: none;
 }
 
+/* A section standing open says nothing with its chevron: it waits out of sight
+   and comes back under the pointer or on keyboard focus, while a folded section
+   keeps it always, because folding is what the reader is being offered (D94).
+   Only the ink leaves, so the heading keeps its width. */
 body[data-dsh-claude-style] .dsh-claude-panel-section[open] .dsh-claude-panel-section-chevron {
+  opacity: 0;
   transform: rotate(90deg);
+  transition: opacity var(--dsh-claude-timing-feedback);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-section[open] .dsh-claude-panel-section-toggle:hover .dsh-claude-panel-section-chevron,
+body[data-dsh-claude-style] .dsh-claude-panel-section[open] .dsh-claude-panel-section-toggle:focus-visible .dsh-claude-panel-section-chevron {
+  opacity: 1;
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-section-content {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  padding-top: 6px;
+  padding-top: 8px;
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-context-mini {
@@ -127,10 +160,13 @@ body[data-dsh-claude-style] .dsh-claude-panel-context-mini > span {
   background: var(--dsh-claude-context-messages);
 }
 
-/* The panel's quiet type: the empty-section note and the context legend read at
-   one size and rhythm. */
+/* The panel's reading type: a row's words, the empty-section note, the context
+   head and legend, and the figures share one size and line. */
+body[data-dsh-claude-style] .dsh-claude-panel-main,
 body[data-dsh-claude-style] .dsh-claude-panel-note,
-body[data-dsh-claude-style] .dsh-claude-panel-legend-row {
+body[data-dsh-claude-style] .dsh-claude-panel-context-head,
+body[data-dsh-claude-style] .dsh-claude-panel-legend-row,
+body[data-dsh-claude-style] .dsh-claude-panel-stats {
   margin: 0;
   font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 20px;
@@ -154,12 +190,14 @@ body[data-dsh-claude-style] .dsh-claude-panel-row {
   display: flex;
   box-sizing: border-box;
   align-items: center;
-  gap: 10px;
-  width: 100%;
+  gap: 8px;
+  /* The plate under the pointer stands 8px clear of the words on both sides,
+     so the row's box reaches that far into the panel's own inset. */
+  width: calc(100% + 16px);
   min-width: 0;
-  margin: 0;
-  min-height: 32px;
-  padding: 6px 0;
+  margin: 0 -8px;
+  min-height: 28px;
+  padding: 4px 8px;
   border: 0;
   border-radius: 8px;
   background: transparent;
@@ -185,70 +223,112 @@ body[data-dsh-claude-style] .dsh-claude-panel-row.is-button:focus-visible {
   outline-offset: -1.5px;
 }
 
+/* Output disclosure and cancellation are separate focus targets (D94). */
+body[data-dsh-claude-style] .dsh-claude-panel-job-line {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 -8px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-job-line > .dsh-claude-panel-row {
+  flex: 1;
+  width: auto;
+  margin: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-job-control {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  max-width: 55%;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-job-stop {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font: inherit;
+  font-size: calc(11.5px * var(--dsh-claude-interface-font-scale, 1));
+  cursor: pointer;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-job-stop:hover:enabled {
+  background: var(--dsh-claude-hover-bg);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-job-stop:focus-visible {
+  outline: var(--dsw-focus-ring-color) solid 1.5px;
+  outline-offset: -1.5px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-job-stop:disabled {
+  color: var(--dsw-alias-label-tertiary);
+  cursor: default;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-job-error {
+  color: var(--dsw-alias-state-error-primary);
+  font-size: calc(11.5px * var(--dsh-claude-interface-font-scale, 1));
+}
+
 body[data-dsh-claude-style] .dsh-claude-panel-mark {
   display: inline-flex;
   flex: none;
   align-items: center;
   justify-content: center;
-  width: 20px;
+  width: 16px;
   color: var(--dsw-alias-label-secondary, #5c5c5c);
 }
 
+/* A row is one line: its title, then its detail in the quiet ink. The title
+   gives way first, so a detail keeps its own width up to its share of the line
+   and a long name never pushes the detail off the row. */
 body[data-dsh-claude-style] .dsh-claude-panel-main {
   display: flex;
   flex: 1 1 auto;
-  flex-direction: column;
-  gap: 1px;
-  min-width: 0;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-main.is-inline {
-  flex-direction: row;
   align-items: baseline;
   gap: 4px;
+  min-width: 0;
   overflow: hidden;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-main.is-inline,
-body[data-dsh-claude-style] .dsh-claude-panel-title,
-body[data-dsh-claude-style] .dsh-claude-panel-percent {
-  font-size: calc(15px * var(--dsh-claude-interface-font-scale, 1));
-  line-height: 20px;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-main.is-inline .dsh-claude-panel-title {
-  flex: 0 1 auto;
-  min-width: 0;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-main.is-inline .dsh-claude-panel-detail {
-  flex: 0 2 auto;
-  min-width: 0;
-  font-size: inherit;
-  line-height: inherit;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-main.is-inline .dsh-claude-panel-detail::before {
-  content: '· ';
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-title {
-  overflow: hidden;
+  flex: 0 1 auto;
+  min-width: 0;
   color: var(--dsw-alias-label-primary, #161616);
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-detail {
+  flex: none;
+  max-width: 45%;
   color: var(--dsw-alias-label-tertiary, #8a8a8a);
-  font-size: calc(11.5px * var(--dsh-claude-interface-font-scale, 1));
-  line-height: 16px;
 }
 
-/* One line each, cut with the same ellipsis: a row's detail, the rail's preset
-   and a figure's own label. */
+body[data-dsh-claude-style] .dsh-claude-panel-detail::before {
+  content: '· ';
+}
+
+/* The preset is the environment's quiet row: a setting of the session, not a
+   place it works in. */
+body[data-dsh-claude-style] .dsh-claude-details-preset .dsh-claude-panel-title {
+  color: var(--dsw-alias-label-secondary, #5c5c5c);
+}
+
+/* One line each, cut with the same ellipsis: a row's title and detail, a
+   trailing state and a figure's own label. */
+body[data-dsh-claude-style] .dsh-claude-panel-title,
 body[data-dsh-claude-style] .dsh-claude-panel-detail,
-body[data-dsh-claude-style] .dsh-claude-details-preset,
+body[data-dsh-claude-style] .dsh-claude-panel-chip,
 body[data-dsh-claude-style] .dsh-claude-panel-stat dt {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -259,25 +339,15 @@ body[data-dsh-claude-style] .dsh-claude-panel-side {
   display: inline-flex;
   flex: none;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
   max-width: 52%;
 }
 
+/* A row's trailing state is words in the state's ink: an outline around each
+   one would draw a second column of boxes down the list. */
 body[data-dsh-claude-style] .dsh-claude-panel-chip {
-  display: inline-flex;
-  align-items: center;
-  box-sizing: border-box;
   max-width: 150px;
-  height: 20px;
-  padding: 0 7px;
-  overflow: hidden;
-  border: 0.5px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.08));
-  border-radius: 6px;
   color: var(--dsw-alias-label-secondary, #5c5c5c);
-  font-size: calc(11px * var(--dsh-claude-interface-font-scale, 1));
-  line-height: 19px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-chip.is-success {
@@ -300,24 +370,24 @@ body[data-dsh-claude-style] .dsh-claude-panel-context-head {
   justify-content: space-between;
   gap: 8px;
   padding: 0;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
+/* The occupancy is the section's one headline figure and takes the primary ink;
+   the weight stays the section titles' alone (D94). */
 body[data-dsh-claude-style] .dsh-claude-panel-percent {
   color: var(--dsw-alias-label-primary, #161616);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-figures {
   color: var(--dsw-alias-label-secondary, #5c5c5c);
-  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
   font-variant-numeric: tabular-nums;
-  line-height: 16px;
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-bar {
   display: flex;
-  height: 4px;
-  margin: 0 0 8px;
+  height: 6px;
+  margin: 0 0 12px;
   overflow: hidden;
   border-radius: 999px;
   background: var(--dsw-alias-border-l1);
@@ -376,24 +446,27 @@ body[data-dsh-claude-style] .dsh-claude-panel-legend {
 
 body[data-dsh-claude-style] .dsh-claude-panel-legend-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto 50px;
+  /* The share column holds the widest reading, a whole window at one decimal. */
+  grid-template-columns: minmax(0, 1fr) auto 48px;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   color: var(--dsw-alias-label-secondary, #5c5c5c);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-legend-row dt {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+/* Of a part's two figures the share is the one read down the column; the token
+   count beside it stays in the quiet ink. */
 body[data-dsh-claude-style] .dsh-claude-panel-legend-row dd {
   margin: 0;
-  color: var(--dsw-alias-label-secondary, #5c5c5c);
+  color: var(--dsw-alias-label-tertiary, #8a8a8a);
   font-variant-numeric: tabular-nums;
   text-align: end;
 }
@@ -402,16 +475,25 @@ body[data-dsh-claude-style] .dsh-claude-panel-legend-row dd.dsh-claude-panel-sha
   color: var(--dsw-alias-label-primary, #161616);
 }
 
-body[data-dsh-claude-style] .dsh-claude-panel-legend-row.is-free {
-  color: var(--dsw-alias-label-tertiary);
+/* The room left is no part of the occupancy: its whole row is quiet, stated
+   after the share's own ink so this rule decides. */
+body[data-dsh-claude-style] .dsh-claude-panel-legend-row.is-free,
+body[data-dsh-claude-style] .dsh-claude-panel-legend-row.is-free dd.dsh-claude-panel-share {
+  color: var(--dsw-alias-label-tertiary, #8a8a8a);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-dot {
   display: inline-block;
   flex: none;
-  width: 9px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 2px;
+}
+
+/* What the legend's figures are, said once under them. */
+body[data-dsh-claude-style] .dsh-claude-panel-caption {
+  margin: 8px 0 0;
+  color: var(--dsw-alias-label-tertiary, #8a8a8a);
 }
 
 /* The header control wears the host's ghost button; only its box is the
@@ -422,7 +504,9 @@ body[data-dsh-claude-style] .dsh-claude-session-panel-button {
   width: 28px;
   height: 28px;
   padding: 0;
-  border-radius: 7px;
+  /* The caption row's controls share one plate: 28px square at an 8px radius
+     (header-band.css). */
+  border-radius: 8px;
   color: var(--dsw-alias-label-secondary, #5c5c5c);
   -webkit-app-region: no-drag;
 }
@@ -434,14 +518,15 @@ body[data-dsh-claude-style] .dsh-claude-session-panel-button:focus-visible {
 
 body[data-dsh-claude-style] .dsh-claude-session-panel-button[aria-pressed="true"] {
   color: var(--dsw-alias-label-primary, #161616);
-  background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, 0.06));
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
 }
 
 /* One job's retained output, under the row the reader opened. */
 body[data-dsh-claude-style] .dsh-claude-panel-job-output {
   box-sizing: border-box;
   max-height: 220px;
-  margin: 0 8px 6px 34px;
+  /* Under the row's words: past the mark and its gap. */
+  margin: 0 0 4px 24px;
   padding: 8px 10px;
   overflow: auto;
   border-radius: 8px;
@@ -456,26 +541,33 @@ body[data-dsh-claude-style] .dsh-claude-panel-job-output {
 
 /* The host's own background-work chips beside the title step aside while the
    details rail stands: the same work is the panel's Background tasks section,
-   where a row opens the child session or the job's output (D94). The team and
-   preset chips keep their seats. */
+   where a row opens the child session or the job's output (D94). The team chip
+   keeps its seat. */
 body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-claude-part~="header-actions"] button[aria-haspopup="tree"],
 body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-claude-part~="header-actions"] button[aria-expanded]:not([aria-haspopup]) {
   display: none;
 }
 
-/* The control that unfolds a section's rows past the second. */
+/* The preset's words stand in the rail's Environment section while the rail is
+   up (D94). The header band holds the label's `display` over the host's
+   container query, so the label leaves the row by position and visibility. */
+body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-claude-part~="header-actions"] [data-dsh-claude-part~="header-label"] {
+  position: absolute;
+  visibility: hidden;
+}
+
+/* The control that unfolds a section's rows past the second, on the rows' own
+   box so its words start where theirs do. */
 body[data-dsh-claude-style] .dsh-claude-panel-more {
   box-sizing: border-box;
-  width: 100%;
-  margin: 2px 0 0;
-  padding: 5px 8px;
+  width: calc(100% + 16px);
+  margin: 0 -8px;
+  padding: 4px 8px;
   border: 0;
   border-radius: 8px;
   background: transparent;
   color: var(--dsw-alias-label-tertiary, #8a8a8a);
   font: inherit;
-  font-size: calc(11.5px * var(--dsh-claude-interface-font-scale, 1));
-  line-height: 16px;
   text-align: start;
   cursor: pointer;
 }
@@ -489,16 +581,24 @@ body[data-dsh-claude-style] .dsh-claude-panel-more:focus-visible {
 /* A background category's label: an eyebrow over its rows, quiet enough to
    read as a division of the section rather than a second heading. */
 body[data-dsh-claude-style] .dsh-claude-panel-group-title {
-  margin: 10px 8px 2px;
+  margin: 8px 0 0;
   color: var(--dsw-alias-label-tertiary, #8a8a8a);
   font: inherit;
-  font-size: calc(11px * var(--dsh-claude-interface-font-scale, 1));
-  font-weight: 600;
-  line-height: 15px;
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-group:first-of-type .dsh-claude-panel-group-title {
   margin-top: 0;
+}
+
+/* The panel's small type: a row's trailing state, a category's label, the fold
+   control and a caption. It follows the rules that take the row's font whole,
+   so its size is the one that stands. */
+body[data-dsh-claude-style] .dsh-claude-panel-chip,
+body[data-dsh-claude-style] .dsh-claude-panel-group-title,
+body[data-dsh-claude-style] .dsh-claude-panel-more,
+body[data-dsh-claude-style] .dsh-claude-panel-caption {
+  font-size: calc(11.5px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 16px;
 }
 
 /* The conversation's details rail (D94): the skin's own column beside the chat,
@@ -513,48 +613,80 @@ body[data-dsh-claude-style] .dsh-claude-details-root {
 
 body[data-dsh-claude-style] .dsh-claude-details {
   position: fixed;
-  z-index: var(--dsh-claude-layer-peek);
-  display: flex;
-  flex-direction: column;
+  /* The column sits over the chat, and under the header row that holds the
+     skin's own controls: a menu the host hangs from those controls opens inside
+     their layer, so it paints over the rail rather than under it (D94). */
+  z-index: var(--dsh-claude-layer-rail);
   box-sizing: border-box;
+  /* The rail is the clip as well as the column: it gives the chat its width back
+     by growing narrower, and the body inside keeps the final box (D94). */
+  width: 320px;
+  overflow: hidden;
   border-left: 1px solid var(--dsw-alias-border-secondary, rgba(0, 0, 0, 0.08));
   background: var(--dsw-alias-bg-layer-1, #ffffff);
+  transition: width var(--dsh-claude-duration-column) var(--dsh-claude-ease-column);
 }
 
-body[data-dsh-claude-style] .dsh-claude-details-preset {
-  min-width: 0;
-  margin: 6px 0 0 30px;
-  color: var(--dsw-alias-label-tertiary, #8a8a8a);
-  font-size: calc(11.5px * var(--dsh-claude-interface-font-scale, 1));
-  line-height: 18px;
+/* The rail's first paint starts at no width and takes it over the column's own
+   stretch, so a rail arriving where the chat gives way grows out of the edge
+   rather than appearing beside it. */
+@starting-style {
+  body[data-dsh-claude-style] .dsh-claude-details {
+    width: 0;
+  }
 }
 
-body[data-dsh-claude-style] .dsh-claude-details > .dsh-claude-panel {
+/* The rail giving its width back: the body stands pinned to the rail's right
+   edge, so it holds still while the clip travels leftward and uncovers it, and
+   the two edges the reader sees are the chat's and the rail's alone. The node is
+   taken off the page once the transition ends (session-panel-rail.ts). */
+body[data-dsh-claude-style] .dsh-claude-details.is-leaving {
+  width: 0;
+  pointer-events: none;
+}
+
+body[data-dsh-claude-style] .dsh-claude-details-body {
+  position: absolute;
+  inset: 0 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  width: 320px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-details-body > .dsh-claude-panel {
   flex: 1 1 auto;
   min-height: 0;
 }
 
-/* The rail takes its width from the conversation: the chat reflows into the
-   rest of the column, and the header's own controls follow it. */
-body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-claude-part~="center-column"] {
-  padding-right: 320px;
+/* The rail takes its width from the chat under the header: the conversation's own
+   body box gives 320px of its width back to the rail, while the header keeps the
+   column's whole width, so its controls stand above the rail rather than beside
+   it. The inset travels on the same stretch as the rail, so the chat's edge and
+   the rail's edge are one edge through the whole move (D94). */
+body[data-dsh-claude-style] [data-dsh-claude-part~="conversation-body"] {
+  transition: margin-right var(--dsh-claude-duration-column) var(--dsh-claude-ease-column);
 }
 
-/* Full-width metric rows keep long durations readable; the token buckets form
-   a second group beneath the session's figures (D94). */
+body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-claude-part~="conversation-body"] {
+  margin-right: 320px;
+}
+
+/* A reader who asked for no motion gets the rail where it belongs at once, and
+   the chat with it. */
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-details {
+  transition: none;
+}
+
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-claude-part~="conversation-body"] {
+  transition: none;
+}
+
+/* Full-width figure rows keep a long duration or token count beside its label,
+   on the legend's own rhythm (D94). */
 body[data-dsh-claude-style] .dsh-claude-panel-stats {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  margin: 0;
-  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
-  line-height: 18px;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-stats + .dsh-claude-panel-stats {
-  margin-top: 6px;
-  padding-top: 6px;
-  border-top: 1px solid var(--dsh-claude-divider);
+  gap: 4px;
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-stat {

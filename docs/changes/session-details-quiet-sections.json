@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-11",
+  "group": "improvements",
+  "order": 0,
+  "external": false,
+  "zh": "会话详情栏收起时只占标题一行，展开的节静止时隐去箭头，节标题成为全栏唯一的加粗文字；产出行的图标改为单色线形，后台任务与子智能体的完成状态不再写状态字，只留停住的时钟",
+  "en": "Fold the session details rail's folded sections onto their heading line, hide an open section's chevron at rest, keep bold for section titles alone, draw output rows with single-stroke marks, and let finished jobs and subagents keep their clock instead of a status word"
+}

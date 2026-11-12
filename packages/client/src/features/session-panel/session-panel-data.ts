@@ -31,12 +31,18 @@ const WAKE_MIN_MS = 400
  * only that newer ask may clear the controller or schedule the next poll: the
  * superseded promise sees a newer generation and stops at every step, so an
  * older answer cannot overwrite a newer one and one visibility flip cannot
- * leave two timers running. The page's hidden state pauses the asks.
+ * leave two timers running. The page's hidden state pauses the asks, and so does
+ * a rail that has left the page and is only giving its width back: it keeps the
+ * words it was showing and asks the host nothing more (D94).
  * @param sessionId - the session the rail shows.
+ * @param active - whether the rail still stands; a rail on its way out reads nothing more.
  * @returns the last answer for that session, or the failed flag while nothing arrived.
  */
-export function usePanelReading(sessionId: string): PanelReading {
+export function usePanelReading(sessionId: string, active: boolean): PanelReading {
   const [state, setState] = React.useState<PanelReadingState>({ session: '', reading: EMPTY_READING })
+  /** Whether an ask is still the reader's: updated on every render, read by the loop. */
+  const asking = React.useRef(active)
+  asking.current = active
 
   React.useEffect(() => {
     if (sessionId === '') return undefined
@@ -57,7 +63,7 @@ export function usePanelReading(sessionId: string): PanelReading {
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
         return await response.json() as SessionPanelAnswer
       },
-      hidden: () => document.hidden,
+      hidden: () => document.hidden || !asking.current,
       setTimeout: (run, ms) => window.setTimeout(run, ms),
       clearTimeout: id => window.clearTimeout(id),
       answer(answer, failed) {

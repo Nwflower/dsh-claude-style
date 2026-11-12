@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-12",
+  "group": "improvements",
+  "order": 0,
+  "external": false,
+  "zh": "会话详情栏为运行中的进程与可继续子智能体提供独立停止按钮，支持再次点击确认、停止中反馈与失败重试",
+  "en": "Add independent stop controls for running jobs and continuable subagents in the session details rail with click-again confirmation, stopping feedback and retry after failure"
+}

@@ -6,8 +6,9 @@
  *
  * The rail opens itself: no header control, no guide card, no host tab. The
  * scenario sends one turn that writes four files and runs three commands, reads
- * the sections the rail shows (environment, context, session stats, outputs,
- * background work), folds the two lists, then widens and narrows the window:
+ * the sections the rail shows (environment, context, session stats, token
+ * usage, outputs, background work), folds the two lists, then widens and
+ * narrows the window:
  * the rail retreats under the narrow frame and returns when the frame is wide
  * again. Closing it puts it away for the session and stops its asks.
  */
@@ -45,7 +46,10 @@ const HEADINGS = {
   changes: words('changes'),
   background: words('background'),
   stats: words('sessionStats'),
+  tokens: words('tokenUsage'),
 }
+/** The two figures sections, which start folded with one figure beside the heading (D94). */
+const FOLDED_HEADINGS = [...HEADINGS.stats, ...HEADINGS.tokens]
 
 /** The rail's headings, the sections they title, and what each holds. */
 const readRail = (page) => page.evaluate(({ headings }) => {
@@ -70,13 +74,23 @@ const readRail = (page) => page.evaluate(({ headings }) => {
       rows: group.querySelectorAll('.dsh-claude-panel-row').length,
       more: group.querySelector('.dsh-claude-panel-more')?.textContent ?? null,
     })),
-    chips: [...root.querySelectorAll('.dsh-claude-panel-chip')].map((node) => node.textContent),
-    preset: sectionOf(headings.environment)?.querySelector('.dsh-claude-details-preset')?.textContent ?? null,
+    jobs: [...(sectionOf(headings.background)?.querySelectorAll('.dsh-claude-panel-row') ?? [])].map((row) => ({
+      title: row.querySelector('.dsh-claude-panel-title')?.textContent ?? '',
+      detail: row.querySelector('.dsh-claude-panel-detail')?.textContent ?? '',
+      side: row.querySelector('.dsh-claude-panel-side')?.textContent ?? '',
+    })),
+    preset: sectionOf(headings.environment)?.querySelector('.dsh-claude-details-preset .dsh-claude-panel-title')?.textContent ?? null,
   }
 }, { headings: HEADINGS })
 
 /** The header's preset label, the words the rail repeats: the label's own part, not the whole actions slot, which also carries the host's job and subagent chips. */
 const readPreset = (page) => page.evaluate((attribute) => (document.querySelector(`[${attribute}~="header-label"]`)?.textContent ?? '').trim(), PART)
+
+/** Whether the header's preset label is drawn: it steps aside while the rail carries its words (D94). */
+const presetLabelDrawn = (page) => page.evaluate((attribute) => {
+  const label = document.querySelector(`[${attribute}~="header-label"]`)
+  return label === null ? null : getComputedStyle(label).visibility !== 'hidden'
+}, PART)
 
 /** The title-adjacent actions: whether the host's own subagent and job chips are on the page. */
 const readHeaderActions = (page) => page.evaluate(() => {
@@ -106,21 +120,28 @@ async function pressDetails(page) {
 /** Whether the rail stands on the page right now. */
 const railMounted = (page) => page.evaluate(() => document.querySelector('.dsh-claude-details') !== null)
 
+/** Whether the rail holds the chat's width: the conversation's body gives it up from its own margin, under a header that keeps the column whole (D94). */
+const railSqueezes = (page) => page.evaluate((attribute) => {
+  const body = document.querySelector(`[${attribute}~="conversation-body"]`)
+  return body !== null && Math.round(Number.parseFloat(getComputedStyle(body).marginRight)) === 320
+}, PART)
+
 /**
  * The host's own right column: the width it holds, the words on its control, and
  * what the skin's rail does while it stands.
  */
-const readRightPanel = (page) => page.evaluate(() => {
+const readRightPanel = (page) => page.evaluate((attribute) => {
   const column = document.querySelector('[data-rightbar-col]')
+  const body = document.querySelector(`[${attribute}~="conversation-body"]`)
   const toggle = [...document.querySelectorAll('button')]
     .find((node) => /右侧边栏|right panel/i.test(node.getAttribute('aria-label') ?? node.getAttribute('title') ?? ''))
   return {
     width: column === null ? 0 : Math.round(column.getBoundingClientRect().width),
     toggle: toggle?.getAttribute('aria-label') ?? toggle?.getAttribute('title') ?? null,
     rail: document.querySelector('.dsh-claude-details') !== null,
-    squeezed: [...document.querySelectorAll('div')].some((node) => getComputedStyle(node).paddingRight === '320px'),
+    squeezed: body !== null && Math.round(Number.parseFloat(getComputedStyle(body).marginRight)) === 320,
   }
-})
+}, PART)
 
 /** Press the host's own control for its right column. */
 async function pressRightPanel(page) {
@@ -134,6 +155,7 @@ async function pressRightPanel(page) {
 
 /** Native section states and the readings a reader sees with the rows put away. */
 const readDisclosures = page => page.evaluate(() => [...document.querySelectorAll('.dsh-claude-details details')].map(section => ({
+  title: section.querySelector('.dsh-claude-panel-section-title')?.textContent ?? '',
   open: section.open,
   content: section.querySelector('.dsh-claude-panel-section-content')?.checkVisibility() ?? false,
   reading: section.querySelector('.dsh-claude-panel-section-reading')?.innerText ?? '',
@@ -154,13 +176,19 @@ export function sessionPanelScenario({ check }) {
         { thinking: ['Second file.'], tool: { name: 'write', input: { file_path: '{{workspace}}/panel-two.md', content: '# Two\n' } } },
         { thinking: ['Third file.'], tool: { name: 'write', input: { file_path: '{{workspace}}/panel-three.md', content: '# Three\n' } } },
         { thinking: ['Fourth file.'], tool: { name: 'write', input: { file_path: '{{workspace}}/panel four.md', content: '# Four\n' } } },
-        { thinking: ['The files are written.'], text: ['Wrote four files.\n'] },
-        // The second prompt runs three commands: the rail keeps all three in
-        // its job history, and the third folds behind the first two.
+        // Commands and outputs belong to the same user round; each list folds on its own.
         { thinking: ['First command.'], tool: { name: commandTool, input: { command: 'echo panel-command-one', description: 'print the first rail line' } } },
         { thinking: ['Second command.'], tool: { name: commandTool, input: { command: 'echo panel-command-two', description: 'print the second rail line' } } },
         { thinking: ['Third command.'], tool: { name: commandTool, input: { command: 'echo panel-command-three', description: 'print the third rail line' } } },
-        { thinking: ['The commands ran.'], text: ['Ran three commands.\n'] },
+        { thinking: ['The commands ran.'], text: ['Wrote four files and ran three commands.\n'] },
+        // A new human prompt replaces settled rows and leaves a live job to stop.
+        { thinking: ['Latest output.'], tool: { name: 'write', input: { file_path: '{{workspace}}/panel-latest.md', content: '# Latest round\n' } } },
+        { thinking: ['Latest command.'], tool: { name: commandTool, input: { command: 'echo panel-command-latest', description: 'print the latest rail line' } } },
+        { thinking: ['A job the reader can cancel.'], tool: { name: commandTool, input: {
+          command: process.platform === 'win32' ? 'Write-Output panel-stop-latest; Start-Sleep -Seconds 120' : 'echo panel-stop-latest; sleep 120',
+          description: 'panel-stop-latest', run_in_background: true,
+        } } },
+        { thinking: ['Latest round is ready.'], text: ['Latest file and jobs are ready.\n'] },
       ],
       auxiliary: { text: ['Scripted rail turn'] },
     },
@@ -178,18 +206,15 @@ export function sessionPanelScenario({ check }) {
         if (request.url().includes(SESSION_PANEL_PATH)) notes.panelAsks.push(Date.now())
       })
       // A new conversation has no turn yet: the rail stays away until one lands.
-      notes.heroRail = await page.evaluate(() => ({
-        rail: document.querySelector('.dsh-claude-details') !== null,
-        squeezed: [...document.querySelectorAll('div')].some((node) => getComputedStyle(node).paddingRight === '320px'),
-      }))
+      notes.heroRail = {
+        rail: await railMounted(page),
+        squeezed: await railSqueezes(page),
+      }
     },
 
     async afterTurn(context) {
       const { page } = context
       const notes = context.notes
-      // One more turn leaves three commands behind.
-      await sendPrompt(page, 'Run the three commands.')
-      await waitForTurn(page)
       await page.waitForSelector('.dsh-claude-details', { timeout: 20000 })
       await page.waitForFunction(() => /panel four\.md/.test(document.querySelector('.dsh-claude-details')?.textContent ?? ''), undefined, { timeout: 30000 })
       // Background tasks catches up on its own poll; the third command starts
@@ -203,13 +228,15 @@ export function sessionPanelScenario({ check }) {
         guide: document.querySelector('[data-sidebar-right-guide-entry="claude-session-overview"]') === null,
       }))
       notes.preset = await readPreset(page)
+      notes.presetLabel = { standing: await presetLabelDrawn(page) }
       notes.rail = await readRail(page)
       // Section controls are independent, retain their choice through a poll,
-      // and keep the browser's Enter and Space activation (D94).
+      // and keep the browser's Enter and Space activation (D94). The two
+      // figures sections start folded, so only the open ones are pressed shut.
       const sectionToggles = page.locator('.dsh-claude-details summary')
       notes.disclosures = { initial: await readDisclosures(page) }
       const refreshed = page.waitForResponse(response => response.url().includes(SESSION_PANEL_PATH) && response.ok())
-      for (const toggle of await sectionToggles.all()) await toggle.click()
+      for (const toggle of await page.locator('.dsh-claude-details details[open] > summary').all()) await toggle.click()
       await refreshed
       notes.disclosures.closed = await readDisclosures(page)
       await sectionToggles.first().focus()
@@ -262,6 +289,9 @@ export function sessionPanelScenario({ check }) {
           title: box(document.querySelector(marks.title)),
           utilities: box(document.querySelector(marks.utilities)),
           tablist: box(document.querySelector(marks.tablist)),
+          column: box(document.querySelector(marks.column)),
+          header: box(document.querySelector(marks.header)),
+          rail: box(document.querySelector('.dsh-claude-details')),
           shiftX: strip?.getAttribute('style') ?? '',
         }
       }, {
@@ -270,6 +300,8 @@ export function sessionPanelScenario({ check }) {
         title: HEADER_TITLE_SELECTOR,
         utilities: HEADER_UTILITIES_SELECTOR,
         tablist: CONVERSATION_TABS_SELECTOR,
+        column: `[${PART}~="center-column"]`,
+        header: `[${PART}~="conversation-header"]`,
       })
       notes.headerActions = await readHeaderActions(page)
       // A job row opens its retained output in place and closes again.
@@ -313,11 +345,12 @@ export function sessionPanelScenario({ check }) {
       // The header's control closes the rail and opens it again, even in a
       // frame narrow enough for the auto rule to keep it away.
       await pressDetails(page)
-      notes.closed = await page.evaluate(() => ({
-        rail: document.querySelector('.dsh-claude-details') !== null,
-        squeezed: [...document.querySelectorAll('div')].some((node) => getComputedStyle(node).paddingRight === '320px'),
-      }))
+      notes.closed = {
+        rail: await railMounted(page),
+        squeezed: await railSqueezes(page),
+      }
       notes.utilitiesClosed = await readUtilities(page)
+      notes.presetLabel.closed = await presetLabelDrawn(page)
       await pressDetails(page)
       notes.reopened = await railMounted(page)
       notes.utilitiesReopened = await readUtilities(page)
@@ -360,6 +393,28 @@ export function sessionPanelScenario({ check }) {
       }, undefined, { timeout: 15000 })
       notes.filePreview = await page.evaluate(() => document.querySelector('[data-sidebar-right-open]')?.textContent ?? '')
       notes.extraPages = page.context().pages().length - pagesBefore
+      await pressRightPanel(page)
+      await sendPrompt(page, 'Write the latest file and start the cancellable job.')
+      await waitForTurn(page)
+      await page.waitForFunction(() => /panel-latest\.md/.test(document.querySelector('.dsh-claude-details')?.textContent ?? ''), undefined, { timeout: 30000 })
+      notes.latestRound = await readRail(page)
+      const jobLine = page.locator('.dsh-claude-panel-job-line').filter({ hasText: 'panel-stop-latest' }).first()
+      const stop = jobLine.locator('.dsh-claude-panel-job-stop')
+      await stop.waitFor({ state: 'visible' })
+      await stop.click()
+      notes.stopConfirm = await stop.textContent()
+      notes.stopDidNotExpand = await jobLine.locator('.dsh-claude-panel-row').getAttribute('aria-expanded') === 'false'
+      await jobLine.locator('.dsh-claude-panel-row').focus()
+      notes.stopBlurCleared = await stop.getAttribute('aria-label') !== notes.stopConfirm
+      await stop.click()
+      await stop.click()
+      await stop.waitFor({ state: 'detached', timeout: 30000 })
+      notes.stopFinished = await page.evaluate(async (path) => {
+        const id = document.querySelector('[data-conversation-session]')?.getAttribute('data-conversation-session') ?? ''
+        const response = await fetch(`${path}?id=${encodeURIComponent(id)}&live=1`, { credentials: 'same-origin' })
+        const answer = await response.json()
+        return answer.value?.background?.jobs?.find(job => job.label.includes('panel-stop-latest'))?.status ?? null
+      }, SESSION_PANEL_PATH)
     },
 
     async assert({ notes }) {
@@ -384,16 +439,26 @@ export function sessionPanelScenario({ check }) {
         check('the environment section carries the preset text from the header',
           (rail.preset ?? '') !== '' && (rail.preset ?? '') === (notes.preset ?? ''),
           JSON.stringify({ rail: rail.preset ?? null, header: notes.preset ?? null })),
+        check('the header\'s preset label steps aside while the rail stands and returns when it closes',
+          notes.presetLabel?.standing === false && notes.presetLabel?.closed === true,
+          JSON.stringify(notes.presetLabel ?? null)),
+        check('the figures sections start folded with a reading and every other section starts open',
+          notes.disclosures?.initial?.length === rail.headings?.length &&
+            notes.disclosures.initial.filter(section => FOLDED_HEADINGS.includes(section.title)).length === 2 &&
+            notes.disclosures.initial.every(section => (FOLDED_HEADINGS.includes(section.title)
+              ? !section.open && !section.content && section.reading !== ''
+              : section.open && section.content)),
+          JSON.stringify(notes.disclosures?.initial ?? null)),
         check('every section folds to its own reading and stays folded through a poll',
-          notes.disclosures?.initial?.length === rail.headings?.length && notes.disclosures.initial.every(section => section.open && section.content) &&
-            notes.disclosures.closed?.every(section => !section.open && !section.content && section.reading !== ''),
+          notes.disclosures?.closed?.length === rail.headings?.length &&
+            notes.disclosures.closed.every(section => !section.open && !section.content && section.reading !== ''),
           JSON.stringify(notes.disclosures ?? null)),
         check('keyboard activation opens one section independently and all sections open again',
           notes.disclosures?.single?.[0]?.open === true && notes.disclosures.single.slice(1).every(section => !section.open) &&
             notes.disclosures.reopened?.every(section => section.open && section.content),
           JSON.stringify(notes.disclosures ?? null)),
-        check('the session stats carry the figures and the token buckets',
-          anyOf(statsWords, (rail.headings ?? []).join('|')) && (rail.stats ?? []).length >= 8 &&
+        check('the session stats and the token usage carry their figures',
+          anyOf(statsWords, (rail.headings ?? []).join('|')) && anyOf(HEADINGS.tokens, (rail.headings ?? []).join('|')) && (rail.stats ?? []).length >= 8 &&
             anyOf(words('statsModelTime'), (rail.stats ?? []).join('|')) && anyOf(words('statsCost'), (rail.stats ?? []).join('|')),
           JSON.stringify((rail.stats ?? []).slice(0, 12))),
         check('Outputs lists the files the turn wrote and folds past its second row',
@@ -408,7 +473,16 @@ export function sessionPanelScenario({ check }) {
         check('a background category folds past two rows and opens on its own control',
           notes.groupFold?.rows?.join() === '2' && notes.groupFold?.expanded?.join() === '3' && notes.groupFold?.collapsed?.join() === '2',
           JSON.stringify(notes.groupFold ?? null)),
-        check('the commands carry their status chip', anyOf(words('completed'), (rail.chips ?? []).join('|')), JSON.stringify((rail.chips ?? []).slice(0, 4))),
+        check('a finished command carries no status word and keeps its clock',
+          (rail.jobs ?? []).length >= 2 && rail.jobs.every(job => job.side === '' && job.detail !== ''),
+          JSON.stringify((rail.jobs ?? []).slice(0, 3))),
+        check('a new user round replaces old outputs and settled jobs',
+          /panel-latest\.md/.test(notes.latestRound?.outputs ?? '') && !/panel four\.md/.test(notes.latestRound?.outputs ?? '') &&
+            /panel-command-latest/.test(notes.latestRound?.background ?? '') && !/panel-command-three/.test(notes.latestRound?.background ?? ''),
+          JSON.stringify({ outputs: notes.latestRound?.outputs, background: notes.latestRound?.background })),
+        check('stopping confirms independently of output disclosure and cancels the job',
+          words('confirmStop').includes(notes.stopConfirm) && notes.stopDidNotExpand === true && notes.stopBlurCleared === true && notes.stopFinished === 'killed',
+          JSON.stringify({ confirm: notes.stopConfirm, independent: notes.stopDidNotExpand, blur: notes.stopBlurCleared, status: notes.stopFinished })),
         check('a job row opens its retained output in place', notes.jobOpened === true && (notes.jobOutput ?? '').trim() !== '', JSON.stringify({ opened: notes.jobOpened, output: (notes.jobOutput ?? '').slice(0, 80) })),
         check('the job row closes its output again', notes.jobClosed === true, String(notes.jobClosed)),
         check('the view switch stands on the title\'s own line, clear of the title and the utilities',
@@ -418,6 +492,12 @@ export function sessionPanelScenario({ check }) {
             notes.layout.tablist.left >= notes.layout.title.right + 4 &&
             (notes.layout.utilities === null || notes.layout.tablist.right <= notes.layout.utilities.left - 4),
           JSON.stringify(notes.layout ?? null)),
+        check('the header keeps the column whole and the rail starts under it',
+          notes.layout?.column !== null && notes.layout?.header !== null && notes.layout?.rail !== null &&
+            notes.layout.header.right >= notes.layout.column.right - 1 &&
+            notes.layout.rail.right >= notes.layout.column.right - 1 &&
+            notes.layout.rail.top >= notes.layout.header.bottom - 1,
+          JSON.stringify({ column: notes.layout?.column ?? null, header: notes.layout?.header ?? null, rail: notes.layout?.rail ?? null })),
         check('the host header chips step aside while the rail stands',
           notes.headerActions?.exists === false || (notes.headerActions.expanded === 0 && notes.headerActions.tree === 0),
           JSON.stringify(notes.headerActions ?? null)),

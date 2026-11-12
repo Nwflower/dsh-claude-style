@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-11",
+  "group": "improvements",
+  "order": 0,
+  "external": false,
+  "zh": "会话详情栏统一为一种字号与行距，每一行只占一行，行尾状态改为不带边框的文字；会话统计拆成「会话统计」与「Token 用量」两节并默认收起，收起时分别显示输出速度与费用；上下文分项不再逐个标注估算记号；详情栏展开时标题栏的预设标签让位给环境一节",
+  "en": "Set the session details rail in one type size and row rhythm with single-line rows and unboxed trailing states; split session statistics into Session stats and Token usage, both folded by default with the output speed and the cost beside their headings; drop the per-figure estimate marks from the context parts; and let the Environment section take over the title bar's preset label while the rail is open"
+}

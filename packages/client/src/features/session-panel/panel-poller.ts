@@ -14,7 +14,7 @@ export interface PanelPollerDeps {
   /** The address to ask; read per ask, since the reader's price table travels with it. */
   url(): string
   fetch(url: string, signal: AbortSignal): Promise<PanelCommonAnswer>
-  /** Whether the page is hidden right now. */
+  /** Whether the page cannot show the answer right now: it is hidden, or the rail is on its way out. */
   hidden(): boolean
   setTimeout(run: () => void, ms: number): number
   clearTimeout(id: number): void

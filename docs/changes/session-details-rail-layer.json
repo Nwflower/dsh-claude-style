@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-11",
+  "group": "fixes",
+  "order": 0,
+  "external": false,
+  "zh": "会话详情栏改用独立的一层（24），标题栏挂出的菜单不再被它盖住",
+  "en": "Give the session details rail its own layer (24) so menus the header hangs no longer open under it"
+}

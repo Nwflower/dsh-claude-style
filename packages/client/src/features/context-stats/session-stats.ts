@@ -4,7 +4,7 @@ import { sessionProjectionFaces } from '../../shared/session-projections'
 import { hostChatSeat } from '../../core/i18n'
 import { prefsFromForm, readPrefs } from '../../core/prefs'
 import { peerPresent } from '../../shared/peer-plugin'
-import { BILLING_OFF, CONTEXT_DISPLAY_PIE, CONTEXT_DISPLAY_RING_BAND, STATS_POSITION_FOOTER, STATS_POSITION_INLINE } from '../../constants'
+import { BILLING_OFF, CONTEXT_DISPLAY_PIE, CONTEXT_DISPLAY_RING_BAND, STATS_POSITION_CONTEXT } from '../../constants'
 import { createContextStatsBinding } from './stats-binding'
 import { createInlineStats } from './inline-stats'
 import { createStatsBlock } from './stats-block'
@@ -270,9 +270,11 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
     if (cancelNumbers !== null) cancelNumbers()
     cancelNumbers = null
     readingMemo = null
-    const position = readPrefs().statsPosition
-    if (position === STATS_POSITION_INLINE || position === STATS_POSITION_FOOTER) inline.render()
-    else inline.clear()
+    // Every position but the popover's writes the line: the footer rides the
+    // toolbar with it, and the rail position keeps it written while the rail
+    // stands, hidden by the stylesheet, so it is whole the moment the rail goes.
+    if (readPrefs().statsPosition === STATS_POSITION_CONTEXT) inline.clear()
+    else inline.render()
     block.render()
     for (const listener of costListeners) listener()
   }

@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-12",
+  "group": "improvements",
+  "order": 0,
+  "external": false,
+  "zh": "会话详情栏的产出、进程与子智能体只展示最新用户轮次，跨轮仍运行的任务继续保留，后台通知与自动续行不清空本轮内容",
+  "en": "Limit outputs, jobs and subagents in the session details rail to the latest human-prompted round while keeping older running work visible and preserving the round through background notices and automatic continuations"
+}

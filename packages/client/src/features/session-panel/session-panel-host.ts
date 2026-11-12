@@ -6,7 +6,7 @@
  * The install hands its host context over for the lifetime of the rail's React
  * root. Row actions read the host through this one place; teardown releases it.
  */
-import { hostUiWorkspace, openHostFile } from '@dsh-claude-style/engine/host'
+import { hostJobs, hostRemoteSubagents, hostUiWorkspace, openHostFile } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 
 /** The host context this generation runs on, for the seats behind the panel's rows. */
@@ -26,6 +26,22 @@ export function clearPanelContext(ctx: HostContext | null) {
 /** The host context this generation runs on, or null before the install handed it over. */
 export function panelHost(): HostContext | null {
   return host
+}
+
+/** Request human cancellation through the same owner-fenced service as the host's job list (D94). */
+export async function stopPanelJob(sessionId: string, jobId: string) {
+  const jobs = hostJobs(host)
+  if (typeof jobs?.kill !== 'function') throw new Error('the host jobs controller is unavailable')
+  const answer = await jobs.kill(sessionId, jobId)
+  if (answer.ok !== true) throw new Error('the host refused to stop the job')
+}
+
+/** Interrupt a continuable child's active turn under the current parent's authority (D94). */
+export async function stopPanelSubagent(parentSessionId: string, childSessionId: string) {
+  const subagents = hostRemoteSubagents(host)
+  if (typeof subagents?.interruptByParent !== 'function') throw new Error('the host subagent controller is unavailable')
+  const answer = await subagents.interruptByParent(childSessionId, parentSessionId, 'continuable')
+  if (answer.ok !== true) throw new Error('the host refused to stop the subagent')
 }
 
 /** Open one subagent or Team member session in the conversation view. */

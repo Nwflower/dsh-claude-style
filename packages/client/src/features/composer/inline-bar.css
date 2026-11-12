@@ -307,6 +307,13 @@ body[data-dsh-claude-style] .dsh-claude-inline-stats {
   white-space: nowrap;
   cursor: pointer;
 }
+/* Under the rail position the conversation's details rail carries the session's
+   numbers while it stands (D94), so the line is not painted then. It keeps its
+   box: the dock's floor and the line's own fit stay as they are, and the
+   composer does not move when the rail opens or steps back. */
+body[data-dsh-claude-style][data-dsh-claude-stats-position="rail"][data-dsh-claude-session-panel] .dsh-claude-inline-stats {
+  visibility: hidden;
+}
 /* A figure holds its number and the host's own words after it
    (features/context-stats/inline-stats.ts); a flex item trims the template's
    leading space, so this gap is the only space between a number and its unit. */

@@ -6,7 +6,7 @@ export default {
   pref: 'sessionPanel',
   // The rail mounts its own root on the page; it joins the first frames so a
   // late chunk cannot land inside a settled page's quiet window (D94).
-  contracts: ['conversation.session-attribute', 'conversation.session', 'sidebar.chat', 'chat.scroller', 'chat.user-row', 'header.action-chips', 'shell.rightbar-column', 'shell.rightbar-toggle'],
+  contracts: ['conversation.session-attribute', 'conversation.session', 'sidebar.chat', 'chat.scroller', 'chat.user-row', 'header.action-chips', 'shell.rightbar-column', 'shell.rightbar-toggle', 'shell.bottom-panel'],
   stylesheets: [{ file: 'session-panel.css', rank: 122 }],
   settingsRows: [{
     tab: 'conversation',

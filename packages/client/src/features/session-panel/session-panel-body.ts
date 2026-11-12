@@ -9,6 +9,7 @@ import { billingCurrency, statsCostText } from './stats-cost'
 import { readPrefs, subscribePrefs } from '../../core/prefs'
 import { useJobOutput, usePanelReading } from './session-panel-data'
 import { contextRows } from './context-rows'
+import { JobStop } from './job-stop'
 import type { PanelBackground, PanelChange, PanelContext, PanelEnvironment, PanelJob, PanelOutput, PanelStats, PanelSubagent } from '@dsh-claude-style/contracts/session-panel'
 
 const h = React.createElement
@@ -16,7 +17,47 @@ const h = React.createElement
 /** The conversation session whose details the rail's body reads. */
 export interface PanelBodyProps {
   sessionId?: unknown
-  preset: string
+  preset: PanelPreset
+  /** Whether the rail still stands; a rail on its way out keeps its words and reads nothing more. */
+  active: boolean
+}
+
+/** The preset as the header's label carries it: its words, and the description the label keeps as its hint. */
+export interface PanelPreset {
+  label: string
+  hint: string
+}
+
+/** The size every row's mark is drawn at. */
+const MARK_SIZE = 16
+
+/**
+ * A file's own mark: the page and its folded corner, drawn in the rail's one
+ * stroke so an output row reads in the same ink as every other row's mark.
+ */
+function SheetMark() {
+  return h('svg', {
+    width: MARK_SIZE, height: MARK_SIZE, viewBox: '0 0 24 24', fill: 'none',
+    stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round',
+  },
+  h('path', { d: 'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z' }),
+  h('path', { d: 'M14 3v5h5' }))
+}
+
+/** An image's own mark: a frame, a sun and the ground it holds. */
+function PictureMark() {
+  return h('svg', {
+    width: MARK_SIZE, height: MARK_SIZE, viewBox: '0 0 24 24', fill: 'none',
+    stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round',
+  },
+  h('rect', { x: 4, y: 4, width: 16, height: 16, rx: 2 }),
+  h('circle', { cx: 9, cy: 9.5, r: 1.5 }),
+  h('path', { d: 'M5 17.5 9 13l3.5 3.5L15 14l4 4' }))
+}
+
+/** What an output row wears: the frame of a picture, the sheet of everything else. */
+function outputMark(kind: PanelOutput['kind']) {
+  return kind === 'image' ? h(PictureMark) : h(SheetMark)
 }
 
 /**
@@ -24,18 +65,19 @@ export interface PanelBodyProps {
  * conversation's session, mounted by the rail beside the chat.
  *
  * The body is one column of sections in the order a reader asks about a
- * session — where it works, what the context holds, what it produced, what it
- * changed, and what runs behind it. The last three appear only with something
- * to show; the first two always do.
+ * session — where it works, what the context holds, how it ran, what it spent,
+ * what it produced, what it changed, and what runs behind it. The first two
+ * always appear; the figures appear once the host reports them, and the last
+ * three only with something to show.
  */
 export function PanelBody(props: PanelBodyProps) {
   const sessionId = typeof props.sessionId === 'string' && props.sessionId !== '' ? props.sessionId : null
   if (sessionId === null) return null
-  return h(PanelView, { sessionId, preset: props.preset })
+  return h(PanelView, { sessionId, preset: props.preset, active: props.active })
 }
 
-function PanelView({ sessionId, preset }: { sessionId: string, preset: string }) {
-  const { value, failed } = usePanelReading(sessionId)
+function PanelView({ sessionId, preset, active }: { sessionId: string, preset: PanelPreset, active: boolean }) {
+  const { value, failed } = usePanelReading(sessionId, active)
   // A running row's clock has to move between the panel's own polls.
   const running = value !== null && hasRunningWork(value.background)
   const [, tick] = React.useState(0)
@@ -52,6 +94,7 @@ function PanelView({ sessionId, preset }: { sessionId: string, preset: string })
     value.environment === null ? null : h(EnvironmentSection, { key: 'environment', environment: value.environment, preset }),
     h(ContextSection, { key: 'context', context: value.context }),
     value.stats === null || value.stats === undefined ? null : h(StatsSection, { key: 'stats', stats: value.stats }),
+    value.stats === null || value.stats === undefined ? null : h(TokensSection, { key: 'tokens', stats: value.stats }),
     value.outputs.length === 0 ? null : h(OutputsSection, { key: 'outputs', sessionId, directory: value.environment?.directory, outputs: value.outputs }),
     value.changes.length === 0 ? null : h(ChangesSection, { key: 'changes', changes: value.changes }),
     hasBackgroundWork(value.background) ? h(BackgroundSection, { key: 'background', sessionId, background: value.background }) : null)
@@ -60,9 +103,10 @@ function PanelView({ sessionId, preset }: { sessionId: string, preset: string })
 /** Each section owns a native disclosure (D94): its children stay mounted so
  * folding preserves list expansion and an opened job's output. An unchanged
  * `open` prop lets the browser keep the reader's choice across data refreshes.
+ * A `folded` section starts closed, with its reading beside the heading.
  */
-function Section({ title, summary, children }: { title: string, summary?: React.ReactNode, children?: React.ReactNode }) {
-  return h('details', { className: 'dsh-claude-panel-section', open: true },
+function Section({ title, summary, folded, children }: { title: string, summary?: React.ReactNode, folded?: boolean, children?: React.ReactNode }) {
+  return h('details', { className: 'dsh-claude-panel-section', open: folded !== true },
     h('summary', { className: 'dsh-claude-panel-section-toggle' },
       h('h2', { className: 'dsh-claude-panel-heading' },
         h('span', { className: 'dsh-claude-panel-section-title' }, title),
@@ -105,18 +149,24 @@ function BackgroundGroup({ title, rows }: { title: string, rows: readonly React.
     h(FoldedList, { rows }))
 }
 
-/** One row: a mark, a title over a line of detail, and a trailing side. */
-function Row(props: { mark?: React.ReactNode, title: string, detail?: string, inline?: boolean, side?: React.ReactNode, href?: string, onClick?: () => void, expanded?: boolean }) {
+/**
+ * One row on one line: a mark, a title with its detail after it, and a trailing
+ * side. The line's hint is the row's whole reading, for a title or a detail the
+ * line cut short; `hint` replaces it where the row has words of its own to say.
+ */
+function Row(props: { mark?: React.ReactNode, title: string, detail?: string, hint?: string, kind?: string, side?: React.ReactNode, href?: string, onClick?: () => void, expanded?: boolean }) {
+  const detail = props.detail === undefined || props.detail === '' ? null : props.detail
   const content = [
     props.mark === undefined ? null : h('span', { key: 'mark', className: 'dsh-claude-panel-mark', 'aria-hidden': true }, props.mark),
-    h('span', { key: 'main', className: `dsh-claude-panel-main${props.inline ? ' is-inline' : ''}`, title: props.detail === undefined ? props.title : `${props.title} · ${props.detail}` },
+    h('span', { key: 'main', className: 'dsh-claude-panel-main', title: props.hint ?? (detail === null ? props.title : `${props.title} · ${detail}`) },
       h('span', { className: 'dsh-claude-panel-title' }, props.title),
-      props.detail === undefined || props.detail === '' ? null : h('span', { className: 'dsh-claude-panel-detail' }, props.detail)),
+      detail === null ? null : h('span', { className: 'dsh-claude-panel-detail' }, detail)),
     props.side === undefined ? null : h('span', { key: 'side', className: 'dsh-claude-panel-side' }, props.side),
   ]
+  const rowClass = props.kind === undefined ? 'dsh-claude-panel-row' : `dsh-claude-panel-row ${props.kind}`
   if (props.href !== undefined) {
     return h('a', {
-      className: 'dsh-claude-panel-row is-link',
+      className: `${rowClass} is-link`,
       href: props.href,
       target: '_blank',
       rel: 'noreferrer',
@@ -126,16 +176,16 @@ function Row(props: { mark?: React.ReactNode, title: string, detail?: string, in
   if (props.onClick !== undefined) {
     return h('button', {
       type: 'button',
-      className: 'dsh-claude-panel-row is-button',
+      className: `${rowClass} is-button`,
       onClick: props.onClick,
       title: props.title,
       ...(props.expanded === undefined ? {} : { 'aria-expanded': props.expanded }),
     }, content)
   }
-  return h('div', { className: 'dsh-claude-panel-row' }, content)
+  return h('div', { className: rowClass }, content)
 }
 
-/** One trailing chip. */
+/** One trailing state word. */
 function Chip({ text, tone }: { text: string, tone?: 'success' | 'failure' | 'pending' }) {
   return h('span', { className: tone === undefined ? 'dsh-claude-panel-chip' : `dsh-claude-panel-chip is-${tone}` }, text)
 }
@@ -155,6 +205,13 @@ export function baseName(path: string) {
   const normalized = path.replaceAll('\\', '/').replace(/\/+$/, '')
   const index = normalized.lastIndexOf('/')
   return index === -1 ? normalized : normalized.slice(index + 1)
+}
+
+/** The folder a `/` or `\` separated path lies in; empty for a path of one segment. */
+export function parentPath(path: string) {
+  const normalized = path.replaceAll('\\', '/').replace(/\/+$/, '')
+  const index = normalized.lastIndexOf('/')
+  return index === -1 ? '' : normalized.slice(0, index)
 }
 
 /** The headline occupancy; detailed rows keep one decimal of the window. */
@@ -180,21 +237,20 @@ export function elapsedText(ms: number) {
 }
 
 /** Where the session works: the machine, the directory, and the checkouts around it. */
-function EnvironmentSection({ environment, preset }: { environment: PanelEnvironment, preset: string }) {
+function EnvironmentSection({ environment, preset }: { environment: PanelEnvironment, preset: PanelPreset }) {
   const rows: React.ReactNode[] = [
     h(Row, {
       key: 'computer',
-      mark: h('svg', { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinejoin: 'round' },
+      mark: h('svg', { width: MARK_SIZE, height: MARK_SIZE, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinejoin: 'round' },
         h('rect', { x: 5, y: 3, width: 14, height: 12, rx: 2 }),
         h('path', { d: 'M5 15 2 19v1h20v-1l-3-4M2 19h20' })),
       title: copy('thisComputer'),
     }),
     h(Row, {
       key: 'directory',
-      mark: h(primitives.IconFolderOpenOutlineRegular, { size: 18 }),
+      mark: h(primitives.IconFolderOpenOutlineRegular, { size: MARK_SIZE }),
       title: baseName(environment.directory),
-      detail: shortPath(environment.directory, environment.home).replace(/\/[^/]+$/, ''),
-      inline: true,
+      detail: parentPath(shortPath(environment.directory, environment.home)),
     }),
   ]
   const checkout = environment.checkout
@@ -210,9 +266,19 @@ function EnvironmentSection({ environment, preset }: { environment: PanelEnviron
       commit: checkout.commit,
     }))
   }
+  // The preset closes the section: the header's own label steps aside while the
+  // rail stands, so this row is where its words and its description are read (D94).
+  if (preset.label !== '') {
+    rows.push(h(Row, {
+      key: 'preset',
+      kind: 'dsh-claude-details-preset',
+      mark: h(primitives.IconAgentPresetOutlineRegular, { size: MARK_SIZE }),
+      title: preset.label,
+      hint: preset.hint === '' ? undefined : preset.hint,
+    }))
+  }
   return h(Section, { title: copy('environment'), summary: baseName(environment.directory) },
-    h('div', { className: 'dsh-claude-panel-list' }, rows),
-    preset === '' ? null : h('p', { className: 'dsh-claude-details-preset', title: preset }, preset))
+    h('div', { className: 'dsh-claude-panel-list' }, rows))
 }
 
 function RepositoryRow(props: { name?: string, branch: string | null, linked: boolean, detail?: string, commit?: string | null }) {
@@ -220,11 +286,11 @@ function RepositoryRow(props: { name?: string, branch: string | null, linked: bo
   // Additional checkouts keep their folder row immediately above the branch.
   return h(React.Fragment, null,
     props.name === undefined ? null : h(Row, {
-      mark: h(primitives.IconFolderOpenOutlineRegular, { size: 18 }),
-      title: props.name, detail: props.detail, inline: true,
+      mark: h(primitives.IconFolderOpenOutlineRegular, { size: MARK_SIZE }),
+      title: props.name, detail: props.detail,
     }),
     h(Row, {
-      mark: h(primitives.IconBranchOutlineRegular, { size: 18 }),
+      mark: h(primitives.IconBranchOutlineRegular, { size: MARK_SIZE }),
       title: props.branch ?? props.commit ?? copy('detachedHead'),
       side: props.linked ? h(Chip, { text: copy('worktree') }) : undefined,
     }))
@@ -265,56 +331,89 @@ function ContextSection({ context }: { context: PanelContext | null }) {
           h('dt', null,
             h('i', { className: `dsh-claude-panel-dot is-${row.kind}`, 'aria-hidden': true }),
             copy(row.label)),
-          h('dd', null, `~${formatCompactTokens(row.tokens)}`),
-          h('dd', { className: 'dsh-claude-panel-share' }, `~${row.share.toFixed(1)}%`))),
+          h('dd', null, formatCompactTokens(row.tokens)),
+          h('dd', { className: 'dsh-claude-panel-share' }, `${row.share.toFixed(1)}%`))),
         h('div', { className: 'dsh-claude-panel-legend-row is-free' },
           h('dt', null,
             h('i', { className: 'dsh-claude-panel-dot is-free', 'aria-hidden': true }),
             copy('contextFree')),
           h('dd', null, formatCompactTokens(free)),
-          h('dd', { className: 'dsh-claude-panel-share' }, `${(free / context.window * 100).toFixed(1)}%`)))))
+          h('dd', { className: 'dsh-claude-panel-share' }, `${(free / context.window * 100).toFixed(1)}%`))),
+      // The parts are estimates and the occupancy above them is the provider's
+      // own reading: the legend says so once, and its hint carries the method.
+      h('p', { className: 'dsh-claude-panel-caption', title: copy('contextEstimate') }, copy('contextEstimateNote'))))
 }
 
-/** The session's own figures, followed by its token buckets (D94). Each figure
- * gets a full row so a long elapsed time keeps its value beside its label.
+/** One figure of a figures section: its label and its value as written. */
+interface Figure {
+  key: string
+  label: string
+  value: string
+}
+
+/** A figures section's rows: each figure gets a full row, so a long elapsed time
+ * or token count keeps its value beside its label.
+ */
+function Figures({ rows }: { rows: readonly Figure[] }) {
+  return h('dl', { className: 'dsh-claude-panel-stats' },
+    rows.map(row => h('div', { key: row.key, className: 'dsh-claude-panel-stat' },
+      h('dt', null, row.label),
+      h('dd', null, row.value))))
+}
+
+/**
+ * How the session ran (D94): its turns and steps, its speed and its time.
+ *
+ * The figures are written in the host's own words, through the same formatters
+ * the composer's readout uses (shared/stats-format.ts): the rail is a second
+ * surface of one session, not a second set of numbers. The section starts
+ * folded with the output speed beside its heading, the one figure a reader
+ * follows while a turn runs.
  */
 function StatsSection({ stats }: { stats: PanelStats }) {
-  const currency = useBillingCurrency()
-  // The figures are written in the host's own words, through the same four
-  // formatters the composer's readout uses (shared/stats-format.ts): the rail is
-  // a second surface of one session, not a second set of numbers.
   const chat = hostChatSeat()
   const duration = (ms: number) => (chat === null ? `${Math.max(0, Math.round(ms / 1000))}s` : sessionStatsDuration(ms, chat))
-  const tokens = (count: number) => (chat === null ? `${formatCompactTokens(count)} tok` : sessionStatsTokens(count, chat))
-  const rows: { key: string, label: string, value: string }[] = []
+  const rows: Figure[] = []
   rows.push({ key: 'turns', label: copy('statsTurns'), value: String(stats.turns) })
   rows.push({ key: 'steps', label: copy('statsSteps'), value: String(stats.steps) })
+  let speedText: string | null = null
   if (stats.decodeMs > 0) {
     const speed = sessionStatsSpeed(stats.decodeTokens / (stats.decodeMs / 1000))
-    rows.push({ key: 'speed', label: copy('statsOutputSpeed'), value: chat === null ? `${speed} tok/s` : chat('message.tokensPerSecond', { tps: speed }) })
+    speedText = chat === null ? `${speed} tok/s` : chat('message.tokensPerSecond', { tps: speed })
+    rows.push({ key: 'speed', label: copy('statsOutputSpeed'), value: speedText })
   }
   if (stats.ttftSteps > 0) rows.push({ key: 'ttft', label: copy('statsFirstToken'), value: duration(stats.ttftMs / stats.ttftSteps) })
   rows.push({ key: 'model', label: copy('statsModelTime'), value: duration(stats.llmMs) })
   rows.push({ key: 'tool', label: copy('statsToolTime'), value: duration(stats.toolMs) })
+  // A session with no decoded output yet has no speed: its turn count stands in.
+  return h(Section, { title: copy('sessionStats'), summary: speedText ?? copy('sectionTurns', { count: stats.turns }), folded: true },
+    h(Figures, { rows }))
+}
+
+/**
+ * What the session spent (D94): its cost, its cache share and its token buckets.
+ *
+ * The section starts folded with the cost beside its heading; with billing off
+ * or a model no table prices, the tokens the session moved stand in.
+ */
+function TokensSection({ stats }: { stats: PanelStats }) {
+  const currency = useBillingCurrency()
+  const chat = hostChatSeat()
+  const tokens = (count: number) => (chat === null ? `${formatCompactTokens(count)} tok` : sessionStatsTokens(count, chat))
+  const rows: Figure[] = []
+  const cost = statsCostText(stats.cost, currency)
+  if (cost !== null) rows.push({ key: 'cost', label: copy('statsCost'), value: cost })
   const billed = stats.uncachedInputTokens + stats.cacheReadTokens + stats.cacheWriteTokens
   if (billed > 0) {
     const hit = chat === null ? String(Math.round((stats.cacheReadTokens / billed) * 100)) : sessionStatsCacheHit(stats.cacheReadTokens, billed)
     if (hit !== null) rows.push({ key: 'cache', label: copy('statsCacheHit'), value: `${hit}%` })
   }
-  const cost = statsCostText(stats.cost, currency)
-  if (cost !== null) rows.push({ key: 'cost', label: copy('statsCost'), value: cost })
-  const buckets: { key: string, label: string, value: string }[] = [
-    { key: 'uncached', label: copy('statsUncachedInput'), value: tokens(stats.uncachedInputTokens) },
-    { key: 'read', label: copy('statsCacheRead'), value: tokens(stats.cacheReadTokens) },
-    { key: 'write', label: copy('statsCacheWrite'), value: tokens(stats.cacheWriteTokens) },
-    { key: 'out', label: copy('statsOutput'), value: tokens(stats.outputTokens) },
-  ]
-  return h(Section, { title: copy('sessionStats'), summary: copy('sectionTurns', { count: stats.turns }) },
-    [{ key: 'figures', rows }, { key: 'tokens', rows: buckets }].map(group =>
-      h('dl', { key: group.key, className: 'dsh-claude-panel-stats' },
-        group.rows.map(row => h('div', { key: row.key, className: 'dsh-claude-panel-stat' },
-          h('dt', null, row.label),
-          h('dd', null, row.value))))))
+  rows.push({ key: 'uncached', label: copy('statsUncachedInput'), value: tokens(stats.uncachedInputTokens) })
+  rows.push({ key: 'read', label: copy('statsCacheRead'), value: tokens(stats.cacheReadTokens) })
+  rows.push({ key: 'write', label: copy('statsCacheWrite'), value: tokens(stats.cacheWriteTokens) })
+  rows.push({ key: 'out', label: copy('statsOutput'), value: tokens(stats.outputTokens) })
+  return h(Section, { title: copy('tokenUsage'), summary: cost ?? tokens(billed + stats.outputTokens), folded: true },
+    h(Figures, { rows }))
 }
 
 /** The currency the reader's billing setting chose, followed across a settings change. */
@@ -324,15 +423,21 @@ function useBillingCurrency() {
   return billingCurrency(choice)
 }
 
-/** The files the session presented or wrote. */
+/**
+ * The files the session presented or wrote.
+ *
+ * A row names the file and the folder it lies in. Writing is what nearly every
+ * row would say, so only a file the model presented carries its word.
+ */
 function OutputsSection({ sessionId, directory, outputs }: { sessionId: string, directory?: string, outputs: readonly PanelOutput[] }) {
   return h(Section, { title: copy('outputs'), summary: copy('sectionItems', { count: outputs.length }) },
     h(FoldedList, { rows: outputs.map(output => h(Row, {
       key: output.path,
-      mark: h(primitives.FileTypeIcon, { path: output.name, size: 16 }),
+      mark: outputMark(output.kind),
       title: output.name,
-      detail: output.display === output.name ? undefined : output.display,
-      side: h(Chip, { text: copy(output.origin === 'presented' ? 'presented' : 'written') }),
+      detail: parentPath(output.display),
+      hint: output.display,
+      side: output.origin === 'presented' ? h(Chip, { text: copy('presented') }) : undefined,
       onClick: () => openPanelFile(sessionId, directory, output.path),
     })) }))
 }
@@ -351,7 +456,7 @@ function ChangesSection({ changes }: { changes: readonly PanelChange[] }) {
       else if (change.state === 'closed') side.push(h(Chip, { key: 'state', text: copy('closed') }))
       return h(Row, {
         key: change.url,
-        mark: h(primitives.IconBranchOutlineRegular, { size: 15 }),
+        mark: h(primitives.IconBranchOutlineRegular, { size: MARK_SIZE }),
         title,
         detail: change.title === null || reference === '' ? undefined : reference,
         side: side.length === 0 ? undefined : side,
@@ -375,13 +480,16 @@ function hasBackgroundWork(background: PanelBackground) {
   return team !== null && (team.members.length > 0 || team.tasks.length > 0)
 }
 
-/** The status one job row shows. */
+/**
+ * The word a job row still needs: one running, stopping or failed. A finished
+ * command is what most rows are, and it says so with its clock stopping; a word
+ * on every row would make the state the row's loudest part (D94).
+ */
 function jobStatusText(status: string) {
   if (status === 'running') return copy('running')
   if (status === 'stopping') return copy('stopping')
-  if (status === 'completed') return copy('completed')
-  if (status === 'killed') return copy('killed')
-  return copy('failed')
+  if (status === 'failed') return copy('failed')
+  return null
 }
 
 /** One job's clock: how long it ran, or how long it has been running. */
@@ -420,11 +528,11 @@ function childDetail(child: PanelSubagent, now: number) {
   return parts.filter(part => part !== '').join(' · ')
 }
 
-/** A child's own state words, in the order the host's subagent panel shows them. */
+/** A child's own state words, in the order the host's subagent panel shows them.
+ * A child that has finished keeps its clock alone, like a finished command (D94). */
 function childChips(child: PanelSubagent) {
   const chips: React.ReactNode[] = []
   if (child.running) chips.push(h(Chip, { key: 'state', tone: 'pending', text: copy('running') }))
-  else if (child.completed) chips.push(h(Chip, { key: 'state', tone: 'success', text: copy('completed') }))
   if (child.mode === 'continuable') chips.push(h(Chip, { key: 'mode', text: copy('continuable') }))
   return chips.length === 0 ? undefined : chips
 }
@@ -459,33 +567,40 @@ function BackgroundSection({ sessionId, background }: { sessionId: string, backg
   const jobs = background.jobs
   for (const job of jobs) {
     const expanded = expandedJob === job.id
+    const status = jobStatusText(job.status)
+    // A command that finished keeps its clock and drops the exit code: the code
+    // is what the reader opens the row for when it is not zero.
+    const settled = status === null
     jobRows.push(h(React.Fragment, { key: `job:${job.id}` },
-      h(Row, {
-        mark: h(primitives.IconCodeOutlineRegular, { size: 15 }),
+      h('div', { className: 'dsh-claude-panel-job-line' }, h(Row, {
+        mark: h(primitives.IconCodeOutlineRegular, { size: MARK_SIZE }),
         title: job.label === '' ? copy('jobs') : job.label,
-        detail: [job.detail, job.progress, jobDuration(job, now)].filter(part => part !== undefined && part !== '').join(' · '),
-        side: h(Chip, { text: jobStatusText(job.status), tone: job.status === 'failed' ? 'failure' : job.status === 'completed' ? 'success' : job.status === 'running' ? 'pending' : undefined }),
+        // The clock leads: it is the part a detail cut short still has to show.
+        detail: [jobDuration(job, now), settled ? null : job.detail, job.progress].filter(part => part !== undefined && part !== null && part !== '').join(' · '),
+        side: status === null ? undefined : h(Chip, { text: status, tone: job.status === 'failed' ? 'failure' : 'pending' }),
         expanded,
         onClick() { setExpandedJob(expanded ? null : job.id) },
-      }),
+      }), h(JobStop, { sessionId, jobId: job.id, label: job.label === '' ? copy('jobs') : job.label, status: job.status })),
       expanded ? h(JobOutput, { key: 'output', sessionId, jobId: job.id }) : null))
   }
   for (const child of background.subagents) {
-    childRows.push(h(Row, {
-      key: `subagent:${child.id}`,
-      mark: h(primitives.IconAgentPresetOutlineRegular, { size: 15 }),
+    childRows.push(h('div', { key: `subagent:${child.id}`, className: 'dsh-claude-panel-job-line' }, h(Row, {
+      mark: h(primitives.IconAgentPresetOutlineRegular, { size: MARK_SIZE }),
       title: child.label === '' ? copy('subagents') : child.label,
       detail: childDetail(child, now),
       side: childChips(child),
       onClick() { openPanelSession(child.id) },
-    }))
+    }), child.mode === 'continuable' && child.running ? h(JobStop, {
+      key: child.activeSince,
+      sessionId, jobId: child.id, label: child.label === '' ? copy('subagents') : child.label, status: 'running', subagent: true,
+    }) : null))
   }
   const team = background.team
   if (team !== null) {
     for (const member of team.members) {
       teamRows.push(h(Row, {
         key: `member:${member.id}`,
-        mark: h(primitives.IconUsersOutlineRegular, { size: 15 }),
+        mark: h(primitives.IconUsersOutlineRegular, { size: MARK_SIZE }),
         title: member.role === 'lead' ? `${member.name} · ${copy('team')}` : member.name,
         detail: member.phase,
         side: h(Chip, { text: memberStatusText(member.running), tone: member.running === true ? 'pending' : undefined }),
@@ -495,7 +610,7 @@ function BackgroundSection({ sessionId, background }: { sessionId: string, backg
     for (const task of team.tasks) {
       teamRows.push(h(Row, {
         key: `task:${task.id}`,
-        mark: h(primitives.IconChecklistOutlineRegular, { size: 15 }),
+        mark: h(primitives.IconChecklistOutlineRegular, { size: MARK_SIZE }),
         title: task.subject,
         detail: task.ownerName ?? copy('tasks'),
         side: h(Chip, { text: task.status, tone: task.status === 'completed' ? 'success' : task.status === 'in_progress' ? 'pending' : undefined }),

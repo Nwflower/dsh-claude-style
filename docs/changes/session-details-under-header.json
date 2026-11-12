@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-12",
+  "group": "improvements",
+  "order": 1,
+  "external": false,
+  "zh": "会话详情栏改从会话头部下面开始，头部连同标题与按钮保持整列宽度、落在栏的上方，只有转录与输入框让出宽度",
+  "en": "Start the session details rail under the conversation header, which keeps the column's whole width so its title and controls stand above the rail, with only the transcript and the composer giving the width up"
+}

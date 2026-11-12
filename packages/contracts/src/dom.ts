@@ -312,6 +312,12 @@ export const CONVERSATION_HEADER_SLOT_SELECTOR = '[data-slot="conversation.heade
 export const ROOT_SLOT_SELECTOR = '[data-slot="root"]'
 /** The right sidebar's own column: the host marks it, and its docked panels are the skin's cards. */
 export const RIGHTBAR_COLUMN_SELECTOR = '[data-rightbar-col]'
+/**
+ * The bottom panel `dsh-better-sidebar` mounts over the conversation's lower
+ * edge: a floating surface of its own, mounted inside the frame rather than in
+ * a column, so it takes the floor from every column standing above it.
+ */
+export const BOTTOM_PANEL_SELECTOR = '[data-dsh-bottom-panel]'
 /** Host collapse control exists only while open; its transformed, clipped subtree requires a header proxy. */
 export const RIGHTBAR_TOGGLE_SELECTOR = '[data-sidebar-right-open] [data-sidebar-right-toggle]'
 /** The right panel's own box; the host states its width from the viewport's pixels. */

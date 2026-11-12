@@ -21,13 +21,15 @@
  * optional service missing is an empty section, not a failed answer.
  */
 import type { DshContext } from '@dsh-claude-style/engine/node/dsh'
-import type { PanelBackground, PanelChange, PanelContextProjections, PanelEnvironment, PanelJob, PanelJobOutput, PanelOutput, PanelStats, PanelSubagent, PanelTeamMember, PanelTeamTask, SessionPanelValue } from '@dsh-claude-style/contracts/session-panel'
+import type { PanelBackground, PanelChange, PanelContextProjections, PanelEnvironment, PanelJob, PanelJobOutput, PanelStats, PanelSubagent, PanelTeamMember, PanelTeamTask, SessionPanelValue } from '@dsh-claude-style/contracts/session-panel'
 import type { BillingRows } from './session-cost.js'
 import { panelEnvironment } from './checkout.js'
 import { JOB_OUTPUT_MAX, foldJobs } from './session-panel-log.js'
 import type { PanelEvent } from './session-panel-log.js'
 import { createPanelContext, foldPanelContext, panelContextOf } from './session-panel-context.js'
 import type { PanelContextState, PanelTokenMeter } from './session-panel-context.js'
+import { belongsToPanelRound, createPanelRound, foldPanelRound, panelRoundJobs } from './session-panel-round.js'
+import type { PanelRoundState } from './session-panel-round.js'
 
 /** Most sessions whose folded panel is kept; the panel reads the session on screen. */
 const KEPT_SESSIONS = 32
@@ -35,11 +37,6 @@ const KEPT_SESSIONS = 32
 const ANSWER_TTL_MS = 1200
 /** How long one child's folded facts are reused: a child's log is not restored on every poll. */
 const CHILD_FACTS_TTL_MS = 8000
-/** The file extensions the panel marks as images and as documents. */
-const IMAGE_EXT = /\.(?:png|jpe?g|webp|gif|svg|avif|bmp)$/i
-const DOCUMENT_EXT = /\.(?:md|markdown|txt|pdf|docx?|xlsx?|pptx?|csv|json|jsonl|yaml|yml|html?)$/i
-/** Tool names whose successful call writes a file; `apply_patch` names its paths inside the patch. */
-const WRITE_TOOLS = new Set(['write', 'edit', 'str_replace_editor'])
 
 /** The session-query service, in the members this module reads. */
 interface SessionQueryReader {
@@ -148,21 +145,21 @@ interface ChildFacts {
   running: boolean
   completed: boolean
   tokens: number
+  lastStartedAt: number
 }
 
 /** The facts of a child whose own log cannot be read: it still has a row. */
-const NO_CHILD_FACTS: ChildFacts = { settledMs: 0, activeSince: null, running: false, completed: false, tokens: 0 }
+const NO_CHILD_FACTS: ChildFacts = { settledMs: 0, activeSince: null, running: false, completed: false, tokens: 0, lastStartedAt: 0 }
 
 /** One session's kept fold. */
 interface Entry {
   value: SessionPanelValue
   at: number
-  /** The last event seq folded into `outputs`. */
+  /** The last event seq consumed by the context, round and job folds. */
   cursor: number
   context: PanelContextState
-  outputs: PanelOutput[]
-  /** Writing calls awaiting a result across polls; owned by this session's fold. */
-  writes: Map<string, string>
+  /** The latest human-input round and call ownership across polls. */
+  round: PanelRoundState
   /** Child sessions' facts, by child id, with the time they were read. */
   children: Map<string, { facts: ChildFacts, at: number }>
   /** Every job this session has registered, kept after the registry drops it. */
@@ -201,10 +198,6 @@ export interface PanelCostStore {
   get(sessionId: string, billing: BillingRows): Promise<CostReading | null>
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null
-}
-
 function number(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null
 }
@@ -221,37 +214,6 @@ function release(observation: SessionObservation) {
   }
   const symbol = observation[Symbol.dispose]
   if (typeof symbol === 'function') symbol.call(observation)
-}
-
-/** The output's mark, from its file name. */
-function kindOf(name: string): PanelOutput['kind'] {
-  if (IMAGE_EXT.test(name)) return 'image'
-  if (DOCUMENT_EXT.test(name)) return 'document'
-  return 'file'
-}
-
-/** One file as the panel names it: under the working directory, else absolute. */
-function outputOf(path: string, origin: PanelOutput['origin'], directory: string | null): PanelOutput {
-  const normalized = path.replaceAll('\\', '/')
-  const base = directory === null ? null : directory.replaceAll('\\', '/')
-  const display = base !== null && base !== '' && normalized.startsWith(`${base}/`)
-    ? normalized.slice(base.length + 1)
-    : normalized
-  const name = display.slice(display.lastIndexOf('/') + 1)
-  return { path: normalized, display, name, kind: kindOf(name), origin }
-}
-
-/** The path one writing tool call names in its arguments, or null. */
-function writtenPath(argumentsText: unknown): string | null {
-  if (typeof argumentsText !== 'string' || argumentsText === '') return null
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(argumentsText)
-  } catch {
-    return null
-  }
-  if (!isRecord(parsed)) return null
-  return text(parsed.path) ?? text(parsed.file_path) ?? text(parsed.target_file) ?? text(parsed.filePath)
 }
 
 /** One change request as the panel shows it: the binding plus the latest status the forge knew. */
@@ -323,45 +285,6 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
     return index === events.length ? [] : events.slice(index)
   }
 
-  /** Fold the new events into the session's outputs: presented files first, then written ones. */
-  function foldOutputs(entry: Entry, events: readonly PanelEvent[], directory: string | null) {
-    // A poll may end between a call and its result; the session keeps the
-    // pending path until that result arrives, including unsuccessful results.
-    const calls = entry.writes
-    const present = new Set(entry.outputs.map(output => output.path))
-    for (const event of events) {
-      const data = event.data
-      if (data === undefined) continue
-      if (event.type === 'tool/call') {
-        const callId = text(data.callId)
-        const name = text(data.name)
-        const written = name !== null && WRITE_TOOLS.has(name) ? writtenPath(data.arguments) : null
-        if (callId !== null && written !== null) calls.set(callId, written)
-        continue
-      }
-      if (event.type === 'deliverables/presented') {
-        for (const file of data.files ?? []) {
-          const path = text(file?.path)
-          if (path === null || present.has(path)) continue
-          present.add(path)
-          entry.outputs.push(outputOf(path, 'presented', directory))
-        }
-        continue
-      }
-      if (event.type === 'tool/result') {
-        const callId = text(data.message?.source?.callId)
-        const written = callId === null ? null : calls.get(callId)
-        if (callId === null || written === undefined || written === null) continue
-        calls.delete(callId)
-        if (data.error !== undefined || data.message?.isError === true || present.has(written)) continue
-        present.add(written)
-        entry.outputs.push(outputOf(written, 'written', directory))
-      }
-    }
-    const last = events[events.length - 1]
-    if (last !== undefined) entry.cursor = last.seq ?? entry.cursor
-  }
-
   /** Watch one bound change request's status through the host's forge registry. */
   function watchChange(entry: Entry, forge: ForgeRegistry, url: string) {
     if (entry.watches.has(url) || typeof forge.changeRequestFromUrl !== 'function' || typeof forge.watch !== 'function') return
@@ -419,8 +342,10 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
       if (entry.cursor === -1 || events.length > 0) {
         const incoming = arrivals(events, entry.cursor)
         foldPanelContext(entry.context, incoming, ctx.get('tokenMeter') as PanelTokenMeter | null | undefined)
-        foldOutputs(entry, incoming, resolvedDirectory)
+        foldPanelRound(entry.round, incoming, resolvedDirectory)
         foldJobs(entry, incoming)
+        const last = incoming[incoming.length - 1]
+        if (last !== undefined) entry.cursor = last.seq ?? entry.cursor
       }
       const forge = ctx.get('forge') as ForgeRegistry | null | undefined
       const jobs = ctx.get('jobs') as JobsRegistry | null | undefined
@@ -443,7 +368,7 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
         environment,
         context: panelContextOf(projections, entry.context),
         // Newest first: the row a reader just caused stands at the top of the list.
-        outputs: [...entry.outputs].reverse(),
+        outputs: [...entry.round.outputs].reverse(),
         changes,
         background,
         stats: await statsOf(projections, sessionId, billing),
@@ -475,7 +400,9 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
       const usage = values.tokenUsage
       const active = timing?.active
       const since = number(active?.since)
+      const lastStart = observation.events?.findLast(event => event.type === 'turn/start')
       return {
+        lastStartedAt: lastStart?.time ?? 0,
         settledMs: number(timing?.settledMs) ?? 0,
         activeSince: active === undefined ? null : since,
         running: active !== undefined,
@@ -520,7 +447,7 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
       const read = jobOutput(sessionId, job.id)
       if (read !== null && read.text !== '') entry.jobOutputs.set(job.id, read)
     }
-    const jobRows = [...entry.jobs.values()]
+    const jobRows = panelRoundJobs(entry.round, [...entry.jobs.values()])
       .sort((left, right) => {
         const leftRunning = left.status === 'running' || left.status === 'stopping' ? 0 : 1
         const rightRunning = right.status === 'running' || right.status === 'stopping' ? 0 : 1
@@ -544,13 +471,16 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
       const kept = entry.children.get(id)
       const facts = kept !== undefined && Date.now() - kept.at < CHILD_FACTS_TTL_MS ? kept.facts : await childFacts(id)
       if (kept === undefined || kept.facts !== facts) entry.children.set(id, { facts, at: Date.now() })
+      const isRunning = running(id) ?? facts.running
+      const resumed = entry.round.since > 0 && facts.lastStartedAt >= entry.round.since
+      if (!isRunning && !resumed && !belongsToPanelRound(entry.round, 'children', id, number(child.createdAt) ?? 0)) continue
       subagents.push({
         id,
         label: text(child.label) ?? '',
         mode: text(child.mode) ?? '',
         settledMs: facts.settledMs,
         activeSince: facts.activeSince,
-        running: facts.running,
+        running: isRunning,
         completed: facts.completed,
         tokens: facts.tokens,
       })
@@ -598,8 +528,7 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
       at: 0,
       cursor: -1,
       context: createPanelContext(),
-      outputs: [],
-      writes: new Map(),
+      round: createPanelRound(),
       children: new Map(),
       jobs: new Map(),
       jobOutputs: new Map(),

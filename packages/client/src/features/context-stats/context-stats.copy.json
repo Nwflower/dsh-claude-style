@@ -55,6 +55,10 @@
     "zh": "紧凑底栏",
     "en": "Compact footer"
   },
+  "statsPositionRail": {
+    "zh": "跟随详情栏",
+    "en": "Follow the details rail"
+  },
   "statsFooterAlignTitle": {
     "zh": "底栏统计位置",
     "en": "Footer alignment"

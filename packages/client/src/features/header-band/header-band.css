@@ -21,7 +21,8 @@ body[data-dsh-claude-style] .dsh-claude-rightbar-close {
   height: 28px;
   padding: 0;
   border: none;
-  border-radius: 7px;
+  /* The caption row's controls share one plate (the rules below). */
+  border-radius: 8px;
   background: transparent;
   color: var(--dsw-alias-label-secondary, #70686a);
   cursor: pointer;
@@ -117,6 +118,88 @@ body[data-dsh-claude-style] [data-dsh-header-band~="title"] {
    missing; the label stays. */
 body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-header-row] [data-dsh-claude-part~="header-label"] {
   display: flex !important;
+}
+
+/* The clusters' own air: a plate's neighbours stand one step apart, and the
+   break before the panel switches is drawn on the first of them. */
+body[data-dsh-claude-style] [data-dsh-claude-part~="header-utilities"],
+body[data-dsh-claude-style] [data-dsh-claude-part~="header-corner"] {
+  gap: 6px;
+}
+
+/* The header's controls read as one row of plates, in the caption row and in
+   the header's own row alike.
+
+   The host draws three of them its own way — the open-with split outlined at
+   24px around a coloured app icon, the bottom-panel switch round, the corner
+   switch with a glyph size of its own — and the skin's details control and its
+   proxy for the right panel took a radius of their own. Here they share one
+   box, one glyph size and one plate under the pointer, and the row divides into
+   three actions and the panel switches. */
+
+/* The open-with split is the row's quiet lead: no outline, one plate for the
+   whole box under the pointer, and the app's own colour kept for that pointer. */
+body[data-dsh-claude-style] [data-dsh-claude-part~="header-utilities"] [data-open-target] {
+  box-sizing: border-box;
+  height: 28px;
+  border: 0;
+  border-radius: 8px;
+}
+body[data-dsh-claude-style] [data-dsh-claude-part~="header-utilities"] [data-open-target] > button {
+  height: 28px;
+  background: transparent;
+}
+body[data-dsh-claude-style] [data-dsh-claude-part~="header-utilities"] [data-open-target] > button + button {
+  border-left: 0;
+}
+body[data-dsh-claude-style] [data-dsh-claude-part~="header-utilities"] [data-open-target]:hover,
+body[data-dsh-claude-style] [data-dsh-claude-part~="header-utilities"] [data-open-target]:focus-within {
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
+}
+body[data-dsh-claude-style] [data-dsh-claude-part~="header-utilities"] [data-open-target] img {
+  filter: grayscale(1);
+  opacity: 0.7;
+}
+body[data-dsh-claude-style] [data-dsh-claude-part~="header-utilities"] [data-open-target]:hover img,
+body[data-dsh-claude-style] [data-dsh-claude-part~="header-utilities"] [data-open-target]:focus-within img {
+  filter: none;
+  opacity: 1;
+}
+
+/* The bottom-panel switch carries the row's break: the three actions stand
+   before it, the two switches after it, and its own circle becomes a plate. It
+   is the desktop shell's control, named by the stable half of its class family
+   the way the host's own menus are. */
+body[data-dsh-claude-style] [data-dsh-claude-part~="header-utilities"] [class*="_toggleButton"] {
+  position: relative;
+  box-sizing: border-box;
+  width: 28px;
+  height: 28px;
+  margin-left: 12px;
+  padding: 0;
+  border-radius: 8px;
+}
+body[data-dsh-claude-style] [data-dsh-claude-part~="header-utilities"] [class*="_toggleButton"]::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -9px;
+  width: 1px;
+  height: 16px;
+  transform: translateY(-50%);
+  background: var(--dsh-claude-divider, rgba(0, 0, 0, 0.06));
+}
+body[data-dsh-claude-style] [data-dsh-claude-part~="header-utilities"] [class*="_toggleButton"][aria-pressed="true"] {
+  color: var(--dsw-alias-label-primary, #161616);
+  background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, 0.06));
+}
+
+/* One glyph size for the row's plates. The split's own two buttons keep their
+   caret: they belong to the host's control, not to the plate. */
+body[data-dsh-claude-style] [data-dsh-claude-part~="header-utilities"] :not([data-open-target]) > button svg,
+body[data-dsh-claude-style] [data-dsh-claude-part~="header-corner"] button svg {
+  width: 16px;
+  height: 16px;
 }
 
 body[data-dsh-claude-style] [data-dsh-header-band~="actions"] [data-dsh-header-actions],

@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-11",
+  "group": "improvements",
+  "order": 0,
+  "external": false,
+  "zh": "手动收起会话详情栏后，所有会话与重启之后都保持收起，直到再次按下标题栏的详情按钮",
+  "en": "Keep the session details rail closed across sessions and restarts once it is closed by hand, until the header's details button is pressed again"
+}

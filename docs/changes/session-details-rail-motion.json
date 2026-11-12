@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-11",
+  "group": "improvements",
+  "order": 0,
+  "external": false,
+  "zh": "会话详情栏的进出与对话的收放合成一段 300ms 的位移，栏从对话右边缘长出来又收回去，两条边始终重合；与宿主右侧栏交接时按外框写下的归属当场开始，不再等右栏宽度归零后跳一帧",
+  "en": "Make the session details rail's arrival and exit one 300ms move with the chat's own inset, growing the rail out of the conversation's right edge so the two edges stay together, and start the handover with the host's right column on the frame the frame states the side's owner rather than a frame after that column finishes closing"
+}

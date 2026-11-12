@@ -71,6 +71,10 @@
     "zh": "分项按来源估算，并按比例校准至已用上下文；百分比为整个上下文窗口的占比。",
     "en": "Parts are estimated by source and proportionally calibrated to used context. Percentages refer to the entire context window."
   },
+  "contextEstimateNote": {
+    "zh": "分项为估算值",
+    "en": "Parts are estimates"
+  },
   "messageTokens": {
     "zh": "对话",
     "en": "Messages"
@@ -82,10 +86,6 @@
   "presented": {
     "zh": "已展示",
     "en": "Presented"
-  },
-  "written": {
-    "zh": "已写入",
-    "en": "Written"
   },
   "changes": {
     "zh": "变更",
@@ -151,21 +151,25 @@
     "zh": "已结束",
     "en": "Finished"
   },
-  "completed": {
-    "zh": "已完成",
-    "en": "Completed"
-  },
   "stopping": {
     "zh": "正在停止",
     "en": "Stopping"
   },
-  "killed": {
-    "zh": "已终止",
-    "en": "Stopped"
-  },
   "failed": {
     "zh": "失败",
     "en": "Failed"
+  },
+  "stopJob": {
+    "zh": "停止任务 {label}",
+    "en": "Stop job {label}"
+  },
+  "confirmStop": {
+    "zh": "确认停止",
+    "en": "Confirm stop"
+  },
+  "stopFailed": {
+    "zh": "停止失败，请重试",
+    "en": "Could not stop the job. Retry"
   },
   "noContext": {
     "zh": "还没有上下文读数",
@@ -214,6 +218,10 @@
   "sessionStats": {
     "zh": "会话统计",
     "en": "Session stats"
+  },
+  "tokenUsage": {
+    "zh": "Token 用量",
+    "en": "Token usage"
   },
   "statsModelTime": {
     "zh": "模型用时",

@@ -121,11 +121,18 @@ export const ONGOING_SIDES = [ONGOING_SIDE_LEFT, ONGOING_SIDE_RIGHT] as const
 /** The chat area's animation switch: on plays the ported set (features/chat-*), off leaves the area to the host. */
 export const CHAT_ANIMATIONS_OFF = 'off'
 
-/** Where the session's numbers show: in the context popover the meter opens, or on a line of their own under the input card. */
+/**
+ * Where the session's numbers show: in the context popover the meter opens, on a
+ * line of their own under the input card, or in the compact footer. The rail
+ * position is the line of their own handed to the conversation's details rail:
+ * the line stands wherever the rail does not, and the rail carries the numbers
+ * while it does (D94).
+ */
 export const STATS_POSITION_INLINE = 'inline'
 export const STATS_POSITION_CONTEXT = 'context'
 export const STATS_POSITION_FOOTER = 'footer'
-export const STATS_POSITIONS = [STATS_POSITION_INLINE, STATS_POSITION_CONTEXT, STATS_POSITION_FOOTER] as const
+export const STATS_POSITION_RAIL = 'rail'
+export const STATS_POSITIONS = [STATS_POSITION_INLINE, STATS_POSITION_CONTEXT, STATS_POSITION_FOOTER, STATS_POSITION_RAIL] as const
 export const STATS_FOOTER_ALIGNS = ['left', 'center', 'right'] as const
 
 /** Context meter face: pie, continuous-band ring or three-band ring. */

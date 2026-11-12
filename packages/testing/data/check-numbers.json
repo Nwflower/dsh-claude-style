@@ -449,11 +449,14 @@
       "the context section arrives with the turn": [
         2
       ],
+      "the figures sections start folded with a reading and every other section starts open": [
+        2
+      ],
       "keyboard activation opens one section independently and all sections open again": [
         0,
         1
       ],
-      "the session stats carry the figures and the token buckets": [
+      "the session stats and the token usage carry their figures": [
         8
       ],
       "Outputs lists the files the turn wrote and folds past its second row": [
@@ -469,9 +472,15 @@
         1,
         2
       ],
+      "a finished command carries no status word and keeps its clock": [
+        2
+      ],
       "the view switch stands on the title's own line, clear of the title and the utilities": [
         2,
         4
+      ],
+      "the header keeps the column whole and the rail starts under it": [
+        1
       ],
       "the host header chips step aside while the rail stands": [
         0

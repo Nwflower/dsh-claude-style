@@ -6,6 +6,7 @@
  */
 import { resolve } from 'node:path'
 import { check } from './shared.mjs'
+import { hostPanelRound } from './host-half-panel-round.mjs'
 
 /**
  * Run the session overview checks.
@@ -135,6 +136,7 @@ async function hostPanel({ mod, fakeHost, request, browser, crossSite, scratchHo
   check('a write completed in a later poll remains an output', splitOutputs.length === 1 && splitOutputs[0].path === 'split-note.md', JSON.stringify(splitOutputs))
   const shapedJob = await request(panelHost, '/dsh-claude-style/session-panel?id=session-overview&job=..%2Fetc', 'GET', '', browser)
   check('a job id that names a path is refused', shapedJob.status === 400, `HTTP ${shapedJob.status}`)
+  await hostPanelRound({ mod, fakeHost, request, browser, scratchHome })
 }
 
 export { hostPanel }

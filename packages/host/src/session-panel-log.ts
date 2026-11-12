@@ -33,6 +33,7 @@ export interface PanelMessage {
 export interface PanelEvent {
   type?: string
   seq?: number
+  time?: number
   surfaceOp?: 'append' | { startSeq: number, endSeq: number }
   data?: PanelMessage & {
     header?: { tools?: readonly { name: string }[] }
@@ -43,12 +44,13 @@ export interface PanelEvent {
     message?: PanelMessage
     error?: unknown
     jobId?: unknown
+    childId?: unknown
     label?: unknown
     startedAt?: unknown
     finishedAt?: unknown
     status?: unknown
     detail?: unknown
-    toolCall?: { callId?: unknown }
+    toolCall?: { callId?: unknown, rootCallId?: unknown }
   }
 }
 
