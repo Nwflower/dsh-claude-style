@@ -16,6 +16,7 @@ import { CONTEXT_STATS_ATTR, CONTEXT_PANEL_ATTR, clearStrayContextNodes, context
 import { CONTEXT_STOPS, rampPosition, writeRamp } from './stats-ramp'
 import { writeContextBand } from './context-meter-face'
 import { priceFor, priceModelId, priceTierAt } from '@dsh-claude-style/contracts/prices'
+import { ACCOUNT_MODEL_GROUP, OFFICIAL_MODEL_GROUP } from '@dsh-claude-style/contracts/services'
 import { overlayBilling } from '@dsh-claude-style/contracts/billing-table'
 import type { Currency } from '@dsh-claude-style/contracts/prices'
 import type { HostContext, HostText } from '@dsh-claude-style/engine/host'
@@ -57,7 +58,7 @@ function pressureOccupancy(pressure: HostContextPressureProjection | null) {
  * under the card, never by opening host dialogs. The stream estimate covers text
  * not yet settled; stats-format mirrors host wording.
  */
-export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace | null) {
+export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace | null, provider: () => string | null = () => null) {
   /** The projections the reading follows: the figures, the route the cost prices at, and the meter's share. */
   const STATS_KEYS = ['sessionStats', 'tokenUsage', 'modelSelection', 'contextPressure']
 
@@ -286,6 +287,12 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
    * model is billed by the vendor behind it instead.
    */
   function officialRoute(): boolean {
+    // A route billed at the platform's own list, by its provider as well as by
+    // its model: a reader who runs a vendored model id through another provider
+    // settles that provider's bill, and the platform's balance does not move
+    // (features/mascot/mascot-bubble.ts reads this to hold the balance still).
+    const route = provider()
+    if (route !== null && route !== OFFICIAL_MODEL_GROUP && route !== ACCOUNT_MODEL_GROUP) return false
     const selection = faceValue<ModelSelection>('modelSelection')
     const model = cost.value()?.model ?? selection?.lastUsed?.model ?? selection?.next?.model ?? null
     const document = priceDocument()

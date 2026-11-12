@@ -1,6 +1,7 @@
 import { CURRENCY_SYMBOL, formatMoneyMicro } from '@dsh-claude-style/contracts/prices'
 import { buildElement } from '@dsh-claude-style/engine/dom'
 import { readAccountBalance } from '../../shared/account-balance'
+import { ACCOUNT_MODEL_GROUP, OFFICIAL_MODEL_GROUP } from '@dsh-claude-style/contracts/services'
 import { copy } from './copy'
 import type { Currency } from '@dsh-claude-style/contracts/prices'
 import type { AccountBalance } from '../../shared/account-balance'
@@ -21,7 +22,8 @@ const HOVER_DELAY_MS = 250
  *
  * The balance is the host's account read, gifted wallets included
  * (shared/account-balance.ts); a reader with no signed-in account gets no
- * balance row. The cost is the figure the statistics print
+ * balance row, and neither does one whose route is billed by another provider:
+ * that money never moves the platform's wallet. The cost is the figure the statistics print
  * (`ui.contextStats.sessionCost`), so the two never disagree, and it is
  * rewritten each time the statistics are; the home page and billing turned
  * off leave the row out. With neither row there is no bubble. It opens only
@@ -102,7 +104,12 @@ export function createMascotBubble(ctx: HostContext, ui: FeatureUi<typeof manife
     observe(reading)
     const rows: HTMLElement[] = []
     const session = sessionFigure(reading)
-    const balances = balanceFigures(session)
+    // The platform's wallet stands only while the route in force is the
+    // platform's: a provider that settles its own bill leaves this figure with
+    // nothing to do with the conversation (features/model/model-picker.ts names it).
+    const provider = ui.model?.provider?.() ?? null
+    const platformBilled = provider === null || provider === OFFICIAL_MODEL_GROUP || provider === ACCOUNT_MODEL_GROUP
+    const balances = platformBilled ? balanceFigures(session) : []
     if (balances.length > 0) rows.push(row('balance', copy('mascotBalanceLabel'), balances))
     if (session !== null) rows.push(row('session', copy('mascotSessionLabel'), [session]))
     const same = rows.length === root.children.length &&

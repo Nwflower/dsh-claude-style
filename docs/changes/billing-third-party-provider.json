@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-12",
+  "group": "fixes",
+  "order": 24,
+  "external": false,
+  "zh": "第三方供应商的会话不再显示、也不再扣减 DeepSeek 账号余额",
+  "en": "A session on a third-party provider no longer shows or draws down the DeepSeek account balance"
+}

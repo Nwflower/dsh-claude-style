@@ -27,6 +27,8 @@ import { createModelCards } from './model-cards'
 
 /** What the effort picker and the settings page read off the model picker (ui.model). */
 export interface ModelHandle extends FeatureHandle {
+  /** The provider the shown session routes to, or null before the catalog answers. */
+  provider(): string | null
   /** The scheduler's own dismiss route; the effort picker calls it with no reason. */
   close(reason?: CloseReason): void
   /** The skin's seat box: the model's text and the effort level's share it (seat-box.ts). */
@@ -542,6 +544,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
 
   ui.model = {
     sync: syncModelControl,
+    // Who the session routes to: the statistics read it to tell the platform's
+    // own billing from a provider that settles elsewhere (D78's account side).
+    provider() {
+      return modelCatalog.snapshot()?.current?.provider ?? null
+    },
     // The seat sits on the composer, outside the column a streaming batch
     // touches, so such a batch skips this pass (D40).
     skipOnContentOnly: true,

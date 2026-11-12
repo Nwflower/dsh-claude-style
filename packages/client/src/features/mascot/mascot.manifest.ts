@@ -5,7 +5,7 @@ export default {
   id: 'mascot',
   order: 40,
   load: 'deferred',
-  reads: ['composer', 'contextStats'],
+  reads: ['composer', 'contextStats', 'model'],
   contracts: ['chat.think-running', 'composer.fallback-panel', 'composer.seat', 'composer.stack', 'conversation.session', 'conversation.session-attribute'],
   pref: 'mascot',
   prefValues: [MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MASCOT_WHALEGIRL],

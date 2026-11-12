@@ -8,7 +8,7 @@ export default {
   contracts: ['chat.call', 'chat.call-tool', 'chat.call-tool-attribute', 'chat.streaming', 'composer.card', 'composer.dialog-trigger', 'composer.meter-fill', 'composer.stat', 'composer.stack'],
   // The ring of the same directory draws the row's reading, and the panel this
   // feature owns hangs from it (features/context-stats/meter-ring.ts).
-  reads: ['meterRing'],
+  reads: ['meterRing', 'model'],
   pref: 'statsPosition',
   // The panel carries the full reading in every position.
   prefValues: [STATS_POSITION_INLINE, STATS_POSITION_CONTEXT, STATS_POSITION_FOOTER],
