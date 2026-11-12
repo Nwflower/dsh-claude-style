@@ -13,6 +13,10 @@ import { createRowHeightCache, rowHeightKey } from './row-heights'
  * frame after, and only then may the row be skipped, standing at the height it
  * really has. A change of the column's width rewraps every row, so every mark
  * comes off, every row is laid out once at the new width, and the marks go back.
+ * A width that is still moving — a sidebar opening or closing, a divider dragged,
+ * a window resized — is not the layout the rows will be laid out at: the relay
+ * waits for the width to stand still, so the moving column costs the transcript
+ * one relay instead of one per report.
  *
  * A row the engine has seen before — the same messages mounted again on a
  * session switch — carries the height it had last time before its first layout
@@ -39,6 +43,9 @@ export const ROW_HEIGHT_ATTR = 'data-dsh-claude-row-height'
 /** Every flow row the host draws, whatever its kind. */
 const ROW_SELECTOR = `[${FLOW_KIND_ATTRIBUTE}]`
 
+/** How long the column's width stands still before every row is relayed: a width still moving is not the layout the rows will be laid out at. */
+export const WIDTH_SETTLE_MS = 140
+
 export function install() {
   const rows = observeMatches<HTMLElement>(ROW_SELECTOR)
   /** Rows that have not yet been through a layout without the mark. */
@@ -48,6 +55,8 @@ export function install() {
   let scroller: Element | null = null
   let stopWidth: (() => void) | null = null
   let width = 0
+  /** The pending relay of a width that has not stood still yet. */
+  let settleTimer: number | null = null
   /** The heights rows were last laid out at, and the layout those heights hold for. */
   const heights = createRowHeightCache()
   let layoutSignature = ''
@@ -149,6 +158,20 @@ export function install() {
   }
 
   /**
+   * Relay once the column's width stands still. A sidebar opening or closing
+   * reports a new width on every frame of its animation; relaying each report
+   * lays the whole transcript out again per frame, so a conversation pays its
+   * size for a column that has not arrived at its width yet.
+   */
+  const relayWhenSettled = () => {
+    if (settleTimer !== null) window.clearTimeout(settleTimer)
+    settleTimer = window.setTimeout(() => {
+      settleTimer = null
+      relayAll()
+    }, WIDTH_SETTLE_MS)
+  }
+
+  /**
    * Hear the conversation scroller's width; a session switch replaces it. Its
    * first report is the width as it stands, which changes nothing.
    */
@@ -157,6 +180,12 @@ export function install() {
     if (next === scroller) return
     if (stopWidth !== null) stopWidth()
     stopWidth = null
+    // A pending relay heard the tree that left; the width signature decides
+    // whether this mount's kept heights still hold.
+    if (settleTimer !== null) {
+      window.clearTimeout(settleTimer)
+      settleTimer = null
+    }
     scroller = next
     // The width a replaced scroller reports is the one the page had: a session
     // switch does not change it, so the kept heights still hold.
@@ -171,7 +200,7 @@ export function install() {
         layoutSignature = currentSignature()
         return
       }
-      if (Math.abs(inline - previous) >= 0.5) relayAll()
+      if (Math.abs(inline - previous) >= 0.5) relayWhenSettled()
     })
   }
 
@@ -233,6 +262,7 @@ export function install() {
     stopArrivals()
     stopCachedArrivals()
     if (stopWidth !== null) stopWidth()
+    if (settleTimer !== null) window.clearTimeout(settleTimer)
     if (cancelFrame !== null) cancelFrame()
     for (const row of rows.all()) unmark(row)
     rows.release()

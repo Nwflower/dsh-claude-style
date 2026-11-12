@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-12",
+  "group": "improvements",
+  "order": 2,
+  "external": false,
+  "zh": "侧栏开合、拖拽分栏与窗口缩放期间，对话行等宽度停止变化后整体重排一次，长会话不再按动画帧数重复重排",
+  "en": "Relay conversation rows once the column's width stands still, so a sidebar toggle, a dragged divider or a window resize lays a long conversation out once instead of once per frame"
+}
