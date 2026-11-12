@@ -282,23 +282,23 @@
       "prop": "margin-bottom",
       "verdict": "unmatched"
     },
-    "body[data-dsh-claude-style] :is([data-chat-flow],[data-lexical-editor]) :is(p,li,td,th,blockquote,pre,h1,h2,h3,h4,h5,h6)::selection{background-color:#3366d0!;color:#fff!}|background-color": {
-      "selector": "body[data-dsh-claude-style] :is([data-chat-flow],[data-lexical-editor]) :is(p,li,td,th,blockquote,pre,h1,h2,h3,h4,h5,h6)::selection",
+    "body[data-dsh-claude-style] :is([data-chat-flow],[data-lexical-editor]) *::selection{background-color:#3366d0!;color:#fff!}|background-color": {
+      "selector": "body[data-dsh-claude-style] :is([data-chat-flow],[data-lexical-editor]) *::selection",
       "prop": "background-color",
       "verdict": "unreadable pseudo-element"
     },
-    "body[data-dsh-claude-style] :is([data-chat-flow],[data-lexical-editor]) :is(p,li,td,th,blockquote,pre,h1,h2,h3,h4,h5,h6)::selection{background-color:#3366d0!;color:#fff!}|color": {
-      "selector": "body[data-dsh-claude-style] :is([data-chat-flow],[data-lexical-editor]) :is(p,li,td,th,blockquote,pre,h1,h2,h3,h4,h5,h6)::selection",
+    "body[data-dsh-claude-style] :is([data-chat-flow],[data-lexical-editor]) *::selection{background-color:#3366d0!;color:#fff!}|color": {
+      "selector": "body[data-dsh-claude-style] :is([data-chat-flow],[data-lexical-editor]) *::selection",
       "prop": "color",
       "verdict": "unreadable pseudo-element"
     },
-    "body[data-dsh-claude-style][data-dsh-window-blur] :is([data-chat-flow],[data-lexical-editor]) :is(p,li,td,th,blockquote,pre,h1,h2,h3,h4,h5,h6)::selection{background-color:#c7c7c6!;color:#000!}|background-color": {
-      "selector": "body[data-dsh-claude-style][data-dsh-window-blur] :is([data-chat-flow],[data-lexical-editor]) :is(p,li,td,th,blockquote,pre,h1,h2,h3,h4,h5,h6)::selection",
+    "body[data-dsh-claude-style][data-dsh-window-blur] :is([data-chat-flow],[data-lexical-editor]) *::selection{background-color:#c7c7c6!;color:#000!}|background-color": {
+      "selector": "body[data-dsh-claude-style][data-dsh-window-blur] :is([data-chat-flow],[data-lexical-editor]) *::selection",
       "prop": "background-color",
       "verdict": "unreadable pseudo-element"
     },
-    "body[data-dsh-claude-style][data-dsh-window-blur] :is([data-chat-flow],[data-lexical-editor]) :is(p,li,td,th,blockquote,pre,h1,h2,h3,h4,h5,h6)::selection{background-color:#c7c7c6!;color:#000!}|color": {
-      "selector": "body[data-dsh-claude-style][data-dsh-window-blur] :is([data-chat-flow],[data-lexical-editor]) :is(p,li,td,th,blockquote,pre,h1,h2,h3,h4,h5,h6)::selection",
+    "body[data-dsh-claude-style][data-dsh-window-blur] :is([data-chat-flow],[data-lexical-editor]) *::selection{background-color:#c7c7c6!;color:#000!}|color": {
+      "selector": "body[data-dsh-claude-style][data-dsh-window-blur] :is([data-chat-flow],[data-lexical-editor]) *::selection",
       "prop": "color",
       "verdict": "unreadable pseudo-element"
     },
