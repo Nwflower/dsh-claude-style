@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-12",
+  "group": "fixes",
+  "order": 26,
+  "external": false,
+  "zh": "皮肤窄屏断点与宿主抽屉阈值 768 对齐，收起侧栏、抽屉与页面窄屏布局在同一宽度切换，页面缩放下不再由皮肤改写抽屉态的列宽",
+  "en": "Align the skin's narrow breakpoint with the host's 768 px drawer threshold, so the rail, the drawer and the narrow page layout switch at one width and the skin leaves a drawer frame's columns to the host"
+}
