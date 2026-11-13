@@ -34,6 +34,9 @@ export const CUSTOM_WORD_IMAGE = 'image'
 export const CUSTOM_WORD_TEXT = 'text'
 export const CUSTOM_TINT_ATTR = 'data-dsh-claude-custom-tint'
 export const CUSTOM_PALETTE_ATTR = 'data-dsh-claude-custom-palette'
+/** How the selected scheme draws a dark contour (`highlight` or `surface`, D96); the custom palette's blocks stand under it. */
+export const CUSTOM_EDGES_ATTR = 'data-dsh-claude-custom-edges'
+export { PALETTE_EDGES } from '@dsh-claude-style/contracts/palette-schemes'
 export const BRAND_INK_ATTR = 'data-dsh-claude-brand-ink'
 
 /** The document attribute the resolved animation answer rides. */

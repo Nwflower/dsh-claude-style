@@ -1,4 +1,4 @@
-import { BRAND_DEFAULT_PRESETS, BRAND_INK_ACCENT, BRAND_INK_ATTR, BRAND_INK_ORIGINAL, BRAND_INK_TEXT, CUSTOM_MARK_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_TINT_ATTR, CUSTOM_WORD_ATTR, CUSTOM_WORD_IMAGE, CUSTOM_WORD_TEXT, INLINE_CODE_COLOR_ATTR, INLINE_CODE_COLOR_CLASSIC } from '../../constants'
+import { BRAND_DEFAULT_PRESETS, BRAND_INK_ACCENT, BRAND_INK_ATTR, BRAND_INK_ORIGINAL, BRAND_INK_TEXT, CUSTOM_EDGES_ATTR, CUSTOM_MARK_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_TINT_ATTR, CUSTOM_WORD_ATTR, CUSTOM_WORD_IMAGE, CUSTOM_WORD_TEXT, INLINE_CODE_COLOR_ATTR, INLINE_CODE_COLOR_CLASSIC } from '../../constants'
 import { readPrefs, subscribePrefs } from '../../core/prefs'
 import { selectedReaderScheme } from '../../shared/palette-scheme'
 import { loadBrandImages, readBrandImages, resetBrandImages, subscribeBrandImages } from '../../shared/custom-brand'
@@ -33,13 +33,15 @@ const CANVAS_LIGHT_PROPERTY = '--dsh-claude-custom-canvas-light'
 const CANVAS_DARK_PROPERTY = '--dsh-claude-custom-canvas-dark'
 const CODE_LIGHT_PROPERTY = '--dsh-claude-custom-code-light'
 const CODE_DARK_PROPERTY = '--dsh-claude-custom-code-dark'
+const LINK_LIGHT_PROPERTY = '--dsh-claude-custom-link-light'
+const LINK_DARK_PROPERTY = '--dsh-claude-custom-link-dark'
 /** The ink the brand's own art and the reader's pictures take while the image-colour choice names the accent or the text colour. */
 const LOGO_INK_PROPERTY = '--dsh-claude-logo-ink'
 const PROPERTIES = [
   MARK_PROPERTY, WORD_PROPERTY, WORD_RATIO_PROPERTY, NAME_PROPERTY,
-  ACCENT_PROPERTY, ACCENT_INK_PROPERTY, CANVAS_LIGHT_PROPERTY, CANVAS_DARK_PROPERTY, CODE_LIGHT_PROPERTY, CODE_DARK_PROPERTY, LOGO_INK_PROPERTY,
+  ACCENT_PROPERTY, ACCENT_INK_PROPERTY, CANVAS_LIGHT_PROPERTY, CANVAS_DARK_PROPERTY, CODE_LIGHT_PROPERTY, CODE_DARK_PROPERTY, LINK_LIGHT_PROPERTY, LINK_DARK_PROPERTY, LOGO_INK_PROPERTY,
 ]
-const ATTRIBUTES = [CUSTOM_MARK_ATTR, CUSTOM_WORD_ATTR, CUSTOM_TINT_ATTR, CUSTOM_PALETTE_ATTR, BRAND_INK_ATTR, INLINE_CODE_COLOR_ATTR]
+const ATTRIBUTES = [CUSTOM_MARK_ATTR, CUSTOM_WORD_ATTR, CUSTOM_TINT_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_EDGES_ATTR, BRAND_INK_ATTR, INLINE_CODE_COLOR_ATTR]
 
 /** The two inks text on an accent fill can take: the dark and the light canvas (docs/STYLE.md). */
 const INK_DARK = '#191919'
@@ -107,6 +109,10 @@ export function install() {
     // A chip is drawn on the scheme's canvas, so an unpicked colour takes that scheme's own ink.
     property(CODE_LIGHT_PROPERTY, custom ? (scheme.code?.light ?? card.code.light) : null)
     property(CODE_DARK_PROPERTY, custom ? (scheme.code?.dark ?? card.code.dark) : null)
+    // A link seed the scheme does not carry stays unwritten: the token sheet derives the link from the accent.
+    property(LINK_LIGHT_PROPERTY, custom ? (scheme.link?.light ?? null) : null)
+    property(LINK_DARK_PROPERTY, custom ? (scheme.link?.dark ?? null) : null)
+    attribute(CUSTOM_EDGES_ATTR, custom ? (scheme.edges ?? card.edges) : null)
     // The art's ink is a sheet token; this choice sits above every palette block, so it is written inline.
     property(LOGO_INK_PROPERTY, prefs.brandInk === BRAND_INK_ACCENT
       ? 'var(--dsw-alias-brand-primary)'
