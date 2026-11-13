@@ -216,10 +216,10 @@ function customPaletteBlocks(doc, gates) {
         else if (spec.literal !== undefined) value = spec.literal[scheme]
         else if (spec.alias !== undefined) value = `var(${spec.alias})`
         else if (spec.card === 'code') value = `var(--dsh-claude-custom-code-${scheme})`
-        // The reader's canvas carries its own sidebar step, like the cards'.
-        else if (spec.card === 'sidebar') value = 'var(--dsh-tone-sidebar)'
-        // The bubble follows the reader's canvas; a card with flat contours reads its dark rung.
-        else if (spec.card === 'bubble') value = `var(--dsh-tone-${edges === 'surface' && scheme === 'dark' ? 'bubble-flat' : 'bubble'})`
+        // The scheme's canvas carries its own sidebar step; a preset's override keeps the preset's hand-tuned colour while its background stands.
+        else if (spec.card === 'sidebar') value = `var(--dsh-claude-custom-sidebar-${scheme}, var(--dsh-tone-sidebar))`
+        // The bubble follows the scheme's canvas, a hand-tuned colour aside; contours drawn as surfaces read the dark rung.
+        else if (spec.card === 'bubble') value = `var(--dsh-claude-custom-bubble-${scheme}, var(--dsh-tone-${edges === 'surface' && scheme === 'dark' ? 'bubble-flat' : 'bubble'}))`
         else throw new Error('build: a palette token names no colour source')
         declarations.push([spec.token, value])
       }

@@ -3,7 +3,7 @@
  * Browser types and host Config derive from this table; settings rows follow it too (D72).
  */
 import { OFFICIAL_MODEL_GROUP } from './services'
-import { PALETTE_SCHEME_CUSTOM, PALETTE_SCHEME_ENTRY_MAX, PALETTE_SCHEME_FOLLOW, PALETTE_SCHEME_ID_MAX, PALETTE_SCHEME_LIMIT, carryCustomPalette, findPaletteScheme, normalizePaletteSchemes } from './palette-schemes'
+import { PALETTE_SCHEME_CUSTOM, PALETTE_SCHEME_ENTRY_MAX, PALETTE_SCHEME_FOLLOW, PALETTE_SCHEME_ID_MAX, PALETTE_SCHEME_LIMIT, carryClassicInlineCode, carryCustomPalette, findPaletteScheme, normalizePaletteSchemes } from './palette-schemes'
 import { CURRENCIES, CURRENCY_CNY } from './prices'
 import { SOUND_LEVELS, SOUND_LEVEL_OFF } from './sound'
 
@@ -40,7 +40,7 @@ export const PALETTE_COLORING_BRAND = PALETTE_SCHEME_FOLLOW
 /** The id the earlier single custom card carries over under. */
 export const PALETTE_COLORING_CUSTOM = PALETTE_SCHEME_CUSTOM
 
-/** Inline code follows the active card or restores Claude 0.19.7's warm ink. */
+/** The earlier inline-code choice: `classic` is read once into the Claude preset's code colour (palette-schemes.ts) and then left at `palette`. */
 export const INLINE_CODE_COLOR_PALETTE = 'palette'
 export const INLINE_CODE_COLOR_CLASSIC = 'classic'
 export const INLINE_CODE_COLORS = [INLINE_CODE_COLOR_PALETTE, INLINE_CODE_COLOR_CLASSIC] as const
@@ -274,6 +274,7 @@ export const PREFS = {
   customCanvasLight: { type: 'color', default: '' },
   customCanvasDark: { type: 'color', default: '' },
   customCode: { type: 'color', default: '' },
+  /** Read once and left at the default: the choice now lives in the Claude preset's override record. */
   inlineCodeColor: { type: 'choice', values: INLINE_CODE_COLORS, default: INLINE_CODE_COLOR_PALETTE },
   motion: { type: 'choice', values: MOTION_MODES, default: MOTION_SYSTEM },
   statusMotion: { type: 'choice', values: STATUS_MOTIONS, default: STATUS_MOTION_SWEEP },
@@ -452,9 +453,14 @@ function carryPaletteSchemes(out: Record<string, unknown>) {
   out.customCanvasLight = ''
   out.customCanvasDark = ''
   out.customCode = ''
-  out.paletteSchemes = carried.slice(0, PALETTE_SCHEME_LIMIT)
+  let records = carried
+  if (out.inlineCodeColor === INLINE_CODE_COLOR_CLASSIC) {
+    records = carryClassicInlineCode(records, 'claude', presets)
+    out.inlineCodeColor = INLINE_CODE_COLOR_PALETTE
+  }
+  out.paletteSchemes = records.slice(0, PALETTE_SCHEME_LIMIT)
   const selected = out.paletteColors as string
-  if (selected !== PALETTE_COLORING_BRAND && !presets.includes(selected) && findPaletteScheme(carried, selected, presets) === undefined) {
+  if (selected !== PALETTE_COLORING_BRAND && !presets.includes(selected) && findPaletteScheme(records, selected, presets) === undefined) {
     problems.push(`the selected palette scheme "${selected}" is not among the records; following the brand`)
     out.paletteColors = PALETTE_COLORING_BRAND
   }

@@ -11,7 +11,7 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { PALETTE_COLORING_BRAND, PALETTE_PRESETS, clampPrefs } from '@dsh-claude-style/contracts/prefs'
 import {
-  PALETTE_SCHEME_LIMIT, PALETTE_SCHEME_NAME_MAX, carryCustomPalette, normalizePaletteSchemes, parsePaletteScheme, serializePaletteScheme,
+  CLASSIC_INLINE_CODE, PALETTE_SCHEME_LIMIT, PALETTE_SCHEME_NAME_MAX, carryCustomPalette, normalizePaletteSchemes, parsePaletteScheme, serializePaletteScheme,
 } from '@dsh-claude-style/contracts/palette-schemes'
 
 const PRESETS: readonly string[] = PALETTE_PRESETS
@@ -129,6 +129,20 @@ test('an unreadable record is reported once and costs only itself', () => {
   const read = clampPrefs({ paletteSchemes: ['{"id":"night","base":"claude"}', '{oops'] })
   expect(read.paletteSchemes).toEqual(['{"id":"night","base":"claude"}'])
   expect(reported).toHaveLength(1)
+})
+
+test('the earlier warm inline-code choice carries into the Claude preset\'s override and the choice is left at its default', () => {
+  const read = clampPrefs({ inlineCodeColor: 'classic' })
+  expect(read.inlineCodeColor).toBe('palette')
+  expect(read.paletteSchemes.map(entry => parsePaletteScheme(entry, PRESETS))).toEqual([{ id: 'claude', name: '', base: 'claude', code: CLASSIC_INLINE_CODE }])
+  expect(clampPrefs({ inlineCodeColor: 'palette' }).paletteSchemes).toEqual([])
+})
+
+test('a code colour the Claude override already carries wins over the earlier warm choice, and the rest of the override stays', () => {
+  const stored = '{"id":"claude","accent":"#112233","code":{"light":"#000000"}}'
+  expect(clampPrefs({ inlineCodeColor: 'classic', paletteSchemes: [stored] }).paletteSchemes).toEqual([stored])
+  const withoutCode = clampPrefs({ inlineCodeColor: 'classic', paletteSchemes: ['{"id":"claude","accent":"#112233"}'] })
+  expect(withoutCode.paletteSchemes.map(entry => parsePaletteScheme(entry, PRESETS))).toEqual([{ id: 'claude', name: '', base: 'claude', accent: '#112233', code: CLASSIC_INLINE_CODE }])
 })
 
 test('what was read back reads back the same, the carried card included', () => {

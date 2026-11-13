@@ -1,6 +1,6 @@
-import { BRAND_DEFAULT_PRESETS, BRAND_INK_ACCENT, BRAND_INK_ATTR, BRAND_INK_ORIGINAL, BRAND_INK_TEXT, CUSTOM_EDGES_ATTR, CUSTOM_MARK_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_TINT_ATTR, CUSTOM_WORD_ATTR, CUSTOM_WORD_IMAGE, CUSTOM_WORD_TEXT, INLINE_CODE_COLOR_ATTR, INLINE_CODE_COLOR_CLASSIC } from '../../constants'
+import { BRAND_DEFAULT_PRESETS, BRAND_INK_ACCENT, BRAND_INK_ATTR, BRAND_INK_ORIGINAL, BRAND_INK_TEXT, CUSTOM_EDGES_ATTR, CUSTOM_MARK_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_TINT_ATTR, CUSTOM_WORD_ATTR, CUSTOM_WORD_IMAGE, CUSTOM_WORD_TEXT } from '../../constants'
 import { readPrefs, subscribePrefs } from '../../core/prefs'
-import { selectedReaderScheme } from '../../shared/palette-scheme'
+import { activeScheme } from '../../shared/palette-scheme'
 import { loadBrandImages, readBrandImages, resetBrandImages, subscribeBrandImages } from '../../shared/custom-brand'
 import { PALETTE_CARDS } from 'virtual:dsh-claude-style/generated'
 
@@ -35,13 +35,18 @@ const CODE_LIGHT_PROPERTY = '--dsh-claude-custom-code-light'
 const CODE_DARK_PROPERTY = '--dsh-claude-custom-code-dark'
 const LINK_LIGHT_PROPERTY = '--dsh-claude-custom-link-light'
 const LINK_DARK_PROPERTY = '--dsh-claude-custom-link-dark'
+const SIDEBAR_LIGHT_PROPERTY = '--dsh-claude-custom-sidebar-light'
+const SIDEBAR_DARK_PROPERTY = '--dsh-claude-custom-sidebar-dark'
+const BUBBLE_LIGHT_PROPERTY = '--dsh-claude-custom-bubble-light'
+const BUBBLE_DARK_PROPERTY = '--dsh-claude-custom-bubble-dark'
 /** The ink the brand's own art and the reader's pictures take while the image-colour choice names the accent or the text colour. */
 const LOGO_INK_PROPERTY = '--dsh-claude-logo-ink'
 const PROPERTIES = [
   MARK_PROPERTY, WORD_PROPERTY, WORD_RATIO_PROPERTY, NAME_PROPERTY,
-  ACCENT_PROPERTY, ACCENT_INK_PROPERTY, CANVAS_LIGHT_PROPERTY, CANVAS_DARK_PROPERTY, CODE_LIGHT_PROPERTY, CODE_DARK_PROPERTY, LINK_LIGHT_PROPERTY, LINK_DARK_PROPERTY, LOGO_INK_PROPERTY,
+  ACCENT_PROPERTY, ACCENT_INK_PROPERTY, CANVAS_LIGHT_PROPERTY, CANVAS_DARK_PROPERTY, CODE_LIGHT_PROPERTY, CODE_DARK_PROPERTY, LINK_LIGHT_PROPERTY, LINK_DARK_PROPERTY,
+  SIDEBAR_LIGHT_PROPERTY, SIDEBAR_DARK_PROPERTY, BUBBLE_LIGHT_PROPERTY, BUBBLE_DARK_PROPERTY, LOGO_INK_PROPERTY,
 ]
-const ATTRIBUTES = [CUSTOM_MARK_ATTR, CUSTOM_WORD_ATTR, CUSTOM_TINT_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_EDGES_ATTR, BRAND_INK_ATTR, INLINE_CODE_COLOR_ATTR]
+const ATTRIBUTES = [CUSTOM_MARK_ATTR, CUSTOM_WORD_ATTR, CUSTOM_TINT_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_EDGES_ATTR, BRAND_INK_ATTR]
 
 /** The two inks text on an accent fill can take: the dark and the light canvas (docs/STYLE.md). */
 const INK_DARK = '#191919'
@@ -86,10 +91,13 @@ export function install() {
   function apply() {
     const prefs = readPrefs()
     const { mark, wordmark } = readBrandImages()
-    const scheme = selectedReaderScheme(prefs)
+    const scheme = activeScheme(prefs)
     const custom = scheme !== undefined
     const card = PALETTE_CARDS.find((entry) => entry.id === (scheme?.base ?? BRAND_DEFAULT_PRESETS[prefs.brand])) ?? PALETTE_CARDS[0]
     const accent = scheme?.accent ?? card.accent
+    // A preset's override keeps the sidebar and bubble colours the preset hand-tunes, per appearance, while its background is the preset's own.
+    const kept = (appearance: 'light' | 'dark', tuned: { light: string, dark: string } | undefined) =>
+      custom && scheme.id === scheme.base && scheme.background?.[appearance] === undefined ? (tuned?.[appearance] ?? null) : null
     attribute(CUSTOM_MARK_ATTR, mark === null ? null : '')
     property(MARK_PROPERTY, mark === null ? null : `url("${mark.url}")`)
     attribute(CUSTOM_WORD_ATTR, wordmark !== null ? CUSTOM_WORD_IMAGE : prefs.brandName !== '' ? CUSTOM_WORD_TEXT : null)
@@ -100,8 +108,6 @@ export function install() {
     attribute(CUSTOM_TINT_ATTR, prefs.brandInk !== BRAND_INK_ORIGINAL && images ? '' : null)
     attribute(BRAND_INK_ATTR, prefs.brandInk === BRAND_INK_ACCENT ? BRAND_INK_ACCENT : prefs.brandInk === BRAND_INK_TEXT ? BRAND_INK_TEXT : null)
     attribute(CUSTOM_PALETTE_ATTR, custom ? '' : null)
-    // A reader-authored card keeps its own code colour even if classic was picked earlier.
-    attribute(INLINE_CODE_COLOR_ATTR, !custom && prefs.inlineCodeColor === INLINE_CODE_COLOR_CLASSIC ? INLINE_CODE_COLOR_CLASSIC : null)
     property(ACCENT_PROPERTY, custom ? accent : null)
     property(ACCENT_INK_PROPERTY, custom ? accentInk(accent) : null)
     property(CANVAS_LIGHT_PROPERTY, custom ? (scheme.background?.light ?? card.canvas.light) : null)
@@ -113,6 +119,10 @@ export function install() {
     property(LINK_LIGHT_PROPERTY, custom ? (scheme.link?.light ?? null) : null)
     property(LINK_DARK_PROPERTY, custom ? (scheme.link?.dark ?? null) : null)
     attribute(CUSTOM_EDGES_ATTR, custom ? (scheme.edges ?? card.edges) : null)
+    property(SIDEBAR_LIGHT_PROPERTY, kept('light', card.sidebar))
+    property(SIDEBAR_DARK_PROPERTY, kept('dark', card.sidebar))
+    property(BUBBLE_LIGHT_PROPERTY, kept('light', card.bubble))
+    property(BUBBLE_DARK_PROPERTY, kept('dark', card.bubble))
     // The art's ink is a sheet token; this choice sits above every palette block, so it is written inline.
     property(LOGO_INK_PROPERTY, prefs.brandInk === BRAND_INK_ACCENT
       ? 'var(--dsw-alias-brand-primary)'

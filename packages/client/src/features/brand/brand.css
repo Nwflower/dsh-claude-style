@@ -1,9 +1,3 @@
-/* Claude 0.19.7's warm inline-code ink is an independent overlay. The custom
-   colour card removes this attribute in brand.ts, so its own colour wins. */
-body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-inline-code-color="classic"] {
-  --dsh-claude-inline-code-fg: var(--dsh-claude-classic-code);
-}
-
 /* ---------- Custom brand: sidebar mark ---------- */
 /* The reader's own mark over either brand (D30): the host's whale, or the
    Claude mark theme/sidebar.css draws, gives way, and the image is painted in

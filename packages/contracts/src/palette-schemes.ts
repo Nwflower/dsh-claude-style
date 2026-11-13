@@ -145,6 +145,22 @@ export function findPaletteScheme(entries: readonly string[], id: string, preset
   return undefined
 }
 
+/** The warm inline-code ink the earlier `classic` choice drew, per appearance. */
+export const CLASSIC_INLINE_CODE: Required<ColourPair> = { light: '#943333', dark: '#e8a08a' }
+
+/**
+ * The records with the earlier `classic` inline-code choice carried in as the
+ * Claude preset's override of its code colour. A code colour that override
+ * already carries stays, because the reader chose it after the choice.
+ */
+export function carryClassicInlineCode(entries: readonly string[], preset: string, presets: readonly string[]) {
+  const out = entries.map((text) => parsePaletteScheme(text, presets))
+  const at = out.findIndex((scheme) => scheme.id === preset)
+  if (at === -1) out.push({ id: preset, name: '', base: preset, code: { ...CLASSIC_INLINE_CODE } })
+  else if (out[at].code === undefined) out[at] = { ...out[at], code: { ...CLASSIC_INLINE_CODE } }
+  return out.map(serializePaletteScheme)
+}
+
 /** What the earlier single custom card stored: its four colours, empty where none was picked. */
 export interface LegacyCustomPalette {
   accent: string
