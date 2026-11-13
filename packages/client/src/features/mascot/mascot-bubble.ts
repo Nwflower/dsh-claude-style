@@ -1,7 +1,6 @@
 import { CURRENCY_SYMBOL, formatMoneyMicro } from '@dsh-claude-style/contracts/prices'
 import { buildElement } from '@dsh-claude-style/engine/dom'
-import { readAccountBalance } from '../../shared/account-balance'
-import { ACCOUNT_MODEL_GROUP, OFFICIAL_MODEL_GROUP } from '@dsh-claude-style/contracts/services'
+import { platformBilledProvider, readAccountBalance } from '../../shared/account-balance'
 import { copy } from './copy'
 import type { Currency } from '@dsh-claude-style/contracts/prices'
 import type { AccountBalance } from '../../shared/account-balance'
@@ -108,8 +107,7 @@ export function createMascotBubble(ctx: HostContext, ui: FeatureUi<typeof manife
     // platform's: a provider that settles its own bill leaves this figure with
     // nothing to do with the conversation (features/model/model-picker.ts names it).
     const provider = ui.model?.provider?.() ?? null
-    const platformBilled = provider === null || provider === OFFICIAL_MODEL_GROUP || provider === ACCOUNT_MODEL_GROUP
-    const balances = platformBilled ? balanceFigures(session) : []
+    const balances = platformBilledProvider(provider) ? balanceFigures(session) : []
     if (balances.length > 0) rows.push(row('balance', copy('mascotBalanceLabel'), balances))
     if (session !== null) rows.push(row('session', copy('mascotSessionLabel'), [session]))
     const same = rows.length === root.children.length &&

@@ -545,7 +545,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
   ui.model = {
     sync: syncModelControl,
     // Who the session routes to: the statistics read it to tell the platform's
-    // own billing from a provider that settles elsewhere (D78's account side).
+    // own billing from a provider that settles elsewhere.
     provider() {
       return modelCatalog.snapshot()?.current?.provider ?? null
     },
