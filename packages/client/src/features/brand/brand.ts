@@ -1,11 +1,12 @@
-import { BRAND_INK_ACCENT, BRAND_INK_ATTR, BRAND_INK_ORIGINAL, BRAND_INK_TEXT, CUSTOM_MARK_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_TINT_ATTR, CUSTOM_WORD_ATTR, CUSTOM_WORD_IMAGE, CUSTOM_WORD_TEXT, INLINE_CODE_COLOR_ATTR, INLINE_CODE_COLOR_CLASSIC, PALETTE_COLORING_CUSTOM } from '../../constants'
+import { BRAND_INK_ACCENT, BRAND_INK_ATTR, BRAND_INK_ORIGINAL, BRAND_INK_TEXT, CUSTOM_MARK_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_TINT_ATTR, CUSTOM_WORD_ATTR, CUSTOM_WORD_IMAGE, CUSTOM_WORD_TEXT, INLINE_CODE_COLOR_ATTR, INLINE_CODE_COLOR_CLASSIC } from '../../constants'
 import { readPrefs, subscribePrefs } from '../../core/prefs'
+import { selectedReaderScheme } from '../../shared/palette-scheme'
 import { loadBrandImages, readBrandImages, resetBrandImages, subscribeBrandImages } from '../../shared/custom-brand'
 import { PALETTE_CARDS } from 'virtual:dsh-claude-style/generated'
 
 /**
- * The custom brand layer (D30): the reader's own name, images and the four
- * colours of the colour card they authored, over whichever brand is chosen.
+ * The custom brand layer (D96): the reader's own name, images and the colours
+ * of the scheme they selected, over whichever brand is chosen.
  * Each part is written onto <body> only while the reader has supplied it — an
  * attribute the stylesheets switch on (brand.css, and the account avatar's rule
  * in account-footer.css) and the value as a custom property — so a reader who
@@ -14,10 +15,10 @@ import { PALETTE_CARDS } from 'virtual:dsh-claude-style/generated'
  * brand's own art is drawn in, so it writes --dsh-claude-logo-ink under either
  * brand (`accent` and `text` in the settings' row).
  *
- * The four colours are seeds: the token sheet turns them into the whole palette
- * at runtime (scripts/build/theme-tokens.mjs), which is why they are written as
- * properties rather than resolved here. A seed the reader has not picked falls
- * back to the card's own value, so picking one colour keeps the rest of the
+ * The colours are seeds: the token sheet turns them into the whole palette at
+ * runtime (scripts/build/theme-tokens.mjs), which is why they are written as
+ * properties rather than resolved here. A seed the scheme does not carry falls
+ * back to its base preset's value, so picking one colour keeps the rest of the
  * look.
  */
 
@@ -83,9 +84,10 @@ export function install() {
   function apply() {
     const prefs = readPrefs()
     const { mark, wordmark } = readBrandImages()
-    const card = PALETTE_CARDS.find((entry) => entry.id === prefs.brand) ?? PALETTE_CARDS[0]
-    const custom = prefs.paletteColors === PALETTE_COLORING_CUSTOM
-    const accent = prefs.customAccent === '' ? card.accent : prefs.customAccent
+    const scheme = selectedReaderScheme(prefs)
+    const custom = scheme !== undefined
+    const card = PALETTE_CARDS.find((entry) => entry.id === (scheme?.base ?? prefs.brand)) ?? PALETTE_CARDS[0]
+    const accent = scheme?.accent ?? card.accent
     attribute(CUSTOM_MARK_ATTR, mark === null ? null : '')
     property(MARK_PROPERTY, mark === null ? null : `url("${mark.url}")`)
     attribute(CUSTOM_WORD_ATTR, wordmark !== null ? CUSTOM_WORD_IMAGE : prefs.brandName !== '' ? CUSTOM_WORD_TEXT : null)
@@ -100,11 +102,11 @@ export function install() {
     attribute(INLINE_CODE_COLOR_ATTR, !custom && prefs.inlineCodeColor === INLINE_CODE_COLOR_CLASSIC ? INLINE_CODE_COLOR_CLASSIC : null)
     property(ACCENT_PROPERTY, custom ? accent : null)
     property(ACCENT_INK_PROPERTY, custom ? accentInk(accent) : null)
-    property(CANVAS_LIGHT_PROPERTY, custom ? (prefs.customCanvasLight === '' ? card.canvas.light : prefs.customCanvasLight) : null)
-    property(CANVAS_DARK_PROPERTY, custom ? (prefs.customCanvasDark === '' ? card.canvas.dark : prefs.customCanvasDark) : null)
+    property(CANVAS_LIGHT_PROPERTY, custom ? (scheme.background?.light ?? card.canvas.light) : null)
+    property(CANVAS_DARK_PROPERTY, custom ? (scheme.background?.dark ?? card.canvas.dark) : null)
     // A chip is drawn on the scheme's canvas, so an unpicked colour takes that scheme's own ink.
-    property(CODE_LIGHT_PROPERTY, custom ? (prefs.customCode === '' ? card.code.light : prefs.customCode) : null)
-    property(CODE_DARK_PROPERTY, custom ? (prefs.customCode === '' ? card.code.dark : prefs.customCode) : null)
+    property(CODE_LIGHT_PROPERTY, custom ? (scheme.code?.light ?? card.code.light) : null)
+    property(CODE_DARK_PROPERTY, custom ? (scheme.code?.dark ?? card.code.dark) : null)
     // The art's ink is a sheet token; this choice sits above every palette block, so it is written inline.
     property(LOGO_INK_PROPERTY, prefs.brandInk === BRAND_INK_ACCENT
       ? 'var(--dsw-alias-brand-primary)'

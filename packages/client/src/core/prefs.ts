@@ -1,4 +1,4 @@
-import { BACKGROUND_OPACITY_ATTR, BACKGROUND_OPACITY_MAX, BACKGROUND_OPACITY_VAR, BRAND_ATTR, BRAND_DEEPSEEK, COMPOSER_ATTR, COMPOSER_GAP_ATTR, COMPOSER_GAP_THEME, CONTEXT_DISPLAY_ATTR, CONTEXT_NUMBERS_ATTR, EFFORT_ACCENT_ATTR, FOOTER_ATTR, INTERFACE_FONT_SIZE_ATTR, INTERFACE_FONT_SIZE_VAR, MASCOT_ATTR, MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MOTION_ATTR, MOTION_FULL, MOTION_REDUCED, ONGOING_INDICATOR_ATTR, ONGOING_SIDE_ATTR, PAGE_ZOOM_ATTR, PAGE_ZOOM_VAR, PACKAGE_NAME, PALETTE_ATTR, PALETTE_CARD_ATTR, PALETTE_COLORING_BRAND, PALETTE_COLORING_CUSTOM, PREF_DEFAULTS, SEARCH_STYLE_ATTR, SETTINGS_ENTRY_FALLBACK, SIDEBAR_BRAND_ATTR, SIDEBAR_LAYOUT_ATTR, STATS_POSITION_ATTR, STATUS_MOTION_ATTR, TYPEFACE_ATTR } from '../constants'
+import { BACKGROUND_OPACITY_ATTR, BACKGROUND_OPACITY_MAX, BACKGROUND_OPACITY_VAR, BRAND_ATTR, BRAND_DEEPSEEK, COMPOSER_ATTR, COMPOSER_GAP_ATTR, COMPOSER_GAP_THEME, CONTEXT_DISPLAY_ATTR, CONTEXT_NUMBERS_ATTR, EFFORT_ACCENT_ATTR, FOOTER_ATTR, INTERFACE_FONT_SIZE_ATTR, INTERFACE_FONT_SIZE_VAR, MASCOT_ATTR, MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MOTION_ATTR, MOTION_FULL, MOTION_REDUCED, ONGOING_INDICATOR_ATTR, ONGOING_SIDE_ATTR, PAGE_ZOOM_ATTR, PAGE_ZOOM_VAR, PACKAGE_NAME, PALETTE_ATTR, PALETTE_CARD_ATTR, PREF_DEFAULTS, SEARCH_STYLE_ATTR, SETTINGS_ENTRY_FALLBACK, SIDEBAR_BRAND_ATTR, SIDEBAR_LAYOUT_ATTR, STATS_POSITION_ATTR, STATUS_MOTION_ATTR, TYPEFACE_ATTR } from '../constants'
 import { backgroundOpacityOf, projectBackgroundOpacity } from '../shared/background-opacity'
 import { interfaceFontSizeOf, projectInterfaceFontSize } from '../shared/interface-font-size'
 import { pageZoomOf, pageZoomText, projectPageZoomFactor } from '../shared/page-zoom'
@@ -8,6 +8,7 @@ import { clampPrefs, PREFS } from '@dsh-claude-style/contracts/prefs'
 import { notifyAll } from '@dsh-claude-style/engine/notify'
 import { createSettingsBinding } from '@dsh-claude-style/engine/settings-binding'
 import { pageOwner } from '../shared/visual-owner'
+import { paletteCardOf } from '../shared/palette-scheme'
 
 /** Defaults hold until the host form answers; the shared table clamps stored values (D73, D75). */
 export let prefs = clampPrefs({})
@@ -92,15 +93,10 @@ const MIRRORS = [
   // keeps drawing the sidebar toggle, so the sheet hides the brand alone.
   { key: 'sidebarBrand', attr: SIDEBAR_BRAND_ATTR, value: (prefs: Prefs) => prefs.sidebarBrand ? false : 'off' },
   { key: 'palette', attr: PALETTE_ATTR, value: (prefs: Prefs) => prefs.palette },
-  // Following the brand and the reader's four paint on top of the brand's card;
-  // a picked card is the token layer of its own, whichever mark stands above it.
-  {
-    key: 'paletteColors',
-    attr: PALETTE_CARD_ATTR,
-    value: (prefs: Prefs) => prefs.paletteColors === PALETTE_COLORING_BRAND || prefs.paletteColors === PALETTE_COLORING_CUSTOM
-      ? prefs.brand
-      : prefs.paletteColors,
-  },
+  // Following the brand paints the brand's preset and a reader's scheme paints
+  // on top of its base preset; a pinned preset is the token layer of its own,
+  // whichever mark stands above it.
+  { key: 'paletteColors', attr: PALETTE_CARD_ATTR, value: paletteCardOf },
   { key: 'typeface', attr: TYPEFACE_ATTR, value: (prefs: Prefs) => prefs.typeface },
   { key: 'mascot', attr: MASCOT_ATTR, value: resolveMascot },
   { key: 'searchStyle', attr: SEARCH_STYLE_ATTR, value: (prefs: Prefs) => prefs.searchStyle },

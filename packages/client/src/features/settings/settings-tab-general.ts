@@ -1,9 +1,10 @@
 import * as React from 'react'
-import { BRAND_CLAUDE, BRAND_DEEPSEEK, INTERFACE_FONT_SIZE_DEFAULT, INTERFACE_FONT_SIZE_MAX, INTERFACE_FONT_SIZE_MIN, PAGE_ZOOM_DEFAULT, PAGE_ZOOM_MAX, PAGE_ZOOM_MIN, PALETTE_COLORING_BRAND, PALETTE_COLORING_CUSTOM, USERNAME_MAX } from '../../constants'
+import { BRAND_CLAUDE, BRAND_DEEPSEEK, INTERFACE_FONT_SIZE_DEFAULT, INTERFACE_FONT_SIZE_MAX, INTERFACE_FONT_SIZE_MIN, PAGE_ZOOM_DEFAULT, PAGE_ZOOM_MAX, PAGE_ZOOM_MIN, PALETTE_COLORING_BRAND, USERNAME_MAX } from '../../constants'
 import { COMBINE_SVGS } from 'virtual:dsh-claude-style/generated'
 import { createHostToast } from '../../shared/host-toast'
 import { interfaceFontSizePercent } from '../../shared/interface-font-size'
 import { pageZoomPercent } from '../../shared/page-zoom'
+import { selectedReaderScheme } from '../../shared/palette-scheme'
 import { PercentControl } from './settings-percent-control'
 import { PreviewCards } from '../../shared/preview-cards'
 import type { Prefs } from '../../constants'
@@ -25,9 +26,11 @@ export function createSettingsGeneralTab(): SettingsTab {
   const toast = createHostToast()
 
   /** The name of the colour card that is keeping the page's colours fixed. */
-  function paletteName(colouring: Prefs['paletteColors']) {
-    if (colouring === PALETTE_COLORING_CUSTOM) return copy('paletteCustom')
-    return colouring === BRAND_DEEPSEEK ? copy('brandDeepseek') : copy('brandClaude')
+  function paletteName(prefs: Prefs) {
+    if (prefs.paletteColors === BRAND_CLAUDE) return copy('brandClaude')
+    if (prefs.paletteColors === BRAND_DEEPSEEK) return copy('brandDeepseek')
+    const name = selectedReaderScheme(prefs)?.name ?? ''
+    return name === '' ? copy('paletteCustom') : name
   }
 
   /**
@@ -72,7 +75,7 @@ export function createSettingsGeneralTab(): SettingsTab {
         write({ brand: option.value })
         if (prefs.paletteColors === PALETTE_COLORING_BRAND) return
         toast.show({
-          text: copy('paletteFixed', { name: paletteName(prefs.paletteColors) }),
+          text: copy('paletteFixed', { name: paletteName(prefs) }),
           actions: [{
             label: copy('paletteFollowBrand'),
             onClick: () => {

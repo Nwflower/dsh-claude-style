@@ -3,6 +3,7 @@
  * Browser types and host Config derive from this table; settings rows follow it too (D72).
  */
 import { OFFICIAL_MODEL_GROUP } from './services'
+import { PALETTE_SCHEME_CUSTOM, PALETTE_SCHEME_ENTRY_MAX, PALETTE_SCHEME_FOLLOW, PALETTE_SCHEME_ID_MAX, PALETTE_SCHEME_LIMIT, carryCustomPalette, findPaletteScheme, normalizePaletteSchemes } from './palette-schemes'
 import { CURRENCIES, CURRENCY_CNY } from './prices'
 import { SOUND_LEVELS, SOUND_LEVEL_OFF } from './sound'
 
@@ -21,10 +22,14 @@ export const BRAND_DEEPSEEK = 'deepseek'
 export const BRAND_DEEPSEEK_LEGACY = 'off'
 export const BRANDS = [BRAND_CLAUDE, BRAND_DEEPSEEK] as const
 
-/** Palette card choice; `brand` follows the selected brand and stays independent of its artwork. */
-export const PALETTE_COLORING_BRAND = 'brand'
-export const PALETTE_COLORING_CUSTOM = 'custom'
-export const PALETTE_COLORINGS = [PALETTE_COLORING_BRAND, ...BRANDS, PALETTE_COLORING_CUSTOM] as const
+/**
+ * The selected colour scheme (D96): `brand` follows the selected brand's default
+ * scheme and stays independent of its artwork; any other value is a preset's id
+ * or the id of one of the reader's schemes.
+ */
+export const PALETTE_COLORING_BRAND = PALETTE_SCHEME_FOLLOW
+/** The id the earlier single custom card carries over under. */
+export const PALETTE_COLORING_CUSTOM = PALETTE_SCHEME_CUSTOM
 
 /** Inline code follows the active card or restores Claude 0.19.7's warm ink. */
 export const INLINE_CODE_COLOR_PALETTE = 'palette'
@@ -251,9 +256,11 @@ export const PREFS = {
   /** Whether the sidebar draws its brand area; off collapses that area and leaves the sidebar toggle in place. */
   sidebarBrand: { type: 'boolean', default: true },
   brandAccent: { type: 'color', default: '' },
-  /** One brand's card, `brand` to follow the theme style, or the reader's four. */
-  paletteColors: { type: 'choice', values: PALETTE_COLORINGS, default: PALETTE_COLORING_BRAND },
-  /** The reader's four colours, empty until picked; each falls back to the card's own. */
+  /** The selected scheme's id, or `brand` to follow the theme style; an id no scheme carries reads as `brand`. */
+  paletteColors: { type: 'text', default: PALETTE_COLORING_BRAND, max: PALETTE_SCHEME_ID_MAX },
+  /** The schemes' records (palette-schemes.ts): the reader's own and the presets' overrides. */
+  paletteSchemes: { type: 'list', default: [], max: PALETTE_SCHEME_LIMIT, entryMax: PALETTE_SCHEME_ENTRY_MAX, drop: [] },
+  /** The earlier single custom card's four colours; read once into the scheme `custom` and then left empty. */
   customAccent: { type: 'color', default: '' },
   customCanvasLight: { type: 'color', default: '' },
   customCanvasDark: { type: 'color', default: '' },
@@ -384,7 +391,8 @@ function clampPref(spec: PrefSpec, raw: unknown): unknown {
   switch (spec.type) {
     case 'boolean': return typeof raw === 'boolean' ? raw : spec.default
     case 'choice': return typeof raw === 'string' && spec.values.includes(raw) ? raw : spec.default
-    case 'text': return typeof raw === 'string' ? raw.trim().slice(0, spec.max) : spec.default
+    // The second trim keeps a cut that lands after a run of spaces from leaving them at the end.
+    case 'text': return typeof raw === 'string' ? raw.trim().slice(0, spec.max).trim() : spec.default
     case 'color': return typeof raw === 'string' && COLOR_RE.test(raw) ? raw.toLowerCase() : spec.default
     case 'list': {
       if (!Array.isArray(raw)) return spec.default
@@ -411,5 +419,35 @@ export function clampPrefs(value: unknown): Prefs {
     out.paletteColors = PALETTE_COLORING_CUSTOM
     out.brandAccent = ''
   }
+  carryPaletteSchemes(out)
   return out as unknown as Prefs
+}
+
+/**
+ * The scheme records and the selection, read as one (D96): records that cannot
+ * be read are left out, the earlier custom card is carried in as the scheme
+ * `custom` and its four fields are left empty, and a selection that names no
+ * scheme reads as following the brand. Each thing left out is reported, since
+ * the reader's stored choice no longer reads as it was written (D12).
+ */
+function carryPaletteSchemes(out: Record<string, unknown>) {
+  const presets: readonly string[] = BRANDS
+  const { entries, problems } = normalizePaletteSchemes(out.paletteSchemes as string[], presets)
+  const carried = carryCustomPalette(entries, {
+    accent: out.customAccent as string,
+    canvasLight: out.customCanvasLight as string,
+    canvasDark: out.customCanvasDark as string,
+    code: out.customCode as string,
+  }, out.brand as string, out.paletteColors === PALETTE_COLORING_CUSTOM, presets)
+  out.customAccent = ''
+  out.customCanvasLight = ''
+  out.customCanvasDark = ''
+  out.customCode = ''
+  out.paletteSchemes = carried.slice(0, PALETTE_SCHEME_LIMIT)
+  const selected = out.paletteColors as string
+  if (selected !== PALETTE_COLORING_BRAND && !presets.includes(selected) && findPaletteScheme(carried, selected, presets) === undefined) {
+    problems.push(`the selected palette scheme "${selected}" is not among the records; following the brand`)
+    out.paletteColors = PALETTE_COLORING_BRAND
+  }
+  for (const problem of problems) console.error(`dsh-claude-style: ${problem}`)
 }

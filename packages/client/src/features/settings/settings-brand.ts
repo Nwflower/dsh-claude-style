@@ -3,6 +3,8 @@ import { BRAND_INK_ACCENT, BRAND_INK_ORIGINAL, BRAND_INK_TEXT, BRANDS, PALETTE_C
 import { PALETTE_CARDS } from 'virtual:dsh-claude-style/generated'
 import { BrandLockup } from './settings-brand-lockup'
 import { withoutTransition } from '../../shared/transition'
+import { newCustomScheme, selectedReaderScheme, selectSchemePatch } from '../../shared/palette-scheme'
+import type { PaletteScheme } from '@dsh-claude-style/contracts/palette-schemes'
 import type { SegmentOption, SettingsRow, SettingsView } from './settings-controls'
 import type { Prefs } from '../../constants'
 import { copy } from './copy'
@@ -17,12 +19,16 @@ import { copy } from './copy'
  * cards stand apart from them as Colours' sub-row (paletteCardsRow).
  */
 
-/** One colour of a card: the preference it writes on the reader's card, and its name. */
+/**
+ * One colour of a card: its name, the preset's own value, the value the
+ * reader's scheme carries, and the scheme with that colour set. The code colour
+ * the swatch shows is the light one; picking it sets both appearances.
+ */
 const COLOURS = [
-  { field: 'customAccent', label: 'paletteSwatchAccent', pick: (card: Card) => card.accent },
-  { field: 'customCanvasLight', label: 'paletteSwatchLight', pick: (card: Card) => card.canvas.light },
-  { field: 'customCanvasDark', label: 'paletteSwatchDark', pick: (card: Card) => card.canvas.dark },
-  { field: 'customCode', label: 'paletteSwatchCode', pick: (card: Card) => card.code.light },
+  { field: 'accent', label: 'paletteSwatchAccent', pick: (card: Card) => card.accent, own: (scheme: PaletteScheme) => scheme.accent, set: (scheme: PaletteScheme, value: string): PaletteScheme => ({ ...scheme, accent: value }) },
+  { field: 'canvasLight', label: 'paletteSwatchLight', pick: (card: Card) => card.canvas.light, own: (scheme: PaletteScheme) => scheme.background?.light, set: (scheme: PaletteScheme, value: string): PaletteScheme => ({ ...scheme, background: { ...scheme.background, light: value } }) },
+  { field: 'canvasDark', label: 'paletteSwatchDark', pick: (card: Card) => card.canvas.dark, own: (scheme: PaletteScheme) => scheme.background?.dark, set: (scheme: PaletteScheme, value: string): PaletteScheme => ({ ...scheme, background: { ...scheme.background, dark: value } }) },
+  { field: 'code', label: 'paletteSwatchCode', pick: (card: Card) => card.code.light, own: (scheme: PaletteScheme) => scheme.code?.light, set: (scheme: PaletteScheme, value: string): PaletteScheme => ({ ...scheme, code: { light: value, dark: value } }) },
 ] as const
 
 type Card = (typeof PALETTE_CARDS)[number]
@@ -141,12 +147,17 @@ function PaletteCards(props: { prefs: Prefs, write: SettingsView['write'] }) {
   const following = prefs.paletteColors === PALETTE_COLORING_BRAND
   const custom = prefs.paletteColors === PALETTE_COLORING_CUSTOM
   const painted = following ? brand.id : prefs.paletteColors
-  const reader = COLOURS.map((colour) => {
-    const stored = prefs[colour.field]
-    return stored === '' ? colour.pick(brand) : stored
-  })
-  const pick = (field: ColourField, value: string) => write({ paletteColors: PALETTE_COLORING_CUSTOM, [field]: value })
-  const select = (colouring: Prefs['paletteColors']) => write({ paletteColors: colouring })
+  const scheme = selectedReaderScheme(prefs) ?? newCustomScheme(prefs)
+  const base = PALETTE_CARDS.find((entry) => entry.id === scheme.base) ?? brand
+  const reader = COLOURS.map((colour) => colour.own(scheme) ?? colour.pick(base))
+  const pick = (field: ColourField, value: string) => {
+    const colour = COLOURS.find((entry) => entry.field === field)!
+    write(selectSchemePatch(prefs, colour.set(scheme, value)))
+  }
+  const select = (colouring: Prefs['paletteColors']) => {
+    if (colouring === PALETTE_COLORING_CUSTOM) write(selectSchemePatch(prefs, scheme))
+    else write({ paletteColors: colouring })
+  }
   const follow = () => write({ paletteColors: PALETTE_COLORING_BRAND })
   // Enter and Space on a card itself pick it; the reset and the colour wells
   // inside the card handle their own keys.

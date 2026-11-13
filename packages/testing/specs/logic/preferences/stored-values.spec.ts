@@ -11,10 +11,11 @@ import { expect, test } from 'vitest'
 import fc from 'fast-check'
 import { resolveMascot } from '@dsh-claude-style/client/pure'
 import {
-  BRAND_CLAUDE, BRAND_DEEPSEEK, BRAND_DEEPSEEK_LEGACY, BRAND_INK_ORIGINAL, BRAND_INK_TEXT, BRAND_NAME_MAX,
+  BRANDS, BRAND_CLAUDE, BRAND_DEEPSEEK, BRAND_DEEPSEEK_LEGACY, BRAND_INK_ORIGINAL, BRAND_INK_TEXT, BRAND_NAME_MAX,
   CHAT_ANIMATIONS_OFF, MASCOT_CRAB, MASCOT_DEEPY, MASCOT_OFF, ONGOING_INDICATOR_BREATHE, ONGOING_INDICATOR_RING, ONGOING_INDICATOR_SHIMMER, ONGOING_SIDE_LEFT, ONGOING_SIDE_RIGHT, PREFS, PREF_DEFAULTS,
   PROVIDER_ID_MAX, QUICK_PROVIDERS_MAX, STATUS_MOTION_WASH, USERNAME_MAX, clampPrefs,
 } from '@dsh-claude-style/contracts/prefs'
+import { parsePaletteScheme } from '@dsh-claude-style/contracts/palette-schemes'
 import { OFFICIAL_MODEL_GROUP } from '@dsh-claude-style/contracts/services'
 
 test('an empty or unreadable value reads as the defaults', () => {
@@ -157,17 +158,17 @@ test('the brand name is trimmed and cut to its limit', () => {
   expect(clampPrefs({ brandName: false }).brandName).toBe('')
 })
 
-test('a stored accent moves into the custom card, keeping its colour, and the card takes over', () => {
+test('a stored accent moves into the custom scheme, keeping its colour, and the scheme takes over', () => {
   const migrated = clampPrefs({ brandAccent: '#1A7F5A' })
-  expect(migrated.customAccent).toBe('#1a7f5a')
+  expect(migrated.customAccent).toBe('')
   expect(migrated.paletteColors).toBe('custom')
   expect(migrated.brandAccent).toBe('')
-  expect(clampPrefs({ brandAccent: '#abc' }).customAccent).toBe('')
-  expect(clampPrefs({ brandAccent: 'red' }).customAccent).toBe('')
+  expect(migrated.paletteSchemes.map(entry => parsePaletteScheme(entry, BRANDS))).toEqual([{ id: 'custom', name: '', base: 'claude', accent: '#1a7f5a' }])
+  expect(clampPrefs({ brandAccent: '#abc' }).paletteSchemes).toEqual([])
+  expect(clampPrefs({ brandAccent: 'red' }).paletteSchemes).toEqual([])
   expect(clampPrefs({}).paletteColors).toBe('brand')
   expect(clampPrefs({ paletteColors: 'claude' }).paletteColors).toBe('claude')
   expect(clampPrefs({ paletteColors: 'deepseek' }).paletteColors).toBe('deepseek')
-  expect(clampPrefs({ paletteColors: 'pink' }).paletteColors).toBe('brand')
 })
 
 test('the custom images keep their own colours unless the text colour is chosen', () => {
