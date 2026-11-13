@@ -150,6 +150,8 @@ function useRailReading(session: string | null) {
   const choice = React.useRef<{ session: string | null, mode: 'auto' | 'open' | 'closed' }>({ session: null, mode: 'auto' })
   /** Whether the host's own right column holds this side now, as the last measurement read it. */
   const held = React.useRef(false)
+  /** The same question asked of the page at the moment it matters: a press may come before the last measurement did. */
+  const holdsSide = React.useRef<() => boolean>(() => false)
   React.useEffect(() => {
     let stopSize: (() => void) | null = null
     let stopHostSize: (() => void) | null = null
@@ -169,6 +171,7 @@ function useRailReading(session: string | null) {
       // A shell the part walk has not marked: the column's own width is all there is to read.
       return host !== null && host.isConnected && host.getBoundingClientRect().width > 0
     }
+    holdsSide.current = hostHolds
     const measure = () => {
       const rect = center === null ? null : center.getBoundingClientRect()
       // The rail starts under the conversation header: the header keeps the
@@ -283,15 +286,25 @@ function useRailReading(session: string | null) {
   // The header's control records the reader's explicit choice.
   React.useEffect(() => {
     const flip = () => {
+      // The host's own right column standing on this side is the one thing a
+      // press always answers, whatever the rail's own state still says: the
+      // column is what the reader sees, and a press asks for the rail's side, so
+      // the column gives it up and the rail comes in as that column's own
+      // animation starts (D94). The page is asked again here, since a press can
+      // arrive before any measurement of that column did.
+      held.current = holdsSide.current()
+      if (held.current) {
+        storeClosed(false)
+        choice.current = { session, mode: 'open' }
+        findRightbarToggle()?.click()
+        setOpen(true)
+        return
+      }
       if (open) close()
       else {
         storeClosed(false)
         choice.current = { session, mode: 'open' }
-        // The rail stands where the host's own right column stands: a press
-        // asks for that side, so the column gives it up and the rail comes in as
-        // that column's own animation starts (D94).
-        if (held.current) findRightbarToggle()?.click()
-        setOpen(!held.current)
+        setOpen(true)
       }
     }
     setRailToggle(flip)
