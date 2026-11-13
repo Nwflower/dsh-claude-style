@@ -152,6 +152,13 @@ function useRailReading(session: string | null) {
   const held = React.useRef(false)
   /** The same question asked of the page at the moment it matters: a press may come before the last measurement did. */
   const holdsSide = React.useRef<() => boolean>(() => false)
+  /**
+   * A press that took the side from the host's own right column and has not been
+   * answered yet. The column keeps its frame's mark until its animation starts,
+   * and a measurement landing in between must not put the rail back away: the
+   * side has already been asked for (D94).
+   */
+  const askingSide = React.useRef(false)
   React.useEffect(() => {
     let stopSize: (() => void) | null = null
     let stopHostSize: (() => void) | null = null
@@ -208,7 +215,10 @@ function useRailReading(session: string | null) {
       // gives the side up (D94).
       held.current = hostHolds()
       if (choice.current.mode !== 'auto') {
-        setOpen(choice.current.mode === 'open' && !held.current)
+        // The column's own mark clears on the frame its animation starts; until
+        // then the rail keeps the side the press asked for.
+        if (askingSide.current && !held.current) askingSide.current = false
+        setOpen(choice.current.mode === 'open' && (!held.current || askingSide.current))
         return
       }
       const windowWide = window.innerWidth >= OPEN_WINDOW
@@ -296,6 +306,7 @@ function useRailReading(session: string | null) {
       if (held.current) {
         storeClosed(false)
         choice.current = { session, mode: 'open' }
+        askingSide.current = true
         findRightbarToggle()?.click()
         setOpen(true)
         return
