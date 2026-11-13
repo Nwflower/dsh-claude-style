@@ -9,8 +9,8 @@ export default {
   contracts: ['conversation.session-attribute', 'conversation.session', 'sidebar.chat', 'chat.scroller', 'chat.user-row', 'header.action-chips', 'shell.rightbar-column', 'shell.rightbar-toggle', 'shell.bottom-panel'],
   stylesheets: [{ file: 'session-panel.css', rank: 122 }],
   settingsRows: [{
-    tab: 'conversation',
-    rank: 85,
+    tab: 'sidebar',
+    rank: 60,
     pref: 'sessionPanel',
     title: 'sessionPanelTitle',
     desc: 'sessionPanelDesc',

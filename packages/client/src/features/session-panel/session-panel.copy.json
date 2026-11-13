@@ -1,7 +1,7 @@
 {
   "sessionPanelTitle": {
-    "zh": "会话总览面板",
-    "en": "Session overview panel"
+    "zh": "对话详情",
+    "en": "Details"
   },
   "sessionPanelDesc": {
     "zh": "在对话右侧显示独立的会话详情栏，列出工作目录与所在仓库、上下文占用、产出、变更请求和后台任务。",

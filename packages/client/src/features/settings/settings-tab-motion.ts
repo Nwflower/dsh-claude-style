@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { MOTION_FULL, MOTION_REDUCED, MOTION_SYSTEM, ONGOING_INDICATOR_BREATHE, ONGOING_INDICATOR_RING, ONGOING_INDICATOR_SHIMMER } from '../../constants'
+import { AUTO_POPOVER_ACCOUNT, AUTO_POPOVER_ALL, AUTO_POPOVER_OFF, MOTION_FULL, MOTION_REDUCED, MOTION_SYSTEM, ONGOING_INDICATOR_BREATHE, ONGOING_INDICATOR_RING, ONGOING_INDICATOR_SHIMMER } from '../../constants'
 import { PreviewCards } from '../../shared/preview-cards'
 import type { PreviewOption } from '../../shared/preview-cards'
 import type { Prefs } from '../../constants'
@@ -7,8 +7,9 @@ import type { SegmentOption, SettingsTab, SettingsView } from './settings-contro
 import { copy } from './copy'
 
 /**
- * The Motion tab owns the global animation choice and sidebar ongoing effects;
- * features contribute their own rows through the settings contract (D76).
+ * The Motion tab owns the global animation choice, the sidebar ongoing effects
+ * and the hover-open popovers; features contribute their own rows through the
+ * settings contract (D76).
  */
 export function createSettingsMotionTab(): SettingsTab {
   function ongoingPicker(prefs: Prefs, write: SettingsView['write']) {
@@ -51,6 +52,11 @@ export function createSettingsMotionTab(): SettingsTab {
       { value: MOTION_REDUCED, label: copy('motionReduced') },
       { value: MOTION_FULL, label: copy('motionFull') },
     ]
+    const autoPopoverOptions: SegmentOption<Prefs['autoPopover']>[] = [
+      { value: AUTO_POPOVER_OFF, label: copy('autoPopoverOff') },
+      { value: AUTO_POPOVER_ACCOUNT, label: copy('autoPopoverAccount') },
+      { value: AUTO_POPOVER_ALL, label: copy('autoPopoverAll') },
+    ]
     return [
       {
         rank: 5,
@@ -69,6 +75,15 @@ export function createSettingsMotionTab(): SettingsTab {
           copy('ongoingDesc'),
           ongoingPicker(prefs, write),
           { block: true, aside: view.aside('ongoingIndicator') },
+        ),
+      },
+      {
+        rank: 60,
+        node: view.controls.row(
+          'autoPopover',
+          copy('autoPopoverTitle'),
+          copy('autoPopoverDesc'),
+          view.controls.segment(autoPopoverOptions, prefs.autoPopover, value => { write({ autoPopover: value }) }),
         ),
       },
     ]

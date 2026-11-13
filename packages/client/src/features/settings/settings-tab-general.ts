@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { AUTO_POPOVER_ACCOUNT, AUTO_POPOVER_ALL, AUTO_POPOVER_OFF, BRAND_CLAUDE, BRAND_DEEPSEEK, INTERFACE_FONT_SIZE_DEFAULT, INTERFACE_FONT_SIZE_MAX, INTERFACE_FONT_SIZE_MIN, PAGE_ZOOM_DEFAULT, PAGE_ZOOM_MAX, PAGE_ZOOM_MIN, PALETTE_COLORING_BRAND, PALETTE_COLORING_CUSTOM, USERNAME_MAX } from '../../constants'
+import { BRAND_CLAUDE, BRAND_DEEPSEEK, INTERFACE_FONT_SIZE_DEFAULT, INTERFACE_FONT_SIZE_MAX, INTERFACE_FONT_SIZE_MIN, PAGE_ZOOM_DEFAULT, PAGE_ZOOM_MAX, PAGE_ZOOM_MIN, PALETTE_COLORING_BRAND, PALETTE_COLORING_CUSTOM, USERNAME_MAX } from '../../constants'
 import { COMBINE_SVGS } from 'virtual:dsh-claude-style/generated'
 import { createHostToast } from '../../shared/host-toast'
 import { interfaceFontSizePercent } from '../../shared/interface-font-size'
@@ -8,13 +8,13 @@ import { PercentControl } from './settings-percent-control'
 import { PreviewCards } from '../../shared/preview-cards'
 import type { Prefs } from '../../constants'
 import type { PreviewOption } from '../../shared/preview-cards'
-import type { SegmentOption, SettingsTab, SettingsView } from './settings-controls'
+import type { SettingsTab, SettingsView } from './settings-controls'
 import { copy } from './copy'
 
 /**
- * The settings page's General tab: the theme style, the username, the page's
- * own scale and the hover-open popovers; the rendering engine is the sodium
- * feature's own row, placed here by its manifest (D76).
+ * The settings page's General tab: the theme style, the username and the
+ * page's own scale; the rendering engine is the sodium feature's own row,
+ * placed here by its manifest (D76).
  *
  * Each tab is a `{ id, label, rows(view) }` record: `rows` runs on every
  * render of the page (packages/client/src/features/settings/settings.ts) with the page's
@@ -89,11 +89,6 @@ export function createSettingsGeneralTab(): SettingsTab {
     const prefs = view.prefs
     const write = view.write
     const controls = view.controls
-    const autoPopoverOptions: SegmentOption<Prefs['autoPopover']>[] = [
-      { value: AUTO_POPOVER_OFF, label: copy('autoPopoverOff') },
-      { value: AUTO_POPOVER_ACCOUNT, label: copy('autoPopoverAccount') },
-      { value: AUTO_POPOVER_ALL, label: copy('autoPopoverAll') },
-    ]
     const username = view.username
     return [
       {
@@ -165,15 +160,6 @@ export function createSettingsGeneralTab(): SettingsTab {
             onPick: percent => { write({ interfaceFontSize: String(percent) }) },
             onReset: () => { write({ interfaceFontSize: INTERFACE_FONT_SIZE_DEFAULT }) },
           }),
-        ),
-      },
-      {
-        rank: 40,
-        node: controls.row(
-          'autoPopover',
-          copy('autoPopoverTitle'),
-          copy('autoPopoverDesc'),
-          controls.segment(autoPopoverOptions, prefs.autoPopover, value => { write({ autoPopover: value }) }),
         ),
       },
     ]
