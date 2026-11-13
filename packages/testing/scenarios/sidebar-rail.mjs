@@ -39,6 +39,7 @@ const RAIL = {
   toggle: 'button[data-dsh-claude-part~="sidebar-toggle"]',
   panelList: `nav${part('panel-list')}`,
   panelRow: '[data-dsh-claude-part~="panel-row"]',
+  panelEntry: part('panel-entry'),
   glyph: '[data-dsh-claude-part~="panel-glyph"]',
   newSession: 'button[data-dsh-claude-part~="new-session"]',
   seat: '[data-dsh-claude-part~="new-session-mask"]',
@@ -136,6 +137,8 @@ const readRail = (page) => page.evaluate((rail) => {
       const dots = seat === null ? null : getComputedStyle(seat, '::before').width
       const glyph = svgRect !== null && svgRect.width > 0 ? Math.round(svgRect.width) : Math.round(Number.parseFloat(dots))
       return {
+        top: rect.top,
+        bottom: rect.bottom,
         width: Math.round(rect.width),
         height: Math.round(rect.height),
         radius: Number.parseFloat(rowStyle.borderTopLeftRadius),
@@ -168,7 +171,9 @@ const readWide = (page) => page.evaluate((rail) => {
     const rect = row.getBoundingClientRect()
     const glyph = row.querySelector(rail.glyph)
     if (rect.width === 0 || rect.height === 0 || glyph === null) continue
-    rows.push({ top: rect.top, height: rect.height, glyphLeft: glyph.getBoundingClientRect().left })
+    const entry = row.closest(rail.panelEntry)
+    rows.push({ top: rect.top, height: rect.height, glyphLeft: glyph.getBoundingClientRect().left,
+      entryHeight: entry === null ? null : entry.getBoundingClientRect().height })
   }
   return { plateBottom: plateRect.bottom, chipLeft, rows }
 }, RAIL)
@@ -213,11 +218,40 @@ function sidebarRailScenario({ check }) {
    */
   let wideSegments = 0
   let wide = null
+  const hoveredPlates = []
   return {
     script: 'greeting',
     prompt: 'hello there',
     async beforeSend({ page }) {
       wideSegments = await page.evaluate((rail) => document.querySelectorAll(rail.segments).length, RAIL)
+      const original = await page.evaluate(() => ({
+        dark: document.body.hasAttribute('data-ds-dark-theme'),
+        layout: document.body.getAttribute('data-dsh-claude-sidebar-layout'),
+      }))
+      for (const dark of [false, true]) {
+        for (const layout of ['relaxed', 'compact']) {
+          await page.evaluate(([dark, layout]) => {
+            document.body.toggleAttribute('data-ds-dark-theme', dark)
+            document.body.setAttribute('data-dsh-claude-sidebar-layout', layout)
+          }, [dark, layout])
+          await page.locator(`${RAIL.panelEntry} ${RAIL.panelRow}`).first().hover()
+          await page.waitForTimeout(400)
+          const plate = await page.evaluate((rail) => {
+            const entry = document.querySelector(rail.panelEntry)
+            const row = entry.querySelector(rail.panelRow)
+            return { entryHeight: entry.getBoundingClientRect().height, rowHeight: row.getBoundingClientRect().height,
+              entryFill: getComputedStyle(entry).backgroundColor, rowFill: getComputedStyle(row).backgroundColor }
+          }, RAIL)
+          hoveredPlates.push({ dark, layout, ...plate })
+        }
+      }
+      await page.evaluate(({ dark, layout }) => {
+        document.body.toggleAttribute('data-ds-dark-theme', dark)
+        if (layout === null) document.body.removeAttribute('data-dsh-claude-sidebar-layout')
+        else document.body.setAttribute('data-dsh-claude-sidebar-layout', layout)
+      }, original)
+      await page.mouse.move(1, 1)
+      await page.waitForTimeout(400)
       // Read while the column is still wide; the collapse follows.
       wide = await readWide(page)
       await collapseRail(page)
@@ -253,6 +287,14 @@ function sidebarRailScenario({ check }) {
           rhythm !== null && rhythm.evenSteps &&
             Math.abs(rhythm.gap - rhythm.gapUnderPlate) <= LINE_TOLERANCE_PX,
           JSON.stringify(rhythm)),
+        check('浅色和深色的两种密度布局悬停时只有容器绘制底板',
+          hoveredPlates.length === 4 && hoveredPlates.every((plate) => plate.entryHeight === plate.rowHeight &&
+            plate.rowFill === 'rgba(0, 0, 0, 0)' && plate.entryFill !== 'rgba(0, 0, 0, 0)'),
+          JSON.stringify(hoveredPlates)),
+        check('展开时固定入口的底板与按钮等高，行间距不在底板里面',
+          wide !== null && wide.rows.some((row) => row.entryHeight !== null) &&
+            wide.rows.every((row) => row.entryHeight === null || row.entryHeight === row.height),
+          JSON.stringify(wide?.rows)),
         check('展开时每一行的图标盒都落在新建会话圆片那一列',
           rhythm !== null && rhythm.worstOffColumn <= LINE_TOLERANCE_PX,
           JSON.stringify(rhythm === null ? null : { worstOffColumn: rhythm.worstOffColumn, chip: wide === null ? null : wide.chipLeft })),
@@ -263,8 +305,9 @@ function sidebarRailScenario({ check }) {
           rows.length > 0 && rows.every((row) => row.glyph === 18),
           JSON.stringify({ glyphs: rows.map((row) => row.glyph) })),
         check('面板行之间隔开 12 像素，宿主自己的步长没有被皮肤的零间距盖住',
-          rail !== null && rail.panelGap === 12,
-          JSON.stringify(rail === null ? null : { panelGap: rail.panelGap })),
+          rail !== null && rail.panelGap === 12 && rows.length > 1 &&
+            rows.slice(1).every((row, index) => Math.abs(row.top - rows[index].bottom - rail.panelGap) <= LINE_TOLERANCE_PX),
+          JSON.stringify(rail === null ? null : { panelGap: rail.panelGap, rows })),
         check('收起成图标栏后这件控件整件离开页面，宿主自己的分区按钮不再被它压住',
           rail !== null && rail.segments === null,
           JSON.stringify(rail === null ? null : { segments: rail.segments })),
