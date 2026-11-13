@@ -10,6 +10,14 @@ import { spec } from '../../fixtures/behaviour.mjs'
 import { DARK_THEME_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 
 export default spec({ page: 'desktop' }, ({ test }) => {
+  test('the sidebar density mark follows the reader selection', async (t) => {
+    for (const layout of ['relaxed', 'compact']) {
+      await t.prefs({ sidebarLayout: layout })
+      const shown = await t.page.evaluate((attribute) => document.body.getAttribute(attribute), t.surface.attribute('skin.sidebar-layout'))
+      t.expectThat.equal(shown, layout, `the sidebar carries the selected ${layout} density`)
+    }
+  })
+
   test('group labels and session titles keep distinct tiers in light and dark', async (t) => {
     const ensureLabel = () => t.page.evaluate((part) => {
       const tree = document.querySelector('[role="tree"]')

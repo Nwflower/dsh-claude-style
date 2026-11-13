@@ -24,6 +24,7 @@
     { "id": "settings.ongoing-title", "selector": ".dsh-claude-ongoing-title", "feature": "settings", "sees": "the preview title before its status marker, animated only by the shimmer option" },
     { "id": "settings.ongoing-mark", "selector": ".dsh-claude-ongoing-mark", "feature": "settings", "sees": "the preview's own breathing dot, rotating ring or hidden shimmer fallback marker" },
     { "id": "skin.ongoing-indicator", "attribute": "data-dsh-claude-ongoing-indicator", "feature": "core", "sees": "the reader's independent running style: breathe, ring or shimmer" },
+    { "id": "skin.sidebar-layout", "attribute": "data-dsh-claude-sidebar-layout", "feature": "core", "sees": "the sidebar density chosen by the reader: relaxed or compact" },
     { "id": "skin.root", "attribute": "data-dsh-claude-style", "feature": "core", "sees": "the page the skin is applied to: every stylesheet the skin ships is scoped under this mark on <body>" },
     { "id": "skin.motion", "attribute": "data-dsh-claude-motion", "feature": "core", "sees": "the motion the reader asked for, resolved: the stylesheets still every animation under its reduced value" },
     { "id": "skin.asleep", "attribute": "data-dsh-claude-asleep", "feature": "core", "sees": "the page off screen: the stylesheets hold every animation on it where it stands until the mark comes off" },

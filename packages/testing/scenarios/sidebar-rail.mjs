@@ -34,6 +34,7 @@ const part = (name) => `[${PART}~="${name}"]`
 
 /** The host's own classes this scenario reads, the seat the skin keeps out of the row, and the skin's own control, which the rail has no heading to lay over. */
 const RAIL = {
+  layoutAttribute: surfaceTable.surface.find((entry) => entry.id === 'skin.sidebar-layout').attribute,
   frame: '[data-dsh-claude-part~="layout-frame"]',
   column: '[data-dsh-claude-part~="sidebar-column"]',
   toggle: 'button[data-dsh-claude-part~="sidebar-toggle"]',
@@ -224,16 +225,16 @@ function sidebarRailScenario({ check }) {
     prompt: 'hello there',
     async beforeSend({ page }) {
       wideSegments = await page.evaluate((rail) => document.querySelectorAll(rail.segments).length, RAIL)
-      const original = await page.evaluate(() => ({
+      const original = await page.evaluate((rail) => ({
         dark: document.body.hasAttribute('data-ds-dark-theme'),
-        layout: document.body.getAttribute('data-dsh-claude-sidebar-layout'),
-      }))
+        layout: document.body.getAttribute(rail.layoutAttribute),
+      }), RAIL)
       for (const dark of [false, true]) {
         for (const layout of ['relaxed', 'compact']) {
-          await page.evaluate(([dark, layout]) => {
+          await page.evaluate(([dark, layout, attribute]) => {
             document.body.toggleAttribute('data-ds-dark-theme', dark)
-            document.body.setAttribute('data-dsh-claude-sidebar-layout', layout)
-          }, [dark, layout])
+            document.body.setAttribute(attribute, layout)
+          }, [dark, layout, RAIL.layoutAttribute])
           await page.locator(`${RAIL.panelEntry} ${RAIL.panelRow}`).first().hover()
           await page.waitForTimeout(400)
           const plate = await page.evaluate((rail) => {
@@ -245,11 +246,11 @@ function sidebarRailScenario({ check }) {
           hoveredPlates.push({ dark, layout, ...plate })
         }
       }
-      await page.evaluate(({ dark, layout }) => {
+      await page.evaluate(({ dark, layout, attribute }) => {
         document.body.toggleAttribute('data-ds-dark-theme', dark)
-        if (layout === null) document.body.removeAttribute('data-dsh-claude-sidebar-layout')
-        else document.body.setAttribute('data-dsh-claude-sidebar-layout', layout)
-      }, original)
+        if (layout === null) document.body.removeAttribute(attribute)
+        else document.body.setAttribute(attribute, layout)
+      }, { ...original, attribute: RAIL.layoutAttribute })
       await page.mouse.move(1, 1)
       await page.waitForTimeout(400)
       // Read while the column is still wide; the collapse follows.
