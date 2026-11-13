@@ -369,12 +369,21 @@
           }
           var read = function () {
             var tree = treeOf({ general: 'appearance' })
-            // The colour row is the appearance tab's only labelled group, so the
-            // cards are its button children; their labels are what the reader sees.
+            // The cards stand in the group the colour row draws; their labels are
+            // what the reader sees. The tab's segmented controls are groups too, so
+            // the cards' own is the one holding a card.
+            var holdsCards = function (children) {
+              var found = false
+              walk(children, function (inner) {
+                var innerProps = inner.props || {}
+                if (innerProps.role === 'button' && (innerProps['data-brand'] || innerProps['data-scheme'])) found = true
+              })
+              return found
+            }
             var group = null
             walk(tree, function (node) {
               var props = node.props || {}
-              if (group === null && props.role === 'group' && typeof props['aria-label'] === 'string') group = props
+              if (group === null && props.role === 'group' && typeof props['aria-label'] === 'string' && holdsCards(props.children)) group = props
             })
             var cards = []
             var readCard = function (node) {
@@ -382,17 +391,15 @@
               if (node === null || typeof node !== 'object') return
               var props = node.props || {}
               if (props.role === 'button') {
+                // The way back to the brand is the card's button of that action.
                 var reset = null
-                var kids = [].concat(props.children || [])
-                for (var ki = 0; ki < kids.length; ki++) {
-                  var kid = kids[ki]
-                  if (kid !== null && typeof kid === 'object' && (kid.props || {}).type === 'button') {
-                    reset = [].concat(kid.props.children || []).join('')
-                  }
-                }
+                walk(props.children, function (inner) {
+                  var innerProps = inner.props || {}
+                  if (innerProps['data-action'] === 'follow-brand') reset = [].concat(innerProps.children || []).join('')
+                })
                 cards.push({
                   label: props['aria-label'],
-                  brand: props['data-brand'] || null,
+                  brand: props['data-brand'] || props['data-scheme'] || null,
                   role: props.role,
                   pressed: props['aria-pressed'],
                   active: props['data-active'] === '',
@@ -427,7 +434,7 @@
           window.__pushForm({ paletteColors: 'claude' })
           await sleep(120)
           var pinned = { cards: read(), mark: mark() }
-          window.__pushForm({ paletteColors: 'custom' })
+          window.__pushForm({ paletteColors: 'custom', paletteSchemes: ['{"id":"custom","base":"claude"}'] })
           await sleep(120)
           var custom = { cards: read(), mark: mark() }
           window.__pushForm({ brand: 'claude', paletteColors: 'brand' })

@@ -1,11 +1,10 @@
 /** palette-checks.mjs — the colour cards against the preset and brand vocabulary, and against the contrast every preset owes its canvas (D96). */
 import { parse, wcagContrast } from 'culori'
+import { loadModule } from '../shared/ts-module.mjs'
 import { cardLink } from './theme-tokens.mjs'
 
-/** The least contrast text colours owe the canvas they are drawn on: inline code and links are read as text. */
-export const TEXT_CONTRAST = 4.5
-/** The least contrast the accent owes the canvas: it fills controls and marks, which need less than text. */
-export const ACCENT_CONTRAST = 3
+// The editor's contrast read-out answers the same question with the same least values.
+const { PALETTE_TEXT_CONTRAST: TEXT_CONTRAST, PALETTE_ACCENT_CONTRAST: ACCENT_CONTRAST } = loadModule('packages/contracts/src/palette-schemes.ts')
 const SCHEMES = ['light', 'dark']
 
 /**

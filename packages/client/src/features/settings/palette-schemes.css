@@ -1,0 +1,302 @@
+/* The colour schemes' cards and manager (palette-cards.ts, palette-manager.ts,
+   palette-editor.ts, D96). The cards extend the card look settings-brand.css
+   draws: they wrap onto further lines as schemes are added, and each carries
+   its small actions. The manager is a modal on <body>, over the settings
+   dialog that would clip it, in the skin's card language: 12px radius, one
+   hairline, the smallest type for read-outs. */
+
+body[data-dsh-claude-style] .dsh-claude-palette-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+body[data-dsh-claude-style] .dsh-claude-palette-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+body[data-dsh-claude-style] .dsh-claude-palette-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 10px;
+  min-height: 16px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-palette-card-tag {
+  margin-left: 6px;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: calc(11px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 16px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-palette-card-actions > .dsh-claude-palette-card-tag {
+  margin-left: 0;
+}
+
+/* The card that makes a scheme: the card's own frame, drawn as a dashed edge. */
+body[data-dsh-claude-style] .dsh-claude-palette-new {
+  justify-content: center;
+  border-style: dashed;
+  background: transparent;
+  cursor: pointer;
+}
+
+body[data-dsh-claude-style] .dsh-claude-palette-new:hover:not(:disabled) {
+  border-color: var(--dsw-alias-border-l3);
+}
+
+body[data-dsh-claude-style] .dsh-claude-palette-new:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+body[data-dsh-claude-style] .dsh-claude-palette-new-mark {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 24px;
+  line-height: 36px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-palette-toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ---------- the manager ---------- */
+
+body[data-dsh-claude-style] .dsh-claude-scheme-modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--dsh-claude-layer-takeover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 5vh, 48px) 24px;
+  background: color-mix(in srgb, var(--dsw-alias-label-primary) 28%, transparent);
+  font-family: var(--dsw-font-family);
+  color: var(--dsw-alias-label-primary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-panel {
+  display: flex;
+  flex-direction: column;
+  width: 640px;
+  max-width: 100%;
+  max-height: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 14px;
+  background: var(--dsw-alias-bg-overlay);
+  box-shadow: 0 24px 64px rgba(20, 20, 19, 0.2), 0 4px 12px rgba(20, 20, 19, 0.1);
+  overflow: hidden;
+  outline: none;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px 12px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-head h3 {
+  flex: 1;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 22px;
+}
+
+/* The head's back and close buttons: the settings button plate, square and bare until hovered. */
+body[data-dsh-claude-style] .dsh-claude-scheme-icon {
+  width: 28px;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-icon:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+body[data-dsh-claude-style] :is(.dsh-claude-scheme-list, .dsh-claude-scheme-editor) {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+  padding: 0 20px 18px;
+  overflow-y: auto;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--dsw-alias-border-l1);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-row-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-row[data-active] .dsh-claude-scheme-row-name {
+  color: var(--dsw-alias-brand-primary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-row-actions {
+  display: flex;
+  flex: none;
+  gap: 6px;
+}
+
+/* The manager's buttons and choices are the settings button plate at the card's smaller type. */
+body[data-dsh-claude-style] :is(.dsh-claude-scheme-button, .dsh-claude-scheme-choice) {
+  height: 28px;
+  padding: 0 12px;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-primary {
+  border-color: var(--dsw-alias-button-primary-fill);
+  background: var(--dsw-alias-button-primary-fill);
+  color: var(--dsw-alias-label-primary-foreground);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-danger:hover:not(:disabled) {
+  border-color: var(--dsw-alias-label-danger, #b3261e);
+  color: var(--dsw-alias-label-danger, #b3261e);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-choice[aria-pressed="true"] {
+  border-color: var(--dsw-alias-brand-primary);
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-choices {
+  display: inline-flex;
+  gap: 6px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 14px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-limit {
+  margin-left: auto;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 11px;
+  line-height: 16px;
+}
+
+/* ---------- the editor ---------- */
+
+body[data-dsh-claude-style] :is(.dsh-claude-scheme-seed, .dsh-claude-scheme-field) {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--dsw-alias-border-l1);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-field {
+  grid-template-columns: 88px minmax(0, 1fr);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-seed-name {
+  font-size: 13px;
+  line-height: 20px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-wells {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-well {
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-areas:
+    "input name"
+    "input hex"
+    "input contrast";
+  column-gap: 8px;
+  align-items: center;
+  min-width: 132px;
+  cursor: pointer;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-well > .dsh-claude-scheme-well-input {
+  grid-area: input;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+
+/* The well's three lines of small type: its appearance, its colour and the contrast it reads at. */
+body[data-dsh-claude-style] :is(.dsh-claude-scheme-well-name, .dsh-claude-scheme-hex, .dsh-claude-scheme-contrast) {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 11px;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-well-name {
+  grid-area: name;
+  color: var(--dsw-alias-label-secondary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-hex {
+  grid-area: hex;
+}
+
+body[data-dsh-claude-style] :is(.dsh-claude-scheme-contrast, .dsh-claude-scheme-contrasts) {
+  grid-area: contrast;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-contrasts {
+  display: flex;
+  flex-direction: column;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-contrast[data-low] {
+  color: var(--dsw-alias-label-danger, #b3261e);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-text-button-space {
+  width: 24px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-name {
+  width: 100%;
+  box-sizing: border-box;
+}

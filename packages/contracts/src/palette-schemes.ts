@@ -24,6 +24,11 @@ export const PALETTE_SCHEME_FOLLOW = 'brand'
 /** The id the earlier single custom card migrates to. */
 export const PALETTE_SCHEME_CUSTOM = 'custom'
 
+/** The least contrast inline code and links owe the background they are drawn on: they are read as text. */
+export const PALETTE_TEXT_CONTRAST = 4.5
+/** The least contrast the accent owes the background: it fills controls and marks, which need less than text. */
+export const PALETTE_ACCENT_CONTRAST = 3
+
 /** How a dark contour is drawn: a lifted outline, or steps of the carrying surface. */
 export const PALETTE_EDGES = ['highlight', 'surface'] as const
 export type PaletteEdges = typeof PALETTE_EDGES[number]

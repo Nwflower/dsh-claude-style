@@ -16,7 +16,7 @@ export default {
     check('the settings section registers with the settings dialog', settings.registered === true, JSON.stringify(settings.registered))
     const expected = {
       general: ['brand', 'username', 'pageZoom', 'interfaceFontSize', 'sodium', 'soundCues'],
-      appearance: ['sidebarBrand', 'brandLockup', 'brandInk', 'palette', 'paletteCards', 'backgroundOpacity', 'typeface', 'homeLayout', 'homeSessionScope', 'homeRipple', 'mascot', 'mascotScope'],
+      appearance: ['sidebarBrand', 'brandLockup', 'brandInk', 'typeface', 'homeLayout', 'homeSessionScope', 'homeRipple', 'mascot', 'mascotScope', 'palette', 'paletteCards', 'backgroundOpacity'],
       'main-window': ['turnNav', 'messageActions', 'conversationWidth', 'viewTabs', 'headerBand', 'processRows', 'answerAnchor', 'composerScope', 'composerBottomGap', 'questionCard', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent', 'contextDisplay', 'contextNumbers', 'statsPosition', 'statsFooterAlign', 'billingCurrency', 'billingTable'],
       sidebar: ['collapseFooter', 'banLocale', 'sidebarSearch', 'searchStyle', 'sidebarEntries', 'workspaceView', 'sidebarPeek', 'sidebarLayout', 'sessionPanel'],
       motion: ['motion', 'chatAnimations', 'chatWait', 'statusDetail', 'statusMotion', 'chatReveal', 'chatSend', 'messageEnter', 'caretMotion', 'ongoingIndicator', 'reasoningDisplay', 'autoPopover'],
@@ -53,13 +53,13 @@ export default {
         JSON.stringify(onWindows.disabled) === '["statsFooterAlign"]' && JSON.stringify(onWindows.notes) === '["statsFooterAlign"]',
       JSON.stringify(onWindows))
     const palette = settings.paletteCards || {}
-    const paletteCard = (state, id) => (state.cards || []).find((card) => (card.brand || 'custom') === id) || {}
+    const paletteCard = (state, id) => (state.cards || []).find((card) => card.brand === id) || {}
     const followingCards = palette.following || {}
     const pinnedCards = palette.pinned || {}
     const customCards = palette.custom || {}
-    check('the three colour cards are all buttons: the card the page paints is pressed, the others stand ready, and the trio carries the brand cards and the reader\'s own',
-      [followingCards, pinnedCards, customCards].every((state) => (state.cards || []).length === 3 &&
-        state.cards.every((card) => card.role === 'button' && card.pressed === (card.active ? 'true' : 'false') &&
+    check('every colour card is a button, the card the page paints is pressed and the others stand ready: the two presets always, the reader schemes after them once stored',
+      [followingCards, pinnedCards].every((state) => (state.cards || []).length === 2) && (customCards.cards || []).length === 3 &&
+        [followingCards, pinnedCards, customCards].every((state) => state.cards.every((card) => card.role === 'button' && card.pressed === (card.active ? 'true' : 'false') &&
           typeof card.label === 'string' && card.label.length > 0)),
       JSON.stringify(palette))
     check('following the brand presses the brand\'s card with no reset to offer; a picked card paints its own colours while the mark stays, and offers the way back',

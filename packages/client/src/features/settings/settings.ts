@@ -18,6 +18,7 @@ import type { Prefs } from '../../constants'
 import type { SettingsTabId } from '../../core/feature'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { HostSlotsService } from '@dsh-claude-style/contracts/services'
+import { closePaletteManager } from './palette-manager'
 import type { FeatureUi } from '../../core/feature'
 import type manifest from './settings.manifest'
 import type { SettingsTab, SettingsView } from './settings-controls'
@@ -515,6 +516,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   })
   return () => {
     stopThemeFlip()
+    closePaletteManager()
     hostSettings.stopSettingsDrive()
     if (ui && ui.settingsNav) {
       delete ui.settingsNav

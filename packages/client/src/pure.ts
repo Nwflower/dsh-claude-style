@@ -5,6 +5,8 @@
 export { switchedOff } from './core/switches'
 export { resolveMascot } from './core/prefs'
 export { accentInk, cssString } from './features/brand/brand'
+export { contrastRatio } from './shared/contrast'
+export { canAddScheme, duplicateScheme, newSchemeId, removeSchemePatch, selectSchemePatch, storedSchemes, storeSchemePatch } from './shared/palette-scheme'
 export { createFooterMirror } from './features/account/footer-mirror'
 export { chatFileOperationTitle, chatFileReadCard, chatFileReadEnvelope, chatFileReadMeta } from './features/chat-files/file-row-model'
 export type { FileHunk, FileReadCard, FileRowState } from './features/chat-files/file-row-model'

@@ -4,7 +4,7 @@ import { BRAND_MARK_ROUTE, BRAND_ROUTE, BRAND_WORDMARK_ROUTE } from '../constant
 import { notifyAll } from '@dsh-claude-style/engine/notify'
 import { createHostRequest } from '@dsh-claude-style/engine/resource'
 
-/** Painting and settings share this host-backed image state; URLs change with image bytes (D30). */
+/** Painting and settings share this host-backed image state; URLs change with image bytes (D96). */
 
 /** One custom image: its address, and its width over its height. */
 export interface BrandImage {

@@ -18,7 +18,7 @@
 
 ## Preview
 
-The settings page switches between the two palettes; light and dark follow the system.
+Switch between the Claude and DeepSeek brands in settings; light and dark follow the system. Appearance lets you edit presets and create, duplicate, rename and delete colour schemes.
 
 ### Claude
 

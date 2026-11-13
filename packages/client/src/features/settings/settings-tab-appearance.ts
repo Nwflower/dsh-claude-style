@@ -1,17 +1,18 @@
 import * as React from 'react'
 import { BACKGROUND_OPACITY_DEFAULT, BACKGROUND_OPACITY_MAX, BACKGROUND_OPACITY_MIN, PALETTE_CLAUDE, PALETTE_HOST, TYPEFACE_CLAUDE, TYPEFACE_HOST, TYPEFACE_SYSTEM } from '../../constants'
 import { backgroundOpacityPercent } from '../../shared/background-opacity'
-import { brandRows, paletteCardsRow } from './settings-brand'
+import { brandRows } from './settings-brand'
+import { paletteCardsRow } from './palette-cards'
 import { PercentControl } from './settings-percent-control'
 import { copy } from './copy'
 import type { SettingsRow, SettingsTab, SettingsView } from './settings-controls'
 
 /**
  * The settings page's Appearance tab: the custom brand rows that open it
- * (settings-brand.ts), whether the skin paints the colours — with the colour
- * cards as that row's sub-rows, the background fill's opacity, and whether it
- * sets the type. The home layout, the mascot and where it stands are the
- * features' own rows, placed here by their manifests (D76).
+ * (settings-brand.ts), whether it sets the type, and the colours last: whether
+ * the skin paints them, the scheme cards and manager (palette-cards.ts) and the
+ * background fill's opacity under them. The home layout, the mascot and where
+ * it stands are the features' own rows, placed here by their manifests (D76).
  */
 /**
  * The background fill's opacity row: the percentage field and the seekbar the
@@ -24,7 +25,7 @@ import type { SettingsRow, SettingsTab, SettingsView } from './settings-controls
  */
 function backgroundOpacityRow(view: SettingsView): SettingsRow {
   return {
-    rank: 16,
+    rank: 52,
     node: view.controls.row(
       'backgroundOpacity',
       copy('backgroundOpacityTitle'),
@@ -40,7 +41,7 @@ function backgroundOpacityRow(view: SettingsView): SettingsRow {
         onPick: percent => { view.write({ backgroundOpacity: String(percent) }) },
         onReset: () => { view.write({ backgroundOpacity: BACKGROUND_OPACITY_DEFAULT }) },
       }),
-      { experimental: true, mark: 'backgroundOpacity' },
+      { experimental: true, mark: 'backgroundOpacity', sub: true },
     ),
   }
 }
@@ -54,7 +55,7 @@ export function createSettingsAppearanceTab(): SettingsTab {
       ...brandRows(view),
       // Both are the skin's own or the host's, nothing between: a switch, on for the skin's.
       {
-        rank: 10,
+        rank: 50,
         node: controls.row(
           'palette',
           copy('paletteTitle'),
