@@ -60,6 +60,9 @@ const easeSources = new WeakMap<Element, ScrollSource>()
 const held = new Set<Element>()
 /** The position the reader chose on each held container; host writes to the tail never replace it. */
 const readerPositions = new WeakMap<Element, number>()
+/** Increments when a held container's position changes away from its tail. */
+const readerRevisions = new WeakMap<Element, number>()
+let nextReaderRevision = 1
 /** The scroll range (scrollHeight - clientHeight) when readerPositions was last recorded, to tell a host growth pin from reader travel. */
 const readerFloors = new WeakMap<Element, number>()
 /** The held containers the reader has since moved toward the end of: his own way back to it. */
@@ -99,6 +102,7 @@ function forgetDetached() {
     if (container.isConnected) continue
     held.delete(container)
     readerPositions.delete(container)
+    readerRevisions.delete(container)
     readerFloors.delete(container)
     heldTowardEnd.delete(container)
   }
@@ -140,10 +144,13 @@ function setHeld(container: Element, holding: boolean) {
   if (holding) {
     held.add(container)
     readerPositions.set(container, container.scrollTop)
+    readerRevisions.set(container, nextReaderRevision)
+    nextReaderRevision += 1
     readerFloors.set(container, floorOf(container))
   } else {
     held.delete(container)
     readerPositions.delete(container)
+    readerRevisions.delete(container)
     readerFloors.delete(container)
     heldTowardEnd.delete(container)
   }
@@ -171,6 +178,11 @@ function claim(container: Element, source: ScrollSource) {
 /** The reader's chosen position, or null while that container is not held. */
 export function readerScrollPosition(container: Element): number | null {
   return readerPositions.get(container) ?? null
+}
+
+/** The held position's revision: a growth consumer can tell new travel from an old record. */
+export function readerScrollRevision(container: Element): number {
+  return readerRevisions.get(container) ?? 0
 }
 
 /**
@@ -388,6 +400,10 @@ function noteScroll(event: Event) {
   const threshold = target.matches(PROCESS_BODY_SELECTOR) ? PROCESS_RELEASE_THRESHOLD_PX : FOLLOW_THRESHOLD_PX
   const hostGrowthPin = isHostGrowthPin(target, floor, threshold)
   if (floor - target.scrollTop > 0.5) {
+    if (prevTop !== target.scrollTop) {
+      readerRevisions.set(target, nextReaderRevision)
+      nextReaderRevision += 1
+    }
     readerPositions.set(target, target.scrollTop)
     readerFloors.set(target, floor)
   }
@@ -450,6 +466,7 @@ export function joinScrollOwner() {
     for (const container of held) {
       heldTowardEnd.delete(container)
       readerPositions.delete(container)
+      readerRevisions.delete(container)
       readerFloors.delete(container)
     }
     held.clear()

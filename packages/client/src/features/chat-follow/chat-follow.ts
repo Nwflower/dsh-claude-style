@@ -9,7 +9,7 @@ import { createStamp } from '@dsh-claude-style/engine/dom'
 import { motionEase, motionEaseAt, motionMs } from '../../shared/motion'
 import { inPageBox, pageViewport } from '../../shared/page-zoom'
 import { observeComposerCards } from '@dsh-claude-style/engine/host'
-import { SCROLL_EASE_LEAD_PX, handBackFollow, joinScrollOwner, readerHolds, readerScrollPosition, submissionHolds, writeScroll } from '@dsh-claude-style/engine/scroll-owner'
+import { SCROLL_EASE_LEAD_PX, handBackFollow, joinScrollOwner, readerHolds, readerScrollPosition, readerScrollRevision, submissionHolds, writeScroll } from '@dsh-claude-style/engine/scroll-owner'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { FeatureUi } from '../../core/feature'
 import type manifest from './chat-follow.manifest'
@@ -185,6 +185,8 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
   let slideHeight = 0
   /** The scroller position after the previous resize batch; null until the first report. */
   let slideScrollTop: number | null = null
+  /** The held position's revision at that batch: new travel alone may use the owner's absolute position. */
+  let slideReaderRevision = 0
   /** Whether the current conversation column has ever stood at or followed the tail. */
   let seenAtTail = false
   /** The slide running now: the column's, the counter-slides on stuck chrome, the distance they started from, and their duration. */
@@ -402,6 +404,7 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
     slideArmed = false
     slideHeight = 0
     slideScrollTop = null
+    slideReaderRevision = 0
     seenAtTail = false
     // A new column is a new conversation: the pace the old one streamed at is
     // no reading of how fast this one's pieces arrive (D95).
@@ -442,14 +445,17 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
    * refused while he holds, so this is the one writer left for it. A position
    * away from the end is the reader's own and stays where he put it.
    */
-  const holdGrowth = (column: HTMLElement) => {
+  const holdGrowth = (column: HTMLElement, previousScrollTop: number | null, readerMoved: boolean) => {
     const scroller = column.closest(CONVERSATION_SCROLL_SELECTOR)
     if (scroller === null || column.closest(FOLLOWING_TAIL_SELECTOR) === null) return
     if (scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop > 0.5) return
     if (foldBusy()) return
-    // The host has already written the new tail. Restore the position the
-    // reader chose, which is the old tail only for a touch held there (#230).
-    writeScroll(scroller, readerScrollPosition(scroller)!, 'reader')
+    // New travel since the previous growth belongs to the reader and is kept.
+    // Otherwise restore the position the previous growth actually ended at:
+    // an older absolute record could belong to another layout epoch (#332).
+    const position = readerMoved ? readerScrollPosition(scroller) : previousScrollTop
+    if (position === null) return
+    writeScroll(scroller, position, 'reader')
   }
 
   /**
@@ -468,7 +474,9 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
       if (!slideArmed) {
         slideArmed = true
         slideHeight = box
-        slideScrollTop = column.closest(CONVERSATION_SCROLL_SELECTOR)?.scrollTop ?? 0
+        const scroller = column.closest(CONVERSATION_SCROLL_SELECTOR)
+        slideScrollTop = scroller?.scrollTop ?? 0
+        slideReaderRevision = scroller === null ? 0 : readerScrollRevision(scroller)
         continue
       }
       const delta = box - slideHeight
@@ -495,15 +503,22 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
     const scroller = column?.closest(CONVERSATION_SCROLL_SELECTOR) ?? null
     noteTailIfNear(scroller)
     const scrollTop = scroller?.scrollTop ?? null
+    const previousScrollTop = slideScrollTop
+    const revision = scroller === null ? 0 : readerScrollRevision(scroller)
+    const readerMoved = revision !== slideReaderRevision
     // Sibling rows can change the pin by less or more than the column grew.
     // Compensate the host's actual position write, not only the column's delta.
     const moved = slideScrollTop === null || scrollTop === null ? 0 : scrollTop - slideScrollTop
     slideScrollTop = scrollTop
+    slideReaderRevision = revision
     holdCheck()
     if (column === null || grew === 0) return
     if (readerAway()) {
-      holdGrowth(column)
-      if (scroller !== null) slideScrollTop = scroller.scrollTop
+      holdGrowth(column, previousScrollTop, readerMoved)
+      if (scroller !== null) {
+        slideScrollTop = scroller.scrollTop
+        slideReaderRevision = readerScrollRevision(scroller)
+      }
       return
     }
     if (!slideWanted(column)) return
