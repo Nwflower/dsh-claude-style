@@ -29,7 +29,6 @@
     "packages/client/src/features/permissions/permissions.ts": 4,
     "packages/client/src/features/question-card/question-card.ts": 6,
     "packages/client/src/features/row-skip/row-skip.ts": 2,
-    "packages/client/src/features/sidebar-entries/sidebar-entries.ts": 3,
     "packages/client/src/features/sidebar-status/group-status.ts": 3,
     "packages/client/src/features/sidebar-status/sidebar-status.ts": 2,
     "packages/client/src/features/sodium/flow-items.ts": 2,

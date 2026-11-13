@@ -3,16 +3,16 @@ import * as reactDom from 'react-dom/client'
 import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
 import { MENU_ROLE_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { observeMatches } from '@dsh-claude-style/engine/bus'
-import { registerSlotEntries, withSlots } from '@dsh-claude-style/engine/host'
-import { setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
+import { hostSidebarPins, registerSlotEntries, withSlots } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
-import type { HostPanelActionEntry, HostPanelActionsProps, HostSlotsService } from '@dsh-claude-style/contracts/services'
-import { MORE_MENU_ATTR, PANEL_HIDDEN_ATTR } from '../../constants'
-import { readPrefs, savePrefs, subscribePrefs } from '../../core/prefs'
+import type { HostPanelActionEntry, HostPanelActionsProps, HostSidebarPins, HostSlotsService } from '@dsh-claude-style/contracts/services'
+import { MORE_MENU_ATTR } from '../../constants'
+import { prefsFromForm, readPrefs, savePrefs } from '../../core/prefs'
 import type { FeatureUi } from '../../core/feature'
 import type manifest from './sidebar-entries.manifest'
 import { copy } from './copy'
 import { openPanelFromAction } from '../../shared/panel-actions'
+import { createHostToast } from '../../shared/host-toast'
 import { placeBesideLauncher } from './more-placement'
 
 /**
@@ -20,11 +20,14 @@ import { placeBesideLauncher } from './more-placement'
  * entries stand on the list in an Edit sidebar dialog, and the ones taken off
  * stay one click away in More, above the host's own rows (D43).
  *
- * The host keeps a pin list of its own, but only in memory, and a panel it
- * unpins leaves the page with its icon, which the menu and the dialog still
- * draw. So the choice is a preference of the skin's, the host renders every
- * row as before, and the pass hides the rows the preference names; a row is
- * known by its label, which the panel's registration resolves from its id.
+ * The host keeps the pin list: the sidebar draws an unpin button on each row,
+ * removes the unpinned rows, and its default More menu lists them with a pin
+ * button. That list lives in the sidebar plugin's memory and starts empty on
+ * every load, so the host list is the live state and the skin's `sidebarHidden`
+ * preference is the stored copy of it: the pass replays the stored ids into the
+ * host once, writes every later change of the host list back, and the dialog
+ * writes through the same list. A host whose default menu does not list the
+ * unpinned entries gets them from the skin's own rows.
  */
 
 /** The host's panel icons, one registration per panel id. */
@@ -39,6 +42,8 @@ const ACTIONS_SLOT = 'sidebar.panellist.actions'
 const PANEL_LIST_SELECTOR = 'nav[data-dsh-claude-part~="panel-list"]'
 const PANEL_ROW_SELECTOR = `${PANEL_LIST_SELECTOR} button[data-dsh-claude-part~="panel-row"]:not([aria-haspopup="menu"])`
 const GLYPH_SELECTOR = '[data-dsh-claude-part~="panel-glyph"]'
+/** How long an entry's row may take to draw its icon before the entry is unpinned without it. */
+const GLYPH_WAIT_MS = 1500
 
 const ICON_CLASS = 'dsh-claude-sidebar-entries-icon'
 const NAME_CLASS = 'dsh-claude-sidebar-entries-name'
@@ -50,7 +55,6 @@ const ROW_CLASS = 'dsh-claude-sidebar-entries-row'
 const INPUT_CLASS = 'dsh-claude-sidebar-entries-input'
 const BOX_CLASS = 'dsh-claude-sidebar-entries-box'
 const TICK_CLASS = 'dsh-claude-sidebar-entries-tick'
-const ERROR_CLASS = 'dsh-claude-sidebar-entries-error'
 
 /** A registration's label: a string, or a thunk re-read so it follows the locale; the sidebar falls back to the id. */
 function panelLabel(label: string | (() => string) | undefined, id: string) {
@@ -58,92 +62,154 @@ function panelLabel(label: string | (() => string) | undefined, id: string) {
   return text ?? id
 }
 
+/** Whether two id lists hold the same ids in the same order. */
+function sameIds(left: readonly string[], right: readonly string[]) {
+  return left.length === right.length && left.every((id, index) => id === right[index])
+}
+
 export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const rows = observeMatches<HTMLElement>(PANEL_ROW_SELECTOR)
-  const hiddenRows = new Set<HTMLElement>()
   /**
-   * The boxes the hidden rows stand in. The host paints the row from its box and
-   * lays that box out in the list, so an emptied box would leave the list's own
-   * gap behind; the set is what the last pass hid, re-read every pass.
+   * A copy of each panel row's icon, by the row's label. The host removes an
+   * unpinned row, so the dialog and the skin's own More rows draw this copy.
    */
-  const hiddenBoxes = new Set<HTMLElement>()
+  const glyphs = new Map<string, Element>()
+  const toast = createHostToast()
   let dialogRoot: reactDom.Root | null = null
   /** The slot registry, once the host has served it to the injected scope. */
   let slots: HostSlotsService | null = null
 
-  /** The labels of the panels the reader took off the list, as the host labels their rows now. */
-  function hiddenLabels() {
-    const labels = new Set<string>()
-    const hidden = readPrefs().sidebarHidden
-    if (hidden.length === 0 || slots === null) return labels
+  /** Every registered panel's id and label, as the host labels its row now. */
+  function registeredPanels() {
+    const panels = new Map<string, string>()
+    if (slots === null) return panels
     for (const entry of slots.entriesOfSlot(PANEL_SLOT)) {
       const id = entry.options.id
-      if (id !== undefined && hidden.includes(id)) labels.add(panelLabel(entry.options.label, id))
+      if (id !== undefined) panels.set(id, panelLabel(entry.options.label, id))
     }
-    return labels
+    return panels
   }
 
-  /** The box the list lays a row out in: the row itself where the host draws it as the list's own child. */
-  function boxOf(row: HTMLElement) {
-    let node = row
-    let parent = node.parentElement
-    while (parent !== null && !parent.matches(PANEL_LIST_SELECTOR)) {
-      node = parent
-      parent = node.parentElement
+  /** Keep a copy of the icon of every row the list draws right now. */
+  function keepGlyphs() {
+    for (const row of rows.all()) {
+      const label = row.getAttribute('aria-label') ?? ''
+      if (label === '' || glyphs.has(label)) continue
+      const glyph = row.querySelector(GLYPH_SELECTOR)?.querySelector('svg, img')
+      if (glyph !== null && glyph !== undefined) glyphs.set(label, glyph.cloneNode(true) as Element)
     }
-    return node
+  }
+
+  /** The host's pin list this pass follows, and the undo of its subscription. */
+  let pins: HostSidebarPins | null = null
+  let unfollow: (() => void) | null = null
+  /** The stored ids the host has not been told about yet. */
+  const toReplay = new Set<string>()
+  /** When each stored id was first seen registered while its icon was still missing. */
+  const waitingSince = new Map<string, number>()
+  let wake: ReturnType<typeof setTimeout> | null = null
+
+  /** The list the preference should hold: the host's unpinned ids, then the stored ones still waiting to be replayed. */
+  function wantedHidden(unpinned: readonly string[]) {
+    return unpinned.concat([...toReplay].filter(id => !unpinned.includes(id)))
+  }
+
+  /** The host list moved (the sidebar's button, the host's More menu, or the dialog): store it. */
+  function storeHostList() {
+    if (pins === null) return
+    const wanted = wantedHidden(pins.unpinned.getSnapshot())
+    if (sameIds(wanted, readPrefs().sidebarHidden)) return
+    savePrefs({ sidebarHidden: wanted }).then(saved => {
+      if (saved === null) toast.show({ text: copy('saveFailed') })
+    })
+  }
+
+  /** Follow the sidebar plugin's pin list; a new list means the sidebar plugin reloaded and forgot every unpin. */
+  function followPins() {
+    if (slots === null || !prefsFromForm()) return
+    const served = hostSidebarPins(slots)
+    if (served === null) return
+    if (pins === null || served.unpinned !== pins.unpinned) {
+      if (unfollow !== null) unfollow()
+      pins = served
+      unfollow = served.unpinned.subscribe(storeHostList)
+      toReplay.clear()
+      waitingSince.clear()
+      for (const id of readPrefs().sidebarHidden) toReplay.add(id)
+    }
+    replayStored(served)
+  }
+
+  /**
+   * Tell the host about the stored ids once their panels stand on the list. An
+   * entry is unpinned after its row has drawn the icon the dialog copies, since
+   * the host removes the row as soon as it is unpinned. An id no panel has
+   * registered yet waits for its registration.
+   */
+  function replayStored(served: HostSidebarPins) {
+    if (toReplay.size === 0) return
+    const known = registeredPanels()
+    const unpinned = served.unpinned.getSnapshot()
+    const now = performance.now()
+    let waiting = false
+    for (const id of [...toReplay]) {
+      if (unpinned.includes(id)) {
+        toReplay.delete(id)
+        continue
+      }
+      const label = known.get(id)
+      if (label === undefined) continue
+      if (!waitingSince.has(id)) waitingSince.set(id, now)
+      if (!glyphs.has(label) && now - (waitingSince.get(id) ?? now) < GLYPH_WAIT_MS) {
+        waiting = true
+        continue
+      }
+      toReplay.delete(id)
+      waitingSince.delete(id)
+      served.setPinned(id, false)
+    }
+    if (waiting && wake === null) {
+      wake = setTimeout(() => {
+        wake = null
+        ui.schedule?.()
+      }, GLYPH_WAIT_MS)
+    }
   }
 
   function sync() {
-    const labels = hiddenLabels()
-    const wanted = new Set<HTMLElement>()
-    for (const row of rows.all()) {
-      const box = boxOf(row)
-      if (labels.has(row.getAttribute('aria-label') ?? '')) {
-        setAttributeIfChanged(row, PANEL_HIDDEN_ATTR, '')
-        setAttributeIfChanged(box, PANEL_HIDDEN_ATTR, '')
-        hiddenRows.add(row)
-        wanted.add(box)
-      } else if (hiddenRows.delete(row)) {
-        row.removeAttribute(PANEL_HIDDEN_ATTR)
-      }
-    }
-    for (const row of hiddenRows) {
-      if (!row.isConnected) hiddenRows.delete(row)
-    }
-    // A box whose entry stands on the list again hands its place back, and a box
-    // that lost its row with it: the mark outlives the row it was set for.
-    for (const box of hiddenBoxes) {
-      if (wanted.has(box) && box.isConnected) continue
-      box.removeAttribute(PANEL_HIDDEN_ATTR)
-      hiddenBoxes.delete(box)
-    }
-    for (const box of wanted) hiddenBoxes.add(box)
+    keepGlyphs()
+    followPins()
   }
 
-  /** The icon the host drew on a panel's row, hidden rows included: the menu and the dialog draw a copy of it. */
-  function glyphOf(label: string) {
-    for (const row of rows.all()) {
-      if (row.getAttribute('aria-label') !== label) continue
-      return row.querySelector(GLYPH_SELECTOR)?.querySelector('svg, img') ?? null
-    }
-    return null
-  }
-
-  /** A copy of a panel's row icon; the panel's own component needs the sidebar's kit, which only its row has. */
+  /** A copy of a panel row's icon; the panel's own component needs the sidebar's kit, which only its row has. */
   function PanelIcon({ label }: { label: string }) {
     const seat = React.useRef<HTMLSpanElement>(null)
     React.useLayoutEffect(() => {
       const node = seat.current
       if (node === null) return
-      const glyph = glyphOf(label)
-      node.replaceChildren(...(glyph === null ? [] : [glyph.cloneNode(true)]))
+      const glyph = glyphs.get(label)
+      node.replaceChildren(...(glyph === undefined ? [] : [glyph.cloneNode(true)]))
     }, [label])
     return React.createElement('span', { ref: seat, className: ICON_CLASS, 'aria-hidden': 'true' })
   }
 
-  function usePrefs() {
-    return React.useSyncExternalStore(subscribePrefs, readPrefs)
+  /**
+   * Whether the host's own More rows list the unpinned entries: the card tells
+   * it by holding a row that is not the skin's and names one of them. The skin's
+   * rows are drawn only where the host draws none, so one entry is never listed
+   * twice. The More card writes the answer when it mounts and clears it when it
+   * unmounts.
+   */
+  let hostListsUnpinned = false
+  const hostListsListeners = new Set<() => void>()
+  function setHostLists(next: boolean) {
+    if (hostListsUnpinned === next) return
+    hostListsUnpinned = next
+    for (const listener of hostListsListeners) listener()
+  }
+  function subscribeHostLists(listener: () => void) {
+    hostListsListeners.add(listener)
+    return () => { hostListsListeners.delete(listener) }
   }
 
   /**
@@ -151,9 +217,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * them: the host's own rows that follow start no group of their own here.
    */
   function HiddenPanelRows({ entries, onOpen, onDismiss }: HostPanelActionsProps) {
-    const hidden = usePrefs().sidebarHidden
-    const listed = entries.filter(entry => hidden.includes(entry.id))
-    if (listed.length === 0) return null
+    const hostLists = React.useSyncExternalStore(subscribeHostLists, () => hostListsUnpinned)
+    const listed = entries.filter(entry => !entry.pinned)
+    if (listed.length === 0 || hostLists) return null
     return React.createElement(React.Fragment, null,
       listed.map(entry => React.createElement(primitives.MenuItemButton, {
         key: entry.id,
@@ -175,26 +241,36 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * words up with the rows above. The row renders inside the host's card on
    * every opening, so it stamps that card for the stylesheet and seats it
    * beside its launcher before the first paint, and the card goes with the
-   * stamp when the menu closes.
+   * stamp when the menu closes. It also reads the card for the host's own rows
+   * of unpinned entries (hostListsUnpinned).
    */
-  function EditSidebarRow({ entries, onDismiss }: HostPanelActionsProps) {
+  function EditSidebarRow({ entries, onDismiss, onPinnedChange }: HostPanelActionsProps) {
     const seat = React.useRef<HTMLSpanElement>(null)
+    const unpinnedLabels = entries.filter(entry => !entry.pinned).map(entry => entry.label).join('\n')
     React.useLayoutEffect(() => {
       const card = seat.current?.closest(MENU_ROLE_SELECTOR) ?? null
       if (!(card instanceof HTMLElement)) return
       card.setAttribute(MORE_MENU_ATTR, '')
       const releasePlace = placeBesideLauncher(card)
+      const labels = unpinnedLabels === '' ? [] : unpinnedLabels.split('\n')
+      let hostRow = false
+      for (const item of card.querySelectorAll<HTMLElement>('[role="menuitem"]')) {
+        if (item.querySelector(`.${NAME_CLASS}`) !== null) continue
+        if (labels.includes((item.textContent ?? '').trim())) hostRow = true
+      }
+      setHostLists(hostRow)
       return () => {
+        setHostLists(false)
         releasePlace()
         card.removeAttribute(MORE_MENU_ATTR)
       }
-    }, [])
+    }, [unpinnedLabels])
     return React.createElement(primitives.MenuItemButton, {
       separatorBefore: true,
       icon: React.createElement('span', { ref: seat, className: ICON_CLASS, 'aria-hidden': 'true' }),
       onSelect: () => {
         onDismiss()
-        openDialog(entries)
+        openDialog(entries, onPinnedChange)
       },
       children: copy('editRow'),
     })
@@ -214,22 +290,14 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   }
 
   /**
-   * One checkbox per customizable panel. A box flips at once and the write
-   * follows; a refused write puts the boxes back to what is stored and says so.
-   * An id stored for a panel that is not on the page now stays stored.
+   * One checkbox per customizable panel. A box flips at once and the host's pin
+   * list follows it; the pin list's own subscription stores the choice.
    */
-  function EditSidebarDialog({ entries }: { entries: readonly HostPanelActionEntry[] }) {
-    const [hidden, setHidden] = React.useState(() => readPrefs().sidebarHidden)
-    const [failed, setFailed] = React.useState(false)
-    function toggle(id: string, shown: boolean) {
-      const next = shown ? hidden.filter(entry => entry !== id) : hidden.concat(id)
-      setHidden(next)
-      setFailed(false)
-      savePrefs({ sidebarHidden: next }).then(result => {
-        if (result !== null) return
-        setHidden(readPrefs().sidebarHidden)
-        setFailed(true)
-      })
+  function EditSidebarDialog({ entries, onPinnedChange }: { entries: readonly HostPanelActionEntry[], onPinnedChange: HostPanelActionsProps['onPinnedChange'] }) {
+    const [shown, setShown] = React.useState(() => new Map(entries.map(entry => [entry.id, entry.pinned])))
+    function toggle(id: string, next: boolean) {
+      setShown(previous => new Map(previous).set(id, next))
+      onPinnedChange(id, next)
     }
     return React.createElement(primitives.Modal, {
       open: true,
@@ -244,7 +312,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
         React.createElement('input', {
           type: 'checkbox',
           className: INPUT_CLASS,
-          checked: !hidden.includes(entry.id),
+          checked: shown.get(entry.id) === true,
           onChange: (event: React.ChangeEvent<HTMLInputElement>) => { toggle(entry.id, event.currentTarget.checked) },
           'data-modal-autofocus': index === 0 ? '' : undefined,
         }),
@@ -252,22 +320,21 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
         React.createElement(PanelIcon, { label: entry.label }),
         React.createElement('span', null, entry.label),
       )),
-      failed ? React.createElement('p', { className: ERROR_CLASS, role: 'alert' }, copy('saveFailed')) : null,
     ))
   }
 
   /** The dialog lists the panels More was opened with; the Modal portals itself into the page. */
-  function openDialog(entries: readonly HostPanelActionEntry[]) {
+  function openDialog(entries: readonly HostPanelActionEntry[], onPinnedChange: HostPanelActionsProps['onPinnedChange']) {
     if (dialogRoot === null) dialogRoot = reactDom.createRoot(document.createElement('div'))
-    dialogRoot.render(React.createElement(EditSidebarDialog, { entries }))
+    dialogRoot.render(React.createElement(EditSidebarDialog, { entries, onPinnedChange }))
   }
 
   function closeDialog() {
     if (dialogRoot !== null) dialogRoot.render(null)
   }
 
-  // The registry the pass reads labels from is the one the injected scope holds;
-  // its arrival asks for a pass, since rows already hidden by preference wait on it.
+  // The registry the pass reads labels and the pin list from is the one the injected scope holds;
+  // its arrival asks for a pass, since stored ids wait on it.
   const slotsFiber = withSlots(ctx, (served, scope) => {
     slots = served
     scope.effect(() => () => { slots = null }, 'dsh-claude-style: sidebar entries registry')
@@ -284,14 +351,14 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   return () => {
     if (rowsFiber !== null) rowsFiber.dispose()
     if (slotsFiber !== null) slotsFiber.dispose()
+    if (unfollow !== null) unfollow()
+    if (wake !== null) clearTimeout(wake)
+    toast.dispose()
     if (dialogRoot !== null) {
       dialogRoot.unmount()
       dialogRoot = null
     }
-    for (const row of hiddenRows) row.removeAttribute(PANEL_HIDDEN_ATTR)
-    hiddenRows.clear()
-    for (const box of hiddenBoxes) box.removeAttribute(PANEL_HIDDEN_ATTR)
-    hiddenBoxes.clear()
+    glyphs.clear()
     rows.release()
     delete ui.sidebarEntries
   }

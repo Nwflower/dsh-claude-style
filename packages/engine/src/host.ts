@@ -1,6 +1,6 @@
 import { COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_PLACEHOLDER_SELECTOR, COMPOSER_SELECTOR, COMPOSER_STACK_SELECTOR, COMPOSER_STAT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, CONVERSATION_VIEW_STORAGE_PREFIX, DIALOG_TRIGGER_SELECTOR, FOOT_AREA_SELECTOR, FOREGROUND_SELECTOR, MENU_ROLE_SELECTOR, MODAL_DIALOG_SELECTOR, MODEL_SLOT_SELECTOR, PERMISSION_TRIGGER_SELECTOR, PHASE_ATTRIBUTE, RIGHTBAR_TOGGLE_SELECTOR, SIDEBAR_BRAND_SELECTOR, SIDEBAR_CHAT_SELECTOR, SIDEBAR_NEW_SESSION_SELECTOR, SIDEBAR_ROOT_SELECTOR, SIDEBAR_TOGGLE_SELECTOR, WINDOWS_MENU_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import type { HostAccountService } from '@dsh-claude-style/contracts/account'
-import type { HostAgentTeamsRemote, HostAssistantStep, HostBundleListAnswer, HostChatSnapshot, HostChatTarget, HostConfigFormsService, HostConversationService, HostInventoryAnswer, HostJobsService, HostLocaleService, HostModelDirectoriesService, HostPluginBundle, HostServiceLookup, HostOutlineTurn, HostRunningCall, HostSession, HostSessionsService, HostSessionRenameAnswer, HostShortcutsService, HostSlotOptions, HostSlotsService, HostSnapshotSource, HostSubagentsRemote, HostTurn, HostUiConversationService, HostUiSessionService, HostWorkspacesService, HostWorkspaceViewStore } from '@dsh-claude-style/contracts/services'
+import type { HostAgentTeamsRemote, HostSidebarPins, HostAssistantStep, HostBundleListAnswer, HostChatSnapshot, HostChatTarget, HostConfigFormsService, HostConversationService, HostInventoryAnswer, HostJobsService, HostLocaleService, HostModelDirectoriesService, HostPluginBundle, HostServiceLookup, HostOutlineTurn, HostRunningCall, HostSession, HostSessionsService, HostSessionRenameAnswer, HostShortcutsService, HostSlotOptions, HostSlotsService, HostSnapshotSource, HostSubagentsRemote, HostTurn, HostUiConversationService, HostUiSessionService, HostWorkspacesService, HostWorkspaceViewStore } from '@dsh-claude-style/contracts/services'
 import { fileAddressFor } from '@deepseek-ai/dsh-util-workspace-path'
 import { observeMatches, subscribeMutations } from './bus'
 import { closestFrom, shown } from './dom'
@@ -518,6 +518,24 @@ export function hostJobs(lookup: HostServiceLookup | null | undefined): HostJobs
 /** The parent-authorized child controls; the Gateway owns the relationship check (D94). */
 export function hostRemoteSubagents(lookup: HostServiceLookup | null | undefined): HostSubagentsRemote | null {
   return lookup?.get('remote.subagents') as HostSubagentsRemote | undefined ?? null
+}
+
+/**
+ * The sidebar's pin list, read from the face its own registration injects: the
+ * host keeps no service for it, and the list lives in the sidebar plugin's
+ * memory, so the registration is the one seat that hands it out. The unpinned
+ * source keeps its identity for as long as the sidebar plugin stands, which is
+ * how a reload of that plugin shows. Null while no sidebar registers.
+ */
+export function hostSidebarPins(slots: HostSlotsService): HostSidebarPins | null {
+  for (const entry of slots.entries('sidebar')) {
+    if (typeof entry.inject !== 'function') continue
+    const face = entry.inject()
+    const unpinned = face.hooks?.entryPins as HostSidebarPins['unpinned'] | undefined
+    const setPinned = face.setPinned as HostSidebarPins['setPinned'] | undefined
+    if (unpinned !== undefined && typeof setPinned === 'function') return { unpinned, setPinned }
+  }
+  return null
 }
 
 /** The Agent Teams service behind the remote; null where the host mounts no team mode. */

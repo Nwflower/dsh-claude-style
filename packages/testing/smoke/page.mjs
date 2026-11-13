@@ -48,6 +48,7 @@ const STAND_IN_PARTS = [
   'sessions.js',
   'session-title.js',
   'model-directory.js',
+  'sidebar-pins.js',
   'config-forms.js',
   'slots.js',
   'ctx.js',

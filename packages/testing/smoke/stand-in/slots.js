@@ -60,12 +60,13 @@
     },
     register: function (spec, component) {
       // The host's slots/changed wake (packages/extensions/cordis-client-runner's
-      // event catalog), for the model seat alone: a registration change asks
+      // event catalog), for the model seat and the sidebar panel rows: a registration change asks
       // listeners for a page-wide pass, which the stand-in has no event channel
       // for — a probe node under <body> asks the same pass, the way any read
       // outside the conversation column does. Other keys keep the stand-in's
       // silent answer, the way every case that never read a wake expects.
-      if (spec.name === 'conversation.input.model') {
+      // A panel registration draws a row in the host's sidebar, which is the page-wide pass the skin's pin list waits on.
+      if (spec.name === 'conversation.input.model' || spec.name === 'sidebar.panellist') {
         var probe = document.createElement('i')
         document.body.appendChild(probe)
         probe.remove()
@@ -95,6 +96,7 @@
     // each with the options it was registered under. The workspace browser
     // declares the store it renders from instead, which is what the skin reads.
     entries: function (key) {
+      if (host.sidebarEntry !== undefined && key === 'sidebar') return [host.sidebarEntry]
       if (switchCase && key === 'sidebar.workspaces') {
         return [{ store: { create: function () { return viewStore } } }]
       }

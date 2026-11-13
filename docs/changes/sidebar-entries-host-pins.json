@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-12",
+  "group": "improvements",
+  "order": 23,
+  "external": false,
+  "zh": "侧栏条目的固定状态改用 DSH 0.2.2-rc.2 自带的固定列表，编辑侧栏对话框、行上的取消固定按钮与 More 菜单共用一份状态，取消固定的条目仍会跨重启保存",
+  "en": "Sidebar entries now share the pin list DSH 0.2.2-rc.2 keeps, so the Edit sidebar dialog, the unpin button on each row and the More menu act on one state, and the entries taken off are still stored across restarts"
+}

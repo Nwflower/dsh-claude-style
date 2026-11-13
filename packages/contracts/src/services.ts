@@ -138,11 +138,19 @@ export interface HostSlotOptions {
   label?(): string
 }
 
+/** The sidebar's pin list, as its registration's business face hands it out: the unpinned panel ids (held in memory until the host plugin reloads) and the one write. */
+export interface HostSidebarPins {
+  unpinned: HostSnapshotSource<readonly string[]>
+  setPinned(id: string, pinned: boolean): void
+}
+
 /** One registered slot entry: how it was declared, and the store it hands out. */
 interface HostSlotRegistration {
   /** A label is a string or a thunk the owner re-reads on every projection, so it follows the locale. */
   options: { id?: string, label?: string | (() => string), priority?: number }
   store?: { create(): HostSlotStore }
+  /** The registrant's business face; the sidebar's carries its pin list. */
+  inject?(): { setPinned?: unknown, hooks?: { entryPins?: unknown } }
 }
 
 /** One customizable panel, as the sidebar's More menu hands it to its rows; Plugins is never one. */
@@ -159,6 +167,8 @@ export interface HostPanelActionsProps {
   entries: readonly HostPanelActionEntry[]
   /** Open a panel by id; the sidebar does the selecting. */
   onOpen(id: string): void
+  /** Pin a panel to the sidebar (true) or unpin it (false); the sidebar's own pin list takes the change. */
+  onPinnedChange(id: string, pinned: boolean): void
   /** Close the More menu. */
   onDismiss(): void
 }

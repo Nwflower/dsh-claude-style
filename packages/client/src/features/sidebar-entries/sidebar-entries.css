@@ -1,13 +1,3 @@
-/* ---------- Sidebar entries: rows taken off the list ---------- */
-/* The host still renders the row, so More and the dialog can copy its icon
-   (sidebar-entries.ts); the list only stops showing it. The row and the box the
-   list lays it out in both carry the mark: the host paints the row from that box,
-   and an emptied box still takes the list's own gap. */
-body[data-dsh-claude-style] button[data-dsh-claude-part~="panel-row"][data-dsh-claude-panel-hidden],
-body[data-dsh-claude-style] nav[data-dsh-claude-part~="panel-list"] > [data-dsh-claude-panel-hidden] {
-  display: none;
-}
-
 /* ---------- More: the card ---------- */
 /* Claude's card is as wide as its longest row and stands beside the launcher;
    the host asks 288px under it. The shift is written by more-placement.ts, and
@@ -133,10 +123,4 @@ body[data-dsh-claude-style] .dsh-claude-sidebar-entries-row > .dsh-claude-sideba
 }
 body[data-dsh-claude-style] .dsh-claude-sidebar-entries-row > .dsh-claude-sidebar-entries-icon {
   color: var(--dsw-alias-label-secondary);
-}
-body[data-dsh-claude-style] .dsh-claude-sidebar-entries-error {
-  margin: 8px 0 0;
-  color: var(--dsw-alias-state-error-primary);
-  font-size: 12px;
-  line-height: 18px;
 }
