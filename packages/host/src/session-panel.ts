@@ -28,8 +28,10 @@ import { JOB_OUTPUT_MAX, foldJobs } from './session-panel-log.js'
 import type { PanelEvent } from './session-panel-log.js'
 import { createPanelContext, foldPanelContext, panelContextOf } from './session-panel-context.js'
 import type { PanelContextState, PanelTokenMeter } from './session-panel-context.js'
-import { belongsToPanelRound, createPanelRound, foldPanelRound, panelRoundJobs } from './session-panel-round.js'
+import { belongsToPanelRound, createPanelRound, foldPanelRound } from './session-panel-round.js'
 import type { PanelRoundState } from './session-panel-round.js'
+import { isPanelProcess } from './session-panel-call.js'
+import type { PanelInvocation } from './session-panel-call.js'
 
 /** Most sessions whose folded panel is kept; the panel reads the session on screen. */
 const KEPT_SESSIONS = 32
@@ -87,6 +89,7 @@ interface ForgeRegistry {
 /** One background job as the jobs registry projects it. */
 interface JobView {
   id?: unknown
+  kind?: unknown
   label?: unknown
   status?: unknown
   startedAt?: unknown
@@ -167,7 +170,9 @@ interface Entry {
   /** Retained output read for a job while it could still be read, by job id. */
   jobOutputs: Map<string, PanelJobOutput>
   /** The tool call that registered each job, by its call id. */
-  jobCalls: Map<string, string>
+  jobCalls: Map<string, Set<string>>
+  jobInvocations: Map<string, PanelInvocation>
+  jobOrigins: Map<string, string>
   /** Change-request updates the watches delivered, by URL. */
   updates: Map<string, ForgeUpdate>
   /** Stop functions of the forge watches, by URL. */
@@ -428,9 +433,13 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
         const id = String(job.id ?? '')
         if (id === '') continue
         live.add(id)
+        const known = entry.jobs.get(id)
         entry.jobs.set(id, {
           id,
-          label: text(job.label) ?? '',
+          label: known?.label || text(job.label) || '',
+          category: known?.category ?? (isPanelProcess(id, job.kind) ? 'process' : 'task'),
+          execution: known?.execution ?? 'unknown',
+          controllable: true,
           status: (text(job.status) ?? 'running') as PanelJob['status'],
           startedAt: number(job.startedAt) ?? 0,
           finishedAt: number(job.finishedAt) ?? undefined,
@@ -447,7 +456,7 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
       const read = jobOutput(sessionId, job.id)
       if (read !== null && read.text !== '') entry.jobOutputs.set(job.id, read)
     }
-    const jobRows = panelRoundJobs(entry.round, [...entry.jobs.values()])
+    const jobRows = [...entry.jobs.values()]
       .sort((left, right) => {
         const leftRunning = left.status === 'running' || left.status === 'stopping' ? 0 : 1
         const rightRunning = right.status === 'running' || right.status === 'stopping' ? 0 : 1
@@ -533,6 +542,8 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
       jobs: new Map(),
       jobOutputs: new Map(),
       jobCalls: new Map(),
+      jobInvocations: new Map(),
+      jobOrigins: new Map(),
       updates: new Map(),
       watches: new Map(),
       loading: null,

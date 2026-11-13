@@ -16,3 +16,13 @@ export function webfontRules(faces: readonly string[]): string {
 }`)
     .join('\n\n')
 }
+
+/**
+ * The faces the page cannot draw, as a reader names them, in the contract's
+ * order: `present` answers whether one face resolves anywhere — the system's
+ * own copy or the drop point's file (shared/font-presence.ts). The settings page
+ * reports them under the typeface row (D75).
+ */
+export function unavailableWebfonts(present: (face: typeof OPTIONAL_WEBFONTS[number]) => boolean): string[] {
+  return OPTIONAL_WEBFONTS.filter(face => !present(face)).map(face => face.label)
+}

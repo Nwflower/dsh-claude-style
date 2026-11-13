@@ -42,6 +42,6 @@ export function JobStop({ sessionId, jobId, label, status, subagent = false }: {
       onBlur() { setState(previous => previous === 'confirm' ? 'idle' : previous) },
     }, state === 'confirm' ? copy('confirmStop') : waiting ? copy('stopping') : h('svg', {
       width: 14, height: 14, viewBox: '0 0 16 16', fill: 'none', 'aria-hidden': true,
-    }, h('rect', { x: 4, y: 4, width: 8, height: 8, rx: 1, stroke: 'currentColor', strokeWidth: 1.5 }))),
+    }, h('rect', { x: 4, y: 4, width: 8, height: 8, rx: 1, fill: 'currentColor' }))),
     state === 'failed' ? h('span', { className: 'dsh-claude-panel-job-error', role: 'alert' }, copy('stopFailed')) : null)
 }

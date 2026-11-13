@@ -6,8 +6,9 @@
  * their round until results arrive, so a late result cannot enter a newer one.
  * The same ordered fold handles a restored log and incremental poll batches.
  */
-import type { PanelJob, PanelOutput } from '@dsh-claude-style/contracts/session-panel'
+import type { PanelOutput } from '@dsh-claude-style/contracts/session-panel'
 import type { PanelEvent } from './session-panel-log.js'
+import { panelArguments } from './session-panel-call.js'
 
 const IMAGE_EXT = /\.(?:png|jpe?g|webp|gif|svg|avif|bmp)$/i
 const DOCUMENT_EXT = /\.(?:md|markdown|txt|pdf|docx?|xlsx?|pptx?|csv|json|jsonl|yaml|yml|html?)$/i
@@ -25,29 +26,15 @@ export interface PanelRoundState {
   since: number
   outputs: PanelOutput[]
   calls: Map<string, RoundCall>
-  jobs: Map<string, number>
   children: Map<string, number>
 }
 
 export function createPanelRound(): PanelRoundState {
-  return { round: 0, since: 0, outputs: [], calls: new Map(), jobs: new Map(), children: new Map() }
+  return { round: 0, since: 0, outputs: [], calls: new Map(), children: new Map() }
 }
 
 function text(value: unknown): string | null {
   return typeof value === 'string' && value !== '' ? value : null
-}
-
-/** Malformed tool arguments have no file or recipient to attribute. */
-function argumentsOf(value: unknown): Record<string, unknown> | null {
-  if (typeof value !== 'string' || value === '') return null
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(value)
-  } catch {
-    // A failed or partially recorded tool call contributes no output row.
-    return null
-  }
-  return typeof parsed === 'object' && parsed !== null ? parsed as Record<string, unknown> : null
 }
 
 function outputOf(path: string, origin: PanelOutput['origin'], directory: string | null): PanelOutput {
@@ -84,20 +71,11 @@ export function foldPanelRound(state: PanelRoundState, events: readonly PanelEve
     if (event.type === 'tool/call') {
       const id = text(data.callId)
       if (id === null) continue
-      const args = argumentsOf(data.arguments)
+      const args = panelArguments(data.arguments)
       const written = WRITE_TOOLS.has(String(data.name)) && args !== null
         ? text(args.path) ?? text(args.file_path) ?? text(args.target_file) ?? text(args.filePath) : null
       const child = data.name === 'send_message' && args !== null ? text(args.agent_id) : null
       state.calls.set(id, { round: state.round, written, child })
-      continue
-    }
-    if (event.type === 'job/registered') {
-      const id = text(data.jobId)
-      const call = text(data.toolCall?.callId)
-      const root = text(data.toolCall?.rootCallId)
-      const round = (call === null ? undefined : state.calls.get(call)?.round)
-        ?? (root === null ? undefined : state.calls.get(root)?.round) ?? state.round
-      if (id !== null) state.jobs.set(id, round)
       continue
     }
     if (event.type === 'subagent/catalog') {
@@ -126,12 +104,7 @@ export function foldPanelRound(state: PanelRoundState, events: readonly PanelEve
 }
 
 /** Unknown registry-only records use their creation time; a legacy log has no boundary. */
-export function belongsToPanelRound(state: PanelRoundState, kind: 'jobs' | 'children', id: string, createdAt: number) {
+export function belongsToPanelRound(state: PanelRoundState, kind: 'children', id: string, createdAt: number) {
   const round = state[kind].get(id)
   return round === undefined ? state.round === 0 || (state.since > 0 && createdAt >= state.since) : round === state.round
-}
-
-/** Running work stays actionable across a new input; settled older work leaves. */
-export function panelRoundJobs(state: PanelRoundState, jobs: readonly PanelJob[]) {
-  return jobs.filter(job => job.status === 'running' || job.status === 'stopping' || belongsToPanelRound(state, 'jobs', job.id, job.startedAt))
 }

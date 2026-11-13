@@ -8,6 +8,8 @@ import { createWakeThrottle } from './wake-throttle'
 import { panelHost } from './session-panel-host'
 import { EMPTY_READING, answeredReading, failedReading, readingFor } from './reading-state'
 import type { PanelReading, PanelReadingState } from './reading-state'
+import type { ContextOccupancy } from './context-rows'
+import type { HostContextPressureProjection, HostSnapshotSource } from '@dsh-claude-style/contracts/services'
 
 /** The reading shape the body consumes; its rules live in reading-state.ts. */
 export type { PanelReading } from './reading-state'
@@ -18,6 +20,47 @@ const POLL_MS = 2500
 const WAKE_KEYS = ['sessionStats', 'tokenUsage'] as const
 /** The closest two asks from those frames, so one streaming turn is not one ask per frame. */
 const WAKE_MIN_MS = 400
+/** The projection that carries the session's occupancy, read for the context section's overview. */
+const OCCUPANCY_KEY = 'contextPressure'
+
+/**
+ * The host's occupancy reading for one session, from the projection that carries
+ * it, or null while that projection names no window.
+ */
+function occupancyFrom(face: HostSnapshotSource<unknown> | undefined) {
+  if (typeof face?.getSnapshot !== 'function') return null
+  const pressure = face.getSnapshot() as HostContextPressureProjection | undefined
+  const used = pressure?.projectedTokens ?? pressure?.pressureTokens
+  const window = pressure?.contextWindow
+  if (used === undefined || window === undefined || !(window > 0)) return null
+  return { used: Math.max(0, Math.min(window, used)), window }
+}
+
+/**
+ * Follow one session's occupancy (D94).
+ *
+ * The context section states its overview on the frame the rail mounts: the
+ * provider's occupancy is a projection frame, not the host route's fold, so the
+ * rail does not wait for that fold to say how full the window is. The breakdown
+ * under the overview is the fold's, and takes its place when it answers.
+ * @param sessionId - the session the rail shows.
+ * @returns the occupancy, or null while the projection names no window.
+ */
+export function useLiveOccupancy(sessionId: string): ContextOccupancy | null {
+  const read = React.useCallback(() => {
+    const face = sessionProjectionFaces(panelHost(), sessionId, [OCCUPANCY_KEY])?.[OCCUPANCY_KEY]
+    return occupancyFrom(face)
+  }, [sessionId])
+  const [occupancy, setOccupancy] = React.useState<ContextOccupancy | null>(read)
+  React.useEffect(() => {
+    if (sessionId === '') return undefined
+    setOccupancy(read())
+    const face = sessionProjectionFaces(panelHost(), sessionId, [OCCUPANCY_KEY])?.[OCCUPANCY_KEY]
+    if (typeof face?.subscribe !== 'function') return undefined
+    return face.subscribe(() => { setOccupancy(read()) })
+  }, [read, sessionId])
+  return occupancy
+}
 
 /**
  * Follow one session's overview panel (D94).

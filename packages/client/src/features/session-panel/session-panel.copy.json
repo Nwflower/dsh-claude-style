@@ -4,8 +4,8 @@
     "en": "Details"
   },
   "sessionPanelDesc": {
-    "zh": "在对话右侧显示独立的会话详情栏，列出工作目录与所在仓库、上下文占用、产出、变更请求和后台任务。",
-    "en": "Shows a separate session details rail beside the conversation: the working directory and the checkout it sits in, context occupancy, outputs, change requests and background work."
+    "zh": "在对话右侧显示会话详情，列出工作目录、上下文占用、产出、变更请求、进程、子智能体与团队。",
+    "en": "Shows session details beside the conversation: working directory, context occupancy, outputs, change requests, processes, subagents and team."
   },
   "environment": {
     "zh": "环境",
@@ -125,7 +125,19 @@
   },
   "jobs": {
     "zh": "进程",
-    "en": "Jobs"
+    "en": "Processes"
+  },
+  "processForeground": {
+    "zh": "前台",
+    "en": "Foreground"
+  },
+  "processBackground": {
+    "zh": "后台",
+    "en": "Background"
+  },
+  "finishedCount": {
+    "zh": "{count} 项已结束",
+    "en": "{count} finished"
   },
   "subagents": {
     "zh": "子智能体",
@@ -174,6 +186,10 @@
   "noContext": {
     "zh": "还没有上下文读数",
     "en": "No context reading yet"
+  },
+  "contextBreakdownLoading": {
+    "zh": "正在读取上下文分项",
+    "en": "Loading the context breakdown"
   },
   "loading": {
     "zh": "正在读取会话",

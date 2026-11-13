@@ -400,6 +400,12 @@ body[data-dsh-claude-style] .dsh-claude-panel-segment {
   box-shadow: inset -1px 0 var(--dsw-alias-bg-layer-1);
 }
 
+/* The occupancy before its composition is read: one bar, in the ink the whole
+   used context wears, with the parts taking their own colours when they arrive. */
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-used {
+  background: var(--dsh-claude-context-messages);
+}
+
 body[data-dsh-claude-style] .dsh-claude-panel-segment.is-system,
 body[data-dsh-claude-style] .dsh-claude-panel-dot.is-system {
   background: var(--dsh-claude-context-system);
@@ -578,23 +584,10 @@ body[data-dsh-claude-style] .dsh-claude-panel-more:focus-visible {
   background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.06));
 }
 
-/* A background category's label: an eyebrow over its rows, quiet enough to
-   read as a division of the section rather than a second heading. */
-body[data-dsh-claude-style] .dsh-claude-panel-group-title {
-  margin: 8px 0 0;
-  color: var(--dsw-alias-label-tertiary, #8a8a8a);
-  font: inherit;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-group:first-of-type .dsh-claude-panel-group-title {
-  margin-top: 0;
-}
-
-/* The panel's small type: a row's trailing state, a category's label, the fold
+/* The panel's small type: a row's trailing state, the fold
    control and a caption. It follows the rules that take the row's font whole,
    so its size is the one that stands. */
 body[data-dsh-claude-style] .dsh-claude-panel-chip,
-body[data-dsh-claude-style] .dsh-claude-panel-group-title,
 body[data-dsh-claude-style] .dsh-claude-panel-more,
 body[data-dsh-claude-style] .dsh-claude-panel-caption {
   font-size: calc(11.5px * var(--dsh-claude-interface-font-scale, 1));

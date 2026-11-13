@@ -6,7 +6,7 @@
  *   occupancy, reorder categories, or turn a missing composition into messages.
  */
 import { expect, test } from 'vitest'
-import { contextRows } from '@dsh-claude-style/client/pure'
+import { contextOverview, contextRows } from '@dsh-claude-style/client/pure'
 import type { PanelContext } from '@dsh-claude-style/contracts/session-panel'
 
 test('source parts share one occupancy and one window denominator', () => {
@@ -34,4 +34,25 @@ test('unattributed occupancy keeps its own category and zero stays zero', () => 
   const context = { used: 100, window: 1000, system: 0, tools: 0, messages: 0 }
   expect(contextRows(context).map(row => [row.kind, row.tokens])).toEqual([['other', 100]])
   expect(contextRows({ ...context, used: 0 }).reduce((sum, row) => sum + row.tokens, 0)).toBe(0)
+})
+
+test('the live occupancy states the overview before the route has any context', () => {
+  expect(contextOverview({ used: 248900, window: 450000 }, null)).toEqual({ used: 248900, window: 450000 })
+})
+
+test('the live occupancy decides while it answers, over the route figure', () => {
+  const context: PanelContext = { used: 100, window: 1000, system: 10, tools: 20, messages: 70 }
+  expect(contextOverview({ used: 120, window: 1000 }, context)).toEqual({ used: 120, window: 1000 })
+})
+
+test('the route answers when nothing is live, and no window answers nothing', () => {
+  const context: PanelContext = { used: 100, window: 1000, system: 10, tools: 20, messages: 70 }
+  expect(contextOverview(null, context)).toEqual({ used: 100, window: 1000 })
+  expect(contextOverview(null, null)).toBeNull()
+  expect(contextOverview({ used: 10, window: 0 }, null)).toBeNull()
+})
+
+test('an occupancy past either end of the window is clamped into it', () => {
+  expect(contextOverview({ used: 1200, window: 1000 }, null)).toEqual({ used: 1000, window: 1000 })
+  expect(contextOverview({ used: -5, window: 1000 }, null)).toEqual({ used: 0, window: 1000 })
 })

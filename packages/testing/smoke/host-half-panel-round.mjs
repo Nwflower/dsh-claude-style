@@ -58,8 +58,8 @@ export async function hostPanelRound({ mod, fakeHost, request, browser, scratchH
   }
   const empty = await read('incremental')
   check('a new human input clears old outputs before a new delivery', empty.outputs.length === 0, JSON.stringify(empty.outputs))
-  check('an old running job survives the input while old completed jobs leave',
-    empty.background.jobs.map(job => job.id).join() === 'old-running', JSON.stringify(empty.background.jobs))
+  check('command history spans human inputs while running commands remain actionable',
+    empty.background.jobs.map(job => job.id).sort().join() === 'old-finished,old-running', JSON.stringify(empty.background.jobs))
   check('old running and newly resumed children survive while old completed children leave',
     empty.background.subagents.map(child => child.id).sort().join() === 'running-child,ui-resumed-child', JSON.stringify(empty.background.subagents))
   incremental.push(...numbered.slice(initial.length))
@@ -76,10 +76,10 @@ export async function hostPanelRound({ mod, fakeHost, request, browser, scratchH
     !advanced.outputs.some(output => /late/.test(output.path)), JSON.stringify(advanced.outputs))
   check('successful child reuse and current creation enter the round while failed reuse stays out',
     advanced.background.subagents.map(child => child.id).sort().join() === 'latest-child,reused-child,running-child,ui-resumed-child', JSON.stringify(advanced.background.subagents))
-  check('current completed and cross-round running jobs both remain visible',
-    advanced.background.jobs.map(job => job.id).sort().join() === 'new-finished,old-running', JSON.stringify(advanced.background.jobs))
+  check('current and earlier commands remain in the session history',
+    advanced.background.jobs.map(job => job.id).sort().join() === 'late-nested,new-finished,old-finished,old-running', JSON.stringify(advanced.background.jobs))
   incremental.push({ ...settled('old-running'), seq: numbered.length })
   const finished = await read('incremental')
-  check('an older running job leaves when it settles',
-    finished.background.jobs.map(job => job.id).join() === 'new-finished', JSON.stringify(finished.background.jobs))
+  check('an older running command becomes a settled history entry',
+    finished.background.jobs.find(job => job.id === 'old-running')?.status === 'completed', JSON.stringify(finished.background.jobs))
 }

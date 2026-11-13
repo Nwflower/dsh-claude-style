@@ -1,16 +1,20 @@
 import * as React from 'react'
 import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
-import { formatCompactTokens, formatHostDuration } from '../../shared/format'
+import { formatCompactTokens } from '../../shared/format'
 import { sessionStatsCacheHit, sessionStatsDuration, sessionStatsSpeed, sessionStatsTokens } from '../../shared/stats-format'
 import { hostChatSeat } from '../../core/i18n'
 import { copy } from './copy'
-import { openPanelFile, openPanelSession } from './session-panel-host'
+import { openPanelFile } from './session-panel-host'
 import { billingCurrency, statsCostText } from './stats-cost'
 import { readPrefs, subscribePrefs } from '../../core/prefs'
-import { useJobOutput, usePanelReading } from './session-panel-data'
-import { contextRows } from './context-rows'
-import { JobStop } from './job-stop'
-import type { PanelBackground, PanelChange, PanelContext, PanelEnvironment, PanelJob, PanelOutput, PanelStats, PanelSubagent } from '@dsh-claude-style/contracts/session-panel'
+import { usePanelReading, useLiveOccupancy } from './session-panel-data'
+import { panelFiguresOf } from './session-panel-figures'
+import { useLiveFigures } from './session-panel-live'
+import { contextRows, contextOverview } from './context-rows'
+import type { ContextOccupancy, ContextOverview, ContextRow } from './context-rows'
+import { Row, Chip, Section, FoldedList } from './panel-rows'
+import { hasRunningWork, WorkSections } from './session-panel-work'
+import type { PanelChange, PanelContext, PanelEnvironment, PanelOutput, PanelStats } from '@dsh-claude-style/contracts/session-panel'
 
 const h = React.createElement
 
@@ -66,9 +70,9 @@ function outputMark(kind: PanelOutput['kind']) {
  *
  * The body is one column of sections in the order a reader asks about a
  * session — where it works, what the context holds, how it ran, what it spent,
- * what it produced, what it changed, and what runs behind it. The first two
- * always appear; the figures appear once the host reports them, and the last
- * three only with something to show.
+ * what it produced, what it changed, and its processes, tasks, subagents and
+ * team. The first two always appear; figures need a host reading, and work
+ * sections appear only with something to show.
  */
 export function PanelBody(props: PanelBodyProps) {
   const sessionId = typeof props.sessionId === 'string' && props.sessionId !== '' ? props.sessionId : null
@@ -78,6 +82,15 @@ export function PanelBody(props: PanelBodyProps) {
 
 function PanelView({ sessionId, preset, active }: { sessionId: string, preset: PanelPreset, active: boolean }) {
   const { value, failed } = usePanelReading(sessionId, active)
+  // The two figures tables print the statistics feature's live reading — the one
+  // the composer's line prints — so the numbers beside the chat move with the
+  // numbers under it instead of one settlement behind them (D94).
+  const live = useLiveFigures(sessionId)
+  // The occupancy is a projection frame, so the context section can state its
+  // overview on the frame the rail mounts; its breakdown is the route's fold and
+  // takes its place when that answers (D94).
+  const occupancy = useLiveOccupancy(sessionId)
+  const currency = useBillingCurrency()
   // A running row's clock has to move between the panel's own polls.
   const running = value !== null && hasRunningWork(value.background)
   const [, tick] = React.useState(0)
@@ -87,107 +100,26 @@ function PanelView({ sessionId, preset, active }: { sessionId: string, preset: P
     return () => window.clearInterval(timer)
   }, [running])
   if (value === null) {
+    // The first frame carries what the page already knows: the context overview.
+    // The sections that need the host's fold join it when that answers, so the
+    // rail never stands as one loading line (D94).
     return h('div', { className: 'dsh-claude-panel' },
-      h('p', { className: 'dsh-claude-panel-note' }, copy(failed ? 'unavailable' : 'loading')))
+      failed
+        ? h('p', { className: 'dsh-claude-panel-note' }, copy('unavailable'))
+        : h(ContextSection, { key: 'context', context: null, occupancy }))
   }
+  const settled = value.stats ?? null
+  const figures = live !== null
+    ? panelFiguresOf(live, settled)
+    : settled === null ? null : { stats: settled, cost: statsCostText(settled.cost, currency) }
   return h('div', { className: 'dsh-claude-panel' },
     value.environment === null ? null : h(EnvironmentSection, { key: 'environment', environment: value.environment, preset }),
-    h(ContextSection, { key: 'context', context: value.context }),
-    value.stats === null || value.stats === undefined ? null : h(StatsSection, { key: 'stats', stats: value.stats }),
-    value.stats === null || value.stats === undefined ? null : h(TokensSection, { key: 'tokens', stats: value.stats }),
+    h(ContextSection, { key: 'context', context: value.context, occupancy }),
+    figures === null ? null : h(StatsSection, { key: 'stats', stats: figures.stats }),
+    figures === null ? null : h(TokensSection, { key: 'tokens', stats: figures.stats, cost: figures.cost }),
     value.outputs.length === 0 ? null : h(OutputsSection, { key: 'outputs', sessionId, directory: value.environment?.directory, outputs: value.outputs }),
     value.changes.length === 0 ? null : h(ChangesSection, { key: 'changes', changes: value.changes }),
-    hasBackgroundWork(value.background) ? h(BackgroundSection, { key: 'background', sessionId, background: value.background }) : null)
-}
-
-/** Each section owns a native disclosure (D94): its children stay mounted so
- * folding preserves list expansion and an opened job's output. An unchanged
- * `open` prop lets the browser keep the reader's choice across data refreshes.
- * A `folded` section starts closed, with its reading beside the heading.
- */
-function Section({ title, summary, folded, children }: { title: string, summary?: React.ReactNode, folded?: boolean, children?: React.ReactNode }) {
-  return h('details', { className: 'dsh-claude-panel-section', open: folded !== true },
-    h('summary', { className: 'dsh-claude-panel-section-toggle' },
-      h('h2', { className: 'dsh-claude-panel-heading' },
-        h('span', { className: 'dsh-claude-panel-section-title' }, title),
-        h('span', { className: 'dsh-claude-panel-section-chevron', 'aria-hidden': true },
-          h(primitives.IconChevronRightOutlineRegular, { size: 12 })),
-        summary === undefined ? null : h('span', { className: 'dsh-claude-panel-section-reading' }, summary))),
-    h('div', { className: 'dsh-claude-panel-section-content' }, children))
-}
-
-/** How many rows a section or a background category shows before folding the rest behind its own control. */
-const FOLD_LIMIT = 2
-
-/**
- * One section's rows, folded after two while the reader has not asked for the
- * rest: the panel is a summary, and a long list would push every section after
- * it out of the column. A row opened in place (a job's output) folds with the
- * rows it belongs to.
- */
-function FoldedList({ rows }: { rows: readonly React.ReactNode[] }) {
-  const [expanded, setExpanded] = React.useState(false)
-  if (rows.length <= FOLD_LIMIT) return h('div', { className: 'dsh-claude-panel-list' }, rows)
-  return h('div', { className: 'dsh-claude-panel-list' },
-    expanded ? rows : rows.slice(0, FOLD_LIMIT),
-    h('button', {
-      type: 'button',
-      className: 'dsh-claude-panel-more',
-      'aria-expanded': expanded,
-      onClick() { setExpanded(!expanded) },
-    }, expanded ? copy('showLess') : copy('showMore', { count: rows.length - FOLD_LIMIT })))
-}
-
-/**
- * One labeled group of background rows. The categories are the kinds of work
- * the host reports — commands, subagents, team — so a reader finds the row they
- * mean without reading every label; each group folds on its own.
- */
-function BackgroundGroup({ title, rows }: { title: string, rows: readonly React.ReactNode[] }) {
-  return h('div', { className: 'dsh-claude-panel-group' },
-    h('h3', { className: 'dsh-claude-panel-group-title' }, title),
-    h(FoldedList, { rows }))
-}
-
-/**
- * One row on one line: a mark, a title with its detail after it, and a trailing
- * side. The line's hint is the row's whole reading, for a title or a detail the
- * line cut short; `hint` replaces it where the row has words of its own to say.
- */
-function Row(props: { mark?: React.ReactNode, title: string, detail?: string, hint?: string, kind?: string, side?: React.ReactNode, href?: string, onClick?: () => void, expanded?: boolean }) {
-  const detail = props.detail === undefined || props.detail === '' ? null : props.detail
-  const content = [
-    props.mark === undefined ? null : h('span', { key: 'mark', className: 'dsh-claude-panel-mark', 'aria-hidden': true }, props.mark),
-    h('span', { key: 'main', className: 'dsh-claude-panel-main', title: props.hint ?? (detail === null ? props.title : `${props.title} · ${detail}`) },
-      h('span', { className: 'dsh-claude-panel-title' }, props.title),
-      detail === null ? null : h('span', { className: 'dsh-claude-panel-detail' }, detail)),
-    props.side === undefined ? null : h('span', { key: 'side', className: 'dsh-claude-panel-side' }, props.side),
-  ]
-  const rowClass = props.kind === undefined ? 'dsh-claude-panel-row' : `dsh-claude-panel-row ${props.kind}`
-  if (props.href !== undefined) {
-    return h('a', {
-      className: `${rowClass} is-link`,
-      href: props.href,
-      target: '_blank',
-      rel: 'noreferrer',
-      title: props.title,
-    }, content)
-  }
-  if (props.onClick !== undefined) {
-    return h('button', {
-      type: 'button',
-      className: `${rowClass} is-button`,
-      onClick: props.onClick,
-      title: props.title,
-      ...(props.expanded === undefined ? {} : { 'aria-expanded': props.expanded }),
-    }, content)
-  }
-  return h('div', { className: rowClass }, content)
-}
-
-/** One trailing state word. */
-function Chip({ text, tone }: { text: string, tone?: 'success' | 'failure' | 'pending' }) {
-  return h('span', { className: tone === undefined ? 'dsh-claude-panel-chip' : `dsh-claude-panel-chip is-${tone}` }, text)
+    h(WorkSections, { key: 'work', sessionId, background: value.background }))
 }
 
 /** A path with the reader's home replaced by `~`. */
@@ -296,52 +228,79 @@ function RepositoryRow(props: { name?: string, branch: string | null, linked: bo
     }))
 }
 
-/** The context window's occupancy, its composition, and the room left. */
-function ContextSection({ context }: { context: PanelContext | null }) {
-  if (context === null) {
+/**
+ * The context window's occupancy, its composition, and the room left.
+ *
+ * The overview is the provider's own reading, so it stands on the frame the rail
+ * mounts; the composition is the host's fold, and while that has not answered
+ * the section states the overview alone with the breakdown's own line under it (D94).
+ */
+function ContextSection({ context, occupancy }: { context: PanelContext | null, occupancy: ContextOccupancy | null }) {
+  const overview = contextOverview(occupancy, context)
+  if (overview === null) {
     return h(Section, { title: copy('context') },
-      h('p', { className: 'dsh-claude-panel-note' }, copy('noContext')))
+      h('p', { className: 'dsh-claude-panel-note' }, copy(context === null ? 'loading' : 'noContext')))
   }
-  const rows = contextRows(context)
-  const free = Math.max(0, context.window - context.used)
-  const percent = sharePercent(context.used, context.window)
+  const percent = sharePercent(overview.used, overview.window)
+  const rows = context === null ? null : contextRows({ ...context, used: overview.used, window: overview.window })
   return h(Section, {
     title: copy('context'),
     summary: h(React.Fragment, null,
       h('span', null, `${percent}%`),
       h('span', { className: 'dsh-claude-panel-context-mini', 'aria-hidden': true },
-        h('span', { style: { width: `${Math.min(100, Math.max(0, context.used / context.window * 100))}%` } }))),
+        h('span', { style: { width: `${Math.min(100, overview.used / overview.window * 100)}%` } }))),
   },
     h('div', { className: 'dsh-claude-panel-context' },
       h('div', { className: 'dsh-claude-panel-context-head' },
         h('span', { className: 'dsh-claude-panel-percent' }, copy('contextUsedPct', { percent })),
         h('span', { className: 'dsh-claude-panel-figures' },
-          `${formatCompactTokens(context.used)} / ${formatCompactTokens(context.window)}`)),
-      h('div', {
-        className: 'dsh-claude-panel-bar',
-        role: 'img',
-        'aria-label': copy('contextUsedPct', { percent }),
-      }, rows.map(row => h('span', {
-        key: row.kind,
-        className: `dsh-claude-panel-segment is-${row.kind}`,
-        style: { width: `${row.share}%` },
-      }))),
-      h('dl', { className: 'dsh-claude-panel-legend', title: copy('contextEstimate') },
-        rows.map(row => h('div', { key: row.kind, className: 'dsh-claude-panel-legend-row' },
-          h('dt', null,
-            h('i', { className: `dsh-claude-panel-dot is-${row.kind}`, 'aria-hidden': true }),
-            copy(row.label)),
-          h('dd', null, formatCompactTokens(row.tokens)),
-          h('dd', { className: 'dsh-claude-panel-share' }, `${row.share.toFixed(1)}%`))),
-        h('div', { className: 'dsh-claude-panel-legend-row is-free' },
-          h('dt', null,
-            h('i', { className: 'dsh-claude-panel-dot is-free', 'aria-hidden': true }),
-            copy('contextFree')),
-          h('dd', null, formatCompactTokens(free)),
-          h('dd', { className: 'dsh-claude-panel-share' }, `${(free / context.window * 100).toFixed(1)}%`))),
-      // The parts are estimates and the occupancy above them is the provider's
-      // own reading: the legend says so once, and its hint carries the method.
-      h('p', { className: 'dsh-claude-panel-caption', title: copy('contextEstimate') }, copy('contextEstimateNote'))))
+          `${formatCompactTokens(overview.used)} / ${formatCompactTokens(overview.window)}`)),
+      contextBar(overview, rows),
+      contextLegend(rows, overview)))
+}
+
+/** The occupancy bar: the parts' own colours once they answer, one used-ink bar before. */
+function contextBar(overview: ContextOverview, rows: ContextRow[] | null) {
+  const share = `${Math.min(100, overview.used / overview.window * 100)}%`
+  return h('div', {
+    className: 'dsh-claude-panel-bar',
+    role: 'img',
+    'aria-label': copy('contextUsedPct', { percent: sharePercent(overview.used, overview.window) }),
+  }, rows === null
+    // The occupancy before its composition is read: one bar, in the ink the
+    // whole used context wears, until the parts take their own colours.
+    ? h('span', { className: 'dsh-claude-panel-segment is-used', style: { width: share } })
+    : rows.map(row => h('span', {
+      key: row.kind,
+      className: `dsh-claude-panel-segment is-${row.kind}`,
+      style: { width: `${row.share}%` },
+    })))
+}
+
+/**
+ * The parts' legend and the room left, or the breakdown's own line until the
+ * host's fold answers: the occupancy above is already the provider's own reading.
+ */
+function contextLegend(rows: ContextRow[] | null, overview: ContextOverview) {
+  if (rows === null) return h('p', { className: 'dsh-claude-panel-note' }, copy('contextBreakdownLoading'))
+  const free = Math.max(0, overview.window - overview.used)
+  return h(React.Fragment, null,
+    h('dl', { className: 'dsh-claude-panel-legend', title: copy('contextEstimate') },
+      rows.map(row => h('div', { key: row.kind, className: 'dsh-claude-panel-legend-row' },
+        h('dt', null,
+          h('i', { className: `dsh-claude-panel-dot is-${row.kind}`, 'aria-hidden': true }),
+          copy(row.label)),
+        h('dd', null, formatCompactTokens(row.tokens)),
+        h('dd', { className: 'dsh-claude-panel-share' }, `${row.share.toFixed(1)}%`))),
+      h('div', { className: 'dsh-claude-panel-legend-row is-free' },
+        h('dt', null,
+          h('i', { className: 'dsh-claude-panel-dot is-free', 'aria-hidden': true }),
+          copy('contextFree')),
+        h('dd', null, formatCompactTokens(free)),
+        h('dd', { className: 'dsh-claude-panel-share' }, `${(free / overview.window * 100).toFixed(1)}%`))),
+    // The parts are estimates and the occupancy above them is the provider's own
+    // reading: the legend says so once, and its hint carries the method.
+    h('p', { className: 'dsh-claude-panel-caption', title: copy('contextEstimate') }, copy('contextEstimateNote')))
 }
 
 /** One figure of a figures section: its label and its value as written. */
@@ -396,12 +355,10 @@ function StatsSection({ stats }: { stats: PanelStats }) {
  * The section starts folded with the cost beside its heading; with billing off
  * or a model no table prices, the tokens the session moved stand in.
  */
-function TokensSection({ stats }: { stats: PanelStats }) {
-  const currency = useBillingCurrency()
+function TokensSection({ stats, cost }: { stats: PanelStats, cost: string | null }) {
   const chat = hostChatSeat()
   const tokens = (count: number) => (chat === null ? `${formatCompactTokens(count)} tok` : sessionStatsTokens(count, chat))
   const rows: Figure[] = []
-  const cost = statsCostText(stats.cost, currency)
   if (cost !== null) rows.push({ key: 'cost', label: copy('statsCost'), value: cost })
   const billed = stats.uncachedInputTokens + stats.cacheReadTokens + stats.cacheWriteTokens
   if (billed > 0) {
@@ -464,161 +421,4 @@ function ChangesSection({ changes }: { changes: readonly PanelChange[] }) {
       })
   })
   return h(Section, { title: copy('changes'), summary: copy('sectionItems', { count: changes.length }) }, h(FoldedList, { rows }))
-}
-
-/** Whether any background row is still moving. */
-function hasRunningWork(background: PanelBackground) {
-  if (background.jobs.some(job => job.status === 'running' || job.status === 'stopping')) return true
-  if (background.subagents.some(child => child.running === true)) return true
-  return (background.team?.members ?? []).some(member => member.running === true)
-}
-
-/** Whether any background row exists at all. */
-function hasBackgroundWork(background: PanelBackground) {
-  if (background.jobs.length > 0 || background.subagents.length > 0) return true
-  const team = background.team
-  return team !== null && (team.members.length > 0 || team.tasks.length > 0)
-}
-
-/**
- * The word a job row still needs: one running, stopping or failed. A finished
- * command is what most rows are, and it says so with its clock stopping; a word
- * on every row would make the state the row's loudest part (D94).
- */
-function jobStatusText(status: string) {
-  if (status === 'running') return copy('running')
-  if (status === 'stopping') return copy('stopping')
-  if (status === 'failed') return copy('failed')
-  return null
-}
-
-/** One job's clock: how long it ran, or how long it has been running. */
-function jobElapsed(startedAt: number, finishedAt: number | undefined, now: number) {
-  if (startedAt <= 0) return ''
-  return elapsedText((finishedAt ?? now) - startedAt)
-}
-
-/** A clock the host's own chat surfaces write: minutes from the first minute, hours from the first hour. */
-function hostDuration(ms: number) {
-  const seat = hostChatSeat()
-  return seat === null ? `${Math.max(0, Math.round(ms / 1000))}s` : formatHostDuration(ms, seat)
-}
-
-/** One job's clock: how long it ran, or how long it has been running. */
-function jobDuration(job: PanelJob, now: number) {
-  if (job.startedAt <= 0) return ''
-  return hostDuration((job.finishedAt ?? now) - job.startedAt)
-}
-
-/**
- * One child's clock: the turns it closed plus the open one.
- *
- * A finished child's figure stands still; only a child with a turn open at the
- * reading moves, because only then is `activeSince` carried.
- */
-function childDuration(child: PanelSubagent, now: number) {
-  const total = child.settledMs + (child.running && child.activeSince !== null ? Math.max(0, now - child.activeSince) : 0)
-  return total <= 0 ? '' : hostDuration(total)
-}
-
-/** What a child row's second line carries: its clock and its tokens. */
-function childDetail(child: PanelSubagent, now: number) {
-  const parts = [childDuration(child, now)]
-  if (child.tokens > 0) parts.push(`${formatCompactTokens(child.tokens)} tok`)
-  return parts.filter(part => part !== '').join(' · ')
-}
-
-/** A child's own state words, in the order the host's subagent panel shows them.
- * A child that has finished keeps its clock alone, like a finished command (D94). */
-function childChips(child: PanelSubagent) {
-  const chips: React.ReactNode[] = []
-  if (child.running) chips.push(h(Chip, { key: 'state', tone: 'pending', text: copy('running') }))
-  if (child.mode === 'continuable') chips.push(h(Chip, { key: 'mode', text: copy('continuable') }))
-  return chips.length === 0 ? undefined : chips
-}
-
-/** A team member's state word. */
-function memberStatusText(running: boolean | null) {
-  if (running === true) return copy('running')
-  if (running === false) return copy('idle')
-  return copy('finished')
-}
-
-/**
- * One job's retained output, read when the reader opens its row.
- * @param props.sessionId - the session that owns the job.
- * @param props.jobId - the job whose output is shown.
- * @returns the output block, or the reason there is none.
- */
-function JobOutput({ sessionId, jobId }: { sessionId: string, jobId: string }) {
-  const reading = useJobOutput(sessionId, jobId)
-  const text = reading.loading ? copy('loading') : reading.failed ? copy('unavailable') : reading.text === null || reading.text === '' ? copy('noOutput') : reading.text
-  return h('pre', { className: 'dsh-claude-panel-job-output' }, text)
-}
-
-/** What runs behind the conversation. */
-function BackgroundSection({ sessionId, background }: { sessionId: string, background: PanelBackground }) {
-  const now = Date.now()
-  const [expandedJob, setExpandedJob] = React.useState<string | null>(null)
-  const jobRows: React.ReactNode[] = []
-  const childRows: React.ReactNode[] = []
-  const teamRows: React.ReactNode[] = []
-  // The host answers newest first (running work included); the rail keeps that order.
-  const jobs = background.jobs
-  for (const job of jobs) {
-    const expanded = expandedJob === job.id
-    const status = jobStatusText(job.status)
-    // A command that finished keeps its clock and drops the exit code: the code
-    // is what the reader opens the row for when it is not zero.
-    const settled = status === null
-    jobRows.push(h(React.Fragment, { key: `job:${job.id}` },
-      h('div', { className: 'dsh-claude-panel-job-line' }, h(Row, {
-        mark: h(primitives.IconCodeOutlineRegular, { size: MARK_SIZE }),
-        title: job.label === '' ? copy('jobs') : job.label,
-        // The clock leads: it is the part a detail cut short still has to show.
-        detail: [jobDuration(job, now), settled ? null : job.detail, job.progress].filter(part => part !== undefined && part !== null && part !== '').join(' · '),
-        side: status === null ? undefined : h(Chip, { text: status, tone: job.status === 'failed' ? 'failure' : 'pending' }),
-        expanded,
-        onClick() { setExpandedJob(expanded ? null : job.id) },
-      }), h(JobStop, { sessionId, jobId: job.id, label: job.label === '' ? copy('jobs') : job.label, status: job.status })),
-      expanded ? h(JobOutput, { key: 'output', sessionId, jobId: job.id }) : null))
-  }
-  for (const child of background.subagents) {
-    childRows.push(h('div', { key: `subagent:${child.id}`, className: 'dsh-claude-panel-job-line' }, h(Row, {
-      mark: h(primitives.IconAgentPresetOutlineRegular, { size: MARK_SIZE }),
-      title: child.label === '' ? copy('subagents') : child.label,
-      detail: childDetail(child, now),
-      side: childChips(child),
-      onClick() { openPanelSession(child.id) },
-    }), child.mode === 'continuable' && child.running ? h(JobStop, {
-      key: child.activeSince,
-      sessionId, jobId: child.id, label: child.label === '' ? copy('subagents') : child.label, status: 'running', subagent: true,
-    }) : null))
-  }
-  const team = background.team
-  if (team !== null) {
-    for (const member of team.members) {
-      teamRows.push(h(Row, {
-        key: `member:${member.id}`,
-        mark: h(primitives.IconUsersOutlineRegular, { size: MARK_SIZE }),
-        title: member.role === 'lead' ? `${member.name} · ${copy('team')}` : member.name,
-        detail: member.phase,
-        side: h(Chip, { text: memberStatusText(member.running), tone: member.running === true ? 'pending' : undefined }),
-        onClick() { openPanelSession(member.id) },
-      }))
-    }
-    for (const task of team.tasks) {
-      teamRows.push(h(Row, {
-        key: `task:${task.id}`,
-        mark: h(primitives.IconChecklistOutlineRegular, { size: MARK_SIZE }),
-        title: task.subject,
-        detail: task.ownerName ?? copy('tasks'),
-        side: h(Chip, { text: task.status, tone: task.status === 'completed' ? 'success' : task.status === 'in_progress' ? 'pending' : undefined }),
-      }))
-    }
-  }
-  return h(Section, { title: copy('background'), summary: copy('sectionItems', { count: jobRows.length + childRows.length + teamRows.length }) },
-    jobRows.length === 0 ? null : h(BackgroundGroup, { key: 'jobs', title: copy('jobs'), rows: jobRows }),
-    childRows.length === 0 ? null : h(BackgroundGroup, { key: 'subagents', title: copy('subagents'), rows: childRows }),
-    teamRows.length === 0 ? null : h(BackgroundGroup, { key: 'team', title: copy('team'), rows: teamRows }))
 }

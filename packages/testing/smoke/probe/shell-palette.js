@@ -9,7 +9,6 @@
   var probe = window.__dshSmokeProbe
   var sleep = probe.sleep
   var r = probe.report
-  var NOTE_CLASS = 'dsh-claude-settings-row-note'
 
   probe.step(async function () {
     // Following the host's colours and type: with the host's palette in the
@@ -100,7 +99,7 @@
         var tree = Section({})
         react.rendering = false
         react.states = null
-        var out = { tabs: [], selected: null, rows: [], disabled: [], notes: [], groups: [], notice: null, link: null }
+        var out = { tabs: [], selected: null, rows: [], disabled: [], notes: [], noteText: {}, groups: [], notice: null, link: null }
         walk(tree, function (node) {
           var props = node.props || {}
           if (props.role === 'tab') {
@@ -119,7 +118,10 @@
             // label seen is the group the row stands in.
             if (out.groups.length > 0) out.groups[out.groups.length - 1].rows.push(rowKey)
             walk(props.children, function (child) {
-              if (((child.props || {}).className || '') === NOTE_CLASS && out.notes.indexOf(rowKey) < 0) out.notes.push(rowKey)
+              var childProps = child.props || {}
+              if (childProps.className !== 'dsh-claude-settings-row-note') return
+              if (out.notes.indexOf(rowKey) < 0) out.notes.push(rowKey)
+              out.noteText[rowKey] = [].concat(childProps.children || []).join('')
             })
           }
           if (typeof props.className === 'string' && /(^| )dsh-claude-settings-tab-notice( |$)/.test(props.className)) {
@@ -147,21 +149,6 @@
       if (r.settings.registered) {
         var tabIds = ['general', 'appearance', 'main-window', 'sidebar', 'motion']
         for (var ti = 0; ti < tabIds.length; ti++) r.settings.pages[tabIds[ti]] = renderTab(tabIds[ti])
-        var readTypeface = function (choice) {
-          if (choice === 'system') window.__pushForm({ typeface: choice })
-          var answer = { note: renderTab('appearance').notes.includes('typeface'), text: '' }
-          var noteNode = null
-          ;(function find(node) {
-            if (noteNode !== null || node === null || node === undefined || typeof node !== 'object') return
-            if (Array.isArray(node)) { node.forEach(find); return }
-            if ((node.props || {}).className === NOTE_CLASS) { noteNode = node; return }
-            find(node.props && node.props.children)
-          })(renderSettingsTab('appearance'))
-          if (noteNode !== null) answer.text = [].concat(noteNode.props.children || []).join('')
-          return answer
-        }
-        r.settings.typefaceNote = { claude: readTypeface('claude'), system: readTypeface('system') }
-        window.__pushForm({ typeface: 'claude' })
         r.settings.link = r.settings.pages.general.link
         // The heading's mark: the build inlines the asset into the token sheet
         // and the rule paints it as a mask over the link's own box, so the
@@ -456,6 +443,24 @@
           window.__pushForm({ brand: 'claude', paletteColors: 'brand' })
           await sleep(120)
           return { following: following, pinned: pinned, custom: custom }
+        })()
+        // The typeface row's note: the stand-in's drop point holds one of the
+        // three faces, so the other two are named while the skin's own faces are
+        // chosen, and nothing is claimed under another choice (D75).
+        r.settings.typefaceNote = await (async function () {
+          var read = function () {
+            var page = renderTab('appearance')
+            return { note: page.notes.indexOf('typeface') !== -1, text: page.noteText.typeface || '' }
+          }
+          window.__pushForm({ typeface: 'claude' })
+          await sleep(120)
+          var claude = read()
+          window.__pushForm({ typeface: 'system' })
+          await sleep(120)
+          var system = read()
+          window.__pushForm({ typeface: 'claude' })
+          await sleep(120)
+          return { claude: claude, system: system }
         })()
         window.__pushForm({ modelPicker: false, mascot: 'off', sidebarSearch: false, palette: 'host', billingCurrency: 'off' })
         r.settings.parentsOff = { appearance: renderTab('appearance'), mainWindow: renderTab('main-window'), sidebar: renderTab('sidebar') }

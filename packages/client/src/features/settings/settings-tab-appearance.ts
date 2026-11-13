@@ -1,12 +1,13 @@
 import * as React from 'react'
 import { BACKGROUND_OPACITY_DEFAULT, BACKGROUND_OPACITY_MAX, BACKGROUND_OPACITY_MIN, PALETTE_CLAUDE, PALETTE_HOST, TYPEFACE_CLAUDE, TYPEFACE_HOST, TYPEFACE_SYSTEM } from '../../constants'
 import { backgroundOpacityPercent } from '../../shared/background-opacity'
+import { webfontsUnavailable } from '../../shared/webfonts'
 import { brandRows } from './settings-brand'
 import { paletteCardsRow } from './palette-cards'
 import { PercentControl } from './settings-percent-control'
 import { copy } from './copy'
 import { noteDesc } from './settings-controls'
-import { missingOptionalWebfonts, optionalWebfontFaces } from '../../shared/webfonts'
+import type { Prefs } from '../../constants'
 import type { SettingsRow, SettingsTab, SettingsView } from './settings-controls'
 
 /**
@@ -48,6 +49,20 @@ function backgroundOpacityRow(view: SettingsView): SettingsRow {
   }
 }
 
+/**
+ * The typeface row's description, with the faces the page cannot draw under it
+ * while the skin's own faces are chosen (D75): a face counts as there wherever it
+ * comes from, installed on the system or dropped at the fonts route, so the note
+ * names a face only where neither provides it. The answer is the page's own
+ * measurement (shared/webfonts.ts), read here rather than taken again; before it
+ * arrives nothing is claimed about the faces.
+ */
+function typefaceDesc(prefs: Prefs): React.ReactNode {
+  const missing = webfontsUnavailable()
+  if (prefs.typeface !== TYPEFACE_CLAUDE || missing === null || missing.length === 0) return copy('typefaceDesc')
+  return noteDesc(copy('typefaceDesc'), copy('typefaceMissing', { names: missing.join(' / ') }))
+}
+
 export function createSettingsAppearanceTab(): SettingsTab {
   function rows(view: SettingsView) {
     const prefs = view.prefs
@@ -74,9 +89,7 @@ export function createSettingsAppearanceTab(): SettingsTab {
         node: controls.row(
           'typeface',
           copy('typefaceTitle'),
-          noteDesc(copy('typefaceDesc'), prefs.typeface === TYPEFACE_CLAUDE && missingOptionalWebfonts(optionalWebfontFaces()).length > 0
-            ? copy('typefaceMissing', { faces: missingOptionalWebfonts(optionalWebfontFaces()).join(', ') })
-            : null),
+          typefaceDesc(prefs),
           controls.segment([
             { value: TYPEFACE_CLAUDE, label: copy('typefaceClaude') },
             { value: TYPEFACE_SYSTEM, label: copy('typefaceSystem') },

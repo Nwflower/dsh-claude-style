@@ -44,7 +44,7 @@ const HEADINGS = {
   context: words('context'),
   outputs: words('outputs'),
   changes: words('changes'),
-  background: words('background'),
+  processes: words('jobs'),
   stats: words('sessionStats'),
   tokens: words('tokenUsage'),
 }
@@ -68,16 +68,14 @@ const readRail = (page) => page.evaluate(({ headings }) => {
     stats: [...root.querySelectorAll('.dsh-claude-panel-stat')].map((row) => row.textContent),
     outputs: sectionOf(headings.outputs)?.textContent ?? '',
     changes: sectionOf(headings.changes)?.textContent ?? '',
-    background: sectionOf(headings.background)?.textContent ?? '',
-    groups: [...(sectionOf(headings.background)?.querySelectorAll('.dsh-claude-panel-group') ?? [])].map((group) => ({
-      title: group.querySelector('.dsh-claude-panel-group-title')?.textContent ?? '',
-      rows: group.querySelectorAll('.dsh-claude-panel-row').length,
-      more: group.querySelector('.dsh-claude-panel-more')?.textContent ?? null,
-    })),
-    jobs: [...(sectionOf(headings.background)?.querySelectorAll('.dsh-claude-panel-row') ?? [])].map((row) => ({
+    processes: sectionOf(headings.processes)?.textContent ?? '',
+    finished: sectionOf(headings.processes)?.querySelector('.dsh-claude-panel-finished-toggle')?.textContent ?? '',
+    jobs: [...(sectionOf(headings.processes)?.querySelectorAll('.dsh-claude-panel-row') ?? [])].map((row) => ({
       title: row.querySelector('.dsh-claude-panel-title')?.textContent ?? '',
       detail: row.querySelector('.dsh-claude-panel-detail')?.textContent ?? '',
       side: row.querySelector('.dsh-claude-panel-side')?.textContent ?? '',
+      duration: row.querySelector('.dsh-claude-panel-work-duration')?.textContent ?? '',
+      execution: row.querySelector('.dsh-claude-panel-execution')?.textContent ?? '',
     })),
     preset: sectionOf(headings.environment)?.querySelector('.dsh-claude-details-preset .dsh-claude-panel-title')?.textContent ?? null,
   }
@@ -158,7 +156,7 @@ async function pressRightPanel(page) {
 }
 
 /** Native section states and the readings a reader sees with the rows put away. */
-const readDisclosures = page => page.evaluate(() => [...document.querySelectorAll('.dsh-claude-details details')].map(section => ({
+const readDisclosures = page => page.evaluate(() => [...document.querySelectorAll('.dsh-claude-details .dsh-claude-panel-section')].map(section => ({
   title: section.querySelector('.dsh-claude-panel-section-title')?.textContent ?? '',
   open: section.open,
   content: section.querySelector('.dsh-claude-panel-section-content')?.checkVisibility() ?? false,
@@ -181,13 +179,13 @@ export function sessionPanelScenario({ check }) {
         { thinking: ['Third file.'], tool: { name: 'write', input: { file_path: '{{workspace}}/panel-three.md', content: '# Three\n' } } },
         { thinking: ['Fourth file.'], tool: { name: 'write', input: { file_path: '{{workspace}}/panel four.md', content: '# Four\n' } } },
         // Commands and outputs belong to the same user round; each list folds on its own.
-        { thinking: ['First command.'], tool: { name: commandTool, input: { command: 'echo panel-command-one', description: 'print the first rail line' } } },
-        { thinking: ['Second command.'], tool: { name: commandTool, input: { command: 'echo panel-command-two', description: 'print the second rail line' } } },
-        { thinking: ['Third command.'], tool: { name: commandTool, input: { command: 'echo panel-command-three', description: 'print the third rail line' } } },
+        { thinking: ['First command.'], tool: { name: commandTool, input: { command: 'echo panel-command-one', description: 'panel-command-one' } } },
+        { thinking: ['Second command.'], tool: { name: commandTool, input: { command: 'echo panel-command-two', description: 'panel-command-two' } } },
+        { thinking: ['Third command.'], tool: { name: commandTool, input: { command: 'echo panel-command-three', description: 'panel-command-three' } } },
         { thinking: ['The commands ran.'], text: ['Wrote four files and ran three commands.\n'] },
-        // A new human prompt replaces settled rows and leaves a live job to stop.
+        // A new human prompt replaces outputs and adds a live command to the session history.
         { thinking: ['Latest output.'], tool: { name: 'write', input: { file_path: '{{workspace}}/panel-latest.md', content: '# Latest round\n' } } },
-        { thinking: ['Latest command.'], tool: { name: commandTool, input: { command: 'echo panel-command-latest', description: 'print the latest rail line' } } },
+        { thinking: ['Latest command.'], tool: { name: commandTool, input: { command: 'echo panel-command-latest', description: 'panel-command-latest' } } },
         { thinking: ['A job the reader can cancel.'], tool: { name: commandTool, input: {
           command: process.platform === 'win32' ? 'Write-Output panel-stop-latest; Start-Sleep -Seconds 120' : 'echo panel-stop-latest; sleep 120',
           description: 'panel-stop-latest', run_in_background: true,
@@ -216,6 +214,54 @@ export function sessionPanelScenario({ check }) {
       }
     },
 
+    /**
+     * The scripted answer streams while the rail stands. The two figures tables
+     * print the same live reading the composer's line prints — the host's settled
+     * projections with the streaming text added — counted to each new reading the
+     * way the line counts, so a count moves between the panel's own asks and
+     * moves a little at a time rather than landing in one step; a table fed from
+     * the route alone can only move after an ask (D94).
+     */
+    async duringTurn(context) {
+      const { page } = context
+      const notes = context.notes
+      await page.waitForSelector('.dsh-claude-details', { timeout: 20000 })
+      const read = () => page.evaluate(() => {
+        const rail = document.querySelector('.dsh-claude-details')
+        if (rail === null) return null
+        const rows = [...rail.querySelectorAll('.dsh-claude-panel-row, .dsh-claude-panel-stat')]
+        const pick = (pattern) => {
+          const row = rows.find(node => pattern.test(node.textContent ?? ''))
+          return row ? (row.textContent ?? '').replace(/\s+/g, ' ').trim() : null
+        }
+        return { out: pick(/^输出[\d,]/), cost: pick(/^费用/) }
+      })
+      const samples = []
+      // A frame-paced count moves many times inside the panel's poll period, so
+      // the readings are taken close enough together to tell the two apart.
+      for (let i = 0; i < 90; i++) {
+        const reading = await read()
+        if (reading === null) break
+        samples.push({ ...reading, at: Date.now(), asks: notes.panelAsks.length })
+        await page.waitForTimeout(50)
+      }
+      // A change no ask stands behind is the live reading moving the table; one
+      // that follows an ask is the route answering.
+      const movedAlone = samples.some((sample, index) => index > 0 &&
+        sample.asks === samples[index - 1].asks &&
+        (sample.out !== samples[index - 1].out || sample.cost !== samples[index - 1].cost))
+      // The count travels: two changes inside a few frames. A table that writes
+      // each reading as it lands has one change per settlement instead.
+      let closest = Number.POSITIVE_INFINITY
+      let lastChange = null
+      for (const sample of samples) {
+        const moved = sample.out !== lastChange?.out || sample.cost !== lastChange?.cost
+        if (lastChange !== null && moved) closest = Math.min(closest, sample.at - lastChange.at)
+        if (moved) lastChange = sample
+      }
+      notes.liveFigures = { movedAlone, closest, samples: samples.slice(0, 12) }
+    },
+
     async afterTurn(context) {
       const { page } = context
       const notes = context.notes
@@ -237,13 +283,13 @@ export function sessionPanelScenario({ check }) {
       // Section controls are independent, retain their choice through a poll,
       // and keep the browser's Enter and Space activation (D94). The two
       // figures sections start folded, so only the open ones are pressed shut.
-      const sectionToggles = page.locator('.dsh-claude-details summary')
+      const sectionToggles = page.locator('.dsh-claude-details .dsh-claude-panel-section > summary')
       notes.disclosures = { initial: await readDisclosures(page) }
       const refreshed = page.waitForResponse(response => response.url().includes(SESSION_PANEL_PATH) && response.ok())
       // The section that closes leaves the open set, so the last one is pressed
       // first: closing it keeps every earlier index pointing at the same
       // summary, while closing from the front would shift them all.
-      const openSections = await page.locator('.dsh-claude-details details[open] > summary').all()
+      const openSections = await page.locator('.dsh-claude-details .dsh-claude-panel-section[open] > summary').all()
       for (const toggle of openSections.reverse()) await toggle.click()
       await refreshed
       notes.disclosures.closed = await readDisclosures(page)
@@ -275,10 +321,10 @@ export function sessionPanelScenario({ check }) {
           return section === undefined ? null : [...section.querySelectorAll('.dsh-claude-panel-row.is-button')].filter((row) => row.checkVisibility()).length
         })
       }
-      // Each background category folds past two rows on its own control.
-      const groupFold = page.locator('.dsh-claude-details .dsh-claude-panel-group .dsh-claude-panel-more').first()
+      // Settled commands share one disclosure; active commands stay above it.
+      const groupFold = page.locator('.dsh-claude-details .dsh-claude-panel-finished-toggle').first()
       if (await groupFold.count() > 0) {
-        const groupRows = () => page.evaluate(() => [...document.querySelectorAll('.dsh-claude-details .dsh-claude-panel-group')].map((group) => group.querySelectorAll('.dsh-claude-panel-row').length))
+        const groupRows = () => page.locator('.dsh-claude-details .dsh-claude-panel-work-row:visible').count()
         notes.groupFold = { rows: await groupRows() }
         await groupFold.click()
         await page.waitForTimeout(300)
@@ -313,6 +359,7 @@ export function sessionPanelScenario({ check }) {
       })
       notes.headerActions = await readHeaderActions(page)
       // A job row opens its retained output in place and closes again.
+      await groupFold.click()
       notes.jobOpened = await page.evaluate(() => {
         const target = [...document.querySelectorAll('.dsh-claude-details .dsh-claude-panel-row.is-button')].find((row) => /panel-command-three/.test(row.textContent ?? ''))
         target?.click()
@@ -378,7 +425,7 @@ export function sessionPanelScenario({ check }) {
           return { theme: value, width: box.width, inside: box.left >= 0 && box.right <= innerWidth, background: getComputedStyle(rail).backgroundColor }
         }, theme))
         if (context.out !== undefined) await capturePanel(page, `${context.out}/session-panel-${theme}.png`)
-        const toggles = page.locator('.dsh-claude-details summary')
+        const toggles = page.locator('.dsh-claude-details .dsh-claude-panel-section > summary')
         for (const toggle of await toggles.all()) await toggle.click()
         if (context.out !== undefined) await capturePanel(page, `${context.out}/session-panel-collapsed-${theme}.png`)
         for (const toggle of await toggles.all()) await toggle.click()
@@ -432,13 +479,20 @@ export function sessionPanelScenario({ check }) {
       await sendPrompt(page, 'Write the latest file and start the cancellable job.')
       await waitForTurn(page)
       await page.waitForFunction(() => /panel-latest\.md/.test(document.querySelector('.dsh-claude-details')?.textContent ?? ''), undefined, { timeout: 30000 })
-      // The background section catches up on its own poll, so the new job's line
+      // The process section catches up on its own poll, so the new job's line
       // is what says it arrived (the first round waits the same way).
       await page.waitForFunction(() => /panel-command-latest/.test(document.querySelector('.dsh-claude-details')?.textContent ?? ''), undefined, { timeout: 30000 })
       notes.latestRound = await readRail(page)
       const jobLine = page.locator('.dsh-claude-panel-job-line').filter({ hasText: 'panel-stop-latest' }).first()
       const stop = jobLine.locator('.dsh-claude-panel-job-stop')
       await stop.waitFor({ state: 'visible' })
+      if (context.out !== undefined) {
+        for (const theme of ['light', 'dark']) {
+          await page.evaluate(value => document.body.toggleAttribute('data-ds-dark-theme', value === 'dark'), theme)
+          await sanitizePage(expression => page.evaluate(expression))
+          await page.locator('.dsh-claude-panel-work-section').first().screenshot({ path: `${context.out}/session-process-running-${theme}.png` })
+        }
+      }
       await stop.click()
       notes.stopConfirm = await stop.textContent()
       notes.stopDidNotExpand = await jobLine.locator('.dsh-claude-panel-row').getAttribute('aria-expanded') === 'false'
@@ -453,6 +507,30 @@ export function sessionPanelScenario({ check }) {
         const answer = await response.json()
         return answer.value?.background?.jobs?.find(job => job.label.includes('panel-stop-latest'))?.status ?? null
       }, SESSION_PANEL_PATH)
+      // The rail's first frame states the occupancy it already holds, while the
+      // route's fold — the breakdown under it — is still on its way. Holding the
+      // ask makes that frame something the walk can read (D94).
+      const held = '**/dsh-claude-style/session-panel**'
+      await page.route(held, async (route) => {
+        await new Promise(resolve => setTimeout(resolve, 3000))
+        await route.continue()
+      })
+      await page.reload()
+      await page.waitForFunction(() => {
+        const rail = document.querySelector('.dsh-claude-details')
+        return rail !== null && /%/.test(rail.textContent ?? '')
+      }, undefined, { timeout: 20000 })
+      notes.firstFrame = await page.evaluate(() => {
+        const rail = document.querySelector('.dsh-claude-details')
+        const text = (rail?.textContent ?? '').replace(/\s+/g, ' ')
+        return {
+          occupancy: /\d+(\.\d+)?%/.test(text),
+          pending: /正在读取上下文分项|Loading the context breakdown/.test(text),
+          sections: rail?.querySelectorAll('.dsh-claude-panel-section').length ?? 0,
+          text: text.slice(0, 200),
+        }
+      })
+      await page.unroute(held)
     },
 
     async assert({ notes }) {
@@ -463,7 +541,7 @@ export function sessionPanelScenario({ check }) {
       const contextWords = words('context')
       const outputsWords = words('outputs')
       const changesWords = words('changes')
-      const backgroundWords = words('background')
+      const processWords = words('jobs')
       const statsWords = words('sessionStats')
       return [
         check('the header control leads to the rail and no guide card does',
@@ -476,6 +554,9 @@ export function sessionPanelScenario({ check }) {
         check('the rail shows the environment first', anyOf(environmentWords, (rail.headings ?? []).join('|')), JSON.stringify(rail.headings ?? null)),
         check('the rail names the working directory', /workspace/.test(rail.environment ?? ''), (rail.environment ?? '').slice(0, 160)),
         check('the context section arrives with the turn', anyOf(contextWords, (rail.headings ?? []).join('|')) && (rail.context ?? []).length >= 2, JSON.stringify(rail.context ?? null)),
+        check('the first frame states the occupancy and leaves only the breakdown to arrive',
+          notes.firstFrame?.occupancy === true && notes.firstFrame?.pending === true && notes.firstFrame?.sections === 1,
+          JSON.stringify(notes.firstFrame ?? null)),
         check('the environment section carries the preset text from the header',
           (rail.preset ?? '') !== '' && (rail.preset ?? '') === (notes.preset ?? ''),
           JSON.stringify({ rail: rail.preset ?? null, header: notes.preset ?? null })),
@@ -501,25 +582,30 @@ export function sessionPanelScenario({ check }) {
           anyOf(statsWords, (rail.headings ?? []).join('|')) && anyOf(HEADINGS.tokens, (rail.headings ?? []).join('|')) && (rail.stats ?? []).length >= 8 &&
             anyOf(words('statsModelTime'), (rail.stats ?? []).join('|')) && anyOf(words('statsCost'), (rail.stats ?? []).join('|')),
           JSON.stringify((rail.stats ?? []).slice(0, 12))),
+        check('the figures move with the answer while it streams, not only when the route answers',
+          notes.liveFigures?.movedAlone === true,
+          JSON.stringify(notes.liveFigures ?? null)),
+        check('the figures count to each reading instead of landing on it',
+          (notes.liveFigures?.closest ?? Number.POSITIVE_INFINITY) <= 150,
+          JSON.stringify({ closest: notes.liveFigures?.closest ?? null })),
         check('Outputs lists the files the turn wrote and folds past its second row',
           (notes.fold?.rows ?? 0) === 2 && /panel four\.md/.test(rail.outputs ?? '') && notes.fold?.more !== null,
           JSON.stringify(notes.fold ?? null)),
         check('the fold control shows the rest and puts them away again', notes.fold?.expanded === 4 && notes.fold?.collapsed === 2, JSON.stringify({ expanded: notes.fold?.expanded, collapsed: notes.fold?.collapsed })),
         check('Changes stays off the page without a change request', !anyOf(changesWords, (rail.headings ?? []).join('|')), JSON.stringify(rail.headings ?? null)),
-        check('Background tasks lists the commands and files them under their kind',
-          anyOf(backgroundWords, (rail.headings ?? []).join('|')) && /panel-command-three/.test(rail.background ?? '') &&
-            rail.groups?.length === 1 && anyOf(words('jobs'), rail.groups[0].title) && rail.groups[0].rows === 2,
-          JSON.stringify(rail.groups ?? null)),
-        check('a background category folds past two rows and opens on its own control',
-          notes.groupFold?.rows?.join() === '2' && notes.groupFold?.expanded?.join() === '3' && notes.groupFold?.collapsed?.join() === '2',
+        check('Processes is its own section and settled commands share a finished count',
+          anyOf(processWords, (rail.headings ?? []).join('|')) && /panel-command-three/.test(rail.processes ?? '') && /3/.test(rail.finished ?? ''),
+          JSON.stringify({ headings: rail.headings, finished: rail.finished })),
+        check('the finished disclosure reveals command history and folds it independently',
+          notes.groupFold?.rows === 0 && notes.groupFold?.expanded === 3 && notes.groupFold?.collapsed === 0,
           JSON.stringify(notes.groupFold ?? null)),
-        check('a finished command carries no status word and keeps its clock',
-          (rail.jobs ?? []).length >= 2 && rail.jobs.every(job => job.side === '' && job.detail !== ''),
+        check('a finished command keeps a separate clock and its foreground provenance',
+          (rail.jobs ?? []).length >= 2 && rail.jobs.every(job => job.duration !== '' && words('processForeground').includes(job.execution)),
           JSON.stringify((rail.jobs ?? []).slice(0, 3))),
-        check('a new user round replaces old outputs and settled jobs',
+        check('a new user round replaces outputs while command history spans the session',
           /panel-latest\.md/.test(notes.latestRound?.outputs ?? '') && !/panel four\.md/.test(notes.latestRound?.outputs ?? '') &&
-            /panel-command-latest/.test(notes.latestRound?.background ?? '') && !/panel-command-three/.test(notes.latestRound?.background ?? ''),
-          JSON.stringify({ outputs: notes.latestRound?.outputs, background: notes.latestRound?.background })),
+            /panel-command-latest/.test(notes.latestRound?.processes ?? '') && /panel-command-three/.test(notes.latestRound?.processes ?? ''),
+          JSON.stringify({ outputs: notes.latestRound?.outputs, processes: notes.latestRound?.processes })),
         check('stopping confirms independently of output disclosure and cancels the job',
           words('confirmStop').includes(notes.stopConfirm) && notes.stopDidNotExpand === true && notes.stopBlurCleared === true && notes.stopFinished === 'killed',
           JSON.stringify({ confirm: notes.stopConfirm, independent: notes.stopDidNotExpand, blur: notes.stopBlurCleared, status: notes.stopFinished })),

@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-13",
+  "group": "fixes",
+  "order": 0,
+  "external": false,
+  "zh": "详情栏分别展示进程、子智能体和团队，区分命令的前后台执行，保留会话命令历史并折叠已结束记录",
+  "en": "Separate processes, subagents and team in Details, distinguish foreground and background commands, and retain session command history behind a finished count"
+}

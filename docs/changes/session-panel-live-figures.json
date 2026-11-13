@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-13",
+  "group": "fixes",
+  "order": 0,
+  "external": false,
+  "zh": "详情栏的会话统计与 Token 用量改读底部读数那一份实时读数，并按同一段时长逐帧推行，数字与那行一样连续增长",
+  "en": "Read the details rail's session stats and token usage from the same live reading as the composer line and count to each new value over the same duration, so both grow the same way"
+}

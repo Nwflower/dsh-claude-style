@@ -33,9 +33,11 @@ export default {
     // band for the Windows desktop window, and the footer alignment for the
     // footer position the page opens away from.
     const expectedGrey = { appearance: ['homeSessionScope'], 'main-window': ['headerBand', 'statsFooterAlign', 'statsFooterSpeed', 'statsFooterTtft', 'statsFooterCache', 'statsFooterCost', 'statsFooterTotal', 'statsFooterContext'] }
-    // A row may carry a note without waiting for anything: the typeface row
-    // names the faces the drop point is missing, read on its own below.
-    const expectedNotes = { appearance: ['typeface', 'homeSessionScope'], 'main-window': ['headerBand', 'statsFooterAlign', 'statsFooterSpeed', 'statsFooterTtft', 'statsFooterCache', 'statsFooterCost', 'statsFooterTotal', 'statsFooterContext'] }
+    // A row may carry a note without waiting for anything: the typeface row names
+    // the faces the page cannot draw, which this machine's own fonts decide, so
+    // that row is left out of the comparison and read on its own below.
+    const expectedNotes = { appearance: ['homeSessionScope'], 'main-window': ['headerBand', 'statsFooterAlign', 'statsFooterSpeed', 'statsFooterTtft', 'statsFooterCache', 'statsFooterCost', 'statsFooterTotal', 'statsFooterContext'] }
+    const notesOf = tab => ((pages[tab] || {}).notes || []).filter(key => key !== 'typeface')
     const pages = settings.pages || {}
     for (const tab of Object.keys(expected)) {
       const page = pages[tab] || {}
@@ -43,7 +45,7 @@ export default {
         JSON.stringify(page.tabs) === JSON.stringify(Object.keys(expected)) && page.selected === tab &&
           JSON.stringify(page.rows) === JSON.stringify(expected[tab]) &&
           JSON.stringify(page.disabled || []) === JSON.stringify(expectedGrey[tab] || []) &&
-          JSON.stringify(page.notes || []) === JSON.stringify(expectedNotes[tab] || []),
+          JSON.stringify(notesOf(tab)) === JSON.stringify(expectedNotes[tab] || []),
         JSON.stringify(page))
     }
     const mainWindow = pages['main-window'] || {}
@@ -82,11 +84,12 @@ export default {
         typeof paletteCard(customCards, 'custom').reset === 'string' && paletteCard(customCards, 'custom').reset.length > 0,
       JSON.stringify(customCards))
     const typefaceNote = settings.typefaceNote || {}
-    check('the typeface row names only the faces the drop point is missing, under a note, and only while the skin\'s own faces are chosen',
-      typefaceNote.claude?.note === true &&
-        /Anthropic Sans/.test(typefaceNote.claude.text) && /Anthropic Mono/.test(typefaceNote.claude.text) &&
-        !/Anthropic Serif/.test(typefaceNote.claude.text) &&
-        typefaceNote.system?.note === false,
+    // Which faces this machine draws is the machine's to say, so the note under
+    // the skin's own typeface is not fixed here; a typeface that does not use
+    // those faces carries none whatever the machine has.
+    check('the typeface row reports the faces the page cannot draw under the skin\'s own typeface alone, and names them as a reader does when it does',
+      typefaceNote.system?.note === false &&
+        (typefaceNote.claude?.note !== true || /^Missing .*:/.test(typefaceNote.claude.text)),
       JSON.stringify(typefaceNote))
     const off = settings.parentsOff || {}
     check('a sub-row greys out while its parent is off: the mascot\'s place with the mascot off, the model descriptions, the effort accent colour, the quick providers and the peak rate meter with the model picker off, the custom price table with the billing off, the search button\'s style with the sidebar search off, the home session scope for the Code home layout, and the title-bar band for the window on every page',
