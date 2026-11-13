@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-13",
+  "group": "fixes",
+  "order": 5,
+  "external": false,
+  "zh": "设置保存失败提示不再使用误导性存储异常文案，并锁定输入区右侧 React 插槽的父子结构",
+  "en": "Correct the settings-save error copy and preserve the React parent-child structure of the composer's right slot"
+}
