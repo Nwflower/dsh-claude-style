@@ -4,6 +4,30 @@ import type { HostAgentTeamsRemote, HostSidebarPins, HostAssistantStep, HostBund
 import { fileAddressFor } from '@deepseek-ai/dsh-util-workspace-path'
 import { observeMatches, subscribeMutations } from './bus'
 import { closestFrom, shown } from './dom'
+import { CHAT_TURN_ATTRIBUTE, PROCESS_GROUP_SELECTOR, TURN_PROCESS_ANSWER_SELECTOR } from '@dsh-claude-style/contracts/dom'
+
+/** A batch-scoped flow index: one group query and one answer query per container (D3, D40).
+ * The caller drops this reader when its mutation batch or frame ends.
+ */
+export function createProcessTurnReader() {
+  const flows = new Map<Element, { groups: Map<string, Element[]>, answered: Set<string> }>()
+  return (flow: Element) => {
+    let state = flows.get(flow)
+    if (state !== undefined) return state
+    const groups = new Map<string, Element[]>()
+    for (const group of flow.querySelectorAll(PROCESS_GROUP_SELECTOR)) {
+      const turn = group.getAttribute(CHAT_TURN_ATTRIBUTE) ?? ''
+      const members = groups.get(turn)
+      if (members === undefined) groups.set(turn, [group])
+      else members.push(group)
+    }
+    const answered = new Set([...flow.querySelectorAll(TURN_PROCESS_ANSWER_SELECTOR)]
+      .map(row => row.getAttribute(CHAT_TURN_ATTRIBUTE) ?? ''))
+    state = { groups, answered }
+    flows.set(flow, state)
+    return state
+  }
+}
 
 /** The host's client context (cordis), handed to `apply` and to every feature; service shapes are the host's own until the contract module types them (D3). */
 export interface HostContext {

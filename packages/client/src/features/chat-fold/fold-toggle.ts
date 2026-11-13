@@ -27,6 +27,16 @@ export function isChatFoldToggle() {
   return chatFoldToggleDepth > 0
 }
 
+/** Keep every automatic press inside the same reader-intent fence, including failures. */
+export function pressChatFoldToggle(control: HTMLElement, reading: FoldPressReading | null = null) {
+  beginChatFoldToggle(reading)
+  try {
+    control.click()
+  } finally {
+    endChatFoldToggle()
+  }
+}
+
 /** The reading the press in flight was made with, or null when none was taken. */
 export function chatFoldPressReading() {
   return chatFoldToggleDepth > 0 ? pressReading : null
