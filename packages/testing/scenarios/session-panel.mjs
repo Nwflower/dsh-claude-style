@@ -236,7 +236,11 @@ export function sessionPanelScenario({ check }) {
       const sectionToggles = page.locator('.dsh-claude-details summary')
       notes.disclosures = { initial: await readDisclosures(page) }
       const refreshed = page.waitForResponse(response => response.url().includes(SESSION_PANEL_PATH) && response.ok())
-      for (const toggle of await page.locator('.dsh-claude-details details[open] > summary').all()) await toggle.click()
+      // The section that closes leaves the open set, so the last one is pressed
+      // first: closing it keeps every earlier index pointing at the same
+      // summary, while closing from the front would shift them all.
+      const openSections = await page.locator('.dsh-claude-details details[open] > summary').all()
+      for (const toggle of openSections.reverse()) await toggle.click()
       await refreshed
       notes.disclosures.closed = await readDisclosures(page)
       await sectionToggles.first().focus()
