@@ -390,9 +390,10 @@ export function sessionPanelScenario({ check }) {
       notes.rightPanelHanded = await readRightPanel(page)
       const pagesBefore = page.context().pages().length
       const outputs = page.locator('.dsh-claude-details .dsh-claude-panel-section').filter({ hasText: /产出|Outputs/ }).first()
-      // Outputs folds past its second row, and which row files the fourth file
-      // depends on the order the host reports the writes: open the rest the way
-      // the reader does before pressing the row.
+      // The section may still stand folded from the theme walk: open it, then
+      // open the rows it folds past its second, as the reader does. Which row
+      // files the fourth file depends on the order the host reports the writes.
+      if (!await outputs.evaluate((section) => /** @type {HTMLDetailsElement} */ (section).open)) await outputs.locator('summary').first().click()
       const moreOutputs = outputs.locator('.dsh-claude-panel-more')
       if (await moreOutputs.count() > 0 && await moreOutputs.isVisible()) await moreOutputs.click()
       await outputs.locator('button.dsh-claude-panel-row').filter({ hasText: 'panel four.md' }).click()
