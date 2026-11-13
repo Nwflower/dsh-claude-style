@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-13",
+  "group": "improvements",
+  "order": 0,
+  "external": false,
+  "zh": "为搜索原文和小写副本分别设置常驻容量上限，被淘汰会话与超大会话仍参与完整检索",
+  "en": "Bound resident search text and lowercase copies separately while keeping evicted and oversized sessions fully searchable"
+}

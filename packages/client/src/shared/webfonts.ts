@@ -3,6 +3,7 @@ import { createHostResource } from '@dsh-claude-style/engine/resource'
 import type { WebfontsAnswer } from '@dsh-claude-style/contracts/webfonts'
 import { mountStylesheet } from '../core/stylesheet'
 import { webfontRules } from './webfont-rules'
+import { OPTIONAL_WEBFONTS } from '@dsh-claude-style/contracts/webfonts'
 
 /** Register only optional faces reported by the host half (D75). */
 
@@ -14,6 +15,22 @@ const fontsInPlace = createHostResource(WEBFONTS_ROUTE, (data) => {
 
 /** The answer in hand, kept for a generation that takes the page after this one. */
 let faces: string[] | null = null
+
+/** Follow the optional faces in place; the current answer is delivered immediately when known. */
+export function onOptionalWebfontsLoaded(listener: (names: readonly string[]) => void) {
+  if (faces !== null) listener(faces)
+  return fontsInPlace.onLoaded(listener)
+}
+
+/** The current answer, or an empty list while the host has not answered yet. */
+export function optionalWebfontFaces(): readonly string[] {
+  return faces ?? []
+}
+
+/** The optional families absent from the reported drop point. */
+export function missingOptionalWebfonts(names: readonly string[]) {
+  return OPTIONAL_WEBFONTS.filter((face) => !names.includes(face.file)).map((face) => face.family)
+}
 
 /** The asynchronous answer uses `font-display: swap`; one page shares it across generations. */
 export function installWebfonts() {

@@ -1,5 +1,6 @@
 import { BRAND_DEFAULT_PRESETS, BRAND_INK_ACCENT, BRAND_INK_ATTR, BRAND_INK_ORIGINAL, BRAND_INK_TEXT, CUSTOM_EDGES_ATTR, CUSTOM_MARK_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_TINT_ATTR, CUSTOM_WORD_ATTR, CUSTOM_WORD_IMAGE, CUSTOM_WORD_TEXT } from '../../constants'
 import { readPrefs, subscribePrefs } from '../../core/prefs'
+import { accentInk } from '../../shared/contrast'
 import { activeScheme } from '../../shared/palette-scheme'
 import { loadBrandImages, readBrandImages, resetBrandImages, subscribeBrandImages } from '../../shared/custom-brand'
 import { PALETTE_CARDS } from 'virtual:dsh-claude-style/generated'
@@ -50,32 +51,9 @@ const PROPERTIES = [
 ]
 const ATTRIBUTES = [CUSTOM_MARK_ATTR, CUSTOM_WORD_ATTR, CUSTOM_TINT_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_EDGES_ATTR, BRAND_INK_ATTR]
 
-/** The two inks text on an accent fill can take: the dark and the light canvas (docs/STYLE.md). */
-const INK_DARK = '#191919'
-const INK_LIGHT = '#faf9f5'
-
 /** A CSS string literal holding the text, for `content: var(...)`; a line break reads as a space. */
 export function cssString(text: string) {
   return `"${text.replace(/[\\"]/g, '\\$&').replace(/[\n\r\f]/g, ' ')}"`
-}
-
-/** WCAG relative luminance of a `#rrggbb` colour. */
-function luminance(hex: string) {
-  const [r, g, b] = [1, 3, 5].map(at => {
-    const channel = parseInt(hex.slice(at, at + 2), 16) / 255
-    return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4
-  })
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b
-}
-
-/** The ink that reads best on a `#rrggbb` accent fill: whichever canvas colour has the higher contrast with it. */
-export function accentInk(accent: string) {
-  const fill = luminance(accent)
-  const contrast = (ink: string) => {
-    const other = luminance(ink)
-    return (Math.max(fill, other) + 0.05) / (Math.min(fill, other) + 0.05)
-  }
-  return contrast(INK_DARK) > contrast(INK_LIGHT) ? INK_DARK : INK_LIGHT
 }
 
 export function install() {

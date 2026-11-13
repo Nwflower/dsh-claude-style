@@ -1,0 +1,299 @@
+/* The colour schemes' cards and manager (palette-cards.ts, palette-manager.ts,
+   D96). The cards extend the card look settings-brand.css draws: they wrap
+   onto further lines as schemes are added, and each carries its small actions.
+   The manager is a modal on <body>, over the settings dialog that would clip
+   it: the list of schemes beside the editor of the one in hand, whose own
+   sheet is palette-editor.css. */
+
+body[data-dsh-claude-style] .dsh-claude-palette-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+body[data-dsh-claude-style] .dsh-claude-palette-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+body[data-dsh-claude-style] .dsh-claude-palette-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 10px;
+  min-height: 16px;
+}
+
+/* The smallest type, for what is read once: a card's tag, the limit on records
+   and the editor's note on its figures. */
+body[data-dsh-claude-style] :is(.dsh-claude-palette-card-tag, .dsh-claude-scheme-limit, .dsh-claude-scheme-note) {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: calc(11px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 16px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-palette-card-tag {
+  margin-left: 6px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-palette-card-actions > .dsh-claude-palette-card-tag {
+  margin-left: 0;
+}
+
+/* The card that makes a scheme: the card's own frame, drawn as a dashed edge. */
+body[data-dsh-claude-style] .dsh-claude-palette-new {
+  justify-content: center;
+  border-style: dashed;
+  background: transparent;
+  cursor: pointer;
+}
+
+body[data-dsh-claude-style] .dsh-claude-palette-new:hover:not(:disabled) {
+  border-color: var(--dsw-alias-border-l3);
+}
+
+body[data-dsh-claude-style] .dsh-claude-palette-new:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+body[data-dsh-claude-style] .dsh-claude-palette-new-mark {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 24px;
+  line-height: 36px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-palette-toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ---------- the manager ---------- */
+
+/* The scrim and the panel arrive and leave together: the scrim fades, the
+   panel grows out of the centre and returns to it (docs/STYLE.md, Open). The
+   leaving mark is written by closePaletteManager, which takes the manager off
+   the page when the panel's exit ends. */
+body[data-dsh-claude-style] .dsh-claude-scheme-modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--dsh-claude-layer-takeover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 5vh, 48px) 24px;
+  background: rgba(20, 20, 19, 0.28);
+  font-family: var(--dsw-font-family);
+  color: var(--dsw-alias-label-primary);
+  animation: dsh-claude-fade-in var(--dsh-claude-timing-surface) both;
+}
+
+body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-scheme-modal {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-host[data-leaving] {
+  pointer-events: none;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-host[data-leaving] .dsh-claude-scheme-modal {
+  animation: dsh-claude-fade-out var(--dsh-claude-duration-exit) var(--dsh-claude-ease-standard) forwards;
+}
+
+/* Two columns under one outline: the list of schemes, then the editor of the
+   one in hand. The height is fixed so the panel keeps its box as the editor
+   changes between a preset and a reader's scheme. */
+body[data-dsh-claude-style] .dsh-claude-scheme-panel {
+  --dsh-claude-scheme-label: 88px;
+  position: relative;
+  display: grid;
+  grid-template-columns: 216px minmax(0, 1fr);
+  width: 840px;
+  max-width: 100%;
+  height: 600px;
+  max-height: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 16px;
+  background: var(--dsw-alias-bg-overlay);
+  box-shadow: 0 24px 64px rgba(20, 20, 19, 0.2), 0 4px 12px rgba(20, 20, 19, 0.1);
+  overflow: hidden;
+  outline: none;
+  animation: dsh-claude-dialog-in var(--dsh-claude-duration-open) var(--dsh-claude-ease-settle) both;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-host[data-leaving] .dsh-claude-scheme-panel {
+  animation: dsh-claude-dialog-out var(--dsh-claude-duration-exit) var(--dsh-claude-ease-settle) forwards;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-glyph {
+  flex: none;
+}
+
+/* The manager's two bare marks, plates only under the pointer: the close mark
+   over the editor's corner, and the editor's mark that hands a colour back. */
+body[data-dsh-claude-style] :is(.dsh-claude-scheme-close, .dsh-claude-scheme-reset) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--dsh-claude-timing-feedback), color var(--dsh-claude-timing-feedback);
+  cursor: pointer;
+  color: var(--dsw-alias-label-tertiary);
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+/* The plate a mark takes under the pointer is the one the list's line in hand wears. */
+body[data-dsh-claude-style] :is(.dsh-claude-scheme-close, .dsh-claude-scheme-reset):hover,
+body[data-dsh-claude-style] .dsh-claude-scheme-item[data-active] {
+  color: var(--dsw-alias-label-primary);
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+}
+
+/* ---------- the list ---------- */
+
+/* The list's column is the panel's face under a faint wash of the ink, parted
+   from the editor by a separator. */
+body[data-dsh-claude-style] .dsh-claude-scheme-rail {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 18px 8px 14px;
+  border-right: 0.5px solid var(--dsh-claude-divider);
+  background: color-mix(in srgb, var(--dsw-alias-label-primary) 3%, transparent);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-rail-title {
+  margin: 0;
+  padding: 0 10px 12px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 22px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-rail-scroll {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* The sliding pill (shared/sliding-pill.css) is placed against the lines' own
+   box, which does not scroll, so its offsets hold wherever the column stands. */
+body[data-dsh-claude-style] .dsh-claude-scheme-items {
+  position: relative;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 2px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-items[data-dsh-claude-pill]::before {
+  border-radius: 8px;
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+/* A line's dots: four of them lapping, as wide together as the add line's
+   mark is given below, so every name starts on one edge. */
+body[data-dsh-claude-style] .dsh-claude-scheme-item {
+  --dsh-claude-scheme-dot: 14px;
+  --dsh-claude-scheme-dot-lap: 5px;
+  --dsh-claude-scheme-dots: calc(var(--dsh-claude-scheme-dot) * 4 - var(--dsh-claude-scheme-dot-lap) * 3);
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  transition: background-color var(--dsh-claude-timing-feedback), color var(--dsh-claude-timing-feedback);
+  cursor: pointer;
+  color: var(--dsw-alias-label-secondary);
+  font: inherit;
+  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 20px;
+  text-align: left;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-item:hover:not(:disabled, [data-active]) {
+  background: color-mix(in srgb, var(--dsw-alias-interactive-bg-hover) 50%, transparent);
+  color: var(--dsw-alias-label-primary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-items[data-dsh-claude-pill] > .dsh-claude-scheme-item[data-active] {
+  background: transparent;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-dots {
+  display: inline-flex;
+  flex: none;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-dot {
+  box-sizing: border-box;
+  width: var(--dsh-claude-scheme-dot);
+  height: var(--dsh-claude-scheme-dot);
+  border-radius: 50%;
+  /* A true circle: the page inherits superellipse corners from <html>. */
+  corner-shape: round;
+  background-color: currentColor;
+  box-shadow: 0 0 0 1px var(--dsw-alias-border-l2);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-dot + .dsh-claude-scheme-dot {
+  margin-left: calc(-1 * var(--dsh-claude-scheme-dot-lap));
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-item-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The scheme the page paints wears the accent's tick, arriving as a surface does. */
+body[data-dsh-claude-style] .dsh-claude-scheme-item-mark {
+  display: inline-flex;
+  flex: none;
+  color: var(--dsw-alias-brand-primary);
+  animation: dsh-claude-surface-in var(--dsh-claude-timing-surface) both;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-add {
+  color: var(--dsw-alias-label-tertiary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-add > .dsh-claude-scheme-glyph {
+  margin: 0 calc((var(--dsh-claude-scheme-dots) - 16px) / 2);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-rail-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 10px 10px 0;
+}
+

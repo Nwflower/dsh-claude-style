@@ -291,6 +291,17 @@ export function noteDesc(text: string, note: string | null): React.ReactNode {
  */
 export function ClaudeStyleSegmentGroup(props: { role?: string, className?: string, children?: React.ReactNode }) {
   const group = React.useRef<HTMLDivElement>(null)
+  useSlidingPill(group)
+  const className = props.className ? `${SEGMENTS_CLASS} ${props.className}` : SEGMENTS_CLASS
+  return React.createElement('div', { ref: group, className, role: props.role || 'group' }, props.children)
+}
+
+/**
+ * The shared sliding highlight on a group React renders: the pill follows the
+ * child carrying `data-active`, placed after every render and taken off when
+ * the group unmounts.
+ */
+export function useSlidingPill(group: React.RefObject<HTMLElement | null>) {
   const pill = React.useRef<ReturnType<typeof createSlidingPill> | null>(null)
   React.useLayoutEffect(() => {
     pill.current = createSlidingPill('[data-active]')
@@ -302,8 +313,6 @@ export function ClaudeStyleSegmentGroup(props: { role?: string, className?: stri
   React.useLayoutEffect(() => {
     pill.current!.sync(group.current)
   })
-  const className = props.className ? `${SEGMENTS_CLASS} ${props.className}` : SEGMENTS_CLASS
-  return React.createElement('div', { ref: group, className, role: props.role || 'group' }, props.children)
 }
 
 /**

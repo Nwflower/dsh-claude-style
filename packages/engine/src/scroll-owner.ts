@@ -1,8 +1,9 @@
 import { subscribeMutations } from './bus'
+import { conversationSession, observeSession } from './host'
 import { skin } from './skin'
-import { CHAT_RUNNING_SELECTOR, COMPOSER_SELECTOR, CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, FOLLOW_THRESHOLD_PX, PROCESS_BODY_SELECTOR, SIDEBAR_SLOT_SELECTOR, STREAMING_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { CHAT_RUNNING_SELECTOR, COMPOSER_SELECTOR, CONVERSATION_SCROLL_SELECTOR, FOLLOW_THRESHOLD_PX, PROCESS_BODY_SELECTOR, SIDEBAR_SLOT_SELECTOR, STREAMING_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { SCROLL_KEYS, SUBMISSION_ROW_SELECTOR, conversationScroller, findFollowTailButton, isScrollbarStrip } from './chat-dom'
-import { SCROLL_EASE_LEAD_PX, easeScroll, isScrollEasing, scrollEasePosition, scrollEnd, stopScrollEase } from './scroll-ease'
+import { SCROLL_EASE_LEAD_PX, easeScroll, isScrollEasing, scrollEasePosition, scrollEnd, stopAllScrollEases, stopScrollEase } from './scroll-ease'
 
 /**
  * The chat area's scroll positions have one writer (D40): features ask, this module decides on the spring of scroll-ease.ts. Sources rank jump > fold > reader > composer > follow > process; a request below the ease running is refused, and composer, follow and process are refused while the reader holds the container. The reader source is his own position held under a stream's growth.
@@ -84,12 +85,12 @@ function contactY(event: TouchEvent): number | null {
 /** Until this moment the stream slide stands down: the reader's own message just arrived. */
 let submissionHoldUntil = 0
 /** The conversation the owner last worked in, for the hold above; null before the first is claimed. */
-let claimedSession: string | null = null
 /** How many features use the owner; its listeners live while one does. */
 let members = 0
 /** Bumped when the owner's listeners go: work begun by one installation ends with it. */
 let ownerGeneration = 0
 let stopSubmissionWatch: (() => void) | null = null
+let stopSessionWatch: (() => void) | null = null
 
 /**
  * Drop the containers the page took away. A detached container never sends the
@@ -258,28 +259,35 @@ export function submissionHolds() {
   return performance.now() < submissionHoldUntil
 }
 
-/**
- * The conversation's element as it was last seen, and the session it belonged
- * to; the element is read again once a session switch replaces it.
- */
-let sessionElement: Element | null = null
+/** Per session: the id last claimed; observeSession releases its holds on a switch (D91). */
 let sessionId: string | null = null
+
+/** Per-session holds, gestures and submission pauses end even while old DOM stays mounted (D91). */
+function releaseSession() {
+  ownerGeneration += 1
+  submissionHoldUntil = 0
+  touchContactY = null
+  stopAllScrollEases()
+  for (const container of held) {
+    readerPositions.delete(container)
+    readerRevisions.delete(container)
+    readerFloors.delete(container)
+    heldTowardEnd.delete(container)
+  }
+  held.clear()
+  if (scrollbarDrag !== null) endScrollbarDrag()
+  for (const scroller of markedScrollers) scroller.removeAttribute(skin().readerHold)
+  markedScrollers.clear()
+}
 
 /**
  * Note which conversation the owner is working in, and drop what belonged to the previous one: the submission hold is armed by the rows a conversation renders, so left standing it would hold the stream slide down over the history the new conversation opens.
  */
 function claimConversation() {
-  if (sessionElement === null || !sessionElement.isConnected) {
-    // The conversation this owner knew is gone: the next one's scroller is a
-    // different element, and the holds taken on the old one ended with it.
-    if (sessionElement !== null) forgetDetached()
-    sessionElement = conversationScroller()?.closest(CONVERSATION_SESSION_SELECTOR) ?? null
-  }
-  const next = sessionElement?.getAttribute(CONVERSATION_SESSION_ATTRIBUTE) ?? null
+  const next = conversationSession()
   if (next === sessionId) return
   sessionId = next
-  submissionHoldUntil = 0
-  forgetDetached()
+  releaseSession()
 }
 
 /**
@@ -445,6 +453,8 @@ function noteBodyChanges(records: MutationRecord[]) {
 export function joinScrollOwner() {
   members += 1
   if (members === 1) {
+    sessionId = conversationSession()
+    stopSessionWatch = observeSession(() => claimConversation())
     for (const type of INTENT_TYPES) document.addEventListener(type, noteIntent, { capture: true, passive: true })
     window.addEventListener('scroll', noteScroll, { capture: true, passive: true })
     stopSubmissionWatch = subscribeMutations(document.body, { childList: true, subtree: true }, noteBodyChanges)
@@ -455,21 +465,14 @@ export function joinScrollOwner() {
     left = true
     members -= 1
     if (members > 0) return
-    ownerGeneration += 1
-    if (scrollbarDrag !== null) endScrollbarDrag()
     for (const type of INTENT_TYPES) document.removeEventListener(type, noteIntent, true)
     window.removeEventListener('scroll', noteScroll, true)
     if (stopSubmissionWatch !== null) stopSubmissionWatch()
     stopSubmissionWatch = null
-    for (const scroller of markedScrollers) scroller.removeAttribute(skin().readerHold)
-    markedScrollers.clear()
-    for (const container of held) {
-      heldTowardEnd.delete(container)
-      readerPositions.delete(container)
-      readerRevisions.delete(container)
-      readerFloors.delete(container)
-    }
-    held.clear()
+    stopSessionWatch?.()
+    stopSessionWatch = null
+    releaseSession()
+    sessionId = null
   }
 }
 
@@ -531,7 +534,8 @@ export function scrollPositionFor(container: Element) {
  * @param options - stillWanted is asked before every look; onSettled runs once the round is over.
  */
 export function handBackFollow(source: ScrollSource, options?: { stillWanted?: () => boolean, onSettled?: () => void }) {
-  const stillWanted = options?.stillWanted ?? (() => true)
+  const generation = ownerGeneration
+  const stillWanted = () => generation === ownerGeneration && (options?.stillWanted?.() ?? true)
   const onSettled = options?.onSettled ?? null
   const scroller = conversationScroller()
   if (scroller === null) {

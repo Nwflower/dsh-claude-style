@@ -203,7 +203,7 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
     const speedFigure = figure('dsh-claude-inline-speed')
     speed.wrap.appendChild(speedFigure.wrap)
     const ttft = segment()
-    const ttftHead = buildElement('span', 'dsh-claude-inline-label')
+    const ttftHead = buildElement('span', 'dsh-claude-inline-ttft-label')
     const ttftFigure = buildFigure()
     ttft.wrap.append(ttftHead, ttftFigure)
     const input = segment()

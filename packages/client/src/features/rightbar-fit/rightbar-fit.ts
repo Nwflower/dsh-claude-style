@@ -1,9 +1,10 @@
 import { RIGHTBAR_COLUMN_SELECTOR, RIGHTBAR_HANDLE_SELECTOR, RIGHTBAR_PANEL_SELECTOR } from '@dsh-claude-style/contracts/dom'
-import { observeMatches, subscribeMutations } from '@dsh-claude-style/engine/bus'
+import { observeLayoutElements } from '@dsh-claude-style/engine/layout-elements'
 import { cacheFirstMatch } from '@dsh-claude-style/engine/host'
 import { PAGE_ZOOM_ATTR } from '../../constants'
 import { heldWrites } from '../../shared/held-writes'
 import { pageZoomFactor } from '../../shared/page-zoom'
+import { panelLength } from '../../shared/panel-length'
 
 /**
  * The right column's own box, in the page's pixels.
@@ -17,18 +18,10 @@ import { pageZoomFactor } from '../../shared/page-zoom'
  * at scale 1 keeps the host's numbers.
  */
 
-/** Trim a computed page length to the shape a CSS declaration keeps. */
-function length(value: number) {
-  return `${Math.round(value * 100) / 100}px`
-}
-
 export function install() {
   const writes = heldWrites()
   let panel: HTMLElement | null = null
   let handle: HTMLElement | null = null
-  /** The subscriptions hearing the two elements standing right now. */
-  const heard: (() => void)[] = []
-  let queued = false
 
   function fixPanel(factor: number) {
     if (panel === null) return
@@ -44,7 +37,7 @@ export function install() {
     // nothing, so the host's own value stands until the track is there.
     const track = column()
     const limit = track === null || track.clientWidth <= 0 ? Number.POSITIVE_INFINITY : track.clientWidth
-    const page = length(Math.min(width / factor, limit))
+    const page = panelLength(Math.min(width / factor, limit))
     writes.write(panel, 'width', raw, page)
     // The panel carries its width twice, and the second declaration states its
     // own number: it is read from itself rather than from the width.
@@ -63,22 +56,11 @@ export function install() {
     if (!Number.isFinite(left)) return
     // The handle sits on the panel's visible left edge, which is the width the
     // panel actually took rather than the one the host wrote for it.
-    const page = length(document.documentElement.clientWidth / factor - panel.offsetWidth)
+    const page = panelLength(document.documentElement.clientWidth / factor - panel.offsetWidth)
     writes.write(handle, 'left', raw, page)
   }
 
   function sync() {
-    queued = false
-    const nextPanel = panels.all()[0] ?? null
-    const nextHandle = handles.all()[0] ?? null
-    if (nextPanel !== panel || nextHandle !== handle) {
-      for (const stop of heard.splice(0)) stop()
-      panel = nextPanel
-      handle = nextHandle
-      for (const element of [panel, handle]) {
-        if (element !== null) heard.push(subscribeMutations(element, { attributes: true, attributeFilter: ['style'] }, schedule))
-      }
-    }
     const factor = pageZoomFactor()
     if (factor === 1) {
       writes.restore()
@@ -88,28 +70,21 @@ export function install() {
     fixHandle(factor)
   }
 
-  function schedule() {
-    if (queued) return
-    queued = true
-    // A microtask keeps the rewrite ahead of the frame the host's write would paint.
-    queueMicrotask(sync)
-  }
-
   // The panel and the handle mount inside the frame, where the body's own child
   // list does not reach; the bus's kept matches hear them arrive and leave.
-  const panels = observeMatches<HTMLElement>(RIGHTBAR_PANEL_SELECTOR, schedule)
-  const handles = observeMatches<HTMLElement>(RIGHTBAR_HANDLE_SELECTOR, schedule)
   const column = cacheFirstMatch<HTMLElement>(RIGHTBAR_COLUMN_SELECTOR)
   // The factor rides an attribute on the body, so a change of zoom re-derives both.
-  const stopZoom = subscribeMutations(document.body, { attributes: true, attributeFilter: [PAGE_ZOOM_ATTR] }, schedule)
-
-  schedule()
+  const stopLayout = observeLayoutElements({
+    selectors: [RIGHTBAR_PANEL_SELECTOR, RIGHTBAR_HANDLE_SELECTOR],
+    bodyAttributes: [PAGE_ZOOM_ATTR],
+    sync([nextPanel, nextHandle]) { panel = nextPanel; handle = nextHandle; sync() },
+    release: element => writes.restore(element),
+  })
 
   return () => {
-    stopZoom()
-    panels.release()
-    handles.release()
-    for (const stop of heard.splice(0)) stop()
+    stopLayout()
+    panel = null
+    handle = null
     writes.restore()
   }
 }

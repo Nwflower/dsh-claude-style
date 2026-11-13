@@ -26,7 +26,7 @@ export const BRANDS = [BRAND_CLAUDE, BRAND_DEEPSEEK] as const
  * The built-in colour presets (D96), one id per colour card in
  * packages/client/src/theme/tokens.json; the build fails when the two disagree.
  */
-export const PALETTE_PRESETS = ['claude', 'deepseek'] as const
+export const PALETTE_PRESETS = ['claude', 'deepseek', 'parchment', 'forest', 'dusk', 'rose'] as const
 export type PalettePreset = typeof PALETTE_PRESETS[number]
 /** The preset each brand paints while the selection follows the brand. */
 export const BRAND_DEFAULT_PRESETS = { [BRAND_CLAUDE]: 'claude', [BRAND_DEEPSEEK]: 'deepseek' } as const satisfies Record<typeof BRANDS[number], PalettePreset>

@@ -41,6 +41,9 @@
           }
         : { ok: true, contract: false }))
     }
+    if (url === '/dsh-claude-style/webfonts' && CASE === 'settings') {
+      return Promise.resolve(jsonResponse({ ok: true, faces: ['AnthropicSerifWebText.ttf'] }))
+    }
     if (url.split('?')[0] === '/dsh-claude-style/usage' && CASE === 'studio') {
       // A folded answer with the model dimension, so both tabs draw their data.
       // The all-time figures reach past the one listed day (history older than

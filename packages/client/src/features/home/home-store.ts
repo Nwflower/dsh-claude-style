@@ -2,6 +2,7 @@ import { HOME_SESSION_SCOPE_WORKSPACE, USAGE_ROUTE } from '../../constants'
 import { readPrefs } from '../../core/prefs'
 import { pad2 } from '../../shared/format'
 import { notifyAll } from '@dsh-claude-style/engine/notify'
+import { createHostRequest } from '@dsh-claude-style/engine/resource'
 import { currentSessionId, hostRemoteSession, hostSessions, hostWorkspaces } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { HostRemoteListAnswer, HostSessionRow } from '@dsh-claude-style/contracts/services'
@@ -65,7 +66,28 @@ export function createHomeUsage(ctx: HostContext) {
   /** Polls this read has made; reset by each ask (loadUsage). */
   let polls = 0
   let disposed = false
-  let requestSerial = 0
+  // Per view: target changes and stop invalidate requests before another read (D12).
+  const request = createHostRequest(data => data as unknown as UsageAnswer | null, body => {
+    usage.loading = false
+    usage.answeredAt = Date.now()
+    if (body === null || body.ok !== true) {
+      usage.error = 'unavailable'
+      emit()
+      return
+    }
+    usage.value = body.value === undefined ? null : body.value
+    usage.computing = body.computing === true
+    usage.error = body.error === undefined ? null : body.error
+    emit()
+    if (usage.computing && polls < HOME_POLL_MAX) {
+      polls += 1
+      stopPolling()
+      pollTimer = setTimeout(() => {
+        pollTimer = null
+        read()
+      }, HOME_POLL_MS)
+    }
+  })
   let target = { scope: readPrefs().homeSessionScope, workspace: '' }
 
   /** The current blank's Workspace, falling back to the most recently active one. */
@@ -127,7 +149,7 @@ export function createHomeUsage(ctx: HostContext) {
     const workspace = scope === HOME_SESSION_SCOPE_WORKSPACE ? currentWorkspaceId() : ''
     if (target.scope === scope && target.workspace === workspace) return
     target = { scope, workspace }
-    requestSerial += 1
+    request.reset()
     stopPolling()
     usage.value = null
     usage.computing = false
@@ -150,37 +172,10 @@ export function createHomeUsage(ctx: HostContext) {
   /** One request to the route, and the poll its answer asks for while the host half is folding. */
   function read() {
     usage.loading = true
-    const serial = requestSerial
     const params = new URLSearchParams({ scope: target.scope })
     if (target.workspace !== '') params.set('workspace', target.workspace)
-    const request = fetch(USAGE_ROUTE + '?' + params.toString(), { credentials: 'same-origin', headers: { accept: 'application/json' } })
-    request.then(response => response !== null && response.ok === true ? response.json() : null).then((body: UsageAnswer | null) => {
-      if (disposed || serial !== requestSerial) return
-      usage.loading = false
-      // A route that refused still answered: the next ask waits out the same
-      // period instead of retrying on every pass.
-      usage.answeredAt = Date.now()
-      if (body === null || body.ok !== true) {
-        usage.error = 'unavailable'
-        emit()
-        return
-      }
-      usage.value = body.value === undefined ? null : body.value
-      usage.computing = body.computing === true
-      usage.error = body.error === undefined ? null : body.error
-      emit()
-      if (usage.computing) {
-        if (polls >= HOME_POLL_MAX) return
-        polls += 1
-        stopPolling()
-        pollTimer = setTimeout(() => {
-          pollTimer = null
-          read()
-        }, HOME_POLL_MS)
-      }
-    // A failed usage fetch is the panel's "unavailable" state, not an exception: the panel renders without the numbers (D12).
-    }).catch(() => {
-      if (disposed || serial !== requestSerial) return
+    // A transport failure is the panel's unavailable state (D12).
+    void request.load(USAGE_ROUTE + '?' + params.toString(), {}, () => {
       usage.loading = false
       usage.answeredAt = Date.now()
       usage.error = 'unavailable'
@@ -269,8 +264,8 @@ export function createHomeUsage(ctx: HostContext) {
     if (sessions === undefined || sessions === null || typeof sessions.list !== 'function') return
     listLoading = true
     sessions.list({}).then((result: HostRemoteListAnswer) => {
-      listLoading = false
       if (disposed) return
+      listLoading = false
       const items = result !== null && result !== undefined && result.ok === true
         && result.value !== null && result.value !== undefined && Array.isArray(result.value.items)
         ? result.value.items
@@ -279,7 +274,8 @@ export function createHomeUsage(ctx: HostContext) {
       listSummary = summarizeSessionList(items)
       emit()
     // The roll-up is a summary the panel can do without: a failed fetch just ends the loading mark (D12).
-    }).catch(() => {
+    }, () => {
+      if (disposed) return
       listLoading = false
     })
   }
@@ -296,7 +292,7 @@ export function createHomeUsage(ctx: HostContext) {
     loadList: loadSessionSummary,
     stop() {
       disposed = true
-      requestSerial += 1
+      request.reset()
       stopPolling()
       listeners.length = 0
     },

@@ -49,7 +49,7 @@ body[data-dsh-claude-style] .dsh-claude-ban {
      A page rebuilt over one already up stands where it is; one on its way out
      takes no more presses (ban-screen.ts). */
   transform-origin: center;
-  animation: dsh-claude-ban-in var(--dsh-claude-duration-open) var(--dsh-claude-ease-settle);
+  animation: dsh-claude-dialog-in var(--dsh-claude-duration-open) var(--dsh-claude-ease-settle);
 }
 
 /* The page is the window, so it keeps none of the dialog cap theme/chrome.css
@@ -67,17 +67,7 @@ body[data-dsh-claude-style] .dsh-claude-ban[data-dsh-ban-settled] {
 
 body[data-dsh-claude-style] .dsh-claude-ban[data-dsh-ban-leaving] {
   pointer-events: none;
-  animation: dsh-claude-ban-out var(--dsh-claude-duration-exit) var(--dsh-claude-ease-settle) forwards;
-}
-
-@keyframes dsh-claude-ban-in {
-  from { opacity: 0; transform: scale(var(--dsh-claude-scale-dialog)); }
-  to { opacity: 1; transform: none; }
-}
-
-@keyframes dsh-claude-ban-out {
-  from { opacity: 1; transform: none; }
-  to { opacity: 0; transform: scale(var(--dsh-claude-scale-dialog)); }
+  animation: dsh-claude-dialog-out var(--dsh-claude-duration-exit) var(--dsh-claude-ease-settle) forwards;
 }
 
 body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-ban {

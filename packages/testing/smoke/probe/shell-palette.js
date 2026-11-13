@@ -9,6 +9,7 @@
   var probe = window.__dshSmokeProbe
   var sleep = probe.sleep
   var r = probe.report
+  var NOTE_CLASS = 'dsh-claude-settings-row-note'
 
   probe.step(async function () {
     // Following the host's colours and type: with the host's palette in the
@@ -118,7 +119,7 @@
             // label seen is the group the row stands in.
             if (out.groups.length > 0) out.groups[out.groups.length - 1].rows.push(rowKey)
             walk(props.children, function (child) {
-              if (((child.props || {}).className || '') === 'dsh-claude-settings-row-note' && out.notes.indexOf(rowKey) < 0) out.notes.push(rowKey)
+              if (((child.props || {}).className || '') === NOTE_CLASS && out.notes.indexOf(rowKey) < 0) out.notes.push(rowKey)
             })
           }
           if (typeof props.className === 'string' && /(^| )dsh-claude-settings-tab-notice( |$)/.test(props.className)) {
@@ -146,6 +147,21 @@
       if (r.settings.registered) {
         var tabIds = ['general', 'appearance', 'main-window', 'sidebar', 'motion']
         for (var ti = 0; ti < tabIds.length; ti++) r.settings.pages[tabIds[ti]] = renderTab(tabIds[ti])
+        var readTypeface = function (choice) {
+          if (choice === 'system') window.__pushForm({ typeface: choice })
+          var answer = { note: renderTab('appearance').notes.includes('typeface'), text: '' }
+          var noteNode = null
+          ;(function find(node) {
+            if (noteNode !== null || node === null || node === undefined || typeof node !== 'object') return
+            if (Array.isArray(node)) { node.forEach(find); return }
+            if ((node.props || {}).className === NOTE_CLASS) { noteNode = node; return }
+            find(node.props && node.props.children)
+          })(renderSettingsTab('appearance'))
+          if (noteNode !== null) answer.text = [].concat(noteNode.props.children || []).join('')
+          return answer
+        }
+        r.settings.typefaceNote = { claude: readTypeface('claude'), system: readTypeface('system') }
+        window.__pushForm({ typeface: 'claude' })
         r.settings.link = r.settings.pages.general.link
         // The heading's mark: the build inlines the asset into the token sheet
         // and the rule paints it as a mask over the link's own box, so the
@@ -369,12 +385,21 @@
           }
           var read = function () {
             var tree = treeOf({ general: 'appearance' })
-            // The colour row is the appearance tab's only labelled group, so the
-            // cards are its button children; their labels are what the reader sees.
+            // The cards stand in the group the colour row draws; their labels are
+            // what the reader sees. The tab's segmented controls are groups too, so
+            // the cards' own is the one holding a card.
+            var holdsCards = function (children) {
+              var found = false
+              walk(children, function (inner) {
+                var innerProps = inner.props || {}
+                if (innerProps.role === 'button' && (innerProps['data-brand'] || innerProps['data-scheme'])) found = true
+              })
+              return found
+            }
             var group = null
             walk(tree, function (node) {
               var props = node.props || {}
-              if (group === null && props.role === 'group' && typeof props['aria-label'] === 'string') group = props
+              if (group === null && props.role === 'group' && typeof props['aria-label'] === 'string' && holdsCards(props.children)) group = props
             })
             var cards = []
             var readCard = function (node) {
@@ -382,17 +407,15 @@
               if (node === null || typeof node !== 'object') return
               var props = node.props || {}
               if (props.role === 'button') {
+                // The way back to the brand is the card's button of that action.
                 var reset = null
-                var kids = [].concat(props.children || [])
-                for (var ki = 0; ki < kids.length; ki++) {
-                  var kid = kids[ki]
-                  if (kid !== null && typeof kid === 'object' && (kid.props || {}).type === 'button') {
-                    reset = [].concat(kid.props.children || []).join('')
-                  }
-                }
+                walk(props.children, function (inner) {
+                  var innerProps = inner.props || {}
+                  if (innerProps['data-action'] === 'follow-brand') reset = [].concat(innerProps.children || []).join('')
+                })
                 cards.push({
                   label: props['aria-label'],
-                  brand: props['data-brand'] || null,
+                  brand: props['data-brand'] || props['data-scheme'] || null,
                   role: props.role,
                   pressed: props['aria-pressed'],
                   active: props['data-active'] === '',
@@ -427,7 +450,7 @@
           window.__pushForm({ paletteColors: 'claude' })
           await sleep(120)
           var pinned = { cards: read(), mark: mark() }
-          window.__pushForm({ paletteColors: 'custom' })
+          window.__pushForm({ paletteColors: 'custom', paletteSchemes: ['{"id":"custom","base":"claude"}'] })
           await sleep(120)
           var custom = { cards: read(), mark: mark() }
           window.__pushForm({ brand: 'claude', paletteColors: 'brand' })

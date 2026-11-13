@@ -97,38 +97,17 @@ body[data-dsh-claude-style] .dsh-claude-home-heat-cell {
    --dsw-alias-bg-base to transparent for the page's ground, so a canvas tone
    used as ink leaves the words invisible. */
 body[data-dsh-claude-style] .dsh-claude-home-heat-hint {
-  position: absolute;
   top: 0;
-  left: 0;
   z-index: 2;
-  box-sizing: border-box;
   /* The pill is as wide as the day it names: it holds one line, and that line is
      what the placement measures (heat-tip.ts). */
-  display: inline-flex;
-  align-items: center;
-  padding: 5px 10px;
-  border-radius: 8px;
   background: var(--dsw-alias-label-primary, #161616);
   color: var(--dsw-alias-bg-layer-3, #ffffff);
   font-size: 13px;
   font-weight: 500;
   line-height: 18px;
-  white-space: nowrap;
   font-variant-numeric: tabular-nums;
-  pointer-events: none;
-  opacity: 0;
   translate: var(--dsh-claude-heat-tip-x, 0px) var(--dsh-claude-heat-tip-y, 0px);
-  scale: var(--dsh-claude-scale-surface);
-  transform-origin: 50% 100%;
-  /* The showing rule swaps the fade's length through --dsh-claude-heat-hint-fade
-     and leaves transition-duration alone, so the reduced-motion rule
-     (theme/chrome.css) still outranks it. The pill travels and resizes on the
-     settling curve, so a run along a row reads as one pill following the pointer
-     rather than a box appearing under each day. */
-  --dsh-claude-heat-hint-fade: var(--dsh-claude-duration-hint-exit);
-  transition-property: opacity, scale, translate, width;
-  transition-duration: var(--dsh-claude-heat-hint-fade), var(--dsh-claude-heat-hint-fade), var(--dsh-claude-duration-move), var(--dsh-claude-duration-move);
-  transition-timing-function: var(--dsh-claude-ease-out), var(--dsh-claude-ease-out), var(--dsh-claude-ease-settle), var(--dsh-claude-ease-settle);
 }
 
 /* Hanging under its cell, the pill grows from its own top edge. A pill that
@@ -136,15 +115,6 @@ body[data-dsh-claude-style] .dsh-claude-home-heat-hint {
    travel on the same clock. */
 body[data-dsh-claude-style] .dsh-claude-home-heat-hint[data-side="below"] {
   transform-origin: 50% 0;
-}
-
-body[data-dsh-claude-style] .dsh-claude-home-heat-hint[data-shown] {
-  --dsh-claude-heat-hint-fade: var(--dsh-claude-duration-surface);
-  opacity: 1;
-  scale: 1;
-  /* The rest before a hint appears sits on the arrival alone: a pill already
-     showing that follows the pointer to the next day carries no delay. */
-  transition-delay: var(--dsh-claude-duration-hint-delay), var(--dsh-claude-duration-hint-delay), 0s, 0s;
 }
 
 /* The one-liner under the grid: a plain caption, no emphasis of its own. */

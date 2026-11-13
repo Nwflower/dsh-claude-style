@@ -284,6 +284,9 @@
       ],
       "连续往返切回后页面的节点数不再增长": [
         0
+      ],
+      "流式期间快速往返后仍显示原会话且控制台没有异常": [
+        0
       ]
     },
     "packages/testing/scenarios/message-actions.mjs": {
@@ -1162,9 +1165,9 @@
       ]
     },
     "packages/testing/smoke/cases/settings.mjs": {
-      "the three colour cards are all buttons: the card the page paints is pressed, the others stand ready, and the trio carries the brand cards and the reader's own": [
+      "every colour card is a button, the card the page paints is pressed and the others stand ready: the presets always, the reader schemes after them once stored": [
         0,
-        3
+        1
       ],
       "following the brand presses the brand's card with no reset to offer; a picked card paints its own colours while the mark stays, and offers the way back": [
         0

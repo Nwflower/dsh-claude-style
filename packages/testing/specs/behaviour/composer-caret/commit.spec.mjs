@@ -101,10 +101,15 @@ export default spec({ page: 'composer' }, ({ test }) => {
     // selectionchange is promised, so the settle after the event is what
     // measures the committed selection.
     await compose(t, false)
-    await frames(t, 4)
+    await t.page.waitForFunction(([field, layer]) => {
+      const drawn = document.querySelector(layer)
+      if (drawn === null) return false
+      const range = document.getSelection().getRangeAt(0).getBoundingClientRect()
+      return Math.abs(drawn.getBoundingClientRect().left - range.left) <= 1
+    }, [FIELD, LAYER], { timeout: 2000 })
     const caret = await readCaret(t)
     t.expectThat.equal(caret.mark, true, 'the field\'s native caret pressed down again')
     t.expectThat.equal(caret.layer?.visible ?? false, true, 'the skin\'s caret drawn after the composition')
-    t.expectThat.equal(Math.abs((caret.layer?.left ?? -Infinity) - caret.range.left) <= 1, true, `the drawn caret at the committed selection (offset ${caret.range.offset})`)
+    t.expectThat.equal(Math.abs((caret.layer?.left ?? -Infinity) - caret.range.left) <= 1, true, `the drawn caret at the committed selection: ${JSON.stringify(caret)}`)
   })
 })

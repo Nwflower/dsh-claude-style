@@ -483,6 +483,7 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
       cancelNumbers = null
       releaseWatch()
       offCost()
+      cost.stop()
       costListeners.clear()
       // The structure bus behind the estimate's call rows goes with the rest.
       estimate.stop()

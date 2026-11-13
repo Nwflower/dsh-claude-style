@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-13",
-  "group": "improvements",
-  "order": 0,
-  "external": false,
-  "zh": "「首页统计范围」的默认值改为「全部记录」，首页用量面板一打开就覆盖已有的全部会话记录",
-  "en": "Make \"all-record\" the default home session scope, so the home usage dashboard covers every recorded session from the start"
-}

@@ -36,6 +36,18 @@ brand and scheme, so the colours resolve in the page while the brand cards keep
 their literals; the image-colour choice (`Default`, `Accent`, `Text colour`)
 repaints the brand art from the same table (D30).
 
+The schemes are managed in one dialog of two columns. The left column lists
+every scheme as a line of four dots and a name, under a highlight that slides to
+the line in hand; the scheme the page paints wears the accent's tick. The right
+column edits that scheme: its name as the heading, then a light and a dark
+**specimen** — a heading, a line of prose with an inline-code chip and a link,
+and a filled control, painted with the scheme's own values whatever appearance
+the page is in — heading the two columns of colour lines under them. A colour
+line is a disc that opens the picker, the value, and the contrast it reads at;
+a figure under what the colour owes its background turns to the error colour.
+The dialog grows out of the centre and returns to it, and moving to another
+scheme brings its editor in from the side that scheme stands on in the list.
+
 Rules:
 
 - Never pure black, never a cold gray. Each canvas pair — the Claude card's and
@@ -77,6 +89,10 @@ card leaves unset.
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | claude (default) | `#d97757` | `#ffffff` | `#191919` | `#161616` | `#fdfdfd` | `#fafafa` | `#1f1f1f` | `#f4f2f3` | `rgba(255, 255, 255, 0.06)` | `#184f95` | `#8ab4f8` | highlight | ink | `#161616` | `#fdfdfd` |
 | deepseek | `#4d6bfe` | `#fbfcff` | `#13161d` | `#131416` | `#f4f9ff` | `#f7f9ff` | `#13161d` | `#ecf0ff` | `#262b36` | `#3b56d9` | `#8fa4ff` | surface | accent | `#0f1115` | `#eef1f8` |
+| parchment | `#b5673a` | `#f7f1e3` | `#1d1a16` | `#100c04` | `#fffef9` | — | — | — | — | `#8f4a1c` | `#e3a676` | highlight | ink | `#2a241c` | `#f3ecdf` |
+| forest | `#3f8f6f` | `#f7fbf7` | `#151a17` | `#101310` | `#f7fffa` | — | — | — | — | `#256b50` | `#7fcfae` | surface | ink | `#14201a` | `#e9f2ec` |
+| dusk | `#8a6ae6` | `#faf8ff` | `#18161f` | `#121116` | `#fcf9ff` | — | — | — | — | `#5b3fc4` | `#b3a1ff` | surface | ink | `#17132a` | `#efecfa` |
+| rose | `#d4577c` | `#fdf1f2` | `#1d1618` | `#140c0d` | `#fff9fc` | — | — | — | — | `#a8325a` | `#f29bb4` | highlight | ink | `#24141a` | `#f8ecef` |
 
 | Tone | Seed | Light | Dark |
 | --- | --- | --- | --- |
@@ -123,88 +139,88 @@ card leaves unset.
 | `link` |  | `Δl 0 · C ×1` | `Δl 0 · C ×1` |
 | `link-underline` |  | `Δl 0 · C ×1 · α 0.6` | `Δl 0 · C ×1 · α 0.6` |
 
-| Token | Tone | claude light | claude dark | deepseek light | deepseek dark | Host alias | Use |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `--dsw-alias-bg-base` | `canvas` | `#ffffff` | `#191919` | `#fbfcff` | `#13161d` | host's own |  |
-| `--dsw-alias-bg-layer-1` | `surface-1` | `#ffffff` | `#212121` | `#fbfcff` | `#1b1e26` | host's own |  |
-| `--dsw-alias-bg-layer-2` | `surface-2` | `#ffffff` | `#282828` | `#fbfcff` | `#22252d` | host's own |  |
-| `--dsw-alias-bg-layer-3` | `surface-3` | `#ffffff` | `#323232` | `#fcfdff` | `#2b2f37` | host's own |  |
-| `--dsw-alias-bg-overlay` | `overlay` | `#ffffff` | `#282828` | `#ffffff` | `#22252d` | host's own |  |
-| `--dsw-alias-border-l1` | `border-1` / `border-1-flat` | `#e9e9e9` | `rgba(255, 255, 255, 0.09)` | — | `#23262e` | host's own | the standard edge: card and panel outlines, dividers, field outlines |
-| `--dsw-alias-border-l2` | `border-2` / `border-2-flat` | `#dedede` | `rgba(255, 255, 255, 0.18)` | — | `#2c3038` | host's own |  |
-| `--dsw-alias-border-l3` | `border-3` / `border-3-flat` | `#cfcfcf` | `rgba(255, 255, 255, 0.3)` | — | `#3a3d46` | host's own |  |
-| `--dsh-claude-divider` | `divider` | `rgba(22, 22, 22, 0.05)` | `rgba(255, 255, 255, 0.06)` | `rgba(19, 20, 22, 0.05)` | `rgba(251, 255, 255, 0.06)` | `var(--dsw-alias-border-l1)` | a line that only separates: foot areas, settings rows, menu separators, the transcript's rule |
-| `--dsw-alias-brand-primary` | `accent` | `#d97757` | `#d97757` | `#4d6bfe` | `#4d6bfe` | host's own | the single accent: checks, focus rings, selected marks |
-| `--dsw-alias-brand-text` | `on-accent` | `#ffffff` | `#fbfbfb` | `#fbfcff` | `#f2f7ff` | host's own |  |
-| `--dsw-alias-button-primary-fill` | `accent` | `#d97757` | `#d97757` | `#4d6bfe` | `#4d6bfe` | host's own |  |
-| `--dsw-alias-button-primary-hover` | `accent-hover` | `#c46343` | `#eb9170` | `#3d56e9` | `#6a84ff` | host's own |  |
-| `--dsw-alias-button-elevated-fill` | `overlay` | `#ffffff` | `#282828` | `#ffffff` | `#22252d` | host's own |  |
-| `--dsw-alias-button-floating-fill` | `overlay` | `#ffffff` | `#282828` | `#ffffff` | `#22252d` | host's own |  |
-| `--dsw-alias-button-floating-hover` | `surface-3` | `#ffffff` | `#323232` | `#fcfdff` | `#2b2f37` | host's own |  |
-| `--dsw-alias-button-info-fill` | `accent` | `#d97757` | `#d97757` | `#4d6bfe` | `#4d6bfe` | host's own |  |
-| `--dsw-alias-button-info-hover` | `accent-hover` | `#c46343` | `#eb9170` | `#3d56e9` | `#6a84ff` | host's own |  |
-| `--dsw-alias-interactive-bg-active` | `accent-active` | `rgba(246, 136, 98, 0.26)` | `rgba(217, 119, 87, 0.3)` | `rgba(95, 124, 255, 0.26)` | `rgba(77, 107, 254, 0.3)` | host's own |  |
-| `--dsh-claude-hover-bg` | `hover-wash` | `rgba(6, 6, 6, 0.08)` | `rgba(255, 255, 255, 0.08)` | `rgba(4, 4, 6, 0.08)` | `rgba(251, 255, 255, 0.08)` | `var(--dsw-alias-interactive-bg-hover)` | hover wash |
-| `--dsh-claude-status-unread` | literal | `#2a78d6` | `#2a78d6` | `#2a78d6` | `#2a78d6` | `#2a78d6` | the native unread background-completion reminder, independent of the brand accent |
-| `--dsh-claude-status-awaiting` | literal | `#fab219` | `#fab219` | `#fab219` | `#fab219` | `#fab219` | the sidebar's waiting-for-input yellow: approvals, plan reviews and questions |
-| `--dsh-claude-status-running` | literal | `#898781` | `#898781` | `#898781` | `#898781` | `#898781` | the sidebar's muted neutral running dot |
-| `--dsh-claude-field-ring` | literal | `#2a78d6` | `#2a78d6` | `#2a78d6` | `#2a78d6` | `var(--dsw-alias-brand-primary)` | the ring around a field the reader is renaming in: the session title's own editor, drawn from the selection blue |
-| `--dsw-focus-ring-color` | literal | `rgba(20, 20, 19, 0.45)` | `rgba(250, 249, 245, 0.60)` | `rgba(20, 20, 19, 0.45)` | `rgba(250, 249, 245, 0.60)` | host's own | the keyboard focus ring: the host's own `:focus-visible` rules paint it, and the skin's fallback ring reads it |
-| `--dsh-claude-inline-code-bg` | `code-wash` | `rgba(6, 6, 6, 0.05)` | `rgba(255, 255, 255, 0.05)` | `rgba(4, 4, 6, 0.05)` | `rgba(251, 255, 255, 0.05)` | `var(--dsw-alias-markdown-inline-code)` | inline code fill |
-| `--dsh-claude-inline-code-fg` | card `code` | `#161616` | `#fdfdfd` | `#0f1115` | `#eef1f8` | `var(--dsw-alias-label-primary)` | inline code ink |
-| `--dsh-claude-link` | `link` | `#184f95` | `#8ab4f8` | `#3b56d9` | `#8fa4ff` | `var(--dsw-alias-link)` | markdown links |
-| `--dsh-claude-link-underline` | `link-underline` | `rgba(24, 79, 149, 0.6)` | `rgba(138, 180, 248, 0.6)` | `rgba(59, 86, 217, 0.6)` | `rgba(143, 164, 255, 0.6)` | `color-mix(in srgb, var(--dsw-alias-link) 60%, transparent)` | markdown link underline |
-| `--dsw-alias-markdown-code-block` | `code-block` | `#ffffff` | `#212121` | `#ffffff` | `#1b1e26` | host's own |  |
-| `--dsw-alias-markdown-code-block-banner` | `overlay` | `#ffffff` | `#282828` | `#ffffff` | `#22252d` | host's own |  |
-| `--dsw-alias-interactive-bg-hover` | `--dsh-claude-hover-bg` | `var(--dsh-claude-hover-bg)` | `var(--dsh-claude-hover-bg)` | `var(--dsh-claude-hover-bg)` | `var(--dsh-claude-hover-bg)` | host's own |  |
-| `--dsw-alias-interactive-bg-hover-solid` | `hover-plate` | `#f4f4f4` | `#323232` | `#f0f1f4` | `#2b2f37` | host's own | the host's solid hover chip |
-| `--dsw-alias-label-primary` | `ink` | `#161616` | `#fdfdfd` | `#131416` | `#f4f9ff` | host's own |  |
-| `--dsw-alias-label-primary-bluish` | `ink` | `#161616` | `#fdfdfd` | `#131416` | `#f4f9ff` | host's own |  |
-| `--dsw-alias-label-secondary` | `ink-2` | `#70696b` | `#beb6b8` | `#646871` | `#acb5c0` | host's own |  |
-| `--dsw-alias-label-tertiary` | `ink-3` | `#91888b` | `#9c9395` | `#848892` | `#88929f` | host's own |  |
-| `--dsw-alias-label-caption` | `ink-4` | `#b2acae` | `#776f71` | `#a7abb3` | `#656e79` | host's own |  |
-| `--dsw-alias-label-shimmer` | `shimmer` | `#161616` | `#fdfdfd` | `#131416` | `#f4f9ff` | host's own | the highlight band's tint over running words: the host's own rows and the skin's band (shared/sweep-band.ts) alike |
-| `--dsw-alias-label-deep-diving-shimmer` | `shimmer` | `#161616` | `#fdfdfd` | `#131416` | `#f4f9ff` | host's own | the band's tint inside the running row, which the host points --dsw-alias-label-shimmer at; under Claude it is the same warm band as everywhere else |
-| `--dsw-alias-state-business-primary` | `accent` | `#d97757` | `#d97757` | `#4d6bfe` | `#4d6bfe` | host's own |  |
-| `--dsw-alias-state-business-tertiary` | `accent-tint` | `#f6ded7` | `#48261b` | `#dce4f7` | `#252f4c` | host's own |  |
-| `--dsw-alias-link` | `ui-link` | `#bf6446` | `#eaa088` | `#3e57e0` | `#7594fd` | host's own | text link at rest |
-| `--dsw-alias-shadow-lv2` | literal | `0 4px 18px rgba(20, 20, 19, 0.10), 0 1px 3px rgba(20, 20, 19, 0.05)` | `0 4px 16px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.14)` | `0 4px 18px rgba(20, 20, 19, 0.10), 0 1px 3px rgba(20, 20, 19, 0.05)` | `0 4px 16px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.14)` | host's own |  |
-| `--dsw-specific-input-major` | `inset` | `#ffffff` | `#141414` | `#ffffff` | `#0e1117` | host's own |  |
-| `--dsw-specific-selector` | `selector` | `#fefefe` | `#323232` | `#fafbfe` | `#2b2f37` | host's own |  |
-| `--dsw-specific-sidebar-fill` | card `sidebar` | `#fafafa` | `#1f1f1f` | `#f7f9ff` | `#13161d` | host's own |  |
-| `--dsw-alias-brand-primary-new-colorprimary-new-color` | `accent` | `#d97757` | `#d97757` | `#4d6bfe` | `#4d6bfe` | host's own |  |
-| `--dsh-claude-canvas` | `canvas` | `#ffffff` | `#191919` | `#fbfcff` | `#13161d` | `var(--dsw-alias-bg-base)` | the page canvas |
-| `--dsh-claude-sidebar-canvas` | card `sidebar` | `#fafafa` | `#1f1f1f` | `#f7f9ff` | `#13161d` | `var(--dsw-specific-sidebar-fill)` | the sidebar |
-| `--dsh-claude-card` | `card` | `#ffffff` | `#232323` | `#fbfcff` | `#1d2028` | `var(--dsw-alias-bg-overlay)` | cards on the canvas in light and raised in dark: the account popover, the search palette |
-| `--dsh-claude-inverse-fill` | `ink` | `#161616` | `#fdfdfd` | `#131416` | `#f4f9ff` | `var(--dsw-alias-interactive-bg-hover)` | the model picker's group label fill: an inverted chip under Claude, a hover-plate chip under the host |
-| `--dsh-claude-inverse-ink` | `inverse-ink` | `#ffffff` | `#171717` | `#feffff` | `#11141a` | `var(--dsw-alias-label-primary)` | the model picker's group label ink |
-| `--dsh-claude-table-head` | `table-head` | `#f4f4f4` | `#282828` | `#f0f1f4` | `#22252d` | `var(--dsw-alias-bg-layer-2)` | table header row |
-| `--dsh-claude-ripple-ink` | `ink-3` | `#91888b` | `#9c9395` | `#848892` | `#88929f` | `var(--dsw-alias-label-secondary, #8a8a85)` | the new-conversation page's glyph field, and the wake a ripple leaves in it |
-| `--dsh-claude-data-ink` | literal | `#3b6ecf` | `#3b6ecf` | `#3b6ecf` | `#3b6ecf` | `var(--dsw-alias-link, #3b6ecf)` | the home heat grid's single data blue |
-| `--dsh-claude-data-0` | literal | `#3366b3` | `#82aaff` | `#3366b3` | `#82aaff` | `light-dark(#3366b3, #82aaff)` | the Models chart and legend's categorical colour 0 |
-| `--dsh-claude-data-1` | literal | `#c4571f` | `#f0a35e` | `#c4571f` | `#f0a35e` | `light-dark(#c4571f, #f0a35e)` | the Models chart and legend's categorical colour 1 |
-| `--dsh-claude-data-2` | literal | `#167552` | `#63c59a` | `#167552` | `#63c59a` | `light-dark(#167552, #63c59a)` | the Models chart and legend's categorical colour 2 |
-| `--dsh-claude-data-3` | literal | `#7651a8` | `#c5a3e0` | `#7651a8` | `#c5a3e0` | `light-dark(#7651a8, #c5a3e0)` | the Models chart and legend's categorical colour 3 |
-| `--dsh-claude-data-4` | literal | `#08798c` | `#55c5d8` | `#08798c` | `#55c5d8` | `light-dark(#08798c, #55c5d8)` | the Models chart and legend's categorical colour 4 |
-| `--dsh-claude-data-5` | literal | `#a43b68` | `#f08db6` | `#a43b68` | `#f08db6` | `light-dark(#a43b68, #f08db6)` | the Models chart and legend's categorical colour 5 |
-| `--dsh-claude-data-6` | literal | `#806000` | `#e3bd54` | `#806000` | `#e3bd54` | `light-dark(#806000, #e3bd54)` | the Models chart and legend's categorical colour 6 |
-| `--dsh-claude-data-7` | literal | `#ad4040` | `#ef8585` | `#ad4040` | `#ef8585` | `light-dark(#ad4040, #ef8585)` | the Models chart and legend's categorical colour 7 |
-| `--dsh-claude-data-8` | literal | `#326b67` | `#83c8be` | `#326b67` | `#83c8be` | `light-dark(#326b67, #83c8be)` | the Models chart and legend's categorical colour 8 |
-| `--dsh-claude-data-9` | literal | `#65616c` | `#b8b3bf` | `#65616c` | `#b8b3bf` | `light-dark(#65616c, #b8b3bf)` | the Models chart and legend's categorical colour 9 |
-| `--dsh-claude-context-messages` | literal | `#2b7de9` | `#2b7de9` | `#2b7de9` | `#2b7de9` | `var(--dsw-alias-link, #2b7de9)` | context messages: Claude Desktop's blue category |
-| `--dsh-claude-context-tools` | literal | `#ff6b2c` | `#ff6b2c` | `#ff6b2c` | `#ff6b2c` | `var(--dsw-alias-state-warning-primary, #ff6b2c)` | context system tools: Claude Desktop's orange category |
-| `--dsh-claude-context-mcp` | literal | `#00b894` | `#00b894` | `#00b894` | `#00b894` | `var(--dsw-alias-state-success-primary, #00b894)` | context MCP tools: Claude Desktop's green category |
-| `--dsh-claude-context-system` | literal | `#e9a400` | `#e9a400` | `#e9a400` | `#e9a400` | `var(--dsw-alias-state-warning-primary, #e9a400)` | context system prompt: Claude Desktop's yellow category |
-| `--dsh-claude-ripple-wave` | literal | `#3b6ef0` | `#7fa6ff` | `#3b6ef0` | `#7fa6ff` | `var(--dsw-alias-link, #3b6ef0)` | the front of a ripple in the new-conversation page's glyph field |
-| `--dsh-claude-scrollbar` | `scrollbar` | `rgba(213, 213, 213, 0.9)` | `rgba(62, 62, 62, 0.9)` | `rgba(209, 210, 213, 0.9)` | `rgba(55, 59, 64, 0.9)` | `var(--dsw-alias-border-l2)` | scrollbar thumb |
-| `--dsh-claude-scrollbar-hover` | `scrollbar-hover` | `rgba(138, 138, 138, 0.8)` | `rgba(113, 113, 113, 0.9)` | `rgba(134, 135, 138, 0.8)` | `rgba(105, 109, 115, 0.9)` | `var(--dsw-alias-label-caption)` | scrollbar thumb under the pointer |
-| `--dsh-claude-link-hover` | `ui-link-hover` | `#a35035` | `#ffbea6` | `#2e41c0` | `#91b1ff` | `var(--dsw-alias-link)` | text link under the pointer |
-| `--dsh-claude-logo-ink` | card `logoInk` | `#161616` | `#fdfdfd` | `#4d6bfe` | `#4d6bfe` | `var(--dsw-alias-label-primary)` | sidebar brand art: the whale and the wordmark |
-| `--dsw-specific-menu` | `overlay` | `#ffffff` | — | `#ffffff` | — | host's own |  |
-| `--dsw-specific-bubble` | card `bubble` | `#f4f2f3` | `rgba(255, 255, 255, 0.06)` | `#ecf0ff` | `#262b36` | host's own | user message bubble |
-| `--dsh-claude-chip` | `chip` | `#f9f9f9` | — | `#f5f6f9` | — | `var(--dsw-specific-selector)` | segmented control and switch at rest |
-| `--dsh-claude-meter-peak` | literal | `#a4621d` | `#e2a45f` | `#a4621d` | `#e2a45f` | `var(--dsw-alias-state-warn-label)` | the peak rate badge: the expensive end of a provider's own billing clock |
-| `--dsh-claude-meter-valley` | literal | `#3d7550` | `#8cbf96` | `#3d7550` | `#8cbf96` | `var(--dsw-alias-state-success-primary)` | the off-peak rate badge, and the dated promotions priced below it |
+| Token | Tone | claude light | claude dark | deepseek light | deepseek dark | parchment light | parchment dark | forest light | forest dark | dusk light | dusk dark | rose light | rose dark | Host alias | Use |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `--dsw-alias-bg-base` | `canvas` | `#ffffff` | `#191919` | `#fbfcff` | `#13161d` | `#f7f1e3` | `#1d1a16` | `#f7fbf7` | `#151a17` | `#faf8ff` | `#18161f` | `#fdf1f2` | `#1d1618` | host's own |  |
+| `--dsw-alias-bg-layer-1` | `surface-1` | `#ffffff` | `#212121` | `#fbfcff` | `#1b1e26` | `#f7f1e3` | `#26221e` | `#f7fbf7` | `#1d221f` | `#faf8ff` | `#201e28` | `#fdf1f2` | `#261e20` | host's own |  |
+| `--dsw-alias-bg-layer-2` | `surface-2` | `#ffffff` | `#282828` | `#fbfcff` | `#22252d` | `#f7f1e3` | `#2d2925` | `#f7fbf7` | `#242926` | `#faf8ff` | `#27252f` | `#fdf1f2` | `#2d2527` | host's own |  |
+| `--dsw-alias-bg-layer-3` | `surface-3` | `#ffffff` | `#323232` | `#fcfdff` | `#2b2f37` | `#f8f2e4` | `#36332f` | `#f8fcf8` | `#2e3330` | `#fbf9ff` | `#312f39` | `#fef2f3` | `#372f31` | host's own |  |
+| `--dsw-alias-bg-overlay` | `overlay` | `#ffffff` | `#282828` | `#ffffff` | `#22252d` | `#f5f5f5` | `#2d2925` | `#fdfdfd` | `#242926` | `#fdfdfd` | `#27252f` | `#f8f8f8` | `#2d2527` | host's own |  |
+| `--dsw-alias-border-l1` | `border-1` / `border-1-flat` | `#e9e9e9` | `rgba(255, 255, 255, 0.09)` | — | `#23262e` | `#e1dbcd` | `rgba(255, 255, 250, 0.09)` | — | `#252a27` | — | `#282630` | `#e7dbdc` | `rgba(255, 253, 255, 0.09)` | host's own | the standard edge: card and panel outlines, dividers, field outlines |
+| `--dsw-alias-border-l2` | `border-2` / `border-2-flat` | `#dedede` | `rgba(255, 255, 255, 0.18)` | — | `#2c3038` | `#d7d1c3` | `rgba(255, 255, 250, 0.18)` | — | `#2f3431` | — | `#32303a` | `#dcd1d2` | `rgba(255, 253, 255, 0.18)` | host's own |  |
+| `--dsw-alias-border-l3` | `border-3` / `border-3-flat` | `#cfcfcf` | `rgba(255, 255, 255, 0.3)` | — | `#3a3d46` | `#c8c2b5` | `rgba(255, 255, 250, 0.3)` | — | `#3c423e` | — | `#403d48` | `#cec2c3` | `rgba(255, 253, 255, 0.3)` | host's own |  |
+| `--dsh-claude-divider` | `divider` | `rgba(22, 22, 22, 0.05)` | `rgba(255, 255, 255, 0.06)` | `rgba(19, 20, 22, 0.05)` | `rgba(251, 255, 255, 0.06)` | `rgba(16, 12, 4, 0.05)` | `rgba(255, 255, 250, 0.06)` | `rgba(16, 19, 16, 0.05)` | `rgba(249, 255, 252, 0.06)` | `rgba(18, 17, 22, 0.05)` | `rgba(255, 254, 255, 0.06)` | `rgba(20, 12, 13, 0.05)` | `rgba(255, 253, 255, 0.06)` | `var(--dsw-alias-border-l1)` | a line that only separates: foot areas, settings rows, menu separators, the transcript's rule |
+| `--dsw-alias-brand-primary` | `accent` | `#d97757` | `#d97757` | `#4d6bfe` | `#4d6bfe` | `#b5673a` | `#b5673a` | `#3f8f6f` | `#3f8f6f` | `#8a6ae6` | `#8a6ae6` | `#d4577c` | `#d4577c` | host's own | the single accent: checks, focus rings, selected marks |
+| `--dsw-alias-brand-text` | `on-accent` | `#ffffff` | `#fbfbfb` | `#fbfcff` | `#f2f7ff` | `#f7f1e3` | `#fffdf7` | `#f7fbf7` | `#f5fdf8` | `#faf8ff` | `#faf7ff` | `#fdf1f2` | `#fff7fa` | host's own |  |
+| `--dsw-alias-button-primary-fill` | `accent` | `#d97757` | `#d97757` | `#4d6bfe` | `#4d6bfe` | `#b5673a` | `#b5673a` | `#3f8f6f` | `#3f8f6f` | `#8a6ae6` | `#8a6ae6` | `#d4577c` | `#d4577c` | host's own |  |
+| `--dsw-alias-button-primary-hover` | `accent-hover` | `#c46343` | `#eb9170` | `#3d56e9` | `#6a84ff` | `#a15425` | `#c78055` | `#287c5d` | `#5ba487` | `#7856d1` | `#a183f4` | `#bf426a` | `#e8738f` | host's own |  |
+| `--dsw-alias-button-elevated-fill` | `overlay` | `#ffffff` | `#282828` | `#ffffff` | `#22252d` | `#f5f5f5` | `#2d2925` | `#fdfdfd` | `#242926` | `#fdfdfd` | `#27252f` | `#f8f8f8` | `#2d2527` | host's own |  |
+| `--dsw-alias-button-floating-fill` | `overlay` | `#ffffff` | `#282828` | `#ffffff` | `#22252d` | `#f5f5f5` | `#2d2925` | `#fdfdfd` | `#242926` | `#fdfdfd` | `#27252f` | `#f8f8f8` | `#2d2527` | host's own |  |
+| `--dsw-alias-button-floating-hover` | `surface-3` | `#ffffff` | `#323232` | `#fcfdff` | `#2b2f37` | `#f8f2e4` | `#36332f` | `#f8fcf8` | `#2e3330` | `#fbf9ff` | `#312f39` | `#fef2f3` | `#372f31` | host's own |  |
+| `--dsw-alias-button-info-fill` | `accent` | `#d97757` | `#d97757` | `#4d6bfe` | `#4d6bfe` | `#b5673a` | `#b5673a` | `#3f8f6f` | `#3f8f6f` | `#8a6ae6` | `#8a6ae6` | `#d4577c` | `#d4577c` | host's own |  |
+| `--dsw-alias-button-info-hover` | `accent-hover` | `#c46343` | `#eb9170` | `#3d56e9` | `#6a84ff` | `#a15425` | `#c78055` | `#287c5d` | `#5ba487` | `#7856d1` | `#a183f4` | `#bf426a` | `#e8738f` | host's own |  |
+| `--dsw-alias-interactive-bg-active` | `accent-active` | `rgba(246, 136, 98, 0.26)` | `rgba(217, 119, 87, 0.3)` | `rgba(95, 124, 255, 0.26)` | `rgba(77, 107, 254, 0.3)` | `rgba(208, 121, 68, 0.26)` | `rgba(181, 103, 58, 0.3)` | `rgba(74, 166, 131, 0.26)` | `rgba(63, 143, 111, 0.3)` | `rgba(161, 123, 255, 0.26)` | `rgba(138, 106, 230, 0.3)` | `rgba(243, 101, 141, 0.26)` | `rgba(212, 87, 124, 0.3)` | host's own |  |
+| `--dsh-claude-hover-bg` | `hover-wash` | `rgba(6, 6, 6, 0.08)` | `rgba(255, 255, 255, 0.08)` | `rgba(4, 4, 6, 0.08)` | `rgba(251, 255, 255, 0.08)` | `rgba(3, 1, 0, 0.08)` | `rgba(255, 255, 250, 0.08)` | `rgba(3, 4, 3, 0.08)` | `rgba(249, 255, 252, 0.08)` | `rgba(3, 3, 6, 0.08)` | `rgba(255, 254, 255, 0.08)` | `rgba(4, 1, 2, 0.08)` | `rgba(255, 253, 255, 0.08)` | `var(--dsw-alias-interactive-bg-hover)` | hover wash |
+| `--dsh-claude-status-unread` | literal | `#2a78d6` | `#2a78d6` | `#2a78d6` | `#2a78d6` | `#2a78d6` | `#2a78d6` | `#2a78d6` | `#2a78d6` | `#2a78d6` | `#2a78d6` | `#2a78d6` | `#2a78d6` | `#2a78d6` | the native unread background-completion reminder, independent of the brand accent |
+| `--dsh-claude-status-awaiting` | literal | `#fab219` | `#fab219` | `#fab219` | `#fab219` | `#fab219` | `#fab219` | `#fab219` | `#fab219` | `#fab219` | `#fab219` | `#fab219` | `#fab219` | `#fab219` | the sidebar's waiting-for-input yellow: approvals, plan reviews and questions |
+| `--dsh-claude-status-running` | literal | `#898781` | `#898781` | `#898781` | `#898781` | `#898781` | `#898781` | `#898781` | `#898781` | `#898781` | `#898781` | `#898781` | `#898781` | `#898781` | the sidebar's muted neutral running dot |
+| `--dsh-claude-field-ring` | literal | `#2a78d6` | `#2a78d6` | `#2a78d6` | `#2a78d6` | `#2a78d6` | `#2a78d6` | `#2a78d6` | `#2a78d6` | `#2a78d6` | `#2a78d6` | `#2a78d6` | `#2a78d6` | `var(--dsw-alias-brand-primary)` | the ring around a field the reader is renaming in: the session title's own editor, drawn from the selection blue |
+| `--dsw-focus-ring-color` | literal | `rgba(20, 20, 19, 0.45)` | `rgba(250, 249, 245, 0.60)` | `rgba(20, 20, 19, 0.45)` | `rgba(250, 249, 245, 0.60)` | `rgba(20, 20, 19, 0.45)` | `rgba(250, 249, 245, 0.60)` | `rgba(20, 20, 19, 0.45)` | `rgba(250, 249, 245, 0.60)` | `rgba(20, 20, 19, 0.45)` | `rgba(250, 249, 245, 0.60)` | `rgba(20, 20, 19, 0.45)` | `rgba(250, 249, 245, 0.60)` | host's own | the keyboard focus ring: the host's own `:focus-visible` rules paint it, and the skin's fallback ring reads it |
+| `--dsh-claude-inline-code-bg` | `code-wash` | `rgba(6, 6, 6, 0.05)` | `rgba(255, 255, 255, 0.05)` | `rgba(4, 4, 6, 0.05)` | `rgba(251, 255, 255, 0.05)` | `rgba(3, 1, 0, 0.05)` | `rgba(255, 255, 250, 0.05)` | `rgba(3, 4, 3, 0.05)` | `rgba(249, 255, 252, 0.05)` | `rgba(3, 3, 6, 0.05)` | `rgba(255, 254, 255, 0.05)` | `rgba(4, 1, 2, 0.05)` | `rgba(255, 253, 255, 0.05)` | `var(--dsw-alias-markdown-inline-code)` | inline code fill |
+| `--dsh-claude-inline-code-fg` | card `code` | `#161616` | `#fdfdfd` | `#0f1115` | `#eef1f8` | `#2a241c` | `#f3ecdf` | `#14201a` | `#e9f2ec` | `#17132a` | `#efecfa` | `#24141a` | `#f8ecef` | `var(--dsw-alias-label-primary)` | inline code ink |
+| `--dsh-claude-link` | `link` | `#184f95` | `#8ab4f8` | `#3b56d9` | `#8fa4ff` | `#8f4a1c` | `#e3a676` | `#256b50` | `#7fcfae` | `#5b3fc4` | `#b3a1ff` | `#a8325a` | `#f29bb4` | `var(--dsw-alias-link)` | markdown links |
+| `--dsh-claude-link-underline` | `link-underline` | `rgba(24, 79, 149, 0.6)` | `rgba(138, 180, 248, 0.6)` | `rgba(59, 86, 217, 0.6)` | `rgba(143, 164, 255, 0.6)` | `rgba(143, 74, 28, 0.6)` | `rgba(227, 166, 118, 0.6)` | `rgba(37, 107, 80, 0.6)` | `rgba(127, 207, 174, 0.6)` | `rgba(91, 63, 196, 0.6)` | `rgba(179, 161, 255, 0.6)` | `rgba(168, 50, 90, 0.6)` | `rgba(242, 155, 180, 0.6)` | `color-mix(in srgb, var(--dsw-alias-link) 60%, transparent)` | markdown link underline |
+| `--dsw-alias-markdown-code-block` | `code-block` | `#ffffff` | `#212121` | `#ffffff` | `#1b1e26` | `#f5f5f5` | `#26221e` | `#fdfdfd` | `#1d221f` | `#fdfdfd` | `#201e28` | `#f8f8f8` | `#261e20` | host's own |  |
+| `--dsw-alias-markdown-code-block-banner` | `overlay` | `#ffffff` | `#282828` | `#ffffff` | `#22252d` | `#f5f5f5` | `#2d2925` | `#fdfdfd` | `#242926` | `#fdfdfd` | `#27252f` | `#f8f8f8` | `#2d2527` | host's own |  |
+| `--dsw-alias-interactive-bg-hover` | `--dsh-claude-hover-bg` | `var(--dsh-claude-hover-bg)` | `var(--dsh-claude-hover-bg)` | `var(--dsh-claude-hover-bg)` | `var(--dsh-claude-hover-bg)` | `var(--dsh-claude-hover-bg)` | `var(--dsh-claude-hover-bg)` | `var(--dsh-claude-hover-bg)` | `var(--dsh-claude-hover-bg)` | `var(--dsh-claude-hover-bg)` | `var(--dsh-claude-hover-bg)` | `var(--dsh-claude-hover-bg)` | `var(--dsh-claude-hover-bg)` | host's own |  |
+| `--dsw-alias-interactive-bg-hover-solid` | `hover-plate` | `#f4f4f4` | `#323232` | `#f0f1f4` | `#2b2f37` | `#ece6d8` | `#36332f` | `#ecf0ec` | `#2e3330` | `#efedf4` | `#312f39` | `#f2e6e7` | `#372f31` | host's own | the host's solid hover chip |
+| `--dsw-alias-label-primary` | `ink` | `#161616` | `#fdfdfd` | `#131416` | `#f4f9ff` | `#100c04` | `#fffef9` | `#101310` | `#f7fffa` | `#121116` | `#fcf9ff` | `#140c0d` | `#fff9fc` | host's own |  |
+| `--dsw-alias-label-primary-bluish` | `ink` | `#161616` | `#fdfdfd` | `#131416` | `#f4f9ff` | `#100c04` | `#fffef9` | `#101310` | `#f7fffa` | `#121116` | `#fcf9ff` | `#140c0d` | `#fff9fc` | host's own |  |
+| `--dsw-alias-label-secondary` | `ink-2` | `#70696b` | `#beb6b8` | `#646871` | `#acb5c0` | `#665e4c` | `#bcbaae` | `#606960` | `#aebcb4` | `#666370` | `#b9b3bf` | `#6e5c5e` | `#bfb3b9` | host's own |  |
+| `--dsw-alias-label-tertiary` | `ink-3` | `#91888b` | `#9c9395` | `#848892` | `#88929f` | `#867d6a` | `#99978a` | `#7f897f` | `#8a9a90` | `#868391` | `#97909d` | `#8f7b7d` | `#9d8f96` | host's own |  |
+| `--dsw-alias-label-caption` | `ink-4` | `#b2acae` | `#776f71` | `#a7abb3` | `#656e79` | `#a7a08e` | `#747267` | `#a3aba3` | `#67756c` | `#a8a6b2` | `#726c77` | `#b09ea0` | `#776b72` | host's own |  |
+| `--dsw-alias-label-shimmer` | `shimmer` | `#161616` | `#fdfdfd` | `#131416` | `#f4f9ff` | `#100c04` | `#fffef9` | `#101310` | `#f7fffa` | `#121116` | `#fcf9ff` | `#140c0d` | `#fff9fc` | host's own | the highlight band's tint over running words: the host's own rows and the skin's band (shared/sweep-band.ts) alike |
+| `--dsw-alias-label-deep-diving-shimmer` | `shimmer` | `#161616` | `#fdfdfd` | `#131416` | `#f4f9ff` | `#100c04` | `#fffef9` | `#101310` | `#f7fffa` | `#121116` | `#fcf9ff` | `#140c0d` | `#fff9fc` | host's own | the band's tint inside the running row, which the host points --dsw-alias-label-shimmer at; under Claude it is the same warm band as everywhere else |
+| `--dsw-alias-state-business-primary` | `accent` | `#d97757` | `#d97757` | `#4d6bfe` | `#4d6bfe` | `#b5673a` | `#b5673a` | `#3f8f6f` | `#3f8f6f` | `#8a6ae6` | `#8a6ae6` | `#d4577c` | `#d4577c` | host's own |  |
+| `--dsw-alias-state-business-tertiary` | `accent-tint` | `#f6ded7` | `#48261b` | `#dce4f7` | `#252f4c` | `#f4dfd4` | `#462716` | `#d4eadf` | `#0f3929` | `#e4e1f6` | `#312b4a` | `#f5dde1` | `#47242d` | host's own |  |
+| `--dsw-alias-link` | `ui-link` | `#bf6446` | `#eaa088` | `#3e57e0` | `#7594fd` | `#9c542a` | `#c78d6e` | `#2d795c` | `#74a991` | `#7657ca` | `#a593ed` | `#b94569` | `#e3879e` | host's own | text link at rest |
+| `--dsw-alias-shadow-lv2` | literal | `0 4px 18px rgba(20, 20, 19, 0.10), 0 1px 3px rgba(20, 20, 19, 0.05)` | `0 4px 16px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.14)` | `0 4px 18px rgba(20, 20, 19, 0.10), 0 1px 3px rgba(20, 20, 19, 0.05)` | `0 4px 16px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.14)` | `0 4px 18px rgba(20, 20, 19, 0.10), 0 1px 3px rgba(20, 20, 19, 0.05)` | `0 4px 16px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.14)` | `0 4px 18px rgba(20, 20, 19, 0.10), 0 1px 3px rgba(20, 20, 19, 0.05)` | `0 4px 16px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.14)` | `0 4px 18px rgba(20, 20, 19, 0.10), 0 1px 3px rgba(20, 20, 19, 0.05)` | `0 4px 16px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.14)` | `0 4px 18px rgba(20, 20, 19, 0.10), 0 1px 3px rgba(20, 20, 19, 0.05)` | `0 4px 16px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.14)` | host's own |  |
+| `--dsw-specific-input-major` | `inset` | `#ffffff` | `#141414` | `#ffffff` | `#0e1117` | `#f5f5f5` | `#171511` | `#fdfdfd` | `#101512` | `#fdfdfd` | `#131119` | `#f8f8f8` | `#171113` | host's own |  |
+| `--dsw-specific-selector` | `selector` | `#fefefe` | `#323232` | `#fafbfe` | `#2b2f37` | `#f6f0e2` | `#36332f` | `#f6faf6` | `#2e3330` | `#f9f7fe` | `#312f39` | `#fcf0f1` | `#372f31` | host's own |  |
+| `--dsw-specific-sidebar-fill` | card `sidebar` | `#fafafa` | `#1f1f1f` | `#f7f9ff` | `#13161d` | `#f7f0e1` | `#1d1a16` | `#f6fbf6` | `#151a17` | `#faf7ff` | `#18161f` | `#fef0f1` | `#1d1618` | host's own |  |
+| `--dsw-alias-brand-primary-new-colorprimary-new-color` | `accent` | `#d97757` | `#d97757` | `#4d6bfe` | `#4d6bfe` | `#b5673a` | `#b5673a` | `#3f8f6f` | `#3f8f6f` | `#8a6ae6` | `#8a6ae6` | `#d4577c` | `#d4577c` | host's own |  |
+| `--dsh-claude-canvas` | `canvas` | `#ffffff` | `#191919` | `#fbfcff` | `#13161d` | `#f7f1e3` | `#1d1a16` | `#f7fbf7` | `#151a17` | `#faf8ff` | `#18161f` | `#fdf1f2` | `#1d1618` | `var(--dsw-alias-bg-base)` | the page canvas |
+| `--dsh-claude-sidebar-canvas` | card `sidebar` | `#fafafa` | `#1f1f1f` | `#f7f9ff` | `#13161d` | `#f7f0e1` | `#1d1a16` | `#f6fbf6` | `#151a17` | `#faf7ff` | `#18161f` | `#fef0f1` | `#1d1618` | `var(--dsw-specific-sidebar-fill)` | the sidebar |
+| `--dsh-claude-card` | `card` | `#ffffff` | `#232323` | `#fbfcff` | `#1d2028` | `#f7f1e3` | `#282420` | `#f7fbf7` | `#1f2421` | `#faf8ff` | `#22202a` | `#fdf1f2` | `#282022` | `var(--dsw-alias-bg-overlay)` | cards on the canvas in light and raised in dark: the account popover, the search palette |
+| `--dsh-claude-inverse-fill` | `ink` | `#161616` | `#fdfdfd` | `#131416` | `#f4f9ff` | `#100c04` | `#fffef9` | `#101310` | `#f7fffa` | `#121116` | `#fcf9ff` | `#140c0d` | `#fff9fc` | `var(--dsw-alias-interactive-bg-hover)` | the model picker's group label fill: an inverted chip under Claude, a hover-plate chip under the host |
+| `--dsh-claude-inverse-ink` | `inverse-ink` | `#ffffff` | `#171717` | `#feffff` | `#11141a` | `#fbf5e7` | `#1a1714` | `#fbfffb` | `#131715` | `#fefcff` | `#16141c` | `#fff5f6` | `#1a1416` | `var(--dsw-alias-label-primary)` | the model picker's group label ink |
+| `--dsh-claude-table-head` | `table-head` | `#f4f4f4` | `#282828` | `#f0f1f4` | `#22252d` | `#ece6d8` | `#2d2925` | `#ecf0ec` | `#242926` | `#efedf4` | `#27252f` | `#f2e6e7` | `#2d2527` | `var(--dsw-alias-bg-layer-2)` | table header row |
+| `--dsh-claude-ripple-ink` | `ink-3` | `#91888b` | `#9c9395` | `#848892` | `#88929f` | `#867d6a` | `#99978a` | `#7f897f` | `#8a9a90` | `#868391` | `#97909d` | `#8f7b7d` | `#9d8f96` | `var(--dsw-alias-label-secondary, #8a8a85)` | the new-conversation page's glyph field, and the wake a ripple leaves in it |
+| `--dsh-claude-data-ink` | literal | `#3b6ecf` | `#3b6ecf` | `#3b6ecf` | `#3b6ecf` | `#3b6ecf` | `#3b6ecf` | `#3b6ecf` | `#3b6ecf` | `#3b6ecf` | `#3b6ecf` | `#3b6ecf` | `#3b6ecf` | `var(--dsw-alias-link, #3b6ecf)` | the home heat grid's single data blue |
+| `--dsh-claude-data-0` | literal | `#3366b3` | `#82aaff` | `#3366b3` | `#82aaff` | `#3366b3` | `#82aaff` | `#3366b3` | `#82aaff` | `#3366b3` | `#82aaff` | `#3366b3` | `#82aaff` | `light-dark(#3366b3, #82aaff)` | the Models chart and legend's categorical colour 0 |
+| `--dsh-claude-data-1` | literal | `#c4571f` | `#f0a35e` | `#c4571f` | `#f0a35e` | `#c4571f` | `#f0a35e` | `#c4571f` | `#f0a35e` | `#c4571f` | `#f0a35e` | `#c4571f` | `#f0a35e` | `light-dark(#c4571f, #f0a35e)` | the Models chart and legend's categorical colour 1 |
+| `--dsh-claude-data-2` | literal | `#167552` | `#63c59a` | `#167552` | `#63c59a` | `#167552` | `#63c59a` | `#167552` | `#63c59a` | `#167552` | `#63c59a` | `#167552` | `#63c59a` | `light-dark(#167552, #63c59a)` | the Models chart and legend's categorical colour 2 |
+| `--dsh-claude-data-3` | literal | `#7651a8` | `#c5a3e0` | `#7651a8` | `#c5a3e0` | `#7651a8` | `#c5a3e0` | `#7651a8` | `#c5a3e0` | `#7651a8` | `#c5a3e0` | `#7651a8` | `#c5a3e0` | `light-dark(#7651a8, #c5a3e0)` | the Models chart and legend's categorical colour 3 |
+| `--dsh-claude-data-4` | literal | `#08798c` | `#55c5d8` | `#08798c` | `#55c5d8` | `#08798c` | `#55c5d8` | `#08798c` | `#55c5d8` | `#08798c` | `#55c5d8` | `#08798c` | `#55c5d8` | `light-dark(#08798c, #55c5d8)` | the Models chart and legend's categorical colour 4 |
+| `--dsh-claude-data-5` | literal | `#a43b68` | `#f08db6` | `#a43b68` | `#f08db6` | `#a43b68` | `#f08db6` | `#a43b68` | `#f08db6` | `#a43b68` | `#f08db6` | `#a43b68` | `#f08db6` | `light-dark(#a43b68, #f08db6)` | the Models chart and legend's categorical colour 5 |
+| `--dsh-claude-data-6` | literal | `#806000` | `#e3bd54` | `#806000` | `#e3bd54` | `#806000` | `#e3bd54` | `#806000` | `#e3bd54` | `#806000` | `#e3bd54` | `#806000` | `#e3bd54` | `light-dark(#806000, #e3bd54)` | the Models chart and legend's categorical colour 6 |
+| `--dsh-claude-data-7` | literal | `#ad4040` | `#ef8585` | `#ad4040` | `#ef8585` | `#ad4040` | `#ef8585` | `#ad4040` | `#ef8585` | `#ad4040` | `#ef8585` | `#ad4040` | `#ef8585` | `light-dark(#ad4040, #ef8585)` | the Models chart and legend's categorical colour 7 |
+| `--dsh-claude-data-8` | literal | `#326b67` | `#83c8be` | `#326b67` | `#83c8be` | `#326b67` | `#83c8be` | `#326b67` | `#83c8be` | `#326b67` | `#83c8be` | `#326b67` | `#83c8be` | `light-dark(#326b67, #83c8be)` | the Models chart and legend's categorical colour 8 |
+| `--dsh-claude-data-9` | literal | `#65616c` | `#b8b3bf` | `#65616c` | `#b8b3bf` | `#65616c` | `#b8b3bf` | `#65616c` | `#b8b3bf` | `#65616c` | `#b8b3bf` | `#65616c` | `#b8b3bf` | `light-dark(#65616c, #b8b3bf)` | the Models chart and legend's categorical colour 9 |
+| `--dsh-claude-context-messages` | literal | `#2b7de9` | `#2b7de9` | `#2b7de9` | `#2b7de9` | `#2b7de9` | `#2b7de9` | `#2b7de9` | `#2b7de9` | `#2b7de9` | `#2b7de9` | `#2b7de9` | `#2b7de9` | `var(--dsw-alias-link, #2b7de9)` | context messages: Claude Desktop's blue category |
+| `--dsh-claude-context-tools` | literal | `#ff6b2c` | `#ff6b2c` | `#ff6b2c` | `#ff6b2c` | `#ff6b2c` | `#ff6b2c` | `#ff6b2c` | `#ff6b2c` | `#ff6b2c` | `#ff6b2c` | `#ff6b2c` | `#ff6b2c` | `var(--dsw-alias-state-warning-primary, #ff6b2c)` | context system tools: Claude Desktop's orange category |
+| `--dsh-claude-context-mcp` | literal | `#00b894` | `#00b894` | `#00b894` | `#00b894` | `#00b894` | `#00b894` | `#00b894` | `#00b894` | `#00b894` | `#00b894` | `#00b894` | `#00b894` | `var(--dsw-alias-state-success-primary, #00b894)` | context MCP tools: Claude Desktop's green category |
+| `--dsh-claude-context-system` | literal | `#e9a400` | `#e9a400` | `#e9a400` | `#e9a400` | `#e9a400` | `#e9a400` | `#e9a400` | `#e9a400` | `#e9a400` | `#e9a400` | `#e9a400` | `#e9a400` | `var(--dsw-alias-state-warning-primary, #e9a400)` | context system prompt: Claude Desktop's yellow category |
+| `--dsh-claude-ripple-wave` | literal | `#3b6ef0` | `#7fa6ff` | `#3b6ef0` | `#7fa6ff` | `#3b6ef0` | `#7fa6ff` | `#3b6ef0` | `#7fa6ff` | `#3b6ef0` | `#7fa6ff` | `#3b6ef0` | `#7fa6ff` | `var(--dsw-alias-link, #3b6ef0)` | the front of a ripple in the new-conversation page's glyph field |
+| `--dsh-claude-scrollbar` | `scrollbar` | `rgba(213, 213, 213, 0.9)` | `rgba(62, 62, 62, 0.9)` | `rgba(209, 210, 213, 0.9)` | `rgba(55, 59, 64, 0.9)` | `rgba(205, 199, 186, 0.9)` | `rgba(64, 63, 59, 0.9)` | `rgba(205, 209, 205, 0.9)` | `rgba(57, 64, 60, 0.9)` | `rgba(208, 206, 213, 0.9)` | `rgba(61, 59, 64, 0.9)` | `rgba(211, 199, 200, 0.9)` | `rgba(64, 59, 61, 0.9)` | `var(--dsw-alias-border-l2)` | scrollbar thumb |
+| `--dsh-claude-scrollbar-hover` | `scrollbar-hover` | `rgba(138, 138, 138, 0.8)` | `rgba(113, 113, 113, 0.9)` | `rgba(134, 135, 138, 0.8)` | `rgba(105, 109, 115, 0.9)` | `rgba(130, 125, 113, 0.8)` | `rgba(115, 114, 109, 0.9)` | `rgba(130, 134, 130, 0.8)` | `rgba(108, 115, 110, 0.9)` | `rgba(133, 131, 138, 0.8)` | `rgba(112, 109, 115, 0.9)` | `rgba(136, 125, 126, 0.8)` | `rgba(115, 109, 112, 0.9)` | `var(--dsw-alias-label-caption)` | scrollbar thumb under the pointer |
+| `--dsh-claude-link-hover` | `ui-link-hover` | `#a35035` | `#ffbea6` | `#2e41c0` | `#91b1ff` | `#824117` | `#e4a98a` | `#196348` | `#90c5ad` | `#6142ad` | `#c1b0ff` | `#9d3254` | `#ffa4ba` | `var(--dsw-alias-link)` | text link under the pointer |
+| `--dsh-claude-logo-ink` | card `logoInk` | `#161616` | `#fdfdfd` | `#4d6bfe` | `#4d6bfe` | `#100c04` | `#fffef9` | `#101310` | `#f7fffa` | `#121116` | `#fcf9ff` | `#140c0d` | `#fff9fc` | `var(--dsw-alias-label-primary)` | sidebar brand art: the whale and the wordmark |
+| `--dsw-specific-menu` | `overlay` | `#ffffff` | — | `#ffffff` | — | `#f5f5f5` | — | `#fdfdfd` | — | `#fdfdfd` | — | `#f8f8f8` | — | host's own |  |
+| `--dsw-specific-bubble` | card `bubble` | `#f4f2f3` | `rgba(255, 255, 255, 0.06)` | `#ecf0ff` | `#262b36` | `#ebe5d5` | `rgba(255, 255, 250, 0.06)` | `#eaefea` | `#27302b` | `#eeebf4` | `#2d2a37` | `#f2e4e5` | `rgba(255, 253, 255, 0.06)` | host's own | user message bubble |
+| `--dsh-claude-chip` | `chip` | `#f9f9f9` | — | `#f5f6f9` | — | `#f1ebdd` | — | `#f1f5f1` | — | `#f4f2f9` | — | `#f7ebec` | — | `var(--dsw-specific-selector)` | segmented control and switch at rest |
+| `--dsh-claude-meter-peak` | literal | `#a4621d` | `#e2a45f` | `#a4621d` | `#e2a45f` | `#a4621d` | `#e2a45f` | `#a4621d` | `#e2a45f` | `#a4621d` | `#e2a45f` | `#a4621d` | `#e2a45f` | `var(--dsw-alias-state-warn-label)` | the peak rate badge: the expensive end of a provider's own billing clock |
+| `--dsh-claude-meter-valley` | literal | `#3d7550` | `#8cbf96` | `#3d7550` | `#8cbf96` | `#3d7550` | `#8cbf96` | `#3d7550` | `#8cbf96` | `#3d7550` | `#8cbf96` | `#3d7550` | `#8cbf96` | `var(--dsw-alias-state-success-primary)` | the off-peak rate badge, and the dated promotions priced below it |
 <!-- /generated:tokens -->
 
 ## Two palettes · 两套配色归属

@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-13",
+  "group": "new",
+  "order": 0,
+  "external": false,
+  "zh": "外观设置支持新建、复制、重命名和删除多套配色方案，编辑预设与明暗颜色，并显示文字对比度",
+  "en": "Create, duplicate, rename and delete colour schemes in Appearance, edit presets and light/dark colours, and read text contrast"
+}

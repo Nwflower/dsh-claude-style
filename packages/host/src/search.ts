@@ -13,8 +13,8 @@
  * is built unless the palette asks for a search or a prewarm.
  */
 
-/** Stored logs read at once while the cache catches up. */
-const READ_CONCURRENCY = 4
+/** UTF-16 code units held as original message text; oversized sessions are read for one pass only. */
+export const CORPUS_CACHE_CHARS = 8_000_000
 /** Sessions the answer lists, newest hit first. */
 const SESSION_LIMIT = 40
 /** Characters of context kept before the match in a snippet; the snippet runs to SNIPPET_CHARS. */
@@ -38,7 +38,7 @@ const CACHE_VERSION = 1
  * corpora themselves take; the sessions a search just read stay at the end of
  * the table and are the last to go.
  */
-const LOWER_CACHE_CHARS = 4_000_000
+export const LOWER_CACHE_CHARS = 4_000_000
 
 /**
  * The host services this module reads, and the shapes it keeps between reads.
@@ -98,8 +98,14 @@ interface CachedSession {
   messages: SearchMessage[]
 }
 
+interface SessionTarget {
+  revision: string
+  live: LiveSession | null
+}
+
 import { PACKAGE_NAME } from '@dsh-claude-style/contracts/package'
 import { createHash } from 'node:crypto'
+import { Buffer } from 'node:buffer'
 import type { DshContext } from '@dsh-claude-style/engine/node/dsh'
 import { cachePath, readJsonDocument, writeJsonDocument } from './cache-file.js'
 import { readEvents } from '@dsh-claude-style/engine/node/session-events'
@@ -161,7 +167,10 @@ function snippetOf(text: string, index: number, length: number) {
   const match = flat(text.slice(index, index + length))
   const tail = `${flat(text.slice(index + length, end)).trimEnd()}${end < text.length ? '…' : ''}`
   const span: [number, number] = [head.length, head.length + match.length]
-  return { snippet: head + match + tail, match: span }
+  // A result outlives its session scan. Own the short UTF-16 string so a sliced
+  // snippet cannot keep the complete log's backing string alive (D92).
+  const snippet = Buffer.from(head + match + tail, 'utf16le').toString('utf16le')
+  return { snippet, match: span }
 }
 
 /** One message as a cache document stores it. */
@@ -182,6 +191,10 @@ function isStoredMessage(value: unknown): value is SearchMessage {
 export function createSessionSearch(ctx: DshContext) {
   /** Session id → its corpus. */
   const cache = new Map<string, CachedSession>()
+  const sizes = new Map<string, number>()
+  let corpusChars = 0
+  // Per plugin generation: the complete directory survives corpus eviction (D75).
+  let catalog = new Map<string, SessionTarget>()
   /**
    * Lowercased message text per session, built by the first search that needs
    * it and dropped by the newest one when the table is full: keeping it for
@@ -192,9 +205,9 @@ export function createSessionSearch(ctx: DshContext) {
   let lowerChars = 0
   /** When each session's cache file was last written, for the write throttle. */
   const writtenAt = new Map<string, number>()
-  /** The catch-up in flight, shared by the searches that arrive meanwhile, and whether it lists the store. */
-  let refreshing: Promise<void> | null = null
-  let refreshingStore = false
+  /** One session read at a time across all requests bounds transient full-log ownership (D12). */
+  let serial: Promise<void> = Promise.resolve()
+  let warming: Promise<void> | null = null
   /** The stored sessions' id → revision, and when it was last listed. */
   let stored: Map<string, string> | null = null
   let listedAt = 0
@@ -230,7 +243,7 @@ export function createSessionSearch(ctx: DshContext) {
     // A corpus rebuilt after the routes left belongs to no page: it must not
     // write the cache file of a plugin that is no longer installed.
     if (disposed) return
-    cache.set(sessionId, entry)
+    hold(sessionId, entry)
     // The lowercased copy is built by the search that needs it: a session no
     // query reaches never holds a second copy of its text.
     forgetLower(sessionId)
@@ -253,11 +266,31 @@ export function createSessionSearch(ctx: DshContext) {
     lower.delete(sessionId)
   }
 
+  /** Memory eviction leaves the derived disk document available to the next scan. */
+  function releaseCorpus(sessionId: string) {
+    corpusChars -= sizes.get(sessionId) ?? 0
+    sizes.delete(sessionId)
+    cache.delete(sessionId)
+    forgetLower(sessionId)
+  }
+
+  function hold(sessionId: string, entry: CachedSession) {
+    let size = 0
+    for (const message of entry.messages) size += message.text.length
+    releaseCorpus(sessionId)
+    if (size > CORPUS_CACHE_CHARS) return
+    while (corpusChars + size > CORPUS_CACHE_CHARS && cache.size > 0) {
+      releaseCorpus(cache.keys().next().value!)
+    }
+    cache.set(sessionId, entry)
+    sizes.set(sessionId, size)
+    corpusChars += size
+  }
+
   /**
    * One session's lowercased text, built the first time a search reads it and
    * moved to the end of the table on every later read. A corpus larger than
-   * the whole table is answered for this query alone: it would evict every
-   * other session and be rebuilt on the next one.
+   * this budget is matched one message at a time for this query alone.
    */
   function loweredFor(sessionId: string, entry: CachedSession) {
     const held = lower.get(sessionId)
@@ -266,10 +299,12 @@ export function createSessionSearch(ctx: DshContext) {
       lower.set(sessionId, held)
       return held
     }
+    // An oversized corpus is matched one message at a time without another full copy.
+    if (!cache.has(sessionId) || (sizes.get(sessionId) ?? 0) > LOWER_CACHE_CHARS) return null
     const texts = entry.messages.map(message => message.text.toLowerCase())
     let size = 0
     for (const text of texts) size += text.length
-    if (size > LOWER_CACHE_CHARS) return texts
+    if (size > LOWER_CACHE_CHARS) return null
     while (lowerChars + size > LOWER_CACHE_CHARS && lower.size > 0) {
       const oldest = lower.keys().next().value
       if (oldest === undefined) break
@@ -283,8 +318,7 @@ export function createSessionSearch(ctx: DshContext) {
   /** Drop one session's corpus from memory and from disk. */
   function forget(sessionId: string) {
     if (disposed) return
-    cache.delete(sessionId)
-    forgetLower(sessionId)
+    releaseCorpus(sessionId)
     writtenAt.delete(sessionId)
     writeJsonDocument(ctx, cacheFile(sessionId), 'session search cache', null)
   }
@@ -292,16 +326,37 @@ export function createSessionSearch(ctx: DshContext) {
   /** Fold one session's complete log into a corpus. */
   async function rebuild(sessionId: string, revision: string) {
     const events = await readEvents<LogEvent>(ctx, PACKAGE_NAME, sessionId, 'content search')
-    if (disposed) return
+    if (disposed) return null
     // A null is a log the host would not hand back this pass: adopt nothing, so
     // the entry already held stands and the next pass retries, rather than an
     // empty corpus frozen at the current revision.
-    if (events === null) return
+    if (events === null) return null
     // The next seq to read, off the log itself: a fold that stopped at the last
     // message would re-read the events after it on every live tail read.
     const last = events[events.length - 1]
     const lastSeq = typeof last?.seq === 'number' ? last.seq + 1 : 0
-    adopt(sessionId, { revision, lastSeq, messages: messagesOf(events) }, false)
+    const entry = { revision, lastSeq, messages: messagesOf(events) }
+    adopt(sessionId, entry, false)
+    return entry
+  }
+
+  /** Materialize only the session being scanned, using the disk document after eviction. */
+  async function corpusFor(id: string, want: SessionTarget): Promise<CachedSession | null> {
+    if (disposed) return null
+    const entry = cache.get(id) ?? readCached(id)
+    if (entry === null || (want.live === null ? entry.revision !== want.revision : entry.lastSeq > want.live.seq)) {
+      return await rebuild(id, want.revision) ?? entry
+    }
+    if (want.live !== null && entry.lastSeq < want.live.seq) {
+      entry.messages = entry.messages.concat(messagesOf(want.live.snapshotEvents(entry.lastSeq)))
+      entry.lastSeq = want.live.seq
+      adopt(id, entry, false)
+    } else if (!cache.has(id)) hold(id, entry)
+    else {
+      cache.delete(id)
+      cache.set(id, entry)
+    }
+    return entry
   }
 
   /**
@@ -310,12 +365,15 @@ export function createSessionSearch(ctx: DshContext) {
    * alone.
    */
   async function refresh(store: boolean) {
+    if (disposed) return
     const persistence = ctx.get('sessionPersistence') as PersistenceService | null | undefined
     const sessions = ctx.get('sessions') as SessionsService | null | undefined
     if (!persistence || !sessions) throw new Error('the host exposes no session persistence or session service')
     if (store && (stored === null || Date.now() - listedAt >= LIST_INTERVAL_MS)) {
       const listing = new Map<string, string>()
-      for (const snapshot of await persistence.list()) {
+      const snapshots = await persistence.list()
+      if (disposed) return
+      for (const snapshot of snapshots) {
         if (snapshot.header.origin === 'subagent') continue
         listing.set(snapshot.header.id, String(snapshot.revision))
       }
@@ -327,7 +385,7 @@ export function createSessionSearch(ctx: DshContext) {
     for (const session of sessions.list()) {
       if (session.header?.origin !== 'subagent') live.set(session.id, session)
     }
-    const wanted = new Map<string, { revision: string, live: LiveSession | null }>()
+    const wanted = new Map<string, SessionTarget>()
     for (const [id, revision] of stored) {
       const held = live.get(id) ?? null
       // A session the host holds open grows in memory ahead of its file: the
@@ -337,61 +395,17 @@ export function createSessionSearch(ctx: DshContext) {
     for (const [id, session] of live) {
       if (!wanted.has(id)) wanted.set(id, { revision: '', live: session })
     }
-    for (const id of [...cache.keys()]) {
+    for (const id of catalog.keys()) {
       if (!wanted.has(id)) forget(id)
     }
-    const stale: string[] = []
-    for (const [id, want] of wanted) {
-      const entry = cache.get(id) ?? readCached(id)
-      if (entry === null) {
-        stale.push(id)
-        continue
-      }
-      cache.set(id, entry)
-      if (want.live !== null) {
-        if (entry.lastSeq > want.live.seq) stale.push(id)
-        else if (entry.lastSeq < want.live.seq) {
-          // A live log only appends, so everything from `lastSeq` on is new.
-          const tail = messagesOf(want.live.snapshotEvents(entry.lastSeq))
-          entry.messages = entry.messages.concat(tail)
-          entry.lastSeq = want.live.seq
-          adopt(id, entry, false)
-        }
-        continue
-      }
-      if (entry.revision !== want.revision) stale.push(id)
-    }
-    // Each stale session is read by id, which costs one log open per session and
-    // no listing of the stored corpus, so a handful run at once.
-    let next = 0
-    const worker = async () => {
-      while (next < stale.length) {
-        const id = stale[next++]
-        const want = wanted.get(id)
-        if (want !== undefined) await rebuild(id, want.revision)
-      }
-    }
-    const workers: Promise<void>[] = []
-    for (let i = 0; i < READ_CONCURRENCY; i++) workers.push(worker())
-    await Promise.all(workers)
+    catalog = wanted
   }
 
-  function catchUp(store: boolean) {
-    // A store listing supersedes a tail-only pass already in flight; the other
-    // way round, a search waits for the pass that is running.
-    if (refreshing !== null && (refreshingStore || !store)) return refreshing
-    refreshingStore = store
-    const pass = refresh(store)
-    // Only the pass that is still current clears the shared state: a store
-    // listing replaces a tail-only pass, whose end must not admit a third one.
-    const done = pass.finally(() => {
-      if (refreshing === done) {
-        refreshing = null
-        refreshingStore = false
-      }
-    })
-    refreshing = done
-    return refreshing
+  function enqueue<T>(run: () => Promise<T>): Promise<T> {
+    const result = serial.then(run)
+    // A failed request is returned rejected; it must still release the next request (D12).
+    serial = result.then(() => {}, () => {})
+    return result
   }
 
   /**
@@ -401,13 +415,18 @@ export function createSessionSearch(ctx: DshContext) {
   async function search(text: string) {
     // Nothing listed yet means no corpus at all: the first search reads the
     // store itself; later ones read the running sessions' new tails only.
-    await catchUp(stored === null)
+    await refresh(stored === null)
     const query = text.trim()
     const parts = query.split(/\s+/u)
     const single = parts.length === 1 ? parts[0].toLowerCase() : ''
     const pattern = single === '' ? compileQuery(query) : null
     const hits: { sessionId: string, seq: number, time: number, role: string, snippet: string, match: [number, number] }[] = []
-    for (const [sessionId, entry] of cache) {
+    let scanned = 0
+    for (const [sessionId, want] of catalog) {
+      if (disposed) break
+      const entry = await corpusFor(sessionId, want)
+      if (entry === null || disposed) continue
+      scanned += 1
       // A multi-part query reads the corpus itself through the regex: the
       // lowercased copy is what one part is matched on, and it is built only
       // for the sessions a one-part query reaches.
@@ -417,7 +436,7 @@ export function createSessionSearch(ctx: DshContext) {
         // One part is the common case, and a substring search over the
         // lowercased text says exactly what the regex says for one part.
         const found = single === '' ? pattern!.exec(message.text) : null
-        const index = single === '' ? found?.index ?? -1 : (lowered[i] ?? message.text.toLowerCase()).indexOf(single)
+        const index = single === '' ? found?.index ?? -1 : (lowered?.[i] ?? message.text.toLowerCase()).indexOf(single)
         if (index < 0) continue
         const length = single === '' ? found![0].length : single.length
         hits.push({ sessionId, seq: message.seq, time: message.time, role: message.role, ...snippetOf(message.text, index, length) })
@@ -425,7 +444,7 @@ export function createSessionSearch(ctx: DshContext) {
       }
     }
     hits.sort((a, b) => b.time - a.time)
-    return { sessions: hits.slice(0, SESSION_LIMIT), scanned: cache.size }
+    return { sessions: disposed ? [] : hits.slice(0, SESSION_LIMIT), scanned: disposed ? 0 : scanned }
   }
 
   /**
@@ -435,12 +454,32 @@ export function createSessionSearch(ctx: DshContext) {
   function dispose() {
     disposed = true
     cache.clear()
+    sizes.clear()
+    corpusChars = 0
+    catalog.clear()
     lower.clear()
     lowerChars = 0
     writtenAt.clear()
     stored = null
-    refreshing = null
+    warming = null
   }
 
-  return { search, warm: () => catchUp(true), dispose }
+  function warm() {
+    if (warming !== null) return warming
+    const done = enqueue(async () => {
+      await refresh(true)
+      for (const [id, want] of catalog) {
+        if (disposed) break
+        await corpusFor(id, want)
+      }
+    }).finally(() => { if (warming === done) warming = null })
+    warming = done
+    return done
+  }
+
+  return {
+    search: (text: string) => enqueue(() => search(text)), warm, dispose,
+    /** Resident UTF-16 units only; directory metadata and transient log reads are separate. */
+    memory: () => ({ corpusChars, lowerChars, sessions: cache.size, catalog: catalog.size }),
+  }
 }
