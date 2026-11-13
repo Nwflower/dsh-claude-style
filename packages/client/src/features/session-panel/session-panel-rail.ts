@@ -296,27 +296,25 @@ function useRailReading(session: string | null) {
   // The header's control records the reader's explicit choice.
   React.useEffect(() => {
     const flip = () => {
-      // The host's own right column standing on this side is the one thing a
-      // press always answers, whatever the rail's own state still says: the
-      // column is what the reader sees, and a press asks for the rail's side, so
-      // the column gives it up and the rail comes in as that column's own
-      // animation starts (D94). The page is asked again here, since a press can
-      // arrive before any measurement of that column did.
-      held.current = holdsSide.current()
-      if (held.current) {
-        storeClosed(false)
-        choice.current = { session, mode: 'open' }
-        askingSide.current = true
-        findRightbarToggle()?.click()
-        setOpen(true)
+      // The press answers what the reader sees, not the rail's own latest state:
+      // a rail standing on the page is put away, and one that is not is called
+      // in. That state can lag a press — the host's own right column can take
+      // this side while the rail still holds 「open」 — and reading it would turn
+      // the call-in into a second close (D94).
+      if (node.current !== null && node.current.isConnected) {
+        close()
         return
       }
-      if (open) close()
-      else {
-        storeClosed(false)
-        choice.current = { session, mode: 'open' }
-        setOpen(true)
+      storeClosed(false)
+      choice.current = { session, mode: 'open' }
+      // The column standing on this side gives it up, and the rail comes in as
+      // that column's own animation starts.
+      held.current = holdsSide.current()
+      if (held.current) {
+        askingSide.current = true
+        findRightbarToggle()?.click()
       }
+      setOpen(true)
     }
     setRailToggle(flip)
     return () => { setRailToggle(null) }
