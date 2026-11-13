@@ -51,12 +51,13 @@
           "minItems": 1,
           "items": {
             "type": "object",
-            "required": ["id", "accent", "canvas", "edges", "logoInk", "code"],
+            "required": ["id", "accent", "canvas", "text", "edges", "logoInk", "code"],
             "additionalProperties": false,
             "properties": {
               "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
               "accent": { "$ref": "#/$defs/value" },
               "canvas": { "$ref": "#/$defs/themes" },
+              "text": { "$ref": "#/$defs/themes" },
               "sidebar": { "$ref": "#/$defs/themes" },
               "bubble": { "$ref": "#/$defs/themes" },
               "link": { "$ref": "#/$defs/themes" },

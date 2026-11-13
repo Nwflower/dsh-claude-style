@@ -73,10 +73,10 @@ colour that tone resolves to in both cards and both schemes; `—` is a token a
 card leaves unset.
 
 <!-- generated:tokens (packages/client/src/theme/tokens.json) -->
-| Card | Accent | Canvas light | Canvas dark | Sidebar light | Sidebar dark | Bubble light | Bubble dark | Link light | Link dark | Edges | Logo ink | Code light | Code dark |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| claude (default) | `#d97757` | `#ffffff` | `#191919` | `#fafafa` | `#1f1f1f` | `#f4f2f3` | `rgba(255, 255, 255, 0.06)` | `#184f95` | `#8ab4f8` | highlight | ink | `#161616` | `#fdfdfd` |
-| deepseek | `#4d6bfe` | `#fbfcff` | `#13161d` | `#f7f9ff` | `#13161d` | `#ecf0ff` | `#262b36` | `#3b56d9` | `#8fa4ff` | surface | accent | `#0f1115` | `#eef1f8` |
+| Card | Accent | Canvas light | Canvas dark | Text light | Text dark | Sidebar light | Sidebar dark | Bubble light | Bubble dark | Link light | Link dark | Edges | Logo ink | Code light | Code dark |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| claude (default) | `#d97757` | `#ffffff` | `#191919` | `#161616` | `#fdfdfd` | `#fafafa` | `#1f1f1f` | `#f4f2f3` | `rgba(255, 255, 255, 0.06)` | `#184f95` | `#8ab4f8` | highlight | ink | `#161616` | `#fdfdfd` |
+| deepseek | `#4d6bfe` | `#fbfcff` | `#13161d` | `#131416` | `#f4f9ff` | `#f7f9ff` | `#13161d` | `#ecf0ff` | `#262b36` | `#3b56d9` | `#8fa4ff` | surface | accent | `#0f1115` | `#eef1f8` |
 
 | Tone | Seed | Light | Dark |
 | --- | --- | --- | --- |
@@ -93,10 +93,11 @@ card leaves unset.
 | `selector` |  | `Δl -0.004` | `Δl +0.104` |
 | `chip` |  | `Δl -0.019` | `Δl 0` |
 | `sidebar` |  | `Δl -0.002 · ΔC +0.002` | `Δl 0` |
-| `ink` |  | `Δl -0.801` | `Δl +0.781` |
-| `ink-2` |  | `Δl -0.474 · ΔC +0.01` | `Δl +0.571 · ΔC +0.009` |
-| `ink-3` |  | `Δl -0.365 · ΔC +0.011` | `Δl +0.458 · ΔC +0.012` |
-| `ink-4` |  | `Δl -0.251 · ΔC +0.007` | `Δl +0.336 · ΔC +0.01` |
+| `canvas-ink` |  | `Δl -0.801` | `Δl +0.781` |
+| `ink` |  | `Δl 0` | `Δl 0` |
+| `ink-2` |  | `Δl +0.327 · ΔC +0.01` | `Δl -0.21 · ΔC +0.009` |
+| `ink-3` |  | `Δl +0.436 · ΔC +0.011` | `Δl -0.323 · ΔC +0.012` |
+| `ink-4` |  | `Δl +0.55 · ΔC +0.007` | `Δl -0.445 · ΔC +0.01` |
 | `bubble` |  | `Δl -0.037 · ΔC +0.002` | `Δl +0.09 · α 0.06` |
 | `bubble-flat` |  | — | `Δl +0.088 · ΔC +0.006` |
 | `border-1` |  | `Δl -0.067` | `Δl +0.026 · α 0.09` |
@@ -159,9 +160,9 @@ card leaves unset.
 | `--dsw-alias-interactive-bg-hover-solid` | `hover-plate` | `#f4f4f4` | `#323232` | `#f0f1f4` | `#2b2f37` | host's own | the host's solid hover chip |
 | `--dsw-alias-label-primary` | `ink` | `#161616` | `#fdfdfd` | `#131416` | `#f4f9ff` | host's own |  |
 | `--dsw-alias-label-primary-bluish` | `ink` | `#161616` | `#fdfdfd` | `#131416` | `#f4f9ff` | host's own |  |
-| `--dsw-alias-label-secondary` | `ink-2` | `#70686a` | `#beb6b8` | `#656871` | `#aeb5c4` | host's own |  |
-| `--dsw-alias-label-tertiary` | `ink-3` | `#91888a` | `#9c9395` | `#848891` | `#8a92a3` | host's own |  |
-| `--dsw-alias-label-caption` | `ink-4` | `#b2acad` | `#776f71` | `#a8abb2` | `#676e7d` | host's own |  |
+| `--dsw-alias-label-secondary` | `ink-2` | `#70696b` | `#beb6b8` | `#646871` | `#acb5c0` | host's own |  |
+| `--dsw-alias-label-tertiary` | `ink-3` | `#91888b` | `#9c9395` | `#848892` | `#88929f` | host's own |  |
+| `--dsw-alias-label-caption` | `ink-4` | `#b2acae` | `#776f71` | `#a7abb3` | `#656e79` | host's own |  |
 | `--dsw-alias-label-shimmer` | `shimmer` | `#161616` | `#fdfdfd` | `#131416` | `#f4f9ff` | host's own | the highlight band's tint over running words: the host's own rows and the skin's band (shared/sweep-band.ts) alike |
 | `--dsw-alias-label-deep-diving-shimmer` | `shimmer` | `#161616` | `#fdfdfd` | `#131416` | `#f4f9ff` | host's own | the band's tint inside the running row, which the host points --dsw-alias-label-shimmer at; under Claude it is the same warm band as everywhere else |
 | `--dsw-alias-state-business-primary` | `accent` | `#d97757` | `#d97757` | `#4d6bfe` | `#4d6bfe` | host's own |  |
@@ -178,7 +179,7 @@ card leaves unset.
 | `--dsh-claude-inverse-fill` | `ink` | `#161616` | `#fdfdfd` | `#131416` | `#f4f9ff` | `var(--dsw-alias-interactive-bg-hover)` | the model picker's group label fill: an inverted chip under Claude, a hover-plate chip under the host |
 | `--dsh-claude-inverse-ink` | `inverse-ink` | `#ffffff` | `#171717` | `#feffff` | `#11141a` | `var(--dsw-alias-label-primary)` | the model picker's group label ink |
 | `--dsh-claude-table-head` | `table-head` | `#f4f4f4` | `#282828` | `#f0f1f4` | `#22252d` | `var(--dsw-alias-bg-layer-2)` | table header row |
-| `--dsh-claude-ripple-ink` | `ink-3` | `#91888a` | `#9c9395` | `#848891` | `#8a92a3` | `var(--dsw-alias-label-secondary, #8a8a85)` | the new-conversation page's glyph field, and the wake a ripple leaves in it |
+| `--dsh-claude-ripple-ink` | `ink-3` | `#91888b` | `#9c9395` | `#848892` | `#88929f` | `var(--dsw-alias-label-secondary, #8a8a85)` | the new-conversation page's glyph field, and the wake a ripple leaves in it |
 | `--dsh-claude-data-ink` | literal | `#3b6ecf` | `#3b6ecf` | `#3b6ecf` | `#3b6ecf` | `var(--dsw-alias-link, #3b6ecf)` | the home heat grid's single data blue |
 | `--dsh-claude-data-0` | literal | `#3366b3` | `#82aaff` | `#3366b3` | `#82aaff` | `light-dark(#3366b3, #82aaff)` | the Models chart and legend's categorical colour 0 |
 | `--dsh-claude-data-1` | literal | `#c4571f` | `#f0a35e` | `#c4571f` | `#f0a35e` | `light-dark(#c4571f, #f0a35e)` | the Models chart and legend's categorical colour 1 |

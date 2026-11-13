@@ -21,7 +21,7 @@ declare module 'virtual:dsh-claude-style/generated' {
   /** The motion tokens, by token name (packages/client/src/theme/tokens.json, D9); read through shared/motion.ts. */
   export const MOTION: Record<string, string>
   /** The colour cards the token sheet resolves (packages/client/src/theme/tokens.json, D30); the settings page's swatches read them. */
-  export const PALETTE_CARDS: { id: string, accent: string, canvas: { light: string, dark: string }, sidebar?: { light: string, dark: string }, bubble?: { light: string, dark: string }, link?: { light: string, dark: string }, code: { light: string, dark: string }, edges: 'highlight' | 'surface', logoInk: 'ink' | 'accent' }[]
+  export const PALETTE_CARDS: { id: string, accent: string, canvas: { light: string, dark: string }, text: { light: string, dark: string }, sidebar?: { light: string, dark: string }, bubble?: { light: string, dark: string }, link?: { light: string, dark: string }, code: { light: string, dark: string }, edges: 'highlight' | 'surface', logoInk: 'ink' | 'accent' }[]
 }
 
 /** Chunk import ids map to repository modules or host packages (D72). */

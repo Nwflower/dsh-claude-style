@@ -28,6 +28,8 @@ const COLOURS = [
   { field: 'accent', label: 'paletteSwatchAccent', pick: (card: Card) => card.accent, own: (scheme: PaletteScheme) => scheme.accent, set: (scheme: PaletteScheme, value: string): PaletteScheme => ({ ...scheme, accent: value }) },
   { field: 'canvasLight', label: 'paletteSwatchLight', pick: (card: Card) => card.canvas.light, own: (scheme: PaletteScheme) => scheme.background?.light, set: (scheme: PaletteScheme, value: string): PaletteScheme => ({ ...scheme, background: { ...scheme.background, light: value } }) },
   { field: 'canvasDark', label: 'paletteSwatchDark', pick: (card: Card) => card.canvas.dark, own: (scheme: PaletteScheme) => scheme.background?.dark, set: (scheme: PaletteScheme, value: string): PaletteScheme => ({ ...scheme, background: { ...scheme.background, dark: value } }) },
+  { field: 'textLight', label: 'paletteSwatchTextLight', pick: (card: Card) => card.text.light, own: (scheme: PaletteScheme) => scheme.text?.light, set: (scheme: PaletteScheme, value: string): PaletteScheme => ({ ...scheme, text: { ...scheme.text, light: value } }) },
+  { field: 'textDark', label: 'paletteSwatchTextDark', pick: (card: Card) => card.text.dark, own: (scheme: PaletteScheme) => scheme.text?.dark, set: (scheme: PaletteScheme, value: string): PaletteScheme => ({ ...scheme, text: { ...scheme.text, dark: value } }) },
   { field: 'code', label: 'paletteSwatchCode', pick: (card: Card) => card.code.light, own: (scheme: PaletteScheme) => scheme.code?.light, set: (scheme: PaletteScheme, value: string): PaletteScheme => ({ ...scheme, code: { light: value, dark: value } }) },
 ] as const
 
@@ -70,7 +72,7 @@ function placeHint(hint: HTMLElement, disc: HTMLElement, label: string) {
 }
 
 /**
- * The four swatches of one card. A brand card's swatches are its colours as the
+ * The six swatches of one card. A brand card's swatches are its colours as the
  * token sheet resolves them; the reader's card takes a colour well each, and
  * every pick switches the page to that card at once. The disc under the pointer
  * or the focus lifts its neighbours less the further they stand
@@ -139,7 +141,7 @@ function Swatches(props: { colours: string[], onChange?: (field: ColourField, va
  * can be picked: a brand card pins that card's colours whatever the theme style
  * says, and the card the page paints wears the selected border. Each picked
  * card offers "follow the brand again", which hands the colours back to the
- * brand the theme style chooses; the reader's four stay stored.
+ * brand the theme style chooses; the reader's six stay stored.
  */
 function PaletteCards(props: { prefs: Prefs, write: SettingsView['write'] }) {
   const { prefs, write } = props
@@ -221,7 +223,7 @@ function PaletteCards(props: { prefs: Prefs, write: SettingsView['write'] }) {
 
 /**
  * The colour cards as Colours' sub-row (D72): the two brands' colours as the
- * page paints them, and the reader's own four, which switch the page to that
+ * page paints them, and the reader's own six, which switch the page to that
  * card the moment one is picked. The row carries no title of its own.
  */
 export function paletteCardsRow(view: SettingsView): SettingsRow {

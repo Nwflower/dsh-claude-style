@@ -4,7 +4,7 @@ import type { PaletteScheme } from '@dsh-claude-style/contracts/palette-schemes'
 import type { Prefs } from '../constants'
 
 /**
- * The selection and the records of the colour schemes (D96), read from the
+ * The selection and the records of the colour schemes (D97), read from the
  * preferences. The records are already canonical text, because the preference
  * clamp reads them through the shared parser (contracts/src/palette-schemes.ts).
  */
