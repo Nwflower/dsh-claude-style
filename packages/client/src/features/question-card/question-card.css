@@ -158,7 +158,7 @@ body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role="radiogroup
   transition: border-color var(--dsh-claude-timing-feedback), border-width var(--dsh-claude-timing-feedback);
 }
 
-body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role="radio"][aria-checked="true"] > :first-child,
+body[data-dsh-claude-style] [data-dsh-claude-question-surface]:not([data-dsh-claude-question-custom-choice]) [data-option-row] > button[role="radio"][aria-checked="true"] > :first-child,
 body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role="radiogroup"] > [data-dsh-claude-question-custom-active]:not([data-dsh-claude-question-custom="free"]) > :first-child {
   border-color: var(--dsh-claude-field-ring);
   border-width: 5px;

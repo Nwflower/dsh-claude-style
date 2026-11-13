@@ -42,6 +42,7 @@ const CUSTOM_LABEL = surface('question-card.label')
 const FLOW_ITEM = surface('question-card.flow-item')
 const QUESTION_SURFACE_ATTR = surface.attribute('question-card.surface')
 const CUSTOM_ACTIVE_ATTR = surface.attribute('question-card.custom-active')
+const CUSTOM_CHOICE_ATTR = surface.attribute('question-card.custom-choice')
 /** The selection blue the chosen radio's ring and the custom field's ring are painted with. */
 const SELECTION_PROPERTY = surface.property('question-card.selection')
 const SUBMIT_SHORTCUT = surface('question-card.submit-shortcut')
@@ -325,6 +326,23 @@ export default spec({ page: 'composer' }, ({ test }) => {
     }, CUSTOM_ACTIVE_ATTR)
     const customFieldBorder = await t.page.evaluate(() => getComputedStyle(window.__debugQuestion.section.querySelector('textarea').parentElement).borderColor)
     t.expectThat.equal(customFieldBorder, reading.selectionBlue, 'the focused custom answer field uses the selection blue')
+    await t.page.waitForFunction((choice) => {
+      const section = window.__debugQuestion.section
+      const button = window.__debugQuestion.row.querySelector('button')
+      return section.hasAttribute(choice) && getComputedStyle(button.querySelector(':scope > :first-child')).borderTopWidth === '1px'
+    }, CUSTOM_CHOICE_ATTR)
+    const chosenYielded = await t.page.evaluate((choice) => {
+      const section = window.__debugQuestion.section
+      const button = window.__debugQuestion.row.querySelector('button')
+      return {
+        mark: section.hasAttribute(choice),
+        checked: button.getAttribute('aria-checked'),
+        ringWidth: getComputedStyle(button.querySelector(':scope > :first-child')).borderTopWidth,
+      }
+    }, CUSTOM_CHOICE_ATTR)
+    t.expectThat.equal(chosenYielded.mark, true, 'choosing the custom answer marks the surface so the host\'s own ring gives way')
+    t.expectThat.equal(chosenYielded.checked, 'true', 'the host\'s own radio keeps its own value rather than being written over')
+    t.expectThat.equal(chosenYielded.ringWidth, '1px', 'the chosen option\'s ring steps aside while the custom answer holds the choice')
     await t.page.evaluate(() => {
       const textarea = window.__debugQuestion.section.querySelector('textarea')
       textarea.value = 'A custom answer'
@@ -346,6 +364,17 @@ export default spec({ page: 'composer' }, ({ test }) => {
     await t.page.waitForFunction((attribute) => window.__debugQuestion.section.querySelector(`[${attribute}]`) === null, CUSTOM_ACTIVE_ATTR)
     const customFieldDisplay = await t.page.evaluate(() => getComputedStyle(window.__debugQuestion.section.querySelector('textarea').parentElement).display)
     t.expectThat.equal(customFieldDisplay, 'none', 'choosing an ordinary option closes the custom answer field')
+    await t.page.waitForFunction((choice) => {
+      const section = window.__debugQuestion.section
+      const button = window.__debugQuestion.row.querySelector('button')
+      return !section.hasAttribute(choice) && getComputedStyle(button.querySelector(':scope > :first-child')).borderTopWidth === '5px'
+    }, CUSTOM_CHOICE_ATTR)
+    const chosenBack = await t.page.evaluate((choice) => {
+      const section = window.__debugQuestion.section
+      const button = window.__debugQuestion.row.querySelector('button')
+      return { mark: section.hasAttribute(choice), ringWidth: getComputedStyle(button.querySelector(':scope > :first-child')).borderTopWidth }
+    }, CUSTOM_CHOICE_ATTR)
+    t.expectThat.equal(chosenBack, { mark: false, ringWidth: '5px' }, 'choosing an ordinary option brings its ring back')
     // The white disc this card once showed was the centre painted with the dark
     // theme's own ink, a defect the light theme could not show: the same rule is
     // read once in each theme.

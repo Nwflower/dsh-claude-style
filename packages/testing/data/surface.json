@@ -73,6 +73,7 @@
     { "id": "question-card.flow-item", "selector": ".dsh-claude-question-flow-item", "feature": "question-card", "sees": "the question card's own container at the end of the conversation flow" },
     { "id": "question-card.surface", "attribute": "data-dsh-claude-question-surface", "feature": "question-card", "sees": "the host question card's section after it moves into the conversation flow" },
     { "id": "question-card.custom-active", "attribute": "data-dsh-claude-question-custom-active", "feature": "question-card", "sees": "the custom answer row while its field holds an answer, with its radio painted in the selection blue" },
+    { "id": "question-card.custom-choice", "attribute": "data-dsh-claude-question-custom-choice", "feature": "question-card", "sees": "the question card's surface while the custom answer holds the choice, so the host's own chosen radio draws no ring" },
     { "id": "question-card.selection", "attribute": "data-dsh-claude-question-surface", "property": "--dsh-claude-field-ring", "feature": "question-card", "sees": "the fixed selection blue shared by the question card's chosen radio and custom answer" },
     { "id": "question-card.submit-shortcut", "selector": ".dsh-claude-question-submit-shortcut", "feature": "question-card", "sees": "the Ctrl label and return icon inside the question card's submit button" },
     { "id": "sidebar.section-label", "selector": "[data-dsh-claude-part~=\"section-label\"]", "feature": "workspace", "sees": "the sidebar's quiet group label above its session rows" },
