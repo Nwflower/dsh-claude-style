@@ -506,9 +506,9 @@ async function hostUsage({ mod, fakeHost, request, browser, scratchHome, scratch
       JSON.stringify(picked))
   }
 
-  // Scope filters use the host's session origin and Workspace registry. The
-  // complete fold still records every log, while each answer keeps the full
-  // record's count as its denominator.
+  // Scope filters use the host's session origin and Workspace registry. Every
+  // answer counts its own main-session population, including retained main logs
+  // in the all-record scope and no subagents in any scope.
   console.log('\nhost half — active, Workspace and all-record usage scopes')
   {
     const home = runsPath(ROOT, 'smoke', 'home-usage-scopes')
@@ -531,16 +531,17 @@ async function hostUsage({ mod, fakeHost, request, browser, scratchHome, scratch
     const host = fakeHost(mod, { fenced: true, home, events, stored, registry })
     const active = (await settledUsage(host, USAGE + '?scope=active')).value ?? {}
     check('active scope excludes subagents, archived sessions and record-only deleted sessions',
-      active.scope === 'active' && active.totals?.sessions === 2 && active.totals?.input === 20 && active.totalSessions === 4,
+      active.scope === 'active' && active.totals?.sessions === 2 && active.totals?.input === 20 && active.totalSessions === 2,
       JSON.stringify({ scope: active.scope, totals: active.totals, totalSessions: active.totalSessions }))
     const workspace = (await settledUsage(host, USAGE + '?scope=workspace&workspace=ws-current')).value ?? {}
     check('Workspace scope keeps only its own active main sessions',
-      workspace.scope === 'workspace' && workspace.totals?.sessions === 1 && workspace.totals?.input === 10 && workspace.totalSessions === 4 &&
+      workspace.scope === 'workspace' && workspace.totals?.sessions === 1 && workspace.totals?.input === 10 && workspace.totalSessions === 1 &&
         workspace.days?.[0]?.sessionIds?.join() === 'main',
       JSON.stringify({ scope: workspace.scope, totals: workspace.totals, days: workspace.days }))
     const all = (await settledUsage(host, USAGE + '?scope=all')).value ?? {}
-    check('all-record scope restores every log without double counting the retained record',
-      all.scope === 'all' && all.totals?.sessions === 4 && all.totals?.input === 40 && all.totalSessions === 4,
+    check('all-record scope keeps main logs and retained records without counting the subagent',
+      all.scope === 'all' && all.totals?.sessions === 3 && all.totals?.input === 30 && all.totalSessions === 3 &&
+        all.days?.[0]?.sessionIds?.join() === 'archived,main,other',
       JSON.stringify({ scope: all.scope, totals: all.totals, totalSessions: all.totalSessions }))
   }
 }

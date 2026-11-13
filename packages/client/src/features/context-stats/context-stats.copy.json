@@ -79,6 +79,16 @@
     "zh": "只在选择「紧凑底栏」时生效。",
     "en": "Applies only to the Compact footer position."
   },
+  "statsFooterMetricRequired": {
+    "zh": "只在选择「紧凑底栏」时生效；速度、首 Token、缓存、费用和总量均为会话级聚合。",
+    "en": "Applies to the Compact footer; speed, TTFT, cache, cost and token total are session-level aggregates."
+  },
+  "statsFooterSpeedTitle": { "zh": "底栏输出速度", "en": "Footer output speed" },
+  "statsFooterTtftTitle": { "zh": "底栏首 Token 时间", "en": "Footer time to first token" },
+  "statsFooterCacheTitle": { "zh": "底栏缓存命中率", "en": "Footer cache-hit rate" },
+  "statsFooterCostTitle": { "zh": "底栏会话费用", "en": "Footer session cost" },
+  "statsFooterTotalTitle": { "zh": "底栏 Token 总量", "en": "Footer token total" },
+  "statsFooterContextTitle": { "zh": "底栏上下文圆环", "en": "Footer context ring" },
   "billingCurrencyTitle": {
     "zh": "计费币种",
     "en": "Billing currency"

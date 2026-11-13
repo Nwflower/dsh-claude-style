@@ -8,7 +8,7 @@ import { inPageBox, inPagePixels } from '../../shared/page-zoom'
 import { createStatsCount } from './stats-count'
 import { createFooterLayout, findStatsDock } from './footer-layout'
 import { CACHE_HIT_STOPS, rampPosition, writeRamp } from './stats-ramp'
-import { sessionStatsCacheHit, sessionStatsGrouped, sessionStatsSpeed } from '../../shared/stats-format'
+import { sessionStatsCacheHit, sessionStatsDuration, sessionStatsGrouped, sessionStatsSpeed } from '../../shared/stats-format'
 import { formatMoneyMicro, CURRENCY_CNY, CURRENCY_SYMBOL } from '@dsh-claude-style/contracts/prices'
 import type { Currency } from '@dsh-claude-style/contracts/prices'
 import type { HostSessionStatsProjection, HostTokenUsageProjection } from '@dsh-claude-style/contracts/services'
@@ -66,6 +66,7 @@ interface Line {
   root: HTMLElement
   counts: Segment
   speed: Segment
+  ttft: Segment
   input: Segment
   output: Segment
   cost: Segment
@@ -78,6 +79,8 @@ interface Line {
     countsTail: Text
     speed: HTMLElement
     speedTail: Text
+    ttftHead: HTMLElement
+    ttft: HTMLElement
     input: HTMLElement
     inputTail: Text
     output: HTMLElement
@@ -199,7 +202,12 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
     const speed = segment()
     const speedFigure = figure('dsh-claude-inline-speed')
     speed.wrap.appendChild(speedFigure.wrap)
+    const ttft = segment()
+    const ttftHead = buildElement('span', 'dsh-claude-inline-label')
+    const ttftFigure = buildFigure()
+    ttft.wrap.append(ttftHead, ttftFigure)
     const input = segment()
+    input.wrap.classList.add('dsh-claude-inline-input-segment')
     input.wrap.append(arrowSpan('↑'))
     const inputFigure = figure('dsh-claude-inline-input')
     input.wrap.appendChild(inputFigure.wrap)
@@ -208,6 +216,7 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
     // tightest step that still shows figures — one total in their place, and
     // the cache share.
     const output = segment()
+    output.wrap.classList.add('dsh-claude-inline-output-segment')
     output.wrap.append(arrowSpan('↓'))
     const outputFigure = figure('dsh-claude-inline-output')
     output.wrap.appendChild(outputFigure.wrap)
@@ -218,6 +227,7 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
     const totalFigure = figure('dsh-claude-inline-total')
     total.wrap.appendChild(totalFigure.wrap)
     const cache = segment()
+    cache.wrap.classList.add('dsh-claude-inline-cache-segment')
     const cacheHead = buildElement('span', 'dsh-claude-inline-label')
     const cacheFigure = buildFigure()
     // The words the template puts after the number (a percent sign) are an
@@ -230,6 +240,7 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
       root,
       counts,
       speed,
+      ttft,
       input,
       output,
       cost,
@@ -242,6 +253,8 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
         countsTail,
         speed: speedFigure.group,
         speedTail: speedFigure.tail,
+        ttftHead,
+        ttft: ttftFigure,
         input: inputFigure.group,
         inputTail: inputFigure.tail,
         output: outputFigure.group,
@@ -330,10 +343,11 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
     const hasOutput = usage !== null && usage.outputTokens > 0
     const hasTokens = hasInput || hasOutput
     const hasCache = hasInput && hit !== null
+    const hasTtft = stats !== null && stats.ttftSteps > 0
     const merged = at >= 4
-    if (!hasCounts && !hasSpeed && !hasTokens) return
-
-    const footerMode = readPrefs().statsPosition === STATS_POSITION_FOOTER
+    const prefs = readPrefs()
+    const footerMode = prefs.statsPosition === STATS_POSITION_FOOTER
+    if (!hasCounts && !hasSpeed && !hasTokens && !(footerMode && hasTtft)) return
     if (footerMode) {
       setAttributeIfChanged(shown.root, FOOTER_DETAIL_ATTR, footerAt === 0 ? 'compact' : footerAt === 1 ? 'exact' : 'directions')
     } else if (shown.root.hasAttribute(FOOTER_DETAIL_ATTR)) {
@@ -341,22 +355,23 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
     }
     const directions = footerMode && footerAt >= 2
     show(shown.counts, !footerMode && hasCounts && at < 2)
-    show(shown.speed, !footerMode && hasSpeed)
+    show(shown.speed, footerMode ? prefs.statsFooterSpeed && hasSpeed : hasSpeed)
+    show(shown.ttft, footerMode && prefs.statsFooterTtft && hasTtft)
     // The prompt tokens ride where the speed is; without a speed the room the
     // speed would have taken is theirs.
-    show(shown.input, footerMode ? directions && hasInput : hasInput && !merged)
-    show(shown.output, footerMode ? directions && hasOutput : hasOutput && !merged)
+    show(shown.input, footerMode ? prefs.statsFooterTotal && directions && hasInput : hasInput && !merged)
+    show(shown.output, footerMode ? prefs.statsFooterTotal && directions && hasOutput : hasOutput && !merged)
     // The cost stands beside the written-back figure until the ladder needs
     // its room for the total. It stands whenever the line has tokens and the
     // reader keeps billing on, with the currency's dash while the figure is
     // still coming (a switch): the toolbar's placement keeps the segment's
     // measure, so the figures after it hold their places. A route the price
     // table cannot price has nothing to wait for, and the segment goes.
-    show(shown.cost, billing && hasTokens && (cost !== null || costPending) && at < 3)
+    show(shown.cost, (!footerMode || prefs.statsFooterCost) && billing && hasTokens && (cost !== null || costPending) && at < 3)
     // The compact footer carries one token total while its room is narrow, and
     // gives that segment up for the two directions on the widest footer step.
-    show(shown.total, footerMode ? footerAt < 2 && hasTokens : hasTokens && merged)
-    show(shown.cache, hasCache)
+    show(shown.total, footerMode ? prefs.statsFooterTotal && footerAt < 2 && hasTokens : hasTokens && merged)
+    show(shown.cache, (!footerMode || prefs.statsFooterCache) && hasCache)
     // The compact footer's cache figure carries its own percent sign alone: the
     // words before it would outweigh the figures beside them.
     shown.cell.cacheHead.hidden = footerMode || at >= 1
@@ -370,6 +385,10 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
     if (hasSpeed && stats !== null) {
       writeTextInPlace(shown.cell.speed, sessionStatsSpeed(stats.decodeTokens / (stats.decodeMs / 1_000)))
       writeText(shown.cell.speedTail, speedParts[1] ?? '')
+    }
+    if (hasTtft && stats !== null) {
+      writeLabel(shown.cell.ttftHead, chat('stats.dialog.ttft'))
+      writeTextInPlace(shown.cell.ttft, sessionStatsDuration(stats.ttftMs / stats.ttftSteps, chat))
     }
     if (hasTokens && usage !== null) {
       // Every token figure folds into k / M / B at the ladder's last step. The

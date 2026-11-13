@@ -59,7 +59,7 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
     t.expectThat.absent(center.dock.height, 'the overlaid figures leave no blank dock below the compact composer')
     t.expectThat.equal([center.dockMinHeight, center.dockPaddingTop], ['0px', '0px'], 'the overlay releases the host\'s reserved statistics row and its top pad')
     t.expectThat.equal(center.segments, 4, 'cost, both token directions and the cache share stand over the toolbar')
-    t.expectThat.equal(center.order[0].startsWith('¥') && center.order[1].startsWith('↑') && center.order[2].startsWith('↓') && center.order[3].endsWith('%'), true, 'the cost leads, the directions follow in order and the cache share closes')
+    t.expectThat.equal(center.order[0].startsWith('¥') && center.order[1].startsWith('↑') && center.order[2].startsWith('↓') && center.order[3].endsWith('%'), true, 'the cost leads, the directions follow in order and the cache share closes: ' + JSON.stringify(center.order))
     t.expectThat.equal(center.cacheLabel, 0, 'the cache figure carries its percent sign alone')
     t.expectThat.equal(/tok/.test(center.text) && /%$/.test(center.text), true, 'the token figures say their unit and the cache figure closes with its percent sign')
     t.expectThat.visible(center.ring, 'the ring the skin draws stands in the composer row')
@@ -125,7 +125,28 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
     t.expectThat.equal(exact.order[1].includes('100,100 tok') && !/[↑↓]/.test(exact.order[1]), true, 'the total becomes its exact grouped value')
     const directions = found.get('directions')
     t.expectThat.equal([directions.mode, directions.segments], ['overlay', 4], 'the widest overlay gives the total up for both directions')
-    t.expectThat.equal(directions.order[0].startsWith('¥') && directions.order[1].startsWith('↑') && directions.order[2].startsWith('↓') && directions.order[3].endsWith('%'), true, 'the cost leads, the directions follow and the cache share closes')
+    t.expectThat.equal(directions.order[0].startsWith('¥') && directions.order[1].startsWith('↑') && directions.order[2].startsWith('↓') && directions.order[3].endsWith('%'), true, 'the cost leads, the directions follow and the cache share closes: ' + JSON.stringify(directions.order))
+  })
+
+  test('footer metrics are independently switchable session aggregates', async t => {
+    await seatStatsSession(t, { ...stats, ttftMs: 800, ttftSteps: 1 }, usage)
+    await t.prefs({
+      statsPosition: 'footer', motion: 'reduced',
+      statsFooterSpeed: true, statsFooterTtft: true, statsFooterCache: false,
+      statsFooterCost: false, statsFooterTotal: false, statsFooterContext: false,
+    })
+    const selected = await reading(t)
+    t.expectThat.equal(selected.segments, 2, 'only output speed and TTFT remain')
+    t.expectThat.equal(selected.text.includes('100 tok/s') && selected.text.includes('0.8s') && selected.text.includes('TTFT'), true, 'both figures use the session projection and host wording: ' + selected.text)
+    t.expectThat.equal(selected.ring, null, 'the context ring has its own switch')
+    t.expectThat.equal(selected.meterHidden, false, 'turning the ring off hands the host meter back')
+    await t.prefs({
+      statsFooterSpeed: false, statsFooterTtft: false, statsFooterCache: true,
+      statsFooterCost: true, statsFooterTotal: true, statsFooterContext: true,
+    })
+    const restored = await reading(t)
+    t.expectThat.equal(restored.segments > 2, true, 'the original footer figures return independently')
+    t.expectThat.visible(restored.ring, 'the context ring returns')
   })
 
   test('a narrow toolbar gives statistics their own line and widening restores the overlay', async t => {

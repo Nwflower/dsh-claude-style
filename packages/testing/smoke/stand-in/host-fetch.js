@@ -69,7 +69,7 @@
         ].concat([6, 5, 4, 3, 2, 1].map(function (size) {
           return { id: 'model-small-' + size, input: size * 10, output: 0, cacheRead: 0, cacheWrite: 0, calls: 1, tokens: size * 10 }
         })),
-        scope: scope, totalSessions: 15,
+        scope: scope, totalSessions: 4,
         totals: { input: 490000, output: 10000, cacheRead: 0, cacheWrite: 0, calls: 9, sessions: 4, activeDays: 3 },
       } }))
     }

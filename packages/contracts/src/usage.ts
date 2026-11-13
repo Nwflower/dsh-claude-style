@@ -57,7 +57,7 @@ export interface UsageReport {
   model?: string
   /** Which session filter produced this answer; an older host leaves it absent. */
   scope?: HomeSessionScope
-  /** The unfiltered record's session count, shown as a filtered figure's denominator. */
+  /** The same scoped population as `totals.sessions`; older hosts may expose an unfiltered count. */
   totalSessions?: number
 }
 

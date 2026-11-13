@@ -326,14 +326,13 @@ body[data-dsh-claude-style] .dsh-claude-inline-figure {
 }
 /* The widest compact footer swaps the total for the two directions in the
    total's old place: the cost keeps the lead and the cache closes the line. */
-body[data-dsh-claude-style] .dsh-claude-inline-stats[data-dsh-claude-footer-detail="directions"] > .dsh-claude-inline-seg:nth-child(3),
-body[data-dsh-claude-style] .dsh-claude-inline-stats[data-dsh-claude-footer-detail="directions"] > .dsh-claude-inline-seg:nth-child(4) {
+body[data-dsh-claude-style] .dsh-claude-inline-stats[data-dsh-claude-footer-detail="directions"] > .dsh-claude-inline-input-segment {
   order: 1;
 }
-body[data-dsh-claude-style] .dsh-claude-inline-stats[data-dsh-claude-footer-detail="directions"] > .dsh-claude-inline-seg:nth-child(4) {
+body[data-dsh-claude-style] .dsh-claude-inline-stats[data-dsh-claude-footer-detail="directions"] > .dsh-claude-inline-output-segment {
   order: 2;
 }
-body[data-dsh-claude-style] .dsh-claude-inline-stats[data-dsh-claude-footer-detail="directions"] > .dsh-claude-inline-seg:nth-child(7) {
+body[data-dsh-claude-style] .dsh-claude-inline-stats[data-dsh-claude-footer-detail="directions"] > .dsh-claude-inline-cache-segment {
   order: 3;
 }
 /* A segment the session has no figure for yet, or one the ladder has given up:

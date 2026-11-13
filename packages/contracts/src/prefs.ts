@@ -307,7 +307,7 @@ export const PREFS = {
   sodium: { type: 'choice', values: SODIUM_MODES, default: SODIUM_UNDECIDED },
   banLocale: { type: 'choice', values: BAN_LOCALES, default: BAN_LOCALE_EN },
   homeLayout: { type: 'choice', values: HOME_LAYOUTS, default: HOME_LAYOUT_STUDIO },
-  homeSessionScope: { type: 'choice', values: HOME_SESSION_SCOPES, default: HOME_SESSION_SCOPE_ALL },
+  homeSessionScope: { type: 'choice', values: HOME_SESSION_SCOPES, default: HOME_SESSION_SCOPE_ACTIVE },
   homeRipple: { type: 'boolean', default: false },
   palette: { type: 'choice', values: PALETTES, default: PALETTE_CLAUDE },
   /** The background fill's opacity as a percentage, between BACKGROUND_OPACITY_MIN and BACKGROUND_OPACITY_MAX. */
@@ -325,6 +325,13 @@ export const PREFS = {
   /** Whether the percentage stands beside that face. */
   contextNumbers: { type: 'boolean', default: true },
   statsFooterAlign: { type: 'choice', values: STATS_FOOTER_ALIGNS, default: 'center' },
+  /** Compact-footer figures; speed and TTFT join the existing figures only when asked for. */
+  statsFooterSpeed: { type: 'boolean', default: false },
+  statsFooterTtft: { type: 'boolean', default: false },
+  statsFooterCache: { type: 'boolean', default: true },
+  statsFooterCost: { type: 'boolean', default: true },
+  statsFooterTotal: { type: 'boolean', default: true },
+  statsFooterContext: { type: 'boolean', default: true },
   /** Which official price table the session's cost follows, or off for no figure at all. */
   billingCurrency: { type: 'choice', values: BILLING_CHOICES, default: CURRENCY_CNY },
   /** Custom `model|input|cacheRead|output` rows per million tokens; blank buckets inherit official rates. */

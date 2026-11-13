@@ -36,7 +36,7 @@ export interface UsageSummary {
   /** How many session logs the pass walked, against `totals.sessions` from the accounts behind them. */
   sessions?: number
   scope?: HomeSessionScope
-  /** The unfiltered record's session count, for a scoped panel's denominator. */
+  /** The same scoped population as `totals.sessions`, kept for payload compatibility. */
   totalSessions?: number
 }
 

@@ -297,7 +297,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   function syncRing() {
     const position = readPrefs().statsPosition
-    if (position !== STATS_POSITION_CONTEXT && position !== STATS_POSITION_FOOTER) {
+    if (position !== STATS_POSITION_CONTEXT && !(position === STATS_POSITION_FOOTER && readPrefs().statsFooterContext)) {
       dropAll()
       return
     }
