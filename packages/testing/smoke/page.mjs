@@ -44,6 +44,7 @@ const STAND_IN_PARTS = [
   'mascot.js',
   'stats-projections.js',
   'workspaces.js',
+  'agent-team.js',
   'sessions.js',
   'session-title.js',
   'model-directory.js',

@@ -493,6 +493,96 @@ body[data-dsh-claude-style] .dsh-claude-model-cell-chevron {
   color: var(--dsw-alias-label-caption, #b2acad);
 }
 
+/* ---------- The Agent Teams row ---------- */
+/* The host's own menu carries this switch as a slot row; the picker draws it
+   after the More-models row with the same row metrics and hover plate. The
+   whole row answers a press, and the information button inside it does not. */
+body[data-dsh-claude-style] .dsh-claude-model-team {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex: none;
+  min-height: 27px;
+  padding: 1px 7px;
+  border-radius: 6px;
+  color: var(--dsw-alias-label-primary, #161616);
+  font-size: 13px;
+  line-height: 20px;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+body[data-dsh-claude-style] .dsh-claude-model-team:hover:not([data-disabled]),
+body[data-dsh-claude-style] .dsh-claude-model-team:has(.dsh-claude-model-team-switch:focus-visible) {
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
+}
+body[data-dsh-claude-style] .dsh-claude-model-team[data-disabled] {
+  cursor: default;
+}
+body[data-dsh-claude-style] .dsh-claude-model-team-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+body[data-dsh-claude-style] .dsh-claude-model-team-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--dsw-alias-label-caption, #b2acad);
+  cursor: help;
+}
+body[data-dsh-claude-style] .dsh-claude-model-team-info:hover {
+  color: var(--dsw-alias-label-secondary, #70686a);
+}
+body[data-dsh-claude-style] .dsh-claude-model-team-switch {
+  flex: none;
+  appearance: none;
+  width: 30px;
+  height: 18px;
+  margin: 0;
+  padding: 2px;
+  border: 0;
+  border-radius: 9px;
+  /* A strict capsule: the page inherits superellipse corners from <html>. */
+  corner-shape: round;
+  background: var(--dsw-specific-selector);
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: background-color var(--dsh-claude-timing-feedback);
+}
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) .dsh-claude-model-team-switch {
+  background: var(--dsh-claude-chip);
+}
+body[data-dsh-claude-style] .dsh-claude-model-team-switch[aria-checked="true"] {
+  background: var(--dsw-alias-brand-primary, #d97757);
+}
+body[data-dsh-claude-style] .dsh-claude-model-team-switch:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+body[data-dsh-claude-style] .dsh-claude-model-team-knob {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  corner-shape: round;
+  background: var(--dsw-alias-bg-overlay, #ffffff);
+  box-shadow: 0 1px 2px rgba(20, 20, 19, 0.18);
+  translate: 0 0;
+  transition: translate var(--dsh-claude-timing-feedback);
+}
+body[data-dsh-claude-style] .dsh-claude-model-team-switch[aria-checked="true"] .dsh-claude-model-team-knob {
+  translate: 12px 0;
+}
+
 /* External seats use the same two-part control outside the composer's trailing region. */
 body[data-dsh-claude-style] [data-dsh-claude-external-control="model-picker"] {
   display: flex;

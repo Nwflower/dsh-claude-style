@@ -20,6 +20,21 @@ export interface HostSubagentsRemote {
   interruptByParent(childSessionId: string, parentSessionId: string, mode: 'continuable'): Promise<{ ok: boolean }>
 }
 
+/** The Agent Teams remote: it saves one session's team selection and answers with the host's outcome. */
+export interface HostAgentTeamsRemote {
+  setEnabled(sessionId: string, enabled: boolean): Promise<{ ok: true } | { ok: false, error: { message: string } }>
+}
+
+/** The session's `agentTeam` projection: the saved selection. */
+export interface HostAgentTeamProjection {
+  enabled: boolean
+}
+
+/** The session's `modelSelection` projection: `lastUsed` stays null until the session records a model request. */
+export interface HostModelSelectionProjection {
+  lastUsed: unknown
+}
+
 /** The session list's own snapshot: every row's summary. */
 export interface HostSessionListSnapshot {
   /** `pending` until the host's list has answered; the readers wait for `ready`. */

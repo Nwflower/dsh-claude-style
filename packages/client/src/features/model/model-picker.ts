@@ -24,6 +24,7 @@ import type manifest from './model-picker.manifest'
 import type { CatalogProvider, ModelCatalog } from './catalog'
 import { copy } from './copy'
 import { createModelCards } from './model-cards'
+import { createTeamMode } from './team-mode'
 
 /** What the effort picker and the settings page read off the model picker (ui.model). */
 export interface ModelHandle extends FeatureHandle {
@@ -189,24 +190,38 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
   })
 
   /**
-   * The footer holds the divider and the More-models row, and nothing else.
-   * Rebuilt only when the row set changes — the divider exists to close the
-   * list off from what follows it, so with no More-models row it is a stray
-   * line and is not drawn either.
+   * The Agent Teams switch the host draws in its own model menu
+   * (features/model/team-mode.ts). The row stands in the footer, under the
+   * model rows, for the sessions whose host serves a team selection.
    */
-  function layoutModelFooter(showMore: boolean) {
+  const teamMode = createTeamMode({
+    ctx,
+    schedule() { if (ui.schedule) ui.schedule() },
+    dismiss() { cards.closeAll() },
+    restoreFocus() { modelBtn?.focus() },
+    locked() { return modelCatalog.inFlight() },
+  })
+
+  /**
+   * The footer holds the divider, the More-models row and the Agent Teams row,
+   * and nothing else. Rebuilt only when the row set changes — the divider
+   * exists to close the list off from what follows it, so with neither row
+   * after it, it is a stray line and is not drawn either.
+   */
+  function layoutModelFooter(showMore: boolean, showTeam: boolean) {
     const modelFooter = cards.footer()
     if (!modelFooter) return
     const stale: ChildNode[] = []
     for (let child = modelFooter.firstChild; child !== null; child = child.nextSibling) stale.push(child)
     for (let i = 0; i < stale.length; i++) modelFooter.removeChild(stale[i])
-    if (!showMore) return
+    if (!showMore && !showTeam) return
     // The role is what the shared separator rule reads (shared/popover.css), so
     // this line is the same line as every separator the host draws in a card.
     const divider = buildElement('div', 'dsh-claude-model-divider')
     divider.setAttribute('role', 'separator')
     modelFooter.appendChild(divider)
-    modelFooter.appendChild(modelRows.buildModelCell(copy('moreLabel')))
+    if (showMore) modelFooter.appendChild(modelRows.buildModelCell(copy('moreLabel')))
+    if (showTeam) modelFooter.appendChild(teamMode.row())
   }
 
   /**
@@ -259,7 +274,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     const status = snap ? snap.status : 'idle'
     const groups = (snap && snap.groups) || []
     const current = modelCatalog.current(snap)
-    let sig = [status, activeLocale(), current ? `${current.group.id}/${current.model.id}` : '', readPrefs().quickProviders.join(','), readPrefs().modelDescriptions !== false].join('|')
+    const showTeam = teamMode.available()
+    let sig = [status, activeLocale(), showTeam, current ? `${current.group.id}/${current.model.id}` : '', readPrefs().quickProviders.join(','), readPrefs().modelDescriptions !== false].join('|')
     sig += rowsSignature(groups)
     if (sig === modelBodySig) {
       modelRows.refreshRates()
@@ -276,7 +292,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     const seated = groups.length > 0 && current !== null
     if (!seated && modelCatalog.inFlight()) {
       modelBody.appendChild(buildElement('div', 'dsh-claude-popover-status', copy('loading')))
-      layoutModelFooter(false)
+      layoutModelFooter(false, showTeam)
       return true
     } else {
       const sections = modelRows.levelOneSections(groups)
@@ -333,7 +349,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
         // no More-models row there is nothing left to close off, and a bare
         // line under the list reads as a stray rule. layoutModelFooter owns
         // that judgement.
-        layoutModelFooter(showMore)
+        layoutModelFooter(showMore, showTeam)
       }
     }
     return true
@@ -516,6 +532,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     modelBtn.disabled = mount.disabled === true
 
     renderModelBody()
+    teamMode.refresh()
     if (cards.subOpen()) {
       const modelSub = cards.sub()
       if (modelSub !== null) modelSub.render()
@@ -642,6 +659,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
       modelSlot = null
       seatBox = null
       cards.dispose()
+      teamMode.dispose()
       if (slotsFiber !== null) slotsFiber.dispose()
     }
   }

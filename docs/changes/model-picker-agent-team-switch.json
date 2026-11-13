@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-12",
+  "group": "new",
+  "order": 22,
+  "external": false,
+  "zh": "模型选择器新增「启用智能体团队协作」开关，适配 DSH 0.2.2-rc.2 模型菜单里的智能体团队入口，关闭已发过请求的会话时先弹出确认",
+  "en": "Add the agent teamwork switch to the model picker, matching the entry DSH 0.2.2-rc.2 puts in its model menu, with a confirmation before turning it off in a session that has sent requests"
+}

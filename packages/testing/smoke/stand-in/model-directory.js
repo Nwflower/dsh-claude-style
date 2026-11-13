@@ -161,7 +161,8 @@
   host.modelDirectories = {
     directoryFor: function (id) { return id === (host.CASE === 'stats-inline' ? 'smoke-stats' : 'smoke-session') ? directory : undefined },
   }
-  if (host.CASE === 'stats-inline') return
+  // The effort page's Agent Teams fixture (agent-team.js) serves its own session binding.
+  if (host.CASE === 'stats-inline' || host.agentTeam !== undefined) return
   host.sessions = {
     selected: 'smoke-session',
     list: {

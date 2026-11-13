@@ -15,7 +15,7 @@
   var permissionFixture = host.permissionFixture
   var permissionCommands = host.permissionCommands
 
-  var sessions = deepy !== undefined ? deepy.sessions : turnNav !== undefined ? turnNav.sessions : statsFixtureCase ? statsCase.sessions : waitFixtureCase ? host.emptySessions(function (id) { return id === 'smoke-session' ? {} : undefined }) : CASE === 'sync-fault'
+  var sessions = host.agentTeam !== undefined ? host.agentTeam.sessions : deepy !== undefined ? deepy.sessions : turnNav !== undefined ? turnNav.sessions : statsFixtureCase ? statsCase.sessions : waitFixtureCase ? host.emptySessions(function (id) { return id === 'smoke-session' ? {} : undefined }) : CASE === 'sync-fault'
     ? { list: { getSnapshot: function () { throw new Error('session list unavailable') }, subscribe: function () { return function () {} } }, binding: function () { return null } }
     : (permissionFixture !== undefined && permissionFixture.current !== null ? {
         selected: 'smoke-session',

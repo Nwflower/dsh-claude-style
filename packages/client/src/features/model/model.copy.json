@@ -11,5 +11,15 @@
   "pickerTitle": { "zh": "重绘模型选择器", "en": "Redraw the model picker" },
   "pickerDesc": { "zh": "使用 Claude 风格重绘模型选择器菜单。", "en": "Redraw the model picker menu in Claude style." },
   "modelDescriptionsTitle": { "zh": "模型描述", "en": "Model descriptions" },
-  "modelDescriptionsDesc": { "zh": "在模型一级列表中显示模型功能说明。", "en": "Show description lines for models in the primary picker list." }
+  "modelDescriptionsDesc": { "zh": "在模型一级列表中显示模型功能说明。", "en": "Show description lines for models in the primary picker list." },
+  "teamLabel": { "zh": "启用智能体团队协作", "en": "Enable agent teamwork" },
+  "teamInfoLabel": { "zh": "关于智能体团队协作", "en": "About agent teamwork" },
+  "teamDescription": { "zh": "通过共享任务板协调多个智能体的分工与进度，复杂任务表现更佳，token 开销也相应更高。", "en": "Coordinates several agents through a shared task board. Complex tasks go better, and token use rises with it." },
+  "teamFailed": { "zh": "无法确认智能体团队协作设置已保存，请重试：{message}", "en": "Could not confirm the agent teamwork setting was saved. Try again: {message}" },
+  "teamDisableTitle": { "zh": "确认停用智能体团队协作？", "en": "Disable agent teamwork?" },
+  "teamDisableDescription": { "zh": "对话过程中停用智能体团队协作，将停止共享任务工具和团队协调指令。", "en": "Disabling agent teamwork during a conversation stops the use of shared task tools and team coordination instructions." },
+  "teamDisableWarning": { "zh": "停用后可能影响缓存复用、增加后续 token 用量与开销，并影响当前任务的协作效果。", "en": "Disabling it may affect cache reuse, increase subsequent token usage and costs, and affect collaboration on the current task." },
+  "teamDisableCancel": { "zh": "取消", "en": "Cancel" },
+  "teamDisableConfirm": { "zh": "确认停用", "en": "Disable" },
+  "teamDisableClose": { "zh": "关闭", "en": "Close" }
 }

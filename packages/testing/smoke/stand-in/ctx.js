@@ -26,6 +26,7 @@
       if (name === 'remote.account') return account
       if (name === 'remote.permissionPresets') return permissionPresets
       if (name === 'remote') return CASE === 'desktop' || CASE === 'session-title' ? remote : undefined
+      if (name === 'remote.agentTeams') return host.agentTeam === undefined ? undefined : host.agentTeam.remote
       if (name === 'remote.session') return CASE === 'session-title' ? remote.session : undefined
       if (name === 'sessions') return sessions
       if (name === 'modelDirectories') return host.modelDirectories
