@@ -28,11 +28,15 @@ const GROWTH_PX = bound('streamJitterGrowthPx')
 const COMPOSER_DRIFT_PX = bound('streamComposerDriftPx')
 
 /**
- * The frames the transcript is scrolled and the host still follows it: the ones
- * where the column's top moves through the reader's screen.
+ * The frames the transcript is scrolled, the host still follows it and the
+ * turn's status line still stands: the ones where the column's top moves
+ * through the reader's screen while an answer arrives. The settle frame is
+ * not one of them — the host takes the status line down and folds the
+ * finished process there, which shrinks the column under the tail by design.
  */
 function followed(trace) {
-  return trace.filter((frame) => typeof frame.flowTop === 'number' && typeof frame.top === 'number' && frame.top > 0 && frame.following === true)
+  return trace.filter((frame) => typeof frame.flowTop === 'number' && typeof frame.top === 'number' &&
+    typeof frame.running === 'number' && frame.top > 0 && frame.following === true)
 }
 
 /** Every move of the column's screen top between two adjacent followed frames. */
@@ -76,7 +80,10 @@ function streamJitterScenario({ check }, statsPosition = 'context') {
       const rising = walked.filter((move) => move.by < 0)
       const cardDrift = boxDrift(frames, 'card')
       const seatDrift = boxDrift(frames, 'seat')
-      const statsDrift = boxDrift(frames, 'stats')
+      // The footer's reading arrives with the settled turn, after the arrival
+      // this scenario is about: it is read over every followed frame, where it
+      // stands, so the line's own stillness is still what the check decides.
+      const statsDrift = boxDrift(trace.filter((frame) => typeof frame.top === 'number' && frame.top > 0 && frame.following === true), 'stats')
       return [
         check('逐帧采样真的在跑', trace.length > 60 && frames.length > 40, `${trace.length} frames, ${frames.length} scrolled while following`),
         check('回答在采样期间长出来', grew > GROWTH_PX, `grew ${grew}px`),

@@ -21,6 +21,7 @@
  */
 import waitCopy from '../../client/src/features/chat-wait/chat-wait.copy.json' with { type: 'json' }
 import foldCopy from '../../client/src/features/chat-fold/chat-fold.copy.json' with { type: 'json' }
+import { ASSISTANT_STEP_KIND, CHAT_GROUP_PART_ATTRIBUTE, CHAT_GROUP_PART_REASONING, FLOW_KIND_ATTRIBUTE, PROCESS_CONTENT_SELECTOR, PROCESS_GROUP_SELECTOR, TOOL_CALL_KIND } from '@dsh-claude-style/contracts/dom'
 
 const COPY = {
   ...waitCopy,
@@ -146,6 +147,23 @@ function processSummaryScenario({ check }) {
       if (await control.isEnabled()) await control.click()
       await page.waitForTimeout(500)
       context.notes.headers = await readHeaders(page)
+      // What each group's body holds, read off the rows the host draws: the
+      // summary has to name exactly these figures, and the host decides which
+      // rows a turn's process keeps (a newer host counts records of its own).
+      context.notes.counts = await page.evaluate(([group, content, kind, assistant, tool, part, reasoning]) =>
+        [...document.querySelectorAll(group)].map((root) => {
+          const counts = { thought: 0, output: 0, tool: 0, record: 0 }
+          for (const row of root.querySelector(content)?.children ?? []) {
+            const rowKind = row.getAttribute(kind)
+            if (rowKind === null) continue
+            if (rowKind === assistant) {
+              if (row.getAttribute(part) === reasoning) counts.thought += 1
+              else counts.output += 1
+            } else if (rowKind === tool) counts.tool += 1
+            else counts.record += 1
+          }
+          return counts
+        }), [PROCESS_GROUP_SELECTOR, PROCESS_CONTENT_SELECTOR, FLOW_KIND_ATTRIBUTE, ASSISTANT_STEP_KIND, TOOL_CALL_KIND, CHAT_GROUP_PART_ATTRIBUTE, CHAT_GROUP_PART_REASONING])
     },
     async assert({ session, notes }) {
       const early = notes.waitEarly ?? {}
@@ -158,14 +176,18 @@ function processSummaryScenario({ check }) {
       const stateWords = [COPY.chatWaitThinking, COPY.chatWaitWriting, COPY.chatWaitToolCall, COPY.chatWaitTools]
       const lang = stateWords.some((word) => word.zh === working.label) ? 'zh' : 'en'
       const sentence = (parts) => parts.join(COPY.processSummaryFullSeparator[lang])
-      // The figures are the body's own rows, and the host keeps a call's result
-      // inside the call's own row (its conversation-nodes/tool.js builds one node
-      // per call), so these groups hold thoughts and calls alone: no record row
-      // stands in this turn for the summary to count.
-      const expected = [
-        sentence([fill(COPY.processSummaryFullThoughtOther[lang], 2), fill(COPY.processSummaryFullToolOne[lang], 1)]),
-        sentence([fill(COPY.processSummaryFullThoughtOne[lang], 1), fill(COPY.processSummaryFullToolOne[lang], 1)]),
-      ]
+      // The sentence names the figures each body holds: the counts are read off
+      // the rows the host drew, so a host that keeps record rows of its own
+      // (DSH 0.2.2-rc.2 draws four in the first group) is counted through the
+      // same words rather than assumed away.
+      const word = (count, one, other) => fill(COPY[count === 1 ? one : other][lang], count)
+      const sentenceFor = (counts) => sentence([
+        ...(counts.thought === 0 ? [] : [word(counts.thought, 'processSummaryFullThoughtOne', 'processSummaryFullThoughtOther')]),
+        ...(counts.output === 0 ? [] : [word(counts.output, 'processSummaryFullOutputOne', 'processSummaryFullOutputOther')]),
+        ...(counts.tool === 0 ? [] : [word(counts.tool, 'processSummaryFullToolOne', 'processSummaryFullToolOther')]),
+        ...(counts.record === 0 ? [] : [word(counts.record, 'processSummaryFullRecordOne', 'processSummaryFullRecordOther')]),
+      ])
+      const expected = (notes.counts ?? []).map(sentenceFor)
       return [
         check('the running row carries the skin\'s line in place of the host\'s words',
           early.line === true && early.wordsShown === false, JSON.stringify(early)),
@@ -185,8 +207,8 @@ function processSummaryScenario({ check }) {
         check('every process group\'s header says what it holds, the host\'s words out of sight',
           headers.length === 2 && headers.every((header) => header.summaryDisplay !== 'none' && header.wordsDisplay === 'none'),
           JSON.stringify(headers)),
-        check('the sentence stands in a header with room for it, naming the thoughts and the tool calls',
-          JSON.stringify(headers.map((header) => header.name)) === JSON.stringify(expected) &&
+        check('the sentence stands in a header with room for it, naming every figure the body holds',
+          expected.length > 0 && JSON.stringify(headers.map((header) => header.name)) === JSON.stringify(expected) &&
             headers.every((header) => header.form === 'full') && headers[0]?.text === expected[0],
           JSON.stringify({ expected, got: headers.map((header) => ({ form: header.form, text: header.text, name: header.name })) })),
         check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),
