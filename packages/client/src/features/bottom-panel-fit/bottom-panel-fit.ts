@@ -1,9 +1,10 @@
 import { BOTTOM_PANEL_SELECTOR, COMPOSER_SELECTOR, RIGHTBAR_COLUMN_SELECTOR } from '@dsh-claude-style/contracts/dom'
-import { observeMatches, subscribeMutations } from '@dsh-claude-style/engine/bus'
+import { observeLayoutElements } from '@dsh-claude-style/engine/layout-elements'
 import { cacheFirstMatch } from '@dsh-claude-style/engine/host'
 import { PAGE_ZOOM_ATTR } from '../../constants'
 import { heldWrites } from '../../shared/held-writes'
 import { pageZoomFactor } from '../../shared/page-zoom'
+import { panelLength } from '../../shared/panel-length'
 
 /**
  * The bottom panel of `dsh-better-sidebar`, placed in the page's pixels.
@@ -23,21 +24,13 @@ const LEFT_COLUMN_SELECTOR = '[data-dsh-claude-part~="sidebar-column"]'
 /** Raised on the body by the plugin while a column is being dragged. */
 const SIDEBAR_DRAGGING_ATTRIBUTE = 'data-dsh-sidebar-dragging'
 
-/** Trim a computed page length to the shape a CSS declaration keeps. */
-function length(value: number) {
-  return `${Math.round(value * 100) / 100}px`
-}
-
 export function install() {
   const writes = heldWrites()
   let panel: HTMLElement | null = null
-  /** The subscriptions hearing the panel standing right now. */
-  const heard: (() => void)[] = []
-  let queued = false
 
   function place(element: HTMLElement, property: string, value: number) {
     const current = element.style.getPropertyValue(property).trim()
-    writes.write(element, property, writes.hostValue(element, property, current), length(value))
+    writes.write(element, property, writes.hostValue(element, property, current), panelLength(value))
   }
 
   function fit() {
@@ -69,42 +62,23 @@ export function install() {
     writes.write(panel, 'bottom', writes.hostValue(panel, 'bottom', anchor), 'auto')
   }
 
-  function sync() {
-    queued = false
-    const next = panels.all()[0] ?? null
-    if (next !== panel) {
-      for (const stop of heard.splice(0)) stop()
-      panel = next
-      if (panel !== null) heard.push(subscribeMutations(panel, { attributes: true, attributeFilter: ['style'] }, schedule))
-    }
-    fit()
-  }
-
-  function schedule() {
-    if (queued) return
-    queued = true
-    // A microtask keeps the rewrite ahead of the frame the host's write would paint.
-    queueMicrotask(sync)
-  }
-
   // The panel mounts inside the frame, where the body's own child list does not
   // reach; the bus's kept matches hear it arrive and leave.
-  const panels = observeMatches<HTMLElement>(BOTTOM_PANEL_SELECTOR, schedule)
   const leftColumn = cacheFirstMatch<HTMLElement>(LEFT_COLUMN_SELECTOR)
   const rightColumn = cacheFirstMatch<HTMLElement>(RIGHTBAR_COLUMN_SELECTOR)
   const composerSeat = cacheFirstMatch<HTMLElement>(COMPOSER_SELECTOR)
   // The factor rides an attribute on the body, so a change of zoom re-derives
   // every edge; the drag flag rides the body too, and its end re-derives them.
-  const stopZoom = subscribeMutations(document.body, { attributes: true, attributeFilter: [PAGE_ZOOM_ATTR] }, schedule)
-  const stopDrag = subscribeMutations(document.body, { attributes: true, attributeFilter: [SIDEBAR_DRAGGING_ATTRIBUTE] }, schedule)
-
-  schedule()
+  const stopLayout = observeLayoutElements({
+    selectors: [BOTTOM_PANEL_SELECTOR],
+    bodyAttributes: [PAGE_ZOOM_ATTR, SIDEBAR_DRAGGING_ATTRIBUTE],
+    sync([element]) { panel = element; fit() },
+    release: element => writes.restore(element),
+  })
 
   return () => {
-    stopZoom()
-    stopDrag()
-    panels.release()
-    for (const stop of heard.splice(0)) stop()
+    stopLayout()
+    panel = null
     writes.restore()
   }
 }

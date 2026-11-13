@@ -11,10 +11,11 @@ export interface HeldWrites {
   /** Write `next` beside the host's `raw`; equal values leave no record behind. */
   write(element: HTMLElement, property: string, raw: string, next: string): void
   /** Put every host value back, for the declarations this feature still holds. */
-  restore(): void
+  restore(element?: HTMLElement): void
 }
 
 export function heldWrites(): HeldWrites {
+  // Per view: restore(element) releases a replaced seat; restore() releases the view (D12).
   const held = new Map<HTMLElement, Map<string, Held>>()
 
   function hostValue(element: HTMLElement, property: string, current: string) {
@@ -25,6 +26,7 @@ export function heldWrites(): HeldWrites {
   function write(element: HTMLElement, property: string, raw: string, next: string) {
     const own = held.get(element)
     if (next === raw) {
+      if (element.style.getPropertyValue(property) !== next) element.style.setProperty(property, next)
       if (own !== undefined) {
         own.delete(property)
         if (own.size === 0) held.delete(element)
@@ -37,13 +39,14 @@ export function heldWrites(): HeldWrites {
     held.set(element, map)
   }
 
-  function restore() {
+  function restore(target?: HTMLElement) {
     for (const [element, declarations] of held) {
+      if (target !== undefined && target !== element) continue
       for (const [property, record] of declarations) {
         if (element.style.getPropertyValue(property) === record.written) element.style.setProperty(property, record.raw)
       }
+      held.delete(element)
     }
-    held.clear()
   }
 
   return { hostValue, write, restore }

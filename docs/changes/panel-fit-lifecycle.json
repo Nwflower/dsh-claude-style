@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-13",
+  "group": "fixes",
+  "order": 0,
+  "external": false,
+  "zh": "面板替换时释放旧元素并恢复宿主样式，关闭缩放处理后停止已排队的布局改写",
+  "en": "Release replaced panels and restore host styles, stopping queued layout rewrites after panel scaling is removed"
+}
