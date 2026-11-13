@@ -74,7 +74,30 @@
           applicable: runningRow.hasAttribute(surface('sidebar-status.running-title')),
         }
       }
+      // The marker side stands in the title line of the ongoing-effect row: the
+      // header that carries it holds the group the manifest row names and its choices.
+      // The row is found by its preference key and the control by its role and
+      // name, so the read carries no class of the page.
+      var readSide = function () {
+        var side = null
+        probe.walkSettingsTree(probe.settingsTree('motion'), function (node) {
+          var props = node.props || {}
+          if (props.key !== 'ongoingIndicator') return
+          // The row's first child is the title line — the text and the aside —
+          // and its second is the preview cards.
+          var head = [].concat(props.children)[0]
+          var aside = head === null || head === undefined || head.props === undefined ? undefined : [].concat(head.props.children)[1]
+          if (aside === undefined || aside === null || aside.props === undefined || aside.props.role !== 'group') return
+          side = { label: aside.props['aria-label'], buttons: [] }
+          probe.walkSettingsTree(aside.props.children, function (child) {
+            var childProps = child.props || {}
+            if (child.type === 'button' && childProps['aria-pressed'] !== undefined) side.buttons.push({ label: [].concat(childProps.children).join(''), pressed: childProps['aria-pressed'] })
+          })
+        })
+        return side
+      }
       var settings = probe.report.settings
+      settings.ongoingSide = readSide()
       settings.ongoingCards = { cards: readCards(), choices: {} }
       settings.ongoingStored = {}
       try {

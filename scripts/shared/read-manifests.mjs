@@ -142,6 +142,14 @@ function checkManifests(manifests) {
           if (!carries(key)) fail(manifest, `names the copy key "${key}" for the value "${value}", which neither packages/client/src/features/${manifest.dir}/${manifest.dir}.copy.json nor the settings page's own copy carries`)
         }
         const requires = row.requires
+        if (row.placement !== undefined) {
+          if (row.placement !== 'header') fail(manifest, `has a settings row placed at "${row.placement}", which is not a place a row takes`)
+          if (row.parent === undefined) fail(manifest, `places the settings row of "${row.pref}" in a header without naming the row in "parent"`)
+          if (row.title === undefined) fail(manifest, `places the settings row of "${row.pref}" in a header without a "title" for its accessible name`)
+          for (const field of ['desc', 'control', 'status', 'requires', 'experimental']) {
+            if (row[field] !== undefined) fail(manifest, `places the settings row of "${row.pref}" in a header, which has no line for its "${field}"`)
+          }
+        }
         if (row.parent !== undefined) {
           if (typeof row.parent !== 'string' || !(row.parent in PREFS)) fail(manifest, `has a settings row standing under "${row.parent}", which PREFS does not carry`)
           if (row.parent === row.pref) fail(manifest, 'has a settings row that stands under its own preference')

@@ -6,6 +6,21 @@ body[data-dsh-claude-style] .dsh-claude-settings-row-block > .dsh-claude-preview
   align-self: stretch;
 }
 
+/* A block row's title line with an aside: the text on the left and the control
+   on the right while the two share a line, the control on the next line, at the
+   row's left edge, when the text's room would fall under its basis. */
+body[data-dsh-claude-style] .dsh-claude-settings-row-head {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 8px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-row-aside {
+  flex: none;
+}
+
 /* The settings page's pickers are one control: a grid of cards, one per choice,
    spanning the row it sits in. The theme style's cards carry the brand's mark
    over its name; the waiting line's paint cards carry the line's words wearing

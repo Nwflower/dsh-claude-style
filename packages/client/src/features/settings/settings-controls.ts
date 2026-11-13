@@ -4,7 +4,7 @@ import { PREFS } from '@dsh-claude-style/contracts/prefs'
 import { ROW_CONTROLS } from 'virtual:dsh-claude-style/settings-controls'
 import { SEGMENTS_CLASS, SEGMENT_CLASS } from '../../shared/segment-control'
 import { windowsDesktop } from '@dsh-claude-style/engine/desktop-band'
-import { prefYielded, settingsRowsOf } from '../../core/feature'
+import { headerRowsOf, prefYielded, settingsRowsOf } from '../../core/feature'
 import { featureCopy } from '../../core/i18n'
 import { motionReduced } from '../../core/prefs'
 import { copy, sharedLine } from './copy'
@@ -42,6 +42,8 @@ export interface SettingsView {
   prefs: Prefs
   write(patch: Partial<Prefs>): void
   controls: SettingsControls
+  /** The control a manifest row places in the header of the row for this preference, or null (headerAside). */
+  aside(parent: keyof Prefs): React.ReactElement | null
   quickTrigger: React.RefObject<HTMLButtonElement | null>
   quickProviderApi(): QuickProvidersHandle | null
   username: {
@@ -133,9 +135,38 @@ function rowLine(feature: Feature, key: string) {
   return feature.copy === undefined || feature.copy[key] === undefined ? sharedLine(key) : featureCopy(feature.copy, key)
 }
 
+/** The slot's manifest rows by preference, for the rows that stand under another. */
+function rowsByPrefOf(slot: SettingsRowSlot) {
+  return new Map(settingsRowsOf(slot).map(({ row }) => [row.pref, row]))
+}
+
 /**
- * The rows the feature manifests declare for a slot (D72): a tab of the strip,
- * or one of the main window's groups. The control follows the preference's own
+ * Whether a preference is off: a switch stored `false`, or a choice stored its
+ * own `off`.
+ */
+function isOff(prefs: Prefs, pref: keyof Prefs) {
+  const stored = prefs[pref]
+  return stored === false || stored === 'off'
+}
+
+/**
+ * Whether a row cannot act right now: the preference it stands under is off,
+ * the row above it cannot act either, or its own requirement is unmet.
+ */
+function blocked(row: FeatureSettingsRow, seen: ReadonlySet<string>, prefs: Prefs, rowsByPref: ReadonlyMap<keyof Prefs, FeatureSettingsRow>): boolean {
+  if (isOff(prefs, row.pref)) return true
+  if (row.requires !== undefined && !row.requires.values.includes(String(prefs[row.requires.pref]))) return true
+  if (row.windowsOnly === true && !windowsDesktop()) return true
+  if (row.parent !== undefined && !seen.has(row.parent)) {
+    const parent = rowsByPref.get(row.parent)
+    if (parent !== undefined && blocked(parent, new Set([...seen, row.parent]), prefs, rowsByPref)) return true
+  }
+  return false
+}
+
+/**
+ * What one manifest row draws: its title and description lines, its control and
+ * whether it refuses input. The control follows the preference's own
  * declaration (packages/contracts/src/prefs.ts): a boolean is an on/off switch,
  * a choice a segmented control over the values the table carries, each labelled
  * by the row's own copy.
@@ -147,92 +178,95 @@ function rowLine(feature: Feature, key: string) {
  * itself waiting), and one acting on the Windows desktop window alone
  * (`windowsOnly`) on every page that is not that window.
  */
+function featureRowParts(feature: Feature, row: FeatureSettingsRow, view: SettingsView, rowsByPref: ReadonlyMap<keyof Prefs, FeatureSettingsRow>) {
+  const controls = view.controls
+  const pref = row.pref
+  const spec = PREFS[pref]
+  const yielded = prefYielded(pref)
+  const title = row.title === undefined ? null : rowLine(feature, row.title)
+  const desc = row.desc === undefined ? '' : rowLine(feature, row.desc)
+  const requires = row.requires
+  const waits = requires !== undefined && !requires.values.includes(String(view.prefs[requires.pref]))
+    ? rowLine(feature, requires.note)
+    : null
+  const offWindows = row.windowsOnly === true && !windowsDesktop()
+  const above = row.parent === undefined ? undefined : rowsByPref.get(row.parent)
+  const parentBlocked = above !== undefined && blocked(above, new Set([row.parent as string]), view.prefs, rowsByPref)
+  const stored = view.prefs[pref]
+  // The row's key and its values are the table's data: the clamp holds them.
+  const write = (value: string | boolean) => { view.write({ [pref]: value } as Partial<Prefs>) }
+  // The row's own value never disables it: that is what the reader changes.
+  const off = yielded || waits !== null || offWindows || parentBlocked
+  // A row the feature draws itself renders its own control (D72); every other
+  // row follows the preference's own type.
+  const own = row.control === undefined ? undefined : ROW_CONTROLS[feature.id]?.[row.control]
+  const sides = row.switch
+  const control = own !== undefined
+    ? React.createElement(own, { prefs: view.prefs, write: view.write, disabled: off })
+    : spec.type === 'boolean'
+      ? controls.toggle(stored !== false, write, off)
+      : sides !== undefined
+        ? controls.toggle(stored === sides.on, value => { write(value ? sides.on : sides.off) }, off)
+        : controls.segment(
+          (spec.type === 'choice' ? spec.values : []).map((value: string) => ({ value, label: rowLine(feature, row.choiceLabels?.[value] ?? value) })),
+          String(stored),
+          write,
+          off,
+        )
+  const still = row.stillWhenReduced === true && motionReduced()
+  const note = waits ?? (offWindows ? sharedLine('windowsOnlyNote') : still ? sharedLine('motionStillNote') : null)
+  // A yielded row says who manages it even when it carries no description of
+  // its own: the switch rows over the preview cards have none.
+  const described = yielded
+    ? managedDesc(desc, true)
+    : (row.desc === undefined && note === null ? null : noteDesc(desc, note))
+  const ownStatus = row.status === undefined ? undefined : ROW_CONTROLS[feature.id]?.[row.status]
+  const status = ownStatus === undefined ? null : React.createElement(ownStatus, { key: 'status', prefs: view.prefs, write: view.write, disabled: off })
+  const description = status === null ? described : described === null ? status : [described, status]
+  return { title, description, control, off, drawn: own !== undefined }
+}
+
+/**
+ * The rows the feature manifests declare for a slot (D72): a tab of the strip,
+ * or one of the main window's groups. A row placed in a header (`placement`)
+ * stands in its parent's row instead (headerAside).
+ */
 function featureRows(slot: SettingsRowSlot, view: SettingsView): SettingsRow[] {
   const controls = view.controls
-  const entries = settingsRowsOf(slot)
-  const prefs = view.prefs
-  const rowsByPref = new Map(entries.map(({ row }) => [row.pref, row]))
-
-  /**
-   * Whether a preference is off: a switch stored `false`, or a choice stored
-   * its own `off`.
-   */
-  function isOff(pref: keyof Prefs) {
-    const stored = prefs[pref]
-    return stored === false || stored === 'off'
-  }
-
-  /**
-   * Whether a row cannot act right now: the preference it stands under is off,
-   * the row above it cannot act either, or its own requirement is unmet.
-   */
-  function blocked(row: FeatureSettingsRow, seen: ReadonlySet<string>): boolean {
-    if (isOff(row.pref)) return true
-    if (row.requires !== undefined && !row.requires.values.includes(String(prefs[row.requires.pref]))) return true
-    if (row.windowsOnly === true && !windowsDesktop()) return true
-    if (row.parent !== undefined && !seen.has(row.parent)) {
-      const parent = rowsByPref.get(row.parent)
-      if (parent !== undefined && blocked(parent, new Set([...seen, row.parent]))) return true
-    }
-    return false
-  }
-
-  return entries.map(({ feature, row }) => {
-    const pref = row.pref
-    const spec = PREFS[pref]
-    const yielded = prefYielded(pref)
-    const title = row.title === undefined ? null : rowLine(feature, row.title)
-    const desc = row.desc === undefined ? '' : rowLine(feature, row.desc)
-    const requires = row.requires
-    const waits = requires !== undefined && !requires.values.includes(String(view.prefs[requires.pref]))
-      ? rowLine(feature, requires.note)
-      : null
-    const offWindows = row.windowsOnly === true && !windowsDesktop()
-    const above = row.parent === undefined ? undefined : rowsByPref.get(row.parent)
-    const parentBlocked = above !== undefined && blocked(above, new Set([row.parent as string]))
-    const stored = view.prefs[pref]
-    // The row's key and its values are the table's data: the clamp holds them.
-    const write = (value: string | boolean) => { view.write({ [pref]: value } as Partial<Prefs>) }
-    // The row's own value never disables it: that is what the reader changes.
-    const off = yielded || waits !== null || offWindows || parentBlocked
-    // A row the feature draws itself renders its own control (D72); every other
-    // row follows the preference's own type.
-    const own = row.control === undefined ? undefined : ROW_CONTROLS[feature.id]?.[row.control]
-    const sides = row.switch
-    const control = own !== undefined
-      ? React.createElement(own, { prefs: view.prefs, write: view.write, disabled: off })
-      : spec.type === 'boolean'
-        ? controls.toggle(stored !== false, write, off)
-        : sides !== undefined
-          ? controls.toggle(stored === sides.on, value => { write(value ? sides.on : sides.off) }, off)
-          : controls.segment(
-            (spec.type === 'choice' ? spec.values : []).map((value: string) => ({ value, label: rowLine(feature, row.choiceLabels?.[value] ?? value) })),
-            String(stored),
-            write,
-            off,
-          )
-    const still = row.stillWhenReduced === true && motionReduced()
-    const note = waits ?? (offWindows ? sharedLine('windowsOnlyNote') : still ? sharedLine('motionStillNote') : null)
-    // A yielded row says who manages it even when it carries no description of
-    // its own: the switch rows over the preview cards have none.
-    const described = yielded
-      ? managedDesc(desc, true)
-      : (row.desc === undefined && note === null ? null : noteDesc(desc, note))
-    const ownStatus = row.status === undefined ? undefined : ROW_CONTROLS[feature.id]?.[row.status]
-    const status = ownStatus === undefined ? null : React.createElement(ownStatus, { key: 'status', prefs: view.prefs, write: view.write, disabled: off })
-    const description = status === null ? described : described === null ? status : [described, status]
+  const rowsByPref = rowsByPrefOf(slot)
+  return settingsRowsOf(slot).filter(({ row }) => row.placement !== 'header').map(({ feature, row }) => {
+    const { title, description, control, off, drawn } = featureRowParts(feature, row, view, rowsByPref)
     // A feature's own control (preview cards, a table) takes the line under the
     // row's text, or the whole row when it has none, under a parent row too.
-    const node = row.parent === undefined || own !== undefined
-      ? controls.row(pref, title, description, control, {
+    const node = row.parent === undefined || drawn
+      ? controls.row(row.pref, title, description, control, {
         disabled: off,
-        block: own !== undefined,
+        block: drawn,
         sub: row.parent !== undefined,
         experimental: row.experimental === true,
       })
-      : controls.subRow(pref, title ?? '', description, control, !off, row.experimental === true)
+      : controls.subRow(row.pref, title ?? '', description, control, !off, row.experimental === true)
     return { rank: row.rank, node }
   })
+}
+
+/**
+ * The control a manifest row places in the header of the row for `parent`
+ * (FeatureSettingsRow.placement), named by that row's title; null where no row
+ * is placed there. The parent's tab hands the result to `row()` as `aside`. A
+ * header carries one control.
+ */
+export function headerAside(parent: keyof Prefs, view: SettingsView): React.ReactElement | null {
+  const entries = headerRowsOf(parent)
+  if (entries.length === 0) return null
+  if (entries.length > 1) throw new Error(`settings: ${entries.length} rows are placed in the header of "${parent}"; a header carries one control`)
+  const { feature, row } = entries[0]
+  const { title, control } = featureRowParts(feature, row, view, rowsByPrefOf(row.tab))
+  if (title === null) throw new Error(`settings: the header row of "${row.pref}" has no title for its accessible name`)
+  const named = React.isValidElement(control) && control.type === ClaudeStyleSwitch
+    ? React.cloneElement(control as React.ReactElement<{ label?: string }>, { label: title })
+    : control
+  return React.createElement('div', { key: `aside-${row.pref}`, className: 'dsh-claude-settings-row-aside', role: 'group', 'aria-label': title }, named)
 }
 
 /** A row's description, with the line naming the plugin that manages it while one does. */
@@ -374,8 +408,13 @@ export function createSettingsControls() {
    * marks a titled row that belongs to the row above it the same way, so the
    * group keeps no hairline between its members. `mark` names the row on the
    * element for a stylesheet that has to single it out.
+   *
+   * `aside` is a control that stands in the title line, across from the text,
+   * above the block's own content: the switch or choice that belongs to the
+   * block under it. It belongs to a block row, whose content has no right-hand
+   * slot of its own.
    */
-  function row(key: string, title: string | null, description: React.ReactNode, control: React.ReactNode, options?: { block?: boolean, disabled?: boolean, sub?: boolean, experimental?: boolean, mark?: string }) {
+  function row(key: string, title: string | null, description: React.ReactNode, control: React.ReactNode, options?: { block?: boolean, disabled?: boolean, sub?: boolean, experimental?: boolean, mark?: string, aside?: React.ReactElement | null }) {
     const classes = ['dsh-claude-settings-row']
     if (options?.block) classes.push('dsh-claude-settings-row-block')
     else if (React.isValidElement(control) && control.type === ClaudeStyleSegmentGroup) classes.push('dsh-claude-settings-row-segment')
@@ -389,10 +428,13 @@ export function createSettingsControls() {
       ? React.cloneElement(control as React.ReactElement<{ label?: string }>, { label: title ?? '' })
       : control
     const disabled = options?.disabled === true
+    const text = title === null && description === null ? null : rowText(title ?? '', description, options?.experimental)
+    const aside = options?.aside ?? null
+    if (aside !== null && options?.block !== true) throw new Error(`settings: the row "${key}" carries an aside without being a block row`)
     return React.createElement(
       'div',
       { className: classes.join(' '), key, 'aria-disabled': disabled ? 'true' : undefined, 'data-disabled': disabled ? '' : undefined, 'data-dsh-claude-settings-row': options?.mark },
-      title === null && description === null ? null : rowText(title ?? '', description, options?.experimental),
+      aside === null ? text : React.createElement('div', { className: 'dsh-claude-settings-row-head' }, text, aside),
       named,
     )
   }

@@ -81,6 +81,14 @@ export interface FeatureSettingsRow {
   choiceLabels?: Readonly<Record<string, string>>
   /** A child row is disabled while its parent or owner cannot act. */
   parent?: keyof Prefs
+  /**
+   * `header` seats the row's control in the title line of the row `parent`
+   * names, across from that row's text, instead of giving it a row of its own;
+   * the title becomes the control's accessible name. The row carries a title
+   * and a plain control and no description, status line, own control or
+   * requirement, because the header has no line to show them on.
+   */
+  placement?: 'header'
   requires?: FeatureRowRequirement
   /** Other platforms show the stored choice but refuse input. */
   windowsOnly?: boolean
@@ -168,6 +176,15 @@ export function settingsRowsOf(slot: SettingsRowSlot) {
   const out: { feature: Feature, row: FeatureSettingsRow }[] = []
   for (const feature of registry) {
     for (const row of feature.settingsRows ?? []) if (row.tab === slot) out.push({ feature, row })
+  }
+  return out
+}
+
+/** The rows whose control stands in the header of the row `parent` names (FeatureSettingsRow.placement). */
+export function headerRowsOf(parent: keyof Prefs) {
+  const out: { feature: Feature, row: FeatureSettingsRow }[] = []
+  for (const feature of registry) {
+    for (const row of feature.settingsRows ?? []) if (row.placement === 'header' && row.parent === parent) out.push({ feature, row })
   }
   return out
 }

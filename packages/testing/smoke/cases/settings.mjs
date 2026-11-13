@@ -19,7 +19,7 @@ export default {
       appearance: ['sidebarBrand', 'brandLockup', 'brandInk', 'palette', 'paletteCards', 'inlineCodeColor', 'backgroundOpacity', 'typeface', 'homeLayout', 'homeSessionScope', 'homeRipple', 'mascot', 'mascotScope'],
       'main-window': ['turnNav', 'messageActions', 'conversationWidth', 'viewTabs', 'headerBand', 'processRows', 'answerAnchor', 'sessionPanel', 'composerScope', 'composerBottomGap', 'questionCard', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent', 'contextDisplay', 'contextNumbers', 'statsPosition', 'statsFooterAlign', 'billingCurrency', 'billingTable'],
       sidebar: ['collapseFooter', 'banLocale', 'sidebarSearch', 'searchStyle', 'sidebarEntries', 'workspaceView', 'sidebarPeek', 'sidebarLayout'],
-      motion: ['motion', 'chatAnimations', 'chatWait', 'statusDetail', 'statusMotion', 'chatReveal', 'chatSend', 'messageEnter', 'caretMotion', 'ongoingIndicator', 'ongoingIndicatorSide', 'reasoningDisplay'],
+      motion: ['motion', 'chatAnimations', 'chatWait', 'statusDetail', 'statusMotion', 'chatReveal', 'chatSend', 'messageEnter', 'caretMotion', 'ongoingIndicator', 'reasoningDisplay'],
     }
     // The main window's three groups, each under its label and carrying its own
     // rows: the conversation side, the composer's controls with the model
@@ -174,6 +174,10 @@ export default {
       fade.animation === 'dsh-claude-reveal-piece' && Number.parseFloat(fade.duration) === 0.12 && fade.fill === 'both' &&
         waiting.opacity === '0' && plain.animation === 'none' && plain.opacity === '1',
       JSON.stringify(revealPreview))
+    const ongoingSide = settings.ongoingSide || {}
+    check('the marker side stands in the ongoing-effect row\'s title line as a named group of two choices, the default left one pressed, and no row of its own',
+      ongoingSide.label === 'Marker side' && JSON.stringify(ongoingSide.buttons) === JSON.stringify([{ label: 'Left', pressed: 'true' }, { label: 'Right', pressed: 'false' }]),
+      JSON.stringify(ongoingSide))
     const ongoing = settings.ongoingCards || {}
     const ongoingCards = ongoing.cards || []
     const looks = ['breathe', 'ring', 'shimmer']

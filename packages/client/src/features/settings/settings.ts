@@ -6,7 +6,7 @@ import { createHostAccountMenu } from '../account/host-menu'
 import { adoptSettingsForm, motionReduced, readPrefs, savePrefs, subscribePrefs } from '../../core/prefs'
 import { cacheFirstMatch, hostSlots } from '@dsh-claude-style/engine/host'
 import { motionMs } from '../../shared/motion'
-import { ClaudeStyleSegmentGroup, createSettingsControls, tabRows } from './settings-controls'
+import { ClaudeStyleSegmentGroup, createSettingsControls, headerAside, tabRows } from './settings-controls'
 import { createSettingsAppearanceTab } from './settings-tab-appearance'
 import { createSettingsGeneralTab } from './settings-tab-general'
 import { createSettingsMainWindowTab } from './settings-tab-main-window'
@@ -319,6 +319,7 @@ export function ClaudeStyleSettingsSection(props: { embed?: boolean }) {
     prefs,
     write,
     controls: SETTINGS_CONTROLS,
+    aside: parent => headerAside(parent, view),
     quickTrigger,
     quickProviderApi: () => quickProviderHandle === null ? null : quickProviderHandle(),
     username: {

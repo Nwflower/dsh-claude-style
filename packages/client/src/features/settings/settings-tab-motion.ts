@@ -68,7 +68,7 @@ export function createSettingsMotionTab(): SettingsTab {
           copy('ongoingTitle'),
           copy('ongoingDesc'),
           ongoingPicker(prefs, write),
-          { block: true },
+          { block: true, aside: view.aside('ongoingIndicator') },
         ),
       },
     ]

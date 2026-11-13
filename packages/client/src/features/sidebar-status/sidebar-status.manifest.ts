@@ -8,13 +8,15 @@ export default {
   stylesheets: [{ file: 'sidebar-status.css', rank: 117 }],
   /**
    * The Motion tab's Ongoing conversations row chooses the look; where that
-   * look stands belongs to the row it stands in, so this row rests under it.
+   * look stands belongs to the row it stands in, so this control sits in that
+   * row's title line.
    */
   settingsRows: [{
     tab: 'motion',
     rank: 45,
     pref: 'ongoingIndicatorSide',
     parent: 'ongoingIndicator',
+    placement: 'header',
     title: 'sideTitle',
     choiceLabels: { left: 'sideLeft', right: 'sideRight' },
   }],
