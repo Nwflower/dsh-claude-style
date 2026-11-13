@@ -39,10 +39,16 @@ function followed(trace) {
     typeof frame.running === 'number' && frame.top > 0 && frame.following === true)
 }
 
-/** Every move of the column's screen top between two adjacent followed frames. */
+/**
+ * Every move of the column's screen top between two adjacent followed frames.
+ * A pair whose content shrank is left out: the host rewraps the last line as
+ * words arrive, so the column can lose a line's height, and the bottom pin
+ * moves the whole column down with that shorter content — no slide is involved.
+ */
 function moves(frames) {
   const out = []
   for (let at = 1; at < frames.length; at += 1) {
+    if (frames[at].height < frames[at - 1].height) continue
     out.push({ at: frames[at].t, by: Math.round((frames[at].flowTop - frames[at - 1].flowTop) * 10) / 10 })
   }
   return out
