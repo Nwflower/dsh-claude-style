@@ -28,6 +28,8 @@ function readAssets() {
  */
 async function serveStandIn(html) {
   const assets = readAssets()
+  const fontRoot = path.join(ROOT, 'lib', 'fonts')
+  const fonts = new Set(fs.readdirSync(fontRoot).filter(name => name.endsWith('.woff2')))
   /** The page whose HTML was served last; pages run at once, so a request is answered for the page named in its referer. */
   let current = null
   /**
@@ -78,6 +80,17 @@ async function serveStandIn(html) {
       }
       res.writeHead(200, { 'content-type': 'image/svg+xml' })
       res.end('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 100"><rect width="400" height="100"/></svg>')
+    } else if (name.startsWith('dsh-claude-style/fonts/')) {
+      // Font loads bypass window.fetch, so serve the real bundled bytes here.
+      // The built directory is the whitelist; absent optional faces stay 404.
+      const file = name.slice('dsh-claude-style/fonts/'.length)
+      if (!fonts.has(file)) {
+        res.writeHead(404)
+        res.end()
+        return
+      }
+      res.writeHead(200, { 'content-type': 'font/woff2' })
+      res.end(fs.readFileSync(path.join(fontRoot, file)))
     } else if (name.startsWith('dsh-claude-style/assets/')) {
       // The routed assets, from the build output the host half serves them
       // from. The manifest is the same gate here: a name the build did not

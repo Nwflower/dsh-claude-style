@@ -18,6 +18,10 @@ const requestedFaces = (t) => t.page.evaluate(() => performance.getEntriesByType
 
 export default spec({ page: 'shell' }, ({ test }) => {
   test('a host without the optional faces is asked for none of them, and the faces the package ships still load', async (t) => {
+    // A locally installed preferred face can keep the UI from using its bundled
+    // fallback. Ask the browser to load that real face before reading requests.
+    const loaded = await t.page.evaluate(() => document.fonts.load('16px "Claude Style Inter"').then(faces => faces.length))
+    t.expectThat.equal(loaded > 0, true, 'the bundled interface face loads')
     const faces = await requestedFaces(t)
     t.expectThat.equal(faces.length > 0, true, `the page asked the fonts route for the faces it ships (${faces.join(', ')})`)
     t.expectThat.equal(faces.filter(name => name.startsWith('Anthropic')), [], 'no optional face is requested')

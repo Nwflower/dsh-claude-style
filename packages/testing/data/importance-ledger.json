@@ -892,11 +892,6 @@
       "prop": "background",
       "verdict": "unmatched"
     },
-    "body[data-dsh-claude-style][data-ds-dark-theme] button[data-dsh-claude-part~=panel-row]:hover{background:#ffffff14!}|background": {
-      "selector": "body[data-dsh-claude-style][data-ds-dark-theme] button[data-dsh-claude-part~=panel-row]:hover",
-      "prop": "background",
-      "verdict": "unmatched"
-    },
     "body[data-dsh-claude-style] [data-dsh-claude-part~=group-section]+[data-dsh-claude-part~=group-section]{margin-top:6px!}|margin-top": {
       "selector": "body[data-dsh-claude-style] [data-dsh-claude-part~=group-section]+[data-dsh-claude-part~=group-section]",
       "prop": "margin-top",

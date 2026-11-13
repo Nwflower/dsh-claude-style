@@ -53,7 +53,7 @@
       document.documentElement.style.setProperty('--dsh-windows-titlebar-height', '56px')
       Object.defineProperty(navigator, 'windowControlsOverlay', {
         configurable: true,
-        value: {
+        value: Object.assign(new EventTarget(), {
           visible: true,
           getTitlebarAreaRect: function () {
             return {
@@ -61,7 +61,7 @@
               top: 0, left: 0, right: window.innerWidth - CONTROLS, bottom: BAND,
             }
           },
-        },
+        }),
       })
       var header = document.createElement('header')
       header.className = '_header_b_1'
