@@ -96,10 +96,15 @@ export interface PanelChange {
   total: number
 }
 
-/** One background job of the session. */
+/** One command execution or other registered task of the session (D94). */
 export interface PanelJob {
   id: string
   label: string
+  category: 'process' | 'task'
+  /** Unknown means the retained host record carries no creating invocation. */
+  execution: 'foreground' | 'background' | 'unknown'
+  /** Only a real registry id can be passed to the host's stop controller. */
+  controllable: boolean
   status: 'running' | 'stopping' | 'completed' | 'killed' | 'failed'
   startedAt: number
   finishedAt?: number
@@ -148,7 +153,7 @@ export interface PanelTeamTask {
   ownerName?: string
 }
 
-/** What runs behind the conversation: background jobs, subagents, and the Agent Team. */
+/** Work owned by the conversation: command executions, registered tasks, subagents and team. */
 export interface PanelBackground {
   jobs: readonly PanelJob[]
   subagents: readonly PanelSubagent[]
