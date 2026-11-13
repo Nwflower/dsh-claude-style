@@ -2,7 +2,7 @@ import * as React from 'react'
 import { BRAND_INK_ACCENT, BRAND_INK_ORIGINAL, BRAND_DEFAULT_PRESETS, BRAND_INK_TEXT, PALETTE_COLORING_BRAND, PALETTE_COLORING_CUSTOM, PALETTE_PRESETS } from '../../constants'
 import { PALETTE_CARDS } from 'virtual:dsh-claude-style/generated'
 import { BrandLockup } from './settings-brand-lockup'
-import { withoutTransition } from '../../shared/transition'
+import { hidePointerHint, POINTER_HINT_CLASS, showPointerHint } from '../../shared/pointer-hint'
 import { newCustomScheme, selectedReaderScheme, selectSchemePatch } from '../../shared/palette-scheme'
 import type { PaletteScheme } from '@dsh-claude-style/contracts/palette-schemes'
 import type { SegmentOption, SettingsRow, SettingsView } from './settings-controls'
@@ -53,20 +53,16 @@ function cardName(card: Card) {
  * the delayed appear plays.
  */
 function placeHint(hint: HTMLElement, disc: HTMLElement, label: string) {
-  const text = hint.firstElementChild as HTMLElement
-  const showing = hint.hasAttribute('data-show')
-  text.textContent = label
-  const style = getComputedStyle(hint)
-  const width = Math.ceil(text.scrollWidth + Number.parseFloat(style.paddingLeft) + Number.parseFloat(style.paddingRight))
-  // offsetLeft, not the client rect: the disc's own lift and scale stay out of the measure.
-  const x = disc.offsetLeft + disc.offsetWidth / 2 - width / 2
-  const write = () => {
-    hint.style.width = `${width}px`
-    hint.style.setProperty('--dsh-claude-hint-x', `${x}px`)
-  }
-  if (showing) write()
-  else withoutTransition([hint], write)
-  hint.setAttribute('data-show', '')
+  showPointerHint(hint, label, text => {
+    const style = getComputedStyle(hint)
+    const width = Math.ceil(text.scrollWidth + Number.parseFloat(style.paddingLeft) + Number.parseFloat(style.paddingRight))
+    // offsetLeft, not the client rect: the disc's own lift and scale stay out of the measure.
+    const x = disc.offsetLeft + disc.offsetWidth / 2 - width / 2
+    return () => {
+      hint.style.width = `${width}px`
+      hint.style.setProperty('--dsh-claude-hint-x', `${x}px`)
+    }
+  }, 'data-show')
 }
 
 /**
@@ -86,7 +82,7 @@ function Swatches(props: { colours: string[], onChange?: (field: ColourField, va
   }
   const release = () => {
     setLifted(null)
-    hint.current!.removeAttribute('data-show')
+    hidePointerHint(hint.current, 'data-show')
   }
   return React.createElement(
     'span',
@@ -111,6 +107,7 @@ function Swatches(props: { colours: string[], onChange?: (field: ColourField, va
           'data-dsh-claude-lifted': index === lifted ? '' : undefined,
           'aria-label': readOut ? label : undefined,
           role: readOut ? 'img' : undefined,
+          tabIndex: readOut ? 0 : undefined,
           onPointerEnter: (event: React.PointerEvent<HTMLSpanElement>) => point(event.currentTarget, index),
           // A brand disc takes no focus; the reader's discs take it through their colour wells.
           onFocus: (event: React.FocusEvent<HTMLSpanElement>) => point(event.currentTarget, index),
@@ -128,7 +125,7 @@ function Swatches(props: { colours: string[], onChange?: (field: ColourField, va
     // The discs carry their own names; the hint repeats them for the eye only.
     React.createElement(
       'span',
-      { ref: hint, className: 'dsh-claude-palette-hint', 'aria-hidden': 'true' },
+      { ref: hint, className: `dsh-claude-palette-hint ${POINTER_HINT_CLASS}`, 'aria-hidden': 'true' },
       React.createElement('span', { className: 'dsh-claude-palette-hint-text' }),
     ),
   )

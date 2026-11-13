@@ -5,6 +5,7 @@ import type { HeatCell, HomePanel } from './data'
 import { formatCompactTokens } from '../../shared/format'
 import { tooltipAnchor } from '../../shared/host-tooltip'
 import { HEAT_CELL_SELECTOR, HEAT_HINT_CLASS, HEAT_HINT_TEXT_CLASS, hideHeatTip, showHeatTip } from './heat-tip'
+import { POINTER_HINT_CLASS } from '../../shared/pointer-hint'
 import { copy } from './copy'
 
 /**
@@ -97,7 +98,7 @@ export function createHomeOverview() {
         // The panel's one day tip: its words are rewritten in place (heat-tip.ts).
         React.createElement(
           'span',
-          { className: HEAT_HINT_CLASS, 'aria-hidden': 'true' },
+          { className: `${HEAT_HINT_CLASS} ${POINTER_HINT_CLASS}`, 'aria-hidden': 'true' },
           React.createElement('span', { className: HEAT_HINT_TEXT_CLASS }),
         ),
       ),

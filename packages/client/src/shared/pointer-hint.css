@@ -1,0 +1,28 @@
+/* Persistent hint geometry and arrival/exit clocks shared by swatches and heat cells (D9).
+   Feature rules supply their paint, type and placement; reduced motion can override
+   transition-duration because showing changes only the fade variable. */
+body[data-dsh-claude-style] .dsh-claude-pointer-hint {
+  position: absolute;
+  left: 0;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 8px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  scale: var(--dsh-claude-scale-surface);
+  transform-origin: 50% 100%;
+  --dsh-claude-pointer-hint-fade: var(--dsh-claude-duration-hint-exit);
+  transition-property: opacity, scale, translate, width;
+  transition-duration: var(--dsh-claude-pointer-hint-fade), var(--dsh-claude-pointer-hint-fade), var(--dsh-claude-duration-move), var(--dsh-claude-duration-move);
+  transition-timing-function: var(--dsh-claude-ease-out), var(--dsh-claude-ease-out), var(--dsh-claude-ease-settle), var(--dsh-claude-ease-settle);
+}
+
+body[data-dsh-claude-style] .dsh-claude-pointer-hint:is([data-show], [data-shown]) {
+  --dsh-claude-pointer-hint-fade: var(--dsh-claude-duration-surface);
+  opacity: 1;
+  scale: 1;
+  transition-delay: var(--dsh-claude-duration-hint-delay), var(--dsh-claude-duration-hint-delay), 0s, 0s;
+}

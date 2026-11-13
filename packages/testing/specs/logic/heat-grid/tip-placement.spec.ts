@@ -14,6 +14,7 @@ import { userEvent } from 'vitest/browser'
 import {
   HEAT_CELL_SELECTOR, HEAT_HINT_CLASS, HEAT_HINT_SHOWN_ATTR, HEAT_HINT_SIDE_ATTR, HEAT_HINT_TEXT_CLASS, HEAT_TIP_ATTR, HEAT_TIP_GAP,
   HOME_OVERVIEW_SHEET, hideHeatTip, placeHeatTip, showHeatTip,
+  POINTER_HINT_CLASS, POINTER_HINT_SHEET,
 } from '@dsh-claude-style/client/pure'
 import { surfaceAttribute, surfaceClass } from '../../fixtures/surface'
 
@@ -31,7 +32,7 @@ afterEach(async () => {
 /** The usage panel's box holding one 26-week grid whose cells all carry the same tip, under the shipped sheet. */
 function mount(options: { short?: boolean } = {}) {
   const sheet = document.createElement('style')
-  sheet.textContent = HOME_OVERVIEW_SHEET
+  sheet.textContent = POINTER_HINT_SHEET + HOME_OVERVIEW_SHEET
   const panel = document.createElement('div')
   panel.style.cssText = 'width:480px;padding:12px;overflow:auto;box-sizing:border-box;margin:120px 40px'
   const grid = document.createElement('div')
@@ -44,7 +45,7 @@ function mount(options: { short?: boolean } = {}) {
     grid.append(cell)
   }
   const pill = document.createElement('span')
-  pill.className = HEAT_HINT_CLASS
+  pill.className = `${HEAT_HINT_CLASS} ${POINTER_HINT_CLASS}`
   const words = document.createElement('span')
   words.className = HEAT_HINT_TEXT_CLASS
   pill.append(words)

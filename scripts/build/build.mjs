@@ -66,6 +66,7 @@ const THEME_SHEETS = [
   { file: 'shared/segment-control.css', rank: 38 },
   { file: 'shared/sliding-pill.css', rank: 40 },
   { file: 'shared/masked.css', rank: 45 },
+  { file: 'shared/pointer-hint.css', rank: 47 },
   { file: 'theme/chrome.css', rank: 50 },
   { file: 'theme/hero.css', rank: 70 },
   { file: 'theme/sidebar.css', rank: 110 },

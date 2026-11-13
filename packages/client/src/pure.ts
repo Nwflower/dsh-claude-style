@@ -87,6 +87,8 @@ export { captureComposerCaret, composerComposing, focusKeepingComposerCaret } fr
 export { fileName, fileToolCall, fileToolOperation } from './shared/file-tool'
 export type { FileToolOperation } from './shared/file-tool'
 export { clampToViewport, createHoverIntent, resolveAnchoredPosition, setMenuPopoverOpen } from './shared/popover'
+export { hidePointerHint, POINTER_HINT_CLASS, POINTER_HINT_SHOWN_ATTRIBUTE, showPointerHint } from './shared/pointer-hint'
+export { default as POINTER_HINT_SHEET } from './shared/pointer-hint.css?raw'
 export { createSlidingPill } from './shared/sliding-pill'
 export { default as SLIDING_PILL_SHEET } from './shared/sliding-pill.css?raw'
 export { ACTIVITY_THINKING, activityWords, waitingWord } from './shared/turn-activity'

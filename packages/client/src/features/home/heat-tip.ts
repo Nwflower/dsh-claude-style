@@ -1,5 +1,5 @@
 import { inPageBox, inPagePixels } from '../../shared/page-zoom'
-import { withoutTransition } from '../../shared/transition'
+import { hidePointerHint, POINTER_HINT_SHOWN_ATTRIBUTE, showPointerHint } from '../../shared/pointer-hint'
 
 /** Move one heat-grid pill between cells, keeping it inside the grid. */
 
@@ -12,7 +12,7 @@ export const HEAT_HINT_CLASS = 'dsh-claude-home-heat-hint'
 /** The box inside the pill its words sit in. */
 export const HEAT_HINT_TEXT_CLASS = 'dsh-claude-home-heat-hint-text'
 /** The attribute the sheet shows the pill by; its absence is the pill away. */
-export const HEAT_HINT_SHOWN_ATTR = 'data-shown'
+export const HEAT_HINT_SHOWN_ATTR = POINTER_HINT_SHOWN_ATTRIBUTE
 /** The side of its cell the pill stands on, read by the sheet's own origin. */
 export const HEAT_HINT_SIDE_ATTR = 'data-side'
 /** The air between a cell and the pill that names it. */
@@ -69,8 +69,6 @@ function pillOf(grid: HTMLElement) {
   return pill
 }
 
-const WORDS = new Range()
-
 /** Read the pill's entrance scale so its measured box is its settled size. */
 function pillScale(style: CSSStyleDeclaration): number {
   const scale = style.getPropertyValue('scale')
@@ -87,29 +85,28 @@ export function showHeatTip(cell: HTMLElement, grid: HTMLElement) {
   const label = cell.getAttribute(HEAT_TIP_ATTR)
   // A grid still drawing its placeholders names no day yet.
   if (label === null) return
-  const { element, text } = pillOf(grid)
-  const arriving = !element.hasAttribute(HEAT_HINT_SHOWN_ATTR)
-  text.textContent = label
-  WORDS.selectNodeContents(text)
-  const style = getComputedStyle(element)
-  // Undo the entrance scale and page zoom before writing the settled box.
-  const scale = pillScale(style)
-  const words = inPagePixels(WORDS.getBoundingClientRect().width / scale)
-  const width = Math.ceil(words) + Math.ceil(Number.parseFloat(style.paddingLeft) + Number.parseFloat(style.paddingRight))
-  const height = Math.ceil(inPagePixels(element.getBoundingClientRect().height / scale))
-  const placement = placeHeatTip(cell, grid, width, height)
-  const write = () => {
-    element.style.width = `${width}px`
-    element.style.setProperty('--dsh-claude-heat-tip-x', `${placement.left}px`)
-    element.style.setProperty('--dsh-claude-heat-tip-y', `${placement.top}px`)
-    element.setAttribute(HEAT_HINT_SIDE_ATTR, placement.side)
-  }
-  if (arriving) withoutTransition([element], write)
-  else write()
-  element.setAttribute(HEAT_HINT_SHOWN_ATTR, '')
+  const { element } = pillOf(grid)
+  showPointerHint(element, label, text => {
+    // Per read: the range must not retain a grid after its view closes (D12).
+    const wordsRange = document.createRange()
+    wordsRange.selectNodeContents(text)
+    const style = getComputedStyle(element)
+    // Undo the entrance scale and page zoom before writing the settled box.
+    const scale = pillScale(style)
+    const words = inPagePixels(wordsRange.getBoundingClientRect().width / scale)
+    const width = Math.ceil(words) + Math.ceil(Number.parseFloat(style.paddingLeft) + Number.parseFloat(style.paddingRight))
+    const height = Math.ceil(inPagePixels(element.getBoundingClientRect().height / scale))
+    const placement = placeHeatTip(cell, grid, width, height)
+    return () => {
+      element.style.width = `${width}px`
+      element.style.setProperty('--dsh-claude-heat-tip-x', `${placement.left}px`)
+      element.style.setProperty('--dsh-claude-heat-tip-y', `${placement.top}px`)
+      element.setAttribute(HEAT_HINT_SIDE_ATTR, placement.side)
+    }
+  }, HEAT_HINT_SHOWN_ATTR)
 }
 
 /** Take the grid's pill away, the pointer having left the grid. */
 export function hideHeatTip(grid: HTMLElement) {
-  PILLS.get(grid)?.element.removeAttribute(HEAT_HINT_SHOWN_ATTR)
+  hidePointerHint(PILLS.get(grid)?.element ?? null, HEAT_HINT_SHOWN_ATTR)
 }

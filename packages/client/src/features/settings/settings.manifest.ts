@@ -13,6 +13,7 @@ export default {
     { file: 'settings-zoom.css', rank: 311 },
     { file: 'settings-cards.css', rank: 315 },
     { file: 'settings-brand-lockup.css', rank: 316 },
+    { file: 'settings-brand.css', rank: 319 },
     { file: 'theme-flip.css', rank: 370 },
   ],
   cases: ['settings', 'late-forms', 'host-palette', 'skin-center-handoff', 'skin-center-arrival'],
