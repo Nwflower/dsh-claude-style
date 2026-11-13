@@ -18,13 +18,18 @@ const modelButton = (page) => page.getByRole('button', { name: MODEL_SEAT_NAME }
 /**
  * Watch the seat's name while the next model lands: every frame's words, the
  * copies standing in the box, the box's own width, and where each copy's text
- * ends on the right.
+ * ends on the right. The recording ends once the swap has settled — both copies
+ * were seen and one stands again — or at `capMs`, which is only the guard for a
+ * swap that never settles; the press that starts the swap may take a frame or
+ * more to reach the page, so a fixed window can end before the settle does.
  */
-function watchName(t, ms) {
+function watchName(t, capMs) {
   return t.page.evaluate(({ nameSelector, copySelector, duration }) => new Promise((resolve) => {
     const label = document.querySelector(nameSelector)
     const frames = []
     const until = performance.now() + duration
+    let doubled = false
+    let settledAt = null
     const tick = () => {
       const box = label.getBoundingClientRect()
       const copies = [...document.querySelectorAll(copySelector)].map((copy) => {
@@ -42,11 +47,19 @@ function watchName(t, ms) {
         width: Math.round(box.width * 10) / 10,
         right: box.right,
       })
+      const last = frames[frames.length - 1]
+      if (last.words.length > 1) doubled = true
+      // One copy alone is the swap's end; the box keeps the pinned width for the
+      // slide it began with, then takes the arriving name's width. The recording
+      // runs half a second past the settle so the travel between the two widths
+      // is inside the frames either assertion reads.
+      if (doubled && last.words.length === 1 && settledAt === null) settledAt = performance.now()
+      if (settledAt !== null && performance.now() - settledAt > 500) return resolve(frames)
       if (performance.now() < until) requestAnimationFrame(tick)
       else resolve(frames)
     }
     requestAnimationFrame(tick)
-  }), { nameSelector: t.surface('model.seat-name'), copySelector: t.surface('swap.copy'), duration: ms })
+  }), { nameSelector: t.surface('model.seat-name'), copySelector: t.surface('swap.copy'), duration: capMs })
 }
 
 export default spec({ page: 'effort' }, ({ test }) => {
@@ -57,7 +70,7 @@ export default spec({ page: 'effort' }, ({ test }) => {
     await t.page.getByRole('menuitem', { name: 'More models' }).click()
     await t.settle()
     const rows = t.page.locator(t.surface('model.sub-row')).filter({ hasText: 'GLM-5.3' })
-    const recording = watchName(t, 1200)
+    const recording = watchName(t, 4000)
     await rows.first().click()
     const frames = await recording
     // Two copies stand in the box while the swap runs: the words that left and

@@ -1,5 +1,6 @@
 import { MARKUP, SKIN_FACE, SKIN_HAT, BAND_ANIMATION, same, check, contrast, basicChecks, commonChecks } from './_shared.mjs'
 import { bound } from '../../bounds.mjs'
+import { handoverCounts, handoverJumps } from './chat-handover.mjs'
 
 /**
  * The readings between the two ends of a recorded walk, each with the frame it
@@ -512,19 +513,8 @@ export default {
     const handing = changes.length < 2 ? [] : seen.slice(changes[0] - 1, changes[1])
     const settled = goneLane === null || comeLane === null ? null
       : handing.find((frame) => laneShows(frame, goneLane, (one) => one < 0.1) && laneShows(frame, comeLane, (one) => one > 0.9)) ?? null
-    const counts = handing.map((frame) => inView(frame).length)
-    const jumps = []
-    for (let at = 1; at < handing.length; at += 1) {
-      const earlier = inView(handing[at - 1])
-      const lanesBefore = handing[at - 1].loader.lanes || []
-      ;(handing[at].loader.lanes || []).forEach((lane, which) => {
-        (lane.spots || []).forEach((spot, dot) => {
-          if (!shown(lane, dot) || shown(lanesBefore[which] || {}, dot)) return
-          const gap = Math.min(...earlier.map((one) => Math.hypot(one[0] - spot[0], one[1] - spot[1])))
-          if (!(gap <= bound('loaderHandOverStepPx'))) jumps.push({ lane: lane.name, dot, gap: Number(gap.toFixed(2)) })
-        })
-      })
-    }
+    const counts = handoverCounts(handing, shown)
+    const jumps = handoverJumps(handing, { shown, bound })
     check('换轨道是一次形变：每颗新出现的球都从旧轨道某颗球所在的位置出发，框里每一帧都有三到四颗球，交接完只剩新的那条',
       goneLane !== null && comeLane !== null && goneLane !== comeLane && settled !== null && String(settled.motion).includes(comeLane) &&
         counts.length > 0 && counts.every((one) => one >= 3 && one <= 4) && jumps.length === 0,
