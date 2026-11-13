@@ -283,8 +283,8 @@ switches: three actions — open-with, changes, more — stand 6px apart, a 16px
 hairline drawn on the first switch opens a 18px break, and the bottom-panel
 switch, the details switch and the right-panel switch follow at 6px. The
 open-with split carries no outline of its own; its app icon keeps the app's
-colour for the pointer and stands grey at rest, and the whole control takes one
-plate rather than one per half.
+colour throughout, and the whole control takes one plate rather than one per
+half.
 
 ## Right sidebar · 右侧栏
 

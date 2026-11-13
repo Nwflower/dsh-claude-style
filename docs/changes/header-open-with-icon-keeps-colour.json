@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-12",
+  "group": "fixes",
+  "order": 28,
+  "external": false,
+  "zh": "顶栏文件资源管理器图标在任何状态下保持应用自身的颜色",
+  "en": "Keep the header's file explorer icon in its own app colour in every state"
+}

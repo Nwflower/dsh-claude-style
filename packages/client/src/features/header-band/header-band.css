@@ -138,7 +138,7 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="header-corner"] {
    three actions and the panel switches. */
 
 /* The open-with split is the row's quiet lead: no outline, one plate for the
-   whole box under the pointer, and the app's own colour kept for that pointer. */
+   whole box under the pointer, and the app's own colour throughout. */
 body[data-dsh-claude-style] [data-dsh-claude-part~="header-utilities"] [data-open-target] {
   box-sizing: border-box;
   height: 28px;
@@ -155,15 +155,6 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="header-utilities"] [data-ope
 body[data-dsh-claude-style] [data-dsh-claude-part~="header-utilities"] [data-open-target]:hover,
 body[data-dsh-claude-style] [data-dsh-claude-part~="header-utilities"] [data-open-target]:focus-within {
   background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
-}
-body[data-dsh-claude-style] [data-dsh-claude-part~="header-utilities"] [data-open-target] img {
-  filter: grayscale(1);
-  opacity: 0.7;
-}
-body[data-dsh-claude-style] [data-dsh-claude-part~="header-utilities"] [data-open-target]:hover img,
-body[data-dsh-claude-style] [data-dsh-claude-part~="header-utilities"] [data-open-target]:focus-within img {
-  filter: none;
-  opacity: 1;
 }
 
 /* The bottom-panel switch carries the row's break: the three actions stand
