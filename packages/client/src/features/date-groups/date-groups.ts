@@ -2,6 +2,7 @@ import { SESSION_ROW_KEY_ATTRIBUTE, SESSION_ROW_SELECTOR } from '@dsh-claude-sty
 import { observeMatches } from '@dsh-claude-style/engine/bus'
 import { buildElement } from '@dsh-claude-style/engine/dom'
 import { QUIET_ATTR } from '../../constants'
+import { moveElementsIntoOrder, sessionSeatSegments } from '../../shared/element-order'
 import { watchSidebar } from '../../shared/sidebar-watch'
 import { hostSessions, hostWorkspaces, hostWorkspaceView } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
@@ -61,8 +62,6 @@ interface Seat {
   box: HTMLElement
   /** 盒子里那一行，读 key、插标签都落在它上面。 */
   row: HTMLElement
-  /** 会话 id（行 key 去掉 `session:` 前缀）。 */
-  id: string
   /** 最后更新时间，段落与先后都按它排。 */
   updatedAt: number
   /** 离今天几天：0 是今天，1 是昨天，越大越早。 */
@@ -127,6 +126,11 @@ function labelOf(seat: Seat) {
     if (key !== undefined) return copy(key)
   }
   return copy('earlier')
+}
+
+/** Put dated seats in their target order, keeping the host's order for equal times. */
+export function orderDateSeats<T extends Pick<Seat, 'day' | 'updatedAt'>>(seats: readonly T[]): T[] {
+  return seats.slice().sort((left, right) => left.day - right.day || right.updatedAt - left.updatedAt)
 }
 
 export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
@@ -242,24 +246,15 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * @param seats - 这条列表的座位，按宿主当前画出来的顺序。
    */
   function place(list: Element, seats: Seat[]) {
-    // 站好的顺序：离今天越近越前，同一天里更新时间新的在前（sort 是稳定的，
-    // 时间一样的两个座位保持宿主给的先后）。
-    const ordered = seats.slice().sort((left, right) => left.day - right.day || right.updatedAt - left.updatedAt)
-    // 现在的顺序按 DOM 读，而不是按总线的匹配清单读：清单是增量维护的，节点被挪过
-    // 之后它的先后就不再是页面上的先后，拿它比对会每一遍都判「没站好」，把整条
-    // 列表反复重排 —— 读者看到的就是列表在抖。
-    const byBox = new Map<Element, Seat>()
-    for (const seat of seats) byBox.set(seat.box, seat)
-    const current: Seat[] = []
-    for (const child of Array.from(list.children)) {
-      const seat = byBox.get(child)
-      if (seat !== undefined) current.push(seat)
-    }
-    const standing = current.length === ordered.length && current.every((seat, at) => seat === ordered[at])
-    if (!standing) {
-      // 挨个追加到末尾：一轮之后列表里的座位就是 ordered 的顺序；标题节点先不管，
-      // 下面统一重建（这一步只在这一条列表上写过非座位子节点时才需要）。
-      for (const seat of ordered) list.appendChild(seat.box)
+    // 站好的顺序：离今天越近越前，同一天里更新时间新的在前。排序稳定，
+    // 时间一样的两个座位保持宿主给的先后。
+    const ordered = orderDateSeats(seats)
+    const byBox = new Map<Element, Seat>(seats.map(seat => [seat.box, seat]))
+    // 新会话占位、工作区标题与分隔线分开座位组。我们自己的日期标题由下面重建，
+    // 可以留在组内，让座位跨过旧边界后再一起重画。
+    for (const segment of sessionSeatSegments(list, byBox, child => child.getAttribute(HEADER_ATTRIBUTE) !== null)) {
+      const members = new Set(segment)
+      moveElementsIntoOrder(ordered.filter(seat => members.has(seat)).map(seat => seat.box))
     }
     // 段落边界：相邻两个座位的标题不一样的第一行。
     const boundaries: { before: Element, label: string }[] = []
@@ -338,7 +333,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       // 其余跑着的会话照常排进「今天」那一块。
       if (box.style.display === 'none') box.style.display = ''
       const updatedAt = times.get(id) ?? 0
-      const seat: Seat = { box, row, id, updatedAt, day: daysBetween(startOfDay(updatedAt), today) }
+      const seat: Seat = { box, row, updatedAt, day: daysBetween(startOfDay(updatedAt), today) }
       const seats = lists.get(list)
       if (seats === undefined) lists.set(list, [seat])
       else if (!seats.some(other => other.box === box)) seats.push(seat)

@@ -1,6 +1,7 @@
 import { SESSION_ONGOING_SELECTOR, SESSION_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { observeMatches, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
+import { moveElementsIntoOrder, sessionSeatSegments } from '../../shared/element-order'
 
 /**
  * The rows whose session is running, kept at the head of the list they stand in.
@@ -44,12 +45,7 @@ export function install() {
     if (running.length === 0 || running.length === boxes.length) return
     const runningSet = new Set(running)
     const rest = boxes.filter((box) => !runningSet.has(box))
-    const anchor = rest[0]
-    const parent = anchor.parentElement
-    if (parent === null) return
-    // A list already standing first: every running seat is ahead of the first waiting one.
-    if (boxes.slice(0, running.length).every((box) => runningSet.has(box))) return
-    for (const box of running) parent.insertBefore(box, anchor)
+    moveElementsIntoOrder([...running, ...rest])
   }
 
   /**
@@ -66,34 +62,24 @@ export function install() {
    */
   const reorder = () => {
     if (document.body.hasAttribute('data-dsh-claude-date-groups')) return
-    const seatsByList = new Map<Element, Set<HTMLElement>>()
+    const seatsByList = new Map<Element, Map<Element, HTMLElement>>()
     for (const row of rows.all()) {
       const box = row.parentElement
       const list = box === null ? null : box.parentElement
       if (box === null || list === null) continue
       let known = seatsByList.get(list)
       if (known === undefined) {
-        known = new Set()
+        known = new Map()
         seatsByList.set(list, known)
       }
-      known.add(box)
+      known.set(box, box)
     }
-    // Walk each list's children in DOM order and treat any non-session child
-    // (workspace headings, group headings, dividers) as a hard boundary, so a
-    // shared flat list never lifts a running session across workspaces. The
-    // children are read once into an array: lifting a segment moves its seats,
-    // and the live collection would shift under a running iteration.
+    // A shared flat list is split at workspace headings, group headings and
+    // dividers so a running session never crosses another section.
     for (const [list, known] of seatsByList) {
-      let segment: HTMLElement[] = []
-      for (const child of [...list.children]) {
-        if (child instanceof HTMLElement && known.has(child)) {
-          segment.push(child)
-          continue
-        }
+      for (const segment of sessionSeatSegments(list, known)) {
         if (segment.length > 1) lift(segment)
-        segment = []
       }
-      if (segment.length > 1) lift(segment)
     }
   }
 
