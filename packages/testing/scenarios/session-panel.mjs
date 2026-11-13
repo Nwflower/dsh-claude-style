@@ -388,6 +388,18 @@ export function sessionPanelScenario({ check }) {
       await pressDetails(page)
       await page.waitForTimeout(500)
       notes.rightPanelHanded = await readRightPanel(page)
+      // The rail the handover just called in. A press that did not bring it back
+      // is what the handover's own check reports; this walk keeps going by
+      // pressing again, the way a reader would, so the rest of the rail is still
+      // read and the failing check is the one that names the handover.
+      await page.waitForTimeout(300)
+      notes.railAfterHandover = { mounted: await railMounted(page), utilities: await readUtilities(page) }
+      if (!await railMounted(page)) {
+        notes.handoverRepaired = true
+        await pressDetails(page)
+        await page.waitForTimeout(600)
+        notes.railAfterRepair = await railMounted(page)
+      }
       const pagesBefore = page.context().pages().length
       const outputs = page.locator('.dsh-claude-details .dsh-claude-panel-section').filter({ hasText: /产出|Outputs/ }).first()
       // The section may still stand folded from the theme walk: open it, then
