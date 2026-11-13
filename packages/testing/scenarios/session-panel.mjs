@@ -390,6 +390,11 @@ export function sessionPanelScenario({ check }) {
       notes.rightPanelHanded = await readRightPanel(page)
       const pagesBefore = page.context().pages().length
       const outputs = page.locator('.dsh-claude-details .dsh-claude-panel-section').filter({ hasText: /产出|Outputs/ }).first()
+      // Outputs folds past its second row, and which row files the fourth file
+      // depends on the order the host reports the writes: open the rest the way
+      // the reader does before pressing the row.
+      const moreOutputs = outputs.locator('.dsh-claude-panel-more')
+      if (await moreOutputs.count() > 0 && await moreOutputs.isVisible()) await moreOutputs.click()
       await outputs.locator('button.dsh-claude-panel-row').filter({ hasText: 'panel four.md' }).click()
       await page.waitForFunction(() => {
         const preview = document.querySelector('[data-sidebar-right-open]')
@@ -401,6 +406,9 @@ export function sessionPanelScenario({ check }) {
       await sendPrompt(page, 'Write the latest file and start the cancellable job.')
       await waitForTurn(page)
       await page.waitForFunction(() => /panel-latest\.md/.test(document.querySelector('.dsh-claude-details')?.textContent ?? ''), undefined, { timeout: 30000 })
+      // The background section catches up on its own poll, so the new job's line
+      // is what says it arrived (the first round waits the same way).
+      await page.waitForFunction(() => /panel-command-latest/.test(document.querySelector('.dsh-claude-details')?.textContent ?? ''), undefined, { timeout: 30000 })
       notes.latestRound = await readRail(page)
       const jobLine = page.locator('.dsh-claude-panel-job-line').filter({ hasText: 'panel-stop-latest' }).first()
       const stop = jobLine.locator('.dsh-claude-panel-job-stop')
