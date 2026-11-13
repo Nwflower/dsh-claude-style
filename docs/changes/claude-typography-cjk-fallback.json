@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-11",
-  "group": "fixes",
-  "order": 23,
-  "external": false,
-  "zh": "为随包拉丁字体补充字符范围声明，移除中文字体前的西文衬线回退并恢复中日韩标题的自然字距",
-  "en": "Declare Unicode ranges on bundled Latin faces, drop Georgia and Times fallbacks ahead of CJK fonts, and restore normal heading letter-spacing in CJK locales"
-}

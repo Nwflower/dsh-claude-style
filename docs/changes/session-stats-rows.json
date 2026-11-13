@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-11",
-  "group": "improvements",
-  "order": 0,
-  "external": false,
-  "zh": "会话统计按左侧标签、右侧数值逐行显示，会话读数与 token 用量分组排列",
-  "en": "Display session statistics in compact rows with labels on the left and values on the right, grouping session figures and token usage"
-}

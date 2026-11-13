@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-12",
-  "group": "fixes",
-  "order": 20,
-  "external": false,
-  "zh": "修复侧栏固定入口选中与悬停时底板被行间距撑高、叠出第二层的问题",
-  "en": "Keep the sidebar's pinned entries to one plate when active or hovered, without the row's foot stretching it below the row"
-}

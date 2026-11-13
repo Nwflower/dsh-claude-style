@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-11",
-  "group": "improvements",
-  "order": 0,
-  "external": false,
-  "zh": "状态标记放在行首时，折叠工作区的运行标记改为跟在名字之后，标记出现或消失时工作区名称不再左右移动",
-  "en": "Move a collapsed workspace's running mark behind its name when the mark stands on the leading side, so the name stays where it stood while the mark appears and goes"
-}

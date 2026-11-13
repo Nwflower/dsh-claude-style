@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-11",
-  "group": "fixes",
-  "order": 18,
-  "external": false,
-  "zh": "修复详情栏的统计读数与底部读数措辞不一致、并且落后一个轮询周期的问题，token 计数改为带分隔符的精确数字，时长与首 token 平均按宿主写法印出，宿主落下统计帧时立即刷新",
-  "en": "Fix the details rail's figures reading differently from the composer's readout and trailing it by one polling cycle, printing exact grouped token counts and the host's own duration wording, and refreshing as soon as the host lands a figure frame"
-}

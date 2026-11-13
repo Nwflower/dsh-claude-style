@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-11",
-  "group": "fixes",
-  "order": 22,
-  "external": false,
-  "zh": "输入区结构与尺寸不变时不再重复排队空测量，真实尺寸变化仍自动重排",
-  "en": "Skip redundant composer measurements while preserving automatic reflow when its structure or dimensions change"
-}

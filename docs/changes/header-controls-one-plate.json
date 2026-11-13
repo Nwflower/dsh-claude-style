@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-11",
-  "group": "improvements",
-  "order": 0,
-  "external": false,
-  "zh": "顶栏控件统一为 28px 方底板与 16px 图标，工具与面板开关之间加一条分隔线，打开方式去掉描边并只保留一块悬停底板",
-  "en": "Unify the header's controls on one 28px plate with 16px glyphs, divide the session actions from the panel switches with a hairline, and drop the open-with control's outline so the whole control takes one hover plate"
-}

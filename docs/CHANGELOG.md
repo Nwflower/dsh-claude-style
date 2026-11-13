@@ -2,6 +2,128 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [0.21.0] - 2026-11-12
+
+[中文](#cn-0.21.0) | [English](#en-0.21.0)
+
+<h3 id="cn-0.21.0">新增功能</h3>
+
+- 「对话统计信息位置」新增「跟随详情栏」，会话详情栏展开时隐藏输入区下方的统计行，详情栏收起或退避时照「独立成行」显示
+- 在对话右侧提供会自动开合的详情栏，列出工作目录与仓库、上下文占用、会话统计（模型与工具用时、首 token 平均、输出速度、费用、缓存命中与 token 分项）、产出、变更请求和后台任务；全部行按最新在前排列、不设条数上限；读数按会话隔离，费用跟随计费币种；头部按钮可收起或手动打开，窄窗口自动退避，收起后停止取数
+- 会话总览面板中的子智能体显示实际用时与用量、点击打开对应会话，后台任务可展开查看留存输出
+- 详情栏展开时，标题栏的子智能体与后台任务入口让位给详情栏的后台任务一节
+- 详情栏展开时，对话与轨迹切换器站到标题所在的一行，标题按剩余宽度截断
+- 会话总览的输出、变更与每类后台任务超过两条时折叠其余行，按剩余条数展开
+- 会话总览的后台任务按进程、子智能体与团队分组，各组只在有行时出现，并在超过两条时各自折叠
+- 首页模型图使用随模型稳定的十色分类色板，热力图扩为五档，并可按活跃会话、当前工作区或全部记录统计
+- 新增行内代码字色选择，可恢复 Claude 0.19.7 的经典暖色且保留自定义颜色卡优先级
+- 模型选择器新增「启用智能体团队协作」开关，适配 DSH 0.2.2-rc.2 模型菜单里的智能体团队入口，关闭已发过请求的会话时先弹出确认
+
+### 体验优化
+
+- 顶栏控件统一为 28px 方底板与 16px 图标，工具与面板开关之间加一条分隔线，打开方式去掉描边并只保留一块悬停底板
+- 会话详情栏统一为一种字号与行距，每一行只占一行，行尾状态改为不带边框的文字；会话统计拆成「会话统计」与「Token 用量」两节并默认收起，收起时分别显示输出速度与费用；上下文分项不再逐个标注估算记号；详情栏展开时标题栏的预设标签让位给环境一节
+- 会话详情栏收起的节改为 36px 一行并保留自己那条分隔线，整栏不再收滚动条，内容超出时照常滚动，右边缘只留一条与对话之间的分界线
+- 会话详情栏的产出、进程与子智能体只展示最新用户轮次，跨轮仍运行的任务继续保留，后台通知与自动续行不清空本轮内容
+- 会话详情栏收起时只占标题一行，展开的节静止时隐去箭头，节标题成为全栏唯一的加粗文字；产出行的图标改为单色线形，后台任务与子智能体的完成状态不再写状态字，只留停住的时钟
+- 会话详情栏的进出与对话的收放合成一段 300ms 的位移，栏从对话右边缘长出来又收回去，两条边始终重合；与宿主右侧栏交接时按外框写下的归属当场开始，不再等右栏宽度归零后跳一帧
+- 手动收起会话详情栏后，所有会话与重启之后都保持收起，直到再次按下标题栏的详情按钮
+- 会话详情栏为运行中的进程与可继续子智能体提供独立停止按钮，支持再次点击确认、停止中反馈与失败重试
+- 会话统计按左侧标签、右侧数值逐行显示，会话读数与 token 用量分组排列
+- 状态标记放在行首时，折叠工作区的运行标记改为跟在名字之后，标记出现或消失时工作区名称不再左右移动
+- 会话详情栏改从会话头部下面开始，头部连同标题与按钮保持整列宽度、落在栏的上方，只有转录与输入框让出宽度
+- 侧栏开合、拖拽分栏与窗口缩放期间，对话行等宽度停止变化后整体重排一次，长会话不再按动画帧数重复重排
+- 发送消息的过渡不再每帧读布局，连发两条时不再留下重复的气泡
+- 将随包等宽可变字体转为体积更小的 woff2 格式，收窄流式观察回调与常驻监听并清理可替代的结构选择器
+- 侧栏条目的固定状态改用 DSH 0.2.2-rc.2 自带的固定列表，编辑侧栏对话框、行上的取消固定按钮与 More 菜单共用一份状态，取消固定的条目仍会跨重启保存
+
+### 问题修复
+
+- 详情栏各节支持独立折叠并显示简要读数，整栏开合统一使用标题栏按钮，预设说明移入环境区域；上下文采用 Claude 配色，细分系统工具、MCP 工具、指令文件、技能与运行上下文，并显示估算数量和窗口占比
+- 会话详情栏改用独立的一层（24），标题栏挂出的菜单不再被它盖住
+- 会话详情栏的下缘停在底部面板的上缘，不再压住底部面板
+- 会话详情栏的产出文件可直接在宿主预览中打开，支持 Windows 路径与包含空格的文件名
+- 写文件调用和执行结果跨两次详情栏轮询到达时，成功写入的文件仍会完整列入产出
+- 修复某一轮运行失败后上下文计量环读到 0% 的问题，失败尝试的零用量样本不再顶掉提供方上一次报告的读数
+- 修复账号菜单把插件卡片压成一行截断文字、并把卡片副本收窄到账号行宽度导致标签折行与撑高的问题
+- 修复提问卡片点过「其他」之后再点回原来选中的选项，选中圆圈不再出现的问题
+- 修复宿主右栏打开时详情栏仍按自身宽度挤压对话、把对话压成窄条的问题，并让详情按钮先收起右栏再让出这一侧
+- 修复详情栏的统计读数与底部读数措辞不一致、并且落后一个轮询周期的问题，token 计数改为带分隔符的精确数字，时长与首 token 平均按宿主写法印出，宿主落下统计帧时立即刷新
+- 修复工作目录不是 Git 仓库时环境一节列出目录下所有仓库的问题，环境只显示本机与工作目录，工作目录在仓库里时才加仓库名与分支
+- 修复与工作区树插件同时启用时运行中会话排序跨越工作区或分组标题边界的问题
+- 修复侧栏固定入口选中与悬停时底板被行间距撑高、叠出第二层的问题
+- 修复非 Windows 桌面壳误判标题栏、标签被遮挡后无法回退及详情栏打开时控制栏偏右的问题
+- 合并流式统计的数字重绘并复用宽度探针，减少长会话中的强制同步布局
+- 修复对话运行期间通过拖动滚动条、按上方向键或翻页回看前文时被新消息与工具调用拉回底部的问题
+- 输入区结构与尺寸不变时不再重复排队空测量，真实尺寸变化仍自动重排
+- 修复长思考展开状态下流式输出时顶部吸顶的思考标题随消息列位移上下跳动的问题
+- 为随包拉丁字体补充字符范围声明，移除中文字体前的西文衬线回退并恢复中日韩标题的自然字距
+- 第三方供应商的会话不再显示、也不再扣减 DeepSeek 账号余额
+- 对话正文里的选中配色覆盖到粗体、行内代码与语法高亮等嵌套文本，全部 Markdown 形态在聚焦与失焦下都取同一个底色
+- 承载非 portal 提示气泡的对话行不再跳过排版，消息操作条的悬停提示恢复原位与可见
+- 皮肤窄屏断点与宿主抽屉阈值 768 对齐，收起侧栏、抽屉与页面窄屏布局在同一宽度切换，页面缩放下不再由皮肤改写抽屉态的列宽
+- 新建会话页的输入卡在 420 像素以上保持单行控件，过长的模型名以省略号截断，400 像素以下只在第二行放右侧控件
+- 顶栏文件资源管理器图标在任何状态下保持应用自身的颜色
+
+<h3 id="en-0.21.0">New Features</h3>
+
+- Add a Follow the details rail choice to the conversation statistics position, hiding the line under the composer while the session details rail is open and showing it as its own line when the rail closes or steps back
+- Add a width-driven details rail beside the conversation with the working directory and its repositories, context occupancy, session stats (model and tool time, first token, output speed, cost, cache hit and token buckets), outputs, change requests and background work, listing every row newest first, scoped per session and priced in the chosen billing currency, with a header control to close or reopen it; it retreats under a narrow frame and stops asking once closed
+- Show each subagent's real time and usage in the session overview, open its conversation from the row, and expand a background job's retained output
+- Let the details rail's Background tasks section take over the title bar's subagent and background job entries while the rail is open
+- Place the conversation and trajectory switch on the title's own line while the details rail is open, with the title truncating to the remaining width
+- Fold the rows past the second in the session overview's Outputs and Changes sections and in each background category, behind a control naming the count left
+- File the session overview's background rows under commands, subagents and team, each group shown only with rows and folded past its second row
+- Give home models stable categorical colours, widen the heat grid to five levels and add active, current-workspace and all-record session scopes
+- Add an inline-code colour choice restoring Claude 0.19.7's warm ink while preserving the custom colour card's precedence
+- Add the agent teamwork switch to the model picker, matching the entry DSH 0.2.2-rc.2 puts in its model menu, with a confirmation before turning it off in a session that has sent requests
+
+### Improvements
+
+- Unify the header's controls on one 28px plate with 16px glyphs, divide the session actions from the panel switches with a hairline, and drop the open-with control's outline so the whole control takes one hover plate
+- Set the session details rail in one type size and row rhythm with single-line rows and unboxed trailing states; split session statistics into Session stats and Token usage, both folded by default with the output speed and the cost beside their headings; drop the per-figure estimate marks from the context parts; and let the Environment section take over the title bar's preset label while the rail is open
+- Give the session details rail's folded sections a 36px row that keeps its own hairline, and hide the rail's scrollbar while the column keeps scrolling, leaving one hairline between it and the chat
+- Limit outputs, jobs and subagents in the session details rail to the latest human-prompted round while keeping older running work visible and preserving the round through background notices and automatic continuations
+- Fold the session details rail's folded sections onto their heading line, hide an open section's chevron at rest, keep bold for section titles alone, draw output rows with single-stroke marks, and let finished jobs and subagents keep their clock instead of a status word
+- Make the session details rail's arrival and exit one 300ms move with the chat's own inset, growing the rail out of the conversation's right edge so the two edges stay together, and start the handover with the host's right column on the frame the frame states the side's owner rather than a frame after that column finishes closing
+- Keep the session details rail closed across sessions and restarts once it is closed by hand, until the header's details button is pressed again
+- Add independent stop controls for running jobs and continuable subagents in the session details rail with click-again confirmation, stopping feedback and retry after failure
+- Display session statistics in compact rows with labels on the left and values on the right, grouping session figures and token usage
+- Move a collapsed workspace's running mark behind its name when the mark stands on the leading side, so the name stays where it stood while the mark appears and goes
+- Start the session details rail under the conversation header, which keeps the column's whole width so its title and controls stand above the rail, with only the transcript and the composer giving the width up
+- Relay conversation rows once the column's width stands still, so a sidebar toggle, a dragged divider or a window resize lays a long conversation out once instead of once per frame
+- Stop the send transition from reading layout every frame, so a second send no longer leaves a duplicate bubble behind
+- Ship JetBrains Mono variable faces as WOFF2, narrow streaming mutation and timer work, consolidate fold listeners, and replace avoidable structural selectors
+- Sidebar entries now share the pin list DSH 0.2.2-rc.2 keeps, so the Edit sidebar dialog, the unpin button on each row and the More menu act on one state, and the entries taken off are still stored across restarts
+
+### Bug Fixes
+
+- Give each details section independent folding and a compact reading, control the rail from the conversation header and place its preset in Environment; split context into system tools, MCP tools, instruction files, skills and runtime context with Claude colours, estimated counts and window shares
+- Give the session details rail its own layer (24) so menus the header hangs no longer open under it
+- Stop the session details rail at the bottom panel's top edge so it never covers that panel
+- Open output files from the session details rail in the host preview, including Windows paths and filenames containing spaces
+- Keep successfully written files in Outputs when a write call and its result arrive in separate details-rail polls
+- Fix the context meter reading 0 % after a round fails, where a failed attempt's zero usage sample displaced the reading the provider last reported
+- Fix the account menu collapsing a plugin's footer card into one truncated line and pinning its copy to the account row's width, which folded the card's labels and made it taller
+- Fix the question card's chosen option losing its ring after the custom answer is chosen and that option is picked again
+- Fix the details rail keeping its own width and squeezing the conversation to a narrow strip while the host's right panel is open, and have the details control close that panel before handing the side over
+- Fix the details rail's figures reading differently from the composer's readout and trailing it by one polling cycle, printing exact grouped token counts and the host's own duration wording, and refreshing as soon as the host lands a figure frame
+- Fix the environment section listing every repository under a working directory that is not itself a checkout, showing the machine and the working directory alone and adding the checkout's name and branch only when the directory sits in one
+- Keep running-session sorting inside each contiguous session segment so rows never cross workspace or group headers in shared flat lists
+- Keep the sidebar's pinned entries to one plate when active or hovered, without the row's foot stretching it below the row
+- Keep view tabs out of unsupported desktop caption bands, restore them when covered and centre the control while the details rail is open
+- Coalesce streaming statistic writes and retain the measurement probe, reducing forced synchronous layout in long conversations
+- Preserve the reader's scrollback position across scrollbar drags, upward keys, content clicks and host growth pins while a turn runs
+- Skip redundant composer measurements while preserving automatic reflow when its structure or dimensions change
+- Counter-slide top-pinned thinking disclosure headers during streamed growth so the sticky header stays stationary
+- Declare Unicode ranges on bundled Latin faces, drop Georgia and Times fallbacks ahead of CJK fonts, and restore normal heading letter-spacing in CJK locales
+- A session on a third-party provider no longer shows or draws down the DeepSeek account balance
+- Paint the selection of nested Markdown runs — bold text, inline code, syntax tokens — so every shape in a conversation takes the one selection colour, focused and blurred
+- Keep the conversation row holding a non-portal tooltip laid out, restoring the message actions' hover labels in place and in view
+- Align the skin's narrow breakpoint with the host's 768 px drawer threshold, so the rail, the drawer and the narrow page layout switch at one width and the skin leaves a drawer frame's columns to the host
+- Keep the new-conversation composer on one control line from 420 px up, truncate an over-long model name with an ellipsis, and give the trailing controls their own second line below 400 px
+- Keep the header's file explorer icon in its own app colour in every state
+
 ## [0.20.3] - 2026-11-10
 
 [中文](#cn-0.20.3) | [English](#en-0.20.3)

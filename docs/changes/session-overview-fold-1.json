@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-10",
-  "group": "new",
-  "order": 4,
-  "external": false,
-  "zh": "详情栏展开时，对话与轨迹切换器站到标题所在的一行，标题按剩余宽度截断",
-  "en": "Place the conversation and trajectory switch on the title's own line while the details rail is open, with the title truncating to the remaining width"
-}

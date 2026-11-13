@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-10",
-  "group": "new",
-  "order": 5,
-  "external": false,
-  "zh": "会话总览的输出、变更与每类后台任务超过两条时折叠其余行，按剩余条数展开",
-  "en": "Fold the rows past the second in the session overview's Outputs and Changes sections and in each background category, behind a control naming the count left"
-}

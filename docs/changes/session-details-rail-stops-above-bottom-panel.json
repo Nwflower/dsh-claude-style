@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-11",
-  "group": "fixes",
-  "order": 0,
-  "external": false,
-  "zh": "会话详情栏的下缘停在底部面板的上缘，不再压住底部面板",
-  "en": "Stop the session details rail at the bottom panel's top edge so it never covers that panel"
-}

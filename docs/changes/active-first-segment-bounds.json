@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-11",
-  "group": "fixes",
-  "order": 20,
-  "external": false,
-  "zh": "修复与工作区树插件同时启用时运行中会话排序跨越工作区或分组标题边界的问题",
-  "en": "Keep running-session sorting inside each contiguous session segment so rows never cross workspace or group headers in shared flat lists"
-}

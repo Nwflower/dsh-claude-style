@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-11",
-  "group": "improvements",
-  "order": 0,
-  "external": false,
-  "zh": "会话详情栏收起的节改为 36px 一行并保留自己那条分隔线，整栏不再收滚动条，内容超出时照常滚动，右边缘只留一条与对话之间的分界线",
-  "en": "Give the session details rail's folded sections a 36px row that keeps its own hairline, and hide the rail's scrollbar while the column keeps scrolling, leaving one hairline between it and the chat"
-}

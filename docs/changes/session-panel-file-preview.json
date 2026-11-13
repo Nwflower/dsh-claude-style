@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-11",
-  "group": "fixes",
-  "order": 0,
-  "external": false,
-  "zh": "会话详情栏的产出文件可直接在宿主预览中打开，支持 Windows 路径与包含空格的文件名",
-  "en": "Open output files from the session details rail in the host preview, including Windows paths and filenames containing spaces"
-}

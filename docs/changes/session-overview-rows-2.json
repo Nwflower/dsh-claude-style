@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-10",
-  "group": "new",
-  "order": 3,
-  "external": false,
-  "zh": "详情栏展开时，标题栏的子智能体与后台任务入口让位给详情栏的后台任务一节",
-  "en": "Let the details rail's Background tasks section take over the title bar's subagent and background job entries while the rail is open"
-}

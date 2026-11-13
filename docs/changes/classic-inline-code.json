@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-11",
-  "group": "new",
-  "order": 21,
-  "external": false,
-  "zh": "新增行内代码字色选择，可恢复 Claude 0.19.7 的经典暖色且保留自定义颜色卡优先级",
-  "en": "Add an inline-code colour choice restoring Claude 0.19.7's warm ink while preserving the custom colour card's precedence"
-}

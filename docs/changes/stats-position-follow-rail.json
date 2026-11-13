@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-11",
-  "group": "new",
-  "order": 0,
-  "external": false,
-  "zh": "「对话统计信息位置」新增「跟随详情栏」，会话详情栏展开时隐藏输入区下方的统计行，详情栏收起或退避时照「独立成行」显示",
-  "en": "Add a Follow the details rail choice to the conversation statistics position, hiding the line under the composer while the session details rail is open and showing it as its own line when the rail closes or steps back"
-}

@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-11",
-  "group": "improvements",
-  "order": 15,
-  "external": false,
-  "zh": "将随包等宽可变字体转为体积更小的 woff2 格式，收窄流式观察回调与常驻监听并清理可替代的结构选择器",
-  "en": "Ship JetBrains Mono variable faces as WOFF2, narrow streaming mutation and timer work, consolidate fold listeners, and replace avoidable structural selectors"
-}

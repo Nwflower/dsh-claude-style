@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-10",
-  "group": "new",
-  "order": 1,
-  "external": false,
-  "zh": "在对话右侧提供会自动开合的详情栏，列出工作目录与仓库、上下文占用、会话统计（模型与工具用时、首 token 平均、输出速度、费用、缓存命中与 token 分项）、产出、变更请求和后台任务；全部行按最新在前排列、不设条数上限；读数按会话隔离，费用跟随计费币种；头部按钮可收起或手动打开，窄窗口自动退避，收起后停止取数",
-  "en": "Add a width-driven details rail beside the conversation with the working directory and its repositories, context occupancy, session stats (model and tool time, first token, output speed, cost, cache hit and token buckets), outputs, change requests and background work, listing every row newest first, scoped per session and priced in the chosen billing currency, with a header control to close or reopen it; it retreats under a narrow frame and stops asking once closed"
-}

@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-11",
-  "group": "fixes",
-  "order": 0,
-  "external": false,
-  "zh": "详情栏各节支持独立折叠并显示简要读数，整栏开合统一使用标题栏按钮，预设说明移入环境区域；上下文采用 Claude 配色，细分系统工具、MCP 工具、指令文件、技能与运行上下文，并显示估算数量和窗口占比",
-  "en": "Give each details section independent folding and a compact reading, control the rail from the conversation header and place its preset in Environment; split context into system tools, MCP tools, instruction files, skills and runtime context with Claude colours, estimated counts and window shares"
-}

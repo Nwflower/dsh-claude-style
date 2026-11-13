@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-11",
-  "group": "fixes",
-  "order": 19,
-  "external": false,
-  "zh": "修复工作目录不是 Git 仓库时环境一节列出目录下所有仓库的问题，环境只显示本机与工作目录，工作目录在仓库里时才加仓库名与分支",
-  "en": "Fix the environment section listing every repository under a working directory that is not itself a checkout, showing the machine and the working directory alone and adding the checkout's name and branch only when the directory sits in one"
-}
