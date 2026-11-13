@@ -1,8 +1,10 @@
+import { OPTIONAL_WEBFONTS } from '@dsh-claude-style/contracts/webfonts'
 import { WEBFONTS_PLUGIN_CSS, WEBFONTS_ROUTE, WEBFONTS_STYLE_ID } from '../constants'
 import { createHostResource } from '@dsh-claude-style/engine/resource'
 import type { WebfontsAnswer } from '@dsh-claude-style/contracts/webfonts'
 import { mountStylesheet } from '../core/stylesheet'
-import { webfontRules } from './webfont-rules'
+import { familyResolves } from './font-presence'
+import { unavailableWebfonts, webfontRules } from './webfont-rules'
 
 /** Register only optional faces reported by the host half (D75). */
 
@@ -12,29 +14,49 @@ const fontsInPlace = createHostResource(WEBFONTS_ROUTE, (data) => {
   return Array.isArray(answer?.faces) ? answer.faces.filter((name): name is string => typeof name === 'string') : undefined
 })
 
-/** The answer in hand, kept for a generation that takes the page after this one. */
-let faces: string[] | null = null
+/** The faces the page cannot draw, or null before the page has measured them. */
+let unavailable: readonly string[] | null = null
 
-/** Everyone waiting to hear which faces the drop point holds. */
-const listeners: ((faces: readonly string[]) => void)[] = []
+/** Everyone waiting to hear which faces the page cannot draw. */
+const listeners: ((labels: readonly string[]) => void)[] = []
 
 /**
- * The faces the drop point held when the host half answered, or null before
- * that answer: the settings page reports the missing ones from this read
- * instead of asking the route again (D75).
+ * The faces the page cannot draw, as a reader names them, or null before the
+ * page has measured them. A face counts as drawn wherever it comes from — a copy
+ * installed on the system or the drop point's file — so the settings page
+ * reports a face only where neither path provides it (D75).
  */
-export function webfontsInPlace(): readonly string[] | null {
-  return faces
+export function webfontsUnavailable(): readonly string[] | null {
+  return unavailable
 }
 
-/** Hear the answer once; a listener registered after it is called with it at once. The returned call removes it. */
-export function subscribeWebfonts(listener: (faces: readonly string[]) => void) {
+/** Hear the measurement; a listener registered after it is called with it at once. The returned call removes it. */
+export function subscribeWebfontPresence(listener: (labels: readonly string[]) => void) {
   listeners.push(listener)
-  if (faces !== null) listener(faces)
+  if (unavailable !== null) listener(unavailable)
   return () => {
     const index = listeners.indexOf(listener)
     if (index !== -1) listeners.splice(index, 1)
   }
+}
+
+/** Measure every face and tell the listeners; the page's own stacks are what decide. */
+function publish() {
+  unavailable = unavailableWebfonts(face => familyResolves(face.stack))
+  for (const listener of [...listeners]) listener(unavailable)
+}
+
+/**
+ * Measure again once the faces a sheet just declared have loaded. A declared
+ * face loads on first use, so each one is asked for by name; the answer arrives
+ * after the page's fonts settle.
+ */
+function remeasure(names: readonly string[]) {
+  const loads = OPTIONAL_WEBFONTS
+    .filter(face => names.includes(face.file))
+    .map(face => document.fonts.load(`16px "${face.family}"`))
+  if (loads.length === 0) return
+  void Promise.all(loads).then(() => document.fonts.ready).then(() => publish())
 }
 
 /** The asynchronous answer uses `font-display: swap`; one page shares it across generations. */
@@ -42,19 +64,18 @@ export function installWebfonts() {
   let stopped = false
   let stopSheet: (() => void) | null = null
   /** Mount the rules once; with no face in place there is nothing to declare. */
-  function register(names: string[]) {
-    for (const listener of [...listeners]) listener(names)
+  function register(names: readonly string[]) {
     if (stopped || stopSheet !== null) return
     const rules = webfontRules(names)
     if (rules === '') return
     stopSheet = mountStylesheet(WEBFONTS_STYLE_ID, rules, WEBFONTS_PLUGIN_CSS)
+    // The sheet's faces are the ones that arrive late; the page's own copies are
+    // already there, so the first measurement answers before this.
+    remeasure(names)
   }
-  const off = fontsInPlace.onLoaded((names) => {
-    faces = names
-    register(names)
-  })
+  const off = fontsInPlace.onLoaded(register)
   fontsInPlace.load()
-  if (faces !== null) register(faces)
+  publish()
   return () => {
     stopped = true
     off()

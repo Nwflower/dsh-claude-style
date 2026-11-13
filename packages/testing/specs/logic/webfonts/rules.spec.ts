@@ -1,17 +1,18 @@
 /**
  * The `@font-face` rules the browser half writes for the optional faces the drop
- * point holds (D75): an install without them declares nothing, so the page sends
- * no font request that would answer 404, and each face in place is declared under
- * the family the stacks name and the address the fonts route serves.
+ * point holds (D75), and the faces it reports as undrawable: an install without
+ * them declares nothing, so the page sends no font request that would answer 404,
+ * and a face the page can draw counts as present wherever it comes from — the
+ * system's own copy or the drop point's file.
  *
  * @capability webfonts
  * @features contracts
- * @risk A face the reader supplied is never declared and the stacks keep their look-alikes, or a face that is not there is declared and the page requests a file it cannot get.
+ * @risk A face the reader supplied is never declared and the stacks keep their look-alikes, or a face that is not there is declared and the page requests a file it cannot get; or the settings page reports a face as missing while the page draws it.
  */
 import { expect, test } from 'vitest'
 import { OPTIONAL_WEBFONTS } from '@dsh-claude-style/contracts/webfonts'
 import { FONT_FILES_PATH } from '@dsh-claude-style/contracts/routes'
-import { missingWebfonts, webfontRules } from '@dsh-claude-style/client/pure'
+import { unavailableWebfonts, webfontRules } from '@dsh-claude-style/client/pure'
 
 test('a drop point with no face in place declares nothing, so the page asks for no font', () => {
   expect(webfontRules([])).toBe('')
@@ -36,10 +37,17 @@ test('a face the package ships is left to the stylesheet that declares it', () =
   expect(webfontRules(['JetBrainsMonoVariable.woff2', 'InterVariable.woff2'])).toBe('')
 })
 
-test('the faces the drop point is missing are named as a reader knows them, in the contract order, and a face in place is not named', () => {
-  expect(missingWebfonts([])).toEqual(['Anthropic Sans', 'Anthropic Serif', 'Anthropic Mono'])
-  expect(missingWebfonts([OPTIONAL_WEBFONTS[1].file])).toEqual(['Anthropic Sans', 'Anthropic Mono'])
-  expect(missingWebfonts(OPTIONAL_WEBFONTS.map((face) => face.file))).toEqual([])
-  // The package's own faces are not the reader's to supply: they never count as missing.
-  expect(missingWebfonts(['JetBrainsMonoVariable.woff2'])).toHaveLength(OPTIONAL_WEBFONTS.length)
+test('the faces the page cannot draw are named as a reader knows them, in the contract order', () => {
+  expect(unavailableWebfonts(() => true)).toEqual([])
+  expect(unavailableWebfonts(() => false)).toEqual(['Anthropic Sans', 'Anthropic Serif', 'Anthropic Mono'])
+  expect(unavailableWebfonts(face => face.file !== OPTIONAL_WEBFONTS[1].file)).toEqual(['Anthropic Serif'])
+})
+
+test('a stack names the dropped file\'s family and the names a system copy registers under, so either copy can answer for the face', () => {
+  for (const face of OPTIONAL_WEBFONTS) {
+    expect(face.stack[0]).toBe(face.family)
+  }
+  const mono = OPTIONAL_WEBFONTS[2]
+  // Anthropic's variable cut registers under this name, which the dropped file does not use.
+  expect(mono.stack).toContain('Anthropic Mono Variable')
 })

@@ -3,6 +3,6 @@
   "group": "improvements",
   "order": 0,
   "external": false,
-  "zh": "字体行在投放点缺少 Anthropic 字体时说明缺哪几款、这些文字改用随插件附带的字体",
-  "en": "The typeface row names the Anthropic faces the drop point is missing and says the text falls back to the faces shipped with the plugin"
+  "zh": "字体行说明页面画不出的 Anthropic 字体，按装进系统或放进投放点两条路给出说明",
+  "en": "The typeface row names the Anthropic faces the page cannot draw and says how to supply them, on the system or at the fonts folder"
 }
