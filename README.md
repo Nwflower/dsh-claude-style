@@ -16,7 +16,7 @@
 
 ## 预览
 
-Claude 与 DeepSeek 品牌在插件设置里切换，亮暗跟随系统。外观设置支持编辑预设，并新建、复制、重命名与删除多套配色方案。
+Claude 与 DeepSeek 品牌在插件设置里切换，亮暗跟随系统。外观设置提供 Claude、DeepSeek、羊皮纸、森林、暮色、蔷薇六套配色预设，可编辑预设，也可新建、复制、重命名与删除多套配色方案。
 
 ### Claude
 
@@ -84,7 +84,7 @@ dsh plugin --profile web add Nwflower/dsh-claude-style#dist      # GitHub 发布
 > Anthropic 没有公开发行这三款字体；本仓库只提供下载与研究的[副本](https://github.com/Nwflower/dsh-claude-style/tree/master/packages/assets/src/fonts/anthropic)。
 
 
-启用时二选一：装进系统，或把 `.ttf` 复制到 `$DSH_HOME/dsh-claude-style/fonts/`。
+启用时二选一：装进系统，或把 `.ttf` 复制到 `$DSH_HOME/dsh-claude-style/fonts/`（刷新页面后生效）。
 
 ## 文档
 

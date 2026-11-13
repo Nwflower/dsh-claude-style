@@ -151,7 +151,7 @@ const CONSTANTS = (() => {
       paletteCard: { attribute: PALETTE_CARD_ATTR },
       customEdges: { attribute: CUSTOM_EDGES_ATTR, values: PALETTE_EDGES },
       typeface: { attribute: TYPEFACE_ATTR, claude: TYPEFACE_CLAUDE, system: TYPEFACE_SYSTEM, host: TYPEFACE_HOST },
-      brand: { attribute: BRAND_ATTR, deepseek: BRAND_DEEPSEEK },
+      brand: { attribute: BRAND_ATTR, deepseek: BRAND_DEEPSEEK, defaults: BRAND_DEFAULT_PRESETS },
     },
     brands: BRANDS,
     presets: PALETTE_PRESETS,

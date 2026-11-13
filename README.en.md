@@ -18,7 +18,7 @@
 
 ## Preview
 
-Switch between the Claude and DeepSeek brands in settings; light and dark follow the system. Appearance lets you edit presets and create, duplicate, rename and delete colour schemes.
+Switch between the Claude and DeepSeek brands in settings; light and dark follow the system. Appearance offers six colour presets — Claude, DeepSeek, Parchment, Forest, Dusk and Rose — lets you edit them, and lets you create, duplicate, rename and delete colour schemes.
 
 ### Claude
 
@@ -96,7 +96,7 @@ Hover a message you sent and **Retract** and **Edit** join the clock and copy bu
 
 > The Anthropic fonts have no public release; this repository only offers [copies](https://github.com/Nwflower/dsh-claude-style/tree/master/packages/assets/src/fonts/anthropic) for download and study.
 
-To enable them, install the `.ttf` files on your system, or copy them into `$DSH_HOME/dsh-claude-style/fonts/`.
+To enable them, install the `.ttf` files on your system, or copy them into `$DSH_HOME/dsh-claude-style/fonts/`; a copy there takes effect after a reload.
 
 The mascot bubble's pixel text is set in [PoxiaoPixel](https://diaowinner.itch.io/poxiaopixel) by DWNfonts (SIL OFL 1.1); the package carries only the characters the bubble uses.
 

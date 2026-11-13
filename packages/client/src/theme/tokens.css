@@ -17,6 +17,22 @@ html:has(body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-
 html:has(body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-palette-card="deepseek"]:not([data-ds-dark-theme])) {
   background-color: #ffffff;
 }
+
+html:has(body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-palette-card="parchment"]:not([data-ds-dark-theme])) {
+  background-color: #f7f1e3;
+}
+
+html:has(body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-palette-card="forest"]:not([data-ds-dark-theme])) {
+  background-color: #f7fbf7;
+}
+
+html:has(body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-palette-card="dusk"]:not([data-ds-dark-theme])) {
+  background-color: #faf8ff;
+}
+
+html:has(body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-palette-card="rose"]:not([data-ds-dark-theme])) {
+  background-color: #fdf1f2;
+}
 body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-ds-dark-theme]):not([data-we-wallpaper]) #root {
   background-color: var(--dsh-claude-canvas);
 }

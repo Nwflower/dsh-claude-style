@@ -4,9 +4,10 @@ import { hidePointerHint, POINTER_HINT_CLASS, showPointerHint } from '../../shar
 import { PALETTE_SCHEME_CUSTOM } from '@dsh-claude-style/contracts/palette-schemes'
 import { schemeColours } from '../../shared/palette-colours'
 import { storedSchemes } from '../../shared/palette-scheme'
-import type { Prefs } from '../../constants'
+import type { PalettePreset, Prefs } from '../../constants'
 import type { PaletteScheme } from '@dsh-claude-style/contracts/palette-schemes'
 import { copy } from './copy'
+import type { CopyKey } from './copy'
 
 /**
  * What the colour cards and the scheme manager share (D96): a scheme's name as
@@ -22,6 +23,20 @@ export function cardSchemes(prefs: Prefs): PaletteScheme[] {
   return [...presets, ...stored.filter((scheme) => !PRESETS.includes(scheme.id))]
 }
 
+/** Each preset's name: a brand's default goes by the brand's, the others by their own. */
+const PRESET_LABELS: Record<PalettePreset, CopyKey> = {
+  claude: 'brandClaude',
+  deepseek: 'brandDeepseek',
+  parchment: 'palettePresetParchment',
+  forest: 'palettePresetForest',
+  dusk: 'palettePresetDusk',
+  rose: 'palettePresetRose',
+}
+
+export function presetLabel(preset: PalettePreset) {
+  return copy(PRESET_LABELS[preset])
+}
+
 /** Whether the scheme is a preset's own record rather than one the reader made. */
 export function isPresetScheme(scheme: PaletteScheme) {
   return PRESETS.includes(scheme.id)
@@ -29,8 +44,7 @@ export function isPresetScheme(scheme: PaletteScheme) {
 
 /** The name a scheme goes by: a preset's own, the reader's name, or the earlier custom card's. */
 export function schemeLabel(scheme: PaletteScheme) {
-  if (scheme.id === 'claude') return copy('brandClaude')
-  if (scheme.id === 'deepseek') return copy('brandDeepseek')
+  if (isPresetScheme(scheme)) return presetLabel(scheme.id as PalettePreset)
   if (scheme.name !== '') return scheme.name
   return scheme.id === PALETTE_SCHEME_CUSTOM ? copy('paletteCustom') : copy('paletteUnnamed')
 }

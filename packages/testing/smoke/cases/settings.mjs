@@ -33,6 +33,9 @@ export default {
     // band for the Windows desktop window, and the footer alignment for the
     // footer position the page opens away from.
     const expectedGrey = { appearance: ['homeSessionScope'], 'main-window': ['headerBand', 'statsFooterAlign'] }
+    // A row may carry a note without waiting for anything: the typeface row
+    // names the faces the drop point is missing, read on its own below.
+    const expectedNotes = { appearance: ['typeface', 'homeSessionScope'], 'main-window': ['headerBand', 'statsFooterAlign'] }
     const pages = settings.pages || {}
     for (const tab of Object.keys(expected)) {
       const page = pages[tab] || {}
@@ -40,7 +43,7 @@ export default {
         JSON.stringify(page.tabs) === JSON.stringify(Object.keys(expected)) && page.selected === tab &&
           JSON.stringify(page.rows) === JSON.stringify(expected[tab]) &&
           JSON.stringify(page.disabled || []) === JSON.stringify(expectedGrey[tab] || []) &&
-          JSON.stringify(page.notes || []) === JSON.stringify(expectedGrey[tab] || []),
+          JSON.stringify(page.notes || []) === JSON.stringify(expectedNotes[tab] || []),
         JSON.stringify(page))
     }
     const mainWindow = pages['main-window'] || {}
@@ -57,8 +60,10 @@ export default {
     const followingCards = palette.following || {}
     const pinnedCards = palette.pinned || {}
     const customCards = palette.custom || {}
-    check('every colour card is a button, the card the page paints is pressed and the others stand ready: the two presets always, the reader schemes after them once stored',
-      [followingCards, pinnedCards].every((state) => (state.cards || []).length === 2) && (customCards.cards || []).length === 3 &&
+    // The presets PALETTE_PRESETS names, ahead of any scheme the reader stores.
+    const PRESETS = 6
+    check('every colour card is a button, the card the page paints is pressed and the others stand ready: the presets always, the reader schemes after them once stored',
+      [followingCards, pinnedCards].every((state) => (state.cards || []).length === PRESETS) && (customCards.cards || []).length === PRESETS + 1 &&
         [followingCards, pinnedCards, customCards].every((state) => state.cards.every((card) => card.role === 'button' && card.pressed === (card.active ? 'true' : 'false') &&
           typeof card.label === 'string' && card.label.length > 0)),
       JSON.stringify(palette))
@@ -76,6 +81,13 @@ export default {
         paletteCard(customCards, 'claude').pressed === 'false' && paletteCard(customCards, 'deepseek').pressed === 'false' &&
         typeof paletteCard(customCards, 'custom').reset === 'string' && paletteCard(customCards, 'custom').reset.length > 0,
       JSON.stringify(customCards))
+    const typefaceNote = settings.typefaceNote || {}
+    check('the typeface row names only the faces the drop point is missing, under a note, and only while the skin\'s own faces are chosen',
+      typefaceNote.claude?.note === true &&
+        /Anthropic Sans/.test(typefaceNote.claude.text) && /Anthropic Mono/.test(typefaceNote.claude.text) &&
+        !/Anthropic Serif/.test(typefaceNote.claude.text) &&
+        typefaceNote.system?.note === false,
+      JSON.stringify(typefaceNote))
     const off = settings.parentsOff || {}
     check('a sub-row greys out while its parent is off: the mascot\'s place with the mascot off, the model descriptions, the effort accent colour, the quick providers and the peak rate meter with the model picker off, the custom price table with the billing off, the search button\'s style with the sidebar search off, the home session scope for the Code home layout, and the title-bar band for the window on every page',
       !!off.appearance && JSON.stringify(off.appearance.disabled) === '["homeSessionScope","mascotScope"]' &&

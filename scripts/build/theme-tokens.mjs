@@ -74,8 +74,9 @@ function tokenValue(spec, card, scheme, tones) {
   if (spec.tone !== undefined) return tones.get(tokenTone(spec, card))
   if (spec.card === 'logoInk') return card.logoInk === 'ink' ? tones.get('ink') : card.accent
   if (spec.card === 'code') return card.code[scheme]
-  if (spec.card === 'sidebar') return card.sidebar?.[scheme]
-  if (spec.card === 'bubble') return card.bubble?.[scheme]
+  // A card that names neither takes the steps of its canvas a reader's scheme takes (customPaletteBlocks).
+  if (spec.card === 'sidebar') return card.sidebar?.[scheme] ?? tones.get('sidebar')
+  if (spec.card === 'bubble') return card.bubble?.[scheme] ?? tones.get(card.edges === 'surface' && scheme === 'dark' ? 'bubble-flat' : 'bubble')
   throw new Error('build: a palette token names no colour source')
 }
 
@@ -268,10 +269,11 @@ export function tokenSheet(doc, gates, images) {
       blocks.push(tokenBlock(`${gated(card.id)}${schemeOf(scheme)}`, paletteTokens(changed)))
     }
   }
-  for (const card of doc.palette.cards) {
+  // One block per brand, from the card that brand defaults to; a card no brand defaults to draws no brand art.
+  for (const [brand, preset] of Object.entries(gates.brand.defaults)) {
     for (const scheme of SCHEMES) {
-      blocks.push(tokenBlock(`${palette}${gate(gates.brand, card.id)}${schemeOf(scheme)}`, [
-        ['--dsh-claude-logo-ink', values.get(card.id).get(scheme).get('--dsh-claude-logo-ink')],
+      blocks.push(tokenBlock(`${palette}${gate(gates.brand, brand)}${schemeOf(scheme)}`, [
+        ['--dsh-claude-logo-ink', values.get(preset).get(scheme).get('--dsh-claude-logo-ink')],
       ]))
     }
   }

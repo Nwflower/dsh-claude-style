@@ -17,6 +17,13 @@ import { copy } from './copy'
  * to wears it while the page follows the brand.
  */
 
+const BRAND_PRESETS: readonly string[] = Object.values(BRAND_DEFAULT_PRESETS)
+
+/** Whether the scheme is the preset a brand defaults to: the card a brand's own mark is drawn beside. */
+function isBrandPreset(scheme: PaletteScheme) {
+  return BRAND_PRESETS.includes(scheme.id)
+}
+
 function PaletteCards(props: { prefs: Prefs, write: SettingsView['write'] }) {
   const { prefs, write } = props
   const following = prefs.paletteColors === PALETTE_COLORING_BRAND
@@ -56,8 +63,8 @@ function PaletteCards(props: { prefs: Prefs, write: SettingsView['write'] }) {
         className: 'dsh-claude-palette-card',
         role: 'button',
         tabIndex: 0,
-        'data-brand': isPresetScheme(scheme) ? scheme.id : undefined,
-        'data-scheme': isPresetScheme(scheme) ? undefined : scheme.id,
+        'data-brand': isBrandPreset(scheme) ? scheme.id : undefined,
+        'data-scheme': isBrandPreset(scheme) ? undefined : scheme.id,
         'data-active': selected ? '' : undefined,
         'aria-pressed': selected ? 'true' : 'false',
         'aria-label': schemeLabel(scheme),

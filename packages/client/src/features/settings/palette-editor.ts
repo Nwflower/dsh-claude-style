@@ -5,7 +5,7 @@ import { accentInk, contrastRatio, luminance } from '../../shared/contrast'
 import { canAddScheme, duplicateScheme, removeSchemePatch, selectSchemePatch, storedSchemes, storeSchemePatch } from '../../shared/palette-scheme'
 import { presetCard, schemeColours } from '../../shared/palette-colours'
 import { PALETTE_ACCENT_CONTRAST, PALETTE_EDGES, PALETTE_SCHEME_LIMIT, PALETTE_SCHEME_NAME_MAX, PALETTE_TEXT_CONTRAST } from '@dsh-claude-style/contracts/palette-schemes'
-import { Glyph, isPresetScheme, schemeLabel } from './palette-parts'
+import { Glyph, isPresetScheme, presetLabel, schemeLabel } from './palette-parts'
 import { createSettingsControls } from './settings-controls'
 import type { SchemeColours } from '../../shared/palette-colours'
 import type { ColourPair, PaletteEdges, PaletteScheme } from '@dsh-claude-style/contracts/palette-schemes'
@@ -262,7 +262,7 @@ export function PaletteEditor(props: { prefs: Prefs, id: string, created: Palett
       React.createElement(Reset, { own: draft.edges !== undefined, name: copy('paletteEdges'), run: () => commit(withoutSeed(draft, 'edges')) }),
       preset ? null : React.createElement('span', { className: 'dsh-claude-scheme-seed-name' }, copy('paletteBase')),
       preset ? null : controls.segment(
-        PALETTE_PRESETS.map((value) => ({ value, label: value === 'claude' ? copy('brandClaude') : copy('brandDeepseek') })),
+        PALETTE_PRESETS.map((value) => ({ value, label: presetLabel(value) })),
         draft.base,
         (base) => commit({ ...draft, base }),
       ),
