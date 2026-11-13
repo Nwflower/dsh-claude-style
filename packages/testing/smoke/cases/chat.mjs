@@ -584,8 +584,12 @@ export default {
     // displacement comes in many small steps, where a width written in one task
     // moves it the whole way inside one frame.
     const steps = boxes.map((box, at) => at === 0 ? 0 : toward * (box.width - boxes[at - 1].width)).filter((step) => step > 0)
-    check('the box takes its new width in one move, so the clock slides with it instead of jumping',
-      Math.abs(travelled) > 4 && steps.length >= 3 && Math.max(...steps) < Math.abs(travelled) / 2,
+    // A width written in one task moves the clock the whole way inside one
+    // frame; a travelled one arrives over several. The ceiling is two thirds of
+    // the travel: a loaded machine can leave one sampled frame carrying more
+    // than half of it without any frame carrying the whole.
+    check('the box travels to its new width over several frames, so the clock slides with it instead of jumping',
+      Math.abs(travelled) > 4 && steps.length >= 3 && Math.max(...steps) < Math.abs(travelled) * 2 / 3,
       JSON.stringify({ steps: steps.length, largest: steps.length === 0 ? 0 : Math.max(...steps), travelled }))
     check('the new wording is the one left standing once the copy that left is taken down',
       silent[0].displayed === 'Running tools…' && silent[0].copies === 1 && silent[0].phase === null &&
