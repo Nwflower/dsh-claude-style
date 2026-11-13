@@ -350,6 +350,8 @@ export function holdRelations(vocabulary: PartsTableVocabulary): HoldRelation[] 
   },
   // features/composer/responsive.css: a compact row may spend its shortage on
   // the model label while no foreign right-hand control needs the wrapping path.
+  // This relation writes only the holder's attribute. React-owned slot children
+  // stay under their slot so a later insertBefore keeps its reference sibling.
   {
     name: 'composer-right-filled',
     holder: '[data-composer-card]',
