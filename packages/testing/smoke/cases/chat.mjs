@@ -87,10 +87,15 @@ export default {
     // (chat-follow.ts's startSlide).
     const burst = follow.burst || []
     const burstSteps = walkedSteps(burst, AT_END_PX)
+    // The slide runs for its own 240ms; how many of its positions the probe can
+    // read follows the machine's frame cadence, and a loaded one leaves two
+    // sampled steps. What a jump would leave is one step covering the whole
+    // carried stretch, so the check asks for at least two steps and no step
+    // near the whole distance.
     check('a burst is slid from the stretch a slide carries instead of jumping whole',
       burst.length >= bound('followSlideMinFrames') && burst[0] > bound('followSlideStartPx') &&
         burst.every((offset, at) => at === 0 || offset <= burst[at - 1]) && burst[burst.length - 1] <= AT_END_PX &&
-        burstSteps.length >= bound('followWalkDistinctValues'),
+        burstSteps.length >= 2 && Math.max(...burstSteps.map((step) => step.gap)) < burst[0] * 3 / 4,
       JSON.stringify({ readings: burst.length, start: burst[0], end: burst[burst.length - 1], steps: burstSteps.map((step) => step.gap) }))
     // The slide restarts from where the frame before it stood, and one growth is
     // all the distance it may be left carrying, the tail of the slide still

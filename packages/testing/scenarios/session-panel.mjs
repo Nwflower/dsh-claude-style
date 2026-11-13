@@ -13,7 +13,7 @@
  * again. Closing it puts it away for the session and stops its asks.
  */
 import copy from '../../client/src/features/session-panel/session-panel.copy.json' with { type: 'json' }
-import { CONVERSATION_TABS_SELECTOR, HEADER_TITLE_ROW_SELECTOR, HEADER_TITLE_SELECTOR, HEADER_UTILITIES_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { CONVERSATION_TABS_SELECTOR, HEADER_TITLE_ROW_SELECTOR, HEADER_TITLE_SELECTOR, HEADER_UTILITIES_SELECTOR, RIGHTBAR_TOGGLE_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { SESSION_PANEL_PATH } from '@dsh-claude-style/contracts/routes'
 import { MARKS } from '../lane.mjs'
 import surfaceTable from '../data/surface.json' with { type: 'json' }
@@ -143,13 +143,17 @@ const readRightPanel = (page) => page.evaluate((attribute) => {
   }
 }, PART)
 
-/** Press the host's own control for its right column. */
+/**
+ * Press the host's own control for its right column: the control the contract
+ * names, which is the header one, rather than the first button that mentions a
+ * right panel (the column carries controls of its own).
+ */
 async function pressRightPanel(page) {
-  await page.evaluate(() => {
-    const toggle = [...document.querySelectorAll('button')]
-      .find((node) => /右侧边栏|right panel/i.test(node.getAttribute('aria-label') ?? node.getAttribute('title') ?? ''))
+  await page.evaluate((selector) => {
+    const toggle = document.querySelector(selector) ??
+      [...document.querySelectorAll('button')].find((node) => /右侧边栏|right panel/i.test(node.getAttribute('aria-label') ?? node.getAttribute('title') ?? ''))
     toggle?.click()
-  })
+  }, RIGHTBAR_TOGGLE_SELECTOR)
   await page.waitForTimeout(700)
 }
 

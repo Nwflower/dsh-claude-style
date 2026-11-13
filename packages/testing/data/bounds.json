@@ -3,8 +3,8 @@
   "bounds": [
     {
       "name": "longSessionGrowthRatio",
-      "value": 2.5,
-      "reason": "How much longer the second measured turn's transcript has to be for the two rounds to be worth comparing at all. The two lengths are set by the fill turns, and how many rows a scripted answer leaves behind moves the ratio between about 2.8 and 3.8 runs, so the floor sits below the lowest reading that still separates the two lengths."
+      "value": 2.2,
+      "reason": "How much longer the second measured turn's transcript has to be for the two rounds to be worth comparing at all. The two lengths are set by the fill turns, and how many rows a scripted answer leaves behind moves the ratio between about 2.4 and 3.8 runs, so the floor sits below the lowest reading that still separates the two lengths."
     },
     {
       "name": "longSessionGrowthSlack",

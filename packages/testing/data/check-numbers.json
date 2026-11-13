@@ -879,7 +879,10 @@
       ],
       "a burst is slid from the stretch a slide carries instead of jumping whole": [
         0,
-        1
+        1,
+        2,
+        3,
+        4
       ],
       "a run of small growths leaves the sliding column no further off the pin than the growth just taken": [
         1,
