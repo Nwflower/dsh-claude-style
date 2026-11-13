@@ -1,6 +1,7 @@
 import { PEAKRATE_ROUTE } from '../../constants'
 import { forgetRates } from './schedule'
 import type { HostAnswer } from '@dsh-claude-style/engine/resource'
+import { createHostRequest } from '@dsh-claude-style/engine/resource'
 import type { RateProfile } from '@dsh-claude-style/contracts/peakrate'
 
 /**
@@ -24,18 +25,13 @@ let profiles: readonly RateProfile[] = []
 let fetchedAt = Number.NaN
 /** When this page last asked, so the scheduler's passes cannot become a poll. */
 let attemptedAt = 0
-/** True while a request is in flight: one at a time. */
-let inFlight = false
 /** True once a copy has been adopted, so a later failure keeps what is on screen. */
 let loaded = false
 /** How many catalogs this page has adopted; the rows' render signature reads it. */
 let generation = 0
-/**
- * Bumped when the feature is torn down: an answer that arrives afterwards
- * belongs to a scope that is gone, so it is dropped rather than adopted.
- */
-let epoch = 0
 const listeners = new Set<() => void>()
+// Per generation: stopPeakRate releases the request before another installation (D12).
+const request = createHostRequest(answer => answer, answer => { adopt(answer) })
 
 /** Tell every reader the catalog moved (a new one arrived, or the first attempt failed). */
 function announce(): void {
@@ -71,33 +67,11 @@ function adopt(answer: HostAnswer): boolean {
  * know.
  */
 function call(refresh: boolean): Promise<boolean> {
-  const startedAt = epoch
-  inFlight = true
   attemptedAt = Date.now()
-  return fetch(PEAKRATE_ROUTE, {
+  // A transport failure keeps the current catalog until the next timed attempt (D12).
+  return request.load(PEAKRATE_ROUTE, {
     method: refresh ? 'POST' : 'GET',
-    credentials: 'same-origin',
-    headers: { accept: 'application/json' },
-  }).then(
-    response => {
-      if (!response.ok) throw new Error(`HTTP ${response.status}`)
-      return response.json()
-    },
-  ).then(
-    (answer: HostAnswer) => {
-      // The feature may have been switched off while this request was out.
-      if (epoch !== startedAt) return false
-      inFlight = false
-      return adopt(answer)
-    },
-    () => {
-      // The host half did not answer: the catalog already held stays, and the
-      // meter draws nothing until the next attempt
-      if (epoch !== startedAt) return false
-      inFlight = false
-      return false
-    },
-  )
+  }, () => {}).then(answer => answer !== undefined && answer !== null && answer.ok === true)
 }
 
 /** Whether the copy in hand is old enough to be worth replacing, or was never obtained. */
@@ -114,27 +88,26 @@ function stale(now: number): boolean {
  * @param now - the instant of the pass.
  */
 export function loadPeakRate(now: number): void {
-  if (inFlight) return
+  if (request.busy()) return
   if (loaded && !stale(now)) return
   if (attemptedAt !== 0 && now - attemptedAt < RETRY_MS) return
   // Holding a stale copy means the host's own answer is already known to be
   // old, so it is asked to fetch the source in the same round trip.
   const refresh = loaded && stale(now)
-  const startedAt = epoch
+  const before = generation
   void call(refresh).then((adopted) => {
-    if (epoch !== startedAt) return
+    if (generation === before) return
     if (!refresh && adopted && stale(Date.now())) void call(true)
   })
 }
 
 /** Forget the page's copy: the feature is being torn down. */
 export function stopPeakRate(): void {
-  epoch += 1
+  request.reset()
   profiles = []
   fetchedAt = Number.NaN
   attemptedAt = 0
   loaded = false
-  inFlight = false
   forgetRates()
 }
 

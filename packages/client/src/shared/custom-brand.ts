@@ -2,6 +2,7 @@ import { BRAND_IMAGE_KINDS } from '@dsh-claude-style/contracts/brand'
 import type { BrandAnswer, BrandImageKind, BrandImageState } from '@dsh-claude-style/contracts/brand'
 import { BRAND_MARK_ROUTE, BRAND_ROUTE, BRAND_WORDMARK_ROUTE } from '../constants'
 import { notifyAll } from '@dsh-claude-style/engine/notify'
+import { createHostRequest } from '@dsh-claude-style/engine/resource'
 
 /** Painting and settings share this host-backed image state; URLs change with image bytes (D30). */
 
@@ -17,9 +18,17 @@ const ROUTES: Record<BrandImageKind, string> = { mark: BRAND_MARK_ROUTE, wordmar
 
 let images: BrandImages = { mark: null, wordmark: null }
 let requested = false
-/** Bumped by every read, so an answer that arrives after a newer one is dropped. */
-let generation = 0
 const listeners: ((images: BrandImages) => void)[] = []
+// Per generation: reset releases the status request and pending image adoption (D12).
+const request = createHostRequest(async data => {
+  const answer = data as unknown as BrandAnswer
+  if (answer.ok !== true) throw new Error('brand status did not answer successfully')
+  const [mark, wordmark] = await Promise.all(BRAND_IMAGE_KINDS.map(kind => measure(kind, answer[kind])))
+  return { mark, wordmark }
+}, value => {
+  images = value
+  notifyAll(listeners, images)
+})
 
 /** The images in hand (live object; treat as read-only). */
 export function readBrandImages() {
@@ -39,39 +48,22 @@ export function subscribeBrandImages(listener: (images: BrandImages) => void) {
 export function loadBrandImages() {
   if (requested) return
   requested = true
-  const at = ++generation
-  fetch(BRAND_ROUTE, { credentials: 'same-origin', headers: { accept: 'application/json' } })
-    .then(response => {
-      if (!response.ok) throw new Error(`HTTP ${response.status}`)
-      return response.json()
-    })
-    .then((answer: BrandAnswer) => adopt(answer, at), () => { /* the host half did not answer: the brand's own art stays (D12) */ })
+  // The host's unavailable status leaves the brand's own artwork in place (D12).
+  void request.load(BRAND_ROUTE, {}, () => {})
 }
 
 /** Re-arm: the next load() reads again (a new host context). */
 export function resetBrandImages() {
   requested = false
-  generation++
+  request.reset()
   images = { mark: null, wordmark: null }
-}
-
-/**
- * Measure each image the answer names and adopt the pair. An image the
- * browser cannot load is left out with a warning, so a broken wordmark does
- * not take a good mark down with it (D12).
- */
-function adopt(answer: BrandAnswer, at: number) {
-  return Promise.all(BRAND_IMAGE_KINDS.map(kind => measure(kind, answer[kind]))).then(([mark, wordmark]) => {
-    if (at !== generation) return
-    images = { mark, wordmark }
-    notifyAll(listeners, images)
-  })
 }
 
 /**
  * Load one image and read its proportions; an SVG with only a viewBox reports
  * them through its natural size. The load event carries the size: `decode()`
  * waits for the page to render, which a window in the background never does.
+ * A broken image is isolated from its partner and reported with a warning (D12).
  */
 function measure(kind: BrandImageKind, state: BrandImageState | null): Promise<BrandImage | null> {
   if (state === null) return Promise.resolve(null)
@@ -92,12 +84,8 @@ function measure(kind: BrandImageKind, state: BrandImageState | null): Promise<B
  * A refusal rejects with the reason the host half gave.
  */
 function change(kind: BrandImageKind, init: RequestInit) {
-  const at = ++generation
-  return fetch(ROUTES[kind], { ...init, credentials: 'same-origin' })
-    .then(response => response.json().then((answer: BrandAnswer | { ok: false, error?: string }) => {
-      if (answer.ok !== true) throw new Error(answer.error ?? `HTTP ${response.status}`)
-      return adopt(answer, at)
-    }))
+  request.reset()
+  return request.load(ROUTES[kind], init).then(() => {})
 }
 
 /** Replace one image with a file the reader picked; the content type names its format. */

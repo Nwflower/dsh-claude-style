@@ -1,6 +1,7 @@
 import { PRICES_PATH, SESSION_COST_PATH } from '@dsh-claude-style/contracts/routes'
 import type { PriceDocument, SessionCostAnswer } from '@dsh-claude-style/contracts/prices'
 import { billingQuery, billingRows } from '../../shared/billing'
+import { createHostRequest } from '@dsh-claude-style/engine/resource'
 
 /**
  * The price table and the current session's settled cost, both from the host
@@ -22,9 +23,15 @@ export { adoptBillingRows, entryOf, billingRows } from '../../shared/billing'
 
 let document: PriceDocument | null = null
 let fetchedAt = 0
-let fetching: Promise<void> | null = null
 /** Bumped when the document changes, so a page that adopted one keeps it. */
 let generation = 0
+// Per generation: the shared price table survives individual statistics views.
+const prices = createHostRequest(data => data as { ok?: boolean, document?: PriceDocument, fetchedAt?: string } | null, body => {
+  if (body?.ok !== true || body.document == null) return
+  document = body.document
+  fetchedAt = typeof body.fetchedAt === 'string' ? Date.parse(body.fetchedAt) : Date.now()
+  generation += 1
+})
 
 /** The table in force, or null until the host answers. */
 export function priceDocument() {
@@ -38,25 +45,10 @@ export function priceGeneration() {
 
 /** Ask the host for its table; a fetch in flight is shared and one a day is enough. */
 export function loadPrices(now: number): Promise<void> {
-  if (fetching !== null) return fetching
+  if (prices.busy()) return prices.load(PRICES_PATH).then(() => {})
   if (document !== null && now - fetchedAt < DAY_MS) return Promise.resolve()
-  fetching = fetch(PRICES_PATH, { credentials: 'same-origin', headers: { accept: 'application/json' } })
-    .then(response => (response.ok ? response.json() : null))
-    .then((body: { ok?: boolean, document?: PriceDocument, fetchedAt?: string } | null) => {
-      if (body !== null && body.ok === true && body.document !== undefined && body.document !== null) {
-        document = body.document
-        fetchedAt = typeof body.fetchedAt === 'string' ? Date.parse(body.fetchedAt) : now
-        generation += 1
-      }
-    })
-    .catch(() => {
-      // A failed fetch keeps the table already held; the shipped copy answered
-      // first if this page never got one (D12's isolation).
-    })
-    .finally(() => {
-      fetching = null
-    })
-  return fetching
+  // A transport failure keeps the last table and permits a later attempt (D12).
+  return prices.load(PRICES_PATH, {}, () => {}).then(() => {})
 }
 
 /** One session's settled cost, followed across a session switch. */
@@ -64,10 +56,16 @@ export function createSessionCost() {
   let sessionId = ''
   let answer: SessionCostAnswer | null = null
   let askedAt = 0
-  let asking = false
-  /** Bumped when the followed session changes and when an ask starts; a settle from another generation is dropped. */
-  let askGeneration = 0
+  let stopped = false
   const listeners = new Set<() => void>()
+  // Per session: follow and stop release the old session's request (D12, D91).
+  const request = createHostRequest(data => data as { ok?: boolean, value?: SessionCostAnswer | null } | null, body => {
+    if (body?.ok !== true || body.value == null) return
+    answer = body.value
+    for (const listener of listeners) listener()
+    // A cold placeholder is retried on the next projection pass.
+    if (answer !== null && answer.cny === 0 && answer.usd === 0 && answer.model === null) askedAt = 0
+  })
 
   /** Follow the conversation on screen; a switch drops the previous session's answer. */
   function follow(id: string) {
@@ -75,11 +73,7 @@ export function createSessionCost() {
     sessionId = id
     answer = null
     askedAt = 0
-    // The ask in flight belongs to the session left behind. Its answer is not
-    // this session's, and the flag it settles must not stand in the way of the
-    // ask this session still needs.
-    asking = false
-    askGeneration += 1
+    request.reset()
   }
 
   /**
@@ -93,34 +87,11 @@ export function createSessionCost() {
    * @param force - ask even inside the interval (a new price table).
    */
   function ask(now: number, force = false) {
-    if (sessionId === '' || asking) return
+    if (stopped || sessionId === '' || request.busy()) return
     if (!force && askedAt !== 0 && now - askedAt < ASK_MS) return
     askedAt = now
-    asking = true
-    const generation = ++askGeneration
-    fetch(`${SESSION_COST_PATH}?id=${encodeURIComponent(sessionId)}${billingQuery()}`, {
-      credentials: 'same-origin',
-      headers: { accept: 'application/json' },
-    })
-      .then(response => (response.ok ? response.json() : null))
-      .then((body: { ok?: boolean, value?: SessionCostAnswer | null } | null) => {
-        if (generation !== askGeneration) return
-        if (body !== null && body.ok === true && body.value !== undefined && body.value !== null) {
-          answer = body.value
-          for (const listener of listeners) listener()
-        }
-      })
-      .catch(() => {
-        // The last answer stays; the next settlement tries again.
-      })
-      .finally(() => {
-        if (generation !== askGeneration) return
-        asking = false
-        // A session the store has not folded yet answers an empty total; the
-        // first settlement arrives a moment after the turn starts, so the next
-        // pass asks again rather than keeping the placeholder.
-        if (answer !== null && answer.cny === 0 && answer.usd === 0 && answer.model === null) askedAt = 0
-      })
+    // A transport failure keeps the last total until the next settlement (D12).
+    void request.load(`${SESSION_COST_PATH}?id=${encodeURIComponent(sessionId)}${billingQuery()}`, {}, () => {})
   }
 
   return {
@@ -134,6 +105,12 @@ export function createSessionCost() {
     onChange(listener: () => void) {
       listeners.add(listener)
       return () => listeners.delete(listener)
+    },
+    stop() {
+      stopped = true
+      request.reset()
+      answer = null
+      listeners.clear()
     },
   }
 }

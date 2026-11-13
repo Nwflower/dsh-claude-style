@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-13",
+  "group": "fixes",
+  "order": 0,
+  "external": false,
+  "zh": "切换会话、关闭统计或重新加载宿主资源时释放旧请求，避免晚到回答覆盖当前品牌和费用状态",
+  "en": "Release old requests on session changes, statistics teardown and host resource resets to keep late answers from replacing current brand and cost state"
+}
