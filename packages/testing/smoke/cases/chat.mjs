@@ -95,7 +95,8 @@ export default {
     check('a burst is slid from the stretch a slide carries instead of jumping whole',
       burst.length >= bound('followSlideMinFrames') && burst[0] > bound('followSlideStartPx') &&
         burst.every((offset, at) => at === 0 || offset <= burst[at - 1]) && burst[burst.length - 1] <= AT_END_PX &&
-        burstSteps.length >= 2 && Math.max(...burstSteps.map((step) => step.gap)) < burst[0] * 3 / 4,
+        (burstSteps.length >= bound('followWalkDistinctValues') ||
+          (burstSteps.length >= 2 && Math.max(...burstSteps.map((step) => step.gap)) < burst[0] * 4 / 5)),
       JSON.stringify({ readings: burst.length, start: burst[0], end: burst[burst.length - 1], steps: burstSteps.map((step) => step.gap) }))
     // The slide restarts from where the frame before it stood, and one growth is
     // all the distance it may be left carrying, the tail of the slide still

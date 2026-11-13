@@ -494,12 +494,6 @@
         2,
         320
       ],
-      "the host right panel takes the side and the rail keeps away": [
-        0
-      ],
-      "the details control closes the host right panel before the rail stands": [
-        0
-      ],
       "an output opens its file in the host preview without another browser tab": [
         0
       ]
@@ -881,8 +875,8 @@
         0,
         1,
         2,
-        3,
-        4
+        4,
+        5
       ],
       "a run of small growths leaves the sliding column no further off the pin than the growth just taken": [
         1,
