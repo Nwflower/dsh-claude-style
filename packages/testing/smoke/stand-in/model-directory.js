@@ -26,7 +26,7 @@
  */
 (function () {
   var host = window.__dshSmokeHost
-  if (host.CASE !== 'model-meter' && host.CASE !== 'model-account' && host.CASE !== 'effort') return
+  if (host.CASE !== 'model-meter' && host.CASE !== 'model-account' && host.CASE !== 'effort' && host.CASE !== 'stats-inline') return
 
   var reasoning = {
     defaultEffort: 'high',
@@ -72,7 +72,15 @@
   if (host.CASE === 'model-meter') {
     groups.push({ id: 'ocg', name: 'Gateway', models: [{ id: 'deepseek-flash', name: 'Gateway Flash' }] })
   }
-  var current = host.CASE === 'effort'
+  // The statistics page prices one model through either the platform or a gateway.
+  if (host.CASE === 'stats-inline') {
+    groups = ['deepseek-official', 'deepseek-account', 'gateway'].map(function (provider) {
+      return { id: provider, name: provider, models: [{ id: 'smoke-model', name: 'Statistics model' }] }
+    })
+  }
+  var current = host.CASE === 'stats-inline'
+    ? { provider: 'deepseek-official', model: 'smoke-model' }
+    : host.CASE === 'effort'
     ? { provider: 'deepseek-official', model: 'deepseek-reasoner', reasoningEffort: 'max' }
     : host.CASE === 'model-account'
       ? { provider: 'deepseek-account', model: 'deepseek-flash' }
@@ -151,8 +159,9 @@
     },
   }
   host.modelDirectories = {
-    directoryFor: function (id) { return id === 'smoke-session' ? directory : undefined },
+    directoryFor: function (id) { return id === (host.CASE === 'stats-inline' ? 'smoke-stats' : 'smoke-session') ? directory : undefined },
   }
+  if (host.CASE === 'stats-inline') return
   host.sessions = {
     selected: 'smoke-session',
     list: {
