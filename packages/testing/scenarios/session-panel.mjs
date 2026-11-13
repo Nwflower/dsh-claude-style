@@ -382,6 +382,12 @@ export function sessionPanelScenario({ check }) {
       // The host's own right column stands on this side as well: the rail keeps
       // away while that column holds width, and the header's control hands the
       // side over by closing it first (D94).
+      // The host keeps its own right column's place across the sessions in this
+      // home: a panel an earlier scenario left open frames the handover below.
+      // The walk starts from the column put away, and its control names the
+      // state it is in (「收起…」 while it stands).
+      const panelBefore = await readRightPanel(page)
+      if (/收起|collapse|close/i.test(panelBefore.toggle ?? '')) await pressRightPanel(page)
       notes.rightPanel = await readRightPanel(page)
       await pressRightPanel(page)
       notes.rightPanelOpen = await readRightPanel(page)
