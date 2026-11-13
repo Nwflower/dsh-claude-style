@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { BRAND_INK_ACCENT, BRAND_INK_ORIGINAL, BRAND_INK_TEXT, BRANDS, PALETTE_COLORING_BRAND, PALETTE_COLORING_CUSTOM } from '../../constants'
+import { BRAND_INK_ACCENT, BRAND_INK_ORIGINAL, BRAND_DEFAULT_PRESETS, BRAND_INK_TEXT, PALETTE_COLORING_BRAND, PALETTE_COLORING_CUSTOM, PALETTE_PRESETS } from '../../constants'
 import { PALETTE_CARDS } from 'virtual:dsh-claude-style/generated'
 import { BrandLockup } from './settings-brand-lockup'
 import { withoutTransition } from '../../shared/transition'
@@ -35,7 +35,7 @@ type Card = (typeof PALETTE_CARDS)[number]
 type ColourField = (typeof COLOURS)[number]['field']
 
 /** The brand cards in the settings page's brand order, each with the id the preference stores. */
-const BRAND_CARDS = BRANDS.map((id) => {
+const BRAND_CARDS = PALETTE_PRESETS.map((id) => {
   const card = PALETTE_CARDS.find((entry) => entry.id === id)
   if (card === undefined) throw new Error(`settings: the palette carries no ${id} card`)
   return { id, card }
@@ -143,7 +143,7 @@ function Swatches(props: { colours: string[], onChange?: (field: ColourField, va
  */
 function PaletteCards(props: { prefs: Prefs, write: SettingsView['write'] }) {
   const { prefs, write } = props
-  const brand = PALETTE_CARDS.find((entry) => entry.id === prefs.brand) ?? PALETTE_CARDS[0]
+  const brand = PALETTE_CARDS.find((entry) => entry.id === BRAND_DEFAULT_PRESETS[prefs.brand]) ?? PALETTE_CARDS[0]
   const following = prefs.paletteColors === PALETTE_COLORING_BRAND
   const custom = prefs.paletteColors === PALETTE_COLORING_CUSTOM
   const painted = following ? brand.id : prefs.paletteColors

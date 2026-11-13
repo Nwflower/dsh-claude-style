@@ -16,6 +16,7 @@ import { buildFonts, checkClaimed, checkSheetPixels, checkSheets, layoutCells, p
 import { openBuildCache } from './build-cache.mjs'
 import { checkContracts, checkCycles, checkDependencies, checkListed, checkManifests, checkMotionSources, checkScrollOwner, checkTypes } from './build-checks.mjs'
 import { chunkFiles, chunkModules, ownModuleIds, splitChunks } from './chunks.mjs'
+import { checkPaletteCards, checkPaletteContrast } from './palette-checks.mjs'
 import { TOKEN_SHEET, loadTokens, writeTokenTable } from './theme-tokens.mjs'
 import { buildStylesheet, writeLayerTable, writeMotionTable } from './css.mjs'
 import { FEATURE_SHEET_CONSTANTS } from './feature-sheets.mjs'
@@ -139,7 +140,7 @@ const CONSTANTS = (() => {
     if (module[name] === undefined) throw new Error(`build: ${file} exports no ${name}`)
     return [name, module[name]]
   }))
-  const { BRAND_ATTR, BRAND_DEEPSEEK, BRANDS, COMPOSER_ATTR, PALETTE_ATTR, PALETTE_CARD_ATTR, PALETTE_CLAUDE, PALETTE_HOST, TYPEFACE_ATTR, TYPEFACE_CLAUDE, TYPEFACE_HOST, TYPEFACE_SYSTEM } = pick(constants, constantsFile, ['BRAND_ATTR', 'BRAND_DEEPSEEK', 'BRANDS', 'COMPOSER_ATTR', 'PALETTE_ATTR', 'PALETTE_CARD_ATTR', 'PALETTE_CLAUDE', 'PALETTE_HOST', 'TYPEFACE_ATTR', 'TYPEFACE_CLAUDE', 'TYPEFACE_HOST', 'TYPEFACE_SYSTEM'])
+  const { BRAND_ATTR, BRAND_DEEPSEEK, BRAND_DEFAULT_PRESETS, BRANDS, COMPOSER_ATTR, PALETTE_ATTR, PALETTE_CARD_ATTR, PALETTE_CLAUDE, PALETTE_HOST, PALETTE_PRESETS, TYPEFACE_ATTR, TYPEFACE_CLAUDE, TYPEFACE_HOST, TYPEFACE_SYSTEM } = pick(constants, constantsFile, ['BRAND_ATTR', 'BRAND_DEEPSEEK', 'BRAND_DEFAULT_PRESETS', 'BRANDS', 'COMPOSER_ATTR', 'PALETTE_ATTR', 'PALETTE_CARD_ATTR', 'PALETTE_CLAUDE', 'PALETTE_HOST', 'PALETTE_PRESETS', 'TYPEFACE_ATTR', 'TYPEFACE_CLAUDE', 'TYPEFACE_HOST', 'TYPEFACE_SYSTEM'])
   return {
     // The gate attributes css.mjs stamps and writes the token blocks under: who paints
     // the colours and who sets the type (D30), the composer preference and the brand's blocks (D9).
@@ -151,6 +152,8 @@ const CONSTANTS = (() => {
       brand: { attribute: BRAND_ATTR, deepseek: BRAND_DEEPSEEK },
     },
     brands: BRANDS,
+    presets: PALETTE_PRESETS,
+    brandDefaults: BRAND_DEFAULT_PRESETS,
     ...pick(sheets, sheetsFile, ['CRAB_SHEETS', 'CRAB_GUTTER', 'DEEPY_SHEETS', 'DEEPY_SCALE', 'DEEPY_GUTTER', 'WHALE_GIRL_SHEETS']),
     featureSheets: pick(constants, constantsFile, FEATURE_SHEET_CONSTANTS),
   }
@@ -319,12 +322,10 @@ async function main() {
   checkClaimed(plan, claimed)
 
   const tokenDoc = loadTokens(SRC)
-  // The colour-card preference stores a card id, so a card without its brand would
-  // be unpickable and a brand without its card would have nothing to paint.
-  const cards = new Set(tokenDoc.palette.cards.map((card) => card.id))
-  if (cards.size !== CONSTANTS.brands.length || !CONSTANTS.brands.every((id) => cards.has(id))) {
-    throw new Error(`build: the palette cards (${[...cards].join(', ')}) and the brand vocabulary (${CONSTANTS.brands.join(', ')}) disagree`)
-  }
+  // The selection stores a preset id, so a card outside the vocabulary would be unpickable
+  // and a preset or brand default without its card would have nothing to paint (D96).
+  checkPaletteCards(tokenDoc, { presets: CONSTANTS.presets, brands: CONSTANTS.brands, brandDefaults: CONSTANTS.brandDefaults })
+  checkPaletteContrast(tokenDoc)
   const css = buildStylesheet({ sheets, srcDir: SRC, sources, tokenDoc, gates: CONSTANTS.gates, images, featureConstants: CONSTANTS.featureSheets })
   if (writeTokenTable(STYLE_GUIDE, tokenDoc)) console.log('built docs/STYLE.md token table from packages/client/src/theme/tokens.json')
   if (writeMotionTable(STYLE_GUIDE, tokenDoc)) console.log('built docs/STYLE.md motion table from packages/client/src/theme/tokens.json')

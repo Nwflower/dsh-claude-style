@@ -11,9 +11,9 @@ import { expect, test } from 'vitest'
 import fc from 'fast-check'
 import { resolveMascot } from '@dsh-claude-style/client/pure'
 import {
-  BRANDS, BRAND_CLAUDE, BRAND_DEEPSEEK, BRAND_DEEPSEEK_LEGACY, BRAND_INK_ORIGINAL, BRAND_INK_TEXT, BRAND_NAME_MAX,
+  BRAND_CLAUDE, BRAND_DEEPSEEK, BRAND_DEEPSEEK_LEGACY, BRAND_INK_ORIGINAL, BRAND_INK_TEXT, BRAND_NAME_MAX,
   CHAT_ANIMATIONS_OFF, MASCOT_CRAB, MASCOT_DEEPY, MASCOT_OFF, ONGOING_INDICATOR_BREATHE, ONGOING_INDICATOR_RING, ONGOING_INDICATOR_SHIMMER, ONGOING_SIDE_LEFT, ONGOING_SIDE_RIGHT, PREFS, PREF_DEFAULTS,
-  PROVIDER_ID_MAX, QUICK_PROVIDERS_MAX, STATUS_MOTION_WASH, USERNAME_MAX, clampPrefs,
+  PALETTE_PRESETS, PROVIDER_ID_MAX, QUICK_PROVIDERS_MAX, STATUS_MOTION_WASH, USERNAME_MAX, clampPrefs,
 } from '@dsh-claude-style/contracts/prefs'
 import { parsePaletteScheme } from '@dsh-claude-style/contracts/palette-schemes'
 import { OFFICIAL_MODEL_GROUP } from '@dsh-claude-style/contracts/services'
@@ -163,7 +163,7 @@ test('a stored accent moves into the custom scheme, keeping its colour, and the 
   expect(migrated.customAccent).toBe('')
   expect(migrated.paletteColors).toBe('custom')
   expect(migrated.brandAccent).toBe('')
-  expect(migrated.paletteSchemes.map(entry => parsePaletteScheme(entry, BRANDS))).toEqual([{ id: 'custom', name: '', base: 'claude', accent: '#1a7f5a' }])
+  expect(migrated.paletteSchemes.map(entry => parsePaletteScheme(entry, PALETTE_PRESETS))).toEqual([{ id: 'custom', name: '', base: 'claude', accent: '#1a7f5a' }])
   expect(clampPrefs({ brandAccent: '#abc' }).paletteSchemes).toEqual([])
   expect(clampPrefs({ brandAccent: 'red' }).paletteSchemes).toEqual([])
   expect(clampPrefs({}).paletteColors).toBe('brand')

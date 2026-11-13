@@ -1,4 +1,4 @@
-import { BRAND_INK_ACCENT, BRAND_INK_ATTR, BRAND_INK_ORIGINAL, BRAND_INK_TEXT, CUSTOM_MARK_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_TINT_ATTR, CUSTOM_WORD_ATTR, CUSTOM_WORD_IMAGE, CUSTOM_WORD_TEXT, INLINE_CODE_COLOR_ATTR, INLINE_CODE_COLOR_CLASSIC } from '../../constants'
+import { BRAND_DEFAULT_PRESETS, BRAND_INK_ACCENT, BRAND_INK_ATTR, BRAND_INK_ORIGINAL, BRAND_INK_TEXT, CUSTOM_MARK_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_TINT_ATTR, CUSTOM_WORD_ATTR, CUSTOM_WORD_IMAGE, CUSTOM_WORD_TEXT, INLINE_CODE_COLOR_ATTR, INLINE_CODE_COLOR_CLASSIC } from '../../constants'
 import { readPrefs, subscribePrefs } from '../../core/prefs'
 import { selectedReaderScheme } from '../../shared/palette-scheme'
 import { loadBrandImages, readBrandImages, resetBrandImages, subscribeBrandImages } from '../../shared/custom-brand'
@@ -86,7 +86,7 @@ export function install() {
     const { mark, wordmark } = readBrandImages()
     const scheme = selectedReaderScheme(prefs)
     const custom = scheme !== undefined
-    const card = PALETTE_CARDS.find((entry) => entry.id === (scheme?.base ?? prefs.brand)) ?? PALETTE_CARDS[0]
+    const card = PALETTE_CARDS.find((entry) => entry.id === (scheme?.base ?? BRAND_DEFAULT_PRESETS[prefs.brand])) ?? PALETTE_CARDS[0]
     const accent = scheme?.accent ?? card.accent
     attribute(CUSTOM_MARK_ATTR, mark === null ? null : '')
     property(MARK_PROPERTY, mark === null ? null : `url("${mark.url}")`)

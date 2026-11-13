@@ -24,11 +24,16 @@ function shift(colour, dl, m) {
   return formatHex({ mode: 'oklch', l: clamp(base.l + dl, 0, 1), c: base.c * m, h: base.h ?? 0 })
 }
 
+/** A card's link colour for one scheme: the one it names, or its accent moved along its lightness. */
+export function cardLink(card, scheme) {
+  return card.link?.[scheme] ?? shift(card.accent, scheme === 'light' ? -0.06 : 0.15, 1)
+}
+
 /** The colour a seed names for one card and scheme: a card's own seed, or a tone already resolved above. */
 function seedColour(card, seed, scheme, resolved) {
   if (seed === 'canvas') return card.canvas[scheme]
   if (seed === 'accent') return card.accent
-  if (seed === 'link') return card.link?.[scheme] ?? shift(card.accent, scheme === 'light' ? -0.06 : 0.15, 1)
+  if (seed === 'link') return cardLink(card, scheme)
   const tone = resolved.get(seed)
   if (tone === undefined) throw new Error(`build: a tone reads ${seed} before it is resolved`)
   return tone

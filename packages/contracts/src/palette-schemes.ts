@@ -155,15 +155,15 @@ export interface LegacyCustomPalette {
 
 /**
  * The records with the earlier custom card carried in as the scheme `custom`,
- * starting from the brand it was drawn over. Nothing is added when a `custom`
+ * starting from `base`, the preset of the brand it was drawn over. Nothing is added when a `custom`
  * record exists, or when the reader never picked a colour and never selected
  * the card.
  */
-export function carryCustomPalette(entries: readonly string[], legacy: LegacyCustomPalette, brand: string, selected: boolean, presets: readonly string[]) {
+export function carryCustomPalette(entries: readonly string[], legacy: LegacyCustomPalette, base: string, selected: boolean, presets: readonly string[]) {
   if (findPaletteScheme(entries, PALETTE_SCHEME_CUSTOM, presets) !== undefined) return [...entries]
   const picked = legacy.accent !== '' || legacy.canvasLight !== '' || legacy.canvasDark !== '' || legacy.code !== ''
   if (!picked && !selected) return [...entries]
-  const scheme: PaletteScheme = { id: PALETTE_SCHEME_CUSTOM, name: '', base: brand }
+  const scheme: PaletteScheme = { id: PALETTE_SCHEME_CUSTOM, name: '', base }
   if (legacy.accent !== '') scheme.accent = legacy.accent
   if (legacy.canvasLight !== '' || legacy.canvasDark !== '') {
     scheme.background = {}

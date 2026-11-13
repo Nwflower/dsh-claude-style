@@ -23,6 +23,15 @@ export const BRAND_DEEPSEEK_LEGACY = 'off'
 export const BRANDS = [BRAND_CLAUDE, BRAND_DEEPSEEK] as const
 
 /**
+ * The built-in colour presets (D96), one id per colour card in
+ * packages/client/src/theme/tokens.json; the build fails when the two disagree.
+ */
+export const PALETTE_PRESETS = ['claude', 'deepseek'] as const
+export type PalettePreset = typeof PALETTE_PRESETS[number]
+/** The preset each brand paints while the selection follows the brand. */
+export const BRAND_DEFAULT_PRESETS = { [BRAND_CLAUDE]: 'claude', [BRAND_DEEPSEEK]: 'deepseek' } as const satisfies Record<typeof BRANDS[number], PalettePreset>
+
+/**
  * The selected colour scheme (D96): `brand` follows the selected brand's default
  * scheme and stays independent of its artwork; any other value is a preset's id
  * or the id of one of the reader's schemes.
@@ -431,14 +440,14 @@ export function clampPrefs(value: unknown): Prefs {
  * the reader's stored choice no longer reads as it was written (D12).
  */
 function carryPaletteSchemes(out: Record<string, unknown>) {
-  const presets: readonly string[] = BRANDS
+  const presets: readonly string[] = PALETTE_PRESETS
   const { entries, problems } = normalizePaletteSchemes(out.paletteSchemes as string[], presets)
   const carried = carryCustomPalette(entries, {
     accent: out.customAccent as string,
     canvasLight: out.customCanvasLight as string,
     canvasDark: out.customCanvasDark as string,
     code: out.customCode as string,
-  }, out.brand as string, out.paletteColors === PALETTE_COLORING_CUSTOM, presets)
+  }, BRAND_DEFAULT_PRESETS[out.brand as typeof BRANDS[number]], out.paletteColors === PALETTE_COLORING_CUSTOM, presets)
   out.customAccent = ''
   out.customCanvasLight = ''
   out.customCanvasDark = ''

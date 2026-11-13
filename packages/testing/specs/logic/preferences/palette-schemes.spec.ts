@@ -9,12 +9,12 @@
  * @risk A reader who upgrades loses the colours they picked, or one hand-edited record empties the whole scheme list.
  */
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
-import { BRANDS, PALETTE_COLORING_BRAND, clampPrefs } from '@dsh-claude-style/contracts/prefs'
+import { PALETTE_COLORING_BRAND, PALETTE_PRESETS, clampPrefs } from '@dsh-claude-style/contracts/prefs'
 import {
   PALETTE_SCHEME_LIMIT, PALETTE_SCHEME_NAME_MAX, carryCustomPalette, normalizePaletteSchemes, parsePaletteScheme, serializePaletteScheme,
 } from '@dsh-claude-style/contracts/palette-schemes'
 
-const PRESETS: readonly string[] = BRANDS
+const PRESETS: readonly string[] = PALETTE_PRESETS
 
 let reported: string[]
 beforeEach(() => {
