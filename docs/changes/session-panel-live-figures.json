@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-13",
+  "group": "fixes",
+  "order": 0,
+  "external": false,
+  "zh": "详情栏的会话统计与 Token 用量改为读底部读数那一份实时读数，数字随流式回答连续前进，不再等宿主按步结算",
+  "en": "Read the details rail's session stats and token usage from the same live reading as the composer line, so both move through a streaming answer instead of waiting for the host's per-step settlement"
+}

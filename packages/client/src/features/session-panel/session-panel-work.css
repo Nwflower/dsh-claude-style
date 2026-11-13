@@ -1,0 +1,48 @@
+/* Work is one section per kind (D94). Names yield to a right-aligned clock;
+   settled rows share one disclosure, so no category eyebrow or inline dot
+   competes with the command's name. */
+body[data-dsh-claude-style] .dsh-claude-panel-work-section .dsh-claude-panel-heading,
+body[data-dsh-claude-style] .dsh-claude-panel-work-row {
+  font-weight: 400;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-work-row .dsh-claude-panel-side,
+body[data-dsh-claude-style] .dsh-claude-panel-finished-toggle {
+  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 20px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-work-duration {
+  color: var(--dsw-alias-label-secondary);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-execution {
+  color: var(--dsw-alias-label-tertiary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-finished-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  list-style: none;
+  cursor: pointer;
+  color: var(--dsw-alias-label-primary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-finished-toggle::-webkit-details-marker {
+  display: none;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-finished-toggle > svg {
+  flex: none;
+  color: var(--dsw-alias-label-secondary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-finished-toggle:focus-visible {
+  outline: 1.5px solid var(--dsw-focus-ring-color);
+  outline-offset: 2px;
+  border-radius: 4px;
+}

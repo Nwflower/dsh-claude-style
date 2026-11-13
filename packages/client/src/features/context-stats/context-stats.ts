@@ -1,15 +1,22 @@
 import { SESSION_STATS_ATTR } from '../../constants'
 import { createSessionStats } from './session-stats'
 import type { SessionCostReading } from './session-stats'
+import type { SessionFigures } from '../../shared/session-projections'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { CloseReason, FeatureHandle } from '@dsh-claude-style/engine/scheduler'
 import type { FeatureUi } from '../../core/feature'
 import type manifest from './context-stats.manifest'
 
-/** The statistics as another feature reads them: the shown session's cost, and word of each rewrite. */
+/**
+ * The statistics as another feature reads them: the shown session's figures with
+ * the streaming answer's estimate in them, its cost, and word of each rewrite.
+ */
 export interface ContextStatsHandle extends FeatureHandle {
   sessionCost(): SessionCostReading | null
   onSessionCost(listener: () => void): () => void
+  /** The figures the composer's line prints, for a second face of the same session (D94). */
+  figures(): SessionFigures | null
+  onFigures(listener: () => void): () => void
 }
 
 /**
@@ -51,6 +58,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     },
     sessionCost: stats.sessionCost,
     onSessionCost: stats.onSessionCost,
+    figures: stats.figures,
+    onFigures: stats.onFigures,
   }
 
   // The composer restyle hides the host's stat dialogs only while this

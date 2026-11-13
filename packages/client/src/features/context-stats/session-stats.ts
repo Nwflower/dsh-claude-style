@@ -23,6 +23,7 @@ import type { HostContext, HostText } from '@dsh-claude-style/engine/host'
 import type { HostContextPressureProjection, HostSessionStatsProjection, HostSnapshotSource, HostTokenUsageProjection } from '@dsh-claude-style/contracts/services'
 import type { StatsReading } from './stats-count'
 import type { PieColours } from './context-meter-pie'
+import type { SessionFigures } from '../../shared/session-projections'
 
 /** The shown session's cost in micro units, in the currency billing follows. */
 export interface SessionCostReading {
@@ -183,6 +184,18 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
     return readingMemo
   }
 
+  /**
+   * The last reading as the two faces publish it: the figures with the streaming
+   * answer's estimate in them, kept for the other face to read between writes
+   * (shared/session-projections.ts).
+   */
+  let liveFigures: SessionFigures | null = null
+
+  /** The figures another face prints, or null while this session's reading has no owner. */
+  function figures(): SessionFigures | null {
+    return liveFigures !== null && liveFigures.sessionId !== '' ? liveFigures : null
+  }
+
   const block = createStatsBlock(reading, chatText, currency)
   const inline = createInlineStats(reading, chatText, findContextMeter, currency)
   const binding = createContextStatsBinding(() => ring()?.root() ?? null)
@@ -227,6 +240,8 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
     // So does the occupancy the last real sample answered.
     sampledOccupancy = null
     readingMemo = null
+    // And the figures published for the other face (shared/session-projections.ts).
+    liveFigures = null
     // The skeleton holds the panel's place, not the session's (stats-block.ts);
     // the line keeps the numbers it shows, which the next session counts on from.
     block.stopSkeleton()
@@ -277,11 +292,26 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
     if (readPrefs().statsPosition === STATS_POSITION_CONTEXT) inline.clear()
     else inline.render()
     block.render()
-    for (const listener of costListeners) listener()
+    // The two surfaces read the figures only where they stand — the popover
+    // closed reads nothing at all — so the reading the rail prints is taken here,
+    // on every frame that moves it, and handed on with the same word the
+    // surfaces' own listeners get (D94).
+    const read = reading()
+    liveFigures = { sessionId: watch?.sessionId ?? '', stats: read.stats, usage: read.usage, cost: read.cost, currency: currency() }
+    for (const listener of figureListeners) listener()
   }
 
-  /** Who reads the session's cost outside the two surfaces (the mascot's bubble), told whenever they are rewritten. */
-  const costListeners = new Set<() => void>()
+  /**
+   * Who reads these figures outside the two surfaces: the mascot's bubble and the
+   * details rail, each told whenever they are rewritten.
+   */
+  const figureListeners = new Set<() => void>()
+
+  /** Hear one more reader of the figures; the returned function stops it. */
+  function listenFigures(listener: () => void) {
+    figureListeners.add(listener)
+    return () => { figureListeners.delete(listener) }
+  }
 
   /**
    * Whether the route in force bills at the platform's own list: the document's
@@ -459,11 +489,11 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
       binding.close()
     },
     sessionCost,
+    figures,
     /** Be told whenever the figures are written again; the return stops it. */
-    onSessionCost(listener: () => void) {
-      costListeners.add(listener)
-      return () => { costListeners.delete(listener) }
-    },
+    onSessionCost: listenFigures,
+    /** The same word, for the face that prints the figures rather than the cost alone. */
+    onFigures: listenFigures,
     /**
      * The viewport moved under the panel: the host re-places it from its anchor,
      * so the skin's own reading is taken again in the same frame, and a narrower
@@ -484,7 +514,7 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
       releaseWatch()
       offCost()
       cost.stop()
-      costListeners.clear()
+      figureListeners.clear()
       // The structure bus behind the estimate's call rows goes with the rest.
       estimate.stop()
       releaseCardWatch()

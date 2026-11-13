@@ -15,10 +15,17 @@ import { SessionPanelButton } from './session-panel-button'
 import { copy } from './copy'
 import { registerSlotEntries } from '@dsh-claude-style/engine/host'
 import { clearPanelContext, setPanelContext } from './session-panel-host'
+import { clearPanelUi, setPanelUi } from './session-panel-live'
+import type { FeatureUi } from '../../core/feature'
 import type { HostContext } from '@dsh-claude-style/engine/host'
+import type manifest from './session-panel.manifest'
 
-export function install(ctx: HostContext) {
+export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   setPanelContext(ctx)
+  // The figures' live reading belongs to the statistics feature, installed under
+  // its own switch: the registry is held for the rail's lifetime, and a handle
+  // that arrives or leaves hands the rail back to the route's folded numbers.
+  setPanelUi(ui)
   // The header's control joins the conversation's utilities; a host without
   // that seat keeps the rail's own close control.
   const fiber = registerSlotEntries(ctx, [{
@@ -39,6 +46,7 @@ export function install(ctx: HostContext) {
     root.unmount()
     container.remove()
     clearPanelContext(ctx)
+    clearPanelUi(ui)
     if (fiber !== null && fiber !== undefined && typeof fiber.dispose === 'function') fiber.dispose()
   }
 }

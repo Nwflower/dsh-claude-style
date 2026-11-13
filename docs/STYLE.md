@@ -348,7 +348,7 @@ is 13/20 in weight 600 and is the column's only bold text; the primary ink goes
 to headings, row titles, the occupancy figure, the share column and a figure's
 value. Labels take the secondary ink; a row's detail, the token column and the
 room left take the tertiary one. The small size, 11.5/16, is kept for a row's
-trailing state, a background category's label, the fold control and the legend's
+trailing state, the file-list fold control and the legend's
 caption. Sections use 16px vertical insets and a hairline on their top edge, and
 lengths stay on the 4px grid.
 
@@ -385,16 +385,21 @@ measured against the whole window. The figures carry no estimate mark; one
 caption under the legend says the parts are estimates and its tooltip explains
 the calibration. Free space is the window less occupancy.
 
-Outputs, jobs and subagents cover the latest human-prompted round. Tool results,
-background notices and automatic continuations keep that round. An older job or
-child that is still running remains visible until it ends; continuing an existing
-child in the current round brings it into that round. Team boards and bound change
-requests remain session-wide.
+Outputs and subagents cover the latest human-prompted round. Tool results,
+background notices and automatic continuations keep that round. An older child
+that is still running remains visible until it ends; continuing an existing child
+in the current round brings it into that round. Processes include every command
+invocation across the session, with foreground waiting and background execution
+identified from the creating invocation and its result. Tasks, team boards and
+bound change requests remain session-wide.
 
 A list shows two rows; the rest fold behind a quiet full-width control that
 names the count left, which keeps a long list from pushing the sections under it
-out of the column. A background category folds the same way, keeping its two
-leading rows. An output row names the file and the folder it lies in, and only a
+out of the column. Processes, Tasks, Subagents and Team each have their own section
+with a regular-weight title. Running work stays visible; settled records share a
+single “N finished” disclosure. Command rows use a terminal mark, a name, and a
+separate right-aligned duration beside their execution mode and stop control.
+An output row names the file and the folder it lies in, and only a
 file the model presented carries a state word. Its mark is a single-stroke sheet
 in the row's own ink, with a picture frame for an image, so a coloured file-type
 badge never competes with the legend. With the rail standing the
@@ -405,9 +410,9 @@ The two figures sections put a label on the left and a value on the right, one
 figure a row, so a long duration or token count keeps the row's width. Session
 stats holds how the session ran: turns and steps, output speed, first-token
 latency, model and tool time. Token usage holds what it spent: cost, cache hit
-and the four token buckets. A finished command keeps its row
-in Background tasks for its round, its status from the durable job records and
-its output from the log the command wrote. Running jobs and continuable children
+and the four token buckets. A finished command keeps its row in Processes for the
+session, its status from the invocation and durable job records and its output
+from the log the command wrote. Running registered jobs and continuable children
 have a separate 28px stop target beside the row's disclosure or navigation button.
 One press asks for confirmation, a second requests cancellation, and blur cancels
 the confirmation. The pending control is disabled; a failed request reports its

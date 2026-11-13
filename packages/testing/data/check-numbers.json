@@ -470,12 +470,11 @@
         2,
         4
       ],
-      "Background tasks lists the commands and files them under their kind": [
+      "the finished disclosure reveals command history and folds it independently": [
         0,
-        1,
-        2
+        3
       ],
-      "a finished command carries no status word and keeps its clock": [
+      "a finished command keeps a separate clock and its foreground provenance": [
         2
       ],
       "the view switch stands on the title's own line, clear of the title and the utilities": [
@@ -1165,10 +1164,9 @@
       ]
     },
     "packages/testing/smoke/cases/settings.mjs": {
-      "every colour card is a button, the card the page paints is pressed and the others stand ready: the two presets always, the reader schemes after them once stored": [
+      "every colour card is a button, the card the page paints is pressed and the others stand ready: the presets always, the reader schemes after them once stored": [
         0,
-        2,
-        3
+        1
       ],
       "following the brand presses the brand's card with no reset to offer; a picked card paints its own colours while the mark stays, and offers the way back": [
         0
