@@ -16,3 +16,11 @@ export function webfontRules(faces: readonly string[]): string {
 }`)
     .join('\n\n')
 }
+
+/**
+ * The faces the drop point does not hold, as a reader names them, in the
+ * contract's order. The settings page reports them under the typeface row (D75).
+ */
+export function missingWebfonts(faces: readonly string[]): string[] {
+  return OPTIONAL_WEBFONTS.filter(face => !faces.includes(face.file)).map(face => face.label)
+}

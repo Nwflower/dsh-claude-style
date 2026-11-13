@@ -131,6 +131,7 @@
   "typefaceClaude": { "zh": "Claude", "en": "Claude" },
   "typefaceSystem": { "zh": "系统无衬线", "en": "System sans" },
   "typefaceHost": { "zh": "跟随宿主", "en": "Follow host" },
+  "typefaceMissing": { "zh": "缺少 {names}。系统里也没装时，这部分文字改用随插件附带的字体显示；放入 $DSH_HOME/dsh-claude-style/fonts/ 后刷新页面生效。", "en": "Missing {names}: without a system copy, this text uses the faces shipped with the plugin. Files in $DSH_HOME/dsh-claude-style/fonts/ take effect after a reload." },
   "sidebarLayoutTitle": { "zh": "左侧栏布局", "en": "Left sidebar layout" },
   "sidebarLayoutRelaxed": { "zh": "宽松", "en": "Relaxed" },
   "sidebarLayoutCompact": { "zh": "紧凑", "en": "Compact" },

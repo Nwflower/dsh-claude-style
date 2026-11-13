@@ -98,7 +98,7 @@ export { ACTIVITY_THINKING, activityWords, waitingWord } from './shared/turn-act
 export { inPageColumns, inPageLength, installFrameColumns } from './shared/page-scale-columns'
 export { pageZoomOf, pageZoomPercent, pageZoomText } from './shared/page-zoom'
 export { interfaceFontSizeOf, interfaceFontSizePercent } from './shared/interface-font-size'
-export { webfontRules } from './shared/webfont-rules'
+export { missingWebfonts, webfontRules } from './shared/webfont-rules'
 export { install as installActiveFirst } from './features/active-first/active-first'
 export { orderDateSeats } from './features/date-groups/date-groups'
 export { install as installRowSkip, WIDTH_SETTLE_MS } from './features/row-skip/row-skip'

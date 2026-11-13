@@ -22,6 +22,11 @@
   }
   window.fetch = function (input, init) {
     var url = typeof input === 'string' ? input : (input && input.url) || ''
+    if (url === '/dsh-claude-style/webfonts' && CASE === 'settings') {
+      // A drop point holding one of the three faces the package does not carry:
+      // the settings page's typeface row reports the other two (D75).
+      return Promise.resolve(jsonResponse({ ok: true, faces: ['AnthropicSerifWebText.ttf'] }))
+    }
     if (url === '/dsh-claude-style/username') return Promise.resolve(jsonResponse({ ok: true, username: 'Tester' }))
     if (url === '/dsh-claude-style/brand') {
       // The custom-brand case holds both images; the bytes are the runner's to

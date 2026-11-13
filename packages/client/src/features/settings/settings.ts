@@ -6,6 +6,7 @@ import { createHostAccountMenu } from '../account/host-menu'
 import { adoptSettingsForm, motionReduced, readPrefs, savePrefs, subscribePrefs } from '../../core/prefs'
 import { cacheFirstMatch, hostSlots } from '@dsh-claude-style/engine/host'
 import { motionMs } from '../../shared/motion'
+import { subscribeWebfonts } from '../../shared/webfonts'
 import { ClaudeStyleSegmentGroup, createSettingsControls, headerAside, tabRows } from './settings-controls'
 import { createSettingsAppearanceTab } from './settings-tab-appearance'
 import { createSettingsGeneralTab } from './settings-tab-general'
@@ -229,9 +230,15 @@ export function ClaudeStyleSettingsSection(props: { embed?: boolean }) {
     const unsubscribeCopy = onModelCopyLoaded(() => {
       if (alive) setPrefs(p => Object.assign({}, p))
     })
+    // The faces the drop point holds arrive from the host half after this page
+    // may already be up; the typeface row reports the missing ones (D75).
+    const unsubscribeFonts = subscribeWebfonts(() => {
+      if (alive) setPrefs(p => Object.assign({}, p))
+    })
     return () => {
       alive = false
       unsubscribe()
+      unsubscribeFonts()
       if (unsubscribeCopy) unsubscribeCopy()
       if (usernameTimer.current) clearTimeout(usernameTimer.current)
     }

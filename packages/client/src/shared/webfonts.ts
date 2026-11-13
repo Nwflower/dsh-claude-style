@@ -15,12 +15,35 @@ const fontsInPlace = createHostResource(WEBFONTS_ROUTE, (data) => {
 /** The answer in hand, kept for a generation that takes the page after this one. */
 let faces: string[] | null = null
 
+/** Everyone waiting to hear which faces the drop point holds. */
+const listeners: ((faces: readonly string[]) => void)[] = []
+
+/**
+ * The faces the drop point held when the host half answered, or null before
+ * that answer: the settings page reports the missing ones from this read
+ * instead of asking the route again (D75).
+ */
+export function webfontsInPlace(): readonly string[] | null {
+  return faces
+}
+
+/** Hear the answer once; a listener registered after it is called with it at once. The returned call removes it. */
+export function subscribeWebfonts(listener: (faces: readonly string[]) => void) {
+  listeners.push(listener)
+  if (faces !== null) listener(faces)
+  return () => {
+    const index = listeners.indexOf(listener)
+    if (index !== -1) listeners.splice(index, 1)
+  }
+}
+
 /** The asynchronous answer uses `font-display: swap`; one page shares it across generations. */
 export function installWebfonts() {
   let stopped = false
   let stopSheet: (() => void) | null = null
   /** Mount the rules once; with no face in place there is nothing to declare. */
   function register(names: string[]) {
+    for (const listener of [...listeners]) listener(names)
     if (stopped || stopSheet !== null) return
     const rules = webfontRules(names)
     if (rules === '') return

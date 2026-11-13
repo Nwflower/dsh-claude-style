@@ -1,10 +1,14 @@
 import * as React from 'react'
 import { BACKGROUND_OPACITY_DEFAULT, BACKGROUND_OPACITY_MAX, BACKGROUND_OPACITY_MIN, PALETTE_CLAUDE, PALETTE_HOST, TYPEFACE_CLAUDE, TYPEFACE_HOST, TYPEFACE_SYSTEM } from '../../constants'
 import { backgroundOpacityPercent } from '../../shared/background-opacity'
+import { missingWebfonts } from '../../shared/webfont-rules'
+import { webfontsInPlace } from '../../shared/webfonts'
 import { brandRows } from './settings-brand'
 import { paletteCardsRow } from './palette-cards'
 import { PercentControl } from './settings-percent-control'
 import { copy } from './copy'
+import { noteDesc } from './settings-controls'
+import type { Prefs } from '../../constants'
 import type { SettingsRow, SettingsTab, SettingsView } from './settings-controls'
 
 /**
@@ -46,6 +50,20 @@ function backgroundOpacityRow(view: SettingsView): SettingsRow {
   }
 }
 
+/**
+ * The typeface row's description, with the faces the drop point is missing
+ * under it while the skin's own faces are chosen (D75). The answer is the one
+ * the page already holds (shared/webfonts.ts), read here rather than asked
+ * again; before it arrives nothing is claimed about the faces.
+ */
+function typefaceDesc(prefs: Prefs): React.ReactNode {
+  const faces = webfontsInPlace()
+  if (prefs.typeface !== TYPEFACE_CLAUDE || faces === null) return copy('typefaceDesc')
+  const missing = missingWebfonts(faces)
+  if (missing.length === 0) return copy('typefaceDesc')
+  return noteDesc(copy('typefaceDesc'), copy('typefaceMissing', { names: missing.join(' / ') }))
+}
+
 export function createSettingsAppearanceTab(): SettingsTab {
   function rows(view: SettingsView) {
     const prefs = view.prefs
@@ -72,7 +90,7 @@ export function createSettingsAppearanceTab(): SettingsTab {
         node: controls.row(
           'typeface',
           copy('typefaceTitle'),
-          copy('typefaceDesc'),
+          typefaceDesc(prefs),
           controls.segment([
             { value: TYPEFACE_CLAUDE, label: copy('typefaceClaude') },
             { value: TYPEFACE_SYSTEM, label: copy('typefaceSystem') },
