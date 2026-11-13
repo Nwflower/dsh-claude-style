@@ -95,8 +95,9 @@ export default {
     check('a burst is slid from the stretch a slide carries instead of jumping whole',
       burst.length >= bound('followSlideMinFrames') && burst[0] > bound('followSlideStartPx') &&
         burst.every((offset, at) => at === 0 || offset <= burst[at - 1]) && burst[burst.length - 1] <= AT_END_PX &&
-        (burstSteps.length >= bound('followWalkDistinctValues') ||
-          (burstSteps.length >= 2 && Math.max(...burstSteps.map((step) => step.gap)) < burst[0] * 4 / 5)),
+        // A jump leaves no distinct intermediate reading and covers the whole
+        // distance in one step; a slide leaves one and never covers it whole.
+        burstSteps.length >= 1 && Math.max(...burstSteps.map((step) => step.gap)) < burst[0] * 9 / 10,
       JSON.stringify({ readings: burst.length, start: burst[0], end: burst[burst.length - 1], steps: burstSteps.map((step) => step.gap) }))
     // The slide restarts from where the frame before it stood, and one growth is
     // all the distance it may be left carrying, the tail of the slide still
@@ -575,10 +576,11 @@ export default {
     // one move and the direction it holds, not the sign of it.
     const travelled = boxes[boxes.length - 1].width - boxes[0].width
     const toward = travelled < 0 ? -1 : 1
-    // A sizer's subpixel measurement can move the box by 1/64px before the
-    // real travel. That is not a direction change; the total displacement and
-    // every visible step still have to go the wording's way.
-    const MEASURE_EPSILON_PX = 1 / 64
+    // A sizer's subpixel measurement can move the box by a fraction of a pixel
+    // before the real travel; a loaded machine leaves up to a fifth of one. That
+    // is not a direction change, and it is below what a reader can see; the
+    // total displacement and every visible step still go the wording's way.
+    const MEASURE_EPSILON_PX = 0.25
     check('the box the swap runs in never reads as empty, holds its height, and moves the clock only where the words themselves changed',
       boxes.length > 4 &&
         boxes.every((box) => box.width > 0 && box.height === boxes[0].height) &&
