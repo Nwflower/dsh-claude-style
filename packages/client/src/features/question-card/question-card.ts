@@ -54,7 +54,7 @@ function buildSubmitShortcut() {
   path.setAttribute('stroke-linecap', 'round')
   path.setAttribute('stroke-linejoin', 'round')
   icon.append(path)
-  shortcut.append(buildElement('span', '', 'Ctrl'), icon)
+  shortcut.append(buildElement('span', '', 'Enter'), icon)
   return shortcut
 }
 

@@ -5,6 +5,7 @@ import { observeMatches, subscribeMutations } from '@dsh-claude-style/engine/bus
 import { cacheFirstMatch } from '@dsh-claude-style/engine/host'
 import { ROOT_SLOT_SELECTOR, SIDEBAR_DRAWER_ATTRIBUTE, SIDEBAR_HANDLE_SELECTOR, SIDEBAR_ROOT_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { subscribePrefs } from '../core/prefs'
+import { pageViewport } from './page-zoom'
 
 /** One length in the host's written column list, and the bracket group a length
  * may stand inside (`minmax(0px, 0px)`). */
@@ -84,6 +85,8 @@ interface Declaration {
 const FRAME_COLUMNS: Declaration = { property: 'grid-template-columns', inPage: inPageColumns }
 const SIDEBAR_WIDTH: Declaration = { property: 'width', inPage: inPageLength }
 const SIDEBAR_HANDLE_LEFT: Declaration = { property: 'left', inPage: inPageLength }
+/** At the host's narrow layout its own drawer, rail and expanded tracks stay authoritative. */
+const HOST_FRAME_LAYOUT_MAX_WIDTH = 768
 
 /** One write this rule made: the number the host wrote, and the number it drew. */
 interface Carry {
@@ -133,12 +136,12 @@ export function installFrameColumns(vocabulary: FrameColumnsVocabulary) {
     const { property } = declaration
     const value = box.style.getPropertyValue(property)
     const seen = seenOn(box)
-    // A frame drawing the sidebar as a drawer is outside the three-track grid
-    // this rule converts: the sidebar's column is lifted out of the flow and
-    // placed over the page, so the tracks no longer describe the page the
-    // reader sees. The host's own declaration stands there, and a carried
-    // number is handed back rather than divided again.
-    if (declaration === FRAME_COLUMNS && box.hasAttribute(SIDEBAR_DRAWER_ATTRIBUTE)) {
+    // The narrow shell's drawer, rail and expanded tracks are host-declared
+    // geometry. Their collapse attributes may trail the viewport by a frame, so
+    // the viewport itself gates every declaration, including the sidebar box.
+    // A wide drawer is outside the three-track grid for the same reason.
+    if (pageViewport().width <= HOST_FRAME_LAYOUT_MAX_WIDTH
+      || (declaration === FRAME_COLUMNS && box.hasAttribute(SIDEBAR_DRAWER_ATTRIBUTE))) {
       if (seen !== null) {
         forgetOn(box)
         box.style.setProperty(property, seen.from)

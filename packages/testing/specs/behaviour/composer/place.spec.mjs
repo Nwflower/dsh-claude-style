@@ -304,7 +304,7 @@ export default spec({ page: 'composer' }, ({ test }) => {
       text: document.querySelector(selector).textContent,
       icons: document.querySelector(selector).querySelectorAll('svg').length,
     }), SUBMIT_SHORTCUT)
-    t.expectThat.equal(shortcut, { text: 'Ctrl', icons: 1 }, 'the submit button carries Ctrl and the return icon')
+    t.expectThat.equal(shortcut, { text: 'Enter', icons: 1 }, 'the submit button names the key that actually submits')
     const narrowWidth = await t.page.evaluate(() => {
       const mount = window.__debugQuestion.section.parentElement
       window.__debugQuestion.column.style.width = '360px'

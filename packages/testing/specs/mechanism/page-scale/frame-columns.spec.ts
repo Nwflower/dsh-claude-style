@@ -9,7 +9,8 @@
  * @features shared
  * @risk At a page scale other than 100% the frame's three columns add up to a factor more than the window, the sidebar is drawn a factor wider and shows cut off, its content stands wider than its column and is clipped at the column's edge, its drag handle leaves that edge, and a second copy of the rule on the page divides the first one's numbers again.
  */
-import { afterEach, expect, test } from 'vitest'
+import { afterEach, beforeEach, expect, test } from 'vitest'
+import { page } from 'vitest/browser'
 import { SIDEBAR_HANDLE_SELECTOR, SIDEBAR_SLOT_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { inPageColumns, inPageLength, installFrameColumns } from '@dsh-claude-style/client/pure'
 import { attach } from '../../fixtures/host-markup'
@@ -23,6 +24,7 @@ const SIDEBAR_ROOT_PART = 'sidebar-root'
 /** The record this rule keeps on a frame it carried, read from the surface table. */
 const CARRY_ATTRIBUTE = surfaceAttribute('skin.frame-columns')
 
+beforeEach(async () => { await page.viewport(1280, 1000) })
 afterEach(resetPage)
 
 /** The host's frame: the one element the part marks, with its columns written inline. */
@@ -93,6 +95,37 @@ test('a frame whose right column is closed carries its sidebar the same way', as
   installed()
   await settle()
   expect(columnsOf(frame)).toBe('224px minmax(0px, 1fr) minmax(0px, 0px)')
+})
+
+test('the narrow frame keeps the host grid through viewport and collapse-attribute ordering', async () => {
+  await page.viewport(1028, 900)
+  try {
+    drawnAt(1.25)
+    const frame = hostFrame('280px minmax(0px, 1fr) minmax(0px, 0px)')
+    const sidebar = hostSidebar('280px')
+    const rule = installed()
+    await settle()
+    expect(columnsOf(frame)).toBe('224px minmax(0px, 1fr) minmax(0px, 0px)')
+    expect(sidebar.style.width).toBe('224px')
+    await page.viewport(640, 900)
+    rule.settle()
+    for (const written of [
+      '280px minmax(0px, 1fr) minmax(0px, 0px)',
+      '56px minmax(0px, 1fr) minmax(0px, 0px)',
+      '0px minmax(0px, 1fr) minmax(0px, 0px)',
+      '56px minmax(0px, 1fr) minmax(0px, 0px)',
+      '280px minmax(0px, 1fr) minmax(0px, 0px)',
+    ]) {
+      frame.style.setProperty('grid-template-columns', written)
+      sidebar.style.width = written.startsWith('56px') ? '56px' : written.startsWith('0px') ? '0px' : '280px'
+      await Promise.resolve()
+      expect(columnsOf(frame)).toBe(written)
+      expect(frame.hasAttribute(CARRY_ATTRIBUTE)).toBe(false)
+    }
+    expect(sidebar.style.width).toBe('280px')
+  } finally {
+    await page.viewport(1280, 1000)
+  }
 })
 
 test('the record stands on the frame, so a second copy of the rule reads it too', async () => {

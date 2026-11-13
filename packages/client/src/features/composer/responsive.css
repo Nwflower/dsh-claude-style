@@ -17,7 +17,9 @@ body[data-dsh-claude-style] [data-composer-card][data-composer-variant] [data-ds
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] > [data-dsh-claude-part~="trailing"] {
   margin-inline-start: auto;
+  flex-shrink: 1;
   flex-wrap: nowrap;
+  min-width: 0;
   max-width: 100%;
 }
 body[data-dsh-claude-style] [data-composer-card][data-dsh-claude-composer-layout="compact"] .dsh-claude-model-btn > .dsh-claude-model-tag,
@@ -64,8 +66,8 @@ body[data-dsh-claude-style] [data-composer-card][data-composer-variant][data-dsh
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat > .dsh-claude-model-seat-model {
   max-width: 100%;
 }
-/* The narrow layout retains its recognition floor. Wide and hero names use
-   their intrinsic width, so a short name keeps the original compact face. */
+/* The conversation keeps a ten-character recognition floor; the hero rules
+   below release it so a long home model name can take the remaining room. */
 body[data-dsh-claude-style] [data-composer-card]:is([data-dsh-claude-composer-layout="compact"], [data-dsh-claude-composer-layout="stacked"]) [data-dsh-claude-composer-toolbar] [data-dsh-claude-part~="trailing"] .dsh-claude-model-seat > .dsh-claude-model-seat-model {
   min-width: calc(10ch + 8px);
 }

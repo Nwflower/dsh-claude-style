@@ -1,11 +1,11 @@
 /**
- * The composer's drawn caret around an input-method composition: it stands
- * down while the IME paints its own candidate and underline, and it comes back
- * at the committed selection once the composition lands.
+ * The composer's drawn caret around an input-method composition: it keeps the
+ * ordinary two-pixel width while the IME paints its candidate and underline,
+ * and it follows the committed selection once the composition lands.
  *
  * @capability composer-caret
  * @features caret
- * @risk A reader typing English through a Chinese input method is left with the drawn caret at a segment boundary, or with no drawn caret at all after the commit.
+ * @risk A reader typing through a Chinese input method sees the caret collapse to the native one-pixel line, or the drawn caret misses the committed selection.
  */
 import { spec, host, surface } from '../../fixtures/behaviour.mjs'
 
@@ -68,20 +68,25 @@ function readCaret(t) {
       layer: drawn === null ? null : {
         visible: drawn.checkVisibility({ visibilityProperty: true, opacityProperty: true }),
         left: drawn.getBoundingClientRect().left,
+        width: getComputedStyle(drawn).width,
       },
+      nativeColour: getComputedStyle(input).caretColor,
       range: { left: range.left, offset: document.getSelection().getRangeAt(0).startOffset },
     }
   }, [FIELD, CARET_MARK, LAYER])
 }
 
 export default spec({ page: 'composer' }, ({ test }) => {
-  test('a composition keeps the browser\'s own caret', async (t) => {
+  test('a composition keeps the drawn caret at its ordinary width', async (t) => {
     await editDraft(t, 3)
     await compose(t, true)
     await frames(t, 3)
     const caret = await readCaret(t)
-    t.expectThat.equal(caret.mark, false, 'the field\'s native caret kept while the IME composes')
-    t.expectThat.equal(caret.layer?.visible ?? false, false, 'the skin\'s caret standing down during the composition')
+    t.expectThat.equal(caret.mark, true, 'the native caret stays pressed down while the IME composes')
+    t.expectThat.equal(caret.layer?.visible ?? false, true, 'the drawn caret remains visible during the composition')
+    t.expectThat.equal(caret.layer?.width, '2px', 'the composition caret keeps the ordinary two-pixel width')
+    t.expectThat.equal(caret.nativeColour, 'rgba(0, 0, 0, 0)', 'no thinner native caret is painted beside it')
+    t.expectThat.equal(Math.abs((caret.layer?.left ?? -Infinity) - caret.range.left) <= 1, true, 'the drawn caret follows the composition selection')
   })
 
   test('the skin\'s caret returns at the committed selection', async (t) => {
