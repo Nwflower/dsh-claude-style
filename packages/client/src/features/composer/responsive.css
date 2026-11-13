@@ -72,6 +72,34 @@ body[data-dsh-claude-style] [data-composer-card]:is([data-dsh-claude-composer-la
 body[data-dsh-claude-style] [data-composer-card]:is([data-dsh-claude-composer-layout="compact"], [data-dsh-claude-composer-layout="stacked"]) [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn-label {
   min-width: 10ch;
 }
+/* The new-conversation card reads as one control line at every width it has
+   above the stacked floor: the reader meets the page's first field, not a
+   stack of three rows. A name too long for the room gives way through the
+   label's own ellipsis (inline-bar.css), so the permission segments and the
+   right-hand controls keep their places on the line. The stacked layout below
+   its floor keeps the second line it was drawn for. */
+body[data-dsh-claude-style] [data-dsh-claude-part~="composer-hero"] [data-composer-card]:is([data-dsh-claude-composer-layout="wide"], [data-dsh-claude-composer-layout="compact"]) [data-dsh-claude-composer-toolbar],
+body[data-dsh-claude-style] [data-dsh-claude-part~="composer-hero"] [data-composer-card]:is([data-dsh-claude-composer-layout="wide"], [data-dsh-claude-composer-layout="compact"]) [data-dsh-claude-composer-toolbar] [data-dsh-claude-part~="composer-controls"],
+body[data-dsh-claude-style] [data-dsh-claude-part~="composer-hero"] [data-composer-card]:is([data-dsh-claude-composer-layout="wide"], [data-dsh-claude-composer-layout="compact"]) [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat {
+  flex-wrap: nowrap;
+}
+body[data-dsh-claude-style] [data-dsh-claude-part~="composer-hero"] [data-composer-card]:is([data-dsh-claude-composer-layout="wide"], [data-dsh-claude-composer-layout="compact"]) [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat > .dsh-claude-model-seat-model,
+body[data-dsh-claude-style] [data-dsh-claude-part~="composer-hero"] [data-composer-card]:is([data-dsh-claude-composer-layout="wide"], [data-dsh-claude-composer-layout="compact"]) [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn-label {
+  min-width: 0;
+}
+/* Below the one-line floor the card takes its second line, and only its
+   second: the trailing controls and the seat stay on that line together, with
+   the model's name ending in its ellipsis rather than pushing the send button
+   onto a third row. */
+body[data-dsh-claude-style] [data-dsh-claude-part~="composer-hero"] [data-composer-card][data-dsh-claude-composer-layout="stacked"] [data-dsh-claude-composer-toolbar] > [data-dsh-claude-part~="trailing"],
+body[data-dsh-claude-style] [data-dsh-claude-part~="composer-hero"] [data-composer-card][data-dsh-claude-composer-layout="stacked"] [data-dsh-claude-composer-toolbar] [data-dsh-claude-part~="composer-controls"],
+body[data-dsh-claude-style] [data-dsh-claude-part~="composer-hero"] [data-composer-card][data-dsh-claude-composer-layout="stacked"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat {
+  flex-wrap: nowrap;
+}
+body[data-dsh-claude-style] [data-dsh-claude-part~="composer-hero"] [data-composer-card][data-dsh-claude-composer-layout="stacked"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat > .dsh-claude-model-seat-model,
+body[data-dsh-claude-style] [data-dsh-claude-part~="composer-hero"] [data-composer-card][data-dsh-claude-composer-layout="stacked"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn-label {
+  min-width: 0;
+}
 /* The native width handle can overflow the outer phase frame without adding
    visible content. Keep that frame from becoming a second scroll container;
    the inner transcript retains its own native scrolling and sticky seat. */

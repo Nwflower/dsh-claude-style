@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-12",
+  "group": "fixes",
+  "order": 24,
+  "external": false,
+  "zh": "对话正文里的选中配色覆盖到粗体、行内代码与语法高亮等嵌套文本，全部 Markdown 形态在聚焦与失焦下都取同一个底色",
+  "en": "Paint the selection of nested Markdown runs — bold text, inline code, syntax tokens — so every shape in a conversation takes the one selection colour, focused and blurred"
+}

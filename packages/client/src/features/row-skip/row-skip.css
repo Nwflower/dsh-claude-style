@@ -3,19 +3,23 @@
    fallback stands at a fixed estimate and is only read by the mark that waits
    for a real layout; a row carrying the kept height is skipped from its first
    frame, because that height is the one it really has. User rows, rows holding
-   hidden content and rows inside a hidden passage must stay laid out because
-   their measurements or hidden boxes depend on it. */
+   hidden content, rows inside a hidden passage and rows holding a tooltip must
+   stay laid out because their measurements, hidden boxes or floating bubbles
+   depend on it. A non-portal tooltip is a fixed bubble the host mounts inside
+   the row (shared/host-tooltip.ts asks for the portal, the host's message
+   actions do not): the skipped row is its containing block, and its paint
+   containment crops the bubble that opens past the row's edge. */
 
-body[data-dsh-claude-style] [data-chat-flow-kind]:not([data-chat-flow-kind='user']):not([data-chat-flow-kind='assistant-step']:not([data-turn-process-member]), [data-turn-process-hidden], [data-disclosure-row] [hidden], [hidden], [data-dsh-claude-holds~='hidden-row']) {
+body[data-dsh-claude-style] [data-chat-flow-kind]:not([data-chat-flow-kind='user']):not([data-chat-flow-kind='assistant-step']:not([data-turn-process-member]), [data-turn-process-hidden], [data-disclosure-row] [hidden], [hidden], [data-dsh-claude-holds~='hidden-row'], [data-dsh-claude-holds~='tooltip-row']) {
   contain-intrinsic-size: auto 240px;
 }
 
-body[data-dsh-claude-style] [data-chat-flow-kind][data-dsh-claude-laid-out]:not([data-chat-flow-kind='user']):not([data-chat-flow-kind='assistant-step']:not([data-turn-process-member]), [data-turn-process-hidden], [data-disclosure-row] [hidden], [hidden], [data-dsh-claude-holds~='hidden-row']) {
+body[data-dsh-claude-style] [data-chat-flow-kind][data-dsh-claude-laid-out]:not([data-chat-flow-kind='user']):not([data-chat-flow-kind='assistant-step']:not([data-turn-process-member]), [data-turn-process-hidden], [data-disclosure-row] [hidden], [hidden], [data-dsh-claude-holds~='hidden-row'], [data-dsh-claude-holds~='tooltip-row']) {
   content-visibility: auto;
 }
 
 /* The row carries the height it had when it was last mounted, so the stylesheet
    may skip it before its first layout of this mount, answer rows included. */
-body[data-dsh-claude-style] [data-chat-flow-kind][data-dsh-claude-laid-out][data-dsh-claude-row-height]:not([data-chat-flow-kind='user']):not([data-turn-process-hidden], [data-disclosure-row] [hidden], [hidden], [data-dsh-claude-holds~='hidden-row']) {
+body[data-dsh-claude-style] [data-chat-flow-kind][data-dsh-claude-laid-out][data-dsh-claude-row-height]:not([data-chat-flow-kind='user']):not([data-turn-process-hidden], [data-disclosure-row] [hidden], [hidden], [data-dsh-claude-holds~='hidden-row'], [data-dsh-claude-holds~='tooltip-row']) {
   content-visibility: auto;
 }

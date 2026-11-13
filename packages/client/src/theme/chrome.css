@@ -272,17 +272,21 @@ body[data-dsh-claude-style] ::-webkit-scrollbar-thumb:hover {
    !important and solid colours because the paint has to cover the ink the host
    and this skin put under it (links, code, syntax tokens). The unfocused rule
    comes after the focused one at the same weight, so the attribute decides.
-   The scope is the conversation's text blocks and the draft editor: a
-   document-wide `::selection` makes Blink compute selection style for every
-   element on each recalculation, which stalls session switches. Selection
-   styles inherit, so the blocks carry their inline descendants; elsewhere the
-   host's own wash shows. */
-body[data-dsh-claude-style] :is([data-chat-flow], [data-lexical-editor]) :is(p, li, td, th, blockquote, pre, h1, h2, h3, h4, h5, h6)::selection {
+   The scope is the conversation's text and the draft editor: a document-wide
+   `::selection` makes Blink compute selection style for every element on each
+   recalculation, which stalls session switches. Every element in that scope
+   takes the paint itself rather than inheriting it from the block above:
+   browsers resolve the inherited paint of a nested run (`strong`, an inline
+   `code`, a syntax token) against the run's own colour, so a selected bold run
+   or code token drifts from the paragraph it stands in. The descendant wildcard
+   keeps the rule inside the two scopes the transcript and the editor own; the
+   host's wash still stands everywhere else. */
+body[data-dsh-claude-style] :is([data-chat-flow], [data-lexical-editor]) *::selection {
   background-color: #3366d0 !important;
   color: #ffffff !important;
 }
 
-body[data-dsh-claude-style][data-dsh-window-blur] :is([data-chat-flow], [data-lexical-editor]) :is(p, li, td, th, blockquote, pre, h1, h2, h3, h4, h5, h6)::selection {
+body[data-dsh-claude-style][data-dsh-window-blur] :is([data-chat-flow], [data-lexical-editor]) *::selection {
   background-color: #c7c7c6 !important;
   color: #000000 !important;
 }

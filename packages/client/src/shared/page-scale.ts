@@ -1,7 +1,7 @@
 import { installScaledLayer } from '@dsh-claude-style/engine/scaled-layer'
 import { installFrameColumns } from './page-scale-columns'
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
-import { PAGE_UNDER_1000_ATTR, PAGE_UNDER_480_ATTR, PAGE_UNDER_760_ATTR, PAGE_ZOOM_ATTR } from '../constants'
+import { PAGE_UNDER_1000_ATTR, PAGE_UNDER_480_ATTR, PAGE_UNDER_768_ATTR, PAGE_ZOOM_ATTR } from '../constants'
 import { subscribePrefs } from '../core/prefs'
 import { pageViewport, pageZoomFactor, projectPageZoomFactor } from './page-zoom'
 
@@ -18,7 +18,7 @@ export const PAGE_WIDTH = '--dsh-claude-page-width'
 /** Attribute breakpoints replace media queries, which cannot see scaled page width. */
 const WIDTH_MARKS = [
   { attr: PAGE_UNDER_1000_ATTR, width: 1000 },
-  { attr: PAGE_UNDER_760_ATTR, width: 760 },
+  { attr: PAGE_UNDER_768_ATTR, width: 768 },
   { attr: PAGE_UNDER_480_ATTR, width: 480 },
 ] as const
 

@@ -27,7 +27,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   // installed before this one): its reading and the face the panel opens from
   // both cross over, and it stands down with this feature's switch.
   const ring = () => (typeof ui.meterRing?.root === 'function' ? ui.meterRing : null)
-  const stats = createSessionStats(ctx, ring)
+  // The model feature names the route the shown session takes; the statistics
+  // price the platform's own billing and leave a provider that settles
+  // elsewhere out of the account's balance (features/context-stats/session-stats.ts).
+  const provider = () => (typeof ui.model?.provider === 'function' ? ui.model.provider() : null)
+  const stats = createSessionStats(ctx, ring, provider)
 
   ui.contextStats = {
     measure: stats.measure,

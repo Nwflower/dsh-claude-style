@@ -1,8 +1,14 @@
 import { CLIENT_VERSION } from 'virtual:dsh-claude-style/generated'
 import { hostRemoteAccount } from '@dsh-claude-style/engine/host'
 import { activeLocale } from '../core/i18n'
+import { ACCOUNT_MODEL_GROUP, OFFICIAL_MODEL_GROUP } from '@dsh-claude-style/contracts/services'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { HostAccountClient, HostWallet } from '@dsh-claude-style/contracts/account'
+
+/** Keep the balance available before a directory answers; known external routes never spend it. */
+export function platformBilledProvider(provider: string | null): boolean {
+  return provider === null || provider === OFFICIAL_MODEL_GROUP || provider === ACCOUNT_MODEL_GROUP
+}
 
 /** Host Remote validates this descriptor on every call; locale and zone must be read at call time.
  * CLIENT_VERSION is the bundle version because the host build version is unavailable here.

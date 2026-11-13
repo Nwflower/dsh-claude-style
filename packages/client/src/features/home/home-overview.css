@@ -171,6 +171,6 @@ body[data-dsh-claude-style] .dsh-claude-home-heat[data-skeleton] .dsh-claude-hom
 
 /* A narrow page stacks the stat cells rather than squeezing three of them;
    the heat grid follows the panel on its own. */
-body[data-dsh-claude-style][data-dsh-claude-page-under-760] .dsh-claude-home-stats {
+body[data-dsh-claude-style][data-dsh-claude-page-under-768] .dsh-claude-home-stats {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }

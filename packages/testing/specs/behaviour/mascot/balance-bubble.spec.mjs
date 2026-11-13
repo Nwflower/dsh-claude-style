@@ -7,7 +7,7 @@
  * closes it, and with nothing to show there is no bubble.
  *
  * @capability mascot
- * @features mascot, context-stats
+ * @features mascot, context-stats, model
  * @risk Hovering the mascot shows nothing, shows a cost that disagrees with the statistics line, or leaves an empty bubble over the composer for a reader with no account and billing off.
  */
 import { CONVERSATION_PARTS } from '@dsh-claude-style/engine/parts-table'
@@ -102,6 +102,28 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
     await t.page.mouse.down()
     t.expectThat.equal((await readBubble(t)).open, false, 'a press on the crab closes the bubble')
     await t.page.mouse.up()
+  })
+
+  test('an external provider keeps the session estimate without the platform balance, and either platform route restores the balance', async (t) => {
+    await pricedCrab(t)
+    await t.page.evaluate(async (model) => {
+      window.__balanceFixture = { ok: true, value: { status: 'ready', value: [{ currency: 'CNY', balance: '10.00' }], bonusWallets: [] } }
+      await window.__dshSmokeHost.modelDirectories.directoryFor('smoke-stats').select({ provider: 'gateway', model })
+    }, COST_ROUTE)
+    await restOnCrab(t)
+    const external = await readBubble(t)
+    t.expectThat.equal(external.rows.map((line) => line.kind), ['session'], 'an external route shows only its session estimate')
+    t.expectThat.equal(external.rows[0].text.endsWith('¥0.0123'), true, 'the estimate remains priced for the same model id')
+
+    for (const provider of ['deepseek-official', 'deepseek-account']) {
+      await t.page.evaluate(async ([provider, model]) => {
+        await window.__dshSmokeHost.modelDirectories.directoryFor('smoke-stats').select({ provider, model })
+        window.__pushStats('tokenUsage', {})
+      }, [provider, COST_ROUTE])
+      await t.page.waitForFunction(([bubble, row, kind]) => document.querySelector(bubble)?.querySelector(`${row}[${kind}="balance"]`),
+        [t.surface('mascot.bubble'), t.surface('mascot.bubble-row'), t.surface.attribute('mascot.bubble-row-kind')], { timeout: 5000 })
+      t.expectThat.equal((await readBubble(t)).rows.map((line) => line.kind), ['balance', 'session'], `${provider} restores the platform balance`)
+    }
   })
 
   test('with no account and billing off, there is nothing to show and no bubble', async (t) => {

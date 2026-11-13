@@ -3,7 +3,7 @@
  */
 import { observeMatches, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { cacheFirstMatch } from '@dsh-claude-style/engine/host'
-import { ROOT_SLOT_SELECTOR, SIDEBAR_HANDLE_SELECTOR, SIDEBAR_ROOT_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { ROOT_SLOT_SELECTOR, SIDEBAR_DRAWER_ATTRIBUTE, SIDEBAR_HANDLE_SELECTOR, SIDEBAR_ROOT_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { subscribePrefs } from '../core/prefs'
 
 /** One length in the host's written column list, and the bracket group a length
@@ -133,6 +133,18 @@ export function installFrameColumns(vocabulary: FrameColumnsVocabulary) {
     const { property } = declaration
     const value = box.style.getPropertyValue(property)
     const seen = seenOn(box)
+    // A frame drawing the sidebar as a drawer is outside the three-track grid
+    // this rule converts: the sidebar's column is lifted out of the flow and
+    // placed over the page, so the tracks no longer describe the page the
+    // reader sees. The host's own declaration stands there, and a carried
+    // number is handed back rather than divided again.
+    if (declaration === FRAME_COLUMNS && box.hasAttribute(SIDEBAR_DRAWER_ATTRIBUTE)) {
+      if (seen !== null) {
+        forgetOn(box)
+        box.style.setProperty(property, seen.from)
+      }
+      return
+    }
     if (value === '') {
       // The host took its declaration away — the sidebar drops its width once it
       // is collapsed — so the next number it writes is a fresh one, even when it
@@ -205,7 +217,9 @@ export function installFrameColumns(vocabulary: FrameColumnsVocabulary) {
       if (!heard.has(box)) {
         // The host's next grid/frame paint reads this declaration. A heavy
         // batch must not leave the unscaled value standing until a later task.
-        heard.set(box, { declaration, off: subscribeMutations(box, { attributes: true, attributeFilter: ['style'], beforePaint: true }, () => carry(box, declaration)) })
+        // The drawer mark arrives on the frame itself, and it decides whether the
+        // three tracks this rule converts are still the page's own geometry.
+        heard.set(box, { declaration, off: subscribeMutations(box, { attributes: true, attributeFilter: ['style', SIDEBAR_DRAWER_ATTRIBUTE], beforePaint: true }, () => carry(box, declaration)) })
       }
       carry(box, declaration)
     }

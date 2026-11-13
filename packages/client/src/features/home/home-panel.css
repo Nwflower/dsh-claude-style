@@ -120,7 +120,7 @@ body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-clau
 
 /* On a narrow page the dashboard centres in the available column; the desktop
    rule above keeps its left edge beside the composer. */
-body[data-dsh-claude-style][data-dsh-claude-page-under-760][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"] > :is([data-slot="conversation.input.dock"], .dsh-claude-home-seat) > * {
+body[data-dsh-claude-style][data-dsh-claude-page-under-768][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"] > :is([data-slot="conversation.input.dock"], .dsh-claude-home-seat) > * {
   max-width: calc(100% - var(--dsh-composer-side-clearance, 0px) - var(--dsh-composer-side-clearance, 0px));
   margin-inline: auto;
 }

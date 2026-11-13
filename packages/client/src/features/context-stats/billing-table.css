@@ -270,7 +270,7 @@ body[data-dsh-claude-style] .dsh-claude-billing-foot {
 /* A page under 760px folds a row into a card: the model above, the three rates
    side by side with their own labels. The mark is the page's own width
    (shared/page-scale.ts), so a zoomed page folds where it would at 100%. */
-body[data-dsh-claude-style][data-dsh-claude-page-under-760] .dsh-claude-billing-card {
+body[data-dsh-claude-style][data-dsh-claude-page-under-768] .dsh-claude-billing-card {
   padding: 12px;
   --dsh-claude-billing-pad: 14px;
   --dsh-claude-billing-columns: repeat(3, minmax(0, 1fr)) 24px;
@@ -282,32 +282,32 @@ body[data-dsh-claude-style][data-dsh-claude-page-under-760] .dsh-claude-billing-
   --dsh-claude-billing-add-border: 1px solid var(--dsw-alias-border-l1, #e9e9e9);
 }
 
-body[data-dsh-claude-style][data-dsh-claude-page-under-760] .dsh-claude-billing-units > span:last-child {
+body[data-dsh-claude-style][data-dsh-claude-page-under-768] .dsh-claude-billing-units > span:last-child {
   display: none;
 }
 
-body[data-dsh-claude-style][data-dsh-claude-page-under-760] .dsh-claude-billing-row-head {
+body[data-dsh-claude-style][data-dsh-claude-page-under-768] .dsh-claude-billing-row-head {
   display: none;
 }
 
-body[data-dsh-claude-style][data-dsh-claude-page-under-760] .dsh-claude-billing-model {
+body[data-dsh-claude-style][data-dsh-claude-page-under-768] .dsh-claude-billing-model {
   grid-column: 1 / 4;
   grid-row: 1;
 }
 
-body[data-dsh-claude-style][data-dsh-claude-page-under-760] .dsh-claude-billing-remove {
+body[data-dsh-claude-style][data-dsh-claude-page-under-768] .dsh-claude-billing-remove {
   grid-column: 4;
   grid-row: 1;
   align-self: center;
   justify-self: end;
 }
 
-body[data-dsh-claude-style][data-dsh-claude-page-under-760] .dsh-claude-billing-add {
+body[data-dsh-claude-style][data-dsh-claude-page-under-768] .dsh-claude-billing-add {
   flex: 1;
   height: 32px;
 }
 
-body[data-dsh-claude-style][data-dsh-claude-page-under-760] .dsh-claude-billing-button {
+body[data-dsh-claude-style][data-dsh-claude-page-under-768] .dsh-claude-billing-button {
   flex: 1;
   height: 34px;
 }

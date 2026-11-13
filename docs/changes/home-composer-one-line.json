@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-12",
+  "group": "fixes",
+  "order": 27,
+  "external": false,
+  "zh": "新建会话页的输入卡在 420 像素以上保持单行控件，过长的模型名以省略号截断，400 像素以下只在第二行放右侧控件",
+  "en": "Keep the new-conversation composer on one control line from 420 px up, truncate an over-long model name with an ellipsis, and give the trailing controls their own second line below 400 px"
+}
