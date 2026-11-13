@@ -290,7 +290,7 @@ export const PREFS = {
   sodium: { type: 'choice', values: SODIUM_MODES, default: SODIUM_UNDECIDED },
   banLocale: { type: 'choice', values: BAN_LOCALES, default: BAN_LOCALE_EN },
   homeLayout: { type: 'choice', values: HOME_LAYOUTS, default: HOME_LAYOUT_STUDIO },
-  homeSessionScope: { type: 'choice', values: HOME_SESSION_SCOPES, default: HOME_SESSION_SCOPE_ACTIVE },
+  homeSessionScope: { type: 'choice', values: HOME_SESSION_SCOPES, default: HOME_SESSION_SCOPE_ALL },
   homeRipple: { type: 'boolean', default: false },
   palette: { type: 'choice', values: PALETTES, default: PALETTE_CLAUDE },
   /** The background fill's opacity as a percentage, between BACKGROUND_OPACITY_MIN and BACKGROUND_OPACITY_MAX. */
