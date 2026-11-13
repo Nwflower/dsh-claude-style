@@ -452,6 +452,9 @@
       "the context section arrives with the turn": [
         2
       ],
+      "the first frame states the occupancy and leaves only the breakdown to arrive": [
+        1
+      ],
       "the figures sections start folded with a reading and every other section starts open": [
         2
       ],
@@ -461,6 +464,9 @@
       ],
       "the session stats and the token usage carry their figures": [
         8
+      ],
+      "the figures count to each reading instead of landing on it": [
+        150
       ],
       "Outputs lists the files the turn wrote and folds past its second row": [
         0,

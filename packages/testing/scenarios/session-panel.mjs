@@ -217,9 +217,10 @@ export function sessionPanelScenario({ check }) {
     /**
      * The scripted answer streams while the rail stands. The two figures tables
      * print the same live reading the composer's line prints — the host's settled
-     * projections with the streaming text added — so a count moves between the
-     * panel's own asks; a table fed from the route alone can only move after one
-     * (D94).
+     * projections with the streaming text added — counted to each new reading the
+     * way the line counts, so a count moves between the panel's own asks and
+     * moves a little at a time rather than landing in one step; a table fed from
+     * the route alone can only move after an ask (D94).
      */
     async duringTurn(context) {
       const { page } = context
@@ -236,18 +237,29 @@ export function sessionPanelScenario({ check }) {
         return { out: pick(/^输出[\d,]/), cost: pick(/^费用/) }
       })
       const samples = []
-      for (let i = 0; i < 24; i++) {
+      // A frame-paced count moves many times inside the panel's poll period, so
+      // the readings are taken close enough together to tell the two apart.
+      for (let i = 0; i < 90; i++) {
         const reading = await read()
         if (reading === null) break
-        samples.push({ ...reading, asks: notes.panelAsks.length })
-        await page.waitForTimeout(150)
+        samples.push({ ...reading, at: Date.now(), asks: notes.panelAsks.length })
+        await page.waitForTimeout(50)
       }
       // A change no ask stands behind is the live reading moving the table; one
       // that follows an ask is the route answering.
       const movedAlone = samples.some((sample, index) => index > 0 &&
         sample.asks === samples[index - 1].asks &&
         (sample.out !== samples[index - 1].out || sample.cost !== samples[index - 1].cost))
-      notes.liveFigures = { movedAlone, samples: samples.slice(0, 12) }
+      // The count travels: two changes inside a few frames. A table that writes
+      // each reading as it lands has one change per settlement instead.
+      let closest = Number.POSITIVE_INFINITY
+      let lastChange = null
+      for (const sample of samples) {
+        const moved = sample.out !== lastChange?.out || sample.cost !== lastChange?.cost
+        if (lastChange !== null && moved) closest = Math.min(closest, sample.at - lastChange.at)
+        if (moved) lastChange = sample
+      }
+      notes.liveFigures = { movedAlone, closest, samples: samples.slice(0, 12) }
     },
 
     async afterTurn(context) {
@@ -573,6 +585,9 @@ export function sessionPanelScenario({ check }) {
         check('the figures move with the answer while it streams, not only when the route answers',
           notes.liveFigures?.movedAlone === true,
           JSON.stringify(notes.liveFigures ?? null)),
+        check('the figures count to each reading instead of landing on it',
+          (notes.liveFigures?.closest ?? Number.POSITIVE_INFINITY) <= 150,
+          JSON.stringify({ closest: notes.liveFigures?.closest ?? null })),
         check('Outputs lists the files the turn wrote and folds past its second row',
           (notes.fold?.rows ?? 0) === 2 && /panel four\.md/.test(rail.outputs ?? '') && notes.fold?.more !== null,
           JSON.stringify(notes.fold ?? null)),

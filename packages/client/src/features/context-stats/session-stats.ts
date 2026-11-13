@@ -8,6 +8,7 @@ import { BILLING_OFF, CONTEXT_DISPLAY_PIE, CONTEXT_DISPLAY_RING_BAND, STATS_POSI
 import { createContextStatsBinding } from './stats-binding'
 import { createInlineStats } from './inline-stats'
 import { createStatsBlock } from './stats-block'
+import { createStatsCount } from './stats-count'
 import { createStreamEstimate } from './stream-estimate'
 import { adoptBillingRows, billingRows, createSessionCost, loadPrices, priceDocument, priceGeneration } from './session-cost'
 import { noteUnpricedModel } from './billing-editor'
@@ -196,6 +197,16 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
     return liveFigures !== null && liveFigures.sessionId !== '' ? liveFigures : null
   }
 
+  /**
+   * The reading the other face draws, counted to each new one the way the line
+   * counts (stats-count.ts): both faces take the same readings, so both travel
+   * between them instead of one landing while the other glides.
+   */
+  const figuresCount = createStatsCount((counting) => {
+    liveFigures = { sessionId: watch?.sessionId ?? '', stats: counting.stats, usage: counting.usage, cost: counting.cost, currency: currency() }
+    for (const listener of figureListeners) listener()
+  })
+
   const block = createStatsBlock(reading, chatText, currency)
   const inline = createInlineStats(reading, chatText, findContextMeter, currency)
   const binding = createContextStatsBinding(() => ring()?.root() ?? null)
@@ -240,8 +251,11 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
     // So does the occupancy the last real sample answered.
     sampledOccupancy = null
     readingMemo = null
-    // And the figures published for the other face (shared/session-projections.ts).
+    // And the figures published for the other face: the next session's numbers
+    // are written as they come rather than counted from this session's
+    // (shared/session-projections.ts).
     liveFigures = null
+    figuresCount.reset()
     // The skeleton holds the panel's place, not the session's (stats-block.ts);
     // the line keeps the numbers it shows, which the next session counts on from.
     block.stopSkeleton()
@@ -294,11 +308,9 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
     block.render()
     // The two surfaces read the figures only where they stand — the popover
     // closed reads nothing at all — so the reading the rail prints is taken here,
-    // on every frame that moves it, and handed on with the same word the
-    // surfaces' own listeners get (D94).
-    const read = reading()
-    liveFigures = { sessionId: watch?.sessionId ?? '', stats: read.stats, usage: read.usage, cost: read.cost, currency: currency() }
-    for (const listener of figureListeners) listener()
+    // on every frame that moves it, and counts to the same place the line's
+    // figures count to (D94).
+    figuresCount.to(reading())
   }
 
   /**
