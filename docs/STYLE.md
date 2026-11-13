@@ -36,6 +36,18 @@ brand and scheme, so the colours resolve in the page while the brand cards keep
 their literals; the image-colour choice (`Default`, `Accent`, `Text colour`)
 repaints the brand art from the same table (D30).
 
+The schemes are managed in one dialog of two columns. The left column lists
+every scheme as a line of four dots and a name, under a highlight that slides to
+the line in hand; the scheme the page paints wears the accent's tick. The right
+column edits that scheme: its name as the heading, then a light and a dark
+**specimen** — a heading, a line of prose with an inline-code chip and a link,
+and a filled control, painted with the scheme's own values whatever appearance
+the page is in — heading the two columns of colour lines under them. A colour
+line is a disc that opens the picker, the value, and the contrast it reads at;
+a figure under what the colour owes its background turns to the error colour.
+The dialog grows out of the centre and returns to it, and moving to another
+scheme brings its editor in from the side that scheme stands on in the list.
+
 Rules:
 
 - Never pure black, never a cold gray. Each canvas pair — the Claude card's and

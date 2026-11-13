@@ -1,0 +1,377 @@
+/* The editor of one colour scheme (palette-editor.ts, D96), the manager's
+   right-hand pane: the scheme's name as its heading, the two specimens over
+   the colours they are painted with, the scheme's choices and what can be
+   done with its record. The panel around it is palette-schemes.css. */
+
+body[data-dsh-claude-style] .dsh-claude-scheme-pane {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-editor {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  padding: 18px 24px 20px;
+  overflow-y: auto;
+}
+
+/* Moving to another scheme brings its editor in from the side that scheme
+   stands on in the list: up from below for a later line, down for an earlier. */
+body[data-dsh-claude-style] .dsh-claude-scheme-editor[data-enter] {
+  animation: dsh-claude-scheme-pane-in var(--dsh-claude-duration-open) var(--dsh-claude-ease-settle);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-editor[data-enter="below"] {
+  --dsh-claude-scheme-shift: var(--dsh-claude-distance-travel);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-editor[data-enter="above"] {
+  --dsh-claude-scheme-shift: calc(-1 * var(--dsh-claude-distance-travel));
+}
+
+@keyframes dsh-claude-scheme-pane-in {
+  from { opacity: 0; transform: translateY(var(--dsh-claude-scheme-shift)); filter: blur(var(--dsh-claude-blur-enter)); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+
+/* The scheme's name is the pane's heading; the close mark keeps its corner. */
+body[data-dsh-claude-style] .dsh-claude-scheme-title {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  padding-right: 32px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-name {
+  box-sizing: border-box;
+  min-width: 0;
+  margin: 0;
+  padding: 2px 0;
+  border: 1px solid transparent;
+  color: var(--dsw-alias-label-primary);
+  font-family: var(--dsh-claude-font-serif);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 28px;
+}
+
+/* A reader's scheme is renamed in place: the heading is a field that shows
+   its plate only under the pointer or the caret. */
+body[data-dsh-claude-style] input.dsh-claude-scheme-name {
+  flex: 1;
+  margin-left: -9px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: transparent;
+  outline: none;
+  transition: background-color var(--dsh-claude-timing-feedback), border-color var(--dsh-claude-timing-feedback);
+}
+
+body[data-dsh-claude-style] input.dsh-claude-scheme-name:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+body[data-dsh-claude-style] input.dsh-claude-scheme-name:focus {
+  border-color: var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-bg-layer-1);
+}
+
+body[data-dsh-claude-style] input.dsh-claude-scheme-name::placeholder {
+  color: var(--dsw-alias-label-caption);
+}
+
+/* The colours as a table: the two specimens head the light and the dark
+   column, each colour is a line under them, and the last column holds the mark
+   that hands a colour back to the starting preset. */
+body[data-dsh-claude-style] .dsh-claude-scheme-grid {
+  display: grid;
+  flex: none;
+  grid-template-columns: var(--dsh-claude-scheme-label) minmax(0, 1fr) minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 4px 12px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-seed-name {
+  color: var(--dsw-alias-label-secondary);
+  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 20px;
+}
+
+/* A specimen is painted with the scheme's own values, whichever appearance
+   the page is in. Its inks are tones of its background, dark or light by the
+   background's luminance (palette-editor.ts), so the words read on any colour
+   the reader picks. */
+body[data-dsh-claude-style] .dsh-claude-scheme-specimen {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+  margin-bottom: 8px;
+  padding: 12px 16px 16px;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 12px;
+  background: var(--dsh-claude-specimen-canvas);
+  color: var(--dsh-claude-specimen-ink);
+  transition: background-color var(--dsh-claude-timing-feedback), color var(--dsh-claude-timing-feedback);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-specimen[data-ink="dark"] {
+  --dsh-claude-specimen-ink: oklch(from var(--dsh-claude-specimen-canvas) 0.24 0.012 h);
+  --dsh-claude-specimen-ink-soft: oklch(from var(--dsh-claude-specimen-canvas) 0.52 0.012 h);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-specimen[data-ink="light"] {
+  --dsh-claude-specimen-ink: oklch(from var(--dsh-claude-specimen-canvas) 0.95 0.008 h);
+  --dsh-claude-specimen-ink-soft: oklch(from var(--dsh-claude-specimen-canvas) 0.7 0.01 h);
+}
+
+/* A link the scheme does not carry follows the accent by the step the token
+   sheet gives a reader's scheme (scripts/build/theme-tokens.mjs). */
+body[data-dsh-claude-style] .dsh-claude-scheme-specimen[data-link="derived"][data-appearance="light"] {
+  --dsh-claude-specimen-link: oklch(from var(--dsh-claude-specimen-accent) calc(l - 0.06) c h);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-specimen[data-link="derived"][data-appearance="dark"] {
+  --dsh-claude-specimen-link: oklch(from var(--dsh-claude-specimen-accent) calc(l + 0.15) c h);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-specimen-tag {
+  color: var(--dsh-claude-specimen-ink-soft);
+  font-size: 11px;
+  line-height: 16px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-specimen-heading {
+  font-family: var(--dsh-claude-font-serif);
+  font-size: 17px;
+  line-height: 24px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-specimen-prose {
+  font-size: 13px;
+  line-height: 20px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-specimen-code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--dsh-claude-specimen-ink) 8%, transparent);
+  color: var(--dsh-claude-specimen-code);
+  font-family: var(--dsh-claude-font-code);
+  font-size: 12px;
+  transition: color var(--dsh-claude-timing-feedback);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-specimen-link {
+  color: var(--dsh-claude-specimen-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color var(--dsh-claude-timing-feedback);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-specimen-button {
+  margin-top: 6px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: var(--dsh-claude-specimen-accent);
+  color: var(--dsh-claude-specimen-accent-ink);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  transition: background-color var(--dsh-claude-timing-feedback), color var(--dsh-claude-timing-feedback);
+}
+
+/* One colour: its disc, its value, and the contrast it reads at pushed to the
+   line's end. The whole line opens the colour picker, which lies over the disc
+   unseen. */
+body[data-dsh-claude-style] .dsh-claude-scheme-well {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  height: 40px;
+  padding: 0 8px 0 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color var(--dsh-claude-timing-feedback);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-well[data-wide] {
+  grid-column: span 2;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-well:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-well:has(:focus-visible) {
+  box-shadow: 0 0 0 2px var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary));
+}
+
+/* The disc is the cards' disc at the line's size: a ring of the panel's face
+   inside a hairline, so a colour close to the panel still shows its edge. It
+   lifts under the pointer the way a card's disc does. */
+body[data-dsh-claude-style] .dsh-claude-scheme-disc {
+  position: relative;
+  flex: none;
+  box-sizing: border-box;
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--dsw-alias-bg-overlay);
+  border-radius: 50%;
+  corner-shape: round;
+  background-color: currentColor;
+  background-clip: padding-box;
+  box-shadow: 0 0 0 1px var(--dsw-alias-border-l1);
+  transition: scale var(--dsh-claude-duration-enter) var(--dsh-claude-ease-recoil);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-well:hover > .dsh-claude-scheme-disc {
+  scale: var(--dsh-claude-scale-lift);
+  transition-timing-function: var(--dsh-claude-ease-settle);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-disc-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-hex {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--dsh-claude-font-code);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-well[data-derived] > .dsh-claude-scheme-hex {
+  color: var(--dsw-alias-label-tertiary);
+  font-family: inherit;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-contrast {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 999px;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 11px;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  transition: background-color var(--dsh-claude-timing-feedback), color var(--dsh-claude-timing-feedback);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-contrast[data-low] {
+  background: color-mix(in srgb, var(--dsw-alias-state-error-primary, #c0392b) 12%, transparent);
+  color: var(--dsw-alias-state-error-primary, #c0392b);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-contrast-side {
+  margin-right: 4px;
+}
+
+/* The mark that hands a colour back stands only on a line the scheme owns;
+   its plate is the close mark's (palette-schemes.css). */
+body[data-dsh-claude-style] .dsh-claude-scheme-reset {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  animation: dsh-claude-fade-in var(--dsh-claude-timing-surface) both;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-reset-space {
+  width: 24px;
+}
+
+/* What the figures are, under the columns they stand in. */
+body[data-dsh-claude-style] .dsh-claude-scheme-note {
+  flex: none;
+  margin: -6px 0 0;
+  padding-left: calc(var(--dsh-claude-scheme-label) + 18px);
+}
+
+/* The scheme's two choices, on the colours' own label column. */
+body[data-dsh-claude-style] .dsh-claude-scheme-options {
+  display: grid;
+  flex: none;
+  grid-template-columns: var(--dsh-claude-scheme-label) minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 10px 12px;
+  padding-top: 14px;
+  border-top: 0.5px solid var(--dsh-claude-divider);
+}
+
+/* Six presets name more than one line of the choices holds: the group wraps, and
+   the sliding highlight follows whichever line the chosen item stands on. */
+body[data-dsh-claude-style] .dsh-claude-scheme-options .dsh-claude-segments {
+  flex-wrap: wrap;
+  justify-self: start;
+}
+
+/* The foot stays at the pane's bottom edge: what the scheme is to the page on
+   the left, what can be done with its record on the right. */
+body[data-dsh-claude-style] .dsh-claude-scheme-foot {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 0.5px solid var(--dsh-claude-divider);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-foot-gap {
+  flex: 1;
+}
+
+/* The foot's buttons are the settings button plate at the card's smaller type. */
+body[data-dsh-claude-style] .dsh-claude-scheme-button {
+  height: 28px;
+  padding: 0 12px;
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 16px;
+  transition: background-color var(--dsh-claude-timing-feedback), border-color var(--dsh-claude-timing-feedback), color var(--dsh-claude-timing-feedback);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-primary {
+  border-color: var(--dsw-alias-button-primary-fill);
+  background: var(--dsw-alias-button-primary-fill);
+  color: var(--dsw-alias-label-primary-foreground);
+}
+
+/* The scheme the page paints says so where its button stood. */
+body[data-dsh-claude-style] .dsh-claude-scheme-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  color: var(--dsw-alias-brand-primary);
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
+  font-weight: 500;
+  line-height: 16px;
+  animation: dsh-claude-surface-in var(--dsh-claude-timing-surface) both;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-danger:is(:hover, [data-confirming]):not(:disabled) {
+  border-color: var(--dsw-alias-state-error-primary, #c0392b);
+  color: var(--dsw-alias-state-error-primary, #c0392b);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-danger[data-confirming] {
+  background: color-mix(in srgb, var(--dsw-alias-state-error-primary, #c0392b) 10%, transparent);
+}

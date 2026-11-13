@@ -1,6 +1,6 @@
 import { BRAND_DEFAULT_PRESETS, BRAND_INK_ACCENT, BRAND_INK_ATTR, BRAND_INK_ORIGINAL, BRAND_INK_TEXT, CUSTOM_EDGES_ATTR, CUSTOM_MARK_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_TINT_ATTR, CUSTOM_WORD_ATTR, CUSTOM_WORD_IMAGE, CUSTOM_WORD_TEXT } from '../../constants'
 import { readPrefs, subscribePrefs } from '../../core/prefs'
-import { contrastRatio } from '../../shared/contrast'
+import { accentInk } from '../../shared/contrast'
 import { activeScheme } from '../../shared/palette-scheme'
 import { loadBrandImages, readBrandImages, resetBrandImages, subscribeBrandImages } from '../../shared/custom-brand'
 import { PALETTE_CARDS } from 'virtual:dsh-claude-style/generated'
@@ -49,18 +49,9 @@ const PROPERTIES = [
 ]
 const ATTRIBUTES = [CUSTOM_MARK_ATTR, CUSTOM_WORD_ATTR, CUSTOM_TINT_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_EDGES_ATTR, BRAND_INK_ATTR]
 
-/** The two inks text on an accent fill can take: the dark and the light canvas (docs/STYLE.md). */
-const INK_DARK = '#191919'
-const INK_LIGHT = '#faf9f5'
-
 /** A CSS string literal holding the text, for `content: var(...)`; a line break reads as a space. */
 export function cssString(text: string) {
   return `"${text.replace(/[\\"]/g, '\\$&').replace(/[\n\r\f]/g, ' ')}"`
-}
-
-/** The ink that reads best on a `#rrggbb` accent fill: whichever canvas colour has the higher contrast with it. */
-export function accentInk(accent: string) {
-  return contrastRatio(accent, INK_DARK) > contrastRatio(accent, INK_LIGHT) ? INK_DARK : INK_LIGHT
 }
 
 export function install() {

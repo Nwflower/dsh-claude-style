@@ -56,6 +56,19 @@ body[data-dsh-claude-style] {
   to { opacity: 1; transform: none; }
 }
 
+/* A dialog growing out of the centre and returning to it: the whole surface
+   scales from --dsh-claude-scale-dialog about its own centre and travels
+   nowhere (transitions.dev's "Modal open / close", MIT). The account-hold page
+   and the colour schemes' manager wear it, each on its own leaving mark. */
+@keyframes dsh-claude-dialog-in {
+  from { opacity: 0; transform: scale(var(--dsh-claude-scale-dialog)); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes dsh-claude-dialog-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: scale(var(--dsh-claude-scale-dialog)); }
+}
+
 /* A plain fade, where nothing travels. */
 @keyframes dsh-claude-fade-in {
   from { opacity: 0; }

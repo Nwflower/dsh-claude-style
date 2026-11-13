@@ -15,6 +15,7 @@ export default {
     { file: 'settings-brand-lockup.css', rank: 316 },
     { file: 'settings-brand.css', rank: 319 },
     { file: 'palette-schemes.css', rank: 321 },
+    { file: 'palette-editor.css', rank: 322 },
     { file: 'theme-flip.css', rank: 370 },
   ],
   cases: ['settings', 'late-forms', 'host-palette', 'skin-center-handoff', 'skin-center-arrival'],

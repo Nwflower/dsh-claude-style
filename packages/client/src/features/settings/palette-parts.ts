@@ -59,6 +59,31 @@ export function schemeDiscs(scheme: PaletteScheme, staticPreset: boolean) {
   ]
 }
 
+/** The manager's line marks, drawn on a 16px grid in the text colour around them. */
+const GLYPHS = {
+  check: 'M3.5 8.5l3 3 6-7',
+  close: 'M4 4l8 8M12 4l-8 8',
+  plus: 'M8 3.5v9M3.5 8h9',
+  undo: 'M6 3.5L3.5 6 6 8.5M3.5 6h5.75a3.25 3.25 0 010 6.5H7',
+} as const
+
+export function Glyph(props: { name: keyof typeof GLYPHS }) {
+  return React.createElement(
+    'svg',
+    { className: 'dsh-claude-scheme-glyph', width: 16, height: 16, viewBox: '0 0 16 16', fill: 'none', 'aria-hidden': 'true' },
+    React.createElement('path', { d: GLYPHS[props.name], stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }),
+  )
+}
+
+/** A scheme's four colours as a row of small dots, for a line of the manager's list. */
+export function SchemeDots(props: { colours: string[] }) {
+  return React.createElement(
+    'span',
+    { className: 'dsh-claude-scheme-dots', 'aria-hidden': 'true' },
+    props.colours.map((colour, index) => React.createElement('span', { key: index, className: 'dsh-claude-scheme-dot', style: { color: colour } })),
+  )
+}
+
 /**
  * Puts the group's one hint over a disc (transitions.dev's "Tooltip open/close",
  * MIT): while it shows it travels there and takes the new label's width; while
