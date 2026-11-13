@@ -1,4 +1,6 @@
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
+import { requestFrame } from '@dsh-claude-style/engine/frame'
+import { inCurrentConversation, observeSession } from '@dsh-claude-style/engine/host'
 import { isChatFoldToggle } from '../chat-fold/fold-toggle'
 import { STREAMING_ATTRIBUTE, STREAMING_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { createRevealScanner } from './reveal-diff'
@@ -146,7 +148,22 @@ export function createChatRevealEngine() {
   const { clearHighlights, showStep } = createRevealHighlights(registry, HighlightConstructor)
   const publishRunColor = createRunColorPublisher()
   const paint = createRevealPainter(state, { clearHighlights, showStep, publishRunColor })
-  const scan = createRevealScanner(state, { publishRunColor, paint })
+  const scan = createRevealScanner(state, { publishRunColor, paint, accepts: inCurrentConversation })
+  let cancelBaseline: (() => void) | null = null
+  // Per session: snapshots, text nodes, ranges and pending frames end on the broadcast (D91).
+  const releaseSession = () => {
+    cancelBaseline?.()
+    cancelBaseline = null
+    state.cancelPaintFrame?.()
+    Object.assign(state, createRevealState())
+    clearHighlights()
+  }
+  const stopSession = observeSession(() => {
+    releaseSession()
+    state.baselinePending = true
+    // The broadcast only releases state before paint; scanning rides the next frame (D40).
+    cancelBaseline = requestFrame({ write() { cancelBaseline = null; scan(null) } })
+  })
 
   /**
    * Note the containers a fold is about to reflow.
@@ -225,12 +242,10 @@ export function createChatRevealEngine() {
   scan(null)
 
   return () => {
+    stopSession()
     stopMutations()
     document.removeEventListener('click', rememberReaderFold, true)
     document.removeEventListener('keydown', rememberReaderFold, true)
-    if (state.cancelPaintFrame !== null) state.cancelPaintFrame()
-    state.cancelPaintFrame = null
-    state.liveRuns.length = 0
-    clearHighlights()
+    releaseSession()
   }
 }

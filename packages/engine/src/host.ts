@@ -302,6 +302,12 @@ export function closestConversationSession(node: EventTarget | null | undefined)
   return closestFrom(node, CONVERSATION_SESSION)
 }
 
+/** A node outside conversations is shared UI; a retained inactive conversation owns no current stream (D3, D91). */
+export function inCurrentConversation(node: Element) {
+  const owner = closestConversationSession(node)
+  return owner === null || owner === findConversationSession()
+}
+
 export function conversationSessionId(host: Element | null | undefined) {
   if (host === null || host === undefined) return null
   const id = host.getAttribute(CONVERSATION_SESSION_ATTR)
@@ -324,6 +330,7 @@ export function conversationSession(): string | null {
 export function observeSession(onChange: (sessionId: string | null) => void): () => void {
   let last = conversationSession()
   return subscribeMutations(document.body, {
+    beforePaint: true,
     childList: true,
     subtree: true,
     attributes: true,

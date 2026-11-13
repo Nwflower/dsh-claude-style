@@ -60,7 +60,7 @@ export interface RevealSnapshot {
   entries: RevealTextEntry[]
 }
 
-/** The empty engine state; the installer fills the history containers it found on the page. */
+/** Per-session state: the engine replaces it on the session broadcast and on teardown (D91). */
 export function createRevealState(): RevealState {
   return {
     liveRuns: [],
@@ -72,11 +72,14 @@ export function createRevealState(): RevealState {
     slowFrames: 0,
     yieldUntil: 0,
     cancelPaintFrame: null,
+    baselinePending: false,
   }
 }
 
 /** Scan and paint modules share this object so scalar state writes remain visible to both. */
 export interface RevealState {
+  /** A session switch baselines already mounted streams before new appends fade (D91). */
+  baselinePending: boolean
   /** The segments still fading. */
   liveRuns: RevealRun[]
   /** Streaming containers already on the page when the engine installed: they are history and do not replay. */

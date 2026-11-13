@@ -20,7 +20,7 @@
  */
 import { sendPrompt, waitForTurn } from '../prompt.mjs'
 import { bound } from '../bounds.mjs'
-import { CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, SESSION_ROW_KEY_ATTRIBUTE, SIDEBAR_NEW_SESSION_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, SESSION_ROW_KEY_ATTRIBUTE, SIDEBAR_NEW_SESSION_SELECTOR, STREAMING_SELECTOR } from '@dsh-claude-style/contracts/dom'
 
 /**
  * How many turns the transcript is grown by before the measured one. The
@@ -77,11 +77,21 @@ async function measureTurn(page, prompt) {
  * which is the other half of what a switch costs beside the streaming round
  * above (D90); the two are read apart because nothing streams in this one.
  */
-async function measureReturn(page, expectedRows) {
-  const sessionId = await page.evaluate(([selector, attribute]) => {
+async function selectedSession(page) {
+  return page.evaluate(([selector, attribute]) => {
     const column = document.querySelector(selector)
     return column === null ? null : column.getAttribute(attribute)
   }, [CONVERSATION_SESSION_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE])
+}
+
+async function openSession(page, sessionId) {
+  await page.locator(`[${SESSION_ROW_KEY_ATTRIBUTE}="session:${sessionId}"]`).click()
+  await page.waitForFunction(([selector, attribute, id]) => document.querySelector(selector)?.getAttribute(attribute) === id,
+    [CONVERSATION_SESSION_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, sessionId])
+}
+
+async function measureReturn(page, expectedRows) {
+  const sessionId = await selectedSession(page)
   if (sessionId === null) throw new Error('long-session: the page names no session before the switch')
   await page.locator(SIDEBAR_NEW_SESSION_SELECTOR).first().click()
   await page.waitForFunction(() => document.querySelectorAll('[data-chat-flow-kind]').length === 0, undefined, { timeout: 15000 })
@@ -89,7 +99,7 @@ async function measureReturn(page, expectedRows) {
   await waitForTurn(page)
   await resetRound(page)
   const started = Date.now()
-  await page.locator(`[${SESSION_ROW_KEY_ATTRIBUTE}="session:${sessionId}"]`).click()
+  await openSession(page, sessionId)
   await page.waitForFunction((rows) => document.querySelectorAll('[data-chat-flow-kind]').length >= rows - 2, expectedRows, { timeout: 30000 })
   return { ...(await read(page)), ms: Date.now() - started }
 }
@@ -264,6 +274,23 @@ function longSessionScenario({ check }) {
       rounds.push(check('连续往返切回后页面的节点数不再增长',
         last <= nodes[0] * SWITCH_NODE_RATIO,
         `nodes ${nodes.join(' → ')} over ${nodes.length - 1} returns`))
+      // These switches run after the frame-cost readings, so remounting belongs
+      // to its own acceptance sequence rather than the streaming comparison.
+      const current = await selectedSession(page)
+      const other = await page.locator(`[${SESSION_ROW_KEY_ATTRIBUTE}]`).evaluateAll((rows, [attribute, id]) => {
+        return rows.map(row => row.getAttribute(attribute)).find(key => key?.startsWith('session:') && key !== `session:${id}`)?.slice('session:'.length) ?? null
+      }, [SESSION_ROW_KEY_ATTRIBUTE, current])
+      if (current === null || other === null) throw new Error('long-session: two sessions are required for the switch sequence')
+      await sendPrompt(page, 'keep streaming while the conversation switches')
+      await page.waitForSelector(STREAMING_SELECTOR)
+      for (let round = 0; round < SWITCH_ROUNDS; round += 1) {
+        await openSession(page, other)
+        await openSession(page, current)
+      }
+      await waitForTurn(page)
+      rounds.push(check('流式期间快速往返后仍显示原会话且控制台没有异常',
+        await selectedSession(page) === current && session.problems.length === 0,
+        `switches ${SWITCH_ROUNDS * 2}; problems ${session.problems.slice(0, 3).join(' | ')}`))
       return rounds
     },
   }

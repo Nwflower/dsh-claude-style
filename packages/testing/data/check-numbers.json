@@ -284,6 +284,9 @@
       ],
       "连续往返切回后页面的节点数不再增长": [
         0
+      ],
+      "流式期间快速往返后仍显示原会话且控制台没有异常": [
+        0
       ]
     },
     "packages/testing/scenarios/message-actions.mjs": {

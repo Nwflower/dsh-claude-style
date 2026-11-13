@@ -17,6 +17,7 @@ import type { RevealRun, RevealSnapshot, RevealState, RevealTextEntry } from './
 interface RevealScanHooks {
   publishRunColor: (element: HTMLElement | null) => void
   paint: (now: number, fromFrame: boolean) => void
+  accepts?: (container: Element) => boolean
 }
 
 /** The characters two strings share at their front; a streamed append is the native test. */
@@ -112,7 +113,7 @@ export function createRevealScanner(state: RevealState, hooks: RevealScanHooks) 
     const now = performance.now()
     let containers: Element[]
     if (only === null) {
-      containers = [...document.querySelectorAll(STREAMING_SELECTOR)]
+      containers = [...document.querySelectorAll(STREAMING_SELECTOR)].filter(container => hooks.accepts?.(container) ?? true)
       // Containers no longer streaming lose their snapshots and their
       // segments: a snapshot holds the message's text nodes (and the text they
       // carried when it was read), so a finished answer would otherwise stay
@@ -139,8 +140,12 @@ export function createRevealScanner(state: RevealState, hooks: RevealScanHooks) 
       }
       state.liveContainers = containers
     } else {
-      containers = [...only].filter(container => container.isConnected && container.matches(STREAMING_SELECTOR))
+      containers = [...only].filter(container => container.isConnected && container.matches(STREAMING_SELECTOR) && (hooks.accepts?.(container) ?? true))
       for (const container of containers) if (!state.liveContainers.includes(container)) state.liveContainers.push(container)
+    }
+    if (state.baselinePending) {
+      for (const container of containers) state.historyContainers.add(container)
+      state.baselinePending = false
     }
     if (containers.length === 0) return
     /** The main thread is busy and the engine has given way: snapshots are still updated, the batch just does not fade. */

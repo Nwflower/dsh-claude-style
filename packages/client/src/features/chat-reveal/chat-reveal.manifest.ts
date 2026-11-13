@@ -4,7 +4,7 @@ import type { FeatureManifest } from '../../core/feature'
 export default {
   id: 'chatReveal',
   order: 210,
-  contracts: ['api.highlight', 'api.highlight-constructor', 'chat.streaming', 'chat.streaming-attribute'],
+  contracts: ['api.highlight', 'api.highlight-constructor', 'chat.streaming', 'chat.streaming-attribute', 'conversation.session', 'conversation.session-attribute', 'shell.phase'],
   pref: 'chatReveal',
   prefValues: [CHAT_REVEAL_ON],
   yieldsTo: 'dsh-chat-ux',

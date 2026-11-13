@@ -95,6 +95,11 @@ export function stopScrollEase(element: Element) {
   scrollEasing.delete(element)
 }
 
+/** The scroll owner's session lifetime ends every spring it owns (D40, D91). */
+export function stopAllScrollEases() {
+  for (const element of scrollEasing.keys()) stopScrollEase(element)
+}
+
 /**
  * Whether this element is being eased right now.
  * @param element - the scroll container.

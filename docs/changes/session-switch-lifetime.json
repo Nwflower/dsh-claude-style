@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-13",
+  "group": "fixes",
+  "order": 0,
+  "external": false,
+  "zh": "切换会话与返回首页时立即释放滚动持有和文字揭示状态，保留的旧容器不再继续绘制",
+  "en": "Release reader scroll holds and text reveal state on session changes and home navigation, including retained inactive containers"
+}
