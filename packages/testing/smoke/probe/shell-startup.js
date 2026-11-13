@@ -126,9 +126,14 @@
           rightDelta: Math.round(t.right - c.right),
         }
       }
+      // A card's row height follows the face its words are drawn in, so the
+      // reading waits for the face the card asked for: a fallback face lands a
+      // pixel under the skin's own.
+      await document.fonts.ready
       r.presetCard = heroCardShape()
       heroTrigger.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
       await sleep(250)
+      await document.fonts.ready
       r.workspaceUpAfterCrossing = window.__heroMenuOpen('hero-workspace')
       r.presetFoldedBySibling = window.__heroMenuOpen('hero-preset')
       r.heroCardsUp = hostCards()
