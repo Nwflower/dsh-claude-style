@@ -4,9 +4,11 @@
    its own colours — or, under the image-colour choice, as a shape in the ink
    that choice names.
    This sheet comes after theme/sidebar.css and theme/hero.css, so where a rule
-   here meets the Claude brand's at the same specificity, this one wins. */
+   here meets the Claude brand's at the same specificity, this one wins.
+   The host wraps its art in a slot element that carries an inline
+   `display: contents`, so the art gives way only over that inline style. */
 body[data-dsh-claude-style][data-dsh-claude-custom-mark] :is([data-dsh-claude-part~="brand-mark"], [data-dsh-claude-part~="rail-mark"]) > * {
-  display: none;
+  display: none !important;
 }
 
 /* The custom mark is drawn the same on the sidebar and on the hero hitbox: one
@@ -30,9 +32,10 @@ body[data-dsh-claude-style][data-dsh-claude-custom-mark] :is([data-dsh-claude-pa
 /* ---------- Custom brand: sidebar wordmark ---------- */
 /* The wordmark image keeps the 18px cap height of the Claude wordmark, its
    width read through the proportions brand.ts measured; with no image, the
-   brand name is set in the brand face. */
+   brand name is set in the brand face. The host's word gives way over its
+   slot's inline `display: contents`, as the mark does. */
 body[data-dsh-claude-style][data-dsh-claude-custom-word] [data-dsh-claude-part~="brand-identity"] > [data-dsh-claude-part~="brand-name"] > * {
-  display: none;
+  display: none !important;
 }
 
 body[data-dsh-claude-style][data-dsh-claude-custom-word="image"] [data-dsh-claude-part~="brand-identity"] > [data-dsh-claude-part~="brand-name"]::before {
