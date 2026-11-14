@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-14",
-  "group": "improvements",
-  "order": 1,
-  "external": false,
-  "zh": "皮肤的样式表按宿主自己的类名匹配宿主元素，节点一插入就带着皮肤的样式，写上部件标记不再让浏览器重算样式；六千节点的页面上，一次样式计算从 22.5 毫秒降到 13.7 毫秒，宿主在插入后立即读布局时一次挂载的遍历、样式与布局合计从 72.3 毫秒降到 32.6 毫秒",
-  "en": "The skin's stylesheet now matches host elements by the host's own class names, so a node carries the skin's styles the moment the host inserts it and writing a part mark no longer makes the browser recalculate; on a 6,000-node page one style calculation drops from 22.5 ms to 13.7 ms, and a mount whose layout the host reads right after inserting drops from 72.3 ms to 32.6 ms of walk, style and layout"
-}

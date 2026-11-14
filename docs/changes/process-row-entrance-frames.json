@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-14",
-  "group": "improvements",
-  "order": 0,
-  "external": true,
-  "zh": "进行中的回合每新写出一行过程，这一行的入场改由引擎在合成器上播放，长会话流式输出时不再每写出这一行就重算一次整页样式",
-  "en": "A process row a running turn writes enters through an animation the engine plays on the compositor, so a long streamed turn no longer recalculates the page's styles for every row"
-}

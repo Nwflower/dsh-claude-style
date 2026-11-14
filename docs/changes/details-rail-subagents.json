@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-14",
-  "group": "fixes",
-  "order": 0,
-  "external": true,
-  "zh": "详情栏展开时标题栏的子智能体入口重新让位，栏内的子智能体一节列出本会话开始过的全部子智能体，已结束的折成计数",
-  "en": "The header's subagent entry steps aside again while the details rail stands, and the rail's Subagents section lists every child the session started, settled ones behind a finished count"
-}

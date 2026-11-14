@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-14",
-  "group": "fixes",
-  "order": 0,
-  "external": false,
-  "zh": "详情栏展开时切换会话，栏会先收起再展开，对话的右边缘跟着来回移动一次；现在栏与对话的宽度在切换期间保持不动，只有栏内的读数换成新会话的。本地一段 105 行的会话，切换回它时浏览器的样式计算从 351 毫秒降到 221 毫秒",
-  "en": "Switching sessions with the details rail open used to fold the rail away and bring it back, moving the chat's right edge out and in once; the rail and the chat now keep their widths through a switch and only the rail's readings change to the new session. Returning to a local 105-row session drops from 351 ms of browser style calculation to 221 ms"
-}

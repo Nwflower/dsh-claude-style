@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-14",
-  "group": "improvements",
-  "order": 3,
-  "external": false,
-  "zh": "挂上一段对话时，给宿主元素命名的那趟遍历每个元素只做一次选择器判断，被移走的子树不再逐个节点查十几张表；切换到一段六百条消息的会话时，皮肤的脚本时间从 66.0 毫秒降到 47.7 毫秒",
-  "en": "The pass that names host elements now asks one selector test of each element of a mounted conversation, and no longer looks every node of a removed subtree up in a dozen tables; switching to a 600-message session drops from 66.0 ms of the skin's script time to 47.7 ms"
-}

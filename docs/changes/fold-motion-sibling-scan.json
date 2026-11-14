@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-14",
-  "group": "improvements",
-  "order": 2,
-  "external": false,
-  "zh": "折叠展开动效的三条样式规则不再让对话里的每个元素逐行查找它上方的全部消息，切换到一段六百条消息的会话时样式计算从 236.9 毫秒降到 92.8 毫秒，两百条时从 53.7 毫秒降到 32.9 毫秒",
-  "en": "The three style rules behind the fold's reveal no longer have every element of a conversation search all the messages above it; switching to a 600-message session drops from 236.9 ms of style calculation to 92.8 ms, and a 200-message one from 53.7 ms to 32.9 ms"
-}

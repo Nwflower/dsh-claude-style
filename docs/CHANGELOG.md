@@ -2,6 +2,50 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [0.21.2] - 2026-11-14
+
+[中文](#cn-0.21.2) | [English](#en-0.21.2)
+
+<h3 id="cn-0.21.2">新增功能</h3>
+
+- 配色方案与命名标志预设支持结构化 YAML、界面管理和明暗图片变体
+- 模型选择器支持按标识、品牌、目录或自定义顺序排列，未识别品牌的模型行不再显示副标题
+- 模型选择器新增 SenseNova 与 SCNet 品牌组合标和厂商文案
+
+### 体验优化
+
+- 进行中的回合每新写出一行过程，这一行的入场改由引擎在合成器上播放，长会话流式输出时不再每写出这一行就重算一次整页样式
+- 以多参数选择器列表结尾的样式规则在构建时展开成按类名、属性或标签匹配的几条，浏览器不再拿它们去试页面上的每个元素；六千节点的页面上，皮肤样式表下的一次样式计算从 28.7 毫秒降到 22.5 毫秒
+- 皮肤的样式表按宿主自己的类名匹配宿主元素，节点一插入就带着皮肤的样式，写上部件标记不再让浏览器重算样式；六千节点的页面上，一次样式计算从 22.5 毫秒降到 13.7 毫秒，宿主在插入后立即读布局时一次挂载的遍历、样式与布局合计从 72.3 毫秒降到 32.6 毫秒
+- 折叠展开动效的三条样式规则不再让对话里的每个元素逐行查找它上方的全部消息，切换到一段六百条消息的会话时样式计算从 236.9 毫秒降到 92.8 毫秒，两百条时从 53.7 毫秒降到 32.9 毫秒
+- 挂上一段对话时，给宿主元素命名的那趟遍历每个元素只做一次选择器判断，被移走的子树不再逐个节点查十几张表；切换到一段六百条消息的会话时，皮肤的脚本时间从 66.0 毫秒降到 47.7 毫秒
+
+### 问题修复
+
+- 详情栏展开时切换会话，栏会先收起再展开，对话的右边缘跟着来回移动一次；现在栏与对话的宽度在切换期间保持不动，只有栏内的读数换成新会话的。本地一段 105 行的会话，切换回它时浏览器的样式计算从 351 毫秒降到 221 毫秒
+- 详情栏展开时标题栏的子智能体入口重新让位，栏内的子智能体一节列出本会话开始过的全部子智能体，已结束的折成计数
+- 触屏窄屏布局交由宿主或移动适配插件控制帧网格，避免会话列落入零宽或侧栏轨道
+
+<h3 id="en-0.21.2">New Features</h3>
+
+- Support structured YAML, UI management and light/dark assets for colour schemes and named logo presets
+- Add ID, brand, catalog and custom model ordering, and keep description lines off models without a recognised brand
+- Add SenseNova and SCNet vendor lockups and descriptions to the model picker
+
+### Improvements
+
+- A process row a running turn writes enters through an animation the engine plays on the compositor, so a long streamed turn no longer recalculates the page's styles for every row
+- Style rules ending in a multi-argument selector list are written out at build time into rules matched by class, attribute or tag, so the browser no longer tries them on every element; on a 6,000-node page one style calculation under the skin's sheet drops from 28.7 ms to 22.5 ms
+- The skin's stylesheet now matches host elements by the host's own class names, so a node carries the skin's styles the moment the host inserts it and writing a part mark no longer makes the browser recalculate; on a 6,000-node page one style calculation drops from 22.5 ms to 13.7 ms, and a mount whose layout the host reads right after inserting drops from 72.3 ms to 32.6 ms of walk, style and layout
+- The three style rules behind the fold's reveal no longer have every element of a conversation search all the messages above it; switching to a 600-message session drops from 236.9 ms of style calculation to 92.8 ms, and a 200-message one from 53.7 ms to 32.9 ms
+- The pass that names host elements now asks one selector test of each element of a mounted conversation, and no longer looks every node of a removed subtree up in a dozen tables; switching to a 600-message session drops from 66.0 ms of the skin's script time to 47.7 ms
+
+### Bug Fixes
+
+- Switching sessions with the details rail open used to fold the rail away and bring it back, moving the chat's right edge out and in once; the rail and the chat now keep their widths through a switch and only the rail's readings change to the new session. Returning to a local 105-row session drops from 351 ms of browser style calculation to 221 ms
+- The header's subagent entry steps aside again while the details rail stands, and the rail's Subagents section lists every child the session started, settled ones behind a finished count
+- Leave narrow touch frame grids to the host or mobile adapter so the conversation cannot land in a zero-width or sidebar rail track
+
 ## [0.21.1] - 2026-11-14
 
 [中文](#cn-0.21.1) | [English](#en-0.21.1)

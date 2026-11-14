@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-15",
-  "group": "fixes",
-  "order": 0,
-  "external": false,
-  "zh": "触屏窄屏布局交由宿主或移动适配插件控制帧网格，避免会话列落入零宽或侧栏轨道",
-  "en": "Leave narrow touch frame grids to the host or mobile adapter so the conversation cannot land in a zero-width or sidebar rail track"
-}
