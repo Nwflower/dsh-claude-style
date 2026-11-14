@@ -323,10 +323,17 @@ function importanceScenario(lane) {
       await attribute(page, 'data-dsh-claude-palette', 'claude')
       await attribute(page, 'data-dsh-claude-typeface', 'claude')
       // The preferences the skin marks the page with, one state each.
+      // The supplied art's rules only carry their weight where the brand's own
+      // art stands in the page: under the Claude brand the brand sheet hides the
+      // slots itself, so the walk audits the supplied art under DeepSeek.
+      const brandBefore = await page.evaluate(() => document.body.getAttribute('data-dsh-claude-brand'))
       for (const [name, key, value] of MARKS) {
+        const supplied = key.startsWith('data-dsh-claude-custom-')
+        if (supplied) await attribute(page, 'data-dsh-claude-brand', 'deepseek')
         await attribute(page, key, value)
         await audit.state(name)
         await attribute(page, key, null)
+        if (supplied) await attribute(page, 'data-dsh-claude-brand', brandBefore)
       }
       await withSettings(page, audit)
       // The preferences the controls set render their own markup on the empty

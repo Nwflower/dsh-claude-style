@@ -907,6 +907,30 @@
       "prop": "display",
       "verdict": "unmatched"
     },
+    "body[data-dsh-claude-style][data-dsh-claude-custom-mark] :is([data-dsh-claude-part~=brand-mark],[data-dsh-claude-part~=rail-mark])>*{display:none!}|display": {
+      "selector": "body[data-dsh-claude-style][data-dsh-claude-custom-mark] :is([data-dsh-claude-part~=brand-mark],[data-dsh-claude-part~=rail-mark])>*",
+      "prop": "display",
+      "verdict": "needed",
+      "state": "custom brand mark",
+      "opponents": [
+        {
+          "kind": "inline",
+          "owner": "element"
+        }
+      ]
+    },
+    "body[data-dsh-claude-style][data-dsh-claude-custom-word] [data-dsh-claude-part~=brand-identity]>[data-dsh-claude-part~=brand-name]>*{display:none!}|display": {
+      "selector": "body[data-dsh-claude-style][data-dsh-claude-custom-word] [data-dsh-claude-part~=brand-identity]>[data-dsh-claude-part~=brand-name]>*",
+      "prop": "display",
+      "verdict": "needed",
+      "state": "custom brand word",
+      "opponents": [
+        {
+          "kind": "inline",
+          "owner": "element"
+        }
+      ]
+    },
     "body[data-dsh-claude-style][data-dsh-claude-custom-mark] [data-dsh-claude-part~=hero-mark]>*{display:none!}|display": {
       "selector": "body[data-dsh-claude-style][data-dsh-claude-custom-mark] [data-dsh-claude-part~=hero-mark]>*",
       "prop": "display",
