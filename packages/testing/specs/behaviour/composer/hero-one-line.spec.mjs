@@ -9,29 +9,17 @@
  * @risk The first field a reader meets on the home page stands three rows tall in a narrow window, its model selector pushing the send button onto a line of its own.
  */
 import { host, spec, surface } from '../../fixtures/behaviour.mjs'
+import { heroCard } from '../../fixtures/hero-card.mjs'
 
 const CARD = host('composer.card')
-const VARIANT = host('composer.variant')
 const LAYOUT = surface.attribute('composer.responsive-layout')
 const PART = surface.attribute('skin.part')
 const LABEL = surface('model.seat-name')
-const LONG = 'qwen4-max-preview · Bailian Token Plan Enterprise'
 const TOOLBAR = '[' + surface.attribute('composer.responsive-toolbar') + ']'
 
 /** Make the home card the hero composer with a name longer than the row can hold. */
 async function lengthen(t) {
-  await t.page.evaluate(([card, variant, label, long, part]) => {
-    const stack = document.querySelector('[' + part + '~="composer-stack"]')
-    if (stack === null) throw new Error('the composer stack is not on the page')
-    stack.setAttribute(variant, 'hero')
-    const node = document.querySelector(label)
-    if (node === null) throw new Error('the model label is not on the page')
-    node.textContent = long
-    const element = document.querySelector(card)
-    element.style.setProperty('width', '420px')
-    element.style.setProperty('max-width', '420px')
-  }, [CARD, VARIANT, LABEL, LONG, PART])
-  await t.settle()
+  await heroCard(t, { width: 420 })
 }
 
 /** The card's one line of controls: the toolbar's height, and the two clusters' centres. */
