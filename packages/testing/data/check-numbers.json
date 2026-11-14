@@ -397,7 +397,7 @@
         0,
         1
       ],
-      "窗口还没长满时，文本铺满窗口、没有遮罩、也没有位移": [
+      "窗口还没长满时，文本铺满窗口、底边留一道渐隐、没有位移": [
         0
       ],
       "窗口里的文本按两行一步往上走，从不停在整步上（过渡真的在跑）": [
@@ -901,7 +901,7 @@
       "a tier that does not cap its body is never pressed": [
         0
       ],
-      "a reasoning shorter than the cap stands in a window exactly as tall as the text, with nothing faded": [
+      "a reasoning shorter than the cap stands in a window exactly as tall as the text, its newest line rising through the bottom fade": [
         0,
         2,
         3,
