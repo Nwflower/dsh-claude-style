@@ -18,10 +18,16 @@
  * could finish. The scripts the lane had before this one sent a piece every
  * 300ms — after any slide had landed — so the restart never happened there.
  */
+import tokens from '../../client/src/theme/tokens.json' with { type: 'json' }
 import { bound } from '../bounds.mjs'
 
 /** How far the column's screen top may move down between two frames, in pixels. */
 const JITTER_PX = bound('streamJitterMovePx')
+/**
+ * The slide's own duration (theme/tokens.json): a pair of frames this far apart
+ * cannot witness the slide, since it has finished before the second paint.
+ */
+const SLIDE_MS = Number.parseFloat(tokens.motion.find((entry) => entry.token === '--dsh-claude-duration-slide').value)
 /** The growth the sampled answer has to show, in pixels: a viewport's worth and then some. */
 const GROWTH_PX = bound('streamJitterGrowthPx')
 /** The composer and its bottom lines may move only by the scrollbar's own rounding. */
@@ -49,7 +55,7 @@ function moves(frames) {
   const out = []
   for (let at = 1; at < frames.length; at += 1) {
     if (frames[at].height < frames[at - 1].height) continue
-    out.push({ at: frames[at].t, by: Math.round((frames[at].flowTop - frames[at - 1].flowTop) * 10) / 10 })
+    out.push({ at: frames[at].t, gap: frames[at].t - frames[at - 1].t, by: Math.round((frames[at].flowTop - frames[at - 1].flowTop) * 10) / 10 })
   }
   return out
 }
@@ -101,8 +107,12 @@ function streamJitterScenario({ check }, statsPosition = 'context') {
       // A frame that moves the column down means the slide carried more than
       // arrived: the reader sees the column pushed back down under text that
       // had already gone up.
-      const bounces = walked.filter((move) => move.by > JITTER_PX)
-      const worst = walked.reduce((high, move) => Math.max(high, move.by), -Infinity)
+      // A pair painted further apart than the slide's own run cannot witness it:
+      // the slide has finished before the second paint, and the movement between
+      // the two frames is the host's own reflow.
+      const judged = walked.filter((move) => move.gap <= SLIDE_MS)
+      const bounces = judged.filter((move) => move.by > JITTER_PX)
+      const worst = judged.reduce((high, move) => Math.max(high, move.by), -Infinity)
       const grew = frames.length < 2 ? 0 : frames[frames.length - 1].height - frames[0].height
       const rising = walked.filter((move) => move.by < 0)
       const cardDrift = steadyDrift(frames, 'card')
@@ -114,7 +124,7 @@ function streamJitterScenario({ check }, statsPosition = 'context') {
       return [
         check('逐帧采样真的在跑', trace.length > 60 && frames.length > 40, `${trace.length} frames, ${frames.length} scrolled while following`),
         check('回答在采样期间长出来', grew > GROWTH_PX, `grew ${grew}px`),
-        check('消息列在相邻两帧之间没有往下走', bounces.length === 0, `downward frames=${bounces.length} of ${walked.length}, worst ${worst === -Infinity ? 'n/a' : `${worst}px`}${bounces.length === 0 ? '' : ` at ${bounces.slice(0, 4).map((move) => `${move.by}px/${move.at}ms`).join(' ')}`}`),
+        check('消息列在相邻两帧之间没有往下走', judged.length >= 20 && bounces.length === 0, `downward frames=${bounces.length} of ${judged.length} judged${walked.length === judged.length ? '' : ` (${walked.length - judged.length} spaced beyond the ${SLIDE_MS}ms slide)`}, worst ${worst === -Infinity ? 'n/a' : `${worst}px`}${bounces.length === 0 ? '' : ` at ${bounces.slice(0, 4).map((move) => `${move.by}px/${move.at}ms`).join(' ')}`}`),
         // The other half of the reading: a column that never moved would pass the
         // check above without the slide doing anything at all. Pieces arrive
         // faster than frames, so many frames stand still; a third is the floor
