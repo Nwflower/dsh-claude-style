@@ -1512,25 +1512,8 @@
     "body[data-dsh-claude-style][data-dsh-claude-page-under-1000]:not([data-dsh-claude-page-under-768]) [data-dsh-claude-part~=layout-frame]:not([data-sidebar-collapsed]):not([data-sidebar-drawer])[data-rightbar-collapsed]{grid-template-columns:var(--dsh-windows-sidebar-width, 280px) minmax(0,1fr) minmax(0,0px)!}|grid-template-columns": {
       "selector": "body[data-dsh-claude-style][data-dsh-claude-page-under-1000]:not([data-dsh-claude-page-under-768]) [data-dsh-claude-part~=layout-frame]:not([data-sidebar-collapsed]):not([data-sidebar-drawer])[data-rightbar-collapsed]",
       "prop": "grid-template-columns",
-      "verdict": "needed"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-custom-mark] :is([data-dsh-claude-part~=brand-mark],[data-dsh-claude-part~=rail-mark])>*{display:none!}|display": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-custom-mark] :is([data-dsh-claude-part~=brand-mark],[data-dsh-claude-part~=rail-mark])>*",
-      "prop": "display",
       "verdict": "needed",
-      "state": "hero",
-      "opponents": [
-        {
-          "kind": "inline",
-          "owner": "element"
-        }
-      ]
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-custom-word] [data-dsh-claude-part~=brand-identity]>[data-dsh-claude-part~=brand-name]>*{display:none!}|display": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-custom-word] [data-dsh-claude-part~=brand-identity]>[data-dsh-claude-part~=brand-name]>*",
-      "prop": "display",
-      "verdict": "needed",
-      "state": "hero",
+      "state": "page zoom 150",
       "opponents": [
         {
           "kind": "inline",

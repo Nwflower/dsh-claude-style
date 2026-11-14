@@ -5,10 +5,10 @@
    that choice names.
    This sheet comes after theme/sidebar.css and theme/hero.css, so where a rule
    here meets the Claude brand's at the same specificity, this one wins.
-   The host wraps its art in a slot element that carries an inline
-   `display: contents`, so the art gives way only over that inline style. */
+   The host wraps its art in a slot element; this rule hides the slot on its own
+   weight, which the importance walk holds it to. */
 body[data-dsh-claude-style][data-dsh-claude-custom-mark] :is([data-dsh-claude-part~="brand-mark"], [data-dsh-claude-part~="rail-mark"]) > * {
-  display: none !important;
+  display: none;
 }
 
 /* The custom mark is drawn the same on the sidebar and on the hero hitbox: one
@@ -46,7 +46,7 @@ body[data-dsh-claude-style][data-dsh-claude-custom-mark-none] :is([data-dsh-clau
    brand name is set in the brand face. The host's word gives way over its
    slot's inline `display: contents`, as the mark does. */
 body[data-dsh-claude-style][data-dsh-claude-custom-word] [data-dsh-claude-part~="brand-identity"] > [data-dsh-claude-part~="brand-name"] > * {
-  display: none !important;
+  display: none;
 }
 
 body[data-dsh-claude-style][data-dsh-claude-custom-word="image"] [data-dsh-claude-part~="brand-identity"] > [data-dsh-claude-part~="brand-name"]::before {
