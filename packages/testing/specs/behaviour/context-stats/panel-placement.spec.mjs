@@ -38,6 +38,9 @@ async function watchPanel(t) {
       frames.push({
         at: Math.round(performance.now() - started),
         painted: panel !== null && getComputedStyle(panel).visibility === 'visible',
+        // The surface's entrance lifts it into place from a few pixels below (shared/motion.css):
+        // the frames it is still arriving in are held to the corner alone.
+        entering: panel !== null && panel.getAnimations().some((animation) => animation instanceof CSSAnimation && animation.animationName === 'dsh-claude-surface-in' && animation.playState === 'running'),
         left: box === null ? null : Math.round(box.left),
         top: box === null ? null : Math.round(box.top),
         bottom: box === null ? null : Math.round(box.bottom),
@@ -99,9 +102,12 @@ function judgeThePlacement(t, reading, label) {
   // answer, which is that corner.
   const corner = reading.frames.filter((frame) => frame.left <= 13 && frame.top <= 13)
   t.expectThat.equal(corner.length, 0, `no frame of the popover stands in the window's corner (${label})`)
-  const offTheRing = reading.frames.filter((frame) => frame.bottom > reading.ring.top + 1)
+  // A frame still inside the entrance travels those few pixels and is judged by
+  // its corner alone; every frame the panel stands in has to be above the ring.
+  const standing = reading.frames.filter((frame) => frame.entering !== true)
+  const offTheRing = standing.filter((frame) => frame.bottom > reading.ring.top + 1)
   t.expectThat.equal(offTheRing.length, 0, `every painted frame stands above the ring (${label})`)
-  t.expectThat.equal(reading.frames.length > 0, true, `the popover was painted at all (${label})`)
+  t.expectThat.equal(standing.length > 0, true, `the popover was painted after its entrance (${label})`)
 }
 
 export default spec({ page: 'context-stats' }, ({ test }) => {

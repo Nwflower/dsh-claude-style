@@ -542,10 +542,16 @@ function sweepInPage(selectors) {
  *     any other refactor) shows here as zero drift.
  */
 async function createImportanceAudit(page, reference) {
-  const original = await page.evaluate((sheet) => document.querySelector(sheet).textContent, SHEET)
+  // The authored sheet the build recorded its verdicts against: the page runs a
+  // finished sheet whose part selectors read host class names (D101), while the
+  // ledger and the build's own check read the sources' spelling (D9).
+  const authored = fs.readFileSync(path.join(ROOT, 'lib', 'audit', 'importance-sheet.css'), 'utf8')
+  const original = authored
   // The page functions below share one helper, defined on the page's window.
   await page.evaluate(`(() => { ${SETTLE}\nwindow.settleTransitions = settleTransitions })()`)
-  const { annotated, rules, selectors } = planImportance(original)
+  const plan = planImportance(original)
+  const annotated = plan.annotated
+  const { rules, selectors } = plan
   const tried = rules.filter((rule) => rule.keep === null)
   const props = [...new Set(rules.flatMap((rule) => rule.props))]
   // The drift check compares every property either sheet holds an `!important` on.
@@ -590,7 +596,12 @@ async function createImportanceAudit(page, reference) {
   async function state(name, only) {
     // The skin can mount its sheet anew between states; the audit's own text goes back in.
     const current = await page.evaluate((sheet) => document.querySelector(sheet).textContent, SHEET)
-    if (current !== annotated && current !== original) throw new Error(`importance: the skin's stylesheet changed during the audit (state ${name})`)
+    if (current !== annotated && current !== original) {
+      // The skin finishes its sheet again when the page meets host class
+      // names (D101); the audit judges the authored sheet, so its own text
+      // goes back in for the measurements that follow.
+      await install(annotated)
+    }
     if (reference !== undefined) {
       const moved = await page.evaluate(diffInPage, { sheet: SHEET, original: reference, candidate: original, props: driftProps })
       if (moved.length > 0) drift.push({ state: name, count: moved.length, first: moved.slice(0, 3) })

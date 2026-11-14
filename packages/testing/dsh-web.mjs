@@ -253,6 +253,10 @@ async function start(options = {}) {
  * @returns `{ page, context, browser, close() }`.
  */
 async function openPage(url, options = {}) {
+  // The scenarios read the shell's Chinese copy, so the lane pins the browser's
+  // language instead of inheriting the runner's: an English runner renders an
+  // English settings dialog and every Chinese selector in a scenario misses.
+  const locale = options.locale ?? process.env.DSH_E2E_LOCALE ?? 'zh-CN'
   const opened = options.browser === undefined
     ? await openBrowser({
       headless: options.headless,
@@ -260,8 +264,9 @@ async function openPage(url, options = {}) {
       width: options.width,
       height: options.height,
       initScript: options.initScript,
+      locale,
     })
-    : await sharedOn(options.browser, options)
+    : await sharedOn(options.browser, { ...options, locale })
   const problems = []
   opened.page.on('console', (message) => {
     const problem = consoleProblem(message)
