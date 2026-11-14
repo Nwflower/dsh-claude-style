@@ -71,7 +71,7 @@ async function duplicateAndRename(page, name, notes) {
   await page.locator(EDITOR).getByRole('button', { name: '存为副本', exact: true }).click()
   await waitForSelected(page, 'preset-1')
   if (notes !== undefined) notes.afterDuplicate = (await selectedCard(page))?.id
-  await page.locator(EDITOR + ' input').fill(name)
+  await page.locator(EDITOR + ' input.dsh-claude-scheme-name').fill(name)
   if (notes !== undefined) notes.afterRename = (await selectedCard(page))?.id
   await page.waitForTimeout(500)
   if (notes !== undefined) notes.afterSettle = (await selectedCard(page))?.id
@@ -122,12 +122,16 @@ function brandingPresetsScenario({ check }) {
       notes.dark = await page.evaluate(property => document.body.style.getPropertyValue(property), MARK)
       await page.evaluate(attribute => document.body.removeAttribute(attribute), DARK)
       await openAppearance(page)
+      // The settings form arrives after the page paints the card: read the card the
+      // stored prefs name, not the default it stood on first.
+      await waitForSelected(page, 'company-primary')
       notes.initial = (await selectedCard(page))?.id
       await duplicateAndRename(page, 'Renamed preset', notes)
       const duplicated = await selectedCard(page)
       notes.duplicate = duplicated?.id
       notes.renamedBeforeReload = duplicated?.name
       await reloadAndOpenAppearance(page)
+      await waitForSelected(page, 'preset-1')
       const reloaded = await selectedCard(page)
       notes.afterReload = reloaded?.id
       notes.renamed = reloaded?.name
@@ -157,9 +161,11 @@ function brandingPresetUiScenario({ check }) {
     async beforeSend({ page, out }) {
       notes.out = out
       await openAppearance(page)
+      await waitForSelected(page, '')
       notes.initial = (await selectedCard(page))?.id
       await duplicateAndRename(page, 'UI preset')
       await reloadAndOpenAppearance(page)
+      await waitForSelected(page, 'preset-1')
       const reloaded = await selectedCard(page)
       notes.afterReload = reloaded?.id
       notes.name = reloaded?.name
