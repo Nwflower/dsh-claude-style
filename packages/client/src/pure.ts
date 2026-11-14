@@ -4,7 +4,7 @@
 
 export { switchedOff } from './core/switches'
 export { preferenceWritePatch, resolveMascot } from './core/prefs'
-export { BRAND_PROPERTIES, cssString } from './features/brand/brand'
+export { BRAND_PROPERTIES, cssString } from './features/brand/brand-properties'
 export { default as SETTINGS_BRAND_LOCKUP_SHEET } from './features/settings/settings-brand-lockup.css?raw'
 export { default as BRAND_CARDS_SHEET } from './features/settings/brand-cards.css?raw'
 export { newBrandingPresetId, removeBrandingPresetPatch, selectedBrandingPreset, storeBrandingPresetPatch, storedBrandingPresets } from './shared/branding-presets'
