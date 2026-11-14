@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-13",
+  "group": "improvements",
+  "order": 0,
+  "external": false,
+  "zh": "详情栏各节的标题改为常规字重，环境、上下文、会话统计、Token 用量、产出与进程由各自的标题行、分隔线和留白分开，其余文字的字号与颜色不变",
+  "en": "Set every details section heading in the regular weight, leaving the environment, context, session stats, token usage, outputs and processes sections told apart by their own heading line, hairline and room, with the sizes and inks unchanged"
+}

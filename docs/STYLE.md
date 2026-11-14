@@ -207,10 +207,14 @@ card leaves unset.
 | `--dsh-claude-data-7` | literal | `#ad4040` | `#ef8585` | `#ad4040` | `#ef8585` | `#ad4040` | `#ef8585` | `#ad4040` | `#ef8585` | `#ad4040` | `#ef8585` | `#ad4040` | `#ef8585` | `light-dark(#ad4040, #ef8585)` | the Models chart and legend's categorical colour 7 |
 | `--dsh-claude-data-8` | literal | `#326b67` | `#83c8be` | `#326b67` | `#83c8be` | `#326b67` | `#83c8be` | `#326b67` | `#83c8be` | `#326b67` | `#83c8be` | `#326b67` | `#83c8be` | `light-dark(#326b67, #83c8be)` | the Models chart and legend's categorical colour 8 |
 | `--dsh-claude-data-9` | literal | `#65616c` | `#b8b3bf` | `#65616c` | `#b8b3bf` | `#65616c` | `#b8b3bf` | `#65616c` | `#b8b3bf` | `#65616c` | `#b8b3bf` | `#65616c` | `#b8b3bf` | `light-dark(#65616c, #b8b3bf)` | the Models chart and legend's categorical colour 9 |
-| `--dsh-claude-context-messages` | literal | `#2b7de9` | `#2b7de9` | `#2b7de9` | `#2b7de9` | `#2b7de9` | `#2b7de9` | `#2b7de9` | `#2b7de9` | `#2b7de9` | `#2b7de9` | `#2b7de9` | `#2b7de9` | `var(--dsw-alias-link, #2b7de9)` | context messages: Claude Desktop's blue category |
-| `--dsh-claude-context-tools` | literal | `#ff6b2c` | `#ff6b2c` | `#ff6b2c` | `#ff6b2c` | `#ff6b2c` | `#ff6b2c` | `#ff6b2c` | `#ff6b2c` | `#ff6b2c` | `#ff6b2c` | `#ff6b2c` | `#ff6b2c` | `var(--dsw-alias-state-warning-primary, #ff6b2c)` | context system tools: Claude Desktop's orange category |
-| `--dsh-claude-context-mcp` | literal | `#00b894` | `#00b894` | `#00b894` | `#00b894` | `#00b894` | `#00b894` | `#00b894` | `#00b894` | `#00b894` | `#00b894` | `#00b894` | `#00b894` | `var(--dsw-alias-state-success-primary, #00b894)` | context MCP tools: Claude Desktop's green category |
-| `--dsh-claude-context-system` | literal | `#e9a400` | `#e9a400` | `#e9a400` | `#e9a400` | `#e9a400` | `#e9a400` | `#e9a400` | `#e9a400` | `#e9a400` | `#e9a400` | `#e9a400` | `#e9a400` | `var(--dsw-alias-state-warning-primary, #e9a400)` | context system prompt: Claude Desktop's yellow category |
+| `--dsh-claude-context-messages` | literal | `#3783f0` | `#64a5ff` | `#3783f0` | `#64a5ff` | `#3783f0` | `#64a5ff` | `#3783f0` | `#64a5ff` | `#3783f0` | `#64a5ff` | `#3783f0` | `#64a5ff` | `light-dark(#3783f0, #64a5ff)` | context user messages, and the used-ink bar that stands before the parts arrive |
+| `--dsh-claude-context-assistant` | literal | `#8a6ee2` | `#a88eff` | `#8a6ee2` | `#a88eff` | `#8a6ee2` | `#a88eff` | `#8a6ee2` | `#a88eff` | `#8a6ee2` | `#a88eff` | `#8a6ee2` | `#a88eff` | `light-dark(#8a6ee2, #a88eff)` | context assistant messages: the model's own words, told apart from the user's |
+| `--dsh-claude-context-tool-result` | literal | `#2695ac` | `#4db4cc` | `#2695ac` | `#4db4cc` | `#2695ac` | `#4db4cc` | `#2695ac` | `#4db4cc` | `#2695ac` | `#4db4cc` | `#2695ac` | `#4db4cc` | `light-dark(#2695ac, #4db4cc)` | context tool results: what the tools handed back, told apart from both sides of the conversation |
+| `--dsh-claude-context-tools` | literal | `#df5200` | `#ff7333` | `#df5200` | `#ff7333` | `#df5200` | `#ff7333` | `#df5200` | `#ff7333` | `#df5200` | `#ff7333` | `#df5200` | `#ff7333` | `light-dark(#df5200, #ff7333)` | context system tools: Claude Desktop's orange category |
+| `--dsh-claude-context-mcp` | literal | `#009e7d` | `#2bbe9b` | `#009e7d` | `#2bbe9b` | `#009e7d` | `#2bbe9b` | `#009e7d` | `#2bbe9b` | `#009e7d` | `#2bbe9b` | `#009e7d` | `#2bbe9b` | `light-dark(#009e7d, #2bbe9b)` | context MCP tools: Claude Desktop's green category |
+| `--dsh-claude-context-system` | literal | `#b67800` | `#da950b` | `#b67800` | `#da950b` | `#b67800` | `#da950b` | `#b67800` | `#da950b` | `#b67800` | `#da950b` | `#b67800` | `#da950b` | `light-dark(#b67800, #da950b)` | context system prompt: Claude Desktop's yellow category |
+| `--dsh-claude-context-memory` | literal | `#7a86a2` | `#98a4c2` | `#7a86a2` | `#98a4c2` | `#7a86a2` | `#98a4c2` | `#7a86a2` | `#98a4c2` | `#7a86a2` | `#98a4c2` | `#7a86a2` | `#98a4c2` | `light-dark(#7a86a2, #98a4c2)` | context instruction files and skills: the injected text family, quiet in chroma |
+| `--dsh-claude-context-other` | literal | `#9d7f68` | `#bd9e86` | `#9d7f68` | `#bd9e86` | `#9d7f68` | `#bd9e86` | `#9d7f68` | `#bd9e86` | `#9d7f68` | `#bd9e86` | `#9d7f68` | `#bd9e86` | `light-dark(#9d7f68, #bd9e86)` | context other context: the attributed injections with no family of their own |
 | `--dsh-claude-ripple-wave` | literal | `#3b6ef0` | `#7fa6ff` | `#3b6ef0` | `#7fa6ff` | `#3b6ef0` | `#7fa6ff` | `#3b6ef0` | `#7fa6ff` | `#3b6ef0` | `#7fa6ff` | `#3b6ef0` | `#7fa6ff` | `var(--dsw-alias-link, #3b6ef0)` | the front of a ripple in the new-conversation page's glyph field |
 | `--dsh-claude-scrollbar` | `scrollbar` | `rgba(213, 213, 213, 0.9)` | `rgba(62, 62, 62, 0.9)` | `rgba(209, 210, 213, 0.9)` | `rgba(55, 59, 64, 0.9)` | `rgba(205, 199, 186, 0.9)` | `rgba(64, 63, 59, 0.9)` | `rgba(205, 209, 205, 0.9)` | `rgba(57, 64, 60, 0.9)` | `rgba(208, 206, 213, 0.9)` | `rgba(61, 59, 64, 0.9)` | `rgba(211, 199, 200, 0.9)` | `rgba(64, 59, 61, 0.9)` | `var(--dsw-alias-border-l2)` | scrollbar thumb |
 | `--dsh-claude-scrollbar-hover` | `scrollbar-hover` | `rgba(138, 138, 138, 0.8)` | `rgba(113, 113, 113, 0.9)` | `rgba(134, 135, 138, 0.8)` | `rgba(105, 109, 115, 0.9)` | `rgba(130, 125, 113, 0.8)` | `rgba(115, 114, 109, 0.9)` | `rgba(130, 134, 130, 0.8)` | `rgba(108, 115, 110, 0.9)` | `rgba(133, 131, 138, 0.8)` | `rgba(112, 109, 115, 0.9)` | `rgba(136, 125, 126, 0.8)` | `rgba(115, 109, 112, 0.9)` | `var(--dsw-alias-label-caption)` | scrollbar thumb under the pointer |
@@ -340,18 +344,18 @@ width is back; a press that calls it in mid-exit turns the transition around
 where it stands. A reader who asked for no motion gets the rail and the chat in
 their new places at once.
 
-The column reads at one size on one rhythm. Every row, legend line and figure is
-13/20 on a 24px pitch, and a row with a mark is 28px tall around a 16px mark. A
-CJK glyph fills its em box where a Latin lowercase letter fills half of it, so a
-size that reads light in Latin reads a step heavier in Chinese; the column takes
-the smaller size and tells its levels apart by weight and ink. A section heading
-is 13/20 in weight 600 and is the column's only bold text; the primary ink goes
-to headings, row titles, the occupancy figure, the share column and a figure's
-value. Labels take the secondary ink; a row's detail, the token column and the
-room left take the tertiary one. The small size, 11.5/16, is kept for a row's
-trailing state, the file-list fold control and the legend's
-caption. Sections use 16px vertical insets and a hairline on their top edge, and
-lengths stay on the 4px grid.
+The column reads at one size and one weight on one rhythm. Every row, legend line
+and figure is 13/20 on a 24px pitch, and a row with a mark is 28px tall around a
+16px mark. A CJK glyph fills its em box where a Latin lowercase letter fills half
+of it, so a size that reads light in Latin reads a step heavier in Chinese; the
+column takes the smaller size and tells its levels apart by ink and by its own
+division lines. A section heading is 13/20 in the regular weight and stands on a
+hairline of its own; the primary ink goes to headings, row titles, the occupancy
+figure, the share column and a figure's value. Labels take the secondary ink; a
+row's detail, the token column and the room left take the tertiary one. The small
+size, 11.5/16, is kept for a row's trailing state, the file-list fold control and
+the legend's caption. Sections use 16px vertical insets and a hairline on their
+top edge, and lengths stay on the 4px grid.
 
 Each section is an independent native disclosure with keyboard activation and a
 chevron beside its heading. Folding keeps its children mounted and its choice
@@ -367,8 +371,12 @@ column's own division line, not a row of the list.
 
 A row is one line: a mark, a title, its detail after a middle dot, and a
 trailing state. The title gives way before the detail, which keeps its own width
-up to its share of the line, and the line's hint carries the whole reading. A
-row's hover plate stands 8px clear of its words on both sides. The trailing
+up to its share of the line. What the line cannot say stands in the host's own
+tooltip bubble, under the pointer or on keyboard focus: an output's full path, a
+job's progress, and the whole title where the row cut it short. A row that says
+everything in its own words raises no bubble. The bubble hangs on the body, so
+the rail's own scrolling never cuts it, and a long path wraps inside it. A row's
+hover plate stands 8px clear of its words on both sides. The trailing
 state is words in the state's ink, without an outline. The environment section
 starts at the top: a computer mark, a folder name with its parent path, a
 separate branch row, and the preset as its last row in the secondary ink, with
@@ -508,9 +516,6 @@ edit the JSON, not the table.
 | `--dsh-claude-duration-reveal` | `120ms` | content entering the chat area: an opened row's body, and one row of a tool body's output |
 | `--dsh-claude-duration-stream-fade` | `240ms` | one character of a streaming answer coming to its own colour (features/chat-reveal), and the settings page's preview of it |
 | `--dsh-claude-duration-row-enter` | `240ms` | one row of a turn's process — a tool call, a thought, a context injection — rising into its place as the live turn writes it (features/chat-row-enter) |
-| `--dsh-claude-duration-line-chunk` | `140ms` | how long one chunk of a tool body's output — two rows — stands before the next two arrive (features/chat-tool-lines) |
-| `--dsh-claude-duration-line-row` | `12ms` | how long one row stands before the next arrives once a tool body's first forty rows are spent |
-| `--dsh-claude-duration-line-settle` | `3800ms` | the longest a batch of a tool body's rows may take to arrive; a longer batch has every offset scaled down to fit it |
 | `--dsh-claude-duration-enter` | `320ms` | one message the reader sends growing into its row, the same growth on the Motion tab's card, and a colour disc lifting out of its row and springing back |
 | `--dsh-claude-duration-surface` | `150ms` | a floating surface or a group of controls appearing: popover cards, menus, panels, the search dialog, a toast, a strip fading in, a hint over what it names |
 | `--dsh-claude-duration-exit` | `120ms` | a surface leaving on the reader's dismissal: a menu or a dialog closing, the overtime badge leaving |
@@ -522,6 +527,9 @@ edit the JSON, not the table.
 | `--dsh-claude-duration-clear-delay` | `50ms` | how long after a field empties the streak under its cleared words starts to rise |
 | `--dsh-claude-duration-clear-text` | `400ms` | the two halves of clearing a field: the words leaving it, and the placeholder taking their place |
 | `--dsh-claude-duration-clear` | `1000ms` | one whole clear: the words leaving, the placeholder arriving, and the streak's rise, peak and fall |
+| `--dsh-claude-duration-line-chunk` | `140ms` | how long one chunk of a tool body's output — two rows — stands before the next two arrive (features/chat-tool-lines) |
+| `--dsh-claude-duration-line-row` | `12ms` | how long one row stands before the next arrives once a tool body's first forty rows are spent |
+| `--dsh-claude-duration-line-settle` | `3800ms` | the longest a batch of a tool body's rows may take to arrive; a longer batch has every offset scaled down to fit it |
 | `--dsh-claude-duration-roll` | `160ms` | a figure's characters rolling over to new digits |
 | `--dsh-claude-duration-move` | `200ms` | something travelling along its own track: a fold's door, the reasoning slider's knob and fill, a hint moving from one colour disc to the next |
 | `--dsh-claude-duration-count` | `220ms` | a session number counting to its new reading |

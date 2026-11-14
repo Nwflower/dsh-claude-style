@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-13",
+  "group": "improvements",
+  "order": 0,
+  "external": false,
+  "zh": "让详情栏、用量面板与轮次状态行的 token 读数按数值本身取单位，不足 1k 写实际数量，1k 到 1000k 用一位小数的 k，1000k 起才用 M 与更大的单位，百万窗口下的剩余空间不再与窗口同读作 1M",
+  "en": "Pick the unit of every token count from the count itself, writing the real number below a thousand, k with one decimal through a thousand k, and M or above only past that, so the room left in a million-token window no longer reads the same as the window"
+}

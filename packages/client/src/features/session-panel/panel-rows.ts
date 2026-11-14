@@ -1,5 +1,6 @@
 import * as React from 'react'
 import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
+import { tooltipAnchor } from '../../shared/host-tooltip'
 import { copy } from './copy'
 
 const h = React.createElement
@@ -44,38 +45,43 @@ export function FoldedList({ rows }: { rows: readonly React.ReactNode[] }) {
 
 /**
  * One row on one line: a mark, a title with its detail after it, and a trailing
- * side. The line's hint is the row's whole reading, for a title or a detail the
- * line cut short; `hint` replaces it where the row has words of its own to say.
+ * side. What the line cannot say — an output's full path, a job's progress, a
+ * title it cut short — stands in the host's own tooltip bubble on hover and on
+ * keyboard focus, portaled to the body so the scrolling rail never cuts it.
  */
 export function Row(props: { mark?: React.ReactNode, title: string, detail?: string, hint?: string, kind?: string, side?: React.ReactNode, href?: string, onClick?: () => void, expanded?: boolean }) {
   const detail = props.detail === undefined || props.detail === '' ? null : props.detail
   const content = [
     props.mark === undefined ? null : h('span', { key: 'mark', className: 'dsh-claude-panel-mark', 'aria-hidden': true }, props.mark),
-    h('span', { key: 'main', className: 'dsh-claude-panel-main', title: props.hint ?? (detail === null ? props.title : `${props.title} · ${detail}`) },
+    h('span', { key: 'main', className: 'dsh-claude-panel-main' },
       h('span', { className: 'dsh-claude-panel-title' }, props.title),
       detail === null ? null : h('span', { className: 'dsh-claude-panel-detail' }, detail)),
     props.side === undefined ? null : h('span', { key: 'side', className: 'dsh-claude-panel-side' }, props.side),
   ]
   const rowClass = props.kind === undefined ? 'dsh-claude-panel-row' : `dsh-claude-panel-row ${props.kind}`
-  if (props.href !== undefined) {
-    return h('a', {
-      className: `${rowClass} is-link`,
-      href: props.href,
-      target: '_blank',
-      rel: 'noreferrer',
-      title: props.title,
-    }, content)
-  }
-  if (props.onClick !== undefined) {
-    return h('button', {
-      type: 'button',
-      className: `${rowClass} is-button`,
-      onClick: props.onClick,
-      title: props.title,
-      ...(props.expanded === undefined ? {} : { 'aria-expanded': props.expanded }),
-    }, content)
-  }
-  return h('div', { className: rowClass }, content)
+  const row = props.href !== undefined
+    ? h('a', { className: `${rowClass} is-link`, href: props.href, target: '_blank', rel: 'noreferrer' }, content)
+    : props.onClick !== undefined
+      ? h('button', {
+        type: 'button',
+        className: `${rowClass} is-button`,
+        onClick: props.onClick,
+        ...(props.expanded === undefined ? {} : { 'aria-expanded': props.expanded }),
+      }, content)
+      : h('div', { className: rowClass }, content)
+  // A row whose reading carries more than its own words — a full path, a job's
+  // progress — says it on any hover; a row whose line already says all of it
+  // raises the bubble only where the line cut a word off.
+  const line = detail === null ? props.title : `${props.title} · ${detail}`
+  const hint = props.hint === undefined || props.hint === '' ? null : props.hint
+  const reading = hint ?? line
+  return h(primitives.Tooltip, {
+    label: reading,
+    side: 'bottom',
+    portal: true,
+    onlyWhenClipped: reading === line,
+    children: tooltipAnchor(row),
+  })
 }
 
 /** One trailing state word. */

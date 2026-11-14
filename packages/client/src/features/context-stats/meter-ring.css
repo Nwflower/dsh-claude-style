@@ -3,7 +3,7 @@
    ([data-dsh-claude-meter-hidden] below), and this ring stands where the row's
    own flow puts it, after the seat box in the host's model slot
    (packages/client/src/features/context-stats/meter-ring.ts). Its face is the
-   one the host's trigger drew: the ring, its reading and the plate both share. */
+   one the host's trigger drew: the ring and its reading both wear it. */
 
 body[data-dsh-claude-style] [data-dsh-claude-meter-ring] {
   display: inline-flex;
@@ -11,6 +11,11 @@ body[data-dsh-claude-style] [data-dsh-claude-meter-ring] {
   flex: none;
   min-width: 0;
 }
+/* The cell keeps the row's own air and paints nothing of its own: no plate
+   stands under the pointer and none while its panel is open. A filled plate
+   behind the drawn pie would read as a second surface on the line, the host's
+   own meter having no fill either, and the open panel is the open state's mark
+   already. */
 body[data-dsh-claude-style] [data-dsh-claude-meter-ring] > button {
   display: inline-flex;
   align-items: center;
@@ -19,23 +24,15 @@ body[data-dsh-claude-style] [data-dsh-claude-meter-ring] > button {
   /* The row states 4px of its own padding at each end (features/composer/inline.css)
      and the left control's word lands on that edge. A symmetric 8px here would
      put the reading a second layer in from the right end and leave the line
-     looking short of one side (issue #272), so the plate keeps its air on the
-     left, where it separates the ring from the model trigger, and states none on
-     the right: the reading and the ring's arc both stop on the row's own edge. */
-  padding: 1px 0 1px 8px;
+     looking short of one side (issue #272), so the cell keeps the row's own 4px
+     on the left, where the reading stands, and states none on the right: the
+     reading and the ring's arc both stop on the row's own edge. */
+  padding: 1px 0 1px 4px;
   border: none;
-  border-radius: 7px;
   background: transparent;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   cursor: pointer;
-}
-/* The plate answers the pointer and the open panel, as the host's own trigger
-   and the seat box beside it do. */
-body[data-dsh-claude-style] [data-dsh-claude-meter-ring] > button:hover,
-body[data-dsh-claude-style] [data-dsh-claude-meter-ring] > button[aria-expanded="true"] {
-  background: var(--dsw-alias-interactive-bg-hover);
-  color: var(--dsw-alias-label-primary);
 }
 body[data-dsh-claude-style] [data-dsh-claude-meter-ring] > button > svg {
   flex: none;

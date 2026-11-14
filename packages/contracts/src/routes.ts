@@ -50,3 +50,6 @@ export const SOUND_PATH = `${ROUTE_PREFIX}/sound`
 
 /** `?id=` selects the session; the answer is the session overview panel's folded data (D94). */
 export const SESSION_PANEL_PATH = `${ROUTE_PREFIX}/session-panel`
+
+/** `POST` with a session id compacts that session's own history through the host's compaction seam (D100). */
+export const SESSION_COMPACT_PATH = `${ROUTE_PREFIX}/session-compact`

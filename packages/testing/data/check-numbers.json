@@ -1433,6 +1433,42 @@
       "the open model list shows every row and a \"Show less\" row": [
         8
       ]
+    },
+    "packages/testing/smoke/cases/tool-lines.mjs": {
+      "a conversation the page mounts on its own is never replayed": [
+        0
+      ],
+      "a body the reader opens is drawn two rows at a time, with the pair after a pair": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "the marks come off once the batch has landed": [
+        0
+      ],
+      "a line a running command appends on its own is drawn at once": [
+        0,
+        1
+      ],
+      "a read card’s rows are a batch of their own": [
+        0,
+        1,
+        2
+      ],
+      "the two sides of one hunk sweep together": [
+        0,
+        1,
+        2
+      ],
+      "the animation choice takes the arrival with it": [
+        0
+      ],
+      "switching it back brings the arrival back": [
+        0,
+        2
+      ]
     }
   }
 }

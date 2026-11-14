@@ -36,6 +36,8 @@
 | [D95](D95-stream-slide-counter-pins.md) | 流式输出的跟随由宿主写位置，皮肤只画位移并抵消吸附元素的跳动 | D85、D71 |
 | [D97](D97-palette-text-seeds.md) | 配色方案增加正文种子 | D96、D30、D50、D64 |
 | [D98](D98-settings-copy-scope-only.md) | 设置文案只写影响范围 |  |
+| [D99](D99-context-parts-priced-from-content.md) | 上下文分项按发送给模型的内容计价，占用仍取服务商读数 |  |
+| [D100](D100-context-compact-control.md) | 详情栏在接近自动压缩点时提供手动压缩，按宿主的 /compact 命令执行 |  |
 
 ## 作废的编号
 

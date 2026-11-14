@@ -61,7 +61,6 @@ async function hostPanel({ mod, fakeHost, request, browser, crossSite, scratchHo
       'session-overview': {
         workingDirectory: '/panel/does-not-exist',
         contextPressure: { projectedTokens: 32_000, contextWindow: 1_000_000 },
-        contextBreakdown: { systemTokens: 1_200, toolsTokens: 7_400, messageTokens: 8_000 },
         subagentCatalog: [{ id: 'child-recon', createdAt: Date.parse('2026-10-17T02:00:00Z'), mode: 'continuable', label: 'Recon child' }],
         sessionStats: { turns: 2, steps: 9, llmMs: 61_000, toolMs: 12_000, ttftMs: 3_000, ttftSteps: 2, decodeMs: 40_000, decodeTokens: 246 },
         tokenUsage: { uncachedInputTokens: 9_200, cacheReadTokens: 5_800, cacheWriteTokens: 92_000, outputTokens: 246 },
@@ -83,6 +82,14 @@ async function hostPanel({ mod, fakeHost, request, browser, crossSite, scratchHo
       get: () => ({ status: 'completed' }),
       readAt: () => ({ chunks: [{ text: 'panel job output\n' }], lossy: false }),
     },
+    // The agent registry and the command registry, as the rail's compact control
+    // reads them: the press runs the host's own `/compact` command (D100).
+    agents: { get: (id) => (id === 'session-overview' ? { status: 'idle' } : undefined) },
+    commands: {
+      execute: async (agent, line) => (line === '/compact' && agent !== undefined
+        ? { commandId: 'cmd-1', result: { kind: 'success', text: 'Compacted 2 history items (~4096 tokens).' } }
+        : undefined),
+    },
   })
   const refusedPanel = await request(panelHost, '/dsh-claude-style/session-panel?id=session-overview', 'GET', '', crossSite)
   check('cross-site page: the session overview is refused',
@@ -100,6 +107,10 @@ async function hostPanel({ mod, fakeHost, request, browser, crossSite, scratchHo
       panelBody.value.changes.length === 0,
     JSON.stringify(panelBody?.value ?? panelBody))
   const child = panelBody?.value?.background?.subagents?.[0]
+  const parts = panelBody?.value?.context?.parts ?? []
+  check('the composition is priced from the session log, the tool result included',
+    parts.some((part) => part.kind === 'tool-result') && parts.every((part) => Number.isInteger(part.tokens) && part.tokens > 0),
+    JSON.stringify(parts))
   check('the overview carries the session\'s own figures and token buckets',
     panelBody?.value?.stats?.turns === 2 && panelBody.value.stats.steps === 9 &&
       panelBody.value.stats.llmMs === 61_000 && panelBody.value.stats.decodeTokens === 246 &&
@@ -137,6 +148,28 @@ async function hostPanel({ mod, fakeHost, request, browser, crossSite, scratchHo
   check('a write completed in a later poll remains an output', splitOutputs.length === 1 && splitOutputs[0].path === 'split-note.md', JSON.stringify(splitOutputs))
   const shapedJob = await request(panelHost, '/dsh-claude-style/session-panel?id=session-overview&job=..%2Fetc', 'GET', '', browser)
   check('a job id that names a path is refused', shapedJob.status === 400, `HTTP ${shapedJob.status}`)
+  // The compaction backend's own defaults: 80% of a 1M window, under the room the
+  // request's own output reservation and the 65,536-token headroom leave (D100).
+  check('the context reading states where automatic compaction fires',
+    panelBody?.value?.context?.compaction?.thresholdTokens === 800_000,
+    JSON.stringify(panelBody?.value?.context?.compaction ?? null))
+  const compacted = await request(panelHost, '/dsh-claude-style/session-compact?id=session-overview', 'POST', '', browser)
+  const compactBody = compacted.status === 200 ? JSON.parse(compacted.body) : null
+  check('one press runs the host\'s own compact command',
+    compactBody !== null && compactBody.ok === true && compactBody.text === 'Compacted 2 history items (~4096 tokens).',
+    JSON.stringify(compactBody ?? compacted))
+  const refusedCompact = await request(panelHost, '/dsh-claude-style/session-compact?id=session-overview', 'POST', '', crossSite)
+  check('a cross-site page cannot compact the session',
+    refusedCompact.status === 401 || refusedCompact.status === 403, `HTTP ${refusedCompact.status}`)
+  const shapedCompact = await request(panelHost, '/dsh-claude-style/session-compact?id=..%2Fetc', 'POST', '', browser)
+  check('a compact ask that names a path is refused', shapedCompact.status === 400, `HTTP ${shapedCompact.status}`)
+  const readCompact = await request(panelHost, '/dsh-claude-style/session-compact?id=session-overview', 'GET', '', browser)
+  check('a read of the compact route is refused', readCompact.status === 405, `HTTP ${readCompact.status}`)
+  const agentlessCompact = await request(panelHost, '/dsh-claude-style/session-compact?id=split-write', 'POST', '', browser)
+  const agentlessBody = agentlessCompact.status === 200 ? JSON.parse(agentlessCompact.body) : null
+  check('a session with no live agent answers why it could not compact',
+    agentlessBody !== null && agentlessBody.ok === false && agentlessBody.code === 'no-agent',
+    JSON.stringify(agentlessBody ?? agentlessCompact))
   await hostPanelRound({ mod, fakeHost, request, browser, scratchHome })
   await hostPanelJobs({ mod, fakeHost, request, browser, scratchHome })
 }

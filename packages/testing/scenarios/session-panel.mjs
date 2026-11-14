@@ -321,6 +321,26 @@ export function sessionPanelScenario({ check }) {
           return section === undefined ? null : [...section.querySelectorAll('.dsh-claude-panel-row.is-button')].filter((row) => row.checkVisibility()).length
         })
       }
+      // A row's whole reading stands in the host's own bubble: an output row
+      // carries more than its line's words, so the bubble gives the full path
+      // on any hover (D94).
+      const outputRows = page.locator('.dsh-claude-details .dsh-claude-panel-section')
+        .filter({ hasText: /产出|Outputs/ }).first().locator('.dsh-claude-panel-row.is-button')
+      if (await outputRows.count() > 0) {
+        const firstOutput = outputRows.first()
+        const name = await firstOutput.locator('.dsh-claude-panel-title').innerText()
+        await firstOutput.hover()
+        await page.waitForTimeout(300)
+        const bubble = await page.evaluate(() => {
+          const element = document.querySelector('[role="tooltip"]')
+          if (element === null) return { text: null, shown: false }
+          const style = getComputedStyle(element)
+          return { text: element.textContent ?? '', shown: style.visibility === 'visible' && style.opacity !== '0' }
+        })
+        notes.tooltip = { name, ...bubble }
+        await page.mouse.move(0, 0)
+        await page.waitForTimeout(200)
+      }
       // Settled commands share one disclosure; active commands stay above it.
       const groupFold = page.locator('.dsh-claude-details .dsh-claude-panel-finished-toggle').first()
       if (await groupFold.count() > 0) {
@@ -592,6 +612,9 @@ export function sessionPanelScenario({ check }) {
           (notes.fold?.rows ?? 0) === 2 && /panel four\.md/.test(rail.outputs ?? '') && notes.fold?.more !== null,
           JSON.stringify(notes.fold ?? null)),
         check('the fold control shows the rest and puts them away again', notes.fold?.expanded === 4 && notes.fold?.collapsed === 2, JSON.stringify({ expanded: notes.fold?.expanded, collapsed: notes.fold?.collapsed })),
+        check('an output row gives its full path in the host\'s bubble on hover',
+          notes.tooltip?.shown === true && (notes.tooltip.text ?? '').endsWith(notes.tooltip.name ?? ''),
+          JSON.stringify(notes.tooltip ?? null)),
         check('Changes stays off the page without a change request', !anyOf(changesWords, (rail.headings ?? []).join('|')), JSON.stringify(rail.headings ?? null)),
         check('Processes is its own section and settled commands share a finished count',
           anyOf(processWords, (rail.headings ?? []).join('|')) && /panel-command-three/.test(rail.processes ?? '') && /3/.test(rail.finished ?? ''),

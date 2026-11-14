@@ -31,34 +31,44 @@ export interface PanelEnvironment {
   checkout: PanelCheckout | null
 }
 
-/** The context window's occupancy and its heuristic composition. */
+/** The context window's occupancy and its composition. */
 export interface PanelContext {
   /** Tokens the next request is expected to take. */
   used: number
   /** The route's context window. */
   window: number
-  /** Tokens the system prompt takes. */
-  system: number
-  /** Tokens the tool schemas take. */
-  tools: number
-  /** Tokens the conversation takes. */
-  messages: number
-  /** Source-attributed heuristic parts, before calibration to provider occupancy. */
-  parts?: readonly PanelContextPart[]
+  /** The composition by source, priced from the content the host sends; the parts hold the window's split. */
+  parts: readonly PanelContextPart[]
+  /** Where automatic compaction fires, or absent while the host states no policy (D100). */
+  compaction?: PanelCompaction
 }
 
-/** Context categories recovered from the request header and retained message sources (D94). */
-export type PanelContextKind = 'messages' | 'tools' | 'mcp' | 'system' | 'memory' | 'skills' | 'other'
+/** The point automatic compaction runs at, as the host's own policy states it (D100). */
+export interface PanelCompaction {
+  /** Tokens the session may hold before automatic compaction runs. */
+  thresholdTokens: number
+}
+
+/** The source a context part is attributed to (D94, D99). */
+export type PanelContextKind =
+  | 'system'
+  | 'tools'
+  | 'mcp'
+  | 'user'
+  | 'assistant'
+  | 'tool-result'
+  | 'memory'
+  | 'skills'
+  | 'other'
 
 export interface PanelContextPart {
   kind: PanelContextKind
   tokens: number
 }
 
-/** The host token meter's aggregate projections, before source attribution. */
+/** The host token meter's aggregate projections: the occupancy the parts divide. */
 export interface PanelContextProjections {
   contextPressure?: { projectedTokens?: number, pressureTokens?: number, contextWindow?: number }
-  contextBreakdown?: { systemTokens?: number, toolsTokens?: number, messageTokens?: number }
 }
 
 /** One file the session produced or presented. */

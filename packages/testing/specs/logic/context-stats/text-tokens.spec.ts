@@ -7,7 +7,7 @@
  * @risk The written-back figure under the composer drifts away from the provider's own count while an answer streams, so the number the reader watches jumps when the step settles, or a re-read of the same text prices it twice.
  */
 import { expect, test } from 'vitest'
-import { textTokens } from '@dsh-claude-style/client/pure'
+import { textTokens } from '@dsh-claude-style/contracts/tokens'
 
 test('a line of English prose lands near the tokenizer\'s own count for it', () => {
   // The tokenizer reads this sentence as ten tokens.

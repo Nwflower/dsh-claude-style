@@ -38,7 +38,7 @@ import { hostSearch, said } from './host-half-search.mjs'
  *   `unarchived` list records every call.
  */
 function fakeHost(mod, options = {}) {
-  const { fenced, home, live = [], events, launch, stored, reads, releases, lists, listCalls, registry, tails, queryShapes, broken, onRead, projections, jobs } = options
+  const { fenced, home, live = [], events, launch, stored, reads, releases, lists, listCalls, registry, tails, queryShapes, broken, onRead, projections, jobs, agents, commands } = options
   const shapes = queryShapes ?? ['readSession', 'observeSession', 'readTitleSnapshots']
   const routes = {}
   const settings = { configure: () => () => {} }
@@ -89,6 +89,10 @@ function fakeHost(mod, options = {}) {
       }
       if (name === 'launchEnvironment') return launchEnvironment
       if (name === 'jobs' && jobs !== undefined) return jobs
+      // The agent registry and the command registry, as the rail's compact control
+      // reads them: the press runs the host's own `/compact` (D100).
+      if (name === 'agents' && agents !== undefined) return agents
+      if (name === 'commands' && commands !== undefined) return commands
       if (name === 'sessionPersistence' && stored !== undefined) {
         return { list: async () => { if (lists !== undefined) lists.push(stored.length); return stored } }
       }

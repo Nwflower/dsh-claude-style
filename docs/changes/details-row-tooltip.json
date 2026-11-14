@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-13",
+  "group": "improvements",
+  "order": 0,
+  "external": false,
+  "zh": "详情栏改用宿主的悬停气泡补上每一行说不出的部分，产出行给出完整路径，被截断的标题给出全文，行内文字已经完整时不弹气泡，气泡挂在页面主体上，详情栏滚动时也不会被裁掉",
+  "en": "Give each details row the host's own hover bubble for what its line cannot say, an output row its full path and a cut title its whole text, with no bubble where the line says everything, and hang the bubble on the page body so the rail's scrolling never clips it"
+}

@@ -2,9 +2,10 @@
    skin's own fixed column beside the chat, and the body inside keeps the
    column's own fill, inset and scroll (STYLE.md); every rule is scoped by the
    skin's own body mark so a page without the skin never sees it. The whole
-   column reads at one size on one 24px row rhythm: a heading differs by weight,
-   a secondary reading by ink, and only a trailing state, a category label, the
-   fold control and a caption take the small size. Lengths stay on the 4px grid. */
+   column reads at one size and one weight on one 24px row rhythm: a heading
+   stands on its own hairline and the room above it, a secondary reading on its
+   ink, and only a trailing state, a category label, the fold control and a
+   caption take the small size. Lengths stay on the 4px grid. */
 
 body[data-dsh-claude-style] .dsh-claude-panel {
   box-sizing: border-box;
@@ -59,10 +60,10 @@ body[data-dsh-claude-style] .dsh-claude-panel-heading {
   padding: 0;
   color: var(--dsw-alias-label-primary, #161616);
   font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
-  /* The rows under a heading read at the heading's own size, so the weight is
-     what sets it apart; a CJK system face draws nothing between regular and
-     this weight. */
-  font-weight: 600;
+  /* The rows under a heading read at the heading's own size and weight, so the
+     heading is told apart by its own line, its hairline and the space above
+     it; the browser's bold on a heading element is what this rule takes back. */
+  font-weight: 400;
   /* The rail's section titles use UI type; the page's display headings use
      the serif family and tighter tracking (D9, D30, D94). */
   font-family: var(--dsw-font-family);
@@ -385,6 +386,7 @@ body[data-dsh-claude-style] .dsh-claude-panel-figures {
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-bar {
+  position: relative;
   display: flex;
   height: 6px;
   margin: 0 0 12px;
@@ -393,11 +395,33 @@ body[data-dsh-claude-style] .dsh-claude-panel-bar {
   background: var(--dsw-alias-border-l1);
 }
 
+/* The track's ink stands over the parts and collapses toward the right edge,
+   uncovering the composition left to right in one sweep (D94). */
+body[data-dsh-claude-style] .dsh-claude-panel-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: inherit;
+  transform-origin: right center;
+  animation: dsh-claude-panel-bar-grow var(--dsh-claude-duration-enter) var(--dsh-claude-ease-enter) both;
+}
+@keyframes dsh-claude-panel-bar-grow {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
 body[data-dsh-claude-style] .dsh-claude-panel-segment {
   flex: none;
   height: 100%;
   min-width: 0;
   box-shadow: inset -1px 0 var(--dsw-alias-bg-layer-1);
+  transition: width var(--dsh-claude-duration-reveal) var(--dsh-claude-ease-out);
+}
+
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-panel-bar::after,
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-panel-segment {
+  animation: none;
+  transition: none;
 }
 
 /* The occupancy before its composition is read: one bar, in the ink the whole
@@ -416,9 +440,19 @@ body[data-dsh-claude-style] .dsh-claude-panel-dot.is-tools {
   background: var(--dsh-claude-context-tools);
 }
 
-body[data-dsh-claude-style] .dsh-claude-panel-segment.is-messages,
-body[data-dsh-claude-style] .dsh-claude-panel-dot.is-messages {
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-user,
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-user {
   background: var(--dsh-claude-context-messages);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-assistant,
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-assistant {
+  background: var(--dsh-claude-context-assistant);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-tool-result,
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-tool-result {
+  background: var(--dsh-claude-context-tool-result);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-segment.is-mcp,
@@ -430,12 +464,12 @@ body[data-dsh-claude-style] .dsh-claude-panel-segment.is-memory,
 body[data-dsh-claude-style] .dsh-claude-panel-dot.is-memory,
 body[data-dsh-claude-style] .dsh-claude-panel-segment.is-skills,
 body[data-dsh-claude-style] .dsh-claude-panel-dot.is-skills {
-  background: var(--dsw-alias-label-tertiary);
+  background: var(--dsh-claude-context-memory);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-segment.is-other,
 body[data-dsh-claude-style] .dsh-claude-panel-dot.is-other {
-  background: var(--dsw-alias-label-caption);
+  background: var(--dsh-claude-context-other);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-dot.is-free {
@@ -494,12 +528,6 @@ body[data-dsh-claude-style] .dsh-claude-panel-dot {
   width: 8px;
   height: 8px;
   border-radius: 2px;
-}
-
-/* What the legend's figures are, said once under them. */
-body[data-dsh-claude-style] .dsh-claude-panel-caption {
-  margin: 8px 0 0;
-  color: var(--dsw-alias-label-tertiary, #8a8a8a);
 }
 
 /* The header control wears the host's ghost button; only its box is the
@@ -588,10 +616,31 @@ body[data-dsh-claude-style] .dsh-claude-panel-more:focus-visible {
    control and a caption. It follows the rules that take the row's font whole,
    so its size is the one that stands. */
 body[data-dsh-claude-style] .dsh-claude-panel-chip,
-body[data-dsh-claude-style] .dsh-claude-panel-more,
-body[data-dsh-claude-style] .dsh-claude-panel-caption {
+body[data-dsh-claude-style] .dsh-claude-panel-more {
   font-size: calc(11.5px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 16px;
+}
+
+/* The distance to automatic compaction, and the request that closes it (D100):
+   one row under the legend, the reading in the quiet ink and the host's own
+   outlined button on the right, where a row's state stands. */
+body[data-dsh-claude-style] .dsh-claude-panel-compact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-compact-distance,
+body[data-dsh-claude-style] .dsh-claude-panel-compact-note {
+  color: var(--dsw-alias-label-tertiary, #8a8a8a);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-compact > .dsh-claude-panel-note {
+  flex-basis: 100%;
+  color: var(--dsw-alias-state-error-primary);
 }
 
 /* The conversation's details rail (D94): the skin's own column beside the chat,

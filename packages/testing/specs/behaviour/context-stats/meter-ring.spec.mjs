@@ -91,6 +91,30 @@ export default spec({ page: 'context-stats', bands: ['phone', 'wide'] }, ({ test
     t.expectThat.equal(reading.span !== null && reading.span !== '', true, `the band names its segment (${reading.span})`)
   })
 
+  test('the pointer and the open panel paint nothing behind the ring', async (t) => {
+    // The pointer's dwell opens the panel over the row, which would put the
+    // panel's own paint between the reader and the cell; the plate is judged
+    // with that path off, and the panel keeps its own tests.
+    await t.prefs({ autoPopover: 'off' })
+    const button = `${t.surface('stats.meter-ring')} button`
+    const at = () => t.page.evaluate((selector) => {
+      const cell = document.querySelector(selector)
+      if (cell === null) return null
+      const style = getComputedStyle(cell)
+      return { paint: style.backgroundColor, image: style.backgroundImage, hovered: cell.matches(':hover') }
+    }, button)
+    const resting = await at()
+    t.expectThat.equal(resting === null, false, 'the ring has a cell to hover')
+    if (resting === null) return
+    t.expectThat.equal(resting.paint, 'rgba(0, 0, 0, 0)', `the cell rests on the row's own paint (${resting.paint})`)
+    await t.page.hover(button)
+    await t.page.waitForTimeout(200)
+    const hovered = await at()
+    t.expectThat.equal(hovered === null ? null : hovered.hovered, true, 'the pointer stands on the cell')
+    t.expectThat.equal(hovered === null ? null : hovered.paint, resting.paint, `the pointer paints no plate (${hovered === null ? null : hovered.paint})`)
+    t.expectThat.equal(hovered === null ? null : hovered.image, resting.image, 'the reading keeps the face it had under the pointer')
+  })
+
   test('the measured face takes the band its reading fell in, and the number follows the switch', async (t) => {
     await t.prefs({ contextDisplay: 'ring-band', contextNumbers: false })
     const reading = await readRing(t)

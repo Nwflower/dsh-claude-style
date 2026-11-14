@@ -27,7 +27,8 @@ import { panelEnvironment } from './checkout.js'
 import { JOB_OUTPUT_MAX, foldJobs } from './session-panel-log.js'
 import type { PanelEvent } from './session-panel-log.js'
 import { createPanelContext, foldPanelContext, panelContextOf } from './session-panel-context.js'
-import type { PanelContextState, PanelTokenMeter } from './session-panel-context.js'
+import { compactionThresholdOf } from './session-compact.js'
+import type { PanelContextState } from './session-panel-context.js'
 import { belongsToPanelRound, createPanelRound, foldPanelRound } from './session-panel-round.js'
 import type { PanelRoundState } from './session-panel-round.js'
 import { isPanelProcess } from './session-panel-call.js'
@@ -346,7 +347,7 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
       const events = observation.events ?? []
       if (entry.cursor === -1 || events.length > 0) {
         const incoming = arrivals(events, entry.cursor)
-        foldPanelContext(entry.context, incoming, ctx.get('tokenMeter') as PanelTokenMeter | null | undefined)
+        foldPanelContext(entry.context, incoming)
         foldPanelRound(entry.round, incoming, resolvedDirectory)
         foldJobs(entry, incoming)
         const last = incoming[incoming.length - 1]
@@ -369,9 +370,12 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
       }
       changes.reverse()
       const background = await backgroundOf(entry, projections, jobs, agents, sessionId)
+      // Where automatic compaction fires is the host's own policy, scaled to this
+      // session's window and output reservation (D100).
+      const thresholdTokens = compactionThresholdOf(ctx, agents, sessionId, entry.context, projections.contextPressure?.contextWindow)
       const value: SessionPanelValue = {
         environment,
-        context: panelContextOf(projections, entry.context),
+        context: panelContextOf(projections, entry.context, thresholdTokens),
         // Newest first: the row a reader just caused stands at the top of the list.
         outputs: [...entry.round.outputs].reverse(),
         changes,

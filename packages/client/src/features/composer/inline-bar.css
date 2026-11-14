@@ -68,6 +68,15 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="trailing"] .dsh-claude-model
 body[data-dsh-claude-style] [data-dsh-claude-part~="trailing"] .dsh-claude-model-seat > .dsh-claude-model-seat-effort:hover {
   background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
 }
+/* The controls box holds the seat and the meter's ring, and the host lays its
+   items out with a 12px column gap: between the level and the ring that gap
+   reads as one hole, every other pair on the line standing a few pixels apart.
+   The items carry the spacing in their own insets instead — the seat's 4px on
+   each side, the ring's 4px on its left — so a control another plugin adds to
+   the right slot meets the ring's inset rather than the host's gap. */
+body[data-dsh-claude-style] [data-dsh-claude-part~="composer-controls"] {
+  column-gap: 0;
+}
 /* The name's own cap: the part stops growing with it, and a narrow row shortens
    the name rather than the level beside it. */
 body[data-dsh-claude-style] [data-dsh-claude-part~="trailing"] .dsh-claude-model-seat-model > .dsh-claude-model-btn {

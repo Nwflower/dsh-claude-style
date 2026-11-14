@@ -12,7 +12,7 @@
  * the browser half addresses the same names.
  */
 import { PACKAGE_NAME } from '@dsh-claude-style/contracts/package'
-import { HDSL_PATH, HDSL_SKIN_PATH, PEAKRATE_PATH, PRICES_PATH, ROUTE_PREFIX, SESSION_COST_PATH, SESSION_DELETE_PATH, SESSION_PANEL_PATH, SESSION_SEARCH_PATH, SOUND_PATH, USAGE_PATH, USERNAME_PATH, WEBFONTS_PATH } from '@dsh-claude-style/contracts/routes'
+import { HDSL_PATH, HDSL_SKIN_PATH, PEAKRATE_PATH, PRICES_PATH, ROUTE_PREFIX, SESSION_COMPACT_PATH, SESSION_COST_PATH, SESSION_DELETE_PATH, SESSION_PANEL_PATH, SESSION_SEARCH_PATH, SOUND_PATH, USAGE_PATH, USERNAME_PATH, WEBFONTS_PATH } from '@dsh-claude-style/contracts/routes'
 import { OPTIONAL_WEBFONTS } from '@dsh-claude-style/contracts/webfonts'
 import { existsSync, readFileSync, readdirSync, realpathSync, rmSync, statSync } from 'node:fs'
 import { userInfo } from 'node:os'
@@ -32,6 +32,7 @@ import { createPrices } from './prices.js'
 import { QUERY_MAX, createSessionSearch } from './search.js'
 import { billingRowsOf, createSessionCost } from './session-cost.js'
 import { createSessionPanel } from './session-panel.js'
+import { compactSession } from './session-compact.js'
 import { sessionDirectoryName } from './session-name.js'
 import { createUsage } from './usage.js'
 import { HOME_SESSION_SCOPE_ACTIVE, HOME_SESSION_SCOPE_ALL, HOME_SESSION_SCOPE_WORKSPACE } from '@dsh-claude-style/contracts/prefs'
@@ -337,8 +338,8 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
      * (D75) — and the shape the id must keep: it names a stored session, so it
      * never reaches the host as a path. Null means the answer already went out.
      */
-    const guardedSessionId = (req: DshRequest, res: DshResponse): string | null => {
-      if (methodRefused(req, res, ['GET'])) return null
+    const guardedSessionId = (req: DshRequest, res: DshResponse, method: 'GET' | 'POST' = 'GET'): string | null => {
+      if (methodRefused(req, res, [method])) return null
       if (fenceRefused(ctx, req, res)) return null
       const sessionId = (new URL(req.url ?? '/', 'http://local').searchParams.get('id') ?? '').trim()
       if (SESSION_ID_RE.test(sessionId)) return sessionId
@@ -610,6 +611,23 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
         // figure the host lands, and a cache hit would hand it the numbers the
         // wake was meant to replace (D94).
         sendPayload(res, sessionPanel.get(sessionId, readBillingRows(params), params.get('live') === '1').then(value => ({ value })))
+      },
+    })
+
+    register('session compact', {
+      kind: 'exact',
+      path: SESSION_COMPACT_PATH,
+      handler: (req: DshRequest, res: DshResponse) => {
+        // Compacting rewrites the user's own history, so it runs the same fence as
+        // every other read of that session and takes an id, never a path (D75).
+        const sessionId = guardedSessionId(req, res, 'POST')
+        if (sessionId === null) return
+        // The seam classifies the failures a reader can act on; the rest are faults
+        // and answer 500 with their message.
+        void compactSession(ctx, sessionId).then(
+          answer => sendJson(res, 200, answer),
+          (error: unknown) => fail(res, error),
+        )
       },
     })
 

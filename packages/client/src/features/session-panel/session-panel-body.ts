@@ -12,6 +12,9 @@ import { panelFiguresOf } from './session-panel-figures'
 import { useLiveFigures } from './session-panel-live'
 import { contextRows, contextOverview } from './context-rows'
 import type { ContextOccupancy, ContextOverview, ContextRow } from './context-rows'
+import { compactOffer, requestCompaction } from './compact-offer'
+import type { CompactOffer } from './compact-offer'
+import type { CompactionFailure } from '@dsh-claude-style/contracts/compaction'
 import { Row, Chip, Section, FoldedList } from './panel-rows'
 import { hasRunningWork, WorkSections } from './session-panel-work'
 import type { PanelChange, PanelContext, PanelEnvironment, PanelOutput, PanelStats } from '@dsh-claude-style/contracts/session-panel'
@@ -106,7 +109,7 @@ function PanelView({ sessionId, preset, active }: { sessionId: string, preset: P
     return h('div', { className: 'dsh-claude-panel' },
       failed
         ? h('p', { className: 'dsh-claude-panel-note' }, copy('unavailable'))
-        : h(ContextSection, { key: 'context', context: null, occupancy }))
+        : h(ContextSection, { key: 'context', sessionId, context: null, occupancy }))
   }
   const settled = value.stats ?? null
   const figures = live !== null
@@ -114,7 +117,7 @@ function PanelView({ sessionId, preset, active }: { sessionId: string, preset: P
     : settled === null ? null : { stats: settled, cost: statsCostText(settled.cost, currency) }
   return h('div', { className: 'dsh-claude-panel' },
     value.environment === null ? null : h(EnvironmentSection, { key: 'environment', environment: value.environment, preset }),
-    h(ContextSection, { key: 'context', context: value.context, occupancy }),
+    h(ContextSection, { key: 'context', sessionId, context: value.context, occupancy }),
     figures === null ? null : h(StatsSection, { key: 'stats', stats: figures.stats }),
     figures === null ? null : h(TokensSection, { key: 'tokens', stats: figures.stats, cost: figures.cost }),
     value.outputs.length === 0 ? null : h(OutputsSection, { key: 'outputs', sessionId, directory: value.environment?.directory, outputs: value.outputs }),
@@ -234,8 +237,10 @@ function RepositoryRow(props: { name?: string, branch: string | null, linked: bo
  * The overview is the provider's own reading, so it stands on the frame the rail
  * mounts; the composition is the host's fold, and while that has not answered
  * the section states the overview alone with the breakdown's own line under it (D94).
+ * Once the session stands near the host's own compaction threshold, the section
+ * offers the manual request beside the distance to it (D100).
  */
-function ContextSection({ context, occupancy }: { context: PanelContext | null, occupancy: ContextOccupancy | null }) {
+function ContextSection({ sessionId, context, occupancy }: { sessionId: string, context: PanelContext | null, occupancy: ContextOccupancy | null }) {
   const overview = contextOverview(occupancy, context)
   if (overview === null) {
     return h(Section, { title: copy('context') },
@@ -243,6 +248,7 @@ function ContextSection({ context, occupancy }: { context: PanelContext | null, 
   }
   const percent = sharePercent(overview.used, overview.window)
   const rows = context === null ? null : contextRows({ ...context, used: overview.used, window: overview.window })
+  const offer = compactOffer(context, overview)
   return h(Section, {
     title: copy('context'),
     summary: h(React.Fragment, null,
@@ -256,7 +262,67 @@ function ContextSection({ context, occupancy }: { context: PanelContext | null, 
         h('span', { className: 'dsh-claude-panel-figures' },
           `${formatCompactTokens(overview.used)} / ${formatCompactTokens(overview.window)}`)),
       contextBar(overview, rows),
-      contextLegend(rows, overview)))
+      contextLegend(rows, overview)),
+    offer === null ? null : h(CompactControl, { key: 'compact', sessionId, offer }))
+}
+
+/** How the compact request stands: waiting, running, or what the host answered. */
+type CompactPhase =
+  | { state: 'idle' }
+  | { state: 'running' }
+  | { state: 'done', text?: string }
+  | { state: 'failed', code?: CompactionFailure, text?: string }
+
+/**
+ * The distance to automatic compaction and the request that closes it (D100).
+ *
+ * One press is in flight at a time. The host's own sentence about the attempt is
+ * kept as the line's hint; the section's polls carry the new numbers once the host
+ * has written the summary, and the offer withdraws itself when the session has moved
+ * away from the threshold.
+ */
+function CompactControl({ sessionId, offer }: { sessionId: string, offer: CompactOffer }) {
+  const [phase, setPhase] = React.useState<CompactPhase>({ state: 'idle' })
+  const press = () => {
+    if (phase.state === 'running') return
+    setPhase({ state: 'running' })
+    requestCompaction(sessionId).then((answer) => {
+      if (answer.ok === true) {
+        setPhase({ state: 'done', text: answer.text })
+        return
+      }
+      setPhase({ state: 'failed', code: answer.code, text: answer.text })
+    }, () => {
+      setPhase({ state: 'failed' })
+    })
+  }
+  const failed = phase.state === 'failed'
+  // The host's own outlined control carries its height, corners, hover, focus and
+  // disabled states; the row only places it.
+  const action = phase.state === 'done'
+    ? h('span', { className: 'dsh-claude-panel-compact-note', title: phase.text }, copy('compactDone'))
+    : h(primitives.Button, {
+      variant: 'outline',
+      size: 'sm',
+      disabled: phase.state === 'running',
+      onClick: press,
+    }, phase.state === 'running' ? copy('compactRunning') : copy('compactNow'))
+  return h('div', { className: 'dsh-claude-panel-compact' },
+    h('span', { className: 'dsh-claude-panel-compact-distance' },
+      copy('compactDistance', { tokens: formatCompactTokens(Math.max(0, offer.remaining)) })),
+    action,
+    failed
+      ? h('p', { className: 'dsh-claude-panel-note', role: 'alert', title: phase.text }, compactFailure(phase.code))
+      : null)
+}
+
+/** What a failed request says: the reason the rail can name, or the attempt itself. */
+function compactFailure(code: CompactionFailure | undefined) {
+  switch (code) {
+    case 'no-agent': return copy('compactNoAgent')
+    case 'unavailable': return copy('compactUnavailable')
+    default: return copy('compactFailed')
+  }
 }
 
 /** The occupancy bar: the parts' own colours once they answer, one used-ink bar before. */
@@ -280,27 +346,24 @@ function contextBar(overview: ContextOverview, rows: ContextRow[] | null) {
 /**
  * The parts' legend and the room left, or the breakdown's own line until the
  * host's fold answers: the occupancy above is already the provider's own reading.
+ * The legend's hint carries how the parts are priced.
  */
 function contextLegend(rows: ContextRow[] | null, overview: ContextOverview) {
   if (rows === null) return h('p', { className: 'dsh-claude-panel-note' }, copy('contextBreakdownLoading'))
   const free = Math.max(0, overview.window - overview.used)
-  return h(React.Fragment, null,
-    h('dl', { className: 'dsh-claude-panel-legend', title: copy('contextEstimate') },
-      rows.map(row => h('div', { key: row.kind, className: 'dsh-claude-panel-legend-row' },
-        h('dt', null,
-          h('i', { className: `dsh-claude-panel-dot is-${row.kind}`, 'aria-hidden': true }),
-          copy(row.label)),
-        h('dd', null, formatCompactTokens(row.tokens)),
-        h('dd', { className: 'dsh-claude-panel-share' }, `${row.share.toFixed(1)}%`))),
-      h('div', { className: 'dsh-claude-panel-legend-row is-free' },
-        h('dt', null,
-          h('i', { className: 'dsh-claude-panel-dot is-free', 'aria-hidden': true }),
-          copy('contextFree')),
-        h('dd', null, formatCompactTokens(free)),
-        h('dd', { className: 'dsh-claude-panel-share' }, `${(free / overview.window * 100).toFixed(1)}%`))),
-    // The parts are estimates and the occupancy above them is the provider's own
-    // reading: the legend says so once, and its hint carries the method.
-    h('p', { className: 'dsh-claude-panel-caption', title: copy('contextEstimate') }, copy('contextEstimateNote')))
+  return h('dl', { className: 'dsh-claude-panel-legend', title: copy('contextEstimate') },
+    rows.map(row => h('div', { key: row.kind, className: 'dsh-claude-panel-legend-row' },
+      h('dt', null,
+        h('i', { className: `dsh-claude-panel-dot is-${row.kind}`, 'aria-hidden': true }),
+        copy(row.label)),
+      h('dd', null, formatCompactTokens(row.tokens)),
+      h('dd', { className: 'dsh-claude-panel-share' }, `${row.share.toFixed(1)}%`))),
+    h('div', { className: 'dsh-claude-panel-legend-row is-free' },
+      h('dt', null,
+        h('i', { className: 'dsh-claude-panel-dot is-free', 'aria-hidden': true }),
+        copy('contextFree')),
+      h('dd', null, formatCompactTokens(free)),
+      h('dd', { className: 'dsh-claude-panel-share' }, `${(free / overview.window * 100).toFixed(1)}%`)))
 }
 
 /** One figure of a figures section: its label and its value as written. */
@@ -393,7 +456,7 @@ function OutputsSection({ sessionId, directory, outputs }: { sessionId: string, 
       mark: outputMark(output.kind),
       title: output.name,
       detail: parentPath(output.display),
-      hint: output.display,
+      hint: output.path,
       side: output.origin === 'presented' ? h(Chip, { text: copy('presented') }) : undefined,
       onClick: () => openPanelFile(sessionId, directory, output.path),
     })) }))

@@ -68,16 +68,48 @@
     "en": "Other context"
   },
   "contextEstimate": {
-    "zh": "分项按来源估算，并按比例校准至已用上下文；百分比为整个上下文窗口的占比。",
-    "en": "Parts are estimated by source and proportionally calibrated to used context. Percentages refer to the entire context window."
+    "zh": "分项按发送给模型的内容计价，并按比例分配至已用上下文；百分比为整个上下文窗口的占比。",
+    "en": "Parts are priced from the content sent to the model and shared out in proportion across used context. Percentages refer to the entire context window."
   },
-  "contextEstimateNote": {
-    "zh": "分项为估算值",
-    "en": "Parts are estimates"
+  "compactDistance": {
+    "zh": "距离自动压缩还有 {tokens}",
+    "en": "{tokens} until auto-compact"
   },
-  "messageTokens": {
-    "zh": "对话",
-    "en": "Messages"
+  "compactNow": {
+    "zh": "压缩会话",
+    "en": "Compact session"
+  },
+  "compactRunning": {
+    "zh": "正在压缩…",
+    "en": "Compacting…"
+  },
+  "compactDone": {
+    "zh": "已压缩",
+    "en": "Compacted"
+  },
+  "compactNoAgent": {
+    "zh": "这个会话没有运行中的对话，无法压缩",
+    "en": "This session has no live agent to compact"
+  },
+  "compactUnavailable": {
+    "zh": "当前宿主没有压缩能力",
+    "en": "This host runs no compaction backend"
+  },
+  "compactFailed": {
+    "zh": "压缩没有完成",
+    "en": "Compaction did not finish"
+  },
+  "userTokens": {
+    "zh": "用户消息",
+    "en": "User messages"
+  },
+  "assistantTokens": {
+    "zh": "助手消息",
+    "en": "Assistant messages"
+  },
+  "toolResultTokens": {
+    "zh": "工具结果",
+    "en": "Tool results"
   },
   "outputs": {
     "zh": "产出",

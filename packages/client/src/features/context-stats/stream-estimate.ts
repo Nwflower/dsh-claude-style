@@ -1,9 +1,9 @@
 import { CHAT_CALL_SELECTOR, CHAT_CALL_TOOL_ATTRIBUTE, CHAT_CALL_TOOL_SELECTOR, CONVERSATION_SCROLL_SELECTOR, STREAMING_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { textTokens } from '@dsh-claude-style/contracts/tokens'
 import { batchAdditions, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { findConversationScroller } from '@dsh-claude-style/engine/host'
 import { callTokens } from './call-tokens'
 import { estimateScale, recordSettlement } from './estimate-scale'
-import { textTokens } from './text-tokens'
 
 /**
  * The tokens a streaming answer has added so far, as an estimate.
@@ -17,8 +17,8 @@ import { textTokens } from './text-tokens'
  * The page's text is thinner than what the provider bills: a tool call's
  * arguments are not on the page at all, and the renderer drops the markers it
  * parses. Each call row therefore counts its tool's own price beside the text
- * (text-tokens.ts, call-tokens.ts), read off the structure bus rather than per
- * frame. Both prices were fitted to one provider's tokenizer, so each model's
+ * (@dsh-claude-style/contracts/tokens, call-tokens.ts), read off the structure
+ * bus rather than per frame. Both prices were fitted to one provider's tokenizer, so each model's
  * settlements carry a multiplier between 0.9 and 1.1 that the figure is written
  * at; the grown tokens stay unscaled, so a settlement compares the fitted
  * estimate with the host's number (estimate-scale.ts).

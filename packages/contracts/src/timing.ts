@@ -63,7 +63,7 @@ export const HOST_TIMING: HostTimingEntry[] = [
   },
   {
     id: 'host.session-projections',
-    assumption: 'The session query answers projection values under the host keys sessionStats, tokenUsage, contextPressure, contextBreakdown, subagentCatalog, agentTeam and forgeChangeRequests, with the numeric fields the rail prints.',
+    assumption: 'The session query answers projection values under the host keys sessionStats, tokenUsage, contextPressure, subagentCatalog, agentTeam and forgeChangeRequests, with the numeric fields the rail prints.',
     use: 'The details rail folds those values into its sections and session stats (features/session-panel, packages/host/src/session-panel.ts); a host that renames a projection leaves that section empty rather than showing a wrong figure.',
     checks: ['scenario:sessionPanel'],
   },

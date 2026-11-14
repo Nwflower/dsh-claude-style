@@ -33,16 +33,24 @@ export function textOf(value: unknown) {
 /**
  * One token count the way Claude Code writes it: one decimal at most, a
  * whole number without its ".0", and a lowercase k — "109M", "4.4M",
- * "963.6k". The unit is picked on the rounded value, so a count just under
- * a million reads "1M", never "1000k". The turn status line, the usage
- * panel's stat cells and its model chart all print through this.
+ * "963.6k". The unit follows the count's own magnitude, so a value under a
+ * million keeps its k reading ("953.3k") and only a k reading that would
+ * round up to 1000k takes M. The turn status line, the usage panel's stat
+ * cells, its model chart and the details rail all print through this.
  */
 export function formatCompactTokens(count: unknown) {
   const value = Number(count) || 0
-  const units: [number, string][] = [[1e9, 'B'], [1e6, 'M'], [1e3, 'k']]
-  for (let u = 0; u < units.length; u++) {
-    const scaled = Math.round(value / units[u][0] * 10) / 10
-    if (scaled >= 1) return String(scaled) + units[u][1]
+  const whole = Math.round(value)
+  if (whole < 1e3) return String(whole)
+  const units: [number, string][] = [[1e3, 'k'], [1e6, 'M'], [1e9, 'B']]
+  let unit = 0
+  while (unit + 1 < units.length && value >= units[unit + 1][0]) unit++
+  let tenths = Math.round(value / units[unit][0] * 10)
+  // A reading that the next step up would take over — 999,960 reads 1000.0k —
+  // moves to that unit, so no figure stands above its own unit's reach.
+  if (tenths >= 1e4 && unit + 1 < units.length) {
+    unit += 1
+    tenths = Math.round(value / units[unit][0] * 10)
   }
-  return String(Math.round(value))
+  return String(tenths / 10) + units[unit][1]
 }

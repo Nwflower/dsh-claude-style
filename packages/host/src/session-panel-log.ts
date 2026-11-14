@@ -39,7 +39,10 @@ export interface PanelEvent {
   time?: number
   surfaceOp?: 'append' | { startSeq: number, endSeq: number }
   data?: PanelMessage & {
-    header?: { tools?: readonly { name: string }[] }
+    header?: {
+      tools?: readonly { name: string }[]
+      config?: { model?: unknown, provider?: unknown, maxTokens?: unknown }
+    }
     files?: readonly { path?: unknown }[]
     callId?: unknown
     name?: unknown
