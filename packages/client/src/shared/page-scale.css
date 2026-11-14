@@ -4,7 +4,9 @@
    pick a width the frame is not drawn at. The width marks are written on resize
    ahead of the frame's style, so they hold in the frame the resize lands in. The
    expanded track reads the host's own sidebar variable, which the reader may
-   have dragged away from its 280px default. */
+   have dragged away from its 280px default. A touch shell can put the centre
+   column in the first track, so these desktop-only overrides leave its grid alone. */
+@media (hover: hover) and (pointer: fine) {
 body[data-dsh-claude-style][data-dsh-claude-page-under-768] [data-dsh-claude-part~="layout-frame"][data-rightbar-collapsed] {
   grid-template-columns: 0px minmax(0, 1fr) minmax(0, 0px) !important;
 }
@@ -16,4 +18,5 @@ body[data-dsh-claude-style][data-dsh-claude-page-under-1000]:not([data-dsh-claud
 }
 body[data-dsh-claude-style][data-dsh-claude-page-under-1000]:not([data-dsh-claude-page-under-768]) [data-dsh-claude-part~="layout-frame"]:not([data-sidebar-collapsed]):not([data-sidebar-drawer])[data-rightbar-collapsed] {
   grid-template-columns: var(--dsh-windows-sidebar-width, 280px) minmax(0, 1fr) minmax(0, 0px) !important;
+}
 }
