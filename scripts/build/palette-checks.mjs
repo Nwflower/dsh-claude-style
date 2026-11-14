@@ -1,4 +1,4 @@
-/** palette-checks.mjs — the colour cards against the preset and brand vocabulary, and against the contrast every preset owes its canvas (D96). */
+/** palette-checks.mjs — the colour cards against the preset and brand vocabulary, and against the contrast every preset owes its canvas (D97). */
 import { parse, wcagContrast } from 'culori'
 import { loadModule } from '../shared/ts-module.mjs'
 import { cardLink } from './theme-tokens.mjs'
@@ -45,6 +45,7 @@ export function checkPaletteContrast(doc) {
     for (const scheme of SCHEMES) {
       const canvas = card.canvas[scheme]
       const reads = [
+        ['text', card.text[scheme], TEXT_CONTRAST],
         ['inline code', card.code[scheme], TEXT_CONTRAST],
         ['link', cardLink(card, scheme), TEXT_CONTRAST],
         ['accent', card.accent, ACCENT_CONTRAST],

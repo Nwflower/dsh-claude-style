@@ -1,5 +1,5 @@
 /**
- * The colour schemes a reader keeps (D96): one record per scheme, written as a
+ * The colour schemes a reader keeps (D97): one record per scheme, written as a
  * JSON string so the whole list is a plain string list the host's settings form
  * accepts (D73). Both halves read a record through this module, so a record
  * means the same thing on either side.
@@ -47,6 +47,7 @@ export interface PaletteScheme {
   base: string
   accent?: string
   background?: ColourPair
+  text?: ColourPair
   code?: ColourPair
   link?: ColourPair
   edges?: PaletteEdges
@@ -97,6 +98,8 @@ export function parsePaletteScheme(text: string, presets: readonly string[]): Pa
   if (record.accent !== undefined) scheme.accent = colour(record.accent, 'accent')
   const background = pair(record.background, 'background')
   if (background !== undefined) scheme.background = background
+  const textPair = pair(record.text, 'text')
+  if (textPair !== undefined) scheme.text = textPair
   const code = pair(record.code, 'code')
   if (code !== undefined) scheme.code = code
   const link = pair(record.link, 'link')
@@ -113,7 +116,7 @@ export function serializePaletteScheme(scheme: PaletteScheme) {
   const record: Record<string, unknown> = { id: scheme.id }
   if (scheme.name !== '') record.name = scheme.name
   if (scheme.base !== scheme.id) record.base = scheme.base
-  for (const key of ['accent', 'background', 'code', 'link', 'edges'] as const) {
+  for (const key of ['accent', 'background', 'text', 'code', 'link', 'edges'] as const) {
     if (scheme[key] !== undefined) record[key] = scheme[key]
   }
   return JSON.stringify(record)

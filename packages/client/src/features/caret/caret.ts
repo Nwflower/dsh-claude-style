@@ -4,7 +4,6 @@ import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { readPrefs, subscribePrefs } from '../../core/prefs'
 import { caretClipToField, caretMeasurePlain, caretMeasureRich, noteFacesLoaded } from './caret-measure'
 import type { CaretBox, CaretReading } from './caret-measure'
-import { composerComposing } from '../../shared/composer-caret'
 import { inPagePixels } from '../../shared/page-zoom'
 import { COMPOSER_INPUT_SELECTOR, COMPOSER_TEXTAREA_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import type { HostContext } from '@dsh-claude-style/engine/host'
@@ -400,14 +399,9 @@ interface CaretHostEdge {
       plan = { off: true, target: null, host: null, hostRect: null, reading: null, colour: null, hostEdge: null }
       return
     }
-    // An input-method composition paints its own caret, candidate window and
-    // underline. Its selection may stand at a segment boundary rather than the
-    // end of the composed text, so the skin's caret stands down for its span
-    // and compositionend measures again once the commit has landed.
-    if (composerComposing(document)) {
-      plan = { off: false, target: null, host: null, hostRect: null, reading: null, colour: null, hostEdge: null }
-      return
-    }
+    // An input-method composition keeps the same drawn caret width as ordinary
+    // typing. Its collapsed range is measured where the IME puts it, and the
+    // settle after compositionend measures the committed selection once more.
     const selection = document.getSelection()
     const active = document.activeElement
     const kind = active instanceof HTMLElement ? caretSurfaceOf(active) : null
@@ -540,7 +534,7 @@ interface CaretHostEdge {
     if (event.target instanceof Element && caretSurfaceOf(event.target) !== null) queue()
   }
   /**
-   * A composition starts: the next frame gives the caret back to the browser.
+   * A composition starts: the next frame draws at the composition's selection.
    * A composition ends: the browser may update the committed selection after
    * this event without another `selectionchange`, so measure again once two
    * frames have passed.

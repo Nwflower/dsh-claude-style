@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-13",
+  "group": "improvements",
+  "order": 0,
+  "external": false,
+  "zh": "「首页统计范围」默认统计现有主会话；各范围只显示同一集合的会话数，子代理不再计入，已删除主会话仅在「全部记录」中保留",
+  "en": "Default home session scope to current main sessions; every scope shows one count from its own population, excludes subagents, and retains deleted main sessions only in All recorded"
+}

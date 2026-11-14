@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-13",
+  "group": "improvements",
+  "order": 2,
+  "external": false,
+  "zh": "紧凑底栏支持独立开关输出速度、首 Token 时间、缓存命中率、费用、Token 总量与上下文圆环",
+  "en": "Add independent compact-footer toggles for output speed, TTFT, cache-hit rate, cost, token total and the context ring"
+}

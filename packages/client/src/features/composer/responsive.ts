@@ -68,7 +68,7 @@ export function createComposerResponsive() {
           if (card.isConnected === false || card.clientWidth === 0) continue
           const width = card.clientWidth
           const inline = card.getAttribute(COMPOSER_VARIANT_ATTRIBUTE) === 'inline'
-          const layout = inline ? (width < 360 ? 'stacked' : width < 440 ? 'compact' : 'wide') : 'wide'
+          const layout = inline ? (width <= 320 ? 'stacked' : width < 440 ? 'compact' : 'wide') : 'wide'
           readings.push({ card, row, layout, height: row.offsetHeight })
         }
       },

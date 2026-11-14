@@ -85,10 +85,10 @@ export function installPageScale() {
   const stopScaleWatch = subscribeMutations(body, { attributes: true, attributeFilter: [PAGE_ZOOM_ATTR] }, settle)
   // The window's own size moves the readings too. A resize is dispatched ahead
   // of the frame's style and layout, so the marks hold in the frame it lands in.
-  window.addEventListener('resize', measure)
+  window.addEventListener('resize', settle)
   settle()
   return () => {
-    window.removeEventListener('resize', measure)
+    window.removeEventListener('resize', settle)
     stopScaleWatch()
     for (const mark of WIDTH_MARKS) body.removeAttribute(mark.attr)
     offPrefs()

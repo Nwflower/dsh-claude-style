@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-13",
+  "group": "improvements",
+  "order": 3,
+  "external": false,
+  "zh": "配色方案新增明暗正文颜色入口，可以单独调整文字亮度而不改变背景色",
+  "en": "Add light and dark text colour seeds to palette schemes, allowing text brightness changes without changing the canvas"
+}

@@ -10,7 +10,7 @@ import { copy } from './copy'
 import type { CopyKey } from './copy'
 
 /**
- * What the colour cards and the scheme manager share (D96): a scheme's name as
+ * What the colour cards and the scheme manager share (D97): a scheme's name as
  * the reader sees it and the row of discs that shows its colours.
  */
 
@@ -49,10 +49,11 @@ export function schemeLabel(scheme: PaletteScheme) {
   return scheme.id === PALETTE_SCHEME_CUSTOM ? copy('paletteCustom') : copy('paletteUnnamed')
 }
 
-/** The four colours a card shows, in the order of their names: accent, background, inline code, links. */
+/** The five colours a card shows: accent, background, text, inline code and links. */
 const DISCS = [
   { label: 'paletteSwatchAccent' },
   { label: 'paletteSwatchBackground' },
+  { label: 'paletteSwatchText' },
   { label: 'paletteSwatchCode' },
   { label: 'paletteSwatchLink' },
 ] as const
@@ -62,12 +63,13 @@ function pairColour(light: string, dark: string) {
   return `light-dark(${light}, ${dark})`
 }
 
-/** The CSS colours of a scheme's four discs; a link the page derives shows the accent it is derived from. */
+/** The CSS colours of a scheme's five discs; a link the page derives shows the accent it is derived from. */
 export function schemeDiscs(scheme: PaletteScheme, staticPreset: boolean) {
   const colours = schemeColours(scheme, staticPreset)
   return [
     colours.accent,
     pairColour(colours.background.light, colours.background.dark),
+    pairColour(colours.text.light, colours.text.dark),
     pairColour(colours.code.light, colours.code.dark),
     pairColour(colours.link.light ?? colours.accent, colours.link.dark ?? colours.accent),
   ]
@@ -89,7 +91,7 @@ export function Glyph(props: { name: keyof typeof GLYPHS }) {
   )
 }
 
-/** A scheme's four colours as a row of small dots, for a line of the manager's list. */
+/** A scheme's five colours as a row of small dots, for a line of the manager's list. */
 export function SchemeDots(props: { colours: string[] }) {
   return React.createElement(
     'span',
@@ -118,7 +120,7 @@ function placeHint(hint: HTMLElement, disc: HTMLElement, label: string) {
 }
 
 /**
- * The four discs of one scheme. The disc under the pointer lifts its
+ * The five discs of one scheme. The disc under the pointer lifts its
  * neighbours less the further they stand (transitions.dev's "Avatar group
  * hover", MIT) and names itself in the hint.
  */

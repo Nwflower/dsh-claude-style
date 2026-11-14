@@ -52,9 +52,7 @@ export function createHomeOverview() {
   function view(data: HomePanel) {
     const skeleton = !data.known
     const format = homeShortDateFormat()
-    const sessions = data.sessions === null ? '—' : data.totalSessions === null
-      ? formatHomeCount(data.sessions)
-      : copy('homeSessionsScoped', { count: formatHomeCount(data.sessions), total: formatHomeCount(data.totalSessions) })
+    const sessions = data.sessions === null ? '—' : formatHomeCount(data.sessions)
     return React.createElement(
       React.Fragment,
       null,

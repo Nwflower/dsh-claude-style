@@ -14,14 +14,14 @@ import { copy } from './copy'
 import type { CopyKey } from './copy'
 
 /**
- * The editor of one scheme (D96), the manager's right-hand pane: its name, a
- * specimen of the scheme in the light and the dark appearance, the four
+ * The editor of one scheme (D97), the manager's right-hand pane: its name, a
+ * specimen of the scheme in the light and the dark appearance, the five
  * colours under the specimen they paint with the contrast each reads at, how a
  * dark outline is drawn and the preset a reader's scheme starts from. Every
  * change is stored at once; the contrast is a read-out and never stops a save.
  */
 
-type Seed = 'accent' | 'background' | 'code' | 'link'
+type Seed = 'accent' | 'background' | 'text' | 'code' | 'link'
 type Appearance = 'light' | 'dark'
 
 const APPEARANCES: readonly Appearance[] = ['light', 'dark']
@@ -30,6 +30,7 @@ const APPEARANCE_LABELS: Record<Appearance, CopyKey> = { light: 'paletteLight', 
 /** The colours kept one per appearance, in the cards' order, and the least contrast each owes its background (none for the background itself). */
 const PAIRED: readonly { seed: Exclude<Seed, 'accent'>, label: CopyKey, least: number | null }[] = [
   { seed: 'background', label: 'paletteSeedBackground', least: null },
+  { seed: 'text', label: 'paletteSeedText', least: PALETTE_TEXT_CONTRAST },
   { seed: 'code', label: 'paletteSeedCode', least: PALETTE_TEXT_CONTRAST },
   { seed: 'link', label: 'paletteSeedLink', least: PALETTE_TEXT_CONTRAST },
 ]
@@ -102,6 +103,7 @@ function Specimen(props: { colours: SchemeColours, appearance: Appearance }) {
       'data-link': link === undefined ? 'derived' : undefined,
       style: {
         '--dsh-claude-specimen-canvas': background,
+        '--dsh-claude-specimen-ink': colours.text[appearance],
         '--dsh-claude-specimen-accent': colours.accent,
         '--dsh-claude-specimen-accent-ink': accentInk(colours.accent),
         '--dsh-claude-specimen-code': colours.code[appearance],

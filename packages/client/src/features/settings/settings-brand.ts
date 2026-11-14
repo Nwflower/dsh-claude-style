@@ -6,7 +6,7 @@ import type { Prefs } from '../../constants'
 import { copy } from './copy'
 
 /**
- * The Appearance tab's custom brand rows (D96), which open the tab: the switch
+ * The Appearance tab's custom brand rows (D97), which open the tab: the switch
  * that keeps the sidebar's brand area on the page, then the brand area drawn as
  * the lockup the reader edits in place (settings-brand-lockup.ts), with how the
  * images are inked as its sub-row. The name and the two images are the reader's

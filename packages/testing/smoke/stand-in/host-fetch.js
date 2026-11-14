@@ -41,6 +41,9 @@
           }
         : { ok: true, contract: false }))
     }
+    if (url === '/dsh-claude-style/webfonts' && CASE === 'settings') {
+      return Promise.resolve(jsonResponse({ ok: true, faces: [] }))
+    }
     if (url.split('?')[0] === '/dsh-claude-style/usage' && CASE === 'studio') {
       // A folded answer with the model dimension, so both tabs draw their data.
       // The all-time figures reach past the one listed day (history older than
@@ -69,7 +72,7 @@
         ].concat([6, 5, 4, 3, 2, 1].map(function (size) {
           return { id: 'model-small-' + size, input: size * 10, output: 0, cacheRead: 0, cacheWrite: 0, calls: 1, tokens: size * 10 }
         })),
-        scope: scope, totalSessions: 15,
+        scope: scope, totalSessions: 4,
         totals: { input: 490000, output: 10000, cacheRead: 0, cacheWrite: 0, calls: 9, sessions: 4, activeDays: 3 },
       } }))
     }

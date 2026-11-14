@@ -10,7 +10,7 @@ const walkedSteps = (readings, endPx) => {
   const from = readings[0]
   const steps = []
   for (let at = 1; at < readings.length; at += 1) {
-    if (readings[at] !== readings[at - 1] && readings[at] > endPx && readings[at] < from) steps.push({ at, gap: readings[at] })
+    if (readings[at] !== readings[at - 1] && readings[at] > endPx && readings[at] < from) steps.push({ at, gap: readings[at - 1] - readings[at] })
   }
   return steps
 }

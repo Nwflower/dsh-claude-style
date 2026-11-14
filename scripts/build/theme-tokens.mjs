@@ -32,6 +32,7 @@ export function cardLink(card, scheme) {
 /** The colour a seed names for one card and scheme: a card's own seed, or a tone already resolved above. */
 function seedColour(card, seed, scheme, resolved) {
   if (seed === 'canvas') return card.canvas[scheme]
+  if (seed === 'text') return card.text[scheme]
   if (seed === 'accent') return card.accent
   if (seed === 'link') return cardLink(card, scheme)
   const tone = resolved.get(seed)
@@ -121,7 +122,7 @@ export function loadTokens(srcDir) {
       const hue = tone[scheme]?.hue
       if (seed === undefined) continue
       for (const name of [seed, hue]) {
-        if (name === undefined || ['canvas', 'accent', 'link', 'code'].includes(name) || tones.has(name)) continue
+        if (name === undefined || ['canvas', 'text', 'accent', 'link', 'code'].includes(name) || tones.has(name)) continue
         throw new Error(`build: packages/client/src/${TOKEN_SHEET} has the tone ${tone.id} read ${name}, which is neither a card seed nor a tone above it`)
       }
     }
@@ -178,7 +179,7 @@ function relativeColour(seed, step) {
 }
 
 /**
- * A scheme's own palette (a reader's scheme, D96), resolved in the page as relative
+ * A scheme's own palette (a reader's scheme, D97), resolved in the page as relative
  * colours over the seeds the brand layer writes on <body>. A link seed the scheme
  * does not carry follows its accent. The blocks stand under the scheme's contour
  * drawing, which the scheme owns, whichever brand the page shows.
@@ -193,6 +194,7 @@ function customPaletteBlocks(doc, gates) {
         : 'oklch(from var(--dsh-claude-custom-accent) calc(l + 0.15) c h)'
       const seeds = {
         canvas: `var(--dsh-claude-custom-canvas-${scheme})`,
+        text: `var(--dsh-claude-custom-text-${scheme})`,
         accent: 'var(--dsh-claude-custom-accent)',
         code: `var(--dsh-claude-custom-code-${scheme})`,
         link: `var(--dsh-claude-custom-link-${scheme}, ${accentLink})`,
@@ -329,6 +331,8 @@ function tokenTable(doc) {
     tableCell(card.accent),
     tableCell(card.canvas.light),
     tableCell(card.canvas.dark),
+    tableCell(card.text.light),
+    tableCell(card.text.dark),
     cell(card.sidebar?.light),
     cell(card.sidebar?.dark),
     cell(card.bubble?.light),
@@ -353,8 +357,8 @@ function tokenTable(doc) {
   })
   const tokenHeader = ['Token', 'Tone', ...schemeHeader, 'Host alias', 'Use']
   return [
-    row(['Card', 'Accent', 'Canvas light', 'Canvas dark', 'Sidebar light', 'Sidebar dark', 'Bubble light', 'Bubble dark', 'Link light', 'Link dark', 'Edges', 'Logo ink', 'Code light', 'Code dark']),
-    row(['---', '---', '---', '---', '---', '---', '---', '---', '---', '---', '---', '---', '---', '---']),
+    row(['Card', 'Accent', 'Canvas light', 'Canvas dark', 'Text light', 'Text dark', 'Sidebar light', 'Sidebar dark', 'Bubble light', 'Bubble dark', 'Link light', 'Link dark', 'Edges', 'Logo ink', 'Code light', 'Code dark']),
+    row(['---', '---', '---', '---', '---', '---', '---', '---', '---', '---', '---', '---', '---', '---', '---', '---']),
     ...cardRows,
     '',
     row(['Tone', 'Seed', 'Light', 'Dark']),

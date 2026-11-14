@@ -59,6 +59,7 @@
   "paletteFollowBrand": { "zh": "改为跟随品牌", "en": "Follow the brand" },
   "paletteSwatchAccent": { "zh": "强调色", "en": "Accent" },
   "paletteSwatchBackground": { "zh": "背景", "en": "Background" },
+  "paletteSwatchText": { "zh": "正文", "en": "Text" },
   "paletteSwatchCode": { "zh": "行内代码", "en": "Inline code" },
   "paletteSwatchLink": { "zh": "链接", "en": "Links" },
   "palettePresetParchment": { "zh": "羊皮纸", "en": "Parchment" },
@@ -91,6 +92,7 @@
   "paletteEdgesSurface": { "zh": "承载面台阶", "en": "Surface steps" },
   "paletteSeedAccent": { "zh": "强调色", "en": "Accent" },
   "paletteSeedBackground": { "zh": "背景", "en": "Background" },
+  "paletteSeedText": { "zh": "正文", "en": "Text" },
   "paletteSeedCode": { "zh": "行内代码", "en": "Inline code" },
   "paletteSeedLink": { "zh": "链接", "en": "Links" },
   "paletteLight": { "zh": "浅色", "en": "Light" },
@@ -140,7 +142,7 @@
   "motionStillNote": { "zh": "动画设为「减弱」时这一项不生效，卡片只显示定格画面。", "en": "No effect while Animation is Reduced; the cards show stills." },
   "conversationComposerNote": { "zh": "只在「重绘对话框」覆盖对话页时生效。", "en": "Takes effect only while Composer restyle covers the conversation." },
   "experimental": { "zh": "实验性", "en": "Experimental" },
-  "unavailable": { "zh": "ERROR : 设置存储服务异常，改动不会被保存。", "en": "The settings store is unavailable, so changes will not be saved." },
+  "unavailable": { "zh": "设置保存失败，请重试。", "en": "The settings change could not be saved. Try again." },
   "title": { "zh": "Claude Style", "en": "Claude Style" },
   "composerRequired": { "zh": "「重绘对话框」为「关闭」时不生效。", "en": "No effect while Composer restyle is Off." }
 }

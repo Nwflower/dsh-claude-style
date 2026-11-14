@@ -11,7 +11,7 @@
 import { expect, test } from 'vitest'
 import { installParts } from '@dsh-claude-style/engine/parts'
 import { holdRelations } from '@dsh-claude-style/engine/parts-table'
-import { COMPOSER_CARD_SELECTOR, CONVERSATION_HEADER_SLOT_SELECTOR, CONVERSATION_SCROLL_SELECTOR, PHASE_ATTRIBUTE, ROOT_SLOT_SELECTOR, SIDEBAR_SLOT_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { COMPOSER_CARD_SELECTOR, CONVERSATION_HEADER_SLOT_SELECTOR, CONVERSATION_INPUT_RIGHT_SLOT_SELECTOR, CONVERSATION_SCROLL_SELECTOR, PHASE_ATTRIBUTE, ROOT_SLOT_SELECTOR, SIDEBAR_SLOT_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { partRegion } from '../../fixtures/part-region'
 import { hostElement } from '../../fixtures/host-markup'
 import { pageCleanups } from '../../fixtures/page'
@@ -145,6 +145,28 @@ test('the sidebar scroll viewport and panel entry wrapper carry their own parts'
   expect(marked(sidebar.part('scrollArea'))).toBe(area)
   expect(marked(sidebar.part('panelEntry'))).toBe(entry)
   expect(marked(sidebar.part('panelRow'))).toBe(entry.firstChild)
+})
+
+test('the composer right slot keeps every React child under its own parent', async () => {
+  const card = hostElement(COMPOSER_CARD_SELECTOR)
+  const outlet = hostElement(CONVERSATION_INPUT_RIGHT_SLOT_SELECTOR)
+  const first = document.createElement('span')
+  const reference = document.createElement('span')
+  outlet.append(first, reference)
+  card.append(outlet)
+  mount(card)
+  install()
+  expect(holds(card)).toBe(hold('composer-right-filled'))
+  expect(first.parentElement).toBe(outlet)
+  expect(reference.parentElement).toBe(outlet)
+  // React commits a new slot entry before a reference it already owns. The
+  // reference is still a child of the slot, so this commit cannot throw.
+  const inserted = document.createElement('span')
+  outlet.insertBefore(inserted, reference)
+  await settle()
+  expect(inserted.parentElement).toBe(outlet)
+  expect(first.parentElement).toBe(outlet)
+  expect(reference.parentElement).toBe(outlet)
 })
 
 test('the teardown takes every hold mark off with the parts', () => {

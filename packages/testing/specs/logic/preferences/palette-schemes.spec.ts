@@ -31,9 +31,9 @@ test('a record reads back the colours it carries and falls to its base preset fo
 })
 
 test('a record written out reads back as the same scheme, in one fixed key order', () => {
-  const scheme = parsePaletteScheme('{"link":{"light":"#112233","dark":"#445566"},"base":"claude","id":"night","code":{"light":"#000000"},"name":"Night"}', PRESETS)
+  const scheme = parsePaletteScheme('{"link":{"light":"#112233","dark":"#445566"},"text":{"light":"#101010","dark":"#e0e0e0"},"base":"claude","id":"night","code":{"light":"#000000"},"name":"Night"}', PRESETS)
   const text = serializePaletteScheme(scheme)
-  expect(text).toBe('{"id":"night","name":"Night","base":"claude","code":{"light":"#000000"},"link":{"light":"#112233","dark":"#445566"}}')
+  expect(text).toBe('{"id":"night","name":"Night","base":"claude","text":{"light":"#101010","dark":"#e0e0e0"},"code":{"light":"#000000"},"link":{"light":"#112233","dark":"#445566"}}')
   expect(parsePaletteScheme(text, PRESETS)).toEqual(scheme)
 })
 

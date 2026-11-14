@@ -17,7 +17,7 @@ export default {
     const expected = {
       general: ['brand', 'username', 'pageZoom', 'interfaceFontSize', 'sodium', 'soundCues'],
       appearance: ['sidebarBrand', 'brandLockup', 'brandInk', 'typeface', 'homeLayout', 'homeSessionScope', 'homeRipple', 'mascot', 'mascotScope', 'palette', 'paletteCards', 'backgroundOpacity'],
-      'main-window': ['turnNav', 'messageActions', 'conversationWidth', 'viewTabs', 'headerBand', 'processRows', 'answerAnchor', 'composerScope', 'composerBottomGap', 'questionCard', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent', 'contextDisplay', 'contextNumbers', 'statsPosition', 'statsFooterAlign', 'billingCurrency', 'billingTable'],
+      'main-window': ['turnNav', 'messageActions', 'conversationWidth', 'viewTabs', 'headerBand', 'processRows', 'answerAnchor', 'composerScope', 'composerBottomGap', 'questionCard', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent', 'contextDisplay', 'contextNumbers', 'statsPosition', 'statsFooterAlign', 'statsFooterSpeed', 'statsFooterTtft', 'statsFooterCache', 'statsFooterCost', 'statsFooterTotal', 'statsFooterContext', 'billingCurrency', 'billingTable'],
       sidebar: ['collapseFooter', 'banLocale', 'sidebarSearch', 'searchStyle', 'sidebarEntries', 'workspaceView', 'sidebarPeek', 'sidebarLayout', 'sessionPanel'],
       motion: ['motion', 'chatAnimations', 'chatWait', 'statusDetail', 'statusMotion', 'chatReveal', 'chatSend', 'messageEnter', 'caretMotion', 'ongoingIndicator', 'reasoningDisplay', 'autoPopover'],
     }
@@ -27,16 +27,16 @@ export default {
     const mainWindowGroups = [
       { label: 'Conversation', rows: ['turnNav', 'messageActions', 'conversationWidth', 'viewTabs', 'headerBand', 'processRows', 'answerAnchor'] },
       { label: 'Composer', rows: ['composerScope', 'composerBottomGap', 'questionCard', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent'] },
-      { label: 'Context and cost', rows: ['contextDisplay', 'contextNumbers', 'statsPosition', 'statsFooterAlign', 'billingCurrency', 'billingTable'] },
+      { label: 'Context and cost', rows: ['contextDisplay', 'contextNumbers', 'statsPosition', 'statsFooterAlign', 'statsFooterSpeed', 'statsFooterTtft', 'statsFooterCache', 'statsFooterCost', 'statsFooterTotal', 'statsFooterContext', 'billingCurrency', 'billingTable'] },
     ]
     // The home session scope waits for the Code home layout, the title-bar
     // band for the Windows desktop window, and the footer alignment for the
     // footer position the page opens away from.
-    const expectedGrey = { appearance: ['homeSessionScope'], 'main-window': ['headerBand', 'statsFooterAlign'] }
+    const expectedGrey = { appearance: ['homeSessionScope'], 'main-window': ['headerBand', 'statsFooterAlign', 'statsFooterSpeed', 'statsFooterTtft', 'statsFooterCache', 'statsFooterCost', 'statsFooterTotal', 'statsFooterContext'] }
     // A row may carry a note without waiting for anything: the typeface row names
     // the faces the page cannot draw, which this machine's own fonts decide, so
     // that row is left out of the comparison and read on its own below.
-    const expectedNotes = { appearance: ['homeSessionScope'], 'main-window': ['headerBand', 'statsFooterAlign'] }
+    const expectedNotes = { appearance: ['homeSessionScope'], 'main-window': ['headerBand', 'statsFooterAlign', 'statsFooterSpeed', 'statsFooterTtft', 'statsFooterCache', 'statsFooterCost', 'statsFooterTotal', 'statsFooterContext'] }
     const notesOf = tab => ((pages[tab] || {}).notes || []).filter(key => key !== 'typeface')
     const pages = settings.pages || {}
     for (const tab of Object.keys(expected)) {
@@ -55,7 +55,7 @@ export default {
     const onWindows = settings.onWindows || {}
     check('on the Windows window the title-bar row takes input and the footer alignment still waits for its position',
       JSON.stringify(onWindows.rows) === JSON.stringify(expected['main-window']) &&
-        JSON.stringify(onWindows.disabled) === '["statsFooterAlign"]' && JSON.stringify(onWindows.notes) === '["statsFooterAlign"]',
+        JSON.stringify(onWindows.disabled) === '["statsFooterAlign","statsFooterSpeed","statsFooterTtft","statsFooterCache","statsFooterCost","statsFooterTotal","statsFooterContext"]' && JSON.stringify(onWindows.notes) === '["statsFooterAlign","statsFooterSpeed","statsFooterTtft","statsFooterCache","statsFooterCost","statsFooterTotal","statsFooterContext"]',
       JSON.stringify(onWindows))
     const palette = settings.paletteCards || {}
     const paletteCard = (state, id) => (state.cards || []).find((card) => card.brand === id) || {}
@@ -94,7 +94,7 @@ export default {
     const off = settings.parentsOff || {}
     check('a sub-row greys out while its parent is off: the mascot\'s place with the mascot off, the model descriptions, the effort accent colour, the quick providers and the peak rate meter with the model picker off, the custom price table with the billing off, the search button\'s style with the sidebar search off, the home session scope for the Code home layout, and the title-bar band for the window on every page',
       !!off.appearance && JSON.stringify(off.appearance.disabled) === '["homeSessionScope","mascotScope"]' &&
-        !!off.mainWindow && JSON.stringify(off.mainWindow.disabled) === '["headerBand","effortSlider","modelDescriptions","quickProviders","peakrate","effortAccent","statsFooterAlign","billingTable"]' &&
+        !!off.mainWindow && JSON.stringify(off.mainWindow.disabled) === '["headerBand","effortSlider","modelDescriptions","quickProviders","peakrate","effortAccent","statsFooterAlign","statsFooterSpeed","statsFooterTtft","statsFooterCache","statsFooterCost","statsFooterTotal","statsFooterContext","billingTable"]' &&
         !!off.sidebar && JSON.stringify(off.sidebar.disabled) === '["searchStyle"]',
       JSON.stringify(off))
     const offAppearance = (off.appearance || {}).rows || []
@@ -103,13 +103,13 @@ export default {
       JSON.stringify(offAppearance))
     const unmet = settings.requirementsOff || {}
     check('with the composer restyle off, the model picker with its sub-rows, the permission control and the statistics\' figures grey out, the two switches and the statistics rows saying what they wait for; with the footer takeover off, so does the easter egg under it',
-      !!unmet.mainWindow && JSON.stringify(unmet.mainWindow.disabled) === '["headerBand","composerBottomGap","permissionsControl","modelPicker","effortSlider","modelDescriptions","quickProviders","peakrate","effortAccent","contextDisplay","contextNumbers","statsPosition","statsFooterAlign","billingCurrency","billingTable"]' &&
-        JSON.stringify(unmet.mainWindow.notes) === '["headerBand","composerBottomGap","permissionsControl","modelPicker","contextDisplay","contextNumbers","statsPosition","statsFooterAlign","billingCurrency","billingTable"]' &&
+      !!unmet.mainWindow && JSON.stringify(unmet.mainWindow.disabled) === '["headerBand","composerBottomGap","permissionsControl","modelPicker","effortSlider","modelDescriptions","quickProviders","peakrate","effortAccent","contextDisplay","contextNumbers","statsPosition","statsFooterAlign","statsFooterSpeed","statsFooterTtft","statsFooterCache","statsFooterCost","statsFooterTotal","statsFooterContext","billingCurrency","billingTable"]' &&
+        JSON.stringify(unmet.mainWindow.notes) === '["headerBand","composerBottomGap","permissionsControl","modelPicker","contextDisplay","contextNumbers","statsPosition","statsFooterAlign","statsFooterSpeed","statsFooterTtft","statsFooterCache","statsFooterCost","statsFooterTotal","statsFooterContext","billingCurrency","billingTable"]' &&
         !!unmet.sidebar && JSON.stringify(unmet.sidebar.disabled) === '["banLocale"]' && JSON.stringify(unmet.sidebar.notes) === '[]',
       JSON.stringify(unmet))
     const hero = settings.heroOnly || {}
     check('with the restyle on the home page alone, the picker and the permission control take input, the statistics\' position still waits for a conversation and the title-bar band for the window',
-      !!hero.mainWindow && JSON.stringify(hero.mainWindow.disabled) === '["headerBand","composerBottomGap","contextDisplay","contextNumbers","statsPosition","statsFooterAlign","billingCurrency","billingTable"]',
+      !!hero.mainWindow && JSON.stringify(hero.mainWindow.disabled) === '["headerBand","composerBottomGap","contextDisplay","contextNumbers","statsPosition","statsFooterAlign","statsFooterSpeed","statsFooterTtft","statsFooterCache","statsFooterCost","statsFooterTotal","statsFooterContext","billingCurrency","billingTable"]',
       JSON.stringify(hero))
     const pageZoom = settings.pageZoom || {}
     const zoomed = pageZoom.zoomed || {}

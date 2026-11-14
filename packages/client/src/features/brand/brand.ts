@@ -6,7 +6,7 @@ import { loadBrandImages, readBrandImages, resetBrandImages, subscribeBrandImage
 import { PALETTE_CARDS } from 'virtual:dsh-claude-style/generated'
 
 /**
- * The custom brand layer (D96): the reader's own name, images and the colours
+ * The custom brand layer (D97): the reader's own name, images and the colours
  * of the scheme they selected, over whichever brand is chosen.
  * Each part is written onto <body> only while the reader has supplied it — an
  * attribute the stylesheets switch on (brand.css, and the account avatar's rule
@@ -32,6 +32,8 @@ const ACCENT_PROPERTY = '--dsh-claude-custom-accent'
 const ACCENT_INK_PROPERTY = '--dsh-claude-custom-accent-ink'
 const CANVAS_LIGHT_PROPERTY = '--dsh-claude-custom-canvas-light'
 const CANVAS_DARK_PROPERTY = '--dsh-claude-custom-canvas-dark'
+const TEXT_LIGHT_PROPERTY = '--dsh-claude-custom-text-light'
+const TEXT_DARK_PROPERTY = '--dsh-claude-custom-text-dark'
 const CODE_LIGHT_PROPERTY = '--dsh-claude-custom-code-light'
 const CODE_DARK_PROPERTY = '--dsh-claude-custom-code-dark'
 const LINK_LIGHT_PROPERTY = '--dsh-claude-custom-link-light'
@@ -44,7 +46,7 @@ const BUBBLE_DARK_PROPERTY = '--dsh-claude-custom-bubble-dark'
 const LOGO_INK_PROPERTY = '--dsh-claude-logo-ink'
 const PROPERTIES = [
   MARK_PROPERTY, WORD_PROPERTY, WORD_RATIO_PROPERTY, NAME_PROPERTY,
-  ACCENT_PROPERTY, ACCENT_INK_PROPERTY, CANVAS_LIGHT_PROPERTY, CANVAS_DARK_PROPERTY, CODE_LIGHT_PROPERTY, CODE_DARK_PROPERTY, LINK_LIGHT_PROPERTY, LINK_DARK_PROPERTY,
+  ACCENT_PROPERTY, ACCENT_INK_PROPERTY, CANVAS_LIGHT_PROPERTY, CANVAS_DARK_PROPERTY, TEXT_LIGHT_PROPERTY, TEXT_DARK_PROPERTY, CODE_LIGHT_PROPERTY, CODE_DARK_PROPERTY, LINK_LIGHT_PROPERTY, LINK_DARK_PROPERTY,
   SIDEBAR_LIGHT_PROPERTY, SIDEBAR_DARK_PROPERTY, BUBBLE_LIGHT_PROPERTY, BUBBLE_DARK_PROPERTY, LOGO_INK_PROPERTY,
 ]
 const ATTRIBUTES = [CUSTOM_MARK_ATTR, CUSTOM_WORD_ATTR, CUSTOM_TINT_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_EDGES_ATTR, BRAND_INK_ATTR]
@@ -90,6 +92,8 @@ export function install() {
     property(ACCENT_INK_PROPERTY, custom ? accentInk(accent) : null)
     property(CANVAS_LIGHT_PROPERTY, custom ? (scheme.background?.light ?? card.canvas.light) : null)
     property(CANVAS_DARK_PROPERTY, custom ? (scheme.background?.dark ?? card.canvas.dark) : null)
+    property(TEXT_LIGHT_PROPERTY, custom ? (scheme.text?.light ?? card.text.light) : null)
+    property(TEXT_DARK_PROPERTY, custom ? (scheme.text?.dark ?? card.text.dark) : null)
     // A chip is drawn on the scheme's canvas, so an unpicked colour takes that scheme's own ink.
     property(CODE_LIGHT_PROPERTY, custom ? (scheme.code?.light ?? card.code.light) : null)
     property(CODE_DARK_PROPERTY, custom ? (scheme.code?.dark ?? card.code.dark) : null)

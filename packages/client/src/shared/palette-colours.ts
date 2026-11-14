@@ -2,7 +2,7 @@ import { PALETTE_CARDS } from 'virtual:dsh-claude-style/generated'
 import type { PaletteScheme } from '@dsh-claude-style/contracts/palette-schemes'
 
 /**
- * The colours a scheme draws as values (D96): its own seeds over the colour card
+ * The colours a scheme draws as values (D97): its own seeds over the colour card
  * of the preset it starts from. Kept apart from the records' own module
  * (palette-scheme.ts) because the cards are a generated module the preference
  * path does not load.
@@ -19,6 +19,7 @@ export function presetCard(preset: string) {
 export interface SchemeColours {
   accent: string
   background: { light: string, dark: string }
+  text: { light: string, dark: string }
   code: { light: string, dark: string }
   link: { light?: string, dark?: string }
 }
@@ -29,6 +30,7 @@ export function schemeColours(scheme: PaletteScheme, staticPreset = false): Sche
   return {
     accent: scheme.accent ?? card.accent,
     background: { light: scheme.background?.light ?? card.canvas.light, dark: scheme.background?.dark ?? card.canvas.dark },
+    text: { light: scheme.text?.light ?? card.text.light, dark: scheme.text?.dark ?? card.text.dark },
     code: { light: scheme.code?.light ?? card.code.light, dark: scheme.code?.dark ?? card.code.dark },
     link: { light: scheme.link?.light ?? (staticPreset ? card.link?.light : undefined), dark: scheme.link?.dark ?? (staticPreset ? card.link?.dark : undefined) },
   }

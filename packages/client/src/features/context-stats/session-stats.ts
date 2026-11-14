@@ -306,6 +306,7 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
     if (readPrefs().statsPosition === STATS_POSITION_CONTEXT) inline.clear()
     else inline.render()
     block.render()
+    for (const listener of figureListeners) listener()
     // The two surfaces read the figures only where they stand — the popover
     // closed reads nothing at all — so the reading the rail prints is taken here,
     // on every frame that moves it, and counts to the same place the line's

@@ -89,6 +89,15 @@ function recordChanged(stored: ReadonlyMap<string, RecordSession>, sessions: Rea
   return false
 }
 
+/** Keep every day's count and identifier list in the same main-session population. */
+function filterSessionIds(days: ReadonlyMap<string, DayBuckets>, excluded: ReadonlySet<string>) {
+  return new Map([...days].map(([date, buckets]) => {
+    if (buckets.sessionIds === undefined) return [date, buckets]
+    const sessionIds = buckets.sessionIds.filter((id) => !excluded.has(id))
+    return [date, { ...buckets, sessions: sessionIds.length, sessionIds }]
+  }))
+}
+
 /** The service's state: the last summary, whether more is coming, and why not. */
 interface UsageState {
   value: UsageSummary | null
@@ -137,7 +146,7 @@ export function createUsage(ctx: DshContext) {
   }
 
   /** Fold every session whose log changed since the record was written. */
-  async function computeLocal(logs: SessionLog[], ledgerDays: ReadonlyMap<string, DayBuckets> | null, allowed: ReadonlySet<string> | null, scope: HomeSessionScope) {
+  async function computeLocal(logs: SessionLog[], ledgerDays: ReadonlyMap<string, DayBuckets> | null, allowed: ReadonlySet<string> | null, excluded: ReadonlySet<string>, scope: HomeSessionScope) {
     const record = readRecord(ctx)
     const sessions = new Map<string, RecordSession>()
     let read = 0
@@ -203,23 +212,23 @@ export function createUsage(ctx: DshContext) {
     const source = scopedLedger === null
       ? LOCAL_SOURCE
       : merge.folded ? `${LEDGER_SOURCE}+${LOCAL_SOURCE}` : LEDGER_SOURCE
+    const scopedIds = new Set([...merge.sessionIds].filter((id) => !excluded.has(id)))
+    const scopedDays = filterSessionIds(merge.days, excluded)
     const summary = summarize(
-      merge.days,
-      merge.sessionIds.size,
+      scopedDays,
+      scopedIds.size,
       source,
-      merge.days.size === 0 ? undefined : hoursOf(merge.days),
-      { sessionIds: merge.sessionIds },
+      scopedDays.size === 0 ? undefined : hoursOf(scopedDays),
+      { sessionIds: scopedIds },
     )
     // Active scopes count every main session whose log exists, including one
     // that has not settled usage yet; a date range still unions its own days.
     const shaped = allowed === null ? summary : { ...summary, totals: { ...summary.totals, sessions: allowed.size } }
-    const allIds = new Set<string>()
-    for (const [id, entry] of recorded) if (entry.days.size > 0) allIds.add(id)
-    for (const buckets of ledgerDays?.values() ?? []) for (const id of buckets.sessionIds ?? []) allIds.add(id)
+    const totalSessions = Number(shaped.totals.sessions) || 0
     if (sessions.size === 0 && failed > 0) {
-      return { ...shaped, scope, totalSessions: allIds.size, unavailable: true, reason: 'session-query-unavailable' }
+      return { ...shaped, scope, totalSessions, unavailable: true, reason: 'session-query-unavailable' }
     }
-    return { ...shaped, scope, totalSessions: allIds.size, read, failed, sessions: logs.length }
+    return { ...shaped, scope, totalSessions, read, failed, sessions: logs.length }
   }
 
   /**
@@ -232,14 +241,21 @@ export function createUsage(ctx: DshContext) {
     // history must not hold the event loop.
     const logs = await listSessionLogs(root)
     const ledgerDays = readLedger(home(), ctx.logger)
+    const persistence = ctx.get('sessionPersistence') as SessionPersistence | null | undefined
+    const stored = persistence === null || persistence === undefined ? [] : await persistence.list()
+    const originById = new Map(stored.map((entry) => [entry.header.id, entry.header.origin]))
+    const excluded = new Set<string>()
+    for (const entry of stored) if (entry.header.origin === 'subagent') excluded.add(entry.header.id)
+    const mainLogs = logs.filter((log) => {
+      if (originById.get(log.id) !== 'subagent') return true
+      excluded.add(log.storedName)
+      return false
+    })
     let allowed: Set<string> | null = null
     if (scope !== HOME_SESSION_SCOPE_ALL) {
-      const persistence = ctx.get('sessionPersistence') as SessionPersistence | null | undefined
-      const stored = persistence === null || persistence === undefined ? [] : await persistence.list()
-      const originById = new Map(stored.map((entry) => [entry.header.id, entry.header.origin]))
       const registry = ctx.get('workspaceRegistry') as WorkspaceRegistry | null | undefined
       const archived = new Set(registry?.archivedSessionIds ?? [])
-      let selected = logs.filter((log) => log.storedName !== '' && originById.get(log.id) !== 'subagent' && !archived.has(log.id))
+      let selected = mainLogs.filter((log) => log.storedName !== '' && !archived.has(log.id))
       if (scope === HOME_SESSION_SCOPE_WORKSPACE) {
         const workspace = registry?.list().find((entry) => entry.id === workspaceId)
         const members = new Set(workspace?.sessionIds ?? [])
@@ -249,14 +265,14 @@ export function createUsage(ctx: DshContext) {
     }
 
     if (scope === HOME_SESSION_SCOPE_ALL && ledgerDays !== null && ledgerDays.size > 0) {
-      // Only the unfiltered scope may publish the ledger as a partial answer.
+      // The partial ledger answer uses the same main-session count as the fold.
       const sessionIds = new Set<string>()
       for (const buckets of ledgerDays.values()) {
-        for (const id of buckets.sessionIds ?? []) sessionIds.add(id)
+        for (const id of buckets.sessionIds ?? []) if (!excluded.has(id)) sessionIds.add(id)
       }
-      publish({ ...summarize(ledgerDays, sessionIds.size, LEDGER_SOURCE), scope, totalSessions: sessionIds.size, sessions: logs.length })
+      publish({ ...summarize(filterSessionIds(ledgerDays, excluded), sessionIds.size, LEDGER_SOURCE), scope, totalSessions: sessionIds.size, sessions: mainLogs.length })
     }
-    return await computeLocal(logs, ledgerDays, allowed, scope) as UsageSummary
+    return await computeLocal(mainLogs, ledgerDays, allowed, excluded, scope) as UsageSummary
   }
 
   /**

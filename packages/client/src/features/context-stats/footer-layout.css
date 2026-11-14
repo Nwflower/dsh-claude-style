@@ -7,6 +7,7 @@ body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] [data-dsh-c
 }
 body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] [data-dsh-claude-footer-line] {
   flex: none;
+  white-space: nowrap;
 }
 /* The host's row holds figures that keep a line under the toolbar. While they
    ride the toolbar as an overlay — and while a session holds no figures yet —
