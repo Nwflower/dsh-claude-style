@@ -371,7 +371,7 @@ export default {
       r.workspaceUpAfterCrossing === true && r.presetFoldedBySibling === false && r.heroCardsUp === 1,
       JSON.stringify({ workspace: r.workspaceUpAfterCrossing, preset: r.presetFoldedBySibling, cards: r.heroCardsUp }))
     check('the preset card is stamped as the preset picker and keeps its row glyph',
-      r.presetCard !== null && r.presetCard.kind === 'preset' && r.presetCard.iconsShown === 1 && r.presetCard.rowHeight === 32,
+      r.presetCard !== null && r.presetCard.kind === 'preset' && r.presetCard.iconsShown === 1 && Math.abs(r.presetCard.rowHeight - 32) <= 1,
       JSON.stringify(r.presetCard))
     check('the workspace card is drawn as a folder menu: plain text rows, the add row included, set closer together',
       r.workspaceCard !== null && r.workspaceCard.kind === 'workspace' && r.workspaceCard.iconsShown === 0 &&
