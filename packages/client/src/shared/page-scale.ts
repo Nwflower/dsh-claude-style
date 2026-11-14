@@ -1,7 +1,7 @@
 import { installScaledLayer } from '@dsh-claude-style/engine/scaled-layer'
 import { installFrameColumns } from './page-scale-columns'
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
-import { PAGE_UNDER_1000_ATTR, PAGE_UNDER_480_ATTR, PAGE_UNDER_768_ATTR, PAGE_ZOOM_ATTR } from '../constants'
+import { PAGE_UNDER_1000_ATTR, PAGE_UNDER_480_ATTR, PAGE_UNDER_600_ATTR, PAGE_UNDER_768_ATTR, PAGE_RESIZING_ATTR, PAGE_ZOOM_ATTR } from '../constants'
 import { subscribePrefs } from '../core/prefs'
 import { pageViewport, pageZoomFactor, projectPageZoomFactor } from './page-zoom'
 
@@ -19,6 +19,7 @@ export const PAGE_WIDTH = '--dsh-claude-page-width'
 const WIDTH_MARKS = [
   { attr: PAGE_UNDER_1000_ATTR, width: 1000 },
   { attr: PAGE_UNDER_768_ATTR, width: 768 },
+  { attr: PAGE_UNDER_600_ATTR, width: 600 },
   { attr: PAGE_UNDER_480_ATTR, width: 480 },
 ] as const
 
@@ -86,9 +87,26 @@ export function installPageScale() {
   // The window's own size moves the readings too. A resize is dispatched ahead
   // of the frame's style and layout, so the marks hold in the frame it lands in.
   window.addEventListener('resize', settle)
+  // While a resize is in flight the sidebar's collapse and drawer attributes can
+  // lag the viewport by a frame; the mark lets shared/page-scale.css pin the
+  // rail track for that frame instead of letting a stale attribute pick the
+  // expanded width.
+  let resizeGate: number | null = null
+  const markResizing = () => {
+    body.setAttribute(PAGE_RESIZING_ATTR, '')
+    if (resizeGate !== null) clearTimeout(resizeGate)
+    resizeGate = window.setTimeout(() => {
+      body.removeAttribute(PAGE_RESIZING_ATTR)
+      resizeGate = null
+    }, 180)
+  }
+  window.addEventListener('resize', markResizing)
   settle()
   return () => {
     window.removeEventListener('resize', settle)
+    window.removeEventListener('resize', markResizing)
+    if (resizeGate !== null) clearTimeout(resizeGate)
+    body.removeAttribute(PAGE_RESIZING_ATTR)
     stopScaleWatch()
     for (const mark of WIDTH_MARKS) body.removeAttribute(mark.attr)
     offPrefs()
