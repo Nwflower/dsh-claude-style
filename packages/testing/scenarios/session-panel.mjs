@@ -226,16 +226,25 @@ export function sessionPanelScenario({ check }) {
       const { page } = context
       const notes = context.notes
       await page.waitForSelector('.dsh-claude-details', { timeout: 20000 })
-      const read = () => page.evaluate(() => {
+      // The rows carry the skin's own words, so the labels come from its copy:
+      // an English page draws "Output"/"Cost" where the Chinese one draws
+      // 输出/费用, and the figure after the label tells the total apart from
+      // "Output speed…".
+      const labels = { out: words('statsOutput'), cost: words('statsCost') }
+      const read = () => page.evaluate((labels) => {
         const rail = document.querySelector('.dsh-claude-details')
         if (rail === null) return null
         const rows = [...rail.querySelectorAll('.dsh-claude-panel-row, .dsh-claude-panel-stat')]
-        const pick = (pattern) => {
-          const row = rows.find(node => pattern.test(node.textContent ?? ''))
-          return row ? (row.textContent ?? '').replace(/\s+/g, ' ').trim() : null
+        const pick = (names, figure) => {
+          const textOf = (node) => (node.textContent ?? '').replace(/\s+/g, ' ').trim()
+          const row = rows.find(node => names.some(name => {
+            const text = textOf(node)
+            return text.startsWith(name) && figure.test(text.slice(name.length))
+          }))
+          return row ? textOf(row) : null
         }
-        return { out: pick(/^输出[\d,]/), cost: pick(/^费用/) }
-      })
+        return { out: pick(labels.out, /^[\d,]/), cost: pick(labels.cost, /^\s*\D*[\d¥$€]/) }
+      }, labels)
       const samples = []
       // A frame-paced count moves many times inside the panel's poll period, so
       // the readings are taken close enough together to tell the two apart.
