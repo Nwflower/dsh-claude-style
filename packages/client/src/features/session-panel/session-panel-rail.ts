@@ -6,6 +6,8 @@ import { conversationScroller } from '@dsh-claude-style/engine/chat-dom'
 import { PART_ATTR } from '../../constants'
 import { SESSION_PANEL_ATTR } from '../../constants'
 import { FRAME_SELECTOR } from '../../shared/page-scale-columns'
+import { NO_CONVERSATION, conversationStanding } from './conversation-standing'
+import type { ConversationSight } from './conversation-standing'
 import { copy } from './copy'
 import { setRailOpen, setRailToggle } from './session-panel-state'
 import { PanelBody } from './session-panel-body'
@@ -54,8 +56,7 @@ interface RailBox {
 
 /** The session the conversation shows, followed across a switch and the hero page. */
 function useConversationSession() {
-  const [reading, setReading] = React.useState<{ id: string | null, live: boolean }>({ id: null, live: false })
-  const setSession = (id: string | null) => setReading(previous => (previous.id === id ? previous : { id, live: previous.live }))
+  const [reading, setReading] = React.useState(NO_CONVERSATION)
   React.useEffect(() => {
     // The element the attribute lands on may exist before the attribute: a
     // cached first match reads it again whenever the page's structure changes.
@@ -63,18 +64,18 @@ function useConversationSession() {
     // The rail belongs to the conversation the reader is looking at: not a new
     // session without a turn yet, not a plugin page's hidden conversation, and
     // not a subagent's own column (D94).
-    const live = () => {
-      const node = sessionNode()
-      if (node === null || node === undefined || !node.isConnected) return false
-      if (node.closest(SIDEBAR_CHAT_SELECTOR) !== null) return false
-      const scroller = node.closest(CONVERSATION_SCROLL_SELECTOR) ?? conversationScroller()
-      if (!(scroller instanceof HTMLElement) || !scroller.checkVisibility()) return false
-      return scroller.querySelector(`[${FLOW_KIND_ATTRIBUTE}]`) !== null
-    }
-    const read = () => {
+    const sight = (): ConversationSight => {
       const node = sessionNode()
       const id = node?.getAttribute(CONVERSATION_SESSION_ATTRIBUTE) ?? null
-      setReading(previous => ({ id, live: live() }))
+      if (node === null || node === undefined || !node.isConnected) return { id, shown: false, rows: false }
+      if (node.closest(SIDEBAR_CHAT_SELECTOR) !== null) return { id, shown: false, rows: false }
+      const scroller = node.closest(CONVERSATION_SCROLL_SELECTOR) ?? conversationScroller()
+      if (!(scroller instanceof HTMLElement) || !scroller.checkVisibility()) return { id, shown: false, rows: false }
+      return { id, shown: true, rows: scroller.querySelector(`[${FLOW_KIND_ATTRIBUTE}]`) !== null }
+    }
+    const read = () => {
+      const seen = sight()
+      setReading(previous => conversationStanding(previous, seen))
     }
     const stop = subscribeMutations(document.body, {
       subtree: true,

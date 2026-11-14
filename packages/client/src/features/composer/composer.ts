@@ -1,4 +1,4 @@
-import { COMPOSER_ATTR, COMPOSER_HIDDEN_ATTR, HOME_LAYOUT_STUDIO, MOBILE_PORTRAIT_ATTR, PART_ATTR, TRANSCRIPT_ATTR } from '../../constants'
+import { COMPOSER_ATTR, COMPOSER_HIDDEN_ATTR, HOME_LAYOUT_STUDIO, MOBILE_PORTRAIT_ATTR, PART_ATTR, STAMPED_PART_ATTR, TRANSCRIPT_ATTR } from '../../constants'
 import { COMPOSER_ATTACHMENT_RAIL_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_VIEW_CONTEXT, CONVERSATION_VIEW_STATS, CONVERSATION_VIEW_TRAJECTORY, MOBILE_PORTRAIT_SELECTOR, PERMISSION_TRIGGER_SELECTOR, PHASE_ATTRIBUTE, SIDEBAR_CHAT_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
@@ -242,9 +242,13 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       // A docked card's row is outside the part walk, so the sheet's toolbar
       // rules never reach it: the host's own row wraps, and the trailing model
       // cluster falls onto a second line with room to spare. Name the row so
-      // inline.css lays it out exactly like the primary card's.
+      // inline.css lays it out exactly like the primary card's: the stamp is
+      // what the finished sheet reads, the part mark what the pass's readers do (D101).
       const row = findComposerRowIn(card)
-      if (row !== null) setAttributeIfChanged(row, PART_ATTR, 'row')
+      if (row !== null) {
+        setAttributeIfChanged(row, STAMPED_PART_ATTR, 'row')
+        setAttributeIfChanged(row, PART_ATTR, 'row')
+      }
       const commands = card.querySelector('[data-dsh-claude-part~="tools"] button[aria-haspopup="listbox"]')
       if (commands !== null) setAttributeIfChanged(commands, CONTROL_ATTR, 'commands')
       const primaries = card.querySelectorAll<HTMLElement>(PRIMARY_SELECTOR)
@@ -508,7 +512,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     chatHidden = false
     for (const card of portraitCards) card.removeAttribute(MOBILE_PORTRAIT_ATTR)
     portraitCards.clear()
-    const marks = ['data-composer-variant', ATTACHED_ATTR, ATTACHMENT_TILE_ATTR, DRAFT_EMPTY_ATTR, CONTROL_ATTR, HIDDEN_ATTR]
+    const marks = ['data-composer-variant', ATTACHED_ATTR, ATTACHMENT_TILE_ATTR, DRAFT_EMPTY_ATTR, CONTROL_ATTR, HIDDEN_ATTR, STAMPED_PART_ATTR]
     for (const mark of marks) {
       for (const marked of document.querySelectorAll(`[${mark}]`)) marked.removeAttribute(mark)
     }
