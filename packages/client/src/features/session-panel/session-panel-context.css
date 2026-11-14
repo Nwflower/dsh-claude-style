@@ -1,0 +1,193 @@
+/* The details rail's context section (D94): the occupancy head, the bar of its
+   parts, the legend and the compaction offer under it (D100). The rows, sections
+   and type it reads at are session-panel.css's. */
+/* Context categories share their colour between the bar and legend (D9, D94). */
+
+body[data-dsh-claude-style] .dsh-claude-panel-context-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0;
+  margin-bottom: 8px;
+}
+
+/* The occupancy is the section's one headline figure and takes the primary ink;
+   the weight stays the section titles' alone (D94). */
+body[data-dsh-claude-style] .dsh-claude-panel-percent {
+  color: var(--dsw-alias-label-primary, #161616);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-figures {
+  color: var(--dsw-alias-label-secondary, #5c5c5c);
+  font-variant-numeric: tabular-nums;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-bar {
+  position: relative;
+  display: flex;
+  height: 6px;
+  margin: 0 0 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--dsw-alias-border-l1);
+}
+
+/* The track's ink stands over the parts and collapses toward the right edge,
+   uncovering the composition left to right in one sweep (D94). */
+body[data-dsh-claude-style] .dsh-claude-panel-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: inherit;
+  transform-origin: right center;
+  animation: dsh-claude-panel-bar-grow var(--dsh-claude-duration-enter) var(--dsh-claude-ease-enter) both;
+}
+@keyframes dsh-claude-panel-bar-grow {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-segment {
+  flex: none;
+  height: 100%;
+  min-width: 0;
+  box-shadow: inset -1px 0 var(--dsw-alias-bg-layer-1);
+  transition: width var(--dsh-claude-duration-reveal) var(--dsh-claude-ease-out);
+}
+
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-panel-bar::after,
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-panel-segment {
+  animation: none;
+  transition: none;
+}
+
+/* The occupancy before its composition is read: one bar, in the ink the whole
+   used context wears, with the parts taking their own colours when they arrive. */
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-used {
+  background: var(--dsh-claude-context-messages);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-system,
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-system {
+  background: var(--dsh-claude-context-system);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-tools,
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-tools {
+  background: var(--dsh-claude-context-tools);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-user,
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-user {
+  background: var(--dsh-claude-context-messages);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-assistant,
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-assistant {
+  background: var(--dsh-claude-context-assistant);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-tool-result,
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-tool-result {
+  background: var(--dsh-claude-context-tool-result);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-mcp,
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-mcp {
+  background: var(--dsh-claude-context-mcp);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-memory,
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-memory,
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-skills,
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-skills {
+  background: var(--dsh-claude-context-memory);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-other,
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-other {
+  background: var(--dsh-claude-context-other);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-free {
+  background: var(--dsw-alias-border-l1);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-legend-row {
+  display: grid;
+  /* The share column holds the widest reading, a whole window at one decimal. */
+  grid-template-columns: minmax(0, 1fr) auto 48px;
+  align-items: center;
+  gap: 12px;
+  color: var(--dsw-alias-label-secondary, #5c5c5c);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-legend-row dt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Of a part's two figures the share is the one read down the column; the token
+   count beside it stays in the quiet ink. */
+body[data-dsh-claude-style] .dsh-claude-panel-legend-row dd {
+  margin: 0;
+  color: var(--dsw-alias-label-tertiary, #8a8a8a);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-legend-row dd.dsh-claude-panel-share {
+  color: var(--dsw-alias-label-primary, #161616);
+}
+
+/* The room left is no part of the occupancy: its whole row is quiet, stated
+   after the share's own ink so this rule decides. */
+body[data-dsh-claude-style] .dsh-claude-panel-legend-row.is-free,
+body[data-dsh-claude-style] .dsh-claude-panel-legend-row.is-free dd.dsh-claude-panel-share {
+  color: var(--dsw-alias-label-tertiary, #8a8a8a);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-dot {
+  display: inline-block;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+
+/* The distance to automatic compaction, and the request that closes it (D100):
+   one row under the legend, the reading in the quiet ink and the host's own
+   outlined button on the right, where a row's state stands. */
+body[data-dsh-claude-style] .dsh-claude-panel-compact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-compact-distance,
+body[data-dsh-claude-style] .dsh-claude-panel-compact-note {
+  color: var(--dsw-alias-label-tertiary, #8a8a8a);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-compact > .dsh-claude-panel-note {
+  flex-basis: 100%;
+  color: var(--dsw-alias-state-error-primary);
+}
+

@@ -10,7 +10,7 @@ export default {
   // The two figures tables print the statistics feature's live reading, the same
   // one the composer's line prints (features/session-panel/session-panel-figures.ts).
   reads: ['contextStats'],
-  stylesheets: [{ file: 'session-panel.css', rank: 122 }, { file: 'session-panel-work.css', rank: 123 }],
+  stylesheets: [{ file: 'session-panel.css', rank: 122 }, { file: 'session-panel-work.css', rank: 123 }, { file: 'session-panel-context.css', rank: 124 }],
   settingsRows: [{
     tab: 'sidebar',
     rank: 60,
