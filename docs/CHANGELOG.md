@@ -33,6 +33,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - 修复首页热力图用量最少的一档比没有用量的空白格还浅的问题
 - 混元模型行的图形改用官方的腾讯混元美术，字标沿用英文 Tencent，图形在浅色与深色画布上都保留品牌色
 - 修复「动画」设为「减弱」时状态行加载点仍飞速换帧而抽搐、详情栏上下文色块被扫光遮罩盖住不显示的问题
+- 管理窗口的选中高亮按行的实际大小绘制，面板入场动画期间不再小一圈
 
 ### 移除
 
@@ -65,6 +66,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - Fix the home heat grid's faintest level looking lighter than an empty day
 - Hunyuan rows draw the official Tencent Hunyuan mark beside the English Tencent wordmark, the mark keeping its brand colours on both canvases
 - Fix the waiting line's dots racing through their frames and the details rail's context parts hidden under the reveal cover when the animation choice is Reduced
+- A manager's selected highlight now matches its line, instead of drawing smaller while the panel was still arriving
 
 ### Removals
 

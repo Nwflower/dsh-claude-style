@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-14",
-  "group": "fixes",
-  "order": 1,
-  "external": true,
-  "zh": "管理窗口的选中高亮在面板入场动画期间量尺寸会小一圈，现在按行的实际大小绘制",
-  "en": "A manager's selected highlight measured while the panel was still arriving drew a size smaller than its line; it now matches the line"
-}
