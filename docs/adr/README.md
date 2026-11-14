@@ -38,6 +38,7 @@
 | [D98](D98-settings-copy-scope-only.md) | 设置文案只写影响范围 |  |
 | [D99](D99-context-parts-priced-from-content.md) | 上下文分项按发送给模型的内容计价，占用仍取服务商读数 |  |
 | [D100](D100-context-compact-control.md) | 详情栏在接近自动压缩点时提供手动压缩，按宿主的 /compact 命令执行 |  |
+| [D101](D101-stylesheet-compilation.md) | 样式表编译成浏览器能分桶的选择器 |  |
 
 ## 作废的编号
 
