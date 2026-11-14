@@ -137,9 +137,15 @@
       holdRow.setAttribute('data-chat-flow-kind', 'user')
       holdRow.innerHTML = '<div><div style="width:220px;height:44px;background:rgb(240,240,240);border-radius:18px;padding:8px 12px">held</div></div>'
       sendFlow.appendChild(holdRow)
-      await sleep(300)
+      // The hand-over lands on the row's own pass; a loaded runner takes it
+      // later than a fixed pause, so wait for the stand-in to go, bounded.
+      var handedGhost = document.querySelector('[data-dsh-claude-send-ghost]')
+      for (var handedWait = 0; handedWait < 1500 && handedGhost !== null; handedWait += 50) {
+        await sleep(50)
+        handedGhost = document.querySelector('[data-dsh-claude-send-ghost]')
+      }
       r.send.handed = {
-        ghost: document.querySelector('[data-dsh-claude-send-ghost]') !== null,
+        ghost: handedGhost !== null,
         hidden: holdRow.hasAttribute('data-dsh-claude-send-flight'),
         visibility: getComputedStyle(holdRow).visibility,
       }
