@@ -5,6 +5,12 @@
     "note": "Which brand mark a row shows. Every id names a vendored lockup in packages/assets/src/icons/combine/; scripts/build/build.mjs fails the build on an id that is not there. This is presentation data, kept out of the bundle like the rest of this document, and it is separate from the copy rules above: a vendor's mark and a vendor's description line change for different reasons. `providers` is deliberately empty: a model no rule claims draws **no** lockup rather than its provider's, because the reseller's own lockup on a model it did not make reads as a wrong answer rather than a missing one. `models` is an ordered, anchored rule list resolved against the model's id and then its display name (D79), exactly like `families` and with the same discipline: first match wins, so a broad rule must sit below the narrow ones and every rule must name its vendor (`step` cannot match `step-3.7-flash` by accident only if no earlier rule already claimed it). A brand with no lockup renders the label without a mark.",
     "providers": {},
     "models": [
+      {
+        "match": "sensenova",
+        "brand": "sensenova",
+        "note": "This rule must precede Amazon Nova: the whole SenseNova name is one vendor, with `nova` never starting its own segment."
+      },
+      { "match": "(^|[^a-z0-9])scnet($|-)", "brand": "scnet" },
       { "match": "deepseek", "brand": "deepseek" },
       {
         "match": "claude",
@@ -85,6 +91,20 @@
     }
   },
   "families": [
+    {
+      "match": "sensenova",
+      "text": {
+        "zh": "商汤的多模态模型，面向理解、生成与持续任务。",
+        "en": "SenseTime multimodal models for understanding, generation and sustained tasks."
+      }
+    },
+    {
+      "match": "(^|[^a-z0-9])scnet($|-)",
+      "text": {
+        "zh": "超算互联网提供的聚合算力与模型服务。",
+        "en": "Aggregated computing and model services from SuperComputing Network."
+      }
+    },
     {
       "match": "deepseek.*flash",
       "text": {
