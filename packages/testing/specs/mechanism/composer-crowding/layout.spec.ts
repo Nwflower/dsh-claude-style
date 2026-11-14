@@ -119,7 +119,7 @@ for (const variant of ['hero', 'inline']) {
     }
     sameAction(send)
     expect(view.model.querySelector(surfaceSelector('model.release-tag'))).toBe(view.release)
-    expect(view.release.checkVisibility()).toBe(variant === 'hero')
+    expect(view.release.checkVisibility()).toBe(true)
     expect(view.activity.hasAttribute(surfaceAttribute('skin.holds'))).toBe(false)
     view.model.click(); view.primary.click(); expect(view.clicks()).toEqual({ model: 1, primary: 1 })
     view.primary.disabled = true; view.primary.click(); expect(view.clicks().primary).toBe(1); sameAction(send)
@@ -135,7 +135,7 @@ for (const variant of ['hero', 'inline']) {
     expect(view.card.hasAttribute(LAYOUT)).toBe(false); expect(view.row.hasAttribute(TOOLBAR)).toBe(false); sameAction('stop')
     view.responsive.sync([view.card], true); await frames(); core(view); sameAction('stop')
     expect(view.model.querySelector(surfaceSelector('model.release-tag'))).toBe(view.release)
-    expect(view.release.checkVisibility()).toBe(variant === 'hero')
+    expect(view.release.checkVisibility()).toBe(true)
     view.responsive.dispose(); sameAction('stop')
     expect(view.card.hasAttribute(LAYOUT)).toBe(false); expect(view.row.hasAttribute(TOOLBAR)).toBe(false)
   })
