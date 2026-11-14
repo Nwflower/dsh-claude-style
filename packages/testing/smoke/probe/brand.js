@@ -1,9 +1,9 @@
 /**
- * The custom-brand case (D30): the host half's status names a mark and a 4:1
- * wordmark, and the page paints them over the brand's own art — the sidebar's
+ * The custom-brand case (D30): the host half's status names a preset's mark
+ * and 4:1 wordmark, and the page paints them over the brand's own art — the sidebar's
  * mark and wordmark, the hero's mark and the account row's fallback picture —
- * then inks them in the colour the image-colour choice names, and hands the
- * accent back when it is cleared.
+ * then inks them in the colour the preset's ink names, and hands the accent
+ * back when it is cleared.
  */
 (function () {
   var probe = window.__dshSmokeProbe
@@ -26,6 +26,13 @@
         '<div class="_fishHitbox_h_1" style="display:flex"><svg viewBox="0 0 8 8"></svg></div>'
       document.body.appendChild(sidebar)
       document.body.appendChild(heroHolder)
+      // The images are a preset's; its record carries the ink they are painted in.
+      var preset = function (ink) {
+        var record = { id: 'company', name: 'Company', mark: '@managed/mark-light', wordmark: '@managed/wordmark-light' }
+        if (ink !== 'original') record.ink = ink
+        return { brandingPreset: 'company', brandingPresets: [record] }
+      }
+      window.__pushForm(preset('original'))
       // The parts land on the pass after the subtree arrives (D3).
       var mark = null
       for (var look = 0; look < 40 && mark === null; look++) {
@@ -78,15 +85,15 @@
       document.body.appendChild(swatch)
       r.customBrand.accentRgb = getComputedStyle(swatch).color
       swatch.remove()
-      window.__pushForm({ brandInk: 'text', paletteColors: 'custom', customAccent: '#1a7f5a', brandName: 'Acme' })
+      window.__pushForm(Object.assign(preset('text'), { paletteColors: 'custom', customAccent: '#1a7f5a', brandName: 'Acme' }))
       await sleep(150)
       r.customBrand.tinted = read()
       // The accent choice with the page following a brand's own colour card:
       // the tint has to resolve there too, where no custom accent is stored.
-      window.__pushForm({ brandInk: 'accent', paletteColors: 'brand', customAccent: '' })
+      window.__pushForm(Object.assign(preset('accent'), { paletteColors: 'brand', customAccent: '' }))
       await sleep(150)
       r.customBrand.accented = read()
-      window.__pushForm({ brandInk: 'original', paletteColors: 'brand', customAccent: '' })
+      window.__pushForm(Object.assign(preset('original'), { paletteColors: 'brand', customAccent: '' }))
       await sleep(150)
       r.customBrand.cleared = read()
       sidebar.remove()

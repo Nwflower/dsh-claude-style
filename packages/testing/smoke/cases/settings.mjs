@@ -16,7 +16,7 @@ export default {
     check('the settings section registers with the settings dialog', settings.registered === true, JSON.stringify(settings.registered))
     const expected = {
       general: ['brand', 'username', 'pageZoom', 'interfaceFontSize', 'sodium', 'soundCues'],
-      appearance: ['sidebarBrand', 'brandLockup', 'brandInk', 'typeface', 'homeLayout', 'homeSessionScope', 'homeRipple', 'mascot', 'mascotScope', 'palette', 'paletteCards', 'backgroundOpacity'],
+      appearance: ['sidebarBrand', 'brandLockup', 'typeface', 'homeLayout', 'homeSessionScope', 'homeRipple', 'mascot', 'mascotScope', 'palette', 'paletteCards', 'backgroundOpacity'],
       'main-window': ['turnNav', 'messageActions', 'conversationWidth', 'viewTabs', 'headerBand', 'processRows', 'answerAnchor', 'composerScope', 'composerBottomGap', 'questionCard', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent', 'contextDisplay', 'contextNumbers', 'statsPosition', 'statsFooterAlign', 'statsFooterSpeed', 'statsFooterTtft', 'statsFooterCache', 'statsFooterCost', 'statsFooterTotal', 'statsFooterContext', 'billingCurrency', 'billingTable'],
       sidebar: ['collapseFooter', 'banLocale', 'sidebarSearch', 'searchStyle', 'sidebarEntries', 'workspaceView', 'sidebarPeek', 'sidebarLayout', 'sessionPanel'],
       motion: ['motion', 'chatAnimations', 'chatWait', 'statusDetail', 'statusMotion', 'chatReveal', 'chatSend', 'messageEnter', 'caretMotion', 'ongoingIndicator', 'reasoningDisplay', 'autoPopover'],

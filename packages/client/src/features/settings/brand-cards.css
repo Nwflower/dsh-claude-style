@@ -1,17 +1,22 @@
-/* The brand sets drawn small: the cards under the brand switch
+/* The brand sets drawn small: the card under the brand switch
    (brand-cards.ts), the leads of the manager's list (brand-manager.ts), and
-   the lockup's room in the brand editor (brand-editor.ts). The cards wear the
+   the lockup's room in the brand editor (brand-editor.ts). The card wears the
    colour cards' frame (settings-brand.css, palette-schemes.css); the art inside
    is the lockup's own (settings-brand-lockup.css) at a smaller cap height. */
+
+/* The one card is as wide as a vendor's word at the card's cap needs. */
+body[data-dsh-claude-style] .dsh-claude-brand-cards {
+  grid-template-columns: minmax(150px, 220px);
+}
 
 /* A brand card holds its lockup and its name in the middle of its frame. */
 body[data-dsh-claude-style] .dsh-claude-brand-card {
   justify-content: center;
 }
 
-/* A card's lockup: the mark and the word at a cap the card's width holds.
-   The row keeps one height whichever art it carries, so the cards' names
-   stand on one line across the grid. */
+/* The card's lockup: the mark and the word at a cap the card's width holds.
+   The row keeps one height whichever art it carries, so the name stays put
+   when another set is picked. */
 body[data-dsh-claude-style] .dsh-claude-brand-card-art {
   --dsh-claude-lockup-cap: 22px;
   display: flex;

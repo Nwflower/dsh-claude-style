@@ -22,7 +22,7 @@ export default {
     commonChecks(r)
   },
   // The custom brand over the Claude brand (D30): both images painted where the
-  // brand's art stood, the ink the image-colour choice names — the text colour
+  // brand's art stood, the ink the preset names — the text colour
   // and the accent, the latter while the page follows a brand's colour card —
   // and the brand's own accent back once it is cleared.
   'custom-brand'(r) {

@@ -47,7 +47,7 @@ async function reloadAndOpenAppearance(page) {
   await openAppearance(page)
 }
 
-/** The set the brand cards show as painted: its id (empty for the images outside any preset) and its name. */
+/** The set the brand card shows as painted: its id (empty for the theme style's own art) and its name. */
 function selectedCard(page) {
   return page.evaluate(selector => {
     const card = document.querySelector(selector + '[data-active]')
@@ -156,15 +156,8 @@ function brandingPresetUiScenario({ check }) {
     prompt: 'hello there',
     async beforeSend({ page, out }) {
       notes.out = out
-      await page.evaluate(async () => {
-        const canvas = document.createElement('canvas')
-        canvas.width = 32
-        canvas.height = 32
-        canvas.getContext('2d').fillRect(0, 0, 32, 32)
-        const png = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'))
-        await fetch('/dsh-claude-style/brand/mark', { method: 'PUT', headers: { 'content-type': 'image/png' }, body: png })
-      })
-      await reloadAndOpenAppearance(page)
+      await openAppearance(page)
+      notes.initial = (await selectedCard(page))?.id
       await duplicateAndRename(page, 'UI preset')
       await reloadAndOpenAppearance(page)
       const reloaded = await selectedCard(page)
@@ -189,8 +182,9 @@ function brandingPresetUiScenario({ check }) {
     },
     async assert({ session }) {
       return [
+        check('没有预设时设置页显示跟随主题', notes.initial === '', String(notes.initial)),
         check('UI 创建的预设重载后仍保留 id 和名称', notes.afterReload === 'preset-1' && notes.name === 'UI preset', JSON.stringify({ id: notes.afterReload, name: notes.name })),
-        check('删除预设后回到未命名图片路径', notes.afterDelete === '', String(notes.afterDelete)),
+        check('删除预设后回到跟随主题', notes.afterDelete === '', String(notes.afterDelete)),
         check('预设管理没有错误行', notes.error === 0, JSON.stringify(notes.errorText)),
         check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),
       ]

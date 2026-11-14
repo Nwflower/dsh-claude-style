@@ -17,7 +17,7 @@ export const SIDEBAR_LIGHT_PROPERTY = '--dsh-claude-custom-sidebar-light'
 export const SIDEBAR_DARK_PROPERTY = '--dsh-claude-custom-sidebar-dark'
 export const BUBBLE_LIGHT_PROPERTY = '--dsh-claude-custom-bubble-light'
 export const BUBBLE_DARK_PROPERTY = '--dsh-claude-custom-bubble-dark'
-/** The ink the brand's own art and the reader's pictures take while the image-colour choice names the accent or the text colour. */
+/** The ink the brand's own art and the set's pictures take while the selected set's ink names the accent or the text colour. */
 export const LOGO_INK_PROPERTY = '--dsh-claude-logo-ink'
 export const BRAND_PROPERTIES = [
   MARK_PROPERTY, WORD_PROPERTY, WORD_RATIO_PROPERTY, NAME_PROPERTY,

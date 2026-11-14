@@ -3,10 +3,10 @@
  *
  * @capability custom-brand
  * @features brand
- * @risk YAML-defined presets disappear or lose their stable selection, one invalid asset removes valid presets, or replacing one variant clears the other.
+ * @risk YAML-defined presets disappear or lose their stable selection, one invalid asset removes valid presets, replacing one variant clears the other, a built-in preset cannot be selected, or one set's ink leaks into another.
  */
 import { expect, test } from 'vitest'
-import { brandingAsset, newBrandingPresetId, normalizeBrandingPresets, preferenceWritePatch, removeBrandingPresetPatch, selectedBrandingPreset, storeBrandingPresetPatch, withBrandingAsset } from '@dsh-claude-style/client/pure'
+import { brandingAsset, brandingInkOf, brandingInkPatch, newBrandingPresetId, normalizeBrandingPresets, preferenceWritePatch, removeBrandingPresetPatch, selectedBrandingPreset, storeBrandingPresetPatch, storedBrandingPresets, withBrandingAsset } from '@dsh-claude-style/client/pure'
 import { clampPrefs } from '@dsh-claude-style/contracts/prefs'
 import type { BrandingPreset } from '@dsh-claude-style/contracts/branding-presets'
 import type { PrefKey } from '@dsh-claude-style/contracts/prefs'
@@ -90,4 +90,22 @@ test('renaming keeps the selected id and deleting only removes that record', () 
   const removed = removeBrandingPresetPatch(prefs, 'company')
   expect(removed.brandingPreset).toBe('')
   expect(removed.brandingPresets).toHaveLength(1)
+})
+
+test('a built-in preset is selected without a record and each set keeps its own ink', () => {
+  let prefs = clampPrefs({ brandingPreset: 'vendor-openai', brandInk: 'text', brandingPresets: [{ id: 'company', name: 'Company', ink: 'accent' }] })
+  expect(prefs.brandingPreset).toBe('vendor-openai')
+  expect(selectedBrandingPreset(prefs)).toBeUndefined()
+  expect(brandingInkOf(prefs)).toBe('original')
+  expect(brandingInkOf(prefs, '')).toBe('text')
+  expect(brandingInkOf(prefs, 'company')).toBe('accent')
+  prefs = { ...prefs, ...brandingInkPatch(prefs, 'vendor-openai', 'accent') }
+  expect(brandingInkOf(prefs)).toBe('accent')
+  expect(storedBrandingPresets(prefs).map(preset => preset.id)).toEqual(['company'])
+  prefs = { ...prefs, ...brandingInkPatch(prefs, 'vendor-openai', 'original') }
+  expect(prefs.brandingPresets).toHaveLength(1)
+  prefs = { ...prefs, ...brandingInkPatch(prefs, 'company', 'original') }
+  expect(JSON.parse(prefs.brandingPresets[0]).ink).toBeUndefined()
+  expect(clampPrefs({ brandingPreset: 'vendor-nobody' }).brandingPreset).toBe('')
+  expect(normalizeBrandingPresets([JSON.stringify({ id: 'company', name: 'Company', ink: 'neon' })]).problems).toHaveLength(1)
 })

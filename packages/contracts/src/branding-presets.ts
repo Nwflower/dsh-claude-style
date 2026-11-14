@@ -17,14 +17,42 @@ export interface BrandingAssetPair {
   dark?: string
 }
 
+/** How the brand art is painted: in its own colours, in the accent, or as a shape in the text colour. */
+export const BRAND_INK_ORIGINAL = 'original'
+export const BRAND_INK_ACCENT = 'accent'
+export const BRAND_INK_TEXT = 'text'
+export const BRAND_INKS = [BRAND_INK_ORIGINAL, BRAND_INK_ACCENT, BRAND_INK_TEXT] as const
+export type BrandInk = typeof BRAND_INKS[number]
+
+/** A named set of brand images and the ink they are painted in; a record without `ink` paints in the images' own colours. */
 export interface BrandingPreset {
   id: string
   name: string
   mark?: string | BrandingAssetPair
   wordmark?: string | BrandingAssetPair
+  ink?: BrandInk
 }
 
 const ID = /^[a-z0-9][a-z0-9-]*$/
+
+/**
+ * The vendor lockups the skin carries (packages/assets/src/icons/combine/)
+ * offered as built-in presets, by brand id. A built-in preset's id is the brand
+ * id under VENDOR_PREFIX; it needs no record to be selected, and a record with
+ * its id carries only the reader's ink for it.
+ */
+export const BRANDING_VENDORS = ['openai', 'gemini', 'qwen', 'kimi', 'zai', 'minimax', 'grok', 'mistral', 'tencent', 'bytedance', 'stepfun', 'xiaomimimo'] as const
+const VENDOR_PREFIX = 'vendor-'
+
+/** The built-in presets' ids, in the order the manager lists them. */
+export const BRANDING_VENDOR_IDS: readonly string[] = BRANDING_VENDORS.map(brand => VENDOR_PREFIX + brand)
+
+/** The vendor brand id a built-in preset's id names, or undefined for any other id. */
+export function brandingVendorOf(id: string): string | undefined {
+  if (!id.startsWith(VENDOR_PREFIX)) return undefined
+  const brand = id.slice(VENDOR_PREFIX.length)
+  return (BRANDING_VENDORS as readonly string[]).includes(brand) ? brand : undefined
+}
 
 export function brandingSlot(kind: BrandImageKind, appearance: BrandingAppearance): BrandingSlot {
   return kind + '-' + appearance as BrandingSlot
@@ -80,6 +108,10 @@ export function parseBrandingPreset(text: string): BrandingPreset {
   const wordmark = asset(record.wordmark, 'wordmark')
   if (mark !== undefined) preset.mark = mark
   if (wordmark !== undefined) preset.wordmark = wordmark
+  if (record.ink !== undefined) {
+    if (!BRAND_INKS.includes(record.ink as BrandInk)) throw new Error('the ink is not one of ' + BRAND_INKS.join(', '))
+    preset.ink = record.ink as BrandInk
+  }
   return preset
 }
 
@@ -87,6 +119,7 @@ export function serializeBrandingPreset(preset: BrandingPreset) {
   const record: Record<string, unknown> = { id: preset.id, name: preset.name }
   if (preset.mark !== undefined) record.mark = preset.mark
   if (preset.wordmark !== undefined) record.wordmark = preset.wordmark
+  if (preset.ink !== undefined) record.ink = preset.ink
   return JSON.stringify(record)
 }
 

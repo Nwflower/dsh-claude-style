@@ -5,7 +5,7 @@
 import { OFFICIAL_MODEL_GROUP } from './services'
 import { PALETTE_SCHEME_CUSTOM, PALETTE_SCHEME_ENTRY_MAX, PALETTE_SCHEME_FOLLOW, PALETTE_SCHEME_ID_MAX, PALETTE_SCHEME_LIMIT, carryClassicInlineCode, carryCustomPalette, findPaletteScheme, normalizePaletteSchemes, parsePaletteScheme } from './palette-schemes'
 import { CURRENCIES, CURRENCY_CNY } from './prices'
-import { BRANDING_PRESET_ENTRY_MAX, BRANDING_PRESET_ID_MAX, BRANDING_PRESET_LIMIT, findBrandingPreset, normalizeBrandingPresets, parseBrandingPreset } from './branding-presets'
+import { BRAND_INK_ORIGINAL, BRAND_INKS, BRANDING_PRESET_ENTRY_MAX, BRANDING_PRESET_ID_MAX, BRANDING_PRESET_LIMIT, brandingVendorOf, findBrandingPreset, normalizeBrandingPresets, parseBrandingPreset } from './branding-presets'
 import { SOUND_LEVELS, SOUND_LEVEL_OFF } from './sound'
 
 /* ---------- the value vocabulary ---------- */
@@ -46,11 +46,7 @@ export const INLINE_CODE_COLOR_PALETTE = 'palette'
 export const INLINE_CODE_COLOR_CLASSIC = 'classic'
 export const INLINE_CODE_COLORS = [INLINE_CODE_COLOR_PALETTE, INLINE_CODE_COLOR_CLASSIC] as const
 
-/** How the brand art is painted: in its own colours, in the accent, or as a shape in the text colour. */
-export const BRAND_INK_ORIGINAL = 'original'
-export const BRAND_INK_ACCENT = 'accent'
-export const BRAND_INK_TEXT = 'text'
-export const BRAND_INKS = [BRAND_INK_ORIGINAL, BRAND_INK_ACCENT, BRAND_INK_TEXT] as const
+export { BRAND_INK_ACCENT, BRAND_INK_ORIGINAL, BRAND_INK_TEXT, BRAND_INKS } from './branding-presets'
 /** Longest accepted brand name. */
 export const BRAND_NAME_MAX = 40
 
@@ -272,8 +268,9 @@ export type PrefSpec = BooleanSpec | ChoiceSpec | TextSpec | ColorSpec | ListSpe
 export const PREFS = {
   brand: { type: 'choice', values: BRANDS, default: BRAND_CLAUDE, legacy: { [BRAND_DEEPSEEK_LEGACY]: BRAND_DEEPSEEK } },
   brandName: { type: 'text', default: '', max: BRAND_NAME_MAX },
+  /** The ink of the brand's own art while the brand marks follow the theme style; a preset carries its own. */
   brandInk: { type: 'choice', values: BRAND_INKS, default: BRAND_INK_ORIGINAL },
-  /** Empty keeps the legacy uploaded images; a preset id selects one named record. */
+  /** Empty follows the theme style's own art; a preset id selects one named record or a built-in vendor preset. */
   brandingPreset: { type: 'text', default: '', max: BRANDING_PRESET_ID_MAX },
   /** Named logo presets, stored canonically and also accepted as structured YAML records. */
   brandingPresets: { type: 'list', default: [], max: BRANDING_PRESET_LIMIT, entryMax: BRANDING_PRESET_ENTRY_MAX, drop: [] },
@@ -537,8 +534,8 @@ function carryBrandingPresets(out: Record<string, unknown>) {
   out.brandingPresets = merged.slice(0, BRANDING_PRESET_LIMIT)
   const selected = (out.brandingPresetOverride || out.brandingPreset) as string
   out.brandingPreset = selected
-  if (selected !== '' && findBrandingPreset(merged, selected) === undefined) {
-    problems.push(`the selected branding preset "${selected}" is not among the records; using the legacy images`)
+  if (selected !== '' && findBrandingPreset(merged, selected) === undefined && brandingVendorOf(selected) === undefined) {
+    problems.push(`the selected branding preset "${selected}" is neither a record nor a built-in preset; following the theme style`)
     out.brandingPreset = ''
   }
   for (const problem of problems) console.error(`dsh-claude-style: ${problem}`)

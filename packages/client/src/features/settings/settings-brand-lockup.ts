@@ -1,13 +1,13 @@
 import * as React from 'react'
 import { BRAND_IMAGE_MAX_BYTES, BRAND_IMAGE_TYPES } from '@dsh-claude-style/contracts/brand'
 import type { BrandImageKind } from '@dsh-claude-style/contracts/brand'
-import { brandingSlot, withBrandingAsset } from '@dsh-claude-style/contracts/branding-presets'
+import { brandingSlot, brandingVendorOf, withBrandingAsset } from '@dsh-claude-style/contracts/branding-presets'
 import type { BrandingAppearance, BrandingPreset } from '@dsh-claude-style/contracts/branding-presets'
 import { BRAND_CLAUDE, BRAND_NAME_MAX } from '../../constants'
-import { removeBrandImage, removeBrandingPresetAsset, uploadBrandImage, uploadBrandingPresetAsset } from '../../shared/custom-brand'
+import { removeBrandingPresetAsset, uploadBrandingPresetAsset } from '../../shared/custom-brand'
 import type { BrandImage } from '../../shared/custom-brand'
 import { readPrefs, savePrefs } from '../../core/prefs'
-import { storeBrandingPresetPatch } from '../../shared/branding-presets'
+import { brandingInkOf, brandingRecord, storeBrandingPresetPatch } from '../../shared/branding-presets'
 import { SeatArt, useBrandImages, WordArt, wordModeOf } from './brand-art'
 import type { Prefs } from '../../constants'
 import { copy } from './copy'
@@ -15,10 +15,11 @@ import { copy } from './copy'
 /**
  * The brand area as the brand editor's own drawn lockup (D30): the mark and the
  * word in the seats the sidebar paints them into, for the set the editor holds
- * — a preset's variant in one appearance, or the images kept outside any
- * preset. The seats write the same preferences and the same host routes the
- * sidebar reads: `brandName` for the typed name, the image routes or the
- * preset's managed assets for the mark and the wordmark.
+ * in one appearance. The seats write the same preferences and the same host
+ * routes the sidebar reads: `brandName` for the typed name, the preset's
+ * managed assets for the mark and the wordmark. The theme style's own art and
+ * the built-in presets hold images no seat replaces (a fixed set); the theme
+ * style's word seat still takes the typed name.
  *
  * The lockup is drawn here rather than moved from the sidebar: the sidebar's
  * identity is the host's own markup, painted by the theme's attribute
@@ -55,20 +56,14 @@ function useBrandSeat(kind: BrandImageKind, image: BrandImage | null, preset: Br
       setError(copy('brandImageSize'))
       return
     }
-    if (preset === undefined) {
-      run(uploadBrandImage(kind, file))
-      return
-    }
+    if (preset === undefined) throw new Error('dsh-claude-style: a fixed brand set takes no image')
     run((async () => {
       const ref = await uploadBrandingPresetAsset(preset.id, brandingSlot(kind, mode), file)
       await savePrefs(storeBrandingPresetPatch(readPrefs(), withBrandingAsset(preset, kind, mode, ref)))
     })())
   }
   const remove = () => {
-    if (preset === undefined) {
-      run(removeBrandImage(kind))
-      return
-    }
+    if (preset === undefined) throw new Error('dsh-claude-style: a fixed brand set takes no image')
     run((async () => {
       await savePrefs(storeBrandingPresetPatch(readPrefs(), withBrandingAsset(preset, kind, mode, null)))
       await removeBrandingPresetAsset(preset.id, brandingSlot(kind, mode))
@@ -161,14 +156,17 @@ function NameField(props: { value: string, onChange: (value: string) => void, on
 
 /**
  * The lockup: the mark seat and the name seat with its image button on one
- * plate, for the set `preset` names in the appearance `mode`. A set with no
+ * plate, for the set `id` names in the appearance `mode`. A set with no
  * pictures shows the brand's own art, which is what the sidebar shows; a seat
  * holding the reader's own picture offers its removal in the corner the action
  * plate leaves free.
  */
-export function BrandLockup(props: { prefs: Prefs, preset: BrandingPreset | undefined, mode: BrandingAppearance }) {
-  const { prefs, preset, mode } = props
-  const images = useBrandImages(preset, mode)
+export function BrandLockup(props: { prefs: Prefs, id: string, mode: BrandingAppearance }) {
+  const { prefs, id, mode } = props
+  // The theme style's art and the built-in presets are fixed sets: their images come with them.
+  const preset = brandingVendorOf(id) === undefined ? brandingRecord(prefs, id) : undefined
+  const ink = brandingInkOf(prefs, id)
+  const images = useBrandImages(prefs, id, mode)
   const mark = useBrandSeat('mark', images.mark, preset, mode)
   const word = useBrandSeat('wordmark', images.wordmark, preset, mode)
   const [editing, setEditing] = React.useState(false)
@@ -200,7 +198,10 @@ export function BrandLockup(props: { prefs: Prefs, preset: BrandingPreset | unde
   }
 
   const wordMode = wordModeOf(images, prefs)
-  const remove = (seat: Seat, className: string) => seat.image === null ? null : React.createElement(
+  const fixed = preset === undefined
+  /** A fixed seat: the art alone, which no click replaces. */
+  const still = (art: React.ReactElement) => React.createElement('span', { className: 'dsh-claude-brand-seat' }, art)
+  const remove = (seat: Seat, className: string) => fixed || seat.image === null ? null : React.createElement(
     'button',
     {
       type: 'button',
@@ -216,12 +217,12 @@ export function BrandLockup(props: { prefs: Prefs, preset: BrandingPreset | unde
   return React.createElement(
     'div',
     { className: 'dsh-claude-brand-lockup', 'data-brand': prefs.brand === BRAND_CLAUDE ? 'claude' : 'deepseek' },
-    SeatPicker({ seat: mark }),
-    SeatPicker({ seat: word }),
+    fixed ? null : SeatPicker({ seat: mark }),
+    fixed ? null : SeatPicker({ seat: word }),
     React.createElement(
       'div',
       { className: 'dsh-claude-brand-zone dsh-claude-brand-zone-mark' },
-      React.createElement(
+      fixed ? still(React.createElement(SeatArt, { kind: 'mark', image: mark.image, prefs, ink })) : React.createElement(
         'button',
         {
           type: 'button',
@@ -230,7 +231,7 @@ export function BrandLockup(props: { prefs: Prefs, preset: BrandingPreset | unde
           'aria-label': mark.image === null ? copy('brandMarkUpload') : copy('brandMarkReplace'),
           onClick: mark.open,
         },
-        React.createElement(SeatArt, { kind: 'mark', image: mark.image, prefs }),
+        React.createElement(SeatArt, { kind: 'mark', image: mark.image, prefs, ink }),
         React.createElement(SeatPlate, { icon: 'upload' }),
       ),
       remove(mark, 'dsh-claude-brand-clear-mark'),
@@ -240,7 +241,7 @@ export function BrandLockup(props: { prefs: Prefs, preset: BrandingPreset | unde
       { className: 'dsh-claude-brand-zone dsh-claude-brand-zone-word' },
       editing
         ? NameField({ value: draft, onChange: change, onDone: done, onCancel: cancel })
-        : React.createElement(
+        : fixed && wordMode === 'image' ? still(React.createElement(WordArt, { images, prefs, ink })) : React.createElement(
           'button',
           {
             type: 'button',
@@ -249,10 +250,10 @@ export function BrandLockup(props: { prefs: Prefs, preset: BrandingPreset | unde
             'aria-label': wordMode === 'image' ? copy('brandWordmarkReplace') : copy('brandNameEdit'),
             onClick: wordMode === 'image' ? word.open : () => { setDraft(prefs.brandName); setEditing(true) },
           },
-          React.createElement(WordArt, { images, prefs }),
+          React.createElement(WordArt, { images, prefs, ink }),
           React.createElement(SeatPlate, { icon: wordMode === 'image' ? 'upload' : 'pencil' }),
         ),
-      editing ? null : ImageButton({ seat: word }),
+      editing || fixed ? null : ImageButton({ seat: word }),
       remove(word, 'dsh-claude-brand-clear-word'),
     ),
     problem === null ? null : React.createElement('div', { className: 'dsh-claude-brand-error', role: 'alert' }, problem),

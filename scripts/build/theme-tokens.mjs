@@ -272,10 +272,13 @@ export function tokenSheet(doc, gates, images) {
     }
   }
   // One block per brand, from the card that brand defaults to; a card no brand defaults to draws no brand art.
+  // The own ink repeats it under a name the selected set's ink never overrides (brand.ts), for drawing another set beside it.
   for (const [brand, preset] of Object.entries(gates.brand.defaults)) {
     for (const scheme of SCHEMES) {
+      const ink = values.get(preset).get(scheme).get('--dsh-claude-logo-ink')
       blocks.push(tokenBlock(`${palette}${gate(gates.brand, brand)}${schemeOf(scheme)}`, [
-        ['--dsh-claude-logo-ink', values.get(preset).get(scheme).get('--dsh-claude-logo-ink')],
+        ['--dsh-claude-logo-ink', ink],
+        ['--dsh-claude-logo-ink-own', ink],
       ]))
     }
   }
@@ -291,7 +294,7 @@ export function tokenSheet(doc, gates, images) {
     tokenBlock(`${SCOPE}${light}`, doc.apex.map((item) => [item.token, item.light])),
     ...blocks,
     ...customPaletteBlocks(doc, gates),
-    tokenBlock(`${SCOPE}${gate(gates.palette, gates.palette.host)}`, doc.palette.tokens.flatMap((spec) => (spec.host === undefined ? [] : [[spec.token, spec.host]]))),
+    tokenBlock(`${SCOPE}${gate(gates.palette, gates.palette.host)}`, doc.palette.tokens.flatMap((spec) => (spec.host === undefined ? [] : spec.token === '--dsh-claude-logo-ink' ? [[spec.token, spec.host], ['--dsh-claude-logo-ink-own', spec.host]] : [[spec.token, spec.host]]))),
   ].filter((block) => block !== '').join('\n')
 }
 

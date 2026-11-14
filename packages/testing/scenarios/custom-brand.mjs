@@ -9,8 +9,10 @@
  * way the settings page does — through the host's fence, with the page's own
  * cookie — and holds each refusal to its status: a type the route does not
  * take, bytes that do not open the way their type requires, a body over the
- * size limit. Then it reloads and reads where the real shell paints the
- * images: the sidebar's mark and wordmark, the hero's mark. The images are
+ * size limit. Images kept outside any preset move into a preset of their own
+ * on the next load, which the page selects: the scenario reloads, waits for
+ * the move, and reads where the real shell paints the moved images — the
+ * sidebar's mark and wordmark, the hero's mark. The moved preset's images are
  * removed before the scenario ends, so the home the next scenario boots on
  * carries none.
  */
@@ -20,7 +22,11 @@ const ROUTES = {
   status: '/dsh-claude-style/brand',
   mark: '/dsh-claude-style/brand/mark',
   wordmark: '/dsh-claude-style/brand/wordmark',
+  asset: '/dsh-claude-style/branding/asset',
 }
+
+/** The preset the moved images land in: the first free id of an empty home. */
+const MOVED = 'preset-1'
 
 /** One step past the host half's size limit (packages/contracts/src/brand.ts). */
 const OVERSIZED_BYTES = 2 * 1024 * 1024 + 1
@@ -70,16 +76,31 @@ async function readPainted(page) {
   })
 }
 
-/** Remove both images and answer the status left behind. */
-const removeImages = (page) => page.evaluate(async (routes) => {
+/** Remove the moved preset's images and both images outside any preset, and answer the status left behind outside any preset. */
+const removeImages = (page) => page.evaluate(async ({ routes, moved }) => {
+  for (const slot of ['mark-light', 'mark-dark', 'wordmark-light', 'wordmark-dark']) {
+    await fetch(routes.asset + '?' + new URLSearchParams({ id: moved, slot }).toString(), { method: 'DELETE' })
+  }
   for (const url of [routes.mark, routes.wordmark]) await fetch(url, { method: 'DELETE' })
   return (await fetch(routes.status)).json()
-}, ROUTES)
+}, { routes: ROUTES, moved: MOVED })
+
+/** What the move left outside any preset, once it has removed the originals (the removal follows the painting). */
+const readLegacy = (page) => page.evaluate(async (route) => {
+  let status = null
+  for (let look = 0; look < 50; look++) {
+    status = await (await fetch(route)).json()
+    if (status.mark === null && status.wordmark === null) break
+    await new Promise((settle) => setTimeout(settle, 100))
+  }
+  return status
+}, ROUTES.status)
 
 function customBrandScenario({ check }) {
   /** What beforeSend read, for assert to judge. */
   let routes = null
   let painted = null
+  let left = null
   let after = null
   return {
     script: 'greeting',
@@ -89,6 +110,7 @@ function customBrandScenario({ check }) {
         routes = await driveRoutes(page)
         await page.reload()
         painted = await readPainted(page)
+        left = await readLegacy(page)
       } finally {
         after = await removeImages(page)
       }
@@ -110,14 +132,16 @@ function customBrandScenario({ check }) {
         check('图按自己的类型送出，带禁止脚本的安全策略',
           routes.served.status === 200 && routes.served.type === 'image/png' && /sandbox/.test(routes.served.policy ?? ''),
           JSON.stringify(routes.served)),
-        check('侧栏的标志与新会话页的标志画的是这张图',
-          painted.mark !== null && painted.mark.image.includes(ROUTES.mark) && painted.mark.width === '18px' &&
-            painted.hero !== null && painted.hero.image.includes(ROUTES.mark),
+        check('重载后两张图移进一个新预设，预设外不再留图',
+          left.mark === null && left.wordmark === null, JSON.stringify(left)),
+        check('侧栏的标志与新会话页的标志画的是移进预设的这张图',
+          painted.mark !== null && painted.mark.image.includes(ROUTES.asset) && painted.mark.image.includes(MOVED) && painted.mark.width === '18px' &&
+            painted.hero !== null && painted.hero.image.includes(ROUTES.asset),
           JSON.stringify({ mark: painted.mark, hero: painted.hero })),
         check('文字标志按 4:1 的比例随 18 像素高度换算宽度',
-          painted.word !== null && painted.word.image.includes(ROUTES.wordmark) && painted.word.width === '72px' && painted.word.height === '18px',
+          painted.word !== null && painted.word.image.includes(ROUTES.asset) && painted.word.width === '72px' && painted.word.height === '18px',
           JSON.stringify(painted.word)),
-        check('移除之后状态里两张都不在', after.mark === null && after.wordmark === null, JSON.stringify(after)),
+        check('移除之后预设外两张都不在', after.mark === null && after.wordmark === null, JSON.stringify(after)),
         check('控制台没有异常', problems.length === 0, problems.slice(0, 3).join(' | ')),
       ]
     },

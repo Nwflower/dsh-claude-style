@@ -1,10 +1,12 @@
-import { BRAND_DEFAULT_PRESETS, BRAND_INK_ACCENT, BRAND_INK_ATTR, BRAND_INK_ORIGINAL, BRAND_INK_TEXT, CUSTOM_EDGES_ATTR, CUSTOM_MARK_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_TINT_ATTR, CUSTOM_WORD_ATTR, CUSTOM_WORD_IMAGE, CUSTOM_WORD_TEXT } from '../../constants'
+import { BRAND_DEFAULT_PRESETS, BRAND_INK_ATTR, BRAND_INK_ORIGINAL, CUSTOM_EDGES_ATTR, CUSTOM_MARK_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_TINT_ATTR, CUSTOM_WORD_ATTR, CUSTOM_WORD_IMAGE, CUSTOM_WORD_TEXT } from '../../constants'
 import { readPrefs, subscribePrefs } from '../../core/prefs'
 import { accentInk } from '../../shared/contrast'
 import { activeScheme } from '../../shared/palette-scheme'
 import { loadBrandImages, readBrandImages, resetBrandImages, subscribeBrandImages } from '../../shared/custom-brand'
+import { brandingInkOf, brandInkColour } from '../../shared/branding-presets'
 import { BRAND_PROPERTIES, cssString, MARK_PROPERTY, WORD_PROPERTY, WORD_RATIO_PROPERTY, NAME_PROPERTY, ACCENT_PROPERTY, ACCENT_INK_PROPERTY, CANVAS_LIGHT_PROPERTY, CANVAS_DARK_PROPERTY, TEXT_LIGHT_PROPERTY, TEXT_DARK_PROPERTY, CODE_LIGHT_PROPERTY, CODE_DARK_PROPERTY, LINK_LIGHT_PROPERTY, LINK_DARK_PROPERTY, SIDEBAR_LIGHT_PROPERTY, SIDEBAR_DARK_PROPERTY, BUBBLE_LIGHT_PROPERTY, BUBBLE_DARK_PROPERTY, LOGO_INK_PROPERTY } from './brand-properties'
 import { PALETTE_CARDS } from 'virtual:dsh-claude-style/generated'
+import { copy } from './copy'
 
 /**
  * The custom brand layer (D97): the reader's own name, images and the colours
@@ -13,9 +15,9 @@ import { PALETTE_CARDS } from 'virtual:dsh-claude-style/generated'
  * attribute the stylesheets switch on (brand.css, and the account avatar's rule
  * in account-footer.css) and the value as a custom property — so a reader who
  * supplied nothing gets the brand's own art and colours untouched. The one part
- * that stands without an image is the image-colour choice: it names the ink the
- * brand's own art is drawn in, so it writes --dsh-claude-logo-ink under either
- * brand (`accent` and `text` in the settings' row).
+ * that stands without an image is the selected set's ink (brandingInkOf): it
+ * names the ink the brand's own art is drawn in, so it writes
+ * --dsh-claude-logo-ink under either brand.
  *
  * The colours are seeds: the token sheet turns them into the whole palette at
  * runtime (scripts/build/theme-tokens.mjs), which is why they are written as
@@ -55,8 +57,9 @@ export function install() {
     property(WORD_RATIO_PROPERTY, wordmark === null ? null : String(wordmark.ratio))
     property(NAME_PROPERTY, wordmark === null && prefs.brandName !== '' ? cssString(prefs.brandName) : null)
     const images = mark !== null || wordmark !== null
-    attribute(CUSTOM_TINT_ATTR, prefs.brandInk !== BRAND_INK_ORIGINAL && images ? '' : null)
-    attribute(BRAND_INK_ATTR, prefs.brandInk === BRAND_INK_ACCENT ? BRAND_INK_ACCENT : prefs.brandInk === BRAND_INK_TEXT ? BRAND_INK_TEXT : null)
+    const ink = brandingInkOf(prefs)
+    attribute(CUSTOM_TINT_ATTR, ink !== BRAND_INK_ORIGINAL && images ? '' : null)
+    attribute(BRAND_INK_ATTR, ink === BRAND_INK_ORIGINAL ? null : ink)
     attribute(CUSTOM_PALETTE_ATTR, custom ? '' : null)
     property(ACCENT_PROPERTY, custom ? accent : null)
     property(ACCENT_INK_PROPERTY, custom ? accentInk(accent) : null)
@@ -76,14 +79,12 @@ export function install() {
     property(BUBBLE_LIGHT_PROPERTY, kept('light', card.bubble))
     property(BUBBLE_DARK_PROPERTY, kept('dark', card.bubble))
     // The art's ink is a sheet token; this choice sits above every palette block, so it is written inline.
-    property(LOGO_INK_PROPERTY, prefs.brandInk === BRAND_INK_ACCENT
-      ? 'var(--dsw-alias-brand-primary)'
-      : prefs.brandInk === BRAND_INK_TEXT ? 'var(--dsw-alias-label-primary)' : null)
+    property(LOGO_INK_PROPERTY, brandInkColour(ink))
   }
 
   const offPrefs = subscribePrefs(apply)
   const offImages = subscribeBrandImages(apply)
-  loadBrandImages()
+  loadBrandImages(() => copy('brandingPresetMoved'))
   apply()
 
   return () => {

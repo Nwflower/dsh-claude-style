@@ -93,7 +93,7 @@ body[data-dsh-claude-style] .dsh-claude-brand-seat {
   transition: background-color var(--dsh-claude-duration-feedback) var(--dsh-claude-ease-standard);
 }
 
-body[data-dsh-claude-style] .dsh-claude-brand-seat:hover,
+body[data-dsh-claude-style] .dsh-claude-brand-seat:enabled:hover,
 body[data-dsh-claude-style] .dsh-claude-brand-seat:focus-visible {
   background: var(--dsh-claude-hover-bg);
 }
@@ -103,7 +103,7 @@ body[data-dsh-claude-style] .dsh-claude-brand-seat:focus-visible {
   outline-offset: 0;
 }
 
-body[data-dsh-claude-style] .dsh-claude-brand-seat:disabled {
+body[data-dsh-claude-style] .dsh-claude-brand-seat:not(:enabled) {
   cursor: default;
 }
 

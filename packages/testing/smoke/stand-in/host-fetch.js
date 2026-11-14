@@ -23,12 +23,16 @@
   window.fetch = function (input, init) {
     var url = typeof input === 'string' ? input : (input && input.url) || ''
     if (url === '/dsh-claude-style/username') return Promise.resolve(jsonResponse({ ok: true, username: 'Tester' }))
-    if (url === '/dsh-claude-style/brand') {
-      // The custom-brand case holds both images; the bytes are the runner's to
-      // serve (packages/testing/smoke.cjs), since the page loads them as images.
-      return Promise.resolve(jsonResponse(CASE === 'custom-brand'
-        ? { ok: true, mark: { type: 'image/png', version: '1-1' }, wordmark: { type: 'image/svg+xml', version: '1-1' } }
-        : { ok: true, mark: null, wordmark: null }))
+    if (url === '/dsh-claude-style/brand') return Promise.resolve(jsonResponse({ ok: true, mark: null, wordmark: null }))
+    if (url === '/dsh-claude-style/branding/status' && CASE === 'custom-brand') {
+      // The custom-brand case's preset holds both images; the bytes are the
+      // runner's to serve (packages/testing/smoke/server.mjs), since the page
+      // loads them as images.
+      return Promise.resolve(jsonResponse({
+        ok: true,
+        mark: { type: 'image/png', version: '1-1', url: '/dsh-claude-style/brand/mark?v=1-1' },
+        wordmark: { type: 'image/svg+xml', version: '1-1', url: '/dsh-claude-style/brand/wordmark?v=1-1' },
+      }))
     }
     if (url === '/dsh-claude-style/hdsl') {
       // Three launcher cases: the player's own atlas, a built-in figure (no
