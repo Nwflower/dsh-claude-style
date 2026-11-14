@@ -73,19 +73,22 @@ body[data-dsh-claude-style] .dsh-claude-home-heat {
 }
 
 /* Claude Code's heat grid is a blue data ramp, not the brand ember: the empty
-   cell stays the neutral base tone, and each level mixes in the data blue by
-   its share of the ramp (constants.ts's HOME_HEAT_RAMP; the build writes one
-   rule per level, scripts/build/feature-sheets.mjs). The Models chart uses its
-   own categorical tokens; the heat grid keeps this one luminance ramp. */
+   cell is the neutral base tone, and each level mixes the data blue into that
+   same tone by its share of the ramp (constants.ts's HOME_HEAT_RAMP; the build
+   writes one rule per level, scripts/build/feature-sheets.mjs). Mixing into the
+   empty tone keeps every level at least as solid as an empty day, so the
+   faintest level reads as a tinted empty cell and never as a hole. The Models
+   chart uses its own categorical tokens; the heat grid keeps this one ramp. */
 body[data-dsh-claude-style] .dsh-claude-home-heat {
   --dsh-claude-heat-ink: var(--dsh-claude-data-ink);
+  --dsh-claude-heat-empty: color-mix(in srgb, var(--dsw-alias-label-primary, #161616) 11%, transparent);
 }
 
 body[data-dsh-claude-style] .dsh-claude-home-heat-cell {
   position: relative;
   aspect-ratio: 1;
   border-radius: 3px;
-  background: color-mix(in srgb, var(--dsw-alias-label-primary, #161616) 11%, transparent);
+  background: var(--dsh-claude-heat-empty);
 }
 
 /* Claude Code's day tip: one pill the grid carries, which names the day the

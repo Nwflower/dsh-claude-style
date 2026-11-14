@@ -32,7 +32,7 @@ function revealSteps(constants) {
 
 
 function heatLevels(constants) {
-  return constants.HOME_HEAT_RAMP.map((share, index) => `${SCOPE} .dsh-claude-home-heat-cell[data-level="${index + 1}"] {\n  background: color-mix(in srgb, var(--dsh-claude-heat-ink) ${share}%, transparent);\n}\n`).join('\n')
+  return constants.HOME_HEAT_RAMP.map((share, index) => `${SCOPE} .dsh-claude-home-heat-cell[data-level="${index + 1}"] {\n  background: color-mix(in srgb, var(--dsh-claude-heat-ink) ${share}%, var(--dsh-claude-heat-empty));\n}\n`).join('\n')
 }
 
 const GENERATORS = { 'reveal-steps': revealSteps, 'heat-levels': heatLevels }

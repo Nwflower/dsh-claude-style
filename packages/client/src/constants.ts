@@ -238,9 +238,9 @@ export const HOME_LAYOUT_ATTR = 'data-dsh-claude-home-layout'
 /** Present while the studio layout owns the page shown: the studio layout is in force and the page is the new-conversation hero.
  * Every studio rule keys on it, so the host's hero-phase marker is read once per pass in JS rather than repeated across the stylesheet. */
 export const HOME_HERO_ATTR = 'data-dsh-claude-home-hero'
-/** The heat grid's ramp: how much of the heat ink each level paints, in percent, faintest first. Its length is the number of levels a day's tokens are bucketed into (features/home/data.ts); the build writes one rule per level from it (scripts/build/feature-sheets.mjs).
- * Not even steps: the low levels stay apart from each other and from the empty cell. */
-export const HOME_HEAT_RAMP = [8, 28, 52, 76, 100] as const
+/** The heat grid's ramp: how much of the heat ink each level mixes into the empty cell's tone, in percent, faintest first. Its length is the number of levels a day's tokens are bucketed into (features/home/data.ts); the build writes one rule per level from it (scripts/build/feature-sheets.mjs).
+ * The first share is large enough that the faintest level reads as blue beside an empty day in both themes; the rest step evenly up to the full ink. */
+export const HOME_HEAT_RAMP = [24, 44, 64, 82, 100] as const
 /** The host half's private routes, under this half's own names; the paths are the shared contract (packages/contracts/src/routes.ts, D73), declared once for both halves. */
 export {
   BRAND_MARK_PATH as BRAND_MARK_ROUTE,
