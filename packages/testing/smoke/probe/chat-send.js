@@ -139,10 +139,11 @@
       sendFlow.appendChild(holdRow)
       // The hand-over lands on the row's own pass; a loaded runner takes it
       // later than a fixed pause, so wait for the stand-in to go, bounded.
-      var handedGhost = document.querySelector('[data-dsh-claude-send-ghost]')
+      var handedSelector = '[data-dsh-claude-send-ghost]'
+      var handedGhost = document.querySelector(handedSelector)
       for (var handedWait = 0; handedWait < 1500 && handedGhost !== null; handedWait += 50) {
         await sleep(50)
-        handedGhost = document.querySelector('[data-dsh-claude-send-ghost]')
+        handedGhost = document.querySelector(handedSelector)
       }
       r.send.handed = {
         ghost: handedGhost !== null,
