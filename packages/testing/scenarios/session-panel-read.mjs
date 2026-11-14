@@ -13,6 +13,11 @@ import { sanitizePage } from '../../../scripts/shared/privacy.mjs'
 /** The part mark the skin writes on a host element, read from the surface table rather than spelled here (D92). */
 const PART = surfaceTable.surface.find((entry) => entry.id === 'skin.part')?.attribute
 if (PART === undefined) throw new Error('session-panel: skin.part names no attribute')
+/** The resolved motion answer's mark, read from the same table (D40, D92). */
+const MOTION = surfaceTable.surface.find((entry) => entry.id === 'skin.motion')?.attribute
+if (MOTION === undefined) throw new Error('session-panel: skin.motion names no attribute')
+/** The value the mark carries while the animation choice holds still (D40). */
+const MOTION_REDUCED = 'reduced'
 
 /** Every retained capture passes the same privacy sweep as the release shots (D92). */
 async function capturePanel(page, file) {
@@ -71,6 +76,33 @@ const readRail = (page) => page.evaluate(({ headings }) => {
     preset: sectionOf(headings.environment)?.querySelector('.dsh-claude-details-preset .dsh-claude-panel-title')?.textContent ?? null,
   }
 }, { headings: HEADINGS })
+
+/**
+ * The context bar's cover and parts, read under the choice standing and again
+ * under the Reduced one: the cover is the reveal's own ink, and the choice that
+ * leaves the reveal out must leave the cover out too, so the parts keep the
+ * widths they draw at the other choice (session-panel.css).
+ */
+const readContextBar = (page) => page.evaluate(({ attribute, reduced }) => {
+  const bar = document.querySelector('.dsh-claude-panel-bar')
+  if (bar === null) return null
+  const read = () => ({
+    cover: getComputedStyle(bar, '::after').transform,
+    coverAnimation: getComputedStyle(bar, '::after').animationName,
+    parts: [...bar.querySelectorAll('.dsh-claude-panel-segment')].map((part) => ({
+      width: Math.round(part.getBoundingClientRect().width * 100) / 100,
+      color: getComputedStyle(part).backgroundColor,
+    })),
+  })
+  const body = document.body
+  const standing = body.getAttribute(attribute)
+  const standingChoice = read()
+  body.setAttribute(attribute, reduced)
+  const reducedChoice = read()
+  if (standing === null) body.removeAttribute(attribute)
+  else body.setAttribute(attribute, standing)
+  return { standing: standingChoice, reduced: reducedChoice }
+}, { attribute: MOTION, reduced: MOTION_REDUCED })
 
 /** The header's preset label, the words the rail repeats: the label's own part, not the whole actions slot, which also carries the host's job and subagent chips. */
 const readPreset = (page) => page.evaluate((attribute) => (document.querySelector(`[${attribute}~="header-label"]`)?.textContent ?? '').trim(), PART)
@@ -155,4 +187,4 @@ const readDisclosures = page => page.evaluate(() => [...document.querySelectorAl
   reading: section.querySelector('.dsh-claude-panel-section-reading')?.innerText ?? '',
 })))
 
-export { PART, capturePanel, words, anyOf, HEADINGS, FOLDED_HEADINGS, readRail, readPreset, presetLabelDrawn, readHeaderActions, readUtilities, pressDetails, railMounted, railSqueezes, readRightPanel, pressRightPanel, readDisclosures }
+export { PART, MOTION, MOTION_REDUCED, capturePanel, words, anyOf, HEADINGS, FOLDED_HEADINGS, readRail, readContextBar, readPreset, presetLabelDrawn, readHeaderActions, readUtilities, pressDetails, railMounted, railSqueezes, readRightPanel, pressRightPanel, readDisclosures }

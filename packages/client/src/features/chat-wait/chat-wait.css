@@ -334,12 +334,14 @@ body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-orbit {
   --dsh-claude-dot-fade: 0.125;
 }
 
-/* The reader's animation choice (D40): the theme presses every animation to a
-   hundredth of a millisecond but leaves the iteration count alone, so pausing
-   holds each dot at its own phase instead of strobing. wait-loader.ts lays a
-   change down at once under that choice. */
+/* The reader's animation choice (D40): the lane stands on its still frame — the
+   dots on their own places, with no keyframe to read — and the loader takes no
+   other motion up (wait-loader.ts). Pausing alone does not hold them: the
+   hand-over gives each dot's motion a start time, which starts it running
+   again, and at the reduced net's centisecond that spins through every
+   keyframe. */
 body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-chat-wait-lane .dsh-claude-chat-wait-dot {
-  animation-play-state: paused;
+  animation: none;
 }
 
 /* The dot flattens against the floor as it leaves and rounds out on the way up.

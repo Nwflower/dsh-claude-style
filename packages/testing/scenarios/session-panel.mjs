@@ -19,7 +19,7 @@ import { MARKS } from '../lane.mjs'
 import { sendPrompt, waitForTurn } from '../prompt.mjs'
 import { sanitizePage } from '../../../scripts/shared/privacy.mjs'
 import {
-  PART, HEADINGS, FOLDED_HEADINGS, words, anyOf, capturePanel, readRail, readPreset,
+  PART, HEADINGS, FOLDED_HEADINGS, words, anyOf, capturePanel, readRail, readContextBar, readPreset,
   presetLabelDrawn, readHeaderActions, readUtilities, pressDetails, railMounted, railSqueezes,
   readRightPanel, pressRightPanel, readDisclosures,
 } from './session-panel-read.mjs'
@@ -150,6 +150,7 @@ export function sessionPanelScenario({ check }) {
       notes.preset = await readPreset(page)
       notes.presetLabel = { standing: await presetLabelDrawn(page) }
       notes.rail = await readRail(page)
+      notes.contextBar = await readContextBar(page)
       // Section controls are independent, retain their choice through a poll,
       // and keep the browser's Enter and Space activation (D94). The two
       // figures sections start folded, so only the open ones are pressed shut.
@@ -443,6 +444,10 @@ export function sessionPanelScenario({ check }) {
       const changesWords = words('changes')
       const processWords = words('jobs')
       const statsWords = words('sessionStats')
+      /** The horizontal scale a transform leaves on its element: the bar's cover reads as a matrix. */
+      const coverScaleX = (transform) => typeof transform === 'string' && transform.startsWith('matrix(')
+        ? Number(transform.slice('matrix('.length).split(',')[0])
+        : Number.NaN
       return [
         check('the header control leads to the rail and no guide card does',
           notes.entry?.header === true && notes.entry?.guide === true,
@@ -454,6 +459,11 @@ export function sessionPanelScenario({ check }) {
         check('the rail shows the environment first', anyOf(environmentWords, (rail.headings ?? []).join('|')), JSON.stringify(rail.headings ?? null)),
         check('the rail names the working directory', /workspace/.test(rail.environment ?? ''), (rail.environment ?? '').slice(0, 160)),
         check('the context section arrives with the turn', anyOf(contextWords, (rail.headings ?? []).join('|')) && (rail.context ?? []).length >= 2, JSON.stringify(rail.context ?? null)),
+        check('the Reduced choice leaves the context bar\'s parts uncovered: the cover collapses and the parts keep the widths of the other choice',
+          notes.contextBar?.reduced?.coverAnimation === 'none' && coverScaleX(notes.contextBar?.reduced?.cover) === 0 &&
+            (notes.contextBar?.reduced?.parts ?? []).length > 0 &&
+            JSON.stringify(notes.contextBar?.reduced?.parts) === JSON.stringify(notes.contextBar?.standing?.parts),
+          JSON.stringify(notes.contextBar ?? null)),
         check('the first frame stands environment, context and both figures sections, the unread rows under placeholders',
           notes.firstFrame?.occupancy === true && notes.firstFrame?.busy === true && notes.firstFrame?.placeholders > 0 &&
             (notes.firstFrame?.headings ?? []).length === 4 &&

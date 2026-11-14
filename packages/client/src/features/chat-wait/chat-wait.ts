@@ -3,13 +3,13 @@ import { observeMatches } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { closestConversationSession, conversationSessionId, findChatTarget } from '@dsh-claude-style/engine/host'
 import { hostChatCopy, hostChatSeat } from '../../core/i18n'
-import { readPrefs, subscribePrefs } from '../../core/prefs'
+import { motionReduced, readPrefs, subscribePrefs } from '../../core/prefs'
 import { buildElement, writeTextInPlace } from '@dsh-claude-style/engine/dom'
 import { formatHostDuration } from '../../shared/format'
 import { motionMs } from '../../shared/motion'
 import { releaseSwappingText, setSwappingText } from '../../shared/swapping-text'
 import { activityWords, waitingWord, THINKING_KEY } from '../../shared/turn-activity'
-import { startWaitLoader, releaseWaitLoader } from './wait-loader'
+import { startWaitLoader, releaseWaitLoader, resyncWaitLoader } from './wait-loader'
 import { CHAT_FLOW_SELECTOR, CHAT_RUNNING_SELECTOR, CHAT_RUNNING_HOLDING_ATTRIBUTE, CHAT_RUNNING_TEXT_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { WAIT_OVERTIME_MS, openTurn, waitStart, wordForPass } from './wait-state'
 import { foreignRunningLineOwns } from './running-owner'
@@ -87,9 +87,18 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const badgeTimers = new Set<number>()
 
   // The detail choice is read on every pass; a change of it rewrites the line
-  // at once rather than waiting out the standing word's lock.
+  // at once rather than waiting out the standing word's lock. The animation
+  // answer moves the loaders standing on the page with it: a rotation armed under
+  // the other answer would fold the next motion in place with nothing moving the
+  // dots (wait-loader.ts).
   let detailChoice = readPrefs().statusDetail
-  const offDetailChoice = subscribePrefs(prefs => {
+  let motionChoice = motionReduced()
+  const offPrefs = subscribePrefs(prefs => {
+    const reducedNow = motionReduced()
+    if (reducedNow !== motionChoice) {
+      motionChoice = reducedNow
+      for (const line of lines.values()) resyncWaitLoader(line.loader)
+    }
     if (prefs.statusDetail === detailChoice) return
     detailChoice = prefs.statusDetail
     wording.clear()
@@ -419,7 +428,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (cancelTailPass !== null) cancelTailPass()
     cancelTailPass = null
     tailReadings = null
-    offDetailChoice()
+    offPrefs()
     runningRows.release()
     for (const exit of badgeTimers) window.clearTimeout(exit)
     badgeTimers.clear()

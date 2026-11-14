@@ -58,10 +58,10 @@ body[data-dsh-claude-style] .dsh-claude-panel-segment {
   transition: width var(--dsh-claude-duration-reveal) var(--dsh-claude-ease-out);
 }
 
-body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-panel-bar::after,
-body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-panel-segment {
+/* The reveal's own ink covers the parts; left out, its last frame stands. */
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-panel-bar::after {
   animation: none;
-  transition: none;
+  transform: scaleX(0);
 }
 
 /* The occupancy before its composition is read: one bar, in the ink the whole

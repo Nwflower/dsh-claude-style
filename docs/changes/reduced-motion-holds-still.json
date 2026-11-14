@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-14",
+  "group": "fixes",
+  "order": 0,
+  "external": true,
+  "zh": "修复「动画」设为「减弱」时状态行加载点仍飞速换帧而抽搐、详情栏上下文色块被扫光遮罩盖住不显示的问题",
+  "en": "Fix the waiting line's dots racing through their frames and the details rail's context parts hidden under the reveal cover when the animation choice is Reduced"
+}

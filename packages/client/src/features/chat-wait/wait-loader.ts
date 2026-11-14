@@ -17,6 +17,13 @@ const LANES: { motion: WaitLoaderMotion; lane: string; dots: number }[] = [
   { motion: 'orbit', lane: 'is-orbit', dots: 4 },
 ]
 
+/**
+ * The motion the Reduced choice rests on: the bounce lane's three dots on their
+ * own places are a still frame with no keyframe to read, and every line opens on
+ * the same one so a rebuilt row does not change the picture (chat-wait.css).
+ */
+const STILL_MOTION: WaitLoaderMotion = 'bounce'
+
 /** The lane in play, the one on its way out, and the one out of the page. */
 const ACTIVE = 'is-active'
 const LEAVING = 'is-leaving'
@@ -357,7 +364,10 @@ function handOver(loader: HTMLElement, state: LoaderState, from: WaitLoaderMotio
   state.motion = to
   const handOvers = ++state.handOvers
   if (from === null) {
-    open(loader, to)
+    // Under the Reduced choice there is no motion to read and none to hand over:
+    // the lane is placed on the still frame its stylesheet keeps for it.
+    if (motionReduced()) place(loader, to, null)
+    else open(loader, to)
     return
   }
   if (motionReduced()) {
@@ -401,13 +411,37 @@ function rotate(loader: HTMLElement, state: LoaderState) {
  */
 export function startWaitLoader(loader: HTMLElement) {
   if (loaders.has(loader)) return
-  const opening = LANES[Math.floor(Math.random() * LANES.length)].motion
+  const opening = motionReduced() ? STILL_MOTION : LANES[Math.floor(Math.random() * LANES.length)].motion
   const state: LoaderState = { motion: opening, timer: null, handOvers: 0 }
   loaders.set(loader, state)
   handOver(loader, state, null, opening)
   // Under the Reduced choice the loader holds one frame and never takes another
   // up: a rotation would be a visible jump with nothing moving the dots.
   if (!motionReduced()) rotate(loader, state)
+}
+
+/**
+ * Put one loader on the animation choice the reader holds now: under the
+ * Reduced choice it rests on the still frame and takes no other motion up, and
+ * otherwise its rotation is armed again. The choice can flip while a line
+ * stands, and a timer armed under the other answer would fold the next motion
+ * in place with nothing moving the dots.
+ */
+export function resyncWaitLoader(loader: HTMLElement) {
+  const state = loaders.get(loader)
+  if (state === undefined) return
+  if (state.timer !== null) {
+    window.clearTimeout(state.timer)
+    state.timer = null
+  }
+  dropHandOver(loader)
+  if (motionReduced()) {
+    state.motion = STILL_MOTION
+    place(loader, STILL_MOTION, null)
+    return
+  }
+  place(loader, state.motion, null)
+  rotate(loader, state)
 }
 
 /** Let go of one loader: a row leaving the page takes no timer with it. */
