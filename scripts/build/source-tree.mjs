@@ -157,6 +157,14 @@ function collect(project, root, srcDirs) {
     && expression.expression.kind === SyntaxKind.CallExpression
     && SEAM_READERS.has(calleeName(expression.expression))
 
+  /**
+   * An engine that draws its own motion hands no attribute: `null` wherever a
+   * name would go is the answer that no sheet carries a rule for it, and the
+   * writer guards the call (shared/motion-engine.ts). A real `setAttribute` takes
+   * a string, so the type system alone keeps this from covering a write.
+   */
+  const isNoAttribute = (expression) => expression.kind === SyntaxKind.NullKeyword
+
   /** The attribute names a hand-over object literal spells, the nested `regions` included. */
   const namesHandedOver = (seam, record) => {
     if (seam?.kind !== SyntaxKind.ObjectLiteralExpression) return
@@ -177,7 +185,7 @@ function collect(project, root, srcDirs) {
   for (const call of calls) {
     const name = calleeName(call)
     if (call.expression.kind === SyntaxKind.PropertyAccessExpression && ATTRIBUTE_WRITERS.has(name)) {
-      follow(call.arguments[0], firstAt(attributes), 'writes an attribute whose name is no literal the build can read; give it a literal type', isSeamRead)
+      follow(call.arguments[0], firstAt(attributes), 'writes an attribute whose name is no literal the build can read; give it a literal type', (node) => isSeamRead(node) || isNoAttribute(node))
     }
     // The engine writes the skin's own attribute names through the vocabulary it
     // is handed (packages/engine/src/skin.ts, parts.ts, D73), so the hand-over
