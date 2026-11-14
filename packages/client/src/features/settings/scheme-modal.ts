@@ -76,8 +76,8 @@ export function createModalHost<P extends object>(name: string, Body: (props: P 
   return { open, close }
 }
 
-/** One line of a manager's list: what the record looks like in small, its name, and the tick while the page uses it. */
-export function SchemeItem(props: { id: string, lead: React.ReactNode, name: string, active: boolean, inUse: boolean, pick(): void }) {
+/** One line of a manager's list: what the record looks like in small where the record draws one, its name, and the tick while the page uses it. */
+export function SchemeItem(props: { id: string, lead?: React.ReactNode, name: string, active: boolean, inUse: boolean, pick(): void }) {
   return React.createElement(
     'button',
     {
@@ -88,7 +88,7 @@ export function SchemeItem(props: { id: string, lead: React.ReactNode, name: str
       'aria-pressed': props.active ? 'true' : 'false',
       onClick: props.pick,
     },
-    props.lead,
+    props.lead ?? null,
     React.createElement('span', { className: 'dsh-claude-scheme-item-name' }, props.name),
     props.inUse
       ? React.createElement('span', { className: 'dsh-claude-scheme-item-mark', role: 'img', 'aria-label': copy('paletteInUse') }, React.createElement(Glyph, { name: 'check' }))
