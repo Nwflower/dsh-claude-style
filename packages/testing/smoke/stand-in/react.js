@@ -27,9 +27,11 @@
     isValidElement: function (node) {
       return node !== null && typeof node === 'object' && 'type' in node && 'props' in node
     },
+    // As React does, a function is the initial state's initializer.
     useState: function (v) {
       var states = react.states
-      return [states !== null && Object.prototype.hasOwnProperty.call(states, v) ? states[v] : v, function () {}]
+      var initial = typeof v === 'function' ? v() : v
+      return [states !== null && Object.prototype.hasOwnProperty.call(states, initial) ? states[initial] : initial, function () {}]
     },
     useEffect: function () {},
     useMemo: function (fn) { return fn() },
