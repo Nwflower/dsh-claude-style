@@ -2,8 +2,8 @@ import { motionMs } from '../../shared/motion'
 
 // The build reads these constants to write the step rules.
 export { CHAT_REVEAL_COLOR_VAR, CHAT_REVEAL_HIGHLIGHT_PREFIX, CHAT_REVEAL_MIN_OPACITY, CHAT_REVEAL_STEPS } from '../../constants'
-/** Changing this duration requires reviewing CHAT_REVEAL_STEPS (D9). */
-export const CHAT_REVEAL_MS = motionMs('--dsh-claude-duration-reveal')
+/** The fade runs on the streaming answer's own token: characters arrive many per second, and a fade as short as an entrance's ends before the next arrival, which reads as a swap. Changing this duration requires reviewing CHAT_REVEAL_STEPS (D9). */
+export const CHAT_REVEAL_MS = motionMs('--dsh-claude-duration-stream-fade')
 /** Stagger scales with the fade duration (D9). */
 export const CHAT_REVEAL_STAGGER_DIVISOR = 50
 /** Bounds keep the sweep visible without delaying trailing characters. */

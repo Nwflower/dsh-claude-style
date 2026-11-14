@@ -27,14 +27,14 @@
         }
         return { total: total, steps: steps, mark: document.body.hasAttribute('data-dsh-claude-chat-reveal') }
       }
-      // The fade ships off: a container streaming before the choice is turned on
-      // gets nothing at all, which is the answer the row offers first.
+      // The fade ships on: a streaming container carries the engine's mark and
+      // its characters are registered as step highlights without the choice
+      // being touched, which is the answer the row offers first.
       var revealShippedContainer = document.createElement('div')
       revealShippedContainer.setAttribute('data-streaming', '')
       revealShippedContainer.textContent = 'Hello there'
       document.body.appendChild(revealShippedContainer)
-      await probe.settle()
-      var revealShipped = revealPeek()
+      var revealShipped = await probe.watch(revealPeek)
       revealShippedContainer.remove()
       window.__pushForm({ chatReveal: 'on' })
       await probe.settle()

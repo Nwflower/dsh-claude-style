@@ -288,15 +288,15 @@ export default {
   'chat-reveal'(r) {
     basicChecks(r)
     const reveal = r.reveal || {}
-    const shipped = reveal.shipped || {}
+    const shipped = reveal.shipped || []
     const opening = reveal.opening || []
     const grown = reveal.grown || []
     const settled = reveal.settled || {}
     const off = reveal.off || {}
     const back = reveal.back || {}
     const reduced = reveal.reduced || {}
-    check('the fade ships off: a streaming container gets no step highlights and no mark until the choice is turned on',
-      shipped.total === 0 && shipped.mark === false, JSON.stringify(shipped))
+    check('the fade ships on: a streaming container carries the mark and its characters are registered as step highlights before the choice is touched',
+      shipped.some((frame) => frame.mark === true && frame.total > 0 && frame.steps > 0), JSON.stringify(shipped.slice(0, 4)))
     check('characters arriving in a streaming container are registered as step highlights from the faintest step',
       opening.some((frame) => frame.mark === true && frame.total > 0 && frame.steps > 0), JSON.stringify(opening.slice(0, 4)))
     check('more characters arriving join them', grown.some((frame) => frame.total > 0 && frame.steps >= 1), JSON.stringify(grown.slice(0, 4)))

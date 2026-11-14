@@ -139,11 +139,14 @@ export const FOLLOW_HOLD_ATTR = 'data-dsh-claude-follow-hold'
 export const READER_HOLD_ATTR = 'data-dsh-claude-reader-hold'
 /** Present while the ported token reveal is installed (features/chat-reveal/): its step rules hang off it, and switching the feature off leaves the page with no trace of it. */
 export const CHAT_REVEAL_ATTR = 'data-dsh-claude-chat-reveal'
-/** The reveal's fade: how many alpha steps a character walks through, the faintest of them, the prefix of each step's highlight name and the custom property an element publishes its own colour to.
- * The engine registers one highlight per step; the build writes one `::highlight()` rule per step from the same four values (scripts/build/feature-sheets.mjs). */
+/** The reveal's fade: how many alpha steps a character walks through, the faintest of them, how the step table spends its alphas, the prefix of each step's highlight name and the custom property an element publishes its own colour to.
+ * The engine registers one highlight per step; the build writes one `::highlight()` rule per step from the same five values (scripts/build/feature-sheets.mjs). */
 export const CHAT_REVEAL_STEPS = 24
-/** The faintest step: a fifth faint, which still reads as text arriving in both themes. */
-export const CHAT_REVEAL_MIN_OPACITY = 0.2
+/** The faintest step: a character arrives unseen, so the fade is the arrival rather than a dim start a reader has to read through. */
+export const CHAT_REVEAL_MIN_OPACITY = 0
+/** How the step table spends its alphas over the fade's time: a step that has reached `t` of the fade holds `1 - (1 - t) ** CHAT_REVEAL_ALPHA_CURVE` of the character's colour.
+ * Above 1 the colour arrives fast and settles, which is the shape a character reads as arriving; at 1 every step moves the colour by as much as the one before it. */
+export const CHAT_REVEAL_ALPHA_CURVE = 2
 export const CHAT_REVEAL_HIGHLIGHT_PREFIX = 'dsh-claude-tok-'
 export const CHAT_REVEAL_COLOR_VAR = '--dsh-claude-run-color'
 /** On the real message row while the send bubble's stand-in is flying (features/chat-send/): the stylesheet hides that row, keeping its layout box so the stand-in can measure the destination from it every frame. */

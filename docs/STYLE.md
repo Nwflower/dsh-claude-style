@@ -506,6 +506,7 @@ edit the JSON, not the table.
 | `--dsh-claude-duration-instant` | `80ms` | the composer caret following the insertion point |
 | `--dsh-claude-duration-feedback` | `120ms` | a control answering hover, press or focus: its colour, background, border, shadow, or a small turn or slide of its own parts |
 | `--dsh-claude-duration-reveal` | `120ms` | content entering the chat area: an opened row's body, and each streamed piece of the answer |
+| `--dsh-claude-duration-stream-fade` | `240ms` | one character of a streaming answer coming to its own colour (features/chat-reveal), and the settings page's preview of it |
 | `--dsh-claude-duration-enter` | `320ms` | one message the reader sends growing into its row, the same growth on the Motion tab's card, and a colour disc lifting out of its row and springing back |
 | `--dsh-claude-duration-surface` | `150ms` | a floating surface or a group of controls appearing: popover cards, menus, panels, the search dialog, a toast, a strip fading in, a hint over what it names |
 | `--dsh-claude-duration-exit` | `120ms` | a surface leaving on the reader's dismissal: a menu or a dialog closing, the overtime badge leaving |

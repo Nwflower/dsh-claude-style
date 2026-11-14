@@ -290,20 +290,15 @@ body[data-dsh-claude-style] .dsh-claude-reveal-card:not([data-fade]) .dsh-claude
   opacity: 1;
 }
 
-/* The fade card's character arrives the way a streamed one does: it lands on
-   the reveal's own faintest step and settles over the reveal's own duration
-   (constants.ts CHAT_REVEAL_MIN_OPACITY, tokens.json
-   --dsh-claude-duration-reveal). An animation rather than a transition, because
-   the piece is handed its turn by an attribute and the frame it lands on has to
-   be the faint one rather than a step along the way. */
+/* The fade card's character arrives the way a streamed one does: it lands unseen
+   and settles over the reveal's own duration (constants.ts
+   CHAT_REVEAL_MIN_OPACITY, tokens.json --dsh-claude-duration-stream-fade). An
+   animation rather than a transition, because the piece is handed its turn by an
+   attribute and the frame it lands on has to be the unseen one rather than a
+   step along the way. */
 body[data-dsh-claude-style] .dsh-claude-reveal-card[data-fade] .dsh-claude-reveal-piece[data-in] {
   opacity: 1;
-  animation: dsh-claude-reveal-piece var(--dsh-claude-duration-reveal) linear both;
-}
-
-@keyframes dsh-claude-reveal-piece {
-  from { opacity: 0.2; }
-  to { opacity: 1; }
+  animation: dsh-claude-fade-in var(--dsh-claude-duration-stream-fade) var(--dsh-claude-ease-out) both;
 }
 
 /* The reader's animation choice (D40): both samples stand whole, which is what

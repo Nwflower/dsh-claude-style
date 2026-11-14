@@ -362,7 +362,7 @@ export const PREFS = {
   chatAnimations: { type: 'boolean', default: true, legacy: { [CHAT_ANIMATIONS_OFF]: false, enhanced: true, redraw: true } },
   chatWait: { type: 'boolean', default: true },
   chatSend: { type: 'boolean', default: true },
-  chatReveal: { type: 'choice', values: CHAT_REVEAL_MODES, default: CHAT_REVEAL_OFF },
+  chatReveal: { type: 'choice', values: CHAT_REVEAL_MODES, default: CHAT_REVEAL_ON },
   reasoningDisplay: { type: 'choice', values: REASONING_DISPLAYS, default: REASONING_DISPLAY_STEPPED },
   /** Moves the reading position when an answer starts; default off because this is unsolicited movement. */
   answerAnchor: { type: 'boolean', default: false },

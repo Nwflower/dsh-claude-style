@@ -25,17 +25,21 @@ body[data-dsh-claude-style] [data-dsh-claude-rolling] > * {
 }
 
 /* reasoning-stream.ts writes the measured height; the cap mirrors the host process body.
-   Mask only the capped state so shorter reasoning stays unfaded and any card background shows through. */
+   The cap's own fade covers both edges; below the cap only the bottom edge is faded, so the newest line arrives through it. */
 
 body[data-dsh-claude-style] [data-dsh-claude-reason-window] {
   --dsh-claude-reason-lines: 2;
   --dsh-claude-reason-window-lines: 4;
   --dsh-claude-reason-window-cap: 400px;
   --dsh-claude-reason-fade: 28px;
+  --dsh-claude-reason-fade-near: 12px;
   --dsh-claude-reason-ease: var(--dsh-claude-ease-glide);
   --dsh-claude-reason-step: var(--dsh-claude-duration-step);
   overflow: hidden;
   height: var(--dsh-claude-reason-window-height, auto);
+  /* The window is as tall as the text it holds, so the fade lands on the newest line: it covers that line's lower half and leaves the line above it whole, which is what makes the arriving line rise out of the edge. */
+  -webkit-mask-image: linear-gradient(to bottom, black calc(100% - var(--dsh-claude-reason-fade-near)), transparent 100%);
+  mask-image: linear-gradient(to bottom, black calc(100% - var(--dsh-claude-reason-fade-near)), transparent 100%);
 }
 
 body[data-dsh-claude-style] [data-dsh-claude-reason-window][data-dsh-claude-reason-capped] {

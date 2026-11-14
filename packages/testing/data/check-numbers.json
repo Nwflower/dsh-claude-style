@@ -938,7 +938,7 @@
       "switching it off takes the mark and the fade, and lets the press land at once with nothing rolling": [
         1
       ],
-      "the fade ships off: a streaming container gets no step highlights and no mark until the choice is turned on": [
+      "the fade ships on: a streaming container carries the mark and its characters are registered as step highlights before the choice is touched": [
         0
       ],
       "characters arriving in a streaming container are registered as step highlights from the faintest step": [
@@ -1210,8 +1210,8 @@
       "the caret row previews its two answers on one typed line: a character waiting for its turn is unseen while the typed ones stand, the caret stands where the last typed character ends, and it is lit for the whole time the line is being typed and blinks on the native cycle once the line stands whole": [
         34
       ],
-      "the new-text fade row previews its two answers: the fade card's character lands faint and settles over the reveal's own duration, the other stands solid as it arrives, and a character waiting for its turn is unseen": [
-        0.12
+      "the new-text fade row previews its two answers: the fade card's character lands unseen and settles over the reveal's own duration, the other stands solid as it arrives, and a character waiting for its turn is unseen": [
+        0.24
       ],
       "the ongoing-effect row names three independent cards, each carrying a decorative title before its marker, with only the default breathing choice pressed": [
         0,

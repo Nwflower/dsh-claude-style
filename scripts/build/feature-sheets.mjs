@@ -5,6 +5,7 @@ export const FEATURE_SHEET_CONSTANTS = [
   'CHAT_REVEAL_ATTR',
   'CHAT_REVEAL_STEPS',
   'CHAT_REVEAL_MIN_OPACITY',
+  'CHAT_REVEAL_ALPHA_CURVE',
   'CHAT_REVEAL_HIGHLIGHT_PREFIX',
   'CHAT_REVEAL_COLOR_VAR',
   'HOME_HEAT_RAMP',
@@ -12,15 +13,18 @@ export const FEATURE_SHEET_CONSTANTS = [
 
 const SCOPE = 'body[data-dsh-claude-style]'
 
-/** `::highlight()` cannot animate opacity; mix the final color with transparent to fade alpha only. */
+/** `::highlight()` cannot animate opacity; mix the final color with transparent to fade alpha only.
+ * The engine walks the steps evenly in time and the table carries the curve (constants.ts CHAT_REVEAL_ALPHA_CURVE), so the two together are the character's alpha over the fade. */
 function revealSteps(constants) {
   const steps = constants.CHAT_REVEAL_STEPS
   const floor = constants.CHAT_REVEAL_MIN_OPACITY
+  const curve = constants.CHAT_REVEAL_ALPHA_CURVE
   const scope = `${SCOPE}[${constants.CHAT_REVEAL_ATTR}] [data-streaming]`
   const rules = []
   for (let step = 0; step < steps; step += 1) {
     const name = `${constants.CHAT_REVEAL_HIGHLIGHT_PREFIX}${step}`
-    const alpha = ((floor + (1 - floor) * step / (steps - 1)) * 100).toFixed(2)
+    const reached = step / (steps - 1)
+    const alpha = ((floor + (1 - floor) * (1 - (1 - reached) ** curve)) * 100).toFixed(2)
     rules.push(`${scope}::highlight(${name}),\n${scope} ::highlight(${name}) {\n  color: color-mix(in srgb, var(${constants.CHAT_REVEAL_COLOR_VAR}, currentColor) ${alpha}%, transparent);\n}\n`)
   }
   return rules.join('\n')

@@ -185,8 +185,8 @@ export default {
     const fade = revealPreview.fade || {}
     const waiting = revealPreview.waiting || {}
     const plain = revealPreview.plain || {}
-    check('the new-text fade row previews its two answers: the fade card\'s character lands faint and settles over the reveal\'s own duration, the other stands solid as it arrives, and a character waiting for its turn is unseen',
-      fade.animation === 'dsh-claude-reveal-piece' && Number.parseFloat(fade.duration) === 0.12 && fade.fill === 'both' &&
+    check('the new-text fade row previews its two answers: the fade card\'s character lands unseen and settles over the reveal\'s own duration, the other stands solid as it arrives, and a character waiting for its turn is unseen',
+      fade.animation === 'dsh-claude-fade-in' && Number.parseFloat(fade.duration) === 0.24 && fade.fill === 'both' &&
         waiting.opacity === '0' && plain.animation === 'none' && plain.opacity === '1',
       JSON.stringify(revealPreview))
     const ongoingSide = settings.ongoingSide || {}
