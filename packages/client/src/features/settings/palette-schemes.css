@@ -1,9 +1,9 @@
-/* The colour schemes' cards and manager (palette-cards.ts, palette-manager.ts,
-   D96). The cards extend the card look settings-brand.css draws: they wrap
-   onto further lines as schemes are added, and each carries its small actions.
-   The manager is a modal on <body>, over the settings dialog that would clip
-   it: the list of schemes beside the editor of the one in hand, whose own
-   sheet is palette-editor.css. */
+/* The colour schemes' cards (palette-cards.ts, D96) and the frame both
+   managers share (scheme-modal.ts). The cards extend the card look
+   settings-brand.css draws: they wrap onto further lines as schemes are added,
+   and each carries its small actions. The frame is a modal on <body>, over the
+   settings dialog that would clip it: the list of records beside the editor of
+   the one in hand, whose own sheets are palette-editor.css and brand-cards.css. */
 
 body[data-dsh-claude-style] .dsh-claude-palette-cards {
   display: grid;
@@ -78,11 +78,11 @@ body[data-dsh-claude-style] .dsh-claude-palette-manage:hover {
   color: var(--dsw-alias-label-secondary);
 }
 
-/* ---------- the manager ---------- */
+/* ---------- the managers' frame (scheme-modal.ts) ---------- */
 
 /* The scrim and the panel arrive and leave together: the scrim fades, the
    panel grows out of the centre and returns to it (docs/STYLE.md, Open). The
-   leaving mark is written by closePaletteManager, which takes the manager off
+   leaving mark is written by the frame's close, which takes the manager off
    the page when the panel's exit ends. */
 body[data-dsh-claude-style] .dsh-claude-scheme-modal {
   position: fixed;
