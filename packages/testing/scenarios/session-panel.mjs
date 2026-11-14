@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
- * session-panel.mjs — the conversation's details rail on the real host (D94,
+ * session-panel.mjs — the conversation's details rail on the real host (D102,
  * D92). Registered in the lane's scenario table
- * (packages/testing/scenarios.mjs).
+ * (packages/testing/scenarios.mjs). The page readings it judges with live in
+ * session-panel-read.mjs beside it.
  *
  * The rail opens itself: no header control, no guide card, no host tab. The
  * scenario sends one turn that writes four files and runs three commands, reads
@@ -396,9 +397,10 @@ export function sessionPanelScenario({ check }) {
         const answer = await response.json()
         return answer.value?.background?.jobs?.find(job => job.label.includes('panel-stop-latest'))?.status ?? null
       }, SESSION_PANEL_PATH)
-      // The rail's first frame states the occupancy it already holds, while the
-      // route's fold — the breakdown under it — is still on its way. Holding the
-      // ask makes that frame something the walk can read (D94).
+      // The rail's first frame stands every section each conversation has, with
+      // what the page knows written and the rest under placeholders, while the
+      // route's fold is still on its way. Holding the ask makes that frame
+      // something the walk can read (D102).
       const held = '**/dsh-claude-style/session-panel**'
       await page.route(held, async (route) => {
         await new Promise(resolve => setTimeout(resolve, 3000))
@@ -412,13 +414,22 @@ export function sessionPanelScenario({ check }) {
       notes.firstFrame = await page.evaluate(() => {
         const rail = document.querySelector('.dsh-claude-details')
         const text = (rail?.textContent ?? '').replace(/\s+/g, ' ')
+        const sections = [...(rail?.querySelectorAll('.dsh-claude-panel-section') ?? [])]
         return {
           occupancy: /\d+(\.\d+)?%/.test(text),
-          pending: /正在读取上下文分项|Loading the context breakdown/.test(text),
-          sections: rail?.querySelectorAll('.dsh-claude-panel-section').length ?? 0,
+          busy: rail?.querySelector('.dsh-claude-panel[aria-busy="true"]') !== null,
+          headings: sections.map(section => section.querySelector('.dsh-claude-panel-section-title')?.textContent ?? ''),
+          placeholders: rail?.querySelectorAll('.dsh-claude-panel-skeleton').length ?? 0,
+          // A folded section's insets beside an open one's: equal insets keep a
+          // heading where it stood across its own fold (D102).
+          insets: {
+            folded: sections.filter(section => !section.open && section.previousElementSibling !== null).map(section => getComputedStyle(section).paddingTop),
+            open: sections.filter(section => section.open && section.previousElementSibling !== null).map(section => getComputedStyle(section).paddingTop),
+          },
           text: text.slice(0, 200),
         }
       })
+      if (context.out !== undefined) await capturePanel(page, `${context.out}/session-panel-first-frame.png`)
       await page.unroute(held)
     },
 
@@ -443,8 +454,15 @@ export function sessionPanelScenario({ check }) {
         check('the rail shows the environment first', anyOf(environmentWords, (rail.headings ?? []).join('|')), JSON.stringify(rail.headings ?? null)),
         check('the rail names the working directory', /workspace/.test(rail.environment ?? ''), (rail.environment ?? '').slice(0, 160)),
         check('the context section arrives with the turn', anyOf(contextWords, (rail.headings ?? []).join('|')) && (rail.context ?? []).length >= 2, JSON.stringify(rail.context ?? null)),
-        check('the first frame states the occupancy and leaves only the breakdown to arrive',
-          notes.firstFrame?.occupancy === true && notes.firstFrame?.pending === true && notes.firstFrame?.sections === 1,
+        check('the first frame stands environment, context and both figures sections, the unread rows under placeholders',
+          notes.firstFrame?.occupancy === true && notes.firstFrame?.busy === true && notes.firstFrame?.placeholders > 0 &&
+            (notes.firstFrame?.headings ?? []).length === 4 &&
+            anyOf(environmentWords, notes.firstFrame.headings[0]) && anyOf(contextWords, notes.firstFrame.headings[1]) &&
+            anyOf(statsWords, notes.firstFrame.headings[2]) && anyOf(HEADINGS.tokens, notes.firstFrame.headings[3]),
+          JSON.stringify(notes.firstFrame ?? null)),
+        check('a folded section keeps the insets of an open one, so its heading stays put across the fold',
+          (notes.firstFrame?.insets?.folded ?? []).length > 0 && (notes.firstFrame?.insets?.open ?? []).length > 0 &&
+            [...notes.firstFrame.insets.folded, ...notes.firstFrame.insets.open].every(inset => inset === notes.firstFrame.insets.open[0]),
           JSON.stringify(notes.firstFrame ?? null)),
         check('the environment section carries the preset text from the header',
           (rail.preset ?? '') !== '' && (rail.preset ?? '') === (notes.preset ?? ''),
@@ -491,8 +509,10 @@ export function sessionPanelScenario({ check }) {
         check('the finished disclosure reveals command history and folds it independently',
           notes.groupFold?.rows === 0 && notes.groupFold?.expanded === 3 && notes.groupFold?.collapsed === 0,
           JSON.stringify(notes.groupFold ?? null)),
+        // A command that finished inside its first second keeps its clock's place
+        // empty rather than print a zero (D102); a longer one writes its clock there.
         check('a finished command keeps a separate clock and its foreground provenance',
-          (rail.jobs ?? []).length >= 2 && rail.jobs.every(job => job.duration !== '' && words('processForeground').includes(job.execution)),
+          (rail.jobs ?? []).length >= 2 && rail.jobs.every(job => job.clock && (job.duration === '' || /\d/.test(job.duration)) && words('processForeground').includes(job.execution)),
           JSON.stringify((rail.jobs ?? []).slice(0, 3))),
         check('a new user round replaces outputs while command history spans the session',
           /panel-latest\.md/.test(notes.latestRound?.outputs ?? '') && !/panel four\.md/.test(notes.latestRound?.outputs ?? '') &&

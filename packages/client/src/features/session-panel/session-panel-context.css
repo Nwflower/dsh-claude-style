@@ -1,7 +1,7 @@
 /* The details rail's context section (D94): the occupancy head, the bar of its
    parts, the legend and the compaction offer under it (D100). The rows, sections
-   and type it reads at are session-panel.css's. */
-/* Context categories share their colour between the bar and legend (D9, D94). */
+   and type it reads at are session-panel.css's. Context categories share their
+   colour between the bar and legend (D9). */
 
 body[data-dsh-claude-style] .dsh-claude-panel-context-head {
   display: flex;
@@ -26,7 +26,7 @@ body[data-dsh-claude-style] .dsh-claude-panel-figures {
 body[data-dsh-claude-style] .dsh-claude-panel-bar {
   position: relative;
   display: flex;
-  height: 6px;
+  height: 4px;
   margin: 0 0 12px;
   overflow: hidden;
   border-radius: 999px;
@@ -52,7 +52,9 @@ body[data-dsh-claude-style] .dsh-claude-panel-segment {
   flex: none;
   height: 100%;
   min-width: 0;
-  box-shadow: inset -1px 0 var(--dsw-alias-bg-layer-1);
+  /* Each part ends on a 2px cut in the panel's own fill, so neighbouring parts
+     read as separate pieces the way Claude's bar draws them. */
+  box-shadow: inset -2px 0 var(--dsw-alias-bg-layer-1);
   transition: width var(--dsh-claude-duration-reveal) var(--dsh-claude-ease-out);
 }
 
@@ -98,16 +100,15 @@ body[data-dsh-claude-style] .dsh-claude-panel-dot.is-mcp {
   background: var(--dsh-claude-context-mcp);
 }
 
+/* The parts a turn does not grow share one neutral grey, so colour marks only
+   what moves as the session runs, as Claude's legend does. */
 body[data-dsh-claude-style] .dsh-claude-panel-segment.is-memory,
 body[data-dsh-claude-style] .dsh-claude-panel-dot.is-memory,
 body[data-dsh-claude-style] .dsh-claude-panel-segment.is-skills,
-body[data-dsh-claude-style] .dsh-claude-panel-dot.is-skills {
-  background: var(--dsh-claude-context-memory);
-}
-
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-skills,
 body[data-dsh-claude-style] .dsh-claude-panel-segment.is-other,
 body[data-dsh-claude-style] .dsh-claude-panel-dot.is-other {
-  background: var(--dsh-claude-context-other);
+  background: var(--dsh-claude-context-fixed);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-dot.is-free {
@@ -163,15 +164,15 @@ body[data-dsh-claude-style] .dsh-claude-panel-legend-row.is-free dd.dsh-claude-p
 body[data-dsh-claude-style] .dsh-claude-panel-dot {
   display: inline-block;
   flex: none;
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 2px;
 }
 
-
 /* The distance to automatic compaction, and the request that closes it (D100):
-   one row under the legend, the reading in the quiet ink and the host's own
-   outlined button on the right, where a row's state stands. */
+   one row under the legend at the legend's type, the reading in the legend
+   labels' ink and the host's own filled button on the right, where a row's
+   state stands. */
 body[data-dsh-claude-style] .dsh-claude-panel-compact {
   display: flex;
   flex-wrap: wrap;
@@ -183,11 +184,22 @@ body[data-dsh-claude-style] .dsh-claude-panel-compact {
 
 body[data-dsh-claude-style] .dsh-claude-panel-compact-distance,
 body[data-dsh-claude-style] .dsh-claude-panel-compact-note {
-  color: var(--dsw-alias-label-tertiary, #8a8a8a);
+  color: var(--dsw-alias-label-secondary, #5c5c5c);
+}
+
+/* The button rests on the hover wash, a light plate without an outline; its
+   words take the panel's reading type (session-panel.css) over the host's
+   smaller one. Under the pointer a second wash stacks on the first; this rule
+   outranks the host ghost's own hover, which would paint the resting wash alone. */
+body[data-dsh-claude-style] .dsh-claude-panel-compact-action {
+  background: var(--dsh-claude-hover-bg);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-compact-action:hover:not(:disabled) {
+  background: linear-gradient(var(--dsh-claude-hover-bg), var(--dsh-claude-hover-bg)), var(--dsh-claude-hover-bg);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-compact > .dsh-claude-panel-note {
   flex-basis: 100%;
   color: var(--dsw-alias-state-error-primary);
 }
-

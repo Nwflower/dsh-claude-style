@@ -1,5 +1,4 @@
 import * as React from 'react'
-import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
 import { formatCompactTokens, formatHostDuration } from '../../shared/format'
 import { hostChatSeat } from '../../core/i18n'
 import { copy } from './copy'
@@ -7,10 +6,10 @@ import { openPanelSession } from './session-panel-host'
 import { useJobOutput } from './session-panel-data'
 import { JobStop } from './job-stop'
 import { Row, Chip, Section } from './panel-rows'
+import { AgentMark, ChecklistMark, CommandMark, FinishedMark, TeamMark } from './session-panel-marks'
 import type { PanelBackground, PanelJob, PanelSubagent } from '@dsh-claude-style/contracts/session-panel'
 
 const h = React.createElement
-const MARK_SIZE = 16
 
 /** Whether any background row is still moving. */
 export function hasRunningWork(background: PanelBackground) {
@@ -37,10 +36,16 @@ function hostDuration(ms: number) {
   return seat === null ? `${Math.max(0, Math.round(ms / 1000))}s` : formatHostDuration(ms, seat)
 }
 
-/** One job's clock: how long it ran, or how long it has been running. */
+/**
+ * One job's clock: how long it ran, or how long it has been running. A command
+ * that finished inside its first second has no clock worth reading, so its row
+ * leaves the place empty rather than print a zero.
+ */
 function jobDuration(job: PanelJob, now: number) {
   if (job.startedAt <= 0) return ''
-  return hostDuration((job.finishedAt ?? now) - job.startedAt)
+  const ms = (job.finishedAt ?? now) - job.startedAt
+  if (job.finishedAt !== undefined && ms < 1000) return ''
+  return hostDuration(ms)
 }
 
 /**
@@ -103,17 +108,9 @@ function WorkList({ title, rows }: { title: string, rows: readonly WorkRow[] }) 
     h('div', { className: 'dsh-claude-panel-list' }, rows.filter(row => row.active).map(row => row.node)),
     finished.length === 0 ? null : h('details', { className: 'dsh-claude-panel-finished' },
       h('summary', { className: 'dsh-claude-panel-finished-toggle' },
-        h('svg', { width: MARK_SIZE, height: MARK_SIZE, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, 'aria-hidden': true },
-          h('path', { d: 'm4 5 7 7-7 7 7-7-7-7m7 0 7 7-7 7' })),
+        h(FinishedMark),
         h('span', null, copy('finishedCount', { count: finished.length }))),
       h('div', { className: 'dsh-claude-panel-list' }, finished.map(row => row.node))))
-}
-
-/** A command prompt's square and its prompt: the execution mark in Claude's rail. */
-function CommandMark() {
-  return h('svg', { width: MARK_SIZE, height: MARK_SIZE, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' },
-    h('rect', { x: 3, y: 3, width: 18, height: 18, rx: 3 }),
-    h('path', { d: 'm7 8 3 3-3 3m6 1h4' }))
 }
 
 /** Independent process, task, subagent and team sections share the rail's row geometry (D94). */
@@ -137,7 +134,7 @@ export function WorkSections({ sessionId, background }: { sessionId: string, bac
     rows.push({ id: job.id, active, node: h(React.Fragment, { key: `job:${job.id}` },
       h('div', { className: 'dsh-claude-panel-job-line' }, h(Row, {
         kind: 'dsh-claude-panel-work-row',
-        mark: job.category === 'task' ? h(primitives.IconChecklistOutlineRegular, { size: MARK_SIZE }) : h(CommandMark),
+        mark: job.category === 'task' ? h(ChecklistMark) : h(CommandMark),
         title: job.label === '' ? copy('jobs') : job.label,
         hint: [job.label, job.progress, settled ? null : job.detail].filter(Boolean).join(' · '),
         side: h(React.Fragment, null,
@@ -152,7 +149,7 @@ export function WorkSections({ sessionId, background }: { sessionId: string, bac
   for (const child of background.subagents) {
     childRows.push({ id: child.id, active: child.running, node: h('div', { key: `subagent:${child.id}`, className: 'dsh-claude-panel-job-line' }, h(Row, {
       kind: 'dsh-claude-panel-work-row',
-      mark: h(primitives.IconAgentPresetOutlineRegular, { size: MARK_SIZE }),
+      mark: h(AgentMark),
       title: child.label === '' ? copy('subagents') : child.label,
       side: h(React.Fragment, null, child.running ? childChips(child) : null,
         h('span', { className: 'dsh-claude-panel-work-duration' }, childDetail(child, now))),
@@ -167,7 +164,7 @@ export function WorkSections({ sessionId, background }: { sessionId: string, bac
     for (const member of team.members) {
       teamRows.push({ id: member.id, active: member.running === true, node: h(Row, {
         key: `member:${member.id}`,
-        mark: h(primitives.IconUsersOutlineRegular, { size: MARK_SIZE }),
+        mark: h(TeamMark),
         title: member.role === 'lead' ? `${member.name} · ${copy('team')}` : member.name,
         detail: member.phase,
         side: h(Chip, { text: memberStatusText(member.running), tone: member.running === true ? 'pending' : undefined }),
@@ -177,7 +174,7 @@ export function WorkSections({ sessionId, background }: { sessionId: string, bac
     for (const task of team.tasks) {
       teamRows.push({ id: task.id, active: task.status !== 'completed', node: h(Row, {
         key: `task:${task.id}`,
-        mark: h(primitives.IconChecklistOutlineRegular, { size: MARK_SIZE }),
+        mark: h(ChecklistMark),
         title: task.subject,
         detail: task.ownerName ?? copy('tasks'),
         side: h(Chip, { text: task.status, tone: task.status === 'completed' ? 'success' : task.status === 'in_progress' ? 'pending' : undefined }),

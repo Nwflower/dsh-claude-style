@@ -219,10 +219,6 @@
     "zh": "还没有上下文读数",
     "en": "No context reading yet"
   },
-  "contextBreakdownLoading": {
-    "zh": "正在读取上下文分项",
-    "en": "Loading the context breakdown"
-  },
   "loading": {
     "zh": "正在读取会话",
     "en": "Reading the session"

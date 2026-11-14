@@ -38,7 +38,6 @@ body[data-dsh-claude-style] .dsh-claude-panel-finished-toggle::-webkit-details-m
 
 body[data-dsh-claude-style] .dsh-claude-panel-finished-toggle > svg {
   flex: none;
-  color: var(--dsw-alias-label-secondary);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-finished-toggle:focus-visible {

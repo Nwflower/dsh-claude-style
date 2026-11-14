@@ -29,7 +29,9 @@ body[data-dsh-claude-style] .dsh-claude-panel::-webkit-scrollbar {
 
 /* The hairline belongs to a section's top edge, so every section keeps its own
    line whatever its neighbours do, and the column's divider never depends on a
-   page reading of what the next section holds (D94). */
+   page reading of what the next section holds (D94). Folded and open sections
+   keep the same insets, so a heading stands where it stood across its own fold
+   and the line the reader pressed stays under the pointer (D102). */
 body[data-dsh-claude-style] .dsh-claude-panel-section {
   display: block;
   min-width: 0;
@@ -41,14 +43,6 @@ body[data-dsh-claude-style] .dsh-claude-panel-section {
 body[data-dsh-claude-style] .dsh-claude-panel-section:first-child {
   padding-top: 0;
   border-top: 0;
-}
-
-/* A folded section stands on its heading's own line instead of a section's
-   insets, so its reading keeps its line and its hairline without the room an
-   open section needs. The rule reads the browser's own `open` state, so a
-   reader's fold is followed at once (D94). */
-body[data-dsh-claude-style] .dsh-claude-panel-section:not([open]) {
-  padding: 8px 0;
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-heading {
@@ -167,10 +161,37 @@ body[data-dsh-claude-style] .dsh-claude-panel-main,
 body[data-dsh-claude-style] .dsh-claude-panel-note,
 body[data-dsh-claude-style] .dsh-claude-panel-context-head,
 body[data-dsh-claude-style] .dsh-claude-panel-legend-row,
+body[data-dsh-claude-style] .dsh-claude-panel-compact,
+body[data-dsh-claude-style] .dsh-claude-panel-compact-action,
 body[data-dsh-claude-style] .dsh-claude-panel-stats {
   margin: 0;
   font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 20px;
+}
+
+/* A placeholder where a reading will be written (D102): the stand-in ink the
+   composer's placeholders use, breathing on the skin's shared pulse, with the
+   count the animation choice sets (theme/chrome.css, D40). A bar stands one
+   line's words high in the middle of that line, so the row keeps the height the
+   written row will have; the legend's pending swatch keeps the swatch's box. */
+body[data-dsh-claude-style] .dsh-claude-panel-skeleton,
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-pending {
+  background: var(--dsw-alias-interactive-bg-hover-solid, rgba(0, 0, 0, 0.06));
+  animation: dsh-claude-pulse var(--dsh-claude-period-pulse) var(--dsh-claude-ease-in-out) var(--dsh-claude-loop-count, infinite);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-skeleton {
+  display: block;
+  flex: none;
+  align-self: center;
+  max-width: 100%;
+  height: 12px;
+  border-radius: 4px;
+}
+
+/* A figure's or a legend reading's placeholder stands at the column's end, where the number will. */
+body[data-dsh-claude-style] dd > .dsh-claude-panel-skeleton {
+  margin-left: auto;
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-note {
@@ -288,7 +309,9 @@ body[data-dsh-claude-style] .dsh-claude-panel-mark {
   align-items: center;
   justify-content: center;
   width: 16px;
-  color: var(--dsw-alias-label-secondary, #5c5c5c);
+  /* A row's mark wears its title's ink, as Claude's rail draws them; the one
+     set of marks (session-panel-marks.ts) keeps them at one weight. */
+  color: var(--dsw-alias-label-primary, #161616);
 }
 
 /* A row is one line: its title, then its detail in the quiet ink. The title
@@ -317,12 +340,6 @@ body[data-dsh-claude-style] .dsh-claude-panel-detail {
 
 body[data-dsh-claude-style] .dsh-claude-panel-detail::before {
   content: '· ';
-}
-
-/* The preset is the environment's quiet row: a setting of the session, not a
-   place it works in. */
-body[data-dsh-claude-style] .dsh-claude-details-preset .dsh-claude-panel-title {
-  color: var(--dsw-alias-label-secondary, #5c5c5c);
 }
 
 /* One line each, cut with the same ellipsis: a row's title and detail, a

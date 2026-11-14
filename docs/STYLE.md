@@ -213,8 +213,7 @@ card leaves unset.
 | `--dsh-claude-context-tools` | literal | `#df5200` | `#ff7333` | `#df5200` | `#ff7333` | `#df5200` | `#ff7333` | `#df5200` | `#ff7333` | `#df5200` | `#ff7333` | `#df5200` | `#ff7333` | `light-dark(#df5200, #ff7333)` | context system tools: Claude Desktop's orange category |
 | `--dsh-claude-context-mcp` | literal | `#009e7d` | `#2bbe9b` | `#009e7d` | `#2bbe9b` | `#009e7d` | `#2bbe9b` | `#009e7d` | `#2bbe9b` | `#009e7d` | `#2bbe9b` | `#009e7d` | `#2bbe9b` | `light-dark(#009e7d, #2bbe9b)` | context MCP tools: Claude Desktop's green category |
 | `--dsh-claude-context-system` | literal | `#b67800` | `#da950b` | `#b67800` | `#da950b` | `#b67800` | `#da950b` | `#b67800` | `#da950b` | `#b67800` | `#da950b` | `#b67800` | `#da950b` | `light-dark(#b67800, #da950b)` | context system prompt: Claude Desktop's yellow category |
-| `--dsh-claude-context-memory` | literal | `#7a86a2` | `#98a4c2` | `#7a86a2` | `#98a4c2` | `#7a86a2` | `#98a4c2` | `#7a86a2` | `#98a4c2` | `#7a86a2` | `#98a4c2` | `#7a86a2` | `#98a4c2` | `light-dark(#7a86a2, #98a4c2)` | context instruction files and skills: the injected text family, quiet in chroma |
-| `--dsh-claude-context-other` | literal | `#9d7f68` | `#bd9e86` | `#9d7f68` | `#bd9e86` | `#9d7f68` | `#bd9e86` | `#9d7f68` | `#bd9e86` | `#9d7f68` | `#bd9e86` | `#9d7f68` | `#bd9e86` | `light-dark(#9d7f68, #bd9e86)` | context other context: the attributed injections with no family of their own |
+| `--dsh-claude-context-fixed` | literal | `#8f8f8f` | `#8a8a8a` | `#8f8f8f` | `#8a8a8a` | `#8f8f8f` | `#8a8a8a` | `#8f8f8f` | `#8a8a8a` | `#8f8f8f` | `#8a8a8a` | `#8f8f8f` | `#8a8a8a` | `light-dark(#8f8f8f, #8a8a8a)` | context instruction files, skills and other context: Claude Desktop's neutral grey for the parts a turn does not grow |
 | `--dsh-claude-ripple-wave` | literal | `#3b6ef0` | `#7fa6ff` | `#3b6ef0` | `#7fa6ff` | `#3b6ef0` | `#7fa6ff` | `#3b6ef0` | `#7fa6ff` | `#3b6ef0` | `#7fa6ff` | `#3b6ef0` | `#7fa6ff` | `var(--dsw-alias-link, #3b6ef0)` | the front of a ripple in the new-conversation page's glyph field |
 | `--dsh-claude-scrollbar` | `scrollbar` | `rgba(213, 213, 213, 0.9)` | `rgba(62, 62, 62, 0.9)` | `rgba(209, 210, 213, 0.9)` | `rgba(55, 59, 64, 0.9)` | `rgba(205, 199, 186, 0.9)` | `rgba(64, 63, 59, 0.9)` | `rgba(205, 209, 205, 0.9)` | `rgba(57, 64, 60, 0.9)` | `rgba(208, 206, 213, 0.9)` | `rgba(61, 59, 64, 0.9)` | `rgba(211, 199, 200, 0.9)` | `rgba(64, 59, 61, 0.9)` | `var(--dsw-alias-border-l2)` | scrollbar thumb |
 | `--dsh-claude-scrollbar-hover` | `scrollbar-hover` | `rgba(138, 138, 138, 0.8)` | `rgba(113, 113, 113, 0.9)` | `rgba(134, 135, 138, 0.8)` | `rgba(105, 109, 115, 0.9)` | `rgba(130, 125, 113, 0.8)` | `rgba(115, 114, 109, 0.9)` | `rgba(130, 134, 130, 0.8)` | `rgba(108, 115, 110, 0.9)` | `rgba(133, 131, 138, 0.8)` | `rgba(112, 109, 115, 0.9)` | `rgba(136, 125, 126, 0.8)` | `rgba(115, 109, 112, 0.9)` | `var(--dsw-alias-label-caption)` | scrollbar thumb under the pointer |
@@ -363,11 +362,20 @@ survives data refreshes. Environment, Context and the three lists start open;
 Session stats and Token usage are tables of figures and start folded. The closed
 heading shows a directory name, a context percentage and miniature meter, the
 output speed, the cost or an item count. A folded section stands on its heading's
-own line, 36px tall with 8px insets, and keeps the hairline above it like any
-other section. The chevron belongs to a folded section; on an open one it waits
+own line with the same 16px insets an open one has, so the heading does not move
+when it folds, and keeps the hairline above it like any other section. The chevron belongs to a folded section; on an open one it waits
 out of sight and returns under the pointer or on keyboard focus, leaving the
 heading clean at rest. A heading paints nothing under the pointer: it is the
 column's own division line, not a row of the list.
+
+Before the host's fold answers, Environment, Context, Session stats and Token
+usage stand together. What the page knows is written: this computer, the preset,
+the occupancy and any figure the live reading holds. The directory, the branch,
+the context legend and figures not yet read keep their rows under placeholders:
+12px bars of the stand-in ink at 4px corners, in the middle of a row of the
+final height, breathing on the shared pulse. Outputs, Changes and the work
+sections wait for the answer, since a placeholder that turned out empty would
+pull every section under it up.
 
 A row is one line: a mark, a title, its detail after a middle dot, and a
 trailing state. The title gives way before the detail, which keeps its own width
@@ -378,15 +386,24 @@ everything in its own words raises no bubble. The bubble hangs on the body, so
 the rail's own scrolling never cuts it, and a long path wraps inside it. A row's
 hover plate stands 8px clear of its words on both sides. The trailing
 state is words in the state's ink, without an outline. The environment section
-starts at the top: a computer mark, a folder name with its parent path, a
-separate branch row, and the preset as its last row in the secondary ink, with
-the preset's description as its hint. A checkout already named by the working
+starts at the top: a computer mark, a folder name with its parent path in the
+separator the reader's system writes (`D:\DSH` on Windows), a separate branch
+row, and the preset as its last row, with the preset's description as its hint.
+
+Every mark in the rail comes from one set the rail draws itself
+(`session-panel-marks.ts`); host glyphs are not mixed in. A mark stands on a
+16-unit grid drawn at 16px, so its stroke is 1.25px wherever it appears, with
+round caps and joins and the figure filling 1.5–14.5 of the box; the heading
+chevron keeps the same pixel stroke on its own 12-unit grid. Marks wear the
+row title's ink. One meaning has one figure: a branch and a change request,
+a preset and a subagent each have their own. A checkout already named by the working
 directory contributes only its branch. While the rail stands the header's own
 preset label steps aside, and it returns when the rail closes or retreats.
 
-The context bar is 6px tall. Messages are blue, system tools orange, MCP tools
-green and the system prompt yellow; instruction files, skills and runtime
-context use gray. Request tool names and retained message sources identify the
+The context bar is 4px tall, each part ending on a 2px cut in the panel's fill,
+and a legend swatch is a 10px square. Messages are blue, system tools orange,
+MCP tools green and the system prompt yellow; instruction files, skills and
+other context share one neutral gray. Request tool names and retained message sources identify the
 parts, and surface replacements retire the contributions they cover. Parts are
 heuristic estimates proportionally calibrated to provider occupancy: the bar,
 token column and percentage column share that allocation, with percentages

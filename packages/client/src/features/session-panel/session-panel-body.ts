@@ -15,8 +15,10 @@ import type { ContextOccupancy, ContextOverview, ContextRow } from './context-ro
 import { compactOffer, requestCompaction } from './compact-offer'
 import type { CompactOffer } from './compact-offer'
 import type { CompactionFailure } from '@dsh-claude-style/contracts/compaction'
-import { Row, Chip, Section, FoldedList } from './panel-rows'
+import { Row, Chip, Section, FoldedList, PendingRow, Skeleton } from './panel-rows'
+import type { CopyKey } from './copy'
 import { hasRunningWork, WorkSections } from './session-panel-work'
+import { BranchMark, ComputerMark, FolderMark, PictureMark, PresetMark, PullRequestMark, SheetMark } from './session-panel-marks'
 import type { PanelChange, PanelContext, PanelEnvironment, PanelOutput, PanelStats } from '@dsh-claude-style/contracts/session-panel'
 
 const h = React.createElement
@@ -33,33 +35,6 @@ export interface PanelBodyProps {
 export interface PanelPreset {
   label: string
   hint: string
-}
-
-/** The size every row's mark is drawn at. */
-const MARK_SIZE = 16
-
-/**
- * A file's own mark: the page and its folded corner, drawn in the rail's one
- * stroke so an output row reads in the same ink as every other row's mark.
- */
-function SheetMark() {
-  return h('svg', {
-    width: MARK_SIZE, height: MARK_SIZE, viewBox: '0 0 24 24', fill: 'none',
-    stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round',
-  },
-  h('path', { d: 'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z' }),
-  h('path', { d: 'M14 3v5h5' }))
-}
-
-/** An image's own mark: a frame, a sun and the ground it holds. */
-function PictureMark() {
-  return h('svg', {
-    width: MARK_SIZE, height: MARK_SIZE, viewBox: '0 0 24 24', fill: 'none',
-    stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round',
-  },
-  h('rect', { x: 4, y: 4, width: 16, height: 16, rx: 2 }),
-  h('circle', { cx: 9, cy: 9.5, r: 1.5 }),
-  h('path', { d: 'M5 17.5 9 13l3.5 3.5L15 14l4 4' }))
 }
 
 /** What an output row wears: the frame of a picture, the sheet of everything else. */
@@ -102,19 +77,24 @@ function PanelView({ sessionId, preset, active }: { sessionId: string, preset: P
     const timer = window.setInterval(() => tick(count => count + 1), 1000)
     return () => window.clearInterval(timer)
   }, [running])
-  if (value === null) {
-    // The first frame carries what the page already knows: the context overview.
-    // The sections that need the host's fold join it when that answers, so the
-    // rail never stands as one loading line (D94).
-    return h('div', { className: 'dsh-claude-panel' },
-      failed
-        ? h('p', { className: 'dsh-claude-panel-note' }, copy('unavailable'))
-        : h(ContextSection, { key: 'context', sessionId, context: null, occupancy }))
+  if (value === null && failed) {
+    return h('div', { className: 'dsh-claude-panel' }, h('p', { className: 'dsh-claude-panel-note' }, copy('unavailable')))
   }
-  const settled = value.stats ?? null
+  // Before the host's fold answers, every section each conversation has stands
+  // on the first frame: what the page already knows is written, the rest keeps
+  // its row under a placeholder of the final row's height. Sections that appear
+  // only with something to show wait for the answer (D102).
+  const settled = value?.stats ?? null
   const figures = live !== null
     ? panelFiguresOf(live, settled)
     : settled === null ? null : { stats: settled, cost: statsCostText(settled.cost, currency) }
+  if (value === null) {
+    return h('div', { className: 'dsh-claude-panel', 'aria-busy': true },
+      h(EnvironmentSection, { key: 'environment', environment: null, preset }),
+      h(ContextSection, { key: 'context', sessionId, context: null, occupancy }),
+      h(StatsSection, { key: 'stats', stats: figures?.stats ?? null }),
+      h(TokensSection, { key: 'tokens', stats: figures?.stats ?? null, cost: figures?.cost ?? null }))
+  }
   return h('div', { className: 'dsh-claude-panel' },
     value.environment === null ? null : h(EnvironmentSection, { key: 'environment', environment: value.environment, preset }),
     h(ContextSection, { key: 'context', sessionId, context: value.context, occupancy }),
@@ -149,6 +129,14 @@ export function parentPath(path: string) {
   return index === -1 ? '' : normalized.slice(0, index)
 }
 
+/**
+ * A `/` separated path written back in the separator its source uses, so a
+ * Windows directory reads `D:\DSH` as the reader's own system writes it.
+ */
+export function nativePath(path: string, source: string) {
+  return source.includes('\\') ? path.replaceAll('/', '\\') : path
+}
+
 /** The headline occupancy; detailed rows keep one decimal of the window. */
 function sharePercent(value: number, whole: number) {
   if (whole <= 0) return '0'
@@ -171,27 +159,33 @@ export function elapsedText(ms: number) {
   return hours > 0 ? `${hours}:${pad2(minutes)}:${pad2(seconds)}` : `${minutes}:${pad2(seconds)}`
 }
 
-/** Where the session works: the machine, the directory, and the checkouts around it. */
-function EnvironmentSection({ environment, preset }: { environment: PanelEnvironment, preset: PanelPreset }) {
+/**
+ * Where the session works: the machine, the directory, and the checkouts around it.
+ * Before the host's fold answers (`environment` null) the machine and the preset
+ * are already known and are written; the directory and its branch hold their
+ * rows under placeholders (D102).
+ */
+function EnvironmentSection({ environment, preset }: { environment: PanelEnvironment | null, preset: PanelPreset }) {
   const rows: React.ReactNode[] = [
     h(Row, {
       key: 'computer',
-      mark: h('svg', { width: MARK_SIZE, height: MARK_SIZE, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinejoin: 'round' },
-        h('rect', { x: 5, y: 3, width: 14, height: 12, rx: 2 }),
-        h('path', { d: 'M5 15 2 19v1h20v-1l-3-4M2 19h20' })),
+      mark: h(ComputerMark),
       title: copy('thisComputer'),
     }),
-    h(Row, {
-      key: 'directory',
-      mark: h(primitives.IconFolderOpenOutlineRegular, { size: MARK_SIZE }),
-      title: baseName(environment.directory),
-      detail: parentPath(shortPath(environment.directory, environment.home)),
-    }),
+    environment === null
+      ? h(PendingRow, { key: 'directory', mark: h(FolderMark), width: '60%' })
+      : h(Row, {
+        key: 'directory',
+        mark: h(FolderMark),
+        title: baseName(environment.directory),
+        detail: nativePath(parentPath(shortPath(environment.directory, environment.home)), environment.directory),
+      }),
   ]
-  const checkout = environment.checkout
+  const checkout = environment?.checkout ?? null
+  if (environment === null) rows.push(h(PendingRow, { key: 'branch', mark: h(BranchMark), width: '32%' }))
   // A directory that is no checkout names the folder alone: the branch belongs
   // to a checkout, and a folder without one has none to show (D94).
-  if (checkout !== null) {
+  else if (checkout !== null) {
     rows.push(h(RepositoryRow, {
       key: `checkout:${checkout.root}`,
       name: shortPath(checkout.root, environment.home) === shortPath(environment.directory, environment.home) ? undefined : baseName(checkout.root),
@@ -207,12 +201,12 @@ function EnvironmentSection({ environment, preset }: { environment: PanelEnviron
     rows.push(h(Row, {
       key: 'preset',
       kind: 'dsh-claude-details-preset',
-      mark: h(primitives.IconAgentPresetOutlineRegular, { size: MARK_SIZE }),
+      mark: h(PresetMark),
       title: preset.label,
       hint: preset.hint === '' ? undefined : preset.hint,
     }))
   }
-  return h(Section, { title: copy('environment'), summary: baseName(environment.directory) },
+  return h(Section, { title: copy('environment'), summary: environment === null ? undefined : baseName(environment.directory) },
     h('div', { className: 'dsh-claude-panel-list' }, rows))
 }
 
@@ -221,11 +215,11 @@ function RepositoryRow(props: { name?: string, branch: string | null, linked: bo
   // Additional checkouts keep their folder row immediately above the branch.
   return h(React.Fragment, null,
     props.name === undefined ? null : h(Row, {
-      mark: h(primitives.IconFolderOpenOutlineRegular, { size: MARK_SIZE }),
+      mark: h(FolderMark),
       title: props.name, detail: props.detail,
     }),
     h(Row, {
-      mark: h(primitives.IconBranchOutlineRegular, { size: MARK_SIZE }),
+      mark: h(BranchMark),
       title: props.branch ?? props.commit ?? copy('detachedHead'),
       side: props.linked ? h(Chip, { text: copy('worktree') }) : undefined,
     }))
@@ -236,15 +230,22 @@ function RepositoryRow(props: { name?: string, branch: string | null, linked: bo
  *
  * The overview is the provider's own reading, so it stands on the frame the rail
  * mounts; the composition is the host's fold, and while that has not answered
- * the section states the overview alone with the breakdown's own line under it (D94).
+ * the legend holds its rows under placeholders. Before either answers, the head
+ * holds its two figures the same way (D102).
  * Once the session stands near the host's own compaction threshold, the section
  * offers the manual request beside the distance to it (D100).
  */
 function ContextSection({ sessionId, context, occupancy }: { sessionId: string, context: PanelContext | null, occupancy: ContextOccupancy | null }) {
   const overview = contextOverview(occupancy, context)
+  if (overview === null && context !== null) {
+    return h(Section, { title: copy('context') }, h('p', { className: 'dsh-claude-panel-note' }, copy('noContext')))
+  }
   if (overview === null) {
     return h(Section, { title: copy('context') },
-      h('p', { className: 'dsh-claude-panel-note' }, copy(context === null ? 'loading' : 'noContext')))
+      h('div', { className: 'dsh-claude-panel-context', 'aria-hidden': true },
+        h('div', { className: 'dsh-claude-panel-context-head' }, h(Skeleton, { width: '28%' }), h(Skeleton, { width: '30%' })),
+        h('div', { className: 'dsh-claude-panel-bar' }),
+        pendingLegend()))
   }
   const percent = sharePercent(overview.used, overview.window)
   const rows = context === null ? null : contextRows({ ...context, used: overview.used, window: overview.window })
@@ -297,12 +298,14 @@ function CompactControl({ sessionId, offer }: { sessionId: string, offer: Compac
     })
   }
   const failed = phase.state === 'failed'
-  // The host's own outlined control carries its height, corners, hover, focus and
-  // disabled states; the row only places it.
+  // The host's own borderless control carries its height, corners, press, focus
+  // and disabled states; the row gives it the resting plate Claude's rail puts
+  // under this request and the row's type (session-panel-context.css).
   const action = phase.state === 'done'
     ? h('span', { className: 'dsh-claude-panel-compact-note', title: phase.text }, copy('compactDone'))
     : h(primitives.Button, {
-      variant: 'outline',
+      variant: 'ghost',
+      className: 'dsh-claude-panel-compact-action',
       size: 'sm',
       disabled: phase.state === 'running',
       onClick: press,
@@ -343,13 +346,30 @@ function contextBar(overview: ContextOverview, rows: ContextRow[] | null) {
     })))
 }
 
+/** How many legend rows the placeholder holds: the parts a session most often carries. */
+const PENDING_LEGEND_ROWS = 6
+
 /**
- * The parts' legend and the room left, or the breakdown's own line until the
- * host's fold answers: the occupancy above is already the provider's own reading.
- * The legend's hint carries how the parts are priced.
+ * The legend before the host's fold answers: rows of the legend's own shape,
+ * each a swatch and its three readings under placeholders (D102).
+ */
+function pendingLegend() {
+  return h('dl', { className: 'dsh-claude-panel-legend', 'aria-hidden': true },
+    Array.from({ length: PENDING_LEGEND_ROWS }, (_, index) => h('div', { key: index, className: 'dsh-claude-panel-legend-row' },
+      h('dt', null,
+        h('i', { className: 'dsh-claude-panel-dot is-pending' }),
+        h(Skeleton, { width: `${44 + (index % 3) * 12}%` })),
+      h('dd', null, h(Skeleton, { width: '36px' })),
+      h('dd', { className: 'dsh-claude-panel-share' }, h(Skeleton, { width: '36px' })))))
+}
+
+/**
+ * The parts' legend and the room left, or the legend's placeholder rows until
+ * the host's fold answers: the occupancy above is already the provider's own
+ * reading. The legend's hint carries how the parts are priced.
  */
 function contextLegend(rows: ContextRow[] | null, overview: ContextOverview) {
-  if (rows === null) return h('p', { className: 'dsh-claude-panel-note' }, copy('contextBreakdownLoading'))
+  if (rows === null) return pendingLegend()
   const free = Math.max(0, overview.window - overview.used)
   return h('dl', { className: 'dsh-claude-panel-legend', title: copy('contextEstimate') },
     rows.map(row => h('div', { key: row.kind, className: 'dsh-claude-panel-legend-row' },
@@ -366,11 +386,21 @@ function contextLegend(rows: ContextRow[] | null, overview: ContextOverview) {
       h('dd', { className: 'dsh-claude-panel-share' }, `${(free / overview.window * 100).toFixed(1)}%`)))
 }
 
-/** One figure of a figures section: its label and its value as written. */
+/** One figure of a figures section: its label and its value as written, or its placeholder. */
 interface Figure {
   key: string
   label: string
-  value: string
+  value: React.ReactNode
+}
+
+/**
+ * A figures section before any reading answers (D102): folded like the written
+ * one, a placeholder beside the heading where its reading will stand, and the
+ * rows every session has with their values held under placeholders.
+ */
+function PendingFigures({ title, labels }: { title: string, labels: readonly CopyKey[] }) {
+  return h(Section, { title, summary: h(Skeleton, { width: '48px' }), folded: true },
+    h(Figures, { rows: labels.map(label => ({ key: label, label: copy(label), value: h(Skeleton, { width: '40px' }) })) }))
 }
 
 /** A figures section's rows: each figure gets a full row, so a long elapsed time
@@ -392,7 +422,8 @@ function Figures({ rows }: { rows: readonly Figure[] }) {
  * folded with the output speed beside its heading, the one figure a reader
  * follows while a turn runs.
  */
-function StatsSection({ stats }: { stats: PanelStats }) {
+function StatsSection({ stats }: { stats: PanelStats | null }) {
+  if (stats === null) return h(PendingFigures, { title: copy('sessionStats'), labels: ['statsTurns', 'statsSteps', 'statsModelTime', 'statsToolTime'] })
   const chat = hostChatSeat()
   const duration = (ms: number) => (chat === null ? `${Math.max(0, Math.round(ms / 1000))}s` : sessionStatsDuration(ms, chat))
   const rows: Figure[] = []
@@ -418,7 +449,8 @@ function StatsSection({ stats }: { stats: PanelStats }) {
  * The section starts folded with the cost beside its heading; with billing off
  * or a model no table prices, the tokens the session moved stand in.
  */
-function TokensSection({ stats, cost }: { stats: PanelStats, cost: string | null }) {
+function TokensSection({ stats, cost }: { stats: PanelStats | null, cost: string | null }) {
+  if (stats === null) return h(PendingFigures, { title: copy('tokenUsage'), labels: ['statsUncachedInput', 'statsCacheRead', 'statsCacheWrite', 'statsOutput'] })
   const chat = hostChatSeat()
   const tokens = (count: number) => (chat === null ? `${formatCompactTokens(count)} tok` : sessionStatsTokens(count, chat))
   const rows: Figure[] = []
@@ -476,7 +508,7 @@ function ChangesSection({ changes }: { changes: readonly PanelChange[] }) {
       else if (change.state === 'closed') side.push(h(Chip, { key: 'state', text: copy('closed') }))
       return h(Row, {
         key: change.url,
-        mark: h(primitives.IconBranchOutlineRegular, { size: MARK_SIZE }),
+        mark: h(PullRequestMark),
         title,
         detail: change.title === null || reference === '' ? undefined : reference,
         side: side.length === 0 ? undefined : side,

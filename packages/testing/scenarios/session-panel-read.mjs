@@ -1,9 +1,9 @@
 /**
  * session-panel-read.mjs — what the session panel's scenario reads from the page
- * (D92): the rail's headings and what each section holds, the context bar, the
- * header's preset and controls, the host's right column, and the captures taken
- * of the rail. The scenario beside this file sends the turn and judges what these
- * readings bring back.
+ * (D92, D102): the rail's headings and what each section holds, the context bar,
+ * the header's preset and controls, the host's right column, and the captures
+ * taken of the rail. The scenario beside this file sends the turn and judges what
+ * these readings bring back.
  */
 import copy from '../../client/src/features/session-panel/session-panel.copy.json' with { type: 'json' }
 import { RIGHTBAR_TOGGLE_SELECTOR } from '@dsh-claude-style/contracts/dom'
@@ -64,6 +64,7 @@ const readRail = (page) => page.evaluate(({ headings }) => {
       title: row.querySelector('.dsh-claude-panel-title')?.textContent ?? '',
       detail: row.querySelector('.dsh-claude-panel-detail')?.textContent ?? '',
       side: row.querySelector('.dsh-claude-panel-side')?.textContent ?? '',
+      clock: row.querySelector('.dsh-claude-panel-work-duration') !== null,
       duration: row.querySelector('.dsh-claude-panel-work-duration')?.textContent ?? '',
       execution: row.querySelector('.dsh-claude-panel-execution')?.textContent ?? '',
     })),
@@ -153,6 +154,5 @@ const readDisclosures = page => page.evaluate(() => [...document.querySelectorAl
   content: section.querySelector('.dsh-claude-panel-section-content')?.checkVisibility() ?? false,
   reading: section.querySelector('.dsh-claude-panel-section-reading')?.innerText ?? '',
 })))
-
 
 export { PART, capturePanel, words, anyOf, HEADINGS, FOLDED_HEADINGS, readRail, readPreset, presetLabelDrawn, readHeaderActions, readUtilities, pressDetails, railMounted, railSqueezes, readRightPanel, pressRightPanel, readDisclosures }

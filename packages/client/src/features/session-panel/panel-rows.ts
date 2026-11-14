@@ -2,6 +2,7 @@ import * as React from 'react'
 import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
 import { tooltipAnchor } from '../../shared/host-tooltip'
 import { copy } from './copy'
+import { ChevronMark } from './session-panel-marks'
 
 const h = React.createElement
 
@@ -16,7 +17,7 @@ export function Section({ title, summary, folded, children, kind }: { title: str
       h('h2', { className: 'dsh-claude-panel-heading' },
         h('span', { className: 'dsh-claude-panel-section-title' }, title),
         h('span', { className: 'dsh-claude-panel-section-chevron', 'aria-hidden': true },
-          h(primitives.IconChevronRightOutlineRegular, { size: 12 })),
+          h(ChevronMark)),
         summary === undefined ? null : h('span', { className: 'dsh-claude-panel-section-reading' }, summary))),
     h('div', { className: 'dsh-claude-panel-section-content' }, children))
 }
@@ -82,6 +83,22 @@ export function Row(props: { mark?: React.ReactNode, title: string, detail?: str
     onlyWhenClipped: reading === line,
     children: tooltipAnchor(row),
   })
+}
+
+/**
+ * A placeholder bar where a reading will be written once the host's fold
+ * answers (D102): one line's height, so the row it stands in keeps the height
+ * the written row will have.
+ */
+export function Skeleton({ width }: { width: string }) {
+  return h('span', { className: 'dsh-claude-panel-skeleton', style: { width } })
+}
+
+/** A row whose words have not been answered yet: its own mark, and a placeholder where the title will stand. */
+export function PendingRow({ mark, width }: { mark: React.ReactNode, width: string }) {
+  return h('div', { className: 'dsh-claude-panel-row', 'aria-hidden': true },
+    h('span', { className: 'dsh-claude-panel-mark' }, mark),
+    h('span', { className: 'dsh-claude-panel-main' }, h(Skeleton, { width })))
 }
 
 /** One trailing state word. */
