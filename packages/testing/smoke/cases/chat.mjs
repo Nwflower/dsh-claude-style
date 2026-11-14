@@ -215,9 +215,9 @@ export default {
     const step = 24 * 2
     const offsets = run.map(offsetsOf)
     const reachable = run.length > 0 ? (run[0].textHeight - run[0].slotHeight) : 0
-    check('a reasoning shorter than the cap stands in a window exactly as tall as the text, with nothing faded',
+    check('a reasoning shorter than the cap stands in a window exactly as tall as the text, its newest line rising through the bottom fade',
       grow.length === 4 &&
-        grow.slice(0, 2).every((frame) => frame.on === true && frame.capped === false && frame.offset === 0 && frame.mask === 'none' && frame.slotHeight === frame.textHeight && frame.textHeight < 400) &&
+        grow.slice(0, 2).every((frame) => frame.on === true && frame.capped === false && frame.offset === 0 && frame.mask.startsWith('linear-gradient') && frame.slotHeight === frame.textHeight && frame.textHeight < 400) &&
         grow.slice(2).every((frame) => frame.capped === true && frame.slotHeight === 400 && frame.mask.startsWith('linear-gradient') && frame.textHeight > 400) &&
         grow[3].textHeight > grow[0].textHeight,
       JSON.stringify(grow))

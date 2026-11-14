@@ -260,9 +260,9 @@ function reasoningStreamScenario({ check }) {
             capped.every((sample) => sample.masked === true) &&
             last.slotHeight <= cap + step && last.capped === true,
           JSON.stringify({ samples: samples.length, capped: capped.length, cap, first: samples[0], last })),
-        check('窗口还没长满时，文本铺满窗口、没有遮罩、也没有位移',
+        check('窗口还没长满时，文本铺满窗口、底边留一道渐隐、没有位移',
           uncapped.length > 0 && uncapped.some((sample) => sample.textHeight > 0) &&
-            uncapped.every((sample) => sample.masked === false && sample.offset === 0 &&
+            uncapped.every((sample) => sample.masked === true && sample.offset === 0 &&
               sample.slotHeight - sample.textHeight <= (sample.lineHeight ?? 0)) &&
             unclosed.length === 0,
           JSON.stringify({ lags: lags.length, unclosed: unclosed.length, first: uncapped.slice(0, 3), lag: lags[0] ?? null })),
