@@ -10,7 +10,7 @@ import { findPrimaryModelSlot, withSlots } from '@dsh-claude-style/engine/host'
 import { createModelCatalog } from './catalog'
 import { MODEL_SLOT_KEY, thirdPartyHoldsSeat } from './seat-ledger'
 import { createModelSubMenu } from './sub-menu'
-import { byModelId, createModelRows } from './rows'
+import { createModelRows, modelComparator } from './rows'
 import { releaseTag } from './release-tag'
 import { buildElement, closestFrom, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
 import { removeStrayNodes, pressKeepsPopoverOpen } from '../../shared/popover'
@@ -275,7 +275,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     const groups = (snap && snap.groups) || []
     const current = modelCatalog.current(snap)
     const showTeam = teamMode.available()
-    let sig = [status, activeLocale(), showTeam, current ? `${current.group.id}/${current.model.id}` : '', readPrefs().quickProviders.join(','), readPrefs().modelDescriptions !== false].join('|')
+    const prefs = readPrefs()
+    let sig = [status, activeLocale(), showTeam, current ? `${current.group.id}/${current.model.id}` : '', prefs.quickProviders.join(','), prefs.modelOrder, prefs.modelOrderRows.join(','), prefs.modelDescriptions !== false].join('|')
     sig += rowsSignature(groups)
     if (sig === modelBodySig) {
       modelRows.refreshRates()
@@ -304,7 +305,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
           // The official source needs no naming, and the first section needs
           // no rule: a bare line above the list would be one line too many.
           const sectionLabel = section.id === MODEL_OFFICIAL_GROUP ? '' : modelGroupName(section.id, section.name)
-          const sectionModels = section.models.slice().sort(byModelId)
+          const sectionModels = section.models.slice().sort(modelComparator(prefs.modelOrder, section.id, prefs.modelOrderRows))
           if (s === 0 && sectionLabel === '') {
             for (const model of sectionModels) {
               const selected = current !== null && current.group.id === section.id && current.model.id === model.id
@@ -367,7 +368,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     const sections = modelRows.levelOneSections(groups)
     const listed: string[] = []
     for (let s = 0; s < sections.length; s++) listed.push(sections[s].id)
-    let sig = `more|${listed.join(',')}`
+    const prefs = readPrefs()
+    let sig = `more|${prefs.modelOrder}|${prefs.modelOrderRows.join(',')}|${listed.join(',')}`
     sig += rowsSignature(groups)
     if (current) sig += `#${current.group.id}/${current.model.id}`
     return sig

@@ -67,6 +67,7 @@ export type { MascotStage, StageSurroundings } from './features/mascot/mascot-st
 export { indexModelCopy, modelIdentity, resolveModelBrand, resolveModelCopy } from './features/model/model-copy'
 export type { ModelCopyIndex } from './features/model/model-copy'
 export { levelOneSections } from './features/model/level-one'
+export { byModelId, modelComparator } from './features/model/model-order'
 export { buildRateBadge, rateDetail, rateName } from './features/peakrate/badge'
 export { matchProfile } from './features/peakrate/match'
 export { currentRate, forgetRates, formatCountdown } from './features/peakrate/schedule'

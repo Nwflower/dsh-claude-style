@@ -238,6 +238,16 @@ export const PRICE_ROWS_MAX = 32
 export const PRICE_ROW_MODEL_MAX = 96
 export const PRICE_ROW_RATE_MAX = 16
 
+/** Model rows keep id order by default; brand order puts recognised vendor lockups first. */
+export const MODEL_ORDER_ID = 'id'
+export const MODEL_ORDER_BRAND = 'brand'
+export const MODEL_ORDER_CATALOG = 'catalog'
+export const MODEL_ORDER_CUSTOM = 'custom'
+export const MODEL_ORDERS = [MODEL_ORDER_ID, MODEL_ORDER_BRAND, MODEL_ORDER_CATALOG, MODEL_ORDER_CUSTOM] as const
+/** Custom model order stores at most 200 `provider/model` rows. */
+export const MODEL_ORDER_ROWS_MAX = 200
+export const MODEL_ORDER_ROW_MAX = 160
+
 /* ---------- the table ---------- */
 
 interface PrefSpecBase {
@@ -287,6 +297,10 @@ export const PREFS = {
   /** Whether the host's question card is redrawn and moved to the end of the conversation; off leaves it in the composer as the host draws it. */
   questionCard: { type: 'boolean', default: true },
   modelPicker: { type: 'boolean', default: true },
+  /** Brand order groups recognised vendor lockups before plain model names. */
+  modelOrder: { type: 'choice', values: MODEL_ORDERS, default: MODEL_ORDER_ID },
+  /** Custom order entries are `provider/model`; entries left out follow in id order. */
+  modelOrderRows: { type: 'list', default: [], max: MODEL_ORDER_ROWS_MAX, entryMax: MODEL_ORDER_ROW_MAX, drop: [] },
   /** Off restores the host model seat so third-party effort controls remain reachable. */
   effortSlider: { type: 'boolean', default: true },
   modelDescriptions: { type: 'boolean', default: true },

@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-15",
+  "group": "new",
+  "order": 0,
+  "external": false,
+  "zh": "模型选择器支持按标识、品牌、目录或自定义顺序排列，未识别品牌的模型行不再显示副标题",
+  "en": "Add ID, brand, catalog and custom model ordering, and keep description lines off models without a recognised brand"
+}

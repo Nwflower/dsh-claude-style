@@ -19,6 +19,14 @@ export default {
     // The menu is drawn into the restyled composer.
     requires: ANY_COMPOSER_REQUIRES,
   }, {
+    tab: 'composer',
+    rank: 34,
+    pref: 'modelOrder',
+    parent: 'modelPicker',
+    title: 'modelOrderTitle',
+    desc: 'modelOrderDesc',
+    choiceLabels: { id: 'modelOrderId', brand: 'modelOrderBrand', catalog: 'modelOrderCatalog', custom: 'modelOrderCustom' },
+  }, {
     // The catalog's own description lines, which the picker draws, under it.
     tab: 'composer',
     rank: 35,
