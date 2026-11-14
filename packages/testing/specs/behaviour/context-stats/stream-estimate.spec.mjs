@@ -90,6 +90,9 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
       window.__pushStats('tokenUsage', { outputTokens: 130 })
       return performance.now()
     })
+    // The skin answers the push in a scheduler pass, which is a frame's work:
+    // read after it, never race the read against it.
+    await t.page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve(undefined)))))
     const settled = await readWrittenBackTokens(t)
     const readAt = await t.page.evaluate(() => performance.now())
     t.expectThat.equal(settled, 130, "the figure is the host's settled total on the next frame")

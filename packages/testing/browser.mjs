@@ -80,6 +80,7 @@ async function newContextOn(browser, options = {}, extra = {}) {
   const context = await browser.newContext({
     viewport: { width: options.width ?? 1280, height: options.height ?? 900 },
     ...(options.reducedMotion === undefined ? {} : { reducedMotion: options.reducedMotion }),
+    ...(options.locale === undefined ? {} : { locale: options.locale }),
     ...extra,
   })
   if (options.initScript !== undefined) await context.addInitScript(options.initScript)

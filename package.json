@@ -53,6 +53,7 @@
     "lib",
     "!lib/**/*.map",
     "!lib/assets/*.map.br",
+    "!lib/audit",
     "locale",
     "skin.json",
     "cordis.patch.yml",

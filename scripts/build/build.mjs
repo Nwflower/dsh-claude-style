@@ -330,6 +330,12 @@ async function main() {
   checkPaletteCards(tokenDoc, { presets: CONSTANTS.presets, brands: CONSTANTS.brands, brandDefaults: CONSTANTS.brandDefaults })
   checkPaletteContrast(tokenDoc)
   const css = buildStylesheet({ sheets, srcDir: SRC, sources, tokenDoc, gates: CONSTANTS.gates, images, featureConstants: CONSTANTS.featureSheets })
+  // The authored sheet, for the live importance walk: it judges the rules the
+  // build's own record is keyed by (D9), which the page's finished sheet no
+  // longer spells (D101). Kept out of the package, beside the build output the
+  // cloud hands the end-to-end lane.
+  fs.mkdirSync(path.join(ROOT, 'lib', 'audit'), { recursive: true })
+  fs.writeFileSync(path.join(ROOT, 'lib', 'audit', 'importance-sheet.css'), css.authored)
   if (writeTokenTable(STYLE_GUIDE, tokenDoc)) console.log('built docs/STYLE.md token table from packages/client/src/theme/tokens.json')
   if (writeMotionTable(STYLE_GUIDE, tokenDoc)) console.log('built docs/STYLE.md motion table from packages/client/src/theme/tokens.json')
   if (writeLayerTable(STYLE_GUIDE, tokenDoc)) console.log('built docs/STYLE.md layer table from packages/client/src/theme/tokens.json')
