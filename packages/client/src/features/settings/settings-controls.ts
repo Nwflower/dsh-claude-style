@@ -426,8 +426,11 @@ export function createSettingsControls() {
    * above the block's own content: the switch or choice that belongs to the
    * block under it. It belongs to a block row, whose content has no right-hand
    * slot of its own.
+   *
+   * `lead` is a quieter control the row shows ahead of its own, such as the
+   * button that opens what the control governs.
    */
-  function row(key: string, title: string | null, description: React.ReactNode, control: React.ReactNode, options?: { block?: boolean, disabled?: boolean, sub?: boolean, experimental?: boolean, mark?: string, aside?: React.ReactElement | null }) {
+  function row(key: string, title: string | null, description: React.ReactNode, control: React.ReactNode, options?: { block?: boolean, disabled?: boolean, sub?: boolean, experimental?: boolean, mark?: string, aside?: React.ReactElement | null, lead?: React.ReactElement | null }) {
     const classes = ['dsh-claude-settings-row']
     if (options?.block) classes.push('dsh-claude-settings-row-block')
     else if (React.isValidElement(control) && control.type === ClaudeStyleSegmentGroup) classes.push('dsh-claude-settings-row-segment')
@@ -448,6 +451,7 @@ export function createSettingsControls() {
       'div',
       { className: classes.join(' '), key, 'aria-disabled': disabled ? 'true' : undefined, 'data-disabled': disabled ? '' : undefined, 'data-dsh-claude-settings-row': options?.mark },
       aside === null ? text : React.createElement('div', { className: 'dsh-claude-settings-row-head' }, text, aside),
+      options?.lead ?? null,
       named,
     )
   }

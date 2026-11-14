@@ -3,7 +3,7 @@ import { BACKGROUND_OPACITY_DEFAULT, BACKGROUND_OPACITY_MAX, BACKGROUND_OPACITY_
 import { backgroundOpacityPercent } from '../../shared/background-opacity'
 import { webfontsUnavailable } from '../../shared/webfonts'
 import { brandRows } from './settings-brand'
-import { paletteCardsRow } from './palette-cards'
+import { paletteCardsRow, paletteManageButton } from './palette-cards'
 import { PercentControl } from './settings-percent-control'
 import { copy } from './copy'
 import { noteDesc } from './settings-controls'
@@ -78,6 +78,8 @@ export function createSettingsAppearanceTab(): SettingsTab {
           copy('paletteTitle'),
           copy('paletteDesc'),
           controls.toggle(prefs.palette !== PALETTE_HOST, on => { write({ palette: on ? PALETTE_CLAUDE : PALETTE_HOST }) }),
+          // The manager's door stands with the cards it manages: following the host leaves it nothing.
+          { lead: prefs.palette === PALETTE_HOST ? null : paletteManageButton() },
         ),
       },
       // The cards belong to the skin's own colours: following the host leaves nothing to pick.

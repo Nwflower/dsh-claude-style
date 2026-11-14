@@ -75,10 +75,11 @@ export function schemeDiscs(scheme: PaletteScheme, staticPreset: boolean) {
   ]
 }
 
-/** The manager's line marks, drawn on a 16px grid in the text colour around them. */
+/** The line marks of the manager and the cards, drawn on a 16px grid in the text colour around them. */
 const GLYPHS = {
   check: 'M3.5 8.5l3 3 6-7',
   close: 'M4 4l8 8M12 4l-8 8',
+  pencil: 'M11.1 2.9l2 2-7.4 7.4-2.6.6.6-2.6 7.4-7.4Z',
   plus: 'M8 3.5v9M3.5 8h9',
   undo: 'M6 3.5L3.5 6 6 8.5M3.5 6h5.75a3.25 3.25 0 010 6.5H7',
 } as const
@@ -122,9 +123,11 @@ function placeHint(hint: HTMLElement, disc: HTMLElement, label: string) {
 /**
  * The five discs of one scheme. The disc under the pointer lifts its
  * neighbours less the further they stand (transitions.dev's "Avatar group
- * hover", MIT) and names itself in the hint.
+ * hover", MIT) and names itself in the hint. Each disc is also the button that
+ * opens the scheme's editor, and wears the pencil while it is under the
+ * pointer (palette-schemes.css); pressing it leaves the card around it unpicked.
  */
-export function Swatches(props: { colours: string[] }) {
+export function Swatches(props: { colours: string[], edit: { label: string, run(): void } }) {
   const [lifted, setLifted] = React.useState<number | null>(null)
   const hint = React.useRef<HTMLSpanElement>(null)
   const release = () => {
@@ -138,17 +141,21 @@ export function Swatches(props: { colours: string[] }) {
       'data-dsh-claude-lifting': lifted === null ? undefined : '',
       onPointerLeave: release,
     },
-    DISCS.map((disc, index) => React.createElement('span', {
+    DISCS.map((disc, index) => React.createElement('button', {
       key: disc.label,
+      type: 'button',
       className: 'dsh-claude-palette-swatch',
       style: {
         color: props.colours[index],
         '--dsh-claude-lift-reach': lifted === null ? undefined : String(Math.abs(index - lifted)),
       } as React.CSSProperties,
       'data-dsh-claude-lifted': index === lifted ? '' : undefined,
-      'aria-label': copy(disc.label),
-      role: 'img',
-      tabIndex: 0,
+      'data-action': 'edit',
+      'aria-label': `${props.edit.label} · ${copy(disc.label)}`,
+      onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.stopPropagation()
+        props.edit.run()
+      },
       onPointerEnter: (event: React.PointerEvent<HTMLSpanElement>) => {
         setLifted(index)
         placeHint(hint.current!, event.currentTarget, copy(disc.label))
@@ -158,7 +165,7 @@ export function Swatches(props: { colours: string[] }) {
         placeHint(hint.current!, event.currentTarget, copy(disc.label))
       },
       onBlur: release,
-    })),
+    }, React.createElement(Glyph, { name: 'pencil' }))),
     // The discs carry their own names; the hint repeats them for the eye only.
     React.createElement(
       'span',

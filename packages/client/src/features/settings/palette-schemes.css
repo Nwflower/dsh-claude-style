@@ -5,13 +5,6 @@
    it: the list of schemes beside the editor of the one in hand, whose own
    sheet is palette-editor.css. */
 
-body[data-dsh-claude-style] .dsh-claude-palette-block {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
-}
-
 body[data-dsh-claude-style] .dsh-claude-palette-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -42,32 +35,47 @@ body[data-dsh-claude-style] .dsh-claude-palette-card-actions > .dsh-claude-palet
   margin-left: 0;
 }
 
-/* The card that makes a scheme: the card's own frame, drawn as a dashed edge. */
-body[data-dsh-claude-style] .dsh-claude-palette-new {
+/* A card's discs are the buttons that open its scheme's editor (palette-parts.ts):
+   the disc under the pointer or the keyboard wears a bare pencil. */
+body[data-dsh-claude-style] button.dsh-claude-palette-swatch {
+  align-items: center;
   justify-content: center;
-  border-style: dashed;
-  background: transparent;
+  padding: 0;
+  font: inherit;
   cursor: pointer;
 }
 
-body[data-dsh-claude-style] .dsh-claude-palette-new:hover:not(:disabled) {
-  border-color: var(--dsw-alias-border-l3);
+/* The disc's own colour is the inherited currentColor: the pencil takes black
+   on a light disc and white on a dark one, the split at the lightness where
+   either still reads. */
+body[data-dsh-claude-style] .dsh-claude-palette-swatch > .dsh-claude-scheme-glyph {
+  width: 14px;
+  height: 14px;
+  color: oklch(from currentColor clamp(0, (0.62 - l) * 1000, 1) 0 0);
+  opacity: 0;
+  transition: opacity var(--dsh-claude-duration-feedback) var(--dsh-claude-ease-standard);
 }
 
-body[data-dsh-claude-style] .dsh-claude-palette-new:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+body[data-dsh-claude-style] .dsh-claude-palette-swatch:is(:hover, :focus-visible) > .dsh-claude-scheme-glyph {
+  opacity: 1;
 }
 
-body[data-dsh-claude-style] .dsh-claude-palette-new-mark {
+/* The manager's door beside the colour switch: the row's quiet text button. */
+body[data-dsh-claude-style] .dsh-claude-palette-manage {
+  margin-right: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
   color: var(--dsw-alias-label-tertiary);
-  font-size: 24px;
-  line-height: 36px;
+  font: inherit;
+  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 20px;
+  cursor: pointer;
+  transition: color var(--dsh-claude-timing-feedback);
 }
 
-body[data-dsh-claude-style] .dsh-claude-palette-toolbar {
-  display: flex;
-  justify-content: flex-end;
+body[data-dsh-claude-style] .dsh-claude-palette-manage:hover {
+  color: var(--dsw-alias-label-secondary);
 }
 
 /* ---------- the manager ---------- */

@@ -27,8 +27,6 @@ import { copy } from './copy'
 export interface PaletteManagerOpen {
   /** The scheme whose editor opens first. */
   edit?: string
-  /** A scheme just made whose record is still on its way to the form. */
-  created?: PaletteScheme
 }
 
 const PANEL_CLASS = 'dsh-claude-scheme-panel'
@@ -76,7 +74,7 @@ function SchemeItem(props: { prefs: Prefs, scheme: PaletteScheme, active: boolea
 
 function Manager(props: { first: PaletteManagerOpen, close(): void }) {
   const prefs = React.useSyncExternalStore(subscribePrefs, readPrefs)
-  const [view, setView] = React.useState<View>(() => ({ id: props.first.edit ?? paintedScheme(prefs), created: props.first.created, enter: null }))
+  const [view, setView] = React.useState<View>(() => ({ id: props.first.edit ?? paintedScheme(prefs), created: undefined, enter: null }))
   const panel = React.useRef<HTMLDivElement>(null)
   const items = React.useRef<HTMLDivElement>(null)
   // The host owns nested-dialog keyboard handling and restores the settings control's focus (D43).

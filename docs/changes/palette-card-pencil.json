@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-14",
+  "group": "improvements",
+  "order": 0,
+  "external": true,
+  "zh": "配色卡片在指针所在的色球上显示按色球深浅取白或黑的画笔，点任一色球打开该方案的编辑，「管理」移到配色开关左侧，新建方案只留在管理窗口里",
+  "en": "Colour cards show a pencil on the disc under the pointer, white or black by the disc's lightness, any disc opens the scheme's editor, Manage moves beside the colour switch, and new schemes are made from the manager alone"
+}
