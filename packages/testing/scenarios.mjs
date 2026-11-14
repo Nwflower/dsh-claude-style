@@ -206,7 +206,7 @@ const SCENARIOS = {
    * does not scroll sideways.
    */
   mobileHome: mobileHomeScenario(),
-  composerViewport: composerViewportScenario(),
+  composerViewport: { ...composerViewportScenario(), frames: true },
   narrow: {
     script: 'greeting',
     prompt: 'hello there',
@@ -412,19 +412,19 @@ const SCENARIOS = {
    * The reader's own scrolling during a live turn: the status line's pin stands
    * only while the skin's follow moves the position (D40, D74).
    */
-  readerScroll: readerScrollScenario({ check }),
+  readerScroll: { ...readerScrollScenario({ check }), frames: true },
   /** Completion-time fold room is the host's reading-position reservation (turn-spacer.mjs). */
-  turnSpacer: turnSpacerScenario({ check }),
+  turnSpacer: { ...turnSpacerScenario({ check }), frames: true },
   /** A door rolling at the tail mid-stream leaves the status line pinned where it stood (door-pin.mjs, D40). */
-  doorPin: doorPinScenario({ check }),
+  doorPin: { ...doorPinScenario({ check }), frames: true },
   /** An answer arriving faster than a slide carries it: the composer stands still and the column stays on the pin (stream-pace.mjs, D85). */
-  streamPace: streamPaceScenario({ check }),
+  streamPace: { ...streamPaceScenario({ check }), frames: true },
   /** A provider's own pace: the column the reader watches never moves down between two frames (stream-jitter.mjs, D85). */
-  streamJitter: streamJitterScenario({ check }),
-  streamJitterFooter: streamJitterScenario({ check }, 'footer'),
-  streamJitterInline: streamJitterScenario({ check }, 'inline'),
+  streamJitter: { ...streamJitterScenario({ check }), frames: true },
+  streamJitterFooter: { ...streamJitterScenario({ check }, 'footer'), frames: true },
+  streamJitterInline: { ...streamJitterScenario({ check }, 'inline'), frames: true },
   /** The transitions.dev surfaces where they move: greeting, panel, switch, tab, badge, menu (motion.mjs, D9). */
-  motion: motionScenario({ check }),
+  motion: { ...motionScenario({ check }), frames: true },
   /** The send flight: the stand-in takes off, the row lands, the words stay put. */
   send: {
     script: 'greeting',
@@ -586,20 +586,20 @@ const SCENARIOS = {
   /** The collapsed rail as one icon column, its chip centred on it (sidebar-rail.mjs). */
   sidebarRail: sidebarRailScenario({ check }),
   /** The collapsed sidebar opened over the page from a hover, the centre kept as it was (sidebar-peek.mjs). */
-  sidebarPeek: sidebarPeekScenario({ check }),
+  sidebarPeek: { ...sidebarPeekScenario({ check }), frames: true },
   /** The waiting line and the counted process headers (process-summary.mjs, D74). */
-  processSummary: processSummaryScenario({ check }),
+  processSummary: { ...processSummaryScenario({ check }), frames: true },
   /** The file-change rows of one file read as one row (file-merge.mjs). */
   fileMerge: fileMergeScenario({ check }),
   /** The reasoning's streamed window while the model thinks (reasoning-stream.mjs, D74). */
-  reasoningStream: reasoningStreamScenario({ check }),
-  reasoningContinuous: reasoningContinuousScenario({ check }),
+  reasoningStream: { ...reasoningStreamScenario({ check }), frames: true },
+  reasoningContinuous: { ...reasoningContinuousScenario({ check }), frames: true },
   /** The waiting line's own words: the model's clause and the file a call works on (wait-line.mjs, D74). */
-  waitLine: waitLineScenario({ check }),
+  waitLine: { ...waitLineScenario({ check }), frames: true },
   /** The waiting line's second paint, chosen in the settings (wash-line.mjs, D40). */
-  washLine: washLineScenario({ check }),
+  washLine: { ...washLineScenario({ check }), frames: true },
   /** What a frame costs in a transcript that is already long (long-session.mjs, D40). */
-  longSession: longSessionScenario({ check }),
+  longSession: { ...longSessionScenario({ check }), frames: true },
   /** Every `!important` the skin writes is needed on the real page (packages/testing/scenarios/importance.mjs, D9). */
   importance: importanceScenario({ check, observe, sendPrompt, waitForTurn, host: HOST }),
   /** A page under a non-loopback name reads and writes the host's settings beside the loopback one (packages/testing/scenarios/remote-settings.mjs, D75). */

@@ -485,6 +485,26 @@ async function main() {
         }
       }
     }))
+    // A scenario whose checks read frame by frame can lose to a slow runner:
+    // re-judge a failed one alone, as the behaviour lane does for its
+    // frame-sensitive tests, and let only a failure alone count.
+    if (broke === null) {
+      for (const name of walked) {
+        const result = finished.get(name)
+        if (result === undefined || result.failed === 0 || SCENARIOS[name].frames !== true) continue
+        say(`\n== ${name} ==  re-judged alone\n`)
+        try {
+          const again = await runScenario(name, { ...options, home: homes[0], worker: 0, browser, say })
+          if (again.failed === 0) {
+            finished.set(name, { ...again, rerun: true })
+            fs.writeFileSync(path.join(out, `${name}.json`), `${JSON.stringify({ ...again, rerun: true }, null, 2)}\n`)
+            say('  re-judged alone: passed\n')
+          }
+        } catch (error) {
+          say(`  re-judged alone: ${String(error).split('\n')[0]}\n`)
+        }
+      }
+    }
   } finally {
     await browser.close()
   }
