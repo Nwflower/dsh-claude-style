@@ -7,6 +7,8 @@ import path from 'node:path'
 import postcss from 'postcss'
 import selectorParser from 'postcss-selector-parser'
 import { featureSheet } from './feature-sheets.mjs'
+import { sheetTemplate } from './part-template.mjs'
+import { bucketSelectors, recordKey } from './selector-buckets.mjs'
 import { minifyCss } from '../shared/minify-css.mjs'
 import { loadModule } from '../shared/ts-module.mjs'
 import { ruleKey } from '../shared/rule-key.mjs'
@@ -201,9 +203,10 @@ function sheetLabel(sheet) {
  * @param read - collects the skin attributes the sheet's selectors read, each with where.
  * @param keyframes - signature → where, across the sheets, for the repeat check (D9).
  * @param relations - relation name → where, for the hold-mark check (D9).
+ * @param unkeyed - selector → where, for the selectors no bucket key can be written into (D101).
  * @returns the sheet's text, comments and formatting kept.
  */
-function processSheet(sheet, text, gates, names, read, parts, relations, keyframes) {
+function processSheet(sheet, text, gates, names, read, parts, relations, keyframes, unkeyed) {
   const label = sheetLabel(sheet)
   const root = postcss.parse(text, { from: label })
   const surface = sheet.scope === 'surface'
@@ -235,6 +238,8 @@ function processSheet(sheet, text, gates, names, read, parts, relations, keyfram
       if (scopes.length === 0) throw new Error(`build: ${where} selector "${selector.toString().trim()}" is not under ${SCOPE_TAG}[${scopeAttribute}]`)
       checkHasPlacement(where, selector)
       checkHasMarks(where, selector)
+      const written = recordKey(selector.toString())
+      if (!unkeyed.has(written) && bucketSelectors(written).some((item) => !item.keyed)) unkeyed.set(written, where)
       if (!stamp) continue
       for (const { attribute } of scopes) attribute.parent.insertAfter(attribute, selectorParser.attribute({ attribute: gates.composer }))
     }
@@ -411,13 +416,14 @@ export function buildStylesheet({ sheets, srcDir, sources, tokenDoc, gates, imag
   const parts = new Map()
   const relations = new Map()
   const keyframes = new Map()
+  const unkeyed = new Map()
   const processed = sheets.map((sheet) => {
     const source = sheet.file === TOKEN_SHEET
       ? tokenSheet(tokenDoc, gates, images)
       : sheet.generated !== undefined
         ? featureSheet(sheet.generated, featureConstants)
         : fs.readFileSync(path.join(srcDir, sheet.file), 'utf8').replace(/\r\n/g, '\n')
-    return { sheet, text: processSheet(sheet, source, gates, names, read, parts, relations, keyframes).replace(/\n+$/, '') }
+    return { sheet, text: processSheet(sheet, source, gates, names, read, parts, relations, keyframes, unkeyed).replace(/\n+$/, '') }
   })
   const joined = (surface) => processed.filter((item) => (item.sheet.scope === 'surface') === surface).map((item) => item.text).join('\n\n')
   for (const name of names.claude) {
@@ -426,6 +432,7 @@ export function buildStylesheet({ sheets, srcDir, sources, tokenDoc, gates, imag
   checkAttributes(read, sources)
   checkParts(parts)
   checkHolds(relations)
+  checkBuckets(unkeyed, srcDir)
   // The token sheet declares every token, so it is no reader of any: what reads
   // a token is another sheet, or another token's value (a shorthand).
   const readers = [
@@ -435,7 +442,41 @@ export function buildStylesheet({ sheets, srcDir, sources, tokenDoc, gates, imag
   checkTokensRead(tokenDoc, readers, sources)
   const main = minifyCss(joined(false))
   checkImportance(main, srcDir)
-  return { main, surface: minifyCss(joined(true)) }
+  return { main: sheetTemplate(bucketSheet(main), PART_ATTRIBUTE), surface: sheetTemplate(bucketSheet(minifyCss(joined(true))), PART_ATTRIBUTE) }
+}
+
+/**
+ * Hold every selector's last compound to a bucket key (D101): a selector that
+ * stays unkeyed once its lists are written out has to stand in the record with
+ * its reason, and a record that names no selector any more is struck — so the
+ * record is the whole of what the browser tries on every element, and it only
+ * shrinks.
+ */
+function checkBuckets(unkeyed, srcDir) {
+  const file = 'packages/testing/data/unkeyed-selectors.json'
+  const record = JSON.parse(fs.readFileSync(path.resolve(srcDir, '..', '..', '..', ...file.split('/')), 'utf8'))
+  const recorded = new Set(record.groups.flatMap((group) => group.selectors))
+  const missing = [...unkeyed].filter(([selector]) => !recorded.has(selector))
+  if (missing.length > 0) {
+    throw new Error(`build: ${missing.length} selector(s) end in a compound with no class, id, attribute or tag, so the browser tries them on every element (D101) — name the elements they mean, or record each in ${file} with its reason: ${missing.slice(0, 5).map(([selector, where]) => `${where} "${selector}"`).join('；')}`)
+  }
+  const stale = [...recorded].filter((selector) => !unkeyed.has(selector))
+  if (stale.length > 0) throw new Error(`build: ${file} records ${stale.length} selector(s) no sheet writes unkeyed any more — strike them: ${stale.slice(0, 5).join('；')}`)
+}
+
+/**
+ * Write every selector of a joined sheet out by its bucket keys (D101). The
+ * checks above and the importance record read the selectors as the sources
+ * write them, so this runs after them; the part template is cut from its result.
+ */
+function bucketSheet(text) {
+  const root = postcss.parse(text)
+  root.walkRules((rule) => {
+    if (rule.parent.type === 'atrule' && /keyframes$/i.test(rule.parent.name)) return
+    const written = bucketSelectors(rule.selector).map((item) => item.selector).join(',')
+    if (written !== rule.selector) rule.selector = written
+  })
+  return root.toString()
 }
 
 /**

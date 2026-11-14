@@ -50,3 +50,20 @@ export function mountStylesheet(request: SheetRequest) {
     if (mountedGenerations.get(id) === generation) sheet.remove()
   }
 }
+
+/**
+ * Replace the text of a sheet that stands mounted, in place: its node, its tags
+ * and the generation that owns it stay as they are, so the stop its mount
+ * returned still takes it away. The sheet is rewritten only while it reads as
+ * `from`, the text this caller left in it: a sheet a newer generation has
+ * mounted its own text into is that generation's, and a sheet that is not on
+ * the page is left alone.
+ *
+ * @returns whether the sheet now carries `to`.
+ */
+export function rewriteStylesheet(id: string, from: string, to: string): boolean {
+  const sheet = document.getElementById(id)
+  if (sheet === null || sheet.textContent !== from) return false
+  if (from !== to) sheet.textContent = to
+  return true
+}

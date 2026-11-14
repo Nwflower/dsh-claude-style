@@ -95,6 +95,7 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@csstools/selector-specificity": "6.0.1",
     "@deepseek-ai/dsh-client-ui-primitives": "0.2.2-rc.1",
     "@deepseek-ai/dsh-util-workspace-path": "0.2.2-rc.1",
     "@deepseek-ai/schemastery": "3.18.4",

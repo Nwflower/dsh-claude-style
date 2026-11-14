@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-14",
+  "group": "improvements",
+  "order": 0,
+  "external": false,
+  "zh": "以多参数选择器列表结尾的样式规则在构建时展开成按类名、属性或标签匹配的几条，浏览器不再拿它们去试页面上的每个元素；六千节点的页面上，皮肤样式表下的一次样式计算从 28.7 毫秒降到 22.5 毫秒",
+  "en": "Style rules ending in a multi-argument selector list are written out at build time into rules matched by class, attribute or tag, so the browser no longer tries them on every element; on a 6,000-node page one style calculation under the skin's sheet drops from 28.7 ms to 22.5 ms"
+}

@@ -1,0 +1,134 @@
+{
+  "note": "The selectors whose last compound carries no class, id, attribute or tag once the build has written their lists out, each under the reason it has to stand that way (D101). The browser tries such a selector on every element of the page, so the build refuses one that is not recorded here and a record that names no selector any more: the list is a debt, and it only shrinks (scripts/ci/ci-scope.mjs --ledgers).",
+  "groups": [
+    {
+      "reason": "任何元素都可能滚动，标准滚动条属性里的宽度不继承，规则落在每个元素上",
+      "selectors": [
+        "body[data-dsh-claude-style] *",
+        "body[data-dsh-claude-style]:not([data-ds-dark-theme]) *"
+      ]
+    },
+    {
+      "reason": "滚动条伪元素没有可取键的主体：任何元素都可能带滚动条",
+      "selectors": [
+        "body[data-dsh-claude-style] ::-webkit-scrollbar",
+        "body[data-dsh-claude-style] ::-webkit-scrollbar-track",
+        "body[data-dsh-claude-style] ::-webkit-scrollbar-thumb",
+        "body[data-dsh-claude-style] ::-webkit-scrollbar-thumb:hover",
+        "body[data-dsh-claude-style]:not([data-ds-dark-theme]) ::-webkit-scrollbar-thumb",
+        "body[data-dsh-claude-style]:not([data-ds-dark-theme]) ::-webkit-scrollbar-thumb:hover"
+      ]
+    },
+    {
+      "reason": "选区颜色要由对话与输入框里的每个元素自己取得，继承来的颜色会按各自的文字颜色偏移",
+      "selectors": [
+        "body[data-dsh-claude-style] :is([data-chat-flow], [data-lexical-editor]) *::selection",
+        "body[data-dsh-claude-style][data-dsh-window-blur] :is([data-chat-flow], [data-lexical-editor]) *::selection"
+      ]
+    },
+    {
+      "reason": "整页状态（窗口休眠、主题切换）要停下每个元素与伪元素上的动画和过渡，只在状态存在时命中",
+      "selectors": [
+        "html[data-dsh-theme-transitioning] body[data-dsh-claude-style][data-dsh-theme-transitioning] *",
+        "body[data-dsh-claude-style][data-dsh-claude-asleep][data-dsh-claude-asleep] *",
+        "body[data-dsh-claude-style][data-dsh-claude-asleep][data-dsh-claude-asleep] *::before",
+        "body[data-dsh-claude-style][data-dsh-claude-asleep][data-dsh-claude-asleep] *::after"
+      ]
+    },
+    {
+      "reason": "皮肤自己搭的盒子：规则落在它的全部子元素或按位置取的子元素上",
+      "selectors": [
+        "body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [data-dsh-claude-part~=\"foot-area\"] .dsh-claude-footer-seat-copy > *",
+        "body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [data-dsh-claude-part~=\"sidebar-root\"][data-dsh-claude-part~=\"sidebar-collapsed\"] .dsh-claude-footer-seat-copy > *",
+        "body[data-dsh-claude-style] .dsh-claude-ban *",
+        "body[data-dsh-claude-style] .dsh-claude-ban *::before",
+        "body[data-dsh-claude-style] .dsh-claude-ban *::after",
+        "body[data-dsh-claude-style] .dsh-claude-file-op > *",
+        "body[data-dsh-claude-style] [data-dsh-claude-rolling] > *",
+        "body[data-dsh-claude-style] [data-dsh-claude-part~=\"trailing\"] .dsh-claude-model-btn > :not(.dsh-claude-model-tag)",
+        "body[data-dsh-claude-style] .dsh-claude-mascot-bubble-row[data-row=\"session\"] > *",
+        "body[data-dsh-claude-style] .dsh-claude-settings-rows > :first-child",
+        "body[data-dsh-claude-style] .dsh-claude-view-switch > *",
+        "body[data-dsh-claude-style] .dsh-claude-view-switch > *:hover",
+        "body[data-dsh-claude-style] [data-dsh-claude-pill] > *"
+      ]
+    },
+    {
+      "reason": "流式文字的逐词淡入：高亮伪元素要落在流式块里任何承载文字的元素上",
+      "selectors": [
+        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-0)",
+        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-1)",
+        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-2)",
+        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-3)",
+        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-4)",
+        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-5)",
+        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-6)",
+        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-7)",
+        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-8)",
+        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-9)",
+        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-10)",
+        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-11)",
+        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-12)",
+        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-13)",
+        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-14)",
+        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-15)",
+        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-16)",
+        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-17)",
+        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-18)",
+        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-19)",
+        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-20)",
+        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-21)",
+        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-22)",
+        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-23)"
+      ]
+    },
+    {
+      "reason": "宿主的盒子：子元素没有可读的名字，规则落在全部子元素或按位置取的子元素上",
+      "selectors": [
+        "body[data-dsh-claude-style][data-dsh-claude-custom-mark] :is([data-dsh-claude-part~=\"brand-mark\"], [data-dsh-claude-part~=\"rail-mark\"]) > *",
+        "body[data-dsh-claude-style][data-dsh-claude-custom-word] [data-dsh-claude-part~=\"brand-identity\"] > [data-dsh-claude-part~=\"brand-name\"] > *",
+        "body[data-dsh-claude-style][data-dsh-claude-custom-mark] [data-dsh-claude-part~=\"hero-mark\"] > *",
+        "body[data-dsh-claude-style][data-dsh-claude-chat-fold] [data-chat-flow] :is([data-disclosure-row], [data-disclosure-header]) ~ :where(:is([data-disclosure-row], [data-disclosure-header]) ~ *):not([data-turn-process-member] *, [data-turn-trigger] *):is([data-disclosure-row] ~ *, [data-disclosure-header] ~ * *)",
+        "body[data-dsh-claude-style][data-dsh-claude-motion=\"reduced\"] [data-chat-flow] :is([data-disclosure-row], [data-disclosure-header]) ~ :where(:is([data-disclosure-row], [data-disclosure-header]) ~ *):not([data-turn-process-member] *, [data-turn-trigger] *):is([data-disclosure-row] ~ *, [data-disclosure-header] ~ * *)",
+        "body[data-dsh-claude-style][data-dsh-claude-chat-fold] [data-step-process][data-dsh-claude-summary] button[data-process-activity] > :not([aria-hidden=\"true\"])",
+        "body[data-dsh-claude-style][data-dsh-claude-conversation-width] [data-phase] > [data-conversation-content] > *",
+        "body[data-dsh-claude-style][data-dsh-claude-home-layout=\"studio\"] [data-dsh-claude-part~=\"composer-hero\"] > :is([data-slot=\"conversation.input.dock\"], .dsh-claude-home-seat) > *",
+        "body[data-dsh-claude-style][data-dsh-claude-home-layout=\"studio\"] [data-dsh-claude-part~=\"composer-hero\"] > [data-slot=\"conversation.composer.bar\"] > *",
+        "body[data-dsh-claude-style][data-dsh-claude-page-under-768][data-dsh-claude-home-layout=\"studio\"] [data-dsh-claude-part~=\"composer-hero\"] > :is([data-slot=\"conversation.input.dock\"], .dsh-claude-home-seat) > *",
+        "body[data-dsh-claude-style][data-dsh-claude-process-column] [data-step-process-content] :is([data-disclosure-header], [data-disclosure-row]) + *",
+        "body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role] > :last-child",
+        "body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role] > :last-child > :first-child > :first-child",
+        "body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role] > :last-child > :last-child:not(:first-child)",
+        "body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role] > :last-child > :first-child > :last-child:not(:first-child)",
+        "body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role=\"radio\"] > :first-child",
+        "body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role=\"radiogroup\"] > [data-dsh-claude-question-custom]:not([data-dsh-claude-question-custom=\"free\"]) > :first-child",
+        "body[data-dsh-claude-style] [data-dsh-claude-question-surface]:not([data-dsh-claude-question-custom-choice]) [data-option-row] > button[role=\"radio\"][aria-checked=\"true\"] > :first-child",
+        "body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role=\"radiogroup\"] > [data-dsh-claude-question-custom-active]:not([data-dsh-claude-question-custom=\"free\"]) > :first-child",
+        "body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role=\"checkbox\"] > :first-child",
+        "body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role=\"group\"] > [data-dsh-claude-question-custom]:not([data-dsh-claude-question-custom=\"free\"]) > :first-child",
+        "body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role=\"checkbox\"][aria-checked=\"true\"] > :first-child",
+        "body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role=\"group\"] > [data-dsh-claude-question-custom-active]:not([data-dsh-claude-question-custom=\"free\"]) > :first-child",
+        "body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-option-row] > button[role=\"checkbox\"][aria-checked=\"true\"] > :first-child::before",
+        "body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role=\"group\"] > [data-dsh-claude-question-custom-active]:not([data-dsh-claude-question-custom=\"free\"]) > :first-child::before",
+        "body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-question-custom]:not([data-dsh-claude-question-custom=\"free\"]) > :first-child",
+        "body[data-dsh-claude-style] [data-dsh-view-tabs] > *",
+        "body[data-dsh-claude-style] [data-dsh-titlebar-tabs] [data-dsh-view-tabs] > *",
+        "body[data-dsh-claude-style] [data-dsh-view-tabs] [data-conversation-tabs] > *",
+        "body[data-dsh-claude-style] [data-dsh-view-tabs] [data-conversation-tabs] > :not([data-dsh-claude-part~=\"view-tab\"])",
+        "body[data-dsh-claude-style] [data-dsh-claude-part~=\"rightbar-column\"] [data-dsh-claude-part~=\"panel-guide\"] > :first-child",
+        "body[data-dsh-claude-style] [data-dsh-claude-part~=\"rightbar-column\"] [data-dsh-claude-part~=\"panel-guide\"] > :last-child",
+        "body[data-dsh-claude-style] [data-slot=\"conversation.session.header.actions\"] > *",
+        "body[data-dsh-claude-style][data-dsh-claude-brand=\"claude\"] [data-dsh-claude-part~=\"hero-mark\"] > *",
+        "body[data-dsh-claude-style][data-dsh-claude-brand=\"claude\"] :is([data-dsh-claude-part~=\"brand-mark\"], [data-dsh-claude-part~=\"rail-mark\"]) > *",
+        "body[data-dsh-claude-style][data-dsh-claude-brand=\"claude\"] [data-dsh-claude-part~=\"brand-identity\"] > [data-dsh-claude-part~=\"brand-name\"] > *",
+        "body[data-dsh-claude-style] [data-dsh-claude-part~=\"group-section\"] > * + *",
+        "body[data-dsh-claude-style][data-dsh-claude-sidebar-layout=\"compact\"] [data-dsh-claude-part~=\"group-section\"] > * + *",
+        "body[data-dsh-claude-style] svg[data-state=\"ongoing\"] *",
+        "body[data-dsh-claude-style] [data-dsh-claude-part~=\"table-scroll\"] tr > :first-child",
+        "body[data-dsh-claude-style] [data-dsh-claude-part~=\"table-scroll\"] tr > :last-child",
+        "body[data-dsh-claude-style] [data-dsh-claude-composer-toolbar] [data-dsh-claude-part~=\"trailing\"] > :first-child + *",
+        "body[data-dsh-claude-style][data-dsh-claude-stats-position=\"footer\"] [data-dsh-claude-footer-line] > *"
+      ]
+    }
+  ]
+}
