@@ -315,6 +315,12 @@ export interface HostSessionStatusSnapshot extends Iterable<[string, HostSession
   values(): IterableIterator<HostSessionStatus>
 }
 
+/** The live status service (`uiSession.sessionStatus`): the per-session map, and the host's own unread mark where the package ships one. */
+export interface HostSessionStatusService extends HostSnapshotSource<HostSessionStatusSnapshot> {
+  mark?(sessionId: string, unread: boolean): Promise<void>
+  readingReady?: HostSnapshotSource<boolean>
+}
+
 /** One session's live status: whether it runs, waits on the reader, or finished unread. */
 interface HostSessionStatus {
   running?: boolean
@@ -427,7 +433,7 @@ export interface HostUiSessionService {
     /** Main-view identity changes; absent where a host publishes none. */
     subscribe?(listener: () => void): () => void
   }
-  sessionStatus?: HostSnapshotSource<HostSessionStatusSnapshot>
+  sessionStatus?: HostSessionStatusService
 }
 
 /** ui-workspace's session menu slot props. */

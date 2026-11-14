@@ -18,7 +18,7 @@ import { existsSync, readFileSync, readdirSync, realpathSync, rmSync, statSync }
 import { userInfo } from 'node:os'
 import { dirname, join, resolve, sep } from 'node:path'
 import { brandRoutes } from './brand.js'
-import type { DshContext, DshRequest, DshResponse, DshRoute, DshScope } from '@dsh-claude-style/engine/node/dsh'
+import type { DshContext, DshPeerScope, DshRequest, DshResponse, DshRoute, DshScope } from '@dsh-claude-style/engine/node/dsh'
 import { harnessPath } from '@dsh-claude-style/engine/node/harness-home'
 import { pluginPath } from './harness-home.js'
 import { fenceRefused, methodRefused, readRequestBody, refusalOf, sendJson } from '@dsh-claude-style/engine/node/http'
@@ -184,8 +184,8 @@ async function unarchiveSession(ctx: DshContext, sessionId: string) {
  * not hold, so the entry leaves the set and the row does not come back on the
  * next reload.
  */
-async function deleteSession(ctx: DshContext, req: DshRequest, res: DshResponse) {
-  const refused = refusalOf(ctx, req)
+async function deleteSession(ctx: DshContext, req: DshRequest, res: DshResponse, peer?: DshPeerScope) {
+  const refused = refusalOf(ctx, req, peer)
   if (refused !== undefined) {
     sendJson(res, refused, { ok: false, error: refused === 401 ? 'unauthorized' : 'forbidden' })
     return
@@ -314,6 +314,25 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
       }
     }
 
+    /** Register one route behind HTTP method checks and the host's peer fence (D75). */
+    const registerGuarded = (
+      label: string,
+      kind: DshRoute['kind'],
+      path: string,
+      methods: string[],
+      handle: (req: DshRequest, res: DshResponse) => void | Promise<void>,
+    ) => {
+      register(label, {
+        kind,
+        path,
+        handler: (req: DshRequest, res: DshResponse, peer?: DshPeerScope) => {
+          if (methodRefused(req, res, methods)) return
+          if (fenceRefused(ctx, req, res, peer)) return
+          return handle(req, res)
+        },
+      })
+    }
+
     /** Answer with a promise's payload spread under `ok: true`; a rejection is a 500 carrying its message. */
     const sendPayload = (res: DshResponse, answer: Promise<object>) => {
       void answer.then((value: object) => {
@@ -338,246 +357,197 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
      * (D75) — and the shape the id must keep: it names a stored session, so it
      * never reaches the host as a path. Null means the answer already went out.
      */
-    const guardedSessionId = (req: DshRequest, res: DshResponse, method: 'GET' | 'POST' = 'GET'): string | null => {
+    const guardedSessionId = (
+      req: DshRequest,
+      res: DshResponse,
+      peer?: DshPeerScope,
+      method: 'GET' | 'POST' = 'GET',
+    ): string | null => {
       if (methodRefused(req, res, [method])) return null
-      if (fenceRefused(ctx, req, res)) return null
+      if (fenceRefused(ctx, req, res, peer)) return null
       const sessionId = (new URL(req.url ?? '/', 'http://local').searchParams.get('id') ?? '').trim()
       if (SESSION_ID_RE.test(sessionId)) return sessionId
       sendJson(res, 400, { ok: false, error: 'invalid session id' })
       return null
     }
 
-    register('model copy', {
-      kind: 'prefix',
-      path: ROUTE_PREFIX,
-      handler: (req: DshRequest, res: DshResponse) => {
-        if (methodRefused(req, res, ['GET', 'HEAD'])) return
-        // The page's own reading material, behind the same fence as every other
-        // route: a same-origin subresource sends no Origin and a `same-origin`
-        // `Sec-Fetch-Site`, both of which the fence allows (D75).
-        if (fenceRefused(ctx, req, res)) return
-        /* v8 ignore next -- node:http always sets url on server requests. */
-        const sub = new URL(req.url ?? '/', 'http://x').pathname.slice(ROUTE_PREFIX.length)
-        if (sub === `/${COPY_FILE}`) {
-          sendFile(res, req.method ?? 'GET', file, {
-            'content-type': 'application/json; charset=utf-8',
-            'cache-control': 'no-cache',
-          })
-          return
+    // The page's own reading material, behind the same fence as every other
+    // route: a same-origin subresource sends no Origin and a `same-origin`
+    // `Sec-Fetch-Site`, both of which the fence allows (D75).
+    registerGuarded('model copy', 'prefix', ROUTE_PREFIX, ['GET', 'HEAD'], (req, res) => {
+      /* v8 ignore next -- node:http always sets url on server requests. */
+      const sub = new URL(req.url ?? '/', 'http://x').pathname.slice(ROUTE_PREFIX.length)
+      if (sub === `/${COPY_FILE}`) {
+        sendFile(res, req.method ?? 'GET', file, {
+          'content-type': 'application/json; charset=utf-8',
+          'cache-control': 'no-cache',
+        })
+        return
+      }
+      if (sub === WEBFONTS_SUB) {
+        // The optional faces in place: the browser half declares a @font-face
+        // for these alone, so an install without the files sends no font
+        // request at all. Read per request, so a file dropped in while the
+        // host runs is reported on the page's next load.
+        const faces = OPTIONAL_WEBFONTS.filter(face => existsSync(join(userFontsDir(), face.file))).map(face => face.file)
+        sendJson(res, 200, { ok: true, faces })
+        return
+      }
+      const font = sub.startsWith('/fonts/') ? (FONT_FILES as Record<string, string | undefined>)[sub.slice('/fonts/'.length)] : undefined
+      if (font !== undefined) {
+        // The whitelisted name is the whole contract; the user's own copy
+        // wins over the bundled face of the same name.
+        const name = sub.slice('/fonts/'.length)
+        const dropped = join(userFontsDir(), name)
+        // The filename changes with the package, so a long cache is safe
+        // and keeps the code face off the network after first paint.
+        sendFile(res, req.method ?? 'GET', existsSync(dropped) ? dropped : join(fontsDir, name), {
+          'content-type': font,
+          'cache-control': 'public, max-age=86400',
+        })
+        return
+      }
+      const sheet = sub.startsWith('/assets/') ? sub.slice('/assets/'.length) : ''
+      if (sheet !== '' && !sheet.includes('/')) {
+        if (!sendAsset(req, res, sheet)) {
+          res.writeHead(404)
+          res.end()
         }
-        if (sub === WEBFONTS_SUB) {
-          // The optional faces in place: the browser half declares a @font-face
-          // for these alone, so an install without the files sends no font
-          // request at all. Read per request, so a file dropped in while the
-          // host runs is reported on the page's next load.
-          const faces = OPTIONAL_WEBFONTS.filter(face => existsSync(join(userFontsDir(), face.file))).map(face => face.file)
-          sendJson(res, 200, { ok: true, faces })
-          return
-        }
-        const font = sub.startsWith('/fonts/') ? (FONT_FILES as Record<string, string | undefined>)[sub.slice('/fonts/'.length)] : undefined
-        if (font !== undefined) {
-          // The whitelisted name is the whole contract; the user's own copy
-          // wins over the bundled face of the same name.
-          const name = sub.slice('/fonts/'.length)
-          const dropped = join(userFontsDir(), name)
-          // The filename changes with the package, so a long cache is safe
-          // and keeps the code face off the network after first paint.
-          sendFile(res, req.method ?? 'GET', existsSync(dropped) ? dropped : join(fontsDir, name), {
-            'content-type': font,
-            'cache-control': 'public, max-age=86400',
-          })
-          return
-        }
-        const sheet = sub.startsWith('/assets/') ? sub.slice('/assets/'.length) : ''
-        if (sheet !== '' && !sheet.includes('/')) {
-          if (!sendAsset(req, res, sheet)) {
-            res.writeHead(404)
-            res.end()
-          }
-          return
-        }
-        res.writeHead(404)
-        res.end()
-      },
+        return
+      }
+      res.writeHead(404)
+      res.end()
     })
 
-    register('username', {
-      kind: 'exact',
-      path: USERNAME_PATH,
-      handler: (req: DshRequest, res: DshResponse) => {
-        // One-shot OS user resolution for the browser half; it caches the
-        // response and never polls. The exact route wins over the prefix above.
-        if (methodRefused(req, res, ['GET', 'HEAD'])) return
-        if (fenceRefused(ctx, req, res)) return
-        const username = userInfo().username || ''
-        const body = Buffer.from(JSON.stringify({ ok: true, username }))
+    // One-shot OS user resolution for the browser half; it caches the
+    // response and never polls. The exact route wins over the prefix above.
+    registerGuarded('username', 'exact', USERNAME_PATH, ['GET', 'HEAD'], (req, res) => {
+      const username = userInfo().username || ''
+      const body = Buffer.from(JSON.stringify({ ok: true, username }))
+      res.writeHead(200, {
+        'content-type': 'application/json; charset=utf-8',
+        'content-length': String(body.byteLength),
+        'cache-control': 'no-cache',
+      })
+      res.end(req.method === 'HEAD' ? undefined : body)
+    })
+
+    // GET answers whether this machine can play the cues; POST plays one.
+    // Both sit behind the same fence as every other route, and a failure to
+    // start the player answers 500 so the browser half can fall back (D89).
+    registerGuarded('sound', 'exact', SOUND_PATH, ['GET', 'POST'], (req, res) => {
+      if (req.method !== 'POST') {
+        sendJson(res, 200, soundCapability())
+        return
+      }
+      void playSoundRequest(req, res).catch((error: unknown) => fail(res, error))
+    })
+
+    // Read-only and same-origin only; the player's avatar path is dropped
+    // here: the browser half needs a picture, not the home directory it
+    // lives in.
+    registerGuarded('HDSL account', 'exact', HDSL_PATH, ['GET', 'HEAD'], (_req, res) => {
+      sendPayload(res, hdsl.read().then((profile: HdslReading) => {
+        const { skinFile, ...account } = profile
+        return account
+      }))
+    })
+
+    // The player's own avatar. The path comes from the environment and
+    // never from the request, so this route cannot be pointed anywhere; a
+    // missing file is a 404 and the browser half falls back to the brand
+    // mark.
+    registerGuarded('HDSL skin', 'exact', HDSL_SKIN_PATH, ['GET', 'HEAD'], (req, res) => {
+      // A failed read propagates to the web server, which logs it and answers.
+      return hdsl.read().then((profile: HdslReading) => {
+        // A file removed under the launcher is a 404 like no file at all.
+        if (typeof profile.skinFile !== 'string' || !existsSync(profile.skinFile)) {
+          res.writeHead(404, { 'cache-control': 'no-store' })
+          res.end()
+          return
+        }
+        const body = readFileSync(profile.skinFile)
         res.writeHead(200, {
-          'content-type': 'application/json; charset=utf-8',
+          'content-type': 'image/png',
           'content-length': String(body.byteLength),
           'cache-control': 'no-cache',
         })
         res.end(req.method === 'HEAD' ? undefined : body)
-      },
-    })
-
-    register('sound', {
-      kind: 'exact',
-      path: SOUND_PATH,
-      handler: (req: DshRequest, res: DshResponse) => {
-        // GET answers whether this machine can play the cues; POST plays one.
-        // Both sit behind the same fence as every other route, and a failure to
-        // start the player answers 500 so the browser half can fall back (D89).
-        if (methodRefused(req, res, ['GET', 'POST'])) return
-        if (fenceRefused(ctx, req, res)) return
-        if (req.method !== 'POST') {
-          sendJson(res, 200, soundCapability())
-          return
-        }
-        void playSoundRequest(req, res).catch((error: unknown) => fail(res, error))
-      },
-    })
-
-    register('HDSL account', {
-      kind: 'exact',
-      path: HDSL_PATH,
-      handler: (req: DshRequest, res: DshResponse) => {
-        // Read-only and same-origin only; the player's avatar path is dropped
-        // here: the browser half needs a picture, not the home directory it
-        // lives in.
-        if (methodRefused(req, res, ['GET', 'HEAD'])) return
-        if (fenceRefused(ctx, req, res)) return
-        sendPayload(res, hdsl.read().then((profile: HdslReading) => {
-          const { skinFile, ...account } = profile
-          return account
-        }))
-      },
-    })
-
-    register('HDSL skin', {
-      kind: 'exact',
-      path: HDSL_SKIN_PATH,
-      handler: (req: DshRequest, res: DshResponse) => {
-        // The player's own avatar. The path comes from the environment and
-        // never from the request, so this route cannot be pointed anywhere; a
-        // missing file is a 404 and the browser half falls back to the brand
-        // mark.
-        if (methodRefused(req, res, ['GET', 'HEAD'])) return
-        if (fenceRefused(ctx, req, res)) return
-        // A failed read propagates to the web server, which logs it and answers.
-        return hdsl.read().then((profile: HdslReading) => {
-          // A file removed under the launcher is a 404 like no file at all.
-          if (typeof profile.skinFile !== 'string' || !existsSync(profile.skinFile)) {
-            res.writeHead(404, { 'cache-control': 'no-store' })
-            res.end()
-            return
-          }
-          const body = readFileSync(profile.skinFile)
-          res.writeHead(200, {
-            'content-type': 'image/png',
-            'content-length': String(body.byteLength),
-            'cache-control': 'no-cache',
-          })
-          res.end(req.method === 'HEAD' ? undefined : body)
-        })
-      },
+      })
     })
 
     register('session delete', {
       kind: 'exact',
       path: SESSION_DELETE_PATH,
-      handler: (req: DshRequest, res: DshResponse) => {
+      handler: (req: DshRequest, res: DshResponse, peer?: DshPeerScope) => {
         // POST only: the browser half sends one id, and a GET must never
         // reach the filesystem.
         if (methodRefused(req, res, ['POST'])) return
         // A fault anywhere in the deletion answers 500 with its message.
-        void deleteSession(ctx, req, res).catch((error: unknown) => fail(res, error))
+        void deleteSession(ctx, req, res, peer).catch((error: unknown) => fail(res, error))
       },
     })
 
-    register('usage', {
-      kind: 'exact',
-      path: USAGE_PATH,
-      handler: (req: DshRequest, res: DshResponse) => {
-        // Read-only and same-origin only: the answer is the plugin's own
-        // aggregate over the user's session history. A cold pass reports
-        // `computing` and the browser half keeps its skeleton up; the service
-        // owns when a pass is due, so asking faster than its period starts
-        // nothing.
-        if (methodRefused(req, res, ['GET', 'HEAD'])) return
-        if (fenceRefused(ctx, req, res)) return
-        const params = new URL(req.url ?? '/', 'http://local').searchParams
-        const requested = params.get('scope')
-        const scope = requested === HOME_SESSION_SCOPE_ACTIVE || requested === HOME_SESSION_SCOPE_WORKSPACE
-          ? requested
-          : HOME_SESSION_SCOPE_ALL
-        const workspaceId = scope === HOME_SESSION_SCOPE_WORKSPACE
-          ? (params.get('workspace') ?? '').trim().slice(0, 128)
-          : ''
-        void usage.refresh(scope, workspaceId)
-        const snapshot = usage.snapshot(scope, workspaceId)
-        sendJson(res, 200, {
-          ok: true,
-          value: snapshot.value,
-          computing: snapshot.computing === true,
-          ...(snapshot.error === undefined ? {} : { error: snapshot.error }),
-        })
-      },
+    // Read-only and same-origin only: the answer is the plugin's own
+    // aggregate over the user's session history. A cold pass reports
+    // `computing` and the browser half keeps its skeleton up; the service
+    // owns when a pass is due, so asking faster than its period starts
+    // nothing.
+    registerGuarded('usage', 'exact', USAGE_PATH, ['GET', 'HEAD'], (req, res) => {
+      const params = new URL(req.url ?? '/', 'http://local').searchParams
+      const requested = params.get('scope')
+      const scope = requested === HOME_SESSION_SCOPE_ACTIVE || requested === HOME_SESSION_SCOPE_WORKSPACE
+        ? requested
+        : HOME_SESSION_SCOPE_ALL
+      const workspaceId = scope === HOME_SESSION_SCOPE_WORKSPACE
+        ? (params.get('workspace') ?? '').trim().slice(0, 128)
+        : ''
+      void usage.refresh(scope, workspaceId)
+      const snapshot = usage.snapshot(scope, workspaceId)
+      sendJson(res, 200, {
+        ok: true,
+        value: snapshot.value,
+        computing: snapshot.computing === true,
+        ...(snapshot.error === undefined ? {} : { error: snapshot.error }),
+      })
     })
 
-    register('session search', {
-      kind: 'exact',
-      path: SESSION_SEARCH_PATH,
-      handler: (req: DshRequest, res: DshResponse) => {
-        // Read-only, behind the same fence as the usage route: the answer quotes
-        // the user's own conversations. Without `?q=` it only brings the message
-        // cache up to date, which the palette asks for as it opens.
-        if (methodRefused(req, res, ['GET'])) return
-        if (fenceRefused(ctx, req, res)) return
-        const query = (new URL(req.url ?? '/', 'http://local').searchParams.get('q') ?? '').trim().slice(0, QUERY_MAX)
-        const answer = query === ''
-          ? sessionSearch.warm().then(() => ({ sessions: [] }))
-          : sessionSearch.search(query)
-        sendPayload(res, answer)
-      },
+    // Read-only, behind the same fence as the usage route: the answer quotes
+    // the user's own conversations. Without `?q=` it only brings the message
+    // cache up to date, which the palette asks for as it opens.
+    registerGuarded('session search', 'exact', SESSION_SEARCH_PATH, ['GET'], (req, res) => {
+      const query = (new URL(req.url ?? '/', 'http://local').searchParams.get('q') ?? '').trim().slice(0, QUERY_MAX)
+      const answer = query === ''
+        ? sessionSearch.warm().then(() => ({ sessions: [] }))
+        : sessionSearch.search(query)
+      sendPayload(res, answer)
     })
 
-    register('peak rate', {
-      kind: 'exact',
-      path: PEAKRATE_PATH,
-      handler: (req: DshRequest, res: DshResponse) => {
-        // The catalog is public data and the browser half is the only client, so
-        // the fence keeps every other page from making the host reach the source.
-        // `POST` is the browser half asking for a fresh copy, because it cannot
-        // name the source itself.
-        if (methodRefused(req, res, ['GET', 'POST'])) return
-        if (fenceRefused(ctx, req, res)) return
-        peakrate.ensure()
-        const answer = req.method === 'POST' ? peakrate.refresh().then(() => peakrate.payload()) : Promise.resolve(peakrate.payload())
-        sendPayload(res, answer)
-      },
+    // The catalog is public data and the browser half is the only client, so
+    // the fence keeps every other page from making the host reach the source.
+    // `POST` is the browser half asking for a fresh copy, because it cannot
+    // name the source itself.
+    registerGuarded('peak rate', 'exact', PEAKRATE_PATH, ['GET', 'POST'], (req, res) => {
+      peakrate.ensure()
+      const answer = req.method === 'POST' ? peakrate.refresh().then(() => peakrate.payload()) : Promise.resolve(peakrate.payload())
+      sendPayload(res, answer)
     })
 
-    register('prices', {
-      kind: 'exact',
-      path: PRICES_PATH,
-      handler: (req: DshRequest, res: DshResponse) => {
-        // Read-only apart from the refresh ask; the table is public data, and the
-        // fence keeps every other page from making the host reach the repository.
-        if (methodRefused(req, res, ['GET', 'POST'])) return
-        if (fenceRefused(ctx, req, res)) return
-        prices.ensure()
-        const answer = req.method === 'POST' ? prices.refresh().then(() => prices.payload()) : Promise.resolve(prices.payload())
-        sendPayload(res, answer)
-      },
+    // Read-only apart from the refresh ask; the table is public data, and the
+    // fence keeps every other page from making the host reach the repository.
+    registerGuarded('prices', 'exact', PRICES_PATH, ['GET', 'POST'], (req, res) => {
+      prices.ensure()
+      const answer = req.method === 'POST' ? prices.refresh().then(() => prices.payload()) : Promise.resolve(prices.payload())
+      sendPayload(res, answer)
     })
 
     register('session cost', {
       kind: 'exact',
       path: SESSION_COST_PATH,
-      handler: (req: DshRequest, res: DshResponse) => {
+      handler: (req: DshRequest, res: DshResponse, peer?: DshPeerScope) => {
         // The answer is the user's own conversation priced, so it runs the same
         // fence as the usage roll-up and never accepts a path outside one id.
-        const sessionId = guardedSessionId(req, res)
+        const sessionId = guardedSessionId(req, res, peer)
         if (sessionId === null) return
         // The reader's own rows travel with the ask (billing-table.ts): the host
         // prices with them, so a session is priced the same on a restart as in
@@ -590,10 +560,10 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
     register('session panel', {
       kind: 'exact',
       path: SESSION_PANEL_PATH,
-      handler: (req: DshRequest, res: DshResponse) => {
+      handler: (req: DshRequest, res: DshResponse, peer?: DshPeerScope) => {
         // The answer describes the user's own session, so it runs the same
         // fence as the figures and never accepts a path outside one id.
-        const sessionId = guardedSessionId(req, res)
+        const sessionId = guardedSessionId(req, res, peer)
         if (sessionId === null) return
         // `?job=` asks for one job's retained output instead of the fold: the
         // panel expands a row on demand and never carries output it is not showing.
@@ -617,10 +587,10 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
     register('session compact', {
       kind: 'exact',
       path: SESSION_COMPACT_PATH,
-      handler: (req: DshRequest, res: DshResponse) => {
+      handler: (req: DshRequest, res: DshResponse, peer?: DshPeerScope) => {
         // Compacting rewrites the user's own history, so it runs the same fence as
         // every other read of that session and takes an id, never a path (D75).
-        const sessionId = guardedSessionId(req, res, 'POST')
+        const sessionId = guardedSessionId(req, res, peer, 'POST')
         if (sessionId === null) return
         // The seam classifies the failures a reader can act on; the rest are faults
         // and answer 500 with their message.

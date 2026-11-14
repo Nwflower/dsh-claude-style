@@ -1,6 +1,6 @@
 import { COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_PLACEHOLDER_SELECTOR, COMPOSER_SELECTOR, COMPOSER_STACK_SELECTOR, COMPOSER_STAT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, CONVERSATION_VIEW_STORAGE_PREFIX, DIALOG_TRIGGER_SELECTOR, FOOT_AREA_SELECTOR, FOREGROUND_SELECTOR, MENU_ROLE_SELECTOR, MODAL_DIALOG_SELECTOR, MODEL_SLOT_SELECTOR, PERMISSION_TRIGGER_SELECTOR, PHASE_ATTRIBUTE, RIGHTBAR_TOGGLE_SELECTOR, SIDEBAR_BRAND_SELECTOR, SIDEBAR_CHAT_SELECTOR, SIDEBAR_NEW_SESSION_SELECTOR, SIDEBAR_ROOT_SELECTOR, SIDEBAR_TOGGLE_SELECTOR, WINDOWS_MENU_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import type { HostAccountService } from '@dsh-claude-style/contracts/account'
-import type { HostAgentTeamsRemote, HostSidebarPins, HostAssistantStep, HostBundleListAnswer, HostChatSnapshot, HostChatTarget, HostConfigFormsService, HostConversationService, HostInventoryAnswer, HostJobsService, HostLocaleService, HostModelDirectoriesService, HostPluginBundle, HostServiceLookup, HostOutlineTurn, HostRunningCall, HostSession, HostSessionsService, HostSessionRenameAnswer, HostShortcutsService, HostSlotOptions, HostSlotsService, HostSnapshotSource, HostSubagentsRemote, HostTurn, HostUiConversationService, HostUiSessionService, HostWorkspacesService, HostWorkspaceViewStore } from '@dsh-claude-style/contracts/services'
+import type { HostAgentTeamsRemote, HostSidebarPins, HostAssistantStep, HostBundleListAnswer, HostChatSnapshot, HostChatTarget, HostConfigFormsService, HostConversationService, HostInventoryAnswer, HostJobsService, HostLocaleService, HostModelDirectoriesService, HostPluginBundle, HostServiceLookup, HostSessionStatusService, HostOutlineTurn, HostRunningCall, HostSession, HostSessionsService, HostSessionRenameAnswer, HostShortcutsService, HostSlotOptions, HostSlotsService, HostSnapshotSource, HostSubagentsRemote, HostTurn, HostUiConversationService, HostUiSessionService, HostWorkspacesService, HostWorkspaceViewStore } from '@dsh-claude-style/contracts/services'
 import { fileAddressFor } from '@deepseek-ai/dsh-util-workspace-path'
 import { observeMatches, subscribeMutations } from './bus'
 import { closestFrom, shown } from './dom'
@@ -482,6 +482,15 @@ export function hostSessions(lookup: HostServiceLookup | null | undefined): Host
 export function hostUiSession(lookup: HostServiceLookup | null | undefined): HostUiSessionService | null {
   const uiSession = lookup?.get('uiSession') as HostUiSessionService | undefined
   return uiSession ?? null
+}
+
+/** Live per-session status (`uiSession.sessionStatus`). Current hosts expose it as its own service, where reading the uninjected property off `uiSession` throws; earlier hosts expose it directly on `uiSession`. */
+export function hostSessionStatus(lookup: HostServiceLookup | null | undefined): HostSessionStatusService | null {
+  const direct = lookup?.get('uiSession.sessionStatus') as HostSessionStatusService | undefined
+  if (direct !== undefined && direct !== null) return direct
+  const uiSession = hostUiSession(lookup)
+  if (uiSession !== null && 'sessionStatus' in uiSession) return uiSession.sessionStatus ?? null
+  return null
 }
 
 /** One session's model directory: the catalog, its load and the pick. */

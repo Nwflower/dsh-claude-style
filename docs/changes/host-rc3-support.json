@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-14",
+  "group": "fixes",
+  "order": 0,
+  "external": false,
+  "zh": "适配新版 DeepSeek Harness 的独立会话状态服务、原生未读菜单、模块样式路径标记、服务端路由鉴权与侧栏新会话行操作按钮布局",
+  "en": "Support current DeepSeek Harness session status service, native unread actions, client module stylesheet path tags, authenticated route peers and sidebar new-session row action buttons"
+}

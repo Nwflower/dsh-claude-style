@@ -50,12 +50,18 @@ interface DshWebServer {
   register(options: DshRoute): unknown
 }
 
+/** Authenticated peer scope handed to route handlers by hosts that fence routes in `webServer`. */
+export interface DshPeerScope {
+  readonly principal?: { readonly kind?: string }
+  readonly signal?: AbortSignal
+}
+
 /** One route registration: the path it answers, how paths match, and its handler. */
 export interface DshRoute {
   path: string
   /** `prefix` matches every path under `path`; a route without it matches the path alone. */
   kind?: string
-  handler: (req: DshRequest, res: DshResponse) => void
+  handler: (req: DshRequest, res: DshResponse, peer?: DshPeerScope) => void | Promise<void>
 }
 
 /** The request the host's web server hands a route handler: Node's own. */

@@ -13,7 +13,7 @@ import type { BrandAnswer, BrandImageKind, BrandImageState } from '@dsh-claude-s
 import { BRAND_MARK_PATH, BRAND_PATH, BRAND_WORDMARK_PATH } from '@dsh-claude-style/contracts/routes'
 import { mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import type { DshContext, DshRequest, DshResponse, DshRoute } from '@dsh-claude-style/engine/node/dsh'
+import type { DshContext, DshPeerScope, DshRequest, DshResponse, DshRoute } from '@dsh-claude-style/engine/node/dsh'
 import { pluginPath } from './harness-home.js'
 import { fenceRefused, methodRefused, readRequestBody, sendJson } from '@dsh-claude-style/engine/node/http'
 
@@ -133,9 +133,9 @@ export function brandRoutes(ctx: DshContext): { label: string, route: DshRoute }
   const status: DshRoute = {
     kind: 'exact',
     path: BRAND_PATH,
-    handler: (req, res) => {
+    handler: (req, res, peer?: DshPeerScope) => {
       if (methodRefused(req, res, ['GET'])) return
-      if (fenceRefused(ctx, req, res)) return
+      if (fenceRefused(ctx, req, res, peer)) return
       sendJson(res, 200, store.answer())
     },
   }
@@ -144,9 +144,9 @@ export function brandRoutes(ctx: DshContext): { label: string, route: DshRoute }
     route: {
       kind: 'exact',
       path: IMAGE_PATHS[kind],
-      handler: (req, res) => {
+      handler: (req, res, peer?: DshPeerScope) => {
         if (methodRefused(req, res, ['GET', 'HEAD', 'PUT', 'DELETE'])) return
-        if (fenceRefused(ctx, req, res)) return
+        if (fenceRefused(ctx, req, res, peer)) return
         if (req.method === 'PUT' || req.method === 'DELETE') {
           // A storage fault answers 500 with the OS error (D12).
           const done = req.method === 'PUT'

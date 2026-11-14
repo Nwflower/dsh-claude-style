@@ -9,7 +9,7 @@
  * @risk A closed workspace with a running session goes unmarked, an open or unrelated row gains a mark, a status change never repaints, or a torn-down host source takes the whole feature down.
  */
 import { expect, test } from 'vitest'
-import { WorkspaceGroupStatus } from '@dsh-claude-style/client/pure'
+import { WorkspaceGroupStatus, createAttentionFeed } from '@dsh-claude-style/client/pure'
 import { SESSION_ROW_KEY_ATTRIBUTE, WORKSPACE_ROW_EXPANDED_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import { surfaceAttribute } from '../../fixtures/surface'
@@ -150,4 +150,84 @@ test('a torn-down source reads as no mark and never throws into the feature', ()
   expect(() => { view.groups.measure(); view.groups.sync() }).not.toThrow()
   expect(view.closed.hasAttribute(RUNNING)).toBe(false)
   view.groups.dispose()
+})
+
+function standaloneStatusSetup(attachImmediately: boolean) {
+  const h = harness({ withStatus: false })
+  let liveRunning = true
+  const liveStatus = source(() => new Map([['s1', { running: liveRunning }]]))
+  const uiSession = new Proxy({}, {
+    get(target, prop) {
+      if (prop === 'sessionStatus') throw new Error('cannot get property "uiSession.sessionStatus" without inject')
+      return Reflect.get(target, prop)
+    },
+    has(target, prop) {
+      return prop === 'sessionStatus' ? false : Reflect.has(target, prop)
+    },
+  })
+  const services: Record<string, unknown> = {
+    sessions: { list: h.sessions },
+    workspaces: { list: h.workspaces },
+    slots: h.ctx.get('slots'),
+    uiSession,
+  }
+  if (attachImmediately) services['uiSession.sessionStatus'] = liveStatus
+  const fibers: Array<{ deps: readonly string[], callback: (scope: HostContext) => void, disposed: boolean }> = []
+  const ctx = {
+    get: (name: string) => services[name],
+    inject(deps: readonly string[], callback: (scope: HostContext) => void) {
+      const record = { deps, callback, disposed: false }
+      fibers.push(record)
+      return { dispose() { record.disposed = true } }
+    },
+  } as unknown as HostContext
+  return {
+    h,
+    ctx,
+    services,
+    fibers,
+    liveStatus,
+    setRunning(value: boolean) {
+      liveRunning = value
+      liveStatus.publish()
+    },
+  }
+}
+
+test('resolves standalone uiSession.sessionStatus without reading an uninjected uiSession property', () => {
+  const setup = standaloneStatusSetup(true)
+  const view = mount({ ...setup.h, ctx: setup.ctx })
+  expect(() => marked(view)).not.toThrow()
+  expect(view.closed.hasAttribute(RUNNING)).toBe(true)
+  setup.setRunning(false)
+  expect(view.passes()).toBeGreaterThan(0)
+  expect(marked(view)).toBe(false)
+  view.groups.dispose()
+  expect(setup.liveStatus.listeners.size).toBe(0)
+})
+
+test('createAttentionFeed accepts late uiSession.sessionStatus injection and cleans up both fibers', () => {
+  const setup = standaloneStatusSetup(false)
+  const events: string[] = []
+  const feed = createAttentionFeed(setup.ctx, (event) => { events.push(event) })
+  expect(setup.fibers.map((item) => item.deps)).toEqual([
+    ['uiSession', 'sessions'],
+    ['uiSession.sessionStatus', 'sessions'],
+  ])
+
+  expect(() => setup.fibers[0].callback(setup.ctx)).not.toThrow()
+  expect(events).toEqual([])
+
+  setup.services['uiSession.sessionStatus'] = setup.liveStatus
+  setup.fibers[1].callback(setup.ctx)
+  expect(events).toEqual([])
+
+  setup.setRunning(false)
+  expect(events).toEqual(['finished'])
+
+  feed.dispose()
+  setup.setRunning(true)
+  expect(events).toEqual(['finished'])
+  expect(setup.liveStatus.listeners.size).toBe(0)
+  expect(setup.fibers.every((item) => item.disposed)).toBe(true)
 })

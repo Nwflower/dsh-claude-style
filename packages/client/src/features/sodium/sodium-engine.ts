@@ -1,4 +1,4 @@
-import { PLUGIN_SHEET_OWNER_ATTRIBUTE, PLUGIN_SHEET_PATH_ATTRIBUTE, PLUGIN_SHEET_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { PLUGIN_SHEET_OWNER_ATTRIBUTE, PLUGIN_SHEET_PATH_ATTRIBUTE, PLUGIN_SHEET_SELECTOR, PLUGIN_STYLE_PATH_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import { profileBundles } from '@dsh-claude-style/engine/host'
 import { applyRewrite, planRewrite, restoreRewrite } from '@dsh-claude-style/engine/sheet-rewrite'
 import type { HostContext } from '@dsh-claude-style/engine/host'
@@ -36,11 +36,19 @@ function readReleases(ctx: HostContext): Promise<Map<SodiumMember, string | null
   })))
 }
 
+/** Whether `<style>` carries the owner and sheet path (legacy `data-plugin-css` or current `data-path`) of one adapter. */
+export function matchesAdapterSheet(node: Element, adapter: SodiumAdapter): boolean {
+  if (node.getAttribute(PLUGIN_SHEET_OWNER_ATTRIBUTE) !== adapter.owner) return false
+  if (node.getAttribute(PLUGIN_SHEET_PATH_ATTRIBUTE) === adapter.sheet) return true
+  const path = node.getAttribute(PLUGIN_STYLE_PATH_ATTRIBUTE)
+  return path !== null && adapter.modulePath !== undefined && path === adapter.modulePath
+}
+
 /** The sheets on the page that one adapter names, as the loader tagged them. */
 function sheetsOf(adapter: SodiumAdapter) {
   const sheets: CSSStyleSheet[] = []
   for (const node of document.head.querySelectorAll<HTMLStyleElement>(PLUGIN_SHEET_SELECTOR)) {
-    if (node.getAttribute(PLUGIN_SHEET_OWNER_ATTRIBUTE) !== adapter.owner || node.getAttribute(PLUGIN_SHEET_PATH_ATTRIBUTE) !== adapter.sheet) continue
+    if (!matchesAdapterSheet(node, adapter)) continue
     if (node.sheet !== null) sheets.push(node.sheet)
   }
   return sheets

@@ -1,5 +1,5 @@
 import { SESSION_ROW_KEY_ATTRIBUTE, WORKSPACE_ROW_EXPANDED_ATTRIBUTE, WORKSPACE_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
-import { hostSessions, hostSnapshot, hostUiSession, hostWorkspaceView, hostWorkspaces } from '@dsh-claude-style/engine/host'
+import { hostSessionStatus, hostSessions, hostSnapshot, hostWorkspaceView, hostWorkspaces } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { HostSnapshotSource } from '@dsh-claude-style/contracts/services'
 import { readPrefs } from '../../core/prefs'
@@ -83,7 +83,7 @@ export class WorkspaceGroupStatus {
    */
   private follow() {
     const sources = [
-      hostUiSession(this.ctx)?.sessionStatus ?? null,
+      hostSessionStatus(this.ctx),
       hostSessions(this.ctx)?.list ?? null,
       hostWorkspaces(this.ctx)?.list ?? null,
     ]
@@ -107,7 +107,7 @@ export class WorkspaceGroupStatus {
       // A list that has not answered says nothing about who runs; no mark is
       // drawn from a guess, and a mark already standing is taken away below.
       if (workspaces === null || sessions === null || workspaces.phase === 'pending' || !Array.isArray(workspaces.items)) return wanted
-      const status = hostSnapshot(hostUiSession(this.ctx)?.sessionStatus)
+      const status = hostSnapshot(hostSessionStatus(this.ctx))
       const running = new Set<string>()
       for (const id of sessions.ids) {
         const summary = sessions.byId?.[id]

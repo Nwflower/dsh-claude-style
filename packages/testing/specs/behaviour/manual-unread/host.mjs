@@ -7,8 +7,8 @@ const MENU_SLOT = 'sidebar.workspaces.session.menu.item'
  * slot ownership and the native button that dispatches a menu item's onSelect.
  * Every decision and mark is produced by the installed, built plugin.
  */
-export async function setup(t, { marked = [], current = 'a', ready = true, openState = 'open' } = {}) {
-  await t.page.evaluate(({ marked, current, ready, openState, sidebarSelector, rowKey, part, phase, menuSlot }) => {
+export async function setup(t, { marked = [], current = 'a', ready = true, openState = 'open', nativeMark = false } = {}) {
+  await t.page.evaluate(({ marked, current, ready, openState, nativeMark, sidebarSelector, rowKey, part, phase, menuSlot }) => {
     window.__dispose()
     const host = window.__dshSmokeHost
     const channels = { form: new Set(), list: new Set(), current: new Set(), status: new Set() }
@@ -41,10 +41,15 @@ export async function setup(t, { marked = [], current = 'a', ready = true, openS
       binding: (id) => sessionStates.has(id) ? { session: { getSnapshot: () => ({ openState: sessionStates.get(id) }) }, ctx: { get: () => undefined } } : null,
       refresh: () => Promise.resolve(),
     }
+    const statusService = {
+      getSnapshot: () => new Map([['a', { running: true }], ['b', { pendingInteraction: { kind: 'permission' }, completionUnread: true }]]),
+      subscribe: subscribe('status'),
+      ...(nativeMark ? { mark: async () => {} } : {}),
+    }
     const uiSession = {
       current: { get value() { return selected === null ? undefined : { key: selected } }, subscribe: subscribe('current') },
       completionUnread,
-      sessionStatus: { getSnapshot: () => new Map([['a', { running: true }], ['b', { pendingInteraction: { kind: 'permission' }, completionUnread: true }]]), subscribe: subscribe('status') },
+      ...(nativeMark ? {} : { sessionStatus: statusService }),
     }
     const slots = {
       inject: (key, callback) => key === menuSlot ? callback() : () => {},
@@ -57,7 +62,7 @@ export async function setup(t, { marked = [], current = 'a', ready = true, openS
       entriesOfSlot: () => [],
     }
     const originalGet = window.__ctx.get.bind(window.__ctx)
-    const services = { configForms: forms, sessions, uiSession, slots }
+    const services = { configForms: forms, sessions, uiSession, slots, ...(nativeMark ? { 'uiSession.sessionStatus': statusService } : {}) }
     window.__ctx.get = (name) => Object.hasOwn(services, name) ? services[name] : originalGet(name)
     window.__ctx.inject = (_dependencies, callback) => {
       const disposers = []
@@ -132,7 +137,11 @@ export async function setup(t, { marked = [], current = 'a', ready = true, openS
         let element
         window.__react.rendering = true
         try { element = entry.component(props) } finally { window.__react.rendering = false }
-        if (element === null || element.props === undefined) throw new Error('The unread action returned no host menu item')
+        if (element === null) {
+          menu.replaceChildren()
+          return
+        }
+        if (element.props === undefined) throw new Error('The unread action returned an invalid menu item')
         const button = document.createElement('button')
         button.type = 'button'
         button.setAttribute('role', 'menuitem')
@@ -151,7 +160,7 @@ export async function setup(t, { marked = [], current = 'a', ready = true, openS
     window.__unreadHost = fixture
     window.__skin.apply(window.__ctx)
   }, {
-    marked, current, ready, openState,
+    marked, current, ready, openState, nativeMark,
     sidebarSelector: host('shell.sidebar-slot'), rowKey: host('session.row-key'),
     phase: host('session.phase'), part: surface.attribute('skin.part'), menuSlot: MENU_SLOT,
   })

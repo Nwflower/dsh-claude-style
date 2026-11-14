@@ -21,6 +21,8 @@ export interface SodiumAdapter extends SelectorRewrite {
   /** The sheet as the loader tags it: the owning package, and the sheet's own path in that package. */
   readonly owner: string
   readonly sheet: string
+  /** Package-relative stylesheet path emitted by client module loaders via `data-path`. */
+  readonly modulePath?: string
   /** Keep the rewritten rules' attributes true; the returned function removes them. */
   maintain(captured: ReadonlyMap<string, readonly string[]>): () => void
 }
@@ -96,6 +98,7 @@ const CHAT_FLOW: SodiumAdapter = {
   id: 'chat-flow',
   owner: '@deepseek-ai/dsh-client-ui-chat',
   sheet: '@deepseek-ai/dsh-client-ui-chat/ChatView.module.css',
+  modulePath: 'src/client/chat/ChatView.module.css',
   rewrite: firstShape([GAP, GAP_AFTER_RESPONSE, GAP_AFTER_PROCESS]),
   maintain: (captured) => keepFlowChildMark(captured.get('column') ?? [], FLOW_CHILD_ATTR),
 }

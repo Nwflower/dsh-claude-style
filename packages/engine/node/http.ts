@@ -2,14 +2,19 @@
  * The request handling every private route shares: the fence in front of the
  * user's own data, the method check, the bounded body read and the JSON answer.
  */
-import type { DshContext, DshRequest, DshResponse } from './dsh'
+import type { DshContext, DshPeerScope, DshRequest, DshResponse } from './dsh'
 
 /**
- * Plugin routes do not inherit `/api` authentication. Prefer `connection.requestRejection`;
- * without it require a loopback peer and Host, same-site marker and matching Origin.
- * The socket peer is mandatory because request headers alone cannot establish locality.
+ * Current hosts fence and authenticate routes inside `webServer` before calling the
+ * handler with an authenticated `peer` (requiring `owner` and non-aborted signal on
+ * private routes). Earlier hosts fall back to `connection.requestRejection`, then a
+ * loopback peer and Host/Origin check.
  */
-export function refusalOf(ctx: DshContext, req: DshRequest) {
+export function refusalOf(ctx: DshContext, req: DshRequest, peer?: DshPeerScope) {
+  if (peer !== undefined) {
+    if (peer === null || typeof peer !== 'object' || peer.signal?.aborted === true) return 403
+    return peer.principal?.kind === 'owner' ? undefined : 403
+  }
   const connection = ctx.get('connection')
   if (typeof connection?.requestRejection === 'function') return connection.requestRejection(req)
   if (!isLoopbackPeer(req.socket.remoteAddress)) return 403
@@ -55,8 +60,8 @@ export function methodRefused(req: DshRequest, res: DshResponse, methods: string
 }
 
 /** Apply `refusalOf` before private-data routes and send its 401/403 JSON response. */
-export function fenceRefused(ctx: DshContext, req: DshRequest, res: DshResponse) {
-  const refused = refusalOf(ctx, req)
+export function fenceRefused(ctx: DshContext, req: DshRequest, res: DshResponse, peer?: DshPeerScope) {
+  const refused = refusalOf(ctx, req, peer)
   if (refused === undefined) return false
   sendJson(res, refused, { ok: false, error: refused === 401 ? 'unauthorized' : 'forbidden' })
   return true

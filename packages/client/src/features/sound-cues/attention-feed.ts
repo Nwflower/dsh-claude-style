@@ -1,4 +1,4 @@
-import { hostSessions, hostUiSession } from '@dsh-claude-style/engine/host'
+import { hostSessionStatus, hostSessions } from '@dsh-claude-style/engine/host'
 import { attentionEvents, attentionReading } from './attention'
 import type { AttentionEvent, AttentionReading } from './attention'
 import type { HostContext } from '@dsh-claude-style/engine/host'
@@ -34,7 +34,7 @@ export function createAttentionFeed(ctx: HostContext, onEvent: (event: Attention
 
   function bind(scope: HostContext) {
     if (disposed) return
-    const status = hostUiSession(scope)?.sessionStatus
+    const status = hostSessionStatus(scope) ?? undefined
     const list = hostSessions(scope)?.list
     if (status !== statusSource) {
       if (stopStatus !== null) stopStatus()
@@ -49,15 +49,17 @@ export function createAttentionFeed(ctx: HostContext, onEvent: (event: Attention
     read()
   }
 
-  const fiber = typeof ctx.inject === 'function' ? ctx.inject(['uiSession', 'sessions'], bind) : null
-  if (fiber === null) bind(ctx)
+  const legacyFiber = typeof ctx.inject === 'function' ? ctx.inject(['uiSession', 'sessions'], bind) : null
+  const statusFiber = typeof ctx.inject === 'function' ? ctx.inject(['uiSession.sessionStatus', 'sessions'], bind) : null
+  if (legacyFiber === null && statusFiber === null) bind(ctx)
 
   return {
     dispose() {
       disposed = true
       if (stopStatus !== null) stopStatus()
       if (stopList !== null) stopList()
-      fiber?.dispose()
+      legacyFiber?.dispose()
+      statusFiber?.dispose()
     },
   }
 }

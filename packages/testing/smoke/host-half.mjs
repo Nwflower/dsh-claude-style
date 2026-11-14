@@ -182,7 +182,7 @@ function fakeHost(mod, options = {}) {
  * request made from this machine carries this machine's address (D75) unless a
  * check asks for another.
  */
-function request(host, route, method, body, headers, peer = '127.0.0.1') {
+function request(host, route, method, body, headers, peer = '127.0.0.1', scope = undefined) {
   const req = Readable.from(body ? [Buffer.from(body)] : [])
   Object.assign(req, { method, url: route, headers, socket: { remoteAddress: peer } })
   return new Promise((resolve) => {
@@ -194,7 +194,7 @@ function request(host, route, method, body, headers, peer = '127.0.0.1') {
         resolve({ status: this.status, body: raw === null ? '' : raw.toString(), raw })
       },
     }
-    Promise.resolve(host.routes[route.split('?')[0]].handler(req, res)).catch((error) => resolve({ status: -1, body: String(error), raw: null }))
+    Promise.resolve(host.routes[route.split('?')[0]].handler(req, res, scope)).catch((error) => resolve({ status: -1, body: String(error), raw: null }))
   })
 }
 
@@ -624,6 +624,35 @@ async function hostHalf() {
       droppedFaces.length === 3,
     `HTTP ${dropped.status} ${JSON.stringify(droppedFaces)}`)
   fs.rmSync(fontHome, { recursive: true, force: true })
+
+  console.log('\nhost half — authenticated route peer (WebServer peer scope)')
+  const scopedHost = fakeHost(mod, {
+    fenced: false,
+    home: scratchHome,
+    events: { 'session-priced': [said(1, Date.parse('2026-10-17T02:00:00Z'), 'peer scope')] },
+    stored: [{ header: { id: 'session-priced' }, revision: 'p1' }],
+  })
+  const remoteHeaders = { host: '192.168.1.23:43120', origin: 'https://remote.example', 'sec-fetch-site': 'cross-site' }
+  const ownerPeer = { principal: { kind: 'owner' }, signal: new AbortController().signal }
+  const viewerPeer = { principal: { kind: 'viewer' }, signal: new AbortController().signal }
+  const abortedPeer = { principal: { kind: 'owner' }, signal: AbortSignal.abort() }
+  fs.mkdirSync(path.join(scratchCwd, scratchId), { recursive: true })
+  fs.writeFileSync(path.join(scratchCwd, scratchId, 'session.v4.jsonl.zstd'), 'x')
+  check('authenticated owner peer passes non-loopback username read',
+    (await request(scopedHost, USER, 'GET', '', remoteHeaders, '192.168.1.23', ownerPeer)).status === 200)
+  check('authenticated owner peer passes session delete',
+    (await request(scopedHost, DELETE, 'POST', JSON.stringify({ sessionId: scratchId }), remoteHeaders, '192.168.1.23', ownerPeer)).status === 200)
+  check('authenticated owner peer passes session cost read',
+    (await request(scopedHost, '/dsh-claude-style/session-cost?id=session-priced', 'GET', '', remoteHeaders, '192.168.1.23', ownerPeer)).status === 200)
+  check('authenticated owner peer passes brand status read',
+    (await request(scopedHost, '/dsh-claude-style/brand', 'GET', '', remoteHeaders, '192.168.1.23', ownerPeer)).status === 200)
+  for (const [label, scope] of [['non-owner peer', viewerPeer], ['aborted peer', abortedPeer]]) {
+    check(`${label}: username read refused`, (await request(scopedHost, USER, 'GET', '', browser, '127.0.0.1', scope)).status === 403)
+    check(`${label}: session delete refused`, (await request(scopedHost, DELETE, 'POST', JSON.stringify({ sessionId: 'session-smoke-absent' }), browser, '127.0.0.1', scope)).status === 403)
+    check(`${label}: session cost refused`, (await request(scopedHost, '/dsh-claude-style/session-cost?id=session-priced', 'GET', '', browser, '127.0.0.1', scope)).status === 403)
+    check(`${label}: brand status refused`, (await request(scopedHost, '/dsh-claude-style/brand', 'GET', '', browser, '127.0.0.1', scope)).status === 403)
+  }
+  fs.rmSync(scratchHome, { recursive: true, force: true })
 }
 
 /**

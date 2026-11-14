@@ -389,13 +389,14 @@ export const SKIN_CENTER_ATTRIBUTE = 'data-dsh-skin'
 /** The host's own light/dark flip, written on `<body>`. */
 export const DARK_THEME_ATTRIBUTE = 'data-ds-dark-theme'
 /** A sibling plugin's stylesheet in `<head>`, read to tell that plugin is on the page. */
-export const PEER_SHEET_SELECTOR = 'style[data-plugin-css="dsh-plugin-msg-nav/style.css"]'
+export const PEER_SHEET_SELECTOR = 'style[data-plugin-css="dsh-plugin-msg-nav/style.css"], style[data-plugin="dsh-plugin-msg-nav"][data-path="style.css"], style[data-plugin="dsh-plugin-msg-nav"][data-path$="/style.css"]'
 /** Every untagged stylesheet in `<head>`: the host's claim sweep would otherwise take a sibling's. */
 export const UNTAGGED_SHEET_SELECTOR = 'style:not([data-plugin])'
 /** Loader tags identify package and sheet path; sodium lookup depends on both (D78). */
 export const PLUGIN_SHEET_SELECTOR = 'style[data-plugin]'
 export const PLUGIN_SHEET_OWNER_ATTRIBUTE = 'data-plugin'
 export const PLUGIN_SHEET_PATH_ATTRIBUTE = 'data-plugin-css'
+export const PLUGIN_STYLE_PATH_ATTRIBUTE = 'data-path'
 
 /* ---------- a plugin's footer control ---------- */
 /** Plugin-owned footer naming lets the skin find update controls without hashed class names. */

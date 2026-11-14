@@ -133,4 +133,12 @@ export default spec({ page: 'late-forms' }, ({ test }) => {
     t.expectThat.equal(await t.read.count(surface('manual-unread.marker')), 0, 'later host changes cannot restore disposed marks')
     t.expectThat.equal(await writes(t), [], 'disposed navigation starts no preference write')
   })
+
+  test('host native mark yields the menu item and row marks without dropping teardown safety', async (t) => {
+    await setup(t, { marked: ['b'], nativeMark: true })
+    const item = await menu(t, 'b')
+    t.expectThat.equal(await item.count(), 0, 'the plugin menu item stands down when the host exposes uiSession.sessionStatus.mark')
+    t.expectThat.equal(await marked(t, 'b'), false, 'no duplicate plugin row mark renders under native unread support')
+    t.expectThat.equal(await writes(t), [], 'standing down issues no preference writes')
+  })
 })

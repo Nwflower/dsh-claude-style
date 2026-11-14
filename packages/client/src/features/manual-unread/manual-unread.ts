@@ -4,7 +4,7 @@ import { SESSION_ROW_KEY_ATTRIBUTE, SIDEBAR_SLOT_SELECTOR } from '@dsh-claude-st
 import type { HostSessionMenuProps } from '@dsh-claude-style/contracts/services'
 import { observeMatches, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { writeTextInPlace } from '@dsh-claude-style/engine/dom'
-import { currentSessionId, findSidebarRoot, hostSessions, hostUiSession, registerSlotEntries } from '@dsh-claude-style/engine/host'
+import { currentSessionId, findSidebarRoot, hostSessionStatus, hostSessions, hostUiSession, registerSlotEntries } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import { readPrefs, savePrefs, subscribePrefs, prefsFromForm } from '../../core/prefs'
 import type { FeatureUi } from '../../core/feature'
@@ -36,6 +36,31 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let stopWatch: (() => void) | null = null
   let pendingVisit: string | null = null
   let hasSessionBaseline = false
+
+  const hostOwnsUnread = () => typeof hostSessionStatus(ctx)?.mark === 'function'
+  const nativeListeners = new Set<() => void>()
+  const subscribeNative = (listener: () => void) => {
+    nativeListeners.add(listener)
+    return () => { nativeListeners.delete(listener) }
+  }
+  const notifyNative = () => {
+    for (const listener of [...nativeListeners]) listener()
+  }
+  const statusFiber = typeof ctx.inject === 'function'
+    ? ctx.inject(['uiSession.sessionStatus'], (scope) => {
+      scope.effect(() => {
+        notifyNative()
+        changed()
+        return () => {
+          queueMicrotask(() => {
+            if (disposed) return
+            notifyNative()
+            changed()
+          })
+        }
+      }, 'dsh-claude-style: native unread watch')
+    })
+    : null
 
   const writer = createUnreadWriter(() => readPrefs().manualUnreadIds, async (ids) => {
     const accepted = await savePrefs({ manualUnreadIds: ids })
@@ -76,9 +101,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   }
 
   function ManualUnreadMenuItem(props: HostSessionMenuProps) {
+    const native = React.useSyncExternalStore(subscribeNative, hostOwnsUnread)
     const values = React.useSyncExternalStore(subscribePrefs, readPrefs)
     const pending = React.useSyncExternalStore(writer.subscribe, writer.pending)
     const openState = typeof props.useMenuOpenState === 'function' ? props.useMenuOpenState() : null
+    if (native) return null
     const unread = values.manualUnreadIds.includes(props.sessionId)
     return React.createElement(primitives.MenuItemButton, {
       icon: unread
@@ -99,6 +126,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   }], 'dsh-claude-style: manual unread menu')
 
   function sync() {
+    if (hostOwnsUnread()) {
+      pendingVisit = null
+      for (const mark of marks.values()) mark.dispose()
+      marks.clear()
+      return
+    }
     if (sessionsOff === null) {
       const sessions = hostSessions(ctx)
       if (sessions !== null) sessionsOff = sessions.list.subscribe(changed)
@@ -150,11 +183,13 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     navigationOff?.()
     sessionsOff?.()
     stopWatch?.()
+    statusFiber?.dispose()
     rows.release()
     menu?.dispose()
     writer.dispose()
     for (const mark of marks.values()) mark.dispose()
     marks.clear()
+    nativeListeners.clear()
     description.remove()
     toast.dispose()
   }

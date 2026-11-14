@@ -10,9 +10,9 @@
  * @risk With the switch on, a flow item that should collapse keeps its height or its gap, a filled one stays collapsed while the host reads the layout and the conversation's position slides back, the running line's divider shows at the wrong moment, or a rule loses to one it used to beat.
  */
 import { afterEach, expect, test } from 'vitest'
-import { CHAT_FLOW_SLOT_SELECTOR, CHAT_GROUP_PART_ATTRIBUTE, CHAT_GROUP_PART_RESPONSE, CHAT_NODE_SELECTOR, CHAT_RUNNING_SELECTOR, CHAT_STEERING_BATCH_SELECTOR, FLOW_BLOCK_SELECTOR, FLOW_KIND_ATTRIBUTE, PENDING_STEERING_SELECTOR, SUBMISSION_ECHO_SELECTOR, TURN_PROCESS_ROW_KIND } from '@dsh-claude-style/contracts/dom'
+import { CHAT_FLOW_SLOT_SELECTOR, CHAT_GROUP_PART_ATTRIBUTE, CHAT_GROUP_PART_RESPONSE, CHAT_NODE_SELECTOR, CHAT_RUNNING_SELECTOR, CHAT_STEERING_BATCH_SELECTOR, FLOW_BLOCK_SELECTOR, FLOW_KIND_ATTRIBUTE, PENDING_STEERING_SELECTOR, PLUGIN_SHEET_OWNER_ATTRIBUTE, PLUGIN_SHEET_PATH_ATTRIBUTE, PLUGIN_STYLE_PATH_ATTRIBUTE, SUBMISSION_ECHO_SELECTOR, TURN_PROCESS_ROW_KIND } from '@dsh-claude-style/contracts/dom'
 import { applyRewrite, planRewrite, restoreRewrite } from '@dsh-claude-style/engine/sheet-rewrite'
-import { SODIUM_MEMBERS, keepFlowChildMark } from '@dsh-claude-style/client/pure'
+import { SODIUM_MEMBERS, keepFlowChildMark, matchesAdapterSheet } from '@dsh-claude-style/client/pure'
 import { hostElement } from '../../fixtures/host-markup'
 
 const settle = () => new Promise(resolve => setTimeout(resolve, 0))
@@ -273,4 +273,20 @@ test('every rewritten flow rule weighs what the host rule weighs', () => {
     return { rule: entry.original.slice(0, 60), target: target.outerHTML.slice(0, 80), rewrittenLater, originalLater }
   }))
   expect(verdicts.filter(verdict => verdict.rewrittenLater !== 'rewritten' || verdict.originalLater !== 'original')).toEqual([])
+})
+
+test('adapter sheet lookup matches both legacy data-plugin-css and client-module data-path tags', () => {
+  const adapter = SODIUM_MEMBERS.flatMap(member => member.adapters).find(entry => entry.id === 'chat-flow')!
+  const legacy = document.createElement('style')
+  legacy.setAttribute(PLUGIN_SHEET_OWNER_ATTRIBUTE, adapter.owner)
+  legacy.setAttribute(PLUGIN_SHEET_PATH_ATTRIBUTE, adapter.sheet)
+  const moduleTagged = document.createElement('style')
+  moduleTagged.setAttribute(PLUGIN_SHEET_OWNER_ATTRIBUTE, adapter.owner)
+  moduleTagged.setAttribute(PLUGIN_STYLE_PATH_ATTRIBUTE, adapter.modulePath!)
+  const otherSheet = document.createElement('style')
+  otherSheet.setAttribute(PLUGIN_SHEET_OWNER_ATTRIBUTE, adapter.owner)
+  otherSheet.setAttribute(PLUGIN_STYLE_PATH_ATTRIBUTE, 'src/client/chat/Other.module.css')
+  expect(matchesAdapterSheet(legacy, adapter)).toBe(true)
+  expect(matchesAdapterSheet(moduleTagged, adapter)).toBe(true)
+  expect(matchesAdapterSheet(otherSheet, adapter)).toBe(false)
 })

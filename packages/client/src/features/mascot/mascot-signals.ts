@@ -1,4 +1,4 @@
-import { findChatTarget, hostSessions, hostSnapshot, hostUiSession, readTurnActivity } from '@dsh-claude-style/engine/host'
+import { findChatTarget, hostSessionStatus, hostSessions, hostSnapshot, readTurnActivity } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { HostChatSnapshot, HostChatTarget, HostFeedEntry, HostSessionEvent, HostSessionListSnapshot, HostSessionStatusSnapshot, HostSnapshotSource, HostSubagentEntry } from '@dsh-claude-style/contracts/services'
 
@@ -150,7 +150,7 @@ export function createMascotSignals(ctx: HostContext, onMoment: (moment: MascotM
   let stopStatus: (() => void) | null = null
 
   function statusOf(): HostSessionStatusSnapshot | null {
-    const source = hostUiSession(ctx)?.sessionStatus
+    const source = hostSessionStatus(ctx) ?? undefined
     if (source !== statusSource) {
       if (stopStatus !== null) stopStatus()
       statusSource = source
