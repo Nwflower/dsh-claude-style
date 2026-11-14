@@ -6,6 +6,8 @@ import { inPageBox } from './page-zoom'
  */
 export function createSlidingPill(activeSelector: string) {
   const PILL_ATTR = 'data-dsh-claude-pill'
+  /** The token the pill's transition reads; a zero duration makes one placement step. */
+  const SLIDE_DURATION = '--dsh-claude-duration-slide'
   let control: HTMLElement | null = null
   /** The last written box, so an unchanged placement writes nothing. */
   let lastX: number | null = null
@@ -121,12 +123,16 @@ export function createSlidingPill(activeSelector: string) {
       })
       // A webfont that lands after this measurement widens the items without
       // changing the control's own box, which the size observer watches: the
-      // items are read again once the page's fonts have settled.
+      // items are read again once the page's fonts have settled. The correction
+      // steps to the new width — the duration is zero for the one frame the
+      // placement is written in — since the reader is already looking at it.
       void document.fonts.ready.then(() => {
         if (control === null) return
+        control.style.setProperty(SLIDE_DURATION, '0s')
         measure(control)
         taken = false
         place(control, reading)
+        requestAnimationFrame(() => { control?.style.removeProperty(SLIDE_DURATION) })
       })
     }
     if (control === null) return
