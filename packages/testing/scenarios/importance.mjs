@@ -25,6 +25,8 @@ import surfaceTable from '../data/surface.json' with { type: 'json' }
 
 /** A mark the walk sets, read from the surface table rather than spelled here (D92). */
 const surfaceAttribute = (id) => surfaceTable.surface.find((entry) => entry.id === id).attribute
+/** The brand in force: the mark the page carries, set by the walk and read back around it. */
+const BRAND = 'data-dsh-claude-brand'
 
 /**
  * The selectors this walk cannot reach, each under the reason it is out of
@@ -312,11 +314,11 @@ function importanceScenario(lane) {
       // palette and typefaces.
       await attribute(page, 'data-ds-dark-theme', '')
       await audit.state('dark')
-      await attribute(page, 'data-dsh-claude-brand', 'deepseek')
+      await attribute(page, BRAND, 'deepseek')
       await audit.state('deepseek dark')
       await attribute(page, 'data-ds-dark-theme', null)
       await audit.state('deepseek light')
-      await attribute(page, 'data-dsh-claude-brand', 'claude')
+      await attribute(page, BRAND, 'claude')
       await attribute(page, 'data-dsh-claude-palette', 'host')
       await attribute(page, 'data-dsh-claude-typeface', 'host')
       await audit.state('host palette')
@@ -326,14 +328,16 @@ function importanceScenario(lane) {
       // The supplied art's rules only carry their weight where the brand's own
       // art stands in the page: under the Claude brand the brand sheet hides the
       // slots itself, so the walk audits the supplied art under DeepSeek.
-      const brandBefore = await page.evaluate(() => document.body.getAttribute('data-dsh-claude-brand'))
+      const brandBefore = await page.evaluate((mark) => document.body.getAttribute(mark), BRAND)
       for (const [name, key, value] of MARKS) {
-        const supplied = key.startsWith('data-dsh-claude-custom-')
-        if (supplied) await attribute(page, 'data-dsh-claude-brand', 'deepseek')
+        // The states named for the supplied art are the ones whose rules the
+        // brand sheet can hide first; the name says which they are.
+        const supplied = name.startsWith('custom brand')
+        if (supplied) await attribute(page, BRAND, 'deepseek')
         await attribute(page, key, value)
         await audit.state(name)
         await attribute(page, key, null)
-        if (supplied) await attribute(page, 'data-dsh-claude-brand', brandBefore)
+        if (supplied) await attribute(page, BRAND, brandBefore)
       }
       await withSettings(page, audit)
       // The preferences the controls set render their own markup on the empty
