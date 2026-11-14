@@ -1,9 +1,11 @@
-/* The custom brand row's lockup (settings-brand-lockup.ts, D30): the brand
-   area the sidebar draws, at the size the settings column gives it. Every
-   metric comes from the cap height the sidebar paints the identity at
-   (theme/sidebar.css), scaled up by --dsh-claude-lockup-scale, so the mark,
-   the word and the gap keep their proportions at any column width. The plate
-   spans the settings column, so the lockup stands in the middle of it. */
+/* The brand editor's lockup (settings-brand-lockup.ts, D30): the brand area
+   the sidebar draws, at the size the editor gives it. Every metric comes from
+   the cap height the sidebar paints the identity at (theme/sidebar.css),
+   scaled up by --dsh-claude-lockup-scale, so the mark, the word and the gap
+   keep their proportions at any width. The plate spans the editor, so the
+   lockup stands in the middle of it. The art and the typed name read the cap
+   from whatever holds them, which is how the brand cards and the manager's
+   list draw the same art smaller (brand-cards.css). */
 
 body[data-dsh-claude-style] .dsh-claude-brand-lockup {
   --dsh-claude-lockup-unit: 18px;
@@ -291,52 +293,6 @@ body[data-dsh-claude-style] .dsh-claude-brand-clear {
 body[data-dsh-claude-style] .dsh-claude-brand-clear:focus-visible {
   outline: 2px solid var(--dsw-alias-brand-primary, #d97757);
   outline-offset: 2px;
-}
-
-/* Named presets share the brand row without borrowing the lockup's own classes. */
-body[data-dsh-claude-style] .dsh-claude-brand-presets {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  margin-bottom: 12px;
-  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
-}
-body[data-dsh-claude-style] .dsh-claude-brand-presets button,
-body[data-dsh-claude-style] .dsh-claude-brand-preset-select,
-body[data-dsh-claude-style] .dsh-claude-brand-preset-rename input {
-  box-sizing: border-box;
-  min-height: 28px;
-  margin: 0;
-  padding: 3px 9px;
-  border: 1px solid var(--dsw-alias-border-l1);
-  border-radius: 6px;
-  background: var(--dsw-alias-bg-base);
-  color: var(--dsw-alias-label-primary);
-  font: inherit;
-}
-body[data-dsh-claude-style] .dsh-claude-brand-presets button {
-  cursor: pointer;
-}
-body[data-dsh-claude-style] .dsh-claude-brand-presets button:hover,
-body[data-dsh-claude-style] .dsh-claude-brand-presets button:focus-visible,
-body[data-dsh-claude-style] .dsh-claude-brand-preset-select:focus-visible,
-body[data-dsh-claude-style] .dsh-claude-brand-preset-rename input:focus-visible {
-  background: var(--dsh-claude-hover-bg);
-}
-body[data-dsh-claude-style] .dsh-claude-brand-presets button:disabled,
-body[data-dsh-claude-style] .dsh-claude-brand-preset-select:disabled {
-  cursor: default;
-  opacity: 0.55;
-}
-body[data-dsh-claude-style] .dsh-claude-brand-preset-appearances,
-body[data-dsh-claude-style] .dsh-claude-brand-preset-rename {
-  display: inline-flex;
-  gap: 4px;
-}
-body[data-dsh-claude-style] .dsh-claude-brand-preset-appearances button[aria-pressed="true"] {
-  border-color: var(--dsw-alias-brand-primary);
 }
 
 /* A refusal from the host half is written under the lockup in the page's

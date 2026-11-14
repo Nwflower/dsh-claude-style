@@ -5,8 +5,8 @@ import { waitForSkin, dismissOverlays } from '../dsh-web.mjs'
 import { sanitizePage } from '../../../scripts/shared/privacy.mjs'
 import { host, surface } from '../specs/fixtures/behaviour.mjs'
 
-const SELECT = surface('settings.brand-preset-select')
-const RENAME = surface('settings.brand-preset-rename')
+const CARD = surface('settings.brand-card')
+const EDITOR = surface('settings.brand-editor')
 const ERROR = surface('settings.brand-error')
 const DARK = host('shell.dark-theme')
 const ACCENT = surface.property('brand.custom-accent')
@@ -47,19 +47,35 @@ async function reloadAndOpenAppearance(page) {
   await openAppearance(page)
 }
 
+/** The set the brand cards show as painted: its id (empty for the images outside any preset) and its name. */
+function selectedCard(page) {
+  return page.evaluate(selector => {
+    const card = document.querySelector(selector + '[data-active]')
+    return card === null ? null : { id: card.getAttribute('data-branding'), name: card.getAttribute('aria-label') }
+  }, CARD)
+}
+
+function waitForSelected(page, id) {
+  return page.waitForFunction(([selector, want]) => document.querySelector(selector + '[data-active]')?.getAttribute('data-branding') === want, [CARD, id])
+}
+
+/** Open the brand manager from the door beside the brand switch, on the set the page paints. */
+async function openBrandManager(page) {
+  await page.locator('[data-action="manage-brand"]').click()
+  await page.locator(EDITOR).waitFor()
+}
+
 async function duplicateAndRename(page, name, notes) {
   await openAppearance(page)
-  await page.getByRole('button', { name: '存为副本', exact: true }).click()
-  await page.waitForFunction(selector => document.querySelector(selector)?.value === 'preset-1', SELECT)
-  await page.waitForFunction(() => !document.querySelector('.dsh-claude-brand-presets')?.hasAttribute('data-busy'))
-  if (notes !== undefined) notes.afterDuplicate = await page.locator(SELECT).inputValue()
-  await page.getByRole('button', { name: '重命名', exact: true }).click()
-  await page.locator(RENAME).fill(name)
-  await page.getByRole('button', { name: '保存名称', exact: true }).click()
-  await page.waitForFunction(() => !document.querySelector('.dsh-claude-brand-presets')?.hasAttribute('data-busy'))
-  if (notes !== undefined) notes.afterRename = await page.locator(SELECT).inputValue()
+  await openBrandManager(page)
+  await page.locator(EDITOR).getByRole('button', { name: '存为副本', exact: true }).click()
+  await waitForSelected(page, 'preset-1')
+  if (notes !== undefined) notes.afterDuplicate = (await selectedCard(page))?.id
+  await page.locator(EDITOR + ' input').fill(name)
+  if (notes !== undefined) notes.afterRename = (await selectedCard(page))?.id
   await page.waitForTimeout(500)
-  if (notes !== undefined) notes.afterSettle = await page.locator(SELECT).inputValue()
+  if (notes !== undefined) notes.afterSettle = (await selectedCard(page))?.id
+  await page.keyboard.press('Escape')
 }
 
 async function upload(page) {
@@ -106,13 +122,15 @@ function brandingPresetsScenario({ check }) {
       notes.dark = await page.evaluate(property => document.body.style.getPropertyValue(property), MARK)
       await page.evaluate(attribute => document.body.removeAttribute(attribute), DARK)
       await openAppearance(page)
-      notes.initial = await page.locator(SELECT).inputValue()
+      notes.initial = (await selectedCard(page))?.id
       await duplicateAndRename(page, 'Renamed preset', notes)
-      notes.duplicate = await page.locator(SELECT).inputValue()
-      notes.renamedBeforeReload = await page.locator(SELECT + ' option:checked').textContent()
+      const duplicated = await selectedCard(page)
+      notes.duplicate = duplicated?.id
+      notes.renamedBeforeReload = duplicated?.name
       await reloadAndOpenAppearance(page)
-      notes.afterReload = await page.locator(SELECT).inputValue()
-      notes.renamed = await page.locator(SELECT + ' option:checked').textContent()
+      const reloaded = await selectedCard(page)
+      notes.afterReload = reloaded?.id
+      notes.renamed = reloaded?.name
       notes.error = await page.locator(ERROR).count()
     },
     async assert({ session }) {
@@ -149,8 +167,9 @@ function brandingPresetUiScenario({ check }) {
       await reloadAndOpenAppearance(page)
       await duplicateAndRename(page, 'UI preset')
       await reloadAndOpenAppearance(page)
-      notes.afterReload = await page.locator(SELECT).inputValue()
-      notes.name = await page.locator(SELECT + ' option:checked').textContent()
+      const reloaded = await selectedCard(page)
+      notes.afterReload = reloaded?.id
+      notes.name = reloaded?.name
       await page.waitForTimeout(400)
       await sanitizePage(expression => page.evaluate(expression))
       await page.screenshot({ path: notes.out + '/branding-presets-settings-light.png' })
@@ -159,10 +178,12 @@ function brandingPresetUiScenario({ check }) {
       await sanitizePage(expression => page.evaluate(expression))
       await page.screenshot({ path: notes.out + '/branding-presets-settings-dark.png' })
       await page.evaluate(attribute => document.body.removeAttribute(attribute), DARK)
-      await page.getByRole('button', { name: '删除', exact: true }).click()
-      await page.getByRole('button', { name: '确认删除', exact: true }).click()
-      await page.waitForFunction(selector => document.querySelector(selector)?.value === '', SELECT)
-      notes.afterDelete = await page.locator(SELECT).inputValue()
+      await openBrandManager(page)
+      await page.locator(EDITOR).getByRole('button', { name: '删除', exact: true }).click()
+      await page.locator(EDITOR).getByRole('button', { name: '确认删除', exact: true }).click()
+      await waitForSelected(page, '')
+      notes.afterDelete = (await selectedCard(page))?.id
+      await page.keyboard.press('Escape')
       notes.error = await page.locator(ERROR).count()
       notes.errorText = await page.locator(ERROR).allTextContents()
     },

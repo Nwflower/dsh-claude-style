@@ -1,24 +1,16 @@
-import * as React from 'react'
 import { BRAND_INK_ACCENT, BRAND_INK_ORIGINAL, BRAND_INK_TEXT } from '../../constants'
-import { BrandLockup } from './settings-brand-lockup'
+import { brandCardsNode, brandManageButton } from './brand-cards'
 import type { SegmentOption, SettingsRow, SettingsView } from './settings-controls'
 import type { Prefs } from '../../constants'
 import { copy } from './copy'
 
 /**
  * The Appearance tab's custom brand rows (D97), which open the tab: the switch
- * that keeps the sidebar's brand area on the page, then the brand area drawn as
- * the lockup the reader edits in place (settings-brand-lockup.ts), with how the
- * images are inked as its sub-row. The name and the two images are the reader's
- * own data, written through the page's write path and the host half's brand
- * routes, so the lockup edits the same values the sidebar paints.
- */
-
-/**
- * The custom brand rows, ranked ahead of every other row on the tab: the switch
- * that keeps the sidebar's brand area on the page, the lockup the reader edits in
- * place under it (titleless), and how
- * the images are inked as that block's sub-row.
+ * that keeps the sidebar's brand area on the page with the brand manager's door
+ * beside it, the cards of the brand sets under it (brand-cards.ts), and how the
+ * images are inked as that block's sub-row. The cards and the door stand while
+ * the switch is on; the sets themselves are edited in the manager
+ * (brand-manager.ts), which writes the same values the sidebar paints.
  */
 export function brandRows(view: SettingsView): SettingsRow[] {
   const { prefs, write } = view
@@ -35,18 +27,10 @@ export function brandRows(view: SettingsView): SettingsRow[] {
         copy('brandLockupTitle'),
         copy('brandLockupDesc'),
         view.controls.toggle(prefs.sidebarBrand, on => { write({ sidebarBrand: on }) }),
+        { lead: prefs.sidebarBrand ? brandManageButton() : null },
       ),
     },
-    {
-      rank: 6,
-      node: view.controls.row(
-        'brandLockup',
-        null,
-        null,
-        React.createElement(BrandLockup, { prefs, write }),
-        { block: true },
-      ),
-    },
+    ...(prefs.sidebarBrand ? [{ rank: 6, node: brandCardsNode(view) }] : []),
     {
       rank: 7,
       node: view.controls.subRow(

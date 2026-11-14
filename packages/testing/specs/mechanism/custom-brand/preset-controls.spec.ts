@@ -1,20 +1,23 @@
 /**
- * The appearance preset controls' surface contract (D92).
+ * The brand set controls' surface contract (D92).
  *
  * @capability custom-brand
  * @features settings
- * @risk The preset toolbar loses its registered selectors, or the renderer stops writing the colour-scheme and logo properties the page and scenarios read.
+ * @risk The brand cards or the brand editor lose their registered selectors, or the renderer stops writing the colour-scheme and logo properties the page and scenarios read.
  */
 import { expect, test } from 'vitest'
 import { surfaceProperty, surfaceSelector } from '../../fixtures/surface'
-import { BRAND_PROPERTIES, SETTINGS_BRAND_LOCKUP_SHEET } from '@dsh-claude-style/client/pure'
+import { BRAND_CARDS_SHEET, BRAND_PROPERTIES, SETTINGS_BRAND_LOCKUP_SHEET } from '@dsh-claude-style/client/pure'
 
-test('every preset-control selector has a rule in the shipped stylesheet', () => {
-  const sheet = new CSSStyleSheet()
-  sheet.replaceSync(SETTINGS_BRAND_LOCKUP_SHEET)
-  for (const id of ['settings.brand-preset-select', 'settings.brand-preset-rename', 'settings.brand-error']) {
+test('every brand-control selector has a rule in the shipped stylesheets', () => {
+  const sheets = [SETTINGS_BRAND_LOCKUP_SHEET, BRAND_CARDS_SHEET].map((text) => {
+    const sheet = new CSSStyleSheet()
+    sheet.replaceSync(text)
+    return sheet
+  })
+  for (const id of ['settings.brand-card', 'settings.brand-editor', 'settings.brand-error']) {
     const selector = surfaceSelector(id)
-    expect([...sheet.cssRules].some(rule => rule.type === CSSRule.STYLE_RULE && (rule as CSSStyleRule).selectorText.includes(selector)), selector).toBe(true)
+    expect(sheets.some(sheet => [...sheet.cssRules].some(rule => rule.type === CSSRule.STYLE_RULE && (rule as CSSStyleRule).selectorText.includes(selector))), selector).toBe(true)
   }
 })
 

@@ -1,0 +1,80 @@
+/* The brand sets drawn small: the cards under the brand switch
+   (brand-cards.ts), the leads of the manager's list (brand-manager.ts), and
+   the lockup's room in the brand editor (brand-editor.ts). The cards wear the
+   colour cards' frame (settings-brand.css, palette-schemes.css); the art inside
+   is the lockup's own (settings-brand-lockup.css) at a smaller cap height. */
+
+/* A brand card holds its lockup and its name in the middle of its frame. */
+body[data-dsh-claude-style] .dsh-claude-brand-card {
+  justify-content: center;
+}
+
+/* A card's lockup: the mark and the word at a cap the card's width holds.
+   The row keeps one height whichever art it carries, so the cards' names
+   stand on one line across the grid. */
+body[data-dsh-claude-style] .dsh-claude-brand-card-art {
+  --dsh-claude-lockup-cap: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  max-width: 100%;
+  min-width: 0;
+  height: 40px;
+}
+
+/* A seat of a card: the art, and the bare pencil over it while the pointer or
+   the keyboard is on that seat, with the art faded so the pencil reads on any
+   ink or picture. */
+body[data-dsh-claude-style] .dsh-claude-brand-card-seat {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  max-width: 100%;
+  padding: 2px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+body[data-dsh-claude-style] .dsh-claude-brand-card-seat > :is(.dsh-claude-brand-art, .dsh-claude-brand-typed, .dsh-claude-scheme-glyph) {
+  grid-area: 1 / 1;
+  transition: opacity var(--dsh-claude-duration-feedback) var(--dsh-claude-ease-standard);
+}
+
+body[data-dsh-claude-style] .dsh-claude-brand-card-seat > .dsh-claude-scheme-glyph {
+  color: var(--dsw-alias-label-primary);
+  opacity: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-brand-card-seat:is(:hover, :focus-visible) > .dsh-claude-scheme-glyph {
+  opacity: 1;
+}
+
+body[data-dsh-claude-style] .dsh-claude-brand-card-seat:is(:hover, :focus-visible) > :is(.dsh-claude-brand-art, .dsh-claude-brand-typed) {
+  opacity: 0.2;
+}
+
+body[data-dsh-claude-style] .dsh-claude-brand-card-seat:focus-visible {
+  outline: 1px solid var(--dsw-alias-brand-primary);
+  outline-offset: 0;
+}
+
+/* A line of the manager's list leads with the set's mark, as wide as the
+   colour list's dots so every name starts on one edge (palette-schemes.css). */
+body[data-dsh-claude-style] .dsh-claude-brand-lead {
+  --dsh-claude-lockup-cap: 16px;
+  display: inline-flex;
+  flex: none;
+  justify-content: center;
+  width: var(--dsh-claude-scheme-dots);
+}
+
+/* The editor's lockup takes the room between the options and the foot. */
+body[data-dsh-claude-style] .dsh-claude-brand-editor > .dsh-claude-brand-lockup {
+  flex: 1;
+}

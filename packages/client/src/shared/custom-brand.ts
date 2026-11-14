@@ -2,6 +2,7 @@ import { BRAND_IMAGE_KINDS } from '@dsh-claude-style/contracts/brand'
 import type { BrandAnswer, BrandImageKind, BrandImageState } from '@dsh-claude-style/contracts/brand'
 import { brandingAsset, brandingSlot, findBrandingPreset, withBrandingAsset } from '@dsh-claude-style/contracts/branding-presets'
 import type { BrandingAppearance, BrandingPreset, BrandingSlot } from '@dsh-claude-style/contracts/branding-presets'
+import { DARK_THEME_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import { BRAND_MARK_ROUTE, BRAND_ROUTE, BRAND_WORDMARK_ROUTE, BRANDING_ASSET_ROUTE, BRANDING_STATUS_ROUTE } from '../constants'
 import { readPrefs, subscribePrefs } from '../core/prefs'
 import { notifyAll } from '@dsh-claude-style/engine/notify'
@@ -69,8 +70,9 @@ const request = createHostRequest(adopt, value => {
   notifyAll(listeners, images)
 })
 
-function appearance(): BrandingAppearance {
-  return document.body.hasAttribute('data-ds-dark-theme') ? 'dark' : 'light'
+/** The appearance the page shows now, which picks a preset's variant. */
+export function pageAppearance(): BrandingAppearance {
+  return document.body.hasAttribute(DARK_THEME_ATTRIBUTE) ? 'dark' : 'light'
 }
 
 function statusRequest(preset: BrandingPreset, mode: BrandingAppearance): RequestInit {
@@ -86,7 +88,7 @@ function reload() {
   request.reset()
   const preset = selectedBrandingPreset(readPrefs())
   if (preset === undefined) return request.load(BRAND_ROUTE, {}, error => { console.warn('dsh-claude-style: brand status could not be read: ' + String(error)) })
-  return request.load(BRANDING_STATUS_ROUTE, statusRequest(preset, appearance()), error => { console.warn('dsh-claude-style: branding status could not be read: ' + String(error)) })
+  return request.load(BRANDING_STATUS_ROUTE, statusRequest(preset, pageAppearance()), error => { console.warn('dsh-claude-style: branding status could not be read: ' + String(error)) })
 }
 
 export function readBrandImages() {
@@ -106,7 +108,7 @@ export function loadBrandImages() {
   if (!armed) {
     armed = true
     offPrefs = subscribePrefs(() => { void reload() })
-    offTheme = subscribeMutations(document.body, { attributes: true, attributeFilter: ['data-ds-dark-theme'] }, () => { void reload() })
+    offTheme = subscribeMutations(document.body, { attributes: true, attributeFilter: [DARK_THEME_ATTRIBUTE] }, () => { void reload() })
   }
   return reload()
 }
@@ -124,6 +126,16 @@ export function resetBrandImages() {
 /** Read one preset independently of the page's shared state (the settings editor uses this for either appearance). */
 export async function loadBrandingPresetImages(preset: BrandingPreset, mode: BrandingAppearance) {
   return adopt(await readHostJson(BRANDING_STATUS_ROUTE, statusRequest(preset, mode)))
+}
+
+/** Read the images kept outside any preset, whether or not the page paints them now. */
+async function loadLegacyBrandImages() {
+  return adopt(await readHostJson(BRAND_ROUTE, {}))
+}
+
+/** Read one set, a preset's variant or the images outside any preset (`undefined`), independently of the page's shared state. */
+export function loadBrandingImages(preset: BrandingPreset | undefined, mode: BrandingAppearance) {
+  return preset === undefined ? loadLegacyBrandImages() : loadBrandingPresetImages(preset, mode)
 }
 
 function change(kind: BrandImageKind, init: RequestInit) {
@@ -172,11 +184,11 @@ async function imageFile(image: BrandImage, kind: BrandImageKind) {
   return new File([bytes], kind, { type: bytes.type })
 }
 
-/** Copy the active images into a new managed preset; later replacement never changes the source preset. */
+/** Copy a preset's images, or those kept outside any preset (`undefined`), into a new managed preset; later replacement never changes the source. */
 export async function cloneBrandImages(targetId: string, source: BrandingPreset | undefined) {
   let preset: BrandingPreset = { id: targetId, name: '' }
   if (source === undefined) {
-    const current = readBrandImages()
+    const current = await loadLegacyBrandImages()
     for (const kind of BRAND_IMAGE_KINDS) {
       const image = current[kind]
       if (image === null) continue

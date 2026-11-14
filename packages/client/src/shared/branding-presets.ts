@@ -10,10 +10,13 @@ export function selectedBrandingPreset(prefs: Prefs) {
   return prefs.brandingPreset === '' ? undefined : findBrandingPreset(prefs.brandingPresets, prefs.brandingPreset)
 }
 
+/** Store a preset in its own place in the list (a new one goes last), so the cards keep their order while one is edited. */
 export function storeBrandingPresetPatch(prefs: Prefs, preset: BrandingPreset, select = false): Partial<Prefs> {
   const text = serializeBrandingPreset(preset)
-  const records = prefs.brandingPresets.filter(entry => parseBrandingPreset(entry).id !== preset.id)
-  records.push(text)
+  const at = prefs.brandingPresets.findIndex(entry => parseBrandingPreset(entry).id === preset.id)
+  const records = [...prefs.brandingPresets]
+  if (at === -1) records.push(text)
+  else records[at] = text
   if (records.length > BRANDING_PRESET_LIMIT) throw new Error('branding presets exceed the record limit')
   const patch: Partial<Prefs> = { brandingPresets: records }
   if (select) patch.brandingPreset = preset.id
