@@ -54,15 +54,32 @@ export default spec({ page: 'chat-tool-lines' }, ({ test }) => {
     await t.page.waitForFunction((selector) => document.querySelectorAll(selector).length === 0, marked, { timeout: 5000 })
     t.expectThat.equal(await t.read.count(marked), 0, 'the arrival leaves no mark behind')
 
-    // A line streaming in on its own is drawn at once, whatever came before it.
-    await t.page.evaluate((selector) => {
+    // A line streaming in on its own is drawn at once: its mark is written
+    // before the paint and its offset stands at nothing. The reading happens in
+    // the page on the mutation that writes the mark, so a slow frame between the
+    // append and the read cannot find the mark already gone.
+    const single = await t.page.evaluate(([selector, attribute]) => new Promise((resolve) => {
       const layer = document.querySelector(selector)?.parentElement
+      if (layer === null) {
+        resolve('no layer')
+        return
+      }
       document.body.click()
       const row = document.createElement('div')
       row.textContent = 'one more line'
-      layer?.append(row)
-    }, rows)
-    await t.page.waitForFunction((selector) => document.querySelectorAll(selector).length === 1, marked, { timeout: 5000 })
-    t.expectThat.equal((await delays())[0], 0, 'a single line waits for nothing')
+      const read = () => {
+        const animation = row.getAnimations().find((one) => one.effect !== null)
+        resolve(animation === undefined ? null : Number(animation.effect.getComputedTiming().delay))
+      }
+      const watch = new MutationObserver(() => {
+        if (!row.hasAttribute(attribute)) return
+        watch.disconnect()
+        read()
+      })
+      watch.observe(row, { attributes: true, attributeFilter: [attribute] })
+      layer.append(row)
+      setTimeout(() => { watch.disconnect(); read() }, 2000)
+    }), [rows, t.surface.attribute('chat.tool-line')])
+    t.expectThat.equal(single, 0, 'a single line waits for nothing')
   })
 })
