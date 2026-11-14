@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-14",
+  "group": "removals",
+  "order": 0,
+  "external": true,
+  "zh": "移除进行中回合的过程行入场与工具输出的逐行淡入，长会话流式输出和打开工具正文时不再逐行重算样式并启动动画",
+  "en": "Remove the process-row entrance and the tool-output line-by-line fade, so a long streamed turn and an opened tool body no longer recalculate styles and start an animation per row"
+}

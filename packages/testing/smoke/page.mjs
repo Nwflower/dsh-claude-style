@@ -83,7 +83,6 @@ const PROBE_PARTS = [
   'chat-caret.js',
   'chat-fold.js',
   'chat-reveal.js',
-  'tool-lines.js',
   'chat-files.js',
   'chat-send.js',
   'chat-wait.js',
@@ -440,40 +439,6 @@ function page(name, tier, cases, probe = PROBE) {
   var chatSubmit = name === 'chat-follow'
     ? '<div data-echo-holder id="debugEchoHolder"></div>'
     : ''
-  // The three bodies a tool's output is drawn in, as the host writes them: a
-  // terminal's rows inside the layer that scrolls, a read card's rows the same
-  // way, and a diff's own marked rows under each of its two sides. They stand in
-  // the document before the bundle boots, so the page opens onto output that has
-  // already arrived; the steps and the specs mount the batches that do arrive.
-  var toolLinesArea = name === 'chat-tool-lines'
-    ? '<div data-chat-flow id="debugToolFlow">' +
-        '<div data-tool="pwsh" data-state="ok"><div data-terminal data-body id="debugTerminal">' +
-          '<div class="_termHeader_x_1">Get-ChildItem</div>' +
-          '<div class="_termOutput_x_1" id="debugTerminalRows">' +
-            '<div class="_lineT_x_1">mode name</div>' +
-            '<div class="_lineT_x_1">---- ----</div>' +
-            '<div class="_lineT_x_1">d---- packages</div>' +
-          '</div>' +
-        '</div></div>' +
-        '<div data-read id="debugRead">' +
-          '<div class="_readHeader_x_1">src/app.ts</div>' +
-          '<div class="_readBody_x_1" id="debugReadRows">' +
-            '<div class="_lineR_x_1"><span class="_gutter_x_1">1</span><span>const app = create()</span></div>' +
-            '<div class="_lineR_x_1"><span class="_gutter_x_1">2</span><span>app.start()</span></div>' +
-          '</div>' +
-        '</div>' +
-        '<div data-diff id="debugDiff">' +
-          '<div data-diff-side="left" id="debugDiffLeft"><section class="_hunk_x_1">' +
-            '<div data-diff-line="context">const app = create()</div>' +
-            '<div data-diff-line="del">app.start()</div>' +
-          '</section></div>' +
-          '<div data-diff-side="right" id="debugDiffRight"><section class="_hunk_x_1">' +
-            '<div data-diff-line="context">const app = create()</div>' +
-            '<div data-diff-line="add">app.start({ fast: true })</div>' +
-          '</section></div>' +
-        '</div>' +
-      '</div>'
-    : ''
   // The other chat-behaviour plugin, installed: the host's own startup picture
   // names every client entry before any of them runs, which is the signal
   // packages/client/src/shared/peer-plugin.ts reads first (the style element is the other one).
@@ -604,7 +569,6 @@ ${caretArea}
 ${sessionTitleArea}
 ${chatSubmit}
 ${foldArea}
-${toolLinesArea}
 </div>
 <script>window.SMOKE_CASE = ${JSON.stringify(name)}; window.SMOKE_GROUPS = ${JSON.stringify(cases)}; window.SMOKE_TIER = ${JSON.stringify(tier)}; window.SMOKE_MARKUP = ${JSON.stringify(MARKUP)}; window.SMOKE_PNG = ${JSON.stringify(PNG_1PX)}; window.SMOKE_SURFACE = ${JSON.stringify(SURFACE)}</script>
 <script>${STAND_IN}</script>

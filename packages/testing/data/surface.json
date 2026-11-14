@@ -3,7 +3,6 @@
   "surface": [
     { "id": "width-handle.rest", "attribute": "data-dsh-claude-handle-rest", "feature": "width-handle", "sees": "the conversation width handle whose bar is up because the pointer has rested on it" },
     { "id": "manual-unread.row", "attribute": "data-dsh-claude-manual-unread", "feature": "manual-unread", "sees": "a profile-persisted manual reminder independent of native session status" },
-    { "id": "chat.tool-line", "attribute": "data-dsh-claude-tool-line", "feature": "chat-tool-lines", "sees": "a row of a tool body's output while its arrival plays: the row stands behind its batch's own offset and is drawn by the fade the stylesheet hangs on this mark, which comes off once the batch has landed" },
     { "id": "manual-unread.marker", "selector": ".dsh-claude-manual-unread-marker", "feature": "manual-unread", "sees": "the decorative trailing manual reminder dot, yielding to active native status" },
     { "id": "manual-unread.description", "selector": ".dsh-claude-manual-unread-description", "feature": "manual-unread", "sees": "the localized accessible description referenced by manually unread session rows" },
     { "id": "model.release-tag", "selector": ".dsh-claude-model-tag", "feature": "model", "sees": "the secondary model release tag, which yields before the model identity in tight toolbars" },

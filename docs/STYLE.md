@@ -512,9 +512,8 @@ edit the JSON, not the table.
 |---|---|---|
 | `--dsh-claude-duration-instant` | `80ms` | the composer caret following the insertion point |
 | `--dsh-claude-duration-feedback` | `120ms` | a control answering hover, press or focus: its colour, background, border, shadow, or a small turn or slide of its own parts |
-| `--dsh-claude-duration-reveal` | `120ms` | content entering the chat area: an opened row's body, and one row of a tool body's output |
+| `--dsh-claude-duration-reveal` | `120ms` | content entering the chat area: an opened row's body, and each streamed piece of the answer |
 | `--dsh-claude-duration-stream-fade` | `240ms` | one character of a streaming answer coming to its own colour (features/chat-reveal), and the settings page's preview of it |
-| `--dsh-claude-duration-row-enter` | `240ms` | one row of a turn's process — a tool call, a thought, a context injection — rising into its place as the live turn writes it (features/chat-row-enter) |
 | `--dsh-claude-duration-enter` | `320ms` | one message the reader sends growing into its row, the same growth on the Motion tab's card, and a colour disc lifting out of its row and springing back |
 | `--dsh-claude-duration-surface` | `150ms` | a floating surface or a group of controls appearing: popover cards, menus, panels, the search dialog, a toast, a strip fading in, a hint over what it names |
 | `--dsh-claude-duration-exit` | `120ms` | a surface leaving on the reader's dismissal: a menu or a dialog closing, the overtime badge leaving |
@@ -526,9 +525,6 @@ edit the JSON, not the table.
 | `--dsh-claude-duration-clear-delay` | `50ms` | how long after a field empties the streak under its cleared words starts to rise |
 | `--dsh-claude-duration-clear-text` | `400ms` | the two halves of clearing a field: the words leaving it, and the placeholder taking their place |
 | `--dsh-claude-duration-clear` | `1000ms` | one whole clear: the words leaving, the placeholder arriving, and the streak's rise, peak and fall |
-| `--dsh-claude-duration-line-chunk` | `140ms` | how long one chunk of a tool body's output — two rows — stands before the next two arrive (features/chat-tool-lines) |
-| `--dsh-claude-duration-line-row` | `12ms` | how long one row stands before the next arrives once a tool body's first forty rows are spent |
-| `--dsh-claude-duration-line-settle` | `3800ms` | the longest a batch of a tool body's rows may take to arrive; a longer batch has every offset scaled down to fit it |
 | `--dsh-claude-duration-roll` | `160ms` | a figure's characters rolling over to new digits |
 | `--dsh-claude-duration-move` | `200ms` | something travelling along its own track: a fold's door, the reasoning slider's knob and fill, a hint moving from one colour disc to the next |
 | `--dsh-claude-duration-count` | `220ms` | a session number counting to its new reading |
