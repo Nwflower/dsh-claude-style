@@ -15,6 +15,15 @@ const pageUp = (page) => page.evaluate((selector) => {
   return node !== null && node.getClientRects().length > 0
 }, SETTINGS_PAGE)
 
+/** Whether the shell shows the menu the shortcut opens, or the dialog itself. */
+const shellAnswered = (selector) => {
+  const settings = document.querySelector(selector)
+  if (settings !== null && settings.getClientRects().length > 0) return true
+  if (document.querySelector('[role="menu"] [role="menuitem"]') !== null) return true
+  return [...document.querySelectorAll('button, a, [role="tab"], [role="menuitem"]')]
+    .some((node) => (node.textContent || '').trim() === 'Claude Style')
+}
+
 /**
  * Press what the shell opened: the account menu's first row when the shortcut
  * opened that menu, the skin's own entry when the dialog already stands. The
@@ -34,26 +43,19 @@ const pressEntry = (page) => page.evaluate(() => {
 
 async function openSkinSettings(page) {
   if (await pageUp(page)) return
-  await page.keyboard.press('Control+Alt+Comma')
-  // The shortcut answers with the account menu or with the dialog itself: wait
-  // for whichever the shell shows before pressing anything.
-  await page.waitForFunction((selector) => {
-    const settings = document.querySelector(selector)
-    if (settings !== null && settings.getClientRects().length > 0) return true
-    if (document.querySelector('[role="menu"] [role="menuitem"]') !== null) return true
-    return [...document.querySelectorAll('button, a, [role="tab"], [role="menuitem"]')]
-      .some((node) => (node.textContent || '').trim() === 'Claude Style')
-  }, SETTINGS_PAGE, { timeout: SETTINGS_WAIT_MS })
+  // A page that has just loaded may still be booting when the shortcut is
+  // pressed: repeat it while nothing answers, then press what it answered with.
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await page.keyboard.press('Control+Alt+Comma')
+    const answered = await page.waitForFunction(shellAnswered, SETTINGS_PAGE, { timeout: Math.min(8000, SETTINGS_WAIT_MS) })
+      .then(() => true, () => false)
+    if (answered || await pageUp(page)) break
+  }
   if (await pressEntry(page) === 'menu') {
     // The menu row opens the host's settings dialog; its nav entry is pressed
     // in one step once it stands.
     await page.waitForTimeout(MENU_WAIT_MS)
-    await page.waitForFunction((selector) => {
-      const settings = document.querySelector(selector)
-      if (settings !== null && settings.getClientRects().length > 0) return true
-      return [...document.querySelectorAll('button, a, [role="tab"], [role="menuitem"]')]
-        .some((node) => (node.textContent || '').trim() === 'Claude Style')
-    }, SETTINGS_PAGE, { timeout: SETTINGS_WAIT_MS })
+    await page.waitForFunction(shellAnswered, SETTINGS_PAGE, { timeout: SETTINGS_WAIT_MS })
     await page.evaluate(() => {
       const settings = document.querySelector('.dsh-claude-settings')
       if (settings !== null && settings.getClientRects().length > 0) return

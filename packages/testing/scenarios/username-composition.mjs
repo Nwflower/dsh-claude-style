@@ -2,6 +2,7 @@
 /** Slow IME composition in the real host's username field (D92). */
 
 import path from 'node:path'
+import { waitForSkin, dismissOverlays } from '../dsh-web.mjs'
 import { openSkinSettings } from './settings-route.mjs'
 import { sanitizePage } from '../../../scripts/shared/privacy.mjs'
 
@@ -53,6 +54,10 @@ function usernameCompositionScenario({ check }) {
         notes.events = await input.evaluate(() => window.__usernameEvents)
         await page.waitForTimeout(700)
         await page.reload({ waitUntil: 'domcontentloaded' })
+        // The shell boots after the document: the skin's mark, then the overlays
+        // it raises, come before a shortcut can be heard.
+        await waitForSkin(page)
+        await dismissOverlays(page)
         await openSkinSettings(page)
         notes.restored = await page.locator(INPUT).first().inputValue()
         for (const scheme of ['light', 'dark']) {
