@@ -153,8 +153,12 @@
       var viewTabs = probe.viewStrip.list.children
       // The pill is placed by the pass after the strip arrives; its mark is
       // the state the first reading waits for (D92).
+      // The pill's mark and a placement that has stopped moving: a webfont that
+      // lands after the first pass corrects the width with the pill's own slide
+      // (shared/sliding-pill.ts), and the first reading is taken once it stands.
       var placed = await probe.until(function () { return pillState(probe.viewStrip.list, viewTabs[0]) },
-        function (read) { return read[read.length - 1].attr === true }, 'the view-tabs pill to be placed')
+        function (read) { var last = read[read.length - 1]; return last.attr === true && last.slides.length === 0 },
+        'the view-tabs pill to be placed')
       r.viewPill = { stamped: viewRow.hasAttribute(probe.surface('view-tabs.strip')), first: placed[placed.length - 1] }
       r.viewPill.switched = await probe.pillSlide(probe.viewStrip.list, viewTabs[2], function () {
         viewTabs[0].setAttribute('aria-selected', 'false')
@@ -246,7 +250,8 @@
       // The plate's class and the pill's placement are written by the pass
       // after the row arrives; the pill's mark is the state this read waits for.
       var placed = await probe.until(function () { return pillState(list, rowTabs[0]) },
-        function (read) { return read[read.length - 1].attr === true }, 'the view-tabs row pill to be placed')
+        function (read) { var last = read[read.length - 1]; return last.attr === true && last.slides.length === 0 },
+        'the view-tabs row pill to be placed')
       var rowBox = row.getBoundingClientRect()
       var listBox = list.getBoundingClientRect()
       var moreBox = more.getBoundingClientRect()
