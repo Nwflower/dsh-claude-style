@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-14",
+  "group": "fixes",
+  "order": 0,
+  "external": false,
+  "zh": "窄屏帧网格兜底只作用于鼠标驱动的窗口，触屏设备的帧交给它自己的移动适配层，手机竖屏与横屏都按整宽排版",
+  "en": "The narrow frame fallback now applies to mouse-driven windows only and leaves a touch device's frame to its own mobile shell, so a phone lays the page out at its full width in portrait and landscape"
+}
