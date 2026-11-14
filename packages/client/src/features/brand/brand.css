@@ -29,6 +29,12 @@ body[data-dsh-claude-style][data-dsh-claude-custom-mark] :is([data-dsh-claude-pa
   height: 18px;
 }
 
+/* A set that carries no mark of its own leaves the seat out altogether, so its
+   wordmark stands where the brand's art would. */
+body[data-dsh-claude-style][data-dsh-claude-custom-mark-none] :is([data-dsh-claude-part~="brand-mark"], [data-dsh-claude-part~="rail-mark"], [data-dsh-claude-part~="hero-mark"]) {
+  display: none;
+}
+
 /* ---------- Custom brand: sidebar wordmark ---------- */
 /* The wordmark image keeps the 18px cap height of the Claude wordmark, its
    width read through the proportions brand.ts measured; with no image, the

@@ -199,6 +199,8 @@ export function BrandLockup(props: { prefs: Prefs, id: string, mode: BrandingApp
 
   const wordMode = wordModeOf(images, prefs)
   const fixed = preset === undefined
+  // The theme style's own art stands in an empty seat, and a reader's set shows it as the place to put one; a built-in drawing no mark leaves the seat out.
+  const absent = fixed && id !== '' ? 'none' : 'brand'
   /** A fixed seat: the art alone, which no click replaces. */
   const still = (art: React.ReactElement) => React.createElement('span', { className: 'dsh-claude-brand-seat' }, art)
   const remove = (seat: Seat, className: string) => fixed || seat.image === null ? null : React.createElement(
@@ -222,7 +224,7 @@ export function BrandLockup(props: { prefs: Prefs, id: string, mode: BrandingApp
     React.createElement(
       'div',
       { className: 'dsh-claude-brand-zone dsh-claude-brand-zone-mark' },
-      fixed ? still(React.createElement(SeatArt, { kind: 'mark', image: mark.image, prefs, ink })) : React.createElement(
+      fixed ? still(React.createElement(SeatArt, { kind: 'mark', image: mark.image, prefs, ink, absent })) : React.createElement(
         'button',
         {
           type: 'button',
@@ -231,7 +233,7 @@ export function BrandLockup(props: { prefs: Prefs, id: string, mode: BrandingApp
           'aria-label': mark.image === null ? copy('brandMarkUpload') : copy('brandMarkReplace'),
           onClick: mark.open,
         },
-        React.createElement(SeatArt, { kind: 'mark', image: mark.image, prefs, ink }),
+        React.createElement(SeatArt, { kind: 'mark', image: mark.image, prefs, ink, absent }),
         React.createElement(SeatPlate, { icon: 'upload' }),
       ),
       remove(mark, 'dsh-claude-brand-clear-mark'),

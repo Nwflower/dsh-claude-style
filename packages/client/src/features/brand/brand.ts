@@ -1,4 +1,4 @@
-import { BRAND_DEFAULT_PRESETS, BRAND_INK_ATTR, BRAND_INK_ORIGINAL, CUSTOM_EDGES_ATTR, CUSTOM_MARK_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_TINT_ATTR, CUSTOM_WORD_ATTR, CUSTOM_WORD_IMAGE, CUSTOM_WORD_TEXT } from '../../constants'
+import { BRAND_DEFAULT_PRESETS, BRAND_INK_ATTR, BRAND_INK_ORIGINAL, CUSTOM_EDGES_ATTR, CUSTOM_MARK_ATTR, CUSTOM_MARK_NONE_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_TINT_ATTR, CUSTOM_WORD_ATTR, CUSTOM_WORD_IMAGE, CUSTOM_WORD_TEXT } from '../../constants'
 import { readPrefs, subscribePrefs } from '../../core/prefs'
 import { accentInk } from '../../shared/contrast'
 import { activeScheme } from '../../shared/palette-scheme'
@@ -26,7 +26,7 @@ import { copy } from './copy'
  * look.
  */
 
-const ATTRIBUTES = [CUSTOM_MARK_ATTR, CUSTOM_WORD_ATTR, CUSTOM_TINT_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_EDGES_ATTR, BRAND_INK_ATTR]
+const ATTRIBUTES = [CUSTOM_MARK_ATTR, CUSTOM_MARK_NONE_ATTR, CUSTOM_WORD_ATTR, CUSTOM_TINT_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_EDGES_ATTR, BRAND_INK_ATTR]
 
 export function install() {
   const body = document.body
@@ -51,6 +51,8 @@ export function install() {
     const kept = (appearance: 'light' | 'dark', tuned: { light: string, dark: string } | undefined) =>
       custom && scheme.id === scheme.base && scheme.background?.[appearance] === undefined ? (tuned?.[appearance] ?? null) : null
     attribute(CUSTOM_MARK_ATTR, mark === null ? null : '')
+    // A set other than the theme's own carries no mark when its art has none: its seat gives way to the wordmark.
+    attribute(CUSTOM_MARK_NONE_ATTR, prefs.brandingPreset !== '' && mark === null ? '' : null)
     property(MARK_PROPERTY, mark === null ? null : `url("${mark.url}")`)
     attribute(CUSTOM_WORD_ATTR, wordmark !== null ? CUSTOM_WORD_IMAGE : prefs.brandName !== '' ? CUSTOM_WORD_TEXT : null)
     property(WORD_PROPERTY, wordmark === null ? null : `url("${wordmark.url}")`)

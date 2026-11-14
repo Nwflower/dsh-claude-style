@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { BRANDING_PRESET_LIMIT, BRANDING_VENDOR_IDS } from '@dsh-claude-style/contracts/branding-presets'
+import { BRANDING_PRESET_LIMIT, BRANDING_VENDOR_IDS, brandingVendorOf } from '@dsh-claude-style/contracts/branding-presets'
 import type { BrandingAppearance } from '@dsh-claude-style/contracts/branding-presets'
 import { readPrefs, savePrefs, subscribePrefs } from '../../core/prefs'
 import { brandingInkOf, newBrandingPresetId, storeBrandingPresetPatch, storedBrandingPresets } from '../../shared/branding-presets'
@@ -31,7 +31,8 @@ interface View {
 /** A list line's lead: the set's mark, small, in the appearance the page shows. */
 function MarkLead(props: { prefs: Prefs, id: string, mode: BrandingAppearance }) {
   const images = useBrandImages(props.prefs, props.id, props.mode)
-  return React.createElement('span', { className: 'dsh-claude-brand-lead', 'aria-hidden': 'true' }, React.createElement(SeatArt, { kind: 'mark', image: images.mark, prefs: props.prefs, ink: brandingInkOf(props.prefs, props.id) }))
+  const absent = brandingVendorOf(props.id) === undefined ? 'brand' : 'none'
+  return React.createElement('span', { className: 'dsh-claude-brand-lead', 'aria-hidden': 'true' }, React.createElement(SeatArt, { kind: 'mark', image: images.mark, prefs: props.prefs, ink: brandingInkOf(props.prefs, props.id), absent }))
 }
 
 function Manager(props: BrandManagerOpen & { close(): void }) {
