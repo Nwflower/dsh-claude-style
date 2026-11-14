@@ -297,6 +297,14 @@ body[data-dsh-claude-style] .dsh-claude-scheme-add > .dsh-claude-scheme-glyph {
   margin: 0 calc((var(--dsh-claude-scheme-dots) - 16px) / 2);
 }
 
+/* A list whose lines carry no lead starts its ink at the padding, so the add
+   line's mark does too: the plus is drawn 3.5 units into its 16px grid with a
+   1.5-wide stroke (palette-parts.ts), and the margin takes that ink back out so
+   the mark stands on the same edge its neighbours' names do. */
+body[data-dsh-claude-style] .dsh-claude-scheme-add[data-lead="none"] > .dsh-claude-scheme-glyph {
+  margin: 0 0 0 -2.75px;
+}
+
 body[data-dsh-claude-style] .dsh-claude-scheme-rail-foot {
   display: flex;
   flex-direction: column;

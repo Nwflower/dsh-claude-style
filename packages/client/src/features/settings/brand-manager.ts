@@ -46,6 +46,7 @@ function Manager(props: BrandManagerOpen & { close(): void }) {
   return React.createElement(SchemeModal, {
     title: copy('brandLockupTitle'),
     close: props.close,
+    leadless: true,
     items: ids.map(id => React.createElement(SchemeItem, {
       key: id,
       id,
