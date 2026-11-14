@@ -330,6 +330,15 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-c
   pointer-events: none;
   user-select: none;
 }
+/* The 16px floor that keeps iOS Safari from zooming on focus (card.css). */
+@media (pointer: coarse) {
+  body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-composer-input],
+  body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card] [data-composer-input],
+  body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-composer-placeholder],
+  body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card] [data-composer-placeholder] {
+    font-size: max(16px, calc(14px * var(--dsh-claude-interface-font-scale, 1)));
+  }
+}
 /* Pinned send and stop buttons inside input box */
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] button[data-dsh-claude-control="send"],
 body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card] button[data-dsh-claude-control="send"],

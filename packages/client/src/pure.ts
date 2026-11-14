@@ -131,7 +131,7 @@ export { UnreadRowMark, unreadRowSessionId } from './features/manual-unread/row-
 export { default as MANUAL_UNREAD_SHEET } from './features/manual-unread/manual-unread.css?raw'
 
 export { createComposerResponsive } from './features/composer/responsive'
-export { composerViewportGap } from './features/composer/visual-viewport'
+export { composerViewportGap, composerSeatOffset } from './features/composer/visual-viewport'
 export { default as composerInlineCss } from './features/composer/inline.css?raw'
 export { default as composerInlineBarCss } from './features/composer/inline-bar.css?raw'
 export { default as composerResponsiveCss } from './features/composer/responsive.css?raw'
