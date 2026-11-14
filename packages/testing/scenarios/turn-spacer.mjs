@@ -19,7 +19,9 @@ const SCRIPT = {
   conversation: [
     { thinking: [REASONING], tool: { name: 'glob', input: { pattern: 'packages/**/*.json' } } },
     { thinking: [REASONING], tool: { name: 'glob', input: { pattern: 'scripts/**/*.json' } } },
-    { thinking: ['The work is complete.'], text: ['# Answer\n\nA short final line.'] },
+    // The answer arrives in pieces: one delta and a stop inside a single task can
+  // leave no painted frame carrying the host's streaming mark on a loaded runner.
+  { thinking: ['The work is complete.'], text: ['# Answer\n\n', 'A short ', 'final ', 'line.'] },
   ],
   auxiliary: { text: ['Scripted spacer answer'] },
 }
