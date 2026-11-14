@@ -23,9 +23,9 @@ body[data-dsh-claude-style] .dsh-claude-brand-card-art {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* The seats' own padding makes up the rest of the gap the brand area draws
-     between the mark and its word. */
-  gap: 1px;
+  /* The seats' own padding makes up the gap the brand area draws between the
+     mark and its word. */
+  gap: 0;
   max-width: 100%;
   min-width: 0;
   height: 40px;

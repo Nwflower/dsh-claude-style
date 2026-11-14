@@ -4,7 +4,7 @@ import { accentInk } from '../../shared/contrast'
 import { activeScheme } from '../../shared/palette-scheme'
 import { loadBrandImages, readBrandImages, resetBrandImages, subscribeBrandImages } from '../../shared/custom-brand'
 import { brandingInkOf, brandInkColour } from '../../shared/branding-presets'
-import { BRAND_PROPERTIES, cssString, MARK_PROPERTY, WORD_PROPERTY, WORD_RATIO_PROPERTY, NAME_PROPERTY, ACCENT_PROPERTY, ACCENT_INK_PROPERTY, CANVAS_LIGHT_PROPERTY, CANVAS_DARK_PROPERTY, TEXT_LIGHT_PROPERTY, TEXT_DARK_PROPERTY, CODE_LIGHT_PROPERTY, CODE_DARK_PROPERTY, LINK_LIGHT_PROPERTY, LINK_DARK_PROPERTY, SIDEBAR_LIGHT_PROPERTY, SIDEBAR_DARK_PROPERTY, BUBBLE_LIGHT_PROPERTY, BUBBLE_DARK_PROPERTY, LOGO_INK_PROPERTY } from './brand-properties'
+import { BRAND_PROPERTIES, cssString, MARK_PROPERTY, MARK_RATIO_PROPERTY, WORD_PROPERTY, WORD_RATIO_PROPERTY, NAME_PROPERTY, ACCENT_PROPERTY, ACCENT_INK_PROPERTY, CANVAS_LIGHT_PROPERTY, CANVAS_DARK_PROPERTY, TEXT_LIGHT_PROPERTY, TEXT_DARK_PROPERTY, CODE_LIGHT_PROPERTY, CODE_DARK_PROPERTY, LINK_LIGHT_PROPERTY, LINK_DARK_PROPERTY, SIDEBAR_LIGHT_PROPERTY, SIDEBAR_DARK_PROPERTY, BUBBLE_LIGHT_PROPERTY, BUBBLE_DARK_PROPERTY, LOGO_INK_PROPERTY } from './brand-properties'
 import { PALETTE_CARDS } from 'virtual:dsh-claude-style/generated'
 import { copy } from './copy'
 
@@ -54,6 +54,7 @@ export function install() {
     // A set other than the theme's own carries no mark when its art has none: its seat gives way to the wordmark.
     attribute(CUSTOM_MARK_NONE_ATTR, prefs.brandingPreset !== '' && mark === null ? '' : null)
     property(MARK_PROPERTY, mark === null ? null : `url("${mark.url}")`)
+    property(MARK_RATIO_PROPERTY, mark === null ? null : String(mark.ratio))
     attribute(CUSTOM_WORD_ATTR, wordmark !== null ? CUSTOM_WORD_IMAGE : prefs.brandName !== '' ? CUSTOM_WORD_TEXT : null)
     property(WORD_PROPERTY, wordmark === null ? null : `url("${wordmark.url}")`)
     property(WORD_RATIO_PROPERTY, wordmark === null ? null : String(wordmark.ratio))

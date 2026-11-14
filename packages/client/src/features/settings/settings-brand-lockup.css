@@ -128,13 +128,6 @@ body[data-dsh-claude-style] .dsh-claude-brand-art {
   mask: var(--dsh-claude-brand-art) center / contain no-repeat;
 }
 
-/* The mark seat is the square the sidebar gives it (brand.css): a mark wider
-   than it is tall fits inside that square instead of widening it, so the
-   preview keeps the proportions of the brand area it stands for. */
-body[data-dsh-claude-style] .dsh-claude-brand-art-mark {
-  width: var(--dsh-claude-lockup-cap);
-}
-
 body[data-dsh-claude-style] .dsh-claude-brand-art-word {
   max-width: 100%;
   background-position: left center;
