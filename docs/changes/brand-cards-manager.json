@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-14",
-  "group": "improvements",
-  "order": 1,
-  "external": true,
-  "zh": "品牌标志改为卡片与管理窗口，开关下方的卡片显示当前使用的标志，指针所在的图形或字标上出现画笔进入编辑，「管理」在开关左侧，切换、新建、改名、浅色与深色图片、复制与删除都在管理窗口里完成",
-  "en": "Brand marks become a card with a manager, the card under the switch showing the set in use, a pencil on the mark or word under the pointer opening its editor, Manage beside the switch, and switching, creating, naming, light and dark images, copying and deleting all done in the manager"
-}

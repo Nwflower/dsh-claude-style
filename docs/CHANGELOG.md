@@ -11,40 +11,64 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - 配色方案与命名标志预设支持结构化 YAML、界面管理和明暗图片变体
 - 模型选择器支持按标识、品牌、目录或自定义顺序排列，未识别品牌的模型行不再显示副标题
 - 模型选择器新增 SenseNova 与 SCNet 品牌组合标和厂商文案
+- 品牌标志新增八套内置的厂商标志预设，默认预设改为跟随主题，标志颜色成为每套预设自己的设置，以前上传的图片自动移进一套名为「当前图片」的预设
 
 ### 体验优化
 
-- 进行中的回合每新写出一行过程，这一行的入场改由引擎在合成器上播放，长会话流式输出时不再每写出这一行就重算一次整页样式
 - 以多参数选择器列表结尾的样式规则在构建时展开成按类名、属性或标签匹配的几条，浏览器不再拿它们去试页面上的每个元素；六千节点的页面上，皮肤样式表下的一次样式计算从 28.7 毫秒降到 22.5 毫秒
 - 皮肤的样式表按宿主自己的类名匹配宿主元素，节点一插入就带着皮肤的样式，写上部件标记不再让浏览器重算样式；六千节点的页面上，一次样式计算从 22.5 毫秒降到 13.7 毫秒，宿主在插入后立即读布局时一次挂载的遍历、样式与布局合计从 72.3 毫秒降到 32.6 毫秒
 - 折叠展开动效的三条样式规则不再让对话里的每个元素逐行查找它上方的全部消息，切换到一段六百条消息的会话时样式计算从 236.9 毫秒降到 92.8 毫秒，两百条时从 53.7 毫秒降到 32.9 毫秒
 - 挂上一段对话时，给宿主元素命名的那趟遍历每个元素只做一次选择器判断，被移走的子树不再逐个节点查十几张表；切换到一段六百条消息的会话时，皮肤的脚本时间从 66.0 毫秒降到 47.7 毫秒
+- 首页模型图与图例改用更明亮干净的十色分类色板
+- 配色卡片在指针所在的色球上显示按色球深浅取白或黑的画笔，点任一色球打开该方案的编辑，「管理」移到配色开关左侧，新建方案只留在管理窗口里
+- 品牌标志改为卡片与管理窗口，开关下方的卡片显示当前使用的标志，指针所在的图形或字标上出现画笔进入编辑，「管理」在开关左侧，切换、新建、改名、浅色与深色图片、复制与删除都在管理窗口里完成
+- 对话详情栏的图标统一为一套同线宽的线形图标，分支、合并请求、预设与子智能体各用自己的图形，图标与标题同色；Windows 路径改用反斜杠分隔，不足一秒结束的命令不再显示「0 秒」，上下文色条变细、色段之间留出间隙，图例方块加大，指令文件、技能与其他上下文统一用中性灰；距离自动压缩那一行改用图例的字号与墨色，「压缩会话」改为无描边的浅灰底按钮
+- 对话详情栏在数据到达前就显示环境、上下文、会话统计与 Token 用量四节，未读到的行用骨架条占位，折叠的节保持与展开时相同的上下边距，标题在开合前后不再移动
 
 ### 问题修复
 
 - 详情栏展开时切换会话，栏会先收起再展开，对话的右边缘跟着来回移动一次；现在栏与对话的宽度在切换期间保持不动，只有栏内的读数换成新会话的。本地一段 105 行的会话，切换回它时浏览器的样式计算从 351 毫秒降到 221 毫秒
 - 详情栏展开时标题栏的子智能体入口重新让位，栏内的子智能体一节列出本会话开始过的全部子智能体，已结束的折成计数
 - 触屏窄屏布局交由宿主或移动适配插件控制帧网格，避免会话列落入零宽或侧栏轨道
+- 修复首页热力图用量最少的一档比没有用量的空白格还浅的问题
+- 混元模型行的图形改用官方的腾讯混元美术，字标沿用英文 Tencent，图形在浅色与深色画布上都保留品牌色
+- 修复「动画」设为「减弱」时状态行加载点仍飞速换帧而抽搐、详情栏上下文色块被扫光遮罩盖住不显示的问题
+
+### 移除
+
+- 移除进行中回合的过程行入场与工具输出的逐行淡入，长会话流式输出和打开工具正文时不再逐行重算样式并启动动画
 
 <h3 id="en-0.21.2">New Features</h3>
 
 - Support structured YAML, UI management and light/dark assets for colour schemes and named logo presets
 - Add ID, brand, catalog and custom model ordering, and keep description lines off models without a recognised brand
 - Add SenseNova and SCNet vendor lockups and descriptions to the model picker
+- Brand marks gain eight built-in vendor presets, the default set follows the theme, the mark colour belongs to each set, and images uploaded earlier move into a set named Current images on their own
 
 ### Improvements
 
-- A process row a running turn writes enters through an animation the engine plays on the compositor, so a long streamed turn no longer recalculates the page's styles for every row
 - Style rules ending in a multi-argument selector list are written out at build time into rules matched by class, attribute or tag, so the browser no longer tries them on every element; on a 6,000-node page one style calculation under the skin's sheet drops from 28.7 ms to 22.5 ms
 - The skin's stylesheet now matches host elements by the host's own class names, so a node carries the skin's styles the moment the host inserts it and writing a part mark no longer makes the browser recalculate; on a 6,000-node page one style calculation drops from 22.5 ms to 13.7 ms, and a mount whose layout the host reads right after inserting drops from 72.3 ms to 32.6 ms of walk, style and layout
 - The three style rules behind the fold's reveal no longer have every element of a conversation search all the messages above it; switching to a 600-message session drops from 236.9 ms of style calculation to 92.8 ms, and a 200-message one from 53.7 ms to 32.9 ms
 - The pass that names host elements now asks one selector test of each element of a mounted conversation, and no longer looks every node of a removed subtree up in a dozen tables; switching to a 600-message session drops from 66.0 ms of the skin's script time to 47.7 ms
+- Give the home models chart and legend a brighter, cleaner ten-colour palette
+- Colour cards show a pencil on the disc under the pointer, white or black by the disc's lightness, any disc opens the scheme's editor, Manage moves beside the colour switch, and new schemes are made from the manager alone
+- Brand marks become a card with a manager, the card under the switch showing the set in use, a pencil on the mark or word under the pointer opening its editor, Manage beside the switch, and switching, creating, naming, light and dark images, copying and deleting all done in the manager
+- The details rail's marks become one line set at one stroke weight, with their own figures for branch, change request, preset and subagent, in the title's ink; Windows paths use backslashes, commands that finish within a second no longer show 0 s, the context bar is thinner with gaps between its parts, legend swatches are larger, and instruction files, skills and other context share one neutral grey; the distance to automatic compaction reads at the legend's size and ink, and Compact session sits on a light plate without an outline
+- The details rail shows Environment, Context, Session stats and Token usage before its data arrives, with placeholder bars on the rows not yet read, and folded sections keep the insets of open ones so a heading no longer moves when it folds
 
 ### Bug Fixes
 
 - Switching sessions with the details rail open used to fold the rail away and bring it back, moving the chat's right edge out and in once; the rail and the chat now keep their widths through a switch and only the rail's readings change to the new session. Returning to a local 105-row session drops from 351 ms of browser style calculation to 221 ms
 - The header's subagent entry steps aside again while the details rail stands, and the rail's Subagents section lists every child the session started, settled ones behind a finished count
 - Leave narrow touch frame grids to the host or mobile adapter so the conversation cannot land in a zero-width or sidebar rail track
+- Fix the home heat grid's faintest level looking lighter than an empty day
+- Hunyuan rows draw the official Tencent Hunyuan mark beside the English Tencent wordmark, the mark keeping its brand colours on both canvases
+- Fix the waiting line's dots racing through their frames and the details rail's context parts hidden under the reveal cover when the animation choice is Reduced
+
+### Removals
+
+- Remove the process-row entrance and the tool-output line-by-line fade, so a long streamed turn and an opened tool body no longer recalculate styles and start an animation per row
 
 ## [0.21.1] - 2026-11-14
 

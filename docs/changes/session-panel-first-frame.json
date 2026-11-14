@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-14",
-  "group": "improvements",
-  "order": 3,
-  "external": true,
-  "zh": "对话详情栏在数据到达前就显示环境、上下文、会话统计与 Token 用量四节，未读到的行用骨架条占位，折叠的节保持与展开时相同的上下边距，标题在开合前后不再移动",
-  "en": "The details rail shows Environment, Context, Session stats and Token usage before its data arrives, with placeholder bars on the rows not yet read, and folded sections keep the insets of open ones so a heading no longer moves when it folds"
-}

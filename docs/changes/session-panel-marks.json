@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-14",
-  "group": "improvements",
-  "order": 2,
-  "external": true,
-  "zh": "对话详情栏的图标统一为一套同线宽的线形图标，分支、合并请求、预设与子智能体各用自己的图形，图标与标题同色；Windows 路径改用反斜杠分隔，不足一秒结束的命令不再显示「0 秒」，上下文色条变细、色段之间留出间隙，图例方块加大，指令文件、技能与其他上下文统一用中性灰；距离自动压缩那一行改用图例的字号与墨色，「压缩会话」改为无描边的浅灰底按钮",
-  "en": "The details rail's marks become one line set at one stroke weight, with their own figures for branch, change request, preset and subagent, in the title's ink; Windows paths use backslashes, commands that finish within a second no longer show 0 s, the context bar is thinner with gaps between its parts, legend swatches are larger, and instruction files, skills and other context share one neutral grey; the distance to automatic compaction reads at the legend's size and ink, and Compact session sits on a light plate without an outline"
-}
