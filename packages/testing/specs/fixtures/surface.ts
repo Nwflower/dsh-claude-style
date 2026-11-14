@@ -8,6 +8,7 @@ interface SurfaceEntry {
   id: string
   selector?: string
   attribute?: string
+  property?: string
 }
 
 function entry(id: string): SurfaceEntry {
@@ -28,6 +29,13 @@ export function surfaceClass(id: string): string {
   const selector = surfaceSelector(id)
   if (!/^\.[\w-]+$/.test(selector)) throw new Error(`surface: "${id}" is not one class`)
   return selector.slice(1)
+}
+
+/** A CSS custom property the skin writes. */
+export function surfaceProperty(id: string): string {
+  const { property } = entry(id)
+  if (property === undefined) throw new Error(`surface: "${id}" names no custom property`)
+  return property
 }
 
 /** An attribute the skin writes. */

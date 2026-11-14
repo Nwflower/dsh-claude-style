@@ -4,11 +4,17 @@ import { interfaceFontSizeOf, projectInterfaceFontSize } from '../shared/interfa
 import { pageZoomOf, pageZoomText, projectPageZoomFactor } from '../shared/page-zoom'
 import type { PrefKey, Prefs } from '../constants'
 import type { HostContext } from '@dsh-claude-style/engine/host'
-import { clampPrefs, PREFS } from '@dsh-claude-style/contracts/prefs'
+import { clampPrefs, PREFS, PALETTE_PRESETS } from '@dsh-claude-style/contracts/prefs'
+import { parsePaletteScheme } from '@dsh-claude-style/contracts/palette-schemes'
+import { parseBrandingPreset } from '@dsh-claude-style/contracts/branding-presets'
+import { loadAppearanceOverlay, onAppearanceOverlayLoaded, readAppearanceOverlay, writeAppearanceOverlay } from '../shared/appearance-overlays'
 import { notifyAll } from '@dsh-claude-style/engine/notify'
 import { createSettingsBinding } from '@dsh-claude-style/engine/settings-binding'
 import { pageOwner } from '../shared/visual-owner'
 import { paletteCardOf } from '../shared/palette-scheme'
+
+/** Record fields whose UI edits always use the overlay, independent of their storage layer. */
+const RECORD_FIELDS = new Set<PrefKey>(['paletteSchemes', 'paletteColors', 'brandingPresets', 'brandingPreset'])
 
 /** Defaults hold until the host form answers; the shared table clamps stored values (D73, D75). */
 export let prefs = clampPrefs({})
@@ -20,7 +26,8 @@ const binding = createSettingsBinding({
   namespaces: [PACKAGE_NAME, SETTINGS_ENTRY_FALLBACK],
   adoptForm(value) {
     readFromForm = true
-    adoptPrefs(clampPrefs(value))
+    adoptPrefs(clampPrefs({ ...value, ...readAppearanceOverlay() }))
+    loadAppearanceOverlay()
     moveLocalPrefs(value)
   },
 })
@@ -273,6 +280,52 @@ function moveLocalPrefs(formValue: Record<string, unknown>) {
  * @returns a promise for the resolved preferences, or null when the form does
  *          not carry values yet or refused the change.
  */
-export function savePrefs(patch: Partial<Prefs>): Promise<Prefs | null> {
-  return binding.save(patch).then(accepted => accepted === null || accepted === false ? null : prefs)
+function removedIds(before: readonly string[], after: readonly string[], readId: (text: string) => string) {
+  const kept = new Set(after.map(readId))
+  return before.map(readId).filter(id => !kept.has(id))
 }
+
+/** Route record edits into the UI overlay so file-defined bases remain immutable. */
+export function preferenceWritePatch(patch: Partial<Prefs>, locked: ReadonlySet<PrefKey> = RECORD_FIELDS): Partial<Prefs> {
+  const out: Partial<Prefs> = { ...patch }
+  const current = readPrefs()
+  if (locked.has('paletteSchemes') && patch.paletteSchemes !== undefined) {
+    out.paletteSchemeOverrides = patch.paletteSchemes
+    out.paletteSchemeDeleted = [...new Set([...current.paletteSchemeDeleted, ...removedIds(current.paletteSchemes, patch.paletteSchemes, text => parsePaletteScheme(text, PALETTE_PRESETS).id)])]
+    delete out.paletteSchemes
+  }
+  if (locked.has('paletteColors') && patch.paletteColors !== undefined) {
+    out.paletteColorsOverride = patch.paletteColors
+    delete out.paletteColors
+  }
+  if (locked.has('brandingPresets') && patch.brandingPresets !== undefined) {
+    out.brandingPresetOverrides = patch.brandingPresets
+    out.brandingPresetDeleted = [...new Set([...current.brandingPresetDeleted, ...removedIds(current.brandingPresets, patch.brandingPresets, text => parseBrandingPreset(text).id)])]
+    delete out.brandingPresets
+  }
+  if (locked.has('brandingPreset') && patch.brandingPreset !== undefined) {
+    out.brandingPresetOverride = patch.brandingPreset
+    delete out.brandingPreset
+  }
+  return out
+}
+
+const OVERLAY_FIELDS = new Set<PrefKey>(['paletteSchemeOverrides', 'paletteSchemeDeleted', 'paletteColorsOverride', 'brandingPresetOverrides', 'brandingPresetDeleted', 'brandingPresetOverride'])
+
+export function savePrefs(patch: Partial<Prefs>): Promise<Prefs | null> {
+  const write = preferenceWritePatch(patch)
+  const overlay: Record<string, unknown> = {}
+  const form: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(write) as [PrefKey, Prefs[PrefKey]][]) {
+    if (OVERLAY_FIELDS.has(key)) overlay[key] = value
+    else form[key] = value
+  }
+  const overlayWrite = Object.keys(overlay).length > 0 ? writeAppearanceOverlay(overlay) : Promise.resolve(null)
+  const formWrite = Object.keys(form).length > 0 ? binding.save(form) : Promise.resolve(true)
+  return Promise.all([overlayWrite, formWrite]).then(([, accepted]) => {
+    loadPrefs()
+    return accepted === null || accepted === false ? null : prefs
+  })
+}
+
+onAppearanceOverlayLoaded(() => { loadPrefs() })

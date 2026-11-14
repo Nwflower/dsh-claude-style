@@ -18,6 +18,7 @@ import { existsSync, readFileSync, readdirSync, realpathSync, rmSync, statSync }
 import { userInfo } from 'node:os'
 import { dirname, join, resolve, sep } from 'node:path'
 import { brandRoutes } from './brand.js'
+import { appearanceOverlayRoutes } from './appearance-overlays.js'
 import type { DshContext, DshPeerScope, DshRequest, DshResponse, DshRoute, DshScope } from '@dsh-claude-style/engine/node/dsh'
 import { harnessPath } from '@dsh-claude-style/engine/node/harness-home'
 import { pluginPath } from './harness-home.js'
@@ -602,6 +603,8 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
     })
 
     for (const { label, route } of brandRoutes(ctx)) register(label, route)
+    const appearanceOverlays = appearanceOverlayRoutes(ctx)
+    register(appearanceOverlays.label, appearanceOverlays.route)
 
     return () => {
       usage.dispose()

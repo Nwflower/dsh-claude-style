@@ -3,8 +3,9 @@
  * Browser types and host Config derive from this table; settings rows follow it too (D72).
  */
 import { OFFICIAL_MODEL_GROUP } from './services'
-import { PALETTE_SCHEME_CUSTOM, PALETTE_SCHEME_ENTRY_MAX, PALETTE_SCHEME_FOLLOW, PALETTE_SCHEME_ID_MAX, PALETTE_SCHEME_LIMIT, carryClassicInlineCode, carryCustomPalette, findPaletteScheme, normalizePaletteSchemes } from './palette-schemes'
+import { PALETTE_SCHEME_CUSTOM, PALETTE_SCHEME_ENTRY_MAX, PALETTE_SCHEME_FOLLOW, PALETTE_SCHEME_ID_MAX, PALETTE_SCHEME_LIMIT, carryClassicInlineCode, carryCustomPalette, findPaletteScheme, normalizePaletteSchemes, parsePaletteScheme } from './palette-schemes'
 import { CURRENCIES, CURRENCY_CNY } from './prices'
+import { BRANDING_PRESET_ENTRY_MAX, BRANDING_PRESET_ID_MAX, BRANDING_PRESET_LIMIT, findBrandingPreset, normalizeBrandingPresets, parseBrandingPreset } from './branding-presets'
 import { SOUND_LEVELS, SOUND_LEVEL_OFF } from './sound'
 
 /* ---------- the value vocabulary ---------- */
@@ -272,6 +273,16 @@ export const PREFS = {
   brand: { type: 'choice', values: BRANDS, default: BRAND_CLAUDE, legacy: { [BRAND_DEEPSEEK_LEGACY]: BRAND_DEEPSEEK } },
   brandName: { type: 'text', default: '', max: BRAND_NAME_MAX },
   brandInk: { type: 'choice', values: BRAND_INKS, default: BRAND_INK_ORIGINAL },
+  /** Empty keeps the legacy uploaded images; a preset id selects one named record. */
+  brandingPreset: { type: 'text', default: '', max: BRANDING_PRESET_ID_MAX },
+  /** Named logo presets, stored canonically and also accepted as structured YAML records. */
+  brandingPresets: { type: 'list', default: [], max: BRANDING_PRESET_LIMIT, entryMax: BRANDING_PRESET_ENTRY_MAX, drop: [] },
+  /** UI logo records layered over file-defined presets; effective records merge by id. */
+  brandingPresetOverrides: { type: 'list', default: [], max: BRANDING_PRESET_LIMIT, entryMax: BRANDING_PRESET_ENTRY_MAX, drop: [] },
+  /** Base logo ids deleted through the UI, so file reloads do not resurrect them. */
+  brandingPresetDeleted: { type: 'list', default: [], max: BRANDING_PRESET_LIMIT, entryMax: BRANDING_PRESET_ID_MAX, drop: [] },
+  /** Empty keeps the file's logo selection; a UI selection otherwise wins. */
+  brandingPresetOverride: { type: 'text', default: '', max: BRANDING_PRESET_ID_MAX },
   /** Whether the sidebar draws its brand area; off collapses that area and leaves the sidebar toggle in place. */
   sidebarBrand: { type: 'boolean', default: true },
   brandAccent: { type: 'color', default: '' },
@@ -279,6 +290,12 @@ export const PREFS = {
   paletteColors: { type: 'text', default: PALETTE_COLORING_BRAND, max: PALETTE_SCHEME_ID_MAX },
   /** The schemes' records (palette-schemes.ts): the reader's own and the presets' overrides. */
   paletteSchemes: { type: 'list', default: [], max: PALETTE_SCHEME_LIMIT, entryMax: PALETTE_SCHEME_ENTRY_MAX, drop: [] },
+  /** UI records layered over file-defined schemes; effective records merge by id. */
+  paletteSchemeOverrides: { type: 'list', default: [], max: PALETTE_SCHEME_LIMIT, entryMax: PALETTE_SCHEME_ENTRY_MAX, drop: [] },
+  /** Base scheme ids deleted through the UI, so file reloads do not resurrect them. */
+  paletteSchemeDeleted: { type: 'list', default: [], max: PALETTE_SCHEME_LIMIT, entryMax: PALETTE_SCHEME_ID_MAX, drop: [] },
+  /** Empty keeps the file's selection; a UI selection otherwise wins. */
+  paletteColorsOverride: { type: 'text', default: '', max: PALETTE_SCHEME_ID_MAX },
   /** The earlier single custom card's four colours; read once into the scheme `custom` and then left empty. */
   customAccent: { type: 'color', default: '' },
   customCanvasLight: { type: 'color', default: '' },
@@ -441,7 +458,17 @@ function clampPref(spec: PrefSpec, raw: unknown): unknown {
 
 /** Clamp every host field to its declaration; unreadable values use defaults. */
 export function clampPrefs(value: unknown): Prefs {
-  const section: Record<string, unknown> = value !== null && typeof value === 'object' ? value as Record<string, unknown> : {}
+  const section: Record<string, unknown> = value !== null && typeof value === 'object' ? { ...value as Record<string, unknown> } : {}
+  // Structured YAML records enter the same canonical store as UI writes. One
+  // unserializable entry is isolated here and dropped by the list clamp.
+  for (const key of ['paletteSchemes', 'paletteSchemeOverrides', 'brandingPresets', 'brandingPresetOverrides'] as const) {
+    const list = section[key]
+    if (!Array.isArray(list)) continue
+    section[key] = list.map(entry => {
+      if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) return entry
+      try { return JSON.stringify(entry) } catch { return entry }
+    })
+  }
   const out: Record<string, unknown> = {}
   for (const [key, spec] of Object.entries(PREFS) as [PrefKey, PrefSpec][]) out[key] = clampPref(spec, section[key])
   // A stored accent becomes the first of the reader's four colours, and the custom card is the one in force.
@@ -451,6 +478,7 @@ export function clampPrefs(value: unknown): Prefs {
     out.brandAccent = ''
   }
   carryPaletteSchemes(out)
+  carryBrandingPresets(out)
   return out as unknown as Prefs
 }
 
@@ -479,11 +507,39 @@ function carryPaletteSchemes(out: Record<string, unknown>) {
     records = carryClassicInlineCode(records, 'claude', presets)
     out.inlineCodeColor = INLINE_CODE_COLOR_PALETTE
   }
+  const overridden = normalizePaletteSchemes(out.paletteSchemeOverrides as string[], presets).entries
+  const overriddenIds = new Set(overridden.map(text => parsePaletteScheme(text, presets).id))
+  const deleted = new Set(out.paletteSchemeDeleted as string[])
+  records = [...overridden, ...records.filter(text => {
+    const id = parsePaletteScheme(text, presets).id
+    return !overriddenIds.has(id) && !deleted.has(id)
+  })]
   out.paletteSchemes = records.slice(0, PALETTE_SCHEME_LIMIT)
-  const selected = out.paletteColors as string
+  const selected = (out.paletteColorsOverride || out.paletteColors) as string
+  out.paletteColors = selected
   if (selected !== PALETTE_COLORING_BRAND && !presets.includes(selected) && findPaletteScheme(records, selected, presets) === undefined) {
     problems.push(`the selected palette scheme "${selected}" is not among the records; following the brand`)
     out.paletteColors = PALETTE_COLORING_BRAND
+  }
+  for (const problem of problems) console.error(`dsh-claude-style: ${problem}`)
+}
+
+/** Named logo records and their independent selection; invalid entries do not remove valid ones. */
+function carryBrandingPresets(out: Record<string, unknown>) {
+  const { entries, problems } = normalizeBrandingPresets(out.brandingPresets as string[])
+  const overridden = normalizeBrandingPresets(out.brandingPresetOverrides as string[]).entries
+  const overriddenIds = new Set(overridden.map(text => parseBrandingPreset(text).id))
+  const deleted = new Set(out.brandingPresetDeleted as string[])
+  const merged = [...overridden, ...entries.filter(text => {
+    const id = parseBrandingPreset(text).id
+    return !overriddenIds.has(id) && !deleted.has(id)
+  })]
+  out.brandingPresets = merged.slice(0, BRANDING_PRESET_LIMIT)
+  const selected = (out.brandingPresetOverride || out.brandingPreset) as string
+  out.brandingPreset = selected
+  if (selected !== '' && findBrandingPreset(merged, selected) === undefined) {
+    problems.push(`the selected branding preset "${selected}" is not among the records; using the legacy images`)
+    out.brandingPreset = ''
   }
   for (const problem of problems) console.error(`dsh-claude-style: ${problem}`)
 }

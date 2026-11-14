@@ -54,6 +54,12 @@ interface KeyboardEvent {
   __dshHostMenuEscape?: boolean
 }
 
+/** A JSON document read through the declared logic surface. */
+declare module '*.json' {
+  const value: Record<string, unknown>
+  export default value
+}
+
 /** A stylesheet's text, as the declared logic surface hands it to a spec (pure.ts, through Vite's `?raw`). */
 declare module '*.css?raw' {
   const text: string

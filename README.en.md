@@ -92,6 +92,48 @@ Choose **Mark as unread** or **Clear unread mark** from a session's ellipsis men
 
 Hover a message you sent and **Retract** and **Edit** join the clock and copy buttons. Both open a new session and leave the original as it was: retracting drops that message and everything after it and puts the text back in the composer for you to send again, while editing amends the text in place first and sends it in the new session as soon as you confirm. A message carrying images or files gets neither button, since attachments cannot travel with the text into a new session. Both wait while the turn is still running. Disable the feature under **Conversation** in the plugin settings.
 
+## Declarative appearance configuration
+
+`paletteSchemes` and `brandingPresets` accept both nested YAML objects and the existing JSON-string records. This snippet shows plugin fields only, not a complete Harness profile:
+
+```yaml
+palette: claude
+paletteColors: company-ocean
+paletteSchemes:
+  - id: company-ocean
+    name: Company Ocean
+    base: deepseek
+    accent: "#2855d9"
+    background:
+      light: "#f7f9ff"
+      dark: "#111827"
+    code:
+      light: "#173f99"
+      dark: "#b8ceff"
+
+brandingPreset: company-primary
+brandingPresets:
+  - id: company-primary
+    name: Company Primary
+    mark:
+      light: "./branding/primary-mark-light.svg"
+      dark: "./branding/primary-mark-dark.svg"
+    wordmark: "./branding/primary-wordmark.svg"
+
+modelOrder: custom
+modelOrderRows:
+  - deepseek-official/deepseek-v4.1-pro
+  - sensenova/sensenova-6.8-flash
+```
+
+- Colour records keep the seed model, including `accent`, `background`, `text`, `code`, `link` and `edges`. Built-in presets and **Follow the brand** remain available.
+- A logo preset has a stable `id`, an optional `name`, and `mark` / `wordmark` assets. One string uses the same image in both appearances; a `light` / `dark` pair selects by appearance, with the supplied side covering a missing side.
+- Relative image paths resolve from `$DSH_HOME/dsh-claude-style/` and must stay inside it. PNG, SVG and WebP files up to 2 MB are accepted. UI uploads live under `branding/presets/<id>/`, so switching presets needs no repeated upload.
+- Appearance settings create, duplicate, rename, select and delete logo presets, with separate light and dark replacement. An empty `brandingPreset` keeps the previous global uploads. Logo and colour selections stay independent.
+- UI edits persist in the plugin-managed `appearance-overlays.json` and merge with base YAML by `id`. UI-created or edited records and selection overrides win; records added later to the file are merged in, and base records deleted through the UI do not return after a reload. After a manual configuration edit and reload, unconflicted records follow the file, while conflicts follow the latest UI edit.
+- Invalid records are reported and skipped without removing valid ones. A missing or invalid image affects only that image and leaves the other presets and settings UI working.
+- `modelOrder` accepts `id`, `brand`, `catalog` and `custom`. Brand order places recognised vendors first and hides descriptions on unrecognised rows. Custom order follows `provider/model` entries in `modelOrderRows`; remaining models follow in ID order.
+
 ## Fonts
 
 > The Anthropic fonts have no public release; this repository only offers [copies](https://github.com/Nwflower/dsh-claude-style/tree/master/packages/assets/src/fonts/anthropic) for download and study.

@@ -44,7 +44,7 @@ const BUBBLE_LIGHT_PROPERTY = '--dsh-claude-custom-bubble-light'
 const BUBBLE_DARK_PROPERTY = '--dsh-claude-custom-bubble-dark'
 /** The ink the brand's own art and the reader's pictures take while the image-colour choice names the accent or the text colour. */
 const LOGO_INK_PROPERTY = '--dsh-claude-logo-ink'
-const PROPERTIES = [
+export const BRAND_PROPERTIES = [
   MARK_PROPERTY, WORD_PROPERTY, WORD_RATIO_PROPERTY, NAME_PROPERTY,
   ACCENT_PROPERTY, ACCENT_INK_PROPERTY, CANVAS_LIGHT_PROPERTY, CANVAS_DARK_PROPERTY, TEXT_LIGHT_PROPERTY, TEXT_DARK_PROPERTY, CODE_LIGHT_PROPERTY, CODE_DARK_PROPERTY, LINK_LIGHT_PROPERTY, LINK_DARK_PROPERTY,
   SIDEBAR_LIGHT_PROPERTY, SIDEBAR_DARK_PROPERTY, BUBBLE_LIGHT_PROPERTY, BUBBLE_DARK_PROPERTY, LOGO_INK_PROPERTY,
@@ -121,6 +121,6 @@ export function install() {
     offImages()
     resetBrandImages()
     for (const name of ATTRIBUTES) body.removeAttribute(name)
-    for (const name of PROPERTIES) body.style.removeProperty(name)
+    for (const name of BRAND_PROPERTIES) body.style.removeProperty(name)
   }
 }

@@ -79,6 +79,48 @@ dsh plugin --profile web add Nwflower/dsh-claude-style#dist      # GitHub 发布
 
 需要 dsh ≥ 0.2.2-rc.1，装好后重启 DeepSeek Harness。
 
+## 声明式外观配置
+
+插件配置中的 `paletteSchemes` 和 `brandingPresets` 同时接受嵌套 YAML 对象与既有 JSON 字符串记录。下面的片段只展示插件字段，不是完整的 Harness 配置：
+
+```yaml
+palette: claude
+paletteColors: company-ocean
+paletteSchemes:
+  - id: company-ocean
+    name: Company Ocean
+    base: deepseek
+    accent: "#2855d9"
+    background:
+      light: "#f7f9ff"
+      dark: "#111827"
+    code:
+      light: "#173f99"
+      dark: "#b8ceff"
+
+brandingPreset: company-primary
+brandingPresets:
+  - id: company-primary
+    name: Company Primary
+    mark:
+      light: "./branding/primary-mark-light.svg"
+      dark: "./branding/primary-mark-dark.svg"
+    wordmark: "./branding/primary-wordmark.svg"
+
+modelOrder: custom
+modelOrderRows:
+  - deepseek-official/deepseek-v4.1-pro
+  - sensenova/sensenova-6.8-flash
+```
+
+- 配色记录沿用现有种子模型，支持 `accent`、`background`、`text`、`code`、`link` 和 `edges`。内置预设及“跟随品牌”继续可用。
+- 标志预设包含稳定的 `id`、可选的 `name`、以及 `mark` / `wordmark`。图片写成单个字符串时两种外观共用；写成 `light` / `dark` 对时按当前外观选择，缺少的一侧回退到另一侧。
+- 相对图片路径以 `$DSH_HOME/dsh-claude-style/` 为根目录，只能引用该目录内的 PNG、SVG 或 WebP 文件，单张不超过 2 MB。UI 上传使用 `branding/presets/<id>/` 下的托管资源；切换预设不需要再次上传。
+- 外观设置可以新建、复制、重命名、选择和删除标志预设，也可分别替换明暗图片。`brandingPreset` 留空时继续使用此前的全局上传图片，配色与标志选择互不影响。
+- UI 修改通过插件的 `appearance-overlays.json` 持久化，按 `id` 与基础 YAML 合并。UI 创建或修改的记录及选择覆盖优先；文件后来新增的记录继续并入，UI 删除的基础记录不会因重载恢复。手动修改配置并重载后，未冲突的记录以文件为准，发生冲突的字段以最近一次 UI 修改为准。
+- 无法解析的记录会被报告并跳过，其余记录继续生效。缺失或无效图片只影响对应图片，不会移除其它预设或使设置页失效。
+- `modelOrder` 可取 `id`、`brand`、`catalog`、`custom`。`brand` 把可识别品牌排在前面，未识别行不显示副标题；`custom` 按 `modelOrderRows` 中的 `provider/model` 顺序排列，未列出的模型按标识排在后面。
+
 ## 字体
 
 > Anthropic 没有公开发行这三款字体；本仓库只提供下载与研究的[副本](https://github.com/Nwflower/dsh-claude-style/tree/master/packages/assets/src/fonts/anthropic)。
