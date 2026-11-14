@@ -34,6 +34,16 @@ export const CHAT_CALL_SELECTOR = '[data-chat-call-id]'
 export const CHAT_CALL_TOOL_SELECTOR = '[data-tool]'
 /** The same contract as an attribute name: the tool a call row runs. */
 export const CHAT_CALL_TOOL_ATTRIBUTE = 'data-tool'
+/**
+ * One row of a tool body's output. Two of the bodies the host draws mark their
+ * rows themselves — a diff's `data-diff-line`, and the rows of a diff review's
+ * two sides under the same mark — while the terminal, the read card and the
+ * single-column diff mark only the body, so there a row is one of the children
+ * of the body's last child, the layer that scrolls. Each row is a box of its
+ * own, so a batch of them can arrive one chunk at a time
+ * (features/chat-tool-lines).
+ */
+export const TOOL_OUTPUT_ROW_SELECTOR = '[data-diff-line], [data-diff] > *:last-child > div, [data-terminal][data-body] > *:last-child > div, [data-read] > *:last-child > div'
 /** One thinking row; its phase is its data-state attribute. */
 export const THINK_ROW_SELECTOR = '[data-variant="think"]'
 /**

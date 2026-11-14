@@ -149,6 +149,12 @@ export const CHAT_REVEAL_MIN_OPACITY = 0
 export const CHAT_REVEAL_ALPHA_CURVE = 2
 export const CHAT_REVEAL_HIGHLIGHT_PREFIX = 'dsh-claude-tok-'
 export const CHAT_REVEAL_COLOR_VAR = '--dsh-claude-run-color'
+/** Present while a tool body's output rows are given their arrival (features/chat-tool-lines/): the stylesheet's arrival rule hangs off it, so switching the feature off leaves the rows exactly as the host draws them. */
+export const CHAT_TOOL_LINES_ATTR = 'data-dsh-claude-tool-lines'
+/** On one row of a tool body's output for the span of its arrival (features/chat-tool-lines/tool-line-reveal.ts): the stylesheet hangs that arrival on the mark, and the row takes it off once the batch has landed. */
+export const TOOL_LINE_ATTR = 'data-dsh-claude-tool-line'
+/** How far behind its batch's first row that row's arrival starts, written beside the mark above. A row whose batch came in whole waits its turn; a line streaming in on its own stands at nothing. */
+export const TOOL_LINE_DELAY_VAR = '--dsh-claude-tool-line-delay'
 /** Present while a turn's process rows are given their entrance (features/chat-row-enter/): the stylesheet's entrance rule hangs off it, so switching the feature off leaves the rows exactly as the host draws them. */
 export const CHAT_ROW_ENTER_ATTR = 'data-dsh-claude-row-enter'
 /** On one process row for the span of its entrance (features/chat-row-enter/row-enter.ts): the stylesheet hangs that entrance on the mark, and the row takes it off once it has played. */

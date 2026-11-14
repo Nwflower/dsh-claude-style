@@ -505,9 +505,12 @@ edit the JSON, not the table.
 |---|---|---|
 | `--dsh-claude-duration-instant` | `80ms` | the composer caret following the insertion point |
 | `--dsh-claude-duration-feedback` | `120ms` | a control answering hover, press or focus: its colour, background, border, shadow, or a small turn or slide of its own parts |
-| `--dsh-claude-duration-reveal` | `120ms` | content entering the chat area: an opened row's body, and each streamed piece of the answer |
+| `--dsh-claude-duration-reveal` | `120ms` | content entering the chat area: an opened row's body, and one row of a tool body's output |
 | `--dsh-claude-duration-stream-fade` | `240ms` | one character of a streaming answer coming to its own colour (features/chat-reveal), and the settings page's preview of it |
 | `--dsh-claude-duration-row-enter` | `240ms` | one row of a turn's process — a tool call, a thought, a context injection — rising into its place as the live turn writes it (features/chat-row-enter) |
+| `--dsh-claude-duration-line-chunk` | `140ms` | how long one chunk of a tool body's output — two rows — stands before the next two arrive (features/chat-tool-lines) |
+| `--dsh-claude-duration-line-row` | `12ms` | how long one row stands before the next arrives once a tool body's first forty rows are spent |
+| `--dsh-claude-duration-line-settle` | `3800ms` | the longest a batch of a tool body's rows may take to arrive; a longer batch has every offset scaled down to fit it |
 | `--dsh-claude-duration-enter` | `320ms` | one message the reader sends growing into its row, the same growth on the Motion tab's card, and a colour disc lifting out of its row and springing back |
 | `--dsh-claude-duration-surface` | `150ms` | a floating surface or a group of controls appearing: popover cards, menus, panels, the search dialog, a toast, a strip fading in, a hint over what it names |
 | `--dsh-claude-duration-exit` | `120ms` | a surface leaving on the reader's dismissal: a menu or a dialog closing, the overtime badge leaving |

@@ -1,0 +1,26 @@
+/* One row of a tool body's output arriving: the script marks each row a batch
+   reveals and writes the offset that batch measured for it
+   (features/chat-tool-lines/tool-line-reveal.ts); the arrival itself is the
+   stylesheet's. Only opacity and a translate move, so a row arriving never
+   changes the body's height — the host's follow and the capped body's scroll
+   position stay where they are (D9, D95). The rule's gate is the body attribute
+   the feature writes with its engine, so a page it has stood down leaves the
+   rows exactly as the host draws them. */
+
+body[data-dsh-claude-style][data-dsh-claude-tool-lines] [data-dsh-claude-tool-line] {
+  animation: dsh-claude-tool-line-arrive var(--dsh-claude-duration-reveal) var(--dsh-claude-ease-out) both;
+  animation-delay: var(--dsh-claude-tool-line-delay, 0ms);
+}
+
+/* A line of output surfacing where it stands. */
+@keyframes dsh-claude-tool-line-arrive {
+  from {
+    opacity: 0;
+    translate: 0 var(--dsh-claude-distance-nudge);
+  }
+
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}

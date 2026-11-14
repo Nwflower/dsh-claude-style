@@ -73,6 +73,10 @@
       "count": 1,
       "reason": "The streaming containers, read once when the reveal engine is installed."
     },
+    "packages/client/src/features/chat-tool-lines/tool-line-reveal.ts": {
+      "count": 1,
+      "reason": "The rows of the tool bodies standing on the page, read once when the engine is installed: those are the conversation the page opened onto and never play. Every batch after that is answered from the records the bus hands over."
+    },
     "packages/client/src/features/chat-send/send-grow.ts": {
       "count": 1,
       "reason": "The echo rows lying on the page, noted once at install."
