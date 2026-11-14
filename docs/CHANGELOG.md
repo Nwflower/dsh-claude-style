@@ -2,6 +2,94 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [0.21.1] - 2026-11-14
+
+[中文](#cn-0.21.1) | [English](#en-0.21.1)
+
+<h3 id="cn-0.21.1">新增功能</h3>
+
+- 新增羊皮纸、森林、暮色与蔷薇四套配色预设，外观设置里可选可改，侧栏与气泡色由各自的背景推出
+- 外观设置支持新建、复制、重命名和删除多套配色方案，编辑预设与明暗颜色，并显示文字对比度
+
+### 体验优化
+
+- 让详情栏、用量面板与轮次状态行的 token 读数按数值本身取单位，不足 1k 写实际数量，1k 到 1000k 用一位小数的 k，1000k 起才用 M 与更大的单位，百万窗口下的剩余空间不再与窗口同读作 1M
+- 详情栏各节的标题改为常规字重，环境、上下文、会话统计、Token 用量、产出与进程由各自的标题行、分隔线和留白分开，其余文字的字号与颜色不变
+- 详情栏改用宿主的悬停气泡补上每一行说不出的部分，产出行给出完整路径，被截断的标题给出全文，行内文字已经完整时不弹气泡，气泡挂在页面主体上，详情栏滚动时也不会被裁掉
+- 「首页统计范围」默认统计现有主会话；各范围只显示同一集合的会话数，子代理不再计入，已删除主会话仅在「全部记录」中保留
+- 配色方案的管理与编辑合成一个双栏弹窗，左侧列出全部方案，右侧给出所选方案的浅色与深色样张、颜色和对比度读数
+- 进行中的回合每写出一行过程——工具调用、思考、上下文注入——这一行用 0.24 秒淡入、上移并从左侧放大到位，打开或切换会话时已有的行不重播
+- 为搜索原文和小写副本分别设置常驻容量上限，被淘汰会话与超大会话仍参与完整检索
+- 详情栏首帧先画出上下文的占用与占比，分项随宿主折叠就位，其余各节同时出现，不再让整栏停在正在读取
+- 对话详情、配色对比度附注与字体缺失提示改为一句话说明影响范围与要做的事
+- 流式回答的新文字默认淡入，字符从看不见到坐实本色用 0.24 秒、前段快后段缓，思考窗口未到上限时底边也留一道渐隐，最新一行从这道边缘升起
+- 工具调用的终端输出、diff 与文件内容按行分段出现，一次挂载的正文每两条一段、段间 140 毫秒，超过四十行之后每条 12 毫秒，整批最多 3.8 秒并按比例压缩，运行中命令追加的一行立刻出现，页面自己装载的旧对话不重播
+- 字体行说明页面画不出的 Anthropic 字体，按装进系统或放进投放点两条路给出说明
+- 拉开首页热力图五档色阶的明度差距，让相邻等级在明暗主题下都更容易分辨
+- 详情栏的上下文分项改按实际发送给模型的内容计价，对话拆成用户消息、助手消息与工具结果三行，技能正文归入技能，各项按大小降序排列，八种分项色统一到同一感知明度，占用总量与占比仍取服务商的读数
+- 紧凑底栏支持独立开关输出速度、首 Token 时间、缓存命中率、费用、Token 总量与上下文圆环
+- 详情栏的上下文一节在接近自动压缩点时给出到压缩线的距离与一个「压缩会话」按钮，按下走宿主自己的 /compact 命令，压缩后占用与分项随下一轮读数自动收敛
+- 配色方案新增明暗正文颜色入口，可以单独调整文字亮度而不改变背景色
+- 输入区底行去掉宿主控件箱留在推理档位与上下文圆环之间的 12px 空档，圆环左内边距收成 4px，悬停与展开时只留圆环本身、不再铺一块深色底板
+
+### 问题修复
+
+- 关闭聊天动效时取消尚未执行的自动折叠，保留输入法组合与读者手动开合状态
+- 切换会话、关闭统计或重新加载宿主资源时释放旧请求，避免晚到回答覆盖当前品牌和费用状态
+- 窄屏输入栏的固定控件（思考深度、语音、发送、计量环）不再被压扁重叠，模型名与权限文字先缩短，模型版本标签在所有布局里保持可见，首页页宽不足时右侧控件整组换行并保持靠右，会话宽窄布局都保持单行
+- 修复侧栏「新会话」一行在 DSH 0.2.2-rc.3 上右移的问题，圆片与标题回到搜索、插件各行的同一列
+- 面板替换时释放旧元素并恢复宿主样式，关闭缩放处理后停止已排队的布局改写
+- 色卡圆点支持键盘聚焦显示名称，并与鼠标共享同一条提示气泡
+- 详情栏的会话统计与 Token 用量改读底部读数那一份实时读数，并按同一段时长逐帧推行，数字与那行一样连续增长
+- 详情栏分别展示进程、子智能体和团队，区分命令的前后台执行，保留会话命令历史并折叠已结束记录
+- 切换会话与返回首页时立即释放滚动持有和文字揭示状态，保留的旧容器不再继续绘制
+- 侧栏重排只移动位置确实改变的会话座位，局部换位时保留其余节点、焦点与所在分组边界
+- 窄屏帧网格按宿主几何兜底，页宽标记固定 drawer 0、rail 56 与宿主侧栏宽度，侧栏收起或抽屉时不再被过期的行内值改成展开宽度，会话区不再塌成右侧窄条或闪现半白帧
+- 修复长会话增长时回写陈旧滚动位置、窄屏输入栏溢出与页帧塌陷、中文输入光标变细，以及提问卡片错误的 Ctrl 回车提示
+- 设置保存失败提示不再使用误导性存储异常文案，并锁定输入区右侧 React 插槽的父子结构
+
+<h3 id="en-0.21.1">New Features</h3>
+
+- Add four colour presets — Parchment, Forest, Dusk and Rose — selectable and editable in Appearance, each deriving its sidebar and bubble from its own canvas
+- Create, duplicate, rename and delete colour schemes in Appearance, edit presets and light/dark colours, and read text contrast
+
+### Improvements
+
+- Pick the unit of every token count from the count itself, writing the real number below a thousand, k with one decimal through a thousand k, and M or above only past that, so the room left in a million-token window no longer reads the same as the window
+- Set every details section heading in the regular weight, leaving the environment, context, session stats, token usage, outputs and processes sections told apart by their own heading line, hairline and room, with the sizes and inks unchanged
+- Give each details row the host's own hover bubble for what its line cannot say, an output row its full path and a cut title its whole text, with no bubble where the line says everything, and hang the bubble on the page body so the rail's scrolling never clips it
+- Default home session scope to current main sessions; every scope shows one count from its own population, excludes subagents, and retains deleted main sessions only in All recorded
+- Merge the colour scheme manager and editor into one two-column dialog, with every scheme on the left and the chosen one's light and dark specimens, colours and contrast figures on the right
+- Each process row a running turn writes — a tool call, a thought, a context injection — fades in, rises and grows from its leading edge over 0.24 s, and the rows already standing when a session is opened or switched to never replay
+- Bound resident search text and lowercase copies separately while keeping evicted and oversized sessions fully searchable
+- Paint the details rail's context occupancy on the first frame, with its breakdown and the other sections taking their place as the host's answer lands, instead of holding the whole rail on one loading line
+- The Details, palette contrast and missing-font lines each say their reach, and the one thing to do, in a single sentence
+- New characters of a streaming answer fade in by default, each arriving unseen and settling to its own colour over 0.24 s, and the reasoning window keeps a soft bottom edge below its cap so the newest line rises out of it
+- A tool call's terminal output, diff and file contents now surface in chunks of two rows 140 ms apart, one row every 12 ms past the first forty, and a batch is compressed to arrive within 3.8 s; a line a running command appends appears at once, and a conversation the page mounts on its own is never replayed
+- The typeface row names the Anthropic faces the page cannot draw and says how to supply them, on the system or at the fonts folder
+- Increase contrast between all five home heatmap levels in light and dark themes
+- Price the details rail's context parts from the content actually sent to the model, splitting the conversation into user messages, assistant messages and tool results, counting a skill's body as skills, ordering the parts largest first and holding every part colour to one perceived lightness, with the occupancy and share still the provider's own reading
+- Add independent compact-footer toggles for output speed, TTFT, cache-hit rate, cost, token total and the context ring
+- Offer the distance to the auto-compaction line and a compact button in the details rail's context section once a session comes near it, running the host's own /compact command so the occupancy and its parts settle on the next reading
+- Add light and dark text colour seeds to palette schemes, allowing text brightness changes without changing the canvas
+- Close the 12px gap the host's controls box left between the effort level and the context ring on the composer's bottom line, cut the ring's left inset to 4px, and drop the dark plate the ring painted under the pointer and while its panel was open
+
+### Bug Fixes
+
+- Cancel pending automatic folds when chat animations are disabled, preserving input composition and manual fold choices
+- Release old requests on session changes, statistics teardown and host resource resets to keep late answers from replacing current brand and cost state
+- Narrow composer bars no longer squeeze their fixed controls (effort, voice, send, meter ring) into each other, the model name and permission text shorten first, the release tag stays visible in every layout, the new-conversation card wraps its right-hand cluster to a second right-aligned line when the page is too narrow, and the conversation row stays on one line in both layouts
+- Keep the sidebar's New session row on the same column as the search and panel rows after DSH 0.2.2-rc.3 moved it right
+- Release replaced panels and restore host styles, stopping queued layout rewrites after panel scaling is removed
+- Let colour-card discs reveal their labels on keyboard focus through the same pointer hint
+- Read the details rail's session stats and token usage from the same live reading as the composer line and count to each new value over the same duration, so both grow the same way
+- Separate processes, subagents and team in Details, distinguish foreground and background commands, and retain session command history behind a finished count
+- Release reader scroll holds and text reveal state on session changes and home navigation, including retained inactive containers
+- Move only the sidebar seats whose places changed, preserving the other nodes, focus and section boundaries during a local swap
+- Narrow frame grids fall back to the host's own geometry, page-width marks pin drawer 0, rail 56 and the sidebar's own width, a collapsed or drawer sidebar is no longer drawn at a stale expanded width, and the conversation no longer collapses into a right strip or flashes a half-white frame
+- Fix stale scroll restoration, narrow composer overflow and frame collapse, thin IME carets, and the incorrect Ctrl+Enter hint on question cards
+- Correct the settings-save error copy and preserve the React parent-child structure of the composer's right slot
+
 ## [0.21.0] - 2026-11-12
 
 [中文](#cn-0.21.0) | [English](#en-0.21.0)

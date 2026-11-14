@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-13",
-  "group": "improvements",
-  "order": 0,
-  "external": false,
-  "zh": "配色方案的管理与编辑合成一个双栏弹窗，左侧列出全部方案，右侧给出所选方案的浅色与深色样张、颜色和对比度读数",
-  "en": "Merge the colour scheme manager and editor into one two-column dialog, with every scheme on the left and the chosen one's light and dark specimens, colours and contrast figures on the right"
-}

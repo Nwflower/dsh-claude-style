@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-13",
-  "group": "improvements",
-  "order": 4,
-  "external": false,
-  "zh": "输入区底行去掉宿主控件箱留在推理档位与上下文圆环之间的 12px 空档，圆环左内边距收成 4px，悬停与展开时只留圆环本身、不再铺一块深色底板",
-  "en": "Close the 12px gap the host's controls box left between the effort level and the context ring on the composer's bottom line, cut the ring's left inset to 4px, and drop the dark plate the ring painted under the pointer and while its panel was open"
-}

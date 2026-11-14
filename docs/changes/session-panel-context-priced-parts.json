@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-13",
-  "group": "improvements",
-  "order": 1,
-  "external": false,
-  "zh": "详情栏的上下文分项改按实际发送给模型的内容计价，对话拆成用户消息、助手消息与工具结果三行，技能正文归入技能，各项按大小降序排列，八种分项色统一到同一感知明度，占用总量与占比仍取服务商的读数",
-  "en": "Price the details rail's context parts from the content actually sent to the model, splitting the conversation into user messages, assistant messages and tool results, counting a skill's body as skills, ordering the parts largest first and holding every part colour to one perceived lightness, with the occupancy and share still the provider's own reading"
-}

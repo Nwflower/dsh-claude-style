@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-13",
-  "group": "fixes",
-  "order": 0,
-  "external": false,
-  "zh": "色卡圆点支持键盘聚焦显示名称，并与鼠标共享同一条提示气泡",
-  "en": "Let colour-card discs reveal their labels on keyboard focus through the same pointer hint"
-}

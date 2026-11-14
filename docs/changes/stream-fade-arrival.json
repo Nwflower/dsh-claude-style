@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-13",
-  "group": "improvements",
-  "order": 0,
-  "external": true,
-  "zh": "流式回答的新文字默认淡入，字符从看不见到坐实本色用 0.24 秒、前段快后段缓，思考窗口未到上限时底边也留一道渐隐，最新一行从这道边缘升起",
-  "en": "New characters of a streaming answer fade in by default, each arriving unseen and settling to its own colour over 0.24 s, and the reasoning window keeps a soft bottom edge below its cap so the newest line rises out of it"
-}

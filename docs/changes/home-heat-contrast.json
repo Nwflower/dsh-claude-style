@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-13",
-  "group": "improvements",
-  "order": 1,
-  "external": false,
-  "zh": "拉开首页热力图五档色阶的明度差距，让相邻等级在明暗主题下都更容易分辨",
-  "en": "Increase contrast between all five home heatmap levels in light and dark themes"
-}

@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-13",
-  "group": "improvements",
-  "order": 2,
-  "external": false,
-  "zh": "详情栏的上下文一节在接近自动压缩点时给出到压缩线的距离与一个「压缩会话」按钮，按下走宿主自己的 /compact 命令，压缩后占用与分项随下一轮读数自动收敛",
-  "en": "Offer the distance to the auto-compaction line and a compact button in the details rail's context section once a session comes near it, running the host's own /compact command so the occupancy and its parts settle on the next reading"
-}

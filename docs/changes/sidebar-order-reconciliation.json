@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-13",
-  "group": "fixes",
-  "order": 0,
-  "external": false,
-  "zh": "侧栏重排只移动位置确实改变的会话座位，局部换位时保留其余节点、焦点与所在分组边界",
-  "en": "Move only the sidebar seats whose places changed, preserving the other nodes, focus and section boundaries during a local swap"
-}

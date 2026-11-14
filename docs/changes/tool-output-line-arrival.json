@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-14",
-  "group": "improvements",
-  "order": 0,
-  "external": true,
-  "zh": "工具调用的终端输出、diff 与文件内容按行分段出现，一次挂载的正文每两条一段、段间 140 毫秒，超过四十行之后每条 12 毫秒，整批最多 3.8 秒并按比例压缩，运行中命令追加的一行立刻出现，页面自己装载的旧对话不重播",
-  "en": "A tool call's terminal output, diff and file contents now surface in chunks of two rows 140 ms apart, one row every 12 ms past the first forty, and a batch is compressed to arrive within 3.8 s; a line a running command appends appears at once, and a conversation the page mounts on its own is never replayed"
-}

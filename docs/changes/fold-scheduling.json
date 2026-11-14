@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-13",
-  "group": "fixes",
-  "order": 0,
-  "external": false,
-  "zh": "关闭聊天动效时取消尚未执行的自动折叠，保留输入法组合与读者手动开合状态",
-  "en": "Cancel pending automatic folds when chat animations are disabled, preserving input composition and manual fold choices"
-}

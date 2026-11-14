@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-13",
-  "group": "improvements",
-  "order": 0,
-  "external": false,
-  "zh": "详情栏首帧先画出上下文的占用与占比，分项随宿主折叠就位，其余各节同时出现，不再让整栏停在正在读取",
-  "en": "Paint the details rail's context occupancy on the first frame, with its breakdown and the other sections taking their place as the host's answer lands, instead of holding the whole rail on one loading line"
-}

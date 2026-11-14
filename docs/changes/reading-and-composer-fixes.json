@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-13",
-  "group": "fixes",
-  "order": 4,
-  "external": false,
-  "zh": "修复长会话增长时回写陈旧滚动位置、窄屏输入栏溢出与页帧塌陷、中文输入光标变细，以及提问卡片错误的 Ctrl 回车提示",
-  "en": "Fix stale scroll restoration, narrow composer overflow and frame collapse, thin IME carets, and the incorrect Ctrl+Enter hint on question cards"
-}
