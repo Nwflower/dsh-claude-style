@@ -22,9 +22,12 @@ body[data-dsh-claude-style] [data-composer-card][data-composer-variant] [data-ds
   min-width: 0;
   max-width: 100%;
 }
-body[data-dsh-claude-style] [data-composer-card][data-dsh-claude-composer-layout="compact"] .dsh-claude-model-btn > .dsh-claude-model-tag,
-body[data-dsh-claude-style] [data-composer-card][data-dsh-claude-composer-layout="stacked"] .dsh-claude-model-btn > .dsh-claude-model-tag {
-  display: none;
+/* The release tag stays beside the model's name in every layout: it is part of
+   the model's identity, and the name is what gives way when the row is short.
+   The tag keeps its own plate width, so shortening the name never hides or
+   clips it. */
+body[data-dsh-claude-style] [data-composer-card] .dsh-claude-model-btn > .dsh-claude-model-tag {
+  flex-shrink: 0;
 }
 body[data-dsh-claude-style] [data-composer-card][data-dsh-claude-composer-layout="stacked"] [data-dsh-claude-composer-toolbar] > [data-dsh-claude-part~="trailing"] {
   flex: 1 0 100%;
