@@ -34,6 +34,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 ### 问题修复
 
+- 适配新版 DeepSeek Harness 的独立会话状态服务、原生未读菜单、模块样式路径标记、服务端路由鉴权与侧栏新会话行操作按钮布局
 - 关闭聊天动效时取消尚未执行的自动折叠，保留输入法组合与读者手动开合状态
 - 切换会话、关闭统计或重新加载宿主资源时释放旧请求，避免晚到回答覆盖当前品牌和费用状态
 - 窄屏输入栏的固定控件（思考深度、语音、发送、计量环）不再被压扁重叠，模型名与权限文字先缩短，模型版本标签在所有布局里保持可见，首页页宽不足时右侧控件整组换行并保持靠右，会话宽窄布局都保持单行
@@ -76,6 +77,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 ### Bug Fixes
 
+- Support current DeepSeek Harness session status service, native unread actions, client module stylesheet path tags, authenticated route peers and sidebar new-session row action buttons
 - Cancel pending automatic folds when chat animations are disabled, preserving input composition and manual fold choices
 - Release old requests on session changes, statistics teardown and host resource resets to keep late answers from replacing current brand and cost state
 - Narrow composer bars no longer squeeze their fixed controls (effort, voice, send, meter ring) into each other, the model name and permission text shorten first, the release tag stays visible in every layout, the new-conversation card wraps its right-hand cluster to a second right-aligned line when the page is too narrow, and the conversation row stays on one line in both layouts
