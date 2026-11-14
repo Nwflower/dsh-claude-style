@@ -102,6 +102,57 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="composer-hero"] [data-compos
 body[data-dsh-claude-style] [data-dsh-claude-part~="composer-hero"] [data-composer-card][data-dsh-claude-composer-layout="stacked"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn-label {
   min-width: 0;
 }
+/* The right-hand cluster keeps every fixed control at its own width and
+   spends a shortage on the model name; the permission segments give way the
+   same way, so a narrow row shortens text instead of overlapping controls. */
+body[data-dsh-claude-style] [data-dsh-claude-composer-toolbar] :is(.dsh-claude-model-tag, .dsh-claude-model-seat-effort, .dsh-claude-effort-btn, [data-dsh-claude-part~="composer-activity"], [data-dsh-claude-part~="composer-primary"], [data-dsh-claude-part~="trailing"] > button, button:has(.dsh-claude-meter-ring-value), span:has(> button .dsh-claude-meter-ring-value)) {
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+}
+/* The cluster's leading seat takes the line, and the controls after it stand
+   at the right edge, including on the second row a narrow hero takes. */
+body[data-dsh-claude-style] [data-dsh-claude-composer-toolbar] [data-dsh-claude-part~="trailing"] > :first-child + * {
+  margin-inline-start: auto;
+}
+/* The new-conversation card keeps its right-hand cluster on one line while the
+   page has room for it; below the page mark the cluster takes the second line
+   intact, so the name, the effort control and the voice and send buttons keep
+   their places instead of sharing one squeezed row. */
+body[data-dsh-claude-style][data-dsh-claude-page-under-600] [data-dsh-claude-part~="composer-hero"] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] {
+  flex-wrap: wrap;
+}
+body[data-dsh-claude-style][data-dsh-claude-page-under-600] [data-dsh-claude-part~="composer-hero"] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] > [data-dsh-claude-part~="trailing"] {
+  flex: 1 0 100%;
+}
+/* The conversation row stays single through wide and compact; a foreign
+   right-hand control keeps the wrapping path its own rule reserved for it. */
+body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-phase="active"] [data-composer-card][data-composer-variant]:is([data-dsh-claude-composer-layout="wide"], [data-dsh-claude-composer-layout="compact"]):not([data-dsh-claude-holds~="composer-right-filled"]) [data-dsh-claude-composer-toolbar] {
+  flex-wrap: nowrap;
+}
+body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] > [data-dsh-claude-part~="tools"] {
+  flex-shrink: 1;
+  min-width: 0;
+  flex-wrap: nowrap;
+}
+body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] [data-dsh-claude-part~="modes"] {
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] [data-dsh-claude-part~="modes"] button {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] [data-dsh-claude-part~="composer-controls"],
+body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat {
+  flex-wrap: nowrap;
+}
+body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat > .dsh-claude-model-seat-model,
+body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn-label {
+  min-width: 0;
+}
 /* The native width handle can overflow the outer phase frame without adding
    visible content. Keep that frame from becoming a second scroll container;
    the inner transcript retains its own native scrolling and sticky seat. */
