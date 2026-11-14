@@ -1,10 +1,10 @@
-import { BRAND_DEFAULT_PRESETS, BRAND_INK_ATTR, BRAND_INK_ORIGINAL, CUSTOM_EDGES_ATTR, CUSTOM_MARK_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_TINT_ATTR, CUSTOM_WORD_ATTR, CUSTOM_WORD_IMAGE, CUSTOM_WORD_TEXT } from '../../constants'
+import { BRAND_DEFAULT_PRESETS, BRAND_INK_ATTR, BRAND_INK_ORIGINAL, CUSTOM_EDGES_ATTR, CUSTOM_MARK_ATTR, CUSTOM_MARK_NONE_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_TINT_ATTR, CUSTOM_WORD_ATTR, CUSTOM_WORD_IMAGE, CUSTOM_WORD_TEXT } from '../../constants'
 import { readPrefs, subscribePrefs } from '../../core/prefs'
 import { accentInk } from '../../shared/contrast'
 import { activeScheme } from '../../shared/palette-scheme'
 import { loadBrandImages, readBrandImages, resetBrandImages, subscribeBrandImages } from '../../shared/custom-brand'
 import { brandingInkOf, brandInkColour } from '../../shared/branding-presets'
-import { BRAND_PROPERTIES, cssString, MARK_PROPERTY, WORD_PROPERTY, WORD_RATIO_PROPERTY, NAME_PROPERTY, ACCENT_PROPERTY, ACCENT_INK_PROPERTY, CANVAS_LIGHT_PROPERTY, CANVAS_DARK_PROPERTY, TEXT_LIGHT_PROPERTY, TEXT_DARK_PROPERTY, CODE_LIGHT_PROPERTY, CODE_DARK_PROPERTY, LINK_LIGHT_PROPERTY, LINK_DARK_PROPERTY, SIDEBAR_LIGHT_PROPERTY, SIDEBAR_DARK_PROPERTY, BUBBLE_LIGHT_PROPERTY, BUBBLE_DARK_PROPERTY, LOGO_INK_PROPERTY } from './brand-properties'
+import { BRAND_PROPERTIES, cssString, MARK_PROPERTY, MARK_RATIO_PROPERTY, WORD_PROPERTY, WORD_RATIO_PROPERTY, NAME_PROPERTY, ACCENT_PROPERTY, ACCENT_INK_PROPERTY, CANVAS_LIGHT_PROPERTY, CANVAS_DARK_PROPERTY, TEXT_LIGHT_PROPERTY, TEXT_DARK_PROPERTY, CODE_LIGHT_PROPERTY, CODE_DARK_PROPERTY, LINK_LIGHT_PROPERTY, LINK_DARK_PROPERTY, SIDEBAR_LIGHT_PROPERTY, SIDEBAR_DARK_PROPERTY, BUBBLE_LIGHT_PROPERTY, BUBBLE_DARK_PROPERTY, LOGO_INK_PROPERTY } from './brand-properties'
 import { PALETTE_CARDS } from 'virtual:dsh-claude-style/generated'
 import { copy } from './copy'
 
@@ -26,7 +26,7 @@ import { copy } from './copy'
  * look.
  */
 
-const ATTRIBUTES = [CUSTOM_MARK_ATTR, CUSTOM_WORD_ATTR, CUSTOM_TINT_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_EDGES_ATTR, BRAND_INK_ATTR]
+const ATTRIBUTES = [CUSTOM_MARK_ATTR, CUSTOM_MARK_NONE_ATTR, CUSTOM_WORD_ATTR, CUSTOM_TINT_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_EDGES_ATTR, BRAND_INK_ATTR]
 
 export function install() {
   const body = document.body
@@ -51,7 +51,10 @@ export function install() {
     const kept = (appearance: 'light' | 'dark', tuned: { light: string, dark: string } | undefined) =>
       custom && scheme.id === scheme.base && scheme.background?.[appearance] === undefined ? (tuned?.[appearance] ?? null) : null
     attribute(CUSTOM_MARK_ATTR, mark === null ? null : '')
+    // A set other than the theme's own carries no mark when its art has none: its seat gives way to the wordmark.
+    attribute(CUSTOM_MARK_NONE_ATTR, prefs.brandingPreset !== '' && mark === null ? '' : null)
     property(MARK_PROPERTY, mark === null ? null : `url("${mark.url}")`)
+    property(MARK_RATIO_PROPERTY, mark === null ? null : String(mark.ratio))
     attribute(CUSTOM_WORD_ATTR, wordmark !== null ? CUSTOM_WORD_IMAGE : prefs.brandName !== '' ? CUSTOM_WORD_TEXT : null)
     property(WORD_PROPERTY, wordmark === null ? null : `url("${wordmark.url}")`)
     property(WORD_RATIO_PROPERTY, wordmark === null ? null : String(wordmark.ratio))

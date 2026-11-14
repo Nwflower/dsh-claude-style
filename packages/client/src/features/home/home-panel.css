@@ -146,9 +146,12 @@ body[data-dsh-claude-style] [data-dsh-claude-home-hero] [data-dsh-claude-part~="
 }
 
 /* The mark shrinks with the line: Claude's home asterisk stands a hair taller
-   than the greeting's own cap height, not twice it. */
+   than the greeting's own cap height, not twice it. A reader's or a preset's
+   mark keeps the width its own proportions give it, as it does in the
+   sidebar (features/brand/brand.css). */
 body[data-dsh-claude-style] [data-dsh-claude-home-hero] [data-dsh-claude-part~="hero-mark"]::before {
-  width: 21px;
+  width: calc(21px * var(--dsh-claude-custom-mark-ratio, 1));
+  max-width: 100%;
   height: 21px;
 }
 

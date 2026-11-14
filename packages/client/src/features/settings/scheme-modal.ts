@@ -76,8 +76,8 @@ export function createModalHost<P extends object>(name: string, Body: (props: P 
   return { open, close }
 }
 
-/** One line of a manager's list: what the record looks like in small, its name, and the tick while the page uses it. */
-export function SchemeItem(props: { id: string, lead: React.ReactNode, name: string, active: boolean, inUse: boolean, pick(): void }) {
+/** One line of a manager's list: what the record looks like in small where the record draws one, its name, and the tick while the page uses it. */
+export function SchemeItem(props: { id: string, lead?: React.ReactNode, name: string, active: boolean, inUse: boolean, pick(): void }) {
   return React.createElement(
     'button',
     {
@@ -88,7 +88,7 @@ export function SchemeItem(props: { id: string, lead: React.ReactNode, name: str
       'aria-pressed': props.active ? 'true' : 'false',
       onClick: props.pick,
     },
-    props.lead,
+    props.lead ?? null,
     React.createElement('span', { className: 'dsh-claude-scheme-item-name' }, props.name),
     props.inUse
       ? React.createElement('span', { className: 'dsh-claude-scheme-item-mark', role: 'img', 'aria-label': copy('paletteInUse') }, React.createElement(Glyph, { name: 'check' }))
@@ -104,6 +104,8 @@ export function SchemeModal(props: {
   foot: React.ReactNode
   pane: React.ReactNode
   close(): void
+  /** The lines carry no lead of their own, so the add line's mark stands on the padding's edge (palette-schemes.css). */
+  leadless?: boolean
 }) {
   const panel = React.useRef<HTMLDivElement>(null)
   const items = React.useRef<HTMLDivElement>(null)
@@ -132,7 +134,7 @@ export function SchemeModal(props: {
           React.createElement('div', { ref: items, className: 'dsh-claude-scheme-items' }, props.items),
           React.createElement(
             'button',
-            { type: 'button', className: 'dsh-claude-scheme-item dsh-claude-scheme-add', disabled: props.add.disabled, onClick: props.add.run },
+            { type: 'button', className: 'dsh-claude-scheme-item dsh-claude-scheme-add', 'data-lead': props.leadless === true ? 'none' : undefined, disabled: props.add.disabled, onClick: props.add.run },
             React.createElement(Glyph, { name: 'plus' }),
             React.createElement('span', { className: 'dsh-claude-scheme-item-name' }, props.add.label),
           ),

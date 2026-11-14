@@ -1,8 +1,8 @@
-/* The brand sets drawn small: the card under the brand switch
-   (brand-cards.ts), the leads of the manager's list (brand-manager.ts), and
-   the lockup's room in the brand editor (brand-editor.ts). The card wears the
-   colour cards' frame (settings-brand.css, palette-schemes.css); the art inside
-   is the lockup's own (settings-brand-lockup.css) at a smaller cap height. */
+/* The brand set drawn small: the card under the brand switch
+   (brand-cards.ts), and the lockup's room in the brand editor
+   (brand-editor.ts). The card wears the colour cards' frame
+   (settings-brand.css, palette-schemes.css); the art inside is the lockup's own
+   (settings-brand-lockup.css) at a smaller cap height. */
 
 /* The one card takes the row's whole width; the lockup and the name sit in the
    middle of its frame. */
@@ -23,7 +23,9 @@ body[data-dsh-claude-style] .dsh-claude-brand-card-art {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  /* The seats' own padding makes up the gap the brand area draws between the
+     mark and its word. */
+  gap: 0;
   max-width: 100%;
   min-width: 0;
   height: 40px;
@@ -68,16 +70,6 @@ body[data-dsh-claude-style] .dsh-claude-brand-card-seat:is(:hover, :focus-visibl
 body[data-dsh-claude-style] .dsh-claude-brand-card-seat:focus-visible {
   outline: 1px solid var(--dsw-alias-brand-primary);
   outline-offset: 0;
-}
-
-/* A line of the manager's list leads with the set's mark, as wide as the
-   colour list's dots so every name starts on one edge (palette-schemes.css). */
-body[data-dsh-claude-style] .dsh-claude-brand-lead {
-  --dsh-claude-lockup-cap: 16px;
-  display: inline-flex;
-  flex: none;
-  justify-content: center;
-  width: var(--dsh-claude-scheme-dots);
 }
 
 /* The editor's lockup takes the room between the options and the foot. */

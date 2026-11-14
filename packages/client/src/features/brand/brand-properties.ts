@@ -1,5 +1,6 @@
 /** The custom properties written on <body>, read by the rules gated on the attributes. */
 export const MARK_PROPERTY = '--dsh-claude-custom-mark'
+export const MARK_RATIO_PROPERTY = '--dsh-claude-custom-mark-ratio'
 export const WORD_PROPERTY = '--dsh-claude-custom-word'
 export const WORD_RATIO_PROPERTY = '--dsh-claude-custom-word-ratio'
 export const NAME_PROPERTY = '--dsh-claude-custom-name'
@@ -20,7 +21,7 @@ export const BUBBLE_DARK_PROPERTY = '--dsh-claude-custom-bubble-dark'
 /** The ink the brand's own art and the set's pictures take while the selected set's ink names the accent or the text colour. */
 export const LOGO_INK_PROPERTY = '--dsh-claude-logo-ink'
 export const BRAND_PROPERTIES = [
-  MARK_PROPERTY, WORD_PROPERTY, WORD_RATIO_PROPERTY, NAME_PROPERTY,
+  MARK_PROPERTY, MARK_RATIO_PROPERTY, WORD_PROPERTY, WORD_RATIO_PROPERTY, NAME_PROPERTY,
   ACCENT_PROPERTY, ACCENT_INK_PROPERTY, CANVAS_LIGHT_PROPERTY, CANVAS_DARK_PROPERTY, TEXT_LIGHT_PROPERTY, TEXT_DARK_PROPERTY, CODE_LIGHT_PROPERTY, CODE_DARK_PROPERTY, LINK_LIGHT_PROPERTY, LINK_DARK_PROPERTY,
   SIDEBAR_LIGHT_PROPERTY, SIDEBAR_DARK_PROPERTY, BUBBLE_LIGHT_PROPERTY, BUBBLE_DARK_PROPERTY, LOGO_INK_PROPERTY,
 ]

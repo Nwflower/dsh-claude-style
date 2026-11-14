@@ -56,11 +56,12 @@ function cut(brand: string, mode: BrandingAppearance): BrandImages {
   holder.append(svg)
   document.body.append(holder)
   try {
-    const mark = svg.querySelector<SVGGraphicsElement>(MARK_LAYER[mode])
+    const mark = svg.querySelector<SVGGraphicsElement>(MARK_LAYER[mode]) ?? svg.querySelector<SVGGraphicsElement>('.dsh-combine-mark-mono') ?? svg.querySelector<SVGGraphicsElement>('.dsh-combine-mark-color')
     const word = svg.querySelector<SVGGraphicsElement>('.dsh-combine-text')
-    if (mark === null || word === null) throw new Error(`dsh-claude-style: the vendor lockup "${brand}" has no separate mark and word layers`)
+    if (word === null) throw new Error(`dsh-claude-style: the vendor lockup "${brand}" has no word layer`)
     const defs = [...svg.querySelectorAll('defs')].map(node => new XMLSerializer().serializeToString(node)).join('')
-    const images: BrandImages = { mark: layerImage(defs, mark, CANVAS_INK[mode]), wordmark: layerImage(defs, word, CANVAS_INK[mode]), problems: {} }
+    // A lockup drawn as a wordmark alone carries no mark layer, and its set shows no mark.
+    const images: BrandImages = { mark: mark === null ? null : layerImage(defs, mark, CANVAS_INK[mode]), wordmark: layerImage(defs, word, CANVAS_INK[mode]), problems: {} }
     split.set(key, images)
     return images
   } finally {

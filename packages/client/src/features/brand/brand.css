@@ -23,10 +23,21 @@ body[data-dsh-claude-style][data-dsh-claude-custom-mark] [data-dsh-claude-part~=
   mask: none;
 }
 
+/* The mark stands as tall as the wordmark's cap and takes the width its own
+   proportions give it, the pair a wordmark already follows: a mark drawn
+   wider than it is tall keeps its drawing instead of shrinking inside a
+   square, so the sidebar's lockup carries the proportions of the art. */
 body[data-dsh-claude-style][data-dsh-claude-custom-mark] :is([data-dsh-claude-part~="brand-mark"], [data-dsh-claude-part~="rail-mark"])::before {
   display: block;
-  width: 18px;
+  width: calc(18px * var(--dsh-claude-custom-mark-ratio, 1));
+  max-width: 100%;
   height: 18px;
+}
+
+/* A set that carries no mark of its own leaves the seat out altogether, so its
+   wordmark stands where the brand's art would. */
+body[data-dsh-claude-style][data-dsh-claude-custom-mark-none] :is([data-dsh-claude-part~="brand-mark"], [data-dsh-claude-part~="rail-mark"], [data-dsh-claude-part~="hero-mark"]) {
+  display: none;
 }
 
 /* ---------- Custom brand: sidebar wordmark ---------- */
@@ -80,7 +91,8 @@ body[data-dsh-claude-style][data-dsh-claude-custom-mark] [data-dsh-claude-part~=
 }
 
 body[data-dsh-claude-style][data-dsh-claude-custom-mark] [data-dsh-claude-part~="hero-mark"]::before {
-  width: 42.5px;
+  width: calc(42.5px * var(--dsh-claude-custom-mark-ratio, 1));
+  max-width: 100%;
   height: 42.5px;
 }
 

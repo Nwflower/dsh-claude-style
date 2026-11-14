@@ -41,7 +41,7 @@ const ID = /^[a-z0-9][a-z0-9-]*$/
  * id under VENDOR_PREFIX; it needs no record to be selected, and a record with
  * its id carries only the reader's ink for it.
  */
-export const BRANDING_VENDORS = ['openai', 'gemini', 'qwen', 'kimi', 'zcode', 'minimax', 'grok', 'xiaomimimo'] as const
+export const BRANDING_VENDORS = ['openai', 'gemini', 'qwen', 'kimicode', 'zcode', 'minimax', 'grok', 'xiaomimimo'] as const
 const VENDOR_PREFIX = 'vendor-'
 
 /** The built-in presets' ids, in the order the manager lists them. */

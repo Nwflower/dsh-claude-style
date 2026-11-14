@@ -26,9 +26,11 @@ export const REPOSITORY_URL = 'https://github.com/Nwflower/dsh-claude-style'
 /** The document attribute the stylesheet switches on. */
 export const BRAND_ATTR = 'data-dsh-claude-brand'
 
-/** The custom brand layer over either brand (D30, features/brand/brand.ts): each part stands only while the reader supplied it — CUSTOM_MARK_ATTR for a mark image, CUSTOM_WORD_ATTR as `image` or `text`, CUSTOM_TINT_ATTR while the images take an ink (`accent` or `text`, in --dsh-claude-logo-ink), CUSTOM_PALETTE_ATTR for the reader's four colours.
+/** The custom brand layer over either brand (D30, features/brand/brand.ts): each part stands only while the reader supplied it — CUSTOM_MARK_ATTR for a mark image, CUSTOM_WORD_ATTR as `image` or `text`, CUSTOM_TINT_ATTR while the images take an ink (`accent` or `text`, in --dsh-claude-logo-ink), CUSTOM_PALETTE_ATTR for the reader's four colours. CUSTOM_MARK_NONE_ATTR marks the selected set that carries no mark of its own, whose seat stands empty rather than showing the brand's art.
  * BRAND_INK_ATTR carries that `accent`/`text` choice while it repaints the brand art; the images, the name and the colours ride <body> as custom properties. */
 export const CUSTOM_MARK_ATTR = 'data-dsh-claude-custom-mark'
+/** The set paints no mark: the sidebar, rail and hero seats give way to its wordmark alone. */
+export const CUSTOM_MARK_NONE_ATTR = 'data-dsh-claude-custom-mark-none'
 export const CUSTOM_WORD_ATTR = 'data-dsh-claude-custom-word'
 export const CUSTOM_WORD_IMAGE = 'image'
 export const CUSTOM_WORD_TEXT = 'text'

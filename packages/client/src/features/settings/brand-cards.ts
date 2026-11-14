@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { brandingVendorOf } from '@dsh-claude-style/contracts/branding-presets'
 import { brandingInkOf } from '../../shared/branding-presets'
 import { brandingLabel, SeatArt, useBrandImages, usePageAppearance, WordArt } from './brand-art'
 import { openBrandManager } from './brand-manager'
@@ -41,6 +42,8 @@ function BrandCard(props: { prefs: Prefs }) {
   const mode = usePageAppearance()
   const images = useBrandImages(prefs, id, mode)
   const ink = brandingInkOf(prefs, id)
+  // A built-in set draws the art its lockup carries; only the reader's own set falls back to the brand's art.
+  const absent = brandingVendorOf(id) === undefined ? 'brand' : 'none'
   const label = brandingLabel(prefs, id)
   const edit = () => openBrandManager({ edit: id })
   const editLabel = `${copy('paletteEdit')} ${label}`
@@ -67,7 +70,7 @@ function BrandCard(props: { prefs: Prefs }) {
       React.createElement(
         'span',
         { className: 'dsh-claude-brand-card-art' },
-        React.createElement(CardSeat, { label: editLabel, edit, art: React.createElement(SeatArt, { kind: 'mark', image: images.mark, prefs, ink }) }),
+        React.createElement(CardSeat, { label: editLabel, edit, art: React.createElement(SeatArt, { kind: 'mark', image: images.mark, prefs, ink, absent }) }),
         React.createElement(CardSeat, { label: editLabel, edit, art: React.createElement(WordArt, { images, prefs, ink }) }),
       ),
       React.createElement('span', { className: 'dsh-claude-palette-card-name' }, label),

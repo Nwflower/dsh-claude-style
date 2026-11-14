@@ -94,9 +94,11 @@ export function useBrandImages(prefs: Prefs, id: string, mode: BrandingAppearanc
  * own colours is a picture too, and wears the set's ink once that names one.
  * The ink is written on the art itself, since the page's ink is the selected
  * set's and the art may draw another; the art's own ink is the brand's token
- * that no selection overrides.
+ * that no selection overrides. A set that carries no mark of its own (`absent`
+ * 'none') draws nothing in that seat: the brand's art is not its stand-in.
  */
-export function SeatArt(props: { kind: 'mark' | 'word', image: BrandImage | null, prefs: Prefs, ink: BrandInk }) {
+export function SeatArt(props: { kind: 'mark' | 'word', image: BrandImage | null, prefs: Prefs, ink: BrandInk, absent?: 'brand' | 'none' }) {
+  if (props.image === null && props.absent === 'none') return null
   const art = BRAND_ART[props.prefs.brand === BRAND_CLAUDE ? 'claude' : 'deepseek']
   const own = props.image
   const image = own === null ? (props.kind === 'mark' ? art.mark : art.word) : `url("${own.url}")`

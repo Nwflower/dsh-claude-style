@@ -56,11 +56,16 @@ export function createSlidingPill(activeSelector: string) {
       reading = null
       return
     }
+    // A transform on an ancestor — a panel arriving at its scale — scales both
+    // rects while the styles under it keep their layout: the ratio between the
+    // control's rect and its own layout width takes that scale back out, so a
+    // pill read during the arrival still lands on the item's box.
+    const scale = next.offsetWidth === 0 ? 1 : box.width / next.offsetWidth
     reading = {
-      x: Math.round((itemBox.left - box.left - next.clientLeft) * 100) / 100,
-      y: Math.round((itemBox.top - box.top - next.clientTop) * 100) / 100,
-      w: Math.round(itemBox.width * 100) / 100,
-      h: Math.round(itemBox.height * 100) / 100,
+      x: Math.round(((itemBox.left - box.left) / scale - next.clientLeft) * 100) / 100,
+      y: Math.round(((itemBox.top - box.top) / scale - next.clientTop) * 100) / 100,
+      w: Math.round(itemBox.width / scale * 100) / 100,
+      h: Math.round(itemBox.height / scale * 100) / 100,
     }
   }
 
