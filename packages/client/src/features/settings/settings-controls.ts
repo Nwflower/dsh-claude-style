@@ -277,6 +277,10 @@ export function managedDesc(text: string, managed: boolean): React.ReactNode {
 /**
  * A row's description, with `note` added below in the accent colour, so a row
  * that refuses input says why where the eye already is.
+ *
+ * The description states the row's reach and nothing else; a note carries the
+ * one thing the reader has to do about it (D98). The strings come from the
+ * feature's copy file, where the same rule holds.
  */
 export function noteDesc(text: string, note: string | null): React.ReactNode {
   if (note === null) return text

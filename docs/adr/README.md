@@ -35,6 +35,7 @@
 | [D94](D94-session-overview-details-rail.md) | 会话总览是对话右侧的详情栏，数据由宿主半边折叠 |  |
 | [D95](D95-stream-slide-counter-pins.md) | 流式输出的跟随由宿主写位置，皮肤只画位移并抵消吸附元素的跳动 | D85、D71 |
 | [D96](D96-palette-schemes.md) | 品牌与配色方案：预设可编辑，读者可自建多套 | D30、D50、D64 |
+| [D98](D98-settings-copy-scope-only.md) | 设置文案只写影响范围 |  |
 
 ## 作废的编号
 

@@ -4,8 +4,8 @@
     "en": "Details"
   },
   "sessionPanelDesc": {
-    "zh": "在对话右侧显示会话详情，列出工作目录、上下文占用、产出、变更请求、进程、子智能体与团队。",
-    "en": "Shows session details beside the conversation: working directory, context occupancy, outputs, change requests, processes, subagents and team."
+    "zh": "对话页右侧；窗口足够宽时出现。",
+    "en": "The right of a conversation, once the window is wide enough."
   },
   "environment": {
     "zh": "环境",
