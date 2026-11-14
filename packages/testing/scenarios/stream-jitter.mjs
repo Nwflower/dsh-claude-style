@@ -27,7 +27,7 @@ const JITTER_PX = bound('streamJitterMovePx')
  * The slide's own duration (theme/tokens.json): a pair of frames this far apart
  * cannot witness the slide, since it has finished before the second paint.
  */
-const SLIDE_MS = Number.parseFloat(tokens.motion.find((entry) => entry.token === '--dsh-claude-duration-slide').value)
+const SLIDE_MS = Number.parseFloat(tokens.motion.find((entry) => entry.token.endsWith('-duration-slide')).value)
 /** The growth the sampled answer has to show, in pixels: a viewport's worth and then some. */
 const GROWTH_PX = bound('streamJitterGrowthPx')
 /** The composer and its bottom lines may move only by the scrollbar's own rounding. */
