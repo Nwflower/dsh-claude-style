@@ -1,36 +1,51 @@
-# Contributing
+# 贡献指南
 
-Thanks for helping improve `dsh-claude-style`!
+感谢你帮助改进 `dsh-claude-style`！
 
-## Report an issue
+## 修复问题
 
-Open an issue with:
+本插件面向使用编程 Agent的用户。因此，我们非常推荐使用PR而非issue提出改进。遇到缺陷、性能问题或需要改进的交互体验时，请让 Agent 复现并定位问题，然后提交包含修复的 PR。这些改进优先通过 PR 贡献。
 
-- Which theme (light / dark) and viewport you saw it in
-- A screenshot (this project is visual — a screenshot beats 100 words)
-- The DSH version (`dsh --version`) and install source (npm / GitHub)
-- The skin's build id: run `document.body.getAttribute('data-dsh-claude-style')` in the page's developer console
+PR 应说明问题症状、定位到的原因和修改如何解决，并列出运行过的检查及其结果。性能改进附相同场景下修改前后的测量数据；测量方法见[性能排查](docs/DEBUGGING.md)。
 
-## Suggest a change
+如果暂时无法完成修复，请让 Agent 调查问题后提交 issue。调查结论应包括：
 
-A fix is welcome as a pull request on its own: describe the symptom, the cause and, when the look of the page changes, attach a before-and-after screenshot.
+- 复现步骤、预期行为和实际行为。
+- 问题出现时的主题（亮色 / 暗色）和视口大小。
+- DSH 版本、安装来源和皮肤的构建编号；构建编号的读取方法见[临时实例](docs/DEBUGGING.md#临时实例)。
+- 已定位的原因，或现有证据最支持的推断，以及相关源文件、日志和跟踪记录。
+- 尝试过的修复或实验及其结果；性能问题附测量数据或性能跟踪记录。
+- 已有的修改方案、预期产生的行为和发现的取舍。
 
-Any other change — a new feature, a new setting, a reworked layout — starts as an issue with the rationale and waits for an answer before the code is written.
+不需要附截图或录屏。
 
-This theme aims to faithfully replicate the Claude Code Desktop experience; changes should align with the [design tokens](docs/STYLE.md).
+## 讨论较大改动
 
-## Describe the change
+新功能、新设置或布局重构先提交说明理由的 issue，得到答复后再开始编写代码。目标明确且范围局部的交互体验改进可以直接提交 PR。
 
-- A change is described once, in its own file under `docs/changes/`; the CHANGELOG's version sections are written from those files at release time. A pending change is never edited into `docs/CHANGELOG.md` by hand.
-- Both READMEs describe the plugin as it ships: a pull request leaves both untouched, or changes both in the same pull request, and only to re-shoot a stale screenshot or to correct the install instructions; an explanation of a feature belongs in `docs/changes/`, where the release notes read it.
+## 开始修改
 
-## Code changes
+开发依赖、构建、真实页面验证和测试入口见 [AGENTS.md 的命令表](AGENTS.md#commands) 与[性能排查](docs/DEBUGGING.md)；测试范围和云端判定见[测试分层](docs/adr/D92-testing-evidence-and-selection.md)。代码结构、跨模块约束、外观规则和方向决策分别见[架构](docs/ARCHITECTURE.md)、[设计令牌](docs/STYLE.md)和[架构决策索引](docs/adr/README.md)。提交格式见 [Git 与发布约定](AGENTS.md#git-and-release)。
 
-- Small edits and one-off investigations can use the independent temporary-file commands; tasks that need continuity use a work order. The criteria and commands are in [AGENTS.md](AGENTS.md#work-orders-and-temporary-files).
-- Continuous integration is described where it is defined: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) says what each lane reads and which events run it, and [AGENTS.md](AGENTS.md#change-workflow) states the workflow the repository follows. A pull request, a merge-queue entry and a manual run walk the whole matrix; a push to master runs the checks, the build and the spec lane, and a separate observation workflow runs the stand-in page's quick tier and every behaviour spec without joining the branch rule. Open the pull request as a draft once the change has a shape: its run is how the cloud judges the branch, and it answers while the code is still being written. Locally, start only the narrowest run that answers the question in hand, in the background, and compare the tree hash it prints with the tree you have: `node scripts/checks/verify.mjs --help` names every selector and what it walks.
-- `lib/` is generated — never edit it by hand. Change `packages/client/src/` (or the host half in `packages/host/src/`), run `npm install` once for the dev dependencies, then `npm run build`: it type-checks the TypeScript sources, bundles them with esbuild and checks the result.
-- Code submitted to the Sodium rendering engine (`packages/client/src/features/sodium/`, `packages/engine/src/sheet-rewrite.ts`) is licensed under the PolyForm Shield License 1.0.0; the rest of the repository stays MIT.
-- A feature's code and stylesheets live together under `packages/client/src/features/<feature>/`; parts several features share are in `packages/client/src/shared/`. The shape of the tree and the constraints that cross it are in [ARCHITECTURE.md](docs/ARCHITECTURE.md); the reasoning behind a direction is in [docs/adr/](docs/adr/README.md); the rules the build enforces and the working rules are in [AGENTS.md](AGENTS.md).
-- Scope every CSS rule under `body[data-dsh-claude-style]`, with dark tokens as the base and light overrides under `:not([data-ds-dark-theme])`.
-- `npm run stand-in` checks the built bundle without a running DSH: the host half's private-route fence, installation and teardown invariants, and the behaviour specs a reader can observe on the stand-in host page.
-- `node packages/testing/probe.mjs --token <launch-token>` re-checks the composer invariants against a running `dsh web` GUI.
+改动初具形态后创建草稿 PR，CI 会运行完整矩阵；具体通道见 [CI 工作流](.github/workflows/ci.yml)。
+
+提交到 Sodium 渲染引擎（`packages/client/src/features/sodium/`、`packages/engine/src/sheet-rewrite.ts`）的代码采用 PolyForm Shield License 1.0.0 授权；仓库其余部分仍采用 MIT 授权。
+
+## 描述改动
+
+读者能够观察到的行为改动，在 `docs/changes/` 下新增一个 `<slug>.json`：
+
+```json
+{
+  "at": "2026-11-14",
+  "group": "fixes",
+  "order": 0,
+  "external": true,
+  "zh": "修复……",
+  "en": "Fix ..."
+}
+```
+
+`group` 可取 `new`、`improvements`、`fixes`、`security`、`removals` 或 `chores`；`order` 是从 0 开始的整数。`zh` 和 `en` 各写一行，行内不写冒号。`external` 在外部贡献时为 `true`，维护者提交时为 `false`。格式由 `npm run changelog:check` 校验，完整字段定义见[变更记录校验脚本](scripts/release/changelog.mjs)。
+
+待发布的改动不要手动写入 `docs/CHANGELOG.md`。两份 README 的修改规则见[改动流程](AGENTS.md#change-workflow)；功能说明写入 `docs/changes/`，由发布说明读取。

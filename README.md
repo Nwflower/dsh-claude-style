@@ -93,7 +93,7 @@ dsh plugin --profile web add Nwflower/dsh-claude-style#dist      # GitHub 发布
 | [设计令牌](docs/STYLE.md) | 配色、字体、形状、动效与层级 |
 | [架构决策](docs/adr/README.md) | 每条方向一页：背景、决定、后果与重审条件 |
 | [更新日志](docs/CHANGELOG.md) | 版本历史 |
-| [贡献指南](CONTRIBUTING.md) | 构建、提交规范与回归工具 |
+| [贡献指南](CONTRIBUTING.md) | 修复优先的贡献流程与变更记录格式 |
 
 ## 许可
 
