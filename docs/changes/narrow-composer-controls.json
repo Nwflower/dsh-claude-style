@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-14",
+  "group": "fixes",
+  "order": 0,
+  "external": false,
+  "zh": "窄屏输入栏的固定控件（思考深度、语音、发送、计量环）不再被压扁重叠，模型名与权限文字先缩短，模型版本标签在所有布局里保持可见，首页页宽不足时右侧控件整组换行并保持靠右，会话宽窄布局都保持单行",
+  "en": "Narrow composer bars no longer squeeze their fixed controls (effort, voice, send, meter ring) into each other, the model name and permission text shorten first, the release tag stays visible in every layout, the new-conversation card wraps its right-hand cluster to a second right-aligned line when the page is too narrow, and the conversation row stays on one line in both layouts"
+}

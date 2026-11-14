@@ -118,6 +118,8 @@ export const INTERFACE_FONT_SIZE_VAR = '--dsh-claude-interface-font-scale'
  * A stylesheet reads these where it would write a width media query, which reads the window unzoomed, so a zoomed page would keep its wide layout in a narrow page. */
 export const PAGE_UNDER_1000_ATTR = 'data-dsh-claude-page-under-1000'
 export const PAGE_UNDER_768_ATTR = 'data-dsh-claude-page-under-768'
+export const PAGE_UNDER_600_ATTR = 'data-dsh-claude-page-under-600'
+export const PAGE_RESIZING_ATTR = 'data-dsh-claude-page-resizing'
 export const PAGE_UNDER_480_ATTR = 'data-dsh-claude-page-under-480'
 
 /** The background fill's opacity as a percentage, present only below 100 (shared/background-opacity.ts): the canvas fills read the property `projectBackgroundOpacity` writes through color-mix.

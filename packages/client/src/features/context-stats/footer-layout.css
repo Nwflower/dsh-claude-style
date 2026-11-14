@@ -8,6 +8,14 @@ body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] [data-dsh-c
 body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] [data-dsh-claude-footer-line] {
   flex: none;
   white-space: nowrap;
+  flex-wrap: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+}
+/* The figures read as one group; a narrow dock shortens the line, never
+   splits the ring from its numbers onto separate rows. */
+body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] [data-dsh-claude-footer-line] > * {
+  flex-shrink: 0;
 }
 /* The host's row holds figures that keep a line under the toolbar. While they
    ride the toolbar as an overlay — and while a session holds no figures yet —

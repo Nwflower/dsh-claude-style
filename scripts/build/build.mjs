@@ -71,6 +71,7 @@ const THEME_SHEETS = [
   { file: 'theme/hero.css', rank: 70 },
   { file: 'theme/sidebar.css', rank: 110 },
   { file: 'theme/third-party.css', rank: 300 },
+  { file: 'shared/page-scale.css', rank: 390 },
   // Last: the page on a wallpaper restates what the features paint on the shell
   { file: 'theme/wallpaper.css', rank: 400 },
 ]

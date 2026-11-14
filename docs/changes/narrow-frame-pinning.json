@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-14",
+  "group": "fixes",
+  "order": 1,
+  "external": false,
+  "zh": "窄屏帧网格按宿主常量兜底，页宽标记固定 drawer 0、rail 56、展开 280，resize 属性滞后的一帧额外固定 rail，会话区不再塌成右侧窄条或闪现半白帧",
+  "en": "Narrow frame grids fall back to the host's own constants, page-width marks pin drawer 0, rail 56 and expanded 280, the resizing mark pins the rail for the frame where attributes lag the viewport, and the conversation no longer collapses into a right strip or flashes a half-white frame"
+}
