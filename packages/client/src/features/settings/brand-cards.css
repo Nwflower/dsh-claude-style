@@ -4,9 +4,10 @@
    colour cards' frame (settings-brand.css, palette-schemes.css); the art inside
    is the lockup's own (settings-brand-lockup.css) at a smaller cap height. */
 
-/* The one card is as wide as a vendor's word at the card's cap needs. */
+/* The one card takes the row's whole width; the lockup and the name sit in the
+   middle of its frame. */
 body[data-dsh-claude-style] .dsh-claude-brand-cards {
-  grid-template-columns: minmax(150px, 220px);
+  grid-template-columns: minmax(0, 1fr);
 }
 
 /* A brand card holds its lockup and its name in the middle of its frame. */
