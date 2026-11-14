@@ -322,7 +322,10 @@ async function runScenario(name, options) {
   const step = (label) => say(`  · ${label}\n`)
   let session
   let expired = false
-  const timer = setTimeout(() => { expired = true }, SCENARIO_DEADLINE_MS)
+  // A scenario whose walk is heavier than the rest says so; every other keeps
+  // the lane's own deadline.
+  const deadline = scenario.deadlineMs ?? SCENARIO_DEADLINE_MS
+  const timer = setTimeout(() => { expired = true }, deadline)
   try {
     // `args` are launch switches, and the walk's shared browser was started
     // without them: a scenario that carries any starts a browser of its own,
@@ -365,7 +368,7 @@ async function runScenario(name, options) {
       for (const item of checks) say(`  ${item.ok ? '✓' : item.observation === true ? '△' : '✗'} ${item.name}${item.detail === '' ? '' : `  — ${item.detail}`}\n`)
       const failed = checks.filter((item) => !item.ok && item.observation !== true).length
       const observed = checks.filter((item) => !item.ok && item.observation === true)
-      if (expired) throw new Error(`scenario "${name}" overran its ${SCENARIO_DEADLINE_MS / 1000} s deadline`)
+      if (expired) throw new Error(`scenario "${name}" overran its ${deadline / 1000} s deadline`)
       return { scenario: name, checks, failed, observed, frameMs: await measureFrameMs(page), requested: mock.requests.length, trace: context.trace, notes: context.notes }
     })()
     return await body
@@ -374,7 +377,7 @@ async function runScenario(name, options) {
     if (expired) {
       // The hung step is still holding the page; the run stops here with the
       // evidence written above instead of waiting on the runner's own limit.
-      say(`  scenario "${name}" passed its ${SCENARIO_DEADLINE_MS / 1000} s deadline; stopping the run\n`)
+      say(`  scenario "${name}" passed its ${deadline / 1000} s deadline; stopping the run\n`)
       flush()
       host.stop()
       await mock.stop().catch(() => {})

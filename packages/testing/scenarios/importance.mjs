@@ -187,6 +187,14 @@ function importanceScenario(lane) {
         await card.locator('.dsh-claude-billing-close').click({ force: true })
         await page.waitForTimeout(300)
       }
+      // The colour cards' pencil opens the scheme editor over the tab strip,
+      // the same way: the state above is audited with it up, and it is closed
+      // here so the next control is reachable.
+      const scheme = page.locator('.dsh-claude-scheme-modal')
+      if (await scheme.count() > 0) {
+        await page.keyboard.press('Escape')
+        await page.waitForTimeout(300)
+      }
     }
   }
 

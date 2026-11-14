@@ -601,7 +601,7 @@ const SCENARIOS = {
   /** What a frame costs in a transcript that is already long (long-session.mjs, D40). */
   longSession: { ...longSessionScenario({ check }), frames: true },
   /** Every `!important` the skin writes is needed on the real page (packages/testing/scenarios/importance.mjs, D9). */
-  importance: importanceScenario({ check, observe, sendPrompt, waitForTurn, host: HOST }),
+  importance: { ...importanceScenario({ check, observe, sendPrompt, waitForTurn, host: HOST }), deadlineMs: 5 * 60 * 1000 },
   /** A page under a non-loopback name reads and writes the host's settings beside the loopback one (packages/testing/scenarios/remote-settings.mjs, D75). */
   remoteSettings: remoteSettingsScenario({ check }),
   /** Slow IME composition and cancellation in the real host's username field. */
