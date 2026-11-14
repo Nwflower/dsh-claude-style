@@ -7,7 +7,7 @@
  * request for the host half alone needs neither a server nor a browser.
  */
 import { availableParallelism } from 'os'
-import { setTier, tierName, TIMING_CASES, FEATURE_CASES, pagesFor, failures } from './smoke/shared.mjs'
+import { setTier, tierName, TIMING_CASES, FEATURE_CASES, pagesFor, failures, retractFailures } from './smoke/shared.mjs'
 import { hostHalf } from './smoke/host-half.mjs'
 import { CASES } from './smoke/cases.mjs'
 import { mapAtOnce } from './at-once.mjs'
@@ -142,7 +142,7 @@ async function drivePages(planned, jobs, browser, base) {
   for (const { page: pageName, cases: pageCases } of pages) {
     if (pageCases.length > 1) console.log(`\nbrowser half — page ${pageName} — ${pageCases.join(', ')}`)
     const report = reports.get(pageName)
-    const before = failures.length
+    const before = failures()
     for (const name of pageCases) {
       console.log(`\nbrowser half — ${name}`)
       CASES[name](report)
@@ -150,11 +150,11 @@ async function drivePages(planned, jobs, browser, base) {
     // A page load can lose to a neighbour or a slow first frame: a page that
     // failed beside the others is judged again on its own, as the behaviour
     // lane does for its timing specs.
-    if (failures.length > before) retry.push({ pageName, pageCases, before })
+    if (failures() > before) retry.push({ pageName, pageCases, before })
   }
   for (const { pageName, pageCases, before } of retry) {
     console.log(`\nbrowser half — page ${pageName} failed beside the others; re-judging it alone`)
-    failures.length = before
+    retractFailures(failures() - before)
     const fresh = await runPage(browser, base, pageName)
     for (const name of pageCases) {
       console.log(`\nbrowser half — ${name}`)

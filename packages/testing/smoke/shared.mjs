@@ -97,7 +97,12 @@ function check(label, ok, detail, kind) {
 const failures = () => failed
 const skips = () => skipped
 
+/** Take back the failures a re-judged page's first run recorded. */
+function retractFailures(count) {
+    failed = Math.max(0, failed - count)
+}
+
 export {
     ROOT, CLIENT, HOST, MARKUP, PNG_1PX, SKIN_FIXTURE, SKIN_FACE, SKIN_HAT, SKIN_CASES,
-    sleep, same, check, failures, skips, setTier, tierName, TIMING_CASES, FEATURE_CASES, DEFERRED_FEATURES, SHIPPED_PREFS, deferredWanted, PAGES, pagesFor,
+    sleep, same, check, failures, retractFailures, skips, setTier, tierName, TIMING_CASES, FEATURE_CASES, DEFERRED_FEATURES, SHIPPED_PREFS, deferredWanted, PAGES, pagesFor,
 }

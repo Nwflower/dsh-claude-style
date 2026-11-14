@@ -99,6 +99,11 @@
   function pillState(control, item) {
     var box = control.getBoundingClientRect()
     var itemBox = item.getBoundingClientRect()
+    // A transform on an ancestor scales both rects while the styles under it keep
+    // their layout (shared/sliding-pill.ts, shared/page-zoom.ts): the control's
+    // rect over its layout width takes that scale back out, so the item is read in
+    // the pixels the written placement is in.
+    var scale = control.offsetWidth === 0 ? 1 : box.width / control.offsetWidth
     var slides = control.getAnimations({ subtree: true }).filter(function (a) {
       return a.effect && a.effect.pseudoElement === '::before'
     })
@@ -107,8 +112,8 @@
       content: getComputedStyle(control, '::before').content,
       x: parseFloat(control.style.getPropertyValue('--dsh-claude-pill-x')),
       w: parseFloat(control.style.getPropertyValue('--dsh-claude-pill-w')),
-      itemX: itemBox.left - box.left - control.clientLeft,
-      itemW: itemBox.width,
+      itemX: (itemBox.left - box.left) / scale - control.clientLeft,
+      itemW: itemBox.width / scale,
       itemFill: getComputedStyle(item).backgroundColor,
       slides: slides.map(function (a) { return a.transitionProperty }),
     }
