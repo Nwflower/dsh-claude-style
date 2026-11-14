@@ -183,6 +183,20 @@
     // Every part is injected as one script, so yielding once lets that script
     // finish registering its steps before the first one runs.
     await Promise.resolve()
+    // A webfont that lands after the first paint resizes the items a control's
+    // pill follows (shared/sliding-pill.ts), and the pill moves there with its
+    // transition: the page is read once the fonts and the finite transitions
+    // they started have settled.
+    await document.fonts.ready
+    var settleBy = performance.now() + 2000
+    while (performance.now() < settleBy) {
+      var running = document.getAnimations().filter(function (animation) {
+        if (animation.playState !== 'running' || animation.effect === null) return false
+        return isFinite(animation.effect.getComputedTiming().endTime)
+      })
+      if (running.length === 0) break
+      await new Promise(function (resolve) { setTimeout(resolve, 50) })
+    }
     for (var i = 0; i < probe.steps.length; i++) await probe.steps[i]()
     return probe.report
   })()
