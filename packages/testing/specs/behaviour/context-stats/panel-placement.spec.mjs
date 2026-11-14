@@ -38,9 +38,10 @@ async function watchPanel(t) {
       frames.push({
         at: Math.round(performance.now() - started),
         painted: panel !== null && getComputedStyle(panel).visibility === 'visible',
-        // The surface's entrance lifts it into place from a few pixels below (shared/motion.css):
-        // the frames it is still arriving in are held to the corner alone.
-        entering: panel !== null && panel.getAnimations().some((animation) => animation instanceof CSSAnimation && animation.animationName === 'dsh-claude-surface-in' && animation.playState === 'running'),
+        // The surface's entrance lifts it into place from a few pixels below
+        // (shared/motion.css): the frames it is still arriving in are held to the
+        // corner alone. The panel runs no other animation of its own.
+        entering: panel !== null && panel.getAnimations().some((animation) => animation.playState === 'running'),
         left: box === null ? null : Math.round(box.left),
         top: box === null ? null : Math.round(box.top),
         bottom: box === null ? null : Math.round(box.bottom),
