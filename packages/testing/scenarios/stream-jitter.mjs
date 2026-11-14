@@ -61,6 +61,27 @@ function boxDrift(frames, key) {
   return Math.max(...edges.map((values) => Math.max(...values) - Math.min(...values)))
 }
 
+/**
+ * How far a box moves between two frames the figures' line stood in the same
+ * place on. The dock carrying the figures mounts with the session's first
+ * reading, and the host's own floor for it replaces the composer stack's foot in
+ * that one layout: the figures' arrival is not the answer's growth, so that
+ * frame is left out here and the line's own stillness is judged on its own
+ * below.
+ */
+function steadyDrift(frames, key) {
+  let biggest = null
+  for (let at = 1; at < frames.length; at += 1) {
+    if ((frames[at].statsMode ?? null) !== (frames[at - 1].statsMode ?? null)) continue
+    const before = frames[at - 1][key]
+    const after = frames[at][key]
+    if (before === null || after === null) continue
+    const moves = Array.isArray(before) ? before.map((value, index) => Math.abs(after[index] - value)) : [Math.abs(after - before)]
+    biggest = Math.max(biggest ?? 0, ...moves)
+  }
+  return biggest
+}
+
 function streamJitterScenario({ check }, statsPosition = 'context') {
   return {
     script: 'paced',
@@ -84,11 +105,11 @@ function streamJitterScenario({ check }, statsPosition = 'context') {
       const worst = walked.reduce((high, move) => Math.max(high, move.by), -Infinity)
       const grew = frames.length < 2 ? 0 : frames[frames.length - 1].height - frames[0].height
       const rising = walked.filter((move) => move.by < 0)
-      const cardDrift = boxDrift(frames, 'card')
-      const seatDrift = boxDrift(frames, 'seat')
-      // The footer's reading arrives with the settled turn, after the arrival
-      // this scenario is about: it is read over every followed frame, where it
-      // stands, so the line's own stillness is still what the check decides.
+      const cardDrift = steadyDrift(frames, 'card')
+      const seatDrift = steadyDrift(frames, 'seat')
+      // The line's own place is read over every followed frame where it stands:
+      // the first reading may seat the dock, but the line itself stays put
+      // through the whole arrival.
       const statsDrift = boxDrift(trace.filter((frame) => typeof frame.top === 'number' && frame.top > 0 && frame.following === true), 'stats')
       return [
         check('逐帧采样真的在跑', trace.length > 60 && frames.length > 40, `${trace.length} frames, ${frames.length} scrolled while following`),
