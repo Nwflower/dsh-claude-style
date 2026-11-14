@@ -442,7 +442,10 @@ export function buildStylesheet({ sheets, srcDir, sources, tokenDoc, gates, imag
   checkTokensRead(tokenDoc, readers, sources)
   const main = minifyCss(joined(false))
   checkImportance(main, srcDir)
-  return { main: sheetTemplate(bucketSheet(main), PART_ATTRIBUTE), surface: sheetTemplate(bucketSheet(minifyCss(joined(true))), PART_ATTRIBUTE) }
+  // `authored` is the sheet as the sources write it and as the importance
+  // record reads it (D9): the runtime sheet finishes it with host class names
+  // (D101), so the audit needs this text rather than the mounted one.
+  return { main: sheetTemplate(bucketSheet(main), PART_ATTRIBUTE), surface: sheetTemplate(bucketSheet(minifyCss(joined(true))), PART_ATTRIBUTE), authored: main }
 }
 
 /**
