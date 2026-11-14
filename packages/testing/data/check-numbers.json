@@ -153,7 +153,7 @@
       "预设管理没有错误行": [
         0
       ],
-      "控制台没有异常 (line 174)": [
+      "控制台没有异常 (line 189)": [
         0
       ]
     },
@@ -466,8 +466,18 @@
       "the context section arrives with the turn": [
         2
       ],
-      "the first frame states the occupancy and leaves only the breakdown to arrive": [
-        1
+      "the Reduced choice leaves the context bar's parts uncovered: the cover collapses and the parts keep the widths of the other choice": [
+        0
+      ],
+      "the first frame stands environment, context and both figures sections, the unread rows under placeholders": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "a folded section keeps the insets of an open one, so its heading stays put across the fold": [
+        0
       ],
       "the figures sections start folded with a reading and every other section starts open": [
         2
