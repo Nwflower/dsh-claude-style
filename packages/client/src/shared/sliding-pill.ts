@@ -119,6 +119,15 @@ export function createSlidingPill(activeSelector: string) {
           place(control, reading)
         }
       })
+      // A webfont that lands after this measurement widens the items without
+      // changing the control's own box, which the size observer watches: the
+      // items are read again once the page's fonts have settled.
+      void document.fonts.ready.then(() => {
+        if (control === null) return
+        measure(control)
+        taken = false
+        place(control, reading)
+      })
     }
     if (control === null) return
     place(control, reading)
