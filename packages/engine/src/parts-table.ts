@@ -33,6 +33,7 @@ export const SIDEBAR_PARTS: PartTable = {
   railMark: 'rail-mark',
   toggle: 'sidebar-toggle',
   panelIcon: 'panel-icon',
+  newSessionRow: 'new-session-row',
   newSession: 'new-session',
   newSessionLabelMask: 'new-session-mask',
   newSessionContent: 'new-session-content',
