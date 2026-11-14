@@ -3,6 +3,6 @@
   "group": "new",
   "order": 1,
   "external": true,
-  "zh": "品牌标志新增十二套内置的厂商标志预设，默认预设改为跟随主题，标志颜色成为每套预设自己的设置，以前上传的图片自动移进一套名为「当前图片」的预设",
-  "en": "Brand marks gain twelve built-in vendor presets, the default set follows the theme, the mark colour belongs to each set, and images uploaded earlier move into a set named Current images on their own"
+  "zh": "品牌标志新增八套内置的厂商标志预设，默认预设改为跟随主题，标志颜色成为每套预设自己的设置，以前上传的图片自动移进一套名为「当前图片」的预设",
+  "en": "Brand marks gain eight built-in vendor presets, the default set follows the theme, the mark colour belongs to each set, and images uploaded earlier move into a set named Current images on their own"
 }
