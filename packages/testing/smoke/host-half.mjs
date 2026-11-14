@@ -15,6 +15,7 @@ import { hostUsage } from './host-half-usage.mjs'
 import { hostSound } from './host-half-sound.mjs'
 import { hostPanel } from './host-half-panel.mjs'
 import { hostSearch, said } from './host-half-search.mjs'
+import { hostBrand } from './host-half-brand.mjs'
 
 // ---------------------------------------------------------------------------
 // Host half
@@ -250,6 +251,14 @@ async function hostHalf() {
     }
     const r = await request(host, USER, 'GET', '', browser)
     check('browser username read answered', r.status === 200 && JSON.parse(r.body).ok === true, `HTTP ${r.status}`)
+    if (fenced) {
+      const structured = { paletteSchemes: [{ id: 'company', name: 'Company', base: 'deepseek' }], brandingPresets: [{ id: 'company', name: 'Company' }] }
+      const accepted = mod.Config(structured)
+      const schemes = typeof accepted.paletteSchemes?.get === 'function' ? accepted.paletteSchemes.get() : accepted.paletteSchemes
+      const logos = typeof accepted.brandingPresets?.get === 'function' ? accepted.brandingPresets.get() : accepted.brandingPresets
+      check('the Config accepts structured scheme and logo records', JSON.stringify(schemes) === JSON.stringify(structured.paletteSchemes) && JSON.stringify(logos) === JSON.stringify(structured.brandingPresets), 'nested YAML records stay intact')
+      await hostBrand({ host, request, browser, home: scratchHome })
+    }
     await hostSound({ host, request, browser, crossSite })
 
     // The launcher's account contract. Its two layers are the only ones allowed

@@ -16,7 +16,7 @@ import { reportFeatureFailure } from '@dsh-claude-style/engine/scheduler'
 import { installScheduler } from './core/scheduler'
 import type { HandleName, Ui } from './core/scheduler'
 import { installPageVisibility } from './core/page-visibility'
-import { mountStylesheet, parkForeignSheets } from './core/stylesheet'
+import { adoptPartVocabulary, mountStylesheet, parkForeignSheets } from './core/stylesheet'
 import { peerPresent, subscribePeerPresence } from './shared/peer-plugin'
 import { pageOwner, subscribePageOwner } from './shared/visual-owner'
 import type { PageOwner } from './shared/visual-owner'
@@ -372,20 +372,14 @@ export function apply(ctx: HostContext) {
     // skin center offer this theme as a selectable look (D74).
     body.setAttribute(HANDOFF_ATTR, BUILD_ID)
     adoptPrefs(prefs)
-    // The sheet carries this package's own tags and is unmounted by
-    // release(); the features install onto a page that already wears it.
-    if (stopStylesheet === null) stopStylesheet = mountStylesheet()
-    // The faces the reader supplied are declared apart from the sheet, once the
-    // host half says which ones the drop point holds (shared/webfonts.ts).
-    if (stopWebfonts === null) stopWebfonts = installWebfonts()
-    // The page's visibility, mirrored for the sheet just mounted and for the
-    // clocks in script that stop with it (core/page-visibility.ts).
-    if (stopVisibility === null) stopVisibility = installPageVisibility()
-    // Before the features: every rule they and the theme's own sheets write
-    // reads the part names this pass puts on the host's elements (D3). A batch
-    // that moved a mark asks for one more pass, so a feature that measures what
-    // the marks style reads the settled numbers; the scheduler is installed
-    // below, so `schedule` is looked up when the batch runs.
+    // Before the sheet: the pass's first walk meets the host class names the
+    // page shows, and the sheet is finished with them when it is mounted (D101).
+    // Before the features: their own queries and the hold relations read the
+    // part names this pass puts on the host's elements (D3). A batch that moved
+    // a mark asks for one more pass, so a feature that measures what a hold mark
+    // styles reads the settled numbers; the scheduler is installed below, so
+    // `schedule` is looked up when the batch runs.
+    adoptPartVocabulary()
     if (stopParts === null) {
       stopParts = installParts({
     part: PART_ATTR,
@@ -395,6 +389,15 @@ export function apply(ctx: HostContext) {
         if (typeof ui.schedule === 'function') ui.schedule()
       })
     }
+    // The sheet carries this package's own tags and is unmounted by
+    // release(); the features install onto a page that already wears it.
+    if (stopStylesheet === null) stopStylesheet = mountStylesheet()
+    // The faces the reader supplied are declared apart from the sheet, once the
+    // host half says which ones the drop point holds (shared/webfonts.ts).
+    if (stopWebfonts === null) stopWebfonts = installWebfonts()
+    // The page's visibility, mirrored for the sheet just mounted and for the
+    // clocks in script that stop with it (core/page-visibility.ts).
+    if (stopVisibility === null) stopVisibility = installPageVisibility()
     // With the sheet: the page is drawn at the reader's own scale from here on,
     // and the host's floating cards are carried under it (engine/src/scaled-layer.ts).
     if (stopScale === null) stopScale = installPageScale()

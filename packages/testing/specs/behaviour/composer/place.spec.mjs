@@ -17,7 +17,9 @@
  * @features composer, question-card
  * @risk Once a conversation is showing, the composer stops following the window's bottom edge and stands in the middle of the transcript, with the rows running past it; a session switch paints the composer in the host's own look for a frame, and a question card is drawn in the host's own box instead of the skin's.
  */
+import { CONVERSATION_PARTS } from '@dsh-claude-style/engine/parts-table'
 import { spec, host, surface } from '../../fixtures/behaviour.mjs'
+import { partClass } from '../../fixtures/parts.mjs'
 import { mountQuestion, unmountQuestion } from '../../fixtures/question-card.mjs'
 
 const SEAT = host('composer.seat')
@@ -79,14 +81,13 @@ function readRadioMark(page) {
 
 /**
  * The host's shape around a composer: a phase root, its scroll body, the view
- * area holding the message column, and the seat after them. The view area is
- * marked as the part it plays for the length of one reading — the walk would
- * take the mark back on its next pass — so the contract holds without the spec
- * spelling the host's own class. The reading of the place is kept with the
- * fixture, so both tests read it the same way.
+ * area holding the message column, and the seat after them. The view area
+ * carries the class the parts table reads for the part it plays, as the host's
+ * own does, so the sheet's rule for it reaches the box. The reading of the
+ * place is kept with the fixture, so both tests read it the same way.
  */
 function mount(t, phase) {
-  return t.page.evaluate(([seat, column, scroller, phaseAttribute, part, mark, value]) => {
+  return t.page.evaluate(([seat, column, scroller, phaseAttribute, viewClass, mark, value]) => {
     const name = (selector) => selector.slice(1, -1)
     const root = document.createElement('div')
     root.setAttribute(phaseAttribute, value)
@@ -95,6 +96,7 @@ function mount(t, phase) {
     body.setAttribute(name(scroller), '')
     body.style.cssText = 'flex:1;min-height:0;overflow-y:auto'
     const view = document.createElement('div')
+    view.className = viewClass
     const flow = document.createElement('div')
     flow.setAttribute(name(column), '')
     flow.style.height = '600px'
@@ -114,11 +116,7 @@ function mount(t, phase) {
       read() {
         const paint = getComputedStyle(seatBox)
         const band = getComputedStyle(seatBox, '::before')
-        // The view area's contract is read in the one frame it carries the part
-        // mark: the rule is the stylesheet's, and the mark is the walk's.
-        view.setAttribute(part, 'view-area')
         const flex = getComputedStyle(view).flex
-        view.removeAttribute(part)
         return {
           phase: root.getAttribute(phaseAttribute),
           mark: root.hasAttribute(mark),
@@ -130,7 +128,7 @@ function mount(t, phase) {
         }
       },
     }
-  }, [SEAT, COLUMN, SCROLLER, PHASE, PART, MARK, phase])
+  }, [SEAT, COLUMN, SCROLLER, PHASE, partClass(CONVERSATION_PARTS, 'view-area'), MARK, phase])
 }
 
 /** Where the seat and the view area stand, read off the page. */

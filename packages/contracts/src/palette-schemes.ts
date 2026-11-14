@@ -11,6 +11,8 @@
  * table imports this module.
  */
 
+import { appearancePair, normalizeRecords, parseRecordObject } from './records'
+
 /** The most records kept: the reader's schemes and the presets' override records together. */
 export const PALETTE_SCHEME_LIMIT = 16
 /** The longest record accepted, in characters. */
@@ -63,13 +65,7 @@ function colour(value: unknown, what: string) {
 
 /** A pair's present appearances; an object with neither is no pair. */
 function pair(value: unknown, what: string): ColourPair | undefined {
-  if (value === undefined) return undefined
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) throw new Error(`${what} is not an object of light and dark colours`)
-  const record = value as Record<string, unknown>
-  const out: ColourPair = {}
-  if (record.light !== undefined) out.light = colour(record.light, `${what}.light`)
-  if (record.dark !== undefined) out.dark = colour(record.dark, `${what}.dark`)
-  return out.light === undefined && out.dark === undefined ? undefined : out
+  return appearancePair(value, what, colour)
 }
 
 /**
@@ -77,9 +73,7 @@ function pair(value: unknown, what: string): ColourPair | undefined {
  * not know are left out, so a record a newer build wrote still reads.
  */
 export function parsePaletteScheme(text: string, presets: readonly string[]): PaletteScheme {
-  const raw: unknown = JSON.parse(text)
-  if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('the record is not an object')
-  const record = raw as Record<string, unknown>
+  const record = parseRecordObject(text)
   const id = record.id
   if (typeof id !== 'string' || id.length > PALETTE_SCHEME_ID_MAX || !ID.test(id)) throw new Error('the id is not 1–24 lowercase letters, digits or hyphens')
   if (id === PALETTE_SCHEME_FOLLOW) throw new Error(`the id "${PALETTE_SCHEME_FOLLOW}" is the follow-the-brand choice`)
@@ -128,20 +122,7 @@ export function serializePaletteScheme(scheme: PaletteScheme) {
  * bad record costs only itself (D12).
  */
 export function normalizePaletteSchemes(list: readonly string[], presets: readonly string[]) {
-  const entries: string[] = []
-  const problems: string[] = []
-  const seen = new Set<string>()
-  list.forEach((text, at) => {
-    try {
-      const scheme = parsePaletteScheme(text, presets)
-      if (seen.has(scheme.id)) throw new Error(`the id "${scheme.id}" repeats an earlier record`)
-      seen.add(scheme.id)
-      entries.push(serializePaletteScheme(scheme))
-    } catch (error) {
-      problems.push(`palette scheme ${at + 1} left out: ${error instanceof Error ? error.message : String(error)}`)
-    }
-  })
-  return { entries, problems }
+  return normalizeRecords(list, text => parsePaletteScheme(text, presets), serializePaletteScheme, 'palette scheme')
 }
 
 /** The record with this id, or undefined. */

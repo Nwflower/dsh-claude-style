@@ -13,6 +13,8 @@ import type { HostTooltip } from '../../shared/host-tooltip'
 import type { createHoverIntent } from '../../shared/popover'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { HostModelEntry, HostModelGroup } from '@dsh-claude-style/contracts/services'
+import type { Prefs } from '@dsh-claude-style/contracts/prefs'
+import { byModelId, modelComparator as compareModelOrder } from './model-order'
 
 /**
  * Model picker rows: the row/cell builders and the two level-1 list selectors,
@@ -20,16 +22,16 @@ import type { HostModelEntry, HostModelGroup } from '@dsh-claude-style/contracts
  * feature's closure only through its options: ctx (the copy lookup),
  * pickModel(provider, modelId) (commit a row), subHoverIntent (the
  * More-models dwell/grace), and isSubOpen() / closeSub() / openSub() (the
- * second level's state). The two SVG strings and byModelId are pure and
- * stay at the fragment's top level.
+ * second level's state). The two SVG strings stay at the fragment's top
+ * level; the pure ordering rules live in model-order.ts.
  */
 export const MODEL_CHEVRON_SVG = '<svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg>'
 
-/** Catalog order is whatever the provider happened to send; id order is scannable. */
-export function byModelId(a: HostModelEntry, b: HostModelEntry) {
-  const left = String(a.id)
-  const right = String(b.id)
-  return left < right ? -1 : left > right ? 1 : 0
+export { byModelId } from './model-order'
+
+/** Apply the configured order with the same brand lookup the row painter uses. */
+export function modelComparator(order: Prefs['modelOrder'], provider: string, rows: readonly string[] = []) {
+  return compareModelOrder(order, provider, rows, modelBrand)
 }
 
 /**
@@ -248,7 +250,7 @@ export function createModelRows(options: {
     // localized rather than stacked, so a row never carries two languages. The
     // line has its own switch under the picker's settings row, and a row built
     // without it is the same row with the copy block left as the name alone.
-    const desc = withDescription && readPrefs().modelDescriptions !== false ? modelDescription(ctx, group.id, model) : ''
+    const desc = brand !== null && withDescription && readPrefs().modelDescriptions !== false ? modelDescription(ctx, group.id, model) : ''
     if (desc) {
       item.classList.add('dsh-claude-model-described')
       copy.appendChild(buildElement('span', 'dsh-claude-model-desc', desc))

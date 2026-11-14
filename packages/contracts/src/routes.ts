@@ -30,6 +30,13 @@ export const BRAND_MARK_PATH = `${ROUTE_PREFIX}/brand/mark`
 /** The custom wordmark's bytes, answered the same three ways as the mark. */
 export const BRAND_WORDMARK_PATH = `${ROUTE_PREFIX}/brand/wordmark`
 
+/** One named preset's image bytes, with `id`, `slot` and `ref` query parameters. */
+export const BRANDING_ASSET_PATH = `${ROUTE_PREFIX}/branding/asset`
+/** POST a preset record and appearance to read image states and invalid references. */
+export const BRANDING_STATUS_PATH = `${ROUTE_PREFIX}/branding/status`
+/** UI-owned palette and logo overlays, merged with file-defined base records. */
+export const APPEARANCE_OVERLAY_PATH = `${ROUTE_PREFIX}/appearance-overlays`
+
 /** `GET` returns the cached peak-rate catalog; `POST` refreshes it from the host-known source. */
 export const PEAKRATE_PATH = `${ROUTE_PREFIX}/peakrate`
 

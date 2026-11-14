@@ -2,6 +2,7 @@ import { holdRelations, partRegions } from './parts-table'
 import type { HoldRelation, PartTable, PartsTableVocabulary } from './parts-table'
 import { localClassName, setAttributeIfChanged } from './dom'
 import { batchAdditions, subscribeMutations } from './bus'
+import { announceClasses, meetClass } from './part-classes'
 
 /**
  * The marking pass behind the skin's part vocabulary (D3) and the holds a
@@ -10,10 +11,12 @@ import { batchAdditions, subscribeMutations } from './bus'
  * The tables in packages/engine/src/parts-table.ts say which host class names
  * the skin reads and what it calls each one; this module walks the page once,
  * reads each host class name's local part exactly, and writes the skin's own
- * names for it onto the element as `data-dsh-claude-part`. A stylesheet then
- * matches one attribute whole, so a match cannot take a neighbour that merely
- * holds the same fragment, a host rename leaves the rule quiet instead of
- * wrong, and no other plugin's class name can collide with these rules.
+ * names for it onto the element as `data-dsh-claude-part`. The browser half's
+ * own queries and the relations below match that attribute whole, so a match
+ * cannot take a neighbour that merely holds the same fragment and a host rename
+ * leaves a reader quiet instead of wrong. No shipped rule reads the attribute:
+ * a sheet reaches the same elements through their class names
+ * (packages/engine/src/part-classes.ts, D101), so writing a mark moves no style.
  *
  * A region scopes a local name that means different things in different places
  * — the composer's `_row` is not the tool call's, the sidebar's `_title` is not
@@ -80,14 +83,45 @@ let LOOKUPS: RegionLookup[] = []
 /** Every region's skipped subtree as one selector, so a walk tests an element once. */
 let SKIP_SELECTOR = ''
 
-/** The parts one element's class list carries, as one attribute value, or null when it plays none. */
+/**
+ * Everything the walk decides on an element beyond its class names — an anchor,
+ * a skipped subtree's root, the held side of a relation — as one selector. A
+ * mounted transcript is thousands of elements that are none of the three, and
+ * each of them is turned away by this one test.
+ */
+let NOTABLE_SELECTOR = ''
+
+/** The local name of each class token met, so a token is taken apart once however many elements carry it. */
+const LOCAL_NAMES = new Map<string, string | null>()
+/** The tokens kept before the record starts over: a page shows a few thousand names, and one that mints them without end must not grow this without end. */
+const LOCAL_NAMES_LIMIT = 8192
+
+/** One class token's local name, or null when it carries none. */
+function localOf(token: string): string | null {
+  const known = LOCAL_NAMES.get(token)
+  if (known !== undefined) return known
+  if (LOCAL_NAMES.size >= LOCAL_NAMES_LIMIT) LOCAL_NAMES.clear()
+  const local = localClassName(token)
+  LOCAL_NAMES.set(token, local)
+  return local
+}
+
+/**
+ * The parts one element's class list carries, as one attribute value, or null
+ * when it plays none. Every hashed name read on the way is reported, whatever
+ * region is in force here: the sheet is finished with the names the page shows,
+ * and puts each region's condition on them itself (D101).
+ */
 function partsOf(element: Element, lookups: readonly RegionLookup[], rootParts: Map<string, string> | null) {
-  if (element.classList.length === 0) return null
+  const tokens = element.classList
+  if (tokens.length === 0) return null
   if (lookups.length === 0 && rootParts === null) return null
   let parts: Set<string> | null = null
-  for (const token of element.classList) {
-    const local = localClassName(token)
+  for (let at = 0; at < tokens.length; at += 1) {
+    const token = tokens[at]
+    const local = localOf(token)
     if (local === null) continue
+    meetClass(local, token)
     for (const lookup of lookups) {
       const part = lookup.parts.get(local)
       if (part === undefined) continue
@@ -103,17 +137,22 @@ function partsOf(element: Element, lookups: readonly RegionLookup[], rootParts: 
   return parts === null ? null : [...parts].join(' ')
 }
 
-/** Write one element's parts, or take the attribute off when it plays none. @returns whether the element's mark changed. */
-function writeParts(element: Element, lookups: readonly RegionLookup[], rootParts: Map<string, string> | null) {
+/** What `writeParts` answers, as two bits: the element's mark changed, and the element carries a mark now. */
+const MARK_CHANGED = 1
+const MARK_STANDS = 2
+
+/** Write one element's parts, or take the attribute off when it plays none. @returns MARK_CHANGED and MARK_STANDS, each set or not. */
+function writeParts(element: Element, lookups: readonly RegionLookup[], rootParts: Map<string, string> | null): number {
   const parts = partsOf(element, lookups, rootParts)
+  const attribute = vocabulary().part
   if (parts === null) {
-    if (!element.hasAttribute(vocabulary().part)) return false
-    element.removeAttribute(vocabulary().part)
-    return true
+    if (!element.hasAttribute(attribute)) return 0
+    element.removeAttribute(attribute)
+    return MARK_CHANGED
   }
-  if (element.getAttribute(vocabulary().part) === parts) return false
-  setAttributeIfChanged(element, vocabulary().part, parts)
-  return true
+  if (element.getAttribute(attribute) === parts) return MARK_STANDS
+  setAttributeIfChanged(element, attribute, parts)
+  return MARK_CHANGED | MARK_STANDS
 }
 
 /* ---------- the holds a stylesheet reads as structure ---------- */
@@ -134,6 +173,23 @@ let HOLD_ATTRIBUTES = new Set<string>()
 
 /** How many held nodes keep each relation's mark on an element. */
 const HOLD_COUNTS = new Map<Element, Map<string, number>>()
+
+/**
+ * How many relations hold each node as their held side: the one lookup that
+ * says whether a node the walk visits, or the host took out, has a mark to move.
+ * It counts the relations' own `held` entries and lives as long as they do — the
+ * node's own lifetime: an entry leaves when the host takes the node's subtree out
+ * (dropHolds) or the node stops being a held side, and the table is emptied with
+ * the marks at teardown.
+ */
+const HELD_IN = new Map<Element, number>()
+
+/** One relation more, or one fewer, holding this node. */
+function countHeld(node: Element, by: 1 | -1) {
+  const next = (HELD_IN.get(node) ?? 0) + by
+  if (next > 0) HELD_IN.set(node, next)
+  else HELD_IN.delete(node)
+}
 
 /** Write one element's mark from its counts, or take the attribute off when nothing holds. */
 function writeHolds(element: Element) {
@@ -207,6 +263,8 @@ function remark(state: HoldState, node: Element, next: Element[]): boolean {
   if (before !== undefined) for (const holder of before) removeMark(holder, state.spec.name)
   if (next.length === 0) state.held.delete(node)
   else state.held.set(node, next)
+  if (before === undefined && next.length > 0) countHeld(node, 1)
+  if (before !== undefined && next.length === 0) countHeld(node, -1)
   for (const holder of next) addMark(holder, state.spec.name)
   return true
 }
@@ -217,9 +275,7 @@ function remark(state: HoldState, node: Element, next: Element[]): boolean {
  * change around it took its holders away.
  */
 function applyHolds(node: Element): boolean {
-  let tracked = false
-  for (const state of HOLD_STATES) if (state.held.has(node)) { tracked = true; break }
-  if (!tracked && !node.matches(HELD_SELECTOR)) return false
+  if (!HELD_IN.has(node) && !node.matches(HELD_SELECTOR)) return false
   let changed = false
   for (const state of HOLD_STATES) {
     const was = state.held.has(node)
@@ -230,17 +286,27 @@ function applyHolds(node: Element): boolean {
   return changed
 }
 
-/** Drop a node's marks and those of everything under it, for a subtree the host took out. */
+/**
+ * Drop a node's marks and those of everything under it, for a subtree the host
+ * took out. A page that holds nothing has nothing to drop, and a node no
+ * relation holds is passed with one lookup.
+ */
 function dropHolds(node: Element): boolean {
+  if (HELD_IN.size === 0) return false
   let changed = false
-  for (const state of HOLD_STATES) {
-    const holders = state.held.get(node)
-    if (holders === undefined) continue
-    state.held.delete(node)
-    for (const holder of holders) removeMark(holder, state.spec.name)
-    changed = true
+  if (HELD_IN.has(node)) {
+    for (const state of HOLD_STATES) {
+      const holders = state.held.get(node)
+      if (holders === undefined) continue
+      state.held.delete(node)
+      countHeld(node, -1)
+      for (const holder of holders) removeMark(holder, state.spec.name)
+      changed = true
+    }
   }
-  for (const child of node.children) if (dropHolds(child)) changed = true
+  for (let child = node.firstElementChild; child !== null; child = child.nextElementSibling) {
+    if (dropHolds(child)) changed = true
+  }
   return changed
 }
 
@@ -340,17 +406,27 @@ function lookupsBelow(element: Element, lookups: readonly RegionLookup[]): reado
 function walk(element: Element, inherited: readonly RegionLookup[], roots: Map<string, string> | null): boolean {
   let lookups = inherited
   let childRoots: Map<string, string> | null = null
-  if (element.matches(ANCHOR_SELECTOR)) {
+  // The one test nearly every element fails: it is no anchor, starts no skipped
+  // subtree and is no relation's held side, so the three questions below are not asked of it.
+  const notable = element.matches(NOTABLE_SELECTOR)
+  if (notable && element.matches(ANCHOR_SELECTOR)) {
     for (const lookup of LOOKUPS) {
       if (!element.matches(lookup.within)) continue
       if (!lookups.includes(lookup)) lookups = [...lookups, lookup]
       if (lookup.rootParts !== null) childRoots = lookup.rootParts
     }
   }
-  let changed = writeParts(element, lookups, roots)
-  const below = lookupsBelow(element, lookups)
-  for (const child of element.children) if (walk(child, below, childRoots)) changed = true
-  if (applyHolds(element)) changed = true
+  const wrote = writeParts(element, lookups, roots)
+  let changed = (wrote & MARK_CHANGED) !== 0
+  const below = notable ? lookupsBelow(element, lookups) : lookups
+  // By sibling, not through `children`: that list is built anew for every element asked.
+  for (let child = element.firstElementChild; child !== null; child = child.nextElementSibling) {
+    if (walk(child, below, childRoots)) changed = true
+  }
+  // A held side is named by a host attribute, which the test above read, or by
+  // the part mark just written; a node a relation held before may have stopped
+  // being one. Any other element has no relation to answer.
+  if ((notable || (wrote & MARK_STANDS) !== 0 || HELD_IN.has(element)) && applyHolds(element)) changed = true
   return changed
 }
 
@@ -363,6 +439,7 @@ function walk(element: Element, inherited: readonly RegionLookup[], roots: Map<s
 export function markPartsWithin(root: Element) {
   const { lookups, roots } = contextAt(root)
   if (walk(root, lookups, roots)) remarkInside(root)
+  announceClasses()
 }
 
 /** Take every part and hold mark off, for the teardown. */
@@ -372,6 +449,7 @@ export function clearParts(root: ParentNode = document) {
     element.removeAttribute(vocabulary().holds)
   }
   for (const state of HOLD_STATES) state.held.clear()
+  HELD_IN.clear()
   HOLD_COUNTS.clear()
 }
 
@@ -401,10 +479,16 @@ export function installParts(next: PartsVocabulary, onMarked?: () => void) {
   ANCHOR_SELECTOR = partRegions(next).map((region) => region.within).join(', ')
   SKIP_SELECTOR = partRegions(next).flatMap((region) => region.skip === undefined ? [] : [region.skip]).join(', ')
   HOLD_STATES = holdRelations(next).map((spec) => ({ spec, held: new Map() }))
+  HELD_IN.clear()
   HELD_SELECTOR = holdRelations(next).map((relation) => relation.held).join(', ')
+  NOTABLE_SELECTOR = [ANCHOR_SELECTOR, SKIP_SELECTOR, HELD_SELECTOR].filter((selector) => selector !== '').join(', ')
   HOLD_ATTRIBUTES = new Set(holdRelations(next).flatMap((relation) => relation.attributes))
   const settle = () => { if (onMarked !== undefined) onMarked() }
-  if (walk(document.body, [], null)) {
+  const marked = walk(document.body, [], null)
+  // Before the marks' own readers hear: a sheet finished with the names this
+  // walk met is on the page when a feature measures what it styles (D101).
+  announceClasses()
+  if (marked) {
     remarkInside(document.body)
     settle()
   }
@@ -419,7 +503,8 @@ export function installParts(next: PartsVocabulary, onMarked?: () => void) {
     // holds from there on.
     attributeFilter: ['class', next.regions.account, next.regions.hero, next.regions.more, ...HOLD_ATTRIBUTES],
     skipQuiet: true,
-    // The marks this pass writes are what the sheet draws the frame with: the
+    // The class names this pass reports are what the sheet is finished with,
+    // and the hold marks it writes are what the sheet draws the frame with: the
     // prose's face and line height, the table's widths. A session switch mounts
     // its transcript in one large batch, and a pass that waited for the task
     // after the paint drew that frame in the host's own type and then moved it
@@ -438,7 +523,7 @@ export function installParts(next: PartsVocabulary, onMarked?: () => void) {
           // is walked. A plain class rewrite only moves the element's own parts.
           const moved = record.target.matches(ANCHOR_SELECTOR)
             ? walk(record.target, lookups, roots)
-            : writeParts(record.target, lookups, roots)
+            : (writeParts(record.target, lookups, roots) & MARK_CHANGED) !== 0
           if (moved) {
             changed = true
             remarkInside(record.target)
@@ -466,6 +551,7 @@ export function installParts(next: PartsVocabulary, onMarked?: () => void) {
         remarkInside(node)
       }
     }
+    announceClasses()
     if (changed) settle()
   })
   return () => {

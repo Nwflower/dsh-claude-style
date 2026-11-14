@@ -1,12 +1,17 @@
 import * as React from 'react'
 import { BRAND_IMAGE_MAX_BYTES, BRAND_IMAGE_TYPES } from '@dsh-claude-style/contracts/brand'
 import type { BrandImageKind } from '@dsh-claude-style/contracts/brand'
+import { brandingSlot, withBrandingAsset } from '@dsh-claude-style/contracts/branding-presets'
+import type { BrandingAppearance, BrandingPreset } from '@dsh-claude-style/contracts/branding-presets'
 import { BRAND_CLAUDE, BRAND_INK_ORIGINAL, BRAND_NAME_MAX } from '../../constants'
-import { loadBrandImages, readBrandImages, removeBrandImage, subscribeBrandImages, uploadBrandImage } from '../../shared/custom-brand'
-import type { BrandImage } from '../../shared/custom-brand'
+import { loadBrandImages, loadBrandingPresetImages, readBrandImages, removeBrandImage, removeBrandingPresetAsset, subscribeBrandImages, uploadBrandImage, uploadBrandingPresetAsset } from '../../shared/custom-brand'
+import type { BrandImage, BrandImages } from '../../shared/custom-brand'
+import { selectedBrandingPreset, storeBrandingPresetPatch } from '../../shared/branding-presets'
+import { PresetBar } from './settings-brand-presets'
 import type { Prefs } from '../../constants'
 import type { SettingsView } from './settings-controls'
 import { copy } from './copy'
+import { savePrefs } from '../../core/prefs'
 
 /**
  * The brand area as the settings page's own drawn lockup (D30): the mark and
@@ -51,26 +56,39 @@ const BRAND_ART = {
   },
 }
 
-/** The images in hand, following the shared state, read once the control mounts. */
-function useBrandImages() {
-  const [images, setImages] = React.useState(readBrandImages())
+const blankImages = (): BrandImages => ({ mark: null, wordmark: null, problems: {} })
+
+/** Read the active legacy images or one preset's variant, independently for the editor. */
+function useBrandImages(preset: BrandingPreset | undefined, mode: BrandingAppearance) {
+  const [images, setImages] = React.useState<BrandImages>(preset === undefined ? readBrandImages() : blankImages())
+  const signature = JSON.stringify(preset)
   React.useEffect(() => {
-    const off = subscribeBrandImages(setImages)
-    loadBrandImages()
-    setImages(readBrandImages())
-    return off
-  }, [])
-  return images
+    if (preset === undefined) {
+      const off = subscribeBrandImages(setImages)
+      void loadBrandImages()
+      setImages(readBrandImages())
+      return off
+    }
+    let live = true
+    setImages(blankImages())
+    void loadBrandingPresetImages(preset, mode).then(value => { if (live) setImages(value) })
+    return () => { live = false }
+  }, [signature, mode])
+  const reload = async (next: BrandingPreset | undefined) => {
+    if (next === undefined) {
+      await loadBrandImages()
+      setImages(readBrandImages())
+      return
+    }
+    setImages(await loadBrandingPresetImages(next, mode))
+  }
+  return { images, reload }
 }
 
-/**
- * One seat's own picture: the file it picked, the reply while a change
- * travels and the reason the last one was refused. The file is held to the
- * accepted formats and size here, so a refusal is said before the bytes
- * travel; the host half checks both again.
- */
-function useBrandSeat(kind: BrandImageKind) {
-  const images = useBrandImages()
+/** One image seat: file validation, upload, removal, and the last refusal. */
+function useBrandSeat(kind: BrandImageKind, prefs: Prefs, write: SettingsView['write'], mode: BrandingAppearance) {
+  const preset = selectedBrandingPreset(prefs)
+  const { images, reload } = useBrandImages(preset, mode)
   const [busy, setBusy] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const picker = React.useRef<HTMLInputElement>(null)
@@ -95,16 +113,38 @@ function useBrandSeat(kind: BrandImageKind) {
       setError(copy('brandImageSize'))
       return
     }
-    run(uploadBrandImage(kind, file))
+    if (preset === undefined) {
+      run(uploadBrandImage(kind, file))
+      return
+    }
+    run((async () => {
+      const ref = await uploadBrandingPresetAsset(preset.id, brandingSlot(kind, mode), file)
+      const next = withBrandingAsset(preset, kind, mode, ref)
+      write(storeBrandingPresetPatch(prefs, next, true))
+      await reload(next)
+    })())
+  }
+  const remove = () => {
+    if (preset === undefined) {
+      run(removeBrandImage(kind))
+      return
+    }
+    run((async () => {
+      const next = withBrandingAsset(preset, kind, mode, null)
+      await savePrefs(storeBrandingPresetPatch(prefs, next, true))
+      await removeBrandingPresetAsset(preset.id, brandingSlot(kind, mode))
+      await reload(next)
+    })())
   }
   return {
     image: images[kind],
+    problem: images.problems[kind],
     busy,
     error,
     picker,
     pick,
     open: () => picker.current?.click(),
-    remove: () => run(removeBrandImage(kind)),
+    remove,
   }
 }
 
@@ -218,14 +258,17 @@ function NameField(props: { value: string, onChange: (value: string) => void, on
  * removal in the corner the action plate leaves free.
  */
 export function BrandLockup(props: { prefs: Prefs, write: SettingsView['write'], disabled?: boolean }) {
-  const mark = useBrandSeat('mark')
-  const word = useBrandSeat('wordmark')
+  const [mode, setMode] = React.useState<BrandingAppearance>(document.body.hasAttribute('data-ds-dark-theme') ? 'dark' : 'light')
+  const [managerBusy, setManagerBusy] = React.useState(false)
+  const [managerError, setManagerError] = React.useState<string | null>(null)
+  const mark = useBrandSeat('mark', props.prefs, props.write, mode)
+  const word = useBrandSeat('wordmark', props.prefs, props.write, mode)
   const [editing, setEditing] = React.useState(false)
   const [draft, setDraft] = React.useState(props.prefs.brandName)
   const timer = React.useRef<number | null>(null)
   const claude = props.prefs.brand === BRAND_CLAUDE
   const inked = props.prefs.brandInk !== BRAND_INK_ORIGINAL
-  const busy = mark.busy || word.busy
+  const busy = mark.busy || word.busy || managerBusy
 
   React.useEffect(() => () => { if (timer.current !== null) clearTimeout(timer.current) }, [])
 
@@ -253,7 +296,7 @@ export function BrandLockup(props: { prefs: Prefs, write: SettingsView['write'],
   // The word seat holds the reader's wordmark image first, then the name they
   // typed, then the brand's own word where an empty name would be — the
   // precedence the shell paints (features/brand/brand.ts).
-  const mode = word.image !== null ? 'image' : props.prefs.brandName === '' ? 'brand' : 'name'
+  const wordMode = word.image !== null ? 'image' : props.prefs.brandName === '' ? 'brand' : 'name'
   const remove = (seat: Seat, className: string) => seat.image === null ? null : React.createElement(
     'button',
     {
@@ -267,6 +310,10 @@ export function BrandLockup(props: { prefs: Prefs, write: SettingsView['write'],
   )
 
   return React.createElement(
+    React.Fragment,
+    null,
+    React.createElement(PresetBar, { prefs: props.prefs, write: props.write, mode, setMode, busy: managerBusy, setBusy: setManagerBusy, setError: setManagerError }),
+    React.createElement(
     'div',
     {
       className: 'dsh-claude-brand-lockup',
@@ -303,19 +350,20 @@ export function BrandLockup(props: { prefs: Prefs, write: SettingsView['write'],
             type: 'button',
             className: 'dsh-claude-brand-seat',
             disabled: busy,
-            'aria-label': mode === 'image' ? copy('brandWordmarkReplace') : copy('brandNameEdit'),
-            onClick: mode === 'image' ? word.open : () => { setDraft(props.prefs.brandName); setEditing(true) },
+            'aria-label': wordMode === 'image' ? copy('brandWordmarkReplace') : copy('brandNameEdit'),
+            onClick: wordMode === 'image' ? word.open : () => { setDraft(props.prefs.brandName); setEditing(true) },
           },
-          mode === 'name'
+          wordMode === 'name'
             ? React.createElement('span', { className: 'dsh-claude-brand-typed' }, props.prefs.brandName)
             : SeatArt({ kind: 'word', image: word.image, claude, inked }),
-          Plate({ icon: mode === 'image' ? 'upload' : 'pencil', className: 'dsh-claude-brand-seat-plate' }),
+          Plate({ icon: wordMode === 'image' ? 'upload' : 'pencil', className: 'dsh-claude-brand-seat-plate' }),
         ),
       editing ? null : ImageButton({ seat: word }),
       remove(word, 'dsh-claude-brand-clear-word'),
     ),
-    mark.error === null && word.error === null
+    mark.error === null && word.error === null && mark.problem === undefined && word.problem === undefined && managerError === null
       ? null
-      : React.createElement('div', { className: 'dsh-claude-brand-error', role: 'alert' }, mark.error ?? word.error),
+      : React.createElement('div', { className: 'dsh-claude-brand-error', role: 'alert' }, mark.error ?? word.error ?? managerError ?? mark.problem ?? word.problem),
+    ),
   )
 }

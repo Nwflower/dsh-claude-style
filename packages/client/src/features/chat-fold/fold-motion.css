@@ -1,20 +1,24 @@
 /* DisclosureRow unmounts closed bodies, so only insertion can transition; height must stay final
    because host follow and paging anchors track layout. The selectors support both host wrappers;
-   turn-process subtrees are excluded to avoid replaying every nested entrance. */
+   turn-process subtrees are excluded to avoid replaying every nested entrance.
+   The subject opens with the condition the selector already states to its left: a row or a header
+   before it among its own siblings. The browser tries these rules on every element and reads a
+   compound in order, so an element with no such sibling is turned away there, before the last list
+   has it search the siblings of each of its ancestors — in a transcript, every row above it. */
 @starting-style {
-  body[data-dsh-claude-style][data-dsh-claude-chat-fold] [data-chat-flow] :is([data-disclosure-row], [data-disclosure-header]) ~ *:not([data-turn-process-member] *, [data-turn-trigger] *):is([data-disclosure-row] ~ *, [data-disclosure-header] ~ * *) {
+  body[data-dsh-claude-style][data-dsh-claude-chat-fold] [data-chat-flow] :is([data-disclosure-row], [data-disclosure-header]) ~ :where(:is([data-disclosure-row], [data-disclosure-header]) ~ *):not([data-turn-process-member] *, [data-turn-trigger] *):is([data-disclosure-row] ~ *, [data-disclosure-header] ~ * *) {
     opacity: 0;
     translate: 0 -2px;
   }
 }
 
 /* Reveal timing and the feature switch follow D9. */
-body[data-dsh-claude-style][data-dsh-claude-chat-fold] [data-chat-flow] :is([data-disclosure-row], [data-disclosure-header]) ~ *:not([data-turn-process-member] *, [data-turn-trigger] *):is([data-disclosure-row] ~ *, [data-disclosure-header] ~ * *) {
+body[data-dsh-claude-style][data-dsh-claude-chat-fold] [data-chat-flow] :is([data-disclosure-row], [data-disclosure-header]) ~ :where(:is([data-disclosure-row], [data-disclosure-header]) ~ *):not([data-turn-process-member] *, [data-turn-trigger] *):is([data-disclosure-row] ~ *, [data-disclosure-header] ~ * *) {
   transition: opacity var(--dsh-claude-duration-reveal) var(--dsh-claude-ease-out), translate var(--dsh-claude-duration-reveal) var(--dsh-claude-ease-out);
 }
 
 /* The resolved body attribute covers explicit and system reduced motion (D40). */
-body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-chat-flow] :is([data-disclosure-row], [data-disclosure-header]) ~ *:not([data-turn-process-member] *, [data-turn-trigger] *):is([data-disclosure-row] ~ *, [data-disclosure-header] ~ * *) {
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-chat-flow] :is([data-disclosure-row], [data-disclosure-header]) ~ :where(:is([data-disclosure-row], [data-disclosure-header]) ~ *):not([data-turn-process-member] *, [data-turn-trigger] *):is([data-disclosure-row] ~ *, [data-disclosure-header] ~ * *) {
   transition: none;
 }
 

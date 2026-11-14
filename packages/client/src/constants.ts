@@ -165,9 +165,15 @@ export const MESSAGE_FOLD_ATTR = 'data-dsh-claude-message-fold'
 /** On a node the skin owns purely for its own bookkeeping — the caret motion's probe container and the caret it draws.
  * The shared scheduler ignores mutations against such a node (D40), so measuring or redrawing never wakes a pass that no feature needs. */
 export const QUIET_ATTR = 'data-dsh-claude-quiet'
-/** On a host element the stylesheet keys on, carrying the name of the part it plays (packages/engine/src/parts.ts). Every rule that used to match a fragment of a hashed host class name reads this attribute instead, so a match is exact.
- * A host upgrade that drops the element leaves the part unresolved rather than silently matching something else, and no other skin's class name can collide with these rules (D3). */
+/** The name a part is read by. A stylesheet writes `[data-dsh-claude-part~="name"]` and ships with that selector left open: the page finishes it with the host class names behind the part (packages/engine/src/part-classes.ts, D101), so no shipped rule reads this attribute.
+ * On a host element it carries the parts the marking pass names it by (packages/engine/src/parts.ts), which the browser half's own queries and the hold relations read (D3). */
 export const PART_ATTR = 'data-dsh-claude-part'
+/** On a host element a feature names itself, where the host's own class is no part of the region (features/composer names a docked card's row): the part it plays, which the finished sheet reads beside the part's classes (D101). */
+export const STAMPED_PART_ATTR = 'data-dsh-claude-stamped-part'
+/** The parts a feature stamps that way. */
+export const STAMPED_PARTS: readonly string[] = ['row']
+/** A class, id and tag no element carries (D101): what a written-out selector negates to stand at its list's weight, and the selector of a rule whose parts name no class on this page. */
+export const ABSENT_NAME = 'dsh-claude-absent'
 /** On a host element, naming the parts its own subtree holds (packages/engine/src/parts.ts, packages/engine/src/parts-table.ts). A rule that used to ask whether an element contains another (`A:has(B)`) reads this mark instead.
  * The marking pass already walks that subtree, so the answer costs one attribute read rather than a style pass over every candidate (D9); the values are the relation names declared in the parts table. */
 export const HOLDS_ATTR = 'data-dsh-claude-holds'
@@ -246,6 +252,9 @@ export {
   BRAND_MARK_PATH as BRAND_MARK_ROUTE,
   BRAND_PATH as BRAND_ROUTE,
   BRAND_WORDMARK_PATH as BRAND_WORDMARK_ROUTE,
+  BRANDING_ASSET_PATH as BRANDING_ASSET_ROUTE,
+  BRANDING_STATUS_PATH as BRANDING_STATUS_ROUTE,
+  APPEARANCE_OVERLAY_PATH as APPEARANCE_OVERLAY_ROUTE,
   FONT_FILES_PATH as FONT_FILES_ROUTE,
   HDSL_PATH as HDSL_ROUTE,
   HDSL_SKIN_PATH as HDSL_SKIN_ROUTE,

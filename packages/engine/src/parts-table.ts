@@ -9,7 +9,7 @@ export interface PartsTableVocabulary {
 }
 
 /**
- * The host class names the skin reads, as data (D3): host CSS-module local name → the skin's own part name. The host hashes its class names, so a stylesheet cannot match one whole and a substring match takes whatever else holds the fragment; packages/engine/src/parts.ts walks these tables and writes the part names onto the element, so every rule matches one attribute whole. This file is data only, so the build reads it directly (scripts/build/css.mjs, the part gate); a host rename is one line here.
+ * The host class names the skin reads, as data (D3): host CSS-module local name → the skin's own part name. The host hashes its class names, so a stylesheet cannot name one at build time and a substring match takes whatever else holds the fragment. A sheet names the part instead: packages/engine/src/parts.ts walks these tables, reports each hashed name it meets and writes the part names onto the elements for the browser half's queries and the hold relations, and packages/engine/src/part-classes.ts finishes the sheet on the page with the names reported (D101). This file is data only, so the build reads it directly (scripts/build/css.mjs, the part gate); a host rename is one line here.
  */
 import { COMPOSER_OVERLAY_SELECTOR, CONVERSATION_HEADER_SLOT_SELECTOR, CONVERSATION_MAIN_SLOT_SELECTOR, CONVERSATION_SCROLL_SELECTOR, RIGHTBAR_COLUMN_SELECTOR, ROOT_SLOT_SELECTOR, SHIMMER_DECORATION_SELECTOR, SIDEBAR_SLOT_SELECTOR } from '@dsh-claude-style/contracts/dom'
 

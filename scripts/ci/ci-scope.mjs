@@ -155,6 +155,11 @@ const LEDGERS = [
     entries: (record) => new Map(Object.entries(record.files)),
     what: 'spelled skin mark',
   },
+  {
+    file: 'packages/testing/data/unkeyed-selectors.json',
+    entries: (record) => new Map(record.groups.flatMap((group) => group.selectors.map((selector) => [selector, 1]))),
+    what: 'unkeyed selector',
+  },
 ]
 
 /** The revision a ledger is compared with: HEAD for the working tree, else the merge base of the named base. */

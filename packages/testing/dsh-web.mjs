@@ -164,7 +164,7 @@ async function start(options = {}) {
   if (options.resetState === true) {
     // The usage record counts twice: the record itself, and the fold cache an
     // earlier build wrote at the path the record is migrated from
-    for (const entry of ['sessions', path.join('storages', 'session_projcache'), path.join('dsh-claude-style', 'usage.json'), path.join('cache', 'dsh-claude-style', 'usage.json')]) {
+    for (const entry of ['sessions', path.join('storages', 'session_projcache'), path.join('dsh-claude-style', 'usage.json'), path.join('cache', 'dsh-claude-style', 'usage.json'), path.join('dsh-claude-style', 'appearance-overlays.json')]) {
       fs.rmSync(path.join(home, entry), { recursive: true, force: true })
     }
     // The skin's settings page is part of the end-to-end walk, and the choices

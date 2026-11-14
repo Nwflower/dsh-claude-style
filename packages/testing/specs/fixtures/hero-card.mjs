@@ -1,9 +1,11 @@
 /**
  * The stand-in page's composer card standing as the home page's hero: a model
  * name longer than any row it is given, the card at the width under test, and
- * the hero part the real page's parts walk writes when the test needs it.
+ * the class the parts table reads for the hero part when the test needs it.
  */
+import { CONVERSATION_PARTS } from '@dsh-claude-style/engine/parts-table'
 import { host, surface } from './behaviour.mjs'
+import { partClass } from './parts.mjs'
 
 const CARD = host('composer.card')
 const VARIANT = host('composer.variant')
@@ -14,16 +16,13 @@ const LONG = 'qwen4-max-preview · Bailian Token Plan Enterprise'
 /**
  * Put the card in the hero's place.
  * @param width - the card's width in pixels.
- * @param hero - write the `composer-hero` part on the stack, as the home page's walk does.
+ * @param hero - give the stack the home page's own class for the `composer-hero` part, so the parts walk names it and the sheet's rules for it reach the card.
  */
 export async function heroCard(t, { width, hero = false }) {
-  await t.page.evaluate(([card, variant, label, long, part, width, hero]) => {
+  await t.page.evaluate(([card, variant, label, long, part, width, heroClass]) => {
     const stack = document.querySelector('[' + part + '~="composer-stack"]')
     if (stack === null) throw new Error('the composer stack is not on the page')
-    if (hero) {
-      const parts = (stack.getAttribute(part) ?? '').split(/\s+/)
-      stack.setAttribute(part, [...parts.filter(Boolean), 'composer-hero'].join(' '))
-    }
+    if (heroClass !== null) stack.classList.add(heroClass)
     stack.setAttribute(variant, 'hero')
     const node = document.querySelector(label)
     if (node === null) throw new Error('the model label is not on the page')
@@ -31,6 +30,6 @@ export async function heroCard(t, { width, hero = false }) {
     const element = document.querySelector(card)
     element.style.setProperty('width', width + 'px')
     element.style.setProperty('max-width', width + 'px')
-  }, [CARD, VARIANT, LABEL, LONG, PART, width, hero])
+  }, [CARD, VARIANT, LABEL, LONG, PART, width, hero ? partClass(CONVERSATION_PARTS, 'composer-hero') : null])
   await t.settle()
 }

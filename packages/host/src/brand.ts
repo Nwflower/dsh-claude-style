@@ -11,31 +11,16 @@
 import { BRAND_IMAGE_KINDS, BRAND_IMAGE_MAX_BYTES, BRAND_IMAGE_TYPES } from '@dsh-claude-style/contracts/brand'
 import type { BrandAnswer, BrandImageKind, BrandImageState } from '@dsh-claude-style/contracts/brand'
 import { BRAND_MARK_PATH, BRAND_PATH, BRAND_WORDMARK_PATH } from '@dsh-claude-style/contracts/routes'
-import { mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { readFileSync, rmSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import type { DshContext, DshPeerScope, DshRequest, DshResponse, DshRoute } from '@dsh-claude-style/engine/node/dsh'
 import { pluginPath } from './harness-home.js'
+import { IMAGE_HEADERS, readImageUpload, writeAtomicFile } from './brand-image-shared.js'
+import { brandingPresetRoutes } from './branding-presets.js'
 import { fenceRefused, methodRefused, readRequestBody, sendJson } from '@dsh-claude-style/engine/node/http'
 
 /** Each image's route. */
 const IMAGE_PATHS: Record<BrandImageKind, string> = { mark: BRAND_MARK_PATH, wordmark: BRAND_WORDMARK_PATH }
-
-/**
- * Headers on every image answer. An SVG is a document that can carry script:
- * opened at its own address, `sandbox` keeps it from running any, and
- * `nosniff` keeps the browser from reading the bytes as another type.
- */
-const IMAGE_HEADERS = {
-  'cache-control': 'no-cache',
-  'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; sandbox",
-  'x-content-type-options': 'nosniff',
-}
-
-/** The bytes a raster format opens with at a fixed offset; an SVG is text and carries none. */
-const SIGNATURES: Readonly<Record<string, readonly { offset: number, bytes: Buffer }[]>> = {
-  'image/png': [{ offset: 0, bytes: Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]) }],
-  'image/webp': [{ offset: 0, bytes: Buffer.from('RIFF', 'latin1') }, { offset: 8, bytes: Buffer.from('WEBP', 'latin1') }],
-}
 
 /** One image file found on disk. */
 interface StoredImage {
@@ -72,14 +57,8 @@ function createBrandStore(ctx: DshContext) {
    */
   const write = (kind: BrandImageKind, type: string, bytes: Buffer) => {
     const extension = BRAND_IMAGE_TYPES[type]
-    mkdirSync(dir(), { recursive: true })
     const target = join(dir(), `${kind}.${extension}`)
-    const temporary = `${target}.${process.pid}.tmp`
-    writeFileSync(temporary, bytes)
-    renameSync(temporary, target)
-    for (const other of Object.values(BRAND_IMAGE_TYPES)) {
-      if (other !== extension) rmSync(join(dir(), `${kind}.${other}`), { force: true })
-    }
+    writeAtomicFile(target, bytes, Object.values(BRAND_IMAGE_TYPES).filter(other => other !== extension).map(other => join(dir(), `${kind}.${other}`)))
   }
 
   const remove = (kind: BrandImageKind) => {
@@ -89,36 +68,14 @@ function createBrandStore(ctx: DshContext) {
   return { find, answer, write, remove }
 }
 
-/** Whether the bytes open the way their declared raster format requires. */
-function matchesSignature(type: string, bytes: Buffer) {
-  const marks = SIGNATURES[type]
-  if (marks === undefined) return true
-  return marks.every(({ offset, bytes: expected }) => bytes.subarray(offset, offset + expected.length).equals(expected))
-}
-
 /**
  * Store one uploaded image: the content type names the format, and the body is
  * held to the size limit and, for a raster format, to its signature.
  */
 async function storeImage(store: ReturnType<typeof createBrandStore>, kind: BrandImageKind, req: DshRequest, res: DshResponse) {
-  const type = (req.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase()
-  if (BRAND_IMAGE_TYPES[type] === undefined) {
-    sendJson(res, 415, { ok: false, error: 'unsupported image type' })
-    return
-  }
-  const bytes = await readRequestBody(req, BRAND_IMAGE_MAX_BYTES)
-  if (bytes === null) {
-    // The remainder of an oversized body stays unread: the socket is ended
-    // once this answer is out, never before it.
-    res.once('finish', () => req.destroy())
-    sendJson(res, 413, { ok: false, error: 'image too large' })
-    return
-  }
-  if (bytes.length === 0 || !matchesSignature(type, bytes)) {
-    sendJson(res, 400, { ok: false, error: 'not an image of the declared type' })
-    return
-  }
-  store.write(kind, type, bytes)
+  const upload = await readImageUpload(req, res)
+  if (upload === null) return
+  store.write(kind, upload.type, upload.bytes)
   sendJson(res, 200, store.answer())
 }
 
@@ -173,5 +130,5 @@ export function brandRoutes(ctx: DshContext): { label: string, route: DshRoute }
       },
     },
   }))
-  return [{ label: 'brand status', route: status }, ...images]
+  return [{ label: 'brand status', route: status }, ...images, ...brandingPresetRoutes(ctx)]
 }

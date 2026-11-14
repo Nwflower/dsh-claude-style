@@ -293,6 +293,52 @@ body[data-dsh-claude-style] .dsh-claude-brand-clear:focus-visible {
   outline-offset: 2px;
 }
 
+/* Named presets share the brand row without borrowing the lockup's own classes. */
+body[data-dsh-claude-style] .dsh-claude-brand-presets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 12px;
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
+}
+body[data-dsh-claude-style] .dsh-claude-brand-presets button,
+body[data-dsh-claude-style] .dsh-claude-brand-preset-select,
+body[data-dsh-claude-style] .dsh-claude-brand-preset-rename input {
+  box-sizing: border-box;
+  min-height: 28px;
+  margin: 0;
+  padding: 3px 9px;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 6px;
+  background: var(--dsw-alias-bg-base);
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+}
+body[data-dsh-claude-style] .dsh-claude-brand-presets button {
+  cursor: pointer;
+}
+body[data-dsh-claude-style] .dsh-claude-brand-presets button:hover,
+body[data-dsh-claude-style] .dsh-claude-brand-presets button:focus-visible,
+body[data-dsh-claude-style] .dsh-claude-brand-preset-select:focus-visible,
+body[data-dsh-claude-style] .dsh-claude-brand-preset-rename input:focus-visible {
+  background: var(--dsh-claude-hover-bg);
+}
+body[data-dsh-claude-style] .dsh-claude-brand-presets button:disabled,
+body[data-dsh-claude-style] .dsh-claude-brand-preset-select:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+body[data-dsh-claude-style] .dsh-claude-brand-preset-appearances,
+body[data-dsh-claude-style] .dsh-claude-brand-preset-rename {
+  display: inline-flex;
+  gap: 4px;
+}
+body[data-dsh-claude-style] .dsh-claude-brand-preset-appearances button[aria-pressed="true"] {
+  border-color: var(--dsw-alias-brand-primary);
+}
+
 /* A refusal from the host half is written under the lockup in the page's
    error colour. */
 body[data-dsh-claude-style] .dsh-claude-brand-error {

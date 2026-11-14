@@ -19,6 +19,7 @@ import { recordProbes } from './scenarios/contract-probe.mjs'
 import { sendPrompt, waitForTurn } from './prompt.mjs'
 import { importanceScenario } from './scenarios/importance.mjs'
 import { readerScrollScenario } from './scenarios/reader-scroll.mjs'
+import { turnSpacerScenario } from './scenarios/turn-spacer.mjs'
 import { doorPinScenario } from './scenarios/door-pin.mjs'
 import { streamPaceScenario } from './scenarios/stream-pace.mjs'
 import { streamJitterScenario } from './scenarios/stream-jitter.mjs'
@@ -41,6 +42,7 @@ import { remoteSettingsScenario } from './scenarios/remote-settings.mjs'
 import { usernameCompositionScenario } from './scenarios/username-composition.mjs'
 import { usernameImeScenario } from './scenarios/username-ime.mjs'
 import { customBrandScenario } from './scenarios/custom-brand.mjs'
+import { brandingPresetsScenario, brandingPresetUiScenario } from './scenarios/branding-presets.mjs'
 import { dsBotScenario } from './scenarios/ds-bot.mjs'
 import { sessionPanelScenario } from './scenarios/session-panel.mjs'
 import { CANVAS } from './shoot.mjs'
@@ -411,6 +413,8 @@ const SCENARIOS = {
    * only while the skin's follow moves the position (D40, D74).
    */
   readerScroll: readerScrollScenario({ check }),
+  /** Completion-time fold room is the host's reading-position reservation (turn-spacer.mjs). */
+  turnSpacer: turnSpacerScenario({ check }),
   /** A door rolling at the tail mid-stream leaves the status line pinned where it stood (door-pin.mjs, D40). */
   doorPin: doorPinScenario({ check }),
   /** An answer arriving faster than a slide carries it: the composer stands still and the column stays on the pin (stream-pace.mjs, D85). */
@@ -606,6 +610,8 @@ const SCENARIOS = {
   usernameIme: usernameImeScenario({ check }),
   /** The reader's own brand images through the host half's routes and on the real shell (packages/testing/scenarios/custom-brand.mjs, D30). */
   customBrand: customBrandScenario({ check }),
+  brandingPresets: brandingPresetsScenario({ check }),
+  brandingPresetUi: brandingPresetUiScenario({ check }),
   /** The Chat / Code switch beside ds-bot's published browser half (packages/testing/scenarios/ds-bot.mjs, D74). */
   dsBot: dsBotScenario({ check }),
   /**

@@ -54,6 +54,7 @@ interface SchemaFactory {
   object(fields: Record<string, unknown>): unknown
   string(): SchemaField
   boolean(): SchemaField
+  any(): SchemaField
   union(items: unknown[]): SchemaField
   array(item: unknown): SchemaField
 }
@@ -80,6 +81,9 @@ function volatileField(field: SchemaField | null | undefined) {
  * half clamps what it reads and falls back to the default.
  */
 function prefsField(Schema: SchemaFactory, key: PrefKey) {
+  // Structured scheme and logo records are normalized by the shared preference
+  // clamp; refusing them here would stop the plugin before that parser can run.
+  if (key === 'paletteSchemes' || key === 'brandingPresets') return Schema.any().default(PREFS[key].default)
   return Schema
     .union([Schema.string(), Schema.boolean(), Schema.array(Schema.string())])
     .default(PREFS[key].default)
