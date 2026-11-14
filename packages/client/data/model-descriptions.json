@@ -82,7 +82,7 @@
       "note": "Per-brand overrides for the vendored lockup, applied by scripts/data/fetch-lobe-combines.py. `word` is the word the lockup stands in for inside a model name (it must match how the catalog spells it, which is not always Lobe's TITLE), `mark` and `text` name the Lobe icons the two halves are taken from (so a model line can wear its own mark with its parent's wordmark), `keep` crops a wordmark to a fraction of its ink width (GLM-V's \"-V\" is not part of the name), and `tint` is the brand colour a hand-provided mark wears on the ivory canvas, where a fetched mark carries Lobe's own.",
       "meta": { "word": "Meta", "lockup": true },
       "openai": { "word": "GPT", "local": "openai.svg", "textFrom": 0.529 },
-      "tencent": { "word": "Hunyuan", "mark": "hunyuan", "text": "tencent" },
+      "tencent": { "word": "Hunyuan", "local": "tencent.svg" },
       "stepfun": { "word": "Step", "mark": "stepfun", "text": "stepfun" },
       "xiaomimimo": { "word": "MiMo", "mark": "xiaomimimo", "text": "xiaomimimo" },
       "nanobanana": { "word": "Nano Banana" },

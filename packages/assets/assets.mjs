@@ -41,6 +41,9 @@ export const SOURCE_ONLY = new Set([
   // No upstream icon carries Beam's vendor, so its lockup is composed from this
   // artwork the same way.
   'icons/reflection.svg',
+  // Tencent Hunyuan's own mark: scripts/data/fetch-lobe-combines.py composes the
+  // tencent lockup from this mark and Lobe's English wordmark.
+  'icons/tencent.svg',
 ])
 
 const SHEET_FILE = /^[a-z]+(?:-[a-z]+)*\.png$/
