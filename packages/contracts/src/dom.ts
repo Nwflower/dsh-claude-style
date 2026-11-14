@@ -168,6 +168,8 @@ export const FLOW_KIND_ATTRIBUTE = 'data-chat-flow-kind'
 /** The kind of an assistant step's row: its thinking or its output. */
 export const ASSISTANT_STEP_KIND = 'assistant-step'
 export const TOOL_CALL_KIND = 'tool-call'
+/** The kind of a context injection's row: what the host put into the model's context beside the conversation. */
+export const CONTEXT_ROW_KIND = 'context'
 /** The kind of a turn's process group, which the host's widest flow gap follows (D78). */
 export const TURN_PROCESS_ROW_KIND = 'turn-process'
 /** A settled turn's tail row, which carries the answer's own action controls. */

@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-13",
+  "group": "improvements",
+  "order": 0,
+  "external": true,
+  "zh": "进行中的回合每写出一行过程——工具调用、思考、上下文注入——这一行用 0.24 秒淡入、上移并从左侧放大到位，打开或切换会话时已有的行不重播",
+  "en": "Each process row a running turn writes — a tool call, a thought, a context injection — fades in, rises and grows from its leading edge over 0.24 s, and the rows already standing when a session is opened or switched to never replay"
+}

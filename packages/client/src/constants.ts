@@ -149,6 +149,10 @@ export const CHAT_REVEAL_MIN_OPACITY = 0
 export const CHAT_REVEAL_ALPHA_CURVE = 2
 export const CHAT_REVEAL_HIGHLIGHT_PREFIX = 'dsh-claude-tok-'
 export const CHAT_REVEAL_COLOR_VAR = '--dsh-claude-run-color'
+/** Present while a turn's process rows are given their entrance (features/chat-row-enter/): the stylesheet's entrance rule hangs off it, so switching the feature off leaves the rows exactly as the host draws them. */
+export const CHAT_ROW_ENTER_ATTR = 'data-dsh-claude-row-enter'
+/** On one process row for the span of its entrance (features/chat-row-enter/row-enter.ts): the stylesheet hangs that entrance on the mark, and the row takes it off once it has played. */
+export const ROW_ENTERING_ATTR = 'data-dsh-claude-row-entering'
 /** On the real message row while the send bubble's stand-in is flying (features/chat-send/): the stylesheet hides that row, keeping its layout box so the stand-in can measure the destination from it every frame. */
 export const CHAT_FLYING_ATTR = 'data-dsh-claude-send-flight'
 /** On the row of a message just sent while it grows in place (features/chat-send/): the stylesheet hangs the entrance animation off it, so that row animates once — a row rendered by a restored session never carries the mark. */
