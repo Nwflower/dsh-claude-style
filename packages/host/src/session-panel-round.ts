@@ -5,6 +5,8 @@
  * an appended user-sourced message starts a new reading round. Calls retain
  * their round until results arrive, so a late result cannot enter a newer one.
  * The same ordered fold handles a restored log and incremental poll batches.
+ * Only the outputs are read by round; the rail's work sections keep the whole
+ * session.
  */
 import type { PanelOutput } from '@dsh-claude-style/contracts/session-panel'
 import type { PanelEvent } from './session-panel-log.js'
@@ -17,7 +19,6 @@ const WRITE_TOOLS = new Set(['write', 'edit', 'str_replace_editor'])
 interface RoundCall {
   round: number
   written: string | null
-  child: string | null
 }
 
 /** Latest-round rows and durable attribution retained across poll boundaries. */
@@ -26,11 +27,10 @@ export interface PanelRoundState {
   since: number
   outputs: PanelOutput[]
   calls: Map<string, RoundCall>
-  children: Map<string, number>
 }
 
 export function createPanelRound(): PanelRoundState {
-  return { round: 0, since: 0, outputs: [], calls: new Map(), children: new Map() }
+  return { round: 0, since: 0, outputs: [], calls: new Map() }
 }
 
 function text(value: unknown): string | null {
@@ -74,13 +74,7 @@ export function foldPanelRound(state: PanelRoundState, events: readonly PanelEve
       const args = panelArguments(data.arguments)
       const written = WRITE_TOOLS.has(String(data.name)) && args !== null
         ? text(args.path) ?? text(args.file_path) ?? text(args.target_file) ?? text(args.filePath) : null
-      const child = data.name === 'send_message' && args !== null ? text(args.agent_id) : null
-      state.calls.set(id, { round: state.round, written, child })
-      continue
-    }
-    if (event.type === 'subagent/catalog') {
-      const id = text(data.childId)
-      if (id !== null) state.children.set(id, state.round)
+      state.calls.set(id, { round: state.round, written })
       continue
     }
     if (event.type === 'deliverables/presented') {
@@ -97,14 +91,7 @@ export function foldPanelRound(state: PanelRoundState, events: readonly PanelEve
       const id = text(data.message?.source?.callId)
       const call = id === null ? undefined : state.calls.get(id)
       if (call === undefined || data.error !== undefined || data.message?.isError === true) continue
-      if (call.child !== null) state.children.set(call.child, call.round)
       if (call.round === state.round && call.written !== null) rememberOutput(state, call.written, 'written', directory)
     }
   }
-}
-
-/** Unknown registry-only records use their creation time; a legacy log has no boundary. */
-export function belongsToPanelRound(state: PanelRoundState, kind: 'children', id: string, createdAt: number) {
-  const round = state[kind].get(id)
-  return round === undefined ? state.round === 0 || (state.since > 0 && createdAt >= state.since) : round === state.round
 }

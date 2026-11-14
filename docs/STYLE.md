@@ -394,13 +394,12 @@ measured against the whole window. The figures carry no estimate mark; one
 caption under the legend says the parts are estimates and its tooltip explains
 the calibration. Free space is the window less occupancy.
 
-Outputs and subagents cover the latest human-prompted round. Tool results,
-background notices and automatic continuations keep that round. An older child
-that is still running remains visible until it ends; continuing an existing child
-in the current round brings it into that round. Processes include every command
+Outputs cover the latest human-prompted round. Tool results, background notices
+and automatic continuations keep that round. Processes include every command
 invocation across the session, with foreground waiting and background execution
-identified from the creating invocation and its result. Tasks, team boards and
-bound change requests remain session-wide.
+identified from the creating invocation and its result. Subagents list every
+child the session started, a running one above the finished count it settles
+behind. Tasks, team boards and bound change requests remain session-wide.
 
 A list shows two rows; the rest fold behind a quiet full-width control that
 names the count left, which keeps a long list from pushing the sections under it

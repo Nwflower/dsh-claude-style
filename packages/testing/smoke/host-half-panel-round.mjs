@@ -60,8 +60,8 @@ export async function hostPanelRound({ mod, fakeHost, request, browser, scratchH
   check('a new human input clears old outputs before a new delivery', empty.outputs.length === 0, JSON.stringify(empty.outputs))
   check('command history spans human inputs while running commands remain actionable',
     empty.background.jobs.map(job => job.id).sort().join() === 'old-finished,old-running', JSON.stringify(empty.background.jobs))
-  check('old running and newly resumed children survive while old completed children leave',
-    empty.background.subagents.map(child => child.id).sort().join() === 'running-child,ui-resumed-child', JSON.stringify(empty.background.subagents))
+  check('every catalogued child keeps its row, settled ones included',
+    empty.background.subagents.map(child => child.id).sort().join() === 'reused-child,running-child,stale-child,ui-resumed-child', JSON.stringify(empty.background.subagents))
   incremental.push(...numbered.slice(initial.length))
   projections.incremental.subagentCatalog = catalogRows
   const advanced = await read('incremental')
@@ -74,8 +74,8 @@ export async function hostPanelRound({ mod, fakeHost, request, browser, scratchH
     advanced.outputs[0]?.origin === 'presented', JSON.stringify(advanced.outputs))
   check('late old-round writes and presentations stay out of the new round',
     !advanced.outputs.some(output => /late/.test(output.path)), JSON.stringify(advanced.outputs))
-  check('successful child reuse and current creation enter the round while failed reuse stays out',
-    advanced.background.subagents.map(child => child.id).sort().join() === 'latest-child,reused-child,running-child,ui-resumed-child', JSON.stringify(advanced.background.subagents))
+  check('a child started later joins the session list rather than a round',
+    advanced.background.subagents.map(child => child.id).sort().join() === 'latest-child,reused-child,running-child,stale-child,ui-resumed-child', JSON.stringify(advanced.background.subagents))
   check('current and earlier commands remain in the session history',
     advanced.background.jobs.map(job => job.id).sort().join() === 'late-nested,new-finished,old-finished,old-running', JSON.stringify(advanced.background.jobs))
   incremental.push({ ...settled('old-running'), seq: numbered.length })

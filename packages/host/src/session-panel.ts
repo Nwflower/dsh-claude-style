@@ -29,7 +29,7 @@ import type { PanelEvent } from './session-panel-log.js'
 import { createPanelContext, foldPanelContext, panelContextOf } from './session-panel-context.js'
 import { compactionThresholdOf } from './session-compact.js'
 import type { PanelContextState } from './session-panel-context.js'
-import { belongsToPanelRound, createPanelRound, foldPanelRound } from './session-panel-round.js'
+import { createPanelRound, foldPanelRound } from './session-panel-round.js'
 import type { PanelRoundState } from './session-panel-round.js'
 import { isPanelProcess } from './session-panel-call.js'
 import type { PanelInvocation } from './session-panel-call.js'
@@ -484,9 +484,9 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
       const kept = entry.children.get(id)
       const facts = kept !== undefined && Date.now() - kept.at < CHILD_FACTS_TTL_MS ? kept.facts : await childFacts(id)
       if (kept === undefined || kept.facts !== facts) entry.children.set(id, { facts, at: Date.now() })
+      // Every catalogued child keeps a row: the section is the session's own
+      // record of them, and the rail hides finished rows behind its count (D94).
       const isRunning = running(id) ?? facts.running
-      const resumed = entry.round.since > 0 && facts.lastStartedAt >= entry.round.since
-      if (!isRunning && !resumed && !belongsToPanelRound(entry.round, 'children', id, number(child.createdAt) ?? 0)) continue
       subagents.push({
         id,
         label: text(child.label) ?? '',

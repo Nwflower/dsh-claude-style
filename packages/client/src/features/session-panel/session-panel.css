@@ -575,10 +575,10 @@ body[data-dsh-claude-style] .dsh-claude-panel-job-output {
 
 /* The host's own background-work chips beside the title step aside while the
    details rail stands: the same work is the panel's Background tasks section,
-   where a row opens the child session or the job's output (D94). The team chip
-   keeps its seat. */
-body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-claude-part~="header-actions"] button[aria-haspopup="tree"],
-body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-claude-part~="header-actions"] button[aria-expanded]:not([aria-haspopup]) {
+   where a row opens the child session or the job's output (D94). The subagent
+   root's own dialog trigger is the catalog entry; the session switcher beside it
+   and the team chip keep their seats. */
+body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-claude-part~="header-actions"] :is([data-subagent-action] button[aria-haspopup="dialog"], button[aria-haspopup="tree"], button[aria-expanded]:not([aria-haspopup])) {
   display: none;
 }
 

@@ -98,6 +98,7 @@ const readHeaderActions = (page) => page.evaluate(() => {
     exists: actions !== null,
     expanded: visible('[data-slot="conversation.session.header.actions"] button[aria-expanded]'),
     tree: visible('[data-slot="conversation.session.header.actions"] button[aria-haspopup="tree"]'),
+    catalog: visible('[data-slot="conversation.session.header.actions"] [data-subagent-action] button[aria-haspopup="dialog"]'),
   }
 })
 
@@ -657,7 +658,7 @@ export function sessionPanelScenario({ check }) {
             notes.layout.rail.top >= notes.layout.header.bottom - 1,
           JSON.stringify({ column: notes.layout?.column ?? null, header: notes.layout?.header ?? null, rail: notes.layout?.rail ?? null })),
         check('the host header chips step aside while the rail stands',
-          notes.headerActions?.exists === false || (notes.headerActions.expanded === 0 && notes.headerActions.tree === 0),
+          notes.headerActions?.exists === false || (notes.headerActions.expanded === 0 && notes.headerActions.tree === 0 && notes.headerActions.catalog === 0),
           JSON.stringify(notes.headerActions ?? null)),
         check('a narrow frame puts the rail away and a wide one brings it back', notes.narrow === false && notes.wide === true, JSON.stringify({ narrow: notes.narrow, wide: notes.wide })),
         check('the header control shows the rail as pressed while it stands',
