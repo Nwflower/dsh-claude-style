@@ -143,7 +143,10 @@ body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-comp
   overflow: hidden;
 }
 body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] [data-dsh-claude-part~="modes"] button {
-  max-width: 100%;
+  /* The permissions' own 132px cap stays; inside a modes box the row already
+     shrank, the button is only as wide as that box, so a long tier name ends in
+     its ellipsis instead of being clipped by the box. */
+  max-width: min(132px, 100%);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

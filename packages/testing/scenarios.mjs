@@ -276,7 +276,7 @@ const SCENARIOS = {
       return [
         check('页面是手机的宽度', narrow.width === 390, `innerWidth=${narrow.width}`),
         check('权限选择器收起了下三角', narrow.chevron === false, `chevron=${narrow.chevron}`),
-        check('窄屏下两个选择器的名称超出时以省略号收尾', narrow.permMax === '132px' &&
+        check('窄屏下两个选择器的名称超出时以省略号收尾', narrow.permMax === 'min(132px, 100%)' &&
           (narrow.modelMax === '280px' || narrow.modelMax === 'none') &&
           narrow.permEllipsis === 'ellipsis' && narrow.modelEllipsis === 'ellipsis',
           JSON.stringify({ permMax: narrow.permMax, modelMax: narrow.modelMax, perm: narrow.permEllipsis, model: narrow.modelEllipsis })),
