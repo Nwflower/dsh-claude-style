@@ -245,6 +245,19 @@
       ]
     },
     {
+      "reason": "窄视口不被走查到达：走查固定 1280×900，页面从不写 data-dsh-claude-page-under-1000 / -under-768（-under-480 同理）",
+      "selectors": [
+        "body[data-dsh-claude-style][data-dsh-claude-page-under-480] [data-dsh-claude-meter-ring]>button>span",
+        "body[data-dsh-claude-style][data-dsh-claude-page-under-1000] .dsh-claude-ban-column",
+        "body[data-dsh-claude-style][data-dsh-claude-page-under-1000] .dsh-claude-ban-toast",
+        "body[data-dsh-claude-style][data-dsh-claude-page-under-768][data-dsh-claude-home-layout=studio] [data-dsh-claude-part~=composer-hero]>:is([data-slot=\"conversation.input.dock\"],.dsh-claude-home-seat)>*",
+        "body[data-dsh-claude-style][data-dsh-claude-page-under-768] .dsh-claude-home-stats",
+        "body[data-dsh-claude-style][data-dsh-claude-page-under-768] [data-dsh-claude-part~=layout-frame][data-rightbar-collapsed]",
+        "body[data-dsh-claude-style][data-dsh-claude-page-under-1000]:not([data-dsh-claude-page-under-768]) [data-dsh-claude-part~=layout-frame]:not([data-sidebar-drawer])[data-sidebar-collapsed][data-rightbar-collapsed]",
+        "body[data-dsh-claude-style][data-dsh-claude-page-under-1000]:not([data-dsh-claude-page-under-768]) [data-dsh-claude-part~=layout-frame][data-sidebar-drawer][data-rightbar-collapsed]"
+      ]
+    },
+    {
       "reason": "搜索面板里没有结果：走查的查询词在临时宿主里搜不到东西",
       "selectors": [
         "body[data-dsh-claude-style][data-dsh-claude-search-style=standalone] .dsh-claude-search-bar",
