@@ -3,12 +3,23 @@
  * and 4:1 wordmark, and the page paints them over the brand's own art — the sidebar's
  * mark and wordmark, the hero's mark and the account row's fallback picture —
  * then inks them in the colour the preset's ink names, and hands the accent
- * back when it is cleared.
+ * back when it is cleared. With no preset selected, the art the brand draws
+ * itself takes the mark-colour choice through the same token.
  */
 (function () {
   var probe = window.__dshSmokeProbe
   var sleep = probe.sleep
   var r = probe.report
+
+  /** A colour the page paints with, resolved by the browser through a token name. */
+  var resolved = function (property) {
+    var swatch = document.createElement('span')
+    swatch.style.color = 'var(' + property + ')'
+    document.body.appendChild(swatch)
+    var colour = getComputedStyle(swatch).color
+    swatch.remove()
+    return colour
+  }
 
   probe.step(async function () {
     await probe.onlyFor(['custom-brand'], async function () {
@@ -80,11 +91,7 @@
       r.customBrand = { images: read() }
       // The accent the page paints, resolved the way the browser resolves the
       // token the images are filled with.
-      var swatch = document.createElement('span')
-      swatch.style.color = 'var(--dsw-alias-brand-primary)'
-      document.body.appendChild(swatch)
-      r.customBrand.accentRgb = getComputedStyle(swatch).color
-      swatch.remove()
+      r.customBrand.accentRgb = resolved('--dsw-alias-brand-primary')
       window.__pushForm(Object.assign(preset('text'), { paletteColors: 'custom', customAccent: '#1a7f5a', brandName: 'Acme' }))
       await sleep(150)
       r.customBrand.tinted = read()
@@ -98,6 +105,80 @@
       r.customBrand.cleared = read()
       sidebar.remove()
       heroHolder.remove()
+    })
+  })
+
+  // The art the brand draws itself, under the mark-colour choice with no preset
+  // selected (D97): the Claude brand draws its mark as an alpha mask and the
+  // DeepSeek brand keeps the host's whale, and the two take their ink from the
+  // logo-ink token, the one the settings page's preview and the account row's
+  // picture read. The palette is held on the Claude card, so the three inks
+  // answer against one set of tokens whichever mark stands above them.
+  probe.step(async function () {
+    await probe.onlyFor(['custom-brand'], async function () {
+      // The host's sidebar brand in the shape ui-sidebar renders it, inside the
+      // host anchor the skin reads its parts in (D3).
+      var sidebar = document.createElement('div')
+      sidebar.setAttribute('data-slot', 'sidebar')
+      sidebar.innerHTML =
+        '<span class="_brandIdentity_x_1"><span class="_brandMark_x_1"><svg viewBox="0 0 8 8"></svg></span></span>'
+      document.body.appendChild(sidebar)
+      var mark = sidebar.querySelector('._brandMark_x_1')
+      if (mark === null) throw new Error('smoke: the sidebar brand carries no mark seat')
+      // The parts land on the pass after the subtree arrives (D3), under either
+      // brand: the seat reads as one of the host's own the moment they do.
+      var seated = function () {
+        return probe.attrs(mark).some(function (name) { return /-part$/.test(name) })
+      }
+      for (var look = 0; look < 40 && !seated(); look++) await sleep(50)
+      if (!seated()) throw new Error('smoke: the sidebar mark never took its part')
+      // A masked seat is the skin's own drawing, so its ink is the mask's fill;
+      // the host's whale keeps its art and takes the colour it inherits.
+      var seatInk = function (art) { return art.masked ? art.fill : art.colour }
+      var read = function () {
+        var art = getComputedStyle(mark, '::before')
+        return {
+          masked: art.maskImage !== 'none',
+          fill: art.backgroundColor,
+          colour: getComputedStyle(mark).color,
+          accent: resolved('--dsw-alias-brand-primary'),
+          text: resolved('--dsw-alias-label-primary'),
+        }
+      }
+      var brands = ['claude', 'deepseek']
+      var inks = ['original', 'accent', 'text']
+      var readings = { claude: {}, deepseek: {} }
+      for (var at = 0; at < brands.length; at++) {
+        for (var ink = 0; ink < inks.length; ink++) {
+          window.__pushForm({ brandingPreset: '', brandInk: inks[ink], brand: brands[at], paletteColors: 'claude' })
+          await sleep(150)
+          readings[brands[at]][inks[ink]] = read()
+        }
+      }
+      r.customBrand.sidebarInk = readings
+      var failures = []
+      var seen = []
+      for (var one = 0; one < brands.length; one++) {
+        var brand = brands[one]
+        var tones = readings[brand]
+        var original = seatInk(tones.original)
+        seen.push(brand + ': ' + inks.map(function (tone) { return tone + ' ' + seatInk(tones[tone]) }).join(', '))
+        if (seatInk(tones.accent) !== tones.accent.accent) {
+          failures.push(brand + ' paints the accent in ' + seatInk(tones.accent) + ' rather than in the accent token ' + tones.accent.accent)
+        }
+        if (seatInk(tones.text) !== tones.text.text) {
+          failures.push(brand + ' paints the text ink in ' + seatInk(tones.text) + ' rather than in the label token ' + tones.text.text)
+        }
+        if (seatInk(tones.accent) === original) failures.push(brand + ' keeps its original ink ' + original + ' under the accent')
+      }
+      sidebar.remove()
+      // The shipped state back: the theme style's own art in its own ink.
+      window.__pushForm({ brandingPreset: '', brandInk: 'original', brand: 'claude', paletteColors: 'brand' })
+      await sleep(150)
+      if (failures.length > 0) {
+        throw new Error('smoke: the sidebar mark does not take the ink the choice names — ' +
+          failures.join('; ') + ' — ' + seen.join('; '))
+      }
     })
   })
 })()

@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-15",
+  "group": "fixes",
+  "order": 359,
+  "external": true,
+  "zh": "标志颜色对 Claude 品牌的侧栏标志与字标生效，与设置页预览和账号行头像读同一个颜色",
+  "en": "Make the mark-colour choice reach the Claude brand's sidebar mark and wordmark, in the same colour the settings preview and the account row's picture take"
+}

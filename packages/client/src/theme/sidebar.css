@@ -1,7 +1,10 @@
 /* ---------- Claude Code layout: sidebar brand ---------- */
 /* The shipped whale and wordmark give way to the selected brand, each painted as
-   an alpha mask over currentColor so it follows the label colour. The choice is a
-   document attribute, so the settings page flips one attribute and the UI follows.
+   an alpha mask in --dsh-claude-logo-ink: that value is the brand palette's, or
+   the reader's mark-colour choice written onto <body> (features/brand/brand.ts),
+   and the settings page's preview and the account row's picture read the same
+   token. The choice is a document attribute, so the settings page flips one
+   attribute and the UI follows.
    Sizing: an 18px cap height to match the shipped brandName box, the wordmark's
    width read from that height through the artwork's aspect ratio (its viewBox,
    512.22 × 121.54, packages/assets/src/brand/claude-word.svg). */
@@ -13,7 +16,7 @@ body[data-dsh-claude-style][data-dsh-claude-brand="claude"] :is([data-dsh-claude
   content: "";
   display: block;
   flex: none;
-  background-color: currentColor;
+  background-color: var(--dsh-claude-logo-ink);
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
@@ -36,7 +39,7 @@ body[data-dsh-claude-style][data-dsh-claude-brand="claude"] [data-dsh-claude-par
   content: "";
   display: block;
   flex: none;
-  background-color: currentColor;
+  background-color: var(--dsh-claude-logo-ink);
 }
 
 body[data-dsh-claude-style][data-dsh-claude-brand="claude"] [data-dsh-claude-part~="brand-identity"] > [data-dsh-claude-part~="brand-name"]::before {
