@@ -5,6 +5,7 @@ import { activeLocale } from '../../core/i18n'
 import { ensureSeatBox, ensureSeatPart } from './seat-box'
 import type { SeatPart } from './seat-box'
 import { loadModelCopy } from './model-copy'
+import { modelBrand } from './brand'
 import { readPrefs } from '../../core/prefs'
 import { findPrimaryModelSlot, withSlots } from '@dsh-claude-style/engine/host'
 import { createModelCatalog } from './catalog'
@@ -30,6 +31,8 @@ import { createTeamMode } from './team-mode'
 export interface ModelHandle extends FeatureHandle {
   /** The provider the shown session routes to, or null before the catalog answers. */
   provider(): string | null
+  /** The current model family's styling id, resolved from its catalog id and display name (D79). */
+  family(): string | null
   /** The scheduler's own dismiss route; the effort picker calls it with no reason. */
   close(reason?: CloseReason): void
   /** The skin's seat box: the model's text and the effort level's share it (seat-box.ts). */
@@ -567,6 +570,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     // own billing from a provider that settles elsewhere.
     provider() {
       return modelCatalog.snapshot()?.current?.provider ?? null
+    },
+    family() {
+      const active = modelCatalog.current(modelCatalog.snapshot())
+      return active === null ? null : modelBrand(active.model.id, active.model.name)
     },
     // The seat sits on the composer, outside the column a streaming batch
     // touches, so such a batch skips this pass (D40).
