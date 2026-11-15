@@ -1,9 +1,9 @@
-import { QUIET_ATTR, STATS_POSITION_FOOTER } from '../../constants'
+import { FOOTER_TOKEN_UNITS, QUIET_ATTR, STATS_POSITION_FOOTER } from '../../constants'
 import { readPrefs } from '../../core/prefs'
 import { buildElement, setAttributeIfChanged, writeTextInPlace } from '@dsh-claude-style/engine/dom'
 import { findComposerCard, findComposerStats } from '@dsh-claude-style/engine/host'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
-import { formatCompactTokens } from '../../shared/format'
+import { formatCompactTokens, formatUnitTokens } from '../../shared/format'
 import { inPageBox, inPagePixels } from '../../shared/page-zoom'
 import { createStatsCount } from './stats-count'
 import { createFooterLayout, findStatsDock } from './footer-layout'
@@ -125,6 +125,26 @@ function writeText(node: Text, text: string) {
 /** The same for the one label that has to be an element, so the ladder can hide it. */
 function writeLabel(element: HTMLElement, text: string) {
   if (element.textContent !== text) element.textContent = text
+}
+
+/**
+ * The compact footer's one token total: the K/M/B units the reader asked for
+ * with one decimal place kept, or the grouped whole number with the host's
+ * unit word. The tightest footer step writes an abbreviated unit word of its
+ * own, since that step is the width the toolbar has left.
+ *
+ * @param footerAt - the footer's detail step: 0 is the tightest, 1 the exact reading.
+ */
+function footerTotalText(total: number, footerAt: number, units: boolean, chat: HostText, tokenParts: string[]) {
+  const rounded = Math.round(total)
+  if (!units) {
+    return footerAt === 0
+      ? `${formatCompactTokens(rounded)}tok`
+      : `${sessionStatsGrouped(rounded, chat)}${tokenParts[1] ?? ' tok'}`
+  }
+  return footerAt === 0
+    ? `${formatUnitTokens(rounded)}tok`
+    : `${formatUnitTokens(rounded)}${tokenParts[1] ?? ' tok'}`
 }
 
 /** One template's words, its numbers replaced by MARK and split on them. */
@@ -391,19 +411,22 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
       writeTextInPlace(shown.cell.ttft, sessionStatsDuration(stats.ttftMs / stats.ttftSteps, chat))
     }
     if (hasTokens && usage !== null) {
-      // Every token figure folds into k / M / B at the ladder's last step. The
-      // compact footer's one total wears that folded shape and its unit from the
-      // first character.
-      const readTokens = (value: number) => at >= FIT_MAX ? formatCompactTokens(Math.round(value)) : sessionStatsGrouped(Math.round(value), chat)
+      // Every token figure folds into k / M / B at the ladder's last step, and
+      // the footer's figures take the reader's unit choice in every detail
+      // step, the two directions as well as the total.
+      const footerUnits = footerMode && prefs.statsFooterTokenFormat === FOOTER_TOKEN_UNITS
+      const readTokens = (value: number) => footerUnits
+        ? formatUnitTokens(Math.round(value))
+        : at >= FIT_MAX
+          ? formatCompactTokens(Math.round(value))
+          : sessionStatsGrouped(Math.round(value), chat)
       const total = billed + usage.outputTokens
       writeTextInPlace(shown.cell.input, readTokens(billed))
       writeText(shown.cell.inputTail, tokenParts[1] ?? '')
       writeTextInPlace(shown.cell.output, readTokens(usage.outputTokens))
       writeText(shown.cell.outputTail, tokenParts[1] ?? '')
       writeTextInPlace(shown.cell.total, footerMode
-        ? footerAt === 0
-          ? `${formatCompactTokens(Math.round(total))}tok`
-          : `${sessionStatsGrouped(Math.round(total), chat)}${tokenParts[1] ?? ' tok'}`
+        ? footerTotalText(total, footerAt, prefs.statsFooterTokenFormat === FOOTER_TOKEN_UNITS, chat, tokenParts)
         : readTokens(total))
       // A figure that is still coming keeps the segment's place with the
       // currency's own dash; the amount replaces it in the width it needs, and

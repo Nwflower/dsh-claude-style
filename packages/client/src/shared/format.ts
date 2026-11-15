@@ -30,6 +30,29 @@ export function textOf(value: unknown) {
   return value === undefined || value === null ? '' : String(value)
 }
 
+/** The token-unit steps, low to high; the compact reading and the footer's unit reading walk the same four. */
+const TOKEN_UNIT_STEPS = [1e3, 1e6, 1e9, 1e12] as const
+/** The units the compact reading writes, lowercase as Claude Code writes them. */
+const COMPACT_TOKEN_UNITS = ['k', 'M', 'B', 'T'] as const
+/** The units the footer's figures write when the reader asks for them. */
+const UNIT_TOKEN_UNITS = ['K', 'M', 'B', 'T'] as const
+
+/**
+ * The step a count reads in and its reading in tenths of that step, moved up a
+ * step when rounding would carry it over that step's top — 999,960 is no
+ * reading at 1000.0k, so it reads 1M, or 1.0M where the decimal stays.
+ */
+function tokenTenths(value: number) {
+  let unit = 0
+  while (unit + 1 < TOKEN_UNIT_STEPS.length && value >= TOKEN_UNIT_STEPS[unit + 1]) unit++
+  let tenths = Math.round(value / TOKEN_UNIT_STEPS[unit] * 10)
+  if (tenths >= 1e4 && unit + 1 < TOKEN_UNIT_STEPS.length) {
+    unit += 1
+    tenths = Math.round(value / TOKEN_UNIT_STEPS[unit] * 10)
+  }
+  return { unit, tenths }
+}
+
 /**
  * One token count the way Claude Code writes it: one decimal at most, a
  * whole number without its ".0", and a lowercase k — "109M", "4.4M",
@@ -42,15 +65,20 @@ export function formatCompactTokens(count: unknown) {
   const value = Number(count) || 0
   const whole = Math.round(value)
   if (whole < 1e3) return String(whole)
-  const units: [number, string][] = [[1e3, 'k'], [1e6, 'M'], [1e9, 'B']]
-  let unit = 0
-  while (unit + 1 < units.length && value >= units[unit + 1][0]) unit++
-  let tenths = Math.round(value / units[unit][0] * 10)
-  // A reading that the next step up would take over — 999,960 reads 1000.0k —
-  // moves to that unit, so no figure stands above its own unit's reach.
-  if (tenths >= 1e4 && unit + 1 < units.length) {
-    unit += 1
-    tenths = Math.round(value / units[unit][0] * 10)
-  }
-  return String(tenths / 10) + units[unit][1]
+  const { unit, tenths } = tokenTenths(value)
+  return String(tenths / 10) + COMPACT_TOKEN_UNITS[unit]
+}
+
+/**
+ * One token count in the units the footer's figures wear when the reader asks
+ * for them: K/M/B/T with one decimal place kept on every figure ("1.0K",
+ * "12.3M"), so a reading keeps its width while it crosses a unit. A count
+ * below a thousand has no unit to carry and stays a whole number.
+ */
+export function formatUnitTokens(count: unknown) {
+  const value = Number(count) || 0
+  const whole = Math.round(value)
+  if (whole < 1e3) return String(whole)
+  const { unit, tenths } = tokenTenths(value)
+  return (tenths / 10).toFixed(1) + UNIT_TOKEN_UNITS[unit]
 }

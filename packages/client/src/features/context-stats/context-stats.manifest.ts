@@ -1,4 +1,4 @@
-import { CONVERSATION_COMPOSER_REQUIRES, STATS_POSITION_CONTEXT, STATS_POSITION_FOOTER, STATS_POSITION_INLINE, STATS_POSITION_RAIL } from '../../constants'
+import { CONVERSATION_COMPOSER_REQUIRES, FOOTER_TOKEN_DIGITS, FOOTER_TOKEN_UNITS, STATS_POSITION_CONTEXT, STATS_POSITION_FOOTER, STATS_POSITION_INLINE, STATS_POSITION_RAIL } from '../../constants'
 import type { FeatureManifest } from '../../core/feature'
 
 const FOOTER_REQUIRES = {
@@ -72,10 +72,24 @@ export default {
   }, {
     tab: 'statistics', rank: 54, pref: 'statsFooterTotal', parent: 'statsPosition', title: 'statsFooterTotalTitle', requires: FOOTER_METRIC_REQUIRES,
   }, {
-    tab: 'statistics', rank: 55, pref: 'statsFooterContext', parent: 'statsPosition', title: 'statsFooterContextTitle', requires: FOOTER_METRIC_REQUIRES,
+    // The unit choice hangs off the total it writes, with no hairline between
+    // the two rows: with the total switched off there is no figure for it to
+    // reach.
+    tab: 'statistics',
+    rank: 55,
+    pref: 'statsFooterTokenFormat',
+    parent: 'statsFooterTotal',
+    title: 'statsFooterTokenFormatTitle',
+    choiceLabels: {
+      [FOOTER_TOKEN_DIGITS]: 'statsFooterTokenDigitsSample',
+      [FOOTER_TOKEN_UNITS]: 'statsFooterTokenUnitsSample',
+    },
+    requires: FOOTER_METRIC_REQUIRES,
+  }, {
+    tab: 'statistics', rank: 56, pref: 'statsFooterContext', parent: 'statsPosition', title: 'statsFooterContextTitle', requires: FOOTER_METRIC_REQUIRES,
   }, {
     tab: 'statistics',
-    rank: 56,
+    rank: 57,
     pref: 'billingCurrency',
     title: 'billingCurrencyTitle',
     desc: 'billingCurrencyDesc',
@@ -85,7 +99,7 @@ export default {
     tab: 'statistics',
     // Under the currency it prices in: the table's own unit is that currency,
     // and with billing off there is no cost for it to set.
-    rank: 57,
+    rank: 58,
     pref: 'billingTable',
     parent: 'billingCurrency',
     title: 'billingTableTitle',

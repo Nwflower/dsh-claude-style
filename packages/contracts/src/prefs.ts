@@ -146,6 +146,11 @@ export const STATS_POSITION_RAIL = 'rail'
 export const STATS_POSITIONS = [STATS_POSITION_INLINE, STATS_POSITION_CONTEXT, STATS_POSITION_FOOTER, STATS_POSITION_RAIL] as const
 export const STATS_FOOTER_ALIGNS = ['left', 'center', 'right'] as const
 
+/** How the compact footer writes its token figures: the grouped whole numbers, or K/M/B/T units with one decimal place. */
+export const FOOTER_TOKEN_DIGITS = 'digits'
+export const FOOTER_TOKEN_UNITS = 'units'
+export const FOOTER_TOKEN_FORMATS = [FOOTER_TOKEN_DIGITS, FOOTER_TOKEN_UNITS] as const
+
 /** Context meter face: pie, continuous-band ring or three-band ring. */
 export const CONTEXT_DISPLAY_PIE = 'pie'
 export const CONTEXT_DISPLAY_RING_RAMP = 'ring-ramp'
@@ -359,6 +364,8 @@ export const PREFS = {
   statsFooterCache: { type: 'boolean', default: true },
   statsFooterCost: { type: 'boolean', default: true },
   statsFooterTotal: { type: 'boolean', default: true },
+  /** How the footer's token figures read: the grouped whole numbers, or K/M/B/T units with one decimal place. */
+  statsFooterTokenFormat: { type: 'choice', values: FOOTER_TOKEN_FORMATS, default: FOOTER_TOKEN_DIGITS },
   statsFooterContext: { type: 'boolean', default: true },
   /** Which official price table the session's cost follows, or off for no figure at all. */
   billingCurrency: { type: 'choice', values: BILLING_CHOICES, default: CURRENCY_CNY },
