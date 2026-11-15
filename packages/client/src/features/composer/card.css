@@ -187,10 +187,10 @@ body[data-dsh-claude-style]:not([data-dsh-claude-home-layout="studio"]) [data-ds
 }
 
 body[data-dsh-claude-style]:not([data-dsh-claude-home-layout="studio"]) [data-dsh-claude-part~="composer-stack"][data-composer-variant="hero"] [data-composer-card] {
-  gap: 8px !important;
-  padding-bottom: 2px !important;
-  min-height: 0 !important;
-  height: auto !important;
+  gap: 8px;
+  padding-bottom: 2px;
+  min-height: 0;
+  height: auto;
 }
 
 body[data-dsh-claude-style]:not([data-dsh-claude-home-layout="studio"]) [data-dsh-claude-part~="composer-stack"][data-composer-variant="hero"] > [data-dsh-claude-part~="hero-workspace-row"] {

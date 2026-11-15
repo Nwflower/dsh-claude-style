@@ -16,7 +16,7 @@ body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"]
 body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card],
 body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card]:focus-within {
   background: transparent;
-  border: none !important;
+  border: none;
   /* No canvas wash here: the seat behind the composer paints the opaque bar and
      its fade band (see the seat rules below), so the card needs no
      background-coloured shadow to hide the transcript scrolling past. */
@@ -106,7 +106,7 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="view-area"] {
    views keep it. Hiding the seat also zeroes the host's --dsh-composer-height,
    so the trajectory ledger's bottom clearance collapses with it. */
 body[data-dsh-claude-style] [data-dsh-claude-composer-hidden] [data-composer-seat] {
-  display: none !important;
+  display: none;
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"]:not([data-has-attachments="true"]) [data-dsh-claude-part~="attachment-rail"],
 body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card]:not([data-has-attachments="true"]) [data-dsh-claude-part~="attachment-rail"] {
@@ -115,8 +115,8 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-c
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"][data-has-attachments="true"] [data-dsh-claude-part~="attachment-rail"],
 body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card][data-has-attachments="true"] [data-dsh-claude-part~="attachment-rail"] {
   background: var(--dsw-specific-input-major, #ffffff);
-  border: 1px solid var(--dsw-alias-border-l1) !important;
-  border-bottom: none !important;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-bottom: none;
   border-radius: 14px 14px 0 0;
   padding: 12px 14px 10px 14px;
   margin: 0;
@@ -139,21 +139,24 @@ body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-dsh-claude-part~="co
 }
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-composer-card][data-composer-variant="inline"]:focus-within [data-dsh-claude-part~="attachment-rail"],
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card]:focus-within [data-dsh-claude-part~="attachment-rail"] {
-  border-color: rgba(20, 20, 19, 0.18) !important;
+  border-color: rgba(20, 20, 19, 0.18);
 }
 body[data-dsh-claude-style][data-ds-dark-theme] [data-composer-card][data-composer-variant="inline"]:focus-within [data-dsh-claude-part~="attachment-rail"],
 body[data-dsh-claude-style][data-ds-dark-theme] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card]:focus-within [data-dsh-claude-part~="attachment-rail"] {
-  border-color: rgba(250, 249, 245, 0.22) !important;
+  border-color: rgba(250, 249, 245, 0.22);
 }
 /* The attachment rail nests two levels: ComposerAttachments' outer rail wraps
    AttachmentRail's scrolling inner rail, and both carry the host's own `rail`
    local name, so the block above would draw the card frame twice — one box
    inside the other. Only the outer shell carries the frame; the inner
-   scrolling rail stays frameless. */
-body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"][data-has-attachments="true"] [data-dsh-claude-part~="attachment-rail"] [data-dsh-claude-part~="attachment-rail"],
-body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card][data-has-attachments="true"] [data-dsh-claude-part~="attachment-rail"] [data-dsh-claude-part~="attachment-rail"] {
+   scrolling rail stays frameless. The rail's own name is spelt twice on the
+   segment the rule reaches it by: that name is what the shell's frame rule
+   also ends with, and neither declaration carries a weight, so specificity is
+   what stands this rule above it. */
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"][data-has-attachments="true"] [data-dsh-claude-part~="attachment-rail"] [data-dsh-claude-part~="attachment-rail"][data-dsh-claude-part~="attachment-rail"],
+body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card][data-has-attachments="true"] [data-dsh-claude-part~="attachment-rail"] [data-dsh-claude-part~="attachment-rail"][data-dsh-claude-part~="attachment-rail"] {
   background: transparent;
-  border: none !important;
+  border: none;
   box-shadow: none;
   border-radius: 0;
   padding: 0;
@@ -225,7 +228,7 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-c
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"][data-has-attachments="true"] [data-input-scroll],
 body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card][data-has-attachments="true"] [data-input-scroll] {
-  border-top: none !important;
+  border-top: none;
   border-radius: 0 0 14px 14px;
   /* Seamless join with attachment rail above: 1px negative margin prevents subpixel seam without clipping thumbnails */
   margin-top: -1px;
@@ -254,24 +257,24 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-c
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"][data-dsh-claude-part~="card-workspace-trigger"] [data-input-scroll],
 body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card][data-dsh-claude-part~="card-workspace-trigger"] [data-input-scroll] {
-  border-style: dashed !important;
-  border-color: var(--dsw-alias-border-l4) !important;
-  box-shadow: none !important;
-  cursor: pointer !important;
-  transition: border-color var(--dsh-claude-timing-feedback) !important;
+  border-style: dashed;
+  border-color: var(--dsw-alias-border-l4);
+  box-shadow: none;
+  cursor: pointer;
+  transition: border-color var(--dsh-claude-timing-feedback);
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"][data-dsh-claude-part~="card-workspace-trigger"]:hover [data-input-scroll],
 body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card][data-dsh-claude-part~="card-workspace-trigger"]:hover [data-input-scroll] {
-  border-color: var(--dsw-alias-state-business-primary) !important;
+  border-color: var(--dsw-alias-state-business-primary);
 }
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-composer-card][data-composer-variant="inline"]:focus-within [data-input-scroll],
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card]:focus-within [data-input-scroll] {
-  border-color: rgba(20, 20, 19, 0.18) !important;
+  border-color: rgba(20, 20, 19, 0.18);
   box-shadow: 0 0 0 1px rgba(20, 20, 19, 0.065), 0 4px 12px rgba(20, 20, 19, 0.025);
 }
 body[data-dsh-claude-style][data-ds-dark-theme] [data-composer-card][data-composer-variant="inline"]:focus-within [data-input-scroll],
 body[data-dsh-claude-style][data-ds-dark-theme] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card]:focus-within [data-input-scroll] {
-  border-color: rgba(250, 249, 245, 0.22) !important;
+  border-color: rgba(250, 249, 245, 0.22);
   box-shadow: 0 0 0 1px rgba(250, 249, 245, 0.09), 0 4px 16px rgba(0, 0, 0, 0.20);
 }
 /* With attachments the rail already carries the card's focus ring, so the
@@ -366,7 +369,7 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-c
   box-shadow: none;
   background: transparent;
   color: var(--dsw-alias-label-caption);
-  border: none !important;
+  border: none;
   cursor: pointer;
   transition: color var(--dsh-claude-timing-feedback), background-color var(--dsh-claude-timing-feedback);
 }
@@ -387,8 +390,8 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-c
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] button[data-dsh-claude-control="send"]:not(:disabled):hover,
 body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card] button[data-dsh-claude-control="send"]:not(:disabled):hover {
-  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
-  color: var(--dsw-alias-label-primary) !important;
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
+  color: var(--dsw-alias-label-primary);
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"]:not([data-dsh-claude-draft-empty]) button[data-dsh-claude-control="send"],
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"][data-has-attachments="true"] button[data-dsh-claude-control="send"],
@@ -408,7 +411,7 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-c
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] button[data-dsh-claude-control="stop"]:hover:not(:disabled),
 body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card] button[data-dsh-claude-control="stop"]:hover:not(:disabled) {
-  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
 }
 /* Ring and square are both drawn here: the host ships the square alone, as an SVG
    glyph, and a scaled glyph rasterizes on a subpixel phase of its own, so at 125%
@@ -462,7 +465,7 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-c
   padding: 0 4px;
   margin: 6px 0 0 0;
   background: transparent;
-  border: none !important;
+  border: none;
   box-shadow: none;
   min-height: 28px;
   height: 28px;
@@ -478,25 +481,27 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-c
    the toolbar-row override above — which flattened the shipped definition
    list into one 28px flex line and wrapped every label/value. Restore the
    shipped legend layout: the list stacks vertically, each row keeps its
-   natural height and space-between distribution. */
+   natural height and space-between distribution. Neither block below carries a
+   weight: they are written after the toolbar row's rule, and the row block adds
+   the list as an ancestor, so order and specificity stand them above it. */
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-dsh-claude-part~="rows"],
 body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card] [data-dsh-claude-part~="rows"] {
-  display: block !important;
-  height: auto !important;
-  min-height: 0 !important;
-  width: auto !important;
-  max-width: none !important;
-  padding: 0 !important;
+  display: block;
+  height: auto;
+  min-height: 0;
+  width: auto;
+  max-width: none;
+  padding: 0;
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-dsh-claude-part~="rows"] [data-dsh-claude-part~="row"],
 body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card] [data-dsh-claude-part~="rows"] [data-dsh-claude-part~="row"] {
-  display: flex !important;
-  height: auto !important;
-  min-height: 0 !important;
-  width: auto !important;
-  max-width: none !important;
-  padding: 2px 0 !important;
-  margin: 0 !important;
+  display: flex;
+  height: auto;
+  min-height: 0;
+  width: auto;
+  max-width: none;
+  padding: 2px 0;
+  margin: 0;
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-dsh-claude-part~="tools"],
 body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card] [data-dsh-claude-part~="tools"] {

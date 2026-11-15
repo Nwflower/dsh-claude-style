@@ -404,69 +404,9 @@
       "prop": "padding-bottom",
       "verdict": "transient state"
     },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active]:not([data-dsh-claude-home-layout=studio]) [data-dsh-claude-part~=composer-stack][data-composer-variant=hero] [data-composer-card]{gap:8px!;padding-bottom:2px!;min-height:0!;height:auto!}|gap": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active]:not([data-dsh-claude-home-layout=studio]) [data-dsh-claude-part~=composer-stack][data-composer-variant=hero] [data-composer-card]",
-      "prop": "gap",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active]:not([data-dsh-claude-home-layout=studio]) [data-dsh-claude-part~=composer-stack][data-composer-variant=hero] [data-composer-card]{gap:8px!;padding-bottom:2px!;min-height:0!;height:auto!}|padding-bottom": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active]:not([data-dsh-claude-home-layout=studio]) [data-dsh-claude-part~=composer-stack][data-composer-variant=hero] [data-composer-card]",
-      "prop": "padding-bottom",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active]:not([data-dsh-claude-home-layout=studio]) [data-dsh-claude-part~=composer-stack][data-composer-variant=hero] [data-composer-card]{gap:8px!;padding-bottom:2px!;min-height:0!;height:auto!}|min-height": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active]:not([data-dsh-claude-home-layout=studio]) [data-dsh-claude-part~=composer-stack][data-composer-variant=hero] [data-composer-card]",
-      "prop": "min-height",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active]:not([data-dsh-claude-home-layout=studio]) [data-dsh-claude-part~=composer-stack][data-composer-variant=hero] [data-composer-card]{gap:8px!;padding-bottom:2px!;min-height:0!;height:auto!}|height": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active]:not([data-dsh-claude-home-layout=studio]) [data-dsh-claude-part~=composer-stack][data-composer-variant=hero] [data-composer-card]",
-      "prop": "height",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline]:focus-within,body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card]:focus-within{background:transparent;border:none!;box-shadow:none;outline:none;padding:0;gap:0;display:flex;flex-direction:column;position:relative;width:100%;max-width:var(--dsh-composer-card-max-width, 100%);box-sizing:border-box;overflow:visible;height:auto}|border": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline]:focus-within,body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card]:focus-within",
-      "prop": "border",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-composer-hidden] [data-composer-seat]{display:none!}|display": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-composer-hidden] [data-composer-seat]",
-      "prop": "display",
-      "verdict": "transient state"
-    },
     "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline]:not([data-has-attachments=true]) [data-dsh-claude-part~=attachment-rail],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card]:not([data-has-attachments=true]) [data-dsh-claude-part~=attachment-rail]{display:none!}|display": {
       "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline]:not([data-has-attachments=true]) [data-dsh-claude-part~=attachment-rail],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card]:not([data-has-attachments=true]) [data-dsh-claude-part~=attachment-rail]",
       "prop": "display",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline][data-has-attachments=true] [data-dsh-claude-part~=attachment-rail],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card][data-has-attachments=true] [data-dsh-claude-part~=attachment-rail]{background:var(--dsw-specific-input-major, #ffffff);border:1px solid var(--dsw-alias-border-l1)!;border-bottom:none!;border-radius:14px 14px 0 0;padding:12px 14px 10px;margin:0;width:100%;max-width:100%;box-sizing:border-box;min-height:162px;height:auto;overflow:visible;box-shadow:none;position:relative;transition:border-color var(--dsh-claude-timing-feedback),box-shadow var(--dsh-claude-timing-feedback)}|border": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline][data-has-attachments=true] [data-dsh-claude-part~=attachment-rail],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card][data-has-attachments=true] [data-dsh-claude-part~=attachment-rail]",
-      "prop": "border",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline][data-has-attachments=true] [data-dsh-claude-part~=attachment-rail],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card][data-has-attachments=true] [data-dsh-claude-part~=attachment-rail]{background:var(--dsw-specific-input-major, #ffffff);border:1px solid var(--dsw-alias-border-l1)!;border-bottom:none!;border-radius:14px 14px 0 0;padding:12px 14px 10px;margin:0;width:100%;max-width:100%;box-sizing:border-box;min-height:162px;height:auto;overflow:visible;box-shadow:none;position:relative;transition:border-color var(--dsh-claude-timing-feedback),box-shadow var(--dsh-claude-timing-feedback)}|border-bottom": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline][data-has-attachments=true] [data-dsh-claude-part~=attachment-rail],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card][data-has-attachments=true] [data-dsh-claude-part~=attachment-rail]",
-      "prop": "border-bottom",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active]:not([data-ds-dark-theme]) [data-composer-card][data-composer-variant=inline]:focus-within [data-dsh-claude-part~=attachment-rail],body[data-dsh-claude-style][data-dsh-claude-composer-active]:not([data-ds-dark-theme]) [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card]:focus-within [data-dsh-claude-part~=attachment-rail]{border-color:#1414132e!}|border-color": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active]:not([data-ds-dark-theme]) [data-composer-card][data-composer-variant=inline]:focus-within [data-dsh-claude-part~=attachment-rail],body[data-dsh-claude-style][data-dsh-claude-composer-active]:not([data-ds-dark-theme]) [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card]:focus-within [data-dsh-claude-part~=attachment-rail]",
-      "prop": "border-color",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active][data-ds-dark-theme] [data-composer-card][data-composer-variant=inline]:focus-within [data-dsh-claude-part~=attachment-rail],body[data-dsh-claude-style][data-dsh-claude-composer-active][data-ds-dark-theme] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card]:focus-within [data-dsh-claude-part~=attachment-rail]{border-color:#faf9f538!}|border-color": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active][data-ds-dark-theme] [data-composer-card][data-composer-variant=inline]:focus-within [data-dsh-claude-part~=attachment-rail],body[data-dsh-claude-style][data-dsh-claude-composer-active][data-ds-dark-theme] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card]:focus-within [data-dsh-claude-part~=attachment-rail]",
-      "prop": "border-color",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline][data-has-attachments=true] [data-dsh-claude-part~=attachment-rail] [data-dsh-claude-part~=attachment-rail],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card][data-has-attachments=true] [data-dsh-claude-part~=attachment-rail] [data-dsh-claude-part~=attachment-rail]{background:transparent;border:none!;box-shadow:none;border-radius:0;padding:0;margin:0;min-height:140px;height:auto;display:flex;align-items:center;gap:10px;overflow-x:auto;overflow-y:hidden}|border": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline][data-has-attachments=true] [data-dsh-claude-part~=attachment-rail] [data-dsh-claude-part~=attachment-rail],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card][data-has-attachments=true] [data-dsh-claude-part~=attachment-rail] [data-dsh-claude-part~=attachment-rail]",
-      "prop": "border",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline][data-has-attachments=true] [data-input-scroll],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card][data-has-attachments=true] [data-input-scroll]{border-top:none!;border-radius:0 0 14px 14px;margin-top:-1px;min-height:32px;padding:8px 36px 6px 14px}|border-top": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline][data-has-attachments=true] [data-input-scroll],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card][data-has-attachments=true] [data-input-scroll]",
-      "prop": "border-top",
       "verdict": "transient state"
     },
     "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline][data-dsh-claude-part~=card-workspace-trigger]:after,body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card][data-dsh-claude-part~=card-workspace-trigger]:after{display:none!}|display": {
@@ -474,154 +414,14 @@
       "prop": "display",
       "verdict": "transient state"
     },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline][data-dsh-claude-part~=card-workspace-trigger] [data-input-scroll],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card][data-dsh-claude-part~=card-workspace-trigger] [data-input-scroll]{border-style:dashed!;border-color:var(--dsw-alias-border-l4)!;box-shadow:none!;cursor:pointer!;transition:border-color var(--dsh-claude-timing-feedback)!}|border-style": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline][data-dsh-claude-part~=card-workspace-trigger] [data-input-scroll],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card][data-dsh-claude-part~=card-workspace-trigger] [data-input-scroll]",
-      "prop": "border-style",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline][data-dsh-claude-part~=card-workspace-trigger] [data-input-scroll],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card][data-dsh-claude-part~=card-workspace-trigger] [data-input-scroll]{border-style:dashed!;border-color:var(--dsw-alias-border-l4)!;box-shadow:none!;cursor:pointer!;transition:border-color var(--dsh-claude-timing-feedback)!}|border-color": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline][data-dsh-claude-part~=card-workspace-trigger] [data-input-scroll],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card][data-dsh-claude-part~=card-workspace-trigger] [data-input-scroll]",
-      "prop": "border-color",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline][data-dsh-claude-part~=card-workspace-trigger] [data-input-scroll],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card][data-dsh-claude-part~=card-workspace-trigger] [data-input-scroll]{border-style:dashed!;border-color:var(--dsw-alias-border-l4)!;box-shadow:none!;cursor:pointer!;transition:border-color var(--dsh-claude-timing-feedback)!}|box-shadow": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline][data-dsh-claude-part~=card-workspace-trigger] [data-input-scroll],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card][data-dsh-claude-part~=card-workspace-trigger] [data-input-scroll]",
-      "prop": "box-shadow",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline][data-dsh-claude-part~=card-workspace-trigger] [data-input-scroll],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card][data-dsh-claude-part~=card-workspace-trigger] [data-input-scroll]{border-style:dashed!;border-color:var(--dsw-alias-border-l4)!;box-shadow:none!;cursor:pointer!;transition:border-color var(--dsh-claude-timing-feedback)!}|cursor": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline][data-dsh-claude-part~=card-workspace-trigger] [data-input-scroll],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card][data-dsh-claude-part~=card-workspace-trigger] [data-input-scroll]",
-      "prop": "cursor",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline][data-dsh-claude-part~=card-workspace-trigger] [data-input-scroll],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card][data-dsh-claude-part~=card-workspace-trigger] [data-input-scroll]{border-style:dashed!;border-color:var(--dsw-alias-border-l4)!;box-shadow:none!;cursor:pointer!;transition:border-color var(--dsh-claude-timing-feedback)!}|transition": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline][data-dsh-claude-part~=card-workspace-trigger] [data-input-scroll],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card][data-dsh-claude-part~=card-workspace-trigger] [data-input-scroll]",
-      "prop": "transition",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline][data-dsh-claude-part~=card-workspace-trigger]:hover [data-input-scroll],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card][data-dsh-claude-part~=card-workspace-trigger]:hover [data-input-scroll]{border-color:var(--dsw-alias-state-business-primary)!}|border-color": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline][data-dsh-claude-part~=card-workspace-trigger]:hover [data-input-scroll],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card][data-dsh-claude-part~=card-workspace-trigger]:hover [data-input-scroll]",
-      "prop": "border-color",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active]:not([data-ds-dark-theme]) [data-composer-card][data-composer-variant=inline]:focus-within [data-input-scroll],body[data-dsh-claude-style][data-dsh-claude-composer-active]:not([data-ds-dark-theme]) [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card]:focus-within [data-input-scroll]{border-color:#1414132e!;box-shadow:0 0 0 1px #14141311,0 4px 12px #14141306}|border-color": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active]:not([data-ds-dark-theme]) [data-composer-card][data-composer-variant=inline]:focus-within [data-input-scroll],body[data-dsh-claude-style][data-dsh-claude-composer-active]:not([data-ds-dark-theme]) [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card]:focus-within [data-input-scroll]",
-      "prop": "border-color",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active][data-ds-dark-theme] [data-composer-card][data-composer-variant=inline]:focus-within [data-input-scroll],body[data-dsh-claude-style][data-dsh-claude-composer-active][data-ds-dark-theme] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card]:focus-within [data-input-scroll]{border-color:#faf9f538!;box-shadow:0 0 0 1px #faf9f517,0 4px 16px #0003}|border-color": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active][data-ds-dark-theme] [data-composer-card][data-composer-variant=inline]:focus-within [data-input-scroll],body[data-dsh-claude-style][data-dsh-claude-composer-active][data-ds-dark-theme] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card]:focus-within [data-input-scroll]",
-      "prop": "border-color",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] button[data-dsh-claude-control=send],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] button[data-dsh-claude-control=send]{box-shadow:none;background:transparent;color:var(--dsw-alias-label-caption);border:none!;cursor:pointer;transition:color var(--dsh-claude-timing-feedback),background-color var(--dsh-claude-timing-feedback)}|border": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] button[data-dsh-claude-control=send],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] button[data-dsh-claude-control=send]",
-      "prop": "border",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] button[data-dsh-claude-control=send]:not(:disabled):hover,body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] button[data-dsh-claude-control=send]:not(:disabled):hover{background:var(--dsh-claude-hover-bg, rgba(0, 0, 0, .08))!;color:var(--dsw-alias-label-primary)!}|background": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] button[data-dsh-claude-control=send]:not(:disabled):hover,body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] button[data-dsh-claude-control=send]:not(:disabled):hover",
-      "prop": "background",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] button[data-dsh-claude-control=send]:not(:disabled):hover,body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] button[data-dsh-claude-control=send]:not(:disabled):hover{background:var(--dsh-claude-hover-bg, rgba(0, 0, 0, .08))!;color:var(--dsw-alias-label-primary)!}|color": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] button[data-dsh-claude-control=send]:not(:disabled):hover,body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] button[data-dsh-claude-control=send]:not(:disabled):hover",
-      "prop": "color",
-      "verdict": "transient state"
-    },
     "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] button[data-dsh-claude-control=stop],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] button[data-dsh-claude-control=stop]{background:transparent;color:var(--dsw-alias-label-primary, #161616);border:none!}|border": {
       "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] button[data-dsh-claude-control=stop],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] button[data-dsh-claude-control=stop]",
       "prop": "border",
       "verdict": "transient state"
     },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] button[data-dsh-claude-control=stop]:hover:not(:disabled),body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] button[data-dsh-claude-control=stop]:hover:not(:disabled){background:var(--dsh-claude-hover-bg, rgba(0, 0, 0, .08))!}|background": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] button[data-dsh-claude-control=stop]:hover:not(:disabled),body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] button[data-dsh-claude-control=stop]:hover:not(:disabled)",
-      "prop": "background",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=row],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=row]{display:flex;flex-wrap:nowrap;justify-content:space-between;align-items:center;padding:0 4px;margin:6px 0 0;background:transparent;border:none!;box-shadow:none;min-height:28px;height:28px;width:100%;max-width:100%;box-sizing:border-box;overflow:visible;position:relative;z-index:3}|border": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=row],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=row]",
-      "prop": "border",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=rows],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=rows]{display:block!;height:auto!;min-height:0!;width:auto!;max-width:none!;padding:0!}|display": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=rows],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=rows]",
-      "prop": "display",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=rows],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=rows]{display:block!;height:auto!;min-height:0!;width:auto!;max-width:none!;padding:0!}|height": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=rows],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=rows]",
-      "prop": "height",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=rows],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=rows]{display:block!;height:auto!;min-height:0!;width:auto!;max-width:none!;padding:0!}|min-height": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=rows],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=rows]",
-      "prop": "min-height",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=rows],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=rows]{display:block!;height:auto!;min-height:0!;width:auto!;max-width:none!;padding:0!}|width": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=rows],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=rows]",
-      "prop": "width",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=rows],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=rows]{display:block!;height:auto!;min-height:0!;width:auto!;max-width:none!;padding:0!}|max-width": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=rows],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=rows]",
-      "prop": "max-width",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=rows],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=rows]{display:block!;height:auto!;min-height:0!;width:auto!;max-width:none!;padding:0!}|padding": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=rows],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=rows]",
-      "prop": "padding",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row]{display:flex!;height:auto!;min-height:0!;width:auto!;max-width:none!;padding:2px 0!;margin:0!}|display": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row]",
-      "prop": "display",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row]{display:flex!;height:auto!;min-height:0!;width:auto!;max-width:none!;padding:2px 0!;margin:0!}|height": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row]",
-      "prop": "height",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row]{display:flex!;height:auto!;min-height:0!;width:auto!;max-width:none!;padding:2px 0!;margin:0!}|min-height": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row]",
-      "prop": "min-height",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row]{display:flex!;height:auto!;min-height:0!;width:auto!;max-width:none!;padding:2px 0!;margin:0!}|width": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row]",
-      "prop": "width",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row]{display:flex!;height:auto!;min-height:0!;width:auto!;max-width:none!;padding:2px 0!;margin:0!}|max-width": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row]",
-      "prop": "max-width",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row]{display:flex!;height:auto!;min-height:0!;width:auto!;max-width:none!;padding:2px 0!;margin:0!}|padding": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row]",
-      "prop": "padding",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row]{display:flex!;height:auto!;min-height:0!;width:auto!;max-width:none!;padding:2px 0!;margin:0!}|margin": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-composer-card][data-composer-variant=inline] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row],body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=composer-stack]:not([data-composer-variant=hero]) [data-composer-card] [data-dsh-claude-part~=rows] [data-dsh-claude-part~=row]",
-      "prop": "margin",
-      "verdict": "transient state"
-    },
     "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-model-host]{display:none!}|display": {
       "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-model-host]",
       "prop": "display",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=trailing] .dsh-claude-model-seat-model>.dsh-claude-model-btn,body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=trailing] .dsh-claude-model-seat-effort>.dsh-claude-effort-btn{display:inline-flex;align-items:center;height:var(--dsh-claude-footer-control-height);min-width:0;padding:0 4px;border:none!;background:transparent;white-space:nowrap;cursor:pointer}|border": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=trailing] .dsh-claude-model-seat-model>.dsh-claude-model-btn,body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=trailing] .dsh-claude-model-seat-effort>.dsh-claude-effort-btn",
-      "prop": "border",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=trailing] .dsh-claude-model-btn-label.dsh-claude-model-btn-loading{color:var(--dsw-alias-label-caption, #b2acad)!}|color": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-dsh-claude-part~=trailing] .dsh-claude-model-btn-label.dsh-claude-model-btn-loading",
-      "prop": "color",
       "verdict": "transient state"
     },
     "body[data-dsh-claude-style][data-dsh-claude-composer-active][data-dsh-claude-session-stats] [role=dialog][data-dsh-claude-holds~=host-stats]{display:none!}|display": {
@@ -649,24 +449,19 @@
       "prop": "justify-content",
       "verdict": "transient state"
     },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] .dsh-claude-context-stats-skeleton-label,body[data-dsh-claude-style][data-dsh-claude-composer-active] .dsh-claude-context-stats-skeleton-value{display:block!;border-radius:3px!;background:var(--dsw-alias-interactive-bg-hover-solid, rgba(0, 0, 0, .06))!;animation:dsh-claude-pulse var(--dsh-claude-period-pulse) var(--dsh-claude-ease-in-out) var(--dsh-claude-loop-count, infinite)!}|display": {
+    "body[data-dsh-claude-style][data-dsh-claude-composer-active] .dsh-claude-context-stats-skeleton-label,body[data-dsh-claude-style][data-dsh-claude-composer-active] .dsh-claude-context-stats-skeleton-value{display:block!;border-radius:3px!;background:var(--dsw-alias-interactive-bg-hover-solid, rgba(0, 0, 0, .06))!;animation:dsh-claude-pulse var(--dsh-claude-period-pulse) var(--dsh-claude-ease-in-out) var(--dsh-claude-loop-count, infinite)}|display": {
       "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] .dsh-claude-context-stats-skeleton-label,body[data-dsh-claude-style][data-dsh-claude-composer-active] .dsh-claude-context-stats-skeleton-value",
       "prop": "display",
       "verdict": "transient state"
     },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] .dsh-claude-context-stats-skeleton-label,body[data-dsh-claude-style][data-dsh-claude-composer-active] .dsh-claude-context-stats-skeleton-value{display:block!;border-radius:3px!;background:var(--dsw-alias-interactive-bg-hover-solid, rgba(0, 0, 0, .06))!;animation:dsh-claude-pulse var(--dsh-claude-period-pulse) var(--dsh-claude-ease-in-out) var(--dsh-claude-loop-count, infinite)!}|border-radius": {
+    "body[data-dsh-claude-style][data-dsh-claude-composer-active] .dsh-claude-context-stats-skeleton-label,body[data-dsh-claude-style][data-dsh-claude-composer-active] .dsh-claude-context-stats-skeleton-value{display:block!;border-radius:3px!;background:var(--dsw-alias-interactive-bg-hover-solid, rgba(0, 0, 0, .06))!;animation:dsh-claude-pulse var(--dsh-claude-period-pulse) var(--dsh-claude-ease-in-out) var(--dsh-claude-loop-count, infinite)}|border-radius": {
       "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] .dsh-claude-context-stats-skeleton-label,body[data-dsh-claude-style][data-dsh-claude-composer-active] .dsh-claude-context-stats-skeleton-value",
       "prop": "border-radius",
       "verdict": "transient state"
     },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] .dsh-claude-context-stats-skeleton-label,body[data-dsh-claude-style][data-dsh-claude-composer-active] .dsh-claude-context-stats-skeleton-value{display:block!;border-radius:3px!;background:var(--dsw-alias-interactive-bg-hover-solid, rgba(0, 0, 0, .06))!;animation:dsh-claude-pulse var(--dsh-claude-period-pulse) var(--dsh-claude-ease-in-out) var(--dsh-claude-loop-count, infinite)!}|background": {
+    "body[data-dsh-claude-style][data-dsh-claude-composer-active] .dsh-claude-context-stats-skeleton-label,body[data-dsh-claude-style][data-dsh-claude-composer-active] .dsh-claude-context-stats-skeleton-value{display:block!;border-radius:3px!;background:var(--dsw-alias-interactive-bg-hover-solid, rgba(0, 0, 0, .06))!;animation:dsh-claude-pulse var(--dsh-claude-period-pulse) var(--dsh-claude-ease-in-out) var(--dsh-claude-loop-count, infinite)}|background": {
       "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] .dsh-claude-context-stats-skeleton-label,body[data-dsh-claude-style][data-dsh-claude-composer-active] .dsh-claude-context-stats-skeleton-value",
       "prop": "background",
-      "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-dsh-claude-composer-active] .dsh-claude-context-stats-skeleton-label,body[data-dsh-claude-style][data-dsh-claude-composer-active] .dsh-claude-context-stats-skeleton-value{display:block!;border-radius:3px!;background:var(--dsw-alias-interactive-bg-hover-solid, rgba(0, 0, 0, .06))!;animation:dsh-claude-pulse var(--dsh-claude-period-pulse) var(--dsh-claude-ease-in-out) var(--dsh-claude-loop-count, infinite)!}|animation": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-composer-active] .dsh-claude-context-stats-skeleton-label,body[data-dsh-claude-style][data-dsh-claude-composer-active] .dsh-claude-context-stats-skeleton-value",
-      "prop": "animation",
       "verdict": "transient state"
     },
     "body[data-dsh-claude-style][data-dsh-claude-composer-active] .dsh-claude-context-stats-skeleton-label{width:68%!;height:12px!}|width": {
@@ -745,11 +540,6 @@
       "prop": "display",
       "verdict": "unmatched"
     },
-    "html[data-windows-titlebar] body[data-dsh-claude-style] [data-slot=sidebar] [data-dsh-claude-part~=logo-row]{margin-top:-6px!}|margin-top": {
-      "selector": "html[data-windows-titlebar] body[data-dsh-claude-style] [data-slot=sidebar] [data-dsh-claude-part~=logo-row]",
-      "prop": "margin-top",
-      "verdict": "unmatched"
-    },
     "body[data-dsh-claude-style]:not([data-dsh-claude-search-style=icon]) [data-slot=sidebar] [data-dsh-claude-part~=section-actions-hidden]{opacity:1!;visibility:visible!;max-width:60px!;transform:none!;pointer-events:auto!}|opacity": {
       "selector": "body[data-dsh-claude-style]:not([data-dsh-claude-search-style=icon]) [data-slot=sidebar] [data-dsh-claude-part~=section-actions-hidden]",
       "prop": "opacity",
@@ -775,11 +565,6 @@
       "prop": "pointer-events",
       "verdict": "unmatched"
     },
-    "body[data-dsh-claude-style] [data-dsh-claude-search-closing]>.dsh-claude-search-dialog{animation:dsh-claude-surface-out var(--dsh-claude-duration-exit) var(--dsh-claude-ease-standard) forwards!}|animation": {
-      "selector": "body[data-dsh-claude-style] [data-dsh-claude-search-closing]>.dsh-claude-search-dialog",
-      "prop": "animation",
-      "verdict": "transient state"
-    },
     "body[data-dsh-claude-style] [data-dsh-claude-search-closing]>[data-dsh-claude-part~=mask]{animation:dsh-claude-fade-out var(--dsh-claude-duration-exit) var(--dsh-claude-ease-standard) forwards!}|animation": {
       "selector": "body[data-dsh-claude-style] [data-dsh-claude-search-closing]>[data-dsh-claude-part~=mask]",
       "prop": "animation",
@@ -789,21 +574,6 @@
       "selector": "body[data-dsh-claude-style] [data-dsh-claude-search-closing]",
       "prop": "pointer-events",
       "verdict": "transient state"
-    },
-    "body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-dialog{border-color:var(--dsw-alias-border-l2)!;background:var(--dsh-claude-card)!;box-shadow:0 16px 48px #00000080,0 2px 8px #0000004d!}|border-color": {
-      "selector": "body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-dialog",
-      "prop": "border-color",
-      "verdict": "unmatched"
-    },
-    "body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-dialog{border-color:var(--dsw-alias-border-l2)!;background:var(--dsh-claude-card)!;box-shadow:0 16px 48px #00000080,0 2px 8px #0000004d!}|background": {
-      "selector": "body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-dialog",
-      "prop": "background",
-      "verdict": "unmatched"
-    },
-    "body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-dialog{border-color:var(--dsw-alias-border-l2)!;background:var(--dsh-claude-card)!;box-shadow:0 16px 48px #00000080,0 2px 8px #0000004d!}|box-shadow": {
-      "selector": "body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-dialog",
-      "prop": "box-shadow",
-      "verdict": "unmatched"
     },
     "body[data-dsh-claude-style] .dsh-claude-search-input{flex:1 1 auto;min-width:0;height:32px;padding:0;border:none!;outline:none;background:transparent;box-shadow:none;color:var(--dsw-alias-label-primary, #161616);font-family:var(--dsw-font-family);font-size:17px}|border": {
       "selector": "body[data-dsh-claude-style] .dsh-claude-search-input",
@@ -827,11 +597,6 @@
     "body[data-dsh-claude-style] .dsh-claude-search-close:hover{background:var(--dsh-claude-hover-bg, rgba(0, 0, 0, .06))!;color:var(--dsw-alias-label-primary, #161616)!}|color": {
       "selector": "body[data-dsh-claude-style] .dsh-claude-search-close:hover",
       "prop": "color",
-      "verdict": "unmatched"
-    },
-    "body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-filters[data-dsh-claude-pill]:before{background:#faf9f514!}|background": {
-      "selector": "body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-filters[data-dsh-claude-pill]:before",
-      "prop": "background",
       "verdict": "unmatched"
     },
     "body[data-dsh-claude-style] .dsh-claude-search-filter{height:32px;padding:0 10px;border:none!;border-radius:8px;background:transparent;color:var(--dsw-alias-label-tertiary, #91888a);font-family:var(--dsw-font-family);font-size:14px;white-space:nowrap;cursor:pointer;transition:color var(--dsh-claude-timing-feedback);user-select:none;-webkit-user-select:none}|border": {

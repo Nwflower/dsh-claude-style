@@ -7,7 +7,7 @@
    no offset: its own `_topStrip + _logoRow` margin already seats the row where
    the frame's top clearance wants it. */
 html[data-windows-titlebar] body[data-dsh-claude-style] [data-slot="sidebar"] [data-dsh-claude-part~="logo-row"] {
-  margin-top: -6px !important;
+  margin-top: -6px;
 }
 /* The host's own sidebar search stays mounted while the skin's button stands
    in for it: its shortcut (Ctrl+K) ends by focusing its input and that focus is
@@ -76,7 +76,7 @@ body[data-dsh-claude-style] .dsh-claude-search-dialog {
   box-shadow: 0 16px 48px rgba(20, 20, 19, 0.14), 0 2px 8px rgba(20, 20, 19, 0.06);
 }
 body[data-dsh-claude-style] [data-dsh-claude-search-closing] > .dsh-claude-search-dialog {
-  animation: dsh-claude-surface-out var(--dsh-claude-duration-exit) var(--dsh-claude-ease-standard) forwards !important;
+  animation: dsh-claude-surface-out var(--dsh-claude-duration-exit) var(--dsh-claude-ease-standard) forwards;
 }
 body[data-dsh-claude-style] [data-dsh-claude-search-closing] > [data-dsh-claude-part~="mask"] {
   animation: dsh-claude-fade-out var(--dsh-claude-duration-exit) var(--dsh-claude-ease-standard) forwards !important;
@@ -85,9 +85,9 @@ body[data-dsh-claude-style] [data-dsh-claude-search-closing] {
   pointer-events: none !important;
 }
 body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-dialog {
-  border-color: var(--dsw-alias-border-l2) !important;
-  background: var(--dsh-claude-card) !important;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  border-color: var(--dsw-alias-border-l2);
+  background: var(--dsh-claude-card);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 body[data-dsh-claude-style] .dsh-claude-search {
   display: flex;
@@ -153,7 +153,7 @@ body[data-dsh-claude-style] .dsh-claude-search-filters[data-dsh-claude-pill]::be
   background: rgba(20, 20, 19, 0.06);
 }
 body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-filters[data-dsh-claude-pill]::before {
-  background: rgba(250, 249, 245, 0.08) !important;
+  background: rgba(250, 249, 245, 0.08);
 }
 body[data-dsh-claude-style] .dsh-claude-search-filter {
   height: 32px;
