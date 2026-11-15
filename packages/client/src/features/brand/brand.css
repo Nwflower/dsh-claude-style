@@ -5,11 +5,8 @@
    that choice names.
    This sheet comes after theme/sidebar.css and theme/hero.css, so where a rule
    here meets the Claude brand's at the same specificity, this one wins.
-   The host wraps its art in a slot element that carries an inline
-   `display: contents`, so the art gives way only over that inline style. */
-body[data-dsh-claude-style][data-dsh-claude-custom-mark] :is([data-dsh-claude-part~="brand-mark"], [data-dsh-claude-part~="rail-mark"]) > * {
-  display: none !important;
-}
+   The host's art inside the seats is taken off the page by brand-slots.ts, which
+   writes the hiding value on the slot element the host wraps its art in. */
 
 /* The custom mark is drawn the same on the sidebar and on the hero hitbox: one
    image rule and one tint rule cover both seats; each seat's own box is stated
@@ -43,12 +40,8 @@ body[data-dsh-claude-style][data-dsh-claude-custom-mark-none] :is([data-dsh-clau
 /* ---------- Custom brand: sidebar wordmark ---------- */
 /* The wordmark image keeps the 18px cap height of the Claude wordmark, its
    width read through the proportions brand.ts measured; with no image, the
-   brand name is set in the brand face. The host's word gives way over its
-   slot's inline `display: contents`, as the mark does. */
-body[data-dsh-claude-style][data-dsh-claude-custom-word] [data-dsh-claude-part~="brand-identity"] > [data-dsh-claude-part~="brand-name"] > * {
-  display: none !important;
-}
-
+   brand name is set in the brand face. The host's word gives way at its slot,
+   as the mark does. */
 body[data-dsh-claude-style][data-dsh-claude-custom-word="image"] [data-dsh-claude-part~="brand-identity"] > [data-dsh-claude-part~="brand-name"]::before {
   content: "";
   display: block;
@@ -84,12 +77,9 @@ body[data-dsh-claude-style][data-dsh-claude-custom-word="text"] [data-dsh-claude
 
 /* ---------- Custom brand: hero mark ---------- */
 /* The new-conversation hero takes the same mark at the size the Claude mark
-   stands there (theme/hero.css); React keeps owning the hitbox's children. The
-   image and tint rules are the merged ones under "sidebar mark" above. */
-body[data-dsh-claude-style][data-dsh-claude-custom-mark] [data-dsh-claude-part~="hero-mark"] > * {
-  display: none !important;
-}
-
+   stands there (theme/hero.css); React keeps owning the hitbox's children,
+   which brand-slots.ts takes off the page. The image and tint rules are the
+   merged ones under "sidebar mark" above. */
 body[data-dsh-claude-style][data-dsh-claude-custom-mark] [data-dsh-claude-part~="hero-mark"]::before {
   width: calc(42.5px * var(--dsh-claude-custom-mark-ratio, 1));
   max-width: 100%;

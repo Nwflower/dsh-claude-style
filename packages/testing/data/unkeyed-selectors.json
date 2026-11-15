@@ -85,9 +85,6 @@
     {
       "reason": "宿主的盒子：子元素没有可读的名字，规则落在全部子元素或按位置取的子元素上",
       "selectors": [
-        "body[data-dsh-claude-style][data-dsh-claude-custom-mark] :is([data-dsh-claude-part~=\"brand-mark\"], [data-dsh-claude-part~=\"rail-mark\"]) > *",
-        "body[data-dsh-claude-style][data-dsh-claude-custom-word] [data-dsh-claude-part~=\"brand-identity\"] > [data-dsh-claude-part~=\"brand-name\"] > *",
-        "body[data-dsh-claude-style][data-dsh-claude-custom-mark] [data-dsh-claude-part~=\"hero-mark\"] > *",
         "body[data-dsh-claude-style][data-dsh-claude-chat-fold] [data-chat-flow] :is([data-disclosure-row], [data-disclosure-header]) ~ :where(:is([data-disclosure-row], [data-disclosure-header]) ~ *):not([data-turn-process-member] *, [data-turn-trigger] *):is([data-disclosure-row] ~ *, [data-disclosure-header] ~ * *)",
         "body[data-dsh-claude-style][data-dsh-claude-motion=\"reduced\"] [data-chat-flow] :is([data-disclosure-row], [data-disclosure-header]) ~ :where(:is([data-disclosure-row], [data-disclosure-header]) ~ *):not([data-turn-process-member] *, [data-turn-trigger] *):is([data-disclosure-row] ~ *, [data-disclosure-header] ~ * *)",
         "body[data-dsh-claude-style][data-dsh-claude-chat-fold] [data-step-process][data-dsh-claude-summary] button[data-process-activity] > :not([aria-hidden=\"true\"])",
@@ -118,7 +115,6 @@
         "body[data-dsh-claude-style] [data-dsh-claude-part~=\"rightbar-column\"] [data-dsh-claude-part~=\"panel-guide\"] > :first-child",
         "body[data-dsh-claude-style] [data-dsh-claude-part~=\"rightbar-column\"] [data-dsh-claude-part~=\"panel-guide\"] > :last-child",
         "body[data-dsh-claude-style] [data-slot=\"conversation.session.header.actions\"] > *",
-        "body[data-dsh-claude-style][data-dsh-claude-brand=\"claude\"] [data-dsh-claude-part~=\"hero-mark\"] > *",
         "body[data-dsh-claude-style][data-dsh-claude-brand=\"claude\"] :is([data-dsh-claude-part~=\"brand-mark\"], [data-dsh-claude-part~=\"rail-mark\"]) > *",
         "body[data-dsh-claude-style][data-dsh-claude-brand=\"claude\"] [data-dsh-claude-part~=\"brand-identity\"] > [data-dsh-claude-part~=\"brand-name\"] > *",
         "body[data-dsh-claude-style] [data-dsh-claude-part~=\"group-section\"] > * + *",

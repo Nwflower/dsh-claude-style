@@ -4,6 +4,7 @@ import { accentInk } from '../../shared/contrast'
 import { activeScheme } from '../../shared/palette-scheme'
 import { loadBrandImages, readBrandImages, resetBrandImages, subscribeBrandImages } from '../../shared/custom-brand'
 import { brandingInkOf, brandInkColour } from '../../shared/branding-presets'
+import { installBrandSlots } from './brand-slots'
 import { BRAND_PROPERTIES, cssString, MARK_PROPERTY, MARK_RATIO_PROPERTY, WORD_PROPERTY, WORD_RATIO_PROPERTY, NAME_PROPERTY, ACCENT_PROPERTY, ACCENT_INK_PROPERTY, CANVAS_LIGHT_PROPERTY, CANVAS_DARK_PROPERTY, TEXT_LIGHT_PROPERTY, TEXT_DARK_PROPERTY, CODE_LIGHT_PROPERTY, CODE_DARK_PROPERTY, LINK_LIGHT_PROPERTY, LINK_DARK_PROPERTY, SIDEBAR_LIGHT_PROPERTY, SIDEBAR_DARK_PROPERTY, BUBBLE_LIGHT_PROPERTY, BUBBLE_DARK_PROPERTY, LOGO_INK_PROPERTY } from './brand-properties'
 import { PALETTE_CARDS } from 'virtual:dsh-claude-style/generated'
 import { copy } from './copy'
@@ -24,6 +25,8 @@ import { copy } from './copy'
  * properties rather than resolved here. A seed the scheme does not carry falls
  * back to its base preset's value, so picking one colour keeps the rest of the
  * look.
+ *
+ * The host's own art inside each seat gives way through brand-slots.ts.
  */
 
 const ATTRIBUTES = [CUSTOM_MARK_ATTR, CUSTOM_MARK_NONE_ATTR, CUSTOM_WORD_ATTR, CUSTOM_TINT_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_EDGES_ATTR, BRAND_INK_ATTR]
@@ -89,10 +92,14 @@ export function install() {
   const offImages = subscribeBrandImages(apply)
   loadBrandImages(() => copy('brandingPresetMoved'))
   apply()
+  // After the attributes are written: the seats' first pass reads the state this
+  // installation starts in.
+  const stopSlots = installBrandSlots()
 
   return () => {
     offPrefs()
     offImages()
+    stopSlots()
     resetBrandImages()
     for (const name of ATTRIBUTES) body.removeAttribute(name)
     for (const name of BRAND_PROPERTIES) body.style.removeProperty(name)

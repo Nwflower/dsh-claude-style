@@ -1,13 +1,9 @@
 /* ---------- Claude Code layout: hero brand mark ---------- */
 /* The new-conversation hero ships the DeepSeek fish; swap it for the selected
-   brand mark. Every child of the hitbox is hidden — the mark can sit behind a
-   slot wrapper, not always a bare svg — and the mark is painted on the hitbox,
-   so React keeps owning its own node. The hero keeps the clay fill in both
-   brands, matching the shipped accent treatment. */
-body[data-dsh-claude-style][data-dsh-claude-brand="claude"] [data-dsh-claude-part~="hero-mark"] > * {
-  display: none !important;
-}
-
+   brand mark. The mark is painted on the hitbox and React keeps owning its own
+   node: the slot wrapper the host puts its art behind is taken off the page by
+   features/brand/brand-slots.ts, and a bare svg is hidden here. The hero keeps
+   the clay fill in both brands, matching the shipped accent treatment. */
 body[data-dsh-claude-style][data-dsh-claude-brand="claude"] [data-dsh-claude-part~="hero-mark"] svg {
   display: none;
 }
