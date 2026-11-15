@@ -15,7 +15,12 @@ export function modelCombine(brand: string | null, name: string) {
   return { id: brand, word, svg: COMBINE_SVGS[brand], at }
 }
 
-/** Keep the vendor word as hidden text because its visible lockup is aria-hidden. */
+/**
+ * The model's display name, with the vendor's word drawn as the lockup in its
+ * place. The lockup is art, so it is hidden from assistive technology and the
+ * hidden segment beside it carries the whole display name instead: the row is
+ * then addressed by the name the catalog holds, whatever the label draws.
+ */
 export function buildModelLabel(name: unknown, brand: string | null) {
   const el = buildElement('span', 'dsh-claude-model-name')
   const text = typeof name === 'string' ? name : ''
@@ -34,6 +39,6 @@ export function buildModelLabel(name: unknown, brand: string | null) {
   if (head) el.appendChild(document.createTextNode(head))
   el.appendChild(box)
   el.appendChild(document.createTextNode(tail))
-  el.appendChild(buildElement('span', 'dsh-claude-model-combine-alt', tail ? `${mark.word} ` : mark.word))
+  el.appendChild(buildElement('span', 'dsh-claude-model-combine-alt', text))
   return el
 }

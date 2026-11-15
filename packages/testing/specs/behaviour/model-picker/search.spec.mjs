@@ -28,6 +28,13 @@ async function openSecondLevel(t) {
 /** The words each row of the second level draws. */
 const rows = (t) => t.page.locator(t.surface('model.sub-row'))
 
+/**
+ * The second level's row for one display name, found by the name the catalog
+ * gives it. A row's label draws a vendor's lockup in place of its word, so the
+ * row's visible words are not the name it is addressed by.
+ */
+const rowNamed = (t, name) => t.page.locator(t.surface('model.sub-card')).getByRole('menuitemradio', { name })
+
 /** Type into the field the way a reader does, then let the card settle. */
 async function search(t, words) {
   await t.page.locator(t.surface('model.search-field')).fill(words)
@@ -53,9 +60,8 @@ export default spec({ page: 'effort' }, ({ test }) => {
     const every = await rows(t).count()
     t.expectThat.equal(every > 1, true, `the card lists the providers the first level does not (${every} rows)`)
     await search(t, 'glm-4.7')
-    const narrowed = await rows(t).allInnerTexts()
-    t.expectThat.equal(narrowed.length, 1, 'one row answers to the name typed')
-    t.expectThat.equal(narrowed[0].includes('GLM-4.7'), true, `the row is the one typed (${JSON.stringify(narrowed)})`)
+    t.expectThat.equal(await rows(t).count(), 1, 'one row answers to the name typed')
+    t.expectThat.equal(await rowNamed(t, 'GLM-4.7').count(), 1, 'the row is the one typed')
     t.expectThat.equal(await t.read.text(t.surface('model.sub-label')), 'Z.ai', 'the provider label stands above the narrowed rows')
   })
 
@@ -68,9 +74,8 @@ export default spec({ page: 'effort' }, ({ test }) => {
     const field = t.surface('model.search-field')
     t.expectThat.equal(await t.page.locator(field).inputValue(), '5', 'the field holds the key')
     t.expectThat.equal(await t.page.evaluate((selector) => document.activeElement === document.querySelector(selector), field), true, 'the field holds the focus')
-    const narrowed = await rows(t).allInnerTexts()
-    t.expectThat.equal(narrowed.length, 1, 'one row answers to the key')
-    t.expectThat.equal(narrowed[0].includes('GLM-5.3'), true, `the row is the one the key names (${JSON.stringify(narrowed)})`)
+    t.expectThat.equal(await rows(t).count(), 1, 'one row answers to the key')
+    t.expectThat.equal(await rowNamed(t, 'GLM-5.3').count(), 1, 'the row is the one the key names')
   })
 
   test('a query no model answers to says so instead of listing the whole catalog', async (t) => {

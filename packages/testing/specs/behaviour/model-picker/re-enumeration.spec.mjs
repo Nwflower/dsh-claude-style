@@ -100,9 +100,11 @@ export default spec({ page: 'effort' }, ({ test }) => {
     await t.settle()
     await t.page.getByRole('menuitem', { name: 'More models' }).click()
     await t.settle()
-    const row = t.page.locator(t.surface('model.sub-row')).filter({ hasText: 'GLM-5.3' })
+    // The row answers to the display name the catalog gives it, not to the words
+    // its label draws: a vendor's lockup stands where that name's own word was.
+    const row = t.page.locator(t.surface('model.sub-card')).getByRole('menuitemradio', { name: 'GLM-5.3' })
     const finish = await watch(t, 1800)
-    await row.first().click()
+    await row.click()
     const { frames, clickedAt } = await finish()
     const startName = frames[0].name
     const startLevel = frames[0].level

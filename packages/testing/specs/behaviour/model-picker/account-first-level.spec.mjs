@@ -15,7 +15,10 @@ export default spec({ page: 'model-account' }, ({ test }) => {
   test('with no API key, the signed-in account leads the first level beside the chosen provider', async (t) => {
     await trigger(t.page).click()
     await t.settle()
-    const firstLevel = await t.page.locator(t.surface('model.row')).allInnerTexts()
+    // The words each row is addressed by, in the order the level lists them: a
+    // row's label draws a vendor's lockup in place of its word, so the names are
+    // read off the rows rather than out of their text.
+    const firstLevel = await t.page.locator(t.surface('model.row')).evaluateAll((rows) => rows.map((row) => row.getAttribute('aria-label')))
     t.expectThat.equal(firstLevel.length, 2, `the first level lists the account and the chosen provider (${JSON.stringify(firstLevel)})`)
     t.expectThat.equal(firstLevel[0].includes('DeepSeek V4.1 Flash'), true, `the account model leads the list (${firstLevel[0]})`)
     t.expectThat.equal(firstLevel[1].includes('GLM-5.3'), true, `the chosen provider follows (${firstLevel[1]})`)

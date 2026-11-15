@@ -69,9 +69,10 @@ export default spec({ page: 'effort' }, ({ test }) => {
     // The stand-in's other provider sits behind More models.
     await t.page.getByRole('menuitem', { name: 'More models' }).click()
     await t.settle()
-    const rows = t.page.locator(t.surface('model.sub-row')).filter({ hasText: 'GLM-5.3' })
+    // The picked row is the one the catalog names GLM-5.3: the name it is
+    // addressed by, beside the lockup its label draws in place of the word.
     const recording = watchName(t, 4000)
-    await rows.first().click()
+    await t.page.locator(t.surface('model.sub-card')).getByRole('menuitemradio', { name: 'GLM-5.3' }).click()
     const frames = await recording
     // Two copies stand in the box while the swap runs: the words that left and
     // the ones that arrived. The arrival ends alone, naming the picked model.

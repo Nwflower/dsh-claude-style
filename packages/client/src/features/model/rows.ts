@@ -237,9 +237,15 @@ export function createModelRows(options: {
     painted.push(row)
     const copy = built.text
     // A model the host names with an empty string still reads as itself: the
-    // row is picked by that id, so the label falls back to it.
+    // row is picked by that id, and the same string names the row.
+    const name = model.name || model.id
+    // The row is addressed by the model's display name, whatever its label
+    // draws: a vendor lockup puts art where the name's own word stood, and the
+    // description line and the release tag trail the name inside this row, so
+    // the row's own contents spell neither of the two.
+    item.setAttribute('aria-label', name)
     const line = buildElement('span', 'dsh-claude-model-line')
-    line.appendChild(buildModelLabel(model.name || model.id, brand))
+    line.appendChild(buildModelLabel(name, brand))
     const tag = releaseTag(group.id, model)
     if (tag !== null) line.appendChild(buildElement('span', 'dsh-claude-model-tag', tag))
     copy.appendChild(line)
