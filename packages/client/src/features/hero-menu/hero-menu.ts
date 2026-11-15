@@ -9,8 +9,9 @@ import type manifest from './hero-menu.manifest'
 
 /**
  * Stamp the host's portalled hero menu with its picker name, place it above the
- * trigger through `!important` custom properties, and drive the host's click
- * handler from delegated hover. Two open candidates leave every card alone.
+ * trigger through the two custom properties the card's `left` and `top` read
+ * (hero-menu.css), and drive the host's click handler from delegated hover. Two
+ * open candidates leave every card alone.
  */
 export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** Air between the trigger and its card, as the skin's other pickers take. */

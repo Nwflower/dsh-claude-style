@@ -39,23 +39,26 @@ body[data-dsh-claude-style] .dsh-claude-rightbar-close:focus-visible {
    there) — take one place each. The pass stamps a piece it lifted and writes its
    numbers on it; a piece left in the row carries no stamp, so these rules miss
    it and the row keeps the height it takes there. */
-body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-header-title],
-body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-header-trail] {
-  position: fixed !important;
+body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-header-title][data-dsh-header-title],
+body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-header-trail][data-dsh-header-trail] {
+  position: fixed;
   /* The pass centres each box on the measured caption row's middle. */
-  top: var(--dsh-header-band-title-top, calc(var(--dsh-windows-titlebar-height, 40px) / 2)) !important;
-  left: var(--dsh-header-band-left) !important;
+  top: var(--dsh-header-band-title-top, calc(var(--dsh-windows-titlebar-height, 40px) / 2));
+  left: var(--dsh-header-band-left);
   /* The room the pass measured for this piece: past it the title would run into
      the tab strip or the controls, and the cluster into what stands after it.
      The title's own crumb ellipsizes inside whatever width this leaves (the
      host's own rule, unchanged). The pass hands the cluster no limit of its own:
      a capped cluster measures at the cap, so the width it needs is only known
-     while it stands uncapped (header-band.ts). */
-  max-width: var(--dsh-header-band-max, none) !important;
-  margin: 0 !important;
-  transform: translateY(-50%) !important;
-  z-index: var(--dsh-claude-layer-chrome) !important;
-  -webkit-app-region: no-drag !important;
+     while it stands uncapped (header-band.ts). The attribute is written twice
+     for weight alone: the session overview caps this same node's width from four
+     attribute selectors in view-tabs.css, and two readings of one attribute
+     outrank them without a `!important`. */
+  max-width: var(--dsh-header-band-max, none);
+  margin: 0;
+  transform: translateY(-50%);
+  z-index: var(--dsh-claude-layer-chrome);
+  -webkit-app-region: no-drag;
 }
 
 /* The host's title cluster carries its truncation fade as a mask clipped to
@@ -74,7 +77,7 @@ body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-claude-par
    the middle of the row. The pass hands it the middle of what is left between
    them, and the strip's own translate keeps it centred on that value. */
 body[data-dsh-claude-style] [data-dsh-titlebar-tabs] [data-dsh-header-band-tabs] {
-  left: var(--dsh-header-band-tabs-left, 50%) !important;
+  left: var(--dsh-header-band-tabs-left, 50%);
 }
 
 /* The row the title left: what it still holds — the background-task chips,
@@ -84,14 +87,14 @@ body[data-dsh-claude-style] [data-dsh-titlebar-tabs] [data-dsh-header-band-tabs]
    measured, so the host's inset is not assumed, and the row declares itself
    no-drag: its top now lies inside the shell's drag strip. */
 body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-header-row] {
-  position: relative !important;
-  top: var(--dsh-header-band-row-lift, 0px) !important;
+  position: relative;
+  top: var(--dsh-header-band-row-lift, 0px);
   /* The host sizes this row for the title. With the title gone the controls it
      still holds are shorter, and the header closes to them rather than to the
      height the title took. */
   height: auto;
   min-height: 0;
-  -webkit-app-region: no-drag !important;
+  -webkit-app-region: no-drag;
 }
 /* The header closes around that row: the height it kept was the title's, and
    the title now stands in the caption row. The measured top inset overrides the
@@ -117,7 +120,7 @@ body[data-dsh-claude-style] [data-dsh-header-band~="title"] {
    title takes no width, so the row has room and the control would only be
    missing; the label stays. */
 body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-header-row] [data-dsh-claude-part~="header-label"] {
-  display: flex !important;
+  display: flex;
 }
 
 /* The clusters' own air: a plate's neighbours stand one step apart, and the
@@ -195,15 +198,15 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="header-corner"] button svg {
 
 body[data-dsh-claude-style] [data-dsh-header-band~="actions"] [data-dsh-header-actions],
 body[data-dsh-claude-style] [data-dsh-header-band~="actions"] [data-dsh-header-corner] {
-  position: fixed !important;
-  top: calc(var(--dsh-header-band-height, var(--dsh-windows-titlebar-height, 40px)) / 2) !important;
+  position: fixed;
+  top: calc(var(--dsh-header-band-height, var(--dsh-windows-titlebar-height, 40px)) / 2);
   /* Both clusters keep their order and their air through this offset alone:
      the corner sits off the caption buttons, the utilities off the corner. */
-  right: var(--dsh-header-band-right) !important;
+  right: var(--dsh-header-band-right);
   /* The utilities carry the host's own left margin for the row's flow; a
      fixed box has no row to keep clear of. */
-  margin: 0 !important;
-  transform: translateY(-50%) !important;
-  z-index: var(--dsh-claude-layer-chrome) !important;
-  -webkit-app-region: no-drag !important;
+  margin: 0;
+  transform: translateY(-50%);
+  z-index: var(--dsh-claude-layer-chrome);
+  -webkit-app-region: no-drag;
 }

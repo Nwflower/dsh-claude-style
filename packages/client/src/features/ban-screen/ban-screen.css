@@ -32,12 +32,12 @@ body[data-dsh-claude-style] .dsh-claude-ban {
      keeps the clay accent while the wordmark stays in the page's ink. */
   --dsh-ban-mark: #d97757;
   --dsh-ban-word: #141413;
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: var(--dsh-claude-layer-takeover) !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  background: var(--dsh-ban-canvas) !important;
+  position: fixed;
+  inset: 0;
+  z-index: var(--dsh-claude-layer-takeover);
+  margin: 0;
+  padding: 0;
+  background: var(--dsh-ban-canvas);
   color: var(--dsh-ban-text);
   font-family: var(--dsw-font-family);
   font-size: 15px;
@@ -210,8 +210,8 @@ body[data-dsh-claude-style] .dsh-claude-ban-win:hover {
    macOS the elements the host marks `data-window-drag`), and a drag region the
    pointer cannot reach is no region at all. */
 body[data-dsh-claude-style] .dsh-claude-ban[data-dsh-ban-titlebar] .dsh-claude-ban-bar {
-  height: var(--dsh-ban-caption-height, 40px) !important;
-  padding: 0 calc(var(--dsh-ban-caption-controls, 140px) + 10px) 0 44px !important;
+  height: var(--dsh-ban-caption-height, 40px);
+  padding: 0 calc(var(--dsh-ban-caption-controls, 140px) + 10px) 0 44px;
   -webkit-app-region: drag;
 }
 
@@ -219,7 +219,7 @@ body[data-dsh-claude-style] .dsh-claude-ban[data-dsh-ban-titlebar] .dsh-claude-b
    its own leading inset clear of them and gives the trailing end back to the
    row. */
 body[data-dsh-claude-style] .dsh-claude-ban[data-dsh-ban-titlebar][data-dsh-ban-controls="left"] .dsh-claude-ban-bar {
-  padding: 0 10px 0 calc(var(--dsh-ban-caption-controls, 88px) + 10px) !important;
+  padding: 0 10px 0 calc(var(--dsh-ban-caption-controls, 88px) + 10px);
 }
 
 /* The lockup sits a touch below the row's midline: the wordmark's ink fills its
@@ -235,7 +235,7 @@ body[data-dsh-claude-style] .dsh-claude-ban[data-dsh-ban-titlebar] .dsh-claude-b
 }
 
 body[data-dsh-claude-style] .dsh-claude-ban[data-dsh-ban-titlebar] .dsh-claude-ban-window {
-  display: none !important;
+  display: none;
 }
 
 body[data-dsh-claude-style] .dsh-claude-ban[data-dsh-ban-titlebar] .dsh-claude-ban-scroll {

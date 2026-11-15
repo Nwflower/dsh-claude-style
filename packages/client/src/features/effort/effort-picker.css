@@ -222,14 +222,14 @@ body[data-dsh-claude-style] .dsh-claude-effort-matrix-canvas {
    the matrix, the knob takes the theme accent's tint and a soft glow, and the
    level's name keeps the same ramp colour the trigger and the card's text wear. */
 body[data-dsh-claude-style] .dsh-claude-effort[data-apex] .dsh-claude-effort-fill {
-  opacity: 0 !important;
+  opacity: 0;
 }
 body[data-dsh-claude-style] .dsh-claude-effort[data-apex] .dsh-claude-effort-ticks {
-  opacity: 0 !important;
+  opacity: 0;
 }
 body[data-dsh-claude-style] .dsh-claude-effort[data-apex] .dsh-claude-effort-knob {
-  background: color-mix(in srgb, var(--dsh-claude-apex, #8b7ad0) 22%, var(--dsw-static-neutral-bluish-00, #ffffff)) !important;
-  box-shadow: 0 0 10px color-mix(in srgb, var(--dsh-claude-apex, #8b7ad0) 80%, transparent), 0 0 0 1px color-mix(in srgb, var(--dsh-claude-apex, #8b7ad0) 35%, transparent) !important;
+  background: color-mix(in srgb, var(--dsh-claude-apex, #8b7ad0) 22%, var(--dsw-static-neutral-bluish-00, #ffffff));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--dsh-claude-apex, #8b7ad0) 80%, transparent), 0 0 0 1px color-mix(in srgb, var(--dsh-claude-apex, #8b7ad0) 35%, transparent);
 }
 
 /* A vertical capsule, not a bead: 16px wide, 30px tall, poking 2px past the
@@ -266,24 +266,24 @@ body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-effort-knob {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(0, 0, 0, 0.4);
 }
 body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-effort[data-apex] .dsh-claude-effort-knob {
-  box-shadow: 0 0 10px color-mix(in srgb, var(--dsh-claude-apex, #9d8ce0) 80%, transparent), 0 0 0 1px color-mix(in srgb, var(--dsh-claude-apex, #9d8ce0) 35%, transparent) !important;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--dsh-claude-apex, #9d8ce0) 80%, transparent), 0 0 0 1px color-mix(in srgb, var(--dsh-claude-apex, #9d8ce0) 35%, transparent);
 }
 /* Held: the knob lifts 10%. Only `transform` stays un-transitioned (the drag
    writes it every frame); the lift itself eases in and, on release, eases back
    — so grabbing and letting go read as motion rather than a size jump. */
 body[data-dsh-claude-style] .dsh-claude-effort[data-dragging] .dsh-claude-effort-knob {
-  scale: 1.1 !important;
+  scale: 1.1;
   /* `translate` is dropped from the transition (the drag writes it every
      frame); the lift itself still eases in and back out. */
-  transition: scale var(--dsh-claude-timing-feedback), background-color var(--dsh-claude-duration-fade) var(--dsh-claude-ease-standard), box-shadow var(--dsh-claude-duration-fade) var(--dsh-claude-ease-standard) !important;
+  transition: scale var(--dsh-claude-timing-feedback), background-color var(--dsh-claude-duration-fade) var(--dsh-claude-ease-standard), box-shadow var(--dsh-claude-duration-fade) var(--dsh-claude-ease-standard);
 }
 body[data-dsh-claude-style] .dsh-claude-effort[data-dragging] .dsh-claude-effort-fill {
-  transition: none !important;
+  transition: none;
 }
 body[data-dsh-claude-style] .dsh-claude-effort-track:focus-visible {
-  outline: 2px solid var(--dsw-alias-brand-primary, #d97757) !important;
-  outline-offset: 1px !important;
-  border-radius: 10px !important;
+  outline: 2px solid var(--dsw-alias-brand-primary, #d97757);
+  outline-offset: 1px;
+  border-radius: 10px;
 }
 /* No ladder to climb: the track is dimmed and the value reads as a dash, but the
    knob still travels and eases home — the control keeps its shape. */
@@ -291,7 +291,7 @@ body[data-dsh-claude-style] .dsh-claude-effort[data-empty] .dsh-claude-effort-tr
   opacity: 0.55 !important;
 }
 body[data-dsh-claude-style] .dsh-claude-effort[data-empty] .dsh-claude-effort-value {
-  color: var(--dsw-alias-label-caption, #b2acad) !important;
+  color: var(--dsw-alias-label-caption, #b2acad);
 }
 
 /* ---------- reasoning-effort level ---------- */

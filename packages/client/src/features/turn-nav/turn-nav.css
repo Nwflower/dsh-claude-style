@@ -37,13 +37,13 @@ body[data-dsh-claude-style] .dsh-claude-turn-rail {
   }
 }
 body[data-dsh-claude-style] .dsh-claude-turn-rail[data-fade-top] {
-  mask-image: linear-gradient(transparent 0, #000 24px, #000 100%) !important;
+  mask-image: linear-gradient(transparent 0, #000 24px, #000 100%);
 }
 body[data-dsh-claude-style] .dsh-claude-turn-rail[data-fade-bottom] {
-  mask-image: linear-gradient(#000 0, #000 calc(100% - 24px), transparent 100%) !important;
+  mask-image: linear-gradient(#000 0, #000 calc(100% - 24px), transparent 100%);
 }
 body[data-dsh-claude-style] .dsh-claude-turn-rail[data-fade-top][data-fade-bottom] {
-  mask-image: linear-gradient(transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%) !important;
+  mask-image: linear-gradient(transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
 }
 body[data-dsh-claude-style] .dsh-claude-turn-rail-track {
   position: relative;
@@ -81,8 +81,8 @@ body[data-dsh-claude-style] .dsh-claude-turn-rail-mark::before {
 }
 body[data-dsh-claude-style] .dsh-claude-turn-rail-mark[data-unloaded]::before,
 body[data-dsh-claude-style] .dsh-claude-turn-nav-row[data-unloaded] .dsh-claude-turn-nav-dash {
-  opacity: 0.6 !important;
-  transform: scaleX(0.4) !important;
+  opacity: 0.6;
+  transform: scaleX(0.4);
 }
 body[data-dsh-claude-style] .dsh-claude-turn-nav-row:hover .dsh-claude-turn-nav-dash {
   background: var(--dsw-alias-label-tertiary);

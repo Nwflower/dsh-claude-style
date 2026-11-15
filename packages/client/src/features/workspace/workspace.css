@@ -58,7 +58,9 @@ body[data-dsh-claude-style] [data-dsh-claude-ws-view="active"] [data-dsh-claude-
 }
 body[data-dsh-claude-style] [data-dsh-claude-ws-view="active"]:hover [data-dsh-claude-part~="section-label"][data-dsh-claude-ws-label],
 body[data-dsh-claude-style] [data-dsh-claude-part~="section-header"]:hover [data-dsh-claude-part~="section-label"][data-dsh-claude-ws-label] {
-  opacity: 0 !important;
+  /* The hovered ancestor carries one pseudo-class more than the shown label
+     above, so this rule wins on specificity alone. */
+  opacity: 0;
 }
 body[data-dsh-claude-style] .dsh-claude-ws-segment {
   padding: 0 8px;

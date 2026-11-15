@@ -53,9 +53,11 @@ body[data-dsh-claude-style] [data-dsh-titlebar-tabs] [data-dsh-view-tabs] > * {
 }
 /* `centerCol` is the pane holding the header AND the transcript, so hovering the
    strip itself keeps it up, while the right sidebar — which sits outside it —
-   does not bring it back. */
-body[data-dsh-claude-style] [data-dsh-claude-part~="center-column"]:hover [data-dsh-view-tabs],
-body[data-dsh-claude-style] [data-dsh-claude-part~="center-column"]:hover [data-dsh-view-tabs] [data-conversation-tabs] {
+   does not bring it back. The header is named in the chain so the Windows
+   titlebar mode, which marks that header, keeps its own reveal: there the strip
+   stands outside the pane and only its own hover brings it back. */
+body[data-dsh-claude-style] [data-dsh-claude-part~="center-column"]:hover [data-dsh-claude-part~="conversation-header"]:not([data-dsh-titlebar-tabs]) [data-dsh-view-tabs],
+body[data-dsh-claude-style] [data-dsh-claude-part~="center-column"]:hover [data-dsh-claude-part~="conversation-header"]:not([data-dsh-titlebar-tabs]) [data-dsh-view-tabs] [data-conversation-tabs] {
   opacity: 1;
 }
 /* What stands in the strip takes a press despite the row's own stand-down, and is
@@ -121,35 +123,37 @@ body[data-dsh-claude-style] [data-dsh-view-tabs] [data-dsh-claude-part~="view-ta
    the base transform gives way. macOS has none of this: its frame top is
    unpadded, so the measured shift seats the tabs inside it (view-tabs.ts). */
 body[data-dsh-claude-style] [data-dsh-titlebar-tabs] [data-dsh-view-tabs] {
-  position: fixed !important;
-  top: calc(var(--dsh-windows-titlebar-height, 40px) / 2) !important;
-  left: 50% !important;
+  position: fixed;
+  top: calc(var(--dsh-windows-titlebar-height, 40px) / 2);
+  left: 50%;
   /* The host's own strip carries a top margin for its row; fixed placement
      must not inherit it, or the translate would be off centre. */
-  margin: 0 !important;
-  transform: translate(-50%, -50%) !important;
-  z-index: var(--dsh-claude-layer-chrome) !important;
+  margin: 0;
+  transform: translate(-50%, -50%);
+  z-index: var(--dsh-claude-layer-chrome);
   /* The row spans the window, so the band stays the shell's drag region and the
      controls inside it stay the only boxes that take a press. */
-  /* The pane-hover reveal stays the rule here, but the strip now sits outside
-     the pane: its own hover keeps it up, and the longer fade covers the cross. */
-  opacity: 0 !important;
-  transition: opacity var(--dsh-claude-duration-fade) var(--dsh-claude-ease-standard) !important;
+  /* The pane's own reveal is scoped out of this mode above. The three rules
+     here state the whole of it: this one rests the strip at nothing, its own
+     hover and the pane's hover below bring it back, and the longer fade covers
+     the cross. */
+  opacity: 0;
+  transition: opacity var(--dsh-claude-duration-fade) var(--dsh-claude-ease-standard);
 }
 body[data-dsh-claude-style] [data-dsh-titlebar-tabs] [data-dsh-view-tabs]:hover {
-  opacity: 1 !important;
+  opacity: 1;
 }
-/* The pane-hover reveal cannot outweigh this mode's resting `!important`
-   opacity: the pane is the header's ancestor, so the compound order turns
-   around — hovered pane, marked header, then the strip. */
+/* The pane-hover reveal reaches this mode from outside the titlebar's own rules:
+   the pane is the header's ancestor, so this selector carries the pane's
+   attribute and its hover on top of the resting rule's own. */
 body[data-dsh-claude-style] [data-dsh-claude-part~="center-column"]:hover [data-dsh-titlebar-tabs] [data-dsh-view-tabs] {
-  opacity: 1 !important;
+  opacity: 1;
 }
 /* The strip's row has left the flow, so the header takes the shape it has when
    it owns no tab strip: no min-height, and the header band closes its bottom
    padding further (--dsh-header-band-bottom). */
 body[data-dsh-claude-style] [data-dsh-claude-part~="conversation-header"][data-dsh-titlebar-tabs][data-dsh-claude-holds~="view-tabs"] {
-  min-height: 0 !important;
+  min-height: 0;
   padding-bottom: var(--dsh-header-band-bottom, 10px) !important;
 }
 
