@@ -314,6 +314,12 @@ body[data-dsh-claude-style] .dsh-claude-panel-mark {
   color: var(--dsw-alias-label-primary, #161616);
 }
 
+/* The Outputs and Subagents sections lead with a quieter mark: the figure names
+   the row's kind, and the reader comes for the words beside it. */
+body[data-dsh-claude-style] .dsh-claude-panel-quiet-marks .dsh-claude-panel-mark {
+  opacity: 0.65;
+}
+
 /* A row is one line: its title, then its detail in the quiet ink. The title
    gives way first, so a detail keeps its own width up to its share of the line
    and a long name never pushes the detail off the row. */

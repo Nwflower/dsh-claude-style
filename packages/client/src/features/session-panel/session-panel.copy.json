@@ -227,10 +227,6 @@
     "zh": "会话总览暂不可用",
     "en": "The session overview is unavailable"
   },
-  "continuable": {
-    "zh": "可继续",
-    "en": "Continuable"
-  },
   "noOutput": {
     "zh": "没有留存的输出",
     "en": "No retained output"

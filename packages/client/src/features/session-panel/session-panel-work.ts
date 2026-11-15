@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { formatCompactTokens, formatHostDuration } from '../../shared/format'
+import { formatHostDuration } from '../../shared/format'
 import { hostChatSeat } from '../../core/i18n'
 import { copy } from './copy'
 import { openPanelSession } from './session-panel-host'
@@ -59,22 +59,6 @@ function childDuration(child: PanelSubagent, now: number) {
   return total <= 0 ? '' : hostDuration(total)
 }
 
-/** What a child row's second line carries: its clock and its tokens. */
-function childDetail(child: PanelSubagent, now: number) {
-  const parts = [childDuration(child, now)]
-  if (child.tokens > 0) parts.push(`${formatCompactTokens(child.tokens)} tok`)
-  return parts.filter(part => part !== '').join(' · ')
-}
-
-/** A child's own state words, in the order the host's subagent panel shows them.
- * A child that has finished keeps its clock alone, like a finished command (D102). */
-function childChips(child: PanelSubagent) {
-  const chips: React.ReactNode[] = []
-  if (child.running) chips.push(h(Chip, { key: 'state', tone: 'pending', text: copy('running') }))
-  if (child.mode === 'continuable') chips.push(h(Chip, { key: 'mode', text: copy('continuable') }))
-  return chips.length === 0 ? undefined : chips
-}
-
 /** A team member's state word. */
 function memberStatusText(running: boolean | null) {
   if (running === true) return copy('running')
@@ -101,10 +85,14 @@ interface WorkRow {
 }
 
 /** Current work stays visible; settled records share Claude's one disclosure row (D102). */
-function WorkList({ title, rows }: { title: string, rows: readonly WorkRow[] }) {
+function WorkList({ title, rows, kind }: { title: string, rows: readonly WorkRow[], kind?: string }) {
   if (rows.length === 0) return null
   const finished = rows.filter(row => !row.active)
-  return h(Section, { title, kind: 'dsh-claude-panel-work-section', summary: copy('sectionItems', { count: rows.length }) },
+  return h(Section, {
+    title,
+    kind: kind === undefined ? 'dsh-claude-panel-work-section' : ['dsh-claude-panel-work-section', kind],
+    summary: copy('sectionItems', { count: rows.length }),
+  },
     h('div', { className: 'dsh-claude-panel-list' }, rows.filter(row => row.active).map(row => row.node)),
     finished.length === 0 ? null : h('details', { className: 'dsh-claude-panel-finished' },
       h('summary', { className: 'dsh-claude-panel-finished-toggle' },
@@ -151,8 +139,7 @@ export function WorkSections({ sessionId, background }: { sessionId: string, bac
       kind: 'dsh-claude-panel-work-row',
       mark: h(AgentMark),
       title: child.label === '' ? copy('subagents') : child.label,
-      side: h(React.Fragment, null, child.running ? childChips(child) : null,
-        h('span', { className: 'dsh-claude-panel-work-duration' }, childDetail(child, now))),
+      side: h('span', { className: 'dsh-claude-panel-work-duration' }, childDuration(child, now)),
       onClick() { openPanelSession(child.id) },
     }), child.mode === 'continuable' && child.running ? h(JobStop, {
       key: child.activeSince,
@@ -184,6 +171,6 @@ export function WorkSections({ sessionId, background }: { sessionId: string, bac
   return h(React.Fragment, null,
     h(WorkList, { key: 'jobs', title: copy('jobs'), rows: jobRows }),
     h(WorkList, { key: 'tasks', title: copy('tasks'), rows: taskRows }),
-    h(WorkList, { key: 'subagents', title: copy('subagents'), rows: childRows }),
+    h(WorkList, { key: 'subagents', title: copy('subagents'), rows: childRows, kind: 'dsh-claude-panel-quiet-marks' }),
     h(WorkList, { key: 'team', title: copy('team'), rows: teamRows }))
 }

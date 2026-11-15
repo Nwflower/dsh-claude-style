@@ -11,8 +11,9 @@ const h = React.createElement
  * `open` prop lets the browser keep the reader's choice across data refreshes.
  * A `folded` section starts closed, with its reading beside the heading.
  */
-export function Section({ title, summary, folded, children, kind }: { title: string, summary?: React.ReactNode, folded?: boolean, children?: React.ReactNode, kind?: string }) {
-  return h('details', { className: ['dsh-claude-panel-section', kind].filter(Boolean).join(' '), open: folded !== true },
+export function Section({ title, summary, folded, children, kind }: { title: string, summary?: React.ReactNode, folded?: boolean, children?: React.ReactNode, kind?: string | readonly string[] }) {
+  const kinds = typeof kind === 'string' ? [kind] : kind ?? []
+  return h('details', { className: ['dsh-claude-panel-section', ...kinds].filter(Boolean).join(' '), open: folded !== true },
     h('summary', { className: 'dsh-claude-panel-section-toggle' },
       h('h2', { className: 'dsh-claude-panel-heading' },
         h('span', { className: 'dsh-claude-panel-section-title' }, title),

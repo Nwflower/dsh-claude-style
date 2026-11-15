@@ -397,7 +397,9 @@ Every mark in the rail comes from one set the rail draws itself
 16-unit grid drawn at 16px, so its stroke is 1.25px wherever it appears, with
 round caps and joins and the figure filling 1.5–14.5 of the box; the heading
 chevron keeps the same pixel stroke on its own 12-unit grid. Marks wear the
-row title's ink. One meaning has one figure: a branch and a change request,
+row title's ink, at two thirds of it in Outputs and Subagents, where the figure
+names the row's kind and the words carry what the reader came for. One meaning
+has one figure: a branch and a change request,
 a preset and a subagent each have their own. A checkout already named by the working
 directory contributes only its branch. While the rail stands the header's own
 preset label steps aside, and it returns when the rail closes or retreats.
@@ -444,10 +446,12 @@ have a separate 28px stop target beside the row's disclosure or navigation butto
 One press asks for confirmation, a second requests cancellation, and blur cancels
 the confirmation. The pending control is disabled; a failed request reports its
 failure in the row and allows retry. Stop targets remain visible without hover
-and keep their keyboard focus ring. A finished command and a finished subagent keep their
-clock alone: their ending is what most rows report, so the word would be the
+and keep their keyboard focus ring. A finished command keeps its
+clock alone: its ending is what most rows report, so the word would be the
 row's loudest part. Only work running, stopping or failed carries a state word,
-the failed one in the error ink.
+the failed one in the error ink. A subagent's row carries its clock alone
+whether it has settled or is still running: the stop target beside it says it
+runs, and its tokens stay in the session's own figures.
 
 ## Typography
 

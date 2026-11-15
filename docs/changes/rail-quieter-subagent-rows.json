@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-15",
+  "group": "improvements",
+  "order": 358,
+  "external": true,
+  "zh": "对话详情栏的子智能体行改用菱形图标，时长之外不再显示运行状态、可继续与 token 用量，产出节与子智能体节的图标降到标题墨色的三分之二",
+  "en": "Draw the details rail's subagent rows with the diamond mark, keep only their clock beside it, and quiet the marks of the Outputs and Subagents sections to two thirds of the title's ink"
+}

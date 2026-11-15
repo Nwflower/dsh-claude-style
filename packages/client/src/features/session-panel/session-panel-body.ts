@@ -482,7 +482,7 @@ function useBillingCurrency() {
  * row would say, so only a file the model presented carries its word.
  */
 function OutputsSection({ sessionId, directory, outputs }: { sessionId: string, directory?: string, outputs: readonly PanelOutput[] }) {
-  return h(Section, { title: copy('outputs'), summary: copy('sectionItems', { count: outputs.length }) },
+  return h(Section, { title: copy('outputs'), summary: copy('sectionItems', { count: outputs.length }), kind: 'dsh-claude-panel-quiet-marks' },
     h(FoldedList, { rows: outputs.map(output => h(Row, {
       key: output.path,
       mark: outputMark(output.kind),

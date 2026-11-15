@@ -80,9 +80,12 @@ export function ChecklistMark() {
   return draw([['path', { d: 'M1.5 4l1.25 1.25L5 3M1.5 10.5l1.25 1.25L5 9.5M7.5 4.25h7M7.5 11h7' }]])
 }
 
-/** A subagent: one figure. */
+/** A subagent: a diamond, and the one standing behind it. */
 export function AgentMark() {
-  return draw([['circle', { cx: 8, cy: 5, r: 3 }], ['path', { d: 'M2 14.5a6 6 0 0 1 12 0' }]])
+  return draw([
+    ['path', { d: 'M6.5 2 11.5 8 6.5 14 1.5 8z' }],
+    ['path', { d: 'M9.5 2 14.5 8 9.5 14' }],
+  ])
 }
 
 /** A team: a figure with another behind it. */
