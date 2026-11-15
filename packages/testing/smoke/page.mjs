@@ -549,6 +549,7 @@ ${heroRow}
   ${name === 'chat-send' ? '<div data-input-scroll style="overflow:auto;max-height:120px">' : ''}
   ${name === 'composer' ? '<div data-dsh-claude-part="input-grow" class="_grow_x_1">' : ''}
   <div data-composer-input contenteditable="true" id="editor">/comp</div>
+  ${name === 'composer' ? '<input type="file" id="file-picker" hidden>' : ''}
   ${hintFixture}
   ${name === 'composer' ? '</div>' : ''}
   ${name === 'chat-send' ? '</div>' : ''}
