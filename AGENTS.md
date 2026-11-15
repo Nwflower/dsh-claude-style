@@ -116,9 +116,28 @@ Each script states its purpose at the top of the script. `node scripts/checks/ve
 3. Sync documents: bilingual READMEs change together, a behavior change adds one file under `docs/changes/`, and a direction change adds its replacing ADR before the code. Regenerate affected indexes. Committed judgment records move with the change that moves them.
 4. Test layers, selection and cloud verdicts follow D92 and `.github/workflows/`; those files carry the operational detail. A red run on master over this session's push is this session's to fix and re-push.
 
+### Spec timing and expectations
+
+A spec runs on a cloud runner whose frame takes far longer than a local one, and on a host that moves under it:
+
+- Wait for an observable condition — text reaching a width, a colour settling, three consecutive frames that do not overflow, a fixture leaving — where a fixed pause reads a value mid-transition.
+- Compute a tolerance from the measured frame duration and the distance the value covers in one frame, never from a figure estimated on a fast machine.
+- Start from the state the walkthrough assumes: close the host panel an earlier scenario opened, and stop at conditions rather than at an index that a collapsed section has since invalidated.
+- Take an expected value from the table it comes from — the copy table, the surface table, the token set — so a renamed label or a moved colour leaves no stale expectation behind.
+
 ## Git and Release
 
 - Use conventional commit prefixes and Chinese commit titles and bodies. One logical change per commit, no WIP or unrelated changes; moves are committed apart from logic changes.
 - Several sessions work in the main tree at once: stage only the change in hand and leave the rest uncommitted. `npm run work -- paths <id>` prints an order's declared files; a file two sessions touched is merged into one change before commits are split.
 - `lib/` is build output and never committed (D47).
-- Release requires a green full matrix on master, locally `npm run verify -- --full` or the cloud CI workflow. The Release workflow and `scripts/release/` carry versioning, verdict checking, packing, publishing and GitHub Release details. `scripts/release/changelog.mjs` defines and validates the CHANGELOG format.
+- Release requires a green full matrix on the commit you tag, locally `npm run verify -- --full` or the cloud CI workflow. The Release workflow and `scripts/release/` carry versioning, verdict checking, packing, publishing and GitHub Release details. `scripts/release/changelog.mjs` defines and validates the CHANGELOG format.
+
+### Releasing
+
+- Start the cloud matrix on the commit you are about to tag: `gh workflow run CI --ref master`. Only a `workflow_dispatch` run carries every lane — `smoke-windows` and `e2e` skip pushes, the macOS lane runs nothing else — and the verdict keeps the run whose `head_sha` is the tagged commit (D92).
+- Tag a commit that carries code. A documentation-only commit skips the build and every spec lane, and the verdict reads a skipped lane as no judgement at all.
+- Bump `version` in `package.json` by hand. No script writes that field, and the tag is compared against it only after the tag is pushed.
+- Write the release section before tagging: `npm run changelog -- --release <version>` moves `docs/changes/` into `docs/CHANGELOG.md` and empties the directory. `changelog:check` refuses an `[Unreleased]` heading and knows nothing about whether the current version has a section.
+- Run the five checks the release job reruns after publishing `dev`: `npm run lint`, `docs:check`, `changelog:check`, `agents:check`, `checks:numbers`. A moved assertion needs `npm run checks:numbers` to regenerate its record.
+- Push `git tag v<version>`. The workflow packs once, publishes `dev`, rechecks the tree, moves `dist` and the tag onto the packaged commit, then publishes `latest`, or `next` for a version carrying a hyphen.
+- The tag ends on the dist commit, which has no run of its own: pushing the same tag again finds no matrix. Fix forward with a new version.

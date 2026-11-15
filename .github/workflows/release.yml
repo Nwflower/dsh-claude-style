@@ -3,8 +3,22 @@ name: Release
 # Require a green manual CI matrix on the tagged commit before packing or
 # publishing (D92).
 #
+# A tag whose commit lacks any of the following fails this run, either before
+# packing or after publishing dev:
+#   - a `workflow_dispatch` run of CI on that commit (`gh workflow run CI --ref
+#     master`) with every lane present and green; a push run, a skipped lane or
+#     a documentation-only commit is no verdict (D92);
+#   - package.json's version, which no script writes and which this workflow
+#     compares with the tag only once the tag is pushed;
+#   - the version's section in docs/CHANGELOG.md, written by `npm run
+#     changelog -- --release <version>`; `changelog:check` refuses an
+#     [Unreleased] heading and asks nothing about the current version.
+#
 # Pack once, publish dev, recheck the tree, then promote the same tarball to
 # latest; dist carries npm's files for build-free git installs (D47).
+#
+# The tag moves onto the dist commit, which carries no run of its own: a second
+# push of the same tag finds no matrix to stand on. Release a new version.
 
 on:
   push:
