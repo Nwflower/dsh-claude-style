@@ -218,6 +218,9 @@ function reasoningStreamScenario({ check }) {
       // reach is measured against the tallest the text stood while it was read.
       const tallest = samples.reduce((most, sample) => Math.max(most, sample.textHeight ?? 0), 0)
       const capped = samples.filter((sample) => sample.capped === true)
+      // The fold's last samples carry the door's shrinking height. The cap the
+      // window reached is the tallest capped sample before or during that door.
+      const reachedCap = capped.reduce((most, sample) => Math.max(most, sample.slotHeight ?? 0), 0)
       const reachable = cap === null ? 0 : Math.max(0, tallest - cap)
       const last = samples[samples.length - 1] ?? {}
       // The window's height is written by the module's own pass, which can land
@@ -256,10 +259,10 @@ function reasoningStreamScenario({ check }) {
         check('窗口跟着推理文本长高，长到推理能到的最大高度就停住',
           samples.length > 0 && Number.isFinite(cap) && capped.length > 0 &&
             samples.every((sample) => sample.windowed === true) &&
-            samples[0].slotHeight < samples[samples.length - 1].slotHeight &&
+            samples[0].slotHeight < reachedCap &&
             capped.every((sample) => sample.masked === true) &&
-            last.slotHeight <= cap + step && last.capped === true,
-          JSON.stringify({ samples: samples.length, capped: capped.length, cap, first: samples[0], last })),
+            Math.abs(reachedCap - cap) <= step,
+          JSON.stringify({ samples: samples.length, capped: capped.length, cap, reachedCap, first: samples[0], last })),
         check('窗口还没长满时，文本铺满窗口、底边留一道渐隐、没有位移',
           uncapped.length > 0 && uncapped.some((sample) => sample.textHeight > 0) &&
             uncapped.every((sample) => sample.masked === true && sample.offset === 0 &&

@@ -15,6 +15,7 @@ export default spec({ page: 'chat-fold' }, ({ test }) => {
     const text = t.host('chat.reasoning-text')
     const window = t.surface('chat.reason-window')
     const capped = t.surface.attribute('chat.reason-capped')
+    const heightProperty = t.surface.property('chat.reason-window-height')
     await t.prefs({ chatAnimations: true, motion: 'full', reasoningDisplay: 'continuous' })
     await t.page.evaluate(([rowSelector, phase, running, expanded]) => {
       const row = document.querySelector(rowSelector)
@@ -26,6 +27,19 @@ export default spec({ page: 'chat-fold' }, ({ test }) => {
 
     await t.prefs({ reasoningDisplay: 'stepped' })
     await t.page.waitForSelector(window, { timeout: 5000 })
+    const natural = await t.page.evaluate(([windowSelector, textSelector, heightProperty]) => {
+      const frame = document.querySelector(windowSelector)
+      const content = frame?.querySelector(textSelector)
+      if (!(frame instanceof HTMLElement) || !(content instanceof HTMLElement)) return null
+      return {
+        heightProperty: frame.style.getPropertyValue(heightProperty),
+        willChange: getComputedStyle(content).willChange,
+        difference: Math.abs(frame.getBoundingClientRect().height - content.getBoundingClientRect().height),
+      }
+    }, [window, text, heightProperty])
+    t.expectThat.equal(natural?.heightProperty, '', 'below the cap the window keeps its natural height without an inline height')
+    t.expectThat.equal(natural?.willChange, 'auto', 'below the cap the text reserves no compositor layer')
+    t.expectThat.equal((natural?.difference ?? Infinity) <= 1, true, 'the natural window follows the text height')
     await t.page.evaluate(([rowSelector, textSelector, phase, running]) => {
       const row = document.querySelector(rowSelector)
       const text = document.querySelector(textSelector)
@@ -39,6 +53,16 @@ export default spec({ page: 'chat-fold' }, ({ test }) => {
       return window !== null && window.hasAttribute(attribute)
     }, [window, capped], { timeout: 5000 })
     t.expectThat.equal(await t.page.locator(window).count() > 0, true, 'the stepped choice installs its window')
+    const cappedStyle = await t.page.evaluate(([windowSelector, textSelector, heightProperty]) => {
+      const frame = document.querySelector(windowSelector)
+      const content = frame?.querySelector(textSelector)
+      return {
+        heightProperty: frame instanceof HTMLElement ? frame.style.getPropertyValue(heightProperty) : null,
+        willChange: content instanceof Element ? getComputedStyle(content).willChange : null,
+      }
+    }, [window, text, heightProperty])
+    t.expectThat.equal(cappedStyle.heightProperty, '400px', 'the cap is the only fixed height the window writes')
+    t.expectThat.equal(cappedStyle.willChange, 'transform', 'the compositor layer arrives with the capped steps')
 
     await t.prefs({ reasoningDisplay: 'continuous' })
     await t.page.waitForSelector(window, { state: 'detached', timeout: 5000 })
