@@ -962,8 +962,13 @@
       "prop": "grid-template-columns",
       "verdict": "unmatched"
     },
-    "body[data-dsh-claude-style][data-dsh-claude-page-under-1000]:not([data-dsh-claude-page-under-768]) [data-dsh-claude-part~=layout-frame]:not([data-sidebar-drawer])[data-sidebar-collapsed][data-rightbar-collapsed]{grid-template-columns:56px minmax(0,1fr) minmax(0,0px)!}|grid-template-columns": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-page-under-1000]:not([data-dsh-claude-page-under-768]) [data-dsh-claude-part~=layout-frame]:not([data-sidebar-drawer])[data-sidebar-collapsed][data-rightbar-collapsed]",
+    "html:is([data-windows-titlebar],[data-platform=darwin]) body[data-dsh-claude-style][data-dsh-claude-page-under-1000]:not([data-dsh-claude-page-under-768]) [data-dsh-claude-part~=layout-frame]:not([data-sidebar-drawer])[data-sidebar-collapsed][data-rightbar-collapsed]{grid-template-columns:0px minmax(0,1fr) minmax(0,0px)!}|grid-template-columns": {
+      "selector": "html:is([data-windows-titlebar],[data-platform=darwin]) body[data-dsh-claude-style][data-dsh-claude-page-under-1000]:not([data-dsh-claude-page-under-768]) [data-dsh-claude-part~=layout-frame]:not([data-sidebar-drawer])[data-sidebar-collapsed][data-rightbar-collapsed]",
+      "prop": "grid-template-columns",
+      "verdict": "unmatched"
+    },
+    "html:not(:is([data-windows-titlebar],[data-platform=darwin])) body[data-dsh-claude-style][data-dsh-claude-page-under-1000]:not([data-dsh-claude-page-under-768]) [data-dsh-claude-part~=layout-frame]:not([data-sidebar-drawer])[data-sidebar-collapsed][data-rightbar-collapsed]{grid-template-columns:56px minmax(0,1fr) minmax(0,0px)!}|grid-template-columns": {
+      "selector": "html:not(:is([data-windows-titlebar],[data-platform=darwin])) body[data-dsh-claude-style][data-dsh-claude-page-under-1000]:not([data-dsh-claude-page-under-768]) [data-dsh-claude-part~=layout-frame]:not([data-sidebar-drawer])[data-sidebar-collapsed][data-rightbar-collapsed]",
       "prop": "grid-template-columns",
       "verdict": "unmatched"
     },

@@ -37,6 +37,8 @@ import { washLineScenario } from './scenarios/wash-line.mjs'
 import { longSessionScenario } from './scenarios/long-session.mjs'
 import { statsScenarios } from './scenarios/stats-position.mjs'
 import { sidebarRailScenario } from './scenarios/sidebar-rail.mjs'
+import { sidebarTrackScenario } from './scenarios/sidebar-track.mjs'
+import { narrowWindowScenario } from './scenarios/narrow-window.mjs'
 import { sidebarPeekScenario } from './scenarios/sidebar-peek.mjs'
 import { remoteSettingsScenario } from './scenarios/remote-settings.mjs'
 import { usernameCompositionScenario } from './scenarios/username-composition.mjs'
@@ -585,6 +587,10 @@ const SCENARIOS = {
   ...statsScenarios({ check }),
   /** The collapsed rail as one icon column, its chip centred on it (sidebar-rail.mjs). */
   sidebarRail: sidebarRailScenario({ check }),
+  /** The track a collapsed sidebar closes to, told apart by the shell the page runs in (sidebar-track.mjs). */
+  sidebarTrack: sidebarTrackScenario({ check }),
+  /** The sidebar and the caption row in a 752px window, then the title's lift edge swept from 780 to 880 (narrow-window.mjs). */
+  narrowWindow: narrowWindowScenario({ check, observe }),
   /** The collapsed sidebar opened over the page from a hover, the centre kept as it was (sidebar-peek.mjs). */
   sidebarPeek: { ...sidebarPeekScenario({ check }), frames: true },
   /** The waiting line and the counted process headers (process-summary.mjs, D74). */

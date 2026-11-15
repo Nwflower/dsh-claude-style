@@ -14,7 +14,15 @@
 body[data-dsh-claude-style][data-dsh-claude-page-under-768] :is([data-sidebar-collapsed], [data-sidebar-drawer])[data-dsh-claude-part~="layout-frame"][data-rightbar-collapsed] {
   grid-template-columns: 0px minmax(0, 1fr) minmax(0, 0px) !important;
 }
-body[data-dsh-claude-style][data-dsh-claude-page-under-1000]:not([data-dsh-claude-page-under-768]) [data-dsh-claude-part~="layout-frame"]:not([data-sidebar-drawer])[data-sidebar-collapsed][data-rightbar-collapsed] {
+/* The app window folds the sidebar away when it is collapsed and leaves no rail
+   behind: the Windows caption row's mark, or the platform mark macOS writes,
+   says the page runs in that window, and a browser page never carries either. A
+   browser page keeps the host's 56px icon rail in the same column, so the two
+   shells close to different tracks. */
+html:is([data-windows-titlebar], [data-platform="darwin"]) body[data-dsh-claude-style][data-dsh-claude-page-under-1000]:not([data-dsh-claude-page-under-768]) [data-dsh-claude-part~="layout-frame"]:not([data-sidebar-drawer])[data-sidebar-collapsed][data-rightbar-collapsed] {
+  grid-template-columns: 0px minmax(0, 1fr) minmax(0, 0px) !important;
+}
+html:not(:is([data-windows-titlebar], [data-platform="darwin"])) body[data-dsh-claude-style][data-dsh-claude-page-under-1000]:not([data-dsh-claude-page-under-768]) [data-dsh-claude-part~="layout-frame"]:not([data-sidebar-drawer])[data-sidebar-collapsed][data-rightbar-collapsed] {
   grid-template-columns: 56px minmax(0, 1fr) minmax(0, 0px) !important;
 }
 body[data-dsh-claude-style][data-dsh-claude-page-under-1000]:not([data-dsh-claude-page-under-768]) [data-dsh-claude-part~="layout-frame"][data-sidebar-drawer][data-rightbar-collapsed] {

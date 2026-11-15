@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-15",
+  "group": "fixes",
+  "order": 361,
+  "external": true,
+  "zh": "应用窗口里收起的侧栏折走整条轨道，浏览器页面里仍留宿主的 56 像素图标栏，窄窗口左侧不再多出一条空带",
+  "en": "Fold the collapsed sidebar's track away in the app window while the browser page keeps the host's 56px icon rail, so a narrow window no longer carries an empty band at the left"
+}
