@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-15",
-  "group": "fixes",
-  "order": 357,
-  "external": true,
-  "zh": "窄窗口下「标题进入顶栏」的顶栏与对话头部不再来回跳动，标题回到行内时行也不再停在半空中",
-  "en": "The Windows caption row and the conversation header stop jumping in a narrow window, and the row comes back down when the title returns to it"
-}

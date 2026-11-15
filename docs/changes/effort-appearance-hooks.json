@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-15",
-  "group": "new",
-  "order": 357,
-  "external": true,
-  "zh": "推理滑块暴露当前模型族，并支持自定义旋钮图片、帧数与尺寸",
-  "en": "Expose the current model family and reader-supplied knob artwork, frame counts and dimensions on the reasoning slider"
-}

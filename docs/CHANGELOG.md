@@ -2,6 +2,44 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [0.21.3] - 2026-11-15
+
+[中文](#cn-0.21.3) | [English](#en-0.21.3)
+
+<h3 id="cn-0.21.3">新增功能</h3>
+
+- 支持使用 Ctrl+U 或 Cmd+U 打开当前输入框的文件选择器
+- 推理滑块暴露当前模型族，并支持自定义旋钮图片、帧数与尺寸
+
+### 体验优化
+
+- 对话详情栏的子智能体行改用菱形图标，时长之外不再显示运行状态、可继续与 token 用量，产出节与子智能体节的图标降到标题墨色的三分之二
+
+### 问题修复
+
+- 减少两行步进接管前与长步骤折叠时的排版开销
+- 窗口宽度不足 768px 时展开的侧栏重新拿到自己的轨道，不再被压成一条竖线
+- 窄窗口下「标题进入顶栏」的顶栏与对话头部不再来回跳动，标题回到行内时行也不再停在半空中
+- 标志颜色对 Claude 品牌的侧栏标志与字标生效，与设置页预览和账号行头像读同一个颜色
+- 应用窗口里收起的侧栏折走整条轨道，浏览器页面里仍留宿主的 56 像素图标栏，窄窗口左侧不再多出一条空带
+
+<h3 id="en-0.21.3">New Features</h3>
+
+- Open the current composer's native file picker with Ctrl+U or Cmd+U
+- Expose the current model family and reader-supplied knob artwork, frame counts and dimensions on the reasoning slider
+
+### Improvements
+
+- Draw the details rail's subagent rows with the diamond mark, keep only their clock beside it, and quiet the marks of the Outputs and Subagents sections to two thirds of the title's ink
+
+### Bug Fixes
+
+- Reduce layout work before stepped reasoning takes over and while long steps fold
+- Reopening the sidebar below 768px gives it its own track back instead of squeezing it to a sliver
+- The Windows caption row and the conversation header stop jumping in a narrow window, and the row comes back down when the title returns to it
+- Make the mark-colour choice reach the Claude brand's sidebar mark and wordmark, in the same colour the settings preview and the account row's picture take
+- Fold the collapsed sidebar's track away in the app window while the browser page keeps the host's 56px icon rail, so a narrow window no longer carries an empty band at the left
+
 ## [0.21.2] - 2026-11-14
 
 [中文](#cn-0.21.2) | [English](#en-0.21.2)

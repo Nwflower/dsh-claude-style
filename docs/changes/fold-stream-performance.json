@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-15",
-  "group": "fixes",
-  "order": 353,
-  "external": true,
-  "zh": "减少两行步进接管前与长步骤折叠时的排版开销",
-  "en": "Reduce layout work before stepped reasoning takes over and while long steps fold"
-}
