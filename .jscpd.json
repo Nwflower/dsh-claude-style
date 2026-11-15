@@ -1,4 +1,6 @@
 {
+  "minTokens": 50,
+  "minLines": 5,
   "path": ["."],
   "format": ["typescript", "javascript", "css"],
   "pattern": "{packages/client/src,packages/host/src,packages/engine/src,packages/engine/node,packages/contracts/src,packages/testing,scripts}/**/*",
