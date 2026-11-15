@@ -11,7 +11,7 @@ import type { Prefs } from '../../constants'
 import { copy } from './copy'
 
 /**
- * The colour schemes' manager (D96) in the frame the managers share
+ * The colour schemes' manager (D97) in the frame the managers share
  * (scheme-modal.ts): its list holds every scheme — the presets and the
  * reader's own — and makes a new one; its editor is that scheme's
  * (palette-editor.ts). It reads the preferences and writes through the same

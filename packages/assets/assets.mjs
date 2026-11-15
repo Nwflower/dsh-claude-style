@@ -1,5 +1,5 @@
 /**
- * Build and validate the asset manifest. Large assets and deferred chunks (D72)
+ * Build and validate the asset manifest. Large assets and deferred chunks (D76)
  * use content-hashed routes; unclaimed source files fail the build.
  */
 import fs from 'node:fs'
@@ -210,7 +210,7 @@ export function checkClaimed(plan, claimed) {
   }
 }
 
-/** Route generated chunks and source maps; inlining would defeat deferred loading (D72). */
+/** Route generated chunks and source maps; inlining would defeat deferred loading (D76). */
 export function routeText(plan, { file, name, type, text }) {
   const bytes = Buffer.from(text, 'utf8')
   const entry = { file, bytes, text, type, hash: name.split('.')[0], name, url: ASSETS_ROUTE + name, inline: false }
@@ -221,7 +221,7 @@ export function routeText(plan, { file, name, type, text }) {
 
 /**
  * Write assets before their manifest and prune old files last so live pages
- * never see a missing route; retain keeps previous chunks addressable (D72).
+ * never see a missing route; retain keeps previous chunks addressable (D76).
  */
 export function writeAssets(libDir, plan, { retain = false, compress = brotliCompressSync } = {}) {
   const dir = path.join(libDir, 'assets')

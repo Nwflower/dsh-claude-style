@@ -1,5 +1,5 @@
 /**
- * The session overview panel's data (D94): one answer describes a session's
+ * The session overview panel's data (D102): one answer describes a session's
  * Environment, Context, Outputs, Changes and Background tasks, folded on the
  * host from its own projections, session log and services. The browser half
  * renders sections in that order and leaves out the ones with nothing to show.
@@ -49,7 +49,7 @@ export interface PanelCompaction {
   thresholdTokens: number
 }
 
-/** The source a context part is attributed to (D94, D99). */
+/** The source a context part is attributed to (D102, D99). */
 export type PanelContextKind =
   | 'system'
   | 'tools'
@@ -106,7 +106,7 @@ export interface PanelChange {
   total: number
 }
 
-/** One command execution or other registered task of the session (D94). */
+/** One command execution or other registered task of the session (D102). */
 export interface PanelJob {
   id: string
   label: string

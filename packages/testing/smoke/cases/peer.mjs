@@ -20,7 +20,7 @@ export default {
     const tabs = settings.tabs || {}
     const page = (tab) => tabs[tab] || {}
     // The rows the ported features own, each on the tab its manifest registers it
-    // on (D74, D72). The line's switch and the sent message's entrance carry
+    // on (D74, D76). The line's switch and the sent message's entrance carry
     // switches of their own beside the chat-area switch, so all five sit on the
     // Motion tab. headerBand carries a note of its own on a page that is not the
     // Windows desktop, so its note says nothing about the peer plugin.

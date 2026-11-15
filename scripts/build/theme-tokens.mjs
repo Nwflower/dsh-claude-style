@@ -1,4 +1,4 @@
-/** theme-tokens.mjs — resolve palette seed tones into build-time colors and generate the token stylesheet and table (D9, D30). */
+/** theme-tokens.mjs — resolve palette seed tones into build-time colors and generate the token stylesheet and table (D9, D97). */
 import fs from 'node:fs'
 import path from 'node:path'
 import Ajv2020 from 'ajv/dist/2020.js'
@@ -240,7 +240,7 @@ function customPaletteBlocks(doc, gates) {
  * and layer blocks, the typeface and apex blocks, the palette, and the custom palette.
  *
  * Every block writing a host token carries the Claude gate, so "follow the host" keeps
- * the host's own tokens (D30). Dark names `[data-ds-dark-theme]` on purpose: the host's
+ * the host's own tokens (D97). Dark names `[data-ds-dark-theme]` on purpose: the host's
  * own dark block weighs the same (0,1,1) as a bare `body[data-dsh-claude-style]`, and
  * naming the attribute lifts these to (0,2,1). The first card is the default look; every
  * later card states only the tokens that differ from it.

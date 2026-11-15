@@ -513,7 +513,7 @@ async function hostHalf() {
   const [assetName, asset] = entries.find(([, entry]) => entry.encoding === 'br') ?? entries[0] ?? []
   if (assetName === undefined) throw new Error('no routed assets in lib/assets/manifest.json; run npm run build')
   // Every name the manifest carries has its file: the manifest is what the
-  // route answers from, so an entry an earlier build's cleanup removed (D72)
+  // route answers from, so an entry an earlier build's cleanup removed (D76)
   // would have the route refuse a name the manifest promises.
   const dangling = Object.entries(manifest)
     .filter(([name, entry]) => !fs.existsSync(path.join(ROOT, 'lib', 'assets', entry.encoding === 'br' ? `${name}.br` : name)))
@@ -549,7 +549,7 @@ async function hostHalf() {
     check(`nothing but a name the build wrote answers under the assets route: ${url}`, answer.status === 404, `HTTP ${answer.status}`)
   }
 
-  // The debug retention (D72): a linked checkout rebuilds while a page runs the
+  // The debug retention (D76): a linked checkout rebuilds while a page runs the
   // previous bundle, which asks for that build's chunk names. The flag keeps
   // those names and their files in the manifest; a build without it ships
   // exactly its own set.

@@ -53,7 +53,7 @@ const ASSETS_MODULE = path.join(ROOT, 'packages', 'assets', 'assets.mjs')
 const ICON_SOURCE = 'claude-mark-clay.svg'
 const ICON_FILE = 'claude-mark.svg'
 
-/** Theme and feature sheets share one rank order because later rules win ties (D72). */
+/** Theme and feature sheets share one rank order because later rules win ties (D76). */
 const THEME_SHEETS = [
   // Generated from packages/client/src/theme/tokens.json (scripts/build/css.mjs).
   { file: TOKEN_SHEET, rank: 5 },
@@ -96,7 +96,7 @@ const PACKAGE_ID = PACKAGE.name
 /** The packages the host's loader hands the factory's `require`; never bundled. */
 const HOST_PACKAGES = ['react', 'react-dom/client', '@deepseek-ai/dsh-client-ui-primitives']
 
-/** Retain old assets only for linked live pages; published and CI builds carry exactly their own (D72). */
+/** Retain old assets only for linked live pages; published and CI builds carry exactly their own (D76). */
 const RETAIN_ASSETS = process.env.DSH_CLAUDE_STYLE_DEBUG === '1' && process.env.CI === undefined
 
 /** Find linked profiles so the build log explains retained or replaced assets. */
@@ -145,7 +145,7 @@ const CONSTANTS = (() => {
   const { BRAND_ATTR, BRAND_DEEPSEEK, BRAND_DEFAULT_PRESETS, BRANDS, COMPOSER_ATTR, CUSTOM_EDGES_ATTR, PALETTE_ATTR, PALETTE_CARD_ATTR, PALETTE_CLAUDE, PALETTE_EDGES, PALETTE_HOST, PALETTE_PRESETS, TYPEFACE_ATTR, TYPEFACE_CLAUDE, TYPEFACE_HOST, TYPEFACE_SYSTEM } = pick(constants, constantsFile, ['BRAND_ATTR', 'BRAND_DEEPSEEK', 'BRAND_DEFAULT_PRESETS', 'BRANDS', 'COMPOSER_ATTR', 'CUSTOM_EDGES_ATTR', 'PALETTE_ATTR', 'PALETTE_CARD_ATTR', 'PALETTE_CLAUDE', 'PALETTE_EDGES', 'PALETTE_HOST', 'PALETTE_PRESETS', 'TYPEFACE_ATTR', 'TYPEFACE_CLAUDE', 'TYPEFACE_HOST', 'TYPEFACE_SYSTEM'])
   return {
     // The gate attributes css.mjs stamps and writes the token blocks under: who paints
-    // the colours and who sets the type (D30), the composer preference and the brand's blocks (D9).
+    // the colours and who sets the type (D97), the composer preference and the brand's blocks (D9).
     gates: {
       composer: COMPOSER_ATTR,
       palette: { attribute: PALETTE_ATTR, claude: PALETTE_CLAUDE, host: PALETTE_HOST },
@@ -326,7 +326,7 @@ async function main() {
 
   const tokenDoc = loadTokens(SRC)
   // The selection stores a preset id, so a card outside the vocabulary would be unpickable
-  // and a preset or brand default without its card would have nothing to paint (D96).
+  // and a preset or brand default without its card would have nothing to paint (D97).
   checkPaletteCards(tokenDoc, { presets: CONSTANTS.presets, brands: CONSTANTS.brands, brandDefaults: CONSTANTS.brandDefaults })
   checkPaletteContrast(tokenDoc)
   const css = buildStylesheet({ sheets, srcDir: SRC, sources, tokenDoc, gates: CONSTANTS.gates, images, featureConstants: CONSTANTS.featureSheets })
@@ -387,7 +387,7 @@ async function main() {
     plugins: [featuresModule(manifests, chunkUrls), chunkModulesModule(shared), settingsControlsModule(manifests), generated],
   })
 
-  // The deferred features leave the bundle for chunks of their own (D72); a graph
+  // The deferred features leave the bundle for chunks of their own (D76); a graph
   // pass stands every chunk's address in with its feature id.
   const deferred = manifests.filter((manifest) => manifest.load === 'deferred')
   const standIns = Object.fromEntries(deferred.map((manifest) => [manifest.id, manifest.id]))
@@ -415,7 +415,7 @@ async function main() {
   checkCycles(result.metafile)
   checkScrollOwner(result.metafile)
   // The metafile keys paths the way esbuild saw them: repository-relative. Both sides are
-  // the repository's own modules, generated ones included: a second copy ships its values twice (D72).
+  // the repository's own modules, generated ones included: a second copy ships its values twice (D76).
   const prefix = `${path.relative(ROOT, SRC).split(path.sep).join('/')}/`
   const mainIds = ownModuleIds(result.metafile)
   const twice = mainIds.filter((id) => chunkInputs.includes(id))
@@ -488,7 +488,7 @@ async function main() {
   console.log(`built lib/host/ (${host.files} modules) from packages/host/src/`)
 
   // Last, always: this is the file a running page's client hot reload watches, and the
-  // generation it swaps to reads its chunks from this build, so every asset is on disk first (D72).
+  // generation it swaps to reads its chunks from this build, so every asset is on disk first (D76).
   fs.writeFileSync(OUT, bundle)
   fs.writeFileSync(`${OUT}.map`, sourceMap)
   console.log(`built lib/client.js (${Buffer.byteLength(bundle)} bytes, build ${buildId}) from packages/client/src/ (${bundled.size} modules + ${sheets.length} stylesheets + ${Object.keys(combines).length} lockups)`)

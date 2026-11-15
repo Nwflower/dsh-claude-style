@@ -47,7 +47,7 @@ body[data-dsh-claude-style] .dsh-claude-account-avatar {
 body[data-dsh-claude-style][data-dsh-claude-brand="deepseek"] .dsh-claude-account-avatar {
   background-image: var(--dsh-claude-image-deepseek-mark);
 }
-/* The reader's own mark takes that place under either brand (D30). Tinted, it
+/* The reader's own mark takes that place under either brand (D97). Tinted, it
    is a shape in the ink the image-colour choice names on a layer of its own: a
    mask on the avatar itself would cut the account photo layered over it to the
    mark's outline, and the photo and skin rules below hide that layer whenever a

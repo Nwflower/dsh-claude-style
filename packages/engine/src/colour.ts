@@ -1,4 +1,4 @@
-/** Normalize literal, `rgb()` and relative CSS colours by painting one shared pixel (D30). */
+/** Normalize literal, `rgb()` and relative CSS colours by painting one shared pixel (D97). */
 export interface PaintedColour {
   readonly red: number
   readonly green: number

@@ -1,5 +1,5 @@
 /**
- * Who may move the conversation (D40, D85): writes and eases are ranked by source,
+ * Who may move the conversation (D40, D95): writes and eases are ranked by source,
  * and the reader's own wheel, key or scrollbar drag holds the conversation against
  * every following source until they come back to its end, marked on the container.
  *

@@ -9,7 +9,7 @@ import type { SettingsControlsOf, SettingsRowView } from '../../core/feature'
 import type manifest from './chat-reveal.manifest'
 
 /**
- * The one row this feature draws itself (D72): the fade's two answers as
+ * The one row this feature draws itself (D76): the fade's two answers as
  * preview cards, each showing the arriving characters the way the answer it
  * picks does (features/settings/settings-cards.css).
  */

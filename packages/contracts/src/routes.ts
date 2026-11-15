@@ -21,7 +21,7 @@ export const USAGE_PATH = `${ROUTE_PREFIX}/usage`
 /** `?q=` searches message content; without it, the route only refreshes its cache. */
 export const SESSION_SEARCH_PATH = `${ROUTE_PREFIX}/session-search`
 
-/** Brand status; each stored image's version changes with its bytes (D30). */
+/** Brand status; each stored image's version changes with its bytes (D97). */
 export const BRAND_PATH = `${ROUTE_PREFIX}/brand`
 
 /** The custom mark's bytes: `GET` serves them, `PUT` replaces them, `DELETE` removes them. */
@@ -55,7 +55,7 @@ export const WEBFONTS_PATH = `${ROUTE_PREFIX}/webfonts`
 /** `GET` reports system-cue capability and `POST` plays one using OS files (D89). */
 export const SOUND_PATH = `${ROUTE_PREFIX}/sound`
 
-/** `?id=` selects the session; the answer is the session overview panel's folded data (D94). */
+/** `?id=` selects the session; the answer is the session overview panel's folded data (D102). */
 export const SESSION_PANEL_PATH = `${ROUTE_PREFIX}/session-panel`
 
 /** `POST` with a session id compacts that session's own history through the host's compaction seam (D100). */

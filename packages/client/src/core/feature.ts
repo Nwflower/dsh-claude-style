@@ -6,7 +6,7 @@ import type { CopyEntries } from './i18n'
 import type { SchedulerCalls } from '@dsh-claude-style/engine/scheduler'
 import type { HandleName, Handles, Ui } from './scheduler'
 
-/** Data-only manifests are evaluated by the build and projected into the browser registry (D72). */
+/** Data-only manifests are evaluated by the build and projected into the browser registry (D76). */
 export type FeatureManifest = FeatureIdentity & FeatureFields & FeatureSwitch
 
 /** Exactly one of `pref` and `ungated`; preference flips install or tear down live (D76). */
@@ -25,16 +25,16 @@ export type FeatureIdentity =
   | { id: 'settings', handle: HandleName }
 
 export interface FeatureFields {
-  /** Undeclared handle reads fail the type check (D72). */
+  /** Undeclared handle reads fail the type check (D76). */
   reads?: HandleName[]
   /** Unique ascending install and scheduler pass order. */
   order: number
   /** Stay uninstalled while this peer owns the behaviour (D74). */
   yieldsTo?: PeerPlugin
-  /** Deferred features must be unnecessary for the first frames (D72). */
+  /** Deferred features must be unnecessary for the first frames (D76). */
   load?: 'deferred'
   stylesheets: FeatureStylesheet[]
-  /** Each preference has one owning settings row (D72). */
+  /** Each preference has one owning settings row (D76). */
   settingsRows?: FeatureSettingsRow[]
   cases: string[]
   /** End-to-end scenarios that guard this feature (D92). */
@@ -69,7 +69,7 @@ export type SettingsGroupId = 'conversation' | 'composer' | 'statistics'
 
 export type SettingsRowSlot = SettingsTabId | SettingsGroupId
 
-/** Copy keys and control types must match the preference declaration (D72). */
+/** Copy keys and control types must match the preference declaration (D76). */
 export interface FeatureSettingsRow {
   tab: SettingsRowSlot
   /** Rank is shared with rows written by the settings feature. */
@@ -94,7 +94,7 @@ export interface FeatureSettingsRow {
   windowsOnly?: boolean
   /** Reduced motion swaps previews for distinguishable stills without disabling the choice. */
   stillWhenReduced?: boolean
-  /** Names a feature module collected by the settings build (D72). */
+  /** Names a feature module collected by the settings build (D76). */
   control?: string
   /** Values outside this pair display as off and remain stored until flipped. */
   switch?: { on: string, off: string }
@@ -127,7 +127,7 @@ export type RowControlNames<M> = M extends { settingsRows: readonly (infer R)[] 
 /**
  * The controls one feature's settings module exports, keyed by the names its
  * own manifest gives: a name the manifest does not carry, or one it carries and
- * the record leaves out, fails the type check (D72).
+ * the record leaves out, fails the type check (D76).
  */
 export type SettingsControlsOf<M> = Record<RowControlNames<M>, React.ComponentType<SettingsRowView>>
 
@@ -136,14 +136,14 @@ export type FeatureRuntime = FeatureIdentity & Pick<FeatureFields, 'order' | 'yi
   pref?: keyof Prefs
   prefValues?: string[]
   ungated?: string
-  /** Settings copy remains available while the feature is uninstalled (D72). */
+  /** Settings copy remains available while the feature is uninstalled (D76). */
   copy?: CopyEntries
 }
 
 /** A feature main module's `install`. */
 export type FeatureInstall = (ctx: HostContext, ui: Ui) => (() => void) | void
 
-/** A feature carries either `install` or its deferred chunk address (D72). */
+/** A feature carries either `install` or its deferred chunk address (D76). */
 export type Feature = FeatureRuntime & ({ install: FeatureInstall, chunk?: never } | { chunk: string, install?: never })
 
 /** The name a feature's handle registers under on `ui`. */
@@ -159,7 +159,7 @@ type ReadHandles<M> = M extends { reads: readonly (infer R extends HandleName)[]
 
 /**
  * What one feature's modules see of `ui`: the two calls, the feature's own
- * handle and the handles its manifest `reads` (D72). Its install takes `ui` as
+ * handle and the handles its manifest `reads` (D76). Its install takes `ui` as
  * `FeatureUi<typeof manifest>`, with the manifest imported as a type.
  */
 export type FeatureUi<M> = SchedulerCalls & { [K in OwnHandle<M> | ReadHandles<M>]?: Handles[K] }

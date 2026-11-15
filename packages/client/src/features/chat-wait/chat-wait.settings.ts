@@ -13,7 +13,7 @@ import type { SettingsControlsOf, SettingsRowView } from '../../core/feature'
 import type manifest from './chat-wait.manifest'
 
 /**
- * The rows this feature draws itself (D72). The waiting line's switch and its
+ * The rows this feature draws itself (D76). The waiting line's switch and its
  * detail choice are switches the settings page draws from the manifest; the
  * paint is the option under the switch, and it is shown as the effect itself:
  * the card wears the very look the line wears (shared/motion.css builds both),

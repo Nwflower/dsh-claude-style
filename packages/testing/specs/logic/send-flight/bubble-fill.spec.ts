@@ -2,7 +2,7 @@
  * The fill a message row is read by: the bubble the reader's own row paints,
  * found from the colour the page computed for it — the host's `rgb()` fill, or
  * a card's token and a reader's custom palette, which the page states as a
- * literal or as a relative colour (D30).
+ * literal or as a relative colour (D97).
  *
  * @capability send-flight
  * @features chat-send

@@ -250,14 +250,14 @@ export function apply(ctx: HostContext) {
     }
   }
 
-  /** The deferred features' installs that have arrived this generation, by id (D72). */
+  /** The deferred features' installs that have arrived this generation, by id (D76). */
   const arrived = new Map<string, FeatureInstall>()
   /** The deferred features whose chunk is on its way. */
   const awaited = new Set<string>()
 
   /**
    * Install one feature, or, for a deferred one whose chunk has not arrived
-   * yet, send for the chunk: the arrival installs it (D72).
+   * yet, send for the chunk: the arrival installs it (D76).
    */
   function installFeature(feature: Feature) {
     if (feature.chunk === undefined) {
@@ -341,7 +341,7 @@ export function apply(ctx: HostContext) {
    * Stand down for another owner (D74): install the features it leaves on the
    * page that are not installed yet — a page booting yielded, or going from
    * one owner to the other — and release the rest. A kept feature that is
-   * deferred installs when its chunk arrives (D72).
+   * deferred installs when its chunk arrives (D76).
    */
   function yieldTo(next: PageOwner) {
     const keep = KEPT_FOR[next]
@@ -358,11 +358,11 @@ export function apply(ctx: HostContext) {
    * a yield leaves the features it kept alone (D74); a feature retired after
    * failing stays retired (D12).
    *
-   * FEATURES is the registry the build generates from the manifests (D72),
+   * FEATURES is the registry the build generates from the manifests (D76),
    * in install order; the scheduler's pass order is the same order. A feature
    * with a `pref` follows that switch and the plugins it yields to; a feature
    * that only reads preferences installs once. A deferred feature installs
-   * when its chunk arrives, after this pass and the scheduler (D72).
+   * when its chunk arrives, after this pass and the scheduler (D76).
    */
   function own() {
     // The value is the build id (scripts/build/build.mjs): the stylesheet keys on

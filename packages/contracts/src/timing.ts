@@ -76,7 +76,7 @@ export const HOST_TIMING: HostTimingEntry[] = [
   {
     id: 'host.composer-place',
     assumption: 'The composer seat is the conversation scroller\u2019s own sibling rather than a row inside the message column, so growing the column moves the transcript under the composer and never the composer itself.',
-    use: 'The stream slide puts the column back down with a transform on the column alone (D85); the lane holds the composer\u2019s box still through a fast answer on the strength of that shape.',
+    use: 'The stream slide puts the column back down with a transform on the column alone (D95); the lane holds the composer\u2019s box still through a fast answer on the strength of that shape.',
     checks: ['scenario:streamPace', 'scenario:streamJitter', 'scenario:streamJitterFooter', 'scenario:streamJitterInline'],
   },
 ]

@@ -13,7 +13,7 @@ import type { SettingsControlsOf, SettingsRowView } from '../../core/feature'
 import type manifest from './context-stats.manifest'
 
 /**
- * The context meter's face as the settings page shows it (D72): one card per
+ * The context meter's face as the settings page shows it (D76): one card per
  * answer, each carrying readings drawn the way the composer draws them, so the
  * three compare side by side without a trip through the conversation.
  *
@@ -42,7 +42,7 @@ const FACES = [
   { value: CONTEXT_DISPLAY_RING_BAND, label: 'contextDisplayRingBand' },
 ] as const
 
-/** The row controls this feature draws itself (D72). */
+/** The row controls this feature draws itself (D76). */
 export const controls: SettingsControlsOf<typeof manifest> = {
   'context-display': ContextDisplayPicker,
   'billing-table': BillingTableRow,

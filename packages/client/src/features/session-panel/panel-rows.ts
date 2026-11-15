@@ -6,7 +6,7 @@ import { ChevronMark } from './session-panel-marks'
 
 const h = React.createElement
 
-/** Each section owns a native disclosure (D94): its children stay mounted so
+/** Each section owns a native disclosure (D102): its children stay mounted so
  * folding preserves list expansion and an opened job's output. An unchanged
  * `open` prop lets the browser keep the reader's choice across data refreshes.
  * A `folded` section starts closed, with its reading beside the heading.

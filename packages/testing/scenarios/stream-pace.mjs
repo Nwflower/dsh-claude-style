@@ -2,7 +2,7 @@
 /**
  * stream-pace.mjs — where the composer stands, and how far behind the pin the
  * answer runs, while an answer arrives faster than a slide carries it, end to
- * end (D85, D92).
+ * end (D95, D92).
  *
  * Registered in the lane's scenario table (packages/testing/scenarios.mjs). It
  * reads the lane's own frame trace (packages/testing/e2e.mjs), which carries

@@ -1,7 +1,7 @@
 /**
  * build-checks.mjs — the build's refusals that are not about the stylesheets (those are in
  * scripts/build/css.mjs): types, the import graph, the scroll owner, listed sources, manifests,
- * and the host contract and timing tables (D36, D40, D72, D3).
+ * and the host contract and timing tables (D36, D40, D76, D3).
  */
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -79,7 +79,7 @@ export function checkCycles(metafile) {
   for (const file of graph.keys()) if (!state.has(file)) visit(file)
 }
 
-/** Keep host literals, probe metadata and manifest owners synchronized (D3, D72). */
+/** Keep host literals, probe metadata and manifest owners synchronized (D3, D76). */
 export function checkContracts(manifests) {
   const literals = loadModule('packages/contracts/src/dom.ts')
   const { HOST_DOM: table } = loadModule('packages/contracts/src/table.ts')

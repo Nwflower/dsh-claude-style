@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "dsh-claude-style design tokens",
-  "description": "The skin's custom properties: the build generates the token stylesheet and the docs/STYLE.md tables from this document (D9, D30).",
+  "description": "The skin's custom properties: the build generates the token stylesheet and the docs/STYLE.md tables from this document (D9, D97).",
   "type": "object",
   "required": ["typeface", "apex", "palette", "motion", "layer"],
   "additionalProperties": false,

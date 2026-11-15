@@ -9,7 +9,7 @@ import type { SettingsRow, SettingsView } from './settings-controls'
 import { copy } from './copy'
 
 /**
- * The colour cards as the Appearance tab's last rows (D96): one card per
+ * The colour cards as the Appearance tab's last rows (D97): one card per
  * scheme — the presets (a preset the reader edited wears its edits), then the
  * reader's own. A card picks its scheme, and its discs, the one under the
  * pointer wearing a pencil, open that scheme in the manager (palette-manager.ts), which

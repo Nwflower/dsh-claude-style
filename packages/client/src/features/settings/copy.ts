@@ -6,7 +6,7 @@ export type CopyKey = keyof typeof COPY
 
 export const copy = createCopy(COPY)
 
-/** Shared settings copy stays in this feature's bundle (D72). */
+/** Shared settings copy stays in this feature's bundle (D76). */
 export function sharedLine(key: string, params?: CopyParams) {
   return featureCopy(COPY, key, params)
 }

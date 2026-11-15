@@ -13,7 +13,7 @@ import type { Prefs } from '../../constants'
 import { copy } from './copy'
 
 /**
- * The brand area as the brand editor's own drawn lockup (D30): the mark and the
+ * The brand area as the brand editor's own drawn lockup (D97): the mark and the
  * word in the seats the sidebar paints them into, for the set the editor holds
  * in one appearance. The seats write the same preferences and the same host
  * routes the sidebar reads: `brandName` for the typed name, the preset's

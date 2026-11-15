@@ -56,7 +56,7 @@ export interface SettingsView {
   }
 }
 
-/** One row of a tab, with its place among the slot's rows and the switch rows the manifests add (D72). */
+/** One row of a tab, with its place among the slot's rows and the switch rows the manifests add (D76). */
 export interface SettingsRow {
   rank: number
   node: React.ReactNode
@@ -129,7 +129,7 @@ export function tabRows(tab: SettingsTab, view: SettingsView) {
 
 /**
  * One line of a row's copy: the owning feature's own line, or this page's own
- * for a line two features' rows share (D72).
+ * for a line two features' rows share (D76).
  */
 function rowLine(feature: Feature, key: string) {
   return feature.copy === undefined || feature.copy[key] === undefined ? sharedLine(key) : featureCopy(feature.copy, key)
@@ -197,7 +197,7 @@ function featureRowParts(feature: Feature, row: FeatureSettingsRow, view: Settin
   const write = (value: string | boolean) => { view.write({ [pref]: value } as Partial<Prefs>) }
   // The row's own value never disables it: that is what the reader changes.
   const off = yielded || waits !== null || offWindows || parentBlocked
-  // A row the feature draws itself renders its own control (D72); every other
+  // A row the feature draws itself renders its own control (D76); every other
   // row follows the preference's own type.
   const own = row.control === undefined ? undefined : ROW_CONTROLS[feature.id]?.[row.control]
   const sides = row.switch
@@ -227,7 +227,7 @@ function featureRowParts(feature: Feature, row: FeatureSettingsRow, view: Settin
 }
 
 /**
- * The rows the feature manifests declare for a slot (D72): a tab of the strip,
+ * The rows the feature manifests declare for a slot (D76): a tab of the strip,
  * or one of the main window's groups. A row placed in a header (`placement`)
  * stands in its parent's row instead (headerAside).
  */

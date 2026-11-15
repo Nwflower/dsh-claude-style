@@ -48,7 +48,7 @@ export const SUBMISSION_ROW_SELECTOR = `[${FLOW_KIND_ATTRIBUTE}="${USER_ROW_KIND
 /** Both faces inside the chat column, asked in one query. */
 export const CHAT_ROW_SELECTOR = `${CHAT_USER_ROW_SELECTOR}, ${SUBMISSION_ECHO_SELECTOR}`
 
-/** Parse ordinary `rgb()` directly; resolve other CSS colour forms through a painted pixel (D30). */
+/** Parse ordinary `rgb()` directly; resolve other CSS colour forms through a painted pixel (D97). */
 export function colorParts(color: string) {
   const match = /^rgba?\(([^)]+)\)$/.exec(color.trim())
   if (match !== null) {

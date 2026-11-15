@@ -61,7 +61,7 @@ type PageDirection = 'forward' | 'back'
  * The quick-provider popover (packages/client/src/features/settings/quick-providers.ts). The settings
  * row is React-rendered while that card is imperative, so the row reaches the
  * popover through this handle. The handle is read through the live registry
- * (D72) rather than kept: a page yielded to another owner takes the
+ * (D76) rather than kept: a page yielded to another owner takes the
  * quick-provider install down and brings a fresh one back, while this page's
  * section stays mounted, and a stored handle would drive the dead one.
  */

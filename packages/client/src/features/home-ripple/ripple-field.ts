@@ -31,7 +31,7 @@ export interface GlyphField {
 /**
  * The channels of a theme token's colour, or null for a value the field cannot
  * paint with: the page states a token as a literal, the host's alias, or the
- * relative colour a reader's palette derives from their canvas (D30), and the
+ * relative colour a reader's palette derives from their canvas (D97), and the
  * field sets solid glyphs with no backdrop of its own to mix a translucent ink
  * into.
  */

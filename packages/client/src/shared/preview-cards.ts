@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-/** Shared classes own interaction styling; feature classes and attributes own preview content (D72). */
+/** Shared classes own interaction styling; feature classes and attributes own preview content (D76). */
 
 /** The row's group: settings-cards.css lays its cards out as one grid. */
 export const PREVIEW_PICKER_CLASS = 'dsh-claude-preview-picker'

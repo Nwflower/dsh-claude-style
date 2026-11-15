@@ -17,7 +17,7 @@
  * The shipped copy, so the assertions read the words the page is in rather than
  * one language: the lane runs under whatever locale the machine has, and the
  * host's own word for the fallback is read off the page itself. The waiting
- * line's words belong to chat-wait and the counted headers' to chat-fold (D72).
+ * line's words belong to chat-wait and the counted headers' to chat-fold (D76).
  */
 import waitCopy from '../../client/src/features/chat-wait/chat-wait.copy.json' with { type: 'json' }
 import foldCopy from '../../client/src/features/chat-fold/chat-fold.copy.json' with { type: 'json' }

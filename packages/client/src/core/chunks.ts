@@ -5,7 +5,7 @@ import type { FeatureInstall } from './feature'
 
 const chunks = createChunkLoader<FeatureInstall>({ packageName: PACKAGE_NAME, modules: CHUNK_MODULES })
 
-/** Reject with the chunk address when loading or its factory fails (D72). */
+/** Reject with the chunk address when loading or its factory fails (D76). */
 export function loadFeatureChunk(url: string): Promise<FeatureInstall> {
   return chunks.load(url)
 }

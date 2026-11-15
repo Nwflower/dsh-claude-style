@@ -580,7 +580,7 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
         }
         // `?live=1` asks past the kept answer: the page wakes the rail on every
         // figure the host lands, and a cache hit would hand it the numbers the
-        // wake was meant to replace (D94).
+        // wake was meant to replace (D102).
         sendPayload(res, sessionPanel.get(sessionId, readBillingRows(params), params.get('live') === '1').then(value => ({ value })))
       },
     })

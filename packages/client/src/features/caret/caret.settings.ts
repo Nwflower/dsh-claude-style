@@ -10,7 +10,7 @@ import type { SettingsControlsOf, SettingsRowView } from '../../core/feature'
 import type manifest from './caret.manifest'
 
 /**
- * The one row this feature draws itself (D72): the caret's two answers as
+ * The one row this feature draws itself (D76): the caret's two answers as
  * preview cards. The same line is typed out in both, character by character,
  * with the caret following it — the on card's caret glides to each new place
  * the way the drawn one does, the off card's arrives there at once the way the

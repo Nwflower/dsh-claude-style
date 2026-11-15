@@ -1,4 +1,4 @@
-/* The brand editor's lockup (settings-brand-lockup.ts, D30): the brand area
+/* The brand editor's lockup (settings-brand-lockup.ts, D97): the brand area
    the sidebar draws, at the size the editor gives it. Every metric comes from
    the cap height the sidebar paints the identity at (theme/sidebar.css),
    scaled up by --dsh-claude-lockup-scale, so the mark, the word and the gap

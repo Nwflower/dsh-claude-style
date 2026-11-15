@@ -10,7 +10,7 @@
    ground. The canvas rules in `tokens.css`, `typography.css` and `chrome.css`
    carry the same `:not([data-we-wallpaper])` gate. `--dsw-alias-bg-base` keeps
    the canvas colour against the plugin's clearing, so host dialogs and cards
-   stay opaque. "Follow the host" lays no mask (D30). Theme layering from the
+   stay opaque. "Follow the host" lays no mask (D97). Theme layering from the
    host would let the shell stand aside by layer. */
 
 body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper] {

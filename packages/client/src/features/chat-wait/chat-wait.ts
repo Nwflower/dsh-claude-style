@@ -38,7 +38,7 @@ interface WaitLine {
  * elapsed clock, and 「暂未响应」 past the overtime margin (wait-state.ts).
  * Precise adds a call's file or description and reasoning's clause. A wording
  * stands a whole second (wordForPass), so fast state changes read as one line;
- * the swap is transitions.dev's "Thinking states" (MIT).
+ * the swap is transitions.dev's "Text states swap" (shared/swapping-text.ts).
  *
  * The host keeps its row and live region: the line is a quiet span beside the
  * host's icon, and the stylesheet hides the host's words while it stands
