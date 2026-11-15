@@ -5,9 +5,13 @@
    ahead of the frame's style, so they hold in the frame the resize lands in. The
    expanded track reads the host's own sidebar variable, which the reader may
    have dragged away from its 280px default. A touch shell can put the centre
-   column in the first track, so these desktop-only overrides leave its grid alone. */
+   column in the first track, so these desktop-only overrides leave its grid alone.
+
+   The zero track holds while the sidebar is out of the grid: at this width the
+   reader's reopen expands it in-grid, and a pin written whatever the sidebar's
+   state would keep that column at nothing, so the host's own track stands there. */
 @media (hover: hover) and (pointer: fine) {
-body[data-dsh-claude-style][data-dsh-claude-page-under-768] [data-dsh-claude-part~="layout-frame"][data-rightbar-collapsed] {
+body[data-dsh-claude-style][data-dsh-claude-page-under-768] :is([data-sidebar-collapsed], [data-sidebar-drawer])[data-dsh-claude-part~="layout-frame"][data-rightbar-collapsed] {
   grid-template-columns: 0px minmax(0, 1fr) minmax(0, 0px) !important;
 }
 body[data-dsh-claude-style][data-dsh-claude-page-under-1000]:not([data-dsh-claude-page-under-768]) [data-dsh-claude-part~="layout-frame"]:not([data-sidebar-drawer])[data-sidebar-collapsed][data-rightbar-collapsed] {

@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-15",
+  "group": "fixes",
+  "order": 356,
+  "external": true,
+  "zh": "窗口宽度不足 768px 时展开的侧栏重新拿到自己的轨道，不再被压成一条竖线",
+  "en": "Reopening the sidebar below 768px gives it its own track back instead of squeezing it to a sliver"
+}

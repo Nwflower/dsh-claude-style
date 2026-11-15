@@ -957,8 +957,8 @@
       "prop": "transition",
       "verdict": "transient state"
     },
-    "body[data-dsh-claude-style][data-dsh-claude-page-under-768] [data-dsh-claude-part~=layout-frame][data-rightbar-collapsed]{grid-template-columns:0px minmax(0,1fr) minmax(0,0px)!}|grid-template-columns": {
-      "selector": "body[data-dsh-claude-style][data-dsh-claude-page-under-768] [data-dsh-claude-part~=layout-frame][data-rightbar-collapsed]",
+    "body[data-dsh-claude-style][data-dsh-claude-page-under-768] :is([data-sidebar-collapsed],[data-sidebar-drawer])[data-dsh-claude-part~=layout-frame][data-rightbar-collapsed]{grid-template-columns:0px minmax(0,1fr) minmax(0,0px)!}|grid-template-columns": {
+      "selector": "body[data-dsh-claude-style][data-dsh-claude-page-under-768] :is([data-sidebar-collapsed],[data-sidebar-drawer])[data-dsh-claude-part~=layout-frame][data-rightbar-collapsed]",
       "prop": "grid-template-columns",
       "verdict": "unmatched"
     },
