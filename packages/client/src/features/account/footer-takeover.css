@@ -18,7 +18,11 @@
    apart from the settings trigger and the connection pill. The account menu and
    its sign-in dialog are portals and the settings panel is the row's sibling, so
    all three still open. */
-body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [data-dsh-claude-part~="foot-area"] > [data-dsh-claude-part~="footer-actions"] :is([data-dsh-claude-part~="footer-buttons"], > button) {
+/* `footer-buttons` sits at any depth under `footer-actions`, a bare button is its
+   direct child: `:is()` holds no relative selector, so the two depths are two
+   selectors. */
+body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [data-dsh-claude-part~="foot-area"] > [data-dsh-claude-part~="footer-actions"] [data-dsh-claude-part~="footer-buttons"],
+body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [data-dsh-claude-part~="foot-area"] > [data-dsh-claude-part~="footer-actions"] > button {
   display: none;
 }
 body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [data-dsh-claude-part~="foot-area"] [data-dsh-claude-part~="settings-trigger"] :is(button, [role="button"], a):not([data-dsh-claude-account-host-row]):not([aria-disabled]) {
