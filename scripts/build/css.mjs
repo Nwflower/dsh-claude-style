@@ -105,7 +105,7 @@ function checkHasMarks(where, selector) {
   })
 }
 
-/** Gate host-token writes so follow-host mode can drop every override (D30). */
+/** Gate host-token writes so follow-host mode can drop every override (D97). */
 function checkTokenGates(label, rule, selectors, gates, names) {
   const every = (gate, value) => selectors.every((selector) => carries(selector, gate.attribute, value))
   for (const node of rule.nodes) {

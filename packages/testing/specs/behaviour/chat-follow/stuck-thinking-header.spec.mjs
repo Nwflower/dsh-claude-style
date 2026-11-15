@@ -1,6 +1,6 @@
 /**
  * An expanded thinking row whose sticky header has reached the top of the
- * conversation scroller stands still while streamed growth slides the column (D94).
+ * conversation scroller stands still while streamed growth slides the column (D95).
  *
  * @capability chat-follow
  * @features chat-follow

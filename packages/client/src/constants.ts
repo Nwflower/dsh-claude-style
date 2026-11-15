@@ -26,7 +26,7 @@ export const REPOSITORY_URL = 'https://github.com/Nwflower/dsh-claude-style'
 /** The document attribute the stylesheet switches on. */
 export const BRAND_ATTR = 'data-dsh-claude-brand'
 
-/** The custom brand layer over either brand (D30, features/brand/brand.ts): each part stands only while the reader supplied it — CUSTOM_MARK_ATTR for a mark image, CUSTOM_WORD_ATTR as `image` or `text`, CUSTOM_TINT_ATTR while the images take an ink (`accent` or `text`, in --dsh-claude-logo-ink), CUSTOM_PALETTE_ATTR for the reader's four colours. CUSTOM_MARK_NONE_ATTR marks the selected set that carries no mark of its own, whose seat stands empty rather than showing the brand's art.
+/** The custom brand layer over either brand (D97, features/brand/brand.ts): each part stands only while the reader supplied it — CUSTOM_MARK_ATTR for a mark image, CUSTOM_WORD_ATTR as `image` or `text`, CUSTOM_TINT_ATTR while the images take an ink (`accent` or `text`, in --dsh-claude-logo-ink), CUSTOM_PALETTE_ATTR for a custom or edited colour scheme's five seeds. CUSTOM_MARK_NONE_ATTR marks the selected set that carries no mark of its own, whose seat stands empty rather than showing the brand's art.
  * BRAND_INK_ATTR carries that `accent`/`text` choice while it repaints the brand art; the images, the name and the colours ride <body> as custom properties. */
 export const CUSTOM_MARK_ATTR = 'data-dsh-claude-custom-mark'
 /** The set paints no mark: the sidebar, rail and hero seats give way to its wordmark alone. */
@@ -36,7 +36,7 @@ export const CUSTOM_WORD_IMAGE = 'image'
 export const CUSTOM_WORD_TEXT = 'text'
 export const CUSTOM_TINT_ATTR = 'data-dsh-claude-custom-tint'
 export const CUSTOM_PALETTE_ATTR = 'data-dsh-claude-custom-palette'
-/** How the selected scheme draws a dark contour (`highlight` or `surface`, D96); the custom palette's blocks stand under it. */
+/** How the selected scheme draws a dark contour (`highlight` or `surface`, D97); the custom palette's blocks stand under it. */
 export const CUSTOM_EDGES_ATTR = 'data-dsh-claude-custom-edges'
 export { PALETTE_EDGES } from '@dsh-claude-style/contracts/palette-schemes'
 export const BRAND_INK_ATTR = 'data-dsh-claude-brand-ink'
@@ -69,7 +69,7 @@ export const STATUS_MOTION_ATTR = 'data-dsh-claude-status-motion'
 
 /** The document attributes the choices below resolve onto; the values themselves are in the table (contracts/prefs.ts). */
 export const PALETTE_ATTR = 'data-dsh-claude-palette'
-/** The colour card the page paints, resolved from `paletteColors` (D30): a palette card id. Following the brand and the reader's four resolve to the brand's card, so those tokens stand and the custom blocks layer over them.
+/** The colour card the page paints, resolved from `paletteColors` (D97): a palette card id. Following the brand and a custom or edited scheme resolve to the base card, so those tokens stand and the custom blocks layer over them.
  * A picked card stands on its own whatever the brand mark is. */
 export const PALETTE_CARD_ATTR = 'data-dsh-claude-palette-card'
 export const TYPEFACE_ATTR = 'data-dsh-claude-typeface'
@@ -89,13 +89,13 @@ export const CONTEXT_DISPLAY_ATTR = 'data-dsh-claude-context-display'
 export const CONTEXT_NUMBERS_ATTR = 'data-dsh-claude-context-numbers'
 /** The room under the conversation's composer (features/composer/bottom-gap.css); the host's own writes no attribute. */
 export const COMPOSER_GAP_ATTR = 'data-dsh-claude-composer-gap'
-/** The requirement the settings rows under the conversation's composer carry (D72): they restyle that composer, which the hero's own and the "all" scope do not stand for. */
+/** The requirement the settings rows under the conversation's composer carry (D76): they restyle that composer, which the hero's own and the "all" scope do not stand for. */
 export const CONVERSATION_COMPOSER_REQUIRES = {
   pref: 'composerScope',
   values: [COMPOSER_SCOPE_CONVERSATION, COMPOSER_SCOPE_ALL],
   note: 'conversationComposerNote',
 } as const
-/** The requirement the settings rows that restyle any composer carry (D72): the hero's, the conversation's and the "all" scope. */
+/** The requirement the settings rows that restyle any composer carry (D76): the hero's, the conversation's and the "all" scope. */
 export const ANY_COMPOSER_REQUIRES = {
   pref: 'composerScope',
   values: [COMPOSER_SCOPE_HERO, COMPOSER_SCOPE_CONVERSATION, COMPOSER_SCOPE_ALL],

@@ -16,28 +16,30 @@ rule names (D48). The three tables marked generated are written from
 
 ## Palette
 
-Every look is a **colour card**: an accent, a canvas, a sidebar and the reader's
-bubble per scheme, an inline-code ink and, when its prose links keep a family of
-their own, a link per scheme. The first card is the default look. A card's dark
-outlines are drawn either as a lit highlight or as a flat surface step, and its
-brand art takes its colour from the ink or the accent (D30).
+Every look is a **colour card**: an accent, a canvas, a body ink, a sidebar and
+the reader's bubble per scheme, an inline-code ink and, when its prose links
+keep a family of their own, a link per scheme. The first card is the default
+look. A card's dark outlines are drawn either as a lit highlight or as a flat
+surface step, and a brand preset's art takes its colour from the original
+image, the ink or the accent (D97).
 
 The colour every token paints is a **tone** of one of those seeds; the build
 resolves the tones into plain colours, so the page ships literals and nothing
 derives at runtime. The ladder is shared by every card; a card states only its
 seeds, its sidebar, its bubble and its traits.
 
-The reader authors a card of their own: four colours, shown and edited in the
-settings page beside the two brands. Every card can be picked; a brand card
-paints its own colours whatever the brand mark is, and a picked card offers
-「恢复跟随品牌」 to hand the colours back to the theme style's brand. The
-reader's palette is the same ladder written as relative colours, one block per
-brand and scheme, so the colours resolve in the page while the brand cards keep
-their literals; the image-colour choice (`Default`, `Accent`, `Text colour`)
-repaints the brand art from the same table (D30).
+Six built-in presets (Claude, DeepSeek, Parchment, Forest, Dusk and Rose) and
+reader-created schemes share the same five-seed model (`accent`, `background`,
+`text`, `code`, `link`). Every card can be picked; a picked card paints its own
+colours whatever the brand mark is, and offers 「恢复跟随品牌」 to hand the
+colours back to the active theme's brand. Custom and edited schemes write the
+same ladder as relative colours, one block per brand and appearance, so the
+colours resolve in the page while unedited built-in cards keep their literals;
+each branding preset's ink choice (`original`, `accent`, `text`) repaints the
+brand art from the same table (D97).
 
 The schemes are managed in one dialog of two columns. The left column lists
-every scheme as a line of four dots and a name, under a highlight that slides to
+every scheme as a line of five dots and a name, under a highlight that slides to
 the line in hand; the scheme the page paints wears the accent's tick. The right
 column edits that scheme: its name as the heading, then a light and a dark
 **specimen** — a heading, a line of prose with an inline-code chip and a link,
@@ -445,10 +447,7 @@ failure in the row and allows retry. Stop targets remain visible without hover
 and keep their keyboard focus ring. A finished command and a finished subagent keep their
 clock alone: their ending is what most rows report, so the word would be the
 row's loudest part. Only work running, stopping or failed carries a state word,
-the failed one in the error ink. The section's rows are filed under quiet eyebrow
-labels by kind — commands, subagents, team — and a group appears only when it has
-a row, folding past its second row like the sections above it, so the list stays
-a summary of what actually runs.
+the failed one in the error ink.
 
 ## Typography
 
@@ -1176,7 +1175,7 @@ still frame.
   the look no single feature owns is in `packages/client/src/theme/`, and the parts several
   features share (the popover card and rows, the sliding highlight) are in
   `packages/client/src/shared/`. The host selector discipline and the style checks the build
-  runs are in `docs/adr/` (D3, D9, D30).
+  runs are in `docs/adr/` (D3, D9, D97).
 - The page's scale (settings › General) is the `zoom` the theme sheet puts on the body, so a
   length written into the page is read in a smaller space than the one a bounding rect is
   measured in: code that turns a measured box into a written length goes through

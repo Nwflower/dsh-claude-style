@@ -13,7 +13,7 @@ import { readPrefs } from '../../core/prefs'
 import { copy } from './copy'
 
 /**
- * How a brand set is drawn on the settings page (D30): the brand's own art
+ * How a brand set is drawn on the settings page (D97): the brand's own art
  * where the set holds no picture, and the set's picture where it does, in the
  * seats the sidebar paints them into and in the set's own ink. The brand card
  * (brand-cards.ts), the manager's list (brand-manager.ts) and the editor's

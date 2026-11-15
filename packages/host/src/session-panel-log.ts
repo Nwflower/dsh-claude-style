@@ -1,6 +1,6 @@
 /**
  * The session log's job records, folded into the overview panel's kept history
- * (D94).
+ * (D102).
  *
  * The host's job registry drops a settled record once its owner collected the
  * outcome — a foreground command's record is gone by the next poll — so the

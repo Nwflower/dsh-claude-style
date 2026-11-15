@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * dev.mjs — rebuild inputs in a fresh process to avoid stale evaluated constants.
- * Debug builds retain previous chunks for live linked pages (D72).
+ * Debug builds retain previous chunks for live linked pages (D76).
  */
 import { spawn } from 'node:child_process'
 import fs from 'node:fs'

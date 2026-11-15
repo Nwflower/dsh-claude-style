@@ -1,5 +1,5 @@
 /**
- * The details rail keeps standing while one conversation replaces another (D94).
+ * The details rail keeps standing while one conversation replaces another (D102).
  * @capability session-panel
  * @features session-panel
  * @risk A session switch takes the rail away for the frames before the next

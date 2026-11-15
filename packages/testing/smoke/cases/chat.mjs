@@ -53,7 +53,7 @@ export default {
     check('the capped body is left at its end: the frames the recording ended on all read it',
       walkHeldAtEnd(catchUp, AT_END_PX, bound('followQuietFrames')), JSON.stringify(catchUp.slice(-bound('followQuietFrames'))))
     // While the host's streaming mark is on the page, the end its own follow
-    // writes stands, and the column slides the growth to rest (chat-follow.ts, D85).
+    // writes stands, and the column slides the growth to rest (chat-follow.ts, D95).
     const slide = follow.slide || []
     const slideSteps = walkedSteps(slide, AT_END_PX)
     check('the stream slide puts the growth the host\'s pin pushed up back down and slides it to rest: the recording starts well above rest, every frame closes on it, and the last one is at rest',
@@ -105,7 +105,7 @@ export default {
     // arriving before the slide has landed, stays inside the growth it just took
     // — the offset the column is drawn at, not the scroller's own gap, which the
     // host's pin keeps at zero either way — and the run is never left standing
-    // once it stops (chat-follow.ts's slideDuration, D85).
+    // once it stops (chat-follow.ts's slideDuration, D95).
     const pace = follow.pace || {}
     const paceFrames = pace.frames || []
     const carried = paceFrames.map((frame) => frame.offset)
@@ -270,7 +270,7 @@ export default {
     check('the wrapped row\'s door is handed back when it lands',
       wrapped.clicksDuringRoll === 0 && wrapped.clicks === 1 &&
         wrapped.bodyGone === true && wrapped.folded === true, JSON.stringify(wrapped))
-    // The switch covers the door and the entrance fade as well (D72/D74).
+    // The switch covers the door and the entrance fade as well (D76/D74).
     const animationsOff = fold.animationsOff || {}
     const wrappedEntrance = fold.entranceWrapped || {}
     const wrappedOff = animationsOff.wrappedEntrance || {}

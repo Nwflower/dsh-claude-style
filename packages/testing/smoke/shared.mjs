@@ -29,13 +29,13 @@ const tierName = () => tier
 /** Cases that observe frames are skipped whole by the quick tier. */
 const TIMING_CASES = ['chat-follow', 'chat-fold', 'chat-reveal', 'chat-send', 'crab-states', 'deepy', 'whalegirl', 'popovers']
 
-/** `--feature` refuses directories without their own cases rather than running unrelated ones (D72). */
+/** `--feature` refuses directories without their own cases rather than running unrelated ones (D76). */
 const MANIFESTS = readManifests()
 const FEATURE_CASES = Object.fromEntries(
     Object.entries(featureCoverage(MANIFESTS, [])).map(([dir, row]) => [dir, row.cases]),
 )
 
-/** Credit every deferred feature with loader cases so `--feature` reaches chunk delivery (D72). */
+/** Credit every deferred feature with loader cases so `--feature` reaches chunk delivery (D76). */
 const DEFERRED_CASES = ['chunk-fault', 'chunk-late']
 for (const manifest of MANIFESTS) {
     if (manifest.load !== 'deferred') continue
@@ -43,7 +43,7 @@ for (const manifest of MANIFESTS) {
     for (const name of DEFERRED_CASES) if (!covered.includes(name)) covered.push(name)
 }
 
-/** The features that arrive in chunks of their own (D72), by id. */
+/** The features that arrive in chunks of their own (D76), by id. */
 const DEFERRED_FEATURES = MANIFESTS.filter((manifest) => manifest.load === 'deferred').map((manifest) => manifest.id)
 
 /** The preferences a page carries before a reader touches anything (packages/contracts/src/prefs.ts). */

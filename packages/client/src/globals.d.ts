@@ -45,7 +45,7 @@ interface Element {
 }
 
 interface HTMLScriptElement {
-  /** The running chunk publishes its factory here; `require` resolves shared bundle modules (D72). */
+  /** The running chunk publishes its factory here; `require` resolves shared bundle modules (D76). */
   __dshChunk?: (require: (id: string) => unknown) => { install?: unknown }
 }
 

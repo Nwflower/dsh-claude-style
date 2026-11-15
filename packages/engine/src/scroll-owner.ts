@@ -7,7 +7,7 @@ import { SCROLL_EASE_LEAD_PX, easeScroll, isScrollEasing, scrollEasePosition, sc
 
 /**
  * The chat area's scroll positions have one writer (D40): features ask, this module decides on the spring of scroll-ease.ts. Sources rank jump > fold > reader > composer > follow > process; a request below the ease running is refused, and composer, follow and process are refused while the reader holds the container. The reader source is his own position held under a stream's growth.
- * While content streams nothing here writes: the host's follow pins the end, and the follow feature slides what the pin pushed up (D85). The reader's own wheel stays the browser's and is only recorded (noteIntent), so the following sources stand down; the scroller above a held container carries skin().readerHold for the waiting line's pin.
+ * While content streams nothing here writes: the host's follow pins the end, and the follow feature slides what the pin pushed up (D95). The reader's own wheel stays the browser's and is only recorded (noteIntent), so the following sources stand down; the scroller above a held container carries skin().readerHold for the waiting line's pin.
  */
 
 export { SCROLL_EASE_LEAD_PX }

@@ -1,7 +1,7 @@
 /**
  * virtual-modules.mjs — the modules the build generates while bundling, as
- * esbuild plugins: the feature registry from the manifests (D72), the table
- * the feature chunks share the bundle's modules through (D72) and the build's
+ * esbuild plugins: the feature registry from the manifests (D76), the table
+ * the feature chunks share the bundle's modules through (D76) and the build's
  * own output for the browser half (D36).
  */
 import path from 'node:path'
@@ -12,7 +12,7 @@ const SRC = path.join(ROOT, 'packages', 'client', 'src')
 /** The manifest fields the browser half reads (FeatureRuntime in packages/client/src/core/feature.ts). */
 const RUNTIME_FIELDS = ['id', 'handle', 'order', 'pref', 'prefValues', 'ungated', 'yieldsTo', 'settingsRows']
 
-/** Include settings copy eagerly because labels must render before deferred features install (D72). */
+/** Include settings copy eagerly because labels must render before deferred features install (D76). */
 export function featuresModule(manifests, chunks) {
   const copyOwners = manifests.filter((manifest) => manifest.settingsRows !== undefined)
   const imports = manifests.flatMap((manifest, index) => manifest.load === 'deferred' ? [] : [`import { install as install${index} } from ${JSON.stringify(`./${manifest.main}`)}`])
@@ -39,7 +39,7 @@ export function featuresModule(manifests, chunks) {
   }
 }
 
-/** Resolve chunk imports to the main bundle's own module instances (D72). */
+/** Resolve chunk imports to the main bundle's own module instances (D76). */
 export function chunkModulesModule(ids) {
   const own = ids.filter((id) => id.startsWith('packages/') || id.startsWith('virtual:'))
   const source = (id) => (id.startsWith('virtual:') ? id : path.join(ROOT, id))
@@ -58,7 +58,7 @@ export function chunkModulesModule(ids) {
   }
 }
 
-/** Keep custom settings controls in the settings page's own chunk (D72). */
+/** Keep custom settings controls in the settings page's own chunk (D76). */
 export function settingsControlsModule(manifests) {
   const owners = manifests.filter((manifest) => (manifest.settingsRows ?? []).some((row) => row.control !== undefined || row.status !== undefined))
   const imports = owners.map((manifest) => `import { controls as ROWS_${manifest.id} } from ${JSON.stringify(`./features/${manifest.dir}/${manifest.dir}.settings`)}`)

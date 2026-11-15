@@ -23,7 +23,7 @@ export default {
     desc: 'effortSliderDesc',
   }, {
     // The colour speaks on the slider's own trigger, so the row stands under the
-    // switch that draws it and goes with it (D72).
+    // switch that draws it and goes with it (D76).
     tab: 'composer',
     // After the rows about the menu's own lines (35–45): this one colours the trigger.
     rank: 46,

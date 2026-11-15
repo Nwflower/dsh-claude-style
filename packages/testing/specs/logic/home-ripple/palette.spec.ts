@@ -1,7 +1,7 @@
 /**
  * The two inks the new-conversation page's glyph field is drawn with: a theme
  * token becomes channels through the painted pixel, so a reader's own palette —
- * whose tokens the page states as relative colours over their canvas (D30) —
+ * whose tokens the page states as relative colours over their canvas (D97) —
  * paints the field the way a card's literal does.
  *
  * @capability home-ripple

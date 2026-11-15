@@ -10,16 +10,16 @@
    actions do not): the skipped row is its containing block, and its paint
    containment crops the bubble that opens past the row's edge. */
 
-body[data-dsh-claude-style] [data-chat-flow-kind]:not([data-chat-flow-kind='user']):not([data-chat-flow-kind='assistant-step']:not([data-turn-process-member]), [data-turn-process-hidden], [data-disclosure-row] [hidden], [hidden], [data-dsh-claude-holds~='hidden-row'], [data-dsh-claude-holds~='tooltip-row']) {
+body[data-dsh-claude-style] [data-chat-flow-kind]:not([data-chat-flow-kind='user']):not([data-chat-flow-kind='assistant-step']:not([data-turn-process-member]), [data-turn-process-hidden], [data-disclosure-row] [hidden], [hidden], [data-dsh-claude-holds~='hidden-row'], [data-dsh-claude-holds~='tooltip-row'], [data-dsh-claude-rolling] *, [data-dsh-claude-rolling]) {
   contain-intrinsic-size: auto 240px;
 }
 
-body[data-dsh-claude-style] [data-chat-flow-kind][data-dsh-claude-laid-out]:not([data-chat-flow-kind='user']):not([data-chat-flow-kind='assistant-step']:not([data-turn-process-member]), [data-turn-process-hidden], [data-disclosure-row] [hidden], [hidden], [data-dsh-claude-holds~='hidden-row'], [data-dsh-claude-holds~='tooltip-row']) {
+body[data-dsh-claude-style] [data-chat-flow-kind][data-dsh-claude-laid-out]:not([data-chat-flow-kind='user']):not([data-chat-flow-kind='assistant-step']:not([data-turn-process-member]), [data-turn-process-hidden], [data-disclosure-row] [hidden], [hidden], [data-dsh-claude-holds~='hidden-row'], [data-dsh-claude-holds~='tooltip-row'], [data-dsh-claude-rolling] *, [data-dsh-claude-rolling]) {
   content-visibility: auto;
 }
 
 /* The row carries the height it had when it was last mounted, so the stylesheet
    may skip it before its first layout of this mount, answer rows included. */
-body[data-dsh-claude-style] [data-chat-flow-kind][data-dsh-claude-laid-out][data-dsh-claude-row-height]:not([data-chat-flow-kind='user']):not([data-turn-process-hidden], [data-disclosure-row] [hidden], [hidden], [data-dsh-claude-holds~='hidden-row'], [data-dsh-claude-holds~='tooltip-row']) {
+body[data-dsh-claude-style] [data-chat-flow-kind][data-dsh-claude-laid-out][data-dsh-claude-row-height]:not([data-chat-flow-kind='user']):not([data-turn-process-hidden], [data-disclosure-row] [hidden], [hidden], [data-dsh-claude-holds~='hidden-row'], [data-dsh-claude-holds~='tooltip-row'], [data-dsh-claude-rolling] *, [data-dsh-claude-rolling]) {
   content-visibility: auto;
 }

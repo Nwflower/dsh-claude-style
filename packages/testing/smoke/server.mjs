@@ -53,6 +53,10 @@ async function serveStandIn(html) {
     if (name === 'client.js') {
       res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8' })
       res.end(fs.readFileSync(CLIENT))
+    } else if (name === 'dsh-claude-style/model-descriptions.json' && fromPage(req) === 'effort') {
+      // The effort page reads the real built rules for its model-family hook.
+      res.writeHead(200, { 'content-type': 'application/json; charset=utf-8' })
+      res.end(fs.readFileSync(path.join(ROOT, 'lib', 'model-descriptions.json')))
     } else if (name === 'dsh-claude-style/hdsl-skin.png') {
       // The launcher's atlas, which the skin loads outside `fetch`, so the
       // page-side stand-in cannot answer it. `hdsl-broken` models a file the
@@ -98,7 +102,7 @@ async function serveStandIn(html) {
       const file = name.slice('dsh-claude-style/assets/'.length)
       const asset = assets[file]
       // The chunk-fault case's route carries none of the feature chunks, the
-      // way a host still serving the bundle it read before an update answers (D72).
+      // way a host still serving the bundle it read before an update answers (D76).
       const chunkRefused = fromPage(req) === 'chunk-fault' && file.endsWith('.js')
       if (asset === undefined || chunkRefused) {
         res.writeHead(404)

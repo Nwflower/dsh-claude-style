@@ -1,6 +1,6 @@
 /**
  * Shared preference declarations (D73): values, defaults, limits and legacy shapes.
- * Browser types and host Config derive from this table; settings rows follow it too (D72).
+ * Browser types and host Config derive from this table; settings rows follow it too (D76).
  */
 import { OFFICIAL_MODEL_GROUP } from './services'
 import { PALETTE_SCHEME_CUSTOM, PALETTE_SCHEME_ENTRY_MAX, PALETTE_SCHEME_FOLLOW, PALETTE_SCHEME_ID_MAX, PALETTE_SCHEME_LIMIT, carryClassicInlineCode, carryCustomPalette, findPaletteScheme, normalizePaletteSchemes, parsePaletteScheme } from './palette-schemes'
@@ -24,7 +24,7 @@ export const BRAND_DEEPSEEK_LEGACY = 'off'
 export const BRANDS = [BRAND_CLAUDE, BRAND_DEEPSEEK] as const
 
 /**
- * The built-in colour presets (D96), one id per colour card in
+ * The built-in colour presets (D97), one id per colour card in
  * packages/client/src/theme/tokens.json; the build fails when the two disagree.
  */
 export const PALETTE_PRESETS = ['claude', 'deepseek', 'parchment', 'forest', 'dusk', 'rose'] as const
@@ -33,7 +33,7 @@ export type PalettePreset = typeof PALETTE_PRESETS[number]
 export const BRAND_DEFAULT_PRESETS = { [BRAND_CLAUDE]: 'claude', [BRAND_DEEPSEEK]: 'deepseek' } as const satisfies Record<typeof BRANDS[number], PalettePreset>
 
 /**
- * The selected colour scheme (D96): `brand` follows the selected brand's default
+ * The selected colour scheme (D97): `brand` follows the selected brand's default
  * scheme and stays independent of its artwork; any other value is a preset's id
  * or the id of one of the reader's schemes.
  */
@@ -137,7 +137,7 @@ export const CHAT_ANIMATIONS_OFF = 'off'
  * line of their own under the input card, or in the compact footer. The rail
  * position is the line of their own handed to the conversation's details rail:
  * the line stands wherever the rail does not, and the rail carries the numbers
- * while it does (D94).
+ * while it does (D102).
  */
 export const STATS_POSITION_INLINE = 'inline'
 export const STATS_POSITION_CONTEXT = 'context'
@@ -384,7 +384,7 @@ export const PREFS = {
   messageActions: { type: 'boolean', default: true },
   viewTabs: { type: 'boolean', default: true },
   headerBand: { type: 'boolean', default: true },
-  /** Whether the conversation offers its own session details rail (D94). */
+  /** Whether the conversation offers its own session details rail (D102). */
   sessionPanel: { type: 'boolean', default: true },
   /** The legacy choices all mean on except `off`. */
   chatAnimations: { type: 'boolean', default: true, legacy: { [CHAT_ANIMATIONS_OFF]: false, enhanced: true, redraw: true } },
@@ -480,7 +480,7 @@ export function clampPrefs(value: unknown): Prefs {
 }
 
 /**
- * The scheme records and the selection, read as one (D96): records that cannot
+ * The scheme records and the selection, read as one (D97): records that cannot
  * be read are left out, the earlier custom card is carried in as the scheme
  * `custom` and its four fields are left empty, and a selection that names no
  * scheme reads as following the brand. Each thing left out is reported, since

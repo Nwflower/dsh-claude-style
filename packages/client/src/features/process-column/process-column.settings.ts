@@ -9,7 +9,7 @@ import type { SettingsControlsOf, SettingsRowView } from '../../core/feature'
 import type manifest from './process-column.manifest'
 
 /**
- * The one row this feature draws itself (D72): the two layouts as preview
+ * The one row this feature draws itself (D76): the two layouts as preview
  * cards. Each card holds the same small process group, a header and three rows,
  * and the column card wears the very rules the open groups wear
  * (process-column.css), so a card is the layout and not a picture of it.

@@ -391,7 +391,7 @@ const SCENARIOS = {
       const live = sampled.filter((frame) => frame.running !== null && frame.running !== undefined && frame.following && overflowing(frame))
       const tops = live.map((frame) => frame.running)
       const spread = tops.length === 0 ? 0 : Math.max(...tops) - Math.min(...tops)
-      // The skin writes no position while the answer streams (D85), so nothing reads to the host as a
+      // The skin writes no position while the answer streams (D95), so nothing reads to the host as a
       // reader leaving the tail: its own mark stays on in every frame the live turn's row is pinned in.
       const dropped = sampled.filter((frame) => frame.running !== null && frame.running !== undefined && frame.following === false && overflowing(frame))
       return [
@@ -417,9 +417,9 @@ const SCENARIOS = {
   turnSpacer: { ...turnSpacerScenario({ check }), frames: true },
   /** A door rolling at the tail mid-stream leaves the status line pinned where it stood (door-pin.mjs, D40). */
   doorPin: { ...doorPinScenario({ check }), frames: true },
-  /** An answer arriving faster than a slide carries it: the composer stands still and the column stays on the pin (stream-pace.mjs, D85). */
+  /** An answer arriving faster than a slide carries it: the composer stands still and the column stays on the pin (stream-pace.mjs, D95). */
   streamPace: { ...streamPaceScenario({ check }), frames: true },
-  /** A provider's own pace: the column the reader watches never moves down between two frames (stream-jitter.mjs, D85). */
+  /** A provider's own pace: the column the reader watches never moves down between two frames (stream-jitter.mjs, D95). */
   streamJitter: { ...streamJitterScenario({ check }), frames: true },
   streamJitterFooter: { ...streamJitterScenario({ check }, 'footer'), frames: true },
   streamJitterInline: { ...streamJitterScenario({ check }, 'inline'), frames: true },
@@ -608,7 +608,7 @@ const SCENARIOS = {
   usernameComposition: usernameCompositionScenario({ check }),
   /** The username keeps the reader's text while an input method composes it across a save (packages/testing/scenarios/username-ime.mjs, D92). */
   usernameIme: usernameImeScenario({ check }),
-  /** The reader's own brand images through the host half's routes and on the real shell (packages/testing/scenarios/custom-brand.mjs, D30). */
+  /** The reader's own brand images through the host half's routes and on the real shell (packages/testing/scenarios/custom-brand.mjs, D97). */
   customBrand: customBrandScenario({ check }),
   brandingPresets: brandingPresetsScenario({ check }),
   brandingPresetUi: brandingPresetUiScenario({ check }),
@@ -616,7 +616,7 @@ const SCENARIOS = {
   dsBot: dsBotScenario({ check }),
   /**
    * The session overview in the right column (packages/testing/scenarios/session-panel.mjs,
-   * D94): its five sections on a blank and a worked session, the two-row folding,
+   * D102): its five sections on a blank and a worked session, the two-row folding,
    * the view switch on the title's line, and the column's opening width.
    */
   sessionPanel: sessionPanelScenario({ check }),

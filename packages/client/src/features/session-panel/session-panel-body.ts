@@ -43,7 +43,7 @@ function outputMark(kind: PanelOutput['kind']) {
 }
 
 /**
- * The session details rail's body (D94): the sections the rail shows for the
+ * The session details rail's body (D102): the sections the rail shows for the
  * conversation's session, mounted by the rail beside the chat.
  *
  * The body is one column of sections in the order a reader asks about a
@@ -62,11 +62,11 @@ function PanelView({ sessionId, preset, active }: { sessionId: string, preset: P
   const { value, failed } = usePanelReading(sessionId, active)
   // The two figures tables print the statistics feature's live reading — the one
   // the composer's line prints — so the numbers beside the chat move with the
-  // numbers under it instead of one settlement behind them (D94).
+  // numbers under it instead of one settlement behind them (D102).
   const live = useLiveFigures(sessionId)
   // The occupancy is a projection frame, so the context section can state its
   // overview on the frame the rail mounts; its breakdown is the route's fold and
-  // takes its place when that answers (D94).
+  // takes its place when that answers (D102).
   const occupancy = useLiveOccupancy(sessionId)
   const currency = useBillingCurrency()
   // A running row's clock has to move between the panel's own polls.
@@ -184,7 +184,7 @@ function EnvironmentSection({ environment, preset }: { environment: PanelEnviron
   const checkout = environment?.checkout ?? null
   if (environment === null) rows.push(h(PendingRow, { key: 'branch', mark: h(BranchMark), width: '32%' }))
   // A directory that is no checkout names the folder alone: the branch belongs
-  // to a checkout, and a folder without one has none to show (D94).
+  // to a checkout, and a folder without one has none to show (D102).
   else if (checkout !== null) {
     rows.push(h(RepositoryRow, {
       key: `checkout:${checkout.root}`,
@@ -196,7 +196,7 @@ function EnvironmentSection({ environment, preset }: { environment: PanelEnviron
     }))
   }
   // The preset closes the section: the header's own label steps aside while the
-  // rail stands, so this row is where its words and its description are read (D94).
+  // rail stands, so this row is where its words and its description are read (D102).
   if (preset.label !== '') {
     rows.push(h(Row, {
       key: 'preset',
@@ -211,7 +211,7 @@ function EnvironmentSection({ environment, preset }: { environment: PanelEnviron
 }
 
 function RepositoryRow(props: { name?: string, branch: string | null, linked: boolean, detail?: string, commit?: string | null }) {
-  // A checkout already named by the directory needs only its branch (D94).
+  // A checkout already named by the directory needs only its branch (D102).
   // Additional checkouts keep their folder row immediately above the branch.
   return h(React.Fragment, null,
     props.name === undefined ? null : h(Row, {
@@ -414,7 +414,7 @@ function Figures({ rows }: { rows: readonly Figure[] }) {
 }
 
 /**
- * How the session ran (D94): its turns and steps, its speed and its time.
+ * How the session ran (D102): its turns and steps, its speed and its time.
  *
  * The figures are written in the host's own words, through the same formatters
  * the composer's readout uses (shared/stats-format.ts): the rail is a second
@@ -444,7 +444,7 @@ function StatsSection({ stats }: { stats: PanelStats | null }) {
 }
 
 /**
- * What the session spent (D94): its cost, its cache share and its token buckets.
+ * What the session spent (D102): its cost, its cache share and its token buckets.
  *
  * The section starts folded with the cost beside its heading; with billing off
  * or a model no table prices, the tokens the session moved stand in.

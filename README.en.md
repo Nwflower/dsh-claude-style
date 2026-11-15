@@ -6,13 +6,11 @@
 
 > **Why settle for another Claude Code when your next Claude Code Desktop is here.**
 
-[![English](https://img.shields.io/badge/lang-English-blue.svg)](README.en.md) [![简体中文](https://img.shields.io/badge/lang-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-red.svg)](README.md)
-
+[![English](https://img.shields.io/badge/lang-English-blue.svg)](README.en.md)
+[![简体中文](https://img.shields.io/badge/lang-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-red.svg)](README.md)
 [![version](https://img.shields.io/npm/v/dsh-claude-style?style=flat&label=version&color=D97757)](https://www.npmjs.com/package/dsh-claude-style)
 [![downloads](https://img.shields.io/npm/dm/dsh-claude-style?style=flat&label=downloads&color=D97757)](https://www.npmjs.com/package/dsh-claude-style)
 [![GitHub stars](https://img.shields.io/github/stars/Nwflower/dsh-claude-style?style=flat&label=%E2%98%85&color=08C)](https://github.com/Nwflower/dsh-claude-style)
-[![dsh.so install](https://www.dsh.so/badge/install/dsh-claude-style.svg)](https://www.dsh.so/artifact/dsh-claude-style/)
-[![license](https://img.shields.io/badge/license-MIT%20%2B%20PolyForm%20Shield-2EA44F?style=flat)](LICENSE)
 
 </div>
 
@@ -33,7 +31,7 @@ Switch between the Claude and DeepSeek brands in settings; light and dark follow
   </tr>
 </table>
 
-> Code home above, Markdown conversation below; light on the left, dark on the right. White canvas `#FFFFFF` with a `#FAFAFA` sidebar, near-black `#191919` with a `#1F1F1F` sidebar, ember orange `#D97757` for every action, and Claude Code's pixel crab on the composer.
+> Code home above, Markdown conversation below; light on the left, dark on the right.
 
 ### DeepSeek
 
@@ -48,7 +46,7 @@ Switch between the Claude and DeepSeek brands in settings; light and dark follow
   </tr>
 </table>
 
-> Pale blue-white canvas `#FBFCFF` with a `#F7F9FF` sidebar, blue-black `#13161D`, DeepSeek blue `#4D6BFE`; Deepy the pixel whale stands on the composer, in eight states:
+> Deepy the pixel whale stands on the composer in eight states:
 
 <table>
   <tr>
@@ -65,10 +63,6 @@ Switch between the Claude and DeepSeek brands in settings; light and dark follow
   </tr>
 </table>
 
-> In Settings the mascot can also be switched to the pixel crab Clawd or the whale girl. Resting the pointer on the mascot opens a pixel bubble: the DeepSeek account balance, gifted credit included and drawn down live as the conversation spends (checked against the platform at most once a minute), on top, and under it what the current conversation has cost, the same figure the statistics line shows.
-
-> The workspaces, sessions, usage figures and nickname in the screenshots are sample data.
-
 ## Installation
 
 From the official plugin page add the package below, or from a terminal:
@@ -82,15 +76,7 @@ dsh plugin --profile web add dsh-claude-style                    # npm package (
 dsh plugin --profile web add Nwflower/dsh-claude-style#dist      # GitHub release branch
 ```
 
-Also from the [plugin market](https://github.com/dsh-market/dsh-market) or the Skin Center of the dsh-web-all plugin. Keep one theme enabled at a time; dsh ≥ 0.2.2-rc.1 is required, and a restart of DeepSeek Harness brings the full feature set.
-
-## Manual unread marks
-
-Choose **Mark as unread** or **Clear unread mark** from a session's ellipsis menu. Marks are saved in the current profile, survive reloads, and clear when you leave and later open that session. The host's automatic completion reminders stay independent.
-
-## Retract and edit a message
-
-Hover a message you sent and **Retract** and **Edit** join the clock and copy buttons. Both open a new session and leave the original as it was: retracting drops that message and everything after it and puts the text back in the composer for you to send again, while editing amends the text in place first and sends it in the new session as soon as you confirm. A message carrying images or files gets neither button, since attachments cannot travel with the text into a new session. Both wait while the turn is still running. Disable the feature under **Conversation** in the plugin settings.
+Also available from the [plugin market](https://github.com/dsh-market/dsh-market) or the Skin Center of dsh-web-all. Keep one theme enabled at a time; dsh ≥ 0.2.2-rc.1 is required, and restart DeepSeek Harness after installing.
 
 ## Declarative appearance configuration
 
@@ -115,6 +101,7 @@ brandingPreset: company-primary
 brandingPresets:
   - id: company-primary
     name: Company Primary
+    ink: original
     mark:
       light: "./branding/primary-mark-light.svg"
       dark: "./branding/primary-mark-dark.svg"
@@ -126,10 +113,10 @@ modelOrderRows:
   - sensenova/sensenova-6.8-flash
 ```
 
-- Colour records keep the seed model, including `accent`, `background`, `text`, `code`, `link` and `edges`. Built-in presets and **Follow the brand** remain available.
-- A logo preset has a stable `id`, an optional `name`, and `mark` / `wordmark` assets. One string uses the same image in both appearances; a `light` / `dark` pair selects by appearance, with the supplied side covering a missing side.
+- Colour records use the five-seed model (`accent`, `background`, `text`, `code`, `link`) plus `edges`. The six built-in presets (`claude`, `deepseek`, `parchment`, `forest`, `dusk`, `rose`) and **Follow the brand** remain available.
+- A logo preset has a stable `id`, an optional `name`, at least one of `mark` or `wordmark`, and an optional `ink` field (`original`, `accent` or `text`, defaulting to the original image colours). One string uses the same image in both appearances; a `light` / `dark` pair selects by appearance, with the supplied side covering a missing side.
 - Relative image paths resolve from `$DSH_HOME/dsh-claude-style/` and must stay inside it. PNG, SVG and WebP files up to 2 MB are accepted. UI uploads live under `branding/presets/<id>/`, so switching presets needs no repeated upload.
-- Appearance settings create, duplicate, rename, select and delete logo presets, with separate light and dark replacement. An empty `brandingPreset` keeps the previous global uploads. Logo and colour selections stay independent.
+- Appearance settings include eight built-in vendor presets (OpenAI, Gemini, Qwen, Kimi Code, ZCode, MiniMax, Grok, Xiaomi MiMo) and let you create, duplicate, rename, select and delete logo presets, replace light and dark images separately, and adjust logo colour. An empty `brandingPreset` follows the active theme's logo, and any earlier standalone global uploads are migrated into a **Current images** preset automatically. Logo and colour selections stay independent.
 - UI edits persist in the plugin-managed `appearance-overlays.json` and merge with base YAML by `id`. UI-created or edited records and selection overrides win; records added later to the file are merged in, and base records deleted through the UI do not return after a reload. After a manual configuration edit and reload, unconflicted records follow the file, while conflicts follow the latest UI edit.
 - Invalid records are reported and skipped without removing valid ones. A missing or invalid image affects only that image and leaves the other presets and settings UI working.
 - `modelOrder` accepts `id`, `brand`, `catalog` and `custom`. Brand order places recognised vendors first and hides descriptions on unrecognised rows. Custom order follows `provider/model` entries in `modelOrderRows`; remaining models follow in ID order.
@@ -138,14 +125,13 @@ modelOrderRows:
 
 > The Anthropic fonts have no public release; this repository only offers [copies](https://github.com/Nwflower/dsh-claude-style/tree/master/packages/assets/src/fonts/anthropic) for download and study.
 
-To enable them, install the `.ttf` files on your system, or copy them into `$DSH_HOME/dsh-claude-style/fonts/`; a copy there takes effect after a reload.
-
-The mascot bubble's pixel text is set in [PoxiaoPixel](https://diaowinner.itch.io/poxiaopixel) by DWNfonts (SIL OFL 1.1); the package carries only the characters the bubble uses.
+To enable them, install the `.ttf` files on your system, or copy them into `$DSH_HOME/dsh-claude-style/fonts/` (takes effect after a reload).
 
 ## Documentation
 
 | Document | Contents |
 | --- | --- |
+| [Architecture](docs/ARCHITECTURE.md) | Repository layout, engine and half boundaries, cross-module invariants |
 | [Design tokens](docs/STYLE.md) | The palette, typography, shape, motion and layer rules |
 | [Architecture decisions](docs/adr/README.md) | One page per direction: background, decision, consequences, revisiting conditions |
 | [Changelog](docs/CHANGELOG.md) | Version history |
@@ -167,8 +153,6 @@ The Sodium rendering engine is licensed under the [PolyForm Shield License 1.0.0
 - Clawd is a character of Anthropic. Its frames are not covered by the MIT license (see [LICENSE](LICENSE)). This plugin is an unofficial fan work, not affiliated with or endorsed by Anthropic.
 
 ## Related projects
-
-> Running several themes at once? Try [dsh-skin-manager](https://github.com/xiaoyangcheng84-svg/dsh-skin-manager) — it switches between all installed themes from a single settings page.
 
 > Want to import your Claude Code / Codex session history into DSH and keep the conversation going? Try the author's other plugin, [dsh-chat-import](https://github.com/Nwflower/dsh-chat-import).
 

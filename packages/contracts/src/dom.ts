@@ -95,6 +95,8 @@ export const COMPOSER_INPUT_SELECTOR = '[data-composer-input]'
 export const COMPOSER_COMPOSING_ATTRIBUTE = 'data-composer-composing'
 /** The card the input sits in; the send flight lifts a copy of the whole card. */
 export const COMPOSER_CARD_SELECTOR = '[data-composer-card]'
+/** The native file picker one composer card owns; its change handler performs the host's upload intake. */
+export const COMPOSER_FILE_INPUT_SELECTOR = 'input[type="file"]'
 /** Host overlay slot for `@` and `/` menus; positioned above the card and outside its layout. */
 export const COMPOSER_OVERLAY_SELECTOR = '[data-composer-overlay]'
 /** The draft's own scroll area inside that card. */

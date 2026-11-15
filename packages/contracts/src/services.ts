@@ -9,13 +9,13 @@ export interface HostSnapshotSource<Snapshot> {
   subscribe(listener: () => void): () => void
 }
 
-/** The client's shared jobs controller, as the host's own job list calls it (D94). */
+/** The client's shared jobs controller, as the host's own job list calls it (D102). */
 export interface HostJobsService {
   /** Human cancellation; the host checks the session owner and records the user's reason. */
   kill(sessionId: string, jobId: string): Promise<{ ok: boolean }>
 }
 
-/** Parent-authorized cancellation of a continuable child's active turn (D94). */
+/** Parent-authorized cancellation of a continuable child's active turn (D102). */
 export interface HostSubagentsRemote {
   interruptByParent(childSessionId: string, parentSessionId: string, mode: 'continuable'): Promise<{ ok: boolean }>
 }
@@ -118,7 +118,7 @@ export interface HostShortcutsService {
   fixedCatalog: HostSnapshotSource<HostShortcutRow[]>
 }
 
-/** `inject` waits for slot declaration; both registration calls return their undo function (D42). */
+/** `inject` waits for slot declaration; both registration calls return their undo function (D76). */
 export interface HostSlotsService {
   entries(key: string): HostSlotRegistration[]
   /** The entries a list slot renders: one per id, the winner of each, as its owner reads them. */

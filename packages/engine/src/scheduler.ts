@@ -19,7 +19,7 @@ export type CloseReason = 'outside' | 'escape' | 'composer'
 
 /**
  * A feature's handle on the shared `ui` registry. Every hook is optional: the
- * scheduler calls the ones a feature implements and skips the rest (D72).
+ * scheduler calls the ones a feature implements and skips the rest (D76).
  */
 export interface FeatureHandle {
   /** Every scheduler pass, in FEATURES order. */

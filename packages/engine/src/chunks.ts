@@ -1,4 +1,4 @@
-/** Load deferred feature scripts (D72) with bundle-shared modules so stateful modules stay singletons. */
+/** Load deferred feature scripts (D76) with bundle-shared modules so stateful modules stay singletons. */
 
 /** What a chunk's script sets on its own element: its body, still to be run against the shared modules. */
 type ChunkFactory = NonNullable<HTMLScriptElement['__dshChunk']>
@@ -53,7 +53,7 @@ function fetchFactory(url: string, packageName: string) {
 export function createChunkLoader<Install>(source: ChunkSource) {
   const loads = new Map<string, Promise<Install>>()
 
-  /** Resolve only bundle-shared modules; duplicate stateful copies would split state (D72). */
+  /** Resolve only bundle-shared modules; duplicate stateful copies would split state (D76). */
   function chunkRequire(id: string) {
     if (!Object.hasOwn(source.modules, id)) throw new Error(`${source.packageName}: a feature chunk asks for "${id}", which the bundle does not share`)
     return source.modules[id]

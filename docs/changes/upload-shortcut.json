@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-15",
+  "group": "new",
+  "order": 355,
+  "external": true,
+  "zh": "支持使用 Ctrl+U 或 Cmd+U 打开当前输入框的文件选择器",
+  "en": "Open the current composer's native file picker with Ctrl+U or Cmd+U"
+}

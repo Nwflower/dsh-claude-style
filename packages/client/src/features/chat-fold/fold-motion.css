@@ -54,6 +54,8 @@ body[data-dsh-claude-style] [data-dsh-claude-reason-window][data-dsh-claude-reas
 body[data-dsh-claude-style] [data-dsh-claude-reason-window] [data-dsh-claude-reason-text] {
   transform: translateY(0);
   transition: transform var(--dsh-claude-reason-step) var(--dsh-claude-reason-ease);
+}
+body[data-dsh-claude-style] [data-dsh-claude-reason-window][data-dsh-claude-reason-capped] [data-dsh-claude-reason-text] {
   will-change: transform;
 }
 

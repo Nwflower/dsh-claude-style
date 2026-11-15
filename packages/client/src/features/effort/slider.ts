@@ -1,4 +1,5 @@
 import { requestFrame } from '@dsh-claude-style/engine/frame'
+import { observeSize } from '@dsh-claude-style/engine/bus'
 import { MODEL_EFFORT_DEFAULT, MODEL_EFFORT_FASTER, MODEL_EFFORT_LABEL, MODEL_EFFORT_NONE, MODEL_EFFORT_SMARTER } from '../model/model-labels'
 import { effortSteps } from './ladder'
 import type { EffortStep } from './ladder'
@@ -157,6 +158,21 @@ export function createEffortControl(opts: {
     }
   }
 
+  /** A custom property can change the knob's box without a DOM mutation. Resize
+     observation re-reads that box in the frame pipeline and reuses the ordinary
+     update, so the travel and fill never retain the previous width. */
+  let cancelGeometryFrame: (() => void) | null = null
+  const stopGeometryObservation = observeSize([track, knob], () => {
+    if (cancelGeometryFrame !== null) return
+    cancelGeometryFrame = requestFrame({
+      read() { measureTrack() },
+      write() {
+        cancelGeometryFrame = null
+        update()
+      },
+    })
+  })
+
   /** The knob's width and the track's, as the pass's read phase took them for the update in hand. */
   let passBox: EffortTrackBox | null = null
   /**
@@ -211,10 +227,9 @@ export function createEffortControl(opts: {
   function place(x: number, animate: boolean) {
     const px = Math.round(x)
     const value = `${px}px`
-    /* The fill runs from the track's left end to the knob's centre (+8 is half
-       the 16px knob) and disappears under the opaque knob. An empty ladder
-       selects nothing, and nothing stays unfilled. */
-    const width = steps.length === 0 ? '0px' : `${px + 8}px`
+    /* The fill ends at the knob's centre and disappears under it. Its offset
+       reads the measured width so a custom knob keeps the same geometry. */
+    const width = steps.length === 0 ? '0px' : `${px + trackBox().size / 2}px`
     /* Same-value guard: update() runs on every scheduler pass, and re-writing
        an unchanged position would run the transition dance's forced reflow —
        worse, mid-glide it cancels the transition and snaps the knob. */
@@ -602,6 +617,9 @@ export function createEffortControl(opts: {
      * this rather than letting the node's removal drop them.
      */
     dispose() {
+      stopGeometryObservation()
+      if (cancelGeometryFrame !== null) cancelGeometryFrame()
+      cancelGeometryFrame = null
       dotMatrix.dispose()
       document.removeEventListener('pointerup', onRelease, true)
       document.removeEventListener('pointercancel', onRelease, true)

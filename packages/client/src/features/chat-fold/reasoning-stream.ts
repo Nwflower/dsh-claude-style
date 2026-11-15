@@ -4,6 +4,7 @@ import { motionReduced, readPrefs, subscribePrefs } from '../../core/prefs'
 import { REASONING_DISPLAY_STEPPED } from '../../constants'
 import { motionMs } from '../../shared/motion'
 import { EXPANDED_ATTRIBUTE, REASONING_TEXT_SELECTOR, ROW_PHASE_ATTRIBUTE, RUNNING_STATE, THINK_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { isChatFoldBusy } from './fold-glide-parts'
 
 /* Adapted from transitions.dev's "Reasoning stream" (MIT) for live text. The nearest boxed ancestor
    clips because host slots may use display:contents. Reuse the fold observer and frame read/write
@@ -138,9 +139,9 @@ export function createReasoningStream() {
 
   /** What one wait reads off the page, before it writes anything; null once the window is not this module's any more. */
   function readStep(row: Element, state: WindowState): Step | null {
+    const active = row.getAttribute(ROW_PHASE_ATTRIBUTE) === RUNNING_STATE && row.hasAttribute(EXPANDED_ATTRIBUTE)
     const live = row.isConnected && state.window.isConnected && state.text.isConnected
-      && row.getAttribute(ROW_PHASE_ATTRIBUTE) === RUNNING_STATE
-      && row.hasAttribute(EXPANDED_ATTRIBUTE)
+      && (active || isChatFoldBusy())
       && !motionReduced()
       && readPrefs().reasoningDisplay === REASONING_DISPLAY_STEPPED
     // The host can rebuild the body under the same row (a session switch, a fresh
@@ -156,11 +157,15 @@ export function createReasoningStream() {
     return { heightPx: measure.heightPx, capped: true, offset: Math.min(state.offset + steps * stepPx, measure.reachable) }
   }
 
-  /** Write a window's own height and the mark of its capped state; only what changes is written. */
+  /** Write the cap and its mark; below the cap, natural height follows the text without a style write per batch. */
   function writeHeight(window: HTMLElement, height: Height) {
     // The fold watches the row's attributes, and a redundant write each frame
     // would keep the frame scheduler awake.
-    if (window.style.getPropertyValue(REASON_WINDOW_HEIGHT_PROPERTY) !== height.heightPx) window.style.setProperty(REASON_WINDOW_HEIGHT_PROPERTY, height.heightPx)
+    const value = height.capped ? height.heightPx : ''
+    if (window.style.getPropertyValue(REASON_WINDOW_HEIGHT_PROPERTY) !== value) {
+      if (value === '') window.style.removeProperty(REASON_WINDOW_HEIGHT_PROPERTY)
+      else window.style.setProperty(REASON_WINDOW_HEIGHT_PROPERTY, value)
+    }
     if (height.capped !== window.hasAttribute(REASON_CAPPED_ATTR)) window.toggleAttribute(REASON_CAPPED_ATTR, height.capped)
   }
 
@@ -199,10 +204,13 @@ export function createReasoningStream() {
     for (const row of rows) {
       if (!row.isConnected) continue
       const running = row.getAttribute(ROW_PHASE_ATTRIBUTE) === RUNNING_STATE
-      const text = running && row.hasAttribute(EXPANDED_ATTRIBUTE) && !motionReduced()
+      const held = windows.get(row)
+      // A fold owns the body's height until its door settles. Keep the cap in
+      // place through that interval even after the running phase has ended.
+      const active = running && row.hasAttribute(EXPANDED_ATTRIBUTE)
+      const text = (active || (held !== undefined && isChatFoldBusy())) && !motionReduced()
         && readPrefs().reasoningDisplay === REASONING_DISPLAY_STEPPED ? textOf(row) : null
       const viewport = text === null ? null : windowOf(row, text)
-      const held = windows.get(row)
       if (text === null || viewport === null) {
         if (held !== undefined) plans.push({ row, state: null, step: null, grow: null })
         continue

@@ -129,7 +129,7 @@ function writeFollowTail(stamp: ReturnType<typeof createStamp<HTMLElement>>, pla
 /**
  * Watch the whole page for the moments that lose the host's follow, and hand
  * the position back at each of them; while content streams, slide what the
- * host's pin pushed up instead of letting it jump in one frame (D85). Every
+ * host's pin pushed up instead of letting it jump in one frame (D95). Every
  * position write goes through the scroll owner (D40).
  *
  * @param options.foldBusy - whether a fold glide is animating a height right now.
@@ -169,7 +169,7 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
    */
   const running = () => streaming() || performance.now() - lastActivityAt <= FOLLOW_ACTIVITY_GRACE_MS
 
-  // ---------- the stream slide (D85) ----------
+  // ---------- the stream slide (D95) ----------
   //
   // While work is streaming and the reader is at the end, the host follows by
   // writing the end outright the moment content grows, so the text above the
@@ -275,12 +275,12 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
     if (linear >= 1) return 0
     // The curve the animation paints with, not the linear share of its
     // duration: with the two mixed up, every restart re-inflates the distance
-    // the frame before it had already travelled (D85).
+    // the frame before it had already travelled (D95).
     return slide.from * (1 - motionEaseAt(GLIDE_TOKEN, linear))
   }
 
   /**
-   * How long this slide may run (D85). A piece of an answer arriving at a
+   * How long this slide may run (D95). A piece of an answer arriving at a
    * provider's pace lands well inside the slide token, and a slide still moving
    * when the next piece lands starts its restart from a distance it had not paid
    * back yet: the column is drawn further below the tail with every piece until
@@ -299,7 +299,7 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
    * Put the column back down by this frame's growth and slide it to rest.
    *
    * One replace-mode animation at a time: an additive one stays off the
-   * compositor (D85), so a new growth restarts from the distance still carried
+   * compositor (D95), so a new growth restarts from the distance still carried
    * — up to the longest stretch a slide carries, so a burst is glided as far as
    * that and no farther. Its length follows the pace the pieces arrive at, so
    * the distance carried never outgrows one piece. The live turn's row is pinned
@@ -491,7 +491,7 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
         grew = delta
         // A faster arrival bounds this slide at once; smoothing a shorter gap
         // would carry the old pause into the new stream and let offsets build
-        // up. Slower arrivals still ease toward their own pace (D85).
+        // up. Slower arrivals still ease toward their own pace (D95).
         const now = performance.now()
         if (grewAt > 0) {
           const gap = now - grewAt

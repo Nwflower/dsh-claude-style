@@ -1,4 +1,4 @@
-/* The colour schemes' cards (palette-cards.ts, D96) and the frame both
+/* The colour schemes' cards (palette-cards.ts, D97) and the frame both
    managers share (scheme-modal.ts). The cards extend the card look
    settings-brand.css draws: they wrap onto further lines as schemes are added,
    and each carries its small actions. The frame is a modal on <body>, over the

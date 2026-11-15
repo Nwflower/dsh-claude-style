@@ -81,7 +81,7 @@ export function sessionPanelScenario({ check }) {
      * projections with the streaming text added — counted to each new reading the
      * way the line counts, so a count moves between the panel's own asks and
      * moves a little at a time rather than landing in one step; a table fed from
-     * the route alone can only move after an ask (D94).
+     * the route alone can only move after an ask (D102).
      */
     async duringTurn(context) {
       const { page } = context
@@ -152,7 +152,7 @@ export function sessionPanelScenario({ check }) {
       notes.rail = await readRail(page)
       notes.contextBar = await readContextBar(page)
       // Section controls are independent, retain their choice through a poll,
-      // and keep the browser's Enter and Space activation (D94). The two
+      // and keep the browser's Enter and Space activation (D102). The two
       // figures sections start folded, so only the open ones are pressed shut.
       const sectionToggles = page.locator('.dsh-claude-details .dsh-claude-panel-section > summary')
       notes.disclosures = { initial: await readDisclosures(page) }
@@ -194,7 +194,7 @@ export function sessionPanelScenario({ check }) {
       }
       // A row's whole reading stands in the host's own bubble: an output row
       // carries more than its line's words, so the bubble gives the full path
-      // on any hover (D94).
+      // on any hover (D102).
       const outputRows = page.locator('.dsh-claude-details .dsh-claude-panel-section')
         .filter({ hasText: /产出|Outputs/ }).first().locator('.dsh-claude-panel-row.is-button')
       if (await outputRows.count() > 0) {
@@ -269,7 +269,7 @@ export function sessionPanelScenario({ check }) {
       notes.utilitiesOpen = await readUtilities(page)
       // The figures are the host's own words: exact grouped counts, no compact
       // k/M suffix; and the environment answers the working folder, never the
-      // repositories lying beside it (D94).
+      // repositories lying beside it (D102).
       notes.wording = await page.evaluate(async (path) => {
         const id = document.querySelector('[data-conversation-session]')?.getAttribute('data-conversation-session') ?? ''
         const response = await fetch(`${path}?id=${encodeURIComponent(id)}`, { credentials: 'same-origin', headers: { accept: 'application/json' } })
@@ -323,7 +323,7 @@ export function sessionPanelScenario({ check }) {
       }
       // The host's own right column stands on this side as well: the rail keeps
       // away while that column holds width, and the header's control hands the
-      // side over by closing it first (D94).
+      // side over by closing it first (D102).
       // The host keeps its own right column's place across the sessions in this
       // home: a panel an earlier scenario left open frames the handover below.
       // The walk starts from the column put away, and its control names the

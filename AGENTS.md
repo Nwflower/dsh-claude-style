@@ -94,7 +94,7 @@ Each script states its purpose at the top of the script. `node scripts/checks/ve
 | `npm run checks:numbers` | every number a check decides on, as a generated record |
 | `npm run agents` | write this table into AGENTS.md from `package.json` and each script's own header |
 | `npm run agents:check` | fail when AGENTS.md's command table differs from `package.json`; the cloud job runs this |
-| `npm run lint` | check source limits, repository references, dependency direction and spec contracts (D72, D92) |
+| `npm run lint` | check source limits, repository references, dependency direction and spec contracts (D76, D92) |
 | `npm run element-collections` | the element-keyed collections the browser half keeps, by file (C1) |
 | `npm run probe` | headless UI regression probe for the composer invariants |
 | `npm run stand-in` | the built plugin's one stand-in-page lane (D92): host-half and installation checks, then the behaviour specs a reader can observe |

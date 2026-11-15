@@ -1,4 +1,4 @@
-/** Custom brand image contract shared by both halves (D30). */
+/** Custom brand image contract shared by both halves (D97). */
 
 /** The two images a reader can put in place of the brand's own art. */
 export type BrandImageKind = 'mark' | 'wordmark'

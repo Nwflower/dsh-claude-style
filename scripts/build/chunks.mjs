@@ -1,6 +1,6 @@
 /**
  * chunks.mjs — split deferred features without duplicating stateful modules
- * (D72); shared imports resolve against the main bundle's own instances.
+ * (D76); shared imports resolve against the main bundle's own instances.
  */
 import { createHash } from 'node:crypto'
 import path from 'node:path'
@@ -80,7 +80,7 @@ function bundleChunk(manifest, shared, { external, plugins }) {
     footer: { js: CHUNK_CLOSE },
     // The sharing resolution runs before the generated-module plugin: that one
     // answers for its own paths, and an answer that wins would put a second copy
-    // of a module the bundle already carries into the chunk (D72).
+    // of a module the bundle already carries into the chunk (D76).
     plugins: [sharedModules(shared), ...plugins],
   })
 }
@@ -91,7 +91,7 @@ export async function splitChunks({ deferred, mainModules, options, slot }) {
   for (;;) {
     const shared = await mainModules([...promoted])
     for (const manifest of deferred) {
-      if (shared.has(`packages/client/src/${manifest.main}`)) throw new Error(`build: packages/client/src/${manifest.main} is deferred (D72), but a module the bundle carries imports it`)
+      if (shared.has(`packages/client/src/${manifest.main}`)) throw new Error(`build: packages/client/src/${manifest.main} is deferred (D76), but a module the bundle carries imports it`)
     }
     const chunks = new Map()
     for (const manifest of deferred) chunks.set(manifest.id, { manifest, result: await bundleChunk(manifest, shared, options) })
@@ -113,7 +113,7 @@ export async function splitChunks({ deferred, mainModules, options, slot }) {
         for (const item of input.imports) if (item.external) imports.add(item.path)
       }
       const text = result.outputFiles.find((file) => file.path.endsWith('.js')).text
-      if (text.includes(slot)) throw new Error(`build: a deferred feature reads BUILD_ID; a chunk is hashed before the bundle and cannot carry it (D72)`)
+      if (text.includes(slot)) throw new Error(`build: a deferred feature reads BUILD_ID; a chunk is hashed before the bundle and cannot carry it (D76)`)
     }
     return { chunks, shared: [...imports].sort(), bundled: shared }
   }

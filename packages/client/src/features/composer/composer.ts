@@ -1,5 +1,5 @@
 import { COMPOSER_ATTR, COMPOSER_HIDDEN_ATTR, HOME_LAYOUT_STUDIO, MOBILE_PORTRAIT_ATTR, PART_ATTR, STAMPED_PART_ATTR, TRANSCRIPT_ATTR } from '../../constants'
-import { COMPOSER_ATTACHMENT_RAIL_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_VIEW_CONTEXT, CONVERSATION_VIEW_STATS, CONVERSATION_VIEW_TRAJECTORY, MOBILE_PORTRAIT_SELECTOR, PERMISSION_TRIGGER_SELECTOR, PHASE_ATTRIBUTE, SIDEBAR_CHAT_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { COMPOSER_ATTACHMENT_RAIL_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_FILE_INPUT_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_VIEW_CONTEXT, CONVERSATION_VIEW_STATS, CONVERSATION_VIEW_TRAJECTORY, MOBILE_PORTRAIT_SELECTOR, PERMISSION_TRIGGER_SELECTOR, PHASE_ATTRIBUTE, SIDEBAR_CHAT_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { conversationColumn } from '@dsh-claude-style/engine/chat-dom'
@@ -462,6 +462,23 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (distance < 150) writeScroll(scroller, scroller.scrollHeight, 'composer')
   }
 
+  /** Open the focused card's native file picker, or the main card's from outside a composer. */
+  function openFilePicker(event: KeyboardEvent) {
+    if (event.key.toLowerCase() !== 'u' || event.ctrlKey === event.metaKey || event.altKey || event.shiftKey || event.isComposing) return
+    const found = cards.all()
+    const rememberedHero = heroCard !== null && heroCard.isConnected ? heroCard : null
+    const card = closestComposerCard(event.target) ?? rememberedHero ?? found.find(item => item.closest(SIDEBAR_CHAT_SELECTOR) === null) ?? found[0]
+    const input = card?.querySelector<HTMLInputElement>(COMPOSER_FILE_INPUT_SELECTOR)
+    if (!input || input.disabled) return
+    // The capture-phase scheduler sees the key before the editor's line-editing
+    // shortcuts. Stop its route as well as its default, then let the host's
+    // native input perform the same intake as the File action.
+    event.preventDefault()
+    event.stopPropagation()
+    if (event.repeat) return
+    input.click()
+  }
+
   ui.composer = {
     sync: syncComposer,
     /** Whether the page shows the hero composer, as of this pass. */
@@ -485,6 +502,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       placeholderCopy.onInput(hero, active)
     },
     onPointerDown: focusEditorOnPress,
+    onKey: openFilePicker,
     /** The composer card changed size: the transcript follows it. */
     reposition(reason: 'viewport' | 'composer') {
       responsive.measure()

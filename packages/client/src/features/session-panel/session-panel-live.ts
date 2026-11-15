@@ -1,5 +1,5 @@
 /**
- * Following the statistics feature's live reading from the rail (D94).
+ * Following the statistics feature's live reading from the rail (D102).
  *
  * The figures the rail's two tables print are the ones the composer's line
  * prints, so the rail subscribes to the same entry instead of asking the host
@@ -62,7 +62,7 @@ export function useLiveFigures(sessionId: string): SessionFigures | null {
     }
     attach()
     // The statistics feature is installed from a chunk of its own and can be
-    // switched off under the rail (D72): its install stamps the body, and that
+    // switched off under the rail (D76): its install stamps the body, and that
     // mark is what says the handle arrived or left. Without a handle the rail
     // prints the route's folded figures again (session-panel-figures.ts).
     const stopMark = subscribeMutations(document.body, { attributes: true, attributeFilter: [SESSION_STATS_ATTR] }, () => {

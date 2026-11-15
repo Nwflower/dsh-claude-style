@@ -14,7 +14,7 @@ import type manifest from './context-stats.manifest'
 export interface ContextStatsHandle extends FeatureHandle {
   sessionCost(): SessionCostReading | null
   onSessionCost(listener: () => void): () => void
-  /** The figures the composer's line prints, for a second face of the same session (D94). */
+  /** The figures the composer's line prints, for a second face of the same session (D102). */
   figures(): SessionFigures | null
   onFigures(listener: () => void): () => void
 }

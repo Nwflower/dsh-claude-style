@@ -24,7 +24,7 @@ export interface SchemeColours {
   link: { light?: string, dark?: string }
 }
 
-/** Stored schemes derive missing links from the accent; a static preset retains its hand-tuned links (D96). */
+/** Stored schemes derive missing links from the accent; a static preset retains its hand-tuned links (D97). */
 export function schemeColours(scheme: PaletteScheme, staticPreset = false): SchemeColours {
   const card = presetCard(scheme.base)
   return {

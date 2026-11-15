@@ -11,7 +11,7 @@ import type { SettingsControlsOf, SettingsRowView } from '../../core/feature'
 import type manifest from './send-flight.manifest'
 
 /**
- * The one row this feature draws itself (D72): the sent message's entrance as
+ * The one row this feature draws itself (D76): the sent message's entrance as
  * two preview cards, each playing the arrival it picks over the same sample
  * message (features/settings/settings-cards.css).
  */

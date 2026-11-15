@@ -1,4 +1,4 @@
-/** read-manifests.mjs — load and validate feature manifests for build ordering and smoke coverage (D72). */
+/** read-manifests.mjs — load and validate feature manifests for build ordering and smoke coverage (D76). */
 import fs from 'node:fs'
 import path from 'node:path'
 import vm from 'node:vm'
@@ -15,7 +15,7 @@ const SUFFIX = '.manifest.ts'
 const { PREFS } = loadModule('packages/contracts/src/prefs.ts')
 /** Where a settings row can stand (core/feature.ts SettingsRowSlot): the strip's tabs and the main window's groups. */
 const SETTINGS_SLOTS = new Set(['general', 'appearance', 'main-window', 'sidebar', 'motion', 'conversation', 'composer', 'statistics'])
-/** The settings page's own copy: the lines two features' rows share live there (D72). */
+/** The settings page's own copy: the lines two features' rows share live there (D76). */
 const SETTINGS_COPY = (() => {
   const file = path.join(FEATURES, 'settings', 'settings.copy.json')
   return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {}
@@ -106,7 +106,7 @@ function checkManifests(manifests) {
       if (!Array.isArray(manifest.settingsRows) || manifest.settingsRows.length === 0) fail(manifest, 'needs "settingsRows": a non-empty list of the rows this feature owns')
       const copyFile = path.join(FEATURES, manifest.dir, `${manifest.dir}.copy.json`)
       const copy = fs.existsSync(copyFile) ? JSON.parse(fs.readFileSync(copyFile, 'utf8')) : {}
-      /** A row's line: the feature's own copy, or the settings page's for a line two features share (D72). */
+      /** A row's line: the feature's own copy, or the settings page's for a line two features share (D76). */
       const carries = (key) => copy[key] !== undefined || SETTINGS_COPY[key] !== undefined
       const ranks = new Map()
       for (const row of manifest.settingsRows) {

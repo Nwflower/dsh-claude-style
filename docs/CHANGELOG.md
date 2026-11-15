@@ -1681,7 +1681,7 @@ Full Changelog: [v0.18.1...v0.18.2](https://github.com/Nwflower/dsh-claude-style
 - 英雄首页那张选择器卡的触发点也记住答案，输入卡片上那个工作区触发点与首页那一行共用的查找由一处记住、页面结构变化才重查，登记表里这一条从三处降到两处。
 - 首页那张宿主菜单卡也走同一条查找，英雄首页落位前改用宿主访问模块里记住答案的那一处，登记表里这条从两处降到一处。
 - 两份决定草稿里记的现状跟上已经做完的部分，整份文档的查找记账现存四十三处，`importance` 台账覆盖全部五百三十九处 `!important`，边界表已有十四条由 `packages/testing/bounds.cjs` 供各场景读取，检查表达式里的其余数字由 `check-numbers.json` 记录并核对。
-- 侧栏分区的标题改由总线登记表供着，标题清单由观察总线按选择器登记、随页面变化增量维护（D40），每趟刷新只在清单里挑一次，标题与布局都不变时不再走文档，登记表里这一条欠账划掉、现存四十二处。
+- 侧栏分区的标题改由总线登记表供着，标题清单由观察总线按选择器登记、随页面变化增量维护，每趟刷新只在清单里挑一次，标题与布局都不变时不再走文档，登记表里这一条欠账划掉、现存四十二处。
 - 登记一处查不到的原因，首页那一行「开着的选择器」要的是「属性一变就作废」的答案，得由它自己的读取或当趟已经拿着的行来给。
 - 对手分类按走查自己的口径补齐两处，去掉重要性之后有过渡开始也算作「这个候选正托着值」，与简写并排写的长属性也成为候选，台账的说明把试过的三条死路一并写下。
 - 冒烟的静置判定补上「没有还在跑的有限动画」，页面上仍在运行的有限动画未结束就不采读数，无限循环的那种不算。
@@ -1731,7 +1731,7 @@ Full Changelog: [v0.18.1...v0.18.2](https://github.com/Nwflower/dsh-claude-style
 - The hero picker's card trigger keeps its answer too, the workspace trigger on the composer card and the hero row served by one kept lookup re-asked only when the page's structure changes, and the ledger entry for that file drops from three lookups to two.
 - The hero page reads the host's open menu card through the same lookup, using the accessor that keeps that answer, and the ledger entry for the file drops from two lookups to one.
 - Both decision drafts' standing sections follow what has landed, the lookup record standing at forty-three sites, the `!important` ledger covering all five hundred and thirty-nine declarations, the bounds table holding fourteen values read through `packages/testing/bounds.cjs`, and the remaining numbers in check expressions recorded and verified in `check-numbers.json`.
-- The sidebar's section labels come from the bus registry now, the labels kept by the observation bus per selector and maintained incrementally as the page changes (D40), so a pass picks from the list without walking the document and the ledger entry is struck out with forty-two sites remaining.
+- The sidebar's section labels come from the bus registry now, the labels kept by the observation bus per selector and maintained incrementally as the page changes, so a pass picks from the list without walking the document and the ledger entry is struck out with forty-two sites remaining.
 - Why one lookup cannot move is written down, the hero row's open pickers needing an answer invalidated by an attribute change, from a reader of its own or from the row the pass already holds.
 - The opponent classification now matches the walk's own criteria in two places, a declaration counting as necessary when dropping its importance starts a transition and a longhand written beside a shorthand becoming a candidate, with the three dead ends tried recorded in the ledger's note.
 - The smoke walk's settle rule now requires that no finite animation is still running, a reading waiting until every finite animation the page runs has finished, an endless one being no such thing.

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** lint.mjs — check source limits, repository references, dependency direction and spec contracts (D72, D92). */
+/** lint.mjs — check source limits, repository references, dependency direction and spec contracts (D76, D92). */
 import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import { createRequire } from 'node:module'
@@ -177,14 +177,14 @@ for (const file of prose) {
 }
 
 // 6. A feature sees `ui` as FeatureUi of its own manifest: its handle and the handles the
-// manifest `reads` (D72). A feature module importing the whole registry type would read any
+// manifest `reads` (D76). A feature module importing the whole registry type would read any
 // handle with nothing declared.
 const featureModules = filesUnder(path.join(ROOT, 'packages', 'client', 'src', 'features'), ['.ts'], SKIPPED_DIRS).filter((file) => !/\.(test|manifest)\.ts$/.test(file))
 let featureUiChecked = 0
 for (const file of featureModules) {
   const text = fs.readFileSync(file, 'utf8')
   if (/\bFeatureUi\b/.test(text)) featureUiChecked += 1
-  if (/^import type \{[^}]*\bUi\b[^}]*\} from '[./]+core\/scheduler'/m.test(text)) problems.push(`${relative(file)}: imports the whole ui registry type; type ui as FeatureUi<typeof manifest> and list the handles it reads in the manifest (D72)`)
+  if (/^import type \{[^}]*\bUi\b[^}]*\} from '[./]+core\/scheduler'/m.test(text)) problems.push(`${relative(file)}: imports the whole ui registry type; type ui as FeatureUi<typeof manifest> and list the handles it reads in the manifest (D76)`)
   // A host service is read through an accessor in the engine's host.ts, which owns its name,
   // its shape and the answer where the host carries none (D3, D73).
   text.split('\n').forEach((line, at) => {

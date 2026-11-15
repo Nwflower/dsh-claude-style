@@ -541,7 +541,7 @@ export function withSlots(ctx: HostContext, use: (slots: HostSlotsService, scope
   })
 }
 
-/** Hand components to host slots, each as soon as its slot is declared (D42); disposing the returned scope takes every entry back. */
+/** Hand components to host slots, each as soon as its slot is declared (D76); disposing the returned scope takes every entry back. */
 export function registerSlotEntries(ctx: HostContext, entries: readonly SlotEntry[], label: string): HostFiber | null {
   return withSlots(ctx, (slots, scope) => {
     for (const entry of entries) {
@@ -550,12 +550,12 @@ export function registerSlotEntries(ctx: HostContext, entries: readonly SlotEntr
   })
 }
 
-/** The client's jobs controller, shared with the host's background task list (D94). */
+/** The client's jobs controller, shared with the host's background task list (D102). */
 export function hostJobs(lookup: HostServiceLookup | null | undefined): HostJobsService | null {
   return lookup?.get('jobs') as HostJobsService | undefined ?? null
 }
 
-/** The parent-authorized child controls; the Gateway owns the relationship check (D94). */
+/** The parent-authorized child controls; the Gateway owns the relationship check (D102). */
 export function hostRemoteSubagents(lookup: HostServiceLookup | null | undefined): HostSubagentsRemote | null {
   return lookup?.get('remote.subagents') as HostSubagentsRemote | undefined ?? null
 }
@@ -641,7 +641,7 @@ export function hostUiWorkspace(lookup: HostServiceLookup | null | undefined): H
   return lookup?.get('uiWorkspace')
 }
 
-/** Open a file in the host's preview through its canonical resource address (D3, D94). */
+/** Open a file in the host's preview through its canonical resource address (D3, D102). */
 export function openHostFile(lookup: HostServiceLookup, sessionId: string, directory: string | undefined, path: string): void {
   const sidebar = lookup.get('sidebarRight') as { openResource(address: string): unknown } | undefined
   if (typeof sidebar?.openResource !== 'function') throw new Error('the host has no file preview controller')
