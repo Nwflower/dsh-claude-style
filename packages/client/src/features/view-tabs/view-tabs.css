@@ -149,6 +149,17 @@ body[data-dsh-claude-style] [data-dsh-titlebar-tabs] [data-dsh-view-tabs]:hover 
 body[data-dsh-claude-style] [data-dsh-claude-part~="center-column"]:hover [data-dsh-titlebar-tabs] [data-dsh-view-tabs] {
   opacity: 1;
 }
+/* The resting rule at the top of this sheet takes the tablist down with the
+   strip, and the two reveals above name the strip alone: raised by either, the
+   plate would stay at nothing with its pills inside it. These two carry the
+   same reveal down to the tablist, one per way the strip is raised here — its
+   own hover, and the pane's hover when the pointer never reaches the strip. Both
+   chains hold more attribute segments than the resting rule, so neither needs
+   added weight. */
+body[data-dsh-claude-style] [data-dsh-titlebar-tabs] [data-dsh-view-tabs]:hover [data-conversation-tabs],
+body[data-dsh-claude-style] [data-dsh-claude-part~="center-column"]:hover [data-dsh-titlebar-tabs] [data-dsh-view-tabs] [data-conversation-tabs] {
+  opacity: 1;
+}
 /* The strip's row has left the flow, so the header takes the shape it has when
    it owns no tab strip: no min-height, and the header band closes its bottom
    padding further (--dsh-header-band-bottom). */
