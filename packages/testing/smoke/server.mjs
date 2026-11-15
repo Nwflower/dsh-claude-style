@@ -54,7 +54,8 @@ async function serveStandIn(html) {
       res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8' })
       res.end(fs.readFileSync(CLIENT))
     } else if (name === 'dsh-claude-style/model-descriptions.json' && fromPage(req) === 'effort') {
-      // The effort page reads the real built rules for its model-family hook.
+      // The effort page reads the real built copy and brand rules: its rows
+      // draw the vendor lockups those rules name.
       res.writeHead(200, { 'content-type': 'application/json; charset=utf-8' })
       res.end(fs.readFileSync(path.join(ROOT, 'lib', 'model-descriptions.json')))
     } else if (name === 'dsh-claude-style/hdsl-skin.png') {

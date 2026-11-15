@@ -5,7 +5,6 @@ import { activeLocale } from '../../core/i18n'
 import { ensureSeatBox, ensureSeatPart } from './seat-box'
 import type { SeatPart } from './seat-box'
 import { loadModelCopy } from './model-copy'
-import { modelBrand } from './brand'
 import { readPrefs } from '../../core/prefs'
 import { findPrimaryModelSlot, withSlots } from '@dsh-claude-style/engine/host'
 import { createModelCatalog } from './catalog'
@@ -18,7 +17,7 @@ import { removeStrayNodes, pressKeepsPopoverOpen } from '../../shared/popover'
 import { releaseSwappingText, setSwappingText } from '../../shared/swapping-text'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import { COMPOSER_INPUT_SELECTOR } from '@dsh-claude-style/contracts/dom'
-import type { HostModelDirectory, HostModelGroup, HostSlotsService } from '@dsh-claude-style/contracts/services'
+import type { HostModelDirectory, HostModelEntry, HostModelGroup, HostSlotsService } from '@dsh-claude-style/contracts/services'
 import type { CloseReason, FeatureHandle } from '@dsh-claude-style/engine/scheduler'
 import type { FeatureUi } from '../../core/feature'
 import type manifest from './model-picker.manifest'
@@ -27,12 +26,17 @@ import { copy } from './copy'
 import { createModelCards } from './model-cards'
 import { createTeamMode } from './team-mode'
 
+/**
+ * The mark naming the model in force on <body>. A reader's own tooling reads it
+ * to know which model the session is on; the value is the catalog's
+ * `provider/id`, the pair the copy rules read (features/model/model-copy.ts).
+ */
+const MODEL_ATTR = 'data-dsh-claude-model'
+
 /** What the effort picker and the settings page read off the model picker (ui.model). */
 export interface ModelHandle extends FeatureHandle {
   /** The provider the shown session routes to, or null before the catalog answers. */
   provider(): string | null
-  /** The current model family's styling id, resolved from its catalog id and display name (D79). */
-  family(): string | null
   /** The scheduler's own dismiss route; the effort picker calls it with no reason. */
   close(reason?: CloseReason): void
   /** The skin's seat box: the model's text and the effort level's share it (seat-box.ts). */
@@ -407,6 +411,23 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     cards.dropNodes()
     modelBodySig = ''
     modelCatalog.reset()
+    markSeatModel(null)
+  }
+
+  /**
+   * Name the model in force on <body>: its `provider/id`, which separates two
+   * providers' same-named models. The mark carries the catalog's data and no
+   * judgement drawn from it — the family, the brand and the display name stay in
+   * the picker. One model sits in force at a time, so a seat that names none (no
+   * session, a catalog still answering, an id its groups do not hold) leaves the
+   * mark off.
+   */
+  function markSeatModel(current: { group: HostModelGroup, model: HostModelEntry } | null) {
+    if (current === null) {
+      document.body.removeAttribute(MODEL_ATTR)
+      return
+    }
+    setAttributeIfChanged(document.body, MODEL_ATTR, `${current.group.id}/${current.model.id}`)
   }
 
   /** Build/refresh the trigger, its label and the popover rows. */
@@ -439,7 +460,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     // must not lose its model seat to one (engine/host.ts::findPrimaryModelSlot).
     const slot = mount.slot ?? findPrimaryModelSlot()
     modelSlot = slot
-    if (slot === null) return
+    if (slot === null) {
+      // A page with no composer seat in it names no model either.
+      markSeatModel(null)
+      return
+    }
     // Hide the host's own seat (React owns the node; re-mark on swap).
     // Idempotent against a torn-down-less reload, like the account footer:
     // client HMR drops the old fiber's disposals, so a previous generation's
@@ -496,6 +521,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
 
     const snap = modelCatalog.snapshot()
     const current = modelCatalog.current(snap)
+    // The seat in force is the one fact the mark carries: written here, where the
+    // name below is taken from the same reading, so the two never disagree.
+    markSeatModel(current)
     const label = current ? current.model.name : copy('fallbackLabel')
     const labelEl = modelBtn.querySelector('.dsh-claude-model-btn-label')
     if (labelEl) {
@@ -570,10 +598,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     // own billing from a provider that settles elsewhere.
     provider() {
       return modelCatalog.snapshot()?.current?.provider ?? null
-    },
-    family() {
-      const active = modelCatalog.current(modelCatalog.snapshot())
-      return active === null ? null : modelBrand(active.model.id, active.model.name)
     },
     // The seat sits on the composer, outside the column a streaming batch
     // touches, so such a batch skips this pass (D40).

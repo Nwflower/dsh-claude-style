@@ -51,8 +51,6 @@
       models: [
         { id: 'glm-5.3', name: 'GLM-5.3', description: 'The flagship one.', reasoning: otherReasoning },
         { id: 'glm-4.7', name: 'GLM-4.7', description: 'The older one.' },
-        { id: 'gateway-alias', name: 'Qwen3.8-Flash', description: 'The display name names the family.', reasoning: otherReasoning },
-        { id: 'opaque-model', name: 'Custom model', description: 'No family rule claims this one.', reasoning: otherReasoning },
       ],
     },
   ] : [

@@ -27,10 +27,8 @@ body[data-dsh-claude-style] .dsh-claude-effort {
   --dsh-claude-effort-swap-progress: 0;
   --dsh-claude-effort-swap-rest: 1;
   --dsh-claude-effort-swap-dir: 1;
-  /* Public appearance hooks: a reader-supplied sprite needs no extra element,
-     and the travel geometry reads the resulting knob width (issue #357). */
-  --dsh-claude-effort-knob-image: none;
-  --dsh-claude-effort-knob-frames: 1;
+  /* The knob's box. The override measures the knob it draws, so the travel and
+     the fill end at that centre (features/effort/slider.ts). */
   --dsh-claude-effort-knob-width: 16px;
   --dsh-claude-effort-knob-height: 30px;
   user-select: none;
@@ -255,9 +253,6 @@ body[data-dsh-claude-style] .dsh-claude-effort-knob {
   /* Pinned to the host's static white in BOTH appearances: the knob is the one
      light pebble in the groove, and a dark knob drowned in the dark groove. */
   background-color: var(--dsw-static-neutral-bluish-00, #ffffff);
-  background-image: var(--dsh-claude-effort-knob-image);
-  background-size: calc(var(--dsh-claude-effort-knob-frames) * 100%) 100%;
-  background-repeat: no-repeat;
   box-shadow: 0 1px 3px rgba(20, 20, 19, 0.28), 0 0 0 1px rgba(20, 20, 19, 0.06);
   /* The lift is the `scale` property and the travel is the `translate`
      property — both INDIVIDUAL transform properties, which compose in the order

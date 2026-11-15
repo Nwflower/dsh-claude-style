@@ -218,8 +218,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
 
   /** Take the level's button and card down with its seat. */
   function hideEffortTrigger() {
-    // A hidden card must not keep describing the model that previously held it.
-    effortSlider?.el.removeAttribute('data-dsh-claude-model-family')
     if (effortBtn !== null) {
       if (effortBtn.parentElement !== null) effortBtn.parentElement.removeChild(effortBtn)
       effortBtn = null
@@ -246,11 +244,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     }
     ensureEffortChrome()
     const button = ensureEffortButton(box)
-    const family = typeof ui.model?.family === 'function' ? ui.model.family() : null
-    if (effortSlider !== null) {
-      if (family === null) effortSlider.el.removeAttribute('data-dsh-claude-model-family')
-      else setAttributeIfChanged(effortSlider.el, 'data-dsh-claude-model-family', family)
-    }
     // Same-value guards: sync runs on every scheduler pass, and an identical
     // write still mutates the DOM (textContent replaces the text node;
     // setAttribute queues a record the scheduler's observer sees).
