@@ -16,7 +16,7 @@ test('every narrow-frame fallback is gated to a hover-capable fine pointer', () 
   const media = [...sheet.cssRules].find(rule => rule.type === CSSRule.MEDIA_RULE) as CSSMediaRule
   expect(media).toBeDefined()
   expect(media.conditionText).toBe('(hover: hover) and (pointer: fine)')
-  expect(media.cssRules).toHaveLength(4)
+  expect(media.cssRules).toHaveLength(5)
   for (const rule of media.cssRules) {
     expect(rule.type).toBe(CSSRule.STYLE_RULE)
     expect((rule as CSSStyleRule).style.getPropertyValue('grid-template-columns')).not.toBe('')
