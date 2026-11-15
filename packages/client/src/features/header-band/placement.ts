@@ -15,6 +15,20 @@ const GAP = 8
 const FURNITURE = 48
 /** Below this a lifted title would be a stub: it stays in the row instead. */
 const MIN_TITLE = 120
+/**
+ * How far a piece's room may fall back below its threshold before the place it
+ * took is given up.
+ *
+ * A pass reads the layout it last wrote: lifting a piece out of the row changes
+ * the room the row has, the boxes standing in it and the header's own height, so
+ * the numbers the next pass reads are a few pixels from the ones it decided on.
+ * On a threshold those few pixels answer the other way, the piece goes back into
+ * the row, the row moves back, and the pass that follows lifts it again — a
+ * caption row that never comes to rest. Keeping a place across a margin wider
+ * than that shift ends the walk at the state the window is nearest, instead of
+ * alternating between two.
+ */
+const KEEP = 4
 
 /** Everything one pass places against, in the page's pixels (shared/page-zoom.ts). */
 export interface CaptionInputs {
@@ -37,9 +51,21 @@ export interface CaptionInputs {
   /** The two control clusters: whether each is on the page, and its width. */
   utilities: { present: boolean, width: number }
   corner: { present: boolean, width: number }
-  /** The row's top edge, the lift it already carries, and the title box's height. */
-  row: { top: number, applied: number }
+  /**
+   * The header's own top edge and the title box's height. The row's rise is
+   * decided from these alone: the pass stands the header's inset over the row's
+   * line and lifts the row by what the inset cannot cover, so no number it wrote
+   * before enters the next decision.
+   */
+  headerTop: number
   titleHeight: number
+  /**
+   * The places the last pass gave the pieces, or absent on a page's first pass.
+   * A piece keeps the place it holds until its room falls back past the margin
+   * (KEEP), so the pixels a placement moves cannot answer a threshold the other
+   * way on the pass that follows it.
+   */
+  previous?: { title: boolean, trail: boolean, actions: boolean }
 }
 
 /** What the pass writes, one number per side and the run its strip takes. */
@@ -49,6 +75,8 @@ export interface CaptionPlacement {
   rowLift: number
   /** Where the row's top belongs: the lower edge of the title's centred box. */
   rowTop: number
+  /** The header's top inset that stands the row on that line, as far as the inset can. */
+  headerInset: number
   /** The title's place and the room it is handed, or null while it stays in the row. */
   title: { left: number, max: number, top: number } | null
   /** The cluster's place, or null while it stays beside the title in the row. */
@@ -63,6 +91,15 @@ export interface CaptionPlacement {
 /** The width the title's own run needs: its words, capped by nothing this pass wrote. */
 function titleRun(title: CaptionInputs['title']) {
   return Math.max(title.width, title.natural)
+}
+
+/**
+ * Whether a piece takes a place with the room it has: the threshold decides a
+ * piece that stands in the row, and a piece already in the caption row keeps its
+ * place until the room falls the margin below it (KEEP).
+ */
+function takesPlace(room: number, threshold: number, held: boolean) {
+  return held ? room >= threshold - KEEP : room >= threshold
 }
 
 /**
@@ -90,7 +127,11 @@ export function placeCaptionRow(inputs: CaptionInputs): CaptionPlacement {
   // out a page scrollbar, which `innerWidth` counts.
   const edge = width - controls - GAP
   const cornerRight = controls + GAP
-  const liftActions = clusterWidth > 0 && edge - clusterWidth >= Math.max(furniture, stripRight) + GAP
+  // The room the cluster needs at the right end, and the margin it keeps once it
+  // stands there (KEEP).
+  const actionsRoom = edge - clusterWidth - Math.max(furniture, stripRight) - GAP
+  const held = inputs.previous ?? null
+  const liftActions = clusterWidth > 0 && takesPlace(actionsRoom, 0, held?.actions === true)
   const left = Math.max(rowLeft, furniture + GAP)
   // Where the row's right-hand content ends: the controls when they are lifted,
   // the caption buttons when they stayed in the row.
@@ -98,12 +139,12 @@ export function placeCaptionRow(inputs: CaptionInputs): CaptionPlacement {
   // The title's room runs up to that end, less the strip's width and the air on
   // both sides of it.
   const room = rightStop - GAP - (strip.inBand ? stripWidth + GAP : 0) - left
-  const liftTitle = title.present && room >= MIN_TITLE
+  const liftTitle = title.present && takesPlace(room, MIN_TITLE, held?.title === true)
   // The cluster takes the caption row's next place, and its own need comes off
   // the title's room. A capped cluster would measure at the cap, so the number
   // read here is the need the pass keeps (D9).
   const titleRoom = room - trail.need - GAP
-  const liftTrail = liftTitle && trail.present && titleRoom >= MIN_TITLE
+  const liftTrail = liftTitle && trail.present && takesPlace(titleRoom, MIN_TITLE, held?.trail === true)
   const titleMax = liftTrail ? titleRoom : room
   // A limit this element still carries from an earlier placement would be
   // measured as its width and squeeze the chips it holds.
@@ -112,7 +153,12 @@ export function placeCaptionRow(inputs: CaptionInputs): CaptionPlacement {
   const titleCentre = bandHeight / 2
   const titleHeight = inputs.titleHeight
   const rowTop = titleCentre + titleHeight / 2
-  const rowLift = liftTitle ? Math.max(0, Math.round(inputs.row.top - inputs.row.applied - rowTop)) : 0
+  // The header's inset is the header's own walk down to the row's line, and the
+  // row's rise is what is left of that walk once the inset has taken it: the two
+  // numbers are read off one header edge, so the pass writes them together and
+  // the row lands on the line in the pass that writes them.
+  const headerInset = liftTitle ? Math.max(0, Math.round(rowTop - inputs.headerTop)) : 0
+  const rowLift = liftTitle ? Math.max(0, Math.round(inputs.headerTop + headerInset - rowTop)) : 0
   const utilitiesRight = cornerRight + (corner.present ? cornerWidth + GAP : 0)
   // The strip is centred in what is left between the title and the controls —
   // or between the shell's own left end and the caption buttons when a side
@@ -126,6 +172,7 @@ export function placeCaptionRow(inputs: CaptionInputs): CaptionPlacement {
     lift: { title: liftTitle, trail: liftTrail, actions: liftActions },
     rowLift,
     rowTop,
+    headerInset,
     title: liftTitle ? { left: Math.round(left), max: Math.round(titleMax), top: Math.round(titleCentre) } : null,
     trail: liftTrail ? { left: Math.round(trailLeft), top: Math.round(titleCentre) } : null,
     utilitiesRight: liftActions && utilities.present ? Math.round(utilitiesRight) : null,

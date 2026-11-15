@@ -116,6 +116,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let keptRow: HTMLElement | null = null
   /** The header carrying BAND_ATTR right now, or null. */
   let bandHost: HTMLElement | null = null
+  /**
+   * The places the last pass gave the pieces. A pass moves the rows the next one
+   * reads, so a piece keeps its place across a small step back (placement.ts).
+   */
+  let lastLift: { title: boolean, trail: boolean, actions: boolean } | null = null
   /** Every control the skin registered for the right panel, kept current by the bus (D40). */
   const closeButtons = observeMatches<HTMLElement>(`.${CLOSE_CLASS}`)
 
@@ -226,6 +231,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   /** Hand the row back: no placement, no marks. */
   function clear() {
+    lastLift = null
     rowStamp.release()
     titleStamp.release()
     trailStamp.release()
@@ -373,9 +379,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const stripBox = current.stripBox
     const inBand = stripBox !== null && stripBox.top < band.height
     const stripWidth = stripBox === null || !inBand ? 0 : stripBox.width
-    // Where the row's lift already applied is taken back out, or the pass would
-    // read the raised row as needing no rise.
+    // The header's own top edge decides the row's rise; where its box was not
+    // read, the row's unraised top is the edge the inset starts from.
     const applied = parseFloat(row.style.getPropertyValue(ROW_LIFT))
+    const headerTop = current.headerBox === null ? rowBox.top - (isFinite(applied) ? applied : 0) : current.headerBox.top
     const placement = placeCaptionRow({
       width: current.width,
       bandHeight: band.height,
@@ -387,19 +394,27 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       trail: { present: current.trail !== null, width: current.trailBox === null ? 0 : current.trailBox.width, need: current.trailNeed },
       utilities: { present: current.utilitiesBox !== null, width: current.utilitiesBox === null ? 0 : current.utilitiesBox.width },
       corner: { present: current.cornerBox !== null, width: current.cornerBox === null ? 0 : current.cornerBox.width },
-      row: { top: rowBox.top, applied: isFinite(applied) ? applied : 0 },
+      headerTop,
       titleHeight: current.titleBox === null ? 0 : current.titleBox.height,
+      ...(lastLift === null ? {} : { previous: lastLift }),
     })
+    lastLift = placement.lift
     const liftTitle = placement.lift.title
     const liftActions = placement.lift.actions
     rowStamp.mark(liftTitle ? row : null)
+    // The rise is written on every pass that lifts the title and taken off every
+    // pass that hands it back: the stylesheet draws no raise for a row without the
+    // stamp, and a value left on the element would outlive the placement and stand
+    // in for a raise the next reading has to take back out.
     if (liftTitle) setVar(row, ROW_LIFT, `${-placement.rowLift}px`)
+    else if (row.style.getPropertyValue(ROW_LIFT) !== '') row.style.removeProperty(ROW_LIFT)
     // The header closes to the row it no longer shares with the title: its top
     // inset becomes the air between its own edge and that row, so the height the
     // title held is not left standing empty above the conversation. A header
-    // whose box was not read keeps the host's inset, the stylesheet's fallback.
-    if (placement.title !== null && current.header !== null && current.headerBox !== null) {
-      setVar(current.header, ROW_TOP, `${Math.max(0, Math.round(placement.rowTop - current.headerBox.top))}px`)
+    // whose box was not read takes the inset the pass decided from the row, the
+    // stylesheet's fallback standing only until the pass writes it.
+    if (placement.title !== null && current.header !== null) {
+      setVar(current.header, ROW_TOP, `${placement.headerInset}px`)
     } else if (current.header !== null) {
       current.header.style.removeProperty(ROW_TOP)
     }
