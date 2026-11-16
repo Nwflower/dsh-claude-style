@@ -70,4 +70,62 @@ export default spec({ page: 'chat-fold' }, ({ test }) => {
     const transform = await t.page.locator(text).first().evaluate((element) => getComputedStyle(element).transform)
     t.expectThat.equal(transform, 'none', 'the host text keeps no offset from the stepped window')
   })
+
+  test('a catch-up glides over the wait instead of snapping the backlog', async (t) => {
+    const row = t.host('chat.think-row')
+    const text = t.host('chat.reasoning-text')
+    const window = t.surface('chat.reason-window')
+    const capped = t.surface.attribute('chat.reason-capped')
+    await t.prefs({ chatAnimations: true, motion: 'full', reasoningDisplay: 'stepped' })
+    await t.page.evaluate(([rowSelector, phase, running, expanded]) => {
+      const element = document.querySelector(rowSelector)
+      element?.setAttribute(phase, running)
+      element?.setAttribute(expanded, '')
+    }, [row, ROW_PHASE_ATTRIBUTE, RUNNING_STATE, EXPANDED_ATTRIBUTE])
+    await t.settle()
+    // Record every written step with the glide time it was given, so the burst's
+    // own catch-up is read wherever it lands instead of at a guessed moment.
+    await t.page.evaluate(([textSelector]) => {
+      const content = document.querySelector(textSelector)
+      window.__glide = []
+      let last = content.style.transform
+      const sample = () => {
+        const now = content.style.transform
+        if (now !== last) { window.__glide.push({ from: last, to: now, dur: content.style.transitionDuration }); last = now }
+        if (window.__glide.length < 400) requestAnimationFrame(sample)
+      }
+      requestAnimationFrame(sample)
+    }, [text])
+    // A burst far past the cap: the catch-up glides over the wait, not one snap.
+    await t.page.evaluate(([rowSelector, textSelector, phase, running]) => {
+      const element = document.querySelector(rowSelector)
+      const content = document.querySelector(textSelector)
+      for (let index = 0; index < 40; index += 1) content.append(document.createElement('br'), document.createTextNode(`reasoning line ${index}`))
+      element?.setAttribute(phase, 'ok')
+      element?.setAttribute(phase, running)
+    }, [row, text, ROW_PHASE_ATTRIBUTE, RUNNING_STATE])
+    await t.page.waitForFunction(([windowSelector, attribute]) => {
+      const frame = document.querySelector(windowSelector)
+      return frame !== null && frame.hasAttribute(attribute)
+    }, [window, capped], { timeout: 5000 })
+    await t.page.waitForTimeout(2000)
+    const glide = await t.page.evaluate(([windowSelector, textSelector, stepProperty, holdProperty]) => {
+      const frame = document.querySelector(windowSelector)
+      const content = document.querySelector(textSelector)
+      const style = getComputedStyle(frame)
+      const ms = value => value.endsWith('ms') ? Number.parseFloat(value) : Number.parseFloat(value) * 1000
+      const px = value => { const m = /translateY\((-?[\d.]+)px\)/.exec(value || ''); return m === null ? 0 : -Number(m[1]) }
+      const step = Math.round(Number.parseFloat(getComputedStyle(content).lineHeight)) * 2
+      return {
+        records: (window.__glide || []).map(r => ({ delta: px(r.to) - px(r.from), dur: ms(r.dur || '0ms') })),
+        base: ms(style.getPropertyValue(stepProperty).trim()),
+        hold: ms(style.getPropertyValue(holdProperty).trim()),
+        step,
+      }
+    }, [window, text, t.surface.property('chat.reason-step'), t.surface.property('chat.reason-hold')])
+    const caught = glide.records.filter(r => r.delta > glide.step)
+    t.expectThat.equal(caught.length > 0 && caught.every(r => r.dur > glide.base), true, 'a long catch-up glides over the wait instead of snapping: ' + JSON.stringify(glide.records.slice(0, 6)))
+    t.expectThat.equal(glide.records.every(r => r.dur >= glide.base && r.dur <= glide.hold), true, 'every glide stays between the step and the wait: ' + JSON.stringify({ base: glide.base, hold: glide.hold, records: glide.records.slice(0, 6) }))
+    await t.prefs({ reasoningDisplay: 'continuous' })
+  })
 })

@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-16",
+  "group": "fixes",
+  "order": 368,
+  "external": true,
+  "zh": "思考内容两行步进在输出较快时按距离定速滑移，不再停顿后猛跳",
+  "en": "Stepped reasoning glides at a steady pace over fast output instead of pausing and snapping"
+}

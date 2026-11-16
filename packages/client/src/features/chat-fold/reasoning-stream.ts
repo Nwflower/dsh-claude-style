@@ -25,6 +25,9 @@ const FALLBACKS = { lines: 2, cap: 400 }
 /** motionMs handles the seconds unit emitted by the minified stylesheet (D9). */
 const HOLD_MS = motionMs('--dsh-claude-period-hold')
 
+/** One step's own glide, the time the stylesheet hangs on the text; a catch-up scales it by the distance it covers. */
+const STEP_MS = motionMs('--dsh-claude-duration-step')
+
 /** A duration, a count or a length written in a CSS token. */
 function tokenNumber(value: string, fallback: number) {
   const amount = Number.parseFloat(value)
@@ -55,6 +58,8 @@ interface Measure extends Height {
 /** What one wait writes: the window's height and how far the text has risen. */
 interface Step extends Height {
   offset: number
+  /** The rise of one whole step, in pixels: the pace the glide keeps. */
+  stepPx: number
 }
 
 /** One row read this frame: the window it takes (null: the one it holds comes off), or the one it holds with the height the text has grown to. */
@@ -119,6 +124,7 @@ export function createReasoningStream() {
     state.window.style.removeProperty(REASON_WINDOW_HEIGHT_PROPERTY)
     state.text.removeAttribute(REASON_TEXT_ATTR)
     state.text.style.removeProperty('transform')
+    state.text.style.removeProperty('transition-duration')
   }
 
   /** Each tick remeasures growth and catches up by whole steps without passing the newest line. */
@@ -154,9 +160,9 @@ export function createReasoningStream() {
     const lineHeight = lineHeightOf(state.text)
     const stepPx = Math.round(lineHeight * tokenNumber(style.getPropertyValue('--dsh-claude-reason-lines'), FALLBACKS.lines))
     const measure = measureOf(state)
-    if (!measure.capped) return { heightPx: measure.heightPx, capped: false, offset: 0 }
+    if (!measure.capped) return { heightPx: measure.heightPx, capped: false, offset: 0, stepPx }
     const steps = Math.max(1, Math.floor((measure.reachable - state.offset) / Math.max(1, stepPx)))
-    return { heightPx: measure.heightPx, capped: true, offset: Math.min(state.offset + steps * stepPx, measure.reachable) }
+    return { heightPx: measure.heightPx, capped: true, offset: Math.min(state.offset + steps * stepPx, measure.reachable), stepPx }
   }
 
   /** Write the cap and its mark; below the cap, natural height follows the text without a style write per batch. */
@@ -187,6 +193,16 @@ export function createReasoningStream() {
       return
     }
     writeHeight(state.window, step)
+    // A catch-up covers several whole steps in one wait. Give the glide the time
+    // that distance takes at the step's own pace, so a fast burst rises steadily
+    // instead of snapping the whole backlog and standing still until the next
+    // wait. Never longer than the wait itself: the glide then finishes before the
+    // next step lands and the window never falls behind the newest line.
+    const distance = step.offset - state.offset
+    if (step.capped && distance > 0) {
+      const pace = Math.round(distance * STEP_MS / Math.max(1, step.stepPx))
+      state.text.style.transitionDuration = `${Math.min(HOLD_MS, Math.max(STEP_MS, pace))}ms`
+    }
     writeOffset(state, step.offset)
     state.timer = window.setTimeout(() => tick(row, state), HOLD_MS)
   }
