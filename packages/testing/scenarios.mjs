@@ -19,6 +19,7 @@ import { recordProbes } from './scenarios/contract-probe.mjs'
 import { sendPrompt, waitForTurn } from './prompt.mjs'
 import { importanceScenario } from './scenarios/importance.mjs'
 import { readerScrollScenario } from './scenarios/reader-scroll.mjs'
+import { returnTailScenario } from './scenarios/return-tail.mjs'
 import { turnSpacerScenario } from './scenarios/turn-spacer.mjs'
 import { doorPinScenario } from './scenarios/door-pin.mjs'
 import { streamPaceScenario } from './scenarios/stream-pace.mjs'
@@ -415,6 +416,8 @@ const SCENARIOS = {
    * only while the skin's follow moves the position (D40, D74).
    */
   readerScroll: { ...readerScrollScenario({ check }), frames: true },
+  /** The host's back-to-end button during a live turn: the press ends the reader's hold, so the growth that follows cannot put him back (return-tail.mjs, D40). */
+  returnTail: { ...returnTailScenario({ check }), frames: true },
   /** Completion-time fold room is the host's reading-position reservation (turn-spacer.mjs). */
   turnSpacer: { ...turnSpacerScenario({ check }), frames: true },
   /** A door rolling at the tail mid-stream leaves the status line pinned where it stood (door-pin.mjs, D40). */
