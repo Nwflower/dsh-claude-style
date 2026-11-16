@@ -18,8 +18,9 @@ import { boxOf } from '../../fixtures/boxes.mjs'
  * spells no mark (the same escape the engine uses). The page carries the
  * switches case's services, so the view store the segment drives is the
  * stand-in's own. The root is the host's own box — a bounded column whose
- * region clips what overflows — because the archived page's scroll port is the
- * box the skin seats in it, and a root left to grow would hide that.
+ * region clips what overflows — and its list seat (the host's own list area) is
+ * the scroll port: the skin's rows are seated in it and the host tree body
+ * inside gives way, so the seat must be the box the reader scrolls.
  */
 const HOST_CLASS = {
   root: '_root_n_' + '1',
@@ -27,6 +28,7 @@ const HOST_CLASS = {
   label: '_sectionLabel_' + 'w1_1',
   wide: '_wide_' + 'w1_1',
   area: '_listArea_' + 'w1_1',
+  treeBody: '_treeBody_' + 'w1_1',
   project: '_projectRow_' + 'w1_1',
 }
 
@@ -60,7 +62,9 @@ async function setup(t, count) {
     sidebar.setAttribute('data-' + 'slot', 'sidebar')
     sidebar.innerHTML = '<div class="' + classes.root + '" style="display:flex;flex-direction:column;height:320px;overflow:hidden">' +
       '<div class="' + classes.section + '" style="display:flex;align-items:center;justify-content:space-between;width:100%"><span class="' + classes.label + ' ' + classes.wide + '">Workspaces</span></div>' +
-      '<div role="tree" class="' + classes.area + '"><div ' + 'data-' + 'row-key="w1" class="' + classes.project + '">project</div></div></div>'
+      '<div role="tree" class="' + classes.area + '" style="flex:1 1 0%;min-height:0;overflow-y:auto;overflow-x:hidden">' +
+        '<div class="' + classes.treeBody + '"><div ' + 'data-' + 'row-key="w1" class="' + classes.project + '">project</div></div>' +
+      '</div></div>'
     document.body.appendChild(sidebar)
   }, { classes: HOST_CLASS, count })
   await t.settle()
@@ -95,35 +99,42 @@ function row(t, title) {
     .filter({ has: t.page.getByText(title, { exact: true }) })
 }
 
-/** The archived page's own list: the box the section's room seats, and its scroll port. */
+/** The archived page's own rows, drawn by the skin inside the host's seat. */
 function archivedList(t) {
   return t.surface('workspace.archived-list')
 }
 
-/** The reader's scroll to the foot of the archived list. */
+/** The host's list seat the skin seats the archived rows in: the section's scroll port. */
+function archiveSeat(t) {
+  return t.surface('workspace.archived-seat')
+}
+
+/** The reader's scroll to the foot of the seat, which appends the next page. */
 async function scrollToFoot(t) {
-  await t.page.evaluate((listSelector) => {
-    const list = document.querySelector(listSelector)
-    list.scrollTop = list.scrollHeight
-    window.dispatchEvent(new Event('scroll'))
-  }, archivedList(t))
+  await t.page.evaluate((seatSelector) => {
+    const seat = document.querySelector(seatSelector)
+    seat.scrollTop = seat.scrollHeight
+    seat.dispatchEvent(new Event('scroll'))
+  }, archiveSeat(t))
   await t.settle()
 }
 
 export default spec({ page: 'switches' }, ({ test }) => {
-  test('the archived list is the section\'s scroll port', async (t) => {
+  test('the archived list scrolls inside the host\'s own seat', async (t) => {
     await setup(t, 420)
     await pickArchived(t)
     const listSelector = archivedList(t)
-    t.expectThat.equal(await t.read.computed(listSelector, 'overflow-y'), 'auto', 'the list is the box the reader scrolls')
-    const standing = await t.read.overflow(listSelector)
-    t.expectThat.equal(standing.scrollHeight > standing.clientHeight, true, 'a page of rows runs past the section')
-    const listBox = await t.read.box(listSelector)
+    const seat = archiveSeat(t)
+    t.expectThat.equal(await t.page.evaluate(([list, seatSel]) => document.querySelector(seatSel).contains(document.querySelector(list)), [listSelector, seat]), true, 'the page\'s own list stands inside the host\'s seat')
+    t.expectThat.equal(await t.read.computed(seat, 'overflow-y'), 'auto', 'the seat is the box the reader scrolls')
+    const standing = await t.read.overflow(seat)
+    t.expectThat.equal(standing.scrollHeight > standing.clientHeight, true, 'a page of rows runs past the seat')
+    const seatBox = await t.read.box(seat)
     const rootBox = await t.read.box('.' + HOST_CLASS.root)
-    t.expectThat.equal(listBox.bottom <= rootBox.bottom + 0.5, true, 'the list ends at the section\'s own foot')
+    t.expectThat.equal(seatBox.bottom <= rootBox.bottom + 0.5, true, 'the seat ends at the section\'s own foot')
     await scrollToFoot(t)
-    const moved = await t.page.evaluate((listSelector) => document.querySelector(listSelector).scrollTop, listSelector)
-    t.expectThat.equal(moved > 0, true, 'the reader reaches the rows below the section')
+    const moved = await t.page.evaluate((seatSelector) => document.querySelector(seatSelector).scrollTop, seat)
+    t.expectThat.equal(moved > 0, true, 'the reader reaches the rows below the seat')
     t.expectThat.equal(await rowCount(t), 60, 'the foot of the port asks for the next page')
   })
 
@@ -133,9 +144,10 @@ export default spec({ page: 'switches' }, ({ test }) => {
     t.expectThat.equal(await rowCount(t), 30, 'the first page is thirty rows')
     await scrollToFoot(t)
     t.expectThat.equal(await rowCount(t), 60, 'reaching the foot appends the next thirty')
-    await t.page.evaluate(() => {
-      for (let event = 0; event < 8; event += 1) window.dispatchEvent(new Event('scroll'))
-    })
+    await t.page.evaluate((seatSelector) => {
+      const seat = document.querySelector(seatSelector)
+      for (let event = 0; event < 8; event += 1) seat.dispatchEvent(new Event('scroll'))
+    }, archiveSeat(t))
     await t.settle()
     t.expectThat.equal(await rowCount(t), 60, 'a scroll storm in one frame adds one page, not many')
     for (let page = 0; page < 20 && await rowCount(t) < 420; page += 1) await scrollToFoot(t)
@@ -236,7 +248,7 @@ export default spec({ page: 'switches' }, ({ test }) => {
     t.expectThat.visible(hostTree, 'the host own tree is back where it stood')
     await pickArchived(t)
     t.expectThat.equal(await rowCount(t), 30, 'the archive starts over at its first page')
-    const top = await t.page.evaluate((listSelector) => document.querySelector(listSelector).scrollTop, archivedList(t))
+    const top = await t.page.evaluate((seatSelector) => document.querySelector(seatSelector).scrollTop, archiveSeat(t))
     t.expectThat.equal(top, 0, 'the page starts at the top of the archive')
   })
 })

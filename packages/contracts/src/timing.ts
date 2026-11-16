@@ -79,4 +79,10 @@ export const HOST_TIMING: HostTimingEntry[] = [
     use: 'The stream slide puts the column back down with a transform on the column alone (D95); the lane holds the composer\u2019s box still through a fast answer on the strength of that shape.',
     checks: ['scenario:streamPace', 'scenario:streamJitter', 'scenario:streamJitterFooter', 'scenario:streamJitterInline'],
   },
+  {
+    id: 'host.sidebar-list-seat',
+    assumption: 'While the wide sidebar stands, its list seat (the list-area box) is the section’s own vertical scroller below the toolbar, and the tree body is a child inside that seat; when the viewport cannot scroll down, the seat takes the wheel.',
+    use: 'The archived segment seats its rows in that seat and lets the host tree body give way, so the sidebar’s wheel hand-off, scroll-state gating and gutter keep serving the skin’s rows as they serve the host’s; without it the rows would not scroll (features/workspace).',
+    checks: ['spec:behaviour/workspace-archive/the archived list scrolls inside the host\'s own seat'],
+  },
 ]

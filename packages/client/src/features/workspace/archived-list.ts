@@ -101,8 +101,8 @@ const TITLE_CLASS = 'dsh-claude-ws-archived-title'
 const TITLE_ANCHOR_CLASS = 'dsh-claude-ws-archived-title-anchor'
 
 export interface ArchivedList {
-  /** Seat the list in the section root at the first page; re-entering 已归档 starts over at the top. */
-  mount(root: Element): void
+  /** Seat the list in the host's list seat at the first page; re-entering 已归档 starts over at the top. */
+  mount(seat: Element): void
   /** Take the list off the page; the host's tree is back where the segment left it. */
   unmount(): void
   /** Whether the list stands in the section. */
@@ -142,6 +142,8 @@ function nearBottom(element: HTMLElement): boolean {
  */
 export function createArchivedList(deps: ArchivedListDeps): ArchivedList {
   let container: HTMLElement | null = null
+  /** Where the active list stood in the shared seat before 已归档 took it; restored on unmount. */
+  let seatScroll: number | null = null
   /** The rows the container holds, by session id; re-used across renders, moved into order. */
   const rows = new Map<string, HTMLElement>()
   /** Each control's own host tooltip, by the control it belongs to. */
@@ -385,16 +387,24 @@ export function createArchivedList(deps: ArchivedListDeps): ArchivedList {
     }
   }
 
-  function mount(into: Element) {
-    if (container !== null && container.parentElement === into) return
+  function mount(seat: Element) {
+    if (container !== null && container.parentElement === seat) return
     if (container === null) {
+      // The seat is the host's own element and outlives the list: remember where
+      // the active list stood so leaving 已归档 puts it back, then home the seat
+      // so the archive opens at its first page.
+      if (seat instanceof HTMLElement) {
+        seatScroll = seat.scrollTop
+        seat.scrollTop = 0
+      }
       container = buildElement('div', 'dsh-claude-ws-archived')
       container.addEventListener('click', onAction)
       container.addEventListener('click', onPress)
       container.addEventListener('keydown', onKey)
-      into.appendChild(container)
-    } else if (container.parentElement !== into) {
-      into.appendChild(container)
+      seat.appendChild(container)
+    } else if (container.parentElement !== seat) {
+      seat.appendChild(container)
+      if (seat instanceof HTMLElement) seat.scrollTop = 0
     }
     cursor = ARCHIVED_PAGE_SIZE
     window.addEventListener('scroll', onScroll, { capture: true, passive: true })
@@ -406,7 +416,11 @@ export function createArchivedList(deps: ArchivedListDeps): ArchivedList {
   function unmount() {
     if (container === null) return
     window.removeEventListener('scroll', onScroll, { capture: true })
+    const seat = container.parentElement instanceof HTMLElement ? container.parentElement : null
     container.parentElement?.removeChild(container)
+    // Give the active list back the scroll position it stood at before 已归档 took the seat.
+    if (seat !== null && seatScroll !== null) seat.scrollTop = seatScroll
+    seatScroll = null
     for (const row of rows.values()) releaseRow(row)
     rows.clear()
     tips.clear()
