@@ -645,6 +645,17 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
     },
     clear,
     /**
+     * The words the line shows changed under the same reading — a preference
+     * the settings form wrote: the fitted shape is stale, so the next render
+     * writes the figures and measures the line again instead of waiting for
+     * the next projection.
+     */
+    invalidate() {
+      fitted = false
+      fittedWidth = -1
+      fittedShape = -1
+    },
+    /**
      * The line's own element while it stands on the page: the panel's second
      * trigger, which the feature binds to the host's meter (session-stats.ts).
      */

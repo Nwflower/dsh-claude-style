@@ -2,7 +2,7 @@ import { conversationSessionId, findConversationSession, hostSessions, observeSe
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { sessionProjectionFaces } from '../../shared/session-projections'
 import { hostChatSeat } from '../../core/i18n'
-import { prefsFromForm, readPrefs } from '../../core/prefs'
+import { prefsFromForm, readPrefs, subscribePrefs } from '../../core/prefs'
 import { peerPresent } from '../../shared/peer-plugin'
 import { BILLING_OFF, CONTEXT_DISPLAY_PIE, CONTEXT_DISPLAY_RING_BAND, STATS_POSITION_CONTEXT } from '../../constants'
 import { createContextStatsBinding } from './stats-binding'
@@ -226,6 +226,17 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
     // Cost asks already have their own 1500ms throttle; a settled answer writes
     // immediately, while the streaming projection and text sources coalesce.
     renderNumbers()
+  })
+
+  /**
+   * A preference the figures read arrives through the settings form, not through
+   * a projection: the line's fitted shape is stale the moment it lands, so the
+   * stale shape is dropped and the next frame writes the figures again. Without
+   * this the switch only reached the footer at the next projection or scroll.
+   */
+  const offPrefs = subscribePrefs(() => {
+    inline.invalidate()
+    scheduleNumbers()
   })
 
   /** The pie's colours this frame's read phase took, until the pass's sync uses them. */
@@ -526,6 +537,7 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
       cancelNumbers = null
       releaseWatch()
       offCost()
+      offPrefs()
       cost.stop()
       figureListeners.clear()
       // The structure bus behind the estimate's call rows goes with the rest.
