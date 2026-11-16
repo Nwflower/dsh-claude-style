@@ -130,7 +130,10 @@ function read(t) {
 function settledAt(t, target) {
   return t.page.waitForFunction((value) => {
     const opacity = (id) => Number.parseFloat(getComputedStyle(document.getElementById(id)).opacity)
-    return Math.abs(opacity('probe-strip') - value) < 0.001 && Math.abs(opacity('probe-plate') - value) < 0.001
+    // The assertion asks for the resting value itself, so the wait asks for the
+    // same: a tolerance here hands the read the last tenth of a percent of the
+    // transition on whichever machine finishes its round trip first.
+    return opacity('probe-strip') === value && opacity('probe-plate') === value
   }, target, { timeout: 10000 })
 }
 
