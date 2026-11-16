@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-16",
+  "group": "fixes",
+  "order": 370,
+  "external": true,
+  "zh": "修复自定义配色以低彩度预设为起点时侧栏等派生色丢失色相变粉",
+  "en": "Fix custom schemes over low-chroma presets losing hue in derived colours such as the sidebar"
+}

@@ -9,6 +9,7 @@
  * @risk A reader's link colour is ignored, the link stops following a changed accent, or the same scheme draws its dark contours differently under the two brands.
  */
 import { host, spec, surface } from '../../fixtures/behaviour.mjs'
+import { samePaint } from '../../fixtures/colour.mjs'
 
 const EDGES_ATTR = surface.attribute('brand.custom-scheme')
 const LINK_PROPERTY = surface.property('brand.custom-scheme')
@@ -19,6 +20,7 @@ const DARK_ATTR = host('shell.dark-theme')
 const scheme = (record) => JSON.stringify({ id: 'custom', base: 'claude', ...record })
 
 export default spec({ page: 'chat-fold' }, ({ test }) => {
+  const linkIs = (t, hex) => samePaint(t, `var(${LINK_PROPERTY})`, hex)
   const readLink = (t) => t.page.evaluate((property) => {
     const probe = document.createElement('span')
     probe.style.color = `var(${property})`
@@ -35,7 +37,7 @@ export default spec({ page: 'chat-fold' }, ({ test }) => {
   for (const appearance of ['light', 'dark']) {
     test(`the scheme's own link colour reaches the page in ${appearance}`, async (t) => {
       await setScheme(t, appearance === 'dark', { link: { light: '#123456', dark: '#abcdef' } })
-      t.expectThat.equal(await readLink(t), appearance === 'light' ? 'rgb(18, 52, 86)' : 'rgb(171, 205, 239)', 'the named link colour is the page\'s link')
+      t.expectThat.equal(await linkIs(t, appearance === 'light' ? '#123456' : '#abcdef'), true, 'the named link colour is the page\'s link')
     })
 
     test(`a scheme naming no link colour derives it from its accent in ${appearance}`, async (t) => {
@@ -46,25 +48,17 @@ export default spec({ page: 'chat-fold' }, ({ test }) => {
       t.expectThat.equal(first !== second, true, 'a changed accent moves the derived link')
       await setScheme(t, appearance === 'dark', { accent: '#e53935', link: { light: '#123456', dark: '#abcdef' } })
       t.expectThat.equal(await readLink(t) !== first, true, 'a named link colour replaces the derived one')
+      t.expectThat.equal(await linkIs(t, appearance === 'light' ? '#123456' : '#abcdef'), true, 'the named link is the scheme\'s own colour')
     })
   }
 
   for (const appearance of ['light', 'dark']) {
     test(`the scheme's text seed changes only text in ${appearance}`, async (t) => {
-      const expectedText = appearance === 'light' ? 'rgb(64, 64, 64)' : 'rgb(184, 184, 184)'
-      const expectedCanvas = appearance === 'light' ? 'rgb(255, 255, 255)' : 'rgb(25, 25, 25)'
+      const expectedText = appearance === 'light' ? '#404040' : '#b8b8b8'
+      const expectedCanvas = appearance === 'light' ? '#ffffff' : '#191919'
       await setScheme(t, appearance === 'dark', { text: { light: '#404040', dark: '#b8b8b8' } })
-      const reading = await t.page.evaluate(([text, canvas]) => {
-        const probe = document.createElement('span')
-        probe.style.color = `var(${text})`
-        probe.style.backgroundColor = `var(${canvas})`
-        document.body.append(probe)
-        const paint = getComputedStyle(probe)
-        const answer = { text: paint.color, canvas: paint.backgroundColor }
-        probe.remove()
-        return answer
-      }, [TEXT_PROPERTY, CANVAS_PROPERTY])
-      t.expectThat.equal(reading, { text: expectedText, canvas: expectedCanvas }, 'the text seed reaches primary text without moving the canvas')
+      t.expectThat.equal(await samePaint(t, `var(${TEXT_PROPERTY})`, expectedText), true, 'the text seed reaches primary text')
+      t.expectThat.equal(await samePaint(t, `var(${CANVAS_PROPERTY})`, expectedCanvas), true, 'the text seed leaves the canvas alone')
     })
   }
 

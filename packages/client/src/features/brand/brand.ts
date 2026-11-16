@@ -2,6 +2,7 @@ import { BRAND_DEFAULT_PRESETS, BRAND_INK_ATTR, BRAND_INK_ORIGINAL, CUSTOM_EDGES
 import { readPrefs, subscribePrefs } from '../../core/prefs'
 import { accentInk } from '../../shared/contrast'
 import { activeScheme } from '../../shared/palette-scheme'
+import { oklchSeed } from '../../shared/palette-colours'
 import { loadBrandImages, readBrandImages, resetBrandImages, subscribeBrandImages } from '../../shared/custom-brand'
 import { brandingInkOf, brandInkColour } from '../../shared/branding-presets'
 import { installBrandSlots } from './brand-slots'
@@ -50,6 +51,9 @@ export function install() {
     const custom = scheme !== undefined
     const card = PALETTE_CARDS.find((entry) => entry.id === (scheme?.base ?? BRAND_DEFAULT_PRESETS[prefs.brand])) ?? PALETTE_CARDS[0]
     const accent = scheme?.accent ?? card.accent
+    // Seeds reach the token sheet as relative colours over these properties; a
+    // hex seed would lose its hue on a low-chroma canvas (palette-colours.ts).
+    const seed = (value: string | undefined | null) => (value === undefined || value === null ? null : oklchSeed(value))
     // A preset's override keeps the sidebar and bubble colours the preset hand-tunes, per appearance, while its background is the preset's own.
     const kept = (appearance: 'light' | 'dark', tuned: { light: string, dark: string } | undefined) =>
       custom && scheme.id === scheme.base && scheme.background?.[appearance] === undefined ? (tuned?.[appearance] ?? null) : null
@@ -67,18 +71,18 @@ export function install() {
     attribute(CUSTOM_TINT_ATTR, ink !== BRAND_INK_ORIGINAL && images ? '' : null)
     attribute(BRAND_INK_ATTR, ink === BRAND_INK_ORIGINAL ? null : ink)
     attribute(CUSTOM_PALETTE_ATTR, custom ? '' : null)
-    property(ACCENT_PROPERTY, custom ? accent : null)
+    property(ACCENT_PROPERTY, custom ? seed(accent) : null)
     property(ACCENT_INK_PROPERTY, custom ? accentInk(accent) : null)
-    property(CANVAS_LIGHT_PROPERTY, custom ? (scheme.background?.light ?? card.canvas.light) : null)
-    property(CANVAS_DARK_PROPERTY, custom ? (scheme.background?.dark ?? card.canvas.dark) : null)
-    property(TEXT_LIGHT_PROPERTY, custom ? (scheme.text?.light ?? card.text.light) : null)
-    property(TEXT_DARK_PROPERTY, custom ? (scheme.text?.dark ?? card.text.dark) : null)
+    property(CANVAS_LIGHT_PROPERTY, custom ? seed(scheme.background?.light ?? card.canvas.light) : null)
+    property(CANVAS_DARK_PROPERTY, custom ? seed(scheme.background?.dark ?? card.canvas.dark) : null)
+    property(TEXT_LIGHT_PROPERTY, custom ? seed(scheme.text?.light ?? card.text.light) : null)
+    property(TEXT_DARK_PROPERTY, custom ? seed(scheme.text?.dark ?? card.text.dark) : null)
     // A chip is drawn on the scheme's canvas, so an unpicked colour takes that scheme's own ink.
-    property(CODE_LIGHT_PROPERTY, custom ? (scheme.code?.light ?? card.code.light) : null)
-    property(CODE_DARK_PROPERTY, custom ? (scheme.code?.dark ?? card.code.dark) : null)
+    property(CODE_LIGHT_PROPERTY, custom ? seed(scheme.code?.light ?? card.code.light) : null)
+    property(CODE_DARK_PROPERTY, custom ? seed(scheme.code?.dark ?? card.code.dark) : null)
     // A link seed the scheme does not carry stays unwritten: the token sheet derives the link from the accent.
-    property(LINK_LIGHT_PROPERTY, custom ? (scheme.link?.light ?? null) : null)
-    property(LINK_DARK_PROPERTY, custom ? (scheme.link?.dark ?? null) : null)
+    property(LINK_LIGHT_PROPERTY, custom ? seed(scheme.link?.light) : null)
+    property(LINK_DARK_PROPERTY, custom ? seed(scheme.link?.dark) : null)
     attribute(CUSTOM_EDGES_ATTR, custom ? (scheme.edges ?? card.edges) : null)
     property(SIDEBAR_LIGHT_PROPERTY, kept('light', card.sidebar))
     property(SIDEBAR_DARK_PROPERTY, kept('dark', card.sidebar))

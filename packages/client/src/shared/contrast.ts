@@ -5,12 +5,15 @@
  * presets answers the same question with culori (scripts/build/palette-checks.mjs).
  */
 
+/** One `#rrggbb` channel as linear light: the sRGB transfer undone, shared by every colour read here. */
+export function linearChannel(hex: string, at: number) {
+  const channel = parseInt(hex.slice(at, at + 2), 16) / 255
+  return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4
+}
+
 /** WCAG relative luminance of a `#rrggbb` colour. */
 export function luminance(hex: string) {
-  const [r, g, b] = [1, 3, 5].map(at => {
-    const channel = parseInt(hex.slice(at, at + 2), 16) / 255
-    return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4
-  })
+  const [r, g, b] = [1, 3, 5].map(at => linearChannel(hex, at))
   return 0.2126 * r + 0.7152 * g + 0.0722 * b
 }
 

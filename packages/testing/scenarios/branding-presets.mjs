@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /** Structured YAML colour schemes and named logo presets on the real host. */
+import { parse, formatHex } from 'culori'
 import { openSkinSettings } from './settings-route.mjs'
 import { waitForSkin, dismissOverlays } from '../dsh-web.mjs'
 import { sanitizePage } from '../../../scripts/shared/privacy.mjs'
@@ -140,7 +141,9 @@ function brandingPresetsScenario({ check }) {
     async assert({ session }) {
       const problems = session.problems.filter(line => !line.includes('branding/asset') && !line.includes('custom mark image') && !line.includes('custom wordmark image') && !/Failed to load resource: the server responded with a status of 404/.test(line))
       return [
-        check('结构化 YAML 直接选中并画出公司配色', notes.palette?.accent === '#2855d9' && notes.palette?.canvas === '#f7f9ff', JSON.stringify(notes.palette)),
+        // The seeds stand as oklch colours naming their hue (palette-colours.ts);
+        // read back through culori they are still the YAML's own colours.
+        check('结构化 YAML 直接选中并画出公司配色', notes.palette?.accent !== undefined && notes.palette?.canvas !== undefined && formatHex(parse(notes.palette.accent)) === '#2855d9' && formatHex(parse(notes.palette.canvas)) === '#f7f9ff' && typeof parse(notes.palette.accent).h === 'number', JSON.stringify(notes.palette)),
         check('YAML 选中的标志预设按浅色图片渲染', notes.palette?.mark.includes('company-primary') && notes.palette?.mark.includes('mark-light'), notes.palette?.mark ?? ''),
         check('切换深色外观读取深色变体', notes.dark?.includes('mark-dark'), notes.dark ?? ''),
         check('设置页打开时选中 YAML 预设', notes.initial === 'company-primary', String(notes.initial)),

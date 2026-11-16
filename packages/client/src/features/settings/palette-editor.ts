@@ -3,7 +3,7 @@ import { BRAND_DEFAULT_PRESETS, PALETTE_COLORING_BRAND, PALETTE_PRESETS } from '
 import { readPrefs, savePrefs } from '../../core/prefs'
 import { accentInk, contrastRatio, luminance } from '../../shared/contrast'
 import { canAddScheme, duplicateScheme, removeSchemePatch, selectSchemePatch, storedSchemes, storeSchemePatch } from '../../shared/palette-scheme'
-import { presetCard, schemeColours } from '../../shared/palette-colours'
+import { oklchSeed, presetCard, schemeColours } from '../../shared/palette-colours'
 import { PALETTE_ACCENT_CONTRAST, PALETTE_EDGES, PALETTE_SCHEME_LIMIT, PALETTE_SCHEME_NAME_MAX, PALETTE_TEXT_CONTRAST } from '@dsh-claude-style/contracts/palette-schemes'
 import { Glyph, isPresetScheme, presetLabel, schemeLabel } from './palette-parts'
 import { createSettingsControls } from './settings-controls'
@@ -102,9 +102,9 @@ function Specimen(props: { colours: SchemeColours, appearance: Appearance }) {
       'data-ink': luminance(background) > SPECIMEN_INK_TURN ? 'dark' : 'light',
       'data-link': link === undefined ? 'derived' : undefined,
       style: {
-        '--dsh-claude-specimen-canvas': background,
+        '--dsh-claude-specimen-canvas': oklchSeed(background),
         '--dsh-claude-specimen-ink': colours.text[appearance],
-        '--dsh-claude-specimen-accent': colours.accent,
+        '--dsh-claude-specimen-accent': oklchSeed(colours.accent),
         '--dsh-claude-specimen-accent-ink': accentInk(colours.accent),
         '--dsh-claude-specimen-code': colours.code[appearance],
         '--dsh-claude-specimen-link': link,
