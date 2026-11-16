@@ -37,6 +37,8 @@ interface WindowState {
   text: HTMLElement
   timer: number
   offset: number
+  /** Whether the last read found the row running and expanded: what tells the read after it that the phase has just left. */
+  running: boolean
 }
 
 /** The height a window takes: the text's own height, held under the cap reasoning may reach. */
@@ -205,10 +207,17 @@ export function createReasoningStream() {
       if (!row.isConnected) continue
       const running = row.getAttribute(ROW_PHASE_ATTRIBUTE) === RUNNING_STATE
       const held = windows.get(row)
-      // A fold owns the body's height until its door settles. Keep the cap in
-      // place through that interval even after the running phase has ended.
       const active = running && row.hasAttribute(EXPANDED_ATTRIBUTE)
-      const text = (active || (held !== undefined && isChatFoldBusy())) && !motionReduced()
+      // A fold owns the body's height until its door settles: keep the cap through
+      // that interval. Every read in a frame also runs before any write, and the
+      // fold marks itself busy in that write phase, so the read that sees the phase
+      // leave running keeps the cap as well: the fold starting in this frame starts
+      // from the capped height, and the read after it either finds the fold busy or
+      // takes the window off.
+      const leaving = held !== undefined && held.running && !active
+      if (held !== undefined) held.running = active
+      const live = active || leaving || (held !== undefined && isChatFoldBusy())
+      const text = live && !motionReduced()
         && readPrefs().reasoningDisplay === REASONING_DISPLAY_STEPPED ? textOf(row) : null
       const viewport = text === null ? null : windowOf(row, text)
       if (text === null || viewport === null) {
@@ -222,7 +231,7 @@ export function createReasoningStream() {
         plans.push({ row, state: held, step: null, grow: measureOf(held) })
         continue
       }
-      const state: WindowState = { window: viewport, text, timer: 0, offset: 0 }
+      const state: WindowState = { window: viewport, text, timer: 0, offset: 0, running: active }
       plans.push({ row, state, step: readStep(row, state), grow: null })
     }
   }

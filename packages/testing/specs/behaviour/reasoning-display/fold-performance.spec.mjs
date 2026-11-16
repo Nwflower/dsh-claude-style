@@ -31,13 +31,28 @@ export default spec({ page: 'chat-fold' }, ({ test }) => {
       document.getElementById('debugFlow').append(row)
     }, [EXPANDED_ATTRIBUTE, ROW_PHASE_ATTRIBUTE, RUNNING_STATE, WORKSPACE_ROW_EXPANDED_ATTRIBUTE])
     await t.page.waitForSelector('#debugGrow ' + window + '[' + capped + ']', { timeout: 5000 })
-    await t.page.evaluate((phase) => { document.getElementById('debugGrow')?.setAttribute(phase, 'ok') }, ROW_PHASE_ATTRIBUTE)
-    await t.page.waitForSelector('#debugGrowBody[' + rolling + ']', { state: 'attached', timeout: 5000 })
-    const during = await t.page.evaluate(([selector, property]) => {
-      const frame = document.querySelector(selector)
-      return frame instanceof HTMLElement ? frame.style.getPropertyValue(property) : null
-    }, ['#debugGrow ' + window, heightProperty])
-    t.expectThat.equal(during, '400px', 'the fold starts from one stable capped height')
+    // The fold owns the body's height for one roll, so the cap it starts from is a
+    // value of that roll alone. A round trip that lands after the roll's own mark
+    // can outlast the roll on a loaded runner, so the read is taken in the page, in
+    // the task that marks the body, and kept for the assertion.
+    await t.page.evaluate(([phase, selector, rollingAttribute, cappedAttribute, property]) => {
+      window.__foldStart = null
+      const body = document.getElementById('debugGrowBody')
+      const observer = new MutationObserver(() => {
+        if (!body.hasAttribute(rollingAttribute)) return
+        observer.disconnect()
+        const frame = document.querySelector(selector)
+        const element = frame instanceof HTMLElement ? frame : null
+        window.__foldStart = {
+          height: element === null ? null : element.style.getPropertyValue(property),
+          capped: element !== null && element.hasAttribute(cappedAttribute),
+        }
+      })
+      observer.observe(body, { attributes: true, attributeFilter: [rollingAttribute] })
+      document.getElementById('debugGrow')?.setAttribute(phase, 'ok')
+    }, [ROW_PHASE_ATTRIBUTE, '#debugGrow ' + window, rolling, capped, heightProperty])
+    const during = await t.page.waitForFunction(() => window.__foldStart ?? null, undefined, { timeout: 5000 })
+    t.expectThat.equal(await during.jsonValue(), { height: '400px', capped: true }, 'the fold starts from one stable capped height')
     await t.page.waitForSelector('#debugGrow ' + window, { state: 'detached', timeout: 5000 })
     t.expectThat.equal(await t.page.locator('#debugGrow ' + window).count(), 0, 'the window leaves once the fold no longer owns the height')
   })
