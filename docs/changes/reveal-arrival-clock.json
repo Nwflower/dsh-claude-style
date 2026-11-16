@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-15",
+  "group": "fixes",
+  "order": 0,
+  "external": true,
+  "zh": "流式输出的渐入改用一条共用的到达时钟，后到的字符不会早于先到的字符开始淡入，两处同时输出时后写的一处始终最淡",
+  "en": "Schedule the streaming reveal on one shared arrival clock, so a later character never starts its fade before an earlier one and the text written second is always the faintest"
+}

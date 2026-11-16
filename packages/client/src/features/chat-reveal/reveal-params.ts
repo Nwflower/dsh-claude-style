@@ -41,8 +41,8 @@ export interface RevealRun {
   /** Offset into the container's joined text, and how many UTF-16 units. */
   start: number
   length: number
+  /** When this segment starts to fade, on the page's arrival clock (the state's cursor); it may lie ahead of now while a batch is queued behind an earlier one. */
   bornAt: number
-  delay: number
   /** The element whose colour was last published for this segment. */
   colorElement: HTMLElement | null
 }
@@ -68,6 +68,7 @@ export function createRevealState(): RevealState {
     textSnapshots: new WeakMap<Element, RevealSnapshot>(),
     foldQuietUntil: new WeakMap<Element, number>(),
     liveContainers: [],
+    cursor: 0,
     lastFrameAt: 0,
     slowFrames: 0,
     yieldUntil: 0,
@@ -90,6 +91,8 @@ export interface RevealState {
   foldQuietUntil: WeakMap<Element, number>
   /** The streaming containers on the page at the last full scan; segments and snapshots of the ones gone are dropped. */
   liveContainers: Element[]
+  /** The moment the next character may start fading: every batch is scheduled on this one clock, across containers too, so a character is never brighter than one that arrived before it. */
+  cursor: number
   /** The last paint frame's timestamp; 0 before the first. */
   lastFrameAt: number
   /** Slow frames in a row; at CHAT_REVEAL_SLOW_FRAME_RUN the engine gives way. */

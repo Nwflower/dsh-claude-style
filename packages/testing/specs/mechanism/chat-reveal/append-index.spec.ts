@@ -9,57 +9,21 @@
  * @features chat-reveal
  * @risk A long answer re-reads every text node on every token, or a batch appends off the end of the index so new characters never fade or fade at the wrong offsets.
  */
-import { afterEach, expect, test } from 'vitest'
-import { STREAMING_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
+import { expect, test } from 'vitest'
 import {
   appendRevealSnapshot,
   CHAT_REVEAL_ACTIVE_LIMIT,
-  createRevealScanner,
   createRevealState,
   revealEntryAt,
   revealTextSlice,
 } from '@dsh-claude-style/client/pure'
-import type { RevealRun, RevealSnapshot, RevealState } from '@dsh-claude-style/client/pure'
+import type { RevealRun, RevealSnapshot } from '@dsh-claude-style/client/pure'
+import { pageCleanups } from '../../fixtures/page'
+import { changesOf, recordsOf, scannerFor, streamingContainer } from '../../fixtures/reveal'
 
-const cleanups: (() => void)[] = []
-afterEach(() => {
-  for (const cleanup of cleanups.splice(0)) cleanup()
-  document.body.replaceChildren()
-})
+pageCleanups()
 
 const freshState = () => createRevealState()
-
-function streamingContainer(text: string) {
-  const element = document.createElement('div')
-  element.setAttribute(STREAMING_ATTRIBUTE, '')
-  element.textContent = text
-  document.body.append(element)
-  return element
-}
-
-/** The records a change made, taken before the page can settle them. */
-function recordsOf(change: () => void) {
-  const observer = new MutationObserver(() => {})
-  observer.observe(document.body, { childList: true, subtree: true, characterData: true })
-  change()
-  const records = observer.takeRecords()
-  observer.disconnect()
-  return records
-}
-
-/** The records of a change made inside one container, as the engine's route hands them over. */
-function changesOf(container: Element, records: MutationRecord[]) {
-  return new Map<Element, MutationRecord[]>([[container, records]])
-}
-
-function scannerFor(state: RevealState) {
-  const paints: number[] = []
-  const scan = createRevealScanner(state, {
-    publishRunColor: () => {},
-    paint: () => { paints.push(performance.now()) },
-  })
-  return { scan, paints }
-}
 
 test('a tail append keeps the index and fades only the characters it added', () => {
   const state = freshState()
@@ -110,7 +74,7 @@ test('the characters fading at once stay bounded in total', () => {
   scan(null)
   state.liveRuns.length = 0
   for (let index = 0; index < CHAT_REVEAL_ACTIVE_LIMIT; index += 1) {
-    state.liveRuns.push({ container, start: 0, length: 1, bornAt: 0, delay: 0, colorElement: null })
+    state.liveRuns.push({ container, start: 0, length: 1, bornAt: 0, colorElement: null })
   }
   const records = recordsOf(() => { container.firstChild!.textContent = 'Hello world' })
   scan(new Set([container]), changesOf(container, records))

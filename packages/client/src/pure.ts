@@ -26,7 +26,7 @@ export { createRowHeightCache, ROW_HEIGHT_CACHE_LIMIT, rowHeightKey } from './fe
 export { appendRevealSnapshot, revealEntryAt, revealTextSlice } from './features/chat-reveal/reveal-text'
 export { createRevealScanner } from './features/chat-reveal/reveal-diff'
 export { createChatRevealEngine } from './features/chat-reveal/reveal-engine'
-export { CHAT_REVEAL_ACTIVE_LIMIT, createRevealState } from './features/chat-reveal/reveal-params'
+export { CHAT_REVEAL_ACTIVE_LIMIT, CHAT_REVEAL_MS, createRevealState } from './features/chat-reveal/reveal-params'
 export type { RevealRun, RevealSnapshot, RevealState } from './features/chat-reveal/reveal-params'
 export { countProcessItems, summaryForm, summaryParts, summarySeparator, summaryText } from './features/chat-fold/process-summary'
 export {

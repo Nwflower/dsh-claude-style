@@ -88,8 +88,12 @@ export function createRevealPainter(state: RevealState, hooks: RevealPaintHooks)
       const unspent = gap - CHAT_REVEAL_NOMINAL_FRAME_MS
       for (const run of state.liveRuns) {
         // Segments born in the blank count as born now, or they would wait
-        // that same blank out before starting to fade.
-        run.bornAt = run.bornAt <= previousFrameAt ? run.bornAt + unspent : now
+        // that same blank out before starting to fade. One the arrival clock
+        // queued ahead of now keeps its place: pulling it back to now would
+        // flatten the order the clock set and let a later character outrun an
+        // earlier one, so it only rises to now at the soonest.
+        const startedAt = run.bornAt
+        run.bornAt = startedAt <= previousFrameAt ? startedAt + unspent : Math.max(startedAt, now)
       }
     }
     /** The segment each step has already drawn this frame; a following segment that touches it is merged in. */
@@ -101,7 +105,7 @@ export function createRevealPainter(state: RevealState, hooks: RevealPaintHooks)
     for (let index = 0; index < state.liveRuns.length; index += 1) {
       const run = state.liveRuns[index]
       if (run === undefined) continue
-      const age = now - run.bornAt - run.delay
+      const age = now - run.bornAt
       // Done: it is as solid as the text around it and needs no highlight.
       if (age >= CHAT_REVEAL_MS) continue
       state.liveRuns[kept] = run

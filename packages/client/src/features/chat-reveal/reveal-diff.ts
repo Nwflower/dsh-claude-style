@@ -339,8 +339,8 @@ export function createRevealScanner(state: RevealState, hooks: RevealScanHooks) 
               container,
               start: offset,
               length: character.length,
+              // Placed on the arrival clock once the batch's step is known, below.
               bornAt: now,
-              delay: 0,
               // The element it renders in is remembered as soon as it is
               // queued, so the synchronous paint right after does not read the
               // colour again. One colour read is one forced style resolution,
@@ -362,14 +362,32 @@ export function createRevealScanner(state: RevealState, hooks: RevealScanHooks) 
       // hundred characters does not make the tail wait seconds. More
       // characters means a smaller step each, and the sweep stays continuous;
       // smaller shows no sweep, larger makes the last characters late.
+      //
+      // The stagger is spent on the state's arrival clock rather than on this
+      // batch's own start, so the batches that overlap — two containers
+      // streaming at once, a second append landing inside the first one's fade
+      // — queue behind each other. Every segment's bornAt rises along the
+      // order it arrived in, and a character can never read brighter than one
+      // before it, which is what a per-batch clock broke: the later batch
+      // started at now, ahead of the earlier batch's still-staggered tail.
       const batchCount = createdRuns.length - batchStart
       const staggerLimit = Math.min(CHAT_REVEAL_MAX_STAGGER_MS, Math.max(CHAT_REVEAL_MIN_STAGGER_MS, CHAT_REVEAL_MS / CHAT_REVEAL_STAGGER_DIVISOR))
       const step = batchCount <= 1 ? 0 : Math.min(staggerLimit, CHAT_REVEAL_MS / (batchCount - 1))
+      // A character may wait at most one fade before its own fade starts: past
+      // that the backlog is dropped rather than queued, since text sitting
+      // faint while the stream runs ahead of it reads as a stuck answer. The
+      // cap closes the queue instead of resetting the clock — a reset would put
+      // the arriving batch ahead of the one still fading, the inversion this
+      // clock exists to prevent.
+      const latest = now + CHAT_REVEAL_MS
+      let start = Math.max(now, state.cursor)
       for (let slot = batchStart; slot < createdRuns.length; slot += 1) {
         const run = createdRuns[slot]
-        if (run === undefined || step === 0) continue
-        run.delay = (slot - batchStart) * step
+        if (run === undefined) continue
+        run.bornAt = Math.min(start, latest)
+        start += step
       }
+      state.cursor = Math.min(start, latest)
     }
     if (createdRuns.length === 0) return
     // A new character has to carry the faintest step within the same frame.
