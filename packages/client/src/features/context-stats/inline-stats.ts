@@ -1,4 +1,4 @@
-import { FOOTER_TOKEN_UNITS, QUIET_ATTR, STATS_POSITION_FOOTER } from '../../constants'
+import { COMPOSER_ATTR, FOOTER_TOKEN_UNITS, QUIET_ATTR, STATS_POSITION_FOOTER } from '../../constants'
 import { readPrefs } from '../../core/prefs'
 import { buildElement, setAttributeIfChanged, writeTextInPlace } from '@dsh-claude-style/engine/dom'
 import { findComposerCard, findComposerStats } from '@dsh-claude-style/engine/host'
@@ -612,6 +612,14 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
    * words to another can change the room the line needs.
    */
   function render() {
+    // The figures ride the composer restyle. With it off the host draws its own
+    // statistics row, and neither the line nor its measuring twin may stand
+    // beside it: their hiding and their type live in the restyle's stylesheet,
+    // which is not mounted then, so a line left here paints twice and unstyled.
+    if (!document.body.hasAttribute(COMPOSER_ATTR)) {
+      clear()
+      return
+    }
     const nextFooter = readPrefs().statsPosition === STATS_POSITION_FOOTER
     if (footerPosition !== nextFooter) {
       footerPosition = nextFooter

@@ -79,13 +79,21 @@ export function createFooterLayout(refit: () => void) {
         const { rowBox, stackBox, start, end } = view
         const width = inPageBox(root.getBoundingClientRect()).width
         const align = readPrefs().statsFooterAlign
-        const left = align === 'left' ? start : align === 'right' ? end - width : (start + end - width) / 2
+        const room = end - start
+        const wanted = align === 'left' ? start : align === 'right' ? end - width : (start + end - width) / 2
+        // The figures stay between the two control groups: a placement that would
+        // cover the trailing controls or run past them takes the nearer edge.
+        const left = room >= width ? Math.min(Math.max(start, wanted), end - width) : Math.max(start, wanted)
+        // An absolute box resolves against its own positioned ancestor, which is
+        // the stack only while the stack is the element that positions it; measure
+        // against the one the line actually hangs from so the offset lands true.
+        const anchor = root.offsetParent instanceof HTMLElement ? inPageBox(root.offsetParent.getBoundingClientRect()) : stackBox
         measured = {
-          mode: width <= end - start ? 'overlay' : 'below',
-          left: Math.max(start, left) - stackBox.left,
-          bottom: stackBox.bottom - rowBox.bottom,
+          mode: room >= width ? 'overlay' : 'below',
+          left: left - anchor.left,
+          bottom: anchor.bottom - rowBox.bottom,
           height: rowBox.height,
-          room: Math.max(0, end - start),
+          room: Math.max(0, room),
         }
       },
       write() {

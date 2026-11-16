@@ -73,6 +73,11 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
     const right = await reading(t)
     t.expectThat.equal(left.line.left < center.line.left && center.line.left < right.line.left, true, 'alignment moves the compact figures left to right')
     t.expectThat.equal(right.ring, center.ring, 'the alignment moves the figures alone, not the ring')
+    for (const [name, reading] of [['left', left], ['right', right]]) {
+      t.expectThat.boxWithin(reading.line, reading.toolbar, `the ${name} footer stays inside the toolbar`)
+      t.expectThat.boxesApart(reading.line, reading.tools, `the ${name} footer leaves the left controls free`)
+      t.expectThat.boxesApart(reading.line, reading.trailing, `the ${name} footer leaves the right controls free`)
+    }
     await t.prefs({ statsPosition: 'context' })
     const context = await reading(t)
     t.expectThat.equal([context.mode, context.line], [null, null], 'the popover position takes the figures back out of the toolbar')
@@ -173,5 +178,21 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
     await t.prefs({ composerScope: 'off' })
     const off = await reading(t)
     t.expectThat.equal([off.mode, off.meterHidden, off.ring], [null, false, null], 'disabling the restyle clears footer placement, the ring and the hidden meter')
+  })
+
+  test('disabling the restyle takes the figures and their measuring twin off the page', async t => {
+    await seatStatsSession(t, stats, usage)
+    await t.prefs({ statsPosition: 'footer', motion: 'reduced' })
+    const on = await t.page.evaluate(selector => document.querySelectorAll(selector).length, t.surface('stats.inline-line'))
+    t.expectThat.equal(on, 1, 'the restyle draws one line of figures')
+    await t.prefs({ composerScope: 'off' })
+    const offCounts = await t.page.evaluate(([lineSelector, probeSelector, statSelector]) => ({
+      line: document.querySelectorAll(lineSelector).length,
+      probe: document.querySelectorAll(probeSelector).length,
+      host: [...document.querySelectorAll(statSelector)].filter(element => getComputedStyle(element).display !== 'none').length,
+    }), [t.surface('stats.inline-line'), t.surface('stats.inline-probe'), t.host('composer.stat')])
+    t.expectThat.equal([offCounts.line, offCounts.probe], [0, 0], 'the line and its measuring twin leave with the restyle, so nothing paints twice')
+    t.expectThat.equal(offCounts.host > 0, true, 'the host draws its own statistics row again')
+    await t.prefs({ composerScope: 'all', statsPosition: 'context' })
   })
 })
