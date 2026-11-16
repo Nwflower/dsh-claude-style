@@ -19,5 +19,5 @@ export default {
     title: 'chatAnimationsTitle',
   }],
   cases: ['chat-follow'],
-  scenarios: ['readerScroll', 'scroll', 'doorPin'],
+  scenarios: ['readerScroll', 'returnTail', 'scroll', 'doorPin'],
 } satisfies FeatureManifest

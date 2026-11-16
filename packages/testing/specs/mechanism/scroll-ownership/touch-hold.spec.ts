@@ -6,21 +6,15 @@
  * @features engine
  * @risk A phone reader cannot stop a streaming answer, or the follow never resumes after the reader returns to its end.
  */
-import { afterEach, expect, test } from 'vitest'
+import { expect, test } from 'vitest'
 import { adoptSkin } from '@dsh-claude-style/engine/skin'
 import { easeScrollToEndFor, readerHolds, writeScroll } from '@dsh-claude-style/engine/scroll-owner'
-import { CHAT_FLOW_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { MOTION_FULL, MOTION_REDUCED, READER_HOLD_ATTR, TEST_SKIN } from '../../fixtures/vocabulary'
-import { attach } from '../../fixtures/host-markup'
-import { createScrollOwnerFixture } from '../../fixtures/scroll-owner'
+import { followTailButton, scrollOwnerSuite } from '../../fixtures/scroll-owner'
 
 adoptSkin(TEST_SKIN)
 const wanted = () => true
-const cleanups: (() => void)[] = []
-afterEach(() => {
-  while (cleanups.length > 0) cleanups.pop()!()
-})
-const { scrollBox, join, setMotion } = createScrollOwnerFixture(cleanups)
+const { scrollBox, join, setMotion, cleanups } = scrollOwnerSuite()
 
 function touch(target: Element, type: 'touchstart' | 'touchmove' | 'touchend', clientY: number) {
   const contact = new Touch({ identifier: 7, target, clientX: 8, clientY })
@@ -62,26 +56,15 @@ async function moveTo(box: HTMLElement, top: number) {
 }
 
 /**
- * A drag that reached the end of the host's own frame: the column the follow's
- * button is found from, and the button itself, the only way the host lights its
- * follow back up once its sampling window has settled.
+ * A conversation in the host's own frame with its back-to-end button beside it,
+ * the only way the host lights its follow back up once its sampling window has
+ * settled. The box's own teardown removes the frame with it.
  */
-function followFrame(cleanups: (() => void)[]) {
+function followFrame() {
   const box = scrollBox()
-  const column = attach(box, CHAT_FLOW_SELECTOR)
-  const frame = document.createElement('div')
-  frame.append(box)
-  const tail = document.createElement('div')
-  const button = document.createElement('button')
-  button.type = 'button'
-  tail.append(button)
-  document.body.append(frame, tail)
+  const button = followTailButton(box)
   let pressed = 0
   button.addEventListener('click', () => { pressed += 1 })
-  cleanups.push(() => {
-    frame.remove()
-    tail.remove()
-  })
   return { scroller: box, content: box.firstElementChild!, pressed: () => pressed }
 }
 
@@ -149,7 +132,7 @@ test('the wheel keeps its own direction and release', () => {
 test('a finger lifted at the end ends the hold and hands the follow back', async () => {
   setMotion(MOTION_FULL)
   join()
-  const { scroller, content, pressed } = followFrame(cleanups)
+  const { scroller, content, pressed } = followFrame()
   scroller.scrollTop = scroller.scrollHeight
   touch(content, 'touchstart', 400)
   touch(content, 'touchmove', 460)

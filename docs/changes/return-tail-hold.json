@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-16",
+  "group": "fixes",
+  "order": 0,
+  "external": false,
+  "zh": "修复流式输出期间点击回到底部按钮后页面闪回读者原位置的问题",
+  "en": "Fix the page springing back to the reader's position after the back-to-end button is pressed while an answer streams"
+}

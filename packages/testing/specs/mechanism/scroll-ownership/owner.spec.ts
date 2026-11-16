@@ -7,22 +7,17 @@
  * @features engine
  * @risk While the reader scrolls up to re-read something, a streaming answer drags them back to the bottom; or after they return to the end, the conversation stops following the stream.
  */
-import { afterEach, expect, test } from 'vitest'
+import { expect, test } from 'vitest'
 import { adoptSkin } from '@dsh-claude-style/engine/skin'
 import { easeScrollFor, easeScrollToEndFor, holdReader, readerHolds, readerMovedSince, readerScrollPosition, readerScrollRevision, releaseReader, submissionHolds, writeScroll } from '@dsh-claude-style/engine/scroll-owner'
 import { CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, FLOW_KIND_ATTRIBUTE, PHASE_ATTRIBUTE, PROCESS_BODY_SELECTOR, USER_ROW_KIND } from '@dsh-claude-style/contracts/dom'
 import { MOTION_FULL, MOTION_REDUCED, READER_HOLD_ATTR, TEST_SKIN } from '../../fixtures/vocabulary'
-import { createScrollOwnerFixture } from '../../fixtures/scroll-owner'
+import { scrollOwnerSuite, settledScroll } from '../../fixtures/scroll-owner'
 
 adoptSkin(TEST_SKIN)
 
 const nextFrame = () => new Promise<number>(resolve => requestAnimationFrame(resolve))
 const wanted = () => true
-
-const cleanups: (() => void)[] = []
-afterEach(() => {
-  while (cleanups.length > 0) cleanups.pop()!()
-})
 
 /** Another scroller beside the conversation, which the owner does not govern. */
 function besideBox() {
@@ -36,7 +31,7 @@ function besideBox() {
   return box
 }
 
-const { scrollBox, join, setMotion } = createScrollOwnerFixture(cleanups)
+const { scrollBox, join, setMotion, cleanups } = scrollOwnerSuite()
 
 /** The reader's own user row, as the host mounts it into the conversation. */
 function userRow() {
@@ -44,8 +39,6 @@ function userRow() {
   row.setAttribute(FLOW_KIND_ATTRIBUTE, USER_ROW_KIND)
   return row
 }
-
-const settledScroll = (box: HTMLElement) => new Promise(resolve => box.addEventListener('scroll', resolve, { once: true }))
 
 /**
  * The host writes the conversation to its end with no move of the reader's: the

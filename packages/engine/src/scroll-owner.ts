@@ -299,7 +299,34 @@ function intentReaches(scroller: Element, event: Event) {
   return target instanceof Node && scroller.contains(target)
 }
 
+/**
+ * Whether an event is the reader asking for the conversation's end through the
+ * host's back-to-end button, the one it renders only while its follow is off:
+ * the primary press, the first touch of a tap, or the key that presses it.
+ */
+function answersFollowTail(event: Event, target: EventTarget | null) {
+  if (!(target instanceof Element) || target.closest('button') === null) return false
+  const button = findFollowTailButton()
+  if (button === null || !button.contains(target)) return false
+  if (event.type === 'pointerdown') return !(event instanceof PointerEvent) || event.button === 0
+  if (event.type === 'touchstart') return true
+  return event instanceof KeyboardEvent && (event.key === 'Enter' || event.key === ' ')
+}
+
 function noteIntent(event: Event) {
+  const target = event.target
+  // A press or tap on the host's back-to-end button is the reader's own move
+  // toward the end, and it ends the hold here rather than at the arrival: the
+  // host's jump is the write that brings the position to the end, and growth
+  // landing between the press and that jump reads to noteScroll as the host
+  // pinning the end, which keeps a hold alive and lets the follow feature put the
+  // held position back on the next growth (holdGrowth, features/chat-follow). A
+  // tap's touchstart would otherwise take a hold of its own.
+  if (answersFollowTail(event, target)) {
+    const scroller = conversationScroller()
+    if (scroller !== null) releaseReader(scroller)
+    return
+  }
   if (!isReaderScrollIntent(event)) return
   const moving = MOVING_INTENT_TYPES.has(event.type)
   if (moving) lastMovingIntentAt = performance.now()
@@ -330,7 +357,6 @@ function noteIntent(event: Event) {
       touchContactY = y
     }
   }
-  const target = event.target
   const isScrollPointer = (container: Element) =>
     event.type !== 'pointerdown'
     || (event instanceof PointerEvent && (isScrollbarStrip(container, event, target) || event.button === 1))
