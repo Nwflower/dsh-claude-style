@@ -173,10 +173,17 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const view = follower.view()
     segments.sync(header, view)
     viewStamp.mark(root, view)
-    // The archived list occupies the section; other segments restore the host tree.
+    // The archived list rides inside the host's own list seat, which the wide
+    // sidebar registers as this section's scroller (host.sidebar-list-seat): its
+    // tree body gives way, so the seat keeps serving the wheel hand-off, the
+    // scroll-state gating and the gutter. Other segments restore the host tree.
     if (view === 'archived') {
-      list.mount(root)
-      list.sync()
+      const seat = root.querySelector(LIST_AREA_SELECTOR)
+      // sectionOf() stood this label only where the root keeps a list seat.
+      if (seat !== null) {
+        list.mount(seat)
+        list.sync()
+      }
     } else {
       list.unmount()
     }
