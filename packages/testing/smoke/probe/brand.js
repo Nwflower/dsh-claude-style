@@ -21,6 +21,20 @@
     return colour
   }
 
+  /** A colour as the sRGB bytes the page paints: a scheme seed stands as an oklch
+      colour naming its hue, so read the paint rather than the spelling. */
+  var painted = function (colour) {
+    var canvas = document.createElement('canvas')
+    canvas.width = 1
+    canvas.height = 1
+    var context = canvas.getContext('2d')
+    context.fillStyle = colour
+    context.fillRect(0, 0, 1, 1)
+    var data = context.getImageData(0, 0, 1, 1).data
+    var hex = '#' + [data[0], data[1], data[2]].map(function (v) { return v.toString(16).padStart(2, '0') }).join('')
+    return { hex: hex, rgb: 'rgb(' + data[0] + ', ' + data[1] + ', ' + data[2] + ')' }
+  }
+
   probe.step(async function () {
     await probe.onlyFor(['custom-brand'], async function () {
       // The host's sidebar brand and hero hitbox, in the shape ui-sidebar and
@@ -60,9 +74,9 @@
       chip.textContent = 'c'
       document.body.appendChild(chip)
       var codeInk = function () {
-        var light = getComputedStyle(chip).color
+        var light = painted(getComputedStyle(chip).color).rgb
         document.body.setAttribute('data-ds-dark-theme', '')
-        var dark = getComputedStyle(chip).color
+        var dark = painted(getComputedStyle(chip).color).rgb
         document.body.removeAttribute('data-ds-dark-theme')
         return { light: light, dark: dark }
       }
@@ -83,7 +97,7 @@
           hero: { image: heroArt.backgroundImage, width: heroArt.width },
           avatar: avatar === null ? null : getComputedStyle(avatar).backgroundImage,
           avatarFill: avatar === null ? null : getComputedStyle(avatar, '::before').backgroundColor,
-          accent: body.getPropertyValue('--dsw-alias-brand-primary').trim(),
+          accent: painted(resolved('--dsw-alias-brand-primary')).hex,
           accentInk: body.getPropertyValue('--dsw-alias-label-primary-foreground').trim(),
           codeInk: codeInk(),
         }
