@@ -203,7 +203,10 @@
       var longSpan = longRailBox.height - 16
       var longMove = async function (clientY, clientX) {
         longCard.dispatchEvent(new PointerEvent('pointermove', { clientX: clientX, clientY: clientY, bubbles: true }))
-        await sleep(120)
+        // The list is steered in the frame the move asks for, which is asked for
+        // inside the dispatch: the frame below is that one, however long the
+        // display takes to hand it out.
+        await probe.frame()
         return longList.scrollTop
       }
       var longOut = {
@@ -224,7 +227,7 @@
       var longSameFrame = async function (first, second) {
         longCard.dispatchEvent(new PointerEvent('pointermove', { clientX: first.x, clientY: first.y, bubbles: true }))
         longCard.dispatchEvent(new PointerEvent('pointermove', { clientX: second.x, clientY: second.y, bubbles: true }))
-        await sleep(120)
+        await probe.frame()
         return longList.scrollTop
       }
       longOut.sameFrameFrozen = await longSameFrame(

@@ -177,7 +177,13 @@
       // The row reopens for the reasoning: the fold closes it when the phase
       // turns ok, and the window's own reading is of a running, open row.
       r.fold.reasonGrow = await probe.watch(function () { return windowOf(reasonBody, reasonText) })
-      r.fold.reasonWindow = [windowOf(growBody, growText)]
+      // The short row's own window is drawn by a pass of its own: read it once
+      // the mark and the transition it hangs on are both on it.
+      var growWindow = function () { return windowOf(growBody, growText) }
+      await probe.until(growWindow, function (frames) {
+        return frames[frames.length - 1].on && frames[frames.length - 1].transition !== 'all 0s'
+      }, 'the short reasoning takes its window')
+      r.fold.reasonWindow = [growWindow()]
       var growLine = 3
       var growMore = async function () {
         for (var added = 0; added < 3; added += 1) {

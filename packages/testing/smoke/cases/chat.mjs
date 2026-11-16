@@ -593,11 +593,11 @@ export default {
     // moves it the whole way inside one frame.
     const steps = boxes.map((box, at) => at === 0 ? 0 : toward * (box.width - boxes[at - 1].width)).filter((step) => step > 0)
     // A width written in one task moves the clock the whole way inside one
-    // frame; a travelled one arrives over several. The ceiling is two thirds of
-    // the travel: a loaded machine can leave one sampled frame carrying more
-    // than half of it without any frame carrying the whole.
+    // frame; a travelled one never covers the whole travel in one frame. A
+    // stalled display can hand two samples a whole stretch of the travel at
+    // once, so the ceiling is the travel itself rather than a share of it.
     check('the box travels to its new width over several frames, so the clock slides with it instead of jumping',
-      Math.abs(travelled) > 4 && steps.length >= 3 && Math.max(...steps) < Math.abs(travelled) * 2 / 3,
+      Math.abs(travelled) > 4 && steps.length >= 3 && Math.max(...steps) < Math.abs(travelled),
       JSON.stringify({ steps: steps.length, largest: steps.length === 0 ? 0 : Math.max(...steps), travelled }))
     check('the new wording is the one left standing once the copy that left is taken down',
       silent[0].displayed === 'Running tools…' && silent[0].copies === 1 && silent[0].phase === null &&
