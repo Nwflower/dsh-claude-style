@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-16",
-  "group": "fixes",
-  "order": 364,
-  "external": true,
-  "zh": "修复关闭对话框重绘时底栏统计重复显示，以及紧凑底栏左/中/右错位与重叠模型选择器",
-  "en": "Fix duplicated footer statistics when the composer restyle is off, and compact-footer left/center/right misplacement and overlap with the model picker"
-}

@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-16",
-  "group": "fixes",
-  "order": 0,
-  "external": false,
-  "zh": "修复已归档列表无法滚动的问题，让自绘归档行挂在宿主自己的列表座内",
-  "en": "Fix the archived list not scrolling by seating the skin's archived rows in the host's own list seat"
-}

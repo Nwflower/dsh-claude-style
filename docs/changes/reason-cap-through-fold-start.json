@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-15",
-  "group": "fixes",
-  "order": 362,
-  "external": true,
-  "zh": "推理步骤结束的那一帧不再先把推理窗口的高度放开，自动折叠从封顶的高度开始，过程不再重排一次",
-  "en": "Keep the reasoning window's cap in the frame where a finished step folds, so the automatic collapse starts from the capped height instead of laying the step out again first"
-}
