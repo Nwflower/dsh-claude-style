@@ -2,6 +2,42 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [0.21.4] - 2026-11-16
+
+[中文](#cn-0.21.4) | [English](#en-0.21.4)
+
+<h3 id="cn-0.21.4">新增功能</h3>
+
+- 统计设置新增底栏 Token 单位滑块设置，可选使用千进制K/M/B单位
+
+### 问题修复
+
+- 修复已归档列表无法滚动的问题，让自绘归档行挂在宿主自己的列表座内
+- 修复流式输出期间点击回到底部按钮后页面闪回读者原位置的问题
+- 流式输出的渐入改用一条共用的到达时钟，后到的字符不会早于先到的字符开始淡入，两处同时输出时后写的一处始终最淡
+- 修复底栏统计信息设置修改后未立即生效的问题
+- 推理步骤结束的那一帧不再先把推理窗口的高度放开，自动折叠从封顶的高度开始，过程不再重排一次
+- 修复关闭对话框重绘时底栏统计重复显示，以及紧凑底栏左/中/右错位与重叠模型选择器
+- 思考内容两行步进在输出较快时按距离定速滑移，不再停顿后猛跳
+- 修复自定义配色以低彩度预设为起点时侧栏等派生色丢失色相变粉
+- 修复首页hero的侧栏工作区切换器掉位、模型选择器竖排与输入卡片撑高
+
+<h3 id="en-0.21.4">New Features</h3>
+
+- Add a footer token unit slider to the statistics settings, optionally using thousand-based K/M/B units
+
+### Bug Fixes
+
+- Fix the archived list not scrolling by seating the skin's archived rows in the host's own list seat
+- Fix the page springing back to the reader's position after the back-to-end button is pressed while an answer streams
+- Schedule the streaming reveal on one shared arrival clock, so a later character never starts its fade before an earlier one and the text written second is always the faintest
+- Fix footer statistics settings not taking effect immediately after a change
+- Keep the reasoning window's cap in the frame where a finished step folds, so the automatic collapse starts from the capped height instead of laying the step out again first
+- Fix duplicated footer statistics when the composer restyle is off, and compact-footer left/center/right misplacement and overlap with the model picker
+- Stepped reasoning glides at a steady pace over fast output instead of pausing and snapping
+- Fix custom schemes over low-chroma presets losing hue in derived colours such as the sidebar
+- Fix the home hero's workspace switch placement, stacked model picker and stretched composer card
+
 ## [0.21.3] - 2026-11-15
 
 [中文](#cn-0.21.3) | [English](#en-0.21.3)
