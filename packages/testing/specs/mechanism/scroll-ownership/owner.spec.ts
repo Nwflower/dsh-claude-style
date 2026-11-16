@@ -52,6 +52,14 @@ async function holdOutlastsHostWrite(scroller: HTMLElement) {
   expect(readerHolds(scroller)).toBe(false)
 }
 
+/** The reader wheels away from the end: the conversation is theirs, marked on the container, and the follow is refused. */
+function wheelAwayHolds(scroller: HTMLElement) {
+  scroller.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: -120 }))
+  expect(readerHolds(scroller)).toBe(true)
+  expect(scroller.hasAttribute(READER_HOLD_ATTR)).toBe(true)
+  expect(easeScrollToEndFor(scroller, 'follow', wanted)).toBe(false)
+}
+
 test('a source ranked below the running ease is refused, an equal or higher one is carried out', () => {
   setMotion(MOTION_FULL)
   const scroller = scrollBox(CONVERSATION_SCROLL_SELECTOR)
@@ -74,10 +82,7 @@ test('the reader holds the conversation until they come back to its end; only fo
   setMotion(MOTION_FULL)
   join()
   const scroller = scrollBox(CONVERSATION_SCROLL_SELECTOR)
-  scroller.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: -120 }))
-  expect(readerHolds(scroller)).toBe(true)
-  expect(scroller.hasAttribute(READER_HOLD_ATTR)).toBe(true)
-  expect(easeScrollToEndFor(scroller, 'follow', wanted)).toBe(false)
+  wheelAwayHolds(scroller)
   expect(writeScroll(scroller, scroller.scrollHeight, 'composer')).toBe(false)
   expect(scroller.scrollTop).toBe(0)
   expect(writeScroll(scroller, 50, 'reader')).toBe(true)
@@ -87,6 +92,18 @@ test('the reader holds the conversation until they come back to its end; only fo
   expect(scroller.hasAttribute(READER_HOLD_ATTR)).toBe(false)
   expect(easeScrollToEndFor(scroller, 'follow', wanted)).toBe(true)
   expect(writeScroll(scroller, scroller.scrollHeight, 'composer')).toBe(true)
+})
+
+test('a wheel holds the conversation in a browser that defines no TouchEvent constructor', () => {
+  setMotion(MOTION_FULL)
+  join()
+  const scroller = scrollBox(CONVERSATION_SCROLL_SELECTOR)
+  // Desktop Firefox with its touch events off: the constructor is not on the page at all.
+  const constructor = Object.getOwnPropertyDescriptor(window, 'TouchEvent')!
+  Reflect.deleteProperty(window, 'TouchEvent')
+  cleanups.push(() => Object.defineProperty(window, 'TouchEvent', constructor))
+  expect(typeof TouchEvent).toBe('undefined')
+  wheelAwayHolds(scroller)
 })
 
 test('a press or a wheel outside the conversation is no hold on it: the follow keeps going', () => {

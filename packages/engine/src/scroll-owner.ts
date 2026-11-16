@@ -77,6 +77,13 @@ let touchContactY: number | null = null
 /** The container whose scrollbar strip is currently pressed; direction follows actual scroll travel until release. */
 let scrollbarDrag: Element | null = null
 
+/**
+ * Whether an event is a touch contact. A browser with its touch events off defines no TouchEvent constructor (desktop Firefox decides by a preference and by the hardware it finds), and naming the constructor there throws before the wheel, key or press that arrived is recorded as the reader's hold; with no constructor no event is a touch.
+ */
+function isTouchEvent(event: Event): event is TouchEvent {
+  return typeof TouchEvent !== 'undefined' && event instanceof TouchEvent
+}
+
 /** The contact's vertical reading, or null when the event carries none. */
 function contactY(event: TouchEvent): number | null {
   const contact = event.changedTouches[0]
@@ -347,7 +354,7 @@ function noteIntent(event: Event) {
   else if (event.type === 'pointerdown' || event.type === 'beforematch') towardEnd = false
 
   let touchAim: boolean | null = null
-  if (event instanceof TouchEvent) {
+  if (isTouchEvent(event)) {
     const y = contactY(event)
     if (event.type === 'touchstart') {
       touchContactY = y
