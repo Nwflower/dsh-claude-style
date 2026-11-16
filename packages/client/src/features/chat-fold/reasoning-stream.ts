@@ -203,6 +203,8 @@ export function createReasoningStream() {
     queued = false
     const rows = [...pending]
     pending.clear()
+    /** Rows read here whose phase has just left running: each is read once more, so a window no fold took comes off. */
+    const graced: Element[] = []
     for (const row of rows) {
       if (!row.isConnected) continue
       const running = row.getAttribute(ROW_PHASE_ATTRIBUTE) === RUNNING_STATE
@@ -215,6 +217,7 @@ export function createReasoningStream() {
       // from the capped height, and the read after it either finds the fold busy or
       // takes the window off.
       const leaving = held !== undefined && held.running && !active
+      if (leaving) graced.push(row)
       if (held !== undefined) held.running = active
       const live = active || leaving || (held !== undefined && isChatFoldBusy())
       const text = live && !motionReduced()
@@ -234,6 +237,7 @@ export function createReasoningStream() {
       const state: WindowState = { window: viewport, text, timer: 0, offset: 0, running: active }
       plans.push({ row, state, step: readStep(row, state), grow: null })
     }
+    for (const row of graced) queue(row)
   }
 
   /** Give each row read this frame the window its phase asks for, grow the window it holds, or take it off. */

@@ -201,6 +201,16 @@
       r.fold.reasonStopped = windowOf(reasonBody, reasonText)
       document.getElementById('debugGrow').setAttribute('data-state', 'ok')
       document.getElementById('debugThink').setAttribute('data-state', 'ok')
+      // A window comes off once its own row's fold has taken the height and the
+      // host has collapsed the body. One row's press queues behind the other's
+      // door, so a roll and its replay lie between the two exits and a quiet
+      // page can arrive before the second one: wait for the marks themselves.
+      await probe.until(function () {
+        return { reason: windowOf(reasonBody, reasonText).on, grow: windowOf(growBody, growText).on }
+      }, function (marks) {
+        var mark = marks[marks.length - 1]
+        return !mark.reason && !mark.grow
+      }, 'both reasoning windows come off their rows')
       await probe.settle()
       r.fold.reasonClosed = windowOf(reasonBody, reasonText)
       r.fold.reasonGrewClosed = windowOf(growBody, growText)
