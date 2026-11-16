@@ -19,6 +19,11 @@
    The two swap by opacity rather than display, so they cross-fade; the control
    is laid over the label's own slot (absolute, same 16px) so neither the header's
    height nor the actions' position moves while they swap. */
+/* The host's own header attribute carries the reference even where the part's
+   host class is not met on the page: the switch lays over the label at top:50%. */
+body[data-dsh-claude-style] [data-sidebar-workspace-header] {
+  position: relative;
+}
 body[data-dsh-claude-style] [data-dsh-claude-part~="section-header"] {
   position: relative;
 }

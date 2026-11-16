@@ -16,7 +16,7 @@ import { buildElement, closestFrom, setAttributeIfChanged } from '@dsh-claude-st
 import { removeStrayNodes, pressKeepsPopoverOpen } from '../../shared/popover'
 import { releaseSwappingText, setSwappingText } from '../../shared/swapping-text'
 import type { HostContext } from '@dsh-claude-style/engine/host'
-import { COMPOSER_INPUT_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import type { HostModelDirectory, HostModelEntry, HostModelGroup, HostSlotsService } from '@dsh-claude-style/contracts/services'
 import type { CloseReason, FeatureHandle } from '@dsh-claude-style/engine/scheduler'
 import type { FeatureUi } from '../../core/feature'
@@ -83,6 +83,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
   let seatBox: HTMLElement | null = null
   /** The host slot the seat lives in; the effort picker anchors there too. */
   let modelSlot: HTMLElement | null = null
+  /** The hero slot this instance marked as an external seat; the mark is ours to take back. */
+  let heroMarkedSlot: HTMLElement | null = null
   /**
    * The slot registry the yield decision reads, from the scope that injected
    * it: the plugin's own context hands no registry out (D75), so the seat's
@@ -406,6 +408,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     releaseModelLabels()
     removeStrayNodes(modelSlot ?? document, '.dsh-claude-model-seat', [])
     seatBox = null
+    if (heroMarkedSlot !== null) {
+      heroMarkedSlot.removeAttribute('data-dsh-claude-external-control')
+      heroMarkedSlot = null
+    }
     removeStrayNodes(modelSlot ?? document, '.dsh-claude-model-btn', [])
     modelBtn = null
     cards.dropNodes()
@@ -483,6 +489,16 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     const hostRoot = slot.querySelector(`:scope > :not([${SLOT_NODE_ATTR}])`)
     if (hostRoot !== null) hostRoot.toggleAttribute('data-dsh-claude-model-host', readPrefs().effortSlider === true)
     seatBox = ensureSeatBox(slot, seatBox)
+    // The home card stands outside the conversation region the trailing rules
+    // read, so its seat takes the external-control gate the picker's own block
+    // styles: one line, capsule and height together (#371).
+    if (slot.closest(COMPOSER_CARD_SELECTOR)?.getAttribute(COMPOSER_VARIANT_ATTRIBUTE) === 'hero') {
+      slot.setAttribute('data-dsh-claude-external-control', 'model-picker')
+      heroMarkedSlot = slot
+    } else if (heroMarkedSlot !== null) {
+      heroMarkedSlot.removeAttribute('data-dsh-claude-external-control')
+      heroMarkedSlot = null
+    }
     const modelPart = ensureSeatPart(seatBox, 'model')
     if (modelBtn === null || modelBtn.parentElement !== modelPart) {
       // The old trigger carries the old label: its swap goes before the node does.

@@ -309,6 +309,9 @@ export const SLOT_ANCHOR_SELECTOR = '[data-slot]'
 export const SIDEBAR_CHAT_SELECTOR = '[data-sidebar-chat]'
 /** Slot anchors delimit part-walk regions, avoiding document-wide queries (D3). */
 export const SIDEBAR_SLOT_SELECTOR = '[data-slot="sidebar"]'
+
+/** The host's workspace section header in the sidebar: the row the view switch lays over. */
+export const SIDEBAR_WORKSPACE_HEADER_SELECTOR = '[data-sidebar-workspace-header]'
 export const CONVERSATION_HEADER_SLOT_SELECTOR = '[data-slot="conversation.header"]'
 /** The root slot: the shell frame is its own element child, and the three columns are inside. */
 export const ROOT_SLOT_SELECTOR = '[data-slot="root"]'
