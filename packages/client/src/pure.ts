@@ -88,7 +88,7 @@ export { billingCurrency, figuresCostText, statsCostText } from './features/sess
 export { panelFiguresOf } from './features/session-panel/session-panel-figures'
 export type { PanelFigures } from './features/session-panel/session-panel-figures'
 export type { SessionFigures } from './shared/session-projections'
-export { formatCompactTokens } from './shared/format'
+export { formatCompactTokens, formatUnitTokens } from './shared/format'
 export { NO_CONVERSATION, conversationStanding } from './features/session-panel/conversation-standing'
 export type { ConversationSight, ConversationStanding } from './features/session-panel/conversation-standing'
 export { contextOverview, contextRows } from './features/session-panel/context-rows'
