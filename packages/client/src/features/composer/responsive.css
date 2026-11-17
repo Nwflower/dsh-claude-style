@@ -159,6 +159,39 @@ body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-comp
 body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn-label {
   min-width: 0;
 }
+/* D3, D9: SlotOutlet's contents anchor has no box. Its effective children keep
+   their content width; the model label supplies the cluster's compression.
+   A zero basis lets the outer wrapping row share its spare room before moving
+   the cluster below. Its minimum includes the name's recognition floor, so a
+   genuinely crowded row still wraps without painting over another control. */
+body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] > [data-dsh-claude-part~="trailing"] {
+  flex-basis: 0;
+  flex-grow: 1;
+  min-width: min-content;
+}
+body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] [data-dsh-claude-part~="composer-controls"],
+body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat {
+  flex-grow: 1;
+}
+body[data-dsh-claude-style] [data-phase="active"] [data-composer-card] [data-dsh-claude-composer-extension] {
+  flex-shrink: 0;
+  min-width: max-content;
+}
+body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat > .dsh-claude-model-seat-model {
+  flex-basis: 0;
+  flex-grow: 1;
+  justify-content: flex-end;
+  width: 0;
+  min-width: min-content;
+}
+body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat-model > .dsh-claude-model-btn {
+  flex-grow: 1;
+}
+body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn-label {
+  flex-grow: 1;
+  width: 0;
+  min-width: 10ch;
+}
 /* The native width handle can overflow the outer phase frame without adding
    visible content. Keep that frame from becoming a second scroll container;
    the inner transcript retains its own native scrolling and sticky seat. */

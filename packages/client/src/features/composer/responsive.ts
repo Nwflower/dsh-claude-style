@@ -1,4 +1,4 @@
-import { COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_CONTENT_SELECTOR, CONVERSATION_MAIN_SLOT_SELECTOR, PHASE_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
+import { COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_CONTENT_SELECTOR, CONVERSATION_INPUT_RIGHT_SLOT_SELECTOR, CONVERSATION_MAIN_SLOT_SELECTOR, PHASE_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { observeSize } from '@dsh-claude-style/engine/bus'
 import { setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
@@ -7,6 +7,7 @@ const TOOLBAR = 'data-dsh-claude-composer-toolbar'
 const LAYOUT = 'data-dsh-claude-composer-layout'
 const FRAME = 'data-dsh-claude-composer-frame'
 const HEIGHT = '--dsh-claude-composer-toolbar-height'
+const EXTENSION = 'data-dsh-claude-composer-extension'
 
 /** Share the composer's scheduler and size notifications; no second observer. */
 export function createComposerResponsive() {
@@ -27,6 +28,7 @@ export function createComposerResponsive() {
   }
 
   function clear(card: HTMLElement, row: HTMLElement) {
+    for (const root of row.querySelectorAll(`[${EXTENSION}]`)) root.removeAttribute(EXTENSION)
     row.removeAttribute(TOOLBAR)
     card.removeAttribute(LAYOUT)
     card.style.removeProperty(HEIGHT)
@@ -106,6 +108,14 @@ export function createComposerResponsive() {
       for (const [card, row] of next) {
         rows.set(card, row)
         setAttributeIfChanged(row, TOOLBAR, '')
+        // D3, D101: mark the effective slot items without changing their React
+        // parents, giving every extension tag one keyed stylesheet rule.
+        for (const root of row.querySelectorAll(`[${EXTENSION}]`)) {
+          if (root.parentElement?.matches(CONVERSATION_INPUT_RIGHT_SLOT_SELECTOR) !== true) root.removeAttribute(EXTENSION)
+        }
+        for (const slot of row.querySelectorAll(CONVERSATION_INPUT_RIGHT_SLOT_SELECTOR)) {
+          for (const root of slot.children) setAttributeIfChanged(root, EXTENSION, '')
+        }
       }
       if (unchanged) return
       stopSizes()

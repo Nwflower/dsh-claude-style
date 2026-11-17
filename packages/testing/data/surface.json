@@ -8,6 +8,7 @@
     { "id": "model.release-tag", "selector": ".dsh-claude-model-tag", "feature": "model", "sees": "the secondary model release tag, which yields before the model identity in tight toolbars" },
     { "id": "composer.frame", "attribute": "data-dsh-claude-composer-frame", "feature": "composer", "sees": "the structurally verified main native phase frame owned by the active composer; only its active phase clips accidental outer scrolling while the inner transcript keeps its native scroll" },
     { "id": "composer.responsive-toolbar", "attribute": "data-dsh-claude-composer-toolbar", "feature": "composer", "sees": "the actual composer toolbar whose measured height anchors send and stop controls" },
+    { "id": "composer.extension", "attribute": "data-dsh-claude-composer-extension", "feature": "composer", "sees": "an effective right-slot child that keeps its content width without moving away from its host anchor" },
     { "id": "composer.responsive-layout", "attribute": "data-dsh-claude-composer-layout", "feature": "composer", "sees": "the input card choosing a wide, compact or stacked toolbar from its own width" },
     { "id": "composer.bottom-gap", "attribute": "data-dsh-claude-composer-gap", "feature": "composer", "sees": "the reader's chosen room under the conversation composer: compact, the host's own, or roomy" },
     { "id": "composer.control", "attribute": "data-dsh-claude-control", "feature": "composer", "sees": "the native composer control identified by the skin without replacing its action" },
