@@ -1,3 +1,5 @@
+import { DEPLOY_ROOT, assetUrlUnder } from '@dsh-claude-style/contracts/routes'
+
 /** Load deferred feature scripts (D76) with bundle-shared modules so stateful modules stay singletons. */
 
 /** What a chunk's script sets on its own element: its body, still to be run against the shared modules. */
@@ -61,6 +63,9 @@ export function createChunkLoader<Install>(source: ChunkSource) {
 
   /** Return the chunk's `install`; failures reject with its URL. */
   function load(url: string): Promise<Install> {
+    // The build bakes an origin-root chunk address; resolve it against the page's
+    // deployment root so a prefix-stripping proxy reaches the assets route (D73).
+    url = assetUrlUnder(url, DEPLOY_ROOT)
     const known = loads.get(url)
     if (known !== undefined) return known
     const pending = fetchFactory(url, source.packageName).then((factory) => {

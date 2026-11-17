@@ -1,3 +1,5 @@
+import { DEPLOY_ROOT, assetUrlUnder } from '@dsh-claude-style/contracts/routes'
+
 /**
  * A mascot's sheets, as the addresses the sprite paints from.
  *
@@ -18,6 +20,9 @@ export function createRoutedSheets(urls: Record<string, string>, name: string, o
   const sheets = new Map<string, 'loading' | 'ready' | 'failed'>()
   /** False once disposed: a load landing after the character left is dropped. */
   let alive = true
+  // The build bakes origin-root addresses; resolve them against the page's deployment
+  // root so a prefix-stripping proxy reaches the assets route under the mount (D73).
+  const addresses = Object.fromEntries(Object.entries(urls).map(([key, address]) => [key, assetUrlUnder(address, DEPLOY_ROOT)]))
 
   /**
    * Whether a sheet is ready to paint, starting its load the first time.
@@ -26,7 +31,7 @@ export function createRoutedSheets(urls: Record<string, string>, name: string, o
   function ready(key: string) {
     const known = sheets.get(key)
     if (known !== undefined) return known === 'ready'
-    const address = urls[key]
+    const address = addresses[key]
     // The table and the sheets are one list; a name outside it is a bug here.
     if (address === undefined) throw new Error(`dsh-claude-style: no ${name} sheet for "${key}"`)
     sheets.set(key, 'loading')
@@ -49,7 +54,7 @@ export function createRoutedSheets(urls: Record<string, string>, name: string, o
 
   /** The address a ready sheet plays from. */
   function url(key: string) {
-    return urls[key]
+    return addresses[key]
   }
 
   function dispose() {

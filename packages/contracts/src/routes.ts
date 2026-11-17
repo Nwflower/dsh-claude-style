@@ -1,7 +1,47 @@
 /** Private route names registered by the host and addressed by the browser (D73). */
 
-/** Route prefix this plugin owns. */
-export const ROUTE_PREFIX = '/dsh-claude-style'
+/** The origin root the host registers this plugin's routes under. */
+export const ROUTE_ROOT = '/dsh-claude-style'
+
+/**
+ * The document's own directory, which the served page resolves URLs against. The
+ * host serves origin-root routes and never learns the mount (`dsh --public-url`
+ * advertises only); behind a prefix-stripping proxy the same routes answer under
+ * the mount, and the directory stays at the mount root across in-page navigation.
+ * @param documentBase - the document's base URL.
+ */
+export function deployRootOf(documentBase: string): string {
+  return new URL('.', documentBase).href
+}
+
+/** The document's base URL when this module runs in a browser; absent in Node. */
+const DOCUMENT_BASE = (globalThis as unknown as { document?: { baseURI?: string } }).document?.baseURI
+
+/** The browser's deployment root; null in Node, where the host half keeps the origin root. */
+export const DEPLOY_ROOT = typeof DOCUMENT_BASE === 'string' ? deployRootOf(DOCUMENT_BASE) : null
+
+/**
+ * The route prefix under a deployment root: the origin root with no root (Node),
+ * the mounted path otherwise. Pure so the contract spec judges both entries.
+ * @param deployRoot - the document's directory, or null for the host's origin root.
+ */
+export function routePrefixUnder(deployRoot: string | null): string {
+  return deployRoot === null ? ROUTE_ROOT : new URL(ROUTE_ROOT.slice(1), deployRoot).pathname
+}
+
+/** Route prefix this plugin owns: the origin root in Node, the mounted path in the browser. */
+export const ROUTE_PREFIX = routePrefixUnder(DEPLOY_ROOT)
+
+/**
+ * Resolve a build-baked origin-root address against a deployment root. The build
+ * bakes `${ROUTE_ROOT}/assets/…`; the leading slash is dropped so the address
+ * resolves against the document's directory rather than the origin root.
+ * @param baked - the origin-root address the build wrote.
+ * @param deployRoot - the document's directory, or null to keep the baked address.
+ */
+export function assetUrlUnder(baked: string, deployRoot: string | null): string {
+  return deployRoot === null ? baked : new URL(baked.replace(/^\/+/, ''), deployRoot).href
+}
 
 /** One-shot host OS user route; the browser half caches the response and never polls. */
 export const USERNAME_PATH = `${ROUTE_PREFIX}/username`

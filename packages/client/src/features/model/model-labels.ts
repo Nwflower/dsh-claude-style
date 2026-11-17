@@ -2,7 +2,8 @@
    The English constants are fallbacks before that document arrives or when its fetch fails. */
 /** The account group becomes the default when the API-key route advertises no official models. */
 export { ACCOUNT_MODEL_GROUP as MODEL_ACCOUNT_GROUP, OFFICIAL_MODEL_GROUP as MODEL_OFFICIAL_GROUP } from '@dsh-claude-style/contracts/services'
-export const MODEL_COPY_ROUTE = '/dsh-claude-style/model-descriptions.json'
+import { ROUTE_PREFIX } from '@dsh-claude-style/contracts/routes'
+export const MODEL_COPY_ROUTE = `${ROUTE_PREFIX}/model-descriptions.json`
 export const MODEL_COPY_FALLBACK_LOCALE = 'en'
 export const MODEL_FALLBACK_LABEL = 'Select model'
 export const MODEL_LOADING_LABEL = 'Loading models…'

@@ -1,10 +1,13 @@
 /* ---------- webfonts ---------- */
+/* The font addresses are document-relative: the sheet is mounted inline, so they
+   resolve against the page's own directory and a prefix-stripping proxy reaches
+   the fonts route under the mount (D73). */
 /* The code font ships in the package and the host half serves it, so 'JetBrains
    Mono' resolves on systems that never installed it. When the route is missing the
    fetch 404s and the stacks' system fallbacks take over. */
 @font-face {
   font-family: 'JetBrains Mono';
-  src: url('/dsh-claude-style/fonts/JetBrainsMonoVariable.woff2') format('woff2');
+  src: url('dsh-claude-style/fonts/JetBrainsMonoVariable.woff2') format('woff2');
   font-weight: 100 800;
   font-style: normal;
   font-display: swap;
@@ -12,7 +15,7 @@
 
 @font-face {
   font-family: 'JetBrains Mono';
-  src: url('/dsh-claude-style/fonts/JetBrainsMonoItalicVariable.woff2') format('woff2');
+  src: url('dsh-claude-style/fonts/JetBrainsMonoItalicVariable.woff2') format('woff2');
   font-weight: 100 800;
   font-style: italic;
   font-display: swap;
@@ -34,7 +37,7 @@
    or 'Noto Serif' still gets its own copy. */
 @font-face {
   font-family: 'Claude Style Inter';
-  src: url('/dsh-claude-style/fonts/InterVariable.woff2') format('woff2');
+  src: url('dsh-claude-style/fonts/InterVariable.woff2') format('woff2');
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
@@ -43,7 +46,7 @@
 
 @font-face {
   font-family: 'Claude Style Noto Serif';
-  src: url('/dsh-claude-style/fonts/NotoSerifVariable.woff2') format('woff2');
+  src: url('dsh-claude-style/fonts/NotoSerifVariable.woff2') format('woff2');
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
@@ -55,7 +58,7 @@
    through to the next face in the bubble's stack. */
 @font-face {
   font-family: 'Claude Style Pixel';
-  src: url('/dsh-claude-style/fonts/ClaudeStylePixel.woff2') format('woff2');
+  src: url('dsh-claude-style/fonts/ClaudeStylePixel.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
