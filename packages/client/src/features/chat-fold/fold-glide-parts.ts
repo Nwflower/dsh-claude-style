@@ -110,7 +110,7 @@ export type FoldWatch = ReturnType<typeof foldWatchReader>
 export function foldHandBackFollow(watch: FoldWatch) {
   if (!watch.atBottom) return
   // He took the scroll over himself in between: the hand-back is void.
-  handBackFollow('fold', { stillWanted: () => !watch.moved() })
+  handBackFollow({ stillWanted: () => !watch.moved() })
 }
 
 /** Wait for the actual animation when present because stalls extend it; otherwise use the duration. */
