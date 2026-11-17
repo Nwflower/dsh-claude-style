@@ -31,10 +31,16 @@ jobs:
             }
             const parts = []
             // Route by nature: design-leaning to the repository owner, logic-leaning
-            // to the maintainer. A keyword first pass; reassign by hand when it misreads.
-            const text = (issue.title + ' ' + body).toLowerCase()
-            const designWords = ['界面', '视觉', '样式', '配色', '颜色', '色彩', '色值', '色板', '布局', '排版', '图标', '字体', '主题', '外观', '美观', '设计', '皮肤', '圆角', '间距', '边距', '动效', '椭圆', '圆形', '形状', '挤扁', '挤成', 'ui', 'ux', 'design', 'visual', 'style', 'stylesheet', 'color', 'colour', 'palette', 'layout', 'icon', 'font', 'theme', 'appearance', 'css', 'spacing', 'margin', 'padding', 'animation', 'ellipse', 'circle', 'squish']
-            const isDesign = designWords.some((w) => text.includes(w))
+            // to the maintainer. Strip the form boilerplate, code and the plugin/host
+            // names so they do not read as design signals; English matches on word
+            // boundaries. A keyword first pass — reassign by hand when it misreads.
+            let text = (issue.title + ' ' + body).toLowerCase()
+            text = text.replace(/```[\s\S]*?```/g, ' ').replace(/`[^`]*`/g, ' ')
+            text = text.replace(/^###.*$/gm, ' ').replace(/_no response_/g, ' ')
+            text = text.replace(/dsh-claude-style|claude-style/g, ' ').replace(/data-[a-z0-9-]+/g, ' ').replace(/dsh-claude-[a-z0-9-]+/g, ' ')
+            const designZh = ['视觉', '样式', '配色', '颜色', '色彩', '色值', '色板', '布局', '排版', '字体', '外观', '美观', '设计', '皮肤', '圆角', '间距', '边距', '动效', '椭圆', '圆形', '形状', '挤扁', '挤成']
+            const designEn = ['design', 'visual', 'stylesheet', 'palette', 'layout', 'icon', 'font', 'appearance', 'spacing', 'ellipse', 'circle', 'squish', 'color', 'colour', 'css', 'animation', 'margin', 'padding', 'theme', 'style']
+            const isDesign = designZh.some((w) => text.includes(w)) || designEn.some((w) => new RegExp('\\b' + w + '\\b').test(text))
             const assignee = isDesign ? owner : 'Aa728848'
             let assigned = true
             try { await github.rest.issues.addAssignees({ owner, repo, issue_number: issue.number, assignees: [assignee] }) } catch { assigned = false }
