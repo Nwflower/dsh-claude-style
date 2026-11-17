@@ -70,8 +70,22 @@ body[data-dsh-claude-surface] .dsh-claude-surface-switch[data-dsh-claude-surface
 
 /* The web's brand row is a grid of the brand and the collapse toggle; the
    switch takes a column between them. */
-body[data-dsh-claude-surface] [data-dsh-claude-surface-row] {
+body[data-dsh-claude-surface="code"] [data-dsh-claude-surface-row] {
   grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+/* ds-bot's Bot top row is a flex row sized to its own controls. The round
+   controls and the switch hold their natural size; the brand label yields its
+   width first, so a row too narrow for the switch truncates the label instead
+   of squeezing the round buttons into ellipses. */
+body[data-dsh-claude-surface="chat"] [data-dsh-claude-surface-row] > button,
+body[data-dsh-claude-surface="chat"] [data-dsh-claude-surface-row] > span {
+  flex: none;
+}
+body[data-dsh-claude-surface="chat"] [data-dsh-claude-surface-row] > .bt-brand {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* ds-bot's account menu while the switch presses its Agent mode item: it

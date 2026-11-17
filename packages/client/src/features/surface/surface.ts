@@ -219,6 +219,7 @@ export function install() {
       }
       if (root.parentElement !== row || root.nextSibling !== null) row.appendChild(root)
       mark('row')
+      rowStamp.mark(row)
       return
     }
     const row = findSidebarBrand()?.parentElement ?? null

@@ -21,6 +21,7 @@
  *   - dressed as the Windows desktop, the switch takes the caption strip and
  *     leaves the screen while the sidebar is collapsed.
  */
+import path from 'node:path'
 import { dismissOverlays } from '../dsh-web.mjs'
 
 /** The ds-bot release the lane checks against. */
@@ -59,6 +60,7 @@ const read = (page) => page.evaluate(() => {
     themeNodes: [...document.querySelectorAll(':is([class^="dsh-claude-"], [class*=" dsh-claude-"])')].filter((node) => root === null || !root.contains(node)).length,
     checked: root === null ? [] : [...root.querySelectorAll('.dsh-claude-surface-option')].map((option) => option.getAttribute('aria-checked') === 'true'),
     switchShown: root !== null && root.isConnected && switchBox.width > 0 && getComputedStyle(root).visibility !== 'hidden',
+    rounds: [...document.querySelectorAll('.bt-side-top .bt-round')].map((button) => { const rect = button.getBoundingClientRect(); return { w: Math.round(rect.width), h: Math.round(rect.height) } }),
     menu: document.querySelector('.bt-account-menu') !== null,
     switching: body.hasAttribute('data-dsh-claude-surface-switching'),
     box: switchBox === null ? null : {
@@ -194,6 +196,7 @@ function dsBotScenario({ check }) {
       await press(page, 'chat')
       await settle(page, 'chat')
       notes.desktopChat = await read(page)
+      await page.locator('.bt-side-top').screenshot({ path: path.join(context.out, 'ds-bot-chat-top.png') })
       await press(page, 'code')
       await settle(page, 'code')
       await page.waitForTimeout(500)
@@ -238,11 +241,12 @@ function dsBotScenario({ check }) {
           themed(desktop) && band.place === 'band' && band.inBody && band.fixed &&
             band.right === band.columnRight - 12 && band.y >= 0 && band.y + band.height <= 40,
           JSON.stringify(band)),
-        check('桌面端在聊天一侧，切换留在 ds-bot 自己的顶行、没有被标题栏的测量丢掉',
+        check('桌面端在聊天一侧，切换留在 ds-bot 顶行，圆钮保持正圆不被挤扁',
           notes.desktopChat.bot && !notes.desktopChat.theme && notes.desktopChat.switchShown &&
             notes.desktopChat.box?.place === 'row' && notes.desktopChat.box?.parent === 'bt-side-top' &&
-            notes.desktopChat.box?.fixed === false,
-          JSON.stringify(notes.desktopChat.box)),
+            notes.desktopChat.box?.fixed === false &&
+            notes.desktopChat.rounds.length >= 3 && notes.desktopChat.rounds.every((r) => Math.abs(r.w - r.h) <= 1),
+          JSON.stringify({ box: notes.desktopChat.box, rounds: notes.desktopChat.rounds })),
         check('侧栏收窄到放不下时切换离开屏幕，但仍在测量之中',
           rail.box !== null && rail.box.place === 'tucked' && rail.box.inBody && !rail.switchShown,
           JSON.stringify(rail.box)),
