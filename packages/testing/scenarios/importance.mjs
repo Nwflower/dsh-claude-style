@@ -99,6 +99,9 @@ const MARKS = [
   ['page zoom 80', surfaceAttribute('skin.page-zoom'), '0.8'],
   ['page zoom 125', surfaceAttribute('skin.page-zoom'), '1.25'],
   ['page zoom 150', surfaceAttribute('skin.page-zoom'), '1.5'],
+  // The width mark the resize pass writes under 768px: the mobile input floor
+  // keys on it, and the walk sets it as the pass leaves it at that width.
+  ['page under 768', surfaceAttribute('skin.page-under-768'), ''],
   // The window's focus state, which the skin mirrors onto the page for the
   // selection paints: a browser the lane drives keeps the focus, so the state
   // is set as the mirror writes it.

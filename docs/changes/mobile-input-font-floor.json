@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-17",
+  "group": "fixes",
+  "order": 376,
+  "external": true,
+  "zh": "修复手机端聚焦输入框触发页面自动放大且失焦不回弹的问题",
+  "en": "Fix phone browsers zooming the page on input focus and never restoring it on blur"
+}

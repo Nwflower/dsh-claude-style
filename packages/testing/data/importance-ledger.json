@@ -131,6 +131,13 @@
       "prop": "font-size",
       "verdict": "unmatched"
     },
+    "body[data-dsh-claude-style][data-dsh-claude-page-under-768] :is(textarea,input,select,[contenteditable=true],[contenteditable=\"\"]){font-size:max(16px,calc(16px * var(--dsh-claude-interface-font-scale, 1)))!}|font-size": {
+      "selector": "body[data-dsh-claude-style][data-dsh-claude-page-under-768] :is(textarea,input,select,[contenteditable=true],[contenteditable=\"\"])",
+      "prop": "font-size",
+      "verdict": "needed",
+      "state": "page under 768",
+      "opponents": []
+    },
     "body[data-dsh-claude-style][data-ds-dark-theme] :is([data-dsh-claude-account-menu],[data-dsh-claude-hero-menu],[data-dsh-claude-more-menu]){background:var(--dsh-claude-card)!;border-color:var(--dsw-alias-border-l1)!;box-shadow:0 8px 28px #000000a6,0 2px 8px #00000073!}|background": {
       "selector": "body[data-dsh-claude-style][data-ds-dark-theme] :is([data-dsh-claude-account-menu],[data-dsh-claude-hero-menu],[data-dsh-claude-more-menu])",
       "prop": "background",

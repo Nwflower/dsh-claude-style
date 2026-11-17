@@ -322,3 +322,15 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="text-mono-label"] {
   font-size: 12px;
   letter-spacing: 0;
 }
+
+/* ---------- the mobile input floor ---------- */
+/* A phone browser zooms the whole page when focus lands in an editable whose
+   semantic font size is under 16px, and never zooms back on blur. The floor is
+   the semantic size itself: page zoom and the interface scale may paint it
+   smaller, the browser still reads at least 16px. !important over the skin's
+   own compact input sizes (features/composer/inline.css), whose selectors
+   outrank this one; a reader's enlarged interface scale keeps growing past the
+   floor. */
+body[data-dsh-claude-style][data-dsh-claude-page-under-768] :is(textarea, input, select, [contenteditable="true"], [contenteditable=""]) {
+  font-size: max(16px, calc(16px * var(--dsh-claude-interface-font-scale, 1))) !important;
+}
