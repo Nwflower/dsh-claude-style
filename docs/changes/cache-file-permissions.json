@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-17",
-  "group": "security",
-  "order": 385,
-  "external": true,
-  "zh": "收紧插件缓存文件与目录权限至 0600 与 0700，避免多用户机器上的其他账户读取对话缓存明文",
-  "en": "Tighten plugin cache files and directories to 0600 and 0700 so other accounts on a shared machine cannot read conversation cache plaintext"
-}

@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-17",
-  "group": "fixes",
-  "order": 374,
-  "external": true,
-  "zh": "修复 Firefox 未启用触摸事件时无法识别读者向上回看，展开历史步骤后页面被滚回底部的问题",
-  "en": "Fix Firefox with touch events off not registering the reader scrolling up, which let opening earlier steps pull the page back to the end"
-}

@@ -2,6 +2,54 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [0.21.5] - 2026-11-17
+
+[中文](#cn-0.21.5) | [English](#en-0.21.5)
+
+<h3 id="cn-0.21.5">体验优化</h3>
+
+- 压缩会话按钮改用栏内小字号，高度与距离自动压缩一行文本齐平
+- 对话详情栏改用主对话区的画布底色，两栏站在同一底色上
+
+### 问题修复
+
+- 修复深色页面下对话详情栏左侧分界线过暗的问题，与左侧栏分界线颜色一致
+- 修复逐字跟随模式下 token 输出较快时思考内容整段跳变与思考标题闪烁
+- 修复悬停展开的侧栏收回时整列文字保持不透明滑出的问题，让内容随滑动一起淡出
+- 修复 Firefox 未启用触摸事件时无法识别读者向上回看，展开历史步骤后页面被滚回底部的问题
+- 修复手机端聚焦输入框触发页面自动放大且失焦不回弹的问题
+- 修复首页挂件遮住工具条右端控件、侧栏视图切换器偏离工作区标题左沿的问题
+- 修复带快照日期的 DeepSeek 模型路由恒按峰价计费，谷时费用不回落的问题
+- 修复 ds-bot 聊天界面下界面开关挤扁侧栏顶部圆形按钮的问题，圆钮与开关保持自然尺寸，窄行先截断品牌标签
+- 修复路径前缀反向代理部署下全部宿主接口与主题资产因根绝对基址而失效的问题，接口与资产改按页面自身目录解析
+- 修复首字较慢的模型每轮都被挂出「暂未响应」的问题，徽标等待时长改为会话平均首 Token 时间的两倍，最低十秒
+
+### 安全
+
+- 收紧插件缓存文件与目录权限至 0600 与 0700，避免多用户机器上的其他账户读取对话缓存明文
+
+<h3 id="en-0.21.5">Improvements</h3>
+
+- Set the compact request in the rail's small size at the reading line's height, level with the distance text
+- Paint the conversation details rail with the chat column's own canvas so the two surfaces share one ground
+
+### Bug Fixes
+
+- Draw the details rail's left hairline in the sidebar split's border colour so the division reads on the dark canvas
+- Fix choppy reasoning output and a flickering thinking title when tokens arrive fast in continuous display mode
+- Fade the sidebar's content while the hover peek slides it away, so a closing peek no longer drags its labels out at full opacity
+- Fix Firefox with touch events off not registering the reader scrolling up, which let opening earlier steps pull the page back to the end
+- Fix phone browsers zooming the page on input focus and never restoring it on blur
+- Fix the home mascot covering the right-end controls of the context row and the sidebar view switch missing the left edge of the workspace heading
+- Fix snapshot-dated DeepSeek model routes billing every hour at the peak rate, with off-peak costs never falling
+- Fix the surface switch squeezing ds-bot's round sidebar buttons into ellipses on the Bot surface; the buttons and switch keep their natural size and a narrow row truncates the brand label first
+- Fix every host call and theme asset failing behind a path-prefix reverse proxy because of the origin-root base; routes and assets now resolve against the page's own directory
+- Fix the overtime badge calling a slow-first-token model unresponsive every turn; it now waits out twice the session's average time to first token, ten seconds at the least
+
+### Security
+
+- Tighten plugin cache files and directories to 0600 and 0700 so other accounts on a shared machine cannot read conversation cache plaintext
+
 ## [0.21.4] - 2026-11-16
 
 [中文](#cn-0.21.4) | [English](#en-0.21.4)

@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-17",
-  "group": "fixes",
-  "order": 380,
-  "external": true,
-  "zh": "修复 ds-bot 聊天界面下界面开关挤扁侧栏顶部圆形按钮的问题，圆钮与开关保持自然尺寸，窄行先截断品牌标签",
-  "en": "Fix the surface switch squeezing ds-bot's round sidebar buttons into ellipses on the Bot surface; the buttons and switch keep their natural size and a narrow row truncates the brand label first"
-}

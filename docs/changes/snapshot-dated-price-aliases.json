@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-17",
-  "group": "fixes",
-  "order": 379,
-  "external": true,
-  "zh": "修复带快照日期的 DeepSeek 模型路由恒按峰价计费，谷时费用不回落的问题",
-  "en": "Fix snapshot-dated DeepSeek model routes billing every hour at the peak rate, with off-peak costs never falling"
-}

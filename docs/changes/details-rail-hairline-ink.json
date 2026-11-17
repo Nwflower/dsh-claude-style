@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-17",
-  "group": "fixes",
-  "order": 0,
-  "external": false,
-  "zh": "修复深色页面下对话详情栏左侧分界线过暗的问题，与左侧栏分界线颜色一致",
-  "en": "Draw the details rail's left hairline in the sidebar split's border colour so the division reads on the dark canvas"
-}

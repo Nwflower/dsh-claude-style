@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-17",
-  "group": "fixes",
-  "order": 381,
-  "external": true,
-  "zh": "修复路径前缀反向代理部署下全部宿主接口与主题资产因根绝对基址而失效的问题，接口与资产改按页面自身目录解析",
-  "en": "Fix every host call and theme asset failing behind a path-prefix reverse proxy because of the origin-root base; routes and assets now resolve against the page's own directory"
-}

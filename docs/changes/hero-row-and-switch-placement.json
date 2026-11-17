@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-17",
-  "group": "fixes",
-  "order": 378,
-  "external": true,
-  "zh": "修复首页挂件遮住工具条右端控件、侧栏视图切换器偏离工作区标题左沿的问题",
-  "en": "Fix the home mascot covering the right-end controls of the context row and the sidebar view switch missing the left edge of the workspace heading"
-}
