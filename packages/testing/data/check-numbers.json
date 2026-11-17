@@ -950,6 +950,100 @@
         999
       ]
     },
+    "packages/testing/smoke/cases/chat-wait.mjs": {
+      "加载点把三条轨道都建好了——三颗跳球、三颗走路、四颗交换四角——其中一条在用，主机的鲸鱼尾让位": [
+        3
+      ],
+      "跳球那条：一颗球从地面弹起 8px 再落回，三颗各错开一个相位": [
+        0,
+        0.5,
+        7.5,
+        40
+      ],
+      "走路那条：三颗各沿自己的线走简谐、两端停得比中间久、相位各错三分之一，去程与回程是同一条曲线，最长的一帧也不比跳球大": [
+        0,
+        0.05,
+        0.38,
+        0.5,
+        1.001,
+        3,
+        7,
+        45
+      ],
+      "交换四角那条：四颗球站成 45 : 55 的矩形，一圈里 A 段换一对对角、B 段换另一对、再各换回来，每颗走的是弧、走完停半段": [
+        0,
+        0.05,
+        0.06,
+        0.6,
+        1,
+        2,
+        3,
+        10,
+        25,
+        45,
+        55,
+        60
+      ],
+      "加载点每 10 秒换一条轨道，换的不会是正站着的那一条": [
+        2
+      ],
+      "换轨道是一次形变：每颗新出现的球都从旧轨道某颗球所在的位置出发，框里每一帧都有三到四颗球，交接完只剩新的那条": [
+        0,
+        3,
+        4
+      ],
+      "the old wording leaves upward with a blur: the leave pose is set, its opacity falls and its glyphs blur": [
+        0,
+        0.1,
+        0.5,
+        1,
+        2
+      ],
+      "the two halves overlap: both copies stand in the box across the leaving one's whole fade, and the band keeps sweeping throughout": [
+        0.3,
+        2
+      ],
+      "the wording arriving rises from below through a blur, its opacity climbing to rest": [
+        0,
+        0.01,
+        0.05,
+        0.5,
+        0.9,
+        0.95,
+        1
+      ],
+      "the box the swap runs in never reads as empty, holds its height, and moves the clock only where the words themselves changed": [
+        0,
+        1,
+        4
+      ],
+      "the box travels to its new width over several frames, so the clock slides with it instead of jumping": [
+        3,
+        4
+      ],
+      "the new wording is the one left standing once the copy that left is taken down": [
+        0,
+        1
+      ],
+      "reasoning the line can take words from says the model's own clause": [
+        1
+      ],
+      "a wording with no room is carried whole and clipped where the row ends, and the clock stays on the row": [
+        1
+      ],
+      "with the animation choice set to Reduced the new wording is written at once, with no swap": [
+        1
+      ],
+      "句子不带自己的从句时，站着的那句在该选择下也留在原处": [
+        1
+      ],
+      "words that settle shorter take the box down with them, so the clock sits right after them": [
+        10
+      ],
+      "状态行钉住时行下的画布铺到输入框顶，跟随关掉后这块画布随之退场": [
+        17
+      ]
+    },
     "packages/testing/smoke/cases/chat.mjs": {
       "a structural moment hands the scroll back: the position was 60px off the end and lands at it": [
         60
@@ -1095,98 +1189,6 @@
       ],
       "the other plugin leaving hands the seat keys back": [
         3
-      ],
-      "加载点把三条轨道都建好了——三颗跳球、三颗走路、四颗交换四角——其中一条在用，主机的鲸鱼尾让位": [
-        3
-      ],
-      "跳球那条：一颗球从地面弹起 8px 再落回，三颗各错开一个相位": [
-        0,
-        0.5,
-        7.5,
-        40
-      ],
-      "走路那条：三颗各沿自己的线走简谐、两端停得比中间久、相位各错三分之一，去程与回程是同一条曲线，最长的一帧也不比跳球大": [
-        0,
-        0.05,
-        0.38,
-        0.5,
-        1.001,
-        3,
-        7,
-        45
-      ],
-      "交换四角那条：四颗球站成 45 : 55 的矩形，一圈里 A 段换一对对角、B 段换另一对、再各换回来，每颗走的是弧、走完停半段": [
-        0,
-        0.05,
-        0.06,
-        0.6,
-        1,
-        2,
-        3,
-        10,
-        25,
-        45,
-        55,
-        60
-      ],
-      "加载点每 10 秒换一条轨道，换的不会是正站着的那一条": [
-        2
-      ],
-      "换轨道是一次形变：每颗新出现的球都从旧轨道某颗球所在的位置出发，框里每一帧都有三到四颗球，交接完只剩新的那条": [
-        0,
-        3,
-        4
-      ],
-      "the old wording leaves upward with a blur: the leave pose is set, its opacity falls and its glyphs blur": [
-        0,
-        0.1,
-        0.5,
-        1,
-        2
-      ],
-      "the two halves overlap: both copies stand in the box across the leaving one's whole fade, and the band keeps sweeping throughout": [
-        0.3,
-        2
-      ],
-      "the wording arriving rises from below through a blur, its opacity climbing to rest": [
-        0,
-        0.01,
-        0.05,
-        0.5,
-        0.9,
-        0.95,
-        1
-      ],
-      "the box the swap runs in never reads as empty, holds its height, and moves the clock only where the words themselves changed": [
-        0,
-        1,
-        4
-      ],
-      "the box travels to its new width over several frames, so the clock slides with it instead of jumping": [
-        3,
-        4
-      ],
-      "the new wording is the one left standing once the copy that left is taken down": [
-        0,
-        1
-      ],
-      "reasoning the line can take words from says the model's own clause": [
-        1
-      ],
-      "a wording with no room is carried whole and clipped where the row ends, and the clock stays on the row": [
-        1
-      ],
-      "with the animation choice set to Reduced the new wording is written at once, with no swap": [
-        1
-      ],
-      "句子不带自己的从句时，站着的那句在该选择下也留在原处": [
-        1
-      ],
-      "words that settle shorter take the box down with them, so the clock sits right after them": [
-        10
-      ],
-      "状态行钉住时行下的画布铺到输入框顶，跟随关掉后这块画布随之退场": [
-        17
       ],
       "the flight plays an animation": [
         0

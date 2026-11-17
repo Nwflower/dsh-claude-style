@@ -48,7 +48,7 @@ const APP = 'const first = 1\n'
  * (features/chat-wait/chat-wait.css). `wait-loader.ts` hands the row over from
  * one to the next every `--dsh-claude-period-dot-rotate`, so any of the three may
  * be the one standing when the head is read; the smoke case reads the same three
- * (cases/chat.mjs).
+ * (cases/chat-wait.mjs).
  */
 const MOTIONS = [
   { lane: 'is-bounce', dots: 3, animation: 'dsh-claude-wait-dot', duration: '0.5s' },
