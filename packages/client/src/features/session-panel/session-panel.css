@@ -478,9 +478,11 @@ body[data-dsh-claude-style] .dsh-claude-panel-more {
 }
 
 /* The conversation's details rail (D102): the skin's own column beside the chat,
-   placed against the conversation column's edge and filled like the column's
-   other pages. It opens and retreats with that column's width, so it carries no
-   tab chrome of its own; the body inside keeps the panel's inset and scroll. */
+   placed against the conversation column's edge and reading the column's own
+   canvas token, so the two surfaces stand on one ground and the hairline between
+   them is the only division. It opens and retreats with that column's width, so
+   it carries no tab chrome of its own; the body inside keeps the panel's inset
+   and scroll. */
 /* The rail's own mount: a body child that lays nothing out itself, so the
    fixed column inside it is placed against the page, not against a box. */
 body[data-dsh-claude-style] .dsh-claude-details-root {
@@ -498,8 +500,11 @@ body[data-dsh-claude-style] .dsh-claude-details {
      by growing narrower, and the body inside keeps the final box (D102). */
   width: 320px;
   overflow: hidden;
-  border-left: 1px solid var(--dsw-alias-border-secondary, rgba(0, 0, 0, 0.08));
-  background: var(--dsw-alias-bg-layer-1, #ffffff);
+  /* The edge reads the standard border token, the same one the sidebar's split
+     wears, so the two column divisions keep one colour in every card and both
+     themes. */
+  border-left: 1px solid var(--dsw-alias-border-l1);
+  background: var(--dsh-claude-canvas);
   transition: width var(--dsh-claude-duration-column) var(--dsh-claude-ease-column);
 }
 

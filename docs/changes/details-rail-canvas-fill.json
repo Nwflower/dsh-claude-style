@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-17",
+  "group": "improvements",
+  "order": 0,
+  "external": false,
+  "zh": "对话详情栏改用主对话区的画布底色，两栏站在同一底色上",
+  "en": "Paint the conversation details rail with the chat column's own canvas so the two surfaces share one ground"
+}

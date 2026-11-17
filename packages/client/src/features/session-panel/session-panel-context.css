@@ -54,7 +54,7 @@ body[data-dsh-claude-style] .dsh-claude-panel-segment {
   min-width: 0;
   /* Each part ends on a 2px cut in the panel's own fill, so neighbouring parts
      read as separate pieces the way Claude's bar draws them. */
-  box-shadow: inset -2px 0 var(--dsw-alias-bg-layer-1);
+  box-shadow: inset -2px 0 var(--dsh-claude-canvas);
   transition: width var(--dsh-claude-duration-reveal) var(--dsh-claude-ease-out);
 }
 

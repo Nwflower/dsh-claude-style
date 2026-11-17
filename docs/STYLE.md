@@ -325,7 +325,10 @@ zero once it does not, so the list starts at the top and scrolls to its end.
 **The conversation details rail.** The rail is the skin's own fixed column
 against the conversation column's right edge: 320px wide, a 16px left inset
 and one scroll inside, opened and retreated by the column's width (a 1360px window with an 860px column to open, 1180px or a 760px column to
-Retreat) and squeezing the chat while it stands. It starts under the conversation
+Retreat) and squeezing the chat while it stands. It reads the conversation
+column's own canvas (`--dsh-claude-canvas`), so the rail and the chat stand on
+one ground; the hairline between them is the only division and wears
+`--dsw-alias-border-l1`, the same edge as the sidebar's split. It starts under the conversation
 header: the header keeps the column's whole width, so its title and controls
 stand above the rail, and the body under it gives the rail its 320px. Its floor
 is the conversation column's own, or the bottom panel's top edge while that
