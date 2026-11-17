@@ -22,20 +22,14 @@ jobs:
             const hasType = types.some((t) => labels.includes(t))
             const body = (issue.body || '').trim()
             const comment = (text) => github.rest.issues.createComment({ owner, repo, issue_number: issue.number, body: text })
-            // An empty issue carries nothing to triage: close it and point at the forms.
-            if (body.length < 20 && !hasType) {
-              await comment('此 issue 没有内容，已关闭。请通过 issue 表单提交并填全必填项。\n\nEmpty issue closed. Please use one of the issue forms and fill the required fields.')
+            // Conformance is the form's own type label plus substantive content.
+            // Anything else is closed and asked to resubmit through a form.
+            if (!hasType || body.length < 20) {
+              await comment(`此 issue 未通过规定的 issue 表单提交，或缺少必填内容，已自动关闭。请改用以下表单之一重新提交，并填全必填项：\n\n- **错误反馈 / Bug report**：DSH 版本、插件版本、系统与浏览器、部署方式、同时启用的其他插件、明暗主题、复现步骤、期望与实际，并确认已在最新版本复现。\n- **建议 / Feature request**：场景与动机、期望行为。\n- **疑问 / Question**：想达成什么、已查阅与尝试。\n\n合格的 issue 会被自动分类并进入分诊。\n\n---\n\nThis issue was not submitted through the required issue forms, or lacks required content, and was closed automatically. Please resubmit using one of the forms below with every required field:\n\n- **Bug report**: DSH version, plugin version, OS/browser, deployment, other plugins, light/dark theme, steps, expected vs actual, and a latest-release check.\n- **Feature request**: problem and scenario, proposed behavior.\n- **Question**: what you are trying to do, what you have read and tried.\n\nA conforming issue is classified automatically and enters triage.`)
               await github.rest.issues.update({ owner, repo, issue_number: issue.number, state: 'closed', state_reason: 'not_planned' })
               return
             }
             const parts = []
-            // Filed outside the forms: guide softly, do not close a report that has content.
-            if (!hasType) {
-              parts.push('此 issue 未使用表单提交。请改用「错误反馈 / 建议 / 疑问」表单，以便自动分类并填全复现所需信息。\n\nThis issue was not filed through a form. Please use the Bug / Feature / Question form so it is classified and carries the information needed to reproduce.')
-              try { await github.rest.issues.getLabel({ owner, repo, name: 'needs-info' }) }
-              catch { try { await github.rest.issues.createLabel({ owner, repo, name: 'needs-info', color: 'fbca04', description: 'Further information is requested' }) } catch {} }
-              await github.rest.issues.addLabels({ owner, repo, issue_number: issue.number, labels: ['needs-info'] })
-            }
             // A hint at possibly related open issues, never a gate.
             const core = issue.title.replace(/^\[[^\]]*\]\s*/, '').trim()
             if (core.length >= 4) {
