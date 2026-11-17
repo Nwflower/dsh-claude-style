@@ -149,6 +149,8 @@
     "deepseek-v4-flash": "deepseek-flash",
     "deepseek-v4-flash-vision-exp": "deepseek-flash",
     "deepseek-v4.1-flash": "deepseek-flash",
+    "deepseek-v4.1-flash-1017": "deepseek-flash",
+    "deepseek-v4-pro-0813": "deepseek-v4-pro",
     "deepseek-chat": "deepseek-flash",
     "deepseek-reasoner": "deepseek-flash",
     "k3": "kimi-k3",

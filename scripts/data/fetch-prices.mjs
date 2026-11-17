@@ -29,6 +29,11 @@ const ALIASES = {
   'deepseek-v4-flash': 'deepseek-flash',
   'deepseek-v4-flash-vision-exp': 'deepseek-flash',
   'deepseek-v4.1-flash': 'deepseek-flash',
+  // Snapshot-dated ids of the two official models: the official table lists
+  // the undated id, and a catalogue row for the dated one carries a single
+  // tier, which would bill every hour at the peak rate.
+  'deepseek-v4.1-flash-1017': 'deepseek-flash',
+  'deepseek-v4-pro-0813': 'deepseek-v4-pro',
   'deepseek-chat': 'deepseek-flash',
   'deepseek-reasoner': 'deepseek-flash',
   // The Kimi Code picker names its routes without the vendor's prefix; the

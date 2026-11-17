@@ -8,8 +8,9 @@
  * @risk A session's cost is billed at the wrong tier or the wrong model, or a retry is priced twice, so the figure beside the tokens disagrees with the official bill.
  */
 import { expect, test } from 'vitest'
-import { costMicro, formatMoneyMicro, isPeak, priceFor, priceTierAt } from '@dsh-claude-style/contracts/prices'
+import { costMicro, formatMoneyMicro, isPeak, priceFor, priceModelId, priceTierAt } from '@dsh-claude-style/contracts/prices'
 import type { PriceDocument, PriceSchedule } from '@dsh-claude-style/contracts/prices'
+import { shippedPrices } from '../../fixtures/prices-snapshot'
 
 const schedule: PriceSchedule = {
   timeZone: 'Asia/Shanghai',
@@ -131,4 +132,24 @@ test('the figure takes the shorter of four significant digits and four decimals'
   expect(formatMoneyMicro(1500, 'CNY')).toBe('¥0.0015')
   expect(formatMoneyMicro(0, 'CNY')).toBe('¥0.000')
   expect(formatMoneyMicro(1_234_567, 'CNY')).toBe('¥1.235')
+})
+
+test('a snapshot-dated DeepSeek route bills at the official two tiers', () => {
+  // The official table lists the undated id; the dated route the picker names
+  // reaches it through the shipped snapshot's aliases. A catalogue row would
+  // answer with one tier for both hours and bill the off-peak at the peak rate.
+  const shippedDocument = shippedPrices
+  const route = 'remote-magpie/qwen-token-plan/deepseek-v4.1-flash-1017'
+  expect(priceModelId(shippedDocument, route)).toBe('deepseek-flash')
+  expect(priceModelId(shippedDocument, 'deepseek-v4-pro-0813')).toBe('deepseek-v4-pro')
+  const flash = priceFor(shippedDocument, route, 'CNY')
+  expect(flash?.offPeak.cacheMiss).toBe(shippedDocument.models['deepseek-flash'].CNY.offPeak.cacheMiss)
+  expect(flash?.peak.cacheMiss).toBe(shippedDocument.models['deepseek-flash'].CNY.peak.cacheMiss)
+  const pro = priceFor(shippedDocument, 'deepseek-v4-pro-0813', 'USD')
+  expect(pro?.offPeak.output).toBe(shippedDocument.models['deepseek-v4-pro'].USD.offPeak.output)
+  expect(pro?.peak.output).toBe(shippedDocument.models['deepseek-v4-pro'].USD.peak.output)
+  // Beijing 13:00 on a weekday sits between the two peak windows: the tier in
+  // force for the dated route is the official off-peak one.
+  const tier = priceTierAt(flash!, Date.parse('2026-11-17T05:00:00Z'), shippedDocument.schedule)
+  expect(tier.cacheMiss).toBe(shippedDocument.models['deepseek-flash'].CNY.offPeak.cacheMiss)
 })
