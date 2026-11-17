@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 文档 / Documentation
+    url: https://github.com/Nwflower/dsh-claude-style#readme
+    about: 安装与使用先读 README / Read the README for install and usage
+  - name: 部署指南 / Deployment guide
+    url: https://github.com/deepseek-ai/deepseek-harness/blob/HEAD/docs/user/guide/public-deployments.md
+    about: 路径前缀反代部署先读宿主此文 / For path-prefix reverse-proxy deployment read the host guide
+  - name: 安全报告 / Security report
+    url: https://github.com/Nwflower/dsh-claude-style/security/advisories/new
+    about: 安全或隐私问题请私下报告，勿开公开 issue / Report security or privacy issues privately, not as a public issue

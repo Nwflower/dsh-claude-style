@@ -1,0 +1,29 @@
+name: 疑问 / Question
+description: 使用上的疑问 / Ask about using the theme
+title: "[Question] "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        请先查阅 README 与 docs/；路径前缀反代部署见宿主的部署指南（提交页底部的联系方式）。
+        Read the README and docs/ first; for path-prefix reverse-proxy deployment see the host guide linked at the bottom of the new-issue page.
+  - type: textarea
+    id: goal
+    attributes:
+      label: 想达成什么 / What you are trying to do
+    validations:
+      required: true
+  - type: textarea
+    id: tried
+    attributes:
+      label: 已查阅与尝试 / What you have read and tried
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 环境 / Environment
+      description: DSH 与插件版本、系统、部署方式 / DSH and plugin versions, OS, deployment
+    validations:
+      required: false

@@ -1,0 +1,96 @@
+name: 错误反馈 / Bug report
+description: 报告主题未按预期工作的地方 / Report something the theme does not do as expected
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈。提交前请先确认：已在**最新版本**复现、已搜索**重复 issue**、已查阅 README 与 docs/。
+        Thanks — before filing, confirm you reproduced on the **latest release**, searched for **duplicates**, and read the README and docs/.
+  - type: input
+    id: dsh-version
+    attributes:
+      label: DSH 版本 / DSH version
+      placeholder: 0.2.2-rc.3
+    validations:
+      required: true
+  - type: input
+    id: plugin-version
+    attributes:
+      label: dsh-claude-style 版本 / Plugin version
+      placeholder: 0.21.4
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 系统与浏览器 / OS and browser
+      description: 桌面应用请注明 / Note if you use the desktop app
+      placeholder: Windows 11 / Edge 140
+    validations:
+      required: true
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: 部署方式 / Deployment
+      options:
+        - 根路径直连 / Root path (localhost)
+        - 路径前缀反向代理 / Path-prefix reverse proxy (--public-url)
+        - 桌面应用 / Desktop app
+        - 其他 / Other
+    validations:
+      required: true
+  - type: input
+    id: other-plugins
+    attributes:
+      label: 同时启用的其他插件 / Other plugins enabled
+      description: 没有请填「无」/ Write "none" if absent
+      placeholder: ds-bot 0.3.8
+    validations:
+      required: true
+  - type: dropdown
+    id: theme
+    attributes:
+      label: 出现问题的主题 / Theme where it occurs
+      options:
+        - 浅色 / Light
+        - 深色 / Dark
+        - 两者 / Both
+        - 不确定 / Not sure
+    validations:
+      required: true
+  - type: checkboxes
+    id: latest
+    attributes:
+      label: 复现确认 / Reproduction check
+      options:
+        - label: 我已在最新发布版本复现此问题 / I reproduced this on the latest release
+          required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤 / Steps to reproduce
+      description: 一步一步写，从打开页面开始 / Step by step, starting from opening the page
+    validations:
+      required: true
+  - type: textarea
+    id: expected-actual
+    attributes:
+      label: 期望与实际 / Expected vs actual
+      description: 期望发生什么、实际发生什么 / What you expected and what actually happened
+    validations:
+      required: true
+  - type: textarea
+    id: media
+    attributes:
+      label: 截图、录屏或日志 / Screenshots, video or logs
+      description: 视觉问题请附浅色与深色截图，性能问题请附录屏 / For visual issues attach light and dark shots; for performance attach a video
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: 补充上下文 / Additional context
+    validations:
+      required: false
