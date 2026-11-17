@@ -298,9 +298,10 @@ function CompactControl({ sessionId, offer }: { sessionId: string, offer: Compac
     })
   }
   const failed = phase.state === 'failed'
-  // The host's own borderless control carries its height, corners, press, focus
-  // and disabled states; the row gives it the resting plate Claude's rail puts
-  // under this request and the row's type (session-panel-context.css).
+  // The host's own borderless control carries its corners, press, focus and
+  // disabled states; the row gives it the resting plate Claude's rail puts
+  // under this request, the small size and the reading line's height
+  // (session-panel-context.css).
   const action = phase.state === 'done'
     ? h('span', { className: 'dsh-claude-panel-compact-note', title: phase.text }, copy('compactDone'))
     : h(primitives.Button, {

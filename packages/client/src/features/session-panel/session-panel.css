@@ -162,7 +162,6 @@ body[data-dsh-claude-style] .dsh-claude-panel-note,
 body[data-dsh-claude-style] .dsh-claude-panel-context-head,
 body[data-dsh-claude-style] .dsh-claude-panel-legend-row,
 body[data-dsh-claude-style] .dsh-claude-panel-compact,
-body[data-dsh-claude-style] .dsh-claude-panel-compact-action,
 body[data-dsh-claude-style] .dsh-claude-panel-stats {
   margin: 0;
   font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));

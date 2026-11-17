@@ -357,8 +357,9 @@ division lines. A section heading is 13/20 in the regular weight and stands on a
 hairline of its own; the primary ink goes to headings, row titles, the occupancy
 figure, the share column and a figure's value. Labels take the secondary ink; a
 row's detail, the token column and the room left take the tertiary one. The small
-size, 11.5/16, is kept for a row's trailing state, the file-list fold control and
-the legend's caption. Sections use 16px vertical insets and a hairline on their
+size, 11.5/16, is kept for a row's trailing state, the file-list fold control,
+the legend's caption and the compact request, which stands at the reading line's
+own height beside the distance's words. Sections use 16px vertical insets and a hairline on their
 top edge, and lengths stay on the 4px grid.
 
 Each section is an independent native disclosure with keyboard activation and a

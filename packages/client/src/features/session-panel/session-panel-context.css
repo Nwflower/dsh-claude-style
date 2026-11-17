@@ -187,12 +187,18 @@ body[data-dsh-claude-style] .dsh-claude-panel-compact-note {
   color: var(--dsw-alias-label-secondary, #5c5c5c);
 }
 
-/* The button rests on the hover wash, a light plate without an outline; its
-   words take the panel's reading type (session-panel.css) over the host's
-   smaller one. Under the pointer a second wash stacks on the first; this rule
-   outranks the host ghost's own hover, which would paint the resting wash alone. */
+/* The button rests on the hover wash, a light plate without an outline. It
+   takes the panel's small size and the reading line's own 20px height over the
+   host's taller sm box, so it stands level with the distance's words; the
+   host's corners, press, focus and disabled states stay. Under the pointer a
+   second wash stacks on the first; this rule outranks the host ghost's own
+   hover, which would paint the resting wash alone. */
 body[data-dsh-claude-style] .dsh-claude-panel-compact-action {
+  height: 20px;
+  padding: 0 8px;
   background: var(--dsh-claude-hover-bg);
+  font-size: calc(11.5px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 16px;
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-compact-action:hover:not(:disabled) {

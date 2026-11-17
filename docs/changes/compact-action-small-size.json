@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-17",
+  "group": "improvements",
+  "order": 0,
+  "external": false,
+  "zh": "压缩会话按钮改用栏内小字号，高度与距离自动压缩一行文本齐平",
+  "en": "Set the compact request in the rail's small size at the reading line's height, level with the distance text"
+}
