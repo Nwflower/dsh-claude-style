@@ -29,7 +29,10 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="section-header"] {
 }
 body[data-dsh-claude-style] .dsh-claude-ws-segments {
   position: absolute;
-  left: 0;
+  /* The label's own left edge, measured by the pass (workspace-view.ts): the
+     host's header padding carries the label in from the header's edge, and the
+     switch lays over the label's slot, not over the padding. */
+  left: var(--dsh-claude-ws-segments-left, 0px);
   top: 50%;
   transform: translateY(-50%);
   opacity: 1;

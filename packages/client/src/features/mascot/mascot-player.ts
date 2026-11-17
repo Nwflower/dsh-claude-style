@@ -1,5 +1,6 @@
 import { COMPOSER_STACK, conversationSessionId, findComposerCard, findComposerSeat, findConversationSession, findHeroRoot } from '@dsh-claude-style/engine/host'
 import { motionReduced } from '../../core/prefs'
+import { MASCOT_STANDING_ATTR } from '../../constants'
 import { createMascotBubble } from './mascot-bubble'
 import { createMascotSignals } from './mascot-signals'
 import type { MascotMoment } from './mascot-signals'
@@ -86,6 +87,8 @@ export function createMascotPlayer(ctx: HostContext, ui: FeatureUi<typeof manife
   const ANCHOR_ATTR = `data-${PREFIX}-anchor` as const
   /** The stamp carrying the anchor mark across re-renders. */
   const anchorStamp = createStamp(ANCHOR_ATTR)
+  /** The composer stack carrying the standing mark, kept so the mark leaves with the mascot. */
+  let standingStack: HTMLElement | null = null
   const SHEETS = character.sheets
   const FRAME_MS = character.frameMs
 
@@ -196,6 +199,15 @@ export function createMascotPlayer(ctx: HostContext, ui: FeatureUi<typeof manife
     }
     if (root.parentNode !== stand.element) stand.element.appendChild(root)
     anchorStamp.mark(stand.element, stand.place)
+    // The hero's context row stands above the card the mascot stands on; the
+    // stack's mark lets the home layout keep the row's right end clear of the
+    // character (features/home/home-panel.css).
+    const stack = stand.element.closest<HTMLElement>(COMPOSER_STACK)
+    if (stack !== standingStack) {
+      standingStack?.removeAttribute(MASCOT_STANDING_ATTR)
+      standingStack = stack
+      standingStack?.setAttribute(MASCOT_STANDING_ATTR, character.name)
+    }
     if (stand.session !== stage.sessionId) {
       stage.sessionId = stand.session
       // A moment belongs to the page it happened on.
@@ -455,6 +467,8 @@ export function createMascotPlayer(ctx: HostContext, ui: FeatureUi<typeof manife
     bubble.leave()
     if (root !== null && root.parentNode !== null) root.parentNode.removeChild(root)
     anchorStamp.release()
+    standingStack?.removeAttribute(MASCOT_STANDING_ATTR)
+    standingStack = null
     if (signals !== null) signals.dispose()
     signals = null
     // One replacement for every field the page owned.

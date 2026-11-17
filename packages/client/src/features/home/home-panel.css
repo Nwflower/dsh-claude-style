@@ -98,6 +98,16 @@ body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-clau
   margin-left: 0;
 }
 
+/* The mascot stands on the card's top edge and reaches 120px above it, into
+   this row's right end — the git branch and the worktree picker. While a
+   character stands in the hero stack, the row keeps its content clear of the
+   widest one: the whalegirl's 138px plus her 8px inset and 4px of slack. The
+   row spans the whole stack while the card sits inside the side clearance,
+   so the clearance joins the sum. */
+body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"][data-dsh-claude-mascot-standing] > [data-dsh-claude-part~="hero-workspace-row"] {
+  padding-right: calc(var(--dsh-composer-side-clearance, 16px) + 150px);
+}
+
 /* The context row's triggers wear Claude's chip: a hairline box on the canvas
    rather than a bare label. The target list is the composer card's own for these
    triggers, so the chip carries the same weight and, coming later, wins. */

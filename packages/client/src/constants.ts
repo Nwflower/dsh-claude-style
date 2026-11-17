@@ -74,6 +74,8 @@ export const PALETTE_ATTR = 'data-dsh-claude-palette'
 export const PALETTE_CARD_ATTR = 'data-dsh-claude-palette-card'
 export const TYPEFACE_ATTR = 'data-dsh-claude-typeface'
 export const MASCOT_ATTR = 'data-dsh-claude-mascot'
+/** The composer stack a mascot stands in, valued with the character's name (features/mascot/mascot-player.ts); the home layout keeps the hero context row's right end clear while it stands. */
+export const MASCOT_STANDING_ATTR = 'data-dsh-claude-mascot-standing'
 export const SEARCH_STYLE_ATTR = 'data-dsh-claude-search-style'
 export const SIDEBAR_LAYOUT_ATTR = 'data-dsh-claude-sidebar-layout'
 /** Present as `off` while the sidebar's brand area is hidden (theme/sidebar.css); the Brand row's switch writes it. */

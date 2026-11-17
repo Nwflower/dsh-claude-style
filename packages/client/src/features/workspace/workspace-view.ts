@@ -25,6 +25,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The section's view (active / archived), its heading, marked for workspace.css. */
   const viewStamp = createStamp('data-dsh-claude-ws-view')
   const labelStamp = createStamp('data-dsh-claude-ws-label')
+  /** The switch's left edge follows the label's own, measured in the read phase. */
+  const SEGMENTS_LEFT_VAR = '--dsh-claude-ws-segments-left'
   const follower = createViewStoreFollower()
   const segments = createSegmentControl((next) => {
     follower.drive(next)
@@ -41,6 +43,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * host mounts once and replaces whole, and this runs on every pass.
    */
   let sectionLabel: HTMLElement | null = null
+  /** The label's offset within its header, taken in the read phase; null asks sync to read it. */
+  let labelLeft: number | null = null
+  /** The header the switch's alignment was written on, kept so it leaves with the control. */
+  let dressedHeader: HTMLElement | null = null
   /** The section labels on the page, taken from the bus and released with the section. */
   let labelWatch: MatchList<HTMLElement> | null = null
   /** The list's additions, marked before the frame paints; see watchAdditions. */
@@ -149,6 +155,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     segments.release()
     labelStamp.release()
     viewStamp.release()
+    dressedHeader?.style.removeProperty(SEGMENTS_LEFT_VAR)
+    dressedHeader = null
+    labelLeft = null
   }
 
   function sync() {
@@ -172,6 +181,15 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     labelStamp.mark(label)
     const view = follower.view()
     segments.sync(header, view)
+    if (dressedHeader !== header) {
+      dressedHeader?.style.removeProperty(SEGMENTS_LEFT_VAR)
+      dressedHeader = header
+    }
+    // The host's header padding carries the label in from the header's edge;
+    // the switch lays over the label's slot, so its left edge is the label's
+    // own offset, not the header's.
+    const value = `${labelLeft ?? label.offsetLeft}px`
+    if (header.style.getPropertyValue(SEGMENTS_LEFT_VAR) !== value) header.style.setProperty(SEGMENTS_LEFT_VAR, value)
     viewStamp.mark(root, view)
     // The archived list rides inside the host's own list seat, which the wide
     // sidebar registers as this section's scroller (host.sidebar-list-seat): its
@@ -196,6 +214,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    */
   function measure() {
     segments.measure()
+    const label = sectionLabel
+    labelLeft = label !== null && label.isConnected ? label.offsetLeft : null
   }
 
   ui.workspace = {
