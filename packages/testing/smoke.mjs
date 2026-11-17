@@ -149,12 +149,15 @@ async function drivePages(planned, jobs, browser, base) {
     }
     // A page load can lose to a neighbour or a slow first frame: a page that
     // failed beside the others is judged again on its own, as the behaviour
-    // lane does for its timing specs.
-    if (failures() > before) retry.push({ pageName, pageCases, before })
+    // lane does for its timing specs. The page's own share is counted here,
+    // while the counter still stands right after this page's judgment.
+    if (failures() > before) retry.push({ pageName, pageCases, lost: failures() - before })
   }
-  for (const { pageName, pageCases, before } of retry) {
+  for (const { pageName, pageCases, lost } of retry) {
     console.log(`\nbrowser half — page ${pageName} failed beside the others; re-judging it alone`)
-    retractFailures(failures() - before)
+    // The counter is shared: an earlier re-judgment has already taken back its
+    // own share, so only this page's recorded share may be retracted here.
+    retractFailures(lost)
     const fresh = await runPage(browser, base, pageName)
     for (const name of pageCases) {
       console.log(`\nbrowser half — ${name}`)
