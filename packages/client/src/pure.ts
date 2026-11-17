@@ -37,7 +37,7 @@ export {
 export type { ShapeSample } from './features/chat-send/send-shape'
 export { chatSendOpaque } from './features/chat-send/send-snapshot'
 export { foreignRunningLineOwns } from './features/chat-wait/running-owner'
-export { WORD_LOCK_MS, openTurn, waitStart, wordForPass } from './features/chat-wait/wait-state'
+export { WAIT_OVERTIME_MS, WORD_LOCK_MS, openTurn, overtimeMargin, waitStart, wordForPass } from './features/chat-wait/wait-state'
 export { callTokens } from './features/context-stats/call-tokens'
 export { contextBandAt, ringDash } from './features/context-stats/context-meter-face'
 export { contextPieImage } from './features/context-stats/context-meter-pie'

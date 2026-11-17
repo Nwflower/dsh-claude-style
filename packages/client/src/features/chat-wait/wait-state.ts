@@ -1,4 +1,4 @@
-import type { HostChatSnapshot, HostTurn } from '@dsh-claude-style/contracts/services'
+import type { HostChatSnapshot, HostSessionStatsProjection, HostTurn } from '@dsh-claude-style/contracts/services'
 
 /**
  * When the model has kept the reader waiting, read off the host's chat
@@ -7,8 +7,21 @@ import type { HostChatSnapshot, HostTurn } from '@dsh-claude-style/contracts/ser
  * against the model.
  */
 
-/** Past this, a wait stops reading as a pause and reads as the model not answering. */
+/** The shortest a wait runs before it reads as the model not answering; the session's own pace stretches the margin past this (overtimeMargin). */
 export const WAIT_OVERTIME_MS = 10_000
+
+/**
+ * The margin a wait runs past before the badge stands: twice the session's
+ * average time to first token, never under the floor. A model whose first token
+ * takes a quarter minute is at work through that stretch, and the floor alone
+ * would call every such turn unresponsive. The average is the host's settled
+ * statistics, summed over the steps that reported a first token; with no such
+ * step there is nothing to average, and the floor is the whole margin.
+ */
+export function overtimeMargin(stats: HostSessionStatsProjection | null): number {
+  if (stats === null || !(stats.ttftSteps > 0)) return WAIT_OVERTIME_MS
+  return Math.max(2 * (stats.ttftMs / stats.ttftSteps), WAIT_OVERTIME_MS)
+}
 
 /**
  * Where a wait first seen at `now` began. Before the model has written anything

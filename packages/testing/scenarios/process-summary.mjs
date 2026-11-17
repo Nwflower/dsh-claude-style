@@ -123,7 +123,9 @@ function processSummaryScenario({ check }) {
     delayMs: 300,
     async duringTurn(context) {
       const { page } = context
-      // The model holds its first event for 11.5 s: the badge rises at 10 s.
+      // The model holds its first event for 11.5 s. The session is fresh, so no
+      // first token has settled and the floor is the whole margin: the badge
+      // rises at 10 s (wait-state.ts).
       await page.waitForFunction(() => document.querySelector('[data-chat-running] .dsh-claude-chat-wait') !== null, undefined, { timeout: 15000 })
       context.notes.waitEarly = await readWait(page)
       await page.waitForFunction(() => {

@@ -46,6 +46,24 @@
     // make the model silent, and puts a call in flight to make the turn tooling.
     host.turnFixtureRunning = running
     host.turnFixtureCalls = runningCalls
+    // The bound session's statistics face: the waiting line reads the average
+    // time to first token from it to stretch its overtime margin (wait-state.ts).
+    // The value starts absent, the way a session whose baseline has not landed
+    // answers; the probe lands whole values on it, and the line reads them on its
+    // own tick, so the face answers snapshots alone. Every key answers with a
+    // face — absence is an undefined snapshot, never a missing face (the host's
+    // ProjectionValueStore contract).
+    var stats
+    host.pushWaitStats = function (value) { stats = value }
+    host.waitSession = {
+      session: {
+        projections: {
+          faceOf: function (key) {
+            return { getSnapshot: function () { return key === 'sessionStats' ? stats : undefined } }
+          },
+        },
+      },
+    }
     return {
       binding: function () { return { target: function () { return { getSnapshot: function () { return snapshot } } } } },
     }

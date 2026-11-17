@@ -224,6 +224,13 @@
       "apply": "forward",
       "patch": "patches/intent-session-cost-stuck.patch",
       "defect": "A reader who leaves a conversation before its first total arrives never sees a cost again: the line keeps the currency's dash for the rest of the page's life."
+    },
+    {
+      "id": "intent-overtime-ignores-first-token-pace",
+      "from": "intent",
+      "apply": "forward",
+      "patch": "patches/intent-overtime-ignores-first-token-pace.patch",
+      "defect": "The waiting line's overtime badge comes out at ten seconds of silence on every session, whatever the session's own average time to first token."
     }
   ]
 }

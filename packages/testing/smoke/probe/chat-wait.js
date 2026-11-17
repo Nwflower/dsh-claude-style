@@ -323,6 +323,60 @@
       // clock slides with it: the frames run on until the page settles.
       r.wait.silent = r.wait.silent.concat(await probe.watch(lineOf))
       r.wait.enterFrames = enterFrames
+      // The overtime margin follows the session's own first-token pace: twice
+      // the average time to first token its statistics settle, never under the
+      // floor (wait-state.ts). Each reading starts a fresh turn whose start is
+      // placed a fixed stretch behind now, so the wait's length is the probe's
+      // own; the line reads the fixture on its own tick, so every reading waits
+      // for the badge to reach the state the margin answers, not for a pause.
+      var waitFrom = function (agoMs) {
+        window.__dshSmokeHost.turnFixtureRunning.turn += 1
+        window.__dshSmokeHost.turnFixtureRunning.start = { time: Date.now() - agoMs }
+        window.__dshSmokeHost.turnFixtureRunning.steps = []
+      }
+      var awaitBadge = function (shown, what) {
+        return probe.until(function () { return lineOf().badge }, function (badges) {
+          var last = badges[badges.length - 1]
+          return shown ? last === 'No response yet' : last === null
+        }, what)
+      }
+      var statsWith = function (ttftMs, ttftSteps) {
+        return { turns: 2, steps: ttftSteps, llmMs: 0, toolMs: 0, ttftMs: ttftMs, ttftSteps: ttftSteps, decodeMs: 0, decodeTokens: 0 }
+      }
+      // No statistics settled: the floor is the whole margin, and a wait past it
+      // carries the badge.
+      waitFrom(12000)
+      await awaitBadge(true, 'the badge past the floor with no statistics')
+      r.wait.marginNoStats = lineOf()
+      // A session whose first token takes a minute: the margin stretches to two
+      // minutes, and the same length of wait stands under it.
+      window.__dshSmokeHost.pushWaitStats(statsWith(120000, 2))
+      await awaitBadge(false, 'the badge standing down under a slow session\'s margin')
+      r.wait.marginSlowSession = lineOf()
+      // A fast session: twice its average is under the floor, so the floor holds
+      // the badge down at six seconds of silence and lets it out at twelve.
+      window.__dshSmokeHost.pushWaitStats(statsWith(4000, 2))
+      waitFrom(6000)
+      await awaitBadge(false, 'the badge held down at six seconds under the floor')
+      r.wait.marginFastUnderFloor = lineOf()
+      waitFrom(12000)
+      await awaitBadge(true, 'the badge out at twelve seconds under the floor')
+      r.wait.marginFastPastFloor = lineOf()
+      // The stretch is twice the average, not the average itself: an eight-second
+      // average holds the badge at twelve seconds of silence and lets it out at
+      // twenty.
+      window.__dshSmokeHost.pushWaitStats(statsWith(16000, 2))
+      waitFrom(12000)
+      await awaitBadge(false, 'the badge held at twelve seconds by twice an eight-second average')
+      r.wait.marginAverageHolds = lineOf()
+      waitFrom(20000)
+      await awaitBadge(true, 'the badge out at twenty seconds past twice an eight-second average')
+      r.wait.marginTwiceAveragePassed = lineOf()
+      // The statistics gone again: the floor returns.
+      window.__dshSmokeHost.pushWaitStats(undefined)
+      waitFrom(12000)
+      await awaitBadge(true, 'the badge back past the floor once the statistics go')
+      r.wait.marginStatsCleared = lineOf()
       // The reasoning this case's turn streams, one wording at a time: the line
       // reads it off the session's snapshot (shared/turn-activity).
       var reason = function (text) {

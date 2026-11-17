@@ -225,6 +225,25 @@ export default {
     check('a wait nothing can be read from stands on the word the brand says while the model thinks, not a second word of its own',
       last.word === working.word, JSON.stringify({ silent: last.word, working: working.word }))
     check('a model silent past ten seconds shows the overtime badge', last.badge === 'No response yet', JSON.stringify(last))
+    // The margin the badge waits out is the session's own: twice its average
+    // time to first token, never under ten seconds (wait-state.ts). The probe
+    // places each wait's start and lands whole statistics values on the session.
+    const marginNoStats = wait.marginNoStats || {}
+    const marginSlow = wait.marginSlowSession || {}
+    const marginCleared = wait.marginStatsCleared || {}
+    check('a session whose first token is slow keeps the badge down past ten seconds, and the floor returns when its statistics go',
+      marginNoStats.badge === 'No response yet' && marginSlow.badge === null && marginCleared.badge === 'No response yet',
+      JSON.stringify({ noStats: marginNoStats.badge, slow: marginSlow.badge, cleared: marginCleared.badge }))
+    const marginUnder = wait.marginFastUnderFloor || {}
+    const marginOver = wait.marginFastPastFloor || {}
+    check('the floor holds under a fast session: six seconds of silence carries no badge, twelve does',
+      marginUnder.badge === null && marginOver.badge === 'No response yet',
+      JSON.stringify({ under: marginUnder.badge, over: marginOver.badge }))
+    const marginHolds = wait.marginAverageHolds || {}
+    const marginPassed = wait.marginTwiceAveragePassed || {}
+    check('the margin is twice the average first-token time: an eight-second average holds at twelve seconds of silence and lets out at twenty',
+      marginHolds.badge === null && marginPassed.badge === 'No response yet',
+      JSON.stringify({ holds: marginHolds.badge, passed: marginPassed.badge }))
     const tools = wait.tools || {}
     check('a tool call in flight is named as such',
       tools.word === 'Running tools…' && tools.badge === null, JSON.stringify(tools))

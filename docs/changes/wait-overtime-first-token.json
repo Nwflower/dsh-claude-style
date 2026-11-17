@@ -1,0 +1,1 @@
+{"at": "2026-11-17", "group": "fixes", "order": 384, "external": true, "zh": "修复首字较慢的模型每轮都被挂出「暂未响应」的问题，徽标等待时长改为会话平均首 Token 时间的两倍，最低十秒", "en": "Fix the overtime badge calling a slow-first-token model unresponsive every turn; it now waits out twice the session's average time to first token, ten seconds at the least"}

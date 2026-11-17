@@ -1,0 +1,12 @@
+diff --git a/packages/client/src/features/chat-wait/wait-state.ts b/packages/client/src/features/chat-wait/wait-state.ts
+--- a/packages/client/src/features/chat-wait/wait-state.ts
++++ b/packages/client/src/features/chat-wait/wait-state.ts
+@@ -18,7 +18,7 @@
+  * statistics, summed over the steps that reported a first token; with no such
+  * step there is nothing to average, and the floor is the whole margin.
+  */
+ export function overtimeMargin(stats: HostSessionStatsProjection | null): number {
+   if (stats === null || !(stats.ttftSteps > 0)) return WAIT_OVERTIME_MS
+-  return Math.max(2 * (stats.ttftMs / stats.ttftSteps), WAIT_OVERTIME_MS)
++  return WAIT_OVERTIME_MS
+ }

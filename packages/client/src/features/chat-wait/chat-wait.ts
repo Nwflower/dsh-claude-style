@@ -1,7 +1,7 @@
 import { QUIET_ATTR } from '../../constants'
 import { observeMatches } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
-import { closestConversationSession, conversationSessionId, findChatTarget } from '@dsh-claude-style/engine/host'
+import { closestConversationSession, conversationSessionId, findChatTarget, hostSnapshot } from '@dsh-claude-style/engine/host'
 import { hostChatCopy, hostChatSeat } from '../../core/i18n'
 import { motionReduced, readPrefs, subscribePrefs } from '../../core/prefs'
 import { buildElement, writeTextInPlace } from '@dsh-claude-style/engine/dom'
@@ -9,12 +9,13 @@ import { formatHostDuration } from '../../shared/format'
 import { motionMs } from '../../shared/motion'
 import { releaseSwappingText, setSwappingText } from '../../shared/swapping-text'
 import { activityWords, waitingWord, THINKING_KEY } from '../../shared/turn-activity'
+import { sessionProjectionFaces } from '../../shared/session-projections'
 import { startWaitLoader, releaseWaitLoader, resyncWaitLoader } from './wait-loader'
 import { CHAT_FLOW_SELECTOR, CHAT_RUNNING_SELECTOR, CHAT_RUNNING_HOLDING_ATTRIBUTE, CHAT_RUNNING_TEXT_SELECTOR } from '@dsh-claude-style/contracts/dom'
-import { WAIT_OVERTIME_MS, openTurn, waitStart, wordForPass } from './wait-state'
+import { openTurn, overtimeMargin, waitStart, wordForPass } from './wait-state'
 import { foreignRunningLineOwns } from './running-owner'
 import type { RowWords } from './wait-state'
-import type { HostChatTarget } from '@dsh-claude-style/contracts/services'
+import type { HostChatTarget, HostSessionStatsProjection } from '@dsh-claude-style/contracts/services'
 import type { HostContext, HostText } from '@dsh-claude-style/engine/host'
 import type { FeatureUi } from '../../core/feature'
 import type manifest from './chat-wait.manifest'
@@ -252,6 +253,19 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     })
   }
 
+  /**
+   * The session's settled statistics, off the projection the host serves for it
+   * (shared/session-projections.ts): the average time to first token in them is
+   * what stretches the overtime margin (wait-state.ts). Null while the host
+   * serves no projection seat for the session, which is how a host that names no
+   * projections answers at all.
+   */
+  function sessionStatsOf(sessionId: string | null): HostSessionStatsProjection | null {
+    if (sessionId === null) return null
+    const face = sessionProjectionFaces(ctx, sessionId, ['sessionStats'])?.sessionStats
+    return (hostSnapshot(face) ?? null) as HostSessionStatsProjection | null
+  }
+
   /** Bring one row's line to what the host's snapshot says now. */
   function syncRow(row: HTMLElement, t: HostText, now: number, seen: Set<string>, live: Set<string>) {
     // The host keeps the running row's slot after the turn stops, marked
@@ -317,7 +331,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
         began = waitStart(turn, now)
         waits.set(key, began)
       }
-      overtime = now - began >= WAIT_OVERTIME_MS
+      overtime = now - began >= overtimeMargin(sessionStatsOf(sessionId))
     }
     syncBadge(badge, overtime)
     if (!row.hasAttribute(WAIT_ATTR)) row.setAttribute(WAIT_ATTR, '')
