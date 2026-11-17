@@ -3,6 +3,9 @@
    with no foreign right-hand control spends a shortage on the model label;
    other rows keep the wrapping path, and stacked always takes the second line. */
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant][data-dsh-claude-composer-layout] [data-dsh-claude-composer-toolbar] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
   height: auto;
   min-height: 28px;
@@ -10,12 +13,16 @@ body[data-dsh-claude-style] [data-composer-card][data-composer-variant][data-dsh
   row-gap: 4px;
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] > [data-dsh-claude-part~="tools"] {
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
   flex-wrap: wrap;
   height: auto;
   max-width: 100%;
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] > [data-dsh-claude-part~="trailing"] {
+  display: flex;
+  align-items: center;
   margin-inline-start: auto;
   flex-shrink: 1;
   flex-wrap: nowrap;
@@ -164,33 +171,62 @@ body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-comp
    A zero basis lets the outer wrapping row share its spare room before moving
    the cluster below. Its minimum includes the name's recognition floor, so a
    genuinely crowded row still wraps without painting over another control. */
-body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] > [data-dsh-claude-part~="trailing"] {
+body[data-dsh-claude-style] :is([data-phase="active"], [data-phase="hero"]) [data-composer-card][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] {
+  flex-wrap: wrap;
+}
+body[data-dsh-claude-style] :is([data-phase="active"], [data-phase="hero"]) [data-composer-card][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] > [data-dsh-claude-part~="trailing"] {
   flex-basis: 0;
   flex-grow: 1;
   min-width: min-content;
 }
-body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] [data-dsh-claude-part~="composer-controls"],
-body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat {
+body[data-dsh-claude-style] :is([data-phase="active"], [data-phase="hero"]) [data-composer-card][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] [data-dsh-claude-part~="composer-controls"],
+body[data-dsh-claude-style] :is([data-phase="active"], [data-phase="hero"]) [data-composer-card][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat {
   flex-grow: 1;
+  flex-wrap: nowrap;
 }
-body[data-dsh-claude-style] [data-phase="active"] [data-composer-card] [data-dsh-claude-composer-extension] {
+body[data-dsh-claude-style] :is([data-phase="active"], [data-phase="hero"]) [data-composer-card] [data-dsh-claude-composer-extension] {
   flex-shrink: 0;
   min-width: max-content;
 }
-body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat > .dsh-claude-model-seat-model {
+body[data-dsh-claude-style] :is([data-phase="active"], [data-phase="hero"]) [data-composer-card][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat > .dsh-claude-model-seat-model {
   flex-basis: 0;
   flex-grow: 1;
   justify-content: flex-end;
   width: 0;
   min-width: min-content;
 }
-body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat-model > .dsh-claude-model-btn {
+body[data-dsh-claude-style] :is([data-phase="active"], [data-phase="hero"]) [data-composer-card][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat-model > .dsh-claude-model-btn {
   flex-grow: 1;
 }
-body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn-label {
+body[data-dsh-claude-style] :is([data-phase="active"], [data-phase="hero"]) [data-composer-card][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn-label {
   flex-grow: 1;
   width: 0;
   min-width: 10ch;
+}
+/* The home row carries three permission segments as well as desktop control.
+   Tighten toolbar gaps, segment padding and the model-name floor before
+   spending another control row, while keeping narrow windows free to wrap (D9). */
+body[data-dsh-claude-style] [data-phase="hero"] [data-composer-card][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] {
+  column-gap: 4px;
+}
+body[data-dsh-claude-style] [data-phase="hero"] [data-composer-card][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] > [data-dsh-claude-part~="tools"] {
+  column-gap: 4px;
+}
+body[data-dsh-claude-style]:not([data-dsh-claude-page-under-600]) [data-phase="hero"] [data-composer-card][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] > [data-dsh-claude-part~="tools"] {
+  flex-wrap: nowrap;
+}
+body[data-dsh-claude-style] [data-phase="hero"] [data-composer-card][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] > [data-dsh-claude-part~="trailing"] {
+  column-gap: 4px;
+}
+body[data-dsh-claude-style] [data-phase="hero"] [data-composer-card][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] .dsh-claude-segment {
+  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
+  padding-inline: 5px;
+}
+body[data-dsh-claude-style] [data-phase="hero"] [data-composer-card][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn > .dsh-claude-model-tag {
+  margin-left: 4px;
+}
+body[data-dsh-claude-style] [data-phase="hero"] [data-composer-card][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn-label {
+  min-width: 4ch;
 }
 /* The native width handle can overflow the outer phase frame without adding
    visible content. Keep that frame from becoming a second scroll container;

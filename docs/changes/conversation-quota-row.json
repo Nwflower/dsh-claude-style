@@ -3,6 +3,6 @@
   "group": "fixes",
   "order": 0,
   "external": true,
-  "zh": "修复会话输入区加入第三方额度控件后有空间仍换行的问题，保留额度完整宽度并按剩余空间缩短模型名称",
-  "en": "Fix conversation toolbars wrapping with room to spare when a third-party quota is present, preserving its content width while shortening the model name to fit"
+  "zh": "修复首页与会话输入区加入第三方额度控件后的换行和文字重叠问题，保留额度完整宽度并按剩余空间缩短模型名称",
+  "en": "Fix wrapping and overlapping text in home and conversation toolbars with third-party quotas, preserving their content width while shortening the model name to fit"
 }

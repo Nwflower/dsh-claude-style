@@ -23,12 +23,12 @@ test.each([
   { direction: 'rtl', zoom: 1, dark: true },
   { direction: 'ltr', zoom: 1.5, dark: true },
   { direction: 'rtl', zoom: 1.5, dark: true },
-])('$direction $zoom dark=$dark: quota and model share room and wrap safely', async ({ direction, zoom, dark }) => {
-    const view = crowdingFixture({ width: 760 * zoom, direction, zoom })
+].flatMap(options => ['active', 'hero'].map(phase => ({ ...options, phase }))))('$phase $direction $zoom dark=$dark: quota and model share room and wrap safely', async ({ phase, direction, zoom, dark }) => {
+    const view = crowdingFixture({ width: 760 * zoom, direction, zoom, variant: phase === 'hero' ? 'hero' : 'inline' })
     cleanups.push(view.dispose)
     document.body.toggleAttribute(DARK_THEME_ATTRIBUTE, dark)
     cleanups.push(() => document.body.removeAttribute(DARK_THEME_ATTRIBUTE))
-    view.host.setAttribute(PHASE_ATTRIBUTE, 'active')
+    view.host.setAttribute(PHASE_ATTRIBUTE, phase)
     // Third-party SlotOutlet content has its own nested text and no fixed width.
     const quota = document.createElement('div')
     quota.style.cssText = 'display:inline-flex;align-items:center'
@@ -40,15 +40,17 @@ test.each([
     view.responsive.sync([view.card], true)
     const originalParent = quota.parentElement
 
-    for (const width of [760, 640, 600, 560, 520, 480, 760]) {
+    for (const width of [760, 700, 640, 600, 560, 520, 480, 760]) {
       view.resize(width * zoom)
       await frames()
       const row = view.row.getBoundingClientRect()
       const leading = view.tools.getBoundingClientRect()
       const trailing = view.trailing.getBoundingClientRect()
-      if (width >= 640) {
+      // The hero also keeps its primary button on the control row; the
+      // conversation places that same button over its editor.
+      if (width >= (phase === 'hero' ? 700 : 640)) {
         expect(Math.abs(leading.top + leading.height / 2 - trailing.top - trailing.height / 2)).toBeLessThan(1)
-      } else if (width === 480) {
+      } else if (width === 480 && phase === 'active') {
         expect(trailing.top).toBeGreaterThanOrEqual(leading.bottom)
       }
       const controls = [view.model, view.effort, view.usage, view.vision, trigger]
