@@ -16,6 +16,7 @@ import { hostSound } from './host-half-sound.mjs'
 import { hostPanel } from './host-half-panel.mjs'
 import { hostSearch, said } from './host-half-search.mjs'
 import { hostBrand } from './host-half-brand.mjs'
+import { hostCache } from './host-half-cache.mjs'
 
 // ---------------------------------------------------------------------------
 // Host half
@@ -399,6 +400,7 @@ async function hostHalf() {
 
   await hostUsage({ mod, fakeHost, request, browser, scratchHome, scratchCwd })
   await hostSearch({ mod, fakeHost, request, browser, crossSite, scratchHome })
+  await hostCache()
 
   // The peak rate catalog: the route answers the copy the package ships with
   // its profiles already parsed, and the fence keeps every other page off the
