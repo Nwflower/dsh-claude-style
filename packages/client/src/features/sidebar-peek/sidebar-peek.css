@@ -9,8 +9,9 @@
    cut it off, so the slide is an offset. A closing peek fades the column's
    own children while it slides, the same children the host fades when it
    collapses. On the Windows desktop the toggle is fixed inside the logo row,
-   so that row keeps full opacity and only the brand identity fades; macOS
-   fixes nothing, so its top strip fades whole with the column. */
+   so that row keeps full opacity and only the brand identity, inside the
+   brand button, fades; macOS fixes nothing, so its top strip fades whole with
+   the column. */
 body[data-dsh-claude-style] [data-dsh-claude-part~="layout-frame"][data-dsh-claude-sidebar-peek] > [data-dsh-claude-part~="sidebar-column"] {
   position: absolute;
   grid-row: 1;
@@ -32,7 +33,7 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="layout-frame"][data-dsh-clau
 }
 body[data-dsh-claude-style] [data-dsh-claude-part~="layout-frame"][data-dsh-claude-sidebar-peek="closing"] [data-dsh-claude-part~="sidebar-root"] > [data-dsh-claude-part~="logo-row"],
 body[data-dsh-claude-style] [data-dsh-claude-part~="layout-frame"][data-dsh-claude-sidebar-peek="closing"] [data-dsh-claude-part~="sidebar-root"] > [data-dsh-claude-part~="top-strip"],
-body[data-dsh-claude-style] [data-dsh-claude-part~="layout-frame"][data-dsh-claude-sidebar-peek="closing"] [data-dsh-claude-part~="sidebar-root"] > [data-dsh-claude-part~="new-session"],
+body[data-dsh-claude-style] [data-dsh-claude-part~="layout-frame"][data-dsh-claude-sidebar-peek="closing"] [data-dsh-claude-part~="sidebar-root"] > [data-dsh-claude-part~="new-session-row"],
 body[data-dsh-claude-style] [data-dsh-claude-part~="layout-frame"][data-dsh-claude-sidebar-peek="closing"] [data-dsh-claude-part~="sidebar-root"] > [data-dsh-claude-part~="sidebar-scroll-region"],
 body[data-dsh-claude-style] [data-dsh-claude-part~="layout-frame"][data-dsh-claude-sidebar-peek="closing"] [data-dsh-claude-part~="sidebar-root"] > [data-dsh-claude-part~="foot-area"] {
   animation: dsh-claude-sidebar-peek-fade-out var(--dsh-claude-duration-exit) var(--dsh-claude-ease-standard) forwards;
@@ -40,7 +41,7 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="layout-frame"][data-dsh-clau
 html[data-windows-titlebar] body[data-dsh-claude-style] [data-dsh-claude-part~="layout-frame"][data-dsh-claude-sidebar-peek="closing"] [data-dsh-claude-part~="sidebar-root"] > [data-dsh-claude-part~="logo-row"] {
   animation: none;
 }
-html[data-windows-titlebar] body[data-dsh-claude-style] [data-dsh-claude-part~="layout-frame"][data-dsh-claude-sidebar-peek="closing"] [data-dsh-claude-part~="sidebar-root"] > [data-dsh-claude-part~="logo-row"] > [data-dsh-claude-part~="brand-identity"] {
+html[data-windows-titlebar] body[data-dsh-claude-style] [data-dsh-claude-part~="layout-frame"][data-dsh-claude-sidebar-peek="closing"] [data-dsh-claude-part~="sidebar-root"] > [data-dsh-claude-part~="logo-row"] > [data-dsh-claude-part~="brand-button"] > [data-dsh-claude-part~="brand-identity"] {
   animation: dsh-claude-sidebar-peek-fade-out var(--dsh-claude-duration-exit) var(--dsh-claude-ease-standard) forwards;
 }
 /* The host animates the frame's first track while it opens or closes the
@@ -53,10 +54,10 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="layout-frame"][data-dsh-clau
 html body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-claude-part~="layout-frame"][data-dsh-claude-sidebar-peek] > [data-dsh-claude-part~="sidebar-column"],
 html body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-claude-part~="layout-frame"][data-dsh-claude-sidebar-peek] [data-dsh-claude-part~="sidebar-root"] > [data-dsh-claude-part~="logo-row"],
 html body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-claude-part~="layout-frame"][data-dsh-claude-sidebar-peek] [data-dsh-claude-part~="sidebar-root"] > [data-dsh-claude-part~="top-strip"],
-html body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-claude-part~="layout-frame"][data-dsh-claude-sidebar-peek] [data-dsh-claude-part~="sidebar-root"] > [data-dsh-claude-part~="new-session"],
+html body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-claude-part~="layout-frame"][data-dsh-claude-sidebar-peek] [data-dsh-claude-part~="sidebar-root"] > [data-dsh-claude-part~="new-session-row"],
 html body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-claude-part~="layout-frame"][data-dsh-claude-sidebar-peek] [data-dsh-claude-part~="sidebar-root"] > [data-dsh-claude-part~="sidebar-scroll-region"],
 html body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-claude-part~="layout-frame"][data-dsh-claude-sidebar-peek] [data-dsh-claude-part~="sidebar-root"] > [data-dsh-claude-part~="foot-area"],
-html body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-claude-part~="layout-frame"][data-dsh-claude-sidebar-peek] [data-dsh-claude-part~="sidebar-root"] > [data-dsh-claude-part~="logo-row"] > [data-dsh-claude-part~="brand-identity"] {
+html body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-claude-part~="layout-frame"][data-dsh-claude-sidebar-peek] [data-dsh-claude-part~="sidebar-root"] > [data-dsh-claude-part~="logo-row"] > [data-dsh-claude-part~="brand-button"] > [data-dsh-claude-part~="brand-identity"] {
   animation: none;
 }
 /* The handle the host places at the open sidebar's edge would resize a sidebar
