@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-17",
+  "group": "fixes",
+  "order": 0,
+  "external": true,
+  "zh": "修复逐字跟随模式下 token 输出较快时思考内容整段跳变与思考标题闪烁",
+  "en": "Fix choppy reasoning output and a flickering thinking title when tokens arrive fast in continuous display mode"
+}

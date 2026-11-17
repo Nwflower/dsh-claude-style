@@ -7,7 +7,7 @@ import { currentRow, lastUserRow, takeFreshEcho, touchesUserRow } from './send-r
 import { watchGrowEnter } from './send-grow'
 import { CHAT_FLIGHT_MS, CHAT_LANDING_MS } from './send-shape'
 import { CHAT_SEND_GHOST_ATTR, snapshotComposer } from './send-snapshot'
-import { CHAT_FLOW_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, FLOW_KIND_ATTRIBUTE, SUBMISSION_ECHO_SELECTOR, USER_ROW_KIND } from '@dsh-claude-style/contracts/dom'
+import { CHAT_FLOW_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, CONVERSATION_SCROLL_SELECTOR, FLOW_KIND_ATTRIBUTE, SUBMISSION_ECHO_SELECTOR, USER_ROW_KIND } from '@dsh-claude-style/contracts/dom'
 import { CHAT_USER_ROW_SELECTOR, userBubble } from '@dsh-claude-style/engine/chat-dom'
 import { motionEase } from '../../shared/motion'
 import { inPageBox, pageViewport } from '../../shared/page-zoom'
@@ -197,10 +197,19 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     // A row with no box yet is not somewhere to land: hold, as land() does.
     if (there.width === 0) return false
     const gap = Math.max(Math.abs(here.top - there.top), Math.abs(here.left - there.left), Math.abs(here.height - there.height))
+    // The host's follow pins the tail on every growth while a turn streams, so
+    // the row rides up the screen each frame without moving in the transcript
+    // (D95). Judging its stillness by the screen top would reset the stable
+    // count every frame and hold the flight — and the slide it stands down —
+    // open for the whole ceiling. Read the row's own place in layout space
+    // instead: the scroll offset is added back, in the page's own pixels, so
+    // only a real move or rewrap of the row breaks the stillness.
+    const scroller = row.closest(CONVERSATION_SCROLL_SELECTOR)
+    const layoutTop = inPageBox(there).top + (scroller === null ? 0 : scroller.scrollTop)
     const held = value.rowTop !== null
-      && Math.abs(there.top - value.rowTop) < CHAT_ARRIVED_PX
+      && Math.abs(layoutTop - value.rowTop) < CHAT_ARRIVED_PX
       && Math.abs(there.height - value.rowHeight) < CHAT_ARRIVED_PX
-    value.rowTop = there.top
+    value.rowTop = layoutTop
     value.rowHeight = there.height
     if (gap >= CHAT_ARRIVED_NEAR_PX) {
       value.nearAt = null
