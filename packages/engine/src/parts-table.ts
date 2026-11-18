@@ -350,8 +350,8 @@ export function holdRelations(vocabulary: PartsTableVocabulary): HoldRelation[] 
     direct: true,
     attributes: ['data-dsh-claude-footer-line'],
   },
-  // features/composer/responsive.css: a compact row may spend its shortage on
-  // the model label while no foreign right-hand control needs the wrapping path.
+  // features/composer/responsive.css: an occupied right slot keeps its control's
+  // content width and gives the conversation row its min-content wrapping floor.
   // This relation writes only the holder's attribute. React-owned slot children
   // stay under their slot so a later insertBefore keeps its reference sibling.
   {

@@ -1,7 +1,9 @@
 /* @composer-gate */
 /* The actual toolbar, including the hero, owns its natural height. Compact
    with no foreign right-hand control spends a shortage on the model label;
-   other rows keep the wrapping path, and stacked always takes the second line. */
+   a conversation row with one enters at its minimum content width, so it stays
+   on the first line while the label can absorb the shortage and wraps at the
+   label's recognition floor. Stacked always takes the second line. */
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant][data-dsh-claude-composer-layout] [data-dsh-claude-composer-toolbar] {
   flex-wrap: wrap;
   height: auto;
@@ -21,6 +23,18 @@ body[data-dsh-claude-style] [data-composer-card][data-composer-variant] [data-ds
   flex-wrap: nowrap;
   min-width: 0;
   max-width: 100%;
+}
+/* A wrapping flex row places an item from its content width before shrinking
+   it. Starting the occupied trailing cluster at min-content lets a long model
+   name shorten on the first line; once its recognition floor and the fixed
+   controls no longer fit, the cluster wraps whole. */
+body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-phase="active"] [data-composer-card][data-composer-variant]:is([data-dsh-claude-composer-layout="wide"], [data-dsh-claude-composer-layout="compact"])[data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] > [data-dsh-claude-part~="trailing"] {
+  flex-basis: min-content;
+}
+/* The independent control keeps the width its own content asks for. The model
+   label is the shrinking item, so no quota or badge paints over a neighbour. */
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant][data-dsh-claude-holds~="composer-right-filled"] [data-slot="conversation.input.right"] > :is(button, span, div, a) {
+  flex-shrink: 0;
 }
 /* The release tag stays beside the model's name in every layout: it is part of
    the model's identity, and the name is what gives way when the row is short.
@@ -127,8 +141,9 @@ body[data-dsh-claude-style][data-dsh-claude-page-under-600] [data-dsh-claude-par
 body[data-dsh-claude-style][data-dsh-claude-page-under-600] [data-dsh-claude-part~="composer-hero"] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] > [data-dsh-claude-part~="trailing"] {
   flex: 1 0 100%;
 }
-/* The conversation row stays single through wide and compact; a foreign
-   right-hand control keeps the wrapping path its own rule reserved for it. */
+/* The conversation row stays single through wide and compact. With no foreign
+   right-hand control it never wraps; with one, the min-content rules above keep
+   it single until the model's recognition floor, then let the cluster wrap. */
 body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-phase="active"] [data-composer-card][data-composer-variant]:is([data-dsh-claude-composer-layout="wide"], [data-dsh-claude-composer-layout="compact"]):not([data-dsh-claude-holds~="composer-right-filled"]) [data-dsh-claude-composer-toolbar] {
   flex-wrap: nowrap;
 }
@@ -158,6 +173,21 @@ body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-comp
 body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat > .dsh-claude-model-seat-model,
 body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn-label {
   min-width: 0;
+}
+/* With an independent control in the cluster, the name may ellipsize to its
+   recognition floor, never to zero. A zero flex basis keeps the name's natural
+   length out of the wrapping decision; the seat's min-content floor still
+   includes its fixed effort control. */
+body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant]:is([data-dsh-claude-composer-layout="wide"], [data-dsh-claude-composer-layout="compact"])[data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat {
+  flex-basis: 0;
+  min-width: min-content;
+}
+body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant]:is([data-dsh-claude-composer-layout="wide"], [data-dsh-claude-composer-layout="compact"])[data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat > .dsh-claude-model-seat-model {
+  flex-basis: 0;
+  min-width: calc(10ch + 8px);
+}
+body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant]:is([data-dsh-claude-composer-layout="wide"], [data-dsh-claude-composer-layout="compact"])[data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn-label {
+  min-width: 10ch;
 }
 /* The native width handle can overflow the outer phase frame without adding
    visible content. Keep that frame from becoming a second scroll container;
