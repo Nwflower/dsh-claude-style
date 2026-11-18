@@ -32,11 +32,15 @@ export default {
     // A browser clamps a scroll position a few pixels inside
     // `scrollHeight - clientHeight` when a child's own overflow or a scrollbar
     // rounds it, so "at the end" means "inside that clamp", and the point of the
-    // checks below is that the position got there by walking. The two walks are
-    // the page's own recordings of their frames (smoke/probe/chat-motion.js).
+    // walk checks below is that the position got there by walking. The two walks
+    // are the page's own recordings of their frames (smoke/probe/chat-follow.js).
     const AT_END_PX = bound('followAtEndPx')
-    check('a structural moment hands the scroll back: the position was 60px off the end and lands at it',
-      follow.before === 60 && follow.after <= AT_END_PX && follow.after < follow.before,
+    // A position above the end is where the reader reads: the host restores a
+    // saved position inside the last screen when the reader returns to a
+    // conversation, and the hand-back stands the follow up only from the end
+    // (scroll-owner.ts's handBackFollow, D40, D95).
+    check('a structural moment leaves a position above the end where the reader left it',
+      follow.before === 60 && follow.after === 60,
       JSON.stringify({ before: follow.before, after: follow.after }))
     check('a reader who scrolled away himself is left where he is',
       follow.readerBefore === 60 && follow.readerAfter === 60,

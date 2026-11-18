@@ -1045,7 +1045,7 @@
       ]
     },
     "packages/testing/smoke/cases/chat.mjs": {
-      "a structural moment hands the scroll back: the position was 60px off the end and lands at it": [
+      "a structural moment leaves a position above the end where the reader left it": [
         60
       ],
       "a reader who scrolled away himself is left where he is": [

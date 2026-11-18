@@ -1,8 +1,8 @@
 /**
  * The follow hand-back and the stream glide (packages/client/src/features/chat-follow/):
- * a structural moment hands the host’s follow back, a reader who took the scroll
- * over himself is left where he is, and the growth a fast answer brings is slid to
- * rest instead of jumping a frame (D85).
+ * a structural moment hands the host's follow back from the end, a position above
+ * the end and a reader who took the scroll over himself are left where they are,
+ * and the growth a fast answer brings is slid to rest instead of jumping a frame (D85).
  */
 (function () {
   var probe = window.__dshSmokeProbe
@@ -73,8 +73,9 @@
       await probe.settle()
     })
     // The ported chat-follow feature (packages/client/src/features/chat-follow/): a structural
-    // moment hands the host's follow back, and a reader who took the scroll
-    // over himself is left where he is.
+    // moment hands the host's follow back from the end, a position above the end
+    // stays where the reader left it, and a reader who took the scroll over
+    // himself is left where he is.
     await probe.onlyFor(['chat-follow'], async function () {
       var followScroller = document.querySelector('[data-conversation-scroll]')
       var followColumn = document.querySelector('[data-chat-flow]')
@@ -149,7 +150,8 @@
       followScroller.scrollTop = followScroller.scrollHeight
       await probe.settle()
       await structuralMoment()
-      // 60px off the end, the way a structural moment leaves it.
+      // 60px off the end, the way the host restores a saved position inside the
+      // last screen when the reader returns to a conversation.
       followScroller.scrollTop = Math.max(0, followScroller.scrollHeight - followScroller.clientHeight - 60)
       await probe.settle()
       r.chatFollow.before = endGap()
