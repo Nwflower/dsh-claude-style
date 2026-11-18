@@ -95,6 +95,11 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh-client-ui-primitives": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@csstools/selector-specificity": "6.0.1",
     "@deepseek-ai/dsh-client-ui-primitives": "0.2.2-rc.1",
