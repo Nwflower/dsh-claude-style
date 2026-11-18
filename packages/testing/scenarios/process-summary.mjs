@@ -21,7 +21,7 @@
  */
 import waitCopy from '../../client/src/features/chat-wait/chat-wait.copy.json' with { type: 'json' }
 import foldCopy from '../../client/src/features/chat-fold/chat-fold.copy.json' with { type: 'json' }
-import { ASSISTANT_STEP_KIND, CHAT_GROUP_PART_ATTRIBUTE, CHAT_GROUP_PART_REASONING, FLOW_KIND_ATTRIBUTE, PROCESS_CONTENT_SELECTOR, PROCESS_GROUP_SELECTOR, TOOL_CALL_KIND } from '@dsh-claude-style/contracts/dom'
+import { ASSISTANT_STEP_KIND, CHAT_GROUP_PART_ATTRIBUTE, CHAT_GROUP_PART_REASONING, FLOW_KIND_ATTRIBUTE, PROCESS_CONTENT_SELECTOR, PROCESS_GROUP_SELECTOR, TOOL_CALL_KIND, TURN_PROCESS_ANSWER_SELECTOR } from '@dsh-claude-style/contracts/dom'
 
 const COPY = {
   ...waitCopy,
@@ -166,6 +166,14 @@ function processSummaryScenario({ check }) {
           }
           return counts
         }), [PROCESS_GROUP_SELECTOR, PROCESS_CONTENT_SELECTOR, FLOW_KIND_ATTRIBUTE, ASSISTANT_STEP_KIND, TOOL_CALL_KIND, CHAT_GROUP_PART_ATTRIBUTE, CHAT_GROUP_PART_REASONING])
+      // The assistant's answer the process closes on: the summary stands in for the
+      // header's count sentence only, so this body stays visible.
+      context.notes.answers = await page.evaluate((answer) =>
+        [...document.querySelectorAll(answer)].map((row) => ({
+          text: (row.textContent || '').trim().slice(0, 40),
+          display: getComputedStyle(row).display,
+          visible: row.checkVisibility(),
+        })), TURN_PROCESS_ANSWER_SELECTOR)
     },
     async assert({ session, notes }) {
       const early = notes.waitEarly ?? {}
@@ -209,6 +217,9 @@ function processSummaryScenario({ check }) {
         check('every process group\'s header says what it holds, the host\'s words out of sight',
           headers.length === 2 && headers.every((header) => header.summaryDisplay !== 'none' && header.wordsDisplay === 'none'),
           JSON.stringify(headers)),
+        check('the assistant\'s answer stays visible while the process header is summarised',
+          (notes.answers ?? []).length > 0 && notes.answers.every((answer) => answer.visible && answer.display !== 'none'),
+          JSON.stringify(notes.answers)),
         check('the sentence stands in a header with room for it, naming every figure the body holds',
           expected.length > 0 && JSON.stringify(headers.map((header) => header.name)) === JSON.stringify(expected) &&
             headers.every((header) => header.form === 'full') && headers[0]?.text === expected[0],

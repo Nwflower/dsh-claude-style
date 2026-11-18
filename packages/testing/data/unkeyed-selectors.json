@@ -87,7 +87,6 @@
       "selectors": [
         "body[data-dsh-claude-style][data-dsh-claude-chat-fold] [data-chat-flow] :is([data-disclosure-row], [data-disclosure-header]) ~ :where(:is([data-disclosure-row], [data-disclosure-header]) ~ *):not([data-turn-process-member] *, [data-turn-trigger] *):is([data-disclosure-row] ~ *, [data-disclosure-header] ~ * *)",
         "body[data-dsh-claude-style][data-dsh-claude-motion=\"reduced\"] [data-chat-flow] :is([data-disclosure-row], [data-disclosure-header]) ~ :where(:is([data-disclosure-row], [data-disclosure-header]) ~ *):not([data-turn-process-member] *, [data-turn-trigger] *):is([data-disclosure-row] ~ *, [data-disclosure-header] ~ * *)",
-        "body[data-dsh-claude-style][data-dsh-claude-chat-fold] [data-step-process][data-dsh-claude-summary] button[data-process-activity] > :not([aria-hidden=\"true\"])",
         "body[data-dsh-claude-style][data-dsh-claude-conversation-width] [data-phase] > [data-conversation-content] > *",
         "body[data-dsh-claude-style][data-dsh-claude-home-layout=\"studio\"] [data-dsh-claude-part~=\"composer-hero\"] > :is([data-slot=\"conversation.input.dock\"], .dsh-claude-home-seat) > *",
         "body[data-dsh-claude-style][data-dsh-claude-home-layout=\"studio\"] [data-dsh-claude-part~=\"composer-hero\"] > [data-slot=\"conversation.composer.bar\"] > *",

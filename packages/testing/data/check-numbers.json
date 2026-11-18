@@ -408,6 +408,9 @@
       "every process group's header says what it holds, the host's words out of sight": [
         2
       ],
+      "the assistant's answer stays visible while the process header is summarised": [
+        0
+      ],
       "the sentence stands in a header with room for it, naming every figure the body holds": [
         0
       ],

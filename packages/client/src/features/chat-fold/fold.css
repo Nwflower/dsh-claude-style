@@ -1,7 +1,8 @@
-/* process-summary.ts hides the host's non-decorative words while its own summary is present.
-   The hidden sentence supplies the natural width used to choose compact figures. */
+/* process-summary.ts marks the host's count sentence — the header label its summary
+   stands in for — and hides that marked element alone, so anything else the host keeps
+   inside the control stays visible. */
 
-body[data-dsh-claude-style][data-dsh-claude-chat-fold] [data-step-process][data-dsh-claude-summary] button[data-process-activity] > :not([aria-hidden="true"]) {
+body[data-dsh-claude-style][data-dsh-claude-chat-fold] [data-step-process][data-dsh-claude-summary] button[data-process-activity] > [data-dsh-claude-summary-replaced] {
   display: none;
 }
 

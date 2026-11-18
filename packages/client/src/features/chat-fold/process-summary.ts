@@ -8,7 +8,7 @@ import { buildElement } from '@dsh-claude-style/engine/dom'
 import { motionMs } from '../../shared/motion'
 import { inPagePixels } from '../../shared/page-zoom'
 import { SWEEP_BAND_CLASS, buildSweepBand } from '../../shared/sweep-band'
-import { ASSISTANT_STEP_KIND, CHAT_GROUP_PART_ATTRIBUTE, CHAT_GROUP_PART_REASONING, FLOW_KIND_ATTRIBUTE, PROCESS_ACTIVITY_SELECTOR, PROCESS_CONTENT_SELECTOR, PROCESS_GROUP_SELECTOR, SHIMMER_ATTRIBUTE, SHIMMER_SELECTOR, TOOL_CALL_KIND } from '@dsh-claude-style/contracts/dom'
+import { ASSISTANT_STEP_KIND, CHAT_GROUP_PART_ATTRIBUTE, CHAT_GROUP_PART_REASONING, FLOW_KIND_ATTRIBUTE, PROCESS_ACTIVITY_SELECTOR, PROCESS_CONTENT_SELECTOR, PROCESS_GROUP_SELECTOR, PROCESS_HEADER_LABEL_SELECTOR, SHIMMER_ATTRIBUTE, SHIMMER_SELECTOR, TOOL_CALL_KIND } from '@dsh-claude-style/contracts/dom'
 
 /* The visible summary is aria-hidden and quiet; the header carries the full sentence as its
    accessible name. Narrow headers use compact figures. */
@@ -61,6 +61,8 @@ const FULL_SEPARATOR = () => copy('processSummaryFullSeparator')
 const COMPACT_SEPARATOR = ' · '
 /** On a group root while its header shows the summary; the stylesheet hides the host's words under it. */
 export const PROCESS_SUMMARY_ATTR = 'data-dsh-claude-summary'
+/** On the host's count sentence the summary stands in for; the stylesheet hides this marked element alone. */
+const PROCESS_SUMMARY_REPLACED_ATTR = 'data-dsh-claude-summary-replaced'
 /** On the summary while the group's section still runs, which is while its band stands (syncBand). */
 export const PROCESS_SUMMARY_RUNNING_ATTR = 'data-dsh-claude-summary-running'
 /** On the summary: the wording it stands in. */
@@ -343,6 +345,7 @@ export function createProcessSummary() {
   function release(header: HTMLElement) {
     const kept = named.get(header)
     header.querySelector(`:scope > .${SUMMARY_CLASS}`)?.remove()
+    header.querySelector(`:scope > [${PROCESS_SUMMARY_REPLACED_ATTR}]`)?.removeAttribute(PROCESS_SUMMARY_REPLACED_ATTR)
     if (kept !== undefined && header.getAttribute('aria-label') === kept.name) header.removeAttribute('aria-label')
     named.delete(header)
     header.closest(PROCESS_GROUP_SELECTOR)?.removeAttribute(PROCESS_SUMMARY_ATTR)
@@ -396,6 +399,10 @@ export function createProcessSummary() {
         known.summary = summary
       }
       if (!group.hasAttribute(PROCESS_SUMMARY_ATTR)) group.setAttribute(PROCESS_SUMMARY_ATTR, '')
+      // The count sentence is the header's own words, not a flow row: mark it alone so
+      // anything else the host keeps in the control (an answer, a slot) stays visible.
+      const label = [...header.querySelectorAll(PROCESS_HEADER_LABEL_SELECTOR)].find((child) => !child.hasAttribute(FLOW_KIND_ATTRIBUTE)) ?? null
+      if (label !== null && !label.hasAttribute(PROCESS_SUMMARY_REPLACED_ATTR)) label.setAttribute(PROCESS_SUMMARY_REPLACED_ATTR, '')
     }
     // A header the host replaced or unmounted takes nothing more from this module.
     for (const header of [...named.keys()]) {
