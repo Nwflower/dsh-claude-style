@@ -297,7 +297,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   function syncRing() {
     const position = readPrefs().statsPosition
-    if (position !== STATS_POSITION_CONTEXT && !(position === STATS_POSITION_FOOTER && readPrefs().statsFooterContext)) {
+    // The popover position and the compact footer both carry the ring in the
+    // composer row, the footer's figures riding the toolbar beside it. Handing
+    // the reading back to the host's meter would strand it in the dock below
+    // while the figures stay above, so the footer's ring is not switchable.
+    if (position !== STATS_POSITION_CONTEXT && position !== STATS_POSITION_FOOTER) {
       dropAll()
       return
     }

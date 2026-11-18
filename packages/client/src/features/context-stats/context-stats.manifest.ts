@@ -86,8 +86,6 @@ export default {
     },
     requires: FOOTER_METRIC_REQUIRES,
   }, {
-    tab: 'statistics', rank: 56, pref: 'statsFooterContext', parent: 'statsPosition', title: 'statsFooterContextTitle', requires: FOOTER_METRIC_REQUIRES,
-  }, {
     tab: 'statistics',
     rank: 57,
     pref: 'billingCurrency',

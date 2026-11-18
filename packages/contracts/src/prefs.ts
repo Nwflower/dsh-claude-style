@@ -366,7 +366,6 @@ export const PREFS = {
   statsFooterTotal: { type: 'boolean', default: true },
   /** How the footer's token figures read: the grouped whole numbers, or K/M/B/T units with one decimal place. */
   statsFooterTokenFormat: { type: 'choice', values: FOOTER_TOKEN_FORMATS, default: FOOTER_TOKEN_DIGITS },
-  statsFooterContext: { type: 'boolean', default: true },
   /** Which official price table the session's cost follows, or off for no figure at all. */
   billingCurrency: { type: 'choice', values: BILLING_CHOICES, default: CURRENCY_CNY },
   /** Custom `model|input|cacheRead|output` rows per million tokens; blank buckets inherit official rates. */

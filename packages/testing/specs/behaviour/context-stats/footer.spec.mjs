@@ -138,20 +138,20 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
     await t.prefs({
       statsPosition: 'footer', motion: 'reduced',
       statsFooterSpeed: true, statsFooterTtft: true, statsFooterCache: false,
-      statsFooterCost: false, statsFooterTotal: false, statsFooterContext: false,
+      statsFooterCost: false, statsFooterTotal: false,
     })
     const selected = await reading(t)
     t.expectThat.equal(selected.segments, 2, 'only output speed and TTFT remain')
     t.expectThat.equal(selected.text.includes('100 tok/s') && selected.text.includes('0.8s') && selected.text.includes('TTFT'), true, 'both figures use the session projection and host wording: ' + selected.text)
-    t.expectThat.equal(selected.ring, null, 'the context ring has its own switch')
-    t.expectThat.equal(selected.meterHidden, false, 'turning the ring off hands the host meter back')
+    t.expectThat.visible(selected.ring, 'the context ring stands with the footer whatever the figures show')
+    t.expectThat.equal(selected.meterHidden, true, 'the host meter stays unpainted behind the ring')
     await t.prefs({
       statsFooterSpeed: false, statsFooterTtft: false, statsFooterCache: true,
-      statsFooterCost: true, statsFooterTotal: true, statsFooterContext: true,
+      statsFooterCost: true, statsFooterTotal: true,
     })
     const restored = await reading(t)
     t.expectThat.equal(restored.segments > 2, true, 'the original footer figures return independently')
-    t.expectThat.visible(restored.ring, 'the context ring returns')
+    t.expectThat.visible(restored.ring, 'the context ring keeps its place')
   })
 
   test('a narrow toolbar gives statistics their own line and widening restores the overlay', async t => {
