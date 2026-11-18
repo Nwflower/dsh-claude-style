@@ -1,12 +1,10 @@
 /**
- * Under the Windows caption row the strip and the plate inside it rise together:
- * with the pointer on neither the strip nor the conversation pane the row and
- * its tablist both rest at nothing, and the strip's own hover and the pane's
- * hover each bring the two to full with the three views laid out.
+ * The Windows caption keeps the strip and its three views visible as the pointer
+ * moves between the conversation, the strip and the rest of the window.
  *
  * @capability view-tabs
  * @features view-tabs
- * @risk In the caption row the strip's own reveal raises the row while the plate inside it stays at nothing, so the three views a reader switches between are drawn invisible, and the pane's hover no longer raises them either.
+ * @risk Caption tabs disappear when the pointer leaves the conversation or a native IME window clears the hover chain.
  */
 import { FRAME_PARTS } from '@dsh-claude-style/engine/parts-table'
 import { spec, host, surface } from '../../fixtures/behaviour.mjs'
@@ -126,25 +124,14 @@ function read(t) {
   })
 }
 
-/** Wait until both the strip and the plate have settled on one opacity: the transition ends on the value the rule states. */
-function settledAt(t, target) {
-  return t.page.waitForFunction((value) => {
-    const opacity = (id) => Number.parseFloat(getComputedStyle(document.getElementById(id)).opacity)
-    // The assertion asks for the resting value itself, so the wait asks for the
-    // same: a tolerance here hands the read the last tenth of a percent of the
-    // transition on whichever machine finishes its round trip first.
-    return opacity('probe-strip') === value && opacity('probe-plate') === value
-  }, target, { timeout: 10000 })
-}
-
-/** Put the pointer on a point, wait for both opacities to reach the target, and answer what the page reads there. */
-async function resting(t, point, target, where) {
+/** Read the caption once the pointer has moved and the page has settled. */
+async function checkCaption(t, point, where) {
   await t.page.mouse.move(point.x, point.y)
-  await settledAt(t, target)
+  await t.settle()
   const page = await read(t)
-  t.expectThat.equal(page.strip, target, `the strip rests at ${target} ${where}`)
-  t.expectThat.equal(page.plate, target, `the plate rests at ${target} ${where}`)
-  return page
+  t.expectThat.equal(page.strip, 1, `the strip is visible ${where}`)
+  t.expectThat.equal(page.plate, 1, `the plate is visible ${where}`)
+  expectPills(t, page, where)
 }
 
 /** The three views are the host's, each carrying the box a reader presses. */
@@ -154,7 +141,7 @@ function expectPills(t, page, where) {
 }
 
 export default spec({ page: 'view-tabs-row', bands: ['wide'] }, ({ test }) => {
-  test('in the caption row the strip and its plate rise together, on the strip\'s hover and on the pane\'s', async (t) => {
+  test('the caption tabs stay visible away from the conversation', async (t) => {
     await mount(t)
     await ready(t)
     await t.settle()
@@ -163,13 +150,8 @@ export default spec({ page: 'view-tabs-row', bands: ['wide'] }, ({ test }) => {
     t.expectThat.equal(spot.plateUnderPointer, true, 'the plate is what the pointer meets on the strip')
     t.expectThat.equal(spot.paneUnderPointer, true, 'the pane is what the pointer meets in the conversation')
 
-    await resting(t, spot.away, 0, 'with the pointer on neither')
-    expectPills(t, await read(t), 'while they rest at nothing')
-
-    const onStrip = await resting(t, spot.onPlate, 1, 'with the pointer on the strip')
-    expectPills(t, onStrip, 'with the pointer on the strip')
-
-    const onPane = await resting(t, spot.onPane, 1, 'with the pointer on the pane')
-    expectPills(t, onPane, 'with the pointer on the pane')
+    await checkCaption(t, spot.onPane, 'with the pointer on the pane')
+    await checkCaption(t, spot.onPlate, 'with the pointer on the strip')
+    await checkCaption(t, spot.away, 'with the pointer outside the strip and the pane')
   })
 })

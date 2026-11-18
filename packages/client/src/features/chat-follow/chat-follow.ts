@@ -154,6 +154,7 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
   /** This batch of mutations held a structural moment / the follow being turned off. */
   let structureSeen = false
   let guardSeen = false
+  let tailReadWanted = false
 
   /** Whether the reader is reading up there right now (the owner's hold on the conversation). */
   const readerAway = () => {
@@ -411,7 +412,6 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
     grewAt = 0
     grewEvery = 0
     if (column === null) return
-    noteTailIfNear(column.closest(CONVERSATION_SCROLL_SELECTOR))
     stopSlideSize = observeSize(column, onSlideResize, { afterHost: true })
   }
 
@@ -577,6 +577,11 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
     // The hand-back reads the position and writes it in one go, in the scroll
     // phase, while the frame's reads have left the layout settled (D40).
     cancelScan = requestFrame({
+      read() {
+        if (!tailReadWanted) return
+        tailReadWanted = false
+        noteTailIfNear(conversationScroller())
+      },
       scroll() {
         cancelScan = null
         scanQueued = false
@@ -633,24 +638,26 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
         }
       }
     }
-    if (structureSeen || guardSeen) queue()
-    // Content arriving is when a session switch shows up as a new column and a
-    // door's hold mark is due: a character-data change, or a node added or
-    // removed anywhere, is enough to ask. Attribute batches (a streaming mark
-    // flipping) are skipped, which keeps the common idle case down to a
-    // boolean per batch.
-    const contentArrived = records.some(record => record.type === 'characterData' || record.addedNodes.length > 0 || record.removedNodes.length > 0)
-    if (contentArrived) {
+    const before = slideColumn
+    if (records.some(record => record.type !== 'attributes')) {
       slideSync()
-      noteTailIfNear(conversationScroller())
       holdCheck()
+      // Read the tail at most once per frame, only for a different column or
+      // content arriving in this transcript. Mutations elsewhere never force
+      // layout in a conversation restored at its saved reading position (D40).
+      const scroller = conversationScroller()
+      if (!seenAtTail && scroller !== null && (before !== slideColumn || records.some(
+        record => record.type !== 'attributes' && scroller.contains(record.target),
+      ))) tailReadWanted = true
     }
+    if (structureSeen || guardSeen || tailReadWanted) queue()
   }
 
   const stopMutations = subscribeMutations(document.body, {
     subtree: true,
     childList: true,
     characterData: true,
+    skipQuiet: true,
     attributeFilter: [ROW_PHASE_ATTRIBUTE, FOLLOWING_TAIL_ATTRIBUTE, READER_HOLD_ATTR],
     attributeOldValue: true,
   }, onRecords)

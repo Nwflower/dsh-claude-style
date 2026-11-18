@@ -1,4 +1,4 @@
-import { HOME_SESSION_SCOPE_WORKSPACE, USAGE_ROUTE } from '../../constants'
+import { HOME_SESSION_SCOPE_ALL, HOME_SESSION_SCOPE_WORKSPACE, USAGE_ROUTE } from '../../constants'
 import { readPrefs } from '../../core/prefs'
 import { pad2 } from '../../shared/format'
 import { notifyAll } from '@dsh-claude-style/engine/notify'
@@ -6,6 +6,7 @@ import { createHostRequest } from '@dsh-claude-style/engine/resource'
 import { currentSessionId, hostRemoteSession, hostSessions, hostWorkspaces } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { HostRemoteListAnswer, HostSessionRow } from '@dsh-claude-style/contracts/services'
+import type { HomeSessionScope } from '@dsh-claude-style/contracts/prefs'
 import type { UsageAnswer, UsageReport } from '@dsh-claude-style/contracts/usage'
 import { homeRefreshDue } from './usage-refresh'
 import type { HomeRefreshReason } from './usage-refresh'
@@ -15,6 +16,7 @@ import type { HomeRefreshReason } from './usage-refresh'
  * usage fold, packages/host/src/usage-fold.ts), whether more is coming, and why not.
  */
 export interface HomeUsageState {
+  scope: HomeSessionScope
   value: UsageReport | null
   computing: boolean
   error: string | null
@@ -58,7 +60,9 @@ export function homeDayKey(date: Date) {
  */
 export function createHomeUsage(ctx: HostContext) {
   /** What the panel draws: the last answer, whether more is coming, and why not. */
-  const usage: HomeUsageState = { value: null, computing: false, error: null, loading: false, answeredAt: null }
+  const usage: HomeUsageState = {
+    scope: readPrefs().homeSessionScope, value: null, computing: false, error: null, loading: false, answeredAt: null,
+  }
   let listSummary: ListSummary | null = null
   let listLoading = false
   const listeners: (() => void)[] = []
@@ -88,7 +92,7 @@ export function createHomeUsage(ctx: HostContext) {
       }, HOME_POLL_MS)
     }
   })
-  let target = { scope: readPrefs().homeSessionScope, workspace: '' }
+  let targetWorkspace = ''
 
   /** The current blank's Workspace, falling back to the most recently active one. */
   function currentWorkspaceId() {
@@ -147,8 +151,9 @@ export function createHomeUsage(ctx: HostContext) {
   function syncTarget() {
     const scope = readPrefs().homeSessionScope
     const workspace = scope === HOME_SESSION_SCOPE_WORKSPACE ? currentWorkspaceId() : ''
-    if (target.scope === scope && target.workspace === workspace) return
-    target = { scope, workspace }
+    if (usage.scope === scope && targetWorkspace === workspace) return
+    usage.scope = scope
+    targetWorkspace = workspace
     request.reset()
     stopPolling()
     usage.value = null
@@ -172,8 +177,8 @@ export function createHomeUsage(ctx: HostContext) {
   /** One request to the route, and the poll its answer asks for while the host half is folding. */
   function read() {
     usage.loading = true
-    const params = new URLSearchParams({ scope: target.scope })
-    if (target.workspace !== '') params.set('workspace', target.workspace)
+    const params = new URLSearchParams({ scope: usage.scope })
+    if (targetWorkspace !== '') params.set('workspace', targetWorkspace)
     // A transport failure is the panel's unavailable state (D12).
     void request.load(USAGE_ROUTE + '?' + params.toString(), {}, () => {
       usage.loading = false
@@ -259,7 +264,7 @@ export function createHomeUsage(ctx: HostContext) {
 
   /** Read the session list once; a host without the remote service keeps the route's answer. */
   function loadSessionSummary() {
-    if (disposed || listLoading || listSummary !== null) return
+    if (disposed || usage.scope !== HOME_SESSION_SCOPE_ALL || listLoading || listSummary !== null) return
     const sessions = hostRemoteSession(ctx)
     if (sessions === undefined || sessions === null || typeof sessions.list !== 'function') return
     listLoading = true

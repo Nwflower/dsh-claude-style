@@ -21,10 +21,6 @@ body[data-dsh-claude-style] [data-dsh-view-tabs] [data-conversation-tabs] {
   transform: translate(var(--dsh-view-tabs-shift-x, 0px), var(--dsh-view-tabs-shift, -10px));
   /* The sliding pill (shared/sliding-pill.css) is absolutely placed against the control. */
   position: relative;
-  /* A view switcher, not furniture: it fades in while the pointer is in the
-     conversation pane, and opacity keeps the header's height. */
-  opacity: 0;
-  transition: opacity var(--dsh-claude-duration-surface) var(--dsh-claude-ease-standard);
 }
 /* The row spans the header so the host counts room for every tab, centres what
    it draws and takes no press of its own. What rises is the content, not the
@@ -51,11 +47,14 @@ body[data-dsh-claude-style] [data-dsh-view-tabs] > * {
 body[data-dsh-claude-style] [data-dsh-titlebar-tabs] [data-dsh-view-tabs] > * {
   transform: none;
 }
-/* `centerCol` is the pane holding the header AND the transcript, so hovering the
-   strip itself keeps it up, while the right sidebar — which sits outside it —
-   does not bring it back. The header is named in the chain so the Windows
-   titlebar mode, which marks that header, keeps its own reveal: there the strip
-   stands outside the pane and only its own hover brings it back. */
+/* The inline strip fades with the conversation pane. In the Windows caption
+   the strip stays visible: native windows such as the IME candidate list can
+   clear Chromium’s hover chain while the pointer remains still (#397). */
+body[data-dsh-claude-style] [data-dsh-claude-part~="conversation-header"]:not([data-dsh-titlebar-tabs]) [data-dsh-view-tabs],
+body[data-dsh-claude-style] [data-dsh-claude-part~="conversation-header"]:not([data-dsh-titlebar-tabs]) [data-dsh-view-tabs] [data-conversation-tabs] {
+  opacity: 0;
+  transition: opacity var(--dsh-claude-duration-surface) var(--dsh-claude-ease-standard);
+}
 body[data-dsh-claude-style] [data-dsh-claude-part~="center-column"]:hover [data-dsh-claude-part~="conversation-header"]:not([data-dsh-titlebar-tabs]) [data-dsh-view-tabs],
 body[data-dsh-claude-style] [data-dsh-claude-part~="center-column"]:hover [data-dsh-claude-part~="conversation-header"]:not([data-dsh-titlebar-tabs]) [data-dsh-view-tabs] [data-conversation-tabs] {
   opacity: 1;
@@ -133,32 +132,6 @@ body[data-dsh-claude-style] [data-dsh-titlebar-tabs] [data-dsh-view-tabs] {
   z-index: var(--dsh-claude-layer-chrome);
   /* The row spans the window, so the band stays the shell's drag region and the
      controls inside it stay the only boxes that take a press. */
-  /* The pane's own reveal is scoped out of this mode above. The three rules
-     here state the whole of it: this one rests the strip at nothing, its own
-     hover and the pane's hover below bring it back, and the longer fade covers
-     the cross. */
-  opacity: 0;
-  transition: opacity var(--dsh-claude-duration-fade) var(--dsh-claude-ease-standard);
-}
-body[data-dsh-claude-style] [data-dsh-titlebar-tabs] [data-dsh-view-tabs]:hover {
-  opacity: 1;
-}
-/* The pane-hover reveal reaches this mode from outside the titlebar's own rules:
-   the pane is the header's ancestor, so this selector carries the pane's
-   attribute and its hover on top of the resting rule's own. */
-body[data-dsh-claude-style] [data-dsh-claude-part~="center-column"]:hover [data-dsh-titlebar-tabs] [data-dsh-view-tabs] {
-  opacity: 1;
-}
-/* The resting rule at the top of this sheet takes the tablist down with the
-   strip, and the two reveals above name the strip alone: raised by either, the
-   plate would stay at nothing with its pills inside it. These two carry the
-   same reveal down to the tablist, one per way the strip is raised here — its
-   own hover, and the pane's hover when the pointer never reaches the strip. Both
-   chains hold more attribute segments than the resting rule, so neither needs
-   added weight. */
-body[data-dsh-claude-style] [data-dsh-titlebar-tabs] [data-dsh-view-tabs]:hover [data-conversation-tabs],
-body[data-dsh-claude-style] [data-dsh-claude-part~="center-column"]:hover [data-dsh-titlebar-tabs] [data-dsh-view-tabs] [data-conversation-tabs] {
-  opacity: 1;
 }
 /* The strip's row has left the flow, so the header takes the shape it has when
    it owns no tab strip: no min-height, and the header band closes its bottom

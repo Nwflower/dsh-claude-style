@@ -78,6 +78,8 @@ dsh plugin --profile web add Nwflower/dsh-claude-style#dist      # GitHub 发布
 
 也可从[插件市场](https://github.com/dsh-market/dsh-market)或 dsh-web-all 的皮肤中心安装。同一时刻只启用一个主题；需要 dsh ≥ 0.2.2-rc.1，装好后重启 DeepSeek Harness。
 
+官方 DSH 网页和桌面界面自带浏览器组件模块 `@deepseek-ai/dsh-client-ui-primitives`。即使 profile 关闭了 pnpm 的 `autoInstallPeers`，也无需在 profile 中另外安装组件包。
+
 ## 字体
 
 > Anthropic 没有公开发行这三款字体；本仓库只提供下载与研究的[副本](https://github.com/Nwflower/dsh-claude-style/tree/master/packages/assets/src/fonts/anthropic)。
