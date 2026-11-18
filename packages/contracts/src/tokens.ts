@@ -23,18 +23,21 @@ const WORD = [0, 0.496, 0.496, 0.62, 0.62, 0.62, 0.636, 0.636, 0.776, 0.776, 1.5
  * about four characters rather than reading it as one word.
  */
 const WORD_TAIL = 0.25
-const CJK = 0.5235
-const CJK_MARK = 2.6312
+// The character-class rates are fitted to the DeepSeek tokenizer (V3/V4 family) over a
+// diverse corpus; the WORD table and DIGIT_GROUP stay at their exact anchors (three
+// digits cost one token), and the rates below carry the corpus-fit adjustment (D104, D103).
+const CJK = 0.5465
+const CJK_MARK = 2.0938
 const DIGIT_GROUP = 1
-const NEWLINE = 1.5161
+const NEWLINE = 1.3089
 /**
  * A lone space and a run of them: the tokenizer keeps one space inside the piece that
  * follows it, so a lone space is nearly free and a longer run costs a whole token.
  */
-const LONE_SPACE = 0.3398
-const SPACE_RUN = 1.421
-const PUNCT_RUN = 0.8153
-const PUNCT_CHAR = 0.1941
+const LONE_SPACE = 0.4192
+const SPACE_RUN = 1.528
+const PUNCT_RUN = 0.8391
+const PUNCT_CHAR = 0.281
 
 /** The classes a run can hold. */
 const NONE = 0
@@ -182,4 +185,63 @@ export function messageTokens(message: { content?: unknown } | null | undefined)
  */
 export function toolSchemaTokens(tool: unknown): number {
   return Math.round(structuralTokens(tool) + BLOCK_OVERHEAD)
+}
+
+/** Whether a content block carries a file or picture rather than model-readable text. */
+function isAttachment(block: object): boolean {
+  const type = (block as { type?: unknown }).type
+  if (type === 'image' || type === 'file' || type === 'audio' || type === 'video' || type === 'document') return true
+  const attachment = (block as { attachment?: unknown }).attachment
+  return attachment !== null && typeof attachment === 'object'
+}
+
+/** A message's price split by content-block form, the parts summing to {@link messageTokens}. */
+export interface MessageBlockParts {
+  text: number
+  reasoning: number
+  toolCall: number
+  attachment: number
+  /** Unknown blocks plus the role framing; the assistant's reasoning residual absorbs these. */
+  other: number
+}
+
+/**
+ * What one message costs by content-block form (D104). The block forms are priced apart so
+ * the context fold can route reasoning, tool calls and attachments to their own categories
+ * regardless of the message carrying them. The five parts are integer shares of the message's
+ * rounded total, allocated in order so they sum to it exactly; the role framing rides with
+ * `other`, which the assistant's reasoning residual (total less text, calls and attachments)
+ * takes — so invisible reasoning and unknown blocks land there too.
+ *
+ * @param message - the message as the session log carries it, or null before one exists.
+ * @returns the message's price by block form, summing to {@link messageTokens}.
+ */
+export function messageBlockParts(message: { content?: unknown } | null | undefined): MessageBlockParts {
+  const parts: MessageBlockParts = { text: 0, reasoning: 0, toolCall: 0, attachment: 0, other: 0 }
+  const content = message?.content
+  if (!Array.isArray(content) || content.length === 0) return parts
+  let text = 0, reasoning = 0, toolCall = 0, attachment = 0, other = 0
+  for (const block of content) {
+    const price = blockTokens(block)
+    if (block !== null && typeof block === 'object') {
+      const type = (block as { type?: unknown }).type
+      if (type === 'text') { text += price; continue }
+      if (type === 'reasoning') { reasoning += price; continue }
+      if (type === 'tool-call') { toolCall += price; continue }
+      if (isAttachment(block)) { attachment += price; continue }
+    }
+    other += price
+  }
+  const weights = [text, reasoning, toolCall, attachment, other + ROLE_OVERHEAD]
+  const keys = ['text', 'reasoning', 'toolCall', 'attachment', 'other'] as const
+  const total = messageTokens(message)
+  const sum = weights.reduce((acc, weight) => acc + weight, 0)
+  let allocated = 0, cumulative = 0
+  for (let index = 0; index < weights.length; index++) {
+    cumulative += weights[index]
+    const next = index === weights.length - 1 ? total : Math.round(total * cumulative / sum)
+    parts[keys[index]] = next - allocated
+    allocated = next
+  }
+  return parts
 }

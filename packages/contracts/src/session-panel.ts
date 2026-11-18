@@ -49,17 +49,24 @@ export interface PanelCompaction {
   thresholdTokens: number
 }
 
-/** The source a context part is attributed to (D102, D99). */
+/**
+ * The source a context part is attributed to (D102, D104). The fold publishes these granular
+ * kinds; the legend merges `tools`, `mcp` and `skills` into one capability row whose label
+ * names whichever of the three are present. `conversation` is the user's and assistant's text
+ * bodies; `reasoning` is the assistant's reasoning residual; `attachment` is files and pictures
+ * extracted from any message; `injection` is instruction files and other attributed context.
+ */
 export type PanelContextKind =
   | 'system'
   | 'tools'
   | 'mcp'
-  | 'user'
-  | 'assistant'
-  | 'tool-result'
-  | 'memory'
   | 'skills'
-  | 'other'
+  | 'conversation'
+  | 'reasoning'
+  | 'tool-call'
+  | 'tool-result'
+  | 'attachment'
+  | 'injection'
 
 export interface PanelContextPart {
   kind: PanelContextKind

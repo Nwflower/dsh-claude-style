@@ -3,7 +3,7 @@ import { textTokens } from '@dsh-claude-style/contracts/tokens'
 import { batchAdditions, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { findConversationScroller } from '@dsh-claude-style/engine/host'
 import { callTokens } from './call-tokens'
-import { estimateScale, recordSettlement } from './estimate-scale'
+import { estimateScale, recordSettlement, STREAM_UNDERESTIMATE } from './estimate-scale'
 
 /**
  * The tokens a streaming answer has added so far, as an estimate.
@@ -151,7 +151,10 @@ export function createStreamEstimate(onChange: () => void) {
    * @param now - the frame's time, so the interval rides the pipeline's clock.
    */
   function tokens(model: string | null, now = performance.now()) {
-    const scale = scaleOf(model)
+    // The learned multiplier calibrates the route's tokenizer; STREAM_UNDERESTIMATE is
+    // the separate intentional under-estimate for natural growth (D103). The settlement
+    // ratio learns from the unfactored estimate, so this factor stays out of calibration.
+    const scale = scaleOf(model) * STREAM_UNDERESTIMATE
     if (clock === 0) clock = now
     // A reading between the due ones answers the structure batches alone, and
     // only when one brought a call row; a batch of streamed text leaves nothing.

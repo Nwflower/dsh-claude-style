@@ -75,19 +75,26 @@ body[data-dsh-claude-style] .dsh-claude-panel-dot.is-system {
   background: var(--dsh-claude-context-system);
 }
 
-body[data-dsh-claude-style] .dsh-claude-panel-segment.is-tools,
-body[data-dsh-claude-style] .dsh-claude-panel-dot.is-tools {
+/* Tools, skills and MCP share the capability row in the tools' orange (D104). */
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-capability,
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-capability {
   background: var(--dsh-claude-context-tools);
 }
 
-body[data-dsh-claude-style] .dsh-claude-panel-segment.is-user,
-body[data-dsh-claude-style] .dsh-claude-panel-dot.is-user {
+/* The conversation's text bodies, user and assistant alike, wear the messages' blue. */
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-conversation,
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-conversation {
   background: var(--dsh-claude-context-messages);
 }
 
-body[data-dsh-claude-style] .dsh-claude-panel-segment.is-assistant,
-body[data-dsh-claude-style] .dsh-claude-panel-dot.is-assistant {
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-reasoning,
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-reasoning {
   background: var(--dsh-claude-context-assistant);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-tool-call,
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-tool-call {
+  background: var(--dsh-claude-context-tool-call);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-segment.is-tool-result,
@@ -95,19 +102,15 @@ body[data-dsh-claude-style] .dsh-claude-panel-dot.is-tool-result {
   background: var(--dsh-claude-context-tool-result);
 }
 
-body[data-dsh-claude-style] .dsh-claude-panel-segment.is-mcp,
-body[data-dsh-claude-style] .dsh-claude-panel-dot.is-mcp {
-  background: var(--dsh-claude-context-mcp);
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-attachment,
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-attachment {
+  background: var(--dsh-claude-context-attachment);
 }
 
-/* The parts a turn does not grow share one neutral grey, so colour marks only
-   what moves as the session runs, as Claude's legend does. */
-body[data-dsh-claude-style] .dsh-claude-panel-segment.is-memory,
-body[data-dsh-claude-style] .dsh-claude-panel-dot.is-memory,
-body[data-dsh-claude-style] .dsh-claude-panel-segment.is-skills,
-body[data-dsh-claude-style] .dsh-claude-panel-dot.is-skills,
-body[data-dsh-claude-style] .dsh-claude-panel-segment.is-other,
-body[data-dsh-claude-style] .dsh-claude-panel-dot.is-other {
+/* The injected context a turn does not grow wears one neutral grey, so colour marks
+   only what moves as the session runs, as Claude's legend does. */
+body[data-dsh-claude-style] .dsh-claude-panel-segment.is-injection,
+body[data-dsh-claude-style] .dsh-claude-panel-dot.is-injection {
   background: var(--dsh-claude-context-fixed);
 }
 

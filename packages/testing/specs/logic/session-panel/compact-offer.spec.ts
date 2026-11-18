@@ -32,7 +32,7 @@ test('no usable policy answers no threshold', () => {
 })
 
 const contextWith = (used: number, threshold?: number): PanelContext => ({
-  used, window: 1_000_000, parts: [{ kind: 'user', tokens: used }],
+  used, window: 1_000_000, parts: [{ kind: 'conversation', tokens: used }],
   ...(threshold === undefined ? {} : { compaction: { thresholdTokens: threshold } }),
 })
 

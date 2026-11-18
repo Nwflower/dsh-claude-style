@@ -1,12 +1,13 @@
-diff --git a/packages/client/src/features/context-stats/text-tokens.ts b/packages/client/src/features/context-stats/text-tokens.ts
---- a/packages/client/src/features/context-stats/text-tokens.ts
-+++ b/packages/client/src/features/context-stats/text-tokens.ts
-@@ -15,7 +15,7 @@
- 
- /** A Latin word's price by length; the tenth entry stands for ten letters and up. */
- const WORD = [0, 0.496, 0.496, 0.62, 0.62, 0.62, 0.636, 0.636, 0.776, 0.776, 1.593]
--const CJK = 0.5235
+diff --git a/packages/contracts/src/tokens.ts b/packages/contracts/src/tokens.ts
+index e49ee1aa..2a828fe7 100644
+--- a/packages/contracts/src/tokens.ts
++++ b/packages/contracts/src/tokens.ts
+@@ -26,7 +26,7 @@ const WORD_TAIL = 0.25
+ // The character-class rates are fitted to the DeepSeek tokenizer (V3/V4 family) over a
+ // diverse corpus; the WORD table and DIGIT_GROUP stay at their exact anchors (three
+ // digits cost one token), and the rates below carry the corpus-fit adjustment (D104, D103).
+-const CJK = 0.5465
 +const CJK = 0.18
- const CJK_MARK = 2.6312
+ const CJK_MARK = 2.0938
  const DIGIT_GROUP = 1
- const NEWLINE = 1.5161
+ const NEWLINE = 1.3089

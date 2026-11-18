@@ -1,5 +1,5 @@
 /**
- * The context legend and colour bar allocate the provider reading once (D102, D99).
+ * The context legend and colour bar allocate the provider reading once (D102, D104).
  * @capability session-panel
  * @features session-panel
  * @risk Source prices double-count injected instructions, disagree with the
@@ -14,12 +14,13 @@ test('source parts share one occupancy and one window denominator', () => {
     used: 301, window: 1000,
     parts: [
       { kind: 'skills', tokens: 10 }, { kind: 'system', tokens: 20 },
-      { kind: 'mcp', tokens: 30 }, { kind: 'user', tokens: 80 },
-      { kind: 'memory', tokens: 30 }, { kind: 'tools', tokens: 30 },
+      { kind: 'mcp', tokens: 30 }, { kind: 'conversation', tokens: 80 },
+      { kind: 'injection', tokens: 30 }, { kind: 'tools', tokens: 30 },
     ],
   }
   const rows = contextRows(context)
-  expect(rows.map(row => row.kind)).toEqual(['user', 'tools', 'mcp', 'memory', 'system', 'skills'])
+  // tools, mcp and skills merge into the capability row (70); the rest keep their own.
+  expect(rows.map(row => row.kind)).toEqual(['conversation', 'capability', 'injection', 'system'])
   expect(rows.reduce((sum, row) => sum + row.tokens, 0)).toBe(context.used)
   expect(rows.reduce((sum, row) => sum + row.share, 0)).toBeCloseTo(30.1)
   for (const row of rows) expect(row.share).toBeCloseTo(row.tokens / context.window * 100)
@@ -30,33 +31,42 @@ test('the rows run largest first, and equal parts keep the reading order', () =>
     used: 500, window: 1000,
     parts: [
       { kind: 'system', tokens: 50 }, { kind: 'tools', tokens: 300 },
-      { kind: 'user', tokens: 50 }, { kind: 'memory', tokens: 100 },
+      { kind: 'conversation', tokens: 50 }, { kind: 'injection', tokens: 100 },
     ],
   })
   expect(rows.map(row => [row.kind, row.tokens])).toEqual([
-    ['tools', 300], ['memory', 100], ['system', 50], ['user', 50],
+    ['capability', 300], ['injection', 100], ['system', 50], ['conversation', 50],
   ])
   for (let index = 1; index < rows.length; index++) expect(rows[index - 1].tokens).toBeGreaterThanOrEqual(rows[index].tokens)
 })
 
-test('the conversation is read apart: user, assistant and tool result keep their own rows', () => {
+test('the conversation, reasoning, calls and results keep their own rows', () => {
   const context: PanelContext = {
     used: 1000, window: 2000,
     parts: [
-      { kind: 'tool-result', tokens: 400 }, { kind: 'assistant', tokens: 300 },
-      { kind: 'user', tokens: 200 }, { kind: 'system', tokens: 100 },
+      { kind: 'tool-result', tokens: 400 }, { kind: 'reasoning', tokens: 300 },
+      { kind: 'conversation', tokens: 200 }, { kind: 'system', tokens: 100 },
     ],
   }
   expect(contextRows(context).map(row => [row.kind, row.tokens, row.label]))
     .toEqual([
-      ['tool-result', 400, 'toolResultTokens'], ['assistant', 300, 'assistantTokens'],
-      ['user', 200, 'userTokens'], ['system', 100, 'systemTokens'],
+      ['tool-result', 400, 'toolResultTokens'], ['reasoning', 300, 'reasoningTokens'],
+      ['conversation', 200, 'conversationTokens'], ['system', 100, 'systemTokens'],
     ])
+})
+
+test('the capability label names whichever of tools, skills and MCP are present', () => {
+  const label = (parts: PanelContext['parts']) =>
+    contextRows({ used: 100, window: 1000, parts }).find(row => row.kind === 'capability')?.label
+  expect(label([{ kind: 'tools', tokens: 10 }, { kind: 'mcp', tokens: 10 }, { kind: 'skills', tokens: 10 }])).toBe('capabilityTokens')
+  expect(label([{ kind: 'tools', tokens: 10 }, { kind: 'skills', tokens: 10 }])).toBe('capabilityToolsSkills')
+  expect(label([{ kind: 'tools', tokens: 10 }, { kind: 'mcp', tokens: 10 }])).toBe('capabilityToolsMcp')
+  expect(label([{ kind: 'tools', tokens: 10 }])).toBe('capabilityToolsOnly')
 })
 
 test('unattributed occupancy keeps its own category and zero stays zero', () => {
   const context: PanelContext = { used: 100, window: 1000, parts: [] }
-  expect(contextRows(context).map(row => [row.kind, row.tokens])).toEqual([['other', 100]])
+  expect(contextRows(context).map(row => [row.kind, row.tokens])).toEqual([['injection', 100]])
   expect(contextRows({ ...context, used: 0 }).reduce((sum, row) => sum + row.tokens, 0)).toBe(0)
 })
 
@@ -65,12 +75,12 @@ test('the live occupancy states the overview before the route has any context', 
 })
 
 test('the live occupancy decides while it answers, over the route figure', () => {
-  const context: PanelContext = { used: 100, window: 1000, parts: [{ kind: 'user', tokens: 100 }] }
+  const context: PanelContext = { used: 100, window: 1000, parts: [{ kind: 'conversation', tokens: 100 }] }
   expect(contextOverview({ used: 120, window: 1000 }, context)).toEqual({ used: 120, window: 1000 })
 })
 
 test('the route answers when nothing is live, and no window answers nothing', () => {
-  const context: PanelContext = { used: 100, window: 1000, parts: [{ kind: 'user', tokens: 100 }] }
+  const context: PanelContext = { used: 100, window: 1000, parts: [{ kind: 'conversation', tokens: 100 }] }
   expect(contextOverview(null, context)).toEqual({ used: 100, window: 1000 })
   expect(contextOverview(null, null)).toBeNull()
   expect(contextOverview({ used: 10, window: 0 }, null)).toBeNull()

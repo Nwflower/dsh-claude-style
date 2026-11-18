@@ -4,6 +4,16 @@
 export const SCALE_MIN = 0.9
 export const SCALE_MAX = 1.1
 
+/**
+ * The intentional under-estimate the streaming growth figure is written at (D103). The
+ * base estimator is fitted accurate for the detail panel; the live streaming figure
+ * carries this separate factor so it grows up toward the settlement rather than
+ * overshooting and retreating. It scales the written figure only — the settlement ratio
+ * that learns SCALE_MIN..SCALE_MAX reads the unfactored estimate, so this never feeds
+ * back into calibration. Tunable independently of the base accuracy.
+ */
+export const STREAM_UNDERESTIMATE = 0.95
+
 const SAMPLE_COUNT = 20
 const RATIO_FLOOR = 40
 

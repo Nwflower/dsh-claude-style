@@ -41,7 +41,7 @@ export { WAIT_OVERTIME_MS, WORD_LOCK_MS, openTurn, overtimeMargin, waitStart, wo
 export { callTokens } from './features/context-stats/call-tokens'
 export { contextBandAt, ringDash } from './features/context-stats/context-meter-face'
 export { contextPieImage } from './features/context-stats/context-meter-pie'
-export { estimateScale, recordSettlement } from './features/context-stats/estimate-scale'
+export { estimateScale, recordSettlement, STREAM_UNDERESTIMATE } from './features/context-stats/estimate-scale'
 export { CACHE_HIT_STOPS, CONTEXT_STOPS, RAMP_SPAN_HIGH, RAMP_SPAN_LOW, rampPosition } from './features/context-stats/stats-ramp'
 export { textTokens } from '@dsh-claude-style/contracts/tokens'
 export { effortSteps, effortTint, isRankedEffort, orderEffortIds } from './features/effort/ladder'

@@ -7,7 +7,15 @@
  * @risk The figure stays at the fitted price for a route whose tokenizer prices text differently, so it overstates or understates every step of that model; a single large write or a three-token settlement swings the multiplier so the next answer is written far off.
  */
 import { expect, test } from 'vitest'
-import { estimateScale, recordSettlement } from '@dsh-claude-style/client/pure'
+import { estimateScale, recordSettlement, STREAM_UNDERESTIMATE } from '@dsh-claude-style/client/pure'
+
+test('the streaming growth figure carries a separate intentional under-estimate (D103)', () => {
+  // Below one so the live figure grows up toward the settlement, never overshoots it;
+  // independent of the learned multiplier, which calibrates the unfactored estimate.
+  expect(STREAM_UNDERESTIMATE).toBeGreaterThan(0)
+  expect(STREAM_UNDERESTIMATE).toBeLessThan(1)
+  expect(estimateScale([]) * STREAM_UNDERESTIMATE).toBeLessThan(1)
+})
 
 test('no settlement yet leaves the fitted estimate as it is', () => {
   expect(estimateScale([])).toBe(1)

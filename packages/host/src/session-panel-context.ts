@@ -1,4 +1,4 @@
-/** The context window's composition, folded from the session log's own surface (D102, D99).
+/** The context window's composition, folded from the session log's own surface (D102, D104).
  *
  * Every part is priced from the content the host sends — the retained messages, the
  * request header's tool definitions, the system prompt — by the shared estimator in
@@ -7,35 +7,40 @@
  * flat characters-per-token rate.
  *
  * The fold is incremental: a message is priced once when it arrives, its price joins
- * the running total of its kind, and a replacement retires the prices it covers. Only
- * a compaction walks the retained messages, so a long session costs one price per
- * event. The classification reads the event type and the producer attribution the
- * host records, never the message's own text.
+ * the running totals of the kinds it contributes to, and a replacement retires the
+ * prices it covers. Only a compaction walks the retained messages, so a long session
+ * costs one price per event.
+ *
+ * The categories follow the block form first and the producer attribution second
+ * (D104): reasoning, tool-call and attachment blocks are extracted from whatever
+ * message carries them; the assistant's reasoning is the residual left after its text,
+ * calls and attachments are priced (so invisible reasoning lands there too); every
+ * other carrier's remaining text routes by source — skill content to skills, attributed
+ * injections to injection, the unattributed conversation to conversation. The system
+ * prompt keeps every surviving prompt; tool definitions and the MCP proxy's are priced
+ * from the request header.
  */
 import type { PanelContext, PanelContextKind, PanelContextPart, PanelContextProjections } from '@dsh-claude-style/contracts/session-panel'
-import { messageTokens, toolSchemaTokens } from '@dsh-claude-style/contracts/tokens'
+import { messageBlockParts, toolSchemaTokens } from '@dsh-claude-style/contracts/tokens'
 import type { PanelEvent } from './session-panel-log.js'
 
-/** The kinds a retained message can hold; the system prompt and the tools have their own counts. */
-type MessageKind = Exclude<PanelContextKind, 'system' | 'tools' | 'mcp'>
+/** The kinds a retained message contributes to; tools and mcp come from the request header. */
+type MessageKind = Exclude<PanelContextKind, 'tools' | 'mcp'>
 
-/** The order the parts are published and drawn in. */
-const KIND_ORDER: readonly PanelContextKind[] = ['system', 'tools', 'mcp', 'user', 'assistant', 'tool-result', 'memory', 'skills', 'other']
+/** The order the parts are published in. */
+const KIND_ORDER: readonly PanelContextKind[] = ['system', 'tools', 'mcp', 'skills', 'conversation', 'reasoning', 'tool-call', 'tool-result', 'attachment', 'injection']
 
-/** One retained message's contribution, kept so a replacement can retire it. */
+/** One retained message's contributions by kind, kept so a replacement can retire them. */
 interface PanelContextNode {
-  kind: PanelContextKind
-  tokens: number
+  contributions: Partial<Record<MessageKind, number>>
 }
 
 /** Kept per session with the panel's event cursor. */
 export interface PanelContextState {
-  /** Every retained message's price, by the sequence its surface entry carries. */
+  /** Every retained message's contributions, by the sequence its surface entry carries. */
   nodes: Map<number, PanelContextNode>
-  /** Running totals per retained-message kind, so publishing never walks the messages. */
+  /** Running totals per message kind, so publishing never walks the messages. */
   sums: Record<MessageKind, number>
-  /** The newest system prompt's price and sequence, or null while none survives. */
-  system: { seq: number, tokens: number } | null
   /** What the latest request header's tool definitions cost, the MCP proxy's apart. */
   tools: number
   mcp: number
@@ -49,8 +54,7 @@ export interface PanelContextState {
 export function createPanelContext(): PanelContextState {
   return {
     nodes: new Map(),
-    sums: { user: 0, assistant: 0, 'tool-result': 0, memory: 0, skills: 0, other: 0 },
-    system: null,
+    sums: { system: 0, skills: 0, conversation: 0, reasoning: 0, 'tool-call': 0, 'tool-result': 0, attachment: 0, injection: 0 },
     tools: 0,
     mcp: 0,
     provider: '',
@@ -82,17 +86,17 @@ function opensSkill(content: unknown): boolean {
   return false
 }
 
+/** The source whose text a message's non-attachment blocks route to (D104). */
+type SourceKind = 'system' | 'assistant' | 'skills' | 'tool-result' | 'injection' | 'conversation'
+
 /**
- * The kind one event's message belongs to, or null when the event carries no
- * model-visible message.
- *
- * The producer attribution decides: a skill catalog entry and a skill invocation are
- * skills, an instruction file's own text is memory, any other attributed injection
- * (a runtime context, a subagent relay, a job notice) is other context, and what
- * carries no attribution is the conversation. The system prompt is published as its
- * own part rather than kept with the messages.
+ * The source kind of one event's message, or null when the event carries no model-visible
+ * message. The producer attribution decides: a skill catalog entry, a skill invocation and a
+ * skill body are skills; an instruction file and any other attributed injection (a runtime
+ * context, a subagent relay, a job notice) are injection; what carries no attribution is the
+ * conversation. The assistant is split by block form rather than routed as one source.
  */
-function kindOf(event: PanelEvent, message: { content?: unknown, source?: { kind?: string, form?: string } }): PanelContextKind | null {
+function kindOf(event: PanelEvent, message: { content?: unknown, source?: { kind?: string, form?: string } }): SourceKind | null {
   switch (event.type) {
     case 'system/message':
       return 'system'
@@ -101,30 +105,51 @@ function kindOf(event: PanelEvent, message: { content?: unknown, source?: { kind
     case 'tool/result':
       return opensSkill(message.content) ? 'skills' : 'tool-result'
     case 'developer/message':
-      return message.source?.form === 'instructions' ? 'memory' : 'other'
+      return 'injection'
     case 'user/message': {
       const source = message.source
       if (source?.kind === 'skill-catalog' || source?.kind === 'skill-invocation') return 'skills'
-      if (source?.form === 'instructions') return 'memory'
       // A real user turn carries either no attribution or the host's own `user` kind.
-      if (source?.kind !== undefined && source.kind !== '' && source.kind !== 'user') return 'other'
-      if (source?.form !== undefined) return 'other'
-      return 'user'
+      if (source?.kind !== undefined && source.kind !== '' && source.kind !== 'user') return 'injection'
+      if (source?.form !== undefined) return 'injection'
+      return 'conversation'
     }
     default:
       return null
   }
 }
 
-/** Retire every price a replacement covers, its system prompt included. */
+/**
+ * One message's contributions by context kind (D104). Attachments are extracted first from
+ * any carrier; the assistant's text, calls and reasoning residual split apart; every other
+ * carrier's remaining text (including any unknown blocks) routes to its source kind.
+ */
+function contributionsOf(event: PanelEvent, message: { content?: unknown, source?: { kind?: string, form?: string } }): Partial<Record<MessageKind, number>> | null {
+  const source = kindOf(event, message)
+  if (source === null) return null
+  const parts = messageBlockParts(message)
+  const out: Partial<Record<MessageKind, number>> = {}
+  const add = (kind: MessageKind, tokens: number) => { if (tokens > 0) out[kind] = (out[kind] ?? 0) + tokens }
+  add('attachment', parts.attachment)
+  if (source === 'assistant') {
+    add('conversation', parts.text)
+    add('tool-call', parts.toolCall)
+    add('reasoning', parts.reasoning + parts.other)
+  } else {
+    add(source, parts.text + parts.reasoning + parts.toolCall + parts.other)
+  }
+  return out
+}
+
+/** Retire every contribution a replacement covers. */
 function retire(state: PanelContextState, startSeq: number, endSeq: number) {
   for (const [seq, node] of state.nodes) {
     if (seq < startSeq || seq > endSeq) continue
-    if (node.kind !== 'system') state.sums[node.kind as MessageKind] -= node.tokens
+    for (const kind of Object.keys(node.contributions) as MessageKind[]) {
+      state.sums[kind] -= node.contributions[kind] ?? 0
+    }
     state.nodes.delete(seq)
   }
-  const system = state.system
-  if (system !== null && system.seq >= startSeq && system.seq <= endSeq) state.system = null
 }
 
 /** Price the latest request header's tool definitions, the MCP proxy's own counted apart (D43). */
@@ -166,28 +191,14 @@ export function foldPanelContext(state: PanelContextState, events: readonly Pane
     }
     if (data === undefined || event.seq === undefined) continue
     const message = data.message ?? data
-    const kind = kindOf(event, message)
-    if (kind === null) continue
-    const tokens = messageTokens(message)
-    if (kind === 'system') {
-      // A newer system prompt supersedes the one it follows; a surviving older prompt
-      // is still sent, so its price stays in the composition as other context.
-      const previous = state.system
-      if (previous !== null && previous.seq !== event.seq) {
-        const kept = state.nodes.get(previous.seq)
-        if (kept !== undefined) {
-          kept.kind = 'other'
-          state.sums.other += kept.tokens
-        }
-      }
-      state.system = { seq: event.seq, tokens }
-      state.nodes.set(event.seq, { kind: 'system', tokens })
-      continue
-    }
+    const contributions = contributionsOf(event, message)
+    if (contributions === null) continue
     const existing = state.nodes.get(event.seq)
     if (existing !== undefined) retire(state, event.seq, event.seq)
-    state.nodes.set(event.seq, { kind, tokens })
-    state.sums[kind as MessageKind] += tokens
+    state.nodes.set(event.seq, { contributions })
+    for (const kind of Object.keys(contributions) as MessageKind[]) {
+      state.sums[kind] += contributions[kind] ?? 0
+    }
   }
 }
 
@@ -213,15 +224,16 @@ export function panelContextOf(
   const window = pressure?.contextWindow
   if (used === undefined || window === undefined || window <= 0) return null
   const counts: Record<PanelContextKind, number> = {
-    system: state.system?.tokens ?? 0,
+    system: state.sums.system,
     tools: state.tools,
     mcp: state.mcp,
-    user: state.sums.user,
-    assistant: state.sums.assistant,
-    'tool-result': state.sums['tool-result'],
-    memory: state.sums.memory,
     skills: state.sums.skills,
-    other: state.sums.other,
+    conversation: state.sums.conversation,
+    reasoning: state.sums.reasoning,
+    'tool-call': state.sums['tool-call'],
+    'tool-result': state.sums['tool-result'],
+    attachment: state.sums.attachment,
+    injection: state.sums.injection,
   }
   const parts: PanelContextPart[] = []
   for (const kind of KIND_ORDER) {

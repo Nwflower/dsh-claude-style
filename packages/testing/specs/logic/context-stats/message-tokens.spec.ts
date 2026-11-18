@@ -1,6 +1,6 @@
 /**
  * What one message, one tool definition and one picture cost: the shared yardstick the
- * host prices every context part with (D99).
+ * host prices every context part with (D104).
  * @capability context-stats
  * @features session-panel
  * @risk A part priced on a different yardstick than its neighbours puts the wrong
