@@ -556,7 +556,7 @@ edit the JSON, not the table.
 | `--dsh-claude-duration-move` | `200ms` | something travelling along its own track: a fold's door, the reasoning slider's knob and fill, a hint moving from one colour disc to the next |
 | `--dsh-claude-duration-count` | `220ms` | a session number counting to its new reading |
 | `--dsh-claude-duration-slide` | `240ms` | the segmented controls' sliding highlight, a sidebar icon's quarter turn, the wording box taking the width of the words arriving, and streamed content sliding up from the bottom edge |
-| `--dsh-claude-duration-fade` | `300ms` | a slow cross-fade: the theme flip, the titlebar tabs' hover reveal, the reasoning knob's glow, a placeholder handing its place to what it stood for |
+| `--dsh-claude-duration-fade` | `300ms` | a slow cross-fade: the theme flip, the reasoning knob's glow, a placeholder handing its place to what it stood for |
 | `--dsh-claude-duration-column` | `300ms` | a column taking or giving up width beside the chat: the conversation's details rail opening or closing, and the chat's own inset following it |
 | `--dsh-claude-duration-bounce` | `350ms` | a switch's knob travelling across with its double bounce |
 | `--dsh-claude-duration-flight` | `400ms` | the sent message flying from the composer to its row |
