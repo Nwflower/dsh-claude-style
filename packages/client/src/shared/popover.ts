@@ -177,48 +177,101 @@ export function programmaticPress(trigger: HTMLElement) {
 }
 
 /**
+ * The pointer's last position, followed only while a popover is up, and the
+ * geometric test for whether it still sits in one of the popover's boxes. A
+ * hover card held unpainted until it settles (visibility:hidden) answers no
+ * `:hover` and no `mouseenter`, and a card set a few pixels from its trigger
+ * leaves a sliver of desktop the pointer crosses while inside neither; the
+ * card's layout box is measurable through all of that, so the close grace asks
+ * the pointer's position rather than the hit test. Boxes and pointer coordinates
+ * are both read in viewport pixels, so page zoom (D81) cancels out of the
+ * comparison. Shared by every picker whose trigger and card are separate boxes.
+ */
+export function createPointerWatch() {
+  let pointer: { x: number, y: number } | null = null
+  let bound = false
+  function track(event: MouseEvent) {
+    pointer = { x: event.clientX, y: event.clientY }
+  }
+  return {
+    /** Follow the pointer; a second call while already following does nothing. */
+    bind() {
+      if (bound) return
+      bound = true
+      document.addEventListener('mousemove', track, true)
+    },
+    /** Stop following and forget the position; the card's close takes it off. */
+    unbind() {
+      if (!bound) return
+      document.removeEventListener('mousemove', track, true)
+      bound = false
+      pointer = null
+    },
+    /** Whether the tracked pointer sits in the element's box grown by `band` on
+     *  every side — the band is what covers the gap between trigger and card. */
+    inBox(element: Element | null, band: number) {
+      if (pointer === null || element === null || !element.isConnected) return false
+      const box = element.getBoundingClientRect()
+      if (box.width === 0 && box.height === 0) return false
+      return pointer.x >= box.left - band && pointer.x <= box.right + band &&
+        pointer.y >= box.top - band && pointer.y <= box.bottom + band
+    },
+  }
+}
+
+/**
  * Hover-intent helper shared by every skin popover. BOTH sides are scheduled:
  * `scheduleOpen` waits out the dwell, `scheduleClose` the grace, and `cancel`
  * clears whichever is pending (a leave needs only the one call, since
  * `scheduleClose` drops a pending open as well).
+ *
+ * `stillInside` turns the grace into a keep-alive for a trigger and card that
+ * are separate boxes: when it answers true at the end of the grace the pointer
+ * is still in the trigger/card region (a crossing, not a departure), so the
+ * grace re-arms instead of closing. The card is kept open across the gap and
+ * across the unpainted settle window, where `:hover` and `mouseenter` cannot
+ * report the pointer (createPointerWatch).
  */
-export function createHoverIntent(open: () => void, close: () => void, openDelay: number, closeDelay: number) {
+export function createHoverIntent(open: () => void, close: () => void, openDelay: number, closeDelay: number, stillInside?: () => boolean) {
   let openTimer: ReturnType<typeof setTimeout> | null = null
   let closeTimer: ReturnType<typeof setTimeout> | null = null
-  return {
-    cancel() {
-      if (openTimer) {
-        clearTimeout(openTimer)
-        openTimer = null
-      }
-      if (closeTimer) {
-        clearTimeout(closeTimer)
-        closeTimer = null
-      }
-    },
-    scheduleOpen() {
-      if (closeTimer) {
-        clearTimeout(closeTimer)
-        closeTimer = null
-      }
-      if (openTimer) clearTimeout(openTimer)
-      openTimer = setTimeout(() => {
-        openTimer = null
-        open()
-      }, openDelay)
-    },
-    scheduleClose() {
-      if (openTimer) {
-        clearTimeout(openTimer)
-        openTimer = null
-      }
-      if (closeTimer) clearTimeout(closeTimer)
-      closeTimer = setTimeout(() => {
-        closeTimer = null
-        close()
-      }, closeDelay)
-    },
+  function cancel() {
+    if (openTimer) {
+      clearTimeout(openTimer)
+      openTimer = null
+    }
+    if (closeTimer) {
+      clearTimeout(closeTimer)
+      closeTimer = null
+    }
   }
+  function scheduleOpen() {
+    if (closeTimer) {
+      clearTimeout(closeTimer)
+      closeTimer = null
+    }
+    if (openTimer) clearTimeout(openTimer)
+    openTimer = setTimeout(() => {
+      openTimer = null
+      open()
+    }, openDelay)
+  }
+  function scheduleClose() {
+    if (openTimer) {
+      clearTimeout(openTimer)
+      openTimer = null
+    }
+    if (closeTimer) clearTimeout(closeTimer)
+    closeTimer = setTimeout(() => {
+      closeTimer = null
+      if (stillInside !== undefined && stillInside()) {
+        scheduleClose()
+        return
+      }
+      close()
+    }, closeDelay)
+  }
+  return { cancel, scheduleOpen, scheduleClose }
 }
 
 /**

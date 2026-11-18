@@ -1,7 +1,7 @@
 import { AUTO_POPOVER_ALL } from '../../constants'
 import { readPrefs } from '../../core/prefs'
 import { closestFrom } from '@dsh-claude-style/engine/dom'
-import { POPOVER_MARGIN, POPOVER_OPEN_DELAY, closeOtherPopovers, createHoverIntent, positionAnchoredPopover, registerPopover, removeStrayNodes, setMenuPopoverOpen, unregisterPopover } from '../../shared/popover'
+import { POPOVER_MARGIN, POPOVER_OPEN_DELAY, closeOtherPopovers, createHoverIntent, createPointerWatch, positionAnchoredPopover, registerPopover, removeStrayNodes, setMenuPopoverOpen, unregisterPopover } from '../../shared/popover'
 import { pageViewport } from '../../shared/page-zoom'
 import { createModelSubMenu } from './sub-menu'
 
@@ -66,46 +66,23 @@ export function createModelCards(options: {
    * Where the pointer last was, tracked only while a card is up. The two cards
    * are separate boxes with a sliver of desktop between them, and a pointer
    * crossing that sliver has not left the picker — without this the grace
-   * simply runs out mid-gap and both cards fold.
+   * simply runs out mid-gap and both cards fold. The watch goes with the card:
+   * a generation torn down while the card stands would otherwise leave its
+   * document listener, and the closure behind it, for the page's life.
    */
-  let pointer: { x: number, y: number } | null = null
-  let pointerBound = false
-  function trackPointer(event: MouseEvent) {
-    pointer = { x: event.clientX, y: event.clientY }
-  }
+  const pointerWatch = createPointerWatch()
   function trackPointerWhileOpen() {
     const wanted = modelPop !== null && modelPop.getAttribute('data-open') === 'true'
-    if (wanted === pointerBound) return
-    if (!wanted) {
-      unbindPointerTracking()
-      return
-    }
-    pointerBound = true
-    document.addEventListener('mousemove', trackPointer, true)
-  }
-
-  /**
-   * Take the pointer watch off the document. The open card is the only thing
-   * that asks for it, so it goes with the card: a generation torn down while
-   * the card stands would otherwise leave this listener, and the closure
-   * behind it, on the document for the page's life.
-   */
-  function unbindPointerTracking() {
-    if (!pointerBound) return
-    document.removeEventListener('mousemove', trackPointer, true)
-    pointerBound = false
-    pointer = null
+    if (wanted) pointerWatch.bind()
+    else pointerWatch.unbind()
   }
 
   /** True while the tracked pointer sits within one card's box, with the same
    *  8px band of desktop around it that covers the sliver of gap between the
    *  two cards. */
   function pointerInCardBox(card: HTMLElement | null) {
-    if (pointer === null || card === null) return false
-    if (card.getAttribute('data-open') !== 'true') return false
-    const box = card.getBoundingClientRect()
-    return pointer.x >= box.left - 8 && pointer.x <= box.right + 8 &&
-           pointer.y >= box.top - 8 && pointer.y <= box.bottom + 8
+    if (card === null || card.getAttribute('data-open') !== 'true') return false
+    return pointerWatch.inBox(card, 8)
   }
 
   /** True while the pointer sits in either card, or in the gap between them. */
@@ -113,23 +90,21 @@ export function createModelCards(options: {
     return pointerInCardBox(modelPop) || pointerInCardBox(modelSubPop)
   }
 
-  /** Close on leave, but treat the gap between the two cards as still inside. */
+  /** Close on leave. The gap between the two cards is the intent's keep-alive
+   *  (pointerInPicker as stillInside), so reaching here means the pointer is
+   *  genuinely away from both cards. */
   function closeModelIfAway() {
     // A reader typing in the level-2 field is still using the card: the pointer
     // leaving the box it sits in does not fold it out from under their hands.
     // A press elsewhere and the Escape key are what close it then.
     if (modelSub !== null && modelSub.focused()) return
-    if (pointerInPicker()) {
-      scheduleCloseModel()
-      return
-    }
     closeModelPopovers()
   }
 
   // The picker takes part in the shared popover rule (shared/popover.ts): one
   // entry for BOTH levels, so opening the More-models card never folds the
   // card that carries it.
-  const modelHoverIntent = createHoverIntent(openModelPopover, closeModelIfAway, POPOVER_OPEN_DELAY, MODEL_CLOSE_DELAY)
+  const modelHoverIntent = createHoverIntent(openModelPopover, closeModelIfAway, POPOVER_OPEN_DELAY, MODEL_CLOSE_DELAY, pointerInPicker)
   registerPopover(popoverKey, closeModelPopovers)
 
   function closeModelPopovers() {
@@ -276,7 +251,7 @@ export function createModelCards(options: {
    * dwell still waiting: its timer would otherwise fire into a feature that has
    * been torn down and open a card nothing owns.
    */
-  const subIntent = createHoverIntent(openModelSub, closeModelIfAway, POPOVER_OPEN_DELAY, MODEL_CLOSE_DELAY)
+  const subIntent = createHoverIntent(openModelSub, closeModelIfAway, POPOVER_OPEN_DELAY, MODEL_CLOSE_DELAY, pointerInPicker)
 
   return {
     /** Level 1's scrolling body, for the pass that paints the rows. */
@@ -309,7 +284,7 @@ export function createModelCards(options: {
       modelBody = null
       modelFooter = null
       modelSub = null
-      unbindPointerTracking()
+      pointerWatch.unbind()
       cancelCloseModel()
     },
     /** Leave the shared popover registry, with no dwell left waiting to open a card. */
