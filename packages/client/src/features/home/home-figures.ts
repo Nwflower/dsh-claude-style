@@ -1,4 +1,4 @@
-import { HOME_HEAT_RAMP } from '../../constants'
+import { HOME_HEAT_RAMP, HOME_SESSION_SCOPE_ALL } from '../../constants'
 import { activeLocale } from '../../core/i18n'
 import { homeDayKey } from './home-store'
 import type { HomeUsageState, ListSummary } from './home-store'
@@ -215,7 +215,7 @@ export function homeModelList(value: UsageReport | null, listed: ListSummary | n
       lastAt: entry.lastAt
     }))
   }
-  if (listed === null) return null
+  if (listed === null) return value === null ? null : []
   return listed.models.map(entry => ({
     id: entry.id,
     tokens: entry.tokens,
@@ -252,12 +252,15 @@ export function homeModelDays(value: UsageReport | null, windowDays: number) {
  * Every figure the panel draws, from the two sources and the picked range.
  *
  * @param state - the roll-up store's snapshot.
- * @param listed - the session list's roll-up, or null.
+ * @param listSummary - the unfiltered session list's roll-up, or null.
  * @param range - the picked range id ('all' / '30d' / '7d').
  * @param bookPick - the panel's draw in [0, 1), which picks the yardstick book.
  * @returns the figures both views read.
  */
-export function homePanelData(state: HomeUsageState, listed: ListSummary | null, range: string, bookPick: number) {
+export function homePanelData(state: HomeUsageState, listSummary: ListSummary | null, range: string, bookPick: number) {
+  // The session list has neither workspace nor archive membership. A cached
+  // all-records summary must stay out of a newly narrowed view.
+  const listed = state.scope === HOME_SESSION_SCOPE_ALL ? listSummary : null
   const value = state.value
   const ready = value !== null && value.totals !== undefined
   const totals = ready ? value.totals : null
