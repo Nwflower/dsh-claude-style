@@ -49,7 +49,10 @@ body[data-dsh-claude-style] [data-chat-running][data-dsh-claude-wait] [data-dsh-
   display: none;
 }
 
+/* The injected line has no controls. Leave hit testing to the host row so
+   the scrolling transcript never returns its animated copies or loader lanes. */
 body[data-dsh-claude-style] .dsh-claude-chat-wait {
+  pointer-events: none;
   display: inline-flex;
   align-items: center;
   min-width: 0;

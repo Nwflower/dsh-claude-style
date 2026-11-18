@@ -5,7 +5,10 @@ body[data-dsh-claude-style][data-dsh-claude-chat-fold] [data-step-process][data-
   display: none;
 }
 
+/* The visible copy is decorative; the containing button owns the click and
+   accessible name. Scroll anchoring should hit that button, not its digits. */
 body[data-dsh-claude-style] .dsh-claude-process-summary {
+  pointer-events: none;
   position: relative;
   display: inline-flex;
   flex: 1 1 auto;

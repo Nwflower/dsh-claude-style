@@ -169,6 +169,8 @@ export default {
       summary.running === true && summary.band?.animation === BAND_ANIMATION &&
         summary.band?.text === summary.text && summary.band?.rolling === false,
       JSON.stringify(summary))
+    check('scroll hit testing over the summary returns the clickable header and skips its decoration',
+      fold.summaryHit?.header === true && fold.summaryHit?.decoration === false, JSON.stringify(fold.summaryHit))
     const grown = fold.grown || {}
     check('a call arriving rolls its figure to the new count, and the band\'s copy stands on that count at once',
       grown.text === '1 thought, 2 tool calls' && grown.name === '1 thought, 2 tool calls' && grown.rolling === true &&

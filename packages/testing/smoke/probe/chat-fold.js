@@ -91,6 +91,11 @@
         expandedUntouched: !foldExpandedBody.hasAttribute('hidden'),
         clicks: Object.assign({}, window.__foldClicks),
       }
+      var passive = foldHeader.querySelector('.dsh-claude-process-summary')
+      passive.scrollIntoView({ block: 'center', behavior: 'instant' })
+      var summaryBox = passive.getBoundingClientRect()
+      var hits = document.elementsFromPoint(summaryBox.left + summaryBox.width / 2, summaryBox.top + summaryBox.height / 2)
+      r.fold.summaryHit = { header: hits[0] === foldHeader, decoration: hits.some(function (hit) { return passive.contains(hit) }) }
       // Another call arrives in the group: its figure rolls to the new count.
       var moreCall = document.createElement('div')
       moreCall.setAttribute('data-chat-flow-kind', 'tool-call')
