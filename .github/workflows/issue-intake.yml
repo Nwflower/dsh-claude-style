@@ -46,9 +46,9 @@ jobs:
             try { await github.rest.issues.addAssignees({ owner, repo, issue_number: issue.number, assignees: [assignee] }) } catch { assigned = false }
             parts.push(`本条判定为${isDesign ? '设计' : '逻辑'}类，${assigned ? '已分配给' : '未能分配给'} @${assignee}（设计类归仓库主，逻辑类归维护者，可按实际改派）。\n\nClassified as ${isDesign ? 'design' : 'logic'}; ${assigned ? 'assigned to' : 'could not assign to'} @${assignee} (design to the repository owner, logic to the maintainer; reassign as needed).`)
             // A hint at possibly related open issues, never a gate.
-            const core = issue.title.replace(/^\[[^\]]*\]\s*/, '').trim()
-            if (core.length >= 4) {
-              const found = await github.rest.search.issuesAndPullRequests({ q: `repo:${owner}/${repo} is:issue is:open in:title ${core}`, per_page: 6 })
+            const titleCore = issue.title.replace(/^\[[^\]]*\]\s*/, '').trim()
+            if (titleCore.length >= 4) {
+              const found = await github.rest.search.issuesAndPullRequests({ q: `repo:${owner}/${repo} is:issue is:open in:title ${titleCore}`, per_page: 6 })
               const dups = found.data.items.filter((i) => i.number !== issue.number && !i.pull_request)
               if (dups.length) parts.push('可能相关的已有 issue / Possibly related:\n' + dups.map((i) => `- #${i.number} ${i.title}`).join('\n'))
             }
