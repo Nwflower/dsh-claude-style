@@ -30,6 +30,7 @@ import { fileMergeScenario } from './scenarios/file-merge.mjs'
 import { reasoningContinuousScenario, reasoningStreamScenario } from './scenarios/reasoning-stream.mjs'
 import { messageAnswerActionsScenario } from './scenarios/message-answer-actions.mjs'
 import { messageActionsScenario } from './scenarios/message-actions.mjs'
+import { messageRewindFilesScenario } from './scenarios/message-rewind-files.mjs'
 import { systemTypographyScenario } from './scenarios/system-typography.mjs'
 import { mobileHomeScenario } from './scenarios/mobile-home.mjs'
 import { composerViewportScenario } from './scenarios/composer-viewport.mjs'
@@ -172,8 +173,8 @@ async function handoverFrames(context) {
 const SCENARIOS = {
   /**
    * 读者消息下面那行控件（features/message-actions）：撤回与编辑插在宿主自己的
-   * 控件行里，整行只在悬停时显现；撤回从消息前一个事件分岔并把原文放回新会话的
-   * 输入框，编辑把改过的文字在新会话里直接发出，原会话原样留着。
+   * 控件行里，整行只在悬停时显现；撤回从消息前一个事件分岔并把原文放回活动版本的
+   * 输入框，编辑把改过的文字在原历史位置直接发出，原会话收进版本历史。
    *
    * 这一场按读者看见的样子选：控件行是宿主的 `[data-clock]`，皮肤的两个按钮就
    * 是它末尾的两个按钮（宿主先画时间与复制），编辑框是那一行里唯一的文本域。
@@ -182,6 +183,7 @@ const SCENARIOS = {
    */
   messageAnswerActions: messageAnswerActionsScenario({ check }),
   messageActions: messageActionsScenario({ check }),
+  messageRewindFiles: messageRewindFilesScenario({ check }),
   systemTypography: systemTypographyScenario(),
   /** A scripted answer: the reader's message, the thought, the markdown. */
   conversation: {

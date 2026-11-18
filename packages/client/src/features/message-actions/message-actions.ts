@@ -1,19 +1,23 @@
 import * as React from 'react'
 import * as reactDom from 'react-dom/client'
-import { CHAT_ANSWER_ROW_SELECTOR, FLOW_KIND_ATTRIBUTE, MESSAGE_ACTION_ROW_ATTRIBUTE, ROW_PHASE_ATTRIBUTE, TURN_TAIL_SELECTOR, USER_ROW_KIND } from '@dsh-claude-style/contracts/dom'
+import { CHAT_ANSWER_ROW_SELECTOR, FLOW_KIND_ATTRIBUTE, INHERITED_HISTORY_ROW_SELECTOR, MESSAGE_ACTION_ROW_ATTRIBUTE, ROW_PHASE_ATTRIBUTE, SESSION_ROW_SELECTOR, TURN_TAIL_SELECTOR, USER_ROW_KIND } from '@dsh-claude-style/contracts/dom'
 import { observeMatches, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { buildElement } from '@dsh-claude-style/engine/dom'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import type { HostContext } from '@dsh-claude-style/engine/host'
-import { createCopy } from '../../core/i18n'
+import { hostUiWorkspace, hostWorkspaces } from '@dsh-claude-style/engine/host'
+import type { HostUiWorkspaceService } from '@dsh-claude-style/contracts/services'
+import type { RewindAction } from '@dsh-claude-style/contracts/session-rewind'
 import type { FeatureUi } from '../../core/feature'
 import { createHostToast } from '../../shared/host-toast'
 import { ACTION_BUTTON_ATTRIBUTE, BUTTONS_SEAT_ATTRIBUTE, BUTTONS_SEAT_CLASS, MessageActionButtons } from './message-action-buttons'
-import COPY from './message-actions.copy.json'
+import { copy } from './message-actions-copy'
 import type manifest from './message-actions.manifest'
-import { answerPromptOf, answerRowOf, readerMessageOf, rewindTo } from './message-cut'
-
-const copy = createCopy(COPY)
+import { answerPromptOf, answerRowOf, readerMessageOf } from './message-cut'
+import type { ReaderMessage } from './message-cut'
+import { executeRewind, prepareRewind } from './rewind-client'
+import { closeRewindDialogs, confirmRewind, openRevisionHistory } from './rewind-dialog'
+import { applyForkArtifactVisibility, applyRevisionVisibility, clearRevisionVisibility, conversationFor, refreshConversations, REVISIONS_CHANGED_EVENT } from './revision-history'
 
 /**
  * 一条读者发出的消息：它下面那行控件补上「撤回」和「编辑」，与 Claude Code
@@ -22,17 +26,15 @@ const copy = createCopy(COPY)
  * 这行控件是宿主自己画的（时钟与复制按钮），皮肤不另画一份：宿主在
  * `[data-clock]` 上标出控件行，在 `data-chat-flow-kind="user"` 上标出读者
  * 消息，样式表按这两个标记让每一行读者消息都只在悬停或聚焦时显现（宿主自己
- * 只对后面还跟着消息的那种行这样做）。撤回与编辑这两个按钮插进同一行，因此
+ * 只对后面还跟着消息的那种行这样做）。撤回、编辑与版本历史按钮插进同一行，因此
  * 跟着一起显现，复制与时间也是同一个行为。
  *
- * 两个按钮画成宿主自己的按钮：标签走宿主的 Tooltip，与复制按钮是同一个组件，
+ * 动作按钮画成宿主自己的按钮：标签走宿主的 Tooltip，与复制按钮是同一个组件，
  * 悬停时出来的提示因此同形同色（message-action-buttons.ts）。
  *
- * 两个动作都走分岔（message-cut.ts）：宿主没有原地截断会话的接口，所以消息
- * 前一个事件处复制成新会话。撤回把原文放回新会话的输入框，等读者自己再发；
- * 编辑把改过的文字直接在里面发出去。原会话一个事件都不动，读者想回去看随时
- * 能回去。正式回答行的「重跑」与「删除此轮」也从那一轮的用户提问前分岔：
- * 重跑在新会话里提交原提问，删除只留下该轮之前的会话前缀。
+ * 四个动作共用确认计划（rewind-client.ts）：DSH 仍从消息前 fork，插件恢复
+ * 目标检查点并把新旧 Session 收进同一条逻辑对话。侧边栏只显示活动版本，
+ * 原 Session 一个事件都不动，可从版本历史打开（D105）。
  */
 
 /** 读者消息的那一行（宿主标出的 kind）。 */
@@ -105,12 +107,13 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * 这里没有别的上报通道 —— 分岔失败时页面什么也不会变，读者需要一个说法；
    * 提示只带走一句通用的话，具体原因留在控制台。
    */
+  const report = (error: unknown) => {
+    console.error('[dsh-claude-style] message-actions failed:', error)
+    toast.show({ text: copy('failed') })
+  }
+
   function run(action: () => unknown) {
     if (pendingAction) return
-    const report = (error: unknown) => {
-      console.error('[dsh-claude-style] message-actions failed:', error)
-      toast.show({ text: copy('failed') })
-    }
     try {
       const answer = action()
       if (answer instanceof Promise) {
@@ -177,21 +180,27 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     input.setSelectionRange(input.value.length, input.value.length)
   }
 
-  /** 保存编辑：分岔到这条消息之前，把改过的文字在新会话里直接发出。 */
+  /** One confirmed plan drives all four actions; cancelling leaves the current Session and editor untouched. */
+  async function confirmedRewind(message: ReaderMessage, text: string, send: boolean, action: RewindAction, success: string): Promise<boolean> {
+    const plan = await prepareRewind(message)
+    const choice = await confirmRewind(plan, action)
+    if (choice === null) return false
+    await executeRewind(ctx, message, plan, text, send, action, choice.restore)
+    toast.show({ text: success })
+    return true
+  }
+
+  /** 保存编辑：确认后在原消息位置继续；取消或失败时编辑框和文字都保留。 */
   async function commitEditor() {
     const current = editing
     if (current === null) return
     const text = current.input.value
-    // 空文字不发：编辑框留着，读者补上内容再按一次。
     if (text.trim() === '') return
     const message = readerMessageOf(ctx, current.row)
-    closeEditor()
     if (message === null) throw new Error('message-actions: the row no longer resolves to a message')
-    await rewindTo(ctx, message, text, true)
-    toast.show({ text: copy('sent') })
+    if (await confirmedRewind(message, text, true, 'edit', copy('sent'))) closeEditor()
   }
 
-  /** 撤回：分岔到这条消息之前，把原文放回新会话的输入框，等读者自己再发。 */
   async function retractMessage(row: HTMLElement) {
     const message = readerMessageOf(ctx, row)
     if (message === null) throw new Error('message-actions: the row no longer resolves to a message')
@@ -199,9 +208,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       toast.show({ text: copy('running') })
       return
     }
-    closeEditor()
-    await rewindTo(ctx, message, message.text, false)
-    toast.show({ text: copy('rewound') })
+    if (await confirmedRewind(message, message.text, false, 'retract', copy('rewound'))) closeEditor()
   }
 
   /** An answer's prompt must still resolve to a settled turn when the press lands. */
@@ -212,25 +219,22 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       toast.show({ text: copy('running') })
       return null
     }
-    closeEditor()
     return message
   }
 
   async function rerunAnswer(row: HTMLElement) {
     const message = actionableAnswer(row)
     if (message === null || message.attachments) return
-    await rewindTo(ctx, message, message.text, true)
-    toast.show({ text: copy('reran') })
+    if (await confirmedRewind(message, message.text, true, 'rerun', copy('reran'))) closeEditor()
   }
 
   async function deleteAnswer(row: HTMLElement) {
     const message = actionableAnswer(row)
     if (message === null) return
-    await rewindTo(ctx, message, '', false)
-    toast.show({ text: copy('deleted') })
+    if (await confirmedRewind(message, '', false, 'delete', copy('deleted'))) closeEditor()
   }
 
-  /** 两个按钮的动作：宿主重画一行时按钮跟着重画，动作本身读的是当时那一行。 */
+  /** 各按钮的动作：宿主重画一行时按钮跟着重画，动作本身读的是当时那一行。 */
   function handlersFor(row: HTMLElement, line: HTMLElement) {
     if (row.matches(CHAT_ANSWER_ROW_SELECTOR)) {
       const attachments = answerPromptOf(ctx, row)?.attachments === true
@@ -239,6 +243,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
         delete() { run(() => deleteAnswer(row)) },
       }
     }
+    const message = readerMessageOf(ctx, row)
+    const history = message === null ? undefined : conversationFor(message.sessionId)
     return {
       retract() {
         run(() => retractMessage(row))
@@ -246,18 +252,35 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       edit() {
         run(() => openEditor(row, line))
       },
+      ...(history === undefined || history.revisions.length < 2 ? {} : {
+        history() {
+          // Reading revisions is safe while the previous submission settles; it never forks or writes.
+          try {
+            openRevisionHistory(history, sessionId => {
+              const archives = hostWorkspaces(ctx)
+              const workspace = hostUiWorkspace(ctx) as HostUiWorkspaceService | null
+              if (archives === null) throw new Error('message-actions: host workspaces service is unavailable')
+              if (workspace === null || typeof workspace.openSession !== 'function') throw new Error('message-actions: host uiWorkspace.openSession is unavailable')
+              // The dialog closes immediately; navigation errors surface through the same toast as every other action.
+              void archives.unarchiveSession(sessionId).then(() => { workspace.openSession(sessionId) }).catch(report)
+            })
+          } catch (error) {
+            report(error)
+          }
+        },
+      }),
     }
   }
 
   function draw(seat: Seat, row: HTMLElement, line: HTMLElement) {
     const handlers = handlersFor(row, line)
     seat.root.render(React.createElement(MessageActionButtons, {
-      labels: { retract: copy('retract'), edit: copy('edit'), rerun: copy('rerun'), delete: copy('delete') },
+      labels: { retract: copy('retract'), edit: copy('edit'), rerun: copy('rerun'), delete: copy('delete'), history: copy('history') },
       handlers,
     }))
   }
 
-  /** 给一个控件行补上两个按钮；已经有就不再写第二遍。 */
+  /** 给一个控件行补上动作按钮；已经有就不再写第二遍。 */
   function decorate(line: HTMLElement) {
     if (line.querySelector(`[${BUTTONS_SEAT_ATTRIBUTE}]`) !== null) return
     const answer = answerRowOf(line)
@@ -273,7 +296,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     }
     const box = buildElement('span', BUTTONS_SEAT_CLASS)
     box.setAttribute(BUTTONS_SEAT_ATTRIBUTE, '')
-    // 宿主在这一行里先画时间与复制；回答行的行尾是它的用量与时间。两个按钮排在
+    // 宿主在这一行里先画时间与复制；回答行的行尾是它的用量与时间。动作按钮排在
     // 那组信息之前，跟宿主的动作按钮同处一簇，数字与时间仍留在行尾。
     if (answer === null || line.lastElementChild === null) line.append(box)
     else line.insertBefore(box, line.lastElementChild)
@@ -298,8 +321,13 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   }
 
   const seatsOnPage = observeMatches<HTMLElement>(MESSAGE_SEATS_SELECTOR, () => queue(sync))
+  const sessionRows = observeMatches<HTMLElement>(SESSION_ROW_SELECTOR, () => queue(sync))
+  const inheritedRows = observeMatches<HTMLElement>(INHERITED_HISTORY_ROW_SELECTOR, () => queue(sync))
+  const turnTailRows = observeMatches<HTMLElement>(TURN_TAIL_SELECTOR, () => queue(sync))
 
   function sync() {
+    applyRevisionVisibility(sessionRows.all())
+    applyForkArtifactVisibility(ctx, inheritedRows.all(), turnTailRows.all())
     for (const line of seats.keys()) if (!line.isConnected) dropSeat(line)
     if (editing !== null && !editing.root.isConnected) {
       // 宿主重画了这一行，把编辑框一起换掉了：状态收回来，不留半开的行。
@@ -331,6 +359,19 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     }
   })
 
+  function redrawHistoryButtons() {
+    for (const [line, seat] of seats) {
+      const answer = answerRowOf(line)
+      const row = line.closest<HTMLElement>(USER_ROW_SELECTOR) ?? answer
+      if (row !== null) draw(seat, row, line)
+    }
+    queue(sync)
+  }
+  const revisionsChanged = () => { queue(redrawHistoryButtons) }
+  document.addEventListener(REVISIONS_CHANGED_EVENT, revisionsChanged)
+  // Background metadata loading is isolated from installation; a failure is reported without uninstalling the row controls.
+  void refreshConversations().catch(report)
+
   ui.messageActions = { onCopyChange: relabel }
   queue(sync)
 
@@ -338,7 +379,15 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     released = true
     delete ui.messageActions
     stopRemovals()
+    document.removeEventListener(REVISIONS_CHANGED_EVENT, revisionsChanged)
     seatsOnPage.release()
+    clearRevisionVisibility(sessionRows.all())
+    clearRevisionVisibility(inheritedRows.all())
+    clearRevisionVisibility(turnTailRows.all())
+    inheritedRows.release()
+    turnTailRows.release()
+    sessionRows.release()
+    closeRewindDialogs()
     if (cancelFrame !== null) cancelFrame()
     cancelFrame = null
     closeEditor()

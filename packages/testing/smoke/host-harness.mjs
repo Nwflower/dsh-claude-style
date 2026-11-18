@@ -2,9 +2,19 @@ import path from 'node:path'
 import { Readable } from 'node:stream'
 
 function fakeHost(mod, options = {}) {
-  const { fenced, home, live = [], events, launch, stored, reads, releases, lists, listCalls, registry, tails, queryShapes, broken, onRead, projections, jobs, agents, commands } = options
+  const { fenced, home, live = [], events, launch, stored, reads, releases, lists, listCalls, registry, tails, queryShapes, broken, onRead, projections, jobs, agents, commands, directories = {}, filesystem, listen = false } = options
   const shapes = queryShapes ?? ['readSession', 'observeSession', 'readTitleSnapshots']
   const routes = {}
+  const listeners = {}
+  const liveSession = (id) => ({
+    id,
+    header: { id, ...(directories[id] === undefined ? {} : { cwd: directories[id] }) },
+    seq: (events?.[id] ?? []).reduce((next, event) => Math.max(next, event.seq + 1), 0),
+    snapshotEvents: (fromSeq) => {
+      if (tails !== undefined) tails.push([id, fromSeq])
+      return (events?.[id] ?? []).filter((event) => event.seq >= fromSeq)
+    },
+  })
   const settings = { configure: () => () => {} }
   // The harness's launch environment, as its own snapshot behaves: the canonical
   // order is process, project-env, user-env, and a layer left out of the asked
@@ -37,19 +47,8 @@ function fakeHost(mod, options = {}) {
       if (name === 'connection' && fenced) return connection
       if (name === 'dshHomePath' && home !== undefined) return (...segments) => path.join(home, ...segments)
       if (name === 'sessions') return {
-        get: (id) => (live.includes(id) ? {} : undefined),
-        list: () => live.map((id) => ({
-          id,
-          header: { id },
-          // The host's own `Session.seq` is the next sequence number, not the
-          // event count: this log's events are numbered from 1.
-          seq: (events?.[id] ?? []).reduce((next, event) => Math.max(next, event.seq + 1), 0),
-          // The host's own live Session: the events from one seq onward (D3).
-          snapshotEvents: (fromSeq) => {
-            if (tails !== undefined) tails.push([id, fromSeq])
-            return (events?.[id] ?? []).filter((event) => event.seq >= fromSeq)
-          },
-        })),
+        get: (id) => (live.includes(id) ? liveSession(id) : undefined),
+        list: () => live.map(liveSession),
       }
       if (name === 'launchEnvironment') return launchEnvironment
       if (name === 'jobs' && jobs !== undefined) return jobs
@@ -124,9 +123,18 @@ function fakeHost(mod, options = {}) {
         }
       }
       if (name === 'workspaceRegistry' && registry !== undefined) return registry
+      if (name === 'fs' && filesystem !== undefined) return filesystem
       return undefined
     },
     effect: (fn) => fn(),
+    ...(listen ? {
+      on(name, listener) {
+        const registered = listeners[name] ?? []
+        listeners[name] = registered
+        registered.push(listener)
+        return () => { listeners[name] = listeners[name].filter(entry => entry !== listener) }
+      },
+    } : {}),
     inject: (deps, cb) => cb({
       effect: (fn) => fn(),
       get: (name) => ctx.get(name),
@@ -135,7 +143,10 @@ function fakeHost(mod, options = {}) {
     }),
   }
   mod.apply(ctx)
-  return { routes, ctx }
+  const emit = async (name, ...args) => {
+    for (const listener of listeners[name] ?? []) await listener(...args)
+  }
+  return { routes, ctx, listeners, emit }
 }
 
 /**

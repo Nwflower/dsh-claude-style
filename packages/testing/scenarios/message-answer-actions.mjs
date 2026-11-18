@@ -90,6 +90,7 @@ function messageAnswerActionsScenario({ check }) {
         button.click()
         button.click()
       })
+      await page.getByRole('button', { name: /^(确认回退|Confirm rewind)$/ }).click()
       await waitForBranch(page, notes.before.sessionId)
       await waitForAnswers(page, 1)
       notes.reran = await read(page)
@@ -97,6 +98,7 @@ function messageAnswerActionsScenario({ check }) {
       await sendPrompt(page, 'second turn')
       await waitForAnswers(page, 2)
       await page.getByRole('button', { name: DELETE }).first().click()
+      await page.getByRole('button', { name: /^(确认回退|Confirm rewind)$/ }).click()
       await waitForBranch(page, notes.reran.sessionId)
       notes.deleted = await read(page)
       await page.reload({ waitUntil: 'domcontentloaded' })
@@ -110,8 +112,8 @@ function messageAnswerActionsScenario({ check }) {
         check('两轮会话与两条回答都已就位', notes.before?.prompts?.length === 2 && notes.before?.answers === 2, JSON.stringify(notes.before)),
         check('重跑与删除排在回答行的用量与时间之前', notes.placement?.length > 0 && notes.placement.every((row) => row.beforeInfo && row.buttons >= 4), JSON.stringify(notes.placement)),
         check('正在运行的回答不提供重跑或删除', notes.runningButtons === 0, `buttons=${notes.runningButtons}`),
-        check('重跑中间回答只重放该轮提问并创建新分岔', reran.sessionId !== notes.before?.sessionId && reran.prompts?.length === 1 && reran.prompts[0].includes('hello there') && !reran.prompts[0].includes('second turn') && reran.answers === 1 && reran.draft === '', JSON.stringify(reran)),
-        check('删除中间轮次创建不含该轮及后续内容的新分岔', deleted.sessionId !== reran.sessionId && deleted.prompts?.length === 0 && deleted.answers === 0 && deleted.draft === '', JSON.stringify(deleted)),
+        check('重跑中间回答只重放该轮提问并切换逻辑对话活动版本', reran.sessionId !== notes.before?.sessionId && reran.prompts?.length === 1 && reran.prompts[0].includes('hello there') && !reran.prompts[0].includes('second turn') && reran.answers === 1 && reran.draft === '', JSON.stringify(reran)),
+        check('删除中间轮次切换到不含该轮及后续内容的活动版本', deleted.sessionId !== reran.sessionId && deleted.prompts?.length === 0 && deleted.answers === 0 && deleted.draft === '', JSON.stringify(deleted)),
         check('删除后的会话在页面重载后仍保持该前缀', (restored.sessionId === deleted.sessionId || restored.sessionId === null) && restored.prompts?.length === 0 && restored.answers === 0, JSON.stringify(restored)),
         check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),
       ]

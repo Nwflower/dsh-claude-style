@@ -100,3 +100,8 @@ export const SESSION_PANEL_PATH = `${ROUTE_PREFIX}/session-panel`
 
 /** `POST` with a session id compacts that session's own history through the host's compaction seam (D100). */
 export const SESSION_COMPACT_PATH = `${ROUTE_PREFIX}/session-compact`
+
+/** Fork-backed logical conversations, their rewind plans and confirmed commits (D105). */
+export const SESSION_REVISIONS_PATH = `${ROUTE_PREFIX}/session-revisions`
+export const SESSION_REWIND_PLAN_PATH = `${ROUTE_PREFIX}/session-rewind-plan`
+export const SESSION_REWIND_COMMIT_PATH = `${ROUTE_PREFIX}/session-rewind-commit`

@@ -19,6 +19,7 @@ import { hostBrand } from './host-half-brand.mjs'
 import { hostCache } from './host-half-cache.mjs'
 
 import { fakeHost, request } from './host-harness.mjs'
+import { hostRewind } from './host-half-rewind.mjs'
 // ---------------------------------------------------------------------------
 // Host half
 // ---------------------------------------------------------------------------
@@ -343,6 +344,7 @@ async function hostHalf() {
     JSON.stringify(catalogBody?.value ?? catalogBody))
 
   await hostPanel({ mod, fakeHost, request, browser, crossSite, scratchHome })
+  await hostRewind({ mod, fakeHost, request, browser, crossSite })
 
   // The routed assets, on the public prefix route: the manifest the
   // build wrote decides what exists, a text asset is stored brotli-compressed,

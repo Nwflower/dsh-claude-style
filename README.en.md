@@ -63,6 +63,12 @@ Switch between the Claude and DeepSeek brands in settings; light and dark follow
   </tr>
 </table>
 
+## Message rewind and revision history
+
+Retract, edit, rerun and delete-turn open a confirmation dialog listing the turns leaving the current timeline and the files that can be restored. The conversation then continues from the original message position while the sidebar keeps presenting one logical conversation. Source sessions and later revisions move into the host archive and can be unarchived from **Revision history** in the message actions. Inherited-history dividers and fork-generated turn tails stay out of this continuous timeline.
+
+The plugin records a workspace checkpoint for each turn and can restore code changes at the same time. History recorded before installation, or with an incomplete checkpoint, rewinds messages only and says so in the dialog. Git commits, external services and other command side effects are not undone.
+
 ## Installation
 
 From the official plugin page add the package below, or from a terminal:

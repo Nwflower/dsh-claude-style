@@ -16,7 +16,7 @@ export interface DshContext {
   /** Run a function and drop its disposals with this generation. */
   effect?(run: () => void): void
   /** Listen for one host event; the listener drops with this generation. */
-  on?(name: string, listener: (...args: any[]) => void): unknown
+  on?(name: string, listener: (...args: any[]) => void, options?: { prepend?: boolean }): unknown
   /** The loader fiber, which carries the entry that mounted this half. */
   fiber?: { entry?: { id?: unknown, options?: unknown } }
 }

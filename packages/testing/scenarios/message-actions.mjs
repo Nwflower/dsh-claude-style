@@ -103,10 +103,56 @@ function messageActionsScenario({ check }) {
       const cancelled = await read()
       await page.hover(ROW)
       await retractButton.click()
+      await page.getByRole('button', { name: /^(确认回退|Confirm rewind)$/ }).waitFor({ timeout: 20000 })
+      for (const theme of ['light', 'dark']) {
+        await page.evaluate(value => document.body.toggleAttribute('data-ds-dark-theme', value === 'dark'), theme)
+        await page.evaluate(async () => {
+          const panel = document.querySelector('.dsh-claude-rewind-modal')
+          let previous = ''
+          let stable = 0
+          for (let frame = 0; frame < 90; frame += 1) {
+            const current = getComputedStyle(document.body).backgroundColor + '|' + (panel === null ? '' : getComputedStyle(panel).backgroundColor + getComputedStyle(panel).opacity)
+            stable = current === previous ? stable + 1 : 0
+            if (stable >= 3) return
+            previous = current
+            await new Promise(requestAnimationFrame)
+          }
+          throw new Error('the rewind dialog did not settle visually')
+        })
+        await sanitizePage((expression) => page.evaluate(expression))
+        await page.screenshot({ path: path.join(out, `rewind-confirm-${theme}.png`) })
+      }
+      await page.getByRole('button', { name: /^(确认回退|Confirm rewind)$/ }).click()
       await page.waitForFunction((before) => document.querySelector('[data-conversation-session]')?.getAttribute('data-conversation-session') !== before, resting.sessionId, { timeout: 30000 }).catch(() => {})
       await page.waitForFunction(() => (document.querySelector('[data-composer-input]')?.innerText ?? '').trim() === 'hello there', { timeout: 30000 }).catch(() => {})
       const rewound = await read()
-      // 放回输入框的原文再发一次，再点编辑改过之后按 Enter：改过的文字在新会话里直接发出。
+      await page.waitForFunction((before) => {
+        const row = document.querySelector(`[data-row-key="session:${CSS.escape(before)}"]`)
+        return row === null || getComputedStyle(row).display === 'none'
+      }, resting.sessionId, { timeout: 10000 }).catch(() => {})
+      const sourceRowHidden = await page.evaluate((before) => {
+        const row = document.querySelector(`[data-row-key="session:${CSS.escape(before)}"]`)
+        return row === null || getComputedStyle(row).display === 'none'
+      }, resting.sessionId)
+      const artifactState = await page.evaluate(async ({ before, after }) => {
+        const response = await fetch('/dsh-claude-style/session-revisions')
+        const answer = await response.json()
+        const conversation = Array.isArray(answer.value) ? answer.value.find(item => item.activeSessionId === after) : undefined
+        const source = conversation?.revisions.find(revision => revision.sessionId === before)
+        const active = conversation?.revisions.find(revision => revision.sessionId === after)
+        const visible = selector => [...document.querySelectorAll(selector)].filter(row => getComputedStyle(row).display !== 'none').length
+        return {
+          inheritedVisible: visible('[data-chat-flow-kind="inherited-history"]'),
+          tailVisible: visible('[data-chat-flow-kind="turn-tail"]'),
+          sourceArchived: source?.archived,
+          activeArchived: active?.archived,
+          revisionStatus: response.status,
+          revisionAnswer: answer,
+        }
+      }, { before: resting.sessionId, after: rewound.sessionId })
+      await sanitizePage((expression) => page.evaluate(expression))
+      await page.screenshot({ path: path.join(out, 'rewound-timeline-dark.png') })
+      // 放回输入框的原文再发一次，再点编辑改过之后按 Enter：改过的文字在原位置直接发出。
       await page.evaluate((selector) => document.querySelector(selector)?.focus(), '[data-composer-input]')
       await page.keyboard.press('Enter')
       // 分岔出来的会话自己带着一个合成的收尾行，所以这里等的是新消息那一轮的收尾
@@ -120,6 +166,7 @@ function messageActionsScenario({ check }) {
       const emptySaveOff = await page.isDisabled(`${EDITOR} ~ div > button:last-child`)
       await page.fill(EDITOR, 'hello there, edited')
       await page.keyboard.press('Enter')
+      await page.getByRole('button', { name: /^(确认回退|Confirm rewind)$/ }).click()
       await page.waitForFunction((before) => document.querySelector('[data-conversation-session]')?.getAttribute('data-conversation-session') !== before, rewound.sessionId, { timeout: 30000 }).catch(() => {})
       await page.waitForFunction(() => {
         const bubble = document.querySelector('[data-chat-flow-kind="user"] [data-message-bubble]')
@@ -127,6 +174,12 @@ function messageActionsScenario({ check }) {
       }, { timeout: 30000 }).catch(() => {})
       await page.waitForFunction(() => (document.querySelector('[data-composer-input]')?.innerText ?? '').trim() === '', { timeout: 10000 }).catch(() => {})
       const committed = await read()
+      await page.getByRole('button', { name: /^(查看版本历史|View revision history)$/ }).click()
+      await page.getByRole('dialog', { name: /^(版本历史|Revision history)$/ }).waitFor({ timeout: 10000 })
+      const historyCount = await page.locator('.dsh-claude-history-item').count()
+      await page.getByRole('button', { name: /^(取消归档并打开|Unarchive and open)$/ }).last().click()
+      await page.waitForFunction(before => document.querySelector('[data-conversation-session]')?.getAttribute('data-conversation-session') === before, resting.sessionId, { timeout: 15000 }).catch(() => {})
+      const openedOriginal = (await read()).sessionId === resting.sessionId
       return [
         check('回答行提供重跑与删除此轮', answerButtons.rerun === 1 && answerButtons.delete === 1, `${JSON.stringify(answerButtons)} rows=${JSON.stringify(answerState)} clocks=${JSON.stringify(clockState)}`),
         check('控件行末尾长出撤回与编辑两个按钮', resting.buttons === 3, `${resting.buttons} 个按钮（宿主的时间与复制之外）`),
@@ -136,10 +189,14 @@ function messageActionsScenario({ check }) {
         check('编辑框打开时带着那条消息的原文', edited.trim() === 'hello there', edited.slice(0, 80)),
         check('编辑期间原来的气泡让位', whileEditing.bubbleShown === false, `bubbleShown=${whileEditing.bubbleShown}`),
         check('编辑框按 Esc 收起，气泡回来', cancelled.bubbleShown === true && cancelled.bubbleText.includes('hello there'), `bubbleShown=${cancelled.bubbleShown} bubble=${cancelled.bubbleText.slice(0, 60)}`),
-        check('撤回后打开新会话', rewound.sessionId !== resting.sessionId && rewound.sessionId !== null, `before=${resting.sessionId} after=${rewound.sessionId}`),
-        check('原文回到新会话的输入框', rewound.draft === 'hello there', rewound.draft.slice(0, 80)),
+        check('撤回后打开同一逻辑对话的活动版本', rewound.sessionId !== resting.sessionId && rewound.sessionId !== null && sourceRowHidden, `before=${resting.sessionId} after=${rewound.sessionId} sourceHidden=${sourceRowHidden}`),
+        check('继承分隔行与 fork 收尾行不再出现在时间线', artifactState.inheritedVisible === 0 && artifactState.tailVisible === 0, JSON.stringify(artifactState)),
+        check('原版本进入归档而活动版本保持未归档', artifactState.sourceArchived === true && artifactState.activeArchived === false, JSON.stringify(artifactState)),
+        check('原文回到活动版本的输入框', rewound.draft === 'hello there', rewound.draft.slice(0, 80)),
         check('文字清空时保存按钮不可按', emptySaveOff === true, `disabled=${emptySaveOff}`),
-        check('编辑保存后改过的文字在新会话里直接发出', committed.sessionId !== rewound.sessionId && committed.bubbleText === 'hello there, edited' && committed.draft === '', `session=${committed.sessionId} draft=${committed.draft.slice(0, 40)} bubble=${committed.bubbleText.slice(0, 60)}`),
+        check('编辑保存后改过的文字在原历史位置直接发出', committed.sessionId !== rewound.sessionId && committed.bubbleText === 'hello there, edited' && committed.draft === '', `session=${committed.sessionId} draft=${committed.draft.slice(0, 40)} bubble=${committed.bubbleText.slice(0, 60)}`),
+        check('版本历史保留原会话、撤回版本与编辑版本', historyCount === 3, `revisions=${historyCount}`),
+        check('历史弹窗可以取消归档并打开最初会话', openedOriginal, `session=${(await read()).sessionId} expected=${resting.sessionId}`),
         check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),
       ]
     },

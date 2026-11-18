@@ -40,6 +40,7 @@
 | [D102](D102-session-overview-details-rail.md) | 会话总览是对话右侧的详情栏，数据由宿主半边折叠 | D94 |
 | [D103](D103-streaming-underestimate-layer.md) | 流式增长的低估单独成层，基准计价保持准确 |  |
 | [D104](D104-context-parts-eight-categories.md) | 上下文分项按内容块与来源拆成八类，占用仍取服务商读数 | D99 |
+| [D105](D105-logical-conversation-rewind.md) | fork 版本链承载消息回退 |  |
 
 ## 作废的编号
 

@@ -7,7 +7,6 @@ import {
   TURN_TAIL_SELECTOR,
   USER_ROW_KIND,
 } from '@dsh-claude-style/contracts/dom'
-import type { HostUiWorkspaceService } from '@dsh-claude-style/contracts/services'
 import { conversationColumn } from '@dsh-claude-style/engine/chat-dom'
 import {
   closestConversationSession,
@@ -16,20 +15,16 @@ import {
   findChatTarget,
   hostConversation,
   hostSessions,
-  hostUiWorkspace,
 } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 
 /**
- * 一条读者消息在会话日志里的位置，以及从它前面分岔出去的两种动作。
- *
- * 宿主没有原地截断会话的接口：会话控制器给出的是 `fork`，从某个事件为止的
- * 前缀复制成新会话（宿主自己的分支按钮就走这条路）。所以「撤回」和「编辑」
- * 都是先在消息前一个事件处分岔 —— 原会话一个事件都不动；撤回把原文放回新
- * 会话的输入框，编辑把改过的文字直接在里面发出去。
+ * 一条读者消息在会话日志里的位置。DSH 的 fork 仍负责创建配置完整的
+ * Agent；插件的确认计划、文件恢复和逻辑会话关系在 rewind-client.ts 中编排，
+ * 原 Session 永远不被改写（D105）。
  */
 
-/** 分岔之后等新会话挂上输入框的上限：宿主要先建会话、再把它的绑定交给页面。 */
+/** 活动版本挂上输入框的上限：宿主要先建物理 fork、再把它的绑定交给页面。 */
 const DRAFT_SEED_WAIT_MS = 4000
 /** 两次查看绑定之间的间隔。 */
 const DRAFT_SEED_POLL_MS = 60
@@ -41,6 +36,8 @@ export interface ReaderMessage {
   seq: number
   /** 消息正文，图片与文件附件不在其中。 */
   text: string
+  /** The top-level turn whose start checkpoint belongs to this prompt. */
+  turn: number
   /**
    * 消息带着图片或文件附件。附件是浏览器为一次发送上传的草稿，正文里只留下
    * 投递凭证，重新放进输入框或重新发出都会丢掉它们，所以这种消息不提供撤回
@@ -88,11 +85,13 @@ export function readerMessageOf(ctx: HostContext, row: Element): ReaderMessage |
   const raw = node?.data?.seq
   if (typeof raw !== 'number' || !Number.isSafeInteger(raw)) return null
   const turn = Number(row.getAttribute(CHAT_TURN_ATTRIBUTE))
-  const exchange = Number.isSafeInteger(turn) ? snapshot.timeline.turns.get(turn) : undefined
+  if (!Number.isSafeInteger(turn) || turn <= 0) return null
+  const exchange = snapshot.timeline.turns.get(turn)
   return {
     sessionId,
     seq: raw,
     text: textOf(node?.data?.content),
+    turn,
     attachments: carriesAttachments(node?.data?.content),
     open: exchange !== undefined && exchange.end === undefined,
   }
@@ -121,13 +120,13 @@ export function answerPromptOf(ctx: HostContext, row: Element): ReaderMessage | 
 }
 
 /**
- * 把 `text` 放进新会话的输入框并等它真的落到那里；`send` 为真时接着用宿主的
+ * 把 `text` 放进活动版本的输入框并等它真的落到那里；`send` 为真时接着用宿主的
  * 提交动作发出去（与编辑器里按 Enter 同一个入口）。
  *
  * 分岔刚返回时会话可能还没绑定到页面，读不到它的输入框；这里按固定间隔再看，
  * 到上限还没有就抛出 —— 分岔已经把消息切掉了，读者的文字不能悄悄不见。
  */
-async function seedDraft(ctx: HostContext, sessionId: string, text: string, send: boolean): Promise<void> {
+export async function seedDraft(ctx: HostContext, sessionId: string, text: string, send: boolean): Promise<void> {
   const deadline = Date.now() + DRAFT_SEED_WAIT_MS
   for (;;) {
     const binding = hostSessions(ctx)?.binding(sessionId)
@@ -146,21 +145,4 @@ async function seedDraft(ctx: HostContext, sessionId: string, text: string, send
     if (Date.now() >= deadline) throw new Error(`message-actions: the forked session ${sessionId} never bound its composer`)
     await new Promise<void>((resolve) => { setTimeout(resolve, DRAFT_SEED_POLL_MS) })
   }
-}
-
-/**
- * 在消息前一个事件处分岔，打开新会话，把 `text` 放进它的输入框；`send` 为真
- * 时直接发出，读者看到的就是这条消息在新会话里重发了一次。
- *
- * 新会话的标题接着原会话（`increaseTitle`），与宿主自己的分支按钮一致。
- */
-export async function rewindTo(ctx: HostContext, message: ReaderMessage, text: string, send: boolean): Promise<void> {
-  if (message.seq <= 0) throw new Error('message-actions: no event precedes the message to fork at')
-  const sessions = hostSessions(ctx)
-  if (sessions === null || typeof sessions.fork !== 'function') throw new Error('message-actions: the host sessions service offers no fork')
-  const childId = await sessions.fork({ sessionId: message.sessionId, atSeq: message.seq - 1, increaseTitle: true })
-  const workspace = hostUiWorkspace(ctx) as HostUiWorkspaceService | null
-  if (workspace === null || typeof workspace.openSession !== 'function') throw new Error('message-actions: host uiWorkspace.openSession is unavailable')
-  workspace.openSession(childId)
-  await seedDraft(ctx, childId, text, send)
 }

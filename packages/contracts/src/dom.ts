@@ -175,6 +175,8 @@ export const TURN_PROCESS_ROW_KIND = 'turn-process'
 /** A settled turn's tail row, which carries the answer's own action controls. */
 const TURN_TAIL_KIND = 'turn-tail'
 export const TURN_TAIL_SELECTOR = `[${FLOW_KIND_ATTRIBUTE}="${TURN_TAIL_KIND}"]`
+/** The divider a host fork places between inherited events and its own events. */
+export const INHERITED_HISTORY_ROW_SELECTOR = `[${FLOW_KIND_ATTRIBUTE}="inherited-history"]`
 /**
  * The assistant step outside the turn's process. A running turn marks its answer
  * as a process member too, so this matches the process-closing answer only after the turn ends.

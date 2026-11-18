@@ -2,17 +2,17 @@ import * as React from 'react'
 import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
 
 /**
- * 消息控件行里的两个按钮，画成宿主自己的按钮：标签走宿主的 Tooltip
+ * 消息控件行里的动作按钮，画成宿主自己的按钮：标签走宿主的 Tooltip
  * （primitives 包，与复制按钮同一份），图标是本地的一笔路径。
  *
  * 用 React 渲染是因为 Tooltip 只有组件一种用法；宿主自己的按钮也长在同一棵
  * 树上，两边悬停时出来的提示因此是同一个样式。
  */
 
-/** 两个按钮自己的标记，值说明是哪一个。 */
+/** 动作按钮自己的标记，值说明是哪一个。 */
 export const ACTION_BUTTON_ATTRIBUTE = 'data-dsh-claude-message-action'
 export const ACTION_BUTTON_CLASS = 'dsh-claude-message-action'
-/** 承载两个按钮的盒子：contents 盒子，宿主那一行的排布因此不变。 */
+/** 承载动作按钮的盒子：contents 盒子，宿主那一行的排布因此不变。 */
 export const BUTTONS_SEAT_ATTRIBUTE = 'data-dsh-claude-message-actions'
 export const BUTTONS_SEAT_CLASS = 'dsh-claude-message-actions'
 /** 撤回：一段往回折的箭头。 */
@@ -23,12 +23,15 @@ const EDIT_PATH = 'M10.8 2.7 13.3 5.2 5.8 12.7 2.9 13.4 3.6 10.5ZM9.6 3.9 12.1 6
 const RERUN_PATH = 'M13.5 5.5V2.8m0 2.7h-2.7M13.2 5.2a5.5 5.5 0 1 0 1 5.2'
 /** 删除此轮：一个叉。 */
 const DELETE_PATH = 'M4 4l8 8M12 4l-8 8'
+/** 版本历史：三个横向排列的历史节点。 */
+const HISTORY_PATH = 'M4 4h8M4 8h8M4 12h8M2.5 4h.01M2.5 8h.01M2.5 12h.01'
 
 export interface MessageActionLabels {
   retract: string
   edit: string
   rerun: string
   delete: string
+  history: string
 }
 
 export interface MessageActionHandlers {
@@ -36,6 +39,7 @@ export interface MessageActionHandlers {
   edit?(): void
   rerun?(): void
   delete?(): void
+  history?(): void
 }
 
 function icon(path: string) {
@@ -55,7 +59,7 @@ function icon(path: string) {
   }))
 }
 
-function action(kind: 'retract' | 'edit' | 'rerun' | 'delete', label: string, path: string, press: () => void) {
+function action(kind: 'retract' | 'edit' | 'rerun' | 'delete' | 'history', label: string, path: string, press: () => void) {
   return React.createElement(primitives.Tooltip, {
     label,
     side: 'bottom',
@@ -64,8 +68,15 @@ function action(kind: 'retract' | 'edit' | 'rerun' | 'delete', label: string, pa
       className: ACTION_BUTTON_CLASS,
       [ACTION_BUTTON_ATTRIBUTE]: kind,
       'aria-label': label,
+      onPointerUp: kind === 'history' ? (event: React.PointerEvent) => {
+        // A revision refresh can replace the row before click; pointer-up opens before that replacement.
+        event.stopPropagation()
+        press()
+      } : undefined,
       onClick: (event: React.MouseEvent) => {
         event.stopPropagation()
+        // Keyboard activation has no pointer-up and produces click detail 0.
+        if (kind === 'history' && event.detail !== 0) return
         press()
       },
     }, icon(path)),
@@ -78,5 +89,6 @@ export function MessageActionButtons({ labels, handlers }: { labels: MessageActi
     handlers.rerun === undefined ? null : action('rerun', labels.rerun, RERUN_PATH, handlers.rerun),
     handlers.retract === undefined ? null : action('retract', labels.retract, RETRACT_PATH, handlers.retract),
     handlers.edit === undefined ? null : action('edit', labels.edit, EDIT_PATH, handlers.edit),
-    handlers.delete === undefined ? null : action('delete', labels.delete, DELETE_PATH, handlers.delete))
+    handlers.delete === undefined ? null : action('delete', labels.delete, DELETE_PATH, handlers.delete),
+    handlers.history === undefined ? null : action('history', labels.history, HISTORY_PATH, handlers.history))
 }

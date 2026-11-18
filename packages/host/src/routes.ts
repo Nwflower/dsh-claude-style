@@ -36,6 +36,8 @@ import { createSessionPanel } from './session-panel.js'
 import { compactSession } from './session-compact.js'
 import { sessionDirectoryName } from './session-name.js'
 import { createUsage } from './usage.js'
+import { SessionRewind } from './session-rewind.js'
+import { sessionRewindRoutes } from './session-rewind-routes.js'
 import { HOME_SESSION_SCOPE_ACTIVE, HOME_SESSION_SCOPE_ALL, HOME_SESSION_SCOPE_WORKSPACE } from '@dsh-claude-style/contracts/prefs'
 
 /** The copy document, built from `packages/client/data/model-descriptions.json` by scripts/build/build.mjs. */
@@ -296,6 +298,7 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
     const prices = createPrices(ctx)
     const sessionCost = createSessionCost(ctx, prices)
     const sessionPanel = createSessionPanel(ctx, sessionCost)
+    const sessionRewind = new SessionRewind(ctx)
     // The listener is what makes a total O(1) after the first read; the
     // snapshot loads on the first ask, so a reader who never opens the figures
     // never reaches the repository.
@@ -602,6 +605,7 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
       },
     })
 
+    for (const { label, route } of sessionRewindRoutes(ctx, sessionRewind)) register(label, route)
     for (const { label, route } of brandRoutes(ctx)) register(label, route)
     const appearanceOverlays = appearanceOverlayRoutes(ctx)
     register(appearanceOverlays.label, appearanceOverlays.route)

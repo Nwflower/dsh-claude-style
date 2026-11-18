@@ -122,3 +122,148 @@ body[data-dsh-claude-style] .dsh-claude-message-editor-save:disabled {
     background: var(--dsw-alias-button-primary-hover);
   }
 }
+
+
+/* D105: superseded physical Sessions stay in revision history, while the native
+   sidebar presents only the active fork as the logical conversation. */
+body[data-dsh-claude-style] [data-dsh-claude-revision-hidden] {
+  display: none;
+}
+
+body[data-dsh-claude-style] .dsh-claude-rewind-modal {
+  width: min(560px, calc(100vw - 48px));
+  max-width: calc(100vw - 48px);
+}
+
+body[data-dsh-claude-style] .dsh-claude-rewind-content {
+  max-height: min(62vh, 500px);
+  overflow: auto;
+  color: var(--dsw-alias-label-secondary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-rewind-restore {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  color: var(--dsw-alias-label-primary);
+  cursor: pointer;
+}
+
+body[data-dsh-claude-style] .dsh-claude-rewind-restore input {
+  margin: 3px 0 0;
+  accent-color: var(--dsw-alias-brand-primary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-rewind-restore:has(input:disabled) {
+  cursor: default;
+  opacity: 0.65;
+}
+
+body[data-dsh-claude-style] :is(.dsh-claude-rewind-reason, .dsh-claude-rewind-note) {
+  margin: 12px 0 0;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: var(--dsh-content-font-size-secondary, 13px);
+  line-height: 1.55;
+}
+
+body[data-dsh-claude-style] :is(.dsh-claude-rewind-files, .dsh-claude-history-list) {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: var(--dsw-radius-md);
+  overflow: hidden;
+}
+
+body[data-dsh-claude-style] .dsh-claude-rewind-files {
+  max-height: 220px;
+  overflow: auto;
+}
+
+body[data-dsh-claude-style] .dsh-claude-rewind-files li {
+  display: flex;
+  gap: 10px;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--dsh-claude-divider);
+  font-size: var(--dsh-content-font-size-secondary, 13px);
+}
+
+body[data-dsh-claude-style] .dsh-claude-rewind-files li:last-child,
+body[data-dsh-claude-style] .dsh-claude-history-item:last-child {
+  border-bottom: none;
+}
+
+body[data-dsh-claude-style] .dsh-claude-rewind-file-status {
+  flex: 0 0 36px;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-rewind-file-path {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-family: var(--dsh-claude-mono-font);
+}
+
+body[data-dsh-claude-style] .dsh-claude-rewind-button {
+  min-height: 30px;
+  padding: 0 14px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font: inherit;
+  cursor: pointer;
+}
+
+body[data-dsh-claude-style] .dsh-claude-rewind-primary {
+  border-color: transparent;
+  background: var(--dsw-alias-button-primary-fill);
+  color: var(--dsw-alias-label-primary-foreground);
+}
+
+body[data-dsh-claude-style] .dsh-claude-rewind-button:hover:not(:disabled) {
+  background: var(--dsw-alias-button-primary-hover);
+}
+
+body[data-dsh-claude-style] .dsh-claude-rewind-button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+body[data-dsh-claude-style] .dsh-claude-history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--dsh-claude-divider);
+}
+
+body[data-dsh-claude-style] .dsh-claude-history-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-history-copy strong {
+  color: var(--dsw-alias-label-primary);
+  font-weight: 500;
+}
+
+body[data-dsh-claude-style] .dsh-claude-history-copy :is(span, small) {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: var(--dsh-content-font-size-secondary, 13px);
+}
+
+body[data-dsh-claude-style] .dsh-claude-history-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--dsh-claude-mono-font);
+}
+
+body[data-dsh-claude-style] .dsh-claude-history-current {
+  flex: none;
+  color: var(--dsw-alias-brand-primary);
+  font-size: var(--dsh-content-font-size-secondary, 13px);
+}
