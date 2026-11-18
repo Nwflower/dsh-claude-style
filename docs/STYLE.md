@@ -269,8 +269,10 @@ their colour from the rung in force; the caption and the scale ends keep their
 own caption inks. Every thinking rung has one place on a single ramp between two
 ends mixed from the theme accent: the low end toward the raised surface (less
 saturated, lower contrast), the high end toward the label ink (more contrast),
-and the rung's index over the ladder's span places it. The hue starts at the
-theme accent and travels slightly toward red as the rung climbs. The switch-off
+and the rung's index over the ladder's span places it. On dark both ends keep a
+lightness floor, so every rung reads at 4.5:1 or more on the canvas whatever
+accent the reader picks. The hue starts at the theme accent and travels slightly
+toward red as the rung climbs. The switch-off
 level and the model's own default level have no strength the catalog names, so
 both keep the resting ink (`--dsw-alias-label-secondary`). The row off leaves the
 resting ink on every rung.
