@@ -5,7 +5,7 @@
  * Registered in the lane's scenario table (packages/testing/scenarios.mjs).
  *
  * The skin opens the host's own sidebar while the pointer rests on the rail's
- * toggle, and keeps the page from making room for it
+ * toggle or the window's left edge, and keeps the page from making room for it
  * (packages/client/src/features/sidebar-peek/). The scenario collapses the
  * rail on the real host, then reads what a reader sees, judged on the host's
  * own collapse marker and the boxes of the first two columns: the centre keeps
@@ -85,6 +85,15 @@ async function openPeek(page) {
   return opened
 }
 
+/** Approach the window's left edge away from the toggle: the whole edge is the peek's trigger. */
+async function openEdgePeek(page) {
+  const viewport = page.viewportSize()
+  await page.mouse.move(16, Math.round(viewport.height * 0.65))
+  const opened = await waitForSidebar(page, false)
+  await page.waitForTimeout(400)
+  return opened
+}
+
 /** Somewhere in the centre, well clear of the sidebar's open width. */
 async function leave(page) {
   const viewport = page.viewportSize()
@@ -127,6 +136,12 @@ function sidebarPeekScenario({ check }) {
       await waitForSidebar(page, true)
       const before = await settledFrame(page)
 
+      const edgeOpened = await openEdgePeek(page)
+      const edgeOpen = await settledFrame(page)
+      await leave(page)
+      const edgeClosed = await waitForSidebar(page, true)
+      const edgeAfter = await settledFrame(page)
+
       const opened = await openPeek(page)
       const open = await settledFrame(page)
 
@@ -152,6 +167,12 @@ function sidebarPeekScenario({ check }) {
         check('侧栏已收起',
           before.collapsed && before.center !== null,
           JSON.stringify(before)),
+        check('鼠标靠近窗口左缘的任意高度即可唤出侧栏，主区保持原来的盒子',
+          edgeOpened && edgeClosed && edgeOpen.column !== null && edgeOpen.column.width >= OPEN_WIDTH_PX &&
+            edgeAfter.center !== null && before.center !== null &&
+            edgeOpen.center !== null && edgeOpen.center.left === before.center.left && edgeOpen.center.width === before.center.width &&
+            edgeAfter.center.left === before.center.left && edgeAfter.center.width === before.center.width,
+          JSON.stringify({ before: before.center, open: edgeOpen.center, after: edgeAfter.center })),
         check('鼠标停在收起按钮上，宿主打开侧栏，侧栏以展开宽度浮在页面上方',
           opened && !open.collapsed && open.column !== null && open.column.left === 0 && open.column.width >= OPEN_WIDTH_PX,
           JSON.stringify(open)),

@@ -1,6 +1,6 @@
 /* ---------- Sidebar peek ---------- */
 /* features/sidebar-peek/sidebar-peek.ts opens the host's sidebar while the
-   pointer rests on its toggle and marks the frame. The host then widens its
+   pointer rests on its toggle or the window's left edge and marks the frame. The host then widens its
    first track to the open sidebar; the column leaves the flow for that track's
    row and stands over the page, and the centre spans the open track as well as
    its own, keeping clear of the collapsed width it stood at, so it keeps the

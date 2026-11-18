@@ -1,4 +1,4 @@
 {
   "peekTitle": { "zh": "悬停展开侧栏", "en": "Open the sidebar on hover" },
-  "peekDesc": { "zh": "侧栏收起时，悬停于切换按钮即可临时展开。", "en": "Hover over the toggle button to temporarily expand the collapsed sidebar." }
+  "peekDesc": { "zh": "侧栏收起时，悬停于切换按钮或窗口左缘即可临时展开。", "en": "Hover over the toggle or the window's left edge to temporarily expand the collapsed sidebar." }
 }

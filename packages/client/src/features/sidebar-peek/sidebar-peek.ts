@@ -8,7 +8,7 @@ import { FRAME_SELECTOR } from '../../shared/page-scale-columns'
 
 /**
  * The collapsed sidebar opened over the page while the pointer rests on its
- * toggle, the way Claude's app peeks it (D43).
+ * toggle or the window's left edge, the way Claude's app peeks it (D43).
  *
  * The host draws the session list only while its own layout has the sidebar
  * open, so the peek opens it through the host's layout service and keeps the
@@ -26,8 +26,10 @@ import { FRAME_SELECTOR } from '../../shared/page-scale-columns'
  * so the peek stands down there.
  */
 
-/** How long the pointer rests on the toggle before the sidebar opens: a pointer passing over on its way to the caption row opens nothing. */
+/** How long the pointer rests on a trigger before the sidebar opens: a pointer passing over on its way elsewhere opens nothing. */
 const OPEN_DELAY_MS = 120
+/** The full-height strip at the frame's left edge that also opens the peek. */
+const EDGE_PX = 32
 /** How long the pointer may stand outside the toggle and the column before the sidebar closes: the Windows caption strip between the two hands the pointer to the shell for a moment. */
 const LEAVE_DELAY_MS = 300
 
@@ -93,6 +95,19 @@ export function install(ctx: HostContext) {
     return box.hasAttribute(RIGHTBAR_COLLAPSED_ATTRIBUTE) || box.getBoundingClientRect().width >= SIDEBAR_BESIDE_RIGHTBAR_MIN_PX
   }
 
+  /** The toggle keeps its original hover path; the edge adds a full-height strip without putting a hit box over the page. */
+  function triggered(box: HTMLElement, point: Point) {
+    const toggle = findSidebarToggle()
+    if (toggle !== null && within(toggle.getBoundingClientRect(), point)) return true
+    const bounds = box.getBoundingClientRect()
+    return point.x >= bounds.left && point.x <= bounds.left + EDGE_PX && point.y >= bounds.top && point.y < bounds.bottom
+  }
+
+  /** A foreground surface owns its pointer; the collapsed sidebar must not open beneath it. */
+  function eligible(box: HTMLElement, point: Point) {
+    return triggered(box, point) && canOpen(box) && findForeground() === null
+  }
+
   /** The width the slide travels: the one the host gives the open sidebar's own box. */
   function writeWidth() {
     if (frame === null) return
@@ -130,6 +145,12 @@ export function install(ctx: HostContext) {
     closeTimer = undefined
   }
 
+  function cancelWaiting() {
+    window.clearTimeout(openTimer)
+    openTimer = undefined
+    phase = 'idle'
+  }
+
   /** Give the frame back to the host: its own columns, its own caption row. */
   function finish() {
     clearTimers()
@@ -162,7 +183,7 @@ export function install(ctx: HostContext) {
   function open() {
     openTimer = undefined
     const box = frames.all()[0] ?? null
-    if (phase !== 'waiting' || box === null || !canOpen(box)) {
+    if (phase !== 'waiting' || box === null || pointer === null || !eligible(box, pointer)) {
       phase = 'idle'
       return
     }
@@ -238,7 +259,11 @@ export function install(ctx: HostContext) {
     const toggle = findSidebarToggle()
     if (toggle === null || !(event.target instanceof Node) || !toggle.contains(event.target)) return
     const box = frames.all()[0] ?? null
-    if (box === null || !canOpen(box)) return
+    if (box === null) return
+    // The Windows caption strip can deliver this event without a following
+    // pointermove, so the button keeps its own entry into the same wait.
+    pointer = { x: event.clientX, y: event.clientY }
+    if (!eligible(box, pointer)) return
     phase = 'waiting'
     openTimer = window.setTimeout(open, OPEN_DELAY_MS)
   }
@@ -247,31 +272,36 @@ export function install(ctx: HostContext) {
     // Off the window, or onto the Windows caption strip the shell keeps for itself.
     if (event.relatedTarget === null) {
       pointer = null
+      if (phase === 'waiting') cancelWaiting()
       judge(false)
+      return
     }
     if (phase !== 'waiting') return
-    const toggle = findSidebarToggle()
-    if (toggle !== null && event.relatedTarget instanceof Node && toggle.contains(event.relatedTarget)) return
-    window.clearTimeout(openTimer)
-    openTimer = undefined
-    phase = 'idle'
+    pointer = { x: event.clientX, y: event.clientY }
+    const box = frames.all()[0] ?? null
+    if (box === null || !eligible(box, pointer)) cancelWaiting()
   }
 
   function onPointerMove(event: PointerEvent) {
     pointer = { x: event.clientX, y: event.clientY }
+    if (phase === 'idle' || phase === 'waiting') {
+      const box = frames.all()[0] ?? null
+      const ready = event.buttons === 0 && box !== null && eligible(box, pointer)
+      if (phase === 'idle' && ready) {
+        phase = 'waiting'
+        openTimer = window.setTimeout(open, OPEN_DELAY_MS)
+      } else if (phase === 'waiting' && !ready) {
+        cancelWaiting()
+      }
+    }
     judge(event.buttons !== 0)
   }
 
   /** Before the host hears it: a click on the toggle while the sidebar stands over the page keeps it open. */
   function onClickCapture(event: MouseEvent) {
+    if (phase === 'waiting') cancelWaiting()
     const toggle = findSidebarToggle()
     if (toggle === null || !(event.target instanceof Node) || !toggle.contains(event.target)) return
-    if (phase === 'waiting') {
-      window.clearTimeout(openTimer)
-      openTimer = undefined
-      phase = 'idle'
-      return
-    }
     if (phase !== 'open' && phase !== 'closing') return
     if (frame === null || collapsed(frame)) return
     event.stopPropagation()

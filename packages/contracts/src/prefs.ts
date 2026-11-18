@@ -374,7 +374,7 @@ export const PREFS = {
   workspaceView: { type: 'boolean', default: true },
   sidebarSearch: { type: 'boolean', default: true },
   searchStyle: { type: 'choice', values: SEARCH_STYLES, default: SEARCH_STYLE_STANDALONE, legacy: { overlay: SEARCH_STYLE_STANDALONE } },
-  /** Whether resting the pointer on the collapsed sidebar's toggle opens the sidebar over the page. */
+  /** Whether resting the pointer on the collapsed sidebar's toggle or the window's left edge opens the sidebar over the page. */
   sidebarPeek: { type: 'boolean', default: true },
   /** Whether the panel list carries the More menu's hidden entries and its Edit sidebar dialog. */
   sidebarEntries: { type: 'boolean', default: true },
