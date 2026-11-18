@@ -10,7 +10,7 @@ import { createAccountSurface } from './surface'
 import type { AccountSurfaceMode } from './surface'
 import { createAccountDrawer } from './account-drawer'
 import { createFooterSeats } from './footer-seats'
-import { POPOVER_CLOSE_DELAY, POPOVER_OPEN_DELAY, closeOtherPopovers, createHoverIntent, pressKeepsPopoverOpen, registerPopover, unregisterPopover } from '../../shared/popover'
+import { POPOVER_CLOSE_DELAY, POPOVER_OPEN_DELAY, closeOtherPopovers, createHoverIntent, createPointerWatch, pressKeepsPopoverOpen, registerPopover, unregisterPopover } from '../../shared/popover'
 import { inPageBox } from '../../shared/page-zoom'
 import { resolveDisplayName } from '../../shared/identity'
 import type { HostContext } from '@dsh-claude-style/engine/host'
@@ -54,8 +54,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   })
   // The host path's hover intent. The host owns its menu and unmounts it on
   // close, so this drives the host's trigger and dismisses the menu with the
-  // Escape the host's own Menu handles.
-  const hostHoverIntent = createHoverIntent(openHostMenu, closeHostMenuForHover, POPOVER_OPEN_DELAY, POPOVER_CLOSE_DELAY)
+  // Escape the host's own Menu handles. The keep-alive (pointerInAccountRegion)
+  // holds the menu across the row→card crossing and the unpainted settle window.
+  const pointerWatch = createPointerWatch()
+  const hostHoverIntent = createHoverIntent(openHostMenu, closeHostMenuForHover, POPOVER_OPEN_DELAY, POPOVER_CLOSE_DELAY, pointerInAccountRegion)
   /**
    * Identity of the row bindings THIS generation installed. A client reload
    * drops the old generation's disposals but the host's row node outlives
@@ -199,6 +201,23 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     hostMenu.openMenu()
   }
 
+  /** The desktop air around the row and card that still counts as "at the
+   *  menu": it covers the gap the placement leaves between them (menu-placement.ts)
+   *  so the pointer crossing from row to card is never read as a departure. */
+  const ACCOUNT_HOVER_BAND = 8
+
+  /**
+   * Whether the tracked pointer still sits at the account row or its card — the
+   * hover intent's stillInside. The card is measured by its layout box, which
+   * stands even while the settle window holds it unpainted (visibility:hidden
+   * answers no :hover and no mouseenter), so the keep-alive holds the menu open
+   * across the crossing before the card can be hovered.
+   */
+  function pointerInAccountRegion() {
+    return pointerWatch.inBox(hostMenu.trigger(), ACCOUNT_HOVER_BAND) ||
+      pointerWatch.inBox(hostMenu.findMenu(), ACCOUNT_HOVER_BAND)
+  }
+
   /**
    * Close the host's menu for the hover preference.
    *
@@ -324,11 +343,15 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    */
   function onHostMenuChanged(menu: HTMLElement | null) {
     if (menu === null) {
+      pointerWatch.unbind()
       disarmAccountMenu()
       unbindHostMenu()
       menuPlacement.unwatch()
       return
     }
+    // Follow the pointer while the card stands, so the close grace can read the
+    // crossing geometrically even before the settle window lets the card be hovered.
+    pointerWatch.bind()
     if (hostMenuBinding !== null && hostMenuBinding.menu === menu) return
     // A different card: the host unmounted the one before it, so its listeners
     // come off now rather than at the teardown.
@@ -375,6 +398,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   function dropAccountFooter(footArea: Element | null) {
     drawer.cancelClose()
     hostHoverIntent.cancel()
+    pointerWatch.unbind()
     // The drive that presses the host's own settings row stops with the footer
     // it was reaching through.
     hostMenu.stopSettingsDrive()

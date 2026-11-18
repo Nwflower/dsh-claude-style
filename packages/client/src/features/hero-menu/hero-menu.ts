@@ -2,7 +2,7 @@ import { AUTO_POPOVER_ALL, HERO_MENU_ATTR } from '../../constants'
 import { cacheFirstMatch, findHostMenu } from '@dsh-claude-style/engine/host'
 import { readPrefs } from '../../core/prefs'
 import { closestFrom, createStamp } from '@dsh-claude-style/engine/dom'
-import { POPOVER_CLOSE_DELAY, POPOVER_MARGIN, POPOVER_OPEN_DELAY, anchorSpace, clampToViewport, closeOtherPopovers, createHoverIntent, isProgrammaticPress, pressKeepsPopoverOpen, programmaticPress, registerPopover, resolveAnchoredPosition, unregisterPopover } from '../../shared/popover'
+import { POPOVER_CLOSE_DELAY, POPOVER_MARGIN, POPOVER_OPEN_DELAY, anchorSpace, clampToViewport, closeOtherPopovers, createHoverIntent, createPointerWatch, isProgrammaticPress, pressKeepsPopoverOpen, programmaticPress, registerPopover, resolveAnchoredPosition, unregisterPopover } from '../../shared/popover'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { FeatureUi } from '../../core/feature'
 import type manifest from './hero-menu.manifest'
@@ -32,7 +32,11 @@ const findCardTrigger = cacheFirstMatch<HTMLElement>('[data-dsh-claude-part~="ca
   let pointerTrigger: HTMLElement | null = null
   /** The trigger a scheduled hover open clicks when its dwell runs out. */
   let pendingTrigger: HTMLElement | null = null
-  /** Shared dwell and grace: tolerate a crossing row and travel to the card. */
+  /** Follow the pointer while a card stands, so the grace can read the trigger→card
+   *  crossing geometrically instead of trusting relatedTarget across the gap. */
+  const pointerWatch = createPointerWatch()
+  /** Shared dwell and grace: tolerate a crossing row and travel to the card. The
+   *  keep-alive (pointerInHeroRegion) holds the card across the gap to the trigger. */
   const hoverIntent = createHoverIntent(
     () => {
       const trigger = pendingTrigger
@@ -42,7 +46,21 @@ const findCardTrigger = cacheFirstMatch<HTMLElement>('[data-dsh-claude-part~="ca
     () => { closeFromHover() },
     POPOVER_OPEN_DELAY,
     POPOVER_CLOSE_DELAY,
+    pointerInHeroRegion,
   )
+
+  /** The desktop air around the trigger and card that still counts as "at the
+   *  picker": it covers the GAP the card keeps from its trigger, so the pointer
+   *  crossing between them is never read as a departure. */
+  const HERO_HOVER_BAND = 8
+
+  /** Whether the tracked pointer still sits at the open picker's trigger or its
+   *  card — the hover intent's stillInside. Measured by layout box, so it holds
+   *  across the gap even when a mouseout's relatedTarget lands on neither. */
+  function pointerInHeroRegion() {
+    return pointerWatch.inBox(openTrigger(), HERO_HOVER_BAND) ||
+      pointerWatch.inBox(cardStamp.current(), HERO_HOVER_BAND)
+  }
 
   /** Click the host's trigger once the dwell has passed; the host's menu has no hover of its own. */
   function openFromHover(trigger: HTMLElement) {
@@ -157,6 +175,7 @@ const findCardTrigger = cacheFirstMatch<HTMLElement>('[data-dsh-claude-part~="ca
   function clearStamp() {
     cardStamp.release()
     stampedTrigger = null
+    pointerWatch.unbind()
   }
 
   /** The hero row's open pickers: the workspace chip and the preset seat. */
@@ -239,6 +258,7 @@ const findCardTrigger = cacheFirstMatch<HTMLElement>('[data-dsh-claude-part~="ca
     }
     if (cardStamp.current() !== card) stampedTrigger = trigger
     cardStamp.mark(card, pickerKind(trigger))
+    pointerWatch.bind()
     placeCard(trigger, card)
   }
 
