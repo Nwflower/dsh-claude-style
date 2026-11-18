@@ -241,10 +241,10 @@ export function releaseReader(container: Element) {
 function releaseAtTail(container: Element) {
   if (readerHolds(container)) return
   if (!container.matches(CONVERSATION_SCROLL_SELECTOR)) return
-  // The walk in flight gives up where the reader takes the container again, and
-  // where the owner has been left: a hand-back outlives the frame it began in.
+  // The hand-back in flight gives up where the reader takes the container
+  // again, and where the owner has been left: it outlives the frame it began in.
   const generation = ownerGeneration
-  handBackFollow('follow', { stillWanted: () => generation === ownerGeneration && !held.has(container) })
+  handBackFollow({ stillWanted: () => generation === ownerGeneration && !held.has(container) })
 }
 
 /**
@@ -562,11 +562,10 @@ export function scrollPositionFor(container: Element) {
 }
 
 /**
- * Hand the conversation back to the host's own follow, lighting it up again when it is off. The host turns its follow off on any write inside its 500 ms sampling window and leaves one way back: the back-to-end button it renders only while off. The position is walked to the end first, so the host's onScroll sees the reader reach it; the button click covers the start of an execution, when there is no scrollbar and no scroll event. The looks in between cover the host turning its follow off a beat late.
- * @param source - follow for the follow's own hand-back, fold after a door.
+ * Hand the conversation back to the host's own follow, lighting it up again when it is off. The host turns its follow off on any write inside its 500 ms sampling window and leaves one way back: the back-to-end button it renders only while off. The hand-back stands the follow up from the end the reader is already at: the button click covers the start of an execution, when there is no scrollbar and no scroll event, and the looks in between cover the host turning its follow off a beat late.
  * @param options - stillWanted is asked before every look; onSettled runs once the round is over.
  */
-export function handBackFollow(source: ScrollSource, options?: { stillWanted?: () => boolean, onSettled?: () => void }) {
+export function handBackFollow(options?: { stillWanted?: () => boolean, onSettled?: () => void }) {
   const generation = ownerGeneration
   const stillWanted = () => generation === ownerGeneration && (options?.stillWanted?.() ?? true)
   const onSettled = options?.onSettled ?? null
@@ -575,7 +574,17 @@ export function handBackFollow(source: ScrollSource, options?: { stillWanted?: (
     if (onSettled !== null) onSettled()
     return
   }
-  if (scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop > 0.5) easeScrollToEndFor(scroller, source, stillWanted)
+  // A position above the end is where the reader reads, and the end standing
+  // above it is no sign of a follow that fell behind: the host restores the
+  // saved position of a conversation inside the last screen whenever the reader
+  // returns to it, and walking that place to the end would move what he went
+  // back to read (D40 leaves the move to the reader, D95 hands the follow back
+  // at a structural moment). The hand-back stands the follow up from the end;
+  // a reader above it keeps the host's button to come down himself.
+  if (scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop > 0.5) {
+    if (onSettled !== null) onSettled()
+    return
+  }
   let rounds = 0
   const look = () => {
     if (!stillWanted() || rounds >= FOLLOW_LOOK_ROUNDS) {
@@ -583,8 +592,8 @@ export function handBackFollow(source: ScrollSource, options?: { stillWanted?: (
       return
     }
     rounds += 1
-    // The walk first, the button after it: clicking mid-walk would drop the
-    // eased position for the host's own instant jump.
+    // A position still easing is not one to press over: the host's own jump
+    // would drop the ease before its curve had carried the position anywhere.
     if (isScrollEasing(scroller)) {
       window.setTimeout(look, FOLLOW_LOOK_INTERVAL_MS)
       return

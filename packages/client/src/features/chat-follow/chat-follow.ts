@@ -556,7 +556,7 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
     lastEnsureAt = now
     // A hand-back in flight outlives the frame it began in, so it is told the
     // feature is gone rather than only that the reader is still up there.
-    handBackFollow('follow', { stillWanted: () => !stopped && !readerAway() })
+    handBackFollow({ stillWanted: () => !stopped && !readerAway() })
   }
 
   /** A batch of mutations is settled: decide whether to act. */
