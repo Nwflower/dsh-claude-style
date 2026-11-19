@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-18",
-  "group": "improvements",
-  "order": 0,
-  "external": false,
-  "zh": "侧栏悬停唤出扩展到窗口左缘 32px 全高热区，悬浮展开与收回时主区保持原位",
-  "en": "Extend sidebar hover peeking to a full-height 32px strip at the window's left edge while the centre stays in place as the overlay opens and closes"
-}

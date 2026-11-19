@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-18",
-  "group": "improvements",
-  "order": 0,
-  "external": false,
-  "zh": "上下文计价的字符类别系数对 DeepSeek 分词器重新拟合（词长表与数字锚点保持不变），详情栏分项更贴近实际占用；流式增长的低估单独成层，基准准确度与动画手感各自独立可调",
-  "en": "Refit the context estimator's character-class rates to the DeepSeek tokenizer (word-length table and digit anchors preserved) for a closer detail-panel split; the streaming growth under-estimate becomes its own layer, so base accuracy and animation feel tune independently"
-}

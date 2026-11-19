@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-18",
-  "group": "improvements",
-  "order": 0,
-  "external": false,
-  "zh": "对话详情的上下文分项按八类拆分（系统提示、工具、技能和MCP、对话正文、推理过程、执行过程、工具结果、文件与图片、上下文注入），推理按助手消息残差计量，文件与图片从各消息独立提取，能力行名称随构成变化",
-  "en": "Split the details rail context into eight categories (system prompt, tools/skills/MCP, conversation, reasoning, execution, tool results, files/images, context injection), meter reasoning as the assistant residual, extract files/images from every message, and let the capability row's label follow its mix"
-}

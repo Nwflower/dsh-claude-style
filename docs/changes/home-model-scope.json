@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-18",
-  "group": "fixes",
-  "order": 0,
-  "external": true,
-  "zh": "首页模型排名和最常用模型跟随当前工作区或活跃会话范围；范围内没有模型用量时显示为空",
-  "en": "Keep the home model ranking and favorite model within the selected workspace or active sessions, and show an empty state when no model usage is attributed"
-}

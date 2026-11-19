@@ -1,1 +1,0 @@
-{"at": "2026-11-17", "group": "fixes", "order": 385, "external": true, "zh": "修复切回会话时插件把宿主恢复的阅读位置缓动到末尾并重新开启跟随的问题，交还跟随只在读者已经位于末尾时进行", "en": "Fix the hand-back springing a reading position the host restored to the end when the reader switches back to a conversation, handing the follow back only from the end he is already at"}

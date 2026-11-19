@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-18",
-  "group": "fixes",
-  "order": 0,
-  "external": true,
-  "zh": "合并对话末尾的位置读取，避免无关页面更新在切换或阅读长会话时触发布局测量",
-  "en": "Coalesce chat tail position checks and avoid layout reads triggered by unrelated page updates while switching or reading long conversations"
-}

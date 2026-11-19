@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-18",
-  "group": "fixes",
-  "order": 0,
-  "external": true,
-  "zh": "过程摘要只替换活动按钮上的计数句，按钮内的其余内容不再被一并隐藏，助手正文保持可见",
-  "en": "The process summary replaces only the count sentence on the activity button, no longer hiding the rest of the control's content and keeping the assistant's answer visible"
-}
