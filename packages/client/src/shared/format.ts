@@ -34,7 +34,7 @@ export function textOf(value: unknown) {
 const TOKEN_UNIT_STEPS = [1e3, 1e6, 1e9, 1e12] as const
 /** The units the compact reading writes, lowercase as Claude Code writes them. */
 const COMPACT_TOKEN_UNITS = ['k', 'M', 'B', 'T'] as const
-/** The units the footer's figures write when the reader asks for them. */
+/** The units the statistics' figures write when the reader asks for them. */
 const UNIT_TOKEN_UNITS = ['K', 'M', 'B', 'T'] as const
 
 /**
@@ -70,8 +70,8 @@ export function formatCompactTokens(count: unknown) {
 }
 
 /**
- * One token count in the units the footer's figures wear when the reader asks
- * for them: K/M/B/T with one decimal place kept on every figure ("1.0K",
+ * One token count in the units the statistics' figures wear when the reader
+ * asks for them: K/M/B/T with one decimal place kept on every figure ("1.0K",
  * "12.3M"), so a reading keeps its width while it crosses a unit. A count
  * below a thousand has no unit to carry and stays a whole number.
  */

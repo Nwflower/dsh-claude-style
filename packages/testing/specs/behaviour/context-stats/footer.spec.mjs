@@ -92,9 +92,22 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
     await t.prefs({ statsPosition: 'context' })
   })
 
+  test('one token unit choice reaches independent and compact statistics', async t => {
+    await seatStatsSession(t, stats, usage)
+    await t.prefs({ statsPosition: 'inline', statsFooterTokenFormat: 'units', motion: 'reduced' })
+    const independentUnits = await reading(t)
+    t.expectThat.equal(independentUnits.text.includes('100.0K'), true, 'the independent line writes the chosen token units: ' + independentUnits.text)
+    await t.prefs({ statsFooterTokenFormat: 'digits' })
+    const independentDigits = await reading(t)
+    t.expectThat.equal(independentDigits.text.includes('100,000') && !independentDigits.text.includes('100.0K'), true, 'the independent line returns to grouped whole numbers: ' + independentDigits.text)
+    await t.prefs({ statsPosition: 'footer', statsFooterTokenFormat: 'units' })
+    const compactUnits = await reading(t)
+    t.expectThat.equal(compactUnits.text.includes('100.0K'), true, 'the compact footer follows the same token units: ' + compactUnits.text)
+  })
+
   test('a roomier footer expands the token total in place before it moves below', async t => {
     await seatStatsSession(t, stats, usage)
-    await t.prefs({ statsPosition: 'footer', motion: 'reduced' })
+    await t.prefs({ statsPosition: 'footer', statsFooterTokenFormat: 'digits', motion: 'reduced' })
     const at = async width => {
       await t.page.evaluate(([selector, value]) => {
         document.querySelector(selector).parentElement.style.width = `${value}px`

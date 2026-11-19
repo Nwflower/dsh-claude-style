@@ -122,7 +122,7 @@ export default {
         r.statsInline.text !== null && r.statsInline.glyphs === 0,
       JSON.stringify({ attr: r.statsInline.attr, dock: r.statsInline.dockPosition, row: r.statsInline.rowDisplay, meter: r.statsInline.meterPosition, glyphs: r.statsInline.glyphs }))
     check('the figures are the host\'s own words around the host\'s own numbers',
-      same(r.statsInline.figures, ['2', '374', '279', '777,345,457', '7,345,457', '99']) &&
+      same(r.statsInline.figures, ['2', '374', '279', '777.3M', '7.3M', '99']) &&
         r.statsInline.text.indexOf('2 轮 374 步') === 0 &&
         r.statsInline.text.indexOf('缓存命中') !== -1,
       JSON.stringify({ figures: r.statsInline.figures, text: r.statsInline.text }))

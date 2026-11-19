@@ -285,6 +285,10 @@
         await sleep(300)
         r.statsInline.panelClosed = linePanel() === null
       }
+      // The exact-reading checks below switch away from the default units;
+      // the first reading above has already judged that default.
+      window.__pushForm({ statsFooterTokenFormat: 'digits' })
+      await sleep(400)
       // A card too narrow for the whole line: the figures give way one step at
       // a time, in the reader's own order — the cache share's words, the turns
       // and steps, the meter's number, the two token figures in favour of one

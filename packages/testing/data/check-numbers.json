@@ -536,7 +536,7 @@
         0,
         1
       ],
-      "the session stats and the token usage carry their figures": [
+      "the session stats and the token usage carry their figures in the configured token units": [
         8
       ],
       "the figures count to each reading instead of landing on it": [
