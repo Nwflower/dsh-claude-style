@@ -149,6 +149,9 @@
         viewportRight: viewportRight,
       }
 
+      // The words' width is what the cluster's place is computed from: read it
+      // once the faces the page loads have arrived, not mid-fallback.
+      await document.fonts.ready
       await sleep(250)
       r.band.laid = {
         marks: marks(),

@@ -109,6 +109,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let watched: HTMLElement | null = null
   /** Stops watching it. */
   let stopSize: (() => void) | null = null
+  /** The title whose size the pass follows beside the row. */
+  let watchedTitle: HTMLElement | null = null
+  /** Stops watching the title. */
+  let stopTitleSize: (() => void) | null = null
   /** The cluster's needed width, measured while nothing capped it (D9). */
   let clusterNeed: number | null = null
   /** Every candidate title row, kept current by the bus (D40), and the one this pass took. */
@@ -251,13 +255,25 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * column's width with no mutation under it, and a placement written once
    * would trail the column the whole way; a resize report asks for a pass in
    * the same frame, and the pass writes the same numbers, so it stops there.
+   *
+   * The title's box is followed beside it: a webfont arriving changes the
+   * width the words take without a mutation and without moving the row, which
+   * spans the header. The cluster's place is computed from that width, so
+   * without this report it would keep the gap the fallback font measured.
    */
-  function watch(row: HTMLElement | null) {
-    if (row === watched) return
-    if (stopSize !== null) stopSize()
-    stopSize = null
-    watched = row
-    if (row !== null) stopSize = observeSize(row, () => { ui.schedule?.() })
+  function watch(row: HTMLElement | null, title: HTMLElement | null) {
+    if (row !== watched) {
+      if (stopSize !== null) stopSize()
+      stopSize = null
+      watched = row
+      if (row !== null) stopSize = observeSize(row, () => { ui.schedule?.() })
+    }
+    if (title !== watchedTitle) {
+      if (stopTitleSize !== null) stopTitleSize()
+      stopTitleSize = null
+      watchedTitle = title
+      if (title !== null) stopTitleSize = observeSize(title, () => { ui.schedule?.() })
+    }
   }
 
   /**
@@ -360,12 +376,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     syncRightbarClose()
     const current = reading
     if (current === null) {
-      watch(null)
+      watch(null, null)
       clear()
       return
     }
     const { band, row, title, utilities, corner } = current
-    watch(row)
+    watch(row, title)
     const rowBox = current.rowBox
     if (rowBox === null) {
       clear()
@@ -501,7 +517,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (corner !== null) corner.style.removeProperty(ACTIONS_RIGHT)
     if (strip !== null) strip.style.removeProperty(TABS_LEFT)
     clear()
-    watch(null)
+    watch(null, null)
     titleRows.release()
     closeButtons.release()
     if (closeButtonSlot !== null) closeButtonSlot.dispose()
