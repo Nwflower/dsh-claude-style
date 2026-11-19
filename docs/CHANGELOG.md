@@ -26,6 +26,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - Windows 标题栏中的会话标签持续可见，移动指针或使用输入法组词时不会淡出
 - 修复切回会话时插件把宿主恢复的阅读位置缓动到末尾并重新开启跟随的问题，交还跟随只在读者已经位于末尾时进行
 - 修复悬停展开的账号菜单与工作区、预设选择卡片在指针移入时立即收起的问题，指针在入口与卡片之间移动时保持展开
+- 修复消息撤回后分岔收尾行短暂留在时间线的问题，收尾行随宿主快照发布即时隐去，逻辑对话保持一条连续时间线
 
 <h3 id="en-0.21.6">Improvements</h3>
 
@@ -47,6 +48,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - Keep conversation tabs visible in the Windows title bar when the pointer leaves the conversation or an IME candidate window opens
 - Fix the hand-back springing a reading position the host restored to the end when the reader switches back to a conversation, handing the follow back only from the end he is already at
 - Fix hover-opened account menus and workspace/preset picker cards folding as the pointer moves into them, keeping the card open while the pointer travels between the trigger and the card
+- Fix the forked turn tail lingering on the timeline after a message retract, hiding it as soon as the host publishes the turn end so a logical conversation keeps one continuous timeline
 
 ## [0.21.5] - 2026-11-17
 

@@ -134,6 +134,12 @@ function messageActionsScenario({ check }) {
         const row = document.querySelector(`[data-row-key="session:${CSS.escape(before)}"]`)
         return row === null || getComputedStyle(row).display === 'none'
       }, resting.sessionId)
+      // 分岔的收尾行先挂上页面，宿主把 forked 结束发布进 timeline 后它才隐去：
+      // 等这个落定的状态，再读时间线，不在发布途中取值（云端的一帧慢得多）。
+      await page.waitForFunction(() => {
+        const visible = selector => [...document.querySelectorAll(selector)].filter(row => getComputedStyle(row).display !== 'none').length
+        return visible('[data-chat-flow-kind="inherited-history"]') === 0 && visible('[data-chat-flow-kind="turn-tail"]') === 0
+      }, { timeout: 15000 }).catch(() => {})
       const artifactState = await page.evaluate(async ({ before, after }) => {
         const response = await fetch('/dsh-claude-style/session-revisions')
         const answer = await response.json()

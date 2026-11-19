@@ -24,7 +24,7 @@
     "packages/client/src/features/date-groups/date-groups.ts": 3,
     "packages/client/src/features/home/greeting-copy.ts": 1,
     "packages/client/src/features/manual-unread/manual-unread.ts": 2,
-    "packages/client/src/features/message-actions/message-actions.ts": 1,
+    "packages/client/src/features/message-actions/message-actions.ts": 2,
     "packages/client/src/features/model/rows.ts": 1,
     "packages/client/src/features/permissions/permissions.ts": 4,
     "packages/client/src/features/question-card/question-card.ts": 6,

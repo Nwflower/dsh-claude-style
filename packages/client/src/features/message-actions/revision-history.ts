@@ -31,7 +31,7 @@ export async function refreshConversations(): Promise<void> {
 }
 
 /** One native row stays visible for each logical conversation: its active fork. */
-function rowSession(ctx: HostContext, row: HTMLElement): string | null {
+export function rowSession(ctx: HostContext, row: HTMLElement): string | null {
   return conversationSessionId(closestConversationSession(row)) ?? currentSessionId(ctx)
 }
 

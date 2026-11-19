@@ -5,7 +5,7 @@ import { observeMatches, subscribeMutations } from '@dsh-claude-style/engine/bus
 import { buildElement } from '@dsh-claude-style/engine/dom'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import type { HostContext } from '@dsh-claude-style/engine/host'
-import { hostUiWorkspace, hostWorkspaces } from '@dsh-claude-style/engine/host'
+import { hostUiWorkspace, hostWorkspaces, findChatTarget } from '@dsh-claude-style/engine/host'
 import type { HostUiWorkspaceService } from '@dsh-claude-style/contracts/services'
 import type { RewindAction } from '@dsh-claude-style/contracts/session-rewind'
 import type { FeatureUi } from '../../core/feature'
@@ -17,7 +17,7 @@ import { answerPromptOf, answerRowOf, readerMessageOf } from './message-cut'
 import type { ReaderMessage } from './message-cut'
 import { executeRewind, prepareRewind } from './rewind-client'
 import { closeRewindDialogs, confirmRewind, openRevisionHistory } from './rewind-dialog'
-import { applyForkArtifactVisibility, applyRevisionVisibility, clearRevisionVisibility, conversationFor, refreshConversations, REVISIONS_CHANGED_EVENT } from './revision-history'
+import { applyForkArtifactVisibility, applyRevisionVisibility, clearRevisionVisibility, conversationFor, refreshConversations, rowSession, REVISIONS_CHANGED_EVENT } from './revision-history'
 
 /**
  * 一条读者发出的消息：它下面那行控件补上「撤回」和「编辑」，与 Claude Code
@@ -325,9 +325,41 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const inheritedRows = observeMatches<HTMLElement>(INHERITED_HISTORY_ROW_SELECTOR, () => queue(sync))
   const turnTailRows = observeMatches<HTMLElement>(TURN_TAIL_SELECTOR, () => queue(sync))
 
+  /**
+   * 收尾行所属会话的快照订阅（D105）：分岔的收尾行先挂上页面，timeline 的
+   * forked 结束晚一步才发布出来，隐藏判定在行挂载那一帧读到的还是空结束。
+   * 宿主每发布一次快照就重新判定一次；行离开页面或换了会话，订阅随之摘下。
+   * 按行: 订阅随行元素脱离文档丢弃，换会话时旧订阅先停下。
+   */
+  const snapshotFollows = new Map<HTMLElement, { sessionId: string, stop: () => void }>()
+
+  function followTailSnapshot(row: HTMLElement) {
+    const sessionId = rowSession(ctx, row)
+    const target = sessionId === null ? null : findChatTarget(ctx, sessionId)
+    const followed = snapshotFollows.get(row)
+    if (sessionId === null || target === null || typeof target.subscribe !== 'function') {
+      if (followed !== undefined) {
+        followed.stop()
+        snapshotFollows.delete(row)
+      }
+      return
+    }
+    if (followed !== undefined && followed.sessionId === sessionId) return
+    followed?.stop()
+    snapshotFollows.set(row, { sessionId, stop: target.subscribe(() => queue(sync)) })
+  }
+
   function sync() {
     applyRevisionVisibility(sessionRows.all())
-    applyForkArtifactVisibility(ctx, inheritedRows.all(), turnTailRows.all())
+    const tails = turnTailRows.all()
+    for (const row of tails) followTailSnapshot(row)
+    for (const [row, followed] of snapshotFollows) {
+      if (!row.isConnected) {
+        followed.stop()
+        snapshotFollows.delete(row)
+      }
+    }
+    applyForkArtifactVisibility(ctx, inheritedRows.all(), tails)
     for (const line of seats.keys()) if (!line.isConnected) dropSeat(line)
     if (editing !== null && !editing.root.isConnected) {
       // 宿主重画了这一行，把编辑框一起换掉了：状态收回来，不留半开的行。
@@ -384,6 +416,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     clearRevisionVisibility(sessionRows.all())
     clearRevisionVisibility(inheritedRows.all())
     clearRevisionVisibility(turnTailRows.all())
+    for (const followed of snapshotFollows.values()) followed.stop()
+    snapshotFollows.clear()
     inheritedRows.release()
     turnTailRows.release()
     sessionRows.release()
