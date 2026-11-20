@@ -16,6 +16,7 @@ import { reportFeatureFailure } from '@dsh-claude-style/engine/scheduler'
 import { installScheduler } from './core/scheduler'
 import type { HandleName, Ui } from './core/scheduler'
 import { installPageVisibility } from './core/page-visibility'
+import { installSelectionPaint } from './core/selection-paint'
 import { adoptPartVocabulary, mountStylesheet, parkForeignSheets } from './core/stylesheet'
 import { peerPresent, subscribePeerPresence } from './shared/peer-plugin'
 import { pageOwner, subscribePageOwner } from './shared/visual-owner'
@@ -100,6 +101,8 @@ export function apply(ctx: HostContext) {
   let stopWebfonts: (() => void) | null = null
   /** Mirrors the page's visibility onto the document; set with the sheet that reads it. */
   let stopVisibility: (() => void) | null = null
+  /** Writes the marks the sheet's selection paints key on; set with that sheet. */
+  let stopSelectionPaint: (() => void) | null = null
   /** Carries the host's floating layer in a page drawn at a scale; set with the sheet that scales it. */
   let stopScale: (() => void) | null = null
   /** Stops the part-marking pass; set once the page is taken (D3). */
@@ -141,6 +144,10 @@ export function apply(ctx: HostContext) {
     if (stopVisibility !== null) {
       stopVisibility()
       stopVisibility = null
+    }
+    if (stopSelectionPaint !== null) {
+      stopSelectionPaint()
+      stopSelectionPaint = null
     }
     // This generation's own sheet, handed over rather than taken away when a
     // newer generation has mounted after it (mountStylesheet). The carried layer
@@ -398,6 +405,8 @@ export function apply(ctx: HostContext) {
     // The page's visibility, mirrored for the sheet just mounted and for the
     // clocks in script that stop with it (core/page-visibility.ts).
     if (stopVisibility === null) stopVisibility = installPageVisibility()
+    // The marks the sheet's selection paints key on (core/selection-paint.ts).
+    if (stopSelectionPaint === null) stopSelectionPaint = installSelectionPaint()
     // With the sheet: the page is drawn at the reader's own scale from here on,
     // and the host's floating cards are carried under it (engine/src/scaled-layer.ts).
     if (stopScale === null) stopScale = installPageScale()

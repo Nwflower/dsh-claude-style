@@ -22,8 +22,10 @@
     {
       "reason": "选区颜色要由对话与输入框里的每个元素自己取得，继承来的颜色会按各自的文字颜色偏移",
       "selectors": [
-        "body[data-dsh-claude-style] :is([data-chat-flow], [data-lexical-editor]) *::selection",
-        "body[data-dsh-claude-style][data-dsh-window-blur] :is([data-chat-flow], [data-lexical-editor]) *::selection"
+        "body[data-dsh-claude-style] [data-chat-flow][data-dsh-claude-selection-paint] *::selection",
+        "body[data-dsh-claude-style] [data-lexical-editor] *::selection",
+        "body[data-dsh-claude-style][data-dsh-window-blur] [data-chat-flow][data-dsh-claude-selection-paint] *::selection",
+        "body[data-dsh-claude-style][data-dsh-window-blur] [data-lexical-editor] *::selection"
       ]
     },
     {

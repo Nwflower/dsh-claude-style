@@ -655,9 +655,14 @@ Both are solid (never translucent) and `!important`, so they override whatever
 colour the text underneath carries — links, inline code, syntax tokens. CSS
 cannot read window focus: Chromium reaches the inactive paint through its own
 internal `-internal-inactive-selection-*` properties, which a stylesheet cannot
-address. `packages/client/src/features/composer/selection-mirror.ts` therefore
-mirrors `document.hasFocus()` onto `data-dsh-window-blur` and the stylesheet
-switches on that attribute; the selection itself survives the blur.
+address. `packages/client/src/core/selection-paint.ts` therefore mirrors
+`document.hasFocus()` onto `data-dsh-window-blur` while a range is selected, and
+the stylesheet switches on that attribute; the selection itself survives the
+blur. The same module marks a transcript's root with
+`data-dsh-claude-selection-paint` once a selection starts in it, and the
+transcript's paints key on that mark: a `::selection` rule that matches an
+element costs that element a selection style on every recalculation, and a
+session switch mounts the new transcript without the mark.
 
 The window's chrome is not text. The sidebar column and the conversation header
 take `user-select: none`: a press on a row or on the session title is a gesture

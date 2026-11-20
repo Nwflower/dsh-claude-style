@@ -289,43 +289,43 @@
       "prop": "margin-bottom",
       "verdict": "unmatched"
     },
-    "body[data-dsh-claude-style] :is([data-chat-flow],[data-lexical-editor]) *::selection{background-color:#3366d0!;color:#fff!}|background-color": {
-      "selector": "body[data-dsh-claude-style] :is([data-chat-flow],[data-lexical-editor]) *::selection",
+    "body[data-dsh-claude-style] [data-chat-flow][data-dsh-claude-selection-paint] *::selection,body[data-dsh-claude-style] [data-lexical-editor] *::selection{background-color:#3366d0!;color:#fff!}|background-color": {
+      "selector": "body[data-dsh-claude-style] [data-chat-flow][data-dsh-claude-selection-paint] *::selection,body[data-dsh-claude-style] [data-lexical-editor] *::selection",
       "prop": "background-color",
       "verdict": "unreadable pseudo-element"
     },
-    "body[data-dsh-claude-style] :is([data-chat-flow],[data-lexical-editor]) *::selection{background-color:#3366d0!;color:#fff!}|color": {
-      "selector": "body[data-dsh-claude-style] :is([data-chat-flow],[data-lexical-editor]) *::selection",
+    "body[data-dsh-claude-style] [data-chat-flow][data-dsh-claude-selection-paint] *::selection,body[data-dsh-claude-style] [data-lexical-editor] *::selection{background-color:#3366d0!;color:#fff!}|color": {
+      "selector": "body[data-dsh-claude-style] [data-chat-flow][data-dsh-claude-selection-paint] *::selection,body[data-dsh-claude-style] [data-lexical-editor] *::selection",
       "prop": "color",
       "verdict": "unreadable pseudo-element"
     },
-    "body[data-dsh-claude-style][data-dsh-window-blur] :is([data-chat-flow],[data-lexical-editor]) *::selection{background-color:#c7c7c6!;color:#000!}|background-color": {
-      "selector": "body[data-dsh-claude-style][data-dsh-window-blur] :is([data-chat-flow],[data-lexical-editor]) *::selection",
+    "body[data-dsh-claude-style][data-dsh-window-blur] [data-chat-flow][data-dsh-claude-selection-paint] *::selection,body[data-dsh-claude-style][data-dsh-window-blur] [data-lexical-editor] *::selection{background-color:#c7c7c6!;color:#000!}|background-color": {
+      "selector": "body[data-dsh-claude-style][data-dsh-window-blur] [data-chat-flow][data-dsh-claude-selection-paint] *::selection,body[data-dsh-claude-style][data-dsh-window-blur] [data-lexical-editor] *::selection",
       "prop": "background-color",
       "verdict": "unreadable pseudo-element"
     },
-    "body[data-dsh-claude-style][data-dsh-window-blur] :is([data-chat-flow],[data-lexical-editor]) *::selection{background-color:#c7c7c6!;color:#000!}|color": {
-      "selector": "body[data-dsh-claude-style][data-dsh-window-blur] :is([data-chat-flow],[data-lexical-editor]) *::selection",
+    "body[data-dsh-claude-style][data-dsh-window-blur] [data-chat-flow][data-dsh-claude-selection-paint] *::selection,body[data-dsh-claude-style][data-dsh-window-blur] [data-lexical-editor] *::selection{background-color:#c7c7c6!;color:#000!}|color": {
+      "selector": "body[data-dsh-claude-style][data-dsh-window-blur] [data-chat-flow][data-dsh-claude-selection-paint] *::selection,body[data-dsh-claude-style][data-dsh-window-blur] [data-lexical-editor] *::selection",
       "prop": "color",
       "verdict": "unreadable pseudo-element"
     },
-    "body[data-dsh-claude-style] [data-chat-flow] code:not(pre code)::selection{background-color:#285ece!}|background-color": {
-      "selector": "body[data-dsh-claude-style] [data-chat-flow] code:not(pre code)::selection",
+    "body[data-dsh-claude-style] [data-chat-flow][data-dsh-claude-selection-paint] code:not(pre code)::selection{background-color:#285ece!}|background-color": {
+      "selector": "body[data-dsh-claude-style] [data-chat-flow][data-dsh-claude-selection-paint] code:not(pre code)::selection",
       "prop": "background-color",
       "verdict": "unreadable pseudo-element"
     },
-    "body[data-dsh-claude-style][data-dsh-window-blur] [data-chat-flow] code:not(pre code)::selection{background-color:#c4c4c3!}|background-color": {
-      "selector": "body[data-dsh-claude-style][data-dsh-window-blur] [data-chat-flow] code:not(pre code)::selection",
+    "body[data-dsh-claude-style][data-dsh-window-blur] [data-chat-flow][data-dsh-claude-selection-paint] code:not(pre code)::selection{background-color:#c4c4c3!}|background-color": {
+      "selector": "body[data-dsh-claude-style][data-dsh-window-blur] [data-chat-flow][data-dsh-claude-selection-paint] code:not(pre code)::selection",
       "prop": "background-color",
       "verdict": "unreadable pseudo-element"
     },
-    "body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-chat-flow] code:not(pre code)::selection{background-color:#366bdb!}|background-color": {
-      "selector": "body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-chat-flow] code:not(pre code)::selection",
+    "body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-chat-flow][data-dsh-claude-selection-paint] code:not(pre code)::selection{background-color:#366bdb!}|background-color": {
+      "selector": "body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-chat-flow][data-dsh-claude-selection-paint] code:not(pre code)::selection",
       "prop": "background-color",
       "verdict": "unreadable pseudo-element"
     },
-    "body[data-dsh-claude-style]:not([data-ds-dark-theme])[data-dsh-window-blur] [data-chat-flow] code:not(pre code)::selection{background-color:#d1d1d0!}|background-color": {
-      "selector": "body[data-dsh-claude-style]:not([data-ds-dark-theme])[data-dsh-window-blur] [data-chat-flow] code:not(pre code)::selection",
+    "body[data-dsh-claude-style]:not([data-ds-dark-theme])[data-dsh-window-blur] [data-chat-flow][data-dsh-claude-selection-paint] code:not(pre code)::selection{background-color:#d1d1d0!}|background-color": {
+      "selector": "body[data-dsh-claude-style]:not([data-ds-dark-theme])[data-dsh-window-blur] [data-chat-flow][data-dsh-claude-selection-paint] code:not(pre code)::selection",
       "prop": "background-color",
       "verdict": "unreadable pseudo-element"
     },

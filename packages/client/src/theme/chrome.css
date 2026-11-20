@@ -271,41 +271,46 @@ body[data-dsh-claude-style] ::-webkit-scrollbar-thumb:hover {
 /* Text selection: white on blue, gray on black while the window is blurred.
    !important and solid colours because the paint has to cover the ink the host
    and this skin put under it (links, code, syntax tokens). The unfocused rule
-   comes after the focused one at the same weight, so the attribute decides.
-   The scope is the conversation's text and the draft editor: a document-wide
-   `::selection` makes Blink compute selection style for every element on each
-   recalculation, which stalls session switches. Every element in that scope
-   takes the paint itself rather than inheriting it from the block above:
-   browsers resolve the inherited paint of a nested run (`strong`, an inline
-   `code`, a syntax token) against the run's own colour, so a selected bold run
-   or code token drifts from the paragraph it stands in. The descendant wildcard
-   keeps the rule inside the two scopes the transcript and the editor own; the
-   host's wash still stands everywhere else. */
-body[data-dsh-claude-style] :is([data-chat-flow], [data-lexical-editor]) *::selection {
+   weighs more than the focused one, so the attribute decides.
+   The scope is the conversation's text and the draft editor: a `::selection`
+   rule that matches an element makes Blink compute that element's selection
+   style on each recalculation, selected or not, which stalls session switches.
+   A transcript is covered only once a selection has started in it
+   (core/selection-paint.ts marks its root); a session switch mounts a new root
+   without the mark, and the editor's few nodes are covered from the start.
+   Every element in that scope takes the paint itself rather than inheriting
+   it from the block above: browsers resolve the inherited paint of a nested
+   run (`strong`, an inline `code`, a syntax token) against the run's own
+   colour, so a selected bold run or code token drifts from the paragraph it
+   stands in. The descendant wildcard keeps the rule inside the two scopes the
+   transcript and the editor own; the host's wash still stands everywhere else. */
+body[data-dsh-claude-style] [data-chat-flow][data-dsh-claude-selection-paint] *::selection,
+body[data-dsh-claude-style] [data-lexical-editor] *::selection {
   background-color: #3366d0 !important;
   color: #ffffff !important;
 }
 
-body[data-dsh-claude-style][data-dsh-window-blur] :is([data-chat-flow], [data-lexical-editor]) *::selection {
+body[data-dsh-claude-style][data-dsh-window-blur] [data-chat-flow][data-dsh-claude-selection-paint] *::selection,
+body[data-dsh-claude-style][data-dsh-window-blur] [data-lexical-editor] *::selection {
   background-color: #c7c7c6 !important;
   color: #000000 !important;
 }
 
 /* Inline-code chips: the chip's own background paints above the selection
    highlight, so these paints are the channel-wise inverse of that wash. */
-body[data-dsh-claude-style] [data-chat-flow] code:not(pre code)::selection {
+body[data-dsh-claude-style] [data-chat-flow][data-dsh-claude-selection-paint] code:not(pre code)::selection {
   background-color: rgb(40, 94, 206) !important;
 }
 
-body[data-dsh-claude-style][data-dsh-window-blur] [data-chat-flow] code:not(pre code)::selection {
+body[data-dsh-claude-style][data-dsh-window-blur] [data-chat-flow][data-dsh-claude-selection-paint] code:not(pre code)::selection {
   background-color: rgb(196, 196, 195) !important;
 }
 
-body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-chat-flow] code:not(pre code)::selection {
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-chat-flow][data-dsh-claude-selection-paint] code:not(pre code)::selection {
   background-color: rgb(54, 107, 219) !important;
 }
 
-body[data-dsh-claude-style]:not([data-ds-dark-theme])[data-dsh-window-blur] [data-chat-flow] code:not(pre code)::selection {
+body[data-dsh-claude-style]:not([data-ds-dark-theme])[data-dsh-window-blur] [data-chat-flow][data-dsh-claude-selection-paint] code:not(pre code)::selection {
   background-color: rgb(209, 209, 208) !important;
 }
 

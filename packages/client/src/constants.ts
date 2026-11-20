@@ -228,9 +228,11 @@ export const HERO_MENU_ATTR = 'data-dsh-claude-hero-menu'
 /** Stamped on the sidebar's More menu card while it is open. The card is the host's shared Menu portal like the two above; features/sidebar-entries stamps it from inside, since its own rows render in that card.
  * The card and its rows take the account menu's look (shared/popover.css). */
 export const MORE_MENU_ATTR = 'data-dsh-claude-more-menu'
-/** Present while the browser window does NOT hold focus. The focus state is the only thing that separates the two text selection paints (gray on black unfocused, blue on white focused) and no selector can read it.
- * features/composer/selection-mirror.ts mirrors it onto the document and the stylesheet switches on this attribute. */
+/** Present while the browser window does NOT hold focus and the document holds a selected range. The focus state is the only thing that separates the two text selection paints (gray on black unfocused, blue on white focused) and no selector can read it.
+ * core/selection-paint.ts mirrors it onto the document and the stylesheet switches on this attribute. */
 export const WINDOW_BLUR_ATTR = 'data-dsh-window-blur'
+/** On a transcript's root once a selection starts in it, until the host replaces the root: the skin's selection paints cover a transcript only under it (core/selection-paint.ts, theme/chrome.css). */
+export const SELECTION_PAINT_ATTR = 'data-dsh-claude-selection-paint'
 /** The handoff marker: stamped on `body` while this build is live AND able to give the page back (D74). Its presence is a capability another package can read without running anything.
  * A skin that lists this theme as one of its looks has to know the page can come back, and a build from before D74 does not stamp it. */
 export const HANDOFF_ATTR = 'data-dsh-claude-style-handoff'
