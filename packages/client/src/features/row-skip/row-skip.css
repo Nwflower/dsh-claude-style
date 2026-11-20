@@ -23,3 +23,9 @@ body[data-dsh-claude-style] [data-chat-flow-kind][data-dsh-claude-laid-out]:not(
 body[data-dsh-claude-style] [data-chat-flow-kind][data-dsh-claude-laid-out][data-dsh-claude-row-height]:not([data-chat-flow-kind='user']):not([data-turn-process-hidden], [data-disclosure-row] [hidden], [hidden], [data-dsh-claude-holds~='hidden-row'], [data-dsh-claude-holds~='tooltip-row'], [data-dsh-claude-rolling] *, [data-dsh-claude-rolling]) {
   content-visibility: auto;
 }
+
+/* Keep paint-contained chat rows padded symmetrically so child borders and hover pills do not clip at the row box edge. */
+body[data-dsh-claude-style] [data-chat-flow-kind] {
+  box-sizing: border-box;
+  padding-inline: 8px;
+}

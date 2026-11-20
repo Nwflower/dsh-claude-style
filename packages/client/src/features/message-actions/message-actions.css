@@ -22,6 +22,11 @@ body[data-dsh-claude-style] .dsh-claude-message-actions {
   display: contents;
 }
 
+/* Reset the host action bar's negative left margin so the leftmost hover pill stays inside paint-contained chat rows. */
+body[data-dsh-claude-style] [data-chat-flow-kind] [data-clock] {
+  margin-left: 0;
+}
+
 /* The two buttons the skin draws into that row. Sizes and colours are the
    host's own action button (ui-chat's MessageIconActions), so the row reads as
    one set of controls. */
