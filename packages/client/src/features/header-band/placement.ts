@@ -1,15 +1,17 @@
 /**
- * Where one caption-row pass puts the four pieces it can lift: the title, the
- * cluster the host keeps beside it and the two control clusters.
+ * Where one caption-row pass puts the five pieces it can lift: the title, the
+ * session's more-actions trigger beside it, the cluster the host keeps beside
+ * the title and the two control clusters.
  *
  * The pass measures and writes; this decides, from numbers alone, so the
  * thresholds can be walked in a unit test instead of by dragging a window. The
  * judge never reads a box it wrote itself: the cluster's width arrives as the
- * need the pass measured while nothing capped it (D9), and the title's as the
- * width its words take, not the width the last pass handed it.
+ * need the pass measured while nothing capped it (D9), the title's as the
+ * width its words take, not the width the last pass handed it, and the
+ * trigger's as its own fixed square, which no placement caps.
  */
 
-/** The air between anything placed here and its neighbour. */
+/** The default air between items in the caption. */
 const GAP = 8
 /** What the row keeps clear at its left end when the shell mounts no menu seat: the sidebar's control. */
 const FURNITURE = 48
@@ -40,8 +42,10 @@ export interface CaptionInputs {
   controls: number
   /** The title row's left edge. */
   rowLeft: number
-  /** The shell menu seat's right edge, or null while none is mounted. */
+  /** The shell menu seat's right edge, or null while none is mounted; the seat keeps the row's left end. */
   menuRight: number | null
+  /** The more-actions trigger: whether the row carries one, and the width of its square. */
+  menu: { present: boolean, width: number }
   /** The title's box, the width its words need, and whether the row carries one. */
   title: { present: boolean, width: number, natural: number }
   /** The cluster beside the title: its box, its need, and whether the row carries one. */
@@ -79,6 +83,8 @@ export interface CaptionPlacement {
   headerInset: number
   /** The title's place and the room it is handed, or null while it stays in the row. */
   title: { left: number, max: number, top: number } | null
+  /** The more-actions trigger's position in the caption, or null when the regular title anchor places it. */
+  menuLeft: number | null
   /** The cluster's place, or null while it stays beside the title in the row. */
   trail: { left: number, top: number } | null
   /** The two control clusters' right offsets, or null while they stay in the row. */
@@ -107,7 +113,8 @@ function takesPlace(room: number, threshold: number, held: boolean) {
  * room falls below the thresholds keeps the row, which needs no undoing.
  */
 export function placeCaptionRow(inputs: CaptionInputs): CaptionPlacement {
-  const { width, bandHeight, controls, rowLeft, menuRight, title, trail, utilities, corner } = inputs
+  const { width, bandHeight, controls, rowLeft, menuRight, title, trail, utilities, corner, menu } = inputs
+  const held = inputs.previous ?? null
   // The shell's own menu seat takes the row's left end, and the collapsed
   // sidebar's control sits left of it whether the seat is mounted or not.
   const furniture = menuRight === null ? FURNITURE : Math.max(FURNITURE, menuRight)
@@ -126,7 +133,6 @@ export function placeCaptionRow(inputs: CaptionInputs): CaptionPlacement {
   // The room the cluster needs at the right end, and the margin it keeps once it
   // stands there (KEEP).
   const actionsRoom = edge - clusterWidth - furniture - GAP
-  const held = inputs.previous ?? null
   const liftActions = clusterWidth > 0 && takesPlace(actionsRoom, 0, held?.actions === true)
   const left = Math.max(rowLeft, furniture + GAP)
   // Where the row's right-hand content ends: the controls when they are lifted,
@@ -138,17 +144,25 @@ export function placeCaptionRow(inputs: CaptionInputs): CaptionPlacement {
   // small for a readable title, the title stays in the conversation header.
   const liftTabs = tabsWidth > 0 && available >= tabsWidth
   const room = available - (liftTabs ? tabsWidth + GAP : 0)
-  const liftTitle = title.present && takesPlace(room, MIN_TITLE, held?.title === true)
-  // The cluster takes the caption row's next place, and its own need comes off
-  // the title's room. A capped cluster would measure at the cap, so the number
-  // read here is the need the pass keeps (D9).
-  const titleRoom = room - trail.need - GAP
+  // The trigger rides beside the title whenever the title lifts, so the
+  // title's room carries the trigger's width on every pass, lifted or not: a
+  // threshold that counts the trigger only once it rides would answer both
+  // ways a pass apart at the boundary.
+  const menuWidth = menu.present ? menu.width : 0
+  const liftTitle = title.present && takesPlace(room - menuWidth, MIN_TITLE, held?.title === true)
+  const menuRides = menu.present && liftTitle
+  // The cluster takes the caption row's next place after the trigger, and its
+  // own need comes off the title's room. A capped cluster would measure at the
+  // cap, so the number read here is the need the pass keeps (D9).
+  const titleBase = room - (menuRides ? menuWidth : 0)
+  const titleRoom = titleBase - trail.need - GAP
   const liftTrail = liftTitle && trail.present && takesPlace(titleRoom, MIN_TITLE, held?.trail === true)
-  const titleMax = liftTrail ? titleRoom : room
+  const titleMax = liftTrail ? titleRoom : titleBase
   // A limit this element still carries from an earlier placement would be
   // measured as its width and squeeze the chips it holds.
   const titleWidth = Math.min(titleRun(title), titleMax)
-  const trailLeft = left + titleWidth + GAP
+  const menuLeft = menuRides ? left + titleWidth : null
+  const trailLeft = left + titleWidth + GAP + (menuRides ? menuWidth : 0)
   const titleCentre = bandHeight / 2
   const titleHeight = inputs.titleHeight
   const rowTop = titleCentre + titleHeight / 2
@@ -165,6 +179,7 @@ export function placeCaptionRow(inputs: CaptionInputs): CaptionPlacement {
     rowTop,
     headerInset,
     title: liftTitle ? { left: Math.round(left), max: Math.round(titleMax), top: Math.round(titleCentre) } : null,
+    menuLeft: menuLeft === null ? null : Math.round(menuLeft),
     trail: liftTrail ? { left: Math.round(trailLeft), top: Math.round(titleCentre) } : null,
     utilitiesRight: liftActions && utilities.present ? Math.round(utilitiesRight) : null,
     cornerRight: liftActions && corner.present ? Math.round(cornerRight) : null,

@@ -14,7 +14,7 @@
  * again. Closing it puts it away for the session and stops its asks.
  */
 import { SESSION_PANEL_PATH } from '@dsh-claude-style/contracts/routes'
-import { COMPOSER_SELECTOR, CONVERSATION_TABS_SELECTOR, HEADER_TITLE_SELECTOR, HEADER_UTILITIES_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { COMPOSER_SELECTOR, CONVERSATION_CONTENT_SELECTOR, CONVERSATION_HEADER_SELECTOR, CONVERSATION_TABS_SELECTOR, HEADER_MORE_TRIGGER_SELECTOR, HEADER_TITLE_SELECTOR, HEADER_UTILITIES_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { MARKS } from '../lane.mjs'
 import { sendPrompt, waitForTurn } from '../prompt.mjs'
 import { sanitizePage } from '../../../scripts/shared/privacy.mjs'
@@ -254,6 +254,36 @@ export function sessionPanelScenario({ check }) {
       const chat = tabs.getByRole('tab', { name: /^(对话|Chat)$/ })
       const trajectory = tabs.getByRole('tab', { name: /^(轨迹|Trajectory)$/ })
       const composer = page.locator(COMPOSER_SELECTOR).first()
+      const header = page.locator(CONVERSATION_HEADER_SELECTOR).first()
+      const content = page.locator(CONVERSATION_CONTENT_SELECTOR).first()
+      const moreViewsSelector = `${MARKS.viewTabsStrip} button[aria-haspopup="menu"]`
+      const headerPaint = () => header.evaluate(async (element, selectors) => {
+        const opacityTransitions = element.getAnimations({ subtree: true }).filter(animation =>
+          animation instanceof CSSTransition && animation.transitionProperty === 'opacity')
+        await Promise.all(opacityTransitions.map(animation => animation.finished))
+        const sessionMenu = element.querySelector(selectors.sessionMenu)
+        const title = element.querySelector(selectors.title)
+        const titleBox = title?.getBoundingClientRect()
+        const menuBox = sessionMenu?.getBoundingClientRect()
+        const tools = [...element.querySelectorAll(`${selectors.utilities} button`)]
+          .filter(button => button !== sessionMenu && button.checkVisibility())
+        const visible = node => node?.checkVisibility({ opacityProperty: true }) ?? null
+        return {
+          title: visible(title),
+          menu: visible(sessionMenu),
+          besideTitle: titleBox !== undefined && menuBox !== undefined && titleBox.right === menuBox.left &&
+            titleBox.top + titleBox.height / 2 === menuBox.top + menuBox.height / 2,
+          controls: [...selectors.tabs.map(selector => element.querySelector(selector)), ...tools].map(visible),
+        }
+      }, { title: HEADER_TITLE_SELECTOR, sessionMenu: HEADER_MORE_TRIGGER_SELECTOR, utilities: HEADER_UTILITIES_SELECTOR,
+        tabs: [CONVERSATION_TABS_SELECTOR, moreViewsSelector] })
+      const contentBefore = await content.boundingBox()
+      await page.locator('.dsh-claude-details').hover()
+      const overDetails = await headerPaint()
+      await content.hover()
+      const overConversation = await headerPaint()
+      await header.hover()
+      notes.headerVisibility = { overDetails, overConversation, overHeader: await headerPaint(), contentBefore, contentAfter: await content.boundingBox() }
       await trajectory.click()
       await trajectory.and(tabs.getByRole('tab', { selected: true })).waitFor()
       await composer.waitFor({ state: 'hidden' })
@@ -263,7 +293,7 @@ export function sessionPanelScenario({ check }) {
       await composer.waitFor()
       const inChat = await page.locator(MARKS.viewTabsStrip).boundingBox()
       notes.viewSwitch = { inTrajectory, inChat }
-      const moreViews = page.locator(MARKS.viewTabsStrip).locator('button[aria-haspopup="menu"]')
+      const moreViews = page.locator(moreViewsSelector)
       await moreViews.click()
       await moreViews.and(page.locator('[aria-expanded="true"]')).waitFor()
       await page.keyboard.press('Escape')
@@ -587,6 +617,13 @@ export function sessionPanelScenario({ check }) {
             notes.layout.title.right <= notes.layout.tablist.left &&
             notes.layout.strip.right < notes.layout.utilities.left,
           JSON.stringify(notes.layout ?? null)),
+        check('the title and session menu stay visible while the tabs and other tools follow the pointer',
+          notes.headerVisibility?.overDetails.title === true && notes.headerVisibility.overDetails.menu === true && notes.headerVisibility.overDetails.besideTitle === true &&
+            notes.headerVisibility.overDetails.controls.every(value => value === false) &&
+            [notes.headerVisibility.overConversation, notes.headerVisibility.overHeader].every(({ title, menu, besideTitle, controls }) =>
+              title === true && menu === true && besideTitle === true && controls.every(value => value === true)) &&
+            JSON.stringify(notes.headerVisibility.contentBefore) === JSON.stringify(notes.headerVisibility.contentAfter),
+          JSON.stringify(notes.headerVisibility ?? null)),
         check('the header keeps the column whole and the rail starts under it',
           notes.layout?.column !== null && notes.layout?.header !== null && notes.layout?.rail !== null &&
             notes.layout.header.right >= notes.layout.column.right - 1 &&

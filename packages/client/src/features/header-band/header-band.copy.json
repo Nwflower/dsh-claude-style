@@ -1,5 +1,5 @@
 {
   "headerBandTitle": { "zh": "标题进入顶栏", "en": "Header in the title bar" },
-  "headerBandDesc": { "zh": "把会话标题与顶栏控件抬进系统标题栏。", "en": "The session title and the header's controls rise into the window's caption row." },
+  "headerBandDesc": { "zh": "把会话标题与顶栏控件抬进系统标题栏，更多操作菜单站在标题旁边。", "en": "The session title and the header's controls rise into the window's caption row, with the more-actions menu beside the title." },
   "rightbarClose": { "zh": "收起右侧栏", "en": "Collapse right panel" }
 }

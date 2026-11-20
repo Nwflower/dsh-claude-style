@@ -27,6 +27,7 @@ function inputs(patch: Partial<CaptionInputs> = {}): CaptionInputs {
     controls: 140,
     rowLeft: 200,
     menuRight: null,
+    menu: { present: false, width: 0 },
     title: { present: true, width: 300, natural: 300 },
     trail: { present: true, width: 60, need: 60 },
     utilities: { present: true, width: 114 },
@@ -148,4 +149,36 @@ test('the tabs keep the right side when the remaining space cannot hold the titl
   expect(narrow.tabsRight).not.toBeNull()
   expect(narrow.lift.title).toBe(false)
   expect(placeCaptionRow(inputs({ tabsWidth: 120, rowLeft: 860 })).tabsRight).toBeNull()
+})
+
+test('the more-actions trigger starts at the title end and keeps the normal gap before the cluster', () => {
+  const placed = placeCaptionRow(inputs({ menu: { present: true, width: 28 }, menuRight: 146 }))
+  expect(placed.lift).toEqual({ title: true, trail: true, actions: true })
+  expect(placed.menuLeft).toBe(200 + 300)
+  expect(placed.trail?.left).toBe(200 + 300 + 28 + 8)
+  // The trigger's width comes off the title's room, on the lift pass and after it.
+  expect(placed.title?.max).toBe(706 - 28)
+  const held = placeCaptionRow(inputs({ menu: { present: true, width: 28 }, menuRight: 146, previous: placed.lift }))
+  expect(held.title).toEqual(placed.title)
+  expect(held.menuLeft).toBe(placed.menuLeft)
+})
+
+test('the title lifts only with room for itself and the trigger beside it', () => {
+  const menu = { present: true, width: 28 }
+  const fits = placeCaptionRow(inputs({ menu, menuRight: 146, rowLeft: 826 }))
+  expect(fits.lift.title).toBe(true)
+  expect(fits.title?.max).toBe(120)
+  const short = placeCaptionRow(inputs({ menu, menuRight: 146, rowLeft: 827 }))
+  expect(short.lift.title).toBe(false)
+  expect(short.menuLeft).toBeNull()
+  const held = { title: true, trail: false, actions: false }
+  expect(placeCaptionRow(inputs({ menu, menuRight: 146, rowLeft: 830, previous: held })).lift.title).toBe(true)
+  expect(placeCaptionRow(inputs({ menu, menuRight: 146, rowLeft: 831, previous: held })).lift.title).toBe(false)
+})
+
+test('a shell seat too wide for the row keeps both sides in the header, trigger included', () => {
+  const placed = placeCaptionRow(inputs({ menu: { present: true, width: 28 }, menuRight: 1200 }))
+  expect(placed.lift).toEqual({ title: false, trail: false, actions: false })
+  expect(placed.menuLeft).toBeNull()
+  expect(placed.utilitiesRight).toBeNull()
 })

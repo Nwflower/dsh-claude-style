@@ -53,6 +53,7 @@ export interface Handles {
   chatSend: ChatSendHandle
   caret: FeatureHandle
   viewTabs: ViewTabsHandle
+  headerVisibility: FeatureHandle
   headerBand: FeatureHandle
   rightbarFit: FeatureHandle
   sessionPanel: FeatureHandle

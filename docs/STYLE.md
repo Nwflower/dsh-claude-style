@@ -299,6 +299,15 @@ page itself: no block of their own behind them, and they dim with a modal's mask
 like everything else. Their hover plate is the system's, a tint of the button
 glyph's colour.
 
+**The session's menu at the name.** The more-actions trigger — the launcher
+whose panel carries the session's own actions — starts at the end of the
+session title in either header row, with the preset cluster after it.
+The button uses a downward SVG chevron and stays visible as the surrounding
+tools fade. Its panel opens at the button, and the utilities cluster closes the
+gap the trigger leaves. The title anchors the button in the conversation header
+whenever that is where the title stands. The shell's application menu seat keeps
+the caption row's left end, and the row's content starts after it.
+
 **The header's controls.** The conversation header's controls read as one row of
 plates, in the caption row and in the header's own row alike: a 28px square at an
 8px radius with a 16px glyph in the secondary ink, and the skin's hover plate
@@ -450,6 +459,16 @@ The tabs and their overflow menu sit before the right-hand tools in the
 conversation header, including the Windows caption when it has room. A narrow
 header keeps them right-aligned on the next line. The details rail leaves the
 header's width intact.
+
+The title area and the session's more-actions trigger stay visible. The view
+tabs, their overflow menu and the right-hand tools fade in while the pointer is
+over the header or main content, including the composer and the Windows caption
+space above the conversation.
+They fade out over a sidebar or the details rail and keep their place in the
+header. Keyboard focus reveals them immediately. Reduced motion applies the
+opacity changes immediately, and touch-only devices keep the controls visible.
+The Conversation setting Hide toolbar outside the conversation starts on.
+Turning it off keeps those controls visible throughout the active conversation.
 
 The two figures sections put a label on the left and a value on the right, one
 figure a row, so a long duration or token count keeps the row's width. Session

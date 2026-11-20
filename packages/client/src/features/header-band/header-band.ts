@@ -3,11 +3,10 @@ import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
 import {
   HEADER_ACTIONS_SELECTOR,
   HEADER_TITLE_ROW_SELECTOR,
-  HEADER_TITLE_SELECTOR,
 } from '@dsh-claude-style/contracts/dom'
 import { observeMatches, observeSize } from '@dsh-claude-style/engine/bus'
 import { desktopBand } from '@dsh-claude-style/engine/desktop-band'
-import { closestConversationHeader, conversationHeaderTools, findRightbarToggle, findWindowsMenu, registerSlotEntries } from '@dsh-claude-style/engine/host'
+import { closestConversationHeader, conversationHeaderMore, conversationHeaderTitle, conversationHeaderTools, findRightbarToggle, findWindowsMenu, registerSlotEntries } from '@dsh-claude-style/engine/host'
 import { createStamp, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
 import { inPageBox, inPagePixels } from '../../shared/page-zoom'
 import type { FeatureUi } from '../../core/feature'
@@ -24,6 +23,14 @@ import { placeCaptionRow } from './placement'
  * stamped and placed with `position: fixed`, never moved between parents. A
  * side whose measured room is too small writes nothing and stays in the row,
  * which is the stylesheet's base rule, so a failed placement needs no undoing.
+ *
+ * The session's more-actions trigger rides beside the lifted title, the way
+ * Claude's app keeps the session's own menu at the name: the trigger is
+ * stamped and fixed out of the utilities cluster, which closes the gap it
+ * leaves, and the host's menu anchors from the trigger's own box, so the
+ * panel opens beside the title. The conversation header keeps the trigger
+ * at the end of an unlifted title. The shell's application menu seat keeps
+ * the caption row's left end throughout.
  *
  * The row the title leaves rises by a relative offset, which creates no
  * containing block for the fixed pieces; the header then closes to that row, so
@@ -60,6 +67,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * row keeps the height it takes there.
    */
   const TRAIL_ATTR = 'data-dsh-header-trail'
+  /** The more-actions trigger's stamp; lifted out of the utilities cluster beside the title. */
+  const MORE_ATTR = 'data-dsh-header-more'
   /**
    * The row's own stamp and the negative top margin its rule reads: with the
    * title gone the row holds only the controls, and the host's top inset for a
@@ -90,6 +99,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   const rowStamp = createStamp<HTMLElement>(ROW_ATTR)
   const titleStamp = createStamp<HTMLElement>(TITLE_ATTR)
+  const moreStamp = createStamp<HTMLElement>(MORE_ATTR)
   const trailStamp = createStamp<HTMLElement>(TRAIL_ATTR)
   const actionsStamp = createStamp<HTMLElement>(ACTIONS_ATTR)
   const cornerStamp = createStamp<HTMLElement>(CORNER_ATTR)
@@ -180,7 +190,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   /** Whether `row` carries a title or the utilities. */
   function carriesHeaderText(row: HTMLElement) {
-    return row.querySelector(HEADER_TITLE_SELECTOR) !== null || conversationHeaderTools(row).utilities !== null
+    return conversationHeaderTitle(row) !== null || conversationHeaderTools(row).utilities !== null
   }
 
   /** Whether the kept row is still the first match carrying header text (D40). */
@@ -226,6 +236,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     lastLift = null
     rowStamp.release()
     titleStamp.release()
+    moreStamp.release()
     trailStamp.release()
     actionsStamp.release()
     cornerStamp.release()
@@ -282,7 +293,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     corner: HTMLElement | null
     rowBox: DOMRect | null
     headerBox: DOMRect | null
-    menuBox: DOMRect | null
+    /** The shell's application menu seat, which keeps the row's left end. */
+    menuRight: number | null
+    /** The row's more-actions trigger, read inside the row so embedded headers are not taken. */
+    more: HTMLElement | null
+    /** The trigger's presence and the width of its square, which no placement caps. */
+    moreSize: { present: boolean, width: number }
     utilitiesBox: DOMRect | null
     cornerBox: DOMRect | null
     titleBox: DOMRect | null
@@ -314,9 +330,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       return
     }
     const header = closestConversationHeader(row)
-    const title = row.querySelector<HTMLElement>(HEADER_TITLE_SELECTOR)
+    const title = conversationHeaderTitle(row)
     const trail = row.querySelector<HTMLElement>(HEADER_ACTIONS_SELECTOR)
     const { utilities, corner } = conversationHeaderTools(row)
+    const menuBox = rect(findWindowsMenu())
+    const more = conversationHeaderMore(utilities)
+    const moreBox = rect(more)
     const titleBox = rect(title)
     const trailBox = rect(trail)
     // The cluster's need is measured while nothing of ours caps it, which is the
@@ -335,7 +354,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       corner,
       rowBox: rect(row),
       headerBox: rect(header),
-      menuBox: rect(findWindowsMenu()),
+      menuRight: menuBox === null ? null : menuBox.right,
+      more,
+      moreSize: { present: moreBox !== null, width: moreBox === null ? 0 : moreBox.width },
       utilitiesBox: rect(utilities),
       cornerBox: rect(corner),
       titleBox,
@@ -376,7 +397,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       bandHeight: band.height,
       controls: band.controls.size,
       rowLeft: rowBox.left,
-      menuRight: current.menuBox === null ? null : current.menuBox.right,
+      menuRight: current.menuRight,
+      menu: current.moreSize,
       title: { present: title !== null, width: current.titleBox === null ? 0 : current.titleBox.width, natural: current.titleNatural },
       trail: { present: current.trail !== null, width: current.trailBox === null ? 0 : current.trailBox.width, need: current.trailNeed },
       utilities: { present: current.utilitiesBox !== null, width: current.utilitiesBox === null ? 0 : current.utilitiesBox.width },
@@ -413,6 +435,16 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       // further; without one it is the row's whole run.
       setVar(title, TITLE_MAX, `${placement.title.max}px`)
       setVar(title, TITLE_TOP, `${placement.title.top}px`)
+    }
+    // The trigger is fixed out of the utilities cluster, which closes the gap
+    // it leaves; the host's menu anchors from the trigger's own box, so the
+    // panel opens beside the title. Handing the title back lets its own anchor
+    // place the trigger in the conversation header again (D43).
+    const more = current.more
+    moreStamp.mark(placement.menuLeft === null ? null : more)
+    if (placement.menuLeft !== null && more !== null) {
+      setVar(more, TITLE_LEFT, `${placement.menuLeft}px`)
+      setVar(more, TITLE_TOP, `${placement.title?.top ?? band.height / 2}px`)
     }
     const trail = current.trail
     trailStamp.mark(placement.trail === null ? null : trail)
@@ -459,6 +491,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     overlay?.removeEventListener('geometrychange', scheduleGeometry)
     const row = rowStamp.current()
     const title = titleStamp.current()
+    const more = moreStamp.current()
     const trail = trailStamp.current()
     const utilities = actionsStamp.current()
     const corner = cornerStamp.current()
@@ -467,6 +500,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       title.style.removeProperty(TITLE_LEFT)
       title.style.removeProperty(TITLE_MAX)
       title.style.removeProperty(TITLE_TOP)
+    }
+    if (more !== null) {
+      more.style.removeProperty(TITLE_LEFT)
+      more.style.removeProperty(TITLE_TOP)
     }
     if (trail !== null) {
       trail.style.removeProperty(TITLE_LEFT)

@@ -364,6 +364,8 @@ export const HEADER_ACTIONS_SELECTOR = '[data-dsh-claude-part~="header-actions"]
 export const HEADER_ACTION_CHIPS_SELECTOR = '[data-dsh-claude-part~="header-actions"] [data-subagent-action], [data-dsh-claude-part~="header-actions"] button[aria-haspopup="tree"], [data-dsh-claude-part~="header-actions"] button[aria-expanded]:not([aria-haspopup])'
 /** The header's utilities cluster: the workspace opener, the overflow menu, the bottom-panel toggle. */
 export const HEADER_UTILITIES_SELECTOR = '[data-dsh-claude-part~="header-utilities"]'
+/** The session's more-actions trigger in the utilities cluster; the band lifts it beside the title. Read inside the title row, so embedded conversation headers are not taken. */
+export const HEADER_MORE_TRIGGER_SELECTOR = `${HEADER_UTILITIES_SELECTOR} button[aria-haspopup="menu"]`
 /** The corner seat beside the utilities, carrying the right-sidebar toggle. */
 export const HEADER_CORNER_SELECTOR = '[data-dsh-claude-part~="header-corner"]'
 /** Resolve with `closest` from the title row; this substring also matches unrelated bars. */

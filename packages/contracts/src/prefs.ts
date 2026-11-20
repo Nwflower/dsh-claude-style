@@ -389,6 +389,7 @@ export const PREFS = {
   /** Whether a message the reader sent carries edit and retract beside its copy button (features/message-actions). */
   messageActions: { type: 'boolean', default: true },
   viewTabs: { type: 'boolean', default: true },
+  hideToolbarOutsideConversation: { type: 'boolean', default: true },
   headerBand: { type: 'boolean', default: true },
   /** Whether the conversation offers its own session details rail (D102). */
   sessionPanel: { type: 'boolean', default: true },

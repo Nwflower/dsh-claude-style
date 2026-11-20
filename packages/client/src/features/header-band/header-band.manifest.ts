@@ -7,7 +7,7 @@ export default {
   contracts: [
     'api.window-controls', 'shell.fullscreen', 'shell.platform', 'shell.top-clearance', 'shell.windows-titlebar', 'shell.windows-menu',
     'shell.rightbar-toggle',
-    'header.row', 'header.title', 'header.actions', 'header.utilities', 'header.corner', 'header.element',
+    'header.row', 'header.title', 'header.actions', 'header.utilities', 'header.corner', 'header.element', 'header.more-trigger',
   ],
   pref: 'headerBand',
   stylesheets: [{ file: 'header-band.css', rank: 75 }],

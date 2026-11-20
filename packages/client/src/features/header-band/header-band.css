@@ -34,12 +34,15 @@ body[data-dsh-claude-style] .dsh-claude-rightbar-close:focus-visible {
   background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
 }
 
-/* The two pieces the caption row holds — the session title, and the cluster the
-   host keeps beside it (the preset picker and the chips the session mounts
-   there) — take one place each. The pass stamps a piece it lifted and writes its
-   numbers on it; a piece left in the row carries no stamp, so these rules miss
-   it and the row keeps the height it takes there. */
+/* The pieces the caption row holds — the session title, the more-actions
+   trigger beside it, and the cluster the host keeps beside the title (the
+   preset picker and the chips the session mounts there) — take one place each.
+   The pass stamps a piece it lifted and writes its numbers on it; a piece left
+   in the row carries no stamp, so these rules miss it and the row keeps the
+   height it takes there. The trigger's menu anchors from its own box, so the
+   panel opens at the name; the utilities cluster closes the gap it leaves. */
 body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-header-title],
+body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-header-more],
 body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-header-trail] {
   position: fixed;
   /* The pass centres each box on the measured caption row's middle. */
@@ -183,14 +186,17 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="header-corner"] button svg {
 body[data-dsh-claude-style] [data-dsh-header-band~="actions"] [data-dsh-header-actions],
 body[data-dsh-claude-style] [data-dsh-header-band~="actions"] [data-dsh-header-corner] {
   position: fixed;
-  top: calc(var(--dsh-header-band-height, var(--dsh-windows-titlebar-height, 40px)) / 2);
+  /* Centred on the row's middle by half the 28px plate, without a transform:
+     a transformed cluster would become the containing block of the fixed
+     more-actions trigger it still holds in the DOM, and the trigger rides
+     beside the title in the viewport's own space. */
+  top: calc(var(--dsh-header-band-height, var(--dsh-windows-titlebar-height, 40px)) / 2 - 14px);
   /* Both clusters keep their order and their air through this offset alone:
      the corner sits off the caption buttons, the utilities off the corner. */
   right: var(--dsh-header-band-right);
   /* The utilities carry the host's own left margin for the row's flow; a
      fixed box has no row to keep clear of. */
   margin: 0;
-  transform: translateY(-50%);
   z-index: var(--dsh-claude-layer-chrome);
   -webkit-app-region: no-drag;
 }

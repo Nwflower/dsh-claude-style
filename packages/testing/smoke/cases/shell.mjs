@@ -127,10 +127,13 @@ export default {
     check('the words the row carries are the window\'s own: a press on the title starts no selection',
       laid.titleSelect === 'none' && laid.headerSelect === 'none',
       JSON.stringify({ title: laid.titleSelect, header: laid.headerSelect }))
-    check('the cluster the row keeps beside the title takes the caption row\'s next place, so the row the title leaves holds nothing it has to keep standing',
-      marks.trail === true && laid.preset.x === laid.title.right + b.air && laid.preset.y === middle + b.titleDrop &&
-        laid.trailLeft === laid.title.right + b.air + 'px' && laid.trailHit === true,
-      JSON.stringify({ marks: marks, title: laid.title, preset: laid.preset, trailLeft: laid.trailLeft, trailHit: laid.trailHit }))
+    // The title and trigger meet, then the next cluster gets the usual gap.
+    const moreAir = (laid.more.right - laid.more.x) + b.air
+    check('the trigger touches the title and the preset cluster keeps the usual gap after it',
+      marks.trail === true && laid.more.x === laid.title.right &&
+        laid.preset.x === laid.more.right + b.air && laid.preset.y === middle + b.titleDrop &&
+        laid.trailLeft === laid.more.right + b.air + 'px' && laid.trailHit === true,
+      JSON.stringify({ marks: marks, title: laid.title, more: laid.more, preset: laid.preset, trailLeft: laid.trailLeft, trailHit: laid.trailHit }))
     check('the title is handed the room up to the cluster beside it rather than the width its own box holds, and the row it left starts at the title box without the host\'s old inset',
       laid.titleLeft === laid.row.x + 'px' &&
         parseFloat(laid.titleMax) > laid.title.right - laid.title.x &&
@@ -147,8 +150,8 @@ export default {
       before.width < long.width && short.width < long.width && again.width === long.width &&
         long.max === again.max && parseFloat(long.max) > long.width,
       JSON.stringify(names))
-    check('the cluster beside the title follows a name that grew back in the same pass, one air gap off the title\'s own end',
-      long.presetX === long.right + b.air && short.presetX === short.right + b.air && again.presetX === again.right + b.air,
+    check('the cluster beside the title follows a name that grew back in the same pass, one air gap off the trigger\'s own end',
+      long.presetX === long.right + moreAir && short.presetX === short.right + moreAir && again.presetX === again.right + moreAir,
       JSON.stringify(names))
     const panelClosed = b.panelClosed || {}
     check('the right panel\'s collapse control is the skin\'s own, drawn in the header\'s row: it shows while the panel is open and hides with the panel, and the panel\'s own copy stays where the host drew it',
@@ -172,9 +175,16 @@ export default {
       crowded.marks.band === 'title actions tabs' && crowded.marks.title === true && crowded.marks.trail === false &&
         (crowded.preset.right - crowded.preset.x) > 120 && parseFloat(crowded.titleMax) > crowded.preset.right - crowded.preset.x,
       JSON.stringify(crowded))
-    check('a step of room buys the cluster its place beside the title again, one air gap off the title\'s own end',
-      relaxed.marks.trail === true && relaxed.preset.x === relaxed.title.right + b.air,
+    check('a step of room buys the cluster its place beside the title again, one air gap off the trigger\'s own end',
+      relaxed.marks.trail === true && relaxed.preset.x === relaxed.title.right + moreAir,
       JSON.stringify(relaxed))
+    const ride = b.menu || {}
+    check('the more-actions trigger stays flush with the lifted title and the preset cluster follows it',
+      (ride.marks || {}).title === true && (ride.marks || {}).trail === true &&
+        Math.abs(ride.more.x - ride.title.right) <= 1 && ride.more.y < b.band &&
+        ride.moreLeft === Math.round(ride.title.right) + 'px' &&
+        Math.abs(ride.preset.x - (ride.more.right + b.air)) <= 1,
+      JSON.stringify(ride))
     const back = b.back || {}
     check('switching the feature off restores the cluster\'s fade and switching it on places both sides again',
       off.marks.band === null && off.marks.title === false && off.marks.trail === false && off.marks.utilities === false && off.marks.corner === false &&

@@ -75,8 +75,9 @@
         '<div class="_headerActions_b_1" style="width:60px;height:' + TITLE_HEIGHT + 'px">Preset</div></div>' +
         // The host's utilities seat, with the skin's own right-panel control in it,
         // the way the host's slot renders it: the pass shows or hides that node.
-        '<div class="_headerUtilities_b_1" style="display:flex;width:114px;height:28px">' +
-        '<button type="button" class="dsh-claude-rightbar-close" style="width:28px;height:28px">close</button></div>' +
+        '<div class="_headerUtilities_b_1" style="display:flex;width:148px;height:28px">' +
+        '<button type="button" class="dsh-claude-rightbar-close" style="width:28px;height:28px">close</button>' +
+        '<button type="button" aria-haspopup="menu" style="width:28px;height:28px">more</button></div>' +
         '<div class="_headerCorner_b_1" style="width:28px;height:28px"></div></div>' +
         '<div class="_tabs_b_1"><div class="_viewTabs_b_1" role="tablist" data-conversation-tabs="" style="width:152px;height:26px"></div></div>'
       document.body.insertBefore(header, document.body.firstChild)
@@ -102,6 +103,7 @@
       // the seat the host writes its truncation fade on.
       var cluster = title.parentElement
       var utilities = header.querySelector('[data-dsh-claude-part~="header-utilities"]')
+      var more = utilities.querySelector('button[aria-haspopup="menu"]')
       var corner = header.querySelector('[data-dsh-claude-part~="header-corner"]')
       var strip = header.querySelector('[data-dsh-claude-part~="view-tabs"]')
       var box = function (el) {
@@ -156,6 +158,7 @@
       r.band.laid = {
         marks: marks(),
         title: box(title),
+        more: box(more),
         utilities: box(utilities),
         corner: box(corner),
         preset: box(actions),
@@ -224,6 +227,10 @@
       nudge()
       await sleep(250)
       r.band.relaxed = { marks: marks(), title: box(title), preset: box(actions), titleMax: title.style.getPropertyValue('--dsh-header-band-max') }
+      // The session's more-actions trigger starts at the lifted title's end.
+      // The preset cluster keeps the normal gap after the trigger.
+      r.band.menu = { marks: marks(), moreLeft: more.style.getPropertyValue('--dsh-header-band-left'), more: box(more), title: box(title), preset: box(actions),
+        moreAttr: more.getAttribute('data-dsh-header-more'), morePosition: getComputedStyle(more).position }
       // The switch hands the header row back and restores its cluster mask.
       window.__pushForm({ headerBand: false })
       await sleep(250)
