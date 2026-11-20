@@ -333,7 +333,7 @@ function page(name, tier, cases, probe = PROBE) {
         '</div>' +
       '</div>' +
       '<div data-step-process id="debugGroup">' +
-        '<button type="button" data-process-activity id="debugGroupHeader"><span aria-hidden="true">icon</span><span data-shimmer id="debugGroupWords">Working · building</span></button>' +
+        '<button type="button" data-process-activity id="debugGroupHeader"><span aria-hidden="true">icon</span><span data-shimmer id="debugGroupWords">Working · building</span><span id="debugToolStatus">Tool ran without output or errors</span><span data-chat-flow-kind="assistant-step" id="debugHeaderAnswer">Header answer</span></button>' +
         '<div data-step-process-body hidden="until-found" id="debugGroupBody"><div data-step-process-content id="debugGroupContent">' +
           '<div data-chat-flow-kind="assistant-step" data-chat-group-part="reasoning">thought</div>' +
           '<div data-chat-flow-kind="tool-call">call</div>' +

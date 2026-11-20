@@ -75,6 +75,8 @@
           })(),
           rolling: summary.querySelector('[data-dsh-claude-roll="enter"]') !== null,
           wordsShown: getComputedStyle(foldWords).display !== 'none',
+          toolStatusShown: getComputedStyle(document.getElementById('debugToolStatus')).display !== 'none',
+          answerShown: getComputedStyle(document.getElementById('debugHeaderAnswer')).display !== 'none',
           summaryShown: getComputedStyle(summary).display !== 'none',
         }
       }
