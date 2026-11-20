@@ -72,19 +72,18 @@ export default {
   }, {
     tab: 'statistics', rank: 54, pref: 'statsFooterTotal', parent: 'statsPosition', title: 'statsFooterTotalTitle', requires: FOOTER_METRIC_REQUIRES,
   }, {
-    // The unit choice hangs off the total it writes, with no hairline between
-    // the two rows: with the total switched off there is no figure for it to
-    // reach.
+    // One unit choice serves the independent line, the compact footer and
+    // the details rail, so it stays available in every statistics position.
     tab: 'statistics',
     rank: 55,
     pref: 'statsFooterTokenFormat',
-    parent: 'statsFooterTotal',
+    parent: 'statsPosition',
     title: 'statsFooterTokenFormatTitle',
     choiceLabels: {
       [FOOTER_TOKEN_DIGITS]: 'statsFooterTokenDigitsSample',
       [FOOTER_TOKEN_UNITS]: 'statsFooterTokenUnitsSample',
     },
-    requires: FOOTER_METRIC_REQUIRES,
+    requires: CONVERSATION_COMPOSER_REQUIRES,
   }, {
     tab: 'statistics',
     rank: 57,

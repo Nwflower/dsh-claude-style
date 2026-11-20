@@ -8,7 +8,7 @@ import { inPageBox, inPagePixels } from '../../shared/page-zoom'
 import { createStatsCount } from './stats-count'
 import { createFooterLayout, findStatsDock } from './footer-layout'
 import { CACHE_HIT_STOPS, rampPosition, writeRamp } from './stats-ramp'
-import { sessionStatsCacheHit, sessionStatsDuration, sessionStatsGrouped, sessionStatsSpeed } from '../../shared/stats-format'
+import { sessionStatsCacheHit, sessionStatsDuration, sessionStatsGrouped, sessionStatsSpeed, sessionStatsTokenCount } from '../../shared/stats-format'
 import { formatMoneyMicro, CURRENCY_CNY, CURRENCY_SYMBOL } from '@dsh-claude-style/contracts/prices'
 import type { Currency } from '@dsh-claude-style/contracts/prices'
 import type { HostSessionStatsProjection, HostTokenUsageProjection } from '@dsh-claude-style/contracts/services'
@@ -413,15 +413,12 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
       writeTextInPlace(shown.cell.ttft, sessionStatsDuration(stats.ttftMs / stats.ttftSteps, chat))
     }
     if (hasTokens && usage !== null) {
-      // Every token figure folds into k / M / B at the ladder's last step, and
-      // the footer's figures take the reader's unit choice in every detail
-      // step, the two directions as well as the total.
-      const footerUnits = footerMode && prefs.statsFooterTokenFormat === FOOTER_TOKEN_UNITS
-      const readTokens = (value: number) => footerUnits
-        ? formatUnitTokens(Math.round(value))
-        : at >= FIT_MAX
-          ? formatCompactTokens(Math.round(value))
-          : sessionStatsGrouped(Math.round(value), chat)
+      // The reader's unit choice reaches every position and detail step.
+      // Without it, every token figure folds into k / M / B at the last step.
+      const units = prefs.statsFooterTokenFormat === FOOTER_TOKEN_UNITS
+      const readTokens = (value: number) => !units && at >= FIT_MAX
+        ? formatCompactTokens(Math.round(value))
+        : sessionStatsTokenCount(Math.round(value), chat, units)
       const total = billed + usage.outputTokens
       writeTextInPlace(shown.cell.input, readTokens(billed))
       writeText(shown.cell.inputTail, tokenParts[1] ?? '')

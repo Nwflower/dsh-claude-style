@@ -61,7 +61,7 @@ const FULL_SEPARATOR = () => copy('processSummaryFullSeparator')
 const COMPACT_SEPARATOR = ' · '
 /** On a group root while its header shows the summary; the stylesheet hides the host's words under it. */
 export const PROCESS_SUMMARY_ATTR = 'data-dsh-claude-summary'
-/** On the host's count sentence the summary stands in for; the stylesheet hides this marked element alone. */
+/** On host header copy the summary stands in for; the stylesheet hides every marked element. */
 const PROCESS_SUMMARY_REPLACED_ATTR = 'data-dsh-claude-summary-replaced'
 /** On the summary while the group's section still runs, which is while its band stands (syncBand). */
 export const PROCESS_SUMMARY_RUNNING_ATTR = 'data-dsh-claude-summary-running'
@@ -345,7 +345,7 @@ export function createProcessSummary() {
   function release(header: HTMLElement) {
     const kept = named.get(header)
     header.querySelector(`:scope > .${SUMMARY_CLASS}`)?.remove()
-    header.querySelector(`:scope > [${PROCESS_SUMMARY_REPLACED_ATTR}]`)?.removeAttribute(PROCESS_SUMMARY_REPLACED_ATTR)
+    for (const label of header.querySelectorAll(`:scope > [${PROCESS_SUMMARY_REPLACED_ATTR}]`)) label.removeAttribute(PROCESS_SUMMARY_REPLACED_ATTR)
     if (kept !== undefined && header.getAttribute('aria-label') === kept.name) header.removeAttribute('aria-label')
     named.delete(header)
     header.closest(PROCESS_GROUP_SELECTOR)?.removeAttribute(PROCESS_SUMMARY_ATTR)
@@ -399,10 +399,12 @@ export function createProcessSummary() {
         known.summary = summary
       }
       if (!group.hasAttribute(PROCESS_SUMMARY_ATTR)) group.setAttribute(PROCESS_SUMMARY_ATTR, '')
-      // The count sentence is the header's own words, not a flow row: mark it alone so
-      // anything else the host keeps in the control (an answer, a slot) stays visible.
-      const label = [...header.querySelectorAll(PROCESS_HEADER_LABEL_SELECTOR)].find((child) => !child.hasAttribute(FLOW_KIND_ATTRIBUTE)) ?? null
-      if (label !== null && !label.hasAttribute(PROCESS_SUMMARY_REPLACED_ATTR)) label.setAttribute(PROCESS_SUMMARY_REPLACED_ATTR, '')
+      // The host can place a tool status beside the count sentence. Hide every
+      // non-flow header copy; flow rows and extension slots keep their own content visible.
+      for (const label of header.querySelectorAll(PROCESS_HEADER_LABEL_SELECTOR)) {
+        if (label.hasAttribute(FLOW_KIND_ATTRIBUTE) || label.hasAttribute('data-slot')) label.removeAttribute(PROCESS_SUMMARY_REPLACED_ATTR)
+        else label.setAttribute(PROCESS_SUMMARY_REPLACED_ATTR, '')
+      }
     }
     // A header the host replaced or unmounted takes nothing more from this module.
     for (const header of [...named.keys()]) {

@@ -32,11 +32,11 @@ export default {
     // The home session scope waits for the Code home layout, the title-bar
     // band for the Windows desktop window, and the footer alignment for the
     // footer position the page opens away from.
-    const expectedGrey = { appearance: ['homeSessionScope'], 'main-window': ['headerBand', 'statsFooterAlign', 'statsFooterSpeed', 'statsFooterTtft', 'statsFooterCache', 'statsFooterCost', 'statsFooterTotal', 'statsFooterTokenFormat'] }
+    const expectedGrey = { appearance: ['homeSessionScope'], 'main-window': ['headerBand', 'statsFooterAlign', 'statsFooterSpeed', 'statsFooterTtft', 'statsFooterCache', 'statsFooterCost', 'statsFooterTotal'] }
     // A row may carry a note without waiting for anything: the typeface row names
     // the faces the page cannot draw, which this machine's own fonts decide, so
     // that row is left out of the comparison and read on its own below.
-    const expectedNotes = { appearance: ['homeSessionScope'], 'main-window': ['headerBand', 'statsFooterAlign', 'statsFooterSpeed', 'statsFooterTtft', 'statsFooterCache', 'statsFooterCost', 'statsFooterTotal', 'statsFooterTokenFormat'] }
+    const expectedNotes = { appearance: ['homeSessionScope'], 'main-window': ['headerBand', 'statsFooterAlign', 'statsFooterSpeed', 'statsFooterTtft', 'statsFooterCache', 'statsFooterCost', 'statsFooterTotal'] }
     const notesOf = tab => ((pages[tab] || {}).notes || []).filter(key => key !== 'typeface')
     const pages = settings.pages || {}
     for (const tab of Object.keys(expected)) {
@@ -55,7 +55,7 @@ export default {
     const onWindows = settings.onWindows || {}
     check('on the Windows window the title-bar row takes input and the footer alignment still waits for its position',
       JSON.stringify(onWindows.rows) === JSON.stringify(expected['main-window']) &&
-        JSON.stringify(onWindows.disabled) === '["statsFooterAlign","statsFooterSpeed","statsFooterTtft","statsFooterCache","statsFooterCost","statsFooterTotal","statsFooterTokenFormat"]' && JSON.stringify(onWindows.notes) === '["statsFooterAlign","statsFooterSpeed","statsFooterTtft","statsFooterCache","statsFooterCost","statsFooterTotal","statsFooterTokenFormat"]',
+        JSON.stringify(onWindows.disabled) === '["statsFooterAlign","statsFooterSpeed","statsFooterTtft","statsFooterCache","statsFooterCost","statsFooterTotal"]' && JSON.stringify(onWindows.notes) === '["statsFooterAlign","statsFooterSpeed","statsFooterTtft","statsFooterCache","statsFooterCost","statsFooterTotal"]',
       JSON.stringify(onWindows))
     const palette = settings.paletteCards || {}
     const paletteCard = (state, id) => (state.cards || []).find((card) => card.brand === id) || {}
@@ -94,7 +94,7 @@ export default {
     const off = settings.parentsOff || {}
     check('a sub-row greys out while its parent is off: the mascot\'s place with the mascot off, the model descriptions, the effort accent colour, the quick providers and the peak rate meter with the model picker off, the custom price table with the billing off, the search button\'s style with the sidebar search off, the home session scope for the Code home layout, and the title-bar band for the window on every page',
       !!off.appearance && JSON.stringify(off.appearance.disabled) === '["homeSessionScope","mascotScope"]' &&
-        !!off.mainWindow && JSON.stringify(off.mainWindow.disabled) === '["headerBand","effortSlider","modelOrder","modelDescriptions","quickProviders","peakrate","effortAccent","statsFooterAlign","statsFooterSpeed","statsFooterTtft","statsFooterCache","statsFooterCost","statsFooterTotal","statsFooterTokenFormat","billingTable"]' &&
+        !!off.mainWindow && JSON.stringify(off.mainWindow.disabled) === '["headerBand","effortSlider","modelOrder","modelDescriptions","quickProviders","peakrate","effortAccent","statsFooterAlign","statsFooterSpeed","statsFooterTtft","statsFooterCache","statsFooterCost","statsFooterTotal","billingTable"]' &&
         !!off.sidebar && JSON.stringify(off.sidebar.disabled) === '["searchStyle"]',
       JSON.stringify(off))
     const offAppearance = (off.appearance || {}).rows || []

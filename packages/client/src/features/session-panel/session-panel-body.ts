@@ -1,7 +1,7 @@
 import * as React from 'react'
 import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
-import { QUIET_ATTR } from '../../constants'
-import { formatCompactTokens } from '../../shared/format'
+import { FOOTER_TOKEN_UNITS, QUIET_ATTR } from '../../constants'
+import { formatCompactTokens, formatUnitTokens } from '../../shared/format'
 import { sessionStatsCacheHit, sessionStatsDuration, sessionStatsSpeed, sessionStatsTokens } from '../../shared/stats-format'
 import { hostChatSeat } from '../../core/i18n'
 import { copy } from './copy'
@@ -70,6 +70,7 @@ function PanelView({ sessionId, preset, active }: { sessionId: string, preset: P
   // takes its place when that answers (D102).
   const occupancy = useLiveOccupancy(sessionId)
   const currency = useBillingCurrency()
+  const tokenUnits = useTokenUnits()
   // A running row's clock has to move between the panel's own polls.
   const running = value !== null && hasRunningWork(value.background)
   const [, tick] = React.useState(0)
@@ -94,13 +95,13 @@ function PanelView({ sessionId, preset, active }: { sessionId: string, preset: P
       h(EnvironmentSection, { key: 'environment', environment: null, preset }),
       h(ContextSection, { key: 'context', sessionId, context: null, occupancy }),
       h(StatsSection, { key: 'stats', stats: figures?.stats ?? null }),
-      h(TokensSection, { key: 'tokens', stats: figures?.stats ?? null, cost: figures?.cost ?? null }))
+      h(TokensSection, { key: 'tokens', stats: figures?.stats ?? null, cost: figures?.cost ?? null, units: tokenUnits }))
   }
   return h('div', { className: 'dsh-claude-panel' },
     value.environment === null ? null : h(EnvironmentSection, { key: 'environment', environment: value.environment, preset }),
     h(ContextSection, { key: 'context', sessionId, context: value.context, occupancy }),
     figures === null ? null : h(StatsSection, { key: 'stats', stats: figures.stats }),
-    figures === null ? null : h(TokensSection, { key: 'tokens', stats: figures.stats, cost: figures.cost }),
+    figures === null ? null : h(TokensSection, { key: 'tokens', stats: figures.stats, cost: figures.cost, units: tokenUnits }),
     value.outputs.length === 0 ? null : h(OutputsSection, { key: 'outputs', sessionId, directory: value.environment?.directory, outputs: value.outputs }),
     value.changes.length === 0 ? null : h(ChangesSection, { key: 'changes', changes: value.changes }),
     h(WorkSections, { key: 'work', sessionId, background: value.background }))
@@ -453,10 +454,12 @@ function StatsSection({ stats }: { stats: PanelStats | null }) {
  * The section starts folded with the cost beside its heading; with billing off
  * or a model no table prices, the tokens the session moved stand in.
  */
-function TokensSection({ stats, cost }: { stats: PanelStats | null, cost: string | null }) {
+function TokensSection({ stats, cost, units }: { stats: PanelStats | null, cost: string | null, units: boolean }) {
   if (stats === null) return h(PendingFigures, { title: copy('tokenUsage'), labels: ['statsUncachedInput', 'statsCacheRead', 'statsCacheWrite', 'statsOutput'] })
   const chat = hostChatSeat()
-  const tokens = (count: number) => (chat === null ? `${formatCompactTokens(count)} tok` : sessionStatsTokens(count, chat))
+  const tokens = (count: number) => (chat === null
+    ? `${units ? formatUnitTokens(count) : formatCompactTokens(count)} tok`
+    : sessionStatsTokens(count, chat, units))
   const rows: Figure[] = []
   if (cost !== null) rows.push({ key: 'cost', label: copy('statsCost'), value: cost })
   const billed = stats.uncachedInputTokens + stats.cacheReadTokens + stats.cacheWriteTokens
@@ -470,6 +473,13 @@ function TokensSection({ stats, cost }: { stats: PanelStats | null, cost: string
   rows.push({ key: 'out', label: copy('statsOutput'), value: tokens(stats.outputTokens) })
   return h(Section, { title: copy('tokenUsage'), summary: cost ?? tokens(billed + stats.outputTokens), folded: true },
     h(Figures, { rows }))
+}
+
+/** The token format the reader chose, followed across a settings change (D106). */
+function useTokenUnits() {
+  const [units, setUnits] = React.useState(() => readPrefs().statsFooterTokenFormat === FOOTER_TOKEN_UNITS)
+  React.useEffect(() => subscribePrefs(prefs => setUnits(prefs.statsFooterTokenFormat === FOOTER_TOKEN_UNITS)), [])
+  return units
 }
 
 /** The currency the reader's billing setting chose, followed across a settings change. */

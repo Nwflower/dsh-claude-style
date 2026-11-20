@@ -57,6 +57,11 @@ export function sessionPanelScenario({ check }) {
     },
     prompt: 'Write the rail note and start the background job.',
     delayMs: 60,
+    patch: [
+      '- id: ui-skin-claude-style',
+      '  config:',
+      '    statsFooterTokenFormat: units',
+    ],
     // Wide enough for the rail's own threshold (the conversation column keeps 1160px).
     viewport: { width: 1440, height: 900 },
 
@@ -495,9 +500,10 @@ export function sessionPanelScenario({ check }) {
           notes.disclosures?.single?.[0]?.open === true && notes.disclosures.single.slice(1).every(section => !section.open) &&
             notes.disclosures.reopened?.every(section => section.open && section.content),
           JSON.stringify(notes.disclosures ?? null)),
-        check('the session stats and the token usage carry their figures',
+        check('the session stats and the token usage carry their figures in the configured token units',
           anyOf(statsWords, (rail.headings ?? []).join('|')) && anyOf(HEADINGS.tokens, (rail.headings ?? []).join('|')) && (rail.stats ?? []).length >= 8 &&
-            anyOf(words('statsModelTime'), (rail.stats ?? []).join('|')) && anyOf(words('statsCost'), (rail.stats ?? []).join('|')),
+            anyOf(words('statsModelTime'), (rail.stats ?? []).join('|')) && anyOf(words('statsCost'), (rail.stats ?? []).join('|')) &&
+            (rail.stats ?? []).some((row) => /\d(?:\.\d+)?[KMBT]/.test(row)),
           JSON.stringify((rail.stats ?? []).slice(0, 12))),
         check('the figures move with the answer while it streams, not only when the route answers',
           notes.liveFigures?.movedAlone === true,
