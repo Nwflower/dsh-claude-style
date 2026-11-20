@@ -1,106 +1,15 @@
 diff --git a/packages/engine/src/settings-binding.ts b/packages/engine/src/settings-binding.ts
-index 0b99a3f..325d1c8 100644
 --- a/packages/engine/src/settings-binding.ts
 +++ b/packages/engine/src/settings-binding.ts
-@@ -13,7 +13,11 @@ import type { HostConfigForm, HostConfigFormsService } from '@dsh-claude-style/c
- export interface SettingsBindingOptions {
-   /** Namespaces to try after the loader's entry id, best first: the package name, the id the host inserted under. */
-   namespaces: string[]
--  /** The form's current values, once it carries them; runs on every host change. */
-+  /**
-+   * The values to adopt, once the form carries them; runs on every host change.
-+   * A field this page's own write has not settled yet carries the value it asked
-+   * for rather than the one the document still holds.
-+   */
-   adoptForm(value: Record<string, unknown>): void
- }
+@@ -75,7 +75,10 @@ export function createSettingsBinding(options: SettingsBindingOptions) {
  
-@@ -37,6 +41,17 @@ export function createSettingsBinding(options: SettingsBindingOptions) {
-   let watchOff: (() => void) | null = null
-   /** Whether the served-namespace directory is already being watched. */
-   let binding = false
-+  /**
-+   * Fields a write of ours has not settled yet, by the value it asked for. The
-+   * document keeps the value from before the write until the host answers it,
-+   * and a change anywhere in it makes the host's mirror re-read it whole (D75),
-+   * so a read landing inside that window hands back the value the reader just
-+   * changed away from: a switch would flip over and back. Held here, and
-+   * released when the write settles, after which the host's answer is the truth.
-+   */
-+  const held = new Map<string, { value: unknown, generation: number }>()
-+  /** Writes of ours so far: a field is released by the write that holds it last. */
-+  let holds = 0
- 
-   /**
-    * Namespaces to try, best first: loader entry id, then the package's own
-@@ -58,6 +73,26 @@ export function createSettingsBinding(options: SettingsBindingOptions) {
-     return snapshot.value && typeof snapshot.value === 'object' ? snapshot.value as Record<string, unknown> : null
-   }
- 
-+  /** The values to adopt: the form's own, with this page's unsettled writes over them. */
-+  function withHeld(value: Record<string, unknown>) {
+   /** The values to adopt: the form's own, with this page's unsettled writes over them. */
+   function withHeld(value: Record<string, unknown>) {
+-    return value
 +    if (held.size === 0) return value
 +    const out = { ...value }
 +    for (const [name, entry] of held) out[name] = entry.value
 +    return out
-+  }
-+
-+  /** Hold one write's fields until it settles; @returns the hold to release. */
-+  function hold(patch: Record<string, unknown>) {
-+    const generation = ++holds
-+    for (const name of Object.keys(patch)) held.set(name, { value: patch[name], generation })
-+    return generation
-+  }
-+
-+  /** Release one write's fields; a field a later write holds keeps that write's value. */
-+  function release(generation: number) {
-+    for (const [name, entry] of held) if (entry.generation === generation) held.delete(name)
-+  }
-+
-   /**
-    * Read the values from the form, once it carries them. The form's
-    * subscription calls this on every host change; the binding calls it for
-@@ -66,7 +101,7 @@ export function createSettingsBinding(options: SettingsBindingOptions) {
-   function read() {
-     const value = readValue()
-     if (value === null) return
--    options.adoptForm(value)
-+    options.adoptForm(withHeld(value))
    }
  
-   /** Bind one namespace the host already serves; the controller waits for its own snapshot. */
-@@ -130,7 +165,9 @@ export function createSettingsBinding(options: SettingsBindingOptions) {
-     /**
-      * Write a partial change through the official form: one `set()` per field,
-      * chained, because the controller owns the write queue and takes its
--     * revision fence from the last settlement.
-+     * revision fence from the last settlement. The fields stay held until the
-+     * answer lands, and the host's answer is read back then, so a refusal ends
-+     * on the stored value rather than on the value we hoped for.
-      *
-      * @returns a promise for whether the host accepted every field, or null
-      *          when the form does not carry values yet.
-@@ -138,6 +175,7 @@ export function createSettingsBinding(options: SettingsBindingOptions) {
-     save(patch: Record<string, unknown>): Promise<boolean | null> {
-       const bound = form
-       if (readValue() === null || bound === null) return Promise.resolve(null)
-+      const generation = hold(patch)
-       const step = (name: string) => (accepted: boolean): boolean | Promise<boolean> => {
-         if (accepted === false) return false
-         let pending
-@@ -155,6 +193,7 @@ export function createSettingsBinding(options: SettingsBindingOptions) {
-       let run = Promise.resolve(true)
-       for (const key of Object.keys(patch)) run = run.then(step(key))
-       return run.then(accepted => {
-+        release(generation)
-         // Refused (a stale revision, or a field this Config does not carry):
-         // re-read rather than guess.
-         read()
-@@ -172,6 +211,7 @@ export function createSettingsBinding(options: SettingsBindingOptions) {
-         watchOff()
-         watchOff = null
-       }
-+      held.clear()
-       binding = false
-       form = null
-     },
+   /** Hold one write's fields until it settles; @returns the hold to release. */

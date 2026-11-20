@@ -18,7 +18,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { launchBrowser } from './browser.mjs'
-import { FEATURE_CASES, failures, skips } from './smoke/shared.mjs'
+import { FEATURE_CASES, failures, failedChecks, skips } from './smoke/shared.mjs'
 import { pagesFor } from './smoke/shared.mjs'
 import { page as standInPage, behaviourPage } from './smoke/page.mjs'
 import { serveStandIn } from './smoke/server.mjs'
@@ -168,7 +168,9 @@ async function main(args) {
     return 2
   }
   fs.mkdirSync(path.dirname(REPORT), { recursive: true })
-  fs.writeFileSync(REPORT, `${JSON.stringify({ at: new Date().toISOString(), ...codes }, null, 2)}\n`)
+  // The failed installation checks travel by name: the faults lane credits a
+  // defect its own run turned red, and reads them beside the behaviour report.
+  fs.writeFileSync(REPORT, `${JSON.stringify({ at: new Date().toISOString(), ...codes, failedChecks: failedChecks() }, null, 2)}\n`)
   const values = Object.values(codes)
   const code = values.includes(1) ? 1 : values.includes(UNJUDGED_EXIT) ? UNJUDGED_EXIT : 0
   const skipped = skips() === 0 ? '' : `, ${skips()} timing checks skipped`
