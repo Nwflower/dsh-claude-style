@@ -104,11 +104,11 @@ export function createFooterLayout(refit: () => void) {
         }
         // The ring joins the toolbar after the statistics pass. A changed
         // budget must refit the figures before their next box is positioned,
-        // even when the session's numbers and the card's width stayed still.
+        // even when the session's numbers and the card's width stayed still:
+        // the fit writes the figures and lays the line out again after them.
         if (measured.room !== fittedRoom) {
           fittedRoom = measured.room
           refit()
-          sync(root)
           return
         }
         setAttributeIfChanged(root, FOOTER_LINE_ATTR, measured.mode)

@@ -1,7 +1,7 @@
 import { observeSize } from '@dsh-claude-style/engine/bus'
 import { inPageBox } from './page-zoom'
 
-/** `measure` reads and `sync` writes; a fresh control measures in `sync` so its first pill does not slide.
+/** `measure` reads and `sync` writes; a control met for the first time is measured by its size observer's first report, so its first pill does not slide.
  * ResizeObserver covers font-driven width changes. Reduced motion keeps this functional movement.
  */
 export function createSlidingPill(activeSelector: string) {
@@ -98,7 +98,36 @@ export function createSlidingPill(activeSelector: string) {
     if (!next.hasAttribute(PILL_ATTR)) next.setAttribute(PILL_ATTR, '')
   }
 
+  /** Measure the control again and place its pill, from a callback of its own. */
+  function remeasure() {
+    if (control === null) return
+    measure(control)
+    taken = false
+    place(control, reading)
+  }
+
   function sync(next: HTMLElement | null) {
+    if (next !== control) {
+      taken = false
+      if (stopSize !== null) stopSize()
+      stopSize = null
+      if (control !== null) clear(control)
+      control = next
+      if (control === null) return
+      // A control met for the first time is measured by its size observer's
+      // first report. That report comes once the frame has laid the control
+      // out and before it paints, so the reading sees the stamps this pass
+      // writes — the first pill does not slide — and costs no layout of its
+      // own. Read here, in the pass's write phase, it would compute the layout
+      // of the whole transcript a session switch has just mounted once more.
+      stopSize = observeSize(control, remeasure)
+      // A webfont that lands after the first report widens the items without
+      // changing the control's own box, which the size observer watches: the
+      // items are read again once the page's fonts have settled.
+      if (document.fonts.status !== 'loaded') void document.fonts.ready.then(remeasure)
+      return
+    }
+    if (control === null) return
     // A reading taken in an earlier pass describes the item that was active
     // then. A press can move the active item before the control is synced from
     // its own task — the search palette places its pill from its render — and
@@ -106,30 +135,6 @@ export function createSlidingPill(activeSelector: string) {
     const active = activeItemOf(next)
     if (!taken || measured !== next || active !== measuredItem) measure(next, active)
     taken = false
-    if (next !== control) {
-      if (stopSize !== null) stopSize()
-      stopSize = null
-      if (control !== null) clear(control)
-      control = next
-      if (control === null) return
-      stopSize = observeSize(control, () => {
-        if (control !== null) {
-          measure(control)
-          taken = false
-          place(control, reading)
-        }
-      })
-      // A webfont that lands after this measurement widens the items without
-      // changing the control's own box, which the size observer watches: the
-      // items are read again once the page's fonts have settled.
-      void document.fonts.ready.then(() => {
-        if (control === null) return
-        measure(control)
-        taken = false
-        place(control, reading)
-      })
-    }
-    if (control === null) return
     place(control, reading)
   }
 

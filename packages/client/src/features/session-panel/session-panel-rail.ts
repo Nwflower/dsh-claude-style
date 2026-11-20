@@ -285,7 +285,10 @@ function useRailReading(session: string | null) {
     // matches are what bring the rail's floor back and take it up again.
     const bottomPanels = observeMatches<HTMLElement>(BOTTOM_PANEL_SELECTOR, bindSoon.request)
     const stopParts = subscribeMutations(document.body, { subtree: true, attributes: true, attributeFilter: [PART_ATTR, RIGHTBAR_COLLAPSED_ATTRIBUTE] }, bindSoon.request)
-    bind()
+    // The effect runs again on every session switch, in the commit that mounts
+    // the new transcript: its first measurement waits for the frame's read
+    // phase like every later one, and the rail keeps the box it stood in until then.
+    bindSoon.request()
     // The columns' own size observers report once on attach, which covers a
     // shell that laid out after this feature's first render; no timer wakes a
     // page that has settled.
