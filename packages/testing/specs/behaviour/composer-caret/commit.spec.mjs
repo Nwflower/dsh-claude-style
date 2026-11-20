@@ -66,7 +66,9 @@ function readCaret(t) {
     return {
       mark: input.hasAttribute(mark),
       layer: drawn === null ? null : {
-        visible: drawn.checkVisibility({ visibilityProperty: true, opacityProperty: true }),
+        // The blink is an opacity animation; the layer's own hidden state is
+        // visibility. Reading opacity would sample the blink's dark phase.
+        visible: drawn.checkVisibility({ visibilityProperty: true }),
         left: drawn.getBoundingClientRect().left,
         width: getComputedStyle(drawn).width,
       },
@@ -80,7 +82,13 @@ export default spec({ page: 'composer' }, ({ test }) => {
   test('a composition keeps the drawn caret at its ordinary width', async (t) => {
     await editDraft(t, 3)
     await compose(t, true)
-    await frames(t, 3)
+    // The drawn caret arrives on the pass the composition flag schedules: wait
+    // for the visible layer rather than a fixed frame count a slow runner lands
+    // before the pass (D92). Visibility, not the blink's opacity phase.
+    await t.page.waitForFunction((layer) => {
+      const drawn = document.querySelector(layer)
+      return drawn !== null && drawn.checkVisibility({ visibilityProperty: true })
+    }, LAYER, { timeout: 2000 })
     const caret = await readCaret(t)
     t.expectThat.equal(caret.mark, true, 'the native caret stays pressed down while the IME composes')
     t.expectThat.equal(caret.layer?.visible ?? false, true, 'the drawn caret remains visible during the composition')

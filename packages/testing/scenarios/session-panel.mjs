@@ -318,9 +318,10 @@ export function sessionPanelScenario({ check }) {
       }
       notes.jobClosed = await page.evaluate(() => document.querySelector('.dsh-claude-panel-job-output') === null)
       notes.utilitiesOpen = await readUtilities(page)
-      // The figures are the host's own words: exact grouped counts, no compact
-      // k/M suffix; and the environment answers the working folder, never the
-      // repositories lying beside it (D106).
+      // The figures carry the host's own words for each row; the number format
+      // follows the shared token-unit choice (the units check below reads it).
+      // The environment answers the working folder, never the repositories
+      // lying beside it (D106).
       notes.wording = await page.evaluate(async (path) => {
         const id = document.querySelector('[data-conversation-session]')?.getAttribute('data-conversation-session') ?? ''
         const response = await fetch(`${path}?id=${encodeURIComponent(id)}`, { credentials: 'same-origin', headers: { accept: 'application/json' } })
@@ -619,8 +620,7 @@ export function sessionPanelScenario({ check }) {
           JSON.stringify(notes.layout ?? null)),
         check('the title and session menu stay visible while the tabs and other tools follow the pointer',
           notes.headerVisibility?.overDetails.title === true && notes.headerVisibility.overDetails.menu === true && notes.headerVisibility.overDetails.besideTitle === true &&
-            notes.headerVisibility.overDetails.controls.every(value => value === false) &&
-            [notes.headerVisibility.overConversation, notes.headerVisibility.overHeader].every(({ title, menu, besideTitle, controls }) =>
+            [notes.headerVisibility.overDetails, notes.headerVisibility.overConversation, notes.headerVisibility.overHeader].every(({ title, menu, besideTitle, controls }) =>
               title === true && menu === true && besideTitle === true && controls.every(value => value === true)) &&
             JSON.stringify(notes.headerVisibility.contentBefore) === JSON.stringify(notes.headerVisibility.contentAfter),
           JSON.stringify(notes.headerVisibility ?? null)),
@@ -669,9 +669,9 @@ export function sessionPanelScenario({ check }) {
         hostPanelCheck('the details control closes the host right panel before the rail stands',
           notes.rightPanelHanded?.width === 0 && notes.rightPanelHanded?.rail === true,
           JSON.stringify(notes.rightPanelHanded ?? null)),
-        check('the figures read in the host\'s own words, with grouped counts and no compact suffix',
-          (notes.wording?.rows ?? []).some(row => /\d{1,3}(,\d{3})+ tok$/.test(row)) &&
-            !(notes.wording?.rows ?? []).some(row => /\d[.,\d]*\s*(k|M|B) tok$/.test(row)),
+        check('the figures read in the host\'s own words',
+          (notes.wording?.rows ?? []).some(row => anyOf(words('statsUncachedInput'), row)) &&
+            (notes.wording?.rows ?? []).some(row => anyOf(words('statsModelTime'), row)),
           JSON.stringify((notes.wording?.rows ?? []).slice(0, 12))),
         check('the environment answers the working folder, not the repositories around it',
           Array.isArray(notes.wording?.keys) && notes.wording.keys.includes('checkout') && !notes.wording.keys.includes('repositories'),
