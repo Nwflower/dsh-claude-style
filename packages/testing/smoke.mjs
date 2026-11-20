@@ -7,6 +7,7 @@
  * request for the host half alone needs neither a server nor a browser.
  */
 import { availableParallelism } from 'os'
+import { newStandInContext } from './browser.mjs'
 import { setTier, tierName, TIMING_CASES, FEATURE_CASES, pagesFor, check, failures, retractFailures } from './smoke/shared.mjs'
 import { hostHalf } from './smoke/host-half.mjs'
 import { CASES } from './smoke/cases.mjs'
@@ -76,7 +77,7 @@ function checkFeatureTable() {
  * (chunk-fault) must be answered by the server, not by that cache.
  */
 async function runPage(browser, base, name) {
-  const context = await browser.newContext()
+  const context = await newStandInContext(browser)
   try {
     const tab = await context.newPage()
     await tab.goto(`${base}/${name}`, { waitUntil: 'domcontentloaded' })
