@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-20",
+  "group": "fixes",
+  "order": 0,
+  "external": true,
+  "zh": "无上下文压力投影的宿主上，上下文圆环跟随宿主计量条的读数更新",
+  "en": "Follow the host meter's reading on the context ring when the host serves no context-pressure projection"
+}
