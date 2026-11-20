@@ -55,8 +55,6 @@ function commonChecks(r) {
     `${r.idlePasses} passes${(r.idlePassTimes ?? []).length === 0 ? '' : ` at ${r.idlePassTimes.join('ms, ')}ms`}`, 'timing')
   check('a closed popover card claims no menu role for the host\'s keyboard arbitration',
     r.closedMenuCards === 0, `${r.closedMenuCards} closed cards carry role=menu`)
-  check('no Windows titlebar marker: no element carries data-dsh-titlebar-tabs',
-    r.titlebarTabs === false, JSON.stringify(r.titlebarTabs))
   check('teardown registered with the host', r.teardownRegistered)
   check("the sheet carries this package's own module-system tags, so no sibling's bookkeeping can take it away",
     r.sheetPlugin === 'dsh-claude-style' && r.sheetPluginCss === 'dsh-claude-style/client.css' && r.sheetClaimable === false,

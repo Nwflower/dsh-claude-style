@@ -14,7 +14,7 @@
  * again. Closing it puts it away for the session and stops its asks.
  */
 import { SESSION_PANEL_PATH } from '@dsh-claude-style/contracts/routes'
-import { CONVERSATION_TABS_SELECTOR, HEADER_TITLE_ROW_SELECTOR, HEADER_TITLE_SELECTOR, HEADER_UTILITIES_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { COMPOSER_SELECTOR, CONVERSATION_TABS_SELECTOR, HEADER_TITLE_SELECTOR, HEADER_UTILITIES_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { MARKS } from '../lane.mjs'
 import { sendPrompt, waitForTurn } from '../prompt.mjs'
 import { sanitizePage } from '../../../scripts/shared/privacy.mjs'
@@ -229,30 +229,46 @@ export function sessionPanelScenario({ check }) {
         await page.waitForTimeout(300)
         notes.groupFold.collapsed = await groupRows()
       }
-      // The view switch stands on the title's own line while the rail squeezes
-      // the column.
+      // The tabs share the title row even when the rail squeezes the body.
       notes.layout = await page.evaluate((marks) => {
         const box = (el) => { if (el === null) return null; const rect = el.getBoundingClientRect(); return { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right, height: rect.height } }
         const strip = document.querySelector(marks.strip)
         return {
-          titleRow: box(document.querySelector(marks.titleRow)),
+          strip: box(strip),
           title: box(document.querySelector(marks.title)),
           utilities: box(document.querySelector(marks.utilities)),
           tablist: box(document.querySelector(marks.tablist)),
           column: box(document.querySelector(marks.column)),
           header: box(document.querySelector(marks.header)),
           rail: box(document.querySelector('.dsh-claude-details')),
-          shiftX: strip?.getAttribute('style') ?? '',
         }
       }, {
         strip: MARKS.viewTabsStrip,
-        titleRow: HEADER_TITLE_ROW_SELECTOR,
         title: HEADER_TITLE_SELECTOR,
         utilities: HEADER_UTILITIES_SELECTOR,
         tablist: CONVERSATION_TABS_SELECTOR,
         column: `[${PART}~="center-column"]`,
         header: `[${PART}~="conversation-header"]`,
       })
+      const tabs = page.locator(CONVERSATION_TABS_SELECTOR)
+      const chat = tabs.getByRole('tab', { name: /^(对话|Chat)$/ })
+      const trajectory = tabs.getByRole('tab', { name: /^(轨迹|Trajectory)$/ })
+      const composer = page.locator(COMPOSER_SELECTOR).first()
+      await trajectory.click()
+      await trajectory.and(tabs.getByRole('tab', { selected: true })).waitFor()
+      await composer.waitFor({ state: 'hidden' })
+      const inTrajectory = await page.locator(MARKS.viewTabsStrip).boundingBox()
+      await chat.click()
+      await chat.and(tabs.getByRole('tab', { selected: true })).waitFor()
+      await composer.waitFor()
+      const inChat = await page.locator(MARKS.viewTabsStrip).boundingBox()
+      notes.viewSwitch = { inTrajectory, inChat }
+      const moreViews = page.locator(MARKS.viewTabsStrip).locator('button[aria-haspopup="menu"]')
+      await moreViews.click()
+      await moreViews.and(page.locator('[aria-expanded="true"]')).waitFor()
+      await page.keyboard.press('Escape')
+      await moreViews.and(page.locator('[aria-expanded="false"]')).waitFor()
+      notes.moreViews = await moreViews.evaluate(element => element === document.activeElement)
       notes.headerActions = await readHeaderActions(page)
       // A job row opens its retained output in place and closes again.
       await groupFold.click()
@@ -321,6 +337,15 @@ export function sessionPanelScenario({ check }) {
           return { theme: value, width: box.width, inside: box.left >= 0 && box.right <= innerWidth, background: getComputedStyle(rail).backgroundColor }
         }, theme))
         if (context.out !== undefined) await capturePanel(page, `${context.out}/session-panel-${theme}.png`)
+        notes.themes.at(-1).tabs = await tabs.getByRole('tab').evaluateAll(elements => elements.map(element => ({
+          selected: element.getAttribute('aria-selected') === 'true',
+          ink: getComputedStyle(element).color,
+          underline: getComputedStyle(element, '::after').backgroundColor,
+        })))
+        if (context.out !== undefined) {
+          await sanitizePage(expression => page.evaluate(expression))
+          await page.locator(`[${PART}~="conversation-header"]`).screenshot({ path: `${context.out}/view-tabs-header-${theme}.png` })
+        }
         const toggles = page.locator('.dsh-claude-details .dsh-claude-panel-section > summary')
         for (const toggle of await toggles.all()) await toggle.click()
         if (context.out !== undefined) await capturePanel(page, `${context.out}/session-panel-collapsed-${theme}.png`)
@@ -539,12 +564,11 @@ export function sessionPanelScenario({ check }) {
           JSON.stringify({ confirm: notes.stopConfirm, independent: notes.stopDidNotExpand, blur: notes.stopBlurCleared, status: notes.stopFinished })),
         check('a job row opens its retained output in place', notes.jobOpened === true && (notes.jobOutput ?? '').trim() !== '', JSON.stringify({ opened: notes.jobOpened, output: (notes.jobOutput ?? '').slice(0, 80) })),
         check('the job row closes its output again', notes.jobClosed === true, String(notes.jobClosed)),
-        check('the view switch stands on the title\'s own line, clear of the title and the utilities',
-          notes.layout?.titleRow !== null && notes.layout?.tablist !== null &&
-            notes.layout.tablist.top >= notes.layout.titleRow.top - 2 &&
-            notes.layout.tablist.bottom <= notes.layout.titleRow.bottom + 2 &&
-            notes.layout.tablist.left >= notes.layout.title.right + 4 &&
-            (notes.layout.utilities === null || notes.layout.tablist.right <= notes.layout.utilities.left - 4),
+        check('the view switch stands in the title row between the title and the right-hand tools',
+          notes.layout?.strip != null && notes.layout.title !== null && notes.layout.utilities !== null && notes.layout.tablist !== null &&
+            Math.abs((notes.layout.strip.top + notes.layout.strip.bottom) - (notes.layout.utilities.top + notes.layout.utilities.bottom)) <= 2 &&
+            notes.layout.title.right <= notes.layout.tablist.left &&
+            notes.layout.strip.right < notes.layout.utilities.left,
           JSON.stringify(notes.layout ?? null)),
         check('the header keeps the column whole and the rail starts under it',
           notes.layout?.column !== null && notes.layout?.header !== null && notes.layout?.rail !== null &&
@@ -552,6 +576,15 @@ export function sessionPanelScenario({ check }) {
             notes.layout.rail.right >= notes.layout.column.right - 1 &&
             notes.layout.rail.top >= notes.layout.header.bottom - 1,
           JSON.stringify({ column: notes.layout?.column ?? null, header: notes.layout?.header ?? null, rail: notes.layout?.rail ?? null })),
+        check('the title bar switch stays available in both views and Escape returns focus to More views',
+          notes.viewSwitch?.inTrajectory != null && notes.viewSwitch.inChat !== null &&
+            notes.viewSwitch.inTrajectory.y === notes.viewSwitch.inChat.y && notes.moreViews === true,
+          JSON.stringify({ views: notes.viewSwitch, focus: notes.moreViews })),
+        check('the selected tab carries its underline in both themes',
+          notes.themes?.every(theme => theme.tabs.length >= 2 &&
+            theme.tabs.filter(tab => tab.selected).length === 1 &&
+            theme.tabs.every(tab => tab.selected === (tab.underline === tab.ink))),
+          JSON.stringify(notes.themes?.map(theme => ({ theme: theme.theme, tabs: theme.tabs })))),
         check('the host header chips step aside while the rail stands',
           notes.headerActions?.exists === false || (notes.headerActions.expanded === 0 && notes.headerActions.tree === 0 && notes.headerActions.catalog === 0),
           JSON.stringify(notes.headerActions ?? null)),

@@ -127,6 +127,7 @@ const read = (t) => t.page.evaluate(([id, rowSelector, titleSelector, trailSelec
     lift: row.style.getPropertyValue(lift),
     inset: header.style.getPropertyValue(top),
     titleLine: line(title),
+    titleMax: parseFloat(getComputedStyle(title).maxWidth) || null,
     trailInRow: Math.round(box(trail).top) >= Math.round(box(row).top) - 1,
     rowTop: Math.round(box(row).top),
   }
@@ -155,7 +156,7 @@ export default spec({ page: 'desktop', bands: ['wide', 'compact'] }, ({ test }) 
 
     // The cluster beside the title grows past what its own place can hold: it
     // returns to the row, and the title keeps the caption row.
-    await place(t, { trail: 700 })
+    await place(t, { trail: lifted.titleMax })
     const crowded = await read(t)
     t.expectThat.equal((crowded.tokens ?? '').includes('title'), true, 'the title keeps the caption row')
     t.expectThat.equal(crowded.trailInRow, true, 'the cluster that no longer fits stands in the row')

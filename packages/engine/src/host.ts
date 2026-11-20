@@ -4,7 +4,7 @@ import type { HostAgentTeamsRemote, HostSidebarPins, HostAssistantStep, HostBund
 import { fileAddressFor } from '@deepseek-ai/dsh-util-workspace-path'
 import { observeMatches, subscribeMutations } from './bus'
 import { closestFrom, shown } from './dom'
-import { CHAT_TURN_ATTRIBUTE, PROCESS_GROUP_SELECTOR, TURN_PROCESS_ANSWER_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { CHAT_TURN_ATTRIBUTE, CONVERSATION_HEADER_SELECTOR, HEADER_CORNER_SELECTOR, HEADER_UTILITIES_SELECTOR, PROCESS_GROUP_SELECTOR, TURN_PROCESS_ANSWER_SELECTOR } from '@dsh-claude-style/contracts/dom'
 
 /** A batch-scoped flow index: one group query and one answer query per container (D3, D40).
  * The caller drops this reader when its mutation batch or frame ends.
@@ -290,6 +290,19 @@ export const findPageComposerSeat = cacheFirst<HTMLElement>(COMPOSER_SELECTOR)
 
 /** The session scroller: the element the host hangs its own follow off (D40). */
 export const findConversationScroller = cacheFirst<HTMLElement>(CONVERSATION_SCROLL_SELECTOR)
+
+/** The host header around one of its controls (D3). */
+export function closestConversationHeader(node: Element | null) {
+  return node?.closest<HTMLElement>(CONVERSATION_HEADER_SELECTOR) ?? null
+}
+
+/** The right-hand control clusters that share the conversation's title row (D3). */
+export function conversationHeaderTools(row: ParentNode) {
+  return {
+    utilities: row.querySelector<HTMLElement>(HEADER_UTILITIES_SELECTOR),
+    corner: row.querySelector<HTMLElement>(HEADER_CORNER_SELECTOR),
+  }
+}
 
 /** The shown conversation: the element carrying its session id, and the id itself. */
 const CONVERSATION_SESSION_ATTR = CONVERSATION_SESSION_ATTRIBUTE

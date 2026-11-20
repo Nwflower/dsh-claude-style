@@ -1,19 +1,14 @@
 import * as React from 'react'
 import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
 import {
-  CONVERSATION_HEADER_SELECTOR,
   HEADER_ACTIONS_SELECTOR,
-  HEADER_CORNER_SELECTOR,
   HEADER_TITLE_ROW_SELECTOR,
   HEADER_TITLE_SELECTOR,
-  HEADER_UTILITIES_SELECTOR,
-  VIEW_TABS_STRIP_SELECTOR,
 } from '@dsh-claude-style/contracts/dom'
 import { observeMatches, observeSize } from '@dsh-claude-style/engine/bus'
 import { desktopBand } from '@dsh-claude-style/engine/desktop-band'
-import { findRightbarToggle, findWindowsMenu, registerSlotEntries } from '@dsh-claude-style/engine/host'
+import { closestConversationHeader, conversationHeaderTools, findRightbarToggle, findWindowsMenu, registerSlotEntries } from '@dsh-claude-style/engine/host'
 import { createStamp, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
-import { contentBox } from '../../shared/content-box'
 import { inPageBox, inPagePixels } from '../../shared/page-zoom'
 import type { FeatureUi } from '../../core/feature'
 import type { HostContext } from '@dsh-claude-style/engine/host'
@@ -80,18 +75,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const ROW_TOP = '--dsh-header-band-top'
   /** The measured caption height shared by the title and the fixed controls. */
   const BAND_HEIGHT = '--dsh-header-band-height'
+  const TABS_RIGHT = '--dsh-view-tabs-caption-right'
   /** The two control clusters' stamps, and the right offset both rules read. */
   const ACTIONS_ATTR = 'data-dsh-header-actions'
   const CORNER_ATTR = 'data-dsh-header-corner'
   const ACTIONS_RIGHT = '--dsh-header-band-right'
-  /**
-   * The view-tab strip's own stamp and the centre its rule reads: view-tabs
-   * places the strip at the window's centre, which stops reading as the middle
-   * of the row once the title and the controls stand on either side of it.
-   */
-  const TABS_ATTR = 'data-dsh-header-band-tabs'
-  const TABS_LEFT = '--dsh-header-band-tabs-left'
-  /** The two tokens the body marker carries. */
+  /** The pieces the header marker places in the caption. */
   const TITLE_TOKEN = 'title'
   const ACTIONS_TOKEN = 'actions'
   /** The host's seat in the header's own row that the header utilities land in. */
@@ -104,7 +93,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const trailStamp = createStamp<HTMLElement>(TRAIL_ATTR)
   const actionsStamp = createStamp<HTMLElement>(ACTIONS_ATTR)
   const cornerStamp = createStamp<HTMLElement>(CORNER_ATTR)
-  const tabsStamp = createStamp<HTMLElement>(TABS_ATTR)
   /** The row whose size the pass follows. */
   let watched: HTMLElement | null = null
   /** Stops watching it. */
@@ -192,7 +180,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   /** Whether `row` carries a title or the utilities. */
   function carriesHeaderText(row: HTMLElement) {
-    return row.querySelector(HEADER_TITLE_SELECTOR) !== null || row.querySelector(HEADER_UTILITIES_SELECTOR) !== null
+    return row.querySelector(HEADER_TITLE_SELECTOR) !== null || conversationHeaderTools(row).utilities !== null
   }
 
   /** Whether the kept row is still the first match carrying header text (D40). */
@@ -241,13 +229,14 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     trailStamp.release()
     actionsStamp.release()
     cornerStamp.release()
-    tabsStamp.release()
-    if (bandHost !== null) {
-      bandHost.removeAttribute(BAND_ATTR)
-      bandHost.style.removeProperty(ROW_TOP)
-      bandHost.style.removeProperty(BAND_HEIGHT)
-      bandHost = null
-    }
+    releaseBand()
+  }
+
+  function releaseBand() {
+    if (bandHost === null) return
+    bandHost.removeAttribute(BAND_ATTR)
+    for (const property of [ROW_TOP, BAND_HEIGHT, TABS_RIGHT]) bandHost.style.removeProperty(property)
+    bandHost = null
   }
 
   /**
@@ -291,10 +280,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     trail: HTMLElement | null
     utilities: HTMLElement | null
     corner: HTMLElement | null
-    stripEl: HTMLElement | null
     rowBox: DOMRect | null
     headerBox: DOMRect | null
-    stripBox: DOMRect | null
     menuBox: DOMRect | null
     utilitiesBox: DOMRect | null
     cornerBox: DOMRect | null
@@ -326,12 +313,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       reading = null
       return
     }
-    const header = row.closest<HTMLElement>(CONVERSATION_HEADER_SELECTOR)
+    const header = closestConversationHeader(row)
     const title = row.querySelector<HTMLElement>(HEADER_TITLE_SELECTOR)
     const trail = row.querySelector<HTMLElement>(HEADER_ACTIONS_SELECTOR)
-    const utilities = row.querySelector<HTMLElement>(HEADER_UTILITIES_SELECTOR)
-    const corner = row.querySelector<HTMLElement>(HEADER_CORNER_SELECTOR)
-    const stripEl = header === null ? null : header.querySelector<HTMLElement>(VIEW_TABS_STRIP_SELECTOR)
+    const { utilities, corner } = conversationHeaderTools(row)
     const titleBox = rect(title)
     const trailBox = rect(trail)
     // The cluster's need is measured while nothing of ours caps it, which is the
@@ -348,13 +333,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       trail,
       utilities,
       corner,
-      stripEl,
       rowBox: rect(row),
       headerBox: rect(header),
-      // The plate and overflow button standing in the strip's row
-      // (shared/content-box.ts): the row spans the header, so its own box would
-      // reserve the window for the tabs.
-      stripBox: stripEl === null ? null : contentBox(stripEl),
       menuBox: rect(findWindowsMenu()),
       utilitiesBox: rect(utilities),
       cornerBox: rect(corner),
@@ -387,14 +367,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       clear()
       return
     }
-    // Only a strip the view-tabs feature has already lifted shares the caption
-    // row; one still drawn in the header's own row takes nothing from it. The box
-    // is the strip's content (the plate and the overflow button), because the row
-    // the host draws them in spans the header (shared/content-box.ts).
-    const stripEl = current.stripEl
-    const stripBox = current.stripBox
-    const inBand = stripBox !== null && stripBox.top < band.height
-    const stripWidth = stripBox === null || !inBand ? 0 : stripBox.width
     // The header's own top edge decides the row's rise; where its box was not
     // read, the row's unraised top is the edge the inset starts from.
     const applied = parseFloat(row.style.getPropertyValue(ROW_LIFT))
@@ -405,11 +377,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       controls: band.controls.size,
       rowLeft: rowBox.left,
       menuRight: current.menuBox === null ? null : current.menuBox.right,
-      strip: { width: stripWidth, inBand },
       title: { present: title !== null, width: current.titleBox === null ? 0 : current.titleBox.width, natural: current.titleNatural },
       trail: { present: current.trail !== null, width: current.trailBox === null ? 0 : current.trailBox.width, need: current.trailNeed },
       utilities: { present: current.utilitiesBox !== null, width: current.utilitiesBox === null ? 0 : current.utilitiesBox.width },
       corner: { present: current.cornerBox !== null, width: current.cornerBox === null ? 0 : current.cornerBox.width },
+      tabsWidth: ui.viewTabs?.widthFor(current.header) ?? 0,
       headerTop,
       titleHeight: current.titleBox === null ? 0 : current.titleBox.height,
       ...(lastLift === null ? {} : { previous: lastLift }),
@@ -455,34 +427,19 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     cornerStamp.mark(placement.cornerRight === null ? null : corner)
     if (placement.utilitiesRight !== null && utilities !== null) setVar(utilities, ACTIONS_RIGHT, `${placement.utilitiesRight}px`)
     if (placement.cornerRight !== null && corner !== null) setVar(corner, ACTIONS_RIGHT, `${placement.cornerRight}px`)
-    // view-tabs centres the strip on the window; with the title and the controls
-    // standing on either side of it that stops reading as the middle of the row,
-    // so it takes the middle of what is left between them — or between the
-    // shell's own left end and the caption buttons when a side stayed in the row.
-    const stripInBand = inBand && stripEl !== null
-    if (stripInBand && stripEl !== null && placement.stripLeft !== null) setVar(stripEl, TABS_LEFT, `${placement.stripLeft}px`)
-    tabsStamp.mark(stripInBand ? stripEl : null)
-
     // The tokens ride the header itself: they change on every page the row
     // appears on or leaves, and a body write would invalidate the whole
     // document each time (D9). Every stamped piece sits under the header.
-    const tokens = `${liftTitle ? TITLE_TOKEN : ''} ${liftActions ? ACTIONS_TOKEN : ''}`.trim()
+    const tokens = [liftTitle ? TITLE_TOKEN : '', liftActions ? ACTIONS_TOKEN : '', placement.tabsRight === null ? '' : 'tabs'].filter(Boolean).join(' ')
     const header = current.header
     if (tokens === '' || header === null) {
-      if (bandHost !== null) {
-        bandHost.removeAttribute(BAND_ATTR)
-        bandHost.style.removeProperty(ROW_TOP)
-        bandHost.style.removeProperty(BAND_HEIGHT)
-        bandHost = null
-      }
+      releaseBand()
     } else {
-      if (bandHost !== null && bandHost !== header) {
-        bandHost.removeAttribute(BAND_ATTR)
-        bandHost.style.removeProperty(ROW_TOP)
-        bandHost.style.removeProperty(BAND_HEIGHT)
-      }
+      if (bandHost !== header) releaseBand()
       bandHost = header
       setVar(header, BAND_HEIGHT, `${band.height}px`)
+      if (placement.tabsRight === null) header.style.removeProperty(TABS_RIGHT)
+      else setVar(header, TABS_RIGHT, `${placement.tabsRight}px`)
       setAttributeIfChanged(header, BAND_ATTR, tokens)
     }
   }
@@ -491,17 +448,20 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   // a streaming batch touches, so such a batch skips this pass (D40). The boxes
   // are read in the pass's read phase and written in its write phase.
   ui.headerBand = { measure, sync, skipOnContentOnly: true }
+  const overlay = navigator.windowControlsOverlay
+  const scheduleGeometry = () => ui.schedule?.()
+  overlay?.addEventListener('geometrychange', scheduleGeometry)
   // The slot entry is this generation's: the fiber is what takes it back when
   // the reader switches the band off, or another owner hands the page over.
   const closeButtonSlot = registerRightbarClose()
 
   return () => {
+    overlay?.removeEventListener('geometrychange', scheduleGeometry)
     const row = rowStamp.current()
     const title = titleStamp.current()
     const trail = trailStamp.current()
     const utilities = actionsStamp.current()
     const corner = cornerStamp.current()
-    const strip = tabsStamp.current()
     if (row !== null) row.style.removeProperty(ROW_LIFT)
     if (title !== null) {
       title.style.removeProperty(TITLE_LEFT)
@@ -515,7 +475,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     }
     if (utilities !== null) utilities.style.removeProperty(ACTIONS_RIGHT)
     if (corner !== null) corner.style.removeProperty(ACTIONS_RIGHT)
-    if (strip !== null) strip.style.removeProperty(TABS_LEFT)
     clear()
     watch(null, null)
     titleRows.release()

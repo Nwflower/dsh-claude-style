@@ -368,8 +368,6 @@ export const HEADER_UTILITIES_SELECTOR = '[data-dsh-claude-part~="header-utiliti
 export const HEADER_CORNER_SELECTOR = '[data-dsh-claude-part~="header-corner"]'
 /** Resolve with `closest` from the title row; this substring also matches unrelated bars. */
 export const CONVERSATION_HEADER_SELECTOR = '[data-dsh-claude-part~="conversation-header"]'
-/** The view-tab strip inside the header, whose box the band placement keeps clear of. */
-export const VIEW_TABS_STRIP_SELECTOR = '[data-dsh-claude-part~="view-tabs"]'
 /** The tablist plate inside the host's sizing row. */
 export const VIEW_TABS_LIST_SELECTOR = '[data-dsh-claude-part~="view-tabs-list"]'
 /** Host-marked view tablist; plugin tablists elsewhere in the conversation are excluded. */

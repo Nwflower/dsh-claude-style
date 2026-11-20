@@ -161,6 +161,7 @@
         preset: box(actions),
         // The plate the strip's row holds: the row itself spans the window.
         strip: box(strip.querySelector('[data-conversation-tabs]')),
+        stripHit: hitAt(strip.querySelector('[data-conversation-tabs]')),
         row: box(row),
         header: box(header),
         headerDisplay: getComputedStyle(header).display,
@@ -215,7 +216,7 @@
         row.appendChild(mark)
         mark.remove()
       }
-      actions.style.width = '500px'
+      actions.style.width = r.band.laid.titleMax
       nudge()
       await sleep(250)
       r.band.crowded = { marks: marks(), title: box(title), preset: box(actions), titleMax: title.style.getPropertyValue('--dsh-header-band-max') }
@@ -223,11 +224,10 @@
       nudge()
       await sleep(250)
       r.band.relaxed = { marks: marks(), title: box(title), preset: box(actions), titleMax: title.style.getPropertyValue('--dsh-header-band-max') }
-      // The switch hands the row back on its own, with the strip left in place,
-      // and the placement comes back when it is switched on again.
+      // The switch hands the header row back and restores its cluster mask.
       window.__pushForm({ headerBand: false })
       await sleep(250)
-      r.band.off = { marks: marks(), row: box(row), headerPaddingTop: getComputedStyle(header).paddingTop, stripStamped: strip.hasAttribute('data-dsh-view-tabs'), clusterMask: getComputedStyle(cluster).maskImage }
+      r.band.off = { marks: marks(), row: box(row), headerPaddingTop: getComputedStyle(header).paddingTop, clusterMask: getComputedStyle(cluster).maskImage }
       window.__pushForm({ headerBand: true })
       await sleep(250)
       r.band.back = { marks: marks(), title: box(title), utilities: box(utilities), titleHit: hitAt(title), clusterMask: getComputedStyle(cluster).maskImage }

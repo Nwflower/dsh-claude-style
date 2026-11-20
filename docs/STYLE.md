@@ -438,9 +438,13 @@ separate right-aligned duration beside their execution mode and stop control.
 An output row names the file and the folder it lies in, and only a
 file the model presented carries a state word. Its mark is a single-stroke sheet
 in the row's own ink, with a picture frame for an image, so a coloured file-type
-badge never competes with the legend. With the rail standing the
-conversation's view switch shares the title's line at the row's right end,
-before the utilities, and the title truncates to the span left over.
+badge never competes with the legend.
+
+The conversation view switch uses the host's text tabs and active underline.
+The tabs and their overflow menu sit before the right-hand tools in the
+conversation header, including the Windows caption when it has room. A narrow
+header keeps them right-aligned on the next line. The details rail leaves the
+header's width intact.
 
 The two figures sections put a label on the left and a value on the right, one
 figure a row, so a long duration or token count keeps the row's width. Session
@@ -638,7 +642,7 @@ edit the JSON, not the table.
 | `--dsh-claude-layer-control` | `10` | a control kept over the composer card's own stacked rows: the send and stop buttons, the reasoning picker's trigger |
 | `--dsh-claude-layer-picker` | `20` | a picker that hangs its card from inside the composer: the permission picker, whose card has to stand over the controls beside it |
 | `--dsh-claude-layer-rail` | `24` | the conversation's details column: over the chat and the composer, under the host's own floating panels and under the header row, which hangs its menus in a layer of its own |
-| `--dsh-claude-layer-chrome` | `30` | the window's title row the skin draws into: the header band's title and actions, the titlebar's view tabs, over the host's own header |
+| `--dsh-claude-layer-chrome` | `30` | the window's title row the skin draws into: the title, view tabs and actions over the host's own header |
 | `--dsh-claude-layer-peek` | `40` | the sidebar opened over the page while the pointer rests on its toggle: over the main window's title row and its own controls, under the floating cards and menus its rows open |
 | `--dsh-claude-layer-float` | `99999` | a floating card or menu over everything the host draws: the popover cards, the hero menu |
 | `--dsh-claude-layer-tooltip` | `100000` | the host's own tooltip bubble while it explains a control inside a card the skin floats: over those cards, under a takeover |
