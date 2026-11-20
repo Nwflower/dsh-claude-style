@@ -2,7 +2,7 @@ import { CARET_ATTR, CARET_FIELD_ATTR, CARET_HOST_ATTR, CARET_LAYER_ATTR, CARET_
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { readPrefs, subscribePrefs } from '../../core/prefs'
-import { caretClipToField, caretMeasurePlain, caretMeasureRich, noteFacesLoaded } from './caret-measure'
+import { caretClipToField, caretMeasurePlain, caretMeasureRich, noteFacesLoaded, noteMeasuredFamily } from './caret-measure'
 import type { CaretBox, CaretReading } from './caret-measure'
 import { inPagePixels } from '../../shared/page-zoom'
 import { COMPOSER_INPUT_SELECTOR, COMPOSER_TEXTAREA_SELECTOR } from '@dsh-claude-style/contracts/dom'
@@ -433,6 +433,8 @@ interface CaretHostEdge {
     const reading = target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement
       ? caretMeasurePlain(target, endKeyed, probeHome)
       : range === null ? null : caretMeasureRich(target, range, probeHome)
+    // The faces this surface is drawn in are the ones whose arrival moves it.
+    noteMeasuredFamily(target)
     // The layer's host is the surface's parent, and the drawn caret is placed
     // against its box: read here for the same reason the caret is.
     const host = target.parentElement instanceof HTMLElement ? target.parentElement : null
@@ -559,10 +561,10 @@ interface CaretHostEdge {
   window.addEventListener('resize', queue)
   // The shipped faces arrive after the first frame and wrap differently, so the
   // caret is measured again — and every probe reading taken before them is
-  // dropped, since the same words now measure differently.
-  const onFacesLoaded = () => {
-    noteFacesLoaded()
-    queue()
+  // dropped, since the same words now measure differently. A face no measured
+  // surface is drawn in moves nothing (caret-measure.ts).
+  const onFacesLoaded = (event: FontFaceSetLoadEvent) => {
+    if (noteFacesLoaded(event.fontfaces)) queue()
   }
   document.fonts.addEventListener('loadingdone', onFacesLoaded)
 
