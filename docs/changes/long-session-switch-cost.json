@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-19",
+  "group": "improvements",
+  "order": 0,
+  "external": true,
+  "zh": "长会话切换与流式输出时主题的主线程开销约减少一半，统计数字计数期间不再每帧触发整页更新，会话详情栏每帧最多测量一次，关闭的 effort 卡片与无关字体加载不再强制重排",
+  "en": "Switching between long sessions and streaming answers costs the theme about half the main-thread time, as the counting statistics no longer wake a page-wide pass every frame, the details rail measures at most once a frame, and a closed effort card or an unrelated font loading no longer forces a layout"
+}
