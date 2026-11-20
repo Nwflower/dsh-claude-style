@@ -1,13 +1,12 @@
 /**
  * The shell cases' page reads: the Claude palette, the classic hero's welcome,
- * the conversation view tabs' pill, the composer's marked host controls and the
+ * the conversation header tabs, the composer's marked host controls and the
  * sidebar's search row. The strip the view-tabs case builds and the root the
  * search case mounts are handed to the probe for the teardown step.
  */
 (function () {
   var probe = window.__dshSmokeProbe
   var sleep = probe.sleep
-  var pillState = probe.pillState
   var r = probe.report
 
   probe.step(async function () {
@@ -132,172 +131,37 @@
       await probe.nextPass('the classic hero to leave the page again')
     })
     await probe.onlyFor(['view-tabs'], async function () {
-      // The conversation view tabs (ConversationSession's strip), in the row the
-      // host draws when it has no views beyond the pinned ones, so the row holds
-      // the tablist alone: the pill is drawn under the active tab without sliding
-      // in, then slides to the tab a switch selects. The strip stays until the
-      // teardown, which must take the pill and the row's stamp back off.
-      var viewHeader = document.createElement('div')
-      viewHeader.className = '_header_c_1'
-      // The host's own header anchor: the skin reads the tab strip's parts
-      // inside it (D3).
-      viewHeader.setAttribute('data-slot', 'conversation.header')
-      viewHeader.innerHTML = '<div class="_tabs_c_1">' +
+      var conversation = document.createElement('div')
+      conversation.innerHTML = '<div data-slot="conversation.header"><div class="_header_c_1" style="width:400px">' +
+        '<div class="_titleRow_c_1" style="display:flex;height:30px;align-items:center;justify-content:space-between">' +
+        '<span class="_titleCluster_c_1">Session title</span><button class="_headerUtilities_c_1">Tools</button></div>' +
+        '<div class="_tabs_c_1">' +
         '<div class="_viewTabs_c_1" role="tablist" data-conversation-tabs="">' +
-        '<button type="button" role="tab" aria-selected="true" class="_tab_c_1 _tabActive_c_1">Chat</button>' +
-        '<button type="button" role="tab" aria-selected="false" class="_tab_c_1">Trajectory</button>' +
-        '<button type="button" role="tab" aria-selected="false" class="_tab_c_1">Context</button></div></div>'
-      document.body.appendChild(viewHeader)
-      var viewRow = viewHeader.firstElementChild
-      probe.viewStrip = { row: viewRow, list: viewRow.firstElementChild }
-      var viewTabs = probe.viewStrip.list.children
-      // The pill is placed by the pass after the strip arrives; its mark is
-      // the state the first reading waits for (D92).
-      // The pill's mark and a placement that has stopped moving: a webfont that
-      // lands after the first pass corrects the width with the pill's own slide
-      // (shared/sliding-pill.ts), and the first reading is taken once it stands.
-      var placed = await probe.until(function () { return pillState(probe.viewStrip.list, viewTabs[0]) },
-        function (read) { var last = read[read.length - 1]; return last.attr === true && last.slides.length === 0 },
-        'the view-tabs pill to be placed')
-      r.viewPill = { stamped: viewRow.hasAttribute(probe.surface('view-tabs.strip')), first: placed[placed.length - 1] }
-      r.viewPill.switched = await probe.pillSlide(probe.viewStrip.list, viewTabs[2], function () {
-        viewTabs[0].setAttribute('aria-selected', 'false')
-        viewTabs[0].className = '_tab_c_1'
-        viewTabs[2].setAttribute('aria-selected', 'true')
-        viewTabs[2].className = '_tab_c_1 _tabActive_c_1'
-      }, 'the view-tabs pill to take the newly active tab')
-      // The desktop attribute alone is not a Windows overlay: Linux shells carry
-      // it too. The OS boundary is stubbed, while occlusion is a real DOM cover.
-      var root = document.documentElement
-      var oldOverlay = Object.getOwnPropertyDescriptor(navigator, 'windowControlsOverlay')
-      var oldMark = root.hasAttribute('data-windows-titlebar')
-      var overlay = null
-      var cover = null
-      try {
-        root.setAttribute('data-windows-titlebar', '')
-        Object.defineProperty(navigator, 'windowControlsOverlay', { configurable: true, value: undefined })
-        document.body.appendChild(document.createElement('i'))
-        await probe.nextPass('the desktop mark without an overlay to stay in the header')
-        r.viewPill.nonOverlay = !viewHeader.hasAttribute('data-dsh-titlebar-tabs') && getComputedStyle(viewRow).position !== 'fixed'
-        overlay = new EventTarget()
-        overlay.visible = true
-        overlay.getTitlebarAreaRect = function () { return new DOMRect(0, 0, window.innerWidth, 40) }
-        Object.defineProperty(navigator, 'windowControlsOverlay', { configurable: true, value: overlay })
-        document.body.appendChild(document.createElement('i'))
-        overlay.dispatchEvent(new Event('geometrychange'))
-        await probe.nextPass('the visible Windows overlay to take the caption band')
-        await probe.frame()
-        await probe.frame()
-        r.viewPill.overlay = viewHeader.hasAttribute('data-dsh-titlebar-tabs') && getComputedStyle(viewRow).position === 'fixed'
-        cover = document.createElement('div')
-        cover.style.cssText = 'position:fixed;inset:0;z-index:2147483647;pointer-events:auto'
-        document.body.appendChild(cover)
-        overlay.dispatchEvent(new Event('geometrychange'))
-        await probe.until(function () { return viewHeader.hasAttribute('data-dsh-titlebar-tabs') },
-          function (read) { return read[read.length - 1] === false }, 'the covered caption band to fall back')
-        await probe.frame()
-        await probe.frame()
-        r.viewPill.covered = !viewHeader.hasAttribute('data-dsh-titlebar-tabs') && getComputedStyle(viewRow).position !== 'fixed'
-      } finally {
-        if (cover !== null) cover.remove()
-        if (oldOverlay === undefined) delete navigator.windowControlsOverlay
-        else Object.defineProperty(navigator, 'windowControlsOverlay', oldOverlay)
-        if (!oldMark) root.removeAttribute('data-windows-titlebar')
-        document.body.appendChild(document.createElement('i'))
-        await probe.nextPass('the desktop boundary to be restored')
-      }
-      // The slide plays whatever the system's motion setting: no reduced-motion
-      // block in the shipped stylesheets may reach the pill.
-      r.viewPill.reducedMotionRules = 0
-      for (var sheetIndex = 0; sheetIndex < document.styleSheets.length; sheetIndex++) {
-        var sheetRules = document.styleSheets[sheetIndex].cssRules
-        for (var ruleIndex = 0; ruleIndex < sheetRules.length; ruleIndex++) {
-          var mediaRule = sheetRules[ruleIndex]
-          if (mediaRule instanceof CSSMediaRule && /prefers-reduced-motion/.test(mediaRule.conditionText) &&
-            mediaRule.cssText.indexOf('data-dsh-claude-pill') !== -1) r.viewPill.reducedMotionRules++
-        }
-      }
-    })
-    await probe.onlyFor(['view-tabs-row'], async function () {
-      // The row with the overflow button: the host's row holds the tablist and the
-      // overflow button, and counts the tabs it keeps from the row's own width.
-      // The row must span the header for that count while the plate inside it
-      // hugs the tabs, and the pill travels inside the plate.
-      var rowHeader = document.createElement('div')
-      // The host's text tabs use negative margins, and its overflow seat is flex.
-      var rowHostStyle = document.createElement('style')
-      rowHostStyle.textContent = '._tab_v_1 { margin: -10px -10px 0; }' +
-        '._viewsMoreAnchor_v_1 { display: flex; }'
-      document.head.appendChild(rowHostStyle)
-      rowHeader.className = '_header_v_1'
-      rowHeader.setAttribute('data-slot', 'conversation.header')
-      rowHeader.innerHTML = '<div class="_tabs_v_1">' +
-        '<div class="_viewTabs_v_1" role="tablist" data-conversation-tabs="">' +
-        '<button type="button" role="tab" aria-selected="true" class="_tab_v_1 _tabActive_v_1">Chat</button>' +
-        '<button type="button" role="tab" aria-selected="false" class="_tab_v_1">Trajectory</button>' +
-        '<button type="button" role="tab" aria-selected="false" class="_tab_v_1">Context</button>' +
-        '<button type="button" role="tab" aria-selected="false" class="_tab_v_1">Team</button></div>' +
-        '<span class="_viewsMoreAnchor_v_1"><button type="button" class="_viewsMore_v_1" aria-haspopup="menu" aria-expanded="false">more</button></span>' +
-        '</div>'
-      document.body.appendChild(rowHeader)
-      // Read by the host's own structure: the row is the header's first box, the
-      // tablist its marked tablist, and the overflow button the tablist's
-      // neighbour (the skin's marks are what the assertions below see in styles).
-      var row = rowHeader.firstElementChild
-      var list = row.querySelector('[role="tablist"]')
-      var more = list.nextElementSibling.querySelector('button')
-      var rowTabs = list.children
-      // The plate's class and the pill's placement are written by the pass
-      // after the row arrives; the pill's mark is the state this read waits for.
-      var placed = await probe.until(function () { return pillState(list, rowTabs[0]) },
-        function (read) { var last = read[read.length - 1]; return last.attr === true && last.slides.length === 0 },
-        'the view-tabs row pill to be placed')
+        '<button class="_tab_c_1" role="tab" aria-selected="true">Chat</button>' +
+        '<button class="_tab_c_1" role="tab" aria-selected="false">Trajectory</button></div>' +
+        '<span class="_viewsMoreAnchor_c_1"><button class="_viewsMore_c_1" aria-haspopup="menu">More views</button></span>' +
+        '</div></div></div>'
+      document.body.insertBefore(conversation, document.body.firstChild)
+      var list = conversation.querySelector('[role="tablist"]')
+      var row = list.parentElement
+      var more = list.nextElementSibling.firstElementChild
+      var tools = conversation.querySelector('._headerUtilities_c_1')
+      var stripMark = probe.surface('view-tabs.strip')
+      await probe.until(function () { return getComputedStyle(row).position },
+        function (read) { return read[read.length - 1] === 'absolute' }, 'the view switch to join the title row')
+
       var rowBox = row.getBoundingClientRect()
+      var toolsBox = tools.getBoundingClientRect()
       var listBox = list.getBoundingClientRect()
       var moreBox = more.getBoundingClientRect()
-      var rowStyle = getComputedStyle(row)
-      var listStyle = getComputedStyle(list)
-      var moreStyle = getComputedStyle(more)
-      var tabBoxes = Array.prototype.map.call(rowTabs, function (tab) {
-        var box = tab.getBoundingClientRect()
-        return { left: box.left, right: box.right }
-      })
-      r.viewRow = {
-        justifyContent: rowStyle.justifyContent,
-        pointerEvents: rowStyle.pointerEvents,
-        // The lift rides the content, not the row: a translated row would put
-        // its full-width box over the header's actions (#174).
-        transform: { row: rowStyle.transform, list: listStyle.transform },
-        width: Math.round(rowBox.width),
-        headerWidth: rowHeader.clientWidth,
-        counted: row.clientWidth,
-        groupCentre: Math.round((listBox.left + moreBox.right) / 2 - rowBox.left),
-        plate: {
-          width: Math.round(listBox.width),
-          centre: Math.round(listBox.top + listBox.height / 2 - rowBox.top),
-          background: listStyle.backgroundColor,
-          radius: listStyle.borderTopLeftRadius,
-          padding: listStyle.paddingLeft,
-          gap: listStyle.gap,
-        },
-        chip: {
-          width: Math.round(moreBox.width),
-          height: Math.round(moreBox.height),
-          centre: Math.round(moreBox.top + moreBox.height / 2 - rowBox.top),
-          marginTop: moreStyle.marginTop,
-        },
-        tabHeight: getComputedStyle(rowTabs[0]).height,
-        tabBoxes: tabBoxes,
-        underline: getComputedStyle(rowTabs[0], '::after').display,
-        pill: placed[placed.length - 1],
+      r.viewTabs = {
+        besideTools: row.hasAttribute(stripMark) && Math.abs(rowBox.top + rowBox.height / 2 - toolsBox.top - toolsBox.height / 2) <= 1 &&
+          rowBox.right < toolsBox.left,
+        rightAligned: getComputedStyle(row).justifyContent === 'flex-end' &&
+          rowBox.left < listBox.left && listBox.right <= moreBox.left && moreBox.right <= rowBox.right,
+        clickable: more.contains(document.elementFromPoint(moreBox.x + moreBox.width / 2, moreBox.y + moreBox.height / 2)),
       }
-      r.viewRow.pillSwitched = await probe.pillSlide(list, rowTabs[2], function () {
-        rowTabs[0].setAttribute('aria-selected', 'false')
-        rowTabs[0].className = '_tab_v_1'
-        rowTabs[2].setAttribute('aria-selected', 'true')
-        rowTabs[2].className = '_tab_v_1 _tabActive_v_1'
-      }, 'the view-tabs row pill to take the newly active tab')
-      probe.viewRow = { row: row, list: list }
+      probe.viewStrip = { row: row, stripMark: stripMark }
     })
     await probe.onlyFor(['composer'], async function () {
       // The composer's host controls are marked by what they are, read from

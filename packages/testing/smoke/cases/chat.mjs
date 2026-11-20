@@ -165,6 +165,8 @@ export default {
       summary.marked === true && summary.text === '1 thought, 1 tool call' && summary.form === 'full' &&
         summary.name === '1 thought, 1 tool call' && summary.wordsShown === false && summary.summaryShown === true,
       JSON.stringify(summary))
+    check('the summary hides the host\'s extra tool status and keeps the assistant answer visible',
+      summary.toolStatusShown === false && summary.answerShown === true, JSON.stringify(summary))
     check('the summary sweeps while the section runs: the host\'s band crosses a copy of its figures',
       summary.running === true && summary.band?.animation === BAND_ANIMATION &&
         summary.band?.text === summary.text && summary.band?.rolling === false,

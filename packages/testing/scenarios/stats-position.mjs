@@ -190,6 +190,7 @@ function statsPositionScenario({ check }) {
       '- id: ui-skin-claude-style',
       '  config:',
       '    statsPosition: inline',
+      '    statsFooterTokenFormat: units',
     ],
     async assert({ page, session }) {
       // The projections answer while the turn runs; the line appears with them.
@@ -217,6 +218,8 @@ function statsPositionScenario({ check }) {
             state.glyphs === 0 && state.rowDisplay === 'none' &&
             state.dockPosition === 'static' && state.meterPosition === 'static',
           JSON.stringify(state)),
+        check('the independent line follows the configured token units',
+          state.figures.some((figure) => /\d(?:\.\d+)?[KMBT]/.test(figure)), JSON.stringify(state.figures)),
         check('the figures are text a count rewrites in place, with no character carrying a span or an entrance of its own',
           state.digits === 0, JSON.stringify(state.digits)),
         check('the cache share\'s band colours its figure and percent sign alone, and the meter\'s reading is a pie in the occupancy\'s own colour',
@@ -254,7 +257,7 @@ function statsPositionScenario({ check }) {
 
 /**
  * The session statistics' scenarios: the line of their own, the meter's dock,
- * and the compact figures over the toolbar, registered under one factory.
+ * and the compact figures in the toolbar, registered under one factory.
  */
 function statsScenarios({ check }) {
   return {

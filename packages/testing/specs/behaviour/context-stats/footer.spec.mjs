@@ -30,6 +30,8 @@ async function reading(t) {
       mode: line === null ? null : line.getAttribute(lineMark),
       detail: line === null ? null : line.getAttribute(detailMark),
       lineInDock: line !== null && line.parentElement === dock,
+      lineInToolbar: line !== null && (row?.contains(line) ?? false),
+      position: line === null ? null : getComputedStyle(line).position,
       segments: visible.length,
       order: segments,
       gap: line === null ? null : getComputedStyle(line).columnGap,
@@ -53,12 +55,12 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
     await seatStatsSession(t, stats, usage)
     await t.prefs({ statsPosition: 'footer', composerBottomGap: 'compact', motion: 'reduced' })
     const center = await reading(t)
-    t.expectThat.equal(center.mode, 'overlay', 'the wide toolbar has room for compact figures')
+    t.expectThat.equal(center.mode, 'toolbar', 'the wide toolbar has room for compact figures')
     t.expectThat.equal(center.detail, 'directions', 'the wide toolbar takes the footer\'s widest detail')
-    t.expectThat.equal(center.lineInDock, true, 'the figures keep the dock the host renders them in')
-    t.expectThat.absent(center.dock.height, 'the overlaid figures leave no blank dock below the compact composer')
-    t.expectThat.equal([center.dockMinHeight, center.dockPaddingTop], ['0px', '0px'], 'the overlay releases the host\'s reserved statistics row and its top pad')
-    t.expectThat.equal(center.segments, 4, 'cost, both token directions and the cache share stand over the toolbar')
+    t.expectThat.equal([center.lineInToolbar, center.position], [true, 'static'], 'the statistics take part in the toolbar layout')
+    t.expectThat.absent(center.dock.height, 'the toolbar figures leave no blank dock below the compact composer')
+    t.expectThat.equal([center.dockMinHeight, center.dockPaddingTop], ['0px', '0px'], 'the toolbar releases the host\'s reserved statistics row and its top pad')
+    t.expectThat.equal(center.segments, 4, 'cost, both token directions and the cache share stand in the toolbar')
     t.expectThat.equal(center.order[0].startsWith('¥') && center.order[1].startsWith('↑') && center.order[2].startsWith('↓') && center.order[3].endsWith('%'), true, 'the cost leads, the directions follow in order and the cache share closes: ' + JSON.stringify(center.order))
     t.expectThat.equal(center.cacheLabel, 0, 'the cache figure carries its percent sign alone')
     t.expectThat.equal(/tok/.test(center.text) && /%$/.test(center.text), true, 'the token figures say their unit and the cache figure closes with its percent sign')
@@ -92,9 +94,22 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
     await t.prefs({ statsPosition: 'context' })
   })
 
+  test('one token unit choice reaches independent and compact statistics', async t => {
+    await seatStatsSession(t, stats, usage)
+    await t.prefs({ statsPosition: 'inline', statsFooterTokenFormat: 'units', motion: 'reduced' })
+    const independentUnits = await reading(t)
+    t.expectThat.equal(independentUnits.text.includes('100.0K'), true, 'the independent line writes the chosen token units: ' + independentUnits.text)
+    await t.prefs({ statsFooterTokenFormat: 'digits' })
+    const independentDigits = await reading(t)
+    t.expectThat.equal(independentDigits.text.includes('100,000') && !independentDigits.text.includes('100.0K'), true, 'the independent line returns to grouped whole numbers: ' + independentDigits.text)
+    await t.prefs({ statsPosition: 'footer', statsFooterTokenFormat: 'units' })
+    const compactUnits = await reading(t)
+    t.expectThat.equal(compactUnits.text.includes('100.0K'), true, 'the compact footer follows the same token units: ' + compactUnits.text)
+  })
+
   test('a roomier footer expands the token total in place before it moves below', async t => {
     await seatStatsSession(t, stats, usage)
-    await t.prefs({ statsPosition: 'footer', motion: 'reduced' })
+    await t.prefs({ statsPosition: 'footer', statsFooterTokenFormat: 'digits', motion: 'reduced' })
     const at = async width => {
       await t.page.evaluate(([selector, value]) => {
         document.querySelector(selector).parentElement.style.width = `${value}px`
@@ -108,7 +123,7 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
     const found = new Map()
     for (let width = 360; width <= 900; width += 5) {
       const fitted = await at(width)
-      if (fitted.mode === 'overlay' && !found.has(fitted.detail)) {
+      if (fitted.mode === 'toolbar' && !found.has(fitted.detail)) {
         found.set(fitted.detail, fitted)
         for (const source of ['context', 'inline']) {
           await t.prefs({ statsPosition: source })
@@ -123,13 +138,13 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
     }
     t.expectThat.equal([...found.keys()], ['compact', 'exact', 'directions'], 'the footer expands through every step as the card widens')
     const compact = found.get('compact')
-    t.expectThat.equal([compact.mode, compact.segments], ['overlay', 3], 'the narrowest overlay keeps the folded total')
+    t.expectThat.equal([compact.mode, compact.segments], ['toolbar', 3], 'the narrowest toolbar keeps the folded total')
     t.expectThat.equal(compact.order[1].includes('100.1k') && !/[↑↓]/.test(compact.order[1]), true, 'the folded total stays a compact figure with no directions')
     const exact = found.get('exact')
-    t.expectThat.equal([exact.mode, exact.segments], ['overlay', 3], 'a wider overlay expands the total without leaving the line')
+    t.expectThat.equal([exact.mode, exact.segments], ['toolbar', 3], 'a wider toolbar expands the total without leaving the line')
     t.expectThat.equal(exact.order[1].includes('100,100 tok') && !/[↑↓]/.test(exact.order[1]), true, 'the total becomes its exact grouped value')
     const directions = found.get('directions')
-    t.expectThat.equal([directions.mode, directions.segments], ['overlay', 4], 'the widest overlay gives the total up for both directions')
+    t.expectThat.equal([directions.mode, directions.segments], ['toolbar', 4], 'the widest toolbar gives the total up for both directions')
     t.expectThat.equal(directions.order[0].startsWith('¥') && directions.order[1].startsWith('↑') && directions.order[2].startsWith('↓') && directions.order[3].endsWith('%'), true, 'the cost leads, the directions follow and the cache share closes: ' + JSON.stringify(directions.order))
   })
 
@@ -154,7 +169,7 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
     t.expectThat.visible(restored.ring, 'the context ring keeps its place')
   })
 
-  test('a narrow toolbar gives statistics their own line and widening restores the overlay', async t => {
+  test('a narrow toolbar gives statistics their own line and widening restores the toolbar seat', async t => {
     await seatStatsSession(t, stats, usage)
     await t.prefs({ statsPosition: 'footer', motion: 'reduced' })
     await t.page.setViewportSize({ width: 420, height: 844 })
@@ -163,7 +178,7 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
     }, t.host('composer.card'))
     await t.settle()
     const narrow = await reading(t)
-    t.expectThat.equal(narrow.mode, 'below', 'the narrow toolbar leaves figures below it')
+    t.expectThat.equal([narrow.mode, narrow.lineInDock], ['below', true], 'the narrow toolbar seats the figures in the dock')
     t.expectThat.visible(narrow.dock, 'the dock keeps the line\'s own room when the figures move below')
     t.expectThat.boxWithin(narrow.line, narrow.dock, 'the below figures stay inside the dock that holds their room')
     t.expectThat.boxesApart(narrow.line, narrow.tools, 'statistics do not cover the left controls')
@@ -174,7 +189,7 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
       document.querySelector(selector).parentElement.style.removeProperty('width')
     }, t.host('composer.card'))
     await t.settle()
-    t.expectThat.equal((await reading(t)).mode, 'overlay', 'widening restores the toolbar position')
+    t.expectThat.equal((await reading(t)).mode, 'toolbar', 'widening restores the toolbar position')
     await t.prefs({ composerScope: 'off' })
     const off = await reading(t)
     t.expectThat.equal([off.mode, off.meterHidden, off.ring], [null, false, null], 'disabling the restyle clears footer placement, the ring and the hidden meter')

@@ -36,8 +36,3 @@ export interface HostSoundCapability {
   sounds: SoundName[]
 }
 
-/** One play request: the cue and the gain the settings resolved to. */
-export interface HostSoundRequest {
-  name: SoundName
-  volume: number
-}

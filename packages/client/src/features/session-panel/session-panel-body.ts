@@ -1,6 +1,7 @@
 import * as React from 'react'
 import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
-import { formatCompactTokens } from '../../shared/format'
+import { FOOTER_TOKEN_UNITS, QUIET_ATTR } from '../../constants'
+import { formatCompactTokens, formatUnitTokens } from '../../shared/format'
 import { sessionStatsCacheHit, sessionStatsDuration, sessionStatsSpeed, sessionStatsTokens } from '../../shared/stats-format'
 import { hostChatSeat } from '../../core/i18n'
 import { copy } from './copy'
@@ -43,7 +44,7 @@ function outputMark(kind: PanelOutput['kind']) {
 }
 
 /**
- * The session details rail's body (D102): the sections the rail shows for the
+ * The session details rail's body (D106): the sections the rail shows for the
  * conversation's session, mounted by the rail beside the chat.
  *
  * The body is one column of sections in the order a reader asks about a
@@ -62,13 +63,14 @@ function PanelView({ sessionId, preset, active }: { sessionId: string, preset: P
   const { value, failed } = usePanelReading(sessionId, active)
   // The two figures tables print the statistics feature's live reading — the one
   // the composer's line prints — so the numbers beside the chat move with the
-  // numbers under it instead of one settlement behind them (D102).
+  // numbers under it instead of one settlement behind them (D106).
   const live = useLiveFigures(sessionId)
   // The occupancy is a projection frame, so the context section can state its
   // overview on the frame the rail mounts; its breakdown is the route's fold and
-  // takes its place when that answers (D102).
+  // takes its place when that answers (D106).
   const occupancy = useLiveOccupancy(sessionId)
   const currency = useBillingCurrency()
+  const tokenUnits = useTokenUnits()
   // A running row's clock has to move between the panel's own polls.
   const running = value !== null && hasRunningWork(value.background)
   const [, tick] = React.useState(0)
@@ -83,7 +85,7 @@ function PanelView({ sessionId, preset, active }: { sessionId: string, preset: P
   // Before the host's fold answers, every section each conversation has stands
   // on the first frame: what the page already knows is written, the rest keeps
   // its row under a placeholder of the final row's height. Sections that appear
-  // only with something to show wait for the answer (D102).
+  // only with something to show wait for the answer (D106).
   const settled = value?.stats ?? null
   const figures = live !== null
     ? panelFiguresOf(live, settled)
@@ -93,13 +95,13 @@ function PanelView({ sessionId, preset, active }: { sessionId: string, preset: P
       h(EnvironmentSection, { key: 'environment', environment: null, preset }),
       h(ContextSection, { key: 'context', sessionId, context: null, occupancy }),
       h(StatsSection, { key: 'stats', stats: figures?.stats ?? null }),
-      h(TokensSection, { key: 'tokens', stats: figures?.stats ?? null, cost: figures?.cost ?? null }))
+      h(TokensSection, { key: 'tokens', stats: figures?.stats ?? null, cost: figures?.cost ?? null, units: tokenUnits }))
   }
   return h('div', { className: 'dsh-claude-panel' },
     value.environment === null ? null : h(EnvironmentSection, { key: 'environment', environment: value.environment, preset }),
     h(ContextSection, { key: 'context', sessionId, context: value.context, occupancy }),
     figures === null ? null : h(StatsSection, { key: 'stats', stats: figures.stats }),
-    figures === null ? null : h(TokensSection, { key: 'tokens', stats: figures.stats, cost: figures.cost }),
+    figures === null ? null : h(TokensSection, { key: 'tokens', stats: figures.stats, cost: figures.cost, units: tokenUnits }),
     value.outputs.length === 0 ? null : h(OutputsSection, { key: 'outputs', sessionId, directory: value.environment?.directory, outputs: value.outputs }),
     value.changes.length === 0 ? null : h(ChangesSection, { key: 'changes', changes: value.changes }),
     h(WorkSections, { key: 'work', sessionId, background: value.background }))
@@ -163,7 +165,7 @@ export function elapsedText(ms: number) {
  * Where the session works: the machine, the directory, and the checkouts around it.
  * Before the host's fold answers (`environment` null) the machine and the preset
  * are already known and are written; the directory and its branch hold their
- * rows under placeholders (D102).
+ * rows under placeholders (D106).
  */
 function EnvironmentSection({ environment, preset }: { environment: PanelEnvironment | null, preset: PanelPreset }) {
   const rows: React.ReactNode[] = [
@@ -184,7 +186,7 @@ function EnvironmentSection({ environment, preset }: { environment: PanelEnviron
   const checkout = environment?.checkout ?? null
   if (environment === null) rows.push(h(PendingRow, { key: 'branch', mark: h(BranchMark), width: '32%' }))
   // A directory that is no checkout names the folder alone: the branch belongs
-  // to a checkout, and a folder without one has none to show (D102).
+  // to a checkout, and a folder without one has none to show (D106).
   else if (checkout !== null) {
     rows.push(h(RepositoryRow, {
       key: `checkout:${checkout.root}`,
@@ -196,7 +198,7 @@ function EnvironmentSection({ environment, preset }: { environment: PanelEnviron
     }))
   }
   // The preset closes the section: the header's own label steps aside while the
-  // rail stands, so this row is where its words and its description are read (D102).
+  // rail stands, so this row is where its words and its description are read (D106).
   if (preset.label !== '') {
     rows.push(h(Row, {
       key: 'preset',
@@ -211,7 +213,7 @@ function EnvironmentSection({ environment, preset }: { environment: PanelEnviron
 }
 
 function RepositoryRow(props: { name?: string, branch: string | null, linked: boolean, detail?: string, commit?: string | null }) {
-  // A checkout already named by the directory needs only its branch (D102).
+  // A checkout already named by the directory needs only its branch (D106).
   // Additional checkouts keep their folder row immediately above the branch.
   return h(React.Fragment, null,
     props.name === undefined ? null : h(Row, {
@@ -231,7 +233,7 @@ function RepositoryRow(props: { name?: string, branch: string | null, linked: bo
  * The overview is the provider's own reading, so it stands on the frame the rail
  * mounts; the composition is the host's fold, and while that has not answered
  * the legend holds its rows under placeholders. Before either answers, the head
- * holds its two figures the same way (D102).
+ * holds its two figures the same way (D106).
  * Once the session stands near the host's own compaction threshold, the section
  * offers the manual request beside the distance to it (D100).
  */
@@ -352,7 +354,7 @@ const PENDING_LEGEND_ROWS = 6
 
 /**
  * The legend before the host's fold answers: rows of the legend's own shape,
- * each a swatch and its three readings under placeholders (D102).
+ * each a swatch and its three readings under placeholders (D106).
  */
 function pendingLegend() {
   return h('dl', { className: 'dsh-claude-panel-legend', 'aria-hidden': true },
@@ -395,7 +397,7 @@ interface Figure {
 }
 
 /**
- * A figures section before any reading answers (D102): folded like the written
+ * A figures section before any reading answers (D106): folded like the written
  * one, a placeholder beside the heading where its reading will stand, and the
  * rows every session has with their values held under placeholders.
  */
@@ -405,17 +407,19 @@ function PendingFigures({ title, labels }: { title: string, labels: readonly Cop
 }
 
 /** A figures section's rows: each figure gets a full row, so a long elapsed time
- * or token count keeps its value beside its label.
+ * or token count keeps its value beside its label. The list is quiet
+ * (QUIET_ATTR, D40): the figures' count rewrites its values every frame it
+ * travels, and no page-wide pass reads them.
  */
 function Figures({ rows }: { rows: readonly Figure[] }) {
-  return h('dl', { className: 'dsh-claude-panel-stats' },
+  return h('dl', { className: 'dsh-claude-panel-stats', [QUIET_ATTR]: '' },
     rows.map(row => h('div', { key: row.key, className: 'dsh-claude-panel-stat' },
       h('dt', null, row.label),
       h('dd', null, row.value))))
 }
 
 /**
- * How the session ran (D102): its turns and steps, its speed and its time.
+ * How the session ran (D106): its turns and steps, its speed and its time.
  *
  * The figures are written in the host's own words, through the same formatters
  * the composer's readout uses (shared/stats-format.ts): the rail is a second
@@ -445,15 +449,17 @@ function StatsSection({ stats }: { stats: PanelStats | null }) {
 }
 
 /**
- * What the session spent (D102): its cost, its cache share and its token buckets.
+ * What the session spent (D106): its cost, its cache share and its token buckets.
  *
  * The section starts folded with the cost beside its heading; with billing off
  * or a model no table prices, the tokens the session moved stand in.
  */
-function TokensSection({ stats, cost }: { stats: PanelStats | null, cost: string | null }) {
+function TokensSection({ stats, cost, units }: { stats: PanelStats | null, cost: string | null, units: boolean }) {
   if (stats === null) return h(PendingFigures, { title: copy('tokenUsage'), labels: ['statsUncachedInput', 'statsCacheRead', 'statsCacheWrite', 'statsOutput'] })
   const chat = hostChatSeat()
-  const tokens = (count: number) => (chat === null ? `${formatCompactTokens(count)} tok` : sessionStatsTokens(count, chat))
+  const tokens = (count: number) => (chat === null
+    ? `${units ? formatUnitTokens(count) : formatCompactTokens(count)} tok`
+    : sessionStatsTokens(count, chat, units))
   const rows: Figure[] = []
   if (cost !== null) rows.push({ key: 'cost', label: copy('statsCost'), value: cost })
   const billed = stats.uncachedInputTokens + stats.cacheReadTokens + stats.cacheWriteTokens
@@ -467,6 +473,13 @@ function TokensSection({ stats, cost }: { stats: PanelStats | null, cost: string
   rows.push({ key: 'out', label: copy('statsOutput'), value: tokens(stats.outputTokens) })
   return h(Section, { title: copy('tokenUsage'), summary: cost ?? tokens(billed + stats.outputTokens), folded: true },
     h(Figures, { rows }))
+}
+
+/** The token format the reader chose, followed across a settings change (D106). */
+function useTokenUnits() {
+  const [units, setUnits] = React.useState(() => readPrefs().statsFooterTokenFormat === FOOTER_TOKEN_UNITS)
+  React.useEffect(() => subscribePrefs(prefs => setUnits(prefs.statsFooterTokenFormat === FOOTER_TOKEN_UNITS)), [])
+  return units
 }
 
 /** The currency the reader's billing setting chose, followed across a settings change. */

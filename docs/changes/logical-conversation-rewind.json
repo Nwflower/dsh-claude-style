@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-18",
-  "group": "improvements",
-  "order": 0,
-  "external": true,
-  "zh": "消息撤回、编辑、重跑与删除此轮新增确认窗口和工作区检查点，可在原历史位置继续并同时恢复代码改动；侧边栏只显示逻辑对话的活动版本，原 fork 进入宿主归档并可从版本历史取消归档",
-  "en": "Add confirmation dialogs and workspace checkpoints to message retract, edit, rerun and delete-turn, continuing from the original history position while restoring code changes; the sidebar shows only the active revision of one logical conversation, archives source forks, and lets revision history unarchive them"
-}

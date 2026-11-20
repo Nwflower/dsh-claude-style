@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-18",
-  "group": "fixes",
-  "order": 0,
-  "external": true,
-  "zh": "修复深色模式下模型选择器的推理档位文字（如 Max）在自定义强调色下变成深蓝而难以辨认，各档位文字与画布保持正文可读的对比度",
-  "en": "Fix the reasoning level text in the model selector (such as Max) turning a hard-to-read dark blue in dark mode with a custom accent, keeping every level at body-text contrast against the canvas"
-}

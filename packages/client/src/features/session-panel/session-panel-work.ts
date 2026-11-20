@@ -21,7 +21,7 @@ export function hasRunningWork(background: PanelBackground) {
 /**
  * The word a job row still needs: one running, stopping or failed. A finished
  * command is what most rows are, and it says so with its clock stopping; a word
- * on every row would make the state the row's loudest part (D102).
+ * on every row would make the state the row's loudest part (D106).
  */
 function jobStatusText(status: string) {
   if (status === 'running') return copy('running')
@@ -84,7 +84,7 @@ interface WorkRow {
   node: React.ReactNode
 }
 
-/** Current work stays visible; settled records share Claude's one disclosure row (D102). */
+/** Current work stays visible; settled records share Claude's one disclosure row (D106). */
 function WorkList({ title, rows, kind }: { title: string, rows: readonly WorkRow[], kind?: string }) {
   if (rows.length === 0) return null
   const finished = rows.filter(row => !row.active)
@@ -101,7 +101,7 @@ function WorkList({ title, rows, kind }: { title: string, rows: readonly WorkRow
       h('div', { className: 'dsh-claude-panel-list' }, finished.map(row => row.node))))
 }
 
-/** Independent process, task, subagent and team sections share the rail's row geometry (D102). */
+/** Independent process, task, subagent and team sections share the rail's row geometry (D106). */
 export function WorkSections({ sessionId, background }: { sessionId: string, background: PanelBackground }) {
   const now = Date.now()
   const [expandedJob, setExpandedJob] = React.useState<string | null>(null)

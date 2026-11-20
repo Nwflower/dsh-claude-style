@@ -75,8 +75,9 @@
         '<div class="_headerActions_b_1" style="width:60px;height:' + TITLE_HEIGHT + 'px">Preset</div></div>' +
         // The host's utilities seat, with the skin's own right-panel control in it,
         // the way the host's slot renders it: the pass shows or hides that node.
-        '<div class="_headerUtilities_b_1" style="display:flex;width:114px;height:28px">' +
-        '<button type="button" class="dsh-claude-rightbar-close" style="width:28px;height:28px">close</button></div>' +
+        '<div class="_headerUtilities_b_1" style="display:flex;width:148px;height:28px">' +
+        '<button type="button" class="dsh-claude-rightbar-close" style="width:28px;height:28px">close</button>' +
+        '<button type="button" aria-haspopup="menu" style="width:28px;height:28px">more</button></div>' +
         '<div class="_headerCorner_b_1" style="width:28px;height:28px"></div></div>' +
         '<div class="_tabs_b_1"><div class="_viewTabs_b_1" role="tablist" data-conversation-tabs="" style="width:152px;height:26px"></div></div>'
       document.body.insertBefore(header, document.body.firstChild)
@@ -102,6 +103,7 @@
       // the seat the host writes its truncation fade on.
       var cluster = title.parentElement
       var utilities = header.querySelector('[data-dsh-claude-part~="header-utilities"]')
+      var more = utilities.querySelector('button[aria-haspopup="menu"]')
       var corner = header.querySelector('[data-dsh-claude-part~="header-corner"]')
       var strip = header.querySelector('[data-dsh-claude-part~="view-tabs"]')
       var box = function (el) {
@@ -149,15 +151,20 @@
         viewportRight: viewportRight,
       }
 
+      // The words' width is what the cluster's place is computed from: read it
+      // once the faces the page loads have arrived, not mid-fallback.
+      await document.fonts.ready
       await sleep(250)
       r.band.laid = {
         marks: marks(),
         title: box(title),
+        more: box(more),
         utilities: box(utilities),
         corner: box(corner),
         preset: box(actions),
         // The plate the strip's row holds: the row itself spans the window.
         strip: box(strip.querySelector('[data-conversation-tabs]')),
+        stripHit: hitAt(strip.querySelector('[data-conversation-tabs]')),
         row: box(row),
         header: box(header),
         headerDisplay: getComputedStyle(header).display,
@@ -212,7 +219,7 @@
         row.appendChild(mark)
         mark.remove()
       }
-      actions.style.width = '500px'
+      actions.style.width = r.band.laid.titleMax
       nudge()
       await sleep(250)
       r.band.crowded = { marks: marks(), title: box(title), preset: box(actions), titleMax: title.style.getPropertyValue('--dsh-header-band-max') }
@@ -220,11 +227,14 @@
       nudge()
       await sleep(250)
       r.band.relaxed = { marks: marks(), title: box(title), preset: box(actions), titleMax: title.style.getPropertyValue('--dsh-header-band-max') }
-      // The switch hands the row back on its own, with the strip left in place,
-      // and the placement comes back when it is switched on again.
+      // The session's more-actions trigger starts at the lifted title's end.
+      // The preset cluster keeps the normal gap after the trigger.
+      r.band.menu = { marks: marks(), moreLeft: more.style.getPropertyValue('--dsh-header-band-left'), more: box(more), title: box(title), preset: box(actions),
+        moreAttr: more.getAttribute('data-dsh-header-more'), morePosition: getComputedStyle(more).position }
+      // The switch hands the header row back and restores its cluster mask.
       window.__pushForm({ headerBand: false })
       await sleep(250)
-      r.band.off = { marks: marks(), row: box(row), headerPaddingTop: getComputedStyle(header).paddingTop, stripStamped: strip.hasAttribute('data-dsh-view-tabs'), clusterMask: getComputedStyle(cluster).maskImage }
+      r.band.off = { marks: marks(), row: box(row), headerPaddingTop: getComputedStyle(header).paddingTop, clusterMask: getComputedStyle(cluster).maskImage }
       window.__pushForm({ headerBand: true })
       await sleep(250)
       r.band.back = { marks: marks(), title: box(title), utilities: box(utilities), titleHit: hitAt(title), clusterMask: getComputedStyle(cluster).maskImage }

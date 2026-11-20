@@ -252,6 +252,10 @@ export const CONVERSATION_VIEW_STATS = 'stats'
 export const PHASE_ATTRIBUTE = 'data-phase'
 /** The composer card and the stack of cards above it. */
 export const COMPOSER_STACK_SELECTOR = '[data-dsh-claude-part~="composer-stack"]'
+/** The dock below the composer card, which contains the host's session figures. */
+export const COMPOSER_DOCK_SELECTOR = '[data-dsh-claude-part~="composer-dock"]'
+/** The toolbar's trailing cluster containing the model and context controls. */
+export const COMPOSER_TRAILING_SELECTOR = '[data-dsh-claude-part~="trailing"]'
 /** ui-attachment's local class remains usable before part marking reaches a newly mounted rail. */
 export const COMPOSER_ATTACHMENT_RAIL_SELECTOR = '[class*="_rail"]'
 /** The placeholder the host's own editor draws inside the draft. */
@@ -301,6 +305,10 @@ export const MENU_MATERIAL_SELECTOR = '[data-menu-material]'
 export const MENU_LIST_SELECTOR = '[role="presentation"]'
 /** The host's account trigger in the sidebar footer. */
 export const ACCOUNT_TRIGGER_SELECTOR = '[aria-haspopup="menu"][data-signed-out]'
+/** A control that opens a menu, read on a footer entry itself or on a control inside one. */
+export const MENU_TRIGGER_SELECTOR = '[aria-haspopup="menu"]'
+/** The host's sign-out glyph (ui-primitives LogoutIcon), told by its geometry, never by its localized label. */
+export const SIGN_OUT_GLYPH_SELECTOR = 'svg[viewBox="0 0 13.664 13.571"]'
 /** Footer popup trigger; `aria-haspopup` varies across supported hosts and is intentionally unconstrained. */
 export const SETTINGS_BUTTON_SELECTOR = '[data-dsh-claude-part~="settings-area"] button[aria-haspopup]'
 /** The sidebar's action list, whose entries the skin mirrors into its drawer. */
@@ -356,16 +364,18 @@ export const HEADER_ACTIONS_SELECTOR = '[data-dsh-claude-part~="header-actions"]
 export const HEADER_ACTION_CHIPS_SELECTOR = '[data-dsh-claude-part~="header-actions"] [data-subagent-action], [data-dsh-claude-part~="header-actions"] button[aria-haspopup="tree"], [data-dsh-claude-part~="header-actions"] button[aria-expanded]:not([aria-haspopup])'
 /** The header's utilities cluster: the workspace opener, the overflow menu, the bottom-panel toggle. */
 export const HEADER_UTILITIES_SELECTOR = '[data-dsh-claude-part~="header-utilities"]'
+/** The session's more-actions trigger in the utilities cluster; the band lifts it beside the title. Read inside the title row, so embedded conversation headers are not taken. */
+export const HEADER_MORE_TRIGGER_SELECTOR = `${HEADER_UTILITIES_SELECTOR} button[aria-haspopup="menu"]`
 /** The corner seat beside the utilities, carrying the right-sidebar toggle. */
 export const HEADER_CORNER_SELECTOR = '[data-dsh-claude-part~="header-corner"]'
 /** Resolve with `closest` from the title row; this substring also matches unrelated bars. */
 export const CONVERSATION_HEADER_SELECTOR = '[data-dsh-claude-part~="conversation-header"]'
-/** The view-tab strip inside the header, whose box the band placement keeps clear of. */
-export const VIEW_TABS_STRIP_SELECTOR = '[data-dsh-claude-part~="view-tabs"]'
 /** The tablist plate inside the host's sizing row. */
 export const VIEW_TABS_LIST_SELECTOR = '[data-dsh-claude-part~="view-tabs-list"]'
 /** Host-marked view tablist; plugin tablists elsewhere in the conversation are excluded. */
 export const CONVERSATION_TABS_SELECTOR = '[data-conversation-tabs]'
+/** The selected native tab when the current view is visible in the tablist. */
+export const CONVERSATION_ACTIVE_TAB_SELECTOR = '[data-dsh-claude-part~="view-tab"][aria-selected="true"]'
 
 /* ---------- the document, the shell and the browser API ---------- */
 

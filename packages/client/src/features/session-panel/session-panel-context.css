@@ -1,4 +1,4 @@
-/* The details rail's context section (D102): the occupancy head, the bar of its
+/* The details rail's context section (D106): the occupancy head, the bar of its
    parts, the legend and the compaction offer under it (D100). The rows, sections
    and type it reads at are session-panel.css's. Context categories share their
    colour between the bar and legend (D9). */
@@ -13,7 +13,7 @@ body[data-dsh-claude-style] .dsh-claude-panel-context-head {
 }
 
 /* The occupancy is the section's one headline figure and takes the primary ink;
-   the weight stays the section titles' alone (D102). */
+   the weight stays the section titles' alone (D106). */
 body[data-dsh-claude-style] .dsh-claude-panel-percent {
   color: var(--dsw-alias-label-primary, #161616);
 }
@@ -34,7 +34,7 @@ body[data-dsh-claude-style] .dsh-claude-panel-bar {
 }
 
 /* The track's ink stands over the parts and collapses toward the right edge,
-   uncovering the composition left to right in one sweep (D102). */
+   uncovering the composition left to right in one sweep (D106). */
 body[data-dsh-claude-style] .dsh-claude-panel-bar::after {
   content: '';
   position: absolute;

@@ -2,6 +2,56 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [0.21.6] - 2026-11-19
+
+[中文](#cn-0.21.6) | [English](#en-0.21.6)
+
+<h3 id="cn-0.21.6">体验优化</h3>
+
+- 已有会话输入栏在第三方额度控件存在时优先保持紧凑单行，模型名按剩余空间省略，空间不足时安全换行
+- 对话详情的上下文分项按八类拆分（系统提示、工具、技能和MCP、对话正文、推理过程、执行过程、工具结果、文件与图片、上下文注入），推理按助手消息残差计量，文件与图片从各消息独立提取，能力行名称随构成变化
+- 消息撤回、编辑、重跑与删除此轮新增确认窗口和工作区检查点，可在原历史位置继续并同时恢复代码改动；侧边栏只显示逻辑对话的活动版本，原 fork 进入宿主归档并可从版本历史取消归档
+- 侧栏悬停唤出扩展到窗口左缘 32px 全高热区，悬浮展开与收回时主区保持原位
+- 上下文计价的字符类别系数对 DeepSeek 分词器重新拟合（词长表与数字锚点保持不变），详情栏分项更贴近实际占用；流式增长的低估单独成层，基准准确度与动画手感各自独立可调
+
+### 问题修复
+
+- 滚动长会话时，状态装饰和流程摘要的数字不再参与指针命中测试；流程按钮仍可点击
+- 合并对话末尾的位置读取，避免无关页面更新在切换或阅读长会话时触发布局测量
+- 修复深色模式下模型选择器的推理档位文字（如 Max）在自定义强调色下变成深蓝而难以辨认，各档位文字与画布保持正文可读的对比度
+- 修复紧凑底栏下上下文圆环掉出统计排列的问题（#405），移除「底栏上下文圆环」开关，圆环常驻输入区工具栏、与费用等统计项同排，百分比读数仍随「上下文占用百分比」开关显示
+- 首页模型排名和最常用模型跟随当前工作区或活跃会话范围；范围内没有模型用量时显示为空
+- 官方 DSH 界面提供的浏览器组件不再要求在 profile 内另外安装
+- 过程摘要只替换活动按钮上的计数句，按钮内的其余内容不再被一并隐藏，助手正文保持可见
+- Windows 标题栏中的会话标签持续可见，移动指针或使用输入法组词时不会淡出
+- 修复切回会话时插件把宿主恢复的阅读位置缓动到末尾并重新开启跟随的问题，交还跟随只在读者已经位于末尾时进行
+- 修复悬停展开的账号菜单与工作区、预设选择卡片在指针移入时立即收起的问题，指针在入口与卡片之间移动时保持展开
+- 修复消息撤回后分岔收尾行短暂留在时间线的问题，收尾行随宿主快照发布即时隐去，逻辑对话保持一条连续时间线
+- 修复网页字体加载后标题栏控件簇与会话标题的间距偏离设定值的问题，标题宽度随字体落定即重新定位
+
+<h3 id="en-0.21.6">Improvements</h3>
+
+- Keep the conversation composer compact and single-row with third-party quota controls when room allows, ellipsize the model name, and wrap safely when space runs out
+- Split the details rail context into eight categories (system prompt, tools/skills/MCP, conversation, reasoning, execution, tool results, files/images, context injection), meter reasoning as the assistant residual, extract files/images from every message, and let the capability row's label follow its mix
+- Add confirmation dialogs and workspace checkpoints to message retract, edit, rerun and delete-turn, continuing from the original history position while restoring code changes; the sidebar shows only the active revision of one logical conversation, archives source forks, and lets revision history unarchive them
+- Extend sidebar hover peeking to a full-height 32px strip at the window's left edge while the centre stays in place as the overlay opens and closes
+- Refit the context estimator's character-class rates to the DeepSeek tokenizer (word-length table and digit anchors preserved) for a closer detail-panel split; the streaming growth under-estimate becomes its own layer, so base accuracy and animation feel tune independently
+
+### Bug Fixes
+
+- Exclude chat status decorations and process-summary digits from hit testing while keeping disclosure buttons clickable
+- Coalesce chat tail position checks and avoid layout reads triggered by unrelated page updates while switching or reading long conversations
+- Fix the reasoning level text in the model selector (such as Max) turning a hard-to-read dark blue in dark mode with a custom accent, keeping every level at body-text contrast against the canvas
+- Fix the context ring dropping out of the compact footer's statistics arrangement (#405) by removing the 'Footer context ring' switch, the ring always standing in the composer toolbar beside the cost and other figures while its percentage still follows the 'Context occupancy percentage' switch
+- Keep the home model ranking and favorite model within the selected workspace or active sessions, and show an empty state when no model usage is attributed
+- Mark the official DSH frontend’s built-in browser UI primitives as an optional npm peer
+- The process summary replaces only the count sentence on the activity button, no longer hiding the rest of the control's content and keeping the assistant's answer visible
+- Keep conversation tabs visible in the Windows title bar when the pointer leaves the conversation or an IME candidate window opens
+- Fix the hand-back springing a reading position the host restored to the end when the reader switches back to a conversation, handing the follow back only from the end he is already at
+- Fix hover-opened account menus and workspace/preset picker cards folding as the pointer moves into them, keeping the card open while the pointer travels between the trigger and the card
+- Fix the forked turn tail lingering on the timeline after a message retract, hiding it as soon as the host publishes the turn end so a logical conversation keeps one continuous timeline
+- Fix the caption-row control cluster drifting off its set gap from the session title after a webfont loads, re-placing it as soon as the title's width settles
+
 ## [0.21.5] - 2026-11-17
 
 [中文](#cn-0.21.5) | [English](#en-0.21.5)

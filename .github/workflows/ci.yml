@@ -52,7 +52,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      # Install dependencies for esbuild to bundle the feature manifests (D42).
+      # Install dependencies for esbuild to bundle the feature manifests (D76).
       - run: npm ci
       - id: scope
         run: node scripts/ci/ci-scope.mjs --base "${{ github.event.pull_request.base.sha || github.event.before || 'origin/master' }}"

@@ -99,9 +99,10 @@ for (const file of markdown) {
   }
 }
 
-// 3. Decision numbers cited by code and documents. A retired number stays citable (D48): a
-// comment or an older record points at it and the index leads on to what replaced it. A
-// decision file names the decision in force — only its 取代 line names retired numbers.
+// 3. Decision numbers cited by code and documents name the decision in force. A retired
+// number is led to its successor by the index for readers of old commits; the living tree
+// cites the successor, so a comment never points at a deleted decision file. Only a
+// decision's 取代 line and the generated index name retired numbers.
 const { live, retired } = decisionNumbers()
 const citing = [
   ...sources,
@@ -112,6 +113,7 @@ const citing = [
 ].filter((file, at, all) => all.indexOf(file) === at && fs.existsSync(file))
 const DECISION_FILE = /^docs\/adr\/D\d+-.*\.md$/
 const REPLACES_LINE = /^\s*[-*]\s*\*\*取代\*\*：/
+const DECISION_INDEX = 'docs/adr/README.md'
 let citations = 0
 let decisionProse = 0
 for (const file of citing) {
@@ -127,7 +129,8 @@ for (const file of citing) {
         continue
       }
       if (retired.has(number)) {
-        if (isDecision && !REPLACES_LINE.test(line)) problems.push(`${relative(file)}:${at + 1}: cites D${number}, which a later decision replaced; name the decision in force`)
+        const namesRetired = (isDecision && REPLACES_LINE.test(line)) || relative(file) === DECISION_INDEX
+        if (!namesRetired) problems.push(`${relative(file)}:${at + 1}: cites D${number}, which a later decision replaced; name the decision in force (docs/adr/README.md leads to it)`)
         continue
       }
       problems.push(`${relative(file)}:${at + 1}: cites D${number}, which is not a decision`)
@@ -455,8 +458,19 @@ for (const file of Object.keys(recordedMarks)) {
   if (!fs.existsSync(path.join(ROOT, file))) problems.push(`packages/testing/data/skin-literals.json: ${file} is gone from the tree — take its entry out`)
 }
 
+// The fault corpus applies to the tree it ships with (D92): a patch that no
+// longer applies fails the weekly faults run, so the push that moved the code
+// hears about it here, without a browser.
+const corpus = JSON.parse(fs.readFileSync(path.join(ROOT, 'packages', 'testing', 'faults', 'corpus.json'), 'utf8')).faults
+for (const fault of corpus) {
+  const patch = path.join(ROOT, 'packages', 'testing', 'faults', fault.patch)
+  const applied = spawnSync('git', ['apply', '--check', ...(fault.apply === 'reverse' ? ['-R'] : []), patch], { cwd: ROOT, encoding: 'utf8' })
+  if (applied.status !== 0) problems.push(`packages/testing/faults/corpus.json: ${fault.id} no longer applies — bring the patch up to the tree or take the entry out`)
+}
+
 // A rule whose pattern stopped matching anything would pass forever: each rule has to have looked at something.
 if (specs.length === 0) problems.push('lint: no spec was examined — the spec rule matches nothing')
+if (corpus.length === 0) problems.push('lint: no fault patch was examined — the corpus is empty')
 if (breakpoints === 0) problems.push('lint: no viewport breakpoint was read — the matrix rule matches nothing')
 if (featureUiChecked === 0) problems.push('lint: no feature module types ui as FeatureUi — the feature rule matches nothing')
 if (links === 0) problems.push('lint: no Markdown link was examined — the link pattern matches nothing')

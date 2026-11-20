@@ -1,19 +1,13 @@
 import * as React from 'react'
 import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
 import {
-  CONVERSATION_HEADER_SELECTOR,
   HEADER_ACTIONS_SELECTOR,
-  HEADER_CORNER_SELECTOR,
   HEADER_TITLE_ROW_SELECTOR,
-  HEADER_TITLE_SELECTOR,
-  HEADER_UTILITIES_SELECTOR,
-  VIEW_TABS_STRIP_SELECTOR,
 } from '@dsh-claude-style/contracts/dom'
 import { observeMatches, observeSize } from '@dsh-claude-style/engine/bus'
 import { desktopBand } from '@dsh-claude-style/engine/desktop-band'
-import { findRightbarToggle, findWindowsMenu, registerSlotEntries } from '@dsh-claude-style/engine/host'
+import { closestConversationHeader, conversationHeaderMore, conversationHeaderTitle, conversationHeaderTools, findRightbarToggle, findWindowsMenu, registerSlotEntries } from '@dsh-claude-style/engine/host'
 import { createStamp, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
-import { contentBox } from '../../shared/content-box'
 import { inPageBox, inPagePixels } from '../../shared/page-zoom'
 import type { FeatureUi } from '../../core/feature'
 import type { HostContext } from '@dsh-claude-style/engine/host'
@@ -29,6 +23,14 @@ import { placeCaptionRow } from './placement'
  * stamped and placed with `position: fixed`, never moved between parents. A
  * side whose measured room is too small writes nothing and stays in the row,
  * which is the stylesheet's base rule, so a failed placement needs no undoing.
+ *
+ * The session's more-actions trigger rides beside the lifted title, the way
+ * Claude's app keeps the session's own menu at the name: the trigger is
+ * stamped and fixed out of the utilities cluster, which closes the gap it
+ * leaves, and the host's menu anchors from the trigger's own box, so the
+ * panel opens beside the title. The conversation header keeps the trigger
+ * at the end of an unlifted title. The shell's application menu seat keeps
+ * the caption row's left end throughout.
  *
  * The row the title leaves rises by a relative offset, which creates no
  * containing block for the fixed pieces; the header then closes to that row, so
@@ -65,6 +67,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * row keeps the height it takes there.
    */
   const TRAIL_ATTR = 'data-dsh-header-trail'
+  /** The more-actions trigger's stamp; lifted out of the utilities cluster beside the title. */
+  const MORE_ATTR = 'data-dsh-header-more'
   /**
    * The row's own stamp and the negative top margin its rule reads: with the
    * title gone the row holds only the controls, and the host's top inset for a
@@ -80,18 +84,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const ROW_TOP = '--dsh-header-band-top'
   /** The measured caption height shared by the title and the fixed controls. */
   const BAND_HEIGHT = '--dsh-header-band-height'
+  const TABS_RIGHT = '--dsh-view-tabs-caption-right'
   /** The two control clusters' stamps, and the right offset both rules read. */
   const ACTIONS_ATTR = 'data-dsh-header-actions'
   const CORNER_ATTR = 'data-dsh-header-corner'
   const ACTIONS_RIGHT = '--dsh-header-band-right'
-  /**
-   * The view-tab strip's own stamp and the centre its rule reads: view-tabs
-   * places the strip at the window's centre, which stops reading as the middle
-   * of the row once the title and the controls stand on either side of it.
-   */
-  const TABS_ATTR = 'data-dsh-header-band-tabs'
-  const TABS_LEFT = '--dsh-header-band-tabs-left'
-  /** The two tokens the body marker carries. */
+  /** The pieces the header marker places in the caption. */
   const TITLE_TOKEN = 'title'
   const ACTIONS_TOKEN = 'actions'
   /** The host's seat in the header's own row that the header utilities land in. */
@@ -101,14 +99,18 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   const rowStamp = createStamp<HTMLElement>(ROW_ATTR)
   const titleStamp = createStamp<HTMLElement>(TITLE_ATTR)
+  const moreStamp = createStamp<HTMLElement>(MORE_ATTR)
   const trailStamp = createStamp<HTMLElement>(TRAIL_ATTR)
   const actionsStamp = createStamp<HTMLElement>(ACTIONS_ATTR)
   const cornerStamp = createStamp<HTMLElement>(CORNER_ATTR)
-  const tabsStamp = createStamp<HTMLElement>(TABS_ATTR)
   /** The row whose size the pass follows. */
   let watched: HTMLElement | null = null
   /** Stops watching it. */
   let stopSize: (() => void) | null = null
+  /** The title whose size the pass follows beside the row. */
+  let watchedTitle: HTMLElement | null = null
+  /** Stops watching the title. */
+  let stopTitleSize: (() => void) | null = null
   /** The cluster's needed width, measured while nothing capped it (D9). */
   let clusterNeed: number | null = null
   /** Every candidate title row, kept current by the bus (D40), and the one this pass took. */
@@ -188,7 +190,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   /** Whether `row` carries a title or the utilities. */
   function carriesHeaderText(row: HTMLElement) {
-    return row.querySelector(HEADER_TITLE_SELECTOR) !== null || row.querySelector(HEADER_UTILITIES_SELECTOR) !== null
+    return conversationHeaderTitle(row) !== null || conversationHeaderTools(row).utilities !== null
   }
 
   /** Whether the kept row is still the first match carrying header text (D40). */
@@ -234,16 +236,18 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     lastLift = null
     rowStamp.release()
     titleStamp.release()
+    moreStamp.release()
     trailStamp.release()
     actionsStamp.release()
     cornerStamp.release()
-    tabsStamp.release()
-    if (bandHost !== null) {
-      bandHost.removeAttribute(BAND_ATTR)
-      bandHost.style.removeProperty(ROW_TOP)
-      bandHost.style.removeProperty(BAND_HEIGHT)
-      bandHost = null
-    }
+    releaseBand()
+  }
+
+  function releaseBand() {
+    if (bandHost === null) return
+    bandHost.removeAttribute(BAND_ATTR)
+    for (const property of [ROW_TOP, BAND_HEIGHT, TABS_RIGHT]) bandHost.style.removeProperty(property)
+    bandHost = null
   }
 
   /**
@@ -251,13 +255,25 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * column's width with no mutation under it, and a placement written once
    * would trail the column the whole way; a resize report asks for a pass in
    * the same frame, and the pass writes the same numbers, so it stops there.
+   *
+   * The title's box is followed beside it: a webfont arriving changes the
+   * width the words take without a mutation and without moving the row, which
+   * spans the header. The cluster's place is computed from that width, so
+   * without this report it would keep the gap the fallback font measured.
    */
-  function watch(row: HTMLElement | null) {
-    if (row === watched) return
-    if (stopSize !== null) stopSize()
-    stopSize = null
-    watched = row
-    if (row !== null) stopSize = observeSize(row, () => { ui.schedule?.() })
+  function watch(row: HTMLElement | null, title: HTMLElement | null) {
+    if (row !== watched) {
+      if (stopSize !== null) stopSize()
+      stopSize = null
+      watched = row
+      if (row !== null) stopSize = observeSize(row, () => { ui.schedule?.() })
+    }
+    if (title !== watchedTitle) {
+      if (stopTitleSize !== null) stopTitleSize()
+      stopTitleSize = null
+      watchedTitle = title
+      if (title !== null) stopTitleSize = observeSize(title, () => { ui.schedule?.() })
+    }
   }
 
   /**
@@ -275,11 +291,14 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     trail: HTMLElement | null
     utilities: HTMLElement | null
     corner: HTMLElement | null
-    stripEl: HTMLElement | null
     rowBox: DOMRect | null
     headerBox: DOMRect | null
-    stripBox: DOMRect | null
-    menuBox: DOMRect | null
+    /** The shell's application menu seat, which keeps the row's left end. */
+    menuRight: number | null
+    /** The row's more-actions trigger, read inside the row so embedded headers are not taken. */
+    more: HTMLElement | null
+    /** The trigger's presence and the width of its square, which no placement caps. */
+    moreSize: { present: boolean, width: number }
     utilitiesBox: DOMRect | null
     cornerBox: DOMRect | null
     titleBox: DOMRect | null
@@ -310,12 +329,13 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       reading = null
       return
     }
-    const header = row.closest<HTMLElement>(CONVERSATION_HEADER_SELECTOR)
-    const title = row.querySelector<HTMLElement>(HEADER_TITLE_SELECTOR)
+    const header = closestConversationHeader(row)
+    const title = conversationHeaderTitle(row)
     const trail = row.querySelector<HTMLElement>(HEADER_ACTIONS_SELECTOR)
-    const utilities = row.querySelector<HTMLElement>(HEADER_UTILITIES_SELECTOR)
-    const corner = row.querySelector<HTMLElement>(HEADER_CORNER_SELECTOR)
-    const stripEl = header === null ? null : header.querySelector<HTMLElement>(VIEW_TABS_STRIP_SELECTOR)
+    const { utilities, corner } = conversationHeaderTools(row)
+    const menuBox = rect(findWindowsMenu())
+    const more = conversationHeaderMore(utilities)
+    const moreBox = rect(more)
     const titleBox = rect(title)
     const trailBox = rect(trail)
     // The cluster's need is measured while nothing of ours caps it, which is the
@@ -332,14 +352,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       trail,
       utilities,
       corner,
-      stripEl,
       rowBox: rect(row),
       headerBox: rect(header),
-      // The plate and overflow button standing in the strip's row
-      // (shared/content-box.ts): the row spans the header, so its own box would
-      // reserve the window for the tabs.
-      stripBox: stripEl === null ? null : contentBox(stripEl),
-      menuBox: rect(findWindowsMenu()),
+      menuRight: menuBox === null ? null : menuBox.right,
+      more,
+      moreSize: { present: moreBox !== null, width: moreBox === null ? 0 : moreBox.width },
       utilitiesBox: rect(utilities),
       cornerBox: rect(corner),
       titleBox,
@@ -360,25 +377,17 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     syncRightbarClose()
     const current = reading
     if (current === null) {
-      watch(null)
+      watch(null, null)
       clear()
       return
     }
     const { band, row, title, utilities, corner } = current
-    watch(row)
+    watch(row, title)
     const rowBox = current.rowBox
     if (rowBox === null) {
       clear()
       return
     }
-    // Only a strip the view-tabs feature has already lifted shares the caption
-    // row; one still drawn in the header's own row takes nothing from it. The box
-    // is the strip's content (the plate and the overflow button), because the row
-    // the host draws them in spans the header (shared/content-box.ts).
-    const stripEl = current.stripEl
-    const stripBox = current.stripBox
-    const inBand = stripBox !== null && stripBox.top < band.height
-    const stripWidth = stripBox === null || !inBand ? 0 : stripBox.width
     // The header's own top edge decides the row's rise; where its box was not
     // read, the row's unraised top is the edge the inset starts from.
     const applied = parseFloat(row.style.getPropertyValue(ROW_LIFT))
@@ -388,12 +397,13 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       bandHeight: band.height,
       controls: band.controls.size,
       rowLeft: rowBox.left,
-      menuRight: current.menuBox === null ? null : current.menuBox.right,
-      strip: { width: stripWidth, inBand },
+      menuRight: current.menuRight,
+      menu: current.moreSize,
       title: { present: title !== null, width: current.titleBox === null ? 0 : current.titleBox.width, natural: current.titleNatural },
       trail: { present: current.trail !== null, width: current.trailBox === null ? 0 : current.trailBox.width, need: current.trailNeed },
       utilities: { present: current.utilitiesBox !== null, width: current.utilitiesBox === null ? 0 : current.utilitiesBox.width },
       corner: { present: current.cornerBox !== null, width: current.cornerBox === null ? 0 : current.cornerBox.width },
+      tabsWidth: ui.viewTabs?.widthFor(current.header) ?? 0,
       headerTop,
       titleHeight: current.titleBox === null ? 0 : current.titleBox.height,
       ...(lastLift === null ? {} : { previous: lastLift }),
@@ -426,6 +436,16 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       setVar(title, TITLE_MAX, `${placement.title.max}px`)
       setVar(title, TITLE_TOP, `${placement.title.top}px`)
     }
+    // The trigger is fixed out of the utilities cluster, which closes the gap
+    // it leaves; the host's menu anchors from the trigger's own box, so the
+    // panel opens beside the title. Handing the title back lets its own anchor
+    // place the trigger in the conversation header again (D43).
+    const more = current.more
+    moreStamp.mark(placement.menuLeft === null ? null : more)
+    if (placement.menuLeft !== null && more !== null) {
+      setVar(more, TITLE_LEFT, `${placement.menuLeft}px`)
+      setVar(more, TITLE_TOP, `${placement.title?.top ?? band.height / 2}px`)
+    }
     const trail = current.trail
     trailStamp.mark(placement.trail === null ? null : trail)
     if (placement.trail !== null && trail !== null) {
@@ -439,34 +459,19 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     cornerStamp.mark(placement.cornerRight === null ? null : corner)
     if (placement.utilitiesRight !== null && utilities !== null) setVar(utilities, ACTIONS_RIGHT, `${placement.utilitiesRight}px`)
     if (placement.cornerRight !== null && corner !== null) setVar(corner, ACTIONS_RIGHT, `${placement.cornerRight}px`)
-    // view-tabs centres the strip on the window; with the title and the controls
-    // standing on either side of it that stops reading as the middle of the row,
-    // so it takes the middle of what is left between them — or between the
-    // shell's own left end and the caption buttons when a side stayed in the row.
-    const stripInBand = inBand && stripEl !== null
-    if (stripInBand && stripEl !== null && placement.stripLeft !== null) setVar(stripEl, TABS_LEFT, `${placement.stripLeft}px`)
-    tabsStamp.mark(stripInBand ? stripEl : null)
-
     // The tokens ride the header itself: they change on every page the row
     // appears on or leaves, and a body write would invalidate the whole
     // document each time (D9). Every stamped piece sits under the header.
-    const tokens = `${liftTitle ? TITLE_TOKEN : ''} ${liftActions ? ACTIONS_TOKEN : ''}`.trim()
+    const tokens = [liftTitle ? TITLE_TOKEN : '', liftActions ? ACTIONS_TOKEN : '', placement.tabsRight === null ? '' : 'tabs'].filter(Boolean).join(' ')
     const header = current.header
     if (tokens === '' || header === null) {
-      if (bandHost !== null) {
-        bandHost.removeAttribute(BAND_ATTR)
-        bandHost.style.removeProperty(ROW_TOP)
-        bandHost.style.removeProperty(BAND_HEIGHT)
-        bandHost = null
-      }
+      releaseBand()
     } else {
-      if (bandHost !== null && bandHost !== header) {
-        bandHost.removeAttribute(BAND_ATTR)
-        bandHost.style.removeProperty(ROW_TOP)
-        bandHost.style.removeProperty(BAND_HEIGHT)
-      }
+      if (bandHost !== header) releaseBand()
       bandHost = header
       setVar(header, BAND_HEIGHT, `${band.height}px`)
+      if (placement.tabsRight === null) header.style.removeProperty(TABS_RIGHT)
+      else setVar(header, TABS_RIGHT, `${placement.tabsRight}px`)
       setAttributeIfChanged(header, BAND_ATTR, tokens)
     }
   }
@@ -475,22 +480,30 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   // a streaming batch touches, so such a batch skips this pass (D40). The boxes
   // are read in the pass's read phase and written in its write phase.
   ui.headerBand = { measure, sync, skipOnContentOnly: true }
+  const overlay = navigator.windowControlsOverlay
+  const scheduleGeometry = () => ui.schedule?.()
+  overlay?.addEventListener('geometrychange', scheduleGeometry)
   // The slot entry is this generation's: the fiber is what takes it back when
   // the reader switches the band off, or another owner hands the page over.
   const closeButtonSlot = registerRightbarClose()
 
   return () => {
+    overlay?.removeEventListener('geometrychange', scheduleGeometry)
     const row = rowStamp.current()
     const title = titleStamp.current()
+    const more = moreStamp.current()
     const trail = trailStamp.current()
     const utilities = actionsStamp.current()
     const corner = cornerStamp.current()
-    const strip = tabsStamp.current()
     if (row !== null) row.style.removeProperty(ROW_LIFT)
     if (title !== null) {
       title.style.removeProperty(TITLE_LEFT)
       title.style.removeProperty(TITLE_MAX)
       title.style.removeProperty(TITLE_TOP)
+    }
+    if (more !== null) {
+      more.style.removeProperty(TITLE_LEFT)
+      more.style.removeProperty(TITLE_TOP)
     }
     if (trail !== null) {
       trail.style.removeProperty(TITLE_LEFT)
@@ -499,9 +512,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     }
     if (utilities !== null) utilities.style.removeProperty(ACTIONS_RIGHT)
     if (corner !== null) corner.style.removeProperty(ACTIONS_RIGHT)
-    if (strip !== null) strip.style.removeProperty(TABS_LEFT)
     clear()
-    watch(null)
+    watch(null, null)
     titleRows.release()
     closeButtons.release()
     if (closeButtonSlot !== null) closeButtonSlot.dispose()

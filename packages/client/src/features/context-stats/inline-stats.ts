@@ -6,9 +6,9 @@ import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { formatCompactTokens, formatUnitTokens } from '../../shared/format'
 import { inPageBox, inPagePixels } from '../../shared/page-zoom'
 import { createStatsCount } from './stats-count'
-import { createFooterLayout, findStatsDock } from './footer-layout'
+import { createFooterLayout } from './footer-layout'
 import { CACHE_HIT_STOPS, rampPosition, writeRamp } from './stats-ramp'
-import { sessionStatsCacheHit, sessionStatsDuration, sessionStatsGrouped, sessionStatsSpeed } from '../../shared/stats-format'
+import { sessionStatsCacheHit, sessionStatsDuration, sessionStatsGrouped, sessionStatsSpeed, sessionStatsTokenCount } from '../../shared/stats-format'
 import { formatMoneyMicro, CURRENCY_CNY, CURRENCY_SYMBOL } from '@dsh-claude-style/contracts/prices'
 import type { Currency } from '@dsh-claude-style/contracts/prices'
 import type { HostSessionStatsProjection, HostTokenUsageProjection } from '@dsh-claude-style/contracts/services'
@@ -102,9 +102,19 @@ function figure(className: string) {
   return { wrap, group, tail }
 }
 
-/** One figure's element: plain text a count rewrites in place. */
+/**
+ * One figure's element: plain text a count rewrites in place. It is quiet
+ * (QUIET_ATTR, D40): the count rewrites it every frame for as long as it
+ * travels, the line places itself again on each of those writes, and a
+ * page-wide pass woken by each one would run every feature once a frame.
+ */
 function buildFigure() {
-  return buildElement('span', 'dsh-claude-digit-group')
+  return quietFigure(buildElement('span', 'dsh-claude-digit-group'))
+}
+
+function quietFigure(element: HTMLElement) {
+  element.setAttribute(QUIET_ATTR, '')
+  return element
 }
 
 /**
@@ -164,7 +174,7 @@ function templateParts(chat: HostText, key: string, names: string[]) {
  * @returns { render, refit, clear, root }.
  */
 export function createInlineStats(read: () => StatsReading, chatText: () => HostText | null, meter: () => HTMLElement | null, currency: () => Currency | null) {
-  const footer = createFooterLayout(() => fit(true))
+  const footer = createFooterLayout(() => scheduleFit(true))
   let footerPosition = false
   let line: Line | null = null
   /** The twin a fit measures on, built on the first fit that asks. */
@@ -241,7 +251,7 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
     const outputFigure = figure('dsh-claude-inline-output')
     output.wrap.appendChild(outputFigure.wrap)
     const cost = segment()
-    const costFigure = buildElement('span', 'dsh-claude-inline-cost')
+    const costFigure = quietFigure(buildElement('span', 'dsh-claude-inline-cost'))
     cost.wrap.appendChild(costFigure)
     const total = segment()
     const totalFigure = figure('dsh-claude-inline-total')
@@ -292,41 +302,24 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
   function place(root: HTMLElement) {
     const row = findComposerStats()
     if (row === null || row.parentElement === null) return false
-    const dock = readPrefs().statsPosition === STATS_POSITION_FOOTER ? findStatsDock() : null
-    if (dock !== null) {
-      if (root.parentElement !== dock) dock.insertBefore(root, dock.firstChild)
-    } else if (root.parentElement !== row.parentElement) row.parentElement.insertBefore(root, row)
-    footer.sync(root)
+    if (footerPosition) return footer.place(root, row)
+    if (root.parentElement !== row.parentElement) row.parentElement.insertBefore(root, row)
     return true
   }
 
-  /** Take the line off the page, and the meter's step with it. */
   /**
-   * Fit again after a viewport or composer change. The change arrives in a
-   * write phase, where reading the card's width forces the page's layout under
-   * every write before it, so the width is read in the next frame's read phase
-   * and only a new width measures the line again (D40).
+   * Fit again after a viewport or composer change: only a new card width
+   * measures the line again (scheduleFit).
    */
-  let cancelRefit: (() => void) | null = null
   function refit() {
-    if (cancelRefit !== null) return
-    let width = -1
-    cancelRefit = requestFrame({
-      read() {
-        const card = findComposerCard()
-        width = card === null ? -1 : card.clientWidth
-      },
-      write() {
-        cancelRefit = null
-        if (width >= 0) fit(false, width)
-      },
-    })
+    scheduleFit(false)
   }
 
   function clear() {
     footer.clear()
-    cancelRefit?.()
-    cancelRefit = null
+    cancelFit?.()
+    cancelFit = null
+    forceFit = false
     count.reset()
     // The measuring twin survives every fit, but follows no removed line.
     if (probe !== null && probe.root.parentElement !== null) probe.root.remove()
@@ -341,7 +334,12 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
   }
 
   function show(segment: Segment, on: boolean) {
-    segment.wrap.hidden = !on
+    hide(segment.wrap, !on)
+  }
+
+  /** Writing `hidden` writes the attribute back even when it is unchanged, and the line is written every frame a count travels. */
+  function hide(element: HTMLElement, hidden: boolean) {
+    if (element.hidden !== hidden) element.hidden = hidden
   }
 
   /** Every figure that has data, in the words the host's templates give it, on ladder step `at`. */
@@ -394,7 +392,7 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
     show(shown.cache, (!footerMode || prefs.statsFooterCache) && hasCache)
     // The compact footer's cache figure carries its own percent sign alone: the
     // words before it would outweigh the figures beside them.
-    shown.cell.cacheHead.hidden = footerMode || at >= 1
+    hide(shown.cell.cacheHead, footerMode || at >= 1)
 
     if (hasCounts && counts !== null && stats !== null) {
       writeTextInPlace(shown.cell.turns, String(Math.round(stats.turns)))
@@ -411,15 +409,12 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
       writeTextInPlace(shown.cell.ttft, sessionStatsDuration(stats.ttftMs / stats.ttftSteps, chat))
     }
     if (hasTokens && usage !== null) {
-      // Every token figure folds into k / M / B at the ladder's last step, and
-      // the footer's figures take the reader's unit choice in every detail
-      // step, the two directions as well as the total.
-      const footerUnits = footerMode && prefs.statsFooterTokenFormat === FOOTER_TOKEN_UNITS
-      const readTokens = (value: number) => footerUnits
-        ? formatUnitTokens(Math.round(value))
-        : at >= FIT_MAX
-          ? formatCompactTokens(Math.round(value))
-          : sessionStatsGrouped(Math.round(value), chat)
+      // The reader's unit choice reaches every position and detail step.
+      // Without it, every token figure folds into k / M / B at the last step.
+      const units = prefs.statsFooterTokenFormat === FOOTER_TOKEN_UNITS
+      const readTokens = (value: number) => !units && at >= FIT_MAX
+        ? formatCompactTokens(Math.round(value))
+        : sessionStatsTokenCount(Math.round(value), chat, units)
       const total = billed + usage.outputTokens
       writeTextInPlace(shown.cell.input, readTokens(billed))
       writeText(shown.cell.inputTail, tokenParts[1] ?? '')
@@ -542,63 +537,93 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
   }
 
   /**
-   * Shorten the line until it fits the card it stands under, or, when it
-   * already fits, give back every step whose roomier shape fits with
-   * FIT_SLACK_PX to spare. Both walks measure the twin, which carries the
-   * reading the count is moving to: the figures on show may still be counting
-   * up to it. Both walks end at a ladder end, so a card too narrow for the last
-   * step leaves the line on it.
+   * The step a fit chooses: shorten the line until it fits the card it stands
+   * under, or, when it already fits, give back every step whose roomier shape
+   * fits with FIT_SLACK_PX to spare. Both walks measure the twin, which carries
+   * the reading the count is moving to: the figures on show may still be
+   * counting up to it. Both walks end at a ladder end, so a card too narrow for
+   * the last step leaves the line on it. The compact footer chooses its detail
+   * against the toolbar's room the same way.
+   *
+   * It runs in a frame's read phase (scheduleFit): it writes only the
+   * out-of-flow twin, and the meter is put back on the step in force after
+   * each reading.
    *
    * @param force - measure again even when the card has not changed width:
-   *     the render path passes it, a scroll does not, so scrolling a card of
-   *     one width stops paying for the twin probes.
-   * @param width - the card's width, when a read phase already took it.
+   *     the render path passes it, a resize does not, so a card of one width
+   *     stops paying for the twin probes.
+   * @returns the step and detail to write, or null when nothing is to change.
    */
-  function fit(force = false, width?: number) {
+  function chooseFit(force: boolean) {
     const shown = line
-    if (shown === null || shown.root.parentElement === null) return level
+    if (shown === null || shown.root.parentElement === null) return null
     const card = findComposerCard()
     const chat = chatText()
     const goal = count.goal()
-    if (card === null || chat === null || goal === null) return level
+    if (card === null || chat === null || goal === null) return null
     if (footerPosition) {
-      setLevel(0)
       const room = footer.room()
-      detail = 0
-      if (room !== null) {
-        for (const candidate of [2, 1]) {
-          if (probeFooterWidth(shown, candidate, chat, goal) <= room) {
-            detail = candidate
-            break
-          }
-        }
-      }
-      const displayed = count.current()
-      writeLine(shown, 0, chat, displayed.stats, displayed.usage, displayed.cost, displayed.billing, displayed.costPending, currency(), detail)
-      fitted = true
-      fittedShape = lineShape(goal, chat)
-      footer.sync(shown.root)
-      return level
+      if (!force && fitted && room === fittedWidth) return null
+      return { level: 0, width: room, ...footer.fit(room, step => probeFooterWidth(shown, step, chat, goal)) }
     }
-    const available = width ?? card.clientWidth
-    if (available <= 0) return level
-    if (!force && fitted && available === fittedWidth) return level
-    fittedWidth = available
+    const available = card.clientWidth
+    if (available <= 0) return null
+    if (!force && fitted && available === fittedWidth) return null
     const measure = (at: number) => probeWidth(shown, at, chat, goal)
-    if (measure(level) > available) {
-      while (level < FIT_MAX && measure(level) > available) setLevel(level + 1)
+    let step = level
+    if (measure(step) > available) {
+      while (step < FIT_MAX && measure(step) > available) step += 1
     } else {
-      let roomier = level
-      while (roomier > 0 && measure(roomier - 1) + FIT_SLACK_PX <= available) roomier -= 1
-      if (roomier !== level) setLevel(roomier)
+      while (step > 0 && measure(step - 1) + FIT_SLACK_PX <= available) step -= 1
     }
+    return { level: step, detail, width: available, placement: null }
+  }
+
+  /** Write the step a fit chose onto the shown line, in the frame's write phase. */
+  function applyFit(choice: NonNullable<ReturnType<typeof chooseFit>>) {
+    const shown = line
+    const chat = chatText()
+    const goal = count.goal()
+    if (shown === null || shown.root.parentElement === null || chat === null || goal === null) return
+    setLevel(choice.level)
+    detail = choice.detail
+    fittedWidth = choice.width
     // The step that stands is written onto the shown line with the numbers it
     // shows, so the figures that remain are the ones the reader is watching.
     const displayed = count.current()
     writeLine(shown, level, chat, displayed.stats, displayed.usage, displayed.cost, displayed.billing, displayed.costPending, currency())
     fitted = true
     fittedShape = lineShape(goal, chat)
-    return level
+    if (choice.placement !== null) footer.setPlacement(choice.placement)
+  }
+
+  /**
+   * Fit the line in the next frame, once however many renders asked (D40). A
+   * render runs where the host has just written the page — a projection
+   * landing, a session switch mounting its transcript — and a fit taken there
+   * would compute the whole transcript's style and layout once more before the
+   * frame does. The read phase measures, and the write phase of the same frame
+   * writes the chosen step before the paint.
+   */
+  let cancelFit: (() => void) | null = null
+  let forceFit = false
+  function scheduleFit(force: boolean) {
+    if (force) forceFit = true
+    if (cancelFit !== null) return
+    let choice: ReturnType<typeof chooseFit> = null
+    cancelFit = requestFrame({
+      read() {
+        const forced = forceFit
+        forceFit = false
+        choice = chooseFit(forced)
+      },
+      write() {
+        cancelFit = null
+        if (choice !== null) applyFit(choice)
+        // A render that asked after this frame's read phase is measured in the next one.
+        if (forceFit) scheduleFit(true)
+      },
+    })
   }
 
   /**
@@ -622,8 +647,10 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
     }
     const nextFooter = readPrefs().statsPosition === STATS_POSITION_FOOTER
     if (footerPosition !== nextFooter) {
+      if (!nextFooter) footer.clear()
       footerPosition = nextFooter
       fitted = false
+      fittedWidth = -1
       level = 0
       detail = 0
     }
@@ -638,7 +665,10 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
       // A session switch leaves the reading empty for a moment; the line stands
       // with the figures it had rather than folding the composer's bottom line
       // and unfolding it again.
-      if (held) return
+      if (held && line !== null) {
+        place(line.root)
+        return
+      }
       clear()
       return
     }
@@ -654,7 +684,7 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
     if (!changed && fitted) return
     const goal = count.goal()
     const shape = goal === null ? -1 : lineShape(goal, chat)
-    if (!fitted || shape !== fittedShape) fit(true)
+    if (!fitted || shape !== fittedShape) scheduleFit(true)
   }
 
   return {

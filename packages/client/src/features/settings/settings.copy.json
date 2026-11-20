@@ -49,7 +49,6 @@
   "brandImageType": { "zh": "只接受 PNG、SVG 或 WebP 图片。", "en": "Only PNG, SVG or WebP images are accepted." },
   "brandImageSize": { "zh": "图片超过 2 MB。", "en": "The image is larger than 2 MB." },
   "brandImageFailed": { "zh": "保存失败：{detail}", "en": "Saving failed: {detail}" },
-  "brandingPresetLabel": { "zh": "标志预设", "en": "Logo presets" },
   "brandingPresetTheme": { "zh": "跟随主题", "en": "Follow theme" },
   "brandingPresetNew": { "zh": "新建预设", "en": "New preset" },
   "brandingPresetLimit": { "zh": "最多 {count} 个", "en": "Up to {count}" },

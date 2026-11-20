@@ -61,7 +61,7 @@ const FULL_SEPARATOR = () => copy('processSummaryFullSeparator')
 const COMPACT_SEPARATOR = ' · '
 /** On a group root while its header shows the summary; the stylesheet hides the host's words under it. */
 export const PROCESS_SUMMARY_ATTR = 'data-dsh-claude-summary'
-/** On the host's count sentence the summary stands in for; the stylesheet hides this marked element alone. */
+/** On host header copy the summary stands in for; the stylesheet hides every marked element. */
 const PROCESS_SUMMARY_REPLACED_ATTR = 'data-dsh-claude-summary-replaced'
 /** On the summary while the group's section still runs, which is while its band stands (syncBand). */
 export const PROCESS_SUMMARY_RUNNING_ATTR = 'data-dsh-claude-summary-running'
@@ -76,6 +76,8 @@ const SUMMARY_CLASS = 'dsh-claude-process-summary'
 const FIT_CLASS = 'dsh-claude-process-summary-fit'
 /** On the band's copy of the figures, which lays them out the way the summary does (fold.css). */
 const GLYPHS_CLASS = 'dsh-claude-process-summary-glyphs'
+/** What a header has to be for its wording to be measured: rendered, and in a row content-visibility does not skip. */
+const RENDERED: CheckVisibilityOptions = { contentVisibilityAuto: true }
 
 /** Count direct body rows only; calls nested inside a tool row are not separate group items. */
 export function countProcessItems(content: Element): ProcessCounts {
@@ -178,6 +180,17 @@ export function createProcessSummary() {
   let faceEpoch = 0
   /** What each running summary's band copy says, so a pass that changes nothing writes nothing. */
   const bandSentences = new WeakMap<HTMLElement, string>()
+  /**
+   * Headers a pass left unmeasured because the page does not render them: a
+   * folded turn's, or one in a row content-visibility skips. A style or layout
+   * read inside such a subtree lays that subtree out on its own, every time it
+   * is read, and a folded transcript holds dozens of them. Their size observer
+   * hears them show and measures them in that report, before the frame paints.
+   * Per row: a header leaves when it is measured, released, or found detached.
+   */
+  const unseen = new Set<HTMLElement>()
+  let watchedUnseen: HTMLElement[] = []
+  let stopUnseenSizes: (() => void) | null = null
 
   /** One figure's count, rolled from the one it showed. */
   function setCount(roll: HTMLElement, count: number) {
@@ -267,7 +280,7 @@ export function createProcessSummary() {
     return width
   }
 
-  /** A header hidden in a folded turn keeps the full sentence until it can be measured. */
+  /** The wording a rendered header has room for. */
   function formOf(header: HTMLElement, summary: HTMLElement, sentence: string): SummaryForm {
     return summaryForm(fitWidthOf(fitOf(summary), sentence), availableWidth(header, summary))
   }
@@ -345,9 +358,10 @@ export function createProcessSummary() {
   function release(header: HTMLElement) {
     const kept = named.get(header)
     header.querySelector(`:scope > .${SUMMARY_CLASS}`)?.remove()
-    header.querySelector(`:scope > [${PROCESS_SUMMARY_REPLACED_ATTR}]`)?.removeAttribute(PROCESS_SUMMARY_REPLACED_ATTR)
+    for (const label of header.querySelectorAll(`:scope > [${PROCESS_SUMMARY_REPLACED_ATTR}]`)) label.removeAttribute(PROCESS_SUMMARY_REPLACED_ATTR)
     if (kept !== undefined && header.getAttribute('aria-label') === kept.name) header.removeAttribute('aria-label')
     named.delete(header)
+    unseen.delete(header)
     header.closest(PROCESS_GROUP_SELECTOR)?.removeAttribute(PROCESS_SUMMARY_ATTR)
   }
 
@@ -364,13 +378,42 @@ export function createProcessSummary() {
     })
   }
 
-  /** Whether the same summaries are watched, in the same order. */
-  function sameSummaries(summaries: readonly HTMLElement[]) {
-    if (summaries.length !== watchedSummaries.length) return false
-    for (let index = 0; index < summaries.length; index += 1) {
-      if (summaries[index] !== watchedSummaries[index]) return false
+  /** Whether two lists hold the same elements, in the same order. */
+  function sameElements(next: readonly HTMLElement[], watched: readonly HTMLElement[]) {
+    if (next.length !== watched.length) return false
+    for (let index = 0; index < next.length; index += 1) {
+      if (next[index] !== watched[index]) return false
     }
     return true
+  }
+
+  /** Whether the same summaries are watched, in the same order. */
+  function sameSummaries(summaries: readonly HTMLElement[]) {
+    return sameElements(summaries, watchedSummaries)
+  }
+
+  /** Watch the unmeasured headers with one size subscription (D40); the first report of a hidden one says nothing. */
+  function watchUnseen() {
+    for (const header of unseen) if (!header.isConnected) unseen.delete(header)
+    const headers = [...unseen]
+    if (sameElements(headers, watchedUnseen)) return
+    if (stopUnseenSizes !== null) stopUnseenSizes()
+    watchedUnseen = headers
+    stopUnseenSizes = headers.length === 0 ? null : observeSize(headers, entries => {
+      const shown: Element[] = []
+      for (const entry of entries) {
+        const header = entry.target as HTMLElement
+        if (!unseen.has(header) || !header.checkVisibility(RENDERED)) continue
+        const group = header.closest(PROCESS_GROUP_SELECTOR)
+        if (group !== null) shown.push(group)
+      }
+      if (shown.length === 0) return
+      // The report comes once the frame has laid the header out: measured and
+      // written here, the summary is drawn with the frame that shows it.
+      const pass = createPass()
+      readForms(shown, pass)
+      for (const candidate of writeForms(shown, pass)) queue(candidate)
+    })
   }
 
   /** Keep the accessible name as the full sentence even when the visible wording is compact. */
@@ -399,10 +442,12 @@ export function createProcessSummary() {
         known.summary = summary
       }
       if (!group.hasAttribute(PROCESS_SUMMARY_ATTR)) group.setAttribute(PROCESS_SUMMARY_ATTR, '')
-      // The count sentence is the header's own words, not a flow row: mark it alone so
-      // anything else the host keeps in the control (an answer, a slot) stays visible.
-      const label = [...header.querySelectorAll(PROCESS_HEADER_LABEL_SELECTOR)].find((child) => !child.hasAttribute(FLOW_KIND_ATTRIBUTE)) ?? null
-      if (label !== null && !label.hasAttribute(PROCESS_SUMMARY_REPLACED_ATTR)) label.setAttribute(PROCESS_SUMMARY_REPLACED_ATTR, '')
+      // The host can place a tool status beside the count sentence. Hide every
+      // non-flow header copy; flow rows and extension slots keep their own content visible.
+      for (const label of header.querySelectorAll(PROCESS_HEADER_LABEL_SELECTOR)) {
+        if (label.hasAttribute(FLOW_KIND_ATTRIBUTE) || label.hasAttribute('data-slot')) label.removeAttribute(PROCESS_SUMMARY_REPLACED_ATTR)
+        else label.setAttribute(PROCESS_SUMMARY_REPLACED_ATTR, '')
+      }
     }
     // A header the host replaced or unmounted takes nothing more from this module.
     for (const header of [...named.keys()]) {
@@ -411,49 +456,79 @@ export function createProcessSummary() {
     watchSummaries([...named.values()].map(entry => entry.summary))
   }
 
+  /**
+   * What one pass carries from its read half to its write half: the wording
+   * each measured header takes, and the groups whose summary or measuring text
+   * it has to write, with the sentence to put there. Per pass: dropped once
+   * the write half has run.
+   */
+  function createPass() {
+    return { forms: new Map<HTMLElement, SummaryForm>(), deferred: new Map<Element, string>() }
+  }
+
+  /**
+   * The read half of a pass: the wording each group's header has room for.
+   * Missing measuring content is built by the write half and measured by the
+   * next pass (D40); a header the page does not render waits in `unseen`.
+   */
+  function readForms(candidates: Iterable<Element>, { forms, deferred }: ReturnType<typeof createPass>) {
+    for (const candidate of candidates) {
+      if (!candidate.isConnected) continue
+      const header = candidate.querySelector<HTMLElement>(PROCESS_ACTIVITY_SELECTOR)
+      const reading = readingOf(candidate)
+      if (header === null || reading === null) continue
+      const sentence = summaryText(reading.full, 'full')
+      const summary = header.querySelector<HTMLElement>(`:scope > .${SUMMARY_CLASS}`)
+      if (summary === null || fitOf(summary).textContent !== sentence) {
+        deferred.set(candidate, sentence)
+        continue
+      }
+      if (!header.checkVisibility(RENDERED)) {
+        unseen.add(header)
+        continue
+      }
+      unseen.delete(header)
+      forms.set(header, formOf(header, summary, sentence))
+    }
+  }
+
+  /**
+   * The write half of a pass.
+   * @returns the groups whose measuring text it wrote, for the next pass to measure.
+   */
+  function writeForms(groups: readonly Element[], { forms, deferred }: ReturnType<typeof createPass>) {
+    // Every write first: the next frame's reads then pay one layout for the
+    // whole batch, where a write between two reads paid one per group.
+    const measureNext: Element[] = []
+    for (const [candidate, sentence] of deferred) {
+      if (!candidate.isConnected) continue
+      const header = candidate.querySelector<HTMLElement>(PROCESS_ACTIVITY_SELECTOR)
+      if (header === null) continue
+      const fit = fitOf(summaryOf(header))
+      if (fit.textContent !== sentence) fit.textContent = sentence
+      measureNext.push(candidate)
+    }
+    flush(groups, forms)
+    watchUnseen()
+    return measureNext
+  }
+
   function queue(group: Element) {
     if (stopped) return
     pending.add(group)
     if (queued) return
     queued = true
-    const forms = new Map<HTMLElement, SummaryForm>()
-    /** Groups whose summary or measuring text this batch has to write, with the sentence to put there. */
-    const deferred = new Map<Element, string>()
+    const pass = createPass()
     cancelFrame = requestFrame({
       read() {
-        // Build missing measuring content in the write phase and measure it next frame (D40).
-        for (const candidate of pending) {
-          if (!candidate.isConnected) continue
-          const header = candidate.querySelector<HTMLElement>(PROCESS_ACTIVITY_SELECTOR)
-          const reading = readingOf(candidate)
-          if (header === null || reading === null) continue
-          const sentence = summaryText(reading.full, 'full')
-          const summary = header.querySelector<HTMLElement>(`:scope > .${SUMMARY_CLASS}`)
-          if (summary === null || fitOf(summary).textContent !== sentence) {
-            deferred.set(candidate, sentence)
-            continue
-          }
-          forms.set(header, formOf(header, summary, sentence))
-        }
+        readForms(pending, pass)
       },
       write() {
         cancelFrame = null
         queued = false
         const groups = [...pending]
         pending.clear()
-        // Every write first: the next frame's reads then pay one layout for the
-        // whole batch, where a write between two reads paid one per group.
-        const measureNext: Element[] = []
-        for (const [candidate, sentence] of deferred) {
-          if (!candidate.isConnected) continue
-          const header = candidate.querySelector<HTMLElement>(PROCESS_ACTIVITY_SELECTOR)
-          if (header === null) continue
-          const fit = fitOf(summaryOf(header))
-          if (fit.textContent !== sentence) fit.textContent = sentence
-          measureNext.push(candidate)
-        }
-        flush(groups, forms)
-        for (const candidate of measureNext) queue(candidate)
+        for (const candidate of writeForms(groups, pass)) queue(candidate)
       },
     })
   }
@@ -520,6 +595,10 @@ export function createProcessSummary() {
       if (stopSummarySizes !== null) stopSummarySizes()
       stopSummarySizes = null
       watchedSummaries = []
+      if (stopUnseenSizes !== null) stopUnseenSizes()
+      stopUnseenSizes = null
+      watchedUnseen = []
+      unseen.clear()
       for (const group of document.querySelectorAll(`[${PROCESS_SUMMARY_ATTR}]`)) group.removeAttribute(PROCESS_SUMMARY_ATTR)
     },
   }

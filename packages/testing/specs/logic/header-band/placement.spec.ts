@@ -1,6 +1,6 @@
 /**
  * Where one caption-row pass puts the title, the cluster beside it, the two
- * control clusters and the tab strip, decided from numbers alone. The cases
+ * control clusters, decided from numbers alone. The cases
  * walk the thresholds on both sides: a title that just fits and one that does
  * not, a cluster whose need just fits and one that does not, and a name that
  * grew back past the width an earlier pass handed it. The last cases hand the
@@ -12,8 +12,7 @@
  * @features header-band
  * @risk The cluster is judged by a width something capped rather than the width
  *   it needs, a title that grew back keeps the trail placed against its old
- *   name, a piece whose room falls below the threshold is lifted anyway, the
- *   strip is centred in a run the title and the controls no longer leave, or a
+ *   name, a piece whose room falls below the threshold is lifted anyway, or a
  *   boundary the pass moves itself leaves the caption row alternating.
  */
 import { expect, test } from 'vitest'
@@ -28,7 +27,7 @@ function inputs(patch: Partial<CaptionInputs> = {}): CaptionInputs {
     controls: 140,
     rowLeft: 200,
     menuRight: null,
-    strip: { width: 152, inBand: true },
+    menu: { present: false, width: 0 },
     title: { present: true, width: 300, natural: 300 },
     trail: { present: true, width: 60, need: 60 },
     utilities: { present: true, width: 114 },
@@ -42,7 +41,7 @@ function inputs(patch: Partial<CaptionInputs> = {}): CaptionInputs {
 test('the caption row takes both sides and the pieces take one place each', () => {
   const placed = placeCaptionRow(inputs())
   expect(placed.lift).toEqual({ title: true, trail: true, actions: true })
-  expect(placed.title).toEqual({ left: 200, max: 546, top: 20 })
+  expect(placed.title).toEqual({ left: 200, max: 706, top: 20 })
   expect(placed.trail).toEqual({ left: 508, top: 20 })
   expect(placed.utilitiesRight).toBe(184)
   expect(placed.cornerRight).toBe(148)
@@ -64,20 +63,20 @@ test('the row stands on the lower edge of the title box it no longer holds', () 
 })
 
 test('a title that just fits the room is lifted, and one a pixel short stays in the row', () => {
-  const fits = placeCaptionRow(inputs({ rowLeft: 694 }))
+  const fits = placeCaptionRow(inputs({ rowLeft: 854 }))
   expect(fits.lift.title).toBe(true)
   expect(fits.title?.max).toBe(120)
   expect(fits.lift.trail).toBe(false)
-  const short = placeCaptionRow(inputs({ rowLeft: 695 }))
+  const short = placeCaptionRow(inputs({ rowLeft: 855 }))
   expect(short.lift.title).toBe(false)
   expect(short.title).toBeNull()
   expect(short.rowLift).toBe(0)
 })
 
 test('the cluster is judged by the width it needs, not by the box a limit left it with', () => {
-  const needed = placeCaptionRow(inputs({ trail: { present: true, width: 60, need: 700 } }))
+  const needed = placeCaptionRow(inputs({ trail: { present: true, width: 60, need: 701 } }))
   expect(needed.lift.trail).toBe(false)
-  expect(needed.title?.max).toBe(614)
+  expect(needed.title?.max).toBe(774)
   expect(placeCaptionRow(inputs({ trail: { present: true, width: 60, need: 60 } })).lift.trail).toBe(true)
 })
 
@@ -85,37 +84,32 @@ test('a name that grew back past its old limit places the cluster against the wi
   const grown = placeCaptionRow(inputs({ title: { present: true, width: 120, natural: 500 } }))
   expect(grown.trail?.left).toBe(708)
   const room = placeCaptionRow(inputs({ title: { present: true, width: 120, natural: 900 } }))
-  expect(room.trail?.left).toBe(200 + 546 + 8)
+  expect(room.trail?.left).toBe(200 + 706 + 8)
 })
 
 test('a window the cluster and the controls cannot both stand in keeps both in the row', () => {
-  const tight = placeCaptionRow(inputs({ strip: { width: 670, inBand: true } }))
+  const tight = placeCaptionRow(inputs({ width: 353 }))
   expect(tight.lift.actions).toBe(false)
   expect(tight.utilitiesRight).toBeNull()
   expect(tight.cornerRight).toBeNull()
-  expect(placeCaptionRow(inputs({ strip: { width: 668, inBand: true } })).lift.actions).toBe(true)
-})
-
-test('the strip takes the middle of the run the title and the controls leave', () => {
-  expect(placeCaptionRow(inputs()).stripLeft).toBe(775)
-  expect(placeCaptionRow(inputs({ strip: { width: 152, inBand: false } })).stripLeft).toBeNull()
+  expect(placeCaptionRow(inputs({ width: 354 })).lift.actions).toBe(true)
 })
 
 test('a place taken stands across the pixels a placement moves, and is given up past them', () => {
-  // The room is 120 at a row left of 694, and one pixel less for every pixel the
+  // The room is 120 at a row left of 854, and one pixel less for every pixel the
   // row moves right; the pass keeps a place down to 4px below the threshold.
   const held = { title: true, trail: false, actions: false }
-  expect(placeCaptionRow(inputs({ rowLeft: 698 })).lift.title).toBe(false)
-  expect(placeCaptionRow(inputs({ rowLeft: 698, previous: held })).lift.title).toBe(true)
-  expect(placeCaptionRow(inputs({ rowLeft: 698, previous: { ...held, title: false } })).lift.title).toBe(false)
-  expect(placeCaptionRow(inputs({ rowLeft: 697, previous: held })).lift.title).toBe(true)
-  expect(placeCaptionRow(inputs({ rowLeft: 699, previous: held })).lift.title).toBe(false)
+  expect(placeCaptionRow(inputs({ rowLeft: 858 })).lift.title).toBe(false)
+  expect(placeCaptionRow(inputs({ rowLeft: 858, previous: held })).lift.title).toBe(true)
+  expect(placeCaptionRow(inputs({ rowLeft: 858, previous: { ...held, title: false } })).lift.title).toBe(false)
+  expect(placeCaptionRow(inputs({ rowLeft: 857, previous: held })).lift.title).toBe(true)
+  expect(placeCaptionRow(inputs({ rowLeft: 859, previous: held })).lift.title).toBe(false)
 })
 
 test('a boundary the placement itself moves comes to rest', () => {
   // A lifted title closes the header, and the pass after it reads a row three
   // pixels further right: the same window answers both ways, one pass apart.
-  const read = (lifted: boolean) => inputs({ rowLeft: 694 + (lifted ? 3 : 0) })
+  const read = (lifted: boolean) => inputs({ rowLeft: 854 + (lifted ? 3 : 0) })
   const walked: boolean[] = []
   let previous: CaptionInputs['previous']
   for (let pass = 0; pass < 6; pass++) {
@@ -127,18 +121,64 @@ test('a boundary the placement itself moves comes to rest', () => {
 })
 
 test('a control cluster taken keeps its place across a step back, and no room at all gives it up', () => {
-  // The cluster and the strip's own right end meet exactly at a 668px strip, and
-  // the margin holds the place down to four pixels short of that at 676; a pixel
-  // less room hands it back.
+  // The window has room for the controls at 354px. The margin holds a placed
+  // cluster four pixels below the threshold.
   const held = { title: true, trail: true, actions: true }
-  expect(placeCaptionRow(inputs({ strip: { width: 672, inBand: true } })).lift.actions).toBe(false)
-  expect(placeCaptionRow(inputs({ strip: { width: 672, inBand: true }, previous: held })).lift.actions).toBe(true)
-  expect(placeCaptionRow(inputs({ strip: { width: 676, inBand: true }, previous: held })).lift.actions).toBe(true)
-  expect(placeCaptionRow(inputs({ strip: { width: 677, inBand: true }, previous: held })).lift.actions).toBe(false)
+  expect(placeCaptionRow(inputs({ width: 352 })).lift.actions).toBe(false)
+  expect(placeCaptionRow(inputs({ width: 352, previous: held })).lift.actions).toBe(true)
+  expect(placeCaptionRow(inputs({ width: 350, previous: held })).lift.actions).toBe(true)
+  expect(placeCaptionRow(inputs({ width: 349, previous: held })).lift.actions).toBe(false)
 })
 
 test('a missing control cluster leaves no air behind it', () => {
   const solo = placeCaptionRow(inputs({ corner: { present: false, width: 0 } }))
   expect(solo.utilitiesRight).toBe(148)
   expect(solo.lift.actions).toBe(true)
+})
+
+test('the tabs leave one gap before the tools and reserve title room', () => {
+  const tabsWidth = 120
+  const withoutTabs = placeCaptionRow(inputs())
+  const withTabs = placeCaptionRow(inputs({ tabsWidth }))
+  expect(withTabs.tabsRight).toBe(withTabs.utilitiesRight! + 114 + 8)
+  expect(withTabs.title?.max).toBe(withoutTabs.title!.max - tabsWidth - 8)
+})
+
+test('the tabs keep the right side when the remaining space cannot hold the title', () => {
+  const narrow = placeCaptionRow(inputs({ tabsWidth: 120, rowLeft: 840 }))
+  expect(narrow.tabsRight).not.toBeNull()
+  expect(narrow.lift.title).toBe(false)
+  expect(placeCaptionRow(inputs({ tabsWidth: 120, rowLeft: 860 })).tabsRight).toBeNull()
+})
+
+test('the more-actions trigger starts at the title end and keeps the normal gap before the cluster', () => {
+  const placed = placeCaptionRow(inputs({ menu: { present: true, width: 28 }, menuRight: 146 }))
+  expect(placed.lift).toEqual({ title: true, trail: true, actions: true })
+  expect(placed.menuLeft).toBe(200 + 300)
+  expect(placed.trail?.left).toBe(200 + 300 + 28 + 8)
+  // The trigger's width comes off the title's room, on the lift pass and after it.
+  expect(placed.title?.max).toBe(706 - 28)
+  const held = placeCaptionRow(inputs({ menu: { present: true, width: 28 }, menuRight: 146, previous: placed.lift }))
+  expect(held.title).toEqual(placed.title)
+  expect(held.menuLeft).toBe(placed.menuLeft)
+})
+
+test('the title lifts only with room for itself and the trigger beside it', () => {
+  const menu = { present: true, width: 28 }
+  const fits = placeCaptionRow(inputs({ menu, menuRight: 146, rowLeft: 826 }))
+  expect(fits.lift.title).toBe(true)
+  expect(fits.title?.max).toBe(120)
+  const short = placeCaptionRow(inputs({ menu, menuRight: 146, rowLeft: 827 }))
+  expect(short.lift.title).toBe(false)
+  expect(short.menuLeft).toBeNull()
+  const held = { title: true, trail: false, actions: false }
+  expect(placeCaptionRow(inputs({ menu, menuRight: 146, rowLeft: 830, previous: held })).lift.title).toBe(true)
+  expect(placeCaptionRow(inputs({ menu, menuRight: 146, rowLeft: 831, previous: held })).lift.title).toBe(false)
+})
+
+test('a shell seat too wide for the row keeps both sides in the header, trigger included', () => {
+  const placed = placeCaptionRow(inputs({ menu: { present: true, width: 28 }, menuRight: 1200 }))
+  expect(placed.lift).toEqual({ title: false, trail: false, actions: false })
+  expect(placed.menuLeft).toBeNull()
+  expect(placed.utilitiesRight).toBeNull()
 })

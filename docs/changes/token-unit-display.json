@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-19",
+  "group": "improvements",
+  "order": 0,
+  "external": true,
+  "zh": "独立统计行与对话详情栏支持可配置的 K/M/B/T Token 单位，并默认使用单位显示",
+  "en": "Add configurable K/M/B/T token units to the independent statistics line and conversation details rail, with units shown by default"
+}

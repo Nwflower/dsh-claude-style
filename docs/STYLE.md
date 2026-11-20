@@ -299,6 +299,15 @@ page itself: no block of their own behind them, and they dim with a modal's mask
 like everything else. Their hover plate is the system's, a tint of the button
 glyph's colour.
 
+**The session's menu at the name.** The more-actions trigger — the launcher
+whose panel carries the session's own actions — starts at the end of the
+session title in either header row, with the preset cluster after it.
+The button uses a downward SVG chevron and stays visible as the surrounding
+tools fade. Its panel opens at the button, and the utilities cluster closes the
+gap the trigger leaves. The title anchors the button in the conversation header
+whenever that is where the title stands. The shell's application menu seat keeps
+the caption row's left end, and the row's content starts after it.
+
 **The header's controls.** The conversation header's controls read as one row of
 plates, in the caption row and in the header's own row alike: a 28px square at an
 8px radius with a 16px glyph in the secondary ink, and the skin's hover plate
@@ -438,9 +447,28 @@ separate right-aligned duration beside their execution mode and stop control.
 An output row names the file and the folder it lies in, and only a
 file the model presented carries a state word. Its mark is a single-stroke sheet
 in the row's own ink, with a picture frame for an image, so a coloured file-type
-badge never competes with the legend. With the rail standing the
-conversation's view switch shares the title's line at the row's right end,
-before the utilities, and the title truncates to the span left over.
+badge never competes with the legend.
+
+The conversation view switch keeps the host's text tabs and selection. The
+label's text colour brightens on hover or keyboard focus. One underline follows
+the selected label. Both edges ease out of rest. The leading edge stretches
+across the gap and moves just past the new label as the trailing edge catches
+up. The line settles under the new label. Reduced motion applies both changes
+immediately.
+The tabs and their overflow menu sit before the right-hand tools in the
+conversation header, including the Windows caption when it has room. A narrow
+header keeps them right-aligned on the next line. The details rail leaves the
+header's width intact.
+
+The title area and the session's more-actions trigger stay visible. The view
+tabs, their overflow menu and the right-hand tools fade in while the pointer is
+over the header or main content, including the composer and the Windows caption
+space above the conversation.
+They fade out over a sidebar or the details rail and keep their place in the
+header. Keyboard focus reveals them immediately. Reduced motion applies the
+opacity changes immediately, and touch-only devices keep the controls visible.
+The Conversation setting Hide toolbar outside the conversation starts on.
+Turning it off keeps those controls visible throughout the active conversation.
 
 The two figures sections put a label on the left and a value on the right, one
 figure a row, so a long duration or token count keeps the row's width. Session
@@ -559,6 +587,7 @@ edit the JSON, not the table.
 | `--dsh-claude-duration-fade` | `300ms` | a slow cross-fade: the theme flip, the reasoning knob's glow, a placeholder handing its place to what it stood for |
 | `--dsh-claude-duration-column` | `300ms` | a column taking or giving up width beside the chat: the conversation's details rail opening or closing, and the chat's own inset following it |
 | `--dsh-claude-duration-bounce` | `350ms` | a switch's knob travelling across with its double bounce |
+| `--dsh-claude-duration-tab-underline` | `280ms` | the conversation tab underline stretching and settling under the next label |
 | `--dsh-claude-duration-flight` | `400ms` | the sent message flying from the composer to its row |
 | `--dsh-claude-duration-step` | `500ms` | one step of the reasoning window's text rising two lines |
 | `--dsh-claude-duration-pop` | `500ms` | something popping into place: the overtime badge's own pill |
@@ -594,6 +623,8 @@ edit the JSON, not the table.
 | `--dsh-claude-ease-status-title` | `cubic-bezier(0.45, 0, 0.55, 1)` | the middle travel segment of the strong running-title shimmer |
 | `--dsh-claude-ease-in-out` | `ease-in-out` | something that leaves and returns, or swaps in place: wording swaps, pulses, flashes |
 | `--dsh-claude-ease-glide` | `cubic-bezier(0.22, 0.61, 0.36, 1)` | travel along a track: the sliding highlight, the reasoning slider, the search dialog's entrance, the reasoning window's step, the wording box's width, the stream's slide |
+| `--dsh-claude-ease-tab-leading-edge` | `cubic-bezier(0.2, 0, 0.32, 1.28)` | the leading edge of the tab underline stretching just past the new label before settling |
+| `--dsh-claude-ease-tab-trailing-edge` | `cubic-bezier(0.52, 0, 0.72, 1)` | the trailing edge of the tab underline accelerating later and easing to a stop as it catches the leading edge |
 | `--dsh-claude-ease-roll` | `cubic-bezier(0.4, 0, 0.2, 1)` | digits rolling over: the file rows' tail and the process group header's counts |
 | `--dsh-claude-ease-column` | `cubic-bezier(0.4, 0, 0.2, 1)` | a column taking or giving up width beside the chat, and the chat's inset following it |
 | `--dsh-claude-ease-spring` | `cubic-bezier(0.34, 1.45, 0.64, 1)` | a small overshoot as something lands: the overtime badge popping in, a switch's knob bouncing past its end |
@@ -638,7 +669,7 @@ edit the JSON, not the table.
 | `--dsh-claude-layer-control` | `10` | a control kept over the composer card's own stacked rows: the send and stop buttons, the reasoning picker's trigger |
 | `--dsh-claude-layer-picker` | `20` | a picker that hangs its card from inside the composer: the permission picker, whose card has to stand over the controls beside it |
 | `--dsh-claude-layer-rail` | `24` | the conversation's details column: over the chat and the composer, under the host's own floating panels and under the header row, which hangs its menus in a layer of its own |
-| `--dsh-claude-layer-chrome` | `30` | the window's title row the skin draws into: the header band's title and actions, the titlebar's view tabs, over the host's own header |
+| `--dsh-claude-layer-chrome` | `30` | the window's title row the skin draws into: the title, view tabs and actions over the host's own header |
 | `--dsh-claude-layer-peek` | `40` | the sidebar opened over the page while the pointer rests on its toggle: over the main window's title row and its own controls, under the floating cards and menus its rows open |
 | `--dsh-claude-layer-float` | `99999` | a floating card or menu over everything the host draws: the popover cards, the hero menu |
 | `--dsh-claude-layer-tooltip` | `100000` | the host's own tooltip bubble while it explains a control inside a card the skin floats: over those cards, under a takeover |
@@ -655,9 +686,14 @@ Both are solid (never translucent) and `!important`, so they override whatever
 colour the text underneath carries — links, inline code, syntax tokens. CSS
 cannot read window focus: Chromium reaches the inactive paint through its own
 internal `-internal-inactive-selection-*` properties, which a stylesheet cannot
-address. `packages/client/src/features/composer/selection-mirror.ts` therefore
-mirrors `document.hasFocus()` onto `data-dsh-window-blur` and the stylesheet
-switches on that attribute; the selection itself survives the blur.
+address. `packages/client/src/core/selection-paint.ts` therefore mirrors
+`document.hasFocus()` onto `data-dsh-window-blur` while a range is selected, and
+the stylesheet switches on that attribute; the selection itself survives the
+blur. The same module marks a transcript's root with
+`data-dsh-claude-selection-paint` once a selection starts in it, and the
+transcript's paints key on that mark: a `::selection` rule that matches an
+element costs that element a selection style on every recalculation, and a
+session switch mounts the new transcript without the mark.
 
 The window's chrome is not text. The sidebar column and the conversation header
 take `user-select: none`: a press on a row or on the session title is a gesture
@@ -808,7 +844,13 @@ the written-back tokens and the cache share, and it is among the figures the
 ladder gives up when the line needs the room for the total; in the block it is
 the usage section's first row.
 
-In the toolbar's placement the segment keeps its width across a session switch:
+Compact footer figures join the tool row between the left controls and the
+model and context controls. Their seat takes the space available in that row.
+When even the shortest statistics line cannot fit, it takes its own row below
+the tools. The invisible measuring copy stays inside its positioning box so
+it cannot extend the transcript's scroll range beyond the composer.
+
+In the toolbar the cost segment keeps its width across a session switch:
 the session's figure is replaced while the next one is being priced, so the
 amount sits in a box of an amount's measure, right-aligned so a growing figure
 extends left, and the box stands as the currency symbol and a dash in

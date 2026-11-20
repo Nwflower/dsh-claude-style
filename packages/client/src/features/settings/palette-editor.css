@@ -259,9 +259,13 @@ body[data-dsh-claude-style] .dsh-claude-scheme-hex {
   line-height: 16px;
 }
 
-body[data-dsh-claude-style] .dsh-claude-scheme-well[data-derived] > .dsh-claude-scheme-hex {
+/* A derived link's origin, beside the resolved value it explains. */
+body[data-dsh-claude-style] .dsh-claude-scheme-derived {
+  flex: none;
   color: var(--dsw-alias-label-tertiary);
-  font-family: inherit;
+  font-size: 11px;
+  line-height: 16px;
+  white-space: nowrap;
 }
 
 body[data-dsh-claude-style] .dsh-claude-scheme-contrast {

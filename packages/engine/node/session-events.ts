@@ -1,6 +1,7 @@
 /**
- * Prefer `observeSession`: `readSession` lists the whole corpus per lookup, while observation leases avoid that.
- * `readTitleSnapshots` discards events and cannot substitute. Keep `readSession` only for older hosts.
+ * Events are read through `observeSession`: the observation lease answers one
+ * id without listing the corpus, and every host the package loads on publishes
+ * it. `readTitleSnapshots` discards events and cannot substitute.
  * Corrupt/vanished logs are omitted with a warning; all other failures propagate (D12).
  */
 import type { DshContext, DshSessionObservation } from './dsh'
@@ -8,7 +9,6 @@ import type { DshContext, DshSessionObservation } from './dsh'
 /** The `sessionQuery` service, in the members this module reads. */
 interface QueryReader {
   observeSession?(sessionId: string, options?: { projectionMode?: 'all' | 'none' }): Promise<DshSessionObservation>
-  readSession?(sessionId: string): Promise<{ events?: unknown } | null | undefined>
 }
 
 /** The caller's events out of whatever the host hands back, or null when it is not a log. */
@@ -40,20 +40,16 @@ export async function readEvents<T>(ctx: DshContext, packageName: string, sessio
   const query = ctx.get('sessionQuery') as QueryReader | null | undefined
   if (query === null || query === undefined) return null
   try {
-    if (typeof query.observeSession === 'function') {
-      // `projectionMode: 'none'` keeps the host's own projection computation off
-      // a read that only wants the events; the lease is released as soon as they
-      // are in hand.
-      const observation = await query.observeSession(sessionId, { projectionMode: 'none' })
-      try {
-        return eventsOf<T>(observation.events)
-      } finally {
-        releaseObservation(observation)
-      }
+    if (typeof query.observeSession !== 'function') return null
+    // `projectionMode: 'none'` keeps the host's own projection computation off
+    // a read that only wants the events; the lease is released as soon as they
+    // are in hand.
+    const observation = await query.observeSession(sessionId, { projectionMode: 'none' })
+    try {
+      return eventsOf<T>(observation.events)
+    } finally {
+      releaseObservation(observation)
     }
-    if (typeof query.readSession !== 'function') return null
-    const snapshot = await query.readSession(sessionId)
-    return eventsOf<T>(snapshot?.events)
   } catch (error) {
     if (unreadableLog(error) === null) throw error
     reportUnreadable(ctx, packageName, error, sessionId, label)

@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-18",
-  "group": "fixes",
-  "order": 394,
-  "external": true,
-  "zh": "修复悬停展开的账号菜单与工作区、预设选择卡片在指针移入时立即收起的问题，指针在入口与卡片之间移动时保持展开",
-  "en": "Fix hover-opened account menus and workspace/preset picker cards folding as the pointer moves into them, keeping the card open while the pointer travels between the trigger and the card"
-}

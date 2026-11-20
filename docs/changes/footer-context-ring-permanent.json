@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-18",
-  "group": "fixes",
-  "order": 0,
-  "external": false,
-  "zh": "修复紧凑底栏下上下文圆环掉出统计排列的问题（#405），移除「底栏上下文圆环」开关，圆环常驻输入区工具栏、与费用等统计项同排，百分比读数仍随「上下文占用百分比」开关显示",
-  "en": "Fix the context ring dropping out of the compact footer's statistics arrangement (#405) by removing the 'Footer context ring' switch, the ring always standing in the composer toolbar beside the cost and other figures while its percentage still follows the 'Context occupancy percentage' switch"
-}

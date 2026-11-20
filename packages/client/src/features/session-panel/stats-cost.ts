@@ -1,5 +1,5 @@
 /**
- * The session's cost in the currency the reader's billing setting chose (D102):
+ * The session's cost in the currency the reader's billing setting chose (D106):
  * the host's settled totals and the live reading each arrive in one currency,
  * and the setting decides which one the rail prints. Billing off leaves no cost
  * row at all.

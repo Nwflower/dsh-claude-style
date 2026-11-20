@@ -55,6 +55,8 @@ export const FOOTER_SEATS = [
 ] as const
 /** A footer entry a plugin lays out as a block of its own — a `<section>` carrying its heading and its rows — which the takeover keeps above the account row instead of gathering it into the account menu (features/account/footer-mirror.ts, footer-takeover.css). */
 export const FOOTER_BLOCK_ATTR = 'data-dsh-claude-footer-block'
+/** A footer entry that opens a menu — its own trigger or a control inside it — or carries the host's sign-out glyph: the takeover keeps it in place in the sidebar and the account popover gathers no row for it, because the menu portals from the trigger's own box and returns focus to that trigger (features/account/footer-mirror.ts, footer-takeover.css). */
+export const FOOTER_MENU_ATTR = 'data-dsh-claude-footer-menu'
 
 /** The host frame's mark while the sidebar stands over the page from a hover (features/sidebar-peek): `open`, then `closing` for the slide back out.
  * The two custom properties carry the collapsed width the centre keeps clear of and the width the slide travels. */
@@ -175,7 +177,7 @@ export const ABSENT_NAME = 'dsh-claude-absent'
 /** On a host element, naming the parts its own subtree holds (packages/engine/src/parts.ts, packages/engine/src/parts-table.ts). A rule that used to ask whether an element contains another (`A:has(B)`) reads this mark instead.
  * The marking pass already walks that subtree, so the answer costs one attribute read rather than a style pass over every candidate (D9); the values are the relation names declared in the parts table. */
 export const HOLDS_ATTR = 'data-dsh-claude-holds'
-/** On the body while the session overview is installed (features/session-panel): the stylesheet hides the host's background-work chips, and the view-tab strip takes the title's line beside the title's own actions (features/view-tabs). It goes with the feature's seats, so its absence is the preference off. */
+/** On the body while the session overview is installed (features/session-panel): the stylesheet hides the host's background-work chips. It goes with the feature's seats, so its absence is the preference off. */
 export const SESSION_PANEL_ATTR = 'data-dsh-claude-session-panel'
 /** On the element the fold glide is pressing right now (features/chat-fold/fold-glide.ts): while it stands, the elements inside lay out at their natural height instead of being squeezed by flex (fold-motion.css). */
 export const CHAT_ROLLING_ATTR = 'data-dsh-claude-rolling'
@@ -226,9 +228,11 @@ export const HERO_MENU_ATTR = 'data-dsh-claude-hero-menu'
 /** Stamped on the sidebar's More menu card while it is open. The card is the host's shared Menu portal like the two above; features/sidebar-entries stamps it from inside, since its own rows render in that card.
  * The card and its rows take the account menu's look (shared/popover.css). */
 export const MORE_MENU_ATTR = 'data-dsh-claude-more-menu'
-/** Present while the browser window does NOT hold focus. The focus state is the only thing that separates the two text selection paints (gray on black unfocused, blue on white focused) and no selector can read it.
- * features/composer/selection-mirror.ts mirrors it onto the document and the stylesheet switches on this attribute. */
+/** Present while the browser window does NOT hold focus and the document holds a selected range. The focus state is the only thing that separates the two text selection paints (gray on black unfocused, blue on white focused) and no selector can read it.
+ * core/selection-paint.ts mirrors it onto the document and the stylesheet switches on this attribute. */
 export const WINDOW_BLUR_ATTR = 'data-dsh-window-blur'
+/** On a transcript's root once a selection starts in it, until the host replaces the root: the skin's selection paints cover a transcript only under it (core/selection-paint.ts, theme/chrome.css). */
+export const SELECTION_PAINT_ATTR = 'data-dsh-claude-selection-paint'
 /** The handoff marker: stamped on `body` while this build is live AND able to give the page back (D74). Its presence is a capability another package can read without running anything.
  * A skin that lists this theme as one of its looks has to know the page can come back, and a build from before D74 does not stamp it. */
 export const HANDOFF_ATTR = 'data-dsh-claude-style-handoff'

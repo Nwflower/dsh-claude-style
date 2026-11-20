@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * session-panel.mjs — the conversation's details rail on the real host (D102,
+ * session-panel.mjs — the conversation's details rail on the real host (D106,
  * D92). Registered in the lane's scenario table
  * (packages/testing/scenarios.mjs). The page readings it judges with live in
  * session-panel-read.mjs beside it.
@@ -14,7 +14,7 @@
  * again. Closing it puts it away for the session and stops its asks.
  */
 import { SESSION_PANEL_PATH } from '@dsh-claude-style/contracts/routes'
-import { CONVERSATION_TABS_SELECTOR, HEADER_TITLE_ROW_SELECTOR, HEADER_TITLE_SELECTOR, HEADER_UTILITIES_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { COMPOSER_SELECTOR, CONVERSATION_CONTENT_SELECTOR, CONVERSATION_HEADER_SELECTOR, CONVERSATION_TABS_SELECTOR, HEADER_MORE_TRIGGER_SELECTOR, HEADER_TITLE_SELECTOR, HEADER_UTILITIES_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { MARKS } from '../lane.mjs'
 import { sendPrompt, waitForTurn } from '../prompt.mjs'
 import { sanitizePage } from '../../../scripts/shared/privacy.mjs'
@@ -57,6 +57,11 @@ export function sessionPanelScenario({ check }) {
     },
     prompt: 'Write the rail note and start the background job.',
     delayMs: 60,
+    patch: [
+      '- id: ui-skin-claude-style',
+      '  config:',
+      '    statsFooterTokenFormat: units',
+    ],
     // Wide enough for the rail's own threshold (the conversation column keeps 1160px).
     viewport: { width: 1440, height: 900 },
 
@@ -81,7 +86,7 @@ export function sessionPanelScenario({ check }) {
      * projections with the streaming text added — counted to each new reading the
      * way the line counts, so a count moves between the panel's own asks and
      * moves a little at a time rather than landing in one step; a table fed from
-     * the route alone can only move after an ask (D102).
+     * the route alone can only move after an ask (D106).
      */
     async duringTurn(context) {
       const { page } = context
@@ -152,7 +157,7 @@ export function sessionPanelScenario({ check }) {
       notes.rail = await readRail(page)
       notes.contextBar = await readContextBar(page)
       // Section controls are independent, retain their choice through a poll,
-      // and keep the browser's Enter and Space activation (D102). The two
+      // and keep the browser's Enter and Space activation (D106). The two
       // figures sections start folded, so only the open ones are pressed shut.
       const sectionToggles = page.locator('.dsh-claude-details .dsh-claude-panel-section > summary')
       notes.disclosures = { initial: await readDisclosures(page) }
@@ -194,7 +199,7 @@ export function sessionPanelScenario({ check }) {
       }
       // A row's whole reading stands in the host's own bubble: an output row
       // carries more than its line's words, so the bubble gives the full path
-      // on any hover (D102).
+      // on any hover (D106).
       const outputRows = page.locator('.dsh-claude-details .dsh-claude-panel-section')
         .filter({ hasText: /产出|Outputs/ }).first().locator('.dsh-claude-panel-row.is-button')
       if (await outputRows.count() > 0) {
@@ -224,30 +229,76 @@ export function sessionPanelScenario({ check }) {
         await page.waitForTimeout(300)
         notes.groupFold.collapsed = await groupRows()
       }
-      // The view switch stands on the title's own line while the rail squeezes
-      // the column.
+      // The tabs share the title row even when the rail squeezes the body.
       notes.layout = await page.evaluate((marks) => {
         const box = (el) => { if (el === null) return null; const rect = el.getBoundingClientRect(); return { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right, height: rect.height } }
         const strip = document.querySelector(marks.strip)
         return {
-          titleRow: box(document.querySelector(marks.titleRow)),
+          strip: box(strip),
           title: box(document.querySelector(marks.title)),
           utilities: box(document.querySelector(marks.utilities)),
           tablist: box(document.querySelector(marks.tablist)),
           column: box(document.querySelector(marks.column)),
           header: box(document.querySelector(marks.header)),
           rail: box(document.querySelector('.dsh-claude-details')),
-          shiftX: strip?.getAttribute('style') ?? '',
         }
       }, {
         strip: MARKS.viewTabsStrip,
-        titleRow: HEADER_TITLE_ROW_SELECTOR,
         title: HEADER_TITLE_SELECTOR,
         utilities: HEADER_UTILITIES_SELECTOR,
         tablist: CONVERSATION_TABS_SELECTOR,
         column: `[${PART}~="center-column"]`,
         header: `[${PART}~="conversation-header"]`,
       })
+      const tabs = page.locator(CONVERSATION_TABS_SELECTOR)
+      const chat = tabs.getByRole('tab', { name: /^(对话|Chat)$/ })
+      const trajectory = tabs.getByRole('tab', { name: /^(轨迹|Trajectory)$/ })
+      const composer = page.locator(COMPOSER_SELECTOR).first()
+      const header = page.locator(CONVERSATION_HEADER_SELECTOR).first()
+      const content = page.locator(CONVERSATION_CONTENT_SELECTOR).first()
+      const moreViewsSelector = `${MARKS.viewTabsStrip} button[aria-haspopup="menu"]`
+      const headerPaint = () => header.evaluate(async (element, selectors) => {
+        const opacityTransitions = element.getAnimations({ subtree: true }).filter(animation =>
+          animation instanceof CSSTransition && animation.transitionProperty === 'opacity')
+        await Promise.all(opacityTransitions.map(animation => animation.finished))
+        const sessionMenu = element.querySelector(selectors.sessionMenu)
+        const title = element.querySelector(selectors.title)
+        const titleBox = title?.getBoundingClientRect()
+        const menuBox = sessionMenu?.getBoundingClientRect()
+        const tools = [...element.querySelectorAll(`${selectors.utilities} button`)]
+          .filter(button => button !== sessionMenu && button.checkVisibility())
+        const visible = node => node?.checkVisibility({ opacityProperty: true }) ?? null
+        return {
+          title: visible(title),
+          menu: visible(sessionMenu),
+          besideTitle: titleBox !== undefined && menuBox !== undefined && titleBox.right === menuBox.left &&
+            titleBox.top + titleBox.height / 2 === menuBox.top + menuBox.height / 2,
+          controls: [...selectors.tabs.map(selector => element.querySelector(selector)), ...tools].map(visible),
+        }
+      }, { title: HEADER_TITLE_SELECTOR, sessionMenu: HEADER_MORE_TRIGGER_SELECTOR, utilities: HEADER_UTILITIES_SELECTOR,
+        tabs: [CONVERSATION_TABS_SELECTOR, moreViewsSelector] })
+      const contentBefore = await content.boundingBox()
+      await page.locator('.dsh-claude-details').hover()
+      const overDetails = await headerPaint()
+      await content.hover()
+      const overConversation = await headerPaint()
+      await header.hover()
+      notes.headerVisibility = { overDetails, overConversation, overHeader: await headerPaint(), contentBefore, contentAfter: await content.boundingBox() }
+      await trajectory.click()
+      await trajectory.and(tabs.getByRole('tab', { selected: true })).waitFor()
+      await composer.waitFor({ state: 'hidden' })
+      const inTrajectory = await page.locator(MARKS.viewTabsStrip).boundingBox()
+      await chat.click()
+      await chat.and(tabs.getByRole('tab', { selected: true })).waitFor()
+      await composer.waitFor()
+      const inChat = await page.locator(MARKS.viewTabsStrip).boundingBox()
+      notes.viewSwitch = { inTrajectory, inChat }
+      const moreViews = page.locator(moreViewsSelector)
+      await moreViews.click()
+      await moreViews.and(page.locator('[aria-expanded="true"]')).waitFor()
+      await page.keyboard.press('Escape')
+      await moreViews.and(page.locator('[aria-expanded="false"]')).waitFor()
+      notes.moreViews = await moreViews.evaluate(element => element === document.activeElement)
       notes.headerActions = await readHeaderActions(page)
       // A job row opens its retained output in place and closes again.
       await groupFold.click()
@@ -269,7 +320,7 @@ export function sessionPanelScenario({ check }) {
       notes.utilitiesOpen = await readUtilities(page)
       // The figures are the host's own words: exact grouped counts, no compact
       // k/M suffix; and the environment answers the working folder, never the
-      // repositories lying beside it (D102).
+      // repositories lying beside it (D106).
       notes.wording = await page.evaluate(async (path) => {
         const id = document.querySelector('[data-conversation-session]')?.getAttribute('data-conversation-session') ?? ''
         const response = await fetch(`${path}?id=${encodeURIComponent(id)}`, { credentials: 'same-origin', headers: { accept: 'application/json' } })
@@ -316,6 +367,32 @@ export function sessionPanelScenario({ check }) {
           return { theme: value, width: box.width, inside: box.left >= 0 && box.right <= innerWidth, background: getComputedStyle(rail).backgroundColor }
         }, theme))
         if (context.out !== undefined) await capturePanel(page, `${context.out}/session-panel-${theme}.png`)
+        notes.themes.at(-1).tabs = await tabs.evaluate(list => {
+          const active = list.querySelector('[aria-selected="true"]')
+          const underline = getComputedStyle(list, '::after')
+          return {
+            activeInk: active === null ? null : getComputedStyle(active).color,
+            ink: underline.backgroundColor,
+            drawn: underline.content !== 'none' && parseFloat(underline.width) > 0,
+            nativeHidden: active !== null && getComputedStyle(active, '::after').visibility === 'hidden',
+          }
+        })
+        const readLabel = (element) => {
+          const style = getComputedStyle(element)
+          return { ink: style.color, background: style.backgroundColor }
+        }
+        const resting = await trajectory.evaluate(readLabel)
+        await trajectory.hover()
+        await page.waitForFunction(({ selector, ink }) => {
+          const hovered = document.querySelector(selector)?.querySelector('[role="tab"]:hover')
+          return hovered != null && getComputedStyle(hovered).color !== ink
+        }, { selector: CONVERSATION_TABS_SELECTOR, ink: resting.ink })
+        const hovered = await trajectory.evaluate(readLabel)
+        notes.themes.at(-1).hover = { resting, hovered }
+        if (context.out !== undefined) {
+          await sanitizePage(expression => page.evaluate(expression))
+          await page.locator(`[${PART}~="conversation-header"]`).screenshot({ path: `${context.out}/view-tabs-header-${theme}.png` })
+        }
         const toggles = page.locator('.dsh-claude-details .dsh-claude-panel-section > summary')
         for (const toggle of await toggles.all()) await toggle.click()
         if (context.out !== undefined) await capturePanel(page, `${context.out}/session-panel-collapsed-${theme}.png`)
@@ -323,7 +400,7 @@ export function sessionPanelScenario({ check }) {
       }
       // The host's own right column stands on this side as well: the rail keeps
       // away while that column holds width, and the header's control hands the
-      // side over by closing it first (D102).
+      // side over by closing it first (D106).
       // The host keeps its own right column's place across the sessions in this
       // home: a panel an earlier scenario left open frames the handover below.
       // The walk starts from the column put away, and its control names the
@@ -401,7 +478,7 @@ export function sessionPanelScenario({ check }) {
       // The rail's first frame stands every section each conversation has, with
       // what the page knows written and the rest under placeholders, while the
       // route's fold is still on its way. Holding the ask makes that frame
-      // something the walk can read (D102).
+      // something the walk can read (D106).
       const held = '**/dsh-claude-style/session-panel**'
       await page.route(held, async (route) => {
         await new Promise(resolve => setTimeout(resolve, 3000))
@@ -422,7 +499,7 @@ export function sessionPanelScenario({ check }) {
           headings: sections.map(section => section.querySelector('.dsh-claude-panel-section-title')?.textContent ?? ''),
           placeholders: rail?.querySelectorAll('.dsh-claude-panel-skeleton').length ?? 0,
           // A folded section's insets beside an open one's: equal insets keep a
-          // heading where it stood across its own fold (D102).
+          // heading where it stood across its own fold (D106).
           insets: {
             folded: sections.filter(section => !section.open && section.previousElementSibling !== null).map(section => getComputedStyle(section).paddingTop),
             open: sections.filter(section => section.open && section.previousElementSibling !== null).map(section => getComputedStyle(section).paddingTop),
@@ -495,9 +572,10 @@ export function sessionPanelScenario({ check }) {
           notes.disclosures?.single?.[0]?.open === true && notes.disclosures.single.slice(1).every(section => !section.open) &&
             notes.disclosures.reopened?.every(section => section.open && section.content),
           JSON.stringify(notes.disclosures ?? null)),
-        check('the session stats and the token usage carry their figures',
+        check('the session stats and the token usage carry their figures in the configured token units',
           anyOf(statsWords, (rail.headings ?? []).join('|')) && anyOf(HEADINGS.tokens, (rail.headings ?? []).join('|')) && (rail.stats ?? []).length >= 8 &&
-            anyOf(words('statsModelTime'), (rail.stats ?? []).join('|')) && anyOf(words('statsCost'), (rail.stats ?? []).join('|')),
+            anyOf(words('statsModelTime'), (rail.stats ?? []).join('|')) && anyOf(words('statsCost'), (rail.stats ?? []).join('|')) &&
+            (rail.stats ?? []).some((row) => /\d(?:\.\d+)?[KMBT]/.test(row)),
           JSON.stringify((rail.stats ?? []).slice(0, 12))),
         check('the figures move with the answer while it streams, not only when the route answers',
           notes.liveFigures?.movedAlone === true,
@@ -520,7 +598,7 @@ export function sessionPanelScenario({ check }) {
           notes.groupFold?.rows === 0 && notes.groupFold?.expanded === 3 && notes.groupFold?.collapsed === 0,
           JSON.stringify(notes.groupFold ?? null)),
         // A command that finished inside its first second keeps its clock's place
-        // empty rather than print a zero (D102); a longer one writes its clock there.
+        // empty rather than print a zero (D106); a longer one writes its clock there.
         check('a finished command keeps a separate clock and its foreground provenance',
           (rail.jobs ?? []).length >= 2 && rail.jobs.every(job => job.clock && (job.duration === '' || /\d/.test(job.duration)) && words('processForeground').includes(job.execution)),
           JSON.stringify((rail.jobs ?? []).slice(0, 3))),
@@ -533,19 +611,35 @@ export function sessionPanelScenario({ check }) {
           JSON.stringify({ confirm: notes.stopConfirm, independent: notes.stopDidNotExpand, blur: notes.stopBlurCleared, status: notes.stopFinished })),
         check('a job row opens its retained output in place', notes.jobOpened === true && (notes.jobOutput ?? '').trim() !== '', JSON.stringify({ opened: notes.jobOpened, output: (notes.jobOutput ?? '').slice(0, 80) })),
         check('the job row closes its output again', notes.jobClosed === true, String(notes.jobClosed)),
-        check('the view switch stands on the title\'s own line, clear of the title and the utilities',
-          notes.layout?.titleRow !== null && notes.layout?.tablist !== null &&
-            notes.layout.tablist.top >= notes.layout.titleRow.top - 2 &&
-            notes.layout.tablist.bottom <= notes.layout.titleRow.bottom + 2 &&
-            notes.layout.tablist.left >= notes.layout.title.right + 4 &&
-            (notes.layout.utilities === null || notes.layout.tablist.right <= notes.layout.utilities.left - 4),
+        check('the view switch stands in the title row between the title and the right-hand tools',
+          notes.layout?.strip != null && notes.layout.title !== null && notes.layout.utilities !== null && notes.layout.tablist !== null &&
+            Math.abs((notes.layout.strip.top + notes.layout.strip.bottom) - (notes.layout.utilities.top + notes.layout.utilities.bottom)) <= 2 &&
+            notes.layout.title.right <= notes.layout.tablist.left &&
+            notes.layout.strip.right < notes.layout.utilities.left,
           JSON.stringify(notes.layout ?? null)),
+        check('the title and session menu stay visible while the tabs and other tools follow the pointer',
+          notes.headerVisibility?.overDetails.title === true && notes.headerVisibility.overDetails.menu === true && notes.headerVisibility.overDetails.besideTitle === true &&
+            notes.headerVisibility.overDetails.controls.every(value => value === false) &&
+            [notes.headerVisibility.overConversation, notes.headerVisibility.overHeader].every(({ title, menu, besideTitle, controls }) =>
+              title === true && menu === true && besideTitle === true && controls.every(value => value === true)) &&
+            JSON.stringify(notes.headerVisibility.contentBefore) === JSON.stringify(notes.headerVisibility.contentAfter),
+          JSON.stringify(notes.headerVisibility ?? null)),
         check('the header keeps the column whole and the rail starts under it',
           notes.layout?.column !== null && notes.layout?.header !== null && notes.layout?.rail !== null &&
             notes.layout.header.right >= notes.layout.column.right - 1 &&
             notes.layout.rail.right >= notes.layout.column.right - 1 &&
             notes.layout.rail.top >= notes.layout.header.bottom - 1,
           JSON.stringify({ column: notes.layout?.column ?? null, header: notes.layout?.header ?? null, rail: notes.layout?.rail ?? null })),
+        check('the title bar switch stays available in both views and Escape returns focus to More views',
+          notes.viewSwitch?.inTrajectory != null && notes.viewSwitch.inChat !== null &&
+            notes.viewSwitch.inTrajectory.y === notes.viewSwitch.inChat.y && notes.moreViews === true,
+          JSON.stringify({ views: notes.viewSwitch, focus: notes.moreViews })),
+        check('the selected tab carries its underline in both themes',
+          notes.themes?.every(({ tabs }) => tabs.drawn && tabs.nativeHidden && tabs.activeInk === tabs.ink),
+          JSON.stringify(notes.themes?.map(theme => ({ theme: theme.theme, tabs: theme.tabs })))),
+        check('hover brightens the tab label without filling its background in either theme',
+          notes.themes?.every(({ hover: { resting, hovered } }) => hovered.ink !== resting.ink && hovered.background === resting.background),
+          JSON.stringify(notes.themes?.map(({ theme, hover }) => ({ theme, hover })))),
         check('the host header chips step aside while the rail stands',
           notes.headerActions?.exists === false || (notes.headerActions.expanded === 0 && notes.headerActions.tree === 0 && notes.headerActions.catalog === 0),
           JSON.stringify(notes.headerActions ?? null)),

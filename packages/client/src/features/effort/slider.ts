@@ -358,8 +358,8 @@ export function createEffortControl(opts: {
     if (smarterEl.textContent !== labels.smarter) smarterEl.textContent = labels.smarter
     setAttributeIfChanged(track, 'aria-label', labels.label)
     if (steps.length === 0) {
-      root.setAttribute('data-empty', '')
-      track.setAttribute('aria-disabled', 'true')
+      setAttributeIfChanged(root, 'data-empty', '')
+      setAttributeIfChanged(track, 'aria-disabled', 'true')
       track.removeAttribute('aria-valuemin')
       track.removeAttribute('aria-valuemax')
       track.removeAttribute('aria-valuenow')
@@ -369,10 +369,10 @@ export function createEffortControl(opts: {
     const at = Math.max(0, selected)
     root.removeAttribute('data-empty')
     track.removeAttribute('aria-disabled')
-    track.setAttribute('aria-valuemin', '0')
-    track.setAttribute('aria-valuemax', String(steps.length - 1))
-    track.setAttribute('aria-valuenow', String(at))
-    track.setAttribute('aria-valuetext', steps[at] ? steps[at].name : '')
+    setAttributeIfChanged(track, 'aria-valuemin', '0')
+    setAttributeIfChanged(track, 'aria-valuemax', String(steps.length - 1))
+    setAttributeIfChanged(track, 'aria-valuenow', String(at))
+    setAttributeIfChanged(track, 'aria-valuetext', steps[at] ? steps[at].name : '')
   }
 
   /** Drop the wait for the host's echo (echo seen, ladder changed, or timeout). */
@@ -559,8 +559,11 @@ export function createEffortControl(opts: {
    *   keeps its layout box while closed, so reading it after the pass's writes
    *   would force a layout on every pass. Left out, the update uses the last
    *   reading the read phase took.
+   * @param snap - put the knob on the level without travelling there: the
+   *   card is opening onto a level that changed while it was shut, and the
+   *   reader never saw the level it would travel from.
    */
-  function update(box?: EffortTrackBox | null) {
+  function update(box?: EffortTrackBox | null, snap = false) {
     passBox = box ?? null
     const next = state()
     let changed = next.steps.length !== steps.length
@@ -582,7 +585,7 @@ export function createEffortControl(opts: {
     }
     let swapFrom = -1
     if (!pressed && !pendingEcho) {
-      const moved = painted && !changed && selected !== next.index
+      const moved = painted && !changed && !snap && selected !== next.index
       swapFrom = moved ? selected : -1
       selected = next.index
       place(positionFor(selected), moved)

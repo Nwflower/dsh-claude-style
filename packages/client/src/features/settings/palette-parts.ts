@@ -2,7 +2,7 @@ import * as React from 'react'
 import { PALETTE_PRESETS } from '../../constants'
 import { hidePointerHint, POINTER_HINT_CLASS, showPointerHint } from '../../shared/pointer-hint'
 import { PALETTE_SCHEME_CUSTOM } from '@dsh-claude-style/contracts/palette-schemes'
-import { schemeColours } from '../../shared/palette-colours'
+import { linkFromAccent, schemeColours } from '../../shared/palette-colours'
 import { storedSchemes } from '../../shared/palette-scheme'
 import type { PalettePreset, Prefs } from '../../constants'
 import type { PaletteScheme } from '@dsh-claude-style/contracts/palette-schemes'
@@ -63,7 +63,7 @@ function pairColour(light: string, dark: string) {
   return `light-dark(${light}, ${dark})`
 }
 
-/** The CSS colours of a scheme's five discs; a link the page derives shows the accent it is derived from. */
+/** The CSS colours of a scheme's five discs; a link the page derives shows the resolved colour it is derived to. */
 export function schemeDiscs(scheme: PaletteScheme, staticPreset: boolean) {
   const colours = schemeColours(scheme, staticPreset)
   return [
@@ -71,7 +71,7 @@ export function schemeDiscs(scheme: PaletteScheme, staticPreset: boolean) {
     pairColour(colours.background.light, colours.background.dark),
     pairColour(colours.text.light, colours.text.dark),
     pairColour(colours.code.light, colours.code.dark),
-    pairColour(colours.link.light ?? colours.accent, colours.link.dark ?? colours.accent),
+    pairColour(colours.link.light ?? linkFromAccent(colours.accent, 'light'), colours.link.dark ?? linkFromAccent(colours.accent, 'dark')),
   ]
 }
 

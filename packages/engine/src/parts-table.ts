@@ -341,8 +341,7 @@ export function holdRelations(vocabulary: PartsTableVocabulary): HoldRelation[] 
     attributes: ['data-session-stats-details', 'data-session-stats-usage'],
   },
   // features/context-stats/footer-layout.css: the dock's reserved row stands
-  // only for figures that keep their own line under the toolbar; an overlaid
-  // line and a dock with no figures leave it empty.
+  // only for figures that keep their own line under the toolbar.
   {
     name: 'footer-below',
     holder: part('composer-dock'),
@@ -386,6 +385,15 @@ export function holdRelations(vocabulary: PartsTableVocabulary): HoldRelation[] 
     holder: part('footer-actions'),
     held: '[data-dsh-claude-footer-block]',
     attributes: ['data-dsh-claude-footer-block'],
+  },
+  // features/account/footer-takeover.css: the footer's action box keeps its size for
+  // an entry that opens a menu, which the takeover leaves in place in the sidebar
+  // rather than gathering into the account menu (issue #417).
+  {
+    name: 'footer-menu',
+    holder: part('footer-actions'),
+    held: '[data-dsh-claude-footer-menu]',
+    attributes: ['data-dsh-claude-footer-menu'],
   },
   // features/account/footer-takeover.css: the host mounts its own account menu on
   // <body>, outside the sidebar, so the collapsed rail's card width cannot be read

@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-19",
+  "group": "fixes",
+  "order": 1,
+  "external": true,
+  "zh": "修复配色编辑器把预设手调链接色显示成「由强调色推出」的问题，链接行改为显示实际解析出的颜色与对比度，未带链接种子的方案显示推出后的颜色并把来源留作附注",
+  "en": "Fix the scheme editor reading a preset's hand-tuned link colour as derived-from-accent, so the link row shows the resolved colour and its contrast, and a scheme without a link seed shows the derived colour with its origin kept as a side note"
+}

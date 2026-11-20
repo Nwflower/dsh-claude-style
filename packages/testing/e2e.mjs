@@ -228,7 +228,7 @@ async function startTrace(page) {
       const cardRect = card === null ? null : card.getBoundingClientRect()
       const seatRect = card === null ? null : card.closest(host.composerSeat)?.getBoundingClientRect() ?? null
       const statsLine = document.querySelector(host.statsLine)
-      const statsRect = statsLine === null || getComputedStyle(statsLine).visibility === 'hidden' ? null : statsLine.getBoundingClientRect()
+      const statsRect = statsLine?.checkVisibility({ visibilityProperty: true }) ? statsLine.getBoundingClientRect() : null
       const scrollerRect = scroller === null ? null : scroller.getBoundingClientRect()
       const rowRect = lastRow === null ? null : lastRow.getBoundingClientRect()
       const columnRect = column === null ? null : column.getBoundingClientRect()

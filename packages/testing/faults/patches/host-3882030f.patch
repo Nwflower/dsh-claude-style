@@ -1,77 +1,23 @@
 diff --git a/packages/host/src/routes.ts b/packages/host/src/routes.ts
 --- a/packages/host/src/routes.ts
 +++ b/packages/host/src/routes.ts
-@@ -82,8 +82,39 @@ const USAGE_TTL_MS = 30 * 1000
- /** Largest deletion request body read; a real one carries one id. */
- const DELETE_BODY_MAX = 4096
- 
--/** Session ids are the harness's own shape; anything else is refused before it reaches a path. */
+@@ -130,7 +130,7 @@ const SOUND_BODY_MAX = 1024
+  * escapes `/`, `\` and `~`, so an id carrying one is refused here rather than
+  * silently resolved through the escape.
+  */
 -const SESSION_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/
-+/**
-+ * The single directory name the harness stores one session id under: a code
-+ * unit outside `A-Za-z0-9._-` becomes `~XXXX`, `.` and `..` included, so the
-+ * mapping is injective over every id and a plugin-generated id
-+ * (`im:<channel>:dm:<user>:<token>@<domain>`) has a name of its own.
-+ *
-+ * This restates `encodeSegment` in the host's session persistence
-+ * (`@deepseek-ai/dsh-session-persistence-jsonl`), which no shared module hands
-+ * to the host half, so the storage layout lives beside the one route that reads
-+ * it.
-+ */
-+function sessionDirectoryName(id: string): string {
-+  if (id === '.') return '~002E'
-+  if (id === '..') return '~002E~002E'
-+  let name = ''
-+  for (let index = 0; index < id.length; index += 1) {
-+    const unit = id.charAt(index)
-+    name += unit !== '~' && /^[A-Za-z0-9._-]$/.test(unit)
-+      ? unit
-+      : `~${id.charCodeAt(index).toString(16).toUpperCase().padStart(4, '0')}`
-+  }
-+  return name
-+}
-+
-+/**
-+ * An id the deletion route takes: the characters a plugin-generated id carries
-+ * (`:`, `@`), and none that could name a place of its own.
-+ *
-+ * The stored name below escapes `/`, `\` and `~` as well, so an id carrying one
-+ * is refused here rather than silently resolved through the escape: a client
-+ * naming a path segment is not naming a session.
-+ */
 +const SESSION_ID_RE = /^[A-Za-z0-9._\-:@]{1,200}$/
  
- /**
-  * Whether the host holds this session open right now.
-@@ -131,9 +162,9 @@ async function unarchiveSession(ctx: DshContext, sessionId: string) {
-  * sessions root's working-directory directories, and the id's entry in the
-  * workspace registry's archive set.
-  *
-- * The id never reaches a path unchecked — it must match the harness's own
-- * shape, the lookup is by exact name, and the resolved directory must stay
-- * inside the sessions root.
-+ * The id reaches the filesystem as the name the harness stores it under, never
-+ * as its own spelling, and only after the id check: the lookup is by exact name
-+ * and the resolved directory must stay inside the sessions root.
-  *
-  * The archive set can name a session whose stored directory is already gone —
-  * an earlier removal took the directory while the registry entry stayed, and
-@@ -167,6 +198,9 @@ async function deleteSession(ctx: DshContext, req: DshRequest, res: DshResponse)
+ /** A background job id the panel may read output for: the registry's own `<kind>-<hex>` shape. */
+ const JOB_ID_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{1,80}$/
+@@ -211,7 +211,9 @@ async function deleteSession(ctx: DshContext, req: DshRequest, res: DshResponse,
      sendJson(res, 400, { ok: false, error: 'invalid session id' })
      return
    }
+-  const storedName = sessionId
 +  // The id is looked up under the name the storage holds it under, never under
 +  // its own spelling: `:` and `@` in a plugin-generated id are escaped there.
 +  const storedName = sessionDirectoryName(sessionId)
    if (sessionIsLive(ctx, sessionId)) {
      sendJson(res, 409, { ok: false, error: 'session is open' })
      return
-@@ -177,7 +211,7 @@ async function deleteSession(ctx: DshContext, req: DshRequest, res: DshResponse)
-   // fault and propagates to the route's 500 answer; a candidate that does not
-   // exist is "not under this entry", and the scan moves past it.
-   for (const entry of readdirSync(root)) {
--    const candidate = join(root, entry, sessionId)
-+    const candidate = join(root, entry, storedName)
-     if (statSync(candidate, { throwIfNoEntry: false })?.isDirectory() === true) {
-       dir = candidate
-       break

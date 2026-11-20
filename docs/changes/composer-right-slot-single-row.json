@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-18",
-  "group": "improvements",
-  "order": 0,
-  "external": false,
-  "zh": "已有会话输入栏在第三方额度控件存在时优先保持紧凑单行，模型名按剩余空间省略，空间不足时安全换行",
-  "en": "Keep the conversation composer compact and single-row with third-party quota controls when room allows, ellipsize the model name, and wrap safely when space runs out"
-}

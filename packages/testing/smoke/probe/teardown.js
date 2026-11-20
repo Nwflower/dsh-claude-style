@@ -62,14 +62,10 @@
       // The custom brand's values ride <body>'s own style (features/brand/brand.ts).
       r.leftBrandProperties = Array.prototype.filter.call(document.body.style, function (name) { return name.indexOf('--dsh-claude-custom-') === 0 })
       r.leftStylesheet = !!document.getElementById('dsh-claude-style-style')
-      if (probe.viewStrip) r.viewPill.left = probe.viewStrip.list.hasAttribute('data-dsh-claude-pill') || probe.viewStrip.row.hasAttribute('data-dsh-view-tabs') || probe.viewStrip.row.style.length > 0
-      if (probe.viewRow) {
-        // The row's own rules are off again: it centres nothing, takes presses,
-        // and the plate is back to the host's plain box with no pill on it.
-        var rowStyle = getComputedStyle(probe.viewRow.row)
-        var listStyle = getComputedStyle(probe.viewRow.list)
-        r.viewRow.left = rowStyle.justifyContent === 'center' || rowStyle.pointerEvents === 'none' ||
-          listStyle.borderTopLeftRadius === '7px' || listStyle.paddingLeft === '2px' || listStyle.backgroundColor !== 'rgba(0, 0, 0, 0)'
+      if (probe.viewStrip) {
+        var viewStrip = probe.viewStrip
+        r.viewTabs.left = viewStrip.row.hasAttribute(viewStrip.stripMark) ||
+          getComputedStyle(viewStrip.row).position === 'absolute'
       }
       if (r.search) {
         r.search.left = (window.__slots || []).filter(function (entry) {

@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-18",
-  "group": "fixes",
-  "order": 0,
-  "external": true,
-  "zh": "Windows 标题栏中的会话标签持续可见，移动指针或使用输入法组词时不会淡出",
-  "en": "Keep conversation tabs visible in the Windows title bar when the pointer leaves the conversation or an IME candidate window opens"
-}

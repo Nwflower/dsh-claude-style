@@ -3,7 +3,7 @@ import { BRAND_DEFAULT_PRESETS, PALETTE_COLORING_BRAND, PALETTE_PRESETS } from '
 import { readPrefs, savePrefs } from '../../core/prefs'
 import { accentInk, contrastRatio, luminance } from '../../shared/contrast'
 import { canAddScheme, duplicateScheme, removeSchemePatch, selectSchemePatch, storedSchemes, storeSchemePatch } from '../../shared/palette-scheme'
-import { oklchSeed, presetCard, schemeColours } from '../../shared/palette-colours'
+import { linkFromAccent, oklchSeed, presetCard, schemeColours } from '../../shared/palette-colours'
 import { PALETTE_ACCENT_CONTRAST, PALETTE_EDGES, PALETTE_SCHEME_LIMIT, PALETTE_SCHEME_NAME_MAX, PALETTE_TEXT_CONTRAST } from '@dsh-claude-style/contracts/palette-schemes'
 import { Glyph, isPresetScheme, presetLabel, schemeLabel } from './palette-parts'
 import { createSettingsControls } from './settings-controls'
@@ -125,11 +125,11 @@ function Specimen(props: { colours: SchemeColours, appearance: Appearance }) {
   )
 }
 
-/** One colour well: the disc that opens the colour picker, the colour's value and its read-outs. */
-function Well(props: { name: string, colour: string, text: string, derived?: boolean, wide?: boolean, disabled: boolean, pick(value: string): void, children?: React.ReactNode }) {
+/** One colour well: the disc that opens the colour picker, the colour's value, its origin where it is derived, and its read-outs. */
+function Well(props: { name: string, colour: string, text: string, note?: string, wide?: boolean, disabled: boolean, pick(value: string): void, children?: React.ReactNode }) {
   return React.createElement(
     'label',
-    { className: 'dsh-claude-scheme-well', 'data-derived': props.derived === true ? '' : undefined, 'data-wide': props.wide === true ? '' : undefined },
+    { className: 'dsh-claude-scheme-well', 'data-wide': props.wide === true ? '' : undefined },
     React.createElement(
       'span',
       { className: 'dsh-claude-scheme-disc', style: { color: props.colour } },
@@ -143,6 +143,7 @@ function Well(props: { name: string, colour: string, text: string, derived?: boo
       }),
     ),
     React.createElement('span', { className: 'dsh-claude-scheme-hex' }, props.text),
+    props.note === undefined ? null : React.createElement('span', { className: 'dsh-claude-scheme-derived' }, props.note),
     props.children,
   )
 }
@@ -194,25 +195,29 @@ export function PaletteEditor(props: { prefs: Prefs, id: string, created: Palett
   }
   const hasRecord = storedSchemes(prefs).some((scheme) => scheme.id === id)
   const canStore = hasRecord || canAddScheme(prefs)
-  const colours = schemeColours(draft)
+  // An unedited preset paints its static card, hand-tuned links included; a
+  // stored scheme derives a link it does not carry from its accent (D97).
+  const colours = schemeColours(draft, preset && !hasRecord)
   const edges = draft.edges ?? presetCard(draft.base).edges
   const rows = PAIRED.map(({ seed, label, least }) => [
     React.createElement('span', { key: `${seed}-name`, className: 'dsh-claude-scheme-seed-name' }, copy(label)),
     ...APPEARANCES.map((appearance) => {
       const value = colours[seed][appearance]
+      // A link the scheme does not carry is drawn from the accent: the well
+      // shows the resolved colour the page paints and notes where it comes from.
+      const shown = value ?? linkFromAccent(colours.accent, appearance)
       return React.createElement(
         Well,
         {
           key: `${seed}-${appearance}`,
           name: `${copy(label)} ${copy(APPEARANCE_LABELS[appearance])}`,
-          // A link the scheme does not carry is drawn from the accent: the well shows the accent and says so.
-          colour: value ?? colours.accent,
-          text: value ?? copy('paletteLinkDerived'),
-          derived: value === undefined,
+          colour: shown,
+          text: shown,
+          note: value === undefined ? copy('paletteLinkDerived') : undefined,
           disabled: !canStore,
           pick: (picked) => commit(withColour(draft, seed, appearance, picked)),
         },
-        least !== null && value !== undefined ? React.createElement(Contrast, { colour: value, background: colours.background[appearance], least }) : null,
+        least !== null ? React.createElement(Contrast, { colour: shown, background: colours.background[appearance], least }) : null,
       )
     }),
     React.createElement(Reset, { key: `${seed}-reset`, own: draft[seed] !== undefined, name: copy(label), run: () => commit(withoutSeed(draft, seed)) }),

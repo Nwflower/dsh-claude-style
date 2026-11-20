@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-18",
-  "group": "fixes",
-  "order": 0,
-  "external": true,
-  "zh": "滚动长会话时，状态装饰和流程摘要的数字不再参与指针命中测试；流程按钮仍可点击",
-  "en": "Exclude chat status decorations and process-summary digits from hit testing while keeping disclosure buttons clickable"
-}

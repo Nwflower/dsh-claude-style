@@ -1,9 +1,10 @@
 /**
  * The highlight of a segmented control, placed from the control it is given:
- * a pass's reading places it in that pass without reading the page again, and
- * a press that moves the chosen item before the next pass still lands the
- * highlight under the item the reader pressed. The highlight is measured as
- * the shipped stylesheet draws it.
+ * a control met for the first time is placed by its size observer's first
+ * report, a pass's reading places it in that pass without reading the page
+ * again, and a press that moves the chosen item before the next pass still
+ * lands the highlight under the item the reader pressed. The highlight is
+ * measured as the shipped stylesheet draws it.
  *
  * @capability segmented-control
  * @features shared
@@ -55,11 +56,17 @@ function checkedBox(bar: HTMLElement) {
   return { left: Math.round(item.left * 100) / 100, width: Math.round(item.width * 100) / 100 }
 }
 
-test('a pass\'s reading places the highlight in that pass, without reading the page again', () => {
+/** Meet the control and wait for its size observer's first report to place the highlight under the checked item. */
+async function firstPlaced(pill: ReturnType<typeof createSlidingPill>, bar: HTMLElement) {
+  pill.sync(bar)
+  await expect.poll(() => highlightBox(bar)).toEqual(checkedBox(bar))
+}
+
+test('a pass\'s reading places the highlight in that pass, without reading the page again', async () => {
   const bar = control()
   const pill = createSlidingPill('[aria-checked="true"]')
   cleanups.push(() => pill.release())
-  pill.sync(bar)
+  await firstPlaced(pill, bar)
   // cost: D40 — the write phase places from the read phase's reading, with no layout read of its own.
   const read = vi.spyOn(bar, 'getBoundingClientRect')
   pill.measure(bar)
@@ -70,12 +77,11 @@ test('a pass\'s reading places the highlight in that pass, without reading the p
   expect(highlightBox(bar)).toEqual(checkedBox(bar))
 })
 
-test('a press that moves the chosen item before the next pass lands the highlight under the item pressed', () => {
+test('a press that moves the chosen item before the next pass lands the highlight under the item pressed', async () => {
   const bar = control()
   const pill = createSlidingPill('[aria-checked="true"]')
   cleanups.push(() => pill.release())
-  pill.sync(bar)
-  expect(highlightBox(bar)).toEqual(checkedBox(bar))
+  await firstPlaced(pill, bar)
   // The press moves the chosen item and the control is placed from its own
   // render, before the next pass's read phase: the reading standing is the one
   // taken while the first item was still the chosen one.

@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-18",
-  "group": "fixes",
-  "order": 0,
-  "external": true,
-  "zh": "官方 DSH 界面提供的浏览器组件不再要求在 profile 内另外安装",
-  "en": "Mark the official DSH frontend’s built-in browser UI primitives as an optional npm peer"
-}

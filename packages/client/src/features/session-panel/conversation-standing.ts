@@ -1,5 +1,5 @@
 /**
- * Whether the conversation on the page is one the details rail stands beside (D102).
+ * Whether the conversation on the page is one the details rail stands beside (D106).
  *
  * The rail belongs to a conversation the reader is looking at: a session the
  * host shows in its active phase, in the main column, with its scroller visible

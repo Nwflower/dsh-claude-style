@@ -16,7 +16,7 @@ import { buildFonts, checkClaimed, checkSheetPixels, checkSheets, layoutCells, p
 import { openBuildCache } from './build-cache.mjs'
 import { checkContracts, checkCycles, checkDependencies, checkListed, checkManifests, checkMotionSources, checkScrollOwner, checkTypes } from './build-checks.mjs'
 import { chunkFiles, chunkModules, ownModuleIds, splitChunks } from './chunks.mjs'
-import { checkPaletteCards, checkPaletteContrast } from './palette-checks.mjs'
+import { checkPaletteCards, checkPaletteContrast, checkLinkResolution } from './palette-checks.mjs'
 import { TOKEN_SHEET, loadTokens, writeTokenTable } from './theme-tokens.mjs'
 import { buildStylesheet, writeLayerTable, writeMotionTable } from './css.mjs'
 import { FEATURE_SHEET_CONSTANTS } from './feature-sheets.mjs'
@@ -329,6 +329,7 @@ async function main() {
   // and a preset or brand default without its card would have nothing to paint (D97).
   checkPaletteCards(tokenDoc, { presets: CONSTANTS.presets, brands: CONSTANTS.brands, brandDefaults: CONSTANTS.brandDefaults })
   checkPaletteContrast(tokenDoc)
+  checkLinkResolution(tokenDoc)
   const css = buildStylesheet({ sheets, srcDir: SRC, sources, tokenDoc, gates: CONSTANTS.gates, images, featureConstants: CONSTANTS.featureSheets })
   // The authored sheet, for the live importance walk: it judges the rules the
   // build's own record is keyed by (D9), which the page's finished sheet no

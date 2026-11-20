@@ -627,7 +627,7 @@ const SCENARIOS = {
   dsBot: dsBotScenario({ check }),
   /**
    * The session overview in the right column (packages/testing/scenarios/session-panel.mjs,
-   * D102): its five sections on a blank and a worked session, the two-row folding,
+   * D106): its five sections on a blank and a worked session, the two-row folding,
    * the view switch on the title's line, and the column's opening width.
    */
   sessionPanel: sessionPanelScenario({ check }),

@@ -88,7 +88,7 @@
   "statsFooterCacheTitle": { "zh": "底栏缓存命中率", "en": "Footer cache-hit rate" },
   "statsFooterCostTitle": { "zh": "底栏会话费用", "en": "Footer session cost" },
   "statsFooterTotalTitle": { "zh": "底栏 Token 总量", "en": "Footer token total" },
-  "statsFooterTokenFormatTitle": { "zh": "底栏 Token 单位", "en": "Footer token units" },
+  "statsFooterTokenFormatTitle": { "zh": "Token 单位", "en": "Token units" },
   "statsFooterTokenDigitsSample": { "zh": "1,000,000 tok", "en": "1,000,000 tok" },
   "statsFooterTokenUnitsSample": { "zh": "1.0M tok", "en": "1.0M tok" },
   "billingCurrencyTitle": {

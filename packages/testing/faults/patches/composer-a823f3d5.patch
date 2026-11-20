@@ -1,40 +1,7 @@
-diff --git a/packages/client/src/features/composer/inline-bar.css b/packages/client/src/features/composer/inline-bar.css
-index c98a33e8..df23e70a 100644
---- a/packages/client/src/features/composer/inline-bar.css
-+++ b/packages/client/src/features/composer/inline-bar.css
-@@ -443,12 +443,10 @@ body[data-dsh-claude-style] .dsh-claude-context-stats-skeleton-value {
-    the ring repeats none of them in either position. This is the host's own
-    node, which keeps the row where the numbers live on a line of their own; the
-    ring the skin draws for the popover's position carries the same rule in
--   features/context-stats/meter-ring.css. */
-+   features/context-stats/meter-ring.css. The trailing cluster's own shrink is
-+   not a phone rule: it carries the model name's compression at every width
-+   (inline.css). */
- @media (max-width: 480px) {
--  body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card] [data-dsh-claude-part~="trailing"] {
--    flex: 0 1 auto;
--    min-width: 0;
--  }
-   body[data-dsh-claude-style] [data-dsh-claude-context-meter] button > span {
-     display: none;
-   }
 diff --git a/packages/client/src/features/composer/inline.css b/packages/client/src/features/composer/inline.css
-index 335d433f..66f3a1d5 100644
 --- a/packages/client/src/features/composer/inline.css
 +++ b/packages/client/src/features/composer/inline.css
-@@ -525,11 +525,18 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-c
-   background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
-   color: var(--dsw-alias-label-primary);
- }
-+/* The cluster gives up width when the row is short, and the model name is what
-+   that width comes out of: the label carries its own ellipsis
-+   (inline-bar.css), and the flex shrink reaching it is what truncates a name
-+   too long for the room. `min-width: 0` is what lets the shrink pass a flex
-+   item's content-sized floor. The controls the reader presses — the send
-+   button, the activity slot — stay at their own width inside it. */
- body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-dsh-claude-part~="trailing"],
- body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card] [data-dsh-claude-part~="trailing"] {
-   display: flex;
+@@ -545,5 +545,6 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-c
    align-items: center;
    gap: 8px;
    margin-left: auto;
@@ -42,12 +9,12 @@ index 335d433f..66f3a1d5 100644
 +  flex: 0 1 auto;
 +  min-width: 0;
  }
+
 diff --git a/packages/client/src/theme/chrome.css b/packages/client/src/theme/chrome.css
-index e683b09e..6a6b0756 100644
 --- a/packages/client/src/theme/chrome.css
 +++ b/packages/client/src/theme/chrome.css
-@@ -312,6 +312,19 @@ body[data-dsh-claude-style][data-ds-dark-theme] :is(button, input, textarea, sel
-   outline-color: rgba(250, 249, 245, 0.60);
+@@ -340,6 +340,19 @@ body[data-dsh-claude-style]:not([data-ds-dark-theme])[data-dsh-window-blur] [dat
+   outline-offset: 1px;
  }
  
 +/* ---------- the transcript pane's own axes ---------- */

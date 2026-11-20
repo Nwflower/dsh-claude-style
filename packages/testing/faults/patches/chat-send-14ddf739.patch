@@ -1,25 +1,16 @@
 diff --git a/packages/client/src/features/chat-send/send-shape.ts b/packages/client/src/features/chat-send/send-shape.ts
-index 605f699..ec4efc8 100644
 --- a/packages/client/src/features/chat-send/send-shape.ts
 +++ b/packages/client/src/features/chat-send/send-shape.ts
-@@ -78,15 +78,14 @@ export const CHAT_LANDING_MS = motionMs('--dsh-claude-duration-surface')
-  *
-  * Critically damped, no overshoot: the shape must not bounce.
-  *
-- * The vertical spring keeps a little give: it overshoots the target by
-- * `exp(-πζ/√(1-ζ²))` — set by the damping ratio alone — and settles back. At
-- * CHAT_RISE_DAMPING that is a fifth of a pixel, which reads as the landing
-- * without the stand-in ever standing outside the row it lands on.
-+ * The vertical spring is deliberately under-damped: it overshoots the target by
-+ * about 2.84% (`exp(-πζ/√(1-ζ²))`, set by the damping ratio alone) and settles
-+ * back — that give is the landing.
-  */
- export const CHAT_ACROSS_OMEGA = 16
+@@ -92,9 +92,10 @@ export function chatSendSpringProgress(u: number, damping: number, omega: number
+     * (Math.cos(damped * u) + (damping * omega / damped) * Math.sin(damped * u))
+ }
  
--/** The vertical spring's damping ratio, 1 being critical. How much it gives on landing is this one number: 0.9 leaves the stand-in a fifth of a pixel past the row it lands on, and a flight whose give is a few pixels paints itself above the row's top edge (see chatSendTextWindows). */
--export const CHAT_RISE_DAMPING = 0.9
-+/** The vertical spring's damping ratio, 1 being critical. How much it gives on landing is this one number; a ratio near critical leaves a give too small to read as a landing. */
-+export const CHAT_RISE_DAMPING = 0.75
+-/** The vertical spring's own response, residual included. */
++/** Subtract the spring's residual with a late cubic so stand-in and bubble meet exactly at landing. */
+ export function chatSendRiseProgress(u: number) {
+-  return chatSendSpringProgress(u, CHAT_RISE_DAMPING, CHAT_RISE_OMEGA)
++  const residual = chatSendSpringProgress(1, CHAT_RISE_DAMPING, CHAT_RISE_OMEGA) - 1
++  return chatSendSpringProgress(u, CHAT_RISE_DAMPING, CHAT_RISE_OMEGA) - residual * u * u * u
+ }
  
- /** The vertical spring's angular frequency, on the same clock as the whole flight: larger settles earlier and bounces earlier. */
- export const CHAT_RISE_OMEGA = 7.5
+ /** Normalize the compressed spring by its endpoint so shape reaches the target without a jump. */

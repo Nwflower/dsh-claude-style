@@ -37,7 +37,7 @@ function occupancyFrom(face: HostSnapshotSource<unknown> | undefined) {
 }
 
 /**
- * Follow one session's occupancy (D102).
+ * Follow one session's occupancy (D106).
  *
  * The context section states its overview on the frame the rail mounts: the
  * provider's occupancy is a projection frame, not the host route's fold, so the
@@ -63,7 +63,7 @@ export function useLiveOccupancy(sessionId: string): ContextOccupancy | null {
 }
 
 /**
- * Follow one session's overview panel (D102).
+ * Follow one session's overview panel (D106).
  *
  * The rail mounts this body for the session it shows; a session switch replaces
  * the body and restarts this hook. The reading is kept with the session that
@@ -76,7 +76,7 @@ export function useLiveOccupancy(sessionId: string): ContextOccupancy | null {
  * older answer cannot overwrite a newer one and one visibility flip cannot
  * leave two timers running. The page's hidden state pauses the asks, and so does
  * a rail that has left the page and is only giving its width back: it keeps the
- * words it was showing and asks the host nothing more (D102).
+ * words it was showing and asks the host nothing more (D106).
  * @param sessionId - the session the rail shows.
  * @param active - whether the rail still stands; a rail on its way out reads nothing more.
  * @returns the last answer for that session, or the failed flag while nothing arrived.
@@ -125,7 +125,7 @@ export function usePanelReading(sessionId: string, active: boolean): PanelReadin
     // The host lands its figures as projection frames (D40), and a streaming turn
     // moves them every few hundred milliseconds. The rail asks again on those
     // frames — past the host's kept answer — so its numbers move with the
-    // composer's readout instead of one poll behind it (D102).
+    // composer's readout instead of one poll behind it (D106).
     const throttle = createWakeThrottle({
       minMs: WAKE_MIN_MS,
       now: () => Date.now(),

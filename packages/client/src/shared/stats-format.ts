@@ -1,3 +1,4 @@
+import { formatUnitTokens } from './format'
 import type { HostText } from '@dsh-claude-style/engine/host'
 
 /**
@@ -35,9 +36,14 @@ export function sessionStatsGrouped(value: number, chat: HostText) {
   return groups.join(chat('number.groupSeparator'))
 }
 
-/** One usage row's reading, as the host writes it: the count template around the grouped number. */
-export function sessionStatsTokens(value: number, chat: HostText) {
-  return chat('message.turnUsage.count', { count: sessionStatsGrouped(value, chat) })
+/** One token count: the reader's units, or the host's grouped whole number. */
+export function sessionStatsTokenCount(value: number, chat: HostText, units: boolean) {
+  return units ? formatUnitTokens(value) : sessionStatsGrouped(value, chat)
+}
+
+/** One usage row's reading: the host's count template around the chosen token format. */
+export function sessionStatsTokens(value: number, chat: HostText, units = false) {
+  return chat('message.turnUsage.count', { count: sessionStatsTokenCount(value, chat, units) })
 }
 
 /**
