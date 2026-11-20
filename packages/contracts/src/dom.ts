@@ -372,6 +372,8 @@ export const CONVERSATION_HEADER_SELECTOR = '[data-dsh-claude-part~="conversatio
 export const VIEW_TABS_LIST_SELECTOR = '[data-dsh-claude-part~="view-tabs-list"]'
 /** Host-marked view tablist; plugin tablists elsewhere in the conversation are excluded. */
 export const CONVERSATION_TABS_SELECTOR = '[data-conversation-tabs]'
+/** The selected native tab when the current view is visible in the tablist. */
+export const CONVERSATION_ACTIVE_TAB_SELECTOR = '[data-dsh-claude-part~="view-tab"][aria-selected="true"]'
 
 /* ---------- the document, the shell and the browser API ---------- */
 

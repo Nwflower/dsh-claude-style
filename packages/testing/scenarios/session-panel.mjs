@@ -337,11 +337,28 @@ export function sessionPanelScenario({ check }) {
           return { theme: value, width: box.width, inside: box.left >= 0 && box.right <= innerWidth, background: getComputedStyle(rail).backgroundColor }
         }, theme))
         if (context.out !== undefined) await capturePanel(page, `${context.out}/session-panel-${theme}.png`)
-        notes.themes.at(-1).tabs = await tabs.getByRole('tab').evaluateAll(elements => elements.map(element => ({
-          selected: element.getAttribute('aria-selected') === 'true',
-          ink: getComputedStyle(element).color,
-          underline: getComputedStyle(element, '::after').backgroundColor,
-        })))
+        notes.themes.at(-1).tabs = await tabs.evaluate(list => {
+          const active = list.querySelector('[aria-selected="true"]')
+          const underline = getComputedStyle(list, '::after')
+          return {
+            activeInk: active === null ? null : getComputedStyle(active).color,
+            ink: underline.backgroundColor,
+            drawn: underline.content !== 'none' && parseFloat(underline.width) > 0,
+            nativeHidden: active !== null && getComputedStyle(active, '::after').visibility === 'hidden',
+          }
+        })
+        const readLabel = (element) => {
+          const style = getComputedStyle(element)
+          return { ink: style.color, background: style.backgroundColor }
+        }
+        const resting = await trajectory.evaluate(readLabel)
+        await trajectory.hover()
+        await page.waitForFunction(({ selector, ink }) => {
+          const hovered = document.querySelector(selector)?.querySelector('[role="tab"]:hover')
+          return hovered != null && getComputedStyle(hovered).color !== ink
+        }, { selector: CONVERSATION_TABS_SELECTOR, ink: resting.ink })
+        const hovered = await trajectory.evaluate(readLabel)
+        notes.themes.at(-1).hover = { resting, hovered }
         if (context.out !== undefined) {
           await sanitizePage(expression => page.evaluate(expression))
           await page.locator(`[${PART}~="conversation-header"]`).screenshot({ path: `${context.out}/view-tabs-header-${theme}.png` })
@@ -581,10 +598,11 @@ export function sessionPanelScenario({ check }) {
             notes.viewSwitch.inTrajectory.y === notes.viewSwitch.inChat.y && notes.moreViews === true,
           JSON.stringify({ views: notes.viewSwitch, focus: notes.moreViews })),
         check('the selected tab carries its underline in both themes',
-          notes.themes?.every(theme => theme.tabs.length >= 2 &&
-            theme.tabs.filter(tab => tab.selected).length === 1 &&
-            theme.tabs.every(tab => tab.selected === (tab.underline === tab.ink))),
+          notes.themes?.every(({ tabs }) => tabs.drawn && tabs.nativeHidden && tabs.activeInk === tabs.ink),
           JSON.stringify(notes.themes?.map(theme => ({ theme: theme.theme, tabs: theme.tabs })))),
+        check('hover brightens the tab label without filling its background in either theme',
+          notes.themes?.every(({ hover: { resting, hovered } }) => hovered.ink !== resting.ink && hovered.background === resting.background),
+          JSON.stringify(notes.themes?.map(({ theme, hover }) => ({ theme, hover })))),
         check('the host header chips step aside while the rail stands',
           notes.headerActions?.exists === false || (notes.headerActions.expanded === 0 && notes.headerActions.tree === 0 && notes.headerActions.catalog === 0),
           JSON.stringify(notes.headerActions ?? null)),

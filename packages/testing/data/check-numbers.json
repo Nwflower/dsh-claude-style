@@ -563,10 +563,6 @@
       "the header keeps the column whole and the rail starts under it": [
         1
       ],
-      "the selected tab carries its underline in both themes": [
-        1,
-        2
-      ],
       "the host header chips step aside while the rail stands": [
         0
       ],
@@ -677,7 +673,7 @@
         7,
         9
       ],
-      "控制台没有异常 (line 367)": [
+      "控制台没有异常 (line 358)": [
         0
       ]
     },

@@ -440,7 +440,12 @@ file the model presented carries a state word. Its mark is a single-stroke sheet
 in the row's own ink, with a picture frame for an image, so a coloured file-type
 badge never competes with the legend.
 
-The conversation view switch uses the host's text tabs and active underline.
+The conversation view switch keeps the host's text tabs and selection. The
+label's text colour brightens on hover or keyboard focus. One underline follows
+the selected label. Both edges ease out of rest. The leading edge stretches
+across the gap and moves just past the new label as the trailing edge catches
+up. The line settles under the new label. Reduced motion applies both changes
+immediately.
 The tabs and their overflow menu sit before the right-hand tools in the
 conversation header, including the Windows caption when it has room. A narrow
 header keeps them right-aligned on the next line. The details rail leaves the
@@ -563,6 +568,7 @@ edit the JSON, not the table.
 | `--dsh-claude-duration-fade` | `300ms` | a slow cross-fade: the theme flip, the reasoning knob's glow, a placeholder handing its place to what it stood for |
 | `--dsh-claude-duration-column` | `300ms` | a column taking or giving up width beside the chat: the conversation's details rail opening or closing, and the chat's own inset following it |
 | `--dsh-claude-duration-bounce` | `350ms` | a switch's knob travelling across with its double bounce |
+| `--dsh-claude-duration-tab-underline` | `280ms` | the conversation tab underline stretching and settling under the next label |
 | `--dsh-claude-duration-flight` | `400ms` | the sent message flying from the composer to its row |
 | `--dsh-claude-duration-step` | `500ms` | one step of the reasoning window's text rising two lines |
 | `--dsh-claude-duration-pop` | `500ms` | something popping into place: the overtime badge's own pill |
@@ -598,6 +604,8 @@ edit the JSON, not the table.
 | `--dsh-claude-ease-status-title` | `cubic-bezier(0.45, 0, 0.55, 1)` | the middle travel segment of the strong running-title shimmer |
 | `--dsh-claude-ease-in-out` | `ease-in-out` | something that leaves and returns, or swaps in place: wording swaps, pulses, flashes |
 | `--dsh-claude-ease-glide` | `cubic-bezier(0.22, 0.61, 0.36, 1)` | travel along a track: the sliding highlight, the reasoning slider, the search dialog's entrance, the reasoning window's step, the wording box's width, the stream's slide |
+| `--dsh-claude-ease-tab-leading-edge` | `cubic-bezier(0.2, 0, 0.32, 1.28)` | the leading edge of the tab underline stretching just past the new label before settling |
+| `--dsh-claude-ease-tab-trailing-edge` | `cubic-bezier(0.52, 0, 0.72, 1)` | the trailing edge of the tab underline accelerating later and easing to a stop as it catches the leading edge |
 | `--dsh-claude-ease-roll` | `cubic-bezier(0.4, 0, 0.2, 1)` | digits rolling over: the file rows' tail and the process group header's counts |
 | `--dsh-claude-ease-column` | `cubic-bezier(0.4, 0, 0.2, 1)` | a column taking or giving up width beside the chat, and the chat's inset following it |
 | `--dsh-claude-ease-spring` | `cubic-bezier(0.34, 1.45, 0.64, 1)` | a small overshoot as something lands: the overtime badge popping in, a switch's knob bouncing past its end |

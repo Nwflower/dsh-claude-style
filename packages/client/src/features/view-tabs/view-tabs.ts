@@ -1,11 +1,11 @@
-import { CONVERSATION_HEADER_SLOT_SELECTOR, CONVERSATION_TABS_SELECTOR, HEADER_TITLE_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { CONVERSATION_ACTIVE_TAB_SELECTOR, CONVERSATION_HEADER_SLOT_SELECTOR, CONVERSATION_TABS_SELECTOR, HEADER_TITLE_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { observeSize, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { createStamp } from '@dsh-claude-style/engine/dom'
 import { cacheFirstMatch, closestConversationHeader, conversationHeaderTools } from '@dsh-claude-style/engine/host'
 import type { FeatureHandle } from '@dsh-claude-style/engine/scheduler'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { FeatureUi } from '../../core/feature'
-import { inPageBox } from '../../shared/page-zoom'
+import { inPageBox, inPagePixels } from '../../shared/page-zoom'
 import type manifest from './view-tabs.manifest'
 
 export interface ViewTabsHandle extends FeatureHandle {
@@ -17,14 +17,25 @@ const MIN_TITLE = 48
 const RIGHT = '--dsh-view-tabs-inline-right'
 const TOP = '--dsh-view-tabs-inline-top'
 const SPACE = '--dsh-view-tabs-inline-space'
+const UNDERLINE_LEFT = '--dsh-view-tabs-underline-left'
+const UNDERLINE_RIGHT = '--dsh-view-tabs-underline-right'
+
+interface UnderlineReading {
+  list: HTMLElement
+  active: Element
+  left: number
+  right: number
+}
 
 /** The row stays in the host's React tree and the host still counts its tabs (D43). */
 export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const stripStamp = createStamp<HTMLElement>('data-dsh-view-tabs')
   const headerStamp = createStamp<HTMLElement>('data-dsh-view-tabs-taken')
+  const underlineStamp = createStamp<HTMLElement>('data-dsh-view-tabs-underline')
   const tabs = cacheFirstMatch<HTMLElement>(CONVERSATION_TABS_SELECTOR)
   let watched: HTMLElement | null = null
   let stopSize: (() => void) | null = null
+  let placedUnderline: UnderlineReading | null = null
 
   function find() {
     const list = tabs()
@@ -37,6 +48,14 @@ export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     for (const property of [RIGHT, TOP, SPACE]) header.style.removeProperty(property)
   }
 
+  function clearUnderline() {
+    const list = underlineStamp.current()
+    list?.style.removeProperty(UNDERLINE_LEFT)
+    list?.style.removeProperty(UNDERLINE_RIGHT)
+    underlineStamp.release()
+    placedUnderline = null
+  }
+
   function mark(found: ReturnType<typeof find>) {
     const previous = headerStamp.current()
     if (previous !== (found?.header ?? null)) {
@@ -47,25 +66,55 @@ export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const list = found?.list ?? null
     if (watched !== list) {
       stopSize?.()
+      clearUnderline()
       watched = list
       // The font or window can change the room for tabs without mounting nodes (D40).
       stopSize = found === null ? null : observeSize([found.header, found.list], () => ui.schedule?.())
     }
   }
 
+  function measureUnderline(list: HTMLElement, box: DOMRect): UnderlineReading | null {
+    const active = list.querySelector(CONVERSATION_ACTIVE_TAB_SELECTOR)
+    if (active === null) return null
+    const tab = active.getBoundingClientRect()
+    if (tab.width === 0) return null
+    return { list, active, left: inPagePixels(tab.left - box.left), right: inPagePixels(box.right - tab.right) }
+  }
+
+  function syncUnderline(next: UnderlineReading | null) {
+    if (next === null) {
+      clearUnderline()
+      return
+    }
+    const previous = placedUnderline
+    const { list, active, left, right } = next
+    if (previous?.list === list && previous.active === active && previous.left === left && previous.right === right) return
+    // Animate selection changes in a mounted list. A new session or a resized
+    // label gets its resting underline on the first paint (D40, D43).
+    const changed = previous?.list === list && previous.active.parentElement === list && previous.active !== active
+    const direction = changed ? (left < previous.left ? 'left' : 'right') : ''
+    list.style.setProperty(UNDERLINE_LEFT, `${left}px`)
+    list.style.setProperty(UNDERLINE_RIGHT, `${right}px`)
+    underlineStamp.mark(list, direction)
+    placedUnderline = next
+  }
+
   function measureStrip(found: NonNullable<ReturnType<typeof find>>) {
-    const { strip, header } = found
+    const { strip, header, list } = found
     let left = Infinity
     let right = -Infinity
+    let underline: UnderlineReading | null = null
     for (const child of strip.children) {
-      const box = inPageBox(child.getBoundingClientRect())
-      if (box.width === 0 || box.height === 0) continue
+      const viewportBox = child.getBoundingClientRect()
+      if (viewportBox.width === 0 || viewportBox.height === 0) continue
+      if (child === list) underline = measureUnderline(list, viewportBox)
+      const box = inPageBox(viewportBox)
       left = Math.min(left, box.left)
       right = Math.max(right, box.right)
     }
     const width = right < left ? 0 : Math.ceil(right - left)
     const titleRow = header.querySelector<HTMLElement>(HEADER_TITLE_ROW_SELECTOR)
-    if (titleRow === null || width === 0) return { header, width, inline: null }
+    if (titleRow === null || width === 0) return { header, width, inline: null, underline }
 
     const rowBox = inPageBox(titleRow.getBoundingClientRect())
     const headerBox = inPageBox(header.getBoundingClientRect())
@@ -89,7 +138,7 @@ export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       top: rowBox.top - headerBox.top + rowBox.height / 2,
       space,
     } : null
-    return { header, width, inline }
+    return { header, width, inline, underline }
   }
 
   let reading: ReturnType<typeof measureStrip> | null = null
@@ -102,7 +151,8 @@ export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const found = find()
     mark(found)
     if (found === null) return
-    const { header } = found
+    const { header, list } = found
+    syncUnderline(reading?.underline?.list === list ? reading.underline : null)
     const inline = reading?.header === header ? reading.inline : null
     headerStamp.mark(header, inline === null ? '' : 'inline')
     if (inline === null) {
