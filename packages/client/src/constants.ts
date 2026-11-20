@@ -55,6 +55,8 @@ export const FOOTER_SEATS = [
 ] as const
 /** A footer entry a plugin lays out as a block of its own — a `<section>` carrying its heading and its rows — which the takeover keeps above the account row instead of gathering it into the account menu (features/account/footer-mirror.ts, footer-takeover.css). */
 export const FOOTER_BLOCK_ATTR = 'data-dsh-claude-footer-block'
+/** A footer entry that opens a menu — its own trigger or a control inside it — or carries the host's sign-out glyph: the takeover keeps it in place in the sidebar and the account popover gathers no row for it, because the menu portals from the trigger's own box and returns focus to that trigger (features/account/footer-mirror.ts, footer-takeover.css). */
+export const FOOTER_MENU_ATTR = 'data-dsh-claude-footer-menu'
 
 /** The host frame's mark while the sidebar stands over the page from a hover (features/sidebar-peek): `open`, then `closing` for the slide back out.
  * The two custom properties carry the collapsed width the centre keeps clear of and the width the slide travels. */

@@ -91,8 +91,12 @@ body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [data-dsh-claude-pa
    plugin's layout for the sidebar, not a control the account menu can stand in
    for. It keeps its place above the account row, so the action box the takeover
    zeroes for its gathered entries takes its own size back while it holds one;
-   the hold is kept by the pass (packages/engine/src/parts-table.ts). */
-body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [data-dsh-claude-part~="foot-area"] > [data-dsh-claude-part~="footer-actions"][data-dsh-claude-holds~="footer-block"] {
+   the hold is kept by the pass (packages/engine/src/parts-table.ts). An entry
+   that opens a menu keeps its place for the same reason and reads the same hold
+   (footer-mirror.ts, issue #417): the menu portals from the trigger's own box, so
+   the trigger must keep painting and the action box must keep its size. */
+body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [data-dsh-claude-part~="foot-area"] > [data-dsh-claude-part~="footer-actions"][data-dsh-claude-holds~="footer-block"],
+body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [data-dsh-claude-part~="foot-area"] > [data-dsh-claude-part~="footer-actions"][data-dsh-claude-holds~="footer-menu"] {
   width: 100%;
   height: auto;
   font-size: initial;
@@ -111,6 +115,15 @@ body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [data-dsh-claude-pa
    account menu stands down: one control appears in one place. */
 body[data-dsh-claude-style]:not([data-dsh-claude-holds~="sidebar-rail"]) .dsh-claude-popover-embed.dsh-claude-popover-embed-section {
   display: none;
+}
+/* A menu-trigger entry keeps the box the plugin gave it: the takeover writes no
+   entry or hidden mark onto it (footer-mirror.ts), so nothing collapses it in the
+   wide sidebar. In the rail it takes the column's width, so its control stays
+   inside the icon-wide sidebar rather than overflowing it; unlike a block it is
+   never hidden there, because the account menu carries no copy of it. */
+body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [data-dsh-claude-part~="sidebar-root"][data-dsh-claude-part~="sidebar-collapsed"] [data-dsh-claude-footer-menu] {
+  width: 100%;
+  min-width: 0;
 }
 
 /* The footer collapse uses zero text metrics to suppress stray in-flow content.

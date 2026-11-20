@@ -387,6 +387,15 @@ export function holdRelations(vocabulary: PartsTableVocabulary): HoldRelation[] 
     held: '[data-dsh-claude-footer-block]',
     attributes: ['data-dsh-claude-footer-block'],
   },
+  // features/account/footer-takeover.css: the footer's action box keeps its size for
+  // an entry that opens a menu, which the takeover leaves in place in the sidebar
+  // rather than gathering into the account menu (issue #417).
+  {
+    name: 'footer-menu',
+    holder: part('footer-actions'),
+    held: '[data-dsh-claude-footer-menu]',
+    attributes: ['data-dsh-claude-footer-menu'],
+  },
   // features/account/footer-takeover.css: the host mounts its own account menu on
   // <body>, outside the sidebar, so the collapsed rail's card width cannot be read
   // from a sidebar ancestor; the body takes the mark from the frame's own attribute.

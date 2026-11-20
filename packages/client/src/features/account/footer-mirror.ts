@@ -1,7 +1,7 @@
-import { FOOTER_ACTIONS_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { FOOTER_ACTIONS_SELECTOR, MENU_TRIGGER_SELECTOR, SIGN_OUT_GLYPH_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { findFootArea } from '@dsh-claude-style/engine/host'
-import { hasSkinClass } from '@dsh-claude-style/engine/dom'
-import { FOOTER_BLOCK_ATTR, FOOTER_SEAT_ATTR, FOOTER_SEATS } from '../../constants'
+import { hasSkinClass, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
+import { FOOTER_BLOCK_ATTR, FOOTER_MENU_ATTR, FOOTER_SEAT_ATTR, FOOTER_SEATS } from '../../constants'
 import { buildPopoverItem } from '../../shared/popover'
 import { copy } from './copy'
 
@@ -74,6 +74,11 @@ export function createFooterMirror(options: {
    *     sidebar, not a control: it keeps its place above the account row under
    *     FOOTER_BLOCK_ATTR, the popover carries a copy of it for the collapsed
    *     rail alone.
+   *   - an entry that opens a menu (its own trigger or a control inside it) or
+   *     carries the host's sign-out glyph keeps its place in the sidebar under
+   *     FOOTER_MENU_ATTR: the menu portals from the trigger's own box and returns
+   *     focus to it, so the popover gathers no row and the takeover hides nothing
+   *     (issue #417).
    * Returns the live entry list for popover mirroring.
    */
   function syncFooterVisibility(footArea: Element) {
@@ -97,7 +102,8 @@ export function createFooterMirror(options: {
         entry.removeAttribute('data-dsh-claude-footer-entry')
         entry.removeAttribute('data-dsh-claude-footer-hidden')
         entry.removeAttribute(FOOTER_BLOCK_ATTR)
-        entry.setAttribute('data-dsh-claude-footer-overlay', '')
+        entry.removeAttribute(FOOTER_MENU_ATTR)
+        setAttributeIfChanged(entry, 'data-dsh-claude-footer-overlay', '')
         continue
       }
       const seat = seatOf(entry)
@@ -106,13 +112,33 @@ export function createFooterMirror(options: {
         // it (footer-seats.ts), and the plugin's own node stays hidden in its
         // slot rather than collapsed into the popover. Neither the entry mark
         // nor the hidden mark is written — the seat rule owns the node.
-        entry.setAttribute(FOOTER_SEAT_ATTR, seat)
+        setAttributeIfChanged(entry, FOOTER_SEAT_ATTR, seat)
         entry.removeAttribute('data-dsh-claude-footer-entry')
         entry.removeAttribute('data-dsh-claude-footer-hidden')
         entry.removeAttribute(FOOTER_BLOCK_ATTR)
+        entry.removeAttribute(FOOTER_MENU_ATTR)
+        continue
+      }
+      if (keepsMenuAnchor(entry)) {
+        // A menu trigger keeps its place in the sidebar: the menu portals from
+        // the trigger's own box and returns focus to it, so the takeover writes
+        // no display rule onto the entry and footer-takeover.css gives the
+        // footer's action box its size back for it. The popover gathers no row
+        // (the mirror reads the same mark), so the entry is never hidden out of
+        // both places at once (issue #417). A hidden mark an earlier pass wrote
+        // on a branch comes off, so a trigger that grew into an entry already
+        // collapsed paints whole again.
+        setAttributeIfChanged(entry, FOOTER_MENU_ATTR, '')
+        entry.removeAttribute('data-dsh-claude-footer-entry')
+        entry.removeAttribute('data-dsh-claude-footer-hidden')
+        entry.removeAttribute(FOOTER_SEAT_ATTR)
+        entry.removeAttribute(FOOTER_BLOCK_ATTR)
+        const stale = entry.querySelectorAll('[data-dsh-claude-footer-hidden]')
+        for (let s = 0; s < stale.length; s++) stale[s].removeAttribute('data-dsh-claude-footer-hidden')
         continue
       }
       entry.removeAttribute(FOOTER_SEAT_ATTR)
+      entry.removeAttribute(FOOTER_MENU_ATTR)
       const block = entry.tagName === 'SECTION'
       if (block) {
         // A section is the plugin's own block laid out for the sidebar — a
@@ -121,19 +147,20 @@ export function createFooterMirror(options: {
         // footer-takeover.css gives the footer's action box its size back for
         // it. The popover still carries a copy, which the rail shows where the
         // block itself has no room.
-        entry.setAttribute(FOOTER_BLOCK_ATTR, '')
+        setAttributeIfChanged(entry, FOOTER_BLOCK_ATTR, '')
         entry.removeAttribute('data-dsh-claude-footer-entry')
         entry.removeAttribute('data-dsh-claude-footer-hidden')
+        entry.removeAttribute(FOOTER_MENU_ATTR)
         continue
       }
       entry.removeAttribute(FOOTER_BLOCK_ATTR)
-      entry.setAttribute('data-dsh-claude-footer-entry', '')
+      setAttributeIfChanged(entry, 'data-dsh-claude-footer-entry', '')
       const all = entry.querySelectorAll('*')
       for (let j = 0; j < all.length; j++) {
         const el = all[j]
         if (el.hasAttribute('data-dsh-claude-footer-overlay')) continue
         const overlay = isOverlay(el) || isFixedPanelForSync(el, read)
-        if (overlay) el.setAttribute('data-dsh-claude-footer-overlay', '')
+        if (overlay) setAttributeIfChanged(el, 'data-dsh-claude-footer-overlay', '')
       }
       markFooterHiddenBranches(entry)
     }
@@ -159,6 +186,22 @@ export function createFooterMirror(options: {
       if (entry.matches(option.selector)) return option.seat
     }
     return null
+  }
+
+  /**
+   * Whether an entry opens a menu — its own trigger or a control inside it — or
+   * carries the host's sign-out glyph. Both the hiding pass and the mirror read
+   * this one answer, so an entry the popover refuses to gather is never hidden
+   * out of the sidebar (issue #417). A menu portals from its trigger's own box
+   * and returns focus to that trigger, so the trigger must keep painting where
+   * the plugin put it: a mirrored copy's press would open the menu against a
+   * hidden anchor. The sign-out control belongs to the account area the popover
+   * itself is, so a second copy would be two controls for one state.
+   */
+  function keepsMenuAnchor(entry: Element) {
+    return entry.matches(MENU_TRIGGER_SELECTOR) ||
+      entry.querySelector(MENU_TRIGGER_SELECTOR) !== null ||
+      entry.querySelector(SIGN_OUT_GLYPH_SELECTOR) !== null
   }
 
   /**
@@ -280,7 +323,7 @@ export function createFooterMirror(options: {
       for (let i = 0; i < kids.length; i++) markFooterHiddenBranches(kids[i])
       return
     }
-    el.setAttribute('data-dsh-claude-footer-hidden', '')
+    setAttributeIfChanged(el, 'data-dsh-claude-footer-hidden', '')
   }
 
   /**
@@ -588,16 +631,13 @@ export function createFooterMirror(options: {
     for (let f = 0; f < footerEntries.length; f++) {
       try {
         ((entry: Element, idx: number) => {
-        // The host's account area also lives in the footer: skip anything
-        // that is a menu anchor or contains one, and anything carrying the
-        // host's sign-out glyph, so its logout button stays out of the
-        // drawer's header. The glyph is identified by its geometry
-        // (ui-primitives LogoutIcon: a 13.664×13.571 svg), never by text —
-        // the row is icon-only and its label follows the interface
-        // language.
-        if (entry.getAttribute('aria-haspopup') === 'menu') return
-        if (entry.querySelector('[aria-haspopup="menu"]') !== null) return
-        if (entry.querySelector('svg[viewBox="0 0 13.664 13.571"]') !== null) return
+        // An entry that opens a menu or carries the host's sign-out glyph keeps
+        // its place in the sidebar (syncFooterVisibility stamps FOOTER_MENU_ATTR
+        // from the same answer the hiding pass reads): the menu portals from the
+        // trigger's own box and returns focus to it, so a row here would press a
+        // hidden anchor, and the entry is never hidden out of both places at once
+        // (issue #417).
+        if (entry.hasAttribute(FOOTER_MENU_ATTR)) return
         // An entry that is itself an overlay is no footer control: it gets no
         // row, and a clone of it would carry the dialog's own `open` into the
         // popover as a second, non-modal copy.
@@ -721,7 +761,7 @@ export function createFooterMirror(options: {
   /** Drop every takeover marker from the host's footer entries. */
   function clear(footArea: Element) {
     const marked = footArea.querySelectorAll(
-      '[data-dsh-claude-footer-entry], [data-dsh-claude-footer-hidden], [data-dsh-claude-footer-overlay], [data-dsh-claude-footer-seat], [data-dsh-claude-footer-block]',
+      '[data-dsh-claude-footer-entry], [data-dsh-claude-footer-hidden], [data-dsh-claude-footer-overlay], [data-dsh-claude-footer-seat], [data-dsh-claude-footer-block], [data-dsh-claude-footer-menu]',
     )
     for (let i = 0; i < marked.length; i++) {
       marked[i].removeAttribute('data-dsh-claude-footer-entry')
@@ -729,6 +769,7 @@ export function createFooterMirror(options: {
       marked[i].removeAttribute('data-dsh-claude-footer-overlay')
       marked[i].removeAttribute(FOOTER_SEAT_ATTR)
       marked[i].removeAttribute(FOOTER_BLOCK_ATTR)
+      marked[i].removeAttribute(FOOTER_MENU_ATTR)
     }
   }
 

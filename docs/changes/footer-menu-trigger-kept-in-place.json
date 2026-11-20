@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-19",
+  "group": "fixes",
+  "order": 0,
+  "external": true,
+  "zh": "修复重绘账户区后插件菜单触发器入口彻底消失的问题，菜单触发器保留在侧栏原位置，菜单定位与焦点返回正常",
+  "en": "Fix a plugin menu-trigger footer entry vanishing once the account area is redrawn, keeping the trigger in its sidebar place with its menu placement and focus return intact"
+}

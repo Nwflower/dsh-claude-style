@@ -301,6 +301,10 @@ export const MENU_MATERIAL_SELECTOR = '[data-menu-material]'
 export const MENU_LIST_SELECTOR = '[role="presentation"]'
 /** The host's account trigger in the sidebar footer. */
 export const ACCOUNT_TRIGGER_SELECTOR = '[aria-haspopup="menu"][data-signed-out]'
+/** A control that opens a menu, read on a footer entry itself or on a control inside one. */
+export const MENU_TRIGGER_SELECTOR = '[aria-haspopup="menu"]'
+/** The host's sign-out glyph (ui-primitives LogoutIcon), told by its geometry, never by its localized label. */
+export const SIGN_OUT_GLYPH_SELECTOR = 'svg[viewBox="0 0 13.664 13.571"]'
 /** Footer popup trigger; `aria-haspopup` varies across supported hosts and is intentionally unconstrained. */
 export const SETTINGS_BUTTON_SELECTOR = '[data-dsh-claude-part~="settings-area"] button[aria-haspopup]'
 /** The sidebar's action list, whose entries the skin mirrors into its drawer. */
