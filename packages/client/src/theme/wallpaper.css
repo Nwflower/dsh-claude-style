@@ -57,10 +57,10 @@ body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper]
   background: transparent;
 }
 
-/* The composer's seat and the two fades at the transcript's ends paint the full
-   canvas across the column, which over the mask shows as brighter bands. They
-   stand down, and the transcript passing under the dock row is covered by a
-   tray in the canvas colour: the composer card's own width, from under the
+/* The composer's seat and its fade paint the full canvas across the column,
+   which over the mask shows as brighter bands. They stand down, and a tray
+   in the canvas colour covers the transcript passing under the dock row. The
+   tray spans the composer card's own width, from under the
    card's top edge to the window's bottom, so the dock row and the figures under
    the card sit on the card's ground. The seat is sticky, so the tray goes with it. */
 body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper] :is([data-phase="active"], [data-content-phase="active"]) [data-composer-seat],
@@ -69,8 +69,7 @@ body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper]
 }
 
 body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper] :is([data-phase="active"], [data-content-phase="active"]) [data-composer-seat]::before,
-body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper] [data-dsh-claude-transcript] [data-composer-seat]::before,
-body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper] [data-dsh-claude-part~="conversation-header"][data-dsh-view-tabs-taken]::after {
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-we-wallpaper] [data-dsh-claude-transcript] [data-composer-seat]::before {
   display: none;
 }
 

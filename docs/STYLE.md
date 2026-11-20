@@ -314,7 +314,9 @@ plates, in the caption row and in the header's own row alike: a 28px square at a
 under the pointer. The row divides into the session's actions and the panel
 switches: three actions — open-with, changes, more — stand 6px apart, a 16px
 hairline drawn on the first switch opens a 18px break, and the bottom-panel
-switch, the details switch and the right-panel switch follow at 6px. The
+switch and the details switch follow at 6px. In the caption row the right-panel
+switch has 8px of leading space in both states, so it keeps the same place
+when its action changes from opening to closing. The
 open-with split carries no outline of its own; its app icon keeps the app's
 colour throughout, and the whole control takes one plate rather than one per
 half.
@@ -450,25 +452,30 @@ in the row's own ink, with a picture frame for an image, so a coloured file-type
 badge never competes with the legend.
 
 The conversation view switch keeps the host's text tabs and selection. The
-label's text colour brightens on hover or keyboard focus. One underline follows
-the selected label. Both edges ease out of rest. The leading edge stretches
-across the gap and moves just past the new label as the trailing edge catches
-up. The line settles under the new label. Reduced motion applies both changes
-immediately.
+label's text colour brightens on hover or keyboard focus. The shared underline
+rests under the selected label. Hovering a tab previews its position with a
+transform animation. The leading edge stretches across the gap and moves just
+past the hovered label as the trailing edge catches up. Leaving the tabs
+returns the line to the selected label. Selection updates the resting position
+without starting an animation. Reduced motion moves the line immediately.
 The tabs and their overflow menu sit before the right-hand tools in the
 conversation header, including the Windows caption when it has room. A narrow
 header keeps them right-aligned on the next line. The details rail leaves the
-header's width intact.
+header's width intact. The host's bottom border separates the header from the
+conversation and takes the same colour as the column dividers.
 
 The title area and the session's more-actions trigger stay visible. The view
 tabs, their overflow menu and the right-hand tools fade in while the pointer is
-over the header or main content, including the composer and the Windows caption
-space above the conversation.
-They fade out over a sidebar or the details rail and keep their place in the
-header. Keyboard focus reveals them immediately. Reduced motion applies the
-opacity changes immediately, and touch-only devices keep the controls visible.
+over the header, the main content, the sidebar or the details rail, including the
+composer and the Windows caption space above the conversation. The caption carries
+the sidebar's collapse control, so those columns keep the header buttons up. The
+tools fade out over the host right panel and keep their place in the header.
+Keyboard focus reveals them immediately. Reduced motion applies the opacity
+changes immediately, and touch-only devices keep the controls visible.
 The Conversation setting Hide toolbar outside the conversation starts on.
 Turning it off keeps those controls visible throughout the active conversation.
+When Right-align Chat / Trajectory tabs is off, the host's view tabs and their
+menu stay visible in their original row.
 
 The two figures sections put a label on the left and a value on the right, one
 figure a row, so a long duration or token count keeps the row's width. Session
@@ -505,13 +512,11 @@ runs, and its tokens stay in the session's own figures.
   code block or a keycap reads as a chamfer catching the top light over whatever
   fill it sits on rather than as a contour whose colour has to be re-picked per
   surface. The light rungs stay the warm opaque ladder.
-- Separator: `--dsh-claude-divider`, a rung below the lightest border, drawn at
-  0.5px on every line that only separates — the sidebar's foot area, the search
-  panel's foot, the context stats, the settings rows, a menu's separators, the
-  file block's IN/OUT line and the transcript's `hr`. The line belongs to the
-  layout rather than to a surface's opening animation, so one thickness covers
-  every separator a card holds. A card, a field and a popover keep their 1px
-  border in l1, so an outline always reads heavier than a separator inside it.
+- Layout dividers: 0.5px in `--dsw-alias-border-l1` below the conversation header
+  and where the sidebar and details rail meet the conversation.
+- Content dividers: 0.5px in `--dsh-claude-divider`, a rung below the lightest
+  border, for details sections, menu groups, settings rows, foot areas and the
+  transcript's `hr`. Cards, fields and popovers use a 1px outline in l1.
 - Spacing: 4 px rhythm.
 - Bottom edge: the transcript never fades behind the composer by shadow. The
   composer seat paints an opaque `var(--dsw-alias-bg-base)` bar across its own
@@ -703,7 +708,8 @@ it passes. The transcript, the composer's draft and a text field inside the
 chrome keep their own selection, which Chromium grants an editing host under a
 locked ancestor.
 
-The session title is the session's name, and a press on it renames the session.
+The session title uses the space available in its header row and ends with an
+ellipsis when the name exceeds that space. A press on it renames the session.
 The pointer over the title's last crumb raises a plate under the words — the
 host's own crumb already carries the padding and the radius — with a tip under
 the segment naming the press, in the label ink on the canvas tone the usage

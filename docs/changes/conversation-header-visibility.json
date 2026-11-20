@@ -3,6 +3,6 @@
   "group": "improvements",
   "order": 0,
   "external": true,
-  "zh": "新增「焦点不在对话页内隐藏工具栏」开关，控制视图标签、更多视图菜单和右侧工具的淡入淡出",
-  "en": "Add a Hide toolbar outside the conversation setting for the view tabs, More views menu, and right-hand tools"
+  "zh": "新增「焦点不在对话页内隐藏工具栏」开关，指针移到宿主右侧面板时淡出视图标签、更多视图菜单和右侧工具，悬停侧栏或详情栏时保持显示",
+  "en": "Add a Hide toolbar outside the conversation setting that fades the view tabs, More views menu and right-hand tools over the host right panel and keeps them up over the sidebar and details rail"
 }

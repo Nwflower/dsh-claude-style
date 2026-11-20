@@ -97,29 +97,17 @@ body[data-dsh-claude-style] [data-dsh-view-tabs-underline] > [data-dsh-claude-pa
 body[data-dsh-claude-style] [data-dsh-view-tabs-underline]::after {
   content: "";
   position: absolute;
-  left: calc(var(--dsh-view-tabs-underline-left) + var(--dsh-view-tab-inline-padding));
-  right: calc(var(--dsh-view-tabs-underline-right) + var(--dsh-view-tab-inline-padding));
+  left: 0;
   bottom: -1px;
+  width: 100%;
   height: 2px;
-  border-radius: 2px;
   background-color: var(--dsw-alias-state-business-primary);
   pointer-events: none;
+  transform-origin: left;
+  transform: var(--dsh-view-tabs-underline-transform);
 }
 
-/* The leading edge goes first and the trailing edge catches it. A new
-   selection continues from the browser's current values of both edges (D9). */
-body[data-dsh-claude-style] [data-dsh-view-tabs-underline="left"]::after {
-  transition: left var(--dsh-claude-duration-tab-underline) var(--dsh-claude-ease-tab-leading-edge),
-    right var(--dsh-claude-duration-tab-underline) var(--dsh-claude-ease-tab-trailing-edge);
-}
-
-body[data-dsh-claude-style] [data-dsh-view-tabs-underline="right"]::after {
-  transition: left var(--dsh-claude-duration-tab-underline) var(--dsh-claude-ease-tab-trailing-edge),
-    right var(--dsh-claude-duration-tab-underline) var(--dsh-claude-ease-tab-leading-edge);
-}
-
-body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-view-tabs] [data-dsh-claude-part~="view-tab"],
-body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-view-tabs-underline]::after {
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-view-tabs] [data-dsh-claude-part~="view-tab"] {
   transition: none;
 }
 

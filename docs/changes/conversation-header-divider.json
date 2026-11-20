@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-20",
+  "group": "improvements",
+  "order": 0,
+  "external": true,
+  "zh": "移除对话顶栏下方的渐隐遮罩，恢复 DSH 原有的分隔线",
+  "en": "Restore the native divider below the conversation header by removing the gradient overlay"
+}

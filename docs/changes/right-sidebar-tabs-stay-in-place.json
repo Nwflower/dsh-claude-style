@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-20",
+  "group": "fixes",
+  "order": 0,
+  "external": true,
+  "zh": "展开或收起右侧栏时，桌面顶栏中靠右的对话和轨迹标签保持原位",
+  "en": "Keep the right-aligned Chat and Trajectory tabs in place when the right sidebar opens or closes"
+}

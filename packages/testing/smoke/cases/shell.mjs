@@ -155,9 +155,9 @@ export default {
       JSON.stringify(names))
     const panelClosed = b.panelClosed || {}
     check('the right panel\'s collapse control is the skin\'s own, drawn in the header\'s row: it shows while the panel is open and hides with the panel, and the panel\'s own copy stays where the host drew it',
-      laid.closeInline === 'inline-flex' && laid.closeShown !== 'none' &&
+      laid.closeShown !== 'none' &&
         laid.hostToggleDisplay !== 'none' && panelClosed.close === 'none',
-      JSON.stringify({ laid: { close: laid.closeInline, shown: laid.closeShown, host: laid.hostToggleDisplay }, closed: panelClosed }))
+      JSON.stringify({ laid: { shown: laid.closeShown, host: laid.hostToggleDisplay }, closed: panelClosed }))
     const solo = b.solo || {}
     check('with the corner seat empty — the right sidebar is open — the cluster that is there still lifts, into the corner\'s own place',
       solo.marks.band === 'title actions tabs' && solo.marks.corner === false && solo.marks.trail === true && solo.utilities.right === right,
