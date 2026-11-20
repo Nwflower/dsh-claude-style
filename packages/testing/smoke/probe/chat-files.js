@@ -130,7 +130,7 @@
       r.files.reading = renderRow('read', reading, {})
       // The switch comes down whole: this feature takes the host's three seat
       // keys over, and a key cannot be handed back by reading a preference, so
-      // off has to unregister them (D72/D74).
+      // off has to unregister them (D76/D74).
       window.__pushForm({ chatAnimations: false })
       await sleep(150)
       r.files.offSeats = (window.__slots || []).filter(function (entry) { return entry.key === 'tool.call.toolview' }).length

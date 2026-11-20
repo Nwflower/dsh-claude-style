@@ -1,5 +1,5 @@
 /**
- * Git facts for the session overview panel (D102).
+ * Git facts for the session overview panel (D106).
  *
  * The panel names the checkout the session works in, its branch and whether it
  * is a linked worktree, and, for a directory that holds several checkouts, the
@@ -85,7 +85,7 @@ async function checkoutOf(directory: string): Promise<PanelCheckout | null> {
  * The answer is kept per directory for a few seconds: the panel asks again on
  * every read, and a branch changes only when the session checks another one out.
  * A directory that is no checkout answers the folder alone: the checkouts beside
- * it are other sessions' business and never enter this answer (D102).
+ * it are other sessions' business and never enter this answer (D106).
  */
 export async function panelEnvironment(directory: string | null): Promise<PanelEnvironment | null> {
   const home = homedir()

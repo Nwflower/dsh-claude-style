@@ -1,6 +1,6 @@
 /**
  * session-panel-read.mjs — what the session panel's scenario reads from the page
- * (D92, D102): the rail's headings and what each section holds, the context bar,
+ * (D92, D106): the rail's headings and what each section holds, the context bar,
  * the header's preset and controls, the host's right column, and the captures
  * taken of the rail. The scenario beside this file sends the turn and judges what
  * these readings bring back.
@@ -43,7 +43,7 @@ const HEADINGS = {
   stats: words('sessionStats'),
   tokens: words('tokenUsage'),
 }
-/** The two figures sections, which start folded with one figure beside the heading (D102). */
+/** The two figures sections, which start folded with one figure beside the heading (D106). */
 const FOLDED_HEADINGS = [...HEADINGS.stats, ...HEADINGS.tokens]
 
 /** The rail's headings, the sections they title, and what each holds. */
@@ -107,7 +107,7 @@ const readContextBar = (page) => page.evaluate(({ attribute, reduced }) => {
 /** The header's preset label, the words the rail repeats: the label's own part, not the whole actions slot, which also carries the host's job and subagent chips. */
 const readPreset = (page) => page.evaluate((attribute) => (document.querySelector(`[${attribute}~="header-label"]`)?.textContent ?? '').trim(), PART)
 
-/** Whether the header's preset label is drawn: it steps aside while the rail carries its words (D102). */
+/** Whether the header's preset label is drawn: it steps aside while the rail carries its words (D106). */
 const presetLabelDrawn = (page) => page.evaluate((attribute) => {
   const label = document.querySelector(`[${attribute}~="header-label"]`)
   return label === null ? null : getComputedStyle(label).visibility !== 'hidden'
@@ -142,7 +142,7 @@ async function pressDetails(page) {
 /** Whether the rail stands on the page right now. */
 const railMounted = (page) => page.evaluate(() => document.querySelector('.dsh-claude-details') !== null)
 
-/** Whether the rail holds the chat's width: the conversation's body gives it up from its own margin, under a header that keeps the column whole (D102). */
+/** Whether the rail holds the chat's width: the conversation's body gives it up from its own margin, under a header that keeps the column whole (D106). */
 const railSqueezes = (page) => page.evaluate((attribute) => {
   const body = document.querySelector(`[${attribute}~="conversation-body"]`)
   return body !== null && Math.round(Number.parseFloat(getComputedStyle(body).marginRight)) === 320

@@ -1,4 +1,4 @@
-/** Command executions keep their session scope and their foreground/background provenance (D102). */
+/** Command executions keep their session scope and their foreground/background provenance (D106). */
 import { check } from './shared.mjs'
 
 export async function hostPanelJobs({ mod, fakeHost, request, browser, scratchHome }) {

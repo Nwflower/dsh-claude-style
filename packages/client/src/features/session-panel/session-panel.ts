@@ -1,5 +1,5 @@
 /**
- * The conversation's details rail (D102): the session overview beside the chat.
+ * The conversation's details rail (D106): the session overview beside the chat.
  *
  * The rail is the skin's own column rather than a page in the host's right
  * sidebar. The install mounts it once into a container of its own on the body;

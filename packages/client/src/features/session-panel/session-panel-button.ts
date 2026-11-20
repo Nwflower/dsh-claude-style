@@ -4,7 +4,7 @@ import { copy } from './copy'
 import { railOpen, subscribeRail, toggleRail } from './session-panel-state'
 
 /**
- * The header's own control for the details rail (D102).
+ * The header's own control for the details rail (D106).
  *
  * The rail opens itself when the conversation column is wide enough; this
  * control puts it away, or brings it back in a frame too narrow for the auto

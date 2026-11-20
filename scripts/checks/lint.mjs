@@ -99,9 +99,10 @@ for (const file of markdown) {
   }
 }
 
-// 3. Decision numbers cited by code and documents. A retired number stays citable (D48): a
-// comment or an older record points at it and the index leads on to what replaced it. A
-// decision file names the decision in force — only its 取代 line names retired numbers.
+// 3. Decision numbers cited by code and documents name the decision in force. A retired
+// number is led to its successor by the index for readers of old commits; the living tree
+// cites the successor, so a comment never points at a deleted decision file. Only a
+// decision's 取代 line and the generated index name retired numbers.
 const { live, retired } = decisionNumbers()
 const citing = [
   ...sources,
@@ -112,6 +113,7 @@ const citing = [
 ].filter((file, at, all) => all.indexOf(file) === at && fs.existsSync(file))
 const DECISION_FILE = /^docs\/adr\/D\d+-.*\.md$/
 const REPLACES_LINE = /^\s*[-*]\s*\*\*取代\*\*：/
+const DECISION_INDEX = 'docs/adr/README.md'
 let citations = 0
 let decisionProse = 0
 for (const file of citing) {
@@ -127,7 +129,8 @@ for (const file of citing) {
         continue
       }
       if (retired.has(number)) {
-        if (isDecision && !REPLACES_LINE.test(line)) problems.push(`${relative(file)}:${at + 1}: cites D${number}, which a later decision replaced; name the decision in force`)
+        const namesRetired = (isDecision && REPLACES_LINE.test(line)) || relative(file) === DECISION_INDEX
+        if (!namesRetired) problems.push(`${relative(file)}:${at + 1}: cites D${number}, which a later decision replaced; name the decision in force (docs/adr/README.md leads to it)`)
         continue
       }
       problems.push(`${relative(file)}:${at + 1}: cites D${number}, which is not a decision`)

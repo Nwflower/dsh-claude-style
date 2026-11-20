@@ -5,7 +5,7 @@ import { StopMark } from './session-panel-marks'
 
 const h = React.createElement
 
-/** A sibling of the output disclosure, so stopping never opens the row or nests buttons (D102). */
+/** A sibling of the output disclosure, so stopping never opens the row or nests buttons (D106). */
 export function JobStop({ sessionId, jobId, label, status, subagent = false }: { sessionId: string, jobId: string, label: string, status: string, subagent?: boolean }) {
   const [state, setState] = React.useState<'idle' | 'confirm' | 'pending' | 'requested' | 'failed'>('idle')
   // The ref closes the gap before React paints the disabled button.

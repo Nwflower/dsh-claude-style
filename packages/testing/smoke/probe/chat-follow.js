@@ -2,7 +2,7 @@
  * The follow hand-back and the stream glide (packages/client/src/features/chat-follow/):
  * a structural moment hands the host's follow back from the end, a position above
  * the end and a reader who took the scroll over himself are left where they are,
- * and the growth a fast answer brings is slid to rest instead of jumping a frame (D85).
+ * and the growth a fast answer brings is slid to rest instead of jumping a frame (D95).
  */
 (function () {
   var probe = window.__dshSmokeProbe
@@ -88,7 +88,7 @@
       var AT_END_PX = 6
       // One walk, as the browser draws it: the first reading is taken where the
       // walk starts, the rest on the frames that follow, and the recording stops
-      // on a run of frames that read the same position. D87's 动效的断言 reads
+      // on a run of frames that read the same position. D92's 动效的断言 reads
       // this sequence — monotone, at least two different values between the two
       // ends, the end equal to the target — so that the shape of the curve is
       // settled in the unit lane and this lane only asks whether it was walked.
@@ -177,7 +177,7 @@
         if (cappedContent !== null) cappedContent.style.height = '900px'
         r.chatFollow.catchUp = await recordWalk(bodyGap, bodyWalking)
       }
-      // The stream slide (chat-follow.ts, D85): with the host's own streaming mark
+      // The stream slide (chat-follow.ts, D95): with the host's own streaming mark
       // on the page and its follow on, the growth the host's pin pushed up is put
       // back down by the column's own offset and slid to rest, while the position
       // stays at the end. The live turn's row, the flow's last, stands still.
@@ -241,7 +241,7 @@
       // left carrying: a run at thirty milliseconds a growth measures the offset
       // the slide is drawn at on the frame after each landing, and the position
       // the scroller shows there. A slide left running past the next growth
-      // reads a distance that grows with every step (D85).
+      // reads a distance that grows with every step (D95).
       var paceFrames = []
       var paced = document.createElement('div')
       paced.style.height = '20px'

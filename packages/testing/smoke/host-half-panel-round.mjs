@@ -1,4 +1,4 @@
-/** Latest human-input round filtering through the built host route (D102). */
+/** Latest human-input round filtering through the built host route (D106). */
 import { check } from './shared.mjs'
 
 export async function hostPanelRound({ mod, fakeHost, request, browser, scratchHome }) {

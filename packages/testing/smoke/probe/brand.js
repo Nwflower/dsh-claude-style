@@ -1,5 +1,5 @@
 /**
- * The custom-brand case (D30): the host half's status names a preset's mark
+ * The custom-brand case (D97): the host half's status names a preset's mark
  * and 4:1 wordmark, and the page paints them over the brand's own art — the sidebar's
  * mark and wordmark, the hero's mark and the account row's fallback picture —
  * then inks them in the colour the preset's ink names, and hands the accent

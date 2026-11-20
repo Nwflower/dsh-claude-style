@@ -3,7 +3,7 @@ import * as React from 'react'
 const h = React.createElement
 
 /**
- * The details rail's marks (D102): one set, drawn by the rail itself so every row
+ * The details rail's marks (D106): one set, drawn by the rail itself so every row
  * leads with the same ink and weight.
  *
  * Every mark stands on a 16-unit grid drawn at 16px, so one unit is one pixel and

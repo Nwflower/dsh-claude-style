@@ -7,7 +7,7 @@ import { ChevronMark } from './session-panel-marks'
 
 const h = React.createElement
 
-/** Each section owns a native disclosure (D102): its children stay mounted so
+/** Each section owns a native disclosure (D106): its children stay mounted so
  * folding preserves list expansion and an opened job's output. An unchanged
  * `open` prop lets the browser keep the reader's choice across data refreshes.
  * A `folded` section starts closed, with its reading beside the heading. The
@@ -91,7 +91,7 @@ export function Row(props: { mark?: React.ReactNode, title: string, detail?: str
 
 /**
  * A placeholder bar where a reading will be written once the host's fold
- * answers (D102): one line's height, so the row it stands in keeps the height
+ * answers (D106): one line's height, so the row it stands in keeps the height
  * the written row will have.
  */
 export function Skeleton({ width }: { width: string }) {

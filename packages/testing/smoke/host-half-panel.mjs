@@ -2,7 +2,7 @@
  * The smoke's session overview panel, in Node: the route the panel reads, its
  * answer folded from a session's log and projections, the child timing and job
  * output it carries, and the fence and id checks every read of the user's own
- * session runs (D75, D102).
+ * session runs (D75, D106).
  */
 import { resolve } from 'node:path'
 import { check } from './shared.mjs'

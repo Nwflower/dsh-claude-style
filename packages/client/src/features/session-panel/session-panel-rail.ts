@@ -20,7 +20,7 @@ const h = React.createElement
 const CENTER = `[${PART_ATTR}~="center-column"]`
 const PRESET = `[${PART_ATTR}~="header-label"]`
 
-/** The window and column widths that open and retreat the rail (D102).
+/** The window and column widths that open and retreat the rail (D106).
  *
  * The rail needs a wide window and a conversation column that keeps a usable
  * chat beside it: the window alone would open it over a chat squeezed by the
@@ -35,7 +35,7 @@ const CLOSE_COLUMN = 760
 /**
  * The reader's own closing of the rail, kept in this browser: a rail put away
  * by hand stays away in every session and across a restart, until the header's
- * control is pressed again (D102).
+ * control is pressed again (D106).
  */
 const CLOSED_STORAGE = 'dsh-claude-style.sessionPanelClosed'
 
@@ -64,7 +64,7 @@ function useConversationSession() {
     const sessionNode = cacheFirstMatch<HTMLElement>(CONVERSATION_SESSION_SELECTOR)
     // The rail belongs to the conversation the reader is looking at: not a new
     // session without a turn yet, not a plugin page's hidden conversation, and
-    // not a subagent's own column (D102).
+    // not a subagent's own column (D106).
     const sight = (): ConversationSight => {
       const node = sessionNode()
       const id = node?.getAttribute(CONVERSATION_SESSION_ATTRIBUTE) ?? null
@@ -96,7 +96,7 @@ function useConversationSession() {
   return reading
 }
 
-/** The preset's own words and its description, as the header's label carries them (D102). */
+/** The preset's own words and its description, as the header's label carries them (D106). */
 function usePresetLabel() {
   const [preset, setPreset] = React.useState<PanelPreset>({ label: '', hint: '' })
   React.useEffect(() => {
@@ -118,7 +118,7 @@ function usePresetLabel() {
 }
 
 /**
- * Whether the details rail stands open, and where (D102).
+ * Whether the details rail stands open, and where (D106).
  *
  * It opens itself when the conversation's column is wide enough and steps back
  * when the frame narrows. A reader who closes it keeps it closed everywhere:
@@ -164,7 +164,7 @@ function useRailReading(session: string | null) {
    * A press that took the side from the host's own right column and has not been
    * answered yet. The column keeps its frame's mark until its animation starts,
    * and a measurement landing in between must not put the rail back away: the
-   * side has already been asked for (D102).
+   * side has already been asked for (D106).
    */
   const askingSide = React.useRef(false)
   React.useEffect(() => {
@@ -181,7 +181,7 @@ function useRailReading(session: string | null) {
       const shell = frame()
       // The frame states the owner of that side as the handover starts, before
       // its columns have moved: that statement is the intent, and the width the
-      // animation still shows is only how far the move has got (D102).
+      // animation still shows is only how far the move has got (D106).
       if (shell !== null && shell !== undefined) return !shell.hasAttribute(RIGHTBAR_COLLAPSED_ATTRIBUTE)
       // A shell the part walk has not marked: the column's own width is all there is to read.
       return host !== null && host.isConnected && host.getBoundingClientRect().width > 0
@@ -191,7 +191,7 @@ function useRailReading(session: string | null) {
       const rect = center === null ? null : center.getBoundingClientRect()
       // The rail starts under the conversation header: the header keeps the
       // column's whole width so its controls stand above the rail, and the column
-      // beside it belongs to the chat alone (D102). A header the part walk has not
+      // beside it belongs to the chat alone (D106). A header the part walk has not
       // marked yet, one the band has lifted into the caption row, or one an older
       // host draws without a box leaves the column's own top as the start.
       const headRect = head === null ? null : head.getBoundingClientRect()
@@ -204,7 +204,7 @@ function useRailReading(session: string | null) {
       // The bottom panel `dsh-better-sidebar` floats over the conversation's
       // lower edge, wider than the column the rail squeezes: the rail stops at
       // the panel's top rather than standing over it, so both stay readable
-      // (D102).
+      // (D106).
       const panelTop = panel === null || panel.getClientRects().length === 0
         ? null
         : Math.round(panel.getBoundingClientRect().top)
@@ -220,7 +220,7 @@ function useRailReading(session: string | null) {
       // The host's own right column stands on this same side, so it comes
       // first: while it holds the side the rail keeps away, automatic and
       // pressed alike, and the reader's choice stands again once that column
-      // gives the side up (D102).
+      // gives the side up (D106).
       held.current = hostHolds()
       if (choice.current.mode !== 'auto') {
         // The column's own mark clears on the frame its animation starts; until
@@ -318,7 +318,7 @@ function useRailReading(session: string | null) {
       // a rail standing on the page is put away, and one that is not is called
       // in. That state can lag a press — the host's own right column can take
       // this side while the rail still holds 「open」 — and reading it would turn
-      // the call-in into a second close (D102).
+      // the call-in into a second close (D106).
       if (node.current !== null && node.current.isConnected) {
         close()
         return
@@ -350,7 +350,7 @@ function widthTransitionMs(node: HTMLElement) {
   return Number.isFinite(ms) ? ms : 0
 }
 
-/** The conversation's details rail: the session overview the reader keeps beside the chat (D102). */
+/** The conversation's details rail: the session overview the reader keeps beside the chat (D106). */
 export function SessionPanelRail() {
   const { id: session, live } = useConversationSession()
   const preset = usePresetLabel()
@@ -362,7 +362,7 @@ export function SessionPanelRail() {
   // The page mark gives the rail its width out of the conversation's body, under
   // the header. It states what the rail is about to do, so it goes on and comes
   // off in the same commit as the rail's own width: both transitions start on one
-  // frame, and the chat's edge and the rail's edge travel as one (D102).
+  // frame, and the chat's edge and the rail's edge travel as one (D106).
   const wanted = session !== null && live && open
   React.useLayoutEffect(() => {
     if (wanted) document.body.setAttribute(SESSION_PANEL_ATTR, '')
@@ -371,7 +371,7 @@ export function SessionPanelRail() {
   }, [wanted])
   // The node outlives the decision by its own exit: the rail stays mounted while
   // it gives the width back, and a press that calls it in again turns the
-  // transition around where it stands instead of restarting from nothing (D102).
+  // transition around where it stands instead of restarting from nothing (D106).
   // The decision mounts it directly, and the exit is read off the decision rather
   // than stored, so the rail's own width turns in the commit that sets the mark.
   const [mounted, setMounted] = React.useState(false)

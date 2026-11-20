@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-20",
+  "group": "chores",
+  "order": 0,
+  "external": false,
+  "zh": "清理无人调用的导出、结果与默认值相同的旧值映射、旧宿主日志读取回退、两个孤立探针与作废决策编号引用，并补齐决策作废记录",
+  "en": "Remove unreferenced exports, identity legacy preference mappings, the old-host log read fallback, two standalone probes and retired decision citations, and complete the decision retirement record"
+}

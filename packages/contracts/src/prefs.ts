@@ -137,7 +137,7 @@ export const CHAT_ANIMATIONS_OFF = 'off'
  * line of their own under the input card, or in the compact footer. The rail
  * position is the line of their own handed to the conversation's details rail:
  * the line stands wherever the rail does not, and the rail carries the numbers
- * while it does (D102).
+ * while it does (D106).
  */
 export const STATS_POSITION_INLINE = 'inline'
 export const STATS_POSITION_CONTEXT = 'context'
@@ -388,7 +388,7 @@ export const PREFS = {
   viewTabs: { type: 'boolean', default: true },
   hideToolbarOutsideConversation: { type: 'boolean', default: true },
   headerBand: { type: 'boolean', default: true },
-  /** Whether the conversation offers its own session details rail (D102). */
+  /** Whether the conversation offers its own session details rail (D106). */
   sessionPanel: { type: 'boolean', default: true },
   /** The legacy choice `off` means off. */
   chatAnimations: { type: 'boolean', default: true, legacy: { [CHAT_ANIMATIONS_OFF]: false } },

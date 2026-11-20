@@ -1,5 +1,5 @@
 /**
- * One ask per window, while something else keeps signalling (D102).
+ * One ask per window, while something else keeps signalling (D106).
  *
  * The rail refreshes on the host's own figure frames, and a streaming turn lands
  * one every few hundred milliseconds; the window keeps those signals from

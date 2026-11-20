@@ -1,5 +1,5 @@
 /**
- * The rail's two figures tables print the composer's live reading (D102).
+ * The rail's two figures tables print the composer's live reading (D106).
  * @capability session-panel
  * @features session-panel
  * @risk The tables print a projection that has said nothing as zero, drop a cost
