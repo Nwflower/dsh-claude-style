@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-10",
+  "updatedAt": "2026-11-19",
   "defaultProfile": "deepseek-v4",
   "profiles": [
     {
@@ -296,8 +296,8 @@
       "shortName": "BAI",
       "title": "B.AI DeepSeek Flash pricing clock",
       "subtitle": "B.AI Flash campaign hours in your local time",
-      "kicker": "V4.1 Flash · 60% of the applicable reference rate",
-      "policyNote": "From Oct 4 at 10:00 SGT, API usage costs 60% of the applicable peak or off-peak reference price. Chat always uses the off-peak base. No published end date.",
+      "kicker": "V4.1 Flash · 50% of the applicable reference rate",
+      "policyNote": "Current published offer: 50% of the applicable peak or off-peak API reference price. Chat uses the off-peak base. Confirmed November 19; B.AI does not publish the rate changeover or offer end. The clock switches at the audit timestamp, not a verified billing cutoff.",
       "schedule": {
         "timeZone": "Asia/Shanghai",
         "peakDays": [1, 2, 3, 4, 5],
@@ -398,11 +398,30 @@
             "windows": [
               { "start": "09:00", "end": "12:00" },
               { "start": "14:00", "end": "18:00" }
-            ]
+            ],
+            "endAt": "2026-11-19T09:53:27+01:00"
           },
           {
             "period": "campaign60OffPeak",
             "startAt": "2026-10-04T10:00:00+08:00",
+            "days": [0, 1, 2, 3, 4, 5, 6],
+            "windows": [
+              { "start": "00:00", "end": "00:00", "allDay": true }
+            ],
+            "endAt": "2026-11-19T09:53:27+01:00"
+          },
+          {
+            "period": "campaign50Peak",
+            "startAt": "2026-11-19T09:53:27+01:00",
+            "days": [1, 2, 3, 4, 5],
+            "windows": [
+              { "start": "09:00", "end": "12:00" },
+              { "start": "14:00", "end": "18:00" }
+            ]
+          },
+          {
+            "period": "campaign50OffPeak",
+            "startAt": "2026-11-19T09:53:27+01:00",
             "days": [0, 1, 2, 3, 4, 5, 6],
             "windows": [
               { "start": "00:00", "end": "00:00", "allDay": true }
@@ -413,7 +432,7 @@
         "offDayName": "Weekend",
         "sourceTitle": "Busy hours (Beijing time):",
         "sourceWindows": "09:00–12:00 · 14:00–18:00",
-        "sourceNote": "B.AI V4.1 Flash campaign: 10% from Sep 12, 2026 10:00 to Sep 25 15:00; 30% from Sep 25 15:00 to Oct 4 10:00; 60% from Oct 4, 2026 10:00 SGT (UTC+8) · each discount applies to the applicable peak or off-peak reference price · API peak hours are weekdays 09:00–12:00 and 14:00–18:00 Beijing; weekends and Chinese public holidays are off-peak · Chat uses the off-peak base all day · no published end date for the 60% offer; platform settlement controls"
+        "sourceNote": "Current published offer: 50% of the applicable peak or off-peak API reference price. Chat uses the off-peak base. Confirmed November 19; B.AI does not publish the rate changeover or offer end. The clock switches at the audit timestamp, not a verified billing cutoff."
       },
       "periods": {
         "peak": {
@@ -454,6 +473,20 @@
           "status": "B.AI Flash campaign uses the off-peak reference rate now",
           "badge": "0.6× off-peak",
           "detail": "60% of the off-peak reference price; half the campaign peak price",
+          "tone": "special"
+        },
+        "campaign50Peak": {
+          "name": "Flash campaign · peak",
+          "status": "B.AI Flash campaign uses the peak reference rate now",
+          "badge": "0.5× peak",
+          "detail": "50% of the applicable reference price; exact changeover and end unpublished.",
+          "tone": "special"
+        },
+        "campaign50OffPeak": {
+          "name": "Flash campaign · off-peak",
+          "status": "B.AI Flash campaign uses the off-peak reference rate now",
+          "badge": "0.5× off-peak",
+          "detail": "50% of the applicable reference price; exact changeover and end unpublished.",
           "tone": "special"
         }
       },
@@ -1327,8 +1360,8 @@
       "temporary": true,
       "title": "B.AI GLM Flash campaign clock",
       "subtitle": "B.AI GLM campaign rates in your local time",
-      "kicker": "GLM-5.3-Flash · 30% off the standard reference rate",
-      "policyNote": "The campaign changes from 30% to 70% of the standard reference price on Oct 4 at 10:00 SGT (UTC+8). This is a 30% discount, not 70% off. No published end date.",
+      "kicker": "GLM-5.3-Flash · 40% off the standard reference rate",
+      "policyNote": "Current published offer: 60% of the standard reference price for eligible API and Chat usage. Confirmed November 19; B.AI does not publish the rate changeover or offer end. The clock switches at the audit timestamp, not a verified billing cutoff.",
       "schedule": {
         "timeZone": "Asia/Shanghai",
         "peakDays": [0, 1, 2, 3, 4, 5, 6],
@@ -1354,10 +1387,19 @@
             "days": [0, 1, 2, 3, 4, 5, 6],
             "windows": [
               { "start": "00:00", "end": "00:00", "allDay": true }
+            ],
+            "endAt": "2026-11-19T09:53:27+01:00"
+          },
+          {
+            "period": "campaign60",
+            "startAt": "2026-11-19T09:53:27+01:00",
+            "days": [0, 1, 2, 3, 4, 5, 6],
+            "windows": [
+              { "start": "00:00", "end": "00:00", "allDay": true }
             ]
           }
         ],
-        "sourceNote": "Eligible B.AI API and Chat GLM-5.3-Flash usage costs 30% of the standard reference price from Sep 25, 2026 15:00 until Oct 4, 2026 10:00 SGT (UTC+8), then 70% of the standard reference price · the new offer is 30% off, not 70% off · platform settlement controls · no published end date for the 70% offer"
+        "sourceNote": "Current published offer: 60% of the standard reference price for eligible API and Chat usage. Confirmed November 19; B.AI does not publish the rate changeover or offer end. The clock switches at the audit timestamp, not a verified billing cutoff."
       },
       "periods": {
         "peak": {
@@ -1384,6 +1426,13 @@
           "status": "B.AI campaign rate is active now",
           "badge": "0.7× base",
           "detail": "70% of the standard reference price (30% off); no published end date",
+          "tone": "special"
+        },
+        "campaign60": {
+          "name": "Campaign · 60%",
+          "status": "B.AI campaign rate is active now",
+          "badge": "0.6× base",
+          "detail": "60% of the applicable reference price; exact changeover and end unpublished.",
           "tone": "special"
         }
       },
@@ -1659,19 +1708,19 @@
       "shortName": "Q",
       "temporary": true,
       "title": "Qoder Qwen3.8-Max Service Account clock",
-      "policyNote": "Service Accounts only. Night discount: 01:00–07:00 Beijing daily. No published end date.",
+      "policyNote": "Service Accounts only. Night discount: 22:00–08:00 Beijing daily, matching other accounts. Qoder does not date the change from the previously documented 01:00–07:00 window. No published end date.",
       "subtitle": "Service Account credit rates in your local time",
-      "kicker": "Service Account · 60% fewer Credits from 01:00–07:00 Beijing",
+      "kicker": "Service Account · 60% fewer Credits from 22:00–08:00 Beijing",
       "schedule": {
         "timeZone": "Asia/Shanghai",
         "peakDays": [0, 1, 2, 3, 4, 5, 6],
         "peakWindows": [
-          { "start": "07:00", "end": "01:00" }
+          { "start": "08:00", "end": "22:00" }
         ],
         "windowName": "standard-rate",
         "sourceTitle": "Standard-rate hours (Beijing):",
-        "sourceWindows": "07:00–01:00 next day",
-        "sourceNote": "Qoder Service Accounts only · daily 01:00–07:00 Beijing off-peak, including weekends and public holidays · the same model multipliers apply as on other products, which instead use 22:00–08:00 · no published effective date for the Service Account window and no published end date"
+        "sourceWindows": "08:00–22:00",
+        "sourceNote": "Qoder Service Accounts only · daily 22:00–08:00 Beijing off-peak, including weekends and public holidays · matches the same schedule and model multipliers as other products · no published effective date for the Service Account window and no published end date"
       },
       "periods": {
         "peak": {
@@ -1946,8 +1995,8 @@
       "shortName": "Q",
       "title": "Qoder CN Flash Service Account clock",
       "subtitle": "Service Account credit rates in your local time",
-      "kicker": "Service Accounts · 0.04× credits from 01:00–07:00 Beijing",
-      "policyNote": "Service Accounts only. Night discount: 01:00–07:00 Beijing daily, 0.04× credits versus 0.1× otherwise. Pro Trial and paying users with available Credits. Flash night program starts Nov 7, 2026 at 00:00 Beijing; no separate Service Account effective instant or end date is published. Historical individual-account free access is not applied here.",
+      "kicker": "Service Accounts · 0.04× credits from 22:00–08:00 Beijing",
+      "policyNote": "Service Accounts only. Night discount: 22:00–08:00 Beijing daily, 0.04× credits versus 0.1× otherwise. Pro Trial and paying users with available Credits. Flash night program starts Nov 7, 2026 at 00:00 Beijing; no separate Service Account effective instant or end date is published. Historical individual-account free access is not applied here. Qoder does not date the change from 01:00–07:00; the clock uses the November 19 audit boundary, not an official cutoff.",
       "schedule": {
         "timeZone": "Asia/Shanghai",
         "peakDays": [0, 1, 2, 3, 4, 5, 6],
@@ -1956,15 +2005,24 @@
         ],
         "windowName": "standard-rate",
         "sourceTitle": "Standard-rate hours (Beijing):",
-        "sourceWindows": "07:00–01:00 next day",
-        "sourceNote": "Service Accounts only. Night discount: 01:00–07:00 Beijing daily, 0.04× credits versus 0.1× otherwise. Pro Trial and paying users with available Credits. Flash night program starts Nov 7, 2026 at 00:00 Beijing; no separate Service Account effective instant or end date is published. Historical individual-account free access is not applied here.",
+        "sourceWindows": "08:00–22:00",
+        "sourceNote": "Service Accounts only. Night discount: 22:00–08:00 Beijing daily, 0.04× credits versus 0.1× otherwise. Pro Trial and paying users with available Credits. Flash night program starts Nov 7, 2026 at 00:00 Beijing; no separate Service Account effective instant or end date is published. Historical individual-account free access is not applied here. Qoder does not date the change from 01:00–07:00; the clock uses the November 19 audit boundary, not an official cutoff.",
         "overrides": [
           {
             "period": "offPeak",
             "startAt": "2026-11-07T00:00:00+08:00",
+            "endAt": "2026-11-19T09:00:00Z",
             "days": [0, 1, 2, 3, 4, 5, 6],
             "windows": [
               { "start": "01:00", "end": "07:00" }
+            ]
+          },
+          {
+            "period": "offPeak",
+            "startAt": "2026-11-19T09:00:00Z",
+            "days": [0, 1, 2, 3, 4, 5, 6],
+            "windows": [
+              { "start": "22:00", "end": "08:00" }
             ]
           }
         ]
@@ -2207,7 +2265,7 @@
       "title": "OpenRouter MiniMax Flash route pricing clock",
       "subtitle": "Route-specific API pricing in your local time",
       "kicker": "50% off token prices during daily off-peak hours",
-      "policyNote": "Applies only to model minimax/minimax-m3.1-flash on endpoint minimax; not other OpenRouter providers or the model vendor’s direct API. Pin provider.only to [\"minimax\"] and set provider.allow_fallbacks=false. Default routing or fallbacks can select differently priced providers. Daily UTC off-peak 15:00–01:00 next day; all other hours peak, including weekends/holidays. Endpoint metadata gives inclusive starts and exclusive ends, with no utc_days restriction. USD per 1M tokens: peak input/cache/output 0.15/0.015/0.6; off-peak 0.075/0.0075/0.3. These are token rates, not total account charges; billing-time boundary semantics and effective/end dates are not published by this metadata. Check current endpoint pricing and actual usage charges.",
+      "policyNote": "Applies only to models minimax/minimax-m3.1-flash and minimax/minimax-m3.1-flash-20261019 on endpoint minimax; not other OpenRouter providers or the model vendor’s direct API. Pin provider.only to [\"minimax\"] and set provider.allow_fallbacks=false. Default routing or fallbacks can select differently priced providers. Daily UTC off-peak 15:00–01:00 next day; all other hours peak, including weekends/holidays. Endpoint metadata gives inclusive starts and exclusive ends, with no utc_days restriction. USD per 1M tokens: peak input/cache/output 0.15/0.015/0.6; off-peak 0.075/0.0075/0.3. These are token rates, not total account charges; billing-time boundary semantics and effective/end dates are not published by this metadata. Check current endpoint pricing and actual usage charges.",
       "routing": {
         "only": [
           "minimax"
