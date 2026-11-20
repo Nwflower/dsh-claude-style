@@ -1,8 +1,7 @@
 diff --git a/packages/client/src/shared/sliding-pill.ts b/packages/client/src/shared/sliding-pill.ts
-index 1b16379..de620f9 100644
 --- a/packages/client/src/shared/sliding-pill.ts
 +++ b/packages/client/src/shared/sliding-pill.ts
-@@ -35,8 +35,9 @@ export function createSlidingPill(activeSelector: string) {
+@@ -16,8 +16,9 @@ export function createSlidingPill(activeSelector: string) {
    let stopSize: (() => void) | null = null
    /** What the read phase measured: the item's box against the control's. */
    let reading: { x: number, y: number, w: number, h: number } | null = null
@@ -13,7 +12,7 @@ index 1b16379..de620f9 100644
    let taken = false
  
    function clear(el: HTMLElement) {
-@@ -51,15 +52,21 @@ export function createSlidingPill(activeSelector: string) {
+@@ -32,15 +33,21 @@ export function createSlidingPill(activeSelector: string) {
      lastH = null
    }
  
@@ -37,10 +36,10 @@ index 1b16379..de620f9 100644
      // Both boxes in the pixels the four properties are read in; the control's
      // own border and padding already are (shared/page-zoom.ts).
      const box = inPageBox(next.getBoundingClientRect())
-@@ -106,9 +113,12 @@ export function createSlidingPill(activeSelector: string) {
-   }
- 
-   function sync(next: HTMLElement | null) {
+@@ -121,9 +128,12 @@ export function createSlidingPill(activeSelector: string) {
+       return
+     }
+     if (control === null) return
 -    // A pass that took its reading places from it; one that did not — the
 -    // control was built in this frame's write phase — measures here.
 -    if (!taken || measured !== next) measure(next)
@@ -51,8 +50,8 @@ index 1b16379..de620f9 100644
 +    const active = activeItemOf(next)
 +    if (!taken || measured !== next || active !== measuredItem) measure(next, active)
      taken = false
-     if (next !== control) {
-       if (stopSize !== null) stopSize()
+     place(control, reading)
+   }
 @@ -135,6 +145,7 @@ export function createSlidingPill(activeSelector: string) {
      control = null
      reading = null

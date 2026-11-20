@@ -151,13 +151,16 @@ async function drivePages(planned, jobs, browser, base) {
     // failed beside the others is judged again on its own, as the behaviour
     // lane does for its timing specs. The page's own share is counted here,
     // while the counter still stands right after this page's judgment.
-    if (failures() > before) retry.push({ pageName, pageCases, lost: failures() - before })
+    if (failures() > before) retry.push({ pageName, pageCases, lost: failures() - before, labelStart: before })
   }
-  for (const { pageName, pageCases, lost } of retry) {
+  let retracted = 0
+  for (const { pageName, pageCases, lost, labelStart } of retry) {
     console.log(`\nbrowser half — page ${pageName} failed beside the others; re-judging it alone`)
     // The counter is shared: an earlier re-judgment has already taken back its
-    // own share, so only this page's recorded share may be retracted here.
-    retractFailures(lost)
+    // own share, so only this page's recorded share may be retracted here, at
+    // the position it was recorded at, shifted by the shares taken back before it.
+    retractFailures(lost, labelStart - retracted)
+    retracted += lost
     const fresh = await runPage(browser, base, pageName)
     for (const name of pageCases) {
       console.log(`\nbrowser half — ${name}`)

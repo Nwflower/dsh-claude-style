@@ -1,33 +1,32 @@
 diff --git a/packages/client/src/features/context-stats/stats-binding.ts b/packages/client/src/features/context-stats/stats-binding.ts
-index 0da4b14e..5b5603c1 100644
 --- a/packages/client/src/features/context-stats/stats-binding.ts
 +++ b/packages/client/src/features/context-stats/stats-binding.ts
-@@ -75,7 +75,12 @@ export function createContextStatsBinding(ring: () => HTMLElement | null) {
-     programmaticPress(trigger)
-   }
- 
--  const hoverIntent = createHoverIntent(openContextPanel, closeContextPanel, POPOVER_OPEN_DELAY, POPOVER_CLOSE_DELAY)
-+  const hoverIntent = createHoverIntent(openContextPanel, () => {
+@@ -132,7 +132,12 @@ export function createContextStatsBinding(ring: () => HTMLElement | null) {
+     const surface = dwellFace
+     dwellFace = null
+     openContextPanel(surface)
+-  }, closeContextPanel, POPOVER_OPEN_DELAY, POPOVER_CLOSE_DELAY)
++  }, () => {
 +    // Layout can return the pointer to the face before the close grace expires.
 +    // Explicit line and keyboard dismissal still use closeContextPanel directly.
-+    if (meterFace()?.matches(':hover')) return
++    if (openFace()?.matches(':hover')) return
 +    closeContextPanel()
 +  }, POPOVER_OPEN_DELAY, POPOVER_CLOSE_DELAY)
  
    /** The hover preference gates both directions, as it does for the skin's other popovers. */
    function hoverEnabled() {
+
 diff --git a/packages/client/src/shared/popover.ts b/packages/client/src/shared/popover.ts
-index 65092564..f9b99e2a 100644
 --- a/packages/client/src/shared/popover.ts
 +++ b/packages/client/src/shared/popover.ts
-@@ -182,6 +182,10 @@ export function createHoverIntent(open: () => void, close: () => void, openDelay
-       }
-     },
-     scheduleOpen() {
-+      if (closeTimer) {
-+        clearTimeout(closeTimer)
-+        closeTimer = null
-+      }
-       if (openTimer) clearTimeout(openTimer)
-       openTimer = setTimeout(() => {
-         openTimer = null
+@@ -246,6 +246,10 @@ export function createHoverIntent(open: () => void, close: () => void, openDelay
+     }
+   }
+   function scheduleOpen() {
++    if (closeTimer) {
++      clearTimeout(closeTimer)
++      closeTimer = null
++    }
+     if (openTimer) clearTimeout(openTimer)
+     openTimer = setTimeout(() => {
+       openTimer = null

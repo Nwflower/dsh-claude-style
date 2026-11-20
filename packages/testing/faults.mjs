@@ -9,6 +9,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { ROOT } from '../../scripts/shared/spec-header.mjs'
 import { runsPath } from '../../scripts/shared/debug-paths.mjs'
+import { FEATURE_CASES } from './smoke/shared.mjs'
 
 const CORPUS = path.join(import.meta.dirname, 'faults', 'corpus.json')
 /** The number of faults each suite catches by an assertion: the record a run may not fall below. */
@@ -141,15 +142,17 @@ function judge(dir, fault, suite, cleanBehaviour) {
   red.push(...vitestRed(dir, json))
   const { features, wide, browserHalf } = reach(patch)
   // The behaviour specs read the built page: the build is paid only where one of
-  // them covers what the patch touches.
+  // them, or an installation case, covers what the patch touches.
   const selection = wide || features.length === 0 ? [] : ['--feature', features.join(',')]
+  const hasCases = features.some((name) => (FEATURE_CASES[name] ?? []).length > 0)
   const listed = suite === 'new' && browserHalf ? run(dir, 'packages/testing/stand-in.mjs', ['--list', ...selection]) : null
-  if (listed !== null && listed.code === 0 && listed.output.trim() !== '') {
+  if (listed !== null && listed.code !== 0) console.log(`  ${fault.id}: the coverage list refused (exit ${listed.code}): ${listed.output.split('\n').slice(-3).join(' | ')}`)
+  if (listed !== null && listed.code === 0 && (listed.output.trim() !== '' || hasCases)) {
     const build = run(dir, 'scripts/build/build.mjs', [])
     if (build.code !== 0) {
       red.push(`build (${build.output.split('\n').find((line) => /error|refus/i.test(line)) ?? 'failed'})`)
     } else {
-      run(dir, 'packages/testing/stand-in.mjs', [...BEHAVIOUR_JOBS, ...selection])
+      const lane = run(dir, 'packages/testing/stand-in.mjs', [...BEHAVIOUR_JOBS, ...selection])
       const report = runsPath(dir, 'behaviour', 'report.json')
       // A behaviour test that already fails on the untouched copy is red for
       // its own reason, and saying the fault was caught by it would credit the
@@ -157,6 +160,18 @@ function judge(dir, fault, suite, cleanBehaviour) {
       if (fs.existsSync(report)) red.push(...JSON.parse(fs.readFileSync(report, 'utf8')).results
         .filter((result) => !result.ok && !result.quarantined && !cleanBehaviour.has(result.id))
         .map((result) => result.id))
+      // The installation half's failed checks are judgements too (D92): one
+      // stand-in lane answers both kinds, and the corpus reads both reports.
+      const installation = runsPath(dir, 'stand-in', 'report.json')
+      if (fs.existsSync(installation)) red.push(...(JSON.parse(fs.readFileSync(installation, 'utf8')).failedChecks ?? [])
+        .filter((label) => !cleanBehaviour.has(`installation/${label}`))
+        .map((label) => `installation/${label}`))
+      // A lane that reported nothing judged nothing: say so instead of a MISS
+      // that looks like a spec gap.
+      if (!fs.existsSync(report) && !fs.existsSync(installation)) {
+        console.log(`  ${fault.id}: the stand-in lane reported nothing (exit ${lane.code})`)
+        for (const line of lane.output.split('\n').slice(-6)) console.log(`    ${line}`)
+      }
     }
   }
   // A spec file that no longer loads — or a build whose type check fails over the
@@ -188,20 +203,25 @@ function main() {
   const clean = run(dir, VITEST, ['run', '--reporter=json', `--outputFile=${runsPath(dir, 'faults-vitest.json')}`])
   const cleanRed = vitestRed(dir, runsPath(dir, 'faults-vitest.json'))
   if (clean.code !== 0 || cleanRed.length > 0) bad(`the ${asked.suite} suite is red before any fault: ${cleanRed.slice(0, 5).join(' | ')}`)
-  // The behaviour lane gets the same clean reading where a fault reaches it: a
-  // test red on the untouched copy is red for its own reason.
+  // The stand-in lane gets the same clean reading where a fault reaches it: a
+  // test red on the untouched copy is red for its own reason. Both halves run,
+  // so installation checks and behaviour specs are baselined alike.
   const cleanBehaviour = new Set()
   if (asked.suite === 'new' && chosen.some((fault) => reach(fs.readFileSync(path.join(import.meta.dirname, 'faults', fault.patch), 'utf8')).browserHalf)) {
     const build = run(dir, 'scripts/build/build.mjs', [])
     if (build.code !== 0) bad('the build is red before any fault; the behaviour lane cannot be read')
-    run(dir, 'packages/testing/stand-in.mjs', [...BEHAVIOUR_JOBS, '--spec', 'specs/behaviour'])
+    run(dir, 'packages/testing/stand-in.mjs', [...BEHAVIOUR_JOBS])
     const report = runsPath(dir, 'behaviour', 'report.json')
     if (fs.existsSync(report)) {
       for (const result of JSON.parse(fs.readFileSync(report, 'utf8')).results) {
         if (!result.ok && !result.quarantined) cleanBehaviour.add(result.id)
       }
     }
-    if (cleanBehaviour.size > 0) console.log(`  clean behaviour failures, not credited to any fault: ${[...cleanBehaviour].join(' | ')}`)
+    const installation = runsPath(dir, 'stand-in', 'report.json')
+    if (fs.existsSync(installation)) {
+      for (const label of JSON.parse(fs.readFileSync(installation, 'utf8')).failedChecks ?? []) cleanBehaviour.add(`installation/${label}`)
+    }
+    if (cleanBehaviour.size > 0) console.log(`  clean stand-in failures, not credited to any fault: ${[...cleanBehaviour].join(' | ')}`)
   }
   const results = []
   for (const fault of chosen) {

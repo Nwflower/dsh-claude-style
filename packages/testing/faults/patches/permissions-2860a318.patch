@@ -1,24 +1,12 @@
 diff --git a/packages/client/src/features/permissions/permissions.ts b/packages/client/src/features/permissions/permissions.ts
-index 566c88d..ae982ed 100644
 --- a/packages/client/src/features/permissions/permissions.ts
 +++ b/packages/client/src/features/permissions/permissions.ts
-@@ -481,8 +481,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
-     // it; a value no preset carries (the host's `custom`) reads as the host's
-     // own word for it rather than as the machine value.
-     const matchedLabel = preset === null ? restingLabel() : presetLabel(preset)
--    // Same-value guard: this runs on every pass, and an identical
--    // textContent write still replaces the text node — a mutation that
-+    // Same-value guards: this runs on every pass, and an identical write still
-+    // lands — a replaced text node, a written attribute — a mutation that
-     // schedules the next pass, so the page never went idle.
-     if (permLabel.textContent !== matchedLabel) permLabel.textContent = matchedLabel
- 
-@@ -491,7 +491,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
-       const it = items[j]
-       const isCurrent = it.getAttribute('data-preset') === preset
-       const check = it.querySelector<HTMLElement>('.dsh-claude-popover-check')
--      if (check) check.hidden = !isCurrent
-+      if (check) check.toggleAttribute('hidden', !isCurrent)
-       it.toggleAttribute('data-active', isCurrent)
-       // One preset out of the list is current: the row says so itself, so the
-       // check mark is not the only thing carrying the choice.
+@@ -287,7 +287,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
+       if (item.disabled !== coldStart) item.disabled = coldStart
+       const isCurrent = item.getAttribute('data-preset') === preset
+       item.toggleAttribute('data-active', isCurrent)
+-      item.setAttribute('aria-checked', String(isCurrent))
++      setAttributeIfChanged(item, 'aria-checked', String(isCurrent))
+     }
+     segmentPill.sync(group)
+   }
