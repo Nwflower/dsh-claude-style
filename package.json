@@ -20,7 +20,6 @@
     "agents:check": "node scripts/checks/agents-commands.mjs --check",
     "lint": "node scripts/checks/lint.mjs",
     "element-collections": "node packages/testing/element-collections.mjs",
-    "probe": "node packages/testing/probe.mjs",
     "stand-in": "node packages/testing/stand-in.mjs",
     "behaviour": "node packages/testing/behaviour.mjs",
     "faults": "node packages/testing/faults.mjs",

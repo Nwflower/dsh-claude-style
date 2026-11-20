@@ -10,7 +10,6 @@
     "packages/testing/scenarios/importance.mjs": 24,
     "packages/testing/lane.mjs": 4,
     "packages/testing/scenarios/motion.mjs": 15,
-    "packages/testing/probe.mjs": 6,
     "packages/testing/scenarios/process-summary.mjs": 3,
     "packages/testing/scenarios/reader-scroll.mjs": 1,
     "packages/testing/scenarios/reasoning-stream.mjs": 1,
