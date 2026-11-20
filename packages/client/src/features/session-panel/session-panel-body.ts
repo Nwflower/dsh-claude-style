@@ -1,5 +1,6 @@
 import * as React from 'react'
 import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
+import { QUIET_ATTR } from '../../constants'
 import { formatCompactTokens } from '../../shared/format'
 import { sessionStatsCacheHit, sessionStatsDuration, sessionStatsSpeed, sessionStatsTokens } from '../../shared/stats-format'
 import { hostChatSeat } from '../../core/i18n'
@@ -405,10 +406,12 @@ function PendingFigures({ title, labels }: { title: string, labels: readonly Cop
 }
 
 /** A figures section's rows: each figure gets a full row, so a long elapsed time
- * or token count keeps its value beside its label.
+ * or token count keeps its value beside its label. The list is quiet
+ * (QUIET_ATTR, D40): the figures' count rewrites its values every frame it
+ * travels, and no page-wide pass reads them.
  */
 function Figures({ rows }: { rows: readonly Figure[] }) {
-  return h('dl', { className: 'dsh-claude-panel-stats' },
+  return h('dl', { className: 'dsh-claude-panel-stats', [QUIET_ATTR]: '' },
     rows.map(row => h('div', { key: row.key, className: 'dsh-claude-panel-stat' },
       h('dt', null, row.label),
       h('dd', null, row.value))))

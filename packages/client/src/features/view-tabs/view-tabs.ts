@@ -61,7 +61,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   function classStamp(control: HTMLElement | null) {
     if (classedControl !== null && classedControl !== control) classedControl.classList.remove(VIEW_SWITCH_CLASS)
     classedControl = control
-    if (control !== null) control.classList.add(VIEW_SWITCH_CLASS)
+    // `classList.add` writes the attribute back even when the class is there,
+    // and every pass would otherwise hand each observer a record.
+    if (control !== null && !control.classList.contains(VIEW_SWITCH_CLASS)) control.classList.add(VIEW_SWITCH_CLASS)
   }
   const pill = createSlidingPill('[aria-selected="true"]')
   /** The two seats a strip is found through, each resolved once per batch (engine/host.ts). */

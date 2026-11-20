@@ -102,9 +102,19 @@ function figure(className: string) {
   return { wrap, group, tail }
 }
 
-/** One figure's element: plain text a count rewrites in place. */
+/**
+ * One figure's element: plain text a count rewrites in place. It is quiet
+ * (QUIET_ATTR, D40): the count rewrites it every frame for as long as it
+ * travels, the line places itself again on each of those writes, and a
+ * page-wide pass woken by each one would run every feature once a frame.
+ */
 function buildFigure() {
-  return buildElement('span', 'dsh-claude-digit-group')
+  return quietFigure(buildElement('span', 'dsh-claude-digit-group'))
+}
+
+function quietFigure(element: HTMLElement) {
+  element.setAttribute(QUIET_ATTR, '')
+  return element
 }
 
 /**
@@ -241,7 +251,7 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
     const outputFigure = figure('dsh-claude-inline-output')
     output.wrap.appendChild(outputFigure.wrap)
     const cost = segment()
-    const costFigure = buildElement('span', 'dsh-claude-inline-cost')
+    const costFigure = quietFigure(buildElement('span', 'dsh-claude-inline-cost'))
     cost.wrap.appendChild(costFigure)
     const total = segment()
     const totalFigure = figure('dsh-claude-inline-total')
@@ -341,7 +351,12 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
   }
 
   function show(segment: Segment, on: boolean) {
-    segment.wrap.hidden = !on
+    hide(segment.wrap, !on)
+  }
+
+  /** Writing `hidden` writes the attribute back even when it is unchanged, and the line is written every frame a count travels. */
+  function hide(element: HTMLElement, hidden: boolean) {
+    if (element.hidden !== hidden) element.hidden = hidden
   }
 
   /** Every figure that has data, in the words the host's templates give it, on ladder step `at`. */
@@ -394,7 +409,7 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
     show(shown.cache, (!footerMode || prefs.statsFooterCache) && hasCache)
     // The compact footer's cache figure carries its own percent sign alone: the
     // words before it would outweigh the figures beside them.
-    shown.cell.cacheHead.hidden = footerMode || at >= 1
+    hide(shown.cell.cacheHead, footerMode || at >= 1)
 
     if (hasCounts && counts !== null && stats !== null) {
       writeTextInPlace(shown.cell.turns, String(Math.round(stats.turns)))
