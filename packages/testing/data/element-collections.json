@@ -8,7 +8,7 @@
     "packages/client/src/features/chat-files/file-row-merge.ts": 5,
     "packages/client/src/features/chat-fold/fold-scheduler.ts": 1,
     "packages/client/src/features/chat-fold/message-fold.ts": 2,
-    "packages/client/src/features/chat-fold/process-summary.ts": 5,
+    "packages/client/src/features/chat-fold/process-summary.ts": 6,
     "packages/client/src/features/chat-fold/reasoning-fold.ts": 1,
     "packages/client/src/features/chat-fold/reasoning-stream.ts": 2,
     "packages/client/src/features/chat-follow/process-follow.ts": 1,

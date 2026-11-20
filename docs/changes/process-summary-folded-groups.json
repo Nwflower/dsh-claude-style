@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-20",
+  "group": "improvements",
+  "order": 3,
+  "external": true,
+  "zh": "折叠起来的进程组不再在切换会话时逐个测量摘要宽度，改为展开显示的那一帧再测量，长会话切换时省下几十次单独的样式计算",
+  "en": "Folded process groups no longer measure their summary one by one on a session switch; each is measured in the frame that shows it, sparing a long session's switch dozens of separate style computations"
+}
