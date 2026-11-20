@@ -3,7 +3,7 @@ import { Readable } from 'node:stream'
 
 function fakeHost(mod, options = {}) {
   const { fenced, home, live = [], events, launch, stored, reads, releases, lists, listCalls, registry, tails, queryShapes, broken, onRead, projections, jobs, agents, commands, directories = {}, filesystem, listen = false } = options
-  const shapes = queryShapes ?? ['readSession', 'observeSession', 'readTitleSnapshots']
+  const shapes = queryShapes ?? ['observeSession', 'readTitleSnapshots']
   const routes = {}
   const listeners = {}
   const liveSession = (id) => ({
@@ -71,16 +71,12 @@ function fakeHost(mod, options = {}) {
           if (onRead !== undefined) onRead(id)
           return events[id] ?? []
         }
-        // An id the real backend does not know is refused, and resolving one it
-        // does know through `readSession` means listing the whole stored corpus
-        // (every header opened). The host half is expected to avoid that walk
-        // entirely, so `listCalls` records every id that would have cost it.
+        // An id the real backend does not know is refused. A batch title read
+        // lists the whole stored corpus (every header opened); the host half is
+        // expected to avoid that walk for events, so `listCalls` records every
+        // id that would have cost it.
         const known = (id) => stored === undefined || live.includes(id) || stored.some((entry) => entry.header.id === id)
         const missing = (id) => Object.assign(new Error(`session "${id}" not found`), { code: 'SESSION_QUERY_SESSION_NOT_FOUND' })
-        const listed = (id) => {
-          if (listCalls !== undefined) listCalls.push(id)
-          return stored?.find((entry) => entry.header.id === id)
-        }
         return {
           ...(shapes.includes('observeSession') ? {
             // The listing-free read: a `stat` by id and the restored log in a
@@ -96,15 +92,6 @@ function fakeHost(mod, options = {}) {
                 ...(projections === undefined ? {} : { projections: { asOfSeq: -1, values: projections[id] ?? {} } }),
                 [Symbol.dispose]() { if (releases !== undefined) releases.push(id) },
               }
-            },
-          } : {}),
-          ...(shapes.includes('readSession') ? {
-            // The fallback for a host publishing only this one: it resolves the
-            // id through a corpus listing, so the fake charges it that walk.
-            readSession: async (id) => {
-              const snapshot = listed(id)
-              if (!known(id)) throw missing(id)
-              return { session: snapshot?.header ?? { id }, events: log(id) }
             },
           } : {}),
           ...(shapes.includes('readTitleSnapshots') ? {
