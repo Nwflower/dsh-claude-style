@@ -33,11 +33,6 @@ export function paletteCardOf(prefs: Prefs) {
   return selectedReaderScheme(prefs)?.base ?? BRAND_DEFAULT_PRESETS[prefs.brand]
 }
 
-/** A scheme with no seed of its own, over the default preset of the brand the page shows now. */
-export function newCustomScheme(prefs: Prefs): PaletteScheme {
-  return { id: PALETTE_COLORING_CUSTOM, name: '', base: BRAND_DEFAULT_PRESETS[prefs.brand] }
-}
-
 /** Whether a record carries no seed of its own. */
 function bare(scheme: PaletteScheme) {
   return scheme.accent === undefined && scheme.background === undefined && scheme.code === undefined && scheme.link === undefined && scheme.edges === undefined

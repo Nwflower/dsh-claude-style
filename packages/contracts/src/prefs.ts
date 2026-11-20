@@ -202,7 +202,6 @@ export const AUTO_POPOVER_ALL = 'all'
 export const AUTO_POPOVER_SCOPES = [AUTO_POPOVER_OFF, AUTO_POPOVER_ACCOUNT, AUTO_POPOVER_ALL] as const
 
 /** Page zoom percentage; empty follows the system, and values outside the declared bounds clamp to an endpoint. */
-export const PAGE_ZOOM_SYSTEM = ''
 export const PAGE_ZOOM_DEFAULT = '100'
 export const PAGE_ZOOM_MIN = 60
 export const PAGE_ZOOM_MAX = 200
@@ -237,8 +236,6 @@ export const MANUAL_UNREAD_LIMIT = 2048
 export const MANUAL_UNREAD_ID_LIMIT = 1024
 /** Custom-price storage limits; decimal text avoids losing entered digits to floats. */
 export const PRICE_ROWS_MAX = 32
-export const PRICE_ROW_MODEL_MAX = 96
-export const PRICE_ROW_RATE_MAX = 16
 
 /** Model rows keep id order by default; brand order puts recognised vendor lockups first. */
 export const MODEL_ORDER_ID = 'id'
