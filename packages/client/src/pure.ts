@@ -11,6 +11,7 @@ export { brandingInkOf, brandingInkPatch, newBrandingPresetId, removeBrandingPre
 export { brandingAsset, findBrandingPreset, normalizeBrandingPresets, parseBrandingPreset, serializeBrandingPreset, withBrandingAsset } from '@dsh-claude-style/contracts/branding-presets'
 export { accentInk, contrastRatio } from './shared/contrast'
 export { canAddScheme, duplicateScheme, newSchemeId, removeSchemePatch, selectSchemePatch, storedSchemes, storeSchemePatch } from './shared/palette-scheme'
+export { linkFromAccent } from './shared/oklch'
 export { createFooterMirror } from './features/account/footer-mirror'
 export { chatFileOperationTitle, chatFileReadCard, chatFileReadEnvelope, chatFileReadMeta } from './features/chat-files/file-row-model'
 export type { FileHunk, FileReadCard, FileRowState } from './features/chat-files/file-row-model'

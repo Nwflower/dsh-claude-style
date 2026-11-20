@@ -534,6 +534,14 @@
       "selectors": [
         "body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-key"
       ]
+    },
+    {
+      "reason": "配色编辑器的推出形态：走查打开的是未编辑的预设，链接色取预设手调值；推出附注与样张的推出画色只在存储方案未带链接种子时出现",
+      "selectors": [
+        "body[data-dsh-claude-style] .dsh-claude-scheme-derived",
+        "body[data-dsh-claude-style] .dsh-claude-scheme-specimen[data-link=\"derived\"][data-appearance=\"light\"]",
+        "body[data-dsh-claude-style] .dsh-claude-scheme-specimen[data-link=\"derived\"][data-appearance=\"dark\"]"
+      ]
     }
   ]
 }

@@ -1,10 +1,12 @@
-/** palette-checks.mjs — the colour cards against the preset and brand vocabulary, and against the contrast every preset owes its canvas (D97). */
+/** palette-checks.mjs — the colour cards against the preset and brand vocabulary, the contrast every preset owes its canvas, and the page's derived-link resolution against the build's own (D97). */
 import { parse, wcagContrast } from 'culori'
 import { loadModule } from '../shared/ts-module.mjs'
 import { cardLink } from './theme-tokens.mjs'
 
 // The editor's contrast read-out answers the same question with the same least values.
 const { PALETTE_TEXT_CONTRAST: TEXT_CONTRAST, PALETTE_ACCENT_CONTRAST: ACCENT_CONTRAST } = loadModule('packages/contracts/src/palette-schemes.ts')
+// The page resolves a derived link with its own oklch arithmetic; the build holds it to culori's resolution of the same step.
+const { linkFromAccent } = loadModule('packages/client/src/shared/oklch.ts')
 const SCHEMES = ['light', 'dark']
 
 /**
@@ -57,4 +59,29 @@ export function checkPaletteContrast(doc) {
     }
   }
   if (problems.length > 0) throw new Error(`build: a palette card is hard to read on its own canvas:\n  ${problems.join('\n  ')}`)
+}
+
+/** One `#rrggbb` as its three channels. */
+function channels(hex) {
+  return [1, 3, 5].map(at => parseInt(hex.slice(at, at + 2), 16))
+}
+
+/**
+ * The link the page derives for a scheme without a link seed is the link the
+ * build resolves: the client's oklch arithmetic and culori's formatHex over the
+ * same lightness step, to a channel of rounding.
+ */
+export function checkLinkResolution(doc) {
+  const problems = []
+  const accents = [...doc.palette.cards.map((card) => card.accent), '#1e88e5', '#e53935', '#161616', '#fdfdfd', '#000000', '#ffffff']
+  for (const accent of accents) {
+    for (const scheme of SCHEMES) {
+      const page = channels(linkFromAccent(accent, scheme))
+      const build = channels(cardLink({ accent }, scheme))
+      if (page.some((channel, at) => Math.abs(channel - build[at]) > 1)) {
+        problems.push(`the ${scheme} link of ${accent} resolves to ${linkFromAccent(accent, scheme)} in the page but ${cardLink({ accent }, scheme)} in the build`)
+      }
+    }
+  }
+  if (problems.length > 0) throw new Error(`build: the page and the build derive different links:\n  ${problems.join('\n  ')}`)
 }
