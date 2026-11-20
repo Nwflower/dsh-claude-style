@@ -81,6 +81,10 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="composer-controls"] {
    the name rather than the level beside it. */
 body[data-dsh-claude-style] [data-dsh-claude-part~="trailing"] .dsh-claude-model-seat-model > .dsh-claude-model-btn {
   max-width: 280px;
+  /* The swapping label's travel extends past its layout height (D9). Clip
+     it at the control so a compact composer cannot grow the transcript's
+     scroll range below its sticky seat. */
+  overflow: clip;
 }
 body[data-dsh-claude-style] [data-dsh-claude-part~="trailing"] .dsh-claude-model-seat-model > .dsh-claude-model-btn,
 body[data-dsh-claude-style] [data-dsh-claude-part~="trailing"] .dsh-claude-model-seat-effort > .dsh-claude-effort-btn {
@@ -298,10 +302,7 @@ body[data-dsh-claude-style] .dsh-claude-context-stats-value {
    (features/context-stats/stats-binding.ts), and the shared focus ring marks it
    where the reader tabs to it.
 
-   The line keeps the host row's own 20px text line here: it stands in the dock
-   the host draws the meter in, so a control height taller than that row would
-   deepen the composer's bottom edge against the compact footer's placement,
-   which takes the toolbar row's height (footer-layout.css). */
+   A 20px text line fits both the dock and the toolbar's statistics seat. */
 body[data-dsh-claude-style] .dsh-claude-inline-stats {
   display: inline-flex;
   align-items: center;
@@ -350,10 +351,14 @@ body[data-dsh-claude-style] .dsh-claude-inline-stats[data-dsh-claude-footer-deta
 body[data-dsh-claude-style] .dsh-claude-inline-stats .dsh-claude-inline-seg[hidden] {
   display: none;
 }
-/* The line's measuring twin stays beside it, out of flow and hidden between
-   readings, so a fit rewrites text without inserting and removing a subtree. */
+/* The measuring twin still contributes scrollable overflow when hidden. Grow
+   into its containing box from the end edges, so it cannot extend the scroll
+   range past the sticky composer when bottom padding is compact (D40). */
 body[data-dsh-claude-style] .dsh-claude-inline-stats[data-dsh-claude-inline-probe] {
   position: absolute;
+  inset-inline-end: 0;
+  inset-block-end: 0;
+  inline-size: max-content;
   visibility: hidden;
   pointer-events: none;
 }

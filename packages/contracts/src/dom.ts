@@ -252,6 +252,10 @@ export const CONVERSATION_VIEW_STATS = 'stats'
 export const PHASE_ATTRIBUTE = 'data-phase'
 /** The composer card and the stack of cards above it. */
 export const COMPOSER_STACK_SELECTOR = '[data-dsh-claude-part~="composer-stack"]'
+/** The dock below the composer card, which contains the host's session figures. */
+export const COMPOSER_DOCK_SELECTOR = '[data-dsh-claude-part~="composer-dock"]'
+/** The toolbar's trailing cluster containing the model and context controls. */
+export const COMPOSER_TRAILING_SELECTOR = '[data-dsh-claude-part~="trailing"]'
 /** ui-attachment's local class remains usable before part marking reaches a newly mounted rail. */
 export const COMPOSER_ATTACHMENT_RAIL_SELECTOR = '[class*="_rail"]'
 /** The placeholder the host's own editor draws inside the draft. */

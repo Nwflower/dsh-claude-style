@@ -6,7 +6,7 @@ import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { formatCompactTokens, formatUnitTokens } from '../../shared/format'
 import { inPageBox, inPagePixels } from '../../shared/page-zoom'
 import { createStatsCount } from './stats-count'
-import { createFooterLayout, findStatsDock } from './footer-layout'
+import { createFooterLayout } from './footer-layout'
 import { CACHE_HIT_STOPS, rampPosition, writeRamp } from './stats-ramp'
 import { sessionStatsCacheHit, sessionStatsDuration, sessionStatsGrouped, sessionStatsSpeed, sessionStatsTokenCount } from '../../shared/stats-format'
 import { formatMoneyMicro, CURRENCY_CNY, CURRENCY_SYMBOL } from '@dsh-claude-style/contracts/prices'
@@ -302,15 +302,11 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
   function place(root: HTMLElement) {
     const row = findComposerStats()
     if (row === null || row.parentElement === null) return false
-    const dock = readPrefs().statsPosition === STATS_POSITION_FOOTER ? findStatsDock() : null
-    if (dock !== null) {
-      if (root.parentElement !== dock) dock.insertBefore(root, dock.firstChild)
-    } else if (root.parentElement !== row.parentElement) row.parentElement.insertBefore(root, row)
-    footer.sync(root)
+    if (footerPosition) return footer.place(root, row)
+    if (root.parentElement !== row.parentElement) row.parentElement.insertBefore(root, row)
     return true
   }
 
-  /** Take the line off the page, and the meter's step with it. */
   /**
    * Fit again after a viewport or composer change: only a new card width
    * measures the line again (scheduleFit).
@@ -567,16 +563,8 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
     if (card === null || chat === null || goal === null) return null
     if (footerPosition) {
       const room = footer.room()
-      let chosen = 0
-      if (room !== null) {
-        for (const candidate of [2, 1]) {
-          if (probeFooterWidth(shown, candidate, chat, goal) <= room) {
-            chosen = candidate
-            break
-          }
-        }
-      }
-      return { level: 0, detail: chosen, width: fittedWidth }
+      if (!force && fitted && room === fittedWidth) return null
+      return { level: 0, width: room, ...footer.fit(room, step => probeFooterWidth(shown, step, chat, goal)) }
     }
     const available = card.clientWidth
     if (available <= 0) return null
@@ -588,11 +576,11 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
     } else {
       while (step > 0 && measure(step - 1) + FIT_SLACK_PX <= available) step -= 1
     }
-    return { level: step, detail, width: available }
+    return { level: step, detail, width: available, placement: null }
   }
 
   /** Write the step a fit chose onto the shown line, in the frame's write phase. */
-  function applyFit(choice: { level: number, detail: number, width: number }) {
+  function applyFit(choice: NonNullable<ReturnType<typeof chooseFit>>) {
     const shown = line
     const chat = chatText()
     const goal = count.goal()
@@ -606,7 +594,7 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
     writeLine(shown, level, chat, displayed.stats, displayed.usage, displayed.cost, displayed.billing, displayed.costPending, currency())
     fitted = true
     fittedShape = lineShape(goal, chat)
-    if (footerPosition) footer.sync(shown.root)
+    if (choice.placement !== null) footer.setPlacement(choice.placement)
   }
 
   /**
@@ -659,8 +647,10 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
     }
     const nextFooter = readPrefs().statsPosition === STATS_POSITION_FOOTER
     if (footerPosition !== nextFooter) {
+      if (!nextFooter) footer.clear()
       footerPosition = nextFooter
       fitted = false
+      fittedWidth = -1
       level = 0
       detail = 0
     }
@@ -675,7 +665,10 @@ export function createInlineStats(read: () => StatsReading, chatText: () => Host
       // A session switch leaves the reading empty for a moment; the line stands
       // with the figures it had rather than folding the composer's bottom line
       // and unfolding it again.
-      if (held) return
+      if (held && line !== null) {
+        place(line.root)
+        return
+      }
       clear()
       return
     }

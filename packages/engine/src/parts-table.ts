@@ -341,8 +341,7 @@ export function holdRelations(vocabulary: PartsTableVocabulary): HoldRelation[] 
     attributes: ['data-session-stats-details', 'data-session-stats-usage'],
   },
   // features/context-stats/footer-layout.css: the dock's reserved row stands
-  // only for figures that keep their own line under the toolbar; an overlaid
-  // line and a dock with no figures leave it empty.
+  // only for figures that keep their own line under the toolbar.
   {
     name: 'footer-below',
     holder: part('composer-dock'),

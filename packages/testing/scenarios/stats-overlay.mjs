@@ -20,6 +20,8 @@
  * (D92): the table is what a lane names a skin mark through.
  */
 import surfaceTable from '../data/surface.json' with { type: 'json' }
+import { COMPOSER_CARD_SELECTOR, COMPOSER_SELECTOR, CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, SESSION_ROW_KEY_ATTRIBUTE, SIDEBAR_NEW_SESSION_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { sendPrompt, waitForTurn } from '../prompt.mjs'
 
 const SURFACE = surfaceTable.surface
 const mark = (id) => {
@@ -38,6 +40,8 @@ const CONTEXT_METER = mark('stats.context-meter')
 const CONTEXT_PANEL = mark('stats.context-panel')
 const CONTEXT_PANEL_PLACED = mark('stats.context-panel-placed')
 const FOOTER_LINE = mark('stats.footer-line')
+const INLINE_PROBE = selector('stats.inline-probe')
+const SEATED_CARD = `${COMPOSER_SELECTOR} ${COMPOSER_CARD_SELECTOR}`
 const PART = mark('skin.part')
 const METER_RING = selector('stats.meter-ring')
 const MODEL_SEAT = selector('model.seat')
@@ -178,9 +182,9 @@ const readPopoverAtZoom = async (page, zoom) => {
   return { ...frames, gap }
 }
 
-/** The compact figures over the toolbar, and the host dock whose reserved row they leave. */
-const readFooterOverlay = (page) => page.evaluate(([lineMark, partMark, gapMark]) => {
-  const card = document.querySelector('[data-composer-card]')
+/** The compact figures in the toolbar and the host dock below them. */
+const readFooter = (page) => page.evaluate(([cardSelector, lineMark, partMark, gapMark]) => {
+  const card = document.querySelector(cardSelector)
   const dock = card?.nextElementSibling ?? null
   const line = document.querySelector(`[${lineMark}]`)
   const toolbar = card?.querySelector(`[${partMark}~="row"]`) ?? null
@@ -188,13 +192,67 @@ const readFooterOverlay = (page) => page.evaluate(([lineMark, partMark, gapMark]
   return {
     gap: document.body.getAttribute(gapMark),
     mode: line?.getAttribute(lineMark) ?? null,
+    belongsToToolbar: toolbar?.contains(line) ?? false,
     line: box(line),
     toolbar: box(toolbar),
     dock: box(dock),
     dockMinHeight: dock === null ? null : getComputedStyle(dock).minHeight,
     dockPaddingTop: dock === null ? null : getComputedStyle(dock).paddingTop,
   }
-}, [FOOTER_LINE, PART, COMPOSER_GAP])
+}, [SEATED_CARD, FOOTER_LINE, PART, COMPOSER_GAP])
+
+/** Read every painted card from a switch between two settled conversations. */
+async function readFooterSwitch(page) {
+  const firstSession = await page.locator(CONVERSATION_SESSION_SELECTOR).getAttribute(CONVERSATION_SESSION_ATTRIBUTE)
+  await page.locator(SIDEBAR_NEW_SESSION_SELECTOR).first().click()
+  await sendPrompt(page, 'A second conversation for the compact composer.')
+  await waitForTurn(page)
+  const target = await page.locator(`[${SESSION_ROW_KEY_ATTRIBUTE}="session:${firstSession}"]`).elementHandle()
+  if (target === null) throw new Error('The first conversation is missing from the sidebar')
+  return page.evaluate(async ({ target, firstSession, cardSelector, seatSelector, scrollSelector, sessionSelector, sessionAttribute, lineMark, probeSelector, part }) => {
+    const sample = () => {
+      const card = document.querySelector(cardSelector)
+      if (!card?.checkVisibility()) return null
+      const edge = innerHeight - card.getBoundingClientRect().bottom
+      const dock = card.parentElement.querySelector(`[${part}~="composer-dock"]`)
+      const seat = card.closest(seatSelector)
+      const scroller = card.closest(scrollSelector)
+      const probe = document.querySelector(probeSelector)
+      return {
+        edge: Math.round(edge * 100) / 100,
+        padding: getComputedStyle(card.parentElement).paddingBottom,
+        dock: dock?.getBoundingClientRect().height ?? null,
+        seat: seat && innerHeight - seat.getBoundingClientRect().bottom,
+        scroller: scroller && [innerHeight - scroller.getBoundingClientRect().bottom, scroller.offsetHeight - scroller.clientHeight, scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop],
+        probe: probe && seat && probe.getBoundingClientRect().bottom - seat.getBoundingClientRect().bottom,
+        mode: document.querySelector(`[${lineMark}]`)?.getAttribute(lineMark) ?? null,
+      }
+    }
+    const before = sample()
+    const frames = []
+    target.click()
+    await new Promise((resolve, reject) => {
+      const start = performance.now()
+      let stableSince = null
+      const frame = (now) => {
+        const current = sample()
+        const previous = frames.at(-1)
+        const arrived = document.querySelector(sessionSelector)?.getAttribute(sessionAttribute) === firstSession
+        frames.push(current)
+        if (arrived && current?.mode && previous?.edge === current.edge) stableSince ??= now
+        else stableSince = null
+        if (stableSince !== null && now - stableSince >= 120) resolve()
+        else if (now - start > 5000) reject(new Error('The compact composer did not settle after switching sessions'))
+        else requestAnimationFrame(frame)
+      }
+      requestAnimationFrame(frame)
+    })
+    return { before, after: frames.at(-1),
+      changes: frames.filter((value, index) => JSON.stringify(value) !== JSON.stringify(frames[index - 1])) }
+  }, { target, firstSession, cardSelector: SEATED_CARD, seatSelector: COMPOSER_SELECTOR,
+    scrollSelector: CONVERSATION_SCROLL_SELECTOR, sessionSelector: CONVERSATION_SESSION_SELECTOR,
+    sessionAttribute: CONVERSATION_SESSION_ATTRIBUTE, lineMark: FOOTER_LINE, probeSelector: INLINE_PROBE, part: PART })
+}
 
 function statsFooterScenario({ check }) {
   return {
@@ -208,19 +266,24 @@ function statsFooterScenario({ check }) {
     ],
     async assert({ page, session }) {
       await page.waitForFunction(
-        (lineMark) => document.querySelector(`[${lineMark}="overlay"]`) !== null,
+        (lineMark) => document.querySelector(`[${lineMark}="toolbar"]`) !== null,
         FOOTER_LINE, { timeout: 20000 },
-      ).catch(() => {})
-      const state = await readFooterOverlay(page)
+      )
+      const state = await readFooter(page)
       const inside = state.line !== null && state.toolbar !== null &&
         state.line.left >= state.toolbar.left - 1 && state.line.right <= state.toolbar.right + 1 &&
         state.line.top >= state.toolbar.top - 1 && state.line.bottom <= state.toolbar.bottom + 1
+      const switched = await readFooterSwitch(page)
       return [
-        check('the stored footer position and compact gap reach the page', state.gap === 'compact' && state.mode === 'overlay', JSON.stringify(state)),
-        check('the compact figures stand inside the toolbar', inside, JSON.stringify(state)),
-        check('the overlaid figures leave no reserved dock below the card',
+        check('the stored footer position and compact gap reach the page', state.gap === 'compact' && state.mode === 'toolbar', JSON.stringify(state)),
+        check('the compact figures belong to the toolbar and fit inside it', inside && state.belongsToToolbar, JSON.stringify(state)),
+        check('the toolbar figures leave no reserved dock below the card',
           state.dock !== null && state.dock.height === 0 && state.dockMinHeight === '0px' && state.dockPaddingTop === '0px',
           JSON.stringify(state)),
+        check('the compact composer keeps its bottom edge through the session switch',
+          switched.before !== null && switched.after?.mode === 'toolbar' && [switched.before, ...switched.changes].every(frame => frame === null ||
+            (frame.padding === switched.after.padding && Math.abs(frame.edge - switched.after.edge) <= 1)),
+          JSON.stringify(switched)),
         check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),
       ]
     },

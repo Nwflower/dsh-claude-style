@@ -646,8 +646,11 @@
       ]
     },
     "packages/testing/scenarios/stats-overlay.mjs": {
-      "the overlaid figures leave no reserved dock below the card": [
+      "the toolbar figures leave no reserved dock below the card": [
         0
+      ],
+      "the compact composer keeps its bottom edge through the session switch": [
+        1
       ],
       "控制台没有异常": [
         0
@@ -671,7 +674,7 @@
         7,
         9
       ],
-      "控制台没有异常 (line 295)": [
+      "控制台没有异常 (line 367)": [
         0
       ]
     },

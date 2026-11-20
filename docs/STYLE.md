@@ -813,7 +813,13 @@ the written-back tokens and the cache share, and it is among the figures the
 ladder gives up when the line needs the room for the total; in the block it is
 the usage section's first row.
 
-In the toolbar's placement the segment keeps its width across a session switch:
+Compact footer figures join the tool row between the left controls and the
+model and context controls. Their seat takes the space available in that row.
+When even the shortest statistics line cannot fit, it takes its own row below
+the tools. The invisible measuring copy stays inside its positioning box so
+it cannot extend the transcript's scroll range beyond the composer.
+
+In the toolbar the cost segment keeps its width across a session switch:
 the session's figure is replaced while the next one is being priced, so the
 amount sits in a box of an amount's measure, right-aligned so a growing figure
 extends left, and the box stands as the currency symbol and a dash in

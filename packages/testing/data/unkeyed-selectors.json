@@ -123,8 +123,7 @@
         "body[data-dsh-claude-style] svg[data-state=\"ongoing\"] *",
         "body[data-dsh-claude-style] [data-dsh-claude-part~=\"table-scroll\"] tr > :first-child",
         "body[data-dsh-claude-style] [data-dsh-claude-part~=\"table-scroll\"] tr > :last-child",
-        "body[data-dsh-claude-style] [data-dsh-claude-composer-toolbar] [data-dsh-claude-part~=\"trailing\"] > :first-child + *",
-        "body[data-dsh-claude-style][data-dsh-claude-stats-position=\"footer\"] [data-dsh-claude-footer-line] > *"
+        "body[data-dsh-claude-style] [data-dsh-claude-composer-toolbar] [data-dsh-claude-part~=\"trailing\"] > :first-child + *"
       ]
     }
   ]
