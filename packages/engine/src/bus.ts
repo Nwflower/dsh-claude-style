@@ -386,11 +386,15 @@ function registryFor(selector: string): MatchRegistry {
   }
   registry.stop = subscribeMutations(document.body, { childList: true, subtree: true }, records => {
     const summary = additionsOf(records)
-    let changed = summary.removed
+    let changed = false
     // A subtree the batch removed leaves the registry now, not at a later read:
     // a selector no pass reads again would otherwise hold the whole transcript
     // of a switched-away session for the rest of the page's life. The pruning
     // runs before this batch's additions, so a node the page moved stays.
+    // Only a match leaving changes the set: the host removes nodes in nearly
+    // every batch while a session mounts or streams, and a listener woken by an
+    // unrelated removal re-measures the page in a frame that is already paying
+    // for a style pass over the whole transcript.
     if (summary.removed) {
       const removedRoots: Element[] = []
       for (const record of records) {
@@ -403,6 +407,7 @@ function registryFor(selector: string): MatchRegistry {
           for (const root of removedRoots) {
             if (root === item || root.contains(item)) {
               registry.items.delete(item)
+              changed = true
               break
             }
           }

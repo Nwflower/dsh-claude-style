@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { BOTTOM_PANEL_SELECTOR, CONVERSATION_HEADER_SELECTOR, CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, FLOW_KIND_ATTRIBUTE, RIGHTBAR_COLLAPSED_ATTRIBUTE, RIGHTBAR_COLUMN_SELECTOR, SIDEBAR_CHAT_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { observeMarker, observeMatches, observeSize, subscribeMutations } from '@dsh-claude-style/engine/bus'
+import { coalesceRead } from '@dsh-claude-style/engine/frame'
 import { cacheFirstMatch, findRightbarToggle } from '@dsh-claude-style/engine/host'
 import { conversationScroller } from '@dsh-claude-style/engine/chat-dom'
 import { PART_ATTR } from '../../constants'
@@ -77,14 +78,20 @@ function useConversationSession() {
       const seen = sight()
       setReading(previous => conversationStanding(previous, seen))
     }
+    // `checkVisibility` resolves styles: the batches a mount brings are read
+    // once in the next frame, before its paint.
+    const readSoon = coalesceRead(read)
     const stop = subscribeMutations(document.body, {
       subtree: true,
       childList: true,
       attributes: true,
       attributeFilter: ['data-phase', CONVERSATION_SESSION_ATTRIBUTE, FLOW_KIND_ATTRIBUTE],
-    }, read)
+    }, readSoon.request)
     read()
-    return stop
+    return () => {
+      readSoon.cancel()
+      stop()
+    }
   }, [])
   return reading
 }
@@ -265,19 +272,26 @@ function useRailReading(session: string | null) {
       }
       measure()
     }
+    // A page change answers in the next frame's read phase, once however many
+    // batches arrived before it: the parts walk marks hundreds of nodes while a
+    // session mounts, and a measurement per batch would force a style pass over
+    // the whole transcript each time. The frame still runs before the paint, so
+    // the rail stands in place on the frame the change is drawn.
+    const bindSoon = coalesceRead(bind)
     // The parts walk marks the column after the first frame, so its arrival is
     // an attribute change, not a child-list one; so is the frame's statement of
     // which side it gives the host's own right column. The bottom panel mounts
     // inside the frame, where the body's own child list does not reach: its kept
     // matches are what bring the rail's floor back and take it up again.
-    const bottomPanels = observeMatches<HTMLElement>(BOTTOM_PANEL_SELECTOR, bind)
-    const stopParts = subscribeMutations(document.body, { subtree: true, attributes: true, attributeFilter: [PART_ATTR, RIGHTBAR_COLLAPSED_ATTRIBUTE] }, bind)
+    const bottomPanels = observeMatches<HTMLElement>(BOTTOM_PANEL_SELECTOR, bindSoon.request)
+    const stopParts = subscribeMutations(document.body, { subtree: true, attributes: true, attributeFilter: [PART_ATTR, RIGHTBAR_COLLAPSED_ATTRIBUTE] }, bindSoon.request)
     bind()
     // The columns' own size observers report once on attach, which covers a
     // shell that laid out after this feature's first render; no timer wakes a
     // page that has settled.
     window.addEventListener('resize', bind)
     return () => {
+      bindSoon.cancel()
       stopParts()
       bottomPanels.release()
       columns.release()

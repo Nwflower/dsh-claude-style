@@ -391,6 +391,21 @@ test('a registry listener hears the batch that removes a match, with nothing arr
   expect(heard[0]).toEqual([])
 })
 
+test('a registry listener does not hear a batch that removes only nodes outside the set', async () => {
+  const root = host()
+  const held = probed('i')
+  const bystander = document.createElement('span')
+  root.append(held, bystander)
+  await settle()
+  let heard = 0
+  const matches = observeMatches<HTMLElement>(`[${PROBE}]`, () => { heard += 1 })
+  cleanups.push(() => matches.release())
+  bystander.remove()
+  await settle()
+  expect(heard).toBe(0)
+  expect(matches.all()).toEqual([held])
+})
+
 test('a marker registry follows an attribute that arrives on a node already standing', async () => {
   const root = host()
   const row = document.createElement('div')
