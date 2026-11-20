@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-20",
-  "group": "fixes",
-  "order": 0,
-  "external": true,
-  "zh": "关闭「对话 / 轨迹标签靠右显示」时，原位视图标签和更多视图菜单保持可见",
-  "en": "Keep the native view tabs and More views menu visible when right alignment is off"
-}

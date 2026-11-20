@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-20",
-  "group": "improvements",
-  "order": 0,
-  "external": true,
-  "zh": "顶栏的对话和轨迹标签在悬停时高亮文字，切换时下划线拉伸并缓动至选中的标签，支持减少动态效果",
-  "en": "Highlight Chat and Trajectory labels on hover and ease the stretching underline between tabs, with support for reduced motion"
-}

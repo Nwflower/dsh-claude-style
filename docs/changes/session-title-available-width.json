@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-20",
-  "group": "fixes",
-  "order": 0,
-  "external": true,
-  "zh": "会话标题按顶栏可用宽度显示，空间足够时显示完整名称",
-  "en": "Show the full session title whenever it fits in the header"
-}

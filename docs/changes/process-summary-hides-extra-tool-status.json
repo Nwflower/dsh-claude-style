@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-20",
-  "group": "fixes",
-  "order": 0,
-  "external": true,
-  "zh": "过程摘要会一并隐藏活动按钮内的额外工具状态文本，助手正文仍保持可见",
-  "en": "The process summary hides extra tool status text inside the activity button while keeping the assistant answer visible"
-}

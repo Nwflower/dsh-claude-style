@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-20",
-  "group": "chores",
-  "order": 1,
-  "external": false,
-  "zh": "故障语料补丁跟上当前代码，故障运行计入安装类用例的失败，lint 增加故障补丁可应用性检查",
-  "en": "Bring fault corpus patches up to the current tree, credit installation-case failures in the faults lane, and check fault patch applicability in lint"
-}

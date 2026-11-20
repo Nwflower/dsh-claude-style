@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-20",
-  "group": "improvements",
-  "order": 0,
-  "external": true,
-  "zh": "统一顶栏、侧栏和详情栏外侧的分隔线，详情分节和模型菜单分组使用更淡的细线",
-  "en": "Match the dividers at the header and column edges, with subtler hairlines between details sections and model groups"
-}

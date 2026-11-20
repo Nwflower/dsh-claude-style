@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-20",
-  "group": "improvements",
-  "order": 2,
-  "external": true,
-  "zh": "对话里的选中配色改为在开始选中文字时才覆盖这段对话，长会话切换时浏览器不再为每个元素额外计算一份选中样式，每次切换的长帧总时长约减少两成；窗口失焦或获得焦点时，没有选中文字就不再触发整页样式重算",
-  "en": "The selection colours now cover a conversation from the moment text is first selected in it, so switching long sessions no longer has the browser work out a selection style for every element, cutting about a fifth of the long frames per switch; losing or regaining window focus with nothing selected no longer restyles the whole page"
-}

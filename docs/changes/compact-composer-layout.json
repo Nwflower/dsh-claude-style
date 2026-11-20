@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-20",
-  "group": "fixes",
-  "order": 0,
-  "external": true,
-  "zh": "紧凑统计行直接纳入对话输入区工具栏布局，修复紧凑底部间距在切换会话时跳动的问题",
-  "en": "Seat compact statistics inside the composer toolbar and keep the compact bottom gap steady when switching conversations"
-}

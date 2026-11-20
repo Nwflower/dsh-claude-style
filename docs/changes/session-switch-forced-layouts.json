@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-19",
-  "group": "improvements",
-  "order": 1,
-  "external": true,
-  "zh": "切换会话时主题强制触发的样式与排版计算从约五次减到一次，详情栏位置、统计行宽度、标签滑块与输入光标都改在帧的读取阶段或尺寸回报里测量，每次切换省下约 70 毫秒主线程时间",
-  "en": "Switching sessions now forces one style and layout pass from the theme where it used to force about five, as the details rail, the statistics line, the tab slider and the composer caret measure in the frame's read phase or in a size report, saving about 70 ms of main-thread time per switch"
-}
