@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-21",
+  "group": "improvements",
+  "order": 0,
+  "external": true,
+  "zh": "统一侧边聊天及未接管输入卡片中宿主原生模型选择触发器的字号、高度、圆角、悬停态与省略号截断样式",
+  "en": "Match host model selector triggers in embedded and fallback inline composers to the bottom row typography, height, radius, hover plate and ellipsis truncation"
+}
