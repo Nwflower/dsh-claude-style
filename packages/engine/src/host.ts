@@ -161,8 +161,22 @@ export const findSidebarBrand = cacheFirst<HTMLElement>(SIDEBAR_BRAND_SELECTOR)
 export const findSidebarToggle = cacheFirst<HTMLElement>(SIDEBAR_TOGGLE_SELECTOR)
 export const findWindowsMenu = cacheFirst<HTMLElement>(WINDOWS_MENU_SELECTOR)
 
-/** The right panel's own collapse control while that panel is open. It hangs from a transformed, clipped subtree, so the skin draws its own control in the header's row and presses this one; the same read answers whether the panel is open. */
-export const findRightbarToggle = cacheFirst<HTMLElement>(RIGHTBAR_TOGGLE_SELECTOR)
+/**
+ * The right panel's own collapse control while that panel is open on screen.
+ *
+ * A Session the reader left keeps its panel mounted behind a hidden view, so
+ * the first match in document order can belong to that earlier Session; the
+ * control the page shows belongs to a panel that is actually visible. The
+ * header's copy and the details rail both press this control to close the
+ * panel standing beside the conversation.
+ */
+export function findRightbarToggle(): HTMLElement | null {
+  const toggles = document.querySelectorAll<HTMLElement>(RIGHTBAR_TOGGLE_SELECTOR)
+  for (let index = 0; index < toggles.length; index += 1) {
+    if (shown(toggles[index])) return toggles[index]
+  }
+  return null
+}
 
 /** The open host menu card: the host portals menus to `<body>`, and every card the skin builds itself carries a `dsh-claude-` class (D3). Read once and kept until a menu opens or closes (D40). */
 export const findHostMenu = cacheFirst<HTMLElement>(`${MENU_ROLE_SELECTOR}:not([class*="dsh-claude-"])`)

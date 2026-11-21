@@ -9,7 +9,7 @@ import {
 import { observeMatches, observeSize, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { desktopBand } from '@dsh-claude-style/engine/desktop-band'
 import { closestConversationHeader, conversationHeaderMore, conversationHeaderTitle, conversationHeaderTools, findRightbarToggle, findWindowsMenu, registerSlotEntries } from '@dsh-claude-style/engine/host'
-import { createStamp, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
+import { createStamp, setAttributeIfChanged, shown } from '@dsh-claude-style/engine/dom'
 import { FRAME_SELECTOR } from '../../shared/page-scale-columns'
 import { inPageBox, inPagePixels } from '../../shared/page-zoom'
 import type { FeatureUi } from '../../core/feature'
@@ -99,6 +99,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const UTILITIES_SLOT = 'conversation.session.header.utilities'
   /** The skin's own control there, which the stylesheet shows while the panel is open. */
   const CLOSE_CLASS = 'dsh-claude-rightbar-close'
+  /**
+   * The host hides a retained Session's right column with this attribute while
+   * another Session takes the foreground; that Session's panel keeps its own
+   * open mark, so this attribute change is what makes the visible panel win.
+   */
+  const HIDDEN_ATTRIBUTE = 'hidden'
 
   const rowStamp = createStamp<HTMLElement>(ROW_ATTR)
   const titleStamp = createStamp<HTMLElement>(TITLE_ATTR)
@@ -156,7 +162,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * so that measurement never depends on the later width transition (D40, D43).
    */
   function markRightbarOpen() {
-    const panel = rightbarPanels.all().find(element => element.hasAttribute(RIGHTBAR_OPEN_ATTRIBUTE))
+    const panel = rightbarPanels.all().find(element => element.hasAttribute(RIGHTBAR_OPEN_ATTRIBUTE) && shown(element))
     const frame = panel?.closest<HTMLElement>(FRAME_SELECTOR) ?? null
     if (frame === rightbarOpenStamp.current()) return
     rightbarOpenStamp.mark(frame)
@@ -170,7 +176,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const rightbarFrames = observeMatches<HTMLElement>(FRAME_SELECTOR, markRightbarOpen)
   const stopRightbarOpen = subscribeMutations(document.body, {
     subtree: true,
-    attributeFilter: [RIGHTBAR_OPEN_ATTRIBUTE],
+    attributeFilter: [RIGHTBAR_OPEN_ATTRIBUTE, HIDDEN_ATTRIBUTE],
     beforePaint: true,
   }, markRightbarOpen)
   markRightbarOpen()

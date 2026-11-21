@@ -335,8 +335,10 @@ export const RIGHTBAR_COLUMN_SELECTOR = '[data-rightbar-col]'
 export const BOTTOM_PANEL_SELECTOR = '[data-dsh-bottom-panel]'
 /** The right panel publishes its expanded state before the frame starts its width transition. */
 export const RIGHTBAR_OPEN_ATTRIBUTE = 'data-sidebar-right-open'
+/** The panel chrome strip's own collapse control; present only while the panel is open. */
+export const RIGHTBAR_TOGGLE_CONTROL_SELECTOR = '[data-sidebar-right-toggle]'
 /** Host collapse control is usable only while open; its transformed, clipped subtree requires a header proxy. */
-export const RIGHTBAR_TOGGLE_SELECTOR = `[${RIGHTBAR_OPEN_ATTRIBUTE}] [data-sidebar-right-toggle]`
+export const RIGHTBAR_TOGGLE_SELECTOR = `[${RIGHTBAR_OPEN_ATTRIBUTE}] ${RIGHTBAR_TOGGLE_CONTROL_SELECTOR}`
 /** The right panel's own box; the host states its width from the viewport's pixels. */
 export const RIGHTBAR_PANEL_SELECTOR = '[data-sidebar-right-panel]'
 /** The right column's drag handle; the host places it from the viewport's own width. */

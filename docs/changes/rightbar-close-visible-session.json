@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-21",
+  "group": "fixes",
+  "order": 0,
+  "external": true,
+  "zh": "右侧栏的收起按钮只跟随当前会话。切换会话后，上一个会话保留的右侧栏不再让新会话顶栏显示收起按钮，按下收起也不会关掉上一个会话的面板",
+  "en": "The right panel's collapse control follows the visible Session. A right panel retained by a conversation the reader left no longer shows the control in another conversation's header, and pressing it no longer closes that earlier panel"
+}
