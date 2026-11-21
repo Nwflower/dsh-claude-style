@@ -242,48 +242,6 @@ async function hostUsage({ mod, fakeHost, request, browser, scratchHome, scratch
     fs.rmSync(home, { recursive: true, force: true })
   }
 
-  // The fold cache this record replaced is migrated where the record does not
-  // exist yet, so the days of the sessions deleted before it come across
-  console.log('\nhost half — the previous fold cache is migrated into the record')
-  {
-    const home = runsPath(ROOT, 'smoke', 'home-usage-migrate')
-    fs.rmSync(home, { recursive: true, force: true })
-    const day = localDay(at(-3, 11))
-    const slots = new Array(24).fill(0)
-    slots[11] = 1
-    fs.mkdirSync(path.join(home, 'cache', 'dsh-claude-style'), { recursive: true })
-    fs.writeFileSync(path.join(home, 'cache', 'dsh-claude-style', 'usage.json'), JSON.stringify({
-      version: 4,
-      computedAt: 1,
-      sessions: {
-        'gone-1': {
-          size: 12,
-          mtimeMs: 34,
-          days: { [day]: { input: 60, output: 6, cacheRead: 0, cacheWrite: 0, calls: 1, hours: slots, models: { 'model-c': { input: 60, output: 6, cacheRead: 0, cacheWrite: 0, calls: 1 } } } },
-          hours: slots,
-        },
-      },
-    }))
-    const migrated = (await settledUsage(fakeHost(mod, { fenced: true, home }))).value ?? {}
-    const migrateDays = Array.isArray(migrated.days) ? migrated.days : []
-    check('the previous fold cache is migrated: its day answers the panel, its hours included',
-      migrated.source === 'local' && migrateDays.length === 1 && migrateDays[0].date === day &&
-        migrated.totals?.input === 60 && migrated.totals?.sessions === 1 && migrated.hours?.[11] === 1 &&
-        JSON.stringify(migrateDays[0].sessionIds) === JSON.stringify(['gone-1']),
-      JSON.stringify({ source: migrated.source, totals: migrated.totals, days: migrateDays }))
-    const record = JSON.parse(fs.readFileSync(path.join(home, 'dsh-claude-style', 'usage.json'), 'utf8'))
-    const writtenDay = record.sessions?.['gone-1']?.days?.[day]
-    check('the migrated record holds the same day in the record\'s own shape, against no log at all',
-      record.version === 1 && record.sessions?.['gone-1']?.size === undefined &&
-        JSON.stringify(writtenDay?.m) === JSON.stringify({ 'model-c': [60, 6, 0, 0, 1] }) &&
-        JSON.stringify(writtenDay?.h) === JSON.stringify({ '11': 1 }),
-      JSON.stringify(record))
-    check('the previous fold cache is removed once the record holding its days is written',
-      !fs.existsSync(path.join(home, 'cache', 'dsh-claude-style', 'usage.json')),
-      JSON.stringify(fs.readdirSync(path.join(home, 'cache', 'dsh-claude-style'))))
-    fs.rmSync(home, { recursive: true, force: true })
-  }
-
   // A record that does not parse may be the only place the days of deleted
   // sessions are left, so it is moved aside before the pass rebuilds it
   console.log('\nhost half — an unreadable record is moved aside before it is rebuilt')

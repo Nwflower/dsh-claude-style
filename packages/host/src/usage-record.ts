@@ -17,13 +17,12 @@
  * does not write is left as it stands. A file that does not parse is moved aside
  * under a stamped name before the pass rebuilds it. Every instance under one
  * harness home writes the whole document, so a write first lays the pass over what
- * the file holds by then. The earlier fold cache is read while it exists and
- * removed once a record holding it is written.
+ * the file holds by then.
  */
 import { PACKAGE_NAME } from '@dsh-claude-style/contracts/package'
-import { existsSync, renameSync, unlinkSync } from 'node:fs'
+import { existsSync, renameSync } from 'node:fs'
 import type { DshContext } from '@dsh-claude-style/engine/node/dsh'
-import { cachePath, readJsonDocument, writeJsonDocument } from './cache-file.js'
+import { readJsonDocument, writeJsonDocument } from './cache-file.js'
 import { pluginPath } from './harness-home.js'
 import { BUCKET_KEYS, addBuckets, emptyBuckets } from './usage-ledger.js'
 import type { Buckets, DayBuckets } from './usage-ledger.js'
@@ -32,8 +31,6 @@ import type { Buckets, DayBuckets } from './usage-ledger.js'
 const RECORD_VERSION = 1
 /** The record's file name inside the plugin's own directory. */
 const RECORD_FILE = 'usage.json'
-/** The version of the fold cache this document replaced, read once to migrate it. */
-const LEGACY_CACHE_VERSION = 4
 /** The route of the settlements that named no model, which count toward their day alone. */
 const NO_ROUTE = ''
 /**
@@ -53,7 +50,7 @@ export interface RecordSession {
 /** What reading the document produced: the entries it holds, and what may be written back. */
 export interface RecordRead {
   sessions: Map<string, RecordSession>
-  /** Whether the pass must write even when nothing changed: the file is absent or unreadable, or the old fold cache is still there to remove. */
+  /** Whether the pass must write even when nothing changed: the file is absent or unreadable. */
   mustWrite: boolean
   /** Whether the file may be written at all: a version this build does not read is left as it stands. */
   writable: boolean
@@ -190,77 +187,6 @@ function sessionFromStored(value: unknown): RecordSession | null {
   return { fingerprint: { size: Number(stored.size), mtimeMs: Number(stored.mtimeMs) }, days }
 }
 
-/** A legacy day's hour histogram, written out as 24 slots. */
-function hoursFromArray(raw: unknown): number[] | null {
-  if (!Array.isArray(raw) || raw.length !== 24) return null
-  const hours = new Array(24).fill(0) as number[]
-  let settled = false
-  for (let hour = 0; hour < 24; hour += 1) {
-    const count = Number(raw[hour]) || 0
-    hours[hour] = count
-    if (count !== 0) settled = true
-  }
-  return settled ? hours : null
-}
-
-/** The days of one legacy entry: the day's own buckets and models, and its hour histogram. */
-function legacyDays(raw: unknown): Map<string, DayBuckets> {
-  const days = new Map<string, DayBuckets>()
-  if (raw === null || typeof raw !== 'object') return days
-  for (const [day, value] of Object.entries(raw as Record<string, unknown>)) {
-    const stored = storedDay<Partial<Buckets> & { hours?: unknown, models?: unknown }>(value)
-    if (stored === null) continue
-    const buckets: DayBuckets = emptyBuckets()
-    addBuckets(buckets, stored, 1)
-    if (stored.models !== null && typeof stored.models === 'object') {
-      const models = new Map<string, Buckets>()
-      for (const [model, cell] of Object.entries(stored.models as Record<string, unknown>)) {
-        if (cell === null || typeof cell !== 'object') continue
-        const counts = emptyBuckets()
-        addBuckets(counts, cell as Partial<Buckets>, 1)
-        models.set(model, counts)
-      }
-      if (models.size > 0) buckets.models = models
-    }
-    const hours = hoursFromArray(stored.hours)
-    if (isEmptyDay(buckets, hours)) continue
-    if (hours !== null) buckets.hours = hours
-    days.set(day, buckets)
-  }
-  return days
-}
-
-/** Where the fold cache this record replaced was kept. */
-function legacyCachePath(ctx: DshContext): string {
-  return cachePath(ctx, RECORD_FILE)
-}
-
-/**
- * The entries of the fold cache this record replaced, or null when there is no
- * such file. The cache is read at its own path and version: this build never
- * writes it. A file that is there but holds nothing of that version reads as no
- * entries, so the write that follows still removes it.
- */
-function legacyRecord(ctx: DshContext): Map<string, RecordSession> | null {
-  const path = legacyCachePath(ctx)
-  if (!existsSync(path)) return null
-  const sessions = new Map<string, RecordSession>()
-  const parsed = readJsonDocument(ctx, path, 'usage cache')
-  if (parsed === null || typeof parsed !== 'object') return sessions
-  const document = parsed as { version?: unknown, sessions?: unknown }
-  if (document.version !== LEGACY_CACHE_VERSION) return sessions
-  if (document.sessions === null || typeof document.sessions !== 'object') return sessions
-  for (const [id, value] of Object.entries(document.sessions as Record<string, unknown>)) {
-    if (value === null || typeof value !== 'object') continue
-    const entry = value as { size?: unknown, mtimeMs?: unknown, days?: unknown }
-    if (!Number.isFinite(entry.size) || !Number.isFinite(entry.mtimeMs)) continue
-    const days = legacyDays(entry.days)
-    if (days.size === 0) continue
-    sessions.set(id, { fingerprint: { size: Number(entry.size), mtimeMs: Number(entry.mtimeMs) }, days })
-  }
-  return sessions
-}
-
 /** What the record file holds right now: nothing yet, a version this build does not read, or entries. */
 type StoredRecord =
   | { kind: 'absent' }
@@ -306,8 +232,7 @@ function readStored(ctx: DshContext): StoredRecord {
  * An absent or unreadable document is written out again whatever the pass found.
  * A version this build does not write is left as it stands: overwriting it would
  * drop the days of the sessions deleted in between, which nothing can fold again
- * (D12). The old fold cache's entries join wherever the record has none of its
- * own for that session.
+ * (D12).
  *
  * @param ctx - host plugin context, for the record's path and the warning a
  *   failure leaves.
@@ -316,11 +241,7 @@ export function readRecord(ctx: DshContext): RecordRead {
   const stored = readStored(ctx)
   if (stored.kind === 'foreign') return { sessions: new Map(), mustWrite: false, writable: false }
   const sessions = stored.kind === 'ours' ? stored.sessions : new Map<string, RecordSession>()
-  const legacy = legacyRecord(ctx)
-  for (const [id, entry] of legacy ?? []) {
-    if (!sessions.has(id)) sessions.set(id, entry)
-  }
-  return { sessions, mustWrite: stored.kind === 'absent' || legacy !== null, writable: true }
+  return { sessions, mustWrite: stored.kind === 'absent', writable: true }
 }
 
 /**
@@ -344,7 +265,7 @@ function overStored(stored: ReadonlyMap<string, RecordSession>, sessions: Readon
 
 /**
  * Write down the sessions this pass ended up with, over whatever the record holds
- * by now, and remove the old fold cache once the record holding it is on disk.
+ * by now.
  *
  * @param ctx - host plugin context, for the record's path and the warning a
  *   failed write leaves.
@@ -364,7 +285,5 @@ export function writeRecord(ctx: DshContext, sessions: ReadonlyMap<string, Recor
   }
   for (const [id, entry] of merged) document.sessions[id] = sessionToStored(entry)
   if (!writeJsonDocument(ctx, pluginPath(ctx, RECORD_FILE), 'usage record', document)) return merged
-  const legacy = legacyCachePath(ctx)
-  if (existsSync(legacy)) unlinkSync(legacy)
   return merged
 }

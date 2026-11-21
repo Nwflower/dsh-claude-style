@@ -247,7 +247,7 @@ export const MODEL_ORDER_ROW_MAX = 160
 /* ---------- the table ---------- */
 
 interface PrefSpecBase {
-  /** Legacy stored values mapped to current meanings; unknown values fall back to the default. */
+  /** Legacy stored values mapped to current meanings; unknown values fall back to the default. Retires at v0.23.0: migrationWriteBack stores the canonical value on the first form read. */
   readonly legacy?: Readonly<Record<string, unknown>>
 }
 
@@ -480,12 +480,42 @@ export function clampPrefs(value: unknown): Prefs {
   return out as unknown as Prefs
 }
 
+/** The palette fields the scheme carry consumes: a stored value in one of them becomes a scheme record. */
+const PALETTE_CARRY_KEYS: PrefKey[] = ['brandAccent', 'customAccent', 'customCanvasLight', 'customCanvasDark', 'customCode', 'inlineCodeColor']
+
+/**
+ * The canonical write-back for stored shapes an earlier build wrote: the
+ * declared legacy values and the palette carry fields, as one patch for the
+ * form store, or null when nothing stored needs carrying. The browser half
+ * writes it once per generation, so the mappings and the carry retire with the
+ * version docs/changes names. Values no declaration maps are left as stored.
+ */
+export function migrationWriteBack(value: unknown): Partial<Prefs> | null {
+  const section: Record<string, unknown> = value !== null && typeof value === 'object' ? value as Record<string, unknown> : {}
+  const clamped = clampPrefs(section)
+  const patch: Record<string, unknown> = {}
+  for (const [key, spec] of Object.entries(PREFS) as [PrefKey, PrefSpec][]) {
+    const raw = section[key]
+    if (spec.legacy !== undefined && (typeof raw === 'string' || typeof raw === 'boolean') && Object.hasOwn(spec.legacy, String(raw))) {
+      patch[key] = clamped[key]
+    }
+  }
+  if (PALETTE_CARRY_KEYS.some(key => section[key] !== undefined && section[key] !== '' && section[key] !== clamped[key])) {
+    for (const key of PALETTE_CARRY_KEYS) patch[key] = clamped[key]
+    patch.paletteSchemes = clamped.paletteSchemes
+    patch.paletteColors = clamped.paletteColors
+  }
+  return Object.keys(patch).length === 0 ? null : patch as Partial<Prefs>
+}
+
 /**
  * The scheme records and the selection, read as one (D97): records that cannot
  * be read are left out, the earlier custom card is carried in as the scheme
  * `custom` and its four fields are left empty, and a selection that names no
  * scheme reads as following the brand. Each thing left out is reported, since
- * the reader's stored choice no longer reads as it was written (D12).
+ * the reader's stored choice no longer reads as it was written (D12). The
+ * carry retires at v0.23.0: migrationWriteBack stores its result on the first
+ * form read.
  */
 function carryPaletteSchemes(out: Record<string, unknown>) {
   const presets: readonly string[] = PALETTE_PRESETS

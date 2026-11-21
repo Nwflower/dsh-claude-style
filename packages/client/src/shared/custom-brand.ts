@@ -132,7 +132,9 @@ export function subscribeBrandImages(listener: (images: BrandImages) => void) {
  * host after the copy is stored. The move waits for the stored preferences
  * (prefsFromForm): the defaults that hold until then carry none of the
  * reader's presets, so a new id taken from them would overwrite one. The name
- * is read as the record is stored, once the host's locale is up.
+ * is read as the record is stored, once the host's locale is up. The move and
+ * the legacy brand routes retire at v0.23.0, after every reader's first load
+ * of a carrying build has taken the originals across.
  */
 async function moveLegacyImages(name: () => string) {
   const held = await adopt(await readHostJson(BRAND_ROUTE, {}))

@@ -1,10 +1,10 @@
-import { BACKGROUND_OPACITY_ATTR, BACKGROUND_OPACITY_MAX, BACKGROUND_OPACITY_VAR, BRAND_ATTR, BRAND_DEEPSEEK, COMPOSER_ATTR, COMPOSER_GAP_ATTR, COMPOSER_GAP_THEME, CONTEXT_DISPLAY_ATTR, CONTEXT_NUMBERS_ATTR, EFFORT_ACCENT_ATTR, FOOTER_ATTR, INTERFACE_FONT_SIZE_ATTR, INTERFACE_FONT_SIZE_VAR, MASCOT_ATTR, MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MOTION_ATTR, MOTION_FULL, MOTION_REDUCED, ONGOING_INDICATOR_ATTR, ONGOING_SIDE_ATTR, PAGE_ZOOM_ATTR, PAGE_ZOOM_VAR, PACKAGE_NAME, PALETTE_ATTR, PALETTE_CARD_ATTR, PREF_DEFAULTS, SEARCH_STYLE_ATTR, SETTINGS_ENTRY_FALLBACK, SIDEBAR_BRAND_ATTR, SIDEBAR_LAYOUT_ATTR, STATS_POSITION_ATTR, STATUS_MOTION_ATTR, TYPEFACE_ATTR } from '../constants'
+import { BACKGROUND_OPACITY_ATTR, BACKGROUND_OPACITY_MAX, BACKGROUND_OPACITY_VAR, BRAND_ATTR, BRAND_DEEPSEEK, COMPOSER_ATTR, COMPOSER_GAP_ATTR, COMPOSER_GAP_THEME, CONTEXT_DISPLAY_ATTR, CONTEXT_NUMBERS_ATTR, EFFORT_ACCENT_ATTR, FOOTER_ATTR, INTERFACE_FONT_SIZE_ATTR, INTERFACE_FONT_SIZE_VAR, MASCOT_ATTR, MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MOTION_ATTR, MOTION_FULL, MOTION_REDUCED, ONGOING_INDICATOR_ATTR, ONGOING_SIDE_ATTR, PAGE_ZOOM_ATTR, PAGE_ZOOM_VAR, PACKAGE_NAME, PALETTE_ATTR, PALETTE_CARD_ATTR, SEARCH_STYLE_ATTR, SETTINGS_ENTRY_FALLBACK, SIDEBAR_BRAND_ATTR, SIDEBAR_LAYOUT_ATTR, STATS_POSITION_ATTR, STATUS_MOTION_ATTR, TYPEFACE_ATTR } from '../constants'
 import { backgroundOpacityOf, projectBackgroundOpacity } from '../shared/background-opacity'
 import { interfaceFontSizeOf, projectInterfaceFontSize } from '../shared/interface-font-size'
 import { pageZoomOf, pageZoomText, projectPageZoomFactor } from '../shared/page-zoom'
 import type { PrefKey, Prefs } from '../constants'
 import type { HostContext } from '@dsh-claude-style/engine/host'
-import { clampPrefs, PREFS, PALETTE_PRESETS } from '@dsh-claude-style/contracts/prefs'
+import { clampPrefs, migrationWriteBack, PALETTE_PRESETS } from '@dsh-claude-style/contracts/prefs'
 import { parsePaletteScheme } from '@dsh-claude-style/contracts/palette-schemes'
 import { parseBrandingPreset } from '@dsh-claude-style/contracts/branding-presets'
 import { loadAppearanceOverlay, onAppearanceOverlayLoaded, readAppearanceOverlay, writeAppearanceOverlay } from '../shared/appearance-overlays'
@@ -28,7 +28,7 @@ const binding = createSettingsBinding({
     readFromForm = true
     adoptPrefs(clampPrefs({ ...value, ...readAppearanceOverlay() }))
     loadAppearanceOverlay()
-    moveLocalPrefs(value)
+    writeBackMigrated(value)
   },
 })
 
@@ -236,42 +236,22 @@ export function resolveMascot(current: Prefs) {
 }
 
 /**
- * Values an earlier build kept in this browser's local storage, by preference:
- * the first time the form carries values, each field the form does not hold
- * yet is written through the form and the local copy dropped.
+ * Stored shapes an earlier build wrote: the first form read of a generation
+ * writes the canonical patch back through the form, so the legacy mappings and
+ * the palette carry can retire with the version docs/changes names. The write
+ * goes straight to the form store rather than the UI overlay; a refused
+ * revision retries on the next load.
  */
-const LOCAL_PREF_KEYS: Partial<Record<PrefKey, string>> = {
-  username: 'dsh-claude-style.username',
-  banLocale: 'dsh-claude-style.banLocale',
-}
-let localPrefsMoved = false
+let migrationWritten = false
 
-/** Whether a stored local value is one this build still accepts for that preference. */
-function localValueUsable(key: PrefKey, stored: string) {
-  const spec = PREFS[key]
-  if (stored === '' || stored === spec.default) return false
-  if (spec.type === 'choice') return spec.values.some((value: string) => value === stored)
-  if (spec.type === 'text') return stored.trim().length <= spec.max
-  return false
-}
-
-function moveLocalPrefs(formValue: Record<string, unknown>) {
-  if (localPrefsMoved) return
-  localPrefsMoved = true
-  for (const [key, storageKey] of Object.entries(LOCAL_PREF_KEYS) as [PrefKey, string][]) {
-    const stored = localStorage.getItem(storageKey)
-    if (stored === null) continue
-    const held = formValue[key] !== undefined && formValue[key] !== PREF_DEFAULTS[key]
-    if (held || !localValueUsable(key, stored)) {
-      localStorage.removeItem(storageKey)
-      continue
-    }
-    // The value was held to the table just above, and each key here is one of
-    // the two string-shaped preferences: the write carries its own type.
-    savePrefs({ [key]: stored } as Partial<Prefs>).then(saved => {
-      if (saved !== null && saved[key] === stored) localStorage.removeItem(storageKey)
-    })
-  }
+function writeBackMigrated(value: Record<string, unknown>) {
+  if (migrationWritten) return
+  migrationWritten = true
+  const patch = migrationWriteBack(value)
+  if (patch === null) return
+  void binding.save(patch).then(accepted => {
+    if (accepted === false) migrationWritten = false
+  })
 }
 
 /**
