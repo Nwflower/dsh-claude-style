@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-21",
+  "group": "improvements",
+  "order": 0,
+  "external": true,
+  "zh": "「新文字淡入」一行加上开关，与动效页其他项一致，一眼看出当前是开还是关，两档的预览卡留在开关下方",
+  "en": "Add a switch to the New-text fade row like the Motion tab's other rows, so its state reads at a glance, with the two answers' preview cards under it."
+}

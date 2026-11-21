@@ -9,6 +9,9 @@ export default {
   prefValues: [CHAT_REVEAL_ON],
   yieldsTo: 'dsh-chat-ux',
   stylesheets: [{ generated: 'reveal-steps', rank: 180 }],
+  // The row is the switch every other on/off row on the page wears, with the
+  // two answers under it as preview cards: the row says what the switch turns
+  // on and off, the cards show what each answer looks like.
   settingsRows: [{
     tab: 'motion',
     rank: 20,
