@@ -38,8 +38,8 @@
       "reason": "The ring a generation whose teardown a client reload dropped left behind in the model slot, swept once when the next generation installs."
     },
     "packages/client/src/features/chat-fold/process-summary.ts": {
-      "count": 3,
-      "reason": "The process groups, read once at install and again when the shell language changes, and the summary marks swept at teardown."
+      "count": 4,
+      "reason": "The process groups, read once at install and again when the shell language changes; the summary marks swept at teardown, both the named headers' and any span written this frame whose measuring pass never ran."
     },
     "packages/client/src/features/chat-send/send-rows.ts": {
       "count": 3,

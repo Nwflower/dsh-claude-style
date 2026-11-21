@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-21",
+  "group": "fixes",
+  "order": 0,
+  "external": true,
+  "zh": "让出页面给其他插件时，进程组摘要随特性一起离开，不再留在宿主的进程标题里",
+  "en": "Take the process group summary off the host's process header when handing the page to another plugin"
+}

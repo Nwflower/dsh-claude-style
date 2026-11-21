@@ -62,7 +62,7 @@ const COMPACT_SEPARATOR = ' · '
 /** On a group root while its header shows the summary; the stylesheet hides the host's words under it. */
 export const PROCESS_SUMMARY_ATTR = 'data-dsh-claude-summary'
 /** On host header copy the summary stands in for; the stylesheet hides every marked element. */
-const PROCESS_SUMMARY_REPLACED_ATTR = 'data-dsh-claude-summary-replaced'
+export const PROCESS_SUMMARY_REPLACED_ATTR = 'data-dsh-claude-summary-replaced'
 /** On the summary while the group's section still runs, which is while its band stands (syncBand). */
 export const PROCESS_SUMMARY_RUNNING_ATTR = 'data-dsh-claude-summary-running'
 /** On the summary: the wording it stands in. */
@@ -71,7 +71,7 @@ export const PROCESS_SUMMARY_FORM_ATTR = 'data-dsh-claude-summary-form'
 const ROLL_ATTR = 'data-dsh-claude-roll'
 /** How long a digit takes to roll, as the stylesheet's animations run it (D9). */
 const ROLL_MS = motionMs('--dsh-claude-duration-roll')
-const SUMMARY_CLASS = 'dsh-claude-process-summary'
+export const PROCESS_SUMMARY_CLASS = 'dsh-claude-process-summary'
 /** The hidden span holding the sentence, whose natural width tells whether the header has room for it. */
 const FIT_CLASS = 'dsh-claude-process-summary-fit'
 /** On the band's copy of the figures, which lays them out the way the summary does (fold.css). */
@@ -216,9 +216,9 @@ export function createProcessSummary() {
 
   /** The summary span of one header, its hidden measurement standing inside it. */
   function summaryOf(header: HTMLElement) {
-    const existing = header.querySelector<HTMLElement>(`:scope > .${SUMMARY_CLASS}`)
+    const existing = header.querySelector<HTMLElement>(`:scope > .${PROCESS_SUMMARY_CLASS}`)
     if (existing !== null) return existing
-    const summary = buildElement('span', SUMMARY_CLASS)
+    const summary = buildElement('span', PROCESS_SUMMARY_CLASS)
     summary.setAttribute(QUIET_ATTR, '')
     summary.setAttribute('aria-hidden', 'true')
     summary.appendChild(buildElement('span', FIT_CLASS))
@@ -357,7 +357,7 @@ export function createProcessSummary() {
   /** Take one header's summary down and give the host's words back. */
   function release(header: HTMLElement) {
     const kept = named.get(header)
-    header.querySelector(`:scope > .${SUMMARY_CLASS}`)?.remove()
+    header.querySelector(`:scope > .${PROCESS_SUMMARY_CLASS}`)?.remove()
     for (const label of header.querySelectorAll(`:scope > [${PROCESS_SUMMARY_REPLACED_ATTR}]`)) label.removeAttribute(PROCESS_SUMMARY_REPLACED_ATTR)
     if (kept !== undefined && header.getAttribute('aria-label') === kept.name) header.removeAttribute('aria-label')
     named.delete(header)
@@ -478,7 +478,7 @@ export function createProcessSummary() {
       const reading = readingOf(candidate)
       if (header === null || reading === null) continue
       const sentence = summaryText(reading.full, 'full')
-      const summary = header.querySelector<HTMLElement>(`:scope > .${SUMMARY_CLASS}`)
+      const summary = header.querySelector<HTMLElement>(`:scope > .${PROCESS_SUMMARY_CLASS}`)
       if (summary === null || fitOf(summary).textContent !== sentence) {
         deferred.set(candidate, sentence)
         continue
@@ -592,6 +592,14 @@ export function createProcessSummary() {
       }
       leaving.clear()
       for (const header of [...named.keys()]) release(header)
+      // A summary written this frame whose measuring pass never ran is the
+      // module's too: it stands in the header before the pass that would name
+      // it, so teardown sweeps every span it wrote, not only the named ones
+      // (D12 — teardown is the one cleanup point).
+      for (const summary of document.querySelectorAll(`.${PROCESS_SUMMARY_CLASS}`)) {
+        const header = summary.parentElement
+        if (header !== null) release(header)
+      }
       if (stopSummarySizes !== null) stopSummarySizes()
       stopSummarySizes = null
       watchedSummaries = []
