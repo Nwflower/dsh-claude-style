@@ -82,7 +82,7 @@ dsh plugin --profile web add dsh-claude-style                    # npm package (
 dsh plugin --profile web add Nwflower/dsh-claude-style#dist      # GitHub release branch
 ```
 
-Also available from the [plugin market](https://github.com/dsh-market/dsh-market) or the Skin Center of dsh-web-all. Keep one theme enabled at a time; dsh ≥ 0.2.2-rc.1 is required, and restart DeepSeek Harness after installing.
+Also available from the [plugin market](https://github.com/dsh-market/dsh-market) or the Skin Center of dsh-web-all. Keep one theme enabled at a time; dsh ≥ 0.2.2-rc.3 is required, and restart DeepSeek Harness after installing.
 
 The official DSH web and desktop frontends supply the browser module `@deepseek-ai/dsh-client-ui-primitives`. Profiles with pnpm’s `autoInstallPeers` disabled can use it without installing the package separately.
 

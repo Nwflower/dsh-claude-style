@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-21",
+  "group": "removals",
+  "order": 0,
+  "external": true,
+  "zh": "宿主下限提高到 0.2.2-rc.3，移除插件自有的手动未读标记与旧宿主的状态服务回退，未读状态完全由宿主提供",
+  "en": "Raise the host floor to 0.2.2-rc.3 and remove the plugin's own manual unread marks and the old-host status service fallback, leaving unread state entirely to the host"
+}

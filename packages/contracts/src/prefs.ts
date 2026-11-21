@@ -231,9 +231,6 @@ export const PROVIDER_ID_MAX = 128
 export const SIDEBAR_HIDDEN_MAX = 32
 export const PANEL_ID_MAX = 128
 export const PLUGINS_PANEL_ID = 'plugins'
-/** Bounds for profile-persisted manual reminders; session ids remain opaque. */
-export const MANUAL_UNREAD_LIMIT = 2048
-export const MANUAL_UNREAD_ID_LIMIT = 1024
 /** Custom-price storage limits; decimal text avoids losing entered digits to floats. */
 export const PRICE_ROWS_MAX = 32
 
@@ -380,8 +377,6 @@ export const PREFS = {
   ongoingIndicator: { type: 'choice', values: ONGOING_INDICATORS, default: ONGOING_INDICATOR_BREATHE },
   /** Leading uses the host slot; trailing leaves that slot available for third-party marks. */
   ongoingIndicatorSide: { type: 'choice', values: ONGOING_SIDES, default: ONGOING_SIDE_LEFT },
-  /** Explicit reminders stay separate from the host's completion-unread state. */
-  manualUnreadIds: { type: 'list', default: [], max: MANUAL_UNREAD_LIMIT, entryMax: MANUAL_UNREAD_ID_LIMIT, drop: [] },
   turnNav: { type: 'boolean', default: true },
   /** Whether a message the reader sent carries edit and retract beside its copy button (features/message-actions). */
   messageActions: { type: 'boolean', default: true },

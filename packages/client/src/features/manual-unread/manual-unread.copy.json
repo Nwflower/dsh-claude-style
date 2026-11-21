@@ -1,6 +1,0 @@
-{
-  "markUnread": { "zh": "标记为未读", "en": "Mark as unread" },
-  "clearUnread": { "zh": "清除未读标记", "en": "Clear unread mark" },
-  "description": { "zh": "手动标记为未读", "en": "Manually marked unread" },
-  "saveFailed": { "zh": "未读标记未能保存，请稍后重试。", "en": "Could not save the unread mark. Please try again." }
-}

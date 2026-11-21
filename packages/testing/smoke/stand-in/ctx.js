@@ -39,6 +39,8 @@
         if (CASE === 'sync-fault') return { current: { get value() { throw new Error('session selection unavailable') } } }
         return { current: { value: { key: sessions !== undefined ? sessions.selected : undefined } } }
       }
+      // The status service the host publishes under its own name; the mascot fixture carries one.
+      if (name === 'uiSession.sessionStatus') return deepy !== undefined ? deepy.uiSession.sessionStatus : undefined
       if (name === 'locale') return localeService
       // The effort case models the documented boundary (D75): the plugin's own context hands no registry out; only the injected scope serves it.
     if (name === 'slots') return CASE === 'effort' ? undefined : slotRegistry

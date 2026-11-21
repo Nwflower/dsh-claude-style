@@ -29,14 +29,14 @@ export async function setup(t, { status, list }) {
     let listNow = initialList
     const uiSession = {
       current: { value: { key: 'a' }, subscribe: () => () => {} },
-      sessionStatus: { getSnapshot: () => statusNow, subscribe: subscribe('status') },
     }
+    const sessionStatus = { getSnapshot: () => statusNow, subscribe: subscribe('status') }
     const sessions = {
       list: { getSnapshot: () => listNow, subscribe: subscribe('list') },
       binding: () => null,
       refresh: () => Promise.resolve(),
     }
-    const services = { uiSession, sessions }
+    const services = { uiSession, 'uiSession.sessionStatus': sessionStatus, sessions }
     const originalGet = window.__ctxOriginalGet ?? window.__ctx.get.bind(window.__ctx)
     window.__ctxOriginalGet = originalGet
     window.__ctx.get = (name) => Object.hasOwn(services, name) ? services[name] : originalGet(name)

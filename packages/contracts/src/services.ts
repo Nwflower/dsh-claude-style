@@ -435,14 +435,13 @@ interface HostCommandResult {
   value?: { matched?: boolean, [field: string]: unknown }
 }
 
-/** The shell's `uiSession`: which session is selected, and how it is doing. */
+/** The shell's `uiSession`: which session is selected. */
 export interface HostUiSessionService {
   current?: {
     value?: { key?: unknown }
     /** Main-view identity changes; absent where a host publishes none. */
     subscribe?(listener: () => void): () => void
   }
-  sessionStatus?: HostSessionStatusService
 }
 
 /** ui-workspace's session menu slot props. */

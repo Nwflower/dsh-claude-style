@@ -57,7 +57,7 @@ function harness(options: { withStatus?: boolean, phase?: string, broken?: boole
     workspaces: { list: workspaces },
     slots: { entries: (name: string) => name === 'sidebar.workspaces' ? [{ store: { create: () => view } }] : [] },
   }
-  if (options.withStatus !== false) services.uiSession = { sessionStatus: status }
+  if (options.withStatus !== false) services['uiSession.sessionStatus'] = status
   const ctx = { get: (name: string) => services[name] } as unknown as HostContext
   return { ctx, running, status, sessions, workspaces }
 }
@@ -156,20 +156,10 @@ function standaloneStatusSetup(attachImmediately: boolean) {
   const h = harness({ withStatus: false })
   let liveRunning = true
   const liveStatus = source(() => new Map([['s1', { running: liveRunning }]]))
-  const uiSession = new Proxy({}, {
-    get(target, prop) {
-      if (prop === 'sessionStatus') throw new Error('cannot get property "uiSession.sessionStatus" without inject')
-      return Reflect.get(target, prop)
-    },
-    has(target, prop) {
-      return prop === 'sessionStatus' ? false : Reflect.has(target, prop)
-    },
-  })
   const services: Record<string, unknown> = {
     sessions: { list: h.sessions },
     workspaces: { list: h.workspaces },
     slots: h.ctx.get('slots'),
-    uiSession,
   }
   if (attachImmediately) services['uiSession.sessionStatus'] = liveStatus
   const fibers: Array<{ deps: readonly string[], callback: (scope: HostContext) => void, disposed: boolean }> = []
@@ -194,7 +184,7 @@ function standaloneStatusSetup(attachImmediately: boolean) {
   }
 }
 
-test('resolves standalone uiSession.sessionStatus without reading an uninjected uiSession property', () => {
+test('resolves the standalone uiSession.sessionStatus service', () => {
   const setup = standaloneStatusSetup(true)
   const view = mount({ ...setup.h, ctx: setup.ctx })
   expect(() => marked(view)).not.toThrow()
@@ -206,12 +196,11 @@ test('resolves standalone uiSession.sessionStatus without reading an uninjected 
   expect(setup.liveStatus.listeners.size).toBe(0)
 })
 
-test('createAttentionFeed accepts late uiSession.sessionStatus injection and cleans up both fibers', () => {
+test('createAttentionFeed accepts late uiSession.sessionStatus injection and cleans up its fiber', () => {
   const setup = standaloneStatusSetup(false)
   const events: string[] = []
   const feed = createAttentionFeed(setup.ctx, (event) => { events.push(event) })
   expect(setup.fibers.map((item) => item.deps)).toEqual([
-    ['uiSession', 'sessions'],
     ['uiSession.sessionStatus', 'sessions'],
   ])
 
@@ -219,7 +208,7 @@ test('createAttentionFeed accepts late uiSession.sessionStatus injection and cle
   expect(events).toEqual([])
 
   setup.services['uiSession.sessionStatus'] = setup.liveStatus
-  setup.fibers[1].callback(setup.ctx)
+  setup.fibers[0].callback(setup.ctx)
   expect(events).toEqual([])
 
   setup.setRunning(false)

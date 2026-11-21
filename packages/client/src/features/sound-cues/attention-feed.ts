@@ -49,16 +49,14 @@ export function createAttentionFeed(ctx: HostContext, onEvent: (event: Attention
     read()
   }
 
-  const legacyFiber = typeof ctx.inject === 'function' ? ctx.inject(['uiSession', 'sessions'], bind) : null
   const statusFiber = typeof ctx.inject === 'function' ? ctx.inject(['uiSession.sessionStatus', 'sessions'], bind) : null
-  if (legacyFiber === null && statusFiber === null) bind(ctx)
+  if (statusFiber === null) bind(ctx)
 
   return {
     dispose() {
       disposed = true
       if (stopStatus !== null) stopStatus()
       if (stopList !== null) stopList()
-      legacyFiber?.dispose()
       statusFiber?.dispose()
     },
   }

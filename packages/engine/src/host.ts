@@ -523,13 +523,10 @@ export function hostUiSession(lookup: HostServiceLookup | null | undefined): Hos
   return uiSession ?? null
 }
 
-/** Live per-session status (`uiSession.sessionStatus`). Current hosts expose it as its own service, where reading the uninjected property off `uiSession` throws; earlier hosts expose it directly on `uiSession`. */
+/** Live per-session status, the host's own `uiSession.sessionStatus` service: the per-session map every status reader follows. */
 export function hostSessionStatus(lookup: HostServiceLookup | null | undefined): HostSessionStatusService | null {
   const direct = lookup?.get('uiSession.sessionStatus') as HostSessionStatusService | undefined
-  if (direct !== undefined && direct !== null) return direct
-  const uiSession = hostUiSession(lookup)
-  if (uiSession !== null && 'sessionStatus' in uiSession) return uiSession.sessionStatus ?? null
-  return null
+  return direct ?? null
 }
 
 /** One session's model directory: the catalog, its load and the pick. */
