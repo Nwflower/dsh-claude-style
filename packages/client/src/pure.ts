@@ -120,6 +120,7 @@ export { interfaceFontSizeOf, interfaceFontSizePercent } from './shared/interfac
 export { unavailableWebfonts, webfontRules } from './shared/webfont-rules'
 export { familyResolves } from './shared/font-presence'
 export { install as installActiveFirst } from './features/active-first/active-first'
+export { default as ACTIVE_FIRST_SHEET } from './features/active-first/active-first.css?raw'
 export { orderDateSeats } from './features/date-groups/date-groups'
 export { install as installRowSkip, WIDTH_SETTLE_MS } from './features/row-skip/row-skip'
 export { ARCHIVED_PAGE_SIZE, archivedOrder, createArchivedList } from './features/workspace/archived-list'

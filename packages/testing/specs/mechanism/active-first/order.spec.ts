@@ -1,182 +1,234 @@
 /**
- * A session that is running stands at the head of its list, waiting rows behind
- * it, each partition keeping the order it came in; a list already standing that
- * way is left untouched.
- *
  * @capability active-first
  * @features active-first
- * @risk A session works quietly in the middle of the list while the reader reads an older conversation, and the row he wants is the one he has to hunt for.
+ * @risk A manual drag is undone, a finished session stays ahead of the host's latest rows, or the keyboard reaches a different session than the visual order suggests.
  */
-import { expect, test } from 'vitest'
-import { SESSION_ONGOING_STATE, SESSION_ONGOING_SELECTOR, SESSION_PHASE_ATTRIBUTE, SESSION_ROW_KEY_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
-import { installActiveFirst } from '@dsh-claude-style/client/pure'
+import { beforeEach, expect, test } from 'vitest'
+import { userEvent } from 'vitest/browser'
+import { ACTIVE_FIRST_SHEET, installActiveFirst } from '@dsh-claude-style/client/pure'
+import { SESSION_ONGOING_STATE, SESSION_PHASE_ATTRIBUTE, SESSION_ROW_KEY_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
+import type { HostSessionGroupBy, HostSessionOrderBy } from '@dsh-claude-style/contracts/services'
+import type { HostContext } from '@dsh-claude-style/engine/host'
+import { surfaceAttribute } from '../../fixtures/surface'
 import { cleanupWith, frames } from '../../fixtures/teardown'
 
+const ROOT = surfaceAttribute('skin.root')
+const PART = surfaceAttribute('skin.part')
+const DATE = surfaceAttribute('date-groups.mode')
 
-function installed() {
-  const stop = installActiveFirst()
+beforeEach(() => {
+  document.body.setAttribute(ROOT, '')
+  const style = document.createElement('style')
+  style.textContent = '.workspace-rows > * { display:block; height:24px } .workspace-rows > * + * { margin-top:2px }' + ACTIVE_FIRST_SHEET
+  document.head.append(style)
+  cleanupWith(() => { style.remove(); document.body.removeAttribute(ROOT); document.body.removeAttribute(DATE) })
+})
+
+/** The view menu and workspace registry are host boundaries (D92). Both publish through native events. */
+function host(groupBy: HostSessionGroupBy = 'flat', orderBy: HostSessionOrderBy | undefined = 'updated') {
+  const viewEvents = new EventTarget()
+  const registryEvents = new EventTarget()
+  const registry = { phase: 'ready', pinnedSessionIds: [] as string[], archivedSessionIds: [] as string[] }
+  const changes = (events: EventTarget) => (listener: () => void) => {
+    events.addEventListener('change', listener)
+    return () => events.removeEventListener('change', listener)
+  }
+  const selection: { groupBy: HostSessionGroupBy, orderBy: HostSessionOrderBy | undefined, archivedFilter: string } = { groupBy, orderBy, archivedFilter: 'default' }
+  const view = {
+    getSnapshot: () => selection,
+    subscribe: changes(viewEvents),
+    actions: {
+      setGroupBy(mode: HostSessionGroupBy) { selection.groupBy = mode; viewEvents.dispatchEvent(new Event('change')) },
+      setArchivedFilter(value: string) { selection.archivedFilter = value; viewEvents.dispatchEvent(new Event('change')) },
+    },
+  }
+  const list = { getSnapshot: () => registry, subscribe: changes(registryEvents) }
+  const services = new Map<string, unknown>([
+    ['workspaces', { list }], ['slots', { entries: (key: string) => key === 'sidebar.workspaces' ? [{ store: { create: () => view } }] : [] }],
+  ])
+  return {
+    ctx: { get: (name: string) => services.get(name) } as HostContext,
+    order(mode: HostSessionOrderBy | undefined) { selection.orderBy = mode; viewEvents.dispatchEvent(new Event('change')) },
+    pins(pinned: string[], archived: string[] = []) {
+      registry.pinnedSessionIds = pinned
+      registry.archivedSessionIds = archived
+      registryEvents.dispatchEvent(new Event('change'))
+    },
+  }
+}
+
+function installed(ctx: HostContext) {
+  const stop = installActiveFirst(ctx)
   cleanupWith(stop)
   return stop
 }
 
-interface Seat {
-  id: string
-  running?: boolean
+function session(id: string, running = false) {
+  const box = document.createElement('span')
+  box.id = id
+  const row = document.createElement('div')
+  row.setAttribute(SESSION_ROW_KEY_ATTRIBUTE, 'session:' + id)
+  row.tabIndex = 0
+  const phase = document.createElement('span')
+  if (running) phase.setAttribute(SESSION_PHASE_ATTRIBUTE, SESSION_ONGOING_STATE)
+  row.append(phase)
+  box.append(row)
+  return { box, row, run() { phase.setAttribute(SESSION_PHASE_ATTRIBUTE, SESSION_ONGOING_STATE) }, finish() { phase.removeAttribute(SESSION_PHASE_ATTRIBUTE) } }
 }
 
-/** A sidebar list of session rows, in the host's own naming. */
-function sessionList(seats: Seat[]) {
+function owner(part = 'list') {
   const list = document.createElement('div')
-  list.setAttribute('role', 'tree')
+  list.className = 'workspace-rows'
+  list.setAttribute(PART, part)
   document.body.append(list)
-  const rows = new Map<string, HTMLElement>()
-  for (const seat of seats) {
-    const row = document.createElement('div')
-    row.setAttribute(SESSION_ROW_KEY_ATTRIBUTE, `session:${seat.id}`)
-    if (seat.running === true) row.append(phaseDot())
-    // The host draws a row inside a box of its own, one child per box: the box
-    // is the row's seat in the list, and the seats are what the list reorders.
-    const box = document.createElement('span')
-    box.append(row)
-    list.append(box)
-    rows.set(seat.id, row)
-  }
-  return { list, rows }
+  return list
 }
 
-/** The dot the host draws in a row whose session is running. */
-function phaseDot() {
-  const dot = document.createElement('span')
-  dot.setAttribute(SESSION_PHASE_ATTRIBUTE, SESSION_ONGOING_STATE)
-  return dot
+function marker(id: string) {
+  const element = document.createElement('div')
+  element.id = id
+  return element
 }
 
-/** The seats a reader sees, in order. */
-function order(list: Element) {
-  // The seat's name is read through the contract's own key attribute, never a
-  // host attribute spelled here.
-  return [...list.querySelectorAll<HTMLElement>(`[${SESSION_ROW_KEY_ATTRIBUTE}]`)].map(row => {
-    const key = row.getAttribute(SESSION_ROW_KEY_ATTRIBUTE) ?? ''
-    return key.startsWith('session:') ? key.slice('session:'.length) : key
+function expectOrder(list: Element, dom: string[], visual = dom) {
+  const children = [...list.children]
+  expect(children.map(child => child.id)).toEqual(dom)
+  expect(children.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top).map(child => child.id)).toEqual(visual)
+}
+
+for (const group of ['flat', 'workspace', 'workspace-tree'] as const) {
+  test(group + ' preserves a manual order throughout activity', async () => {
+    const h = host(group, 'manual')
+    const list = owner(group === 'flat' ? 'list' : 'group-section')
+    const a = session('a'), b = session('b'), c = session('c', true)
+    list.append(a.box, b.box, c.box)
+    installed(h.ctx)
+    b.run()
+    list.prepend(b.box)
+    await frames(2)
+    expectOrder(list, ['b', 'a', 'c'])
+    c.finish()
+    await frames(2)
+    expectOrder(list, ['b', 'a', 'c'])
+    expect(getComputedStyle(list).display).toBe('block')
   })
 }
 
-test('a running session stands at the head of its list', async () => {
-  const { list } = sessionList([{ id: 'a' }, { id: 'b', running: true }, { id: 'c' }])
-  installed()
+test('running sessions follow effective pins, keep host tie order and release the blank after the last finishes', async () => {
+  const h = host()
+  const list = owner()
+  const blank = session('blank'), pin = session('pinned'), archive = session('archived'), a = session('a'), b = session('b')
+  const dom = [blank, pin, archive, a, b].map(item => item.box.id)
+  list.append(blank.box, pin.box, archive.box, a.box, b.box)
+  h.pins(['pinned', 'archived'], ['archived'])
+  installed(h.ctx)
+  a.run(); b.run()
   await frames(2)
-  expect(order(list)).toEqual(['b', 'a', 'c'])
+  expectOrder(list, dom, ['pinned', 'a', 'b', 'blank', 'archived'])
+  a.finish()
+  await frames(2)
+  expectOrder(list, dom, ['pinned', 'b', 'blank', 'archived', 'a'])
+  h.pins(['archived'])
+  await frames(2)
+  expectOrder(list, dom, ['archived', 'b', 'blank', 'pinned', 'a'])
+  b.finish()
+  await frames(2)
+  expectOrder(list, dom)
+  expect(getComputedStyle(list).display).toBe('block')
 })
 
-test('two running sessions keep their own order, ahead of the waiting ones', async () => {
-  const { list } = sessionList([{ id: 'a' }, { id: 'b', running: true }, { id: 'c' }, { id: 'd', running: true }])
-  installed()
+test('new rows, removed rows, host moves and store-only mode changes use the live seats', async () => {
+  const h = host()
+  const list = owner()
+  const a = session('a'), b = session('b'), c = session('c', true), d = session('d')
+  list.append(a.box, b.box, c.box)
+  installed(h.ctx)
+  expectOrder(list, ['a', 'b', 'c'], ['c', 'a', 'b'])
+  b.box.remove(); list.prepend(d.box); list.append(a.box)
   await frames(2)
-  expect(order(list)).toEqual(['b', 'd', 'a', 'c'])
+  expectOrder(list, ['d', 'c', 'a'], ['c', 'd', 'a'])
+  expect(b.box.style.length).toBe(0)
+  h.order('manual')
+  await frames(2)
+  expectOrder(list, ['d', 'c', 'a'])
+  h.order('updated')
+  await frames(2)
+  expectOrder(list, ['d', 'c', 'a'], ['c', 'd', 'a'])
+  h.order(undefined)
+  await frames(2)
+  expectOrder(list, ['d', 'c', 'a'])
 })
 
-test('a list already standing that way is not touched', async () => {
-  const { list } = sessionList([{ id: 'a', running: true }, { id: 'b' }])
-  installed()
-  const moved: MutationRecord[] = []
-  const observer = new MutationObserver(records => moved.push(...records))
-  observer.observe(list, { childList: true })
-  await frames(3)
-  observer.disconnect()
-  expect(moved).toHaveLength(0)
-  expect(order(list)).toEqual(['a', 'b'])
+test('the visual leader inherits the first slot, all gaps hold and Tab follows the visual rows', async () => {
+  const h = host()
+  const before = document.createElement('button')
+  document.body.append(before)
+  const list = owner()
+  const a = session('a'), b = session('b'), c = session('c')
+  list.append(a.box, b.box, c.box)
+  const tops = [a, b, c].map(item => item.box.getBoundingClientRect().top)
+  installed(h.ctx)
+  c.row.focus(); c.run()
+  await frames(2)
+  expectOrder(list, ['a', 'b', 'c'], ['c', 'a', 'b'])
+  expect([c, a, b].map(item => item.box.getBoundingClientRect().top)).toEqual(tops)
+  expect(document.activeElement).toBe(c.row)
+  before.focus()
+  for (const seat of [c, a, b]) {
+    await userEvent.tab()
+    expect(document.activeElement).toBe(seat.row)
+  }
 })
 
-test('a session that starts running later takes the head of the list', async () => {
-  const { list, rows } = sessionList([{ id: 'a' }, { id: 'b' }, { id: 'c' }])
-  installed()
+test('headings and dividers retain their slots and bound each running partition', async () => {
+  const h = host('workspace')
+  const list = owner('group-section')
+  const first = marker('header'), line = marker('divider'), more = marker('more')
+  const a = session('a'), b = session('b', true), c = session('c'), d = session('d', true)
+  list.append(first, a.box, b.box, line, c.box, d.box, more)
+  const dom = ['header', 'a', 'b', 'divider', 'c', 'd', 'more']
+  const slots = [...list.children].map(child => child.getBoundingClientRect().top)
+  installed(h.ctx)
+  expectOrder(list, dom, ['header', 'b', 'a', 'divider', 'd', 'c', 'more'])
+  expect([first, b.box, a.box, line, d.box, c.box, more].map(child => child.getBoundingClientRect().top)).toEqual(slots)
+  list.insertBefore(line, b.box)
   await frames(2)
-  expect(order(list)).toEqual(['a', 'b', 'c'])
-  rows.get('c')?.append(phaseDot())
-  await frames(3)
-  expect(order(list)).toEqual(['c', 'a', 'b'])
+  expectOrder(list, ['header', 'a', 'divider', 'b', 'c', 'd', 'more'], ['header', 'a', 'divider', 'b', 'd', 'c', 'more'])
 })
 
-test('the teardown leaves the rows where they stand', async () => {
-  const { list, rows } = sessionList([{ id: 'a' }, { id: 'b' }])
-  const stop = installed()
+test('date mode, list replacement and teardown release every surviving or detached seat', async () => {
+  const h = host()
+  const list = owner()
+  const a = session('a'), b = session('b', true)
+  list.append(a.box, b.box)
+  const stop = installed(h.ctx)
+  expectOrder(list, ['a', 'b'], ['b', 'a'])
+  document.body.setAttribute(DATE, '')
   await frames(2)
-  expect(order(list)).toEqual(['a', 'b'])
-  rows.get('b')?.append(phaseDot())
-  await frames(3)
-  expect(order(list)).toEqual(['b', 'a'])
+  expectOrder(list, ['a', 'b'])
+  expect([a.box, b.box].every(child => child.style.length === 0)).toBe(true)
+  document.body.removeAttribute(DATE)
+  await frames(2)
+  expectOrder(list, ['a', 'b'], ['b', 'a'])
+  list.remove()
+  const next = owner()
+  const c = session('c'), d = session('d', true)
+  next.append(c.box, d.box)
+  await frames(2)
+  expectOrder(next, ['c', 'd'], ['d', 'c'])
+  expect([a.box, b.box].every(child => child.style.length === 0)).toBe(true)
   stop()
-  rows.get('b')?.querySelector(SESSION_ONGOING_SELECTOR)?.remove()
+  expectOrder(next, ['c', 'd'])
+  expect([c.box, d.box].every(child => child.style.length === 0)).toBe(true)
+  h.order('manual'); h.order('updated')
   await frames(2)
-  expect(order(list)).toEqual(['b', 'a'])
+  expectOrder(next, ['c', 'd'])
 })
 
-test('non-session headers in a shared flat list bound each workspace and group segment', async () => {
-  const list = document.createElement('div')
-  list.setAttribute('role', 'tree')
-  document.body.append(list)
-  const addHeader = (name: string) => {
-    const header = document.createElement('div')
-    header.setAttribute('data-test-header', name)
-    list.append(header)
-  }
-  const rows = new Map<string, HTMLElement>()
-  const boxes = new Map<string, HTMLElement>()
-  const addSeat = (id: string, running = false) => {
-    const row = document.createElement('div')
-    row.setAttribute(SESSION_ROW_KEY_ATTRIBUTE, `session:${id}`)
-    if (running) row.append(phaseDot())
-    // The host draws every row inside a box of its own: the box is the seat.
-    const box = document.createElement('span')
-    box.append(row)
-    list.append(box)
-    boxes.set(id, box)
-    rows.set(id, row)
-  }
-  // Workspace A has an idle session; Workspace B has two groups with running
-  // sessions; workspace C starts with the running row already at its head.
-  addHeader('ws-a')
-  addSeat('a-idle')
-  addHeader('ws-b')
-  addSeat('b-idle')
-  addSeat('b-running', true)
-  addHeader('ws-b-pinned')
-  addSeat('p-idle')
-  addSeat('p-running', true)
-  addHeader('ws-c')
-  addSeat('c-running', true)
-  addSeat('c-idle')
-
-  installed()
-  await frames(2)
-
-  const sequence = [...list.children].map((child) => {
-    const header = child.getAttribute('data-test-header')
-    if (header !== null) return header
-    const row = child.querySelector(`[${SESSION_ROW_KEY_ATTRIBUTE}]`)
-    return row?.getAttribute(SESSION_ROW_KEY_ATTRIBUTE) ?? '?'
-  })
-  expect(sequence).toEqual([
-    'ws-a',
-    'session:a-idle',
-    'ws-b',
-    'session:b-running',
-    'session:b-idle',
-    'ws-b-pinned',
-    'session:p-running',
-    'session:p-idle',
-    'ws-c',
-    'session:c-running',
-    'session:c-idle',
-  ])
-  // No running seat ever crossed a workspace header: it stays inside the boxes
-  // that stand between two headers.
-  expect(boxes.get('b-running')!.nextElementSibling).toBe(boxes.get('b-idle'))
-  expect(boxes.get('p-running')!.nextElementSibling).toBe(boxes.get('p-idle'))
-
-  // A continuous state flip stays inside its own segment.
-  rows.get('b-idle')?.append(phaseDot())
-  rows.get('b-running')?.querySelector(SESSION_ONGOING_SELECTOR)?.remove()
-  await frames(3)
-  expect(order(list)).toEqual(['a-idle', 'b-idle', 'b-running', 'p-running', 'p-idle', 'c-running', 'c-idle'])
+test('an unrelated surface using session keys retains its own layout', () => {
+  const list = owner('third-party-list')
+  list.append(session('a').box, session('b', true).box)
+  installed(host().ctx)
+  expectOrder(list, ['a', 'b'])
+  expect(getComputedStyle(list).display).toBe('block')
 })

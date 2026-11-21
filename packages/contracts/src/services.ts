@@ -64,6 +64,8 @@ export interface HostWorkspaceListSnapshot {
   phase?: string
   items: HostWorkspaceRow[]
   archivedSessionIds: string[]
+  /** Absent while the host has not published its session pin set. */
+  pinnedSessionIds?: readonly string[]
 }
 
 /** One workspace: its identity, its name, where it lives, and the sessions under it. */
@@ -84,12 +86,17 @@ export interface HostWorkspacesService {
 /** Session-list grouping: sibling Workspace sections, a Workspace tree, or one flat list. */
 export type HostSessionGroupBy = 'workspace' | 'workspace-tree' | 'flat'
 
+/** Session order: the reader's saved positions or current recency. */
+export type HostSessionOrderBy = 'manual' | 'updated'
+
 /** Which archived rows the host's tree shows: `default` hides them, `show` keeps them, `only` shows nothing else. */
 export type HostArchivedFilter = 'default' | 'show' | 'only'
 
 /** The workspace browser's view state, as the host's own view menu reads it. */
 export interface HostWorkspaceViewSnapshot {
   groupBy: HostSessionGroupBy
+  /** Absent in hosts that predate manual ordering; ordering features stand down. */
+  orderBy?: HostSessionOrderBy
   /** Absent until the host filters; a missing value reads as `default`. */
   archivedFilter?: HostArchivedFilter
 }
@@ -97,6 +104,8 @@ export interface HostWorkspaceViewSnapshot {
 /** `sidebar.workspaces` returns the view menu's own store; writes through `actions` drive that menu. */
 export interface HostWorkspaceViewStore {
   getSnapshot(): HostWorkspaceViewSnapshot
+  /** The rendered view instance publishes ordering changes even when no row moves. */
+  subscribe?(listener: () => void): () => void
   actions: {
     setGroupBy(mode: HostSessionGroupBy): void
     setArchivedFilter(filter: HostArchivedFilter): void

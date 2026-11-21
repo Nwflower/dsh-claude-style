@@ -1,129 +1,147 @@
-import { SESSION_ONGOING_SELECTOR, SESSION_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { SESSION_ONGOING_SELECTOR, SESSION_PHASE_ATTRIBUTE, SESSION_ROW_KEY_ATTRIBUTE, SESSION_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { observeMatches, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
-import { moveElementsIntoOrder, sessionSeatSegments } from '../../shared/element-order'
+import { hostSnapshot, hostWorkspaceView, hostWorkspaces } from '@dsh-claude-style/engine/host'
+import type { HostContext } from '@dsh-claude-style/engine/host'
+import { PART_ATTR } from '../../constants'
+import { sessionSeatSegments } from '../../shared/element-order'
 
-/**
- * The rows whose session is running, kept at the head of the list they stand in.
- *
- * The sidebar orders a group by the host's own rules — the New Session
- * placeholder, the pinned rows, then the rest by their last answer — and the
- * view store has no word for "running": the row's status dot carries it, the
- * order does not. The order a reader sees is the DOM's, so the order is written
- * there: the running rows stand first and each partition keeps its own order.
- * A list already standing that way is left untouched, which is also what keeps
- * a move from feeding the observer that asked for it.
- *
- * The row is not the element that moves. The host draws every row inside a box
- * of its own — one child per box — so the box is the row's seat in the list:
- * moving the row moves it from one single-child box to another, which changes
- * nothing on screen. The boxes are the seats, and the boxes are what the list
- * reorders; a box speaks for its row's phase.
- *
- * The placeholder's seat is the one position this feature changes: a running
- * row ahead of it is the point, and the placeholder keeps its place in front of
- * the waiting rows.
- */
+const GROUP = '[' + PART_ATTR + '~="group-section"]'
+const LIST = '[' + PART_ATTR + '~="list"], ' + GROUP
+const DATE_MODE = 'data-dsh-claude-date-groups'
+const ACTIVE_LIST = 'data-dsh-claude-active-first'
+const ORDER = '--dsh-claude-active-first-order'
+const SEAT = 'data-dsh-claude-active-first-seat'
 
-export function install() {
-  /** The frame the moves wait for; the rows move before that frame paints. */
+type Source = { subscribe?(listener: () => void): () => void }
+
+/** The host owns every seat. Only a shown workspace list supports this layout (D3, D43). */
+function visualOrder(list: HTMLElement, seats: Map<Element, HTMLElement>, pins: ReadonlySet<string>) {
+  const children = Array.from(list.children)
+  if (!children.every((child): child is HTMLElement => child instanceof HTMLElement)) return null
+  // 按行：成员只在这次分段计算期间有效。
+  const facts = new Map<Element, { box: HTMLElement, running: boolean, rank: number }>()
+  for (const box of children) {
+    const row = seats.get(box)
+    if (!row) continue
+    const running = box.matches(SESSION_ONGOING_SELECTOR) || box.querySelector(SESSION_ONGOING_SELECTOR) !== null
+    const pinned = pins.has(row.getAttribute(SESSION_ROW_KEY_ATTRIBUTE)!)
+    facts.set(box, { box, running, rank: pinned ? 0 : running ? 1 : 2 })
+  }
+  const ordered = children.slice()
+  for (const segment of sessionSeatSegments(list, facts)) {
+    // The host puts the current blank before pins when no session is running.
+    if (!segment.some(seat => seat.running)) continue
+    const at = children.indexOf(segment[0]!.box)
+    segment.sort((a, b) => a.rank - b.rank)
+    ordered.splice(at, segment.length, ...segment.map(seat => seat.box))
+  }
+  return ordered.some((child, index) => child !== children[index]) ? ordered : null
+}
+
+export function install(ctx: HostContext) {
+  // Native sequential focus navigation follows this same visual order. Older
+  // browsers retain their host's list and its keyboard order together.
+  if (!CSS.supports('reading-flow', 'flex-visual')) return () => {}
+  const subscriptions = new Map<Source, () => void>()
+  // 按行：仅保留下次刷新或拆卸时需要清理的列表与直接子节点。
+  let applied = new Map<HTMLElement, HTMLElement[]>()
   let cancelFrame: (() => void) | null = null
 
-  /**
-   * Does this box hold a running session: the host draws the running phase's
-   * dot inside the row (a profile risk: it may draw it on the box instead).
-   */
-  const runs = (box: Element) =>
-    box.matches(SESSION_ONGOING_SELECTOR) || box.querySelector(SESSION_ONGOING_SELECTOR) !== null
-
-  /**
-   * Stand the running rows of one list at its head, the waiting rows behind them.
-   * @param boxes - the seats of one list, in the order the reader sees them.
-   */
-  const lift = (boxes: HTMLElement[]) => {
-    const running = boxes.filter(runs)
-    if (running.length === 0 || running.length === boxes.length) return
-    const runningSet = new Set(running)
-    const rest = boxes.filter((box) => !runningSet.has(box))
-    moveElementsIntoOrder([...running, ...rest])
-  }
-
-  /**
-   * One pass over every list the sidebar draws, each list moved on its own.
-   * A list is the parent of the rows' seats, not the rows' direct parent: the
-   * seats are the boxes, and the boxes share the list.
-   *
-   * The date grouping stands down here: it arranges the same seats by the day
-   * they belong to, and a running row lifted to the very head of the list would
-   * be put back under its own day section on the next pass — two features
-   * rewriting one order, which the reader sees as the list twitching. What runs
-   * right now is already said twice over: the bell's badge and its card, and the
-   * 「优先级」block above the list.
-   */
-  const reorder = () => {
-    if (document.body.hasAttribute('data-dsh-claude-date-groups')) return
-    const seatsByList = new Map<Element, Map<Element, HTMLElement>>()
-    for (const row of rows.all()) {
-      const box = row.parentElement
-      const list = box === null ? null : box.parentElement
-      if (box === null || list === null) continue
-      let known = seatsByList.get(list)
-      if (known === undefined) {
-        known = new Map()
-        seatsByList.set(list, known)
-      }
-      known.set(box, box)
-    }
-    // A shared flat list is split at workspace headings, group headings and
-    // dividers so a running session never crosses another section.
-    for (const [list, known] of seatsByList) {
-      for (const segment of sessionSeatSegments(list, known)) {
-        if (segment.length > 1) lift(segment)
+  function render(next: Map<HTMLElement, HTMLElement[]>) {
+    const children = new Set([...next.values()].flat())
+    for (const [list, prior] of applied) {
+      if (!next.has(list)) list.removeAttribute(ACTIVE_LIST)
+      for (const child of prior) {
+        if (children.has(child)) continue
+        child.style.removeProperty(ORDER)
+        child.removeAttribute(SEAT)
       }
     }
+    for (const [list, ordered] of next) {
+      // Only the flat list starts with a session. Group headers and their
+      // inter-section margins stay in their original positions.
+      const shifted = !list.matches(GROUP) && ordered[0] !== list.firstElementChild
+      const state = shifted ? 'shifted' : ''
+      if (list.getAttribute(ACTIVE_LIST) !== state) list.setAttribute(ACTIVE_LIST, state)
+      ordered.forEach((child, index) => {
+        if (child.style.getPropertyValue(ORDER) !== String(index)) child.style.setProperty(ORDER, String(index))
+        const seat = shifted && index === 0 ? 'leader' : ''
+        if (child.getAttribute(SEAT) !== seat) child.setAttribute(SEAT, seat)
+      })
+    }
+    applied = next
   }
 
-  const schedule = () => {
-    if (cancelFrame !== null) return
-    cancelFrame = requestFrame({
-      write() {
-        cancelFrame = null
-        reorder()
-      },
-    })
-  }
-
-  /** Every session row the sidebar has, whichever list it stands in. */
-  const rows = observeMatches<HTMLElement>(SESSION_ROW_SELECTOR, schedule)
-
-  /**
-   * The host re-renders a row's dot without replacing the row, and puts rows in
-   * place again as answers arrive: both are child-list changes, and the phase
-   * change is the one attribute the dot carries.
-   */
-  const stopRows = subscribeMutations(
-    document.body,
-    { childList: true, subtree: true, attributes: true, attributeFilter: ['data-state'] },
-    (records) => {
-      // Only a change inside a session row can move this order: a streamed
-      // answer reaches the body on every frame, and re-reading every list for
-      // it would put the whole sidebar on the conversation's clock. Rows the
-      // host adds or removes are announced by the registry above.
-      for (const record of records) {
-        const target = record.target
-        if (target instanceof Element && target.closest(SESSION_ROW_SELECTOR) !== null) {
-          schedule()
-          return
+  function refresh() {
+    const view = hostWorkspaceView(ctx)
+    const workspaces = hostWorkspaces(ctx)?.list
+    const sources = new Set<Source>()
+    if (view !== null) sources.add(view)
+    if (workspaces !== undefined) sources.add(workspaces)
+    for (const [source, release] of subscriptions) {
+      if (sources.has(source)) continue
+      release()
+      subscriptions.delete(source)
+    }
+    for (const source of sources) {
+      if (!subscriptions.has(source) && typeof source.subscribe === 'function') {
+        subscriptions.set(source, source.subscribe(schedule))
+      }
+    }
+    // 按行：本次刷新生成当前需要显示排序的列表。
+    const next = new Map<HTMLElement, HTMLElement[]>()
+    if (view?.subscribe && view.getSnapshot().orderBy === 'updated' && !document.body.hasAttribute(DATE_MODE)) {
+      const snapshot = hostSnapshot(workspaces)
+      if (snapshot?.phase !== 'pending' && Array.isArray(snapshot?.pinnedSessionIds) && Array.isArray(snapshot.archivedSessionIds)) {
+        const archived = new Set(snapshot.archivedSessionIds)
+        const pins = new Set(snapshot.pinnedSessionIds.filter(id => !archived.has(id)).map(id => 'session:' + id))
+        // 按行：本次刷新内按父节点收集宿主当前的座位。
+        const lists = new Map<HTMLElement, Map<Element, HTMLElement>>()
+        for (const row of rows.all()) {
+          const box = row.parentElement
+          const list = box?.parentElement
+          if (!box || !list?.matches(LIST) || box.firstElementChild !== row) continue
+          let seats = lists.get(list)
+          if (!seats) lists.set(list, seats = new Map())
+          seats.set(box, row)
+        }
+        for (const [list, seats] of lists) {
+          const ordered = visualOrder(list, seats, pins)
+          if (ordered) next.set(list, ordered)
         }
       }
-    },
-  )
+    }
+    render(next)
+  }
 
-  reorder()
+  function schedule() {
+    if (cancelFrame !== null) return
+    cancelFrame = requestFrame({ write() { cancelFrame = null; refresh() } })
+  }
 
+  const rows = observeMatches<HTMLElement>(SESSION_ROW_SELECTOR, schedule)
+  const stopDate = subscribeMutations(document.body, { attributeFilter: [DATE_MODE] }, schedule)
+  const stopRows = subscribeMutations(document.body, {
+    childList: true, subtree: true, attributeFilter: [SESSION_PHASE_ATTRIBUTE, SESSION_ROW_KEY_ATTRIBUTE, PART_ATTR],
+  }, records => {
+    for (const { target, type, attributeName } of records) {
+      if (!(target instanceof HTMLElement)) continue
+      if (attributeName === PART_ATTR ? target.matches(LIST) || applied.has(target) :
+        target.closest(SESSION_ROW_SELECTOR) || type === 'childList' && target.matches(LIST)) {
+        schedule()
+        return
+      }
+    }
+  })
+  refresh()
   return () => {
     stopRows()
-    if (cancelFrame !== null) cancelFrame()
+    stopDate()
     rows.release()
+    for (const release of subscriptions.values()) release()
+    subscriptions.clear()
+    cancelFrame?.()
+    render(new Map())
   }
 }
