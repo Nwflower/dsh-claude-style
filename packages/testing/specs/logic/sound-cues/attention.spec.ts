@@ -4,7 +4,7 @@
  * @risk A prompt already pending at load cues again, a subagent's finish reads as the task's finish, or a repeated status publication plays the same cue twice.
  */
 import { expect, test } from 'vitest'
-import { attentionEvents, attentionReading } from '@dsh-claude-style/client/pure'
+import { attentionChanges, attentionEvents, attentionReading } from '@dsh-claude-style/client/pure'
 import type { AttentionReading } from '@dsh-claude-style/client/pure'
 import type { HostSessionListSnapshot, HostSessionStatusSnapshot } from '@dsh-claude-style/contracts/services'
 
@@ -53,6 +53,17 @@ test('a top-level session stopping cues; a subagent stopping does not', () => {
 test('a session that starts waiting as it stops answers both events; the cue window keeps one', () => {
   const events = attentionEvents(readings({ a: { running: true } }), readings({ a: { pending: true, running: false } }))
   expect(events).toEqual(['permission', 'finished'])
+})
+
+test('each change carries its session id while the sound projection stays unchanged', () => {
+  const before = readings({ a: { running: true }, b: { running: true } })
+  const next = readings({ a: { pending: true, running: false }, b: { running: false } })
+  expect(attentionChanges(before, next)).toEqual([
+    { event: 'permission', sessionId: 'a' },
+    { event: 'finished', sessionId: 'a' },
+    { event: 'finished', sessionId: 'b' },
+  ])
+  expect(attentionEvents(before, next)).toEqual(['permission', 'finished', 'finished'])
 })
 
 test('a session appearing for the first time is a baseline too', () => {

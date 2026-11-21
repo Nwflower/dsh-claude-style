@@ -1,5 +1,5 @@
 import { hostSessionStatus, hostSessions } from '@dsh-claude-style/engine/host'
-import { attentionEvents, attentionReading } from './attention'
+import { attentionChanges, attentionReading } from './attention'
 import type { AttentionEvent, AttentionReading } from './attention'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { HostSessionListSnapshot, HostSessionStatusSnapshot, HostSnapshotSource } from '@dsh-claude-style/contracts/services'
@@ -12,7 +12,7 @@ import type { HostSessionListSnapshot, HostSessionStatusSnapshot, HostSnapshotSo
  * shell finishes), so `ctx.inject` waits for both where the host offers it; a
  * host without the wait reads what stands now.
  */
-export function createAttentionFeed(ctx: HostContext, onEvent: (event: AttentionEvent) => void) {
+export function createAttentionFeed(ctx: HostContext, onEvent: (event: AttentionEvent, sessionId: string) => void) {
   let previous: Map<string, AttentionReading> | null = null
   let statusSource: HostSnapshotSource<HostSessionStatusSnapshot> | undefined
   let listSource: HostSnapshotSource<HostSessionListSnapshot> | undefined
@@ -26,8 +26,8 @@ export function createAttentionFeed(ctx: HostContext, onEvent: (event: Attention
     const list = typeof listSource?.getSnapshot === 'function' ? listSource.getSnapshot() : null
     const next = attentionReading(status, list)
     if (previous !== null) {
-      const events = attentionEvents(previous, next)
-      for (let i = 0; i < events.length; i++) onEvent(events[i])
+      const changes = attentionChanges(previous, next)
+      for (let i = 0; i < changes.length; i++) onEvent(changes[i]!.event, changes[i]!.sessionId)
     }
     previous = next
   }

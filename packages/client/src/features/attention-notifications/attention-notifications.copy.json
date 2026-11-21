@@ -1,0 +1,11 @@
+{
+  "notificationsTitle": { "zh": "系统通知", "en": "System notifications" },
+  "notificationsDesc": { "zh": "窗口在后台时，提醒你处理会话请求或查看已结束的任务", "en": "When the window is in the background, get notified when a session needs input or a task ends" },
+  "unsupported": { "zh": "当前页面无法使用系统通知。", "en": "System notifications are unavailable on this page." },
+  "denied": { "zh": "通知权限已被阻止，请在此网站的权限设置中允许通知。", "en": "Notifications are blocked. Allow notifications in this site's permissions." },
+  "default": { "zh": "开启时，请允许此网站发送通知。", "en": "Allow notifications for this site when you turn this on." },
+  "requestFailed": { "zh": "无法获取通知权限，请检查此网站的权限设置后重试。", "en": "Couldn't request notification permission. Check this site's permissions and try again." },
+  "notificationTitle": { "zh": "DeepSeek Harness", "en": "DeepSeek Harness" },
+  "permission": { "zh": "有会话需要你处理请求。", "en": "A session needs your input." },
+  "finished": { "zh": "任务已结束。", "en": "A task has ended." }
+}

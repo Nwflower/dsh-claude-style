@@ -306,6 +306,21 @@ body[data-dsh-claude-style] .dsh-claude-settings-row-text {
   padding-right: 48px;
 }
 
+/* A custom inline control keeps its permission or status words beside the
+   switch instead of turning the whole row into a preview card's block. */
+body[data-dsh-claude-style] .dsh-claude-settings-inline-control {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+body[data-dsh-claude-style] .dsh-claude-settings-inline-control [role="status"] {
+  max-width: 240px;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  line-height: 16px;
+}
+
 /* A block row stacks its control under the text — the brand picker's cards
    and the four-way mascot choice need more room than an inline control slot
    gives. A control keeps its own width; only the brand cards span the row. */

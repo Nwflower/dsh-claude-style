@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-21",
+  "group": "new",
+  "order": 0,
+  "external": true,
+  "zh": "新增默认关闭的系统通知，窗口在后台时可提醒会话需要处理请求或任务已经结束，点击通知可返回窗口",
+  "en": "Add opt-in system notifications when a background session needs input or a top-level task ends. Click a notification to return to the window."
+}

@@ -405,6 +405,8 @@ export const PREFS = {
   processRows: { type: 'choice', values: PROCESS_ROWS_LAYOUTS, default: PROCESS_ROWS_FLAT },
   /** Completion/blocked cue gain; default off to avoid unsolicited interruption (D89). */
   soundCues: { type: 'choice', values: SOUND_LEVELS, default: SOUND_LEVEL_OFF },
+  /** Background system notifications; the reader grants permission from the settings switch. */
+  systemNotifications: { type: 'boolean', default: false },
 } as const satisfies Record<string, PrefSpec>
 
 /** One preference's key. */

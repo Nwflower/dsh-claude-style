@@ -126,9 +126,11 @@ export { install as installRowSkip, WIDTH_SETTLE_MS } from './features/row-skip/
 export { ARCHIVED_PAGE_SIZE, archivedOrder, createArchivedList } from './features/workspace/archived-list'
 export type { ArchivedList, ArchivedListActions, ArchivedListDeps, ArchivedListHost } from './features/workspace/archived-list'
 
-export { attentionEvents, attentionReading } from './features/sound-cues/attention'
+export { attentionChanges, attentionEvents, attentionReading } from './features/sound-cues/attention'
 export type { AttentionEvent, AttentionReading } from './features/sound-cues/attention'
 export { createAttentionFeed } from './features/sound-cues/attention-feed'
+export { createNotificationBatch, notificationsInBackground } from './features/attention-notifications/batch'
+export { createNotificationDisplay, notificationPermission } from './features/attention-notifications/display'
 export { RightSessionStatus } from './features/sidebar-status/row-status'
 export { WorkspaceRunningMark } from './features/sidebar-status/group-mark'
 export { WorkspaceGroupStatus } from './features/sidebar-status/group-status'

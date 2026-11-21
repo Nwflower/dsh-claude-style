@@ -243,7 +243,7 @@ function featureRows(slot: SettingsRowSlot, view: SettingsView): SettingsRow[] {
     const node = row.parent === undefined || drawn
       ? controls.row(row.pref, title, description, control, {
         disabled: off,
-        block: drawn,
+        block: drawn && row.controlLayout !== 'inline',
         sub: row.parent !== undefined,
         experimental: row.experimental === true,
       })
