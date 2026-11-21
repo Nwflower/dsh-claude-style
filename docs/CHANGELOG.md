@@ -2,6 +2,64 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [0.21.8] - 2026-11-21
+
+[中文](#cn-0.21.8) | [English](#en-0.21.8)
+
+<h3 id="cn-0.21.8">新增功能</h3>
+
+- 新增默认关闭的系统通知，窗口在后台时可提醒会话需要处理请求或任务已经结束，点击通知可返回窗口
+
+### 体验优化
+
+- 统一侧边聊天及未接管输入卡片中宿主原生模型选择触发器的字号、高度、圆角、悬停态与省略号截断样式
+- 关掉逐字淡入之后，那几条高亮规则也随特性离开页面，长回答的滚动与输入不再为一段不显示的动画付出样式重算
+- 流式回答的逐字淡入不再拖住长回答里的滚动与输入
+- 钠改写的适配表只保留宿主成员，不再读取宿主版本，设置悬停的成员行不再显示起始版本
+
+### 问题修复
+
+- 侧栏保留手动会话顺序。按更新时间排序时，运行中的会话临时显示在本段置顶会话之后，结束后恢复宿主当前的顺序
+- 修复与 dsh-prompt-rewriter 等第三方底栏控件同时启用时控件紧贴或覆盖模型选择器的问题，右槽控件与模型座位保持间距并归零插件朝向座位的微移
+- 修复与 dsh-pause 等第三方底栏控件同时启用时模型名被压窄、Firefox 右侧留白或提前换行的问题
+- 右侧栏的收起按钮只跟随当前会话。切换会话后，上一个会话保留的右侧栏不再让新会话顶栏显示收起按钮，按下收起也不会关掉上一个会话的面板
+- 修复表格边框裁剪、补全数学和箭头符号字体回退并补充滑块空值回归测试
+
+### 移除
+
+- 宿主下限提高到 0.2.2-rc.3，移除插件自有的手动未读标记与旧宿主的状态服务回退，未读状态完全由宿主提供
+
+### 其他变更
+
+- 首次读取设置时把旧值映射与配色携带的结果写回表单，移除用量折叠缓存与本地存储迁移，其余旧值映射和配色、标志迁移定于 v0.23.0 退役
+
+<h3 id="en-0.21.8">New Features</h3>
+
+- Add opt-in system notifications when a background session needs input or a top-level task ends. Click a notification to return to the window.
+
+### Improvements
+
+- Match host model selector triggers in embedded and fallback inline composers to the bottom row typography, height, radius, hover plate and ellipsis truncation
+- Take the reveal's highlight rules off the page with the feature, so a long answer no longer pays style recalculation for a fade that is not shown.
+- Keep the streaming reveal from dragging scrolling and typing in a long answer.
+- Keep only the host member in the sodium rewrite table, stop reading the host release, and drop the starting release from the settings tooltip's member line
+
+### Bug Fixes
+
+- The sidebar respects manual session order. When sorting by update time, running sessions appear below pinned sessions in their section and return to the current host order when they finish
+- Keep foreign composer right-slot controls clear of the model seat with a leading inset and neutralize dsh-prompt-rewriter's seat nudge under the skin's gapless controls row
+- Keep the model name readable and prevent Firefox blank space or premature wrapping with dsh-pause and other nested composer controls
+- The right panel's collapse control follows the visible Session. A right panel retained by a conversation the reader left no longer shows the control in another conversation's header, and pressing it no longer closes that earlier panel
+- Fix table border clipping, add arrow and math symbol font fallbacks, and add sliding-pill null regression test
+
+### Removals
+
+- Raise the host floor to 0.2.2-rc.3 and remove the plugin's own manual unread marks and the old-host status service fallback, leaving unread state entirely to the host
+
+### Chores
+
+- Write legacy preference mappings and palette carry results back to the settings form on first read, remove the usage fold-cache and local-storage migrations, and retire the remaining mappings and the palette and brand migrations at v0.23.0
+
 ## [0.21.7] - 2026-11-20
 
 [中文](#cn-0.21.7) | [English](#en-0.21.7)

@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-21",
-  "group": "chores",
-  "order": 1,
-  "external": false,
-  "zh": "首次读取设置时把旧值映射与配色携带的结果写回表单，移除用量折叠缓存与本地存储迁移，其余旧值映射和配色、标志迁移定于 v0.23.0 退役",
-  "en": "Write legacy preference mappings and palette carry results back to the settings form on first read, remove the usage fold-cache and local-storage migrations, and retire the remaining mappings and the palette and brand migrations at v0.23.0"
-}
