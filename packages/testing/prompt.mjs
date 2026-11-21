@@ -12,6 +12,7 @@ const HOST = {
   composer: '[data-composer-input]', // COMPOSER_INPUT_SELECTOR
   userRow: '[data-chat-flow-kind="user"]', // FLOW_KIND_ATTRIBUTE with the host's user kind
   streaming: '[data-streaming]', // STREAMING_SELECTOR
+  running: '[data-state="running"]', // ROW_PHASE_ATTRIBUTE with RUNNING_STATE
   turnTail: '[data-chat-flow-kind="turn-tail"]',
 }
 
@@ -65,7 +66,12 @@ async function composed(page, text, timeoutMs = 3000) {
 /** Wait until the turn has settled: its tail row is there and nothing streams. */
 async function waitForTurn(page, timeoutMs = 90000) {
   await page.waitForSelector(HOST.turnTail, { timeout: timeoutMs })
-  await page.waitForFunction((selector) => document.querySelectorAll(selector).length === 0, HOST.streaming, { timeout: timeoutMs })
+  // The streaming mark can lift between two pieces of a paced answer while the
+  // turn still runs; the row's own running phase holds until the turn ends, so
+  // the wait reads both and a prompt never lands as a steering mid-turn.
+  await page.waitForFunction(([streaming, running]) =>
+    document.querySelectorAll(streaming).length === 0 && document.querySelectorAll(running).length === 0,
+    [HOST.streaming, HOST.running], { timeout: timeoutMs })
 }
 
 export { sendPrompt, waitForTurn }
