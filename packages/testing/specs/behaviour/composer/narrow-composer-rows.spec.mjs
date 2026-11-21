@@ -68,6 +68,24 @@ async function mountForeignControl(t) {
   await t.settle()
 }
 
+/** Mount dsh-pause's actual shape: an inline-flex root with its own button. */
+async function mountNestedForeignControl(t) {
+  await t.page.evaluate((slot) => {
+    const anchor = document.querySelector(slot)
+    if (anchor === null) throw new Error('the composer right-hand slot is not on the page')
+    const root = document.createElement('div')
+    root.dataset.dshPause = 'true'
+    root.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:0 4px;font-size:12px;line-height:20px;white-space:nowrap'
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.textContent = '暂停'
+    button.style.cssText = 'border:1px solid gray;border-radius:6px;padding:1px 8px;font-size:12px;line-height:18px;white-space:nowrap'
+    root.append(button)
+    anchor.append(root)
+  }, RIGHT_SLOT)
+  await t.settle()
+}
+
 /** What the row does: its layout, its height, the two clusters' alignment and the label's shortening. */
 async function read(t) {
   return t.page.evaluate(([card, layoutMark, part, label, toolbar, rightSlot]) => {
@@ -108,6 +126,33 @@ export default spec({ page: 'model-meter' }, ({ test }) => {
       t.expectThat.equal(state.overflow <= 1, true, 'the card has no horizontal overflow' + at)
       t.expectThat.equal(state.shortened, true, 'the over-long name is shortened inside the row' + at)
     }
+  })
+
+  test('a nested independent control leaves the model name its room and refits when its text changes', async (t) => {
+    await mountPhase(t)
+    await mountNestedForeignControl(t)
+    for (const width of [900, 480, 367]) {
+      await resize(t, width)
+      const state = await read(t)
+      const at = ' at ' + width + 'px: ' + JSON.stringify(state)
+      t.expectThat.equal(state.sameLine, true, 'the nested control shares the conversation row' + at)
+      t.expectThat.equal(state.overflow <= 1, true, 'the card has no horizontal overflow' + at)
+      t.expectThat.boxesApart(state.foreign, state.model, 'the nested control and model name do not overlap' + at)
+      t.expectThat.equal(state.model.width + 1 >= state.model.minWidth, true, 'the model name keeps its recognition floor' + at)
+      if (width === 900) t.expectThat.equal(state.model.width > state.model.minWidth * 2, true, 'a roomy row gives the model name more than its recognition floor' + at)
+      else t.expectThat.equal(state.shortened, true, 'a tighter row spends its shortage on the model name' + at)
+    }
+    await t.page.evaluate((slot) => {
+      const button = document.querySelector(slot + ' > * button')
+      if (button === null) throw new Error('the nested control is not on the page')
+      button.textContent = '已暂停·回车或点此继续'
+    }, RIGHT_SLOT)
+    await t.settle()
+    const changed = await read(t)
+    const after = ' after the control text changed: ' + JSON.stringify(changed)
+    t.expectThat.equal(changed.overflow <= 1, true, 'the wider control still causes no horizontal overflow' + after)
+    t.expectThat.boxesApart(changed.foreign, changed.model, 'the wider control still does not cover the model name' + after)
+    t.expectThat.equal(changed.model.width + 1 >= changed.model.minWidth, true, 'the wider control leaves the recognition floor' + after)
   })
 
   test('a foreign right-hand control keeps its width and shares the row until the model recognition floor', async (t) => {

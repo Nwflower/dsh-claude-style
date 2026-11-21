@@ -1,9 +1,9 @@
 /* @composer-gate */
 /* The actual toolbar, including the hero, owns its natural height. Compact
    with no foreign right-hand control spends a shortage on the model label;
-   a conversation row with one enters at its minimum content width, so it stays
-   on the first line while the label can absorb the shortage and wraps at the
-   label's recognition floor. Stacked always takes the second line. */
+   a conversation row with one spends it there too, wrapping only when the
+   measured recognition floor and the fixed controls no longer fit. Stacked
+   always takes the second line. */
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant][data-dsh-claude-composer-layout] [data-dsh-claude-composer-toolbar] {
   flex-wrap: wrap;
   height: auto;
@@ -29,7 +29,9 @@ body[data-dsh-claude-style] [data-composer-card][data-composer-variant] [data-ds
    name shorten on the first line; once its recognition floor and the fixed
    controls no longer fit, the cluster wraps whole. */
 body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-phase="active"] [data-composer-card][data-composer-variant]:is([data-dsh-claude-composer-layout="wide"], [data-dsh-claude-composer-layout="compact"])[data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] > [data-dsh-claude-part~="trailing"] {
-  flex-basis: min-content;
+  flex: 1 1 0;
+  min-width: var(--dsh-claude-composer-trailing-min, min-content);
+  max-width: fit-content;
 }
 /* The independent control keeps the width its own content asks for. The model
    label is the shrinking item, so no quota or badge paints over a neighbour. */
@@ -174,17 +176,18 @@ body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-comp
 body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn-label {
   min-width: 0;
 }
-/* With an independent control in the cluster, the name may ellipsize to its
-   recognition floor, never to zero. A zero flex basis keeps the name's natural
-   length out of the wrapping decision; the seat's min-content floor still
-   includes its fixed effort control. */
+/* With an independent control in the cluster, the name takes its natural width
+   while the row has room and may ellipsize to its recognition floor, never to
+   zero. The measured cluster floor makes the wrapping decision before the name
+   grows; clipping its box keeps that floor stable in Chromium and Firefox (#427). */
 body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant]:is([data-dsh-claude-composer-layout="wide"], [data-dsh-claude-composer-layout="compact"])[data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat {
-  flex-basis: 0;
-  min-width: min-content;
+  flex: 1 1 0;
+  min-width: 0;
 }
 body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant]:is([data-dsh-claude-composer-layout="wide"], [data-dsh-claude-composer-layout="compact"])[data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat > .dsh-claude-model-seat-model {
-  flex-basis: 0;
+  flex: 1 1 0;
   min-width: calc(10ch + 8px);
+  overflow: hidden;
 }
 body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant]:is([data-dsh-claude-composer-layout="wide"], [data-dsh-claude-composer-layout="compact"])[data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn-label {
   min-width: 10ch;
