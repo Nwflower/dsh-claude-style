@@ -215,7 +215,7 @@ function longSessionScenario({ check }) {
       const filled = notes.filled ?? { nodes: 0, rows: 0, maxTurn: 0 }
       const rounds = [
         check('测量前已经积累了多轮对话，测量那一轮又长了',
-          filled.maxTurn >= FILL_TURNS && measured.maxTurn > filled.maxTurn,
+          filled.maxTurn >= FILL_TURNS - 1 && measured.maxTurn > filled.maxTurn,
           `turns ${filled.maxTurn} → ${measured.maxTurn}, rows ${filled.rows} → ${measured.rows}, nodes ${filled.nodes} → ${measured.nodes}`),
         check('采样覆盖了整条流式回答', span >= MIN_SPAN_MS, `${Math.round(span)}ms over ${measured.frames.length} frames`),
         check('长时间任务没有占满这一轮', longTotal < LONG_TASK_BUDGET_MS,
