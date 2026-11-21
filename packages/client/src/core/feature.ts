@@ -61,6 +61,8 @@ export interface FeatureStylesheetFile {
 export interface FeatureStylesheetGenerated {
   generated: string
   rank: number
+  /** A feature sheet ships apart from the main sheet and is mounted by its feature (D108). */
+  scope?: 'feature'
 }
 
 export type SettingsTabId = 'general' | 'appearance' | 'main-window' | 'sidebar' | 'motion'

@@ -417,6 +417,15 @@ export function buildStylesheet({ sheets, srcDir, sources, tokenDoc, gates, imag
   const relations = new Map()
   const keyframes = new Map()
   const unkeyed = new Map()
+  // A feature sheet travels alone (D108): it has no file to read, no rank to share
+  // and no gate, and a feature mounts it by the name its generator has.
+  const featureNames = new Set()
+  for (const sheet of sheets) {
+    if (sheet.scope !== 'feature') continue
+    if (sheet.generated === undefined) throw new Error(`build: ${sheet.file} asks to travel with a feature; only a generated sheet can (D108)`)
+    if (featureNames.has(sheet.generated)) throw new Error(`build: the generator "${sheet.generated}" travels with a feature twice; a feature mounts one sheet per name (D108)`)
+    featureNames.add(sheet.generated)
+  }
   const processed = sheets.map((sheet) => {
     const source = sheet.file === TOKEN_SHEET
       ? tokenSheet(tokenDoc, gates, images)
@@ -425,7 +434,7 @@ export function buildStylesheet({ sheets, srcDir, sources, tokenDoc, gates, imag
         : fs.readFileSync(path.join(srcDir, sheet.file), 'utf8').replace(/\r\n/g, '\n')
     return { sheet, text: processSheet(sheet, source, gates, names, read, parts, relations, keyframes, unkeyed).replace(/\n+$/, '') }
   })
-  const joined = (surface) => processed.filter((item) => (item.sheet.scope === 'surface') === surface).map((item) => item.text).join('\n\n')
+  const joined = (scope) => processed.filter((item) => item.sheet.scope === scope).map((item) => item.text).join('\n\n')
   for (const name of names.claude) {
     if (!names.host.has(name)) throw new Error(`build: ${name} is defined under the Claude palette or typeface but has no alias under the host's`)
   }
@@ -440,12 +449,23 @@ export function buildStylesheet({ sheets, srcDir, sources, tokenDoc, gates, imag
     ...tokenDoc.motion.map((item) => item.value),
   ].join('\n')
   checkTokensRead(tokenDoc, readers, sources)
-  const main = minifyCss(joined(false))
+  const main = minifyCss(joined(undefined))
   checkImportance(main, srcDir)
+  // A feature sheet travels with the feature that mounts it (D108): its rules are
+  // not on the page while the feature is off, so they are minified and keyed apart
+  // from the main sheet rather than joined into it.
+  const feature = Object.fromEntries(processed
+    .filter((item) => item.sheet.scope === 'feature')
+    .map((item) => [item.sheet.generated, sheetTemplate(bucketSheet(minifyCss(item.text)), PART_ATTRIBUTE)]))
   // `authored` is the sheet as the sources write it and as the importance
   // record reads it (D9): the runtime sheet finishes it with host class names
   // (D101), so the audit needs this text rather than the mounted one.
-  return { main: sheetTemplate(bucketSheet(main), PART_ATTRIBUTE), surface: sheetTemplate(bucketSheet(minifyCss(joined(true))), PART_ATTRIBUTE), authored: main }
+  return {
+    main: sheetTemplate(bucketSheet(main), PART_ATTRIBUTE),
+    surface: sheetTemplate(bucketSheet(minifyCss(joined('surface'))), PART_ATTRIBUTE),
+    feature,
+    authored: main,
+  }
 }
 
 /**

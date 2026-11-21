@@ -22,7 +22,8 @@ import type { RevealState } from './reveal-params'
  * are scoped under [data-streaming], so elements outside one are filtered out
  * by their ancestor during style matching and pay nothing, and the observer
  * only looks at what changes inside a streaming container. The step count is
- * bounded by what those rules cost: 24 already reads as a continuous fade.
+ * bounded by what those rules cost: eight steps across the fade already read as
+ * continuous, and every step is another rule the page re-matches.
  *
  * A character is drawn the moment it arrives, at the faintest step, by a
  * synchronous paint right after the scan — a scheduled frame would leave one
@@ -76,7 +77,7 @@ function createRevealHighlights(registry: HighlightRegistry, HighlightConstructo
    *
    * The registry is written once per step, the first time it is used; after
    * that only the highlight's own segments change. Unregistering and
-   * registering all twenty-four names every frame would make the browser
+   * registering every step's name on each frame would make the browser
    * rebuild its highlight markers each time. A step that is empty this frame
    * is cleared rather than unregistered — the next frame very likely needs it.
    */
@@ -120,6 +121,10 @@ function createRunColorPublisher() {
 
   return (element: HTMLElement | null) => {
     if (element === null) return
+    // The step rules name this mark as their subject (D107): the element that
+    // carries text is the only thing a highlight can be drawn on, and marking it
+    // once is what keeps each batch from re-matching the streaming block whole.
+    if (!element.hasAttribute('data-dsh-claude-reveal-run')) element.setAttribute('data-dsh-claude-reveal-run', '')
     const style = window.getComputedStyle(element)
     const color = style.color
     if (writtenColors.get(element) === color) return

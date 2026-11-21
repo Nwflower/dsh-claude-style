@@ -310,8 +310,10 @@ export default {
     check('once faded they leave the registry', settled.total === 0, JSON.stringify(settled))
     check('the preference withdraws the engine whole, and switching it back installs it again',
       off.total === 0 && off.mark === false && back.mark === true, JSON.stringify({ off: off, back: back }))
+    check('the step rules leave the page with the engine, so a reveal that is off costs no style recalculation (D108)',
+      shipped.some((frame) => frame.sheet === true) && off.sheet === false && back.sheet === true, JSON.stringify({ shipped: shipped.slice(0, 2), off: off, back: back }))
     check('the animation choice reaches it too: Reduced withdraws the engine, not the system query (D40)',
-      reduced.total === 0 && reduced.mark === false, JSON.stringify(reduced))
+      reduced.total === 0 && reduced.mark === false && reduced.sheet === false, JSON.stringify(reduced))
     const flip = reveal.systemFlip || {}
     check('the system setting flipping under "follow the system" takes the running engine with it, and brings it back',
       (flip.reduced || {}).total === 0 && (flip.reduced || {}).mark === false && (flip.back || {}).mark === true,

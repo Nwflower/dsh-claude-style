@@ -40,6 +40,8 @@
 | [D104](D104-context-parts-eight-categories.md) | 上下文分项按内容块与来源拆成八类，占用仍取服务商读数 | D99 |
 | [D105](D105-logical-conversation-rewind.md) | fork 版本链承载消息回退 |  |
 | [D106](D106-session-overview-details-rail.md) | 会话总览是对话右侧的详情栏，数据由宿主半边折叠 | D102、D94 |
+| [D107](D107-reveal-step-subject.md) | 逐字淡入的步进规则以承载文字的元素为主语 | 无 |
+| [D108](D108-feature-owned-stylesheet.md) | 特性自己的生成样式表随特性挂载 | 无 |
 | [D109](D109-sodium-host-only.md) | 钠改写只适配宿主，不读版本 | D78 |
 
 ## 作废的编号

@@ -4,6 +4,8 @@ declare module 'virtual:dsh-claude-style/generated' {
   export const STYLESHEET: import('@dsh-claude-style/engine/part-classes').SheetTemplate
   /** The surface sheets (`scope: 'surface'`), scoped to `body[data-dsh-claude-surface]` and mounted by the surface feature (D74). */
   export const SURFACE_STYLESHEET: import('@dsh-claude-style/engine/part-classes').SheetTemplate
+  /** The feature sheets (`scope: 'feature'`), by generator name: each is mounted by the feature that owns it (D108). */
+  export const FEATURE_STYLESHEETS: Record<string, import('@dsh-claude-style/engine/part-classes').SheetTemplate>
   /** Vendor lockup markup by brand id (packages/assets/src/icons/combine/). */
   export const COMBINE_SVGS: Record<string, string>
   /** The vendor's own word each lockup draws, by brand id. */
