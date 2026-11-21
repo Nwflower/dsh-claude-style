@@ -91,3 +91,14 @@ test('a press that moves the chosen item before the next pass lands the highligh
   pill.sync(bar)
   expect(highlightBox(bar)).toEqual(checkedBox(bar))
 })
+
+test('null control targets reset cleanly without throwing', async () => {
+  const bar = control()
+  const pill = createSlidingPill('[aria-checked="true"]')
+  cleanups.push(() => pill.release())
+  expect(() => pill.measure(null)).not.toThrow()
+  expect(() => pill.sync(null)).not.toThrow()
+  await firstPlaced(pill, bar)
+  expect(() => pill.sync(null)).not.toThrow()
+  expect(() => pill.sync(null)).not.toThrow()
+})
