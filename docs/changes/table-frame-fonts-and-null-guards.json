@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-20",
+  "group": "fixes",
+  "order": 0,
+  "external": true,
+  "zh": "修复表格边框裁剪、补全数学和箭头符号字体回退并补充滑块空值回归测试",
+  "en": "Fix table border clipping, add arrow and math symbol font fallbacks, and add sliding-pill null regression test"
+}

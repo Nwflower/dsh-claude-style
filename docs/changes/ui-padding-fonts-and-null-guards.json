@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-20",
-  "group": "fixes",
-  "order": 0,
-  "external": true,
-  "zh": "修复消息区横向内边距与表格边框裁剪、补全数学和箭头符号字体回退并补充滑块空值回归测试",
-  "en": "Fix chat row and table clipping, add arrow and math symbol font fallbacks, and add sliding-pill null regression test"
-}
