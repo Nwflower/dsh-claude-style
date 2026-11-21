@@ -21,7 +21,7 @@ export function createSettingsMotionTab(): SettingsTab {
       content: React.createElement(
         React.Fragment,
         null,
-        React.createElement('span', { className: 'dsh-claude-settings-ongoing-label' }, label),
+        React.createElement('span', { className: 'dsh-claude-settings-card-label' }, label),
         React.createElement(
           'span',
           { className: 'dsh-claude-ongoing-sample dsh-claude-ongoing-preview', 'data-look': indicator, 'aria-hidden': 'true' },

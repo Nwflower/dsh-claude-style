@@ -1,6 +1,6 @@
 {
   "caretTitle": { "zh": "光标动画", "en": "Composer caret motion" },
   "caretSample": { "zh": "Hello World!", "en": "Hello World!" },
-  "caretOn": { "zh": "开", "en": "On" },
-  "caretOff": { "zh": "关", "en": "Off" }
+  "caretOn": { "zh": "跟随滑动", "en": "Glides along" },
+  "caretOff": { "zh": "直接跳到", "en": "Jumps ahead" }
 }

@@ -148,8 +148,8 @@ export default {
     const paintCards = settings.paintCards || {}
     const cards = paintCards.cards || []
     const previews = paintCards.previews || {}
-    check('the Motion tab\'s row is two preview cards carrying no text of their own: each names itself for the reader, the stored choice alone is drawn as picked, and a card holds nothing but its words',
-      cards.length === 2 && cards.every((card) => typeof card.label === 'string' && card.label.length > 0 && card.sample === true && card.sampleHidden === true) &&
+    check('the Motion tab\'s row is two preview cards, each naming its paint over a sample of the words taking turns: the stored choice alone is drawn as picked, and a card holds its name and nothing else but that sample',
+      cards.length === 2 && cards.every((card) => typeof card.label === 'string' && card.label.length > 0 && card.named === true && card.sample === true && card.sampleHidden === true) &&
         cards.every((card) => Array.isArray(card.words) && card.words.length === 2 && card.words[0] !== card.words[1]) &&
         cards[0].active === true && cards[0].pressed === 'true' && cards[1].active === false && cards[1].pressed === 'false',
       JSON.stringify(cards))
@@ -189,6 +189,24 @@ export default {
       fade.animation === 'dsh-claude-fade-in' && Number.parseFloat(fade.duration) === 0.24 && fade.fill === 'both' &&
         waiting.opacity === '0' && plain.animation === 'none' && plain.opacity === '1',
       JSON.stringify(revealPreview))
+    const revealRow = settings.revealRow || {}
+    const caretRow = settings.caretRow || {}
+    const enterRow = settings.enterRow || {}
+    const statusRow = settings.statusRow || {}
+    const namedCards = (row, labels) => row.switch === null && JSON.stringify(row.labels) === JSON.stringify(labels) && row.disabled === false && row.cards.every((off) => off === false)
+    check('the rows whose two answers differ only in motion are the two answers: each card names itself over its sample, and the row carries no switch beside them',
+      namedCards(revealRow, ['Fade in', 'Appears at once']) &&
+        namedCards(caretRow, ['Glides along', 'Jumps ahead']) &&
+        namedCards(enterRow, ['Grows into its place', 'Flies up from the composer']),
+      JSON.stringify({ revealRow, caretRow, enterRow }))
+    const enterRowOff = settings.enterRowOff || {}
+    const statusRowOff = settings.statusRowOff || {}
+    check('a row of cards under a switch greys out and takes no input while that switch is off, and comes back with it',
+      statusRow.disabled === false && statusRow.cards.length === 2 && statusRow.cards.every((off) => off === false) &&
+        enterRowOff.disabled === true && enterRowOff.cards.length === 2 && enterRowOff.cards.every((off) => off === true) &&
+        statusRowOff.disabled === true && statusRowOff.cards.length === 2 && statusRowOff.cards.every((off) => off === true) &&
+        JSON.stringify(statusRowOff.labels) === JSON.stringify(['Highlight sweep', 'Colour wash']),
+      JSON.stringify({ statusRow, enterRowOff, statusRowOff }))
     const ongoingSide = settings.ongoingSide || {}
     check('the marker side stands in the ongoing-effect row\'s title line as a named group of two choices, the default left one pressed, and no row of its own',
       ongoingSide.label === 'Marker side' && JSON.stringify(ongoingSide.buttons) === JSON.stringify([{ label: 'Left', pressed: 'true' }, { label: 'Right', pressed: 'false' }]),

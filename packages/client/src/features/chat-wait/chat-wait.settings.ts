@@ -28,13 +28,16 @@ function StatusMotionPicker(props: SettingsRowView) {
   const pickerRef = React.useRef<HTMLDivElement | null>(null)
   const [alt, setAlt] = React.useState(false)
   React.useEffect(() => {
+    // A card that takes no input holds its sample still (settings-controls.ts
+    // greys the row while the line's own switch is off).
+    if (props.disabled) return
     let phase = false
     const timer = window.setInterval(() => {
       phase = !phase
       setAlt(phase)
     }, motionMs('--dsh-claude-period-preview-swap') / 2)
     return () => window.clearInterval(timer)
-  }, [])
+  }, [props.disabled])
   React.useLayoutEffect(() => {
     const picker = pickerRef.current
     if (picker === null) return
@@ -64,12 +67,12 @@ function StatusMotionPicker(props: SettingsRowView) {
   ]
   const [preciseTurn, setPreciseTurn] = React.useState(0)
   React.useEffect(() => {
-    if (!props.prefs.statusDetail) return
+    if (!props.prefs.statusDetail || props.disabled) return
     const timer = window.setInterval(() => {
       setPreciseTurn(turn => (turn + 1) % preciseWords.length)
     }, motionMs('--dsh-claude-period-preview-swap') / preciseWords.length)
     return () => window.clearInterval(timer)
-  }, [props.prefs.statusDetail, preciseWords.length])
+  }, [props.prefs.statusDetail, preciseWords.length, props.disabled])
   // The precise line swaps one specific for the next, so the card runs the
   // line's own two halves (settings-cards.css): the word leaving rises with a
   // blur while the one arriving rises in from below. Both are rendered, and
@@ -108,6 +111,9 @@ function StatusMotionPicker(props: SettingsRowView) {
     value: props.prefs.statusMotion,
     write: (value: Prefs['statusMotion']) => props.write({ statusMotion: value }),
     disabled: props.disabled,
+    // The two paints differ only in how the line's words move, so each card
+    // names its answer over the sample, as the other motion-only rows do.
+    showLabels: true,
     element: pickerRef,
   })
 }

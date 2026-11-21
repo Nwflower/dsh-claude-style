@@ -446,7 +446,7 @@ body[data-dsh-claude-style] .dsh-claude-ongoing-card {
   color: var(--dsw-alias-label-secondary);
 }
 
-body[data-dsh-claude-style] .dsh-claude-settings-ongoing-label {
+body[data-dsh-claude-style] .dsh-claude-settings-card-label {
   font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
   font-weight: 500;
   line-height: 20px;

@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-21",
+  "group": "improvements",
+  "order": 0,
+  "external": true,
+  "zh": "动效页里两档只差动效的设置，两张预览卡本身就是那两档，各自在样例上方写出是哪一档，不再另加一个开关；挂在开关下面的预览卡行，在开关关掉时整行置灰、卡片也停下不动",
+  "en": "Where a Motion row's two answers differ only in motion, the two preview cards are those answers, each naming itself over its sample with no switch beside them, and a row of preview cards under a switch greys out and holds its samples still while that switch is off."
+}
