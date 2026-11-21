@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-19",
+  "updatedAt": "2026-11-20",
   "defaultProfile": "deepseek-v4",
   "profiles": [
     {
@@ -2344,6 +2344,98 @@
       },
       "source": "https://openrouter.ai/api/v1/models/deepseek/deepseek-v4.1-flash/endpoints",
       "verifiedAt": "2026-11-10"
+    },
+    {
+      "id": "turing-weekday",
+      "slug": "turing-weekday",
+      "provider": "Turing",
+      "model": "DeepSeek official / Volcengine routes",
+      "product": "API · named routes",
+      "shortName": "TU",
+      "title": "Turing DeepSeek official / Volcengine routes pricing clock",
+      "subtitle": "Request settlement times in your local time",
+      "kicker": "Half-price off-peak token rates",
+      "policyNote": "deepseek-flash and bytedance/deepseek-v4.1-flash only. Peak/off-peak CNY per million input/cache/output: 2/0.04/8 vs 1/0.02/4. Weekends off-peak; no separate public-holiday exception stated. Turing charges the entire request according to its settlement time (request span end), not submission. Separate per-call tool fees do not vary by time. No published effective date or end date.",
+      "schedule": {
+        "timeZone": "Asia/Shanghai",
+        "peakDays": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "peakWindows": [
+          {
+            "start": "09:00",
+            "end": "12:00"
+          },
+          {
+            "start": "14:00",
+            "end": "18:00"
+          }
+        ],
+        "windowName": "peak"
+      },
+      "periods": {
+        "peak": {
+          "name": "Peak token rate",
+          "status": "Peak token rate if settled now",
+          "badge": "1× peak"
+        },
+        "offPeak": {
+          "name": "Off-peak token rate",
+          "status": "Off-peak token rate if settled now",
+          "badge": "0.5× peak"
+        }
+      },
+      "source": "https://live-turing-docs.cn.llm.tcljd.com/api-guides/billing/usage/",
+      "verifiedAt": "2026-11-20"
+    },
+    {
+      "id": "turing-dashscope",
+      "slug": "turing-dashscope",
+      "provider": "Turing",
+      "model": "DashScope Flash / Pro 0813",
+      "product": "API · named routes",
+      "shortName": "TU",
+      "title": "Turing DashScope Flash / Pro 0813 pricing clock",
+      "subtitle": "Request settlement times in your local time",
+      "kicker": "Half-price off-peak token rates",
+      "policyNote": "dashscope/deepseek-v4.1-flash (CNY peak 2/0.2/8, off-peak 1/0.1/4); deepseek-v4-pro-0813 (CNY peak 9/0.9/27, off-peak 4.5/0.45/13.5); dashscope-intl/deepseek-v4.1-flash (USD peak 0.30/0.03/1.20, off-peak 0.15/0.015/0.60). Rates per million input/cache/output tokens. Undated Pro is flat and excluded. Turing charges the entire request according to its settlement time (request span end), not submission. Separate per-call tool fees do not vary by time. No published effective date or end date.",
+      "schedule": {
+        "timeZone": "Asia/Shanghai",
+        "peakDays": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "peakWindows": [
+          {
+            "start": "08:00",
+            "end": "22:00"
+          }
+        ],
+        "windowName": "peak"
+      },
+      "periods": {
+        "peak": {
+          "name": "Peak token rate",
+          "status": "Peak token rate if settled now",
+          "badge": "1× peak"
+        },
+        "offPeak": {
+          "name": "Off-peak token rate",
+          "status": "Off-peak token rate if settled now",
+          "badge": "0.5× peak"
+        }
+      },
+      "source": "https://live-turing-docs.cn.llm.tcljd.com/api-guides/billing/usage/",
+      "verifiedAt": "2026-11-20"
     }
   ]
 }
