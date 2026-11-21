@@ -13,6 +13,12 @@ export interface AttentionReading {
 /** What a reading changed: a prompt the reader has not answered, or a finished run. */
 export type AttentionEvent = 'permission' | 'finished'
 
+/** One session's change, shared by the sound and system-notification readers. */
+export interface AttentionChange {
+  event: AttentionEvent
+  sessionId: string
+}
+
 /**
  * One reading of every session the cues watch: the list's top-level rows first,
  * with the live status laid over them, then any session the status carries that
@@ -52,13 +58,18 @@ export function attentionReading(status: HostSessionStatusSnapshot | null, list:
  * until it changes. A session that stops running while a new prompt waits
  * answers both events here, and the caller's window keeps the permission cue.
  */
-export function attentionEvents(previous: ReadonlyMap<string, AttentionReading>, next: ReadonlyMap<string, AttentionReading>): AttentionEvent[] {
-  const events: AttentionEvent[] = []
+export function attentionChanges(previous: ReadonlyMap<string, AttentionReading>, next: ReadonlyMap<string, AttentionReading>): AttentionChange[] {
+  const changes: AttentionChange[] = []
   for (const [id, now] of next) {
     const before = previous.get(id)
     if (before === undefined) continue
-    if (now.pending && !before.pending) events.push('permission')
-    if (now.topLevel && before.running && !now.running) events.push('finished')
+    if (now.pending && !before.pending) changes.push({ event: 'permission', sessionId: id })
+    if (now.topLevel && before.running && !now.running) changes.push({ event: 'finished', sessionId: id })
   }
-  return events
+  return changes
+}
+
+/** The sound-only projection; notification readers keep the session id. */
+export function attentionEvents(previous: ReadonlyMap<string, AttentionReading>, next: ReadonlyMap<string, AttentionReading>): AttentionEvent[] {
+  return attentionChanges(previous, next).map(change => change.event)
 }

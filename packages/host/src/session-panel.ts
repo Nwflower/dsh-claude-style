@@ -1,5 +1,5 @@
 /**
- * The session overview panel's host assembly (D102).
+ * The session overview panel's host assembly (D106).
  *
  * The page cannot reach what the panel shows: the session's working directory
  * and Git checkout, the context window's composition, the files the session
@@ -485,7 +485,7 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
       const facts = kept !== undefined && Date.now() - kept.at < CHILD_FACTS_TTL_MS ? kept.facts : await childFacts(id)
       if (kept === undefined || kept.facts !== facts) entry.children.set(id, { facts, at: Date.now() })
       // Every catalogued child keeps a row: the section is the session's own
-      // record of them, and the rail hides finished rows behind its count (D102).
+      // record of them, and the rail hides finished rows behind its count (D106).
       const isRunning = running(id) ?? facts.running
       subagents.push({
         id,

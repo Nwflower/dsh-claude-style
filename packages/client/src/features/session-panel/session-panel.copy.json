@@ -15,10 +15,6 @@
     "zh": "本机",
     "en": "This computer"
   },
-  "workingDirectory": {
-    "zh": "工作目录",
-    "en": "Working directory"
-  },
   "repository": {
     "zh": "仓库",
     "en": "Repository"

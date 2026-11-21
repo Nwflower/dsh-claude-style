@@ -80,7 +80,15 @@
         '<button type="button" aria-haspopup="menu" style="width:28px;height:28px">more</button></div>' +
         '<div class="_headerCorner_b_1" style="width:28px;height:28px"></div></div>' +
         '<div class="_tabs_b_1"><div class="_viewTabs_b_1" role="tablist" data-conversation-tabs="" style="width:152px;height:26px"></div></div>'
-      document.body.insertBefore(header, document.body.firstChild)
+      // The host's layout frame: a child of the root slot whose class local
+      // name is frame, which the part walk marks layout-frame. The band's
+      // right-panel stamp lands on it, and the header and the panel both stand
+      // inside it on a live page.
+      var root = document.querySelector('[data-slot="root"]')
+      var frame = document.createElement('div')
+      frame.className = '_frame_f_1'
+      root.insertBefore(frame, root.firstChild)
+      frame.insertBefore(header, frame.firstChild)
       // The right panel's own collapse control, inside the panel it belongs to:
       // the pass leaves it alone while the skin's control shows in the header's row.
       var panel = document.createElement('div')
@@ -88,7 +96,7 @@
       panel.setAttribute('data-sidebar-right-open', '')
       panel.innerHTML = '<div data-dockkit-strip-chrome style="display:flex">' +
         '<button type="button" data-sidebar-right-toggle style="width:28px;height:28px">collapse</button></div>'
-      document.body.insertBefore(panel, document.body.firstChild)
+      frame.insertBefore(panel, frame.firstChild)
       var hostToggle = panel.querySelector('[data-sidebar-right-toggle]')
       var closeButton = header.querySelector('.dsh-claude-rightbar-close')
       // The parts land on the pass after the subtree arrives (D3).
@@ -185,7 +193,6 @@
         headerSelect: getComputedStyle(header).userSelect,
         utilitiesRegion: getComputedStyle(utilities).webkitAppRegion,
         cornerRegion: getComputedStyle(corner).webkitAppRegion,
-        closeInline: closeButton.style.display,
         closeShown: getComputedStyle(closeButton).display,
         hostToggleDisplay: getComputedStyle(hostToggle).display,
         titleHit: hitAt(title),

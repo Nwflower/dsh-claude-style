@@ -17,7 +17,7 @@ import http from 'node:http'
 import { availableParallelism } from 'node:os'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { launchBrowser, newContextOn } from './browser.mjs'
+import { launchBrowser, newStandInContext } from './browser.mjs'
 import { behaviourPage } from './smoke/page.mjs'
 import { serveStandIn } from './smoke/server.mjs'
 import { readers, expectThat, surface, host } from './specs/fixtures/behaviour.mjs'
@@ -256,7 +256,7 @@ const slug = (id) => id.replace(/[^\w@.-]+/g, '-').replace(/-+/g, '-').slice(0, 
 
 /** Run one test in a context of its own, and answer its result. */
 async function runOne(browser, base, item, runDir) {
-  const context = await newContextOn(browser, { width: item.band.width, height: item.band.height, reducedMotion: 'no-preference' }, { deviceScaleFactor: item.density })
+  const context = await newStandInContext(browser, { width: item.band.width, height: item.band.height, reducedMotion: 'no-preference' }, { deviceScaleFactor: item.density })
   await context.tracing.start({ screenshots: true, snapshots: true })
   const page = await context.newPage()
   const consoleLines = []
@@ -464,7 +464,7 @@ async function openStandIn(asked) {
   const stopped = new Promise((resolve) => { release = resolve })
   const stopSession = () => release()
   try {
-    const context = await newContextOn(browser, { width: asked.band.width, height: asked.band.height, reducedMotion: 'no-preference' })
+    const context = await newStandInContext(browser, { width: asked.band.width, height: asked.band.height, reducedMotion: 'no-preference' })
     const page = await context.newPage()
     // A bisecting run names the features to leave out before the bundle boots;
     // the entry reads the list once, and a page the reader opens never sets it.

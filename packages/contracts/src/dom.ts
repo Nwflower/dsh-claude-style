@@ -333,8 +333,12 @@ export const RIGHTBAR_COLUMN_SELECTOR = '[data-rightbar-col]'
  * a column, so it takes the floor from every column standing above it.
  */
 export const BOTTOM_PANEL_SELECTOR = '[data-dsh-bottom-panel]'
-/** Host collapse control exists only while open; its transformed, clipped subtree requires a header proxy. */
-export const RIGHTBAR_TOGGLE_SELECTOR = '[data-sidebar-right-open] [data-sidebar-right-toggle]'
+/** The right panel publishes its expanded state before the frame starts its width transition. */
+export const RIGHTBAR_OPEN_ATTRIBUTE = 'data-sidebar-right-open'
+/** The panel chrome strip's own collapse control; present only while the panel is open. */
+export const RIGHTBAR_TOGGLE_CONTROL_SELECTOR = '[data-sidebar-right-toggle]'
+/** Host collapse control is usable only while open; its transformed, clipped subtree requires a header proxy. */
+export const RIGHTBAR_TOGGLE_SELECTOR = `[${RIGHTBAR_OPEN_ATTRIBUTE}] ${RIGHTBAR_TOGGLE_CONTROL_SELECTOR}`
 /** The right panel's own box; the host states its width from the viewport's pixels. */
 export const RIGHTBAR_PANEL_SELECTOR = '[data-sidebar-right-panel]'
 /** The right column's drag handle; the host places it from the viewport's own width. */
@@ -374,8 +378,10 @@ export const CONVERSATION_HEADER_SELECTOR = '[data-dsh-claude-part~="conversatio
 export const VIEW_TABS_LIST_SELECTOR = '[data-dsh-claude-part~="view-tabs-list"]'
 /** Host-marked view tablist; plugin tablists elsewhere in the conversation are excluded. */
 export const CONVERSATION_TABS_SELECTOR = '[data-conversation-tabs]'
+/** The host's native view tabs, excluding other plugins' controls in the same strip. */
+export const CONVERSATION_TAB_SELECTOR = '[data-dsh-claude-part~="view-tab"]'
 /** The selected native tab when the current view is visible in the tablist. */
-export const CONVERSATION_ACTIVE_TAB_SELECTOR = '[data-dsh-claude-part~="view-tab"][aria-selected="true"]'
+export const CONVERSATION_ACTIVE_TAB_SELECTOR = `${CONVERSATION_TAB_SELECTOR}[aria-selected="true"]`
 
 /* ---------- the document, the shell and the browser API ---------- */
 

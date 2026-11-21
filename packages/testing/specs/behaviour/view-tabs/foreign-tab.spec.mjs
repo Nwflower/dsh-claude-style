@@ -90,7 +90,7 @@ export default spec({ page: 'view-tabs', bands: ['wide'] }, ({ test }) => {
     t.expectThat.equal(strip.foreignFont, '12px', 'the plugin\'s own label keeps the type it states')
   })
 
-  test('one underline stretches, overshoots and settles under the selected tab in both directions', async (t) => {
+  test('hover stretches the underline and selecting the preview keeps its animation', async (t) => {
     await t.prefs({ motion: 'full' })
     await mount(t)
     const list = t.page.locator(TABLIST)
@@ -107,38 +107,43 @@ export default spec({ page: 'view-tabs', bands: ['wide'] }, ({ test }) => {
       return hovered != null && getComputedStyle(hovered).color !== text
     }, { selector: TABLIST, text: resting.text })
     t.expectThat.equal((await colors()).background, resting.background, 'hover highlights the text without painting a background')
-    const { crossings, reversal } = await list.evaluate(async (element, mark) => {
+    await t.page.mouse.move(0, 0)
+    const { crossings, reversal, selection } = await list.evaluate(async element => {
       const tabs = [...element.querySelectorAll('[role="tab"]')]
       const readLine = () => {
         const line = getComputedStyle(element, '::after')
-        const left = parseFloat(line.left)
-        const width = parseFloat(line.width)
+        const matrix = new DOMMatrixReadOnly(line.transform)
+        const left = matrix.e
+        const width = matrix.a * parseFloat(line.width)
         return { left, right: left + width, center: left + width / 2, width }
       }
-      const select = async (tab) => {
-        const updated = new Promise(resolve => {
-          const observer = new MutationObserver(() => {
-            observer.disconnect()
-            resolve()
-          })
-          observer.observe(element, { attributeFilter: [mark] })
-        })
-        tab.click()
-        await updated
-        // Sample the browser's transition timeline independently of runner frame time (D92).
-        readLine()
-        return element.getAnimations({ subtree: true }).filter(animation =>
-          animation instanceof CSSTransition && ['left', 'right'].includes(animation.transitionProperty))
+      const flight = () => element.getAnimations({ subtree: true }).find(animation =>
+        animation.effect?.pseudoElement === '::after' && animation.effect.target === element)
+      const nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve))
+      const settle = () => window.__dshSmokeProbe.settle()
+      const move = (tab, type, relatedTarget = null) => {
+        tab.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerType: 'mouse', relatedTarget }))
       }
-      const sampleAt = (transitions, progress) => {
-        for (const animation of transitions) {
-          animation.pause()
-          animation.currentTime = Number(animation.effect.getTiming().duration) * progress
+      const hover = async (tab, type = 'pointerover') => {
+        const before = flight()
+        move(tab, type)
+        for (;;) {
+          await nextFrame()
+          const animation = flight()
+          if (animation !== undefined && animation !== before) {
+            animation.pause()
+            animation.currentTime = 0
+            return animation
+          }
         }
+      }
+      // Read the browser's timeline independently of runner frame time (D92).
+      const sampleAt = (animation, progress) => {
+        animation.currentTime = Number(animation.effect.getTiming().duration) * progress
         return readLine()
       }
-      const finish = (transitions) => {
-        for (const animation of transitions) animation.finish()
+      const finish = (animation) => {
+        animation.finish()
         return readLine()
       }
       const matchesTab = (line, tab) => {
@@ -149,40 +154,69 @@ export default spec({ page: 'view-tabs', bands: ['wide'] }, ({ test }) => {
         const labelCenter = box.left - listBox.left + parseFloat(style.paddingLeft) + labelWidth / 2
         return Math.round(line.center) === Math.round(labelCenter) && Math.round(line.width) === Math.round(labelWidth)
       }
+      await settle()
+      flight()?.finish()
       const crossings = []
-      for (const tab of [tabs[1], tabs[0]]) {
+      for (const [tab, type, destination] of [[tabs[1], 'pointerover', tabs[1]], [tabs[1], 'pointerout', tabs[0]]]) {
         const start = readLine()
-        const transitions = await select(tab)
-        const middle = sampleAt(transitions, 0.5)
-        const late = sampleAt(transitions, 0.8)
-        const end = finish(transitions)
+        const animation = await hover(tab, type)
+        const middle = sampleAt(animation, 0.5)
+        const late = sampleAt(animation, 0.8)
+        const end = finish(animation)
         crossings.push({
+          transformOnly: animation.effect.getKeyframes().every(frame => frame.transform && !('left' in frame) && !('right' in frame)),
           stretched: middle.width > Math.max(start.width, end.width),
           travelled: middle.center > Math.min(start.center, end.center) && middle.center < Math.max(start.center, end.center),
           overshot: end.center > start.center ? late.right > end.right : late.left < end.left,
-          landed: matchesTab(end, tab),
+          landed: matchesTab(end, destination),
+          activeUnchanged: tabs[0].getAttribute('aria-selected') === 'true',
         })
       }
-      const before = sampleAt(await select(tabs[1]), 0.5)
-      const reversing = await select(tabs[0])
+      const before = sampleAt(await hover(tabs[1]), 0.5)
+      const reversing = await hover(tabs[0])
       const after = readLine()
+      const reversal = {
+        continuous: Math.round(before.center) === Math.round(after.center) && Math.round(before.width) === Math.round(after.width),
+        landed: matchesTab(finish(reversing), tabs[0]),
+      }
+      const preview = await hover(tabs[1])
+      const halfway = sampleAt(preview, 0.5)
+      tabs[1].click()
+      await settle()
+      const keptFlight = flight() === preview && readLine().center === halfway.center
+      const settled = matchesTab(finish(preview), tabs[1])
+      move(tabs[1], 'pointerout')
+      await settle()
+      const stayedSelected = flight() === undefined && matchesTab(readLine(), tabs[1])
+      tabs[0].click()
+      await settle()
       return {
         crossings,
-        reversal: {
-          continuous: Math.round(before.center) === Math.round(after.center) && Math.round(before.width) === Math.round(after.width),
-          landed: matchesTab(finish(reversing), tabs[0]),
+        reversal,
+        selection: {
+          keptFlight, settled, stayedSelected,
+          withoutHover: flight() === undefined && matchesTab(readLine(), tabs[0]),
         },
       }
-    }, UNDERLINE)
+    })
     for (const crossing of crossings) {
-      t.expectThat.equal(crossing, { stretched: true, travelled: true, overshot: true, landed: true }, 'the line stretches past the new label then returns to its edge')
+      t.expectThat.equal(crossing, { transformOnly: true, stretched: true, travelled: true, overshot: true, landed: true, activeUnchanged: true }, 'hover moves the line without changing selection')
     }
     t.expectThat.equal(reversal, { continuous: true, landed: true }, 'a reversal starts from the visible line and returns to the selected label')
+    t.expectThat.equal(selection, { keptFlight: true, settled: true, stayedSelected: true, withoutHover: true }, 'selection keeps the preview or takes its place immediately')
     await t.prefs({ motion: 'reduced' })
-    await trajectory.click()
-    await list.and(t.page.locator(`[${UNDERLINE}="right"]`)).waitFor()
-    const transition = await list.evaluate(element => getComputedStyle(element, '::after').transitionProperty)
-    t.expectThat.equal(transition, 'none', 'reduced motion applies the underline immediately')
+    await trajectory.hover()
+    await t.settle()
+    const reduced = await list.evaluate(element => {
+      const line = getComputedStyle(element, '::after')
+      const tab = element.querySelector('[role="tab"]:hover')
+      const expected = tab.getBoundingClientRect().left - element.getBoundingClientRect().left + parseFloat(getComputedStyle(tab).paddingLeft)
+      return {
+        animated: element.getAnimations({ subtree: true }).some(animation => animation.effect?.pseudoElement === '::after'),
+        underPointer: Math.round(new DOMMatrixReadOnly(line.transform).e) === Math.round(expected),
+      }
+    })
+    t.expectThat.equal(reduced, { animated: false, underPointer: true }, 'reduced motion moves the underline to the pointer immediately')
     await t.prefs({ viewTabs: false })
     await list.and(t.page.locator(`[${UNDERLINE}]`)).waitFor({ state: 'detached' })
     t.expectThat.equal(await list.evaluate(element => getComputedStyle(element, '::after').content), 'none', 'the disabled setting removes the shared line')

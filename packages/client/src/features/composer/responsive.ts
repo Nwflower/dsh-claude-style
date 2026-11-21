@@ -1,4 +1,5 @@
 import { COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_CONTENT_SELECTOR, CONVERSATION_MAIN_SLOT_SELECTOR, PHASE_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
+import { HOLDS_ATTR } from '../../constants'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { observeSize } from '@dsh-claude-style/engine/bus'
 import { setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
@@ -7,6 +8,68 @@ const TOOLBAR = 'data-dsh-claude-composer-toolbar'
 const LAYOUT = 'data-dsh-claude-composer-layout'
 const FRAME = 'data-dsh-claude-composer-frame'
 const HEIGHT = '--dsh-claude-composer-toolbar-height'
+const TRAILING_MIN = '--dsh-claude-composer-trailing-min'
+const TRAILING = '[data-dsh-claude-part~="trailing"]'
+const MODEL_FLEX = '.dsh-claude-model-seat, .dsh-claude-model-seat-model, .dsh-claude-model-btn'
+const MODEL_LABEL = '.dsh-claude-model-btn-label'
+
+function number(value: string) {
+  const parsed = Number.parseFloat(value)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+function horizontalMargins(style: CSSStyleDeclaration) {
+  return number(style.marginLeft) + number(style.marginRight)
+}
+
+function horizontalInsets(style: CSSStyleDeclaration) {
+  return number(style.paddingLeft) + number(style.paddingRight) + number(style.borderLeftWidth) + number(style.borderRightWidth)
+}
+
+/** The children that really take a flex seat; slot anchors themselves draw no box. */
+function flexItems(container: HTMLElement): HTMLElement[] {
+  const items: HTMLElement[] = []
+  for (const child of Array.from(container.children)) {
+    if (!(child instanceof HTMLElement)) continue
+    const style = getComputedStyle(child)
+    if (style.display === 'none' || style.position === 'absolute' || style.position === 'fixed') continue
+    if (style.display === 'contents') items.push(...flexItems(child))
+    else items.push(child)
+  }
+  return items
+}
+
+/**
+ * The width at which the trailing cluster has every fixed control and the
+ * model's ten-character recognition floor. Only the model's nested flex boxes
+ * need their contents summed; every other effective item has a fixed width.
+ */
+function minimumItemWidth(item: HTMLElement): number {
+  const style = getComputedStyle(item)
+  const margins = horizontalMargins(style)
+  if (item.matches(MODEL_LABEL)) {
+    const floor = number(style.minWidth) + (style.boxSizing === 'border-box' ? 0 : horizontalInsets(style))
+    return floor + margins
+  }
+  if (item.matches(MODEL_FLEX)) return minimumFlexWidth(item) + margins
+  return item.getBoundingClientRect().width + margins
+}
+
+function minimumFlexWidth(container: HTMLElement): number {
+  const style = getComputedStyle(container)
+  const items = flexItems(container)
+  const gap = number(style.columnGap) * Math.max(0, items.length - 1)
+  return horizontalInsets(style) + gap + items.reduce((sum, item) => sum + minimumItemWidth(item), 0)
+}
+
+/** Null while no independent right-hand control is occupying the cluster. */
+export function composerTrailingMinimum(card: HTMLElement, row: HTMLElement): number | null {
+  const held = (card.getAttribute(HOLDS_ATTR) ?? '').split(/\s+/).includes('composer-right-filled')
+  if (!held) return null
+  const trailing = row.querySelector<HTMLElement>(TRAILING)
+  if (trailing === null || trailing.querySelector(MODEL_LABEL) === null) return null
+  return Math.ceil(minimumFlexWidth(trailing))
+}
 
 /** Share the composer's scheduler and size notifications; no second observer. */
 export function createComposerResponsive() {
@@ -30,6 +93,7 @@ export function createComposerResponsive() {
     row.removeAttribute(TOOLBAR)
     card.removeAttribute(LAYOUT)
     card.style.removeProperty(HEIGHT)
+    row.style.removeProperty(TRAILING_MIN)
   }
 
   /** Claim only the main native frame, even before its toolbar has arrived. */
@@ -61,7 +125,7 @@ export function createComposerResponsive() {
 
   function measure() {
     if (cancel !== null || rows.size === 0) return
-    const readings: { card: HTMLElement; row: HTMLElement; layout: string; height: number }[] = []
+    const readings: { card: HTMLElement; row: HTMLElement; layout: string; height: number; trailingMin: number | null }[] = []
     cancel = requestFrame({
       read() {
         for (const [card, row] of rows) {
@@ -69,16 +133,19 @@ export function createComposerResponsive() {
           const width = card.clientWidth
           const inline = card.getAttribute(COMPOSER_VARIANT_ATTRIBUTE) === 'inline'
           const layout = inline ? (width <= 320 ? 'stacked' : width < 440 ? 'compact' : 'wide') : 'wide'
-          readings.push({ card, row, layout, height: row.offsetHeight })
+          readings.push({ card, row, layout, height: row.offsetHeight, trailingMin: composerTrailingMinimum(card, row) })
         }
       },
       write() {
         cancel = null
         let changed = false
-        for (const { card, row, layout, height } of readings) {
+        for (const { card, row, layout, height, trailingMin } of readings) {
           if (rows.get(card) !== row) continue
-          changed = changed || card.getAttribute(LAYOUT) !== layout
+          const minimum = trailingMin === null ? '' : `${trailingMin}px`
+          changed = changed || card.getAttribute(LAYOUT) !== layout || row.style.getPropertyValue(TRAILING_MIN) !== minimum
           setAttributeIfChanged(card, LAYOUT, layout)
+          if (trailingMin === null) row.style.removeProperty(TRAILING_MIN)
+          else row.style.setProperty(TRAILING_MIN, minimum)
           const value = `${height}px`
           if (card.style.getPropertyValue(HEIGHT) !== value) card.style.setProperty(HEIGHT, value)
         }

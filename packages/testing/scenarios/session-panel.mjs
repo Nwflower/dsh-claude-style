@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * session-panel.mjs — the conversation's details rail on the real host (D102,
+ * session-panel.mjs — the conversation's details rail on the real host (D106,
  * D92). Registered in the lane's scenario table
  * (packages/testing/scenarios.mjs). The page readings it judges with live in
  * session-panel-read.mjs beside it.
@@ -86,7 +86,7 @@ export function sessionPanelScenario({ check }) {
      * projections with the streaming text added — counted to each new reading the
      * way the line counts, so a count moves between the panel's own asks and
      * moves a little at a time rather than landing in one step; a table fed from
-     * the route alone can only move after an ask (D102).
+     * the route alone can only move after an ask (D106).
      */
     async duringTurn(context) {
       const { page } = context
@@ -157,7 +157,7 @@ export function sessionPanelScenario({ check }) {
       notes.rail = await readRail(page)
       notes.contextBar = await readContextBar(page)
       // Section controls are independent, retain their choice through a poll,
-      // and keep the browser's Enter and Space activation (D102). The two
+      // and keep the browser's Enter and Space activation (D106). The two
       // figures sections start folded, so only the open ones are pressed shut.
       const sectionToggles = page.locator('.dsh-claude-details .dsh-claude-panel-section > summary')
       notes.disclosures = { initial: await readDisclosures(page) }
@@ -199,7 +199,7 @@ export function sessionPanelScenario({ check }) {
       }
       // A row's whole reading stands in the host's own bubble: an output row
       // carries more than its line's words, so the bubble gives the full path
-      // on any hover (D102).
+      // on any hover (D106).
       const outputRows = page.locator('.dsh-claude-details .dsh-claude-panel-section')
         .filter({ hasText: /产出|Outputs/ }).first().locator('.dsh-claude-panel-row.is-button')
       if (await outputRows.count() > 0) {
@@ -318,9 +318,10 @@ export function sessionPanelScenario({ check }) {
       }
       notes.jobClosed = await page.evaluate(() => document.querySelector('.dsh-claude-panel-job-output') === null)
       notes.utilitiesOpen = await readUtilities(page)
-      // The figures are the host's own words: exact grouped counts, no compact
-      // k/M suffix; and the environment answers the working folder, never the
-      // repositories lying beside it (D102).
+      // The figures carry the host's own words for each row; the number format
+      // follows the shared token-unit choice (the units check below reads it).
+      // The environment answers the working folder, never the repositories
+      // lying beside it (D106).
       notes.wording = await page.evaluate(async (path) => {
         const id = document.querySelector('[data-conversation-session]')?.getAttribute('data-conversation-session') ?? ''
         const response = await fetch(`${path}?id=${encodeURIComponent(id)}`, { credentials: 'same-origin', headers: { accept: 'application/json' } })
@@ -400,7 +401,7 @@ export function sessionPanelScenario({ check }) {
       }
       // The host's own right column stands on this side as well: the rail keeps
       // away while that column holds width, and the header's control hands the
-      // side over by closing it first (D102).
+      // side over by closing it first (D106).
       // The host keeps its own right column's place across the sessions in this
       // home: a panel an earlier scenario left open frames the handover below.
       // The walk starts from the column put away, and its control names the
@@ -478,7 +479,7 @@ export function sessionPanelScenario({ check }) {
       // The rail's first frame stands every section each conversation has, with
       // what the page knows written and the rest under placeholders, while the
       // route's fold is still on its way. Holding the ask makes that frame
-      // something the walk can read (D102).
+      // something the walk can read (D106).
       const held = '**/dsh-claude-style/session-panel**'
       await page.route(held, async (route) => {
         await new Promise(resolve => setTimeout(resolve, 3000))
@@ -499,7 +500,7 @@ export function sessionPanelScenario({ check }) {
           headings: sections.map(section => section.querySelector('.dsh-claude-panel-section-title')?.textContent ?? ''),
           placeholders: rail?.querySelectorAll('.dsh-claude-panel-skeleton').length ?? 0,
           // A folded section's insets beside an open one's: equal insets keep a
-          // heading where it stood across its own fold (D102).
+          // heading where it stood across its own fold (D106).
           insets: {
             folded: sections.filter(section => !section.open && section.previousElementSibling !== null).map(section => getComputedStyle(section).paddingTop),
             open: sections.filter(section => section.open && section.previousElementSibling !== null).map(section => getComputedStyle(section).paddingTop),
@@ -598,7 +599,7 @@ export function sessionPanelScenario({ check }) {
           notes.groupFold?.rows === 0 && notes.groupFold?.expanded === 3 && notes.groupFold?.collapsed === 0,
           JSON.stringify(notes.groupFold ?? null)),
         // A command that finished inside its first second keeps its clock's place
-        // empty rather than print a zero (D102); a longer one writes its clock there.
+        // empty rather than print a zero (D106); a longer one writes its clock there.
         check('a finished command keeps a separate clock and its foreground provenance',
           (rail.jobs ?? []).length >= 2 && rail.jobs.every(job => job.clock && (job.duration === '' || /\d/.test(job.duration)) && words('processForeground').includes(job.execution)),
           JSON.stringify((rail.jobs ?? []).slice(0, 3))),
@@ -619,8 +620,7 @@ export function sessionPanelScenario({ check }) {
           JSON.stringify(notes.layout ?? null)),
         check('the title and session menu stay visible while the tabs and other tools follow the pointer',
           notes.headerVisibility?.overDetails.title === true && notes.headerVisibility.overDetails.menu === true && notes.headerVisibility.overDetails.besideTitle === true &&
-            notes.headerVisibility.overDetails.controls.every(value => value === false) &&
-            [notes.headerVisibility.overConversation, notes.headerVisibility.overHeader].every(({ title, menu, besideTitle, controls }) =>
+            [notes.headerVisibility.overDetails, notes.headerVisibility.overConversation, notes.headerVisibility.overHeader].every(({ title, menu, besideTitle, controls }) =>
               title === true && menu === true && besideTitle === true && controls.every(value => value === true)) &&
             JSON.stringify(notes.headerVisibility.contentBefore) === JSON.stringify(notes.headerVisibility.contentAfter),
           JSON.stringify(notes.headerVisibility ?? null)),
@@ -669,9 +669,9 @@ export function sessionPanelScenario({ check }) {
         hostPanelCheck('the details control closes the host right panel before the rail stands',
           notes.rightPanelHanded?.width === 0 && notes.rightPanelHanded?.rail === true,
           JSON.stringify(notes.rightPanelHanded ?? null)),
-        check('the figures read in the host\'s own words, with grouped counts and no compact suffix',
-          (notes.wording?.rows ?? []).some(row => /\d{1,3}(,\d{3})+ tok$/.test(row)) &&
-            !(notes.wording?.rows ?? []).some(row => /\d[.,\d]*\s*(k|M|B) tok$/.test(row)),
+        check('the figures read in the host\'s own words',
+          (notes.wording?.rows ?? []).some(row => anyOf(words('statsUncachedInput'), row)) &&
+            (notes.wording?.rows ?? []).some(row => anyOf(words('statsModelTime'), row)),
           JSON.stringify((notes.wording?.rows ?? []).slice(0, 12))),
         check('the environment answers the working folder, not the repositories around it',
           Array.isArray(notes.wording?.keys) && notes.wording.keys.includes('checkout') && !notes.wording.keys.includes('repositories'),

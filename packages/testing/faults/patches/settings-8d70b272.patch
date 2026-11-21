@@ -1,8 +1,7 @@
 diff --git a/packages/engine/src/parts-table.ts b/packages/engine/src/parts-table.ts
-index ced9b59..bc3948b 100644
 --- a/packages/engine/src/parts-table.ts
 +++ b/packages/engine/src/parts-table.ts
-@@ -169,7 +169,6 @@ export const CONVERSATION_PARTS: PartTable = {
+@@ -165,7 +165,6 @@ export const CONVERSATION_PARTS: PartTable = {
    card: 'composer-card-box',
    workspaceLabel: 'workspace-chip-label',
    clearButton: 'clear-button',
@@ -10,7 +9,7 @@ index ced9b59..bc3948b 100644
  }
  
  /** The right sidebar's docked panels. */
-@@ -236,6 +235,10 @@ export const PAGE_PARTS: PartTable = {
+@@ -221,6 +220,10 @@ export const PAGE_PARTS: PartTable = {
    panel: 'panel',
    overlay: 'overlay',
    navIcon: 'nav-icon',
@@ -19,5 +18,5 @@ index ced9b59..bc3948b 100644
 +  // is page-wide.
 +  navList: 'nav-list',
    mask: 'mask',
-   tagSystem: 'tag-system',
-   tagUser: 'tag-user',
+   // The image preview's full-window root (ui-primitives' ImageLightbox): the
+   // dialog the reader faces is the backdrop itself, so this name keeps a

@@ -9,9 +9,7 @@
 /* The skin's own control for the right panel, drawn in the header's own row: the
    host's copy cannot leave the panel, whose chrome strip hangs from a
    transformed, clipped subtree, so this button stands in the header instead and
-   presses that one (header-band.ts). Its `display` is the whole of its
-   visibility and is written on the node by the pass — hidden here, shown while
-   the panel is open. */
+   presses that one (D43). */
 body[data-dsh-claude-style] .dsh-claude-rightbar-close {
   display: none;
   align-items: center;
@@ -28,6 +26,18 @@ body[data-dsh-claude-style] .dsh-claude-rightbar-close {
   cursor: pointer;
   -webkit-app-region: no-drag;
 }
+
+/* The host's open state is published before the caption pass reads the controls (D40). */
+body[data-dsh-claude-style] [data-dsh-header-rightbar-open] .dsh-claude-rightbar-close {
+  display: inline-flex;
+}
+
+/* The proxy joins the utilities' 6px gap. Bring its reserve up to the 8px gap
+   the caption pass allots between the utilities and the corner (D9). */
+body[data-dsh-claude-style] [data-dsh-header-band~="actions"] .dsh-claude-rightbar-close {
+  margin-inline-start: 2px;
+}
+
 body[data-dsh-claude-style] .dsh-claude-rightbar-close:hover,
 body[data-dsh-claude-style] .dsh-claude-rightbar-close:focus-visible {
   color: var(--dsw-alias-label-primary, #161616);

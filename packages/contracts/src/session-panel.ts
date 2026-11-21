@@ -1,5 +1,5 @@
 /**
- * The session overview panel's data (D102): one answer describes a session's
+ * The session overview panel's data (D106): one answer describes a session's
  * Environment, Context, Outputs, Changes and Background tasks, folded on the
  * host from its own projections, session log and services. The browser half
  * renders sections in that order and leaves out the ones with nothing to show.
@@ -50,7 +50,7 @@ export interface PanelCompaction {
 }
 
 /**
- * The source a context part is attributed to (D102, D104). The fold publishes these granular
+ * The source a context part is attributed to (D106, D104). The fold publishes these granular
  * kinds; the legend merges `tools`, `mcp` and `skills` into one capability row whose label
  * names whichever of the three are present. `conversation` is the user's and assistant's text
  * bodies; `reasoning` is the assistant's reasoning residual; `attachment` is files and pictures
@@ -113,7 +113,7 @@ export interface PanelChange {
   total: number
 }
 
-/** One command execution or other registered task of the session (D102). */
+/** One command execution or other registered task of the session (D106). */
 export interface PanelJob {
   id: string
   label: string

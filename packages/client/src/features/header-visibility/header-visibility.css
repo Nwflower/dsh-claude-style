@@ -53,8 +53,8 @@ body[data-dsh-claude-style] [data-dsh-header-session-menu]::before {
     --dsh-header-controls-transition: none;
   }
 
-  /* Each group keeps its own stacking level in the native caption (D43). */
-  body[data-dsh-claude-style] [data-phase="active"] [data-dsh-header-visibility] :is([data-dsh-claude-part~="view-tabs"], [data-dsh-header-utility-fade], [data-dsh-claude-part~="header-corner"]) {
+  /* The tab strip joins the toolbar only while the skin seats it there (D43). */
+  body[data-dsh-claude-style] [data-phase="active"] [data-dsh-header-visibility] :is([data-dsh-view-tabs], [data-dsh-header-utility-fade], [data-dsh-claude-part~="header-corner"]) {
     opacity: var(--dsh-header-controls-opacity, 1);
     transition: var(--dsh-header-controls-transition, opacity var(--dsh-claude-timing-surface));
   }

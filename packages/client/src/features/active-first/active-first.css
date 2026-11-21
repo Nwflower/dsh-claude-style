@@ -1,0 +1,21 @@
+/* Workspace rows keep their natural height in both the scrolling flat list and
+   the nested group sections. Reading order follows the displayed flex items. */
+body[data-dsh-claude-style] [data-dsh-claude-active-first] {
+  display: flex;
+  flex-direction: column;
+  reading-flow: flex-visual;
+}
+body[data-dsh-claude-style] [data-dsh-claude-active-first] > [data-dsh-claude-active-first-seat] {
+  flex-shrink: 0;
+  order: var(--dsh-claude-active-first-order);
+}
+
+/* WorkspaceBrowser's flatList gives every sibling after the first a 2px top
+   margin. Transfer that gap to the former first seat when its visual slot moves.
+   Group sections start with their workspace header and retain their own gaps. */
+body[data-dsh-claude-style] [data-dsh-claude-active-first="shifted"] > [data-dsh-claude-active-first-seat]:first-child {
+  margin-top: 2px;
+}
+body[data-dsh-claude-style] [data-dsh-claude-active-first] > [data-dsh-claude-active-first-seat="leader"] {
+  margin-top: 0;
+}

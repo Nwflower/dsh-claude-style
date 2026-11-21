@@ -1,19 +1,16 @@
 diff --git a/packages/client/src/features/home/heat-tip.ts b/packages/client/src/features/home/heat-tip.ts
-index 9add8fbf..cd8642a8 100644
 --- a/packages/client/src/features/home/heat-tip.ts
 +++ b/packages/client/src/features/home/heat-tip.ts
-@@ -57,8 +57,12 @@ export function placeHeatTip(cell: HTMLElement, grid: HTMLElement, width: number
+@@ -37,8 +37,10 @@ export function placeHeatTip(cell: HTMLElement, grid: HTMLElement, width: number
    const cellBox = inPageBox(cell.getBoundingClientRect())
    const centred = cellBox.left + cellBox.width / 2 - width / 2
    const left = Math.min(Math.max(centred, gridBox.left), gridBox.right - width)
 -  // The pill stands above its cell, whatever room the cell holds below it.
--  const side: HeatTipPlacement['side'] = 'above'
+-  const side = 'above' as HeatTipPlacement['side']
 +  const above = cellBox.top - gridBox.top
 +  const below = gridBox.bottom - cellBox.bottom
-+  // The lower side takes the pill only where it holds more room than the upper
-+  // one and room enough for the pill itself: a grid squeezed too short for
-+  // either keeps the pill above, where it has always stood.
++  // Keep the pill above unless the lower side has room.
 +  const side = below > above && below >= height + HEAT_TIP_GAP ? 'below' : 'above'
    const top = side === 'below' ? cellBox.bottom + HEAT_TIP_GAP : cellBox.top - HEAT_TIP_GAP - height
    return {
-     // The pill is positioned in the grid's own box, so the viewport's edges are
+     left: left - gridBox.left,

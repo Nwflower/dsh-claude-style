@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-20",
-  "group": "improvements",
-  "order": 0,
-  "external": true,
-  "zh": "「更多操作」按钮始终紧贴会话标题并显示为向下箭头，网页、窄窗口和桌面标题栏使用同样的排列",
-  "en": "Keep the More actions button flush with the session title, with a downward chevron in the web header, narrow windows, and the desktop caption"
-}

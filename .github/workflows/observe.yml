@@ -45,7 +45,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      # The scope reads the feature manifests, which esbuild bundles (D42).
+      # The scope reads the feature manifests, which esbuild bundles (D76).
       - run: npm ci
       - id: scope
         run: node scripts/ci/ci-scope.mjs --base "${{ github.event.before || 'origin/master' }}"

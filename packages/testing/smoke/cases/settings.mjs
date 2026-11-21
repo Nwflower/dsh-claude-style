@@ -15,7 +15,7 @@ export default {
     const settings = r.settings || {}
     check('the settings section registers with the settings dialog', settings.registered === true, JSON.stringify(settings.registered))
     const expected = {
-      general: ['brand', 'username', 'pageZoom', 'interfaceFontSize', 'sodium', 'soundCues'],
+      general: ['brand', 'username', 'pageZoom', 'interfaceFontSize', 'sodium', 'soundCues', 'systemNotifications'],
       appearance: ['sidebarBrand', 'brandLockup', 'typeface', 'homeLayout', 'homeSessionScope', 'homeRipple', 'mascot', 'mascotScope', 'palette', 'paletteCards', 'backgroundOpacity'],
       'main-window': ['turnNav', 'messageActions', 'conversationWidth', 'viewTabs', 'hideToolbarOutsideConversation', 'headerBand', 'processRows', 'answerAnchor', 'composerScope', 'composerBottomGap', 'questionCard', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelOrder', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent', 'contextDisplay', 'contextNumbers', 'statsPosition', 'statsFooterAlign', 'statsFooterSpeed', 'statsFooterTtft', 'statsFooterCache', 'statsFooterCost', 'statsFooterTotal', 'statsFooterTokenFormat', 'billingCurrency', 'billingTable'],
       sidebar: ['collapseFooter', 'banLocale', 'sidebarSearch', 'searchStyle', 'sidebarEntries', 'workspaceView', 'sidebarPeek', 'sidebarLayout', 'sessionPanel'],

@@ -102,6 +102,11 @@
         }
         // Late image loads write hidden and ask the parts pass to settle. Wait
         // for that host work before measuring the poke's animation frames.
+        // Late image loads write hidden and ask the parts pass to settle. Wait
+        // for that host work before measuring the poke's animation frames. A
+        // lazy image outside the viewport never starts its fetch, so the wait
+        // would hang on it: the probe wants the load work done, and asks for it.
+        Array.from(document.images).forEach(function (image) { image.loading = 'eager' })
         await probe.until(function () { return Array.from(document.images).every(function (image) { return image.complete }) },
           function (read) { return read[read.length - 1] === true }, 'the account images to finish loading')
         await probe.settle()

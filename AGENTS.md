@@ -98,7 +98,6 @@ Each script states its purpose at the top of the script. `node scripts/checks/ve
 | `npm run agents:check` | fail when AGENTS.md's command table differs from `package.json`; the cloud job runs this |
 | `npm run lint` | check source limits, repository references, dependency direction and spec contracts (D76, D92) |
 | `npm run element-collections` | the element-keyed collections the browser half keeps, by file (C1) |
-| `npm run probe` | headless UI regression probe for the composer invariants |
 | `npm run stand-in` | the built plugin's one stand-in-page lane (D92): host-half and installation checks, then the behaviour specs a reader can observe |
 | `npm run behaviour` | live-page debugging and focused spec listing for the stand-in page (D92), driven from outside through Playwright on the BUILT plugin (`lib/`); no running DSH instance is needed |
 | `npm run faults` | whether the specs catch known defects |

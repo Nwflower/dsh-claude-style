@@ -218,7 +218,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * The card's primary button, as the host draws it: the trailing row's button
    * the parts walk marked as the composer's primary one.
    */
-  const PRIMARY_SELECTOR = '[data-dsh-claude-part~="trailing"] button[data-dsh-claude-part~="composer-primary"]'
+  const TRAILING_SELECTOR = '[data-dsh-claude-part~="trailing"]'
+  const PRIMARY_SELECTOR = `${TRAILING_SELECTOR} button[data-dsh-claude-part~="composer-primary"]`
 
   /**
    * Mark each host control on the composer with what it is, so the
@@ -411,7 +412,16 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * `observeMatches` listens without `beforePaint`, so on a large batch it
    * is a task late and the card this batch mounted is not in its list yet.
    */
-  const stopMutations = subscribeMutations(document.body, { childList: true, subtree: true, beforePaint: true }, (records) => {
+  const stopMutations = subscribeMutations(document.body, { childList: true, characterData: true, subtree: true, beforePaint: true }, (records) => {
+    // A third-party control can change its content width without moving the
+    // card or the row, so their ResizeObserver alone cannot see it. Text nodes
+    // have no parentElement on EventTarget, hence the explicit parent read.
+    const controlsChanged = records.some(record => {
+      const target = record.target
+      const element = target instanceof Element ? target : target.parentElement
+      return element !== null && element.closest(TRAILING_SELECTOR) !== null
+    })
+    if (controlsChanged) responsive.measure()
     const pending = addedCards(records).filter(card => !markedForPaint(card))
     if (pending.length === 0) return
     readState()

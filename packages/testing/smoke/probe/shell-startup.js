@@ -12,7 +12,7 @@
 
   probe.step(async function () {
     await probe.onlyFor(['chunk-late'], async function () {
-      // The way a hot reload ends a generation (D72): the chunks apply()
+      // The way a hot reload ends a generation (D76): the chunks apply()
       // sent for still arrive, and must install nothing. The settings section
       // is the one a slot registration would show.
       window.__dispose()

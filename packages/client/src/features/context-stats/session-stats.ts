@@ -1,4 +1,5 @@
 import { conversationSessionId, findConversationSession, hostSessions, observeSession } from '@dsh-claude-style/engine/host'
+import { subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { sessionProjectionFaces } from '../../shared/session-projections'
 import { hostChatSeat } from '../../core/i18n'
@@ -60,7 +61,7 @@ function pressureOccupancy(pressure: HostContextPressureProjection | null) {
  * under the card, never by opening host dialogs. The stream estimate covers text
  * not yet settled; stats-format mirrors host wording.
  */
-export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace | null, provider: () => string | null = () => null) {
+export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace | null, provider: () => string | null = () => null, schedulePass: () => void = () => {}) {
   /** The projections the reading follows: the figures, the route the cost prices at, and the meter's share. */
   const STATS_KEYS = ['sessionStats', 'tokenUsage', 'modelSelection', 'contextPressure']
 
@@ -321,7 +322,7 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
     // The two surfaces read the figures only where they stand — the popover
     // closed reads nothing at all — so the reading the rail prints is taken here,
     // on every frame that moves it, and counts to the same place the line's
-    // figures count to (D102).
+    // figures count to (D106).
     figuresCount.to(reading())
   }
 
@@ -412,6 +413,23 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
   }
 
   /**
+   * The meter's own text is the reading on a host that serves no context-pressure
+   * projection. It changes inside the conversation scroller, whose mutation
+   * batches are content-only and skip this feature's sync (the ring would keep
+   * the last reading a full pass took): the text change asks for a full pass of
+   * its own. The watch follows the meter the last full pass resolved; a meter
+   * the host replaces is re-watched by the next full pass.
+   */
+  let meterTextWatched: HTMLElement | null = null
+  let meterTextStop: (() => void) | null = null
+  function watchMeterText(meter: HTMLElement | null) {
+    if (meter === meterTextWatched) return
+    if (meterTextStop !== null) meterTextStop()
+    meterTextWatched = meter
+    meterTextStop = meter === null ? null : subscribeMutations(meter, { subtree: true, childList: true, characterData: true }, () => schedulePass())
+  }
+
+  /**
    * A pass over the session's numbers: follow the shown conversation's
    * projections, paint the meter's own reading, keep the named surface current.
    */
@@ -436,6 +454,7 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
     // stands beside the main one, and each card's meter opens its own panel.
     const meters = contextMeters()
     const meter = meters[0] ?? null
+    watchMeterText(meter)
     for (let i = 0; i < meters.length; i += 1) markContextMeter(meters[i])
     // Every ring the skin drew is a face of its own: its press reaches its own
     // card's trigger, and the panel it opens hangs from it (stats-binding.ts).
@@ -535,6 +554,9 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
       numbersStopped = true
       if (cancelNumbers !== null) cancelNumbers()
       cancelNumbers = null
+      if (meterTextStop !== null) meterTextStop()
+      meterTextStop = null
+      meterTextWatched = null
       releaseWatch()
       offCost()
       offPrefs()

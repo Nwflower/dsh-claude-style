@@ -96,6 +96,8 @@ export interface FeatureSettingsRow {
   stillWhenReduced?: boolean
   /** Names a feature module collected by the settings build (D76). */
   control?: string
+  /** Custom controls default to a block; an inline one uses the ordinary right-hand control slot. */
+  controlLayout?: 'block' | 'inline'
   /** Values outside this pair display as off and remain stored until flipped. */
   switch?: { on: string, off: string }
   /** Names a feature module that renders live status. */

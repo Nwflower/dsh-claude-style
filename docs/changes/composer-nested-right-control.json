@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-21",
+  "group": "fixes",
+  "order": 0,
+  "external": true,
+  "zh": "修复与 dsh-pause 等第三方底栏控件同时启用时模型名被压窄、Firefox 右侧留白或提前换行的问题",
+  "en": "Keep the model name readable and prevent Firefox blank space or premature wrapping with dsh-pause and other nested composer controls"
+}

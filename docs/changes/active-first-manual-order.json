@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-21",
+  "group": "fixes",
+  "order": 0,
+  "external": true,
+  "zh": "侧栏保留手动会话顺序。按更新时间排序时，运行中的会话临时显示在本段置顶会话之后，结束后恢复宿主当前的顺序",
+  "en": "The sidebar respects manual session order. When sorting by update time, running sessions appear below pinned sessions in their section and return to the current host order when they finish"
+}

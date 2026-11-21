@@ -1,4 +1,4 @@
-/* The conversation's details rail and its sections (D102). The rail is the
+/* The conversation's details rail and its sections (D106). The rail is the
    skin's own fixed column beside the chat, and the body inside keeps the
    column's own fill, inset and scroll (STYLE.md); every rule is scoped by the
    skin's own body mark so a page without the skin never sees it. The whole
@@ -19,7 +19,7 @@ body[data-dsh-claude-style] .dsh-claude-panel {
   font-family: var(--dsw-font-family);
   /* The column scrolls without a bar: a scrollbar in the rail's last 10px reads
      as a second border beside the one that separates it from the chat, and the
-     column is short enough that the wheel finds its end (D102). */
+     column is short enough that the wheel finds its end (D106). */
   scrollbar-width: none;
 }
 
@@ -29,15 +29,15 @@ body[data-dsh-claude-style] .dsh-claude-panel::-webkit-scrollbar {
 
 /* The hairline belongs to a section's top edge, so every section keeps its own
    line whatever its neighbours do, and the column's divider never depends on a
-   page reading of what the next section holds (D102). Folded and open sections
+   page reading of what the next section holds (D106). Folded and open sections
    keep the same insets, so a heading stands where it stood across its own fold
-   and the line the reader pressed stays under the pointer (D102). */
+   and the line the reader pressed stays under the pointer (D106). */
 body[data-dsh-claude-style] .dsh-claude-panel-section {
   display: block;
   min-width: 0;
   flex: none;
   padding: 16px 0;
-  border-top: 1px solid var(--dsh-claude-divider);
+  border-top: 0.5px solid var(--dsh-claude-divider);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-section:first-child {
@@ -59,14 +59,14 @@ body[data-dsh-claude-style] .dsh-claude-panel-heading {
      it; the browser's bold on a heading element is what this rule takes back. */
   font-weight: 400;
   /* The rail's section titles use UI type; the page's display headings use
-     the serif family and tighter tracking (D9, D97, D102). */
+     the serif family and tighter tracking (D9, D97, D106). */
   font-family: var(--dsw-font-family);
   letter-spacing: normal;
   line-height: 20px;
 }
 
 /* Native disclosures keep keyboard activation and expose their open state;
-   only the compact reading disappears while the content stands open (D102). A
+   only the compact reading disappears while the content stands open (D106). A
    heading paints nothing under the pointer: it is the column's own division
    line, not a row of the list. */
 body[data-dsh-claude-style] .dsh-claude-panel-section-toggle {
@@ -117,7 +117,7 @@ body[data-dsh-claude-style] .dsh-claude-panel-section[open] .dsh-claude-panel-se
 
 /* A section standing open says nothing with its chevron: it waits out of sight
    and comes back under the pointer or on keyboard focus, while a folded section
-   keeps it always, because folding is what the reader is being offered (D102).
+   keeps it always, because folding is what the reader is being offered (D106).
    Only the ink leaves, so the heading keeps its width. */
 body[data-dsh-claude-style] .dsh-claude-panel-section[open] .dsh-claude-panel-section-chevron {
   opacity: 0;
@@ -168,7 +168,7 @@ body[data-dsh-claude-style] .dsh-claude-panel-stats {
   line-height: 20px;
 }
 
-/* A placeholder where a reading will be written (D102): the stand-in ink the
+/* A placeholder where a reading will be written (D106): the stand-in ink the
    composer's placeholders use, breathing on the skin's shared pulse, with the
    count the animation choice sets (theme/chrome.css, D40). A bar stands one
    line's words high in the middle of that line, so the row keeps the height the
@@ -244,7 +244,7 @@ body[data-dsh-claude-style] .dsh-claude-panel-row.is-button:focus-visible {
   outline-offset: -1.5px;
 }
 
-/* Output disclosure and cancellation are separate focus targets (D102). */
+/* Output disclosure and cancellation are separate focus targets (D106). */
 body[data-dsh-claude-style] .dsh-claude-panel-job-line {
   display: flex;
   align-items: center;
@@ -430,7 +430,7 @@ body[data-dsh-claude-style] .dsh-claude-panel-job-output {
 
 /* The host's own background-work chips beside the title step aside while the
    details rail stands: the same work is the panel's Background tasks section,
-   where a row opens the child session or the job's output (D102). The subagent
+   where a row opens the child session or the job's output (D106). The subagent
    catalog's own root is the entry and leaves with its trigger; the jobs count
    keeps the same treatment. */
 body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-claude-part~="header-actions"] :is([data-subagent-action], button[aria-haspopup="tree"], button[aria-expanded]:not([aria-haspopup])) {
@@ -438,7 +438,7 @@ body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-claude-part
 }
 
 /* The preset's words stand in the rail's Environment section while the rail is
-   up (D102). The header band holds the label's `display` over the host's
+   up (D106). The header band holds the label's `display` over the host's
    container query, so the label leaves the row by position and visibility. */
 body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-claude-part~="header-actions"] [data-dsh-claude-part~="header-label"] {
   position: absolute;
@@ -476,7 +476,7 @@ body[data-dsh-claude-style] .dsh-claude-panel-more {
   line-height: 16px;
 }
 
-/* The conversation's details rail (D102): the skin's own column beside the chat,
+/* The conversation's details rail (D106): the skin's own column beside the chat,
    placed against the conversation column's edge and reading the column's own
    canvas token, so the two surfaces stand on one ground and the hairline between
    them is the only division. It opens and retreats with that column's width, so
@@ -492,17 +492,15 @@ body[data-dsh-claude-style] .dsh-claude-details {
   position: fixed;
   /* The column sits over the chat, and under the header row that holds the
      skin's own controls: a menu the host hangs from those controls opens inside
-     their layer, so it paints over the rail rather than under it (D102). */
+     their layer, so it paints over the rail rather than under it (D106). */
   z-index: var(--dsh-claude-layer-rail);
   box-sizing: border-box;
   /* The rail is the clip as well as the column: it gives the chat its width back
-     by growing narrower, and the body inside keeps the final box (D102). */
+     by growing narrower, and the body inside keeps the final box (D106). */
   width: 320px;
   overflow: hidden;
-  /* The edge reads the standard border token, the same one the sidebar's split
-     wears, so the two column divisions keep one colour in every card and both
-     themes. */
-  border-left: 1px solid var(--dsw-alias-border-l1);
+  /* Match the sidebar's layout divider in colour and width (D9, D106). */
+  border-left: 0.5px solid var(--dsw-alias-border-l1);
   background: var(--dsh-claude-canvas);
   transition: width var(--dsh-claude-duration-column) var(--dsh-claude-ease-column);
 }
@@ -542,7 +540,7 @@ body[data-dsh-claude-style] .dsh-claude-details-body > .dsh-claude-panel {
    body box gives 320px of its width back to the rail, while the header keeps the
    column's whole width, so its controls stand above the rail rather than beside
    it. The inset travels on the same stretch as the rail, so the chat's edge and
-   the rail's edge are one edge through the whole move (D102). */
+   the rail's edge are one edge through the whole move (D106). */
 body[data-dsh-claude-style] [data-dsh-claude-part~="conversation-body"] {
   transition: margin-right var(--dsh-claude-duration-column) var(--dsh-claude-ease-column);
 }
@@ -562,7 +560,7 @@ body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-claude-p
 }
 
 /* Full-width figure rows keep a long duration or token count beside its label,
-   on the legend's own rhythm (D102). */
+   on the legend's own rhythm (D106). */
 body[data-dsh-claude-style] .dsh-claude-panel-stats {
   display: flex;
   flex-direction: column;

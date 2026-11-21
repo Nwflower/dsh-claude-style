@@ -1,10 +1,47 @@
 /* @composer-gate */
-/* Model trigger in the host's contract slot: the skin's own button, and the
-   host's trigger when the picker preference hands the seat back. Both are
-   named by their exact place in the seat, so a menu another plugin nests
-   inside the seat keeps its own layout, and the seat root the picker hides is
-   never matched — a display here would outrank the hide rule below. */
-body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] > [data-dsh-claude-part~="host-root"] > [data-dsh-claude-part~="trigger"],
+/* Model trigger in the host's contract slot: the skin's own seat box, and the
+   host's own trigger wherever the picker hands the seat back or leaves an
+   embedded card's slot with the host. Both are named by their exact place in
+   the slot, so a menu another plugin nests inside the slot keeps its own
+   layout, and the seat root sets no display so the hide rule below still drops
+   it cleanly. */
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] > [data-dsh-claude-part~="host-root"] {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] > [data-dsh-claude-part~="host-root"] > [data-dsh-claude-part~="trigger"] {
+  display: inline-flex;
+  align-items: center;
+  height: var(--dsh-claude-footer-control-height);
+  min-width: 0;
+  max-width: min(280px, 100%);
+  padding: 0 4px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  box-sizing: border-box;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  visibility: visible;
+}
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] > [data-dsh-claude-part~="host-root"] > [data-dsh-claude-part~="trigger"]:hover:not(:disabled) {
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
+}
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] > [data-dsh-claude-part~="host-root"] > [data-dsh-claude-part~="trigger"]:disabled {
+  cursor: default;
+}
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] > [data-dsh-claude-part~="host-root"] > [data-dsh-claude-part~="trigger"] [data-dsh-claude-part~="trigger-label"] {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] > [data-dsh-claude-part~="host-root"] > [data-dsh-claude-part~="trigger"] > [data-dsh-claude-part~="trigger-chevron"] {
+  display: none;
+}
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] > .dsh-claude-model-seat {
   display: inline-flex;
   align-items: center;
@@ -171,7 +208,9 @@ body[data-dsh-claude-style] [data-dsh-claude-context-meter],
 body[data-dsh-claude-style] [data-dsh-claude-context-meter] button,
 body[data-dsh-claude-style] [data-dsh-claude-meter-ring] > button,
 body[data-dsh-claude-style] [data-composer-card] [data-dsh-claude-part~="row"] .dsh-claude-model-btn,
-body[data-dsh-claude-style] [data-composer-card] [data-dsh-claude-part~="row"] .dsh-claude-effort-btn {
+body[data-dsh-claude-style] [data-composer-card] [data-dsh-claude-part~="row"] .dsh-claude-effort-btn,
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] > [data-dsh-claude-part~="host-root"] > [data-dsh-claude-part~="trigger"],
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] > [data-dsh-claude-part~="host-root"] > [data-dsh-claude-part~="trigger"] [data-dsh-claude-part~="trigger-label"] {
   font-family: var(--dsw-font-family);
   font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
   font-weight: 500;
@@ -187,13 +226,18 @@ body[data-dsh-claude-style] [data-composer-card] [data-dsh-claude-part~="row"] .
 body[data-dsh-claude-style] .dsh-claude-inline-stats,
 body[data-dsh-claude-style] [data-dsh-claude-part~="trailing"] .dsh-claude-model-seat-model > .dsh-claude-model-btn,
 body[data-dsh-claude-style] [data-dsh-claude-part~="trailing"] .dsh-claude-model-seat-effort > .dsh-claude-effort-btn,
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] > [data-dsh-claude-part~="host-root"] > [data-dsh-claude-part~="trigger"],
 body[data-dsh-claude-style] [data-dsh-claude-context-meter] button > span {
   opacity: var(--dsh-claude-footer-ink-opacity);
   transition: opacity var(--dsh-claude-timing-feedback);
 }
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] > [data-dsh-claude-part~="host-root"] > [data-dsh-claude-part~="trigger"] {
+  transition: background var(--dsh-claude-timing-feedback), opacity var(--dsh-claude-timing-feedback);
+}
 body[data-dsh-claude-style] .dsh-claude-inline-stats:hover,
 body[data-dsh-claude-style] [data-dsh-claude-part~="trailing"] .dsh-claude-model-seat-model:hover > .dsh-claude-model-btn,
 body[data-dsh-claude-style] [data-dsh-claude-part~="trailing"] .dsh-claude-model-seat-effort:hover > .dsh-claude-effort-btn,
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] > [data-dsh-claude-part~="host-root"] > [data-dsh-claude-part~="trigger"]:hover:not(:disabled),
 body[data-dsh-claude-style] [data-dsh-claude-context-meter]:hover button > span {
   opacity: var(--dsh-claude-footer-ink-hover-opacity);
 }
@@ -318,7 +362,7 @@ body[data-dsh-claude-style] .dsh-claude-inline-stats {
   cursor: pointer;
 }
 /* Under the rail position the conversation's details rail carries the session's
-   numbers while it stands (D102), so the line is not painted then. It keeps its
+   numbers while it stands (D106), so the line is not painted then. It keeps its
    box: the dock's floor and the line's own fit stay as they are, and the
    composer does not move when the rail opens or steps back. */
 body[data-dsh-claude-style][data-dsh-claude-stats-position="rail"][data-dsh-claude-session-panel] .dsh-claude-inline-stats {

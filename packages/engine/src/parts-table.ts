@@ -11,7 +11,7 @@ export interface PartsTableVocabulary {
 /**
  * The host class names the skin reads, as data (D3): host CSS-module local name → the skin's own part name. The host hashes its class names, so a stylesheet cannot name one at build time and a substring match takes whatever else holds the fragment. A sheet names the part instead: packages/engine/src/parts.ts walks these tables, reports each hashed name it meets and writes the part names onto the elements for the browser half's queries and the hold relations, and packages/engine/src/part-classes.ts finishes the sheet on the page with the names reported (D101). This file is data only, so the build reads it directly (scripts/build/css.mjs, the part gate); a host rename is one line here.
  */
-import { COMPOSER_OVERLAY_SELECTOR, CONVERSATION_HEADER_SLOT_SELECTOR, CONVERSATION_MAIN_SLOT_SELECTOR, CONVERSATION_SCROLL_SELECTOR, RIGHTBAR_COLUMN_SELECTOR, ROOT_SLOT_SELECTOR, SHIMMER_DECORATION_SELECTOR, SIDEBAR_SLOT_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { COMPOSER_CARD_SELECTOR, COMPOSER_OVERLAY_SELECTOR, CONVERSATION_HEADER_SLOT_SELECTOR, CONVERSATION_MAIN_SLOT_SELECTOR, CONVERSATION_SCROLL_SELECTOR, RIGHTBAR_COLUMN_SELECTOR, ROOT_SLOT_SELECTOR, SHIMMER_DECORATION_SELECTOR, SIDEBAR_SLOT_SELECTOR } from '@dsh-claude-style/contracts/dom'
 
 /** Host CSS-module local name → the skin's part name. */
 export type PartTable = Record<string, string>
@@ -278,7 +278,7 @@ export function partRegions(vocabulary: PartsTableVocabulary): PartRegion[] {
     // beside them. Its local name is also every transcript row's, and those rows
     // all stand inside the scroll box, so the region reads nothing under that.
     { within: CONVERSATION_MAIN_SLOT_SELECTOR, parts: { body: 'conversation-body' }, skip: CONVERSATION_SCROLL_SELECTOR },
-    { within: CONVERSATION_SCROLL_SELECTOR, parts: CONVERSATION_PARTS, skip: COMPOSER_OVERLAY_SELECTOR },
+    { within: `${CONVERSATION_SCROLL_SELECTOR}, ${COMPOSER_CARD_SELECTOR}`, parts: CONVERSATION_PARTS, skip: COMPOSER_OVERLAY_SELECTOR },
     { within: RIGHTBAR_COLUMN_SELECTOR, parts: RIGHTBAR_PARTS },
     { within: `[${vocabulary.regions.account}], [${vocabulary.regions.hero}], [${vocabulary.regions.more}]`, parts: MENU_PARTS },
   ]

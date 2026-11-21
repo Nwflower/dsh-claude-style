@@ -1,4 +1,4 @@
-import { COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_PLACEHOLDER_SELECTOR, COMPOSER_SELECTOR, COMPOSER_STACK_SELECTOR, COMPOSER_STAT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, CONVERSATION_VIEW_STORAGE_PREFIX, DIALOG_TRIGGER_SELECTOR, FOOT_AREA_SELECTOR, FOREGROUND_SELECTOR, MENU_ROLE_SELECTOR, MODAL_DIALOG_SELECTOR, MODEL_SLOT_SELECTOR, PERMISSION_TRIGGER_SELECTOR, PHASE_ATTRIBUTE, RIGHTBAR_TOGGLE_SELECTOR, SIDEBAR_BRAND_SELECTOR, SIDEBAR_CHAT_SELECTOR, SIDEBAR_NEW_SESSION_SELECTOR, SIDEBAR_ROOT_SELECTOR, SIDEBAR_TOGGLE_SELECTOR, WINDOWS_MENU_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_PLACEHOLDER_SELECTOR, COMPOSER_SELECTOR, COMPOSER_STACK_SELECTOR, COMPOSER_STAT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, CONVERSATION_VIEW_STORAGE_PREFIX, DIALOG_TRIGGER_SELECTOR, FOOT_AREA_SELECTOR, FOREGROUND_SELECTOR, MENU_ROLE_SELECTOR, MODAL_DIALOG_SELECTOR, MODEL_SLOT_SELECTOR, PERMISSION_TRIGGER_SELECTOR, PHASE_ATTRIBUTE, RIGHTBAR_TOGGLE_SELECTOR, SIDEBAR_BRAND_SELECTOR, SIDEBAR_CHAT_SELECTOR, SIDEBAR_ROOT_SELECTOR, SIDEBAR_TOGGLE_SELECTOR, WINDOWS_MENU_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import type { HostAccountService } from '@dsh-claude-style/contracts/account'
 import type { HostAgentTeamsRemote, HostSidebarPins, HostAssistantStep, HostBundleListAnswer, HostChatSnapshot, HostChatTarget, HostConfigFormsService, HostConversationService, HostInventoryAnswer, HostJobsService, HostLocaleService, HostModelDirectoriesService, HostPluginBundle, HostServiceLookup, HostSessionStatusService, HostOutlineTurn, HostRunningCall, HostSession, HostSessionsService, HostSessionRenameAnswer, HostShortcutsService, HostSlotOptions, HostSlotsService, HostSnapshotSource, HostSubagentsRemote, HostTurn, HostUiConversationService, HostUiSessionService, HostWorkspacesService, HostWorkspaceViewStore } from '@dsh-claude-style/contracts/services'
 import { fileAddressFor } from '@deepseek-ai/dsh-util-workspace-path'
@@ -158,13 +158,26 @@ export const findSidebarRoot = cacheFirst<HTMLElement>(SIDEBAR_ROOT_SELECTOR)
 
 /** The sidebar's brand row and collapse toggle, and the desktop window's menu button beside them: the seats the surface switch and the header band are placed against. Each is absent on most pages, so the answer is kept rather than queried per pass. */
 export const findSidebarBrand = cacheFirst<HTMLElement>(SIDEBAR_BRAND_SELECTOR)
-/** The New session button, after which the skin seats its standalone search button. */
-export const findSidebarNewSession = cacheFirst<HTMLElement>(SIDEBAR_NEW_SESSION_SELECTOR)
 export const findSidebarToggle = cacheFirst<HTMLElement>(SIDEBAR_TOGGLE_SELECTOR)
 export const findWindowsMenu = cacheFirst<HTMLElement>(WINDOWS_MENU_SELECTOR)
 
-/** The right panel's own collapse control while that panel is open. It hangs from a transformed, clipped subtree, so the skin draws its own control in the header's row and presses this one; the same read answers whether the panel is open. */
-export const findRightbarToggle = cacheFirst<HTMLElement>(RIGHTBAR_TOGGLE_SELECTOR)
+/**
+ * The right panel's own collapse control while that panel is open on screen.
+ *
+ * A Session the reader left keeps its panel mounted behind a hidden view, so
+ * the first match in document order can belong to that earlier Session; the
+ * control the page shows belongs to a panel that is actually visible. The
+ * header's copy and the details rail both press this control to close the
+ * panel standing beside the conversation.
+ */
+export function findRightbarToggle(): HTMLElement | null {
+  const toggles = document.querySelectorAll<HTMLElement>(RIGHTBAR_TOGGLE_SELECTOR)
+  for (let index = 0; index < toggles.length; index += 1) {
+    const toggle = toggles[index]
+    if (toggle.closest('[hidden]') === null && shown(toggle)) return toggle
+  }
+  return null
+}
 
 /** The open host menu card: the host portals menus to `<body>`, and every card the skin builds itself carries a `dsh-claude-` class (D3). Read once and kept until a menu opens or closes (D40). */
 export const findHostMenu = cacheFirst<HTMLElement>(`${MENU_ROLE_SELECTOR}:not([class*="dsh-claude-"])`)
@@ -576,12 +589,12 @@ export function registerSlotEntries(ctx: HostContext, entries: readonly SlotEntr
   })
 }
 
-/** The client's jobs controller, shared with the host's background task list (D102). */
+/** The client's jobs controller, shared with the host's background task list (D106). */
 export function hostJobs(lookup: HostServiceLookup | null | undefined): HostJobsService | null {
   return lookup?.get('jobs') as HostJobsService | undefined ?? null
 }
 
-/** The parent-authorized child controls; the Gateway owns the relationship check (D102). */
+/** The parent-authorized child controls; the Gateway owns the relationship check (D106). */
 export function hostRemoteSubagents(lookup: HostServiceLookup | null | undefined): HostSubagentsRemote | null {
   return lookup?.get('remote.subagents') as HostSubagentsRemote | undefined ?? null
 }
@@ -667,7 +680,7 @@ export function hostUiWorkspace(lookup: HostServiceLookup | null | undefined): H
   return lookup?.get('uiWorkspace')
 }
 
-/** Open a file in the host's preview through its canonical resource address (D3, D102). */
+/** Open a file in the host's preview through its canonical resource address (D3, D106). */
 export function openHostFile(lookup: HostServiceLookup, sessionId: string, directory: string | undefined, path: string): void {
   const sidebar = lookup.get('sidebarRight') as { openResource(address: string): unknown } | undefined
   if (typeof sidebar?.openResource !== 'function') throw new Error('the host has no file preview controller')

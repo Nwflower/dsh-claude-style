@@ -1,7 +1,7 @@
 name: Nightly
 
 # Check external drift daily: e2e tests the newest published host's contract
-# and appearance (D86), while macOS behaviour covers platform fonts and Chrome.
+# and appearance (D92), while macOS behaviour covers platform fonts and Chrome.
 #
 # These jobs block neither merges nor releases; manual runs check the same
 # lanes on a chosen commit. Build each tested tree because `lib/` is generated

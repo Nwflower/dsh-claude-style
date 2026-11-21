@@ -14,7 +14,7 @@ import type manifest from './context-stats.manifest'
 export interface ContextStatsHandle extends FeatureHandle {
   sessionCost(): SessionCostReading | null
   onSessionCost(listener: () => void): () => void
-  /** The figures the composer's line prints, for a second face of the same session (D102). */
+  /** The figures the composer's line prints, for a second face of the same session (D106). */
   figures(): SessionFigures | null
   onFigures(listener: () => void): () => void
 }
@@ -38,13 +38,16 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   // price the platform's own billing and leave a provider that settles
   // elsewhere out of the account's balance (features/context-stats/session-stats.ts).
   const provider = () => (typeof ui.model?.provider === 'function' ? ui.model.provider() : null)
-  const stats = createSessionStats(ctx, ring, provider)
+  const stats = createSessionStats(ctx, ring, provider, () => ui.schedule?.())
 
   ui.contextStats = {
     measure: stats.measure,
     sync: stats.sync,
     // Streaming text cannot move the composer row or change a projection by
     // itself; projection subscriptions schedule the figures on their own frame.
+    // The meter's own text — the reading on a host serving no projection —
+    // changes inside the scroller too, and asks for a full pass of its own
+    // (session-stats.ts::watchMeterText).
     skipOnContentOnly: true,
     /**
      * A viewport move under the context panel: the panel is the host's,

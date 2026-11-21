@@ -1,8 +1,7 @@
 diff --git a/packages/client/src/features/chat-send/send-flight.ts b/packages/client/src/features/chat-send/send-flight.ts
-index 2b572f4..a006da1 100644
 --- a/packages/client/src/features/chat-send/send-flight.ts
 +++ b/packages/client/src/features/chat-send/send-flight.ts
-@@ -37,6 +37,8 @@ interface Flight {
+@@ -42,6 +42,8 @@ interface Flight {
    rowHeight: number
    /** When the stand-in first stood close enough to the row to end the wait early (arrived()). */
    nearAt: number | null
@@ -10,76 +9,30 @@ index 2b572f4..a006da1 100644
 +  endedAt: number | null
    landedRow: HTMLElement | null
    bubble: HTMLElement | null
- }
-@@ -286,11 +288,13 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
-    * flight reads one frame late: a gate on a single frame's reading lets a row
-    * that is about to move through.
-    *
--   * The wait is bounded twice over, because a page that keeps changing around the
--   * flight (the reader scrolling, a stream growing below) would otherwise hold the
--   * row away for good: a gap already too small to see shortens the wait, and
--   * CHAT_ARRIVED_CEILING_MS ends it whatever the page is doing. The row is snapped
--   * onto the stand-in at that point (land()), so the pair still agrees.
-+   * The wait is bounded, because a page that keeps changing around the flight (the
-+   * reader scrolling, a stream growing below) would otherwise hold the row away for
-+   * good — the flight's own animation has been over since the first frame of this
-+   * wait, so nothing else ends it. Two ceilings: a gap already too small to see
-+   * shortens the wait, and the flight's own end plus
-+   * CHAT_ARRIVED_CEILING_MS ends it whatever the page is doing. land() snaps the
-+   * row onto the stand-in in that frame, so the pair agrees even then.
-    * @returns true when the row may be shown.
-    */
-   const arrived = (value: Flight) => {
-@@ -304,7 +308,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
-     // A row with no box yet is not somewhere to land: hold, as land() does.
-     if (there.width === 0) return false
-     const gap = Math.max(Math.abs(here.top - there.top), Math.abs(here.left - there.left), Math.abs(here.height - there.height))
--    const onIt = gap < CHAT_ARRIVED_PX
-     const held = value.rowTop !== null
-       && Math.abs(there.top - value.rowTop) < CHAT_ARRIVED_PX
-       && Math.abs(there.height - value.rowHeight) < CHAT_ARRIVED_PX
-@@ -313,17 +316,19 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
-     if (gap >= CHAT_ARRIVED_NEAR_PX) {
-       value.nearAt = null
-       value.stable = 0
--      return false
--    }
--    if (gap < CHAT_ARRIVED_PX && held) {
--      value.stable += 1
--      if (value.stable >= CHAT_ARRIVED_FRAMES) return true
-     } else {
--      value.stable = 0
-+      if (gap < CHAT_ARRIVED_PX && held) {
-+        value.stable += 1
-+        if (value.stable >= CHAT_ARRIVED_FRAMES) return true
-+      } else {
-+        value.stable = 0
-+      }
-+      const now = performance.now()
-+      if (value.nearAt === null) value.nearAt = now
-+      if (now - value.nearAt >= CHAT_ARRIVED_CEILING_MS) return true
+   /** This frame's layout reading, taken in the pass's read phase (D40). */
+@@ -223,7 +225,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
+       if (value.nearAt === null) value.nearAt = now
+       if (now - value.nearAt >= CHAT_ARRIVED_CEILING_MS) return true
      }
--    const now = performance.now()
--    if (value.nearAt === null) value.nearAt = now
--    return now - value.nearAt >= CHAT_ARRIVED_CEILING_MS
+-    return false
 +    const ended = value.endedAt
 +    return ended !== null && performance.now() - ended >= CHAT_ARRIVED_CEILING_MS
    }
  
    /** Land: release the real row first, then drop the stand-in. Reversed, a blank flashes. */
-@@ -370,6 +375,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
-     if (activeFlight === null) return
+@@ -286,6 +289,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
+     // of the flight (D40).
      const u = activeFlight.morph.progress()
      activeFlight.morph.compact(u)
 +    if (activeFlight.endedAt === null && u >= 1) activeFlight.endedAt = performance.now()
      if (!activeFlight.landing) {
        followTarget(activeFlight)
        if (u >= 1 && arrived(activeFlight)) land()
-@@ -415,6 +421,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
+@@ -338,6 +342,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
        rowTop: null,
        rowHeight: 0,
        nearAt: null,
 +      endedAt: null,
        landedRow: null,
        bubble,
-     }
+       measure: null,

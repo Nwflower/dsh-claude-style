@@ -137,7 +137,7 @@ export const CHAT_ANIMATIONS_OFF = 'off'
  * line of their own under the input card, or in the compact footer. The rail
  * position is the line of their own handed to the conversation's details rail:
  * the line stands wherever the rail does not, and the rail carries the numbers
- * while it does (D102).
+ * while it does (D106).
  */
 export const STATS_POSITION_INLINE = 'inline'
 export const STATS_POSITION_CONTEXT = 'context'
@@ -202,7 +202,6 @@ export const AUTO_POPOVER_ALL = 'all'
 export const AUTO_POPOVER_SCOPES = [AUTO_POPOVER_OFF, AUTO_POPOVER_ACCOUNT, AUTO_POPOVER_ALL] as const
 
 /** Page zoom percentage; empty follows the system, and values outside the declared bounds clamp to an endpoint. */
-export const PAGE_ZOOM_SYSTEM = ''
 export const PAGE_ZOOM_DEFAULT = '100'
 export const PAGE_ZOOM_MIN = 60
 export const PAGE_ZOOM_MAX = 200
@@ -237,8 +236,6 @@ export const MANUAL_UNREAD_LIMIT = 2048
 export const MANUAL_UNREAD_ID_LIMIT = 1024
 /** Custom-price storage limits; decimal text avoids losing entered digits to floats. */
 export const PRICE_ROWS_MAX = 32
-export const PRICE_ROW_MODEL_MAX = 96
-export const PRICE_ROW_RATE_MAX = 16
 
 /** Model rows keep id order by default; brand order puts recognised vendor lockups first. */
 export const MODEL_ORDER_ID = 'id'
@@ -307,11 +304,11 @@ export const PREFS = {
   inlineCodeColor: { type: 'choice', values: INLINE_CODE_COLORS, default: INLINE_CODE_COLOR_PALETTE },
   motion: { type: 'choice', values: MOTION_MODES, default: MOTION_SYSTEM },
   statusMotion: { type: 'choice', values: STATUS_MOTIONS, default: STATUS_MOTION_SWEEP },
-  /** The two legacy words: `precise` is on and `simple` off. */
-  statusDetail: { type: 'boolean', default: true, legacy: { precise: true, simple: false } },
+  /** The legacy word `simple` is off. */
+  statusDetail: { type: 'boolean', default: true, legacy: { simple: false } },
   collapseFooter: { type: 'boolean', default: true },
-  /** A legacy boolean maps to every popover or none. */
-  autoPopover: { type: 'choice', values: AUTO_POPOVER_SCOPES, default: AUTO_POPOVER_ALL, legacy: { true: AUTO_POPOVER_ALL, false: AUTO_POPOVER_OFF } },
+  /** The legacy boolean `false` maps to no popover. */
+  autoPopover: { type: 'choice', values: AUTO_POPOVER_SCOPES, default: AUTO_POPOVER_ALL, legacy: { false: AUTO_POPOVER_OFF } },
   composerScope: { type: 'choice', values: COMPOSER_SCOPES, default: COMPOSER_SCOPE_ALL },
   /** Whether the host's question card is redrawn and moved to the end of the conversation; off leaves it in the composer as the host draws it. */
   questionCard: { type: 'boolean', default: true },
@@ -372,7 +369,7 @@ export const PREFS = {
   billingTable: { type: 'list', default: [], max: PRICE_ROWS_MAX, entryMax: 256, drop: [] },
   workspaceView: { type: 'boolean', default: true },
   sidebarSearch: { type: 'boolean', default: true },
-  searchStyle: { type: 'choice', values: SEARCH_STYLES, default: SEARCH_STYLE_STANDALONE, legacy: { overlay: SEARCH_STYLE_STANDALONE } },
+  searchStyle: { type: 'choice', values: SEARCH_STYLES, default: SEARCH_STYLE_STANDALONE },
   /** Whether resting the pointer on the collapsed sidebar's toggle or the window's left edge opens the sidebar over the page. */
   sidebarPeek: { type: 'boolean', default: true },
   /** Whether the panel list carries the More menu's hidden entries and its Edit sidebar dialog. */
@@ -391,10 +388,10 @@ export const PREFS = {
   viewTabs: { type: 'boolean', default: true },
   hideToolbarOutsideConversation: { type: 'boolean', default: true },
   headerBand: { type: 'boolean', default: true },
-  /** Whether the conversation offers its own session details rail (D102). */
+  /** Whether the conversation offers its own session details rail (D106). */
   sessionPanel: { type: 'boolean', default: true },
-  /** The legacy choices all mean on except `off`. */
-  chatAnimations: { type: 'boolean', default: true, legacy: { [CHAT_ANIMATIONS_OFF]: false, enhanced: true, redraw: true } },
+  /** The legacy choice `off` means off. */
+  chatAnimations: { type: 'boolean', default: true, legacy: { [CHAT_ANIMATIONS_OFF]: false } },
   chatWait: { type: 'boolean', default: true },
   chatSend: { type: 'boolean', default: true },
   chatReveal: { type: 'choice', values: CHAT_REVEAL_MODES, default: CHAT_REVEAL_ON },
@@ -406,6 +403,8 @@ export const PREFS = {
   processRows: { type: 'choice', values: PROCESS_ROWS_LAYOUTS, default: PROCESS_ROWS_FLAT },
   /** Completion/blocked cue gain; default off to avoid unsolicited interruption (D89). */
   soundCues: { type: 'choice', values: SOUND_LEVELS, default: SOUND_LEVEL_OFF },
+  /** Background system notifications; the reader grants permission from the settings switch. */
+  systemNotifications: { type: 'boolean', default: false },
 } as const satisfies Record<string, PrefSpec>
 
 /** One preference's key. */

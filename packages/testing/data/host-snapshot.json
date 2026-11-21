@@ -1,18 +1,18 @@
 {
   "note": "The host's own conversation and composer markup, captured by packages/testing/host-snapshot.mjs on a scratch host and read by the stand-in page (packages/testing/specs/fixtures/host-frame.mjs, D3, D92). Regenerate with node packages/testing/host-snapshot.mjs.",
   "host": {
-    "version": "0.2.2-alpha.3",
+    "version": "0.2.2-rc.5",
     "viewport": {
       "width": 1440,
       "height": 900
     },
-    "captured": "2026-11-03"
+    "captured": "2026-11-20"
   },
   "conversation": {
     "phase": {
       "tag": "div",
       "classes": [
-        "-l6A3q_root"
+        "wSkVaW_root"
       ],
       "attributes": {
         "data-phase": "active"
@@ -21,7 +21,7 @@
     "content": {
       "tag": "div",
       "classes": [
-        "-l6A3q_body"
+        "wSkVaW_body"
       ],
       "attributes": {
         "data-conversation-content": "",
@@ -29,15 +29,25 @@
         "data-content-phase": "active"
       },
       "properties": {
-        "--dsh-chat-content-width": "clamp(680px, calc(1160px * .64), 920px)",
-        "--dsh-composer-card-max-width": "calc(clamp(680px, calc(1160px * .64), 920px) + 32px)"
+        "--dsh-chat-content-width": "clamp(680px, calc(840px * .64), 920px)",
+        "--dsh-composer-card-max-width": "calc(clamp(680px, calc(840px * .64), 920px) + 32px)"
       }
     },
     "siblings": [
       {
         "tag": "div",
+        "classes": [],
+        "attributes": {
+          "data-slot": "conversation.hero.frame"
+        },
+        "style": {
+          "display": "contents"
+        }
+      },
+      {
+        "tag": "div",
         "classes": [
-          "-l6A3q_widthHandle"
+          "wSkVaW_widthHandle"
         ],
         "attributes": {
           "data-side": "left",
@@ -47,7 +57,7 @@
       {
         "tag": "div",
         "classes": [
-          "-l6A3q_widthHandle"
+          "wSkVaW_widthHandle"
         ],
         "attributes": {
           "data-side": "right",
@@ -60,7 +70,7 @@
     "bar": {
       "tag": "div",
       "classes": [
-        "CmQxdG_root"
+        "uV2eYG_root"
       ],
       "attributes": {},
       "paddingBottom": "4px"
@@ -80,7 +90,7 @@
     "stack": {
       "tag": "div",
       "classes": [
-        "-l6A3q_composerStack"
+        "wSkVaW_composerStack"
       ],
       "attributes": {}
     }

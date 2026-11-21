@@ -10,7 +10,7 @@ import type { PartsVocabulary } from '@dsh-claude-style/engine/parts'
  * @param vocabulary - the spec's own vocabulary, so the tables are read with it.
  */
 export function partRegion(within: string, vocabulary: PartsVocabulary) {
-  const found = partRegions(vocabulary).find(candidate => candidate.within === within)
+  const found = partRegions(vocabulary).find(candidate => candidate.within === within || candidate.within.split(',').map(selector => selector.trim()).includes(within))
   if (found === undefined) throw new Error(`no part region walked within ${within}`)
   const table: Record<string, string> = { ...found.parts, ...found.rootParts }
   const known = (local: string) => {

@@ -26,14 +26,16 @@ body:
     id: area
     attributes:
       label: 类别 / Area
+      description: 新外观、配色、样式变体等需要拍板的界面方案选「界面设计与决策」；现有界面的交互、显示逻辑与设置项选「现有界面行为」 / Pick "UI design and decisions" for a new look, palette, style variant or other visual direction to settle; pick "Existing UI behavior" for how the current interface acts, displays or is configured
       options:
-        - 界面 / UI
+        - 界面设计与决策 / UI design and decisions
+        - 现有界面行为 / Existing UI behavior
         - 功能 / Feature
         - 性能 / Performance
         - 文档 / Documentation
         - 其他 / Other
     validations:
-      required: false
+      required: true
   - type: checkboxes
     id: pr
     attributes:

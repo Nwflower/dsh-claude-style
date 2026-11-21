@@ -3,11 +3,14 @@ import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
 import {
   HEADER_ACTIONS_SELECTOR,
   HEADER_TITLE_ROW_SELECTOR,
+  RIGHTBAR_OPEN_ATTRIBUTE,
+  RIGHTBAR_PANEL_SELECTOR,
 } from '@dsh-claude-style/contracts/dom'
-import { observeMatches, observeSize } from '@dsh-claude-style/engine/bus'
+import { observeMatches, observeSize, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { desktopBand } from '@dsh-claude-style/engine/desktop-band'
 import { closestConversationHeader, conversationHeaderMore, conversationHeaderTitle, conversationHeaderTools, findRightbarToggle, findWindowsMenu, registerSlotEntries } from '@dsh-claude-style/engine/host'
-import { createStamp, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
+import { createStamp, setAttributeIfChanged, shown } from '@dsh-claude-style/engine/dom'
+import { FRAME_SELECTOR } from '../../shared/page-scale-columns'
 import { inPageBox, inPagePixels } from '../../shared/page-zoom'
 import type { FeatureUi } from '../../core/feature'
 import type { HostContext } from '@dsh-claude-style/engine/host'
@@ -46,7 +49,7 @@ import { placeCaptionRow } from './placement'
  * The right panel's own collapse control is placed from here too, on every page
  * rather than the desktop alone: that panel keeps its copy inside a transformed,
  * clipped subtree, so the skin draws the control in the header's utilities seat
- * and presses the host's own (syncRightbarClose).
+ * and presses the host's own (D43).
  */
 export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The body marker: which parts of the row the caption row holds, as a token list. */
@@ -94,8 +97,14 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const ACTIONS_TOKEN = 'actions'
   /** The host's seat in the header's own row that the header utilities land in. */
   const UTILITIES_SLOT = 'conversation.session.header.utilities'
-  /** The skin's own control there, which the stylesheet paints and the pass shows. */
+  /** The skin's own control there, which the stylesheet shows while the panel is open. */
   const CLOSE_CLASS = 'dsh-claude-rightbar-close'
+  /**
+   * The host hides a retained Session's right column with this attribute while
+   * another Session takes the foreground; that Session's panel keeps its own
+   * open mark, so this attribute change is what makes the visible panel win.
+   */
+  const HIDDEN_ATTRIBUTE = 'hidden'
 
   const rowStamp = createStamp<HTMLElement>(ROW_ATTR)
   const titleStamp = createStamp<HTMLElement>(TITLE_ATTR)
@@ -103,6 +112,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const trailStamp = createStamp<HTMLElement>(TRAIL_ATTR)
   const actionsStamp = createStamp<HTMLElement>(ACTIONS_ATTR)
   const cornerStamp = createStamp<HTMLElement>(CORNER_ATTR)
+  const rightbarOpenStamp = createStamp<HTMLElement>('data-dsh-header-rightbar-open')
   /** The row whose size the pass follows. */
   let watched: HTMLElement | null = null
   /** Stops watching it. */
@@ -123,9 +133,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * reads, so a piece keeps its place across a small step back (placement.ts).
    */
   let lastLift: { title: boolean, trail: boolean, actions: boolean } | null = null
-  /** Every control the skin registered for the right panel, kept current by the bus (D40). */
-  const closeButtons = observeMatches<HTMLElement>(`.${CLOSE_CLASS}`)
-
   /**
    * The skin's own control for the right panel, in the header's utilities seat.
    *
@@ -150,19 +157,55 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     })
   }
 
-  /**
-   * Show the skin's control wherever the panel is open. Its `display` is written
-   * on the node rather than by a rule: the host's control exists only while the
-   * panel does, and a rule keyed on that state would be a marker no page outside
-   * the desktop carries.
+  /** The expand button leaves the header when the host marks the panel open.
+   * Show its replacement before the frame pipeline reads either control box
+   * so that measurement never depends on the later width transition (D40, D43).
    */
-  function syncRightbarClose() {
-    const host = findRightbarToggle()
-    for (const button of closeButtons.all()) {
-      const wanted = host === null ? 'none' : 'inline-flex'
-      if (button.style.display !== wanted) button.style.display = wanted
+  function markRightbarOpen() {
+    const panel = rightbarPanels.all().find(element => element.hasAttribute(RIGHTBAR_OPEN_ATTRIBUTE) && element.closest(`[${HIDDEN_ATTRIBUTE}]`) === null && shown(element))
+    const frame = panel?.closest<HTMLElement>(FRAME_SELECTOR) ?? null
+    if (frame === rightbarOpenStamp.current()) return
+    rightbarOpenStamp.mark(frame)
+    ui.schedule?.()
+  }
+
+  /**
+   * Ignore unrelated `hidden` toggles across the rest of the page: only an open
+   * mark on a panel or a `hidden` change on a panel or its ancestor can move
+   * which panel stands on screen, so chat folds never force a visibility read.
+   */
+  function onRightbarMutation(records: MutationRecord[]) {
+    const panels = rightbarPanels.all()
+    if (panels.length === 0) return
+    for (let i = 0; i < records.length; i += 1) {
+      const record = records[i]
+      if (record.attributeName === RIGHTBAR_OPEN_ATTRIBUTE) {
+        if (panels.includes(record.target as HTMLElement)) {
+          markRightbarOpen()
+          return
+        }
+        continue
+      }
+      for (let j = 0; j < panels.length; j += 1) {
+        if (record.target.contains(panels[j])) {
+          markRightbarOpen()
+          return
+        }
+      }
     }
   }
+
+  const rightbarPanels = observeMatches<HTMLElement>(RIGHTBAR_PANEL_SELECTOR, markRightbarOpen)
+  // The frame's part mark can land after the panel is already on the page (a
+  // restored session opens the panel at load): the stamp is re-read when the
+  // frame arrives, not only when the panel or its open state changes.
+  const rightbarFrames = observeMatches<HTMLElement>(FRAME_SELECTOR, markRightbarOpen)
+  const stopRightbarOpen = subscribeMutations(document.body, {
+    subtree: true,
+    attributeFilter: [RIGHTBAR_OPEN_ATTRIBUTE, HIDDEN_ATTRIBUTE],
+    beforePaint: true,
+  }, onRightbarMutation)
+  markRightbarOpen()
 
   /** Register that control in the header's utilities seat, which renders it wherever it stands. */
   function registerRightbarClose() {
@@ -372,9 +415,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   function sync() {
     if (!measured) measure()
     measured = false
-    // The right panel's control is placed on every page, not only where the
-    // caption row exists: whether it shows is the panel's own state.
-    syncRightbarClose()
     const current = reading
     if (current === null) {
       watch(null, null)
@@ -515,7 +555,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     clear()
     watch(null, null)
     titleRows.release()
-    closeButtons.release()
+    stopRightbarOpen()
+    rightbarPanels.release()
+    rightbarFrames.release()
+    rightbarOpenStamp.release()
     if (closeButtonSlot !== null) closeButtonSlot.dispose()
     keptRow = null
     delete ui.headerBand

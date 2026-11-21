@@ -1,11 +1,11 @@
-diff --git a/packages/client/src/features/composer/selection-mirror.ts b/packages/client/src/features/composer/selection-mirror.ts
---- a/packages/client/src/features/composer/selection-mirror.ts
-+++ b/packages/client/src/features/composer/selection-mirror.ts
-@@ -25,7 +25,6 @@ export function installWindowBlurMirror() {
-   // Capture phase: the events are dispatched at the window, so the flag
-   // records the transition before anything downstream can stop it.
-   window.addEventListener('focus', sync, true)
--  window.addEventListener('blur', sync, true)
-   sync()
+diff --git a/packages/client/src/core/selection-paint.ts b/packages/client/src/core/selection-paint.ts
+--- a/packages/client/src/core/selection-paint.ts
++++ b/packages/client/src/core/selection-paint.ts
+@@ -87,7 +87,6 @@ export function installSelectionPaint() {
+   document.addEventListener('selectstart', onSelectStart, true)
+   document.addEventListener('selectionchange', onSelectionChange)
+   window.addEventListener('focus', onFocusChange, true)
+-  window.addEventListener('blur', onFocusChange, true)
+   onSelectionChange()
  
    return () => {
