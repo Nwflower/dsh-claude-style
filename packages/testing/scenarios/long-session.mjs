@@ -114,6 +114,10 @@ async function read(page) {
     tracing: window.__e2eTrace !== undefined,
     nodes: document.querySelectorAll('body *').length,
     rows: document.querySelectorAll('[data-chat-flow-kind]').length,
+    // The host virtualizes a long transcript: off-screen rows unmount, so the
+    // mounted count is not a stable tally. The newest turn's index is — the
+    // follow pins the tail, so the last turn's rows are always on the page.
+    maxTurn: [...document.querySelectorAll('[data-chat-turn]')].reduce((max, row) => Math.max(max, Number(row.getAttribute('data-chat-turn')) || 0), 0),
   }))
 }
 
@@ -199,10 +203,7 @@ function longSessionScenario({ check }) {
         await sendPrompt(page, `fill the transcript ${index + 1}`)
         await waitForTurn(page)
       }
-      const filled = await page.evaluate(() => ({
-        nodes: document.querySelectorAll('body *').length,
-        rows: document.querySelectorAll('[data-chat-flow-kind]').length,
-      }))
+      const filled = await read(page)
       context.notes.filled = filled
       await resetRound(page)
     },
@@ -211,11 +212,11 @@ function longSessionScenario({ check }) {
       // The stretch of wall clock the sampled frames cover: a display that draws fewer frames a second is judged on the same span.
       const span = measured.frames.reduce((sum, duration) => sum + duration, 0)
       const longTotal = measured.longtasks.reduce((sum, duration) => sum + duration, 0)
-      const filled = notes.filled ?? { nodes: 0, rows: 0 }
+      const filled = notes.filled ?? { nodes: 0, rows: 0, maxTurn: 0 }
       const rounds = [
         check('测量前已经积累了多轮对话，测量那一轮又长了',
-          filled.rows >= FILL_TURNS * 2 && measured.rows > filled.rows,
-          `rows ${filled.rows} → ${measured.rows}, nodes ${filled.nodes} → ${measured.nodes}`),
+          filled.maxTurn >= FILL_TURNS && measured.maxTurn > filled.maxTurn,
+          `turns ${filled.maxTurn} → ${measured.maxTurn}, rows ${filled.rows} → ${measured.rows}, nodes ${filled.nodes} → ${measured.nodes}`),
         check('采样覆盖了整条流式回答', span >= MIN_SPAN_MS, `${Math.round(span)}ms over ${measured.frames.length} frames`),
         check('长时间任务没有占满这一轮', longTotal < LONG_TASK_BUDGET_MS,
           `${measured.longtasks.length} long tasks totalling ${longTotal}ms`),
