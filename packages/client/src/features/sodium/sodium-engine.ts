@@ -32,7 +32,7 @@ function sheetsOf(adapter: SodiumAdapter) {
 }
 
 /**
- * The rewrite itself (D107): on, it rewrites every listed rule on the page and
+ * The rewrite itself (D109): on, it rewrites every listed rule on the page and
  * keeps the attributes the rewritten rules read; off, the sheets and the page
  * are the owners' again. `refresh` follows the sheets coming and going while it
  * is on, and `survey` counts what it would rewrite, for the first probe.

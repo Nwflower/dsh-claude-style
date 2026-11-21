@@ -5,7 +5,7 @@ import type { HostContext } from '@dsh-claude-style/engine/host'
 import { createSodiumEngine } from './sodium-engine'
 
 /**
- * The sodium rewrite (D107): the host's costly style rules, rewritten in place
+ * The sodium rewrite (D109): the host's costly style rules, rewritten in place
  * to read attributes this skin keeps, while the reader has the switch on.
  *
  * The feature is installed whatever the switch says, because the switch starts

@@ -1,7 +1,7 @@
 import { notifyAll } from '@dsh-claude-style/engine/notify'
 
 /**
- * The rules the sodium rewrite holds right now (D107), for the settings row:
+ * The rules the sodium rewrite holds right now (D109), for the settings row:
  * the page's live answer, read whether the settings page is open or not.
  */
 export interface RuleInEffect {

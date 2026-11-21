@@ -3,7 +3,7 @@ import { keepFlowChildMark } from './flow-items'
 import type { SelectorRewrite } from '@dsh-claude-style/engine/sheet-rewrite'
 import { firstShape, selectorShape } from './selector-shape'
 
-/** Sodium rewrite table (D107): the host's adapters, grouped under the member the settings tooltip names. */
+/** Sodium rewrite table (D109): the host's adapters, grouped under the member the settings tooltip names. */
 export interface SodiumMember {
   /** The name the settings tooltip shows the member under: the host's own. */
   readonly id: string
@@ -28,7 +28,7 @@ const FLOW_CHILD_ATTR = 'data-dsh-claude-flow-child'
 
 /*
  * Replace the host chat gap rule's unfilterable subject with a key per flow
- * child, starting when each child is created (D107). Coverage includes a
+ * child, starting when each child is created (D109). Coverage includes a
  * flow-child mark for later children. Specificity is preserved by combining the
  * hidden and empty tests in one `:not()`. Unmatched sheets keep their rules.
  */

@@ -5,7 +5,7 @@ export default {
   id: 'sodium',
   order: 5,
   contracts: ['chat.node', 'chat.flow-slot', 'chat.flow-block', 'chat.running', 'composer.echo', 'chat.pending-steering', 'chat.process-answer', 'chat.turn-process-kind', 'chat.group-part', 'chat.group-part-response', 'chat.user-row', 'chat.steering-batch', 'head.plugin-sheets', 'head.plugin-sheet-owner', 'head.plugin-sheet-path', 'head.plugin-style-path'],
-  ungated: 'the switch starts undecided and the probe runs while it is; the feature follows the switch itself (D107)',
+  ungated: 'the switch starts undecided and the probe runs while it is; the feature follows the switch itself (D109)',
   stylesheets: [{ file: 'sodium.css', rank: 255 }],
   settingsRows: [{
     tab: 'general',

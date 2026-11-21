@@ -3,7 +3,7 @@ import { observeMatches, subscribeMutations } from '@dsh-claude-style/engine/bus
 import type { MatchList } from '@dsh-claude-style/engine/bus'
 
 /**
- * Keep the mark the sodium rewrite's gap rules fall back on (D107): on every
+ * Keep the mark the sodium rewrite's gap rules fall back on (D109): on every
  * child of a chat column and of the flow slot.
  *
  * Those rules are bucketed on what the host writes on the flow's children when
