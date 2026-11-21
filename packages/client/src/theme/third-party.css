@@ -55,3 +55,17 @@ body[data-dsh-claude-style] :is(dialog.cm-stat-dialog, dialog.cm-fee-dialog) :is
 body[data-dsh-claude-style]:not([data-we-wallpaper]) [data-dsh-claude-settings-row="backgroundOpacity"] {
   display: none;
 }
+
+/* ---------- Third-party repair: dsh-prompt-rewriter's seat nudge ---------- */
+/* The rewrite button leans toward the model label with
+   transform: translateX(var(--dsh-pe-seat-nudge, 7px)), a visual nudge tuned for
+   the host's 8–12px toolbar gap: it stays inside that gap and never touches the
+   neighbour. The skin keeps no column gap in the controls box (inline-bar.css),
+   so the same 7px paints the icon into the model seat (issue #438). The plugin
+   exposes the variable for a theme to override; neutralize it where the skin
+   removed the gap, and let the seat's own 4px leading inset (responsive.css)
+   carry the spacing. The variable belongs to another plugin, so it stays out of
+   the host contract table (D3). */
+body[data-dsh-claude-style] [data-dsh-claude-part~="composer-controls"] {
+  --dsh-pe-seat-nudge: 0;
+}

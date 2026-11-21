@@ -38,6 +38,14 @@ body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-phase="active
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant][data-dsh-claude-holds~="composer-right-filled"] [data-slot="conversation.input.right"] > :is(button, span, div, a) {
   flex-shrink: 0;
 }
+/* The right slot renders before the model slot, so a foreign control there
+   precedes the seat in the controls box, which keeps no column gap
+   (inline-bar.css). The seat takes the row's own 4px leading inset so the
+   control stands apart from the plate instead of touching it; the inset is part
+   of the measured cluster floor, so the wrapping decision still carries it. */
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-part~="trailing"] .dsh-claude-model-seat {
+  margin-inline-start: 4px;
+}
 /* The release tag stays beside the model's name in every layout: it is part of
    the model's identity, and the name is what gives way when the row is short.
    The tag keeps its own plate width, so shortening the name never hides or

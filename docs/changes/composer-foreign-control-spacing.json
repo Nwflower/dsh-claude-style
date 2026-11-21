@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-21",
+  "group": "fixes",
+  "order": 0,
+  "external": true,
+  "zh": "修复与 dsh-prompt-rewriter 等第三方底栏控件同时启用时控件紧贴或覆盖模型选择器的问题，右槽控件与模型座位保持间距并归零插件朝向座位的微移",
+  "en": "Keep foreign composer right-slot controls clear of the model seat with a leading inset and neutralize dsh-prompt-rewriter's seat nudge under the skin's gapless controls row"
+}
