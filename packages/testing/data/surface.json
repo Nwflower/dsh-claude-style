@@ -106,6 +106,7 @@
     { "id": "header-band.row", "attribute": "data-dsh-header-row", "feature": "header-band", "sees": "the row the pass raised to the caption row's line, carried while the title stands there" },
     { "id": "header-band.row-lift", "attribute": "data-dsh-header-row", "property": "--dsh-header-band-row-lift", "feature": "header-band", "sees": "the rise the row takes under the caption row's line, written only while the title stands in that row" },
     { "id": "header-band.top", "attribute": "data-dsh-header-band", "property": "--dsh-header-band-top", "feature": "header-band", "sees": "the header's own top inset once it has closed around the row the title left" },
+    { "id": "header-band.rightbar-open", "attribute": "data-dsh-header-rightbar-open", "feature": "header-band", "sees": "written on the layout frame while the visible session's right panel is open, so the header's collapse proxy shows for that session alone" },
     { "id": "effort.particle", "selector": ".dsh-claude-effort-matrix-canvas", "feature": "effort", "sees": "the field of dots the strongest rung draws: one canvas, every dot twinkling on its own phase under a stream of light" },
     { "id": "effort.track", "selector": ".dsh-claude-effort-track", "feature": "effort", "sees": "the slider's track: the groove the reader drags or clicks to pick a level, one stop per effort" },
     { "id": "effort.knob", "selector": ".dsh-claude-effort-knob", "feature": "effort", "sees": "the slider's knob: the handle that rides the track and rests on the level in force" },

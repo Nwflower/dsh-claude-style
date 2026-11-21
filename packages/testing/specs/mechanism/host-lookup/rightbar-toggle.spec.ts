@@ -29,7 +29,7 @@ function view(hidden: boolean) {
   layer.append(panel)
   document.body.append(layer)
   cleanups.push(() => layer.remove())
-  return toggle
+  return { layer, panel, toggle }
 }
 
 test('a hidden Session keeps its open panel mounted and owns no control on screen', () => {
@@ -40,13 +40,13 @@ test('a hidden Session keeps its open panel mounted and owns no control on scree
 test('the control belongs to the panel inside the visible view', () => {
   view(true)
   const visible = view(false)
-  expect(findRightbarToggle()).toBe(visible)
+  expect(findRightbarToggle()).toBe(visible.toggle)
 })
 
 test('the last visible view wins once an earlier one is hidden', () => {
   const earlier = view(false)
-  expect(findRightbarToggle()).toBe(earlier)
-  earlier.closest('div')!.hidden = true
+  expect(findRightbarToggle()).toBe(earlier.toggle)
+  earlier.layer.hidden = true
   const current = view(false)
-  expect(findRightbarToggle()).toBe(current)
+  expect(findRightbarToggle()).toBe(current.toggle)
 })

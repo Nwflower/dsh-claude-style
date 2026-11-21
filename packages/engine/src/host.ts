@@ -173,7 +173,8 @@ export const findWindowsMenu = cacheFirst<HTMLElement>(WINDOWS_MENU_SELECTOR)
 export function findRightbarToggle(): HTMLElement | null {
   const toggles = document.querySelectorAll<HTMLElement>(RIGHTBAR_TOGGLE_SELECTOR)
   for (let index = 0; index < toggles.length; index += 1) {
-    if (shown(toggles[index])) return toggles[index]
+    const toggle = toggles[index]
+    if (toggle.closest('[hidden]') === null && shown(toggle)) return toggle
   }
   return null
 }

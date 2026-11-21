@@ -162,11 +162,37 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * so that measurement never depends on the later width transition (D40, D43).
    */
   function markRightbarOpen() {
-    const panel = rightbarPanels.all().find(element => element.hasAttribute(RIGHTBAR_OPEN_ATTRIBUTE) && shown(element))
+    const panel = rightbarPanels.all().find(element => element.hasAttribute(RIGHTBAR_OPEN_ATTRIBUTE) && element.closest(`[${HIDDEN_ATTRIBUTE}]`) === null && shown(element))
     const frame = panel?.closest<HTMLElement>(FRAME_SELECTOR) ?? null
     if (frame === rightbarOpenStamp.current()) return
     rightbarOpenStamp.mark(frame)
     ui.schedule?.()
+  }
+
+  /**
+   * Ignore unrelated `hidden` toggles across the rest of the page: only an open
+   * mark on a panel or a `hidden` change on a panel or its ancestor can move
+   * which panel stands on screen, so chat folds never force a visibility read.
+   */
+  function onRightbarMutation(records: MutationRecord[]) {
+    const panels = rightbarPanels.all()
+    if (panels.length === 0) return
+    for (let i = 0; i < records.length; i += 1) {
+      const record = records[i]
+      if (record.attributeName === RIGHTBAR_OPEN_ATTRIBUTE) {
+        if (panels.includes(record.target as HTMLElement)) {
+          markRightbarOpen()
+          return
+        }
+        continue
+      }
+      for (let j = 0; j < panels.length; j += 1) {
+        if (record.target.contains(panels[j])) {
+          markRightbarOpen()
+          return
+        }
+      }
+    }
   }
 
   const rightbarPanels = observeMatches<HTMLElement>(RIGHTBAR_PANEL_SELECTOR, markRightbarOpen)
@@ -178,7 +204,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     subtree: true,
     attributeFilter: [RIGHTBAR_OPEN_ATTRIBUTE, HIDDEN_ATTRIBUTE],
     beforePaint: true,
-  }, markRightbarOpen)
+  }, onRightbarMutation)
   markRightbarOpen()
 
   /** Register that control in the header's utilities seat, which renders it wherever it stands. */
