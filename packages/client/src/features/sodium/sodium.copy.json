@@ -3,5 +3,5 @@
   "sodiumDesc": { "zh": "优化样式表以提升界面渲染性能。", "en": "Optimize stylesheets to improve interface rendering performance." },
   "sodiumRules": { "zh": "{count} 条规则生效中", "en": "{count} rules in effect" },
   "sodiumLost": { "zh": "宿主已改动这些规则，改写未生效。", "en": "The host changed these rules, so the rewrite no longer applies." },
-  "sodiumMember": { "zh": "{member} {since} 及以后", "en": "{member} {since} and later" }
+  "sodiumMember": { "zh": "{member}", "en": "{member}" }
 }

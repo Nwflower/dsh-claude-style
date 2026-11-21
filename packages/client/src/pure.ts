@@ -80,7 +80,6 @@ export { currentRate, forgetRates, formatCountdown } from './features/peakrate/s
 export { keepFlowChildMark } from './features/sodium/flow-items'
 export { SODIUM_MEMBERS } from './features/sodium/members'
 export { matchesAdapterSheet } from './features/sodium/sodium-engine'
-export { versionAtLeast } from './features/sodium/version'
 export { createPanelPoller } from './features/session-panel/panel-poller'
 export { createWakeThrottle } from './features/session-panel/wake-throttle'
 export type { WakeThrottle, WakeThrottleDeps } from './features/session-panel/wake-throttle'

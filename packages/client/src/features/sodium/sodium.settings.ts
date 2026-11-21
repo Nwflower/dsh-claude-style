@@ -17,14 +17,14 @@ export const controls: SettingsControlsOf<typeof manifest> = {
   'sodium-rules': SodiumRules,
 }
 
-/** The tooltip's lines: each member with the release its shapes start from, then its rules. */
+/** The tooltip's lines: each member, then its rules. */
 function ruleLines(rules: readonly RuleInEffect[]) {
   const lines: string[] = []
   let member = ''
   for (const rule of rules) {
     if (rule.member !== member) {
       member = rule.member
-      lines.push(copy('sodiumMember', { member: rule.member, since: rule.since }))
+      lines.push(copy('sodiumMember', { member: rule.member }))
     }
     lines.push(`${rule.sheet.slice(rule.sheet.lastIndexOf('/') + 1)} · ${rule.declarations}`)
   }

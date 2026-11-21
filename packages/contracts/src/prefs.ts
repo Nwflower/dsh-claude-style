@@ -216,7 +216,7 @@ export const BACKGROUND_OPACITY_DEFAULT = '100'
 export const BACKGROUND_OPACITY_MIN = 0
 export const BACKGROUND_OPACITY_MAX = 100
 
-/** Sodium starts `undecided` and appears off; only the reader or first matching probe decides it (D78). */
+/** Sodium starts `undecided` and appears off; only the reader or first matching probe decides it (D107). */
 export const SODIUM_ON = 'on'
 export const SODIUM_OFF = 'off'
 export const SODIUM_UNDECIDED = 'undecided'

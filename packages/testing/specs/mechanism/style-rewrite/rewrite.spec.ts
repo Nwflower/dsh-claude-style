@@ -1,5 +1,5 @@
 /**
- * The sodium rewrite's mechanism (D78): a rule is rewritten where it stands and
+ * The sodium rewrite's mechanism (D107): a rule is rewritten where it stands and
  * written back exactly; a selector the sheet refuses leaves the sheet as its
  * owner wrote it; a rule another writer changed is handed back; the flow-child
  * mark stands on every child through every change; and the table's flow rewrite

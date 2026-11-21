@@ -1,13 +1,12 @@
 import { notifyAll } from '@dsh-claude-style/engine/notify'
 
 /**
- * The rules the sodium rewrite holds right now (D78), for the settings row:
+ * The rules the sodium rewrite holds right now (D107), for the settings row:
  * the page's live answer, read whether the settings page is open or not.
  */
 export interface RuleInEffect {
-  /** The member the rule belongs to, and the lowest release its shape was checked on. */
+  /** The member the rule belongs to. */
   readonly member: string
-  readonly since: string
   /** The sheet's path in its package, as the loader tags it. */
   readonly sheet: string
   /** The rule's own declarations, which name the rule for a reader. */

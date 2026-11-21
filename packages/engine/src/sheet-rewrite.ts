@@ -1,6 +1,6 @@
 /**
  * Rewrite the selectors of a stylesheet another package injected, in place,
- * and write them back (D78).
+ * and write them back (D107).
  *
  * A rule keeps its place in the sheet: the selector is assigned through the
  * CSSOM, so the cascade order and every other rule stay as the owner wrote

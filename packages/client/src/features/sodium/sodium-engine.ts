@@ -1,12 +1,9 @@
 import { PLUGIN_SHEET_OWNER_ATTRIBUTE, PLUGIN_SHEET_PATH_ATTRIBUTE, PLUGIN_SHEET_SELECTOR, PLUGIN_STYLE_PATH_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
-import { profileBundles } from '@dsh-claude-style/engine/host'
 import { applyRewrite, planRewrite, restoreRewrite } from '@dsh-claude-style/engine/sheet-rewrite'
-import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { RewrittenRule } from '@dsh-claude-style/engine/sheet-rewrite'
 import { SODIUM_MEMBERS } from './members'
 import type { SodiumAdapter, SodiumMember } from './members'
 import { publishLost, publishRules } from './sodium-state'
-import { versionAtLeast } from './version'
 
 /** One sheet the rewrite holds, under the adapter that rewrote it. */
 interface HeldSheet {
@@ -14,26 +11,6 @@ interface HeldSheet {
   readonly member: SodiumMember
   readonly adapter: SodiumAdapter
   readonly rules: readonly RewrittenRule[]
-}
-
-/**
- * The release each member is on, or null where it cannot be read. The host's
- * is in its boot graph; a plugin's comes from the profile's bundle list, asked
- * only when the table carries a plugin member.
- */
-function readReleases(ctx: HostContext): Promise<Map<SodiumMember, string | null>> {
-  const host = window.__DSH_BOOT__?.release?.version
-  const bundles = SODIUM_MEMBERS.some((member) => member.release === 'bundle') ? profileBundles(ctx) : null
-  // A bundle list that fails leaves the plugin members unread and the host's
-  // rules still rewritten (D12); reportError surfaces the failure.
-  const listed = (bundles ?? Promise.resolve([])).catch((error: unknown) => {
-    reportError(error)
-    return []
-  })
-  return listed.then((list) => new Map(SODIUM_MEMBERS.map((member) => {
-    if (member.release === 'host') return [member, typeof host === 'string' ? host : null]
-    return [member, list.find((bundle) => bundle.name === member.id)?.version ?? null]
-  })))
 }
 
 /** Whether `<style>` carries the owner and sheet path (legacy `data-plugin-css` or current `data-path`) of one adapter. */
@@ -55,13 +32,12 @@ function sheetsOf(adapter: SodiumAdapter) {
 }
 
 /**
- * The rewrite itself (D78): on, it rewrites every listed rule on the page and
+ * The rewrite itself (D107): on, it rewrites every listed rule on the page and
  * keeps the attributes the rewritten rules read; off, the sheets and the page
  * are the owners' again. `refresh` follows the sheets coming and going while it
  * is on, and `survey` counts what it would rewrite, for the first probe.
  */
-export function createSodiumEngine(ctx: HostContext) {
-  const releases = readReleases(ctx)
+export function createSodiumEngine() {
   let on = false
   let held: HeldSheet[] = []
   /** The sheets the table held on the last report, and whether their loss has been reported since. */
@@ -69,12 +45,6 @@ export function createSodiumEngine(ctx: HostContext) {
   let reportedLoss = false
   /** Each adapter's attribute keeper, with the captured classes it keeps them for. */
   const keepers = new Map<SodiumAdapter, { key: string, stop: () => void }>()
-
-  /** The members whose release the table covers. */
-  const coveredMembers = () => releases.then((known) => SODIUM_MEMBERS.filter((member) => {
-    const release = known.get(member)
-    return release !== null && release !== undefined && versionAtLeast(release, member.since)
-  }))
 
   /**
    * Report what the rewrite holds. A table that held rules on a sheet and holds
@@ -84,7 +54,6 @@ export function createSodiumEngine(ctx: HostContext) {
   function publish() {
     const rules = held.flatMap(({ member, adapter, rules }) => rules.map((entry) => ({
       member: member.id,
-      since: member.since,
       sheet: adapter.sheet,
       declarations: entry.rule.style.cssText,
     })))
@@ -165,11 +134,20 @@ export function createSodiumEngine(ctx: HostContext) {
     start() {
       if (on) return
       on = true
-      coveredMembers().then(sync).catch(reportWrite)
+      try {
+        sync(SODIUM_MEMBERS)
+      } catch (error) {
+        reportWrite(error)
+      }
     },
     /** Follow the sheets in `<head>` while on. */
     refresh() {
-      if (on) coveredMembers().then(sync).catch(reportWrite)
+      if (!on) return
+      try {
+        sync(SODIUM_MEMBERS)
+      } catch (error) {
+        reportWrite(error)
+      }
     },
     stop() {
       if (!on) return
@@ -184,10 +162,10 @@ export function createSodiumEngine(ctx: HostContext) {
     },
     /** How many rules the rewrite would take on the page as it stands. */
     survey() {
-      return coveredMembers().then((members) => members.reduce((count, member) => count + member.adapters.reduce(
+      return SODIUM_MEMBERS.reduce((count, member) => count + member.adapters.reduce(
         (sum, adapter) => sum + sheetsOf(adapter).reduce((rules, sheet) => rules + planRewrite(sheet, adapter).length, 0),
         0,
-      ), 0))
+      ), 0)
     },
   }
 }

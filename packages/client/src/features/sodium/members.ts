@@ -3,14 +3,10 @@ import { keepFlowChildMark } from './flow-items'
 import type { SelectorRewrite } from '@dsh-claude-style/engine/sheet-rewrite'
 import { firstShape, selectorShape } from './selector-shape'
 
-/** Sodium rewrite table (D78): members, checked releases and their adapters. */
+/** Sodium rewrite table (D107): the host's adapters, grouped under the member the settings tooltip names. */
 export interface SodiumMember {
-  /** The name the settings tooltip shows the member under: the host's, or the package's. */
+  /** The name the settings tooltip shows the member under: the host's own. */
   readonly id: string
-  /** Where the member's release is read: the host's boot graph, or the profile's bundle list for a plugin. */
-  readonly release: 'host' | 'bundle'
-  /** The lowest release the shapes were checked on; every later one is included. */
-  readonly since: string
   readonly adapters: readonly SodiumAdapter[]
 }
 
@@ -32,7 +28,7 @@ const FLOW_CHILD_ATTR = 'data-dsh-claude-flow-child'
 
 /*
  * Replace the host chat gap rule's unfilterable subject with a key per flow
- * child, starting when each child is created (D78). Coverage includes a
+ * child, starting when each child is created (D107). Coverage includes a
  * flow-child mark for later children. Specificity is preserved by combining the
  * hidden and empty tests in one `:not()`. Unmatched sheets keep their rules.
  */
@@ -104,5 +100,5 @@ const CHAT_FLOW: SodiumAdapter = {
 }
 
 export const SODIUM_MEMBERS: readonly SodiumMember[] = [
-  { id: 'DeepSeek Harness', release: 'host', since: '0.2.2-alpha.3', adapters: [CHAT_FLOW] },
+  { id: 'DeepSeek Harness', adapters: [CHAT_FLOW] },
 ]

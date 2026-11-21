@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-21",
+  "group": "improvements",
+  "order": 0,
+  "external": true,
+  "zh": "钠改写的适配表只保留宿主成员，不再读取宿主版本，设置悬停的成员行不再显示起始版本",
+  "en": "Keep only the host member in the sodium rewrite table, stop reading the host release, and drop the starting release from the settings tooltip's member line"
+}
