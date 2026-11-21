@@ -268,9 +268,6 @@
       ]
     },
     "packages/testing/scenarios/long-session.mjs": {
-      "测量前已经积累了多轮对话，测量那一轮又长了": [
-        2
-      ],
       "控制台没有异常": [
         0
       ],

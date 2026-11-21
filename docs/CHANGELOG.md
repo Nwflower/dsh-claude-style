@@ -24,6 +24,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - 修复与 dsh-pause 等第三方底栏控件同时启用时模型名被压窄、Firefox 右侧留白或提前换行的问题
 - 右侧栏的收起按钮只跟随当前会话。切换会话后，上一个会话保留的右侧栏不再让新会话顶栏显示收起按钮，按下收起也不会关掉上一个会话的面板
 - 修复表格边框裁剪、补全数学和箭头符号字体回退并补充滑块空值回归测试
+- 让出页面给其他插件时，进程组摘要随特性一起离开，不再留在宿主的进程标题里
 
 ### 移除
 
@@ -32,6 +33,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 ### 其他变更
 
 - 首次读取设置时把旧值映射与配色携带的结果写回表单，移除用量折叠缓存与本地存储迁移，其余旧值映射和配色、标志迁移定于 v0.23.0 退役
+- 端到端场景按已允许通知的读者判定远程设置控件，长会话按轮次序号判定增长，不受虚拟滚动与无头浏览器权限限制的影响
 
 <h3 id="en-0.21.8">New Features</h3>
 
@@ -51,6 +53,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - Keep the model name readable and prevent Firefox blank space or premature wrapping with dsh-pause and other nested composer controls
 - The right panel's collapse control follows the visible Session. A right panel retained by a conversation the reader left no longer shows the control in another conversation's header, and pressing it no longer closes that earlier panel
 - Fix table border clipping, add arrow and math symbol font fallbacks, and add sliding-pill null regression test
+- Take the process group summary off the host's process header when handing the page to another plugin
 
 ### Removals
 
@@ -59,6 +62,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 ### Chores
 
 - Write legacy preference mappings and palette carry results back to the settings form on first read, remove the usage fold-cache and local-storage migrations, and retire the remaining mappings and the palette and brand migrations at v0.23.0
+- Judge remote settings controls as a reader who allowed notifications and long-session growth by turn index, independent of virtual scrolling and headless permission limits
 
 ## [0.21.7] - 2026-11-20
 
