@@ -9,14 +9,11 @@ import { page } from 'vitest/browser'
 import { setSwappingText } from '@dsh-claude-style/client/pure'
 import { pageCleanups } from '../../fixtures/page'
 import { surfaceAttribute, surfaceSelector } from '../../fixtures/surface'
-import { crowdingFixture, frames, LAYOUT, TOOLBAR, type CrowdedComposer } from './fixture'
+import { crowdingMount, frames, LAYOUT, TOOLBAR, type CrowdedComposer } from './fixture'
 
 beforeAll(async () => { await page.viewport(1280, 1000) })
 
-const cleanups = pageCleanups()
-function mount(options: Parameters<typeof crowdingFixture>[0]) {
-  const view = crowdingFixture(options); cleanups.push(view.dispose); return view
-}
+const mount = crowdingMount(pageCleanups())
 
 /** Browser evidence only: intersect all clipping ancestors and the actual hit plate. */
 function visibleBox(element: HTMLElement, plate: HTMLElement = element) {

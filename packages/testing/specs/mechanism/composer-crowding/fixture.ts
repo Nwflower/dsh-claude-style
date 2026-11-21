@@ -1,6 +1,6 @@
 import {
   composerInlineCss, composerInlineBarCss, composerResponsiveCss, composerModelCss,
-  composerVarsCss, composerSwappingCss, createComposerResponsive, setSwappingText, releaseSwappingText,
+  composerVarsCss, composerSwappingCss, THIRD_PARTY_SHEET, createComposerResponsive, setSwappingText, releaseSwappingText,
 } from '@dsh-claude-style/client/pure'
 import {
   COMPOSER_CARD_SELECTOR, COMPOSER_SCROLL_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_SCROLL_SELECTOR,
@@ -39,7 +39,9 @@ export function crowdingFixture(options: { width: number; zoom?: number; directi
     [hidden] { display:none ${String.fromCharCode(33)}important; }
   `
   const productSheet = document.createElement('style')
-  productSheet.textContent = [composerVarsCss, composerInlineCss, composerModelCss, composerInlineBarCss, composerSwappingCss, composerResponsiveCss].join('\n')
+  // The third-party sheet carries the prompt-rewriter seat-nudge repair, which
+  // governs the controls box spacing beside a foreign right-hand control (#438).
+  productSheet.textContent = [composerVarsCss, composerInlineCss, composerModelCss, composerInlineBarCss, composerSwappingCss, composerResponsiveCss, THIRD_PARTY_SHEET].join('\n')
   document.head.append(hostSheet, productSheet)
   const host = attach(document.body, CONVERSATION_SCROLL_SELECTOR)
   host.style.cssText = `width:${options.width / zoom}px;zoom:${zoom};direction:${options.direction ?? 'ltr'};padding:16px;box-sizing:border-box;margin:8px;font:13px Arial,sans-serif;--dsw-font-family:Arial,sans-serif;`
@@ -138,3 +140,10 @@ export function crowdingFixture(options: { width: number; zoom?: number; directi
   }
 }
 export type CrowdedComposer = ReturnType<typeof crowdingFixture>
+
+/** A mount bound to a spec file's cleanup registry, so each mounted fixture disposes between tests. */
+export function crowdingMount(cleanups: (() => void)[]) {
+  return (options: Parameters<typeof crowdingFixture>[0]) => {
+    const view = crowdingFixture(options); cleanups.push(view.dispose); return view
+  }
+}

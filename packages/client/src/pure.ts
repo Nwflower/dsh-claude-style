@@ -151,4 +151,5 @@ export { default as composerResponsiveCss } from './features/composer/responsive
 export { default as composerModelCss } from './features/model/model-picker.css?raw'
 export { default as composerVarsCss } from './features/composer/vars.css?raw'
 export { default as composerSwappingCss } from './shared/swapping-text.css?raw'
+export { default as THIRD_PARTY_SHEET } from './theme/third-party.css?raw'
 export { setSwappingText, releaseSwappingText } from './shared/swapping-text'
