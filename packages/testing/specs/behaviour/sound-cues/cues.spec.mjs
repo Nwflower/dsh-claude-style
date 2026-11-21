@@ -78,6 +78,7 @@ export default spec({ page: 'late-forms' }, ({ test }) => {
 
     await host.status({ a: { running: true } })
     await host.status({ a: { running: true, pendingInteraction: { kind: 'permission' } } })
+    await host.waitPosts(1)
     t.expectThat.equal(host.posts, [{ name: 'pop', volume: 0.2 }], 'the next prompt is a change')
   })
 })

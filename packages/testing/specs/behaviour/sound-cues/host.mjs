@@ -72,6 +72,12 @@ export async function setup(t, { status, list }) {
   await t.settle()
   return {
     posts,
+    /** Wait until the route has recorded `count` posts: a slow runner's fetch lands past any fixed pause. */
+    async waitPosts(count, timeoutMs = 8000) {
+      const deadline = Date.now() + timeoutMs
+      while (posts.length < count && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 50))
+      return posts
+    },
     async status(next, waitMs = 450) {
       await t.page.evaluate((entries) => window.__soundHost.setStatus(entries), next)
       if (waitMs > 0) await t.page.waitForTimeout(waitMs)
