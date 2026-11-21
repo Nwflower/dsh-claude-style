@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-21",
+  "group": "improvements",
+  "order": 0,
+  "external": true,
+  "zh": "流式回答的逐字淡入不再拖住长回答里的滚动与输入",
+  "en": "Keep the streaming reveal from dragging scrolling and typing in a long answer."
+}
