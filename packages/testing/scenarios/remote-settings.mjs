@@ -64,6 +64,15 @@ function remoteSettingsScenario({ check }) {
     // The mapped name reaches the scratch host directly, past any proxy the
     // machine routes other names through.
     browserArgs: [`--host-resolver-rules=MAP ${REMOTE_NAME} 127.0.0.1`, '--no-proxy-server'],
+    // The notifications switch disables itself where the browser blocks
+    // notifications. Headless Chromium keeps Notification.permission at
+    // 'denied' even after the permission is granted through the automation
+    // protocol, so the boundary answers as a reader who has allowed them:
+    // the scenario judges the settings page's controls, not the permission
+    // flow (D92 — a stand-in at the system boundary, for this one reason).
+    initScript: () => {
+      if (typeof Notification === 'function') Object.defineProperty(Notification, 'permission', { configurable: true, get: () => 'granted' })
+    },
     async afterTurn(context) {
       const { page: local, session } = context
       const address = new URL(context.url)
